@@ -5,7 +5,8 @@ jornada tem um fluxograma, as regras técnicas que decidem os caminhos e as
 lacunas encontradas no código. Foi escrito lendo o código em 2026-09-17, na
 branch `finance-app-2.0`, e a navegação global foi revista em 2026-10-01,
 quando entrou a busca (⌘K), junto com o menu do botão direito nas linhas de
-lançamento, nos cartões de categoria e nas contas pendentes. Quando uma tela mudar de caminho, atualize o
+lançamento, nos cartões de categoria e nas contas pendentes, e com o seletor
+de período que confirma no próprio popover. Quando uma tela mudar de caminho, atualize o
 diagrama dela.
 
 ## Como ler os diagramas
@@ -410,6 +411,9 @@ flowchart TD
     filters --> list(["Tabela paginada de 100 em 100"])
     list -->|"Todas, Despesas, Receitas; 7d, 15d, 30d, Mês"| filters
     list -->|"Filtros"| panel(["Painel: período, forma, cartões, categorias, valor, descrição, origem"]) --> filters
+    panel -->|"período personalizado"| rangePick(["Seletor de período: rascunho até Aplicar"])
+    rangePick -->|"Aplicar ou Limpar"| filters
+    rangePick -.->|"Cancelar ou Esc"| panel
     filters -->|"chip ✕ ou limpar tudo"| filters
     filters -.->|"grava de volta"| url["URL"]
 
@@ -488,6 +492,7 @@ flowchart TD
 | Exclusão | Parcela cancela o plano inteiro por `delete_workspace_installment_plan_cascade` | `src/lib/transactions/mutations.ts` |
 | Offline | Criar e excluir entram na fila; pagar conta exige conexão | `src/lib/offline/` |
 | Enter | O `Enter` na busca do seletor não salva a transação | `shouldDeferEnterToWidget` em `src/components/ui/form.tsx` |
+| Período personalizado | Um `DatePicker` de intervalo com `confirm`: as pontas ficam em rascunho até Aplicar, Limpar tira o filtro, Cancelar e Esc descartam. Era um formulário à parte (`transactions-date-range-form.tsx`, removido) | `src/components/transactions/transactions-filters-panel.tsx` |
 | Botão direito na linha | Atalho das ações da linha (os botões da coluna Ações continuam); sobre uma linha selecionada age na seleção inteira (`contextMenuTargets`); linhas projetadas não têm menu | `TransactionRowContextMenu` em `src/components/transactions/transactions-table.tsx` |
 
 ---

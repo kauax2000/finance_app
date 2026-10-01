@@ -172,6 +172,8 @@ export function SubscriptionFormFields({
                             )
                         }
                         placeholder="Selecione a data"
+                        displayStyle="relative"
+                        showToday
                     />
                 </FieldControl>
             </Field>

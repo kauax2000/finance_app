@@ -279,7 +279,7 @@
   <dl class="meta">
     <div><dt>Base</dt><dd>Leitura do código</dd></div>
     <div><dt>Branch</dt><dd>finance-app-2.0</dd></div>
-    <div><dt>Data</dt><dd>1 out 2026 · busca global e botão direito</dd></div>
+    <div><dt>Data</dt><dd>1 out 2026 · busca global, botão direito e período</dd></div>
     <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 4 lacunas</dd></div>
     <div><dt>Fonte versionada</dt><dd><code>docs/JORNADAS.md</code></dd></div>
   </dl>
@@ -864,6 +864,7 @@ flowchart TD
       <ol class="steps">
         <li><div><strong>A URL é o filtro.</strong> Tipo, período, forma de pagamento, cartão, categoria, valor, texto, plano e assinatura vivem na URL. É assim que outras áreas mandam a pessoa para uma lista já filtrada.</div></li>
         <li><div><strong>Lista.</strong> Atalhos de período, painel de filtros, chips removíveis, seleção em lote e páginas de 100 lançamentos. A lista vazia oferece criar ou limpar os filtros, conforme o caso.</div></li>
+        <li><div><strong>Período personalizado.</strong> No painel de filtros, o seletor de período guarda as pontas em rascunho até "Aplicar"; "Limpar" tira o filtro, e "Cancelar" ou Esc descartam a escolha.</div></li>
         <li><div><strong>Criar.</strong> O formulário muda com o tipo. Despesa no crédito exige escolher um cartão; parcelada pede o número de parcelas e se o valor é total ou por parcela.</div></li>
         <li><div><strong>Depois de salvar.</strong> O backend avisa os outros membros e confere o orçamento da categoria e os alertas do cartão. Sem conexão, o lançamento entra na fila.</div></li>
         <li><div><strong>Editar e excluir.</strong> Numa parcela, a pessoa escolhe entre editar só ela ou o plano todo. Excluir uma parcela cancela a compra parcelada inteira.</div></li>
@@ -880,6 +881,9 @@ flowchart TD
     filters --&gt; list(["Tabela paginada de 100 em 100"])
     list --&gt;|"Todas, Despesas, Receitas; 7d, 15d, 30d, Mês"| filters
     list --&gt;|"Filtros"| panel(["Painel: período, forma, cartões, categorias, valor, descrição, origem"]) --&gt; filters
+    panel --&gt;|"período personalizado"| rangePick(["Seletor de período: rascunho até Aplicar"])
+    rangePick --&gt;|"Aplicar ou Limpar"| filters
+    rangePick -.-&gt;|"Cancelar ou Esc"| panel
     filters --&gt;|"chip ✕ ou limpar tudo"| filters
     filters -.-&gt;|"grava de volta"| url["URL"]
 
@@ -909,7 +913,7 @@ flowchart TD
     classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
     classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
     class entry,url route
-    class filters,list,panel,newTx,clear,selection,bulk,rowMenu,selMenu dialog
+    class filters,list,panel,rangePick,newTx,clear,selection,bulk,rowMenu,selMenu dialog
     class parse,empty decision
     class form,detail,detailEdit,delConfirm journey</pre></div>
         <figcaption><strong>Figura 5a · Lista e filtros</strong></figcaption>
@@ -966,7 +970,7 @@ flowchart TD
         <figcaption><strong>Figura 5b · Criar, editar e excluir</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
-      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Parâmetros</td><td>Lidos e gravados na URL; <code>new</code> e <code>txn</code> são consumidos e removidos</td><td><code>src/lib/transactions-list-search-params.ts</code></td></tr><tr><td>Formulário</td><td>Um componente para criar, e o mesmo campo a campo na edição</td><td><code>src/components/transactions/transaction-form-dialog.tsx</code>, <code>transaction-form-use.tsx</code></td></tr><tr><td>Parcelada</td><td>RPC <code>create_workspace_installment_plan</code>; editar o plano não muda parcelas já lançadas</td><td><code>src/components/transactions/transaction-form-persistence.ts</code></td></tr><tr><td>Detalhe</td><td>Mesmo painel no Painel, em Cartões e em Categorias</td><td><code>src/components/transactions/transaction-detail-sheet.tsx</code></td></tr><tr><td>Exclusão</td><td>Parcela cancela o plano inteiro por <code>delete_workspace_installment_plan_cascade</code></td><td><code>src/lib/transactions/mutations.ts</code></td></tr><tr><td>Offline</td><td>Criar e excluir entram na fila; pagar conta exige conexão</td><td><code>src/lib/offline/</code></td></tr><tr><td>Enter</td><td>O <code>Enter</code> na busca do seletor não salva a transação</td><td><code>shouldDeferEnterToWidget</code> em <code>src/components/ui/form.tsx</code></td></tr><tr><td>Botão direito na linha</td><td>Atalho das ações da linha (os botões da coluna Ações continuam); sobre uma linha selecionada age na seleção inteira (<code>contextMenuTargets</code>); linhas projetadas não têm menu</td><td><code>TransactionRowContextMenu</code> em <code>src/components/transactions/transactions-table.tsx</code></td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Parâmetros</td><td>Lidos e gravados na URL; <code>new</code> e <code>txn</code> são consumidos e removidos</td><td><code>src/lib/transactions-list-search-params.ts</code></td></tr><tr><td>Formulário</td><td>Um componente para criar, e o mesmo campo a campo na edição</td><td><code>src/components/transactions/transaction-form-dialog.tsx</code>, <code>transaction-form-use.tsx</code></td></tr><tr><td>Parcelada</td><td>RPC <code>create_workspace_installment_plan</code>; editar o plano não muda parcelas já lançadas</td><td><code>src/components/transactions/transaction-form-persistence.ts</code></td></tr><tr><td>Detalhe</td><td>Mesmo painel no Painel, em Cartões e em Categorias</td><td><code>src/components/transactions/transaction-detail-sheet.tsx</code></td></tr><tr><td>Exclusão</td><td>Parcela cancela o plano inteiro por <code>delete_workspace_installment_plan_cascade</code></td><td><code>src/lib/transactions/mutations.ts</code></td></tr><tr><td>Offline</td><td>Criar e excluir entram na fila; pagar conta exige conexão</td><td><code>src/lib/offline/</code></td></tr><tr><td>Enter</td><td>O <code>Enter</code> na busca do seletor não salva a transação</td><td><code>shouldDeferEnterToWidget</code> em <code>src/components/ui/form.tsx</code></td></tr><tr><td>Período personalizado</td><td>Um <code>DatePicker</code> de intervalo com <code>confirm</code>: as pontas ficam em rascunho até Aplicar, Limpar tira o filtro, Cancelar e Esc descartam. Era um formulário à parte (<code>transactions-date-range-form.tsx</code>, removido)</td><td><code>src/components/transactions/transactions-filters-panel.tsx</code></td></tr><tr><td>Botão direito na linha</td><td>Atalho das ações da linha (os botões da coluna Ações continuam); sobre uma linha selecionada age na seleção inteira (<code>contextMenuTargets</code>); linhas projetadas não têm menu</td><td><code>TransactionRowContextMenu</code> em <code>src/components/transactions/transactions-table.tsx</code></td></tr></tbody></table></div>
     </section>
 
     <section class="block" id="j6">

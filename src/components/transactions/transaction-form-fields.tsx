@@ -575,6 +575,8 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                                 )
                             }
                             placeholder="Selecione a data"
+                            displayStyle="relative"
+                            presets
                         />
                     </FieldControl>
                 )}

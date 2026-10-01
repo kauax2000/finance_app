@@ -294,7 +294,6 @@ export function BillFormFields({
                                 setStartDateYmd(d ? localYmdFromDate(d) : "")
                             }
                             placeholder="Início da conta"
-                            className="text-sm"
                         />
                     </FieldControl>
                 </Field>
@@ -311,7 +310,7 @@ export function BillFormFields({
                                 setEndDateYmd(d ? localYmdFromDate(d) : "")
                             }
                             placeholder="Sem data final"
-                            className="text-sm"
+                            clearable
                         />
                     </FieldControl>
                 </Field>

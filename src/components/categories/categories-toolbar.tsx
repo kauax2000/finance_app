@@ -4,7 +4,7 @@ import { Toolbar, ToolbarActions } from "@/components/ui/toolbar"
 import { CalendarIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
-import { BudgetMonthSelects } from "@/components/categories/budget-month-selects"
+import { MonthGrid } from "@/components/ui/date-picker"
 import {
     Popover,
     PopoverContent,
@@ -12,7 +12,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover"
 import { TransactionTypeSegment, type TransactionFilterType } from "@/components/transactions/transaction-type-segment"
-import { formatYearMonth, labelYearMonthPt, shiftYearMonth, shortLabelYearMonthPt } from "@/lib/budget-month"
+import { formatYearMonth, labelYearMonthPt, parseYearMonth, shiftYearMonth, shortLabelYearMonthPt } from "@/lib/budget-month"
 import { cn } from "@/lib/utils"
 
 /**
@@ -41,6 +41,12 @@ const monthNavBarButtonClassName = "h-8 px-2 text-xs"
 const monthNavBarIconButtonClassName = "size-8"
 const monthNavBarMonthPickerClassName = "h-8 flex-1 gap-1.5 px-2 text-xs"
 const monthNavBarCalendarIconClassName = "size-3.5"
+
+/** "2026-04" → o primeiro dia de abril, o valor do `MonthGrid`. */
+function mesDoAnoMes(ym: string) {
+    const { y, m } = parseYearMonth(ym)
+    return new Date(y, m - 1, 1)
+}
 
 function MonthNavArrowControls({
     dense,
@@ -148,17 +154,14 @@ function MonthNavArrowControls({
                         align="center"
                         className="w-auto p-0"
                     >
-                        <BudgetMonthSelects
-                            valueYm={budgetMonthYm}
-                            onChangeYm={onBudgetMonthYmChange}
-                            dense={dense}
-                            showFieldLabels
-                            className="p-3"
-                            afterChange={
-                                esteMesInsidePopoverOnNarrow
-                                    ? () => setMonthPickerOpen(false)
-                                    : undefined
-                            }
+                        {/* A grade de meses do design system (rodada 210): eram dois
+                            `Select` de mês e ano lado a lado. */}
+                        <MonthGrid
+                            value={mesDoAnoMes(budgetMonthYm)}
+                            onChange={(d) => {
+                                onBudgetMonthYmChange(formatYearMonth(d))
+                                if (esteMesInsidePopoverOnNarrow) setMonthPickerOpen(false)
+                            }}
                         />
                         {esteMesInsidePopoverOnNarrow ? (
                             <PopoverFooter className="md:hidden">
@@ -316,12 +319,12 @@ export function MonthNav({
                             align="start"
                             className="w-auto p-0"
                         >
-                            <BudgetMonthSelects
-                                valueYm={budgetMonthYm}
-                                onChangeYm={onBudgetMonthYmChange}
-                                showFieldLabels
-                                afterChange={() => setOpen(false)}
-                                className="p-3"
+                            <MonthGrid
+                                value={mesDoAnoMes(budgetMonthYm)}
+                                onChange={(d) => {
+                                    onBudgetMonthYmChange(formatYearMonth(d))
+                                    setOpen(false)
+                                }}
                             />
                             <PopoverFooter className="justify-between">
                                 <Button

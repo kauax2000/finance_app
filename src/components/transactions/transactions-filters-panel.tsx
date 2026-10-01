@@ -19,7 +19,8 @@ import {
 } from "@/lib/payment-methods"
 import { TransactionsDatePresets } from "@/components/transactions/transactions-date-presets"
 import type { TransactionsDatePresetKey } from "@/components/transactions/transactions-date-presets"
-import { TransactionsDateRangeForm } from "@/components/transactions/transactions-date-range-form"
+import { DatePicker } from "@/components/ui/date-picker"
+import { localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -281,28 +282,39 @@ export function TransactionsFiltersPanel({
                                 <FieldLegend variant="label" className="text-2xs font-medium text-muted-foreground">
                                     Personalizado
                                 </FieldLegend>
-                                <div>
-                                    <TransactionsDateRangeForm
-                                        idPrefix={periodIdPrefix}
-                                        draftFrom={periodDraftFrom}
-                                        draftTo={periodDraftTo}
-                                        onDraftFromChange={onPeriodDraftFromChange}
-                                        onDraftToChange={onPeriodDraftToChange}
-                                        onApply={() =>
-                                            onDateRangeApply({
-                                                from: periodDraftFrom,
-                                                to: periodDraftTo,
-                                            })
-                                        }
-                                        onClear={() => {
+                                {/* O rascunho e o rodapé Limpar/Aplicar são do próprio
+                                    `DatePicker` (`confirm`, rodada 210): eram um
+                                    formulário à parte, com os botões escritos à mão. */}
+                                <DatePicker
+                                    id={`${periodIdPrefix}-from`}
+                                    mode="range"
+                                    confirm
+                                    displayStyle="numeric"
+                                    placeholder="Escolher período"
+                                    value={
+                                        periodDraftFrom
+                                            ? {
+                                                  from: parseYmdLocal(periodDraftFrom),
+                                                  to: periodDraftTo
+                                                      ? parseYmdLocal(periodDraftTo)
+                                                      : undefined,
+                                              }
+                                            : undefined
+                                    }
+                                    onChange={(range) => {
+                                        if (!range?.from) {
                                             onClearPeriodFilter()
                                             onPeriodDraftFromChange("")
                                             onPeriodDraftToChange("")
-                                        }}
-                                        onCancel={undefined}
-                                        showCancel={false}
-                                    />
-                                </div>
+                                            return
+                                        }
+                                        const from = localYmdFromDate(range.from)
+                                        const to = range.to ? localYmdFromDate(range.to) : ""
+                                        onPeriodDraftFromChange(from)
+                                        onPeriodDraftToChange(to)
+                                        onDateRangeApply({ from, to })
+                                    }}
+                                />
                             </FieldSet>
                         </div>
                     </FilterSection>

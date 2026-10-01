@@ -242,7 +242,8 @@ export function PayBillDialog({
                                     d ? localYmdFromDate(d) : localYmdFromDate(new Date()),
                                 )
                             }
-                            className="text-sm"
+                            displayStyle="relative"
+                            presets
                         />
                     </FieldControl>
                 </Field>

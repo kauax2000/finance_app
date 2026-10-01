@@ -16954,3 +16954,57 @@ O `ContextMenu` tinha zero consumidores, e a página uma demonstração só, com
   o cartão de conta pendente (Abrir, Pagar e o menu de três pontos). Mudança
   de jornada: `JORNADAS.md` (5a, 7 e 9) e o Atlas, republicado. **As telas do
   app não foram vistas no navegador** — pedem login.
+
+### Rodada 210 — o DatePicker ganha atalhos, o Hoje, marcadores, o rótulo relativo, o campo digitável, o mês, a gaveta e a confirmação
+
+O dono escolheu todas as versões propostas e as quatro migrações.
+
+- **Duas afirmações falsas**: a página dizia "mesma altura do Input ao
+  lado" com o `Input` em `size="lg"` (36 contra 32); medido depois, 32 e
+  32. E o comentário do componente dizia que o filtro de período montava dois
+  `DatePicker` independentes — ele usava um só, em intervalo.
+- **`presets`, `showToday`, `markers`**: o `Calendar` os tinha desde a 203 e
+  o `DatePicker` não repassava. O atalho do `Calendar` era só de intervalo; a
+  união ganhou `{ label, date }`, para "Hoje" e "Ontem". Medido: "Ontem"
+  escolheu 30/09 e fechou o popover; "Últimos 7 dias" deu 25/09–01/10, com
+  dois meses no desktop; a legenda dos marcadores aparece sob a grade.
+- **`displayStyle="relative"`**: "Hoje · 1 de outubro de 2026".
+- **`variant="input"`**: medido — "31022026" ficou "31/02/2026" com
+  `aria-invalid`; "ontem" virou 30/09/2026; "0504" + Tab virou 05/04/2026.
+- **`mode="month"` e `MonthGrid`**: medido — Ano anterior, Março: "Março de
+  2025", popover fechado.
+- **`confirm`**: Cancelar manteve o valor e devolveu o foco ao campo;
+  Aplicar trocou 09–20/03 por 03–06/03. Uma captura mostrou a seleção antiga
+  ainda acesa por trás do rascunho; era a transição das células, e esperando
+  ela some (só 3 a 6 marcados).
+- **Gaveta no telefone**: a 375 com toque, "Escolher data" como título,
+  células de 49px, sem rolagem horizontal. **Dentro de uma folha** (a
+  demonstração nova, que é o caso dos formulários do app): duas gavetas, a da
+  grade por cima; "Ontem" fechou só ela, e o toque fora também.
+- **`aria-label`** não existia no tipo; o JSX aceita atributo com hífen sem
+  checar contra as props, e ele sumia calado. Entrou no tipo e no gatilho.
+- **No app**: o filtro de período das transações usa `confirm` (o formulário
+  à parte saiu); a navegação de mês das categorias usa o `MonthGrid` (os dois
+  `Select` saíram); lançamento, pagamento de conta e assinatura usam o rótulo
+  relativo, com Hoje/Ontem nos dois primeiros e o Hoje na assinatura; a data
+  final da conta ganhou o ×. A proposta dizia que ela não tinha como voltar a
+  vazio — tinha, desmarcando o dia, o que ninguém descobre. Mudança de
+  jornada no filtro de período: `JORNADAS.md` (5a) e o Atlas, republicado.
+  **As telas do app não foram vistas no navegador** — pedem login.
+- **A entrada que brota do campo** (pedida pelo dono depois da rodada):
+  `@utility date-picker-bloom` no `PopoverContent` do `DatePicker`. A placa
+  se desdobra da aresta encostada no campo por um `clip-path` que desce (ou
+  sobe, com `data-side=top`), com a aresta que avança curva — `round 0 0 50%
+  50% / 0 0 2rem 2rem`, que se achata junto com o progresso —, 6px de passo,
+  3% de escala na origem do Radix e 3px de desfoque, em `--ease-spring`; o
+  cabeçalho, os dias da semana e cada semana sobem o `disclosure-rise` em
+  ondas de 25ms. Filmado a 1/10 da velocidade, no escuro: aos 80ms a curva
+  aparece, aos 200ms a grade está inteira com as últimas semanas chegando, aos
+  550ms assentou. **Três escolhas medidas**: o recorte termina em
+  `inset(-1rem)` e com `backwards` (no fim o `clip-path` e o `filter`
+  computam `none`, e a sombra fica inteira); a máscara em degradê foi
+  descartada porque não sai da caixa e o anel apareceria de estalo; e a
+  seletividade é por `[data-state]`, porque a entrada genérica do popover
+  vive sob `:where()`. A saída é `date-picker-wilt` (150ms, sem mola) — e o
+  Radix a espera: `closed` com a animação rodando, depois desmontado. Com
+  movimento reduzido, duração e atrasos vão a zero.

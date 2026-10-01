@@ -2365,6 +2365,31 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   **Arco-íris sob série continua proibido**: a marca encosta pelo
   `Card variant="brand"`, na borda. O cabeçalho (delta, período, KPIs) é
   composição de `Card`, não peça do `Chart`.
+- **`DatePicker` ganhou atalhos, o Hoje, marcadores, o rótulo relativo, o
+  campo digitável, o mês, a gaveta e a confirmação** (rodada 210).
+  `presets` (dias numa data — o `Calendar` ganhou o atalho de dia —,
+  períodos num intervalo; `true` usa os padrões), `showToday` e `markers`
+  repassam o `Calendar`. `displayStyle="relative"` diz "Hoje · 1 de outubro
+  de 2026" (só ontem, hoje e amanhã ganham a palavra). `variant="input"` é o
+  campo digitável — dd/mm/aaaa com máscara, dd/mm no ano corrente, "hoje",
+  "ontem", "amanhã"; 31/02 fica no campo, inválido, em vez de virar 3 de março.
+  `mode="month"` é a grade de doze meses, e **`MonthGrid` é a grade sozinha**
+  para quem tem gatilho próprio: a navegação de mês das categorias a usa, e
+  os dois `Select` de mês e ano (`budget-month-selects.tsx`) saíram. **No
+  telefone a grade abre numa gaveta** com células `lg` esticadas, e numa
+  folha que já é gaveta ela abre por cima e fecha sozinha — medido. `confirm`
+  no intervalo guarda as pontas em rascunho até Aplicar; o filtro de período
+  das transações o usa, e o `transactions-date-range-form.tsx` saiu.
+  **`aria-label` não existia no tipo**, e o JSX aceita atributo com hífen
+  sem checar: ele sumia calado. Lançamento, pagamento e assinatura usam o
+  rótulo relativo; a data final da conta ganhou o ×. **O calendário brota do
+  campo** (`@utility date-picker-bloom`, só no popover): a placa se desdobra
+  da aresta que encosta no campo, com a aresta que avança curva (uma elipse de
+  2rem que se achata), 6px, 3% de escala e um desfoque que assenta, na mola; as
+  semanas chegam em ondas de 25ms; fechar é 150ms sem mola. O recorte termina
+  em `inset(-1rem)` com preenchimento `backwards` — `inset(0)` cortaria o anel
+  e a sombra, e uma máscara em degradê também, por não sair da caixa.
+  `date-picker-versions.test.ts` tranca.
 - **`ContextMenu` ganhou o alvo, a largura, a tecla, a descrição, o teclado e
   a seleção, e o app passou a usá-lo** (rodada 209). `ContextMenuContent
   header` + `ContextMenuHeader` dizem sobre o que o menu age, e o título o

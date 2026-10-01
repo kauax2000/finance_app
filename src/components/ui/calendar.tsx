@@ -134,11 +134,14 @@ const MARCADOR_TOM: Record<CalendarMarkerTone, string> = {
   expense: "bg-expense",
 }
 
-/** Um atalho de intervalo. `range` pode ser calculado na hora do clique. */
-type CalendarPreset = {
-  label: string
-  range: DateRange | (() => DateRange)
-}
+/**
+ * Um atalho: um intervalo (`range`) ou, desde a rodada 210, um dia (`date`) —
+ * o "Hoje" e o "Ontem" do `DatePicker`. Os dois podem ser calculados na hora do
+ * clique.
+ */
+type CalendarPreset =
+  | { label: string; range: DateRange | (() => DateRange) }
+  | { label: string; date: Date | (() => Date) }
 
 type CalendarExtras = {
   markers: CalendarMarker[]
@@ -199,7 +202,7 @@ function Calendar({
   renderDay?: (date: Date) => React.ReactNode
   /** O "Hoje" que volta ao mês atual. */
   showToday?: boolean
-  /** Atalhos ao lado da grade, para `mode="range"`. */
+  /** Atalhos ao lado da grade: intervalos em `mode="range"`, dias em `single`. */
   presets?: CalendarPreset[]
   /**
    * A grade ocupa a largura de quem a contém, e as células crescem com ela.
@@ -571,10 +574,34 @@ function CalendarShell({ children }: { children: React.ReactNode }) {
     <div className="flex flex-col gap-3 sm:flex-row">
       <ul
         data-slot="calendar-presets"
-        aria-label="Atalhos de período"
+        aria-label={modo === "range" ? "Atalhos de período" : "Atalhos de data"}
         className="flex gap-1 overflow-x-auto sm:w-36 sm:shrink-0 sm:flex-col sm:overflow-visible sm:border-e sm:border-border sm:pe-2"
       >
         {presets.map((p) => {
+          if ("date" in p) {
+            const dia = typeof p.date === "function" ? p.date() : p.date
+            const ativo =
+              (selecionado as Date | undefined)?.toDateString?.() ===
+              dia.toDateString()
+            return (
+              <li key={p.label} className="shrink-0">
+                <Button
+                  type="button"
+                  variant={ativo ? "secondary" : "tertiary"}
+                  size="sm"
+                  aria-pressed={ativo}
+                  className="w-full justify-start font-normal"
+                  onClick={() => {
+                    const d = typeof p.date === "function" ? p.date() : p.date
+                    irPara(d)
+                    escolher(d)
+                  }}
+                >
+                  {p.label}
+                </Button>
+              </li>
+            )
+          }
           const alvo = typeof p.range === "function" ? p.range() : p.range
           const ativo =
             intervaloAtual?.from?.toDateString() === alvo.from?.toDateString() &&
