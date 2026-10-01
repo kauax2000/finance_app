@@ -7,6 +7,7 @@ import { Slot } from "radix-ui"
 import { cn } from "@/lib/utils"
 import { composeRefs, useBrandGlow } from "@/hooks/use-brand-glow"
 import { Muted } from "@/components/ui/typography"
+import { Skeleton, SkeletonText } from "@/components/ui/skeleton"
 
 /**
  * O casco do cartão.
@@ -34,6 +35,25 @@ import { Muted } from "@/components/ui/typography"
  * Os dois eixos são independentes de propósito. O painel do app é
  * `outline` + `none`; o cartão de conteúdo é `outline` + `md`; e nenhuma das
  * duas combinações precisa de uma terceira palavra para existir.
+ *
+ * ## Rodada 204
+ *
+ * Um levantamento das telas achou o que elas escreviam em volta do cartão, e
+ * cada versão abaixo nasce de uma contagem:
+ *
+ * - **`CardField`** — o ladrilho "rótulo + valor" aninhado, em 24 cópias e um
+ *   `FieldCard` local.
+ * - **`CardHeader media`** — o ícone, o ladrilho de cor ou o avatar à
+ *   esquerda do título, montado com grade à mão nos cartões de conta e de
+ *   categoria.
+ * - **`CardLink`** — o link esticado: o cartão inteiro clica, e os botões do
+ *   rodapé e o menu continuam alvos próprios. Cinco cartões o faziam à mão,
+ *   porque `interactive asChild` não aceita botão dentro.
+ * - **`CardTitle size`** — `md` (`text-base`) passa a ser o padrão: 9 dos 10
+ *   títulos do app o escreviam por `className`.
+ * - **`inactive`**, **`selected`**, **`orientation`** e
+ *   **`variant="dashed"`** no casco; **`CardMessage`** e **`CardSkeleton`**
+ *   como peças.
  */
 const cardVariants = cva(
   [
@@ -65,6 +85,13 @@ const cardVariants = cva(
     // A capa encosta nas bordas como a imagem crua encostava.
     "has-[>[data-slot=card-media]:first-child]:pt-0",
     "has-[>[data-slot=card-media]:last-child]:pb-0",
+    // O link esticado (`CardLink`, rodada 204): o cartão responde ao cursor e
+    // ao foco do link como se fosse ele, e todo outro alvo de dentro — os
+    // botões do rodapé, o menu — sobe acima da película do link.
+    "has-[[data-slot=card-link]]:transition-[box-shadow,border-color] has-[[data-slot=card-link]]:duration-(--duration-fast)",
+    "has-[[data-slot=card-link]:hover]:shadow-md has-[[data-slot=card-link]:active]:shadow-md",
+    "has-[[data-slot=card-link]:focus-visible]:ring-3 has-[[data-slot=card-link]:focus-visible]:ring-ring/45",
+    "has-[[data-slot=card-link]]:[&_:is(button,a,[role=button]):not([data-slot=card-link])]:relative has-[[data-slot=card-link]]:[&_:is(button,a,[role=button]):not([data-slot=card-link])]:z-10",
   ],
   {
     variants: {
@@ -113,6 +140,12 @@ const cardVariants = cva(
           "brand-rainbow-image brand-glow isolate overflow-clip [overflow-clip-margin:var(--spacing)]",
           "border border-border bg-card text-card-foreground",
         ].join(" "),
+        /**
+         * O tracejado (rodada 204): o lugar de um cartão que ainda não existe —
+         * o "adicionar" no fim de uma grade, o vazio de uma lista de cartões.
+         * Sem preenchimento, porque não há nada ali ainda.
+         */
+        dashed: "border border-dashed border-border bg-transparent text-muted-foreground",
       },
       /**
        * Uma medida, dois destinos: `--card-px` é o recuo do **corpo** (cabeçalho,
@@ -123,11 +156,13 @@ const cardVariants = cva(
        * continua com os seus 16px — que é exatamente o que as 24 barras feitas à
        * mão escreviam (`px-4`) dentro de cartões `py-0`.
        */
+      // `--card-gap` e `--card-py` repetem o `gap` e o `py` do casco para o
+      // `CardBody` do cartão horizontal, que é quem os aplica ali.
       padding: {
-        none: "gap-0 py-0 [--card-px:0px] [--card-strip-px:--spacing(4)]",
-        sm: "gap-3 py-3 [--card-px:--spacing(3)] [--card-strip-px:--spacing(3)]",
-        md: "gap-4 py-4 [--card-px:--spacing(4)] [--card-strip-px:--spacing(4)]",
-        lg: "gap-6 py-6 [--card-px:--spacing(6)] [--card-strip-px:--spacing(6)]",
+        none: "gap-0 py-0 [--card-px:0px] [--card-strip-px:--spacing(4)] [--card-gap:0px] [--card-py:0px]",
+        sm: "gap-3 py-3 [--card-px:--spacing(3)] [--card-strip-px:--spacing(3)] [--card-gap:--spacing(3)] [--card-py:--spacing(3)]",
+        md: "gap-4 py-4 [--card-px:--spacing(4)] [--card-strip-px:--spacing(4)] [--card-gap:--spacing(4)] [--card-py:--spacing(4)]",
+        lg: "gap-6 py-6 [--card-px:--spacing(6)] [--card-strip-px:--spacing(6)] [--card-gap:--spacing(6)] [--card-py:--spacing(6)]",
       },
       /**
        * O cartão inteiro é o alvo.
@@ -138,6 +173,39 @@ const cardVariants = cva(
        * no lugar certo, e o `active:` que o toque exige (regra H) vindo junto,
        * em vez de depender de quem lembrar de escrevê-lo.
        */
+      /**
+       * Inativo (rodada 204): o cartão continua legível e clicável, só recua.
+       * Era `opacity-[0.82]` em três telas, sempre ao lado de um `Badge`
+       * "Inativo" — que continua sendo de quem chama: a opacidade sozinha não
+       * diz o porquê.
+       */
+      inactive: {
+        true: "opacity-80",
+        false: "",
+      },
+      /**
+       * Escolhido (rodada 204): o contorno e o tingido do cartão de escolha do
+       * `RadioGroup` e do `Item` — a 60%, porque cheio lê como erro. O papel
+       * (`aria-pressed`, `aria-current`) é de quem chama: o cartão não sabe se
+       * é uma opção ou "você" numa lista.
+       */
+      selected: {
+        true: "border-primary-accent/60 bg-primary/5 dark:bg-primary/10",
+        false: "",
+      },
+      /**
+       * Horizontal (rodada 204): a mídia — capa, face do cartão, ícone grande —
+       * à esquerda e o `CardBody` à direita, a partir de `sm`; abaixo, empilha.
+       * O casco perde o respiro vertical ao deitar, e quem o devolve é o
+       * `CardBody`, para a mídia sangrar de cima a baixo.
+       */
+      orientation: {
+        vertical: "",
+        horizontal: [
+          "sm:flex-row sm:gap-0 sm:py-0",
+          "sm:[&>[data-slot=card-media]]:aspect-auto sm:[&>[data-slot=card-media]]:w-2/5 sm:[&>[data-slot=card-media]]:max-w-56 sm:[&>[data-slot=card-media]]:shrink-0 sm:[&>[data-slot=card-media]]:self-stretch",
+        ],
+      },
       interactive: {
         true: [
           "cursor-pointer outline-none",
@@ -151,6 +219,9 @@ const cardVariants = cva(
     defaultVariants: {
       variant: "outline",
       padding: "md",
+      inactive: false,
+      selected: false,
+      orientation: "vertical",
       interactive: false,
     },
   }
@@ -161,6 +232,9 @@ function Card({
   variant,
   padding,
   interactive,
+  inactive,
+  selected,
+  orientation,
   asChild = false,
   ref,
   ...props
@@ -178,7 +252,13 @@ function Card({
       data-variant={variant ?? "outline"}
       data-padding={padding ?? "md"}
       data-interactive={interactive ? "" : undefined}
-      className={cn(cardVariants({ variant, padding, interactive }), className)}
+      data-inactive={inactive ? "" : undefined}
+      data-selected={selected ? "" : undefined}
+      data-orientation={orientation ?? "vertical"}
+      className={cn(
+        cardVariants({ variant, padding, interactive, inactive, selected, orientation }),
+        className
+      )}
       {...props}
     />
   )
@@ -196,7 +276,19 @@ function Card({
  * todas as 30 chamadas com cabeçalho. O respiro vertical é do casco, o recuo
  * horizontal é daqui, e nenhum dos dois é escrito duas vezes.
  */
-function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
+function CardHeader({
+  className,
+  media,
+  children,
+  ...props
+}: React.ComponentProps<"div"> & {
+  /**
+   * O ícone, o ladrilho de cor ou o avatar à esquerda do título e da
+   * descrição (rodada 204), centrado nas duas linhas. Os cartões de conta e
+   * de categoria montavam essa grade à mão.
+   */
+  media?: React.ReactNode
+}) {
   return (
     <div
       data-slot="card-header"
@@ -204,21 +296,52 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
         "group/card-header @container/card-header grid auto-rows-min items-start gap-1 px-(--card-px)",
         "has-data-[slot=card-action]:grid-cols-[1fr_auto]",
         "has-data-[slot=card-description]:grid-rows-[auto_auto]",
+        // Com mídia, a grade ganha uma coluna à esquerda; o título e a
+        // descrição vão para a segunda, a ação para a terceira.
+        "has-[>[data-slot=card-header-media]]:grid-cols-[auto_minmax(0,1fr)] has-[>[data-slot=card-header-media]]:gap-x-3",
+        "has-[>[data-slot=card-header-media]]:has-data-[slot=card-action]:grid-cols-[auto_minmax(0,1fr)_auto]",
+        "has-[>[data-slot=card-header-media]]:[&>[data-slot=card-title]]:col-start-2 has-[>[data-slot=card-header-media]]:[&>[data-slot=card-description]]:col-start-2",
+        "has-[>[data-slot=card-header-media]]:[&>[data-slot=card-action]]:col-start-3",
         // Quem põe um fio no cabeçalho o transforma em tira, e uma tira precisa
         // do próprio pé. Continua atendido — mas o caminho novo é `CardToolbar`,
         // a tira que sangra até a borda com altura mínima.
         className
       )}
       {...props}
-    />
+    >
+      {media ? (
+        <div
+          data-slot="card-header-media"
+          // Duas linhas só quando há descrição: sem ela, a segunda linha
+          // vazia somaria o `gap` sob o título.
+          className="col-start-1 row-start-1 flex shrink-0 items-center self-center group-has-data-[slot=card-description]/card-header:row-span-2"
+        >
+          {media}
+        </div>
+      ) : null}
+      {children}
+    </div>
   )
 }
+
+const CARD_TITLE_SIZE = {
+  sm: "text-sm font-semibold",
+  md: "text-base",
+  lg: "text-lg",
+} as const
 
 function CardTitle({
   className,
   asChild = false,
+  size = "md",
   ...props
 }: React.ComponentProps<"div"> & {
+  /**
+   * O corpo do título (rodada 204). `md` (`text-base`) é o padrão: era `lg`,
+   * e 9 dos 10 títulos do app o rebaixavam por `className`. `lg` fica para o
+   * cartão que é a seção da tela; `sm`, para o cartão denso numa grade.
+   */
+  size?: keyof typeof CARD_TITLE_SIZE
   /**
    * O título é `div` porque um cartão dentro de uma lista de doze não deve
    * despejar doze headings na árvore. Quando o cartão **é** uma seção da
@@ -231,8 +354,10 @@ function CardTitle({
   return (
     <Comp
       data-slot="card-title"
+      data-size={size}
       className={cn(
-        "font-heading text-lg leading-snug font-medium text-balance",
+        "font-heading leading-snug font-medium text-balance",
+        CARD_TITLE_SIZE[size],
         className
       )}
       {...props}
@@ -449,15 +574,171 @@ function CardMedia({
   )
 }
 
+/**
+ * O link esticado (rodada 204): o cartão inteiro clica, e os outros alvos de
+ * dentro — o menu da linha do título, os botões do rodapé — continuam sendo
+ * alvos próprios. **Vai no título**: o nome do link é o nome do cartão, e não
+ * um `aria-label` que apaga o conteúdo. A película (`::after`) cobre o cartão;
+ * o casco sobe os outros botões acima dela e acende o anel e a sombra quando o
+ * link tem foco ou cursor.
+ *
+ * `interactive asChild` continua certo para o cartão que é **só** a ação. Com
+ * um botão dentro ele não serve — botão dentro de link é inválido —, e era por
+ * isso que cinco cartões do app faziam a película à mão.
+ */
+function CardLink({
+  asChild = false,
+  className,
+  ...props
+}: React.ComponentProps<"a"> & { asChild?: boolean }) {
+  const Comp = asChild ? Slot.Root : "a"
+  return (
+    <Comp
+      data-slot="card-link"
+      className={cn(
+        "text-inherit no-underline outline-none",
+        "after:absolute after:inset-0 after:rounded-[inherit] after:content-['']",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/**
+ * A coluna de conteúdo do cartão horizontal (rodada 204): devolve o respiro
+ * vertical que o casco perde ao deitar, para a mídia sangrar de cima a baixo.
+ */
+function CardBody({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-body"
+      className={cn("flex min-w-0 flex-1 flex-col gap-(--card-gap) sm:py-(--card-py)", className)}
+      {...props}
+    />
+  )
+}
+
+/**
+ * O ladrilho "rótulo + valor" de dentro de um cartão ou de uma folha (rodada
+ * 204). Era escrito à mão 24 vezes — `rounded-lg border border-border/60
+ * bg-background/80 p-3` com o rótulo em `text-xs font-medium` — e havia um
+ * `FieldCard` local na folha de prévia de pagamento. O valor é `children`, e
+ * o rótulo e o valor são par de identidade: o respiro entre eles é a
+ * entrelinha mais 4px, não um `gap` maior.
+ */
+function CardField({
+  label,
+  className,
+  children,
+  ...props
+}: Omit<React.ComponentProps<"div">, "children"> & {
+  /** Sem rótulo, quando quem nomeia é a seção em volta (as observações). */
+  label?: React.ReactNode
+  children?: React.ReactNode
+}) {
+  return (
+    <div
+      data-slot="card-field"
+      className={cn(
+        "flex min-w-0 flex-col gap-1 rounded-lg border border-border/60 bg-background/80 p-3 text-sm",
+        className
+      )}
+      {...props}
+    >
+      {label ? (
+        <p data-slot="card-field-label" className="text-xs font-medium text-muted-foreground">
+          {label}
+        </p>
+      ) : null}
+      {children}
+    </div>
+  )
+}
+
+/**
+ * A mensagem que ocupa o cartão (rodada 204): o erro de carregar, o "nenhuma
+ * carteira", a lista vazia curta. Eram 16 `CardContent` com `py-6` ou
+ * `py-8` e a tinta escrita à mão. `destructive` é `role="alert"`; o resto é
+ * texto. Para o vazio que pede ação, o `EmptyState`.
+ */
+function CardMessage({
+  tone = "default",
+  className,
+  ...props
+}: React.ComponentProps<"div"> & { tone?: "default" | "destructive" }) {
+  return (
+    <div
+      data-slot="card-message"
+      data-tone={tone}
+      role={tone === "destructive" ? "alert" : undefined}
+      className={cn(
+        "px-(--card-strip-px) py-6 text-sm",
+        tone === "destructive" ? "text-destructive" : "text-muted-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/**
+ * O cartão esperando dado (rodada 204): a barra, as linhas e o rodapé na
+ * forma do cartão de verdade. Os esqueletos do app escreviam o casco à mão
+ * (`rounded-xl border bg-card`, um com um `ring` morto) e dois arquivos
+ * tinham o mesmo `CardSectionShell`. `children` troca as linhas pelo miolo
+ * próprio. Ele não anuncia nada: quem espera é o `SkeletonGroup` da página.
+ */
+function CardSkeleton({
+  toolbar = true,
+  lines = 3,
+  footer = false,
+  className,
+  children,
+  ...props
+}: Omit<React.ComponentProps<typeof Card>, "padding" | "children"> & {
+  /** A barra de topo, com o rótulo. */
+  toolbar?: boolean
+  /** Linhas de texto no corpo, quando não há `children`. */
+  lines?: number
+  /** O rodapé com dois botões. */
+  footer?: boolean
+  children?: React.ReactNode
+}) {
+  return (
+    <Card padding="none" aria-hidden className={className} {...props}>
+      {toolbar ? (
+        <CardToolbar>
+          <Skeleton shape="text" className="w-36 max-w-[60%]" />
+        </CardToolbar>
+      ) : null}
+      <CardContent className={cn(children == null && "px-4 py-4", !toolbar && children == null && "pt-4")}>
+        {children ?? <SkeletonText lines={lines} />}
+      </CardContent>
+      {footer ? (
+        <CardFooter className="justify-end">
+          <Skeleton className="h-8 w-20 rounded-lg" />
+          <Skeleton className="h-8 w-24 rounded-lg" />
+        </CardFooter>
+      ) : null}
+    </Card>
+  )
+}
+
 export {
   Card,
   CardAction,
-  CardMedia,
+  CardBody,
   CardContent,
   CardDescription,
+  CardField,
   CardFooter,
   CardHeader,
+  CardLink,
+  CardMedia,
+  CardMessage,
   CardNote,
+  CardSkeleton,
   CardTitle,
   CardToolbar,
   cardVariants,

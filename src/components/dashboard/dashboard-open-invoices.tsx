@@ -244,7 +244,7 @@ export function DashboardOpenInvoices({
             </PageSectionHeader>
 
             <Card padding="none">
-                <CardContent className="p-0">
+                <CardContent>
                     <CardToolbar
                         aria-live="polite"
                     >

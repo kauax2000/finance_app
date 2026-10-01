@@ -187,7 +187,7 @@ export function DashboardInstallmentsEndingSoon({
 
             <Card padding="none">
                     <CardToolbar aria-hidden />
-                    <CardContent className="p-0">
+                    <CardContent>
                         {endingSoon.length === 0 ? (
                             <EmptyState variant="plain">
                                 <EmptyStateIcon variant="done" />

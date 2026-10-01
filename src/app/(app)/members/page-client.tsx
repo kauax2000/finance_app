@@ -144,7 +144,7 @@ const membersPageSkeleton = (
                 <Skeleton className="h-4 w-28" />
             </div>
             <Card padding="none">
-                <CardContent className="flex flex-col gap-0 p-0">
+                <CardContent className="flex flex-col gap-0">
                     <div className="space-y-2 px-4 py-4">
                         <Skeleton className="h-4 w-14" />
                         <Skeleton className="h-10 w-full" />
@@ -170,7 +170,7 @@ const membersPageSkeleton = (
                 <Skeleton className="h-3 w-24 shrink-0" />
             </div>
             <Card padding="none">
-                <CardContent className="flex flex-col p-0">
+                <CardContent className="flex flex-col">
                     <ul className="divide-y divide-border" role="list">
                         {[1, 2].map((i) => (
                             <li key={i} className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
@@ -636,7 +636,7 @@ export default function MembersPage() {
                     <PageSectionTitle>Membros</PageSectionTitle>
                 </PageSectionHeader>
                 <Card padding="none">
-                    <CardContent className="flex flex-col p-0">
+                    <CardContent className="flex flex-col">
                         <CardToolbar className="justify-end">
                             <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
                                 {members.length} membro{members.length !== 1 ? "s" : ""}
@@ -661,14 +661,17 @@ export default function MembersPage() {
                                 const isMe = Boolean(user?.id === member.user_id)
                                 return (
                                     <li key={member.user_id} className="min-w-0">
+                                        {/* "Você" é o realce de escolha do sistema
+                                            (`selected`, rodada 204), com
+                                            `aria-current`: era o casco
+                                            sobrescrito à mão, raio e chão
+                                            incluídos. */}
                                         <Card
-                                            padding="none"
-                                            className={cn(
-                                                "rounded-lg border-border/80 bg-muted/20 transition-colors hover:bg-muted/30",
-                                                isMe && "border-primary-accent/30 bg-primary/5 hover:bg-primary/10"
-                                            )}
+                                            padding="sm"
+                                            selected={isMe}
+                                            aria-current={isMe ? "true" : undefined}
                                         >
-                                            <CardContent className="flex items-center gap-3 p-3 sm:p-3.5">
+                                            <CardContent className="flex items-center gap-3">
                                                 {/* `sm` são 32px contra os 36 que
                                                     este cartão desenhava à mão.
                                                     36 não é degrau de nenhuma
@@ -771,7 +774,7 @@ export default function MembersPage() {
                         </Alert>
                     ) : null}
                     <Card padding="none">
-                        <CardContent className="flex flex-col p-0">
+                        <CardContent className="flex flex-col">
                             <CardToolbar>
                                 <p className="text-xs leading-snug text-muted-foreground">Por e-mail ou link</p>
                             </CardToolbar>
@@ -924,7 +927,7 @@ export default function MembersPage() {
                         <PageSectionTitle>Convites pendentes</PageSectionTitle>
                     </PageSectionHeader>
                     <Card padding="none">
-                        <CardContent className="flex flex-col p-0">
+                        <CardContent className="flex flex-col">
                             <CardToolbar className="justify-end">
                                 <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
                                     {pendingEmailInvites.length} pendente

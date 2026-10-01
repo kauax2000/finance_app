@@ -11,7 +11,7 @@ import {
     AlertDescription,
     AlertTitle,
 } from "@/components/ui/alert"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardMessage } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DashboardPageSkeleton } from "@/components/dashboard/dashboard-page-skeleton"
 import { useDashboardData } from "@/components/dashboard/use-dashboard-data"
@@ -289,10 +289,10 @@ export default function DashboardPageClient() {
     if (!authLoading && !workspaceLoading && !currentWorkspaceId) {
         return (
             <Card>
-                <CardContent className="py-8 text-sm text-muted-foreground">
+                <CardMessage>
                     Nenhum espaço de trabalho selecionado. Escolha um espaço no menu
                     lateral para continuar.
-                </CardContent>
+                </CardMessage>
             </Card>
         )
     }

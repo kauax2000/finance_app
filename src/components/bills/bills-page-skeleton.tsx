@@ -1,6 +1,14 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
+import {
+    Card,
+    CardAction,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
@@ -35,7 +43,8 @@ function ToolbarSkeleton() {
     )
 }
 
-function CardSkeleton({ seed }: { seed: number }) {
+/** O gêmeo dos cartões de conta: o casco, o cabeçalho com ladrilho e o rodapé do sistema. */
+function BillCardSkeleton({ seed }: { seed: number }) {
     const titleW =
         seed % 3 === 0
             ? "w-full max-w-44"
@@ -43,28 +52,27 @@ function CardSkeleton({ seed }: { seed: number }) {
               ? "w-full max-w-32"
               : "w-full max-w-24"
     return (
-        <Card padding="none" className="ring-1 ring-border/60">
-            <div className="flex items-start justify-between gap-3 border-b border-border/50 px-4 pb-3 pt-4">
-                <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <Skeleton className="size-10 shrink-0 rounded-xl" />
-                    <div className="min-w-0 flex-1 space-y-1.5">
-                        <Skeleton className={cn("h-4 max-w-full", titleW)} />
-                        <Skeleton className="h-3 w-full max-w-40" />
-                    </div>
-                </div>
-                <Skeleton className="h-6 w-16 shrink-0 rounded-full" />
-            </div>
-            <CardContent className="space-y-3 px-4 pb-4 pt-3">
-                <div>
-                    <Skeleton className="h-3 w-24" />
-                    <Skeleton className="mt-2 h-7 w-28 tabular-nums" />
-                    <Skeleton className="mt-2 h-3 w-full max-w-56" />
-                </div>
+        <Card padding="sm" aria-hidden>
+            <CardHeader media={<Skeleton shape="tile" size="2xl" />}>
+                <CardTitle>
+                    <Skeleton className={cn("h-4 max-w-full", titleW)} />
+                </CardTitle>
+                <CardDescription>
+                    <Skeleton className="h-3 w-full max-w-40" />
+                </CardDescription>
+                <CardAction>
+                    <Skeleton shape="pill" />
+                </CardAction>
+            </CardHeader>
+            <CardContent>
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="mt-2 h-7 w-28 tabular-nums" />
+                <Skeleton className="mt-2 h-3 w-full max-w-56" />
             </CardContent>
-            <div className="flex items-center justify-end gap-2 border-t border-border/50 px-4 py-3">
+            <CardFooter className="justify-end">
                 <Skeleton className="h-8 w-22 rounded-md" />
                 <Skeleton shape="tile" />
-            </div>
+            </CardFooter>
         </Card>
     )
 }
@@ -78,7 +86,7 @@ export function BillsPageSkeleton({
 }) {
     const cards = []
     for (let i = 0; i < cardCount; i++) {
-        cards.push(<CardSkeleton key={`card-${i}`} seed={i} />)
+        cards.push(<BillCardSkeleton key={`card-${i}`} seed={i} />)
     }
     return (
         <SkeletonGroup className="flex flex-col gap-3" label="Carregando contas a pagar…" delay>

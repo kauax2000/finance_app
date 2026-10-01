@@ -36,7 +36,7 @@ import { TransactionsActiveFiltersChips } from "@/components/transactions/transa
 import { TransactionsTable } from "@/components/transactions/transactions-table"
 import { TransactionFormDialog } from "@/components/transactions/transaction-form-dialog"
 import { TransactionDetailSheet } from "@/components/transactions/transaction-detail-sheet"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardMessage } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
     AlertDialog,
@@ -255,9 +255,9 @@ export function CategoryEmbeddedTransactions({
     if (workspaceError) {
         return (
             <Card>
-                <CardContent className="py-6 text-sm text-destructive">
+                <CardMessage tone="destructive">
                     {workspaceError}
-                </CardContent>
+                </CardMessage>
             </Card>
         )
     }
@@ -265,10 +265,10 @@ export function CategoryEmbeddedTransactions({
     if (!authLoading && !workspaceLoading && !currentWorkspaceId) {
         return (
             <Card>
-                <CardContent className="py-6 text-sm text-muted-foreground">
+                <CardMessage>
                     Nenhum espaço de trabalho selecionado. Escolha um espaço no menu
                     lateral para continuar.
-                </CardContent>
+                </CardMessage>
             </Card>
         )
     }
@@ -497,7 +497,6 @@ export function CategoryEmbeddedTransactions({
                     ) : (
                         <Card padding="none">
                             <CardContent
-                                className="p-0"
                                 role="status"
                                 aria-live="polite"
                             >

@@ -152,7 +152,7 @@ export function CreditCardDetailView({
                 <CardHeader className="pb-3 pt-4">
                     <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0 flex-1">
-                            <CardTitle className="truncate text-base leading-snug">
+                            <CardTitle className="truncate">
                                 {card.name}
                             </CardTitle>
                         </div>

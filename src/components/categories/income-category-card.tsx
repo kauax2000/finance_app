@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Card, CardContent, CardTitle, CardToolbar } from "@/components/ui/card"
+import { Card, CardAction, CardContent, CardHeader, CardLink, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -34,49 +34,29 @@ export function IncomeCategoryCard({
     const color = category.color || TILE_INCOME_DEFAULT
 
     return (
-        // O cartão inteiro é clicável por um link esticado (::after) no título, e
-        // não por um <a> em volta de tudo: o botão de menu ficava dentro de um
-        // link, e o aria-label do link apagava o conteúdo do cartão.
-        <div
-            className={cn(
-                "group relative block h-full rounded-xl",
-                "has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring/45 has-[a:focus-visible]:ring-offset-2 has-[a:focus-visible]:ring-offset-background",
-            )}
-        >
-            <Card
-                padding="none"
-                className={cn(
-                    "h-full transition-shadow",
-                    "group-hover:shadow-md group-active:shadow-md",
-                )}
-            >
-                <CardToolbar className="px-3">
-                    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3">
+        // O cartão inteiro é clicável pelo `CardLink` no título (rodada 204),
+        // e não por um <a> em volta de tudo: o menu ficava dentro de um link.
+        <Card padding="sm" className="group h-full">
+                <CardHeader
+                    media={
                         <ColorTile size="lg" color={color}>
                             <CategoryIconPreview name={normalizeCategoryIcon(category.icon)} />
                         </ColorTile>
-                        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pr-1">
-                            <CardTitle
-                                className={cn(
-                                    "min-w-0 text-base font-semibold leading-tight",
-                                    "truncate @min-[360px]/card-header:max-w-none",
-                                )}
-                            >
-                                <Link
-                                    href={href}
-                                    className="no-underline after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none"
-                                >
-                                    {category.name}
-                                </Link>
-                            </CardTitle>
-                        </div>
+                    }
+                >
+                    <CardTitle className="min-w-0 self-center truncate font-semibold leading-tight @min-[360px]/card-header:max-w-none">
+                        <CardLink asChild>
+                            <Link href={href}>{category.name}</Link>
+                        </CardLink>
+                    </CardTitle>
+                    <CardAction>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     type="button"
                                     variant="tertiary"
-                                    size="icon-lg"
-                                    className="relative z-10 size-8 text-muted-foreground hover:text-foreground active:text-foreground"
+                                    size="icon-md"
+                                    className="text-muted-foreground hover:text-foreground active:text-foreground"
                                     aria-label={`Opções da categoria ${category.name}`}
                                     onClick={(e) => stopLinkNavigation(e)}
                                     onPointerDown={(e) => e.stopPropagation()}
@@ -99,10 +79,10 @@ export function IncomeCategoryCard({
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                    </div>
-                </CardToolbar>
+                    </CardAction>
+                </CardHeader>
 
-                <CardContent className="flex flex-1 flex-col gap-3 bg-card px-3 pt-3 pb-3">
+                <CardContent className="flex flex-1 flex-col gap-3">
                     <div
                         className={cn(
                             "inline-flex w-full items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors",
@@ -118,7 +98,6 @@ export function IncomeCategoryCard({
                         />
                     </div>
                 </CardContent>
-            </Card>
-        </div>
+        </Card>
     )
 }

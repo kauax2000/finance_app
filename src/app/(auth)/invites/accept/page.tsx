@@ -16,7 +16,7 @@ export default async function Page(props: {
                 <Container>
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-base">Aceitar convite</CardTitle>
+                            <CardTitle>Aceitar convite</CardTitle>
                             <CardDescription>Carregando...</CardDescription>
                         </CardHeader>
                         <CardContent>

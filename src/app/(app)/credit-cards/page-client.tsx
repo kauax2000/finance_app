@@ -269,7 +269,7 @@ export default function CreditCardsPageClient() {
                 </h1>
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-base">
+                        <CardTitle>
                             Cartões indisponíveis no momento
                         </CardTitle>
                         <CardDescription>
@@ -283,7 +283,7 @@ export default function CreditCardsPageClient() {
                 {process.env.NODE_ENV === "development" ? (
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-base">
+                        <CardTitle>
                             Tabela ainda não criada no banco
                         </CardTitle>
                         <CardDescription className="space-y-3">

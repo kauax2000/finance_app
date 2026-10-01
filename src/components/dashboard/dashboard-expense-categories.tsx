@@ -258,7 +258,7 @@ export function DashboardExpenseCategories({
             </PageSectionHeader>
 
             <Card padding="none">
-                <CardContent className="relative flex flex-col gap-0 p-0">
+                <CardContent className="relative flex flex-col gap-0">
                     <CardToolbar
                         aria-live="polite"
                     >

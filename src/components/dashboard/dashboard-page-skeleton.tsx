@@ -1,6 +1,6 @@
 "use client"
 
-import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
+import { Card, CardNote, CardToolbar } from "@/components/ui/card"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 
 const KPI_KEYS = ["resultado", "receitas", "despesas", "faturas"] as const
@@ -19,20 +19,6 @@ const SUMMARY_KEYS = ["projected", "paid", "closings"] as const
 const WEEKDAY_KEYS = ["seg", "ter", "qua", "qui", "sex", "sab", "dom"] as const
 const MOBILE_WEEK_KEYS = ["w1", "w2", "w3", "w4", "w5", "w6"] as const
 const DESKTOP_CELL_KEYS = Array.from({ length: 35 }, (_, i) => `cell-${i + 1}`)
-
-function CardSectionShell({
-    children,
-}: {
-    children: React.ReactNode
-}) {
-    return (
-        <Card padding="none">
-            <CardContent className="relative flex flex-col gap-0 p-0">
-                {children}
-            </CardContent>
-        </Card>
-    )
-}
 
 function CardSectionHeader() {
     return (
@@ -249,7 +235,7 @@ function DashboardCalendarSkeleton() {
         <div className="min-h-0 min-w-0 max-w-full space-y-4">
             <SectionTitleRow titleClassName="h-4 w-52 max-w-full" />
             <div className="min-h-0">
-                <CardSectionShell>
+                <Card padding="none">
                     <CardSectionHeader />
                     <div className="md:hidden">
                         <CalendarSummarySkeleton cols={1} />
@@ -259,7 +245,7 @@ function DashboardCalendarSkeleton() {
                     </div>
                     <CalendarMobileSkeleton />
                     <CalendarDesktopSkeleton />
-                </CardSectionShell>
+                </Card>
             </div>
         </div>
     )
@@ -269,7 +255,7 @@ function DashboardCategoriesSkeleton() {
     return (
         <div className="min-w-0 max-w-full space-y-4">
             <SectionTitleRow titleClassName="h-4 w-48" cta="responsive" />
-            <CardSectionShell>
+            <Card padding="none">
                 <CardSectionHeader />
                 <div className="space-y-4 p-4">
                     <div className="relative mx-auto flex h-60 w-full max-w-70 items-center justify-center md:h-80 md:max-w-90">
@@ -296,7 +282,7 @@ function DashboardCategoriesSkeleton() {
                         ))}
                     </ul>
                 </div>
-            </CardSectionShell>
+            </Card>
         </div>
     )
 }
@@ -305,7 +291,7 @@ function DashboardInvoicesSkeleton() {
     return (
         <div className="min-w-0 max-w-full space-y-4">
             <SectionTitleRow titleClassName="h-4 w-32" cta="responsive" />
-            <CardSectionShell>
+            <Card padding="none">
                 <CardSectionHeader />
                 <CardToolbar>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-1.5">
@@ -355,7 +341,7 @@ function DashboardInvoicesSkeleton() {
                         </li>
                     ))}
                 </ul>
-            </CardSectionShell>
+            </Card>
         </div>
     )
 }
@@ -364,7 +350,7 @@ function DashboardInstallmentsSkeleton() {
     return (
         <div className="min-w-0 max-w-full space-y-4">
             <SectionTitleRow titleClassName="h-4 w-44" cta="responsive" />
-            <CardSectionShell>
+            <Card padding="none">
                 <CardToolbar aria-hidden />
                 <div className="divide-y divide-border">
                     {INSTALLMENT_KEYS.map((key) => (
@@ -386,7 +372,7 @@ function DashboardInstallmentsSkeleton() {
                 <CardNote className="py-2.5"
                     aria-hidden
                 />
-            </CardSectionShell>
+            </Card>
         </div>
     )
 }

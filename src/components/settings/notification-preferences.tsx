@@ -213,7 +213,7 @@ export function NotificationPreferences() {
                 <PageSectionTitle>Notificações desta carteira</PageSectionTitle>
             </PageSectionHeader>
             <Card padding="none">
-                <CardContent className="flex flex-col p-0">
+                <CardContent className="flex flex-col">
                     {showNoWorkspaceMessage ? (
                         <div className="px-4 py-4">
                             <Alert>

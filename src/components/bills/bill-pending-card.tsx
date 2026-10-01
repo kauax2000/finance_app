@@ -17,10 +17,13 @@ import {
 import { Button } from "@/components/ui/button"
 import {
     Card,
+    CardAction,
     CardContent,
     CardDescription,
+    CardFooter,
+    CardHeader,
+    CardLink,
     CardTitle,
-    CardToolbar,
 } from "@/components/ui/card"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import {
@@ -93,29 +96,13 @@ export function BillPendingCard({
             : undefined
     return (
         <Card
-            padding="none"
-            className={cn(
-                "transition-shadow",
-                row.kind === "regular" && !row.bill.is_active && "opacity-[0.82]"
-            )}
+            padding="sm"
+            inactive={row.kind === "regular" && !row.bill.is_active}
+            className="group"
         >
-            {/* Cru de propósito: é a área clicável do cartão, e o cartão não pode
-                ser o botão — o rodapé, logo abaixo, tem as próprias ações, e botão
-                dentro de botão é inválido. `Card interactive asChild` só serve a um
-                cartão que é inteiro a ação. */}
-            <button
-                type="button"
-                className={cn(
-                    "group w-full min-w-0 rounded-xl text-left outline-none",
-                    "transition-shadow hover:shadow-md",
-                    "focus-visible:ring-2 focus-visible:ring-ring/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                )}
-                onClick={onOpenDetail}
-                aria-label={`Abrir ${row.title}`}
-            >
-                <CardToolbar className="px-3">
-                    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] grid-rows-[auto_auto] items-start gap-x-3 gap-y-1">
-                        {row.kind === "virtual_cc" ? (
+                <CardHeader
+                    media={
+                        row.kind === "virtual_cc" ? (
                             /* Fatura de cartão não tem cor escolhida por
                                ninguém — e é exatamente o que o `ColorTile` sem
                                cor desenha desde a rodada 95: o cinza do
@@ -126,7 +113,6 @@ export function BillPendingCard({
                                desativado. */
                             <ColorTile
                                 size="2xl"
-                                className="col-start-1 row-span-2 self-start"
                             >
                                 <CreditCardMiniIcon />
                             </ColorTile>
@@ -134,7 +120,6 @@ export function BillPendingCard({
                             <ColorTile
                                 size="2xl"
                                 color={headerColor}
-                                className="col-start-1 row-span-2 self-start"
                             >
                                 {/* `lg` desenha o ícone a 20px, e a 20 o
                                     conjunto é o mini. */}
@@ -145,21 +130,31 @@ export function BillPendingCard({
                                     size="mini"
                                 />
                             </ColorTile>
-                        )}
-
+                        )
+                    }
+                >
                         <CardTitle
                             className={cn(
-                                "col-start-2 row-start-1 min-w-0 self-center leading-snug",
+                                "min-w-0 self-center leading-snug",
                                 "line-clamp-2 text-balance @min-[360px]/card-header:line-clamp-1 @min-[360px]/card-header:truncate",
                             )}
                         >
-                            {row.title}
+                            {/* O cartão abre pelo `CardLink` (rodada 204): a película
+                                cobre o cartão, e os botões do rodapé ficam acima
+                                dela — era um <button> em volta de tudo, que não
+                                podia conter as ações. */}
+                            <CardLink asChild>
+                                <button type="button" className="text-left" onClick={onOpenDetail} aria-label={`Abrir ${row.title}`}>
+                                    {row.title}
+                                </button>
+                            </CardLink>
                         </CardTitle>
 
+                        <CardAction>
                         <Badge
                             tone="neutral"
                             className={cn(
-                                "col-start-3 row-span-2 shrink-0 self-start border-0 text-xs",
+                                "shrink-0 border-0 text-xs",
                                 pill.className
                             )}
                         >
@@ -172,8 +167,9 @@ export function BillPendingCard({
                                 pill.label
                             )}
                         </Badge>
+                        </CardAction>
 
-                        <CardDescription className="col-start-2 row-start-2 text-xs leading-relaxed text-muted-foreground">
+                        <CardDescription className="text-xs leading-relaxed">
                             {row.kind === "regular" && cat ? (
                                 <span className="inline-flex max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5">
                                     <span className="inline-flex min-w-0 items-center gap-1.5">
@@ -195,10 +191,9 @@ export function BillPendingCard({
                                 subtitle
                             )}
                         </CardDescription>
-                    </div>
-                </CardToolbar>
+                </CardHeader>
 
-                <CardContent className="space-y-3 px-4 pb-4 pt-3">
+                <CardContent className="space-y-3">
                     <DescriptionList term="eyebrow">
                         <DescriptionListItem>
                             <DescriptionTerm>
@@ -241,9 +236,8 @@ export function BillPendingCard({
                         </DescriptionListItem>
                     </DescriptionList>
                 </CardContent>
-            </button>
 
-            <div className="flex items-center justify-end gap-2 border-t border-border/50 px-4 py-3">
+            <CardFooter className="justify-end">
                 <Button
                     type="button"
                     size="sm"
@@ -300,7 +294,7 @@ export function BillPendingCard({
                         </DropdownMenuContent>
                     </DropdownMenu>
                 ) : null}
-            </div>
+            </CardFooter>
         </Card>
     )
 }

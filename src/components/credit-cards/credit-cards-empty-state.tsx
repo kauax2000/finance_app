@@ -20,7 +20,7 @@ export function CreditCardsEmptyState({ onAddCard }: CreditCardsEmptyStateProps)
     return (
         <Card padding="none">
             <CardContent
-                className="p-0"
+                
                 role="status"
                 aria-live="polite"
             >

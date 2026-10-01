@@ -31,7 +31,7 @@ import {
     type WorkspaceInstallmentPlan,
     type WorkspaceSubscription,
 } from "@/lib/supabase"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardMessage } from "@/components/ui/card"
 import { CustomForm, FormInput } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { CategoryDeleteAlertBody } from "@/components/categories/category-delete-alert-body"
@@ -359,7 +359,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     if (workspaceError) {
         return (
             <Card>
-                <CardContent className="py-8 text-sm text-destructive">{workspaceError}</CardContent>
+                <CardMessage tone="destructive">{workspaceError}</CardMessage>
             </Card>
         )
     }
@@ -371,9 +371,9 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     if (!authLoading && !workspaceLoading && !currentWorkspaceId) {
         return (
             <Card>
-                <CardContent className="py-8 text-sm text-muted-foreground">
+                <CardMessage>
                     Nenhuma carteira selecionada. Escolha uma carteira no menu lateral para continuar.
-                </CardContent>
+                </CardMessage>
             </Card>
         )
     }
@@ -385,9 +385,9 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     if (categoriesQuery.isError) {
         return (
             <Card>
-                <CardContent className="py-8 text-sm text-destructive">
+                <CardMessage tone="destructive">
                     Não foi possível carregar as categorias. Tente recarregar a página.
-                </CardContent>
+                </CardMessage>
             </Card>
         )
     }
@@ -802,7 +802,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
 
             {categories.length === 0 && (
                 <Card padding="none">
-                    <CardContent className="p-0" role="status" aria-live="polite">
+                    <CardContent role="status" aria-live="polite">
                         <EmptyState variant="plain" size="lg">
                             <EmptyStateGhost leading="tile" trailing="amount" />
                             <EmptyStateTitle>Crie suas categorias</EmptyStateTitle>

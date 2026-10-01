@@ -1,9 +1,7 @@
 "use client"
 
 import { currencyBRL } from "@/lib/formatters"
-import {
-    Card,
-} from "@/components/ui/card"
+import { Card, CardField } from "@/components/ui/card"
 import { useEffect, useMemo, useState } from "react"
 import type {
     Category,
@@ -327,22 +325,16 @@ export function TransactionDetailSheet({
                 <section className="space-y-3">
                     <SectionLabel>Detalhes</SectionLabel>
                     <div className="space-y-3 text-sm">
-                        <div className="rounded-lg border border-border/60 bg-background/80 p-3">
-                            <p className="text-xs font-medium text-muted-foreground">
-                                Descrição
-                            </p>
-                            <p className="mt-1 line-clamp-4 break-words text-foreground">
+                        <CardField label="Descrição">
+                            <p className="line-clamp-4 break-words text-foreground">
                                 {t.description?.trim() || "—"}
                             </p>
-                        </div>
+                        </CardField>
 
                         <div className="grid gap-3 sm:grid-cols-2">
-                            <div className="rounded-lg border border-border/60 bg-background/80 p-3">
-                                <p className="text-xs font-medium text-muted-foreground">
-                                    Categoria
-                                </p>
+                            <CardField label="Categoria">
                                 {t.category ? (
-                                    <p className="mt-1 inline-flex items-center gap-2">
+                                    <p className="inline-flex items-center gap-2">
                                         <span
                                             className="size-2 shrink-0 rounded-full"
                                             style={{
@@ -355,25 +347,19 @@ export function TransactionDetailSheet({
                                         {t.category.name}
                                     </p>
                                 ) : (
-                                    <p className="mt-1">—</p>
+                                    <p>—</p>
                                 )}
-                            </div>
-                            <div className="rounded-lg border border-border/60 bg-background/80 p-3">
-                                <p className="text-xs font-medium text-muted-foreground">
-                                    Data (calendário)
-                                </p>
-                                <p className="mt-1 tabular-nums">
+                            </CardField>
+                            <CardField label="Data (calendário)">
+                                <p className="tabular-nums">
                                     {formatTransactionDmyPtBr(t.date)}
                                 </p>
-                            </div>
+                            </CardField>
                             {t.type === "expense" && paymentLine ? (
-                                <div className="rounded-lg border border-border/60 bg-background/80 p-3 sm:col-span-2">
-                                    <p className="text-xs font-medium text-muted-foreground">
-                                        Pagamento
-                                    </p>
-                                    <p className="mt-1">{paymentLine}</p>
+                                <CardField label="Pagamento" className="sm:col-span-2">
+                                    <p>{paymentLine}</p>
                                     {creditInvoiceHint ? (
-                                        <p className="mt-2 text-2xs leading-snug text-muted-foreground">
+                                        <p className="mt-1 text-2xs leading-snug text-muted-foreground">
                                             <span className="font-medium text-foreground/90">
                                                 {creditCardInvoiceSlotLabelPt(
                                                     creditInvoiceHint.slot
@@ -391,34 +377,28 @@ export function TransactionDetailSheet({
                                             )}
                                         </p>
                                     ) : null}
-                                </div>
+                                </CardField>
                             ) : null}
                             {t.is_recurring ? (
-                                <div className="rounded-lg border border-border/60 bg-background/80 p-3 sm:col-span-2">
-                                    <p className="text-xs font-medium text-muted-foreground">
-                                        Recorrência
-                                    </p>
-                                    <p className="mt-1">
+                                <CardField label="Recorrência" className="sm:col-span-2">
+                                    <p>
                                         Sim ·{" "}
                                         {t.recurring_interval
                                             ? RECURRING_INTERVAL_LABEL[t.recurring_interval]
                                             : "—"}
                                     </p>
-                                </div>
+                                </CardField>
                             ) : null}
                             {t.subscription_id ? (
-                                <div className="rounded-lg border border-border/60 bg-background/80 p-3 sm:col-span-2">
-                                    <p className="text-xs font-medium text-muted-foreground">
-                                        Assinatura
-                                    </p>
-                                    <Button asChild variant="outline" size="xs" className="mt-2">
+                                <CardField label="Assinatura" className="sm:col-span-2">
+                                    <Button asChild variant="outline" size="xs" className="mt-1 self-start">
                                         <Link href={subscriptionsHref}>
                                             <ArrowPathRoundedSquareIcon aria-hidden />
                                             {t.subscription?.name ??
                                                 "Ver assinaturas"}
                                         </Link>
                                     </Button>
-                                </div>
+                                </CardField>
                             ) : null}
                         </div>
                     </div>

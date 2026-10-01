@@ -619,7 +619,6 @@ export default function BillsPageClient() {
             {globalEmpty ? (
                 <Card padding="none">
                     <CardContent
-                        className="p-0"
                         role="status"
                         aria-live="polite"
                     >

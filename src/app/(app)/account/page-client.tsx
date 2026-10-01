@@ -57,7 +57,7 @@ export default function AccountPage() {
                     <PageSectionTitle>Perfil</PageSectionTitle>
                 </PageSectionHeader>
                 <Card padding="none">
-                    <CardContent className="flex flex-col p-0">
+                    <CardContent className="flex flex-col">
                         <div className="flex items-center justify-between gap-3 px-4 py-3 sm:py-3.5">
                             <div className="flex min-w-0 flex-1 items-center gap-3">
                                 <Avatar size="lg" className="shrink-0">
@@ -137,7 +137,7 @@ export default function AccountPage() {
                     <PageSectionTitle>Segurança</PageSectionTitle>
                 </PageSectionHeader>
                 <Card padding="none">
-                    <CardContent className="flex flex-col p-0">
+                    <CardContent className="flex flex-col">
                         <Link
                             href={ROUTES.ACCOUNT_SESSIONS}
                             className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 transition-colors hover:bg-muted/30 active:bg-muted/30 sm:py-3.5"

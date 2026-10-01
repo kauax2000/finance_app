@@ -1059,6 +1059,24 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   (elevação no cursor, par `active:` para o toque, anel de foco) + `asChild`
   com um `<Link>` dentro. **`Card` não tem `tone` de dinheiro** — superfície
   tingida de entrada e saída é o `StatCard`.
+- **O `Card` ganhou as versões que as telas escreviam à mão** (rodada 204).
+  **Não há `tone`**: um cartão tingido de estado saiu igual ao `Alert` e foi
+  removido a pedido do dono — aviso é `Alert` (as notas da fatura viraram
+  `Alert size="sm"`). `inactive` esmaece o
+  item pausado (nenhuma tela escreve `opacity-[0.82]`); `selected` é o "este é
+  o seu"; `orientation="horizontal"` põe a `CardMedia` ao lado de um
+  `CardBody` e empilha no telefone; `variant="dashed"` é o lugar vazio ou o
+  "adicionar". `CardHeader media` é o ícone, o ladrilho ou o avatar centrado
+  nas duas linhas; `CardTitle size` é `sm` · **`md`** · `lg`, e o `text-base`
+  escrito à mão saiu. **`CardLink` é o link esticado**: o título leva o link
+  (ou o botão de abrir) e o `::after` cobre o cartão; o casco ergue os outros
+  botões a `z-10` e dá a sombra e o anel de foco — é o cartão clicável **com
+  ações dentro**, que `interactive asChild` não pode ser (botão não aninha em
+  link). `CardField` é o ladrilho rótulo/valor das folhas de detalhe,
+  `CardMessage` o erro ou vazio curto (`destructive` é `role="alert"`) e
+  `CardSkeleton` o esqueleto da forma do painel. E sob `padding="none"` o
+  `CardContent` não precisa de `p-0`: não há recuo para zerar.
+  `card-versions.test.ts` tranca as peças e proíbe as três grafias à mão.
 - **`Alert` tem três eixos, e o da cor se chama `tone`**: `default` | `info` |
   `success` | `warning` | `destructive`. **Não existe `variant` para a cor** —
   ele saiu do tipo, porque neste projeto as cinco cores semânticas se chamam

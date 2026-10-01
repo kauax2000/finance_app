@@ -18,7 +18,16 @@ import {
     Badge,
     tagChipWarning,
 } from "@/components/ui/badge"
-import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
+import {
+    Card,
+    CardAction,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardNote,
+    CardTitle,
+    CardToolbar,
+} from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
 export default function PlansPage() {
@@ -28,42 +37,24 @@ export default function PlansPage() {
                 <PageSectionHeader>
                     <PageSectionTitle>Plano atual</PageSectionTitle>
                 </PageSectionHeader>
-                <Card padding="none">
-                    <CardContent className="flex flex-col p-0">
-                        <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-3.5">
-                            <div className="flex min-w-0 flex-1 items-center gap-3">
-                                <div
-                                    className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-muted/60"
-                                    aria-hidden
-                                >
-                                    <SparklesIcon className="size-5 text-muted-foreground" />
-                                </div>
-                                <div className="min-w-0">
-                                    <div className="flex flex-wrap items-center gap-1.5">
-                                        <p className="truncate text-sm font-medium leading-snug">
-                                            Gratuito
-                                        </p>
-                                        <Badge
-                                            tone="info"
-                                            className="shrink-0 px-1.5 py-0 text-2xs"
-                                        >
-                                            Atual
-                                        </Badge>
-                                    </div>
-                                    <p className="mt-0.5 text-xs text-muted-foreground">
-                                        Plano padrão, ativo automaticamente.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <CardNote>
-                            <InformationCircleIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-                            <p className="min-w-0 break-words">
-                                Você está usando o plano padrão. Sem cobranças ou assinaturas
-                                ativas.
-                            </p>
-                        </CardNote>
-                    </CardContent>
+                <Card>
+                    <CardHeader
+                        media={<SparklesIcon className="size-5 text-muted-foreground" aria-hidden />}
+                    >
+                        <CardTitle size="sm">Gratuito</CardTitle>
+                        <CardDescription>Plano padrão, ativo automaticamente.</CardDescription>
+                        <CardAction>
+                            <Badge tone="info" size="xs">
+                                Atual
+                            </Badge>
+                        </CardAction>
+                    </CardHeader>
+                    <CardNote>
+                        <InformationCircleIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                        <p className="min-w-0 break-words">
+                            Você está usando o plano padrão. Sem cobranças ou assinaturas ativas.
+                        </p>
+                    </CardNote>
                 </Card>
             </PageSection>
 
@@ -72,7 +63,7 @@ export default function PlansPage() {
                     <PageSectionTitle>Planos disponíveis</PageSectionTitle>
                 </PageSectionHeader>
                 <Card padding="none">
-                    <CardContent className="flex flex-col p-0">
+                    <CardContent className="flex flex-col">
                         <CardToolbar>
                             <p className="min-w-0 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                                 Status
@@ -154,7 +145,7 @@ export default function PlansPage() {
                     <PageSectionTitle>Histórico de pagamentos</PageSectionTitle>
                 </PageSectionHeader>
                 <Card padding="none">
-                    <CardContent className="flex flex-col p-0">
+                    <CardContent className="flex flex-col">
                         <CardToolbar className="justify-end">
                             <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
                                 0 pagamentos

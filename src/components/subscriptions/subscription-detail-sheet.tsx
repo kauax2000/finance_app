@@ -1,9 +1,7 @@
 "use client"
 
 import { SectionLabel } from "@/components/transactions/installment-purchase-section"
-import {
-    Card,
-} from "@/components/ui/card"
+import { Card, CardField } from "@/components/ui/card"
 import { currencyBRL } from "@/lib/formatters"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
@@ -404,22 +402,16 @@ export function SubscriptionDetailSheet({
                 <section className="space-y-3">
                     <SectionLabel>Detalhes</SectionLabel>
                     <div className="grid gap-3 sm:grid-cols-2">
-                        <div className="rounded-lg border border-border/60 bg-background/80 p-3">
-                            <p className="text-xs font-medium text-muted-foreground">
-                                Periodicidade
-                            </p>
-                            <p className="mt-1 text-sm text-foreground">
+                        <CardField label="Periodicidade">
+                            <p className="text-sm text-foreground">
                                 {subscriptionBillingIntervalLabel(
                                     s.billing_interval
                                 )}
                             </p>
-                        </div>
-                        <div className="rounded-lg border border-border/60 bg-background/80 p-3">
-                            <p className="text-xs font-medium text-muted-foreground">
-                                Categoria
-                            </p>
+                        </CardField>
+                        <CardField label="Categoria">
                             {s.category ? (
-                                <p className="mt-1 inline-flex items-center gap-2 text-sm">
+                                <p className="inline-flex items-center gap-2 text-sm">
                                     <span
                                         className="size-2 shrink-0 rounded-full"
                                         style={{
@@ -432,20 +424,17 @@ export function SubscriptionDetailSheet({
                                     {s.category.name}
                                 </p>
                             ) : (
-                                <p className="mt-1 text-sm">—</p>
+                                <p className="text-sm">—</p>
                             )}
-                        </div>
-                        <div className="rounded-lg border border-border/60 bg-background/80 p-3 sm:col-span-2">
-                            <p className="text-xs font-medium text-muted-foreground">
-                                Forma de cobrança
-                            </p>
-                            <p className="mt-1 text-sm text-foreground">
+                        </CardField>
+                        <CardField label="Forma de cobrança" className="sm:col-span-2">
+                            <p className="text-sm text-foreground">
                                 {paymentSummary ?? "—"}
                             </p>
                             {s.payment_method === "credit_card" &&
                             s.payment_credit_card_id &&
                             !paymentCard ? (
-                                <p className="mt-1 text-xs text-muted-foreground">
+                                <p className="text-xs text-muted-foreground">
                                     Cartão não encontrado (removido ou inativo).
                                     Edite a assinatura para escolher outro cartão
                                     em{" "}
@@ -458,7 +447,7 @@ export function SubscriptionDetailSheet({
                                     .
                                 </p>
                             ) : null}
-                        </div>
+                        </CardField>
                     </div>
                 </section>
 
@@ -558,11 +547,9 @@ export function SubscriptionDetailSheet({
                 {s.notes ? (
                     <section className="space-y-2">
                         <SectionLabel>Observações</SectionLabel>
-                        <div className="rounded-lg border border-border/60 bg-background/80 p-3">
-                            <p className="whitespace-pre-wrap text-sm text-muted-foreground">
-                                {s.notes}
-                            </p>
-                        </div>
+                        <CardField>
+                            <p className="whitespace-pre-wrap text-muted-foreground">{s.notes}</p>
+                        </CardField>
                     </section>
                 ) : null}
             </div>

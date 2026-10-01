@@ -15,7 +15,7 @@ import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 import { supabase, type Category } from "@/lib/supabase"
-import { CardNote } from "@/components/ui/card"
+import { Card, CardMessage, CardNote } from "@/components/ui/card"
 import { ColorTile } from "@/components/ui/color-tile"
 import { Button } from "@/components/ui/button"
 import { CustomForm, FormInput } from "@/components/ui/form"
@@ -1078,9 +1078,11 @@ export function CategoriesOnboardingWizard({
                             const amt = raw === "" ? null : parseMoneyBrl(raw)
                             return amt === null || amt <= 0
                         }) ? (
-                            <p className="rounded-lg border border-dashed border-border/80 bg-background/40 px-3 py-4 text-center text-xs leading-relaxed text-muted-foreground">
-                                Nenhum orçamento neste passo — você pode definir depois.
-                            </p>
+                            <Card variant="dashed" padding="none">
+                                <CardMessage className="py-4 text-center text-xs leading-relaxed">
+                                    Nenhum orçamento neste passo — você pode definir depois.
+                                </CardMessage>
+                            </Card>
                         ) : null}
                         </div>
                     </div>

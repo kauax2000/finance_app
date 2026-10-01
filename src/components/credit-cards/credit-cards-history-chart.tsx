@@ -283,7 +283,7 @@ export function CreditCardsHistoryChart({
             </PageSectionHeader>
 
             <Card padding="none" className="relative">
-                <CardContent className="relative flex flex-col gap-0 p-0">
+                <CardContent className="relative flex flex-col gap-0">
                     <CardToolbar>
                         {chartData.length > 0 && hasAnyValue ? (
                             <dl className="grid grid-cols-1 gap-x-6 gap-y-1.5 sm:grid-cols-3">

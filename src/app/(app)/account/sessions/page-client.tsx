@@ -144,7 +144,7 @@ export default function SessionsPage() {
                     <PageSectionTitle>Sessões ativas</PageSectionTitle>
                 </PageSectionHeader>
                 <Card padding="none">
-                    <CardContent className="flex flex-col p-0">
+                    <CardContent className="flex flex-col">
                         <CardToolbar className="justify-end">
                             <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
                                 {activeSessionCount === 1

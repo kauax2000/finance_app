@@ -1,10 +1,8 @@
 "use client"
 
 import { XMarkIcon } from "@heroicons/react/16/solid"
-import {
-    Card,
-} from "@/components/ui/card"
-import { useMemo, type ReactNode } from "react"
+import { Card, CardField } from "@/components/ui/card"
+import { useMemo } from "react"
 import Link from "next/link"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
@@ -61,15 +59,6 @@ function resolveCurrentSlotFromDate(
     }
     const nextSlot = plan.generated_count + 1
     return nextSlot >= 1 && nextSlot <= plan.total_installments ? nextSlot : null
-}
-
-function FieldCard({ label, children }: { label: string; children: ReactNode }) {
-    return (
-        <div className="rounded-lg border border-border/60 bg-background/80 p-3">
-            <p className="text-xs font-medium text-muted-foreground">{label}</p>
-            {children}
-        </div>
-    )
 }
 
 export function DashboardPaymentEventPreviewSheet({
@@ -213,15 +202,15 @@ export function DashboardPaymentEventPreviewSheet({
                                 <div className="space-y-3 text-sm">
                                     {isInstallmentView ? (
                                         <>
-                                            <FieldCard label="Descrição">
-                                                <p className="mt-1 line-clamp-4 break-words text-foreground">
+                                            <CardField label="Descrição">
+                                                <p className="line-clamp-4 break-words text-foreground">
                                                     {plan!.description?.trim() || preview.title || "—"}
                                                 </p>
-                                            </FieldCard>
+                                            </CardField>
                                             <div className="grid gap-3 sm:grid-cols-2">
                                                 {category ? (
-                                                    <FieldCard label="Categoria">
-                                                        <p className="mt-1 inline-flex items-center gap-2">
+                                                    <CardField label="Categoria">
+                                                        <p className="inline-flex items-center gap-2">
                                                             <span
                                                                 className="size-2 shrink-0 rounded-full"
                                                                 style={{
@@ -232,21 +221,21 @@ export function DashboardPaymentEventPreviewSheet({
                                                             />
                                                             {category.name}
                                                         </p>
-                                                    </FieldCard>
+                                                    </CardField>
                                                 ) : null}
-                                                <FieldCard label="Data prevista">
-                                                    <p className="mt-1 tabular-nums">
+                                                <CardField label="Data prevista">
+                                                    <p className="tabular-nums">
                                                         {formatTransactionDmyPtBr(preview.dateYmd)}
                                                     </p>
-                                                </FieldCard>
+                                                </CardField>
                                             </div>
                                         </>
                                     ) : (
-                                        <FieldCard label="Descrição">
-                                            <p className="mt-1 leading-relaxed text-foreground">
+                                        <CardField label="Descrição">
+                                            <p className="leading-relaxed text-foreground">
                                                 {contextualDescription(preview.kind, preview.installmentPlanId)}
                                             </p>
-                                        </FieldCard>
+                                        </CardField>
                                     )}
                                 </div>
                             </section>

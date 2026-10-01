@@ -16664,3 +16664,52 @@ O dono pediu a rodada completa e escolheu as quatro versões.
   visto; o teste da rodada confere a migração no fonte e as peças
   renderizadas.
 
+
+### Rodada 204 — o Card ganha estados, forma horizontal, link esticado, campo, mensagem e esqueleto
+
+O pedido: o componente mais genérico do sistema com "bastante versões e
+exemplos". Tudo o que entrou já existia escrito à mão em alguma tela.
+
+- **`tone` entrou e saiu na mesma rodada.** O cartão tingido de estado
+  (borda a 30% e a superfície `-muted`) ficou, na tela, igual ao `Alert`, e o
+  dono pediu a remoção. Aviso é `Alert`: as notas da análise da fatura, que
+  moram dentro de um cartão, viraram `Alert size="sm"`. Com ele saiu o
+  `Omit<…, "tone">` que o `StatCard` precisou por um momento.
+- **`inactive`** (`opacity-80`, `data-inactive`): as contas a pagar
+  pausadas e o cartão de crédito desativado escreviam `opacity-[0.82]`.
+- **`selected`**: o contorno de `--primary-accent` e a tinta de 5%/10%. O
+  membro que é você usa, com `aria-current`.
+- **`orientation="horizontal"`**: a `CardMedia` à esquerda (2/5, até 224px,
+  sangrando) e o `CardBody` com o respiro do casco; empilha abaixo de `sm`.
+- **`variant="dashed"`**: o lugar vazio. O histórico da conta e o passo do
+  assistente de categorias desenhavam a caixa tracejada à mão.
+- **`CardHeader media`**: a terceira coluna da grade, centrada nas duas
+  linhas — e **só** ocupa duas linhas quando há descrição; sem ela a segunda
+  linha vazia somava o `gap` sob o título (medido). Categorias, contas a
+  pagar, plano atual e PWA migraram.
+- **`CardTitle size`** (`sm` · **`md`** · `lg`): seis títulos escreviam
+  `text-base` por cima.
+- **`CardLink`**: o link esticado. O título leva o link (ou o botão que abre
+  o detalhe) e o `::after` cobre o cartão; o casco, por `has-[]`, ergue os
+  outros botões a `z-10` e acende sombra e anel de foco. Medido na página: o
+  clique no meio do cartão cai no link, o botão do rodapé continua por cima.
+  É o que os cartões de categoria (com menu) e de conta a pagar (com
+  "pagar") precisavam e `interactive asChild` não podia dar — botão não
+  aninha em link.
+- **`CardField`**: o ladrilho rótulo/valor das três folhas de detalhe
+  (transação, assinatura, evento do calendário, que tinha um `FieldCard`
+  local). O rótulo é opcional, para as observações, que a seção já nomeia.
+- **`CardMessage`**: o erro (`role="alert"`) ou o vazio curto; 15 trechos
+  `CardContent py-6/py-8` em seis telas.
+- **`CardSkeleton`**: o esqueleto do painel (barra, linhas, rodapé). Sem
+  consumidor no app — os esqueletos de página têm formas próprias e passaram
+  a vestir `Card` em vez de cascas locais (`CardSectionShell` saiu).
+- **Limpeza**: 28 `p-0` mortos em `CardContent` sob `padding="none"`.
+- **A página** foi reescrita: superfícies, marca, tom, ritmo, painel,
+  cabeçalho com mídia, tamanho do título, rodapé, os dois clicáveis,
+  estados, horizontal, capa, campos, mensagem, carregando, cinco exemplos
+  completos e a anatomia. Verificada no Playwright, nos dois temas e a 375px.
+- **Ficou de fora**: as linhas de link da segurança da conta (são linhas de
+  lista, caso de `Item`) e o `dl` das faturas abertas do dashboard (outro
+  desenho). As telas do app pedem login e não foram vistas; o teste confere
+  as peças renderizadas e proíbe as grafias à mão.

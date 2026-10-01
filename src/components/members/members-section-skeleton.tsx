@@ -2,7 +2,6 @@
 
 import {
     Card,
-    CardContent,
     CardNote,
     CardToolbar,
 } from "@/components/ui/card"
@@ -18,38 +17,36 @@ export function MembersSectionSkeleton() {
                 <Skeleton className="h-4 w-24" />
             </div>
             <Card padding="none">
-                <CardContent className="flex flex-col p-0">
-                    <CardToolbar>
-                        <Skeleton className="h-4 w-32 max-w-[55%]" />
-                        <Skeleton className="h-4 w-20 shrink-0" />
-                    </CardToolbar>
-                    <ul
-                        className="flex list-none flex-col gap-2.5 px-3 py-3 sm:px-4 sm:py-4"
-                        role="list"
-                    >
-                        {[1, 2, 3].map((i) => (
-                            <li key={i} className="min-w-0">
-                                <div className="rounded-lg border border-border/80 bg-muted/30 p-3 sm:p-3.5">
-                                    <div className="flex items-center gap-3">
-                                        <Skeleton className="size-9 shrink-0 rounded-lg" />
-                                        <div className="min-w-0 flex-1 space-y-2">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <Skeleton className="h-4 w-28 max-w-full" />
-                                                <Skeleton shape="pill" />
-                                            </div>
-                                            <Skeleton className="h-3 w-40 max-w-full" />
+                <CardToolbar>
+                    <Skeleton className="h-4 w-32 max-w-[55%]" />
+                    <Skeleton className="h-4 w-20 shrink-0" />
+                </CardToolbar>
+                <ul
+                    className="flex list-none flex-col gap-2.5 px-3 py-3 sm:px-4 sm:py-4"
+                    role="list"
+                >
+                    {[1, 2, 3].map((i) => (
+                        <li key={i} className="min-w-0">
+                            <div className="rounded-lg border border-border/80 bg-muted/30 p-3 sm:p-3.5">
+                                <div className="flex items-center gap-3">
+                                    <Skeleton className="size-9 shrink-0 rounded-lg" />
+                                    <div className="min-w-0 flex-1 space-y-2">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <Skeleton className="h-4 w-28 max-w-full" />
+                                            <Skeleton shape="pill" />
                                         </div>
-                                        <Skeleton shape="tile" />
+                                        <Skeleton className="h-3 w-40 max-w-full" />
                                     </div>
+                                    <Skeleton shape="tile" />
                                 </div>
-                            </li>
-                        ))}
-                    </ul>
-                    <CardNote>
-                        <Skeleton className="mt-0.5 size-3.5 shrink-0 rounded" />
-                        <Skeleton className="h-3 w-full max-w-md" />
-                    </CardNote>
-                </CardContent>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+                <CardNote>
+                    <Skeleton className="mt-0.5 size-3.5 shrink-0 rounded" />
+                    <Skeleton className="h-3 w-full max-w-md" />
+                </CardNote>
             </Card>
         </SkeletonGroup>
     )

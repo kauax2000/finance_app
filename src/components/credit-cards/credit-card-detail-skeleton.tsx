@@ -23,16 +23,6 @@ const RECENT_TX_TABLE_ROW_KEYS = [
     "trow-7",
 ] as const
 
-function CardSectionShell({ children }: { children: React.ReactNode }) {
-    return (
-        <Card padding="none">
-            <CardContent className="relative flex flex-col gap-0 p-0">
-                {children}
-            </CardContent>
-        </Card>
-    )
-}
-
 function CardSectionHeader() {
     return (
         <CardToolbar>
@@ -169,15 +159,12 @@ function InvoicePanelSkeleton() {
 
 function MorePeriodSummarySkeleton() {
     return (
-        <div
-            className="rounded-xl border border-border/70 bg-card text-card-foreground shadow-sm"
-            aria-hidden
-        >
+        <Card variant="elevated" padding="none" aria-hidden>
             <div className="flex items-center justify-between gap-2 px-4 py-3">
                 <Skeleton className="h-4 w-full max-w-56" />
                 <Skeleton className="size-4 shrink-0 rounded-sm" />
             </div>
-        </div>
+        </Card>
     )
 }
 
@@ -185,7 +172,7 @@ function InstallmentsBlockSkeleton() {
     return (
         <div className="min-w-0 max-w-full space-y-4">
             <SectionTitleRow titleClassName="h-4 w-44 rounded-sm" />
-            <CardSectionShell>
+            <Card padding="none">
                 <CardSectionHeader />
                 <div className="space-y-3 px-4 py-4 md:px-5 md:py-5">
                     <div className="space-y-1">
@@ -218,7 +205,7 @@ function InstallmentsBlockSkeleton() {
                         ))}
                     </ul>
                 </div>
-            </CardSectionShell>
+            </Card>
         </div>
     )
 }
@@ -228,7 +215,7 @@ function RecentTransactionsSkeleton() {
         <div className="min-w-0 max-w-full space-y-4">
             <SectionTitleRow titleClassName="h-4 w-36 rounded-sm" cta="responsive" />
             <div className="md:hidden">
-                <CardSectionShell>
+                <Card padding="none">
                     <CardSectionHeader />
                     <div className="divide-y divide-border">
                         {RECENT_TX_KEYS.map((key) => (
@@ -253,10 +240,10 @@ function RecentTransactionsSkeleton() {
                     <CardNote className="py-4"
                         aria-hidden
                     />
-                </CardSectionShell>
+                </Card>
             </div>
             <div className="hidden md:block">
-                <CardSectionShell>
+                <Card padding="none">
                     <div className="overflow-x-auto">
                         <Table className="min-w-160 text-sm md:min-w-175">
                             <TableHeader className="bg-muted/50">
@@ -307,7 +294,7 @@ function RecentTransactionsSkeleton() {
                             </TableBody>
                         </Table>
                     </div>
-                </CardSectionShell>
+                </Card>
             </div>
         </div>
     )

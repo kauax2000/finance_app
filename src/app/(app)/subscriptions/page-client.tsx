@@ -29,6 +29,7 @@ import { toastError, toastSuccess } from "@/lib/toast"
 import {
     Card,
     CardContent,
+    CardMessage,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -416,9 +417,9 @@ export default function SubscriptionsPageClient() {
     if (workspaceError) {
         return (
             <Card>
-                <CardContent className="py-6 text-sm text-destructive">
+                <CardMessage tone="destructive">
                     {workspaceError}
-                </CardContent>
+                </CardMessage>
             </Card>
         )
     }
@@ -426,10 +427,10 @@ export default function SubscriptionsPageClient() {
     if (!authLoading && !workspaceLoading && !currentWorkspaceId) {
         return (
             <Card>
-                <CardContent className="py-6 text-sm text-muted-foreground">
+                <CardMessage>
                     Nenhum espaço de trabalho selecionado. Escolha um espaço no menu
                     lateral para continuar.
-                </CardContent>
+                </CardMessage>
             </Card>
         )
     }
@@ -935,7 +936,6 @@ export default function SubscriptionsPageClient() {
             ) : (
                 <Card padding="none">
                     <CardContent
-                        className="p-0"
                         role="status"
                         aria-live="polite"
                     >

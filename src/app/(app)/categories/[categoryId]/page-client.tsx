@@ -8,7 +8,7 @@ import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { useTransactionsListController } from "@/components/transactions/use-transactions-list-controller"
 import { supabase } from "@/lib/supabase"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardMessage } from "@/components/ui/card"
 import {
     CATEGORY_COLORS,
     CATEGORY_ICONS,
@@ -410,7 +410,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     if (workspaceError) {
         return (
             <Card>
-                <CardContent className="py-8 text-sm text-destructive">{workspaceError}</CardContent>
+                <CardMessage tone="destructive">{workspaceError}</CardMessage>
             </Card>
         )
     }
@@ -418,9 +418,9 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     if (!authLoading && !workspaceLoading && !currentWorkspaceId) {
         return (
             <Card>
-                <CardContent className="py-8 text-sm text-muted-foreground">
+                <CardMessage>
                     Nenhuma carteira selecionada. Escolha uma carteira no menu lateral para continuar.
-                </CardContent>
+                </CardMessage>
             </Card>
         )
     }
@@ -436,9 +436,9 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     if (!category) {
         return (
             <Card>
-                <CardContent className="py-8 text-sm text-muted-foreground">
+                <CardMessage>
                     Categoria não encontrada.
-                </CardContent>
+                </CardMessage>
             </Card>
         )
     }

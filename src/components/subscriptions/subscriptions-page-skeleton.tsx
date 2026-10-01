@@ -90,7 +90,7 @@ function TableSkeleton({ rowCount }: { rowCount: number }) {
     }
     return (
         <Card padding="none">
-            <CardContent className="relative flex flex-col p-0">
+            <CardContent className="relative flex flex-col">
                 <div className="min-w-0 overflow-hidden rounded-t-xl">
                     <Table className="min-w-180 text-sm">
                         <TableHeader className="bg-muted/50 [&_tr]:border-b-0">

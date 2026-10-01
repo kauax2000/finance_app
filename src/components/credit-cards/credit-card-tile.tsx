@@ -16,7 +16,7 @@ import { creditCardDetailPath } from "@/config/navigation"
 import { CreditCardFaceTilt } from "@/components/credit-cards/credit-card-face-tilt"
 import { RegisteredCreditCardFace } from "@/components/credit-cards/registered-credit-card-face"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardTitle } from "@/components/ui/card"
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress, ProgressHeader, ProgressLabel, ProgressValue } from "@/components/ui/progress"
 import { CARD_LIMIT_BANDS } from "@/lib/budget-bands"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -58,40 +58,34 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
     })()
 
     return (
+        // Um alvo só, e por isso o cartão **é** o link: `interactive asChild`
+        // traz a elevação, o par de toque e o anel de foco que o <Link> de
+        // dentro escrevia à mão (rodada 204). O inativo é `inactive`, e a
+        // barra de topo com fio virou o cabeçalho do sistema.
         <Card
-            padding="none"
-            className={cn(
-                "transition-shadow",
-                !card.is_active && "opacity-[0.82]"
-            )}
+            interactive
+            asChild
+            inactive={!card.is_active}
+            className="group text-inherit no-underline"
         >
-            {/* Single interactive target: avoids duplicate links/buttons (plan a11y). */}
             <Link
                 href={detailHref}
-                className={cn(
-                    "group block w-full min-w-0 rounded-xl text-left text-inherit no-underline outline-none",
-                    "transition-shadow hover:shadow-md active:shadow-md",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                )}
                 aria-label={`Abrir cartão ${card.name}, final ${card.last_four}. Ver detalhes.`}
             >
-                <div className="flex items-start justify-between gap-3 border-b border-border/50 px-4 pb-3 pt-4">
-                    <div className="min-w-0 flex-1 pr-2">
-                        <CardTitle className="text-base truncate leading-snug">
-                            {card.name}
-                        </CardTitle>
-                    </div>
-                    <Badge
-                        size="sm"
-                        variant={card.is_active ? "soft" : "outline"}
-                        tone={card.is_active ? "success" : "neutral"}
-                        className="shrink-0 self-start"
-                    >
-                        {card.is_active ? "Ativo" : "Inativo"}
-                    </Badge>
-                </div>
+                <CardHeader>
+                    <CardTitle className="truncate">{card.name}</CardTitle>
+                    <CardAction>
+                        <Badge
+                            size="sm"
+                            variant={card.is_active ? "soft" : "outline"}
+                            tone={card.is_active ? "success" : "neutral"}
+                        >
+                            {card.is_active ? "Ativo" : "Inativo"}
+                        </Badge>
+                    </CardAction>
+                </CardHeader>
 
-                <div className="flex flex-col gap-3 px-4 pb-4 pt-3 md:flex-row md:items-stretch md:gap-4">
+                <CardContent className="flex flex-col gap-3 md:flex-row md:items-stretch md:gap-4">
                     <div className="flex shrink-0 flex-col items-center gap-2">
                         <CreditCardFaceTilt className="mx-auto w-full max-w-[16rem] shrink-0 md:mx-0 md:w-56">
                             <RegisteredCreditCardFace
@@ -106,7 +100,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                         </span>
                     </div>
 
-                    <CardContent className="min-w-0 flex-1 space-y-3 border-0 p-0">
+                    <div className="min-w-0 flex-1 space-y-3">
                     {snapshot ? (
                         <>
                             <div className="flex flex-col gap-2">
@@ -189,8 +183,8 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                             ) : null}
                         </>
                     ) : null}
-                    </CardContent>
-                </div>
+                    </div>
+                </CardContent>
             </Link>
         </Card>
     )
@@ -198,19 +192,21 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
 
 export function CreditCardTileSkeleton() {
     return (
-        <Card padding="none">
-            <div className="flex items-start justify-between gap-3 border-b border-border/50 px-4 pb-3 pt-4">
-                <div className="min-w-0 flex-1 pr-2">
+        <Card aria-hidden>
+            <CardHeader>
+                <CardTitle>
                     <Skeleton className="h-4 w-full max-w-56" />
-                </div>
-                <Skeleton shape="pill" />
-            </div>
-            <div className="flex flex-col gap-3 px-4 pb-4 pt-3 md:flex-row md:items-stretch md:gap-4">
+                </CardTitle>
+                <CardAction>
+                    <Skeleton shape="pill" />
+                </CardAction>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3 md:flex-row md:items-stretch md:gap-4">
                 <div className="flex shrink-0 flex-col items-center gap-2">
                     <Skeleton className="mx-auto aspect-[1.586] w-full max-w-[16rem] rounded-2xl md:mx-0 md:w-56" />
                     <Skeleton className="h-3.5 w-28" />
                 </div>
-                <CardContent className="min-w-0 flex-1 space-y-3 border-0 p-0">
+                <div className="min-w-0 flex-1 space-y-3">
                     <div className="flex flex-col gap-2">
                         <div>
                             <Skeleton className="h-2.5 w-full max-w-44" />
@@ -238,8 +234,8 @@ export function CreditCardTileSkeleton() {
                         </div>
                         <Skeleton className="h-1.5 w-full rounded-full" />
                     </div>
-                </CardContent>
-            </div>
+                </div>
+            </CardContent>
         </Card>
     )
 }

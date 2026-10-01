@@ -1,4 +1,5 @@
 import { CreditCardTileSkeleton } from "@/components/credit-cards/credit-card-tile"
+import { Card } from "@/components/ui/card"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
@@ -6,12 +7,13 @@ const DEFAULT_CARD_COUNT = 4
 
 export function CreditCardsHistoryChartSkeleton() {
     return (
-        <div
-            className="flex aspect-video min-h-60 w-full items-center justify-center rounded-xl border border-border/80 bg-card"
+        <Card
+            padding="none"
+            className="aspect-video min-h-60 w-full items-center justify-center"
             aria-hidden
         >
             <Skeleton className="h-40 w-full max-w-md rounded-lg" />
-        </div>
+        </Card>
     )
 }
 

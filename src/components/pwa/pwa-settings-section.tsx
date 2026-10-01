@@ -18,11 +18,10 @@ export function PwaSettingsSection() {
 
     return (
         <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                    <DevicePhoneMobileIcon className="size-5" aria-hidden />
-                    App no celular
-                </CardTitle>
+            <CardHeader
+                media={<DevicePhoneMobileIcon className="size-5 text-muted-foreground" aria-hidden />}
+            >
+                <CardTitle>App no celular</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
                 {isStandalone ? (

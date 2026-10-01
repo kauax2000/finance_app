@@ -96,7 +96,7 @@ function SummaryIncomeSkeleton() {
 function BudgetMoMMobileCardSkeleton() {
     return (
         <div
-            className="w-full min-w-0 rounded-lg border border-border/80 bg-muted/20 p-3 ring-1 ring-foreground/10 md:hidden"
+            className="w-full min-w-0 rounded-lg border border-border/80 bg-muted/20 p-3 md:hidden"
             aria-hidden
         >
             <div className="flex min-w-0 items-start gap-2.5">
@@ -196,83 +196,81 @@ function EmbeddedTransactionsSkeleton({ rowCount = 8 }: { rowCount?: number }) {
             </div>
 
             <Card padding="none">
-                <CardContent className="relative flex flex-col p-0">
-                    <div className="min-w-0 overflow-hidden rounded-t-xl">
-                        <Table className="min-w-175 text-sm">
-                            <TableHeader variant="muted" sticky className="[&_tr]:border-b-0">
-                                <TableRow className="border-0 [&>th]:border-b [&>th]:border-border">
-                                    <TableHead className="w-10 px-2 py-0 md:w-11 md:px-3">
-                                        <Skeleton className="mx-auto size-4 rounded-sm" />
-                                    </TableHead>
-                                    <TableHead className="h-11 w-22 px-4 py-0">
-                                        <Skeleton className="h-3.5 w-8" />
-                                    </TableHead>
-                                    <TableHead className="h-11 px-4 py-0">
-                                        <Skeleton className="h-3.5 w-20" />
-                                    </TableHead>
-                                    <TableHead className="h-11 px-4 py-0">
-                                        <Skeleton className="h-3.5 w-10" />
-                                    </TableHead>
-                                    <TableHead className="hidden h-11 max-w-40 px-4 py-0 md:table-cell">
-                                        <Skeleton className="h-3.5 w-24" />
-                                    </TableHead>
-                                    <TableHead className="hidden h-11 px-4 py-0 md:table-cell">
-                                        <Skeleton className="h-3.5 w-16" />
-                                    </TableHead>
-                                    <TableHead className="h-11 min-w-22 px-4 py-0">
-                                        <Skeleton className="h-3.5 w-8" />
-                                    </TableHead>
-                                    <TableHead className="h-11 w-21 px-3 py-0 pr-4 text-left">
-                                        <Skeleton className="h-3 w-10" />
-                                    </TableHead>
+                <div className="min-w-0 overflow-hidden rounded-t-xl">
+                    <Table className="min-w-175 text-sm">
+                        <TableHeader variant="muted" sticky className="[&_tr]:border-b-0">
+                            <TableRow className="border-0 [&>th]:border-b [&>th]:border-border">
+                                <TableHead className="w-10 px-2 py-0 md:w-11 md:px-3">
+                                    <Skeleton className="mx-auto size-4 rounded-sm" />
+                                </TableHead>
+                                <TableHead className="h-11 w-22 px-4 py-0">
+                                    <Skeleton className="h-3.5 w-8" />
+                                </TableHead>
+                                <TableHead className="h-11 px-4 py-0">
+                                    <Skeleton className="h-3.5 w-20" />
+                                </TableHead>
+                                <TableHead className="h-11 px-4 py-0">
+                                    <Skeleton className="h-3.5 w-10" />
+                                </TableHead>
+                                <TableHead className="hidden h-11 max-w-40 px-4 py-0 md:table-cell">
+                                    <Skeleton className="h-3.5 w-24" />
+                                </TableHead>
+                                <TableHead className="hidden h-11 px-4 py-0 md:table-cell">
+                                    <Skeleton className="h-3.5 w-16" />
+                                </TableHead>
+                                <TableHead className="h-11 min-w-22 px-4 py-0">
+                                    <Skeleton className="h-3.5 w-8" />
+                                </TableHead>
+                                <TableHead className="h-11 w-21 px-3 py-0 pr-4 text-left">
+                                    <Skeleton className="h-3 w-10" />
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody className="[&_tr:last-child]:border-b-0">
+                            {rows.map((_, i) => (
+                                <TableRow key={i} className="border-border/80">
+                                    <TableCell className="w-10 px-2 py-3 md:w-11 md:px-3">
+                                        <Skeleton className="size-4 shrink-0 rounded-sm" />
+                                    </TableCell>
+                                    <TableCell className="whitespace-nowrap px-4 py-3">
+                                        <Skeleton className="h-4 w-14 tabular-nums" />
+                                    </TableCell>
+                                    <TableCell className="max-w-50 px-4 py-3 text-left lg:max-w-70">
+                                        <Skeleton className="h-4 w-full max-w-56" />
+                                    </TableCell>
+                                    <TableCell className="px-4 py-3">
+                                        <Skeleton className="h-4 w-20 tabular-nums" />
+                                    </TableCell>
+                                    <TableCell className="hidden max-w-40 truncate px-4 py-3 md:table-cell">
+                                        <Skeleton className="h-4 w-full max-w-28" />
+                                    </TableCell>
+                                    <TableCell className="hidden max-w-32 truncate px-4 py-3 md:table-cell">
+                                        <span className="inline-flex max-w-full items-center gap-1.5">
+                                            <Skeleton className="size-2 shrink-0 rounded-full" />
+                                            <Skeleton className="h-4 w-16 max-w-full" />
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="min-w-22 px-4 py-3">
+                                        <Skeleton className="h-6 w-18 rounded-full" />
+                                    </TableCell>
+                                    <TableCell className="w-21 px-3 py-3 pr-4">
+                                        <div className="flex items-center justify-start gap-1">
+                                            <Skeleton className="size-7 shrink-0 rounded-md" />
+                                            <Skeleton className="size-7 shrink-0 rounded-md" />
+                                        </div>
+                                    </TableCell>
                                 </TableRow>
-                            </TableHeader>
-                            <TableBody className="[&_tr:last-child]:border-b-0">
-                                {rows.map((_, i) => (
-                                    <TableRow key={i} className="border-border/80">
-                                        <TableCell className="w-10 px-2 py-3 md:w-11 md:px-3">
-                                            <Skeleton className="size-4 shrink-0 rounded-sm" />
-                                        </TableCell>
-                                        <TableCell className="whitespace-nowrap px-4 py-3">
-                                            <Skeleton className="h-4 w-14 tabular-nums" />
-                                        </TableCell>
-                                        <TableCell className="max-w-50 px-4 py-3 text-left lg:max-w-70">
-                                            <Skeleton className="h-4 w-full max-w-56" />
-                                        </TableCell>
-                                        <TableCell className="px-4 py-3">
-                                            <Skeleton className="h-4 w-20 tabular-nums" />
-                                        </TableCell>
-                                        <TableCell className="hidden max-w-40 truncate px-4 py-3 md:table-cell">
-                                            <Skeleton className="h-4 w-full max-w-28" />
-                                        </TableCell>
-                                        <TableCell className="hidden max-w-32 truncate px-4 py-3 md:table-cell">
-                                            <span className="inline-flex max-w-full items-center gap-1.5">
-                                                <Skeleton className="size-2 shrink-0 rounded-full" />
-                                                <Skeleton className="h-4 w-16 max-w-full" />
-                                            </span>
-                                        </TableCell>
-                                        <TableCell className="min-w-22 px-4 py-3">
-                                            <Skeleton className="h-6 w-18 rounded-full" />
-                                        </TableCell>
-                                        <TableCell className="w-21 px-3 py-3 pr-4">
-                                            <div className="flex items-center justify-start gap-1">
-                                                <Skeleton className="size-7 shrink-0 rounded-md" />
-                                                <Skeleton className="size-7 shrink-0 rounded-md" />
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+                <CardNote className="flex-col gap-2.5 rounded-b-xl px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4">
+                    <Skeleton className="h-4 w-full max-w-56" />
+                    <div className="flex items-center justify-between gap-3 sm:justify-end">
+                        <Skeleton className="h-4 w-28 shrink-0 sm:mr-1" />
+                        <Skeleton className="h-9 w-19 shrink-0 rounded-lg" />
                     </div>
-                    <CardNote className="flex-col gap-2.5 rounded-b-xl px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4">
-                        <Skeleton className="h-4 w-full max-w-56" />
-                        <div className="flex items-center justify-between gap-3 sm:justify-end">
-                            <Skeleton className="h-4 w-28 shrink-0 sm:mr-1" />
-                            <Skeleton className="h-9 w-19 shrink-0 rounded-lg" />
-                        </div>
-                    </CardNote>
-                </CardContent>
+                </CardNote>
             </Card>
         </section>
     )

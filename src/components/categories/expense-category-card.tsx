@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Card, CardContent, CardTitle, CardToolbar } from "@/components/ui/card"
+import { Card, CardAction, CardContent, CardHeader, CardLink, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -175,80 +175,65 @@ export function ExpenseCategoryCard({
 
 
     return (
-        // O cartão inteiro é clicável por um link esticado (::after) no título, e
-        // não por um <a> em volta de tudo: o botão de menu ficava dentro de um
-        // link, e o aria-label do link apagava o conteúdo do cartão.
-        <div
-            className={cn(
-                "group relative block h-full rounded-xl",
-                "has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring/45 has-[a:focus-visible]:ring-offset-2 has-[a:focus-visible]:ring-offset-background",
-            )}
-        >
-            <Card
-                padding="none"
-                className={cn(
-                    "h-full transition-shadow",
-                    "group-hover:shadow-md group-active:shadow-md",
-                )}
-            >
-                <CardToolbar className="px-3">
-                    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3">
-                        <ColorTile size="lg" color={color} className="col-start-1 row-start-1 self-start">
+        // O cartão inteiro é clicável pelo `CardLink` no título (o link
+        // esticado do sistema, rodada 204), e não por um <a> em volta de tudo:
+        // o menu ficava dentro de um link, e o aria-label do link apagava o
+        // conteúdo do cartão. O casco acende com o cursor e o foco do link, e
+        // sobe o menu acima da película.
+        <Card padding="sm" className="group h-full">
+                <CardHeader
+                    media={
+                        <ColorTile size="lg" color={color}>
                             <CategoryIconPreview name={normalizeCategoryIcon(category.icon)} />
                         </ColorTile>
+                    }
+                >
+                    <CardTitle
+                        className={cn(
+                            "min-w-0 self-center leading-snug",
+                            "line-clamp-2 text-balance @min-[360px]/card-header:line-clamp-1 @min-[360px]/card-header:truncate",
+                        )}
+                    >
+                        <CardLink asChild>
+                            <Link href={href}>{category.name}</Link>
+                        </CardLink>
+                    </CardTitle>
 
-                        <div className="col-start-2 row-start-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 self-center pr-1">
-                            <CardTitle
-                                className={cn(
-                                    "min-w-0 text-base leading-snug",
-                                    "line-clamp-2 text-balance @min-[360px]/card-header:line-clamp-1 @min-[360px]/card-header:truncate",
-                                )}
+                    <CardAction className="flex items-center gap-1.5">
+                        <MomComparisonBadge now={spent} prev={previousSpent} />
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="tertiary"
+                                    size="icon-md"
+                                    className="text-muted-foreground hover:text-foreground active:text-foreground"
+                                    aria-label={`Opções da categoria ${category.name}`}
+                                    onClick={(e) => stopLinkNavigation(e)}
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                >
+                                    <EllipsisVerticalIcon className="size-4" aria-hidden />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                align="end" size="sm"
                             >
-                                <Link
-                                    href={href}
-                                    className="no-underline after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none"
+                                <DropdownMenuItem onSelect={() => onEdit()}>
+                                    <PencilIcon className="h-4 w-4" aria-hidden />
+                                    Editar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem variant="destructive"
+                                    onSelect={() => onDelete()}
                                 >
-                                    {category.name}
-                                </Link>
-                            </CardTitle>
-                        </div>
+                                    <TrashIcon aria-hidden />
+                                    Excluir
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </CardAction>
+                </CardHeader>
 
-                        <div className="col-start-3 row-start-1 flex shrink-0 items-center gap-1.5 self-start">
-                            <MomComparisonBadge now={spent} prev={previousSpent} />
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        type="button"
-                                        variant="tertiary"
-                                        size="icon-lg"
-                                        className="relative z-10 size-8 text-muted-foreground hover:text-foreground active:text-foreground"
-                                        aria-label={`Opções da categoria ${category.name}`}
-                                        onClick={(e) => stopLinkNavigation(e)}
-                                        onPointerDown={(e) => e.stopPropagation()}
-                                    >
-                                        <EllipsisVerticalIcon className="size-4" aria-hidden />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                    align="end" size="sm"
-                                >
-                                    <DropdownMenuItem onSelect={() => onEdit()}>
-                                        <PencilIcon className="h-4 w-4" aria-hidden />
-                                        Editar
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem variant="destructive"
-                                        onSelect={() => onDelete()}
-                                    >
-                                        <TrashIcon aria-hidden />
-                                        Excluir
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
-                    </div>
-                </CardToolbar>
-
-                <CardContent className="flex flex-1 flex-col gap-3 bg-card px-3 pt-3 pb-3">
+                <CardContent className="flex flex-1 flex-col gap-3">
                     <div className="flex items-start justify-between gap-2">
                         <p className="min-w-0 text-2xl font-bold tabular-nums tracking-tight">{currency(spent)}</p>
                         <div
@@ -326,7 +311,6 @@ export function ExpenseCategoryCard({
                     </div>
 
                 </CardContent>
-            </Card>
-        </div>
+        </Card>
     )
 }

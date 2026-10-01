@@ -1,5 +1,6 @@
 "use client"
 
+import { Card, CardMessage } from "@/components/ui/card"
 import { compareYmd } from "@/lib/transaction-date"
 import { billInstancePill, billDaysDeltaLabel } from "@/components/bills/bill-status"
 import { useMemo, useState } from "react"
@@ -121,9 +122,13 @@ export function BillDetailHistoryList({
 
             <div className="space-y-1">
                 {visible.length === 0 ? (
-                    <p className="rounded-lg border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground">
-                        Nenhuma parcela nesta visão.
-                    </p>
+                    // O vazio da lista é o lugar de um cartão que não existe:
+                    // o tracejado do sistema (rodada 204).
+                    <Card variant="dashed" padding="none">
+                        <CardMessage className="text-center">
+                            Nenhuma parcela nesta visão.
+                        </CardMessage>
+                    </Card>
                 ) : (
                     visible.map((inst) => {
                         const due = inst.due_date.slice(0, 10)

@@ -711,7 +711,7 @@ export default function CreditCardDetailPageClient() {
             <div className="space-y-4">
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-base">
+                        <CardTitle>
                             Tabela ainda não criada no banco
                         </CardTitle>
                         <CardDescription>

@@ -30,7 +30,7 @@ function WorkspaceAppearanceSkeleton() {
                 <Skeleton className="h-4 w-24" />
             </div>
             <Card padding="none">
-                <CardContent className="flex flex-col p-0">
+                <CardContent className="flex flex-col">
                     <div
                         className="flex min-w-0 items-center justify-between gap-3 px-4 py-3 sm:py-3.5"
                         aria-busy="true"
@@ -212,7 +212,7 @@ export function WorkspaceAppearanceSettings() {
                         <PageSectionTitle>Carteira</PageSectionTitle>
                     </PageSectionHeader>
                     <Card padding="none">
-                        <CardContent className="flex flex-col p-0">
+                        <CardContent className="flex flex-col">
                             {!currentWorkspace ? (
                                 <div className="px-4 py-3 sm:py-3.5">
                                     <p className="text-sm text-muted-foreground">

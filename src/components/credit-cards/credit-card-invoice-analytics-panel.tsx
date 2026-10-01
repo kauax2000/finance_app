@@ -1,5 +1,6 @@
 "use client"
 
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { percentPointsBR } from "@/lib/formatters"
 import {
     Collapsible,
@@ -393,51 +394,6 @@ function committedVsPriorDeltaPct(snapshot: CardCycleSnapshot): {
 
 type InsightNoticeVariant = "info" | "success" | "warning" | "neutral"
 
-/**
- * Mesma forma que `Alert`: `border-<estado>/30 bg-<estado>-muted
- * text-<estado>-muted-foreground`. Eram cinco matizes cruas (sky, teal, amber,
- * violet, emerald) que não acompanhavam o tema escuro; os dois verdes diziam a
- * mesma coisa e viraram um só.
- */
-const insightShellBase = "rounded-md border px-2.5 py-2"
-const insightIconBase =
-    "inline-flex shrink-0 items-center justify-center"
-const insightEyebrowBase =
-    "text-2xs font-semibold uppercase tracking-wide"
-
-function insightNoticeStyles(variant: InsightNoticeVariant): {
-    shell: string
-    iconWrap: string
-    eyebrow: string
-} {
-    switch (variant) {
-        case "info":
-            return {
-                shell: `${insightShellBase} border-info/30 bg-info-muted`,
-                iconWrap: `${insightIconBase} text-info-muted-foreground`,
-                eyebrow: `${insightEyebrowBase} text-info-muted-foreground`,
-            }
-        case "success":
-            return {
-                shell: `${insightShellBase} border-success/30 bg-success-muted`,
-                iconWrap: `${insightIconBase} text-success-muted-foreground`,
-                eyebrow: `${insightEyebrowBase} text-success-muted-foreground`,
-            }
-        case "warning":
-            return {
-                shell: `${insightShellBase} border-warning/30 bg-warning-muted`,
-                iconWrap: `${insightIconBase} text-warning-muted-foreground`,
-                eyebrow: `${insightEyebrowBase} text-warning-muted-foreground`,
-            }
-        default:
-            return {
-                shell: `${insightShellBase} border-border bg-muted`,
-                iconWrap: `${insightIconBase} text-muted-foreground`,
-                eyebrow: `${insightEyebrowBase} text-muted-foreground`,
-            }
-    }
-}
-
 function closingInsightVariant(diagnosis: ClosingDiagnosis): InsightNoticeVariant {
     switch (diagnosis) {
         case "lighter_near_close":
@@ -463,39 +419,25 @@ function spendingProfileShortLabel(profile: SpendingProfileLabel): string {
     }
 }
 
+/**
+ * O aviso de leitura da fatura. É o `Alert` (`sm`), e não um bloco tingido
+ * próprio (rodada 204): ele mora **dentro** de um cartão, e um cartão com tom
+ * ali seria cartão dentro de cartão. O mapa local de quatro tons, que já
+ * copiava a forma do `Alert`, saiu.
+ */
 function InsightNoticePanel({
     variant,
-    eyebrow,
     icon,
     children,
 }: {
     variant: InsightNoticeVariant
-    eyebrow?: string
     icon: ReactNode
     children: ReactNode
 }) {
-    const s = insightNoticeStyles(variant)
     return (
-        <div className={s.shell}>
-            <div className="flex items-start gap-2">
-                <span className={s.iconWrap} aria-hidden>
-                    {icon}
-                </span>
-                <div
-                    className={cn(
-                        "min-w-0",
-                        eyebrow != null && eyebrow !== "" && "space-y-0.5"
-                    )}
-                >
-                    {eyebrow != null && eyebrow !== "" ? (
-                        <p className={s.eyebrow}>{eyebrow}</p>
-                    ) : null}
-                    <p className="text-xs font-medium leading-snug text-foreground">
-                        {children}
-                    </p>
-                </div>
-            </div>
-        </div>
+        <Alert size="sm" tone={variant === "neutral" ? "default" : variant} icon={icon}>
+            <AlertDescription className="font-medium">{children}</AlertDescription>
+        </Alert>
     )
 }
 
@@ -888,7 +830,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                             invoiceYearMonth={invoiceYearMonth}
                         />
 
-                        <InsightNoticePanel variant="success" icon={<LightBulbIcon className="size-3.5" />}>
+                        <InsightNoticePanel variant="success" icon={<LightBulbIcon />}>
                             {analytics.summaryText}{" "}
                             <span className="font-normal text-muted-foreground">
                                 Priorize revisar essa categoria neste período.
@@ -1006,7 +948,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                         <div className="space-y-2">
                             <InsightNoticePanel
                                 variant="info"
-                                icon={<ChartBarIcon className="size-3.5" />}
+                                icon={<ChartBarIcon />}
                             >
                                 {strongestWeek != null && strongestWeekTotal > 0 ? (
                                     <>
@@ -1025,7 +967,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                 variant={closingInsightVariant(
                                     analytics.closingDiagnosis
                                 )}
-                                icon={<CalendarDaysIcon className="size-3.5" />}
+                                icon={<CalendarDaysIcon />}
                             >
                                 {analytics.closingCopy}
                             </InsightNoticePanel>

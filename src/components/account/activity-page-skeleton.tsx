@@ -20,7 +20,7 @@ export function ActivityPageSkeleton() {
                     <Skeleton className="h-4 w-36" />
                 </div>
                 <Card padding="none">
-                    <CardContent className="flex flex-col p-0">
+                    <CardContent className="flex flex-col">
                         <CardToolbar className="justify-end">
                             <Skeleton className="h-3 w-28 shrink-0" />
                         </CardToolbar>
