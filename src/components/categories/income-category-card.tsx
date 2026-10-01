@@ -10,6 +10,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
+import { CategoryCardContextMenu } from "@/components/categories/category-card-context-menu"
 import { cn } from "@/lib/utils"
 import { ChevronRightIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ColorTile } from "@/components/ui/color-tile"
@@ -36,6 +37,13 @@ export function IncomeCategoryCard({
     return (
         // O cartão inteiro é clicável pelo `CardLink` no título (rodada 204),
         // e não por um <a> em volta de tudo: o menu ficava dentro de um link.
+        <CategoryCardContextMenu
+            name={category.name}
+            description="Categoria de receita"
+            href={href}
+            onEdit={onEdit}
+            onDelete={onDelete}
+        >
         <Card padding="sm" className="group h-full">
                 <CardHeader
                     media={
@@ -99,5 +107,6 @@ export function IncomeCategoryCard({
                     </div>
                 </CardContent>
         </Card>
+        </CategoryCardContextMenu>
     )
 }

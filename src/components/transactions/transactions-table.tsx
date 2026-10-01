@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table-panel"
 import * as React from "react"
 import Link from "next/link"
-import { ArrowPathRoundedSquareIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { ArrowPathRoundedSquareIcon, ArrowRightIcon, CheckIcon, PencilIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid"
 import type { Transaction } from "@/lib/supabase"
 import {
     formatTransactionDayPtBr,
@@ -40,7 +40,16 @@ import {
 } from "@/lib/credit-card-billing"
 import type { SortDir, TransactionsListSortKey } from "@/components/transactions/transactions-list-types"
 import { isProjectedTransactionRow } from "@/lib/category-expense-month-rows"
-import { numberBR } from "@/lib/formatters"
+import { numberBR, signedCurrencyBRL } from "@/lib/formatters"
+import {
+    ContextMenu,
+    ContextMenuContent,
+    ContextMenuHeader,
+    ContextMenuItem,
+    ContextMenuSeparator,
+    ContextMenuTrigger,
+    contextMenuTargets,
+} from "@/components/ui/context-menu"
 
 export type TransactionsTableSortKey = TransactionsListSortKey
 
@@ -175,6 +184,117 @@ export type TransactionsTableProps = {
 }
 
 const EMPTY_SELECTED_IDS = new Set<string>()
+
+/**
+ * O menu do botão direito de uma linha. `alvos` é a regra do
+ * `contextMenuTargets`: a seleção inteira se a linha faz parte dela, e então
+ * o menu só oferece o que vale para várias.
+ */
+function TransactionRowContextMenu({
+    transaction,
+    title,
+    alvos,
+    selected,
+    enableSelection,
+    enableActions,
+    openTransactionDetail,
+    setSelectedIds,
+    onDeleteSingle,
+    onDeleteBulk,
+}: {
+    transaction: Transaction
+    title: string
+    alvos: string[]
+    selected: boolean
+    enableSelection: boolean
+    enableActions: boolean
+    openTransactionDetail: TransactionsTableProps["openTransactionDetail"]
+    setSelectedIds: React.Dispatch<React.SetStateAction<Set<string>>>
+    onDeleteSingle?: (t: Transaction) => void
+    onDeleteBulk?: (ids: string[]) => void
+}) {
+    if (alvos.length > 1) {
+        return (
+            <ContextMenuContent
+                size="xl"
+                header={
+                    <ContextMenuHeader
+                        title={`${alvos.length} lançamentos`}
+                        description="Selecionados"
+                    />
+                }
+            >
+                <ContextMenuItem onSelect={() => setSelectedIds(new Set())}>
+                    <XMarkIcon aria-hidden />
+                    Limpar seleção
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem
+                    variant="destructive"
+                    onSelect={() => onDeleteBulk?.(alvos)}
+                >
+                    <TrashIcon aria-hidden />
+                    Excluir {alvos.length} lançamentos
+                </ContextMenuItem>
+            </ContextMenuContent>
+        )
+    }
+
+    const valor =
+        transaction.type === "income"
+            ? Number(transaction.amount)
+            : -Number(transaction.amount)
+
+    return (
+        <ContextMenuContent
+            size="xl"
+            header={
+                <ContextMenuHeader
+                    title={title}
+                    description={`${formatTransactionDayPtBr(transaction.date)} · ${signedCurrencyBRL(valor)}`}
+                />
+            }
+        >
+            <ContextMenuItem onSelect={() => openTransactionDetail(transaction)}>
+                <ArrowRightIcon aria-hidden />
+                Abrir
+            </ContextMenuItem>
+            <ContextMenuItem
+                onSelect={() => openTransactionDetail(transaction, { edit: true })}
+            >
+                <PencilIcon aria-hidden />
+                Editar
+            </ContextMenuItem>
+            {enableSelection ? (
+                <ContextMenuItem
+                    onSelect={() =>
+                        setSelectedIds((prev) => {
+                            const next = new Set(prev)
+                            if (selected) next.delete(transaction.id)
+                            else next.add(transaction.id)
+                            return next
+                        })
+                    }
+                >
+                    <CheckIcon aria-hidden />
+                    {selected ? "Desmarcar" : "Selecionar"}
+                </ContextMenuItem>
+            ) : null}
+            {enableActions && onDeleteSingle ? (
+                <>
+                    <ContextMenuSeparator />
+                    <ContextMenuItem
+                        variant="destructive"
+                        onSelect={() => onDeleteSingle(transaction)}
+                    >
+                        <TrashIcon aria-hidden />
+                        Excluir
+                    </ContextMenuItem>
+                </>
+            ) : null}
+        </ContextMenuContent>
+    )
+}
 
 const noopSetSelectedIds: React.Dispatch<
     React.SetStateAction<Set<string>>
@@ -522,6 +642,11 @@ export function TransactionsTable({
                                         </TableRow>
                                     ) : null}
 
+                                    {/* O botão direito e o toque longo repetem as ações da
+                                        linha; sobre uma linha selecionada, agem na seleção
+                                        inteira. Os botões da coluna Ações continuam. */}
+                                    <ContextMenu>
+                                    <ContextMenuTrigger asChild disabled={isProjected}>
                                     <TableRow
                                         className={cn(
                                             "border-border/80 transition-colors",
@@ -760,6 +885,26 @@ export function TransactionsTable({
                                             </TableCell>
                                         ) : null}
                                     </TableRow>
+                                    </ContextMenuTrigger>
+                                    {isProjected ? null : (
+                                        <TransactionRowContextMenu
+                                            transaction={transaction}
+                                            title={descText}
+                                            alvos={
+                                                enableSelection
+                                                    ? contextMenuTargets(transaction.id, selectedIds)
+                                                    : [transaction.id]
+                                            }
+                                            selected={selectedIds.has(transaction.id)}
+                                            enableSelection={enableSelection}
+                                            enableActions={enableActions}
+                                            openTransactionDetail={openTransactionDetail}
+                                            setSelectedIds={setSelectedIds}
+                                            onDeleteSingle={onDeleteSingle}
+                                            onDeleteBulk={onDeleteBulk}
+                                        />
+                                    )}
+                                    </ContextMenu>
                                 </React.Fragment>
                             )
                         })}

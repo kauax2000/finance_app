@@ -11,6 +11,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { CategoryIconPreview, normalizeCategoryIcon } from "@/components/categories/category-appearance-fields"
+import { CategoryCardContextMenu } from "@/components/categories/category-card-context-menu"
 import { cn } from "@/lib/utils"
 import { ChevronRightIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ColorTile } from "@/components/ui/color-tile"
@@ -180,6 +181,13 @@ export function ExpenseCategoryCard({
         // o menu ficava dentro de um link, e o aria-label do link apagava o
         // conteúdo do cartão. O casco acende com o cursor e o foco do link, e
         // sobe o menu acima da película.
+        <CategoryCardContextMenu
+            name={category.name}
+            description={`${currency(spent)} no mês`}
+            href={href}
+            onEdit={onEdit}
+            onDelete={onDelete}
+        >
         <Card padding="sm" className="group h-full">
                 <CardHeader
                     media={
@@ -312,5 +320,6 @@ export function ExpenseCategoryCard({
 
                 </CardContent>
         </Card>
+        </CategoryCardContextMenu>
     )
 }

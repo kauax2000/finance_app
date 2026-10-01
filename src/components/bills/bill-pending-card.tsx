@@ -8,7 +8,7 @@ import {
     DescriptionTerm,
 } from "@/components/ui/description-list"
 import { billDuePill, billDaysDeltaLabel } from "@/components/bills/bill-status"
-import { CreditCardIcon, EllipsisHorizontalIcon, ForwardIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { ArrowRightIcon, BanknotesIcon, CreditCardIcon, EllipsisHorizontalIcon, ForwardIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { CreditCardIcon as CreditCardMiniIcon } from "@heroicons/react/20/solid"
 import {
     Badge,
@@ -26,6 +26,14 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import { MoneyDisplay } from "@/components/ui/money-display"
+import {
+    ContextMenu,
+    ContextMenuContent,
+    ContextMenuHeader,
+    ContextMenuItem,
+    ContextMenuSeparator,
+    ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -95,6 +103,10 @@ export function BillPendingCard({
             ? (cat?.color ?? EXPENSE_CATEGORY_FALLBACK_COLOR)
             : undefined
     return (
+        // O botão direito e o toque longo repetem as ações do rodapé — o
+        // "Pagar" e o menu de três pontos continuam à vista.
+        <ContextMenu>
+        <ContextMenuTrigger asChild>
         <Card
             padding="sm"
             inactive={row.kind === "regular" && !row.bill.is_active}
@@ -296,5 +308,43 @@ export function BillPendingCard({
                 ) : null}
             </CardFooter>
         </Card>
+        </ContextMenuTrigger>
+        <ContextMenuContent
+            size="xl"
+            header={
+                <ContextMenuHeader
+                    title={row.title}
+                    description={`Venc. ${dueFmt} · ${delta}`}
+                />
+            }
+        >
+            <ContextMenuItem onSelect={onOpenDetail}>
+                <ArrowRightIcon aria-hidden />
+                Abrir
+            </ContextMenuItem>
+            <ContextMenuItem onSelect={onPay}>
+                <BanknotesIcon aria-hidden />
+                Pagar
+            </ContextMenuItem>
+            {row.kind === "regular" ? (
+                <>
+                    <ContextMenuSeparator />
+                    <ContextMenuItem onSelect={onEditModel}>
+                        <PencilIcon aria-hidden />
+                        Editar modelo
+                    </ContextMenuItem>
+                    <ContextMenuItem onSelect={onSkipInstance}>
+                        <ForwardIcon aria-hidden />
+                        Ignorar parcela
+                    </ContextMenuItem>
+                    <ContextMenuSeparator />
+                    <ContextMenuItem variant="destructive" onSelect={onDeleteBill}>
+                        <TrashIcon aria-hidden />
+                        Excluir conta
+                    </ContextMenuItem>
+                </>
+            ) : null}
+        </ContextMenuContent>
+        </ContextMenu>
     )
 }

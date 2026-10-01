@@ -279,7 +279,7 @@
   <dl class="meta">
     <div><dt>Base</dt><dd>Leitura do código</dd></div>
     <div><dt>Branch</dt><dd>finance-app-2.0</dd></div>
-    <div><dt>Data</dt><dd>1 out 2026 · busca global</dd></div>
+    <div><dt>Data</dt><dd>1 out 2026 · busca global e botão direito</dd></div>
     <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 4 lacunas</dd></div>
     <div><dt>Fonte versionada</dt><dd><code>docs/JORNADAS.md</code></dd></div>
   </dl>
@@ -867,6 +867,7 @@ flowchart TD
         <li><div><strong>Criar.</strong> O formulário muda com o tipo. Despesa no crédito exige escolher um cartão; parcelada pede o número de parcelas e se o valor é total ou por parcela.</div></li>
         <li><div><strong>Depois de salvar.</strong> O backend avisa os outros membros e confere o orçamento da categoria e os alertas do cartão. Sem conexão, o lançamento entra na fila.</div></li>
         <li><div><strong>Editar e excluir.</strong> Numa parcela, a pessoa escolhe entre editar só ela ou o plano todo. Excluir uma parcela cancela a compra parcelada inteira.</div></li>
+        <li><div><strong>Botão direito.</strong> Na linha, o botão direito (ou o toque longo) abre Abrir, Editar, Selecionar e Excluir — as mesmas ações dos botões da linha, que continuam. Sobre uma linha selecionada, o menu age na seleção inteira: "Excluir 3 lançamentos".</div></li>
       </ol>
       <figure>
         <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
@@ -894,6 +895,13 @@ flowchart TD
     selection --&gt;|"Editar, só 1"| detailEdit
     selection --&gt;|"Excluir"| bulk(["Exclusão em lote"])
     selection --&gt;|"Limpar"| list
+    list -.-&gt;|"botão direito ou toque longo na linha"| rowMenu(["Menu: Abrir, Editar, Selecionar, Excluir"])
+    rowMenu -.-&gt; detail
+    rowMenu -.-&gt; detailEdit
+    rowMenu -.-&gt; selection
+    rowMenu -.-&gt; delConfirm
+    list -.-&gt;|"botão direito numa linha selecionada"| selMenu(["Menu da seleção: Limpar, Excluir N"])
+    selMenu -.-&gt; bulk
 
     classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
     classDef dialog fill:#1a2220,stroke:#5b6a65,color:#dfe7e4
@@ -901,7 +909,7 @@ flowchart TD
     classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
     classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
     class entry,url route
-    class filters,list,panel,newTx,clear,selection,bulk dialog
+    class filters,list,panel,newTx,clear,selection,bulk,rowMenu,selMenu dialog
     class parse,empty decision
     class form,detail,detailEdit,delConfirm journey</pre></div>
         <figcaption><strong>Figura 5a · Lista e filtros</strong></figcaption>
@@ -958,7 +966,7 @@ flowchart TD
         <figcaption><strong>Figura 5b · Criar, editar e excluir</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
-      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Parâmetros</td><td>Lidos e gravados na URL; <code>new</code> e <code>txn</code> são consumidos e removidos</td><td><code>src/lib/transactions-list-search-params.ts</code></td></tr><tr><td>Formulário</td><td>Um componente para criar, e o mesmo campo a campo na edição</td><td><code>src/components/transactions/transaction-form-dialog.tsx</code>, <code>transaction-form-use.tsx</code></td></tr><tr><td>Parcelada</td><td>RPC <code>create_workspace_installment_plan</code>; editar o plano não muda parcelas já lançadas</td><td><code>src/components/transactions/transaction-form-persistence.ts</code></td></tr><tr><td>Detalhe</td><td>Mesmo painel no Painel, em Cartões e em Categorias</td><td><code>src/components/transactions/transaction-detail-sheet.tsx</code></td></tr><tr><td>Exclusão</td><td>Parcela cancela o plano inteiro por <code>delete_workspace_installment_plan_cascade</code></td><td><code>src/lib/transactions/mutations.ts</code></td></tr><tr><td>Offline</td><td>Criar e excluir entram na fila; pagar conta exige conexão</td><td><code>src/lib/offline/</code></td></tr><tr><td>Enter</td><td>O <code>Enter</code> na busca do seletor não salva a transação</td><td><code>shouldDeferEnterToWidget</code> em <code>src/components/ui/form.tsx</code></td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Parâmetros</td><td>Lidos e gravados na URL; <code>new</code> e <code>txn</code> são consumidos e removidos</td><td><code>src/lib/transactions-list-search-params.ts</code></td></tr><tr><td>Formulário</td><td>Um componente para criar, e o mesmo campo a campo na edição</td><td><code>src/components/transactions/transaction-form-dialog.tsx</code>, <code>transaction-form-use.tsx</code></td></tr><tr><td>Parcelada</td><td>RPC <code>create_workspace_installment_plan</code>; editar o plano não muda parcelas já lançadas</td><td><code>src/components/transactions/transaction-form-persistence.ts</code></td></tr><tr><td>Detalhe</td><td>Mesmo painel no Painel, em Cartões e em Categorias</td><td><code>src/components/transactions/transaction-detail-sheet.tsx</code></td></tr><tr><td>Exclusão</td><td>Parcela cancela o plano inteiro por <code>delete_workspace_installment_plan_cascade</code></td><td><code>src/lib/transactions/mutations.ts</code></td></tr><tr><td>Offline</td><td>Criar e excluir entram na fila; pagar conta exige conexão</td><td><code>src/lib/offline/</code></td></tr><tr><td>Enter</td><td>O <code>Enter</code> na busca do seletor não salva a transação</td><td><code>shouldDeferEnterToWidget</code> em <code>src/components/ui/form.tsx</code></td></tr><tr><td>Botão direito na linha</td><td>Atalho das ações da linha (os botões da coluna Ações continuam); sobre uma linha selecionada age na seleção inteira (<code>contextMenuTargets</code>); linhas projetadas não têm menu</td><td><code>TransactionRowContextMenu</code> em <code>src/components/transactions/transactions-table.tsx</code></td></tr></tbody></table></div>
     </section>
 
     <section class="block" id="j6">
@@ -1052,6 +1060,7 @@ flowchart TD
         <li><div><strong>Pagar uma conta cria uma despesa.</strong> O pagamento vira lançamento, avança a recorrência e passa pelo orçamento. Exige conexão.</div></li>
         <li><div><strong>Pagar uma fatura não cria despesa.</strong> As compras já foram lançadas no cartão; a fatura só fica marcada como paga.</div></li>
         <li><div><strong>Lembretes.</strong> Cada conta pode avisar três dias antes e no dia do vencimento.</div></li>
+        <li><div><strong>Botão direito.</strong> No cartão de pendência, o botão direito (ou o toque longo) repete Abrir, Pagar e o menu de três pontos.</div></li>
       </ol>
       <figure>
         <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
@@ -1082,6 +1091,12 @@ flowchart TD
 
     virtual --&gt;|"clique"| G6(("G6 /credit-cards/id"))
     virtual --&gt;|"Pagar"| payVirtual(["Pagar fatura: Marcar como paga"])
+    pending -.-&gt;|"botão direito ou toque longo"| billMenu(["Menu: Abrir, Pagar; na parcela também Editar modelo, Ignorar, Excluir conta"])
+    billMenu -.-&gt; sheet
+    billMenu -.-&gt; payRegular
+    billMenu -.-&gt; form
+    billMenu -.-&gt; skip
+    billMenu -.-&gt; del
 
     sheet --&gt;|"Pagar parcela"| payRegular
     sheet --&gt;|"Editar"| form
@@ -1105,14 +1120,14 @@ flowchart TD
     classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
     classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
     class bills route
-    class sheet,summary,pending,form,saved,clear,goContas,regular,virtual,payRegular,skip,del,payVirtual,stats,needNet,removed dialog
+    class sheet,summary,pending,form,saved,clear,goContas,regular,virtual,payRegular,skip,del,payVirtual,billMenu,stats,needNet,removed dialog
     class tabs,empty,kind,online decision
     class payRpc,alerts,invPay,reminders backend
     class G6,G5,notif journey</pre></div>
         <figcaption><strong>Figura 7 · Contas a pagar</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
-      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Dados</td><td>Um RPC traz a página inteira</td><td><code>rpc_fetch_bills_page_bundle</code> em <code>src/lib/queries/fetch-bills-page-bundle.ts</code></td></tr><tr><td>Fatura como pendência</td><td>Projetada no cliente a partir dos ciclos fechados com valor em aberto</td><td><code>src/lib/bills/credit-card-bill-projector.ts</code></td></tr><tr><td>Pagar conta</td><td><code>pay_bill_instance</code> cria a despesa e avança a recorrência; bloqueado offline</td><td><code>src/lib/bills/pay-bill-flow.ts</code></td></tr><tr><td>Pagar fatura</td><td>Só marca como paga: as compras já estão lançadas no cartão</td><td><code>src/lib/bills/pay-bill-flow.ts</code></td></tr><tr><td>Recorrência</td><td>Mensal, Bimestral, Trimestral, Anual, Única</td><td><code>src/lib/bills/recurrence.ts</code></td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Dados</td><td>Um RPC traz a página inteira</td><td><code>rpc_fetch_bills_page_bundle</code> em <code>src/lib/queries/fetch-bills-page-bundle.ts</code></td></tr><tr><td>Fatura como pendência</td><td>Projetada no cliente a partir dos ciclos fechados com valor em aberto</td><td><code>src/lib/bills/credit-card-bill-projector.ts</code></td></tr><tr><td>Pagar conta</td><td><code>pay_bill_instance</code> cria a despesa e avança a recorrência; bloqueado offline</td><td><code>src/lib/bills/pay-bill-flow.ts</code></td></tr><tr><td>Pagar fatura</td><td>Só marca como paga: as compras já estão lançadas no cartão</td><td><code>src/lib/bills/pay-bill-flow.ts</code></td></tr><tr><td>Recorrência</td><td>Mensal, Bimestral, Trimestral, Anual, Única</td><td><code>src/lib/bills/recurrence.ts</code></td></tr><tr><td>Botão direito</td><td>No cartão de pendência, repete o "Pagar" e o menu de três pontos, que continuam à vista</td><td><code>src/components/bills/bill-pending-card.tsx</code></td></tr></tbody></table></div>
     </section>
 
     <section class="block" id="j8">
@@ -1189,6 +1204,7 @@ flowchart TD
         <li><div><strong>Lista.</strong> Despesas mostram o gasto do mês contra o limite; receitas mostram só a categoria. O mês fica na URL.</div></li>
         <li><div><strong>Limite.</strong> O limite é definido dentro da própria categoria de despesa, para o mês escolhido, e pode ser removido.</div></li>
         <li><div><strong>Detalhe.</strong> Orçamento restante ou estourado, lançado contra projetado, médias, tendência e os lançamentos do mês, com atalho para a lista completa.</div></li>
+        <li><div><strong>Botão direito.</strong> No cartão de categoria, o botão direito (ou o toque longo) abre Abrir, Abrir em nova aba, Editar e Excluir. Ele toma o lugar do menu do navegador sobre o link, e por isso traz a nova aba.</div></li>
       </ol>
       <figure>
         <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
@@ -1214,6 +1230,10 @@ flowchart TD
     listView --&gt;|"⋯ Editar"| catForm
     listView --&gt;|"⋯ Excluir"| delCat(["Excluir categoria?"])
     delCat --&gt;|"Excluir ou Cancelar"| listView
+    listView -.-&gt;|"botão direito ou toque longo no cartão"| catMenu(["Menu: Abrir, Abrir em nova aba, Editar, Excluir"])
+    catMenu -.-&gt; detail
+    catMenu -.-&gt; catForm
+    catMenu -.-&gt; delCat
 
     listView --&gt;|"cartão de despesa"| detail["/categories/id?type=expense&amp;month="]
     listView --&gt;|"cartão de receita"| detailIn["/categories/id?type=income"]
@@ -1237,14 +1257,14 @@ flowchart TD
     classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
     classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
     class cats,newRoute,detail,detailIn route
-    class step0,step1,step2,listView,catForm,delCat,summary,trend,delDetail,embedded dialog
+    class step0,step1,step2,listView,catForm,delCat,catMenu,summary,trend,delDetail,embedded dialog
     class onboarded decision
     class complete,savedCat,budget backend
     class notifCat,G5,txDetail,txForm,notifBudget journey</pre></div>
         <figcaption><strong>Figura 9 · Categorias e orçamentos</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
-      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Assistente</td><td>Só em <code>/categories</code>, por carteira; nada redireciona para ele</td><td><code>src/components/categories/categories-onboarding-wizard.tsx</code></td></tr><tr><td>Detalhe</td><td><code>rpc_fetch_category_detail_bundle</code></td><td><code>src/lib/queries/fetch-category-detail-bundle.ts</code></td></tr><tr><td>Entradas no detalhe</td><td>Lista de categorias, gasto por categoria do cartão, notificação de orçamento</td><td><code>src/components/categories/detail/</code></td></tr><tr><td>Orçamento</td><td>Avaliado depois de cada despesa e de cada conta paga</td><td>edge <code>evaluate-budgets</code></td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Assistente</td><td>Só em <code>/categories</code>, por carteira; nada redireciona para ele</td><td><code>src/components/categories/categories-onboarding-wizard.tsx</code></td></tr><tr><td>Detalhe</td><td><code>rpc_fetch_category_detail_bundle</code></td><td><code>src/lib/queries/fetch-category-detail-bundle.ts</code></td></tr><tr><td>Entradas no detalhe</td><td>Lista de categorias, gasto por categoria do cartão, notificação de orçamento</td><td><code>src/components/categories/detail/</code></td></tr><tr><td>Orçamento</td><td>Avaliado depois de cada despesa e de cada conta paga</td><td>edge <code>evaluate-budgets</code></td></tr><tr><td>Botão direito</td><td>No cartão de categoria, o menu toma o lugar do menu do navegador sobre o link, por isso traz "Abrir em nova aba"; o ⋯ continua</td><td><code>src/components/categories/category-card-context-menu.tsx</code></td></tr></tbody></table></div>
     </section>
 
     <!-- ============ PARTE IV ============ -->

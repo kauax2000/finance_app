@@ -442,7 +442,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("chart", "Chart", "Gráficos ligados aos tokens do tema.", ui("chart"), "ChartAnnotation, ChartArea, ChartBarList, ChartBars, ChartContainer, ChartDonut, ChartHeatmap, ChartLine, ChartRadar, ChartRadial, ChartSparkline, ChartSplit, ChartWaterfall"),
   entry("combobox", "Combobox", "Select com busca, uma ou várias escolhas.", ui("combobox"), "Combobox, ComboboxField, ComboboxTrigger, ComboboxTextField, ComboboxValue, ComboboxClear, ComboboxChips, ComboboxContent, ComboboxInput, ComboboxActions, ComboboxList, ComboboxEmpty, ComboboxGroup, ComboboxItem, ComboboxCreate, ComboboxLoading"),
   entry("command", "Command", "Paleta de comandos com busca.", ui("command"), "Command, CommandDialog, CommandInput, CommandList, CommandGroup, CommandItem, CommandHighlight, CommandPages, CommandPage, CommandSplit, CommandPreview, CommandDock"),
-  entry("context-menu", "Context Menu", "O mesmo menu, aberto pelo botão direito.", ui("context-menu"), "ContextMenu, ContextMenuItem"),
+  entry("context-menu", "Context Menu", "O mesmo menu, aberto pelo botão direito, pelo toque longo e por Shift+F10.", ui("context-menu"), "ContextMenu, ContextMenuContent, ContextMenuHeader, ContextMenuItem, contextMenuTargets"),
   entry("date-picker", "Date Picker", "Campo de data ou intervalo.", ui("date-picker"), "DatePicker"),
   entry("dialog", "Dialog", "Janela modal.", ui("dialog"), "Dialog, DialogContent, DialogBody, DialogFooter"),
   entry("drawer", "Drawer", "Gaveta arrastável, com física de toque.", ui("drawer"), "Drawer, DrawerContent, DrawerTrigger"),

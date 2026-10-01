@@ -16918,3 +16918,39 @@ dono — inclusive a **busca global do app**, que o `AGENTS.md` registrava como
   faz) e Ações (os ganchos do "+ Adicionar"). É mudança de jornada:
   `JORNADAS.md` e o Atlas ganharam o caminho, e o Atlas foi republicado. **Não
   foi vista no navegador** — as telas do app pedem login.
+
+### Rodada 209 — o ContextMenu ganha o alvo, a largura, a tecla, a descrição, o teclado e a seleção, e o app passa a usá-lo
+
+O `ContextMenu` tinha zero consumidores, e a página uma demonstração só, com
+`w-52` escrito à mão. O dono escolheu todas as versões propostas.
+
+- **`header` + `ContextMenuHeader`**: o nome do alvo e uma legenda, irmã do
+  viewport e com o fio, como no `DropdownMenuContent`. O título se registra
+  por contexto e nomeia o menu — medido: `aria-labelledby` resolve "Mercado".
+- **`size`**: `sm` 176 · `md` 192 · `lg` 208 · `xl` 224, a escada do
+  `DropdownMenuContent`.
+- **`ContextMenuItem shortcut`** com o `Kbd` (⌘O, ⌘E medidos) e
+  **`description`**. A primeira versão da descrição usava `flex-wrap` e
+  derrubava o rótulo para a linha de baixo do ícone; virou grade, e a
+  descrição alinha com o rótulo (mesmo `left`, 6px depois do ícone).
+- **`asChild` sem `data-slot`**: o gatilho escrevia
+  `data-slot="context-menu-trigger"`, e o `Slot` o passava por cima do
+  `data-slot="item"` do filho — o `Item` e o `Card` se reconhecem por ele.
+- **O alvo aberto acende** (`data-state=open`, `bg-muted/60`).
+- **Teclado**: Shift+F10 e a tecla Menu despacham um `contextmenu` no
+  elemento focado; medido, o menu abriu sob o botão, com o foco no primeiro
+  item, e o foco voltou ao botão no Esc.
+- **Toque longo**: a página dizia "não existe botão direito no toque", e o
+  Radix já abre em 700ms e desliga o balão do iOS. A proposta incluía engolir
+  o clique que o dedo entrega ao soltar; **medido com toque emulado no
+  Chromium, esse clique não chega à linha com ou sem a trava**, e a trava
+  saiu. O Safari do iOS não foi medido.
+- **`contextMenuTargets`**: sobre uma linha selecionada, o menu age na
+  seleção inteira ("Excluir 2 lançamentos", medido); fora dela, só na linha.
+- **No app**, sempre como atalho do que continua à vista: a linha de
+  transação (Abrir, Editar, Selecionar, Excluir; na seleção, Limpar e Excluir
+  N; projetadas sem menu), os cartões de categoria (Abrir, Abrir em nova aba —
+  o menu toma o lugar do menu do navegador sobre o link —, Editar, Excluir) e
+  o cartão de conta pendente (Abrir, Pagar e o menu de três pontos). Mudança
+  de jornada: `JORNADAS.md` (5a, 7 e 9) e o Atlas, republicado. **As telas do
+  app não foram vistas no navegador** — pedem login.

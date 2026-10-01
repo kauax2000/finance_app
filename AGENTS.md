@@ -2365,6 +2365,26 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   **Arco-íris sob série continua proibido**: a marca encosta pelo
   `Card variant="brand"`, na borda. O cabeçalho (delta, período, KPIs) é
   composição de `Card`, não peça do `Chart`.
+- **`ContextMenu` ganhou o alvo, a largura, a tecla, a descrição, o teclado e
+  a seleção, e o app passou a usá-lo** (rodada 209). `ContextMenuContent
+  header` + `ContextMenuHeader` dizem sobre o que o menu age, e o título o
+  nomeia (`aria-labelledby`); `size` é a escada do `DropdownMenuContent`
+  (176–224), e nenhuma chamada escreve `w-52`. `ContextMenuItem shortcut`
+  desenha a tecla com o `Kbd` (só a dica — a tecla tem de existir na tela) e
+  `description` é a segunda linha; com ela o item vira **grade**, porque
+  `flex-wrap` derrubava o rótulo (um nó de texto solto) para baixo do ícone.
+  **O gatilho com `asChild` não escreve `data-slot`**: o `Slot` o passava por
+  cima do filho, e o `Item` saía `context-menu-trigger` — medido. O alvo
+  acende com `data-state=open`, e Shift+F10 e a tecla Menu despacham o
+  `contextmenu` no elemento focado (o foco volta a ele). **O toque longo já
+  era do Radix** (700ms, balão do iOS desligado), e a página dizia que não
+  havia botão direito no toque; medido com toque emulado, o soltar do dedo não
+  entrega clique à linha, então não há trava. `contextMenuTargets(id,
+  selecionados)` é a regra da seleção: sobre uma linha selecionada, o menu age
+  em toda ela. **Ele é sempre atalho**: a linha de transação, os cartões de
+  categoria e o de conta pendente o usam repetindo ações que continuam à
+  vista — mudança de jornada, no `JORNADAS.md` e no Atlas.
+  `context-menu-versions.test.ts` tranca.
 - **`Command` ganhou sub-páginas, destaque, pré-visualização, contagem,
   atalhos, recentes, busca no servidor e a gaveta** (rodada 208).
   `CommandPages` + `CommandPage` + `useCommandPages` são as sub-páginas: o

@@ -4,7 +4,8 @@ O mapa de tudo o que uma pessoa faz no app, dividido em onze jornadas. Cada
 jornada tem um fluxograma, as regras técnicas que decidem os caminhos e as
 lacunas encontradas no código. Foi escrito lendo o código em 2026-09-17, na
 branch `finance-app-2.0`, e a navegação global foi revista em 2026-10-01,
-quando entrou a busca (⌘K). Quando uma tela mudar de caminho, atualize o
+quando entrou a busca (⌘K), junto com o menu do botão direito nas linhas de
+lançamento, nos cartões de categoria e nas contas pendentes. Quando uma tela mudar de caminho, atualize o
 diagrama dela.
 
 ## Como ler os diagramas
@@ -424,6 +425,13 @@ flowchart TD
     selection -->|"Editar, só 1"| detailEdit
     selection -->|"Excluir"| bulk(["Exclusão em lote"])
     selection -->|"Limpar"| list
+    list -.->|"botão direito ou toque longo na linha"| rowMenu(["Menu: Abrir, Editar, Selecionar, Excluir"])
+    rowMenu -.-> detail
+    rowMenu -.-> detailEdit
+    rowMenu -.-> selection
+    rowMenu -.-> delConfirm
+    list -.->|"botão direito numa linha selecionada"| selMenu(["Menu da seleção: Limpar, Excluir N"])
+    selMenu -.-> bulk
 ```
 
 ### 5b. Criar, editar e excluir
@@ -480,6 +488,7 @@ flowchart TD
 | Exclusão | Parcela cancela o plano inteiro por `delete_workspace_installment_plan_cascade` | `src/lib/transactions/mutations.ts` |
 | Offline | Criar e excluir entram na fila; pagar conta exige conexão | `src/lib/offline/` |
 | Enter | O `Enter` na busca do seletor não salva a transação | `shouldDeferEnterToWidget` em `src/components/ui/form.tsx` |
+| Botão direito na linha | Atalho das ações da linha (os botões da coluna Ações continuam); sobre uma linha selecionada age na seleção inteira (`contextMenuTargets`); linhas projetadas não têm menu | `TransactionRowContextMenu` em `src/components/transactions/transactions-table.tsx` |
 
 ---
 
@@ -572,6 +581,12 @@ flowchart TD
 
     virtual -->|"clique"| G6(("G6 /credit-cards/id"))
     virtual -->|"Pagar"| payVirtual(["Pagar fatura: Marcar como paga"])
+    pending -.->|"botão direito ou toque longo"| billMenu(["Menu: Abrir, Pagar; na parcela também Editar modelo, Ignorar, Excluir conta"])
+    billMenu -.-> sheet
+    billMenu -.-> payRegular
+    billMenu -.-> form
+    billMenu -.-> skip
+    billMenu -.-> del
 
     sheet -->|"Pagar parcela"| payRegular
     sheet -->|"Editar"| form
@@ -599,6 +614,7 @@ flowchart TD
 | Pagar conta | `pay_bill_instance` cria a despesa e avança a recorrência; bloqueado offline | `src/lib/bills/pay-bill-flow.ts` |
 | Pagar fatura | Só marca como paga: as compras já estão lançadas no cartão | `src/lib/bills/pay-bill-flow.ts` |
 | Recorrência | Mensal, Bimestral, Trimestral, Anual, Única | `src/lib/bills/recurrence.ts` |
+| Botão direito | No cartão de pendência, repete o "Pagar" e o menu de três pontos, que continuam à vista | `src/components/bills/bill-pending-card.tsx` |
 
 ---
 
@@ -675,6 +691,10 @@ flowchart TD
     listView -->|"⋯ Editar"| catForm
     listView -->|"⋯ Excluir"| delCat(["Excluir categoria?"])
     delCat -->|"Excluir ou Cancelar"| listView
+    listView -.->|"botão direito ou toque longo no cartão"| catMenu(["Menu: Abrir, Abrir em nova aba, Editar, Excluir"])
+    catMenu -.-> detail
+    catMenu -.-> catForm
+    catMenu -.-> delCat
 
     listView -->|"cartão de despesa"| detail["/categories/id?type=expense&month="]
     listView -->|"cartão de receita"| detailIn["/categories/id?type=income"]
@@ -701,6 +721,7 @@ flowchart TD
 | Detalhe | `rpc_fetch_category_detail_bundle` | `src/lib/queries/fetch-category-detail-bundle.ts` |
 | Entradas no detalhe | Lista de categorias, gasto por categoria do cartão, notificação de orçamento | `src/components/categories/detail/` |
 | Orçamento | Avaliado depois de cada despesa e de cada conta paga | edge `evaluate-budgets` |
+| Botão direito | No cartão de categoria, o menu toma o lugar do menu do navegador sobre o link, por isso traz "Abrir em nova aba"; o ⋯ continua | `src/components/categories/category-card-context-menu.tsx` |
 
 ---
 
