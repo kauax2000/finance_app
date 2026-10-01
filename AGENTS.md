@@ -2024,6 +2024,16 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   transbordo a 375px —, e `variant="compact"` a força. `PaginationMore` é o
   "Mostrar mais" com a contagem. A tabela de transações e o histórico da conta
   o usam; **não escreva paginação com `ButtonGroup`**.
+- **`RadioGroup` tem ficha, nota na linha, valor na ponta e ícone** (rodada
+  197). `variant="chip"` é a escolha em pílulas, na superfície dos chips de
+  filtro do `Badge` (o rádio fica `sr-only`, e a semântica continua de rádio);
+  `deselectable` volta a vazio tocando na escolhida, para a escolha
+  **opcional**. **Escolha única não é `role="group"` com `aria-pressed`** — a
+  forma de pagamento da transação era assim, e hoje é ficha. `description`
+  vale também na linha `plain`; `trailing` é o valor na outra ponta, dentro
+  do rótulo (entra no nome); `icon` é desenhado em 16px (quem chama passa
+  `16/solid`), e num grupo horizontal de cartões vira ladrilho — ícone em
+  cima, rádio no canto.
 - **`KbdGroup` diz o gesto** (rodada 195): `mode="sequence"` (passos, o
   leitor de tela ouve "depois"; `separator` põe o › à vista) ou
   `mode="either"` (opções, com / e "ou"). **Duas pastilhas lado a lado sem

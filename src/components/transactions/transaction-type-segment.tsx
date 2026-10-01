@@ -1,6 +1,11 @@
 "use client"
 
 import * as React from "react"
+import {
+    ArrowTrendingDownIcon,
+    ArrowTrendingUpIcon,
+    RectangleStackIcon,
+} from "@heroicons/react/16/solid"
 
 import { FormRadioGroup } from "@/components/ui/form"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -14,17 +19,18 @@ const FILTER_TABS: { value: TransactionFilterType; label: string }[] = [
     { value: "income", label: "Receitas" },
 ]
 
-const FORM_TYPE_TABS: { value: "expense" | "income"; label: string }[] = [
-    { value: "expense", label: "Despesas" },
-    { value: "income", label: "Receitas" },
+// O `RadioGroupItem` desenha o ícone em 16px, então `16/solid`.
+const FORM_TYPE_TABS: { value: "expense" | "income"; label: string; icon: React.ReactNode }[] = [
+    { value: "expense", label: "Despesas", icon: <ArrowTrendingDownIcon /> },
+    { value: "income", label: "Receitas", icon: <ArrowTrendingUpIcon /> },
 ]
 
 export type TransactionFormKind = "expense" | "installment" | "income"
 
-const FORM_KIND_TABS: { value: TransactionFormKind; label: string }[] = [
-    { value: "expense", label: "Despesa" },
-    { value: "installment", label: "Parcelada" },
-    { value: "income", label: "Receita" },
+const FORM_KIND_TABS: { value: TransactionFormKind; label: string; icon: React.ReactNode }[] = [
+    { value: "expense", label: "Despesa", icon: <ArrowTrendingDownIcon /> },
+    { value: "installment", label: "Parcelada", icon: <RectangleStackIcon /> },
+    { value: "income", label: "Receita", icon: <ArrowTrendingUpIcon /> },
 ]
 
 /**
@@ -54,7 +60,7 @@ export function TransactionFormKindSegment({
             orientation="horizontal"
             value={value}
             onValueChange={(next) => onChange(next as TransactionFormKind)}
-            options={FORM_KIND_TABS.map((t) => ({ value: t.value, label: t.label }))}
+            options={FORM_KIND_TABS}
         />
     )
 }
@@ -90,7 +96,7 @@ export function TransactionFormTypeSegment({
             orientation="horizontal"
             value={value}
             onValueChange={(next) => onChange(next as "income" | "expense")}
-            options={FORM_TYPE_TABS.map((t) => ({ value: t.value, label: t.label }))}
+            options={FORM_TYPE_TABS}
         />
     )
 }

@@ -36,13 +36,30 @@ import { cn } from "@/lib/utils"
  * com o mesmo mecanismo, os dois usam um só — duas mecânicas para a mesma
  * associação é como uma delas envelhece sozinha.
  *
- * ## `description` só existe no cartão, e não usa `aria-describedby`
+ * ## `description` vive dentro do rótulo, e não usa `aria-describedby`
  *
- * Numa linha `plain` não há onde ela caber sem virar cartão. No cartão ela vive
- * **dentro** do `<label>` — é o que mantém a caixa inteira clicável —, e por
- * isso já entra no **nome acessível** da opção ("Pix, cai na hora"). Apontar um
- * `aria-describedby` para o mesmo texto faria o leitor de tela dizê-lo duas
- * vezes.
+ * Nos cartões e, desde a rodada 197, na linha `plain` — o cabeçalho dizia que
+ * ali ela "não cabia sem virar cartão", e cabe: é a nota miúda sob o rótulo,
+ * com o rádio preso à primeira linha. Ela vive **dentro** do `<label>` — é o
+ * que mantém a caixa inteira clicável —, e por isso já entra no **nome
+ * acessível** da opção ("PIX, cai na hora"). Apontar um `aria-describedby`
+ * para o mesmo texto faria o leitor de tela dizê-lo duas vezes. O `trailing`
+ * (o valor à direita) entra no nome pelo mesmo caminho.
+ *
+ * ## Rodada 197
+ *
+ * - **`variant="chip"`**: a ficha em pílula, na superfície dos chips de filtro
+ *   do `Badge`. O rádio fica `sr-only` — a ficha **é** o indicador —, e a
+ *   semântica continua de rádio: a forma de pagamento da transação era
+ *   `role="group"` com `aria-pressed`, que anuncia seis botões de alternar
+ *   para uma escolha única.
+ * - **`deselectable`**: tocar na opção marcada volta a vazio. É para a escolha
+ *   **opcional** (a forma de pagamento pode ficar em branco); o rádio do HTML
+ *   não desmarca, e o Radix também não.
+ * - **`icon`**: na linha e no cartão ele fica antes do rótulo; num grupo
+ *   horizontal de cartões ele vai **em cima**, e o rádio sobe ao canto — o
+ *   ladrilho de escolha.
+ * - **`trailing`**: o valor na outra ponta, alinhado ao fim.
  *
  * ## Ordem no arquivo
  *
@@ -95,10 +112,30 @@ const CARTAO = [
 const SELECAO =
   "has-data-checked:border-primary-accent/60 has-data-checked:bg-primary/5 dark:has-data-checked:bg-primary/10"
 
-const radioGroupItemVariants = cva("relative", {
+/**
+ * A ficha (rodada 197). Repouso e escolha são, classe a classe, `tagChipNeutral`
+ * e `tagChipFilterSelected` do `Badge` — reescritas sob `has-data-checked:`
+ * porque quem sabe da escolha é o rádio de dentro, e uma constante não se
+ * prefixa. `radio-group-versions.test.ts` cobra a igualdade. O foco é
+ * `outline` e não `ring`: o anel de 1px da escolha é `ring`, e os dois
+ * disputariam a mesma sombra.
+ */
+const FICHA = [
+  "h-8 gap-1.5 rounded-full px-3 text-xs leading-none font-semibold transition-colors pointer-coarse:min-h-10",
+  "bg-muted text-muted-foreground",
+  "not-has-[:disabled]:hover:text-foreground not-has-[:disabled]:active:text-foreground",
+  "has-data-checked:bg-primary-muted has-data-checked:text-primary-muted-foreground has-data-checked:ring-1 has-data-checked:ring-primary-accent/25 dark:has-data-checked:ring-primary-accent/40",
+  "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring",
+  "has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50",
+].join(" ")
+
+const radioGroupItemVariants = cva("group/radio-item relative", {
   variants: {
     variant: {
-      plain: "gap-2 pointer-coarse:min-h-11",
+      // Com nota, o rádio desce para a primeira linha e o par ganha
+      // entrelinha — o `leading-none` do `Label` colaria as duas linhas.
+      plain:
+        "gap-2 pointer-coarse:min-h-11 has-data-[slot=radio-group-item-content]:items-start has-data-[slot=radio-group-item-content]:leading-snug",
       card: [CARTAO, SELECAO].join(" "),
       /**
        * O `card` com o brilho de marca na borda (rodada 169). Até a 168 era um
@@ -110,6 +147,7 @@ const radioGroupItemVariants = cva("relative", {
        * O anel de foco continua o do cartão. Uma por tela.
        */
       brandCard: [CARTAO, SELECAO, "brand-glow isolate"].join(" "),
+      chip: FICHA,
     },
   },
   defaultVariants: { variant: "plain" },
@@ -137,16 +175,27 @@ const radioGroupItemVariants = cva("relative", {
 const radioInCardClassName =
   "mt-0.5 after:hidden focus-visible:ring-0 focus-visible:border-input disabled:opacity-100"
 
-type RadioGroupVariant = "plain" | "card" | "brandCard"
+/**
+ * O ladrilho (rodada 197): cartão num grupo horizontal, com ícone. O ícone e o
+ * rótulo empilham, e o rádio sobe ao canto, no recuo do cartão.
+ */
+const ladrilhoClassName = "flex-col gap-2 pe-9"
+const radioNoLadrilhoClassName = "absolute end-2.5 top-2.5 mt-0"
+
+type RadioGroupVariant = "plain" | "card" | "brandCard" | "chip"
 
 type RadioGroupContextValue = {
   variant: RadioGroupVariant
   invalid: boolean
+  horizontal: boolean
+  /** Só com `deselectable`: volta o grupo a vazio. */
+  limpar?: () => void
 }
 
 const RadioGroupContext = React.createContext<RadioGroupContextValue>({
   variant: "plain",
   invalid: false,
+  horizontal: false,
 })
 
 /**
@@ -168,15 +217,44 @@ function RadioGroup({
   variant = "plain",
   orientation,
   children,
+  deselectable = false,
+  value,
+  defaultValue,
+  onValueChange,
   "aria-invalid": ariaInvalid,
   ...props
 }: React.ComponentProps<typeof RadioGroupPrimitive.Root> & {
   variant?: RadioGroupVariant
+  /**
+   * Tocar na opção marcada a desmarca, e `onValueChange` recebe `""`. Para a
+   * escolha opcional; uma escolha obrigatória não deve poder voltar a vazio.
+   */
+  deselectable?: boolean
 }) {
   const invalid = ariaInvalid === true || ariaInvalid === "true"
+  // Desmarcar exige saber o valor: sem `value`, o grupo o guarda. Sem
+  // `deselectable` o Radix continua dono do estado, como sempre foi.
+  const [interno, setInterno] = React.useState(defaultValue ?? "")
+  const controlado = value !== undefined
+  const mudar = React.useCallback(
+    (proximo: string) => {
+      if (!controlado) setInterno(proximo)
+      onValueChange?.(proximo)
+    },
+    [controlado, onValueChange]
+  )
+  const estado = deselectable
+    ? { value: controlado ? value : interno, onValueChange: mudar }
+    : { value, defaultValue, onValueChange }
+  const horizontal = orientation === "horizontal"
   const contexto = React.useMemo<RadioGroupContextValue>(
-    () => ({ variant, invalid }),
-    [variant, invalid]
+    () => ({
+      variant,
+      invalid,
+      horizontal,
+      limpar: deselectable ? () => mudar("") : undefined,
+    }),
+    [variant, invalid, horizontal, deselectable, mudar]
   )
 
   return (
@@ -186,6 +264,7 @@ function RadioGroup({
       data-orientation={orientation ?? "vertical"}
       orientation={orientation}
       aria-invalid={ariaInvalid}
+      {...estado}
       className={cn(
         // 12px entre linhas — o respiro que o `FieldSet` já reserva para este
         // slot (`has-[>[data-slot=radio-group]]:gap-3`).
@@ -193,6 +272,8 @@ function RadioGroup({
         // Na horizontal são colunas iguais, e 8px basta porque cada cartão já
         // tem contorno próprio.
         "data-[orientation=horizontal]:grid-flow-col data-[orientation=horizontal]:auto-cols-fr data-[orientation=horizontal]:gap-2",
+        // As fichas correm e quebram, na largura de cada uma.
+        "data-[variant=chip]:flex data-[variant=chip]:flex-wrap data-[variant=chip]:gap-2",
         className
       )}
       {...props}
@@ -207,39 +288,89 @@ function RadioGroup({
 function RadioGroupItem({
   children,
   description,
+  icon,
+  trailing,
   variant,
   className,
   radioClassName,
+  onClick,
   ...props
 }: Omit<React.ComponentProps<typeof Radio>, "children" | "variant"> &
   VariantProps<typeof radioGroupItemVariants> & {
     /** O rótulo da opção. */
     children: React.ReactNode
-    /** A explicação. Só tem lugar nos cartões — ver o cabeçalho. */
+    /** A nota miúda sob o rótulo. Não vale na ficha. */
     description?: React.ReactNode
+    /** O ícone antes do rótulo; num grupo horizontal de cartões, em cima. */
+    icon?: React.ReactNode
+    /** O valor na outra ponta — prazo, parcela, taxa. Não vale na ficha. */
+    trailing?: React.ReactNode
     /** `className` veste a **caixa** (o `<label>`); esta veste o controle. */
     radioClassName?: string
   }) {
   const grupo = React.useContext(RadioGroupContext)
   const resolvido = variant ?? grupo.variant
   const glowRef = useBrandGlow<HTMLLabelElement>(resolvido === "brandCard")
+  const ficha = resolvido === "chip"
+  const cartao = resolvido === "card" || resolvido === "brandCard"
+  const ladrilho = cartao && grupo.horizontal && icon != null
+  const nota = ficha ? null : description
 
   return (
     <Label
       ref={glowRef}
       data-slot="radio-group-item"
       data-variant={resolvido}
-      className={cn(radioGroupItemVariants({ variant: resolvido }), className)}
+      className={cn(
+        radioGroupItemVariants({ variant: resolvido }),
+        ladrilho && ladrilhoClassName,
+        className
+      )}
     >
       <Radio
         {...props}
+        onClick={(e) => {
+          onClick?.(e)
+          // Antes do Radix: ele só marca o que não está marcado, então a
+          // opção marcada chega aqui intacta e só nós a desmarcamos.
+          if (grupo.limpar && e.currentTarget.dataset.state === "checked") {
+            grupo.limpar()
+          }
+        }}
         aria-invalid={props["aria-invalid"] ?? (grupo.invalid || undefined)}
         className={cn(
-          resolvido !== "plain" && radioInCardClassName,
+          cartao && radioInCardClassName,
+          resolvido === "plain" && nota && "mt-0.5",
+          ladrilho && radioNoLadrilhoClassName,
+          // A ficha é o indicador; o rádio continua o controle, para o leitor
+          // de tela e para o teclado. O `absolute` explícito é o que tira o
+          // `relative` do átomo pelo `twMerge` — o `sr-only` sozinho não é do
+          // grupo de posição, e o rádio ficava no fluxo empurrando o rótulo.
+          ficha && "sr-only absolute",
           radioClassName
         )}
       />
-      {description ? (
+      {icon ? (
+        <span
+          data-slot="radio-group-item-icon"
+          aria-hidden
+          className={cn(
+            // 16px em toda forma, e quem chama passa `16/solid` — o contrato
+            // do `icon` do `Alert`, da `AnnouncementBar` e da `Timeline`.
+            "flex shrink-0 text-muted-foreground transition-colors [&>svg]:size-4",
+            // Numa linha com nota, o ícone fica na primeira linha.
+            !ladrilho && nota && "mt-0.5",
+            // Escolhida, o ícone ganha a tinta do rótulo. A ficha já tinge
+            // pelo `currentColor` dela.
+            ficha
+              ? "text-current"
+              : "group-has-data-checked/radio-item:text-foreground"
+          )}
+        >
+          {icon}
+        </span>
+      ) : null}
+      {nota ? (
         // Título sobre descrição é **par de identidade**: `gap-0`, e quem os
         // separa é a entrelinha.
         <span
@@ -248,12 +379,23 @@ function RadioGroupItem({
         >
           <span className="font-medium text-foreground">{children}</span>
           <Muted asChild className="text-xs">
-            <span>{description}</span>
+            <span>{nota}</span>
           </Muted>
         </span>
       ) : (
         children
       )}
+      {trailing != null && !ficha ? (
+        <span
+          data-slot="radio-group-item-trailing"
+          className={cn(
+            "ms-auto shrink-0 ps-2 text-end text-muted-foreground tabular-nums",
+            ladrilho && "ms-0 ps-0 text-start"
+          )}
+        >
+          {trailing}
+        </span>
+      ) : null}
     </Label>
   )
 }

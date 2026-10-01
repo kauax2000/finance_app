@@ -420,11 +420,15 @@ function FormFieldGroup({
   )
 }
 
-/** Uma opção. `description` só aparece em `variant="card"`. */
+/** Uma opção. `description` e `trailing` não aparecem na ficha (`chip`). */
 type FormRadioOption = {
   value: string
   label: React.ReactNode
   description?: React.ReactNode
+  /** O ícone da opção (rodada 197). */
+  icon?: React.ReactNode
+  /** O valor na outra ponta (rodada 197). */
+  trailing?: React.ReactNode
   disabled?: boolean
 }
 
@@ -473,6 +477,8 @@ function FormRadioGroup({
             key={option.value}
             value={option.value}
             description={option.description}
+            icon={option.icon}
+            trailing={option.trailing}
             disabled={option.disabled}
           >
             {option.label}

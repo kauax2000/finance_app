@@ -16323,3 +16323,51 @@ O dono pediu a rodada completa e escolheu as quatro versões.
   concatenação.
 - As duas telas pedem login e não foram vistas; as peças foram medidas na
   página, no desktop e a 375px.
+
+### Rodada 197 — o RadioGroup ganha a ficha, a nota na linha, o valor na ponta e o ícone
+
+O dono pediu a rodada completa e escolheu as quatro versões.
+
+- **Uma escolha única estava escrita como seis interruptores.** A forma de
+  pagamento do formulário de transação era `role="group"` com seis `Button
+  aria-pressed`: o leitor de tela anunciava botões de alternar independentes,
+  e cada ficha era uma parada de Tab. Virou `FormRadioGroup variant="chip"`:
+  uma parada só, as setas trocam, e o rótulo "Forma de pagamento" nomeia o
+  grupo pelo `aria-labelledby` do campo (antes era um `FieldTitle` visual mais
+  um `aria-label`).
+- **A ficha é, classe a classe, o chip de filtro do `Badge`**
+  (`tagChipNeutral` em repouso, `tagChipFilterSelected` na escolha, reescritas
+  sob `has-data-checked:` porque uma constante não se prefixa), e
+  `radio-group-versions.test.ts` cobra a igualdade. O foco é `outline`, porque
+  o anel de 1px da escolha já é `ring`. Medido: 32px no desktop, 40 no dedo.
+- **O rádio `sr-only` ficava no fluxo.** `sr-only` não é do grupo de posição
+  do `tailwind-merge`, então o `relative` do átomo sobrevivia e vencia: o
+  rádio de 1px, mais o `gap`, empurrava o rótulo para a direita (visto na
+  captura). Com `absolute` junto, o merge tira o `relative`; medido depois,
+  12px de cada lado do texto nas cinco fichas.
+- **`deselectable`**: o Radix só marca o que não está marcado, então o clique
+  na marcada chega intacto ao nosso `onClick`, que chama o grupo com `""`.
+  Sem `value`, o grupo guarda o estado; sem `deselectable`, o Radix continua
+  dono dele, como antes. Medido: tocar na escolhida dá `""`, Espaço na marcada
+  também.
+- **A nota na linha simples**: o cabeçalho dizia que ela "não cabia sem virar
+  cartão". Cabe: o `Label` troca `items-center` por `items-start` e ganha
+  entrelinha (`leading-none` colaria as duas linhas), e o rádio desce 2px.
+  Medido: o centro do rádio a 10px de uma linha de 19,25.
+- **`trailing`**: o valor na ponta, em algarismos tabulares, dentro do
+  `<label>` — entra no nome acessível, como a nota. A página troca o PIX/cartão
+  por um parcelamento com a parcela na ponta.
+- **`icon` em 16px, em toda forma.** A primeira versão desenhava 20px no
+  cartão, com `24/outline` pela regra do "ícone passado como valor", e o
+  auditor acusou os cinco usos da tela: ele supõe 16 para ícone sem tamanho, e
+  o `icon` do `Alert`, da `AnnouncementBar` e da `Timeline` já é desenhado em
+  16 com `16/solid` de quem chama. Seguir o contrato da casa foi mais barato
+  que ensinar outra exceção ao auditor. Num grupo horizontal de cartões a
+  opção vira **ladrilho**: ícone em cima, rádio no canto do recuo. O tipo do
+  lançamento (Despesa, Parcelada, Receita) e o tipo na edição o vestem.
+- **A página tinha duas demonstrações do mesmo par** ("Total e parcelas" /
+  "Valor da parcela", na horizontal e no formulário); a horizontal saiu, e o
+  formulário diz o que ela dizia. A nota "Onde o app usa" entrou.
+- O formulário de transação pede login e não foi visto; as peças foram
+  medidas na página, nos dois temas e a 375px com toque.
+

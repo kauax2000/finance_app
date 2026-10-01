@@ -52,10 +52,6 @@ import {
 } from "@/components/ui/form-picker-popover"
 import { Popover } from "@/components/ui/popover"
 import { useIsMobile } from "@/hooks/use-mobile"
-import {
-    tagChipFilterIdle,
-    tagChipFilterSelected,
-} from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { currencyBRL } from "@/lib/formatters"
 function CategoryRows({
@@ -118,47 +114,6 @@ function CategoryRows({
                 )
             })}
         </ul>
-    )
-}
-
-function PaymentMethodChips({
-    value,
-    onChange,
-}: {
-    value: PaymentMethod | null
-    onChange: (next: PaymentMethod | null) => void
-}) {
-    const options = paymentMethodOptions()
-    return (
-        <div
-            className="flex flex-wrap gap-2"
-            role="group"
-            aria-label="Forma de pagamento"
-        >
-            {options.map((opt) => {
-                const selected = value === opt.value
-                return (
-                    <Button
-                        key={opt.value}
-                        type="button"
-                        size="sm"
-                        variant="tertiary"
-                        aria-pressed={selected}
-                        className={cn(
-                            "h-auto min-h-8 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold shadow-none",
-                            "focus-visible:ring-2 focus-visible:ring-ring/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                            "border-0 max-md:active:bg-muted/50 max-md:active:opacity-90",
-                            selected ? tagChipFilterSelected : tagChipFilterIdle
-                        )}
-                        onClick={() =>
-                            onChange(selected ? null : opt.value)
-                        }
-                    >
-                        {opt.label}
-                    </Button>
-                )
-            })}
-        </div>
     )
 }
 
@@ -627,19 +582,22 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
 
             {type === "expense" || showInstallmentFields ? (
                 <>
-                    <Field size="sm">
-                        {/* Título visual: as fichas já são um grupo com `aria-label`. */}
-                        <FieldTitle>Forma de pagamento</FieldTitle>
-                        <PaymentMethodChips
-                            value={paymentMethod}
-                            onChange={(next) => {
-                                setPaymentMethod(next)
-                                if (next !== "credit_card") {
-                                    setPaymentCreditCardId("")
-                                }
-                            }}
-                        />
-                    </Field>
+                    {/* A forma de pagamento é opcional: tocar na ficha
+                        escolhida a desmarca. */}
+                    <FormRadioGroup
+                        fieldSize="sm"
+                        label="Forma de pagamento"
+                        variant="chip"
+                        deselectable
+                        value={paymentMethod ?? ""}
+                        onValueChange={(next) => {
+                            setPaymentMethod((next || null) as PaymentMethod | null)
+                            if (next !== "credit_card") {
+                                setPaymentCreditCardId("")
+                            }
+                        }}
+                        options={paymentMethodOptions()}
+                    />
 
                     {paymentMethod === "credit_card" ? (
                         <Field size="sm">
