@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { ChevronRightIcon } from "@heroicons/react/16/solid"
 
 import { Badge } from "@/components/ui/badge"
@@ -18,10 +19,14 @@ import {
   CarouselCaption,
   CarouselContent,
   CarouselDots,
+  CarouselFullscreen,
   CarouselItem,
+  CarouselMore,
   CarouselNext,
   CarouselPlayPause,
   CarouselPrevious,
+  CarouselProgress,
+  CarouselSkeleton,
   CarouselStatus,
   CarouselStep,
   CarouselSteps,
@@ -35,6 +40,7 @@ import {
   PageSectionHeader,
   PageSectionTitle,
 } from "@/components/ui/page-section"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Caption } from "@/components/ui/typography"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
@@ -178,6 +184,326 @@ function CartaImagem({
   )
 }
 
+/**
+ * O segmentado das demonstrações: uma demo por eixo, trocando o valor, no
+ * lugar de uma cópia do carrossel para cada valor (a página tinha 30).
+ */
+function Segmentado<T extends string>({
+  rotulo,
+  valores,
+  valor,
+  onChange,
+}: {
+  rotulo: string
+  valores: readonly T[]
+  valor: T
+  onChange: (v: T) => void
+}) {
+  return (
+    <ToggleGroup
+      type="single"
+      variant="segmented"
+      size="sm"
+      value={valor}
+      onValueChange={(v) => v && onChange(v as T)}
+      aria-label={rotulo}
+      className="self-start"
+    >
+      {valores.map((v) => (
+        <ToggleGroupItem key={v} value={v} className="font-mono">
+          {v}
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
+  )
+}
+
+/** A foto inteira, para a tela cheia: `object-contain`, e não recortada. */
+function FotoInteira({ semente, titulo }: { semente: string; titulo: string }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- demonstração com foto externa
+    <img
+      src={FOTO(semente, 1600, 900)}
+      alt={titulo}
+      className="mx-auto max-h-[85dvh] w-full object-contain"
+    />
+  )
+}
+
+function SuperficieDemo() {
+  const [v, setV] = React.useState<"plain" | "card" | "inset">("card")
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <Segmentado rotulo="Superfície" valores={["plain", "card", "inset"] as const} valor={v} onChange={setV} />
+      <Carousel variant={v} aria-label="Saldo por mês" className="w-full">
+        <CarouselContent>
+          {MESES.map((m) => (
+            <CarouselItem key={m.mes} className="basis-1/2 sm:basis-1/3">
+              <TiraMes {...m} />
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious />
+        <CarouselNext />
+      </Carousel>
+    </div>
+  )
+}
+
+function ControlesDemo() {
+  const [c, setC] = React.useState<"inside" | "outside" | "none">("inside")
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <Segmentado rotulo="Controles" valores={["inside", "outside", "none"] as const} valor={c} onChange={setC} />
+      <Carousel controls={c} aria-label="Faturas abertas" className="w-full">
+        <CarouselContent>
+          {CARTOES.map((card) => (
+            <CarouselItem key={card.nome} className="basis-2/3 sm:basis-1/2">
+              <CartaoFatura {...card} />
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious />
+        <CarouselNext />
+        {c === "none" ? <CarouselDots className="mt-3" /> : null}
+      </Carousel>
+    </div>
+  )
+}
+
+function CalhaDemo() {
+  const [g, setG] = React.useState<"none" | "sm" | "md" | "lg">("md")
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <Segmentado rotulo="Calha" valores={["none", "sm", "md", "lg"] as const} valor={g} onChange={setG} />
+      <Carousel gap={g} controls="none" aria-label="Saldo por mês" className="w-full">
+        <CarouselContent>
+          {MESES.map((m) => (
+            <CarouselItem key={m.mes} className="basis-1/3 sm:basis-1/4">
+              <Card>
+                <CardContent>
+                  <Caption>{m.mes}</Caption>
+                  <MoneyDisplay value={m.saldo} size="sm" tone={m.saldo < 0 ? "expense" : "income"} />
+                </CardContent>
+              </Card>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+      </Carousel>
+    </div>
+  )
+}
+
+function IndicadorDemo() {
+  const [v, setV] = React.useState<"dot" | "pill" | "bar" | "progress">("dot")
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <Segmentado rotulo="Indicador" valores={["dot", "pill", "bar", "progress"] as const} valor={v} onChange={setV} />
+      <Carousel controls="none" aria-label="Saldo por mês" className="w-full">
+        <CarouselContent>
+          {MESES.map((m) => (
+            <CarouselItem key={m.mes} className="basis-1/2 sm:basis-1/3">
+              <Card>
+                <CardContent>
+                  <Caption>{m.mes}</Caption>
+                  <MoneyDisplay value={m.saldo} size="sm" tone={m.saldo < 0 ? "expense" : "income"} />
+                </CardContent>
+              </Card>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <div className="mt-3 flex items-center justify-between gap-4">
+          <CarouselStatus />
+          {v === "progress" ? (
+            <CarouselProgress className="max-w-40" />
+          ) : (
+            <CarouselDots variant={v} className={v === "bar" ? "flex-1" : undefined} />
+          )}
+        </div>
+      </Carousel>
+    </div>
+  )
+}
+
+function CarregandoDemo() {
+  const [estado, setEstado] = React.useState<"carregando" | "pronto">("carregando")
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <Segmentado rotulo="Estado" valores={["carregando", "pronto"] as const} valor={estado} onChange={setEstado} />
+      {estado === "carregando" ? (
+        <CarouselSkeleton count={3} itemClassName="basis-2/3 sm:basis-1/2" label="Carregando as faturas" />
+      ) : (
+        <Carousel aria-label="Faturas abertas" className="w-full">
+          <CarouselContent>
+            {CARTOES.map((c) => (
+              <CarouselItem key={c.nome} className="basis-2/3 sm:basis-1/2">
+                <CartaoFatura {...c} />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
+      )}
+    </div>
+  )
+}
+
+function DepoimentoDemo() {
+  const [efeito, setEfeito] = React.useState<"fade" | "scale">("fade")
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <Segmentado rotulo="Efeito" valores={["fade", "scale"] as const} valor={efeito} onChange={setEfeito} />
+      <Carousel
+        key={efeito}
+        controls="none"
+        effect={efeito}
+        fade={false}
+        aria-label="Serviços"
+        className="mx-auto w-full max-w-2xl"
+      >
+        <CarouselContent>
+          {SERVICOS.map((s) => (
+            <CarouselItem key={s.semente}>
+              <div className="grid items-center gap-4 sm:grid-cols-[2fr_3fr]">
+                <div className="overflow-hidden rounded-xl">
+                  <CardMedia src={FOTO(s.semente, 600, 600)} alt="" aspect="square" />
+                </div>
+                <Card variant="elevated" className="sm:-ms-10">
+                  <CardHeader>
+                    <CardTitle>{s.titulo}</CardTitle>
+                    <CardDescription>Finance App</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-pretty">{s.texto}</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselToolbar align="center" className="mt-4">
+          <CarouselPrevious placement="inline" appearance="solid" />
+          <CarouselDots />
+          <CarouselNext placement="inline" appearance="solid" />
+        </CarouselToolbar>
+      </Carousel>
+    </div>
+  )
+}
+
+function GaleriaDemo() {
+  const [surface, setSurface] = React.useState<"glass" | "none">("glass")
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <Segmentado rotulo="Superfície dos pontos" valores={["glass", "none"] as const} valor={surface} onChange={setSurface} />
+      <Carousel gap="none" fade={false} effect="parallax" aria-label="Novidades" className="w-full">
+        <CarouselContent viewportClassName="rounded-xl">
+          {NOVIDADES.map((n) => (
+            <CarouselItem key={n.semente}>
+              <CardMedia src={FOTO(n.semente, 1280, 720)} alt={n.titulo} aspect="video" />
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselStatus placement="overlay" />
+        <CarouselFullscreen title="Novidades">
+          {NOVIDADES.map((n) => (
+            <CarouselItem key={n.semente}>
+              <FotoInteira semente={n.semente} titulo={n.titulo} />
+            </CarouselItem>
+          ))}
+        </CarouselFullscreen>
+        <CarouselPrevious appearance="glass" />
+        <CarouselNext appearance="glass" />
+        <CarouselDots placement="overlay" surface={surface} variant="pill" />
+      </Carousel>
+    </div>
+  )
+}
+
+function MiniaturasDemo() {
+  const [lado, setLado] = React.useState<"horizontal" | "vertical">("vertical")
+  const miniaturas = NOVIDADES.map((n, i) => (
+    <CarouselThumb key={n.semente} index={i}>
+      {/* eslint-disable-next-line @next/next/no-img-element -- demonstração com foto externa */}
+      <img src={FOTO(n.semente, 160, 120)} alt="" />
+    </CarouselThumb>
+  ))
+  const principal = (
+    <CarouselContent viewportClassName="rounded-xl">
+      {NOVIDADES.map((n) => (
+        <CarouselItem key={n.semente}>
+          <CardMedia src={FOTO(n.semente, 1280, 720)} alt={n.titulo} aspect="video" />
+        </CarouselItem>
+      ))}
+    </CarouselContent>
+  )
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <Segmentado rotulo="Miniaturas" valores={["vertical", "horizontal"] as const} valor={lado} onChange={setLado} />
+      {lado === "vertical" ? (
+        <Carousel gap="none" fade={false} controls="none" aria-label="Novidades" className="w-full">
+          <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_5rem]">
+            {principal}
+            <CarouselThumbs orientation="vertical">{miniaturas}</CarouselThumbs>
+          </div>
+        </Carousel>
+      ) : (
+        <Carousel gap="none" fade={false} controls="none" aria-label="Novidades" className="w-full">
+          {principal}
+          <CarouselToolbar className="mt-3">
+            <CarouselPrevious placement="inline" appearance="solid" />
+            <CarouselThumbs>{miniaturas}</CarouselThumbs>
+            <CarouselNext placement="inline" appearance="solid" />
+          </CarouselToolbar>
+        </Carousel>
+      )}
+    </div>
+  )
+}
+
+function RotacaoDemo() {
+  const [indicador, setIndicador] = React.useState<"pontos" | "passos">("pontos")
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <Segmentado rotulo="Indicador" valores={["pontos", "passos"] as const} valor={indicador} onChange={setIndicador} />
+      {indicador === "pontos" ? (
+        <Carousel autoplay={5000} loop gap="none" fade={false} controls="none" aria-label="Novidades" className="w-full">
+          <CarouselContent viewportClassName="rounded-xl">
+            {NOVIDADES.map((n) => (
+              <CarouselItem key={n.semente}>
+                <CartaImagem {...n} aspect="video" />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselToolbar align="center" className="mt-3">
+            <CarouselPlayPause />
+            <CarouselDots variant="pill" />
+          </CarouselToolbar>
+        </Carousel>
+      ) : (
+        <Carousel autoplay={6000} loop controls="none" fade={false} aria-label="Serviços" className="w-full">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <CarouselSteps>
+              {SERVICOS.map((s, i) => (
+                <CarouselStep key={s.semente} index={i} label={s.titulo} />
+              ))}
+            </CarouselSteps>
+            <CarouselPlayPause />
+          </div>
+          <CarouselContent>
+            {SERVICOS.map((s) => (
+              <CarouselItem key={s.semente}>
+                <CartaImagem semente={s.semente} titulo={s.titulo} texto={s.texto} aspect="video" />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
+      )}
+    </div>
+  )
+}
+
 export default function CarouselDoc() {
   return (
     <>
@@ -186,14 +512,237 @@ export default function CarouselDoc() {
         fora da tela não se compara, e duas faturas ou dois meses lado a lado
         pedem grade, tabela ou lista. As versões abaixo são o{" "}
         <strong>mesmo motor</strong> com props e peças diferentes, não
-        componentes paralelos.
+        componentes paralelos. Dê um <code>aria-label</code> a cada um: o padrão,
+        &quot;Carrossel&quot;, não diz o que há dentro.
       </Usage>
+
+      <DocSection
+        title="Padrão"
+        description="Setas dentro da caixa e pontos. Passa pelo arraste, pelas setas, pelo teclado (← →, Home, End) e pelo gesto de dois dedos do trackpad, um item por gesto. O item cortado na borda, clicado, vem para a vista antes de agir."
+        code={`<Carousel aria-label="Faturas abertas">
+  <CarouselContent>
+    <CarouselItem className="basis-2/3 sm:basis-1/2">…</CarouselItem>
+  </CarouselContent>
+  <CarouselPrevious />
+  <CarouselNext />
+  <CarouselDots className="mt-3" />
+</Carousel>`}
+      >
+        <Carousel aria-label="Faturas abertas" className="w-full">
+          <CarouselContent>
+            {CARTOES.map((c) => (
+              <CarouselItem key={c.nome} className="basis-2/3 sm:basis-1/2">
+                <CartaoFatura {...c} />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+          <CarouselDots className="mt-3" />
+        </Carousel>
+      </DocSection>
+
+      <DocSection
+        title="Superfície"
+        description={
+          <>
+            <code>variant</code> decide o que a raiz pinta. <code>card</code> e{" "}
+            <code>inset</code> forçam <code>controls=&quot;inside&quot;</code>:
+            uma superfície pintada não tem controle flutuando fora dela. O item
+            de dentro não é <code>Card</code> — a moldura já é a raiz.
+          </>
+        }
+        code={`<Carousel variant="card">…</Carousel>
+<Carousel variant="inset">…</Carousel>`}
+        previewClassName="flex-col items-stretch"
+      >
+        <SuperficieDemo />
+      </DocSection>
+
+      <DocSection
+        title="Controles"
+        description={
+          <>
+            Onde a seta sobreposta pousa, e se ela existe. No toque a seta{" "}
+            <strong>continua visível</strong>: a WCAG 2.5.7 exige uma
+            alternativa sem arraste. <code>none</code> esconde só as
+            sobrepostas — as de uma barra são pedidas à mão.
+          </>
+        }
+        code={`<Carousel controls="inside">…</Carousel>   {/* o padrão */}
+<Carousel controls="outside">…</Carousel>  {/* reserva px-9 (36px) na raiz */}
+<Carousel controls="none">…</Carousel>     {/* gesto, pontos ou barra */}`}
+        previewClassName="flex-col items-stretch"
+      >
+        <ControlesDemo />
+      </DocSection>
+
+      <DocSection
+        title="Calha"
+        description={
+          <>
+            <code>gap</code> é a distância entre itens: margem negativa no
+            trilho mais recuo no item. <code>gap</code> no flex entraria na
+            conta de <code>basis-*</code>.
+          </>
+        }
+        code={`<Carousel gap="sm">…</Carousel>   {/* none · sm · md (o padrão) · lg */}`}
+        previewClassName="flex-col items-stretch"
+      >
+        <CalhaDemo />
+      </DocSection>
+
+      <DocSection
+        title="Indicador e contagem"
+        description={
+          <>
+            <code>CarouselDots</code> tem três formas: pontos até uns oito,
+            pílula (o ativo alonga, e é a forma do temporizador) e, acima de
+            oito, a barra segmentada. <code>CarouselProgress</code> é a barra
+            de rolagem: o polegar tem a largura do que cabe e anda com a tira.{" "}
+            <code>CarouselStatus</code> é o &quot;3 de 6&quot; e a região que o
+            leitor de tela ouve.
+          </>
+        }
+        code={`<CarouselDots />                {/* pontos */}
+<CarouselDots variant="pill" />   {/* o ativo alonga */}
+<CarouselDots variant="bar" />    {/* barra segmentada */}
+<CarouselProgress />              {/* barra de rolagem */}
+<CarouselStatus />                {/* "3 de 6", role="status" */}`}
+        previewClassName="flex-col items-stretch"
+      >
+        <IndicadorDemo />
+      </DocSection>
+
+      <DocSection
+        title="Carrossel só no telefone"
+        description={
+          <>
+            <code>until=&quot;md&quot;</code>: abaixo de 768px é a tira; a
+            partir dele, grade com a mesma calha, e setas, pontos e barra somem.
+            O embla desliga por breakpoint, então o teclado e a roda deixam a
+            grade em paz. Estreite a janela para ver a troca.
+          </>
+        }
+        code={`<Carousel until="md" aria-label="Cartões">
+  <CarouselContent>
+    <CarouselItem className="basis-2/3">…</CarouselItem>
+  </CarouselContent>
+  <CarouselDots className="mt-3" />
+</Carousel>`}
+        previewClassName="items-stretch"
+      >
+        <Carousel until="md" controls="none" aria-label="Cartões" className="w-full">
+          <CarouselContent>
+            {CARTOES.map((c) => (
+              <CarouselItem key={c.nome} className="basis-2/3">
+                <CartaoFatura {...c} />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselDots className="mt-3" />
+        </Carousel>
+      </DocSection>
+
+      <DocSection
+        title="Arraste livre"
+        description={
+          <>
+            <code>snap=&quot;free&quot;</code>: a tira desliza com inércia e
+            para onde o dedo soltar. Pontos mentiriam aqui — não há &quot;item
+            3&quot; quando a tira para em qualquer lugar —, e quem diz a posição
+            é o <code>CarouselProgress</code>.
+          </>
+        }
+        code={`<Carousel snap="free" controls="none">
+  <CarouselContent>
+    <CarouselItem className="basis-36">…</CarouselItem>
+  </CarouselContent>
+  <CarouselProgress className="mt-3" />
+</Carousel>`}
+        previewClassName="items-stretch"
+      >
+        <Carousel snap="free" controls="none" gap="sm" aria-label="Saldo por mês" className="w-full">
+          <CarouselContent>
+            {[...MESES, ...MESES].map((m, i) => (
+              <CarouselItem key={`${m.mes}-${i}`} className="basis-36">
+                <Card padding="sm">
+                  <CardContent>
+                    <Caption>{m.mes}</Caption>
+                    <MoneyDisplay value={m.saldo} size="sm" tone={m.saldo < 0 ? "expense" : "income"} />
+                  </CardContent>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselProgress className="mt-3" />
+        </Carousel>
+      </DocSection>
+
+      <DocSection
+        title="Cartas com ações e ver todos"
+        description={
+          <>
+            O item carrega a própria ação, no rodapé do cartão. Clicar num
+            cartão cortado na borda — mesmo no botão — primeiro o traz para a
+            vista (<code>selectOnClick</code>, ligado). O fim da tira é{" "}
+            <code>CarouselMore</code>: um item de verdade, com a superfície do
+            lugar vazio, que leva à lista.
+          </>
+        }
+        code={`<CarouselItem hover="lift">
+  <Card>…<CardFooter><Button size="sm">Pagar fatura</Button></CardFooter></Card>
+</CarouselItem>
+<CarouselMore count={12} className="basis-2/3 sm:basis-1/2">
+  <Link href="/credit-cards">Ver todos os cartões</Link>
+</CarouselMore>`}
+        previewClassName="items-stretch"
+      >
+        <Carousel aria-label="Faturas abertas" className="w-full">
+          <CarouselContent>
+            {CARTOES.map((c) => (
+              <CarouselItem key={c.nome} hover="lift" className="basis-2/3 sm:basis-1/2">
+                <Card>
+                  <CardHeader>
+                    <CardDescription>{c.nome}</CardDescription>
+                    <MoneyDisplay value={c.fatura} size="lg" tone="expense" />
+                  </CardHeader>
+                  <CardFooter className="gap-2">
+                    <Button size="sm">Pagar fatura</Button>
+                    <Button size="sm" variant="tertiary">
+                      Ver compras
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </CarouselItem>
+            ))}
+            <CarouselMore count={12} className="basis-2/3 sm:basis-1/2">
+              <a href="#cartas-com-acoes-e-ver-todos">Ver todos os cartões</a>
+            </CarouselMore>
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
+      </DocSection>
+
+      <DocSection
+        title="Carregando"
+        description="CarouselSkeleton tem o basis e a calha do carrossel real, e a tira não pula quando o dado chega. Fica fora de um Carousel — não há o que rolar — e anuncia o carregamento uma vez; o osso de cada item é um CardSkeleton, ou o que vier em children."
+        code={`{carregando ? (
+  <CarouselSkeleton itemClassName="basis-2/3 sm:basis-1/2" label="Carregando as faturas" />
+) : (
+  <Carousel>…</Carousel>
+)}`}
+        previewClassName="flex-col items-stretch"
+      >
+        <CarregandoDemo />
+      </DocSection>
 
       {/* ---------------------------------------------------------------- */}
 
       <DocSection
         title="Destaque no centro"
-        description="O item central em tamanho cheio e os vizinhos menores e apagados, com loop. O efeito é contínuo: acompanha o arraste em vez de trocar no fim. A barra embaixo diz a proporção."
+        description="O item central em tamanho cheio e os vizinhos menores e apagados, com loop. O efeito é contínuo: acompanha o arraste em vez de trocar no fim. Clicar num vizinho o traz ao centro."
         code={`<Carousel effect="spotlight">          {/* centraliza e liga o loop */}
   <CarouselContent>
     <CarouselItem className="basis-3/4 sm:basis-1/2">…</CarouselItem>
@@ -206,7 +755,7 @@ export default function CarouselDoc() {
 </Carousel>`}
         previewClassName="items-stretch"
       >
-        <Carousel effect="spotlight" controls="none" className="w-full">
+        <Carousel effect="spotlight" controls="none" aria-label="Novidades" className="w-full">
           <CarouselContent>
             {NOVIDADES.map((n) => (
               <CarouselItem key={n.semente} className="basis-3/4 sm:basis-1/2">
@@ -241,6 +790,30 @@ export default function CarouselDoc() {
       </DocSection>
 
       <DocSection
+        title="Troca por dissolução"
+        description={
+          <>
+            Um item de cada vez, com seta, pontos e seta centralizados embaixo.{" "}
+            <code>effect=&quot;fade&quot;</code> empilha os itens na origem e os
+            cruza por opacidade — o arraste vira dissolução —, e força{" "}
+            <code>gap=&quot;none&quot;</code>. <code>scale</code> é a troca
+            que desliza, encolhendo quem sai.
+          </>
+        }
+        code={`<Carousel effect="fade" controls="none">
+  <CarouselContent>…</CarouselContent>
+  <CarouselToolbar align="center" className="mt-4">
+    <CarouselPrevious placement="inline" appearance="solid" />
+    <CarouselDots />
+    <CarouselNext placement="inline" appearance="solid" />
+  </CarouselToolbar>
+</Carousel>`}
+        previewClassName="flex-col items-stretch"
+      >
+        <DepoimentoDemo />
+      </DocSection>
+
+      <DocSection
         title="Passos nomeados"
         description="As pílulas numeradas dizem o que vem, e não só quantos. Clicar num passo leva ao item; as setas, os pontos e o teclado andam junto, porque todos leem o mesmo índice."
         code={`<Carousel controls="none">
@@ -252,7 +825,7 @@ export default function CarouselDoc() {
 </Carousel>`}
         previewClassName="items-stretch"
       >
-        <Carousel controls="none" fade={false} className="w-full">
+        <Carousel controls="none" fade={false} aria-label="Novidades" className="w-full">
           <Card padding="lg" className="gap-5">
             <CarouselSteps>
               {NOVIDADES.slice(0, 4).map((n, i) => (
@@ -299,7 +872,7 @@ export default function CarouselDoc() {
 </Carousel>`}
         previewClassName="items-stretch"
       >
-        <Carousel controls="none" gap="none" fade={false} className="w-full">
+        <Carousel controls="none" gap="none" fade={false} aria-label="Serviços" className="w-full">
           <div className="grid items-center gap-8 md:grid-cols-[2fr_3fr]">
             <CarouselSteps orientation="vertical">
               {SERVICOS.map((s, i) => (
@@ -350,7 +923,7 @@ export default function CarouselDoc() {
 </Carousel>`}
         previewClassName="items-stretch"
       >
-        <Carousel controls="none" gap="lg" className="w-full">
+        <Carousel controls="none" gap="lg" aria-label="Novidades" className="w-full">
           <PageSectionHeader
             actions={
               <CarouselToolbar>
@@ -389,7 +962,7 @@ export default function CarouselDoc() {
 </Carousel>`}
         previewClassName="items-stretch"
       >
-        <Carousel controls="none" className="w-full">
+        <Carousel controls="none" aria-label="Faturas abertas" className="w-full">
           <CarouselContent>
             {CARTOES.map((c) => (
               <CarouselItem key={c.nome} hover="lift" className="basis-2/3 sm:basis-1/2">
@@ -407,110 +980,40 @@ export default function CarouselDoc() {
         </Carousel>
       </DocSection>
 
-      <DocSection
-        title="Depoimento"
-        description="Um item de cada vez, com seta, pontos e seta centralizados embaixo. Os controles ficam juntos: o olho acha a navegação num lugar só."
-        code={`<CarouselToolbar align="center" className="mt-4">
-  <CarouselPrevious placement="inline" appearance="solid" />
-  <CarouselDots />
-  <CarouselNext placement="inline" appearance="solid" />
-</CarouselToolbar>`}
-        previewClassName="items-stretch"
-      >
-        <Carousel controls="none" effect="scale" fade={false} className="mx-auto w-full max-w-2xl">
-          <CarouselContent>
-            {SERVICOS.map((s) => (
-              <CarouselItem key={s.semente}>
-                <div className="grid items-center gap-4 sm:grid-cols-[2fr_3fr]">
-                  <div className="overflow-hidden rounded-xl">
-                    <CardMedia src={FOTO(s.semente, 600, 600)} alt="" aspect="square" />
-                  </div>
-                  <Card variant="elevated" className="sm:-ms-10">
-                    <CardHeader>
-                      <CardTitle>{s.titulo}</CardTitle>
-                      <CardDescription>Finance App</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-pretty">{s.texto}</p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselToolbar align="center" className="mt-4">
-            <CarouselPrevious placement="inline" appearance="solid" />
-            <CarouselDots />
-            <CarouselNext placement="inline" appearance="solid" />
-          </CarouselToolbar>
-        </Carousel>
-      </DocSection>
-
       {/* ---------------------------------------------------------------- */}
 
       <DocSection
         title="Galeria de imagem"
-        description="Um item por vez, com as setas e os pontos dentro da foto. Os pontos pousam na base, numa cápsula de vidro ou soltos; a tinta é a do véu, branca nos dois temas, porque a foto não muda com o tema. A seta sem destino apaga em vez de sumir."
+        description="Um item por vez, com as setas, os pontos e a contagem dentro da foto, e o botão de tela cheia no canto. A tinta dos pontos é a do véu, branca nos dois temas, porque a foto não muda com o tema. A tela cheia abre no item atual e devolve o índice ao fechar."
         code={`<Carousel gap="none" fade={false}>
   <CarouselContent viewportClassName="rounded-xl">…</CarouselContent>
+  <CarouselStatus placement="overlay" />
+  <CarouselFullscreen title="Novidades">
+    <CarouselItem><img className="object-contain" … /></CarouselItem>
+  </CarouselFullscreen>
   <CarouselPrevious appearance="glass" />
   <CarouselNext appearance="glass" />
   <CarouselDots placement="overlay" surface="glass" variant="pill" />
 </Carousel>`}
-        previewClassName="flex-col items-stretch gap-8"
+        previewClassName="flex-col items-stretch"
       >
-        {(["glass", "none"] as const).map((surface) => (
-          <Carousel key={surface} gap="none" fade={false} effect="parallax" className="w-full">
-            <CarouselContent viewportClassName="rounded-xl">
-              {NOVIDADES.map((n) => (
-                <CarouselItem key={n.semente}>
-                  <CardMedia src={FOTO(n.semente, 1280, 720)} alt={n.titulo} aspect="video" />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious appearance="glass" />
-            <CarouselNext appearance="glass" />
-            <CarouselDots placement="overlay" surface={surface} variant="pill" />
-          </Carousel>
-        ))}
+        <GaleriaDemo />
       </DocSection>
 
       <DocSection
         title="Miniaturas"
-        description="A imagem grande e a tira que a escolhe. A tira é um segundo embla, livre, sincronizado nos dois sentidos: escolher rola o principal, e rolar o principal traz a miniatura ativa para a vista."
+        description="A imagem grande e a tira que a escolhe — embaixo, entre as setas, ou ao lado. A tira é um segundo embla, livre, sincronizado nos dois sentidos. Ao lado, ela é coluna a partir de md e deita embaixo no telefone; a altura é a da foto."
         code={`<Carousel gap="none" fade={false} controls="none">
-  <CarouselContent viewportClassName="rounded-xl">…</CarouselContent>
-  <CarouselToolbar className="mt-3">
-    <CarouselPrevious placement="inline" appearance="solid" />
-    <CarouselThumbs>
+  <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_5rem]">
+    <CarouselContent viewportClassName="rounded-xl">…</CarouselContent>
+    <CarouselThumbs orientation="vertical">
       <CarouselThumb index={0}><img src={miniatura} alt="" /></CarouselThumb>
     </CarouselThumbs>
-    <CarouselNext placement="inline" appearance="solid" />
-  </CarouselToolbar>
+  </div>
 </Carousel>`}
-        previewClassName="items-stretch"
+        previewClassName="flex-col items-stretch"
       >
-        <Carousel gap="none" fade={false} controls="none" className="w-full">
-          <CarouselContent viewportClassName="rounded-xl">
-            {NOVIDADES.map((n) => (
-              <CarouselItem key={n.semente}>
-                <CardMedia src={FOTO(n.semente, 1280, 720)} alt={n.titulo} aspect="video" />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselToolbar className="mt-3">
-            <CarouselPrevious placement="inline" appearance="solid" />
-            <CarouselThumbs>
-              {NOVIDADES.map((n, i) => (
-                <CarouselThumb key={n.semente} index={i}>
-                  {/* eslint-disable-next-line @next/next/no-img-element -- demonstração com foto externa */}
-                  <img src={FOTO(n.semente, 160, 120)} alt="" />
-                </CarouselThumb>
-              ))}
-            </CarouselThumbs>
-            <CarouselNext placement="inline" appearance="solid" />
-          </CarouselToolbar>
-        </Carousel>
+        <MiniaturasDemo />
       </DocSection>
 
       <DocSection
@@ -525,7 +1028,7 @@ export default function CarouselDoc() {
 </Carousel>`}
         previewClassName="items-stretch"
       >
-        <Carousel layout="accordion" controls="none" gap="sm" className="w-full">
+        <Carousel layout="accordion" controls="none" gap="sm" aria-label="Novidades" className="w-full">
           <div className="mb-4 flex justify-end">
             <CarouselToolbar>
               <CarouselPrevious placement="inline" appearance="solid" />
@@ -550,12 +1053,10 @@ export default function CarouselDoc() {
           <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
             <CarouselCaption className="max-w-lg">
               {(i) => (
-                <>
-                  <p className="text-sm text-pretty">
-                    <span className="font-semibold">{NOVIDADES[i]?.titulo}.</span>{" "}
-                    <span className="text-muted-foreground">{NOVIDADES[i]?.texto}</span>
-                  </p>
-                </>
+                <p className="text-sm text-pretty">
+                  <span className="font-semibold">{NOVIDADES[i]?.titulo}.</span>{" "}
+                  <span className="text-muted-foreground">{NOVIDADES[i]?.texto}</span>
+                </p>
               )}
             </CarouselCaption>
             <Button variant="secondary" size="sm">
@@ -570,7 +1071,7 @@ export default function CarouselDoc() {
 
       <DocSection
         title="Rotação automática"
-        description="autoplay em milissegundos. O ponto ativo é o temporizador: ele enche no intervalo e pausa junto da rotação — sob o cursor, com foco dentro, com a aba escondida ou pelo botão. Com movimento reduzido, nasce pausada."
+        description="autoplay em milissegundos. O indicador ativo é o temporizador — o ponto enche, e no passo nomeado um fio corre na base da pílula —, e ele pausa junto da rotação: sob o cursor, com foco dentro, com a aba escondida ou pelo botão. Com movimento reduzido, nasce pausada."
         code={`<Carousel autoplay={5000} loop gap="none" fade={false}>
   <CarouselContent viewportClassName="rounded-xl">…</CarouselContent>
   <CarouselToolbar align="center" className="mt-3">
@@ -578,49 +1079,9 @@ export default function CarouselDoc() {
     <CarouselDots variant="pill" />
   </CarouselToolbar>
 </Carousel>`}
-        previewClassName="items-stretch"
+        previewClassName="flex-col items-stretch"
       >
-        <Carousel autoplay={5000} loop gap="none" fade={false} controls="none" className="w-full">
-          <CarouselContent viewportClassName="rounded-xl">
-            {NOVIDADES.map((n) => (
-              <CarouselItem key={n.semente}>
-                <CartaImagem {...n} aspect="video" />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselToolbar align="center" className="mt-3">
-            <CarouselPlayPause />
-            <CarouselDots variant="pill" />
-          </CarouselToolbar>
-        </Carousel>
-      </DocSection>
-
-      <DocSection
-        title="Passos com temporizador"
-        description="Os passos nomeados também mostram o relógio: um fio na base da pílula ativa."
-        code={`<Carousel autoplay={6000} loop controls="none">
-  <CarouselSteps>…</CarouselSteps>
-  <CarouselContent>…</CarouselContent>
-</Carousel>`}
-        previewClassName="items-stretch"
-      >
-        <Carousel autoplay={6000} loop controls="none" fade={false} className="w-full">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <CarouselSteps>
-              {SERVICOS.map((s, i) => (
-                <CarouselStep key={s.semente} index={i} label={s.titulo} />
-              ))}
-            </CarouselSteps>
-            <CarouselPlayPause />
-          </div>
-          <CarouselContent>
-            {SERVICOS.map((s) => (
-              <CarouselItem key={s.semente}>
-                <CartaImagem semente={s.semente} titulo={s.titulo} texto={s.texto} aspect="video" />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
+        <RotacaoDemo />
       </DocSection>
 
       <DocNote title="Autoplay só em conteúdo editorial">
@@ -641,7 +1102,7 @@ export default function CarouselDoc() {
 </Carousel>`}
         previewClassName="items-stretch overflow-hidden"
       >
-        <Carousel bleed controls="none" className="w-full">
+        <Carousel bleed controls="none" aria-label="Novidades" className="w-full">
           <CarouselContent className="h-72">
             {NOVIDADES.map((n) => (
               <CarouselItem key={n.semente} hover="lift" className="basis-2/3 sm:basis-1/3">
@@ -658,7 +1119,7 @@ export default function CarouselDoc() {
         code={`<Carousel effect="curve" loop opts={{ align: "center" }} controls="none">…</Carousel>`}
         previewClassName="items-stretch overflow-hidden"
       >
-        <Carousel effect="curve" loop opts={{ align: "center" }} controls="none" fade={false} className="w-full">
+        <Carousel effect="curve" loop opts={{ align: "center" }} controls="none" fade={false} aria-label="Novidades" className="w-full">
           {/* O arco desce os itens até 2,25rem: o recuo de baixo do viewport é
               o que os deixa inteiros em vez de recortados. */}
           <CarouselContent className="h-64" viewportClassName="pb-12">
@@ -672,247 +1133,17 @@ export default function CarouselDoc() {
       </DocSection>
 
       <DocSection
-        title="Cartas com ações"
-        description="O item carrega a própria ação: o rodapé do cartão, fora do trilho de gestos. hover=&quot;lift&quot; levanta o cartão sob o cursor e no toque."
-        code={`<CarouselItem hover="lift">
-  <Card>
-    …
-    <CardFooter><Button size="sm">Pagar fatura</Button></CardFooter>
-  </Card>
-</CarouselItem>`}
-        previewClassName="items-stretch"
-      >
-        <Carousel className="w-full">
-          <CarouselContent>
-            {CARTOES.map((c) => (
-              <CarouselItem key={c.nome} hover="lift" className="basis-2/3 sm:basis-1/2">
-                <Card>
-                  <CardHeader>
-                    <CardDescription>{c.nome}</CardDescription>
-                    <MoneyDisplay value={c.fatura} size="lg" tone="expense" />
-                  </CardHeader>
-                  <CardFooter className="gap-2">
-                    <Button size="sm">Pagar fatura</Button>
-                    <Button size="sm" variant="tertiary">
-                      Ver compras
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
-        </Carousel>
-      </DocSection>
-
-      {/* ---------------------------------------------------------------- */}
-
-      <DocSection
-        title="Padrão"
-        description="Setas dentro da caixa e indicador. As peças são opcionais e independentes, e todas moram dentro do Carousel — elas leem o índice pelo contexto."
-        code={`<Carousel>
-  <CarouselContent>
-    <CarouselItem className="basis-2/3 sm:basis-1/2">…</CarouselItem>
-  </CarouselContent>
-  <CarouselPrevious />
-  <CarouselNext />
-  <CarouselDots className="mt-3" />
-</Carousel>`}
-      >
-        <Carousel className="w-full">
-          <CarouselContent>
-            {CARTOES.map((c) => (
-              <CarouselItem key={c.nome} className="basis-2/3 sm:basis-1/2">
-                <CartaoFatura {...c} />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
-          <CarouselDots className="mt-3" />
-        </Carousel>
-      </DocSection>
-
-      <DocNote title="O componente nunca desenha fora da própria caixa">
-        <code>inside</code> pousa a seta sobre a borda do viewport;{" "}
-        <code>outside</code> reserva a própria calha, <code>px-9</code> na raiz
-        (a seta de 28 mais 8 de respiro). Seta fora da caixa vaza do recorte,
-        cria rolagem horizontal no pai e perde parte da área de clique.
-      </DocNote>
-
-      <DocSection
-        title="Superfície"
-        description={
-          <>
-            <code>variant</code> decide o que a raiz pinta. <code>card</code> e{" "}
-            <code>inset</code> forçam <code>controls=&quot;inside&quot;</code>:
-            uma superfície pintada não tem controle flutuando fora dela.
-          </>
-        }
-        code={`<Carousel variant="card">…</Carousel>
-<Carousel variant="inset">…</Carousel>`}
-        previewClassName="flex-col items-stretch gap-6"
-      >
-        <div className="flex w-full flex-col gap-6">
-          {(["plain", "card", "inset"] as const).map((v) => (
-            <div key={v} className="flex flex-col gap-2">
-              <Caption className="font-mono">variant=&quot;{v}&quot;</Caption>
-              <Carousel variant={v} className="w-full">
-                <CarouselContent>
-                  {MESES.map((m) => (
-                    <CarouselItem key={m.mes} className="basis-1/2 sm:basis-1/3">
-                      <TiraMes {...m} />
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
-              </Carousel>
-            </div>
-          ))}
-        </div>
-      </DocSection>
-
-      <DocSection
-        title="Controles"
-        description={
-          <>
-            Onde a seta sobreposta pousa, e se ela existe. No toque a seta{" "}
-            <strong>continua visível</strong>: a WCAG 2.5.7 exige uma
-            alternativa sem arraste. <code>controls=&quot;none&quot;</code> esconde
-            só as sobrepostas — as de uma barra são pedidas à mão.
-          </>
-        }
-        code={`<Carousel controls="inside">…</Carousel>   {/* o padrão */}
-<Carousel controls="outside">…</Carousel>  {/* reserva px-9 (36px) na raiz */}
-<Carousel controls="none">…</Carousel>     {/* gesto, pontos ou barra */}`}
-        previewClassName="flex-col items-stretch gap-6"
-      >
-        <div className="flex w-full flex-col gap-6">
-          {(["inside", "outside", "none"] as const).map((c) => (
-            <div key={c} className="flex flex-col gap-2">
-              <Caption className="font-mono">controls=&quot;{c}&quot;</Caption>
-              <Carousel controls={c} className="w-full">
-                <CarouselContent>
-                  {CARTOES.map((card) => (
-                    <CarouselItem key={card.nome} className="basis-2/3 sm:basis-1/2">
-                      <CartaoFatura {...card} />
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
-                {c === "none" ? <CarouselDots className="mt-3" /> : null}
-              </Carousel>
-            </div>
-          ))}
-        </div>
-      </DocSection>
-
-      <DocNote title="A seta cresce por pseudo-elemento; o ponto cresce de verdade">
-        A seta sobreposta é <code>icon-sm</code> (28) e cresce no toque com{" "}
-        <code>pointer-coarse:after:-inset-2.5</code>, seguro porque as duas
-        ficam em pontas opostas. Na barra, vizinhas, e nos pontos, adjacentes,
-        um <code>::after</code> engoliria o vizinho, então o botão <em>é</em> a
-        área de toque.
-      </DocNote>
-
-      <DocSection
-        title="Calha"
-        description={
-          <>
-            <code>gap</code> é a distância entre itens: margem negativa no
-            trilho mais recuo no item. <code>gap</code> no flex entraria na
-            conta de <code>basis-*</code>.
-          </>
-        }
-        code={`<Carousel gap="none">…</Carousel>
-<Carousel gap="sm">…</Carousel>
-<Carousel gap="md">…</Carousel>  {/* o padrão */}
-<Carousel gap="lg">…</Carousel>`}
-        previewClassName="flex-col items-stretch gap-6"
-      >
-        <div className="flex w-full flex-col gap-6">
-          {(["none", "sm", "md", "lg"] as const).map((g) => (
-            <div key={g} className="flex flex-col gap-2">
-              <Caption className="font-mono">gap=&quot;{g}&quot;</Caption>
-              <Carousel gap={g} controls="none" className="w-full">
-                <CarouselContent>
-                  {MESES.map((m) => (
-                    <CarouselItem key={m.mes} className="basis-1/3 sm:basis-1/4">
-                      <Card>
-                        <CardContent>
-                          <Caption>{m.mes}</Caption>
-                          <MoneyDisplay
-                            value={m.saldo}
-                            size="sm"
-                            tone={m.saldo < 0 ? "expense" : "income"}
-                          />
-                        </CardContent>
-                      </Card>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-              </Carousel>
-            </div>
-          ))}
-        </div>
-      </DocSection>
-
-      <DocSection
-        title="Indicador e contagem"
-        description={
-          <>
-            <code>CarouselDots</code> tem três formas: pontos até uns oito,
-            pílula (o ativo alonga, e é a forma do temporizador) e, acima de
-            oito, a barra segmentada, que diz a proporção.
-          </>
-        }
-        code={`<CarouselDots />                {/* pontos */}
-<CarouselDots variant="pill" />   {/* o ativo alonga */}
-<CarouselDots variant="bar" />    {/* barra segmentada */}
-<CarouselStatus />                {/* "3 de 12", e a região role="status" */}`}
-        previewClassName="flex-col items-stretch gap-6"
-      >
-        <div className="flex w-full flex-col gap-6">
-          {(["dot", "pill", "bar"] as const).map((variant) => (
-            <Carousel key={variant} controls="none" className="w-full">
-              <CarouselContent>
-                {MESES.map((m) => (
-                  <CarouselItem key={m.mes} className="basis-1/2 sm:basis-1/3">
-                    <Card>
-                      <CardContent>
-                        <Caption>{m.mes}</Caption>
-                        <MoneyDisplay
-                          value={m.saldo}
-                          size="sm"
-                          tone={m.saldo < 0 ? "expense" : "income"}
-                        />
-                      </CardContent>
-                    </Card>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <div className="mt-3 flex items-center justify-between gap-4">
-                <CarouselStatus />
-                <CarouselDots variant={variant} className={variant === "bar" ? "flex-1" : undefined} />
-              </div>
-            </Carousel>
-          ))}
-        </div>
-      </DocSection>
-
-      <DocSection
         title="Vertical"
         description={
           <>
             <code>orientation=&quot;vertical&quot;</code> troca o eixo, a calha,
-            o glifo da seta e as teclas. O viewport precisa de altura.
+            o glifo da seta e as teclas. O viewport precisa de altura, em{" "}
+            <code>viewportClassName</code>. A roda do trackpad não passa itens
+            aqui: o gesto vertical é o da página.
           </>
         }
-        code={`<Carousel orientation="vertical" opts={{ align: "start" }}>
-  <CarouselContent viewportClassName="h-56">…</CarouselContent>
+        code={`<Carousel orientation="vertical" controls="outside" opts={{ align: "start" }}>
+  <CarouselContent viewportClassName="h-40">…</CarouselContent>
   <CarouselPrevious />
   <CarouselNext />
 </Carousel>`}
@@ -922,6 +1153,7 @@ export default function CarouselDoc() {
           orientation="vertical"
           controls="outside"
           opts={{ align: "start" }}
+          aria-label="Faturas abertas"
           className="w-64"
         >
           <CarouselContent viewportClassName="h-40">
@@ -936,15 +1168,30 @@ export default function CarouselDoc() {
         </Carousel>
       </DocSection>
 
+      <DocNote title="O componente nunca desenha fora da própria caixa">
+        <code>inside</code> pousa a seta sobre a borda do viewport;{" "}
+        <code>outside</code> reserva a própria calha, <code>px-9</code> na raiz
+        (a seta de 28 mais 8 de respiro). Seta fora da caixa vaza do recorte,
+        cria rolagem horizontal no pai e perde parte da área de clique.
+      </DocNote>
+
+      <DocNote title="A seta cresce por pseudo-elemento; o ponto cresce de verdade">
+        A seta sobreposta é <code>icon-sm</code> (28) e cresce no toque com{" "}
+        <code>pointer-coarse:after:-inset-2.5</code>, seguro porque as duas
+        ficam em pontas opostas. Na barra, vizinhas, e nos pontos, adjacentes,
+        um <code>::after</code> engoliria o vizinho, então o botão <em>é</em> a
+        área de toque.
+      </DocNote>
+
       <DocNote title="Os efeitos leem uma variável, e nada transiciona">
         Um driver só escreve em cada slide <code>--carousel-slide-s</code> (a
         distância ao encaixe, em passos, com sinal) e{" "}
         <code>--carousel-slide-d</code> (sem sinal). <code>scale</code>,{" "}
-        <code>spotlight</code>, <code>parallax</code> e <code>curve</code> são{" "}
-        <code>@utility carousel-effect-*</code> que só leem a variável. Ela muda
-        a cada quadro de rolagem, e quem suaviza é o embla. Com movimento
-        reduzido, escala, giro e deslocamento zeram; a opacidade do{" "}
-        <code>spotlight</code> fica, porque não move nada.
+        <code>spotlight</code>, <code>parallax</code>, <code>curve</code> e{" "}
+        <code>fade</code> são <code>@utility carousel-effect-*</code> que só
+        leem a variável. Com movimento reduzido, escala, giro e deslocamento
+        zeram; a opacidade do <code>spotlight</code> e o empilhamento do{" "}
+        <code>fade</code> ficam, porque não movem nada.
       </DocNote>
 
       <DocNote title="O item precisa vazar da borda">
@@ -953,15 +1200,48 @@ export default function CarouselDoc() {
         e ninguém desliza.
       </DocNote>
 
+      <DocNote title="O clique no item cortado é engolido, de propósito">
+        Um botão pela metade, fora da vista, não é um alvo que a pessoa
+        escolheu: ela clicou no que via. Por isso o primeiro clique traz o
+        item para a vista, e só o segundo age. Arrasto não conta — o embla
+        cancela o clique que termina um arrasto. Desligue com{" "}
+        <code>selectOnClick=&#123;false&#125;</code>.
+      </DocNote>
+
       <PropsTable
         title="Carousel"
         rows={[
           {
             prop: "effect",
-            type: '"none" | "scale" | "spotlight" | "parallax" | "curve"',
+            type: '"none" | "scale" | "spotlight" | "parallax" | "curve" | "fade"',
             default: '"none"',
             description:
-              "O movimento dos itens conforme se afastam do centro. spotlight também centraliza e liga o loop.",
+              "O movimento dos itens conforme se afastam do centro. spotlight também centraliza e liga o loop; fade empilha e cruza por opacidade, com gap none.",
+          },
+          {
+            prop: "until",
+            type: '"md" | "lg"',
+            description:
+              "Carrossel só abaixo do degrau; a partir dele, grade com a mesma calha, sem setas, pontos nem barra.",
+          },
+          {
+            prop: "snap",
+            type: '"item" | "free"',
+            default: '"item"',
+            description: "free: arraste livre com inércia (dragFree). Indique com CarouselProgress.",
+          },
+          {
+            prop: "selectOnClick",
+            type: "boolean",
+            default: "true",
+            description:
+              "O item cortado, clicado, vem para a vista antes de agir; no spotlight e no curve, para o centro.",
+          },
+          {
+            prop: "wheel",
+            type: "boolean",
+            default: "true",
+            description: "O gesto horizontal do trackpad passa um item por gesto. Só na horizontal.",
           },
           {
             prop: "layout",
@@ -1006,7 +1286,7 @@ export default function CarouselDoc() {
             type: '"none" | "sm" | "md" | "lg"',
             default: '"md"',
             description:
-              "A calha entre itens: margem negativa no trilho, recuo no item.",
+              "A calha entre itens: margem negativa no trilho, recuo no item. Na grade de until, o gap da grade.",
           },
           {
             prop: "fade",
@@ -1024,13 +1304,13 @@ export default function CarouselDoc() {
             prop: "opts",
             type: "EmblaOptionsType",
             description:
-              "Opções do embla: align, dragFree, slidesToScroll, containScroll.",
+              "Opções do embla: align, slidesToScroll, containScroll, startIndex.",
           },
           {
             prop: "aria-label",
             type: "string",
             default: '"Carrossel"',
-            description: "O nome da região, com padrão em pt-BR.",
+            description: "O nome da região. Passe sempre: o padrão não diz o que há dentro.",
           },
         ]}
       />
@@ -1046,6 +1326,12 @@ export default function CarouselDoc() {
               "A resposta ao cursor e ao toque, no filho do item. Não combina com curve nem parallax.",
           },
           {
+            prop: "CarouselMore",
+            type: "count?: number; children: o link",
+            description:
+              "O último item, o caminho para a lista: Card dashed clicável, com a seta e o total.",
+          },
+          {
             prop: "CarouselPrevious / Next",
             type: 'placement: "overlay" | "inline"; appearance: "tertiary" | "glass" | "solid"',
             default: '"overlay", "tertiary"',
@@ -1058,6 +1344,18 @@ export default function CarouselDoc() {
             default: '"dot", "below", "none"',
             description:
               "Com autoplay, o ponto ativo é o temporizador. overlay pousa na base da foto, com a tinta do véu.",
+          },
+          {
+            prop: "CarouselProgress",
+            type: "ComponentProps<\"div\">",
+            description:
+              "A barra de rolagem: o polegar tem a fração visível e anda com a tira. Decorativa; some quando tudo cabe. Sem loop.",
+          },
+          {
+            prop: "CarouselStatus",
+            type: 'placement: "below" | "overlay"',
+            default: '"below"',
+            description: "\"3 de 6\" e a região role=\"status\". overlay é a pílula de vidro no canto da foto.",
           },
           {
             prop: "CarouselToolbar",
@@ -1084,8 +1382,21 @@ export default function CarouselDoc() {
           },
           {
             prop: "CarouselThumbs / Thumb",
-            type: "index: number",
-            description: "A tira de miniaturas, um segundo embla sincronizado.",
+            type: 'orientation: "horizontal" | "vertical"; index: number',
+            description:
+              "A tira de miniaturas, um segundo embla sincronizado. vertical é coluna a partir de md.",
+          },
+          {
+            prop: "CarouselFullscreen",
+            type: "title?: string; children: CarouselItem[]",
+            description:
+              "O botão de tela cheia e o Dialog com a galeria, abrindo no item atual e devolvendo o índice.",
+          },
+          {
+            prop: "CarouselSkeleton",
+            type: "count, gap, itemClassName, label, delay",
+            description:
+              "Fora do Carousel: os ossos com o basis real, num SkeletonGroup.",
           },
           {
             prop: "viewportClassName",

@@ -16713,3 +16713,51 @@ exemplos". Tudo o que entrou já existia escrito à mão em alguma tela.
   lista, caso de `Item`) e o `dl` das faturas abertas do dashboard (outro
   desenho). As telas do app pedem login e não foram vistas; o teste confere
   as peças renderizadas e proíbe as grafias à mão.
+
+### Rodada 205 — o Carousel ganha a grade no desktop, o arraste livre, a roda, a dissolução, a tela cheia e as peças de borda
+
+O pedido: a mesma rodada para o `Carousel`, com as onze versões escolhidas
+pelo dono. Ele continua com **zero consumidores no app** — nenhuma tela tem
+tira horizontal escrita à mão para migrar (as faturas abertas do dashboard são
+lista) —, então tudo foi verificado na página do catálogo.
+
+- **`until="md" | "lg"`**: o `breakpoints` do embla com `active: false`, o
+  trilho em `grid` de colunas de 16rem com o `gap` do carrossel (literal por
+  degrau e calha), e as peças de controle com
+  `group-data-[until=…]/carousel:…:hidden` — a raiz ganhou `group/carousel`.
+  Medido a 1280: `display: grid`, sem transform, pontos escondidos; a 375,
+  `flex` e pontos visíveis. O teclado e a roda conferem `matchMedia` e saem.
+- **`snap="free"`** (`dragFree`) e **`CarouselProgress`**: o polegar mede
+  viewport ÷ trilho e anda `progresso × (1/fração − 1)` larguras. Medido:
+  52,7% de largura, de 0% a 89,9% depois de um arraste. Some quando tudo cabe.
+- **`selectOnClick`, ligado**: em captura, o item cujo filho sai do viewport
+  (o filho, porque o item carrega a calha e o primeiro começa 16px antes)
+  engole o clique e o embla rola ao encaixe dele, achado no `slideRegistry`.
+  Medido a 375: o clique em "Pagar fatura" do cartão cortado **não** chegou
+  ao botão, e o cartão foi de 247–437 para 93–283, dentro de 41–334.
+- **`wheel`, ligado**: um passo por gesto, acumulando 40px de `deltaX` e
+  travando até 160ms de silêncio — a inércia do trackpad continua mandando
+  eventos por quase um segundo. Só quando o gesto é mais horizontal que
+  vertical. Medido: doze eventos de 30px passaram do item 1 ao 2, um só.
+- **`effect="fade"`**: a `@utility carousel-effect-fade` desloca o **item**
+  `−s` larguras (com `gap="none"` e `basis-full`, uma largura é um passo) e
+  apaga por `d`; só o selecionado recebe o ponteiro. Medido: os três itens em
+  `x = 440`, opacidades 1/0/0 e, depois da seta, 0/1/0. A asserção 13 do
+  `carousel-ladder` passou a abrir a exceção, com o motivo.
+- **`CarouselMore`**, **`CarouselSkeleton`**, **`CarouselStatus
+  placement="overlay"`** e **`CarouselThumbs orientation="vertical"`** (o eixo
+  troca pelo `breakpoints` do embla; medido 80×460 ao lado da foto).
+- **`CarouselFullscreen`**: um `Dialog` com outro `Carousel` em
+  `startIndex`, que devolve o índice com `scrollTo(i, true)`. Medido: abriu
+  em "2 de 6", a seta do teclado foi a "3 de 6" com o foco no ×, e ao fechar
+  a galeria estava em "3 de 6". **A placa modal é vidro** (85% no claro, 40%
+  no escuro), e a primeira captura mostrou a página atrás da foto: a tela
+  cheia declara `bg-background dark:bg-background`.
+- **Comentário falso corrigido**: o cabeçalho do alvo de toque das setas dizia
+  que o × da `AnnouncementBar` e os degraus do `Breadcrumb` estavam no backlog;
+  os dois já tinham sido pagos.
+- **A página tinha 30 carrosséis** e passou a 21: superfície, controles,
+  calha, indicador, galeria, miniaturas e rotação viraram uma demo com um
+  segmentado; o "Padrão" subiu para o topo; todo carrossel da página ganhou
+  `aria-label`. Verificada a 1280 e a 375 no tema claro, e a galeria e a
+  tela cheia no escuro — sem erros no console e sem transbordo.

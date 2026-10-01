@@ -316,7 +316,13 @@ describe("escada e caixa do Carousel", () => {
       const bloco = css.slice(i, css.indexOf("\n}\n", i))
       expect(bloco, classe).toMatch(/--carousel-slide-[ds]/)
       expect(bloco, `${classe} transiciona`).not.toMatch(/transition/)
-      // Movimento reduzido zera o que se move.
+      // Movimento reduzido zera o que se move. A exceção é o `fade` (rodada
+      // 205): o deslocamento dele é o empilhamento, não movimento — zerado,
+      // os itens voltariam a correr lado a lado —, e a troca já é só opacidade.
+      if (efeito === "fade") {
+        expect(bloco, "o fade não pode desfazer o empilhamento").not.toContain("translate: none")
+        continue
+      }
       expect(bloco, `${classe} sem movimento reduzido`).toContain("prefers-reduced-motion")
     }
     // O driver escreve as duas, e desinscreve o que inscreve (a 12 cobre).

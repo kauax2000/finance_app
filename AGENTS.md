@@ -2311,6 +2311,27 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   foto não muda com o tema. A capa é a `CardMedia`, nova no `Card`. Um
   carrossel de um item por vez leva `fade={false}`: a dissolução apagaria o
   próprio item visível.
+- **`Carousel` ganhou o que faltava a uma tira de verdade** (rodada 205).
+  `until="md" | "lg"` é o **carrossel só no telefone**: o embla desliga por
+  breakpoint, o trilho vira grade com a calha do `gap`, e setas, pontos,
+  contagem, barra e play somem (`group-data-[until]/carousel`); teclado e roda
+  deixam a grade em paz. `snap="free"` é o arraste com inércia, indicado pelo
+  `CarouselProgress` (a barra de rolagem: polegar na fração visível; pontos
+  mentiriam). **`selectOnClick` e `wheel` vêm ligados**: o item cortado na
+  borda, clicado — mesmo no botão —, primeiro vem para a vista (o clique é
+  engolido em captura; no `spotlight`/`curve`, a régua é ser o central), e o
+  gesto horizontal do trackpad passa **um** item por gesto (ouvinte nativo
+  `passive: false`, trava até 160ms de silêncio por causa da inércia).
+  `effect="fade"` empilha os itens na origem e os cruza por opacidade, força
+  `gap="none"` e é o **único efeito sem bloco de movimento reduzido** — o
+  deslocamento dele é o empilhamento. Peças: `CarouselMore` (o último item
+  leva à lista, `Card dashed` clicável), `CarouselSkeleton` (fora do
+  `Carousel`, com o `basis` real), `CarouselStatus placement="overlay"`,
+  `CarouselThumbs orientation="vertical"` (coluna a partir de `md`, altura da
+  foto por `contain: size`) e `CarouselFullscreen` (o `Dialog` de tela cheia,
+  **opaco** nos dois temas, que abre no item atual e devolve o índice). **Dê
+  `aria-label` a todo carrossel**: o padrão "Carrossel" não diz o que há dentro.
+  `carousel-versions.test.ts` tranca.
 - **`Chart` — nove formas, e a marca não entra no dado** (rodada 135). Além
   de área, linha, barras, rosca e faísca: `ChartSplit` (divisão de um total
   em 2–4 partes, porcentagens pelo maior resto), `ChartRadial` (um anel por

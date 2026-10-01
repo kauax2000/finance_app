@@ -1,6 +1,8 @@
 "use client"
 
 import {
+  ArrowRightIcon,
+  ArrowsPointingOutIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -8,6 +10,7 @@ import {
   PauseIcon,
   PlayIcon,
 } from "@heroicons/react/16/solid"
+import { Slot } from "radix-ui"
 import * as React from "react"
 import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import { useCarouselAutoplay } from "@/hooks/use-carousel-autoplay"
@@ -17,6 +20,14 @@ import useEmblaCarousel, {
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { Button } from "@/components/ui/button"
+import { Card, CardSkeleton } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { SkeletonGroup } from "@/components/ui/skeleton"
 import { Caption } from "@/components/ui/typography"
 import {
   scrollFadeViewportClassName,
@@ -191,6 +202,33 @@ import { cn } from "@/lib/utils"
  * compila dentro de `@media (hover: hover)` e sem ele a seta não acenderia no
  * telefone. E `fade` passou a ser padrão pela mesma decisão: sem preenchimento o
  * glifo pousa direto sobre o conteúdo, e a rampa é o que abre chão para ele.
+ *
+ * ## Rodada 205: o que faltava a uma tira de verdade
+ *
+ * - `until="md" | "lg"` — **carrossel só no telefone**: o embla desliga por
+ *   breakpoint (`active: false`), o trilho vira grade e setas, pontos,
+ *   contagem e barra somem (`group-data-[until=…]/carousel`). A grade usa a
+ *   mesma calha do `gap`.
+ * - `snap="free"` — arraste livre, com inércia (`dragFree`). Pontos não dizem
+ *   nada aqui; quem diz é o `CarouselProgress`.
+ * - `selectOnClick` (**ligado**) — o item cortado na borda, clicado, vem para
+ *   a vista **antes de agir**: o clique é engolido em captura e o embla rola.
+ *   No `spotlight` e no `curve` a régua é ser o central, não estar inteiro.
+ * - `wheel` (**ligado**) — o gesto horizontal de dois dedos passa um item por
+ *   gesto. A inércia do trackpad manda eventos por quase um segundo, então o
+ *   passo trava até 160ms de silêncio. Ouvinte nativo com `passive: false`:
+ *   o `onWheel` do React é passivo, e sem `preventDefault` o Chrome do Mac
+ *   leria o mesmo gesto como "voltar".
+ * - `effect="fade"` — um item por vez, trocando por dissolução: o driver dos
+ *   efeitos já sabe a distância de cada item, e a utility o desloca de volta
+ *   para a origem e apaga pela distância. Força `gap="none"` e tira a rampa
+ *   das pontas (ela apagaria o item inteiro).
+ * - Peças: `CarouselProgress` (a barra de rolagem da tira), `CarouselSkeleton`
+ *   (o carrossel carregando, com o `basis` real), `CarouselMore` (o último
+ *   item é o caminho para a lista), `CarouselStatus placement="overlay"` (o
+ *   "3 de 6" sobre a foto), `CarouselThumbs orientation="vertical"` (as
+ *   miniaturas ao lado da foto a partir de `md`) e `CarouselFullscreen` (a
+ *   galeria num `Dialog` de tela cheia, que devolve o índice ao fechar).
  */
 
 type CarouselApi = UseEmblaCarouselType[1]
@@ -201,7 +239,8 @@ type CarouselPlugin = UseCarouselParameters[1]
 type CarouselOrientation = "horizontal" | "vertical"
 type CarouselControls = "inside" | "outside" | "none"
 type CarouselGap = "none" | "sm" | "md" | "lg"
-type CarouselEffect = "none" | "scale" | "spotlight" | "parallax" | "curve"
+type CarouselEffect = "none" | "scale" | "spotlight" | "parallax" | "curve" | "fade"
+type CarouselUntil = "md" | "lg"
 type CarouselLayout = "slide" | "accordion"
 
 /**
@@ -214,7 +253,53 @@ const EFFECT_CLASSES = {
   spotlight: "carousel-effect-spotlight",
   parallax: "carousel-effect-parallax",
   curve: "carousel-effect-curve",
+  fade: "carousel-effect-fade",
 } as const satisfies Record<CarouselEffect, string>
+
+/** As consultas de `until`, que o embla e o ouvinte da roda leem. */
+const UNTIL_QUERY = {
+  md: "(min-width: 768px)",
+  lg: "(min-width: 1024px)",
+} as const satisfies Record<CarouselUntil, string>
+
+/**
+ * A tira que vira grade. Literal por degrau e por calha — o Tailwind varre o
+ * código como texto. A grade preenche colunas de 16rem (ou a largura toda,
+ * se a coluna for menor), e a calha é a do `gap`: a margem negativa do
+ * trilho e o recuo do item saem, e o `gap` da grade entra.
+ */
+const UNTIL_TRACK = {
+  md: {
+    none: "md:grid md:grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))] md:ml-0 md:gap-0",
+    sm: "md:grid md:grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))] md:ml-0 md:gap-2",
+    md: "md:grid md:grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))] md:ml-0 md:gap-4",
+    lg: "md:grid md:grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))] md:ml-0 md:gap-6",
+  },
+  lg: {
+    none: "lg:grid lg:grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))] lg:ml-0 lg:gap-0",
+    sm: "lg:grid lg:grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))] lg:ml-0 lg:gap-2",
+    md: "lg:grid lg:grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))] lg:ml-0 lg:gap-4",
+    lg: "lg:grid lg:grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))] lg:ml-0 lg:gap-6",
+  },
+} as const
+
+const UNTIL_ITEM = { md: "md:pl-0", lg: "lg:pl-0" } as const
+
+/**
+ * O que some quando a tira vira grade: setas, pontos, contagem, barra, play.
+ * As duas linhas sempre, porque só a do degrau da raiz casa.
+ */
+const ESCONDE_NA_GRADE =
+  "group-data-[until=md]/carousel:md:hidden group-data-[until=lg]/carousel:lg:hidden"
+
+/** A grade está valendo agora? Fora do navegador, nunca. */
+function naGrade(until: CarouselUntil | undefined) {
+  return (
+    until !== undefined &&
+    typeof window !== "undefined" &&
+    window.matchMedia(UNTIL_QUERY[until]).matches
+  )
+}
 
 /** O rótulo da região, quando quem chama não dá um. Ver o cabeçalho. */
 const ROTULO_PADRAO = "Carrossel"
@@ -241,7 +326,7 @@ const DEFAULT_GAP: CarouselGap = "md"
 // de existir caixa para medir. É uma aproximação da *raiz*, não do trilho: onde a
 // raiz carrega pontos ou contagem, os dois diferem. Na hidratação o layout effect
 // do `CarouselContent` corrige antes da primeira pintura do cliente.
-const carouselVariants = cva("relative [--carousel-control-x:50%] [--carousel-control-y:50%]", {
+const carouselVariants = cva("group/carousel relative [--carousel-control-x:50%] [--carousel-control-y:50%]", {
   variants: {
     variant: {
       plain: "",
@@ -358,9 +443,9 @@ const CONTROL_POSITION = {
  * a mais não custam nada num controle sem vizinho.
  *
  * As três ocorrências que esta casa já tinha carregavam o mesmo desconto e
- * afirmavam 44 nos comentários. O `PageHeaderBack` foi pago (32 com
- * `-inset-2` → 46); o × da `AnnouncementBar` (24 → 42) e os degraus do
- * `Breadcrumb` (20 → 42) ficam no backlog com o número.
+ * afirmavam 44 nos comentários. As três foram pagas: o `PageHeaderBack` (32
+ * com `-inset-2` → 46), o × da `AnnouncementBar` (`-inset-3`) e os degraus do
+ * `Breadcrumb` (`-inset-y-3`, que só crescem na altura, porque são vizinhos).
  */
 const CONTROL_TOUCH_TARGET =
   "pointer-coarse:after:absolute pointer-coarse:after:-inset-2.5 pointer-coarse:after:content-['']"
@@ -471,6 +556,17 @@ type CarouselProps = {
    * teclado funcionam iguais porque leem dele.
    */
   layout?: CarouselLayout
+  /**
+   * Carrossel só abaixo do degrau: a partir dele, grade, sem setas nem
+   * pontos. O caso da tira de cartões que no desktop cabe inteira.
+   */
+  until?: CarouselUntil
+  /** `free`: arraste livre, com inércia, parando onde o dedo soltar. */
+  snap?: "item" | "free"
+  /** O item cortado, clicado, vem para a vista antes de agir. Ligado. */
+  selectOnClick?: boolean
+  /** O gesto horizontal do trackpad passa um item por gesto. Ligado. */
+  wheel?: boolean
 }
 
 type CarouselAutoplay = ReturnType<typeof useCarouselAutoplay>
@@ -493,6 +589,8 @@ type CarouselContextProps = {
   layout: CarouselLayout
   bleed: boolean
   autoplay: CarouselAutoplay
+  until: CarouselUntil | undefined
+  selectOnClick: boolean
   /** O acordeão conta os itens pelo contêiner, que é quem os vê. */
   registrarTotal: (total: number) => void
 }
@@ -532,16 +630,21 @@ function Carousel({
   plugins,
   variant = "plain",
   controls: controlsProp,
-  gap = DEFAULT_GAP,
+  gap: gapProp = DEFAULT_GAP,
   fade: fadeProp = true,
   loop,
   effect = "none",
   autoplay: intervalo = 0,
   bleed = false,
   layout = "slide",
+  until,
+  snap = "item",
+  selectOnClick = true,
+  wheel = true,
   className,
   style,
   children,
+  ref,
   onPointerEnter,
   onPointerLeave,
   onFocusCapture,
@@ -561,7 +664,11 @@ function Carousel({
   const acordeao = layout === "accordion"
   // Sangria e dissolução não convivem: a rampa apagaria justamente as pontas
   // que a sangria veio mostrar.
-  const fade = fadeProp && !bleed && !acordeao
+  const dissolve = effect === "fade"
+  // Na dissolução os itens se sobrepõem na origem: calha nenhuma, e nenhuma
+  // rampa nas pontas — ela apagaria o item inteiro.
+  const gap: CarouselGap = dissolve ? "none" : gapProp
+  const fade = fadeProp && !bleed && !acordeao && !dissolve
   const loopEfetivo = loop ?? (effect === "spotlight" ? true : undefined)
 
   const [carouselRef, api] = useEmblaCarousel(
@@ -571,6 +678,8 @@ function Carousel({
       duration: 32,
       ...(effect === "spotlight" && { align: "center" as const }),
       ...(loopEfetivo !== undefined && { loop: loopEfetivo }),
+      ...(snap === "free" && { dragFree: true }),
+      ...(until && { breakpoints: { [UNTIL_QUERY[until]]: { active: false } } }),
       ...opts,
       axis: orientation === "horizontal" ? "x" : "y",
       // No acordeão o embla não move nada: quem troca o item é o contexto.
@@ -635,6 +744,8 @@ function Carousel({
       // de um campo num slide trocava de slide em vez de mover o cursor.
       const alvo = event.target as HTMLElement
       if (alvo.closest("input, textarea, select, [contenteditable=''], [contenteditable='true']")) return
+      // Na grade não há para onde andar, e a seta é do navegador.
+      if (naGrade(until)) return
       // A seta segue o eixo. Antes eram sempre as horizontais, inclusive num
       // carrossel vertical, onde a tecla certa não fazia nada.
       const anterior = orientation === "horizontal" ? "ArrowLeft" : "ArrowUp"
@@ -654,8 +765,45 @@ function Carousel({
         scrollTo(Math.max(0, contagem - 1))
       }
     },
-    [orientation, scrollPrev, scrollNext, scrollTo, contagem]
+    [orientation, scrollPrev, scrollNext, scrollTo, contagem, until]
   )
+
+  // A roda do trackpad. Os passos mais recentes por ref: o ouvinte é montado
+  // uma vez, e `scrollNext` muda de identidade com o total do acordeão.
+  const rootRef = React.useRef<HTMLDivElement | null>(null)
+  const passos = React.useRef({ scrollPrev, scrollNext })
+  React.useEffect(() => {
+    passos.current = { scrollPrev, scrollNext }
+  }, [scrollPrev, scrollNext])
+  React.useEffect(() => {
+    const no = rootRef.current
+    if (!no || !wheel || orientation !== "horizontal") return
+    let acumulado = 0
+    let travado = false
+    let silencio: ReturnType<typeof setTimeout> | undefined
+    const aoRolar = (e: WheelEvent) => {
+      // Só o gesto de lado: o vertical continua rolando a página.
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return
+      if (naGrade(until)) return
+      e.preventDefault()
+      clearTimeout(silencio)
+      silencio = setTimeout(() => {
+        acumulado = 0
+        travado = false
+      }, 160)
+      if (travado) return
+      acumulado += e.deltaX
+      if (Math.abs(acumulado) < 40) return
+      travado = true
+      if (acumulado > 0) passos.current.scrollNext()
+      else passos.current.scrollPrev()
+    }
+    no.addEventListener("wheel", aoRolar, { passive: false })
+    return () => {
+      no.removeEventListener("wheel", aoRolar)
+      clearTimeout(silencio)
+    }
+  }, [wheel, orientation, until])
 
   React.useEffect(() => {
     if (!api || !setApi) return
@@ -698,10 +846,13 @@ function Carousel({
         layout,
         bleed,
         autoplay,
+        until,
+        selectOnClick,
         registrarTotal,
       }}
     >
       <div
+        ref={composeRefs(rootRef, ref)}
         onKeyDownCapture={handleKeyDown}
         onPointerEnter={(e) => {
           autoplay.pausar("cursor")
@@ -736,6 +887,8 @@ function Carousel({
         }
         data-effect={effect === "none" ? undefined : effect}
         data-layout={layout}
+        data-until={until}
+        data-snap={snap === "free" ? "free" : undefined}
         className={cn(
           carouselVariants({ variant, controls, orientation }),
           // A calha da casca, devolvida: a raiz sangra até a borda e o trilho
@@ -783,6 +936,7 @@ function CarouselContent({
     effect,
     layout,
     bleed,
+    until,
     registrarTotal,
   } = useCarousel()
   const viewportRef = React.useRef<HTMLDivElement | null>(null)
@@ -990,6 +1144,8 @@ function CarouselContent({
           // de quem chama, em `viewportClassName`.
           acordeao && "h-full",
           GAP_CLASSES[orientation][gap].track,
+          // A grade de `until`: só no eixo horizontal, que é o da tira.
+          until && orientation === "horizontal" && UNTIL_TRACK[until][gap],
           EFFECT_CLASSES[effect],
           className
         )}
@@ -1044,9 +1200,48 @@ function CarouselItem({
   /** A resposta ao cursor e ao toque. */
   hover?: keyof typeof ITEM_HOVER
 }) {
-  const { orientation, gap, layout, selectedIndex, scrollTo } = useCarousel()
+  const {
+    api,
+    orientation,
+    gap,
+    layout,
+    effect,
+    until,
+    selectOnClick,
+    selectedIndex,
+    scrollTo,
+  } = useCarousel()
   const acordeao = layout === "accordion"
   const selecionado = index === selectedIndex
+
+  // O item cortado na borda vem para a vista **antes de agir**: o clique é
+  // engolido em captura, e o embla rola até o encaixe que contém o item. No
+  // `spotlight` e no `curve` a régua é ser o central, e não estar inteiro.
+  // Arrasto não chega aqui: o embla 8 cancela o clique que termina um arrasto.
+  const trazerParaVista = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!selectOnClick || acordeao || effect === "fade" || !api || naGrade(until)) return
+    const encaixe = api
+      .internalEngine()
+      .slideRegistry.findIndex((grupo) => grupo.includes(index))
+    if (encaixe < 0) return
+    let fora: boolean
+    if (effect === "spotlight" || effect === "curve") {
+      fora = encaixe !== api.selectedScrollSnap()
+    } else {
+      // O filho, e não o item: o item carrega a calha, e o primeiro começa
+      // 16px antes do viewport pela margem negativa do trilho.
+      const caixa = (e.currentTarget.firstElementChild ?? e.currentTarget).getBoundingClientRect()
+      const vista = api.rootNode().getBoundingClientRect()
+      fora =
+        orientation === "horizontal"
+          ? caixa.left < vista.left - 1 || caixa.right > vista.right + 1
+          : caixa.top < vista.top - 1 || caixa.bottom > vista.bottom + 1
+    }
+    if (!fora) return
+    e.preventDefault()
+    e.stopPropagation()
+    api.scrollTo(encaixe)
+  }
 
   return (
     <div
@@ -1063,6 +1258,7 @@ function CarouselItem({
         acordeao &&
           "rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/45 focus-visible:ring-inset",
         GAP_CLASSES[orientation][gap].item,
+        until && orientation === "horizontal" && UNTIL_ITEM[until],
         ITEM_HOVER[hover],
         className
       )}
@@ -1074,6 +1270,7 @@ function CarouselItem({
             } as React.CSSProperties)
           : style
       }
+      onClickCapture={trazerParaVista}
       onClick={(e) => {
         if (acordeao) scrollTo(index)
         onClick?.(e)
@@ -1155,6 +1352,7 @@ function CarouselControl({
         // Sem `rounded-full` no padrão: o raio é o do `Button` (`rounded-lg`,
         // 10px), que é o que `Calendar` e `Pagination` já entregam nas setas.
         sobreposta && "absolute",
+        ESCONDE_NA_GRADE,
         CONTROL_TRANSITION,
         sobreposta && CONTROL_POSITION[controls === "none" ? "inside" : controls][orientation][direction],
         sobreposta && CONTROL_PRESS_FIX[orientation],
@@ -1252,6 +1450,7 @@ function CarouselDots({
       data-placement={placement}
       className={cn(
         "flex items-center justify-center",
+        ESCONDE_NA_GRADE,
         barra && "w-full gap-1",
         // Sobre a foto: centralizado na base do viewport, acima do conteúdo.
         sobreFoto &&
@@ -1341,8 +1540,15 @@ function CarouselDots({
 function CarouselStatus({
   className,
   children,
+  placement = "below",
   ...props
-}: React.ComponentProps<typeof Caption>) {
+}: React.ComponentProps<typeof Caption> & {
+  /**
+   * `overlay`: a pílula de vidro no canto de cima da foto — a tinta
+   * flutuante, que segue o tema, com o texto do corpo por cima.
+   */
+  placement?: "below" | "overlay"
+}) {
   const { selectedIndex, snapCount, autoplay } = useCarousel()
 
   return (
@@ -1352,7 +1558,17 @@ function CarouselStatus({
       // automática atropelaria o leitor de tela (APG, carrossel com rotação).
       aria-live={autoplay.rodando ? "off" : undefined}
       data-slot="carousel-status"
-      className={cn("nums", className)}
+      data-placement={placement}
+      className={cn(
+        "nums",
+        ESCONDE_NA_GRADE,
+        placement === "overlay" &&
+          cn(
+            menuPanelTintClassName,
+            "absolute start-2 top-2 z-10 rounded-full px-2 py-0.5 text-xs font-medium text-foreground shadow-sm ring-1 ring-foreground/10"
+          ),
+        className
+      )}
       {...props}
     >
       {children ?? `${Math.min(selectedIndex + 1, snapCount)} de ${snapCount}`}
@@ -1379,6 +1595,7 @@ function CarouselToolbar({
       data-slot="carousel-toolbar"
       className={cn(
         "flex items-center gap-1.5",
+        ESCONDE_NA_GRADE,
         align === "start" && "justify-start",
         align === "center" && "justify-center",
         align === "end" && "justify-end",
@@ -1444,7 +1661,7 @@ function CarouselPlayPause({
       variant={variant}
       size={size}
       onClick={autoplay.alternar}
-      className={cn("pointer-coarse:size-11", className)}
+      className={cn("pointer-coarse:size-11", ESCONDE_NA_GRADE, className)}
       {...props}
     >
       {pausado ? <PlayIcon /> : <PauseIcon />}
@@ -1676,13 +1893,24 @@ function CarouselStep({
 
 function CarouselThumbs({
   className,
+  orientation = "horizontal",
   children,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div"> & {
+  /**
+   * `vertical`: a coluna ao lado da foto, **a partir de `md`** — abaixo dele
+   * ela deita embaixo, porque uma coluna de 80px come a foto no telefone. O
+   * eixo troca pelo `breakpoints` do embla, e a coluna não mede nada
+   * (`contain: size`): quem dá a altura é a foto, na mesma linha da grade.
+   */
+  orientation?: "horizontal" | "vertical"
+}) {
   const { selectedIndex } = useCarousel()
+  const vertical = orientation === "vertical"
   const [ref, api] = useEmblaCarousel({
     containScroll: "keepSnaps",
     dragFree: true,
+    ...(vertical && { breakpoints: { [UNTIL_QUERY.md]: { axis: "y" } } }),
   })
 
   React.useEffect(() => {
@@ -1695,12 +1923,17 @@ function CarouselThumbs({
       role="group"
       aria-label="Miniaturas"
       data-slot="carousel-thumbs"
-      className={cn("min-w-0 flex-1 overflow-hidden", className)}
+      data-orientation={orientation}
+      className={cn(
+        "min-w-0 flex-1 overflow-hidden",
+        vertical && "md:[contain:size]",
+        className
+      )}
       {...props}
     >
       {/* O recuo dá lugar ao anel de foco e ao da seleção, que o recorte do
             viewport cortaria rente à borda. */}
-      <div className="flex gap-2 p-1">{children}</div>
+      <div className={cn("flex gap-2 p-1", vertical && "md:flex-col")}>{children}</div>
     </div>
   )
 }
@@ -1742,11 +1975,243 @@ function CarouselThumb({
   )
 }
 
+/**
+ * A barra de rolagem da tira — quanto já passou, e quanto cabe de uma vez.
+ *
+ * É o indicador do arraste livre (`snap="free"`), onde pontos mentem: não há
+ * "item 3" quando a tira para em qualquer lugar. O polegar tem a largura da
+ * fração visível (viewport sobre trilho) e anda com `scrollProgress()` do
+ * embla. Decorativa (`aria-hidden`): a posição falada é a do
+ * `CarouselStatus`. Some quando tudo cabe. Horizontal, e sem `loop` — no
+ * laço o progresso dá a volta e o polegar saltaria de uma ponta à outra.
+ */
+function CarouselProgress({ className, ...props }: React.ComponentProps<"div">) {
+  const { api } = useCarousel()
+  const ref = React.useRef<HTMLDivElement | null>(null)
+
+  React.useEffect(() => {
+    const no = ref.current
+    if (!api || !no) return
+    const escrever = () => {
+      const trilho = api.containerNode()
+      const fracao = Math.min(1, api.rootNode().clientWidth / Math.max(1, trilho.scrollWidth))
+      const progresso = Math.min(1, Math.max(0, api.scrollProgress()))
+      no.style.setProperty("--carousel-progress-w", `${fracao * 100}%`)
+      // `translate` em % é da largura do próprio polegar: andar a pista toda
+      // é `(1/fração − 1)` larguras.
+      no.style.setProperty(
+        "--carousel-progress-x",
+        `${progresso * (1 / fracao - 1) * 100}%`
+      )
+      if (fracao >= 1) no.dataset.empty = ""
+      else delete no.dataset.empty
+    }
+    escrever()
+    api.on("scroll", escrever)
+    api.on("reInit", escrever)
+    api.on("resize", escrever)
+    return () => {
+      api.off("scroll", escrever)
+      api.off("reInit", escrever)
+      api.off("resize", escrever)
+    }
+  }, [api])
+
+  return (
+    <div
+      ref={ref}
+      aria-hidden="true"
+      data-slot="carousel-progress"
+      className={cn(
+        "relative h-1 w-full overflow-hidden rounded-full bg-muted data-empty:invisible",
+        ESCONDE_NA_GRADE,
+        className
+      )}
+      {...props}
+    >
+      <div className="h-full w-(--carousel-progress-w) translate-x-(--carousel-progress-x) rounded-full bg-primary-accent" />
+    </div>
+  )
+}
+
+/**
+ * O carrossel carregando, na forma que ele vai ter: o mesmo `basis` e a
+ * mesma calha, para a tira não pular quando o dado chega. Fica **fora** de um
+ * `<Carousel>` — não há o que rolar —, e é um `SkeletonGroup`: a região
+ * anuncia "Carregando…" e os ossos ficam calados. O osso de cada item é um
+ * `CardSkeleton` sem barra, ou o que vier em `children`.
+ */
+function CarouselSkeleton({
+  count = 3,
+  gap = DEFAULT_GAP,
+  itemClassName = "basis-2/3 sm:basis-1/3",
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof SkeletonGroup> & {
+  /** Quantos itens desenhar — o bastante para vazar da borda. */
+  count?: number
+  gap?: CarouselGap
+  /** O `basis` do item real. */
+  itemClassName?: string
+}) {
+  return (
+    <SkeletonGroup
+      data-slot="carousel-skeleton"
+      className={cn("overflow-hidden", className)}
+      {...props}
+    >
+      <div className={cn("flex", GAP_CLASSES.horizontal[gap].track)}>
+        {Array.from({ length: count }, (_, i) => (
+          <div
+            key={i}
+            aria-hidden="true"
+            className={cn(
+              "min-w-0 shrink-0 grow-0",
+              GAP_CLASSES.horizontal[gap].item,
+              itemClassName
+            )}
+          >
+            {children ?? <CardSkeleton toolbar={false} lines={2} />}
+          </div>
+        ))}
+      </div>
+    </SkeletonGroup>
+  )
+}
+
+/**
+ * O último item é o caminho para a lista — "Ver todos" —, e o fim da tira
+ * deixa de ser parede. É um item de verdade (entra na contagem e no teclado),
+ * com a superfície do lugar vazio (`Card variant="dashed"`) clicável.
+ *
+ * O filho é o link (`<Link href>`), que recebe a superfície por `asChild`; a
+ * seta e a contagem entram em volta do texto dele.
+ */
+function CarouselMore({
+  count,
+  children,
+  ...props
+}: Omit<React.ComponentProps<typeof CarouselItem>, "children"> & {
+  /** O total da lista, dito embaixo ("12 no total"). */
+  count?: number
+  /** O link, com o texto: `<Link href="/credit-cards">Ver todos</Link>`. */
+  children: React.ReactElement
+}) {
+  return (
+    <CarouselItem data-more="" {...props}>
+      <Card
+        variant="dashed"
+        interactive
+        asChild
+        className="h-full min-h-28 items-center justify-center gap-1.5 text-center font-medium text-foreground"
+      >
+        <Slot.Root data-slot="carousel-more">
+          <span className="grid size-8 place-items-center rounded-full bg-muted" aria-hidden="true">
+            <ArrowRightIcon className="size-4" />
+          </span>
+          <Slot.Slottable>{children}</Slot.Slottable>
+          {count != null ? (
+            <Caption className="nums font-normal">{count} no total</Caption>
+          ) : null}
+        </Slot.Root>
+      </Card>
+    </CarouselItem>
+  )
+}
+
+/**
+ * A galeria em tela cheia: o botão de expandir no canto da foto e um `Dialog`
+ * com outro `Carousel` dentro, que **abre no item atual** (`startIndex`) e
+ * devolve o índice ao fechar — o principal salta, sem animação, para onde a
+ * pessoa parou. Os itens vêm em `children` outra vez, porque em tela cheia a
+ * foto é outra: inteira (`object-contain`), e não recortada.
+ *
+ * As setas do teclado andam na tela cheia de qualquer foco: o diálogo abre com
+ * o foco no ×, fora da região, e sem isto o teclado só voltaria a andar
+ * depois de tabular até ela.
+ */
+function CarouselFullscreen({
+  title = "Imagens",
+  className,
+  children,
+}: {
+  /** O nome do diálogo e da região. */
+  title?: string
+  className?: string
+  /** Os `CarouselItem` da tela cheia. */
+  children: React.ReactNode
+}) {
+  const { api: principal, selectedIndex } = useCarousel()
+  const [interna, setInterna] = React.useState<CarouselApi>()
+
+  React.useEffect(() => {
+    if (!interna) return
+    const devolver = () => principal?.scrollTo(interna.selectedScrollSnap(), true)
+    interna.on("select", devolver)
+    return () => {
+      interna.off("select", devolver)
+    }
+  }, [interna, principal])
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button
+          variant="tertiary"
+          size="icon-sm"
+          data-slot="carousel-fullscreen-trigger"
+          className={cn(
+            menuPanelTintClassName,
+            "absolute end-2 top-2 z-10 rounded-full shadow-sm ring-1 ring-foreground/10",
+            CONTROL_TOUCH_TARGET,
+            className
+          )}
+        >
+          <ArrowsPointingOutIcon />
+          <span className="sr-only">Ver em tela cheia</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent
+        data-slot="carousel-fullscreen"
+        // Opaca nos dois temas: a placa modal é vidro (85% no claro, 40% no
+        // escuro), e atrás de uma foto em tela cheia a página não pode aparecer.
+        className="flex h-dvh max-h-none w-screen max-w-none flex-col justify-center rounded-none bg-background p-0 ring-0 sm:max-w-none dark:bg-background"
+        onKeyDown={(e) => {
+          // Dentro da região a captura já andou e marcou o evento.
+          if (e.defaultPrevented) return
+          if (e.key === "ArrowLeft") interna?.scrollPrev()
+          else if (e.key === "ArrowRight") interna?.scrollNext()
+        }}
+      >
+        <DialogTitle className="sr-only">{title}</DialogTitle>
+        <Carousel
+          opts={{ startIndex: selectedIndex }}
+          setApi={setInterna}
+          gap="none"
+          fade={false}
+          aria-label={title}
+          className="w-full"
+        >
+          <CarouselContent>{children}</CarouselContent>
+          <CarouselPrevious appearance="glass" />
+          <CarouselNext appearance="glass" />
+          <CarouselStatus placement="overlay" />
+        </Carousel>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export {
   type CarouselApi,
   type CarouselEffect,
   CarouselToolbar,
   CarouselCaption,
+  CarouselFullscreen,
+  CarouselMore,
+  CarouselProgress,
+  CarouselSkeleton,
   CarouselPlayPause,
   CarouselStep,
   CarouselSteps,
@@ -1769,4 +2234,5 @@ export {
   DEFAULT_GAP as carouselDefaultGap,
   EFFECT_CLASSES as carouselEffectClasses,
   ITEM_HOVER as carouselItemHover,
+  UNTIL_TRACK as carouselUntilTrack,
 }

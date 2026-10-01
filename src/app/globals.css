@@ -2749,6 +2749,29 @@
   }
 }
 
+/* A troca por dissolução (rodada 205): o item, e não o filho, volta à origem
+   — desloca-se `−s` larguras, e com `gap="none"` e `basis-full` uma largura é
+   exatamente um passo — e apaga pela distância. Todos se sobrepõem no
+   viewport, e o arraste vira cruzamento de opacidade, como no plugin de fade
+   do embla. Só o selecionado recebe o ponteiro: os outros estão ali, a
+   opacidade zero, por cima dele.
+
+   **Movimento reduzido não zera o deslocamento**, ao contrário dos outros:
+   aqui ele não é movimento, é o empilhamento. Sem ele os itens voltariam a
+   correr lado a lado. A troca já é só opacidade. */
+@utility carousel-effect-fade {
+  & > [data-slot="carousel-item"] {
+    translate: calc(var(--carousel-slide-s, 0) * -100%) 0;
+    opacity: calc(1 - min(var(--carousel-slide-d, 0), 1));
+  }
+  & > [data-slot="carousel-item"]:not([data-selected]) {
+    pointer-events: none;
+  }
+  [data-orientation="vertical"] & > [data-slot="carousel-item"] {
+    translate: 0 calc(var(--carousel-slide-s, 0) * -100%);
+  }
+}
+
 /* O ponto-temporizador: o preenchimento cresce no intervalo do autoplay e
    pausa junto do relógio do `useCarouselAutoplay`. Em `@utility`, e não em
    `animate-[…]`: o Tailwind v4 descarta keyframes que nenhuma utility
