@@ -2049,6 +2049,17 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   foca; sem modificadora, não dispara dentro de campo de texto),
   `variant="brand"` (só em `field`) e `pending`. **Nenhuma busca é `<Input
   type="search">` nem pílula escrita à mão.**
+- **`Accordion` tem o ⌘F, ícone e descrição no gatilho e o "abrir todos"**
+  (rodada 200). `AccordionContent findable` é a mecânica do `Collapsible`,
+  que mora desde então em `hooks/use-until-found` e serve os dois.
+  `AccordionTrigger` ganhou `icon` (16px, antes do rótulo) e `description`
+  (par de identidade, sem `gap`; só o rótulo sublinha). `AccordionToggleAll`
+  abre e fecha todos em `type="multiple"`. **O estado mora na raiz** — o ⌘F e
+  o "abrir todos" escrevem nele de fora da linha —, com `defaultValue` como
+  semente. **O conteúdo alinha com o rótulo**, somando a seta
+  (`markerSide="start"`) e o ícone por variáveis (`--accordion-marker-ps`,
+  `--accordion-icon-ps`); começava sob a seta. Nenhuma tela usa o
+  `Accordion` hoje.
 - **`ToggleGroup` tem a bandeja, a ficha, a contagem e as partes iguais**
   (rodada 199). `variant="segmented"` é o trilho `bg-muted` com **um marcador
   só que desliza** até a escolhida — a mecânica e a superfície do `Tabs

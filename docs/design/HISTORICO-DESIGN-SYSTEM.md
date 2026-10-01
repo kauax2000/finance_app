@@ -16491,3 +16491,40 @@ O dono pediu a rodada completa e escolheu as quatro versões.
 - A folha de filtros e a atividade pedem login e não foram vistas; as peças
   foram medidas na página, nos dois temas e a 375px.
 
+### Rodada 200 — o Accordion ganha o ⌘F, ícone e descrição no gatilho e o "abrir todos"
+
+O dono pediu a rodada completa e escolheu as quatro versões.
+
+- **Nenhuma tela usa o `Accordion`**, e não há acordeão escrito à mão: os
+  blocos que expandem no app são um só por vez (o ciclo do cartão, o período
+  da fatura, o "Ver mais" da ficha do cartão), território do `Collapsible`. A
+  página dizia que `contained` era "a forma que este app usa", e o cabeçalho do
+  componente também; os dois foram corrigidos, e a página ganhou a nota "Onde
+  o app usa". Ela também citava o `ThemeToggle` como precedente do empurrão
+  por variável — o par de variáveis de lá não existe mais; o vivo é o
+  `--disclosure-nudge` da própria linha.
+- **`findable`**: a mecânica do `Collapsible` (rodada 189) saiu dele para
+  `hooks/use-until-found`, e os dois a usam. Para o `Accordion` abrir o item
+  que o ⌘F achou, **o estado passou a morar na raiz**: ele controla o Radix
+  sempre, com `defaultValue` como semente, e quem abre tira o `until-found`
+  do conteúdo antes de o Radix medir (`revelar`). Medido: fechado, o
+  conteúdo é `until-found` com 0px e o texto no DOM; o `beforematch` abre o
+  item certo (32px) e deixa o outro fechado; fechando, volta a
+  `until-found`. O `Collapsible` continua igual, medido depois da extração.
+- **`icon` e `description`** no gatilho. Medido: ícone de 16px, a descrição
+  colada ao rótulo (base do rótulo = topo da descrição), sublinhado só no
+  rótulo, e o nome acessível com os espaços ("Mercado 4 transações · última
+  em 12/03 −R$ 612,40") — o `textContent` sai colado, mas os blocos em flex
+  contam como bloco no cálculo do nome.
+- **`AccordionToggleAll`**: os itens se registram na raiz; o botão lê se
+  todos estão abertos e troca o rótulo. Só no `multiple`. Medido: abre os 3,
+  "Fechar todos", fecha os 3.
+- **O conteúdo começava sob a seta** com `markerSide="start"`, 28px antes do
+  rótulo que o encabeça — e o `icon` novo repetiu o defeito, visto na
+  captura. O recuo virou uma soma de variáveis: a raiz publica a parcela da
+  seta, o item com ícone publica a dele. Medido: diferença 0 nos três casos
+  (sem nada, com a seta antes, com ícone).
+- A página trocou os três acordeões da escada por um, com um segmentado de
+  degrau (32 · 36 · 40, medidos), juntou o `trailing` ao ícone e à descrição
+  numa seção só e somou estrutura com "abrir todos" e o ⌘F.
+

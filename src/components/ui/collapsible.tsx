@@ -7,6 +7,7 @@ import { Collapsible as CollapsiblePrimitive } from "radix-ui"
 import { animate, type AnimationPlaybackControls } from "motion/react"
 
 import { cn } from "@/lib/utils"
+import { useUntilFound } from "@/hooks/use-until-found"
 import {
   DISCLOSURE_ROW_HEIGHT_CLASS,
   DISCLOSURE_ROW_HEIGHTS,
@@ -258,51 +259,15 @@ function CollapsibleLabel({
 }
 
 /**
- * `findable` (rodada 189): o fechado fica no DOM como `hidden="until-found"`.
- * A busca do navegador o encontra, dispara `beforematch`, e ele abre. O Radix
- * desta versão (1.1) não tem a opção, então o conteúdo fica montado
- * (`forceMount`) e o atributo é escrito aqui — **depois** da animação de
- * fechar, senão `content-visibility: hidden` cortaria o trajeto seco. Os
- * filhos da cascata também disparam `animationend`, e só o do próprio nó conta.
- *
- * Onde `until-found` não existe, o atributo cai no `hidden` comum: o bloco
- * fecha igual, só não é encontrado.
+ * `findable` (rodada 189): o fechado fica no DOM como `hidden="until-found"`, e
+ * abre quando o ⌘F o acha. A mecânica mora em `hooks/use-until-found`, que o
+ * `Accordion` divide desde a rodada 200.
  */
 function useEncontravel(ligado: boolean) {
   const estado = React.useContext(CollapsibleContext)
-  const aberto = estado?.open ?? false
   const setOpen = estado?.setOpen
-  // O nó por estado, e não por `useRef`: o efeito precisa rodar quando ele
-  // chega, e a tela compõe a própria `ref` com este setter.
-  const [el, setEl] = React.useState<HTMLDivElement | null>(null)
-
-  React.useEffect(() => {
-    if (!ligado || !el) return
-    if (aberto) {
-      el.removeAttribute("hidden")
-      return
-    }
-    const esconder = () => el.setAttribute("hidden", "until-found")
-    // Na montagem não há animação a esperar.
-    if (el.getAnimations().length === 0) {
-      esconder()
-      return
-    }
-    const fim = (e: AnimationEvent) => {
-      if (e.target === el) esconder()
-    }
-    el.addEventListener("animationend", fim)
-    return () => el.removeEventListener("animationend", fim)
-  }, [ligado, aberto, el])
-
-  React.useEffect(() => {
-    if (!ligado || !el || !setOpen) return
-    const achou = () => setOpen(true)
-    el.addEventListener("beforematch", achou)
-    return () => el.removeEventListener("beforematch", achou)
-  }, [ligado, setOpen, el])
-
-  return setEl
+  const abrir = React.useMemo(() => (setOpen ? () => setOpen(true) : undefined), [setOpen])
+  return useUntilFound(ligado, estado?.open ?? false, abrir)
 }
 
 /**

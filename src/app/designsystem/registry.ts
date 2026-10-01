@@ -433,7 +433,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("toggle-group", "Toggle Group", "Conjunto de toggles: seleção única ou múltipla, em fichas ou numa bandeja segmentada.", ui("toggle-group"), "ToggleGroup, ToggleGroupItem"),
 
   // ── Organisms ──────────────────────────────────────────────────────────
-  entry("accordion", "Accordion", "Seções expansíveis.", ui("accordion"), "Accordion, AccordionItem, AccordionTrigger, AccordionContent"),
+  entry("accordion", "Accordion", "Seções expansíveis.", ui("accordion"), "Accordion, AccordionItem, AccordionTrigger, AccordionContent, AccordionToggleAll"),
   entry("alert-dialog", "Alert Dialog", "Confirmação de uma ação sem volta.", ui("alert-dialog"), "AlertDialog, AlertDialogAction, AlertDialogCancel"),
   entry("breadcrumb", "Breadcrumb", "A trilha até a tela atual.", ui("breadcrumb"), "Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbMenu"),
   entry("calendar", "Calendar", "A grade de um mês.", ui("calendar"), "Calendar, CalendarDayButton"),

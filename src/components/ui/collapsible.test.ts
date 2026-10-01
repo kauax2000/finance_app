@@ -17,10 +17,13 @@ describe("o collapsible", () => {
     // Com o atributo ainda lá, `content-visibility: hidden` mede 0 e o bloco
     // abre sem trajeto.
     expect(FONTE).toMatch(/if \(proximo\) \{\s*raiz\.current[\s\S]{0,120}removeAttribute\("hidden"\)/)
-    expect(FONTE).toContain('el.setAttribute("hidden", "until-found")')
-    expect(FONTE).toContain('addEventListener("beforematch"')
+    // A mecânica mora no hook desde a rodada 200, dividida com o `Accordion`.
+    expect(FONTE).toContain("useUntilFound(")
+    const HOOK = readFileSync(join(process.cwd(), "src/hooks/use-until-found.ts"), "utf8")
+    expect(HOOK).toContain('el.setAttribute("hidden", "until-found")')
+    expect(HOOK).toContain('addEventListener("beforematch"')
     // Só o `animationend` do próprio nó: a cascata dos filhos também dispara.
-    expect(FONTE).toContain("if (e.target === el) esconder()")
+    expect(HOOK).toContain("if (e.target === el) esconder()")
   })
 
   it("o cartão recua embaixo por pseudo, não por padding", () => {
