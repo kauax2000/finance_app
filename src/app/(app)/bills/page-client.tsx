@@ -181,6 +181,7 @@ export default function BillsPageClient() {
     const [payInput, setPayInput] = useState<PayBillInput | null>(null)
     const [paySaving, setPaySaving] = useState(false)
     const [confirmDeleteBill, setConfirmDeleteBill] = useState<Bill | null>(null)
+    const [deletingBill, setDeletingBill] = useState(false)
     const [mobileFiltersSheetOpen, setMobileFiltersSheetOpen] = useState(false)
 
     const billsHasTableEarly = Boolean(bundleQ.data && !bundleQ.data.tableMissing)
@@ -466,11 +467,13 @@ export default function BillsPageClient() {
     const handleDeleteBill = useCallback(async () => {
         if (!confirmDeleteBill || !currentWorkspaceId) return
         const deletedId = confirmDeleteBill.id
+        setDeletingBill(true)
         const r = await deleteBillCascade({
             supabase,
             workspaceId: currentWorkspaceId,
             billId: deletedId,
         })
+        setDeletingBill(false)
         if (!r.ok) toastError(r.error)
         else {
             toastSuccess("Conta removida.")
@@ -865,8 +868,9 @@ export default function BillsPageClient() {
             />
 
             <AlertDialog
+                pending={deletingBill}
                 open={Boolean(confirmDeleteBill)}
-                onOpenChange={(o) => !o && setConfirmDeleteBill(null)}
+                onOpenChange={(o) => !o && !deletingBill && setConfirmDeleteBill(null)}
             >
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -880,6 +884,7 @@ export default function BillsPageClient() {
                         <AlertDialogCancel type="button">Cancelar</AlertDialogCancel>
                         <AlertDialogAction
                             type="button"
+                            pendingLabel="Excluindo…"
                             onClick={(e) => {
                                 e.preventDefault()
                                 void handleDeleteBill()

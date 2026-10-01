@@ -822,6 +822,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             )}
 
             <AlertDialog
+                pending={deleteDeleting}
                 open={Boolean(pendingDelete)}
                 onOpenChange={(open) => {
                     if (!open && !deleteDeleting) setPendingDelete(null)
@@ -830,21 +831,19 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Excluir categoria?</AlertDialogTitle>
-                        <AlertDialogDescription asChild>
-                            <div>
-                                {pendingDelete ? (
-                                    <CategoryDeleteAlertBody categoryName={pendingDelete.name} />
-                                ) : null}
-                            </div>
+                        <AlertDialogDescription>
+                            {pendingDelete ? (
+                                <CategoryDeleteAlertBody categoryName={pendingDelete.name} />
+                            ) : null}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel type="button" disabled={deleteDeleting}>
+                        <AlertDialogCancel type="button">
                             Cancelar
                         </AlertDialogCancel>
                         <AlertDialogAction
+                            pendingLabel="Excluindo…"
                             type="button"
-                            disabled={deleteDeleting}
                             onClick={(e) => {
                                 e.preventDefault()
                                 if (!pendingDelete) return
@@ -856,7 +855,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                                 })()
                             }}
                         >
-                            {deleteDeleting ? "Excluindo…" : "Excluir"}
+                            Excluir
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

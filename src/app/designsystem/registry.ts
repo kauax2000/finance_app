@@ -434,7 +434,7 @@ export const REGISTRY: RegistryEntry[] = [
 
   // ── Organisms ──────────────────────────────────────────────────────────
   entry("accordion", "Accordion", "Seções expansíveis.", ui("accordion"), "Accordion, AccordionItem, AccordionTrigger, AccordionContent, AccordionToggleAll"),
-  entry("alert-dialog", "Alert Dialog", "Confirmação de uma ação sem volta.", ui("alert-dialog"), "AlertDialog, AlertDialogAction, AlertDialogCancel"),
+  entry("alert-dialog", "Alert Dialog", "Confirmação de uma ação sem volta.", ui("alert-dialog"), "AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogMedia, AlertDialogList, AlertDialogError, AlertDialogConfirmInput"),
   entry("breadcrumb", "Breadcrumb", "A trilha até a tela atual.", ui("breadcrumb"), "Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbMenu"),
   entry("calendar", "Calendar", "A grade de um mês.", ui("calendar"), "Calendar, CalendarDayButton"),
   entry("card", "Card", "Cartão de conteúdo e painel.", ui("card"), "Card, CardToolbar, CardContent, CardNote, CardMedia"),

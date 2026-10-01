@@ -40,6 +40,7 @@ import {
     AlertDialogDescription,
     AlertDialogFooter,
     AlertDialogHeader,
+    AlertDialogList,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { MoneyDisplay } from "@/components/ui/money-display"
@@ -409,6 +410,7 @@ export default function DashboardPageClient() {
             />
 
             <AlertDialog
+                pending={deleting}
                 open={pendingDelete !== null}
                 onOpenChange={(open) => {
                     if (!open && !deleting) setPendingDelete(null)
@@ -417,50 +419,48 @@ export default function DashboardPageClient() {
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Excluir transação?</AlertDialogTitle>
-                        <AlertDialogDescription asChild>
-                            <div className="space-y-2 text-sm text-muted-foreground">
-                                <p>Esta ação não pode ser desfeita.</p>
-                                {pendingDelete ? (
-                                    <ul className="list-inside list-disc text-foreground">
-                                        <li>
-                                            {formatTransactionDayPtBr(
-                                                pendingDelete.date,
-                                            )}{" "}
-                                            —{" "}
-                                            {pendingDelete.description ||
-                                                pendingDelete.category?.name ||
-                                                "Sem descrição"}
-                                        </li>
-                                        <li className="flex flex-wrap items-center gap-1 font-medium">
-                                            {pendingDelete.type === "income"
-                                                ? "Receita"
-                                                : "Despesa"}{" "}
-                                            de{" "}
-                                            <MoneyDisplay
-                                                value={Number(
-                                                    pendingDelete.amount,
-                                                )}
-                                                size="sm"
-                                                className="inline font-medium"
-                                            />
-                                        </li>
-                                    </ul>
-                                ) : null}
-                            </div>
+                        <AlertDialogDescription>
+                            <p>Esta ação não pode ser desfeita.</p>
+                            {pendingDelete ? (
+                                <AlertDialogList>
+                                    <li>
+                                        {formatTransactionDayPtBr(
+                                            pendingDelete.date,
+                                        )}{" "}
+                                        —{" "}
+                                        {pendingDelete.description ||
+                                            pendingDelete.category?.name ||
+                                            "Sem descrição"}
+                                    </li>
+                                    <li className="flex flex-wrap items-center gap-1 font-medium">
+                                        {pendingDelete.type === "income"
+                                            ? "Receita"
+                                            : "Despesa"}{" "}
+                                        de{" "}
+                                        <MoneyDisplay
+                                            value={Number(
+                                                pendingDelete.amount,
+                                            )}
+                                            size="sm"
+                                            className="inline font-medium"
+                                        />
+                                    </li>
+                                </AlertDialogList>
+                            ) : null}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={deleting}>
+                        <AlertDialogCancel>
                             Cancelar
                         </AlertDialogCancel>
                         <AlertDialogAction
-                            disabled={deleting}
+                            pendingLabel="Excluindo…"
                             onClick={(e) => {
                                 e.preventDefault()
                                 void confirmDelete()
                             }}
                         >
-                            {deleting ? "Excluindo…" : "Excluir"}
+                            Excluir
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

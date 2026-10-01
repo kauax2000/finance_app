@@ -587,6 +587,7 @@ export default function MembersPage() {
         <div className="min-w-0 max-w-full space-y-5">
             {revokeConfirmDialog}
             <AlertDialog
+                pending={Boolean(removeTarget && busyMemberId === removeTarget.userId)}
                 open={removeDialogOpen}
                 onOpenChange={(open) => {
                     setRemoveDialogOpen(open)
@@ -612,13 +613,9 @@ export default function MembersPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel
-                            disabled={Boolean(removeTarget && busyMemberId === removeTarget.userId)}
-                        >
-                            Cancelar
-                        </AlertDialogCancel>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
                         <AlertDialogAction
-                            disabled={Boolean(removeTarget && busyMemberId === removeTarget.userId)}
+                            pendingLabel="Removendo…"
                             onClick={(e) => {
                                 // Fica aberto enquanto remove; fecha quando termina.
                                 e.preventDefault()
@@ -628,14 +625,7 @@ export default function MembersPage() {
                                 })
                             }}
                         >
-                            {removeTarget && busyMemberId === removeTarget.userId ? (
-                                <>
-                                    <Spinner />
-                                    Removendo...
-                                </>
-                            ) : (
-                                "Remover"
-                            )}
+                            Remover
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

@@ -16528,3 +16528,67 @@ O dono pediu a rodada completa e escolheu as quatro versões.
   degrau (32 · 36 · 40, medidos), juntou o `trailing` ao ícone e à descrição
   numa seção só e somou estrutura com "abrir todos" e o ⌘F.
 
+### Rodada 201 — o AlertDialog ganha o andamento, o ícone, a lista, o erro e o "digite para confirmar"
+
+O dono pediu a rodada completa e escolheu as quatro versões.
+
+- **Dez telas escreviam o andamento à mão** — `disabled={deleting}` nos dois
+  botões, `e.preventDefault()` e `deleting ? "Excluindo…" : "Excluir"` (uma,
+  a de membros, com um `Spinner` à mão) —, e **nenhuma segurava o Esc**:
+  apertá-lo no meio da exclusão fechava a confirmação com a ação correndo.
+  `pending` na raiz faz as três coisas e marca `aria-busy`; `pendingLabel` é
+  o rótulo do andamento. A exclusão de conta (bills) nem tinha estado de
+  andamento: o clique duplo disparava duas exclusões, e ela ganhou um.
+  Medido: com `pending`, a ação mostra a roda e "excluindo…" e trava, o
+  Cancelar trava, o Esc não fecha, e o diálogo fecha quando a ação termina.
+- **A lista de consequências era `asChild` + `<div>` + `<ul list-disc>`**,
+  em oito diálogos, porque a descrição era um `<p>` e uma lista não cabe num
+  parágrafo. A `AlertDialogDescription` virou `<div>` (com 8px entre os
+  parágrafos) e a lista é `AlertDialogList`, dentro dela — o leitor de tela a
+  lê como parte do aviso (`aria-describedby` medido apontando para ela). O
+  corpo compartilhado da exclusão de categoria virou um fragmento.
+- **`AlertDialogError`**: os `<p className="text-sm text-destructive">` da
+  saída e da exclusão de carteira, agora com `role="alert"`.
+- **`AlertDialogMedia`**: o poço de 40 com o ícone de 20 do tom (lixeira no
+  `destructive`). **O auditor tinha dois furos aqui**, e os dois foram
+  consertados: lia `<AlertDialogContext.Provider>` como um ícone renderizado
+  sem tamanho (o `= React.createContext` o fazia entrar como apelido, e o
+  regex parava antes do ponto), e não via o ícone que sai de uma tabela
+  indexada (`const Icone = MEDIA_ICONE[tone]`). A regra G continua em zero
+  no projeto.
+- **`AlertDialogConfirmInput`**: a ação trava até o texto conferir (sem
+  espaços nas pontas), e o campo volta vazio ao reabrir — medido. A
+  exclusão de carteira, que era um `Dialog` com uma `Sheet` à parte no
+  telefone, o campo e a regra à mão e o Cancelar em `outline` (contra a
+  hierarquia do rodapé), virou `AlertDialog size="lg"` com ele. Medido a
+  375×667: 460px, sem rolar, a ação em cima da pilha.
+- **O conteúdo ganhou um teto** (`100dvh − 2rem`, rolando): o `auto` do
+  `Dialog` não tem, e a confirmação com campo podia sair da tela com o
+  teclado do telefone aberto. Uma confirmação curta nunca o alcança.
+- A página dizia que a superfície tinha "o vidro do cabeçalho", que não
+  existe mais; foi corrigida, e as demonstrações foram reorganizadas: o
+  padrão e o que não destrói lado a lado, o andamento de verdade (1,5s, com
+  o Esc preso), a lista com o erro, e o "digite".
+- As telas pedem login e não foram vistas; as peças foram medidas na página,
+  nos dois temas e a 375px.
+- **O ícone foi para a esquerda do texto**, a pedido do dono, depois de nascer
+  em cima do título. O `AlertDialogHeader` vira uma grade de duas colunas
+  quando tem `AlertDialogMedia` (`has-[>…]`), o ícone fica na primeira, preso
+  ao topo, e todo o resto na segunda; ele ocupa as duas linhas só quando há
+  descrição, senão o `gap` da linha vazia somaria 8px sob o título. Medido no
+  desktop e a 375px: ícone em 0/0, título e descrição em 56px (40 + 16), e o
+  campo de confirmar e o erro continuam na largura toda, fora do cabeçalho.
+- **E o ícone mudou de desenho mais duas vezes, pelas referências do dono.**
+  Primeiro ele pediu o ícone menor ao lado do texto, e trouxe uma referência:
+  medida, ela era um poço de 44 com um glifo de **16** (o que encolhe é o
+  glifo, não o poço), 16px até o texto e o centro do título no centro do
+  poço — implementado e medido (centros a 22px). Depois trouxe outra, que ele
+  julgou melhor, e é a que ficou: **sem poço**, o glifo de 16 na linha do
+  título e na cor dele, 8px antes do título, e a descrição atravessando a
+  largura toda embaixo, a partir da borda do ícone. A grade de duas colunas
+  ficou; o título vai na segunda coluna e todo o resto atravessa as duas.
+  Medido nos dois temas e a 375px: centros do ícone e do título a 8px, o
+  título em 24px, a descrição em 0 com a largura do cabeçalho. O `tone`
+  passou a escolher só o glifo. Os botões da referência (contorno e
+  preenchido) não foram copiados: o rodapé segue a hierarquia do sistema.
+

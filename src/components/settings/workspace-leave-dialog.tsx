@@ -8,8 +8,10 @@ import {
     AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
+    AlertDialogError,
     AlertDialogFooter,
     AlertDialogHeader,
+    AlertDialogList,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import type { Workspace } from "@/lib/supabase"
@@ -53,45 +55,41 @@ export function WorkspaceLeaveDialog({
     const show = Boolean(open && workspace)
 
     return (
-        <AlertDialog open={show} onOpenChange={handleOpenChange}>
+        <AlertDialog pending={leaving} open={show} onOpenChange={handleOpenChange}>
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>Sair da carteira?</AlertDialogTitle>
-                    <AlertDialogDescription asChild>
-                        <div className="space-y-2 text-sm text-muted-foreground">
-                            <p>
-                                Você deixa de ter acesso a esta carteira e aos
-                                dados compartilhados.
-                            </p>
-                            <ul className="list-inside list-disc space-y-1 text-foreground">
-                                <li>
-                                    Os outros membros mantêm tudo; o projeto
-                                    não é apagado.
-                                </li>
-                                <li>
-                                    Você pode voltar a ser convidado pelo
-                                    responsável.
-                                </li>
-                            </ul>
-                        </div>
+                    <AlertDialogDescription>
+                        <p>
+                            Você deixa de ter acesso a esta carteira e aos
+                            dados compartilhados.
+                        </p>
+                        <AlertDialogList>
+                            <li>
+                                Os outros membros mantêm tudo; o projeto
+                                não é apagado.
+                            </li>
+                            <li>
+                                Você pode voltar a ser convidado pelo
+                                responsável.
+                            </li>
+                        </AlertDialogList>
                     </AlertDialogDescription>
                 </AlertDialogHeader>
-                {error ? (
-                    <p className="text-sm text-destructive">{error}</p>
-                ) : null}
+                {error ? <AlertDialogError>{error}</AlertDialogError> : null}
                 <AlertDialogFooter>
-                    <AlertDialogCancel type="button" disabled={leaving}>
+                    <AlertDialogCancel type="button">
                         Cancelar
                     </AlertDialogCancel>
                     <AlertDialogAction
+                        pendingLabel="Saindo…"
                         type="button"
-                        disabled={leaving}
                         onClick={(e) => {
                             e.preventDefault()
                             void confirmLeave()
                         }}
                     >
-                        {leaving ? "Saindo…" : "Sair da carteira"}
+                        Sair da carteira
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

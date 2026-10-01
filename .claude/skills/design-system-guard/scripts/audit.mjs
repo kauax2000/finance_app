@@ -636,11 +636,17 @@ function auditFile(absPath, project) {
       for (const m of src.matchAll(/\b([Ii]con)\s*:\s*[A-Z]\w*Icon\b/g)) apelidos.add(m[1])
       for (const m of src.matchAll(/\bicon\s*:\s*([A-Z]\w*)\s*[,}\n]/g)) apelidos.add(m[1])
       if (/\{[^{}]{0,120}\bIcon\b[^{}]{0,120}\}/.test(src)) apelidos.add("Icon")
+      // A tabela indexada (rodada 201): `const Icone = MEDIA_ICONE[tone]`.
+      for (const m of src.matchAll(/\b(?:const|let)\s+([A-Z]\w*)\s*=\s*(\w+)\[/g))
+        if (apelidos.has(m[2])) apelidos.add(m[1])
 
       // 4. Os sítios de render indireto, e o conjunto que cada um pede.
       const pedidos = new Set()
       let opaco = false
-      for (const m of src.matchAll(/<([A-Z]\w*|\w+\.[a-zA-Z]\w*)\b([^>]*?)\/?>/g)) {
+      // A forma com ponto vem primeiro: `<AlertDialogContext.Provider>` era
+      // lida como `<AlertDialogContext>` sem tamanho, e o contexto entrava como
+      // apelido de ícone pelo `= React.createContext` (rodada 201).
+      for (const m of src.matchAll(/<(\w+\.[a-zA-Z]\w*|[A-Z]\w*)\b([^>]*?)\/?>/g)) {
         const tag = m[1]
         if (heroiconSet.has(tag)) continue
         if (!(apelidos.has(tag) || /^\w+\.(icon|Icon)$/.test(tag))) continue

@@ -49,6 +49,7 @@ import {
     AlertDialogDescription,
     AlertDialogFooter,
     AlertDialogHeader,
+    AlertDialogList,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import {
@@ -923,6 +924,7 @@ export default function CreditCardDetailPageClient() {
             ) : null}
             {editDialog}
             <AlertDialog
+                pending={deleting}
                 open={pendingCardDelete}
                 onOpenChange={(open) => {
                     if (!open && !deleting) setPendingCardDelete(false)
@@ -937,21 +939,22 @@ export default function CreditCardDetailPageClient() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
                         <AlertDialogAction
-                            disabled={deleting}
+                            pendingLabel="Excluindo…"
                             onClick={(e) => {
                                 e.preventDefault()
                                 void confirmDelete()
                             }}
                         >
-                            {deleting ? "Excluindo…" : "Excluir"}
+                            Excluir
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
 
             <AlertDialog
+                pending={deletingTransaction}
                 open={pendingTransactionDelete !== null}
                 onOpenChange={(open) => {
                     if (!open && !deletingTransaction) {
@@ -962,51 +965,49 @@ export default function CreditCardDetailPageClient() {
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Excluir transação?</AlertDialogTitle>
-                        <AlertDialogDescription asChild>
-                            <div className="space-y-2 text-sm text-muted-foreground">
-                                <p>Esta ação não pode ser desfeita.</p>
-                                {pendingTransactionDelete?.installment_plan_id ? (
-                                    <p className="text-foreground">
-                                        {INSTALLMENT_DELETE_WARNING}
-                                    </p>
-                                ) : null}
-                                {pendingTransactionDelete ? (
-                                    <ul className="list-inside list-disc text-foreground">
-                                        <li>
-                                            {formatTransactionDayPtBr(
-                                                pendingTransactionDelete.date
-                                            )}{" "}
-                                            —{" "}
-                                            {pendingTransactionDelete.description ||
-                                                pendingTransactionDelete.category?.name ||
-                                                "Sem descrição"}
-                                        </li>
-                                        <li className="font-medium">
-                                            {pendingTransactionDelete.type === "income"
-                                                ? "Receita"
-                                                : "Despesa"}{" "}
-                                            de{" "}
-                                            {currencyBRL(
-                                                Number(pendingTransactionDelete.amount)
-                                            )}
-                                        </li>
-                                    </ul>
-                                ) : null}
-                            </div>
+                        <AlertDialogDescription>
+                            <p>Esta ação não pode ser desfeita.</p>
+                            {pendingTransactionDelete?.installment_plan_id ? (
+                                <p className="text-foreground">
+                                    {INSTALLMENT_DELETE_WARNING}
+                                </p>
+                            ) : null}
+                            {pendingTransactionDelete ? (
+                                <AlertDialogList>
+                                    <li>
+                                        {formatTransactionDayPtBr(
+                                            pendingTransactionDelete.date
+                                        )}{" "}
+                                        —{" "}
+                                        {pendingTransactionDelete.description ||
+                                            pendingTransactionDelete.category?.name ||
+                                            "Sem descrição"}
+                                    </li>
+                                    <li className="font-medium">
+                                        {pendingTransactionDelete.type === "income"
+                                            ? "Receita"
+                                            : "Despesa"}{" "}
+                                        de{" "}
+                                        {currencyBRL(
+                                            Number(pendingTransactionDelete.amount)
+                                        )}
+                                    </li>
+                                </AlertDialogList>
+                            ) : null}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={deletingTransaction}>
+                        <AlertDialogCancel>
                             Cancelar
                         </AlertDialogCancel>
                         <AlertDialogAction
-                            disabled={deletingTransaction}
+                            pendingLabel="Excluindo…"
                             onClick={(e) => {
                                 e.preventDefault()
                                 void confirmDeleteTransaction()
                             }}
                         >
-                            {deletingTransaction ? "Excluindo…" : "Excluir"}
+                            Excluir
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

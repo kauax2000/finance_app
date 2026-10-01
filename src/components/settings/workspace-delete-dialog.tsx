@@ -4,24 +4,21 @@ import { useEffect, useState } from "react"
 import {
     Card,
 } from "@/components/ui/card"
-import { FormInput } from "@/components/ui/form"
 import { useWorkspace } from "@/components/workspace-provider"
-import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogCloseButton,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { cn } from "@/lib/utils"
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogConfirmInput,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogError,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogList,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Workspace } from "@/lib/supabase"
 
@@ -36,7 +33,6 @@ export function WorkspaceDeleteDialog({
     onOpenChange,
     workspace,
 }: WorkspaceDeleteDialogProps) {
-    const isMobile = useIsMobile()
     const {
         fetchWorkspaceDeleteImpact,
         deleteWorkspace,
@@ -48,7 +44,6 @@ export function WorkspaceDeleteDialog({
     const [budgets, setBudgets] = useState(0)
     const [categories, setCategories] = useState(0)
     const [otherMembers, setOtherMembers] = useState(0)
-    const [confirmName, setConfirmName] = useState("")
     const [deleting, setDeleting] = useState(false)
     const [deleteError, setDeleteError] = useState<string | null>(null)
 
@@ -59,7 +54,6 @@ export function WorkspaceDeleteDialog({
         setBudgets(0)
         setCategories(0)
         setOtherMembers(0)
-        setConfirmName("")
         setDeleting(false)
         setDeleteError(null)
     }
@@ -74,7 +68,6 @@ export function WorkspaceDeleteDialog({
         setImpactLoading(true)
         setImpactError(null)
         setDeleteError(null)
-        setConfirmName("")
 
         void (async () => {
             const result = await fetchWorkspaceDeleteImpact(workspace.id)
@@ -102,13 +95,10 @@ export function WorkspaceDeleteDialog({
         onOpenChange(next)
     }
 
-    const nameMatches =
-        workspace !== null &&
-        confirmName.trim() === workspace.name.trim() &&
-        confirmName.trim().length > 0
-
     const handleDelete = async () => {
-        if (!workspace || workspace.type === "personal" || !nameMatches) return
+        // O nome digitado é conferido pelo `AlertDialogConfirmInput`, que
+        // trava a ação até bater.
+        if (!workspace || workspace.type === "personal") return
         setDeleteError(null)
         setDeleting(true)
         const result = await deleteWorkspace(workspace.id)
@@ -125,144 +115,88 @@ export function WorkspaceDeleteDialog({
         open && workspace && workspace.type !== "personal"
     )
 
-    const headerDetailBlock = (
-        <div className="space-y-2 pt-2 text-sm text-muted-foreground">
-            <p>Serão removidos desta carteira:</p>
-            <ul className="list-inside list-disc space-y-0.5">
-                <li>todas as transações e divisões associadas</li>
-                <li>categorias e orçamentos</li>
-                <li>membros, convites e notificações da carteira</li>
-            </ul>
-            {otherMembers > 0 ? (
-                <p className="text-destructive">
-                    Outras {otherMembers}{" "}
-                    {otherMembers === 1 ? "pessoa perderá o acesso" : "pessoas perderão o acesso"} e os dados desta
-                    carteira para elas também serão apagados.
-                </p>
-            ) : null}
+    const resumo = impactLoading ? (
+        <div className="space-y-2" aria-busy="true">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-2/3" />
         </div>
-    )
-
-    const scrollBody = (
-        <div
-            className={cn(
-                "space-y-4 overflow-y-auto py-4",
-                isMobile ? "max-h-none min-h-0 flex-1 px-4" : "max-h-[min(50vh,22rem)] px-6",
-            )}
-        >
-            {isMobile ? headerDetailBlock : null}
-            {impactLoading ? (
-                <div className="space-y-2" aria-busy="true">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-2/3" />
-                </div>
-            ) : impactError ? (
-                <p className="text-sm text-destructive">{impactError}</p>
-            ) : (
-                <Card variant="muted" padding="none" className="px-3 py-2">
-                    <p className="font-medium text-foreground">Resumo nesta carteira</p>
-                    <ul className="mt-2 space-y-1 text-muted-foreground">
-                        <li>
-                            Transações:{" "}
-                            <span className="tabular-nums text-foreground">{transactions}</span>
-                        </li>
-                        <li>
-                            Orçamentos:{" "}
-                            <span className="tabular-nums text-foreground">{budgets}</span>
-                        </li>
-                        <li>
-                            Categorias:{" "}
-                            <span className="tabular-nums text-foreground">{categories}</span>
-                        </li>
-                    </ul>
-                </Card>
-            )}
-
-            <FormInput
-                id="workspace-delete-confirm-name"
-                label={
-                    <span>
-                        Digite o nome da carteira para confirmar:{" "}
-                        <span className="font-semibold text-foreground">{workspace?.name ?? ""}</span>
-                    </span>
-                }
-                autoComplete="off"
-                value={confirmName}
-                onChange={(e) => setConfirmName(e.target.value)}
-                placeholder="Nome exato da carteira"
-                disabled={impactLoading || Boolean(impactError)}
-                aria-invalid={confirmName.length > 0 && !nameMatches}
-            />
-
-            {deleteError ? <p className="text-sm text-destructive">{deleteError}</p> : null}
-        </div>
-    )
-
-    const footerActions = isMobile ? (
-        <DialogFooter className="flex-col">
-            <Button
-                type="button"
-                variant="destructive"
-                size="xl" className="w-full"
-                disabled={deleting || impactLoading || Boolean(impactError) || !nameMatches}
-                onClick={() => void handleDelete()}
-            >
-                {deleting ? "Excluindo…" : "Excluir carteira"}
-            </Button>
-        </DialogFooter>
+    ) : impactError ? (
+        <AlertDialogError>{impactError}</AlertDialogError>
     ) : (
-        <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={deleting}>
-                Cancelar
-            </Button>
-            <Button
-                type="button"
-                variant="destructive"
-                disabled={deleting || impactLoading || Boolean(impactError) || !nameMatches}
-                onClick={() => void handleDelete()}
-            >
-                {deleting ? "Excluindo…" : "Excluir carteira"}
-            </Button>
-        </DialogFooter>
+        <Card variant="muted" padding="none" className="px-3 py-2 text-sm">
+            <p className="font-medium text-foreground">Resumo nesta carteira</p>
+            <ul className="mt-2 space-y-1 text-muted-foreground">
+                <li>
+                    Transações:{" "}
+                    <span className="tabular-nums text-foreground">{transactions}</span>
+                </li>
+                <li>
+                    Orçamentos:{" "}
+                    <span className="tabular-nums text-foreground">{budgets}</span>
+                </li>
+                <li>
+                    Categorias:{" "}
+                    <span className="tabular-nums text-foreground">{categories}</span>
+                </li>
+            </ul>
+        </Card>
     )
 
-    if (isMobile && showDialog) {
-        return (
-            <Sheet open={showDialog} onOpenChange={handleOpenChange}>
-                <SheetContent
-                    side="bottom"
-                    fillMobileViewport
-                >
-                    <DialogHeader>
-                        <DialogTitle>Excluir carteira</DialogTitle>
-                        <DialogDescription>
-                            Esta ação é permanente e não pode ser desfeita.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="flex min-h-0 flex-1 flex-col">{scrollBody}</div>
-                    {footerActions}
-                <DialogCloseButton />
-                </SheetContent>
-            </Sheet>
-        )
-    }
-
+    // Uma confirmação do que não tem volta é `AlertDialog` (rodada 201): até
+    // aqui era um `Dialog` — uma `Sheet` no telefone — com o "digite o nome"
+    // e a regra de habilitar o botão escritos à mão, e o Cancelar em
+    // `outline`, contra a hierarquia do rodapé. O Esc não fechava no meio da
+    // exclusão só porque o `onOpenChange` engolia; agora é o `pending`.
     return (
-        <Dialog open={showDialog} onOpenChange={handleOpenChange}>
-            <DialogContent
-                    layout="fixed"
-                    size="lg"
-                    className="[--dialog-max-h:min(92vh,40rem)]"
-                >
-                <DialogHeader>
-                    <DialogTitle>Excluir carteira</DialogTitle>
-                    <DialogDescription>Esta ação é permanente e não pode ser desfeita.</DialogDescription>
-                    {headerDetailBlock}
-                </DialogHeader>
-                {scrollBody}
-                {footerActions}
-            </DialogContent>
-        </Dialog>
+        <AlertDialog pending={deleting} open={showDialog} onOpenChange={handleOpenChange}>
+            <AlertDialogContent size="lg">
+                <AlertDialogHeader>
+                    <AlertDialogMedia tone="destructive" />
+                    <AlertDialogTitle>Excluir carteira?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        <p>Esta ação é permanente e não pode ser desfeita. Serão removidos desta carteira:</p>
+                        <AlertDialogList>
+                            <li>todas as transações e divisões associadas</li>
+                            <li>categorias e orçamentos</li>
+                            <li>membros, convites e notificações da carteira</li>
+                        </AlertDialogList>
+                        {otherMembers > 0 ? (
+                            <p className="text-destructive">
+                                Outras {otherMembers}{" "}
+                                {otherMembers === 1 ? "pessoa perderá o acesso" : "pessoas perderão o acesso"} e os
+                                dados desta carteira para elas também serão apagados.
+                            </p>
+                        ) : null}
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                {resumo}
+                <AlertDialogConfirmInput
+                    expected={workspace?.name ?? ""}
+                    label={
+                        <span>
+                            Digite o nome da carteira para confirmar:{" "}
+                            <span className="font-semibold text-foreground">{workspace?.name ?? ""}</span>
+                        </span>
+                    }
+                    placeholder="Nome exato da carteira"
+                    disabled={impactLoading || Boolean(impactError)}
+                />
+                {deleteError ? <AlertDialogError>{deleteError}</AlertDialogError> : null}
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                        pendingLabel="Excluindo…"
+                        disabled={impactLoading || Boolean(impactError)}
+                        onClick={(e) => {
+                            e.preventDefault()
+                            void handleDelete()
+                        }}
+                    >
+                        Excluir carteira
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     )
 }

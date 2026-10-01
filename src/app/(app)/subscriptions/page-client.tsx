@@ -40,6 +40,7 @@ import {
     AlertDialogDescription,
     AlertDialogFooter,
     AlertDialogHeader,
+    AlertDialogList,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import {
@@ -960,6 +961,7 @@ export default function SubscriptionsPageClient() {
             )}
 
             <AlertDialog
+                pending={deleting}
                 open={pendingDelete !== null}
                 onOpenChange={(open) => {
                     if (!open && !deleting) setPendingDelete(null)
@@ -972,99 +974,96 @@ export default function SubscriptionsPageClient() {
                                 ? `Excluir ${numberBR(pendingDelete.ids.length)} assinaturas?`
                                 : "Excluir assinatura?"}
                         </AlertDialogTitle>
-                        <AlertDialogDescription asChild>
-                            <div className="space-y-2 text-sm text-muted-foreground">
-                                <p>Esta ação não pode ser desfeita.</p>
-                                {pendingDelete?.mode === "single" ? (
-                                    <>
-                                        <p className="text-foreground">
-                                            A assinatura{" "}
-                                            <span className="font-medium">
-                                                “{pendingDelete.subscription.name}”
-                                            </span>{" "}
-                                            será removida.
-                                        </p>
-                                        <ul className="list-inside list-disc space-y-1 text-foreground">
-                                            <li>
-                                                Lançamentos já registrados no
-                                                extrato não são removidos.
+                        <AlertDialogDescription>
+                            <p>Esta ação não pode ser desfeita.</p>
+                            {pendingDelete?.mode === "single" ? (
+                                <>
+                                    <p className="text-foreground">
+                                        A assinatura{" "}
+                                        <span className="font-medium">
+                                            “{pendingDelete.subscription.name}”
+                                        </span>{" "}
+                                        será removida.
+                                    </p>
+                                    <AlertDialogList>
+                                        <li>
+                                            Lançamentos já registrados no
+                                            extrato não são removidos.
+                                        </li>
+                                        <li>
+                                            {currencyBRL(
+                                                Number(
+                                                    pendingDelete
+                                                        .subscription
+                                                        .amount
+                                                )
+                                            )}{" "}
+                                            ·{" "}
+                                            {subscriptionBillingIntervalLabel(
+                                                pendingDelete.subscription
+                                                    .billing_interval
+                                            )}
+                                        </li>
+                                    </AlertDialogList>
+                                </>
+                            ) : pendingDelete?.mode === "bulk" ? (
+                                <>
+                                    <p className="text-foreground">
+                                        As{" "}
+                                        {numberBR(pendingDelete.ids.length)}{" "}
+                                        assinaturas selecionadas serão
+                                        removidas.
+                                    </p>
+                                    <AlertDialogList>
+                                        <li>
+                                            Lançamentos já registrados no
+                                            extrato não são removidos.
+                                        </li>
+                                    </AlertDialogList>
+                                    <AlertDialogList className="max-h-40 overflow-y-auto">
+                                        {pendingDelete.ids
+                                            .slice(0, 8)
+                                            .map((id) => {
+                                                const sub = rows.find(
+                                                    (x) => x.id === id
+                                                )
+                                                return (
+                                                    <li key={id}>
+                                                        {sub?.name ??
+                                                            `${id.slice(0, 8)}…`}
+                                                    </li>
+                                                )
+                                            })}
+                                        {pendingDelete.ids.length > 8 ? (
+                                            <li className="text-muted-foreground">
+                                                e mais{" "}
+                                                {numberBR((
+                                                    pendingDelete.ids
+                                                        .length - 8
+                                                ))}{" "}
+                                                …
                                             </li>
-                                            <li>
-                                                {currencyBRL(
-                                                    Number(
-                                                        pendingDelete
-                                                            .subscription
-                                                            .amount
-                                                    )
-                                                )}{" "}
-                                                ·{" "}
-                                                {subscriptionBillingIntervalLabel(
-                                                    pendingDelete.subscription
-                                                        .billing_interval
-                                                )}
-                                            </li>
-                                        </ul>
-                                    </>
-                                ) : pendingDelete?.mode === "bulk" ? (
-                                    <>
-                                        <p className="text-foreground">
-                                            As{" "}
-                                            {numberBR(pendingDelete.ids.length)}{" "}
-                                            assinaturas selecionadas serão
-                                            removidas.
-                                        </p>
-                                        <ul className="list-inside list-disc space-y-1 text-foreground">
-                                            <li>
-                                                Lançamentos já registrados no
-                                                extrato não são removidos.
-                                            </li>
-                                        </ul>
-                                        <ul className="max-h-40 list-inside list-disc overflow-y-auto text-foreground">
-                                            {pendingDelete.ids
-                                                .slice(0, 8)
-                                                .map((id) => {
-                                                    const sub = rows.find(
-                                                        (x) => x.id === id
-                                                    )
-                                                    return (
-                                                        <li key={id}>
-                                                            {sub?.name ??
-                                                                `${id.slice(0, 8)}…`}
-                                                        </li>
-                                                    )
-                                                })}
-                                            {pendingDelete.ids.length > 8 ? (
-                                                <li className="text-muted-foreground">
-                                                    e mais{" "}
-                                                    {numberBR((
-                                                        pendingDelete.ids
-                                                            .length - 8
-                                                    ))}{" "}
-                                                    …
-                                                </li>
-                                            ) : null}
-                                        </ul>
-                                    </>
-                                ) : null}
-                            </div>
+                                        ) : null}
+                                    </AlertDialogList>
+                                </>
+                            ) : null}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel
                             type="button"
-                            disabled={deleting}
                         >
                             Cancelar
                         </AlertDialogCancel>
                         <AlertDialogAction
+                            pendingLabel="Excluindo…"
                             type="button"
-                            disabled={deleting}
                             onClick={(e) => {
                                 e.preventDefault()
                                 void confirmDelete()
                             }}
                         >
-                            {deleting ? "Excluindo…" : "Excluir"}
+                            Excluir
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

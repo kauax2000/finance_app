@@ -2049,6 +2049,20 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   foca; sem modificadora, não dispara dentro de campo de texto),
   `variant="brand"` (só em `field`) e `pending`. **Nenhuma busca é `<Input
   type="search">` nem pílula escrita à mão.**
+- **`AlertDialog` tem o andamento, o ícone, a lista, o erro e o "digite
+  para confirmar"** (rodada 201). `pending` na raiz trava a ação (com o
+  `Spinner` e o `pendingLabel`) e o Cancelar, marca `aria-busy` e **segura o
+  Esc** — dez telas escreviam o "Excluindo…" à mão e o Esc fechava no meio da
+  exclusão. **Nenhuma tela escreve `deleting ? "Excluindo…" : …` nem
+  `disabled` nos dois botões.** `AlertDialogMedia` é o ícone **na linha do
+  título**, na cor dele e sem poço, com a descrição atravessando a largura
+  embaixo (a referência do dono; o poço tingido em cima e o de 44 à esquerda
+  foram tentados e saíram). A `AlertDialogDescription` é um `<div>` e recebe a
+  `AlertDialogList` (as consequências) — nada de `asChild` com `<div>` e
+  `<ul list-disc>` à mão —, e `AlertDialogError` é a falha, `role="alert"`.
+  `AlertDialogConfirmInput` trava a ação até o texto conferir: a exclusão de
+  carteira, que era um `Dialog` (e uma `Sheet` no telefone) com o campo à
+  mão e o Cancelar em `outline`, é ele.
 - **`Accordion` tem o ⌘F, ícone e descrição no gatilho e o "abrir todos"**
   (rodada 200). `AccordionContent findable` é a mecânica do `Collapsible`,
   que mora desde então em `hooks/use-until-found` e serve os dois.

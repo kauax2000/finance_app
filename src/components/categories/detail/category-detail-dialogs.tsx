@@ -207,27 +207,27 @@ export function CategoryDetailDialogs({
                 </Dialog>
             )}
 
-            <AlertDialog open={deleteDialogOpen} onOpenChange={onDeleteDialogOpenChange}>
+            <AlertDialog pending={deleteDeleting} open={deleteDialogOpen} onOpenChange={onDeleteDialogOpenChange}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Excluir categoria?</AlertDialogTitle>
-                        <AlertDialogDescription asChild>
+                        <AlertDialogDescription>
                             <CategoryDeleteAlertBody categoryName={category.name} />
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel type="button" disabled={deleteDeleting}>
+                        <AlertDialogCancel type="button">
                             Cancelar
                         </AlertDialogCancel>
                         <AlertDialogAction
+                            pendingLabel="Excluindo…"
                             type="button"
-                            disabled={deleteDeleting}
                             onClick={(e) => {
                                 e.preventDefault()
                                 void onDeleteConfirm()
                             }}
                         >
-                            {deleteDeleting ? "Excluindo…" : "Excluir"}
+                            Excluir
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
