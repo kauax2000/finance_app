@@ -1,7 +1,13 @@
 "use client"
 
 import { ArrowPathRoundedSquareIcon, PlusIcon } from "@heroicons/react/16/solid"
-import { PlusIcon as PlusMiniIcon } from "@heroicons/react/20/solid"
+import {
+    ArrowPathRoundedSquareIcon as AssinaturaIcon,
+    ArrowTrendingDownIcon,
+    ArrowTrendingUpIcon,
+    CreditCardIcon,
+    PlusIcon as PlusMiniIcon,
+} from "@heroicons/react/20/solid"
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -12,26 +18,34 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
+import {
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+import {
+    Drawer,
+    DrawerAction,
+    DrawerActions,
+    DrawerCancel,
+    DrawerContent,
+    DrawerTrigger,
+} from "@/components/ui/drawer"
 import { useSidebar } from "@/components/ui/sidebar"
 import { ROUTES } from "@/config/navigation"
 import { bottomBarActionClassName } from "@/components/ui/bottom-bar"
-import {
-    MOBILE_GLASS_FAB_MENU_CONTENT_CLASSNAME,
-    MOBILE_GLASS_FAB_MENU_ITEM_CLASSNAME,
-    MOBILE_GLASS_MENU_INNER_CLASSNAME,
-    MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME,
-} from "@/lib/mobile-glass-surface"
-import { cn } from "@/lib/utils"
 import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
 import type { NewTransactionMode } from "@/components/transactions/transactions-toolbar"
 
 const FIXED_TRANSACTION_ACTIONS: ReadonlyArray<{
     mode: NewTransactionMode
     label: string
+    /** O ícone da linha na folha de ações do telefone (20/solid). */
+    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
 }> = [
-    { mode: "expense", label: "Despesas" },
-    { mode: "installment", label: "Parcelas" },
-    { mode: "income", label: "Receitas" },
+    { mode: "expense", label: "Despesas", icon: ArrowTrendingDownIcon },
+    { mode: "installment", label: "Parcelas", icon: CreditCardIcon },
+    { mode: "income", label: "Receitas", icon: ArrowTrendingUpIcon },
 ]
 
 /**
@@ -78,13 +92,10 @@ export function useQuickCreateSubscription() {
 
 export function QuickActionResourceLinks({
     onCloseMenu,
-    mobileGlass = false,
 }: {
     onCloseMenu: () => void
-    mobileGlass?: boolean
 }) {
     const createSubscription = useQuickCreateSubscription()
-    const itemClassName = mobileGlass ? MOBILE_GLASS_FAB_MENU_ITEM_CLASSNAME : "gap-2"
 
     return (
         <DropdownMenuItem
@@ -92,9 +103,9 @@ export function QuickActionResourceLinks({
                 createSubscription()
                 onCloseMenu()
             }}
-            className={itemClassName}
+            className="gap-2"
         >
-            <ArrowPathRoundedSquareIcon className={mobileGlass ? undefined : "h-4 w-4"} />
+            <ArrowPathRoundedSquareIcon className="h-4 w-4" />
             <span>Assinatura</span>
         </DropdownMenuItem>
     )
@@ -103,61 +114,23 @@ export function QuickActionResourceLinks({
 function FixedQuickCreateMenuItems({
     onPickTransaction,
     onPickSubscription,
-    mobileGlass = false,
-    part = "all",
 }: {
     onPickTransaction: (mode: NewTransactionMode) => void
     onPickSubscription: () => void
-    mobileGlass?: boolean
-    /** Splits glass FAB menu so the separator can sit outside padded sections. */
-    part?: "all" | "transactions" | "subscription"
 }) {
-    const itemClassName = mobileGlass
-        ? MOBILE_GLASS_FAB_MENU_ITEM_CLASSNAME
-        : undefined
-    const separatorClassName = mobileGlass
-        ? MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME
-        : undefined
-
-    if (part === "subscription") {
-        return (
-            <DropdownMenuItem
-                className={itemClassName}
-                onClick={onPickSubscription}
-            >
-                <ArrowPathRoundedSquareIcon className={mobileGlass ? undefined : "h-4 w-4"} />
-                <span>Assinatura</span>
-            </DropdownMenuItem>
-        )
-    }
-
-    const transactionItems = (
+    return (
         <>
             {FIXED_TRANSACTION_ACTIONS.map(({ mode, label }) => (
                 <DropdownMenuItem
                     key={mode}
-                    className={itemClassName}
                     onClick={() => onPickTransaction(mode)}
                 >
                     {label}
                 </DropdownMenuItem>
             ))}
-        </>
-    )
-
-    if (part === "transactions") {
-        return transactionItems
-    }
-
-    return (
-        <>
-            {transactionItems}
-            <DropdownMenuSeparator className={separatorClassName} />
-            <DropdownMenuItem
-                className={itemClassName}
-                onClick={onPickSubscription}
-            >
-                <ArrowPathRoundedSquareIcon className={mobileGlass ? undefined : "h-4 w-4"} />
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onPickSubscription}>
+                <ArrowPathRoundedSquareIcon className="h-4 w-4" />
                 <span>Assinatura</span>
             </DropdownMenuItem>
         </>
@@ -189,19 +162,60 @@ export function QuickActionButton({ variant = "sidebar" }: QuickActionButtonProp
         setOpen(false)
     }, [createSubscription])
 
-    return (
-        <DropdownMenu open={open} onOpenChange={setOpen}>
-            <DropdownMenuTrigger asChild>
-                {isFab || isSidebarCollapsed ? (
+    // No telefone o "+" abre a folha de ações (rodada 212): era um
+    // `DropdownMenu` com o vidro escrito à mão (`lib/mobile-glass-surface`),
+    // flutuando sobre o botão. A ação roda e a gaveta fecha.
+    if (isFab) {
+        return (
+            <Drawer open={open} onOpenChange={setOpen}>
+                <DrawerTrigger asChild>
                     <Button
                         variant="primary"
                         size="icon-lg"
                         type="button"
-                        className={cn(
-                            isFab && bottomBarActionClassName,
-                            !isFab &&
-                                "size-8 shrink-0 rounded-lg group-data-[collapsible=icon]:flex-none"
-                        )}
+                        className={bottomBarActionClassName}
+                        aria-label="Adicionar"
+                    >
+                        <PlusMiniIcon className="size-5 shrink-0" />
+                    </Button>
+                </DrawerTrigger>
+                <DrawerContent variant="inset">
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>Adicionar</DialogTitle>
+                        <DialogDescription>
+                            O que você quer registrar?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DrawerActions>
+                        {FIXED_TRANSACTION_ACTIONS.map(({ mode, label, icon: Icon }) => (
+                            <DrawerAction
+                                key={mode}
+                                onClick={() => quickCreate(mode)}
+                            >
+                                <Icon aria-hidden />
+                                {label}
+                            </DrawerAction>
+                        ))}
+                        <DrawerAction onClick={() => createSubscription()}>
+                            <AssinaturaIcon aria-hidden />
+                            Assinatura
+                        </DrawerAction>
+                    </DrawerActions>
+                    <DrawerCancel />
+                </DrawerContent>
+            </Drawer>
+        )
+    }
+
+    return (
+        <DropdownMenu open={open} onOpenChange={setOpen}>
+            <DropdownMenuTrigger asChild>
+                {isSidebarCollapsed ? (
+                    <Button
+                        variant="primary"
+                        size="icon-lg"
+                        type="button"
+                        className="size-8 shrink-0 rounded-lg group-data-[collapsible=icon]:flex-none"
                         aria-label="Adicionar"
                     >
                         <PlusMiniIcon className="size-5 shrink-0" />
@@ -218,43 +232,15 @@ export function QuickActionButton({ variant = "sidebar" }: QuickActionButtonProp
                 )}
             </DropdownMenuTrigger>
             <DropdownMenuContent
-                align={isFab ? "end" : "start"}
-                side={isFab ? "top" : "right"}
-                className={
-                    isFab
-                        ? MOBILE_GLASS_FAB_MENU_CONTENT_CLASSNAME
-                        : "min-w-56 w-max max-w-[min(100vw-2rem,18rem)]"
-                }
-                sideOffset={isFab ? 12 : 8}
+                align="start"
+                side="right"
+                className="min-w-56 w-max max-w-[min(100vw-2rem,18rem)]"
+                sideOffset={8}
             >
-                {isFab ? (
-                    <>
-                        <div className={MOBILE_GLASS_MENU_INNER_CLASSNAME}>
-                            <FixedQuickCreateMenuItems
-                                mobileGlass
-                                part="transactions"
-                                onPickTransaction={pickTransaction}
-                                onPickSubscription={pickSubscription}
-                            />
-                        </div>
-                        <DropdownMenuSeparator
-                            className={MOBILE_GLASS_MENU_SEPARATOR_CLASSNAME}
-                        />
-                        <div className={MOBILE_GLASS_MENU_INNER_CLASSNAME}>
-                            <FixedQuickCreateMenuItems
-                                mobileGlass
-                                part="subscription"
-                                onPickTransaction={pickTransaction}
-                                onPickSubscription={pickSubscription}
-                            />
-                        </div>
-                    </>
-                ) : (
-                    <FixedQuickCreateMenuItems
-                        onPickTransaction={pickTransaction}
-                        onPickSubscription={pickSubscription}
-                    />
-                )}
+                <FixedQuickCreateMenuItems
+                    onPickTransaction={pickTransaction}
+                    onPickSubscription={pickSubscription}
+                />
             </DropdownMenuContent>
         </DropdownMenu>
     )

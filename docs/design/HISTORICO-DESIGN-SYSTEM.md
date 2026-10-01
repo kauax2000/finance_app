@@ -17051,3 +17051,55 @@ O dono escolheu todas as versões e as quatro migrações.
   `JORNADAS.md` e no Atlas, republicado; os quatro diagramas mudados nesta
   sessão passam no parser do Mermaid. **As telas do app não foram vistas no
   navegador** — pedem login.
+
+### Rodada 212 — o Drawer ganha a folha de ações, degraus, gaveta sobre gaveta, o fundo que encolhe, a trava, o não-modal, a altura que acompanha e o cabeçalho fixo
+
+O dono escolheu todas as versões, e duas das três migrações (a data e a
+paleta aninhadas sobre uma folha ficaram de fora).
+
+- **Três afirmações falsas no arquivo**: "o projeto tem quatro" superfícies
+  com uma tabela de três; o véu "escrito uma vez em `sheet.tsx`", que mora no
+  `drawer.tsx` desde a rodada 159; e o teste da alça citado como
+  `drag-handle.test.ts`, que se chama `drawer-drag-handle.test.ts`. A página
+  ainda mandava formulário para o `Sheet`; desde a 211 é o `Dialog
+  surface="auto"`.
+- **A trava**: lido no vaul, com `dismissible` falso o toque da alça chama
+  `closeDrawer()` — a trava desliga o `dismissible` **e** barra o pedido na
+  raiz. Medido: salvando, Esc, toque fora e a alça não fecharam; `aria-busy`;
+  fechou ao terminar.
+- **Folha de ações**: linhas de 52px; a ação fecha a gaveta e roda (medido:
+  "Duplicar" fechou e escreveu). No telefone, "Editar" fechou a folha e abriu
+  um `Dialog surface="auto"` (outra gaveta) na sequência, e depois de fechar a
+  página voltou a responder — o caminho do "+ Adicionar" do app.
+- **Degraus**: `[0.45, 1]` abriu com 379 dos 860px à vista (44%).
+- **Aninhada**: a de baixo recebeu `scale(0,9875)`. A demonstração primeiro
+  não mostrava isso — a de cima era mais alta e a cobria —, e a de baixo
+  passou a `fill`.
+- **Fundo que encolhe**: o invólucro escalou a 0,98 com 8px de raio, e voltou
+  a `none` ao fechar.
+- **Altura que acompanha**: a primeira versão ligava o `ResizeObserver` numa
+  `ref` de função; medido, ela criava 6 observadores ao abrir e 3 a cada
+  clique, sem desligar os anteriores, e eles disputavam a altura (6
+  animações, revertendo umas às outras, e a gaveta parada em 247 em vez de
+  326). Com o elemento em estado e o observador num efeito: uma animação por
+  mudança, 242 → 326 e 326 → 242.
+- **Cabeçalho fixo**: a primeira versão montou as classes do meio num
+  template literal, e o Tailwind não gerou nenhuma (`overflow-y: visible`,
+  máscara `none`); escritas por extenso, o meio rola, o título fica parado e
+  a dissolução aparece.
+- **Não-modal**: sem véu, e a página responde por trás.
+- **No app**: o "+" do telefone abre a folha de ações (Despesas, Parcelas,
+  Receitas, Assinatura, com ícone) e o avatar abre o menu da conta numa
+  gaveta solta das bordas com o fundo que encolhe. O vidro escrito à mão
+  saiu — quase todo o `lib/mobile-glass-surface.ts`; ficou a constante da
+  `BottomBar`, que um primeiro `git rm` do arquivo inteiro quebrou (a busca
+  anterior não a tinha achado). Mudança de jornada (navegação global): a
+  seção 3 do `JORNADAS.md` e o Atlas, republicado. **As telas do app não
+  foram vistas no navegador** — pedem login.
+- **O auditor aprendeu a `DrawerAction`**: ela desenha o ícone a 20px, e a
+  regra G contava todo ícone sem classe como `size-4` — 9 falsos alarmes nesta
+  rodada, nas duas formas da regra (direta e indireta). Ancestral em aberto,
+  como o poço do `EmptyStateIcon`. Comparado com o auditor do `HEAD` no `src/`
+  inteiro: só esses 9 sumiram. O décimo achado era de verdade (o
+  `BanknotesIcon` de `20` dentro de um `Button`, que o desenha a 16) e foi
+  corrigido.

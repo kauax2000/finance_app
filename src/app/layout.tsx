@@ -113,7 +113,19 @@ export default function RootLayout({
           <QueryProvider>
             <AuthProvider>
               <WorkspaceProvider>
-                <PushNotificationProvider>{children}</PushNotificationProvider>
+                <PushNotificationProvider>
+                  {/* O que o `Drawer scaleBackground` encolhe atrás da gaveta
+                      (rodada 212): o vaul procura este atributo. Os portais
+                      vão para o `body`, fora dele — a gaveta não encolhe junto.
+                      `bg-background` porque, encolhida, a página mostra o
+                      fundo do `body` em volta. */}
+                  <div
+                    data-vaul-drawer-wrapper=""
+                    className="flex min-h-full flex-1 flex-col bg-background"
+                  >
+                    {children}
+                  </div>
+                </PushNotificationProvider>
               </WorkspaceProvider>
             </AuthProvider>
           </QueryProvider>

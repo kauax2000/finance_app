@@ -1,10 +1,23 @@
 "use client"
 
+import * as React from "react"
 import Link from "next/link"
+import {
+  ArrowPathRoundedSquareIcon,
+  DocumentDuplicateIcon,
+  PencilSquareIcon,
+  TrashIcon,
+} from "@heroicons/react/20/solid"
+
+import { BanknotesIcon } from "@heroicons/react/16/solid"
 
 import { Button } from "@/components/ui/button"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
+  Dialog,
   DialogBody,
+  DialogClose,
+  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -12,6 +25,9 @@ import {
 } from "@/components/ui/dialog"
 import {
   Drawer,
+  DrawerAction,
+  DrawerActions,
+  DrawerCancel,
   DrawerClose,
   DrawerContent,
   DrawerTrigger,
@@ -80,41 +96,72 @@ export default function DrawerDoc() {
       <DocSection
         title="Superfície e largura"
         code={`<DrawerContent variant="inset" size="md">…</DrawerContent>`}
-        previewClassName="items-start"
+        previewClassName="flex-col items-start gap-3"
       >
-        <div className="flex flex-wrap gap-2">
-          {(
-            [
-              { v: "flush", s: "full", rotulo: "flush · full (padrão)" },
-              { v: "inset", s: "full", rotulo: "inset · full" },
-              { v: "flush", s: "md", rotulo: "flush · md" },
-              { v: "inset", s: "lg", rotulo: "inset · lg" },
-            ] as const
-          ).map((c) => (
-            <Drawer key={c.rotulo}>
-              <DrawerTrigger asChild>
-                <Button variant="outline" size="sm">
-                  {c.rotulo}
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent variant={c.v} size={c.s}>
-                <DialogHeader>
-                  <DialogTitle>{c.rotulo}</DialogTitle>
-                  <DialogDescription>
-                    Arraste a alça para baixo para fechar.
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogBody>
-                  <p className="text-sm text-muted-foreground">
-                    Numa janela larga, <code>full</code> estica a gaveta de
-                    ponta a ponta; <code>md</code> e <code>lg</code> a
-                    centralizam.
-                  </p>
-                </DialogBody>
-              </DrawerContent>
-            </Drawer>
-          ))}
-        </div>
+        <SuperficieDemo />
+      </DocSection>
+
+      <DocSection
+        title="Folha de ações"
+        description={
+          <>
+            <code>DrawerActions</code> + <code>DrawerAction</code> é o action
+            sheet: linhas de 52px com o ícone a 20px (o <code>20/solid</code>),
+            a destrutiva em vermelho, e o <code>DrawerCancel</code> separado
+            embaixo. Cada ação fecha a gaveta depois de rodar;{" "}
+            <code>asChild</code> leva a linha para um link. É o &ldquo;+
+            Adicionar&rdquo; e o menu da conta no telefone.
+          </>
+        }
+        code={`<DrawerContent variant="inset">
+  <DialogHeader className="sr-only">…</DialogHeader>
+  <DrawerActions>
+    <DrawerAction onClick={editar}><PencilSquareIcon />Editar</DrawerAction>
+    <DrawerAction variant="destructive" onClick={excluir}><TrashIcon />Excluir</DrawerAction>
+  </DrawerActions>
+  <DrawerCancel />
+</DrawerContent>`}
+      >
+        <AcoesDemo />
+      </DocSection>
+
+      <DocSection
+        title="Degraus, gaveta sobre gaveta e o fundo que encolhe"
+        description={
+          <>
+            <code>snapPoints</code> faz a gaveta parar em degraus — aqui, 45%
+            da tela e a tela cheia; puxe para subir. Uma <code>Drawer</code>{" "}
+            aberta dentro de outra vira aninhada sozinha, e a de baixo recua.{" "}
+            <code>scaleBackground</code> encolhe a página atrás, o gesto do
+            iOS.
+          </>
+        }
+        code={`<Drawer snapPoints={[0.45, 1]}>…</Drawer>
+<Drawer scaleBackground>…</Drawer>
+{/* dentro de uma DrawerContent: */}
+<Drawer>…</Drawer>`}
+        previewClassName="flex-col items-start gap-3"
+      >
+        <GestosDemo />
+      </DocSection>
+
+      <DocSection
+        title="Salvando, não-modal, altura e cabeçalho fixo"
+        description={
+          <>
+            <code>pending</code> trava a gaveta: arrastar, tocar fora, Esc e{" "}
+            <strong>tocar a alça</strong> não fecham. Com{" "}
+            <code>modal={"{false}"}</code> ela fica presa embaixo sem véu, e a
+            página continua usável. A altura acompanha o conteúdo, animando em
+            vez de saltar; e sem <code>DialogBody</code> o meio rola entre o
+            cabeçalho e o rodapé parados, dissolvendo nas bordas.
+          </>
+        }
+        code={`<Drawer pending={salvando}>…</Drawer>
+<Drawer modal={false} dismissible={false} snapPoints={[0.18, 0.6]}>…</Drawer>`}
+        previewClassName="flex-col items-start gap-3"
+      >
+        <ComportamentoDemo />
       </DocSection>
 
       <DocNote title="A largura existe por causa do desktop">
@@ -188,10 +235,11 @@ export default function DrawerDoc() {
         <Link href="/designsystem/sheet">Sheet</Link> no desktop.
       </DocNote>
 
-      <DocNote title="Drawer ou Sheet?">
+      <DocNote title="Drawer, Sheet ou Dialog?">
         <code>Drawer</code> para conteúdo curto e casual, que se descarta com o
-        polegar. Formulário vai no <code>Sheet</code>: numa gaveta arrastável o
-        arraste disputa com a rolagem, e a mesma tela vira painel no desktop.
+        polegar, e para a folha de ações. Formulário é o{" "}
+        <code>Dialog surface=&quot;auto&quot;</code> (rodada 211): diálogo no
+        desktop e a gaveta do <code>Sheet</code> no telefone, numa API só.
       </DocNote>
 
       <PropsTable
@@ -230,6 +278,38 @@ export default function DrawerDoc() {
             description: "Teto de largura acima de 640px: full estica, md para em 32rem, lg em 42rem.",
           },
           {
+            prop: "snapPoints",
+            type: "(number | string)[]",
+            description:
+              "Os degraus de altura (0,45 = 45% da tela). Com eles o conteúdo fica alto sozinho.",
+          },
+          {
+            prop: "scaleBackground",
+            type: "boolean",
+            default: "false",
+            description:
+              "A página recua e arredonda atrás da gaveta. Escala o [data-vaul-drawer-wrapper] da raiz.",
+          },
+          {
+            prop: "pending",
+            type: "boolean",
+            default: "false",
+            description:
+              "Salvando: arrastar, tocar fora, Esc e a alça não fecham; aria-busy no conteúdo.",
+          },
+          {
+            prop: "modal",
+            type: "boolean",
+            default: "true",
+            description: "false: sem véu, a página continua usável.",
+          },
+          {
+            prop: "DrawerActions · DrawerAction · DrawerCancel",
+            type: "div · button (variant, asChild) · Button",
+            description:
+              "A folha de ações: linhas de 52px que fecham ao rodar, e o cancelar separado.",
+          },
+          {
             prop: "showHandle",
             type: "boolean",
             default: "true",
@@ -244,5 +324,328 @@ export default function DrawerDoc() {
         ]}
       />
     </>
+  )
+}
+
+function SuperficieDemo() {
+  const [variant, setVariant] = React.useState<"flush" | "inset">("flush")
+  const [size, setSize] = React.useState<"full" | "md" | "lg">("full")
+
+  return (
+    <>
+      <div className="flex flex-wrap gap-2">
+        <ToggleGroup
+          type="single"
+          variant="segmented"
+          size="sm"
+          value={variant}
+          onValueChange={(v) => v && setVariant(v as typeof variant)}
+          aria-label="Superfície"
+        >
+          <ToggleGroupItem value="flush" className="font-mono">flush</ToggleGroupItem>
+          <ToggleGroupItem value="inset" className="font-mono">inset</ToggleGroupItem>
+        </ToggleGroup>
+        <ToggleGroup
+          type="single"
+          variant="segmented"
+          size="sm"
+          value={size}
+          onValueChange={(v) => v && setSize(v as typeof size)}
+          aria-label="Largura"
+        >
+          <ToggleGroupItem value="full" className="font-mono">full</ToggleGroupItem>
+          <ToggleGroupItem value="md" className="font-mono">md</ToggleGroupItem>
+          <ToggleGroupItem value="lg" className="font-mono">lg</ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+      <Drawer>
+        <DrawerTrigger asChild>
+          <Button variant="outline" size="sm">
+            abrir
+          </Button>
+        </DrawerTrigger>
+        <DrawerContent variant={variant} size={size}>
+          <DialogHeader>
+            <DialogTitle>
+              {variant} · {size}
+            </DialogTitle>
+            <DialogDescription>
+              Arraste a alça para baixo para fechar.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogBody>
+            <p className="text-sm text-muted-foreground">
+              Numa janela larga, <code>full</code> estica a gaveta de ponta a
+              ponta; <code>md</code> e <code>lg</code> a centralizam.
+            </p>
+          </DialogBody>
+        </DrawerContent>
+      </Drawer>
+    </>
+  )
+}
+
+function AcoesDemo() {
+  const [feito, setFeito] = React.useState("")
+  // "Editar" fecha a folha e abre o formulário — que no telefone é outra
+  // gaveta. É o caminho do "+ Adicionar" do app.
+  const [editando, setEditando] = React.useState(false)
+
+  return (
+    <div className="flex flex-col items-start gap-2">
+      <Drawer>
+        <DrawerTrigger asChild>
+          <Button variant="outline">ações do lançamento</Button>
+        </DrawerTrigger>
+        <DrawerContent variant="inset" size="md">
+          <DialogHeader>
+            <DialogTitle>Mercado</DialogTitle>
+            <DialogDescription>12 set · −R$ 42,90</DialogDescription>
+          </DialogHeader>
+          <DrawerActions>
+            <DrawerAction onClick={() => setEditando(true)}>
+              <PencilSquareIcon aria-hidden />
+              Editar
+            </DrawerAction>
+            <DrawerAction onClick={() => setFeito("Duplicar")}>
+              <DocumentDuplicateIcon aria-hidden />
+              Duplicar
+            </DrawerAction>
+            <DrawerAction onClick={() => setFeito("Tornar recorrente")}>
+              <ArrowPathRoundedSquareIcon aria-hidden />
+              Tornar recorrente
+            </DrawerAction>
+            <DrawerAction
+              variant="destructive"
+              onClick={() => setFeito("Excluir")}
+            >
+              <TrashIcon aria-hidden />
+              Excluir
+            </DrawerAction>
+          </DrawerActions>
+          <DrawerCancel />
+        </DrawerContent>
+      </Drawer>
+      <p className="min-h-5 text-sm text-muted-foreground" aria-live="polite">
+        {feito ? `Escolhido: ${feito}` : ""}
+      </p>
+      <Dialog surface="auto" open={editando} onOpenChange={setEditando}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar lançamento</DialogTitle>
+            <DialogDescription>
+              Aberto pela folha de ações, que fechou antes.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="tertiary">
+                fechar
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+function GestosDemo() {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Drawer snapPoints={[0.45, 1]}>
+        <DrawerTrigger asChild>
+          <Button variant="outline" size="sm">
+            degraus
+          </Button>
+        </DrawerTrigger>
+        <DrawerContent>
+          <DialogHeader>
+            <DialogTitle>Últimos lançamentos</DialogTitle>
+            <DialogDescription>
+              Começa em 45% da tela. Puxe a alça para cima.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogBody className="flex flex-col gap-2">
+            {Array.from({ length: 24 }, (_, i) => (
+              <p key={i} className="text-sm">
+                Lançamento {i + 1}
+              </p>
+            ))}
+          </DialogBody>
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer>
+        <DrawerTrigger asChild>
+          <Button variant="outline" size="sm">
+            gaveta sobre gaveta
+          </Button>
+        </DrawerTrigger>
+        {/* Alta, para a de cima não a cobrir: o recuo aparece por trás. */}
+        <DrawerContent variant="inset" size="md" fill>
+          <DialogHeader>
+            <DialogTitle>Nova despesa</DialogTitle>
+            <DialogDescription>
+              Escolha a categoria: ela abre por cima, e esta recua.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogBody>
+            <Drawer>
+              <DrawerTrigger asChild>
+                <Button variant="secondary" className="w-full">
+                  escolher categoria
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent variant="inset" size="md">
+                <DialogHeader>
+                  <DialogTitle>Categoria</DialogTitle>
+                  <DialogDescription>A gaveta de baixo recuou.</DialogDescription>
+                </DialogHeader>
+                <DrawerActions>
+                  {["Mercado", "Moradia", "Transporte"].map((c) => (
+                    <DrawerAction key={c}>{c}</DrawerAction>
+                  ))}
+                </DrawerActions>
+                <DrawerCancel />
+              </DrawerContent>
+            </Drawer>
+          </DialogBody>
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer scaleBackground>
+        <DrawerTrigger asChild>
+          <Button variant="outline" size="sm">
+            fundo que encolhe
+          </Button>
+        </DrawerTrigger>
+        <DrawerContent>
+          <DialogHeader>
+            <DialogTitle>A página recuou</DialogTitle>
+            <DialogDescription>
+              Ela encolhe e arredonda atrás da gaveta, e volta quando esta fecha.
+            </DialogDescription>
+          </DialogHeader>
+        </DrawerContent>
+      </Drawer>
+    </div>
+  )
+}
+
+function ComportamentoDemo() {
+  const [salvando, setSalvando] = React.useState(false)
+  const [aberto, setAberto] = React.useState(false)
+  const [mais, setMais] = React.useState(false)
+  const [resumo, setResumo] = React.useState(false)
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Drawer open={aberto} onOpenChange={setAberto} pending={salvando}>
+        <DrawerTrigger asChild>
+          <Button variant="outline" size="sm">
+            salvar e travar
+          </Button>
+        </DrawerTrigger>
+        <DrawerContent variant="inset" size="md">
+          <DialogHeader>
+            <DialogTitle>Pagar conta de luz</DialogTitle>
+            <DialogDescription>
+              Pague e tente fechar: nada fecha até terminar.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DrawerClose asChild>
+              <Button type="button" variant="tertiary" disabled={salvando}>
+                cancelar
+              </Button>
+            </DrawerClose>
+            <Button
+              type="button"
+              disabled={salvando}
+              onClick={() => {
+                setSalvando(true)
+                window.setTimeout(() => {
+                  setSalvando(false)
+                  setAberto(false)
+                }, 1800)
+              }}
+            >
+              <BanknotesIcon aria-hidden />
+              {salvando ? "pagando…" : "pagar"}
+            </Button>
+          </DialogFooter>
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer>
+        <DrawerTrigger asChild>
+          <Button variant="outline" size="sm">
+            altura que acompanha
+          </Button>
+        </DrawerTrigger>
+        <DrawerContent variant="inset" size="md">
+          <DialogHeader>
+            <DialogTitle>Detalhes</DialogTitle>
+            <DialogDescription>O conteúdo cresce, e a gaveta acompanha.</DialogDescription>
+          </DialogHeader>
+          <DialogBody className="flex flex-col gap-2">
+            {(mais ? ["Categoria", "Cartão", "Parcelas", "Observação"] : ["Categoria"]).map((c) => (
+              <p key={c} className="text-sm">
+                {c}
+              </p>
+            ))}
+          </DialogBody>
+          <DialogFooter>
+            <Button type="button" variant="secondary" onClick={() => setMais((m) => !m)}>
+              {mais ? "mostrar menos" : "mostrar mais"}
+            </Button>
+          </DialogFooter>
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer>
+        <DrawerTrigger asChild>
+          <Button variant="outline" size="sm">
+            cabeçalho fixo
+          </Button>
+        </DrawerTrigger>
+        <DrawerContent>
+          <DialogHeader>
+            <DialogTitle>Categorias</DialogTitle>
+            <DialogDescription>
+              Sem DialogBody: a lista rola e o título fica.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 px-4 pb-4">
+            {Array.from({ length: 30 }, (_, i) => (
+              <p key={i} className="text-sm">
+                Categoria {i + 1}
+              </p>
+            ))}
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer
+        open={resumo}
+        onOpenChange={setResumo}
+        modal={false}
+        dismissible={false}
+        snapPoints={[0.18, 0.6]}
+      >
+        <Button variant="outline" size="sm" onClick={() => setResumo((r) => !r)}>
+          {resumo ? "fechar resumo" : "resumo não-modal"}
+        </Button>
+        <DrawerContent showHandle>
+          <DialogHeader>
+            <DialogTitle>3 lançamentos selecionados</DialogTitle>
+            <DialogDescription>
+              A página continua usável. Puxe para ver mais.
+            </DialogDescription>
+          </DialogHeader>
+        </DrawerContent>
+      </Drawer>
+    </div>
   )
 }

@@ -2366,6 +2366,26 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   **Arco-íris sob série continua proibido**: a marca encosta pelo
   `Card variant="brand"`, na borda. O cabeçalho (delta, período, KPIs) é
   composição de `Card`, não peça do `Chart`.
+- **`Drawer` ganhou a folha de ações, os degraus, a gaveta sobre gaveta, o
+  fundo que encolhe, a trava ao salvar, o modo não-modal, a altura que
+  acompanha e o cabeçalho fixo** (rodada 212). `DrawerActions` +
+  `DrawerAction` (linhas de 52px, ícone `20/solid`, `variant="destructive"`,
+  `asChild` para link; cada uma fecha a gaveta) + `DrawerCancel` é o action
+  sheet — **o "+ Adicionar" e o menu da conta do telefone são ele**, e o vidro
+  escrito à mão desses dois (`lib/mobile-glass-surface`) saiu; ficou só a
+  constante da `BottomBar`. Uma `Drawer` dentro de outra vira `NestedRoot`
+  sozinha. `scaleBackground` escala o `[data-vaul-drawer-wrapper]`, que a raiz
+  do app (`layout.tsx`) passou a ter. **`pending` desliga o `dismissible` e
+  barra o pedido de fechar na raiz** — com `dismissible` falso o vaul fecha no
+  toque da alça, então desligar só ele abria um buraco. Com `snapPoints` o
+  conteúdo fica alto sozinho; `modal={false}` não monta véu. **A altura anima
+  quando o conteúdo muda**, com um observador por gaveta — a primeira versão
+  ligava o observador numa `ref` de função, que era refeita a cada render
+  (medido: seis observadores ao abrir, três a cada clique, brigando pela
+  altura). **Sem `DialogBody`, o filho do meio rola** entre cabeçalho e
+  rodapé parados, com a dissolução — as classes estão escritas por extenso,
+  porque a primeira versão as montou num template literal e o Tailwind não
+  gerou nenhuma. `drawer-versions.test.ts` tranca.
 - **`Dialog` vira gaveta no telefone, trava enquanto salva, protege o
   rascunho e ganhou passos, ícone, ação à esquerda e tela cheia** (rodada
   211). **`<Dialog surface="auto">`** é o diálogo no desktop e a gaveta do

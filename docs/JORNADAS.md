@@ -6,8 +6,8 @@ lacunas encontradas no código. Foi escrito lendo o código em 2026-09-17, na
 branch `finance-app-2.0`, e a navegação global foi revista em 2026-10-01,
 quando entrou a busca (⌘K), junto com o menu do botão direito nas linhas de
 lançamento, nos cartões de categoria e nas contas pendentes, com o seletor
-de período que confirma no próprio popover, e com o rascunho protegido do
-formulário de lançamento. Quando uma tela mudar de caminho, atualize o
+de período que confirma no próprio popover, com o rascunho protegido do
+formulário de lançamento, e com os menus do telefone em gaveta. Quando uma tela mudar de caminho, atualize o
 diagrama dela.
 
 ## Como ler os diagramas
@@ -293,12 +293,12 @@ flowchart TD
     sidebar --> nav7["/members"]
     sidebar --> nav8["/settings"]
     sidebar --> userMenu(["Menu do usuário: tema, Minha conta, Planos, Sair"])
-    bottom --> accountMenu(["Menu da conta: Assinaturas, Contas, Cartões, Membros, Configurações, Conta, Planos, Sair"])
+    bottom --> accountMenu(["Menu da conta, gaveta: Assinaturas, Contas, Cartões, Membros, Configurações, Conta, Planos, Sair"])
     userMenu --> G10(("G10 Conta"))
     accountMenu --> G10
 
     sidebar -->|"+ Adicionar"| add(["Menu: Despesa, Parcelada, Receita, Assinatura"])
-    bottom -->|"+"| add
+    bottom -->|"+, folha de ações"| add
     add -->|"Despesa, Parcelada, Receita"| txForm(("G5b Formulário de transação"))
     add -->|"Assinatura"| subForm(("G8 Formulário de assinatura"))
     add -.->|"formulário global indisponível"| fallback["/transactions?new= ou /subscriptions?new=1"]
@@ -335,6 +335,7 @@ flowchart TD
 |---|---|---|
 | Itens de navegação | Lateral e mobile vêm de configuração, não de JSX solto | `src/config/navigation.ts`, `src/config/mobile-navigation.ts` |
 | Formulários globais | Transação e assinatura montados uma vez na casca; salvar invalida as listas abertas | `src/components/layout/global-shell-dialogs-provider.tsx` |
+| Menus do telefone | O "+" abre uma folha de ações (`Drawer` com `DrawerActions`) e o avatar abre o menu da conta numa gaveta com o fundo que encolhe; cada ação fecha a gaveta e entra pela mesma porta de antes (os ganchos do "+ Adicionar", os links da conta). Eram um `DropdownMenu` e um `Popover` de vidro escritos à mão | `src/components/layout/quick-actions.tsx`, `src/components/layout/mobile-account-menu.tsx` |
 | Busca global (⌘K) | Montada uma vez no `AppHeader`, com a lupa nas duas árvores da barra; no telefone abre como gaveta. As telas vêm de `navigation.ts` e `account-menu-links.ts`; as ações chamam os mesmos ganchos do "+ Adicionar" (`useQuickCreateTransaction`, `useQuickCreateSubscription`); categorias e cartões leem o cache de `useCategoriesQuery` e `useCreditCardsQuery`, as mesmas consultas da casca. Os recentes ficam no `localStorage` (`app:busca`) | `src/components/layout/app-command-palette.tsx`, `src/components/layout/app-header.tsx` |
 | Destino da notificação | `metadata.href` seguro vence; senão, o tipo decide. Espelha o servidor para o push | `src/lib/notification-href.ts`, `supabase/functions/_shared/notification-types.ts` |
 | Notificações no servidor | Edges `dispatch-notifications`, `evaluate-budgets`, `evaluate-credit-card-alerts`, `evaluate-bills-reminders`, `credit-card-calendar-alerts`, `notify-transaction-created` | `supabase/functions/` |

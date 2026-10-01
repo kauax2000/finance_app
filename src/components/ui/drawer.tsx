@@ -2,11 +2,14 @@
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { Slot } from "radix-ui"
 import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "@/lib/utils"
 import { modalSurfaceClassName } from "@/lib/glass-classes"
 import { useViewportModal, useViewportWindow } from "@/hooks/use-mobile"
+import { useScrollFade } from "@/hooks/use-scroll-fade"
+import { Button } from "@/components/ui/button"
 
 /**
  * O véu das superfícies de borda — desta gaveta e do `Sheet`, nos dois ramos.
@@ -33,7 +36,7 @@ const SHEET_OVERLAY_CLASS =
  * deste arquivo era um `return null` com **31 chamadas em 27 arquivos** — 11
  * delas envolvidas num `{isMobile ? … : null}` que escolhia entre dois nadas —,
  * resto de quando a alça era uma `div` decorativa desenhada pela tela.
- * `drag-handle.test.ts` tranca que elas não voltem.
+ * `drawer-drag-handle.test.ts` tranca que elas não voltem.
  *
  * ## O que o vaul dá, e o que ele cobra
  *
@@ -169,7 +172,8 @@ function DragHandle({
  *
  * ## O lugar dela entre as quatro superfícies
  *
- * O projeto tem quatro, e cada uma responde a uma pergunta diferente:
+ * O projeto tem três, e cada uma responde a uma pergunta diferente (o
+ * `AlertDialog` é o `Dialog`, numa régua só):
  *
  * | | Onde encosta | Responde ao dedo | Muda com a largura |
  * | --- | --- | --- | --- |
@@ -304,9 +308,45 @@ const drawerContentVariants = cva(
 
 type DrawerDirection = "bottom" | "top"
 
+/**
+ * O que a raiz diz ao conteúdo: se há degraus (a gaveta então é alta — o vaul
+ * a desloca por `transform` de um degrau a outro) e se ela está salvando.
+ * E, só por existir, que há uma gaveta aberta acima — é como a de dentro sabe
+ * que é aninhada.
+ */
+type DrawerRaiz = { degraus: boolean; pending: boolean }
+
+const DrawerRaizContext = React.createContext<DrawerRaiz | null>(null)
+
+/**
+ * ## Rodada 212
+ *
+ * - **Gaveta sobre gaveta**: uma `Drawer` aberta dentro de outra vira
+ *   `NestedRoot` sozinha, e a de baixo recua e escurece como no iOS. Antes
+ *   eram duas raízes que não se conheciam. (A gaveta do `Sheet` é a raiz do
+ *   vaul direto, sem este contexto — a data e a busca sobre uma folha ainda
+ *   abrem como raízes separadas.)
+ * - **`scaleBackground`**: a página recua e arredonda atrás da gaveta. O vaul
+ *   escala o `[data-vaul-drawer-wrapper]`, que a raiz do app (`layout.tsx`)
+ *   passou a ter.
+ * - **`snapPoints`** chega ao vaul como sempre chegou; o que muda é que o
+ *   conteúdo fica alto sozinho, que é o que os degraus pedem.
+ * - **`pending`**: arrastar, tocar fora, Esc e **tocar a alça** não fecham. O
+ *   último é a armadilha: o vaul só fecha no toque da alça quando
+ *   `dismissible` é **falso** — e é falso que a trava o deixa. Por isso o
+ *   pedido de fechar também é barrado aqui, na raiz, e não só delegado.
+ * - **Não-modal**: `modal={false}` (e `dismissible={false}` com degraus) é a
+ *   gaveta presa embaixo com a página usável — o vaul não monta véu nenhum.
+ */
 function Drawer({
   direction = "bottom",
   repositionInputs = true,
+  scaleBackground = false,
+  pending = false,
+  dismissible = true,
+  open: openProp,
+  defaultOpen,
+  onOpenChange,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root> & {
   /**
@@ -318,20 +358,45 @@ function Drawer({
    * atribuível a nenhum deles. A interseção distribui e preserva a união.
    */
   direction?: DrawerDirection
+  /** A página recua e arredonda atrás da gaveta (iOS). */
+  scaleBackground?: boolean
+  /** Salvando: nada fecha a gaveta até acabar. */
+  pending?: boolean
 }) {
+  const pai = React.useContext(DrawerRaizContext)
+  const controlado = openProp !== undefined
+  const [interno, setInterno] = React.useState(defaultOpen ?? false)
+  const open = controlado ? openProp : interno
+  const pedir = (proximo: boolean) => {
+    if (!proximo && pending) return
+    if (!controlado) setInterno(proximo)
+    onOpenChange?.(proximo)
+  }
+  const degraus = Boolean(
+    (props as { snapPoints?: unknown[] }).snapPoints?.length
+  )
+  const raiz = React.useMemo(() => ({ degraus, pending }), [degraus, pending])
+  const Raiz = pai ? DrawerPrimitive.NestedRoot : DrawerPrimitive.Root
+
   return (
-    <DrawerPrimitive.Root
-      data-slot="drawer"
-      direction={direction}
-      // O motivo é o mesmo que o `Sheet` documenta: é `repositionInputs` que
-      // impede a superfície de encolher quando o teclado do iOS sobe.
-      repositionInputs={repositionInputs}
-      // Dentro da moldura do catálogo ela deixa de ser modal — senão o
-      // `RemoveScroll` do Radix trava a rolagem da **página de fora**. Antes de
-      // `{...props}`, para quem chama continuar mandando. Ver `useViewportModal`.
-      modal={useViewportModal()}
-      {...props}
-    />
+    <DrawerRaizContext.Provider value={raiz}>
+      <Raiz
+        data-slot="drawer"
+        direction={direction}
+        // O motivo é o mesmo que o `Sheet` documenta: é `repositionInputs` que
+        // impede a superfície de encolher quando o teclado do iOS sobe.
+        repositionInputs={repositionInputs}
+        shouldScaleBackground={scaleBackground}
+        // Dentro da moldura do catálogo ela deixa de ser modal — senão o
+        // `RemoveScroll` do Radix trava a rolagem da **página de fora**. Antes de
+        // `{...props}`, para quem chama continuar mandando. Ver `useViewportModal`.
+        modal={useViewportModal()}
+        {...props}
+        dismissible={pending ? false : dismissible}
+        open={open}
+        onOpenChange={pedir}
+      />
+    </DrawerRaizContext.Provider>
   )
 }
 
@@ -364,8 +429,9 @@ function DrawerClose({
 }
 
 /**
- * O véu — o mesmo do painel e o mesmo da folha, escrito uma vez em
- * `sheet.tsx`. Sem a duração fixa que o painel acrescenta: aqui o véu
+ * O véu — o mesmo do painel e o mesmo da folha, escrito uma vez **aqui**
+ * (`SHEET_OVERLAY_CLASS`, no topo do arquivo, desde a rodada 159; o `Sheet`
+ * o importa). Sem a duração fixa que o painel acrescenta: aqui o véu
  * acompanha o dedo, e um keyframe brigaria com o arraste.
  */
 function DrawerOverlay({
@@ -381,6 +447,80 @@ function DrawerOverlay({
   )
 }
 
+/**
+ * O meio de uma gaveta sem `DialogBody`: o filho direto que não é cromagem.
+ * É ele que rola, entre o cabeçalho e o rodapé parados — antes rolava tudo
+ * junto, e o título subia com a lista.
+ *
+ * **As classes estão escritas por extenso, uma a uma**, e não montadas a
+ * partir de uma constante com o seletor: o Tailwind lê o fonte como texto, e
+ * a primeira versão (com o seletor num template literal) não gerou regra
+ * nenhuma — medido, `overflow-y: visible` e máscara `none`.
+ */
+const MEIO_CLASSES = [
+  "[&>:not([data-slot=drag-handle]):not([data-slot=dialog-header]):not([data-slot=dialog-footer]):not([data-slot=dialog-close-button]):not([data-slot=dialog-body]):not([data-slot=drawer-cancel])]:min-h-0",
+  "[&>:not([data-slot=drag-handle]):not([data-slot=dialog-header]):not([data-slot=dialog-footer]):not([data-slot=dialog-close-button]):not([data-slot=dialog-body]):not([data-slot=drawer-cancel])]:overflow-y-auto",
+  "[&>:not([data-slot=drag-handle]):not([data-slot=dialog-header]):not([data-slot=dialog-footer]):not([data-slot=dialog-close-button]):not([data-slot=dialog-body]):not([data-slot=drawer-cancel])]:overscroll-contain",
+  "[&>:not([data-slot=drag-handle]):not([data-slot=dialog-header]):not([data-slot=dialog-footer]):not([data-slot=dialog-close-button]):not([data-slot=dialog-body]):not([data-slot=drawer-cancel])]:scroll-fade-y",
+  "[&>:not([data-slot=drag-handle]):not([data-slot=dialog-header]):not([data-slot=dialog-footer]):not([data-slot=dialog-close-button]):not([data-slot=dialog-body]):not([data-slot=drawer-cancel])]:[--scroll-fade-floor:0]",
+].join(" ")
+
+function acharMeio(el: HTMLElement): HTMLElement | null {
+  const cromagem = new Set([
+    "drag-handle",
+    "dialog-header",
+    "dialog-footer",
+    "dialog-close-button",
+    "dialog-body",
+    "drawer-cancel",
+  ])
+  for (const filho of Array.from(el.children)) {
+    const slot = (filho as HTMLElement).dataset.slot
+    if (!slot || !cromagem.has(slot)) return filho as HTMLElement
+  }
+  return null
+}
+
+/**
+ * A altura acompanha o conteúdo (rodada 212): quando ele muda — um passo, um
+ * erro, uma lista que filtra —, a gaveta anima da altura de antes até a nova
+ * em vez de saltar. O `ResizeObserver` dispara depois do layout e antes da
+ * pintura, então a altura nova nunca chega a aparecer de estalo: a animação
+ * começa da antiga. Enquanto ela roda, as próprias medidas dela são
+ * ignoradas.
+ */
+function useAlturaQueAcompanha(el: HTMLElement | null, ativo: boolean) {
+  React.useEffect(() => {
+    if (!el || !ativo) return
+    const reduzido = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
+    let anterior = el.getBoundingClientRect().height
+    let animando: Animation | null = null
+    const ro = new ResizeObserver(() => {
+      // As medidas da própria animação não contam: ela mexe na altura a
+      // cada quadro.
+      if (animando) return
+      const atual = el.getBoundingClientRect().height
+      if (Math.abs(atual - anterior) < 1 || reduzido || anterior === 0) {
+        anterior = atual
+        return
+      }
+      const de = anterior
+      anterior = atual
+      animando = el.animate(
+        [{ height: `${de}px` }, { height: `${atual}px` }],
+        { duration: 300, easing: "cubic-bezier(0.16, 1, 0.3, 1)" }
+      )
+      animando.onfinish = animando.oncancel = () => {
+        animando = null
+      }
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [el, ativo])
+}
+
 function DrawerContent({
   className,
   children,
@@ -388,6 +528,7 @@ function DrawerContent({
   variant,
   size,
   showHandle = true,
+  ref,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content> &
   VariantProps<typeof drawerContentVariants> & {
@@ -398,10 +539,35 @@ function DrawerContent({
      */
     showHandle?: boolean
   }) {
+  const raiz = React.useContext(DrawerRaizContext)
+  // Com degraus a gaveta é alta: o vaul a desloca de um degrau a outro, e o
+  // conteúdo precisa existir inteiro por baixo.
+  const alta = fill ?? raiz?.degraus ?? false
+  // O elemento mora em estado, e não numa `ref` de função com efeitos: uma
+  // `ref` de função refeita a cada render criava um observador novo sem
+  // desligar o anterior — medido, seis ao abrir e três a cada clique, que
+  // disputavam a altura entre si.
+  const [el, setEl] = React.useState<HTMLDivElement | null>(null)
+  const conteudo = React.useCallback(
+    (no: HTMLDivElement | null) => {
+      setEl(no)
+      if (typeof ref === "function") ref(no)
+      else if (ref) ref.current = no
+    },
+    [ref]
+  )
+  useAlturaQueAcompanha(el, !alta)
+  const dissolver = useScrollFade()
+  React.useEffect(() => {
+    const meio = el ? acharMeio(el) : null
+    return meio ? dissolver(meio) : undefined
+  }, [el, dissolver])
+
   return (
     <DrawerPortal>
       <DrawerOverlay />
       <DrawerPrimitive.Content
+        ref={conteudo}
         data-slot="drawer-content"
         data-surface="drawer"
         data-variant={variant}
@@ -409,15 +575,94 @@ function DrawerContent({
         // `fixed` é o que a cromagem do `Dialog` lê para dar recuo ao cabeçalho
         // e deixar o corpo rolar entre ele e o rodapé.
         data-layout="fixed"
-        className={cn(drawerContentVariants({ fill, variant, size }), className)}
+        aria-busy={raiz?.pending || undefined}
+        className={cn(
+          drawerContentVariants({ fill: alta, variant, size }),
+          // O cabeçalho fixo ao rolar (rodada 212): sem `DialogBody`, o meio
+          // é quem rola, e dissolve nas bordas.
+          "overflow-hidden",
+          MEIO_CLASSES,
+          className
+        )}
         {...props}
       >
-        {showHandle ? (
-          <DragHandle />
-        ) : null}
+        {showHandle ? <DragHandle /> : null}
         {children}
       </DrawerPrimitive.Content>
     </DrawerPortal>
+  )
+}
+
+/**
+ * A folha de ações (rodada 212) — o action sheet do iOS: linhas de 52px com
+ * ícone, a destrutiva em vermelho, e o `DrawerCancel` separado embaixo. Cada
+ * ação fecha a gaveta depois de rodar.
+ */
+function DrawerActions({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      role="group"
+      data-slot="drawer-actions"
+      className={cn("flex flex-col px-2", className)}
+      {...props}
+    />
+  )
+}
+
+/**
+ * Uma linha da folha de ações. O ícone é desenhado a 20px — passe o
+ * `20/solid`. `asChild` para um link (`<DrawerAction asChild><Link>`).
+ */
+function DrawerAction({
+  className,
+  variant = "default",
+  asChild = false,
+  ...props
+}: React.ComponentProps<"button"> & {
+  variant?: "default" | "destructive"
+  asChild?: boolean
+}) {
+  const Comp = asChild ? Slot.Root : "button"
+  return (
+    <DrawerPrimitive.Close asChild>
+      <Comp
+        data-slot="drawer-action"
+        data-variant={variant}
+        {...(asChild ? {} : { type: "button" as const })}
+        className={cn(
+          "flex min-h-13 w-full items-center gap-3 rounded-xl px-3 text-left text-base text-foreground outline-none select-none",
+          "transition-colors duration-(--duration-fast) ease-(--ease-out)",
+          "hover:bg-muted active:bg-muted focus-visible:bg-muted",
+          "disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
+          "[&_svg]:size-5 [&_svg]:shrink-0 [&_svg]:text-muted-foreground",
+          "data-[variant=destructive]:text-destructive data-[variant=destructive]:[&_svg]:text-destructive",
+          className
+        )}
+        {...props}
+      />
+    </DrawerPrimitive.Close>
+  )
+}
+
+/** O "Cancelar" da folha de ações: um botão sozinho, separado das ações. */
+function DrawerCancel({
+  className,
+  children = "cancelar",
+  ...props
+}: React.ComponentProps<typeof Button>) {
+  return (
+    <DrawerPrimitive.Close asChild>
+      <Button
+        data-slot="drawer-cancel"
+        type="button"
+        variant="secondary"
+        size="xl"
+        className={cn("mx-2 mt-2 shrink-0", className)}
+        {...props}
+      >
+        {children}
+      </Button>
+    </DrawerPrimitive.Close>
   )
 }
 
@@ -425,6 +670,9 @@ export {
   DragHandle,
   dragHandleClassName,
   Drawer,
+  DrawerAction,
+  DrawerActions,
+  DrawerCancel,
   DrawerClose,
   DrawerContent,
   DrawerOverlay,

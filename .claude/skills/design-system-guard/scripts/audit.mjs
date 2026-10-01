@@ -518,6 +518,19 @@ function auditFile(absPath, project) {
   // Um primitivo desenhado escolhe o glifo pela geometria, não pelo corpo: o
   // `Spinner` gira o mesmo desenho de 16 a 32px, e nenhum conjunto cobre a
   // faixa inteira. A lista já é `DRAWN_SVG_FILES`, pela mesma razão do `<svg>`.
+  // A `DrawerAction` (rodada 212) desenha o ícone a 20px — `[&_svg]:size-5`,
+  // a linha de 52px da folha de ações. Um ícone ali não declara tamanho de
+  // propósito, e contá-lo como `size-4` acusava o conjunto `20`, que é o
+  // certo. Ancestral em aberto, como o poço do `EmptyStateIcon`.
+  const dentroDeDrawerAction = (indice) => {
+    const antes = src.slice(Math.max(0, indice - 600), indice)
+    const ult = antes.lastIndexOf("<DrawerAction")
+    return (
+      ult !== -1 &&
+      !/^<DrawerActions\b/.test(antes.slice(ult)) &&
+      !antes.slice(ult).includes("</DrawerAction>")
+    )
+  }
   if (heroiconSet.size && !isDrawnSvg && !isHeroiconException) {
     for (const m of src.matchAll(/<([A-Z][A-Za-z0-9]*)\b([^>]*)>/g)) {
       const declared = heroiconSet.get(m[1])
@@ -564,7 +577,9 @@ function auditFile(absPath, project) {
       if (!found && abridorTile && !degrauTile && /\bsize=\{/.test(abridorTile[1])) continue
       const n = found
         ? parseFloat(found[1])
-        : pocoEmLinha
+        : dentroDeDrawerAction(m.index)
+          ? 5
+          : pocoEmLinha
           ? 4
           : dentroDeEmptyState
           ? 6
@@ -656,7 +671,11 @@ function auditFile(absPath, project) {
         // `h-6 w-6` conta como corpo declarado.
         const sz = attrs.match(/\b(?:size|h)-(\d+(?:\.\d+)?)\b/)
         if (!sz && /\$\{/.test(attrs)) { opaco = true; continue }
-        pedidos.add(heroiconSetForSize(sz ? parseFloat(sz[1]) : 4))
+        pedidos.add(
+          heroiconSetForSize(
+            sz ? parseFloat(sz[1]) : dentroDeDrawerAction(m.index) ? 5 : 4
+          )
+        )
       }
 
       if (!opaco && pedidos.size === 1) {

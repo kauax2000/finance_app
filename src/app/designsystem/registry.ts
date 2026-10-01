@@ -445,7 +445,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("context-menu", "Context Menu", "O mesmo menu, aberto pelo botão direito, pelo toque longo e por Shift+F10.", ui("context-menu"), "ContextMenu, ContextMenuContent, ContextMenuHeader, ContextMenuItem, contextMenuTargets"),
   entry("date-picker", "Date Picker", "Campo de data, intervalo ou mês — popover no desktop, gaveta no telefone.", ui("date-picker"), "DatePicker, MonthGrid"),
   entry("dialog", "Dialog", "Janela modal — e gaveta no telefone, com surface=\"auto\".", ui("dialog"), "Dialog, DialogContent, DialogHeader, DialogMedia, DialogSteps, DialogBody, DialogFooter"),
-  entry("drawer", "Drawer", "Gaveta arrastável, com física de toque.", ui("drawer"), "Drawer, DrawerContent, DrawerTrigger"),
+  entry("drawer", "Drawer", "Gaveta arrastável, com física de toque — e a folha de ações.", ui("drawer"), "Drawer, DrawerContent, DrawerTrigger, DrawerActions, DrawerAction, DrawerCancel"),
   entry("dropdown-menu", "Dropdown Menu", "Menu de ações, com checkbox, radio e submenu.", ui("dropdown-menu"), "DropdownMenu, DropdownMenuItem"),
   entry("form", "Form", "Formulário, suas peças e o Enter.", ui("form"), "Form, FormInput, FormTextarea, FormRadioGroup, FormError, FormActions, FormCancel, FormSubmit"),
   entry("form-picker-popover", "Form Picker Popover", "Seletor com busca ancorado num campo.", ui("form-picker-popover"), "FormPickerPopover, FormPickerPopoverTrigger, FormPickerPopoverContent, FormPickerPopoverSearch, FormPickerPopoverList, FormPickerPopoverItem, FormPickerPopoverFooter"),
