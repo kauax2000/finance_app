@@ -16823,3 +16823,54 @@ montavam o gráfico à mão.
 - **A página**: área, linha, barras, rosca, divisão, anéis, calendário,
   perfil, proporção e estado viraram uma demo com segmentado; entraram as doze
   seções novas. Verificada a 1280 e a 375, sem erros e sem transbordo.
+
+### Rodada 207 — o Combobox ganha fichas, ações, mídia, ausência, criar, recentes e o campo que digita
+
+O pedido: a mesma rodada para o `Combobox`. Ele tinha **zero** consumidores, e
+o filtro de transações montava à mão um combobox de várias escolhas inteiro —
+popover, busca, caixas, "Selecionar tudo"/"Limpar", "Sem categoria" e fichas —,
+e o de cartões, a busca e as caixas soltas. Dez das onze versões propostas
+foram escolhidas (ficou de fora o limite de escolhas).
+
+- **`ComboboxItem media/description/variant="none"`** e **`ComboboxValue
+  media/none`**. O ladrilho do gatilho nasceu filho do `ComboboxValue`, e um
+  dos agentes da migração mediu o defeito: o miolo é um `<span>` de truncar
+  (bloco), o `ColorTile` é flex, e ele empilhava sobre o nome — 44px de altura
+  num gatilho de 32, o nome vazando para fora do campo. Virou prop, com o
+  texto num `<span>` próprio. Medido depois: gatilho 32, valor 24.
+- **A ausência é exclusiva em `multiple`**: escolher "Sem categoria" solta as
+  outras, e escolher outra a solta — o registro das linhas `none` mora no
+  contexto. É o comportamento que o filtro tinha (lá, "Sem categoria"
+  desabilitava as caixas).
+- **`ComboboxActions`**: a primeira versão lia `useCommandState(s =>
+  s.filtered.items)` e **escolhia `radix-_r_k_`** — o mapa é indexado pelo id
+  da linha. As linhas passaram a se registrar (valor → palavras-chave) e as
+  ações filtram o registro com o `commandFilter`, no clique. Medido: "tudo"
+  escolhe as 8 categorias; com "sa", Saúde e Casa. E a lista sobe por trás da
+  faixa da busca (`-mt-(--scroll-fade-band-h)`): sem somar a linha das ações à
+  faixa, a lista as cobria e o clique em "Selecionar tudo" caía em
+  "Transporte".
+- **`ComboboxCreate`**: a contagem do cmdk inclui a própria linha de criar
+  (as palavras-chave dela são a busca), e a primeira versão aparecia, se
+  contava e sumia — nunca chegava à tela. Ela desconta a si mesma.
+- **`ComboboxChips`**: o `+N` era `+{resto}`, dois nós de texto, e o `Button`
+  embrulha cada um num rótulo com maiúscula inicial — dois rótulos. Um texto
+  só.
+- **`variant="input"`**: o `Command` envolve o campo e o painel com
+  `className="contents"`; o painel declara as medidas que a raiz publicaria,
+  porque variável não atravessa portal no DOM. Medido: "saude" acha Saúde,
+  Enter escreve "Saúde" no campo e fecha, seta para baixo abre, Esc fecha, o
+  × limpa o texto.
+- **Afirmação falsa corrigida**: o cabeçalho dizia que o `FormPickerPopover` é
+  "só o posicionamento" — hoje ele tem busca, lista e rodapé — e que "os
+  outros 30" componentes eram Radix.
+- **As telas**: o filtro de transações (858 → ~690 linhas), com a ponte entre
+  `categoryIds` + `uncategorizedOnly` e o valor único do combobox; e a
+  categoria de "Pagar conta" e do formulário de conta, de `Select` para
+  `Combobox` com busca e ladrilho. Mudanças visíveis ditas: o gatilho do
+  filtro mostra o primeiro nome com `+N`, os cartões ganharam fichas, as
+  fichas seguem a ordem de escolha, e "Selecionar tudo" com busca escolhe só
+  os visíveis. As telas pedem login e não foram vistas.
+- **A página**: a altura virou uma demo com segmentado, a busca sem acento
+  entrou no padrão, e entraram as seções de mídia, ausência, várias com
+  fichas e ações, criar, recentes e campo que digita.

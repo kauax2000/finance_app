@@ -2365,6 +2365,25 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   **Arco-íris sob série continua proibido**: a marca encosta pelo
   `Card variant="brand"`, na borda. O cabeçalho (delta, período, KPIs) é
   composição de `Card`, não peça do `Chart`.
+- **`Combobox` ganhou o que o filtro de transações escrevia à mão** (rodada
+  207). `ComboboxItem` tem `media` (o `ColorTile size="xs"`), `description` e
+  `variant="none"` — a ausência, esmaecida e, em `multiple`, **exclusiva** nos
+  dois sentidos. O ladrilho do gatilho é `ComboboxValue media`, **prop e não
+  filho**: dentro do texto que trunca ele empilhava sobre o rótulo (44px num
+  gatilho de 32). `ComboboxChips` (`labelFor`, `mediaFor`, `tone`, `max`) são
+  as fichas embaixo do campo — dentro não cabem, o gatilho é `<button>`.
+  `ComboboxActions` é "Selecionar tudo"/"os visíveis" e "Limpar"; **o
+  `filtered.items` do cmdk é indexado pelo id da linha, não pelo valor**, então
+  quem precisa de valores filtra o registro do contexto (`itens`) com o mesmo
+  `commandFilter`. Com ações, a faixa de cima soma a linha delas, senão a lista
+  (que sobe por trás da faixa) as cobre. `ComboboxCreate` cria pela busca quando
+  nada casa, e desconta a si mesma da contagem. `ComboboxGroup recent` some ao
+  digitar e dá ao recente um valor de cmdk próprio. `variant="input"` +
+  `ComboboxTextField`: o campo **é** a busca, com a raiz do cmdk envolvendo
+  campo e painel. **Categoria é `Combobox`, não `Select`** — "Pagar conta" e o
+  formulário de conta migraram; o filtro de transações (categorias e cartões)
+  é `Combobox multiple` com ações e fichas verdes. `combobox-versions.test.ts`
+  tranca.
 - **`Chart` ganhou o que o dashboard ainda escrevia à mão** (rodada 206).
   Formas: `ChartWaterfall` (a cascata do saldo — barras de **faixa**
   `[de, até]`, que cruzam o zero sem pilha transparente; `total` é saldo,

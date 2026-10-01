@@ -16,6 +16,19 @@ import {
 import { useMemo } from "react"
 import { ColorTile } from "@/components/ui/color-tile"
 import {
+    Combobox,
+    ComboboxContent,
+    ComboboxEmpty,
+    ComboboxField,
+    ComboboxGroup,
+    ComboboxInput,
+    ComboboxItem,
+    ComboboxList,
+    ComboboxSeparator,
+    ComboboxTrigger,
+    ComboboxValue,
+} from "@/components/ui/combobox"
+import {
     Select,
     SelectContent,
     SelectItem,
@@ -127,6 +140,10 @@ export function BillFormFields({
         [endDateYmd],
     )
 
+    // O rótulo do gatilho vem daqui: os itens do combobox só montam com o
+    // painel aberto.
+    const categoriaEscolhida = expenseCategories.find((c) => c.id === categoryId)
+
     const dayOptions = useMemo(
         () => Array.from({ length: 31 }, (_, i) => i + 1),
         []
@@ -152,27 +169,53 @@ export function BillFormFields({
             />
             <Field>
                 <FieldLabel>Categoria (despesa)</FieldLabel>
-                <Select value={categoryId} onValueChange={setCategoryId}>
-                    <FieldControl>
-                        <SelectTrigger
-                            id="bill-cat"
-                            className="w-full"
-                        >
-                            <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                    </FieldControl>
-                    <SelectContent>
-                        <SelectItem value={BILL_CATEGORY_NONE} variant="none">
-                            Sem categoria
-                        </SelectItem>
-                        {expenseCategories.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>
-                                <ColorTile size="xs" color={c.color} />
-                                {c.name}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                {/* Combobox, e não Select: a pessoa procura a categoria pelo nome. */}
+                <Combobox value={categoryId} onValueChange={setCategoryId}>
+                    <ComboboxField>
+                        <FieldControl>
+                            <ComboboxTrigger id="bill-cat">
+                                <ComboboxValue
+                                    placeholder="Selecione"
+                                    none={categoryId === BILL_CATEGORY_NONE}
+                                    media={
+                                        categoriaEscolhida ? (
+                                            <ColorTile size="xs" color={categoriaEscolhida.color} />
+                                        ) : undefined
+                                    }
+                                >
+                                    {categoryId === BILL_CATEGORY_NONE
+                                        ? "Sem categoria"
+                                        : categoriaEscolhida?.name}
+                                </ComboboxValue>
+                            </ComboboxTrigger>
+                        </FieldControl>
+                    </ComboboxField>
+                    <ComboboxContent>
+                        <ComboboxInput placeholder="Buscar categoria…" />
+                        <ComboboxList>
+                            <ComboboxEmpty>
+                                Nenhuma categoria com esse nome.
+                            </ComboboxEmpty>
+                            <ComboboxGroup>
+                                <ComboboxItem value={BILL_CATEGORY_NONE} variant="none">
+                                    Sem categoria
+                                </ComboboxItem>
+                            </ComboboxGroup>
+                            <ComboboxSeparator />
+                            <ComboboxGroup>
+                                {expenseCategories.map((c) => (
+                                    <ComboboxItem
+                                        key={c.id}
+                                        value={c.id}
+                                        media={<ColorTile size="xs" color={c.color} />}
+                                    >
+                                        {c.name}
+                                    </ComboboxItem>
+                                ))}
+                            </ComboboxGroup>
+                        </ComboboxList>
+                    </ComboboxContent>
+                </Combobox>
             </Field>
             {/* Título, e não `label`: a grade é um grupo de botões com o próprio
                 `aria-label`, e um `<label>` sem alvo não rotula nada. */}

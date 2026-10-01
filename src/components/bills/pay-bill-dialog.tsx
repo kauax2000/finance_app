@@ -24,6 +24,18 @@ import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/date-picker"
 import { ColorTile } from "@/components/ui/color-tile"
 import {
+    Combobox,
+    ComboboxContent,
+    ComboboxEmpty,
+    ComboboxField,
+    ComboboxGroup,
+    ComboboxInput,
+    ComboboxItem,
+    ComboboxList,
+    ComboboxTrigger,
+    ComboboxValue,
+} from "@/components/ui/combobox"
+import {
     Select,
     SelectContent,
     SelectItem,
@@ -112,6 +124,10 @@ export function PayBillDialog({
         if (input.kind === "regular") return `Pagar · ${input.bill.name}`
         return `Pagar fatura · ${input.virtual.cardName}`
     }, [input])
+
+    // O rótulo do gatilho vem daqui: os itens do combobox só montam com o
+    // painel aberto.
+    const categoriaEscolhida = categoriesExpense.find((c) => c.id === categoryId)
 
     const description =
         input?.kind === "virtual_cc"
@@ -235,26 +251,48 @@ export function PayBillDialog({
                 <Field>
                     <FieldLabel>Categoria</FieldLabel>
                     {/* A categoria é obrigatória aqui: não há opção de ausência, e o
-                        sentinela vira o `placeholder` (valor vazio no Radix). */}
-                    <Select
+                        sentinela vira o `placeholder` (valor vazio). Combobox, e
+                        não Select: a pessoa procura a categoria pelo nome. */}
+                    <Combobox
                         value={categoryId === CAT_NONE ? "" : categoryId}
                         onValueChange={setCategoryId}
                     >
-                        <FieldControl>
-                            <SelectTrigger
-                            >
-                                <SelectValue placeholder="Escolha uma categoria" />
-                            </SelectTrigger>
-                        </FieldControl>
-                        <SelectContent>
-                            {categoriesExpense.map((c) => (
-                                <SelectItem key={c.id} value={c.id}>
-                                    <ColorTile size="xs" color={c.color} />
-                                    {c.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                        <ComboboxField>
+                            <FieldControl>
+                                <ComboboxTrigger>
+                                    <ComboboxValue
+                                        placeholder="Escolha uma categoria"
+                                        media={
+                                            categoriaEscolhida ? (
+                                                <ColorTile size="xs" color={categoriaEscolhida.color} />
+                                            ) : undefined
+                                        }
+                                    >
+                                        {categoriaEscolhida?.name}
+                                    </ComboboxValue>
+                                </ComboboxTrigger>
+                            </FieldControl>
+                        </ComboboxField>
+                        <ComboboxContent>
+                            <ComboboxInput placeholder="Buscar categoria…" />
+                            <ComboboxList>
+                                <ComboboxEmpty>
+                                    Nenhuma categoria com esse nome.
+                                </ComboboxEmpty>
+                                <ComboboxGroup>
+                                    {categoriesExpense.map((c) => (
+                                        <ComboboxItem
+                                            key={c.id}
+                                            value={c.id}
+                                            media={<ColorTile size="xs" color={c.color} />}
+                                        >
+                                            {c.name}
+                                        </ComboboxItem>
+                                    ))}
+                                </ComboboxGroup>
+                            </ComboboxList>
+                        </ComboboxContent>
+                    </Combobox>
                 </Field>
                 <Field>
                     <FieldLabel>Forma de pagamento</FieldLabel>

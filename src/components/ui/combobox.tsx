@@ -1,10 +1,17 @@
 "use client"
 
-import { CheckIcon, ChevronUpDownIcon, XMarkIcon } from "@heroicons/react/16/solid"
+import {
+  CheckIcon,
+  ChevronUpDownIcon,
+  PlusIcon,
+  XMarkIcon,
+} from "@heroicons/react/16/solid"
+import { Command as CommandPrimitive, useCommandState } from "cmdk"
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
 import { commandFilter } from "@/lib/command-filter"
+import { scrollFadeBandsClassName } from "@/lib/scroll-fade-classes"
 import {
   fieldControlHeightClassName,
   fieldControlPaddingClassName,
@@ -16,6 +23,7 @@ import {
   type FieldControlSize,
 } from "@/lib/field-classes"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Command,
@@ -39,12 +47,30 @@ import {
  *
  * A versão do registry para o estilo `radix-nova` vem sobre Base UI, e trazê-la
  * como está adicionaria uma segunda biblioteca de primitivos por causa de um
- * componente só — os outros 30 daqui são todos Radix. Este é o mesmo componente
+ * componente só — o resto do design system é Radix. Este é o mesmo componente
  * montado sobre `Command` (cmdk) + `Popover`, que já existiam no projeto.
  *
- * Não confundir com `FormPickerPopover`: aquele é só o posicionamento de um
- * popover ancorado num campo. Este resolve busca, navegação por teclado e a
- * semântica de listbox.
+ * Não confundir com `FormPickerPopover`: aquele é o seletor de lista longa com
+ * painel próprio — busca, lista e **rodapé** com ação (o "criar categoria" da
+ * transação). Este é o select com busca preso a um campo, com a semântica de
+ * listbox; desde a rodada 207 ele também cria pela busca, mas sem rodapé.
+ *
+ * ## Rodada 207: o que o filtro de transações escrevia à mão
+ *
+ * - `ComboboxChips` — as escolhas de `multiple` em fichas removíveis embaixo
+ *   do campo, recolhendo em `+N` (a ficha é `Badge`, o × é `Button`: fichas
+ *   não cabem **dentro** do gatilho, que é um `<button>`).
+ * - `ComboboxActions` — "Selecionar tudo" e "Limpar" no topo da lista, que
+ *   leem **o que a busca deixou visível** (`useCommandState`).
+ * - `ComboboxItem` com `media` (o `ColorTile` da categoria), `description` e
+ *   `variant="none"` — a ausência ("Sem categoria"), esmaecida e, em
+ *   `multiple`, **exclusiva**: escolhê-la solta as outras, e o contrário.
+ * - `ComboboxCreate` — quando nada casa, a última linha cria o que se digitou.
+ * - `ComboboxGroup recent` — o grupo das usadas há pouco, que some ao digitar.
+ * - `variant="input"` com `ComboboxTextField` — o campo **é** a busca. A raiz
+ *   do cmdk passa a envolver o campo e o painel (o painel é portal, mas o
+ *   contexto do React atravessa), e o teclado do campo chega ao cmdk porque o
+ *   campo mora dentro da raiz no DOM.
  *
  * ## O gatilho era um botão, e parecia um botão
  *
@@ -80,16 +106,43 @@ import {
  * paleta do catálogo — ver lá a razão e a tabela de notas.
  */
 
+type ComboboxVariant = "select" | "input"
+
+type ComboboxToggleOptions = {
+  /** O rótulo da linha — o texto que o campo do `variant="input"` passa a mostrar. */
+  label?: string
+  /** A linha de ausência (`variant="none"`): em `multiple`, exclui as outras. */
+  exclusive?: boolean
+}
+
 type ComboboxContextValue = {
   /** O `id` da listbox, para o `aria-controls` do gatilho. */
   listId: string
   multiple: boolean
+  variant: ComboboxVariant
+  selected: string[]
   isSelected: (value: string) => boolean
-  toggle: (value: string) => void
+  toggle: (value: string, options?: ComboboxToggleOptions) => void
+  /** Acrescenta vários de uma vez — o "Selecionar tudo". */
+  selectMany: (values: string[]) => void
   clear: () => void
   count: number
   open: boolean
   setOpen: (open: boolean) => void
+  /** As linhas de ausência que já montaram — o "Selecionar tudo" as pula. */
+  exclusivos: React.RefObject<Set<string>>
+  /** O texto do campo no `variant="input"`. */
+  inputText: string
+  setInputText: (text: string) => void
+  /** A casca do campo, para o painel não se fechar ao clicar nela. */
+  campoRef: React.RefObject<HTMLDivElement | null>
+  /**
+   * As linhas montadas, valor → palavras-chave. O `useCommandState` do cmdk
+   * indexa o filtrado pelo **id** da linha, e não pelo valor — medido: o
+   * "Selecionar tudo" escolhia `radix-_r_k_`. Quem precisa de valores filtra
+   * este registro com o mesmo `commandFilter`.
+   */
+  itens: React.RefObject<Map<string, string[]>>
 }
 
 const ComboboxContext = React.createContext<ComboboxContextValue | null>(null)
@@ -118,7 +171,17 @@ type ComboboxMultipleProps = {
   onValueChange?: (value: string[]) => void
 }
 
-type ComboboxProps = (ComboboxSingleProps | ComboboxMultipleProps) & {
+type ComboboxProps = (
+  | (ComboboxSingleProps & {
+      /**
+       * `select` (o padrão): o gatilho é um campo-botão e a busca mora no
+       * painel. `input`: o campo **é** a busca (autocomplete) — ver
+       * `ComboboxTextField`. Só com uma escolha.
+       */
+      variant?: ComboboxVariant
+    })
+  | (ComboboxMultipleProps & { variant?: "select" })
+) & {
   open?: boolean
   defaultOpen?: boolean
   onOpenChange?: (open: boolean) => void
@@ -146,8 +209,13 @@ type ComboboxProps = (ComboboxSingleProps | ComboboxMultipleProps) & {
  */
 function Combobox(props: ComboboxProps) {
   const { open: openProp, defaultOpen = false, onOpenChange, modal, children } = props
+  const variant: ComboboxVariant = props.variant ?? "select"
   const isMobile = useIsMobile()
   const listId = `${React.useId()}-listbox`
+  const exclusivos = React.useRef(new Set<string>())
+  const campoRef = React.useRef<HTMLDivElement | null>(null)
+  const itens = React.useRef(new Map<string, string[]>())
+  const [inputText, setInputText] = React.useState("")
 
   const [uncontrolledValue, setUncontrolledValue] = React.useState<string[]>(
     () => normalizeValue(props.defaultValue)
@@ -186,34 +254,72 @@ function Combobox(props: ComboboxProps) {
     return {
       listId,
       multiple,
+      variant,
+      selected,
       count: selected.length,
       isSelected: (value) => selected.includes(value),
-      toggle: (value) => {
+      toggle: (value, options) => {
         if (multiple) {
+          if (selected.includes(value)) {
+            commit(selected.filter((v) => v !== value))
+            return
+          }
+          // A ausência é exclusiva nos dois sentidos: escolhê-la solta as
+          // outras, e escolher outra a solta.
           commit(
-            selected.includes(value)
-              ? selected.filter((v) => v !== value)
-              : [...selected, value]
+            options?.exclusive
+              ? [value]
+              : [...selected.filter((v) => !exclusivos.current.has(v)), value]
           )
           return
         }
         commit([value])
+        if (variant === "input" && options?.label !== undefined) {
+          setInputText(options.label)
+        }
         setOpen(false)
       },
-      clear: () => commit([]),
+      selectMany: (values) => {
+        const novos = values.filter(
+          (v) => !selected.includes(v) && !exclusivos.current.has(v)
+        )
+        commit([
+          ...selected.filter((v) => !exclusivos.current.has(v)),
+          ...novos,
+        ])
+      },
+      clear: () => {
+        commit([])
+        if (variant === "input") setInputText("")
+      },
       open: currentOpen,
       setOpen,
+      exclusivos,
+      inputText,
+      setInputText,
+      campoRef,
+      itens,
     }
-  }, [listId, props, isValueControlled, selected, currentOpen, setOpen])
+  }, [listId, props, variant, isValueControlled, selected, currentOpen, setOpen, inputText])
 
   return (
     <ComboboxContext.Provider value={context}>
       <Popover
         open={currentOpen}
         onOpenChange={setOpen}
-        modal={modal ?? isMobile}
+        modal={variant === "input" ? false : (modal ?? isMobile)}
       >
-        {children}
+        {variant === "input" ? (
+          // A raiz do cmdk envolve o campo **e** o painel: o campo é a busca,
+          // e o teclado dele precisa chegar ao `onKeyDown` da raiz — o que só
+          // acontece se ele morar dentro dela no DOM. O painel é portal, mas o
+          // contexto do React atravessa portal, e a lista o encontra.
+          <Command filter={commandFilter} className="contents">
+            {children}
+          </Command>
+        ) : (
+          children
+        )}
       </Popover>
     </ComboboxContext.Provider>
   )
@@ -238,9 +344,11 @@ function normalizeValue(value: string | string[] | undefined): string[] {
  * da largura do campo que se vê.
  */
 function ComboboxField({ className, ...props }: React.ComponentProps<"div">) {
+  const { campoRef } = useCombobox("ComboboxField")
   return (
     <PopoverAnchor asChild>
       <div
+        ref={campoRef}
         data-slot="combobox-field"
         className={cn(
           "relative w-full",
@@ -357,11 +465,22 @@ function ComboboxValue({
   placeholder = "Selecionar…",
   children,
   overflowCount = 0,
+  none = false,
+  media,
   ...props
 }: React.ComponentProps<"span"> & {
+  /**
+   * O ladrilho ou ícone antes do rótulo — o `ColorTile size="xs"` da
+   * categoria. É prop, e não filho, porque o rótulo trunca: dentro do mesmo
+   * `<span>` de truncar, o ladrilho (que é flex) empilhava sobre o texto e o
+   * empurrava para fora do campo — medido, 44px de altura num gatilho de 32.
+   */
+  media?: React.ReactNode
   placeholder?: string
   /** Quantas escolhas ficaram de fora do rótulo. Só em `multiple`. */
   overflowCount?: number
+  /** A escolha é a ausência ("Sem categoria"): esmaecida, como no `Select`. */
+  none?: boolean
 }) {
   const vazio =
     children === undefined ||
@@ -375,7 +494,14 @@ function ComboboxValue({
       className={cn("flex min-w-0 items-center gap-1.5", className)}
       {...props}
     >
-      <span className="min-w-0 truncate">{vazio ? placeholder : children}</span>
+      {!vazio && media ? (
+        <span data-slot="combobox-value-media" className="flex shrink-0 items-center">
+          {media}
+        </span>
+      ) : null}
+      <span className={cn("min-w-0 truncate", none && "text-muted-foreground")}>
+        {vazio ? placeholder : children}
+      </span>
       {!vazio && overflowCount > 0 ? (
         <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
           +{overflowCount}
@@ -441,6 +567,34 @@ function ComboboxContent({
   /** O que a raiz do cmdk precisa receber — `shouldFilter={false}` para busca no servidor, por exemplo. */
   commandProps?: React.ComponentProps<typeof Command>
 }) {
+  const { variant, campoRef } = useCombobox("ComboboxContent")
+  if (variant === "input") {
+    return (
+      <PopoverContent
+        data-slot="combobox-content"
+        align={align}
+        padding="none"
+        // O foco fica no campo, que é onde se digita: sem isto o Radix o
+        // levaria para o painel na primeira tecla.
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        // Clicar no próprio campo não é "fora".
+        onInteractOutside={(e) => {
+          if (campoRef.current?.contains(e.target as Node)) e.preventDefault()
+        }}
+        className={cn(
+          "w-(--radix-popover-trigger-width) min-w-48",
+          // As medidas que a raiz do `Command` publicaria: aqui ela fica fora
+          // do portal, e variável não atravessa portal no DOM.
+          scrollFadeBandsClassName,
+          "[--command-list-max-h:--spacing(72)]",
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </PopoverContent>
+    )
+  }
   return (
     // **Uma placa só** (rodada 198, a pedido do dono): o popover pinta a
     // placa flutuante, e a pílula de busca e a lista moram **dentro** dela —
@@ -456,7 +610,21 @@ function ComboboxContent({
       className={cn("w-(--radix-popover-trigger-width) min-w-48", className)}
       {...props}
     >
-      <Command filter={commandFilter} {...commandProps}>
+      <Command
+        filter={commandFilter}
+        {...commandProps}
+        className={cn(
+          // Com as ações, a faixa de cima soma a linha delas (24 do botão + 4
+          // de folga) aos 48 da busca: a lista sobe por trás da faixa
+          // (`-mt-(--scroll-fade-band-h)`) e, sem a soma, cobria as ações — o
+          // clique em "Selecionar tudo" caía numa linha da lista. Por `:has()`
+          // com **dois** atributos, e não por identidade do filho (que a casa
+          // proíbe): ele pesa mais que o `:has()` de um da raiz do `Command`,
+          // e vence sem depender da ordem de emissão.
+          "has-[[data-slot=command-input-wrapper]~[data-slot=combobox-actions]]:[--scroll-fade-band-h:calc(--spacing(8)+--spacing(4)+--spacing(7))]",
+          commandProps?.className
+        )}
+      >
         {children}
       </Command>
     </PopoverContent>
@@ -534,17 +702,39 @@ function ComboboxLoading({
   return <CommandLoading data-slot="combobox-loading" {...props} />
 }
 
+/**
+ * O prefixo do valor do cmdk dentro de um grupo de recentes. O mesmo item
+ * aparece lá e na lista inteira, e duas linhas com o mesmo `value` acendem
+ * juntas no cmdk — o recente leva um valor do cmdk próprio, e o valor da
+ * escolha continua o do item.
+ */
+const PREFIXO_RECENTE = "recente:"
+const ComboboxGroupContext = React.createContext<string>("")
+
 function ComboboxGroup({
   className,
+  recent = false,
   ...props
-}: React.ComponentProps<typeof CommandGroup>) {
+}: React.ComponentProps<typeof CommandGroup> & {
+  /**
+   * O grupo das usadas há pouco (rodada 207): fica no topo com o painel
+   * ocioso e **some ao digitar** — buscando, a lista inteira já acha, e o
+   * mesmo nome duas vezes seria ruído.
+   */
+  recent?: boolean
+}) {
+  const buscando = useCommandState((estado) => estado.search.trim() !== "")
+  if (recent && buscando) return null
   return (
-    <CommandGroup
-      data-slot="combobox-group"
-      // O cabeçalho no recuo da linha (`px-2`).
-      className={cn("**:[[cmdk-group-heading]]:px-2", className)}
-      {...props}
-    />
+    <ComboboxGroupContext.Provider value={recent ? PREFIXO_RECENTE : ""}>
+      <CommandGroup
+        data-slot="combobox-group"
+        data-recent={recent || undefined}
+        // O cabeçalho no recuo da linha (`px-2`).
+        className={cn("**:[[cmdk-group-heading]]:px-2", className)}
+        {...props}
+      />
+    </ComboboxGroupContext.Provider>
   )
 }
 
@@ -561,7 +751,10 @@ function ComboboxSeparator({
  * funcionar com dados de verdade: num combobox real o `value` é a chave de
  * máquina (`"cat_7f3a"`), e casar a consulta contra ela não acha nada. Quem
  * passa um rótulo que não é string (um ícone mais o nome, por exemplo) declara
- * `keywords` na mão.
+ * `keywords` na mão — ou `textValue`, que serve às duas coisas.
+ *
+ * A escolha usa o `value` do item, e não o que o cmdk devolve: no grupo de
+ * recentes o valor do cmdk leva prefixo (ver `ComboboxGroup`).
  */
 function ComboboxItem({
   className,
@@ -569,31 +762,86 @@ function ComboboxItem({
   children,
   keywords,
   onSelect,
+  media,
+  description,
+  variant = "default",
+  textValue,
   ...props
 }: Omit<React.ComponentProps<typeof CommandItem>, "value"> & {
   value: string
+  /** O ladrilho ou ícone à esquerda — o `ColorTile size="xs"` da categoria. */
+  media?: React.ReactNode
+  /** A linha de explicação embaixo do rótulo — par de identidade, sem `gap`. */
+  description?: React.ReactNode
+  /**
+   * `none` é a ausência ("Sem categoria"): esmaecida e, em `multiple`,
+   * exclusiva — escolhê-la solta as outras, e escolher outra a solta.
+   */
+  variant?: "default" | "none"
+  /** O texto da linha quando `children` não é texto: busca e campo do `input`. */
+  textValue?: string
 }) {
-  const { isSelected, toggle } = useCombobox("ComboboxItem")
+  const { isSelected, toggle, exclusivos, itens } = useCombobox("ComboboxItem")
+  const prefixo = React.useContext(ComboboxGroupContext)
   const selecionado = isSelected(value)
+  const ausencia = variant === "none"
+  const texto = textValue ?? (typeof children === "string" ? children : undefined)
+
+  const palavras = keywords ?? (texto ? [texto] : undefined)
+  const chavePalavras = palavras?.join("\u0000") ?? ""
+  React.useEffect(() => {
+    // O recente é a mesma linha da lista inteira: registrá-lo duas vezes não
+    // muda nada, e desregistrá-lo ao sumir não pode apagar a outra.
+    if (prefixo) return
+    const registro = itens.current
+    registro.set(value, chavePalavras ? chavePalavras.split("\u0000") : [])
+    return () => {
+      registro.delete(value)
+    }
+  }, [itens, prefixo, value, chavePalavras])
+
+  React.useEffect(() => {
+    if (!ausencia) return
+    const registro = exclusivos.current
+    registro.add(value)
+    return () => {
+      registro.delete(value)
+    }
+  }, [ausencia, exclusivos, value])
 
   return (
     <CommandItem
       data-slot="combobox-item"
-      value={value}
-      keywords={
-        keywords ?? (typeof children === "string" ? [children] : undefined)
-      }
+      data-variant={variant}
+      value={`${prefixo}${value}`}
+      keywords={palavras}
       onSelect={(next) => {
-        toggle(next)
+        toggle(value, { label: texto, exclusive: ausencia })
         onSelect?.(next)
       }}
       // A linha de 32 com 8px de recuo — a do popover da demonstração —, e
       // `pr-8` para o tique. Os 32 saem do `py-1.5` sobre a entrelinha de 20,
       // e não de um `h-*`: a linha não é um degrau da escada de controles.
-      className={cn("px-2 py-1.5 pr-8", className)}
+      className={cn(
+        "gap-2 px-2 py-1.5 pr-8",
+        ausencia && "text-muted-foreground",
+        className
+      )}
       {...props}
     >
-      {children}
+      {media ? (
+        <span data-slot="combobox-item-media" className="flex shrink-0 items-center">
+          {media}
+        </span>
+      ) : null}
+      {description ? (
+        <span className="flex min-w-0 flex-col">
+          <span className="truncate">{children}</span>
+          <span className="truncate text-xs text-muted-foreground">{description}</span>
+        </span>
+      ) : (
+        children
+      )}
       {/* O tique **não** escreve `aria-selected`, e é decisão: o cmdk usa esse
           atributo para a linha *realçada* pela seta, não para a escolhida.
           Sobrescrevê-lo apagaria o cursor de teclado do leitor de tela. Quem
@@ -610,10 +858,252 @@ function ComboboxItem({
   )
 }
 
+/**
+ * O campo que **é** a busca (rodada 207), para `<Combobox variant="input">`:
+ * digitar abre a lista embaixo e filtra, as setas andam por ela, Enter
+ * escolhe e o campo passa a mostrar o rótulo escolhido. É o `Command.Input`
+ * do cmdk vestindo a régua de campo — a mesma do `ComboboxTrigger` — e por
+ * isso o cmdk lhe dá `role="combobox"`, `aria-controls` e
+ * `aria-activedescendant` de fábrica.
+ *
+ * Esc fecha pelo `Popover`; seta para baixo abre sem digitar.
+ */
+function ComboboxTextField({
+  className,
+  size = "md",
+  placeholder = "Buscar…",
+  onKeyDown,
+  ...props
+}: Omit<
+  React.ComponentProps<typeof CommandPrimitive.Input>,
+  "value" | "onValueChange" | "size"
+> & {
+  size?: FieldControlSize
+}) {
+  const { open, setOpen, inputText, setInputText } = useCombobox("ComboboxTextField")
+  return (
+    <CommandPrimitive.Input
+      data-slot="combobox-text-field"
+      data-size={size}
+      value={inputText}
+      onValueChange={(texto) => {
+        setInputText(texto)
+        if (!open) setOpen(true)
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "ArrowDown" && !open) setOpen(true)
+        onKeyDown?.(e)
+      }}
+      placeholder={placeholder}
+      className={cn(
+        fieldSurfaceClassName,
+        fieldFocusRingClassName,
+        fieldInvalidClassName,
+        fieldDisabledClassName,
+        "w-full min-w-0 py-1 text-base outline-none placeholder:text-muted-foreground md:text-sm",
+        fieldControlHeightClassName[size],
+        fieldControlPaddingClassName[size],
+        // O recuo do × do `ComboboxField`, como no gatilho.
+        "pe-[calc(var(--combobox-value-pe,0px)+--spacing(3))]",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/**
+ * As escolhas de `multiple` em fichas (rodada 207), embaixo do campo — dentro
+ * dele não cabe: o gatilho é um `<button>`, e o × de cada ficha é outro.
+ *
+ * O rótulo vem de quem chama, pela mesma razão do `ComboboxValue`: os itens só
+ * montam com o painel aberto. Acima de `max` as fichas recolhem num `+N`, que
+ * é um botão e as mostra todas.
+ */
+function ComboboxChips({
+  className,
+  labelFor,
+  mediaFor,
+  tone = "neutral",
+  max = 6,
+  ...props
+}: React.ComponentProps<"div"> & {
+  /** O rótulo de cada valor. Texto: é também o nome do × ("Remover Mercado"). */
+  labelFor: (value: string) => string
+  /** O que vai antes do rótulo — a bolinha ou o ladrilho da cor. */
+  mediaFor?: (value: string) => React.ReactNode
+  /** A tinta das fichas, a do `Badge`. O filtro de transações as pinta `success`. */
+  tone?: React.ComponentProps<typeof Badge>["tone"]
+  /** Quantas fichas antes de recolher em `+N`. */
+  max?: number
+}) {
+  const { selected, toggle, listId } = useCombobox("ComboboxChips")
+  const [todas, setTodas] = React.useState(false)
+  if (selected.length === 0) return null
+  const visiveis = todas ? selected : selected.slice(0, max)
+  const resto = selected.length - visiveis.length
+
+  return (
+    <div
+      data-slot="combobox-chips"
+      className={cn("flex flex-wrap items-center gap-1.5", className)}
+      {...props}
+    >
+      {visiveis.map((valor) => {
+        const rotulo = labelFor(valor)
+        return (
+          <Badge key={valor} variant="soft" tone={tone} size="sm" className="max-w-full gap-1 pe-0.5">
+            {mediaFor ? mediaFor(valor) : null}
+            <span className="min-w-0 truncate">{rotulo}</span>
+            <Button
+              type="button"
+              variant="tertiary"
+              size="icon-xs"
+              className="size-5 shrink-0 rounded-full"
+              aria-label={`Remover ${rotulo}`}
+              onClick={(e) => {
+                // A ficha some: o foco vai para a vizinha, ou para o campo.
+                const grupo = e.currentTarget.closest("[data-slot=combobox-chips]")
+                toggle(valor)
+                requestAnimationFrame(() => {
+                  const proximo =
+                    grupo?.querySelector<HTMLElement>("button") ??
+                    document.querySelector<HTMLElement>(`[aria-controls="${listId}"]`)
+                  proximo?.focus()
+                })
+              }}
+            >
+              <XMarkIcon aria-hidden />
+            </Button>
+          </Badge>
+        )
+      })}
+      {resto > 0 ? (
+        <Button
+          type="button"
+          variant="tertiary"
+          size="xs"
+          className="nums"
+          aria-label={`Mostrar mais ${resto}`}
+          onClick={() => setTodas(true)}
+        >
+          {/* Um texto só: dois nós ("+" e o número) viravam dois rótulos de
+              botão, cada um com a própria maiúscula inicial. */}
+          {`+${resto}`}
+        </Button>
+      ) : null}
+    </div>
+  )
+}
+
+/**
+ * "Selecionar tudo" e "Limpar", no topo da lista de `multiple` (rodada 207).
+ *
+ * **"Tudo" é o que a busca deixou visível**, e não a lista inteira: quem
+ * digitou "ali" e apertou "Selecionar tudo" quis as categorias de alimentação,
+ * não as quarenta. O que o cmdk filtrou chega por `useCommandState`. A
+ * ausência e os recentes ficam de fora — a primeira é exclusiva, e os segundos
+ * são a mesma linha duas vezes.
+ */
+function ComboboxActions({ className, ...props }: React.ComponentProps<"div">) {
+  const { selectMany, clear, count, exclusivos, itens } = useCombobox("ComboboxActions")
+  const busca = useCommandState((estado) => estado.search.trim())
+  const algumVisivel = useCommandState((estado) => estado.filtered.count > 0)
+
+  // Calculado no clique, e não no render: o registro se enche nos efeitos das
+  // linhas, depois do primeiro render do painel.
+  const selecionarVisiveis = () =>
+    selectMany(
+      [...itens.current.entries()]
+        .filter(([valor, palavras]) => !busca || commandFilter(valor, busca, palavras) > 0)
+        .map(([valor]) => valor)
+        .filter((valor) => !exclusivos.current.has(valor))
+    )
+
+  return (
+    <div
+      data-slot="combobox-actions"
+      // Acima da lista, que sobe por trás da faixa — ver `ComboboxContent`.
+      className={cn("relative z-10 flex items-center gap-1 px-2 pb-1", className)}
+      {...props}
+    >
+      <Button
+        type="button"
+        variant="tertiary"
+        size="xs"
+        disabled={!algumVisivel}
+        onClick={selecionarVisiveis}
+      >
+        {busca ? "selecionar os visíveis" : "selecionar tudo"}
+      </Button>
+      <Button type="button" variant="tertiary" size="xs" disabled={count === 0} onClick={clear}>
+        limpar
+      </Button>
+    </div>
+  )
+}
+
+/** O valor da linha de criar, que nenhum item real usa. */
+const VALOR_CRIAR = "\u0000criar"
+
+/**
+ * Criar o que se digitou (rodada 207): quando a busca não casa com nenhuma
+ * linha, a última vira "Criar ‘Farmácia’". Ela **substitui** o vazio — o
+ * `ComboboxEmpty` só aparece com contagem zero, e esta linha conta.
+ *
+ * Quem cria é quem chama (`onCreate` recebe o texto): ele grava e escolhe o
+ * novo valor. Numa escolha só, o painel fecha junto.
+ */
+function ComboboxCreate({
+  onCreate,
+  children = (texto: string) => `Criar “${texto}”`,
+  className,
+}: {
+  onCreate: (texto: string) => void
+  /** O rótulo da linha, a partir do texto digitado. */
+  children?: (texto: string) => React.ReactNode
+  className?: string
+}) {
+  const { multiple, setOpen, setInputText } = useCombobox("ComboboxCreate")
+  const busca = useCommandState((estado) => estado.search.trim())
+  const contagem = useCommandState((estado) => estado.filtered.count)
+  // A contagem do cmdk inclui esta própria linha quando ela está montada (as
+  // palavras-chave dela são a busca, então ela sempre casa). Sem descontá-la,
+  // a linha aparecia, se contava, e sumia — medido, nunca chegava à tela.
+  const [mostrando, setMostrando] = React.useState(false)
+  const outras = mostrando ? contagem - 1 : contagem
+  const mostrar = busca !== "" && outras <= 0
+  React.useEffect(() => {
+    setMostrando(mostrar)
+  }, [mostrar])
+  if (!mostrar) return null
+
+  return (
+    <CommandItem
+      data-slot="combobox-create"
+      value={VALOR_CRIAR}
+      keywords={[busca]}
+      forceMount
+      onSelect={() => {
+        onCreate(busca)
+        setInputText(multiple ? "" : busca)
+        if (!multiple) setOpen(false)
+      }}
+      className={cn("gap-2 px-2 py-1.5 text-primary-accent", className)}
+    >
+      <PlusIcon aria-hidden />
+      <span className="min-w-0 truncate">{children(busca)}</span>
+    </CommandItem>
+  )
+}
+
 export {
   Combobox,
+  ComboboxActions,
+  ComboboxChips,
   ComboboxClear,
   ComboboxContent,
+  ComboboxCreate,
   ComboboxEmpty,
   ComboboxField,
   ComboboxGroup,
@@ -622,6 +1112,7 @@ export {
   ComboboxList,
   ComboboxLoading,
   ComboboxSeparator,
+  ComboboxTextField,
   ComboboxTrigger,
   ComboboxValue,
 }

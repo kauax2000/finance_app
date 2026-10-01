@@ -24,11 +24,27 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
+import { ColorTile } from "@/components/ui/color-tile"
+import {
+    Combobox,
+    ComboboxActions,
+    ComboboxChips,
+    ComboboxClear,
+    ComboboxContent,
+    ComboboxEmpty,
+    ComboboxField,
+    ComboboxGroup,
+    ComboboxInput,
+    ComboboxItem,
+    ComboboxList,
+    ComboboxSeparator,
+    ComboboxTrigger,
+    ComboboxValue,
+} from "@/components/ui/combobox"
 import { SearchInput } from "@/components/ui/search-input"
 import {
     Popover,
     PopoverContent,
-    PopoverHeader,
     PopoverTrigger,
 } from "@/components/ui/popover"
 import { ChevronDownIcon } from "@heroicons/react/16/solid"
@@ -49,6 +65,9 @@ import { cn } from "@/lib/utils"
 // A régua atravessa o recuo da folha pelo `bleed` do `Separator`, que lê
 // `--dialog-px`; aqui fica só o respiro.
 const FILTERS_DRAWER_SECTION_DIVIDER_CLASSNAME = "my-2.5"
+
+/** O valor da linha "Sem categoria" no combobox — nenhum id de categoria o usa. */
+const SEM_CATEGORIA = "__sem_categoria__"
 
 function FilterSection({
     title,
@@ -174,8 +193,6 @@ export function TransactionsFiltersPanel({
     className,
 }: TransactionsFiltersPanelProps) {
     const fieldUid = React.useId()
-    const [categoryQuery, setCategoryQuery] = React.useState("")
-    const [cardQuery, setCardQuery] = React.useState("")
 
     const creditCardSelected = paymentMethods.includes("credit_card")
 
@@ -187,14 +204,6 @@ export function TransactionsFiltersPanel({
         [creditCards]
     )
 
-    const filteredCards = React.useMemo(() => {
-        const q = cardQuery.trim().toLowerCase()
-        if (!q) return sortedCards
-        return sortedCards.filter((c) =>
-            (c.name ?? "").toLowerCase().includes(q)
-        )
-    }, [cardQuery, sortedCards])
-
     const sortedCategories = React.useMemo(
         () =>
             [...categories].sort((a, b) =>
@@ -203,34 +212,46 @@ export function TransactionsFiltersPanel({
         [categories]
     )
 
-    const filteredCategories = React.useMemo(() => {
-        const q = categoryQuery.trim().toLowerCase()
-        if (!q) return sortedCategories
-        return sortedCategories.filter((cat) =>
-            (cat.name ?? "").toLowerCase().includes(q)
-        )
-    }, [categoryQuery, sortedCategories])
-
-    const allCategoryIds = React.useMemo(
-        () => sortedCategories.map((c) => c.id),
-        [sortedCategories]
-    )
-
     const orderedSelectedPaymentMethods = React.useMemo(
         () => PAYMENT_METHOD_VALUES.filter((pm) => paymentMethods.includes(pm)),
         [paymentMethods]
     )
 
-    const orderedSelectedCategories = React.useMemo(
-        () => sortedCategories.filter((c) => categoryIds.includes(c.id)),
-        [sortedCategories, categoryIds]
-    )
+    /* Os rótulos vêm daqui, e não dos itens: o `Combobox` só monta a lista com
+       o painel aberto, e o campo e as fichas precisam do nome antes disso. */
+    const cardLabel = (id: string) => {
+        const c = creditCards.find((card) => card.id === id)
+        return c ? `${c.name} · •••• ${c.last_four}` : "Cartão"
+    }
 
-    const categoriesTriggerLabel = React.useMemo(() => {
-        if (uncategorizedOnly) return "Sem categoria"
-        if (categoryIds.length === 0) return "Todas as categorias"
-        return "Adicionar ou remover categorias"
-    }, [uncategorizedOnly, categoryIds.length])
+    const categoryLabel = (id: string) =>
+        id === SEM_CATEGORIA
+            ? "Sem categoria"
+            : categories.find((c) => c.id === id)?.name?.trim() || "Sem nome"
+
+    // Os callbacks são de alternar um id; o combobox entrega o valor inteiro.
+    const handleCardsChange = (next: string[]) => {
+        for (const id of creditCardIds) if (!next.includes(id)) onToggleCreditCardId(id)
+        for (const id of next) if (!creditCardIds.includes(id)) onToggleCreditCardId(id)
+    }
+
+    const categoriesValue = uncategorizedOnly ? [SEM_CATEGORIA] : categoryIds
+
+    const handleCategoriesChange = (next: string[]) => {
+        // A ausência é exclusiva no combobox: se está no valor, está sozinha.
+        // Ligá-la já zera `categoryIds` em quem guarda o estado.
+        if (next.includes(SEM_CATEGORIA)) {
+            if (!uncategorizedOnly) onUncategorizedOnlyChange(true)
+            return
+        }
+        if (uncategorizedOnly) onUncategorizedOnlyChange(false)
+        if (next.length === 0) {
+            if (categoryIds.length > 0) onClearAllCategories()
+            return
+        }
+        for (const id of categoryIds) if (!next.includes(id)) onToggleCategory(id)
+        for (const id of next) if (!categoryIds.includes(id)) onToggleCategory(id)
+    }
 
     return (
         <div className={cn("space-y-6 pb-1", className)}>
@@ -377,102 +398,65 @@ export function TransactionsFiltersPanel({
 
                     {creditCardSelected ? (
                         <div className="space-y-2.5">
-                            <div className="flex items-center justify-between gap-2">
-                                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                    Cartões
-                                </p>
-                                <div className="flex items-center gap-1">
-                                    <Button
-                                        type="button"
-                                        variant="tertiary"
-                                        size="sm"
-                                        className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground active:text-foreground"
+                            <p
+                                id={`${fieldUid}-cards-label`}
+                                className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                            >
+                                Cartões
+                            </p>
+
+                            {/* O seletor de cartões é o `Combobox multiple`: a busca, o
+                                "selecionar tudo / limpar" e as fichas são dele. Sem
+                                cartão no espaço, o campo fica desligado e diz isso. */}
+                            <Combobox
+                                multiple
+                                value={creditCardIds}
+                                onValueChange={handleCardsChange}
+                            >
+                                <ComboboxField>
+                                    <ComboboxTrigger
+                                        size="xl"
+                                        aria-labelledby={`${fieldUid}-cards-label`}
                                         disabled={sortedCards.length === 0}
-                                        onClick={() => {
-                                            for (const c of sortedCards) {
-                                                if (!creditCardIds.includes(c.id)) {
-                                                    onToggleCreditCardId(c.id)
-                                                }
-                                            }
-                                        }}
                                     >
-                                        Selecionar tudo
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="tertiary"
-                                        size="sm"
-                                        className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground active:text-foreground"
-                                        disabled={creditCardIds.length === 0}
-                                        onClick={() => {
-                                            for (const id of creditCardIds) {
-                                                onToggleCreditCardId(id)
+                                        <ComboboxValue
+                                            placeholder={
+                                                sortedCards.length === 0
+                                                    ? "Nenhum cartão neste espaço"
+                                                    : "Qualquer cartão"
                                             }
-                                        }}
-                                    >
-                                        Limpar
-                                    </Button>
-                                </div>
-                            </div>
-
-                            {/* A busca e o poço de rolagem abaixo ficam à mão de propósito:
-                                o poço rola, e o `overflow-hidden` do `Card` recorta a
-                                rolagem e o anel de foco das caixas de dentro. */}
-                            <div className="rounded-xl border border-border/60 bg-muted/10 p-3 dark:bg-muted/10">
-                                <SearchInput
-                                    placeholder="Buscar cartão…"
-                                    value={cardQuery}
-                                    onChange={(e) => setCardQuery(e.target.value)}
-                                    onClear={() => setCardQuery("")}
-                                    disabled={sortedCards.length === 0}
-                                />
-                                {creditCardIds.length === 0 ? (
-                                    <p className="mt-2 text-xs text-muted-foreground">
-                                        Qualquer cartão
-                                    </p>
-                                ) : null}
-                            </div>
-
-                            <div className="max-h-48 space-y-1 overflow-y-auto rounded-xl border border-border/60 bg-muted/10 p-2 dark:bg-muted/10">
-                                {sortedCards.length === 0 ? (
-                                    <p className="px-2 py-2 text-xs text-muted-foreground">
-                                        Nenhum cartão neste espaço.
-                                    </p>
-                                ) : filteredCards.length === 0 ? (
-                                    <p className="px-2 py-2 text-xs text-muted-foreground">
-                                        Nenhum cartão encontrado.
-                                    </p>
-                                ) : (
-                                    filteredCards.map((c) => {
-                                        const checked = creditCardIds.includes(c.id)
-                                        const id = `${fieldUid}-card-${c.id}`
-                                        return (
-                                            <Field
-                                                orientation="horizontal"
-                                                key={c.id}
-                                                className="flex items-center gap-2 rounded-md px-2 py-1.5"
-                                            >
-                                                <FieldControl>
-                                                <Checkbox
-                                                    id={id}
-                                                    checked={checked}
-                                                    onCheckedChange={() =>
-                                                        onToggleCreditCardId(c.id)
-                                                    }
-                                                />
-                                                </FieldControl>
-                                                <FieldLabel
-                                                    className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-sm font-normal"
-                                                >
-                                                    <span className="truncate">
-                                                        {c.name} · •••• {c.last_four}
-                                                    </span>
-                                                </FieldLabel>
-                                            </Field>
-                                        )
-                                    })
-                                )}
-                            </div>
+                                            overflowCount={Math.max(
+                                                creditCardIds.length - 1,
+                                                0
+                                            )}
+                                        >
+                                            {creditCardIds[0]
+                                                ? cardLabel(creditCardIds[0])
+                                                : null}
+                                        </ComboboxValue>
+                                    </ComboboxTrigger>
+                                    <ComboboxClear />
+                                </ComboboxField>
+                                <ComboboxContent>
+                                    <ComboboxInput placeholder="Buscar cartão…" />
+                                    <ComboboxActions />
+                                    <ComboboxList>
+                                        <ComboboxEmpty>
+                                            Nenhum cartão encontrado.
+                                        </ComboboxEmpty>
+                                        <ComboboxGroup>
+                                            {sortedCards.map((c) => (
+                                                <ComboboxItem key={c.id} value={c.id}>
+                                                    {cardLabel(c.id)}
+                                                </ComboboxItem>
+                                            ))}
+                                        </ComboboxGroup>
+                                    </ComboboxList>
+                                </ComboboxContent>
+                                {/* Verdes como as fichas de forma de pagamento do
+                                    mesmo painel. */}
+                                <ComboboxChips labelFor={cardLabel} tone="success" />
+                            </Combobox>
                         </div>
                     ) : null}
                 </div>
@@ -487,233 +471,86 @@ export function TransactionsFiltersPanel({
 
                     <FilterSection title="Categorias">
                         <div className="space-y-3">
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="xl"
-                                        className="w-full justify-between gap-2 px-3 font-normal"
-                                    >
-                                        <span className="truncate text-left">
-                                            {categoriesTriggerLabel}
-                                        </span>
-                                        <ChevronDownIcon
-                                            className="size-4 shrink-0 opacity-60"
-                                            aria-hidden
-                                        />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent
-                                    align="start"
-                                    className="w-[var(--radix-popover-trigger-width)] max-w-[min(100vw-1.5rem,22rem)] flex flex-col gap-0 overflow-hidden p-0"
-                                >
-                                    <PopoverHeader className="gap-2.5">
-                                        <div className="flex flex-wrap items-center gap-1">
-                                            <Button
-                                                type="button"
-                                                variant="tertiary"
-                                                size="sm"
-                                                className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground active:text-foreground"
-                                                disabled={
-                                                    uncategorizedOnly ||
-                                                    allCategoryIds.length === 0
-                                                }
-                                                onClick={() => {
-                                                    for (const id of allCategoryIds) {
-                                                        if (!categoryIds.includes(id))
-                                                            onToggleCategory(id)
-                                                    }
-                                                }}
-                                            >
-                                                Selecionar tudo
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                variant="tertiary"
-                                                size="sm"
-                                                className="h-7 px-2 text-2xs text-muted-foreground hover:text-foreground active:text-foreground"
-                                                disabled={categoryIds.length === 0}
-                                                onClick={() => {
-                                                    for (const id of categoryIds)
-                                                        onToggleCategory(id)
-                                                }}
-                                            >
-                                                Limpar
-                                            </Button>
-                                        </div>
-                                        <SearchInput
-                                            surface="plate"
-                                            placeholder="Buscar categoria…"
-                                            value={categoryQuery}
-                                            onChange={(e) =>
-                                                setCategoryQuery(e.target.value)
-                                            }
-                                            onClear={() => setCategoryQuery("")}
-                                            disabled={sortedCategories.length === 0}
-                                        />
-                                    </PopoverHeader>
-                                    <div className="max-h-56 overflow-y-auto p-2">
-                                        <div className="space-y-0.5">
-                                            <Field orientation="horizontal" className="flex items-center gap-2 rounded-md px-2 py-1.5">
-                                                <FieldControl>
-                                                <Checkbox
-                                                    id={`${fieldUid}-uncat`}
-                                                    checked={uncategorizedOnly}
-                                                    onCheckedChange={(v) => {
-                                                        const next = v === true
-                                                        onUncategorizedOnlyChange(next)
-                                                    }}
-                                                />
-                                                </FieldControl>
-                                                <FieldLabel
-                                                    className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-sm font-normal"
-                                                >
-                                                    <span
-                                                        className="size-2 shrink-0 rounded-full border border-dashed border-muted-foreground/60 bg-muted/30"
-                                                        aria-hidden
-                                                    />
-                                                    <span className="truncate">
-                                                        Sem categoria
-                                                    </span>
-                                                </FieldLabel>
-                                            </Field>
-                                            {sortedCategories.length === 0 ? (
-                                                <p className="px-2 py-2 text-xs text-muted-foreground">
-                                                    Nenhuma categoria neste espaço.
-                                                </p>
-                                            ) : filteredCategories.length === 0 ? (
-                                                <p className="px-2 py-2 text-xs text-muted-foreground">
-                                                    Nenhuma categoria encontrada.
-                                                </p>
-                                            ) : (
-                                                filteredCategories.map((cat) => {
-                                                    const checked = categoryIds.includes(
-                                                        cat.id
-                                                    )
-                                                    return (
-                                                        <Field
-                                                            orientation="horizontal"
-                                                            key={cat.id}
-                                                            className={cn(
-                                                                "flex items-center gap-2 rounded-md px-2 py-1.5",
-                                                                uncategorizedOnly
-                                                                    ? "opacity-60"
-                                                                    : "hover:bg-muted/50"
-                                                            )}
-                                                        >
-                                                            <FieldControl>
-                                                            <Checkbox
-                                                                id={`${fieldUid}-cat-${cat.id}`}
-                                                                checked={checked}
-                                                                disabled={
-                                                                    uncategorizedOnly
-                                                                }
-                                                                onCheckedChange={() =>
-                                                                    onToggleCategory(
-                                                                        cat.id
-                                                                    )
-                                                                }
-                                                            />
-                                                            </FieldControl>
-                                                            <FieldLabel
-                                                                className={cn(
-                                                                    "flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-sm font-normal",
-                                                                    uncategorizedOnly &&
-                                                                        "cursor-not-allowed"
-                                                                )}
-                                                            >
-                                                                <span
-                                                                    className="size-2 shrink-0 rounded-full"
-                                                                    style={{
-                                                                        backgroundColor:
-                                                                            cat.color ||
-                                                                            "var(--muted-foreground)",
-                                                                    }}
-                                                                    aria-hidden
-                                                                />
-                                                                <span className="truncate">
-                                                                    {cat.name}
-                                                                </span>
-                                                            </FieldLabel>
-                                                        </Field>
-                                                    )
-                                                })
+                            {/* A categoria é o `Combobox multiple`. "Sem categoria" é a
+                                linha de ausência — exclusiva: escolhê-la solta as
+                                outras, e o contrário —, que é o que a caixa
+                                desligada fazia antes. A tela guarda duas coisas
+                                (`categoryIds` e `uncategorizedOnly`), e o
+                                `handleCategoriesChange` traduz o valor único. */}
+                            <Combobox
+                                multiple
+                                value={categoriesValue}
+                                onValueChange={handleCategoriesChange}
+                            >
+                                <ComboboxField>
+                                    <ComboboxTrigger size="xl" aria-label="Categorias">
+                                        <ComboboxValue
+                                            placeholder="Todas as categorias"
+                                            none={uncategorizedOnly}
+                                            overflowCount={Math.max(
+                                                categoriesValue.length - 1,
+                                                0
                                             )}
-                                        </div>
-                                    </div>
-                                </PopoverContent>
-                            </Popover>
-
-                            {orderedSelectedCategories.length >= 2 ? (
-                                <div className="flex justify-end">
-                                    <Button
-                                        type="button"
-                                        variant="tertiary"
-                                        size="sm"
-                                        className="h-8 px-2 text-2xs text-muted-foreground hover:text-foreground active:text-foreground"
-                                        disabled={uncategorizedOnly}
-                                        onClick={onClearAllCategories}
-                                        aria-label="Limpar todas as categorias selecionadas"
-                                    >
-                                        Limpar todas as categorias
-                                    </Button>
-                                </div>
-                            ) : null}
-
-                            {uncategorizedOnly ||
-                            orderedSelectedCategories.length > 0 ? (
-                                <div className="flex flex-wrap gap-1.5">
-                                    {uncategorizedOnly ? (
-                                        <Badge
-                                            tone="success"
-                                            className="inline-flex items-center gap-1.5 pr-1.5"
-                                            title="Sem categoria"
                                         >
-                                            <span className="min-w-0 max-w-[12rem] truncate">
-                                                Sem categoria
-                                            </span>
-                                            <FilterChipRemoveButton
-                                                aria-label="Remover filtro sem categoria"
-                                                onClick={() =>
-                                                    onUncategorizedOnlyChange(false)
-                                                }
-                                            />
-                                        </Badge>
-                                    ) : null}
-                                    {orderedSelectedCategories.map((cat) => {
-                                        const name =
-                                            cat.name?.trim() || "Sem nome"
-                                        return (
-                                            <Badge
-                                                key={cat.id}
-                                                tone="success"
-                                                className="inline-flex items-center gap-1.5 pr-1.5"
-                                                title={name}
+                                            {categoriesValue[0]
+                                                ? categoryLabel(categoriesValue[0])
+                                                : null}
+                                        </ComboboxValue>
+                                    </ComboboxTrigger>
+                                    <ComboboxClear />
+                                </ComboboxField>
+                                <ComboboxContent>
+                                    <ComboboxInput placeholder="Buscar categoria…" />
+                                    <ComboboxActions />
+                                    <ComboboxList>
+                                        <ComboboxEmpty>
+                                            Nenhuma categoria encontrada.
+                                        </ComboboxEmpty>
+                                        <ComboboxGroup>
+                                            <ComboboxItem
+                                                value={SEM_CATEGORIA}
+                                                variant="none"
                                             >
-                                                <span
-                                                    className="size-2 shrink-0 rounded-full"
-                                                    style={{
-                                                        backgroundColor:
-                                                            cat.color ||
-                                                            "var(--muted-foreground)",
-                                                    }}
-                                                    aria-hidden
-                                                />
-                                                <span className="min-w-0 max-w-[12rem] truncate">
-                                                    {name}
-                                                </span>
-                                                <FilterChipRemoveButton
-                                                    aria-label={`Remover ${name}`}
-                                                    onClick={() =>
-                                                        onToggleCategory(cat.id)
-                                                    }
-                                                />
-                                            </Badge>
+                                                Sem categoria
+                                            </ComboboxItem>
+                                        </ComboboxGroup>
+                                        {sortedCategories.length > 0 ? (
+                                            <>
+                                                <ComboboxSeparator />
+                                                <ComboboxGroup>
+                                                    {sortedCategories.map((cat) => (
+                                                        <ComboboxItem
+                                                            key={cat.id}
+                                                            value={cat.id}
+                                                            media={
+                                                                <ColorTile
+                                                                    size="xs"
+                                                                    color={cat.color}
+                                                                />
+                                                            }
+                                                        >
+                                                            {categoryLabel(cat.id)}
+                                                        </ComboboxItem>
+                                                    ))}
+                                                </ComboboxGroup>
+                                            </>
+                                        ) : null}
+                                    </ComboboxList>
+                                </ComboboxContent>
+                                <ComboboxChips
+                                    labelFor={categoryLabel}
+                                    tone="success"
+                                    mediaFor={(id) =>
+                                        id === SEM_CATEGORIA ? null : (
+                                            <ColorTile
+                                                size="xs"
+                                                color={categories.find((c) => c.id === id)?.color}
+                                                className="size-3.5"
+                                            />
                                         )
-                                    })}
-                                </div>
-                            ) : null}
+                                    }
+                                />
+                            </Combobox>
                         </div>
                     </FilterSection>
 
