@@ -2,7 +2,13 @@
 
 import * as React from "react"
 import { Slot } from "radix-ui"
-import { ChevronRightIcon, EllipsisHorizontalIcon } from "@heroicons/react/16/solid"
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  EllipsisHorizontalIcon,
+} from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -42,6 +48,19 @@ import {
  * 2. **`truncate` nos ancestrais** cobre o rótulo único e longo ("Nubank
  *    Ultravioleta"), que contagem nenhuma resolve. A página atual é `shrink-0`
  *    e só cede depois que todos os ancestrais já cederam.
+ *
+ * ## Rodada 202
+ *
+ * - **`BreadcrumbSwitcher`**: a página atual com um menu dos irmãos —
+ *   "Cartões › Nubank ▾" troca de cartão sem voltar à lista.
+ * - **`collapse="back"`**: abaixo de `sm`, a trilha vira um só "‹ Pai", o
+ *   voltar para o degrau de cima; acima, a trilha inteira.
+ * - **`icon`** no `BreadcrumbLink`: o ícone antes do rótulo, ou sozinho (a
+ *   casa de "Início") com o nome em `aria-label`.
+ * - **`separator`** por nome: `"chevron"` (o padrão), `"slash"` e `"dot"`.
+ * - **`BreadcrumbPage asChild`**: a página atual pode ser o `<h1>` da tela,
+ *   que é o que a barra do app precisava para deixar de escrever a trilha à
+ *   mão.
  */
 
 const breadcrumbSizes = {
@@ -49,13 +68,20 @@ const breadcrumbSizes = {
     list: "gap-1.5 text-xs",
     icon: "size-3",
     ellipsis: "size-4",
+    // O ícone de um degrau acompanha o corpo do texto, um degrau acima do
+    // chevron — ele é conteúdo, o chevron é pontuação.
+    link: "[&_svg]:size-3.5",
   },
   md: {
     list: "gap-2 text-sm",
     icon: "size-3.5",
     ellipsis: "size-4",
+    link: "[&_svg]:size-4",
   },
 } as const
+
+/** Os desenhos de separador por nome (rodada 202). */
+type BreadcrumbSeparatorPreset = "chevron" | "slash" | "dot"
 
 type BreadcrumbSize = keyof typeof breadcrumbSizes
 
@@ -79,12 +105,19 @@ function BreadcrumbList({
   maxItems = 4,
   separator,
   size = "md",
+  collapse = "menu",
   ...props
 }: Omit<React.ComponentProps<"ol">, "children"> & {
   children?: React.ReactNode
   maxItems?: number
-  separator?: React.ReactNode
+  /** Um desenho por nome, ou um nó para a lista toda. */
+  separator?: BreadcrumbSeparatorPreset | React.ReactNode
   size?: BreadcrumbSize
+  /**
+   * `menu` dobra o miolo em reticências quando passa de `maxItems`. `back`
+   * faz, além disso, a trilha virar um só "‹ Pai" abaixo de `sm`.
+   */
+  collapse?: "menu" | "back"
 }) {
   const items = React.Children.toArray(children).filter(React.isValidElement)
   const limite = maxItems > 0 ? Math.max(3, maxItems) : 0
@@ -97,7 +130,17 @@ function BreadcrumbList({
     visiveis = [items[0], null, ...items.slice(items.length - 2)]
   }
 
-  const glifo = separator ?? <BreadcrumbSeparator />
+  const glifo =
+    separator == null || typeof separator === "string" ? (
+      <BreadcrumbSeparator preset={(separator as BreadcrumbSeparatorPreset) ?? "chevron"} />
+    ) : (
+      separator
+    )
+
+  // O voltar do telefone: o link do degrau de cima, com a seta para a
+  // esquerda. Sem degrau de cima não há para onde voltar, e a trilha fica.
+  const pai = items.length >= 2 ? items[items.length - 2] : null
+  const voltar = collapse === "back" && pai ? <BreadcrumbBack item={pai} /> : null
 
   return (
     <BreadcrumbSizeContext.Provider value={size}>
@@ -113,14 +156,46 @@ function BreadcrumbList({
         )}
         {...props}
       >
+        {voltar}
         {visiveis.map((item, i) => (
           <React.Fragment key={i}>
-            {i > 0 ? glifo : null}
-            {item ?? <BreadcrumbMenu>{escondidos}</BreadcrumbMenu>}
+            {i > 0 ? (voltar ? soNoDesktop(glifo) : glifo) : null}
+            {voltar
+              ? soNoDesktop(item ?? <BreadcrumbMenu>{escondidos}</BreadcrumbMenu>)
+              : (item ?? <BreadcrumbMenu>{escondidos}</BreadcrumbMenu>)}
           </React.Fragment>
         ))}
       </ol>
     </BreadcrumbSizeContext.Provider>
+  )
+}
+
+/**
+ * Com `collapse="back"`, a trilha some abaixo de `sm`. Cada degrau é um `<li>`
+ * filho do `<ol>`, então a classe vai **nele**: um invólucro em volta de um
+ * `<li>` deixaria a lista inválida.
+ */
+function soNoDesktop(no: React.ReactNode) {
+  if (!React.isValidElement(no)) return no
+  const el = no as React.ReactElement<{ className?: string }>
+  return React.cloneElement(el, { className: cn(el.props.className, "max-sm:hidden") })
+}
+
+/**
+ * O "‹ Pai" do telefone (rodada 202): o link do degrau de cima, com a seta
+ * para a esquerda. Só abaixo de `sm`; acima, a trilha inteira.
+ */
+function BreadcrumbBack({ item }: { item: React.ReactElement }) {
+  const link = desembrulharLink(item)
+  return (
+    <li data-slot="breadcrumb-back" className="inline-flex min-w-0 items-center sm:hidden">
+      {React.isValidElement(link)
+        ? React.cloneElement(
+            link as React.ReactElement<{ icon?: React.ReactNode }>,
+            { icon: <ChevronLeftIcon /> }
+          )
+        : link}
+    </li>
   )
 }
 
@@ -159,21 +234,50 @@ function BreadcrumbLink({
   asChild,
   className,
   variant = "trail",
+  icon,
+  children,
   ...props
 }: React.ComponentProps<"a"> & {
   asChild?: boolean
   variant?: "trail" | "menu"
+  /**
+   * O ícone antes do rótulo (rodada 202). Sem rótulo, o degrau é só o ícone —
+   * a casa de "Início" —, e o nome vai em `aria-label`.
+   */
+  icon?: React.ReactNode
 }) {
   const Comp = asChild ? Slot.Root : "a"
+  const size = React.useContext(BreadcrumbSizeContext)
+  // Com `asChild`, o rótulo é o filho do filho: o ícone entra dentro dele, ao
+  // lado do texto, pelo `Slottable`.
+  const conteudo = icon ? (
+    asChild && React.isValidElement(children) ? (
+      React.cloneElement(
+        children as React.ReactElement<{ children?: React.ReactNode }>,
+        undefined,
+        icon,
+        (children as React.ReactElement<{ children?: React.ReactNode }>).props.children
+      )
+    ) : (
+      <>
+        {icon}
+        {children}
+      </>
+    )
+  ) : (
+    children
+  )
 
   if (variant === "menu") {
     return (
       <Comp
         data-slot="breadcrumb-link"
         data-variant="menu"
-        className={cn("w-full", className)}
+        className={cn("w-full", icon && "inline-flex items-center gap-1.5", className)}
         {...props}
-      />
+      >
+        {conteudo}
+      </Comp>
     )
   }
 
@@ -196,10 +300,14 @@ function BreadcrumbLink({
         // É a mesma conta que a `PaginationLink` documenta ao recusar a área
         // expandida.
         "pointer-coarse:after:absolute pointer-coarse:after:-inset-x-1 pointer-coarse:after:-inset-y-3 pointer-coarse:after:content-['']",
+        // Com ícone, o link vira uma linha de dois: o ícone não trunca.
+        icon && ["inline-flex items-center gap-1", breadcrumbSizes[size].link],
         className
       )}
       {...props}
-    />
+    >
+      {conteudo}
+    </Comp>
   )
 }
 
@@ -214,9 +322,20 @@ function BreadcrumbLink({
  * `font-medium` porque "você está aqui" era dito só por uma tinta um degrau
  * mais escura — diferença que some numa varredura rápida.
  */
-function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
+function BreadcrumbPage({
+  className,
+  asChild = false,
+  ...props
+}: React.ComponentProps<"span"> & {
+  /**
+   * A página atual como outro elemento — o `<h1>` da tela, na barra do app
+   * (rodada 202). A trilha continua dizendo `aria-current`.
+   */
+  asChild?: boolean
+}) {
+  const Comp = asChild ? Slot.Root : "span"
   return (
-    <span
+    <Comp
       data-slot="breadcrumb-page"
       aria-current="page"
       className={cn("truncate font-medium text-foreground", className)}
@@ -228,9 +347,23 @@ function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
 function BreadcrumbSeparator({
   children,
   className,
+  preset = "chevron",
   ...props
-}: React.ComponentProps<"li">) {
+}: React.ComponentProps<"li"> & {
+  /** O desenho, quando não há `children` (rodada 202). */
+  preset?: BreadcrumbSeparatorPreset
+}) {
   const size = React.useContext(BreadcrumbSizeContext)
+  // A barra e o ponto são texto, quietos (`/60`): pontuação, não sinal. O
+  // chevron é o ícone de sempre.
+  const desenho =
+    preset === "slash" ? (
+      <span className="text-muted-foreground/60">/</span>
+    ) : preset === "dot" ? (
+      <span className="text-muted-foreground/60">·</span>
+    ) : (
+      <ChevronRightIcon className={breadcrumbSizes[size].icon} />
+    )
 
   return (
     <li
@@ -246,7 +379,7 @@ function BreadcrumbSeparator({
       className={cn("shrink-0 [&>svg]:block", className)}
       {...props}
     >
-      {children ?? <ChevronRightIcon className={breadcrumbSizes[size].icon} />}
+      {children ?? desenho}
     </li>
   )
 }
@@ -294,10 +427,14 @@ function BreadcrumbEllipsis({
  * Junto vai `variant="menu"`, que tira do link a apresentação da trilha: ali a
  * geometria é do item de menu.
  */
-function desembrulhar(item: React.ReactElement): React.ReactNode {
+function desembrulharLink(item: React.ReactElement): React.ReactNode {
   const filho = (item.props as { children?: React.ReactNode }).children
-  const unico = React.Children.toArray(filho).filter(React.isValidElement)[0]
-  if (!unico) return item
+  return React.Children.toArray(filho).filter(React.isValidElement)[0] ?? item
+}
+
+function desembrulhar(item: React.ReactElement): React.ReactNode {
+  const unico = desembrulharLink(item)
+  if (unico === item || !React.isValidElement(unico)) return item
   return React.cloneElement(unico as React.ReactElement<{ variant?: string }>, {
     variant: "menu",
   })
@@ -364,6 +501,97 @@ function BreadcrumbMenu({
   )
 }
 
+/**
+ * A página atual com um menu dos irmãos (rodada 202): "Cartões › Nubank ▾"
+ * troca de cartão sem voltar à lista. Ele **é** o último degrau — vai dentro
+ * do `BreadcrumbItem` no lugar do `BreadcrumbPage` —, e por isso o gatilho
+ * leva `aria-current="page"` e a tinta e o peso da página atual. O rótulo é
+ * `children`; os irmãos são `BreadcrumbSwitcherItem`. O gatilho não cresce a
+ * linha: a caixa é a do texto, com 4px de recuo dos lados devolvidos por
+ * margem.
+ */
+function BreadcrumbSwitcher({
+  children,
+  items,
+  label = "Trocar",
+  className,
+}: {
+  /** O nome da página atual. */
+  children: React.ReactNode
+  /** Os irmãos — `BreadcrumbSwitcherItem`. */
+  items: React.ReactNode
+  /** O nome do menu, para o leitor de tela: "Trocar de cartão". */
+  label?: string
+  className?: string
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="tertiary"
+          size="xs"
+          aria-current="page"
+          className={cn(
+            // A caixa é a do texto: sem recuo vertical e sem a borda
+            // transparente do `Button` — com os dois a linha ia de 20 a 26,
+            // medido. Os 4px dos lados voltam por margem.
+            "-mx-1 h-auto min-w-0 gap-1 rounded-sm border-0 px-1 py-0 font-medium text-foreground",
+            "[font-size:inherit] [line-height:inherit]",
+            "pointer-coarse:after:absolute pointer-coarse:after:-inset-x-1 pointer-coarse:after:-inset-y-3 pointer-coarse:after:content-['']",
+            className
+          )}
+        >
+          <span className="truncate">{children}</span>
+          <span className="sr-only">, {label}</span>
+          <ChevronDownIcon
+            aria-hidden
+            className="size-3.5 text-muted-foreground transition-transform duration-(--duration-base) group-aria-expanded/button:rotate-180"
+          />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" size="md" aria-label={label}>
+        {items}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+/**
+ * Um irmão no menu do `BreadcrumbSwitcher`. `asChild` com o `<Link>` do Next;
+ * `current` marca o de agora com o tique e `aria-current`.
+ */
+function BreadcrumbSwitcherItem({
+  current = false,
+  children,
+  className,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuItem> & { current?: boolean }) {
+  const filho = React.isValidElement(children) && props.asChild
+    ? React.cloneElement(
+        children as React.ReactElement<{ children?: React.ReactNode; "aria-current"?: string }>,
+        { "aria-current": current ? "page" : undefined },
+        (children as React.ReactElement<{ children?: React.ReactNode }>).props.children,
+        current ? <CheckIcon aria-hidden className="ms-auto" /> : null
+      )
+    : children
+  return (
+    <DropdownMenuItem
+      data-current={current || undefined}
+      className={cn(current && "font-medium", className)}
+      {...props}
+    >
+      {props.asChild ? (
+        filho
+      ) : (
+        <>
+          {children}
+          {current ? <CheckIcon aria-hidden className="ms-auto" /> : null}
+        </>
+      )}
+    </DropdownMenuItem>
+  )
+}
+
 export {
   Breadcrumb,
   BreadcrumbEllipsis,
@@ -373,4 +601,6 @@ export {
   BreadcrumbMenu,
   BreadcrumbPage,
   BreadcrumbSeparator,
+  BreadcrumbSwitcher,
+  BreadcrumbSwitcherItem,
 }

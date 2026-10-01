@@ -1,8 +1,13 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
-import { Button } from "@/components/ui/button"
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+} from "@/components/ui/breadcrumb"
 import {
     APP_PAGE_TITLES,
     APP_SUB_PAGE_TITLES,
@@ -42,41 +47,24 @@ export function AppBreadcrumbNav({ pathname }: AppBreadcrumbNavProps) {
         )
     }
 
+    // A trilha do sistema (rodada 202): era um link, um chevron e o `<h1>`
+    // escritos à mão, com uma largura máxima cravada no ancestral no lugar da
+    // regra de quem cede. O `<h1>` continua sendo a página atual, pelo
+    // `asChild`.
     return (
-        <div className="flex min-w-0 items-center gap-2 text-sm">
-            <Link
-                href={subPage.parent}
-                className="min-w-0 max-w-[45%] truncate text-muted-foreground hover:text-foreground active:text-foreground transition-colors"
-            >
-                {subPage.parentTitle}
-            </Link>
-            <ChevronRightIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <h1 className="min-w-0 flex-1 truncate text-base font-medium leading-none text-foreground">
-                {subPage.title}
-            </h1>
-        </div>
-    )
-}
-
-type SubPageBackButtonProps = {
-    pathname: string
-}
-
-export function SubPageBackButton({ pathname }: SubPageBackButtonProps) {
-    const subPage = resolveAppSubPageMeta(pathname)
-
-    if (!subPage) {
-        return null
-    }
-
-    return (
-        <div className="-mt-2">
-            <Button variant="tertiary" size="sm" asChild className="gap-2">
-                <Link href={subPage.parent}>
-                    <ArrowLeftIcon className="h-4 w-4" />
-                    Voltar
-                </Link>
-            </Button>
-        </div>
+        <Breadcrumb className="min-w-0">
+            <BreadcrumbList>
+                <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                        <Link href={subPage.parent}>{subPage.parentTitle}</Link>
+                    </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbItem>
+                    <BreadcrumbPage asChild>
+                        <h1 className="text-base leading-none">{subPage.title}</h1>
+                    </BreadcrumbPage>
+                </BreadcrumbItem>
+            </BreadcrumbList>
+        </Breadcrumb>
     )
 }

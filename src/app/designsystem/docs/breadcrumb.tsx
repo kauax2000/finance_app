@@ -1,20 +1,27 @@
 "use client"
 
+import { HomeIcon } from "@heroicons/react/16/solid"
+
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
+  BreadcrumbSwitcher,
+  BreadcrumbSwitcherItem,
 } from "@/components/ui/breadcrumb"
+import { Caption } from "@/components/ui/typography"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 export default function BreadcrumbDoc() {
   return (
     <>
       <Usage>
-        A trilha até onde a pessoa está, para telas de três níveis ou mais. Numa
-        tela de primeiro nível, uma trilha de um item só é ruído.
+        A trilha até onde a pessoa está, para telas abaixo do primeiro nível.
+        Numa tela de primeiro nível, uma trilha de um item só é ruído. A barra
+        do app a usa nas subpáginas (Minha conta › Sessões ativas, Cartões ›
+        Detalhes do cartão).
       </Usage>
 
       <DocSection
@@ -30,6 +37,27 @@ export default function BreadcrumbDoc() {
       >
         <Breadcrumb>
           <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="#">Categorias</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+              <BreadcrumbPage>Mercado</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </DocSection>
+
+      <DocSection
+        title="Com ícone"
+        description="icon põe o ícone antes do rótulo. Sem rótulo, o degrau é só o ícone — a casa de “Início” — e o nome vai em aria-label."
+        code={`<BreadcrumbLink href="/" icon={<HomeIcon />} aria-label="Início" />`}
+        previewClassName="items-start"
+      >
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="#" icon={<HomeIcon />} aria-label="Início" />
+            </BreadcrumbItem>
             <BreadcrumbItem>
               <BreadcrumbLink href="#">Categorias</BreadcrumbLink>
             </BreadcrumbItem>
@@ -94,35 +122,99 @@ export default function BreadcrumbDoc() {
       </DocSection>
 
       <DocSection
-        title="Tamanho"
-        description="sm quando a trilha divide a linha com outra coisa. Ele encolhe o texto, o chevron e as reticências juntos."
-        code={`<BreadcrumbList size="sm">…</BreadcrumbList>`}
+        title="Tamanho e separador"
+        description="sm quando a trilha divide a linha com outra coisa: encolhe o texto, o chevron e as reticências juntos. separator escolhe o desenho por nome — chevron (o padrão), slash ou dot —, uma vez para a lista toda."
+        code={`<BreadcrumbList size="sm" separator="slash">…</BreadcrumbList>`}
         previewClassName="flex-col items-start gap-3"
       >
+        {([
+          ["md", "chevron"],
+          ["sm", "chevron"],
+          ["md", "slash"],
+          ["md", "dot"],
+        ] as const).map(([tamanho, sep]) => (
+          <div key={tamanho + sep} className="flex items-center gap-4">
+            <Caption className="w-28 font-mono">
+              {tamanho} · {sep}
+            </Caption>
+            <Breadcrumb>
+              <BreadcrumbList size={tamanho} separator={sep}>
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="#">Assinaturas</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="#">Streaming</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Spotify</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+        ))}
+      </DocSection>
+
+      <DocSection
+        title="Trocar de irmão"
+        description="BreadcrumbSwitcher é a página atual com um menu dos irmãos: “Cartões › Nubank ▾” troca de cartão sem voltar à lista. O gatilho tem a tinta e o peso da página atual e aria-current; a escolhida leva o tique."
+        code={`<BreadcrumbItem>
+  <BreadcrumbSwitcher
+    label="Trocar de cartão"
+    items={cartoes.map((c) => (
+      <BreadcrumbSwitcherItem key={c.id} asChild current={c.id === atual}>
+        <Link href={\`/credit-cards/\${c.id}\`}>{c.nome}</Link>
+      </BreadcrumbSwitcherItem>
+    ))}
+  >
+    Nubank
+  </BreadcrumbSwitcher>
+</BreadcrumbItem>`}
+        previewClassName="items-start"
+      >
         <Breadcrumb>
-          <BreadcrumbList size="sm">
+          <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="#">Assinaturas</BreadcrumbLink>
+              <BreadcrumbLink href="#">Cartões</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbItem>
-              <BreadcrumbPage>Spotify</BreadcrumbPage>
+              <BreadcrumbSwitcher
+                label="Trocar de cartão"
+                items={["Nubank", "Inter", "C6 Bank"].map((nome) => (
+                  <BreadcrumbSwitcherItem key={nome} asChild current={nome === "Nubank"}>
+                    <a href="#">{nome}</a>
+                  </BreadcrumbSwitcherItem>
+                ))}
+              >
+                Nubank
+              </BreadcrumbSwitcher>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
+      </DocSection>
+
+      <DocSection
+        title="No telefone, voltar"
+        description="collapse=&quot;back&quot;: abaixo de sm a trilha vira um só “‹ Pai” — o link do degrau de cima —, em vez de truncar; acima, a trilha inteira. A página atual já é o título logo abaixo. Estreite a janela para ver."
+        code={`<BreadcrumbList collapse="back">…</BreadcrumbList>`}
+        previewClassName="items-start"
+      >
         <Breadcrumb>
-          <BreadcrumbList size="md">
+          <BreadcrumbList collapse="back">
             <BreadcrumbItem>
-              <BreadcrumbLink href="#">Assinaturas</BreadcrumbLink>
+              <BreadcrumbLink href="#">Minha conta</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbItem>
-              <BreadcrumbPage>Spotify</BreadcrumbPage>
+              <BreadcrumbLink href="#">Segurança</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+              <BreadcrumbPage>Sessões ativas</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
       </DocSection>
 
       <DocNote title="A lista é dona dos separadores">
-        Não escreva <code>&lt;BreadcrumbSeparator /&gt;</code> à mão: é por pôr os separadores que a lista sabe quais filhos são degraus e consegue dobrar o miolo. Para trocar o glifo, passe <code>separator</code> uma vez.
+        Não escreva <code>&lt;BreadcrumbSeparator /&gt;</code> à mão: é por pôr os separadores que a lista sabe quais filhos são degraus e consegue dobrar o miolo — e montar o voltar do telefone. Para trocar o glifo, passe <code>separator</code> uma vez, por nome ou como nó.
       </DocNote>
 
       <DocNote title="Ela nunca vira duas linhas">
@@ -137,8 +229,8 @@ export default function BreadcrumbDoc() {
         Crescer de verdade empurraria a linha do cabeçalho. Em ponteiro grosso o <code>::after</code> soma 12px na vertical e 4px na horizontal — metade do <code>gap</code>, para vizinhos encostarem sem se sobrepor.
       </DocNote>
 
-      <DocNote title="Ele vai dentro do PageHeader">
-        <code>PageHeaderBreadcrumb</code> o põe acima do título, na largura inteira. Fora dali, a trilha disputa a primeira linha com o título.
+      <DocNote title="Ele vai dentro do PageHeader, ou é o título da barra">
+        <code>PageHeaderBreadcrumb</code> o põe acima do título, na largura inteira. Na barra do app ele é o próprio título das subpáginas: o último degrau é o <code>&lt;h1&gt;</code>, por <code>BreadcrumbPage asChild</code> — a barra escrevia link, chevron e <code>&lt;h1&gt;</code> à mão, com <code>max-w-[45%]</code> no lugar da regra de quem cede.
       </DocNote>
 
       <PropsTable
@@ -153,9 +245,15 @@ export default function BreadcrumbDoc() {
           },
           {
             prop: "separator",
-            type: "React.ReactNode",
-            default: "<BreadcrumbSeparator />",
-            description: "Troca o glifo entre os degraus, uma vez para a lista toda.",
+            type: '"chevron" | "slash" | "dot" | ReactNode',
+            default: '"chevron"',
+            description: "O glifo entre os degraus, por nome ou como nó, uma vez para a lista toda.",
+          },
+          {
+            prop: "collapse",
+            type: '"menu" | "back"',
+            default: '"menu"',
+            description: "back: abaixo de sm, a trilha vira “‹ Pai”.",
           },
           {
             prop: "size",
@@ -183,13 +281,23 @@ export default function BreadcrumbDoc() {
           },
           {
             prop: "BreadcrumbLink",
-            type: "ComponentProps<'a'> & { asChild }",
-            description: "Ancestral navegável. asChild para o <Link> do Next.",
+            type: "ComponentProps<'a'> & { asChild, icon }",
+            description: "Ancestral navegável. asChild para o <Link> do Next; icon antes do rótulo, ou sozinho com aria-label.",
           },
           {
             prop: "BreadcrumbPage",
-            type: "ComponentProps<'span'>",
-            description: "A página atual. aria-current, sem papel de link.",
+            type: "ComponentProps<'span'> & { asChild }",
+            description: "A página atual. aria-current, sem papel de link; asChild para ser o <h1>.",
+          },
+          {
+            prop: "BreadcrumbSwitcher",
+            type: "{ children, items, label }",
+            description: "A página atual com o menu dos irmãos; items são BreadcrumbSwitcherItem.",
+          },
+          {
+            prop: "BreadcrumbSwitcherItem",
+            type: "DropdownMenuItem & { current }",
+            description: "Um irmão; current leva o tique e aria-current.",
           },
           {
             prop: "BreadcrumbMenu",

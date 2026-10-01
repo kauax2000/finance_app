@@ -2049,6 +2049,14 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   foca; sem modificadora, não dispara dentro de campo de texto),
   `variant="brand"` (só em `field`) e `pending`. **Nenhuma busca é `<Input
   type="search">` nem pílula escrita à mão.**
+- **`Breadcrumb` troca de irmão, volta no telefone, leva ícone e separador por
+  nome** (rodada 202). `BreadcrumbSwitcher` é a página atual com um menu dos
+  irmãos ("Cartões › Nubank ▾"), sem crescer a linha; `collapse="back"`
+  troca a trilha por "‹ Pai" abaixo de `sm` (a classe vai em cada `<li>`, que
+  um invólucro deixaria a lista inválida); `BreadcrumbLink icon`, sozinho com
+  `aria-label` para a raiz; `separator="chevron" | "slash" | "dot"`; e
+  `BreadcrumbPage asChild`, para a página atual ser o `<h1>`. **A barra do
+  app é o `Breadcrumb`**: ela escrevia link, chevron e `<h1>` à mão.
 - **`AlertDialog` tem o andamento, o ícone, a lista, o erro e o "digite
   para confirmar"** (rodada 201). `pending` na raiz trava a ação (com o
   `Spinner` e o `pendingLabel`) e o Cancelar, marca `aria-busy` e **segura o

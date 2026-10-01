@@ -16592,3 +16592,34 @@ O dono pediu a rodada completa e escolheu as quatro versões.
   passou a escolher só o glifo. Os botões da referência (contorno e
   preenchido) não foram copiados: o rodapé segue a hierarquia do sistema.
 
+### Rodada 202 — o Breadcrumb troca de irmão, volta no telefone, leva ícone e separador por nome
+
+O dono pediu a rodada completa e escolheu as quatro versões.
+
+- **A barra do app escrevia a trilha à mão** (`components/layout/
+  breadcrumb.tsx`): um `Link`, um `ChevronRightIcon` e o `<h1>`, com
+  `max-w-[45%]` no ancestral no lugar da regra do sistema (quem cede é o
+  caminho, nunca o destino). Para migrar, o `BreadcrumbPage` ganhou
+  `asChild`: a página atual da barra é o `<h1>` da tela. O mesmo arquivo
+  exportava um `SubPageBackButton` que ninguém importava, e ele saiu.
+- **`BreadcrumbSwitcher`**: a página atual com um menu dos irmãos, com
+  `aria-current` no gatilho e o tique e `aria-current` no irmão de agora.
+  **A primeira versão crescia a linha de 20 para 26px** — o recuo vertical e
+  a borda transparente do `Button` —, e o gatilho passou a ter a caixa do
+  texto (medido: 20). A seta gira ao abrir; uma captura no meio do giro
+  parecia um defeito e não era (medida parada, `rotate: none`).
+- **`collapse="back"`**: abaixo de `sm`, só "‹ Pai" (o link do degrau de
+  cima, clonado com a seta); acima, a trilha inteira. A primeira versão
+  embrulhava os degraus num `<span class="contents">`, que deixaria o `<ol>`
+  com filhos que não são `<li>`; a classe passou a ir em cada degrau. Medido
+  a 375px: só "‹ Segurança" visível, sem transbordo; no desktop, os três
+  degraus.
+- **`icon`** no `BreadcrumbLink` (16px no `md`, 14 no `sm`), e o degrau só
+  com ícone leva o nome em `aria-label` — medido, a linha continua em 20.
+- **`separator`** por nome: `chevron` (o padrão), `slash` e `dot` — a barra
+  e o ponto em texto quieto (`/60`).
+- A página deixou de dizer "telas de três níveis ou mais" (a barra do app
+  usa trilhas de dois), juntou tamanho e separador numa seção só e ganhou o
+  trocador e o voltar. A barra do app pede login e não foi vista; o teste
+  da rodada confere a migração no fonte e a trilha renderizada.
+
