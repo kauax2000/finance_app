@@ -436,7 +436,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("accordion", "Accordion", "Seções expansíveis.", ui("accordion"), "Accordion, AccordionItem, AccordionTrigger, AccordionContent, AccordionToggleAll"),
   entry("alert-dialog", "Alert Dialog", "Confirmação de uma ação sem volta.", ui("alert-dialog"), "AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogMedia, AlertDialogList, AlertDialogError, AlertDialogConfirmInput"),
   entry("breadcrumb", "Breadcrumb", "A trilha até a tela atual.", ui("breadcrumb"), "Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbMenu, BreadcrumbSwitcher, BreadcrumbSwitcherItem"),
-  entry("calendar", "Calendar", "A grade de um mês.", ui("calendar"), "Calendar, CalendarDayButton"),
+  entry("calendar", "Calendar", "A grade de um mês — escolha, intervalo com atalhos, marcadores e agenda.", ui("calendar"), "Calendar, CalendarDayButton"),
   entry("card", "Card", "Cartão de conteúdo e painel.", ui("card"), "Card, CardToolbar, CardContent, CardNote, CardMedia"),
   entry("carousel", "Carousel", "Itens que deslizam na horizontal ou na vertical — uma biblioteca de versões sobre um motor só.", ui("carousel"), "Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext, CarouselDots, CarouselStatus, CarouselToolbar, CarouselCaption, CarouselPlayPause, CarouselSteps, CarouselStep, CarouselThumbs, CarouselThumb"),
   entry("chart", "Chart", "Gráficos ligados aos tokens do tema.", ui("chart"), "ChartArea, ChartBars, ChartContainer, ChartDonut, ChartHeatmap, ChartLine, ChartRadar, ChartRadial, ChartSparkline, ChartSplit"),

@@ -2049,6 +2049,16 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   foca; sem modificadora, não dispara dentro de campo de texto),
   `variant="brand"` (só em `field`) e `pending`. **Nenhuma busca é `<Input
   type="search">` nem pílula escrita à mão.**
+- **`Calendar` tem marcadores, agenda, o Hoje e os atalhos de intervalo**
+  (rodada 203). `markers` põe pontos por tom sob o número (até três), com a
+  legenda e os rótulos no nome do dia; `variant="agenda"` + `renderDay` é a
+  visão de mês, com o conteúdo na célula; `showToday` volta ao mês atual;
+  `presets` põe atalhos ao lado de um intervalo e dois meses no desktop;
+  `stretch` estica a grade. **O dia só é botão com `mode` ou `onDayClick`** —
+  sem eles o `react-day-picker` desenha texto, e o miolo (pontos, agenda)
+  também entra no dia estático. **O calendário de pagamentos do dashboard é
+  o `Calendar`**: as duas grades eram escritas à mão, com os pontos em
+  cinco cores cruas e um popover por célula.
 - **`Breadcrumb` troca de irmão, volta no telefone, leva ícone e separador por
   nome** (rodada 202). `BreadcrumbSwitcher` é a página atual com um menu dos
   irmãos ("Cartões › Nubank ▾"), sem crescer a linha; `collapse="back"`

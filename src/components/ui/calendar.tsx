@@ -4,7 +4,9 @@ import * as React from "react"
 import {
   DayPicker,
   getDefaultClassNames,
+  type DateRange,
   type DayButton,
+  type Matcher,
 } from "react-day-picker"
 
 import { ptBR } from "date-fns/locale"
@@ -24,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
+import { useIsMobile } from "@/hooks/use-mobile"
 /**
  * A grade de um mês.
  *
@@ -85,6 +88,78 @@ const ROTULOS_PT_BR = {
   },
 } satisfies Partial<React.ComponentProps<typeof DayPicker>["labels"]>
 
+/**
+ * ## Rodada 203
+ *
+ * - **`markers`**: pontos sob o número do dia, por tom (até três por dia),
+ *   com a legenda embaixo e os rótulos somados ao nome do dia. O calendário
+ *   de pagamentos do dashboard escrevia a grade inteira à mão, com os pontos
+ *   em `after:` de cinco cores cruas.
+ * - **`variant="agenda"`**: a célula grande, com o conteúdo do dia
+ *   (`renderDay`) sob o número — a visão de mês. A grade do desktop do mesmo
+ *   calendário também era escrita à mão.
+ * - **`showToday`**: o "Hoje" que volta ao mês atual (e marca o dia, na
+ *   escolha única). Antes, só seta a seta.
+ * - **`presets`**: atalhos ao lado da grade num intervalo, e dois meses lado a
+ *   lado no desktop (um no telefone).
+ */
+
+type CalendarMarkerTone =
+  | "default"
+  | "primary"
+  | "info"
+  | "success"
+  | "warning"
+  | "destructive"
+  | "income"
+  | "expense"
+
+/** Um tipo de marcador: as datas, o tom do ponto e o nome (legenda e leitor de tela). */
+type CalendarMarker = {
+  dates: Matcher | Matcher[]
+  tone: CalendarMarkerTone
+  label: string
+}
+
+/** O ponto de cada tom — os tokens semânticos, nunca a paleta crua. */
+const MARCADOR_TOM: Record<CalendarMarkerTone, string> = {
+  default: "bg-muted-foreground",
+  // A tinta da marca — o traço fino sobre o fundo é sempre o acento.
+  primary: "bg-primary-accent",
+  info: "bg-info",
+  success: "bg-success",
+  warning: "bg-warning",
+  destructive: "bg-destructive",
+  income: "bg-income",
+  expense: "bg-expense",
+}
+
+/** Um atalho de intervalo. `range` pode ser calculado na hora do clique. */
+type CalendarPreset = {
+  label: string
+  range: DateRange | (() => DateRange)
+}
+
+type CalendarExtras = {
+  markers: CalendarMarker[]
+  agenda: boolean
+  renderDay?: (date: Date) => React.ReactNode
+  showToday: boolean
+  presets?: CalendarPreset[]
+  irPara: (mes: Date) => void
+  escolher: (valor: Date | DateRange) => void
+  modo?: string
+  selecionado?: unknown
+}
+
+const CalendarExtrasContext = React.createContext<CalendarExtras>({
+  markers: [],
+  agenda: false,
+  showToday: false,
+  irPara: () => {},
+  escolher: () => {},
+})
+
 const CALENDAR_CELL: Record<CalendarSize, string> = {
   sm: "[--cell-size:--spacing(7)]",
   md: "[--cell-size:--spacing(8)]",
@@ -104,12 +179,100 @@ function Calendar({
   formatters,
   labels,
   components,
+  markers = [],
+  variant = "default",
+  renderDay,
+  showToday = false,
+  presets,
+  stretch = false,
+  numberOfMonths,
+  modifiers,
   ...props
 }: React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>["variant"]
   size?: CalendarSize
+  /** Pontos sob o número do dia, por tom — até três por dia. */
+  markers?: CalendarMarker[]
+  /** `agenda` é a célula grande, com o conteúdo do dia sob o número. */
+  variant?: "default" | "agenda"
+  /** Com `agenda`: o que vai na célula, sob o número. */
+  renderDay?: (date: Date) => React.ReactNode
+  /** O "Hoje" que volta ao mês atual. */
+  showToday?: boolean
+  /** Atalhos ao lado da grade, para `mode="range"`. */
+  presets?: CalendarPreset[]
+  /**
+   * A grade ocupa a largura de quem a contém, e as células crescem com ela.
+   * O padrão é a largura das células (`w-fit`); a agenda já estica.
+   */
+  stretch?: boolean
 }) {
   const defaultClassNames = getDefaultClassNames()
+  const agenda = variant === "agenda"
+  const isMobile = useIsMobile()
+
+  // O mês só passa a ser controlado aqui quando alguém de fora da grade o
+  // move — o "Hoje" e os atalhos. Sem eles, o `DayPicker` segue dono, como
+  // sempre foi, e o `DatePicker` não sente diferença.
+  const controlaMes = showToday || presets != null
+  const [mesInterno, setMesInterno] = React.useState<Date>(
+    () => props.month ?? props.defaultMonth ?? new Date()
+  )
+  const irPara = React.useCallback(
+    (mes: Date) => {
+      setMesInterno(mes)
+      props.onMonthChange?.(mes)
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [props.onMonthChange]
+  )
+  const onSelect = (props as { onSelect?: (v: unknown) => void }).onSelect
+  const escolher = React.useCallback(
+    (valor: Date | DateRange) => onSelect?.(valor),
+    [onSelect]
+  )
+
+  // Os marcadores viram modificadores do `react-day-picker` — `marker-0`,
+  // `marker-1`… —, e a célula lê quais estão ligados nela.
+  const modificadores = React.useMemo(() => {
+    const m: Record<string, Matcher | Matcher[] | undefined> = { ...modifiers }
+    markers.forEach((mk, i) => {
+      m[`marker-${i}`] = mk.dates
+    })
+    return m
+  }, [markers, modifiers])
+
+  const extras = React.useMemo<CalendarExtras>(
+    () => ({
+      markers,
+      agenda,
+      renderDay,
+      showToday,
+      presets,
+      irPara,
+      escolher,
+      modo: props.mode,
+      selecionado: (props as { selected?: unknown }).selected,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [markers, agenda, renderDay, showToday, presets, irPara, escolher, props.mode, (props as { selected?: unknown }).selected]
+  )
+
+  // O nome do dia soma os marcadores: "5 de março, assinatura, parcela".
+  const rotuloDia = React.useCallback(
+    (date: Date, mods: Record<string, boolean | undefined>) => {
+      const base = (labels?.labelDayButton ?? ROTULOS_PT_BR.labelDayButton)(
+        date,
+        mods as never
+      )
+      const nomes = markers.filter((_, i) => mods[`marker-${i}`]).map((mk) => mk.label)
+      return nomes.length ? `${base}, ${nomes.join(", ")}` : base
+    },
+    [labels, markers]
+  )
+
+  // Um intervalo com atalhos ganha dois meses lado a lado no desktop.
+  const meses = numberOfMonths ?? (presets && props.mode === "range" && !isMobile ? 2 : 1)
 
   // Um objeto novo a cada render faz o React remontar toda a subárvore — o foco
   // caía depois de clicar "próximo mês" sempre que o pai re-renderizava. Os
@@ -118,14 +281,16 @@ function Calendar({
     React.ComponentProps<typeof DayPicker>["components"]
   >(
     () => ({
-      Root: ({ className, rootRef, ...props }) => {
+      Root: ({ className, rootRef, children, ...props }) => {
         return (
           <div
             data-slot="calendar"
             ref={rootRef}
             className={cn(className)}
             {...props}
-          />
+          >
+            <CalendarShell>{children}</CalendarShell>
+          </div>
         )
       },
       Chevron: ({ className, orientation, ...props }) => {
@@ -146,6 +311,9 @@ function Calendar({
         )
       },
       DayButton: ({ ...props }) => <CalendarDayButton {...props} />,
+      Day: ({ day, modifiers, ...props }) => (
+        <CalendarDay day={day} modifiers={modifiers as Record<string, boolean>} {...props} />
+      ),
       Dropdown: ({ options, value, onChange, disabled, "aria-label": rotulo }) => (
         <CalendarDropdown
           options={options}
@@ -201,8 +369,14 @@ function Calendar({
   )
 
   return (
+    <CalendarExtrasContext.Provider value={extras}>
     <DayPicker
       showOutsideDays={showOutsideDays}
+      numberOfMonths={meses}
+      modifiers={modificadores}
+      {...(controlaMes
+        ? { month: props.month ?? mesInterno, onMonthChange: irPara }
+        : {})}
       // A grade inteira sai de `--cell-size`. Em ponteiro grosso ela vai de
       // 28px para 44px, o mínimo de alvo de dedo que a página
       // /designsystem/touch-safe-area documenta — 7 células de 44px cabem em
@@ -210,6 +384,8 @@ function Calendar({
       className={cn(
         "group/calendar bg-background p-2 [--cell-radius:var(--radius-md)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
         CALENDAR_CELL[size],
+        // A agenda ocupa a largura de quem a contém, e a célula cresce com ela.
+        agenda && "p-0",
         // O toque vence a escada, e vem depois dela de propósito: 44px é piso
         // de alvo, não um degrau a mais.
         "pointer-coarse:[--cell-size:--spacing(11)]",
@@ -223,9 +399,9 @@ function Calendar({
         formatMonthDropdown: (date) => formatMonthShortPtBr(date),
         ...formatters,
       }}
-      labels={{ ...ROTULOS_PT_BR, ...labels }}
+      labels={{ ...ROTULOS_PT_BR, ...labels, labelDayButton: rotuloDia as never, labelGridcell: rotuloDia as never }}
       classNames={{
-        root: cn("w-fit", defaultClassNames.root),
+        root: cn(agenda || stretch ? "w-full" : "w-fit", defaultClassNames.root),
         months: cn(
           "relative flex flex-col gap-4 md:flex-row",
           defaultClassNames.months
@@ -275,12 +451,16 @@ function Calendar({
           defaultClassNames.caption_label
         ),
         table: "w-full border-collapse",
-        weekdays: cn("flex", defaultClassNames.weekdays),
+        // Na agenda as semanas têm vão de 4px; o cabeçalho acompanha, senão
+        // os nomes desalinham das colunas.
+        weekdays: cn("flex", agenda && "gap-1", defaultClassNames.weekdays),
         weekday: cn(
           "flex-1 rounded-(--cell-radius) text-control-sm font-normal text-muted-foreground select-none",
+          // Na agenda, o cabeçalho é a régua da coluna: versalete pequeno.
+          agenda && "pb-1 text-2xs font-medium tracking-wide uppercase",
           defaultClassNames.weekday
         ),
-        week: cn("mt-2 flex w-full", defaultClassNames.week),
+        week: cn(agenda ? "mt-1 flex w-full gap-1" : "mt-2 flex w-full", defaultClassNames.week),
         week_number_header: cn(
           "w-(--cell-size) select-none",
           defaultClassNames.week_number_header
@@ -291,6 +471,7 @@ function Calendar({
         ),
         day: cn(
           "group/day relative aspect-square h-full w-full rounded-(--cell-radius) p-0 text-center select-none [&:last-child[data-selected=true]_button]:rounded-r-(--cell-radius)",
+          agenda && "aspect-auto",
           props.showWeekNumber
             ? "[&:nth-child(2)[data-selected=true]_button]:rounded-l-(--cell-radius)"
             : "[&:first-child[data-selected=true]_button]:rounded-l-(--cell-radius)",
@@ -328,6 +509,98 @@ function Calendar({
       components={componentes}
       {...props}
     />
+    </CalendarExtrasContext.Provider>
+  )
+}
+
+/**
+ * O que a raiz acrescenta em volta da grade: os atalhos do intervalo (ao lado
+ * no desktop, em cima no telefone), o "Hoje" e a legenda dos marcadores. Lê o
+ * contexto, e não as props, para os `components` do `DayPicker` continuarem
+ * os mesmos entre renders — um objeto novo remontaria a grade e soltaria o
+ * foco (ver o comentário em `componentes`).
+ */
+function CalendarShell({ children }: { children: React.ReactNode }) {
+  const { presets, showToday, markers, irPara, escolher, modo, selecionado } =
+    React.useContext(CalendarExtrasContext)
+  const hoje = () => {
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    return d
+  }
+  const intervaloAtual = selecionado as DateRange | undefined
+
+  const grade = (
+    <div className="flex min-w-0 flex-col">
+      {children}
+      {markers.length > 0 ? (
+        <ul
+          data-slot="calendar-legend"
+          className="mt-3 flex flex-wrap gap-x-3 gap-y-1 px-1 text-xs text-muted-foreground"
+        >
+          {markers.map((mk) => (
+            <li key={mk.label} className="inline-flex items-center gap-1.5">
+              <span aria-hidden className={cn("size-1.5 rounded-full", MARCADOR_TOM[mk.tone])} />
+              {mk.label}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {showToday ? (
+        <div className="mt-2 flex justify-center">
+          <Button
+            type="button"
+            variant="tertiary"
+            size="xs"
+            onClick={() => {
+              const d = hoje()
+              irPara(d)
+              if (modo === "single") escolher(d)
+            }}
+          >
+            hoje
+          </Button>
+        </div>
+      ) : null}
+    </div>
+  )
+
+  if (!presets?.length) return grade
+
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row">
+      <ul
+        data-slot="calendar-presets"
+        aria-label="Atalhos de período"
+        className="flex gap-1 overflow-x-auto sm:w-36 sm:shrink-0 sm:flex-col sm:overflow-visible sm:border-e sm:border-border sm:pe-2"
+      >
+        {presets.map((p) => {
+          const alvo = typeof p.range === "function" ? p.range() : p.range
+          const ativo =
+            intervaloAtual?.from?.toDateString() === alvo.from?.toDateString() &&
+            intervaloAtual?.to?.toDateString() === alvo.to?.toDateString()
+          return (
+            <li key={p.label} className="shrink-0">
+              <Button
+                type="button"
+                variant={ativo ? "secondary" : "tertiary"}
+                size="sm"
+                aria-pressed={ativo}
+                className="w-full justify-start font-normal"
+                onClick={() => {
+                  const r = typeof p.range === "function" ? p.range() : p.range
+                  escolher(r)
+                  if (r.from) irPara(r.from)
+                }}
+              >
+                {p.label}
+              </Button>
+            </li>
+          )
+        })}
+      </ul>
+      {grade}
+    </div>
   )
 }
 
@@ -408,13 +681,112 @@ function CalendarDropdown({
   )
 }
 
+/** A célula da agenda: alta, o número no canto e o conteúdo embaixo. */
+const AGENDA_CELULA =
+  "aspect-auto min-h-24 items-stretch justify-start gap-1 rounded-lg border border-border/60 bg-card p-1.5 text-left"
+
+/**
+ * O miolo do dia, igual no botão e no dia estático: na agenda, o número (hoje
+ * numa pastilha) e o conteúdo; fora dela, o número e os pontos dos marcadores.
+ */
+function DiaConteudo({
+  day,
+  modifiers,
+  children,
+}: {
+  day: { date: Date }
+  modifiers: Record<string, boolean>
+  children: React.ReactNode
+}) {
+  const { markers, agenda, renderDay } = React.useContext(CalendarExtrasContext)
+  if (agenda) {
+    return (
+      <>
+        <span
+          data-slot="calendar-day-number"
+          className={cn(
+            "inline-flex size-6 items-center justify-center self-start rounded-full text-xs font-semibold tabular-nums",
+            modifiers.today && "bg-primary text-primary-foreground"
+          )}
+        >
+          {children}
+        </span>
+        <span data-slot="calendar-day-content" className="w-full min-w-0 flex-1">
+          {renderDay?.(day.date)}
+        </span>
+      </>
+    )
+  }
+  const pontos = markers
+    .map((mk, i) => (modifiers[`marker-${i}`] ? mk : null))
+    .filter((mk): mk is CalendarMarker => mk != null)
+  return (
+    <>
+      {children}
+      {pontos.length > 0 ? (
+        // Os pontos ficam na base da célula, sem empurrar o número.
+        <span
+          data-slot="calendar-markers"
+          aria-hidden
+          className="pointer-events-none absolute bottom-1 left-1/2 flex -translate-x-1/2 gap-0.5"
+        >
+          {pontos.slice(0, 3).map((mk) => (
+            <span key={mk.label} className={cn("size-1 rounded-full", MARCADOR_TOM[mk.tone])} />
+          ))}
+        </span>
+      ) : null}
+    </>
+  )
+}
+
+/**
+ * O dia **estático**. O `react-day-picker` só desenha o dia como botão quando
+ * a grade é interativa (`mode` ou `onDayClick`); sem isso a célula recebe o
+ * número em texto, e a agenda e os pontos — que moram no botão — sumiam
+ * calados num calendário só de leitura. Aqui o mesmo miolo entra no dia
+ * estático. Medido: a agenda sem `onDayClick` saía só com "12" na célula.
+ */
+function CalendarDay({
+  day,
+  modifiers,
+  children,
+  ...props
+}: React.ComponentProps<"td"> & {
+  day: { date: Date }
+  modifiers: Record<string, boolean>
+}) {
+  const { markers, agenda } = React.useContext(CalendarExtrasContext)
+  const estatico = !React.isValidElement(children)
+  return (
+    <td {...props}>
+      {estatico && (agenda || markers.length > 0) ? (
+        <div
+          data-slot="calendar-day-static"
+          className={cn(
+            "relative flex aspect-square size-full flex-col items-center justify-center text-sm leading-none tabular-nums",
+            agenda && AGENDA_CELULA
+          )}
+        >
+          <DiaConteudo day={day} modifiers={modifiers}>
+            {children}
+          </DiaConteudo>
+        </div>
+      ) : (
+        children
+      )}
+    </td>
+  )
+}
+
 function CalendarDayButton({
   className,
   day,
   modifiers,
+  children,
   ...props
 }: React.ComponentProps<typeof DayButton>) {
   const defaultClassNames = getDefaultClassNames()
+  const { agenda } = React.useContext(CalendarExtrasContext)
 
   const ref = React.useRef<HTMLButtonElement>(null)
   React.useEffect(() => {
@@ -452,11 +824,20 @@ function CalendarDayButton({
         // célula.
         "relative isolate z-10 flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 border-0 p-0 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-3 group-data-[focused=true]/day:ring-ring/45 data-[range-end=true]:rounded-r-(--cell-radius) data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground data-[range-middle=true]:rounded-none data-[range-middle=true]:bg-muted data-[range-middle=true]:text-foreground data-[range-start=true]:rounded-l-(--cell-radius) data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground dark:hover:text-foreground [&>span]:text-xs [&>span]:opacity-70",
         defaultClassNames.day,
+        // A agenda: a célula alta, o número no canto e o conteúdo do dia
+        // embaixo. Contorno e chão próprios, e o "hoje" é o número numa
+        // pastilha, não a célula inteira acesa.
+        agenda && [AGENDA_CELULA, "hover:bg-muted/40 active:bg-muted/40"],
         className
       )}
       {...props}
-    />
+    >
+      <DiaConteudo day={day} modifiers={modifiers}>
+        {children}
+      </DiaConteudo>
+    </Button>
   )
 }
 
 export { Calendar, CalendarDayButton }
+export type { CalendarMarker, CalendarPreset }

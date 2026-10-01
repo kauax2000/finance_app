@@ -17,9 +17,9 @@ import {
     Popover,
     PopoverAnchor,
     PopoverContent,
-    PopoverTrigger,
     PopoverTitle,
 } from "@/components/ui/popover"
+import { Calendar, type CalendarMarker } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 import { currencyBRL } from "@/lib/formatters"
 import { labelYearMonthPt, parseYearMonth } from "@/lib/budget-month"
@@ -36,141 +36,10 @@ import type {
     UpcomingPaymentRow,
 } from "@/components/dashboard/payment-events"
 
-const WEEKDAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
-
-const MOBILE_DAY_MODIFIER_DOT = {
-    hasSub: "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-info",
-    hasInst:
-        "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-warning",
-    hasBills:
-        "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-primary",
-    hasCard:
-        "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-muted-foreground",
-    hasPosted:
-        "relative after:absolute after:bottom-0.5 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-success",
-} as const
-
-type PaymentModifierDateSets = {
-    sub: Date[]
-    inst: Date[]
-    bills: Date[]
-    card: Date[]
-    posted: Date[]
-}
-
-function ymdInModifierDates(ymd: string, dates: Date[]): boolean {
-    return dates.some((d) => localYmdFromDate(d) === ymd)
-}
-
-function mobileDayModifierClasses(
-    ymd: string,
-    sets: PaymentModifierDateSets,
-): string {
-    return cn(
-        ymdInModifierDates(ymd, sets.sub) && MOBILE_DAY_MODIFIER_DOT.hasSub,
-        ymdInModifierDates(ymd, sets.inst) && MOBILE_DAY_MODIFIER_DOT.hasInst,
-        ymdInModifierDates(ymd, sets.bills) && MOBILE_DAY_MODIFIER_DOT.hasBills,
-        ymdInModifierDates(ymd, sets.card) && MOBILE_DAY_MODIFIER_DOT.hasCard,
-        ymdInModifierDates(ymd, sets.posted) &&
-            MOBILE_DAY_MODIFIER_DOT.hasPosted,
-    )
-}
-
-function MobilePaymentsCalendarGrid({
-    cells,
-    todayYmd,
-    modifierDates,
-    byYmd,
-    onDayWithEventsClick,
-}: {
-    cells: { ymd: string; inMonth: boolean; label: number }[]
-    todayYmd: string
-    modifierDates: PaymentModifierDateSets
-    byYmd: Map<string, PaymentEvent[]>
-    onDayWithEventsClick: (ymd: string, anchor: HTMLElement) => void
-}) {
-    return (
-        <div className="min-w-0 w-full shrink-0 rounded-lg border border-border/60 p-1">
-            <div className="mb-2 grid grid-cols-7 gap-1">
-                {WEEKDAYS.map((d) => (
-                    <div
-                        key={d}
-                        className="px-1 py-1 text-center text-2xs font-medium uppercase tracking-wide text-muted-foreground"
-                    >
-                        {d}
-                    </div>
-                ))}
-            </div>
-            <div className="grid grid-cols-7 gap-1 [grid-auto-rows:minmax(2.5rem,1fr)]">
-                {cells.map((cell) => {
-                    const list = byYmd.get(cell.ymd) ?? []
-                    const hasEvents = list.length > 0
-                    const isToday = cell.ymd === todayYmd
-                    return (
-                        // Cru de propósito: é a célula da grade do calendário
-                        // (número do dia, "hoje", fora do mês, com ou sem evento),
-                        // e o `Button` impõe altura e alinhamento que a grade não quer.
-                        <button
-                            key={cell.ymd}
-                            type="button"
-                            data-payment-ymd={cell.ymd}
-                            disabled={!hasEvents}
-                            onClick={(e) => {
-                                if (!hasEvents) return
-                                onDayWithEventsClick(
-                                    cell.ymd,
-                                    e.currentTarget,
-                                )
-                            }}
-                            className={cn(
-                                "flex min-h-10 w-full flex-col items-center justify-center rounded-md text-xs font-semibold tabular-nums transition-colors",
-                                !cell.inMonth && "opacity-40",
-                                isToday &&
-                                    "ring-2 ring-primary-accent ring-offset-2 ring-offset-background",
-                                hasEvents
-                                    ? "hover:bg-muted/40"
-                                    : "cursor-default hover:bg-transparent",
-                                mobileDayModifierClasses(
-                                    cell.ymd,
-                                    modifierDates,
-                                ),
-                                cell.inMonth
-                                    ? "text-foreground"
-                                    : "text-muted-foreground",
-                            )}
-                        >
-                            {cell.label}
-                        </button>
-                    )
-                })}
-            </div>
-        </div>
-    )
-}
-
 function paymentEventAmountTone(kind: PaymentEventKind) {
     if (kind === "posted_income") return "income" as const
     if (kind === "posted_expense") return "expense" as const
     return "default" as const
-}
-
-function buildCells(ym: string): { ymd: string; inMonth: boolean; label: number }[] {
-    const { y, m } = parseYearMonth(ym)
-    const first = new Date(y, m - 1, 1)
-    const mondayPad = (first.getDay() + 6) % 7
-    const cur = new Date(first)
-    cur.setDate(first.getDate() - mondayPad)
-    const out: { ymd: string; inMonth: boolean; label: number }[] = []
-    for (let i = 0; i < 42; i++) {
-        const ymd = localYmdFromDate(cur)
-        out.push({
-            ymd,
-            inMonth: cur.getMonth() === m - 1,
-            label: cur.getDate(),
-        })
-        cur.setDate(cur.getDate() + 1)
-    }
-    return out
 }
 
 /** Linhas por dia, cada dia em ordem estável de `id`. */
@@ -413,7 +282,10 @@ export function DashboardPaymentsCalendar({
 }) {
     const isMobile = useIsMobile()
     const byYmd = React.useMemo(() => groupByYmd(events), [events])
-    const cells = React.useMemo(() => buildCells(calendarYm), [calendarYm])
+    const calendarMonth = React.useMemo(() => {
+        const { y, m } = parseYearMonth(calendarYm)
+        return new Date(y, m - 1, 1)
+    }, [calendarYm])
 
     const modifierDates = React.useMemo(() => {
         const sub: Date[] = []
@@ -432,6 +304,28 @@ export function DashboardPaymentsCalendar({
         }
         return { sub, inst, bills, card, posted }
     }, [events])
+
+    // Os pontos da grade do telefone, um tom por tipo — os tokens semânticos
+    // no lugar das cinco cores cruas que a grade escrita à mão usava.
+    const paymentMarkers = React.useMemo<CalendarMarker[]>(
+        () => [
+            { dates: modifierDates.sub, tone: "info", label: "Assinatura" },
+            { dates: modifierDates.inst, tone: "warning", label: "Parcela" },
+            { dates: modifierDates.bills, tone: "primary", label: "Conta a pagar" },
+            { dates: modifierDates.card, tone: "default", label: "Fatura do cartão" },
+            { dates: modifierDates.posted, tone: "success", label: "Lançado" },
+        ],
+        [modifierDates],
+    )
+
+    // O conteúdo da célula da agenda: as fichas do dia, até duas.
+    const renderAgendaDay = React.useCallback(
+        (date: Date) => {
+            const list = byYmd.get(localYmdFromDate(date)) ?? []
+            return list.length > 0 ? <EventChips events={list} max={2} /> : null
+        },
+        [byYmd],
+    )
 
     const mobileGrouped = React.useMemo(() => {
         const keys = [...byYmd.keys()].sort()
@@ -475,7 +369,7 @@ export function DashboardPaymentsCalendar({
         const shell = mobileCalendarShellRef.current
         const live =
             shell?.querySelector<HTMLElement>(
-                `[data-payment-ymd="${mobileDayPopoverYmd}"]`,
+                `button[data-day="${mobileDayPopoverYmd}"]`,
             ) ?? null
         if (live) {
             mobileCalendarDayAnchorRef.current = live
@@ -593,77 +487,84 @@ export function DashboardPaymentsCalendar({
                         )}
                     </div>
                     <div className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-4 p-3 md:p-4">
-                {isMobile ? (
-                    <>
-                        <div
-                            ref={mobileCalendarShellRef}
-                            className="min-w-0 w-full shrink-0"
+                {/* As duas grades são o `Calendar` (rodada 203): a do
+                    telefone com os pontos por tipo de evento, a do desktop na
+                    agenda, com as fichas do dia. Eram escritas à mão — botões
+                    crus, os pontos em cinco cores cruas, e um popover por
+                    célula no desktop. Agora um popover só, ancorado no dia
+                    clicado, serve as duas. */}
+                <div ref={mobileCalendarShellRef} className={isMobile ? "min-w-0 w-full shrink-0" : "overflow-x-auto"}>
+                    <div className={isMobile ? undefined : "min-w-180"}>
+                        <Calendar
+                            variant={isMobile ? "default" : "agenda"}
+                            stretch
+                            month={calendarMonth}
+                            weekStartsOn={1}
+                            hideNavigation
+                            disableNavigation
+                            showOutsideDays
+                            markers={isMobile ? paymentMarkers : undefined}
+                            renderDay={renderAgendaDay}
+                            modifiers={{ vazio: (d) => !byYmd.has(localYmdFromDate(d)) }}
+                            modifiersClassNames={{ vazio: "[&>button]:cursor-default" }}
+                            classNames={{ month_caption: "sr-only" }}
+                            className={isMobile ? "rounded-lg border border-border/60 p-1" : undefined}
+                            onDayClick={(date, _mods, e) => {
+                                const ymd = localYmdFromDate(date)
+                                if (!byYmd.has(ymd)) return
+                                mobileCalendarDayAnchorRef.current = e.currentTarget as HTMLElement
+                                setMobileDayPopoverYmd(ymd)
+                            }}
+                        />
+                    </div>
+                </div>
+                {mobileDayPopoverYmd ? (
+                    <Popover
+                        modal={isMobile}
+                        open
+                        onOpenChange={(open) => {
+                            if (!open) {
+                                setMobileDayPopoverYmd(null)
+                                mobileCalendarDayAnchorRef.current = null
+                            }
+                        }}
+                    >
+                        <PopoverAnchor
+                            virtualRef={
+                                mobileCalendarDayAnchorRef as React.RefObject<{
+                                    getBoundingClientRect: () => DOMRect
+                                }>
+                            }
+                        />
+                        <PopoverContent
+                            side="bottom"
+                            align={isMobile ? "center" : "start"}
+                            sideOffset={6}
+                            className="w-[min(calc(100vw-2rem),18rem)] max-w-[min(calc(100vw-2rem),18rem)] p-2"
+                            aria-describedby={undefined}
                         >
-                            <MobilePaymentsCalendarGrid
-                                cells={cells}
-                                todayYmd={todayYmd}
-                                modifierDates={modifierDates}
-                                byYmd={byYmd}
-                                onDayWithEventsClick={(ymd, anchor) => {
-                                    mobileCalendarDayAnchorRef.current = anchor
-                                    setMobileDayPopoverYmd(ymd)
+                            <PopoverTitle className="sr-only">
+                                Lançamentos do dia{" "}
+                                {formatYmdPtBr(mobileDayPopoverYmd)}
+                            </PopoverTitle>
+                            <p className="mb-2 text-xs font-medium text-muted-foreground">
+                                {formatYmdPtBr(mobileDayPopoverYmd)}
+                            </p>
+                            <PaymentDayEventsListContent
+                                events={byYmd.get(mobileDayPopoverYmd) ?? []}
+                                onTransactionPostedClick={(id) => {
+                                    closeMobileDayPopover()
+                                    onTransactionPostedClick(id)
+                                }}
+                                onPaymentEventPreview={(e) => {
+                                    closeMobileDayPopover()
+                                    onPaymentEventPreview(e)
                                 }}
                             />
-                        </div>
-                        {mobileDayPopoverYmd ? (
-                            <Popover
-                                modal
-                                open
-                                onOpenChange={(open) => {
-                                    if (!open) {
-                                        setMobileDayPopoverYmd(null)
-                                        mobileCalendarDayAnchorRef.current =
-                                            null
-                                    }
-                                }}
-                            >
-                                <PopoverAnchor
-                                    virtualRef={
-                                        mobileCalendarDayAnchorRef as React.RefObject<{
-                                            getBoundingClientRect: () => DOMRect
-                                        }>
-                                    }
-                                />
-                                <PopoverContent
-                                    side="bottom"
-                                    align="center"
-                                    sideOffset={6}
-                                    className="w-[min(calc(100vw-2rem),18rem)] max-w-[min(calc(100vw-2rem),18rem)] p-2"
-                                    aria-describedby={undefined}
-                                >
-                                    <PopoverTitle className="sr-only">
-                                        Lançamentos do dia{" "}
-                                        {formatYmdPtBr(
-                                            mobileDayPopoverYmd,
-                                        )}
-                                    </PopoverTitle>
-                                    <p className="mb-2 text-xs font-medium text-muted-foreground">
-                                        {formatYmdPtBr(
-                                            mobileDayPopoverYmd,
-                                        )}
-                                    </p>
-                                    <PaymentDayEventsListContent
-                                        events={
-                                            byYmd.get(mobileDayPopoverYmd) ??
-                                            []
-                                        }
-                                        onTransactionPostedClick={(id) => {
-                                            closeMobileDayPopover()
-                                            onTransactionPostedClick(id)
-                                        }}
-                                        onPaymentEventPreview={(e) => {
-                                            closeMobileDayPopover()
-                                            onPaymentEventPreview(e)
-                                        }}
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                        ) : null}
+                        </PopoverContent>
+                    </Popover>
+                ) : null}
+                {isMobile ? (
                         <div className="relative z-0 space-y-3">
                             {mobileGroupedForList.length === 0 ? (
                                 <p className="py-6 text-center text-sm text-muted-foreground">
@@ -720,86 +621,7 @@ export function DashboardPaymentsCalendar({
                                 ))
                             )}
                         </div>
-                    </>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <div className="min-w-[720px]">
-                            <div className="grid grid-cols-7 gap-1">
-                                {WEEKDAYS.map((d) => (
-                                    <div
-                                        key={d}
-                                        className="px-1 py-1 text-center text-2xs font-medium uppercase tracking-wide text-muted-foreground"
-                                    >
-                                        {d}
-                                    </div>
-                                ))}
-                                {cells.map((cell) => {
-                                    const list = byYmd.get(cell.ymd) ?? []
-                                    const isToday = cell.ymd === todayYmd
-                                    return (
-                                        <Popover key={cell.ymd}>
-                                            <PopoverTrigger asChild>
-                                                {/* Cru de propósito, como a célula da grade compacta:
-                                                    é o dia do calendário, não um botão de ação. */}
-                                                <button
-                                                    type="button"
-                                                    disabled={list.length === 0}
-                                                    className={cn(
-                                                        "flex min-h-24 flex-col rounded-lg border border-border/60 bg-card p-1.5 text-left transition-colors hover:bg-muted/20",
-                                                        !cell.inMonth &&
-                                                            "opacity-40",
-                                                        isToday &&
-                                                            "ring-2 ring-primary-accent ring-offset-2 ring-offset-background",
-                                                        list.length === 0 &&
-                                                            "cursor-default hover:bg-card"
-                                                    )}
-                                                >
-                                                    <span
-                                                        className={cn(
-                                                            "text-xs font-semibold tabular-nums",
-                                                            cell.inMonth
-                                                                ? "text-foreground"
-                                                                : "text-muted-foreground"
-                                                        )}
-                                                    >
-                                                        {cell.label}
-                                                    </span>
-                                                    <div className="mt-1 flex-1">
-                                                        {list.length > 0 ? (
-                                                            <EventChips
-                                                                events={list}
-                                                                max={2}
-                                                            />
-                                                        ) : null}
-                                                    </div>
-                                                </button>
-                                            </PopoverTrigger>
-                                            <PopoverContent
-                                                className="w-72 p-2"
-                                                align="start"
-                                            >
-                                                <PopoverTitle className="mb-2 text-xs font-medium text-muted-foreground">
-                                                    {formatYmdPtBr(
-                                                        cell.ymd,
-                                                    )}
-                                                </PopoverTitle>
-                                                <PaymentDayEventsListContent
-                                                    events={list}
-                                                    onTransactionPostedClick={
-                                                        onTransactionPostedClick
-                                                    }
-                                                    onPaymentEventPreview={
-                                                        onPaymentEventPreview
-                                                    }
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
-                                    )
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                )}
+                ) : null}
                     </div>
                     </div>
                 </CardContent>

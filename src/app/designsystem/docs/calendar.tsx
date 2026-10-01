@@ -3,7 +3,9 @@
 import * as React from "react"
 import type { DateRange } from "react-day-picker"
 
-import { Calendar } from "@/components/ui/calendar"
+import { Badge } from "@/components/ui/badge"
+import { Calendar, type CalendarMarker, type CalendarPreset } from "@/components/ui/calendar"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 export default function CalendarDoc() {
@@ -16,39 +18,82 @@ export default function CalendarDoc() {
       </Usage>
 
       <DocSection
-        title="Seleção única"
-        code={`<Calendar mode="single" selected={data} onSelect={setData} />`}
+        title="Seleção única, e o Hoje"
+        description="showToday põe o “Hoje” embaixo da grade: volta ao mês atual e, na escolha única, marca o dia. Sem ele, voltar é seta a seta."
+        code={`<Calendar mode="single" selected={data} onSelect={setData} showToday />`}
       >
         <CalendarDemo />
       </DocSection>
 
       <DocSection
-        title="Intervalo"
-        description="A faixa entre as pontas é contínua: cada extremidade estende o preenchimento até a metade da célula vizinha, e a medida é derivada de --cell-size."
-        code={`<Calendar mode="range" selected={periodo} onSelect={setPeriodo} />`}
+        title="Intervalo, com atalhos"
+        description="A faixa entre as pontas é contínua: cada extremidade estende o preenchimento até a metade da célula vizinha. presets põe os atalhos ao lado da grade — o aceso é o que coincide com a escolha —, e com eles o intervalo mostra dois meses lado a lado no desktop e um no telefone."
+        code={`<Calendar
+  mode="range"
+  selected={periodo}
+  onSelect={setPeriodo}
+  presets={[
+    { label: "Últimos 7 dias", range: () => ({ from: subDays(hoje, 6), to: hoje }) },
+    { label: "Este mês", range: () => ({ from: startOfMonth(hoje), to: hoje }) },
+  ]}
+/>`}
       >
         <CalendarRangeDemo />
       </DocSection>
 
       <DocSection
         title="Escada da célula"
-        description="size é o piso da célula — sm 28, md 32 (o padrão), lg 36. Piso mesmo: a grade é elástica, e a célula cresce com a largura disponível."
-        code={`<Calendar size="sm" />
-<Calendar size="md" />
-<Calendar size="lg" />`}
-        previewClassName="items-start gap-6"
+        description="size é o piso da célula — sm 28, md 32 (o padrão), lg 36. Piso mesmo: a grade é elástica, e a célula cresce com a largura disponível. Troque o degrau."
+        code={`<Calendar size="lg" />`}
+        previewClassName="flex-col items-start gap-3"
       >
-        {(["sm", "md", "lg"] as const).map((s) => (
-          <div key={s} className="flex flex-col gap-2">
-            <p className="text-xs text-muted-foreground">size=&ldquo;{s}&rdquo;</p>
+        <EscadaDemo />
+      </DocSection>
+
+      <DocSection
+        title="Marcadores"
+        description="markers põe pontos sob o número do dia, um tom por tipo (até três por dia), com a legenda embaixo — e o nome do dia soma os rótulos para o leitor de tela: “5 de março, assinatura, parcela”. É a grade do calendário de pagamentos no telefone."
+        code={`<Calendar
+  markers={[
+    { dates: assinaturas, tone: "info", label: "Assinatura" },
+    { dates: parcelas, tone: "warning", label: "Parcela" },
+  ]}
+/>`}
+      >
+        <Calendar
+          defaultMonth={new Date(2026, 2, 1)}
+          markers={MARCADORES}
+          className="rounded-lg border border-border"
+        />
+      </DocSection>
+
+      <DocSection
+        title="Agenda"
+        description="variant=&quot;agenda&quot; é a visão de mês: a célula alta, o número no canto (hoje numa pastilha) e o conteúdo do dia por renderDay. Ela ocupa a largura de quem a contém. É a grade do calendário de pagamentos no desktop; o clique no dia vem de onDayClick."
+        code={`<Calendar
+  variant="agenda"
+  weekStartsOn={1}
+  renderDay={(dia) => <Fichas eventos={porDia(dia)} />}
+/>`}
+        previewClassName="items-stretch"
+      >
+        <div className="w-full overflow-x-auto">
+          <div className="min-w-160">
             <Calendar
-              mode="single"
-              size={s}
+              variant="agenda"
+              weekStartsOn={1}
               defaultMonth={new Date(2026, 2, 1)}
-              className="rounded-lg border border-border"
+              renderDay={(dia) => {
+                const e = AGENDA[dia.getDate()]
+                return dia.getMonth() === 2 && e ? (
+                  <Badge size="xs" tone={e.tom} className="max-w-full truncate">
+                    {e.texto}
+                  </Badge>
+                ) : null
+              }}
             />
           </div>
-        ))}
+        </div>
       </DocSection>
 
       <DocSection
@@ -95,6 +140,10 @@ export default function CalendarDoc() {
         e têm tradução própria.
       </DocNote>
 
+      <DocNote title="Onde o app usa">
+        No <code>DatePicker</code> — todo campo de data — e no calendário de pagamentos do dashboard, desde a rodada 203: os pontos no telefone e a agenda no desktop, com um popover só, ancorado no dia clicado. As duas grades eram escritas à mão, com botões crus e os pontos em cinco cores cruas.
+      </DocNote>
+
       <DocNote title="Para dia do mês recorrente, ele é o componente errado">
         &ldquo;Todo dia 5&rdquo; não pertence a nenhum mês, e um calendário
         obriga a escolher um março arbitrário. Ali o certo é um{" "}
@@ -130,6 +179,34 @@ export default function CalendarDoc() {
             description: "Já vem preenchido, porque o app tem uma língua só.",
           },
           {
+            prop: "markers",
+            type: "{ dates, tone, label }[]",
+            description: "Pontos sob o número do dia, por tom (até três), com a legenda.",
+          },
+          {
+            prop: "variant · renderDay",
+            type: '"default" | "agenda" · (date) => ReactNode',
+            default: '"default"',
+            description: "agenda é a célula grande; renderDay, o conteúdo dela.",
+          },
+          {
+            prop: "showToday",
+            type: "boolean",
+            default: "false",
+            description: "O “Hoje”: volta ao mês atual e, na escolha única, marca o dia.",
+          },
+          {
+            prop: "presets",
+            type: "{ label, range }[]",
+            description: "Atalhos ao lado de um intervalo; com eles, dois meses no desktop.",
+          },
+          {
+            prop: "stretch",
+            type: "boolean",
+            default: "false",
+            description: "A grade ocupa a largura de quem a contém (a agenda já ocupa).",
+          },
+          {
             prop: "buttonVariant",
             type: "Button['variant']",
             default: '"tertiary"',
@@ -150,8 +227,63 @@ function CalendarDemo() {
       selected={data}
       onSelect={setData}
       defaultMonth={new Date(2026, 2, 1)}
+      showToday
       className="rounded-lg border border-border"
     />
+  )
+}
+
+const MARCADORES: CalendarMarker[] = [
+  { dates: [new Date(2026, 2, 5), new Date(2026, 2, 18)], tone: "info", label: "Assinatura" },
+  { dates: [new Date(2026, 2, 5), new Date(2026, 2, 12), new Date(2026, 2, 26)], tone: "warning", label: "Parcela" },
+  { dates: [new Date(2026, 2, 10)], tone: "primary", label: "Conta a pagar" },
+  { dates: [new Date(2026, 2, 3), new Date(2026, 2, 12)], tone: "success", label: "Lançado" },
+]
+
+const AGENDA: Record<number, { texto: string; tom: "info" | "warning" | "success" }> = {
+  5: { texto: "Spotify", tom: "info" },
+  12: { texto: "Parcela 3/10", tom: "warning" },
+  18: { texto: "Netflix", tom: "info" },
+  20: { texto: "Salário", tom: "success" },
+}
+
+function intervaloDe(dias: number) {
+  const fim = new Date(2026, 2, 20)
+  const inicio = new Date(fim)
+  inicio.setDate(fim.getDate() - (dias - 1))
+  return { from: inicio, to: fim }
+}
+
+const ATALHOS: CalendarPreset[] = [
+  { label: "Últimos 7 dias", range: () => intervaloDe(7) },
+  { label: "Últimos 30 dias", range: () => intervaloDe(30) },
+  { label: "Este mês", range: { from: new Date(2026, 2, 1), to: new Date(2026, 2, 20) } },
+  { label: "Mês passado", range: { from: new Date(2026, 1, 1), to: new Date(2026, 1, 28) } },
+]
+
+function EscadaDemo() {
+  const [degrau, setDegrau] = React.useState<"sm" | "md" | "lg">("md")
+  return (
+    <>
+      <ToggleGroup
+        type="single"
+        variant="segmented"
+        size="sm"
+        value={degrau}
+        onValueChange={(v) => setDegrau(v as typeof degrau)}
+        aria-label="Degrau"
+      >
+        <ToggleGroupItem value="sm">sm · 28</ToggleGroupItem>
+        <ToggleGroupItem value="md">md · 32</ToggleGroupItem>
+        <ToggleGroupItem value="lg">lg · 36</ToggleGroupItem>
+      </ToggleGroup>
+      <Calendar
+        mode="single"
+        size={degrau}
+        defaultMonth={new Date(2026, 2, 1)}
+        className="rounded-lg border border-border"
+      />
+    </>
   )
 }
 
@@ -166,7 +298,8 @@ function CalendarRangeDemo() {
       mode="range"
       selected={periodo}
       onSelect={setPeriodo}
-      defaultMonth={new Date(2026, 2, 1)}
+      defaultMonth={new Date(2026, 1, 1)}
+      presets={ATALHOS}
       className="rounded-lg border border-border"
     />
   )

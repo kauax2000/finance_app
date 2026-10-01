@@ -16623,3 +16623,44 @@ O dono pediu a rodada completa e escolheu as quatro versões.
   trocador e o voltar. A barra do app pede login e não foi vista; o teste
   da rodada confere a migração no fonte e a trilha renderizada.
 
+### Rodada 203 — o Calendar ganha marcadores, agenda, o Hoje e os atalhos de intervalo
+
+O dono pediu a rodada completa e escolheu as quatro versões.
+
+- **O calendário de pagamentos do dashboard escrevia duas grades de mês à
+  mão**: a do telefone com `<button>` crus, os pontos por tipo de evento em
+  `after:` com cinco cores cruas (`bg-info`, `bg-warning`, `bg-primary`…
+  escritas por classe longa) e o "hoje" num anel; a do desktop com células
+  `min-h-24`, as fichas do dia e **um `Popover` por célula** (42 popovers
+  montados). As duas viraram o `Calendar` — `markers` no telefone, `variant=
+  "agenda"` no desktop —, com `weekStartsOn={1}` (a grade antiga começava na
+  segunda), a navegação escondida (o mês vem de fora) e **um popover só**,
+  ancorado no dia clicado por `virtualRef`, servindo os dois tamanhos. Os
+  dias sem evento não abrem nada (antes eram `disabled`; aqui ficam
+  focáveis e inertes, para não esmaecer o mês inteiro). Saíram o
+  `buildCells`, a grade do telefone e as cinco classes de ponto.
+- **`markers`**: os pontos viram modificadores do `react-day-picker`
+  (`marker-0`…), até três por dia, na base da célula, com a legenda embaixo
+  e os rótulos somados ao nome do dia ("5 de março de 2026, Assinatura,
+  Parcela", medido). Os tons são os tokens semânticos, mais `primary` (o
+  acento) e `default`.
+- **Um furo medido**: a primeira versão desenhava os pontos e a agenda **no
+  botão** do dia, e o `react-day-picker` só desenha o dia como botão quando
+  a grade é interativa (`mode` ou `onDayClick`). Sem eles a célula recebe o
+  número em texto — medido, a agenda da página saía só com "12" na célula.
+  O miolo (`DiaConteudo`) passou a entrar também no dia estático
+  (`components.Day`), e o nome dele usa `labelGridcell`.
+- **`variant="agenda"`**: a célula alta, o número no canto (hoje numa
+  pastilha `primary`) e o conteúdo por `renderDay`; o cabeçalho em versalete
+  ganhou o mesmo vão de 4px das semanas (medido: alinhamento 0).
+- **`showToday`** volta ao mês atual e marca o dia na escolha única
+  (medido: de março a outubro de 2026, com o dia 1 marcado). **`presets`**
+  põe os atalhos ao lado do intervalo, com o que coincide aceso, e dois
+  meses no desktop (um no telefone, sem transbordo). O mês só passa a ser
+  controlado pelo `Calendar` quando um dos dois existe — o `DatePicker`
+  continua igual (medido: um mês, os seletores, fecha ao escolher).
+- A página trocou os três calendários da escada por um com um segmentado
+  de degrau (28 · 32 · 36, medidos). O dashboard pede login e não foi
+  visto; o teste da rodada confere a migração no fonte e as peças
+  renderizadas.
+
