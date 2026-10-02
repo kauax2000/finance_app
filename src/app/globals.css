@@ -2963,6 +2963,44 @@
    **Quem liga é a casca.** A duração é `--command-reveal`, com `0s` de padrão
    — o `CommandDialog` a declara em `--duration-spring`; o `Combobox` e a
    paleta solta numa página ficam paradas, como `--command-list-transition`. */
+/* As linhas do painel do `Menubar` sobem 3px em cascata ao abrir (rodada
+   218, a referência de movimento do dono): 160ms de `--ease-out`, a primeira
+   aos 40ms e cada uma 30ms depois da anterior, com teto na sexta. É o
+   `command-reveal` com os números da referência, e só nas linhas — rótulo e
+   fio entram com o painel. */
+@keyframes menubar-rise {
+  from {
+    opacity: 0;
+    translate: 0 3px;
+  }
+}
+
+@utility menubar-reveal {
+  & > [role^="menuitem"] {
+    animation: menubar-rise 160ms var(--ease-out) 40ms both;
+  }
+  & > [role^="menuitem"]:nth-of-type(2) {
+    animation-delay: 70ms;
+  }
+  & > [role^="menuitem"]:nth-of-type(3) {
+    animation-delay: 100ms;
+  }
+  & > [role^="menuitem"]:nth-of-type(4) {
+    animation-delay: 130ms;
+  }
+  & > [role^="menuitem"]:nth-of-type(5) {
+    animation-delay: 160ms;
+  }
+  & > [role^="menuitem"]:nth-of-type(n + 6) {
+    animation-delay: 190ms;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    & > [role^="menuitem"] {
+      animation-delay: 0ms;
+    }
+  }
+}
+
 @utility command-reveal {
   & [cmdk-item],
   & [cmdk-group-heading] {

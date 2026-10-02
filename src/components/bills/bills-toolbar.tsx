@@ -9,16 +9,23 @@ import {
     ToolbarFilters,
     toolbarIconControlClassName,
 } from "@/components/ui/toolbar"
-import { AdjustmentsHorizontalIcon, ChevronDownIcon, PlusIcon } from "@heroicons/react/16/solid"
+import {
+    AdjustmentsHorizontalIcon,
+    ArrowsUpDownIcon,
+    FunnelIcon,
+    PlusIcon,
+} from "@heroicons/react/16/solid"
 import * as React from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+    Menubar,
+    MenubarContent,
+    MenubarMenu,
+    MenubarRadioGroup,
+    MenubarRadioItem,
+    MenubarTrigger,
+} from "@/components/ui/menubar"
 import {
   Sheet,
   SheetContent,
@@ -70,17 +77,6 @@ function sortSummaryLabel(
     if (key === "due_date")
         return `Vencimento (${dir === "asc" ? "mais antigo primeiro" : "mais recente primeiro"})`
     return `Valor (${dir === "asc" ? "menor primeiro" : "maior primeiro"})`
-}
-
-function filterLabel(
-    mode: BillsPageMode,
-    pendingFilter: BillsPendingFilter,
-    modelFilter: BillsModelFilter
-): string {
-    if (mode === "pending") {
-        return PENDING_FILTER.find((f) => f.value === pendingFilter)?.label ?? "Filtrar"
-    }
-    return MODEL_FILTER.find((f) => f.value === modelFilter)?.label ?? "Filtrar"
 }
 
 function filtersActive(
@@ -227,67 +223,73 @@ export function BillsToolbar({
                     </div>
 
                     <div className="hidden shrink-0 md:flex md:flex-wrap md:items-center md:gap-2">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    className={cn(toolbarControlClassName, "gap-1.5 text-xs")}
+                        {/* Uma barra só para filtrar e ordenar: o rádio marca a
+                            opção valendo e o cabeçalho do painel a repete. */}
+                        <Menubar size="sm" aria-label="Filtrar e ordenar">
+                            <MenubarMenu value="filtrar">
+                                <MenubarTrigger
+                                    icon={<FunnelIcon aria-hidden />}
+                                    chevron
+                                    count={active ? 1 : undefined}
                                     disabled={!hasTable}
                                 >
-                                    Filtrar: {filterLabel(mode, pendingFilter, modelFilter)}
-                                    <ChevronDownIcon className="size-3.5 opacity-70" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" size="md">
-                                {mode === "pending"
-                                    ? PENDING_FILTER.map((f) => (
-                                          <DropdownMenuItem
-                                              key={f.value}
-                                              onClick={() =>
-                                                  onPendingFilterChange(f.value)
-                                              }
-                                          >
-                                              {f.label}
-                                          </DropdownMenuItem>
-                                      ))
-                                    : MODEL_FILTER.map((f) => (
-                                          <DropdownMenuItem
-                                              key={f.value}
-                                              onClick={() =>
-                                                  onModelFilterChange(f.value)
-                                              }
-                                          >
-                                              {f.label}
-                                          </DropdownMenuItem>
-                                      ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    className={cn(toolbarControlClassName, "gap-1.5 text-xs")}
+                                    Filtrar
+                                </MenubarTrigger>
+                                <MenubarContent title="Filtrar">
+                                    {mode === "pending" ? (
+                                        <MenubarRadioGroup
+                                            value={pendingFilter}
+                                            onValueChange={(v) =>
+                                                onPendingFilterChange(v as BillsPendingFilter)
+                                            }
+                                        >
+                                            {PENDING_FILTER.map((f) => (
+                                                <MenubarRadioItem key={f.value} value={f.value}>
+                                                    {f.label}
+                                                </MenubarRadioItem>
+                                            ))}
+                                        </MenubarRadioGroup>
+                                    ) : (
+                                        <MenubarRadioGroup
+                                            value={modelFilter}
+                                            onValueChange={(v) =>
+                                                onModelFilterChange(v as BillsModelFilter)
+                                            }
+                                        >
+                                            {MODEL_FILTER.map((f) => (
+                                                <MenubarRadioItem key={f.value} value={f.value}>
+                                                    {f.label}
+                                                </MenubarRadioItem>
+                                            ))}
+                                        </MenubarRadioGroup>
+                                    )}
+                                </MenubarContent>
+                            </MenubarMenu>
+                            <MenubarMenu value="ordenar">
+                                <MenubarTrigger
+                                    icon={<ArrowsUpDownIcon aria-hidden />}
+                                    chevron
                                     disabled={!hasTable}
                                 >
                                     Ordenar
-                                    <ChevronDownIcon className="size-3.5 opacity-70" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" size="xl">
-                                {sortOpts.map(([k, d]) => (
-                                    <DropdownMenuItem
-                                        key={`${k}-${d}`}
-                                        onClick={() => onSortChange(k, d)}
+                                </MenubarTrigger>
+                                <MenubarContent title="Ordenar">
+                                    <MenubarRadioGroup
+                                        value={`${sortKey}-${sortDir}`}
+                                        onValueChange={(v) => {
+                                            const [k, d] = v.split("-") as [BillsSortKey, BillsSortDir]
+                                            onSortChange(k, d)
+                                        }}
                                     >
-                                        {sortSummaryLabel(mode, k, d)}
-                                    </DropdownMenuItem>
-                                ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                        {sortOpts.map(([k, d]) => (
+                                            <MenubarRadioItem key={`${k}-${d}`} value={`${k}-${d}`}>
+                                                {sortSummaryLabel(mode, k, d)}
+                                            </MenubarRadioItem>
+                                        ))}
+                                    </MenubarRadioGroup>
+                                </MenubarContent>
+                            </MenubarMenu>
+                        </Menubar>
                         <Button
                             type="button"
                             variant="primary"

@@ -17329,3 +17329,61 @@ dois chips são `<button>` crus por desenho (o `Button` traria altura e
 preenchimento), e o auditor os acusa na regra C. É mudança de jornada:
 `docs/JORNADAS.md` e o Atlas (versão 8) registram a prévia e o "Ver cartão".
 `hover-card-versions.test.ts` tranca.
+
+### Rodada 218 — o Menubar é redesenhado: o realce que viaja, o painel que desliza, a pílula flutuante, o gatilho com ícone, contagem e seta, o título do painel, a tecla que funciona fechada, a busca, F10 e as letras de acesso, e a folha no telefone
+
+**O pedido foi "redesign, melhorando muito", com uma referência de movimento
+do dono** — um seletor em cascata em `framer-motion` e `lucide-react`. O
+componente não entrou (a casa usa Heroicons, e o `motion` já instalado); os
+números dele, sim: a mola do realce (0,28s, 20% de quique), a entrada do
+painel descendo 6px de 97% numa mola, a saída curta sem mola, as linhas
+subindo 3px em cascata a partir de 40ms, de 30 em 30ms, o tique que estala e o
+submenu que entra de lado. **O que não veio é o realce correndo entre as linhas
+do painel**: ele é o centro da referência, e foi recusado na rodada 137 —
+`menu-fade.test.ts` o proíbe. Aqui quem viaja é o realce da **fileira**, o
+gesto do marcador do `Tabs`.
+
+**O que estava atrás.** O Menubar tinha ficado para trás dos menus irmãos: a
+caixa fechava o menu ao marcar (o defeito que o `DropdownMenu` corrigiu na 213),
+a tecla de uma linha era um `MenubarShortcut` com `Kbd` à mão que não
+disparava nada, e a página dizia que a barra "se paga a partir de três grupos"
+enquanto a única demonstração de estado tinha um.
+
+**O índice.** O Radix só monta as linhas do menu aberto, e quatro versões
+precisavam delas fechadas — a tecla que funciona com o menu fechado, a busca,
+a folha do telefone e a contagem no gatilho. Em vez de uma lista de comandos
+paralela, cada `MenubarContent` renderiza os filhos também num nó que nunca
+pinta, e ali cada linha só se registra. Dois defeitos medidos no caminho: o
+re-registro de uma linha (marcar uma caixa) a mandava para o fim, e a ordem da
+folha mudava ao marcar — passou a trocar no lugar; e com várias barras na
+mesma tela todas ouviam o F10 — agora a primeira visível atende e as outras
+respeitam o `preventDefault`.
+
+**Medido no catálogo.** O realce acompanha aberto, cursor e foco; trocando de
+Arquivo para Editar com o menu aberto, o painel novo entra vindo de 70px à
+esquerda e o antigo some na hora. F10 foca "Arquivo"; ⌘⇧D executa "Duplicar"
+com o menu fechado; o Alt sublinha as letras e Alt+A (o `code`, porque no Mac
+Alt+A escreve "å") abre Arquivo; "Apagar rascunho" arma no primeiro toque;
+"Exportar CSV" carrega com `aria-busy` e o menu fecha no fim; a busca "ocul"
+acha "Ocultar valores · Exibir" e o Enter executa. No estado à vista, marcar
+uma caixa deixa o menu aberto e o gatilho passa de 1 a 2, e o título do painel
+de ordenar diz o rádio escolhido. A folha do telefone lista os grupos com as
+marcas. Um defeito visual pego na captura: as letras de acesso partiam o
+rótulo ("A rquivo"), porque cada pedaço do texto virava um item do flex do
+gatilho — um `<span>` em volta resolve. O aviso de `DialogTitle` no console é
+da moldura do telefone: o Radix procura o título no `document` da página, e a
+folha mora no `<iframe>`; o nome dela resolve ("Filtrar e ordenar").
+
+**O app.** A barra de contas a pagar, no desktop, tinha "Filtrar: … ▾" e
+"Ordenar ▾" como dois `DropdownMenu` soltos, e nenhum marcava a escolha
+vigente. Virou um `Menubar size="sm"` com dois menus de rádio: o filtro e a
+ordem atuais ficam marcados, o título do painel os diz, e o gatilho de filtro
+conta 1 quando há filtro. A tela não foi vista (login).
+`menubar-versions.test.ts` tranca.
+
+**A pílula flutuante virou o padrão** (pedido do dono, na mesma rodada): é o
+desenho novo da barra, e `<Menubar>` sem `variant` nasce `floating`.
+`outline`, `plain` e `solid` continuam, como escolha explícita. A régua de
+barra segue vestida só pela `outline` — a asserção do `glass.test.ts` não
+mudou. A barra de contas a pagar, que não declarava `variant`, passou a ser a
+pílula junto.

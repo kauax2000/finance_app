@@ -1423,6 +1423,27 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `w-fit` distribui sobra **zero**, então as abas nunca esticaram, e o `Tabs`
   hoje mede o gatilho como esta barra. Não há mais exceção: os dois ancoram no
   gatilho.
+- **O `Menubar` foi redesenhado na rodada 218**, com a referência de
+  movimento do dono (um seletor em cascata): **o realce é um objeto só** que
+  viaja entre os gatilhos na mola dela (`layoutId` do `motion`, 0,28s, 20% de
+  quique) — e **só na fileira**: o realce correndo entre as linhas do painel
+  continua recusado (rodada 137). Com um menu aberto, passar ao vizinho
+  **desliza o painel** (o novo entra de onde o antigo estava, o antigo some);
+  o painel entra na mola de 97%, as linhas sobem em cascata (`@utility
+  menubar-reveal`), o tique estala, o submenu entra de lado. `variant="floating"`
+  — **o padrão, a pedido do dono** — é a pílula com sombra, na tinta
+  **flutuante** (a régua de barra continua só na `outline`, que passou a ser
+  escolha explícita). O gatilho tem `icon`, `count` (sem ele, conta as caixas
+  marcadas), `chevron` e `mnemonic` (Alt + letra, sublinhada com o Alt);
+  **F10 foca a barra**. O painel tem `title` e `description` (sem ela, os
+  rádios marcados). As linhas têm `icon` (as sem ícone recuam sozinhas),
+  `shortcut` — **que funciona com o menu fechado** —, `description`, `confirm`
+  e o `onSelect` que devolve `Promise`; a caixa não fecha o menu. `search` é a
+  busca de comandos e `mobile="sheet"` a folha no telefone. **Tudo isso lê um
+  índice**: cada painel renderiza os filhos também num nó que nunca pinta, onde
+  cada linha só se registra — então dentro de um `MenubarContent` só vão peças
+  do menu. A barra de contas a pagar o usa (filtrar e ordenar, com a escolha
+  marcada).
 - **O `Tabs` tem três eixos, e a moldura não é a fileira.** `variant` é a
   superfície (`solid` bandeja — o padrão —, `underline` um fio sob a fileira com
   o marcador pousando nele, `plain` sem nada); `size` mede o **gatilho**;

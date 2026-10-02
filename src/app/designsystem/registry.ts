@@ -449,7 +449,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("form", "Form", "Formulário com as peças, o Enter, a validação em português e o envio que espera sozinho.", ui("form"), "Form, FormInput, FormField, FormSwitch, FormPickerPopover, FormSubmit"),
   entry("histogram-slider", "Histogram Slider", "Faixa de valor sobre uma distribuição, com atalhos, contagem, eixo e referência.", ui("histogram-slider"), "HistogramSlider"),
   entry("hover-card", "Hover Card", "Prévia ao pousar o cursor — e no toque longo, com o grupo e o carregando.", ui("hover-card"), "HoverCard, HoverCardGroup, HoverCardTrigger, HoverCardContent, HoverCardHeader, HoverCardLink"),
-  entry("menubar", "Menubar", "Fileira de menus.", ui("menubar"), "Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarCheckboxItem, MenubarRadioItem, MenubarSub"),
+  entry("menubar", "Menubar", "Fileira de menus com o realce que viaja, a busca de comandos e a folha no telefone.", ui("menubar"), "Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarRadioGroup"),
   entry("navigation-menu", "Navigation Menu", "Navegação de um cabeçalho público.", ui("navigation-menu"), "NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent, NavigationMenuPanel, NavigationMenuSectionLabel, NavigationMenuLink, NavigationMenuLinkTitle, NavigationMenuLinkDescription"),
   entry("popover", "Popover", "Camada flutuante ancorada a um gatilho.", ui("popover"), "Popover, PopoverContent, PopoverTrigger"),
   entry("sheet", "Sheet", "Painel de borda no desktop, gaveta no telefone.", ui("sheet"), "Sheet, SheetContent, SheetTrigger, SheetClose"),
