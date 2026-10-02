@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import * as React from "react"
 import {
   Cog6ToothIcon,
@@ -21,14 +20,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { Field, FieldControl, FieldLabel } from "@/components/ui/field"
-import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@/components/ui/select"
-import {
-  ResizableCollapseTrigger,
-} from "@/components/ui/resizable"
 import {
   Sidebar,
   SidebarContent,
@@ -53,9 +44,9 @@ import {
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
-  useSidebar,
 } from "@/components/ui/sidebar"
 import { Kbd } from "@/components/ui/kbd"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { TopBar, TopBarStart, TopBarTitle } from "@/components/ui/top-bar"
 import { IDENTITY_TONES } from "@/lib/avatar"
 import { cn } from "@/lib/utils"
@@ -113,14 +104,18 @@ const TOM_WORKSPACE = IDENTITY_TONES[2]
 const TOM_CONTA = IDENTITY_TONES[0]
 
 const SECOES = [
-  { rotulo: "Início", icone: HomeIcon, ativo: true },
+  { rotulo: "Início", icone: HomeIcon },
   { rotulo: "Transações", icone: ReceiptPercentIcon, contagem: "42" },
   { rotulo: "Carteiras", icone: WalletIcon },
   { rotulo: "Cartões", icone: CreditCardIcon, contagem: "3" },
 ] as const
 
-/** O conteúdo de navegação, para as molduras não repetirem a lista. */
+/**
+ * O conteúdo de navegação, para as molduras não repetirem a lista. Os itens
+ * trocam o ativo no clique — é assim que se vê a pílula viajar.
+ */
 function NavDemo() {
+  const [ativo, setAtivo] = React.useState("Início")
   return (
     <>
       <SidebarHeader>
@@ -151,7 +146,8 @@ function NavDemo() {
               {SECOES.map((s) => (
                 <SidebarMenuItem key={s.rotulo}>
                   <SidebarMenuButton
-                    isActive={"ativo" in s && s.ativo}
+                    isActive={ativo === s.rotulo}
+                    onClick={() => setAtivo(s.rotulo)}
                     tooltip={s.rotulo}
                   >
                     <s.icone />
@@ -171,13 +167,21 @@ function NavDemo() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Membros">
+                <SidebarMenuButton
+                  isActive={ativo === "Membros"}
+                  onClick={() => setAtivo("Membros")}
+                  tooltip="Membros"
+                >
                   <UserGroupIcon />
                   <span>Membros</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Configurações">
+                <SidebarMenuButton
+                  isActive={ativo === "Configurações"}
+                  onClick={() => setAtivo("Configurações")}
+                  tooltip="Configurações"
+                >
                   <Cog6ToothIcon />
                   <span>Configurações</span>
                 </SidebarMenuButton>
@@ -217,7 +221,7 @@ function Conteudo({ children }: { children?: React.ReactNode }) {
   return (
     <>
       {/* O fio vem da variante, pela variável que o `SidebarInset` publica —
-          troque `variant` para `floating` acima e ele some. */}
+          troque `variant` para `sidebar` acima e ele aparece. */}
       <TopBar>
         <TopBarStart>{children}</TopBarStart>
         <TopBarTitle>Início</TopBarTitle>
@@ -244,66 +248,61 @@ function CabecalhoComGatilho() {
 
 // ── Demonstrações com estado ────────────────────────────────────────────────
 
+const RECOLHER = ["icon", "offcanvas", "none"] as const
+const VARIANTES = ["floating", "sidebar", "inset"] as const
+
+/** Um eixo, em pílulas segmentadas. */
+function Eixo<T extends string>({
+  rotulo,
+  valores,
+  valor,
+  onChange,
+}: {
+  rotulo: string
+  valores: readonly T[]
+  valor: T
+  onChange: (v: T) => void
+}) {
+  return (
+    <ToggleGroup
+      type="single"
+      variant="segmented"
+      size="sm"
+      value={valor}
+      onValueChange={(v) => v && onChange(v as T)}
+      aria-label={rotulo}
+    >
+      {valores.map((v) => (
+        <ToggleGroupItem key={v} value={v} className="font-mono">
+          {v}
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
+  )
+}
+
 function DemoEixos() {
   const [collapsible, setCollapsible] =
-    React.useState<"offcanvas" | "icon" | "none">("icon")
+    React.useState<(typeof RECOLHER)[number]>("icon")
   const [variant, setVariant] =
-    React.useState<"sidebar" | "floating" | "inset">("sidebar")
-  const [side, setSide] = React.useState<"left" | "right">("left")
+    React.useState<(typeof VARIANTES)[number]>("floating")
+  const [peek, setPeek] = React.useState<"peek" | "sem">("sem")
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Field>
-          <FieldLabel htmlFor="eixo-collapsible">collapsible</FieldLabel>
-          <FieldControl>
-            <NativeSelect
-              id="eixo-collapsible"
-              value={collapsible}
-              onChange={(e) =>
-                setCollapsible(e.target.value as typeof collapsible)
-              }
-            >
-              <NativeSelectOption value="offcanvas">
-                offcanvas
-              </NativeSelectOption>
-              <NativeSelectOption value="icon">icon</NativeSelectOption>
-              <NativeSelectOption value="none">none</NativeSelectOption>
-            </NativeSelect>
-          </FieldControl>
-        </Field>
-        <Field>
-          <FieldLabel htmlFor="eixo-variant">variant</FieldLabel>
-          <FieldControl>
-            <NativeSelect
-              id="eixo-variant"
-              value={variant}
-              onChange={(e) => setVariant(e.target.value as typeof variant)}
-            >
-              <NativeSelectOption value="sidebar">sidebar</NativeSelectOption>
-              <NativeSelectOption value="floating">floating</NativeSelectOption>
-              <NativeSelectOption value="inset">inset</NativeSelectOption>
-            </NativeSelect>
-          </FieldControl>
-        </Field>
-        <Field>
-          <FieldLabel htmlFor="eixo-side">side</FieldLabel>
-          <FieldControl>
-            <NativeSelect
-              id="eixo-side"
-              value={side}
-              onChange={(e) => setSide(e.target.value as typeof side)}
-            >
-              <NativeSelectOption value="left">left</NativeSelectOption>
-              <NativeSelectOption value="right">right</NativeSelectOption>
-            </NativeSelect>
-          </FieldControl>
-        </Field>
+      <div className="flex flex-wrap gap-3">
+        <Eixo rotulo="Variante" valores={VARIANTES} valor={variant} onChange={setVariant} />
+        <Eixo rotulo="Recolher" valores={RECOLHER} valor={collapsible} onChange={setCollapsible} />
+        <Eixo rotulo="Espiar" valores={["sem", "peek"] as const} valor={peek} onChange={setPeek} />
       </div>
 
       <Tela title="Prévia dos eixos da barra lateral numa tela">
         <SidebarProvider>
-          <Sidebar collapsible={collapsible} variant={variant} side={side}>
+          <Sidebar
+            collapsible={collapsible}
+            variant={variant}
+            peek={peek === "peek"}
+          >
             <NavDemo />
             <SidebarRail />
           </Sidebar>
@@ -316,36 +315,38 @@ function DemoEixos() {
   )
 }
 
-/** O gatilho de colapso do átomo, ligado ao painel que o `Provider` governa. */
-function GatilhoDeColapso() {
-  const { state, toggleSidebar } = useSidebar()
-  const colapsado = state === "collapsed"
-
-  return (
-    <ResizableCollapseTrigger
-      collapsed={colapsado}
-      side="start"
-      size="icon-md"
-      onClick={toggleSidebar}
-      aria-label={colapsado ? "Mostrar a navegação" : "Recolher a navegação"}
-    />
-  )
-}
-
+/**
+ * As mesmas versões, no modo redimensionável. `none` fica de fora — não há o
+ * que redimensionar — e o `peek` também: ele abre a barra por cima, e aqui a
+ * barra é um painel do grupo, sem trilho por cima de nada.
+ */
 function DemoRedimensionavel() {
+  const [collapsible, setCollapsible] = React.useState<"icon" | "offcanvas">("icon")
+  const [variant, setVariant] =
+    React.useState<(typeof VARIANTES)[number]>("floating")
+
   return (
-    <Tela title="Prévia da barra lateral redimensionável numa tela">
-      <SidebarProvider resizable>
-        <Sidebar collapsible="icon">
-          <NavDemo />
-        </Sidebar>
-        <SidebarInset>
-          <Conteudo>
-            <GatilhoDeColapso />
-          </Conteudo>
-        </SidebarInset>
-      </SidebarProvider>
-    </Tela>
+    <div className="flex w-full flex-col gap-4">
+      <div className="flex flex-wrap gap-3">
+        <Eixo rotulo="Variante" valores={VARIANTES} valor={variant} onChange={setVariant} />
+        <Eixo
+          rotulo="Recolher"
+          valores={["icon", "offcanvas"] as const}
+          valor={collapsible}
+          onChange={setCollapsible}
+        />
+      </div>
+      <Tela title="Prévia da barra lateral redimensionável numa tela">
+        <SidebarProvider resizable>
+          <Sidebar collapsible={collapsible} variant={variant}>
+            <NavDemo />
+          </Sidebar>
+          <SidebarInset>
+            <CabecalhoComGatilho />
+          </SidebarInset>
+        </SidebarProvider>
+      </Tela>
+    </div>
   )
 }
 
@@ -375,9 +376,9 @@ export default function SidebarDoc() {
 
       <DocSection
         title="Na tela"
-        description="Cada espécime roda numa moldura de viewport: a barra é fixed, bifurca pela largura e abre o painel por portal, e um palco comum mentiria nos três."
+        description="Cada espécime roda numa moldura de viewport: a barra é fixed, bifurca pela largura e abre o painel por portal. Troque os eixos, recolha (⌘B, o gatilho ou a borda) e clique nos itens."
         code={`<SidebarProvider defaultOpen={defaultSidebarOpen}>
-  <Sidebar collapsible="icon">
+  <Sidebar collapsible="icon" peek>
     <SidebarHeader>…</SidebarHeader>
     <SidebarContent>…</SidebarContent>
     <SidebarFooter>…</SidebarFooter>
@@ -393,53 +394,42 @@ export default function SidebarDoc() {
 </SidebarProvider>`}
         previewClassName="items-stretch p-4"
       >
-        <Tela title="Prévia da barra lateral numa tela de desktop">
-          <SidebarProvider>
-            <Sidebar collapsible="icon">
-              <NavDemo />
-              <SidebarRail />
-            </Sidebar>
-            <SidebarInset>
-              <CabecalhoComGatilho />
-            </SidebarInset>
-          </SidebarProvider>
-        </Tela>
-      </DocSection>
-
-      <DocNote title="Três formas de recolher">
-        O gatilho do cabeçalho, a borda entre a barra e o conteúdo, e <Kbd keys="mod+b" />. O atalho escuta o documento que contém a barra, não <code>window</code> — por isso funciona dentro da moldura.
-      </DocNote>
-
-      <DocSection
-        title="Os três eixos"
-        description="collapsible decide para onde ela vai ao recolher, variant a superfície e side a borda. Combine os três: é o que uma tabela de variantes não mostra."
-        code={`<Sidebar collapsible="icon" variant="floating" side="left">`}
-        previewClassName="items-stretch p-4"
-      >
         <DemoEixos />
       </DocSection>
 
-      <DocNote title="side inverte a ordem visual, nunca a do DOM">
-        A raiz leva <code>data-[side=right]:order-last</code>. O DOM fica igual porque é a ordem dele que mantém válidos os <code>peer-*</code> do <code>SidebarInset</code>; as margens de <code>inset</code> espelham pelo mesmo eixo.
+      <DocNote title="floating é o padrão, numa placa chapada">
+        Como a pílula do <code>Menubar</code> e as peças do <code>CommandDialog</code>, a barra é uma placa solta: o <code>--sidebar</code> chapado, o anel de 1px e a sombra, com 8px de calha. Ela não tem vidro: reserva a própria calha, e não há nada atrás para borrar. <code>sidebar</code> encosta na borda com um fio; <code>inset</code> pinta a barra no fundo e solta o conteúdo como placa — sem um <code>SidebarInset</code> na árvore, ele não tem efeito visível.
       </DocNote>
 
-      <DocNote title="floating é vidro pintado, sem borrão">
-        A placa reserva a própria calha, então nada passa por trás dela e um <code>backdrop-filter</code> não desenharia nada. O que a aproxima do iOS é uma curva só (<code>--ease-emphasized</code>) no recolher, a pílula que viaja e o reflexo em repouso — no cursor, ele acenderia a coluna inteira.
+      <DocNote title="Ao lado do floating, o cabeçalho não pinta e o gatilho flutua">
+        O <code>SidebarInset</code> tira o fundo do <code>TopBar</code> em repouso — o <code>glass</code>, e o <code>scroll</code> depois de rolar, mantêm o vidro, porque aí há conteúdo por baixo —, e o <code>SidebarTrigger</code> vira uma pílula da mesma placa: o <code>--sidebar</code>, o anel e a sombra. Os dois decidem pelo seletor de irmão da raiz da barra, sem prop.
       </DocNote>
 
-      <DocNote title="A pílula lê coordenada de conteúdo, somando a cadeia de offsetParent">
-        Como o marcador do <Link href="/designsystem/tabs">Tabs</Link>, ela mede por observadores e nunca por <code>getBoundingClientRect</code>, porque o <code>SidebarContent</code> rola. O <code>&lt;li&gt;</code> é <code>relative</code> e vira o <code>offsetParent</code> do botão — lido direto, <code>offsetLeft</code> seria zero e só o primeiro item acertaria.
+      <DocNote title="Recolhida em ícone, o gatilho entra na barra">
+        No <code>floating</code> com <code>collapsible=&quot;icon&quot;</code>, recolher leva o <code>SidebarTrigger</code> do topo da tela para dentro da barra, sob o cabeçalho. É o mesmo botão: os dois lugares têm o mesmo <code>layoutId</code>, e o <code>motion</code> o leva de um ponto ao outro na mola. A vaga dele no topo encolhe, o título desliza no mesmo passo, e o cabeçalho da barra cresce animando até caber o botão. Ele mora no <code>SidebarHeader</code>: sem cabeçalho, o gatilho fica no topo.
       </DocNote>
 
-      <DocNote title="inset precisa de um SidebarInset">
-        <code>inset</code> e <code>floating</code> têm a mesma geometria; muda quem desenha o cartão — a barra em <code>floating</code>, o <code>SidebarInset</code> em <code>inset</code>. Sem ele na árvore, <code>inset</code> não tem efeito visível.
+      <DocNote title="Recolher: a placa na mola, a página na curva">
+        No <code>floating</code> e no <code>inset</code>, o trilho da placa anda na mola da casa. Ele é <code>fixed</code> e não reflui nada, então o quique fica na placa. A folga que empurra a página, a margem do <code>inset</code> e a barra rente ficam em <code>--ease-emphasized</code>, porque um quique ali sacudiria o conteúdo. Os rótulos saem em 100ms antes de a largura fechar, em vez de serem cortados; ao abrir, eles esperam a largura e sobem 3px.
+      </DocNote>
+
+      <DocNote title="O ativo é um objeto só, e viaja">
+        A pílula do item ativo é o <code>layoutId</code> do <code>motion</code>, na mola do <code>Menubar</code> (0,28s, 20% de quique). Ela vale nas três variantes e passa do item ao subitem. Ela marca o ativo, não o cursor: o hover esmaece no lugar, e o realce que corre sob o ponteiro continua recusado (rodada 137).
+      </DocNote>
+
+      <DocNote title="peek: espiar no modo ícone">
+        Recolhida em ícone, o cursor parado 300ms sobre a barra a abre <strong>por cima</strong> do conteúdo, sem mover a página nem gravar o cookie. Ela recolhe 200ms depois de o cursor sair. É opt-in e só funciona com mouse. Com ele ligado, as dicas dos ícones não aparecem: a espiada já traz os rótulos. E o gatilho dentro da barra vira uma linha, <strong>Manter aberta</strong> com o <Kbd keys="mod+b" />: a barra aberta por cima fecha quando o cursor sai, e a linha diz como fixá-la.
+      </DocNote>
+
+      <DocNote title="Três formas de recolher">
+        O gatilho do cabeçalho, um clique na borda entre a barra e o conteúdo, e <Kbd keys="mod+b" />. A borda não acende nada: sem o modo redimensionável não há o que arrastar, e um fio ali prometeria. O atalho escuta o documento que contém a barra, não <code>window</code> — por isso funciona dentro da moldura.
       </DocNote>
 
       <DocSection
         title="Redimensionável"
-        description="Arraste a costura. A largura é guardada em pixel, porque ícone, rótulo e badge têm medida fixa; passar do mínimo colapsa para o modo ícone."
+        description="As mesmas versões, com a costura arrastável. Arraste a costura. A largura é guardada em pixel, porque ícone, rótulo e badge têm medida fixa; passar do mínimo colapsa para o modo ícone."
         code={`<SidebarProvider resizable>
-  <Sidebar collapsible="icon">…</Sidebar>
+  <Sidebar collapsible="icon" variant="floating">…</Sidebar>
   <SidebarInset>…</SidebarInset>
 </SidebarProvider>`}
         previewClassName="items-stretch p-4"
@@ -448,12 +438,12 @@ export default function SidebarDoc() {
       </DocSection>
 
       <DocNote title="Quem redimensiona é o Resizable, e é opt-in">
-        Com <code>resizable</code> a barra vira o primeiro painel de um <code>ResizablePanelGroup</code> e herda o teclado na costura, o duplo-clique e o colapso por arraste; o modo ícone é <code>collapsedSize</code> de 48px. O grupo declara layout inline, então o padrão do app continua sendo o trilho <code>fixed</code>.
+        Com <code>resizable</code> a barra vira o primeiro painel de um <code>ResizablePanelGroup</code> e herda o teclado na costura, o duplo-clique e o colapso por arraste; o modo ícone é <code>collapsedSize</code> de 48px, mais a calha: 56 no <code>floating</code>, onde a placa encosta na costura, e 64 no <code>inset</code>. Nas soltas a costura tem a altura da placa e acende como a borda dela. O grupo declara layout inline, então o padrão do app continua sendo o trilho <code>fixed</code>.
       </DocNote>
 
       <DocSection
         title="No telefone"
-        description="Abaixo de 768px ela vira um painel lateral com véu e foco preso — a única folha com surface=&quot;panel&quot;, porque menu entra pelo lado, não sobe do rodapé."
+        description="Abaixo de 768px ela vira um painel lateral com véu e foco preso — a única folha com surface=&quot;panel&quot;, porque menu entra pelo lado, não sobe do rodapé. No floating o painel flutua também, com a calha de 8px."
         code={`// Nada muda na chamada. A superfície se escolhe dentro do componente.
 <Sidebar collapsible="offcanvas">…</Sidebar>`}
         previewClassName="justify-center p-4"
@@ -559,7 +549,7 @@ export default function SidebarDoc() {
                         <SidebarMenuSkeleton showIcon />
                       </SidebarMenuItem>
                       <SidebarMenuItem>
-                        <SidebarMenuSkeleton showIcon />
+                        <SidebarMenuSkeleton size="lg" showIcon />
                       </SidebarMenuItem>
                     </SidebarMenu>
                   </SidebarGroupContent>
@@ -619,17 +609,11 @@ export default function SidebarDoc() {
         title="Sidebar"
         rows={[
           {
-            prop: "side",
-            type: '"left" | "right"',
-            default: '"left"',
-            description: "A borda em que ela encosta.",
-          },
-          {
             prop: "variant",
             type: '"sidebar" | "floating" | "inset"',
-            default: '"sidebar"',
+            default: '"floating"',
             description:
-              "A superfície. floating solta a barra; inset solta o conteúdo e exige um SidebarInset.",
+              "A superfície. floating: a placa solta; sidebar: rente, com fio; inset: solta o conteúdo, e exige um SidebarInset.",
           },
           {
             prop: "collapsible",
@@ -637,6 +621,13 @@ export default function SidebarDoc() {
             default: '"offcanvas"',
             description:
               "Para onde ela vai ao recolher. none é a coluna simples, sem estado.",
+          },
+          {
+            prop: "peek",
+            type: "boolean",
+            default: "false",
+            description:
+              "Recolhida em ícone, o cursor parado abre a barra por cima do conteúdo.",
           },
         ]}
       />
@@ -707,9 +698,9 @@ export default function SidebarDoc() {
           },
           {
             prop: "SidebarMenuSkeleton",
-            type: "{ showIcon?: boolean }",
+            type: "{ showIcon?: boolean, size?: 'md' | 'lg' }",
             description:
-              "A linha carregando, com largura variada.",
+              "A linha carregando, com largura variada; lg é a espera do workspace e da conta.",
           },
           {
             prop: "SidebarInput / SidebarSeparator",

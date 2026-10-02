@@ -1188,11 +1188,13 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   qualquer largura, o padrão `auto` é a regra de todas as ~40 folhas do app, e o
   **único** consumidor é a navegação: um menu entra pelo lado, não sobe do
   rodapé com alça para listar seis links. Não há como forçar a gaveta — para
-  isso existe o `Drawer`. Na `Sidebar`, `side` reordena o layout de verdade
-  desde a rodada 65
-  — `order-last` no visual, com a ordem do DOM intacta para os `peer-*` —, e o
-  `floating` é a placa de vidro **pintado**: sem borrão, porque ela reserva a
-  própria calha e não há o que borrar atrás. Isto **inverte** a rodada que criou o `EdgePanel`: ela separou os
+  isso existe o `Drawer`. Na `Sidebar` **não há `side`** desde a rodada 221
+  — a navegação mora sempre à esquerda, por decisão do dono (o eixo da rodada
+  65, com `order-last` e as margens espelhadas, saiu) —, e o
+  `floating` — **o padrão desde a rodada 221** — é uma placa **chapada**
+  (`--sidebar`, o anel de 1px e a sombra dos outros flutuantes): o vidro
+  pintado saiu, porque ela reserva a própria calha e não há o que borrar
+  atrás. Isto **inverte** a rodada que criou o `EdgePanel`: ela separou os
   dois porque a `Sidebar`, pegando a folha emprestada, abria como gaveta de
   baixo com alça de arraste para listar seis links, e a regra passou a ser que
   navegação continua painel em qualquer largura. A rodada 64 aceitou a gaveta de
@@ -1435,6 +1437,31 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `w-fit` distribui sobra **zero**, então as abas nunca esticaram, e o `Tabs`
   hoje mede o gatilho como esta barra. Não há mais exceção: os dois ancoram no
   gatilho.
+- **O `Sidebar` flutua por padrão desde a rodada 221, sem vidro e numa peça
+  só.** `variant="floating"` é a placa solta dos outros flutuantes (o
+  `--sidebar` chapado, `ring-1 ring-foreground/10`, `shadow-lg`, raio 18); o
+  aro, as nuvens e o reflexo da `@utility glass` saíram dela — a utility
+  continua para quem a veste. **A pílula do ativo é o `layoutId` do `motion`**,
+  na mola do `Menubar`, nas três variantes e do item ao subitem; a medição à
+  mão (`offsetParent` e dois observadores) e as `SIDEBAR_GLASS_*` saíram, e o
+  hover continua esmaecendo, sem viajar. **Recolher:** o trilho das placas
+  soltas anda na mola (é `fixed`, não reflui nada), e a folga da página, a
+  margem do `inset` e a barra rente ficam na curva enfatizada; os rótulos
+  somem em 100ms antes de a largura fechar e entram com 120ms de atraso,
+  subindo 3px. `peek` abre a barra recolhida por cima do conteúdo com o
+  cursor parado 300ms, sem mexer na folga nem no cookie. O `inset` é placa com
+  anel e a margem anima; no telefone o `floating` vira `Sheet
+  variant="floating"`. **Nenhuma tela escreve** o `h-12` do cabeçalho
+  recolhido, o `overflow-y-auto` do conteúdo recolhido nem a espera do botão
+  `lg` (é `SidebarMenuSkeleton size="lg"`). Ao lado do `floating` o `TopBar`
+  não pinta em repouso (o vidro do `glass` e do `scroll` rolado fica) e o
+  `SidebarTrigger` é uma pílula da mesma placa — os dois pelo seletor de
+  irmão da raiz da barra, sem prop. **Recolhida em ícone no `floating`, o
+  gatilho viaja para dentro da barra**, sob o cabeçalho: o mesmo botão em
+  dois lugares, com o mesmo `layoutId` (e por isso a barra **não** usa
+  `LayoutGroup id`, que prefixaria o id de dentro dela). A vaga dele no topo
+  encolhe e o título desliza. O app continua rente
+  (`variant="sidebar"`), por decisão do dono.
 - **O `NavigationMenu` foi redesenhado na rodada 219**, com a mesma
   referência de movimento: a **pílula flutuante** e o **realce que viaja**
   (`indicator="highlight"`, que descansa no link da página atual) são o padrão

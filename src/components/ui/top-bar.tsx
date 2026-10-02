@@ -158,7 +158,13 @@ function TopBarStart({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="top-bar-start"
-      className={cn("flex shrink-0 items-center gap-2", className)}
+      // Quando o gatilho da barra lateral vai para dentro dela e esta ponta
+      // fica vazia, ela devolve o `gap` da barra, e o título encosta na calha
+      // deslizando, no passo da vaga que encolhe.
+      className={cn(
+        "flex shrink-0 items-center gap-2 transition-[margin] duration-(--duration-slow) ease-(--ease-emphasized) has-[>[data-slot=sidebar-trigger-slot][data-vazio]:only-child]:-me-2",
+        className
+      )}
       {...props}
     />
   )

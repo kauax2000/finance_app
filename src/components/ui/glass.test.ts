@@ -782,7 +782,9 @@ describe("a superfície de vidro", () => {
             join(process.cwd(), "src/components/ui/sidebar.tsx"),
             "utf8"
         )
-        expect(sidebar).toContain('"group-data-[variant=floating]:glass"')
+        // A `Sidebar` vestiu o vidro por extenso até a rodada 221, quando o
+        // `floating` virou placas chapadas; ela não pode voltar a vesti-lo.
+        expect(sidebar).not.toContain("group-data-[variant=floating]:glass")
     })
 
     it("27. a barra é a terceira régua, e na fileira só a que se sustenta sozinha", () => {

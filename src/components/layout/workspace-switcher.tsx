@@ -131,7 +131,7 @@ export function WorkspaceSwitcher({
             {appearance === "header" ? (
                 <div className="flex shrink-0">{menu}</div>
             ) : (
-                <SidebarHeader className="min-w-0 group-data-[collapsible=icon]:h-12">
+                <SidebarHeader className="min-w-0">
                     {menu}
                 </SidebarHeader>
             )}

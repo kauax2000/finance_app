@@ -241,9 +241,6 @@ const LAYER: Record<string, Layer> = {
   "navigation-menu": "Organisms",
   popover: "Organisms",
   sheet: "Organisms",
-  /** Faixas, grupos, submenus e um estado próprio que atravessa a tela — e ela
-   *  contém organismos (o painel de borda no telefone). */
-  sidebar: "Organisms",
   /** Especializa o `Card`; especializar mantém o degrau. */
   "stat-card": "Organisms",
   stepper: "Organisms",
@@ -264,6 +261,16 @@ const LAYER: Record<string, Layer> = {
   "bottom-bar": "Templates",
   "page-header": "Templates",
   "page-section": "Templates",
+  /**
+   * A casca da página com navegação — a irmã do `top-bar` e do `bottom-bar`.
+   * Ela foi Organismo até a rodada 221 pelo argumento de que contém
+   * organismos (o painel de borda no telefone); isso diz o piso, não a
+   * camada, e Templates também são feitos de organismos. O que decide é o que
+   * `SidebarProvider` e `SidebarInset` fazem: dispõem a página — a barra de um
+   * lado, o conteúdo do outro, o estado que atravessa as duas. Menus, grupos e
+   * submenus são anatomia dela, e nenhum se usa fora.
+   */
+  sidebar: "Templates",
   /** A página dividida: campo de um lado, coluna de conteúdo do outro.
    *  Compõe `Container` e a tipografia, e recebe o campo por slot — o que ele
    *  mostra é conteúdo de produto, e conteúdo de produto não mora em `ui/`. */
@@ -453,7 +460,6 @@ export const REGISTRY: RegistryEntry[] = [
   entry("navigation-menu", "Navigation Menu", "Navegação de um cabeçalho público, com o realce que viaja e o painel que aprofunda.", ui("navigation-menu"), "NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent, NavigationMenuPanel, NavigationMenuGroup, NavigationMenuLink"),
   entry("popover", "Popover", "Camada flutuante ancorada a um gatilho — com a confirmação curta e a gaveta no telefone.", ui("popover"), "Popover, PopoverContent, PopoverTrigger, PopoverHeader, PopoverConfirm"),
   entry("sheet", "Sheet", "Painel de borda no desktop, gaveta no telefone.", ui("sheet"), "Sheet, SheetContent, SheetTrigger, SheetClose"),
-  entry("sidebar", "Sidebar", "A navegação lateral do app.", ui("sidebar"), "Sidebar, SidebarProvider, SidebarInset, SidebarTrigger, SidebarRail, SidebarContent, SidebarGroup, SidebarMenu, SidebarMenuButton, useSidebar"),
   entry("stat-card", "Stat Card", "Um número que importa, com sua variação.", ui("stat-card"), "StatCard, StatCardLabel, StatCardValue, StatCardDelta"),
   entry("stepper", "Stepper", "Progresso por etapas de um fluxo.", ui("stepper"), "Stepper, StepperItem"),
   entry("table", "Table", "Tabela de dados.", ui("table"), "Table, TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, TableEmpty, TableCaption"),
@@ -466,6 +472,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("bottom-bar", "Bottom Bar", "A barra de abas do telefone.", ui("bottom-bar"), "BottomBar, BottomBarRow, BottomBarTabs, BottomBarTab, BottomBarSlot, bottomBarActionClassName"),
   entry("page-header", "Page Header", "O topo de uma tela.", ui("page-header"), "PageHeader, PageHeaderTitleRow, PageHeaderTitle, PageHeaderDescription, PageHeaderEyebrow, PageHeaderMeta, PageHeaderActions"),
   entry("page-section", "Page Section", "Bloco de uma tela, com título e ação.", ui("page-section"), "PageSection, PageSectionHeader, PageSectionTitle, PageSectionDescription"),
+  entry("sidebar", "Sidebar", "A navegação lateral do app.", ui("sidebar"), "Sidebar, SidebarProvider, SidebarInset, SidebarTrigger, SidebarRail, SidebarContent, SidebarGroup, SidebarMenu, SidebarMenuButton, useSidebar"),
   entry("split-shell", "Split Shell", "Campo de um lado, coluna de conteúdo do outro.", ui("split-shell"), "SplitShell"),
   entry("table-panel", "Table Panel", "Tabela com moldura, ações e paginação.", ui("table-panel"), "TablePanel, TablePanelToolbar, TablePanelFooter"),
   entry("top-bar", "Top Bar", "A barra do topo da janela.", ui("top-bar"), "TopBar, TopBarStart, TopBarTitle, TopBarContent, TopBarActions"),

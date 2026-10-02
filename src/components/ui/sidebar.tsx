@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import { cva, type VariantProps } from "class-variance-authority"
+import { motion, useReducedMotion } from "motion/react"
 import { Slot } from "radix-ui"
 
 import { SidebarToggleIcon } from "@/components/icons/sidebar-toggle-icon"
@@ -18,6 +19,7 @@ import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { Button } from "@/components/ui/button"
 import { Input, type InputBaseProps } from "@/components/ui/input"
+import { Kbd } from "@/components/ui/kbd"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import {
@@ -64,25 +66,35 @@ const SIDEBAR_WIDTH_MAX = 384
  *
  * A segunda: o `ds:catalog` lê o **primeiro** `cva` do arquivo. Enquanto o
  * único era o do botão de menu, o catálogo reportava `variant: plain | outline`
- * e `size: md | sm | lg` como se fossem os eixos da **barra** — e `side`,
- * `variant` e `collapsible` não apareciam em lugar nenhum. É o mesmo defeito
+ * e `size: md | sm | lg` como se fossem os eixos da **barra** — e `variant`
+ * e `collapsible` não apareciam em lugar nenhum. É o mesmo defeito
  * que o `Item` registrou com `itemGroupVariants`, e a correção é a mesma:
  * este vem primeiro.
  */
 const sidebarVariants = cva("", {
   variants: {
-    /** A borda em que ela encosta. */
-    side: { left: "", right: "" },
     /**
      * A superfície. `floating` e `inset` têm a **mesma** geometria — o que
      * muda é quem desenha o cartão: o miolo da barra numa, o `SidebarInset` na
      * outra. Sem um `SidebarInset` na árvore, `inset` não tem efeito visível.
      */
-    variant: { sidebar: "", floating: "p-2", inset: "p-2" },
+    //
+    // No modo redimensionável (o único que lê este `cva`) o `floating` não
+    // tem recuo à direita: a placa encosta na costura, e a costura **é** a
+    // aresta dela. Com o recuo, a costura ficava a 8px da placa e o gatilho do
+    // topo, para ficar a 8px dela, encostava na borda do painel de conteúdo —
+    // que rola (`overflow: auto`) e cortava a sombra dele (o dono viu).
+    variant: { sidebar: "", floating: "py-2 pl-2", inset: "p-2" },
     /** Para onde ela vai ao recolher. */
     collapsible: { offcanvas: "", icon: "", none: "" },
   },
-  defaultVariants: { side: "left", variant: "sidebar", collapsible: "offcanvas" },
+  // `floating` é o padrão desde a rodada 221, como no `Menubar` e no
+  // `NavigationMenu`: o objeto solto é a forma desta casa.
+  //
+  // **Não há `side`** (rodada 221, decisão do dono): a navegação mora sempre à
+  // esquerda. O eixo existia e custava a ordem visual invertida, as margens
+  // espelhadas do `inset`, o trilho e o painel do telefone dos dois lados.
+  defaultVariants: { variant: "floating", collapsible: "offcanvas" },
 })
 
 type SidebarContextProps = {
@@ -97,6 +109,14 @@ type SidebarContextProps = {
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
   toggleSidebar: () => void
+  /** Recolhida e aberta por cima pelo cursor (`peek`). O `open` não muda. */
+  espiando: boolean
+  setEspiando: (espiando: boolean) => void
+  /** Recolhida em ícone no `floating`, o gatilho mora no cabeçalho da barra. */
+  gatilhoNaBarra: boolean
+  setGatilhoMovel: (movel: boolean) => void
+  /** O `layoutId` do gatilho — é ele que o leva do topo à barra e de volta. */
+  gatilhoId: string
 }
 
 /** Referência estável: um literal aqui trocaria a identidade do contexto a cada render. */
@@ -141,6 +161,9 @@ function SidebarProvider({
 }) {
   const isMobile = useIsMobile()
   const [openMobile, setOpenMobile] = React.useState(false)
+  const [espiando, setEspiando] = React.useState(false)
+  const [gatilhoMovel, setGatilhoMovel] = React.useState(false)
+  const gatilhoId = `${React.useId()}-gatilho`
   const painel = useResizablePanel()
 
   // O estado interno. `open`/`onOpenChange` controlam de fora.
@@ -213,8 +236,17 @@ function SidebarProvider({
       openMobile,
       setOpenMobile,
       toggleSidebar,
+      // Abrir ou recolher de verdade encerra a espiada.
+      espiando: espiando && state === "collapsed",
+      setEspiando,
+      gatilhoNaBarra: gatilhoMovel && state === "collapsed" && !isMobile,
+      setGatilhoMovel,
+      gatilhoId,
     }),
     [
+      espiando,
+      gatilhoMovel,
+      gatilhoId,
       resizable,
       painel.panelProps,
       state,
@@ -263,34 +295,89 @@ function SidebarProvider({
   )
 }
 
+/**
+ * O id da barra, que prefixa o `layoutId` da pílula do ativo — duas barras na
+ * mesma página não trocam pílula.
+ *
+ * **Não é `LayoutGroup id`**, e foi medido: o grupo prefixa todo `layoutId` de
+ * dentro dele, e o gatilho, que viaja do topo da tela (fora da barra) para o
+ * cabeçalho (dentro dela), virava dois ids — saía do topo sem animar.
+ */
+const SidebarRealceContext = React.createContext("sidebar")
+
+/**
+ * Se o gatilho pode morar na barra: `floating` com `collapsible="icon"`, no
+ * desktop. Quem lê é o `SidebarHeader`, que é onde ele mora.
+ */
+const SidebarGatilhoMovelContext = React.createContext(false)
+
+/**
+ * Se a barra espia (`peek` com `collapsible="icon"`). Aí as dicas de dentro
+ * dela **não montam**: o cursor parado abre a barra com os rótulos em 300ms, e
+ * a dica, mais rápida, aparecia antes e repetia o rótulo que vinha chegando.
+ */
+const SidebarPeekContext = React.createContext(false)
+
 function Sidebar({
-  side = "left",
-  variant = "sidebar",
+  variant = "floating",
   collapsible = "offcanvas",
+  peek = false,
   className,
   children,
   dir,
   ...props
 }: React.ComponentProps<"div"> & {
-  side?: "left" | "right"
   variant?: "sidebar" | "floating" | "inset"
   collapsible?: "offcanvas" | "icon" | "none"
+  /**
+   * Recolhida em ícone, o cursor parado 300ms sobre ela a abre **por cima** do
+   * conteúdo, sem empurrar a página; ela recolhe 200ms depois de o cursor sair.
+   * Só com mouse — no toque não há "passar por cima".
+   */
+  peek?: boolean
 }) {
-  const { isMobile, state, openMobile, setOpenMobile, resizable, panelProps } =
-    useSidebar()
+  const {
+    isMobile,
+    state,
+    openMobile,
+    setOpenMobile,
+    resizable,
+    panelProps,
+    espiando,
+    setEspiando,
+  } = useSidebar()
+  const realceId = React.useId()
+
+  const relogio = React.useRef<ReturnType<typeof setTimeout>>(undefined)
+  React.useEffect(() => () => clearTimeout(relogio.current), [])
+  const podeEspiar = peek && collapsible === "icon" && state === "collapsed"
+  const agendar = (valor: boolean, ms: number) => {
+    clearTimeout(relogio.current)
+    relogio.current = setTimeout(() => setEspiando(valor), ms)
+  }
+  const gestoDeEspiar = podeEspiar
+    ? {
+        onPointerEnter: (e: React.PointerEvent) => {
+          if (e.pointerType === "mouse") agendar(true, 300)
+        },
+        onPointerLeave: () => agendar(false, 200),
+      }
+    : {}
 
   if (collapsible === "none") {
     return (
-      <div
-        data-slot="sidebar"
-        className={cn(
-          "flex h-full w-(--sidebar-width) flex-col bg-sidebar text-sidebar-foreground",
-          className
-        )}
-        {...props}
-      >
-        {children}
-      </div>
+        <SidebarRealceContext.Provider value={realceId}>
+          <div
+            data-slot="sidebar"
+            className={cn(
+              "flex h-full w-(--sidebar-width) flex-col bg-sidebar text-sidebar-foreground",
+              className
+            )}
+            {...props}
+          >
+            {children}
+          </div>
+        </SidebarRealceContext.Provider>
     )
   }
 
@@ -304,9 +391,9 @@ function Sidebar({
       // consumidor. O que não voltou é o `EdgePanel`: o comportamento dele é
       // uma prop, e a moldura continua sendo uma só.
       //
-      // `side` vai junto — uma `Sidebar side="right"` abre pela direita também
-      // no telefone. E **`fillMobileViewport` não vai**: ele é a altura da
-      // gaveta, e no painel a altura sai do par `top`/`bottom` do `cva`.
+      // Entra pela esquerda, onde a barra mora. E **`fillMobileViewport` não
+      // vai**: ele é a altura da gaveta, e no painel a altura sai do par
+      // `top`/`bottom` do `cva`.
       //
       // **`p-0` continua fora**, e a razão é a da rodada 64: a base do casco não
       // declara recuo, então ele era no-op no painel — e no dia em que esta
@@ -318,7 +405,9 @@ function Sidebar({
         {...props}
       >
         <SheetContent
-          side={side}
+          side="left"
+          // O `floating` flutua também no telefone: a calha de 8px do `Sheet`.
+          variant={variant === "floating" ? "floating" : "flush"}
           dir={dir}
           data-sidebar="sidebar"
           data-slot="sidebar"
@@ -343,7 +432,9 @@ function Sidebar({
               Seções do app e as ações da conta.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex min-h-0 w-full flex-1 flex-col">{children}</div>
+            <SidebarRealceContext.Provider value={realceId}>
+              <div className="flex min-h-0 w-full flex-1 flex-col">{children}</div>
+            </SidebarRealceContext.Provider>
         <DialogCloseButton />
         </SheetContent>
       </Sheet>
@@ -356,46 +447,25 @@ function Sidebar({
       data-slot="sidebar-inner"
       className={cn(
         "flex size-full flex-col bg-sidebar",
-        // ── A placa flutuante ──────────────────────────────────────────────
-        // `glassSurfaceClassName` traz a superfície inteira: a lâmina preta, as
-        // duas nuvens nos cantos opostos da diagonal e o **aro inclinado**. A
-        // elevação (`shadow`) fica de fora, porque é outro eixo.
+        // ── A placa flutuante (rodada 221) ─────────────────────────────────
+        // **Chapada, sem vidro**: a barra reserva a própria calha, então um
+        // borrão não teria o que borrar atrás (medido na rodada 36), e o aro e
+        // as nuvens pintados eram a última peça da casa que ainda vestia a
+        // lâmina. Hoje ela é a placa solta dos outros flutuantes — a pílula do
+        // `Menubar`, as peças do `CommandDialog`: o `--sidebar` chapado, o anel
+        // de 1px delas e a sombra. Uma peça só, a pedido do dono.
         //
-        // **O `bg-sidebar` acima é apagado aqui, e é assim mesmo.** O shorthand
-        // `background` da utility redefine a cor de fundo — medido, ele resolve
-        // `rgba(0, 0, 0, 0)` sob `floating`. Ele fica porque as outras duas
-        // variantes o usam; o vidro **substitui** o preenchimento, não soma.
-        //
-        // **E a classe é literal, não `${glassSurfaceClassName}` sob o
-        // variante.** O Tailwind varre o código como texto: um nome montado em
-        // tempo de execução não chega ao CSS. É a mesma razão por que os três
-        // menus escrevem por extenso a classe que carrega o nome da primitiva
-        // em vez de a herdarem da superfície compartilhada.
-        // Raio 18 (`--radius-2xl`), o das placas modais — e não os 14 do
-        // `rounded-xl`, que era o raio de cartão de conteúdo. A elevação sobe
-        // de `sm` para `lg` pelo motivo que a rodada 36 registrou: placa e
-        // página estão a 1,04 uma da outra no tema claro, e uma sombra de 6%
-        // não define nada ali.
-        "group-data-[variant=floating]:rounded-2xl group-data-[variant=floating]:shadow-lg",
-        "group-data-[variant=floating]:glass",
-        // ── O reflexo, em repouso ──────────────────────────────────────────
-        // `--glass-sheen` é a camada mais de cima da `@utility glass`, e ela
-        // nunca tinha tido produtor. Ela chegou a acender **sob o cursor**, e o
-        // defeito era de alvo: a superfície é do tamanho da coluna, então
-        // apontar para *um item* acendia a barra inteira. A decisão foi levar o
-        // valor do hover ao **repouso** — a placa fica permanentemente no tom
-        // que só tinha ao ser apontada, e não reage a nada. Quem responde ao
-        // cursor é o item.
-        //
-        // Só no tema escuro, por medida: no claro a lâmina resolve em 252 de
-        // 255, e a rodada 40 mediu que não sobra unidade acima do corpo.
-        // Estático, então sem `@property` — não há o que interpolar.
-        "dark:group-data-[variant=floating]:[--glass-sheen:oklch(1_0_0_/_4%)]"
+        // Raio 18 (`--radius-2xl`), o das placas modais; a elevação é `lg`
+        // pelo motivo da rodada 36: placa e página estão a 1,04 uma da outra
+        // no tema claro, e uma sombra de 6% não define nada ali.
+        "group-data-[variant=floating]:rounded-2xl group-data-[variant=floating]:shadow-lg group-data-[variant=floating]:ring-1 group-data-[variant=floating]:ring-foreground/10"
       )}
     >
       {children}
     </div>
   )
+
+  const solta = variant === "floating" || variant === "inset"
 
   // ── O caminho redimensionável: quem mede é o átomo `Resizable` ────────────
   // A barra deixa de ser um trilho `fixed` com uma `div` de folga e vira o
@@ -410,10 +480,26 @@ function Sidebar({
         // modo ícone é literalmente o tamanho colapsado, e o offcanvas é zero.
         // (`none` já saiu no retorno de cima — o tipo prova.)
         collapsible
-        collapsedSize={collapsible === "icon" ? 48 : 0}
+        // O modo ícone soma a calha: 48 da placa, mais 8 à esquerda no
+        // `floating` (a direita é a costura) e 8 dos dois lados no `inset`.
+        // Com 48 a placa ficava com 32 e cortava os ícones (rodada 221).
+        collapsedSize={
+          collapsible === "icon"
+            ? variant === "floating"
+              ? 56
+              : variant === "inset"
+                ? 64
+                : 48
+            : 0
+        }
         defaultSize={256}
         minSize={SIDEBAR_WIDTH_MIN}
         maxSize={SIDEBAR_WIDTH_MAX}
+        // A lib escreve `overflow: auto` inline no nó de dentro do painel, e
+        // ele recortava o anel e a sombra da placa na aresta da costura — a
+        // placa saía chapada daquele lado. A barra não rola por ali (quem rola
+        // é o `SidebarContent`), então o painel deixa pintar por fora.
+        className="overflow-visible!"
       >
         {/* A lib põe o `className` do painel num `div` interno e os atributos no
             de fora: `group` e `data-collapsible` ficavam em nós diferentes, e os
@@ -424,11 +510,12 @@ function Sidebar({
           data-state={state}
           data-collapsible={state === "collapsed" ? collapsible : ""}
           data-variant={variant}
-          data-side={side}
           dir={dir}
           className={cn(
-            "group peer hidden size-full text-sidebar-foreground md:block",
-            sidebarVariants({ side, variant, collapsible }),
+            // Fora da tela no offcanvas: o painel vai a zero, mas o recuo de
+            // 8px e o anel transbordariam como um fio solto.
+            "group peer hidden size-full text-sidebar-foreground md:block data-[collapsible=offcanvas]:invisible",
+            sidebarVariants({ variant, collapsible }),
             className
           )}
         >
@@ -437,103 +524,236 @@ function Sidebar({
       </ResizablePanel>
     )
 
-    return side === "left" ? (
-      <>
-        {barra}
-        <ResizableHandle aria-label="Redimensionar a navegação" />
-      </>
-    ) : (
-      <>
-        <ResizableHandle aria-label="Redimensionar a navegação" />
-        {barra}
-      </>
+    return (
+        <SidebarRealceContext.Provider value={realceId}>
+        <SidebarGatilhoMovelContext.Provider
+          value={variant === "floating" && collapsible === "icon"}
+        >
+          {barra}
+          {/* Nas soltas a costura é **da placa** (rodada 221): sem fio em
+              repouso, rente à aresta e da altura dela — e não pendurada no
+              meio do vão, nem do topo ao chão da janela. */}
+          <ResizableHandle
+            aria-label="Redimensionar a navegação"
+            variant={solta ? "plain" : "line"}
+            className={SIDEBAR_COSTURA[variant]}
+          />
+        </SidebarGatilhoMovelContext.Provider>
+        </SidebarRealceContext.Provider>
     )
   }
 
   return (
-    <div
-      // **`order-last` é o que faz `side` mandar no layout.** A folga que
-      // reserva o lugar do trilho `fixed` mora aqui dentro, e sem isto ela
-      // ficava sempre à esquerda: medido a 926px com `side="right"`, o trilho
-      // ia para `l670 r926` e a folga continuava em `l0 r256` — 256px vazios de
-      // um lado e a placa cobrindo **240px do conteúdo** do outro.
-      //
-      // A ordem no **DOM** não muda, e é isso que mantém os `peer-*` do
-      // `SidebarInset` válidos: quem inverte é a ordem visual do flex. O
-      // caminho redimensionável já reordenava por JSX; agora os dois invertem.
-      className="group peer hidden text-sidebar-foreground md:block data-[side=right]:order-last"
-      data-state={state}
-      data-collapsible={state === "collapsed" ? collapsible : ""}
-      data-variant={variant}
-      data-side={side}
-      data-slot="sidebar"
-    >
-      {/* A folga que reserva, no fluxo, o lugar do trilho `fixed`. */}
-      <div
-        data-slot="sidebar-gap"
-        className={cn(
-          "relative w-(--sidebar-width) bg-transparent transition-[width] duration-(--duration-slow) ease-(--ease-emphasized)",
-          "group-data-[collapsible=offcanvas]:w-0",
-          variant === "floating" || variant === "inset"
-            ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
-            : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)"
-        )}
-      />
-      <div
-        data-slot="sidebar-container"
-        data-side={side}
-        className={cn(
-          "fixed inset-y-0 z-(--z-sticky) hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-(--duration-slow) ease-(--ease-emphasized) data-[side=left]:left-0 data-[side=left]:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] data-[side=right]:right-0 data-[side=right]:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)] md:flex",
-          variant === "floating" || variant === "inset"
-            ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
-            : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
-          className
-        )}
-        {...props}
+      <SidebarRealceContext.Provider value={realceId}>
+      <SidebarGatilhoMovelContext.Provider
+        value={variant === "floating" && collapsible === "icon"}
       >
-        {miolo}
-      </div>
-    </div>
+      <SidebarPeekContext.Provider value={peek && collapsible === "icon"}>
+        <div
+          className="group peer hidden text-sidebar-foreground md:block"
+          data-state={state}
+          // Espiando, a barra se desenha **aberta** (`data-collapsible` vazio)
+          // e o `data-state` continua `collapsed` — é ele que o `SidebarInset`
+          // lê, e a página não pode andar.
+          data-collapsible={state === "collapsed" && !espiando ? collapsible : ""}
+          data-peek={espiando ? "" : undefined}
+          data-variant={variant}
+          data-slot="sidebar"
+        >
+          {/* A folga que reserva, no fluxo, o lugar do trilho `fixed`. Ela fica
+              na curva enfatizada: ela **reflui a página**, e um quique aqui
+              sacudiria o conteúdo inteiro. Espiando, ela não se mexe. */}
+          <div
+            data-slot="sidebar-gap"
+            className={cn(
+              "relative w-(--sidebar-width) bg-transparent transition-[width] duration-(--duration-slow) ease-(--ease-emphasized)",
+              "group-data-[collapsible=offcanvas]:w-0",
+              solta
+                ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))] group-data-[peek]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
+                : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[peek]:w-(--sidebar-width-icon)"
+            )}
+          />
+          <div
+            data-slot="sidebar-container"
+            className={cn(
+              "fixed inset-y-0 left-0 z-(--z-sticky) hidden h-svh w-(--sidebar-width) group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] group-data-[peek]:z-(--z-sheet) md:flex",
+              solta
+                ? // **A placa anda na mola** (rodada 221): o trilho `fixed`
+                  // não reflui nada, então o quique de 3,8% da mola da casa
+                  // fica na placa e não chega à página. Sem o `+2px` de
+                  // antes: era a borda do vidro, e o anel não ocupa espaço.
+                  "p-2 transition-[left,width] duration-(--duration-spring) ease-(--ease-spring) group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
+                : // A rente encosta no conteúdo: um quique passaria o fio por
+                  // cima dele. Fica na curva da folga.
+                  "transition-[left,width] duration-(--duration-slow) ease-(--ease-emphasized) group-data-[collapsible=icon]:w-(--sidebar-width-icon) border-r",
+              className
+            )}
+            {...gestoDeEspiar}
+            {...props}
+          >
+            {miolo}
+          </div>
+        </div>
+      </SidebarPeekContext.Provider>
+      </SidebarGatilhoMovelContext.Provider>
+      </SidebarRealceContext.Provider>
   )
 }
 
-function SidebarTrigger({
+/**
+ * A costura do modo redimensionável (rodada 221), uma regra para as três: o
+ * acento é a **borda da barra acendendo**, e não uma peça à parte — a cor do
+ * anel mais forte (`foreground/30` ao pousar e no foco, `/50` ao arrastar), no
+ * lugar do acento da marca, com a ponta arredondada.
+ *
+ * Nas soltas ela tem a **altura da placa** que encosta nela (`my-2`) e só
+ * acende no trecho reto da aresta, depois da curva do canto (8 + 10 = o raio
+ * 18): no `floating` é a aresta direita da barra, no `inset` a esquerda do
+ * conteúdo. Na rente ela é o fio entre as duas, de cima a baixo.
+ */
+const SIDEBAR_COSTURA = {
+  floating:
+    "my-2 h-auto before:inset-y-2.5 before:rounded-full data-[separator=hover]:before:bg-foreground/30 data-[separator=focus]:before:bg-foreground/30 data-[separator=active]:before:bg-foreground/50",
+  inset:
+    "my-2 h-auto before:inset-y-2.5 before:rounded-full data-[separator=hover]:before:bg-foreground/30 data-[separator=focus]:before:bg-foreground/30 data-[separator=active]:before:bg-foreground/50",
+  sidebar:
+    "before:rounded-full data-[separator=hover]:before:bg-foreground/30 data-[separator=focus]:before:bg-foreground/30 data-[separator=active]:before:bg-foreground/50",
+} as const
+
+/**
+ * O gatilho do topo, ao lado de uma barra `floating` aberta, fica a **8px** da
+ * placa — a calha dela — e não a 16: lado a lado, as duas peças soltas leem como
+ * um conjunto, à distância que separa a placa da borda da janela. Recolhida em
+ * offcanvas a placa sai da tela, e ele volta ao recuo de quem o chama.
+ *
+ * **No redimensionável a calha mora no conteúdo** (`pl-2` no `SidebarInset`):
+ * a placa encosta na costura, e o painel de conteúdo rola (`overflow: auto`)
+ * — puxado até a borda dele, o gatilho perdia a sombra e o anel. Com a calha
+ * por dentro, o gatilho para a 8px da placa e a 8px da borda do painel, e a
+ * página tem as mesmas medidas do trilho `fixed`.
+ */
+const SIDEBAR_TRIGGER_GAP =
+  "md:group-has-[[data-slot=sidebar][data-variant=floating][data-state=expanded]]/sidebar-wrapper:-ml-4"
+
+/**
+ * A mola da viagem do gatilho: um pouco mais longa que a do realce, porque o
+ * caminho é maior — do cabeçalho da tela até dentro da barra.
+ */
+const MOLA_DO_GATILHO = { type: "spring", duration: 0.45, bounce: 0.15 } as const
+
+/**
+ * O botão em si. Ele vive em **dois lugares** com o mesmo `layoutId`: no
+ * topo da tela (o `SidebarTrigger`) e, recolhida em ícone no `floating`,
+ * dentro da barra, sob o cabeçalho (rodada 221). Quando um desmonta e o outro
+ * monta no mesmo commit, o `motion` o leva de um ponto ao outro na mola.
+ */
+function SidebarTriggerButton({
+  naBarra = false,
   className,
   onClick,
   ...props
-}: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar, state, isMobile, openMobile } = useSidebar()
+}: React.ComponentProps<typeof Button> & { naBarra?: boolean }) {
+  const { toggleSidebar, state, isMobile, openMobile, gatilhoId } = useSidebar()
+  const espia = React.useContext(SidebarPeekContext)
+  const reduzido = useReducedMotion()
   // O rótulo diz o que o clique vai fazer: recolher quando a barra está aberta,
   // abrir quando está fechada. No telefone quem conta é o painel. O ícone é um
   // só nos dois estados — o desenho próprio da barra lateral.
   const aberta = isMobile ? openMobile : state === "expanded"
   const rotulo = aberta ? "Recolher barra lateral" : "Abrir barra lateral"
 
+  const botao = (
+    <Button
+      data-sidebar="trigger"
+      data-slot="sidebar-trigger"
+      type="button"
+      variant="tertiary"
+      // O degrau padrão: ele mora no `TopBar`, onde todo botão é `md` —
+      // e é a caixa de 32 dos itens da barra recolhida.
+      size="icon-md"
+      aria-label={rotulo}
+      className={cn(!naBarra && SIDEBAR_TRIGGER_FLOATING, className)}
+      onClick={(event) => {
+        onClick?.(event)
+        toggleSidebar()
+      }}
+      {...props}
+    >
+      <SidebarToggleIcon />
+    </Button>
+  )
+
   // A dica existe pelo atalho (rodada 185): ⌘B / Ctrl+B recolhe a barra desde
   // sempre, e nada na tela dizia isso. No telefone não há cursor e ela não abre.
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
+    <motion.span
+      layoutId={gatilhoId}
+      transition={reduzido ? { duration: 0 } : MOLA_DO_GATILHO}
+      className={naBarra && espia ? "flex w-full" : "inline-flex"}
+    >
+      {naBarra && espia ? (
+        // **Numa barra que espia, o gatilho é uma linha da barra** (rodada
+        // 221): ícone, "Manter aberta" e o atalho, na régua dos itens — o
+        // rótulo some e volta com eles, e recolhida ela é o ícone de 32. É o
+        // que a espiada pede: a barra está aberta **por cima** e vai fechar
+        // quando o cursor sair; a linha diz como fixá-la. Sem dica, a mesma
+        // regra dos itens.
+        <SidebarMenuButton
           data-sidebar="trigger"
           data-slot="sidebar-trigger"
-          type="button"
-          variant="tertiary"
-          // O degrau padrão: ele mora no `TopBar`, onde todo botão é `md`.
-          size="icon-md"
-          aria-label={rotulo}
-          className={cn(className)}
           onClick={(event) => {
-            onClick?.(event)
+            onClick?.(event as React.MouseEvent<HTMLButtonElement>)
             toggleSidebar()
           }}
-          {...props}
         >
           <SidebarToggleIcon />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent shortcut={`mod+${SIDEBAR_KEYBOARD_SHORTCUT}`}>{rotulo}</TooltipContent>
-    </Tooltip>
+          <span>Manter aberta</span>
+          <Kbd
+            aria-hidden
+            keys={`mod+${SIDEBAR_KEYBOARD_SHORTCUT}`}
+            className="ml-auto"
+          />
+        </SidebarMenuButton>
+      ) : (
+        <Tooltip>
+          <TooltipTrigger asChild>{botao}</TooltipTrigger>
+          <TooltipContent
+            side={naBarra ? "right" : undefined}
+            shortcut={`mod+${SIDEBAR_KEYBOARD_SHORTCUT}`}
+          >
+            {rotulo}
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </motion.span>
+  )
+}
+
+/**
+ * O gatilho do topo da tela. Quando ele vai para a barra, **a vaga dele
+ * encolhe** em vez de sumir — 32px a zero, com a margem de quem o encosta na
+ * borda —, e o título ao lado desliza no mesmo passo, em vez de saltar.
+ */
+function SidebarTrigger({
+  className,
+  ...props
+}: React.ComponentProps<typeof Button>) {
+  const { gatilhoNaBarra } = useSidebar()
+  return (
+    <span
+      data-slot="sidebar-trigger-slot"
+      data-vazio={gatilhoNaBarra ? "" : undefined}
+      className={cn(
+        "inline-flex w-8 shrink-0 transition-[width,margin] duration-(--duration-slow) ease-(--ease-emphasized) data-vazio:w-0",
+        className,
+        SIDEBAR_TRIGGER_GAP,
+        // Depois do `className`: a margem que encostava o botão na borda
+        // (`-ml-2` no app e no catálogo) sai junto com ele.
+        gatilhoNaBarra && "ms-0 ml-0"
+      )}
+    >
+      {gatilhoNaBarra ? null : <SidebarTriggerButton {...props} />}
+    </span>
   )
 }
 
@@ -563,10 +783,14 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
       tabIndex={-1}
       onClick={toggleSidebar}
       className={cn(
-        "absolute inset-y-0 z-10 hidden w-4 cursor-pointer transition-[background-color,translate] duration-(--duration-slow) ease-(--ease-emphasized) group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:start-1/2 after:w-0.5 after:transition-colors hover:after:bg-sidebar-border active:after:bg-sidebar-border sm:flex ltr:-translate-x-1/2 rtl:-translate-x-1/2",
-        "group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full hover:group-data-[collapsible=offcanvas]:bg-sidebar active:group-data-[collapsible=offcanvas]:bg-sidebar",
-        "[[data-side=left][data-collapsible=offcanvas]_&]:-right-2",
-        "[[data-side=right][data-collapsible=offcanvas]_&]:-left-2",
+        // **Sem fio e sem faixa** (rodada 221, a pedido do dono). Um fio que
+        // acende na borda é a gramática de uma costura de arraste, e aqui não
+        // há arraste — quem redimensiona é o modo `resizable`, que nem monta
+        // este trilho. A borda continua alternando a barra no clique, sem
+        // desenhar nada: o cursor de mão é a única pista.
+        "absolute inset-y-0 -right-4 z-10 hidden w-4 cursor-pointer sm:flex ltr:-translate-x-1/2 rtl:-translate-x-1/2",
+        "group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:-right-2",
+        "[[data-variant=floating]:not([data-collapsible=offcanvas])_&]:-right-2 [[data-variant=floating]_&]:inset-y-2 [[data-variant=inset]_&]:inset-y-2",
         className
       )}
       {...props}
@@ -589,11 +813,40 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
  * **É variável, e não seletor de grupo.** `in-*` e `group-*` compilam com
  * `:where()`, que não soma especificidade e perde para a classe base no mesmo
  * elemento; variável herda e não disputa. É o mecanismo de `--dialog-px`,
- * `--dialog-bleed` e `--toolbar-control`. E ela nasce no `SidebarInset` porque
- * ele é **peer** da barra — a mesma relação que a variante `inset` já usa.
+ * `--dialog-bleed` e `--toolbar-control`. E ela nasce no `SidebarInset`.
+ *
+ * **Quem pergunta pela variante é o invólucro, e não o irmão.** Era o
+ * seletor de irmão (`peer-data-*`), e no modo redimensionável barra e conteúdo
+ * moram em painéis diferentes do grupo — não são irmãos, e o fio, o fundo da
+ * barra do topo e a pílula do gatilho ficavam como na rente (o dono viu na
+ * tela, rodada 221). `group-has-[…]/sidebar-wrapper` pergunta ao invólucro do
+ * `SidebarProvider` se há uma barra `floating` dentro dele, nos dois modos.
  */
 const SIDEBAR_INSET_RULE =
-  "[--sidebar-inset-rule:1px] md:peer-data-[variant=floating]:[--sidebar-inset-rule:0px]"
+  "[--sidebar-inset-rule:1px] md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:[--sidebar-inset-rule:0px]"
+
+/**
+ * E, ao lado do `floating`, a barra do topo **não pinta** (rodada 221): a
+ * placa flutua sobre a página, e uma faixa de fundo atravessando o topo do
+ * conteúdo lia como um segundo chrome encostado nela. Só o repouso — a barra
+ * `glass`, e a `scroll` depois de rolar, mantêm o vidro, porque aí há conteúdo
+ * passando por baixo.
+ *
+ * O próprio conteúdo também não pinta ao lado do `floating`: o fundo dele é o
+ * da página, e no redimensionável ele cobria a sombra da placa, que passa da
+ * costura para dentro dele.
+ */
+const SIDEBAR_INSET_BAR =
+  "md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:[&_[data-slot=top-bar]:not([data-surface=glass]):not([data-scrolled=true])]:bg-transparent md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:bg-transparent"
+
+/**
+ * O gatilho flutua com a barra: no `floating` ele é uma pílula da mesma
+ * placa — o `--sidebar` chapado, o anel e a sombra —, e não um ícone solto no
+ * cabeçalho. Ele mora no `SidebarInset`, fora da barra, então quem decide é
+ * o `:has` do invólucro, sem contexto.
+ */
+const SIDEBAR_TRIGGER_FLOATING =
+  "md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:rounded-full md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:bg-sidebar md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:shadow-lg md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:ring-1 md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:ring-foreground/10"
 
 function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
   const { resizable } = useSidebar()
@@ -611,7 +864,14 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
           data-slot="sidebar-inset"
           className={cn(
             "relative flex size-full min-w-0 flex-col bg-background",
+            // A calha do `floating` aberto, do lado do conteúdo — ver
+            // `SIDEBAR_TRIGGER_GAP`.
+            "md:group-has-[[data-slot=sidebar][data-variant=floating][data-state=expanded]]/sidebar-wrapper:pl-2",
+            // O `inset` também aqui: a placa do conteúdo, com a calha de 8px
+            // em cima, embaixo e do lado de fora (a costura fica do outro).
+            "md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:my-2 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:mr-2 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:h-[calc(100%-1rem)] md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:w-[calc(100%-0.5rem)] md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:rounded-2xl md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ring-1 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ring-foreground/10",
             SIDEBAR_INSET_RULE,
+            SIDEBAR_INSET_BAR,
             className
           )}
           {...props}
@@ -624,14 +884,17 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
     <main
       data-slot="sidebar-inset"
       className={cn(
-        // A margem de `inset` é espelhada: o lado que encosta na barra é o que
-        // perde o respiro, e ele depende do `side`. Antes só existia a versão
-        // da esquerda, então com a barra à direita o conteúdo saía com 8px de
-        // um lado e zero do outro — medido, `m:0px/8px` com a placa à direita.
-        "relative flex min-w-0 w-full flex-1 flex-col bg-background md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm",
-        "md:peer-data-[variant=inset]:peer-data-[side=left]:ml-0 md:peer-data-[variant=inset]:peer-data-[side=right]:mr-0",
-        "md:peer-data-[variant=inset]:peer-data-[state=collapsed]:peer-data-[side=left]:ml-2 md:peer-data-[variant=inset]:peer-data-[state=collapsed]:peer-data-[side=right]:mr-2",
+        // O lado que encosta na barra perde o respiro, e o recupera quando
+        // ela recolhe.
+        //
+        // Desde a rodada 221 o conteúdo é a **placa** do `inset`, na língua das
+        // outras placas soltas: raio 18 e o anel, sem a `shadow-sm` que não
+        // separava nada sobre o `--sidebar`. E a margem anima — ela saltava
+        // 8px no fim do recolher.
+        "relative flex min-w-0 w-full flex-1 flex-col bg-background transition-[margin] duration-(--duration-slow) ease-(--ease-emphasized) md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:m-2 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:rounded-2xl md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ring-1 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ring-foreground/10",
+        "md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ml-0 md:group-has-[[data-slot=sidebar][data-variant=inset][data-state=collapsed]]/sidebar-wrapper:ml-2",
         SIDEBAR_INSET_RULE,
+        SIDEBAR_INSET_BAR,
         className
       )}
       {...props}
@@ -653,7 +916,20 @@ function SidebarInput({
   )
 }
 
-function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
+function SidebarHeader({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"div">) {
+  const { gatilhoNaBarra, setGatilhoMovel } = useSidebar()
+  const movel = React.useContext(SidebarGatilhoMovelContext)
+  // O cabeçalho registra que existe: sem ele o gatilho não teria para onde ir,
+  // e ficaria no topo da tela.
+  useIsomorphicLayoutEffect(() => {
+    setGatilhoMovel(movel)
+    return () => setGatilhoMovel(false)
+  }, [movel, setGatilhoMovel])
+
   return (
     <div
       data-slot="sidebar-header"
@@ -663,12 +939,24 @@ function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
       // contra o qual grudar — o `sticky` era inerte, e o `z-10` mais o
       // `bg-sidebar` existiam para esconder um conteúdo que nunca passou por
       // baixo. Quem marca o limite agora é a dissolução do conteúdo.
+      // Recolhida, a faixa desce a 48 — a altura do botão `lg` com o recuo, que
+      // o seletor de workspace do app escrevia à mão.
+      //
+      // Com o gatilho dentro (rodada 221), a faixa cresce até o conteúdo — e
+      // **anima** até ele: `interpolate-size` deixa a altura transicionar para
+      // `auto` (no Chrome; onde falta, ela salta). Começa do topo, para o
+      // avatar não descer enquanto a altura cresce.
       className={cn(
-        "flex h-16 shrink-0 flex-col justify-center gap-2 px-2",
+        "flex h-16 shrink-0 flex-col justify-center gap-2 px-2 transition-[height,padding] duration-(--duration-slow) ease-(--ease-emphasized) [interpolate-size:allow-keywords] group-data-[collapsible=icon]:h-12",
+        gatilhoNaBarra &&
+          "h-auto justify-start py-2 group-data-[collapsible=icon]:h-auto",
         className
       )}
       {...props}
-    />
+    >
+      {children}
+      {gatilhoNaBarra ? <SidebarTriggerButton naBarra /> : null}
+    </div>
   )
 }
 
@@ -707,7 +995,10 @@ function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="sidebar-content"
       data-sidebar="content"
       className={cn(
-        "no-scrollbar flex min-h-0 flex-1 flex-col gap-0 overflow-auto group-data-[collapsible=icon]:overflow-hidden",
+        // Recolhida, ela **rola** (rodada 221): com muitos itens o modo ícone
+        // cortava os últimos sem caminho até eles, e o app escrevia
+        // `overflow-y-auto` à mão. A máscara continua desligada ali.
+        "no-scrollbar flex min-h-0 flex-1 flex-col gap-0 overflow-auto group-data-[collapsible=icon]:overflow-x-hidden",
         // Modo **sem faixa**: o cabeçalho e o rodapé têm altura variável, e
         // medi-los exigiria um segundo observador escrevendo a altura do JS,
         // com flash na primeira pintura. Aqui a dissolução acontece na borda do
@@ -716,11 +1007,9 @@ function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
         // O ganho é maior aqui do que em qualquer outra superfície: com
         // `no-scrollbar`, esta lista rolava sem **nenhum** indicador.
         scrollFadeViewportClassName,
-        // A guarda do modo ícone, e é um defeito concreto: um elemento com
-        // `overflow: hidden` **continua** tendo `scrollHeight > clientHeight`,
-        // então a máscara acenderia — e como não há evento de rolagem possível,
-        // as duas pontas congelariam no piso para sempre, apagando o primeiro e
-        // o último ícone de navegação.
+        // A guarda do modo ícone: numa coluna de 48 a dissolução apagaria
+        // metade do primeiro e do último ícone, e o ícone não tem rótulo que
+        // sobre para dizer o que é.
         "group-data-[collapsible=icon]:[--scroll-fade-mask:none]",
         className
       )}
@@ -761,6 +1050,10 @@ function SidebarGroupLabel({
       data-sidebar="group-label"
       className={cn(
         "flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70 ring-sidebar-ring outline-hidden transition-[margin,opacity] duration-(--duration-slow) ease-(--ease-emphasized) group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0 focus-visible:ring-3 [&>svg]:size-4 [&>svg]:shrink-0",
+        // A régua dos rótulos (rodada 221): ao abrir, o texto espera a largura
+        // assentar (a margem não espera — ela é o espaço do rótulo); ao
+        // recolher, sai na hora.
+        "[transition-delay:0ms,120ms] group-data-[collapsible=icon]:[transition-delay:0ms]",
         className
       )}
       {...props}
@@ -780,7 +1073,7 @@ function SidebarGroupAction({
       data-slot="sidebar-group-action"
       data-sidebar="group-action"
       className={cn(
-        "absolute top-3.5 right-3 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-sidebar-foreground ring-sidebar-ring outline-hidden transition-transform group-data-[collapsible=icon]:hidden after:absolute after:-inset-3 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground focus-visible:ring-3 md:after:hidden [&>svg]:size-4 [&>svg]:shrink-0",
+        "absolute top-3.5 right-3 flex aspect-square w-5 items-center justify-center rounded-full p-0 text-sidebar-foreground ring-sidebar-ring outline-hidden transition-transform group-data-[collapsible=icon]:hidden after:absolute after:-inset-3 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground focus-visible:ring-3 md:after:hidden [&>svg]:size-4 [&>svg]:shrink-0",
         className
       )}
       {...props}
@@ -799,6 +1092,63 @@ function SidebarGroupContent({
       className={cn("w-full text-sm", className)}
       {...props}
     />
+  )
+}
+
+/**
+ * A mola do realce — a do `Menubar` e do `NavigationMenu`, da referência de
+ * movimento do dono: 0,28s, 20% de quique.
+ */
+const MOLA_DO_REALCE = { type: "spring", duration: 0.28, bounce: 0.2 } as const
+
+/**
+ * A pílula do item ativo: **um objeto só**, que viaja de um item ao outro.
+ *
+ * É o `layoutId` do `motion` (rodada 221), a mecânica do `Menubar`: quem está
+ * ativo desenha a pílula, e como o id é o mesmo, o `motion` a anima do lugar
+ * antigo ao novo — inclusive de um item ao subitem. Antes ela era medida à mão
+ * (`offsetParent`, `ResizeObserver`, `MutationObserver`) e só existia no
+ * `floating`; agora vale nas três variantes, e nasce no HTML do servidor.
+ *
+ * Ela marca **o ativo**, e não o cursor: o realce que corre entre as linhas
+ * sob o ponteiro foi recusado (rodada 137) e continua fora — o hover esmaece.
+ */
+function SidebarRealce() {
+  const id = React.useContext(SidebarRealceContext)
+  const reduzido = useReducedMotion()
+  return (
+    <motion.span
+      layoutId={`${id}-ativo`}
+      aria-hidden
+      data-slot="sidebar-menu-highlight"
+      transition={reduzido ? { duration: 0 } : MOLA_DO_REALCE}
+      className="pointer-events-none absolute inset-0 -z-10 rounded-[inherit] bg-sidebar-accent"
+    />
+  )
+}
+
+/**
+ * Põe a pílula **dentro** do que o botão desenha, como **último** filho — o
+ * primeiro é o ícone, que a régua dos rótulos não esmaece. Com `asChild` o
+ * `Slot` aceita um filho só, e a pílula entra nele.
+ */
+function comRealce(children: React.ReactNode, asChild: boolean, ativo: boolean) {
+  if (!ativo) return children
+  if (asChild && React.isValidElement<{ children?: React.ReactNode }>(children)) {
+    return React.cloneElement(
+      children,
+      undefined,
+      <>
+        {children.props.children}
+        <SidebarRealce />
+      </>
+    )
+  }
+  return (
+    <>
+      {children}
+      <SidebarRealce />
+    </>
   )
 }
 
@@ -823,150 +1173,14 @@ function SidebarGroupContent({
  * fica nos mesmos 4: com o trilho dizendo o aninhamento, um segundo sinal seria
  * redundante.
  */
-/**
- * Se a pílula já mediu — e portanto se o botão ativo cede a ele o preenchimento.
- *
- * É contexto e não seletor pela razão de sempre nesta base: `in-*` e `group-*`
- * compilam com `:where()`, e perderiam para a classe do próprio botão.
- */
-const SidebarMarkerContext = React.createContext(false)
-
-/**
- * A caixa de um elemento **relativa a um ancestral**, somando a cadeia de
- * `offsetParent`.
- *
- * Não é `getBoundingClientRect`: o `SidebarContent` rola, e uma caixa em
- * coordenada de viewport faria o marcador escorregar para fora do item a cada
- * pixel rolado. Em coordenada de conteúdo ele acompanha a rolagem de graça,
- * porque é filho do mesmo elemento que rola. É a decisão que o marcador do
- * `Tabs` registra.
- *
- * **E a soma é a cadeia inteira, não um `offsetTop` só.** O `<li>` do menu é
- * `relative`, então ele — e não a trilha — é o `offsetParent` do botão: lido
- * direto, `offsetLeft` valeria zero para todos, que é exatamente o defeito que
- * o `NavigationMenu` mediu na rodada 32b, onde o primeiro item acertava por
- * acidente. Devolver `null` quando a cadeia não chega ao alvo é o que mantém o
- * marcador fora de um submenu que viva noutra subárvore.
- */
-function caixaRelativa(alvo: HTMLElement, ate: HTMLElement) {
-  let x = 0
-  let y = 0
-  let no: HTMLElement | null = alvo
-  while (no && no !== ate) {
-    x += no.offsetLeft
-    y += no.offsetTop
-    no = no.offsetParent as HTMLElement | null
-  }
-  return no === ate ? { x, y, w: alvo.offsetWidth, h: alvo.offsetHeight } : null
-}
-
-function SidebarMenu({ className, children, ...props }: React.ComponentProps<"ul">) {
-  const trilhaRef = React.useRef<HTMLUListElement | null>(null)
-  const [medido, setMedido] = React.useState(false)
-
-  /**
-   * A medição da pílula viajante — o mecanismo do marcador do `Tabs`: um
-   * `ResizeObserver` na trilha e nos botões, e um `MutationObserver` em
-   * `data-active`. Nada de laço por quadro.
-   *
-   * Ela só roda sob `floating`, e a variante é lida do DOM em vez de descer
-   * por um segundo contexto: ela já está publicada em `data-variant` pela raiz
-   * da barra, que é a mesma fonte que os `group-data-[variant=floating]:` leem.
-   */
-  useIsomorphicLayoutEffect(() => {
-    const trilha = trilhaRef.current
-    if (!trilha) return
-    const raiz = trilha.closest<HTMLElement>('[data-slot="sidebar"]')
-
-    const medir = () => {
-      // A variante é lida **a cada medição**, e não uma vez na montagem: ela
-      // pode trocar em runtime (o seletor de eixos do catálogo faz isso), e um
-      // retorno cedo aqui deixaria o marcador desligado para sempre — medido,
-      // era o que acontecia ao ir de `sidebar` para `floating`.
-      const ativo =
-        raiz?.dataset.variant === "floating"
-          ? trilha.querySelector<HTMLElement>(
-              '[data-slot="sidebar-menu-button"][data-active="true"]'
-            )
-          : null
-      const caixa = ativo && caixaRelativa(ativo, trilha)
-      if (!caixa) {
-        setMedido(false)
-        return
-      }
-      trilha.style.setProperty("--sidebar-marker-x", `${caixa.x}px`)
-      trilha.style.setProperty("--sidebar-marker-y", `${caixa.y}px`)
-      trilha.style.setProperty("--sidebar-marker-w", `${caixa.w}px`)
-      trilha.style.setProperty("--sidebar-marker-h", `${caixa.h}px`)
-      setMedido(true)
-    }
-
-    medir()
-
-    const ro = new ResizeObserver(medir)
-    ro.observe(trilha)
-    for (const botao of trilha.querySelectorAll('[data-slot="sidebar-menu-button"]')) {
-      ro.observe(botao)
-    }
-
-    const mo = new MutationObserver(medir)
-    mo.observe(trilha, {
-      attributes: true,
-      attributeFilter: ["data-active"],
-      subtree: true,
-      childList: true,
-    })
-
-    // A variante mora na **raiz da barra**, fora da subárvore da trilha — um
-    // observador só, na trilha, nunca a veria mudar.
-    const moRaiz = raiz ? new MutationObserver(medir) : null
-    moRaiz?.observe(raiz!, { attributes: true, attributeFilter: ["data-variant"] })
-
-    return () => {
-      ro.disconnect()
-      mo.disconnect()
-      moRaiz?.disconnect()
-    }
-  }, [])
-
+function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
   return (
-    <SidebarMarkerContext.Provider value={medido}>
-      <ul
-        ref={trilhaRef}
-        data-slot="sidebar-menu"
-        data-sidebar="menu"
-        // `relative` é o que dá à cadeia de `offsetParent` um alvo, e a trilha
-        // não declara altura nenhuma: ela cresce com os itens.
-        className={cn("relative flex w-full min-w-0 flex-col gap-1", className)}
-        {...props}
-      >
-        {/*
-          A pílula. `<li>` e não `<div>`: filho direto de `<ul>` só pode ser
-          item, e `aria-hidden` a tira da árvore de acessibilidade — quem
-          anuncia o item ativo é o `data-active` do botão.
-
-          **Ela é o primeiro filho, e é isso que a põe atrás — sem `z-index`.**
-          O `<li>` do menu é `relative`, então marcador e itens são todos
-          posicionados com `z-index: auto`, e aí quem decide a pintura é a ordem
-          no documento. Um `-z-10` faria o oposto do que parece: `relative` com
-          `z-index: auto` **não** cria contexto de empilhamento, então o
-          marcador escaparia para trás da própria placa da barra.
-        */}
-        {medido ? (
-          <li
-            aria-hidden
-            data-slot="sidebar-marker"
-            className={cn(
-              "pointer-events-none absolute top-0 left-0 rounded-md bg-current/12",
-              "translate-x-(--sidebar-marker-x) translate-y-(--sidebar-marker-y)",
-              "w-(--sidebar-marker-w) h-(--sidebar-marker-h)",
-              "transition-[translate,width,height] duration-(--duration-base) ease-(--ease-out)"
-            )}
-          />
-        ) : null}
-        {children}
-      </ul>
-    </SidebarMarkerContext.Provider>
+    <ul
+      data-slot="sidebar-menu"
+      data-sidebar="menu"
+      className={cn("relative flex w-full min-w-0 flex-col gap-1", className)}
+      {...props}
+    />
   )
 }
 
@@ -998,79 +1212,6 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
  * é uma alça com `tabIndex={-1}`, não um botão.
  */
 /**
- * A escada de realce da placa flutuante.
- *
- * No `floating` a superfície tem **degradê** — corre de `oklch(0.242)` no topo a
- * `oklch(0.192)` na base. Um realce que pinta cor **opaca** sobre isso apaga o
- * degradê dentro do próprio retângulo, e — pior — muda de força conforme onde o
- * item está. Medido: o botão do workspace fica a **8%** da altura do painel e o
- * da conta a **92%**, e o mesmo `--sidebar-accent` dava **1,09 no workspace e
- * 1,21 na conta** no tema escuro. No claro a assimetria **inverte** (1,20 e
- * 1,11), porque ali a superfície escurece para baixo em vez de clarear.
- *
- * A tinta é `bg-current/N`, que é o vocabulário que este sistema já usa em
- * `AlertAction` e `AnnouncementBarAction` para "ação dentro de superfície
- * tingida, quando o componente não sabe o tom". `currentColor` dentro do painel
- * é `--sidebar-foreground` — quase-branco no escuro, quase-preto no claro —,
- * então **a tinta vira de direção sozinha**, sem token novo e sem par `dark:`.
- * E ela deixa o degradê passar por baixo, que é o ponto.
- *
- * **Três degraus:** 6% no cursor, 9% no toque e 12% no ativo — e o do ativo
- * mora no marcador que viaja, não aqui. O repouso é transparente: o item em
- * repouso é a própria placa.
- *
- * **Uma armadilha, verificada:** `hover:text-sidebar-accent-foreground` mexe em
- * `currentColor`, e portanto na própria tinta. Nos dois temas
- * `--sidebar-accent-foreground` é **igual** a `--sidebar-foreground`, então ela
- * não se move — mas isto quebra calado no dia em que um dos dois mudar.
- *
- * O par `active:` existe pela regra **H**: `hover:` compila dentro de
- * `@media (hover: hover)`, então sem ele o toque cairia no realce **da base** —
- * que é o token opaco, e não este alfa.
- */
-const SIDEBAR_GLASS_STATES =
-  "group-data-[variant=floating]:hover:bg-current/6 group-data-[variant=floating]:active:bg-current/9"
-
-/**
- * O terceiro degrau, e ele é **o fallback do marcador**.
- *
- * Sob `floating` quem pinta o item ativo é a pílula que viaja
- * (`SidebarMenuMarker`), e ela só existe depois da primeira medição — antes
- * disso não há caixa a publicar. No HTML do servidor, e em qualquer render sem
- * JavaScript, é esta classe que mantém o item ativo pintado; assim que o
- * marcador mede, a trilha desliga o fallback pelo contexto, e não por seletor:
- * `in-*` e `group-*` compilam com `:where()`, que não soma especificidade e
- * perde para a classe base no mesmo elemento.
- *
- * O alfa é o mesmo do marcador (12), então a troca não pisca.
- */
-const SIDEBAR_GLASS_ACTIVE =
-  "group-data-[variant=floating]:data-active:bg-current/12"
-
-/**
- * E o que o botão veste **quando o marcador existe**: nada.
- *
- * Ele não pode só deixar de declarar o alfa. A base do `cva` traz
- * `data-active:bg-sidebar-accent` — o token **opaco** —, e ela não é escopada
- * por variante: sem esta classe, o item ativo sob `floating` voltava a pintar
- * um retângulo `oklch(0.269 0 0)` **por baixo** da pílula. Medido, e foi
- * introduzido nesta mesma rodada ao mover o alfa para o marcador.
- *
- * `twMerge` não resolve sozinho: a base está sob `data-active:` e o alfa sob
- * `group-data-[variant=floating]:data-active:` — variantes diferentes, então
- * as duas sobrevivem à mesclagem e as duas pintam.
- *
- * **E o ativo não ganha um segundo sinal.** O ícone chegou a tingir de
- * `--primary-accent` — 7,11:1 no escuro e 7,46 no claro contra a placa, números
- * que passam com folga —, e foi reprovado na tela: numa coluna de navegação o
- * verde da marca puxa o olho para um item que a pílula já marcou, e o mesmo
- * verde significa "entrou dinheiro" no resto do app. Quem diz qual é o item
- * ativo é a pílula, mais o `font-medium` que a base já traz.
- */
-const SIDEBAR_GLASS_MARKER =
-  "group-data-[variant=floating]:data-active:bg-transparent"
-
-/**
  * Recolhida, quem centra o ícone é o **recuo**, e ele é por degrau.
  *
  * A conta é `(32 − filho) / 2`. No degrau padrão o filho é o ícone de 16, e
@@ -1088,7 +1229,15 @@ const SIDEBAR_GLASS_MARKER =
  * que centra.
  */
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button group/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm ring-sidebar-ring outline-hidden transition-[width,height,padding] group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-3 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-open:hover:bg-sidebar-accent data-open:hover:text-sidebar-accent-foreground data-active:bg-sidebar-accent data-active:font-medium data-active:text-sidebar-accent-foreground [&_svg]:size-4 [&_svg]:shrink-0 [&>span:last-child]:truncate",
+  [
+    "peer/menu-button group/menu-button relative isolate flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm ring-sidebar-ring outline-hidden transition-[width,height,padding,background-color] duration-(--duration-slow) ease-(--ease-emphasized) group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-3 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-open:hover:bg-sidebar-accent data-open:hover:text-sidebar-accent-foreground data-active:font-medium data-active:text-sidebar-accent-foreground [&_svg]:size-4 [&_svg]:shrink-0 [&>span:last-child]:truncate [&>span:nth-last-child(2):has(+[data-slot=sidebar-menu-highlight])]:truncate",
+    // ── Os rótulos ao recolher e abrir (rodada 221) ─────────────────────────
+    // Tudo depois do primeiro filho — o ícone ou o avatar, que fica — é
+    // rótulo. Ao recolher ele some em 100ms, antes de a largura fechar, em vez
+    // de ser cortado no meio; ao abrir, ele espera a largura e sobe 3px.
+    "[&>:not(:first-child):not([data-slot=sidebar-menu-highlight])]:transition-[opacity,translate] [&>:not(:first-child):not([data-slot=sidebar-menu-highlight])]:duration-160 [&>:not(:first-child):not([data-slot=sidebar-menu-highlight])]:delay-120 [&>:not(:first-child):not([data-slot=sidebar-menu-highlight])]:ease-(--ease-out)",
+    "group-data-[collapsible=icon]:[&>:not(:first-child):not([data-slot=sidebar-menu-highlight])]:translate-y-[3px] group-data-[collapsible=icon]:[&>:not(:first-child):not([data-slot=sidebar-menu-highlight])]:opacity-0 group-data-[collapsible=icon]:[&>:not(:first-child):not([data-slot=sidebar-menu-highlight])]:delay-0 group-data-[collapsible=icon]:[&>:not(:first-child):not([data-slot=sidebar-menu-highlight])]:duration-100",
+  ],
   {
     variants: {
       variant: {
@@ -1121,6 +1270,7 @@ function SidebarMenuButton({
   size = "md",
   tooltip,
   className,
+  children,
   ...props
 }: React.ComponentProps<"button"> & {
   asChild?: boolean
@@ -1128,8 +1278,8 @@ function SidebarMenuButton({
   tooltip?: string | React.ComponentProps<typeof TooltipContent>
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const Comp = asChild ? Slot.Root : "button"
-  const { isMobile, state } = useSidebar()
-  const temMarcador = React.useContext(SidebarMarkerContext)
+  const { isMobile, state, espiando } = useSidebar()
+  const espia = React.useContext(SidebarPeekContext)
 
   const button = (
     <Comp
@@ -1137,17 +1287,11 @@ function SidebarMenuButton({
       data-sidebar="menu-button"
       data-size={size}
       data-active={isActive}
-      className={cn(
-        sidebarMenuButtonVariants({ variant, size }),
-        SIDEBAR_GLASS_STATES,
-        // Sem marcador medido, o botão pinta o próprio ativo. Com ele, cede —
-        // e ceder é **apagar**, não é deixar de declarar: a base pinta o token
-        // opaco e ela não conhece a variante.
-        temMarcador ? SIDEBAR_GLASS_MARKER : SIDEBAR_GLASS_ACTIVE,
-        className
-      )}
+      className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
       {...props}
-    />
+    >
+      {comRealce(children, asChild, isActive)}
+    </Comp>
   )
 
   // A dica só existe quando o rótulo não está na tela: recolhida, e no
@@ -1160,7 +1304,9 @@ function SidebarMenuButton({
   // Medido com a barra expandida, que é o estado padrão do app: o botão
   // "Início" saía descrito por uma dica invisível escrita "Início" — o mesmo
   // texto do rótulo, em cada item do menu, para quem usa leitor de tela.
-  if (!tooltip || state !== "collapsed" || isMobile) {
+  // Espiando, o rótulo está na tela de novo — e numa barra que espia a dica
+  // não monta nem antes, porque a espiada traz o rótulo logo depois.
+  if (!tooltip || state !== "collapsed" || isMobile || espiando || espia) {
     return button
   }
 
@@ -1198,7 +1344,7 @@ function SidebarMenuAction({
       data-slot="sidebar-menu-action"
       data-sidebar="menu-action"
       className={cn(
-        "absolute top-1.5 right-1 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-sidebar-foreground ring-sidebar-ring outline-hidden transition-transform group-data-[collapsible=icon]:hidden peer-hover/menu-button:text-sidebar-accent-foreground peer-data-[size=md]/menu-button:top-1.5 peer-data-[size=lg]/menu-button:top-2.5 peer-data-[size=sm]/menu-button:top-1 after:absolute after:-inset-3 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground focus-visible:ring-3 md:after:hidden [&>svg]:size-4 [&>svg]:shrink-0",
+        "absolute top-1.5 right-1 flex aspect-square w-5 items-center justify-center rounded-full p-0 text-sidebar-foreground ring-sidebar-ring outline-hidden transition-transform group-data-[collapsible=icon]:hidden peer-hover/menu-button:text-sidebar-accent-foreground peer-data-[size=md]/menu-button:top-1.5 peer-data-[size=lg]/menu-button:top-2.5 peer-data-[size=sm]/menu-button:top-1 after:absolute after:-inset-3 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground focus-visible:ring-3 md:after:hidden [&>svg]:size-4 [&>svg]:shrink-0",
         showOnHover &&
         "group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 peer-data-active/menu-button:text-sidebar-accent-foreground aria-expanded:opacity-100 md:pointer-fine:opacity-0",
         className
@@ -1228,9 +1374,16 @@ function SidebarMenuBadge({
 function SidebarMenuSkeleton({
   className,
   showIcon = false,
+  size = "md",
   ...props
 }: React.ComponentProps<"div"> & {
   showIcon?: boolean
+  /**
+   * `lg` é a espera do botão `lg` — o seletor de workspace e a conta: avatar
+   * de 32 e duas linhas, e recolhido só o avatar, sem recuo, na caixa de 32
+   * (rodada 221; o perfil da conta escrevia isso à mão).
+   */
+  size?: "md" | "lg"
 }) {
   // A largura varia de 50 a 90% para a pilha não ler como tabela — mas ela sai
   // do `useId`, e não de `Math.random()`. O random do shadcn roda no servidor e
@@ -1246,24 +1399,38 @@ function SidebarMenuSkeleton({
     <div
       data-slot="sidebar-menu-skeleton"
       data-sidebar="menu-skeleton"
-      className={cn("flex h-8 items-center gap-2 rounded-md px-2", className)}
+      data-size={size}
+      className={cn(
+        "flex items-center gap-2 overflow-hidden rounded-md",
+        size === "lg"
+          ? "h-12 p-2 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0!"
+          : "h-8 px-2",
+        className
+      )}
       {...props}
     >
       {showIcon && (
         <Skeleton
-          className="size-4 rounded-md"
+          className={size === "lg" ? "size-8 shrink-0 rounded-lg" : "size-4 rounded-md"}
           data-sidebar="menu-skeleton-icon"
         />
       )}
-      <Skeleton
-        className="h-4 max-w-(--skeleton-width) flex-1"
-        data-sidebar="menu-skeleton-text"
-        style={
-          {
-            "--skeleton-width": width,
-          } as React.CSSProperties
-        }
-      />
+      {size === "lg" ? (
+        <div className="grid min-w-0 flex-1 gap-1.5">
+          <Skeleton className="h-4 w-24 max-w-full" />
+          <Skeleton className="h-3 w-36 max-w-full" />
+        </div>
+      ) : (
+        <Skeleton
+          className="h-4 max-w-(--skeleton-width) flex-1"
+          data-sidebar="menu-skeleton-text"
+          style={
+            {
+              "--skeleton-width": width,
+            } as React.CSSProperties
+          }
+        />
+      )}
     </div>
   )
 }
@@ -1301,6 +1468,7 @@ function SidebarMenuSubButton({
   size = "md",
   isActive = false,
   className,
+  children,
   ...props
 }: React.ComponentProps<"a"> & {
   asChild?: boolean
@@ -1316,15 +1484,13 @@ function SidebarMenuSubButton({
       data-size={size}
       data-active={isActive}
       className={cn(
-        "flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground ring-sidebar-ring outline-hidden group-data-[collapsible=icon]:hidden hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-3 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[size=md]:text-sm data-[size=sm]:text-xs data-active:bg-sidebar-accent data-active:text-sidebar-accent-foreground [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-sidebar-accent-foreground",
-        // Sob `floating` o realce é alfa, como no botão de cima: o token opaco
-        // apagava o degradê da placa dentro do submenu.
-        SIDEBAR_GLASS_STATES,
-        SIDEBAR_GLASS_ACTIVE,
+        "relative isolate flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground ring-sidebar-ring outline-hidden transition-[background-color] duration-(--duration-slow) ease-(--ease-emphasized) group-data-[collapsible=icon]:hidden hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-3 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[size=md]:text-sm data-[size=sm]:text-xs data-active:text-sidebar-accent-foreground [&>span:last-child]:truncate [&>span:nth-last-child(2):has(+[data-slot=sidebar-menu-highlight])]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-sidebar-accent-foreground",
         className
       )}
       {...props}
-    />
+    >
+      {comRealce(children, asChild, isActive)}
+    </Comp>
   )
 }
 

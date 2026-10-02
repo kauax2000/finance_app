@@ -6,6 +6,7 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    SidebarMenuSkeleton,
 } from "@/components/ui/sidebar"
 import { UserMenu } from "@/components/layout/user-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -13,7 +14,6 @@ import { Button } from "@/components/ui/button"
 import { EllipsisVerticalIcon } from "@heroicons/react/16/solid"
 import { cn, getInitials } from "@/lib/utils"
 import { identityToneFor } from "@/lib/avatar"
-import { Skeleton } from "@/components/ui/skeleton"
 import { ROUTES } from "@/config/navigation"
 
 export function SidebarUserProfile() {
@@ -29,17 +29,7 @@ export function SidebarUserProfile() {
         return (
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <div
-                        className="flex h-12 w-full items-center gap-2 overflow-hidden rounded-md p-2 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0!"
-                        aria-busy="true"
-                    >
-                        <Skeleton className="h-8 w-8 shrink-0 rounded-lg" />
-                        <div className="grid min-w-0 flex-1 gap-1.5 text-left group-data-[collapsible=icon]:hidden">
-                            <Skeleton className="h-4 w-24 max-w-full" />
-                            <Skeleton className="h-3 w-36 max-w-full" />
-                        </div>
-                        <Skeleton className="ml-auto size-4 shrink-0 rounded-sm group-data-[collapsible=icon]:hidden" />
-                    </div>
+                    <SidebarMenuSkeleton size="lg" showIcon aria-busy="true" />
                 </SidebarMenuItem>
             </SidebarMenu>
         )

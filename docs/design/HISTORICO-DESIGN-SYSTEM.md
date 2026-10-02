@@ -17483,3 +17483,157 @@ ancorado na célula. Os dois popovers dos filtros de lançamentos usam `size`,
 categorias ganharam `label="Escolher mês"` e perderam `w-auto p-0`, e os
 quatro chevrons perderam o `h-4 w-4`. Nada disso foi visto (login).
 `popover-versions.test.ts` tranca.
+
+### Rodada 221 — o Sidebar flutua por padrão, sem vidro, com a pílula na mola, os rótulos fora do caminho e o espiar
+
+**O pedido.** Tirar o vidro do `floating`, rever as três versões, melhorar a
+animação e fazer do `floating` o principal, como o `Menubar` e o
+`NavigationMenu`. A primeira versão desta rodada dividiu a placa em três
+(cabeçalho, navegação e rodapé, com uma sombra só atrás, na receita do
+`CommandDialog`); o dono a viu e pediu **uma peça só**, e ela voltou a ser uma.
+
+**O que saiu.** A `@utility glass` na placa (o aro inclinado, as duas nuvens,
+a lâmina), o `--glass-sheen` do escuro, as três `SIDEBAR_GLASS_*` com os
+alfas `bg-current/6·9·12` — que existiam porque a placa era degradê e um
+token opaco apagava o degradê dentro do realce —, e o `+2px` da largura
+recolhida, que era a borda do vidro. A placa é chapada: `--sidebar`, o anel
+das placas do `Command` e `shadow-lg`. Um borrão não teria o que borrar atrás,
+porque a barra reserva a própria calha (rodada 36).
+
+**A pílula do ativo virou objeto do `motion`.** Era medida à mão —
+`caixaRelativa` somando a cadeia de `offsetParent`, um `ResizeObserver` e dois
+`MutationObserver` — e só existia no `floating`. Hoje é o `layoutId` do
+`Menubar` (0,28s, 20% de quique), nas três variantes e do item ao subitem, e
+nasce no HTML do servidor. Ela entra como **último** filho do botão: o
+primeiro é o ícone, que a régua dos rótulos não esmaece, e o `truncate` ganhou
+um seletor para achar o rótulo antes dela. Medido na prévia: clicada em
+Cartões, a pílula sai de Configurações e chega a Início passando pelo meio.
+
+**Recolher.** A folga, que reflui a página, fica na curva enfatizada; o
+trilho das placas soltas (`floating`, `inset`) anda na mola, porque é `fixed`
+e o quique de 3,8% não chega ao conteúdo. A rente fica na curva: o fio dela
+passaria por cima da página. Os rótulos eram cortados no meio da transição;
+agora somem em 100ms antes de a largura fechar e entram depois dela, 3px
+abaixo. Medido recolhida: placa de 48, oito botões de 32 com o ícone centrado
+(desvio 0), rótulo com opacidade 0.
+
+**`peek`.** Recolhida em ícone, o cursor parado 300ms abre a barra por cima:
+a raiz se desenha aberta (`data-collapsible` vazio) com `data-state` ainda
+`collapsed`, que é o que o `SidebarInset` lê, e a folga não se mexe. Medido:
+folga em 64 com a barra aberta por cima, fecha 200ms depois de o cursor sair.
+
+Numa barra que espia, **as dicas não montam** — nem antes da espiada: a do
+ícone, mais rápida que os 300ms, aparecia e repetia o rótulo que vinha logo
+depois (o dono viu na tela). Vale para os itens e para o gatilho dentro da
+barra. Medido com o cursor sobre um ícone: a espiada abre, nenhuma dica.
+
+Na espiada o gatilho de dentro da barra virou **uma linha da barra**, a pedido
+do dono: o ícone, "Manter aberta" e o ⌘B, na régua dos itens (o rótulo some e
+volta com eles; recolhida, o ícone de 32). A barra aberta por cima fecha
+quando o cursor sai, e a linha diz como fixá-la — o ícone sozinho não dizia.
+
+**As outras duas e o telefone.** O `inset` trocou a `shadow-sm` pelo anel e
+o raio 18, e a margem passou a animar (saltava). No telefone o `floating` é
+`Sheet variant="floating"`, com a calha de 8px.
+
+**O cabeçalho e o gatilho.** Na tela, o dono pediu o fundo do cabeçalho fora
+no `floating` e um gatilho flutuante. O `SidebarInset` tira o `bg-background`
+do `TopBar` em repouso (`:not([data-surface=glass]):not([data-scrolled=true])`
+— o vidro continua quando há conteúdo por baixo) e o `SidebarTrigger` veste a
+placa: `rounded-full`, `bg-sidebar`, o anel e `shadow-lg`. Os dois decidem
+pelo seletor de irmão (`.peer[data-variant=floating] ~ *`), porque o gatilho
+mora no conteúdo e não na barra. Medido: barra transparente e gatilho
+`oklch(0.205)` redondo no `floating`; barra `oklch(0.145)` e gatilho sem
+fundo na rente.
+
+**O que o app escrevia à mão.** O `h-12` do cabeçalho recolhido (seletor de
+workspace), o `overflow-y-auto` do conteúdo recolhido (a navegação) e a
+espera do botão `lg` (o perfil, que escrevia uma `div` inteira) passaram ao
+componente — este último é `SidebarMenuSkeleton size="lg"`. A `AppSidebar`
+fixa `variant="sidebar"`: o dono pediu o `floating` só no catálogo por
+enquanto.
+
+**O gatilho entra na barra.** Recolhida em ícone no `floating`, o dono pediu o
+botão de recolher sob o "Pessoal", dentro da barra, e a passagem fluida. É um
+botão só em dois lugares, com o mesmo `layoutId`: o `SidebarHeader` o monta
+quando a barra recolhe, o topo da tela o desmonta no mesmo commit, e o
+`motion` o leva na mola (0,45s, 15% de quique). **A primeira versão não
+animava a volta**, e a medição mostrou por quê: o `LayoutGroup id` da barra
+prefixa todo `layoutId` de dentro dela, e o botão de dentro e o de fora viravam
+dois ids. A barra deixou de usar `LayoutGroup`; o id da pílula já era único
+por barra. A vaga do topo encolhe de 32 a zero, a ponta do `TopBar` devolve o
+`gap`, e o título termina alinhado aos cartões (80 e 80, medido). O cabeçalho
+da barra cresce até o botão animando para `auto` (`interpolate-size`; onde
+falta, salta). Medido nos dois sentidos: do topo (264, 8) à barra (16, 56) em
+~280ms, com 1px de quique, e de volta.
+
+**Sem `side`.** O dono tirou o eixo do componente: a navegação nunca vai à
+direita. Saíram o `side` do `cva` e das props, o `data-side`, o `order-last`
+da rodada 65, as margens espelhadas do `inset` (ficou `ml-0`, e `ml-2`
+recolhida), o lado direito do trilho `fixed` e do `SidebarRail`, a ordem da
+costura no modo redimensionável e o `side={side}` do painel do telefone (é
+`left`). O trilho transiciona `left` e `width`, sem `right`.
+
+**O redimensionável recolhia a 48.** Com o `floating` como padrão, a demonstração
+redimensionável passou a vestir a calha de 8px dos dois lados, e o
+`collapsedSize` continuava 48: a placa ficava com 32 e cortava os ícones (o
+dono viu na tela). Nas soltas o modo ícone é 64; na rente, 48. Medido: painel
+recolhido em 64, placa em 48, os botões de 32 centrados.
+
+**O redimensionável fala as mesmas versões.** O dono pediu os eixos também nele,
+e mostrou duas diferenças contra o exemplo de cima: no `floating` a costura
+ficava pendurada no meio da calha, e o cabeçalho tinha fio, fundo e o gatilho
+quadrado. A segunda era mecânica: o fio, o fundo da barra do topo e a pílula
+do gatilho perguntavam pela variante com `peer-data-[variant=floating]`, e no
+redimensionável barra e conteúdo moram em painéis diferentes do grupo — não são
+irmãos. Hoje quem pergunta é o invólucro do `SidebarProvider`
+(`group-has-[[data-slot=sidebar][data-variant=…]]/sidebar-wrapper`), nos dois
+modos, e o `inset` passou a vestir a placa ali também. A costura das soltas é
+`plain`, rente à aresta da placa (medido: 247,7 e 247,7) e da altura dela — `my-2`, a calha também em cima e embaixo, e não do topo ao chão da janela (medido: costura e placa de 8 a 432); e, a pedido do dono, ela **é o anel da placa
+acendendo**, e não uma barra ao lado: 1px, a cor do anel mais forte
+(`foreground/30` ao pousar e no foco, `/50` ao arrastar) no lugar do acento da
+marca, e só no trecho reto da aresta, depois da curva do canto. Ao lado de
+uma placa `floating` aberta, o gatilho do topo fica a **8px** dela — a calha —
+e não a 16 (medido: placa até 248, gatilho em 256, os dois com o topo em 8);
+recolhida em offcanvas, ele volta ao recuo de quem o chama; **e o gatilho saía cortado no redimensionável**: puxado
+8px para a borda do painel de conteúdo, que rola (`overflow: auto`), ele
+perdia a sombra e o anel do lado esquerdo. O conserto foi o inverso — ali o
+`floating` não tem recuo à direita (`py-2 pl-2`), a placa encosta na costura e
+o gatilho fica a 8px dela pelo recuo normal do topo (medido: placa até 256,
+gatilho em 265, sem corte); o puxão só vale no trilho `fixed`
+(`>[data-slot=sidebar-container]`). A costura voltou aos **2px**, e a regra
+passou às três versões e ao `SidebarRail` da versão normal: a borda acendendo
+na cor do anel mais forte, e nas soltas da altura da placa, na aresta dela
+(medido: o trilho em 248 com a placa em 248 no `floating`, em 256 com o
+conteúdo em 256 no `inset`, de 8 a 432). O modo ícone do redimensionável ficou
+56 no `floating` e 64 no `inset`; **e o `SidebarRail` deixou de desenhar**, a pedido do
+dono: sem o modo redimensionável não há arraste, e o fio que acendia na borda
+(e a faixa do offcanvas) era a gramática de uma costura. A borda continua
+alternando a barra no clique; o redimensionável nem monta o trilho; e as ações de 20px da barra (`SidebarGroupAction`, `SidebarMenuAction`) viraram **círculos**, a pedido do dono; **e o redimensionável ficou com o desenho do exemplo de cima**,
+a pedido do dono: a lib escreve `overflow: auto` inline no nó de dentro do
+painel, e ele recortava o anel e a sombra da placa na aresta da costura — o
+painel da barra passou a `overflow-visible!` (a barra não rola por ali). O
+conteúdo não pinta ao lado do `floating` (era o fundo da página cobrindo a
+sombra), e a calha de 8px mora do lado dele (`pl-2`), com o gatilho puxado até
+ela: 8px da placa e 8px da borda do painel que rola, sem corte. Medido: o
+gatilho e o título a 8/48px da placa no `fixed` e a 9/49px no redimensionável
+(o 1px é a costura); o gatilho viaja para
+dentro da barra também no redimensionável; e o offcanvas fica `invisible` no
+painel zerado, senão o recuo e o anel transbordavam. A demonstração usa o
+`SidebarTrigger` do exemplo de cima e os eixos `variant` e `collapsible`
+(`icon` · `offcanvas`; `none` não redimensiona, e `peek` abre por cima de um
+trilho que aqui não existe).
+
+**A camada.** O `Sidebar` passou de Organismo a **Template**, a pedido do dono:
+a régua é "o que estrutura a página, e não o que ela contém", e o
+`SidebarProvider` com o `SidebarInset` é a casca da página — a barra de um
+lado, o conteúdo do outro —, a irmã do `TopBar` e do `BottomBar`. O argumento
+antigo ("contém organismos") só dizia o piso.
+
+**O catálogo.** Os três `NativeSelect` dos eixos viraram `ToggleGroup`
+segmentados, com o eixo `peek`, e absorveram a seção "Na tela", que repetia o
+estado inicial deles. Os itens trocam o ativo no clique. Saíram as notas do
+vidro pintado e da pílula medida. `sidebar-versions.test.ts` tranca a rodada;
+`sidebar-ladder.test.ts` (18, 21, 22b, 24, 25) e o 10 do `glass.test.ts`
+foram reescritos para o novo estado.
+

@@ -160,6 +160,9 @@ describe("taxonomia", () => {
       "bottom-bar",
       "page-header",
       "page-section",
+      // A casca da página com navegação, desde a rodada 221: o
+      // `SidebarProvider` e o `SidebarInset` dispõem a barra e o conteúdo.
+      "sidebar",
       // Casco de página inteira, fora da casca do app. Ele entrou com
       // autorização humana, como manda a invariante 6, e recebe o campo por
       // **slot**: o que o campo mostra é conteúdo de produto, e conteúdo de
