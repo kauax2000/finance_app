@@ -1439,6 +1439,24 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `w-fit` distribui sobra **zero**, então as abas nunca esticaram, e o `Tabs`
   hoje mede o gatilho como esta barra. Não há mais exceção: os dois ancoram no
   gatilho.
+- **O `Stepper` é o estado do fluxo desde a rodada 224.** Com `value` +
+  `onValueChange` cada `StepperItem` deriva `complete`/`current`/`upcoming` do
+  índice — **nenhuma tela escreve `estadoDe(i, atual)`** —, e `state` no item
+  vence (é como uma etapa fica `error`). As concluídas viram botão sozinhas
+  (as futuras também, com `linear={false}`); **no modo interativo todo item é
+  `button`**, desabilitado quando não clica, porque trocar de `div` para
+  `button` ao concluir remontava a subárvore e a trilha nascia cheia. As setas
+  andam entre os botões, e uma região viva anuncia "Passo 3 de 4, Categorias".
+  O desenho: a **trilha enche na mola** (o conector é o trilho com a trilha por
+  cima, `scale` direto), o tique estala, a atual tem um anel; `icon`,
+  `description` e `optional` no item; `variant="bar"` são segmentos com "Passo
+  N de M · Nome"; `orientation="responsive"` troca a fila, no telefone, pela
+  contagem com a barra fina. O fluxo: `StepperContent` (só o atual monta, e
+  desliza do lado para onde andou), `StepperActions`, `StepperPrevious` e
+  `StepperNext` (Concluir na última; `onNext` pode devolver `Promise`, com a
+  roda e a trava, e `false` não avança). A raiz passou de `<ol>` a `<div>` com
+  a lista dentro. **O `DialogSteps` continua à parte** por enquanto — o dono
+  pediu só o catálogo.
 - **O `StatCard` foi redesenhado e ganhou as versões de painel** (rodada
   223). **A anatomia**: `StatCardHeader` com o `StatCardLabel` em sobrancelha
   (caixa alta de 11px, o texto cru truncando) e o `StatCardIcon` num

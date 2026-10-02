@@ -461,7 +461,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("popover", "Popover", "Camada flutuante ancorada a um gatilho — com a confirmação curta e a gaveta no telefone.", ui("popover"), "Popover, PopoverContent, PopoverTrigger, PopoverHeader, PopoverConfirm"),
   entry("sheet", "Sheet", "Painel de borda no desktop, gaveta no telefone.", ui("sheet"), "Sheet, SheetContent, SheetTrigger, SheetClose"),
   entry("stat-card", "Stat Card", "Um número que importa, com sua variação.", ui("stat-card"), "StatCard, StatCardGroup, StatCardHeader, StatCardLabel, StatCardIcon, StatCardValue, StatCardDelta"),
-  entry("stepper", "Stepper", "Progresso por etapas de um fluxo.", ui("stepper"), "Stepper, StepperItem"),
+  entry("stepper", "Stepper", "Progresso por etapas de um fluxo.", ui("stepper"), "Stepper, StepperItem, StepperContent, StepperActions, StepperPrevious, StepperNext"),
   entry("table", "Table", "Tabela de dados.", ui("table"), "Table, TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, TableEmpty, TableCaption"),
   entry("tabs", "Tabs", "Alterna entre painéis do mesmo nível.", ui("tabs"), "Tabs, TabsList, TabsTrigger, TabsContent"),
   entry("timeline", "Timeline", "Feed cronológico de eventos.", ui("timeline"), "Timeline, TimelineItem, TimelineSeparator, TimelineTitle, TimelineDescription, TimelineTime"),

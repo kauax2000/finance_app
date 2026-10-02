@@ -17740,3 +17740,35 @@ ficou: os três ladrilhos moram dentro de um `Card` clicável, e `StatCard`
 dentro dele seria cartão dentro de cartão — o caminho é `DescriptionList
 columns={3}`. As telas ficam atrás de login e não foram vistas.
 
+### Rodada 224 — o Stepper vira o estado do fluxo: a trilha que enche, o marcador vivo, o ícone, a barra, a descrição, o erro, o opcional, o painel, os botões, a contagem compacta, as setas e o anúncio
+
+**O que estava.** Nenhuma tela usava o `Stepper`: os dois fluxos de passos do
+app (a exclusão de conta e o assistente de categorias) são o `DialogSteps`, a
+barra segmentada — duas peças para a mesma ideia. E ele era estático: quem
+chamava escrevia `estadoDe(i, atual)` em cada item, o conector trocava de cor
+seco, e não havia etapa com erro nem opcional.
+
+**O que mudou, todo pedido pelo dono.** Com `value` a lista é o estado: os
+itens derivam o próprio estado, as concluídas voltam ao clique, as setas andam
+entre elas e uma região viva anuncia a troca. O conector é o trilho com a
+**trilha por cima, que enche na mola** e esvazia ao voltar; o tique estala, e a
+atual ganha um anel. `icon`, `description`, `optional` e o estado `error` no
+item; `variant="bar"` é a forma do `DialogSteps` (segmentos e "Passo N de M ·
+Nome"); `orientation="responsive"` é a fila a partir de `sm` e, no telefone, a
+contagem com a barra fina — medido a 375px: a lista em `display: none` e
+"Passo 1 de 3 · Conta" no lugar. `StepperContent` monta só o painel atual, que
+desliza do lado para onde o fluxo andou; `StepperNext` espera a `Promise` do
+`onNext` com a roda e a trava (medido: `aria-busy`, roda, e o painel trocou
+depois) e vira Concluir na última.
+
+**Duas medições na tela.** A primeira: ao concluir, o item trocava de `div`
+para `button` e a subárvore remontava — a trilha nascia cheia, sem encher. No
+modo interativo todo item é `button`, desabilitado quando não clica, e a
+transição passou a disparar (`transitionrun` e `transitionend` medidos). A
+segunda: os botões desabilitados centravam o texto (o padrão do `button`), e na
+vertical "Categorias" e "Pronto" saíam recuados; o `text-left` foi para todos —
+medido, os quatro rótulos em 458. E a lista separa os itens do resto dos filhos por uma **marca na função**, e não por `c.type === StepperItem`: a regra 26 de `table-ladder.test.ts` reprova a identidade, que o Fast Refresh troca a cada edição.
+
+**O app.** O dono pediu só o catálogo: o `DialogSteps` e as duas telas ficam,
+e unificá-los no `variant="bar"` é o próximo passo natural.
+
