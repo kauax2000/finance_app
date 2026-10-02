@@ -1,7 +1,6 @@
 "use client"
 
 import { CustomForm, FormCancel, FormSubmit } from "@/components/ui/form"
-import { cn } from "@/lib/utils"
 import {
   DialogBody,
   DialogClose,
@@ -56,11 +55,6 @@ export function SubscriptionFormSurface({
 }: SubscriptionFormSurfaceProps) {
     const submit = (
         <FormSubmit
-            pendingLabel="Salvando…"
-            className={cn(
-                variant === "detail-sheet" &&
-                    "max-sm:h-11 max-sm:w-full max-sm:text-base"
-            )}
             size={variant === "detail-sheet" ? "sm" : undefined}
             disabled={submitDisabled}
         >

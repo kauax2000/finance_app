@@ -49,11 +49,11 @@ export function TransactionFormSurface({
     const footer = showFooter ? (
         <FormSubmit
             size="sm"
-            pendingLabel="Salvando…"
-            className={cn(
-                variant === "dialog-mobile" && "h-10 w-full",
-                variant === "detail-sheet" && "max-sm:h-10 max-sm:w-full"
-            )}
+            // A altura no dedo e a largura toda abaixo de `sm` são do
+            // `DialogFooter`. Fica o `w-full` do telefone porque a gaveta vai até
+            // 767px e o rodapé vira fileira a partir de `sm` (640): nessa faixa o
+            // botão encolheria à direita.
+            className={variant === "dialog-mobile" ? "w-full" : undefined}
             disabled={submitDisabled}
         >
             Salvar

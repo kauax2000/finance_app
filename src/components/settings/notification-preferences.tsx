@@ -1,20 +1,13 @@
 "use client"
 
 import { useCallback, useState, type ReactNode } from "react"
-import {
-    Field,
-    FieldContent,
-    FieldControl,
-    FieldDescription,
-    FieldLabel,
-} from "@/components/ui/field"
+import { FormSwitch } from "@/components/ui/form"
 import {
     PageSection,
     PageSectionHeader,
     PageSectionTitle,
 } from "@/components/ui/page-section"
 import { ArrowRightIcon } from "@heroicons/react/16/solid"
-import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
     Alert,
@@ -54,7 +47,7 @@ function PrefSubheaderBar({
 
 function PrefRowSkeleton() {
     return (
-        <div className="flex items-start justify-between gap-5 rounded-lg border border-border/80 bg-muted/20 p-3 sm:p-3.5">
+        <div className="flex items-start justify-between gap-4 rounded-lg border border-border p-3">
             <div className="min-w-0 flex-1 space-y-1.5 pr-2">
                 <Skeleton className="h-4 w-40 max-w-full" />
                 <Skeleton className="h-3 w-full max-w-56" />
@@ -88,50 +81,6 @@ function NotificationPreferencesSkeleton() {
                 ))}
             </ul>
         </>
-    )
-}
-
-function PrefRow({
-    id,
-    title,
-    description,
-    checked,
-    onCheckedChange,
-    disabled,
-}: {
-    id: string
-    title: string
-    description: string
-    checked: boolean
-    onCheckedChange: (checked: boolean) => void
-    disabled?: boolean
-}) {
-    return (
-        // `Field` horizontal: o rótulo segue ligado ao interruptor, e a descrição
-        // passa a ser anunciada com ele por `aria-describedby`. A caixa pintada
-        // fica à mão de propósito: é a linha de uma preferência, e o `Field` é
-        // quem ela é — `Card` ou `Item` trocariam a semântica do campo pela de
-        // uma superfície.
-        <Field
-            orientation="horizontal"
-            className="justify-between gap-5 rounded-lg border border-border/80 bg-muted/20 p-3 sm:p-3.5"
-        >
-            <FieldContent className="min-w-0 gap-0.5 pr-2">
-                <FieldLabel className="text-sm font-medium">{title}</FieldLabel>
-                <FieldDescription className="text-xs leading-snug">
-                    {description}
-                </FieldDescription>
-            </FieldContent>
-            <FieldControl>
-                <Switch
-                    id={id}
-                    className="mt-0.5"
-                    checked={checked}
-                    onCheckedChange={onCheckedChange}
-                    disabled={disabled}
-                />
-            </FieldControl>
-        </Field>
     )
 }
 
@@ -242,9 +191,10 @@ export function NotificationPreferences() {
                                 role="list"
                             >
                                 <li>
-                                    <PrefRow
+                                    <FormSwitch
+                                        variant="card"
                                         id="pref-email"
-                                        title="Notificações por email"
+                                        label="Notificações por email"
                                         description="Avisos na sua caixa de email"
                                         checked={!!prefs?.notify_email}
                                         onCheckedChange={(checked) =>
@@ -254,9 +204,10 @@ export function NotificationPreferences() {
                                     />
                                 </li>
                                 <li>
-                                    <PrefRow
+                                    <FormSwitch
+                                        variant="card"
                                         id="pref-inapp"
-                                        title="Central do app"
+                                        label="Central do app"
                                         description="Lista de notificações dentro do app"
                                         checked={!!prefs?.notify_in_app}
                                         onCheckedChange={(checked) =>
@@ -266,9 +217,10 @@ export function NotificationPreferences() {
                                     />
                                 </li>
                                 <li>
-                                    <PrefRow
+                                    <FormSwitch
+                                        variant="card"
                                         id="pref-push"
-                                        title="Push no dispositivo"
+                                        label="Push no dispositivo"
                                         description={
                                             pushUnsupported
                                                 ? "Não disponível neste navegador"
@@ -308,9 +260,10 @@ export function NotificationPreferences() {
                                 role="list"
                             >
                                 <li>
-                                    <PrefRow
+                                    <FormSwitch
+                                        variant="card"
                                         id="pref-tx"
-                                        title="Despesas de outros membros"
+                                        label="Despesas de outros membros"
                                         description="Quando outro membro adiciona uma despesa na carteira compartilhada"
                                         checked={!!prefs?.notify_transactions}
                                         onCheckedChange={(checked) =>
@@ -320,9 +273,10 @@ export function NotificationPreferences() {
                                     />
                                 </li>
                                 <li>
-                                    <PrefRow
+                                    <FormSwitch
+                                        variant="card"
                                         id="pref-budget"
-                                        title="Alertas de orçamento"
+                                        label="Alertas de orçamento"
                                         description="Ao se aproximar ou atingir limites"
                                         checked={!!prefs?.notify_budget}
                                         onCheckedChange={(checked) =>
@@ -332,9 +286,10 @@ export function NotificationPreferences() {
                                     />
                                 </li>
                                 <li>
-                                    <PrefRow
+                                    <FormSwitch
+                                        variant="card"
                                         id="pref-cc-spend"
-                                        title="Cartões: limite e categorias"
+                                        label="Cartões: limite e categorias"
                                         description="Fatura aberta — limite do cartão e alertas por categoria"
                                         checked={prefs?.notify_credit_cards !== false}
                                         onCheckedChange={(checked) =>
@@ -344,9 +299,10 @@ export function NotificationPreferences() {
                                     />
                                 </li>
                                 <li>
-                                    <PrefRow
+                                    <FormSwitch
+                                        variant="card"
                                         id="pref-cc-cal"
-                                        title="Cartões: fatura e vencimento"
+                                        label="Cartões: fatura e vencimento"
                                         description="Lembretes de fechamento e vencimento estimado (agendado)"
                                         checked={
                                             prefs?.notify_credit_card_calendar !== false
@@ -360,9 +316,10 @@ export function NotificationPreferences() {
                                     />
                                 </li>
                                 <li>
-                                    <PrefRow
+                                    <FormSwitch
+                                        variant="card"
                                         id="pref-bills"
-                                        title="Contas a pagar"
+                                        label="Contas a pagar"
                                         description="Vencimento e lembretes de contas cadastradas"
                                         checked={prefs?.notify_bills !== false}
                                         onCheckedChange={(checked) =>
@@ -372,9 +329,10 @@ export function NotificationPreferences() {
                                     />
                                 </li>
                                 <li>
-                                    <PrefRow
+                                    <FormSwitch
+                                        variant="card"
                                         id="pref-promo"
-                                        title="Promoções e ofertas"
+                                        label="Promoções e ofertas"
                                         description="Novidades e conteúdo comercial"
                                         checked={!!prefs?.notify_promotions}
                                         onCheckedChange={(checked) =>

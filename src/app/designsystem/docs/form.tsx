@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -16,14 +17,28 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { DatePicker } from "@/components/ui/date-picker"
 import {
   ENTER_DEFERRAL_RULES,
   Form,
   FormActions,
   FormCancel,
+  FormControl,
   FormError,
+  FormField,
   FormInput,
+  FormPickerPopover,
+  FormPickerPopoverContent,
+  FormPickerPopoverEmpty,
+  FormPickerPopoverFooter,
+  FormPickerPopoverFooterAction,
+  FormPickerPopoverItem,
+  FormPickerPopoverList,
+  FormPickerPopoverPlaceholder,
+  FormPickerPopoverSearch,
+  FormPickerPopoverTrigger,
   FormSubmit,
+  FormSwitch,
   FormTextarea,
 } from "@/components/ui/form"
 import {
@@ -45,6 +60,7 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 import { PhoneFrame } from "../ds-frame"
 import { Group, Spec, Stack } from "../ds-kit"
@@ -53,23 +69,28 @@ export default function FormDoc() {
   return (
     <>
       <Usage>
-          O formulário do projeto: o <code>&lt;form&gt;</code>, o contrato do <Kbd>Enter</Kbd> e as peças curtas sobre <code>Field</code>, <code>Button</code> e <code>Spinner</code>. Use em todo fluxo que salva ou confirma com uma ação principal, nunca <code>&lt;form&gt;</code> cru. Rótulo e erro sem formulário são o <code>Field</code>.
+          O formulário do projeto: o <code>&lt;form&gt;</code>, o contrato do <Kbd>Enter</Kbd> e as peças curtas sobre <code>Field</code>, <code>Button</code> e <code>Spinner</code>. Use em todo fluxo que salva ou confirma com uma ação principal, nunca <code>&lt;form&gt;</code> cru. Rótulo e erro sem formulário são o <code>Field</code>. O seletor com busca ancorado num campo, o <code>FormPickerPopover</code>, mora aqui.
       </Usage>
 
       <DocSection
-        title="Empilhado"
-        description="A forma de autenticação e configurações. layout='stack' lê --space-block, o mesmo respiro do PageSection."
-        code={`<Form onSubmit={handleSubmit}>
-  <FormInput label="E-mail" name="email" type="email" description="Usamos para o aviso de fatura." />
+        title="Empilhado e em linha"
+        description="stack (o padrão) lê --space-block, o mesmo respiro do PageSection. inline põe campo e botão na mesma linha, alinhando o botão pela base do campo — e no telefone empilha, com o botão na largura toda."
+        code={`<Form onSubmit={salvar}>
+  <FormInput label="E-mail" name="email" type="email" description="Usamos só para o aviso de fatura." />
   <FormInput label="Apelido" name="nick" optional />
   <FormActions>
     <FormCancel onClick={fechar}>Cancelar</FormCancel>
     <FormSubmit>Salvar</FormSubmit>
   </FormActions>
+</Form>
+
+<Form layout="inline" pending={convidando} onSubmit={convidar}>
+  <FormInput label="E-mail" type="email" placeholder="email@exemplo.com" />
+  <FormSubmit>Convidar</FormSubmit>
 </Form>`}
-        previewClassName="items-stretch"
+        previewClassName="flex-col items-stretch gap-4"
       >
-        <EmpilhadoDemo />
+        <LayoutDemo />
       </DocSection>
 
       <DocNote title="Um campo é uma linha, e a ligação vem junto">
@@ -81,15 +102,100 @@ export default function FormDoc() {
       </DocNote>
 
       <DocSection
-        title="Em linha"
-        description="Campo e botão na mesma linha, como numa busca. O botão alinha pela base do campo, não do rótulo."
-        code={`<Form layout="inline" onSubmit={buscar}>
-  <FormInput label="Buscar" name="q" className="flex-1" />
-  <FormSubmit>Buscar</FormSubmit>
+        title="Validação no envio"
+        description={
+          <>
+            Sem <code>noValidate</code>, <code>required</code>, <code>type=&quot;email&quot;</code> e <code>minLength</code> viram a frase em português embaixo do campo — não o balão do navegador —, e o foco vai ao primeiro erro. Com um <code>onSubmit</code> que devolve <code>Promise</code>, o formulário espera sozinho, e o botão diz &quot;Convidando…&quot; tirado do próprio verbo.
+          </>
+        }
+        code={`<Form onSubmit={async (e) => { e.preventDefault(); await convidar() }}>
+  <FormInput label="Nome" required minLength={3} />
+  <FormInput label="E-mail" type="email" required />
+  <FormActions start={<FormCancel>Voltar</FormCancel>}>
+    <FormSubmit>Convidar</FormSubmit>
+  </FormActions>
 </Form>`}
         previewClassName="items-stretch"
       >
-        <EmLinhaDemo />
+        <ValidacaoDemo />
+      </DocSection>
+
+      <DocSection
+        title="Seletor com busca"
+        description={
+          <>
+            <code>FormPickerPopover</code>: o campo que abre uma lista longa com busca, com a largura do gatilho, altura limitada e três faixas — busca, lista rolável e um pé com a saída para gerenciar o que a lista mostra. Lista curta sem busca é <code>Select</code>; a que cabe numa palavra é <code>Combobox</code>. A raiz não renderiza nó, então o <code>FormControl</code> vai no gatilho.
+          </>
+        }
+        code={`<FormField label="Cartão">
+  <FormPickerPopover open={open} onOpenChange={setOpen}>
+    <FormControl>
+      <FormPickerPopoverTrigger>
+        {escolhido ? escolhido.nome : (
+          <FormPickerPopoverPlaceholder>Selecione o cartão</FormPickerPopoverPlaceholder>
+        )}
+      </FormPickerPopoverTrigger>
+    </FormControl>
+    <FormPickerPopoverContent>
+      <FormPickerPopoverSearch value={busca} onChange={…} onClear={…} placeholder="Buscar cartão…" />
+      <FormPickerPopoverList>
+        {filtrados.map((c) => (
+          <FormPickerPopoverItem key={c.nome} selected={…} onClick={() => escolher(c)}>
+            {c.nome}
+          </FormPickerPopoverItem>
+        ))}
+      </FormPickerPopoverList>
+      <FormPickerPopoverFooter>
+        <FormPickerPopoverFooterAction>
+          <Link href="/credit-cards">Cadastrar cartão</Link>
+        </FormPickerPopoverFooterAction>
+      </FormPickerPopoverFooter>
+    </FormPickerPopoverContent>
+  </FormPickerPopover>
+</FormField>`}
+        previewClassName="items-stretch"
+      >
+        <PickerDemo />
+      </DocSection>
+
+      <DocNote title="O Enter na busca do seletor não salva">
+          O popover é portalizado para fora do <code>&lt;form&gt;</code> no DOM, mas eventos de portal sobem pela árvore do React: o teclado da busca chega ao formulário. A regra <code>form-picker-popover-search</code> está na lista do Enter, abaixo — experimente: Enter na busca não conta envio.
+      </DocNote>
+
+      <DocNote title="O gatilho é um campo, e a linha responde ao dedo">
+          O gatilho veste <code>field-classes</code>, como <code>Input</code>, <code>Select</code> e <code>DatePicker</code> — não o troque por <code>Button variant=&quot;outline&quot;</code>, que no tema claro é outra superfície. Abrir não rouba o foco (o teclado do telefone não fecha); fechar o devolve ao gatilho. <code>FormPickerPopoverItem</code> tem 44px de alvo e o par <code>active:</code> junto do realce.
+      </DocNote>
+
+      <DocNote title="O vazio é do componente; o texto, de quem chama">
+          <code>FormPickerPopoverEmpty</code> fixa respiro e tinta. A frase muda: &ldquo;nenhuma categoria encontrada&rdquo; é busca sem resultado, &ldquo;nenhum cartão cadastrado&rdquo; é ausência de dado.
+      </DocNote>
+
+      <DocNote title="Quem valida à mão passa noValidate">
+          Login e cadastro trazem a própria regra, com <code>noValidate</code>: ali o formulário não valida, mas o foco no primeiro erro continua valendo — ele procura o <code>aria-invalid</code> que o <code>error</code> do campo escreve. Um controle nativo sem <code>FormField</code> em volta não tem onde mostrar a frase, e ali volta o balão do navegador.
+      </DocNote>
+
+      <DocSection
+        title="Qualquer controle, e a linha de preferência"
+        description={
+          <>
+            <code>FormField</code> põe rótulo, ajuda e erro em volta de um <code>DatePicker</code> ou de qualquer controle de um nó. <code>Select</code> e <code>Combobox</code> não renderizam nó na raiz: ali o <code>FormControl</code> vai no gatilho. <code>FormSwitch</code> é a preferência — a linha inteira liga e desliga.
+          </>
+        }
+        code={`<FormField label="Vencimento" error={erro}>
+  <DatePicker value={data} onChange={setData} />
+</FormField>
+
+<FormField label="Repetir">
+  <Select>
+    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+    <SelectContent>…</SelectContent>
+  </Select>
+</FormField>
+
+<FormSwitch variant="card" label="Fatura fechando" description="Três dias antes do fechamento." checked={on} onCheckedChange={setOn} />`}
+        previewClassName="items-stretch"
+      >
+        <ControlesDemo />
       </DocSection>
 
       <DocSection
@@ -160,7 +266,7 @@ export default function FormDoc() {
       </DocSection>
 
       <DocNote title="FormError é role=&quot;alert&quot; e nada mais">
-          O papel já implica <code>aria-live=&quot;assertive&quot;</code>; um <code>aria-live=&quot;polite&quot;</code> explícito o contradiz. Quem quer a caixa compõe <code>&lt;Alert tone=&quot;destructive&quot; variant=&quot;plain&quot;&gt;</code> na tela.
+          O papel já implica <code>aria-live=&quot;assertive&quot;</code>; um <code>aria-live=&quot;polite&quot;</code> explícito o contradiz. Quem quer a caixa compõe <code>&lt;Alert tone=&quot;destructive&quot; size=&quot;sm&quot;&gt;</code> na tela.
       </DocNote>
 
       <DocNote title="A tecla morta não envia o formulário">
@@ -224,7 +330,13 @@ export default function FormDoc() {
             prop: "pending",
             type: "boolean",
             description:
-              "Enviando. Desce por contexto para FormSubmit e FormCancel.",
+              "Enviando. Desce por contexto para FormSubmit e FormCancel; um onSubmit que devolve Promise liga sozinho.",
+          },
+          {
+            prop: "noValidate",
+            type: "boolean",
+            description:
+              "A tela valida à mão. Sem ele, a validação nativa vira a frase em português no FormField.",
           },
           {
             prop: "id",
@@ -234,8 +346,9 @@ export default function FormDoc() {
           },
           {
             prop: "onSubmit",
-            type: "React.FormEventHandler<HTMLFormElement>",
-            description: "Como em qualquer form. Chame preventDefault().",
+            type: "(e) => void | Promise<unknown>",
+            description:
+              "Chame preventDefault(). Devolvendo Promise, o formulário espera até ela assentar, e depois leva o foco ao primeiro erro.",
           },
           {
             prop: "onKeyDown",
@@ -247,7 +360,7 @@ export default function FormDoc() {
       />
 
       <PropsTable
-        title="FormInput e FormTextarea"
+        title="FormInput, FormTextarea e FormField"
         rows={[
           {
             prop: "label",
@@ -283,17 +396,29 @@ export default function FormDoc() {
             type: "ComponentProps<typeof Input | typeof Textarea>",
             description: "Vai inteiro para o controle: name, type, size, ref.",
           },
+          {
+            prop: "FormField children",
+            type: "React.ReactElement",
+            description:
+              "Um controle de um nó. Em Select e Combobox, o FormControl vai no gatilho.",
+          },
         ]}
       />
 
       <PropsTable
-        title="FormActions, FormSubmit, FormCancel e FormError"
+        title="FormActions, FormSubmit, FormCancel, FormSwitch e FormError"
         rows={[
           {
             prop: "FormActions variant",
             type: '"inline" | "sticky"',
             description:
               "inline é a fileira comum; sticky é o rodapé fixo de uma folha, sem fio nem tinta.",
+          },
+          {
+            prop: "FormActions start",
+            type: "React.ReactNode",
+            description:
+              "A ação à esquerda a partir de sm — Excluir, Voltar —, embaixo no telefone.",
           },
           {
             prop: "FormActions align",
@@ -304,7 +429,7 @@ export default function FormDoc() {
             prop: "FormSubmit pendingLabel",
             type: "React.ReactNode",
             description:
-              "O rótulo enquanto envia; sem ele, só o Spinner entra.",
+              "O rótulo enquanto envia. Sem ele, sai do verbo: Salvar → Salvando…, Criar conta → Criando conta…; rótulo sem verbo não muda.",
           },
           {
             prop: "FormSubmit pending",
@@ -319,6 +444,12 @@ export default function FormDoc() {
               "type='button' e variant='tertiary' já vêm da peça.",
           },
           {
+            prop: "FormSwitch",
+            type: 'label, description, variant: "plain" | "card", …Switch',
+            description:
+              "A linha de preferência; card emoldura a linha solta numa página.",
+          },
+          {
             prop: "FormError",
             type: "ComponentProps<typeof P>",
             description:
@@ -326,66 +457,193 @@ export default function FormDoc() {
           },
         ]}
       />
+      <PropsTable
+        title="FormPickerPopover"
+        rows={[
+          {
+            prop: "FormPickerPopover",
+            type: "ComponentProps<typeof Popover>",
+            default: "modal={isMobile}",
+            description:
+              "A raiz; no telefone tranca a rolagem para a lista não arrastar a folha.",
+          },
+          {
+            prop: "FormPickerPopoverTrigger",
+            type: 'Omit<ComponentProps<"button">, "size"> & { size?: "sm" | "md" | "lg" | "xl" }',
+            default: 'size="md"',
+            description:
+              "O gatilho é o campo: field-classes, altura da escada e chevron que gira.",
+          },
+          {
+            prop: "FormPickerPopoverSearch",
+            type: "ComponentProps<typeof SearchInput>",
+            default: 'size="lg"',
+            description:
+              "A pílula de busca na superfície plate, com o × de limpar (onClear).",
+          },
+          {
+            prop: "FormPickerPopoverList",
+            type: 'ComponentProps<"div">',
+            description:
+              "A região rolável, com a dissolução, as setas de \u201ctem mais\u201d e o onWheel que para a propagação.",
+          },
+          {
+            prop: "FormPickerPopoverItem",
+            type: 'ComponentProps<"button"> & { selected?: boolean }',
+            default: "selected={false}",
+            description: "A linha: 44px de alvo, par hover/active e aria-pressed.",
+          },
+          {
+            prop: "FormPickerPopoverEmpty",
+            type: 'ComponentProps<"p">',
+            description: "A lista vazia: respiro e tinta fixos, texto de quem chama.",
+          },
+          {
+            prop: "FormPickerPopoverFooter / FooterAction",
+            type: 'ComponentProps<"div"> / ComponentProps<typeof Button>',
+            description:
+              "O pé e a saída para gerenciar a lista — secondary, lg, largura toda, asChild com um Link.",
+          },
+        ]}
+      />
     </>
   )
 }
 
-function EmpilhadoDemo() {
-  const [salvos, setSalvos] = React.useState(0)
+function LayoutDemo() {
+  const [layout, setLayout] = React.useState<"stack" | "inline">("stack")
+  const [envios, setEnvios] = React.useState(0)
+  const enviar = (e: React.FormEvent) => {
+    e.preventDefault()
+    setEnvios((v) => v + 1)
+  }
+
+  return (
+    <>
+      <ToggleGroup
+        type="single"
+        variant="segmented"
+        size="sm"
+        value={layout}
+        onValueChange={(v) => v && setLayout(v as typeof layout)}
+        aria-label="Layout"
+        className="self-start"
+      >
+        <ToggleGroupItem value="stack" className="font-mono">
+          stack
+        </ToggleGroupItem>
+        <ToggleGroupItem value="inline" className="font-mono">
+          inline
+        </ToggleGroupItem>
+      </ToggleGroup>
+      {layout === "stack" ? (
+        <Form className="w-full max-w-sm" onSubmit={enviar}>
+          <FormInput
+            label="E-mail"
+            name="email"
+            type="email"
+            placeholder="voce@exemplo.com"
+            description="Usamos só para o aviso de fatura."
+          />
+          <FormInput label="Apelido" name="nick" placeholder="—" optional />
+          <FormActions>
+            <FormCancel>Cancelar</FormCancel>
+            <FormSubmit>Salvar</FormSubmit>
+          </FormActions>
+        </Form>
+      ) : (
+        <Form layout="inline" className="w-full max-w-md" onSubmit={enviar}>
+          <FormInput
+            label="E-mail"
+            name="email"
+            type="email"
+            placeholder="email@exemplo.com"
+          />
+          <FormSubmit>Convidar</FormSubmit>
+        </Form>
+      )}
+      <span className="text-xs text-muted-foreground">
+        Envios: <span className="nums">{envios}</span>
+      </span>
+    </>
+  )
+}
+
+function ValidacaoDemo() {
+  const [convites, setConvites] = React.useState(0)
 
   return (
     <Form
       className="w-full max-w-sm"
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault()
-        setSalvos((v) => v + 1)
+        await new Promise((r) => setTimeout(r, 1500))
+        setConvites((v) => v + 1)
       }}
     >
+      <FormInput
+        label="Nome"
+        name="nome"
+        required
+        minLength={3}
+        placeholder="Ana Souza"
+      />
       <FormInput
         label="E-mail"
         name="email"
         type="email"
-        placeholder="voce@exemplo.com"
-        description="Usamos só para o aviso de fatura."
+        required
+        placeholder="ana@exemplo.com"
+        description={`Convites enviados: ${convites}`}
       />
-      <FormInput label="Apelido" name="nick" placeholder="—" optional />
-      <FormActions align="between">
-        <span className="self-center text-xs text-muted-foreground">
-          Salvos: <span className="nums">{salvos}</span>
-        </span>
-        <div className="flex gap-2">
-          <FormCancel>Cancelar</FormCancel>
-          <FormSubmit>Salvar</FormSubmit>
-        </div>
+      <FormActions start={<FormCancel>Voltar</FormCancel>}>
+        <FormSubmit>Convidar</FormSubmit>
       </FormActions>
     </Form>
   )
 }
 
-function EmLinhaDemo() {
-  const [buscas, setBuscas] = React.useState(0)
+function ControlesDemo() {
+  const [data, setData] = React.useState<Date | undefined>(undefined)
+  const [aviso, setAviso] = React.useState(true)
+  const [resumo, setResumo] = React.useState(false)
 
   return (
-    <Form
-      layout="inline"
-      className="w-full max-w-md"
-      onSubmit={(e) => {
-        e.preventDefault()
-        setBuscas((v) => v + 1)
-      }}
-    >
-      <FormInput
-        label="Buscar"
-        name="q"
-        type="search"
-        placeholder="Mercado"
-        fieldClassName="flex-1"
+    <div className="flex w-full max-w-sm flex-col gap-4">
+      <FormField
+        label="Vencimento"
+        description="O dia em que a conta vence."
+        error={data ? undefined : "Escolha uma data."}
+      >
+        <DatePicker value={data} onChange={setData} />
+      </FormField>
+      <FormField label="Repetir">
+        <Select defaultValue="mensal">
+          <FormControl>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+          </FormControl>
+          <SelectContent>
+            <SelectItem value="mensal">Todo mês</SelectItem>
+            <SelectItem value="anual">Todo ano</SelectItem>
+          </SelectContent>
+        </Select>
+      </FormField>
+      <FormSwitch
+        variant="card"
+        label="Fatura fechando"
+        description="Três dias antes do fechamento do cartão."
+        checked={aviso}
+        onCheckedChange={setAviso}
       />
-      <FormSubmit>Buscar</FormSubmit>
-      <span className="self-center pb-2 text-xs text-muted-foreground">
-        <span className="nums">{buscas}</span>
-      </span>
-    </Form>
+      <FormSwitch
+        label="Resumo semanal"
+        description="Toda segunda, o que entrou e o que saiu."
+        checked={resumo}
+        onCheckedChange={setResumo}
+      />
+    </div>
   )
 }
 
@@ -606,6 +864,107 @@ function EnterDeferDemo() {
       <FormActions align="between">
         <span className="self-center text-xs text-muted-foreground">
           Envios: <span className="nums">{n}</span>
+        </span>
+        <FormSubmit>Salvar</FormSubmit>
+      </FormActions>
+    </Form>
+  )
+}
+
+const CARTOES = [
+  { nome: "Nubank", fim: "4412" },
+  { nome: "Itaú", fim: "8830" },
+  { nome: "Inter", fim: "2091" },
+  { nome: "C6", fim: "7745" },
+  { nome: "BTG", fim: "1203" },
+  { nome: "Will", fim: "6658" },
+  { nome: "Neon", fim: "3317" },
+]
+
+function PickerDemo() {
+  const [aberto, setAberto] = React.useState(false)
+  const [busca, setBusca] = React.useState("")
+  const [escolhido, setEscolhido] = React.useState<
+    (typeof CARTOES)[number] | null
+  >(null)
+  const [enviou, setEnviou] = React.useState(0)
+
+  const filtrados = CARTOES.filter((c) =>
+    c.nome.toLowerCase().includes(busca.trim().toLowerCase())
+  )
+
+  return (
+    <Form
+      className="w-full max-w-xs"
+      onSubmit={(e) => {
+        e.preventDefault()
+        setEnviou((n) => n + 1)
+      }}
+    >
+      <FormField label="Cartão">
+        <FormPickerPopover
+          open={aberto}
+          onOpenChange={(o) => {
+            setAberto(o)
+            if (!o) setBusca("")
+          }}
+        >
+          <FormControl>
+            <FormPickerPopoverTrigger>
+              {escolhido ? (
+                <span className="truncate">
+                  {escolhido.nome} · •••• {escolhido.fim}
+                </span>
+              ) : (
+                <FormPickerPopoverPlaceholder>
+                  Selecione o cartão
+                </FormPickerPopoverPlaceholder>
+              )}
+            </FormPickerPopoverTrigger>
+          </FormControl>
+          <FormPickerPopoverContent>
+            <FormPickerPopoverSearch
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              onClear={() => setBusca("")}
+              placeholder="Buscar cartão…"
+            />
+            <FormPickerPopoverList>
+              {filtrados.length > 0 ? (
+                filtrados.map((c) => (
+                  <FormPickerPopoverItem
+                    key={c.nome}
+                    selected={c.nome === escolhido?.nome}
+                    onClick={() => {
+                      setEscolhido(c)
+                      setAberto(false)
+                    }}
+                  >
+                    <span className="truncate">{c.nome}</span>
+                    <span className="ml-auto shrink-0 text-xs text-muted-foreground nums">
+                      •••• {c.fim}
+                    </span>
+                  </FormPickerPopoverItem>
+                ))
+              ) : (
+                <FormPickerPopoverEmpty>
+                  Nenhum cartão com esse nome.
+                </FormPickerPopoverEmpty>
+              )}
+            </FormPickerPopoverList>
+            <FormPickerPopoverFooter>
+              <FormPickerPopoverFooterAction>
+                <Link href="/credit-cards">Cadastrar cartão</Link>
+              </FormPickerPopoverFooterAction>
+            </FormPickerPopoverFooter>
+          </FormPickerPopoverContent>
+        </FormPickerPopover>
+      </FormField>
+      {/* O envio existe para o Enter ter um alvo — é ele que prova que o Enter
+          na busca não salva o formulário. */}
+      <FormActions align="between">
+        <span aria-live="polite" className="self-center text-xs text-muted-foreground">
+          {enviou === 0 ? "não enviado" : `enviado ${enviou}×`}
         </span>
         <FormSubmit>Salvar</FormSubmit>
       </FormActions>

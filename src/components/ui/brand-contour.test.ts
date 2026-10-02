@@ -137,7 +137,7 @@ describe("contorno de marca", () => {
       "select",
       "combobox",
       "date-picker",
-      "form-picker-popover",
+      "form",
       "input-group",
     ]) {
       expect(fonte(nome), nome).not.toMatch(/--brand-|brand-rainbow/)

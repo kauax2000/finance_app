@@ -2,11 +2,31 @@
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { ChevronDownIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
+import {
+  fieldControlHeightClassName,
+  fieldControlPaddingClassName,
+  fieldDisabledClassName,
+  fieldFocusRingClassName,
+  fieldInvalidClassName,
+  fieldSurfaceClassName,
+  fieldTriggerHoverClassName,
+  type FieldControlSize,
+} from "@/lib/field-classes"
+import {
+  scrollFadeBandsClassName,
+  scrollFadeBleedClassName,
+  scrollFadeViewportClassName,
+} from "@/lib/scroll-fade-classes"
+import { ScrollFadeArrows } from "@/lib/scroll-fade-arrows"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { Button } from "@/components/ui/button"
 import {
   Field,
+  FieldContent,
   FieldControl,
   FieldDescription,
   FieldError,
@@ -21,8 +41,15 @@ import {
 } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
+import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { P } from "@/components/ui/typography"
+import { Muted, P } from "@/components/ui/typography"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { SearchInput } from "@/components/ui/search-input"
 
 /**
  * O formulário do projeto — o `<form>`, a política do Enter e as peças.
@@ -32,7 +59,9 @@ import { P } from "@/components/ui/typography"
  * o `<form>` e o `onKeyDown`, e os 46 botões de enviar do app eram escritos à
  * mão, um por um, cada um com o próprio nome de booleano (`saving`, `loading`,
  * `submitting`, `busy`) e a própria grafia de reticência em "Salvando…". Agora
- * ele compõe os átomos, e é uma molécula.
+ * ele compõe os átomos — e, como compõe `Field` e `RadioGroup`, que são
+ * moléculas, é um **organismo** (o `registry.ts` o classifica, e a régua é a
+ * de lá).
  *
  * ## O que cada peça resolve, com a contagem que a pediu
  *
@@ -44,9 +73,9 @@ import { P } from "@/components/ui/typography"
  *   prop: desabilita, marca `aria-busy`, mostra o `Spinner` e troca o rótulo.
  * - `FormCancel` — **173 `variant="outline"`** no app, contra a hierarquia que o
  *   `AGENTS.md` documenta (sair sem fazer nada é `tertiary`). A peça a embute.
- * - `FormActions variant="sticky"` — o `MobileSheetFormFooter` que o backlog
- *   pedia: o chrome de folha cobria cabeçalho e corpo, e cinco arquivos
- *   derivavam a classe do rodapé à mão, com três `!important`.
+ * - `FormActions variant="sticky"` — o rodapé fixo de uma folha que não é
+ *   `Dialog`. Os formulários do app usam o `DialogFooter` desde a rodada 211
+ *   (`Dialog surface="auto"`), e ele ficou sem consumidor no app.
  * - `FormError` — **três contratos de acessibilidade** para a mesma coisa.
  *
  * ## O `id`, e até onde ele chega
@@ -92,7 +121,7 @@ export const ENTER_DEFERRAL_RULES = [
 ] as const
 
 /**
- * Exportada para poder ser testada. Enquanto era privada, as 7 regras acima
+ * Exportada para poder ser testada. Enquanto era privada, as regras acima
  * eram uma promessa sem asserção — e não existia `form.test.ts`.
  */
 export function shouldDeferEnterToWidget(target: HTMLElement): boolean {
@@ -176,24 +205,82 @@ function submitFrom(form: HTMLFormElement) {
   form.requestSubmit()
 }
 
-type FormContextValue = { id: string; pending: boolean }
+type FormContextValue = {
+  id: string
+  pending: boolean
+  /** As mensagens da validação nativa, pelo `id` do controle. */
+  nativos: Record<string, string>
+  /** O `FormField` diz que tem lugar para a mensagem daquele `id`. */
+  registrar: (id: string) => () => void
+}
 
 const FormContext = React.createContext<FormContextValue | null>(null)
+
+/**
+ * O rótulo de espera sai do verbo (rodada 214): "Salvar" → "Salvando…",
+ * "Excluir" → "Excluindo…", "Criar conta" → "Criando conta…". Só a primeira
+ * palavra, e só quando ela termina em `-ar`, `-er` ou `-ir`; um rótulo que não
+ * é texto, ou não começa por verbo, devolve `null` e o rótulo não muda. Eram
+ * 43 `pendingLabel` escritos à mão, quase todos a mesma conta.
+ */
+export function rotuloDeEspera(rotulo: React.ReactNode): string | null {
+  if (typeof rotulo !== "string") return null
+  const m = rotulo.trim().match(/^(\p{L}{2,}?)([aei])r(\s.*)?$/u)
+  if (!m) return null
+  return `${m[1]}${m[2]}ndo${m[3] ?? ""}…`
+}
+
+/**
+ * A mensagem da validação nativa, em português (rodada 214). O balão do
+ * navegador fala a língua do sistema, some sozinho, não conhece o tema e não
+ * chega ao `FieldError`; aqui a mesma regra — `required`, `type="email"`,
+ * `minLength`… — vira a frase embaixo do campo.
+ */
+export function mensagemNativa(
+  el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+): string {
+  const v = el.validity
+  if (v.valueMissing) return "Preencha este campo."
+  if (v.typeMismatch) {
+    if (el.type === "email") return "Digite um e-mail válido."
+    if (el.type === "url") return "Digite um endereço válido, com https://."
+  }
+  if ("minLength" in el && v.tooShort) return `Use pelo menos ${el.minLength} caracteres.`
+  if ("maxLength" in el && v.tooLong) return `Use no máximo ${el.maxLength} caracteres.`
+  if ("min" in el && v.rangeUnderflow) return `O mínimo é ${el.min}.`
+  if ("max" in el && v.rangeOverflow) return `O máximo é ${el.max}.`
+  if (v.patternMismatch) return el.title || "O formato não confere."
+  if (v.customError) return el.validationMessage
+  return "Valor inválido."
+}
+
+type Validavel = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+
+function validavel(el: Element): el is Validavel {
+  return (
+    el instanceof HTMLInputElement ||
+    el instanceof HTMLTextAreaElement ||
+    el instanceof HTMLSelectElement
+  )
+}
 
 /**
  * O ritmo entre os campos.
  *
  * `stack` lê `--space-block`, o token de 16px que o `PageSection` usa entre
  * blocos — o formulário não inventa um respiro próprio. `inline` é o formulário
- * de busca do Frost, campo e botão na mesma linha (`items-end` alinha o botão
- * pela base do campo, e não pela do rótulo). `none` é o que o `CustomForm`
- * sempre foi: sem layout, porque as 54 chamadas do app trazem o próprio `gap`.
+ * de convite, campo e botão na mesma linha (`items-end` alinha o botão pela
+ * base do campo, e não pela do rótulo) — e um embaixo do outro no telefone. `none` é o que o `CustomForm`
+ * sempre foi: sem layout, porque as chamadas do app trazem o próprio `gap`.
  */
 const formVariants = cva("", {
   variants: {
     layout: {
       stack: "flex flex-col gap-(--space-block)",
-      inline: "flex items-end gap-2",
+      // Empilha no telefone, com o botão na largura toda; de `sm` em diante o
+      // campo ocupa a sobra (rodada 214). Os convites escreviam isso à mão.
+      inline:
+        "flex flex-col gap-2 sm:flex-row sm:items-end sm:*:data-[slot=field]:flex-1",
       none: "",
     },
   },
@@ -201,24 +288,137 @@ const formVariants = cva("", {
 })
 
 export interface FormProps
-  extends React.FormHTMLAttributes<HTMLFormElement>,
+  extends Omit<React.FormHTMLAttributes<HTMLFormElement>, "onSubmit">,
     VariantProps<typeof formVariants> {
-  onSubmit?: React.FormEventHandler<HTMLFormElement>
+  /**
+   * Devolvendo uma `Promise`, o formulário fica `pending` até ela assentar —
+   * a tela não guarda `saving` (rodada 214). O erro dela não é engolido.
+   */
+  onSubmit?: (event: React.FormEvent<HTMLFormElement>) => void | Promise<unknown>
   /** Enviando. Desce por contexto: desabilita o cancelar e ocupa o enviar. */
   pending?: boolean
 }
 
 const Form = React.forwardRef<HTMLFormElement, FormProps>(
   (
-    { className, id, layout, pending = false, onSubmit, onKeyDown, children, ...props },
+    {
+      className,
+      id,
+      layout,
+      pending = false,
+      noValidate = false,
+      onSubmit,
+      onKeyDown,
+      onInput,
+      children,
+      ...props
+    },
     ref
   ) => {
     const reactId = React.useId()
     const formId = id ?? reactId
+    const formRef = React.useRef<HTMLFormElement | null>(null)
+    React.useImperativeHandle(ref, () => formRef.current as HTMLFormElement, [])
+
+    const [enviando, setEnviando] = React.useState(false)
+    const pendente = pending || enviando
+    const [nativos, setNativos] = React.useState<Record<string, string>>({})
+    const registradosRef = React.useRef(new Set<string>())
+    const registrar = React.useCallback((campo: string) => {
+      registradosRef.current.add(campo)
+      return () => {
+        registradosRef.current.delete(campo)
+      }
+    }, [])
+
     const contexto = React.useMemo(
-      () => ({ id: formId, pending }),
-      [formId, pending]
+      () => ({ id: formId, pending: pendente, nativos, registrar }),
+      [formId, pendente, nativos, registrar]
     )
+
+    /**
+     * O foco vai ao primeiro erro (rodada 214): depois do envio — e de novo
+     * quando uma `Promise` assenta, para o erro que vem do servidor —, o
+     * primeiro controle com `aria-invalid` recebe o foco, e o `focus()` o rola
+     * à vista. Dois quadros: o primeiro é o do render com o erro, o segundo já
+     * tem o DOM. O botão de fora do `<form>` (no `DialogFooter`) não conta: só
+     * os controles.
+     */
+    const focarErro = React.useCallback(() => {
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          const alvo = formRef.current?.querySelector<HTMLElement>(
+            '[aria-invalid="true"]'
+          )
+          if (!alvo) return
+          // Um grupo (`radiogroup`) é uma `div`: o foco vai ao rádio de dentro.
+          const foco = alvo.matches("input, select, textarea, button, [tabindex]")
+            ? alvo
+            : alvo.querySelector<HTMLElement>(
+                'input:not([type=hidden]), select, textarea, button:not([tabindex="-1"]), [tabindex="0"]'
+              )
+          if (foco && foco !== document.activeElement) foco.focus()
+        })
+      )
+    }, [])
+
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+      // Enviando, não envia de novo — o `requestSubmit` do Enter sem botão à
+      // vista não passaria pelo `disabled` do `FormSubmit`.
+      if (pendente) {
+        e.preventDefault()
+        return
+      }
+      // A validação nativa é do formulário, e não do balão do navegador:
+      // `noValidate` na tela é quem diz "eu valido", e ali ela fica de fora.
+      if (!noValidate) {
+        const invalidos = Array.from(e.currentTarget.elements).filter(
+          (el): el is Validavel =>
+            validavel(el) && el.willValidate && !el.validity.valid
+        )
+        if (invalidos.length > 0) {
+          e.preventDefault()
+          const mensagens: Record<string, string> = {}
+          let semLugar = false
+          for (const el of invalidos) {
+            if (el.id && registradosRef.current.has(el.id)) {
+              mensagens[el.id] = mensagemNativa(el)
+            } else {
+              semLugar = true
+            }
+          }
+          setNativos(mensagens)
+          // Um controle sem `FormField` não tem onde mostrar a frase: ali o
+          // balão do navegador continua sendo a resposta, como antes.
+          if (semLugar) e.currentTarget.reportValidity()
+          else focarErro()
+          return
+        }
+        if (Object.keys(nativos).length > 0) setNativos({})
+      }
+      const resultado = onSubmit?.(e)
+      focarErro()
+      if (resultado && typeof (resultado as Promise<unknown>).then === "function") {
+        setEnviando(true)
+        void (resultado as Promise<unknown>).finally(() => {
+          setEnviando(false)
+          focarErro()
+        })
+      }
+    }
+
+    // A frase nativa sai quando o campo passa a valer — não a cada tecla.
+    const handleInput = (e: Parameters<NonNullable<typeof onInput>>[0]) => {
+      const alvo = e.target as Element
+      if (validavel(alvo) && nativos[alvo.id] && alvo.validity.valid) {
+        setNativos((atuais) => {
+          const resto = { ...atuais }
+          delete resto[alvo.id]
+          return resto
+        })
+      }
+      onInput?.(e)
+    }
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
       if (e.key === "Enter" && !e.shiftKey && !isComposing(e)) {
@@ -237,14 +437,16 @@ const Form = React.forwardRef<HTMLFormElement, FormProps>(
     return (
       <FormContext.Provider value={contexto}>
         <form
-          ref={ref}
+          ref={formRef}
           id={formId}
           data-slot="form"
           data-layout={layout ?? "stack"}
-          data-pending={pending || undefined}
+          data-pending={pendente || undefined}
           className={cn(formVariants({ layout }), className)}
-          onSubmit={onSubmit}
+          noValidate
+          onSubmit={handleSubmit}
           onKeyDown={handleKeyDown}
+          onInput={handleInput}
           {...props}
         >
           {children}
@@ -258,7 +460,7 @@ Form.displayName = "Form"
 /**
  * O nome antigo, e ele continua válido: `Form` sem layout.
  *
- * São 54 chamadas em 29 arquivos, todas trazendo o próprio `gap` — trocá-las
+ * São 26 chamadas em 19 arquivos, todas trazendo o próprio `gap` — trocá-las
  * pelo nome novo sem trocar o conteúdo seria diff sem ganho. Elas migram quando
  * a tela migrar os campos e os botões, que é a rodada seguinte.
  */
@@ -288,8 +490,18 @@ type FormFieldOwnProps = {
 }
 
 /**
+ * O campo em volta de **qualquer** controle (exportado na rodada 214): rótulo,
+ * ajuda e erro ligados, para um `DatePicker`, um `InputGroup`, um `Checkbox`.
+ * Eram 41 `Field` montados à mão em 15 arquivos.
+ *
+ * **`Select` e `Combobox` não renderizam nó na raiz**, e o `id` que este campo
+ * dá ao filho não chegaria a lugar nenhum. Ali o `FormControl` vai no
+ * **gatilho**, dentro da raiz — a mesma regra do `FieldControl`.
+ *
  * A ordem aqui é o contrato: `FieldControl` compõe o `aria-describedby` na
- * ordem em que os irmãos se registram — descrição, depois erro.
+ * ordem em que os irmãos se registram — descrição, depois erro. O `id` é deste
+ * campo (ou o que o filho já traz): é por ele que a frase da validação nativa
+ * chega ao `FieldError`.
  */
 function FormField({
   label,
@@ -299,16 +511,27 @@ function FormField({
   fieldSize,
   fieldClassName,
   children,
-}: FormFieldOwnProps & { children: React.ReactNode }) {
+}: FormFieldOwnProps & { children: React.ReactElement<{ id?: string }> }) {
+  const form = React.useContext(FormContext)
+  const registrar = form?.registrar
+  const autoId = React.useId()
+  const filho = React.Children.only(children)
+  const id = filho.props.id ?? autoId
+
+  React.useEffect(() => registrar?.(id), [registrar, id])
+
   return (
     <Field size={fieldSize} className={fieldClassName}>
       <FieldLabel optional={optional}>{label}</FieldLabel>
-      <FieldControl>{children}</FieldControl>
+      <FieldControl>{React.cloneElement(filho, { id })}</FieldControl>
       {description ? <FieldDescription>{description}</FieldDescription> : null}
-      <FieldError>{error}</FieldError>
+      <FieldError>{error ?? form?.nativos[id]}</FieldError>
     </Field>
   )
 }
+
+/** O gatilho de um `Select` ou `Combobox` dentro de um `FormField`. */
+const FormControl = FieldControl
 
 /**
  * A união do `Input` distribuída **à mão**, e é obrigatório que seja assim.
@@ -490,6 +713,52 @@ function FormRadioGroup({
 }
 
 /**
+ * A linha de preferência (rodada 214): rótulo e descrição à esquerda, o
+ * `Switch` à direita, e a **linha inteira** liga e desliga — o `::after` do
+ * rótulo cobre a linha, e um `<label for>` aciona o botão. A tela de
+ * notificações a escrevia à mão, com borda e fundo literais e um `gap` entre
+ * título e descrição (par de identidade: sem `gap`).
+ *
+ * `variant="card"` é a linha emoldurada, para preferências soltas numa página;
+ * `plain` é a de dentro de um `Card` ou de uma lista.
+ */
+function FormSwitch({
+  label,
+  description,
+  variant = "plain",
+  className,
+  ...props
+}: Omit<React.ComponentProps<typeof Switch>, "children" | "variant"> & {
+  label: React.ReactNode
+  description?: React.ReactNode
+  variant?: "plain" | "card"
+}) {
+  return (
+    <Field
+      orientation="horizontal"
+      data-slot="form-switch"
+      data-variant={variant}
+      className={cn(
+        "relative items-start justify-between gap-4",
+        variant === "card" && "rounded-lg border border-border p-3",
+        className
+      )}
+    >
+      <FieldContent className="min-w-0">
+        <FieldLabel className="font-medium after:absolute after:inset-0">
+          {label}
+        </FieldLabel>
+        {description ? <FieldDescription>{description}</FieldDescription> : null}
+      </FieldContent>
+      <FieldControl>
+        {/* Acima do rótulo esticado: o toque no próprio interruptor é dele. */}
+        <Switch className="relative z-10 mt-0.5" {...props} />
+      </FieldControl>
+    </Field>
+  )
+}
+
+/**
  * O erro do formulário inteiro — o que não pertence a nenhum campo.
  *
  * **Só `role="alert"`.** O papel já implica `aria-live="assertive"`, e um
@@ -530,16 +799,19 @@ function FormError({
  *
  * **`sticky` é o rodapé fixo de uma folha**, e ele não desenha fio nem tinta: a
  * regra J. Quem marca a fronteira é o conteúdo dissolvendo na borda do
- * `MobileSheetFormBody` logo acima. Também não traz área segura — ela é da
- * **superfície**, e `mobileFormSheetContentClassName` já a carrega; somar aqui
- * dobraria o recuo.
+ * `DialogBody` logo acima. Também não traz área segura — ela é da
+ * **superfície**; somar aqui dobraria o recuo.
+ *
+ * **`start`** (rodada 214) é a ação que encosta à esquerda — "Excluir",
+ * "Voltar" —, a do `DialogFooter`: vem antes no DOM, então fica embaixo no
+ * telefone.
  */
 const formActionsVariants = cva("flex flex-col-reverse gap-2", {
   variants: {
     variant: {
       inline: "sm:flex-row",
-      // Sem fio e sem tinta: o rodapé é irmão do `MobileSheetFormBody`, que se
-      // mascara sozinho, então o fundo dele já é a placa da folha. Um degradê
+      // Sem fio e sem tinta: o rodapé é irmão do `DialogBody`, que se mascara
+      // sozinho, então o fundo dele já é a placa da folha. Um degradê
       // aqui (houve) vira banda sobre a placa translúcida — ver `DialogHeader`.
       sticky: "shrink-0 px-4 pt-3 sm:flex-row sm:px-5",
     },
@@ -556,15 +828,31 @@ function FormActions({
   className,
   variant,
   align,
+  start,
+  children,
   ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof formActionsVariants>) {
+}: React.ComponentProps<"div"> &
+  VariantProps<typeof formActionsVariants> & {
+    /** A ação à esquerda, a partir de `sm`; embaixo no telefone. */
+    start?: React.ReactNode
+  }) {
   return (
     <div
       data-slot="form-actions"
       data-variant={variant ?? "inline"}
       className={cn(formActionsVariants({ variant, align }), className)}
       {...props}
-    />
+    >
+      {start ? (
+        <div
+          data-slot="form-actions-start"
+          className="flex flex-col-reverse gap-2 sm:me-auto sm:flex-row"
+        >
+          {start}
+        </div>
+      ) : null}
+      {children}
+    </div>
   )
 }
 
@@ -606,7 +894,10 @@ function FormSubmit({
   form: formProp,
   ...props
 }: React.ComponentProps<typeof Button> & {
-  /** O rótulo enquanto envia. Sem ele, o rótulo não muda — só o spinner entra. */
+  /**
+   * O rótulo enquanto envia. Sem ele, sai do verbo do rótulo — "Salvar" vira
+   * "Salvando…" —, e um rótulo que não começa por verbo não muda.
+   */
   pendingLabel?: React.ReactNode
   /** Sobrescreve o `pending` do formulário, para um botão que envia outra coisa. */
   pending?: boolean
@@ -625,8 +916,427 @@ function FormSubmit({
       aria-busy={pending || undefined}
     >
       {pending ? <Spinner /> : null}
-      {pending && pendingLabel != null ? pendingLabel : children}
+      {pending ? (pendingLabel ?? rotuloDeEspera(children) ?? children) : children}
     </Button>
+  )
+}
+
+// ── O seletor ancorado num campo ────────────────────────────────────────────
+
+/**
+ * O seletor ancorado num campo — e agora também o que vai dentro dele.
+ *
+ * **Mora no `form.tsx` desde a rodada 215**: ele só existe dentro de um
+ * formulário (é o campo de categoria, de cartão), e a página dele é a do
+ * `Form` — o precedente do `NativeSelect` no `select.tsx` e do `DragHandle`
+ * no `drawer.tsx`.
+ *
+ * ## O que faltava
+ *
+ * Este arquivo resolvia a **casca**: largura do gatilho, folga de colisão,
+ * altura limitada, foco que não pula. Só que o conteúdo é sempre a mesma coisa,
+ * e as três telas que o usam escreviam a mesma anatomia à mão:
+ *
+ * | Faixa | Grafia repetida | Vezes |
+ * | --- | --- | --- |
+ * | Busca | `shrink-0 border-b border-border/50 p-3 pb-2` mais lupa `absolute` | 2 |
+ * | Lista | `formPickerListScrollClassName` + `onWheel` que para a propagação | 3 |
+ * | Rodapé | `shrink-0 border-t border-border/50 bg-muted/25 p-2` | 3 |
+ *
+ * (Os dois fios e a tinta do rodapé saíram desde então: as faixas não pintam
+ * nem aparam, e quem marca o limite é o conteúdo dissolvendo por baixo delas.)
+ * | Ação do rodapé | `Button tertiary xl w-full text-xs asChild` com um `Link` | 3 |
+ * | Gatilho | `Button outline xl w-full justify-between px-3 …` mais chevron | 3 |
+ * | Raiz | `modal={isMobile}` | 3 |
+ *
+ * São as três faixas que o `Card` chama de `CardToolbar` / corpo / `CardFooter`
+ * e o `Dialog` chama de `DialogHeader` / `DialogBody` / `DialogFooter`. A
+ * gramática do projeto já existia; só este componente não a falava.
+ *
+ * ## O foco voltou a voltar
+ *
+ * `onCloseAutoFocus` vinha com `preventDefault()` incondicional. Com o mouse
+ * isso não aparece — o foco nunca saiu do gatilho. Mas o campo de busca vive
+ * **dentro** do popover, então o caminho de teclado é o caminho normal, e ali
+ * fechar deixava o foco no `<body>`: medido, tanto ao escolher um item quanto
+ * no Esc. Quem usa teclado perdia o lugar no formulário.
+ *
+ * A justificativa era evitar o salto de rolagem. Ela vale para **abrir**, e não
+ * para fechar: o Radix devolve o foco com `element.focus({ preventScroll:
+ * true })` (`@radix-ui/react-focus-scope`), então o `preventDefault` não
+ * comprava nada e custava a volta do foco. Abrir continua sem roubar o foco —
+ * ali a razão é real, e é o teclado do telefone.
+ */
+
+/**
+ * As classes da região rolável, ainda exportadas.
+ *
+ * `FormPickerPopoverList` é o destino: a string não consegue carregar o
+ * `onWheel` que as três telas escrevem ao lado dela toda vez, e uma classe
+ * solta é um componente que não foi declarado. Ela sobrevive porque as três
+ * telas ainda a importam, e migrá-las é uma mudança à parte.
+ */
+export const formPickerListScrollClassName =
+  "min-h-0 flex-1 touch-pan-y overflow-y-auto overflow-x-hidden overscroll-contain px-2 py-1 [-webkit-overflow-scrolling:touch]"
+
+/**
+ * A raiz — e ela é quem sabe do telefone.
+ *
+ * `modal` no telefone tranca a rolagem do documento enquanto o seletor está
+ * aberto. Sem isso, rolar a lista arrasta a folha que a contém, e o dedo não
+ * distingue as duas. As três telas tomavam essa decisão por conta própria, com
+ * a mesma resposta; quem a toma agora é o componente.
+ */
+function FormPickerPopover({
+  modal,
+  ...props
+}: React.ComponentProps<typeof Popover>) {
+  const isMobile = useIsMobile()
+
+  return (
+    <Popover
+      data-slot="form-picker-popover"
+      modal={modal ?? isMobile}
+      {...props}
+    />
+  )
+}
+
+/**
+ * O gatilho **é o campo** — e agora ele veste a superfície de campo, em vez de
+ * parecê-la.
+ *
+ * A versão anterior era `Button variant="outline" size="xl"`, e a nota aqui
+ * dizia que ele "parece um campo e não um botão". Parecia só sob `dark:`: no
+ * tema claro `outline` é `border-border` + `bg-background` **opaco**, enquanto
+ * `Input` e `SelectTrigger` são `border-input` + `bg-input-fill/30`
+ * translúcido. É a mesma medição que tirou o `Combobox` do `Button` na rodada
+ * 06 — e este era o outro gatilho que faltava converger.
+ *
+ * **O padrão desceu de `xl` para `md`**, na rodada do piso de toque. Ele era o
+ * segundo padrão fora do passo — a página dele documentava `lg` enquanto o
+ * código dizia `xl`, e nenhum dos dois era o `md` da família. Com o piso, no
+ * telefone ele mede 40 de qualquer jeito; o que muda é o desktop, onde agora
+ * ele alinha com o campo ao lado.
+ */
+function FormPickerPopoverTrigger({
+  className,
+  children,
+  size = "md",
+  ...props
+}: Omit<React.ComponentProps<"button">, "size"> & {
+  size?: FieldControlSize
+}) {
+  return (
+    <PopoverTrigger
+      data-slot="form-picker-popover-trigger"
+      data-size={size}
+      type="button"
+      className={cn(
+        fieldSurfaceClassName,
+        fieldFocusRingClassName,
+        fieldInvalidClassName,
+        fieldDisabledClassName,
+        fieldTriggerHoverClassName,
+        "group/picker-trigger flex w-full min-w-0 items-center justify-between gap-2 text-left font-normal",
+        fieldControlHeightClassName[size],
+        fieldControlPaddingClassName[size],
+        "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        className
+      )}
+      {...props}
+    >
+      <span className="flex min-w-0 items-center gap-2">{children}</span>
+      {/* O grupo é nomeado, e não `in-*`. O `data-state` mora no próprio
+          gatilho, então o filho precisa de um seletor de grupo — e `in-*`
+          casaria com **qualquer** ancestral que carregue `data-state`, além de
+          compilar com `:where()`. Antes isto lia `group-data-open/button`, que
+          era o grupo do `Button`: sem o `Button`, o grupo deixa de existir. */}
+      <ChevronDownIcon
+        aria-hidden
+        className="shrink-0 text-muted-foreground transition-transform duration-(--duration-fast) group-data-[state=open]/picker-trigger:rotate-180"
+      />
+    </PopoverTrigger>
+  )
+}
+
+/**
+ * O texto de quando não há escolha. Existe porque `text-muted-foreground` solto
+ * num `<span>` é a grafia que diverge — e porque o vazio de um seletor não é
+ * um valor, é a ausência dele.
+ */
+function FormPickerPopoverPlaceholder({
+  className,
+  ...props
+}: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="form-picker-popover-placeholder"
+      className={cn("truncate text-muted-foreground", className)}
+      {...props}
+    />
+  )
+}
+
+function FormPickerPopoverContent({
+  className,
+  children,
+  onOpenAutoFocus,
+  ...props
+}: React.ComponentProps<typeof PopoverContent>) {
+  return (
+    <PopoverContent
+      data-slot="form-picker-popover-content"
+      side="bottom"
+      align="start"
+      sideOffset={6}
+      // Abrir não rouba o foco **no toque**: ali isso fecharia o teclado do
+      // telefone e faria a folha inteira saltar. Com mouse e teclado, o foco
+      // entra — sem ele, quem navega por teclado no desktop não alcançava a
+      // busca nem a lista. **Fechar** devolve o foco ao gatilho, como o Radix faz.
+      onOpenAutoFocus={(e) => {
+        if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) {
+          e.preventDefault()
+        }
+        onOpenAutoFocus?.(e)
+      }}
+      padding="none"
+      className={cn(
+        "flex min-h-0 w-(--radix-popover-trigger-width) max-w-88 flex-col overflow-hidden",
+        // O teto de lista suspensa, com a busca e o rodapé somados: 384px
+        // deixam a lista nos ~288 dos outros dropdowns (rodada 174).
+        "max-h-[min(var(--radix-popover-content-available-height),--spacing(96))]",
+        // A casca publica a altura das duas faixas, porque só ela as enxerga
+        // como **irmãs** da lista. As duas são condicionais à presença da faixa
+        // — sem ela, a zona daquele lado vale zero e a dissolução acontece na
+        // borda do próprio rolável.
+        //
+        // **Medidas: 53,2 e 49,4.** Elas não caem na escala de espaçamento, e
+        // por isso ficam no degrau **abaixo** (52 e 48) em vez do acima.
+        // Superestimar põe a borda opaca depois do fim da faixa, e sobra uma
+        // tira de conteúdo chapado logo abaixo dela; subestimar só antecipa a
+        // dissolução em pouco mais de um pixel, ainda dentro da faixa. Errar
+        // para baixo é invisível, errar para cima não.
+        scrollFadeBandsClassName,
+        "has-[[data-slot=form-picker-popover-search]]:[--scroll-fade-band-h:--spacing(13)]",
+        "has-[[data-slot=form-picker-popover-footer]]:[--scroll-fade-foot-h:--spacing(12)]",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </PopoverContent>
+  )
+}
+
+/**
+ * A faixa de busca.
+ *
+ * O campo é o `SearchInput`, e a faixa só o posiciona. Esta peça reimplementava
+ * o mesmo campo — `InputGroup`, lupa, supressão do × do WebKit, × nosso — e a
+ * cópia tinha ficado para trás: limpar a busca soltava o foco no `<body>`,
+ * dentro de um diálogo modal, e quem estava no teclado perdia o lugar. Medido
+ * no seletor de categoria da nova transação. O `SearchInput` devolve o foco ao
+ * campo.
+ *
+ * Desde a rodada 198 ele veste `surface="plate"`: a pílula de vidro da
+ * pilha do `Command`, a mesma do `Combobox`. Dentro da placa flutuante, um
+ * campo preenchido era uma segunda superfície sobre ela.
+ *
+ * `className` continua indo para o `<input>`, como sempre foi aqui — por isso
+ * ele chega como `inputClassName`.
+ *
+ * O `data-slot` da faixa não é enfeite — é por ele que o `CustomForm` sabe que
+ * o Enter aqui não é "salvar". Ver `shouldDeferEnterToWidget` em `form.tsx`.
+ */
+function FormPickerPopoverSearch({
+  className,
+  size = "lg",
+  placeholder = "Buscar…",
+  ...props
+}: Omit<React.ComponentProps<typeof SearchInput>, "surface" | "variant">) {
+  return (
+    <div
+      data-slot="form-picker-popover-search"
+      // **Sem fio.** Quem marca o limite é o conteúdo dissolvendo por baixo, e
+      // não uma aresta. O `relative z-10` é o que põe a faixa sobre a lista, em
+      // vez de ao lado dela: o conteúdo passa por trás.
+      className="relative z-10 shrink-0 p-3 pb-2"
+    >
+      <SearchInput
+        surface="plate"
+        size={size}
+        placeholder={placeholder}
+        inputClassName={className}
+        {...props}
+      />
+    </div>
+  )
+}
+
+/**
+ * A região que rola.
+ *
+ * O `onWheel` que para a propagação vem junto: as três telas o escrevem ao lado
+ * da classe toda vez, porque sem ele a roda do mouse atravessa a lista e rola a
+ * página atrás quando a lista chega ao fim.
+ */
+function FormPickerPopoverList({
+  className,
+  onWheel,
+  ...props
+}: React.ComponentProps<"div">) {
+  return (
+    <>
+      <div
+        ref={useScrollFade({ arrows: true })}
+        data-slot="form-picker-popover-list"
+        className={cn(
+          formPickerListScrollClassName,
+          // As duas pontas dissolvem, e o conteúdo passa **por trás** das faixas
+          // em vez de parar numa borda — é isso que dá à rampa o que dissolver.
+          //
+          // A dissolução vai aqui e não na constante `formPickerListScrollClassName`
+          // de propósito: as telas importam a constante, e uma delas com máscara
+          // ligada mas sem a casca publicando `band-h` ganharia meio tratamento —
+          // um fade começando 1px abaixo do fio escrito à mão, que são os dois
+          // sinais que o sistema está tentando não ter juntos.
+          scrollFadeViewportClassName,
+          scrollFadeBleedClassName,
+          className
+        )}
+        onWheel={(e) => {
+          e.stopPropagation()
+          onWheel?.(e)
+        }}
+        {...props}
+      />
+      <ScrollFadeArrows />
+    </>
+  )
+}
+
+/**
+ * A lista vazia.
+ *
+ * Três telas escrevem esta mensagem à mão, em duas grafias — `px-1 py-6
+ * text-center` nos dois seletores de categoria e `py-4 text-center` no de
+ * cartão —, e a demonstração deste catálogo tinha inventado uma terceira. O
+ * texto continua sendo de quem chama, porque "nenhuma categoria encontrada" e
+ * "nenhum cartão cadastrado nesta carteira" dizem coisas diferentes: uma é
+ * busca sem resultado, a outra é ausência de dado. O que não varia é o respiro
+ * e a tinta.
+ */
+function FormPickerPopoverEmpty({
+  className,
+  ...props
+}: React.ComponentProps<"p">) {
+  return (
+    <Muted
+      data-slot="form-picker-popover-empty"
+      className={cn("px-3 py-6 text-center text-balance", className)}
+      {...props}
+    />
+  )
+}
+
+/**
+ * Uma linha da lista — o `Button` do sistema, e não um `<button>` cru.
+ *
+ * `min-h-11` são os 44px de alvo — este é um seletor de toque antes de ser
+ * qualquer outra coisa —, e por isso a altura não é um degrau da escada: o
+ * `data-size` sai, como no `CalendarDayButton`. O realce tem o par `active:`,
+ * porque no telefone `hover:` não existe: as linhas escritas à mão nas telas
+ * acendiam no cursor e não respondiam ao dedo, que é a regra **H** do auditor.
+ *
+ * **O conteúdo vai num `<span>` próprio, e isso é carga estrutural.** O `Button`
+ * embrulha texto cru para aplicar a maiúscula inicial do CTA — e um nome de
+ * categoria não é um CTA: "iFood" tem de sair "iFood". Com o `<span>` como
+ * único filho direto, nunca há texto cru para embrulhar, e a regra não alcança.
+ */
+function FormPickerPopoverItem({
+  className,
+  selected = false,
+  children,
+  ...props
+}: React.ComponentProps<"button"> & { selected?: boolean }) {
+  return (
+    <Button
+      type="button"
+      variant="tertiary"
+      size="md"
+      data-slot="form-picker-popover-item"
+      data-size={undefined}
+      aria-pressed={selected}
+      data-selected={selected || undefined}
+      className={cn(
+        "h-auto min-h-11 w-full justify-start px-3 py-2 text-left font-normal whitespace-normal",
+        "hover:bg-muted/60 active:bg-muted/60",
+        selected && "bg-muted font-medium text-foreground",
+        className
+      )}
+      {...props}
+    >
+      <span
+        data-slot="form-picker-popover-item-content"
+        className="flex min-w-0 flex-1 items-center gap-2"
+      >
+        {children}
+      </span>
+    </Button>
+  )
+}
+
+/**
+ * O pé — onde mora a saída para gerenciar o que a lista mostra ("Gerenciar
+ * categorias", "Cadastrar cartão").
+ */
+function FormPickerPopoverFooter({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="form-picker-popover-footer"
+      className={cn(
+        // **Sem fio e sem tinta.** O `bg-muted/25` fazia do rodapé uma
+        // superfície diferente da lista, e o degrau de tom na emenda é o mesmo
+        // "bloco aceso" que a paleta de comandos registrou ao tentar pintar o
+        // pé dela. Quem separa agora é a dissolução do conteúdo.
+        "relative z-10 shrink-0 p-2",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/**
+ * A ação do pé. Sempre a mesma forma nas três telas, sempre um `Link` dentro —
+ * então `asChild` vem de fábrica e quem chama passa só o destino.
+ *
+ * **Ela preenche (`secondary`), e não é contradição com a escada.** O degrau
+ * mais quieto conta com uma moldura em volta para se distinguir do fundo, e o
+ * rodapé perdeu a dele quando o fio e a tinta saíram: um `tertiary` ali fica
+ * indistinguível de uma linha da lista até o cursor chegar — que é o problema
+ * que a dissolução não resolve, porque ela separa por gradiente e não por
+ * peso. O cinza preenchido devolve a borda que a faixa não desenha mais. E não
+ * disputa com o `primary` da tela: ele mora no rodapé do formulário, não aqui.
+ */
+function FormPickerPopoverFooterAction({
+  className,
+  ...props
+}: React.ComponentProps<typeof Button>) {
+  return (
+    <Button
+      data-slot="form-picker-popover-footer-action"
+      type="button"
+      variant="secondary"
+      size="lg"
+      asChild
+      className={cn("w-full", className)}
+      {...props}
+    />
   )
 }
 
@@ -635,10 +1345,23 @@ export {
   Form,
   FormActions,
   FormCancel,
+  FormControl,
   FormError,
+  FormField,
   FormInput,
+  FormPickerPopover,
+  FormPickerPopoverContent,
+  FormPickerPopoverEmpty,
+  FormPickerPopoverFooter,
+  FormPickerPopoverFooterAction,
+  FormPickerPopoverItem,
+  FormPickerPopoverList,
+  FormPickerPopoverPlaceholder,
+  FormPickerPopoverSearch,
+  FormPickerPopoverTrigger,
   FormRadioGroup,
   FormSubmit,
+  FormSwitch,
   FormTextarea,
   formActionsVariants,
   formVariants,

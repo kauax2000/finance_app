@@ -416,7 +416,7 @@ export default function CreditCardsPageClient() {
                             <DialogClose asChild>
                                 <FormCancel>Cancelar</FormCancel>
                             </DialogClose>
-                            <FormSubmit pendingLabel="Salvando…">Cadastrar</FormSubmit>
+                            <FormSubmit>Cadastrar</FormSubmit>
                         </DialogFooter>
                     </CustomForm>
                 </DialogContent>

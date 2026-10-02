@@ -1,14 +1,18 @@
 "use client"
 
 import * as React from "react"
-import {
-    Button,
-} from "@/components/ui/button"
 import Link from "next/link"
 import { PlusIcon } from "@heroicons/react/16/solid"
 import { CheckIcon } from "@heroicons/react/20/solid"
 import { useWorkspace } from "@/components/workspace-provider"
 import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
+import {
+    Alert,
+    AlertAction,
+    AlertActions,
+    AlertDescription,
+    AlertTitle,
+} from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
@@ -336,26 +340,19 @@ export function WorkspacePickerMenuBody({
             ) : null}
 
             {error ? (
-                <div
-                    role="alert"
-                    className={cn(
-                        "mt-1 rounded-md border border-destructive/25 bg-destructive/5 px-2.5 py-2",
-                        insetX
-                    )}
-                >
-                    <p className="text-xs font-medium text-destructive">
-                        Não foi possível concluir esta ação
-                    </p>
-                    <p className="mt-1 text-xs leading-snug text-muted-foreground">{error}</p>
-                    <Button
-                        type="button"
-                        variant="link"
-                        size="xs"
-                        className="mt-2 h-auto px-0 font-medium"
-                        onClick={() => void refreshWorkspaces()}
-                    >
-                        Tentar novamente
-                    </Button>
+                // Não é erro de formulário — é a lista que não carregou —, então
+                // é o `Alert` (o ícone e o `role="alert"` vêm do tom). O
+                // invólucro só dá o recuo das linhas do painel.
+                <div className={cn("mt-1", insetX)}>
+                    <Alert tone="destructive" size="sm">
+                        <AlertTitle>Não foi possível concluir esta ação</AlertTitle>
+                        <AlertDescription>{error}</AlertDescription>
+                        <AlertActions>
+                            <AlertAction onClick={() => void refreshWorkspaces()}>
+                                Tentar novamente
+                            </AlertAction>
+                        </AlertActions>
+                    </Alert>
                 </div>
             ) : null}
 

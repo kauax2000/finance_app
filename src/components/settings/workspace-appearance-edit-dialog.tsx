@@ -132,7 +132,7 @@ export function WorkspaceAppearanceEditDialog({
                         <DialogClose asChild>
                             <FormCancel>Cancelar</FormCancel>
                         </DialogClose>
-                        <FormSubmit pendingLabel="Salvando…">Salvar alterações</FormSubmit>
+                        <FormSubmit>Salvar alterações</FormSubmit>
                     </DialogFooter>
                 </CustomForm>
             </DialogContent>

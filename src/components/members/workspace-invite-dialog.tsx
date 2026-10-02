@@ -10,15 +10,10 @@ import {
     ItemContent,
     ItemMedia,
 } from "@/components/ui/item"
-import {
-    Field,
-    FieldControl,
-    FieldLabel,
-} from "@/components/ui/field"
 import * as React from "react"
 import { CheckIcon, DocumentDuplicateIcon, EnvelopeIcon, LinkIcon, PaperAirplaneIcon } from "@heroicons/react/16/solid"
 import type { User } from "@supabase/supabase-js"
-import { CustomForm } from "@/components/ui/form"
+import { Form, FormInput, FormSubmit } from "@/components/ui/form"
 import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -296,47 +291,27 @@ export function WorkspaceInviteDialog({
                             </p>
                         ) : (
                             <>
-                                <CustomForm
-                                    className="space-y-2"
+                                <Form
+                                    layout="inline"
+                                    pending={savingInvite}
                                     onSubmit={(e) => {
                                         e.preventDefault()
                                         void handleInvite()
                                     }}
                                 >
-                                    <Field>
-                                    <FieldLabel>E-mail</FieldLabel>
-                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                                        <FieldControl>
-                                        <Input
-                                            id="global-invite-email"
-                                            value={inviteEmail}
-                                            onChange={(e) =>
-                                                setInviteEmail(e.target.value)
-                                            }
-                                            placeholder="email@exemplo.com"
-                                            disabled={savingInvite}
-                                            className="sm:flex-1"
-                                        />
-                                        </FieldControl>
-                                        <Button
-                                            type="submit"
-                                            disabled={
-                                                savingInvite || !inviteEmail.trim()
-                                            }
-                                            className="sm:shrink-0"
-                                        >
-                                            {savingInvite ? (
-                                                <>
-                                                    <Spinner />
-                                                    Enviando...
-                                                </>
-                                            ) : (
-                                                "Convidar"
-                                            )}
-                                        </Button>
-                                    </div>
-                                    </Field>
-                                </CustomForm>
+                                    <FormInput
+                                        label="E-mail"
+                                        value={inviteEmail}
+                                        onChange={(e) =>
+                                            setInviteEmail(e.target.value)
+                                        }
+                                        placeholder="email@exemplo.com"
+                                        disabled={savingInvite}
+                                    />
+                                    <FormSubmit disabled={!inviteEmail.trim()}>
+                                        Convidar
+                                    </FormSubmit>
+                                </Form>
 
                                 <Card variant="muted" padding="sm" className="gap-2 px-3">
                                     <div className="flex items-center gap-2">

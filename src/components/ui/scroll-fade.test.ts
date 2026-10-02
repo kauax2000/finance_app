@@ -500,7 +500,7 @@ describe("as setas de \"tem mais\" dos dropdowns (rodada 172)", () => {
   })
 
   it("3. todo dropdown põe as setas logo depois do rolável", () => {
-    for (const nome of ["select", "dropdown-menu", "context-menu", "menubar", "command", "form-picker-popover", "popover", "scroll-area"]) {
+    for (const nome of ["select", "dropdown-menu", "context-menu", "menubar", "command", "form", "popover", "scroll-area"]) {
       const src = semComentarios(readFileSync(`src/components/ui/${nome}.tsx`, "utf8"))
       expect(src, nome).toContain("<ScrollFadeArrows />")
       expect(src, nome).toMatch(/arrows: (true|naPilha|setas)/)

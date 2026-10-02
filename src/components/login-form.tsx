@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useRef, useState } from "react"
+import { useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 
@@ -64,8 +64,6 @@ const REASONS: Record<string, string> = {
 export function LoginForm() {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const emailInputRef = useRef<HTMLInputElement>(null)
-    const passwordInputRef = useRef<HTMLInputElement>(null)
     const nextRoute = useMemo(() => {
         const raw = searchParams.get("next")
         const safe = getSafeInternalNextPath(raw)
@@ -98,14 +96,10 @@ export function LoginForm() {
         const errors = getFieldErrors(email, password)
         setFieldErrors(errors)
 
-        if (Object.keys(errors).length > 0) {
-            if (errors.email) {
-                emailInputRef.current?.focus()
-            } else {
-                passwordInputRef.current?.focus()
-            }
-            return
-        }
+        // O foco no primeiro erro é do `Form`: os dois campos carregam
+        // `aria-invalid` quando têm erro (o `FormInput` pelo `error`, a senha
+        // pelo `FieldError`), e ele foca o primeiro depois do envio.
+        if (Object.keys(errors).length > 0) return
 
         setLoading(true)
 
@@ -148,7 +142,6 @@ export function LoginForm() {
                         seleciona por ele. */}
                     <FormInput
                         id="email"
-                        ref={emailInputRef}
                         size="xl"
                         label="E-mail"
                         type="email"
@@ -189,7 +182,6 @@ export function LoginForm() {
                             <FieldControl>
                                 <InputGroupInput
                                     id="password"
-                                    ref={passwordInputRef}
                                     type="password"
                                     autoComplete="current-password"
                                     placeholder="Digite sua senha"
@@ -209,7 +201,7 @@ export function LoginForm() {
                             <FieldError>{fieldErrors.password}</FieldError>
                         ) : null}
                     </Field>
-                    <FormSubmit size="xl" className="w-full" pendingLabel="Entrando…">
+                    <FormSubmit size="xl" className="w-full">
                         Entrar
                     </FormSubmit>
                 </Form>

@@ -13,7 +13,18 @@ This version has breaking changes — APIs, conventions, and file structure may 
   `aria-busy` e troca o rótulo), `FormCancel` (`tertiary` + `type="button"`, a
   tabela do rodapé embutida), `FormActions` (`inline` ou `sticky`, o rodapé de
   folha) e `FormError` (o erro que não é de campo). **`CustomForm` é `Form`
-  com `layout="none"`** e continua válido — 41 chamadas em 23 arquivos.
+  com `layout="none"`** e continua válido — 26 chamadas em 19 arquivos.
+- **Desde a rodada 214** há `FormField` (rótulo, ajuda e erro em volta de
+  **qualquer** controle de um nó — em `Select` e `Combobox`, que não têm nó na
+  raiz, o `FormControl` vai no gatilho), `FormSwitch` (a linha de preferência,
+  inteira clicável) e `FormActions start`. `layout="inline"` empilha no
+  telefone. **O `FormSubmit` tira o rótulo de espera do verbo** ("Salvar" →
+  "Salvando…"): não escreva `pendingLabel` que diga o mesmo. **Um `onSubmit`
+  que devolve `Promise` liga o `pending` sozinho.** **O formulário valida, e
+  não o balão**: `required`, `type="email"`, `minLength`… viram a frase em
+  português no `FormField`, e o foco vai ao primeiro `aria-invalid` — também
+  para quem valida à mão com `noValidate`. Um controle nativo sem `FormField`
+  volta ao balão do navegador.
 - Use **`type="submit"`** only for that primary action. Use **`type="button"`** for cancel, dismiss, toggles, and auxiliary actions.
 - Avoid raw **`<form>`** for submit flows unless there is a documented exception.
 - If you add a control that uses **Enter** for its own behavior (e.g. another Radix primitive), either mark it with a stable **`data-slot`** and extend `shouldDeferEnterToWidget` in `form.tsx`, or document the exception.
@@ -73,7 +84,7 @@ Mermaid (`href` já quebrou um diagrama).
 O design system deste projeto tem três partes, e nenhuma delas se presume de
 memória:
 
-- **Componentes** em [`src/components/ui/`](src/components/ui) — 77 hoje.
+- **Componentes** em [`src/components/ui/`](src/components/ui) — 76 hoje.
 - **Tokens** em [`src/app/globals.css`](src/app/globals.css).
 - **Documentação viva** em `/designsystem`, com uma página por componente e por
   padrão. Sempre disponível em desenvolvimento; em produção, atrás de
@@ -810,13 +821,16 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
 - **Alerts / tabs / forms**: [`Alert`](src/components/ui/alert.tsx), [`Tabs`](src/components/ui/tabs.tsx), [`Textarea`](src/components/ui/textarea.tsx), [`ScrollArea`](src/components/ui/scroll-area.tsx), [`Toggle` / `ToggleGroup`](src/components/ui/toggle.tsx), [`Slider`](src/components/ui/slider.tsx), [`Radio` / `RadioGroup`](src/components/ui/radio-group.tsx) (a forma curta é `FormRadioGroup`), [`Pagination`](src/components/ui/pagination.tsx), [`Collapsible`](src/components/ui/collapsible.tsx), [`Breadcrumb`](src/components/ui/breadcrumb.tsx), [`ChartContainer` + chart helpers](src/components/ui/chart.tsx) for Recharts.
 - **Campos**: [`Field`](src/components/ui/field.tsx) para rótulo + descrição + erro **já ligados — e agora ligados de verdade**: quem escreve `htmlFor`, `id`, `aria-describedby`, `aria-invalid` e `data-invalid` é o `FieldControl`, não a memória de quem escreve a tela. Esta linha afirmava o mesmo antes de o mecanismo existir; ver a rodada 11. [`FieldRow`](src/components/ui/field.tsx) para a linha de dois campos; [`InputGroup`](src/components/ui/input-group.tsx) para campo com ícone ou botão acoplado; [`Combobox`](src/components/ui/combobox.tsx) quando a pessoa **procura um nome** (categoria, carteira), e não quando a lista cresce — os 31 dias do cartão são `Select`, que salta pela digitação. O `NativeSelect` mora em `select.tsx` desde a rodada 165, e a página dele é a do `Select`.
 - **Seletor ancorado num campo**:
-  [`FormPickerPopover`](src/components/ui/form-picker-popover.tsx) e as suas
-  faixas — `FormPickerPopoverTrigger` (o gatilho **é** o campo: `outline`,
-  `xl`, peso normal, chevron que gira), `FormPickerPopoverSearch` (sobre
-  `InputGroup`), `FormPickerPopoverList`, `FormPickerPopoverItem` e
+  [`FormPickerPopover`](src/components/ui/form.tsx) e as suas
+  faixas — `FormPickerPopoverTrigger` (o gatilho **é** o campo: a superfície
+  de `field-classes`, `md` na escada, chevron que gira),
+  `FormPickerPopoverSearch` (o `SearchInput` na superfície `plate`),
+  `FormPickerPopoverList`, `FormPickerPopoverItem` e
   `FormPickerPopoverFooter` + `FormPickerPopoverFooterAction`. São as mesmas
   três faixas do `Card` e do `Dialog`. Escolha-o quando a lista é longa e pede
-  busca; `Select` quando é curta, `Combobox` quando cabe numa palavra.
+  busca; `Select` quando é curta, `Combobox` quando cabe numa palavra. **Mora
+  no `form.tsx` desde a rodada 215**, e a página dele é a do `Form`; dentro de
+  um `FormField`, o `FormControl` vai no gatilho.
 - **Listas e detalhe**: [`Item`](src/components/ui/item.tsx) para linha de lista (e para o que a `Table` vira no telefone), [`DescriptionList`](src/components/ui/description-list.tsx) para pares termo/valor, [`Timeline`](src/components/ui/timeline.tsx) para histórico, [`Toolbar`](src/components/ui/toolbar.tsx) para a linha de filtros e ações.
 - **Tema**: [`ThemeToggle`](src/components/ui/theme-toggle.tsx) — o trilho de **três** paradas (sistema, claro, escuro), e o único controle de tema. Não escreva outro com `setTheme`. Ele é `radiogroup` e não `switch` desde a rodada 116: três estados não cabem num booleano. Tem `size`: `sm` 28 (rodada 181, barras densas), `md` 32 (o padrão, o do menu da conta) e `lg` 36 (rodada 139, ao lado de um campo `lg`) — trilho = 4 + 3 paradas, a parada é a altura menos 4, e o alvo de toque é 44 nos três. Desde a rodada 181: `labels` (ícone e texto; paradas de largura igual, e o esticão tem os mesmos pixels da versão de ícone), `variant="brand"` (o brilho na borda do trilho) e `reveal` (**ligado por padrão**: a troca abre num círculo a partir da parada tocada, pela View Transitions API, com `flushSync` para o tema trocar dentro do callback; o CSS que tira o esmaecer padrão é escopado por `.theme-reveal` no `<html>`; sem API ou com movimento reduzido, troca na hora). O app roda com `enableSystem` e `defaultTheme="system"`.
 - **Carregando**: [`Skeleton`](src/components/ui/skeleton.tsx) para uma tela esperando dado; [`Spinner`](src/components/ui/spinner.tsx) só para ação curta sem fim conhecido. O `Spinner` é uma **roda desenhada**, não o `ArrowPathIcon` — a seta é o "tentar novamente" do app (rodada 178). `size` fala a escada do ícone (`sm` 14 · **`md` 16** · `lg` 20 · `xl` 24 · `2xl` 32), e dentro de um `Button` ele não leva margem: o `gap` já dá o respiro. Sozinho, leva `label`; numa região que espera, é o `SpinnerBlock`, que anuncia e só aparece depois de 300ms (`@starting-style`, sem timer). `variant="brand"` é o anel em arco-íris da tela de abertura — uma por tela.

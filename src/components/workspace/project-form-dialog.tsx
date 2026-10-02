@@ -101,7 +101,7 @@ export function ProjectFormDialog({
                         <DialogClose asChild>
                             <FormCancel>Cancelar</FormCancel>
                         </DialogClose>
-                        <FormSubmit pendingLabel="Criando…">Criar carteira</FormSubmit>
+                        <FormSubmit>Criar carteira</FormSubmit>
                     </DialogFooter>
                 </CustomForm>
             </DialogContent>

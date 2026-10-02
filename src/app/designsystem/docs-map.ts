@@ -34,7 +34,6 @@ import DropdownMenuDoc from "./docs/dropdown-menu"
 import EmptyStateDoc from "./docs/empty-state"
 import FieldDoc from "./docs/field"
 import FormDoc from "./docs/form"
-import FormPickerPopoverDoc from "./docs/form-picker-popover"
 import HistogramSliderDoc from "./docs/histogram-slider"
 import HoverCardDoc from "./docs/hover-card"
 import IconographyDoc from "./docs/iconography"
@@ -120,7 +119,6 @@ export const DOCS: Record<string, ComponentType> = {
   "empty-state": EmptyStateDoc,
   "field": FieldDoc,
   "form": FormDoc,
-  "form-picker-popover": FormPickerPopoverDoc,
   "histogram-slider": HistogramSliderDoc,
   "hover-card": HoverCardDoc,
   "iconography": IconographyDoc,

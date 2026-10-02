@@ -243,7 +243,7 @@ export function CategoryCreateDialog({
                         <DialogClose asChild>
                             <FormCancel>Cancelar</FormCancel>
                         </DialogClose>
-                        <FormSubmit pendingLabel="Salvando…">Salvar</FormSubmit>
+                        <FormSubmit>Salvar</FormSubmit>
                     </DialogFooter>
                 </CustomForm>
             </DialogContent>

@@ -253,7 +253,7 @@ export function PasswordRecoveryForm({
                             }}
                             error={fieldError}
                         />
-                        <FormSubmit size="xl" className="w-full" pendingLabel="Enviando…">
+                        <FormSubmit size="xl" className="w-full">
                             Enviar código
                         </FormSubmit>
                     </Form>
@@ -403,7 +403,7 @@ export function PasswordRecoveryForm({
                     {errorAlert}
                     <Form onSubmit={savePassword} pending={loading} noValidate>
                         {passwordField}
-                        <FormSubmit size="xl" className="w-full" pendingLabel="Salvando…">
+                        <FormSubmit size="xl" className="w-full">
                             Salvar senha
                         </FormSubmit>
                     </Form>

@@ -176,10 +176,7 @@ export function CategoryDetailDialogs({
                             <DialogClose asChild>
                                 <FormCancel>Cancelar</FormCancel>
                             </DialogClose>
-                            <FormSubmit
-                                pendingLabel="Salvando…"
-                                disabled={editBudgetRemoving}
-                            >
+                            <FormSubmit disabled={editBudgetRemoving}>
                                 Salvar
                             </FormSubmit>
                         </DialogFooter>

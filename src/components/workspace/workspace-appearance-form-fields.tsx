@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/field"
 import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
 import { Input } from "@/components/ui/input"
+import { FormError } from "@/components/ui/form"
 import {
     WORKSPACE_ACCENT_PALETTE,
     WORKSPACE_ICON_KEYS,
@@ -182,14 +183,7 @@ export function WorkspaceAppearanceFormFields({
                 </ToggleGroup>
             </FieldSet>
 
-            {displayError ? (
-                <p
-                    role="alert"
-                    className="text-sm font-medium text-destructive"
-                >
-                    {displayError}
-                </p>
-            ) : null}
+            <FormError className="font-medium">{displayError}</FormError>
         </div>
     )
 }

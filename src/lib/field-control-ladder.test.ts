@@ -34,7 +34,7 @@ const CONTROLES = [
   "select",
   "combobox",
   "date-picker",
-  "form-picker-popover",
+  "form",
   "input-group",
 ] as const
 
@@ -124,7 +124,7 @@ const GLOBALS = readFileSync(new URL("../app/globals.css", import.meta.url), "ut
 
 
 
-const CASCAS = ["input-group", "select", "combobox", "date-picker", "form-picker-popover"] as const
+const CASCAS = ["input-group", "select", "combobox", "date-picker", "form"] as const
 const FOLHAS = ["input", "textarea"] as const
 
 describe("o foco do campo é o anel do sistema", () => {

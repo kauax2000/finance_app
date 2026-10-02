@@ -226,7 +226,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                             </FormCancel>
                         </DialogClose>
                         {!success ? (
-                            <FormSubmit size="sm" pendingLabel="Alterando…">
+                            <FormSubmit size="sm">
                                 Alterar senha
                             </FormSubmit>
                         ) : null}

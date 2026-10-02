@@ -18,7 +18,7 @@ import { supabase, type Category } from "@/lib/supabase"
 import { Card, CardMessage, CardNote } from "@/components/ui/card"
 import { ColorTile } from "@/components/ui/color-tile"
 import { Button } from "@/components/ui/button"
-import { CustomForm, FormCancel, FormInput, FormSubmit } from "@/components/ui/form"
+import { CustomForm, FormCancel, FormError, FormInput, FormSubmit } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import {
   Dialog,
@@ -699,9 +699,9 @@ export function CategoriesOnboardingWizard({
                 titleId="onboarding-step-title"
                 footer={
                     <div className="flex flex-col gap-3">
-                        {error && step !== 1 ? (
-                            <p className="text-center text-xs text-destructive">{error}</p>
-                        ) : null}
+                        <FormError className="text-center text-xs">
+                            {step !== 1 ? error : null}
+                        </FormError>
                         {step === 0 ? (
                             <div className="flex flex-col gap-2">
                                 <Button
@@ -831,9 +831,7 @@ export function CategoriesOnboardingWizard({
                                     Sugerir pela renda
                                 </Button>
                             </div>
-                            {error ? (
-                                <p className="pt-2 text-center text-xs text-destructive">{error}</p>
-                            ) : null}
+                            <FormError className="pt-2 text-center text-xs">{error}</FormError>
                         </div>
 
                         {localCategories.length === 0 ? (

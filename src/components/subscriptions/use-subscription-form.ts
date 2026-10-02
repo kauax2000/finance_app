@@ -164,7 +164,8 @@ export function useSubscriptionForm({
         ? undefined
         : "Serviços e cobranças recorrentes (streaming, software, etc.)."
 
-    const submitLabel = saving ? "Salvando…" : "Salvar"
+    // O "Salvando…" sai do verbo, no `FormSubmit`.
+    const submitLabel = "Salvar"
 
     const fieldsProps: SubscriptionFormFieldsProps = {
         saving,

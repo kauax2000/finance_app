@@ -234,7 +234,6 @@ const LAYER: Record<string, Layer> = {
   dialog: "Organisms",
   drawer: "Organisms",
   "dropdown-menu": "Organisms",
-  "form-picker-popover": "Organisms",
   /** Compõe o StatCard, e quem contém organismo é organismo. */
   "histogram-slider": "Organisms",
   "hover-card": "Organisms",
@@ -447,8 +446,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("dialog", "Dialog", "Janela modal — e gaveta no telefone, com surface=\"auto\".", ui("dialog"), "Dialog, DialogContent, DialogHeader, DialogMedia, DialogSteps, DialogBody, DialogFooter"),
   entry("drawer", "Drawer", "Gaveta arrastável, com física de toque — e a folha de ações.", ui("drawer"), "Drawer, DrawerContent, DrawerTrigger, DrawerActions, DrawerAction, DrawerCancel"),
   entry("dropdown-menu", "Dropdown Menu", "Menu de ações, com busca, confirmação e a folha de ações no telefone.", ui("dropdown-menu"), "DropdownMenu, DropdownMenuContent, DropdownMenuHeader, DropdownMenuItem"),
-  entry("form", "Form", "Formulário, suas peças e o Enter.", ui("form"), "Form, FormInput, FormTextarea, FormRadioGroup, FormError, FormActions, FormCancel, FormSubmit"),
-  entry("form-picker-popover", "Form Picker Popover", "Seletor com busca ancorado num campo.", ui("form-picker-popover"), "FormPickerPopover, FormPickerPopoverTrigger, FormPickerPopoverContent, FormPickerPopoverSearch, FormPickerPopoverList, FormPickerPopoverItem, FormPickerPopoverFooter"),
+  entry("form", "Form", "Formulário com as peças, o Enter, a validação em português e o envio que espera sozinho.", ui("form"), "Form, FormInput, FormField, FormSwitch, FormPickerPopover, FormSubmit"),
   entry("histogram-slider", "Histogram Slider", "Faixa de valor sobre uma distribuição.", ui("histogram-slider"), "HistogramSlider"),
   entry("hover-card", "Hover Card", "Prévia ao pousar o cursor.", ui("hover-card"), "HoverCard, HoverCardTrigger, HoverCardContent, HoverCardArrow"),
   entry("menubar", "Menubar", "Fileira de menus.", ui("menubar"), "Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarCheckboxItem, MenubarRadioItem, MenubarSub"),

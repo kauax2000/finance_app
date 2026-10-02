@@ -438,7 +438,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                             </FormCancel>
                         </DialogClose>
                         {!successMessage && (
-                            <FormSubmit size="sm" pendingLabel="Salvando…">
+                            <FormSubmit size="sm">
                                 Salvar
                             </FormSubmit>
                         )}

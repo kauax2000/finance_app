@@ -676,7 +676,6 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                             <FormSubmit
                                 size="sm"
                                 disabled={editBudgetRemoving}
-                                pendingLabel="Salvando…"
                             >
                                 Salvar
                             </FormSubmit>

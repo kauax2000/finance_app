@@ -201,7 +201,7 @@ export function CreditCardCreateDialog({
                         <DialogClose asChild>
                             <FormCancel>Cancelar</FormCancel>
                         </DialogClose>
-                        <FormSubmit pendingLabel="Salvando…">Cadastrar</FormSubmit>
+                        <FormSubmit>Cadastrar</FormSubmit>
                     </DialogFooter>
                 </CustomForm>
             </DialogContent>

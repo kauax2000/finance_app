@@ -244,7 +244,7 @@ export function SignupForm() {
                             <PasswordRequirements password={password} />
                         ) : null}
                     </Field>
-                    <FormSubmit size="xl" className="w-full" pendingLabel="Criando conta…">
+                    <FormSubmit size="xl" className="w-full">
                         Criar conta
                     </FormSubmit>
                 </Form>

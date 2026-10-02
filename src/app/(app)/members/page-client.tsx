@@ -12,11 +12,6 @@ import {
     AlertDescription,
 } from "@/components/ui/alert"
 import {
-    Field,
-    FieldControl,
-    FieldLabel,
-} from "@/components/ui/field"
-import {
     PageSection,
     PageSectionHeader,
     PageSectionTitle,
@@ -64,7 +59,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { CustomForm } from "@/components/ui/form"
+import { Form, FormInput, FormSubmit } from "@/components/ui/form"
 import {
     Tooltip,
     TooltipContent,
@@ -779,47 +774,27 @@ export default function MembersPage() {
                                 <p className="text-xs leading-snug text-muted-foreground">Por e-mail ou link</p>
                             </CardToolbar>
                             <div className="flex flex-col gap-2 px-4 py-3">
-                                <CustomForm
-                                    className="space-y-2"
+                                <Form
+                                    layout="inline"
+                                    pending={savingInvite}
                                     onSubmit={(e) => {
                                         e.preventDefault()
                                         void handleInvite()
                                     }}
                                 >
-                                    <Field>
-                                    <FieldLabel>E-mail</FieldLabel>
-                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                                        <FieldControl>
-                                        <Input
-                                            id="invite-email"
-                                            value={inviteEmail}
-                                            onChange={(e) => setInviteEmail(e.target.value)}
-                                            placeholder="email@exemplo.com"
-                                            disabled={!canManageMembers || savingInvite}
-                                            className="sm:flex-1"
-                                        />
-                                        </FieldControl>
-                                        <Button
-                                            type="submit"
-                                            disabled={
-                                                !canManageMembers ||
-                                                savingInvite ||
-                                                !inviteEmail.trim()
-                                            }
-                                            className="sm:shrink-0"
-                                        >
-                                            {savingInvite ? (
-                                                <>
-                                                    <Spinner />
-                                                    Enviando...
-                                                </>
-                                            ) : (
-                                                "Convidar"
-                                            )}
-                                        </Button>
-                                    </div>
-                                    </Field>
-                                </CustomForm>
+                                    <FormInput
+                                        label="E-mail"
+                                        value={inviteEmail}
+                                        onChange={(e) => setInviteEmail(e.target.value)}
+                                        placeholder="email@exemplo.com"
+                                        disabled={!canManageMembers || savingInvite}
+                                    />
+                                    <FormSubmit
+                                        disabled={!canManageMembers || !inviteEmail.trim()}
+                                    >
+                                        Convidar
+                                    </FormSubmit>
+                                </Form>
                             </div>
                             <Separator />
                             <div className="flex flex-col gap-2 px-4 py-3">

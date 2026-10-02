@@ -17165,3 +17165,81 @@ tique). O que se divide é a medida: com `search`, o conteúdo publica
 `DropdownMenuBuscaContext` e as linhas, os rótulos e o separador vestem a
 geometria do `Combobox`; o submenu zera o contexto, porque ele atravessa o
 portal. Medido depois: 32/8/8 e 32/8/8, número a número.
+
+### Rodada 214 — o Form valida em português, espera sozinho, tira o rótulo de espera do verbo e ganha o campo de qualquer controle, a linha de preferência, a ação à esquerda e o em-linha que empilha
+
+**O que estava falso.** O cabeçalho do `form.tsx` dizia que ele "é uma
+molécula" — o `registry.ts` o classifica como organismo, porque ele compõe
+`Field` e `RadioGroup`. O rodapé `sticky` apontava para o
+`MobileSheetFormBody` e o `mobileFormSheetContentClassName`, que não existem
+mais; o `CustomForm` dizia 54 chamadas em 29 arquivos (são 26 em 19); a
+página mandava compor `<Alert variant="plain">`, variante que saiu; e a
+demonstração "Em linha" era uma busca num `<Input type="search">`, que a casa
+proíbe. `FormActions` e `FormError` tinham **zero** usos no app.
+
+**As peças.** `FormField` existia por dentro e passou a ser exportado: rótulo,
+ajuda e erro em volta de qualquer controle de um nó (`DatePicker`,
+`InputGroup`, `Checkbox`). `Select` e `Combobox` não renderizam nó na raiz,
+então ali o `FormControl` (o `FieldControl`) vai no gatilho; o `id` que o
+campo dá à raiz é ignorado sem erro, e o gatilho o recebe pelo contexto do
+`Field` — medido, o rótulo "Repetir" aponta para o `select-trigger`.
+`FormSwitch` é a linha de preferência: o `::after` do rótulo cobre a linha, e
+um `<label for>` aciona o botão — medido, tocar na descrição liga o
+interruptor. A tela de notificações a escrevia à mão (borda e fundo com alfa,
+`gap-0.5` no par de identidade) nove vezes. `FormActions start` é a ação à
+esquerda do `DialogFooter`. `layout="inline"` empilha no telefone, com o botão
+na largura toda (medido a 375px: coluna, 293 de botão), e de `sm` em diante o
+campo ocupa a sobra (`sm:*:data-[slot=field]:flex-1`).
+
+**Os comportamentos.** O rótulo de espera sai do verbo (`rotuloDeEspera`):
+"Salvar" → "Salvando…", "Criar conta" → "Criando conta…"; o que não começa
+por infinitivo não muda. 15 `pendingLabel` do app saíram; ficaram os que
+dizem outra coisa ("Conferindo…" para "Continuar") e o de rótulo com ícone.
+Um `onSubmit` que devolve `Promise` liga o `pending` (medido: "Convidando…",
+`aria-busy`, Cancelar travado, e a volta em 1,5 s); enviando, um segundo envio
+não passa, nem pelo `requestSubmit` sem botão. **O formulário valida, e não o
+balão**: o `<form>` é sempre `noValidate` no DOM, e no envio os controles
+inválidos ganham a frase em português no `FieldError` do `FormField` (por
+`id`), saindo quando o campo passa a valer; a tela que passa `noValidate`
+continua validando à mão. **Um controle sem `FormField` não tem onde mostrar
+a frase**, e ali o `reportValidity()` devolve o balão — sem isso, um `<Input
+required>` à mão bloquearia o envio em silêncio. E o foco vai ao primeiro
+`aria-invalid` depois do envio (dois quadros: o do render e o do DOM) e de
+novo quando a `Promise` assenta; o login fazia isso com duas refs, que saíram.
+Uma ressalva medida: valor escrito por script não dispara `tooShort` — o
+navegador só o conta em edição do usuário.
+
+**O app.** Os dois convites por e-mail (membros e diálogo) viraram `Form
+layout="inline"` + `FormInput` + `FormSubmit`, sem o `type="submit"` cru, o
+`Spinner` à mão e o "Enviando..." em ternário. Os erros escritos à mão do
+assistente de categorias e da aparência viraram `FormError`; o do seletor de
+carteira não era de formulário (a lista falhou ao carregar) e virou `Alert
+tone="destructive" size="sm"` com a ação. As nove preferências de
+notificação usam `FormSwitch variant="card"`. Os botões de enviar de
+lançamento e assinatura perderam o dimensionamento à mão (`h-10`,
+`max-sm:h-11 … text-base`): quem dimensiona é o `DialogFooter`. Fica o
+`w-full` do lançamento no telefone, porque o ramo é escolhido abaixo de 768px
+e o rodapé vira linha a partir de 640. Os 41 `Field` à mão não foram
+migrados para o `FormField` — ficaram fora da escolha.
+`form-versions.test.ts` tranca.
+
+### Rodada 215 — o FormPickerPopover mora no Form
+
+**A pedido do dono, o seletor com busca ancorado num campo entrou no
+`form.tsx`**, e a página dele virou uma seção da página do `Form` — o
+precedente do `NativeSelect` no `select.tsx` (rodada 165) e do `DragHandle` no
+`drawer.tsx` (rodada 159). Ele só existe dentro de formulário (o campo de
+categoria e o de cartão), a regra do Enter da busca dele já morava no
+`form.tsx`, e a página dele explicava o formulário para explicar a si mesma.
+`src/components/ui/` passou de 77 para 76 arquivos; a URL
+`/designsystem/form-picker-popover` saiu do registro.
+
+**O que estava falso, e foi corrigido na mudança.** A página e o `AGENTS.md`
+diziam que a busca era montada "sobre `InputGroup`" — ela é o `SearchInput`
+na superfície `plate` desde a rodada 198 — e o `AGENTS.md` descrevia o
+gatilho como `outline` `xl`, quando ele veste `field-classes` e nasce `md`. A
+demonstração escrevia `Label` à mão e um `<Button type="submit">` cru; agora é
+`FormField` com o `FormControl` no gatilho (a raiz é o `Popover`, sem nó) e
+`FormSubmit`. Os três testes que liam o arquivo pelo nome
+(`scroll-fade`, `field-control-ladder`, `brand-contour`) passaram a ler o
+`form.tsx`, e as asserções valem igual.
