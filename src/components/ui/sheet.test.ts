@@ -112,11 +112,12 @@ describe("régua do Sheet", () => {
         )
       )
     }
-    // Nenhuma composta fora do encostado: o flutuante fecha a borda sozinho.
+    // Nenhuma composta fora do encostado: o flutuante fecha a borda sozinho —
+    // desde a rodada 222 com o anel das placas soltas, e não com `border`.
     expect(COMPOSTAS).not.toContain('variant: "floating"')
-    expect(EIXO_VARIANT.slice(EIXO_VARIANT.indexOf("floating:"))).toContain(
-      "border"
-    )
+    const flutuante = EIXO_VARIANT.slice(EIXO_VARIANT.indexOf("floating:"))
+    expect(flutuante).toContain("ring-1 ring-foreground/10")
+    expect(flutuante).not.toMatch(/\bborder\b/)
   })
 
   it("5. a área segura entra nas duas verticais e em nenhuma horizontal", () => {
@@ -181,7 +182,7 @@ describe("régua do Sheet", () => {
     expect(gaveta).not.toMatch(/side=\{side\}/)
 
     const desktop = CODIGO.slice(painel)
-    expect(desktop).toContain("sheetContentVariants({ side, variant })")
+    expect(desktop).toContain('sheetContentVariants({ side, variant, size: lateral ? size : "none" })')
   })
 
   it("9. a superfície é eixo, e `auto` continua sendo o padrão de todo mundo", () => {

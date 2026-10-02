@@ -410,7 +410,13 @@ describe("a superfície de vidro", () => {
     it("26. as quatro superfícies modais vestem a régua, e nada repinta por dentro", () => {
         // O `Sheet` traz os dois ramos no mesmo arquivo desde a rodada 64: a
         // placa do painel mora no `cva` e a da gaveta no ramo do `vaul`.
-        for (const nome of ["dialog", "sheet", "drawer"] as const) {
+        // O `Sheet` saiu da lista na rodada 222: a folha passou a ser a placa
+        // **chapada** (`--popover`), a pedido do dono — o véu já a separa da
+        // página. Ela não pode voltar a vestir o vidro por cópia.
+        const folha = semComentariosDe("src/components/ui/sheet.tsx")
+        expect(folha).not.toContain("modalSurfaceClassName")
+        expect(folha).toContain("bg-clip-padding bg-popover text-sm text-popover-foreground shadow-lg")
+        for (const nome of ["dialog", "drawer"] as const) {
             const src = semComentariosDe(`src/components/ui/${nome}.tsx`)
             expect(src, `${nome} precisa vestir a régua`).toContain("modalSurfaceClassName")
             // A marca da cópia, nos dois tokens que a placa já teve.

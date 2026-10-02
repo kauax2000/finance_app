@@ -1183,7 +1183,8 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   sangrava por ela; ele deixou de existir — ver a dissolução, mais abaixo.)
 - **Superfície ancorada é uma só, e é o `Sheet`** — conteúdo e navegação,
   formulário e menu. Ele tem `side` (de qual borda entra) e `variant`
-  (`flush` encostado, `floating` com calha de 8px), e **no telefone tudo vira
+  (`floating` com calha de 8px — **o padrão desde a rodada 222** — ou `flush`
+  encostado), e **no telefone tudo vira
   gaveta — menos quem pede `surface="panel"`**. Esse eixo fixa o painel em
   qualquer largura, o padrão `auto` é a regra de todas as ~40 folhas do app, e o
   **único** consumidor é a navegação: um menu entra pelo lado, não sobe do
@@ -1437,6 +1438,25 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `w-fit` distribui sobra **zero**, então as abas nunca esticaram, e o `Tabs`
   hoje mede o gatilho como esta barra. Não há mais exceção: os dois ancoram no
   gatilho.
+- **O `Sheet` ganhou o redesenho da casa e as versões que as folhas pediam**
+  (rodada 222). **`floating` é o padrão**: raio 18, o anel de 1px das placas e
+  a sombra, numa placa **chapada** (`--popover`) — o vidro saiu, porque o véu
+  já separa a folha da página. Ela **entra na mola e sai em 200ms**, e o
+  conteúdo sobe em cascata (`@utility sheet-reveal`; o × de canto da flutuante é círculo um degrau mais escuro que a placa (o texto a 5% no claro, `--background` a 40% no escuro), sem anel nem sombra, porque já está dentro da placa (a tinta da placa o apagava, e `--muted` era claro demais); com movimento reduzido o
+  bloco global corta e ela aparece). **O casco de formulário é o de fábrica**
+  (`gap-0`, `overflow-hidden`, sem recuo): nenhuma folha escreve `flex w-full
+  flex-col gap-0 overflow-hidden p-0`. `size` é a largura das laterais (`sm`
+  384, o padrão · `md` 448 · `lg` 512 · `full`); topo e base recebem `none`.
+  Na raiz, **`pending`, `dirty` e `confirmDiscard`** são os do `Dialog`, num
+  `pedir` só (a pergunta de descarte é importada do `dialog.tsx` — ciclo
+  deliberado, os dois só se usam dentro de funções); `modal={false}` é o
+  **painel ao lado** (sem véu, clicar fora não fecha); `snapPoints` são os
+  degraus da gaveta no telefone. **Folha sobre folha**: a de baixo recua
+  (`data-coberta`, 96% e 24px para o fundo), e na gaveta empilha o `vaul`
+  (`NestedRoot`). `SheetContent resizable` põe a costura de largura na aresta
+  de dentro, com teclado e — com uma string — guardada; ela segue a regra da
+  costura do `Sidebar`. **As 8 folhas do app pedem `variant="flush"`** por
+  enquanto, por decisão do dono; o material e a mola valem para elas.
 - **O `Sidebar` flutua por padrão desde a rodada 221, sem vidro e numa peça
   só.** `variant="floating"` é a placa solta dos outros flutuantes (o
   `--sidebar` chapado, `ring-1 ring-foreground/10`, `shadow-lg`, raio 18); o

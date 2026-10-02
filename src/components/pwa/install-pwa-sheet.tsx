@@ -40,6 +40,7 @@ export function InstallPwaSheet({ open, onOpenChange }: InstallPwaSheetProps) {
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent
                 side="bottom"
+                variant="flush"
                 fillMobileViewport
                 className="gap-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
             >

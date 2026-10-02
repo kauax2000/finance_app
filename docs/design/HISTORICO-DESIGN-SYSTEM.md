@@ -17637,3 +17637,58 @@ vidro pintado e da pílula medida. `sidebar-versions.test.ts` tranca a rodada;
 `sidebar-ladder.test.ts` (18, 21, 22b, 24, 25) e o 10 do `glass.test.ts`
 foram reescritos para o novo estado.
 
+### Rodada 222 — o Sheet flutua por padrão, chapado, na mola, com o casco de formulário, a escada de largura, o salvar e o descartar, folha sobre folha, a largura arrastável, o painel ao lado e os degraus da gaveta
+
+**O que estava errado.** A página dizia que a entrada e a saída usam
+`--ease-emphasized` — só o lado de baixo usava; os outros três eram
+`ease-in-out` — e que, com movimento reduzido, "o deslize vira um fade curto":
+o `motion-reduce:animate-none` e o bloco global cortavam a animação inteira. E
+ela ainda citava o "keyframe de gaveta" do `fillMobileViewport`, que é o
+`vaul` desde a rodada 34. Nas telas, cinco folhas escreviam
+`flex w-full flex-col gap-0 overflow-hidden p-0 data-[side=right]:sm:max-w-md`,
+e seis decidiam a superfície com `isMobile`, contra a regra de que quem decide
+é o componente.
+
+**O redesenho, todo pedido pelo dono.** `floating` é o padrão, como no
+`Sidebar`: raio 18, o anel `ring-foreground/10` no lugar da borda e
+`shadow-lg`. **Sem vidro**: a placa é `--popover` chapado nos dois ramos — o
+véu já separa a folha da página. Ela entra na mola da casa e sai em 200ms
+sem quique; o conteúdo sobe 3px em cascata (`@utility sheet-reveal`, a régua
+das linhas do `Menubar`), com o × e a costura parados. O × de canto da folha flutuante virou **círculo**, a pedido do dono, aplicado pela variante (`[&>[data-slot=dialog-close-button]]`), então o × de um `DialogHeaderRow` e o da folha encostada ficam como estão. A primeira versão era a pílula inteira do gatilho do `Sidebar` (a tinta, o anel e a sombra); dentro da placa ela lia como uma segunda placa pousada na primeira, e o dono pediu a forma e o fundo, sem o anel e a sombra. O fundo é o texto a 5% (`bg-foreground/5`): com a tinta da placa (`--popover`) o círculo é a cor exata da folha e some — o dono viu —, e `--muted` (0,269 sobre 0,205 no escuro) ficou claro demais; o dono pediu um degrau abaixo. E o texto a 5% só escurece no claro: no escuro ele puxa para o branco e **clareia** (o dono viu) — ali o fundo é a página a 40% sobre a placa (≈0,18 contra 0,205); a página cheia (0,145) descia mais de um degrau, e o dono pediu só um. A flor do hover é o texto a 10%. **Com movimento
+reduzido ela simplesmente aparece** — o bloco global corta toda entrada, e o
+fade que a página prometia exigiria isentá-la dele.
+
+**As peças.** O casco de formulário é o de fábrica (`gap-0`,
+`overflow-hidden`), o `layout="fixed"` do `Dialog`. `size` dá nome à largura
+das laterais — `sm` 384 continua o padrão, `md` 448, `lg` 512, `full` a
+janela menos 4rem — e o componente passa `none` a topo e base, porque um
+`max-w` com as duas âncoras horizontais encolheria a folha para a esquerda.
+
+**Os comportamentos.** `pending`, `dirty` e `confirmDiscard` são os do
+`Dialog`, num `pedir` só na raiz, que passou a guardar o próprio estado
+(controlado ou não). A pergunta de descarte é a do `Dialog`, importada de lá:
+o `dialog.tsx` já importa este arquivo, então é um ciclo — deliberado e
+escrito, porque os dois só se usam dentro de funções. Medido na prévia:
+alterar e apertar Esc pergunta; salvar trava o Esc e marca `aria-busy`, e o
+fechar depois de salvar não pergunta. **Folha sobre folha**: cada
+`SheetContent` publica um canal, a folha aberta dentro dele avisa, e a de
+baixo ganha `data-coberta` — medido, 96% e 24px para o fundo, e volta ao
+fechar a de cima; na gaveta quem empilha é o `vaul` (`NestedRoot`).
+**`resizable`** põe a costura na aresta de dentro: o ponteiro com captura, as
+setas a 16px, mínimo de 320 e a janela menos 64 de teto, e uma string guarda a
+largura no `localStorage` (medido: arrastada a 544, guardada 544); o fio segue
+a regra da costura do `Sidebar`. **`modal={false}` é o painel ao lado**: sem
+véu, e o `onInteractOutside` é cancelado, então clicar na página não fecha
+(medido). **`snapPoints`** vão ao `vaul` no telefone, e a gaveta mede a tela
+inteira. A demonstração deles mora no `Drawer`: dentro da moldura de telefone
+o `vaul` mede pela janela **de fora** (431px de uma tela de 667, medido), e a
+prévia aqui mostraria a altura errada.
+
+**O app.** O dono pediu só o catálogo; as 8 folhas passaram a pedir
+`variant="flush"`, para a geometria não mudar sem migração, e o
+`bills-toolbar` ganhou o `gap-4` que recebia de fábrica. O material chapado,
+a mola e a cascata valem para elas. A gaveta do `Dialog surface="auto"` foi
+conferida no telefone: chapada, com a alça e a cascata. Os testes:
+`sheet-versions.test.ts` novo; o 4 e o 7 de `sheet.test.ts` e o 26 de
+`glass.test.ts` reescritos (o `Sheet` saiu da lista do vidro).
+

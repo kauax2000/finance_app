@@ -435,6 +435,7 @@ export function TransactionDetailSheet({
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent
                 side="right"
+                variant="flush"
                 fillMobileViewport={isMobile}
                 className={cn(
                     "flex w-full flex-col gap-0 overflow-hidden p-0 data-[side=right]:sm:max-w-md",

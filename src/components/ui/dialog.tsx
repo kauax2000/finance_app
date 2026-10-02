@@ -800,6 +800,8 @@ function DialogSteps({
 }
 
 export {
+  // A pergunta de descarte, que o `Sheet` também faz (rodada 222).
+  ConfirmarDescarte,
   Dialog,
   DialogBody,
   DialogClose,
