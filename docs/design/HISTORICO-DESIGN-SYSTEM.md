@@ -17446,3 +17446,40 @@ variável com o painel aberto. Agora a medida mora no estado do React e chega
 pela prop `style`, e o `left` tem `50%` de reserva: sem a medida, o painel
 centra na fileira. Medido: 403–691 dentro do recorte em 398, e 426–714 sem a
 variável.
+
+### Rodada 220 — o Popover ganha a escada de largura, a seta, o × no cabeçalho, a confirmação curta, a mola, a gaveta no telefone e o nome num prop
+
+**O que estava errado.** A página dizia que o `surface="none"` servia à pilha
+do `Command` no `Combobox` — ela saiu dele na rodada 198, e hoje nenhuma
+tela usa o `none`. A demonstração "Sem recuo" mostrava o código de um
+calendário e desenhava uma lista. E as seis telas que usam o popover
+reescreviam à mão o que é do componente: quatro larguras (`w-auto p-0`,
+`w-max … gap-0 p-0`, `w-[min(calc(100vw-2rem),18rem)]`,
+`w-[var(--radix-popover-trigger-width)]`), uma rolagem própria no lugar do
+`PopoverBody`, o `modal={isMobile}` e, nos dois seletores de mês das
+categorias, nenhum nome — o leitor de tela anunciava só "diálogo".
+
+**As versões.** `size` (`auto` · `sm` 224 · `md` 288 · `lg` 352 · `trigger`),
+medido: 224, 352, a largura do gatilho (256) e a do conteúdo. `PopoverArrow`
+na tinta da placa. `PopoverHeader closeButton`, o × preso ao topo do título
+(fecha, medido). `PopoverConfirm`: `role="alertdialog"`, nome pelo título, o
+`onConfirm` com `Promise` deixa os botões ocupados e fecha ao assentar —
+medido. A entrada é a mola de 97% dos menus redesenhados. `mobile="sheet"`
+abre o mesmo conteúdo numa gaveta: gatilho, fechar e título passam a ser
+dela, a seta e o × somem (medido na moldura do telefone, onde o aviso de
+`DialogTitle` no console é o da rodada 218 — o Radix procura o título no
+`document` da página). `label` vira o título `sr-only`, e em
+desenvolvimento um popover que abre sem nome avisa.
+
+**O teste antigo que a ordem quebrou.** O `command-dock.test.ts` procura
+`defaultVariants: { surface: "plate"` — o `size` entrou depois dos dois, em
+vez de mexer no teste.
+
+**O app.** O dia do calendário do painel ganhou o título à vista ("Lançamentos
+de …", no lugar do `sr-only` mais um `<p>` à mão), a seta e o `size`, e virou
+`mobile="sheet"`: no telefone o dia abre numa gaveta, e no desktop continua
+ancorado na célula. Os dois popovers dos filtros de lançamentos usam `size`,
+`padding` e `PopoverBody`; o "+N filtros" ganhou nome. Os seletores de mês das
+categorias ganharam `label="Escolher mês"` e perderam `w-auto p-0`, e os
+quatro chevrons perderam o `h-4 w-4`. Nada disso foi visto (login).
+`popover-versions.test.ts` tranca.

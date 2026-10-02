@@ -1279,6 +1279,18 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   **registram**, e o conteúdo só aponta `aria-labelledby` / `aria-describedby`
   quando eles existem — apontar para um `id` ausente deixa o nome vazio, que era
   o estado anterior. Popover sem rótulo visível leva o par em `sr-only`.
+- **O `Popover` ganhou a escada de largura, a seta, o × no cabeçalho, a
+  confirmação curta, a mola, a gaveta e o nome num prop** (rodada 220).
+  `size` é `auto` · `sm` 224 · **`md` 288** · `lg` 352 · `trigger` — **nenhuma
+  tela escreve `w-auto`, `w-max`, `w-[min(…)]` nem
+  `w-[var(--radix-popover-trigger-width)]`**. `PopoverArrow` (a segunda cópia
+  da tinta da placa, a do `HoverCard` é a primeira) para o gatilho que é um
+  entre iguais; `PopoverHeader closeButton`; `PopoverConfirm` é a confirmação
+  de baixo risco (`alertdialog`, a `Promise` trava e fecha) — o que não tem
+  volta continua `AlertDialog`. A entrada é a mola dos menus. **`mobile="sheet"`
+  troca o `modal={isMobile}` à mão** por uma gaveta, onde `PopoverTitle` vira
+  `DialogTitle`. `label` é o nome sem título à vista, e em desenvolvimento um
+  popover que abre sem nome avisa no console.
 - **O teto e a folga do `Popover` vêm de fábrica**:
   `max-h-(--radix-popover-content-available-height)` com `overflow-y-auto`, e
   `collisionPadding` 8. A variável já era calculada pelo Radix e só o

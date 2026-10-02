@@ -112,7 +112,7 @@ function MonthNavArrowControls({
                 aria-label="Mês anterior"
                 onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, -1))}
             >
-                <ChevronLeftIcon className="h-4 w-4" />
+                <ChevronLeftIcon />
             </Button>
 
             <div
@@ -152,7 +152,9 @@ function MonthNavArrowControls({
                     </PopoverTrigger>
                     <PopoverContent
                         align="center"
-                        className="w-auto p-0"
+                        size="auto"
+                        padding="none"
+                        label="Escolher mês"
                     >
                         {/* A grade de meses do design system (rodada 210): eram dois
                             `Select` de mês e ano lado a lado. */}
@@ -198,7 +200,7 @@ function MonthNavArrowControls({
                 aria-label="Próximo mês"
                 onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, 1))}
             >
-                <ChevronRightIcon className="h-4 w-4" />
+                <ChevronRightIcon />
             </Button>
         </>
     )
@@ -317,7 +319,9 @@ export function MonthNav({
                         </PopoverTrigger>
                         <PopoverContent
                             align="start"
-                            className="w-auto p-0"
+                            size="auto"
+                            padding="none"
+                            label="Escolher mês"
                         >
                             <MonthGrid
                                 value={mesDoAnoMes(budgetMonthYm)}
@@ -339,7 +343,7 @@ export function MonthNav({
                                         )
                                     }
                                 >
-                                    <ChevronLeftIcon className="h-4 w-4" />
+                                    <ChevronLeftIcon />
                                 </Button>
                                 <Button
                                     type="button"
@@ -365,7 +369,7 @@ export function MonthNav({
                                         )
                                     }
                                 >
-                                    <ChevronRightIcon className="h-4 w-4" />
+                                    <ChevronRightIcon />
                                 </Button>
                             </PopoverFooter>
                         </PopoverContent>

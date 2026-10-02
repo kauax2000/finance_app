@@ -16,7 +16,9 @@ import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import {
     Popover,
     PopoverAnchor,
+    PopoverArrow,
     PopoverContent,
+    PopoverHeader,
     PopoverTitle,
 } from "@/components/ui/popover"
 import { Calendar, type CalendarMarker } from "@/components/ui/calendar"
@@ -519,8 +521,10 @@ export function DashboardPaymentsCalendar({
                     </div>
                 </div>
                 {mobileDayPopoverYmd ? (
+                    // No telefone o dia abre numa gaveta (`mobile="sheet"`): a
+                    // âncora é ignorada ali, e no desktop ela segue o dia clicado.
                     <Popover
-                        modal={isMobile}
+                        mobile="sheet"
                         open
                         onOpenChange={(open) => {
                             if (!open) {
@@ -538,18 +542,17 @@ export function DashboardPaymentsCalendar({
                         />
                         <PopoverContent
                             side="bottom"
-                            align={isMobile ? "center" : "start"}
+                            align="start"
                             sideOffset={6}
-                            className="w-[min(calc(100vw-2rem),18rem)] max-w-[min(calc(100vw-2rem),18rem)] p-2"
-                            aria-describedby={undefined}
+                            size="md"
                         >
-                            <PopoverTitle className="sr-only">
-                                Lançamentos do dia{" "}
-                                {formatYmdPtBr(mobileDayPopoverYmd)}
-                            </PopoverTitle>
-                            <p className="mb-2 text-xs font-medium text-muted-foreground">
-                                {formatYmdPtBr(mobileDayPopoverYmd)}
-                            </p>
+                            <PopoverArrow />
+                            <PopoverHeader>
+                                <PopoverTitle>
+                                    Lançamentos de{" "}
+                                    {formatYmdPtBr(mobileDayPopoverYmd)}
+                                </PopoverTitle>
+                            </PopoverHeader>
                             <PaymentDayEventsListContent
                                 events={byYmd.get(mobileDayPopoverYmd) ?? []}
                                 onTransactionPostedClick={(id) => {

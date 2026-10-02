@@ -45,6 +45,7 @@ import {
 import { SearchInput } from "@/components/ui/search-input"
 import {
     Popover,
+    PopoverBody,
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
@@ -346,9 +347,11 @@ export function TransactionsFiltersPanel({
                         </PopoverTrigger>
                         <PopoverContent
                             align="start"
-                            className="w-[var(--radix-popover-trigger-width)] max-w-[min(100vw-1.5rem,22rem)] flex flex-col gap-0 overflow-hidden p-0"
+                            size="trigger"
+                            padding="none"
+                            label="Formas de pagamento"
                         >
-                            <div className="max-h-64 overflow-y-auto p-2">
+                            <PopoverBody className="max-h-64 p-2">
                                 <div className="space-y-0.5">
                                     {PAYMENT_METHOD_VALUES.map((pm) => {
                                         const checked =
@@ -378,7 +381,7 @@ export function TransactionsFiltersPanel({
                                         )
                                     })}
                                 </div>
-                            </div>
+                            </PopoverBody>
                         </PopoverContent>
                     </Popover>
 

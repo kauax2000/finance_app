@@ -15,6 +15,7 @@ import {
     PopoverBody,
     PopoverContent,
     PopoverHeader,
+    PopoverTitle,
     PopoverTrigger,
 } from "@/components/ui/popover"
 import {
@@ -471,17 +472,14 @@ export function TransactionsActiveFiltersChips({
                             {overflow.length === 1 ? "filtro" : "filtros"}
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent
-                        align="end"
-                        className="w-max max-w-[min(100vw-2rem,20rem)] gap-0 p-0"
-                    >
+                    <PopoverContent align="end" size="sm" padding="none">
                         <PopoverHeader>
-                            <p className="text-2xs font-medium leading-tight text-muted-foreground">
+                            <PopoverTitle className="text-2xs leading-tight text-muted-foreground">
                                 Mais filtros ativos
-                            </p>
+                            </PopoverTitle>
                         </PopoverHeader>
                         <PopoverBody className="max-h-64 py-1.5">
-                            <div className="inline-flex max-w-full flex-col items-stretch gap-1.5">
+                            <div className="flex flex-col gap-1.5">
                                 {overflow.map((item) => (
                                     <Chip
                                         key={item.key}
