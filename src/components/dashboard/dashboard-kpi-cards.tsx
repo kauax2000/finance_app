@@ -1,126 +1,25 @@
 "use client"
 
-import { percentPointsBR } from "@/lib/formatters"
 import {
-  ArrowTrendingDownIcon,
-  ArrowTrendingUpIcon,
-  CreditCardIcon,
-  MinusIcon,
-  ScaleIcon,
+    ArrowTrendingDownIcon,
+    ArrowTrendingUpIcon,
+    CreditCardIcon,
+    ScaleIcon,
 } from "@heroicons/react/16/solid"
-import type { HeroIcon } from "@/types/navigation"
-import type { ReactNode } from "react"
 
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { currencyBRL } from "@/lib/formatters"
-import { cn } from "@/lib/utils"
+import {
+    StatCard,
+    StatCardDelta,
+    StatCardFooter,
+    StatCardGroup,
+    StatCardHeader,
+    StatCardIcon,
+    StatCardLabel,
+    StatCardValue,
+} from "@/components/ui/stat-card"
 
-
-function DeltaBadge({
-    cur,
-    prev,
-    invert,
-}: {
-    cur: number
-    prev: number
-    /** true when lower is better (e.g. expense) */
-    invert?: boolean
-}) {
-    if (prev === 0 && cur === 0) {
-        return null
-    }
-    if (prev === 0) {
-        return (
-            <Badge
-                variant="outline" tone="neutral"
-                className="max-w-[min(100%,7.5rem)] shrink-0 truncate px-2 py-0.5 text-2xs font-medium tabular-nums"
-                title="Sem valor no período anterior para comparar"
-            >
-                Sem base
-            </Badge>
-        )
-    }
-
-    const deltaPct = ((cur - prev) / Math.abs(prev)) * 100
-    const good = invert ? deltaPct <= 0 : deltaPct >= 0
-    const isFlat = deltaPct === 0
-
-    const display = `${deltaPct >= 0 ? "+" : ""}${percentPointsBR(deltaPct)}%`
-
-    if (isFlat) {
-        return (
-            <Badge
-                variant="outline" tone="neutral"
-                className="shrink-0 px-2 py-0.5 text-2xs font-medium tabular-nums whitespace-nowrap"
-                aria-label="Sem variação percentual vs. mesmo período do mês anterior"
-            >
-                <MinusIcon
-                    className="hidden opacity-90 md:block"
-                    aria-hidden
-                />
-                <span>0%</span>
-            </Badge>
-        )
-    }
-
-    const Icon = deltaPct > 0 ? ArrowTrendingUpIcon : ArrowTrendingDownIcon
-    const tone = good ? "success" : "destructive"
-
-    return (
-        <Badge
-            tone={tone}
-            className="shrink-0 px-2 py-0.5 text-2xs font-medium tabular-nums whitespace-nowrap"
-            aria-label={`${display} vs. mesmo período do mês anterior`}
-        >
-            <Icon
-                className="hidden opacity-90 md:block"
-                aria-hidden
-            />
-            <span>{display}</span>
-        </Badge>
-    )
-}
-
-function KpiCard({
-    label,
-    icon: Icon,
-    iconClassName,
-    value,
-    badge,
-}: {
-    label: string
-    icon: HeroIcon
-    iconClassName?: string
-    value: ReactNode
-    badge?: ReactNode
-}) {
-    return (
-        <Card padding="none">
-            <CardToolbar>
-                <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <Icon
-                        className={cn(
-                            "hidden size-3.5 shrink-0 md:block",
-                            iconClassName,
-                        )}
-                        aria-hidden
-                    />
-                    <p className="min-w-0 truncate text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                        {label}
-                    </p>
-                </div>
-                {badge ? (
-                    <div className="flex min-w-0 shrink-0 justify-end">{badge}</div>
-                ) : null}
-            </CardToolbar>
-            <CardContent className="pt-4 pb-4 md:pt-5 md:pb-5">
-                <div className="leading-tight">{value}</div>
-            </CardContent>
-        </Card>
-    )
-}
+const CONTEXTO_DELTA = "em relação ao mesmo período do mês anterior"
 
 export function DashboardKpiCards({
     kpiCurrent,
@@ -134,86 +33,79 @@ export function DashboardKpiCards({
     totalOpenInvoices: number
 }) {
     return (
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-            <KpiCard
-                label="Despesas"
-                icon={ArrowTrendingDownIcon}
-                iconClassName="text-expense"
-                value={
-                    <>
-                        <MoneyDisplay
-                            value={kpiCurrent.expense}
-                            tone="expense"
-                            size="2xl"
-                        className="text-xl leading-tight md:text-2xl"
-                        />
-                        {/* Os três cards são lançados, para Receitas − Despesas = Resultado.
-                            O previsto do mês fica como leitura secundária. */}
-                        {kpiPlanned.expense > kpiCurrent.expense ? (
-                            <p className="mt-1 text-2xs text-muted-foreground">
-                                Previsto no mês{" "}
-                                <span className="nums">{currencyBRL(kpiPlanned.expense)}</span>
-                            </p>
-                        ) : null}
-                    </>
-                }
-                badge={
-                    <DeltaBadge
-                        cur={kpiCurrent.expense}
-                        prev={kpiPrev.expense}
-                        invert
+        <StatCardGroup variant="separate" columns={4}>
+            <StatCard tone="expense">
+                <StatCardHeader>
+                    <StatCardLabel>
+                        <StatCardIcon>
+                            <ArrowTrendingDownIcon />
+                        </StatCardIcon>
+                        Despesas
+                    </StatCardLabel>
+                    <StatCardDelta
+                        current={kpiCurrent.expense}
+                        previous={kpiPrev.expense}
+                        better="down"
+                        context={CONTEXTO_DELTA}
                     />
-                }
-            />
+                </StatCardHeader>
+                <StatCardValue value={kpiCurrent.expense} format="currency" />
+                {/* Os três cards são lançados, para Receitas − Despesas = Resultado.
+                    O previsto do mês fica como leitura secundária. */}
+                {kpiPlanned.expense > kpiCurrent.expense ? (
+                    <StatCardFooter>
+                        Previsto no mês <MoneyDisplay value={kpiPlanned.expense} tone="muted" />
+                    </StatCardFooter>
+                ) : null}
+            </StatCard>
 
-            <KpiCard
-                label="Receitas"
-                icon={ArrowTrendingUpIcon}
-                iconClassName="text-income"
-                value={
-                    <MoneyDisplay
-                        value={kpiCurrent.income}
-                        tone="income"
-                        size="2xl"
-                        className="text-xl leading-tight md:text-2xl"
+            <StatCard tone="income">
+                <StatCardHeader>
+                    <StatCardLabel>
+                        <StatCardIcon>
+                            <ArrowTrendingUpIcon />
+                        </StatCardIcon>
+                        Receitas
+                    </StatCardLabel>
+                    <StatCardDelta
+                        current={kpiCurrent.income}
+                        previous={kpiPrev.income}
+                        better="up"
+                        context={CONTEXTO_DELTA}
                     />
-                }
-                badge={
-                    <DeltaBadge cur={kpiCurrent.income} prev={kpiPrev.income} />
-                }
-            />
+                </StatCardHeader>
+                <StatCardValue value={kpiCurrent.income} format="currency" />
+            </StatCard>
 
-            <KpiCard
-                label="Resultado"
-                icon={ScaleIcon}
-                iconClassName="text-muted-foreground"
-                value={
-                    <MoneyDisplay
-                        value={kpiCurrent.net}
-                        tone={
-                            kpiCurrent.net >= 0 ? "income" : "expense"
-                        }
-                        size="2xl"
-                        className="text-xl leading-tight md:text-2xl"
+            <StatCard tone={kpiCurrent.net >= 0 ? "income" : "expense"}>
+                <StatCardHeader>
+                    <StatCardLabel>
+                        <StatCardIcon>
+                            <ScaleIcon />
+                        </StatCardIcon>
+                        Resultado
+                    </StatCardLabel>
+                    <StatCardDelta
+                        current={kpiCurrent.net}
+                        previous={kpiPrev.net}
+                        better="up"
+                        context={CONTEXTO_DELTA}
                     />
-                }
-                badge={
-                    <DeltaBadge cur={kpiCurrent.net} prev={kpiPrev.net} />
-                }
-            />
+                </StatCardHeader>
+                <StatCardValue value={kpiCurrent.net} format="currency" />
+            </StatCard>
 
-            <KpiCard
-                label="Faturas abertas"
-                icon={CreditCardIcon}
-                iconClassName="text-muted-foreground"
-                value={
-                    <MoneyDisplay
-                        value={totalOpenInvoices}
-                        size="2xl"
-                        className="text-xl leading-tight md:text-2xl"
-                    />
-                }
-            />
-        </div>
+            <StatCard tone="default">
+                <StatCardHeader>
+                    <StatCardLabel>
+                        <StatCardIcon>
+                            <CreditCardIcon />
+                        </StatCardIcon>
+                        Faturas abertas
+                    </StatCardLabel>
+                </StatCardHeader>
+                <StatCardValue value={totalOpenInvoices} format="currency" />
+            </StatCard>
+        </StatCardGroup>
     )
 }

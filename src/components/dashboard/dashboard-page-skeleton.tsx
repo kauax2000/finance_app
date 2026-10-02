@@ -2,6 +2,13 @@
 
 import { Card, CardNote, CardToolbar } from "@/components/ui/card"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
+import {
+    StatCard,
+    StatCardGroup,
+    StatCardHeader,
+    StatCardLabel,
+    StatCardValueSkeleton,
+} from "@/components/ui/stat-card"
 
 const KPI_KEYS = ["resultado", "receitas", "despesas", "faturas"] as const
 const CATEGORY_LIST_KEYS = [
@@ -69,32 +76,21 @@ function DashboardToolbarSkeleton() {
 
 function DashboardKpiSkeleton() {
     return (
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+        <StatCardGroup variant="separate" columns={4}>
             {KPI_KEYS.map((key, index) => (
-                <Card
-                    key={key}
-                    padding="none"
-                >
-                    <CardToolbar>
-                        <div className="flex min-w-0 flex-1 items-center gap-2">
-                            <Skeleton className="hidden size-3.5 shrink-0 rounded-sm md:block" />
-                            <Skeleton className="h-3 w-20 max-w-full" />
-                        </div>
-                        {index !== 3 ? (
-                            <Skeleton className="h-5 w-12 shrink-0 rounded-full" />
-                        ) : null}
-                    </CardToolbar>
-                    <div className="px-4 pt-4 pb-4 md:pt-5 md:pb-5">
-                        <Skeleton className="h-7 w-28 max-w-full" />
-                        {index === 2 ? (
-                            <Skeleton className="mt-2 h-2.5 w-40 max-w-full" />
-                        ) : index === 3 ? (
-                            <Skeleton className="mt-2 h-2.5 w-44 max-w-full" />
-                        ) : null}
-                    </div>
-                </Card>
+                <StatCard key={key}>
+                    <StatCardHeader>
+                        <StatCardLabel>
+                            <Skeleton shape="tile" size="xs" />
+                            <Skeleton shape="text" className="w-20 max-w-full" />
+                        </StatCardLabel>
+                        {/* Faturas abertas não tem variação. */}
+                        {index !== 3 ? <Skeleton shape="pill" size="sm" /> : null}
+                    </StatCardHeader>
+                    <StatCardValueSkeleton className="max-w-full" />
+                </StatCard>
             ))}
-        </div>
+        </StatCardGroup>
     )
 }
 

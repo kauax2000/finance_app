@@ -3054,6 +3054,29 @@
   }
 }
 
+/* A faixa de cartões de número (rodada 223): eles entram um depois do outro,
+   uma vez, 3px e o esmaecer — a régua das linhas do `Menubar`, mais lenta,
+   porque aqui sobe um cartão inteiro. */
+@utility stat-card-reveal {
+  & > [data-slot="stat-card"] {
+    animation: menubar-rise 280ms var(--ease-out) both;
+  }
+  & > [data-slot="stat-card"]:nth-child(2) {
+    animation-delay: 50ms;
+  }
+  & > [data-slot="stat-card"]:nth-child(3) {
+    animation-delay: 100ms;
+  }
+  & > [data-slot="stat-card"]:nth-child(n + 4) {
+    animation-delay: 150ms;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    & > [data-slot="stat-card"] {
+      animation-delay: 0ms;
+    }
+  }
+}
+
 @utility command-reveal {
   & [cmdk-item],
   & [cmdk-group-heading] {

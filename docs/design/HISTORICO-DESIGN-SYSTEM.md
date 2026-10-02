@@ -17692,3 +17692,51 @@ conferida no telefone: chapada, com a alça e a cascata. Os testes:
 `sheet-versions.test.ts` novo; o 4 e o 7 de `sheet.test.ts` e o 26 de
 `glass.test.ts` reescritos (o `Sheet` saiu da lista do vidro).
 
+### Rodada 223 — o StatCard redesenhado: a anatomia de painel, o tom no detalhe, o número que conta, a variação calculada, a faísca, a meta, a faixa, a divisão, o grupo e a linha compacta
+
+**O que estava errado.** O `StatCard` era usado por duas telas de contas; os
+números mais vistos do app — os quatro do dashboard — eram um `KpiCard` com um
+`DeltaBadge` declarados no arquivo da tela (invariante 1), e o resumo da
+categoria tinha outra cópia: o cartão de métrica, a variação contra o mês
+anterior (`buildMomBadgeModel`, `pctAriaLabel`) e o rótulo em sobrancelha
+escrito à mão. A análise de contas escrevia o mín · máx dentro do valor.
+
+**O redesenho, pedido inteiro pelo dono.** A anatomia é a que o dashboard já
+desenhava: o rótulo em sobrancelha com o ícone num **ladrilho tonal**, a
+variação no canto e o número embaixo, com uma nota opcional no pé. **O tom
+mora no detalhe**: o cartão inteiro tingido (verde, vermelho, âmbar) saiu — quatro
+lado a lado disputavam o olho com o próprio número —, e cada tom publica quatro
+variáveis que o ladrilho, o número e a faísca leem. Os tons de estado deixam o
+número neutro. **O número conta** ao montar e ao mudar (o `animate` do
+`motion`, a curva dos gráficos); o HTML do servidor já traz o valor final, e o
+zero só é escrito no efeito de layout, antes da pintura — medido, 18.432,90 a
+21.107,35 em ~450ms ao trocar o período. Num grupo os cartões entram em cascata
+(`@utility stat-card-reveal`).
+
+**As peças.** `StatCardDelta current previous better` decide a porcentagem, a
+seta, o tom de **estado** (`success`/`destructive`, porque "melhorou" não é
+"entrou dinheiro"), o "0%" (arredondado como é mostrado) e o "Sem base"; a
+regra é `statCardDelta()`, exportada e testada. `StatCardChart` é o
+`ChartSparkline` na cor do tom; `StatCardProgress` é a meta com
+`BUDGET_BANDS`; `StatCardRange` é o intervalo um degrau abaixo, com "de … a"
+para o leitor de tela; `StatCardSplit` são dois ou três valores e a barra da
+proporção, pelo maior resto (`splitPercents`). As formas: `size` vai até o
+herói (`lg`, 36px), o `md` sobe a 24px a partir de `sm:` (no telefone a grade é
+2×2 e o número de 24 não cabia — o dashboard escrevia `text-xl md:text-2xl`),
+`layout="horizontal"` é a linha compacta, e o `StatCardGroup` é solto ou
+`joined` — um painel só, `gap-px` sobre a cor da borda.
+
+**Uma medição na tela.** Em "Resultado", num cartão de 192px, o rótulo passava
+por baixo da variação: texto cru num flex é item anônimo, e item anônimo não
+trunca. O `StatCardLabel` passou a embrulhar o texto num `span` que trunca, e a
+variação na linha do rótulo desce a `text-2xs`.
+
+**O app.** O dashboard perdeu o `KpiCard` e o `DeltaBadge` (e o esqueleto
+desenhado à mão, que virou `StatCardGroup` com `StatCardValueSkeleton`); o
+resumo da categoria perdeu o cartão de métrica e o modelo da variação (448 →
+258 linhas), com a meta em `StatCardProgress`; a análise e o detalhe de contas
+usam o grupo, `size="sm"`, o valor que conta e a faixa. O `bill-summary-card`
+ficou: os três ladrilhos moram dentro de um `Card` clicável, e `StatCard`
+dentro dele seria cartão dentro de cartão — o caminho é `DescriptionList
+columns={3}`. As telas ficam atrás de login e não foram vistas.
+

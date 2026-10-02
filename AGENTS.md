@@ -1071,8 +1071,9 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   dentro do respiro.
 - **Cartão clicável é o link, não um link em volta dele**: `interactive`
   (elevação no cursor, par `active:` para o toque, anel de foco) + `asChild`
-  com um `<Link>` dentro. **`Card` não tem `tone` de dinheiro** — superfície
-  tingida de entrada e saída é o `StatCard`.
+  com um `<Link>` dentro. **`Card` não tem `tone` de dinheiro** — o tom de
+  entrada e saída de um número é o `StatCard`, e desde a rodada 223 ele não
+  tinge a superfície: pinta o ladrilho do ícone, o número e a faísca.
 - **O `Card` ganhou as versões que as telas escreviam à mão** (rodada 204).
   **Não há `tone`**: um cartão tingido de estado saiu igual ao `Alert` e foi
   removido a pedido do dono — aviso é `Alert` (as notas da fatura viraram
@@ -1438,6 +1439,27 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `w-fit` distribui sobra **zero**, então as abas nunca esticaram, e o `Tabs`
   hoje mede o gatilho como esta barra. Não há mais exceção: os dois ancoram no
   gatilho.
+- **O `StatCard` foi redesenhado e ganhou as versões de painel** (rodada
+  223). **A anatomia**: `StatCardHeader` com o `StatCardLabel` em sobrancelha
+  (caixa alta de 11px, o texto cru truncando) e o `StatCardIcon` num
+  **ladrilho tonal** à esquerda, a variação no canto, o número embaixo e a
+  `StatCardFooter` no pé. **O tom mora no detalhe**: a superfície é a do
+  `Card`, e cada tom publica `--stat-tile`, `--stat-tile-ink`, `--stat-figure`
+  e `--stat-chart`. `size` vai até o herói (`sm` · **`md`**, que sobe a 24px a
+  partir de `sm:` · `lg`, o saldo) e `layout="horizontal"` é a linha compacta.
+  **`StatCardValue value` escreve e conta o número** (`format`: `currency`,
+  `number`, `percent`; o HTML do servidor já traz o final, e o zero é escrito
+  no efeito de layout); com `children`, um `MoneyDisplay` herda o corpo — não
+  escreva `size` nele. **`StatCardDelta current previous better`** calcula a
+  porcentagem, a seta e o tom de **estado** (`success`/`destructive`, invariante
+  3), o "0%" e o "Sem base" — a regra mora em `statCardDelta()`. Peças:
+  `StatCardChart` (a faísca na cor do tom), `StatCardProgress` (a meta com
+  `BUDGET_BANDS`), `StatCardRange` (mín – máx), `StatCardSplit` (dois ou três
+  valores e a barra da proporção) e **`StatCardGroup`** (`separate` ou
+  `joined`, um painel dividido por fios; 2 colunas no telefone, `columns` a
+  partir de `lg`; a cascata `stat-card-reveal`). **Nenhuma tela declara
+  `KpiCard`, `DeltaBadge` nem a conta de variação**: o dashboard, o resumo da
+  categoria e as contas usam as peças.
 - **O `Sheet` ganhou o redesenho da casa e as versões que as folhas pediam**
   (rodada 222). **`floating` é o padrão**: raio 18, o anel de 1px das placas e
   a sombra, numa placa **chapada** (`--popover`) — o vidro saiu, porque o véu

@@ -26,6 +26,7 @@ import { MoneyDisplay } from "@/components/ui/money-display"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
     StatCard,
+    StatCardGroup,
     StatCardLabel,
     StatCardValue,
 } from "@/components/ui/stat-card"
@@ -376,34 +377,28 @@ export function BillDetailSheet({
                                 </div>
                             ) : null}
 
-                            <div className="grid gap-2 sm:grid-cols-2">
-                                <StatCard tone="default">
+                            <StatCardGroup columns={2}>
+                                <StatCard tone="default" size="sm">
                                     <StatCardLabel>Total pago 90d</StatCardLabel>
-                                    <StatCardValue>
-                                        <MoneyDisplay value={stats.paidSum} />
-                                    </StatCardValue>
+                                    <StatCardValue value={stats.paidSum} format="currency" />
                                 </StatCard>
-                                <StatCard tone="default">
+                                <StatCard tone="default" size="sm">
                                     <StatCardLabel>Média paga</StatCardLabel>
-                                    <StatCardValue>
-                                        {stats.avgPaid != null ? (
-                                            <MoneyDisplay value={stats.avgPaid} />
-                                        ) : (
-                                            "—"
-                                        )}
-                                    </StatCardValue>
+                                    {stats.avgPaid != null ? (
+                                        <StatCardValue value={stats.avgPaid} format="currency" />
+                                    ) : (
+                                        <StatCardValue>—</StatCardValue>
+                                    )}
                                 </StatCard>
-                                <StatCard tone="warning">
+                                <StatCard tone="warning" size="sm">
                                     <StatCardLabel>Atrasos 90d</StatCardLabel>
-                                    <StatCardValue>
-                                        {stats.lateN}
-                                    </StatCardValue>
+                                    <StatCardValue value={stats.lateN} format="number" />
                                 </StatCard>
-                                <StatCard tone="default">
+                                <StatCard tone="default" size="sm">
                                     <StatCardLabel>Pendentes 60d</StatCardLabel>
-                                    <StatCardValue>{stats.next60}</StatCardValue>
+                                    <StatCardValue value={stats.next60} format="number" />
                                 </StatCard>
-                            </div>
+                            </StatCardGroup>
 
                             {instances.length > 0 ? (
                                 <BillHistoryAnalytics instances={instances} />

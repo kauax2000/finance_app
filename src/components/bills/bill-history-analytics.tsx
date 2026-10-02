@@ -17,10 +17,11 @@ import {
 } from "@/components/ui/chart"
 import {
     StatCard,
+    StatCardGroup,
     StatCardLabel,
+    StatCardRange,
     StatCardValue,
 } from "@/components/ui/stat-card"
-import { MoneyDisplay } from "@/components/ui/money-display"
 
 const chartCfg = {
     paid: { label: "Valor pago", color: "var(--chart-3)" },
@@ -109,34 +110,24 @@ export function BillHistoryAnalytics({ instances }: { instances: BillInstance[] 
                 </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <StatCard tone="default">
+            <StatCardGroup columns={4}>
+                <StatCard tone="default" size="sm">
                     <StatCardLabel>Último pago</StatCardLabel>
-                    <StatCardValue>
-                        <MoneyDisplay value={averages.lastAmt ?? 0} />
-                    </StatCardValue>
+                    <StatCardValue value={averages.lastAmt ?? 0} format="currency" />
                 </StatCard>
-                <StatCard tone="info">
+                <StatCard tone="info" size="sm">
                     <StatCardLabel>Média ({averages.n} pag.)</StatCardLabel>
-                    <StatCardValue>
-                        <MoneyDisplay value={averages.avgAll} />
-                    </StatCardValue>
+                    <StatCardValue value={averages.avgAll} format="currency" />
                 </StatCard>
-                <StatCard tone="default">
+                <StatCard tone="default" size="sm">
                     <StatCardLabel>Mín / máx ({last12.length} últ.)</StatCardLabel>
-                    <StatCardValue className="flex flex-wrap gap-x-2 text-xs sm:text-sm">
-                        <MoneyDisplay value={averages.mn} />
-                        <span className="text-muted-foreground">·</span>
-                        <MoneyDisplay value={averages.mx} />
-                    </StatCardValue>
+                    <StatCardRange min={averages.mn} max={averages.mx} format="currency" />
                 </StatCard>
-                <StatCard tone="expense">
+                <StatCard tone="expense" size="sm">
                     <StatCardLabel>Pago em {new Date().getFullYear()}</StatCardLabel>
-                    <StatCardValue>
-                        <MoneyDisplay value={averages.yearSum} />
-                    </StatCardValue>
+                    <StatCardValue value={averages.yearSum} format="currency" />
                 </StatCard>
-            </div>
+            </StatCardGroup>
 
             <Card padding="sm">
                 <ChartContainer
