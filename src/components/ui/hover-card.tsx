@@ -7,6 +7,8 @@ import { HoverCard as HoverCardPrimitive } from "radix-ui"
 import { menuPanelSurfaceClassName } from "@/lib/menu-classes"
 import { cn } from "@/lib/utils"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
+import { Button } from "@/components/ui/button"
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { Caption } from "@/components/ui/typography"
 import { useCloseOnScroll } from "@/hooks/use-close-on-scroll"
 
@@ -53,7 +55,16 @@ import { useCloseOnScroll } from "@/hooks/use-close-on-scroll"
  * passa a existir só para quem tem mouse. Envolva um link ou um `Button`.
  *
  * E continua valendo o de sempre: **clicar precisa levar à mesma informação.**
- * No telefone este componente não acontece.
+ *
+ * ## No toque, o toque longo (rodada 217)
+ *
+ * O Radix ignora o ponteiro de toque, e por isso a prévia não existia no
+ * telefone. Agora segurar o gatilho por 500ms a abre — o toque simples
+ * continua sendo do gatilho (navegar, abrir) —, e o clique que o soltar
+ * dispara é engolido, senão a prévia abriria e o link levaria embora no mesmo
+ * gesto. O `contextmenu` do toque longo também para no gatilho: numa linha
+ * com `ContextMenu`, o dedo no chip abre a prévia e não o menu da linha.
+ * `touch={false}` desliga.
  */
 
 const hoverCardContentVariants = cva(
@@ -63,7 +74,12 @@ const hoverCardContentVariants = cva(
     menuPanelSurfaceClassName,
     "text-sm outline-hidden",
     "max-h-(--radix-hover-card-content-available-height) max-w-(--radix-hover-card-content-available-width) overflow-y-auto overscroll-contain",
-    "duration-(--duration-instant) data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+    // A entrada é a mola da casa (rodada 217) — a do `Tooltip`, em CSS: cresce
+    // de 90% passando um pouco do alvo e assenta em 500ms. A saída não tem
+    // mola: uma mola até zero passaria por baixo de zero.
+    "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+    "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-90 data-open:duration-(--duration-spring) data-open:ease-(--ease-spring)",
+    "data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-closed:duration-(--duration-instant) data-closed:ease-(--ease-out)",
   ],
   {
     variants: {
@@ -94,39 +110,220 @@ const hoverCardContentVariants = cva(
   }
 )
 
+/**
+ * Os vizinhos abrem na hora (rodada 217). Num parágrafo com quatro nomes, quem
+ * acabou de ler a prévia de "Ana" e passa para "Anderson" não deveria esperar
+ * os 400ms de novo — o mesmo que o `Tooltip` faz com o `skipDelayDuration` do
+ * Radix. Enquanto uma prévia do grupo está aberta, e por `skipDelay` depois de
+ * a última fechar, as outras abrem sem atraso.
+ */
+const HoverCardGroupContext = React.createContext<{
+  aquecido: boolean
+  abriu: () => void
+  fechou: () => void
+} | null>(null)
+
+function HoverCardGroup({
+  skipDelay = 300,
+  children,
+}: {
+  /** Quanto tempo depois de a última fechar o grupo continua "aquecido". */
+  skipDelay?: number
+  children: React.ReactNode
+}) {
+  const [aquecido, setAquecido] = React.useState(false)
+  const abertasRef = React.useRef(0)
+  const esfriarRef = React.useRef<number | undefined>(undefined)
+
+  const abriu = React.useCallback(() => {
+    abertasRef.current += 1
+    window.clearTimeout(esfriarRef.current)
+    setAquecido(true)
+  }, [])
+  const fechou = React.useCallback(() => {
+    abertasRef.current = Math.max(0, abertasRef.current - 1)
+    if (abertasRef.current > 0) return
+    window.clearTimeout(esfriarRef.current)
+    esfriarRef.current = window.setTimeout(() => setAquecido(false), skipDelay)
+  }, [skipDelay])
+  React.useEffect(() => () => window.clearTimeout(esfriarRef.current), [])
+
+  const valor = React.useMemo(
+    () => ({ aquecido, abriu, fechou }),
+    [aquecido, abriu, fechou]
+  )
+  return (
+    <HoverCardGroupContext.Provider value={valor}>
+      {children}
+    </HoverCardGroupContext.Provider>
+  )
+}
+
+/** O que o gatilho precisa da raiz para o toque longo. */
+const HoverCardTouchContext = React.createContext<{
+  touch: boolean
+  abrir: () => void
+} | null>(null)
+
 function HoverCard({
   openDelay = 400,
   closeDelay = 200,
+  touch = true,
   open: openProp,
   defaultOpen,
   onOpenChange,
   ...props
-}: React.ComponentProps<typeof HoverCardPrimitive.Root>) {
+}: React.ComponentProps<typeof HoverCardPrimitive.Root> & {
+  /** Segurar o gatilho no toque abre a prévia. */
+  touch?: boolean
+}) {
+  const grupo = React.useContext(HoverCardGroupContext)
+  const abertaRef = React.useRef(false)
+
   // A prévia fecha quando a página rola — ver `useCloseOnScroll`.
   const [open, setOpen] = useCloseOnScroll({
     value: openProp,
     defaultValue: defaultOpen,
-    onChange: onOpenChange,
+    onChange: (proximo: boolean) => {
+      // O grupo conta as abertas pela transição, não pelo pedido: o Radix
+      // pede `false` de novo para uma que já fechou.
+      if (proximo !== abertaRef.current) {
+        abertaRef.current = proximo
+        if (proximo) grupo?.abriu()
+        else grupo?.fechou()
+      }
+      onOpenChange?.(proximo)
+    },
     closed: false,
   })
 
+  const toque = React.useMemo(
+    () => ({ touch, abrir: () => setOpen(true) }),
+    [touch, setOpen]
+  )
+
   return (
-    <HoverCardPrimitive.Root
-      data-slot="hover-card"
-      openDelay={openDelay}
-      closeDelay={closeDelay}
-      open={open}
-      onOpenChange={setOpen}
-      {...props}
-    />
+    <HoverCardTouchContext.Provider value={toque}>
+      <HoverCardPrimitive.Root
+        data-slot="hover-card"
+        openDelay={grupo?.aquecido ? 0 : openDelay}
+        closeDelay={closeDelay}
+        open={open}
+        onOpenChange={setOpen}
+        {...props}
+      />
+    </HoverCardTouchContext.Provider>
   )
 }
 
+/**
+ * O gatilho. `variant="inline"` (rodada 217) é o nome dentro de um parágrafo:
+ * sublinhado **pontilhado**, que diz "há mais aqui" sem prometer navegação
+ * como o sublinhado cheio de um link. Sem `asChild`, ele é um `<button>` — o
+ * gatilho tem de ser focável, e o `<a>` sem `href` que o Radix renderiza não é.
+ */
+const hoverCardInlineClassName =
+  "cursor-default rounded-xs underline decoration-muted-foreground/60 decoration-dotted underline-offset-4 outline-none transition-colors hover:decoration-foreground focus-visible:ring-3 focus-visible:ring-ring/45 data-[state=open]:decoration-foreground"
+
 function HoverCardTrigger({
+  variant = "default",
+  asChild,
+  className,
+  children,
+  onPointerDown,
+  onPointerUp,
+  onPointerLeave,
+  onPointerCancel,
+  onClickCapture,
+  onContextMenu,
   ...props
-}: React.ComponentProps<typeof HoverCardPrimitive.Trigger>) {
+}: React.ComponentProps<typeof HoverCardPrimitive.Trigger> & {
+  variant?: "default" | "inline"
+}) {
+  const toque = React.useContext(HoverCardTouchContext)
+  const timerRef = React.useRef<number | undefined>(undefined)
+  const abriuNoToqueRef = React.useRef(false)
+  const ultimoToqueRef = React.useRef(false)
+
+  const cancelar = () => window.clearTimeout(timerRef.current)
+  React.useEffect(() => () => window.clearTimeout(timerRef.current), [])
+
+  const handlers = {
+    onPointerDown: (e: React.PointerEvent<HTMLAnchorElement>) => {
+      onPointerDown?.(e)
+      ultimoToqueRef.current = e.pointerType === "touch"
+      if (!toque?.touch || e.pointerType !== "touch") return
+      abriuNoToqueRef.current = false
+      cancelar()
+      timerRef.current = window.setTimeout(() => {
+        abriuNoToqueRef.current = true
+        toque.abrir()
+      }, 500)
+    },
+    onPointerUp: (e: React.PointerEvent<HTMLAnchorElement>) => {
+      onPointerUp?.(e)
+      cancelar()
+    },
+    onPointerLeave: (e: React.PointerEvent<HTMLAnchorElement>) => {
+      onPointerLeave?.(e)
+      cancelar()
+    },
+    onPointerCancel: (e: React.PointerEvent<HTMLAnchorElement>) => {
+      onPointerCancel?.(e)
+      cancelar()
+    },
+    // O soltar do toque longo dispara um clique: engolido, senão o link do
+    // gatilho levaria embora a prévia que acabou de abrir.
+    onClickCapture: (e: React.MouseEvent<HTMLAnchorElement>) => {
+      if (abriuNoToqueRef.current) {
+        abriuNoToqueRef.current = false
+        e.preventDefault()
+        e.stopPropagation()
+      }
+      onClickCapture?.(e)
+    },
+    // O toque longo também é `contextmenu`: ele é da prévia, não do menu da
+    // linha em volta. O botão direito do mouse continua passando.
+    onContextMenu: (e: React.MouseEvent<HTMLAnchorElement>) => {
+      if (toque?.touch && ultimoToqueRef.current) {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+      onContextMenu?.(e)
+    },
+  }
+  // O balão "copiar/abrir link" do iOS e a seleção de texto disputariam o gesto.
+  const semBalao = toque?.touch && "[-webkit-touch-callout:none] pointer-coarse:select-none"
+
+  if (variant === "inline" && !asChild) {
+    return (
+      <HoverCardPrimitive.Trigger
+        asChild
+        data-slot="hover-card-trigger"
+        data-variant="inline"
+        {...props}
+        {...handlers}
+      >
+        <button
+          type="button"
+          className={cn(hoverCardInlineClassName, semBalao, className)}
+        >
+          {children}
+        </button>
+      </HoverCardPrimitive.Trigger>
+    )
+  }
   return (
-    <HoverCardPrimitive.Trigger data-slot="hover-card-trigger" {...props} />
+    <HoverCardPrimitive.Trigger
+      data-slot="hover-card-trigger"
+      data-variant={variant}
+      asChild={asChild}
+      className={cn(variant === "inline" && hoverCardInlineClassName, semBalao, className)}
+      {...props}
+      {...handlers}
+    >
+      {children}
+    </HoverCardPrimitive.Trigger>
   )
 }
 
@@ -137,9 +334,18 @@ function HoverCardContent({
   collisionPadding = ANCHORED_COLLISION_PADDING,
   size,
   padding,
+  pending = false,
+  children,
   ...props
 }: React.ComponentProps<typeof HoverCardPrimitive.Content> &
-  VariantProps<typeof hoverCardContentVariants>) {
+  VariantProps<typeof hoverCardContentVariants> & {
+    /**
+     * O dado ainda está chegando (rodada 217): o esqueleto da prévia no lugar
+     * do conteúdo. A prévia busca o que mostra no `onOpenChange` da raiz — nada
+     * carrega antes de alguém pousar.
+     */
+    pending?: boolean
+  }) {
   return (
     <HoverCardPrimitive.Portal data-slot="hover-card-portal">
       <HoverCardPrimitive.Content
@@ -148,9 +354,12 @@ function HoverCardContent({
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
         data-padding={padding}
+        aria-busy={pending || undefined}
         className={cn(hoverCardContentVariants({ size, padding }), className)}
         {...props}
-      />
+      >
+        {pending ? <HoverCardSkeleton /> : children}
+      </HoverCardPrimitive.Content>
     </HoverCardPrimitive.Portal>
   )
 }
@@ -226,6 +435,7 @@ function HoverCardHeader({
   className,
   children,
   endAdornment,
+  media,
   ...props
 }: React.ComponentProps<"div"> & {
   /**
@@ -242,30 +452,43 @@ function HoverCardHeader({
    * fosse longo, e o recuo do canto seria um número escrito na tela, que é
    * exatamente o que `--hover-card-strip-px` existe para evitar.
    *
-   * **Sem `space-y-1` no par**, que é onde este slot diverge do
-   * `DialogHeaderRow`: título sobre descrição é o mesmo dado em duas linhas, e
-   * quem os separa é a entrelinha. (O `space-y-1` de lá está no backlog.)
+   * **Sem `space-y-1` no par**: título sobre descrição é o mesmo dado em
+   * duas linhas, e quem os separa é a entrelinha — a mesma regra do
+   * `DialogHeaderRow`, que perdeu o dele.
    */
   endAdornment?: React.ReactNode
+  /**
+   * O avatar, o ladrilho ou o ícone **antes** do par (rodada 217), centrado nas
+   * duas linhas — o `media` do `CardHeader`. A página escrevia `flex gap-3` à
+   * mão em volta do `Avatar` em cada prévia de pessoa.
+   */
+  media?: React.ReactNode
 }) {
-  const pair = (
-    <div className="flex min-w-0 flex-col">{children}</div>
-  )
+  const pair = <div className="flex min-w-0 flex-col">{children}</div>
+  const comGrade = endAdornment != null || media != null
 
   return (
     <div
       data-slot="hover-card-header"
       className={cn(
         "min-w-0 text-sm",
-        endAdornment != null
-          ? "grid w-full grid-cols-[minmax(0,1fr)_auto] items-start gap-3"
+        comGrade
+          ? "grid w-full items-start gap-3"
           : "flex flex-col",
+        media != null && endAdornment != null && "grid-cols-[auto_minmax(0,1fr)_auto]",
+        media != null && endAdornment == null && "grid-cols-[auto_minmax(0,1fr)]",
+        media == null && endAdornment != null && "grid-cols-[minmax(0,1fr)_auto]",
         "px-(--hover-card-strip-px) py-(--hover-card-strip-py)",
         className
       )}
       {...props}
     >
-      {endAdornment != null ? pair : children}
+      {media != null ? (
+        <div data-slot="hover-card-header-media" className="flex shrink-0 self-center">
+          {media}
+        </div>
+      ) : null}
+      {comGrade ? pair : children}
       {endAdornment != null ? (
         <div data-slot="hover-card-header-adornment" className="shrink-0">
           {endAdornment}
@@ -355,9 +578,64 @@ function HoverCardFooter({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/**
+ * O caminho do clique (rodada 217): "Ver fatura", "Abrir carteira". A prévia
+ * é sempre redundante — a mesma informação tem de existir no clique —, e
+ * dentro dela o link é a saída para a página inteira. Um `Button
+ * variant="link"` pequeno, encostado à direita do rodapé; quem chama passa o
+ * `Link` por `asChild`.
+ */
+function HoverCardLink({
+  className,
+  ...props
+}: React.ComponentProps<typeof Button>) {
+  return (
+    <Button
+      data-slot="hover-card-link"
+      variant="link"
+      size="sm"
+      className={cn("ms-auto px-0", className)}
+      {...props}
+    />
+  )
+}
+
+/**
+ * O esqueleto da prévia (rodada 217): o avatar, o par do cabeçalho e uma
+ * linha de corpo, em osso. É o que o `pending` do conteúdo mostra, e quem
+ * monta a prévia à mão pode usá-lo direto.
+ */
+function HoverCardSkeleton({
+  media = true,
+  label = "Carregando prévia",
+}: {
+  media?: boolean
+  label?: string
+}) {
+  return (
+    <SkeletonGroup
+      label={label}
+      data-slot="hover-card-skeleton"
+      className="flex flex-col gap-3 px-(--hover-card-strip-px) py-(--hover-card-strip-py)"
+    >
+      <div className="flex items-center gap-3">
+        {media ? <Skeleton shape="circle" size="md" /> : null}
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Skeleton shape="text" className="w-2/3" />
+          <Skeleton shape="text" className="w-1/2 text-xs" />
+        </div>
+      </div>
+      <Skeleton shape="text" className="w-4/5" />
+    </SkeletonGroup>
+  )
+}
+
 export {
   hoverCardContentVariants,
   HoverCard,
+  HoverCardGroup,
+  HoverCardLink,
+  HoverCardSkeleton,
   HoverCardArrow,
   HoverCardBody,
   HoverCardContent,

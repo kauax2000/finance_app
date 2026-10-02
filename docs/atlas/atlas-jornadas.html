@@ -279,7 +279,7 @@
   <dl class="meta">
     <div><dt>Base</dt><dd>Leitura do código</dd></div>
     <div><dt>Branch</dt><dd>finance-app-2.0</dd></div>
-    <div><dt>Data</dt><dd>1 out 2026 · busca global, botão direito, período, rascunho e menus do telefone</dd></div>
+    <div><dt>Data</dt><dd>2 out 2026 · busca global, botão direito, período, rascunho, menus do telefone e prévias da lista</dd></div>
     <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 4 lacunas</dd></div>
     <div><dt>Fonte versionada</dt><dd><code>docs/JORNADAS.md</code></dd></div>
   </dl>
@@ -424,7 +424,7 @@ flowchart LR
     G8 --&gt;|"cobrança vira lançamento"| G5
     G9 --&gt;|"ver em transações"| G5
     G5 --&gt;|"gerenciar categorias"| G9
-    G5 --&gt;|"cadastrar cartão"| G6
+    G5 --&gt;|"cadastrar cartão, prévia da fatura"| G6
 
     G10 --&gt;|"sair ou excluir conta"| G1
 
@@ -870,6 +870,7 @@ flowchart TD
         <li><div><strong>Editar e excluir.</strong> Numa parcela, a pessoa escolhe entre editar só ela ou o plano todo. Excluir uma parcela cancela a compra parcelada inteira.</div></li>
         <li><div><strong>Rascunho protegido.</strong> Fechar o formulário com algo preenchido pergunta "Descartar alterações?" antes; salvar fecha direto, e enquanto salva nada fecha. Trocar só a aba ou o tipo não conta como alteração.</div></li>
         <li><div><strong>Botão direito.</strong> Na linha, o botão direito (ou o toque longo) abre Abrir, Editar, Selecionar e Excluir — as mesmas ações dos botões da linha, que continuam. Sobre uma linha selecionada, o menu age na seleção inteira: "Excluir 3 lançamentos".</div></li>
+        <li><div><strong>Prévias nos chips.</strong> Pousar o cursor, focar ou segurar o dedo no chip de fatura mostra o cartão, o estado da fatura e as datas de fechamento e vencimento, com "Ver cartão"; no chip "Parcelada", a parcela, o total e quando termina. O clique no chip continua abrindo a linha.</div></li>
       </ol>
       <figure>
         <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
@@ -907,6 +908,9 @@ flowchart TD
     rowMenu -.-&gt; delConfirm
     list -.-&gt;|"botão direito numa linha selecionada"| selMenu(["Menu da seleção: Limpar, Excluir N"])
     selMenu -.-&gt; bulk
+    list -.-&gt;|"pousar, focar ou segurar o chip de fatura"| invoicePeek(["Prévia da fatura: cartão, estado, fecha, vence"])
+    invoicePeek --&gt;|"Ver cartão"| cardPage(("G6 /credit-cards/id"))
+    list -.-&gt;|"pousar, focar ou segurar o chip Parcelada"| planPeek(["Prévia do parcelamento: parcela N de M, total, última"])
 
     classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
     classDef dialog fill:#1a2220,stroke:#5b6a65,color:#dfe7e4
@@ -914,9 +918,9 @@ flowchart TD
     classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
     classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
     class entry,url route
-    class filters,list,panel,rangePick,newTx,clear,selection,bulk,rowMenu,selMenu dialog
+    class filters,list,panel,rangePick,newTx,clear,selection,bulk,rowMenu,selMenu,invoicePeek,planPeek dialog
     class parse,empty decision
-    class form,detail,detailEdit,delConfirm journey</pre></div>
+    class form,detail,detailEdit,delConfirm,cardPage journey</pre></div>
         <figcaption><strong>Figura 5a · Lista e filtros</strong></figcaption>
       </figure>
       <figure>
@@ -975,7 +979,7 @@ flowchart TD
         <figcaption><strong>Figura 5b · Criar, editar e excluir</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
-      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Parâmetros</td><td>Lidos e gravados na URL; <code>new</code> e <code>txn</code> são consumidos e removidos</td><td><code>src/lib/transactions-list-search-params.ts</code></td></tr><tr><td>Formulário</td><td>Um componente para criar, e o mesmo campo a campo na edição</td><td><code>src/components/transactions/transaction-form-dialog.tsx</code>, <code>transaction-form-use.tsx</code></td></tr><tr><td>Parcelada</td><td>RPC <code>create_workspace_installment_plan</code>; editar o plano não muda parcelas já lançadas</td><td><code>src/components/transactions/transaction-form-persistence.ts</code></td></tr><tr><td>Detalhe</td><td>Mesmo painel no Painel, em Cartões e em Categorias</td><td><code>src/components/transactions/transaction-detail-sheet.tsx</code></td></tr><tr><td>Exclusão</td><td>Parcela cancela o plano inteiro por <code>delete_workspace_installment_plan_cascade</code></td><td><code>src/lib/transactions/mutations.ts</code></td></tr><tr><td>Offline</td><td>Criar e excluir entram na fila; pagar conta exige conexão</td><td><code>src/lib/offline/</code></td></tr><tr><td>Rascunho</td><td>Fechar o formulário alterado (Cancelar, Esc, toque fora, ×, arrastar a gaveta) pergunta "Descartar alterações?"; salvar fecha sem perguntar. Trocar só a aba ou o tipo não conta como alteração. Enquanto salva, nada fecha (<code>Dialog pending</code>)</td><td><code>isDirty</code> em <code>src/components/transactions/transaction-form-use.tsx</code>, <code>src/components/transactions/transaction-form-dialog.tsx</code></td></tr><tr><td>Enter</td><td>O <code>Enter</code> na busca do seletor não salva a transação</td><td><code>shouldDeferEnterToWidget</code> em <code>src/components/ui/form.tsx</code></td></tr><tr><td>Período personalizado</td><td>Um <code>DatePicker</code> de intervalo com <code>confirm</code>: as pontas ficam em rascunho até Aplicar, Limpar tira o filtro, Cancelar e Esc descartam. Era um formulário à parte (<code>transactions-date-range-form.tsx</code>, removido)</td><td><code>src/components/transactions/transactions-filters-panel.tsx</code></td></tr><tr><td>Botão direito na linha</td><td>Atalho das ações da linha (os botões da coluna Ações continuam); sobre uma linha selecionada age na seleção inteira (<code>contextMenuTargets</code>); linhas projetadas não têm menu</td><td><code>TransactionRowContextMenu</code> em <code>src/components/transactions/transactions-table.tsx</code></td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Parâmetros</td><td>Lidos e gravados na URL; <code>new</code> e <code>txn</code> são consumidos e removidos</td><td><code>src/lib/transactions-list-search-params.ts</code></td></tr><tr><td>Formulário</td><td>Um componente para criar, e o mesmo campo a campo na edição</td><td><code>src/components/transactions/transaction-form-dialog.tsx</code>, <code>transaction-form-use.tsx</code></td></tr><tr><td>Parcelada</td><td>RPC <code>create_workspace_installment_plan</code>; editar o plano não muda parcelas já lançadas</td><td><code>src/components/transactions/transaction-form-persistence.ts</code></td></tr><tr><td>Detalhe</td><td>Mesmo painel no Painel, em Cartões e em Categorias</td><td><code>src/components/transactions/transaction-detail-sheet.tsx</code></td></tr><tr><td>Exclusão</td><td>Parcela cancela o plano inteiro por <code>delete_workspace_installment_plan_cascade</code></td><td><code>src/lib/transactions/mutations.ts</code></td></tr><tr><td>Offline</td><td>Criar e excluir entram na fila; pagar conta exige conexão</td><td><code>src/lib/offline/</code></td></tr><tr><td>Rascunho</td><td>Fechar o formulário alterado (Cancelar, Esc, toque fora, ×, arrastar a gaveta) pergunta "Descartar alterações?"; salvar fecha sem perguntar. Trocar só a aba ou o tipo não conta como alteração. Enquanto salva, nada fecha (<code>Dialog pending</code>)</td><td><code>isDirty</code> em <code>src/components/transactions/transaction-form-use.tsx</code>, <code>src/components/transactions/transaction-form-dialog.tsx</code></td></tr><tr><td>Enter</td><td>O <code>Enter</code> na busca do seletor não salva a transação</td><td><code>shouldDeferEnterToWidget</code> em <code>src/components/ui/form.tsx</code></td></tr><tr><td>Período personalizado</td><td>Um <code>DatePicker</code> de intervalo com <code>confirm</code>: as pontas ficam em rascunho até Aplicar, Limpar tira o filtro, Cancelar e Esc descartam. Era um formulário à parte (<code>transactions-date-range-form.tsx</code>, removido)</td><td><code>src/components/transactions/transactions-filters-panel.tsx</code></td></tr><tr><td>Prévias dos chips</td><td>O chip de fatura e o "Parcelada" abrem uma prévia ao pousar, no foco e no toque longo (<code>HoverCard</code>); o clique no chip continua abrindo o detalhe da linha. A da fatura leva a "Ver cartão" (o ciclo atual: a página do cartão não abre uma fatura passada por parâmetro). O chip de fatura só existe a partir de <code>md</code></td><td><code>CreditInvoiceChip</code> e <code>InstallmentChip</code> em <code>src/components/transactions/transactions-table.tsx</code></td></tr><tr><td>Botão direito na linha</td><td>Atalho das ações da linha (os botões da coluna Ações continuam); sobre uma linha selecionada age na seleção inteira (<code>contextMenuTargets</code>); linhas projetadas não têm menu</td><td><code>TransactionRowContextMenu</code> em <code>src/components/transactions/transactions-table.tsx</code></td></tr></tbody></table></div>
     </section>
 
     <section class="block" id="j6">
@@ -1468,7 +1472,7 @@ flowchart TD
 </div>
 
 <footer>
-  Atlas de Jornadas do Finance App · escrito a partir do código da branch <code>finance-app-2.0</code> em 17 de setembro de 2026, navegação global revista em 1 de outubro de 2026 · fonte dos fluxogramas em <code>docs/JORNADAS.md</code>
+  Atlas de Jornadas do Finance App · escrito a partir do código da branch <code>finance-app-2.0</code> em 17 de setembro de 2026, navegação global revista em 1 de outubro de 2026, prévias da lista em 2 de outubro · fonte dos fluxogramas em <code>docs/JORNADAS.md</code>
 </footer>
 
 <dialog class="viewer" id="viewer" aria-labelledby="viewer-title">

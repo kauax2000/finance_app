@@ -17284,3 +17284,48 @@ controlado pelo estado da peça.
 tem os valores do período: usá-la pede uma consulta de distribuição, e o dono
 escolheu deixar só no catálogo por enquanto. `histogram-slider-versions.test.ts`
 tranca.
+
+### Rodada 217 — o HoverCard ganha o avatar no cabeçalho, o gatilho no texto, o link de ver mais, o carregando, o grupo, o toque longo e a mola, e a lista de lançamentos passa a usá-lo
+
+**O que estava falso.** O `HoverCardHeader` dizia divergir do
+`DialogHeaderRow` por um `space-y-1` que estaria "no backlog" — o
+`DialogHeaderRow` já não tem respiro no par, e as duas peças seguem a mesma
+regra. O cabeçalho do componente terminava em "no telefone este componente não
+acontece", que deixou de ser verdade nesta rodada. E a página montava a cor do
+avatar por índice (`IDENTITY_TONES[3]`) e o `flex gap-3` em volta dele à mão,
+em cada prévia de pessoa.
+
+**As peças.** `HoverCardHeader media` (o `media` do `CardHeader`, centrado nas
+duas linhas); `HoverCardTrigger variant="inline"` — pontilhado, "há mais
+aqui" sem prometer navegação, e um `<button>` quando não há `asChild`, porque
+o `<a>` sem `href` que o Radix renderiza não recebe foco; `HoverCardLink`, o
+link pequeno à direita do rodapé; `HoverCardSkeleton`, o osso da prévia,
+`role="status"`.
+
+**Os comportamentos.** `pending` troca o conteúdo pelo esqueleto enquanto o
+`onOpenChange` busca. `HoverCardGroup` abre os vizinhos na hora — medido com o
+mouse de verdade: o segundo nome abre em 120ms e, frio, o terceiro espera os
+400. Os eventos sintéticos deram tempos erráticos com a aba em segundo plano
+(timers estrangulados), e o teste do grupo tem de ser com o ponteiro real. O
+grupo conta a **transição** de cada prévia, e não o pedido: o Radix pede
+`false` de novo para uma que já fechou, e contar o pedido esfriaria o grupo
+cedo. **O toque longo**: o Radix ignora o ponteiro de toque, e a prévia não
+existia no telefone; segurar 500ms a abre, o clique que o soltar dispara é
+engolido na captura (medido: não chega ao botão) e o `contextmenu` do toque é
+cancelado no gatilho — senão, numa linha com `ContextMenu`, o menu da linha
+abriria junto. A entrada é a mola da casa, em CSS (`zoom-in-90`, 500ms); a
+saída é a curva de sempre.
+
+**O app.** Os dois chips da tabela de lançamentos usavam `title=` nativo, que
+não aparece no toque nem pelo teclado. O de fatura abre a prévia (cartão,
+"bandeira · •••• final", o estado, a nota da fatura, fecha e vence, e "Ver
+cartão"); o "Parcelada" abre a parcela N de M, o valor da parcela, o total da
+compra e o mês da última. "Ver cartão", e não "Ver fatura": a página do cartão
+não abre uma fatura passada por parâmetro, e o link levaria ao ciclo errado.
+O agente que migrou fez o chip engolir o clique, e ele virou um buraco na
+linha clicável; o clique voltou para a linha, que abre o detalhe como antes.
+O chip de fatura mora na coluna de pagamento, escondida abaixo de `md`. Os
+dois chips são `<button>` crus por desenho (o `Button` traria altura e
+preenchimento), e o auditor os acusa na regra C. É mudança de jornada:
+`docs/JORNADAS.md` e o Atlas (versão 8) registram a prévia e o "Ver cartão".
+`hover-card-versions.test.ts` tranca.

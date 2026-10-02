@@ -1,6 +1,6 @@
 "use client"
 
-import { creditInvoiceSlotCompactLabel, creditInvoiceSlotStatusChipClass } from "@/lib/credit-card-display"
+import { creditCardIdentitySubtitle, creditInvoiceSlotCompactLabel, creditInvoiceSlotStatusChipClass } from "@/lib/credit-card-display"
 import {
     TablePanel,
     TablePanelFooter,
@@ -9,15 +9,18 @@ import {
 import * as React from "react"
 import Link from "next/link"
 import { ArrowPathRoundedSquareIcon, ArrowRightIcon, CheckIcon, PencilIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid"
-import type { Transaction } from "@/lib/supabase"
+import type { CreditCard, Transaction } from "@/lib/supabase"
 import {
     formatTransactionDayPtBr,
     formatTransactionMonthYearPtBr,
+    formatYmdPtBr,
+    localYmdFromDate,
     monthYearKeyFromTransactionDate,
     parseYmdLocal,
+    transactionCalendarParts,
 } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
-import { ROUTES } from "@/config/navigation"
+import { ROUTES, creditCardDetailPath } from "@/config/navigation"
 import { Button } from "@/components/ui/button"
 import { Pagination, PaginationStatus } from "@/components/ui/pagination"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -30,10 +33,11 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { tagChipInfo, tagChipSuccess, tagChipWarning, transactionExpenseTypeRowChip, transactionIncomeTypeRowChip, transactionParceladaRowChip, transactionRowChipShell } from "@/components/ui/badge"
+import { Badge, tagChipInfo, tagChipSuccess, tagChipWarning, transactionExpenseTypeRowChip, transactionIncomeTypeRowChip, transactionParceladaRowChip, transactionRowChipShell } from "@/components/ui/badge"
 import { paymentMethodLabel } from "@/lib/payment-methods"
 import {
     classifyTransactionInvoiceSlot,
+    estimatedDueDateForClose,
     isEstimatedDuePastForClose,
     statementCloseYmdForPurchaseDate,
     type CreditCardInvoiceSlot,
@@ -41,6 +45,27 @@ import {
 import type { SortDir, TransactionsListSortKey } from "@/components/transactions/transactions-list-types"
 import { isProjectedTransactionRow } from "@/lib/category-expense-month-rows"
 import { numberBR, signedCurrencyBRL } from "@/lib/formatters"
+import { resolveInstallmentKn, totalPurchaseFromPlan } from "@/lib/transaction-installment"
+import {
+    DescriptionDetails,
+    DescriptionList,
+    DescriptionListItem,
+    DescriptionTerm,
+} from "@/components/ui/description-list"
+import {
+    HoverCard,
+    HoverCardArrow,
+    HoverCardBody,
+    HoverCardContent,
+    HoverCardDescription,
+    HoverCardFooter,
+    HoverCardGroup,
+    HoverCardHeader,
+    HoverCardLink,
+    HoverCardTitle,
+    HoverCardTrigger,
+} from "@/components/ui/hover-card"
+import { Caption } from "@/components/ui/typography"
 import {
     ContextMenu,
     ContextMenuContent,
@@ -64,15 +89,25 @@ function formatPaymentCell(t: Transaction): string {
     return s
 }
 
-function creditCardInvoiceBadgeForRow(
-    t: Transaction,
-    invoicePaidByCardClose: ReadonlySet<string>
-): {
+type InvoiceBadge = {
     slot: CreditCardInvoiceSlot
     label: string
     chipClass: string
-    title: string
-} | null {
+    /** O mesmo estado no `Badge` da prévia — a cor do chip, pelo nome do tom. */
+    tone: "success" | "warning" | "destructive"
+    /** O que o chip não diz (paga ou não, vencimento passado); a prévia mostra. */
+    note: string | null
+    card: CreditCard
+    cardId: string
+    closeYmd: string | null
+    /** Estimado: o mês seguinte ao fechamento, no `due_day` do cartão. */
+    dueYmd: string | null
+}
+
+function creditCardInvoiceBadgeForRow(
+    t: Transaction,
+    invoicePaidByCardClose: ReadonlySet<string>
+): InvoiceBadge | null {
     if (
         t.type !== "expense" ||
         t.payment_method !== "credit_card" ||
@@ -88,61 +123,229 @@ function creditCardInvoiceBadgeForRow(
     const closeYmd = statementCloseYmdForPurchaseDate(t.date, card.closing_day)
     const payKey = closeYmd != null ? `${cardId}:${closeYmd}` : null
     const invoicePaid = payKey != null && invoicePaidByCardClose.has(payKey)
+    const closeDate = closeYmd != null ? parseYmdLocal(closeYmd) : undefined
+    const dueValid = card.due_day >= 1 && card.due_day <= 31
+    const dueYmd =
+        closeDate && dueValid
+            ? localYmdFromDate(estimatedDueDateForClose(closeDate, card.due_day))
+            : null
+    const base = { slot, card, cardId, closeYmd, dueYmd }
+    const bySlot = {
+        label: creditInvoiceSlotCompactLabel(slot),
+        chipClass: creditInvoiceSlotStatusChipClass(slot),
+        tone:
+            slot === "open"
+                ? ("success" as const)
+                : slot === "last_closed"
+                  ? ("warning" as const)
+                  : ("destructive" as const),
+    }
+    const paid = { label: "Paga", chipClass: tagChipSuccess, tone: "success" as const }
 
     if (slot === "open") {
-        return {
-            slot,
-            label: creditInvoiceSlotCompactLabel(slot),
-            chipClass: creditInvoiceSlotStatusChipClass(slot),
-            title: "Fatura aberta",
-        }
+        return { ...base, ...bySlot, note: null }
     }
 
     if (slot === "last_closed") {
         if (invoicePaid) {
-            return {
-                slot,
-                label: "Paga",
-                chipClass: tagChipSuccess,
-                title: "Fatura fechada — marcada como paga",
-            }
+            return { ...base, ...paid, note: "Fatura fechada — marcada como paga" }
         }
-        let title = "Fatura fechada — ainda não marcada como paga"
-        if (
-            closeYmd != null &&
-            card.due_day >= 1 &&
-            card.due_day <= 31
-        ) {
-            const closeDate = parseYmdLocal(closeYmd)
-            if (
-                closeDate &&
-                isEstimatedDuePastForClose(closeDate, card.due_day)
-            ) {
-                title += " — vencimento estimado já passou"
-            }
+        let note = "Fatura fechada — ainda não marcada como paga"
+        if (closeDate && dueValid && isEstimatedDuePastForClose(closeDate, card.due_day)) {
+            note += " — vencimento estimado já passou"
         }
-        return {
-            slot,
-            label: creditInvoiceSlotCompactLabel(slot),
-            chipClass: creditInvoiceSlotStatusChipClass(slot),
-            title,
-        }
+        return { ...base, ...bySlot, note }
     }
 
     if (invoicePaid) {
-        return {
-            slot,
-            label: "Paga",
-            chipClass: tagChipSuccess,
-            title: "Fatura anterior — marcada como paga",
-        }
+        return { ...base, ...paid, note: "Fatura anterior — marcada como paga" }
     }
-    return {
-        slot,
-        label: creditInvoiceSlotCompactLabel(slot),
-        chipClass: creditInvoiceSlotStatusChipClass(slot),
-        title: "Fatura anterior — ainda não marcada como paga",
-    }
+    return { ...base, ...bySlot, note: "Fatura anterior — ainda não marcada como paga" }
+}
+
+/**
+ * O chip fica dentro de uma linha que abre o detalhe no clique, e a prévia é
+ * portalizada — mas evento de portal do React sobe pela árvore do React, então
+ * o clique no "Ver cartão" também abriria a linha. Os dois param aqui.
+ */
+const stopRowEvent = (e: React.SyntheticEvent) => e.stopPropagation()
+
+/**
+ * O chip vira `<button>` para a prévia abrir no foco; o desenho é o mesmo. O
+ * clique nele **segue para a linha** e abre o detalhe, como antes: a prévia
+ * é redundante, e um chip que engolisse o clique seria um buraco na linha. O
+ * toque longo abre a prévia e o `HoverCardTrigger` engole o clique do soltar.
+ */
+const rowChipTriggerClassName =
+    "cursor-default outline-none focus-visible:ring-3 focus-visible:ring-ring/45"
+
+/** O chip de fatura e a prévia dela: cartão, estado, fechamento e vencimento. */
+function CreditInvoiceChip({ badge }: { badge: InvoiceBadge }) {
+    return (
+        <HoverCard>
+            <HoverCardTrigger asChild>
+                <button
+                    type="button"
+                    className={cn(
+                        transactionRowChipShell,
+                        badge.chipClass,
+                        rowChipTriggerClassName
+                    )}
+                >
+                    {badge.label}
+                </button>
+            </HoverCardTrigger>
+            <HoverCardContent
+                size="md"
+                padding="none"
+                onClick={stopRowEvent}
+                onContextMenu={stopRowEvent}
+            >
+                <HoverCardHeader
+                    endAdornment={
+                        <Badge tone={badge.tone} size="xs">
+                            {badge.label}
+                        </Badge>
+                    }
+                >
+                    <HoverCardTitle>{badge.card.name}</HoverCardTitle>
+                    <HoverCardDescription>
+                        {creditCardIdentitySubtitle(badge.card)}
+                    </HoverCardDescription>
+                </HoverCardHeader>
+                <HoverCardBody>
+                    {badge.note ? <Caption>{badge.note}</Caption> : null}
+                    {badge.closeYmd || badge.dueYmd ? (
+                        <DescriptionList layout="inline" className="gap-1">
+                            {badge.closeYmd ? (
+                                <DescriptionListItem>
+                                    <DescriptionTerm>Fecha</DescriptionTerm>
+                                    <DescriptionDetails className="nums">
+                                        {formatYmdPtBr(badge.closeYmd)}
+                                    </DescriptionDetails>
+                                </DescriptionListItem>
+                            ) : null}
+                            {badge.dueYmd ? (
+                                <DescriptionListItem>
+                                    <DescriptionTerm>Vence</DescriptionTerm>
+                                    <DescriptionDetails className="nums">
+                                        {formatYmdPtBr(badge.dueYmd)}
+                                    </DescriptionDetails>
+                                </DescriptionListItem>
+                            ) : null}
+                        </DescriptionList>
+                    ) : null}
+                </HoverCardBody>
+                {/* A página do cartão abre no ciclo atual — não há parâmetro
+                    que leve a uma fatura específica —, por isso o link diz
+                    "cartão" e não "fatura". */}
+                <HoverCardFooter>
+                    <HoverCardLink asChild>
+                        <Link href={creditCardDetailPath(badge.cardId)}>
+                            Ver cartão
+                        </Link>
+                    </HoverCardLink>
+                </HoverCardFooter>
+                <HoverCardArrow />
+            </HoverCardContent>
+        </HoverCard>
+    )
+}
+
+/**
+ * O mês da última parcela, contando a partir desta: as parcelas são mensais
+ * (`run_installment_billing`), então são `restantes` meses depois da data da
+ * linha. Só o mês — o dia exato depende do dia-âncora, que a lista não traz.
+ */
+function installmentLastMonthLabel(dateIso: string, restantes: number): string | null {
+    const p = transactionCalendarParts(dateIso)
+    if (!p) return null
+    const idx = p.y * 12 + (p.mo - 1) + restantes
+    const ym = `${Math.floor(idx / 12)}-${String((idx % 12) + 1).padStart(2, "0")}`
+    return formatTransactionMonthYearPtBr(`${ym}-01`)
+}
+
+/** O chip "Parcelada" e a prévia do plano: qual parcela, valores e quando acaba. */
+function InstallmentChip({ transaction }: { transaction: Transaction }) {
+    const plan = transaction.installment_plan ?? null
+    const kn = resolveInstallmentKn(
+        transaction.installment_sequence,
+        transaction.description,
+        plan
+    )
+    const sinal = transaction.type === "income" ? 1 : -1
+    const tone = transaction.type === "income" ? "income" : "expense"
+    const total = plan ? totalPurchaseFromPlan(plan) : null
+    const ultima = kn != null && kn.k >= kn.n
+    const termina =
+        kn != null && !ultima
+            ? installmentLastMonthLabel(transaction.date, kn.n - kn.k)
+            : null
+
+    return (
+        <HoverCard>
+            <HoverCardTrigger asChild>
+                <button
+                    type="button"
+                    className={cn(transactionParceladaRowChip, rowChipTriggerClassName)}
+                >
+                    Parcelada
+                </button>
+            </HoverCardTrigger>
+            <HoverCardContent
+                size="md"
+                padding="none"
+                onClick={stopRowEvent}
+                onContextMenu={stopRowEvent}
+            >
+                <HoverCardHeader>
+                    <HoverCardTitle>
+                        {kn ? `Parcela ${kn.k} de ${kn.n}` : "Compra parcelada"}
+                    </HoverCardTitle>
+                    {kn ? (
+                        <HoverCardDescription>
+                            {ultima ? "Última parcela" : "Compra parcelada"}
+                        </HoverCardDescription>
+                    ) : null}
+                </HoverCardHeader>
+                <HoverCardBody>
+                    <DescriptionList layout="inline" className="gap-1">
+                        <DescriptionListItem>
+                            <DescriptionTerm>Parcela</DescriptionTerm>
+                            <DescriptionDetails>
+                                <MoneyDisplay
+                                    value={sinal * Number(transaction.amount)}
+                                    signed
+                                    tone={tone}
+                                    size="sm"
+                                />
+                            </DescriptionDetails>
+                        </DescriptionListItem>
+                        {total != null && Number.isFinite(total) ? (
+                            <DescriptionListItem>
+                                <DescriptionTerm>Total da compra</DescriptionTerm>
+                                <DescriptionDetails>
+                                    <MoneyDisplay
+                                        value={sinal * total}
+                                        signed
+                                        tone={tone}
+                                        size="sm"
+                                    />
+                                </DescriptionDetails>
+                            </DescriptionListItem>
+                        ) : null}
+                        {termina ? (
+                            <DescriptionListItem>
+                                <DescriptionTerm>Última parcela</DescriptionTerm>
+                                <DescriptionDetails>{termina}</DescriptionDetails>
+                            </DescriptionListItem>
+                        ) : null}
+                    </DescriptionList>
+                </HoverCardBody>
+                <HoverCardArrow />
+            </HoverCardContent>
+        </HoverCard>
+    )
 }
 
 export type TransactionsTableProps = {
@@ -546,6 +749,9 @@ export function TransactionsTable({
                         </TableRow>
                     </TableHeader>
                     <TableBody className="[&_tr:last-child]:border-b-0">
+                        {/* Uma prévia aberta aquece as outras: descer pelos chips
+                            das linhas abre a próxima sem esperar de novo. */}
+                        <HoverCardGroup>
                         {transactions.map((transaction, index) => {
                             const isProjected = isProjectedTransactionRow(transaction)
                             const paymentLabel = formatPaymentCell(transaction)
@@ -723,14 +929,7 @@ export function TransactionsTable({
                                                     </span>
                                                 ) : null}
                                                 {transaction.installment_plan_id ? (
-                                                    <span
-                                                        className={
-                                                            transactionParceladaRowChip
-                                                        }
-                                                        title="Compra parcelada"
-                                                    >
-                                                        Parcelada
-                                                    </span>
+                                                    <InstallmentChip transaction={transaction} />
                                                 ) : null}
                                                 {transaction.subscription_id ? (
                                                     <Link
@@ -789,22 +988,16 @@ export function TransactionsTable({
                                         </TableCell>
                                         <TableCell
                                             className="hidden max-w-[11rem] px-4 py-3 text-muted-foreground md:table-cell"
-                                            title={paymentLabel}
                                         >
                                             <div className="flex min-w-0 flex-nowrap items-center gap-1.5">
-                                                <span className="min-w-0 truncate">
+                                                {/* O `title` mora no rótulo, e não na célula: na
+                                                    célula ele vazava para o chip de fatura, por
+                                                    cima da prévia. */}
+                                                <span className="min-w-0 truncate" title={paymentLabel}>
                                                     {paymentLabel}
                                                 </span>
                                                 {invoiceBadge ? (
-                                                    <span
-                                                        className={cn(
-                                                            transactionRowChipShell,
-                                                            invoiceBadge.chipClass
-                                                        )}
-                                                        title={invoiceBadge.title}
-                                                    >
-                                                        {invoiceBadge.label}
-                                                    </span>
+                                                    <CreditInvoiceChip badge={invoiceBadge} />
                                                 ) : null}
                                             </div>
                                         </TableCell>
@@ -908,6 +1101,7 @@ export function TransactionsTable({
                                 </React.Fragment>
                             )
                         })}
+                        </HoverCardGroup>
                     </TableBody>
                 </Table>
             </div>

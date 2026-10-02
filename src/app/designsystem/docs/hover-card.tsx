@@ -1,7 +1,10 @@
 "use client"
 
+import * as React from "react"
+import Link from "next/link"
+
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { IDENTITY_TONES } from "@/lib/avatar"
+import { identityToneFor } from "@/lib/avatar"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,6 +17,8 @@ import {
 import {
   HoverCard,
   HoverCardArrow,
+  HoverCardGroup,
+  HoverCardLink,
   HoverCardBody,
   HoverCardContent,
   HoverCardDescription,
@@ -22,6 +27,7 @@ import {
   HoverCardTitle,
   HoverCardTrigger,
 } from "@/components/ui/hover-card"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
@@ -53,7 +59,10 @@ const CODIGO_FATURA = `<HoverCardContent padding="none" size="lg">
       …
     </DescriptionList>
   </HoverCardBody>
-  <HoverCardFooter>18 transações</HoverCardFooter>
+  <HoverCardFooter>
+    18 transações
+    <HoverCardLink asChild><Link href="/credit-cards">Ver fatura</Link></HoverCardLink>
+  </HoverCardFooter>
   <HoverCardArrow />
 </HoverCardContent>`
 
@@ -80,9 +89,9 @@ export default function HoverCardDoc() {
     <Button variant="link">Ana Ribeiro</Button>
   </HoverCardTrigger>
   <HoverCardContent>
-    <HoverCardHeader>
+    <HoverCardHeader media={<Avatar>…</Avatar>}>
       <HoverCardTitle>Ana Ribeiro</HoverCardTitle>
-      <HoverCardDescription>Membro desde março</HoverCardDescription>
+      <HoverCardDescription>Membro desde março · 42 transações</HoverCardDescription>
     </HoverCardHeader>
   </HoverCardContent>
 </HoverCard>`}
@@ -92,76 +101,63 @@ export default function HoverCardDoc() {
             <Button variant="link">Ana Ribeiro</Button>
           </HoverCardTrigger>
           <HoverCardContent>
-            <div className="flex gap-3">
-              <Avatar>
-                <AvatarFallback className={cn(IDENTITY_TONES[3].surface, IDENTITY_TONES[3].ink)}>
-                  AR
-                </AvatarFallback>
-              </Avatar>
-              <HoverCardHeader>
-                <HoverCardTitle>Ana Ribeiro</HoverCardTitle>
-                <HoverCardDescription>
-                  Membro desde março · 42 transações
-                </HoverCardDescription>
-              </HoverCardHeader>
-            </div>
+            <HoverCardHeader media={<AvatarDe nome="Ana Ribeiro" />}>
+              <HoverCardTitle>Ana Ribeiro</HoverCardTitle>
+              <HoverCardDescription>
+                Membro desde março · 42 transações
+              </HoverCardDescription>
+            </HoverCardHeader>
           </HoverCardContent>
         </HoverCard>
       </DocSection>
 
       <DocSection
-        title="A seta"
+        title="No texto: o gatilho pontilhado, a seta e o grupo"
         description={
           <>
-            O único lugar do sistema onde a seta se paga: a prévia dispara sobre <strong>uma palavra dentro de um parágrafo</strong>, e a seta diz de qual.
+            <code>variant=&quot;inline&quot;</code> é o nome dentro de um parágrafo, com sublinhado pontilhado — &ldquo;há mais aqui&rdquo;, sem prometer navegação. A seta se paga só aqui: a prévia dispara sobre <strong>uma palavra entre outras iguais</strong>, e ela diz de qual. Em <code>HoverCardGroup</code>, passar de um nome ao vizinho abre na hora, sem esperar os 400ms de novo.
           </>
         }
-        code={`<HoverCardContent>
-  …
-  <HoverCardArrow />
-</HoverCardContent>`}
+        code={`<HoverCardGroup>
+  <p>
+    … dividida entre{" "}
+    <HoverCard>
+      <HoverCardTrigger variant="inline">Ana Ribeiro</HoverCardTrigger>
+      <HoverCardContent>
+        …
+        <HoverCardArrow />
+      </HoverCardContent>
+    </HoverCard>
+    , …
+  </p>
+</HoverCardGroup>`}
         previewClassName="items-stretch"
       >
-        <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
-          A fatura de março foi dividida entre{" "}
-          <MembroInline nome="Ana Ribeiro" iniciais="AR" saldo={-318.4} />,{" "}
-          <MembroInline nome="Ana Paula" iniciais="AP" saldo={-96.2} /> e{" "}
-          <MembroInline nome="Anderson Lima" iniciais="AL" saldo={-197.8} />, e o
-          acerto vence no dia 10.
-        </p>
+        <HoverCardGroup>
+          <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
+            A fatura de março foi dividida entre{" "}
+            <MembroInline nome="Ana Ribeiro" saldo={-318.4} />,{" "}
+            <MembroInline nome="Ana Paula" saldo={-96.2} /> e{" "}
+            <MembroInline nome="Anderson Lima" saldo={-197.8} />, e o
+            acerto vence no dia 10.
+          </p>
+        </HoverCardGroup>
       </DocSection>
 
       <DocSection
         title="A largura"
         description="Três degraus; lg é o teto."
         code={`<HoverCardContent size="lg">…</HoverCardContent>`}
+        previewClassName="flex-col items-start gap-4"
       >
-        {LARGURAS.map(([tamanho, nota]) => (
-          <HoverCard key={tamanho}>
-            <HoverCardTrigger asChild>
-              {/* Um `<span>` em vez de texto cru: a maiúscula inicial do CTA é
-                  do `Button`, e aqui o rótulo é um identificador — `sm`, e não
-                  `Sm`. É a saída que o próprio sistema documenta. */}
-              <Button variant="tertiary">
-                <span className="font-mono">{tamanho}</span>
-              </Button>
-            </HoverCardTrigger>
-            <HoverCardContent size={tamanho}>
-              <HoverCardHeader>
-                <HoverCardTitle>size=&quot;{tamanho}&quot;</HoverCardTitle>
-                <HoverCardDescription>{nota}</HoverCardDescription>
-              </HoverCardHeader>
-              <HoverCardArrow />
-            </HoverCardContent>
-          </HoverCard>
-        ))}
+        <LarguraDemo />
       </DocSection>
 
       <DocSection
         title="As três faixas"
         description={
           <>
-            <code>padding=&quot;none&quot;</code>, como no <code>PopoverContent</code>: o casco cede o respiro e <strong>cada faixa passa a ser dona do seu</strong>. O estado vai no <code>endAdornment</code>.
+            <code>padding=&quot;none&quot;</code>, como no <code>PopoverContent</code>: o casco cede o respiro e <strong>cada faixa passa a ser dona do seu</strong>. O estado vai no <code>endAdornment</code>, e o rodapé leva o <code>HoverCardLink</code> — o caminho do clique que toda prévia tem de ter.
           </>
         }
         code={CODIGO_FATURA}
@@ -209,11 +205,41 @@ export default function HoverCardDoc() {
               <span className="text-xs text-muted-foreground">
                 18 transações
               </span>
+              <HoverCardLink asChild>
+                <Link href="/credit-cards">Ver fatura</Link>
+              </HoverCardLink>
             </HoverCardFooter>
             <HoverCardArrow />
           </HoverCardContent>
         </HoverCard>
       </DocSection>
+
+      <DocSection
+        title="Carrega ao abrir"
+        description={
+          <>
+            A prévia busca o que mostra no <code>onOpenChange</code> — nada carrega antes de alguém pousar —, e <code>pending</code> mostra o <code>HoverCardSkeleton</code> até o dado chegar. Aqui a busca leva um segundo, e a resposta fica guardada.
+          </>
+        }
+        code={`const [dado, setDado] = React.useState<Resumo | null>(null)
+
+<HoverCard onOpenChange={(aberta) => { if (aberta && !dado) buscar().then(setDado) }}>
+  <HoverCardTrigger asChild><Button variant="link">Nubank</Button></HoverCardTrigger>
+  <HoverCardContent pending={!dado}>
+    …
+  </HoverCardContent>
+</HoverCard>`}
+      >
+        <CarregaDemo />
+      </DocSection>
+
+      <DocNote title="No telefone, o toque longo">
+        O Radix ignora o toque, e a prévia não existia no telefone. Agora segurar o gatilho por meio segundo a abre; o toque simples continua sendo do gatilho, e o clique que o soltar dispara é engolido — senão o link levaria embora a prévia no mesmo gesto. Numa linha com <code>ContextMenu</code>, o toque longo no gatilho é da prévia. <code>touch=&#123;false&#125;</code> desliga.
+      </DocNote>
+
+      <DocNote title="A entrada é a mola da casa">
+        Ela cresce de 90% passando um pouco do alvo e assenta em 500ms — a mola do <code>Tooltip</code>, em CSS. A saída é curva, sem mola: uma mola até zero passaria por baixo de zero.
+      </DocNote>
 
       <PropsTable
         title="Props · HoverCardContent"
@@ -233,6 +259,12 @@ export default function HoverCardDoc() {
               "none zera o gap junto, porque as duas coisas andam juntas quando o cartão hospeda faixas.",
           },
           {
+            prop: "pending",
+            type: "boolean",
+            description:
+              "O dado está chegando: o HoverCardSkeleton no lugar do conteúdo, e aria-busy.",
+          },
+          {
             prop: "collisionPadding",
             type: "number",
             default: "ANCHORED_COLLISION_PADDING (8)",
@@ -243,8 +275,39 @@ export default function HoverCardDoc() {
       />
 
       <PropsTable
-        title="Props · HoverCardHeader"
+        title="Props · as peças"
         rows={[
+          {
+            prop: "HoverCardHeader media",
+            type: "React.ReactNode",
+            description:
+              "O avatar, o ladrilho ou o ícone antes do par, centrado nas duas linhas.",
+          },
+          {
+            prop: "HoverCardTrigger variant",
+            type: '"default" | "inline"',
+            default: '"default"',
+            description:
+              "inline é o nome num parágrafo, sublinhado pontilhado; sem asChild vira um botão nativo, que é focável.",
+          },
+          {
+            prop: "HoverCardLink",
+            type: "ComponentProps<typeof Button>",
+            description:
+              "O caminho do clique no rodapé — link pequeno, encostado à direita; passe o Link por asChild.",
+          },
+          {
+            prop: "HoverCardSkeleton",
+            type: "{ media?: boolean; label?: string }",
+            description: "O esqueleto da prévia, o que o pending mostra.",
+          },
+          {
+            prop: "HoverCardGroup skipDelay",
+            type: "number",
+            default: "300",
+            description:
+              "Enquanto uma prévia do grupo está aberta, e por skipDelay depois, as vizinhas abrem sem atraso.",
+          },
           {
             prop: "endAdornment",
             type: "React.ReactNode",
@@ -271,6 +334,13 @@ export default function HoverCardDoc() {
             description:
               "Dá tempo de o cursor atravessar o vão até o cartão.",
           },
+          {
+            prop: "touch",
+            type: "boolean",
+            default: "true",
+            description:
+              "Segurar o gatilho no toque abre a prévia; o clique do soltar é engolido.",
+          },
         ]}
       />
 
@@ -295,37 +365,106 @@ export default function HoverCardDoc() {
   )
 }
 
-function MembroInline({
-  nome,
-  iniciais,
-  saldo,
-}: {
-  nome: string
-  iniciais: string
-  saldo: number
-}) {
+function AvatarDe({ nome }: { nome: string }) {
+  const tom = identityToneFor(null, nome)
+  const iniciais = nome
+    .split(" ")
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+  return (
+    <Avatar>
+      <AvatarFallback className={cn(tom.surface, tom.ink)}>{iniciais}</AvatarFallback>
+    </Avatar>
+  )
+}
+
+function MembroInline({ nome, saldo }: { nome: string; saldo: number }) {
   return (
     <HoverCard>
-      <HoverCardTrigger asChild>
-        <Button variant="link" className="h-auto p-0 align-baseline">
-          {nome}
-        </Button>
-      </HoverCardTrigger>
+      <HoverCardTrigger variant="inline">{nome}</HoverCardTrigger>
       <HoverCardContent>
-        <div className="flex gap-3">
-          <Avatar>
-            <AvatarFallback className={cn(IDENTITY_TONES[1].surface, IDENTITY_TONES[1].ink)}>
-              {iniciais}
-            </AvatarFallback>
-          </Avatar>
+        <HoverCardHeader media={<AvatarDe nome={nome} />}>
+          <HoverCardTitle>{nome}</HoverCardTitle>
+          <HoverCardDescription>
+            Deve <MoneyDisplay value={saldo} tone="expense" size="sm" /> nesta
+            fatura
+          </HoverCardDescription>
+        </HoverCardHeader>
+        <HoverCardArrow />
+      </HoverCardContent>
+    </HoverCard>
+  )
+}
+
+function LarguraDemo() {
+  const [tamanho, setTamanho] = React.useState<"sm" | "md" | "lg">("md")
+  const nota = LARGURAS.find(([t]) => t === tamanho)?.[1]
+  return (
+    <>
+      <ToggleGroup
+        type="single"
+        variant="segmented"
+        size="sm"
+        value={tamanho}
+        onValueChange={(v) => v && setTamanho(v as typeof tamanho)}
+        aria-label="Largura"
+      >
+        {LARGURAS.map(([t]) => (
+          <ToggleGroupItem key={t} value={t} className="font-mono">
+            {t}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <Button variant="link">Pouse aqui</Button>
+        </HoverCardTrigger>
+        <HoverCardContent size={tamanho}>
           <HoverCardHeader>
-            <HoverCardTitle>{nome}</HoverCardTitle>
-            <HoverCardDescription>
-              Deve <MoneyDisplay value={saldo} tone="expense" size="sm" /> nesta
-              fatura
-            </HoverCardDescription>
+            <HoverCardTitle>size=&quot;{tamanho}&quot;</HoverCardTitle>
+            <HoverCardDescription>{nota}</HoverCardDescription>
           </HoverCardHeader>
-        </div>
+          <HoverCardArrow />
+        </HoverCardContent>
+      </HoverCard>
+    </>
+  )
+}
+
+type Resumo = { limite: number; usado: number }
+
+function CarregaDemo() {
+  const [dado, setDado] = React.useState<Resumo | null>(null)
+  const buscandoRef = React.useRef(false)
+  return (
+    <HoverCard
+      onOpenChange={(aberta) => {
+        if (!aberta || dado || buscandoRef.current) return
+        buscandoRef.current = true
+        window.setTimeout(() => setDado({ limite: 8000, usado: 3120.5 }), 1000)
+      }}
+    >
+      <HoverCardTrigger asChild>
+        <Button variant="link">Nubank</Button>
+      </HoverCardTrigger>
+      <HoverCardContent padding="none" pending={!dado}>
+        {dado ? (
+          <>
+            <HoverCardHeader>
+              <HoverCardTitle>Nubank</HoverCardTitle>
+              <HoverCardDescription>•••• 4821</HoverCardDescription>
+            </HoverCardHeader>
+            <HoverCardBody>
+              <DescriptionListItem>
+                <DescriptionTerm>Disponível</DescriptionTerm>
+                <DescriptionDetails>
+                  <MoneyDisplay value={dado.limite - dado.usado} size="lg" />
+                </DescriptionDetails>
+              </DescriptionListItem>
+            </HoverCardBody>
+          </>
+        ) : null}
         <HoverCardArrow />
       </HoverCardContent>
     </HoverCard>

@@ -82,7 +82,7 @@ flowchart LR
     G8 -->|"cobrança vira lançamento"| G5
     G9 -->|"ver em transações"| G5
     G5 -->|"gerenciar categorias"| G9
-    G5 -->|"cadastrar cartão"| G6
+    G5 -->|"cadastrar cartão, prévia da fatura"| G6
 
     G10 -->|"sair ou excluir conta"| G1
 ```
@@ -438,6 +438,9 @@ flowchart TD
     rowMenu -.-> delConfirm
     list -.->|"botão direito numa linha selecionada"| selMenu(["Menu da seleção: Limpar, Excluir N"])
     selMenu -.-> bulk
+    list -.->|"pousar, focar ou segurar o chip de fatura"| invoicePeek(["Prévia da fatura: cartão, estado, fecha, vence"])
+    invoicePeek -->|"Ver cartão"| cardPage(("G6 /credit-cards/id"))
+    list -.->|"pousar, focar ou segurar o chip Parcelada"| planPeek(["Prévia do parcelamento: parcela N de M, total, última"])
 ```
 
 ### 5b. Criar, editar e excluir
@@ -500,6 +503,7 @@ flowchart TD
 | Rascunho | Fechar o formulário alterado (Cancelar, Esc, toque fora, ×, arrastar a gaveta) pergunta "Descartar alterações?"; salvar fecha sem perguntar. Trocar só a aba ou o tipo não conta como alteração. Enquanto salva, nada fecha (`Dialog pending`) | `isDirty` em `src/components/transactions/transaction-form-use.tsx`, `src/components/transactions/transaction-form-dialog.tsx` |
 | Enter | O `Enter` na busca do seletor não salva a transação | `shouldDeferEnterToWidget` em `src/components/ui/form.tsx` |
 | Período personalizado | Um `DatePicker` de intervalo com `confirm`: as pontas ficam em rascunho até Aplicar, Limpar tira o filtro, Cancelar e Esc descartam. Era um formulário à parte (`transactions-date-range-form.tsx`, removido) | `src/components/transactions/transactions-filters-panel.tsx` |
+| Prévias dos chips | O chip de fatura e o "Parcelada" abrem uma prévia ao pousar, no foco e no toque longo (`HoverCard`); o clique no chip continua abrindo o detalhe da linha. A da fatura leva a "Ver cartão" (o ciclo atual: a página do cartão não abre uma fatura passada por parâmetro). O chip de fatura só existe a partir de `md` | `CreditInvoiceChip` e `InstallmentChip` em `src/components/transactions/transactions-table.tsx` |
 | Botão direito na linha | Atalho das ações da linha (os botões da coluna Ações continuam); sobre uma linha selecionada age na seleção inteira (`contextMenuTargets`); linhas projetadas não têm menu | `TransactionRowContextMenu` em `src/components/transactions/transactions-table.tsx` |
 
 ---

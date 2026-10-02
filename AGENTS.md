@@ -1897,6 +1897,21 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   **horizontal**, a descrição para de quebrar, e como `overflow-y: auto` promove
   o eixo X a `auto` junto (regra da spec: um eixo não-`visible` promove o outro),
   o texto sai **recortado**. Medido: "42 transações" saía "42 transaç".
+- **`HoverCard` ganhou o avatar no cabeçalho, o gatilho no texto, o link de
+  ver mais, o carregando, o grupo, o toque longo e a mola** (rodada 217).
+  `HoverCardHeader media` põe o avatar ou o ícone antes do par;
+  `HoverCardTrigger variant="inline"` é o nome num parágrafo, pontilhado, e
+  sem `asChild` vira `<button>` (o `<a>` sem `href` do Radix não é focável);
+  `HoverCardLink` é o caminho do clique no rodapé; `pending` mostra o
+  `HoverCardSkeleton` enquanto o `onOpenChange` busca o dado.
+  `HoverCardGroup` zera o atraso enquanto uma prévia do grupo está aberta (e
+  por 300ms depois) — conta a **transição**, porque o Radix pede `false` de
+  novo para uma já fechada. **No toque, segurar 500ms abre**, o clique do
+  soltar é engolido (senão o link levaria a prévia embora) e o `contextmenu`
+  do toque para no gatilho, para o menu da linha não abrir junto. A entrada é
+  a mola da casa; a saída, não. **A lista de lançamentos usa**: o chip de
+  fatura e o "Parcelada" abrem a prévia, e o clique no chip continua abrindo
+  a linha.
 - **Os atrasos do `HoverCard` são decisão, e o padrão do Radix não serve.**
   `openDelay` 400 e `closeDelay` 200. Setecentos milissegundos numa prévia presa
   a um nome em texto corrido lê como componente quebrado; zero dispara em toda
