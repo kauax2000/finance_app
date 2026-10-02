@@ -2048,6 +2048,16 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   porque é o estado do controle. Os punhos anunciam o valor em reais: o
   `format` do `Slider` escreve o `aria-valuetext` desde a rodada 177, e fechou a
   lacuna do número cru.
+  **Desde a rodada 216** ela tem `count` (quanto a faixa pega, somando as
+  colunas **acesas** — a mesma contenção), `axis`, `references` (a média, um
+  teto, tracejada com o rótulo acima), `editable` (a leitura vira campo de
+  dinheiro), `presets` (fichas), `openEnd` (a última coluna é "daí para
+  cima", e o fim sai `Infinity` — um filtro que recebesse `max` cortaria o
+  gasto grande que a coluna diz conter), `onValueCommit` (uma vez, ao soltar),
+  `pending` (esqueleto nas colunas e o controle travado), `format` e `size`
+  (40 · 64 · 96). **O `Slider` de dentro é sempre controlado**: com atalho e
+  campo o valor muda por fora do arraste, e o `defaultValue` deixava o punho
+  parado enquanto as colunas iam — medido. Nenhuma tela a usa ainda.
 - **`Slider` tem cabeçalho, marcas, balão e zonas** (rodada 177): `label`
   (nomeia os punhos) com o valor atual à direita, `format` (no cabeçalho, no
   balão e no `aria-valuetext`), `marks` sob o **centro do punho** — que anda

@@ -17243,3 +17243,44 @@ demonstração escrevia `Label` à mão e um `<Button type="submit">` cru; agora
 `FormSubmit`. Os três testes que liam o arquivo pelo nome
 (`scroll-fade`, `field-control-ladder`, `brand-contour`) passaram a ler o
 `form.tsx`, e as asserções valem igual.
+
+### Rodada 216 — o HistogramSlider ganha contagem, eixo, referência, leitura editável, atalhos, cauda aberta, o aviso ao soltar, o carregando, outras grandezas e alturas
+
+**O que estava falso.** A página registrava como "lacuna conhecida" que o
+leitor de tela anunciava o número cru — ela fechou na rodada 177, quando o
+`format` do `Slider` passou a escrever o `aria-valuetext`, e o próprio
+componente já o usava. Dois comentários do componente estavam trocados de
+lugar: a explicação da âncora do arco-íris morava em cima da função da guia,
+e a da travessia sem atraso em cima da âncora. E `minLabel`/`maxLabel`
+continuavam descritos como "o rótulo de cada caixa", com as caixas já
+substituídas pelo par termo/valor.
+
+**As versões.** `count` soma as colunas acesas, pela mesma contenção que as
+acende — o número diz o que a pessoa vê (medido: o atalho "R$ 100 a 500"
+acende 4 colunas e conta 175 de 1.088). `axis` põe as marcas no recuo da
+régua, com o dinheiro curto ("R$ 1,6 mil" — a primeira versão saiu "R$ 1,60
+mil", e escala não é valor que se confere centavo a centavo). `references`
+desenha a linha tracejada com o rótulo **acima** da caixa, porque por cima das
+colunas ele cobriria a crista; ela não se ancora na grade, porque a média não
+cai numa fresta. `editable` troca a leitura por `Input money` (ou decimal,
+com `format`), confirmando ao sair ou no Enter; o mínimo acima do máximo
+encosta nele. `presets` são fichas (`ToggleGroup chip`), e a que bate com a
+faixa fica marcada. `openEnd` faz a última coluna valer "daí para cima": a
+leitura e o `aria-valuetext` dizem "R$ 6.400,00+", e o fim sai `Infinity`.
+`onValueCommit` dispara ao soltar, no atalho e no campo — uma vez, que é o que
+um filtro que vai ao servidor quer. `pending` põe um esqueleto com a forma de
+uma crista (fixo, nada de aleatório no render), trava o controle e marca
+`aria-busy`. `format` e `size` (40 · 64 · 96) completam.
+
+**O defeito que a rodada pegou.** O `Slider` de dentro era controlado só
+quando quem chamava passava `value`; sem ele, recebia `defaultValue`. Com o
+valor mudando só pelo arraste, era indiferente. Com atalho e campo, as
+colunas, a leitura e a contagem iam para a faixa nova e **o punho ficava onde
+estava** — medido no primeiro teste no navegador. Ele passou a ser sempre
+controlado pelo estado da peça.
+
+**Fora.** A peça segue sem consumidor no app. O lugar natural é o filtro
+"Valor (R$)" das transações, mas a lista é paginada no servidor e a tela não
+tem os valores do período: usá-la pede uma consulta de distribuição, e o dono
+escolheu deixar só no catálogo por enquanto. `histogram-slider-versions.test.ts`
+tranca.

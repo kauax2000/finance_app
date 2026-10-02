@@ -1,6 +1,12 @@
 "use client"
 
+import * as React from "react"
+
 import { HistogramSlider } from "@/components/ui/histogram-slider"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { currencyBRL, numberBR } from "@/lib/formatters"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 /** Uma distribuição plausível de valores de transação: muitas pequenas, poucas grandes. */
@@ -19,44 +25,65 @@ export default function HistogramSliderDoc() {
       </Usage>
 
       <DocSection
-        title="Padrão"
-        description="As barras dentro da seleção acendem; as de fora apagam. Arraste um punho e veja a travessia."
+        title="Padrão e marca"
+        description="As barras dentro da seleção acendem; as de fora apagam. Arraste um punho e veja a travessia. brand é o mesmo eixo variant do Slider: as acesas vestem o arco-íris, ancorado na largura inteira do histograma — uma por tela."
         code={`<HistogramSlider
   label="Faixa de valor"
   bins={distribuicao}
   min={0}
   max={6400}
   defaultValue={[500, 3500]}
+  variant="brand"
 />`}
-        previewClassName="flex-col items-stretch"
+        previewClassName="flex-col items-stretch gap-4"
       >
-        <div className="w-full max-w-md">
-          <HistogramSlider
-            label="Faixa de valor"
-            bins={DISTRIBUICAO}
-            min={0}
-            max={6400}
-            defaultValue={[500, 3500]}
-          />
-        </div>
+        <VarianteDemo />
       </DocSection>
 
       <DocSection
-        title="A versão de marca"
-        description="O mesmo eixo variant do Slider: as barras acesas vestem o arco-íris, ancorado na largura inteira do histograma. Uma por tela."
-        code={`<HistogramSlider variant="brand" label="Faixa de valor" bins={distribuicao} … />`}
+        title="O filtro inteiro"
+        description={
+          <>
+            Os atalhos levam os punhos de uma vez; a contagem diz quanto a faixa pega, somando as colunas acesas; o eixo dá a escala; a linha de referência marca a média; com <code>openEnd</code> a última coluna vale &ldquo;daí para cima&rdquo; e o fim sai <code>Infinity</code>; <code>editable</code> troca a leitura por campos de dinheiro. <code>onValueCommit</code> avisa uma vez, ao soltar — o que um filtro que vai ao servidor quer.
+          </>
+        }
+        code={`<HistogramSlider
+  label="Faixa de valor"
+  bins={distribuicao}
+  min={0}
+  max={6400}
+  openEnd
+  editable
+  axis
+  count={(dentro, total) => \`\${numberBR(dentro)} de \${numberBR(total)} transações\`}
+  references={[{ value: 1180, label: "média" }]}
+  presets={[
+    { label: "Até R$ 100", value: [0, 100] },
+    { label: "R$ 100 a 500", value: [100, 500] },
+    { label: "Acima de R$ 1.000", value: [1000, Infinity] },
+  ]}
+  onValueCommit={filtrar}
+/>`}
         previewClassName="flex-col items-stretch"
       >
-        <div className="w-full max-w-md">
-          <HistogramSlider
-            variant="brand"
-            label="Faixa de valor"
-            bins={DISTRIBUICAO}
-            min={0}
-            max={6400}
-            defaultValue={[500, 3500]}
-          />
-        </div>
+        <FiltroDemo />
+      </DocSection>
+
+      <DocSection
+        title="Além de dinheiro, alturas e o carregando"
+        description="format escreve o valor na leitura, no eixo e no leitor de tela — aqui, dias até o vencimento. size é a altura do histograma (40 · 64 · 96). pending põe o esqueleto nas colunas e trava o controle enquanto a distribuição chega."
+        code={`<HistogramSlider
+  label="Dias até o vencimento"
+  bins={dias}
+  min={0}
+  max={30}
+  format={(v) => \`\${v} dias\`}
+  size="sm"
+  pending={carregando}
+/>`}
+        previewClassName="flex-col items-stretch gap-4"
+      >
+        <FormaDemo />
       </DocSection>
 
       <DocNote title="A contagem de faixas decide a coluna e o passo">
@@ -101,8 +128,12 @@ export default function HistogramSliderDoc() {
         Mínimo e máximo são um par termo/valor (<code>DescriptionList</code>), no mesmo recuo da régua, para cada valor cair sob a ponta a que pertence. O componente não desenha título: isso é chrome de tela, e quem o escreve é o <code>PageSectionHeader</code> ou o <code>FieldLabel</code>.
       </DocNote>
 
-      <DocNote title="Lacuna conhecida: o leitor de tela anuncia o número cru">
-        O Radix anuncia <code>1800</code>, e não &ldquo;R$ 1.800,00&rdquo;. O <code>Slider</code> não escreve <code>aria-valuetext</code> e não repassa props por punho; o conserto é uma prop nele, que pede autorização. Fica registrado em vez de varrido.
+      <DocNote title="O leitor de tela ouve o valor escrito">
+        Os punhos anunciam &ldquo;R$ 1.800,00&rdquo;, e não <code>1800</code> — o <code>format</code> do <code>Slider</code> escreve o <code>aria-valuetext</code> desde a rodada 177. Esta página registrava o número cru como lacuna depois de ela fechar. Com <code>openEnd</code>, o fim é &ldquo;R$ 6.400+&rdquo;.
+      </DocNote>
+
+      <DocNote title="Atalhos e campos não obedecem à grade">
+        O arraste para nas frestas; um atalho ou um valor digitado pode cair no meio de uma coluna. Aí ela não acende — a regra de contenção continua valendo —, e a guia vai à fresta mais próxima. O mínimo digitado acima do máximo encosta nele.
       </DocNote>
 
       <PropsTable
@@ -135,7 +166,59 @@ export default function HistogramSliderDoc() {
           {
             prop: "onValueChange",
             type: "(v: [number, number]) => void",
-            description: "Dispara na mudança, com o par novo.",
+            description: "Dispara na mudança, com o par novo — a cada coluna do arraste.",
+          },
+          {
+            prop: "onValueCommit",
+            type: "(v: [number, number]) => void",
+            description: "Uma vez: ao soltar o punho, escolher um atalho ou confirmar um campo.",
+          },
+          {
+            prop: "format",
+            type: "(v: number) => string",
+            default: "reais",
+            description: "Escreve o valor na leitura, no eixo e no aria-valuetext.",
+          },
+          {
+            prop: "size",
+            type: '"sm" | "md" | "lg"',
+            default: '"md"',
+            description: "A altura do histograma: 40 · 64 · 96.",
+          },
+          {
+            prop: "count",
+            type: "boolean | (dentro, total) => ReactNode",
+            description: "A contagem na faixa, somando as colunas acesas; a função escreve a frase com o substantivo da tela.",
+          },
+          {
+            prop: "axis",
+            type: "boolean | number",
+            description: "O eixo embaixo: true são 5 marcas; um número escolhe quantas.",
+          },
+          {
+            prop: "editable",
+            type: "boolean",
+            description: "A leitura vira campos (de dinheiro, sem format); confirma ao sair ou no Enter.",
+          },
+          {
+            prop: "references",
+            type: "{ value: number; label: string }[]",
+            description: "Linhas tracejadas com rótulo acima — a média, a mediana, um teto.",
+          },
+          {
+            prop: "presets",
+            type: "{ label: string; value: [number, number] }[]",
+            description: "Fichas que levam os punhos de uma vez; a que bate com a faixa fica marcada.",
+          },
+          {
+            prop: "openEnd",
+            type: "boolean",
+            description: "A última coluna vale \u201cdaí para cima\u201d: a leitura diz +, e o fim sai Infinity.",
+          },
+          {
+            prop: "pending",
+            type: "boolean",
+            description: "Esqueleto nas colunas, controle travado, aria-busy.",
           },
           {
             prop: "variant",
@@ -148,10 +231,130 @@ export default function HistogramSliderDoc() {
             prop: "minLabel / maxLabel",
             type: "string",
             default: '"Mínimo" / "Máximo"',
-            description: "O rótulo de cada caixa.",
+            description: "O termo de cada ponta da leitura.",
           },
         ]}
       />
     </>
   )
 }
+
+function VarianteDemo() {
+  const [variant, setVariant] = React.useState<"default" | "brand">("default")
+  return (
+    <>
+      <ToggleGroup
+        type="single"
+        variant="segmented"
+        size="sm"
+        value={variant}
+        onValueChange={(v) => v && setVariant(v as typeof variant)}
+        aria-label="Variante"
+        className="self-start"
+      >
+        <ToggleGroupItem value="default" className="font-mono">
+          default
+        </ToggleGroupItem>
+        <ToggleGroupItem value="brand" className="font-mono">
+          brand
+        </ToggleGroupItem>
+      </ToggleGroup>
+      <div className="w-full max-w-md">
+        <HistogramSlider
+          variant={variant}
+          label="Faixa de valor"
+          bins={DISTRIBUICAO}
+          min={0}
+          max={6400}
+          defaultValue={[500, 3500]}
+        />
+      </div>
+    </>
+  )
+}
+
+function FiltroDemo() {
+  const [aviso, setAviso] = React.useState<[number, number] | null>(null)
+  return (
+    <div className="flex w-full max-w-md flex-col gap-3">
+      <HistogramSlider
+        label="Faixa de valor"
+        bins={DISTRIBUICAO}
+        min={0}
+        max={6400}
+        defaultValue={[0, 6400]}
+        openEnd
+        editable
+        axis
+        count={(dentro, total) =>
+          `${numberBR(dentro)} de ${numberBR(total)} transações`
+        }
+        references={[{ value: 1180, label: "média" }]}
+        presets={[
+          { label: "Até R$ 100", value: [0, 100] },
+          { label: "R$ 100 a 500", value: [100, 500] },
+          { label: "Acima de R$ 1.000", value: [1000, Infinity] },
+        ]}
+        onValueCommit={setAviso}
+      />
+      <p className="text-xs text-muted-foreground nums">
+        {aviso
+          ? `onValueCommit: ${currencyBRL(aviso[0])} até ${
+              Number.isFinite(aviso[1]) ? currencyBRL(aviso[1]) : "Infinity"
+            }`
+          : "onValueCommit ainda não disparou"}
+      </p>
+    </div>
+  )
+}
+
+/** Dias até o vencimento: a maior parte das contas vence na primeira quinzena. */
+const DIAS = [9, 14, 12, 16, 11, 8, 10, 7, 6, 9, 5, 6, 4, 5, 3, 4, 2, 3, 3, 2, 2, 1, 2, 1, 1, 1, 0, 1, 1, 0]
+
+function FormaDemo() {
+  const [size, setSize] = React.useState<"sm" | "md" | "lg">("sm")
+  const [carregando, setCarregando] = React.useState(false)
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-4">
+        <ToggleGroup
+          type="single"
+          variant="segmented"
+          size="sm"
+          value={size}
+          onValueChange={(v) => v && setSize(v as typeof size)}
+          aria-label="Altura"
+        >
+          {(["sm", "md", "lg"] as const).map((t) => (
+            <ToggleGroupItem key={t} value={t} className="font-mono">
+              {t}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+        <div className="flex items-center gap-2">
+          <Switch
+            id="ds-histogram-pending"
+            checked={carregando}
+            onCheckedChange={setCarregando}
+          />
+          <Label htmlFor="ds-histogram-pending">Carregando</Label>
+        </div>
+      </div>
+      <div className="w-full max-w-md">
+        <HistogramSlider
+          label="Dias até o vencimento"
+          bins={DIAS}
+          min={0}
+          max={30}
+          defaultValue={[0, 15]}
+          format={(v) => `${v} ${v === 1 ? "dia" : "dias"}`}
+          size={size}
+          pending={carregando}
+          axis={4}
+          count={(dentro) => `${dentro} contas vencem nessa janela`}
+        />
+      </div>
+    </>
+  )
+}
+
