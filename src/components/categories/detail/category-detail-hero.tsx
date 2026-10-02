@@ -7,6 +7,7 @@ import { ColorTile } from "@/components/ui/color-tile"
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -34,6 +35,13 @@ export function CategoryDetailHero({
     monthToolbar,
 }: CategoryDetailHeroProps) {
     const isExpense = category.type === "expense"
+    // O alvo em cima das ações — no telefone, o título da folha.
+    const menuHeader = (
+        <DropdownMenuHeader
+            title={category.name}
+            description={isExpense ? "Despesa" : "Receita"}
+        />
+    )
 
     return (
         <div className="w-full min-w-0 max-w-full space-y-2">
@@ -68,7 +76,7 @@ export function CategoryDetailHero({
                 </div>
 
                 <div className="flex shrink-0 items-center gap-1">
-                    <DropdownMenu>
+                    <DropdownMenu mobile="sheet">
                         <DropdownMenuTrigger asChild>
                             <Button
                                 type="button"
@@ -81,10 +89,12 @@ export function CategoryDetailHero({
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent
-                            align="end" size="sm"
+                            align="end"
+                            size="sm"
+                            header={menuHeader}
                         >
                             <DropdownMenuItem onSelect={() => onEdit()}>
-                                <PencilIcon className="h-4 w-4" aria-hidden />
+                                <PencilIcon aria-hidden />
                                 Editar
                             </DropdownMenuItem>
                             <DropdownMenuItem variant="destructive"
@@ -156,10 +166,12 @@ export function CategoryDetailHero({
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent
-                            align="end" size="sm"
+                            align="end"
+                            size="sm"
+                            header={menuHeader}
                         >
                             <DropdownMenuItem onSelect={() => onEdit()}>
-                                <PencilIcon className="h-4 w-4" aria-hidden />
+                                <PencilIcon aria-hidden />
                                 Editar
                             </DropdownMenuItem>
                             <DropdownMenuItem variant="destructive"

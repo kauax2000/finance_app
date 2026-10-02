@@ -1,6 +1,6 @@
 "use client"
 
-import { currencyBRL } from "@/lib/formatters"
+import { currencyBRL, signedCurrencyBRL } from "@/lib/formatters"
 import { Card, CardField } from "@/components/ui/card"
 import { useEffect, useMemo, useState } from "react"
 import type {
@@ -41,6 +41,7 @@ import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -244,7 +245,8 @@ export function TransactionDetailSheet({
                         </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-0.5">
-                        <DropdownMenu>
+                        {/* No telefone o ⋯ é a folha de ações, com o lançamento em cima. */}
+                        <DropdownMenu mobile="sheet">
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     type="button"
@@ -256,11 +258,22 @@ export function TransactionDetailSheet({
                                     <EllipsisHorizontalIcon aria-hidden />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" size="sm">
+                            <DropdownMenuContent
+                                align="end"
+                                size="sm"
+                                header={
+                                    <DropdownMenuHeader
+                                        title={t.description?.trim() || t.category?.name || "Sem descrição"}
+                                        description={`${formatTransactionDayPtBr(t.date)} · ${signedCurrencyBRL(
+                                            isIncome ? Number(t.amount) : -Number(t.amount)
+                                        )}`}
+                                    />
+                                }
+                            >
                                 <DropdownMenuItem
                                     onClick={() => setDetailMode("edit")}
                                 >
-                                    <PencilIcon className="h-4 w-4" aria-hidden />
+                                    <PencilIcon aria-hidden />
                                     Editar
                                 </DropdownMenuItem>
                                 <DropdownMenuItem variant="destructive"

@@ -18,6 +18,7 @@ import { Card, CardContent, CardNote } from "@/components/ui/card"
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -56,7 +57,8 @@ function InvitedCarteiraOverflowMenu({
 }) {
     return (
         <div className="shrink-0">
-            <DropdownMenu>
+            {/* No telefone o ⋯ é a folha de ações, com a carteira em cima. */}
+            <DropdownMenu mobile="sheet">
                 <DropdownMenuTrigger asChild>
                     <Button
                         type="button"
@@ -69,12 +71,14 @@ function InvitedCarteiraOverflowMenu({
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
-                    align="end" size="md"
+                    align="end"
+                    size="md"
+                    header={<DropdownMenuHeader title={workspaceName} />}
                 >
                     <DropdownMenuItem variant="destructive"
                         onSelect={() => onLeave()}
                     >
-                        <ArrowRightStartOnRectangleIcon className="h-4 w-4" aria-hidden />
+                        <ArrowRightStartOnRectangleIcon aria-hidden />
                         Sair da carteira
                     </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -96,7 +100,8 @@ function OwnerCarteiraOverflowMenu({
 }) {
     return (
         <div className="shrink-0">
-            <DropdownMenu>
+            {/* No telefone o ⋯ é a folha de ações, com a carteira em cima. */}
+            <DropdownMenu mobile="sheet">
                 <DropdownMenuTrigger asChild>
                     <Button
                         type="button"
@@ -109,10 +114,12 @@ function OwnerCarteiraOverflowMenu({
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
-                    align="end" size="md"
+                    align="end"
+                    size="md"
+                    header={<DropdownMenuHeader title={workspaceName} />}
                 >
                     <DropdownMenuItem onSelect={() => onEdit()}>
-                        <PencilIcon className="h-4 w-4" aria-hidden />
+                        <PencilIcon aria-hidden />
                         Editar
                     </DropdownMenuItem>
                     {canDeleteProject ? (

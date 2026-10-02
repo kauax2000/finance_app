@@ -30,6 +30,7 @@ import {
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -302,7 +303,8 @@ export function SubscriptionDetailSheet({
                         </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-0.5">
-                        <DropdownMenu>
+                        {/* No telefone o ⋯ é a folha de ações, com a assinatura em cima. */}
+                        <DropdownMenu mobile="sheet">
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     type="button"
@@ -316,11 +318,20 @@ export function SubscriptionDetailSheet({
                                     />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" size="sm">
+                            <DropdownMenuContent
+                                align="end"
+                                size="sm"
+                                header={
+                                    <DropdownMenuHeader
+                                        title={s.name}
+                                        description={`${currencyBRL(Number(s.amount))} · próxima ${formatDatePtBr(nextCharge)}`}
+                                    />
+                                }
+                            >
                                 <DropdownMenuItem
                                     onClick={() => setDetailMode("edit")}
                                 >
-                                    <PencilIcon className="h-4 w-4" aria-hidden />
+                                    <PencilIcon aria-hidden />
                                     Editar
                                 </DropdownMenuItem>
                                 <DropdownMenuItem variant="destructive"

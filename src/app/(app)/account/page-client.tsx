@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
@@ -82,7 +83,7 @@ export default function AccountPage() {
                                 </div>
                             </div>
                             <div className="shrink-0">
-                                <DropdownMenu>
+                                <DropdownMenu mobile="sheet">
                                     <DropdownMenuTrigger asChild>
                                         <Button
                                             type="button"
@@ -94,30 +95,39 @@ export default function AccountPage() {
                                             <EllipsisVerticalIcon className="size-4" aria-hidden />
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" size="md">
+                                    <DropdownMenuContent
+                                        align="end"
+                                        size="md"
+                                        header={
+                                            <DropdownMenuHeader
+                                                title={userName}
+                                                description={userEmail}
+                                            />
+                                        }
+                                    >
                                         <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
-                                            <PencilIcon className="mr-2 h-4 w-4" />
+                                            <PencilIcon aria-hidden />
                                             Editar perfil
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                             onClick={() => setChangePasswordOpen(true)}
                                         >
-                                            <LockClosedIcon className="mr-2 h-4 w-4" />
+                                            <LockClosedIcon aria-hidden />
                                             Alterar senha
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
+                                            variant="destructive"
                                             onClick={() => signOut()}
-                                            className="cursor-pointer gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
                                         >
-                                            <ArrowRightStartOnRectangleIcon className="h-4 w-4" />
+                                            <ArrowRightStartOnRectangleIcon aria-hidden />
                                             Sair
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
+                                            variant="destructive"
                                             onClick={() => setDeleteAccountOpen(true)}
-                                            className="cursor-pointer gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
                                         >
-                                            <TrashIcon />
+                                            <TrashIcon aria-hidden />
                                             Excluir conta
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>

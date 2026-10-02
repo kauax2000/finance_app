@@ -428,21 +428,26 @@ function MenubarSubContent({
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.SubContent>) {
   return (
-    <MenubarPrimitive.SubContent
-      data-slot="menubar-sub-content"
-      collisionPadding={collisionPadding}
-      className={cn(menuSubSurfaceClassName, MENUBAR_POPPER, className)}
-      {...props}
-    >
-      <div
-        ref={useScrollFade({ arrows: true })}
-        data-slot="menubar-sub-viewport"
-        className={cn(menuViewportClassName, scrollFadeViewportClassName)}
+    // No portal: dentro do menu, o vidro (`backdrop-filter`) vira o bloco de
+    // contenção do `fixed` do popper e o `overflow-hidden` o recorta — o
+    // submenu abria e não aparecia (medido, rodada 213).
+    <MenubarPrimitive.Portal>
+      <MenubarPrimitive.SubContent
+        data-slot="menubar-sub-content"
+        collisionPadding={collisionPadding}
+        className={cn(menuSubSurfaceClassName, MENUBAR_POPPER, className)}
+        {...props}
       >
-        {children}
-      </div>
-      <ScrollFadeArrows />
-    </MenubarPrimitive.SubContent>
+        <div
+          ref={useScrollFade({ arrows: true })}
+          data-slot="menubar-sub-viewport"
+          className={cn(menuViewportClassName, scrollFadeViewportClassName)}
+        >
+          {children}
+        </div>
+        <ScrollFadeArrows />
+      </MenubarPrimitive.SubContent>
+    </MenubarPrimitive.Portal>
   )
 }
 

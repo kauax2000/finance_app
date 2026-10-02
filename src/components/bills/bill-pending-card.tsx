@@ -37,6 +37,7 @@ import {
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -262,7 +263,7 @@ export function BillPendingCard({
                     Pagar
                 </Button>
                 {row.kind === "regular" ? (
-                    <DropdownMenu>
+                    <DropdownMenu mobile="sheet">
                         <DropdownMenuTrigger asChild>
                             <Button
                                 type="button"
@@ -275,14 +276,23 @@ export function BillPendingCard({
                                 <EllipsisHorizontalIcon className="size-4" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" size="md">
+                        <DropdownMenuContent
+                            align="end"
+                            size="md"
+                            header={
+                                <DropdownMenuHeader
+                                    title={row.title}
+                                    description={`Venc. ${dueFmt} · ${delta}`}
+                                />
+                            }
+                        >
                             <DropdownMenuItem
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     onEditModel()
                                 }}
                             >
-                                <PencilIcon className="mr-2 size-4" />
+                                <PencilIcon aria-hidden />
                                 Editar modelo
                             </DropdownMenuItem>
                             <DropdownMenuItem
@@ -291,7 +301,7 @@ export function BillPendingCard({
                                     onSkipInstance()
                                 }}
                             >
-                                <ForwardIcon className="mr-2 size-4" />
+                                <ForwardIcon aria-hidden />
                                 Ignorar parcela
                             </DropdownMenuItem>
                             <DropdownMenuItem variant="destructive"
@@ -300,7 +310,7 @@ export function BillPendingCard({
                                     onDeleteBill()
                                 }}
                             >
-                                <TrashIcon className="mr-2 size-4" />
+                                <TrashIcon aria-hidden />
                                 Excluir conta
                             </DropdownMenuItem>
                         </DropdownMenuContent>

@@ -610,6 +610,20 @@ function DrawerActions({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 /**
+ * A linha da folha de ações, para quem monta a própria (o `DropdownMenu` no
+ * telefone, rodada 213, cujas linhas que confirmam ou carregam não podem
+ * fechar no toque).
+ */
+const drawerActionClassName = cn(
+  "flex min-h-13 w-full items-center gap-3 rounded-xl px-3 text-left text-base text-foreground outline-none select-none",
+  "transition-colors duration-(--duration-fast) ease-(--ease-out)",
+  "hover:bg-muted active:bg-muted focus-visible:bg-muted",
+  "disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
+  "[&_svg]:size-5 [&_svg]:shrink-0 [&_svg]:text-muted-foreground",
+  "data-[variant=destructive]:text-destructive data-[variant=destructive]:[&_svg]:text-destructive"
+)
+
+/**
  * Uma linha da folha de ações. O ícone é desenhado a 20px — passe o
  * `20/solid`. `asChild` para um link (`<DrawerAction asChild><Link>`).
  */
@@ -629,15 +643,7 @@ function DrawerAction({
         data-slot="drawer-action"
         data-variant={variant}
         {...(asChild ? {} : { type: "button" as const })}
-        className={cn(
-          "flex min-h-13 w-full items-center gap-3 rounded-xl px-3 text-left text-base text-foreground outline-none select-none",
-          "transition-colors duration-(--duration-fast) ease-(--ease-out)",
-          "hover:bg-muted active:bg-muted focus-visible:bg-muted",
-          "disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
-          "[&_svg]:size-5 [&_svg]:shrink-0 [&_svg]:text-muted-foreground",
-          "data-[variant=destructive]:text-destructive data-[variant=destructive]:[&_svg]:text-destructive",
-          className
-        )}
+        className={cn(drawerActionClassName, className)}
         {...props}
       />
     </DrawerPrimitive.Close>
@@ -672,6 +678,7 @@ export {
   Drawer,
   DrawerAction,
   DrawerActions,
+  drawerActionClassName,
   DrawerCancel,
   DrawerClose,
   DrawerContent,

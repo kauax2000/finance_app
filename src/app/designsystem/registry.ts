@@ -446,7 +446,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("date-picker", "Date Picker", "Campo de data, intervalo ou mês — popover no desktop, gaveta no telefone.", ui("date-picker"), "DatePicker, MonthGrid"),
   entry("dialog", "Dialog", "Janela modal — e gaveta no telefone, com surface=\"auto\".", ui("dialog"), "Dialog, DialogContent, DialogHeader, DialogMedia, DialogSteps, DialogBody, DialogFooter"),
   entry("drawer", "Drawer", "Gaveta arrastável, com física de toque — e a folha de ações.", ui("drawer"), "Drawer, DrawerContent, DrawerTrigger, DrawerActions, DrawerAction, DrawerCancel"),
-  entry("dropdown-menu", "Dropdown Menu", "Menu de ações, com checkbox, radio e submenu.", ui("dropdown-menu"), "DropdownMenu, DropdownMenuItem"),
+  entry("dropdown-menu", "Dropdown Menu", "Menu de ações, com busca, confirmação e a folha de ações no telefone.", ui("dropdown-menu"), "DropdownMenu, DropdownMenuContent, DropdownMenuHeader, DropdownMenuItem"),
   entry("form", "Form", "Formulário, suas peças e o Enter.", ui("form"), "Form, FormInput, FormTextarea, FormRadioGroup, FormError, FormActions, FormCancel, FormSubmit"),
   entry("form-picker-popover", "Form Picker Popover", "Seletor com busca ancorado num campo.", ui("form-picker-popover"), "FormPickerPopover, FormPickerPopoverTrigger, FormPickerPopoverContent, FormPickerPopoverSearch, FormPickerPopoverList, FormPickerPopoverItem, FormPickerPopoverFooter"),
   entry("histogram-slider", "Histogram Slider", "Faixa de valor sobre uma distribuição.", ui("histogram-slider"), "HistogramSlider"),

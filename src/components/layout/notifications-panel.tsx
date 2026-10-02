@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -279,7 +280,8 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                             <span className="text-2xs leading-none text-muted-foreground/80">
                                                 {formatRelativeTime(notification.created_at)}
                                             </span>
-                                            <DropdownMenu>
+                                            {/* No telefone o ⋯ é a folha de ações, com o aviso em cima. */}
+                                            <DropdownMenu mobile="sheet">
                                                 <DropdownMenuTrigger asChild>
                                                     <Button
                                                         type="button"
@@ -291,12 +293,21 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                                         <EllipsisHorizontalIcon />
                                                     </Button>
                                                 </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" size="sm">
+                                                <DropdownMenuContent
+                                                    align="end"
+                                                    size="sm"
+                                                    header={
+                                                        <DropdownMenuHeader
+                                                            title={notification.title}
+                                                            description={formatRelativeTime(notification.created_at)}
+                                                        />
+                                                    }
+                                                >
                                                     {unread ? (
                                                         <DropdownMenuItem
                                                             onClick={() => void onMarkAsRead(notification.id)}
                                                         >
-                                                            <CheckIcon className="h-4 w-4" />
+                                                            <CheckIcon />
                                                             Marcar como lida
                                                         </DropdownMenuItem>
                                                     ) : null}

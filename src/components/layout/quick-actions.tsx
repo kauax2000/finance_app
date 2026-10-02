@@ -103,9 +103,8 @@ export function QuickActionResourceLinks({
                 createSubscription()
                 onCloseMenu()
             }}
-            className="gap-2"
         >
-            <ArrowPathRoundedSquareIcon className="h-4 w-4" />
+            <ArrowPathRoundedSquareIcon />
             <span>Assinatura</span>
         </DropdownMenuItem>
     )
@@ -130,7 +129,7 @@ function FixedQuickCreateMenuItems({
             ))}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onPickSubscription}>
-                <ArrowPathRoundedSquareIcon className="h-4 w-4" />
+                <ArrowPathRoundedSquareIcon />
                 <span>Assinatura</span>
             </DropdownMenuItem>
         </>

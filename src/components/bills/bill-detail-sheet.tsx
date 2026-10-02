@@ -32,6 +32,7 @@ import {
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -238,7 +239,7 @@ export function BillDetailSheet({
                             ) : null}
                             <div className="flex items-center gap-0.5">
                                 {bill ? (
-                                    <DropdownMenu>
+                                    <DropdownMenu mobile="sheet">
                                         <DropdownMenuTrigger asChild>
                                             <Button
                                                 type="button"
@@ -252,9 +253,18 @@ export function BillDetailSheet({
                                                 />
                                             </Button>
                                         </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" size="sm">
+                                        <DropdownMenuContent
+                                            align="end"
+                                            size="sm"
+                                            header={
+                                                <DropdownMenuHeader
+                                                    title={bill.name}
+                                                    description={`${billFrequencyLabel(bill.frequency)} · Dia ${bill.due_day_of_month}`}
+                                                />
+                                            }
+                                        >
                                             <DropdownMenuItem onClick={onEditBill}>
-                                                <PencilIcon className="h-4 w-4" aria-hidden />
+                                                <PencilIcon aria-hidden />
                                                 Editar modelo
                                             </DropdownMenuItem>
                                             <DropdownMenuItem variant="destructive"

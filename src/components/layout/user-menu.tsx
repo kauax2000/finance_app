@@ -61,7 +61,7 @@ export function UserMenu({ children }: UserMenuProps) {
                         {dropdownLinkItems.map(({ href, label, icon: Icon }) => (
                             <DropdownMenuItem key={href} asChild>
                                 <Link href={href}>
-                                    <Icon className="mr-2 h-4 w-4" />
+                                    <Icon />
                                     {label}
                                 </Link>
                             </DropdownMenuItem>
@@ -71,10 +71,10 @@ export function UserMenu({ children }: UserMenuProps) {
                     <DropdownMenuSeparator className="mx-0 my-0 bg-border/60" />
 
                     <div className="p-1">
-                        <DropdownMenuItem variant="destructive" className="cursor-pointer gap-2"
+                        <DropdownMenuItem variant="destructive" className="cursor-pointer"
                             onClick={() => signOut()}
                         >
-                            <ArrowRightStartOnRectangleIcon className="h-4 w-4" />
+                            <ArrowRightStartOnRectangleIcon />
                             Sair
                         </DropdownMenuItem>
                     </div>

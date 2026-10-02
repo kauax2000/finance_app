@@ -38,7 +38,10 @@ describe("as versões do Drawer", () => {
   })
 
   it("a folha de ações: 52px, ícone de 20, e cada ação fecha", () => {
-    expect(CODIGO).toMatch(/function DrawerAction\([\s\S]*?<DrawerPrimitive\.Close asChild>[\s\S]*?min-h-13/)
+    // A classe da linha mora em `drawerActionClassName` desde a rodada 213 (o
+    // `DropdownMenu` no telefone a reaproveita); a `DrawerAction` a veste.
+    expect(CODIGO).toMatch(/const drawerActionClassName = cn\(\s*"flex min-h-13/)
+    expect(CODIGO).toMatch(/function DrawerAction\([\s\S]*?<DrawerPrimitive\.Close asChild>[\s\S]*?drawerActionClassName/)
     expect(CODIGO).toContain("[&_svg]:size-5")
   })
 

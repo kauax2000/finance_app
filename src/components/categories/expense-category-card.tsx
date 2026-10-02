@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -209,7 +210,7 @@ export function ExpenseCategoryCard({
 
                     <CardAction className="flex items-center gap-1.5">
                         <MomComparisonBadge now={spent} prev={previousSpent} />
-                        <DropdownMenu>
+                        <DropdownMenu mobile="sheet">
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     type="button"
@@ -224,10 +225,17 @@ export function ExpenseCategoryCard({
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
-                                align="end" size="sm"
+                                align="end"
+                                size="sm"
+                                header={
+                                    <DropdownMenuHeader
+                                        title={category.name}
+                                        description={`${currency(spent)} no mês`}
+                                    />
+                                }
                             >
                                 <DropdownMenuItem onSelect={() => onEdit()}>
-                                    <PencilIcon className="h-4 w-4" aria-hidden />
+                                    <PencilIcon aria-hidden />
                                     Editar
                                 </DropdownMenuItem>
                                 <DropdownMenuItem variant="destructive"

@@ -1,7 +1,17 @@
 "use client"
 
-import { EllipsisHorizontalIcon } from "@heroicons/react/16/solid"
+import * as React from "react"
+import {
+  DocumentDuplicateIcon,
+  EllipsisHorizontalIcon,
+  LinkIcon,
+  PencilSquareIcon,
+  TrashIcon,
+} from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
+import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -13,14 +23,12 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSection,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Kbd } from "@/components/ui/kbd"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 export default function DropdownMenuDoc() {
@@ -32,50 +40,35 @@ export default function DropdownMenuDoc() {
 
       <DocSection
         title="Menu de item"
-        code={`<DropdownMenu>
-  <DropdownMenuTrigger asChild>
-    <Button variant="tertiary" size="icon-lg" aria-label="Ações da transação">
-      <EllipsisHorizontalIcon aria-hidden />
-    </Button>
-  </DropdownMenuTrigger>
-  <DropdownMenuContent align="end">
-    <DropdownMenuItem>Editar</DropdownMenuItem>
-    <DropdownMenuSeparator />
-    <DropdownMenuItem variant="destructive">Excluir</DropdownMenuItem>
-  </DropdownMenuContent>
-</DropdownMenu>`}
+        description={
+          <>
+            <code>DropdownMenuHeader title description</code> diz sobre o que o
+            menu age, e o título o nomeia. Na linha, <code>shortcut</code>{" "}
+            desenha a tecla com o <code>Kbd</code> (a dica de um atalho que já
+            existe na tela), <code>description</code> é a segunda linha, e{" "}
+            <code>confirm</code> faz a destrutiva pedir um segundo toque — para
+            o que se desfaz fácil; o que não tem volta continua no{" "}
+            <code>AlertDialog</code>.
+          </>
+        }
+        code={`<DropdownMenuContent
+  align="end"
+  size="xl"
+  header={<DropdownMenuHeader title="Mercado" description="12 set · −R$ 42,90" />}
+>
+  <DropdownMenuItem shortcut="mod+e"><PencilSquareIcon />Editar</DropdownMenuItem>
+  <DropdownMenuItem disabled description="A fatura deste cartão já fechou">…</DropdownMenuItem>
+  <DropdownMenuItem variant="destructive" confirm="toque de novo para excluir" onSelect={excluir}>
+    <TrashIcon />Excluir
+  </DropdownMenuItem>
+</DropdownMenuContent>`}
       >
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="tertiary" size="icon-lg" aria-label="Ações da transação">
-              <EllipsisHorizontalIcon aria-hidden />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuLabel>Transação</DropdownMenuLabel>
-            <DropdownMenuItem>
-              Editar
-              <DropdownMenuShortcut>
-                <Kbd keys="mod+e" />
-              </DropdownMenuShortcut>
-            </DropdownMenuItem>
-            <DropdownMenuItem>Duplicar</DropdownMenuItem>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>Mover para</DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                <DropdownMenuItem>Conta corrente</DropdownMenuItem>
-                <DropdownMenuItem>Poupança</DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive">Excluir</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <MenuDeItemDemo />
       </DocSection>
 
       <DocSection
         title="Com estado"
-        description="Checkbox para várias opções independentes, radio para uma escolha entre alternativas. O menu fica aberto ao marcar um checkbox e fecha ao escolher um radio."
+        description="Checkbox para várias opções independentes, radio para uma escolha entre alternativas. Marcar uma caixa não fecha o menu (closeOnSelect volta ao padrão do Radix, que fecha); escolher um rádio fecha."
         code={`<DropdownMenuCheckboxItem checked>Mostrar canceladas</DropdownMenuCheckboxItem>
 <DropdownMenuRadioGroup value="data">
   <DropdownMenuRadioItem value="data">Data</DropdownMenuRadioItem>
@@ -85,20 +78,44 @@ export default function DropdownMenuDoc() {
           <DropdownMenuTrigger asChild>
             <Button variant="outline">Exibição</Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56">
-            <DropdownMenuLabel>Mostrar</DropdownMenuLabel>
-            <DropdownMenuCheckboxItem checked>
-              Transações canceladas
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem>Parcelas futuras</DropdownMenuCheckboxItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel>Ordenar por</DropdownMenuLabel>
-            <DropdownMenuRadioGroup value="data">
-              <DropdownMenuRadioItem value="data">Data</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="valor">Valor</DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
+          <ComEstadoMenu />
         </DropdownMenu>
+      </DocSection>
+
+      <DocSection
+        title="Busca, linha que carrega e a tecla que abre"
+        description={
+          <>
+            <code>search</code> põe um campo em cima que filtra as linhas pelo
+            nome — o foco nasce nele, e a seta para baixo desce à lista. Um{" "}
+            <code>onSelect</code> que devolve <code>Promise</code> faz a linha
+            carregar e o menu esperar. <code>shortcut</code> na raiz abre o
+            menu pela tecla: o da linha que tem o foco, ou o da tela quando
+            nada tem foco.
+          </>
+        }
+        code={`<DropdownMenuContent search="Mover para…">…</DropdownMenuContent>
+<DropdownMenuItem onSelect={async () => await gerarLink()}>Copiar link</DropdownMenuItem>
+<DropdownMenu shortcut=".">…</DropdownMenu>`}
+        previewClassName="flex-col items-start gap-4"
+      >
+        <BuscaECarregaDemo />
+      </DocSection>
+
+      <DocSection
+        title="No telefone, a folha de ações"
+        description={
+          <>
+            <code>mobile=&quot;sheet&quot;</code>: abaixo de 768px o mesmo menu
+            abre como a folha de ações do <code>Drawer</code> — o cabeçalho do
+            alvo, linhas de 52px, o Cancelar embaixo —, sem a tela reescrever
+            nada. Caixas e rádios viram linhas com a marca; o submenu, um grupo
+            com rótulo. No desktop, nada muda.
+          </>
+        }
+        code={`<DropdownMenu mobile="sheet">…</DropdownMenu>`}
+      >
+        <FolhaDemo />
       </DocSection>
 
       <DocSection
@@ -108,26 +125,9 @@ export default function DropdownMenuDoc() {
 <DropdownMenuContent size="lg" />   // 208
 <DropdownMenuContent size="xl" />   // 224
 <DropdownMenuContent />             // auto, o padrão`}
+        previewClassName="flex-col items-start gap-3"
       >
-        <div className="flex flex-wrap items-start gap-2">
-          {(["sm", "md", "lg", "xl"] as const).map((t) => (
-            <DropdownMenu key={t}>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  {/* Um `<span>` porque isto é o **valor** do prop, e ele é
-                      minúsculo. A maiúscula inicial do `Button` é do sistema, e
-                      esta é a saída que o AGENTS.md documenta para o rótulo
-                      raro que precisa mesmo ficar como está. */}
-                  <span>{t}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent size={t}>
-                <DropdownMenuItem>Editar</DropdownMenuItem>
-                <DropdownMenuItem>Duplicar</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ))}
-        </div>
+        <LargurasDemo />
       </DocSection>
 
       <DocSection
@@ -233,10 +233,48 @@ export default function DropdownMenuDoc() {
               "menu é a lista de comandos; panel cede o recuo e arredonda mais, para conteúdo que não é comando.",
           },
           {
-            prop: "DropdownMenuHeader",
-            type: 'ComponentProps<"div">',
+            prop: "DropdownMenu mobile",
+            type: '"menu" | "sheet"',
+            default: '"menu"',
+            description: "sheet: no telefone, a folha de ações do Drawer.",
+          },
+          {
+            prop: "DropdownMenu shortcut",
+            type: "string",
             description:
-              "A faixa de identidade do painel: sangra até a borda e traz o fio embaixo.",
+              "A tecla que abre o menu: o da linha focada, ou o da tela sem foco. O gatilho anuncia (aria-keyshortcuts).",
+          },
+          {
+            prop: "DropdownMenuContent search",
+            type: "boolean | string",
+            description: "Um campo que filtra as linhas pelo nome; o texto é o placeholder.",
+          },
+          {
+            prop: "DropdownMenuHeader",
+            type: 'ComponentProps<"div"> · title · description',
+            description:
+              "Com title: o alvo, e o título nomeia o menu. Sem: a faixa de identidade do painel, que sangra até a borda. O fio embaixo é do slot header, e não dela.",
+          },
+          {
+            prop: "DropdownMenuItem shortcut / description",
+            type: "string / ReactNode",
+            description: "A tecla com o Kbd (só a dica) e a segunda linha.",
+          },
+          {
+            prop: "DropdownMenuItem confirm",
+            type: "boolean | string",
+            description: "A linha pede um segundo toque, em 3 segundos. A ação da tela (onSelect ou onClick) espera.",
+          },
+          {
+            prop: "DropdownMenuItem onSelect → Promise / pending",
+            type: "(e) => Promise / boolean",
+            description: "A linha mostra o Spinner e o menu fecha quando a ação termina.",
+          },
+          {
+            prop: "DropdownMenuCheckboxItem closeOnSelect",
+            type: "boolean",
+            default: "false",
+            description: "Marcar não fecha o menu; true volta ao padrão do Radix.",
           },
           {
             prop: "DropdownMenuSection",
@@ -251,6 +289,228 @@ export default function DropdownMenuDoc() {
           },
         ]}
       />
+    </>
+  )
+}
+
+function MenuDeItemDemo() {
+  const [feito, setFeito] = React.useState("")
+  return (
+    <div className="flex flex-col items-start gap-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="tertiary" size="icon-lg" aria-label="Ações da transação">
+            <EllipsisHorizontalIcon aria-hidden />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          size="xl"
+          header={
+            <DropdownMenuHeader title="Mercado" description="12 set · −R$ 42,90" />
+          }
+        >
+          <DropdownMenuItem shortcut="mod+e" onSelect={() => setFeito("Editar")}>
+            <PencilSquareIcon aria-hidden />
+            Editar
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setFeito("Duplicar")}>
+            <DocumentDuplicateIcon aria-hidden />
+            Duplicar
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled description="A fatura deste cartão já fechou">
+            <LinkIcon aria-hidden />
+            Mover para a próxima fatura
+          </DropdownMenuItem>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Mover para</DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuItem>Conta corrente</DropdownMenuItem>
+              <DropdownMenuItem>Poupança</DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            variant="destructive"
+            confirm="toque de novo para excluir"
+            onSelect={() => setFeito("Excluir")}
+          >
+            <TrashIcon aria-hidden />
+            Excluir
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <p className="min-h-5 text-sm text-muted-foreground" aria-live="polite">
+        {feito ? `Escolhido: ${feito}` : ""}
+      </p>
+    </div>
+  )
+}
+
+function ComEstadoMenu() {
+  const [canceladas, setCanceladas] = React.useState(true)
+  const [futuras, setFuturas] = React.useState(false)
+  const [ordem, setOrdem] = React.useState("data")
+  return (
+    <DropdownMenuContent size="xl">
+      <DropdownMenuLabel>Mostrar</DropdownMenuLabel>
+      <DropdownMenuCheckboxItem checked={canceladas} onCheckedChange={setCanceladas}>
+        Transações canceladas
+      </DropdownMenuCheckboxItem>
+      <DropdownMenuCheckboxItem checked={futuras} onCheckedChange={setFuturas}>
+        Parcelas futuras
+      </DropdownMenuCheckboxItem>
+      <DropdownMenuSeparator />
+      <DropdownMenuLabel>Ordenar por</DropdownMenuLabel>
+      <DropdownMenuRadioGroup value={ordem} onValueChange={setOrdem}>
+        <DropdownMenuRadioItem value="data">Data</DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value="valor">Valor</DropdownMenuRadioItem>
+      </DropdownMenuRadioGroup>
+    </DropdownMenuContent>
+  )
+}
+
+const CARTEIRAS = ["Conta corrente", "Poupança", "Viagem", "Reserva", "Casa", "Carro", "Investimentos", "Presentes"]
+
+function BuscaECarregaDemo() {
+  const [aviso, setAviso] = React.useState("")
+  return (
+    <>
+      <div className="flex flex-wrap gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">mover para…</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent size="xl" search="Buscar carteira">
+            {CARTEIRAS.map((c) => (
+              <DropdownMenuItem key={c} onSelect={() => setAviso(`Movido para ${c}`)}>
+                {c}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">compartilhar</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent size="lg">
+            <DropdownMenuItem
+              onSelect={() =>
+                new Promise<void>((pronto) =>
+                  window.setTimeout(() => {
+                    setAviso("Link copiado")
+                    pronto()
+                  }, 1500)
+                )
+              }
+            >
+              <LinkIcon aria-hidden />
+              Copiar link
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      <ItemGroup className="w-full max-w-md">
+        {["Mercado", "Farmácia"].map((nome) => (
+          <Item key={nome} variant="outline" size="sm">
+            <ItemContent>
+              <ItemTitle>{nome}</ItemTitle>
+              <ItemDescription>Foque o botão e tecle “.”</ItemDescription>
+            </ItemContent>
+            <ItemActions>
+              <DropdownMenu shortcut=".">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="tertiary" size="icon-md" aria-label={`Ações de ${nome}`}>
+                        <EllipsisHorizontalIcon aria-hidden />
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent shortcut=".">Ações</TooltipContent>
+                </Tooltip>
+                <DropdownMenuContent align="end" size="sm">
+                  <DropdownMenuItem>Editar</DropdownMenuItem>
+                  <DropdownMenuItem variant="destructive">Excluir</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </ItemActions>
+          </Item>
+        ))}
+      </ItemGroup>
+      <p className="min-h-5 text-sm text-muted-foreground" aria-live="polite">
+        {aviso}
+      </p>
+    </>
+  )
+}
+
+function FolhaDemo() {
+  const [canceladas, setCanceladas] = React.useState(true)
+  return (
+    <DropdownMenu mobile="sheet">
+      <DropdownMenuTrigger asChild>
+        <Button variant="tertiary" size="icon-lg" aria-label="Ações da transação">
+          <EllipsisHorizontalIcon aria-hidden />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        size="xl"
+        header={
+          <DropdownMenuHeader title="Mercado" description="12 set · −R$ 42,90" />
+        }
+      >
+        <DropdownMenuItem>
+          <PencilSquareIcon aria-hidden />
+          Editar
+        </DropdownMenuItem>
+        <DropdownMenuItem>
+          <DocumentDuplicateIcon aria-hidden />
+          Duplicar
+        </DropdownMenuItem>
+        <DropdownMenuCheckboxItem checked={canceladas} onCheckedChange={setCanceladas}>
+          Mostrar canceladas
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="destructive" confirm="toque de novo para excluir">
+          <TrashIcon aria-hidden />
+          Excluir
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+function LargurasDemo() {
+  const [size, setSize] = React.useState<"sm" | "md" | "lg" | "xl">("sm")
+  return (
+    <>
+      <ToggleGroup
+        type="single"
+        variant="segmented"
+        size="sm"
+        value={size}
+        onValueChange={(v) => v && setSize(v as typeof size)}
+        aria-label="Largura"
+      >
+        {(["sm", "md", "lg", "xl"] as const).map((t) => (
+          <ToggleGroupItem key={t} value={t} className="font-mono">
+            {t}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm">
+            abrir
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent size={size}>
+          <DropdownMenuItem>Editar</DropdownMenuItem>
+          <DropdownMenuItem>Duplicar</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </>
   )
 }

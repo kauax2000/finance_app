@@ -17103,3 +17103,54 @@ paleta aninhadas sobre uma folha ficaram de fora).
   inteiro: só esses 9 sumiram. O décimo achado era de verdade (o
   `BanknotesIcon` de `20` dentro de um `Button`, que o desenha a 16) e foi
   corrigido.
+
+### Rodada 213 — o DropdownMenu vira folha de ações no telefone e ganha o alvo, a tecla, a descrição, a confirmação, a busca, a linha que carrega, a caixa que não fecha e a tecla que abre
+
+O dono escolheu todas as versões e as três migrações.
+
+- **Três afirmações falsas na página**: a nota "use o degrau em vez de
+  `w-*`" ao lado de demonstrações com `w-52` e `w-56`; a tabela dizendo que o
+  `DropdownMenuHeader` "traz o fio embaixo", contra a própria nota de que o
+  fio é do slot; e "o menu fica aberto ao marcar um checkbox" — o Radix fecha.
+- **`mobile="sheet"`**: a raiz monta o `Drawer` no telefone, e cada peça
+  (item, caixa, rádio, submenu, rótulo, separador, cabeçalho, busca) se
+  desenha como linha da folha. O `drawer.tsx` passou a exportar
+  `drawerActionClassName`, porque as linhas que confirmam ou carregam não
+  podem fechar no toque, como a `DrawerAction` fecha. Medido a 375 com toque:
+  linhas de 52, a caixa marca sem fechar, excluir pede dois toques, Cancelar
+  fecha. Duas correções no caminho: o `id` próprio no `DialogTitle` deixava a
+  gaveta sem nome (o `aria-labelledby` apontava para o vazio), e os ícones de
+  16 das telas saíam esticados a 20 — ficam em 16.
+- **Dois furos achados antes de chegar ao app**: na folha, o `onClick` da tela
+  vinha por último no espalhamento e sobrescrevia o da linha, que então não
+  fechava a gaveta; e com `confirm`, uma tela que age pelo `onClick` (e não
+  pelo `onSelect`) executaria a ação no primeiro toque. Os dois esperam agora.
+- **Desktop, medido**: o título nomeia o menu ("Mercado"); `xl` = 224; a
+  tecla com o `Kbd`; confirmar arma no primeiro toque e executa no segundo; a
+  busca recebe o foco, "pou" deixa só "Poupança", a seta desce, Enter
+  escolhe, e sem resultado aparece "Nada encontrado"; a linha que carrega
+  mostra o `Spinner` e o menu espera; a caixa não fecha e o rádio fecha; "."
+  com o foco numa linha abre o menu dela, e sem foco nenhum de linha abre.
+  O `Content` do menu do Radix não expõe `onOpenAutoFocus`: o foco vai ao
+  campo no quadro seguinte à montagem.
+- **O lint pegou três erros meus depois das migrações**: uma `ref` sem o
+  sufixo `Ref` (o compilador do React recusa escrever em `.current` de quem
+  não parece `ref`) e o `useScrollFade` chamado depois do `return` da folha,
+  no conteúdo e no submenu — subiu para o topo. E o auditor não sabia que o
+  tique da caixa na folha mede 20; ganhou o `size-5` explícito.
+- **No app** (dois agentes, metades separadas): os menus ⋯ de transação,
+  conta pendente, conta, assinatura, categoria (cartões e detalhe), cartão,
+  notificação, carteira e status da fatura usam `mobile="sheet"`, quase
+  todos com o cabeçalho do alvo; 20 `h-4 w-4` e os `mr-2` saíram dos ícones;
+  dois menus da conta trocaram o vermelho escrito à mão por
+  `variant="destructive"`. Ficaram larguras próprias no `UserMenu`, no
+  `WorkspaceSwitcher` e no "+ Adicionar" do desktop, que não batem com a
+  escada. **As telas do app não foram vistas no navegador** — pedem login.
+
+**O submenu abria e não aparecia** — nos três menus, e antes desta rodada.
+O `SubContent` não ia para um portal: renderizava dentro do viewport do menu,
+cujo vidro (`backdrop-filter`) vira o bloco de contenção do `fixed` do popper,
+e o `overflow-hidden` da superfície o recortava. Medido: o submenu estava
+`data-state=open`, opaco, com dois itens, e invisível. `DropdownMenu`,
+`ContextMenu` e `Menubar` passaram a embrulhá-lo no `Portal`, e o teste da
+rodada tranca os três.

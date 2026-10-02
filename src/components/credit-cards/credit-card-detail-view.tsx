@@ -23,6 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -165,7 +166,7 @@ export function CreditCardDetailView({
                             >
                                 {card.is_active ? "Ativo" : "Inativo"}
                             </Badge>
-                            <DropdownMenu>
+                            <DropdownMenu mobile="sheet">
                                 <DropdownMenuTrigger asChild>
                                     <Button
                                         type="button"
@@ -180,10 +181,17 @@ export function CreditCardDetailView({
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent
-                                    align="end" size="lg"
+                                    align="end"
+                                    size="lg"
+                                    header={
+                                        <DropdownMenuHeader
+                                            title={card.name}
+                                            description={`Final ${card.last_four}`}
+                                        />
+                                    }
                                 >
                                     <DropdownMenuItem onClick={() => onEdit()}>
-                                        <PencilIcon className="h-4 w-4" aria-hidden />
+                                        <PencilIcon aria-hidden />
                                         Editar
                                     </DropdownMenuItem>
                                     {onSetActive ? (
@@ -192,23 +200,10 @@ export function CreditCardDetailView({
                                                 void onSetActive(!card.is_active)
                                             }
                                         >
-                                            {card.is_active ? (
-                                                <>
-                                                    <PowerIcon
-                                                        className="h-4 w-4"
-                                                        aria-hidden
-                                                    />
-                                                    Desativar cartão
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <PowerIcon
-                                                        className="h-4 w-4"
-                                                        aria-hidden
-                                                    />
-                                                    Ativar cartão
-                                                </>
-                                            )}
+                                            <PowerIcon aria-hidden />
+                                            {card.is_active
+                                                ? "Desativar cartão"
+                                                : "Ativar cartão"}
                                         </DropdownMenuItem>
                                     ) : null}
                                     <DropdownMenuItem variant="destructive"

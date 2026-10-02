@@ -2,10 +2,30 @@
 
 import * as React from "react"
 import { CheckIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
+import { CheckIcon as CheckMiniIcon } from "@heroicons/react/20/solid"
 import { cva, type VariantProps } from "class-variance-authority"
-import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
+import { DropdownMenu as DropdownMenuPrimitive, Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { ariaShortcut, matchShortcut } from "@/lib/shortcut"
+import { commandFilter } from "@/lib/command-filter"
+import { Kbd } from "@/components/ui/kbd"
+import { Spinner } from "@/components/ui/spinner"
+import { Separator } from "@/components/ui/separator"
+import { SearchInput } from "@/components/ui/search-input"
+import {
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  Drawer,
+  drawerActionClassName,
+  DrawerCancel,
+  DrawerContent,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
@@ -38,7 +58,7 @@ const DROPDOWN_POPPER =
   "max-h-[min(var(--radix-dropdown-menu-content-available-height),var(--menu-max-h))] max-w-(--radix-dropdown-menu-content-available-width) origin-(--radix-dropdown-menu-content-transform-origin)"
 
 /**
- * O menu de um gatilho.
+ * O menu de um gatilhoRef.
  *
  * ## O que esta revisão corrigiu
  *
@@ -71,6 +91,80 @@ const DropdownMenuScrollCloseContext =
   React.createContext<React.RefObject<boolean> | null>(null)
 
 /**
+ * ## Rodada 213
+ *
+ * - **`mobile="sheet"`**: no telefone o mesmo menu é a folha de ações do
+ *   `Drawer` — linhas de 52px, o cabeçalho do alvo, o Cancelar embaixo —, sem a
+ *   tela reescrever nada. Cada peça lê o `DropdownMenuEstadoContext` e se
+ *   desenha como menu ou como folha; caixas, rádios e submenus viram linhas
+ *   (o submenu, um grupo com rótulo).
+ * - **`shortcut`** na raiz abre o menu pela tecla: o da linha focada (o
+ *   gatilhoRef dentro de uma `tr`, de um `Item` ou de um `Card` com o foco) ou,
+ *   fora de linha, o da tela quando nada tem foco. O gatilhoRef anuncia a tecla
+ *   (`aria-keyshortcuts`).
+ * - **`DropdownMenuHeader title/description`**: o alvo em cima das ações, e o
+ *   título nomeia o menu. **`DropdownMenuContent search`**: um campo filtra as
+ *   linhas pelo nome (`commandFilter`).
+ * - **`DropdownMenuItem`**: `shortcut` (o `Kbd`), `description` (a segunda
+ *   linha), `confirm` (a destrutiva pede um segundo toque) e o `onSelect`
+ *   que devolve uma `Promise` — a linha carrega, e o menu fecha quando ela
+ *   termina.
+ * - **A caixa não fecha o menu.** A página dizia que ficava aberto ao marcar,
+ *   e o Radix fechava; `closeOnSelect` volta ao comportamento dele.
+ */
+type MenuEstado = {
+  /** No telefone, com `mobile="sheet"`: a folha de ações. */
+  folha: boolean
+  fechar: () => void
+  gatilhoRef: React.RefObject<HTMLElement | null>
+  shortcut?: string
+  busca: string
+  setBusca: (busca: string) => void
+}
+
+const DropdownMenuEstadoContext = React.createContext<MenuEstado>({
+  folha: false,
+  fechar: () => {},
+  gatilhoRef: { current: null },
+  busca: "",
+  setBusca: () => {},
+})
+
+/** Registra o título do cabeçalho no conteúdo, para nomear o menu. */
+const DropdownMenuTituloContext = React.createContext<
+  ((id: string | null) => void) | null
+>(null)
+
+/** O rádio da folha: o valor e quem o troca, sem o Radix. */
+const FolhaRadioContext = React.createContext<{
+  value?: string
+  onValueChange?: (value: string) => void
+} | null>(null)
+
+/** O texto de uma linha, para a busca: as folhas de texto dos filhos. */
+function textoDe(no: React.ReactNode): string {
+  if (no == null || typeof no === "boolean") return ""
+  if (typeof no === "string" || typeof no === "number") return String(no)
+  if (Array.isArray(no)) return no.map(textoDe).join(" ")
+  if (React.isValidElement<{ children?: React.ReactNode }>(no))
+    return textoDe(no.props.children)
+  return ""
+}
+
+/** Troca o texto de uma linha pelo da confirmação, mantendo o ícone. */
+function trocarTexto(no: React.ReactNode, texto: string): React.ReactNode {
+  const elementos = React.Children.toArray(no).filter((f) =>
+    React.isValidElement(f)
+  )
+  return (
+    <>
+      {elementos.slice(0, 1)}
+      <span>{texto}</span>
+    </>
+  )
+}
+
+/**
  * Com `modal={false}` a página rola com o menu aberto, e ele fecha — ver
  * `useCloseOnScroll`. O padrão (modal) já trava a rolagem.
  */
@@ -79,8 +173,16 @@ function DropdownMenu({
   defaultOpen,
   onOpenChange,
   modal,
+  mobile = "menu",
+  shortcut,
+  children,
   ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Root> & {
+  /** `sheet`: no telefone, a folha de ações do `Drawer`. */
+  mobile?: "menu" | "sheet"
+  /** A tecla que abre o menu, na grafia do `Kbd` (`"."`, `"mod+."`). */
+  shortcut?: string
+}) {
   const [open, setOpen, fechouPorRolagem] = useCloseOnScroll({
     value: openProp,
     defaultValue: defaultOpen,
@@ -88,26 +190,90 @@ function DropdownMenu({
     closed: false,
     enabled: modal === false,
   })
+  const isMobile = useIsMobile()
+  const folha = mobile === "sheet" && isMobile
+  const gatilhoRef = React.useRef<HTMLElement | null>(null)
+  const [busca, setBusca] = React.useState("")
+
+  // Fechar esquece a busca: o menu reabre inteiro.
+  const mudar = React.useCallback(
+    (proximo: boolean) => {
+      if (!proximo) setBusca("")
+      setOpen(proximo)
+    },
+    [setOpen]
+  )
+
+  React.useEffect(() => {
+    if (!shortcut) return
+    const aoTeclar = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || !matchShortcut(shortcut, e)) return
+      const alvo = gatilhoRef.current
+      if (!alvo || !alvo.isConnected) return
+      const ativo = document.activeElement
+      // O menu de uma linha abre só com o foco nela; o da tela, só com nada
+      // focado — senão uma tecla abriria o menu de todas as linhas.
+      const escopo = alvo.closest(
+        "tr, [data-slot=item], [data-slot=card], [data-menu-scope]"
+      )
+      const vale = escopo
+        ? escopo.contains(ativo)
+        : ativo === alvo || ativo === document.body || ativo === null
+      if (!vale) return
+      e.preventDefault()
+      mudar(true)
+    }
+    document.addEventListener("keydown", aoTeclar)
+    return () => document.removeEventListener("keydown", aoTeclar)
+  }, [shortcut, mudar])
+
+  const estado = React.useMemo<MenuEstado>(
+    () => ({ folha, fechar: () => mudar(false), gatilhoRef, shortcut, busca, setBusca }),
+    [folha, mudar, shortcut, busca]
+  )
 
   return (
     <DropdownMenuScrollCloseContext.Provider value={fechouPorRolagem}>
-      <DropdownMenuPrimitive.Root
-        data-slot="dropdown-menu"
-        open={open}
-        onOpenChange={setOpen}
-        modal={modal}
-        {...props}
-      />
+      <DropdownMenuEstadoContext.Provider value={estado}>
+        {folha ? (
+          <Drawer open={open} onOpenChange={mudar}>
+            {children}
+          </Drawer>
+        ) : (
+          <DropdownMenuPrimitive.Root
+            data-slot="dropdown-menu"
+            open={open}
+            onOpenChange={mudar}
+            modal={modal}
+            {...props}
+          >
+            {children}
+          </DropdownMenuPrimitive.Root>
+        )}
+      </DropdownMenuEstadoContext.Provider>
     </DropdownMenuScrollCloseContext.Provider>
   )
 }
 
 function DropdownMenuTrigger({
+  ref,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>) {
+  const { folha, gatilhoRef, shortcut } = React.useContext(DropdownMenuEstadoContext)
+  const registrar = React.useCallback(
+    (el: HTMLButtonElement | null) => {
+      gatilhoRef.current = el
+      if (typeof ref === "function") ref(el)
+      else if (ref) ref.current = el
+    },
+    [gatilhoRef, ref]
+  )
+  const Comp = folha ? DrawerTrigger : DropdownMenuPrimitive.Trigger
   return (
-    <DropdownMenuPrimitive.Trigger
+    <Comp
       data-slot="dropdown-menu-trigger"
+      ref={registrar}
+      aria-keyshortcuts={shortcut ? ariaShortcut(shortcut) : undefined}
       {...props}
     />
   )
@@ -116,6 +282,12 @@ function DropdownMenuTrigger({
 function DropdownMenuGroup({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Group>) {
+  const { folha } = React.useContext(DropdownMenuEstadoContext)
+  if (folha) {
+    const { asChild: _a, ...resto } = props as typeof props & { asChild?: boolean }
+    void _a
+    return <div role="group" data-slot="dropdown-menu-group" {...resto} />
+  }
   return (
     <DropdownMenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />
   )
@@ -129,15 +301,30 @@ function DropdownMenuPortal({
   )
 }
 
+/** Na folha, o submenu é um grupo com rótulo: não há segundo nível no dedo. */
 function DropdownMenuSub({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Sub>) {
+  const { folha } = React.useContext(DropdownMenuEstadoContext)
+  if (folha) return <>{props.children}</>
   return <DropdownMenuPrimitive.Sub data-slot="dropdown-menu-sub" {...props} />
 }
 
 function DropdownMenuRadioGroup({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.RadioGroup>) {
+  const { folha } = React.useContext(DropdownMenuEstadoContext)
+  if (folha) {
+    return (
+      <FolhaRadioContext.Provider
+        value={{ value: props.value, onValueChange: props.onValueChange }}
+      >
+        <div role="group" data-slot="dropdown-menu-radio-group">
+          {props.children}
+        </div>
+      </FolhaRadioContext.Provider>
+    )
+  }
   return (
     <DropdownMenuPrimitive.RadioGroup
       data-slot="dropdown-menu-radio-group"
@@ -197,33 +384,91 @@ function DropdownMenuContent({
   children,
   header,
   footer,
+  search,
   sideOffset = 4,
   collisionPadding = ANCHORED_COLLISION_PADDING,
   variant,
   size,
   onCloseAutoFocus,
+  "aria-labelledby": ariaLabelledBy,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Content> &
   VariantProps<typeof dropdownMenuContentVariants> & {
     /**
-     * A faixa de identidade do painel — avatar, nome, contexto.
+     * A faixa de cima — a identidade do painel, ou o alvo do menu
+     * (`DropdownMenuHeader title`).
      *
      * Ela é **prop e não filho** por um motivo medido: para o conteúdo dissolver
      * por baixo dela, ela precisa ser **irmã** do viewport, e não estar dentro
      * dele. Detectar isso em tempo de execução com `React.Children` não
      * funcionaria — o consumidor real do padrão é o `UserMenu`, e ali a faixa
-     * não é um `DropdownMenuHeader`, é um `<AccountMenuUserSummary />`. Um teste
-     * por `child.type` nunca a encontraria, ela cairia dentro do viewport, a
-     * máscara a dissolveria, e ninguém descobriria até rolar.
-     *
-     * Slot-como-prop é o idioma daqui: `DialogHeaderRow` tem `endAdornment`, o
-     * `MobileSheetFormStickyHeader` também.
+     * não é um `DropdownMenuHeader`, é um `<AccountMenuUserSummary />`.
      */
     header?: React.ReactNode
     /** A faixa de pé, pelas mesmas razões. */
     footer?: React.ReactNode
+    /** Um campo que filtra as linhas pelo nome. `true` ou o placeholder. */
+    search?: boolean | string
   }) {
   const fechouPorRolagem = React.useContext(DropdownMenuScrollCloseContext)
+  const estado = React.useContext(DropdownMenuEstadoContext)
+  const [tituloId, setTituloId] = React.useState<string | null>(null)
+  const campo = React.useRef<HTMLInputElement>(null)
+  const placeholder = typeof search === "string" ? search : "Buscar…"
+  // Antes do `return` da folha: um hook depois dele mudaria a ordem quando o
+  // menu troca de desenho.
+  const dissolver = useScrollFade({ arrows: true })
+
+  const vazio = estado.busca ? (
+    <p
+      data-slot="dropdown-menu-empty"
+      className="hidden px-2 py-6 text-center text-sm text-muted-foreground"
+    >
+      Nada encontrado
+    </p>
+  ) : null
+
+  if (estado.folha) {
+    const rotulo =
+      estado.gatilhoRef.current?.getAttribute("aria-label") ??
+      estado.gatilhoRef.current?.textContent?.trim() ??
+      "Ações"
+    return (
+      <DrawerContent variant="inset" data-slot="dropdown-menu-sheet">
+        <DropdownMenuTituloContext.Provider value={setTituloId}>
+          {header}
+        </DropdownMenuTituloContext.Provider>
+        {/* Sem um título no cabeçalho, a gaveta leva o nome do gatilhoRef —
+            "Ações da transação" —, escondido. */}
+        {tituloId ? null : (
+          <DialogHeader className="sr-only">
+            <DialogTitle>{rotulo}</DialogTitle>
+            <DialogDescription>Ações disponíveis</DialogDescription>
+          </DialogHeader>
+        )}
+        <div
+          data-slot="dropdown-menu-sheet-list"
+          className="flex flex-col px-2 [&:not(:has([role^=menuitem]))>[data-slot=dropdown-menu-empty]]:block"
+        >
+          {search ? (
+            <div className="px-1 pb-2">
+              <SearchInput
+                ref={campo}
+                value={estado.busca}
+                onChange={(e) => estado.setBusca(e.target.value)}
+                onClear={() => estado.setBusca("")}
+                placeholder={placeholder}
+                aria-label={placeholder}
+              />
+            </div>
+          ) : null}
+          {children}
+          {vazio}
+        </div>
+        <DrawerCancel />
+      </DrawerContent>
+    )
+  }
 
   return (
     <DropdownMenuPrimitive.Portal>
@@ -232,6 +477,7 @@ function DropdownMenuContent({
         data-variant={variant}
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
+        aria-labelledby={ariaLabelledBy ?? tituloId ?? undefined}
         onCloseAutoFocus={skipFocusAfterScrollClose(
           fechouPorRolagem,
           onCloseAutoFocus
@@ -254,15 +500,62 @@ function DropdownMenuContent({
             data-slot="dropdown-menu-header-slot"
             className="relative z-10 shrink-0 border-b border-border"
           >
-            {header}
+            <DropdownMenuTituloContext.Provider value={setTituloId}>
+              {header}
+            </DropdownMenuTituloContext.Provider>
+          </div>
+        ) : null}
+        {search ? (
+          <div
+            data-slot="dropdown-menu-search"
+            className="relative z-10 shrink-0 p-1 pb-0"
+            // Com busca, o foco vai para o campo. O conteúdo do Radix não
+            // expõe `onOpenAutoFocus`, e ele mesmo foca o menu ao abrir — o
+            // quadro seguinte é depois disso.
+            ref={(el) => {
+              if (el) requestAnimationFrame(() => campo.current?.focus())
+            }}
+            // O Radix busca por digitação dentro do menu e leva o foco à linha
+            // que casa — no campo, a tecla é texto. Só a seta para baixo e o
+            // Esc passam: a seta desce para a primeira linha.
+            onKeyDown={(e) => {
+              if (e.key === "Escape") return
+              if (e.key === "ArrowDown") {
+                e.preventDefault()
+                e.currentTarget.parentElement
+                  ?.querySelector<HTMLElement>(
+                    "[role^=menuitem]:not([data-disabled])"
+                  )
+                  ?.focus()
+                return
+              }
+              e.stopPropagation()
+            }}
+          >
+            <SearchInput
+              ref={campo}
+              size="sm"
+              surface="plate"
+              value={estado.busca}
+              onChange={(e) => estado.setBusca(e.target.value)}
+              onClear={() => estado.setBusca("")}
+              placeholder={placeholder}
+              aria-label={placeholder}
+              touchFloor={false}
+            />
           </div>
         ) : null}
         <div
-          ref={useScrollFade({ arrows: true })}
+          ref={dissolver}
           data-slot="dropdown-menu-viewport"
-          className={cn(menuViewportClassName, scrollFadeViewportClassName)}
+          className={cn(
+            menuViewportClassName,
+            scrollFadeViewportClassName,
+            "[&:not(:has([role^=menuitem]))>[data-slot=dropdown-menu-empty]]:block"
+          )}
         >
           {children}
+          {vazio}
         </div>
         <ScrollFadeArrows />
         {footer ? <div className="shrink-0">{footer}</div> : null}
@@ -272,44 +565,78 @@ function DropdownMenuContent({
 }
 
 /**
- * A faixa de identidade do painel — avatar, nome, contexto.
+ * A faixa de cima do menu.
  *
- * Ela sangra até a borda, como `CardToolbar` e `DialogHeader`. Existe porque o
- * `variant="panel"` sem ela empurrava a geometria para quem chama: o
- * `UserMenu` e o `WorkspaceSwitcher` escreviam esta `div` à mão, e a
- * demonstração deste catálogo escreveu uma terceira grafia.
+ * Com `title` (rodada 213) ela é o **alvo** — "Mercado", "12 set · −R$ 42,90"
+ * —, e o título nomeia o menu; na folha do telefone, é o cabeçalho da gaveta.
+ * Sem `title` ela é a faixa de identidade do painel — avatar, nome, contexto —,
+ * que sangra até a borda, como `CardToolbar` e `DialogHeader`. Existe porque o
+ * `variant="panel"` sem ela empurrava a geometria para quem chama.
  *
- * **Aqui o fio fica, e não é exceção à regra das tiras.** Uma tira de
- * superfície rotula o corpo que vem abaixo — `CardToolbar` diz o que a lista é
- * —, e ali o fio é o segundo sinal para a mesma emenda. Esta faixa não rotula
- * comando nenhum: ela é **um bloco de outra natureza** (identidade) empilhado
- * sobre uma lista de comandos, e a fronteira entre os dois é a mesma que o
- * painel já marca entre grupos de comando com `DropdownMenuSeparator`. Mesmo
- * papel, mesmo peso (`border-border`) — é a categoria que o projeto sempre
- * manteve com fio: o traço que divide **itens**, não superfícies.
- *
- * A dissolução do viewport continua valendo e não disputa com ele: ela diz "há
- * mais conteúdo acima", que é outra informação. Um `DropdownMenuSeparator`
- * dentro de uma lista rolável convive com o fade pela mesma razão. E o painel
- * do `UserMenu` não rola, então sem o fio a identidade não tinha fronteira
- * nenhuma.
+ * **O fio que a separa dos comandos é do slot, e não daqui** — ver o
+ * `DropdownMenuContent`. Ela mesma não desenha fio nem tinta.
  */
 function DropdownMenuHeader({
   className,
+  title,
+  description,
+  children,
   ...props
-}: React.ComponentProps<"div">) {
+}: Omit<React.ComponentProps<"div">, "title"> & {
+  title?: React.ReactNode
+  description?: React.ReactNode
+}) {
+  const { folha } = React.useContext(DropdownMenuEstadoContext)
+  const registrar = React.useContext(DropdownMenuTituloContext)
+  const id = React.useId()
+  const temTitulo = title != null
+  React.useEffect(() => {
+    if (!temTitulo) return
+    registrar?.(id)
+    return () => registrar?.(null)
+  }, [registrar, id, temTitulo])
+
+  if (folha && temTitulo) {
+    return (
+      <DialogHeader>
+        {/* Sem `id` próprio: é o Radix quem liga o título à gaveta, e um `id`
+            aqui apontava o `aria-labelledby` dela para o vazio — medido. */}
+        <DialogTitle>{title}</DialogTitle>
+        {description ? <DialogDescription>{description}</DialogDescription> : null}
+      </DialogHeader>
+    )
+  }
+
+  if (temTitulo) {
+    return (
+      <div
+        data-slot="dropdown-menu-header"
+        className={cn("flex min-w-0 flex-col px-3 py-2 text-sm", className)}
+        {...props}
+      >
+        <span id={id} className="truncate font-medium">
+          {title}
+        </span>
+        {description ? (
+          <span className="truncate text-xs text-muted-foreground nums">
+            {description}
+          </span>
+        ) : null}
+      </div>
+    )
+  }
+
   return (
     <div
       data-slot="dropdown-menu-header"
       className={cn(
-        // **A faixa não desenha fio nem tinta** — quem o desenha é o slot que a
-        // recebe, e por isso ela continua chegando pela prop `header`, como
-        // irmã do viewport e não como filha.
         "relative z-10 flex shrink-0 items-center gap-2.5 px-3 py-2.5 text-sm",
         className
       )}
       {...props}
-    />
+    >
+      {children}
+    </div>
   )
 }
 
@@ -326,13 +653,62 @@ function DropdownMenuSection({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const { folha } = React.useContext(DropdownMenuEstadoContext)
   return (
     <div
       data-slot="dropdown-menu-section"
-      className={cn("p-1", className)}
+      className={cn(!folha && "p-1", className)}
       {...props}
     />
   )
+}
+
+/**
+ * O que a linha faz ao ser escolhida, nos dois desenhos: `confirm` pede o
+ * segundo toque; um `onSelect` que devolve `Promise` carrega e fecha no fim.
+ * Devolve `true` quando o menu pode fechar já.
+ */
+function useEscolha({
+  confirm,
+  onSelect,
+  pending,
+}: {
+  confirm?: boolean | string
+  onSelect?: (event: Event) => void | Promise<unknown>
+  pending: boolean
+}) {
+  const { fechar } = React.useContext(DropdownMenuEstadoContext)
+  const [armado, setArmado] = React.useState(false)
+  const [carregando, setCarregando] = React.useState(false)
+
+  // O segundo toque vale por três segundos; depois a linha volta ao normal.
+  React.useEffect(() => {
+    if (!armado) return
+    const t = window.setTimeout(() => setArmado(false), 3000)
+    return () => window.clearTimeout(t)
+  }, [armado])
+
+  const escolher = (event: Event): boolean => {
+    if (pending || carregando) return false
+    if (confirm && !armado) {
+      setArmado(true)
+      return false
+    }
+    const resultado = onSelect?.(event)
+    if (event.defaultPrevented) return false
+    if (resultado && typeof (resultado as Promise<unknown>).then === "function") {
+      setCarregando(true)
+      void (resultado as Promise<unknown>).finally(() => {
+        setCarregando(false)
+        setArmado(false)
+        fechar()
+      })
+      return false
+    }
+    return true
+  }
+
+  return { armado, carregando: carregando || pending, escolher }
 }
 
 /**
@@ -340,27 +716,144 @@ function DropdownMenuSection({
  * `text-destructive focus:text-destructive` na mão. **As 13 chamadas em 11
  * arquivos migraram**, e com elas vieram o `focus:bg-destructive/10`, o par
  * escuro e a tinta do ícone, que a grafia manual não tinha.
+ *
+ * Rodada 213: `shortcut` desenha a tecla com o `Kbd` (só a dica — com o menu
+ * aberto ela não dispara); `description` é a segunda linha, e com ela a
+ * linha vira grade, como no `ContextMenu`; `confirm` pede o segundo toque
+ * ("toque de novo para excluir"); e um `onSelect` que devolve `Promise`
+ * mostra o `Spinner` e fecha o menu só quando ela termina. `pending` é o
+ * mesmo estado, controlado por quem chama.
  */
 function DropdownMenuItem({
   className,
   inset,
   variant = "default",
+  shortcut,
+  description,
+  confirm,
+  pending = false,
+  onSelect,
+  textValue,
+  children,
+  asChild,
+  disabled,
   ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Item> & {
+}: Omit<React.ComponentProps<typeof DropdownMenuPrimitive.Item>, "onSelect"> & {
   inset?: boolean
   variant?: "default" | "destructive"
+  shortcut?: string
+  description?: React.ReactNode
+  /** A linha pede um segundo toque. `true` ou o texto da confirmação. */
+  confirm?: boolean | string
+  /** A linha carrega, e o menu espera. */
+  pending?: boolean
+  onSelect?: (event: Event) => void | Promise<unknown>
 }) {
+  const estado = React.useContext(DropdownMenuEstadoContext)
+  const { armado, carregando, escolher } = useEscolha({ confirm, onSelect, pending })
+  const texto = textValue ?? textoDe(children)
+  if (estado.busca && commandFilter(texto, estado.busca) <= 0) return null
+
+  const textoConfirmacao =
+    typeof confirm === "string" ? confirm : "toque de novo para confirmar"
+  const miolo = (
+    <>
+      {armado ? trocarTexto(children, textoConfirmacao) : children}
+      {carregando ? (
+        <Spinner className="ms-auto" />
+      ) : shortcut && !estado.folha ? (
+        <span data-slot="dropdown-menu-item-shortcut" className="ms-auto">
+          <Kbd
+            keys={shortcut}
+            className="group-focus/menu-item:bg-background/70"
+          />
+        </span>
+      ) : null}
+      {description ? (
+        <span
+          data-slot="dropdown-menu-item-description"
+          className="col-start-1 col-end-[-1] text-xs text-muted-foreground group-has-[>svg]/menu-item:col-start-2 group-focus/menu-item:text-accent-foreground/80"
+        >
+          {description}
+        </span>
+      ) : null}
+    </>
+  )
+  const grade =
+    description &&
+    "grid grid-cols-[minmax(0,1fr)_auto] gap-y-0 has-[>svg]:grid-cols-[auto_minmax(0,1fr)_auto]"
+
+  if (estado.folha) {
+    const Comp = asChild ? Slot.Root : "button"
+    // O `onClick` da tela roda primeiro, e o da linha depois — com ele por
+    // último no espalhamento, a linha não fecharia a gaveta.
+    const { onClick: aoClicar, ...resto } = props as React.ComponentProps<"button">
+    return (
+      <Comp
+        role="menuitem"
+        data-slot="dropdown-menu-item"
+        data-variant={variant}
+        data-armed={armado || undefined}
+        aria-busy={carregando || undefined}
+        {...(asChild ? {} : { type: "button" as const, disabled })}
+        aria-disabled={disabled || undefined}
+        className={cn(
+          "group/menu-item",
+          drawerActionClassName,
+          // As telas passam o ícone de 16 (o do menu), e a folha o desenhava a
+          // 20: o desenho de 16 esticado. Fica no corpo do conjunto que veio.
+          "[&_svg]:size-4",
+          grade,
+          description && "py-2",
+          "data-armed:bg-destructive/10",
+          className
+        )}
+        {...resto}
+        onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+          // Com `confirm`, o primeiro toque só arma: a ação da tela espera.
+          if (!(confirm && !armado)) aoClicar?.(e)
+          if (e.defaultPrevented) return
+          if (escolher(e.nativeEvent)) estado.fechar()
+        }}
+      >
+        {asChild ? children : miolo}
+      </Comp>
+    )
+  }
+
   return (
     <DropdownMenuPrimitive.Item
       data-slot="dropdown-menu-item"
       data-inset={inset}
       data-variant={variant}
-      className={cn(menuItemClassName, className)}
+      data-armed={armado || undefined}
+      aria-busy={carregando || undefined}
+      textValue={texto}
+      asChild={asChild}
+      disabled={disabled}
+      onSelect={(e) => {
+        if (!escolher(e)) e.preventDefault()
+      }}
       {...props}
-    />
+      // Com `confirm`, o primeiro toque só arma: a ação da tela espera — muitas
+      // telas agem pelo `onClick`, e não pelo `onSelect`.
+      onClick={(e) => {
+        if (confirm && !armado) return
+        props.onClick?.(e)
+      }}
+      className={cn(
+        menuItemClassName,
+        grade,
+        "data-armed:bg-destructive/10 data-armed:text-destructive",
+        className
+      )}
+    >
+      {asChild ? children : miolo}
+    </DropdownMenuPrimitive.Item>
   )
 }
 
+/** Na folha o gatilhoRef de submenu é o rótulo do grupo; o submenu, o grupo. */
 function DropdownMenuSubTrigger({
   className,
   inset,
@@ -369,6 +862,14 @@ function DropdownMenuSubTrigger({
 }: React.ComponentProps<typeof DropdownMenuPrimitive.SubTrigger> & {
   inset?: boolean
 }) {
+  const { folha } = React.useContext(DropdownMenuEstadoContext)
+  if (folha) {
+    return (
+      <p className="px-3 pt-3 pb-1 text-xs font-medium text-muted-foreground">
+        {children}
+      </p>
+    )
+  }
   return (
     <DropdownMenuPrimitive.SubTrigger
       data-slot="dropdown-menu-sub-trigger"
@@ -389,40 +890,83 @@ function DropdownMenuSubContent({
   collisionPadding = ANCHORED_COLLISION_PADDING,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.SubContent>) {
+  const { folha } = React.useContext(DropdownMenuEstadoContext)
+  const dissolver = useScrollFade({ arrows: true })
+  if (folha) return <div className="flex flex-col">{children}</div>
   return (
-    <DropdownMenuPrimitive.SubContent
-      data-slot="dropdown-menu-sub-content"
-      collisionPadding={collisionPadding}
-      className={cn(menuSubSurfaceClassName, DROPDOWN_POPPER, className)}
-      {...props}
-    >
-      <div
-        ref={useScrollFade({ arrows: true })}
-        data-slot="dropdown-menu-sub-viewport"
-        className={cn(menuViewportClassName, scrollFadeViewportClassName)}
+    // No portal: dentro do menu, o vidro (`backdrop-filter`) vira o bloco de
+    // contenção do `fixed` do popper e o `overflow-hidden` o recorta — o
+    // submenu abria e não aparecia (medido, rodada 213).
+    <DropdownMenuPrimitive.Portal>
+      <DropdownMenuPrimitive.SubContent
+        data-slot="dropdown-menu-sub-content"
+        collisionPadding={collisionPadding}
+        className={cn(menuSubSurfaceClassName, DROPDOWN_POPPER, className)}
+        {...props}
       >
-        {children}
-      </div>
-      <ScrollFadeArrows />
-    </DropdownMenuPrimitive.SubContent>
+        <div
+          ref={dissolver}
+          data-slot="dropdown-menu-sub-viewport"
+          className={cn(menuViewportClassName, scrollFadeViewportClassName)}
+        >
+          {children}
+        </div>
+        <ScrollFadeArrows />
+      </DropdownMenuPrimitive.SubContent>
+    </DropdownMenuPrimitive.Portal>
   )
 }
 
+/**
+ * A caixa **não fecha o menu** ao marcar (rodada 213): quem marca uma opção
+ * costuma marcar outra. A página dizia isso, e o Radix fechava — medido.
+ * `closeOnSelect` devolve o comportamento dele.
+ */
 function DropdownMenuCheckboxItem({
   className,
   children,
   checked,
   inset,
+  closeOnSelect = false,
+  onSelect,
+  onCheckedChange,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.CheckboxItem> & {
   inset?: boolean
+  closeOnSelect?: boolean
 }) {
+  const estado = React.useContext(DropdownMenuEstadoContext)
+  if (estado.folha) {
+    const marcado = checked === true
+    return (
+      <button
+        type="button"
+        role="menuitemcheckbox"
+        aria-checked={marcado}
+        data-slot="dropdown-menu-checkbox-item"
+        disabled={props.disabled}
+        className={cn(drawerActionClassName, className)}
+        onClick={() => {
+          onCheckedChange?.(!marcado)
+          if (closeOnSelect) estado.fechar()
+        }}
+      >
+        <span className="min-w-0 flex-1">{children}</span>
+        {marcado ? <CheckMiniIcon aria-hidden className="size-5 !text-foreground" /> : null}
+      </button>
+    )
+  }
   return (
     <DropdownMenuPrimitive.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
       data-inset={inset}
       className={cn(menuIndicatorItemClassName, className)}
       checked={checked}
+      onCheckedChange={onCheckedChange}
+      onSelect={(e) => {
+        onSelect?.(e)
+        if (!closeOnSelect) e.preventDefault()
+      }}
       {...props}
     >
       <span className={menuIndicatorSlotClassName}>
@@ -443,6 +987,28 @@ function DropdownMenuRadioItem({
 }: React.ComponentProps<typeof DropdownMenuPrimitive.RadioItem> & {
   inset?: boolean
 }) {
+  const estado = React.useContext(DropdownMenuEstadoContext)
+  const radio = React.useContext(FolhaRadioContext)
+  if (estado.folha) {
+    const marcado = radio?.value === props.value
+    return (
+      <button
+        type="button"
+        role="menuitemradio"
+        aria-checked={marcado}
+        data-slot="dropdown-menu-radio-item"
+        disabled={props.disabled}
+        className={cn(drawerActionClassName, className)}
+        onClick={() => {
+          radio?.onValueChange?.(props.value)
+          estado.fechar()
+        }}
+      >
+        <span className="min-w-0 flex-1">{children}</span>
+        {marcado ? <span aria-hidden className="size-2 rounded-full bg-current" /> : null}
+      </button>
+    )
+  }
   return (
     <DropdownMenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
@@ -471,6 +1037,17 @@ function DropdownMenuLabel({
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Label> & {
   inset?: boolean
 }) {
+  const { folha } = React.useContext(DropdownMenuEstadoContext)
+  if (folha) {
+    return (
+      <div
+        data-slot="dropdown-menu-label"
+        className={cn("px-3 pt-2 pb-1 text-xs font-medium text-muted-foreground", className)}
+      >
+        {props.children}
+      </div>
+    )
+  }
   return (
     <DropdownMenuPrimitive.Label
       data-slot="dropdown-menu-label"
@@ -485,6 +1062,8 @@ function DropdownMenuSeparator({
   className,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Separator>) {
+  const { folha } = React.useContext(DropdownMenuEstadoContext)
+  if (folha) return <Separator tone="soft" className="my-2" />
   return (
     <DropdownMenuPrimitive.Separator
       data-slot="dropdown-menu-separator"
@@ -494,10 +1073,13 @@ function DropdownMenuSeparator({
   )
 }
 
+/** Na folha a tecla não aparece: o dedo não tem teclado. */
 function DropdownMenuShortcut({
   className,
   ...props
 }: React.ComponentProps<"span">) {
+  const { folha } = React.useContext(DropdownMenuEstadoContext)
+  if (folha) return null
   return (
     <span
       data-slot="dropdown-menu-shortcut"

@@ -363,21 +363,26 @@ function ContextMenuSubContent({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.SubContent>) {
   return (
-    <ContextMenuPrimitive.SubContent
-      data-slot="context-menu-sub-content"
-      collisionPadding={collisionPadding}
-      className={cn(menuSubSurfaceClassName, CONTEXT_POPPER, className)}
-      {...props}
-    >
-      <div
-        ref={useScrollFade({ arrows: true })}
-        data-slot="context-menu-sub-viewport"
-        className={cn(menuViewportClassName, scrollFadeViewportClassName)}
+    // No portal: dentro do menu, o vidro (`backdrop-filter`) vira o bloco de
+    // contenção do `fixed` do popper e o `overflow-hidden` o recorta — o
+    // submenu abria e não aparecia (medido, rodada 213).
+    <ContextMenuPrimitive.Portal>
+      <ContextMenuPrimitive.SubContent
+        data-slot="context-menu-sub-content"
+        collisionPadding={collisionPadding}
+        className={cn(menuSubSurfaceClassName, CONTEXT_POPPER, className)}
+        {...props}
       >
-        {children}
-      </div>
-      <ScrollFadeArrows />
-    </ContextMenuPrimitive.SubContent>
+        <div
+          ref={useScrollFade({ arrows: true })}
+          data-slot="context-menu-sub-viewport"
+          className={cn(menuViewportClassName, scrollFadeViewportClassName)}
+        >
+          {children}
+        </div>
+        <ScrollFadeArrows />
+      </ContextMenuPrimitive.SubContent>
+    </ContextMenuPrimitive.Portal>
   )
 }
 

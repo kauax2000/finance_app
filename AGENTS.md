@@ -2366,6 +2366,25 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   **Arco-íris sob série continua proibido**: a marca encosta pelo
   `Card variant="brand"`, na borda. O cabeçalho (delta, período, KPIs) é
   composição de `Card`, não peça do `Chart`.
+- **`DropdownMenu` vira folha de ações no telefone e ganhou o alvo, a tecla,
+  a descrição, a confirmação, a busca, a linha que carrega, a caixa que não
+  fecha e a tecla que abre** (rodada 213). **`mobile="sheet"`**: no telefone o
+  mesmo menu é a folha do `Drawer`; cada peça lê o contexto e se desenha como
+  menu ou como linha (caixa e rádio com a marca, submenu como grupo com
+  rótulo, a tecla some). **O `onClick` da tela roda antes do da linha** — com
+  ele por último no espalhamento, a linha não fecharia a gaveta. Os menus ⋯
+  das telas usam a folha. `DropdownMenuHeader title description` é o alvo
+  (nomeia o menu; na folha, sem `id` próprio, porque o `id` apontava o nome da
+  gaveta para o vazio — medido). `DropdownMenuItem`: `shortcut` (o `Kbd`),
+  `description` (grade, como no `ContextMenu`), `confirm` (o primeiro toque
+  só arma, e a ação da tela — `onSelect` **ou** `onClick` — espera) e o
+  `onSelect` que devolve `Promise` (a linha carrega, o menu fecha no fim).
+  `DropdownMenuContent search` filtra pelo nome; no campo a tecla é texto,
+  senão o Radix buscaria por digitação e levaria o foco. **A caixa não fecha
+  o menu** (`closeOnSelect` volta ao Radix): a página afirmava isso e o Radix
+  fechava. `shortcut` na raiz abre pela tecla — a linha com o foco, ou a tela
+  sem foco. Ícone de linha não leva `h-4 w-4` nem `mr-2`: a linha dimensiona
+  e espaça. `dropdown-menu-versions.test.ts` tranca.
 - **`Drawer` ganhou a folha de ações, os degraus, a gaveta sobre gaveta, o
   fundo que encolhe, a trava ao salvar, o modo não-modal, a altura que
   acompanha e o cabeçalho fixo** (rodada 212). `DrawerActions` +

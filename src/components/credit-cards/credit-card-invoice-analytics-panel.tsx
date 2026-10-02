@@ -205,7 +205,8 @@ function InvoiceFaturaHeaderStatus({
         if (!showPaymentMenu) return paidBadge
         return (
             <>
-            <DropdownMenu>
+            {/* No telefone as ações da fatura são a folha de ações. */}
+            <DropdownMenu mobile="sheet">
                 <DropdownMenuTrigger asChild>
                     <Button
                         type="button"
@@ -264,7 +265,7 @@ function InvoiceFaturaHeaderStatus({
         ? "Status da fatura: não paga, após vencimento estimado."
         : "Status da fatura: não paga."
     return (
-        <DropdownMenu>
+        <DropdownMenu mobile="sheet">
             <DropdownMenuTrigger asChild>
                 <Button
                     type="button"
