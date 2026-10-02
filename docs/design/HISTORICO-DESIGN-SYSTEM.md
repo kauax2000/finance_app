@@ -17387,3 +17387,62 @@ desenho novo da barra, e `<Menubar>` sem `variant` nasce `floating`.
 barra segue vestida só pela `outline` — a asserção do `glass.test.ts` não
 mudou. A barra de contas a pagar, que não declarava `variant`, passou a ser a
 pílula junto.
+
+### Rodada 219 — o NavigationMenu é redesenhado com a referência de movimento: a pílula, o realce que viaja, o painel na mola, o cabeçalho e o rodapé, o aprofundamento com trilha, o selo, o ponto da rota atual, a prévia ao lado, a folha, as setas, a diagonal segura e o painel que abre na rota atual
+
+**A referência.** A mesma da rodada 218 (o seletor em cascata do dono): dela
+vieram a mola do realce, a entrada do painel, a cascata dos links, o
+cabeçalho com título e descrição, o rodapé com a legenda `↑↓ ← → ↵`, a
+pílula de selo ao lado do nome, o ponto no ramo que contém a escolha e — o
+coração dela — o **aprofundamento no lugar com a trilha**. O que não veio,
+de novo, é o realce correndo entre os links do painel (rodada 137).
+
+**O que estava falso.** O componente dizia que as três superfícies eram "as
+três strings do `Menubar`" — o `Menubar` mudou na 218 (a pílula é o padrão,
+a `outline` dele é vidro). A tabela de slots dizia que o
+`NavigationMenuItem` "ancora o painel quando `viewport={false}`" — o item
+**não** é `relative`, por carga estrutural do marcador; e que `data-active`
+marca a rota atual — quem marca é `aria-current`.
+
+**Três defeitos medidos no caminho.** (1) O "abre na rota atual" abria na
+raiz, duas vezes por razões diferentes: o id do grupo era `useId`, e o grupo
+no índice e o grupo no painel são instâncias diferentes, com ids diferentes —
+o caminho registrado não batia; e com viewport o Radix desenha o conteúdo
+**dentro do viewport**, fora do item na árvore do React, e o painel não sabia
+de que item era (`ItemContext` vazio). O id passou a sair do rótulo (ou de
+um `value`), e o conteúdo reenvia o item. Depois: abre em "‹ Cartões ›
+Nubank" com "Fatura aberta" marcada. (2) Ao voltar à raiz pelo teclado o foco
+caía no `<body>` — o nó focado desmontava, e na raiz não há botão de voltar;
+agora vai ao primeiro item do nível. (3) O realce no link do topo não
+aparecia com `asChild` (o `Slot` aceita um filho): ele entra dentro do filho.
+
+**Medido no catálogo.** O realce descansa em "Preços" (a página atual) e
+"Análise" tem o ponto; com o mouse sobre Finanças, o painel abre com o
+cabeçalho, os cartões com o selo "Novo" e o rodapé. Teclado: `←` volta a
+Cartões, `↓` chega a Nubank, `→` aprofunda, cada `Esc` sobe um nível com o
+painel aberto. Diagonal segura: passando por cima de "Análise" a caminho do
+painel, Finanças continua aberto; parando ali, troca em 150ms. A prévia
+acompanha o cursor e o foco (com teclado real — `focus()` por script troca o
+ativo, mas sem a janela focada o evento não chega). Na folha do telefone as
+seções aparecem, o grupo aprofunda com a trilha e o link fecha a gaveta. Os
+testes do mouse foram com o ponteiro real (os sintéticos dão tempos
+erráticos com a aba em segundo plano), menos a diagonal, que precisa de um
+trajeto que o mouse do navegador não faz — ali, eventos com coordenadas reais.
+
+**Fora.** Nenhuma tela do app usa o componente: o app não tem superfície
+pública, e a navegação dele é a `Sidebar` e a ilha do telefone. O dono
+escolheu deixar só no catálogo. `navigation-menu-versions.test.ts` tranca.
+
+**O painel que saía pela esquerda** (relatado pelo dono, com a captura, na
+mesma rodada). O centro do painel caía exatamente na borda esquerda da
+fileira, e metade dele ficava fora da área da demonstração, recortada. A
+causa é antiga: `medir()` escrevia a âncora à mão na raiz
+(`raiz.style.setProperty`), e quando o elemento era recriado — o
+recarregamento a quente das edições faz isso — o estado "já ancorado"
+sobrevivia e a variável não. `left: var(--x)` indefinido é inválido, o
+painel voltava à posição estática (o começo da raiz, que é `flex`) e o
+`-translate-x-1/2` o empurrava 144px para fora — reproduzido tirando a
+variável com o painel aberto. Agora a medida mora no estado do React e chega
+pela prop `style`, e o `left` tem `50%` de reserva: sem a medida, o painel
+centra na fileira. Medido: 403–691 dentro do recorte em 398, e 426–714 sem a
+variável.

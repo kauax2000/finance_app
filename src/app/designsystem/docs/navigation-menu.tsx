@@ -1,11 +1,12 @@
 "use client"
 
+import * as React from "react"
 import Link from "next/link"
 import {
+  ArrowPathIcon,
   BanknotesIcon,
   ChartPieIcon,
   CreditCardIcon,
-  ArrowPathIcon,
   TagIcon,
   UsersIcon,
 } from "@heroicons/react/20/solid"
@@ -13,49 +14,26 @@ import {
 import {
   NavigationMenu,
   NavigationMenuContent,
+  NavigationMenuGroup,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuLinkDescription,
   NavigationMenuLinkTitle,
   NavigationMenuList,
   NavigationMenuPanel,
+  NavigationMenuPanelFooter,
+  NavigationMenuPanelHeader,
+  NavigationMenuPreview,
   NavigationMenuSectionLabel,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
-
-const SUPERFICIES = [
-  {
-    valor: "plain",
-    dica: "Sem moldura — o padrão.",
-  },
-  {
-    valor: "outline",
-    dica: "A fileira com moldura própria.",
-  },
-  {
-    valor: "solid",
-    dica: "Bandeja, para dividir linha com controles.",
-  },
-] as const
-
-const DEGRAUS = [
-  ["sm", "28 — dentro de uma barra apertada."],
-  ["md", "32 — o padrão."],
-  ["lg", "36 — cabeçalho de landing."],
-] as const
-
-const MARCADORES = [
-  {
-    valor: "underline",
-    dica: "Um traço de acento sob o gatilho aberto.",
-  },
-  { valor: "none", dica: "O padrão — o realce do gatilho basta." },
-] as const
+import { PhoneFrame } from "../ds-frame"
 
 const CONTAS = [
   { nome: "Carteiras", texto: "Saldo por conta, num lugar só.", Icone: BanknotesIcon },
-  { nome: "Cartões", texto: "Limite, fechamento e a fatura aberta.", Icone: CreditCardIcon },
+  { nome: "Cartões", texto: "Limite, fechamento e a fatura aberta.", Icone: CreditCardIcon, selo: "Novo" },
   { nome: "Assinaturas", texto: "O que renova sozinho neste mês.", Icone: ArrowPathIcon },
 ] as const
 
@@ -65,87 +43,64 @@ const ANALISE = [
   { nome: "Membros", texto: "Quem divide este workspace.", Icone: UsersIcon },
 ] as const
 
+const VARIANTES = ["floating", "plain", "outline", "solid"] as const
+const TAMANHOS = ["sm", "md", "lg"] as const
+const MARCADORES = ["highlight", "underline", "none"] as const
+
+function Cartoes({ lista }: { lista: typeof CONTAS | typeof ANALISE }) {
+  return (
+    <>
+      {lista.map((item) => (
+        <NavigationMenuLink key={item.nome} variant="card" asChild>
+          <Link href="#">
+            <item.Icone />
+            <NavigationMenuLinkTitle badge={"selo" in item ? item.selo : undefined}>
+              {item.nome}
+            </NavigationMenuLinkTitle>
+            <NavigationMenuLinkDescription>{item.texto}</NavigationMenuLinkDescription>
+          </Link>
+        </NavigationMenuLink>
+      ))}
+    </>
+  )
+}
+
+function Linhas({ lista }: { lista: typeof CONTAS | typeof ANALISE }) {
+  return (
+    <>
+      {lista.map((item) => (
+        <NavigationMenuLink key={item.nome} asChild>
+          <Link href="#">{item.nome}</Link>
+        </NavigationMenuLink>
+      ))}
+    </>
+  )
+}
+
 export default function NavigationMenuDoc() {
   return (
     <>
       <Usage>
-        A fileira com painéis suspensos de um cabeçalho <strong>público</strong>: landing, preços, institucional. Dentro do app a navegação é a <code>Sidebar</code> e a ilha do telefone. Ações de um objeto são <code>DropdownMenu</code>; o caminho até a página é <code>Breadcrumb</code>; painéis irmãos da mesma tela são <code>Tabs</code>.
+        A fileira com painéis suspensos de um cabeçalho <strong>público</strong>: landing, preços, institucional. Dentro do app a navegação é a <code>Sidebar</code> e a ilha do telefone, e nenhuma tela o usa. Ações de um objeto são <code>DropdownMenu</code>; o caminho até a página é <code>Breadcrumb</code>; painéis irmãos da mesma tela são <code>Tabs</code>.
       </Usage>
 
       <DocSection
         title="Padrão"
-        description="O gatilho abre um painel de links. Passe o cursor ou entre com Tab — o teclado é caminho normal aqui, e o anel de foco funciona dentro do painel."
+        description="A pílula flutuante, com o realce que viaja entre os gatilhos na mola e descansa no link da página atual (Preços). O painel entra na mola, os cartões sobem em cascata, e o cabeçalho e o rodapé — com o Ver tudo e a legenda das teclas — moram ao lado do painel. O ponto em Análise diz que a página atual está lá dentro."
         code={`<NavigationMenu>
   <NavigationMenuList>
     <NavigationMenuItem>
       <NavigationMenuTrigger>Finanças</NavigationMenuTrigger>
       <NavigationMenuContent>
-        <NavigationMenuPanel>
-          <NavigationMenuLink asChild>
-            <Link href="/wallets">Carteiras</Link>
-          </NavigationMenuLink>
-        </NavigationMenuPanel>
-      </NavigationMenuContent>
-    </NavigationMenuItem>
-  </NavigationMenuList>
-</NavigationMenu>`}
-        previewClassName="items-start p-6 pb-32"
-      >
-        <NavigationMenu>
-          <NavigationMenuList>
-            <NavigationMenuItem>
-              <NavigationMenuTrigger>Finanças</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <NavigationMenuPanel>
-                  {CONTAS.map((item) => (
-                    <NavigationMenuLink key={item.nome} asChild>
-                      <Link href="#">{item.nome}</Link>
-                    </NavigationMenuLink>
-                  ))}
-                </NavigationMenuPanel>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuTrigger>Análise</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <NavigationMenuPanel>
-                  {ANALISE.map((item) => (
-                    <NavigationMenuLink key={item.nome} asChild>
-                      <Link href="#">{item.nome}</Link>
-                    </NavigationMenuLink>
-                  ))}
-                </NavigationMenuPanel>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Link href="#">Preços</Link>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
-      </DocSection>
-
-      <DocNote title="Use NavigationMenuPanel">
-        O painel traz grade, recuo, teto e rolagem, e faz cada link trazer o próprio <code>&lt;li&gt;</code>. Não escreva o <code>&lt;ul&gt;</code> nem re-estilize os links: a receita à mão diverge da do componente.
-      </DocNote>
-
-      <DocSection
-        title="A troca é um morph"
-        description="Ao trocar de gatilho, o painel muda de forma em 200ms com a curva da casa, e o conteúdo novo entra com um drift de 16px. A saída é só fade, rápida: um menu que fecha ao tirar o cursor não pode demorar."
-        code={`<NavigationMenu>
-  <NavigationMenuList>
-    <NavigationMenuItem>
-      <NavigationMenuTrigger>Finanças</NavigationMenuTrigger>
-      <NavigationMenuContent>
+        <NavigationMenuPanelHeader title="Finanças" description="O dinheiro que se mexe." />
         <NavigationMenuPanel>…</NavigationMenuPanel>
+        <NavigationMenuPanelFooter legend>
+          <Link href="/finance">Ver tudo</Link>
+        </NavigationMenuPanelFooter>
       </NavigationMenuContent>
     </NavigationMenuItem>
     <NavigationMenuItem>
-      <NavigationMenuTrigger>Tudo</NavigationMenuTrigger>
-      <NavigationMenuContent>
-        <NavigationMenuPanel columns={2}>…</NavigationMenuPanel>
-      </NavigationMenuContent>
+      <NavigationMenuLink active asChild><Link href="/precos">Preços</Link></NavigationMenuLink>
     </NavigationMenuItem>
   </NavigationMenuList>
 </NavigationMenu>`}
@@ -156,44 +111,114 @@ export default function NavigationMenuDoc() {
             <NavigationMenuItem>
               <NavigationMenuTrigger>Finanças</NavigationMenuTrigger>
               <NavigationMenuContent>
+                <NavigationMenuPanelHeader
+                  title="Finanças"
+                  description="O dinheiro que se mexe."
+                />
                 <NavigationMenuPanel>
-                  {CONTAS.map((item) => (
-                    <NavigationMenuLink key={item.nome} asChild>
-                      <Link href="#">{item.nome}</Link>
-                    </NavigationMenuLink>
-                  ))}
+                  <Cartoes lista={CONTAS} />
+                </NavigationMenuPanel>
+                <NavigationMenuPanelFooter legend>
+                  <Link href="#" className="font-medium text-foreground">
+                    Ver tudo
+                  </Link>
+                </NavigationMenuPanelFooter>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuTrigger>Análise</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <NavigationMenuPanel>
+                  <NavigationMenuLink asChild>
+                    <Link href="#">Categorias</Link>
+                  </NavigationMenuLink>
+                  <NavigationMenuLink active asChild>
+                    <Link href="#">Relatórios</Link>
+                  </NavigationMenuLink>
+                  <NavigationMenuLink asChild>
+                    <Link href="#">Membros</Link>
+                  </NavigationMenuLink>
                 </NavigationMenuPanel>
               </NavigationMenuContent>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <NavigationMenuTrigger>Tudo</NavigationMenuTrigger>
+              <NavigationMenuLink active asChild>
+                <Link href="#">Preços</Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+          </NavigationMenuList>
+        </NavigationMenu>
+      </DocSection>
+
+      <DocSection
+        title="Aprofundar no lugar"
+        description={
+          <>
+            <code>NavigationMenuGroup</code> abre o nível seguinte dentro do mesmo painel, com a trilha em cima para voltar — sem empilhar painéis. <strong>↑↓</strong> andam, <strong>→</strong> aprofunda, <strong>←</strong> volta, e o <strong>Esc</strong> sobe um nível antes de fechar. Ao abrir, o painel já mostra o nível da página atual: aqui, Cartões › Nubank.
+          </>
+        }
+        code={`<NavigationMenuPanel>
+  <NavigationMenuGroup label="Cartões" icon={<CreditCardIcon />} description="Limite e faturas.">
+    <NavigationMenuGroup label="Nubank">
+      <NavigationMenuLink asChild><Link href="/cards/nu/invoice">Fatura aberta</Link></NavigationMenuLink>
+    </NavigationMenuGroup>
+  </NavigationMenuGroup>
+</NavigationMenuPanel>`}
+        previewClassName="items-start p-6 pb-80"
+      >
+        <NavigationMenu>
+          <NavigationMenuList>
+            <NavigationMenuItem>
+              <NavigationMenuTrigger>Contas</NavigationMenuTrigger>
               <NavigationMenuContent>
-                <NavigationMenuPanel columns={2}>
-                  <NavigationMenuSectionLabel>Contas</NavigationMenuSectionLabel>
-                  {CONTAS.map(({ nome, texto, Icone }) => (
-                    <NavigationMenuLink key={nome} variant="card" asChild>
-                      <Link href="#">
-                        <Icone />
-                        <NavigationMenuLinkTitle>{nome}</NavigationMenuLinkTitle>
-                        <NavigationMenuLinkDescription>
-                          {texto}
-                        </NavigationMenuLinkDescription>
-                      </Link>
+                <NavigationMenuPanelHeader
+                  title="Contas"
+                  description="Entre num grupo para ver o que há dentro."
+                />
+                <NavigationMenuPanel>
+                  <NavigationMenuGroup
+                    label="Carteiras"
+                    icon={<BanknotesIcon />}
+                    description="Saldo por conta, num lugar só."
+                  >
+                    <NavigationMenuLink asChild>
+                      <Link href="#">Conta corrente</Link>
                     </NavigationMenuLink>
-                  ))}
-                  <NavigationMenuSectionLabel>Análise</NavigationMenuSectionLabel>
-                  {ANALISE.map(({ nome, texto, Icone }) => (
-                    <NavigationMenuLink key={nome} variant="card" asChild>
-                      <Link href="#">
-                        <Icone />
-                        <NavigationMenuLinkTitle>{nome}</NavigationMenuLinkTitle>
-                        <NavigationMenuLinkDescription>
-                          {texto}
-                        </NavigationMenuLinkDescription>
-                      </Link>
+                    <NavigationMenuLink asChild>
+                      <Link href="#">Poupança</Link>
                     </NavigationMenuLink>
-                  ))}
+                  </NavigationMenuGroup>
+                  <NavigationMenuGroup
+                    label="Cartões"
+                    icon={<CreditCardIcon />}
+                    description="Limite, fechamento e faturas."
+                    badge="2"
+                  >
+                    <NavigationMenuGroup label="Nubank">
+                      <NavigationMenuLink active asChild>
+                        <Link href="#">Fatura aberta</Link>
+                      </NavigationMenuLink>
+                      <NavigationMenuLink asChild>
+                        <Link href="#">Faturas anteriores</Link>
+                      </NavigationMenuLink>
+                    </NavigationMenuGroup>
+                    <NavigationMenuGroup label="Itaú">
+                      <NavigationMenuLink asChild>
+                        <Link href="#">Fatura aberta</Link>
+                      </NavigationMenuLink>
+                    </NavigationMenuGroup>
+                  </NavigationMenuGroup>
+                  <NavigationMenuLink variant="card" asChild>
+                    <Link href="#">
+                      <ArrowPathIcon className="size-5" />
+                      <NavigationMenuLinkTitle>Assinaturas</NavigationMenuLinkTitle>
+                      <NavigationMenuLinkDescription>
+                        O que renova sozinho neste mês.
+                      </NavigationMenuLinkDescription>
+                    </Link>
+                  </NavigationMenuLink>
                 </NavigationMenuPanel>
+                <NavigationMenuPanelFooter legend />
               </NavigationMenuContent>
             </NavigationMenuItem>
           </NavigationMenuList>
@@ -201,140 +226,69 @@ export default function NavigationMenuDoc() {
       </DocSection>
 
       <DocSection
-        title="As três superfícies"
-        description="plain, outline e solid — as mesmas palavras e strings do Menubar, porque uma fileira de gatilhos é o mesmo objeto."
-        code={`<NavigationMenu variant="solid">…</NavigationMenu>`}
-        previewClassName="flex-col flex-nowrap items-start gap-6 p-6"
+        title="Prévia ao lado"
+        description="NavigationMenuPreview é uma coluna à direita do painel que mostra o preview do link sob o cursor ou com o foco; os filhos dela são o que aparece antes."
+        code={`<NavigationMenuContent>
+  <div className="flex">
+    <NavigationMenuPanel>
+      <NavigationMenuLink preview={<ResumoDeCartoes />} asChild>…</NavigationMenuLink>
+    </NavigationMenuPanel>
+    <NavigationMenuPreview>Passe por um item.</NavigationMenuPreview>
+  </div>
+</NavigationMenuContent>`}
+        previewClassName="items-start p-6 pb-72"
       >
-        {SUPERFICIES.map((s) => (
-          <div key={s.valor} className="flex flex-col gap-2">
-            <NavigationMenu variant={s.valor} indicator="none" viewport={false}>
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>Produto</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <NavigationMenuPanel>
-                      {CONTAS.map((item) => (
-                        <NavigationMenuLink key={item.nome} asChild>
-                          <Link href="#">{item.nome}</Link>
-                        </NavigationMenuLink>
-                      ))}
-                    </NavigationMenuPanel>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <NavigationMenuLink active asChild>
-                    <Link href="#">Preços</Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <NavigationMenuLink asChild>
-                    <Link href="#">Docs</Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
-            <p className="text-xs text-muted-foreground">
-              <code className="font-mono">{s.valor}</code> — {s.dica}
-            </p>
-          </div>
-        ))}
-      </DocSection>
-
-      <DocNote title="O link do topo mede igual ao gatilho">
-        Um link solto na fileira compõe a régua do gatilho, então os dois não divergem quando um degrau muda. O realce da rota atual é <code>aria-[current=page]:</code>, e não <code>data-active:</code>, que tem especificidade zero e apagaria ao passar o cursor.
-      </DocNote>
-
-      <DocSection
-        title="A escada mede o gatilho"
-        description="28 · 32 · 36, os mesmos degraus do Button, do Input e do Tabs. Quem mede é o gatilho: a fileira cresce em volta, e em ponteiro grosso o degrau vai a 40."
-        code={`<NavigationMenu size="lg">…</NavigationMenu>`}
-        previewClassName="flex-col flex-nowrap items-start gap-6 p-6"
-      >
-        {DEGRAUS.map(([valor, dica]) => (
-          <div key={valor} className="flex flex-col gap-2">
-            <NavigationMenu
-              variant="solid"
-              size={valor}
-              indicator="none"
-              viewport={false}
-            >
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>Finanças</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <NavigationMenuPanel>
-                      {CONTAS.map((item) => (
-                        <NavigationMenuLink key={item.nome} asChild>
-                          <Link href="#">{item.nome}</Link>
-                        </NavigationMenuLink>
-                      ))}
-                    </NavigationMenuPanel>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <NavigationMenuLink active asChild>
-                    <Link href="#">Faturas</Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
-            <p className="text-xs text-muted-foreground">
-              <code className="font-mono">{valor}</code> — {dica}
-            </p>
-          </div>
-        ))}
+        <NavigationMenu>
+          <NavigationMenuList>
+            <NavigationMenuItem>
+              <NavigationMenuTrigger>Produto</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <div className="flex">
+                  <NavigationMenuPanel>
+                    {[...CONTAS, ...ANALISE].map((item) => (
+                      <NavigationMenuLink
+                        key={item.nome}
+                        asChild
+                        preview={
+                          <>
+                            <item.Icone className="size-5 text-muted-foreground" />
+                            <span className="font-medium">{item.nome}</span>
+                            <span className="text-xs text-muted-foreground">{item.texto}</span>
+                          </>
+                        }
+                      >
+                        <Link href="#">{item.nome}</Link>
+                      </NavigationMenuLink>
+                    ))}
+                  </NavigationMenuPanel>
+                  <NavigationMenuPreview>
+                    <span className="text-xs text-muted-foreground">
+                      Passe por um item para ver o que ele é.
+                    </span>
+                  </NavigationMenuPreview>
+                </div>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
+          </NavigationMenuList>
+        </NavigationMenu>
       </DocSection>
 
       <DocSection
-        title="O marcador"
-        description="underline desenha um traço de acento que viaja até o gatilho aberto. O padrão é none: o realce do próprio gatilho já marca qual está aberto."
-        code={`<NavigationMenu indicator="underline">…</NavigationMenu>`}
-        previewClassName="flex-col flex-nowrap items-start gap-10 p-6 pb-32"
+        title="Superfícies, degraus e marcador"
+        description="floating é o padrão; plain mora num cabeçalho que já tem moldura; outline se sustenta chapada; solid é bandeja. size mede o gatilho (28 · 32 · 36, 40 no ponteiro grosso). highlight é o realce que viaja; underline, o traço do Radix; none, só o fundo do gatilho."
+        code={`<NavigationMenu variant="solid" size="lg" indicator="underline">…</NavigationMenu>`}
+        previewClassName="flex-col items-start gap-4 p-6 pb-56"
       >
-        {MARCADORES.map((m) => (
-          <div key={m.valor} className="flex flex-col gap-2">
-            <NavigationMenu indicator={m.valor}>
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>Finanças</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <NavigationMenuPanel>
-                      {CONTAS.map((item) => (
-                        <NavigationMenuLink key={item.nome} asChild>
-                          <Link href="#">{item.nome}</Link>
-                        </NavigationMenuLink>
-                      ))}
-                    </NavigationMenuPanel>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>Análise</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <NavigationMenuPanel>
-                      {ANALISE.map((item) => (
-                        <NavigationMenuLink key={item.nome} asChild>
-                          <Link href="#">{item.nome}</Link>
-                        </NavigationMenuLink>
-                      ))}
-                    </NavigationMenuPanel>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
-            <p className="text-xs text-muted-foreground">
-              <code className="font-mono">{m.valor}</code> — {m.dica}
-            </p>
-          </div>
-        ))}
+        <EixosDemo />
       </DocSection>
 
       <DocSection
         title="O painel: uma, duas ou três colunas"
-        description="columns decide grade e largura juntas, porque as duas precisam concordar. Abaixo de sm o painel sempre empilha numa coluna."
+        description="columns decide grade e largura juntas. Abaixo de sm o painel empilha numa coluna. O selo do Cartões é o badge do título."
         code={`<NavigationMenuPanel columns={2}>
   <NavigationMenuSectionLabel>Contas</NavigationMenuSectionLabel>
   …
+  <NavigationMenuLinkTitle badge="Novo">Cartões</NavigationMenuLinkTitle>
 </NavigationMenuPanel>`}
         previewClassName="items-start p-6 pb-80"
       >
@@ -345,84 +299,9 @@ export default function NavigationMenuDoc() {
               <NavigationMenuContent>
                 <NavigationMenuPanel columns={2}>
                   <NavigationMenuSectionLabel>Contas</NavigationMenuSectionLabel>
-                  {CONTAS.map(({ nome, texto, Icone }) => (
-                    <NavigationMenuLink key={nome} variant="card" asChild>
-                      <Link href="#">
-                        <Icone />
-                        <NavigationMenuLinkTitle>{nome}</NavigationMenuLinkTitle>
-                        <NavigationMenuLinkDescription>
-                          {texto}
-                        </NavigationMenuLinkDescription>
-                      </Link>
-                    </NavigationMenuLink>
-                  ))}
+                  <Cartoes lista={CONTAS} />
                   <NavigationMenuSectionLabel>Análise</NavigationMenuSectionLabel>
-                  {ANALISE.map(({ nome, texto, Icone }) => (
-                    <NavigationMenuLink key={nome} variant="card" asChild>
-                      <Link href="#">
-                        <Icone />
-                        <NavigationMenuLinkTitle>{nome}</NavigationMenuLinkTitle>
-                        <NavigationMenuLinkDescription>
-                          {texto}
-                        </NavigationMenuLinkDescription>
-                      </Link>
-                    </NavigationMenuLink>
-                  ))}
-                </NavigationMenuPanel>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
-      </DocSection>
-
-      <DocNote title="Título e descrição sem gap">
-        No <code>card</code> título e descrição são o mesmo dado em duas linhas, separados só pela entrelinha — o componente declara <code>gap-y-0</code> para não haver como escrever errado. A largura de uma coluna vem do conteúdo: 224 com linhas, 288 com cartões.
-      </DocNote>
-
-      <DocSection
-        title="Link em linha e link em cartão"
-        description="row é a linha de menu. card carrega o que aquilo é: use num mega-menu de duas ou três colunas, onde a largura sobra e o nome sozinho não decide."
-        code={`<NavigationMenuLink variant="card" asChild>
-  <Link href="/credit-cards">
-    <CreditCardIcon />
-    <NavigationMenuLinkTitle>Cartões</NavigationMenuLinkTitle>
-    <NavigationMenuLinkDescription>Limite, fechamento e a fatura aberta.</NavigationMenuLinkDescription>
-  </Link>
-</NavigationMenuLink>`}
-        previewClassName="items-start gap-6 p-6 pb-44"
-      >
-        <NavigationMenu defaultValue="linha" indicator="underline" viewport={false}>
-          <NavigationMenuList>
-            <NavigationMenuItem value="linha">
-              <NavigationMenuTrigger>Em linha</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <NavigationMenuPanel>
-                  {CONTAS.map(({ nome, Icone }) => (
-                    <NavigationMenuLink key={nome} asChild>
-                      <Link href="#">
-                        <Icone />
-                        {nome}
-                      </Link>
-                    </NavigationMenuLink>
-                  ))}
-                </NavigationMenuPanel>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-            <NavigationMenuItem value="cartao">
-              <NavigationMenuTrigger>Em cartão</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <NavigationMenuPanel>
-                  {CONTAS.map(({ nome, texto, Icone }) => (
-                    <NavigationMenuLink key={nome} variant="card" asChild>
-                      <Link href="#">
-                        <Icone />
-                        <NavigationMenuLinkTitle>{nome}</NavigationMenuLinkTitle>
-                        <NavigationMenuLinkDescription>
-                          {texto}
-                        </NavigationMenuLinkDescription>
-                      </Link>
-                    </NavigationMenuLink>
-                  ))}
+                  <Cartoes lista={ANALISE} />
                 </NavigationMenuPanel>
               </NavigationMenuContent>
             </NavigationMenuItem>
@@ -431,267 +310,285 @@ export default function NavigationMenuDoc() {
       </DocSection>
 
       <DocSection
-        title="Sem viewport"
-        description="Cada painel abre embaixo do próprio item. Use quando os painéis têm larguras muito diferentes, para o viewport compartilhado não redimensionar à vista."
-        code={`<NavigationMenu viewport={false}>…</NavigationMenu>`}
-        previewClassName="items-start p-6 pb-32"
+        title="Sem viewport, alinhamento e vertical"
+        description="Sem viewport cada painel abre sob o próprio item; align ancora na fileira em vez de seguir o gatilho; na vertical o painel voa para o lado."
+        code={`<NavigationMenu viewport={false}>…</NavigationMenu>
+<NavigationMenu align="end">…</NavigationMenu>
+<NavigationMenu orientation="vertical">…</NavigationMenu>`}
+        previewClassName="flex-col items-stretch gap-8 p-6 pb-40 pr-72"
       >
-        <NavigationMenu viewport={false}>
-          <NavigationMenuList>
-            <NavigationMenuItem>
-              <NavigationMenuTrigger>Finanças</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <NavigationMenuPanel>
-                  {CONTAS.map((item) => (
-                    <NavigationMenuLink key={item.nome} asChild>
-                      <Link href="#">{item.nome}</Link>
-                    </NavigationMenuLink>
-                  ))}
-                </NavigationMenuPanel>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuTrigger>Análise</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <NavigationMenuPanel>
-                  {ANALISE.map((item) => (
-                    <NavigationMenuLink key={item.nome} asChild>
-                      <Link href="#">{item.nome}</Link>
-                    </NavigationMenuLink>
-                  ))}
-                </NavigationMenuPanel>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
-      </DocSection>
-
-      <DocSection
-        title="Alinhamento"
-        description="O padrão segue o gatilho aberto (trigger); start, center e end ancoram na fileira, para mega-menus centrados na página."
-        code={`<NavigationMenu align="end">…</NavigationMenu>`}
-        previewClassName="flex-col flex-nowrap items-stretch gap-4 p-6 pb-32"
-      >
-        <div className="flex justify-end">
+        <div className="flex flex-wrap items-start justify-between gap-6">
+          <NavigationMenu viewport={false}>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger>Finanças</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <NavigationMenuPanel>
+                    <Linhas lista={CONTAS} />
+                  </NavigationMenuPanel>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
           <NavigationMenu align="end">
             <NavigationMenuList>
               <NavigationMenuItem>
                 <NavigationMenuTrigger>Conta</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <NavigationMenuPanel>
-                    {ANALISE.map((item) => (
-                      <NavigationMenuLink key={item.nome} asChild>
-                        <Link href="#">{item.nome}</Link>
-                      </NavigationMenuLink>
-                    ))}
+                    <Linhas lista={ANALISE} />
                   </NavigationMenuPanel>
                 </NavigationMenuContent>
               </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
         </div>
-        <p className="text-xs text-muted-foreground">
-          A fileira está à direita da linha, e o painel abre para dentro.
-        </p>
+        <NavigationMenu orientation="vertical">
+          <NavigationMenuList>
+            <NavigationMenuItem>
+              <NavigationMenuTrigger className="justify-between">Finanças</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <NavigationMenuPanel>
+                  <Linhas lista={CONTAS} />
+                </NavigationMenuPanel>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuTrigger className="justify-between">Análise</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <NavigationMenuPanel>
+                  <Linhas lista={ANALISE} />
+                </NavigationMenuPanel>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
+          </NavigationMenuList>
+        </NavigationMenu>
       </DocSection>
 
-      <DocNote title="Dentro de um contêiner que recorta">
-        Este é o único dropdown do sistema que não é portalizado: o viewport é filho da raiz, então todo ancestral com <code>overflow</code> o recorta. A raiz mede o recorte e o painel desloca e encolhe para caber, com 8px de folga. Por não ser portalizado, a raiz fica em <code>--z-raised</code>: o painel passa por baixo do header sticky, nunca por cima. E ele fecha quando a página rola — rolar a própria lista não fecha.
+      <DocSection
+        title="No telefone, a folha"
+        description={
+          <>
+            <code>mobile=&quot;sheet&quot;</code>: abaixo de 768px a fileira vira um botão que abre a gaveta com as seções; os grupos aprofundam no lugar, com a trilha, e cada link fecha a gaveta.
+          </>
+        }
+        code={`<NavigationMenu mobile="sheet" mobileLabel="Navegar">…</NavigationMenu>`}
+        previewClassName="justify-center"
+      >
+        <PhoneFrame title="A navegação num telefone">
+          <div className="flex h-full items-start justify-center p-4">
+            <NavigationMenu mobile="sheet" mobileLabel="Navegar">
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger>Contas</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <NavigationMenuPanel>
+                      <NavigationMenuGroup label="Cartões">
+                        <NavigationMenuLink asChild>
+                          <Link href="#">Nubank</Link>
+                        </NavigationMenuLink>
+                        <NavigationMenuLink asChild>
+                          <Link href="#">Itaú</Link>
+                        </NavigationMenuLink>
+                      </NavigationMenuGroup>
+                      <NavigationMenuLink asChild>
+                        <Link href="#">Carteiras</Link>
+                      </NavigationMenuLink>
+                    </NavigationMenuPanel>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger>Análise</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <NavigationMenuPanel>
+                      <Linhas lista={ANALISE} />
+                    </NavigationMenuPanel>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+          </div>
+        </PhoneFrame>
+      </DocSection>
+
+      <DocNote title="A diagonal segura">
+        Com um painel aberto, atravessar outro gatilho a caminho dele não troca de painel: o cursor tem um triângulo de tolerância entre onde estava e os dois cantos do painel voltados para a fileira. Se ele parar no gatilho, aí sim o painel troca — em 150ms.
       </DocNote>
 
-      <DocSection
-        title="Vertical"
-        description="O painel abre para o lado, e não para baixo — embaixo da última linha seria um acordeão. O marcador acompanha o eixo sozinho."
-        code={`<NavigationMenu orientation="vertical" variant="outline">…</NavigationMenu>`}
-        previewClassName="items-start p-6 pr-72"
-      >
-        <NavigationMenu orientation="vertical" variant="outline">
-          <NavigationMenuList>
-            <NavigationMenuItem>
-              <NavigationMenuTrigger className="justify-between">
-                Finanças
-              </NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <NavigationMenuPanel>
-                  {CONTAS.map((item) => (
-                    <NavigationMenuLink key={item.nome} asChild>
-                      <Link href="#">{item.nome}</Link>
-                    </NavigationMenuLink>
-                  ))}
-                </NavigationMenuPanel>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuTrigger className="justify-between">
-                Análise
-              </NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <NavigationMenuPanel>
-                  {ANALISE.map((item) => (
-                    <NavigationMenuLink key={item.nome} asChild>
-                      <Link href="#">{item.nome}</Link>
-                    </NavigationMenuLink>
-                  ))}
-                </NavigationMenuPanel>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
-      </DocSection>
+      <DocNote title="O realce que viaja é da fileira, não dos links">
+        O movimento veio da referência do dono, a mesma do <code>Menubar</code>: a mola do realce, o painel descendo de 97%, os links em cascata. O que não veio é o realce correndo entre os links do painel — recusado na rodada 137. Os links acendem no esmaecer de 300ms dos menus.
+      </DocNote>
 
-      <DocSection
-        title="Excesso vertical"
-        description="O painel tem teto e rola com as bordas dissolvendo; o padrão é min(60dvh, 32rem)."
-        code={`<NavigationMenuPanel className="[--navigation-menu-panel-max-h:14rem]">…</NavigationMenuPanel>`}
-        previewClassName="items-start p-6 pb-60"
-      >
-        <NavigationMenu defaultValue="longo" indicator="underline" viewport={false}>
-          <NavigationMenuList>
-            <NavigationMenuItem value="longo">
-              <NavigationMenuTrigger>Categorias</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <NavigationMenuPanel className="[--navigation-menu-panel-max-h:14rem]">
-                  {[
-                    "Mercado",
-                    "Restaurantes",
-                    "Transporte",
-                    "Moradia",
-                    "Saúde",
-                    "Educação",
-                    "Lazer",
-                    "Assinaturas",
-                    "Impostos",
-                    "Presentes",
-                  ].map((nome) => (
-                    <NavigationMenuLink key={nome} asChild>
-                      <Link href="#">{nome}</Link>
-                    </NavigationMenuLink>
-                  ))}
-                </NavigationMenuPanel>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
-      </DocSection>
+      <DocNote title="O painel sabe o que tem dentro sem abrir">
+        O Radix só monta o painel aberto. Para o gatilho ganhar o ponto da página atual e o painel abrir no nível certo, cada <code>NavigationMenuContent</code> renderiza os filhos também num índice que nunca pinta, onde cada link só se registra. Dentro dele só vão peças do componente.
+      </DocNote>
 
-      <DocNote title="O teto mora no painel">
-        Sobrescreva <code>--navigation-menu-panel-max-h</code> no painel, nunca um <code>max-h</code> no viewport. O Radix mede a altura do conteúdo, então capar o painel já faz o viewport animar para o número certo.
+      <DocNote title="Dentro de um contêiner que recorta">
+        É o único dropdown do sistema que não é portalizado: o viewport é filho da raiz, então todo ancestral com <code>overflow</code> o recorta. A raiz mede o recorte e o painel desloca e encolhe para caber. Ela fica em <code>--z-raised</code>, abaixo do header sticky, e fecha quando a página rola.
       </DocNote>
 
       <PropsTable
+        title="NavigationMenu"
         rows={[
           {
             prop: "variant",
-            type: '"plain" | "outline" | "solid"',
-            default: '"plain"',
-            description:
-              "Superfície da fileira, a mesma do Menubar.",
+            type: '"floating" | "plain" | "outline" | "solid"',
+            default: '"floating"',
+            description: "A superfície da fileira; floating é a pílula do Menubar.",
           },
           {
             prop: "size",
             type: '"sm" | "md" | "lg"',
             default: '"md"',
-            description:
-              "Altura do gatilho: 28, 32, 36 (40 em ponteiro grosso).",
+            description: "Altura do gatilho: 28, 32, 36 (40 em ponteiro grosso).",
           },
           {
             prop: "indicator",
-            type: '"none" | "underline"',
-            default: '"none"',
+            type: '"highlight" | "underline" | "none"',
+            default: '"highlight"',
             description:
-              "Marca o gatilho aberto; underline é o opt-in para um sinal alto.",
+              "highlight é o realce que viaja e descansa na página atual; underline, o traço; none, só o fundo do gatilho.",
           },
           {
             prop: "align",
             type: '"trigger" | "start" | "center" | "end"',
             default: '"trigger"',
-            description:
-              "trigger segue o gatilho aberto; os outros ancoram na fileira. O painel fica sempre dentro da janela.",
+            description: "trigger segue o gatilho aberto; os outros ancoram na fileira.",
           },
           {
             prop: "orientation",
             type: '"horizontal" | "vertical"',
             default: '"horizontal"',
-            description:
-              "Na vertical o painel abre para o lado.",
+            description: "Na vertical o painel abre para o lado.",
           },
           {
             prop: "viewport",
             type: "boolean",
             default: "true",
-            description:
-              "Um painel compartilhado (true) ou um por item (false).",
+            description: "Um painel compartilhado (true) ou um por item (false).",
           },
           {
-            prop: "NavigationMenuPanel columns",
-            type: "1 | 2 | 3",
-            default: "1",
-            description:
-              "Colunas e largura do painel. Abaixo de sm empilha; teto em --navigation-menu-panel-max-h.",
-          },
-          {
-            prop: "NavigationMenuLink variant",
-            type: '"row" | "card"',
-            default: '"row"',
-            description:
-              "row é linha de menu; card é ícone, título e descrição.",
+            prop: "mobile / mobileLabel",
+            type: '"bar" | "sheet" / string',
+            default: '"bar" / "Menu"',
+            description: "sheet troca a fileira, abaixo de 768px, pela folha.",
           },
         ]}
       />
 
       <PropsTable
-        title="Slots"
+        title="As peças"
         rows={[
           {
-            prop: "NavigationMenuList",
-            type: "ul",
+            prop: "NavigationMenuPanel columns",
+            type: "1 | 2 | 3",
+            default: "1",
             description:
-              "A fileira; pinta a superfície e monta o marcador.",
+              "Colunas e largura do painel; guarda o aprofundamento e as setas.",
+          },
+          {
+            prop: "NavigationMenuGroup",
+            type: "{ label, description?, icon?, badge?, children }",
+            description:
+              "Um grupo que aprofunda no lugar, com a trilha em cima; aninha.",
+          },
+          {
+            prop: "NavigationMenuLink",
+            type: '{ variant?: "row" | "card", active?, preview? }',
+            description:
+              "O link; active é a página atual (aria-current), preview é o que a prévia mostra.",
+          },
+          {
+            prop: "NavigationMenuLinkTitle badge",
+            type: "React.ReactNode",
+            description: "A pílula ao lado do nome — Novo, Beta.",
+          },
+          {
+            prop: "NavigationMenuPanelHeader",
+            type: "{ title, description? }",
+            description: "O cabeçalho do painel, ao lado dele no conteúdo.",
+          },
+          {
+            prop: "NavigationMenuPanelFooter",
+            type: "{ children?, legend? }",
+            description:
+              "O rodapé: o Ver tudo, e com legend as teclas ↑↓ ← → ↵ (somem no toque).",
+          },
+          {
+            prop: "NavigationMenuPreview",
+            type: "{ children? }",
+            description:
+              "A coluna ao lado do painel com o preview do link sob o cursor; os filhos são o estado inicial.",
           },
           {
             prop: "NavigationMenuItem",
             type: "li",
             description:
-              "Um item; ancora o painel quando viewport={false}.",
-          },
-          {
-            prop: "NavigationMenuTrigger",
-            type: "button",
-            description:
-              "Abre o painel. O chevron já vem junto.",
-          },
-          {
-            prop: "NavigationMenuContent",
-            type: "div",
-            description:
-              "Com viewport não desenha nada; sem viewport é a superfície.",
-          },
-          {
-            prop: "NavigationMenuPanel",
-            type: "ul",
-            description:
-              "Grade, recuo, teto e rolagem. Dentro dele, o Link traz o próprio <li>.",
-          },
-          {
-            prop: "NavigationMenuSectionLabel",
-            type: "li",
-            description:
-              "Rótulo de grupo; atravessa as colunas.",
-          },
-          {
-            prop: "NavigationMenuLink",
-            type: "a",
-            description:
-              "O link. Com asChild recebe o <Link> do Next; data-active marca a rota atual.",
-          },
-          {
-            prop: "NavigationMenuLinkTitle · Description",
-            type: "span",
-            description:
-              "Os dois textos do variant card, separados pela entrelinha.",
+              "Um item. Ele não é relative — o painel sem viewport se ancora na raiz, pela âncora medida.",
           },
         ]}
       />
+    </>
+  )
+}
+
+function EixosDemo() {
+  const [variant, setVariant] = React.useState<(typeof VARIANTES)[number]>("floating")
+  const [size, setSize] = React.useState<(typeof TAMANHOS)[number]>("md")
+  const [indicator, setIndicator] = React.useState<(typeof MARCADORES)[number]>("highlight")
+  const trilho = <T extends string>(
+    rotulo: string,
+    valores: readonly T[],
+    valor: T,
+    mudar: (v: T) => void
+  ) => (
+    <ToggleGroup
+      type="single"
+      variant="segmented"
+      size="sm"
+      value={valor}
+      onValueChange={(v) => v && mudar(v as T)}
+      aria-label={rotulo}
+    >
+      {valores.map((v) => (
+        <ToggleGroupItem key={v} value={v} className="font-mono">
+          {v}
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
+  )
+  return (
+    <>
+      <div className="flex flex-wrap gap-3">
+        {trilho("Superfície", VARIANTES, variant, setVariant)}
+        {trilho("Tamanho", TAMANHOS, size, setSize)}
+        {trilho("Marcador", MARCADORES, indicator, setIndicator)}
+      </div>
+      <NavigationMenu variant={variant} size={size} indicator={indicator}>
+        <NavigationMenuList>
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>Finanças</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <NavigationMenuPanel>
+                <Linhas lista={CONTAS} />
+              </NavigationMenuPanel>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>Análise</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <NavigationMenuPanel>
+                <Linhas lista={ANALISE} />
+              </NavigationMenuPanel>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <NavigationMenuLink active asChild>
+              <Link href="#">Preços</Link>
+            </NavigationMenuLink>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>
     </>
   )
 }

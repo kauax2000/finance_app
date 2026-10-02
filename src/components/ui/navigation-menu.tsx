@@ -2,12 +2,19 @@
 
 import * as React from "react"
 import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
-import { ChevronDownIcon } from "@heroicons/react/16/solid"
+import {
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "@heroicons/react/16/solid"
+import { Bars3Icon } from "@heroicons/react/20/solid"
 import { cva, type VariantProps } from "class-variance-authority"
-import { NavigationMenu as NavigationMenuPrimitive } from "radix-ui"
+import { LayoutGroup, motion, useReducedMotion } from "motion/react"
+import { NavigationMenu as NavigationMenuPrimitive, Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
+import { menuPanelTintClassName } from "@/lib/glass-classes"
 import {
   menuItemFadeClassName,
   menuItemGeometryClassName,
@@ -17,6 +24,18 @@ import {
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { useCloseOnScroll } from "@/hooks/use-close-on-scroll"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Drawer,
+  DrawerCancel,
+  DrawerContent,
+  DrawerTrigger,
+  drawerActionClassName,
+} from "@/components/ui/drawer"
+import { Kbd } from "@/components/ui/kbd"
 
 /**
  * A fileira de navegação com painéis suspensos.
@@ -26,54 +45,52 @@ import { useCloseOnScroll } from "@/hooks/use-close-on-scroll"
  * A navegação **deste app** é a `Sidebar` no desktop e a ilha na base no
  * telefone, e continua sendo — um terceiro lugar onde procurar a mesma tela é
  * um a mais. Este componente é o cabeçalho de uma superfície **pública**:
- * landing, preços, institucional. Ali a `Sidebar` não serve, porque quem chega
- * não tem sessão e a tela inteira é o argumento.
+ * landing, preços, institucional. Nenhuma tela do app o usa.
+ *
+ * ## O redesenho (rodada 219)
+ *
+ * A referência de movimento é a mesma da rodada 218 — o seletor em cascata do
+ * dono —, e a fileira passou a falar com o `Menubar` de novo:
+ *
+ * - **A pílula flutuante é o padrão**, e o realce é **um objeto só** que viaja
+ *   entre os gatilhos na mola da referência (`indicator="highlight"`, o
+ *   padrão): acompanha o aberto, o cursor e o foco, e descansa no link da
+ *   página atual. Como no `Menubar`, ele mora só na fileira — o realce
+ *   correndo entre os links do painel foi recusado na rodada 137.
+ * - **O painel entra na mola** (desce 6px de 97%), sai curto, e os links sobem
+ *   em cascata (`@utility navigation-menu-reveal`). A troca entre painéis
+ *   continua o morph de largura e altura.
+ * - **Aprofundar no lugar** (`NavigationMenuGroup`): um grupo abre o nível
+ *   seguinte dentro do mesmo painel, com a trilha em cima para voltar — o
+ *   coração da referência, sem empilhar painéis. As setas andam, `→` aprofunda,
+ *   `←` volta, e o `Esc` sobe um nível antes de fechar.
+ * - **O índice**, como no `Menubar`: o Radix só monta o painel aberto, e o
+ *   ponto da rota atual no gatilho e o "abre na rota atual" precisam dele
+ *   fechado. Cada `NavigationMenuContent` renderiza os filhos também num nó
+ *   que nunca pinta, onde cada link só se registra.
  *
  * ## `aria-expanded:` e não `data-open:`, e a razão é especificidade
  *
- * No Tailwind 4.2.2 o variante `data-open:` compila para
- * `:where([data-open]:not([data-open=false])), :where([data-state=open])` —
- * **zero especificidade**, medido no CSS emitido. Ele perde para `hover:`
- * (0,2,0), que mora no mesmo elemento. Em `variant="solid"` isso é visível:
- * passar o cursor sobre um gatilho **aberto** o derrubaria de `bg-background`
- * para `/60`, ou seja o realce de aberto desapareceria justo quando a pessoa
- * está apontando para ele.
- *
- * O Radix carimba `aria-expanded` no gatilho (além de `data-state`), e
- * `.classe[aria-expanded="true"]` é 0,2,0 — seletor de atributo de verdade. É
- * a mesma saída que o [`Menubar`](./menubar.tsx) já usa. `data-open:` fica onde
- * não há disputa: nas animações da superfície.
- *
- * ## O marcador já viajava, e faltava uma classe
- *
- * O `Indicator` do Radix posiciona-se sozinho a partir de
- * `offsetLeft`/`offsetWidth` do gatilho ativo, com `ResizeObserver` próprio, e
- * já entende a vertical. O mecanismo que a rodada do `Tabs` construiu à mão
- * **já está pago aqui**. O que faltava era a transição: sem ela, um marcador só
- * pisca de aba em aba, que é o mesmo nada que três marcadores acendendo e
- * apagando.
- *
- * Por isso ele deixou de ser peça que o consumidor lembra de escrever e virou
- * eixo: a fileira o monta quando `indicator !== "none"`.
+ * No Tailwind 4.2.2 o variante `data-open:` compila com `:where()` — **zero
+ * especificidade** — e perde para `hover:` no mesmo elemento. O Radix carimba
+ * `aria-expanded` no gatilho, e `[aria-expanded="true"]` é seletor de atributo
+ * de verdade. `data-open:` fica onde não há disputa: nas animações.
  *
  * ## O teto mora no painel, e não no viewport
  *
- * O Radix expõe **duas** variáveis aqui — `--radix-navigation-menu-viewport-height`
- * e `-width` — e nenhuma `available-height`. Mas ele calcula a primeira a partir
- * do `offsetHeight` do conteúdo: capar o **conteúdo** devolve a altura já capada,
+ * O Radix calcula `--radix-navigation-menu-viewport-height` a partir do
+ * `offsetHeight` do conteúdo: capar o **conteúdo** devolve a altura já capada,
  * e o viewport anima para o número certo sem `max-h` nenhum.
- *
- * De brinde, isso satisfaz a invariante 2 do `scroll-fade` de graça — o
- * `NavigationMenuPanel` não desenha nada, quem desenha é o viewport —, então a
- * dissolução das bordas pode morar nele sem apagar fio nem sombra.
  */
 
-type NavigationMenuVariant = "plain" | "outline" | "solid"
+type NavigationMenuVariant = "floating" | "plain" | "outline" | "solid"
 type NavigationMenuSize = "sm" | "md" | "lg"
-type NavigationMenuIndicator = "none" | "underline"
+type NavigationMenuIndicator = "highlight" | "underline" | "none"
 type NavigationMenuAlign = "trigger" | "start" | "center" | "end"
 type NavigationMenuOrientation = "horizontal" | "vertical"
 
+/** Um link registrado no índice. */
+type Entrada = { id: string; item: string; nivel: string[]; ativo: boolean }
 
 function composeRefs<T>(...refs: Array<React.Ref<T> | undefined>) {
   return (node: T | null) => {
@@ -84,7 +101,7 @@ function composeRefs<T>(...refs: Array<React.Ref<T> | undefined>) {
   }
 }
 
-const NavigationMenuContext = React.createContext<{
+type NavigationMenuContextValue = {
   size: NavigationMenuSize
   variant: NavigationMenuVariant
   indicator: NavigationMenuIndicator
@@ -93,45 +110,90 @@ const NavigationMenuContext = React.createContext<{
   viewport: boolean
   /** Se `--navigation-menu-anchor-c*` já foi escrita. Antes disso o painel centra na fileira. */
   anchored: boolean
-}>({
+  barId: string
+  /** O item aceso: o aberto, o do cursor, o do foco ou o da página atual. */
+  realce: string | null
+  aberto: string
+  setHover: (item: string | null) => void
+  setFoco: (item: string | null) => void
+  setAtual: (item: string | null) => void
+  abrir: (item: string) => void
+  /** A diagonal segura: se o cursor está a caminho do painel aberto. */
+  aCaminho: (x: number, y: number) => boolean
+  entradas: Entrada[]
+  registrar: (e: Entrada) => () => void
+}
+
+const NavigationMenuContext = React.createContext<NavigationMenuContextValue>({
   size: "md",
-  variant: "plain",
-  indicator: "none",
+  variant: "floating",
+  indicator: "highlight",
   align: "center",
   orientation: "horizontal",
   viewport: true,
   anchored: false,
+  barId: "",
+  realce: null,
+  aberto: "",
+  setHover: () => {},
+  setFoco: () => {},
+  setAtual: () => {},
+  abrir: () => {},
+  aCaminho: () => false,
+  entradas: [],
+  registrar: () => () => {},
 })
+
+/** O item em volta: o `value` dele, para gatilho, link do topo e índice. */
+const ItemContext = React.createContext("")
+/** Dentro do índice os links se registram e não pintam. */
+const IndiceContext = React.createContext(false)
+/** Na folha do telefone as peças se desenham como linhas da gaveta. */
+const FolhaContext = React.createContext<{ fechar: () => void } | null>(null)
+/** O nível do aprofundamento em que a peça mora: os grupos acima dela. */
+const NivelContext = React.createContext<string[]>([])
+/** A prévia ao lado: o que o link sob o cursor mostra. */
+const PreviewContext = React.createContext<{
+  atual: React.ReactNode
+  setAtual: (p: React.ReactNode) => void
+} | null>(null)
 
 /**
  * Se este link está dentro de um `NavigationMenuPanel` — que é um `<ul>`, e por
  * isso quer o `<li>` que o link passa a trazer sozinho.
- *
- * É o que torna `<ul>` sem `<li>` impossível de escrever: antes o consumidor
- * montava a lista à mão, e a página deste catálogo montava errado.
  */
 const NavigationMenuPanelContext = React.createContext(false)
 
+/** O aprofundamento do painel: o caminho aberto e quem anda nele. */
+const DrillContext = React.createContext<{
+  caminho: string[]
+  entrar: (nivel: string[]) => void
+  rotulos: Record<string, React.ReactNode>
+  registrarRotulo: (id: string, rotulo: React.ReactNode) => void
+} | null>(null)
+
+/** O nível está à vista quando o caminho aberto é exatamente ele. */
+function useVisivel() {
+  const drill = React.useContext(DrillContext)
+  const nivel = React.useContext(NivelContext)
+  if (!drill) return true
+  return (
+    drill.caminho.length === nivel.length &&
+    drill.caminho.every((id, i) => id === nivel[i])
+  )
+}
+
 /**
  * Nota de ordem: `npm run ds:catalog` lê o **primeiro** bloco `variants:` de
- * cada fonte, e é por isso que o do gatilho vem antes do da fileira — ele
- * carrega `variant` **e** `size`, enquanto o da fileira só repetiria `variant`.
- * O precedente é o `itemVariants`, que subiu para o topo do `item.tsx` pela
- * mesma razão. Nenhum dos dois carrega decisão pela posição.
- */
-/**
- * O gatilho, na escada do sistema: 28 · 32 · 36, os mesmos nomes e os mesmos
- * números do `Button`, do `Input`, do `Tabs` e do `Menubar`. Botão ao lado de
- * gatilho alinha sem ninguém dizer `size`.
+ * cada fonte, e por isso o do gatilho vem antes do da fileira.
  *
- * `pointer-coarse:h-10` pergunta pelo **apontador** e não pela largura, como o
- * item de menu e o `Calendar` já fazem: um telefone em paisagem continua grosso,
- * um desktop estreito continua fino.
+ * O gatilho, na escada do sistema: 28 · 32 · 36. `pointer-coarse:h-10`
+ * pergunta pelo **apontador**, e não pela largura.
  */
 const navigationMenuTriggerVariants = cva(
   [
-    "group/navigation-menu-trigger flex shrink-0 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium whitespace-nowrap outline-hidden select-none",
-    "transition-colors",
+    "group/navigation-menu-trigger relative isolate flex shrink-0 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium whitespace-nowrap outline-hidden select-none",
+    "transition-[color,scale] duration-(--duration-fast) ease-(--ease-out) active:scale-[0.985]",
     "focus-visible:ring-3 focus-visible:ring-ring/45",
     "disabled:pointer-events-none disabled:opacity-50",
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
@@ -139,6 +201,8 @@ const navigationMenuTriggerVariants = cva(
   {
     variants: {
       variant: {
+        floating:
+          "rounded-full px-3 hover:bg-muted active:bg-muted aria-expanded:bg-muted aria-expanded:text-foreground",
         plain:
           "hover:bg-muted active:bg-muted aria-expanded:bg-muted aria-expanded:text-foreground",
         outline:
@@ -153,23 +217,27 @@ const navigationMenuTriggerVariants = cva(
         lg: "h-9 pointer-coarse:h-10",
       },
     },
-    defaultVariants: { variant: "plain", size: "md" },
+    defaultVariants: { variant: "floating", size: "md" },
   }
 )
 
 /**
- * A fileira. As três superfícies são **as três strings do `Menubar`**, e isso é
- * convergência e não invenção: uma fileira de gatilhos que se percorre com a
- * seta é o mesmo objeto, e duas palavras para a mesma coisa é o que a rodada
- * dos menus existiu para acabar.
- *
- * `plain` mantém `border-transparent` de propósito — a caixa fica idêntica nas
- * três, então trocar de variante não move um pixel do que está em volta.
+ * Com o realce que viaja, o gatilho não pinta o próprio fundo: o `tailwind-merge`
+ * derruba o `hover:bg-*` e o `aria-expanded:bg-*` da variante, e quem acende é o
+ * objeto por baixo do rótulo. A tinta do texto continua dizendo quem está aceso.
+ */
+const SEM_FUNDO_PROPRIO =
+  "text-muted-foreground hover:bg-transparent active:bg-transparent aria-expanded:bg-transparent aria-expanded:border-transparent aria-expanded:shadow-none data-[aceso]:text-foreground"
+
+/**
+ * A fileira. `floating` — o padrão desde a rodada 219 — é a pílula do
+ * `Menubar`, na tinta **flutuante** dos menus; `plain`, `outline` e `solid`
+ * continuam, como escolha explícita. **As fileiras não são mais "as mesmas
+ * strings" do `Menubar`**, como este arquivo dizia: a `outline` de lá veste a
+ * régua de barra (vidro), a daqui é chapada.
  *
  * Ela **não declara altura**: quem mede é o gatilho, e a fileira cresce em
- * volta. Ancorar a escada no contêiner é o defeito que esta base já cometeu
- * quatro vezes — `Menubar` entregou 24, `Tabs` entregou 27, `Item` teve dois
- * degraus com a mesma string, `Calendar` entregou 28.
+ * volta.
  */
 const navigationMenuListVariants = cva(
   [
@@ -179,22 +247,30 @@ const navigationMenuListVariants = cva(
   {
     variants: {
       variant: {
+        floating: `rounded-full p-1 shadow-lg ring-1 ring-foreground/10 data-[orientation=vertical]:rounded-2xl ${menuPanelTintClassName}`,
         plain: "border border-transparent bg-transparent",
         outline: "border border-border bg-background",
         solid: "border border-transparent bg-muted",
       },
     },
-    defaultVariants: { variant: "plain" },
+    defaultVariants: { variant: "floating" },
   }
 )
 
+/** O realce que viaja, por superfície: na bandeja `solid` ele sobe em vez de tingir. */
+const realceClassName: Record<NavigationMenuVariant, string> = {
+  floating: "bg-muted",
+  plain: "bg-muted",
+  outline: "bg-muted",
+  solid: "bg-background shadow-xs ring-1 ring-border/80",
+}
+
+/** A mola do realce, da referência: 0,28s com 20% de quique. */
+const MOLA_DO_REALCE = { type: "spring", duration: 0.28, bounce: 0.2 } as const
+
 /**
- * O marcador. A transição é o componente inteiro: o Radix já escreve a caixa do
- * gatilho ativo em `transform`/`width`/`height` inline, e é ela que transforma
- * teleporte em trajeto.
- *
- * Movimento reduzido não precisa de regra própria — o bloco global encurta
- * transições para 0,01ms, o marcador salta, e o estado final chega igual.
+ * O marcador `underline`: um traço de acento que o `Indicator` do Radix leva
+ * até o gatilho aberto. A transição é o componente inteiro.
  */
 const navigationMenuIndicatorVariants = cva(
   [
@@ -206,6 +282,7 @@ const navigationMenuIndicatorVariants = cva(
     variants: {
       indicator: {
         none: "hidden",
+        highlight: "hidden",
         underline: [
           "rounded-full bg-primary-accent",
           "data-[orientation=horizontal]:top-full data-[orientation=horizontal]:h-0.5",
@@ -213,29 +290,17 @@ const navigationMenuIndicatorVariants = cva(
         ].join(" "),
       },
     },
-    defaultVariants: { indicator: "none" },
+    defaultVariants: { indicator: "highlight" },
   }
 )
 
 /**
- * O conteúdo. Ele tem duas formas, e o eixo é lido do **contexto** em vez de
- * escrito como `group-data-[viewport=false]/navigation-menu:` doze vezes — que
- * era como o arquivo fazia, em uma string de 1.400 caracteres.
+ * O conteúdo. Com viewport é só a lâmina que desliza dentro de uma superfície
+ * que já existe; sem viewport ele **é** a superfície.
  *
- * Com viewport ele é só a lâmina que desliza dentro de uma superfície que já
- * existe. Sem viewport ele **é** a superfície, e veste
- * `menuPanelSurfaceClassName` em vez de reescrever a receita.
- *
- * **A troca é um crossfade com drift, e o drift era um whoosh.** O Radix marca
- * `data-motion` só quando se vai de um item a outro — `from-end`/`from-start`
- * no que entra, `to-start`/`to-end` no que sai — e mantém os dois montados até
- * a saída acabar; como os dois são `md:absolute`, eles se sobrepõem e o olho vê
- * um substituir o outro. O deslize vinha do shadcn em `-52`: **208px** em 100ms
- * com a curva do navegador, o conteúdo atravessando o painel inteiro. Hoje são
- * **16px** (`-4`) em `--duration-base` com `--ease-out` — o suficiente para
- * dizer a direção, não para viajar — e o eixo segue a `orientation`: num menu
- * vertical os painéis trocam de cima para baixo, e um drift horizontal ali era
- * mentira.
+ * A troca entre painéis é um crossfade com drift de 16px em `--duration-base`
+ * — o suficiente para dizer a direção, não para viajar —, no eixo da
+ * `orientation`.
  */
 const navigationMenuContentVariants = cva(
   [
@@ -250,8 +315,8 @@ const navigationMenuContentVariants = cva(
         false: [
           "absolute top-full z-10 mt-2 overflow-hidden md:w-auto",
           menuPanelSurfaceClassName,
-          "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:slide-in-from-top-2",
-          "data-closed:animate-out data-closed:fade-out-0 data-closed:duration-(--duration-instant)",
+          "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-[0.97] data-open:slide-in-from-top-1.5 data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring)",
+          "data-closed:animate-out data-closed:fade-out-0 data-closed:animation-duration-[130ms]",
         ].join(" "),
       },
       orientation: {
@@ -263,13 +328,10 @@ const navigationMenuContentVariants = cva(
       align: { trigger: "", start: "", center: "", end: "" },
     },
     compoundVariants: [
-      // O item deixou de ser `relative` (ver `NavigationMenuItem`), então este
-      // absoluto tem o mesmo bloco contentor do marcador e do viewport: a mesma
-      // variável medida serve os dois modos.
       {
         viewport: false,
         align: "trigger",
-        class: "left-(--navigation-menu-anchor-cx) -translate-x-1/2",
+        class: "left-[var(--navigation-menu-anchor-cx,50%)] -translate-x-1/2",
       },
       { viewport: false, align: "start", class: "left-0" },
       { viewport: false, align: "center", class: "left-1/2 -translate-x-1/2" },
@@ -280,51 +342,23 @@ const navigationMenuContentVariants = cva(
 )
 
 /**
- * O painel: a grade dentro do conteúdo, o recuo, o teto e a rolagem.
- *
- * A largura é variável e não classe porque as três contagens de coluna precisam
- * concordar com ela; o teto de altura também, e é o precedente do
- * `--command-list-max-h` — quem declara o teto é a casca do que rola.
- *
- * `max-w` existe porque um painel de três colunas num laptop de 13" é mais
- * largo que a janela, e um mega-menu que sangra para fora da tela é pior que um
- * que quebra em duas colunas.
+ * O painel: a grade, o recuo, o teto e a rolagem. A largura é variável porque
+ * as três contagens de coluna precisam concordar com ela.
  */
 const navigationMenuPanelVariants = cva(
   [
     "grid w-(--navigation-menu-panel-w) max-w-(--navigation-menu-panel-max-w) gap-0.5 p-1",
     "max-h-(--navigation-menu-panel-max-h) overflow-y-auto overscroll-contain",
-    // O teto de largura é **medido**, e a variável mora na raiz — ver
-    // `limite()`. Declarar o padrão dela aqui seria declará-la no mesmo
-    // elemento que a lê, e o valor local vence o herdado: medido, o
-    // `max-width` computado saía **884px** (`100vw` menos um respiro) enquanto
-    // a raiz publicava **304**. O padrão está na casca.
     "[--navigation-menu-panel-max-h:min(60dvh,32rem)]",
+    // Os links sobem em cascata ao abrir e ao aprofundar (rodada 219).
+    "navigation-menu-reveal",
   ],
   {
     variants: {
       columns: {
-        // **A largura de uma coluna sai do conteúdo, não do consumidor.**
-        //
-        // Com linhas, 224 — o degrau mais largo que o `DropdownMenuContent`
-        // oferece (auto · 176 · 192 · 208 · 224). Antes eram 288, mais largo
-        // que qualquer menu do sistema: medido, sobravam 175px de vazio numa
-        // linha cujo rótulo mais longo mede 101.
-        //
-        // Com **cartões**, 288 — e o número é derivado, não escolhido. Um
-        // cartão é ícone (20) + calha (10) + texto, dentro de `p-2.5` (20) e do
-        // `p-1` do painel (8): 58px de cromagem. A descrição mais larga da
-        // página pede **209** sem quebrar, e 209 + 58 = 267. Os 288 do degrau
-        // acima dão **245** de texto — exatamente o que a coluna do mega-menu
-        // de duas já dá (295 de coluna, 245 de texto), onde as seis descrições
-        // cabem em uma linha. **A coluna de cartões mede o mesmo em 1, 2 ou 3
-        // colunas.** A 224 sobravam 166, e a descrição quebrava em três linhas
-        // com uma palavra órfã.
-        //
-        // O `has-` é o mecanismo do `Popover` (`has-[[data-slot=popover-body]]`)
-        // e do próprio cartão logo abaixo (`has-[>svg]`): quem decide é o que
-        // está dentro. Ele é `&:has(…)` — 0,2,0 contra os 0,1,0 da classe base,
-        // no mesmo elemento —, então vence sem `!important` e sem ordem.
+        // A largura de uma coluna sai do conteúdo: 224 com linhas (o degrau
+        // mais largo do `DropdownMenuContent`), 288 com cartões — derivado do
+        // texto da descrição mais longa sem quebrar.
         1: "[--navigation-menu-panel-w:--spacing(56)] has-[[data-variant=card]]:[--navigation-menu-panel-w:--spacing(72)]",
         2: "[--navigation-menu-panel-w:--spacing(150)] sm:grid-cols-2",
         3: "[--navigation-menu-panel-w:--spacing(216)] sm:grid-cols-2 lg:grid-cols-3",
@@ -334,15 +368,6 @@ const navigationMenuPanelVariants = cva(
   }
 )
 
-/**
- * O que todo link da fileira tem, esteja no topo ou dentro do painel.
- *
- * O anel de foco **fica**. O arquivo anterior o apagava de dentro do painel com
- * `**:…[navigation-menu-link]:focus:ring-0` mais `focus:outline-none`, e o
- * resultado era teclado invisível exatamente onde o teclado é o caminho normal:
- * com o mouse o foco nunca entra no painel, então o defeito só existia para
- * quem navega com Tab.
- */
 const NAVIGATION_MENU_LINK_BASE = [
   "group/navigation-menu-link relative min-w-0 outline-hidden select-none",
   "transition-colors",
@@ -351,69 +376,39 @@ const NAVIGATION_MENU_LINK_BASE = [
 ].join(" ")
 
 /**
- * **O link do topo veste a régua do gatilho.** Numa fileira real, "Preços" (um
- * link) fica ao lado de "Produto" (um gatilho com painel), e os dois têm de
- * medir igual — não por coincidência, mas porque leem o mesmo `size`. Compor
- * `navigationMenuTriggerVariants` em vez de repetir a escada é o que garante
- * que eles não possam divergir no dia em que um degrau mudar.
- *
- * Só o realce de rota atual é próprio, e ele é `aria-[current=page]:` e não
- * `data-active:` **pela mesma aritmética que trocou o gatilho**: o variante
- * `data-*` compila com `:where()` (0,1,0) e perderia para o `hover:` (0,2,0)
- * que mora no mesmo elemento — o item da página em que a pessoa está apagaria
- * ao ser apontado. O Radix escreve os dois atributos juntos quando o link
- * recebe `active`.
+ * **O link do topo veste a régua do gatilho**, e o realce de rota atual é
+ * `aria-[current=page]:` (e não `data-active:`, que tem especificidade zero e
+ * apagaria ao passar o cursor).
  */
 const navigationMenuTopLinkVariants = cva(NAVIGATION_MENU_LINK_BASE, {
   variants: {
     variant: {
-      plain:
-        "aria-[current=page]:bg-muted aria-[current=page]:text-foreground",
-      outline:
-        "aria-[current=page]:bg-muted aria-[current=page]:text-foreground",
+      floating: "aria-[current=page]:bg-muted aria-[current=page]:text-foreground",
+      plain: "aria-[current=page]:bg-muted aria-[current=page]:text-foreground",
+      outline: "aria-[current=page]:bg-muted aria-[current=page]:text-foreground",
       solid:
         "aria-[current=page]:border-border/80 aria-[current=page]:bg-background aria-[current=page]:text-foreground aria-[current=page]:shadow-xs",
     },
   },
-  defaultVariants: { variant: "plain" },
+  defaultVariants: { variant: "floating" },
 })
 
 /**
- * O link dentro do painel, em duas formas.
- *
- * `row` é a linha de menu: um rótulo, talvez um ícone. `card` é a forma que
- * todo mega-menu real tem — ícone, título e uma linha do que aquilo é —, e ela
- * existe sobretudo para **trancar o par de identidade**: título e descrição são
- * o mesmo dado em duas linhas, quem os separa é a entrelinha, e `gap-y-0` é o
- * que impede o `gap-1` que quem escreve a tela escreveria. Foi assim que
- * `ItemContent`, `StatCard`, `FieldContent` e `PageHeaderTitleRow` foram pegos,
- * quatro vezes, com a documentação já dizendo o contrário do código.
- *
- * A coluna do ícone só nasce quando há ícone (`has-[>svg]:`) — senão o título e
- * a descrição cairiam lado a lado em vez de empilhados.
+ * O link dentro do painel, em duas formas: `row` é a linha de menu, `card` é
+ * ícone, título e uma linha do que aquilo é — com `gap-y-0`, porque título e
+ * descrição são par de identidade.
  */
 const navigationMenuLinkVariants = cva(
   [
     NAVIGATION_MENU_LINK_BASE,
     "rounded-md text-sm pointer-coarse:min-h-11",
-    // O acender dos menus — ver `menuItemFadeClassName`.
     menuItemFadeClassName,
-    "hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground",
+    "hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground focus-visible:bg-accent",
     "aria-[current=page]:bg-accent/60 aria-[current=page]:font-medium",
   ],
   {
     variants: {
       variant: {
-        // **O corpo é o dos outros menus, e não um parecido.** Ele estava
-        // reimplementado aqui 4px mais alto e mais folgado — `px-2 py-1.5
-        // gap-2` contra `px-1.5 py-1 gap-1.5` —, quando
-        // `menuItemGeometryClassName` existe exatamente para as superfícies de
-        // comando medirem igual: `DropdownMenu`, `ContextMenu`, `Menubar` e
-        // `Command` já a vestem.
-        //
-        // `cursor-pointer` é a **única** contra-classe: a régua traz
-        // `cursor-default`, que é o certo para um `role="menuitem"` e o errado
-        // para um `<a href>`.
         row: cn(menuItemGeometryClassName, "cursor-pointer"),
         card: [
           "grid grid-cols-1 gap-y-0 p-2.5",
@@ -428,45 +423,48 @@ const navigationMenuLinkVariants = cva(
 )
 
 /**
+ * O ponto em que o cursor está a caminho do painel: dentro do triângulo entre
+ * onde ele estava e os dois cantos do painel voltados para a fileira. É a
+ * "diagonal segura" — o *menu aim* da Amazon.
+ */
+export function noTriangulo(
+  p: { x: number; y: number },
+  a: { x: number; y: number },
+  b: { x: number; y: number },
+  c: { x: number; y: number }
+): boolean {
+  const s = (p1: typeof p, p2: typeof p, p3: typeof p) =>
+    (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y)
+  const d1 = s(p, a, b)
+  const d2 = s(p, b, c)
+  const d3 = s(p, c, a)
+  const neg = d1 < 0 || d2 < 0 || d3 < 0
+  const pos = d1 > 0 || d2 > 0 || d3 > 0
+  return !(neg && pos)
+}
+
+/**
  * ## O painel segue o gatilho, e por que isso precisou de medição
  *
- * Com viewport há **um** painel para a fileira inteira, e o Radix não o desloca:
- * ele nasce onde a casca o ancorar. Ancorado na fileira — que é o que
- * `start`/`center`/`end` fazem —, abrir o **segundo** gatilho põe o painel no
- * mesmo lugar em que o primeiro o pusera, e a leitura é a de um menu que abriu
- * o painel errado.
- *
+ * Com viewport há **um** painel para a fileira inteira, e o Radix não o desloca.
  * `align="trigger"` — o padrão — mede o gatilho aberto e publica o **centro**
- * dele em `--navigation-menu-anchor-cx` / `-cy`; o painel centra ali.
- *
- * **Isto passou a ser invisível a olho, e quem mexer aqui precisa saber.**
- * Enquanto havia um bico, um painel ancorado errado saía com a ponta sobre um
- * gatilho e o corpo sob outro — foi assim que o defeito do `offsetLeft` apareceu.
- * Sem ele, o padrão é `none` e nada denuncia o desalinho: verifique medindo
- * `--navigation-menu-anchor-cx` contra o centro de **cada** gatilho, e nunca só
- * do primeiro, para quem zero é o valor certo por acidente.
- *
- * O mecanismo é o do marcador do `Tabs`: `ResizeObserver` na raiz e nos
- * gatilhos, `MutationObserver` em `data-state` — nada de laço por quadro. A
- * diferença é que aqui a leitura é por `getBoundingClientRect` e não por
- * `offsetLeft`: o painel é medido contra a raiz, e o `getBoundingClientRect`
- * dispensa depender de quem é o `offsetParent` (o item deixou de ser `relative`). A troca é segura porque
- * esta raiz não rola por dentro — foi a rolagem que obrigou o `Tabs` a fazer o
- * contrário.
- *
- * Ao fechar, a âncora **não** é recalculada: o painel sai animando, e mover o
- * ponto de fuga no meio da saída é um salto.
+ * dele em `--navigation-menu-anchor-cx` / `-cy`. Verifique medindo contra o
+ * centro de **cada** gatilho, e nunca só do primeiro, para quem zero é o valor
+ * certo por acidente. O mecanismo é o do marcador do `Tabs`: `ResizeObserver`
+ * e `MutationObserver`, nada de laço por quadro.
  */
 function NavigationMenu({
   className,
   children,
   ref,
-  variant = "plain",
+  variant = "floating",
   size = "md",
   align = "trigger",
   orientation = "horizontal",
-  indicator = "none",
+  indicator = "highlight",
   viewport = true,
+  mobile = "bar",
+  mobileLabel = "Menu",
   value: valueProp,
   defaultValue,
   onValueChange,
@@ -481,9 +479,31 @@ function NavigationMenu({
   orientation?: NavigationMenuOrientation
   indicator?: NavigationMenuIndicator
   viewport?: boolean
+  /** No telefone, `sheet` troca a fileira por um botão que abre a folha. */
+  mobile?: "bar" | "sheet"
+  mobileLabel?: string
 }) {
+  const barId = React.useId()
+  const isMobile = useIsMobile()
+  const folha = mobile === "sheet" && isMobile
   const raizRef = React.useRef<HTMLElement | null>(null)
-  const [anchored, setAnchored] = React.useState(false)
+  /**
+   * A âncora medida, **no estado do React**, e não escrita à mão na raiz.
+   *
+   * Até a rodada 219 `medir()` fazia `raiz.style.setProperty(...)`. Quando o
+   * elemento da raiz era recriado — o recarregamento a quente faz isso —, o
+   * estado "já ancorado" sobrevivia e a variável não: `left: var(--x)`
+   * indefinido virava inválido, o painel voltava à posição estática (o começo
+   * da raiz, que é `flex`) e o `-translate-x-1/2` punha metade dele para fora,
+   * onde a área da demonstração recorta. Medido: 144px fora, e o dono via o
+   * painel cortado. Pela prop `style`, a medida acompanha o elemento.
+   */
+  const [ancora, setAncora] = React.useState<{
+    cx: number
+    cy: number
+    maxW: number
+  } | null>(null)
+  const anchored = ancora != null
   // O painel fecha quando a página rola — ver `useCloseOnScroll`.
   const [value, setValue] = useCloseOnScroll({
     value: valueProp,
@@ -493,6 +513,50 @@ function NavigationMenu({
   })
   const segueGatilho = align === "trigger"
 
+  const [hover, setHover] = React.useState<string | null>(null)
+  const [foco, setFoco] = React.useState<string | null>(null)
+  const [atual, setAtual] = React.useState<string | null>(null)
+  const realce = indicator === "highlight" ? value || hover || foco || atual : null
+
+  const [entradas, setEntradas] = React.useState<Entrada[]>([])
+  const registrar = React.useCallback((e: Entrada) => {
+    setEntradas((lista) => {
+      const i = lista.findIndex((x) => x.id === e.id)
+      if (i < 0) return [...lista, e]
+      const nova = lista.slice()
+      nova[i] = e
+      return nova
+    })
+    return () => setEntradas((lista) => lista.filter((x) => x.id !== e.id))
+  }, [])
+
+  // A diagonal segura: as duas últimas posições do cursor sobre a fileira.
+  const rastroRef = React.useRef<{ x: number; y: number }[]>([])
+  React.useEffect(() => {
+    if (!value) return
+    const mover = (e: PointerEvent) => {
+      rastroRef.current = [...rastroRef.current.slice(-3), { x: e.clientX, y: e.clientY }]
+    }
+    document.addEventListener("pointermove", mover)
+    return () => document.removeEventListener("pointermove", mover)
+  }, [value])
+  const aCaminho = React.useCallback(
+    (x: number, y: number) => {
+      const painel = raizRef.current?.querySelector(
+        '[data-slot="navigation-menu-viewport"], [data-slot="navigation-menu-content"][data-state="open"]'
+      )
+      const antes = rastroRef.current[0]
+      if (!painel || !antes || !value) return false
+      const r = painel.getBoundingClientRect()
+      const vertical = orientation === "vertical"
+      const [b, c] = vertical
+        ? [{ x: r.left, y: r.top }, { x: r.left, y: r.bottom }]
+        : [{ x: r.left, y: r.top }, { x: r.right, y: r.top }]
+      return noTriangulo({ x, y }, antes, b, c)
+    },
+    [value, orientation]
+  )
+
   useIsomorphicLayoutEffect(() => {
     const raiz = raizRef.current
     if (!raiz || !segueGatilho) return
@@ -500,21 +564,11 @@ function NavigationMenu({
     let ultimoPainel: Element | null = null
 
     /**
-     * O retângulo em que o painel precisa caber.
-     *
-     * **Não é a janela.** Esta é a única superfície ancorada do sistema que
-     * **não é portalizada** — `Popover`, `Select`, `Tooltip` e os três menus
-     * mandam o conteúdo para o `body` e escapam de qualquer `overflow`; o
-     * viewport daqui é filho da raiz, então todo ancestral que recorta o
-     * recorta. Medido dentro do `Preview` do catálogo: janela de 0 a 420, mas
-     * o que de fato corta vai de **17 a 403** — o painel posto em `left: 8`
-     * ficava com **9px fora**, e era isso que aparecia como "o dropdown está
-     * cortado".
-     *
-     * É o mesmo trabalho que o `collisionBoundary` do Radix faz nas
-     * primitivas Popper. Aqui ele é à mão porque esta primitiva não tem.
+     * O retângulo em que o painel precisa caber. **Não é a janela**: esta é a
+     * única superfície ancorada do sistema que não é portalizada, e todo
+     * ancestral que recorta a recorta — medido no `Preview` do catálogo, 9px
+     * do painel ficavam fora. É o `collisionBoundary` do Radix, à mão.
      */
-    // A janela que **contém** a raiz: dentro da moldura do catálogo `window` é a de fora.
     const janela = raiz.ownerDocument.defaultView ?? window
     const limite = () => {
       let esquerda = 0
@@ -542,25 +596,13 @@ function NavigationMenu({
       const { esquerda, direita } = limite()
       let cx = g.left - r.left + g.width / 2
 
-      // O painel nunca é mais largo que o espaço que sobra: sem este teto,
-      // deslocar não resolve — não existe posição que torne visível o que não
-      // cabe. Ele desce por variável, e o painel a lê.
       const folga = ANCHORED_COLLISION_PADDING
       const maxW = Math.max(0, direita - esquerda - folga * 2)
-      raiz.style.setProperty("--navigation-menu-panel-max-w", `${maxW}px`)
 
-      // O painel centra no gatilho, mas **não sai do retângulo**: um mega-menu
-      // de 600px preso a um gatilho de 91 abriria 259px para fora — medido. O
-      // trilho usa a mesma folga do `collisionPadding` das outras superfícies.
-      // Quando o painel é mais largo que o próprio trilho a conta se inverte, e
-      // aí ela é descartada em vez de espremer.
       const painel = raiz.querySelector(
         '[data-slot="navigation-menu-viewport"], [data-slot="navigation-menu-content"]'
       )
       if (painel) {
-        // O Radix dimensiona o viewport **depois** de montá-lo, então o painel
-        // entra no observador na primeira vez em que aparece; sem isso o clamp
-        // rodaria uma vez só, com largura zero.
         if (painel !== ultimoPainel) {
           ultimoPainel = painel
           ro.observe(painel)
@@ -573,25 +615,22 @@ function NavigationMenu({
         }
       }
 
-      raiz.style.setProperty("--navigation-menu-anchor-cx", `${cx}px`)
-      raiz.style.setProperty(
-        "--navigation-menu-anchor-cy",
-        `${g.top - r.top + g.height / 2}px`
+      const cy = g.top - r.top + g.height / 2
+      // Só troca o estado quando a medida muda: o observador chama a cada
+      // quadro da animação de largura.
+      setAncora((a) =>
+        a && a.cx === cx && a.cy === cy && a.maxW === maxW ? a : { cx, cy, maxW }
       )
-      setAnchored(true)
     }
 
     const ro = new ResizeObserver(medir)
-
     medir()
-
     ro.observe(raiz)
     for (const gatilho of raiz.querySelectorAll(
       '[data-slot="navigation-menu-trigger"]'
     )) {
       ro.observe(gatilho)
     }
-
     const mo = new MutationObserver(medir)
     mo.observe(raiz, {
       attributes: true,
@@ -599,19 +638,15 @@ function NavigationMenu({
       subtree: true,
       childList: true,
     })
-
-    // A raiz é `w-fit`. Estreitar a janela pode não mudar a caixa dela, e aí
-    // nenhum dos dois observadores acorda — mas o retângulo de recorte mudou.
     janela.addEventListener("resize", medir)
-
     return () => {
       ro.disconnect()
       mo.disconnect()
       janela.removeEventListener("resize", medir)
     }
-  }, [segueGatilho, orientation, size, variant])
+  }, [segueGatilho, orientation, size, variant, folha])
 
-  const ctx = React.useMemo(
+  const ctx = React.useMemo<NavigationMenuContextValue>(
     () => ({
       size,
       variant,
@@ -620,41 +655,70 @@ function NavigationMenu({
       viewport,
       anchored: anchored && segueGatilho,
       indicator,
+      barId,
+      realce,
+      aberto: value,
+      setHover,
+      setFoco,
+      setAtual,
+      abrir: setValue,
+      aCaminho,
+      entradas,
+      registrar,
     }),
-    [size, variant, align, orientation, viewport, indicator, anchored, segueGatilho]
+    [size, variant, align, orientation, viewport, indicator, anchored, segueGatilho, barId, realce, value, setValue, aCaminho, entradas, registrar]
   )
 
-  // Memorizado: inline, a função nova a cada render religava o ref (null → nó).
   const rootRef = React.useMemo(() => composeRefs(raizRef, ref), [ref])
+
+  if (folha) {
+    return (
+      <NavigationMenuContext.Provider value={ctx}>
+        <NavigationMenuFolha label={mobileLabel}>{children}</NavigationMenuFolha>
+      </NavigationMenuContext.Provider>
+    )
+  }
 
   return (
     <NavigationMenuContext.Provider value={ctx}>
-      <NavigationMenuPrimitive.Root
-        ref={rootRef}
-        data-slot="navigation-menu"
-        data-variant={variant}
-        data-size={size}
-        data-align={align}
-        data-orientation={orientation}
-        data-viewport={viewport}
-        orientation={orientation}
-        value={value}
-        onValueChange={setValue}
-        className={cn(
-          // `z-(--z-raised)`: o painel não é portalizado, então a raiz é a
-          // camada dele. Acima do conteúdo, **abaixo** do header sticky (20) —
-          // com o `--z-popover` de antes ele pintava por cima do header.
-          "relative z-(--z-raised) flex w-fit max-w-full",
-          // O padrão do teto do painel, para o quadro anterior à primeira
-          // medição. `medir()` o sobrescreve inline, e o painel o herda.
-          "[--navigation-menu-panel-max-w:100vw]",
-          className
-        )}
-        {...props}
-      >
-        {children}
-        {viewport ? <NavigationMenuViewport /> : null}
-      </NavigationMenuPrimitive.Root>
+      <LayoutGroup id={barId}>
+        <NavigationMenuPrimitive.Root
+          ref={rootRef}
+          data-slot="navigation-menu"
+          data-variant={variant}
+          data-size={size}
+          data-align={align}
+          data-orientation={orientation}
+          data-viewport={viewport}
+          orientation={orientation}
+          value={value}
+          onValueChange={setValue}
+          onPointerLeave={() => setHover(null)}
+          className={cn(
+            // `z-(--z-raised)`: o painel não é portalizado, então a raiz é a
+            // camada dele — acima do conteúdo, **abaixo** do header sticky.
+            "relative z-(--z-raised) flex w-fit max-w-full",
+            "[--navigation-menu-panel-max-w:100vw]",
+            className
+          )}
+          {...props}
+          style={
+            {
+              ...(ancora
+                ? {
+                    "--navigation-menu-anchor-cx": `${ancora.cx}px`,
+                    "--navigation-menu-anchor-cy": `${ancora.cy}px`,
+                    "--navigation-menu-panel-max-w": `${ancora.maxW}px`,
+                  }
+                : null),
+              ...props.style,
+            } as React.CSSProperties
+          }
+        >
+          {children}
+          {viewport ? <NavigationMenuViewport /> : null}
+        </NavigationMenuPrimitive.Root>
+      </LayoutGroup>
     </NavigationMenuContext.Provider>
   )
 }
@@ -665,6 +729,8 @@ function NavigationMenuList({
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.List>) {
   const { variant, indicator } = React.useContext(NavigationMenuContext)
+  const folha = React.useContext(FolhaContext)
+  if (folha) return <div className="flex flex-col">{children}</div>
 
   return (
     <NavigationMenuPrimitive.List
@@ -673,55 +739,151 @@ function NavigationMenuList({
       {...props}
     >
       {children}
-      {indicator === "none" ? null : (
+      {indicator === "underline" ? (
         <NavigationMenuIndicator indicator={indicator} />
-      )}
+      ) : null}
     </NavigationMenuPrimitive.List>
   )
 }
 
 /**
- * **Ele não é `relative`, e isso é carga estrutural.**
- *
- * O `Indicator` do Radix se posiciona com `translateX(activeTrigger.offsetLeft)`,
- * e `offsetLeft` é medido contra o **`offsetParent`** — o ancestral posicionado
- * mais próximo. Com `relative` aqui, esse ancestral passa a ser o próprio
- * `<li>`, e `offsetLeft` vale **0 para todo gatilho**: o marcador nunca sai do
- * lugar. Medido, com o segundo gatilho aberto: marcador em 45,5 e gatilho em
- * 152,8, **107,3px** de desalinho — e o primeiro gatilho acertava por
- * acidente, porque ali zero é o valor certo.
- *
- * Sem ele, o `offsetParent` volta a ser o `<div style="position:relative">` que
- * o Radix põe em volta da fileira, que é o mesmo bloco contentor do marcador e
- * do painel. Um posicionamento só, para as três peças.
+ * **Ele não é `relative`, e isso é carga estrutural**: o `Indicator` do Radix
+ * se posiciona por `offsetLeft`, medido contra o `offsetParent`; com `relative`
+ * aqui ele valeria 0 para todo gatilho.
  */
 function NavigationMenuItem({
   className,
+  value: valueProp,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Item>) {
+  const auto = React.useId()
+  const value = valueProp ?? auto
+  const folha = React.useContext(FolhaContext)
+  if (folha) {
+    return (
+      <ItemContext.Provider value={value}>
+        <div role="group" data-slot="navigation-menu-sheet-section" className="flex flex-col">
+          {props.children}
+        </div>
+      </ItemContext.Provider>
+    )
+  }
   return (
-    <NavigationMenuPrimitive.Item
-      data-slot="navigation-menu-item"
-      className={cn("min-w-0", className)}
-      {...props}
+    <ItemContext.Provider value={value}>
+      <NavigationMenuPrimitive.Item
+        data-slot="navigation-menu-item"
+        value={value}
+        className={cn("min-w-0", className)}
+        {...props}
+      />
+    </ItemContext.Provider>
+  )
+}
+
+/** O objeto que viaja entre os gatilhos — um só, por `layoutId`. */
+function Realce() {
+  const { barId, variant } = React.useContext(NavigationMenuContext)
+  const reduzido = useReducedMotion()
+  return (
+    <motion.span
+      layoutId={`${barId}-realce`}
+      aria-hidden
+      data-slot="navigation-menu-highlight"
+      transition={reduzido ? { duration: 0 } : MOLA_DO_REALCE}
+      className={cn(
+        "pointer-events-none absolute inset-0 -z-10 rounded-[inherit]",
+        realceClassName[variant]
+      )}
     />
   )
 }
 
+/**
+ * O gatilho. Ele ganha o **ponto** quando um link do painel dele é a página
+ * atual (rodada 219): a pessoa sabe em que seção está sem abrir. E segura a
+ * troca de painel quando o cursor só passa a caminho do aberto (a diagonal
+ * segura): o Radix pula o próprio handler quando o nosso chama
+ * `preventDefault`, e um temporizador abre este gatilho se o cursor parar nele.
+ */
 function NavigationMenuTrigger({
   className,
   children,
+  onPointerEnter,
+  onPointerMove,
+  onPointerLeave,
+  onFocus,
+  onBlur,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Trigger>) {
-  const { size, variant } = React.useContext(NavigationMenuContext)
+  const ctx = React.useContext(NavigationMenuContext)
+  const item = React.useContext(ItemContext)
+  const folha = React.useContext(FolhaContext)
+  const esperaRef = React.useRef<number | undefined>(undefined)
+  React.useEffect(() => () => window.clearTimeout(esperaRef.current), [])
+  if (folha) {
+    return (
+      <p className="px-3 pt-3 pb-1 text-xs font-medium text-muted-foreground">
+        {children}
+      </p>
+    )
+  }
+
+  const temAtual = ctx.entradas.some((e) => e.item === item && e.ativo)
+  const aceso = ctx.realce === item
+  const comRealce = ctx.indicator === "highlight"
+
+  const segurar = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (e.pointerType !== "mouse") return false
+    if (ctx.aberto && ctx.aberto !== item && ctx.aCaminho(e.clientX, e.clientY)) {
+      e.preventDefault()
+      window.clearTimeout(esperaRef.current)
+      // Parou aqui: era mesmo este gatilho.
+      esperaRef.current = window.setTimeout(() => ctx.abrir(item), 150)
+      return true
+    }
+    return false
+  }
 
   return (
     <NavigationMenuPrimitive.Trigger
       data-slot="navigation-menu-trigger"
-      className={cn(navigationMenuTriggerVariants({ variant, size }), className)}
+      data-aceso={aceso ? "" : undefined}
+      className={cn(
+        navigationMenuTriggerVariants({ variant: ctx.variant, size: ctx.size }),
+        comRealce && SEM_FUNDO_PROPRIO,
+        className
+      )}
+      onPointerEnter={(e) => {
+        onPointerEnter?.(e)
+        if (!segurar(e)) ctx.setHover(item)
+      }}
+      onPointerMove={(e) => {
+        onPointerMove?.(e)
+        if (!segurar(e)) ctx.setHover(item)
+      }}
+      onPointerLeave={(e) => {
+        window.clearTimeout(esperaRef.current)
+        onPointerLeave?.(e)
+      }}
+      onFocus={(e) => {
+        ctx.setFoco(item)
+        onFocus?.(e)
+      }}
+      onBlur={(e) => {
+        ctx.setFoco(null)
+        onBlur?.(e)
+      }}
       {...props}
     >
+      {comRealce && aceso ? <Realce /> : null}
       {children}
+      {temAtual ? (
+        <span
+          aria-label="seção da página atual"
+          data-slot="navigation-menu-trigger-current"
+          className="size-1.5 rounded-full bg-primary-accent"
+        />
+      ) : null}
       <ChevronDownIcon
         aria-hidden="true"
         className="transition-[rotate] duration-(--duration-base) ease-(--ease-out) group-data-open/navigation-menu-trigger:rotate-180"
@@ -731,24 +893,12 @@ function NavigationMenuTrigger({
 }
 
 /**
- * O marcador **não desenha nada dentro de si**, e por isso não tem filho.
- *
- * Ele já teve: um bico de balão, um `<span>` de 8px rotacionado 45° na calha
- * entre a fileira e o painel. Ele era correto pelos números — `bg-popover` com
- * o mesmo `ring-foreground/10` do painel dava **1,00 contra ele**, que é o
- * valor certo para uma ponta —, e era isso o problema: **1,10 contra a página**
- * é uma peça que ocupa a calha e não diz nada que a posição do painel já não
- * diga. Ele saiu, e com ele a derivação que o ligava sozinho quando havia
- * viewport.
- *
- * O que sobrou é o que pinta a si mesmo. `underline` é um traço de acento sob o
- * gatilho aberto — **6,78:1** contra a página, o sinal alto que o bico nunca
- * foi —, e é opt-in. O padrão é `none`, e aí quem marca o gatilho aberto é o
- * realce que ele já tem.
+ * O marcador `underline`. Ele não desenha nada dentro de si: o bico de balão
+ * que já teve saiu, e o realce que viaja (`highlight`) é o padrão.
  */
 function NavigationMenuIndicator({
   className,
-  indicator = "none",
+  indicator = "underline",
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Indicator> & {
   indicator?: NavigationMenuIndicator
@@ -762,25 +912,20 @@ function NavigationMenuIndicator({
   )
 }
 
-/**
- * Onde o painel se ancora. As três âncoras são decididas **em JavaScript**, e
- * não por `in-data-[orientation=…]:`, e a razão é a de sempre nesta base: `in-*`
- * compila com `:where()`, que não soma especificidade — o override de vertical
- * empataria com o `left-1/2` do alinhamento e quem decidiria seria a ordem de
- * emissão do Tailwind, não o que se escreveu.
- */
 const VIEWPORT_ANCHOR: Record<
   NavigationMenuOrientation,
   Record<NavigationMenuAlign, string>
 > = {
   horizontal: {
-    trigger: "top-full left-(--navigation-menu-anchor-cx) -translate-x-1/2",
+    // O `50%` de reserva: sem a medida, o centro da fileira — nunca a posição
+    // estática, que punha metade do painel para fora (ver `ancora`).
+    trigger: "top-full left-[var(--navigation-menu-anchor-cx,50%)] -translate-x-1/2",
     start: "top-full left-0",
     center: "top-full left-1/2 -translate-x-1/2",
     end: "top-full right-0",
   },
   vertical: {
-    trigger: "left-full top-(--navigation-menu-anchor-cy) -translate-y-1/2",
+    trigger: "left-full top-[var(--navigation-menu-anchor-cy,50%)] -translate-y-1/2",
     start: "top-0 left-full",
     center: "top-1/2 left-full -translate-y-1/2",
     end: "bottom-0 left-full",
@@ -788,17 +933,11 @@ const VIEWPORT_ANCHOR: Record<
 }
 
 /**
- * O viewport, e o wrapper que o alinha.
+ * O viewport, e o wrapper que o alinha. Na vertical o painel voa para o lado.
  *
- * O wrapper anterior era `absolute top-full left-0 … justify-center` — e o
- * `justify-center` não fazia nada, porque uma caixa absoluta sem largura já
- * encolhe até o conteúdo. Alinhar exige mexer na âncora, que é o que `align`
- * faz agora; a fileira de um cabeçalho encostado à direita finalmente tem como
- * abrir o painel para dentro da tela.
- *
- * Na vertical o painel voa para o lado, e não para baixo: uma coluna de
- * navegação com o painel embaixo da última linha não é um flyout, é um acordeão
- * mal desenhado.
+ * A entrada é a da referência (rodada 219): desce 6px de 97% na mola da casa;
+ * a saída não se move e dura 130ms — um menu que fecha ao tirar o cursor não
+ * pode demorar.
  */
 function NavigationMenuViewport({
   className,
@@ -806,8 +945,6 @@ function NavigationMenuViewport({
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Viewport>) {
   const { align, orientation, anchored } = React.useContext(NavigationMenuContext)
   const vertical = orientation === "vertical"
-  // Sem medida ainda não há âncora, e `left: var(--x)` indefinido cairia em
-  // `auto`. O painel centra na fileira até o primeiro `medir()`.
   const ancora = align === "trigger" && !anchored ? "center" : align
 
   return (
@@ -823,26 +960,14 @@ function NavigationMenuViewport({
         className={cn(
           "relative h-(--radix-navigation-menu-viewport-height) w-full overflow-hidden",
           vertical
-            ? "ms-2 origin-left data-open:slide-in-from-left-2"
-            : "mt-2 origin-top data-open:slide-in-from-top-2",
+            ? "ms-2 origin-left data-open:slide-in-from-left-1.5"
+            : "mt-2 origin-top data-open:slide-in-from-top-1.5",
           menuPanelSurfaceClassName,
-          // O morph. O Radix já escreve a caixa do conteúdo ativo nas duas
-          // variáveis; uma `transition` de largura e altura é o que transforma
-          // o salto entre painéis em trajeto. **Explícito**, porque um
-          // `duration-*` sem `transition-*` deixa `transition-property: all` —
-          // era o que havia, e a 100ms lia como tremor. Na primeira abertura as
-          // variáveis nascem indefinidas (`auto`), e `auto → px` não interpola:
-          // o painel não cresce do zero.
+          // O morph: o Radix escreve a caixa do conteúdo ativo nas duas
+          // variáveis, e a transição de largura e altura é o trajeto.
           "transition-[width,height] duration-(--duration-base) ease-(--ease-out) md:w-(--radix-navigation-menu-viewport-width)",
-          // A forma é a das superfícies ancoradas (fade + 8px + zoom-95); o que
-          // muda é o tempo e a curva. `duration-*` alimenta `--tw-duration` e
-          // `ease-*` alimenta `--tw-ease`, que é o que o `animate-in` lê — sem
-          // o `ease-(--ease-out)` aqui a curva da casa nunca chegava a este
-          // painel, medido: `animation-timing-function: ease`.
-          "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95",
-          // A saída não se move e é mais curta: um menu que fecha ao tirar o
-          // cursor não pode demorar 200ms para sumir.
-          "data-closed:animate-out data-closed:fade-out-0 data-closed:duration-(--duration-instant)",
+          "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-[0.97] data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring)",
+          "data-closed:animate-out data-closed:fade-out-0 data-closed:animation-duration-[130ms]",
           className
         )}
         {...props}
@@ -853,45 +978,298 @@ function NavigationMenuViewport({
 
 function NavigationMenuContent({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Content>) {
   const { viewport, align, orientation, anchored } =
     React.useContext(NavigationMenuContext)
-  // Mesma queda do viewport: sem medida, `left: var(--x)` cairia em `auto`.
+  const folha = React.useContext(FolhaContext)
+  const item = React.useContext(ItemContext)
+  const [preview, setPreview] = React.useState<React.ReactNode>(null)
+  const previewCtx = React.useMemo(
+    () => ({ atual: preview, setAtual: setPreview }),
+    [preview]
+  )
   const ancora = align === "trigger" && !anchored ? "center" : align
 
-  return (
-    <NavigationMenuPrimitive.Content
-      data-slot="navigation-menu-content"
-      className={cn(
-        navigationMenuContentVariants({ viewport, orientation, align: ancora }),
-        className
-      )}
-      {...props}
-    />
-  )
-}
+  if (folha) return <>{children}</>
 
-function NavigationMenuPanel({
-  className,
-  columns = 1,
-  ...props
-}: React.ComponentProps<"ul"> &
-  VariantProps<typeof navigationMenuPanelVariants>) {
   return (
-    <NavigationMenuPanelContext.Provider value={true}>
-      <ul
-        ref={useScrollFade()}
-        data-slot="navigation-menu-panel"
-        data-columns={columns}
+    <>
+      {/* O índice: os filhos de novo, sem pintar — ver o cabeçalho do arquivo. */}
+      <IndiceContext.Provider value={true}>{children}</IndiceContext.Provider>
+      <NavigationMenuPrimitive.Content
+        data-slot="navigation-menu-content"
         className={cn(
-          navigationMenuPanelVariants({ columns }),
-          scrollFadeViewportClassName,
+          navigationMenuContentVariants({ viewport, orientation, align: ancora }),
           className
         )}
         {...props}
-      />
+      >
+        {/* Com viewport o Radix desenha estes filhos **dentro do viewport**,
+            fora do item na árvore do React: sem reenviar o item, o painel não
+            sabia de quem era — medido, o "abre na rota atual" abria na raiz. */}
+        <ItemContext.Provider value={item}>
+          <PreviewContext.Provider value={previewCtx}>{children}</PreviewContext.Provider>
+        </ItemContext.Provider>
+      </NavigationMenuPrimitive.Content>
+    </>
+  )
+}
+
+/**
+ * O painel. Ele guarda o **aprofundamento** (rodada 219): o caminho aberto
+ * pelos `NavigationMenuGroup`, a trilha em cima para voltar, e as setas — `↑↓`
+ * andam, `→` aprofunda, `←` volta, e o `Esc` sobe um nível antes de fechar.
+ * Ao abrir, ele já mostra o nível do link da página atual.
+ *
+ * As setas são tratadas **na captura**: o Radix já as move entre os links do
+ * conteúdo, mas só entre links — a linha que aprofunda ficaria de fora.
+ */
+function NavigationMenuPanel({
+  className,
+  columns = 1,
+  children,
+  onKeyDownCapture,
+  ...props
+}: React.ComponentProps<"ul"> &
+  VariantProps<typeof navigationMenuPanelVariants>) {
+  const indice = React.useContext(IndiceContext)
+  const folha = React.useContext(FolhaContext)
+  const ctx = React.useContext(NavigationMenuContext)
+  const item = React.useContext(ItemContext)
+  const dissolver = useScrollFade()
+  const listaRef = React.useRef<HTMLUListElement | null>(null)
+
+  // Abre na rota atual: o nível do link ativo deste item, se houver.
+  const [caminho, setCaminho] = React.useState<string[]>(
+    () => ctx.entradas.find((e) => e.item === item && e.ativo)?.nivel ?? []
+  )
+  const [rotulos, setRotulos] = React.useState<Record<string, React.ReactNode>>({})
+  const registrarRotulo = React.useCallback((id: string, rotulo: React.ReactNode) => {
+    setRotulos((r) => (r[id] === rotulo ? r : { ...r, [id]: rotulo }))
+  }, [])
+  const focarPrimeiroRef = React.useRef(false)
+  const entrar = React.useCallback((nivel: string[]) => {
+    focarPrimeiroRef.current = true
+    setCaminho(nivel)
+  }, [])
+  React.useEffect(() => {
+    if (!focarPrimeiroRef.current) return
+    focarPrimeiroRef.current = false
+    // O primeiro do nível novo: o "voltar" da trilha, ou — na raiz, onde não
+    // há trilha — o primeiro link ou grupo. Sem isto o foco caía no `<body>`
+    // ao voltar à raiz, com o nó focado desmontado.
+    listaRef.current
+      ?.querySelector<HTMLElement>(
+        "[data-panel-focavel], [data-slot=navigation-menu-link], [data-slot=navigation-menu-group]"
+      )
+      ?.focus()
+  }, [caminho])
+  const drill = React.useMemo(
+    () => ({ caminho, entrar, rotulos, registrarRotulo }),
+    [caminho, entrar, rotulos, registrarRotulo]
+  )
+  // Memorizada: refeita a cada render, a ref de função religaria o observador
+  // da dissolução — o defeito medido no `Drawer` (rodada 212).
+  const panelRef = React.useMemo(() => composeRefs(dissolver, listaRef), [dissolver])
+
+  const conteudo = (
+    <NavigationMenuPanelContext.Provider value={true}>
+      <DrillContext.Provider value={drill}>
+        <NivelContext.Provider value={[]}>{children}</NivelContext.Provider>
+      </DrillContext.Provider>
     </NavigationMenuPanelContext.Provider>
+  )
+  if (indice) return conteudo
+
+  const trilha =
+    caminho.length > 0 ? (
+      <li
+        data-slot="navigation-menu-trail"
+        className="col-span-full flex min-w-0 items-center gap-0.5 px-1.5 pt-1 pb-1.5 text-xs"
+      >
+        <nav aria-label="Caminho" className="flex min-w-0 flex-wrap items-center gap-0.5">
+          <button
+            type="button"
+            data-panel-focavel
+            aria-label="Voltar"
+            onClick={() => entrar(caminho.slice(0, -1))}
+            className="flex size-6 items-center justify-center rounded-md text-muted-foreground outline-hidden hover:bg-muted hover:text-foreground active:bg-muted active:text-foreground focus-visible:ring-3 focus-visible:ring-ring/45"
+          >
+            <ChevronLeftIcon aria-hidden className="size-4" />
+          </button>
+          {caminho.map((id, i) => {
+            const ultimo = i === caminho.length - 1
+            return (
+              <span key={id} className="flex min-w-0 items-center gap-0.5">
+                {i > 0 ? (
+                  <ChevronRightIcon aria-hidden className="size-3 text-muted-foreground/60" />
+                ) : null}
+                {ultimo ? (
+                  <span aria-current="location" className="truncate font-semibold text-foreground">
+                    {rotulos[id]}
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => entrar(caminho.slice(0, i + 1))}
+                    className="truncate rounded-sm font-medium text-muted-foreground outline-hidden hover:text-foreground active:text-foreground focus-visible:text-foreground"
+                  >
+                    {rotulos[id]}
+                  </button>
+                )}
+              </span>
+            )
+          })}
+        </nav>
+      </li>
+    ) : null
+
+  const teclas = (e: React.KeyboardEvent<HTMLUListElement>) => {
+    onKeyDownCapture?.(e)
+    const focaveis = Array.from(
+      listaRef.current?.querySelectorAll<HTMLElement>(
+        "a[href], [data-slot=navigation-menu-link], [data-slot=navigation-menu-group], [data-panel-focavel]"
+      ) ?? []
+    )
+    const i = focaveis.indexOf(document.activeElement as HTMLElement)
+    const andar = (j: number) => {
+      e.preventDefault()
+      e.stopPropagation()
+      focaveis[Math.max(0, Math.min(focaveis.length - 1, j))]?.focus()
+    }
+    if (e.key === "ArrowDown") andar(i + 1)
+    else if (e.key === "ArrowUp") andar(i - 1)
+    else if (e.key === "Home") andar(0)
+    else if (e.key === "End") andar(focaveis.length - 1)
+    else if (e.key === "ArrowLeft" || (e.key === "Escape" && caminho.length > 0)) {
+      if (caminho.length === 0) return
+      // Sobe um nível — e o Esc só fecha o painel no topo.
+      e.preventDefault()
+      e.stopPropagation()
+      entrar(caminho.slice(0, -1))
+    } else if (e.key === "ArrowRight") {
+      const alvo = document.activeElement as HTMLElement | null
+      if (alvo?.dataset.slot === "navigation-menu-group") {
+        e.preventDefault()
+        e.stopPropagation()
+        alvo.click()
+      }
+    }
+  }
+
+  if (folha) {
+    return (
+      <ul
+        ref={listaRef}
+        data-slot="navigation-menu-panel"
+        className="flex flex-col"
+        onKeyDownCapture={teclas}
+      >
+        {trilha}
+        {conteudo}
+      </ul>
+    )
+  }
+
+  return (
+    <ul
+      ref={panelRef}
+      data-slot="navigation-menu-panel"
+      data-columns={columns}
+      className={cn(
+        navigationMenuPanelVariants({ columns }),
+        scrollFadeViewportClassName,
+        className
+      )}
+      onKeyDownCapture={teclas}
+      {...props}
+    >
+      {trilha}
+      {conteudo}
+    </ul>
+  )
+}
+
+/**
+ * Um grupo que **aprofunda no lugar** (rodada 219): no nível dele, é uma linha
+ * com a seta; tocada, o painel passa a mostrar os filhos, com a trilha em cima.
+ * Grupos aninham — a trilha cresce, a largura não.
+ */
+function NavigationMenuGroup({
+  label,
+  value,
+  description,
+  icon,
+  badge,
+  children,
+}: {
+  label: React.ReactNode
+  /**
+   * A identidade do grupo no caminho. Sem ela, o rótulo em texto. **Não é um
+   * `useId`**: o índice e o painel são instâncias diferentes do mesmo grupo,
+   * e com ids diferentes o caminho da página atual, registrado no índice, não
+   * bate com o do painel — medido, ele abria na raiz.
+   */
+  value?: string
+  description?: React.ReactNode
+  icon?: React.ReactNode
+  badge?: React.ReactNode
+  children: React.ReactNode
+}) {
+  const auto = React.useId()
+  const id = value ?? (typeof label === "string" ? label : auto)
+  const nivel = React.useContext(NivelContext)
+  const drill = React.useContext(DrillContext)
+  const visivel = useVisivel()
+  const indice = React.useContext(IndiceContext)
+  const registrarRotulo = drill?.registrarRotulo
+  const rotulo = typeof label === "string" ? label : null
+  React.useEffect(() => {
+    if (registrarRotulo) registrarRotulo(id, rotulo ?? label)
+    // `label` como elemento muda de identidade a cada render; o texto basta.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registrarRotulo, id, rotulo])
+
+  const filhos = (
+    <NivelContext.Provider value={[...nivel, id]}>{children}</NivelContext.Provider>
+  )
+  if (indice || !visivel) return filhos
+
+  // Na folha, a mesma linha no corpo da gaveta.
+  return (
+    <>
+      <li className="min-w-0">
+        <button
+          type="button"
+          data-slot="navigation-menu-group"
+          aria-expanded={false}
+          onClick={() => drill?.entrar([...nivel, id])}
+          className={cn(
+            navigationMenuLinkVariants({ variant: description ? "card" : "row" }),
+            "w-full text-left",
+            description && "grid-cols-[auto_minmax(0,1fr)_auto] has-[>svg]:grid-cols-[auto_minmax(0,1fr)_auto]"
+          )}
+        >
+          {icon}
+          {description ? (
+            <>
+              <NavigationMenuLinkTitle badge={badge}>{label}</NavigationMenuLinkTitle>
+              <ChevronRightIcon aria-hidden className="row-span-2 size-4 self-center text-muted-foreground" />
+              <NavigationMenuLinkDescription>{description}</NavigationMenuLinkDescription>
+            </>
+          ) : (
+            <>
+              <span className="truncate">{label}</span>
+              {badge ? <Badge variant="outline" size="xs">{badge}</Badge> : null}
+              <ChevronRightIcon aria-hidden className="ms-auto size-4 text-muted-foreground" />
+            </>
+          )}
+        </button>
+      </li>
+      {filhos}
+    </>
   )
 }
 
@@ -900,6 +1278,9 @@ function NavigationMenuSectionLabel({
   className,
   ...props
 }: React.ComponentProps<"li">) {
+  const indice = React.useContext(IndiceContext)
+  const visivel = useVisivel()
+  if (indice || !visivel) return null
   return (
     <li
       data-slot="navigation-menu-section-label"
@@ -913,45 +1294,172 @@ function NavigationMenuSectionLabel({
   )
 }
 
+/**
+ * O link. No índice ele só se registra (se é a página atual, e em que nível
+ * mora); fora do nível aberto ele não aparece; com `preview`, ele escreve na
+ * prévia ao lado quando o cursor ou o foco chegam.
+ */
 function NavigationMenuLink({
   className,
   variant = "row",
+  active,
+  preview,
+  onPointerEnter,
+  onFocus,
+  onClick,
+  onSelect,
+  asChild,
+  children,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Link> &
-  VariantProps<typeof navigationMenuLinkVariants>) {
+  VariantProps<typeof navigationMenuLinkVariants> & {
+    /** O que a `NavigationMenuPreview` mostra com este link sob o cursor. */
+    preview?: React.ReactNode
+  }) {
   const inPanel = React.useContext(NavigationMenuPanelContext)
-  const { size, variant: rowVariant } = React.useContext(NavigationMenuContext)
+  const ctx = React.useContext(NavigationMenuContext)
+  const item = React.useContext(ItemContext)
+  const indice = React.useContext(IndiceContext)
+  const folha = React.useContext(FolhaContext)
+  const nivel = React.useContext(NivelContext)
+  const previewCtx = React.useContext(PreviewContext)
+  const visivel = useVisivel()
+  const id = React.useId()
+
+  const registrar = ctx.registrar
+  const nivelChave = nivel.join("/")
+  React.useEffect(() => {
+    if (!indice) return
+    return registrar({
+      id,
+      item,
+      nivel: nivelChave ? nivelChave.split("/") : [],
+      ativo: active === true,
+    })
+  }, [indice, registrar, id, item, nivelChave, active])
+
+  // O link do topo que é a página atual: o realce descansa nele.
+  const setAtual = ctx.setAtual
+  React.useEffect(() => {
+    if (inPanel || indice || folha || !active) return
+    setAtual(item)
+    return () => setAtual(null)
+  }, [inPanel, indice, folha, active, setAtual, item])
+
+  if (indice) return null
+  if (!visivel) return null
+
+  if (folha) {
+    const Comp = asChild ? Slot.Root : "a"
+    return (
+      <div className="min-w-0" role="none">
+        <Comp
+          data-slot="navigation-menu-link"
+          aria-current={active ? "page" : undefined}
+          className={cn(drawerActionClassName, "[&_svg]:size-5", className)}
+          onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+            onClick?.(e)
+            onSelect?.(e.nativeEvent)
+            folha.fechar()
+          }}
+          {...props}
+        >
+          {children}
+        </Comp>
+      </div>
+    )
+  }
+
+  const aceso = !inPanel && ctx.realce === item
+  const comRealce = !inPanel && ctx.indicator === "highlight"
 
   const link = (
     <NavigationMenuPrimitive.Link
       data-slot="navigation-menu-link"
       data-variant={inPanel ? variant : "top"}
+      data-aceso={aceso ? "" : undefined}
+      active={active}
+      asChild={asChild}
       className={cn(
         inPanel
           ? navigationMenuLinkVariants({ variant })
           : cn(
-              navigationMenuTriggerVariants({ variant: rowVariant, size }),
-              navigationMenuTopLinkVariants({ variant: rowVariant })
+              navigationMenuTriggerVariants({ variant: ctx.variant, size: ctx.size }),
+              navigationMenuTopLinkVariants({ variant: ctx.variant }),
+              comRealce && SEM_FUNDO_PROPRIO,
+              comRealce && "aria-[current=page]:bg-transparent aria-[current=page]:shadow-none aria-[current=page]:border-transparent"
             ),
         className
       )}
+      onPointerEnter={(e) => {
+        onPointerEnter?.(e)
+        if (inPanel) {
+          if (preview) previewCtx?.setAtual(preview)
+        } else ctx.setHover(item)
+      }}
+      onFocus={(e) => {
+        onFocus?.(e)
+        if (inPanel) {
+          if (preview) previewCtx?.setAtual(preview)
+        } else ctx.setFoco(item)
+      }}
+      onClick={onClick}
+      onSelect={onSelect}
       {...props}
-    />
+    >
+      {comRealce && aceso ? comRealceDentro(children, asChild) : children}
+    </NavigationMenuPrimitive.Link>
   )
 
   return inPanel ? <li className="min-w-0">{link}</li> : link
 }
 
+/**
+ * Põe o realce **dentro** do que o link desenha. Com `asChild` o `Slot` aceita
+ * um filho só — o `Link` do Next —, e o realce entra como primeiro filho dele.
+ */
+function comRealceDentro(children: React.ReactNode, asChild?: boolean) {
+  if (asChild && React.isValidElement<{ children?: React.ReactNode }>(children)) {
+    return React.cloneElement(
+      children,
+      undefined,
+      <>
+        <Realce />
+        {children.props.children}
+      </>
+    )
+  }
+  return (
+    <>
+      <Realce />
+      {children}
+    </>
+  )
+}
+
+/**
+ * O título do link em cartão. `badge` (rodada 219) é a pílula pequena ao lado
+ * do nome — "Novo", "Beta" —, a da referência.
+ */
 function NavigationMenuLinkTitle({
   className,
+  badge,
+  children,
   ...props
-}: React.ComponentProps<"span">) {
+}: React.ComponentProps<"span"> & { badge?: React.ReactNode }) {
   return (
     <span
       data-slot="navigation-menu-link-title"
-      className={cn("truncate font-medium", className)}
+      className={cn("flex min-w-0 items-center gap-2 font-medium", className)}
       {...props}
-    />
+    >
+      <span className="truncate">{children}</span>
+      {badge ? (
+        <Badge variant="outline" size="xs" className="shrink-0">
+          {badge}
+        </Badge>
+      ) : null}
+    </span>
   )
 }
 
@@ -971,6 +1479,150 @@ function NavigationMenuLinkDescription({
   )
 }
 
+/**
+ * O cabeçalho do painel (rodada 219): o título e a descrição, os da
+ * referência. Mora no `NavigationMenuContent`, ao lado do painel, e não dentro
+ * do `<ul>`.
+ */
+function NavigationMenuPanelHeader({
+  title,
+  description,
+  className,
+}: {
+  title: React.ReactNode
+  description?: React.ReactNode
+  className?: string
+}) {
+  const indice = React.useContext(IndiceContext)
+  const folha = React.useContext(FolhaContext)
+  if (indice || folha) return null
+  return (
+    <div
+      data-slot="navigation-menu-panel-header"
+      className={cn("flex flex-col px-3 pt-3 pb-1", className)}
+    >
+      <p className="text-sm font-medium leading-snug">{title}</p>
+      {description ? (
+        <p className="text-xs leading-snug text-muted-foreground">{description}</p>
+      ) : null}
+    </div>
+  )
+}
+
+/**
+ * O rodapé do painel (rodada 219): o "Ver tudo" à esquerda e, com `legend`, as
+ * teclas do painel à direita — `↑↓ ← → ↵`, como na referência. A legenda some
+ * no toque.
+ */
+function NavigationMenuPanelFooter({
+  children,
+  legend = false,
+  className,
+}: {
+  children?: React.ReactNode
+  legend?: boolean
+  className?: string
+}) {
+  const indice = React.useContext(IndiceContext)
+  const folha = React.useContext(FolhaContext)
+  if (indice) return null
+  if (folha) return children ? <div className="px-1 pt-1">{children}</div> : null
+  return (
+    <div
+      data-slot="navigation-menu-panel-footer"
+      className={cn(
+        "flex min-h-10 items-center justify-between gap-3 px-3 py-1.5 text-xs text-muted-foreground",
+        className
+      )}
+    >
+      <div className="flex min-w-0 items-center gap-2">{children}</div>
+      {legend ? (
+        <span aria-hidden className="flex shrink-0 items-center gap-1 pointer-coarse:hidden">
+          {["↑↓", "←", "→", "↵"].map((t) => (
+            <Kbd key={t}>{t}</Kbd>
+          ))}
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
+/**
+ * A prévia ao lado (rodada 219): uma coluna à direita do painel que mostra o
+ * `preview` do link sob o cursor ou com o foco. `children` é o que ela mostra
+ * antes de qualquer um. Compõe com o painel numa linha:
+ * `<div className="flex"><NavigationMenuPanel/><NavigationMenuPreview/></div>`.
+ */
+function NavigationMenuPreview({
+  children,
+  className,
+}: {
+  children?: React.ReactNode
+  className?: string
+}) {
+  const indice = React.useContext(IndiceContext)
+  const folha = React.useContext(FolhaContext)
+  const ctx = React.useContext(PreviewContext)
+  if (indice || folha) return null
+  const mostra = ctx?.atual ?? children
+  return (
+    <div
+      data-slot="navigation-menu-preview"
+      aria-live="polite"
+      className={cn(
+        "m-1 hidden w-56 shrink-0 flex-col justify-end gap-1 rounded-md bg-muted/60 p-3 text-sm sm:flex",
+        className
+      )}
+    >
+      {/* A troca esmaece: a chave muda com o conteúdo, e o nó novo entra. */}
+      <div
+        key={typeof mostra === "string" ? mostra : undefined}
+        className="flex flex-col gap-1 animate-in fade-in-0 animation-duration-(--duration-base)"
+      >
+        {mostra}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * No telefone, a folha (rodada 219, `mobile="sheet"`). A fileira com painéis
+ * não cabe em 375px; a folha desenha as mesmas peças como seções, com os
+ * grupos aprofundando no lugar e a trilha em cima, e cada link fecha a gaveta.
+ */
+function NavigationMenuFolha({
+  label,
+  children,
+}: {
+  label: string
+  children: React.ReactNode
+}) {
+  const [aberta, setAberta] = React.useState(false)
+  const folha = React.useMemo(() => ({ fechar: () => setAberta(false) }), [])
+  return (
+    <Drawer open={aberta} onOpenChange={setAberta}>
+      <DrawerTrigger asChild>
+        <Button variant="outline" size="lg" data-slot="navigation-menu-sheet-trigger">
+          <Bars3Icon aria-hidden className="size-5" />
+          {label}
+        </Button>
+      </DrawerTrigger>
+      <DrawerContent variant="inset" data-slot="navigation-menu-sheet">
+        <DialogHeader className="sr-only">
+          <DialogTitle>{label}</DialogTitle>
+          <DialogDescription>A navegação desta página</DialogDescription>
+        </DialogHeader>
+        <FolhaContext.Provider value={folha}>
+          <nav aria-label={label} className="flex flex-col px-2">
+            {children}
+          </nav>
+        </FolhaContext.Provider>
+        <DrawerCancel />
+      </DrawerContent>
+    </Drawer>
+  )
+}
+
 export {
   NavigationMenu,
   NavigationMenuList,
@@ -978,6 +1630,10 @@ export {
   NavigationMenuTrigger,
   NavigationMenuContent,
   NavigationMenuPanel,
+  NavigationMenuPanelHeader,
+  NavigationMenuPanelFooter,
+  NavigationMenuGroup,
+  NavigationMenuPreview,
   NavigationMenuSectionLabel,
   NavigationMenuLink,
   NavigationMenuLinkTitle,

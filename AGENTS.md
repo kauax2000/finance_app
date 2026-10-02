@@ -1423,6 +1423,22 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `w-fit` distribui sobra **zero**, então as abas nunca esticaram, e o `Tabs`
   hoje mede o gatilho como esta barra. Não há mais exceção: os dois ancoram no
   gatilho.
+- **O `NavigationMenu` foi redesenhado na rodada 219**, com a mesma
+  referência de movimento: a **pílula flutuante** e o **realce que viaja**
+  (`indicator="highlight"`, que descansa no link da página atual) são o padrão
+  — a fileira volta a ser o mesmo objeto do `Menubar`. O painel entra na mola,
+  os links sobem em cascata (`@utility navigation-menu-reveal`), e há
+  `NavigationMenuPanelHeader` e `NavigationMenuPanelFooter` (o "Ver tudo" e a
+  legenda das teclas). **`NavigationMenuGroup` aprofunda no lugar**, com a
+  trilha em cima; as setas são do painel, na captura (o Radix só as move entre
+  links), e o `Esc` sobe um nível antes de fechar. O gatilho ganha o **ponto**
+  quando a página atual está no painel dele, e o painel **abre no nível dela** —
+  pelo mesmo índice do `Menubar`. Duas medições: o id do grupo **não é
+  `useId`** (índice e painel são instâncias diferentes), e com viewport o Radix
+  desenha o conteúdo **fora do item** na árvore do React, então o conteúdo
+  reenvia o item. Há a **diagonal segura** (o triângulo até o painel; o Radix
+  pula o próprio handler quando o nosso chama `preventDefault`), a
+  `NavigationMenuPreview` ao lado, o `badge` do título e `mobile="sheet"`.
 - **O `Menubar` foi redesenhado na rodada 218**, com a referência de
   movimento do dono (um seletor em cascata): **o realce é um objeto só** que
   viaja entre os gatilhos na mola dela (`layoutId` do `motion`, 0,28s, 20% de

@@ -3001,6 +3001,35 @@
   }
 }
 
+/* Os links do painel do `NavigationMenu` sobem 3px em cascata ao abrir e a
+   cada nível do aprofundamento (rodada 219) — os números da referência, os
+   mesmos da `menubar-reveal`. */
+@utility navigation-menu-reveal {
+  & > li {
+    animation: menubar-rise 160ms var(--ease-out) 40ms both;
+  }
+  & > li:nth-child(2) {
+    animation-delay: 70ms;
+  }
+  & > li:nth-child(3) {
+    animation-delay: 100ms;
+  }
+  & > li:nth-child(4) {
+    animation-delay: 130ms;
+  }
+  & > li:nth-child(5) {
+    animation-delay: 160ms;
+  }
+  & > li:nth-child(n + 6) {
+    animation-delay: 190ms;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    & > li {
+      animation-delay: 0ms;
+    }
+  }
+}
+
 @utility command-reveal {
   & [cmdk-item],
   & [cmdk-group-heading] {
