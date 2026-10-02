@@ -135,6 +135,15 @@ const DropdownMenuTituloContext = React.createContext<
   ((id: string | null) => void) | null
 >(null)
 
+/**
+ * O menu com busca mede como o `Combobox` — a mesma placa com a pílula e a
+ * lista dentro: pílula `md` a 8px das bordas, lista com 8px dos lados e
+ * embaixo, linhas de 32 (`gap-2 px-2 py-1.5`). Com a pílula de 28 a 4px e as
+ * linhas de 28 do menu, os dois saíam diferentes fazendo o mesmo desenho.
+ */
+const DropdownMenuBuscaContext = React.createContext(false)
+const LINHA_DA_BUSCA = "gap-2 px-2 py-1.5"
+
 /** O rádio da folha: o valor e quem o troca, sem o Radix. */
 const FolhaRadioContext = React.createContext<{
   value?: string
@@ -508,7 +517,7 @@ function DropdownMenuContent({
         {search ? (
           <div
             data-slot="dropdown-menu-search"
-            className="relative z-10 shrink-0 p-1 pb-0"
+            className="relative z-10 shrink-0 p-2"
             // Com busca, o foco vai para o campo. O conteúdo do Radix não
             // expõe `onOpenAutoFocus`, e ele mesmo foca o menu ao abrir — o
             // quadro seguinte é depois disso.
@@ -534,14 +543,12 @@ function DropdownMenuContent({
           >
             <SearchInput
               ref={campo}
-              size="sm"
               surface="plate"
               value={estado.busca}
               onChange={(e) => estado.setBusca(e.target.value)}
               onClear={() => estado.setBusca("")}
               placeholder={placeholder}
               aria-label={placeholder}
-              touchFloor={false}
             />
           </div>
         ) : null}
@@ -551,10 +558,13 @@ function DropdownMenuContent({
           className={cn(
             menuViewportClassName,
             scrollFadeViewportClassName,
+            search && "px-2 pt-0 pb-2",
             "[&:not(:has([role^=menuitem]))>[data-slot=dropdown-menu-empty]]:block"
           )}
         >
-          {children}
+          <DropdownMenuBuscaContext.Provider value={Boolean(search)}>
+            {children}
+          </DropdownMenuBuscaContext.Provider>
           {vazio}
         </div>
         <ScrollFadeArrows />
@@ -750,6 +760,7 @@ function DropdownMenuItem({
   onSelect?: (event: Event) => void | Promise<unknown>
 }) {
   const estado = React.useContext(DropdownMenuEstadoContext)
+  const naBusca = React.useContext(DropdownMenuBuscaContext)
   const { armado, carregando, escolher } = useEscolha({ confirm, onSelect, pending })
   const texto = textValue ?? textoDe(children)
   if (estado.busca && commandFilter(texto, estado.busca) <= 0) return null
@@ -843,6 +854,7 @@ function DropdownMenuItem({
       }}
       className={cn(
         menuItemClassName,
+        naBusca && LINHA_DA_BUSCA,
         grade,
         "data-armed:bg-destructive/10 data-armed:text-destructive",
         className
@@ -863,6 +875,7 @@ function DropdownMenuSubTrigger({
   inset?: boolean
 }) {
   const { folha } = React.useContext(DropdownMenuEstadoContext)
+  const naBusca = React.useContext(DropdownMenuBuscaContext)
   if (folha) {
     return (
       <p className="px-3 pt-3 pb-1 text-xs font-medium text-muted-foreground">
@@ -874,7 +887,7 @@ function DropdownMenuSubTrigger({
     <DropdownMenuPrimitive.SubTrigger
       data-slot="dropdown-menu-sub-trigger"
       data-inset={inset}
-      className={cn(menuSubTriggerClassName, className)}
+      className={cn(menuSubTriggerClassName, naBusca && LINHA_DA_BUSCA, className)}
       {...props}
     >
       {children}
@@ -909,7 +922,10 @@ function DropdownMenuSubContent({
           data-slot="dropdown-menu-sub-viewport"
           className={cn(menuViewportClassName, scrollFadeViewportClassName)}
         >
-          {children}
+          {/* O submenu não tem busca, e o contexto atravessa o portal. */}
+          <DropdownMenuBuscaContext.Provider value={false}>
+            {children}
+          </DropdownMenuBuscaContext.Provider>
         </div>
         <ScrollFadeArrows />
       </DropdownMenuPrimitive.SubContent>
@@ -936,6 +952,7 @@ function DropdownMenuCheckboxItem({
   closeOnSelect?: boolean
 }) {
   const estado = React.useContext(DropdownMenuEstadoContext)
+  const naBusca = React.useContext(DropdownMenuBuscaContext)
   if (estado.folha) {
     const marcado = checked === true
     return (
@@ -960,7 +977,7 @@ function DropdownMenuCheckboxItem({
     <DropdownMenuPrimitive.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
       data-inset={inset}
-      className={cn(menuIndicatorItemClassName, className)}
+      className={cn(menuIndicatorItemClassName, naBusca && "gap-2 pl-2 py-1.5", className)}
       checked={checked}
       onCheckedChange={onCheckedChange}
       onSelect={(e) => {
@@ -988,6 +1005,7 @@ function DropdownMenuRadioItem({
   inset?: boolean
 }) {
   const estado = React.useContext(DropdownMenuEstadoContext)
+  const naBusca = React.useContext(DropdownMenuBuscaContext)
   const radio = React.useContext(FolhaRadioContext)
   if (estado.folha) {
     const marcado = radio?.value === props.value
@@ -1013,7 +1031,7 @@ function DropdownMenuRadioItem({
     <DropdownMenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
       data-inset={inset}
-      className={cn(menuIndicatorItemClassName, className)}
+      className={cn(menuIndicatorItemClassName, naBusca && "gap-2 pl-2 py-1.5", className)}
       {...props}
     >
       <span className={menuIndicatorSlotClassName}>
@@ -1038,6 +1056,7 @@ function DropdownMenuLabel({
   inset?: boolean
 }) {
   const { folha } = React.useContext(DropdownMenuEstadoContext)
+  const naBusca = React.useContext(DropdownMenuBuscaContext)
   if (folha) {
     return (
       <div
@@ -1052,7 +1071,7 @@ function DropdownMenuLabel({
     <DropdownMenuPrimitive.Label
       data-slot="dropdown-menu-label"
       data-inset={inset}
-      className={cn(menuLabelClassName, className)}
+      className={cn(menuLabelClassName, naBusca && "px-2", className)}
       {...props}
     />
   )
@@ -1063,11 +1082,12 @@ function DropdownMenuSeparator({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Separator>) {
   const { folha } = React.useContext(DropdownMenuEstadoContext)
+  const naBusca = React.useContext(DropdownMenuBuscaContext)
   if (folha) return <Separator tone="soft" className="my-2" />
   return (
     <DropdownMenuPrimitive.Separator
       data-slot="dropdown-menu-separator"
-      className={cn(menuSeparatorClassName, className)}
+      className={cn(menuSeparatorClassName, naBusca && "-mx-2", className)}
       {...props}
     />
   )

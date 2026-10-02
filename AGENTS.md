@@ -2380,7 +2380,9 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   só arma, e a ação da tela — `onSelect` **ou** `onClick` — espera) e o
   `onSelect` que devolve `Promise` (a linha carrega, o menu fecha no fim).
   `DropdownMenuContent search` filtra pelo nome; no campo a tecla é texto,
-  senão o Radix buscaria por digitação e levaria o foco. **A caixa não fecha
+  senão o Radix buscaria por digitação e levaria o foco. **Com busca, o menu mede
+  como o `Combobox`** (pílula `md` a 8px, linhas de 32 a 8px), sem ser ele: o
+  menu age e o `Combobox` escolhe valor. **A caixa não fecha
   o menu** (`closeOnSelect` volta ao Radix): a página afirmava isso e o Radix
   fechava. `shortcut` na raiz abre pela tecla — a linha com o foco, ou a tela
   sem foco. Ícone de linha não leva `h-4 w-4` nem `mr-2`: a linha dimensiona

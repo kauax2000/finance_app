@@ -17154,3 +17154,14 @@ e o `overflow-hidden` da superfície o recortava. Medido: o submenu estava
 `data-state=open`, opaco, com dois itens, e invisível. `DropdownMenu`,
 `ContextMenu` e `Menubar` passaram a embrulhá-lo no `Portal`, e o teste da
 rodada tranca os três.
+
+**O menu com busca passou a medir como o `Combobox`** (pedido do dono, com a
+tela dos dois lado a lado). Medido antes: pílula `sm` de 28 a 4px das bordas,
+texto de 12,8px, linhas de 28 a 4px — contra a pílula `md` de 32 a 8px, texto
+de 14, linhas de 32 a 8px e 8px embaixo do `Combobox`. **Não viraram o mesmo
+componente**, e a razão é o papel: o menu **age** (`role="menu"`, a linha
+dispara uma ação), o `Combobox` **escolhe um valor** (`listbox`, o cmdk, o
+tique). O que se divide é a medida: com `search`, o conteúdo publica
+`DropdownMenuBuscaContext` e as linhas, os rótulos e o separador vestem a
+geometria do `Combobox`; o submenu zera o contexto, porque ele atravessa o
+portal. Medido depois: 32/8/8 e 32/8/8, número a número.
