@@ -16,9 +16,11 @@ import {
     Table,
     TableBody,
     TableCell,
+    TableEmpty,
     TableHead,
     TableHeader,
     TableRow,
+    TableSkeleton,
 } from "@/components/ui/table"
 import {
     tagChipSky,
@@ -200,90 +202,87 @@ export function InstallmentPurchaseSection({
                     <p className="mt-3 text-2xs leading-snug text-muted-foreground">{warning}</p>
                 ) : null}
 
-                <Table variant="outline" size="sm" className="mt-3 min-w-[280px]">
-                    <TableHeader labels="caps">
-                        <TableRow>
-                            <TableHead className="h-8 w-10 px-2 text-2xs font-semibold uppercase tracking-wide">
-                                #
-                            </TableHead>
-                            <TableHead>
-                                Data
-                            </TableHead>
-                            <TableHead numeric>
-                                Valor da parcela
-                            </TableHead>
-                            <TableHead>
-                                Status
-                            </TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {summary.slicesLoading ? (
+                {/* A moldura é da `Table`, e a margem fica num envelope: na `<table>` ela
+                    caía dentro da borda, como um vão acima do cabeçalho. */}
+                <div className="mt-3">
+                    {summary.slicesLoading ? (
+                        // Carregando: a mesma tabela em ossos, com o cabeçalho de
+                        // verdade na régua versalete.
+                        <TableSkeleton
+                            variant="outline"
+                            size="sm"
+                            headerLabels="caps"
+                            headerVariant="plain"
+                            className="min-w-70"
+                            rows={3}
+                            label="Carregando as parcelas…"
+                            columns={[
+                                { label: "#", width: "1rem", className: "w-10" },
+                                { label: "Data", width: "4rem" },
+                                { label: "Valor da parcela", numeric: true },
+                                { label: "Status", width: "4.5rem" },
+                            ]}
+                        />
+                    ) : (
+                    <Table variant="outline" size="sm" className="min-w-70">
+                        <TableHeader labels="caps">
                             <TableRow>
-                                <TableCell
-                                    colSpan={4}
-                                    className="h-10 px-2 text-center text-muted-foreground"
-                                >
-                                    …
-                                </TableCell>
+                                <TableHead className="w-10">#</TableHead>
+                                <TableHead>Data</TableHead>
+                                <TableHead numeric>Valor da parcela</TableHead>
+                                <TableHead>Status</TableHead>
                             </TableRow>
-                        ) : summary.scheduleRows && summary.scheduleRows.length > 0 ? (
-                            summary.scheduleRows.map((row) => {
-                                const isCurrent = isCurrentRow(row)
-                                return (
-                                    <TableRow
-                                        key={row.slot}
-                                        className={cn(
-                                            "h-9 border-border/40",
-                                            isCurrent && "bg-muted/50 dark:bg-muted/30"
-                                        )}
-                                    >
-                                        <TableCell className="px-2 py-1.5 font-medium tabular-nums">
-                                            {row.slot}
-                                            {isCurrent ? (
+                        </TableHeader>
+                        <TableBody>
+                            {summary.scheduleRows && summary.scheduleRows.length > 0 ? (
+                                summary.scheduleRows.map((row) => {
+                                    const isCurrent = isCurrentRow(row)
+                                    return (
+                                        <TableRow
+                                            key={row.slot}
+                                            state={isCurrent ? "current" : undefined}
+                                        >
+                                            <TableCell className="font-medium nums">
+                                                {row.slot}
+                                                {isCurrent ? (
+                                                    <span
+                                                        className="ml-1 text-2xs font-normal text-muted-foreground"
+                                                        title={currentRowTitle}
+                                                    >
+                                                        ●
+                                                    </span>
+                                                ) : null}
+                                            </TableCell>
+                                            <TableCell className="max-w-28 truncate nums text-muted-foreground">
+                                                {row.date ? formatTransactionDayPtBr(row.date) : "—"}
+                                            </TableCell>
+                                            <TableCell numeric className="font-medium">
+                                                {currencyBRL(row.parcelAmount)}
+                                            </TableCell>
+                                            <TableCell>
                                                 <span
-                                                    className="ml-1 text-2xs font-normal text-muted-foreground"
-                                                    title={currentRowTitle}
+                                                    className={cn(
+                                                        transactionRowChipShell,
+                                                        statusChipClassName(row)
+                                                    )}
                                                 >
-                                                    ●
+                                                    {row.status === "pending"
+                                                        ? "Não lançada"
+                                                        : row.invoicePaid
+                                                          ? "Paga"
+                                                          : "Lançada"}
                                                 </span>
-                                            ) : null}
-                                        </TableCell>
-                                        <TableCell className="max-w-[7rem] truncate px-2 py-1.5 tabular-nums text-muted-foreground">
-                                            {row.date ? formatTransactionDayPtBr(row.date) : "—"}
-                                        </TableCell>
-                                        <TableCell className="px-2 py-1.5 text-right tabular-nums font-medium">
-                                            {currencyBRL(row.parcelAmount)}
-                                        </TableCell>
-                                        <TableCell className="px-2 py-1.5">
-                                            <span
-                                                className={cn(
-                                                    transactionRowChipShell,
-                                                    statusChipClassName(row)
-                                                )}
-                                            >
-                                                {row.status === "pending"
-                                                    ? "Não lançada"
-                                                    : row.invoicePaid
-                                                      ? "Paga"
-                                                      : "Lançada"}
-                                            </span>
-                                        </TableCell>
-                                    </TableRow>
-                                )
-                            })
-                        ) : (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={4}
-                                    className="h-10 px-2 text-center text-muted-foreground"
-                                >
-                                    Sem parcelas para exibir.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
+                                            </TableCell>
+                                        </TableRow>
+                                    )
+                                })
+                            ) : (
+                                <TableEmpty colSpan={4}>Sem parcelas para exibir.</TableEmpty>
+                            )}
+                        </TableBody>
+                    </Table>
+                    )}
+                </div>
 
                 {!summary.slicesLoading && summary.futureSlots > 0 ? (
                     <p className="mt-2.5 text-2xs leading-snug text-muted-foreground">

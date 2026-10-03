@@ -107,7 +107,7 @@ export default function BadgeDoc() {
         layout="flow"
       >
         <Spec title="tone × variant" meta="ui/badge.tsx" className="mb-0" bodyClassName="p-0">
-          <Table>
+          <Table size="sm">
             <TableHeader>
               <TableRow>
                 <TableHead>tone</TableHead>

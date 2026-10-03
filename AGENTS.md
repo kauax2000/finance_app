@@ -831,6 +831,11 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   busca; `Select` quando é curta, `Combobox` quando cabe numa palavra. **Mora
   no `form.tsx` desde a rodada 215**, e a página dele é a do `Form`; dentro de
   um `FormField`, o `FormControl` vai no gatilho.
+- **Tabela de dados**: [`DataTable`](src/components/ui/data-table.tsx) quando
+  há **estado** — ordenar, filtrar, marcar, paginar, agrupar, expandir —, e a
+  [`Table`](src/components/ui/table.tsx) sozinha para a tabela de leitura.
+  **Nenhuma tela escreve** a conta de ordenação, a seleção com indeterminado,
+  a barra de seleção, a paginação de uma lista nem o gêmeo do telefone à mão.
 - **Listas e detalhe**: [`Item`](src/components/ui/item.tsx) para linha de lista (e para o que a `Table` vira no telefone), [`DescriptionList`](src/components/ui/description-list.tsx) para pares termo/valor, [`Timeline`](src/components/ui/timeline.tsx) para histórico, [`Toolbar`](src/components/ui/toolbar.tsx) para a linha de filtros e ações.
 - **Tema**: [`ThemeToggle`](src/components/ui/theme-toggle.tsx) — o trilho de **três** paradas (sistema, claro, escuro), e o único controle de tema. Não escreva outro com `setTheme`. Ele é `radiogroup` e não `switch` desde a rodada 116: três estados não cabem num booleano. Tem `size`: `sm` 28 (rodada 181, barras densas), `md` 32 (o padrão, o do menu da conta) e `lg` 36 (rodada 139, ao lado de um campo `lg`) — trilho = 4 + 3 paradas, a parada é a altura menos 4, e o alvo de toque é 44 nos três. Desde a rodada 181: `labels` (ícone e texto; paradas de largura igual, e o esticão tem os mesmos pixels da versão de ícone), `variant="brand"` (o brilho na borda do trilho) e `reveal` (**ligado por padrão**: a troca abre num círculo a partir da parada tocada, pela View Transitions API, com `flushSync` para o tema trocar dentro do callback; o CSS que tira o esmaecer padrão é escopado por `.theme-reveal` no `<html>`; sem API ou com movimento reduzido, troca na hora). O app roda com `enableSystem` e `defaultTheme="system"`.
 - **Carregando**: [`Skeleton`](src/components/ui/skeleton.tsx) para uma tela esperando dado; [`Spinner`](src/components/ui/spinner.tsx) só para ação curta sem fim conhecido. O `Spinner` é uma **roda desenhada**, não o `ArrowPathIcon` — a seta é o "tentar novamente" do app (rodada 178). `size` fala a escada do ícone (`sm` 14 · **`md` 16** · `lg` 20 · `xl` 24 · `2xl` 32), e dentro de um `Button` ele não leva margem: o `gap` já dá o respiro. Sozinho, leva `label`; numa região que espera, é o `SpinnerBlock`, que anuncia e só aparece depois de 300ms (`@starting-style`, sem timer). `variant="brand"` é o anel em arco-íris da tela de abertura — uma por tela.
@@ -1439,6 +1444,37 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `w-fit` distribui sobra **zero**, então as abas nunca esticaram, e o `Tabs`
   hoje mede o gatilho como esta barra. Não há mais exceção: os dois ancoram no
   gatilho.
+- **A `Table` foi redesenhada e o `DataTable` é o motor** (rodada 225).
+  **A escada é a altura da linha, em cinco degraus**: `xs` 32 · `sm` 36 ·
+  **`md` 44 (o padrão)** · `lg` 52 · `xl` 64 — o `sm` de 28 virou `xs`, o
+  `md` de 36 virou `sm` (o `PropsTable` e o `ChartDataTable` o escrevem) e o
+  `lg` de 44 dos painéis virou o padrão; o `TablePanel` publica `md`. Eixos
+  novos: `dividers` (`rows` · `none` · `grid`), `striped` (em `:where()`,
+  abaixo do realce), `pending` (a recarga, a 60% com `aria-busy`) e
+  `fade="none"`. A linha tem `state` (`current` com `aria-current`,
+  `pending` apagada) e **`interactive` entra no Tab e abre com Enter**; a
+  célula tem `pin` (a coluna fixa, opaca, que lê `--table-pin-bg` da linha, e
+  cuja sombra só acende com rolagem para aquele lado); o `aria-sort` vai **só
+  na coluna ordenada**, e a seta **gira**. Peças: `TableGroupRow` (o total,
+  a caixa com indeterminado, a seta que recolhe), `TableRowDetail` +
+  `TableExpandButton`, `TableSkeleton` (`headerLabels`, `group={false}`
+  dentro de um esqueleto de página), `TableError`, `TableCellIdentity` e
+  `TableCellMoney` (`flash`, `tone="none"` para saldo). A cascata
+  (`table-reveal`) e o destaque (`table-flash`) moram em `@utility`.
+  **O `DataTable` é a `TanStack Table` v9** (`@tanstack/react-table`, com
+  `@tanstack/react-virtual`), por baixo do `TablePanel`: ordenar por várias
+  (Shift), a busca sem acento, as facetas com contagem, colunas e densidade
+  guardadas, a seleção com faixa, grupo e **a barra flutuante** (no `body`,
+  porque o painel recorta com `clip-path`), o grupo de linhas
+  **consecutivas** (`groupBy` recebe a ordenação e `null` o desliga), o
+  detalhe e as sublinhas, as ações à vista e no ⋯ (folha no telefone), o
+  menu de contexto com os alvos do `contextMenuTargets`, o **gêmeo do
+  telefone** gerado das colunas (`meta.mobile`), o teclado entre as linhas, a
+  URL, a virtualização, o CSV para o Excel em português e a edição na célula
+  (a única versão em `role="grid"`). Dados do servidor: `manual`. **Na v9 o
+  filtro é `constructFilterFn`** e o `arrIncludesSome` pede que o valor da
+  linha já seja lista — a faceta é `arrHas`. Transações e assinaturas usam o
+  `DataTable`.
 - **O `Stepper` é o estado do fluxo desde a rodada 224.** Com `value` +
   `onValueChange` cada `StepperItem` deriva `complete`/`current`/`upcoming` do
   índice — **nenhuma tela escreve `estadoDe(i, atual)`** —, e `state` no item

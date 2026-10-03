@@ -9,15 +9,16 @@ import {
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { currencyBRL, numberBR } from "@/lib/formatters"
-import {
-    TablePanel,
-    TablePanelFooter,
-    TablePanelToolbar,
-} from "@/components/ui/table-panel"
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { ArrowPathRoundedSquareIcon, FunnelIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
+import type {
+    ColumnFiltersState,
+    PaginationState,
+    RowSelectionState,
+    SortingState,
+} from "@tanstack/react-table"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
@@ -32,7 +33,6 @@ import {
     CardMessage,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -44,22 +44,20 @@ import {
     AlertDialogList,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { ColorTile } from "@/components/ui/color-tile"
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
-import { cn } from "@/lib/utils"
+    DataTable,
+    dataTableColumns,
+    type DataTableAction,
+    type DataTableBulkAction,
+    type DataTableColumnDef,
+} from "@/components/ui/data-table"
 import { ROUTES } from "@/config/navigation"
 import { SubscriptionFormDialog } from "@/components/subscriptions/subscription-form-dialog"
 import { SubscriptionDetailSheet } from "@/components/subscriptions/subscription-detail-sheet"
 import { SubscriptionsPageSkeleton } from "@/components/subscriptions/subscriptions-page-skeleton"
 import {
     SubscriptionsToolbar,
-    type SubscriptionSortDir,
     type SubscriptionSortKey,
     type SubscriptionStatusFilter,
 } from "@/components/subscriptions/subscriptions-toolbar"
@@ -74,45 +72,101 @@ import {
     updateSubscription,
 } from "@/lib/subscriptions/mutations"
 import { dispatchFinanceSubscriptionsMutated } from "@/lib/workspace-data-events"
-import { tagChipSuccess } from "@/components/ui/badge"
-import {
-    formatSubscriptionChargeDatePtBr,
-    formatSubscriptionTxSummary,
-} from "@/lib/subscription-tx-summary"
+import { formatSubscriptionTxSummary } from "@/lib/subscription-tx-summary"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
 import { useSubscriptionsPageBundle } from "@/lib/queries/use-subscriptions-page-bundle"
 
-type SortKey = SubscriptionSortKey
-type SortDir = SubscriptionSortDir
+type Row = WorkspaceSubscriptionListRow
 
 type PendingDelete =
-    | { mode: "single"; subscription: WorkspaceSubscriptionListRow }
+    | { mode: "single"; subscription: Row }
     | { mode: "bulk"; ids: string[] }
 
-function compareSubscriptions(
-    a: WorkspaceSubscriptionListRow,
-    b: WorkspaceSubscriptionListRow,
-    key: SortKey,
-    dir: SortDir
-): number {
-    const inv = dir === "asc" ? 1 : -1
-    if (key === "name") {
-        return a.name.localeCompare(b.name, "pt-BR") * inv
-    }
-    if (key === "amount") {
-        const na = Number(a.amount)
-        const nb = Number(b.amount)
-        if (na === nb) return a.name.localeCompare(b.name, "pt-BR")
-        return na < nb ? -inv : inv
-    }
-    const da = a.next_billing_date ?? a.start_date
-    const db = b.next_billing_date ?? b.start_date
-    if (!da && !db) return a.name.localeCompare(b.name, "pt-BR")
-    if (!da) return 1
-    if (!db) return -1
-    const c = da.localeCompare(db)
-    if (c !== 0) return c * inv
-    return a.name.localeCompare(b.name, "pt-BR")
+/** A ordem de quem chega: nome de A a Z, como antes da tabela de dados. */
+const ORDEM_PADRAO: SortingState = [{ id: "name", desc: false }]
+
+const PAGINA_INICIAL: PaginationState = { pageIndex: 0, pageSize: 20 }
+
+const STATUS_OPTIONS = [
+    { value: "active", label: "Ativa" },
+    { value: "inactive", label: "Pausada" },
+]
+
+const statusLabel = (v: string) =>
+    STATUS_OPTIONS.find((o) => o.value === v)?.label ?? v
+
+const col = dataTableColumns<Row>()
+
+/**
+ * As colunas da lista. O nome ordena em `pt-BR` (o `text` da TanStack põe
+ * "Á" depois de "Z"), o valor abre do maior e a data da mais próxima, como o
+ * menu "Ordenar" sempre fez. O status é faceta só para a URL (`?status=`): quem
+ * o escolhe continua sendo a bandeja "Todas · Ativas · Inativas" da barra.
+ */
+function subscriptionColumns(
+    billingStats: Record<string, { count: number; lastDate: string }>
+): DataTableColumnDef<Row>[] {
+    return [
+        {
+            ...col.identity({
+                id: "name",
+                header: "Assinatura",
+                title: (s) => s.name,
+                description: (s) => formatSubscriptionTxSummary(s.id, billingStats),
+                media: (s) => <ColorTile size="xs" color={s.category?.color} />,
+            }),
+            sortFn: (a, b) =>
+                a.original.name.localeCompare(b.original.name, "pt-BR"),
+        },
+        {
+            // Assinatura é sempre saída: o valor fica neutro, sem o "+" verde
+            // que o tom pelo sinal daria a um número positivo.
+            ...col.money({
+                id: "amount",
+                header: "Valor",
+                accessor: (s) => Number(s.amount),
+                signed: false,
+                tone: "none",
+            }),
+            sortDescFirst: true,
+        },
+        {
+            id: "billing_interval",
+            header: "Periodicidade",
+            accessorFn: (s) => subscriptionBillingIntervalLabel(s.billing_interval),
+            enableSorting: false,
+            meta: { label: "Periodicidade", cellClassName: "text-muted-foreground" },
+        },
+        col.date({
+            id: "next_billing_date",
+            header: "Próxima",
+            accessor: (s) => s.next_billing_date ?? s.start_date,
+            meta: { label: "Próxima cobrança" },
+        }),
+        {
+            id: "category",
+            header: "Categoria",
+            accessorFn: (s) => s.category?.name ?? "",
+            enableSorting: false,
+            cell: ({ getValue }) => (getValue() as string) || "—",
+            meta: { label: "Categoria", cellClassName: "text-muted-foreground" },
+        },
+        {
+            ...col.status({
+                id: "status",
+                header: "Status",
+                accessor: (s) => (s.is_active ? "active" : "inactive"),
+                tone: (v) => (v === "active" ? "success" : "neutral"),
+                label: statusLabel,
+                meta: {
+                    facet: { options: STATUS_OPTIONS },
+                    mobile: "trailing",
+                    csv: (s: Row) => (s.is_active ? "Ativa" : "Pausada"),
+                },
+            }),
+            enableSorting: false,
+        },
+    ]
 }
 
 export default function SubscriptionsPageClient() {
@@ -178,10 +232,12 @@ export default function SubscriptionsPageClient() {
 
     const [statusFilter, setStatusFilter] =
         useState<SubscriptionStatusFilter>("all")
-    const [sortKey, setSortKey] = useState<SortKey>("name")
-    const [sortDir, setSortDir] = useState<SortDir>("asc")
+    const [sorting, setSorting] = useState<SortingState>(ORDEM_PADRAO)
+    const [search, setSearch] = useState("")
+    const [pagination, setPagination] =
+        useState<PaginationState>(PAGINA_INICIAL)
 
-    const [selectedIds, setSelectedIds] = useState(() => new Set<string>())
+    const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
     const [detailSub, setDetailSub] =
         useState<WorkspaceSubscriptionListRow | null>(null)
     const [detailOpen, setDetailOpen] = useState(false)
@@ -192,56 +248,43 @@ export default function SubscriptionsPageClient() {
         [categories]
     )
 
+    const columns = useMemo(
+        () => subscriptionColumns(billingStats),
+        [billingStats]
+    )
+
+    // A bandeja de status é a faceta da coluna `status`: memorizada, porque a
+    // tabela volta à primeira página a cada filtro novo, e um array refeito
+    // por render contaria como filtro novo.
+    const columnFilters = useMemo<ColumnFiltersState>(
+        () =>
+            statusFilter === "all"
+                ? []
+                : [{ id: "status", value: [statusFilter] }],
+        [statusFilter]
+    )
+
+    const resetFilters = () => {
+        setStatusFilter("all")
+        setSearch("")
+        setSorting(ORDEM_PADRAO)
+        setRowSelection({})
+    }
+
     const prevWorkspaceIdRef = useRef<string | null>(null)
     useEffect(() => {
         if (prevWorkspaceIdRef.current === currentWorkspaceId) return
         prevWorkspaceIdRef.current = currentWorkspaceId
-        setSelectedIds(new Set())
+        setRowSelection({})
         setStatusFilter("all")
-        setSortKey("name")
-        setSortDir("asc")
+        setSearch("")
+        setSorting(ORDEM_PADRAO)
+        setPagination(PAGINA_INICIAL)
     }, [currentWorkspaceId])
-
-    useEffect(() => {
-        setSelectedIds(new Set())
-    }, [statusFilter, sortKey, sortDir, currentWorkspaceId])
 
     useEffect(() => {
         didConsumeNewQuery.current = false
     }, [currentWorkspaceId])
-
-    const filteredSorted = useMemo(() => {
-        let list = rows.filter((r) => {
-            if (statusFilter === "active" && !r.is_active) return false
-            if (statusFilter === "inactive" && r.is_active) return false
-            return true
-        })
-        list = [...list].sort((a, b) =>
-            compareSubscriptions(a, b, sortKey, sortDir)
-        )
-        return list
-    }, [rows, statusFilter, sortKey, sortDir])
-
-    const hasNoSubscriptions = rows.length === 0
-    const hasNoMatches =
-        rows.length > 0 && filteredSorted.length === 0 && !tableLoading
-
-    const toggleSort = (key: SortKey) => {
-        if (sortKey === key) {
-            setSortDir((d) => (d === "asc" ? "desc" : "asc"))
-        } else {
-            setSortKey(key)
-            setSortDir(
-                key === "name" ? "asc" : key === "amount" ? "desc" : "asc"
-            )
-        }
-    }
-
-    const resetFilters = () => {
-        setStatusFilter("all")
-        setSortKey("name")
-        setSortDir("asc")
-    }
 
     const openCreate = () => {
         setEditingSubscription(null)
@@ -392,7 +435,7 @@ export default function SubscriptionsPageClient() {
                 : `${numberBR(n)} assinaturas removidas.`
         )
         setPendingDelete(null)
-        setSelectedIds(new Set())
+        setRowSelection({})
         setDetailOpen(false)
         setDetailSub(null)
         void refreshBundle()
@@ -404,15 +447,52 @@ export default function SubscriptionsPageClient() {
         if (next && next !== detailSub) setDetailSub(next)
     }, [rows, detailOpen, detailSub])
 
-    const pageIds = filteredSorted.map((r) => r.id)
-    const selectedOnPageCount = pageIds.filter((id) =>
-        selectedIds.has(id)
-    ).length
-    const allPageSelected =
-        pageIds.length > 0 && selectedOnPageCount === pageIds.length
-    const somePageSelected =
-        selectedOnPageCount > 0 &&
-        selectedOnPageCount < pageIds.length
+    const rowActions = useMemo<DataTableAction<Row>[]>(
+        () => [
+            {
+                label: "Editar",
+                icon: <PencilIcon aria-hidden />,
+                primary: true,
+                onSelect: (s) => openDetail(s, { edit: true }),
+            },
+            {
+                label: "Excluir",
+                icon: <TrashIcon aria-hidden />,
+                variant: "destructive",
+                onSelect: (s) =>
+                    setPendingDelete({ mode: "single", subscription: s }),
+            },
+        ],
+        [openDetail]
+    )
+
+    // A confirmação mora no `AlertDialog` da página, então a ação só o abre.
+    const bulkActions = useMemo<DataTableBulkAction<Row>[]>(
+        () => [
+            {
+                label: "Editar",
+                icon: <PencilIcon aria-hidden />,
+                // Uma de cada vez, como a barra de antes: com mais de uma
+                // marcada, o botão fica desabilitado.
+                disabled: (selecionadas) => selecionadas.length !== 1,
+                onSelect: ([s]) => {
+                    if (s) openDetail(s, { edit: true })
+                },
+            },
+            {
+                label: "Excluir",
+                icon: <TrashIcon aria-hidden />,
+                variant: "destructive",
+                // Só abre a confirmação: `false` mantém a seleção, e cancelar
+                // não a perde. Ela limpa depois de excluir.
+                onSelect: (_, ids) => {
+                    setPendingDelete({ mode: "bulk", ids })
+                    return false
+                },
+            },
+        ],
+        [openDetail]
+    )
 
     if (workspaceError) {
         return (
@@ -466,13 +546,15 @@ export default function SubscriptionsPageClient() {
         <div className="space-y-3">
             <SubscriptionsToolbar
                 statusFilter={statusFilter}
-                onStatusFilterChange={setStatusFilter}
-                sortKey={sortKey}
-                sortDir={sortDir}
-                onSortChange={(k, d) => {
-                    setSortKey(k)
-                    setSortDir(d)
+                onStatusFilterChange={(v) => {
+                    setStatusFilter(v)
+                    setRowSelection({})
                 }}
+                sortKey={
+                    (sorting[0]?.id as SubscriptionSortKey | undefined) ?? "name"
+                }
+                sortDir={sorting[0]?.desc ? "desc" : "asc"}
+                onSortChange={(k, d) => setSorting([{ id: k, desc: d === "desc" }])}
                 onResetFilters={resetFilters}
                 onNewSubscription={openCreate}
             />
@@ -523,395 +605,61 @@ export default function SubscriptionsPageClient() {
                 />
             ) : null}
 
-            {!hasNoSubscriptions && !hasNoMatches ? (
-                <TablePanel
-                    toolbar={
-                        selectedIds.size > 0 ? (
-                            <TablePanelToolbar className="px-0">
-                                <div
-                                    className="flex flex-col gap-3 px-3 py-3 sm:hidden"
-                                    aria-label="Ações da seleção"
-                                >
-                                    <div className="flex items-start justify-between gap-3">
-                                        <p className="min-w-0 pt-0.5 text-sm font-medium leading-snug text-foreground">
-                                            {selectedIds.size === 1
-                                                ? "1 selecionada"
-                                                : `${numberBR(selectedIds.size)} selecionadas`}
-                                        </p>
-                                        <Button
-                                            type="button"
-                                            variant="tertiary"
-                                            size="xl"
-                                            className="shrink-0 px-3 text-xs text-muted-foreground hover:text-foreground active:text-foreground"
-                                            onClick={() =>
-                                                setSelectedIds(new Set())
-                                            }
-                                        >
-                                            Limpar
-                                        </Button>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-11 w-full gap-2 text-xs font-medium"
-                                            disabled={selectedIds.size !== 1}
-                                            onClick={() => {
-                                                const id = [...selectedIds][0]
-                                                const s = filteredSorted.find(
-                                                    (x) => x.id === id
-                                                )
-                                                if (s) openDetail(s, { edit: true })
-                                            }}
-                                        >
-                                            <PencilIcon className="size-3.5 shrink-0" />
-                                            Editar
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="destructive"
-                                            size="sm"
-                                            className="h-11 w-full gap-2 text-xs font-medium"
-                                            onClick={() =>
-                                                setPendingDelete({
-                                                    mode: "bulk",
-                                                    ids: [...selectedIds],
-                                                })
-                                            }
-                                        >
-                                            <TrashIcon className="size-3.5 shrink-0" />
-                                            Excluir
-                                        </Button>
-                                    </div>
-                                    {selectedIds.size !== 1 ? (
-                                        <p className="-mt-1 text-center text-2xs leading-tight text-muted-foreground">
-                                            Editar uma assinatura por vez
-                                        </p>
-                                    ) : null}
-                                </div>
-                                <div
-                                    className="hidden px-4 py-2 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-2"
-                                    aria-label="Ações da seleção"
-                                >
-                                    <span className="mr-auto text-xs tabular-nums text-muted-foreground">
-                                        {selectedIds.size === 1
-                                            ? "1 selecionada"
-                                            : `${numberBR(selectedIds.size)} selecionadas`}
-                                    </span>
-                                    <div className="flex flex-wrap items-center justify-end gap-2">
-                                        <Button
-                                            type="button"
-                                            variant="tertiary"
-                                            size="sm"
-                                            className="h-8 text-xs"
-                                            onClick={() =>
-                                                setSelectedIds(new Set())
-                                            }
-                                        >
-                                            Limpar seleção
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-8 text-xs"
-                                            disabled={selectedIds.size !== 1}
-                                            onClick={() => {
-                                                const id = [...selectedIds][0]
-                                                const s = filteredSorted.find(
-                                                    (x) => x.id === id
-                                                )
-                                                if (s) openDetail(s, { edit: true })
-                                            }}
-                                        >
-                                            Editar
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="destructive"
-                                            size="sm"
-                                            className="h-8 text-xs"
-                                            onClick={() =>
-                                                setPendingDelete({
-                                                    mode: "bulk",
-                                                    ids: [...selectedIds],
-                                                })
-                                            }
-                                        >
-                                            Excluir
-                                        </Button>
-                                    </div>
-                                </div>
-                            </TablePanelToolbar>
-                        ) : null
+            {rows.length > 0 ? (
+                <DataTable
+                    id="assinaturas"
+                    aria-label="Assinaturas"
+                    columns={columns}
+                    data={rows}
+                    getRowId={(s) => s.id}
+                    getRowLabel={(s) => s.name}
+                    urlState
+                    sorting={sorting}
+                    onSortingChange={setSorting}
+                    columnFilters={columnFilters}
+                    onColumnFiltersChange={(next) => {
+                        // A URL pode trazer `?status=`; a bandeja segue o que
+                        // ela disser, e "as duas" é o mesmo que "todas".
+                        const valores =
+                            (next.find((f) => f.id === "status")?.value as
+                                | string[]
+                                | undefined) ?? []
+                        setStatusFilter(
+                            valores.length === 1
+                                ? (valores[0] as SubscriptionStatusFilter)
+                                : "all"
+                        )
+                        setRowSelection({})
+                    }}
+                    globalFilter={search}
+                    onGlobalFilterChange={(v) => {
+                        setSearch(v)
+                        setRowSelection({})
+                    }}
+                    pagination={pagination}
+                    onPaginationChange={setPagination}
+                    rowSelection={rowSelection}
+                    onRowSelectionChange={setRowSelection}
+                    enableSelection
+                    bulkActions={bulkActions}
+                    rowActions={rowActions}
+                    // O botão direito e o toque longo repetem as ações da linha.
+                    rowContextMenu
+                    onRowClick={(s) => openDetail(s)}
+                    rowState={(s) => (s.is_active ? undefined : "pending")}
+                    pending={tableLoading}
+                    countLabel={(n, { filtered, all }) =>
+                        filtered
+                            ? `${numberBR(n)} na lista filtrada (total no espaço: ${numberBR(all)})`
+                            : `${numberBR(n)} ${n === 1 ? "assinatura" : "assinaturas"}`
                     }
-                >
-                    <div className="min-w-0 overflow-hidden">
-                        <Table className="min-w-[720px] text-sm">
-                            <TableHeader variant="muted" sticky className="[&_tr]:border-b-0">
-                                <TableRow className="border-0 [&>th]:border-b [&>th]:border-border">
-                                    <TableHead className="w-10 px-2 py-0 md:w-11 md:px-3">
-                                        <Checkbox
-                                            aria-label="Selecionar todas na lista filtrada"
-                                            checked={
-                                                allPageSelected
-                                                    ? true
-                                                    : somePageSelected
-                                                      ? "indeterminate"
-                                                      : false
-                                            }
-                                            onCheckedChange={(v) => {
-                                                if (v === true) {
-                                                    setSelectedIds(
-                                                        new Set(pageIds)
-                                                    )
-                                                } else {
-                                                    setSelectedIds(
-                                                        new Set()
-                                                    )
-                                                }
-                                            }}
-                                        />
-                                    </TableHead>
-                                    <TableHead
-                                        className="h-11 px-4 py-0 align-middle"
-                                        sort={sortKey === "name" ? sortDir : "none"}
-                                        onSort={() => toggleSort("name")}
-                                    >
-                                        Assinatura
-                                    </TableHead>
-                                    <TableHead
-                                        className="h-11 px-4 py-0 align-middle"
-                                        sort={sortKey === "amount" ? sortDir : "none"}
-                                        onSort={() => toggleSort("amount")}
-                                    >
-                                        Valor
-                                    </TableHead>
-                                    <TableHead className="hidden h-11 px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground sm:table-cell">
-                                        Periodicidade
-                                    </TableHead>
-                                    <TableHead
-                                        className="h-11 px-4 py-0 align-middle"
-                                        sort={sortKey === "next_billing_date" ? sortDir : "none"}
-                                        onSort={() => toggleSort("next_billing_date")}
-                                    >
-                                        Próxima
-                                    </TableHead>
-                                    <TableHead className="hidden h-11 px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground md:table-cell">
-                                        Categoria
-                                    </TableHead>
-                                    <TableHead className="h-11 min-w-[4.5rem] px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground">
-                                        Status
-                                    </TableHead>
-                                    <TableHead className="h-11 w-[5.25rem] px-3 py-0 pr-4 text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                        Ações
-                                    </TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody className="[&_tr:last-child]:border-b-0">
-                                {filteredSorted.map((s) => {
-                                    const txLine = formatSubscriptionTxSummary(
-                                        s.id,
-                                        billingStats
-                                    )
-                                    return (
-                                        <TableRow
-                                            key={s.id}
-                                            className={cn(
-                                                "cursor-pointer border-border/80 transition-colors hover:bg-muted/30",
-                                                !s.is_active && "opacity-70"
-                                            )}
-                                            onClick={() => openDetail(s)}
-                                        >
-                                            <TableCell className="w-10 px-2 py-3 md:w-11 md:px-3">
-                                                <Checkbox
-                                                    aria-label={`Selecionar ${s.name}`}
-                                                    checked={selectedIds.has(
-                                                        s.id
-                                                    )}
-                                                    onCheckedChange={(
-                                                        v
-                                                    ) => {
-                                                        setSelectedIds(
-                                                            (prev) => {
-                                                                const next =
-                                                                    new Set(
-                                                                        prev
-                                                                    )
-                                                                if (
-                                                                    v ===
-                                                                    true
-                                                                ) {
-                                                                    next.add(
-                                                                        s.id
-                                                                    )
-                                                                } else {
-                                                                    next.delete(
-                                                                        s.id
-                                                                    )
-                                                                }
-                                                                return next
-                                                            }
-                                                        )
-                                                    }}
-                                                    onClick={(e) =>
-                                                        e.stopPropagation()
-                                                    }
-                                                />
-                                            </TableCell>
-                                            <TableCell className="max-w-[200px] px-4 py-3 text-left lg:max-w-[280px]">
-                                                <div className="flex min-w-0 flex-col gap-0.5">
-                                                    <span
-                                                        className="font-medium [overflow-wrap:anywhere]"
-                                                        title={s.name}
-                                                    >
-                                                        {s.name}
-                                                    </span>
-                                                    <span className="text-2xs text-muted-foreground">
-                                                        {txLine}
-                                                    </span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="whitespace-nowrap px-4 py-3 tabular-nums">
-                                                {currencyBRL(
-                                                    Number(s.amount)
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="hidden px-4 py-3 text-muted-foreground sm:table-cell">
-                                                {subscriptionBillingIntervalLabel(
-                                                    s.billing_interval
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="whitespace-nowrap px-4 py-3 tabular-nums text-muted-foreground">
-                                                {formatSubscriptionChargeDatePtBr(
-                                                    s.next_billing_date ??
-                                                        s.start_date
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="hidden max-w-[8rem] px-4 py-3 md:table-cell">
-                                                {s.category ? (
-                                                    <span className="inline-flex max-w-full items-center gap-1.5">
-                                                        <span
-                                                            className="size-2 shrink-0 rounded-full"
-                                                            style={{
-                                                                backgroundColor:
-                                                                    s
-                                                                        .category
-                                                                        .color ||
-                                                                    "var(--muted-foreground)",
-                                                            }}
-                                                            aria-hidden
-                                                        />
-                                                        <span className="truncate">
-                                                            {
-                                                                s.category
-                                                                    .name
-                                                            }
-                                                        </span>
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-muted-foreground">
-                                                        —
-                                                    </span>
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="px-4 py-3">
-                                                <span
-                                                    className={cn(
-                                                        "inline-flex items-center justify-center rounded-full border-0 px-2.5 py-0.5 text-xs font-medium",
-                                                        s.is_active
-                                                            ? tagChipSuccess
-                                                            : "bg-muted text-muted-foreground"
-                                                    )}
-                                                >
-                                                    {s.is_active
-                                                        ? "Ativa"
-                                                        : "Pausada"}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell className="px-3 py-3 pr-4 text-left">
-                                                <div className="flex items-center justify-start gap-1">
-                                                    <Button
-                                                        variant="tertiary"
-                                                        size="icon-sm"
-                                                        type="button"
-                                                        className="size-7"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                            openDetail(
-                                                                s,
-                                                                {
-                                                                    edit: true,
-                                                                }
-                                                            )
-                                                        }}
-                                                    >
-                                                        <PencilIcon className="size-3.5" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="destructive"
-                                                        size="icon-sm"
-                                                        type="button"
-                                                        className="size-7"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                            setPendingDelete(
-                                                                {
-                                                                    mode: "single",
-                                                                    subscription:
-                                                                        s,
-                                                                }
-                                                            )
-                                                        }}
-                                                    >
-                                                        <TrashIcon className="size-3.5" />
-                                                    </Button>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    )
-                                })}
-                            </TableBody>
-                        </Table>
-                    </div>
-                    <TablePanelFooter className="px-3 sm:px-4">
-                        <p className="text-xs leading-relaxed text-muted-foreground">
-                            {filteredSorted.length === 0 ? (
-                                "Nenhuma assinatura na lista filtrada."
-                            ) : statusFilter !== "all" ? (
-                                <>
-                                    <span className="text-foreground/90">
-                                        {numberBR(filteredSorted.length)}
-                                    </span>
-                                    <span className="mx-1 text-border">
-                                        ·
-                                    </span>
-                                    <span>
-                                        na lista filtrada (total no espaço:{" "}
-                                        {numberBR(rows.length)}
-                                        )
-                                    </span>
-                                </>
-                            ) : (
-                                <>
-                                    {numberBR(rows.length)}{" "}
-                                    {rows.length === 1
-                                        ? "assinatura"
-                                        : "assinaturas"}
-                                </>
-                            )}
-                        </p>
-                    </TablePanelFooter>
-                </TablePanel>
-            ) : hasNoMatches ? (
-                <Card padding="none">
-                    <CardContent
-                        className="px-4 py-12 md:py-14"
-                        role="status"
-                        aria-live="polite"
-                    >
-                        <EmptyState variant="plain" size="lg">
+                    toolbar={{
+                        search: "Buscar assinatura…",
+                        export: "assinaturas",
+                        view: true,
+                    }}
+                    empty={
+                        <EmptyState variant="plain">
                             <EmptyStateIcon variant="stack">
                                 <MagnifyingGlassIcon aria-hidden />
                                 <ArrowPathRoundedSquareIcon aria-hidden />
@@ -919,7 +667,7 @@ export default function SubscriptionsPageClient() {
                             </EmptyStateIcon>
                             <EmptyStateTitle>Nenhuma assinatura com esses filtros</EmptyStateTitle>
                             <EmptyStateDescription>
-                                Tente outro status ou ajuste a ordenação.
+                                Tente outro status ou outra busca.
                             </EmptyStateDescription>
                             <EmptyStateActions>
                                 <Button
@@ -931,8 +679,8 @@ export default function SubscriptionsPageClient() {
                                 </Button>
                             </EmptyStateActions>
                         </EmptyState>
-                    </CardContent>
-                </Card>
+                    }
+                />
             ) : (
                 <Card padding="none">
                     <CardContent

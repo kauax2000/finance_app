@@ -45,9 +45,12 @@ describe("as versões do ContextMenu", () => {
   })
 
   it("as telas migradas repetem as ações visíveis pelo botão direito", () => {
+    // Desde a rodada 225 a tabela de transações é um `DataTable`: o menu entra
+    // por `rowContextMenu`, que calcula os alvos com `contextMenuTargets`, e a
+    // linha projetada não tem menu (a função devolve `null`).
     const tabela = fonte("src/components/transactions/transactions-table.tsx")
-    expect(tabela).toContain("<ContextMenuTrigger asChild disabled={isProjected}>")
-    expect(tabela).toContain("contextMenuTargets(transaction.id, selectedIds)")
+    expect(tabela).toMatch(/rowContextMenu=\{\(t, \{ targets, selected \}\) =>\s*isProjectedTransactionRow\(t\) \? null/)
+    expect(fonte("src/components/ui/data-table.tsx")).toContain("contextMenuTargets(row.id, idsMarcados)")
     expect(fonte("src/components/bills/bill-pending-card.tsx")).toMatch(/<ContextMenuTrigger asChild>\s*<Card/)
     for (const arquivo of [
       "src/components/categories/expense-category-card.tsx",

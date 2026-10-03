@@ -460,6 +460,7 @@ export function CategoryEmbeddedTransactions({
                             setPage={setPage}
                             pageSize={PAGE_SIZE}
                             totalCount={displayTotalCount}
+                            pending={c.tableLoading}
                             invoicePaidByCardClose={invoicePaidByCardClose}
                         />
                     ) : displayHasNoMatches ? (

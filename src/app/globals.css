@@ -3077,6 +3077,52 @@
   }
 }
 
+/* As linhas do corpo da `Table` sobem 3px em cascata (rodada 225), na
+   referência de movimento do dono: 160ms de `--ease-out`, a primeira aos 40ms
+   e cada uma 30ms depois, com teto na décima segunda. Quem liga é o `<tbody>`
+   (`reveal`), e a chave dele troca a cada página — então a cascata toca na
+   primeira carga e na troca de página, e não a cada linha que entra por
+   ordenação (essa desliza, pelo `layout` do `motion`). */
+@utility table-reveal {
+  & > tr {
+    animation: menubar-rise 160ms var(--ease-out) 40ms both;
+  }
+  & > tr:nth-child(2) { animation-delay: 70ms; }
+  & > tr:nth-child(3) { animation-delay: 100ms; }
+  & > tr:nth-child(4) { animation-delay: 130ms; }
+  & > tr:nth-child(5) { animation-delay: 160ms; }
+  & > tr:nth-child(6) { animation-delay: 190ms; }
+  & > tr:nth-child(7) { animation-delay: 220ms; }
+  & > tr:nth-child(8) { animation-delay: 250ms; }
+  & > tr:nth-child(9) { animation-delay: 280ms; }
+  & > tr:nth-child(10) { animation-delay: 310ms; }
+  & > tr:nth-child(11) { animation-delay: 340ms; }
+  & > tr:nth-child(n + 12) { animation-delay: 370ms; }
+  @media (prefers-reduced-motion: reduce) {
+    & > tr {
+      animation-delay: 0ms;
+    }
+  }
+}
+
+/* O valor que mudou acende e se apaga (rodada 225): o fundo fica em `muted`
+   por 500ms e esmaece em 1s, os números do AG Grid. Ele é reacionado por
+   `key` — quem chama troca a chave quando o valor troca. Com movimento
+   reduzido o bloco global corta a animação e nada acende. */
+@keyframes table-flash {
+  0%,
+  33% {
+    background-color: var(--muted);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@utility table-flash {
+  animation: table-flash 1.5s var(--ease-out) both;
+}
+
 @utility command-reveal {
   & [cmdk-item],
   & [cmdk-group-heading] {

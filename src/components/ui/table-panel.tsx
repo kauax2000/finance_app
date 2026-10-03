@@ -28,9 +28,10 @@ const TablePanelFrameContext = React.createContext(false)
  * (`--card-px: 0px`) e `overflow-hidden` recorta os cantos de todo filho —,
  * e as quatro grafias eram a prova de que faltava a peça, não de que o
  * `Card` não bastava. `TablePanel` é essa peça: `Card padding="none"
- * variant="outline"`, publicando `lg` em `TableSizeContext` — nenhuma tela
- * dentro dele escreve `size`, porque `lg` é a densidade confortável que os 7
- * painéis já usavam.
+ * variant="outline"`, publicando `md` em `TableSizeContext` — nenhuma tela
+ * dentro dele escreve `size`, porque `md` (44, o `lg` de antes da rodada 225)
+ * é a densidade confortável que os 7 painéis já usavam. O `DataTable` publica
+ * por cima a densidade que a pessoa escolheu.
  *
  * **Sem eixo de superfície.** As 7 chamadas são a mesma variante do `Card`,
  * sem uma segunda evidência — e eixo sem contagem é ficção, a régua que este
@@ -62,7 +63,7 @@ function TablePanel({
   toolbar?: React.ReactNode
 }) {
   return (
-    <TableSizeContext.Provider value="lg">
+    <TableSizeContext.Provider value="md">
       <div
         data-slot="table-panel-group"
         className={cn(
@@ -185,7 +186,7 @@ function TablePanelFooter({
         // `relative` é carga estrutural: o viewport das linhas é posicionado e
         // sangra por baixo desta faixa, e um bloco estático pintaria atrás dele.
         "relative flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between",
-        // **A altura de uma linha da tabela.** O painel é sempre `lg`, e ali a
+        // **A altura de uma linha da tabela.** O painel é `md` por padrão, e ali a
         // linha mede 44 (12 + 20 + 12). Com o recuo das tiras (12) e o botão
         // `xs` da paginação (24) o rodapé saía 48 — 4px mais alto que as
         // linhas acima dele. 10 + 24 + 10 fecha em 44. No toque o botão cresce

@@ -158,6 +158,8 @@ describe("taxonomia", () => {
     const templates = REGISTRY.filter((e) => e.category === "Templates")
     expect(templates.map((e) => e.slug).sort()).toEqual([
       "bottom-bar",
+      // O motor da tabela, desde a rodada 225: o `TablePanel` com o estado.
+      "data-table",
       "page-header",
       "page-section",
       // A casca da página com navegação, desde a rodada 221: o

@@ -7,6 +7,8 @@ import {
     useQueryClient,
 } from "@tanstack/react-query"
 import {
+    type Dispatch,
+    type SetStateAction,
     useCallback,
     useEffect,
     useLayoutEffect,
@@ -26,9 +28,13 @@ import { attachPaymentCards } from "@/lib/transactions-detail-sheet-query"
 import { type PaymentMethod } from "@/lib/payment-methods"
 import {
     PAYMENT_METHOD_VALUES,
+    TRANSACTIONS_URL_LIST_KEYS,
+    TRANSACTIONS_URL_MANAGED_KEYS,
     buildTransactionsListSearchParams,
     mergeTransactionsSearchParams,
+    transactionsFiltersSignature,
 } from "@/lib/transactions-list-search-params"
+import { parsePage, parseSort } from "@/lib/data-table/url-state"
 import type {
     InstallmentPlanFormSavePayload,
     InstallmentPlanUpdatePayload,
@@ -55,6 +61,12 @@ import type { User } from "@supabase/supabase-js"
 
 type SortKey = "date" | "amount"
 type SortDir = "asc" | "desc"
+
+/** O sentido com que cada coluna abre: a mais recente e a maior primeiro. */
+const SORT_DEFAULT_DIR: Record<SortKey, SortDir> = { date: "desc", amount: "desc" }
+const SORT_KEYS = Object.keys(SORT_DEFAULT_DIR) as SortKey[]
+
+const URL_WRITE_KEYS = [...TRANSACTIONS_URL_MANAGED_KEYS, ...TRANSACTIONS_URL_LIST_KEYS]
 
 type PendingDelete =
     | { mode: "single"; transaction: Transaction }
@@ -199,7 +211,6 @@ export function useTransactionsListController(
         return next
     }, [invoicePaymentsFromQuery])
 
-    const [page, setPage] = useState(0)
     const [dialogOpen, setDialogOpen] = useState(false)
     const [editingTransaction, setEditingTransaction] =
         useState<Transaction | null>(null)
@@ -244,6 +255,68 @@ export function useTransactionsListController(
     const subscriptions = subscriptionsFromQuery
     const [sortKey, setSortKey] = useState<SortKey>("date")
     const [sortDir, setSortDir] = useState<SortDir>("desc")
+
+    // A página pertence aos filtros em que foi escolhida: trocar um filtro a
+    // devolve à primeira sem efeito nenhum. Um `setPage(0)` num efeito disputava
+    // com a URL — a página lida dela era zerada pelos filtros lidos junto, e o
+    // `page` escrito voltava a ler os filtros e zerava de novo.
+    const filtersSignature = useMemo(
+        () =>
+            `${transactionsFiltersSignature(
+                buildTransactionsListSearchParams({
+                    filterType,
+                    filterInstallmentsOnly,
+                    fullPeriod,
+                    datePreset,
+                    filterDateFrom,
+                    filterDateTo,
+                    filterCreditCardIds,
+                    filterPaymentMethods,
+                    filterCategoryIds,
+                    filterUncategorizedOnly,
+                    filterAmountMin,
+                    filterAmountMax,
+                    filterDescriptionQuery,
+                    filterInstallmentPlanId,
+                    filterSubscriptionId,
+                    lockedCategoryId: lockedId,
+                }),
+            )}|${lockedId ?? ""}`,
+        [
+            filterType,
+            filterInstallmentsOnly,
+            fullPeriod,
+            datePreset,
+            filterDateFrom,
+            filterDateTo,
+            filterCreditCardIds,
+            filterPaymentMethods,
+            filterCategoryIds,
+            filterUncategorizedOnly,
+            filterAmountMin,
+            filterAmountMax,
+            filterDescriptionQuery,
+            filterInstallmentPlanId,
+            filterSubscriptionId,
+            lockedId,
+        ],
+    )
+    const [pageState, setPageState] = useState<{
+        filters: string | null
+        index: number
+    }>({ filters: null, index: 0 })
+    const page = pageState.filters === filtersSignature ? pageState.index : 0
+    const setPage: Dispatch<SetStateAction<number>> = useCallback(
+        (next) =>
+            setPageState((prev) => {
+                const atual = prev.filters === filtersSignature ? prev.index : 0
+                return {
+                    filters: filtersSignature,
+                    index: typeof next === "function" ? next(atual) : next,
+                }
+            }),
+        [filtersSignature],
+    )
 
     const transactionsRangeKey = useMemo(
         () =>
@@ -516,6 +589,17 @@ export function useTransactionsListController(
         } else {
             setFilterSubscriptionId(null)
         }
+
+        const [sortParam] = parseSort(searchParams.get("sort"), SORT_KEYS)
+        setSortKey((sortParam?.id as SortKey | undefined) ?? "date")
+        setSortDir(sortParam ? (sortParam.desc ? "desc" : "asc") : "desc")
+
+        // A página da URL vale para os filtros da URL: se a leitura acima os
+        // normalizar para outros, ela volta à primeira.
+        setPageState({
+            filters: `${transactionsFiltersSignature(searchParams)}|${lockedId ?? ""}`,
+            index: parsePage(searchParams.get("page")),
+        })
     }, [isPage, lockedId, searchParams])
 
     const creditCardPaymentSelected = useMemo(
@@ -557,8 +641,15 @@ export function useTransactionsListController(
             filterInstallmentPlanId,
             filterSubscriptionId,
             lockedCategoryId: lockedId,
+            sortKey,
+            sortDir,
+            page,
         })
-        const merged = mergeTransactionsSearchParams(searchParams, next)
+        const merged = mergeTransactionsSearchParams(
+            searchParams,
+            next,
+            URL_WRITE_KEYS,
+        )
         const qs = merged.toString()
         if (qs === searchParams.toString()) return
         router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
@@ -580,30 +671,12 @@ export function useTransactionsListController(
         filterInstallmentPlanId,
         filterSubscriptionId,
         lockedId,
+        sortKey,
+        sortDir,
+        page,
         pathname,
         router,
         searchParams,
-    ])
-
-    useEffect(() => {
-        setPage(0)
-    }, [
-        filterType,
-        fullPeriod,
-        filterDateFrom,
-        filterDateTo,
-        lockedId,
-        datePreset,
-        filterCreditCardIds,
-        filterPaymentMethods,
-        filterCategoryIds,
-        filterUncategorizedOnly,
-        filterAmountMin,
-        filterAmountMax,
-        filterDescriptionQuery,
-        filterInstallmentsOnly,
-        filterInstallmentPlanId,
-        filterSubscriptionId,
     ])
 
     const refreshAll = useCallback(async () => {
@@ -624,7 +697,7 @@ export function useTransactionsListController(
     useEffect(() => {
         if (prevWorkspaceIdRef.current === currentWorkspaceId) return
         prevWorkspaceIdRef.current = currentWorkspaceId
-        setPage(0)
+        setPageState((p) => ({ ...p, index: 0 }))
     }, [currentWorkspaceId])
 
     const openDialog = useCallback(
@@ -923,7 +996,7 @@ export function useTransactionsListController(
             setSortDir((d) => (d === "asc" ? "desc" : "asc"))
         } else {
             setSortKey(key)
-            setSortDir(key === "date" ? "desc" : "desc")
+            setSortDir(SORT_DEFAULT_DIR[key])
         }
     }
 

@@ -337,6 +337,7 @@ export function DashboardRecentTransactions({
                             enableSort={false}
                             enableActions={false}
                             showPaginationFooter={false}
+                            mobile={false}
                             invoicePaidByCardClose={
                                 invoicePaidByCardClose
                             }

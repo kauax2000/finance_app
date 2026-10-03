@@ -668,7 +668,7 @@ export function PropsTable({
           espécime — ds-doc é a segunda superfície nomeada que o auditor já
           isenta. */}
       <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <Table>
+        <Table size="sm">
           {/* O hover de linha é opt-in agora (`interactive`), então não há
               mais nada a neutralizar aqui: uma tabela de referência sem
               `interactive` já não acende ao passar o cursor — nada acontece

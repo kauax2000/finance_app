@@ -1,27 +1,20 @@
 import { Card, CardContent, CardHeader, CardNote, CardToolbar } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
+import { TableSkeleton, type TableSkeletonColumn } from "@/components/ui/table"
+import { TablePanel } from "@/components/ui/table-panel"
 
 const CATEGORY_ROW_KEYS = ["cat-1", "cat-2", "cat-3"] as const
 const INSTALLMENT_KEYS = ["plan-1", "plan-2", "plan-3"] as const
 const RECENT_TX_KEYS = ["tx-1", "tx-2", "tx-3", "tx-4"] as const
-const RECENT_TX_TABLE_ROW_KEYS = [
-    "trow-1",
-    "trow-2",
-    "trow-3",
-    "trow-4",
-    "trow-5",
-    "trow-6",
-    "trow-7",
-] as const
+const RECENT_TX_COLUMNS: TableSkeletonColumn[] = [
+    { label: "Data" },
+    { label: "Descrição" },
+    { label: "Valor", numeric: true },
+    { label: "Forma de pagamento", className: "hidden md:table-cell" },
+    { label: "Categoria", className: "hidden md:table-cell" },
+    { label: "Tipo" },
+]
 
 function CardSectionHeader() {
     return (
@@ -242,59 +235,17 @@ function RecentTransactionsSkeleton() {
                     />
                 </Card>
             </div>
+            {/* No desktop é a `TransactionsTable` sem seleção, sem ações e sem rodapé
+                — a forma que `DashboardRecentTransactions` monta. */}
             <div className="hidden md:block">
-                <Card padding="none">
-                    <div className="overflow-x-auto">
-                        <Table className="min-w-160 text-sm md:min-w-175">
-                            <TableHeader className="bg-muted/50">
-                                <TableRow className="border-0">
-                                    <TableHead className="h-11 px-4 py-0">
-                                        <Skeleton className="h-3 w-10 rounded-md" />
-                                    </TableHead>
-                                    <TableHead className="h-11 px-4 py-0">
-                                        <Skeleton className="h-3 w-20 rounded-md" />
-                                    </TableHead>
-                                    <TableHead className="h-11 px-4 py-0">
-                                        <Skeleton className="h-3 w-12 rounded-md" />
-                                    </TableHead>
-                                    <TableHead className="hidden h-11 px-4 py-0 md:table-cell">
-                                        <Skeleton className="h-3 w-28 rounded-md" />
-                                    </TableHead>
-                                    <TableHead className="hidden h-11 px-4 py-0 md:table-cell">
-                                        <Skeleton className="h-3 w-16 rounded-md" />
-                                    </TableHead>
-                                    <TableHead className="h-11 px-4 py-0">
-                                        <Skeleton className="h-3 w-10 rounded-md" />
-                                    </TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {RECENT_TX_TABLE_ROW_KEYS.map((key) => (
-                                    <TableRow key={key} className="border-border/80">
-                                        <TableCell className="px-4 py-3">
-                                            <Skeleton className="h-4 w-14 rounded-md" />
-                                        </TableCell>
-                                        <TableCell className="px-4 py-3">
-                                            <Skeleton className="h-4 w-full max-w-40 rounded-md" />
-                                        </TableCell>
-                                        <TableCell className="px-4 py-3">
-                                            <Skeleton className="h-4 w-20 rounded-md" />
-                                        </TableCell>
-                                        <TableCell className="hidden px-4 py-3 md:table-cell">
-                                            <Skeleton className="h-4 w-24 max-w-full rounded-md" />
-                                        </TableCell>
-                                        <TableCell className="hidden px-4 py-3 md:table-cell">
-                                            <Skeleton className="h-4 w-20 max-w-full rounded-md" />
-                                        </TableCell>
-                                        <TableCell className="px-4 py-3">
-                                            <Skeleton className="h-5 w-16 rounded-full" />
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </Card>
+                <TablePanel>
+                    <TableSkeleton
+                        columns={RECENT_TX_COLUMNS}
+                        rows={7}
+                        group={false}
+                        className="min-w-160 md:min-w-175"
+                    />
+                </TablePanel>
             </div>
         </div>
     )

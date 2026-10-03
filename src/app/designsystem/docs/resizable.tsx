@@ -182,7 +182,7 @@ const COLUNAS = {
 function DemoColunas() {
   const cols = useResizableColumns({ id: "ds-demo-colunas", columns: COLUNAS })
   return (
-    <Table variant="outline" style={cols.tableStyle}>
+    <Table variant="outline" size="sm" style={cols.tableStyle}>
       <TableHeader>
         <TableRow>
           <TableHead style={cols.columnStyle("data")}>

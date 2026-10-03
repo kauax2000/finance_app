@@ -279,7 +279,7 @@
   <dl class="meta">
     <div><dt>Base</dt><dd>Leitura do código</dd></div>
     <div><dt>Branch</dt><dd>finance-app-2.0</dd></div>
-    <div><dt>Data</dt><dd>2 out 2026 · busca global, botão direito, período, rascunho, menus do telefone e prévias da lista</dd></div>
+    <div><dt>Data</dt><dd>2 out 2026 · busca global, botão direito, período, rascunho, menus do telefone, prévias da lista e as tabelas de lançamentos e assinaturas na URL</dd></div>
     <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 4 lacunas</dd></div>
     <div><dt>Fonte versionada</dt><dd><code>docs/JORNADAS.md</code></dd></div>
   </dl>
@@ -862,8 +862,8 @@ flowchart TD
       </dl>
       <h3>Como funciona</h3>
       <ol class="steps">
-        <li><div><strong>A URL é o filtro.</strong> Tipo, período, forma de pagamento, cartão, categoria, valor, texto, plano e assinatura vivem na URL. É assim que outras áreas mandam a pessoa para uma lista já filtrada.</div></li>
-        <li><div><strong>Lista.</strong> Atalhos de período, painel de filtros, chips removíveis, seleção em lote e páginas de 100 lançamentos. A lista vazia oferece criar ou limpar os filtros, conforme o caso.</div></li>
+        <li><div><strong>A URL é o filtro.</strong> Tipo, período, forma de pagamento, cartão, categoria, valor, texto, plano e assinatura vivem na URL — e, desde 2 de outubro, a ordenação (<code>sort=amount.desc</code>) e a página (<code>page=3</code>). É assim que outras áreas mandam a pessoa para uma lista já filtrada, e que um link devolve a mesma página.</div></li>
+        <li><div><strong>Lista.</strong> Atalhos de período, painel de filtros, chips removíveis e páginas de 100 lançamentos, agrupados por mês quando ordenados por data. Marcar uma linha traz a barra flutuante de seleção (Shift marca a faixa, a caixa do mês marca o mês); cancelar a exclusão mantém a seleção. No telefone a tabela vira uma lista com a mesma informação. As cobranças previstas aparecem apagadas e não abrem. A lista vazia oferece criar ou limpar os filtros, conforme o caso.</div></li>
         <li><div><strong>Período personalizado.</strong> No painel de filtros, o seletor de período guarda as pontas em rascunho até "Aplicar"; "Limpar" tira o filtro, e "Cancelar" ou Esc descartam a escolha.</div></li>
         <li><div><strong>Criar.</strong> O formulário muda com o tipo. Despesa no crédito exige escolher um cartão; parcelada pede o número de parcelas e se o valor é total ou por parcela.</div></li>
         <li><div><strong>Depois de salvar.</strong> O backend avisa os outros membros e confere o orçamento da categoria e os alertas do cartão. Sem conexão, o lançamento entra na fila.</div></li>
@@ -877,10 +877,13 @@ flowchart TD
 flowchart TD
     entry["/transactions?params"] --&gt; parse{"Parâmetros da URL"}
     parse --&gt;|"type, inst, preset, from, to, pm, card, cats, uncat, min, max, q, plan, sub"| filters(["Filtros aplicados"])
+    parse --&gt;|"sort, page"| order(["Ordenação e página"]) --&gt; list
     parse --&gt;|"new=1, parcelada, receita"| form(("G5b Formulário"))
     parse --&gt;|"txn=id"| detail(("G5b Detalhe"))
 
-    filters --&gt; list(["Tabela paginada de 100 em 100"])
+    filters --&gt; list(["Tabela paginada de 100 em 100; no telefone, a lista com o mês"])
+    list --&gt;|"cabeçalho Data ou Valor; página"| order
+    order -.-&gt;|"grava de volta"| url
     list --&gt;|"Todas, Despesas, Receitas; 7d, 15d, 30d, Mês"| filters
     list --&gt;|"Filtros"| panel(["Painel: período, forma, cartões, categorias, valor, descrição, origem"]) --&gt; filters
     panel --&gt;|"período personalizado"| rangePick(["Seletor de período: rascunho até Aplicar"])
@@ -897,8 +900,8 @@ flowchart TD
     list --&gt;|"linha"| detail
     list --&gt;|"lápis"| detailEdit(("G5b Detalhe em edição"))
     list --&gt;|"lixeira"| delConfirm(("G5b Confirmação de exclusão"))
-    list --&gt;|"caixas de seleção"| selection(["Barra de seleção"])
-    selection --&gt;|"Editar, só 1"| detailEdit
+    list --&gt;|"caixas de seleção, Shift para a faixa, a caixa do mês"| selection(["Barra flutuante de seleção"])
+    selection --&gt;|"Editar, só com 1"| detailEdit
     selection --&gt;|"Excluir"| bulk(["Exclusão em lote"])
     selection --&gt;|"Limpar"| list
     list -.-&gt;|"botão direito ou toque longo na linha"| rowMenu(["Menu: Abrir, Editar, Selecionar, Excluir"])
@@ -918,7 +921,7 @@ flowchart TD
     classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
     classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
     class entry,url route
-    class filters,list,panel,rangePick,newTx,clear,selection,bulk,rowMenu,selMenu,invoicePeek,planPeek dialog
+    class filters,order,list,panel,rangePick,newTx,clear,selection,bulk,rowMenu,selMenu,invoicePeek,planPeek dialog
     class parse,empty decision
     class form,detail,detailEdit,delConfirm,cardPage journey</pre></div>
         <figcaption><strong>Figura 5a · Lista e filtros</strong></figcaption>
@@ -979,7 +982,7 @@ flowchart TD
         <figcaption><strong>Figura 5b · Criar, editar e excluir</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
-      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Parâmetros</td><td>Lidos e gravados na URL; <code>new</code> e <code>txn</code> são consumidos e removidos</td><td><code>src/lib/transactions-list-search-params.ts</code></td></tr><tr><td>Formulário</td><td>Um componente para criar, e o mesmo campo a campo na edição</td><td><code>src/components/transactions/transaction-form-dialog.tsx</code>, <code>transaction-form-use.tsx</code></td></tr><tr><td>Parcelada</td><td>RPC <code>create_workspace_installment_plan</code>; editar o plano não muda parcelas já lançadas</td><td><code>src/components/transactions/transaction-form-persistence.ts</code></td></tr><tr><td>Detalhe</td><td>Mesmo painel no Painel, em Cartões e em Categorias</td><td><code>src/components/transactions/transaction-detail-sheet.tsx</code></td></tr><tr><td>Exclusão</td><td>Parcela cancela o plano inteiro por <code>delete_workspace_installment_plan_cascade</code></td><td><code>src/lib/transactions/mutations.ts</code></td></tr><tr><td>Offline</td><td>Criar e excluir entram na fila; pagar conta exige conexão</td><td><code>src/lib/offline/</code></td></tr><tr><td>Rascunho</td><td>Fechar o formulário alterado (Cancelar, Esc, toque fora, ×, arrastar a gaveta) pergunta "Descartar alterações?"; salvar fecha sem perguntar. Trocar só a aba ou o tipo não conta como alteração. Enquanto salva, nada fecha (<code>Dialog pending</code>)</td><td><code>isDirty</code> em <code>src/components/transactions/transaction-form-use.tsx</code>, <code>src/components/transactions/transaction-form-dialog.tsx</code></td></tr><tr><td>Enter</td><td>O <code>Enter</code> na busca do seletor não salva a transação</td><td><code>shouldDeferEnterToWidget</code> em <code>src/components/ui/form.tsx</code></td></tr><tr><td>Período personalizado</td><td>Um <code>DatePicker</code> de intervalo com <code>confirm</code>: as pontas ficam em rascunho até Aplicar, Limpar tira o filtro, Cancelar e Esc descartam. Era um formulário à parte (<code>transactions-date-range-form.tsx</code>, removido)</td><td><code>src/components/transactions/transactions-filters-panel.tsx</code></td></tr><tr><td>Prévias dos chips</td><td>O chip de fatura e o "Parcelada" abrem uma prévia ao pousar, no foco e no toque longo (<code>HoverCard</code>); o clique no chip continua abrindo o detalhe da linha. A da fatura leva a "Ver cartão" (o ciclo atual: a página do cartão não abre uma fatura passada por parâmetro). O chip de fatura só existe a partir de <code>md</code></td><td><code>CreditInvoiceChip</code> e <code>InstallmentChip</code> em <code>src/components/transactions/transactions-table.tsx</code></td></tr><tr><td>Botão direito na linha</td><td>Atalho das ações da linha (os botões da coluna Ações continuam); sobre uma linha selecionada age na seleção inteira (<code>contextMenuTargets</code>); linhas projetadas não têm menu</td><td><code>TransactionRowContextMenu</code> em <code>src/components/transactions/transactions-table.tsx</code></td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Parâmetros</td><td>Lidos e gravados na URL; <code>new</code> e <code>txn</code> são consumidos e removidos</td><td><code>src/lib/transactions-list-search-params.ts</code></td></tr><tr><td>Ordenação e página</td><td><code>sort=date.desc</code> · <code>date.asc</code> · <code>amount.desc</code> · <code>amount.asc</code> e <code>page=N</code> (a partir de 1) vão para a URL e voltam dela, também no voltar e avançar; o padrão (<code>date.desc</code>, página 1) não é escrito. Trocar um filtro volta à página 1. Só na página, não no modo embutido</td><td><code>src/components/transactions/use-transactions-list-controller.ts</code>, <code>src/lib/transactions-list-search-params.ts</code></td></tr><tr><td>Tabela</td><td><code>DataTable</code> em modo <code>manual</code> (o banco ordena e pagina): a seleção não alcança as projetadas, que também não abrem nem têm menu; o mês só agrupa ordenado por data; a barra de seleção é flutuante e cancelar a exclusão mantém a seleção; no telefone, a lista gerada das colunas</td><td><code>src/components/transactions/transactions-table.tsx</code>, <code>src/components/ui/data-table.tsx</code></td></tr><tr><td>Formulário</td><td>Um componente para criar, e o mesmo campo a campo na edição</td><td><code>src/components/transactions/transaction-form-dialog.tsx</code>, <code>transaction-form-use.tsx</code></td></tr><tr><td>Parcelada</td><td>RPC <code>create_workspace_installment_plan</code>; editar o plano não muda parcelas já lançadas</td><td><code>src/components/transactions/transaction-form-persistence.ts</code></td></tr><tr><td>Detalhe</td><td>Mesmo painel no Painel, em Cartões e em Categorias</td><td><code>src/components/transactions/transaction-detail-sheet.tsx</code></td></tr><tr><td>Exclusão</td><td>Parcela cancela o plano inteiro por <code>delete_workspace_installment_plan_cascade</code></td><td><code>src/lib/transactions/mutations.ts</code></td></tr><tr><td>Offline</td><td>Criar e excluir entram na fila; pagar conta exige conexão</td><td><code>src/lib/offline/</code></td></tr><tr><td>Rascunho</td><td>Fechar o formulário alterado (Cancelar, Esc, toque fora, ×, arrastar a gaveta) pergunta "Descartar alterações?"; salvar fecha sem perguntar. Trocar só a aba ou o tipo não conta como alteração. Enquanto salva, nada fecha (<code>Dialog pending</code>)</td><td><code>isDirty</code> em <code>src/components/transactions/transaction-form-use.tsx</code>, <code>src/components/transactions/transaction-form-dialog.tsx</code></td></tr><tr><td>Enter</td><td>O <code>Enter</code> na busca do seletor não salva a transação</td><td><code>shouldDeferEnterToWidget</code> em <code>src/components/ui/form.tsx</code></td></tr><tr><td>Período personalizado</td><td>Um <code>DatePicker</code> de intervalo com <code>confirm</code>: as pontas ficam em rascunho até Aplicar, Limpar tira o filtro, Cancelar e Esc descartam. Era um formulário à parte (<code>transactions-date-range-form.tsx</code>, removido)</td><td><code>src/components/transactions/transactions-filters-panel.tsx</code></td></tr><tr><td>Prévias dos chips</td><td>O chip de fatura e o "Parcelada" abrem uma prévia ao pousar, no foco e no toque longo (<code>HoverCard</code>); o clique no chip continua abrindo o detalhe da linha. A da fatura leva a "Ver cartão" (o ciclo atual: a página do cartão não abre uma fatura passada por parâmetro). O chip de fatura só existe a partir de <code>md</code></td><td><code>CreditInvoiceChip</code> e <code>InstallmentChip</code> em <code>src/components/transactions/transactions-table.tsx</code></td></tr><tr><td>Botão direito na linha</td><td>Atalho das ações da linha (os botões da coluna Ações continuam); sobre uma linha selecionada age na seleção inteira (<code>contextMenuTargets</code>); linhas projetadas não têm menu</td><td><code>TransactionRowContextMenu</code> em <code>src/components/transactions/transactions-table.tsx</code></td></tr></tbody></table></div>
     </section>
 
     <section class="block" id="j6">
@@ -1156,14 +1159,17 @@ flowchart TD
       <h3>Como funciona</h3>
       <ol class="steps">
         <li><div><strong>Cadastro.</strong> Nome, valor, periodicidade (semanal, mensal, bimestral ou anual), próxima cobrança, forma de pagamento, cartão e categoria.</div></li>
+        <li><div><strong>Lista.</strong> Ordenar, buscar, filtrar por status, escolher colunas e densidade e exportar em CSV. A ordenação, a página, a busca e o status ficam na URL. Marcar traz a barra flutuante (Editar só com uma, Excluir em lote); o botão direito repete Editar e Excluir.</div></li>
         <li><div><strong>Acompanhamento.</strong> O painel da assinatura mostra o resumo e as cobranças que já viraram lançamento. A edição acontece ali mesmo.</div></li>
         <li><div><strong>Cobrança automática.</strong> Um cron gera os lançamentos na data. Se ele atrasar, o Painel completa o que faltou ao abrir.</div></li>
       </ol>
       <figure>
         <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
 flowchart TD
-    subs["/subscriptions?new=1"] --&gt;|"new presente"| form(["Formulário: nome, valor, periodicidade, próxima cobrança, forma, cartão, categoria, observações"])
-    subs --&gt; list(["Lista: todas, ativas, inativas; ordenar"])
+    subs["/subscriptions?new=1&amp;sort&amp;page&amp;q&amp;status"] --&gt;|"new presente"| form(["Formulário: nome, valor, periodicidade, próxima cobrança, forma, cartão, categoria, observações"])
+    subs --&gt; list(["Lista: todas, ativas, inativas; ordenar; buscar; colunas e densidade"])
+    list -.-&gt;|"ordenar, página, busca, status"| url["URL"]
+    list --&gt;|"Exportar"| csv(["CSV da lista filtrada"])
     list --&gt;|"Nova assinatura"| form
     list --&gt;|"vazio"| emptyNew(["Cadastre suas assinaturas"]) --&gt; form
     list --&gt;|"filtro sem resultado"| clear(["Limpar filtros"]) --&gt; list
@@ -1176,8 +1182,12 @@ flowchart TD
     sheet --&gt;|"cobrança em transações"| txDetail(("G5b Detalhe"))
     sheet --&gt;|"⋯ Editar"| editInline(["Edição dentro do painel"]) --&gt; sheet
     sheet --&gt;|"⋯ Excluir"| del(["Excluir assinatura?"])
-    list --&gt;|"lixeira"| del
-    list --&gt;|"seleção múltipla"| bar(["Barra: Editar só 1, Excluir em lote, Limpar"])
+    list --&gt;|"lápis"| editInline
+    list --&gt;|"⋯ Excluir"| del
+    list -.-&gt;|"botão direito ou toque longo"| rowMenu(["Menu: Editar, Excluir"])
+    rowMenu -.-&gt; editInline
+    rowMenu -.-&gt; del
+    list --&gt;|"seleção múltipla"| bar(["Barra flutuante: Editar só com 1, Excluir em lote, Limpar"])
     bar --&gt;|"Editar"| sheet
     bar --&gt;|"Excluir"| del
     del --&gt;|"Excluir"| removed(["Assinatura removida"]) --&gt; list
@@ -1191,14 +1201,14 @@ flowchart TD
     classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
     classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
     classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
-    class subs route
-    class form,list,emptyNew,clear,saved,sheet,editInline,del,bar,removed,billed dialog
+    class subs,url route
+    class form,list,csv,emptyNew,clear,saved,sheet,editInline,del,rowMenu,bar,removed,billed dialog
     class cron,catchup backend
     class G6,G9,txDetail,G5 journey</pre></div>
         <figcaption><strong>Figura 8 · Assinaturas</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
-      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Dados</td><td><code>rpc_fetch_subscriptions_page_bundle</code></td><td><code>src/lib/queries/fetch-subscriptions-page-bundle.ts</code></td></tr><tr><td>Periodicidade</td><td>Semanal, Mensal, Bimestral, Anual</td><td><code>src/components/subscriptions/subscription-form-dialog.tsx</code></td></tr><tr><td>Cobrança</td><td><code>run-recurring-billing</code> só aceita chamada com <code>CRON_SECRET</code>; o Painel recupera o atraso</td><td><code>supabase/functions/run-recurring-billing/index.ts</code></td></tr><tr><td>Filtro por assinatura</td><td><code>/transactions?sub=id</code></td><td><code>src/lib/transactions-list-search-params.ts</code></td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Dados</td><td><code>rpc_fetch_subscriptions_page_bundle</code></td><td><code>src/lib/queries/fetch-subscriptions-page-bundle.ts</code></td></tr><tr><td>Periodicidade</td><td>Semanal, Mensal, Bimestral, Anual</td><td><code>src/components/subscriptions/subscription-form-dialog.tsx</code></td></tr><tr><td>Cobrança</td><td><code>run-recurring-billing</code> só aceita chamada com <code>CRON_SECRET</code>; o Painel recupera o atraso</td><td><code>supabase/functions/run-recurring-billing/index.ts</code></td></tr><tr><td>Filtro por assinatura</td><td><code>/transactions?sub=id</code></td><td><code>src/lib/transactions-list-search-params.ts</code></td></tr><tr><td>Estado na URL</td><td><code>sort=&lt;coluna&gt;.&lt;asc\|desc&gt;</code>, <code>page=N</code> (a partir de 1), <code>q</code> (a busca) e <code>status=active</code> ou <code>inactive</code>, lidos ao abrir e gravados a cada troca; trocar de carteira zera os quatro</td><td><code>urlState</code> do <code>DataTable</code> em <code>src/app/(app)/subscriptions/page-client.tsx</code></td></tr><tr><td>Tabela</td><td><code>DataTable</code> no cliente: busca sem acento, exportar CSV, colunas e densidade guardadas; Excluir da linha está no ⋯ (Editar fica à vista); cancelar a exclusão em lote mantém a seleção</td><td><code>src/app/(app)/subscriptions/page-client.tsx</code></td></tr></tbody></table></div>
     </section>
 
     <section class="block" id="j9">
@@ -1410,11 +1420,11 @@ flowchart TD
             <tr><td><code>/members</code></td><td>Membros e convites</td><td>Com sessão</td><td>02</td></tr>
             <tr><td><code>/settings</code></td><td>Carteira, app e notificações</td><td>Com sessão</td><td>02</td></tr>
             <tr><td><code>/dashboard</code></td><td>Painel</td><td>Com sessão</td><td>04</td></tr>
-            <tr><td><code>/transactions</code></td><td>Lançamentos</td><td>Com sessão</td><td>05</td></tr>
+            <tr><td><code>/transactions</code></td><td>Lançamentos; filtros, <code>sort</code> e <code>page</code> na URL</td><td>Com sessão</td><td>05</td></tr>
             <tr><td><code>/credit-cards</code></td><td>Cartões</td><td>Com sessão</td><td>06</td></tr>
             <tr><td><code>/credit-cards/[cardId]</code></td><td>Detalhe do cartão e fatura</td><td>Com sessão</td><td>06</td></tr>
             <tr><td><code>/bills</code></td><td>Contas a pagar</td><td>Com sessão</td><td>07</td></tr>
-            <tr><td><code>/subscriptions</code></td><td>Assinaturas</td><td>Com sessão</td><td>08</td></tr>
+            <tr><td><code>/subscriptions</code></td><td>Assinaturas; <code>sort</code>, <code>page</code>, <code>q</code> e <code>status</code> na URL</td><td>Com sessão</td><td>08</td></tr>
             <tr><td><code>/categories</code></td><td>Categorias e assistente</td><td>Com sessão</td><td>09</td></tr>
             <tr><td><code>/categories/new</code></td><td>Categorias com o formulário aberto</td><td>Com sessão</td><td>09</td></tr>
             <tr><td><code>/categories/[categoryId]</code></td><td>Detalhe da categoria</td><td>Com sessão</td><td>09</td></tr>
@@ -1472,7 +1482,7 @@ flowchart TD
 </div>
 
 <footer>
-  Atlas de Jornadas do Finance App · escrito a partir do código da branch <code>finance-app-2.0</code> em 17 de setembro de 2026, navegação global revista em 1 de outubro de 2026, prévias da lista em 2 de outubro · fonte dos fluxogramas em <code>docs/JORNADAS.md</code>
+  Atlas de Jornadas do Finance App · escrito a partir do código da branch <code>finance-app-2.0</code> em 17 de setembro de 2026, navegação global revista em 1 de outubro de 2026, prévias da lista e tabelas na URL em 2 de outubro · fonte dos fluxogramas em <code>docs/JORNADAS.md</code>
 </footer>
 
 <dialog class="viewer" id="viewer" aria-labelledby="viewer-title">

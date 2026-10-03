@@ -407,10 +407,13 @@ que já se mexeu.
 flowchart TD
     entry["/transactions?params"] --> parse{"Parâmetros da URL"}
     parse -->|"type, inst, preset, from, to, pm, card, cats, uncat, min, max, q, plan, sub"| filters(["Filtros aplicados"])
+    parse -->|"sort, page"| order(["Ordenação e página"]) --> list
     parse -->|"new=1, parcelada, receita"| form(("G5b Formulário"))
     parse -->|"txn=id"| detail(("G5b Detalhe"))
 
-    filters --> list(["Tabela paginada de 100 em 100"])
+    filters --> list(["Tabela paginada de 100 em 100; no telefone, a lista com o mês"])
+    list -->|"cabeçalho Data ou Valor; página"| order
+    order -.->|"grava de volta"| url
     list -->|"Todas, Despesas, Receitas; 7d, 15d, 30d, Mês"| filters
     list -->|"Filtros"| panel(["Painel: período, forma, cartões, categorias, valor, descrição, origem"]) --> filters
     panel -->|"período personalizado"| rangePick(["Seletor de período: rascunho até Aplicar"])
@@ -427,8 +430,8 @@ flowchart TD
     list -->|"linha"| detail
     list -->|"lápis"| detailEdit(("G5b Detalhe em edição"))
     list -->|"lixeira"| delConfirm(("G5b Confirmação de exclusão"))
-    list -->|"caixas de seleção"| selection(["Barra de seleção"])
-    selection -->|"Editar, só 1"| detailEdit
+    list -->|"caixas de seleção, Shift para a faixa, a caixa do mês"| selection(["Barra flutuante de seleção"])
+    selection -->|"Editar, só com 1"| detailEdit
     selection -->|"Excluir"| bulk(["Exclusão em lote"])
     selection -->|"Limpar"| list
     list -.->|"botão direito ou toque longo na linha"| rowMenu(["Menu: Abrir, Editar, Selecionar, Excluir"])
@@ -495,6 +498,8 @@ flowchart TD
 | Ponto | Regra | Onde |
 |---|---|---|
 | Parâmetros | Lidos e gravados na URL; `new` e `txn` são consumidos e removidos | `src/lib/transactions-list-search-params.ts` |
+| Ordenação e página | `sort=date.desc` · `date.asc` · `amount.desc` · `amount.asc` e `page=N` (a partir de 1) vão para a URL e voltam dela, também no voltar e avançar; o padrão (`date.desc`, página 1) não é escrito. Trocar um filtro volta à página 1. Só na página, não no modo embutido | `src/components/transactions/use-transactions-list-controller.ts`, `src/lib/transactions-list-search-params.ts` |
+| Tabela | `DataTable` em modo `manual` (o banco ordena e pagina): a seleção não alcança as projetadas, que também não abrem nem têm menu; o mês só agrupa ordenado por data; a barra de seleção é flutuante e cancelar a exclusão mantém a seleção; no telefone, a lista gerada das colunas | `src/components/transactions/transactions-table.tsx`, `src/components/ui/data-table.tsx` |
 | Formulário | Um componente para criar, e o mesmo campo a campo na edição | `src/components/transactions/transaction-form-dialog.tsx`, `transaction-form-use.tsx` |
 | Parcelada | RPC `create_workspace_installment_plan`; editar o plano não muda parcelas já lançadas | `src/components/transactions/transaction-form-persistence.ts` |
 | Detalhe | Mesmo painel no Painel, em Cartões e em Categorias | `src/components/transactions/transaction-detail-sheet.tsx` |
@@ -641,8 +646,10 @@ flowchart TD
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart TD
-    subs["/subscriptions?new=1"] -->|"new presente"| form(["Formulário: nome, valor, periodicidade, próxima cobrança, forma, cartão, categoria, observações"])
-    subs --> list(["Lista: todas, ativas, inativas; ordenar"])
+    subs["/subscriptions?new=1&sort&page&q&status"] -->|"new presente"| form(["Formulário: nome, valor, periodicidade, próxima cobrança, forma, cartão, categoria, observações"])
+    subs --> list(["Lista: todas, ativas, inativas; ordenar; buscar; colunas e densidade"])
+    list -.->|"ordenar, página, busca, status"| url["URL"]
+    list -->|"Exportar"| csv(["CSV da lista filtrada"])
     list -->|"Nova assinatura"| form
     list -->|"vazio"| emptyNew(["Cadastre suas assinaturas"]) --> form
     list -->|"filtro sem resultado"| clear(["Limpar filtros"]) --> list
@@ -655,8 +662,12 @@ flowchart TD
     sheet -->|"cobrança em transações"| txDetail(("G5b Detalhe"))
     sheet -->|"⋯ Editar"| editInline(["Edição dentro do painel"]) --> sheet
     sheet -->|"⋯ Excluir"| del(["Excluir assinatura?"])
-    list -->|"lixeira"| del
-    list -->|"seleção múltipla"| bar(["Barra: Editar só 1, Excluir em lote, Limpar"])
+    list -->|"lápis"| editInline
+    list -->|"⋯ Excluir"| del
+    list -.->|"botão direito ou toque longo"| rowMenu(["Menu: Editar, Excluir"])
+    rowMenu -.-> editInline
+    rowMenu -.-> del
+    list -->|"seleção múltipla"| bar(["Barra flutuante: Editar só com 1, Excluir em lote, Limpar"])
     bar -->|"Editar"| sheet
     bar -->|"Excluir"| del
     del -->|"Excluir"| removed(["Assinatura removida"]) --> list
@@ -674,6 +685,8 @@ flowchart TD
 | Periodicidade | Semanal, Mensal, Bimestral, Anual | `src/components/subscriptions/subscription-form-dialog.tsx` |
 | Cobrança | `run-recurring-billing` só aceita chamada com `CRON_SECRET`; o Painel recupera o atraso | `supabase/functions/run-recurring-billing/index.ts` |
 | Filtro por assinatura | `/transactions?sub=id` | `src/lib/transactions-list-search-params.ts` |
+| Estado na URL | `sort=<coluna>.<asc\|desc>`, `page=N` (a partir de 1), `q` (a busca) e `status=active` ou `inactive`, lidos ao abrir e gravados a cada troca; trocar de carteira zera os quatro | `urlState` do `DataTable` em `src/app/(app)/subscriptions/page-client.tsx` |
+| Tabela | `DataTable` no cliente: busca sem acento, exportar CSV, colunas e densidade guardadas; Excluir da linha está no ⋯ (Editar fica à vista); cancelar a exclusão em lote mantém a seleção | `src/app/(app)/subscriptions/page-client.tsx` |
 
 ---
 

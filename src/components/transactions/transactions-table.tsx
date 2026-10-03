@@ -1,11 +1,6 @@
 "use client"
 
 import { creditCardIdentitySubtitle, creditInvoiceSlotCompactLabel, creditInvoiceSlotStatusChipClass } from "@/lib/credit-card-display"
-import {
-    TablePanel,
-    TablePanelFooter,
-    TablePanelToolbar,
-} from "@/components/ui/table-panel"
 import * as React from "react"
 import Link from "next/link"
 import { ArrowPathRoundedSquareIcon, ArrowRightIcon, CheckIcon, PencilIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid"
@@ -21,17 +16,13 @@ import {
 } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
 import { ROUTES, creditCardDetailPath } from "@/config/navigation"
-import { Button } from "@/components/ui/button"
-import { Pagination, PaginationStatus } from "@/components/ui/pagination"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
+    DataTable,
+    dataTableColumns,
+    type DataTableAction,
+    type DataTableBulkAction,
+    type DataTableColumnDef,
+} from "@/components/ui/data-table"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Badge, tagChipInfo, tagChipSuccess, tagChipWarning, transactionExpenseTypeRowChip, transactionIncomeTypeRowChip, transactionParceladaRowChip, transactionRowChipShell } from "@/components/ui/badge"
 import { paymentMethodLabel } from "@/lib/payment-methods"
@@ -67,13 +58,10 @@ import {
 } from "@/components/ui/hover-card"
 import { Caption } from "@/components/ui/typography"
 import {
-    ContextMenu,
     ContextMenuContent,
     ContextMenuHeader,
     ContextMenuItem,
     ContextMenuSeparator,
-    ContextMenuTrigger,
-    contextMenuTargets,
 } from "@/components/ui/context-menu"
 
 export type TransactionsTableSortKey = TransactionsListSortKey
@@ -348,6 +336,7 @@ function InstallmentChip({ transaction }: { transaction: Transaction }) {
     )
 }
 
+
 export type TransactionsTableProps = {
     transactions: Transaction[]
     /** Required when `enableSelection` is not `false`. */
@@ -371,6 +360,8 @@ export type TransactionsTableProps = {
     setPage?: React.Dispatch<React.SetStateAction<number>>
     pageSize?: number
     totalCount?: number | null
+    /** A página seguinte chegando: as linhas de antes esmaecem até ela entrar. */
+    pending?: boolean
 
     /** Keys `${credit_card_id}:${statement_close_date}` for paid invoices (workspace). */
     invoicePaidByCardClose?: ReadonlySet<string>
@@ -383,10 +374,13 @@ export type TransactionsTableProps = {
     enableActions?: boolean
     /** @default true */
     showPaginationFooter?: boolean
-    /** @default true */
+    /**
+     * O gêmeo do telefone do `DataTable`. `false` quando quem chama já desenha
+     * a lista do telefone (o painel, com o avatar de quem lançou).
+     * @default true
+     */
+    mobile?: boolean
 }
-
-const EMPTY_SELECTED_IDS = new Set<string>()
 
 /**
  * O menu do botão direito de uma linha. `alvos` é a regra do
@@ -503,7 +497,161 @@ const noopSetSelectedIds: React.Dispatch<
     React.SetStateAction<Set<string>>
 > = () => {}
 
-const noopSetPage: React.Dispatch<React.SetStateAction<number>> = () => {}
+const col = dataTableColumns<Transaction>()
+
+const descriptionOf = (t: Transaction) =>
+    t.description || t.category?.name || "Sem descrição"
+
+const signedAmountOf = (t: Transaction) =>
+    t.type === "income" ? Number(t.amount) : -Number(t.amount)
+
+/** O nome da linha nos rótulos ("Editar Mercado, 12/03"): a data desempata as homônimas. */
+const rowLabelOf = (t: Transaction) =>
+    `${descriptionOf(t)}, ${formatTransactionDayPtBr(t.date)}`
+
+/** A coluna que agrupa por mês — e a única ordenação em que o mês faz sentido. */
+const DATE_COLUMN: TransactionsTableSortKey = "date"
+
+function transactionColumns(
+    enableSort: boolean,
+    invoicePaidByCardClose: ReadonlySet<string>
+): DataTableColumnDef<Transaction>[] {
+    return [
+        {
+            id: DATE_COLUMN,
+            accessorFn: (t) => t.date,
+            header: "Data",
+            enableSorting: enableSort,
+            cell: ({ row }) => (
+                <span className="nums whitespace-nowrap text-muted-foreground">
+                    {formatTransactionDayPtBr(row.original.date)}
+                </span>
+            ),
+            meta: { label: "Data", mobile: "description" },
+        },
+        {
+            id: "description",
+            header: "Descrição",
+            enableSorting: false,
+            cell: ({ row }) => {
+                const t = row.original
+                const descText = descriptionOf(t)
+                return (
+                    <span className="inline-flex flex-wrap items-center gap-x-1 gap-y-0.5">
+                        <span
+                            className="min-w-0 wrap-anywhere"
+                            title={`${descText}${t.is_recurring ? " (recorrente)" : ""}`}
+                        >
+                            {descText}
+                            {t.is_recurring ? (
+                                <span className="ml-1 text-muted-foreground">· rec.</span>
+                            ) : null}
+                        </span>
+                        {isProjectedTransactionRow(t) ? (
+                            <span
+                                className={cn(transactionRowChipShell, tagChipWarning)}
+                                title="Cobrança prevista"
+                            >
+                                Previsto
+                            </span>
+                        ) : null}
+                        {t.installment_plan_id ? <InstallmentChip transaction={t} /> : null}
+                        {t.subscription_id ? (
+                            <Link
+                                href={ROUTES.SUBSCRIPTIONS}
+                                className={cn(transactionRowChipShell, tagChipInfo)}
+                                title={
+                                    t.subscription?.name
+                                        ? `Assinatura: ${t.subscription.name}`
+                                        : "Ver assinaturas"
+                                }
+                                aria-label={
+                                    t.subscription?.name
+                                        ? `Assinatura: ${t.subscription.name}`
+                                        : "Ver assinaturas"
+                                }
+                                onClick={stopRowEvent}
+                            >
+                                <ArrowPathRoundedSquareIcon
+                                    className="size-3 shrink-0 opacity-80"
+                                    aria-hidden
+                                />
+                            </Link>
+                        ) : null}
+                    </span>
+                )
+            },
+            meta: {
+                label: "Descrição",
+                primary: true,
+                mobile: "title",
+                cellClassName: "max-w-50 lg:max-w-70",
+            },
+        },
+        {
+            ...col.money({ id: "amount", header: "Valor", accessor: signedAmountOf }),
+            enableSorting: enableSort,
+        },
+        {
+            id: "payment",
+            header: "Forma de pagamento",
+            enableSorting: false,
+            cell: ({ row }) => {
+                const paymentLabel = formatPaymentCell(row.original)
+                const invoiceBadge = creditCardInvoiceBadgeForRow(
+                    row.original,
+                    invoicePaidByCardClose
+                )
+                return (
+                    <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
+                        {/* O `title` mora no rótulo, e não na célula: na célula ele
+                            vazava para o chip de fatura, por cima da prévia. */}
+                        <span className="min-w-0 truncate" title={paymentLabel}>
+                            {paymentLabel}
+                        </span>
+                        {invoiceBadge ? <CreditInvoiceChip badge={invoiceBadge} /> : null}
+                    </span>
+                )
+            },
+            meta: { label: "Forma de pagamento", cellClassName: "max-w-44" },
+        },
+        {
+            id: "category",
+            header: "Categoria",
+            enableSorting: false,
+            cell: ({ row }) => {
+                const category = row.original.category
+                if (!category) return <span className="text-muted-foreground">—</span>
+                return (
+                    <span className="inline-flex max-w-full items-center gap-1.5 text-muted-foreground">
+                        <span
+                            className="size-2 shrink-0 rounded-full"
+                            style={{
+                                backgroundColor:
+                                    category.color || "var(--muted-foreground)",
+                            }}
+                            aria-hidden
+                        />
+                        <span className="truncate">{category.name}</span>
+                    </span>
+                )
+            },
+            meta: { label: "Categoria", mobile: "description", cellClassName: "max-w-32" },
+        },
+        {
+            id: "type",
+            header: "Tipo",
+            enableSorting: false,
+            cell: ({ row }) =>
+                row.original.type === "income" ? (
+                    <span className={transactionIncomeTypeRowChip}>Receita</span>
+                ) : (
+                    <span className={transactionExpenseTypeRowChip}>Despesa</span>
+                ),
+            meta: { label: "Tipo" },
+        },
+    ]
+}
 
 export function TransactionsTable({
     transactions,
@@ -515,629 +663,155 @@ export function TransactionsTable({
     openTransactionDetail,
     onDeleteSingle,
     onDeleteBulk,
-    page: pageProp,
-    setPage: setPageProp,
+    page = 0,
+    setPage,
     pageSize: pageSizeProp,
-    totalCount: totalCountProp,
+    totalCount,
+    pending = false,
     invoicePaidByCardClose = EMPTY_INVOICE_PAID_KEYS,
     enableSelection = true,
     enableSort = true,
     enableActions = true,
     showPaginationFooter = true,
+    mobile = true,
 }: TransactionsTableProps) {
     const setSelectedIds = setSelectedIdsProp ?? noopSetSelectedIds
-    const page = pageProp ?? 0
-    const setPage = setPageProp ?? noopSetPage
     const pageSize = pageSizeProp ?? Math.max(transactions.length, 1)
-    const totalCount = totalCountProp ?? null
 
-    const tableColCount =
-        6 + (enableSelection ? 1 : 0) + (enableActions ? 1 : 0)
-    const monthHeaderDataColSpan = tableColCount - (enableSelection ? 1 : 0)
-
-    // Projetadas não são linhas do banco: "selecionar todas" as incluía, e a
-    // exclusão em massa tentava apagar o que não existe.
-    const pageTransactionIds = React.useMemo(
-        () => transactions.filter((t) => !isProjectedTransactionRow(t)).map((t) => t.id),
-        [transactions]
+    const columns = React.useMemo(
+        () => transactionColumns(enableSort, invoicePaidByCardClose),
+        [enableSort, invoicePaidByCardClose]
     )
 
     // Só conta e só apaga o que está na tela: uma seleção feita antes de trocar o
-    // filtro seguia valendo e a exclusão em massa levava linhas invisíveis.
-    const selectedIds = React.useMemo(() => {
-        const raw = selectedIdsProp ?? EMPTY_SELECTED_IDS
-        const visible = new Set(pageTransactionIds)
-        return new Set([...raw].filter((id) => visible.has(id)))
-    }, [selectedIdsProp, pageTransactionIds])
-
-    const allPageSelected =
-        enableSelection &&
-        pageTransactionIds.length > 0 &&
-        pageTransactionIds.every((id) => selectedIds.has(id))
-    const somePageSelected =
-        enableSelection &&
-        pageTransactionIds.some((id) => selectedIds.has(id)) &&
-        !allPageSelected
-
-    const transactionIdsByMonthKey = React.useMemo(() => {
-        const map = new Map<string, string[]>()
+    // filtro seguia valendo e a exclusão em massa levava linhas invisíveis. As
+    // projetadas não são linhas do banco e nunca entram.
+    const rowSelection = React.useMemo(() => {
+        const sel: Record<string, true> = {}
         for (const t of transactions) {
-            const k = monthYearKeyFromTransactionDate(t.date)
-            if (!k) continue
-            const list = map.get(k)
-            if (list) list.push(t.id)
-            else map.set(k, [t.id])
+            if (selectedIdsProp?.has(t.id) && !isProjectedTransactionRow(t)) sel[t.id] = true
         }
-        return map
-    }, [transactions])
+        return sel
+    }, [selectedIdsProp, transactions])
 
-    const total = totalCount ?? transactions.length
-    const totalPages = Math.max(1, Math.ceil(total / pageSize))
-    const showFrom = total === 0 ? 0 : page * pageSize + 1
-    const showTo = Math.min(total, (page + 1) * pageSize)
+    const sorting = React.useMemo(
+        () => [{ id: sortKey, desc: sortDir === "desc" }],
+        [sortKey, sortDir]
+    )
 
-    // A barra de seleção mora acima da moldura, na prop `toolbar` do `TablePanel`,
-    // e não dentro do cartão: o recuo é das linhas de dentro, então a barra zera o seu.
-    const selectionToolbar =
-        enableSelection && selectedIds.size > 0 ? (
-            <TablePanelToolbar className="px-0">
-                <div
-                    className="flex flex-col gap-3 px-3 py-3 sm:hidden"
-                    aria-label="Ações da seleção"
-                >
-                    <div className="flex items-start justify-between gap-3">
-                        <p className="min-w-0 pt-0.5 text-sm font-medium leading-snug text-foreground">
-                            {selectedIds.size === 1
-                                ? "1 selecionada"
-                                : `${numberBR(selectedIds.size)} selecionadas`}
-                        </p>
-                        <Button
-                            type="button"
-                            variant="tertiary"
-                            size="xl"
-                            className="shrink-0 px-3 text-xs text-muted-foreground hover:text-foreground active:text-foreground"
-                            onClick={() => setSelectedIds(new Set())}
-                            aria-label="Limpar seleção"
-                        >
-                            Limpar
-                        </Button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-11 w-full gap-2 text-xs font-medium"
-                            disabled={selectedIds.size !== 1}
-                            onClick={() => {
-                                const id = [...selectedIds][0]
-                                const t = transactions.find((x) => x.id === id)
-                                if (t) openTransactionDetail(t, { edit: true })
-                            }}
-                        >
-                            <PencilIcon className="size-3.5 shrink-0" />
-                            Editar
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="h-11 w-full gap-2 text-xs font-medium"
-                            onClick={() => onDeleteBulk?.([...selectedIds])}
-                        >
-                            <TrashIcon className="size-3.5 shrink-0" />
-                            Excluir
-                        </Button>
-                    </div>
-                    {selectedIds.size !== 1 ? (
-                        <p className="-mt-1 text-center text-2xs leading-tight text-muted-foreground">
-                            Editar uma transação por vez
-                        </p>
-                    ) : null}
-                </div>
+    const bulkActions: DataTableBulkAction<Transaction>[] = [
+        // Editar abre uma folha por vez: com mais de uma marcada, desabilita.
+        {
+            label: "Editar",
+            icon: <PencilIcon aria-hidden />,
+            disabled: (rows) => rows.length !== 1,
+            onSelect: ([t]) => {
+                if (t) openTransactionDetail(t, { edit: true })
+            },
+        },
+        {
+            label: "Excluir",
+            icon: <TrashIcon aria-hidden />,
+            variant: "destructive",
+            // Só abre a confirmação: `false` mantém a seleção se ela for
+            // cancelada. Quem limpa é a exclusão que deu certo.
+            onSelect: (_rows, ids) => {
+                onDeleteBulk?.(ids)
+                return false
+            },
+        },
+    ]
 
-                <div
-                    className="hidden px-4 py-2 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-2"
-                    aria-label="Ações da seleção"
-                >
-                    <span className="mr-auto text-xs tabular-nums text-muted-foreground">
-                        {selectedIds.size === 1
-                            ? "1 selecionada"
-                            : `${numberBR(selectedIds.size)} selecionadas`}
-                    </span>
-                    <div className="flex flex-wrap items-center justify-end gap-2">
-                        <Button
-                            type="button"
-                            variant="tertiary"
-                            size="sm"
-                            className="h-8 text-xs"
-                            onClick={() => setSelectedIds(new Set())}
-                        >
-                            Limpar seleção
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-8 gap-1.5 text-xs"
-                            disabled={selectedIds.size !== 1}
-                            onClick={() => {
-                                const id = [...selectedIds][0]
-                                const t = transactions.find((x) => x.id === id)
-                                if (t) openTransactionDetail(t, { edit: true })
-                            }}
-                        >
-                            <PencilIcon className="size-3.5 shrink-0" />
-                            Editar
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="h-8 gap-1.5 text-xs"
-                            onClick={() => onDeleteBulk?.([...selectedIds])}
-                        >
-                            <TrashIcon className="size-3.5 shrink-0" />
-                            Excluir
-                        </Button>
-                    </div>
-                </div>
-            </TablePanelToolbar>
-        ) : null
+    const rowActions: DataTableAction<Transaction>[] = [
+        {
+            label: "Editar",
+            icon: <PencilIcon aria-hidden />,
+            primary: true,
+            hidden: isProjectedTransactionRow,
+            onSelect: (t) => openTransactionDetail(t, { edit: true }),
+        },
+        {
+            label: "Excluir",
+            icon: <TrashIcon aria-hidden />,
+            primary: true,
+            variant: "destructive",
+            hidden: isProjectedTransactionRow,
+            onSelect: (t) => onDeleteSingle?.(t),
+        },
+    ]
 
     return (
-        <TablePanel toolbar={selectionToolbar}>
-
-            <div className="min-w-0">
-                <Table className="min-w-[640px] text-sm md:min-w-[700px]">
-                    <TableHeader variant="muted" sticky className="[&_tr]:border-b-0">
-                        <TableRow className="border-0 [&>th]:border-b [&>th]:border-border">
-                            {enableSelection ? (
-                                <TableHead className="w-10 px-2 py-0 md:w-11 md:px-3">
-                                    <Checkbox
-                                        aria-label="Selecionar todas nesta página"
-                                        checked={
-                                            allPageSelected
-                                                ? true
-                                                : somePageSelected
-                                                  ? "indeterminate"
-                                                  : false
-                                        }
-                                        onCheckedChange={(v) => {
-                                            if (v === true) {
-                                                setSelectedIds(
-                                                    new Set(pageTransactionIds)
-                                                )
-                                            } else {
-                                                setSelectedIds(new Set())
-                                            }
-                                        }}
-                                    />
-                                </TableHead>
-                            ) : null}
-                            <TableHead
-                                className="h-11 w-[4.75rem] px-4 py-0 align-middle text-xs font-semibold tracking-wide md:w-[5.5rem]"
-                                sort={sortKey === "date" ? sortDir : "none"}
-                                onSort={enableSort ? () => onToggleSort?.("date") : undefined}
-                            >
-                                Data
-                            </TableHead>
-                            <TableHead className="h-11 px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground">
-                                Descrição
-                            </TableHead>
-                            <TableHead
-                                className="h-11 px-4 py-0 align-middle text-xs font-semibold tracking-wide"
-                                sort={sortKey === "amount" ? sortDir : "none"}
-                                onSort={enableSort ? () => onToggleSort?.("amount") : undefined}
-                            >
-                                Valor
-                            </TableHead>
-                            <TableHead className="hidden h-11 max-w-[10rem] px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground md:table-cell">
-                                Forma de pagamento
-                            </TableHead>
-                            <TableHead className="hidden h-11 px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground md:table-cell">
-                                Categoria
-                            </TableHead>
-                            <TableHead className="h-11 min-w-[5.5rem] px-4 py-0 text-xs font-semibold tracking-wide text-muted-foreground">
-                                Tipo
-                            </TableHead>
-                            {enableActions ? (
-                                <TableHead className="h-11 w-[4.5rem] px-3 py-0 pr-4 text-left text-2xs font-semibold uppercase tracking-wider text-muted-foreground md:w-[5.25rem]">
-                                    Ações
-                                </TableHead>
-                            ) : null}
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody className="[&_tr:last-child]:border-b-0">
-                        {/* Uma prévia aberta aquece as outras: descer pelos chips
-                            das linhas abre a próxima sem esperar de novo. */}
-                        <HoverCardGroup>
-                        {transactions.map((transaction, index) => {
-                            const isProjected = isProjectedTransactionRow(transaction)
-                            const paymentLabel = formatPaymentCell(transaction)
-                            const invoiceBadge = creditCardInvoiceBadgeForRow(
-                                transaction,
-                                invoicePaidByCardClose
-                            )
-                            const descText =
-                                transaction.description ||
-                                transaction.category?.name ||
-                                "Sem descrição"
-                            const titleText = `${descText}${
-                                transaction.is_recurring ? " (recorrente)" : ""
-                            }`
-
-                            const prevMonthKey =
-                                index > 0
-                                    ? monthYearKeyFromTransactionDate(
-                                          transactions[index - 1].date
-                                      )
-                                    : null
-                            const thisMonthKey =
-                                monthYearKeyFromTransactionDate(transaction.date)
-
-                            const showMonthHeader =
-                                sortKey === "date" &&
-                                thisMonthKey !== "" &&
-                                prevMonthKey !== thisMonthKey
-
-                            const monthRowIds =
-                                transactionIdsByMonthKey.get(thisMonthKey) ?? []
-                            const selectedInMonthCount = enableSelection
-                                ? monthRowIds.filter((id) =>
-                                      selectedIds.has(id)
-                                  ).length
-                                : 0
-                            const allMonthSelected =
-                                enableSelection &&
-                                monthRowIds.length > 0 &&
-                                selectedInMonthCount === monthRowIds.length
-                            const someMonthSelected =
-                                enableSelection &&
-                                selectedInMonthCount > 0 &&
-                                selectedInMonthCount < monthRowIds.length
-
-                            const monthLabel = formatTransactionMonthYearPtBr(
-                                transaction.date
-                            )
-
-                            return (
-                                <React.Fragment key={transaction.id}>
-                                    {showMonthHeader ? (
-                                        <TableRow className="border-border/80 bg-muted/30 hover:bg-muted/30 active:bg-muted/30">
-                                            {enableSelection ? (
-                                                <TableCell className="w-10 px-2 py-2 align-middle md:w-11 md:px-3">
-                                                    <Checkbox
-                                                        aria-label={`Selecionar todas de ${monthLabel}`}
-                                                        checked={
-                                                            allMonthSelected
-                                                                ? true
-                                                                : someMonthSelected
-                                                                  ? "indeterminate"
-                                                                  : false
-                                                        }
-                                                        onCheckedChange={(v) => {
-                                                            setSelectedIds((prev) => {
-                                                                const next = new Set(
-                                                                    prev
-                                                                )
-                                                                if (v === true) {
-                                                                    for (const id of monthRowIds) {
-                                                                        next.add(id)
-                                                                    }
-                                                                } else {
-                                                                    for (const id of monthRowIds) {
-                                                                        next.delete(id)
-                                                                    }
-                                                                }
-                                                                return next
-                                                            })
-                                                        }}
-                                                        onClick={(e) =>
-                                                            e.stopPropagation()
-                                                        }
-                                                    />
-                                                </TableCell>
-                                            ) : null}
-                                            <TableCell
-                                                className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-                                                colSpan={monthHeaderDataColSpan}
-                                            >
-                                                {monthLabel}
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : null}
-
-                                    {/* O botão direito e o toque longo repetem as ações da
-                                        linha; sobre uma linha selecionada, agem na seleção
-                                        inteira. Os botões da coluna Ações continuam. */}
-                                    <ContextMenu>
-                                    <ContextMenuTrigger asChild disabled={isProjected}>
-                                    <TableRow
-                                        className={cn(
-                                            "border-border/80 transition-colors",
-                                            isProjected
-                                                ? "bg-muted/20"
-                                                : "cursor-pointer hover:bg-muted/30",
-                                        )}
-                                        onClick={() => {
-                                            if (isProjected) return
-                                            openTransactionDetail(transaction)
-                                        }}
-                                    >
-                                        {enableSelection ? (
-                                            <TableCell className="w-10 px-2 py-3 md:w-11 md:px-3">
-                                                {isProjected ? null : (
-                                                <Checkbox
-                                                    aria-label={`Selecionar ${formatTransactionDayPtBr(
-                                                        transaction.date
-                                                    )} — ${descText}`}
-                                                    checked={selectedIds.has(
-                                                        transaction.id
-                                                    )}
-                                                    onCheckedChange={(v) => {
-                                                        setSelectedIds((prev) => {
-                                                            const next = new Set(
-                                                                prev
-                                                            )
-                                                            if (v === true) {
-                                                                next.add(
-                                                                    transaction.id
-                                                                )
-                                                            } else {
-                                                                next.delete(
-                                                                    transaction.id
-                                                                )
-                                                            }
-                                                            return next
-                                                        })
-                                                    }}
-                                                    onClick={(e) =>
-                                                        e.stopPropagation()
-                                                    }
-                                                />
-                                                )}
-                                            </TableCell>
-                                        ) : null}
-                                        <TableCell className="whitespace-nowrap px-4 py-3 tabular-nums text-muted-foreground">
-                                            {formatTransactionDayPtBr(
-                                                transaction.date
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="max-w-[160px] px-4 py-3 text-left sm:max-w-[200px] lg:max-w-[280px]">
-                                            <span className="inline-flex w-full min-w-0 max-w-full flex-wrap content-start items-center justify-start gap-x-1 gap-y-0.5 text-left">
-                                                <span
-                                                    className="min-w-0 max-w-full break-words font-medium [overflow-wrap:anywhere]"
-                                                    title={titleText}
-                                                >
-                                                    {descText}
-                                                    {transaction.is_recurring ? (
-                                                        <span className="ml-1 text-muted-foreground">
-                                                            · rec.
-                                                        </span>
-                                                    ) : null}
-                                                </span>
-                                                {isProjected ? (
-                                                    <span
-                                                        className={cn(
-                                                            transactionRowChipShell,
-                                                            tagChipWarning,
-                                                        )}
-                                                        title="Cobrança prevista"
-                                                    >
-                                                        Previsto
-                                                    </span>
-                                                ) : null}
-                                                {transaction.installment_plan_id ? (
-                                                    <InstallmentChip transaction={transaction} />
-                                                ) : null}
-                                                {transaction.subscription_id ? (
-                                                    <Link
-                                                        href={ROUTES.SUBSCRIPTIONS}
-                                                        className={cn(
-                                                            transactionRowChipShell,
-                                                            tagChipInfo
-                                                        )}
-                                                        title={
-                                                            transaction
-                                                                .subscription
-                                                                ?.name
-                                                                ? `Assinatura: ${transaction.subscription.name}`
-                                                                : "Ver assinaturas"
-                                                        }
-                                                        aria-label={
-                                                            transaction
-                                                                .subscription
-                                                                ?.name
-                                                                ? `Assinatura: ${transaction.subscription.name}`
-                                                                : "Ver assinaturas"
-                                                        }
-                                                        onClick={(e) =>
-                                                            e.stopPropagation()
-                                                        }
-                                                    >
-                                                        <ArrowPathRoundedSquareIcon
-                                                            className="size-3 shrink-0 opacity-80"
-                                                            aria-hidden
-                                                        />
-                                                    </Link>
-                                                ) : null}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell className="px-4 py-3 text-sm font-normal text-foreground">
-                                            <MoneyDisplay
-                                                value={
-                                                    transaction.type ===
-                                                    "income"
-                                                        ? Number(
-                                                              transaction.amount
-                                                          )
-                                                        : -Number(
-                                                              transaction.amount
-                                                          )
-                                                }
-                                                signed
-                                                tone={
-                                                    transaction.type ===
-                                                    "income"
-                                                        ? "income"
-                                                        : "expense"
-                                                }
-                                                size="md"
-                                            />
-                                        </TableCell>
-                                        <TableCell
-                                            className="hidden max-w-[11rem] px-4 py-3 text-muted-foreground md:table-cell"
-                                        >
-                                            <div className="flex min-w-0 flex-nowrap items-center gap-1.5">
-                                                {/* O `title` mora no rótulo, e não na célula: na
-                                                    célula ele vazava para o chip de fatura, por
-                                                    cima da prévia. */}
-                                                <span className="min-w-0 truncate" title={paymentLabel}>
-                                                    {paymentLabel}
-                                                </span>
-                                                {invoiceBadge ? (
-                                                    <CreditInvoiceChip badge={invoiceBadge} />
-                                                ) : null}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="hidden max-w-[8rem] truncate px-4 py-3 text-muted-foreground md:table-cell">
-                                            {transaction.category ? (
-                                                <span className="inline-flex max-w-full items-center gap-1.5">
-                                                    <span
-                                                        className="size-2 shrink-0 rounded-full"
-                                                        style={{
-                                                            backgroundColor:
-                                                                transaction
-                                                                    .category
-                                                                    .color ||
-                                                                "var(--muted-foreground)",
-                                                        }}
-                                                        aria-hidden
-                                                    />
-                                                    <span className="truncate">
-                                                        {transaction.category.name}
-                                                    </span>
-                                                </span>
-                                            ) : (
-                                                "—"
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="px-4 py-3">
-                                            <span
-                                                className={
-                                                    transaction.type === "income"
-                                                        ? transactionIncomeTypeRowChip
-                                                        : transactionExpenseTypeRowChip
-                                                }
-                                            >
-                                                {transaction.type === "income"
-                                                    ? "Receita"
-                                                    : "Despesa"}
-                                            </span>
-                                        </TableCell>
-                                        {enableActions ? (
-                                            <TableCell className="px-3 py-3 pr-4 text-left">
-                                                {isProjected ? (
-                                                    <span className="text-xs text-muted-foreground">—</span>
-                                                ) : (
-                                                <div className="flex items-center justify-start gap-1">
-                                                    <Button
-                                                        variant="tertiary"
-                                                        size="icon-sm"
-                                                        type="button"
-                                                        className="size-7"
-                                                        aria-label={`Editar ${transaction.description || "lançamento"}`}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                            openTransactionDetail(
-                                                                transaction,
-                                                                { edit: true }
-                                                            )
-                                                        }}
-                                                    >
-                                                        <PencilIcon className="size-3.5" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="destructive"
-                                                        size="icon-sm"
-                                                        type="button"
-                                                        className="size-7"
-                                                        aria-label={`Excluir ${transaction.description || "lançamento"}`}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                            onDeleteSingle?.(
-                                                                transaction
-                                                            )
-                                                        }}
-                                                    >
-                                                        <TrashIcon className="size-3.5" />
-                                                    </Button>
-                                                </div>
-                                                )}
-                                            </TableCell>
-                                        ) : null}
-                                    </TableRow>
-                                    </ContextMenuTrigger>
-                                    {isProjected ? null : (
-                                        <TransactionRowContextMenu
-                                            transaction={transaction}
-                                            title={descText}
-                                            alvos={
-                                                enableSelection
-                                                    ? contextMenuTargets(transaction.id, selectedIds)
-                                                    : [transaction.id]
-                                            }
-                                            selected={selectedIds.has(transaction.id)}
-                                            enableSelection={enableSelection}
-                                            enableActions={enableActions}
-                                            openTransactionDetail={openTransactionDetail}
-                                            setSelectedIds={setSelectedIds}
-                                            onDeleteSingle={onDeleteSingle}
-                                            onDeleteBulk={onDeleteBulk}
-                                        />
-                                    )}
-                                    </ContextMenu>
-                                </React.Fragment>
-                            )
-                        })}
-                        </HoverCardGroup>
-                    </TableBody>
-                </Table>
-            </div>
-
-            {showPaginationFooter ? (
-                <TablePanelFooter className="px-3 sm:gap-4 sm:px-4">
-                <PaginationStatus>
-                    {total === 0 ? (
-                        "Nenhuma transação nesta página."
-                    ) : (
-                        <>
-                            <span className="text-foreground/90">
-                                {showFrom}–{showTo}
-                            </span>
-                            <span className="mx-1 text-border">·</span>
-                            <span>
-                                {numberBR(total)}{" "}
-                                {total === 1 ? "transação" : "transações"}
-                            </span>
-                        </>
-                    )}
-                </PaginationStatus>
-                {/* Por estado, sem URL (rodada 196): a fileira é gerada, com os
-                    números no desktop e `‹ 2 de 5 ›` no telefone. Foi um
-                    `ButtonGroup` na rodada 188, e antes uma bandeja à mão. */}
-                <Pagination
-                    align="end"
-                    size="md"
-                    page={page + 1}
-                    total={totalPages}
-                    onPageChange={(p) => setPage(p - 1)}
-                    className="w-auto self-end sm:self-auto"
-                />
-            </TablePanelFooter>
-            ) : null}
-        </TablePanel>
+        // Uma prévia aberta aquece as outras: descer pelos chips das linhas abre
+        // a próxima sem esperar de novo.
+        <HoverCardGroup>
+            <DataTable
+                aria-label="Transações"
+                columns={columns}
+                data={transactions}
+                getRowId={(t) => t.id}
+                getRowLabel={rowLabelOf}
+                manual={{
+                    rowCount: totalCount ?? transactions.length,
+                    sorting: true,
+                    pagination: true,
+                }}
+                sorting={sorting}
+                onSortingChange={(next) => {
+                    // A TanStack devolve a ordenação seguinte; quem decide o
+                    // sentido é o controlador. Daqui só sai qual coluna foi tocada.
+                    const tocada = next.find((s) => s.id !== sortKey)?.id ?? sortKey
+                    onToggleSort?.(tocada as TransactionsTableSortKey)
+                }}
+                pageSize={showPaginationFooter ? pageSize : false}
+                pagination={showPaginationFooter ? { pageIndex: page, pageSize } : undefined}
+                onPaginationChange={(p) => setPage?.(p.pageIndex)}
+                pending={pending}
+                mobile={mobile}
+                countLabel={
+                    showPaginationFooter
+                        ? (n) => `${numberBR(n)} ${n === 1 ? "transação" : "transações"}`
+                        : undefined
+                }
+                stickyHeader
+                empty="Nenhuma transação nesta página."
+                enableSelection={
+                    enableSelection ? (t) => !isProjectedTransactionRow(t) : false
+                }
+                rowSelection={enableSelection ? rowSelection : undefined}
+                onRowSelectionChange={(next) =>
+                    setSelectedIds(new Set(Object.keys(next).filter((id) => next[id])))
+                }
+                bulkActions={enableSelection ? bulkActions : undefined}
+                rowActions={enableActions ? rowActions : undefined}
+                // As projetadas são cobranças previstas: não abrem, não têm menu
+                // e aparecem apagadas.
+                onRowClick={(t) => openTransactionDetail(t)}
+                rowClickable={(t) => !isProjectedTransactionRow(t)}
+                rowState={(t) => (isProjectedTransactionRow(t) ? "pending" : undefined)}
+                groupBy={(t, { sorting: ordem }) => {
+                    if (ordem[0]?.id !== DATE_COLUMN) return null
+                    const key = monthYearKeyFromTransactionDate(t.date)
+                    return key ? { key, label: formatTransactionMonthYearPtBr(t.date) } : null
+                }}
+                // O botão direito e o toque longo repetem as ações da linha; sobre
+                // uma linha selecionada, agem na seleção inteira.
+                rowContextMenu={(t, { targets, selected }) =>
+                    isProjectedTransactionRow(t) ? null : (
+                        <TransactionRowContextMenu
+                            transaction={t}
+                            title={descriptionOf(t)}
+                            alvos={targets.map((x) => x.id)}
+                            selected={selected}
+                            enableSelection={enableSelection}
+                            enableActions={enableActions}
+                            openTransactionDetail={openTransactionDetail}
+                            setSelectedIds={setSelectedIds}
+                            onDeleteSingle={onDeleteSingle}
+                            onDeleteBulk={onDeleteBulk}
+                        />
+                    )
+                }
+            />
+        </HoverCardGroup>
     )
 }
-

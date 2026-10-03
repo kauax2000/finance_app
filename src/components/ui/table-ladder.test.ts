@@ -14,8 +14,10 @@ const UI = "src/components/ui"
 /**
  * A escada do `Table`, trancada.
  *
- * Três degraus (`sm`/`md`/`lg`), medidos contra o que o app já escrevia à
- * mão em 8 lugares (`h-11 px-4 py-0` nos painéis, `h-8 px-2` nas folhas). O
+ * Cinco degraus desde a rodada 225 (`xs` 32 · `sm` 36 · `md` 44 · `lg` 52 ·
+ * `xl` 64, a altura da linha); eram três (`sm`/`md`/`lg`), medidos contra o
+ * que o app já escrevia à mão em 8 lugares (`h-11 px-4 py-0` nos painéis,
+ * `h-8 px-2` nas folhas). O
  * teste garante o que as rodadas anteriores desta base já aprenderam a
  * exigir de uma escada: nenhum par produz a mesma string, as medidas sobem
  * de verdade, e nenhuma delas foi montada em tempo de execução — o Tailwind
@@ -36,7 +38,10 @@ function semComentarios(src: string) {
 const SRC = readFileSync(join(UI, "table.tsx"), "utf8")
 const CODE = semComentarios(SRC)
 const PANEL_CODE = semComentarios(readFileSync(join(UI, "table-panel.tsx"), "utf8"))
-const DEGRAUS = ["sm", "md", "lg"] as const
+const DEGRAUS = ["xs", "sm", "md", "lg", "xl"] as const
+
+/** A entrelinha do corpo de cada degrau, para a conta da altura da linha. */
+const ENTRELINHA = { xs: 16, sm: 20, md: 20, lg: 20, xl: 24 } as const
 
 function medidas(size: (typeof DEGRAUS)[number]) {
   const classes = tableVariants({ variant: "plain", size })
@@ -52,7 +57,7 @@ function medidas(size: (typeof DEGRAUS)[number]) {
 }
 
 describe("escada do Table", () => {
-  it("1. tem exatamente os três degraus do sistema, e `md` é o padrão", () => {
+  it("1. tem os cinco degraus, e `md` é o padrão", () => {
     const padrao = tableVariants({ variant: "plain" })
     expect(padrao).toBe(tableVariants({ variant: "plain", size: "md" }))
     for (const size of DEGRAUS) {
@@ -65,14 +70,19 @@ describe("escada do Table", () => {
     expect(new Set(strings).size).toBe(DEGRAUS.length)
   })
 
-  it("3. px, py e a altura do cabeçalho crescem monotonicamente", () => {
+  it("3. a linha mede 32 · 36 · 44 · 52 · 64, e o cabeçalho e o recuo nunca descem", () => {
     const valores = DEGRAUS.map(medidas)
-    for (const eixo of ["px", "py", "headH"] as const) {
-      const seq = valores.map((v) => v[eixo])
-      expect(seq.every(Number.isFinite)).toBe(true)
-      expect(seq).toStrictEqual([...seq].sort((a, b) => a - b))
-      expect(new Set(seq).size).toBe(seq.length)
-    }
+    // A altura da linha é 2 × py mais a entrelinha do corpo; `--spacing` é 4px.
+    const alturas = DEGRAUS.map((d, i) => valores[i].py * 4 * 2 + ENTRELINHA[d])
+    expect(alturas).toStrictEqual([32, 36, 44, 52, 64])
+    // O cabeçalho sobe a cada degrau; o recuo não desce — do `md` para cima ele
+    // fica em 16, o `--card-strip-px`, que alinha a coluna com a barra do painel.
+    const cabecalho = valores.map((v) => v.headH)
+    expect(cabecalho).toStrictEqual([...cabecalho].sort((a, b) => a - b))
+    expect(new Set(cabecalho).size).toBe(cabecalho.length)
+    const recuo = valores.map((v) => v.px)
+    expect(recuo).toStrictEqual([...recuo].sort((a, b) => a - b))
+    expect(recuo.slice(2)).toStrictEqual([4, 4, 4])
   })
 
   it("4. nenhum degrau é montado em tempo de execução — todo literal, sem `${`", () => {
@@ -127,9 +137,10 @@ describe("escada do Table", () => {
     }
   })
 
-  it('9. table-panel.tsx não escreve role="toolbar", e provê `lg` por contexto', () => {
+  it('9. table-panel.tsx não escreve role="toolbar", e provê `md` por contexto', () => {
     expect(PANEL_CODE).not.toContain('role="toolbar"')
-    expect(PANEL_CODE).toContain('TableSizeContext.Provider value="lg"')
+    // O `md` de 44 é o `lg` de antes da rodada 225 — a mesma linha dos painéis.
+    expect(PANEL_CODE).toContain('TableSizeContext.Provider value="md"')
   })
 
   /** As três classes da coluna de ações, lidas do código. */
@@ -285,11 +296,17 @@ describe("escada do Table", () => {
     const tabela = CODE.slice(CODE.indexOf("function Table("), CODE.indexOf("function TableHeader"))
     expect(tabela).toContain('fade = "sides"')
     // Só a ponta de baixo, espelhada na casca para o véu (irmão) poder ler.
-    expect(tabela).toContain('useScrollFade(fundo ? { axis: "y", sides: "end", shell: true } : { axis: "x" })')
-    // O viewport de baixo não veste máscara nenhuma: só o recuo e a folga de rolagem.
-    expect(tabela).toContain(
-      'fundo ? "pb-(--scroll-fade-foot-h) [scroll-padding-block-end:calc(var(--scroll-fade-foot-h)+var(--scroll-fade-h)+0.25rem)]" : scrollFadeViewportXClassName'
+    // `arrows` no eixo x publica `data-scroll-more-*`, que a sombra da coluna
+    // fixa lê (rodada 225).
+    expect(tabela).toMatch(
+      /useScrollFade\(\s*fundo \? \{ axis: "y", sides: "end", shell: true \} : \{ axis: "x", arrows: true \}\s*\)/
     )
+    // O viewport de baixo não veste máscara nenhuma: só o recuo e a folga de
+    // rolagem. E `none` não veste a lateral.
+    expect(tabela).toContain(
+      '"pb-(--scroll-fade-foot-h) [scroll-padding-block-end:calc(var(--scroll-fade-foot-h)+var(--scroll-fade-h)+0.25rem)]"'
+    )
+    expect(tabela).toContain('fade === "sides" && scrollFadeViewportXClassName')
     // A casca sangra por baixo do rodapé e segura o véu.
     expect(tabela).toContain(
       '"relative -mb-(--scroll-fade-foot-h) [--scroll-fade-h:--spacing(8)] [--scroll-fade-foot-h:var(--table-panel-foot-h,0px)]"'

@@ -259,6 +259,13 @@ const LAYER: Record<string, Layer> = {
    * primária vão, e fica parada sobre a tela que rola por baixo dela.
    */
   "bottom-bar": "Templates",
+  /**
+   * O `DataTable` (rodada 225) é o motor da TanStack Table por baixo do
+   * `TablePanel`: ele monta o painel, a barra, o corpo, o rodapé de paginação
+   * e a barra flutuante da seleção — o `TablePanel` com o estado dentro. Um
+   * Template que compõe outro, como a página que dispõe o painel.
+   */
+  "data-table": "Templates",
   "page-header": "Templates",
   "page-section": "Templates",
   /**
@@ -462,7 +469,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("sheet", "Sheet", "Painel de borda no desktop, gaveta no telefone.", ui("sheet"), "Sheet, SheetContent, SheetTrigger, SheetClose"),
   entry("stat-card", "Stat Card", "Um número que importa, com sua variação.", ui("stat-card"), "StatCard, StatCardGroup, StatCardHeader, StatCardLabel, StatCardIcon, StatCardValue, StatCardDelta"),
   entry("stepper", "Stepper", "Progresso por etapas de um fluxo.", ui("stepper"), "Stepper, StepperItem, StepperContent, StepperActions, StepperPrevious, StepperNext"),
-  entry("table", "Table", "Tabela de dados.", ui("table"), "Table, TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, TableEmpty, TableCaption"),
+  entry("table", "Table", "Tabela de dados: cinco densidades, coluna fixa, grupo com total, detalhe, esqueleto e erro.", ui("table"), "Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableGroupRow, TableRowDetail, TableSkeleton, TableCellIdentity, TableCellMoney"),
   entry("tabs", "Tabs", "Alterna entre painéis do mesmo nível.", ui("tabs"), "Tabs, TabsList, TabsTrigger, TabsContent"),
   entry("timeline", "Timeline", "Feed cronológico de eventos.", ui("timeline"), "Timeline, TimelineItem, TimelineSeparator, TimelineTitle, TimelineDescription, TimelineTime"),
   entry("sonner", "Toast", "Confirmação passageira, fora do fluxo.", ui("sonner"), 'import { toastSuccess, toastUndo } from "@/lib/toast"'),
@@ -470,6 +477,7 @@ export const REGISTRY: RegistryEntry[] = [
 
   // ── Templates ───────────────────────────────────────────────────────────
   entry("bottom-bar", "Bottom Bar", "A barra de abas do telefone.", ui("bottom-bar"), "BottomBar, BottomBarRow, BottomBarTabs, BottomBarTab, BottomBarSlot, bottomBarActionClassName"),
+  entry("data-table", "Data Table", "A tabela com o estado: ordenar, filtrar, marcar, agrupar, expandir, exportar e editar.", ui("data-table"), "DataTable, dataTableColumns, DataTableSelectionBar, DataTableFacetFilter, DataTableViewOptions"),
   entry("page-header", "Page Header", "O topo de uma tela.", ui("page-header"), "PageHeader, PageHeaderTitleRow, PageHeaderTitle, PageHeaderDescription, PageHeaderEyebrow, PageHeaderMeta, PageHeaderActions"),
   entry("page-section", "Page Section", "Bloco de uma tela, com título e ação.", ui("page-section"), "PageSection, PageSectionHeader, PageSectionTitle, PageSectionDescription"),
   entry("sidebar", "Sidebar", "A navegação lateral do app.", ui("sidebar"), "Sidebar, SidebarProvider, SidebarInset, SidebarTrigger, SidebarRail, SidebarContent, SidebarGroup, SidebarMenu, SidebarMenuButton, useSidebar"),

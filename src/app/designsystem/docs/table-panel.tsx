@@ -263,7 +263,7 @@ export default function TablePanelDoc() {
 
       <DocSection
         title="Padrão"
-        description="Card padding='none' variant='outline' com densidade lg herdada — ninguém dentro do painel escreve size. A barra de topo fica fora da moldura, sem fundo nem borda."
+        description="Card padding='none' variant='outline' com a densidade md herdada (44, a linha dos painéis) — ninguém dentro do painel escreve size. A barra de topo fica fora da moldura, sem fundo nem borda."
         code={`<TablePanel toolbar={<TablePanelToolbar>3 transações</TablePanelToolbar>}>
   <Table>…</Table>
   <TablePanelFooter>
@@ -444,7 +444,7 @@ export default function TablePanelDoc() {
       </DocNote>
 
       <DocNote title="size vem do contexto, e ninguém dentro do painel escreve">
-        <code>TablePanel</code> publica <code>lg</code> em <code>TableSizeContext</code>; fora dele a tabela fica em <code>md</code>, o padrão.
+        <code>TablePanel</code> publica <code>md</code> em <code>TableSizeContext</code> — a linha de 44, que até a rodada 225 se chamava <code>lg</code> e hoje é o padrão da escada. O <code>DataTable</code> publica por cima a densidade escolhida no menu Exibir; com estado (ordenar, marcar, paginar), use ele em vez de montar o painel à mão.
       </DocNote>
 
       <PropsTable
@@ -453,7 +453,7 @@ export default function TablePanelDoc() {
           {
             prop: "TablePanel",
             type: "ComponentProps<typeof Card> & { toolbar?: ReactNode }",
-            description: "Card padding=\"none\" variant=\"outline\" que publica lg; toolbar recebe a barra de topo, fora da moldura.",
+            description: "Card padding=\"none\" variant=\"outline\" que publica md; toolbar recebe a barra de topo, fora da moldura.",
           },
           {
             prop: "TablePanelToolbar",

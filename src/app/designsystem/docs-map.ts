@@ -26,6 +26,7 @@ import ComboboxDoc from "./docs/combobox"
 import CommandDoc from "./docs/command"
 import ContainerDoc from "./docs/container"
 import ContextMenuDoc from "./docs/context-menu"
+import DataTableDoc from "./docs/data-table"
 import DatePickerDoc from "./docs/date-picker"
 import DescriptionListDoc from "./docs/description-list"
 import DialogDoc from "./docs/dialog"
@@ -111,6 +112,7 @@ export const DOCS: Record<string, ComponentType> = {
   "command": CommandDoc,
   "container": ContainerDoc,
   "context-menu": ContextMenuDoc,
+  "data-table": DataTableDoc,
   "date-picker": DatePickerDoc,
   "description-list": DescriptionListDoc,
   "dialog": DialogDoc,

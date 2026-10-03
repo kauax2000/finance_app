@@ -17772,3 +17772,85 @@ medido, os quatro rótulos em 458. E a lista separa os itens do resto dos filhos
 **O app.** O dono pediu só o catálogo: o `DialogSteps` e as duas telas ficam,
 e unificá-los no `variant="bar"` é o próximo passo natural.
 
+
+### Rodada 225 — o Table redesenhado e o DataTable: a escada de cinco degraus, a coluna fixa, o grupo com total, o detalhe, o esqueleto, o erro, as células prontas, o motor da TanStack, a barra flutuante, as facetas, as colunas e a densidade, o gêmeo do telefone, o teclado, a URL, a virtualização, o CSV e a edição
+
+**O que estava.** O `Table` só desenhava, e as duas telas que o usam de
+verdade escreviam o resto à mão: `transactions-table.tsx` (1143 linhas) e
+`subscriptions/page-client.tsx` (1073) traziam cada uma a conta de ordenação, a
+seleção com indeterminado, o "selecionar o mês", uma barra de seleção de ~100
+linhas (uma versão para o telefone, outra para o desktop, quase cópia uma da
+outra), a paginação, a coluna de ações e a linha clicável — um `<tr onClick>`
+que o teclado não alcançava. As folhas e os quatro esqueletos repetiam
+`h-11 px-4`, `px-2 py-1.5`, `h-9` e `bg-muted/50`. A pesquisa de referências
+(tablecn, openstatus, DiceUI, TanStack, MUI X, AG Grid, Carbon, Primer, Polaris,
+Linear, Stripe, Mercury, Ramp e o W3C APG) deu a lista; o dono escolheu tudo.
+
+**O motor é a TanStack Table, e veio a v9.** `@tanstack/react-table` e
+`@tanstack/react-virtual` entraram como dependências. A v9 é outra API: `useTable` com
+`tableFeatures` explícitas, os modelos de linha como "slots", `sortFn` no lugar
+de `sortingFn`, pinning em `start`/`end`. **E o filtro mudou de forma**: ele é
+um comparador de valores com os normalizadores ao lado (`constructFilterFn`), e
+o `arrIncludesSome` passou a pedir que o valor da linha já seja uma lista —
+medido, a faceta "Renda" devolvia **zero** linhas. A faceta é `arrHas`, e a
+busca sem acento é o `includesString` com `normalizeSearchText` nos dois
+normalizadores.
+
+**A escada é a altura da linha.** `xs` 32 · `sm` 36 · `md` 44 (o padrão) · `lg`
+52 · `xl` 64, com a conta `2 × py + entrelinha` trancada no teste. Os nomes
+andaram um degrau: o `sm` de 28 virou `xs` (as folhas o forçavam a 36 à mão e
+passaram a `sm`), o `md` de 36 virou `sm` (o `PropsTable`, o `ChartDataTable` e
+duas páginas do catálogo o escrevem, para não mudarem de altura) e o `lg` de
+44, a densidade dos painéis, virou o padrão. Do `md` para cima o recuo é 16 —
+o da tira do painel —, então trocar a densidade não desalinha a coluna da barra.
+
+**A coluna fixa pinta o fundo da linha.** Uma célula `sticky` é opaca, e com
+`bg-card` ela apagava o realce, a seleção e a zebra sob ela. A linha publica o
+próprio tom já composto em `srgb` (`--table-pin-bg`), e a célula o lê. A sombra
+da emenda só acende quando há rolagem para aquele lado: o viewport ganhou o
+`arrows` do `useScrollFade`, que escreve `data-scroll-more-start`/`-end` —
+medido, sem sombra no começo, com sombra a 200px. E a dissolução lateral sai
+com coluna fixa (`fade="none"`): a máscara apagaria a coluna presa.
+
+**`aria-sort` só na coluna ordenada.** O `TableHead` escrevia `none` em toda
+coluna ordenável, e o leitor de tela anunciava "não ordenada" em cada cabeçalho
+— o padrão de tabela ordenável do W3C põe o atributo só na ordenada. A seta
+**gira** na mola, e `sortIndex` escreve a ordem numa ordenação por várias.
+
+**Quatro defeitos medidos no caminho.**
+1. As faixas de grupo repetiam a chave quando o mesmo mês voltava mais abaixo
+   (ordenado por valor), e o React embaralhava as linhas: a chave leva a
+   primeira linha do grupo, e o `groupBy` recebe a ordenação — `null` desliga o
+   grupo, porque fora da ordem de data ele vira uma faixa a cada linha.
+2. O `renderDetail` que devolvia `null` (a compra que já abre as parcelas)
+   deixava uma linha de detalhe vazia de 12px: expandir passou a pedir filhas
+   ou um detalhe de verdade.
+3. Na grade de edição o foco caía no `<body>` depois do Esc — o editor
+   desmontava e o `requestAnimationFrame` procurava a célula antes da hora. Um
+   efeito devolve o foco à célula ativa quando a edição termina.
+4. A tabela montava duas vezes quando não havia linhas (o gêmeo do telefone
+   mostrava a mesma tabela vazia), com os ids duplicados.
+
+**A barra de seleção mora no `body`.** O painel recorta com `clip-path`, que
+apaga qualquer descendente `fixed`; ela vai por portal, sobe na mola do realce
+(de 12px abaixo e 97%) e sai em 0,13s, acima da `BottomBar` no telefone
+(`--bottom-bar-pad`). Uma ação em massa que devolve `false` mantém a seleção —
+o Excluir só abre a confirmação, e cancelar não pode perder o que foi marcado;
+`disabled(rows)` é o Editar que vale para uma só.
+
+**O app.** Três agentes migraram em arquivos separados. Transações
+(1143 → ~800 linhas; a montagem da tabela de ~640 para ~290) é um `DataTable`
+em `manual` — o banco ordena e pagina —, com `rowClickable` para as projetadas,
+que pareciam clicáveis e não abriam; o `toggleSort` tinha `"desc" : "desc"`, e
+ordenação e página foram para a URL. Assinaturas (1073 → ~810) é um
+`DataTable` no cliente, com a URL, a busca, o CSV, o botão direito e o preço
+neutro (`tone="none"`: assinatura não é "entrou dinheiro"). As folhas de
+parcelas e de histórico e os quatro esqueletos usam as peças. **As telas atrás
+do login não foram vistas**; o catálogo foi verificado no navegador, nos dois
+temas, a 1440px e a 375px. No telefone a medição mudou duas coisas: a pílula
+de seleção cortava o × (os rótulos viram só ícone abaixo de `sm`) e, com
+ações na linha, o valor desce para o conteúdo do item — a regra da rodada 73,
+que o gêmeo gerado tinha esquecido.
+
+**Mudança de jornada.** `sort` e `page` em `/transactions`; `sort`, `page`, `q`
+e `status` em `/subscriptions`. `docs/JORNADAS.md` e o Atlas atualizados.

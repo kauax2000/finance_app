@@ -3852,7 +3852,7 @@ function ChartDataTable({
   className?: string
 }) {
   return (
-    <Table data-slot="chart-data-table" className={className}>
+    <Table size="sm" data-slot="chart-data-table" className={className}>
       <TableHeader>
         <TableRow>
           {x ? <TableHead>{xLabel}</TableHead> : null}

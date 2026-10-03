@@ -362,6 +362,7 @@ export default function TransactionsPage() {
                     setPage={setPage}
                     pageSize={PAGE_SIZE}
                     totalCount={totalCount}
+                    pending={c.tableLoading}
                     invoicePaidByCardClose={invoicePaidByCardClose}
                 />
             ) : hasNoMatches ? (
