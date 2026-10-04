@@ -17854,3 +17854,54 @@ que o gêmeo gerado tinha esquecido.
 
 **Mudança de jornada.** `sort` e `page` em `/transactions`; `sort`, `page`, `q`
 e `status` em `/subscriptions`. `docs/JORNADAS.md` e o Atlas atualizados.
+
+### Rodada 226 — o Tabs flutua por padrão, sem sombra, e o marcador corre como o polegar do alternador de tema; o estado na raiz, o painel que desliza, a contagem, a aba que fecha, o Mais, a navegação, a URL, o arrastar, o painel mantido e os atalhos
+
+**O pedido.** Uma versão `floating` **sem sombra atrás**, e ela como o padrão
+do sistema; no meio da rodada, o dono pediu que a troca de aba tivesse **a
+animação do alternador de tema**.
+
+**A pílula.** `variant="floating"` é a placa chapada dos flutuantes
+(`--popover`), o anel de 1px e nenhuma sombra: ela fica **no plano** da linha
+de controles, rente ao `Button` e ao `Input`, e quem a separa da página é o
+anel — como as placas do `CommandDialog`. O marcador é a tecla em relevo,
+`--muted` com o anel e o `shadow-xs`; a sombra é dele. Medido: no escuro a
+bandeja em 0,205 e o marcador em 0,269; no claro, 1 contra 0,94, com o anel
+desenhando a borda. Ele mede 32 e estica de fábrica, como o `solid`, e as seis
+telas do app o vestem sem mudar uma linha — todas usavam o padrão.
+
+**A viagem saiu do alternador para uma lib.** O `ThemeToggle` tinha a receita
+toda escrita dentro dele (o trajeto `cubic-bezier(1,0,0.4,1)`, o esticão em
+fase com a velocidade, a origem presa atrás e virando à frente no pouso, o
+volume que se conserva, o mergulho só). Ela foi para `lib/liquid-move`, com
+`viajarLiquido(peca, de, para)` animando posição, largura e altura no
+trajeto e a escala no perfil — e o alternador e o marcador das abas a usam. O
+`theme-toggle.test.ts` lê os dois arquivos. A transição de CSS do marcador
+(200ms de `--ease-out`) saiu: duas animações na mesma propriedade brigariam.
+O esticão é proporcional ao caminho em larguras de aba (0,11 por aba, teto de
+0,22, o do alternador), e a viagem só acontece quando a aba **muda** — um
+redimensionamento só reposiciona. Movimento reduzido é perguntado à mão,
+porque a WAAPI escapa do bloco global. **Uma ressalva de instrumento**: o
+painel do navegador estava oculto (`visibilityState: hidden`, sem quadros), e
+o movimento foi verificado pelas chamadas e quadros-chave do `animate`, não a
+olho.
+
+**O estado mora na raiz.** O Radix guardava a aba sozinho; com o valor no
+`Tabs` (entregue controlado ao Radix) passaram a existir o **sentido** da
+troca — a ordem é a do DOM —, e com ele o painel que desliza 12px do lado
+certo; `urlParam` (a aba de fábrica não suja o endereço — a primeira versão
+gravava `?aba=extrato` ao abrir); `swipe`; `shortcuts`, que são **⌥1–9**,
+porque o Chrome não deixa cancelar ⌘1–9, lidos pelo `code` (no Mac ⌥2 é "™");
+e `keepMounted`, medido com um rascunho que sobreviveu à troca.
+
+**As peças.** `count` com o espaço real antes ("Cartão 9"); `onClose` com o ×
+`aria-hidden` — botão dentro de aba é controle aninhado — e Delete, que leva o
+foco à vizinha; `end` fora do `tablist`, onde mora o `TabsAdd`;
+`overflow="menu"`, que manda o excesso para o **Mais ▾** e nunca esconde a
+ativa; e `TabsNav` + `TabsNavLink`, as abas que são rotas, num `<nav>` com
+`aria-current` e sem `role="tab"`.
+
+**O app.** O histórico da conta ganhou a contagem por estado, do que a tela já
+recebe. As outras cinco telas não têm o número à mão (ele mora no pai), e
+contar ali pede uma prop nova — ficou como próximo passo, junto do `urlParam`
+na visão de cartões e no modo das contas, que hoje se perdem ao recarregar.

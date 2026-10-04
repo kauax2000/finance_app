@@ -3,15 +3,25 @@
 import * as React from "react"
 import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import { cva } from "class-variance-authority"
-import { Tabs as TabsPrimitive } from "radix-ui"
+import { Slot, Tabs as TabsPrimitive } from "radix-ui"
+import { ChevronDownIcon, PlusIcon, XMarkIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { glassControlSurfaceClassName } from "@/lib/glass-classes"
 import {
   scrollFadeViewportClassName,
   scrollFadeViewportXClassName,
 } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
+import { isEditableTarget } from "@/lib/shortcut"
+import { viajarLiquido, type CaixaLiquida } from "@/lib/liquid-move"
 
 /**
  * Painéis irmãos do mesmo nível, dos quais só um aparece por vez.
@@ -107,7 +117,7 @@ import { useScrollFade } from "@/hooks/use-scroll-fade"
  */
 
 type TabsSize = "sm" | "md" | "lg" | "xl"
-type TabsVariant = "solid" | "underline" | "plain"
+type TabsVariant = "floating" | "solid" | "underline" | "plain"
 type TabsOrientation = "horizontal" | "vertical"
 
 /**
@@ -168,7 +178,32 @@ type TabsOrientation = "horizontal" | "vertical"
  * pinturas.
  */
 export function defaultTabsSize(variant: TabsVariant): TabsSize {
-  return variant === "solid" ? "md" : "lg"
+  // O `floating` (rodada 226) é controle segmentado, como o `solid`: vive
+  // numa linha de controles e fica rente ao `Button md`.
+  return variant === "solid" || variant === "floating" ? "md" : "lg"
+}
+
+/**
+ * O vão entre o marcador e a borda da bandeja, **além** do recuo da trilha.
+ * No `floating` o marcador é desenhado 2px para dentro da aba — o dono pediu
+ * mais ar em volta da aba ativa, primeiro 3px e depois 4 —, e o vão vai de 2
+ * para 4px **sem mexer na escada**: a bandeja continua 32 e a aba 28, e o
+ * alvo de clique é a aba inteira. Recuar a trilha teria derrubado a aba a 24,
+ * fora do degrau. O marcador sai com 24 de altura no `md`.
+ */
+const RECUO_DO_MARCADOR: Record<TabsVariant, number> = {
+  floating: 2,
+  solid: 0,
+  underline: 0,
+  plain: 0,
+}
+
+/** As variantes que são controle segmentado — esticam e medem 32 de fábrica. */
+const SEGMENTADA: Record<TabsVariant, boolean> = {
+  floating: true,
+  solid: true,
+  underline: false,
+  plain: false,
 }
 
 export const TABS_SIZES = {
@@ -240,6 +275,7 @@ export const ALTURA_CLASS = {
  * `transition-colors`, que é uma mudança de cor e não um deslocamento.
  */
 const VARIANTE_VIAJA: Record<TabsVariant, boolean> = {
+  floating: true,
   solid: true,
   underline: true,
   plain: false,
@@ -271,7 +307,7 @@ const TabsListContext = React.createContext<{
   stretch: boolean
   /** O marcador viajante já mediu e assumiu a pintura do realce. */
   indicatorReady: boolean
-}>({ size: "md", variant: "solid", stretch: true, indicatorReady: false })
+}>({ size: "md", variant: "floating", stretch: true, indicatorReady: false })
 
 /**
  * `useLayoutEffect` mede antes da pintura — é o que evita o marcador aparecer
@@ -301,32 +337,171 @@ function composeRefs<T>(...refs: Array<React.Ref<T> | undefined>) {
   }
 }
 
+/**
+ * O estado mora na raiz (rodada 226). O Radix guarda a aba ativa sozinho, e
+ * por isso nada fora dele sabia dela — nem para onde ela andou. Com o valor
+ * aqui (controlado ou não, entregue **controlado** ao Radix) passam a existir:
+ * o **sentido** da última troca, que o painel usa para deslizar do lado certo;
+ * a aba na URL; o arrastar no telefone; os atalhos ⌥1–9; o menu "Mais", que
+ * troca de aba de fora da fileira; e os painéis já vistos, para `keepMounted`.
+ *
+ * A ordem das abas é a do DOM (`[data-slot=tabs-trigger]` com `data-value`),
+ * e não um registro: é a ordem que a pessoa vê, e não pode divergir dela.
+ */
+type TabsRootValue = {
+  value: string | undefined
+  setValue: (v: string) => void
+  /** +1 andou para a frente, −1 para trás, 0 sem troca ainda. */
+  sentido: number
+  /** Os painéis já mostrados, para `keepMounted`. */
+  vistas: ReadonlySet<string>
+  /** Vai à vizinha (`+1`/`−1`), pulando as desabilitadas. */
+  andar: (passo: number) => void
+  shortcuts: boolean
+}
+const TabsRootContext = React.createContext<TabsRootValue | null>(null)
+
+function abasDe(raiz: HTMLElement | null) {
+  return raiz
+    ? [...raiz.querySelectorAll<HTMLElement>('[data-slot="tabs-trigger"]')].filter(
+        // Só as desta raiz, e não as de um `Tabs` aninhado num painel.
+        (t) => t.closest('[data-slot="tabs"]') === raiz
+      )
+    : []
+}
+
 function Tabs({
   className,
   orientation = "horizontal",
+  value: valueProp,
+  defaultValue,
+  onValueChange,
+  urlParam,
+  swipe = false,
+  shortcuts = false,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Root>) {
+}: React.ComponentProps<typeof TabsPrimitive.Root> & {
+  /**
+   * A aba na URL (`?aba=faturas`): lida ao abrir, depois da hidratação, e
+   * gravada a cada troca com `history.replaceState` — a régua do `urlState` do
+   * `DataTable`, sem `useSearchParams` (que pediria um `Suspense` em volta de
+   * toda página estática).
+   */
+  urlParam?: string
+  /** Arrastar o painel para os lados troca de aba, no toque. */
+  swipe?: boolean
+  /**
+   * ⌥1…⌥9 vão para a aba N. **Não é ⌘**: ⌘1–9 troca a aba do navegador, e o
+   * Chrome não deixa a página cancelar — a mesma razão do `mod+n/t/w` no
+   * `Command`. Fora de campo de texto, e anunciado em `aria-keyshortcuts`.
+   */
+  shortcuts?: boolean
+}) {
+  const [interno, setInterno] = React.useState(defaultValue)
+  const value = valueProp !== undefined ? valueProp : interno
+  const [sentido, setSentido] = React.useState(0)
+  const [vistas, setVistas] = React.useState<ReadonlySet<string>>(
+    () => new Set(value ? [value] : [])
+  )
+  if (value && !vistas.has(value)) setVistas(new Set([...vistas, value]))
+  const raizRef = React.useRef<HTMLDivElement>(null)
+
+  const setValue = React.useCallback(
+    (proximo: string) => {
+      if (proximo === value) return
+      const valores = abasDe(raizRef.current).map((t) => t.dataset.value)
+      const de = valores.indexOf(value)
+      const para = valores.indexOf(proximo)
+      setSentido(de === -1 || para === -1 ? 0 : Math.sign(para - de))
+      if (valueProp === undefined) setInterno(proximo)
+      onValueChange?.(proximo)
+    },
+    [value, valueProp, onValueChange]
+  )
+
+  const andar = React.useCallback(
+    (passo: number) => {
+      const abas = abasDe(raizRef.current).filter((t) => !t.hasAttribute("disabled"))
+      const i = abas.findIndex((t) => t.dataset.value === value)
+      const alvo = abas[i + passo]?.dataset.value
+      if (alvo) setValue(alvo)
+    },
+    [value, setValue]
+  )
+
+  // A URL: lida uma vez, depois da hidratação.
+  const urlLida = React.useRef(false)
+  React.useEffect(() => {
+    if (!urlParam || urlLida.current) return
+    urlLida.current = true
+    const daUrl = new URLSearchParams(window.location.search).get(urlParam)
+    if (daUrl && abasDe(raizRef.current).some((t) => t.dataset.value === daUrl)) setValue(daUrl)
+  }, [urlParam, setValue])
+  React.useEffect(() => {
+    if (!urlParam || !urlLida.current || !value) return
+    const params = new URLSearchParams(window.location.search)
+    if (params.get(urlParam) === value) return
+    // A aba de fábrica não suja o endereço: só vai para a URL depois de trocar.
+    if (!params.has(urlParam) && value === defaultValue) return
+    params.set(urlParam, value)
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${window.location.pathname}?${params.toString()}${window.location.hash}`
+    )
+  }, [urlParam, value, defaultValue])
+
+  // ⌥1…⌥9. `code`, e não `key`: no Mac o ⌥ troca o caractere ("¡", "™").
+  React.useEffect(() => {
+    if (!shortcuts) return
+    const aoTeclar = (e: KeyboardEvent) => {
+      if (!e.altKey || e.metaKey || e.ctrlKey || isEditableTarget(e.target)) return
+      const m = /^Digit([1-9])$/.exec(e.code)
+      if (!m) return
+      const aba = abasDe(raizRef.current)[Number(m[1]) - 1]
+      if (!aba || aba.hasAttribute("disabled") || !aba.dataset.value) return
+      e.preventDefault()
+      setValue(aba.dataset.value)
+    }
+    document.addEventListener("keydown", aoTeclar)
+    return () => document.removeEventListener("keydown", aoTeclar)
+  }, [shortcuts, setValue])
+
+  const contexto = React.useMemo<TabsRootValue>(
+    () => ({ value, setValue, sentido, vistas, andar, shortcuts }),
+    [value, setValue, sentido, vistas, andar, shortcuts]
+  )
+
   return (
-    <TabsOrientationContext.Provider value={orientation}>
-      <TabsPrimitive.Root
-        data-slot="tabs"
-        orientation={orientation}
-        className={cn(
-          // `min-w-0` não é cosmético: sem ele, um `Tabs` que por acaso é item
-          // de um flex herda `min-width: auto`, recusa encolher abaixo do
-          // conteúdo, e a fileira `scrollable` **nunca transborda** — ela
-          // simplesmente estica o pai. Medido no próprio catálogo: numa caixa
-          // de 341px a lista saía com 511 e a dissolução ficava em `off`, sem
-          // erro nenhum. É a mesma armadilha que o `DialogBody` documenta.
-          "flex min-w-0 flex-col gap-2",
-          "data-[orientation=vertical]:flex-row data-[orientation=vertical]:gap-4",
-          className
-        )}
-        {...props}
-      />
-    </TabsOrientationContext.Provider>
+    <TabsRootContext.Provider value={contexto}>
+      <TabsSwipeContext.Provider value={swipe}>
+        <TabsOrientationContext.Provider value={orientation}>
+          <TabsPrimitive.Root
+            ref={raizRef}
+            data-slot="tabs"
+            orientation={orientation}
+            value={value}
+            onValueChange={setValue}
+            className={cn(
+              // `min-w-0` não é cosmético: sem ele, um `Tabs` que por acaso é item
+              // de um flex herda `min-width: auto`, recusa encolher abaixo do
+              // conteúdo, e a fileira `scrollable` **nunca transborda** — ela
+              // simplesmente estica o pai. Medido no próprio catálogo: numa caixa
+              // de 341px a lista saía com 511 e a dissolução ficava em `off`, sem
+              // erro nenhum. É a mesma armadilha que o `DialogBody` documenta.
+              "flex min-w-0 flex-col gap-2",
+              "data-[orientation=vertical]:flex-row data-[orientation=vertical]:gap-4",
+              className
+            )}
+            {...props}
+          />
+        </TabsOrientationContext.Provider>
+      </TabsSwipeContext.Provider>
+    </TabsRootContext.Provider>
   )
 }
+
+const TabsSwipeContext = React.createContext(false)
 
 /**
  * A moldura. Ela pinta, e é ela que o `className` do `TabsList` dimensiona —
@@ -335,7 +510,16 @@ function Tabs({
 const tabsListFrameVariants = cva("flex", {
   variants: {
     variant: {
-      /** A bandeja preenchida. A forma dominante, e o padrão. */
+      /**
+       * **O padrão desde a rodada 226**: a pílula flutuante da casa — a placa
+       * chapada dos flutuantes (`--popover`), o anel de 1px e **nenhuma
+       * sombra**, a pedido do dono. Quem a separa da página é o anel, como as
+       * placas do `CommandDialog`; sem sombra ela fica no plano da linha de
+       * controles em vez de pairar sobre ela. Sem vidro: nenhum trilho deste
+       * app é fixo, e não há nada passando por baixo para borrar.
+       */
+      floating: "rounded-full bg-popover ring-1 ring-foreground/10",
+      /** A bandeja preenchida — o padrão até a rodada 225. */
       solid: "rounded-lg bg-muted",
       /**
        * Sem bandeja: um fio percorre a fileira e o marcador do gatilho pousa
@@ -384,7 +568,7 @@ const tabsListFrameVariants = cva("flex", {
       xl: "data-[orientation=horizontal]:h-10",
     },
   },
-  defaultVariants: { variant: "solid", size: "md", fill: false },
+  defaultVariants: { variant: "floating", size: "md", fill: false },
 })
 
 /**
@@ -396,6 +580,7 @@ const tabsListTrackVariants = cva(
   {
     variants: {
       variant: {
+        floating: "gap-0.5",
         solid: "gap-0.5",
         underline:
           "gap-1 data-[orientation=horizontal]:pb-0 data-[orientation=vertical]:pe-0",
@@ -436,7 +621,7 @@ const tabsListTrackVariants = cva(
       },
     },
     defaultVariants: {
-      variant: "solid",
+      variant: "floating",
       orientation: "horizontal",
       fill: false,
       glass: false,
@@ -468,6 +653,13 @@ const tabsTriggerVariants = cva(
   {
     variants: {
       variant: {
+        // A pílula pede mais ar nas pontas que o retângulo: com `px-2` o rótulo
+        // encostava na curva.
+        floating: [
+          "rounded-full border border-transparent px-3",
+          "text-muted-foreground hover:text-foreground active:text-foreground",
+          "data-[state=active]:text-foreground",
+        ].join(" "),
         solid: [
           "rounded-md border border-transparent px-2",
           "text-muted-foreground hover:text-foreground active:text-foreground",
@@ -525,7 +717,7 @@ const tabsTriggerVariants = cva(
         false: "",
       },
     },
-    defaultVariants: { variant: "solid", size: "md", stretch: true },
+    defaultVariants: { variant: "floating", size: "md", stretch: true },
   }
 )
 
@@ -540,6 +732,8 @@ const tabsTriggerVariants = cva(
 const tabsTriggerFallbackVariants = cva("", {
   variants: {
     variant: {
+      floating:
+        "data-[state=active]:bg-muted data-[state=active]:ring-1 data-[state=active]:ring-foreground/10 data-[state=active]:shadow-xs",
       solid:
         "data-[state=active]:border-border/80 data-[state=active]:bg-background data-[state=active]:shadow-xs",
       underline: [
@@ -551,7 +745,7 @@ const tabsTriggerFallbackVariants = cva("", {
       plain: "data-[state=active]:bg-muted",
     },
   },
-  defaultVariants: { variant: "solid" },
+  defaultVariants: { variant: "floating" },
 })
 
 /**
@@ -574,10 +768,11 @@ const tabsIndicatorVariants = cva(
     "pointer-events-none absolute top-0 left-0",
     "translate-x-(--tabs-indicator-x) translate-y-(--tabs-indicator-y)",
     "w-(--tabs-indicator-w) h-(--tabs-indicator-h)",
-    // 200ms é a distância curta de uma fileira de abas: a 300 o marcador
-    // arrasta e a interface parece lenta; a 100 ele pisca e não se lê como
-    // deslocamento. A curva é a de chegada confiante do sistema.
-    "transition-[translate,width,height] duration-(--duration-base) ease-(--ease-out)",
+    // **Sem transição de CSS** (rodada 226): a viagem é a do `ThemeToggle`,
+    // em WAAPI — o trajeto com inércia e o esticão que acompanha a velocidade
+    // (`lib/liquid-move`). As variáveis são o repouso; a animação, com
+    // `fill: "none"`, só cobre o caminho. Era 200ms de `--ease-out`, e o
+    // marcador deslizava como um bloco.
   ],
   {
     variants: {
@@ -588,6 +783,7 @@ const tabsIndicatorVariants = cva(
       // e apagá-lo com `bg-transparent` no ramo de vidro seria escrever a
       // classe que morre calada sob o shorthand `background` da utility.
       variant: {
+        floating: "rounded-full",
         solid: "rounded-md",
         underline: [
           "border-primary-accent",
@@ -602,6 +798,17 @@ const tabsIndicatorVariants = cva(
       glass: { true: "", false: "" },
     },
     compoundVariants: [
+      /**
+       * O marcador do `floating` é uma tecla em relevo sobre a placa: o
+       * `--muted` com o anel e a sombra mínima. A sombra é **dele** — a
+       * bandeja não tem nenhuma.
+       */
+      { variant: "floating", glass: false, class: "bg-muted ring-1 ring-foreground/10 shadow-xs" },
+      {
+        variant: "floating",
+        glass: true,
+        class: [glassControlSurfaceClassName, "shadow-xs", "[--glass-tone:var(--muted)]"].join(" "),
+      },
       { variant: "solid", glass: false, class: "border border-border/80 bg-background shadow-xs" },
       /**
        * O marcador de vidro.
@@ -631,23 +838,136 @@ const tabsIndicatorVariants = cva(
         ].join(" "),
       },
     ],
-    defaultVariants: { variant: "solid", glass: false },
+    defaultVariants: { variant: "floating", glass: false },
   }
 )
+
+/**
+ * A medição do marcador viajante, e a viagem.
+ *
+ * Ela lê `offsetLeft`/`offsetTop` **relativos à trilha**, e não
+ * `getBoundingClientRect`: com `scrollable` a trilha rola, e uma caixa em
+ * coordenada de viewport faria o marcador escorregar para fora da aba a cada
+ * pixel rolado. Em coordenada de conteúdo ele acompanha a rolagem de graça,
+ * porque é filho do mesmo elemento que rola.
+ *
+ * Os dois observadores cobrem coisas diferentes: o `ResizeObserver` pega
+ * mudança de largura (janela, fonte, rótulo que troca) e o `MutationObserver`
+ * pega a troca de aba, que é uma mudança de `data-state` (ou de
+ * `aria-current`, no `TabsNav`). Observar o DOM em vez de receber o valor por
+ * prop é o que faz o marcador seguir **também** a troca programática e a
+ * navegação por seta.
+ *
+ * **A viagem** (rodada 226): quando a peça ativa **muda** — e não quando a
+ * mesma só muda de tamanho —, o marcador corre da caixa velha para a nova pela
+ * receita do `ThemeToggle` (`viajarLiquido`). O esticão é proporcional ao
+ * caminho em larguras de aba: 0,11 por aba andada, com o teto de 0,22 do
+ * alternador, que é o que cabe dentro da pílula no contragolpe do pouso.
+ */
+/**
+ * **A viagem das abas é um pouco mais macia que a do alternador** (pedido do
+ * dono). O `cubic-bezier(1,0,0.4,1)` do `ThemeToggle` quase não sai do lugar e
+ * depois dispara — certo num trilho de três paradas curtas, um pouco seco numa
+ * fileira em que a aba anda 300px. Aqui a saída é menos presa (0,65 em vez de
+ * 1), o relógio tem 80ms a mais, e o esticão é 0,09 por aba (teto 0,18) em vez
+ * de 0,11 (teto 0,22). A forma do movimento — inércia, esticão em fase, pouso —
+ * é a mesma.
+ */
+const TRAJETO_DAS_ABAS = { duration: 480, easing: "cubic-bezier(0.65,0,0.25,1)" }
+
+function useMarcador(
+  trilhaRef: React.RefObject<HTMLElement | null>,
+  seletor: string,
+  viaja: boolean,
+  orientation: TabsOrientation,
+  deps: React.DependencyList,
+  /** Quanto o marcador recua para dentro da aba, em px — ver `RECUO_DO_MARCADOR`. */
+  recuo = 0
+) {
+  const [medido, setMedido] = React.useState(false)
+  const marcadorRef = React.useRef<HTMLSpanElement | null>(null)
+  const anterior = React.useRef<{ el: HTMLElement; caixa: CaixaLiquida } | null>(null)
+  const emCurso = React.useRef<Animation[]>([])
+
+  useIsomorphicLayoutEffect(() => {
+    const trilha = trilhaRef.current
+    // O `plain` não mede nem observa nada: sem marcador, não há caixa a
+    // publicar, e os dois observadores seriam custo puro.
+    if (!trilha || !viaja) return
+
+    const medir = () => {
+      const ativa = trilha.querySelector<HTMLElement>(seletor)
+      if (!ativa) {
+        setMedido(false)
+        return
+      }
+      const caixa: CaixaLiquida = {
+        x: ativa.offsetLeft + recuo,
+        y: ativa.offsetTop + recuo,
+        w: ativa.offsetWidth - recuo * 2,
+        h: ativa.offsetHeight - recuo * 2,
+      }
+      trilha.style.setProperty("--tabs-indicator-x", `${caixa.x}px`)
+      trilha.style.setProperty("--tabs-indicator-y", `${caixa.y}px`)
+      trilha.style.setProperty("--tabs-indicator-w", `${caixa.w}px`)
+      trilha.style.setProperty("--tabs-indicator-h", `${caixa.h}px`)
+
+      const antes = anterior.current
+      anterior.current = { el: ativa, caixa }
+      const peca = marcadorRef.current
+      if (antes && antes.el !== ativa && peca) {
+        for (const a of emCurso.current) a.cancel()
+        const vertical = orientation === "vertical"
+        const passo = vertical ? caixa.h : caixa.w
+        const andado = Math.abs(vertical ? caixa.y - antes.caixa.y : caixa.x - antes.caixa.x)
+        const amplitude = Math.min(0.18, passo > 0 ? (andado / passo) * 0.09 : 0.09)
+        emCurso.current = viajarLiquido(peca, antes.caixa, caixa, {
+          amplitude,
+          eixo: vertical ? "y" : "x",
+          trajeto: TRAJETO_DAS_ABAS,
+        })
+      }
+      setMedido(true)
+    }
+
+    medir()
+
+    const ro = new ResizeObserver(medir)
+    ro.observe(trilha)
+    for (const filho of trilha.children) ro.observe(filho)
+
+    const mo = new MutationObserver(medir)
+    mo.observe(trilha, {
+      attributes: true,
+      attributeFilter: ["data-state", "aria-current", "hidden"],
+      subtree: true,
+      childList: true,
+    })
+
+    return () => {
+      ro.disconnect()
+      mo.disconnect()
+    }
+  }, [viaja, seletor, orientation, recuo, ...deps])
+
+  return { medido: viaja && medido, marcadorRef }
+}
 
 function TabsList({
   className,
   size,
-  variant = "solid",
+  variant = "floating",
   stretch,
   scrollable = false,
+  overflow,
   glass = false,
+  end,
   children,
   ...props
 }: Omit<React.ComponentProps<typeof TabsPrimitive.List>, "children"> & {
   size?: TabsSize
   variant?: TabsVariant
-  /** Abas de largura igual, dividindo a linha. Padrão: só em `solid`. */
+  /** Abas de largura igual, dividindo a linha. Padrão: no `floating` e no `solid`. */
   stretch?: boolean
   /**
    * O marcador vira a peça de vidro do sistema — o *thumb* que viaja, que é o
@@ -657,14 +977,10 @@ function TabsList({
    * medida numa fileira idêntica a esta (o `Menubar solid`, rodada 59): abrir
    * a lâmina a 60% no escuro a leva de rgb 38 para 27, e ela deixa de ler como
    * bandeja. O marcador é o oposto — o corpo dele não se move (o tom é o mesmo
-   * `--background` que ele já pintava) e o que entra é a aresta.
+   * que ele já pintava) e o que entra é a aresta.
    *
-   * E é o **pintado**, não o material do iOS (`backdrop-filter`): nenhum
-   * trilho deste app é fixo, então não há nada passando por baixo, e borrar
-   * cor chapada não desenha nada. É a régua de premissa dos dois vidros.
-   *
-   * Opt-in, e sem efeito fora de `solid`: no `underline` o marcador é um fio
-   * de 2px, sem corpo onde um aro more; no `plain` ele nem é montado.
+   * Opt-in, e sem efeito no `underline` (o marcador é um fio de 2px, sem
+   * corpo onde um aro more) nem no `plain` (ele nem é montado).
    */
   glass?: boolean
   /**
@@ -675,107 +991,57 @@ function TabsList({
    * toda barra de abas do app — inclusive das que nunca transbordam.
    */
   scrollable?: boolean
+  /**
+   * `"menu"` (rodada 226): as abas que não cabem saem da fileira para o menu
+   * **Mais ▾**, no fim. A ativa nunca sai — se ela não cabe, sai a última que
+   * cabia. É a alternativa ao `scrollable` para quem não quer rolar.
+   */
+  overflow?: "menu"
+  /**
+   * O que vem depois das abas, **dentro da moldura e fora do `tablist`** — o
+   * `TabsAdd`, uma ação. Fora porque um nó que não é aba entre o `tablist` e as
+   * `tab` quebra a posse ARIA.
+   */
+  end?: React.ReactNode
   children?: React.ReactNode
 }) {
   const orientation = React.useContext(TabsOrientationContext)
+  const raiz = React.useContext(TabsRootContext)
 
   /**
-   * `scrollable` vence `stretch`, e o silêncio é o motivo de a precedência ser
-   * explícita: com filhos `flex-1` a trilha nunca transborda
-   * (`scrollWidth === clientWidth`), o hook marca `data-scroll-fade="off"` e a
-   * prop não faria **nada** — sem erro, sem aviso.
-   */
-  /**
-   * O padrão do degrau depende da variante — ver `defaultTabsSize`. Um `size`
-   * explícito continua vencendo.
+   * `scrollable` e `overflow` vencem `stretch`, e o silêncio é o motivo de a
+   * precedência ser explícita: com filhos `flex-1` a trilha nunca transborda,
+   * e as duas props não fariam **nada** — sem erro, sem aviso.
    */
   const resolvedSize = size ?? defaultTabsSize(variant)
-  const doesStretch = scrollable ? false : (stretch ?? variant === "solid")
+  const doesStretch = scrollable || overflow ? false : (stretch ?? SEGMENTADA[variant])
   const axis = orientation === "vertical" ? "y" : "x"
 
-  /**
-   * A precedência é explícita pela mesma razão que a de `scrollable`: um prop
-   * que não faz nada precisa dizer onde não faz. `glass` desenha o marcador, e
-   * só o `solid` tem um marcador com corpo.
-   */
-  const vidro = glass && variant === "solid"
+  /** `glass` desenha o marcador, e só as variantes segmentadas têm corpo. */
+  const vidro = glass && SEGMENTADA[variant]
 
   /**
    * A classe do fade é escolhida entre duas constantes literais, nunca montada.
    * O Tailwind varre o código como texto: `scroll-fade-${axis}` não existiria
    * para o scanner, e o CSS nunca seria gerado.
-   *
-   * O `ref` do hook devolve uma função de limpeza, e ela sobrevive porque o
-   * `composeRefs` deste arquivo a devolve. É premissa de
-   * dependência, como a instância única do `Dialog`: se ela cair, o
-   * `ResizeObserver` vaza a cada desmontagem.
    */
   const fadeClassName =
     axis === "y" ? scrollFadeViewportClassName : scrollFadeViewportXClassName
   const scrollFadeRef = useScrollFade({ axis })
 
-  /**
-   * A medição do marcador viajante.
-   *
-   * Ela lê `offsetLeft`/`offsetTop` **relativos à trilha**, e não
-   * `getBoundingClientRect`: com `scrollable` a trilha rola, e uma caixa em
-   * coordenada de viewport faria o marcador escorregar para fora da aba a cada
-   * pixel rolado. Em coordenada de conteúdo ele acompanha a rolagem de graça,
-   * porque é filho do mesmo elemento que rola.
-   *
-   * Os dois observadores cobrem coisas diferentes: o `ResizeObserver` pega
-   * mudança de largura (janela, fonte, rótulo que troca) e o `MutationObserver`
-   * pega a troca de aba, que é uma mudança de `data-state` escrita pelo Radix.
-   * Observar `data-state` em vez de receber o valor por prop é o que faz o
-   * marcador seguir **também** a troca programática e a navegação por seta.
-   */
   const trilhaRef = React.useRef<HTMLDivElement | null>(null)
-  const [medido, setMedido] = React.useState(false)
   const viaja = VARIANTE_VIAJA[variant]
-  const indicatorReady = viaja && medido
+  const { medido: indicatorReady, marcadorRef } = useMarcador(
+    trilhaRef,
+    '[data-slot="tabs-trigger"][data-state="active"]:not([hidden])',
+    viaja,
+    orientation,
+    [variant, doesStretch, resolvedSize, scrollable],
+    RECUO_DO_MARCADOR[variant]
+  )
 
-  useIsomorphicLayoutEffect(() => {
-    const trilha = trilhaRef.current
-    // O `plain` não mede nem observa nada: sem marcador, não há caixa a
-    // publicar, e os dois observadores seriam custo puro.
-    if (!trilha || !viaja) return
-
-    const medir = () => {
-      const ativa = trilha.querySelector<HTMLElement>(
-        '[data-slot="tabs-trigger"][data-state="active"]'
-      )
-      if (!ativa) {
-        setMedido(false)
-        return
-      }
-      trilha.style.setProperty("--tabs-indicator-x", `${ativa.offsetLeft}px`)
-      trilha.style.setProperty("--tabs-indicator-y", `${ativa.offsetTop}px`)
-      trilha.style.setProperty("--tabs-indicator-w", `${ativa.offsetWidth}px`)
-      trilha.style.setProperty("--tabs-indicator-h", `${ativa.offsetHeight}px`)
-      setMedido(true)
-    }
-
-    medir()
-
-    const ro = new ResizeObserver(medir)
-    ro.observe(trilha)
-    for (const gatilho of trilha.querySelectorAll('[data-slot="tabs-trigger"]')) {
-      ro.observe(gatilho)
-    }
-
-    const mo = new MutationObserver(medir)
-    mo.observe(trilha, {
-      attributes: true,
-      attributeFilter: ["data-state"],
-      subtree: true,
-      childList: true,
-    })
-
-    return () => {
-      ro.disconnect()
-      mo.disconnect()
-    }
-  }, [viaja, variant, doesStretch, resolvedSize, orientation, scrollable])
+  const molduraRef = React.useRef<HTMLDivElement | null>(null)
+  const escondidas = useExcesso(overflow === "menu", molduraRef, trilhaRef, raiz?.value)
 
   // Memorizado: montado no JSX, o ref era uma função nova a cada render, e o
   // React chamava o antigo com null e o novo com o nó — religando os
@@ -790,6 +1056,7 @@ function TabsList({
       value={{ size: resolvedSize, variant, stretch: doesStretch, indicatorReady }}
     >
       <div
+        ref={molduraRef}
         data-slot="tabs-list-frame"
         data-orientation={orientation}
         className={cn(
@@ -799,18 +1066,18 @@ function TabsList({
             // O `underline` **horizontal** ocupa a largura toda mesmo sem
             // esticar as abas: o fio dele é a fronteira entre a fileira e o
             // painel, e um fio que para depois da última aba lê como
-            // sublinhado do grupo, não como base da página. As abas continuam
-            // do tamanho do rótulo — quem estica é a trilha, não a moldura.
+            // sublinhado do grupo, não como base da página.
             //
             // Na vertical **não**: ali o fio é o de uma coluna, e ele já se
             // estica sozinho no eixo de bloco pelo `align-items: stretch` do
-            // pai. Forçar `w-full` esmagava o painel contra a borda — medido,
-            // com o texto saindo em coluna de quatro letras.
+            // pai. Forçar `w-full` esmagava o painel contra a borda.
             fill:
               doesStretch ||
               scrollable ||
+              Boolean(overflow) ||
               (variant === "underline" && orientation === "horizontal"),
           }),
+          (end || overflow) && "items-center",
           className
         )}
       >
@@ -822,9 +1089,10 @@ function TabsList({
             tabsListTrackVariants({
               variant,
               orientation,
-              fill: doesStretch || scrollable,
+              fill: doesStretch || scrollable || Boolean(overflow),
               glass: vidro,
             }),
+            overflow && "overflow-hidden",
             scrollable && [
               fadeClassName,
               axis === "x"
@@ -838,12 +1106,13 @@ function TabsList({
           )}
           {...props}
         >
-          {/* Primeiro filho e `-z-10`: os gatilhos são `relative`, então eles
-              pintam por cima sem precisar de `z-index` próprio. O marcador só
-              existe depois de medido — montá-lo antes o faria escorregar de
-              0,0 até o lugar na primeira pintura. */}
+          {/* Primeiro filho: os gatilhos são `relative`, então eles pintam por
+              cima sem precisar de `z-index` próprio. O marcador só existe
+              depois de medido — montá-lo antes o faria escorregar de 0,0 até
+              o lugar na primeira pintura. */}
           {indicatorReady ? (
             <span
+              ref={marcadorRef}
               aria-hidden
               data-slot="tabs-indicator"
               data-orientation={orientation}
@@ -853,27 +1122,305 @@ function TabsList({
           ) : null}
           {children}
         </TabsPrimitive.List>
+        {overflow === "menu" && escondidas.length ? (
+          <TabsMoreMenu abas={escondidas} />
+        ) : null}
+        {end}
       </div>
     </TabsListContext.Provider>
   )
 }
 
-function TabsTrigger({
+/**
+ * Quem cabe na fileira. Mede as abas **todas à vista** (tira o `hidden` antes
+ * de ler a largura), soma até a moldura menos o botão "Mais", e esconde o
+ * resto — menos a ativa, que troca de lugar com a última que cabia. Ele roda
+ * num `ResizeObserver` da moldura, e de novo quando a aba ativa muda.
+ */
+function useExcesso(
+  ligado: boolean,
+  molduraRef: React.RefObject<HTMLDivElement | null>,
+  trilhaRef: React.RefObject<HTMLDivElement | null>,
+  ativa: string | undefined
+) {
+  const [escondidas, setEscondidas] = React.useState<{ value: string; label: string }[]>([])
+  useIsomorphicLayoutEffect(() => {
+    const moldura = molduraRef.current
+    const trilha = trilhaRef.current
+    if (!ligado || !moldura || !trilha) return
+    const RESERVA_DO_MAIS = 40
+
+    const medir = () => {
+      const abas = [...trilha.querySelectorAll<HTMLElement>('[data-slot="tabs-trigger"]')]
+      for (const a of abas) a.removeAttribute("hidden")
+      const outros = [...moldura.children]
+        .filter((f) => f !== trilha && f.getAttribute("data-slot") !== "tabs-more")
+        .reduce((soma, f) => soma + (f as HTMLElement).offsetWidth, 0)
+      const larguras = abas.map((a) => a.offsetWidth + 2)
+      const total = larguras.reduce((x, y) => x + y, 0)
+      const cabe = moldura.clientWidth - outros - 6
+      if (total <= cabe) {
+        setEscondidas((v) => (v.length ? [] : v))
+        return
+      }
+      const limite = cabe - RESERVA_DO_MAIS
+      const visiveis = new Set<number>()
+      let soma = 0
+      abas.forEach((_, i) => {
+        if (soma + larguras[i] <= limite) {
+          visiveis.add(i)
+          soma += larguras[i]
+        }
+      })
+      const iAtiva = abas.findIndex((a) => a.dataset.value === ativa)
+      if (iAtiva !== -1 && !visiveis.has(iAtiva)) {
+        const ultima = Math.max(...visiveis)
+        if (Number.isFinite(ultima)) visiveis.delete(ultima)
+        visiveis.add(iAtiva)
+      }
+      const fora: { value: string; label: string }[] = []
+      abas.forEach((a, i) => {
+        if (visiveis.has(i)) return
+        a.setAttribute("hidden", "")
+        fora.push({ value: a.dataset.value ?? "", label: a.dataset.label ?? a.textContent ?? "" })
+      })
+      setEscondidas((v) =>
+        v.length === fora.length && v.every((x, i) => x.value === fora[i].value) ? v : fora
+      )
+    }
+
+    medir()
+    const ro = new ResizeObserver(medir)
+    ro.observe(moldura)
+    return () => ro.disconnect()
+  }, [ligado, ativa])
+  return ligado ? escondidas : []
+}
+
+/** O "Mais ▾": as abas que não couberam, num menu que troca de aba de fora. */
+function TabsMoreMenu({ abas }: { abas: { value: string; label: string }[] }) {
+  const raiz = React.useContext(TabsRootContext)
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="tertiary"
+          size="sm"
+          shape="pill"
+          data-slot="tabs-more"
+          className="ms-0.5 shrink-0"
+        >
+          mais
+          <ChevronDownIcon aria-hidden />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" size="md">
+        {abas.map((a) => (
+          <DropdownMenuItem key={a.value} onSelect={() => raiz?.setValue(a.value)}>
+            {a.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+/** O "+" no fim da fileira: redondo, do degrau da aba, para o slot `end`. */
+function TabsAdd({
+  label = "Nova aba",
   className,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
-  const { size, variant, stretch, indicatorReady } =
-    React.useContext(TabsListContext)
+}: Omit<React.ComponentProps<typeof Button>, "children"> & { label?: string }) {
+  return (
+    <Button
+      type="button"
+      variant="tertiary"
+      size="icon-sm"
+      shape="pill"
+      aria-label={label}
+      data-slot="tabs-add"
+      className={cn("ms-0.5 shrink-0", className)}
+      {...props}
+    >
+      <PlusIcon aria-hidden />
+    </Button>
+  )
+}
+
+function TabsTrigger({
+  className,
+  value,
+  icon,
+  iconActive,
+  count,
+  onClose,
+  closeLabel,
+  children,
+  onKeyDown,
+  ...props
+}: React.ComponentProps<typeof TabsPrimitive.Trigger> & {
+  /** Um ícone `16/solid` antes do rótulo. */
+  icon?: React.ReactNode
+  /** O par sólido quando a aba está ativa — o contorno vira preenchido. */
+  iconActive?: React.ReactNode
+  /**
+   * A contagem ao lado do rótulo — "Ativas 8" —, tabular, com um **espaço de
+   * verdade** antes, senão o nome acessível sai "Ativas8".
+   */
+  count?: React.ReactNode
+  /**
+   * A aba fecha: um × redondo no fim e **Delete** com a aba focada. O × é só
+   * para o ponteiro (`aria-hidden`): um botão dentro de um `role="tab"` é
+   * controle aninhado, que o leitor de tela não sabe anunciar. Quem não usa
+   * ponteiro fecha pela tecla, anunciada em `aria-keyshortcuts`. Fechar a
+   * ativa leva à vizinha antes, e o foco vai junto.
+   */
+  onClose?: () => void
+  closeLabel?: string
+}) {
+  const { size, variant, stretch, indicatorReady } = React.useContext(TabsListContext)
+  const raiz = React.useContext(TabsRootContext)
+  const rotulo = typeof children === "string" ? children : undefined
+
+  const fechar = (gatilho: HTMLElement | null) => {
+    if (!onClose) return
+    const raizEl = gatilho?.closest<HTMLElement>('[data-slot="tabs"]') ?? null
+    const abas = abasDe(raizEl).filter((t) => !t.hasAttribute("disabled"))
+    const i = abas.findIndex((t) => t.dataset.value === value)
+    const vizinha = abas[i + 1] ?? abas[i - 1]
+    if (raiz?.value === value && vizinha?.dataset.value) raiz.setValue(vizinha.dataset.value)
+    onClose()
+    vizinha?.focus()
+  }
 
   return (
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
+      data-value={value}
+      data-label={rotulo}
+      value={value}
+      aria-keyshortcuts={onClose ? "Delete" : undefined}
+      onKeyDown={(e) => {
+        onKeyDown?.(e)
+        if (onClose && (e.key === "Delete" || e.key === "Backspace") && !e.defaultPrevented) {
+          e.preventDefault()
+          fechar(e.currentTarget)
+        }
+      }}
       className={cn(
+        "group/tab",
         tabsTriggerVariants({ variant, size, stretch }),
         // Enquanto o marcador não mediu, o gatilho pinta o próprio realce —
         // ver `tabsTriggerFallbackVariants`. Um booleano do contexto, e não um
         // seletor: `:where()` não soma especificidade.
         !indicatorReady && tabsTriggerFallbackVariants({ variant }),
+        onClose && "pe-1.5",
+        className
+      )}
+      {...props}
+    >
+      {icon ? (
+        iconActive ? (
+          <>
+            <span className="contents group-data-[state=active]/tab:hidden">{icon}</span>
+            <span className="hidden group-data-[state=active]/tab:contents">{iconActive}</span>
+          </>
+        ) : (
+          icon
+        )
+      ) : null}
+      {children}
+      {count !== undefined && count !== null ? (
+        <>
+          {" "}
+          <span
+            data-slot="tabs-count"
+            className="nums text-2xs text-muted-foreground group-data-[state=active]/tab:text-foreground/70"
+          >
+            {count}
+          </span>
+        </>
+      ) : null}
+      {onClose ? (
+        <span
+          aria-hidden
+          data-slot="tabs-close"
+          title={closeLabel ?? (rotulo ? `Fechar ${rotulo}` : "Fechar")}
+          // O × não é uma tab: o clique nele não troca de aba.
+          onPointerDown={(e) => {
+            e.stopPropagation()
+            e.preventDefault()
+          }}
+          onClick={(e) => {
+            e.stopPropagation()
+            fechar(e.currentTarget.closest<HTMLElement>('[data-slot="tabs-trigger"]'))
+          }}
+          className="ms-0.5 inline-flex size-5 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground active:bg-foreground/10 [&_svg]:size-3"
+        >
+          <XMarkIcon />
+        </span>
+      ) : null}
+    </TabsPrimitive.Trigger>
+  )
+}
+
+function TabsContent({
+  className,
+  value,
+  keepMounted = false,
+  forceMount,
+  onPointerDown,
+  onPointerUp,
+  ...props
+}: React.ComponentProps<typeof TabsPrimitive.Content> & {
+  /**
+   * Mantém o painel montado depois de visto — o formulário dentro dele não
+   * perde o rascunho ao trocar de aba. Escondido com `hidden` enquanto
+   * inativo, fora da árvore de acessibilidade.
+   */
+  keepMounted?: boolean
+}) {
+  const raiz = React.useContext(TabsRootContext)
+  const swipe = React.useContext(TabsSwipeContext)
+  const inicio = React.useRef<{ x: number; y: number } | null>(null)
+  const montar = keepMounted && raiz?.vistas.has(value) ? true : forceMount
+  const sentido = raiz?.sentido ?? 0
+
+  return (
+    <TabsPrimitive.Content
+      data-slot="tabs-content"
+      value={value}
+      forceMount={montar || undefined}
+      onPointerDown={(e) => {
+        onPointerDown?.(e)
+        if (swipe && e.pointerType === "touch") inicio.current = { x: e.clientX, y: e.clientY }
+      }}
+      onPointerUp={(e) => {
+        onPointerUp?.(e)
+        const de = inicio.current
+        inicio.current = null
+        if (!de || !raiz) return
+        const dx = e.clientX - de.x
+        const dy = e.clientY - de.y
+        // Um arraste de verdade, e de lado: 56px e bem mais horizontal que
+        // vertical — senão a rolagem da página trocaria de aba.
+        if (Math.abs(dx) >= 56 && Math.abs(dx) > Math.abs(dy) * 1.5) raiz.andar(dx < 0 ? 1 : -1)
+      }}
+      className={cn(
+        "min-w-0 flex-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/45",
+        swipe && "touch-pan-y",
+        montar && "data-[state=inactive]:hidden",
+        // O painel **desliza do lado para onde a aba andou** (rodada 226) —
+        // 12px, na mola —, como o `StepperContent`. Sem sentido (a primeira
+        // pintura, uma troca programática sem ordem), o fade de antes com 4px
+        // de assentamento. O `data-[state=active]` guarda contra `forceMount`.
+        "data-[state=active]:animate-in data-[state=active]:fade-in-0",
+        sentido > 0
+          ? "data-[state=active]:slide-in-from-right-3 duration-(--duration-spring) ease-(--ease-spring)"
+          : sentido < 0
+            ? "data-[state=active]:slide-in-from-left-3 duration-(--duration-spring) ease-(--ease-spring)"
+            : "data-[state=active]:slide-in-from-bottom-1 duration-(--duration-fast) ease-(--ease-out)",
         className
       )}
       {...props}
@@ -881,21 +1428,100 @@ function TabsTrigger({
   )
 }
 
-function TabsContent({
+/**
+ * As abas de **navegação** (rodada 226): cada uma é uma rota. A mesma
+ * moldura, a mesma trilha e o mesmo marcador viajante do `TabsList`, num
+ * `<nav>` — e **sem `role="tab"`**: o padrão de abas do W3C é para painéis
+ * na mesma página; navegação é link, e a atual é `aria-current="page"`.
+ */
+function TabsNav({
   className,
+  size,
+  variant = "floating",
+  stretch,
+  glass = false,
+  children,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Content>) {
+}: React.ComponentProps<"nav"> & {
+  size?: TabsSize
+  variant?: TabsVariant
+  stretch?: boolean
+  glass?: boolean
+}) {
+  const resolvedSize = size ?? defaultTabsSize(variant)
+  const doesStretch = stretch ?? SEGMENTADA[variant]
+  const vidro = glass && SEGMENTADA[variant]
+  const trilhaRef = React.useRef<HTMLDivElement | null>(null)
+  const { medido, marcadorRef } = useMarcador(
+    trilhaRef,
+    '[data-slot="tabs-nav-link"][aria-current="page"]',
+    VARIANTE_VIAJA[variant],
+    "horizontal",
+    [variant, doesStretch, resolvedSize],
+    RECUO_DO_MARCADOR[variant]
+  )
   return (
-    <TabsPrimitive.Content
-      data-slot="tabs-content"
+    <TabsListContext.Provider
+      value={{ size: resolvedSize, variant, stretch: doesStretch, indicatorReady: medido }}
+    >
+      <nav
+        data-slot="tabs-nav"
+        data-orientation="horizontal"
+        className={cn(
+          tabsListFrameVariants({
+            variant,
+            size: resolvedSize,
+            fill: doesStretch || variant === "underline",
+          }),
+          className
+        )}
+        {...props}
+      >
+        <div
+          ref={trilhaRef}
+          data-orientation="horizontal"
+          className={tabsListTrackVariants({
+            variant,
+            orientation: "horizontal",
+            fill: doesStretch,
+            glass: vidro,
+          })}
+        >
+          {medido ? (
+            <span
+              ref={marcadorRef}
+              aria-hidden
+              data-slot="tabs-indicator"
+              data-orientation="horizontal"
+              className={tabsIndicatorVariants({ variant, glass: vidro })}
+            />
+          ) : null}
+          {children}
+        </div>
+      </nav>
+    </TabsListContext.Provider>
+  )
+}
+
+/** Um link do `TabsNav`. `asChild` para o `<Link>` do Next. */
+function TabsNavLink({
+  className,
+  active = false,
+  asChild = false,
+  ...props
+}: React.ComponentProps<"a"> & { active?: boolean; asChild?: boolean }) {
+  const { size, variant, stretch, indicatorReady } = React.useContext(TabsListContext)
+  const Comp = asChild ? Slot.Root : "a"
+  return (
+    <Comp
+      data-slot="tabs-nav-link"
+      data-orientation="horizontal"
+      data-state={active ? "active" : "inactive"}
+      aria-current={active ? "page" : undefined}
       className={cn(
-        "min-w-0 flex-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/45",
-        // O painel **reconhece** a troca, e nada mais: 150ms de fade com 4px de
-        // assentamento. O Radix desmonta o painel inativo, então só existe
-        // entrada — e é bom que seja curta, porque quem trocou de aba veio ler,
-        // não assistir. O `data-[state=active]` guarda contra `forceMount`.
-        "data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-1",
-        "duration-(--duration-fast) ease-(--ease-out)",
+        tabsTriggerVariants({ variant, size, stretch }),
+        !indicatorReady && tabsTriggerFallbackVariants({ variant }),
+        "cursor-pointer",
         className
       )}
       {...props}
@@ -905,8 +1531,11 @@ function TabsContent({
 
 export {
   Tabs,
+  TabsAdd,
   TabsContent,
   TabsList,
+  TabsNav,
+  TabsNavLink,
   TabsTrigger,
   tabsListFrameVariants,
   tabsListTrackVariants,

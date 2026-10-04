@@ -1595,8 +1595,28 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   cada linha só se registra — então dentro de um `MenubarContent` só vão peças
   do menu. A barra de contas a pagar o usa (filtrar e ordenar, com a escolha
   marcada).
-- **O `Tabs` tem três eixos, e a moldura não é a fileira.** `variant` é a
-  superfície (`solid` bandeja — o padrão —, `underline` um fio sob a fileira com
+- **O `Tabs` flutua por padrão desde a rodada 226, sem sombra.**
+  `variant="floating"` é a pílula da casa: a placa chapada `--popover`, o anel
+  de 1px e **nenhuma sombra atrás** (a pedido do dono — ela fica no plano da
+  linha de controles); o marcador é a tecla em relevo (`--muted`, anel e
+  `shadow-xs`). Ele mede 32 e estica de fábrica, como o `solid`. **O marcador
+  corre como o polegar do `ThemeToggle`**: a receita saiu do alternador para
+  `lib/liquid-move` (`viajarLiquido`) — o trajeto com inércia, o esticão em
+  fase com a velocidade e preso à borda de trás, o volume que se conserva e um
+  mergulho no pouso —, em WAAPI e com o esticão proporcional às abas andadas
+  (0,11 por aba, teto 0,22). **O estado mora na raiz**: o `Tabs` sabe o
+  sentido da última troca (a ordem do DOM), e o `TabsContent` desliza 12px
+  desse lado; `urlParam` (`replaceState`, a aba de fábrica não suja a URL),
+  `swipe` (56px, bem mais de lado que de pé), `shortcuts` (**⌥1–9**, e não
+  ⌘: o Chrome não deixa cancelar ⌘1–9; lido pelo `code`) e `keepMounted`.
+  `TabsTrigger` tem `icon`/`iconActive`, `count` (com o espaço real antes) e
+  `onClose` (o × é `aria-hidden` — botão dentro de aba é controle aninhado — e
+  Delete fecha, levando o foco à vizinha); `TabsList` tem `end` (fora do
+  `tablist`, onde mora o `TabsAdd`) e `overflow="menu"` (o excesso vai para o
+  **Mais ▾**, e a ativa nunca sai). **Abas que são rotas são `TabsNav` +
+  `TabsNavLink`**, num `<nav>` com `aria-current="page"` e sem `role="tab"`.
+- **O `Tabs` tem quatro superfícies, e a moldura não é a fileira.** `variant` é a
+  superfície (`floating` a pílula — o padrão —, `solid` bandeja, `underline` um fio sob a fileira com
   o marcador pousando nele, `plain` sem nada); `size` mede o **gatilho**;
   `stretch` divide a linha em partes iguais (ligado só em `solid`, porque uma
   bandeja lê como controle segmentado e uma fileira de abas de página não); e

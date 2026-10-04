@@ -16,9 +16,9 @@ const TABS: { value: CreditCardsPageView; label: string }[] = [
  *
  * Ela desenhava o trilho à mão: uma `<div role="tablist">` com a chapa de
  * `transaction-type-segment` e `<Button role="tab">` dentro, sem foco
- * itinerante e sem painel. `Tabs variant="solid"` é o mesmo desenho — bandeja
- * 32 com gatilho 28, 40/36 no dedo — com o marcador que viaja, as setas do
- * teclado e o ARIA do Radix.
+ * itinerante e sem painel. Hoje é o `Tabs` de fábrica (a pílula `floating`
+ * desde a rodada 226 — bandeja 32 com gatilho 28, 40/36 no dedo), com o
+ * marcador que viaja, as setas do teclado e o ARIA do Radix.
  */
 export function CreditCardsViewSegment({
     value,

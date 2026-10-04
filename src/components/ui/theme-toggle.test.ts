@@ -21,10 +21,12 @@ import { describe, expect, it } from "vitest"
  *    em `COM_MODO` de `glass.test.ts` — que é o teste que cobrava o eixo.
  */
 
-const FONTE = readFileSync(
-    join(process.cwd(), "src/components/ui/theme-toggle.tsx"),
-    "utf8",
-)
+// A receita da viagem mora em `lib/liquid-move.ts` desde a rodada 226, quando
+// o `Tabs` passou a usá-la também: o trilho é lido junto com ela.
+const FONTE =
+    readFileSync(join(process.cwd(), "src/components/ui/theme-toggle.tsx"), "utf8") +
+    "\n" +
+    readFileSync(join(process.cwd(), "src/lib/liquid-move.ts"), "utf8")
 /** Sem comentários: o cabeçalho deste componente cita por extenso quase tudo
  *  que se quer proibir, e varrer o texto cru testaria o comentário. */
 const CODIGO = FONTE.replace(/\/\*[\s\S]*?\*\//g, " ").replace(

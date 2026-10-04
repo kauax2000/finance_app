@@ -96,6 +96,18 @@ export function BillDetailHistoryList({
     const [shown, setShown] = useState(PAGE)
 
     const filtered = useMemo(() => filterInstances(instances, tab), [instances, tab])
+    // A contagem de cada aba sai das mesmas ocorrências que a lista filtra —
+    // nenhuma consulta a mais.
+    const counts = useMemo(() => {
+        const c: Record<BillHistoryTab, number> = {
+            pending: 0,
+            paid: 0,
+            skipped: 0,
+            all: instances.length,
+        }
+        for (const i of instances) c[i.status]++
+        return c
+    }, [instances])
     const visible = filtered.slice(0, shown)
 
     return (
@@ -113,7 +125,7 @@ export function BillDetailHistoryList({
                     antigo era `inline-flex` e tinha a largura dos rótulos. */}
                 <TabsList aria-label="Filtrar histórico" className="w-full md:w-fit">
                     {TABS.map((t) => (
-                        <TabsTrigger key={t.value} value={t.value}>
+                        <TabsTrigger key={t.value} value={t.value} count={counts[t.value]}>
                             {t.label}
                         </TabsTrigger>
                     ))}

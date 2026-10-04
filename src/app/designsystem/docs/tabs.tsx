@@ -1,399 +1,429 @@
 "use client"
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import * as React from "react"
+import Link from "next/link"
+import {
+  ArrowsRightLeftIcon,
+  CreditCardIcon,
+  ListBulletIcon,
+} from "@heroicons/react/16/solid"
+
+import { Kbd } from "@/components/ui/kbd"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import {
+  Tabs,
+  TabsAdd,
+  TabsContent,
+  TabsList,
+  TabsNav,
+  TabsNavLink,
+  TabsTrigger,
+  type TabsSize,
+  type TabsVariant,
+} from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { PhoneFrame } from "../ds-frame"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
-const DEGRAUS = [
-  ["sm", "bandeja 28, gatilho 24 — para dentro de um cartão apertado."],
-  ["md", "bandeja 32, gatilho 28 — o padrão, e a altura de um Button md."],
-  ["lg", "bandeja 36, gatilho 32."],
-  ["xl", "bandeja 40, gatilho 36 — o trilho do telefone."],
-] as const
+const VARIANTES = ["floating", "solid", "underline", "plain"] as const
+const DEGRAUS = ["sm", "md", "lg", "xl"] as const
+const ORIENTACOES = ["horizontal", "vertical"] as const
 
-const MESES = [
-  "Janeiro",
-  "Fevereiro",
-  "Março",
-  "Abril",
-  "Maio",
-  "Junho",
-  "Julho",
-  "Agosto",
-  "Setembro",
-  "Outubro",
-  "Novembro",
-  "Dezembro",
+const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
+
+function Eixo<T extends string>({
+  rotulo,
+  valores,
+  valor,
+  onChange,
+}: {
+  rotulo: string
+  valores: readonly T[]
+  valor: T
+  onChange: (v: T) => void
+}) {
+  return (
+    <ToggleGroup
+      type="single"
+      variant="segmented"
+      size="sm"
+      value={valor}
+      onValueChange={(v) => v && onChange(v as T)}
+      aria-label={rotulo}
+    >
+      {valores.map((v) => (
+        <ToggleGroupItem key={v} value={v} className="font-mono">
+          {v}
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
+  )
+}
+
+function Interruptor({ id, rotulo, valor, onChange }: { id: string; rotulo: string; valor: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div className="flex items-center gap-2">
+      <Switch id={id} size="sm" checked={valor} onCheckedChange={onChange} />
+      <Label htmlFor={id} className="font-mono text-xs font-normal">
+        {rotulo}
+      </Label>
+    </div>
+  )
+}
+
+const PAINEIS = [
+  { valor: "extrato", nome: "Extrato", texto: "12 transações entre 01/03 e 28/03." },
+  { valor: "categorias", nome: "Categorias", texto: "Mercado, Transporte e Lazer." },
+  { valor: "parcelas", nome: "Parcelas", texto: "3 compras parceladas em andamento." },
 ]
+
+function DemoNaTela() {
+  const [variant, setVariant] = React.useState<TabsVariant>("floating")
+  const [size, setSize] = React.useState<TabsSize | "padrão">("padrão")
+  const [orientation, setOrientation] = React.useState<(typeof ORIENTACOES)[number]>("horizontal")
+  const [esticar, setEsticar] = React.useState(true)
+  const [vidro, setVidro] = React.useState(false)
+
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <Eixo rotulo="Variante" valores={VARIANTES} valor={variant} onChange={setVariant} />
+        <Eixo rotulo="Degrau" valores={["padrão", ...DEGRAUS] as const} valor={size} onChange={setSize} />
+        <Eixo rotulo="Orientação" valores={ORIENTACOES} valor={orientation} onChange={setOrientation} />
+        <Interruptor id="ds-tabs-stretch" rotulo="stretch" valor={esticar} onChange={setEsticar} />
+        <Interruptor id="ds-tabs-glass" rotulo="glass" valor={vidro} onChange={setVidro} />
+      </div>
+      <Tabs defaultValue="extrato" orientation={orientation}>
+        <TabsList
+          variant={variant}
+          size={size === "padrão" ? undefined : size}
+          stretch={esticar}
+          glass={vidro}
+        >
+          {PAINEIS.map((p) => (
+            <TabsTrigger key={p.valor} value={p.valor}>
+              {p.nome}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        {PAINEIS.map((p) => (
+          <TabsContent key={p.valor} value={p.valor}>
+            <p className="text-sm text-muted-foreground">{p.texto}</p>
+          </TabsContent>
+        ))}
+      </Tabs>
+    </div>
+  )
+}
+
+function DemoIconeContagem() {
+  return (
+    <Tabs defaultValue="todas">
+      <TabsList stretch={false}>
+        <TabsTrigger value="todas" icon={<ListBulletIcon aria-hidden />} count={24}>
+          Todas
+        </TabsTrigger>
+        <TabsTrigger value="cartao" icon={<CreditCardIcon aria-hidden />} count={9}>
+          Cartão
+        </TabsTrigger>
+        <TabsTrigger value="transferencias" icon={<ArrowsRightLeftIcon aria-hidden />} count={3}>
+          Transferências
+        </TabsTrigger>
+      </TabsList>
+    </Tabs>
+  )
+}
+
+function DemoFechar() {
+  const [abas, setAbas] = React.useState(["Março", "Abril", "Maio"])
+  const [ativa, setAtiva] = React.useState("Março")
+  const proximo = React.useRef(0)
+  return (
+    <Tabs value={ativa} onValueChange={setAtiva}>
+      <TabsList
+        stretch={false}
+        end={
+          <TabsAdd
+            label="Abrir um mês"
+            onClick={() => {
+              const livre = MESES.find((m) => !abas.includes(m)) ?? `Mês ${++proximo.current}`
+              setAbas((a) => [...a, livre])
+              setAtiva(livre)
+            }}
+          />
+        }
+      >
+        {abas.map((m) => (
+          <TabsTrigger
+            key={m}
+            value={m}
+            onClose={abas.length > 1 ? () => setAbas((a) => a.filter((x) => x !== m)) : undefined}
+          >
+            {m}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+      {abas.map((m) => (
+        <TabsContent key={m} value={m}>
+          <p className="text-sm text-muted-foreground">O extrato de {m.toLowerCase()}.</p>
+        </TabsContent>
+      ))}
+    </Tabs>
+  )
+}
+
+function DemoMais() {
+  return (
+    <div className="w-full max-w-md">
+      <Tabs defaultValue="Março">
+        <TabsList overflow="menu">
+          {MESES.map((m) => (
+            <TabsTrigger key={m} value={m}>
+              {m}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        {MESES.map((m) => (
+          <TabsContent key={m} value={m}>
+            <p className="text-sm text-muted-foreground">Os lançamentos de {m.toLowerCase()}.</p>
+          </TabsContent>
+        ))}
+      </Tabs>
+    </div>
+  )
+}
+
+function DemoNavegacao() {
+  const rotas = [
+    { href: "/designsystem/tabs", nome: "Tabs" },
+    { href: "/designsystem/table", nome: "Table" },
+    { href: "/designsystem/data-table", nome: "Data Table" },
+  ]
+  return (
+    <TabsNav aria-label="Páginas vizinhas" stretch={false}>
+      {rotas.map((r) => (
+        <TabsNavLink key={r.href} asChild active={r.href === "/designsystem/tabs"}>
+          <Link href={r.href}>{r.nome}</Link>
+        </TabsNavLink>
+      ))}
+    </TabsNav>
+  )
+}
+
+function DemoUrl() {
+  return (
+    <Tabs defaultValue="extrato" urlParam="aba">
+      <TabsList stretch={false}>
+        {PAINEIS.map((p) => (
+          <TabsTrigger key={p.valor} value={p.valor}>
+            {p.nome}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+      {PAINEIS.map((p) => (
+        <TabsContent key={p.valor} value={p.valor}>
+          <p className="text-sm text-muted-foreground">Olhe a barra de endereço: ?aba={p.valor}.</p>
+        </TabsContent>
+      ))}
+    </Tabs>
+  )
+}
+
+function DemoArrastar() {
+  return (
+    <PhoneFrame>
+      <div className="flex h-full flex-col gap-3 overflow-y-auto bg-background p-4">
+        <Tabs defaultValue="extrato" swipe>
+          <TabsList size="xl">
+            {PAINEIS.map((p) => (
+              <TabsTrigger key={p.valor} value={p.valor}>
+                {p.nome}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {PAINEIS.map((p) => (
+            <TabsContent key={p.valor} value={p.valor} className="min-h-80 rounded-2xl bg-muted/40 p-4">
+              <p className="text-sm text-muted-foreground">
+                {p.texto} Arraste para os lados para trocar de aba.
+              </p>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </div>
+    </PhoneFrame>
+  )
+}
+
+function DemoMontado() {
+  return (
+    <Tabs defaultValue="nota" shortcuts>
+      <TabsList stretch={false}>
+        <TabsTrigger value="nota">Nota</TabsTrigger>
+        <TabsTrigger value="resumo">Resumo</TabsTrigger>
+      </TabsList>
+      <TabsContent value="nota" keepMounted>
+        <Textarea aria-label="Nota do mês" placeholder="Escreva, troque de aba e volte: o rascunho fica." minRows={3} />
+      </TabsContent>
+      <TabsContent value="resumo" keepMounted>
+        <p className="text-sm text-muted-foreground">O resumo do mês.</p>
+      </TabsContent>
+    </Tabs>
+  )
+}
 
 export default function TabsDoc() {
   return (
     <>
       <Usage>
-        Painéis irmãos do mesmo nível, um visível por vez. Se as opções{" "}
-        <em>filtram</em> a mesma lista, é <code>ToggleGroup</code>; se{" "}
-        <em>navegam</em> para outra rota, é um link.
+        Painéis irmãos do mesmo nível, um visível por vez. Se as opções <em>filtram</em> a mesma lista, é{" "}
+        <code>ToggleGroup</code>; se <em>navegam</em> para outra rota, é o <code>TabsNav</code>, com links.
       </Usage>
 
       <DocSection
-        title="Padrão"
-        description="Uma aba é um painel, não um filtro. O valor pertence à URL sempre que o conteúdo é endereçável."
+        title="Na tela"
+        description="floating é o padrão desde a rodada 226: a pílula da casa, chapada, com o anel de 1px e nenhuma sombra atrás — o marcador em relevo é que tem a sombra mínima. Troque de aba: o marcador corre como o polegar do alternador de tema, com inércia, esticando na direção da viagem e acomodando ao pousar. Troque a variante, o degrau, a orientação, o stretch e o vidro."
         code={`<Tabs defaultValue="extrato">
-  <TabsList>
+  <TabsList>                {/* variant="floating" size="md", de fábrica */}
     <TabsTrigger value="extrato">Extrato</TabsTrigger>
     <TabsTrigger value="categorias">Categorias</TabsTrigger>
   </TabsList>
   <TabsContent value="extrato">…</TabsContent>
 </Tabs>`}
-        previewClassName="flex-col flex-nowrap items-stretch p-6"
+        previewClassName="items-stretch"
       >
-        <Tabs defaultValue="extrato">
-          <TabsList>
-            <TabsTrigger value="extrato">Extrato</TabsTrigger>
-            <TabsTrigger value="categorias">Categorias</TabsTrigger>
-            <TabsTrigger value="parcelas">Parcelas</TabsTrigger>
-          </TabsList>
-          <TabsContent value="extrato">
-            <p className="text-sm text-muted-foreground">
-              12 transações entre 01/03 e 28/03.
-            </p>
-          </TabsContent>
-          <TabsContent value="categorias">
-            <p className="text-sm text-muted-foreground">
-              Mercado, Transporte e Lazer.
-            </p>
-          </TabsContent>
-          <TabsContent value="parcelas">
-            <p className="text-sm text-muted-foreground">
-              3 compras parceladas em andamento.
-            </p>
-          </TabsContent>
-        </Tabs>
+        <DemoNaTela />
       </DocSection>
 
-      <DocSection
-        title="Solid — o controle segmentado"
-        description="A bandeja preenchida, para uma linha de controles: mede 32, rente ao Button e ao Input ao lado, por isso o padrão é md."
-        code={`<TabsList>…</TabsList>  {/* variant="solid" size="md", os dois de fábrica */}`}
-        previewClassName="flex-col flex-nowrap items-stretch gap-6 p-6"
-      >
-        <div className="flex flex-col gap-2">
-          <Tabs defaultValue="jan">
-            <TabsList stretch={false}>
-              <TabsTrigger value="jan">Janeiro</TabsTrigger>
-              <TabsTrigger value="fev">Fevereiro</TabsTrigger>
-              <TabsTrigger value="mar">Março</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <p className="text-xs text-muted-foreground">
-            Troque de aba: o realce é um objeto só que se desloca dentro da
-            bandeja.
-          </p>
-        </div>
-      </DocSection>
+      <DocNote title="Sem sombra atrás, de propósito">
+        A placa flutuante não paira sobre a linha de controles: ela está <em>nela</em>, rente ao <code>Button</code> e
+        ao <code>Input</code> ao lado. Quem a separa da página é o anel, como as placas do <code>CommandDialog</code>.
+        A sombra mínima é do marcador — é o relevo que diz qual aba está apertada.
+      </DocNote>
 
-
-      <DocSection
-        title="O marcador de vidro"
-        description="glass troca o marcador que viaja pelo vidro do sistema, como o controle segmentado do iOS. Só em solid."
-        code={`<TabsList glass stretch={false}>…</TabsList>`}
-        previewClassName="flex-col flex-nowrap items-stretch gap-6 p-6"
-      >
-        {(
-          [
-            [false, "chapado — o padrão"],
-            [true, "glass"],
-          ] as const
-        ).map(([vidro, rotulo]) => (
-          <div key={rotulo} className="flex flex-col gap-2">
-            <span className="font-mono text-xs text-muted-foreground">
-              {rotulo}
-            </span>
-            <Tabs defaultValue="fev">
-              <TabsList glass={vidro} stretch={false}>
-                <TabsTrigger value="jan">Janeiro</TabsTrigger>
-                <TabsTrigger value="fev">Fevereiro</TabsTrigger>
-                <TabsTrigger value="mar">Março</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-        ))}
-      </DocSection>
-
-      <DocNote title="Vidro no marcador, nunca na bandeja">
-        O marcador de vidro usa <code>--background</code> opaco, a mesma cor do
-        chapado, então o contraste do rótulo não muda; o que entra é só o aro,
-        no 1px de borda que já existia. É vidro pintado, sem{" "}
-        <code>backdrop-filter</code>: nada passa por baixo de uma fileira de
-        abas. Com material na bandeja, ela escurece e deixa de ler como bandeja.
+      <DocNote title="A viagem é a do alternador de tema">
+        O marcador não desliza: corre. A receita mora em <code>lib/liquid-move</code> e é a mesma do{" "}
+        <code>ThemeToggle</code> — a curva que quase não sai do lugar, dispara e pousa macio; o esticão em fase com a
+        velocidade, preso à borda de trás; o volume que se conserva (esticar em X afina em Y); e um mergulho só no pouso.
+        O esticão é proporcional ao caminho, 0,11 por aba andada até o teto de 0,22. Em WAAPI, porque o bloco global de
+        movimento reduzido só corta transição — a pergunta é feita à mão, e sem movimento o marcador salta.
       </DocNote>
 
       <DocSection
-        title="Underline — as abas de página"
-        description="Um fio sob a fileira, e o marcador pousa nele. São abas que dividem a página com título e texto corrido, então o padrão é lg, o degrau em que o rótulo volta aos 14px."
-        code={`<TabsList variant="underline">…</TabsList>  {/* size="lg" de fábrica */}`}
-        previewClassName="flex-col flex-nowrap items-stretch gap-6 p-6"
+        title="Ícone e contagem"
+        description="icon põe o ícone antes do rótulo (16/solid; iconActive troca pelo par quando a aba fica ativa); count é a contagem tabular, com um espaço de verdade antes — o leitor de tela ouve “Cartão 9”, e não “Cartão9”."
+        code={`<TabsTrigger value="cartao" icon={<CreditCardIcon />} count={9}>Cartão</TabsTrigger>`}
+        previewClassName="items-start"
       >
-        <div className="flex flex-col gap-2">
-          <Tabs defaultValue="visao">
-            <TabsList variant="underline">
-              <TabsTrigger value="visao">Visão geral</TabsTrigger>
-              <TabsTrigger value="limites">Limites</TabsTrigger>
-              <TabsTrigger value="faturas">Faturas</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <p className="text-xs text-muted-foreground">
-            O traço de acento corre sobre o fio.
-          </p>
-        </div>
-      </DocSection>
-
-      <DocNote title="O fio sempre atravessa a largura toda">
-        Ele é a fronteira entre a fileira e o painel. Um fio que para depois da
-        última aba lê como sublinhado do grupo, não como base da página.
-      </DocNote>
-
-      <DocSection
-        title="Plain — dentro de uma moldura que já existe"
-        description="Nem bandeja nem fio: para dentro de um cartão ou diálogo com contorno próprio. Também são abas de página, então nasce lg."
-        code={`<TabsList variant="plain">…</TabsList>  {/* size="lg" de fábrica */}`}
-        previewClassName="flex-col flex-nowrap items-stretch gap-6 p-6"
-      >
-        <div className="flex flex-col gap-2">
-          <Tabs defaultValue="jan">
-            <TabsList variant="plain">
-              <TabsTrigger value="jan">Janeiro</TabsTrigger>
-              <TabsTrigger value="fev">Fevereiro</TabsTrigger>
-              <TabsTrigger value="mar">Março</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <p className="text-xs text-muted-foreground">
-            Aqui o marcador não viaja: a tinta troca no lugar.
-          </p>
-        </div>
-      </DocSection>
-
-      <DocNote title="plain não tem marcador que viaja">
-        O marcador viaja ao longo de um trilho — a bandeja ou o fio. Sem trilho,
-        vira um bloco deslizando sozinho, barulhento demais para a variante mais
-        silenciosa.
-      </DocNote>
-
-      <DocSection
-        title="Altura da bandeja"
-        description="size mede a bandeja, e o gatilho deriva dela. Mesmos nomes e números do Button, do Input e do SelectTrigger: aba ao lado de botão alinha sem declarar size."
-        code={`<TabsList size="sm">…</TabsList>  {/* bandeja 28 */}
-<TabsList size="md">…</TabsList>  {/* bandeja 32 — o padrão */}
-<TabsList size="lg">…</TabsList>  {/* bandeja 36 */}
-<TabsList size="xl">…</TabsList>  {/* bandeja 40 */}`}
-        previewClassName="flex-col flex-nowrap items-start gap-5 p-6"
-      >
-        {DEGRAUS.map(([size, dica]) => (
-          <div key={size} className="flex flex-col gap-1.5">
-            <Tabs defaultValue="mes">
-              <TabsList size={size}>
-                <TabsTrigger value="mes">Mês</TabsTrigger>
-                <TabsTrigger value="ano">Ano</TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <p className="text-xs text-muted-foreground">
-              <code className="font-mono">{size}</code> — {dica}
-            </p>
-          </div>
-        ))}
+        <DemoIconeContagem />
       </DocSection>
 
       <DocSection
-        title="Distribuição"
-        description="stretch divide a linha em partes iguais. Nasce ligado em solid, que lê como controle segmentado, e desligado nas abas de página."
-        code={`{/* padrão em solid */}
-<TabsList stretch>…</TabsList>
-
-{/* uma fileira do tamanho dos rótulos */}
-<TabsList variant="solid" stretch={false}>…</TabsList>`}
-        previewClassName="flex-col flex-nowrap items-stretch gap-6 p-6"
-      >
-        <div className="flex flex-col gap-2">
-          <Tabs defaultValue="todas">
-            <TabsList>
-              <TabsTrigger value="todas">Todas</TabsTrigger>
-              <TabsTrigger value="despesas">Despesas</TabsTrigger>
-              <TabsTrigger value="receitas">Receitas</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <p className="text-xs text-muted-foreground">
-            <code className="font-mono">stretch</code> — as três dividem a
-            largura.
-          </p>
-        </div>
-        <div className="flex flex-col gap-2">
-          <Tabs defaultValue="todas">
-            <TabsList stretch={false}>
-              <TabsTrigger value="todas">Todas</TabsTrigger>
-              <TabsTrigger value="despesas">Despesas</TabsTrigger>
-              <TabsTrigger value="receitas">Receitas</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <p className="text-xs text-muted-foreground">
-            <code className="font-mono">stretch={"{false}"}</code> — cada uma do
-            tamanho do rótulo, e o alvo de toque cresce para 44px no dedo.
-          </p>
-        </div>
-      </DocSection>
-
-      <DocSection
-        title="Excesso horizontal"
-        description="scrollable rola a fileira quando ela não cabe, dissolvendo nas pontas como a paleta de comandos e a tabela. A moldura tracejada tem a largura de um telefone."
-        code={`<TabsList scrollable>
-  {MESES.map((mes) => (
-    <TabsTrigger key={mes} value={mes}>{mes}</TabsTrigger>
-  ))}
+        title="Abas que fecham, e o +"
+        description="onClose põe o × redondo e liga Delete com a aba focada; fechar a ativa leva à vizinha, e o foco vai junto. O × é só do ponteiro (aria-hidden): um botão dentro de uma aba é controle aninhado. end é o slot fora do tablist, onde mora o TabsAdd."
+        code={`<TabsList end={<TabsAdd label="Abrir um mês" onClick={abrir} />}>
+  <TabsTrigger value="mar" onClose={() => fechar("mar")}>Março</TabsTrigger>
 </TabsList>`}
-        previewClassName="flex-col flex-nowrap items-stretch p-6"
+        previewClassName="items-start"
       >
-        <div className="w-full max-w-sm rounded-lg border border-dashed border-border p-3">
-          <Tabs defaultValue="Janeiro">
-            <TabsList scrollable>
-              {MESES.map((mes) => (
-                <TabsTrigger key={mes} value={mes}>
-                  {mes}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            <TabsContent value="Janeiro">
-              <p className="text-sm text-muted-foreground">
-                Doze meses não cabem em 384px.
-              </p>
-            </TabsContent>
-          </Tabs>
-        </div>
+        <DemoFechar />
       </DocSection>
 
       <DocSection
-        title="Vertical"
-        description="orientation vale para as três superfícies, e as setas passam a ser as de cima e de baixo sozinhas. O marcador do underline vai para a aresta vizinha ao painel."
-        code={`<Tabs orientation="vertical" defaultValue="perfil">
-  <TabsList variant="underline">…</TabsList>
-  <TabsContent value="perfil">…</TabsContent>
-</Tabs>`}
-        previewClassName="items-stretch p-6"
+        title="O que não cabe vai para o Mais"
+        description="overflow='menu' mede a fileira e manda as abas que não cabem para o menu Mais ▾, no fim. A ativa nunca sai: se ela não cabe, sai a última que cabia. É a alternativa ao scrollable para quem não quer rolar."
+        code={`<TabsList overflow="menu">{meses.map(…)}</TabsList>`}
+        previewClassName="items-start"
       >
-        <Tabs orientation="vertical" defaultValue="perfil" className="w-full">
-          <TabsList variant="underline">
-            <TabsTrigger value="perfil">Perfil</TabsTrigger>
-            <TabsTrigger value="sessoes">Sessões</TabsTrigger>
-            <TabsTrigger value="notificacoes">Notificações</TabsTrigger>
-          </TabsList>
-          <TabsContent value="perfil">
-            <p className="text-sm text-muted-foreground">
-              Nome, e-mail e foto.
-            </p>
-          </TabsContent>
-          <TabsContent value="sessoes">
-            <p className="text-sm text-muted-foreground">
-              2 dispositivos conectados.
-            </p>
-          </TabsContent>
-          <TabsContent value="notificacoes">
-            <p className="text-sm text-muted-foreground">
-              Faturas a vencer e limite estourado.
-            </p>
-          </TabsContent>
-        </Tabs>
+        <DemoMais />
       </DocSection>
 
+      <DocSection
+        title="Abas de navegação"
+        description="TabsNav é a mesma fileira num <nav>, com links: cada aba é uma rota, a atual é aria-current='page', e não há role='tab' — o padrão de abas do W3C é para painéis na mesma página."
+        code={`<TabsNav aria-label="Seções">
+  <TabsNavLink asChild active><Link href="/tabs">Tabs</Link></TabsNavLink>
+</TabsNav>`}
+        previewClassName="items-start"
+      >
+        <DemoNavegacao />
+      </DocSection>
+
+      <DocSection
+        title="A aba na URL"
+        description="urlParam lê a aba ao abrir e grava a cada troca, com history.replaceState — o link abre na mesma aba, e o voltar não vira um histórico de cliques."
+        code={`<Tabs defaultValue="extrato" urlParam="aba">…</Tabs>`}
+        previewClassName="items-start"
+      >
+        <DemoUrl />
+      </DocSection>
+
+      <DocSection
+        title="Arrastar no telefone"
+        description="swipe troca de aba arrastando o painel para os lados: 56px e bem mais horizontal que vertical, senão a rolagem da página trocaria de aba. O painel desliza do lado para onde a aba andou."
+        code={`<Tabs swipe>…</Tabs>`}
+        previewClassName="items-center"
+      >
+        <DemoArrastar />
+      </DocSection>
+
+      <DocSection
+        title="O rascunho fica, e os atalhos"
+        description="keepMounted mantém o painel montado depois de visto — escreva na nota, troque de aba e volte. shortcuts liga ⌥1…⌥9 para ir direto à aba N."
+        code={`<Tabs shortcuts>
+  <TabsContent value="nota" keepMounted>…</TabsContent>
+</Tabs>`}
+        previewClassName="items-stretch"
+      >
+        <DemoMontado />
+      </DocSection>
+
+      <DocNote title="⌥, e não ⌘">
+        <Kbd keys="mod+1" /> troca a aba do navegador, e o Chrome não deixa a página cancelar — a mesma razão de o{" "}
+        <code>Command</code> evitar <code>mod+n</code>. <Kbd keys="alt+1" /> é livre, não dispara dentro de campo de
+        texto, e vai anunciado em <code>aria-keyshortcuts</code>. A tecla é lida pelo <code>code</code>: no Mac o ⌥
+        troca o caractere (⌥1 é “¡”).
+      </DocNote>
+
+      <DocNote title="O painel desliza do lado certo">
+        O estado mora na raiz do <code>Tabs</code> desde a rodada 226, e ela sabe o sentido da última troca — a ordem é
+        a do DOM, a que a pessoa vê. O painel novo entra 12px desse lado, na mola; sem sentido (a primeira pintura), é o
+        fade de sempre.
+      </DocNote>
+
       <PropsTable
+        title="Props de Tabs"
         rows={[
-          {
-            prop: "size",
-            type: '"sm" | "md" | "lg" | "xl"',
-            default: '"md" em solid · "lg" em underline e plain',
-            description:
-              "Altura da bandeja (28, 32, 36, 40); o gatilho mede bandeja − 4, e no ponteiro grosso a bandeja tem piso de 40.",
-          },
-          {
-            prop: "variant",
-            type: '"solid" | "underline" | "plain"',
-            default: '"solid"',
-            description:
-              "O tipo de aba: solid é controle segmentado, underline e plain são abas de página. Decide os padrões de size e stretch.",
-          },
-          {
-            prop: "stretch",
-            type: "boolean",
-            default: "variant === solid",
-            description:
-              "Abas de largura igual dividindo a linha. Desligado, cada aba mede o próprio rótulo.",
-          },
-          {
-            prop: "glass",
-            type: "boolean",
-            default: "false",
-            description:
-              "O marcador vira a peça de vidro do sistema. Sem efeito fora de solid.",
-          },
-          {
-            prop: "scrollable",
-            type: "boolean",
-            default: "false",
-            description: "A fileira rola e dissolve nas pontas; vence stretch.",
-          },
-          {
-            prop: "orientation",
-            type: '"horizontal" | "vertical"',
-            default: '"horizontal"',
-            description: "Declarado no Tabs; troca as setas de navegação junto.",
-          },
+          { prop: "value / defaultValue / onValueChange", type: "string", description: "A aba ativa, guardada na raiz e entregue controlada ao Radix." },
+          { prop: "urlParam", type: "string", description: "A aba na URL, com replaceState." },
+          { prop: "swipe", type: "boolean", default: "false", description: "Arrastar o painel troca de aba, no toque." },
+          { prop: "shortcuts", type: "boolean", default: "false", description: "⌥1…⌥9 vão para a aba N." },
+          { prop: "orientation", type: '"horizontal" | "vertical"', default: '"horizontal"', description: "A fileira ou a coluna." },
         ]}
       />
 
       <PropsTable
-        title="Slots"
+        title="Props de TabsList"
         rows={[
-          {
-            prop: "TabsList",
-            type: "div + Tabs.List",
-            description: "Moldura mais fileira; o className cai na moldura.",
-          },
-          {
-            prop: "TabsTrigger",
-            type: "Tabs.Trigger",
-            description: "Lê tamanho, superfície e distribuição da lista.",
-          },
-          {
-            prop: "TabsContent",
-            type: "Tabs.Content",
-            description: "O painel. Recebe foco, e por isso tem anel próprio.",
-          },
+          { prop: "variant", type: '"floating" | "solid" | "underline" | "plain"', default: '"floating"', description: "A pílula sem sombra, a bandeja, o fio, ou nada." },
+          { prop: "size", type: '"sm" | "md" | "lg" | "xl"', default: '"md" (lg no underline e no plain)', description: "A bandeja: 28 · 32 · 36 · 40." },
+          { prop: "stretch", type: "boolean", default: "true no floating e no solid", description: "Abas de largura igual." },
+          { prop: "glass", type: "boolean", default: "false", description: "O marcador de vidro, no floating e no solid." },
+          { prop: "scrollable / overflow", type: 'boolean / "menu"', description: "Rolar dissolvendo, ou mandar o excesso para o Mais." },
+          { prop: "end", type: "ReactNode", description: "O slot fora do tablist — o TabsAdd." },
         ]}
       />
 
-      <DocNote title="scrollable é opt-in">
-        <code>scroll-fade-x</code> declara 36px de{" "}
-        <code>scroll-padding-inline</code>; ligado sempre, mudaria o{" "}
-        <code>scrollIntoView</code> de toda barra de abas, inclusive das que
-        não transbordam. Em <code>underline</code> o anel de foco perde 3px na
-        base para o marcador encontrar o fio.
-      </DocNote>
-
-      <DocNote title="A moldura pinta, a fileira rola">
-        A dissolução recorta o alfa do elemento inteiro: uma bandeja mascarada
-        sairia com os cantos apagados. A moldura fica <em>fora</em> da fileira
-        porque um nó entre <code>{'role="tablist"'}</code> e{" "}
-        <code>{'role="tab"'}</code> quebra a posse ARIA.
-      </DocNote>
-
-      <DocNote title="O marcador é um nó só">
-        Um realce que troca de elemento não tem como viajar:{" "}
-        <code>{'tabs-indicator'}</code> é absoluto na fileira e anima largura e
-        altura, porque <code>scaleX</code> distorceria o raio e a borda. Antes
-        da hidratação, o gatilho pinta o próprio realce.
-      </DocNote>
-
-      <DocNote title="Marcador e rótulo no mesmo relógio">
-        Os dois usam <code>{'--duration-base'}</code> com{" "}
-        <code>{'--ease-out'}</code>. Com relógios diferentes, a aba acende antes
-        de o realce chegar e um evento parece dois.
-      </DocNote>
+      <PropsTable
+        title="Peças"
+        rows={[
+          { prop: "TabsTrigger", type: "{ icon, iconActive, count, onClose, closeLabel }", description: "O ícone (e o par ativo), a contagem e a aba que fecha." },
+          { prop: "TabsContent", type: "{ keepMounted }", description: "Desliza do lado da viagem; keepMounted guarda o painel visto." },
+          { prop: "TabsAdd", type: "{ label }", description: "O + redondo, para o end." },
+          { prop: "TabsNav / TabsNavLink", type: "{ variant, size, stretch, glass } / { active, asChild }", description: "As abas de navegação, com aria-current." },
+        ]}
+      />
     </>
   )
 }

@@ -38,7 +38,7 @@ import {
  */
 
 const SIZES = ["sm", "md", "lg", "xl"] as const
-const VARIANTS = ["solid", "underline", "plain"] as const
+const VARIANTS = ["floating", "solid", "underline", "plain"] as const
 
 /** O piso da escada de controles: `xs` (24) é para dentro de outro controle. */
 const PISO = 28
@@ -132,19 +132,20 @@ describe("o anel de foco é o do sistema", () => {
 })
 
 describe("o marcador viaja com os tokens do sistema", () => {
-  const VARIANTS_ = ["solid", "underline", "plain"] as const
+  const VARIANTS_ = ["floating", "solid", "underline", "plain"] as const
 
-  it("a duração e a curva vêm de token, nunca de um número solto", () => {
-    // A página de Movimento é explícita: "não invente um número novo em
-    // milissegundos". Um `duration-200` aqui teria o mesmo valor de hoje e
-    // deixaria de acompanhar o sistema no dia em que o token mudar.
+  it("a viagem é a do ThemeToggle, em WAAPI — e nenhuma transição de CSS disputa com ela", () => {
+    // Desde a rodada 226 o marcador corre pela receita compartilhada de
+    // `lib/liquid-move` (o trajeto com inércia e o esticão). Uma transição de
+    // CSS em `translate`/`width` correria junto, e as duas brigariam.
     for (const variant of VARIANTS_) {
       const classes = tabsIndicatorVariants({ variant })
-      expect(classes).toContain("duration-(--duration-base)")
-      expect(classes).toContain("ease-(--ease-out)")
+      expect(classes).not.toMatch(/transition-\[translate/)
       expect(classes).not.toMatch(/\bduration-\d/)
-      expect(classes).not.toMatch(/\bease-\[/)
     }
+    expect(readFileSync(join(import.meta.dirname, "tabs.tsx"), "utf8")).toContain(
+      "viajarLiquido(peca, antes.caixa, caixa"
+    )
   })
 
   it("a caixa vem das quatro variáveis publicadas pela trilha", () => {
@@ -326,7 +327,7 @@ describe("o vidro do marcador do Tabs", () => {
     expect(chapado).not.toContain("glass")
   })
 
-  it("3. `glass` é no-op fora de `solid`", () => {
+  it("3. `glass` é no-op fora das variantes segmentadas", () => {
     // No `underline` o marcador é um fio de 2px, sem corpo onde um aro more; o
     // `plain` nunca é montado. O prop não pode vazar para nenhum dos dois — e
     // quem o barra de verdade é a resolução no `TabsList`, checada abaixo.
@@ -335,7 +336,7 @@ describe("o vidro do marcador do Tabs", () => {
         tabsIndicatorVariants({ variant, glass: false })
       )
     }
-    expect(FONTE).toContain('const vidro = glass && variant === "solid"')
+    expect(FONTE).toContain("const vidro = glass && SEGMENTADA[variant]")
   })
 
   it("4. o realce tem o par de toque e vira de direção com o tema", () => {
@@ -394,9 +395,7 @@ describe("o vidro do marcador do Tabs", () => {
     // Sem camada negativa: ela o mandaria para trás da moldura, que pinta
     // `bg-muted` e não cria contexto de empilhamento.
     expect(vidro).not.toMatch(/-z-\d/)
-    // Duração e curva de token, como no chapado.
-    expect(vidro).toContain("duration-(--duration-base)")
-    expect(vidro).toContain("ease-(--ease-out)")
+    // Sem relógio de CSS: a viagem é WAAPI, como no chapado.
     expect(vidro).not.toMatch(/\bduration-\d/)
     // O raio é herdado do próprio marcador: a utility não declara nenhum.
     expect(vidro).toContain("rounded-md")

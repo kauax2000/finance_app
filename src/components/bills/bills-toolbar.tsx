@@ -153,9 +153,9 @@ export function BillsToolbar({
             <Toolbar>
                 <ToolbarFilters className="max-w-full shrink-0 flex-none">
                     {/* Aba, e não filtro: ela troca o cartão da tela e reseta o
-                        eixo de ordenação. `Tabs variant="solid"` é o mesmo
-                        desenho do trilho que estava aqui à mão, com foco
-                        itinerante e o marcador que viaja. */}
+                        eixo de ordenação. O `Tabs` de fábrica (a pílula
+                        `floating`) substituiu o trilho que estava aqui à mão,
+                        com foco itinerante e o marcador que viaja. */}
                     <Tabs
                         value={mode}
                         onValueChange={(next) =>
