@@ -483,7 +483,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("sonner", "Toast", "Confirmação passageira, fora do fluxo: a placa flutuante de vidro com o tom no ícone, o Desfazer com contagem, o Ver, o progresso, a pílula e os repetidos.", ui("sonner"), 'import { toastSuccess, toastError, toastUndo, toastPromise, toastProgress, toastPill } from "@/lib/toast"'),
 
   // ── Templates ───────────────────────────────────────────────────────────
-  entry("bottom-bar", "Bottom Bar", "A barra de abas do telefone.", ui("bottom-bar"), "BottomBar, BottomBarRow, BottomBarTabs, BottomBarTab, BottomBarSlot, bottomBarActionClassName"),
+  entry("bottom-bar", "Bottom Bar", "A barra de abas do telefone — o marcador do Tabs, o arraste, a contagem, o rótulo só na ativa e o some-ao-rolar.", ui("bottom-bar"), "BottomBar, BottomBarTab, BottomBarSlot, BottomBarAction, BottomBarSkeleton, BottomBarRow, BottomBarTabs, bottomBarActionClassName"),
   entry("data-table", "Data Table", "A tabela com o estado: ordenar, filtrar, marcar, agrupar, expandir, exportar e editar.", ui("data-table"), "DataTable, dataTableColumns, DataTableSelectionBar, DataTableFacetFilter, DataTableViewOptions"),
   entry("page-header", "Page Header", "O topo de uma tela.", ui("page-header"), "PageHeader, PageHeaderTitleRow, PageHeaderTitle, PageHeaderDescription, PageHeaderEyebrow, PageHeaderMeta, PageHeaderActions"),
   entry("page-section", "Page Section", "Bloco de uma tela, com título e ação.", ui("page-section"), "PageSection, PageSectionHeader, PageSectionTitle, PageSectionDescription"),

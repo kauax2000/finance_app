@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/drawer"
 import { useSidebar } from "@/components/ui/sidebar"
 import { ROUTES } from "@/config/navigation"
-import { bottomBarActionClassName } from "@/components/ui/bottom-bar"
+import { BottomBarAction } from "@/components/ui/bottom-bar"
 import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
 import type { NewTransactionMode } from "@/components/transactions/transactions-toolbar"
 
@@ -168,15 +168,9 @@ export function QuickActionButton({ variant = "sidebar" }: QuickActionButtonProp
         return (
             <Drawer open={open} onOpenChange={setOpen}>
                 <DrawerTrigger asChild>
-                    <Button
-                        variant="primary"
-                        size="icon-lg"
-                        type="button"
-                        className={bottomBarActionClassName}
-                        aria-label="Adicionar"
-                    >
+                    <BottomBarAction label="Adicionar">
                         <PlusMiniIcon className="size-5 shrink-0" />
-                    </Button>
+                    </BottomBarAction>
                 </DrawerTrigger>
                 <DrawerContent variant="inset">
                     <DialogHeader className="sr-only">

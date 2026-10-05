@@ -5,6 +5,7 @@ import Link from "next/link"
 import {
   ArrowsRightLeftIcon,
   ChartPieIcon,
+  EllipsisHorizontalIcon,
   Squares2X2Icon,
 } from "@heroicons/react/24/outline"
 import {
@@ -12,54 +13,76 @@ import {
   ChartPieIcon as ChartPieSolid,
   Squares2X2Icon as Squares2X2Solid,
 } from "@heroicons/react/24/solid"
-import { EllipsisHorizontalIcon } from "@heroicons/react/24/outline"
 import { PlusIcon } from "@heroicons/react/20/solid"
 
 import {
   BottomBar,
+  BottomBarAction,
+  BottomBarSkeleton,
   BottomBarSlot,
   BottomBarTab,
-  bottomBarActionClassName,
 } from "@/components/ui/bottom-bar"
-import { Button } from "@/components/ui/button"
-import { Muted, Small } from "@/components/ui/typography"
+import { MoneyDisplay } from "@/components/ui/money-display"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
-import { PhoneFrame } from "../ds-frame"
+import { IphoneFrame } from "../ds-frame"
 
 /** As três abas do app, para o espécime não inventar uma navegação própria. */
 const ABAS = [
-  {
-    href: "/dashboard",
-    label: "Início",
-    icon: Squares2X2Icon,
-    iconActive: Squares2X2Solid,
-  },
-  {
-    href: "/transactions",
-    label: "Transações",
-    icon: ArrowsRightLeftIcon,
-    iconActive: ArrowsRightLeftSolid,
-  },
-  {
-    href: "/categories",
-    label: "Categorias",
-    icon: ChartPieIcon,
-    iconActive: ChartPieSolid,
-  },
+  { href: "/dashboard", label: "Início", icon: Squares2X2Icon, iconActive: Squares2X2Solid },
+  { href: "/transactions", label: "Transações", icon: ArrowsRightLeftIcon, iconActive: ArrowsRightLeftSolid },
+  { href: "/categories", label: "Categorias", icon: ChartPieIcon, iconActive: ChartPieSolid },
 ] as const
 
-/** Conteúdo que rola por baixo — sem ele o vidro não tem o que borrar. */
-function Conteudo() {
+const ROTULOS = ["não", "sim", "ativa"] as const
+const ACAO = ["com", "sem"] as const
+const ROLAR = ["fica", "some"] as const
+const CONTAGEM = ["sem", "com"] as const
+const ESTADO = ["pronta", "carregando"] as const
+const VIDRO = ["não", "sim"] as const
+
+function Eixo<T extends string>({
+  rotulo,
+  valores,
+  valor,
+  onChange,
+}: {
+  rotulo: string
+  valores: readonly T[]
+  valor: T
+  onChange: (v: T) => void
+}) {
   return (
-    <div className="flex flex-col gap-2 p-4 pb-40">
-      <Small className="font-medium">Transações</Small>
-      {Array.from({ length: 14 }).map((_, i) => (
-        <div
-          key={i}
-          className="flex items-center justify-between rounded-lg bg-primary/15 px-3 py-2.5"
-        >
-          <span className="text-xs">Mercado</span>
-          <span className="nums text-xs">−R$ {(i + 1) * 37},40</span>
+    <div className="flex items-center gap-2">
+      <span className="text-xs text-muted-foreground">{rotulo}</span>
+      <ToggleGroup
+        type="single"
+        variant="segmented"
+        size="sm"
+        value={valor}
+        onValueChange={(v) => v && onChange(v as T)}
+        aria-label={rotulo}
+      >
+        {valores.map((v) => (
+          <ToggleGroupItem key={v} value={v} className="font-mono">
+            {v}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+    </div>
+  )
+}
+
+/** Conteúdo que rola por baixo — sem ele o vidro não tem o que borrar. */
+function Conteudo({ titulo }: { titulo: string }) {
+  return (
+    // `pt-14`: a Dynamic Island cobre o topo da tela, e a área segura vale zero aqui.
+    <div className="flex flex-col gap-2 px-4 pt-14 pb-40">
+      <p className="text-lg font-semibold">{titulo}</p>
+      {Array.from({ length: 18 }).map((_, i) => (
+        <div key={i} className="flex items-center justify-between rounded-xl bg-muted px-3 py-3">
+          <span className="text-sm">Mercado</span>
+          <MoneyDisplay value={-(i + 1) * 37.4} size="sm" />
         </div>
       ))}
     </div>
@@ -69,75 +92,80 @@ function Conteudo() {
 /** O índice do slot da conta, que é o item depois das abas. */
 const SLOT = ABAS.length
 
-function Barra({
-  labels = false,
-  ativa = 0,
-  onSelecionar,
-  comAcao = true,
-}: {
-  labels?: boolean
-  ativa?: number
-  onSelecionar?: (indice: number) => void
-  comAcao?: boolean
-}) {
-  return (
-    <BottomBar
-      labels={labels}
-      action={
-        comAcao ? (
-          <Button
-            variant="primary"
-            className={bottomBarActionClassName}
-            aria-label="Adicionar"
-          >
-            <PlusIcon className="size-5 shrink-0" />
-          </Button>
-        ) : undefined
-      }
-    >
-      {ABAS.map((aba, i) => (
-        <BottomBarTab
-          key={aba.href}
-          href={aba.href}
-          label={aba.label}
-          icon={aba.icon}
-          iconActive={aba.iconActive}
-          active={i === ativa}
-          // O espécime é **desligado do roteador**: o `href` fica, porque é o
-          // que o trecho de código ensina e é o que dá o menu de contexto e o
-          // "abrir em nova aba" ao link. O que não pode acontecer é a moldura
-          // navegar e levar a demonstração embora — daí o `preventDefault`.
-          onClick={(e) => {
-            e.preventDefault()
-            onSelecionar?.(i)
-          }}
-        />
-      ))}
-      <BottomBarSlot
-        aria-label="Abrir menu da conta"
-        label="Conta"
-        active={ativa === SLOT}
-        onClick={() => onSelecionar?.(SLOT)}
-      >
-        <EllipsisHorizontalIcon className="size-6 shrink-0" aria-hidden />
-      </BottomBarSlot>
-    </BottomBar>
-  )
-}
+function DemoNaTela() {
+  const [ativa, setAtiva] = React.useState(1)
+  const [rotulos, setRotulos] = React.useState<(typeof ROTULOS)[number]>("não")
+  const [acao, setAcao] = React.useState<(typeof ACAO)[number]>("com")
+  const [rolar, setRolar] = React.useState<(typeof ROLAR)[number]>("fica")
+  const [contagem, setContagem] = React.useState<(typeof CONTAGEM)[number]>("sem")
+  const [estado, setEstado] = React.useState<(typeof ESTADO)[number]>("pronta")
+  const [vidro, setVidro] = React.useState<(typeof VIDRO)[number]>("não")
 
-function Palco({
-  ativa: ativaInicial = 0,
-  ...props
-}: Omit<React.ComponentProps<typeof Barra>, "onSelecionar">) {
-  const [ativa, setAtiva] = React.useState(ativaInicial)
+  const labels = rotulos === "sim" ? true : rotulos === "ativa" ? "active" : false
+  const titulo = ativa === SLOT ? "Conta" : ABAS[ativa].label
 
   return (
-    <PhoneFrame>
-      <div className="h-full overflow-y-auto bg-background">
-        <Conteudo />
+    <div className="flex w-full flex-col items-center gap-6">
+      <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
+        <Eixo rotulo="Vidro" valores={VIDRO} valor={vidro} onChange={setVidro} />
+        <Eixo rotulo="Rótulos" valores={ROTULOS} valor={rotulos} onChange={setRotulos} />
+        <Eixo rotulo="Ação" valores={ACAO} valor={acao} onChange={setAcao} />
+        <Eixo rotulo="Ao rolar" valores={ROLAR} valor={rolar} onChange={setRolar} />
+        <Eixo rotulo="Contagem" valores={CONTAGEM} valor={contagem} onChange={setContagem} />
+        <Eixo rotulo="Estado" valores={ESTADO} valor={estado} onChange={setEstado} />
       </div>
-      <Barra {...props} ativa={ativa} onSelecionar={setAtiva} />
-    </PhoneFrame>
+
+      <IphoneFrame>
+        <div className="h-full overflow-y-auto bg-background">
+          <Conteudo titulo={titulo} />
+        </div>
+        {estado === "carregando" ? (
+          <BottomBarSkeleton tabs={ABAS.length + 1} action={acao === "com"} labels={labels === true} />
+        ) : (
+          <BottomBar
+            labels={labels}
+            glass={vidro === "sim"}
+            hideOnScroll={rolar === "some"}
+            action={
+              acao === "com" ? (
+                <BottomBarAction label="Adicionar">
+                  <PlusIcon className="size-5" aria-hidden />
+                </BottomBarAction>
+              ) : undefined
+            }
+          >
+            {ABAS.map((aba, i) => (
+              <BottomBarTab
+                key={aba.href}
+                // O espécime é **desligado do roteador**: o `href` fica, porque
+                // é o que o trecho ensina, mas o clique não navega — a moldura
+                // levaria a demonstração embora.
+                href={aba.href}
+                label={aba.label}
+                icon={aba.icon}
+                iconActive={aba.iconActive}
+                active={i === ativa}
+                count={contagem === "com" && i === 1 ? 3 : undefined}
+                countLabel="novas"
+                onClick={(e) => {
+                  e.preventDefault()
+                  setAtiva(i)
+                }}
+              />
+            ))}
+            <BottomBarSlot
+              aria-label="Abrir menu da conta"
+              label="Conta"
+              active={ativa === SLOT}
+              count={contagem === "com" ? true : undefined}
+              onClick={() => setAtiva(SLOT)}
+            >
+              <EllipsisHorizontalIcon className="size-6 shrink-0" aria-hidden />
+            </BottomBarSlot>
+          </BottomBar>
+        )}
+      </IphoneFrame>
+    </div>
   )
 }
 
@@ -152,136 +180,88 @@ export default function BottomBarDoc() {
       </Usage>
 
       <DocSection
-        title="A barra do app"
-        description="Três abas, o slot da conta e a ação primária, flutuando sobre o conteúdo que rola. Os espécimes selecionam em vez de navegar, e o realce viaja em vez de piscar."
-        code={`<BottomBar action={<Button variant="primary" className={bottomBarActionClassName}><PlusIcon /></Button>}>
+        title="A barra"
+        description="Três abas, o slot da conta e a ação, flutuando sobre a lista. A referência é o Tabs: a pílula com o anel de 1px, o marcador em relevo e a viagem líquida. Arraste o dedo (ou o cursor) pela pílula e solte numa aba; toque na aba ativa e a lista volta ao topo."
+        code={`<BottomBar
+  labels="active"
+  hideOnScroll
+  action={<BottomBarAction label="Adicionar"><PlusIcon /></BottomBarAction>}
+>
   {abas.map((aba) => (
     <BottomBarTab key={aba.href} href={aba.href} label={aba.label}
-      icon={aba.icon} active={aba.href === pathname} />
+      icon={aba.icon} iconActive={aba.iconActive}
+      active={aba.href === pathname} count={aba.count} countLabel="a vencer" />
   ))}
-  <BottomBarSlot aria-label="Abrir menu da conta">
-    {/* avatar, ícone da rota ativa, esqueleto — quem sabe é o app */}
-  </BottomBarSlot>
-</BottomBar>`}
+  <BottomBarSlot aria-label="Abrir menu da conta" count>…</BottomBarSlot>
+</BottomBar>
+
+// enquanto a casca carrega
+<BottomBarSkeleton tabs={4} />`}
         previewClassName="justify-center"
       >
-        <Palco />
+        <DemoNaTela />
       </DocSection>
 
-      <DocSection
-        title="Com rótulo"
-        description="labels põe o nome sob o ícone e leva a barra de 56 para 64. Desligado por padrão."
-        code={`<BottomBar labels>…</BottomBar>`}
-        previewClassName="justify-center gap-8"
-      >
-        <div className="flex flex-col items-center gap-2">
-          <Muted className="text-2xs uppercase">padrão — 56</Muted>
-          <Palco ativa={1} />
-        </div>
-        <div className="flex flex-col items-center gap-2">
-          <Muted className="text-2xs uppercase">labels — 64</Muted>
-          <Palco labels ativa={1} />
-        </div>
-      </DocSection>
+      <DocNote title="O marcador é o do Tabs">
+        Ele corre pela receita do alternador de tema (<code>viajarLiquido</code>, o trajeto macio das abas): inércia, um esticão proporcional às abas andadas e o pouso. Em repouso é a tecla em relevo — <code>--muted</code>, anel e <code>shadow-xs</code>, 2px para dentro do item. Antes de medir, o próprio item pinta a mesma tecla, e a troca não pisca.
+      </DocNote>
 
-      <DocSection
-        title="Sem ação"
-        description="A ação é um slot, e ele é opcional: sem ela a pílula ocupa a linha inteira."
-        code={`<BottomBar>…</BottomBar>`}
-        previewClassName="justify-center"
-      >
-        <Palco comAcao={false} ativa={2} />
-      </DocSection>
+      <DocNote title="A tecla tem tom próprio, e o vidro é opcional">
+        O marcador era <code>--muted</code> — o mesmo fundo das linhas que passam por trás —, e sobre uma linha ele empatava com a pílula: ~1,09:1. Hoje a pílula é a tinta dos flutuantes a 82% e a tecla é <code>--bottom-bar-key</code>, a tinta do texto misturada ao <code>--popover</code> (12% no claro, 18% no escuro), que nenhum conteúdo usa — 1,32:1 e 1,52:1 sobre uma linha. Com <code>glass</code> a tecla veste o vidro do <code>TabsList glass</code> sobre esse mesmo tom: muda o material, não o contraste.
+      </DocNote>
 
-      <DocNote title="O marcador viaja, e o item cede o fundo">
-        O realce é <strong>um</strong> nó que corre pela pílula até o item ativo, em <code>--duration-base</code> com <code>--ease-out</code> — o mecanismo do <code>Tabs</code>. Item que pinta o próprio fundo <em>teleporta</em>. O item é <code>relative</code> e o marcador não tem <code>z-index</code>, para não cobrir o ícone nem escapar para trás da pílula; antes de medir, o próprio item pinta o realce, e a troca não pisca.
+      <DocNote title="Um anel, nos dois temas">
+        A pílula tinha borda <strong>e</strong> anel porque cada um só aparecia num tema. O anel em <code>--foreground</code> a 10% (o das <code>Tabs</code>) escurece no claro e clareia no escuro, e substituiu os dois. A ação veste o mesmo anel e a mesma sombra: as duas peças são uma família.
+      </DocNote>
+
+      <DocNote title="Rótulo só na ativa">
+        <code>labels=&quot;active&quot;</code> abre o nome ao lado do ícone na aba ativa, como uma aba de <code>Tabs</code>, e as outras dividem o resto. A barra continua com 56 — o rótulo embaixo (<code>labels</code>) a leva a 64.
+      </DocNote>
+
+      <DocNote title="O arraste e o toque">
+        O dedo desliza pela pílula e o marcador segue o item sob ele; soltar num item diferente o clica — o link navega, o slot abre o menu. Só começa depois de 8px de lado, antes disso é um toque. No toque o ícone afunda a 88% e volta na mola, e quando a aba passa a ativa o sólido entra com um estalo (não na montagem).
+      </DocNote>
+
+      <DocNote title="Some ao rolar, com a ação junto">
+        Com <code>hideOnScroll</code>, rolar para baixo afunda a pílula e a ação juntas — uma ação sozinha no canto lê como botão esquecido e cobre a lista — e rolar para cima as traz de volta. A saída encolhe da base e apaga em <code>--ease-in-out</code>, e a volta sobe na mola — as duas em <code>--duration-gentle</code> (700ms). No topo e com o foco dentro da barra, ela nunca some. A barra ouve a rolagem em captura e guarda quem rolou por último — é essa a lista que a aba ativa leva ao topo.
+      </DocNote>
+
+      <DocNote title="Link ou botão sai da rota, e não de uma escolha">
+        Ninguém escolhe o elemento: com <code>href</code> a aba é link (<code>aria-current=&quot;page&quot;</code>, abre em nova aba, pré-carrega), e sem <code>href</code> é botão (<code>aria-pressed</code>). Quem passa o <code>href</code> é o mapa de rotas — no app as abas saem de <code>config/mobile-navigation</code> e são todas links; o &quot;+&quot; é o <code>BottomBarAction</code> e a conta é o <code>BottomBarSlot</code>, botões que abrem uma gaveta. A aba sem <code>href</code> existe para a tela que troca de vista sem mudar de rota.
+      </DocNote>
+
+      <DocNote title="A contagem entra no nome">
+        <code>count</code> põe o número (até 99+) ou, com <code>true</code>, o ponto no canto do ícone; ele é <code>aria-hidden</code>, e o leitor de tela ouve o nome: &quot;Transações, 3 novas&quot;. <code>countLabel</code> diz o que se conta.
       </DocNote>
 
       <DocNote title="A aba ativa preenche, e isso não contraria a regra do conjunto">
-        <code>iconActive</code> é o par sólido, a convenção de tab bar do iOS. Não fere a <Link href="/designsystem/iconography">regra do conjunto</Link>: a grade é 24 dos dois lados, e muda só o preenchimento. É prop porque a peça não tem como adivinhar o sólido de um ícone.
+        <code>iconActive</code> é o par sólido, a convenção de tab bar do iOS. Não fere a <Link href="/designsystem/iconography">regra do conjunto</Link>: a grade é 24 dos dois lados, e muda só o preenchimento.
       </DocNote>
 
-      <DocNote title="O alvo é a caixa, e não um pseudo-elemento">
-        O controle <strong>é</strong> a área, com o glifo centralizado: um <code>::after</code> de 44px em cada item engoliria o vizinho. Cada item fica acima dos 44px de <Link href="/designsystem/touch-safe-area">Touch & safe area</Link>.
-      </DocNote>
-
-      <DocNote title="O vidro é o da folha, e não o da barra">
-        A ilha flutua com margem, e veste <code>--mobile-glass-bg</code> (55/45), calibrado para uma folha sobre a página. <code>barSurfaceClassName</code> (95/60) é para barra <strong>rente</strong> à borda, e deixaria a pílula quase opaca.
-      </DocNote>
-
-      <DocNote title="A ação lê a altura da barra, porque 56 não é degrau">
-        A escada do <code>Button</code> termina em 40; <code>bottomBarActionClassName</code> lê <code>--bottom-bar-h</code>, então com <code>labels</code> a ação vai a 64 junto. Ela <strong>não declara cor</strong>: quem pinta é o <code>variant</code> do <code>Button</code>.
-      </DocNote>
-
-      <DocNote title="A área segura vale zero nesta moldura">
-        O <code>PhoneFrame</code> não é aparelho: <code>env(safe-area-inset-bottom)</code> vale 0 aqui. Num iPhone a barra ganha mais 34px de folga embaixo, e <code>--bottom-bar-pad</code> acompanha.
+      <DocNote title="A tela é uma viewport de verdade, e a área segura vale zero">
+        O iPhone é o mesmo de <Link href="/designsystem/touch-safe-area">Touch & safe area</Link>, desenhado a 85%, com uma viewport de 375px dentro — o <code>zoom</code> encolhe o desenho, e as media queries continuam lendo o telefone. <code>env(safe-area-inset-bottom)</code> vale 0 aqui: num aparelho a barra ganha mais 34px de folga embaixo, e <code>--bottom-bar-pad</code> acompanha.
       </DocNote>
 
       <PropsTable
         title="Eixos de BottomBar"
         rows={[
-          {
-            prop: "labels",
-            type: "boolean",
-            default: "false",
-            description:
-              "O nome sob o ícone. Ligado, a barra vai de 56 para 64 e a ação acompanha.",
-          },
-          {
-            prop: "shape",
-            type: '"island"',
-            default: '"island"',
-            description:
-              "Flutua com margem nos quatro lados; a faixa rente à borda entra quando houver caso.",
-          },
-          {
-            prop: "action",
-            type: "ReactNode",
-            description:
-              "A ação primária, à direita da pílula. Quem a pinta é quem a passa.",
-          },
+          { prop: "labels", type: 'boolean | "active"', default: "false", description: "O nome sob o ícone (64), ou só na ativa, ao lado do ícone (56)." },
+          { prop: "glass", type: "boolean", default: "false", description: "O marcador de vidro, como o glass do TabsList — o aro e o reflexo sobre o mesmo tom da tecla." },
+          { prop: "hideOnScroll", type: "boolean", default: "false", description: "Rolando para baixo a pílula e a ação afundam juntas; rolando para cima, voltam." },
+          { prop: "action", type: "ReactNode", description: "A ação primária, à direita da pílula — um BottomBarAction." },
+          { prop: "shape", type: '"island"', default: '"island"', description: "Flutua com margem nos quatro lados." },
         ]}
       />
 
       <PropsTable
         title="Peças"
         rows={[
-          {
-            prop: "BottomBarTab",
-            type: "ComponentProps<typeof Link> & { label, icon, iconActive?, active? }",
-            description:
-              "Uma aba; active escreve aria-current=\"page\" e data-active, e com iconActive o glifo troca para o sólido.",
-          },
-          {
-            prop: "BottomBarSlot",
-            type: 'ComponentProps<"button"> & { label?, active?, asChild? }',
-            description:
-              "A mesma caixa sem href, para o gatilho de um popover; não recebe aria-current.",
-          },
-          {
-            prop: "bottom-bar-marker",
-            type: "data-slot",
-            description:
-              "O realce que viaja, montado pela pílula; ninguém o escreve.",
-          },
-          {
-            prop: "BottomBarTabs",
-            type: 'ComponentProps<"div">',
-            description:
-              "A pílula de vidro; as colunas saem da contagem de filhos.",
-          },
-          {
-            prop: "BottomBarRow",
-            type: 'ComponentProps<"div">',
-            description:
-              "A linha que recebe eventos; a casca é pointer-events-none para não engolir o toque na base da tela.",
-          },
-          {
-            prop: "bottomBarActionClassName",
-            type: "string",
-            description:
-              "A ação na altura da barra, para vestir um Button; sem cor.",
-          },
+          { prop: "BottomBarTab", type: "label, icon, iconActive?, active?, href?, count?, countLabel?", description: "Uma aba. Com href é link (aria-current=\"page\"); sem, é botão (aria-pressed). Tocar na ativa sobe ao topo." },
+          { prop: "BottomBarSlot", type: 'ComponentProps<"button"> & { label?, active?, count?, asChild? }', description: "A mesma caixa para o gatilho de um menu ou gaveta; não recebe aria-current." },
+          { prop: "BottomBarAction", type: "Button & { label }", default: 'variant="primary"', description: "A ação redonda na altura da barra, com o anel e a sombra da pílula; o nome é obrigatório." },
+          { prop: "BottomBarSkeleton", type: "tabs?, action?, labels?", description: "A barra enquanto a casca carrega, no mesmo lugar e na mesma altura." },
+          { prop: "bottom-bar-marker", type: "data-slot", description: "O marcador que viaja, montado pela pílula; ninguém o escreve." },
+          { prop: "bottomBarActionClassName", type: "string", description: "A régua da ação, para quem não usa o BottomBarAction." },
         ]}
       />
     </>

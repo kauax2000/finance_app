@@ -140,12 +140,16 @@ describe("régua do BottomBar", () => {
   })
 
   it("11. a tinta do ativo é o foreground, nos dois temas", () => {
-    expect(CODIGO).toMatch(/group-data-\[active\]\/bottom-bar-item:bg-foreground/)
+    // Desde a rodada 230 o fundo do ativo é a tecla, num tom próprio.
+    expect(CODIGO).toMatch(/group-data-\[active\]\/bottom-bar-item:bg-\(--bottom-bar-key\)/)
     expect(CODIGO).toMatch(
       /group-data-\[active\]\/bottom-bar-item:text-foreground/
     )
-    // `--primary-foreground` é a tinta de **sobre o preenchimento primário**.
-    expect(CODIGO).not.toContain("primary-foreground")
+    // `--primary-foreground` é a tinta de **sobre o preenchimento primário** —
+    // e é só ali que ela aparece: no número da contagem, sobre `bg-primary`.
+    const usos = CODIGO.match(/[\w:-]*primary-foreground/g) ?? []
+    expect(usos).toEqual(["text-primary-foreground"])
+    expect(CODIGO).toMatch(/bg-primary px-1 text-2xs[^"]*text-primary-foreground/)
   })
 
   it("12. nenhuma classe é montada em tempo de execução", () => {
@@ -210,9 +214,11 @@ describe("régua do BottomBar", () => {
     for (const eixo of ["x", "y", "w", "h"]) {
       expect(marcador).toContain(`--bottom-bar-marker-${eixo}`)
     }
-    expect(marcador).toContain("transition-[translate,width,height]")
-    expect(marcador).toContain("duration-(--duration-base)")
-    expect(marcador).toContain("ease-(--ease-out)")
+    // Desde a rodada 230 ele não transiciona: viaja por WAAPI
+    // (`viajarLiquido`, o trajeto macio das abas), e o repouso são as variáveis.
+    expect(marcador).not.toContain("transition-")
+    expect(CODIGO).toContain("viajarLiquido(peca, antes.caixa, caixa")
+    expect(CODIGO).toContain("trajeto: TRAJETO_MACIO")
     expect(marcador).not.toMatch(/\bduration-\d/)
     expect(marcador).not.toMatch(/\bease-\[/)
     // Camada negativa escaparia para trás da própria pílula.
@@ -226,7 +232,7 @@ describe("régua do BottomBar", () => {
     expect(CODIGO).not.toContain("requestAnimationFrame")
     expect(CODIGO).toContain("new ResizeObserver")
     expect(CODIGO).toContain("new MutationObserver")
-    expect(CODIGO).toMatch(/attributeFilter:\s*\["data-active"\]/)
+    expect(CODIGO).toMatch(/attributeFilter:\s*\["data-active", "data-scrub"\]/)
   })
 
   it("19. o item fica por cima, e o fallback é trocado por contexto", () => {
@@ -246,8 +252,10 @@ describe("régua do BottomBar", () => {
     expect(CODIGO).toMatch(/!temMarcador && itemFallbackClassName/)
     const fallback = CODIGO.slice(CODIGO.indexOf("const itemFallbackClassName"))
       .slice(0, 300)
-    expect(fallback).toContain("bg-foreground/10")
-    expect(fallback).toContain("bg-foreground/12")
+    // A mesma tecla do marcador (rodada 230): o tom próprio, o anel e a sombra.
+    expect(fallback).toContain("bg-(--bottom-bar-key)")
+    expect(fallback).toContain("ring-foreground/10")
+    expect(fallback).toContain("shadow-sm")
     // O miolo não pinta mais o fundo do ativo: quem pinta é o marcador.
     // Cortado no fim do próprio array, e não por contagem de caracteres: 600
     // passava do `].join` e entrava no fallback, que carrega a classe de

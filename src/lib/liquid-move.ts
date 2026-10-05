@@ -141,6 +141,14 @@ export const ACOPLAMENTO_Y = 0.45
 export const AMPLITUDE_POR_SALTO = [0, 0.11, 0.22]
 
 
+/**
+ * A viagem macia das abas (rodada 226, pedido do dono): a saída menos presa
+ * que o `cubic-bezier(1,0,0.4,1)` do alternador, e 80ms a mais — numa fileira
+ * em que a peça anda 300px, o trajeto do alternador lia seco. Serve o `Tabs` e
+ * o `BottomBar`.
+ */
+export const TRAJETO_MACIO = { duration: 480, easing: "cubic-bezier(0.65,0,0.25,1)" }
+
 /** Uma caixa na régua do trilho, em px: onde a peça está e o tamanho dela. */
 export type CaixaLiquida = { x: number; y: number; w: number; h: number }
 

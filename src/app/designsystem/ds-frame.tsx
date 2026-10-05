@@ -3,8 +3,12 @@
 import * as React from "react"
 import { createPortal } from "react-dom"
 
+import Image from "next/image"
+
 import { ViewportWindowProvider } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
+import iphoneClay from "./assets/iphone-17-pro-clay.png"
+import iphoneClayAro from "./assets/iphone-17-pro-clay-aro.png"
 
 /**
  * # A moldura de viewport do catálogo
@@ -203,6 +207,7 @@ function ViewportFrame({
   title,
   className,
   screenClassName,
+  style,
   children,
   ...props
 }: ViewportFrameProps) {
@@ -280,7 +285,7 @@ function ViewportFrame({
         width === "fluid" ? "w-full" : "shrink-0",
         className
       )}
-      style={{ width: width === "fluid" ? undefined : width, height }}
+      style={{ width: width === "fluid" ? undefined : width, height, ...style }}
       {...props}
     >
       <iframe
@@ -338,5 +343,129 @@ function PhoneFrame({
   )
 }
 
+/**
+ * # O iPhone 17 Pro Clay
+ *
+ * O aparelho é o iPhone 17 Pro Clay da Asylab (asylab.com/resources/freebies):
+ * só a moldura, com a tela vazada, extraída do PSD de frente. Ele nasceu na
+ * página de Touch & safe area como esquema, e desde a rodada 230 é peça daqui,
+ * porque as páginas das barras o usam com a tela **de verdade** dentro.
+ *
+ * `IPHONE_TELA` é a caixa da tela em porcentagem da imagem: a camada "MASK
+ * SCREEN" do PSD (1634 × 3549 num aparelho de 1773 × 3666). As faixas seguras
+ * são porcentagem da tela, na proporção do iPhone 17 Pro: 62 e 34 pontos de
+ * 874; a de cima cobre a Dynamic Island, que termina em 5,6%. O canto é o
+ * círculo que passa pelo ponto a 45° da máscara (259 px), em porcentagem de
+ * cada eixo — sem ele o retângulo escapa pela curva externa do aparelho.
+ */
+export const IPHONE_TELA = {
+  left: 3.95,
+  top: 1.58,
+  width: 92.16,
+  height: 96.81,
+  safeTop: 7.1,
+  safeBottom: 3.9,
+  radiusX: 15.9,
+  radiusY: 7.3,
+}
 
-export { PhoneFrame, ViewportFrame }
+/** O degradê do aparelho, as paradas da marca descendo do coral ao teal. */
+const tintaClayClassName =
+  "pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,var(--brand-coral),var(--brand-magenta)_35%,var(--brand-violet)_60%,var(--brand-blue)_82%,var(--brand-teal))] mix-blend-multiply"
+
+/**
+ * O corpo do aparelho: a tela é quem chama (o primeiro filho, posicionado na
+ * caixa de `IPHONE_TELA`), e por cima vão a moldura e a tinta. A moldura não
+ * recebe eventos, então a tela embaixo continua tocável.
+ *
+ * A tinta é em duas camadas, as duas em `multiply` sobre o Clay branco — o
+ * branco vira a cor e o sombreado do molde continua. A face leva o degradê a
+ * meia força; o aro, os botões e a Dynamic Island levam o degradê cheio, que é
+ * o que desenha o contorno. Cada camada é mascarada pela própria peça.
+ */
+function IphoneBody({ className, style, children, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      className={cn("relative isolate", className)}
+      style={{ aspectRatio: `${iphoneClay.width} / ${iphoneClay.height}`, ...style }}
+      {...props}
+    >
+      {children}
+      <Image
+        src={iphoneClay}
+        alt=""
+        sizes="28rem"
+        className="pointer-events-none relative h-auto w-full select-none"
+      />
+      <div
+        className={cn(tintaClayClassName, "opacity-55")}
+        style={{ maskImage: `url(${iphoneClay.src})`, maskSize: "100% 100%" }}
+      />
+      <div
+        className={tintaClayClassName}
+        style={{ maskImage: `url(${iphoneClayAro.src})`, maskSize: "100% 100%" }}
+      />
+    </div>
+  )
+}
+
+/**
+ * A largura da tela, em pixels de CSS: a mesma do `PhoneFrame`, para `sm:`
+ * continuar fora de alcance. O aparelho cresce em volta dela — **sem
+ * `scale()`**, pela razão do topo do arquivo: a tela é uma viewport de
+ * verdade, e escalar mentiria sobre o pixel. A altura sai da proporção da
+ * máscara do PSD.
+ */
+const IPHONE_W = PHONE_FRAME_WIDTH
+const IPHONE_H = Math.round((IPHONE_W / IPHONE_TELA.width) * IPHONE_TELA.height * (3666 / 1773))
+
+/**
+ * O iPhone com uma viewport de telefone dentro da tela: um `ViewportFrame` de
+ * 375 px, recortado no canto do aparelho. `position: fixed` lá dentro é fixo
+ * **na tela**, e é o que as barras precisam. `env(safe-area-inset-*)` continua
+ * valendo zero: a Dynamic Island cobre o topo, e a base não tem a folga de 34.
+ *
+ * **Ele é desenhado a 85%** (`zoom`), porque em tamanho real o aparelho media
+ * 407 × 841 e não cabia na tela do catálogo com os eixos em cima. O `zoom`
+ * encolhe o desenho e a caixa que ele ocupa; **a viewport de dentro continua
+ * com 375 pixels de CSS** — as media queries, o `useIsMobile` e o toque leem
+ * o telefone, e não o desenho. É diferente do `scale()` que o topo do arquivo
+ * recusa: lá a moldura era uma `div` sem viewport própria, e escalar mudava o
+ * que `sm:` media.
+ */
+function IphoneFrame({
+  title = "Prévia num iPhone",
+  zoom = 0.85,
+  screenClassName,
+  className,
+  children,
+}: {
+  title?: string
+  /** O tamanho do desenho; a viewport de dentro é sempre 375. */
+  zoom?: number
+  screenClassName?: string
+  className?: string
+  children: React.ReactNode
+}) {
+  const largura = IPHONE_W / (IPHONE_TELA.width / 100)
+  return (
+    <IphoneBody className={cn("shrink-0", className)} style={{ width: largura, zoom }}>
+      <ViewportFrame
+        width={IPHONE_W}
+        height={IPHONE_H}
+        title={title}
+        className="absolute ring-0"
+        style={{
+          left: `${IPHONE_TELA.left}%`,
+          top: `${IPHONE_TELA.top}%`,
+          borderRadius: `${(IPHONE_TELA.radiusX / 100) * IPHONE_W}px`,
+        }}
+        screenClassName={cn("bg-background", screenClassName)}
+      >
+        {children}
+      </ViewportFrame>
+    </IphoneBody>
+  )
+}
+
+export { IphoneBody, IphoneFrame, PhoneFrame, ViewportFrame }

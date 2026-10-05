@@ -21,7 +21,7 @@ import {
 } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { isEditableTarget } from "@/lib/shortcut"
-import { viajarLiquido, type CaixaLiquida } from "@/lib/liquid-move"
+import { TRAJETO_MACIO, viajarLiquido, type CaixaLiquida } from "@/lib/liquid-move"
 
 /**
  * Painéis irmãos do mesmo nível, dos quais só um aparece por vez.
@@ -883,7 +883,7 @@ const tabsIndicatorVariants = cva(
  * de 0,11 (teto 0,22). A forma do movimento — inércia, esticão em fase, pouso —
  * é a mesma.
  */
-const TRAJETO_DAS_ABAS = { duration: 480, easing: "cubic-bezier(0.65,0,0.25,1)" }
+const TRAJETO_DAS_ABAS = TRAJETO_MACIO
 
 function useMarcador(
   trilhaRef: React.RefObject<HTMLElement | null>,

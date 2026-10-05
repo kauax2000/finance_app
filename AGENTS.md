@@ -761,9 +761,10 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
 - **A barra de baixo do telefone**: [`BottomBar`](src/components/ui/bottom-bar.tsx)
   — a do app é ela. Não escreva `fixed bottom-0` nem uma grade de abas à mão:
   as abas são `BottomBarTab` (com `iconActive` para o par sólido), o gatilho de
-  popover é `BottomBarSlot`, e a ação primária veste `bottomBarActionClassName`,
-  que lê a altura da barra e **não declara cor**. O realce viaja sozinho, e a
-  área segura mora dentro da caixa. Ver a rodada 82.
+  popover é `BottomBarSlot`, e a ação primária é o `BottomBarAction` (ou
+  `bottomBarActionClassName` num `Button`), que lê a altura da barra e **não
+  declara cor**. O realce viaja sozinho, e a área segura mora dentro da caixa.
+  Ver as rodadas 82 e 230.
 - **A página que existe fora da casca do app**:
   [`SplitShell`](src/components/ui/split-shell.tsx) — campo de um lado, coluna
   de conteúdo do outro, sem cartão, empilhando abaixo de `lg`. O campo entra por
@@ -1637,6 +1638,32 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   com `role="alert"`; Esc fecha o toast com foco. A pilha nasce **abaixo da barra do topo** (a base medida da
   `TopBar` mais 12px — 48 no app, 56 no catálogo), e não por cima dela. As peças com JSX moram em
   `lib/toast-parts.tsx` — `lib/toast.ts` continua `.ts`.
+- **O `BottomBar` tomou o `Tabs` como referência** (rodada 230). A pílula
+  troca a borda e o anel por **um anel** em `--foreground` a 10% (o das
+  `Tabs`, que escurece no claro e clareia no escuro — cada um dos dois de
+  antes só desenhava num tema), o vidro fica; o marcador é a **tecla em
+  relevo** (num tom próprio, `--bottom-bar-key`: a tinta do texto a 12%/18%
+  sobre o `--popover` — era `--muted`, o fundo das linhas de trás, e empatava
+  a 1,09:1; hoje 1,32 e 1,52 —, com a pílula a 82%; anel, `shadow-sm`, 2px
+  para dentro; `glass` veste o vidro do `TabsList glass` sobre ele) e **viaja
+  líquido** (`viajarLiquido` com o `TRAJETO_MACIO`, que mora em
+  `lib/liquid-move` e as `Tabs` dividem). `labels="active"` abre o nome só na
+  ativa, ao lado do ícone (as outras nunca abaixo de 44). Peças:
+  `BottomBarAction` (a ação com o nome obrigatório, o anel e a sombra da
+  pílula), `BottomBarSkeleton`, `count`/`countLabel` na aba e no slot (o
+  número ou o ponto, `aria-hidden`, e o número no nome) e a aba **sem
+  `href`**, que é `<button aria-pressed>`. Comportamento: **o arraste pela
+  pílula** (8px de lado e o marcador segue o dedo; soltar clica o item — e o
+  item é achado por `elementFromPoint`, não por `instanceof`, que falha no
+  iframe do catálogo), **tocar na ativa sobe ao topo** (de quem rolou por
+  último), o glifo afunda na mola e o sólido estala quando a aba **passa** a
+  ativa, e `hideOnScroll` afunda a pílula e a ação juntas (saindo em
+  `--ease-in-out` e voltando na mola, as duas em `--duration-gentle`, 700ms —
+  tokens novos desta rodada). **O catálogo a
+  mostra no `IphoneFrame`** (`ds-frame`): o iPhone 17 Pro Clay com uma
+  viewport de 375 dentro da tela, o mesmo corpo da página de Touch & safe
+  area. O app usa o `BottomBarAction`; contagem não, porque o único número à
+  mão (as não lidas) já está no sino do cabeçalho.
 - **O `Toolbar` ganhou a barra presa, a placa, a escada e as peças que as
   telas escreviam à mão** (rodada 229). **A altura chega sem `className`**:
   o `Button` (o de ícone em `size`), o `SelectTrigger`, o `ComboboxTrigger` e

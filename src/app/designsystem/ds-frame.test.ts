@@ -40,7 +40,16 @@ describe("moldura de telefone do catálogo", () => {
   it("2. não escala nada — escalar mentiria sobre o pixel de CSS", () => {
     // Um `transform: scale()` daria a aparência de um telefone com o viewport
     // do desktop, que é o defeito que a peça existe para não repetir.
-    expect(CODIGO).not.toMatch(/scale\(|\bzoom\b|transform:/)
+    expect(CODIGO).not.toMatch(/scale\(|transform:/)
+    // A exceção nomeada (rodada 230): o `IphoneFrame` é desenhado a 85% por
+    // `zoom`, **por fora** de uma viewport de 375 — o iframe continua medindo
+    // 375 pixels de CSS (medido: `innerWidth` 375 e a media query de telefone
+    // casando). Fora dele, nada usa `zoom`.
+    const zooms = CODIGO.match(/\bzoom\b/g) ?? []
+    expect(zooms.length).toBeGreaterThan(0)
+    const foraDoIphone = CODIGO.slice(0, CODIGO.indexOf("function IphoneFrame("))
+    expect(foraDoIphone.match(/\bzoom\b/g) ?? []).toEqual([])
+    expect(CODIGO).toContain("width={IPHONE_W}")
   })
 
   it("3. nenhuma página do catálogo volta a desenhar a moldura à mão", () => {

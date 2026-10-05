@@ -9,5 +9,5 @@ import { cn } from "@/lib/utils"
  * constantes ficaram sem consumidor; saíram.
  */
 export const MOBILE_GLASS_SURFACE_CLASSNAME = cn(
-    "mobile-glass-surface border shadow-lg ring-1 ring-border/20"
+    "mobile-glass-surface shadow-lg ring-1 ring-foreground/10"
 )

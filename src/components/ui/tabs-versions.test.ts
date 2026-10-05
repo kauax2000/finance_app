@@ -57,7 +57,9 @@ describe("o floating, padrão do sistema", () => {
     expect(LIQUIDO).toContain('window.matchMedia("(prefers-reduced-motion: reduce)")')
     // Proporcional às abas andadas, um pouco mais macio que o alternador.
     expect(TABS).toContain("Math.min(0.18, passo > 0 ? (andado / passo) * 0.09 : 0.09)")
-    expect(TABS).toContain('const TRAJETO_DAS_ABAS = { duration: 480, easing: "cubic-bezier(0.65,0,0.25,1)" }')
+    // Desde a rodada 230 o trajeto macio mora na lib, e o BottomBar o divide.
+    expect(TABS).toContain("const TRAJETO_DAS_ABAS = TRAJETO_MACIO")
+    expect(LIQUIDO).toContain('export const TRAJETO_MACIO = { duration: 480, easing: "cubic-bezier(0.65,0,0.25,1)" }')
     // O esticão acompanha o trajeto, para continuar em fase.
     expect(LIQUIDO).toContain("duration: Math.round(trajeto.duration / VIRADA)")
     // A viagem só acontece quando a aba muda, e não num redimensionamento.

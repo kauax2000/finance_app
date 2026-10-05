@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -10,32 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { DocNote, DocSection, Usage } from "../ds-doc";
 import { Group, Spec } from "../ds-kit";
-import iphoneClay from "../assets/iphone-17-pro-clay.png"
-import iphoneClayAro from "../assets/iphone-17-pro-clay-aro.png"
-
-/** O degradê do aparelho, as paradas da marca descendo do coral ao teal. */
-const tintaClayClassName =
-  "pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,var(--brand-coral),var(--brand-magenta)_35%,var(--brand-violet)_60%,var(--brand-blue)_82%,var(--brand-teal))] mix-blend-multiply";
-
-/**
- * A tela dentro da moldura, em porcentagem da imagem: a caixa da camada
- * "MASK SCREEN" do PSD (1634 × 3549 num aparelho de 1773 × 3666). As faixas
- * seguras são porcentagem da tela, na proporção do iPhone 17 Pro: 62 e 34
- * pontos de 874. A de cima cobre a Dynamic Island, que termina em 5,6%.
- */
-const TELA = {
-  left: 3.95,
-  top: 1.58,
-  width: 92.16,
-  height: 96.81,
-  safeTop: 7.1,
-  safeBottom: 3.9,
-  // O canto da tela, medido no mesmo PSD: o círculo que passa pelo ponto a 45°
-  // da máscara (259 px), em porcentagem de cada eixo. Sem ele o retângulo
-  // escapa pela curva externa do aparelho.
-  radiusX: 15.9,
-  radiusY: 7.3,
-};
+import { IPHONE_TELA as TELA, IphoneBody } from "../ds-frame";
 
 /**
  * As três alturas de alvo, da solta à de mouse. Os consumidores são os que
@@ -287,23 +261,15 @@ export default function TouchSafeAreaDoc() {
         layout="flow"
       >
         <div className="grid items-start gap-6 md:grid-cols-[auto_minmax(0,1fr)]">
-          {/* O aparelho é o iPhone 17 Pro Clay da Asylab
-              (asylab.com/resources/freebies): só a moldura, com a tela vazada,
-              extraída do PSD de frente. A tela é HTML por baixo dela, na caixa
-              medida na camada "MASK SCREEN", e a Dynamic Island da moldura
-              pousa sobre a faixa de cima. As faixas são esquema, não medida —
-              a medida de verdade é a `PhoneFrame`, nas páginas das barras. */}
-          <div
+          {/* O aparelho é o `IphoneBody` do `ds-frame`. A tela aqui é esquema,
+              não medida — as faixas pousam na caixa da máscara do PSD, e a
+              Dynamic Island sobre a de cima. A medida de verdade é o
+              `IphoneFrame`, com uma viewport de 375 dentro, na página do
+              `BottomBar`. */}
+          <IphoneBody
             aria-hidden
-            className={cn("relative isolate mx-auto", altura === null && "w-48")}
-            style={
-              altura === null
-                ? undefined
-                : {
-                    height: altura,
-                    aspectRatio: `${iphoneClay.width} / ${iphoneClay.height}`,
-                  }
-            }
+            className={cn("mx-auto", altura === null && "w-48")}
+            style={altura === null ? undefined : { height: altura }}
           >
             <div
               className="absolute flex flex-col overflow-hidden bg-background"
@@ -340,28 +306,7 @@ export default function TouchSafeAreaDoc() {
                 <span className="h-1 w-16 rounded-full bg-foreground/80" />
               </div>
             </div>
-            <Image
-              src={iphoneClay}
-              alt=""
-              sizes="16rem"
-              className="pointer-events-none relative h-auto w-full select-none"
-            />
-            {/* A tinta do aparelho, em duas camadas, as duas em `multiply`
-                sobre o Clay branco — o branco vira a cor e o sombreado do
-                molde continua. A face leva o degradê a meia força, suave como
-                o vidro da referência; o aro, os botões e a Dynamic Island
-                levam o degradê cheio, que é o que desenha o contorno. Cada
-                camada é mascarada pela própria peça, então a tela e a página
-                em volta não se tingem. As paradas descem do coral ao teal. */}
-            <div
-              className={cn(tintaClayClassName, "opacity-55")}
-              style={{ maskImage: `url(${iphoneClay.src})`, maskSize: "100% 100%" }}
-            />
-            <div
-              className={tintaClayClassName}
-              style={{ maskImage: `url(${iphoneClayAro.src})`, maskSize: "100% 100%" }}
-            />
-          </div>
+          </IphoneBody>
 
           <div ref={tokensRef} className="min-w-0">
             <Spec

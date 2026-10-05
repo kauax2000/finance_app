@@ -18387,3 +18387,109 @@ filtros, as ações e as fichas vão, e depois desta rodada age como as barras
 da página — prende sob o `TopBar`, mede a base dele e some ao rolar. Entrou
 na lista do `taxonomy.test.ts` (asserção 5) e na ordem alfabética dos
 Templates, entre Table Panel e Top Bar.
+
+### Rodada 230 — o Bottom Bar com o Tabs de referência: o anel único, a tecla em relevo e a viagem líquida, o rótulo só na ativa, a contagem, a ação como peça, o esqueleto, a aba de botão, o arraste, o toque na ativa que sobe, a mola e o some-ao-rolar; o iPhone Clay no catálogo
+
+**O que a página afirmava e não era mais verdade.** Que o marcador corria "em
+`--duration-base` com `--ease-out` — o mecanismo do `Tabs`": o `Tabs` corre
+líquido desde a 226. A página mostrava três telefones iguais para três
+eixos.
+
+**Um anel, e não dois.** A pílula tinha borda **e** anel porque cada um só
+desenhava num tema (a borda branca 1,007 no claro; o anel de `--border` 1,042
+no escuro). O anel em `--foreground` a 10%, o das `Tabs`, escurece no claro e
+clareia no escuro — saiu a borda. A ação veste o mesmo anel e a sombra.
+
+**O marcador é o das `Tabs`**: a tecla (`--muted`, anel, `shadow-xs`, 2px
+para dentro) e a viagem por `viajarLiquido`. O trajeto macio saiu do
+`tabs.tsx` para `lib/liquid-move` (`TRAJETO_MACIO`), e os dois o dividem.
+Medido no catálogo: duas animações WAAPI por troca, o marcador pousando a 2px
+do item.
+
+**Rótulo só na ativa.** A fileira vira flex e a ativa toma a largura do nome.
+A primeira versão deu a pílula inteira à ativa (o `w-full` do item fazia o
+`basis: auto` valer 100%) e, corrigido isso, as outras ficaram com **37px**,
+abaixo do alvo; com `min-w-11` elas ficam em 44 e o rótulo cabe (66/66).
+
+**O arraste.** 8px de lado e ele começa; o marcador segue o item sob o dedo
+(`data-scrub`) e soltar o clica. Duas medições: **`instanceof HTMLElement`
+diz falso dentro do iframe do catálogo** (o nó é de outra janela) e o
+arraste não achava item nenhum; e o teste de régua proíbe
+`getBoundingClientRect` — o item é achado por `elementFromPoint` no documento
+da pílula. Testado do item 2 ao 0 e do 0 ao 1.
+
+**Tocar na ativa sobe ao topo** — de quem rolou por último, que a barra
+guarda ouvindo a rolagem em captura (medido: 400 → 0). **`hideOnScroll`**
+afunda a pílula (medido: topo 815, fora da tela) e a ação fica; volta ao
+subir. O glifo afunda a 88% na mola, e o sólido estala só quando a aba
+**passa** a ativa (WAAPI, porque uma classe de animação tocaria na
+hidratação).
+
+**O iPhone.** A página mostra a barra no iPhone 17 Pro Clay da página de
+Touch & safe area, agora peça do `ds-frame`: `IphoneBody` (a moldura e a
+tinta) e `IphoneFrame` (com uma `ViewportFrame` de 375 na caixa da tela,
+sem `scale()`). O `ViewportFrame` passou a somar o `style` de quem chama —
+antes um `style` apagava a largura e a altura.
+
+**O app.** O + é o `BottomBarAction`. A contagem não entrou: o único número
+à mão é o das não lidas, e ele já está no sino do cabeçalho do telefone;
+contas a vencer pediriam consulta nova.
+
+**O iPhone é desenhado a 85%.** Em tamanho real ele media 407 × 841 e não
+cabia na tela com os eixos em cima; a 70% (285 × 589) ficou pequeno demais.
+O `zoom` encolhe o desenho e a caixa que ele ocupa, e a viewport de dentro
+continua com 375 pixels de CSS — medido: `innerWidth` 375 e a media query de
+telefone casando, e o clique acertando a aba.
+
+**O rótulo só na ativa abre no relógio do marcador.** Na primeira versão a
+largura das abas saltava de uma vez, o nome aparecia por cima e o marcador
+viajava para uma caixa que ainda ia mudar. Agora o rótulo existe em todas as
+abas, fechado (largura zero) nas inativas, e cada aba parte do próprio
+conteúdo (`flex: auto`). Quando a ativa muda, o layout já está no fim — é ali
+que o marcador mede o destino — e a largura dos dois rótulos anda de onde
+estava até onde fica, por WAAPI, no `TRAJETO_MACIO`: as abas abrem e fecham
+juntas e os ícones deslizam. Medido a cada 90ms: 125/48 → 115/57 → 79/93 →
+56/115 → 49/122, com o marcador pousando no item (94 de 94) no mesmo quadro.
+Depois de um arraste o marcador já está no item, e só a largura muda: ele a
+acompanha sem esticar.
+
+**Some ao rolar: a saída e a volta são dois gestos.** Era um deslize com
+esmaecer, 200ms `--ease-out` nos dois sentidos. Como quem decide a transição
+é o estado de destino, cada direção tem a sua: indo, a pílula afunda, encolhe
+a 90% a partir da base e apaga na curva enfatizada de 300ms (medido: 86%,
+96%, 99% do caminho a cada 70ms, apagada em ~140ms); voltando, sobe na mola
+da casa e passa 3,5% do lugar antes de assentar (−1,8%, −3,5%, −1,5%,
+−0,3%). `scale` e não `filter`: um borrão faria da pílula uma raiz de fundo,
+e o vidro sumiria durante a saída.
+
+**A ação some junto.** Na primeira versão o "+" ficava parado no canto
+quando a pílula afundava; ele passou a vestir a mesma régua de saída e volta
+(`someAoRolarClassName`), a pedido do dono. Uma ação sozinha, sem a barra que
+a ancora, lê como um botão esquecido e cobre a lista que se está lendo.
+
+**E mais devagar, com dois tokens novos.** A saída em 300ms e a volta na
+mola liam rápidas — e não era a mola: com 90ms a curva enfatizada já tinha
+feito 60% do caminho. A escala de estado para em 300ms e nenhuma curva do
+tema começava devagar, então entraram `--duration-gentle` (700ms) e
+`--ease-in-out` (`cubic-bezier(0.65, 0, 0.35, 1)`), com o ok do dono. A
+saída usa os dois; a volta, a mola esticada a 700ms. O encolhimento ficou em
+95%.
+
+**Link ou botão não é um eixo.** O demo tinha um seletor "Abas: link /
+botão", e ele saiu a pedido do dono: o elemento sai da rota, não de uma
+escolha. Com `href` a aba é link, sem ele é botão, e quem passa o `href` é o
+mapa de rotas (`config/mobile-navigation`). O demo usa links, como o app, e a
+regra ficou numa nota da página.
+
+**A tecla ganhou tom próprio, e a versão de vidro.** O dono achou fraco o
+contraste entre a pílula e a aba ativa, "principalmente quando tem algo
+atrás". Medido (luminância relativa, a pílula composta em sRGB sobre o que
+passa atrás): a tecla era `--muted`, **o mesmo fundo das linhas da lista**, e
+a pílula deixava passar 55% do conteúdo no escuro — 1,09:1 sobre uma linha
+(1,08 no claro). Agora a pílula é a tinta dos flutuantes a 82% (a variável do
+vidro redeclarada só nela; a gaveta e o menu da conta seguem no token) e a
+tecla é `--bottom-bar-key`, a tinta do texto misturada ao `--popover` — 12%
+no claro e 18% no escuro, escolhidos entre 10–14 e 16–20 por medição: **1,32
+e 1,52** sobre uma linha, 1,35 e 1,59 sobre a página. `glass` é o vidro do
+`TabsList glass` (`glass glass-control`) sobre esse mesmo tom: muda o
+material, não o contraste. A sombra subiu de `xs` para `sm`.

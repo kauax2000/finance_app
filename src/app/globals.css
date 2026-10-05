@@ -691,6 +691,14 @@
   --duration-slow: 300ms;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-emphasized: cubic-bezier(0.32, 0.72, 0, 1);
+  /* O movimento que se acompanha com o olho (rodada 230): a barra de baixo
+     afundando ao rolar. As curvas acima disparam no começo — com 90ms a
+     enfatizada já fez 60% do caminho, e o dono leu a saída como rápida demais.
+     Esta começa devagar, acelera no meio e assenta devagar, e 700ms passa da
+     escala de estado (que para em 300) de propósito: não é troca de estado, é
+     uma peça indo embora. */
+  --duration-gentle: 700ms;
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   /* A mola, em CSS. É a mesma da `Tooltip` (`stiffness: 300, damping: 25`,
      massa 1, no `motion`), integrada numericamente e amostrada em 41 pontos:
      passa 3,8% do alvo e assenta em 500ms. `linear()` deixa uma animação de
