@@ -16,22 +16,32 @@ import {
     PageSectionHeader,
     PageSectionTitle,
 } from "@/components/ui/page-section"
-import { formatTransactionDayMonthPtBr } from "@/lib/transaction-date"
+import {
+    formatDateTimeShortPtBr,
+    formatDayHeadingPtBr,
+    groupByLocalDay,
+} from "@/lib/transaction-date"
 import { ROUTES } from "@/config/navigation"
-import { useState, useEffect, useCallback } from "react"
+import { Fragment, useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardNote, CardToolbar } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import {
-    Badge,
-    tagChipDanger,
-    tagChipInfo,
-    tagChipNeutral,
-    tagChipSuccess,
-    tagChipWarning,
-} from "@/components/ui/badge"
-import { InformationCircleIcon } from "@heroicons/react/16/solid"
-import { ChartBarIcon, CheckCircleIcon, Cog6ToothIcon, ExclamationTriangleIcon, KeyIcon, ShieldCheckIcon, ShieldExclamationIcon, UserGroupIcon, UserIcon, UserMinusIcon, UserPlusIcon } from "@heroicons/react/24/outline"
-import { cn } from "@/lib/utils"
+    TIMELINE_TONES,
+    Timeline,
+    TimelineDescription,
+    TimelineHeader,
+    TimelineItem,
+    TimelineSeparator,
+    TimelineTime,
+    TimelineTitle,
+} from "@/components/ui/timeline"
+import { ChartBarIcon, CheckCircleIcon, Cog6ToothIcon, ExclamationTriangleIcon, InformationCircleIcon, KeyIcon, ShieldCheckIcon, ShieldExclamationIcon, UserGroupIcon, UserIcon, UserMinusIcon, UserPlusIcon } from "@heroicons/react/16/solid"
+import {
+    ChartBarIcon as ChartBarIconLg,
+    KeyIcon as KeyIconLg,
+    ShieldCheckIcon as ShieldCheckIconLg,
+} from "@heroicons/react/24/outline"
 import { getActivities, type ActivityLog } from "@/lib/activity"
 import { useAuth } from "@/components/providers"
 import {
@@ -93,44 +103,24 @@ const getActivityLabel = (type: string) => {
     }
 }
 
-const getActivityColor = (type: string, status: string) => {
-    if (status === "failed") return tagChipDanger
-    if (status === "pending") return tagChipNeutral
+const getActivityTone = (type: string, status: string): (typeof TIMELINE_TONES)[number] => {
+    if (status === "failed") return "destructive"
+    if (status === "pending") return "default"
 
     switch (type) {
         case "device_added":
         case "family_member_joined":
-            return tagChipSuccess
-        case "family_member_invited":
-        case "profile_update":
-            return tagChipInfo
+            return "success"
         case "password_change":
         case "security_settings":
         case "family_permission_changed":
         case "family_role_changed":
         case "device_removed":
         case "family_member_removed":
-            return tagChipWarning
+            return "warning"
         default:
-            return tagChipNeutral
+            return "default"
     }
-}
-
-const formatRelativeTime = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diff = now.getTime() - date.getTime()
-
-    const minutes = Math.floor(diff / 60000)
-    const hours = Math.floor(diff / 3600000)
-    const days = Math.floor(diff / 86400000)
-
-    if (minutes < 1) return "Agora"
-    if (minutes < 60) return `Há ${minutes}m`
-    if (hours < 24) return `Há ${hours}h`
-    if (days < 7) return `Há ${days}d`
-
-    return formatTransactionDayMonthPtBr(date.toISOString())
 }
 
 const FAMILY_TYPES = [
@@ -260,65 +250,52 @@ export default function ActivityPage() {
                             </ToggleGroup>
                         </CardToolbar>
                         {filteredActivities.length > 0 ? (
-                            <ul className="divide-y divide-border" role="list">
-                                {filteredActivities.map((activity) => {
-                                    const ActivityIcon = getActivityIcon(activity.type)
-                                    const ipDisplay = activity.ip_address?.trim() || "—"
-                                    const deviceTrim = activity.device?.trim()
-                                    const metaParts = [
-                                        activity.description?.trim(),
-                                        ipDisplay !== "—" ? ipDisplay : null,
-                                        deviceTrim || null,
-                                    ].filter((x): x is string => Boolean(x))
-                                    const metaLine = metaParts.join(" · ")
-                                    return (
-                                        <li key={activity.id}>
-                                            <div
-                                                className={cn(
-                                                    "flex items-start gap-3 px-4 py-2.5 transition-colors",
-                                                    activity.status === "failed"
-                                                        ? "bg-destructive/5 hover:bg-destructive/10"
-                                                        : "hover:bg-muted/30",
-                                                )}
-                                            >
-                                                <div
-                                                    className={cn(
-                                                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-                                                        getActivityColor(activity.type, activity.status),
-                                                    )}
+                            <Timeline marker="icon" reveal className="px-4 py-3">
+                                {groupByLocalDay(filteredActivities, (a) => a.created_at).map((dia) => (
+                                    <Fragment key={dia.chave}>
+                                        <TimelineSeparator>{formatDayHeadingPtBr(dia.data)}</TimelineSeparator>
+                                        {dia.itens.map((activity) => {
+                                            const ActivityIcon = getActivityIcon(activity.type)
+                                            const metaLine = [
+                                                activity.description?.trim(),
+                                                activity.ip_address?.trim(),
+                                                activity.device?.trim(),
+                                            ]
+                                                .filter(Boolean)
+                                                .join(" · ")
+                                            return (
+                                                <TimelineItem
+                                                    key={activity.id}
+                                                    tone={getActivityTone(activity.type, activity.status)}
+                                                    icon={<ActivityIcon />}
                                                 >
-                                                    <ActivityIcon className="h-3.5 w-3.5" />
-                                                </div>
-                                                <div className="flex min-w-0 flex-1 flex-col gap-1">
-                                                    <div className="flex min-w-0 items-center gap-2">
-                                                        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
-                                                            <span className="truncate text-sm font-medium leading-snug">
-                                                                {getActivityLabel(activity.type)}
-                                                            </span>
-                                                            {activity.status === "failed" ? (
-                                                                <Badge
-                                                                    tone="destructive"
-                                                                    className="shrink-0 px-1.5 py-0 text-2xs"
-                                                                >
-                                                                    Falha
-                                                                </Badge>
-                                                            ) : null}
-                                                        </div>
-                                                        <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">
-                                                            {formatRelativeTime(activity.created_at)}
-                                                        </span>
-                                                    </div>
+                                                    <TimelineHeader
+                                                        end={
+                                                            <TimelineTime dateTime={activity.created_at} relative>
+                                                                {formatDateTimeShortPtBr(activity.created_at)}
+                                                            </TimelineTime>
+                                                        }
+                                                    >
+                                                        <TimelineTitle className="truncate">
+                                                            {getActivityLabel(activity.type)}
+                                                        </TimelineTitle>
+                                                        {activity.status === "failed" ? (
+                                                            <Badge tone="destructive" size="xs">
+                                                                Falha
+                                                            </Badge>
+                                                        ) : null}
+                                                    </TimelineHeader>
                                                     {metaLine ? (
-                                                        <p className="text-pretty text-xs leading-relaxed break-words text-muted-foreground">
+                                                        <TimelineDescription className="break-words">
                                                             {metaLine}
-                                                        </p>
+                                                        </TimelineDescription>
                                                     ) : null}
-                                                </div>
-                                            </div>
-                                        </li>
-                                    )
-                                })}
-                            </ul>
+                                                </TimelineItem>
+                                            )
+                                        })}
+                                    </Fragment>
+                                ))}
+                            </Timeline>
                         ) : (
                             <div
                                 className="px-4 py-12 md:py-14"
@@ -327,9 +304,9 @@ export default function ActivityPage() {
                             >
                                 <EmptyState variant="plain" size="lg">
                                     <EmptyStateIcon variant="stack">
-                                        <ShieldCheckIcon aria-hidden />
-                                        <ChartBarIcon aria-hidden />
-                                        <KeyIcon aria-hidden />
+                                        <ShieldCheckIconLg aria-hidden />
+                                        <ChartBarIconLg aria-hidden />
+                                        <KeyIconLg aria-hidden />
                                     </EmptyStateIcon>
                                     <EmptyStateTitle>Nenhuma atividade encontrada</EmptyStateTitle>
                                     <EmptyStateDescription>

@@ -65,6 +65,21 @@ describe("o floating, padrão do sistema", () => {
   })
 })
 
+describe("a vertical", () => {
+  it("não estica: a coluna fica na largura das abas, e a pílula vira placa", () => {
+    const html = renderToStaticMarkup(
+      h(Tabs, { defaultValue: "a", orientation: "vertical" },
+        h(TabsList, null, h(TabsTrigger, { value: "a" }, "A"), h(TabsTrigger, { value: "b" }, "B"))
+      )
+    )
+    expect(html).not.toContain("flex-1")
+    expect(html).toMatch(/data-slot="tabs-list-frame"[^>]*w-fit/)
+    expect(tabsListFrameVariants({})).toContain("data-[orientation=vertical]:rounded-2xl")
+    expect(tabsListFrameVariants({})).toContain("data-[orientation=vertical]:self-start")
+    expect(TABS).toContain('scrollable || overflow || orientation === "vertical"')
+  })
+})
+
 describe("as peças", () => {
   it("a contagem entra no nome com um espaço de verdade", () => {
     const html = render(h(TabsList, null, h(TabsTrigger, { value: "a", count: 8 }, "Ativas")))

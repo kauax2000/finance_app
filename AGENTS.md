@@ -1615,6 +1615,32 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `tablist`, onde mora o `TabsAdd`) e `overflow="menu"` (o excesso vai para o
   **Mais ▾**, e a ativa nunca sai). **Abas que são rotas são `TabsNav` +
   `TabsNavLink`**, num `<nav>` com `aria-current="page"` e sem `role="tab"`.
+  **Na vertical não há `stretch`** (rodada 227): ele dividia a largura e, na
+  coluna, levava a moldura a `w-full` e espremia o painel numa fresta; a
+  coluna fica na largura das abas, em `self-start`, e o `floating` vira placa
+  (`rounded-2xl`) em vez de estádio.
+- **O `Timeline` ganhou o estado, a coluna de data, a linha compacta e o
+  feed** (rodada 227). **O fim é CSS e a forma é contexto**: `:last-child`
+  apaga o conector do último (`isLast={false}` é a exceção), e nada mais é
+  clonado. O ponto tem um **halo do próprio tom** e o poço um fio de 1px na
+  tinta dele — nunca a cor da página; **não há vidro** (o eixo `glass` saiu
+  a pedido do dono). `state` no item: `done` (cor forte,
+  `--tl-strong`, no ponto e no fio), `current` (anel que pulsa e
+  `aria-current`), `upcoming` (vazado, tracejado, "Previsto") e `skipped`; o
+  trecho até um previsto fica tracejado nas duas ordens. `layout="split"` + `opposite`
+  é a coluna de data (no telefone, embaixo); `density="compact"` é o evento de
+  sistema numa linha. Peças: `TimelineHeader end`, `TimelineActions` (o degrau
+  `sm` desce sozinho), `TimelineCard`, `TimelineCollapsed`, `TimelineDetail`,
+  `TimelineLink`, `TimelineSkeleton` (`group={false}` dentro de um esqueleto
+  de página) e `TimelineTime relative`. `reveal` é a cascata, `live` faz o que
+  chega crescer, `TimelineGroup sticky` (um dia por contêiner, para a faixa seguinte
+  empurrar a anterior) prende o dia numa pílula flutuante, com um véu
+  na cor de `--tl-surface` que só existe presa (dentro de um cartão,
+  `[--tl-surface:var(--color-card)]`), e `end` leva o saldo do dia, `progress="scroll"`
+  desenha o fio. Para agrupar por dia: `groupByLocalDay` e
+  `formatDayHeadingPtBr` (`lib/transaction-date`) — o dia **local**. **Nenhuma
+  tela desenha poço, ponto ou fio de histórico à mão**: a atividade da conta e
+  o histórico de cobranças são `Timeline`.
 - **O `Tabs` tem quatro superfícies, e a moldura não é a fileira.** `variant` é a
   superfície (`floating` a pílula — o padrão —, `solid` bandeja, `underline` um fio sob a fileira com
   o marcador pousando nele, `plain` sem nada); `size` mede o **gatilho**;

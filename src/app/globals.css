@@ -3105,6 +3105,30 @@
   }
 }
 
+/* A trilha sobe em cascata (rodada 227): a régua da `table-reveal`, nos
+   eventos da `Timeline reveal`. Um evento inserido depois também entra assim —
+   é o que a chegada de um feed ao vivo soma ao crescer da altura. O fio que se
+   desenha (`timeline-progress`) não entra. */
+@utility timeline-reveal {
+  & > li:not([data-slot="timeline-progress"]) {
+    animation: menubar-rise 160ms var(--ease-out) 40ms both;
+  }
+  & > li:nth-child(2) { animation-delay: 70ms; }
+  & > li:nth-child(3) { animation-delay: 100ms; }
+  & > li:nth-child(4) { animation-delay: 130ms; }
+  & > li:nth-child(5) { animation-delay: 160ms; }
+  & > li:nth-child(6) { animation-delay: 190ms; }
+  & > li:nth-child(7) { animation-delay: 220ms; }
+  & > li:nth-child(8) { animation-delay: 250ms; }
+  & > li:nth-child(9) { animation-delay: 280ms; }
+  & > li:nth-child(n + 10) { animation-delay: 310ms; }
+  @media (prefers-reduced-motion: reduce) {
+    & > li {
+      animation-delay: 0ms;
+    }
+  }
+}
+
 /* O valor que mudou acende e se apaga (rodada 225): o fundo fica em `muted`
    por 500ms e esmaece em 1s, os números do AG Grid. Ele é reacionado por
    `key` — quem chama troca a chave quando o valor troca. Com movimento

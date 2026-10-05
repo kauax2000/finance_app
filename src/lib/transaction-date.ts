@@ -256,3 +256,84 @@ export function formatYearMonthShortPtBr(ym: string): string {
         timeZone: "UTC",
     })
 }
+
+/**
+ * A distância de calendário **local** entre dois instantes, em dias: 0 é o
+ * mesmo dia, −1 é ontem, 1 é amanhã. Não passa por `transactionCalendarParts`
+ * de propósito: aquele lê os dez primeiros caracteres do ISO, e num carimbo
+ * `2026-04-05T01:12:00Z` isso é o dia em UTC — no Brasil, o anterior.
+ */
+function diasDeCalendario(de: Date, ate: Date): number {
+    const a = new Date(de.getFullYear(), de.getMonth(), de.getDate())
+    const b = new Date(ate.getFullYear(), ate.getMonth(), ate.getDate())
+    return Math.round((b.getTime() - a.getTime()) / 86_400_000)
+}
+
+/**
+ * O tempo relativo de um evento (rodada 227): "Agora", "Há 5 min", "Há 3 h",
+ * "Ontem", "Há 3 dias", "Amanhã", "Em 3 dias" — e, a partir de uma semana, a
+ * data (dd/mm no ano corrente, dd/mm/aaaa fora dele). `agora` entra como
+ * argumento para o `TimelineTime relative` decidir quando recalcular, e para o
+ * teste não depender do relógio.
+ */
+export function formatRelativeTimePtBr(iso: string, agora: number = Date.now()): string {
+    const d = new Date(iso)
+    const t = d.getTime()
+    if (Number.isNaN(t)) return iso.trim()
+    const minutos = Math.round((agora - t) / 60_000)
+    if (Math.abs(minutos) < 1) return "Agora"
+    if (minutos > 0 && minutos < 60) return `Há ${minutos} min`
+    if (minutos > 0 && minutos < 24 * 60) return `Há ${Math.floor(minutos / 60)} h`
+    if (minutos < 0 && minutos > -60) return `Em ${-minutos} min`
+    const dias = diasDeCalendario(new Date(agora), d)
+    if (dias === 0) return `Em ${Math.floor(-minutos / 60)} h`
+    if (dias === -1) return "Ontem"
+    if (dias === 1) return "Amanhã"
+    if (dias < 0 && dias > -7) return `Há ${-dias} dias`
+    if (dias > 0 && dias < 7) return `Em ${dias} dias`
+    const dd = String(d.getDate()).padStart(2, "0")
+    const mm = String(d.getMonth() + 1).padStart(2, "0")
+    return d.getFullYear() === new Date(agora).getFullYear()
+        ? `${dd}/${mm}`
+        : `${dd}/${mm}/${d.getFullYear()}`
+}
+
+/**
+ * O rótulo da faixa de dia de um histórico: "Hoje", "Ontem", "Amanhã",
+ * "12 de março" — e com o ano quando não é o corrente.
+ */
+export function formatDayHeadingPtBr(iso: string, agora: number = Date.now()): string {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return iso.trim()
+    const dias = diasDeCalendario(new Date(agora), d)
+    if (dias === 0) return "Hoje"
+    if (dias === -1) return "Ontem"
+    if (dias === 1) return "Amanhã"
+    return d.toLocaleDateString("pt-BR", {
+        day: "numeric",
+        month: "long",
+        ...(d.getFullYear() === new Date(agora).getFullYear() ? {} : { year: "numeric" }),
+    })
+}
+
+/**
+ * Agrupa uma lista **já ordenada** pelo dia local de cada item, mantendo a
+ * ordem: dois dias iguais separados por outro viram dois grupos, porque a faixa
+ * rotula a cronologia e não a reordena. `chave` é o dia em `aaaa-mm-dd`, e
+ * `data` é o carimbo do primeiro item, para o rótulo.
+ */
+export function groupByLocalDay<T>(
+    itens: readonly T[],
+    dataDe: (item: T) => string
+): { chave: string; data: string; itens: T[] }[] {
+    const grupos: { chave: string; data: string; itens: T[] }[] = []
+    for (const item of itens) {
+        const data = dataDe(item)
+        const d = new Date(data)
+        const chave = Number.isNaN(d.getTime()) ? data : localYmdFromDate(d)
+        const ultimo = grupos.at(-1)
+        if (ultimo?.chave === chave) ultimo.itens.push(item)
+        else grupos.push({ chave, data, itens: [item] })
+    }
+    return grupos
+}

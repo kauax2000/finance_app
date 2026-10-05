@@ -7,6 +7,7 @@ import {
     CardToolbar,
 } from "@/components/ui/card"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
+import { TimelineSkeleton } from "@/components/ui/timeline"
 
 /**
  * O esqueleto da tela de atividade. Ele morava dentro do `page-client`, e um
@@ -31,22 +32,7 @@ export function ActivityPageSkeleton() {
                                 ))}
                             </div>
                         </CardToolbar>
-                        <ul className="divide-y divide-border" role="list">
-                            {[1, 2, 3, 4, 5].map((i) => (
-                                <li key={i}>
-                                    <div className="flex items-start gap-3 px-4 py-2.5">
-                                        <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
-                                        <div className="min-w-0 flex-1 space-y-1.5">
-                                            <div className="flex min-w-0 items-center gap-2">
-                                                <Skeleton className="h-4 min-w-0 max-w-48 flex-1" />
-                                                <Skeleton className="h-3 w-10 shrink-0 rounded" />
-                                            </div>
-                                            <Skeleton className="h-3 w-full max-w-md" />
-                                        </div>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
+                        <TimelineSkeleton marker="icon" count={5} group={false} className="px-4 py-3" />
                         <CardNote>
                             <Skeleton className="mt-0.5 size-3.5 shrink-0 rounded" />
                             <Skeleton className="h-3 w-full max-w-md" />

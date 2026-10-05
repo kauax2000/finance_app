@@ -641,6 +641,10 @@ describe("a superfície de vidro", () => {
          * por item, um eixo por item deixaria escrever a trilha com um poço de
          * vidro ao lado de um avatar chapado.
          *
+         * **A `timeline` saiu na rodada 227**, a pedido do dono: com o
+         * relevo do marcador (o halo do tom), o vidro era um terceiro
+         * acabamento que nenhuma tela vestia.
+         *
          * **O `theme-toggle` saiu na rodada 116**, e pela mesma linha que tirou
          * o `ColorTile`: o dono descartou o vidro no alternador, e um modo que
          * ninguém veste é uma linha a manter. O polegar dele continua sendo o
@@ -661,7 +665,6 @@ describe("a superfície de vidro", () => {
          */
         const COM_MODO = [
             "tabs",
-            "timeline",
         ]
 
         // 1. A tradução existe, em qualquer das três formas: tabela semântica,

@@ -518,9 +518,19 @@ const tabsListFrameVariants = cva("flex", {
        * controles em vez de pairar sobre ela. Sem vidro: nenhum trilho deste
        * app é fixo, e não há nada passando por baixo para borrar.
        */
-      floating: "rounded-full bg-popover ring-1 ring-foreground/10",
-      /** A bandeja preenchida — o padrão até a rodada 225. */
-      solid: "rounded-lg bg-muted",
+      //
+      // **Na vertical a pílula vira placa** (`rounded-2xl`, 16px): numa coluna
+      // de três abas o `rounded-full` virava um estádio de 50px de raio, com
+      // as pontas cortando a primeira e a última aba. Os 16 são concêntricos
+      // ao marcador — 12 de raio mais os 4 de vão.
+      floating:
+        "rounded-full bg-popover ring-1 ring-foreground/10 data-[orientation=vertical]:self-start data-[orientation=vertical]:rounded-2xl",
+      /**
+       * A bandeja preenchida — o padrão até a rodada 225. Na vertical ela não
+       * acompanha a altura do painel (`self-start`): uma bandeja que desce até
+       * o fim do texto ao lado lê como coluna vazia.
+       */
+      solid: "rounded-lg bg-muted data-[orientation=vertical]:self-start",
       /**
        * Sem bandeja: um fio percorre a fileira e o marcador do gatilho pousa
        * sobre ele. É separador de **itens**, a categoria que nunca perdeu o
@@ -530,7 +540,7 @@ const tabsListFrameVariants = cva("flex", {
       underline:
         "border-border data-[orientation=horizontal]:border-b data-[orientation=vertical]:border-e",
       /** Nem bandeja nem fio: para dentro de uma superfície que já tem moldura. */
-      plain: "",
+      plain: "data-[orientation=vertical]:self-start",
     },
     /**
      * `w-fit` é o padrão histórico; esticar ou rolar exige largura de verdade —
@@ -1014,7 +1024,16 @@ function TabsList({
    * e as duas props não fariam **nada** — sem erro, sem aviso.
    */
   const resolvedSize = size ?? defaultTabsSize(variant)
-  const doesStretch = scrollable || overflow ? false : (stretch ?? SEGMENTADA[variant])
+  // **Na vertical não há o que esticar.** `stretch` divide a *largura* da
+  // linha, e na coluna ele fazia o contrário do pedido: a moldura ia a
+  // `w-full`, ocupava a linha inteira do `Tabs` e espremia o painel numa
+  // fresta à direita (medido no catálogo, o texto quebrava a cada palavra), e
+  // o `flex-1` das abas repartia a altura. Na coluna as abas já ocupam a
+  // largura dela pelo `items-stretch` da trilha.
+  const doesStretch =
+    scrollable || overflow || orientation === "vertical"
+      ? false
+      : (stretch ?? SEGMENTADA[variant])
   const axis = orientation === "vertical" ? "y" : "x"
 
   /** `glass` desenha o marcador, e só as variantes segmentadas têm corpo. */

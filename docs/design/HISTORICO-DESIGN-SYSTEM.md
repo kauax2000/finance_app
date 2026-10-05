@@ -17905,3 +17905,202 @@ ativa; e `TabsNav` + `TabsNavLink`, as abas que são rotas, num `<nav>` com
 recebe. As outras cinco telas não têm o número à mão (ele mora no pai), e
 contar ali pede uma prop nova — ficou como próximo passo, junto do `urlParam`
 na visão de cartões e no modo das contas, que hoje se perdem ao recarregar.
+
+### Rodada 227 — o Timeline: o relevo, o estado na trilha, a coluna de data, a linha compacta, o cabeçalho e as ações, a placa, os recolhidos, o esqueleto, o tempo relativo e o dia, a cascata e a chegada, a faixa presa, o link e o detalhe, o fio que se desenha; a atividade da conta e o histórico de cobranças migrados
+
+**O pedido.** A rodada de sempre, e o dono escolheu tudo: os quatro
+redesenhos, as quatro peças, os quatro comportamentos e as duas telas
+(marcou também "só o catálogo", que contradiz as outras duas; valeram as
+telas). Referências: o `Timeline` do Mantine (a trilha que enche até o
+ativo), do Ant Design (o rótulo à esquerda, o pendente), do MUI Lab (o
+`opposite`), o histórico do GitHub (o comentário em placa, os itens ocultos),
+o do Linear (o evento de sistema numa linha) e o da Aceternity (o fio que se
+desenha com a rolagem).
+
+**Revisão da página.** Três afirmações falsas: o docblock dizia que o
+componente era de servidor "e não é acidente" — a rodada o fez cliente, e o
+texto foi reescrito; a demonstração de avatar mostrava
+`<Avatar size="sm" glass identity={0}>`, props que o `Avatar` não tem desde a
+rodada 184; e a tabela do item não listava o `marker` que ele aceita. As cinco
+demonstrações repetidas (padrão, marcador, vidro, escada, horizontal) viraram
+uma, com os eixos em fichas.
+
+**O clone saiu.** `isLast` e `marker` desciam por `cloneElement`. O fim agora
+é `:last-child` — o conector lê `[display:var(--tl-conn,block)]`, e
+`last:not-data-[end=false]:` apaga ele, o respiro e o esticar, com
+`isLast={false}` como exceção no mesmo variante (um variante só no mesmo
+elemento compila certo; o problema da casa é o `group-*` empilhado). A forma,
+o vidro, o `layout` e o `live` descem por contexto. O ganho é medido: a faixa
+de data deixou de precisar desestruturar `isLast`/`marker` para não vazar no
+`<li>`, e o `TimelineCollapsed` — que vira vários itens — não tem como ser
+clonado.
+
+**O relevo não é o anel que saiu.** O ponto ganhou um halo da superfície
+`-muted` do próprio tom (2/3/4px por degrau) e o poço um fio de 1px por dentro
+na tinta dele a 16% — nenhum supõe a cor da página, que era o defeito do
+`ring-4 ring-background` da rodada 69. Sob vidro, o relevo não se soma.
+
+**O estado na trilha.** `done` pinta o ponto e o conector na cor **forte**
+(`--tl-strong`, a quarta variável do tom: no `default` a cor cheia é o
+`--border`, fraca demais para dizer "aconteceu"); `current` dobra o halo, pulsa
+(`animate-ping`, que o bloco de movimento reduzido corta) e escreve
+`aria-current="step"`; `upcoming` é vazado, tracejado e lido como "Previsto";
+`skipped` — pedido pelo agente do histórico de cobranças — é o ponto na cor do
+fio, sem halo, lido como "Ignorado". **O tracejado vale nas duas ordens**: o
+conector de um item é o trecho até o irmão seguinte, e numa lista do mais
+recente para o mais antigo o previsto vem **antes** — por isso o item cujo
+seguinte é previsto também tracejou (`[&:has(+[data-state=upcoming])]`).
+Antes disso, o histórico de cobranças (decrescente) saía com o fio cheio entre
+a paga e a prevista.
+
+**A coluna de data é uma grade.** `layout="split"` troca a fileira flex por
+três colunas (data · calha · conteúdo); no telefone são duas, com a data numa
+segunda linha **embaixo** do conteúdo e a calha atravessando as duas, senão o
+fio pararia antes dela. O respiro de baixo muda de dono com a data presente.
+Verificado a 375px, sem rolagem horizontal.
+
+**A linha compacta** força o ponto de 6px e republica a entrelinha miúda
+(`--tl-lead`, `--tl-title`) no item, então o marcador se alinha pela linha
+dele; o respiro cai à metade por uma variável à parte (`--tl-pb-k`), que não
+disputa com o `--tl-pb` que o fim zera.
+
+**As peças.** `TimelineHeader end` (a hora ou o valor na ponta);
+`TimelineActions` (o degrau `sm` pelo `ButtonSizeContext`, acima do link);
+`TimelineCard` (placa `muted`, não `Card` — cartão dentro do cartão que
+hospeda a trilha); `TimelineCollapsed` (os filhos são os escondidos; ao
+mostrar eles **crescem** — o contexto liga a chegada só para eles — e o foco
+vai ao primeiro, medido); `TimelineSkeleton` com `group={false}` para dentro
+de um esqueleto de página (o agente da atividade achou as duas regiões de
+status aninhadas — a régua do `TableSkeleton`); `TimelineDetail` (o
+`Collapsible`, com o rótulo que troca); `TimelineLink` (o link esticado do
+`CardLink`).
+
+**O tempo.** `formatRelativeTimePtBr`, `formatDayHeadingPtBr` e
+`groupByLocalDay` em `lib/transaction-date` — o dia é o **local**, e não os
+dez primeiros caracteres do ISO, que no Brasil caem no dia anterior depois das
+21h. `TimelineTime relative` usa `useSyncExternalStore` com o instantâneo do
+servidor nulo: o HTML do servidor mostra os filhos, e o relativo entra no
+cliente sem erro de hidratação. **O relógio é de meio minuto**: com um minuto
+inteiro arredondado para baixo, o evento que acabou de chegar ficava até 60s
+"no futuro" — medido, o feed escrevia "Em 1 min".
+
+**Os comportamentos.** `reveal` é a `@utility timeline-reveal`, a régua da
+`table-reveal`. `live` envolve os filhos em `AnimatePresence initial={false}`:
+o que chega depois cresce na `MOLA` (medido: 12 → 42 → 58 → 65 → 63px, com o
+quique) e o que sai recolhe. `TimelineSeparator sticky` vira pílula na placa
+flutuante (o conteúdo passa por baixo) e lê `--tl-sticky-top`. `progress=
+"scroll"` mede o primeiro e o último marcador e enche um traço por cima dos
+conectores e por baixo dos marcadores (`z-1`/`z-2`). **O `useScroll` do motion
+saiu**: ele pede o contêiner de antemão, que só se sabe depois de montar, e
+lançava "Container ref is defined but not hydrated" quando a rolagem era a da
+janela. O andamento é lido da caixa contra a janela, num `scroll` ouvido em
+captura no documento — serve a página e qualquer contêiner. O fio é um `<li>`
+e vem **primeiro**, para não virar o `:last-child`.
+
+**O app.** A atividade da conta (`account/activity`) deixou de ser uma lista
+`divide-y` com o poço `h-8 w-8` à mão: é `Timeline marker="icon" reveal`, por
+dia, com o título, o "Falha" e a hora relativa no `TimelineHeader`; os ícones
+foram para `16/solid`; o fundo vermelho da linha falha saiu (o poço e o chip
+já dizem). Mapa de tom: falha `destructive`, entrou `success`, convite e
+perfil `default` (o `primary` é a tecla preta, pesado), segurança e remoções
+`warning`. O histórico de cobranças de uma conta é `Timeline marker="dot"`:
+paga `done` + `success`, ignorada `skipped`, a pendente mais antiga
+`current`, atrasada `destructive`, a vencer hoje `warning`, futuras
+`upcoming`; Pagar e Ignorar em `TimelineActions` (Ignorar de `outline` para
+`tertiary`, a regra do par). **As duas telas ficam atrás de login e não
+foram vistas.** Ficaram como estavam, relatados: a faixa presa não foi usada
+na atividade (a altura da barra do topo não chega à trilha como variável); o
+"(em 3d)" da cobrança continua um `span` dentro do título.
+
+**Testes.** `timeline-versions.test.ts` (15) é novo; o `timeline-ladder` trocou
+as asserções do clone pelas do CSS e do contexto (7, 9, 15, 17), a de
+interpolação passou a mirar só prefixo de utilitário (3), a do anel passou a
+proibir o anel grosso e exigir o halo (5), e a dos tons conta quatro
+variáveis (10).
+
+**E o Tabs vertical, no fim da rodada.** O dono apontou a demonstração
+vertical quebrada: com `stretch` (ligado de fábrica no `floating`) a moldura ia
+a `w-full`, ocupava a linha inteira do `Tabs` e o painel ficava numa fresta à
+direita, quebrando a cada palavra; o `rounded-full` virava um estádio em volta
+da coluna. Hoje `stretch` não existe na vertical (o `items-stretch` da trilha
+já dá a largura da coluna às abas), a moldura das variantes de bandeja fica em
+`self-start` em vez de descer até o fim do painel (o `underline` continua
+esticando, porque o fio dele é a fronteira), e o `floating` vertical é placa de
+`rounded-2xl`. Medido nas quatro variantes: a coluna em 89–97px e o painel
+começando 16px depois dela. A chave `stretch` some da demonstração na vertical.
+
+**O vidro do Timeline saiu, também no fim da rodada.** O dono pediu para
+remover o efeito: o eixo `glass` (rodada 70) vestia ponto, poço e avatar com a
+lâmina do sistema, e com o relevo novo ele virou um terceiro acabamento que
+nenhuma tela usava. Saíram a prop, o contexto, os ramos de vidro do marcador,
+o bisel do avatar, a chave da demonstração e a nota; o `timeline` saiu da
+lista `COM_MODO` do `glass.test.ts` (fica só o `tabs`), e as asserções 12–16
+do `timeline-ladder` viraram três: o vidro não volta, o chapado escreve o
+fundo, o avatar não tem tom. A `@utility glass-round` e o
+`glassRoundSurfaceClassName` ficam — são do sistema de vidro, e a régua dele
+os cobra.
+
+**E o `marker="none"`.** O dono apontou as versões sem marcador. Três defeitos
+medidos: a calha media **zero**, e o fio de 1px sobrava por fora dela, a 6px do
+texto — lia como a barra de uma citação; o último evento não tinha fio
+nenhum (87px nos três primeiros, 0 no quarto), e ficava solto fora da trilha;
+e na deitada o texto se centrava no começo de cada trecho, onde não há
+marcador, e o primeiro passava 39px para fora da lista. Hoje a calha mede o
+fio (`--tl-marker: 1px`), o texto fica a 12px dele em todo degrau, o fio é a
+espinha e **não** para no último (`CONECTOR_ESPINHA`, sem a variável do fim), e
+na deitada o texto começa onde o trecho começa. A coluna de data sem marcador
+virou o desenho mais limpo da página: data, fio, evento.
+
+**E os pontos cortados.** O dono viu os pontos dos itens revelados pelo
+`TimelineCollapsed` cortados de lado. A chegada recortava o item
+(`overflow: clip`) para crescer a altura, e devolvia o `visible` por
+`transitionEnd` — que o motion **nunca aplicou**: medido, os quatro itens
+revelados ficavam em `clip` para sempre, e o halo de 3px, que passa da calha,
+saía aparado. Hoje o recorte entra no `onAnimationStart` e sai no
+`onAnimationComplete`, no próprio nó; medido, `clip` durante e `visible` depois,
+e uma varredura de todos os marcadores da página não acha nenhum halo fora de
+um ancestral que recorta. O feed ao vivo tinha o mesmo defeito.
+Ainda cortava **durante** a abertura, e o dono apontou: o recorte era nos dois
+eixos, e o crescer é só de altura. Hoje ele é `overflow-y: clip` com o `x` em
+`visible` — combinação válida para `clip`, que não vira rolagem como `hidden`.
+Medido quadro a quadro: a altura sobe de 0 a 66 e assenta em 63 na mola, com o
+halo 3px para fora do item na lateral o tempo todo, sem corte.
+
+**E a faixa de dia presa.** O dono pediu para melhorar a demonstração. A
+pílula solta (a placa flutuante só em volta da palavra) deixava o evento rolado
+aparecer por cima e por baixo dela, e o título seguinte colava nela. Hoje a
+faixa presa é a **linha inteira, opaca**, na cor de `--tl-surface` — a página
+por padrão; dentro de um cartão, `[--tl-surface:var(--color-card)]`, porque o
+componente não sabe sobre o que está (a régua do `Accordion`) —, e embaixo
+dela o conteúdo **dissolve** em 12px só quando ela está de fato presa: um
+`container-type: scroll-state` na faixa e `@container scroll-state(stuck: top)`
+no véu. Medido no Chrome 152: véu em 0 no lugar natural, em 1 com a faixa
+presa; onde a consulta não existe, fica a faixa opaca sem o véu. A faixa ganhou
+`end`, o resumo do dia na ponta, e a demonstração virou uma semana de
+movimentações num cartão, com o saldo de cada dia na faixa, o valor de cada
+evento na ponta e a hora relativa na legenda.
+
+**A faixa opaca voltou a ser pílula.** O dono pediu o `floating` de volta e um
+fade melhor. A faixa deixou de pintar: o rótulo é de novo a pílula flutuante, e
+por trás dela vive um **véu** (`timeline-separator-veil`) na cor de
+`--tl-surface`, cheio até a metade da faixa e se desfazendo em cinco paradas
+até 20px abaixo dela — uma rampa sem quina, em vez da faixa chapada com 12px de
+dissolução. O véu só acende com a faixa presa (`scroll-state(stuck: top)`):
+medido, as quatro faixas com o véu em 0 no lugar, e só a presa em 1 depois de
+rolar 40px. A calha e o rótulo são `relative` para pintar por cima dele.
+
+**As faixas se empurram.** O dono pediu que a faixa que chega empurre a presa,
+em vez de pousar sobre ela. Um `sticky` só prende dentro do pai, e com todas as
+faixas irmãs na mesma `<ol>` elas se sobrepunham no topo. Entrou o
+`TimelineGroup` (`label`, `end`, `sticky`): um `<li>` com a `<ol>` do dia,
+faixa e eventos. Duas medições o desenharam. **O fio atravessa os grupos**: o
+último evento de um dia que não é o último volta a ter conector e respiro
+(`[&:not(:last-child)>ol>li:last-child]`, que pesa mais que o
+`last:not-data-[end=false]` do item). **E o vão entre os grupos mora dentro do
+grupo**: com o `gap` da lista entre eles, a caixa do grupo terminava 12px
+antes da faixa seguinte, e a presa começava a subir com as duas a 48px de
+distância; hoje o último evento leva o respiro mais o vão e o grupo devolve o
+vão com `-mb-(--tl-gap)` — medido, a de cima só se move quando a de baixo
+encosta (topos em −2 e 34, altura 37), e a distância entre os dias não mudou
+(124px, contra 75 dentro do dia). O `gap` da trilha virou `--tl-gap`, e o fio
+que se desenha passou a achar eventos em qualquer nível.

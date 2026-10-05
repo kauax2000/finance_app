@@ -92,7 +92,10 @@ function DemoNaTela() {
         <Eixo rotulo="Variante" valores={VARIANTES} valor={variant} onChange={setVariant} />
         <Eixo rotulo="Degrau" valores={["padrão", ...DEGRAUS] as const} valor={size} onChange={setSize} />
         <Eixo rotulo="Orientação" valores={ORIENTACOES} valor={orientation} onChange={setOrientation} />
-        <Interruptor id="ds-tabs-stretch" rotulo="stretch" valor={esticar} onChange={setEsticar} />
+        {/* `stretch` divide a largura de uma fileira; na coluna ele não existe. */}
+        {orientation === "horizontal" ? (
+          <Interruptor id="ds-tabs-stretch" rotulo="stretch" valor={esticar} onChange={setEsticar} />
+        ) : null}
         <Interruptor id="ds-tabs-glass" rotulo="glass" valor={vidro} onChange={setVidro} />
       </div>
       <Tabs defaultValue="extrato" orientation={orientation}>

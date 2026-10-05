@@ -81,7 +81,11 @@ describe("escada da Timeline", () => {
   })
 
   it("3. nada é montado em tempo de execução — o Tailwind varre o código como texto", () => {
-    expect(CODIGO).not.toMatch(/`[^`]*\$\{[^`]*`/)
+    // Interpolação só fora de classe: o `${a.x}px` do fio medido é um valor
+    // de estilo, e o "N eventos ocultos" é texto. Nenhum prefixo de utilitário
+    // (`bg-${…}`, `size-${…}`) pode ser montado.
+    expect(CODIGO).not.toMatch(/`[^`]*[a-z]-\$\{[^`]*`/)
+    expect(CODIGO).not.toMatch(/className=\{`/)
   })
 
   it("4. o deslocamento do marcador deriva do degrau, e não é número mágico", () => {
@@ -119,7 +123,11 @@ describe("escada da Timeline", () => {
 
   it("5. o anel não volta — um componente não sabe sobre que superfície está", () => {
     expect(CODIGO).not.toContain("ring-background")
-    expect(CODIGO).not.toMatch(/ring-\d/)
+    // O anel de 1px da pílula presa (`TimelineSeparator sticky`) é a placa
+    // flutuante, não um furo no fio; o que não volta é o anel grosso.
+    expect(CODIGO).not.toMatch(/ring-[2-9]/)
+    // O relevo é halo do próprio tom, nunca a cor da página.
+    expect(CODIGO).toContain("[box-shadow:0_0_0_var(--tl-halo)_var(--tl-well)]")
   })
 
   it("6. todo `hover:` tem par `active:` — a regra H não alcança `cva`", () => {
@@ -134,12 +142,16 @@ describe("escada da Timeline", () => {
     }
   })
 
-  it("7. a lista deriva `isLast` e `marker` — o defeito do `Stepper`", () => {
-    // O contêiner sabe o índice e a calha; o item não. Quem clona é a lista.
-    expect(CODIGO).toMatch(/React\.Children\.toArray/)
-    expect(CODIGO).toMatch(/isLast:\s*i === itens\.length - 1/)
-    // E um `marker` escrito no item vence o que a lista injeta.
-    expect(CODIGO).toMatch(/\.props\s*\n?\s*\.marker \?\?|props\.marker \?\?/)
+  it("7. a lista decide o fim pelo CSS e a forma pelo contexto — sem clone", () => {
+    // Rodada 227: o clone derramava props na faixa de data e não alcançava um
+    // filho que não fosse elemento direto. O fim é `:last-child`, com a
+    // exceção `isLast={false}` no mesmo variante.
+    expect(CODIGO).not.toContain("cloneElement")
+    expect(CODIGO).toContain("last:not-data-[end=false]:[--tl-conn:none]")
+    expect(CODIGO).toContain("data-[end=true]:[--tl-conn:none]")
+    expect(CODIGO).toContain("[display:var(--tl-conn,block)]")
+    // E um `marker` escrito no item vence o da lista.
+    expect(CODIGO).toMatch(/marker \?\? lista\.marker/)
   })
 
   it("8. a orientação viaja por variável, e o último não estica", () => {
@@ -177,131 +189,40 @@ describe("escada da Timeline", () => {
     // interrompe.
     expect(sep).toContain("bg-border")
 
-    // A `Timeline` clona todos os filhos, e a faixa é um deles: sem
-    // desestruturar, `isLast` e `marker` vazam para o `<li>`. Medido no
-    // console antes do conserto, três vezes na mesma página.
-    expect(sep).toMatch(/isLast: _isLast/)
-    expect(sep).toMatch(/marker: _marker/)
+    // Sem clone, a faixa não recebe mais `isLast` nem `marker` — eram eles que
+    // vazavam para o `<li>`, três vezes na mesma página.
+    expect(sep).not.toMatch(/_isLast|_marker/)
   })
 
-  it("12. o vidro alcança toda forma que pinta superfície — a uniformidade", () => {
-    // O pedido do dono, virado teste: numa `Timeline` de vidro **não existe
-    // marcador chapado**. Como `marker` é sobrescrevível por item, escopar o
-    // vidro a uma forma só deixaria escrever a lista inconsistente — um poço de
-    // vidro ao lado de um avatar chapado. Nenhuma forma fica de fora.
-    const COM_SUPERFICIE = ["dot", "icon", "avatar"] as const
-
-    for (const marker of COM_SUPERFICIE) {
-      expect(
-        timelineMarkerVariants({ marker, glass: true }),
-        `${marker} não veste vidro`
-      ).toMatch(/(?:^|\s)glass(?:\s|$)/)
-      expect(
-        timelineMarkerVariants({ marker, glass: false }),
-        `${marker} veste vidro sem pedir`
-      ).not.toMatch(/(?:^|\s)glass(?:\s|$)/)
-    }
-
-    // `none` é só o fio da faixa de data: não há superfície a vestir.
-    for (const glass of [true, false]) {
-      expect(timelineMarkerVariants({ marker: "none", glass })).not.toContain(
-        "glass"
-      )
-    }
-
-    // E as três vestem o preset **cônico**: o aro linear põe o pico nos cantos
-    // da caixa, e num círculo eles não existem — 0% do perímetro, medido no
-    // `Avatar`.
-    for (const marker of COM_SUPERFICIE) {
-      expect(timelineMarkerVariants({ marker, glass: true })).toContain(
-        "glass-round"
-      )
+  it("12. o vidro saiu, e nenhuma forma o veste (rodada 227)", () => {
+    // O eixo `glass` entrou na rodada 70 e saiu a pedido do dono: com o relevo
+    // (o halo do tom no ponto, o fio no poço) ele era um terceiro acabamento
+    // que nenhuma tela pedia. Nem prop, nem utility, nem a régua do vidro.
+    expect(CODIGO).not.toMatch(/\bglass\b/)
+    expect(CODIGO).not.toContain("glassRoundSurfaceClassName")
+    for (const marker of MARCADORES) {
+      expect(timelineMarkerVariants({ marker })).not.toContain("glass")
     }
   })
 
-  it("13. o ramo de vidro não escreve fundo — a armadilha nº 1", () => {
-    // O shorthand `background` da utility apaga o `background-color` de quem a
-    // veste, **calado**. E a asserção 13 de `glass.test.ts` proíbe o
-    // neutralizador: onde o eixo dispensa a classe, ela não pode existir.
-    for (const marker of ["dot", "icon", "avatar"] as const) {
-      const vidro = timelineMarkerVariants({ marker, glass: true })
-      expect(vidro, `${marker} empilha fundo sob vidro`).not.toMatch(
-        /\[background:/
-      )
-      expect(vidro).not.toMatch(/bg-transparent|ring-0\b/)
-    }
-    // E o chapado escreve, senão o eixo não estaria decidindo nada.
-    expect(timelineMarkerVariants({ marker: "dot", glass: false })).toContain(
+  it("13. o chapado escreve o fundo de cada forma", () => {
+    expect(timelineMarkerVariants({ marker: "dot" })).toContain(
       "[background:var(--tl-fill)]"
     )
-    expect(timelineMarkerVariants({ marker: "icon", glass: false })).toContain(
+    expect(timelineMarkerVariants({ marker: "icon" })).toContain(
       "[background:var(--tl-well)]"
     )
   })
 
   it("14. o tom sai da própria peça, e o avatar não tem tom", () => {
-    // "Quem veste vidro declara `--glass-tone` e `--glass-ink` com a cor que já
-    // tem; não há tabela intermediária a consultar."
-    expect(CODIGO).not.toContain("GLASS_TONES")
-    expect(CODIGO).toContain("glassRoundSurfaceClassName")
-
-    expect(timelineMarkerVariants({ marker: "dot", glass: true })).toContain(
-      "[--glass-tone:var(--tl-fill)]"
-    )
-    expect(timelineMarkerVariants({ marker: "icon", glass: true })).toContain(
-      "[--glass-tone:var(--tl-well)]"
-    )
-    // O corpo vem da família `-muted`, que é opaca nos dois temas — a regra da
-    // rodada 44: tom translúcido deixa a lâmina quase preta atravessar, e a
-    // peça sai 20% mais escura que a chapada.
+    // O corpo vem da família `-muted`, que é opaca nos dois temas.
     expect(timelineToneVariants({ tone: "income" })).toContain(
       "[--tl-well:var(--color-income-muted)]"
     )
-
     // O avatar é o único sem tom: a cor dele é a identidade da pessoa, que mora
     // dentro do avatar. Tingir a moldura competiria com ela.
-    expect(
-      timelineMarkerVariants({ marker: "avatar", glass: true })
-    ).not.toContain("--glass-tone")
-
-    // A tinta é `--tl-ink`, e foi medida contra `--tl-fill`: o aro contra o
-    // corpo dá 3,66 contra 3,15 no escuro e 2,07 contra 1,77 no claro, com o
-    // pior caso (`default` no escuro) indo de **2,60 para 3,48**. O token já
-    // inverte por tema sozinho, então o par `dark:` não é necessário.
-    for (const marker of ["dot", "icon", "avatar"] as const) {
-      expect(timelineMarkerVariants({ marker, glass: true })).toContain(
-        "[--glass-ink:var(--tl-ink)]"
-      )
-    }
-    expect(CODIGO).not.toMatch(/dark:\[--glass-/)
-  })
-
-  it("15. a lista sobrescreve o vidro, e é isso que trava a uniformidade", () => {
-    // `marker` é preenchido com `??` — o item pode fugir da forma. `glass` é
-    // atribuído direto: o acabamento é da trilha, e a exceção não existe. Se
-    // isto virar `glass: props.glass ?? glass`, a lista inconsistente volta a
-    // ser escrevível.
-    expect(CODIGO).toMatch(/\n\s*glass,\n/)
-    expect(CODIGO).not.toMatch(/glass:\s*[^,\n]*\.props\.glass/)
-    expect(CODIGO).not.toMatch(/props\.glass\s*\?\?/)
-
-    // E o padrão é chapado, nos dois níveis.
-    expect(timelineMarkerVariants({ marker: "icon" })).toBe(
-      timelineMarkerVariants({ marker: "icon", glass: false })
-    )
-    expect(CODIGO).toMatch(/glass = false/)
-  })
-
-  it("16. o bisel do avatar é recuo, e o filho encolhe para dentro dele", () => {
-    const vidro = timelineMarkerVariants({ marker: "avatar", glass: true })
-    // O recuo é o que **faz** o bisel: sem ele a foto cobre a casca inteira e o
-    // vidro fica invisível — a razão pela qual esta forma quase ficou fora.
-    expect(vidro).toMatch(/(?:^|\s)p-0\.5(?:\s|$)/)
-    // E o `size-full` fica: é ele que faz o filho resolver contra a caixa de
-    // conteúdo já descontada da borda e do recuo. Tirá-lo deixaria um avatar de
-    // 32 dentro de uma casca de 26, recortado pelo `overflow-hidden`.
-    expect(vidro).toContain("[&>*]:size-full")
-    expect(vidro).toContain("overflow-hidden")
+    expect(timelineMarkerVariants({ marker: "avatar" })).not.toContain("var(--tl-well)")
+    expect(timelineMarkerVariants({ marker: "avatar" })).not.toContain("var(--tl-fill)")
   })
 
   it("17. a calha alinha ao topo — o último marcador não se centra", () => {
@@ -313,16 +234,18 @@ describe("escada da Timeline", () => {
     //
     // Quem alinha o marcador é `MARCADOR_OFFSET`. Um `justify` que só age
     // quando falta um irmão sobrescreve a fórmula pelas costas.
+    // Uma calha só, que o evento, a faixa e o recolhido vestem.
     const calhas = CODIGO.match(
       /flex shrink-0 items-center justify-\w+ \[flex-direction/g
     ) ?? []
-    expect(calhas.length, "as duas calhas — do evento e da faixa").toBe(2)
+    expect(calhas.length).toBe(1)
     for (const c of calhas) expect(c).toContain("justify-start")
+    expect(CODIGO.match(/className=\{cn\(CALHA/g)?.length).toBe(3)
 
     // E o poço **mantém** o dele: ali `justify-center` centra o glifo dentro do
     // marcador, que é outro eixo e está certo.
     expect(CODIGO).toContain(
-      '"flex shrink-0 items-center justify-center rounded-full"'
+      '"relative z-2 flex shrink-0 items-center justify-center rounded-full"'
     )
   })
 
@@ -403,12 +326,12 @@ describe("escada da Timeline", () => {
     expect(timelineVariants({ marker: "icon" })).not.toBe(base)
   })
 
-  it("10. os sete tons publicam as três variáveis, e o poço desfaz o colapso", () => {
+  it("10. os sete tons publicam as quatro variáveis, e o poço desfaz o colapso", () => {
     expect(TIMELINE_TONES).toHaveLength(7)
 
     for (const tone of TIMELINE_TONES) {
       const s = timelineToneVariants({ tone })
-      for (const v of ["--tl-fill", "--tl-ink", "--tl-well"]) {
+      for (const v of ["--tl-fill", "--tl-ink", "--tl-well", "--tl-strong"]) {
         expect(s, `${tone} não publica ${v}`).toContain(`[${v}:`)
       }
     }

@@ -471,7 +471,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("stepper", "Stepper", "Progresso por etapas de um fluxo.", ui("stepper"), "Stepper, StepperItem, StepperContent, StepperActions, StepperPrevious, StepperNext"),
   entry("table", "Table", "Tabela de dados: cinco densidades, coluna fixa, grupo com total, detalhe, esqueleto e erro.", ui("table"), "Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableGroupRow, TableRowDetail, TableSkeleton, TableCellIdentity, TableCellMoney"),
   entry("tabs", "Tabs", "Alterna entre painéis do mesmo nível — a pílula flutuante, o marcador que corre, a contagem, o Mais e a navegação.", ui("tabs"), "Tabs, TabsList, TabsTrigger, TabsContent, TabsAdd, TabsNav, TabsNavLink"),
-  entry("timeline", "Timeline", "Feed cronológico de eventos.", ui("timeline"), "Timeline, TimelineItem, TimelineSeparator, TimelineTitle, TimelineDescription, TimelineTime"),
+  entry("timeline", "Timeline", "Feed cronológico de eventos: estado na trilha, coluna de data, linha compacta, faixa de dia presa, recolhidos, detalhe, link, tempo relativo, feed ao vivo e o fio que se desenha.", ui("timeline"), "Timeline, TimelineItem, TimelineHeader, TimelineTitle, TimelineDescription, TimelineTime, TimelineSeparator, TimelineGroup, TimelineActions, TimelineCard, TimelineDetail, TimelineLink, TimelineCollapsed, TimelineSkeleton"),
   entry("sonner", "Toast", "Confirmação passageira, fora do fluxo.", ui("sonner"), 'import { toastSuccess, toastUndo } from "@/lib/toast"'),
   entry("toolbar", "Toolbar", "Filtros e ações acima de uma lista.", ui("toolbar"), "Toolbar, ToolbarRow, ToolbarFilters, ToolbarActions, ToolbarFilterIndicator"),
 

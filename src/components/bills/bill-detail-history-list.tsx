@@ -11,12 +11,20 @@ import {
 } from "@/components/ui/badge"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+    Timeline,
+    TimelineActions,
+    TimelineDescription,
+    TimelineHeader,
+    TimelineItem,
+    TimelineTitle,
+    type TimelineState,
+} from "@/components/ui/timeline"
 import { paymentMethodLabel } from "@/lib/payment-methods"
 import type { BillInstance } from "@/lib/supabase"
 import {
     formatTransactionDmyPtBr,
 } from "@/lib/transaction-date"
-import { cn } from "@/lib/utils"
 
 export type BillHistoryTab = "pending" | "paid" | "skipped" | "all"
 
@@ -29,13 +37,24 @@ const TABS: { value: BillHistoryTab; label: string }[] = [
 
 const PAGE = 30
 
-function instanceDotClass(inst: BillInstance, todayYmd: string): string {
-    if (inst.status === "paid") return "bg-success"
-    if (inst.status === "skipped") return "bg-muted-foreground/50"
+/**
+ * O estado e o tom de cada cobrança na trilha. Paga deu certo (`success`, o
+ * verde de estado e não o de dinheiro); ignorada só aconteceu. Em aberto, a
+ * data decide o tom (atrasada, hoje); a mais antiga em aberto é a atual, e as
+ * futuras são o previsto.
+ */
+function instanceTimeline(
+    inst: BillInstance,
+    todayYmd: string,
+    currentId: string | null
+): { state?: TimelineState; tone: "default" | "success" | "warning" | "destructive" } {
+    if (inst.status === "paid") return { state: "done", tone: "success" }
+    if (inst.status === "skipped") return { state: "skipped", tone: "default" }
     const due = inst.due_date.slice(0, 10)
-    if (compareYmd(due, todayYmd) < 0) return "bg-destructive"
-    if (due === todayYmd) return "bg-warning"
-    return "bg-muted-foreground"
+    const cmp = compareYmd(due, todayYmd)
+    const tone = cmp < 0 ? "destructive" : cmp === 0 ? "warning" : "default"
+    if (inst.id === currentId) return { state: "current", tone }
+    return { state: cmp > 0 ? "upcoming" : undefined, tone }
 }
 
 function filterInstances(
@@ -109,6 +128,18 @@ export function BillDetailHistoryList({
         return c
     }, [instances])
     const visible = filtered.slice(0, shown)
+    // A atual é a cobrança em aberto mais antiga, em qualquer aba — a mesma
+    // que a tela pediria para pagar primeiro.
+    const currentId = useMemo(() => {
+        let first: BillInstance | null = null
+        for (const i of instances) {
+            if (i.status !== "pending") continue
+            if (!first || compareYmd(i.due_date.slice(0, 10), first.due_date.slice(0, 10)) < 0) {
+                first = i
+            }
+        }
+        return first?.id ?? null
+    }, [instances])
 
     return (
         <div className="space-y-3">
@@ -132,131 +163,86 @@ export function BillDetailHistoryList({
                 </TabsList>
             </Tabs>
 
-            <div className="space-y-1">
-                {visible.length === 0 ? (
-                    // O vazio da lista é o lugar de um cartão que não existe:
-                    // o tracejado do sistema (rodada 204).
-                    <Card variant="dashed" padding="none">
-                        <CardMessage className="text-center">
-                            Nenhuma parcela nesta visão.
-                        </CardMessage>
-                    </Card>
-                ) : (
-                    visible.map((inst) => {
+            {visible.length === 0 ? (
+                // O vazio da lista é o lugar de um cartão que não existe:
+                // o tracejado do sistema (rodada 204).
+                <Card variant="dashed" padding="none">
+                    <CardMessage className="text-center">
+                        Nenhuma parcela nesta visão.
+                    </CardMessage>
+                </Card>
+            ) : (
+                <Timeline marker="dot" aria-label="Histórico de cobranças">
+                    {visible.map((inst) => {
                         const due = inst.due_date.slice(0, 10)
                         const badge = billInstancePill(inst, todayYmd)
+                        const { state, tone } = instanceTimeline(inst, todayYmd, currentId)
                         const pm =
                             inst.payment_method != null
                                 ? paymentMethodLabel(inst.payment_method)
                                 : null
+                        const amount =
+                            inst.amount != null ? (
+                                <MoneyDisplay
+                                    value={Number(inst.amount)}
+                                    tone="muted"
+                                    size="sm"
+                                    className={
+                                        inst.status === "paid"
+                                            ? "font-semibold text-foreground"
+                                            : undefined
+                                    }
+                                />
+                            ) : inst.paid_amount != null ? (
+                                <MoneyDisplay
+                                    value={Number(inst.paid_amount)}
+                                    tone="muted"
+                                    size="sm"
+                                    className="font-semibold text-foreground"
+                                />
+                            ) : (
+                                <span className="text-xs text-muted-foreground">—</span>
+                            )
                         return (
-                            <div
-                                key={inst.id}
-                                className="flex flex-col gap-2 rounded-lg px-3 py-2.5"
-                            >
-                                <div className="flex items-start gap-3">
-                                    <span
-                                        className={cn(
-                                            "mt-1.5 size-2 shrink-0 rounded-full",
-                                            instanceDotClass(inst, todayYmd)
-                                        )}
-                                        aria-hidden
-                                    />
-                                    <div className="min-w-0 flex-1 space-y-0.5">
-                                        <div className="flex flex-wrap items-baseline justify-between gap-2">
-                                            <p className="text-sm font-medium leading-snug">
-                                                {formatTransactionDmyPtBr(
-                                                    `${due}T12:00:00`
-                                                )}
-                                                <span className="ml-1.5 text-xs font-normal text-muted-foreground">
-                                                    ({billDaysDeltaLabel(due, todayYmd, { compact: true })})
-                                                </span>
-                                            </p>
-                                            <div className="shrink-0 text-right tabular-nums">
-                                                {inst.amount != null ? (
-                                                    <MoneyDisplay
-                                                        value={Number(inst.amount)}
-                                                        tone="muted"
-                                                        size="sm"
-                                                        className={
-                                                            inst.status === "paid"
-                                                                ? "font-semibold text-foreground"
-                                                                : undefined
-                                                        }
-                                                    />
-                                                ) : inst.paid_amount != null ? (
-                                                    <MoneyDisplay
-                                                        value={Number(
-                                                            inst.paid_amount
-                                                        )}
-                                                        tone="muted"
-                                                        size="sm"
-                                                        className="font-semibold text-foreground"
-                                                    />
-                                                ) : (
-                                                    <span className="text-xs text-muted-foreground">
-                                                        —
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <Badge
-                                                tone="neutral"
-                                                className={cn(
-                                                    "border-0 text-2xs",
-                                                    badge.className
-                                                )}
-                                            >
-                                                {badge.label}
-                                            </Badge>
-                                            {inst.status === "paid" &&
-                                            inst.paid_at ? (
-                                                <span className="text-2xs text-muted-foreground">
-                                                    Pago{" "}
-                                                    {formatTransactionDmyPtBr(
-                                                        inst.paid_at
-                                                    )}
-                                                </span>
-                                            ) : null}
-                                            {pm ? (
-                                                <span className="text-2xs text-muted-foreground">
-                                                    {pm}
-                                                </span>
-                                            ) : null}
-                                        </div>
-                                        {inst.status === "pending" ? (
-                                            <div className="flex flex-wrap gap-2 pt-1">
-                                                <Button
-                                                    type="button"
-                                                    size="sm"
-                                                    className="h-7 text-xs"
-                                                    onClick={() =>
-                                                        onPayInstance(inst)
-                                                    }
-                                                >
-                                                    Pagar
-                                                </Button>
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="h-7 text-xs"
-                                                    onClick={() =>
-                                                        onSkipInstance(inst)
-                                                    }
-                                                >
-                                                    Ignorar
-                                                </Button>
-                                            </div>
-                                        ) : null}
-                                    </div>
-                                </div>
-                            </div>
+                            <TimelineItem key={inst.id} tone={tone} state={state}>
+                                <TimelineHeader end={amount}>
+                                    <TimelineTitle>
+                                        <time dateTime={due}>
+                                            {formatTransactionDmyPtBr(`${due}T12:00:00`)}
+                                        </time>
+                                        <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                                            ({billDaysDeltaLabel(due, todayYmd, { compact: true })})
+                                        </span>
+                                    </TimelineTitle>
+                                </TimelineHeader>
+                                <TimelineDescription className="flex flex-wrap items-center gap-x-2">
+                                    <Badge tone="neutral" size="xs" className={badge.className}>
+                                        {badge.label}
+                                    </Badge>
+                                    {inst.status === "paid" && inst.paid_at ? (
+                                        <span>Pago {formatTransactionDmyPtBr(inst.paid_at)}</span>
+                                    ) : null}
+                                    {pm ? <span>{pm}</span> : null}
+                                </TimelineDescription>
+                                {inst.status === "pending" ? (
+                                    <TimelineActions>
+                                        <Button type="button" onClick={() => onPayInstance(inst)}>
+                                            Pagar
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="tertiary"
+                                            onClick={() => onSkipInstance(inst)}
+                                        >
+                                            Ignorar
+                                        </Button>
+                                    </TimelineActions>
+                                ) : null}
+                            </TimelineItem>
                         )
-                    })
-                )}
-            </div>
+                    })}
+                </Timeline>
+            )}
 
             <PaginationMore
                 shown={Math.min(shown, filtered.length)}
