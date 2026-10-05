@@ -38,7 +38,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Muted } from "@/components/ui/typography"
 import { IDENTITY_TONES } from "@/lib/avatar"
 import { cn } from "@/lib/utils"
-import { PhoneFrame, ViewportFrame } from "../ds-frame"
+import { IphoneFrame, ViewportFrame } from "../ds-frame"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 /** O tom do espaço de trabalho, por índice — como na página da barra lateral. */
@@ -68,20 +68,20 @@ function Desktop({
   )
 }
 
-/** Um telefone de 375px, com a tela começando no topo — é onde a barra mora. */
+/** O iPhone, com a tela começando no topo — é onde a barra mora, abaixo da ilha. */
 function Telefone({
   title,
-  height = 260,
+  zoom,
   children,
 }: {
   title: string
-  height?: number
+  zoom?: number
   children: React.ReactNode
 }) {
   return (
-    <PhoneFrame title={title} height={height} screenClassName="bg-background">
+    <IphoneFrame title={title} zoom={zoom}>
       {children}
-    </PhoneFrame>
+    </IphoneFrame>
   )
 }
 
@@ -195,8 +195,8 @@ function BarraDoAppTelefone({ voltar = false }: { voltar?: boolean }) {
     <Telefone
       title={
         voltar
-          ? "Prévia da barra de detalhe num telefone"
-          : "Prévia da barra do app num telefone"
+          ? "Prévia da barra de detalhe num iPhone"
+          : "Prévia da barra do app num iPhone"
       }
     >
       <Rolagem fixa>
@@ -317,7 +317,7 @@ function NasDuas({
       <Desktop title={`Prévia da barra ${nome} no desktop`} height={120}>
         {children}
       </Desktop>
-      <Telefone title={`Prévia da barra ${nome} num telefone`} height={120}>
+      <Telefone title={`Prévia da barra ${nome} num iPhone`} zoom={0.6}>
         {children}
       </Telefone>
     </div>

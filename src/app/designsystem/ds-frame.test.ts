@@ -65,7 +65,7 @@ describe("moldura de telefone do catálogo", () => {
     // de folha foi apagada junto com o componente.
     for (const nome of ["form.tsx"]) {
       const p = PAGINAS.find((x) => x.nome === nome)!
-      expect(p.texto, nome).toContain("PhoneFrame")
+      expect(p.texto, nome).toContain("IphoneFrame")
       expect(p.texto, nome).not.toContain("h-80")
     }
   })
@@ -87,7 +87,7 @@ describe("moldura de telefone do catálogo", () => {
 
   it("5. o iframe tem nome, e o documento dele não rola", () => {
     // Sem `title`, o leitor de tela anuncia só "frame".
-    expect(CODIGO).toMatch(/title\s*=\s*"Prévia numa tela de telefone"/)
+    expect(CODIGO).toMatch(/title\s*=\s*"Prévia num iPhone"/)
     expect(CODIGO).toContain("title={title}")
     // `overflow:hidden` é o que impede uma barra de rolagem clássica de comer
     // ~15px dos 375. Quem rola é a folha, por dentro.

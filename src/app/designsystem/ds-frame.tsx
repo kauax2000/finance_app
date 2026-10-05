@@ -39,8 +39,9 @@ import iphoneClayAro from "./assets/iphone-17-pro-clay-aro.png"
  *
  * ## Ela deixou de ser só de telefone
  *
- * `ViewportFrame` é a primitiva, e `PhoneFrame` virou um preset dela de
- * 375×667. A largura fluida (`width="fluid"`) dá a moldura de desktop que a
+ * `ViewportFrame` é a primitiva, e o telefone é o `IphoneFrame`: o aparelho com
+ * uma viewport de 375 dentro (o `PhoneFrame`, um retângulo de 375×667, saiu
+ * quando todas as páginas passaram ao iPhone). A largura fluida (`width="fluid"`) dá a moldura de desktop que a
  * `Sidebar` precisa: dentro dela `position: fixed` é fixo **na moldura**, e o
  * palco do catálogo — medido em **810px** — está acima do `md` (768), então é o
  * ramo de desktop que aparece, com os 16rem da barra ocupando 31,6% dele.
@@ -85,26 +86,6 @@ import iphoneClayAro from "./assets/iphone-17-pro-clay-aro.png"
  * alcance com folga, mesmo se uma barra de rolagem clássica comer 15px.
  */
 export const PHONE_FRAME_WIDTH = 375
-
-/** 667 é o par de 375 no iPhone SE/8: o telefone corrente mais curto. */
-export const PHONE_FRAME_HEIGHT = 667
-
-/**
- * O que a tela reserva acima da folha, e o número não é escolhido: é o
- * `max(0.5rem, env(safe-area-inset-top))` de `--sheet-drawer-h`
- * (`sheet.tsx:175`), que é o que uma folha `fillMobileViewport` deixa de fora.
- *
- * A primeira versão desta peça reservava 96px, para "deixar ver a tela atrás".
- * Era ficção: **oito arquivos do app abrem a folha de formulário com
- * `fillMobileViewport`**, e ela ocupa quase o viewport inteiro. E a ficção
- * cobrava caro — com o véu sobre uma tela vazia, a folha `bg-background` media
- * **1,04:1** contra o fundo velado no tema escuro. Invisível.
- */
-const PHONE_FRAME_INSET = "pt-2"
-
-/** A tela: o fundo do app, com a folha ancorada na base. */
-const PHONE_FRAME_SCREEN =
-  "relative flex h-full w-full flex-col justify-end overflow-hidden bg-background"
 
 /**
  * O documento de um iframe não herda nada. Estas três linhas são tudo o que
@@ -319,31 +300,6 @@ function ViewportFrame({
 }
 
 /**
- * O preset de telefone: 375×667, cantos de aparelho e a tela ancorada na base,
- * que é onde uma folha inferior encosta.
- */
-function PhoneFrame({
-  height = PHONE_FRAME_HEIGHT,
-  title = "Prévia numa tela de telefone",
-  className,
-  ...props
-}: Omit<ViewportFrameProps, "width" | "height" | "title"> & {
-  height?: number
-  title?: string
-}) {
-  return (
-    <ViewportFrame
-      width={PHONE_FRAME_WIDTH}
-      height={height}
-      title={title}
-      className={cn("rounded-3xl", className)}
-      screenClassName={cn(PHONE_FRAME_SCREEN, PHONE_FRAME_INSET)}
-      {...props}
-    />
-  )
-}
-
-/**
  * # O iPhone 17 Pro Clay
  *
  * O aparelho é o iPhone 17 Pro Clay da Asylab (asylab.com/resources/freebies):
@@ -410,7 +366,7 @@ function IphoneBody({ className, style, children, ...props }: React.ComponentPro
 }
 
 /**
- * A largura da tela, em pixels de CSS: a mesma do `PhoneFrame`, para `sm:`
+ * A largura da tela, em pixels de CSS: a de `PHONE_FRAME_WIDTH`, para `sm:`
  * continuar fora de alcance. O aparelho cresce em volta dela — **sem
  * `scale()`**, pela razão do topo do arquivo: a tela é uma viewport de
  * verdade, e escalar mentiria sobre o pixel. A altura sai da proporção da
@@ -420,10 +376,21 @@ const IPHONE_W = PHONE_FRAME_WIDTH
 const IPHONE_H = Math.round((IPHONE_W / IPHONE_TELA.width) * IPHONE_TELA.height * (3666 / 1773))
 
 /**
+ * A área segura do topo, que o iframe não tem (`env()` vale zero nele): a
+ * barra do topo, o painel solto e a gaveta alta descem da ilha, como num aparelho. É CSS fora
+ * de `@layer` no documento da moldura, então vence as utilities que escrevem
+ * o `env()` — e só ali dentro.
+ */
+const IPHONE_AREA_SEGURA =
+  "[data-slot=top-bar]{--top-bar-safe:3rem}[role=dialog]{--sheet-gap-block-start:3rem}[data-vaul-drawer]{--sheet-drawer-h:calc(100dvh - 3rem)}"
+
+/**
  * O iPhone com uma viewport de telefone dentro da tela: um `ViewportFrame` de
  * 375 px, recortado no canto do aparelho. `position: fixed` lá dentro é fixo
  * **na tela**, e é o que as barras precisam. `env(safe-area-inset-*)` continua
- * valendo zero: a Dynamic Island cobre o topo, e a base não tem a folga de 34.
+ * valendo zero; o topo é emulado (`IPHONE_AREA_SEGURA`) para a barra, o painel e a
+ * gaveta, e a base não tem a folga de 34. Conteúdo solto desce da ilha à mão
+ * (`pt-16`).
  *
  * **Ele é desenhado a 85%** (`zoom`), porque em tamanho real o aparelho media
  * 407 × 841 e não cabia na tela do catálogo com os eixos em cima. O `zoom`
@@ -462,10 +429,11 @@ function IphoneFrame({
         }}
         screenClassName={cn("bg-background", screenClassName)}
       >
+        <style>{IPHONE_AREA_SEGURA}</style>
         {children}
       </ViewportFrame>
     </IphoneBody>
   )
 }
 
-export { IphoneBody, IphoneFrame, PhoneFrame, ViewportFrame }
+export { IphoneBody, IphoneFrame, ViewportFrame }

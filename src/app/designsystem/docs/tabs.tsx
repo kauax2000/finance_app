@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { PhoneFrame } from "../ds-frame"
+import { IphoneFrame } from "../ds-frame"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 const VARIANTES = ["floating", "solid", "underline", "plain"] as const
@@ -236,8 +236,8 @@ function DemoUrl() {
 
 function DemoArrastar() {
   return (
-    <PhoneFrame>
-      <div className="flex h-full flex-col gap-3 overflow-y-auto bg-background p-4">
+    <IphoneFrame title="Abas num iPhone">
+      <div className="flex h-full flex-col gap-3 overflow-y-auto bg-background px-4 pt-16 pb-8">
         <Tabs defaultValue="extrato" swipe>
           <TabsList size="xl">
             {PAINEIS.map((p) => (
@@ -255,7 +255,7 @@ function DemoArrastar() {
           ))}
         </Tabs>
       </div>
-    </PhoneFrame>
+    </IphoneFrame>
   )
 }
 
@@ -366,7 +366,7 @@ export default function TabsDoc() {
         title="Arrastar no telefone"
         description="swipe troca de aba arrastando o painel para os lados: 56px e bem mais horizontal que vertical, senão a rolagem da página trocaria de aba. O painel desliza do lado para onde a aba andou."
         code={`<Tabs swipe>…</Tabs>`}
-        previewClassName="items-center"
+        previewClassName="justify-center"
       >
         <DemoArrastar />
       </DocSection>

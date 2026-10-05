@@ -154,7 +154,7 @@ function BottomBar({
  * Quem rola a tela, e o que a barra faz com isso. Um ouvinte de `scroll` em
  * captura no documento da barra (a rolagem de um contêiner não borbulha),
  * passivo, que guarda **o último que rolou** — é ele que a aba ativa leva ao
- * topo, seja a página, seja a tela do `PhoneFrame`. Só conta quem é alto
+ * topo, seja a página, seja a tela do `IphoneFrame`. Só conta quem é alto
  * (60% da janela): um carrossel ou a lista de um menu não escondem a barra.
  *
  * Com `esconder`, rolar para baixo marca `data-hidden` na barra e rolar para
@@ -468,7 +468,7 @@ function useArraste(trilhaRef: React.RefObject<HTMLDivElement | null>) {
   const estado = React.useRef<{ id: number; x0: number; ativo: boolean; alvo: HTMLElement | null } | null>(null)
   const limpeza = React.useRef<number | undefined>(undefined)
 
-  // O item sob o dedo, pelo documento da pílula (no `PhoneFrame` ele é o do
+  // O item sob o dedo, pelo documento da pílula (no `IphoneFrame` ele é o do
   // iframe). Fora da pílula — o dedo subiu demais — não troca de item.
   const itemEm = (x: number, y: number) => {
     const trilha = trilhaRef.current

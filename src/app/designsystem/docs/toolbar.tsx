@@ -25,7 +25,7 @@ import {
   type ToolbarChip,
 } from "@/components/ui/toolbar"
 import { TopBar, TopBarTitle } from "@/components/ui/top-bar"
-import { PhoneFrame } from "../ds-frame"
+import { IphoneFrame } from "../ds-frame"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 const DEGRAUS = ["sm", "md", "lg"] as const
@@ -239,7 +239,7 @@ function Linhas() {
 /** O telefone: o comando que encolhe, o ponto do filtro e a barra que some ao rolar. */
 function DemoTelefone() {
   return (
-    <PhoneFrame>
+    <IphoneFrame title="A barra de filtros num iPhone">
       <div className="h-full overflow-y-auto bg-background">
         <TopBar position="sticky" size="sm">
           <TopBarTitle>Transações</TopBarTitle>
@@ -263,7 +263,7 @@ function DemoTelefone() {
           <Linhas />
         </div>
       </div>
-    </PhoneFrame>
+    </IphoneFrame>
   )
 }
 
@@ -329,6 +329,7 @@ export default function ToolbarDoc() {
     <ToolbarButton collapse icon={<ArrowsUpDownIcon />} label="Ordenar" />
   </ToolbarActions>
 </Toolbar>`}
+        previewClassName="justify-center"
       >
         <DemoTelefone />
       </DocSection>

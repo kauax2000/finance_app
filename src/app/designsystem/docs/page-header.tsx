@@ -252,8 +252,7 @@ function DemoTelefone() {
   return (
     <IphoneFrame title="Cabeçalho de página num iPhone">
       <div className="h-full overflow-y-auto bg-background">
-        {/* A área segura do iPhone, que a moldura não injeta: a ilha. */}
-        <TopBar surface="scroll" className="[--top-bar-safe:3rem]">
+        <TopBar surface="scroll">
           <TopBarTitle pageTitle />
         </TopBar>
         <div className="flex flex-col gap-6 px-4 pt-4 pb-10">

@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/menubar"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
-import { PhoneFrame } from "../ds-frame"
+import { IphoneFrame } from "../ds-frame"
 
 const VARIANTES = ["floating", "outline", "plain", "solid"] as const
 const TAMANHOS = ["sm", "md", "lg"] as const
@@ -125,11 +125,11 @@ export default function MenubarDoc() {
         code={`<Menubar mobile="sheet" mobileLabel="Comandos">…</Menubar>`}
         previewClassName="justify-center"
       >
-        <PhoneFrame title="A barra de menus num telefone">
-          <div className="flex h-full items-start justify-center p-4">
+        <IphoneFrame title="A barra de menus num iPhone">
+          <div className="flex h-full items-start justify-center px-4 pt-16">
             <MenubarEstado mobile />
           </div>
-        </PhoneFrame>
+        </IphoneFrame>
       </DocSection>
 
       <DocNote title="O realce que viaja é da fileira, não das linhas">

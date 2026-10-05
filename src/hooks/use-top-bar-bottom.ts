@@ -16,7 +16,7 @@ import * as React from "react"
 export function useTopBarBottom(
   ativo = true,
   chave?: unknown,
-  /** Quem mede mora num iframe (o `PhoneFrame`): a barra é a do documento dele. */
+  /** Quem mede mora num iframe (o `IphoneFrame`): a barra é a do documento dele. */
   dentroDe?: React.RefObject<Element | null>
 ) {
   const [base, setBase] = React.useState<number | null>(null)

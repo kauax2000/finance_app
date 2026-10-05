@@ -62,7 +62,7 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
-import { PhoneFrame } from "../ds-frame"
+import { IphoneFrame } from "../ds-frame"
 import { Group, Spec, Stack } from "../ds-kit"
 
 export default function FormDoc() {
@@ -696,7 +696,7 @@ function EmFolhaDemo() {
   const [valor, setValor] = React.useState("")
 
   return (
-    <PhoneFrame title="Folha de nova transação num telefone">
+    <IphoneFrame title="Folha de nova transação num iPhone">
       {/* A folha é real, e é o que a tela do app monta. Dentro da moldura o
           `useIsMobile` lê a janela de dentro, então a 375px o `Sheet` toma o
           ramo gaveta — o que abre aqui é o `vaul`, com alça, arraste e véu.
@@ -761,7 +761,7 @@ function EmFolhaDemo() {
           </Form>
         </SheetContent>
       </Sheet>
-    </PhoneFrame>
+    </IphoneFrame>
   )
 }
 

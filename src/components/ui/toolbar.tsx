@@ -207,7 +207,7 @@ function Toolbar({
  *
  * **O `top` depende de quem rola.** Na página, é a base da barra do topo; num
  * contêiner que rola com a própria barra do topo dentro (a tela do
- * `PhoneFrame`), é a altura dela; num contêiner sem barra, zero.
+ * `IphoneFrame`), é a altura dela; num contêiner sem barra, zero.
  */
 function usePresa(
   raiz: React.RefObject<HTMLDivElement | null>,

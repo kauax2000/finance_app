@@ -50,7 +50,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { TopBar, TopBarStart, TopBarTitle } from "@/components/ui/top-bar"
 import { IDENTITY_TONES } from "@/lib/avatar"
 import { cn } from "@/lib/utils"
-import { PhoneFrame, ViewportFrame } from "../ds-frame"
+import { IphoneFrame, ViewportFrame } from "../ds-frame"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 /** A altura da moldura: alta o bastante para a barra ler como coluna de tela. */
@@ -352,7 +352,7 @@ function DemoRedimensionavel() {
 
 function DemoTelefone() {
   return (
-    <PhoneFrame title="Prévia da navegação num telefone">
+    <IphoneFrame title="Prévia da navegação num iPhone">
       <SidebarProvider>
         <Sidebar collapsible="offcanvas">
           <NavDemo />
@@ -361,7 +361,7 @@ function DemoTelefone() {
           <CabecalhoComGatilho />
         </SidebarInset>
       </SidebarProvider>
-    </PhoneFrame>
+    </IphoneFrame>
   )
 }
 

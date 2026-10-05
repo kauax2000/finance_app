@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/popover"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
-import { PhoneFrame } from "../ds-frame"
+import { IphoneFrame } from "../ds-frame"
 
 const TAMANHOS = ["sm", "md", "lg", "auto", "trigger"] as const
 
@@ -181,8 +181,8 @@ export default function PopoverDoc() {
         code={`<Popover mobile="sheet">…</Popover>`}
         previewClassName="justify-center"
       >
-        <PhoneFrame title="O popover num telefone">
-          <div className="flex h-full items-start justify-center p-4">
+        <IphoneFrame title="O popover num iPhone">
+          <div className="flex h-full items-start justify-center px-4 pt-16">
             <Popover mobile="sheet">
               <PopoverTrigger asChild>
                 <Button variant="outline">Como calculamos</Button>
@@ -202,7 +202,7 @@ export default function PopoverDoc() {
               </PopoverContent>
             </Popover>
           </div>
-        </PhoneFrame>
+        </IphoneFrame>
       </DocSection>
 
       <DocNote title="Todo popover tem nome">

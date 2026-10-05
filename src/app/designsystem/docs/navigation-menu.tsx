@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/navigation-menu"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
-import { PhoneFrame } from "../ds-frame"
+import { IphoneFrame } from "../ds-frame"
 
 const CONTAS = [
   { nome: "Carteiras", texto: "Saldo por conta, num lugar só.", Icone: BanknotesIcon },
@@ -375,8 +375,8 @@ export default function NavigationMenuDoc() {
         code={`<NavigationMenu mobile="sheet" mobileLabel="Navegar">…</NavigationMenu>`}
         previewClassName="justify-center"
       >
-        <PhoneFrame title="A navegação num telefone">
-          <div className="flex h-full items-start justify-center p-4">
+        <IphoneFrame title="A navegação num iPhone">
+          <div className="flex h-full items-start justify-center px-4 pt-16">
             <NavigationMenu mobile="sheet" mobileLabel="Navegar">
               <NavigationMenuList>
                 <NavigationMenuItem>
@@ -408,7 +408,7 @@ export default function NavigationMenuDoc() {
               </NavigationMenuList>
             </NavigationMenu>
           </div>
-        </PhoneFrame>
+        </IphoneFrame>
       </DocSection>
 
       <DocNote title="A diagonal segura">
