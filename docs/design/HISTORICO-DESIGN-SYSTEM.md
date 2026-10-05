@@ -18104,3 +18104,184 @@ vão com `-mb-(--tl-gap)` — medido, a de cima só se move quando a de baixo
 encosta (topos em −2 e 34, altura 37), e a distância entre os dias não mudou
 (124px, contra 75 dentro do dia). O `gap` da trilha virou `--tl-gap`, e o fio
 que se desenha passou a achar eventos em qualquer nível.
+
+### Rodada 228 — o Toast: a placa flutuante com o tom no ícone, a barra de tempo, a mola e a pilha, a pílula, o Ver, as duas ações, o Desfazer com contagem, o valor e o progresso, os repetidos, o assunto, a pausa honesta, o Esc e o erro que interrompe; os 176 toasts do app revistos
+
+**O pedido.** A rodada de sempre, e o dono escolheu tudo, e no meio dela
+pediu "migrar todos os toasts do app". Referências: o próprio Sonner, o toast
+do Geist (Vercel), o do Linear, a ilha dinâmica e o snackbar do Material.
+
+**Revisão da página.** As notas descreviam o desenho que saiu (a superfície
+tingida "com os tokens do Alert", o "Desfazer" com a caixa do `tertiary`), e a
+página prometia `toastUndo` e `toastPromise` como padrão da casa sem que
+nenhuma tela os usasse — 0 dos 176 usos.
+
+**A placa flutuante.** O toast deixou de pintar a superfície pelo tipo: é a
+placa dos flutuantes (`--popover`, o anel de 1px, `--shadow-lg`, raio 18) nos
+cinco tipos, e o tom foi para o **poço do ícone** (28px, `-muted` do tom e a
+tinta dele). Uma pilha de três avisos saía em três cores. A entrada e a pilha
+andam na mola da casa; a saída é 200ms de `--ease-out`.
+
+**A barra de tempo.** Um fio de 2px na base esvazia no tempo do toast:
+`@property --toast-left` (1 → 0, `inherits: true`), animada no `<li>` e lida
+pela barra e pelo anel do Desfazer. Três medições a desenharam. **Ela não pode
+ser pseudo-elemento**: o `::after` do toast é a ponte de hover do sonner e o
+`::before` é a área do arraste — ela vive no título, que o `lib/toast` monta.
+**Ela para quando o sonner para**: o relógio dele para com a pilha aberta
+(`data-expanded`) e com a aba escondida; a barra lê o mesmo atributo e um
+`data-toast-paused` no `<html>`. **E ela recomeça quando a bolha volta**: o
+sonner só zera o relógio quando a `duration` muda, e uma animação de CSS só
+recomeça quando o nome muda — a cada emissão a fase alterna 1ms na duração e
+entre `toast-timed-a` e `-b`.
+
+**A pausa honesta.** O sonner pausa no cursor e com a aba escondida, mas
+**não com o foco**: quem chega ao Desfazer pelo Tab via o tempo correr. O
+estado de "aberta" dele é ligado num `mousemove` e desligado num `mouseout`
+para fora da lista, e o `Toaster` despacha os dois no `focusin` e no
+`focusout`. Medido com eventos de foco: pilha aberta, barra parada por um
+segundo inteiro, e de volta ao sair. (O `.focus()` programático não dispara
+eventos de foco com a janela do painel sem foco do sistema — a primeira
+medição deu falso negativo por isso.) Esc fecha o toast com o foco (o sonner
+só recolhia a pilha), e o título de um erro entra com `role="alert"`, porque
+a região do sonner é `polite`.
+
+**Os helpers.** Todos aceitam `description` (um nó — `MoneyDisplay`, avatar),
+`id` (o **assunto**: o mesmo id substitui a bolha), `action` (com `href`,
+navega pelo roteador que o `Toaster` registra — o "Ver") e `cancel`.
+Repetidos sem `id` não empilham: a bolha mostra ×2, ×3 e o tempo recomeça.
+Novos: `toastPill` (a confirmação de uma palavra, no topo ao centro, 2s, sem
+×), `toastProgress` (a porcentagem na mesma bolha) e o `toastUndo` com o anel
+que esvazia, a bolha que vira "Desfazendo…" e o resultado, e `onUndo` que pode
+devolver `Promise`. **O `lib/toast` continua `.ts`**: renomeá-lo para `.tsx`
+deixou o servidor de desenvolvimento (externo) procurando o caminho antigo,
+nos dois sentidos; as peças com JSX foram para `lib/toast-parts.tsx`.
+
+**O telefone.** As duas ações espremiam o texto a três linhas de duas
+palavras, medido a 375px. O toast quebra linha: o texto pede 12rem, e os
+botões descem para uma linha própria, encostados à direita — a margem
+automática do sonner ia no `:first-of-type`, e o primeiro botão do toast é o ×.
+
+**O app (três agentes, 30 arquivos).** Os 176 toasts foram revistos:
+mensagens sem ponto final e com "Não foi possível…", erro e sucesso do mesmo
+formulário com o mesmo `id` (o "Salvo" toma o lugar do erro), segunda frase
+para a descrição, `error.message` cru trocado pela mensagem do arquivo onde
+havia uma. O `query-provider` perdeu a deduplicação à mão (o ×N é
+automático). **Mudança de jornada**: o "Ver" depois de criar — transação
+(`/transactions?txn=id`), compra parcelada (`?plan=id`), cartão
+(`/credit-cards/id`), conta (`/bills?detail=id`) e categoria
+(`/categories/id?type=`); offline, sem "Ver". No caminho, o agente de
+transações achou e consertou a trava do `?txn=` que nunca soltava (com
+`/transactions` aberta, o segundo `?txn=` não abria nada). **O Desfazer na
+exclusão não entrou**: a exclusão é física, sem `deleted_at` nem RPC de
+restaurar, e recriar mudaria o id e quebraria parcelas e faturas — virou a
+lacuna 6. Assinatura ficou sem "Ver" porque o detalhe não abre por URL (lacuna
+5), e o diretório de membros mostra texto de desenvolvedor nos erros de carga
+(lacuna 7). `JORNADAS.md`, o Atlas e a republicação acompanham. **As telas
+ficam atrás de login e não foram vistas.**
+
+**Testes.** `sonner-versions.test.ts` (13) é novo, e cobra também que
+nenhuma tela importe o `toast` do sonner.
+
+**E o vidro.** O dono não gostou da placa chapada e pediu o fundo
+transparente com borrão das outras sobreposições. O toast passou a vestir a
+tinta flutuante de vidro — a do `Popover`, dos menus e do `Select`
+(`menuPanelTintClassName`): `--popover` a 85% com o borrão da `glass-surface`
+(24px, saturação 1,5), abrindo a 60% no escuro, chapado sob transparência
+reduzida ou sem `backdrop-filter`. Escrito à mão no bloco do sonner, porque ele
+renderiza fora da árvore de classes. O × continua chapado: ele fica preso ao
+canto, por fora da placa, e translúcido mostraria a borda dela por trás.
+Medido no escuro: `oklab(0.205 0 0 / 0.6)` com `blur(24px) saturate(1.5)`.
+
+**E a barra de tempo saiu.** O dono pediu para tirar o fio da base dos toasts.
+Saíram o nó (`toast-timer`) do título, a regra dele, a variável `--toast-tone`
+que só ele lia e as classes `toast-timed-a`/`-b` dos toasts comuns. A contagem
+ficou só no **anel do Desfazer** — onde ela decide alguma coisa —, numa
+animação só (`toast-countdown`, na `.toast-undo`), que continua parando com a
+pilha aberta e com a aba escondida. O relógio do sonner ainda recomeça na
+repetição pela duração que alterna 1ms. A bolha que um `id` substitui passou a
+limpar a classe da anterior (`className: undefined`), senão o "Restaurada"
+herdava a `toast-undo` do Desfazer — o sonner mescla o toast novo sobre o
+velho.
+
+**E o × saiu do corpo.** O dono pediu o × flutuante fora do toast. O sonner o
+prende ao canto de cima, meio dentro e meio fora, e ali ele cobria o poço do
+ícone e a curva do raio 18. Hoje é um círculo de 24px **à esquerda** da placa,
+centrado na altura dela, a 8px de vão, com o mesmo vidro e o anel — à
+esquerda e não acima porque o toast nasce 16px abaixo do topo da janela e um ×
+acima sairia da tela. Medido: vão de 7px mais o anel, centro a 0px do centro
+do toast. **No telefone** o toast ocupa a largura menos 16px de cada lado e ali
+não cabem 32px, então abaixo de 600px o × volta ao canto. O hover do sonner
+pintava o × de `--gray2` (0,5,0); a regra daqui empata o seletor dele com o
+`:hover` do toast e vence.
+Depois, a pedido do dono, o × passou a se alinhar ao **topo** da placa, e não
+ao centro dela.
+**E o ×N quebrava.** Com um título longo ("Mercado atingiu 88% do orçamento
+do mês"), o flex do título espremia a contagem até o "×" e o número caírem em
+duas linhas (24×31px, medido pelo dono na tela). Hoje ela não encolhe nem
+quebra (`flex-shrink: 0`, `nowrap`), o texto do título é quem quebra
+(`min-width: 0`), e ela se alinha à **primeira** linha do título em vez da
+linha de base: medido, 26×18px e 1px abaixo do topo do título.
+**E as duas ações.** Com título curto, o "Agora não" ficava ao lado do texto
+e o "Atualizar" descia sozinho à esquerda, e o "Agora não" saía cinza com cara
+de desabilitado — o sonner pinta o `cancel` em `[data-sonner-theme=dark]`
+(0,5,0), que empatava com a regra daqui e vencia pela ordem. Hoje, com
+`cancel`, o texto toma a linha inteira e **as duas ações formam a linha de
+baixo, encostadas à direita** (`:has([data-cancel])`), e a regra do `cancel`
+sobe um degrau com `[data-sonner-theme]`: fundo transparente e tinta
+secundária. Medido: as duas na mesma linha (topo 75), o "Atualizar" rente à
+borda direita do texto, 8px entre elas. Com uma ação só, ela continua ao lado
+do texto.
+Depois, a pedido do dono, as duas ações passaram a **dividir a linha de baixo
+inteira** em partes iguais (`flex: 1 1 0`), como os botões de um alerta do
+iOS: medido, 160px cada numa placa de 356, a 8px uma da outra.
+
+**E o Desfazer virou o botão do Ver.** O dono pediu o Desfazer no padrão do
+"Ver", e, quando o botão quebrar para baixo, ocupando a largura toda. O anel de
+contagem saiu, e com ele tudo o que só existia para ele: `@property
+--toast-left`, `@keyframes toast-countdown`, a classe `toast-undo`, a
+`--toast-duration` e o `data-toast-paused` do `<html>` (o sonner já pausa
+sozinho com a aba escondida). **A quebra não se detecta em CSS, e não precisa**:
+o texto cresce com peso 9999 e o botão com 1 — dividindo a linha, o botão leva
+1/10000 da sobra e fica do tamanho do rótulo; sozinho na linha de baixo, a
+sobra é toda dele e ele vai à largura inteira.
+Na mesma conversa o dono pediu a **roda de contagem de volta** — agora dentro
+do botão no padrão do "Ver": o círculo de 12px antes do rótulo, esvaziando no
+`--toast-left`, parando com a pilha aberta e com a aba escondida (o
+`data-toast-paused` voltou). Com a roda o Desfazer mede 94px e pode quebrar
+para baixo; quando quebra, ocupa a linha inteira.
+E o dono pediu que, **cabendo, o botão fique em cima, à direita**. Ele descia
+porque o texto reservava 12rem (192px) antes de dividir a linha, e o Desfazer
+com a roda (94px) não cabia ao lado disso mesmo com um título curto. A base do
+texto passou a ser a largura **natural** dele (`flex: 9999 1 auto`): o botão só
+desce quando o texto e ele, juntos, passam da linha — e aí ocupa a linha toda.
+Medido: Desfazer (94px) e Ver (44px) em cima, a 15px da borda direita.
+
+**E a pílula foi para o canto.** O dono perguntou se ela não ficaria melhor no
+lugar dos outros avisos, e ficou: um lugar só para as confirmações (com dois,
+o olho vai para a direita e o "Copiado" passa no centro), e no centro do topo
+ela pousava em cima da busca do cabeçalho. A ilha dinâmica é coisa de
+telefone, e no telefone os toasts já ocupam a largura toda. Saiu o
+`position: "top-center"`; a pílula entra na pilha de sempre, com a largura do
+conteúdo e encostada à direita (`margin-inline: auto 0`, que vale também no
+telefone, onde o sonner prende o item às duas bordas).
+
+**E a pilha desceu para baixo da barra.** O dono pediu os avisos e a pílula
+abaixo do cabeçalho, e não por cima dele. No desktop o toast nascia 16px do
+topo da janela, por cima da barra; no telefone o desvio era cravado em 4rem
+(48 + 16). Como as barras não têm a mesma altura (48 no app, 56 no catálogo),
+o `Toaster` **mede** a base da `TopBar` (`[data-slot="top-bar"]`, com um
+`ResizeObserver`, de novo a cada rota) e põe o topo da pilha 12px abaixo dela,
+no desktop e no telefone; sem barra (as telas de acesso), 16px do topo. A área
+segura entra sozinha, porque a `TopBar` a soma à própria altura. Medido no
+catálogo: barra em 56, toast e × em 68, nas duas larguras.
+
+**E o × ficou visível.** O dono pediu mais visibilidade: no vidro da placa
+(60% no escuro) e com a tinta secundária, o × sumia sobre o conteúdo da
+página. Hoje ele é **chapado e um degrau acima da placa** — a superfície do
+`secondary` (`oklch(0.269)` no escuro, contra 0,205 da placa e 0,145 da
+página), a tinta cheia do texto, o glifo de 14 numa caixa de 28 (24 no
+telefone) e o anel a 15% com `--shadow-md`. **A primeira versão não pegou**: o
+sonner pinta o × no escuro em `[data-sonner-theme=dark] … [data-close-button]`
+(0,4,0), que empatava e vencia pela ordem — o fundo continuava o vidro. A regra
+subiu um degrau com `[data-sonner-theme]`, e a do telefone junto, senão ela
+perderia para a de cima.

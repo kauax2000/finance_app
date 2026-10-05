@@ -1,5 +1,8 @@
 import type { PaymentMethod } from "@/lib/payment-methods"
 
+/** O assunto dos toasts do formulário: o "Transação criada" toma o lugar do erro de validação. */
+export const TRANSACTION_SAVE_TOAST_ID = "salvar-transacao"
+
 export type TransactionFormSavePayload = {
     editingId: string | null
     categoryId: string | null

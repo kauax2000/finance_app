@@ -470,7 +470,9 @@ flowchart TD
     saveTx -->|"erro"| keep(["Aviso; formulário continua aberto"])
     saveTx -->|"sucesso"| after[("Edges notify-transaction-created, evaluate-budgets, evaluate-credit-card-alerts")]
     after --> toast(["Transação criada; listas recarregam"])
+    toast -->|"Ver, só online"| txOpen(("G5b Detalhe /transactions?txn=id"))
     savePlan -->|"sucesso"| toastPlan(["Compra parcelada registrada"])
+    toastPlan -->|"Ver, só online"| planList(("G5 /transactions?plan=id"))
     open -->|"Cancelar, Esc ou fora, sem alterações"| closed(["Fecha e descarta"])
     open -->|"fechar com alterações"| discard(["Descartar alterações?"])
     discard -->|"Descartar"| closed
@@ -503,7 +505,8 @@ flowchart TD
 | Formulário | Um componente para criar, e o mesmo campo a campo na edição | `src/components/transactions/transaction-form-dialog.tsx`, `transaction-form-use.tsx` |
 | Parcelada | RPC `create_workspace_installment_plan`; editar o plano não muda parcelas já lançadas | `src/components/transactions/transaction-form-persistence.ts` |
 | Detalhe | Mesmo painel no Painel, em Cartões e em Categorias | `src/components/transactions/transaction-detail-sheet.tsx` |
-| Exclusão | Parcela cancela o plano inteiro por `delete_workspace_installment_plan_cascade` | `src/lib/transactions/mutations.ts` |
+| Exclusão | Parcela cancela o plano inteiro por `delete_workspace_installment_plan_cascade`. Continua com confirmação, e não com o Desfazer do toast: a exclusão é física (`delete`), sem `deleted_at` nem RPC de restaurar, e recriar mudaria o id e quebraria parcelas, recorrência e faturas (verificado na rodada 228) | `src/lib/transactions/mutations.ts` |
+| "Ver" do toast | Criar uma transação (não editar) mostra "Ver", que leva a `/transactions?txn=id` e abre o detalhe; a compra parcelada leva a `?plan=id`. Offline não há id, e o toast sai sem "Ver". A trava que abre o `txn` uma vez só volta a soltar quando a URL perde o parâmetro — antes, com `/transactions` aberta, o segundo `?txn=` não abria nada | `persistTransactionSave` em `src/lib/transaction-detail-sheet-mutations.ts`, `transaction-form-persistence.ts`, `use-transactions-list-controller.ts` |
 | Offline | Criar e excluir entram na fila; pagar conta exige conexão | `src/lib/offline/` |
 | Rascunho | Fechar o formulário alterado (Cancelar, Esc, toque fora, ×, arrastar a gaveta) pergunta "Descartar alterações?"; salvar fecha sem perguntar. Trocar só a aba ou o tipo não conta como alteração. Enquanto salva, nada fecha (`Dialog pending`) | `isDirty` em `src/components/transactions/transaction-form-use.tsx`, `src/components/transactions/transaction-form-dialog.tsx` |
 | Enter | O `Enter` na busca do seletor não salva a transação | `shouldDeferEnterToWidget` em `src/components/ui/form.tsx` |
@@ -527,6 +530,7 @@ flowchart TD
     newCard -->|"Salvar"| valid{"Dias 1 a 31 e validade ok?"}
     valid -->|"não"| newCard
     valid -->|"sim"| created(["Cartão cadastrado"]) --> list
+    created -->|"Ver, só online"| detail
     newCard -->|"Cancelar"| list
     tiles -->|"cartão"| detail["/credit-cards/id"]
 
@@ -564,6 +568,7 @@ flowchart TD
 | Status no detalhe | `Futura`, `Aberta`, `Não paga`, `Paga`, pelo ciclo selecionado | `src/app/(app)/credit-cards/[cardId]/page-client.tsx` |
 | Selo na tabela de transações | `Aberta`, `Fechada`, `Anterior`, `Paga`; Aberta é verde, Fechada âmbar, Anterior vermelha | `src/lib/credit-card-display.ts` |
 | Pagamento de fatura | Linha em `credit_card_invoice_payments`, sem criar despesa | `src/lib/bills/pay-bill-flow.ts` |
+| "Ver" do toast | Cadastrar um cartão (pela página ou pelo diálogo do "+ Adicionar") mostra "Ver", que leva a `/credit-cards/id`; na fila offline, sem "Ver" | `src/app/(app)/credit-cards/page-client.tsx`, `src/components/credit-cards/credit-card-create-dialog.tsx` |
 | Alertas | Limite, fechamento e vencimento geram notificações `cc_*` | edges `evaluate-credit-card-alerts`, `credit-card-calendar-alerts` |
 
 ---
@@ -582,6 +587,7 @@ flowchart TD
     tabs -->|"Pendentes: todas, atrasadas, 30 dias"| pending(["Itens pendentes"])
     bills -->|"Nova conta"| form(["Formulário: nome, categoria, periodicidade, vencimento, valor, início, fim, forma, cartão, lembretes, ativa"])
     form -->|"Salvar"| saved(["Conta criada ou atualizada"])
+    saved -->|"Ver, ao criar e online"| bills
     form -->|"Cancelar"| bills
 
     bills --> empty{"Vazio?"}
@@ -636,6 +642,7 @@ flowchart TD
 | Pagar fatura | Só marca como paga: as compras já estão lançadas no cartão | `src/lib/bills/pay-bill-flow.ts` |
 | Recorrência | Mensal, Bimestral, Trimestral, Anual, Única | `src/lib/bills/recurrence.ts` |
 | Botão direito | No cartão de pendência, repete o "Pagar" e o menu de três pontos, que continuam à vista | `src/components/bills/bill-pending-card.tsx` |
+| "Ver" do toast | Criar uma conta mostra "Ver", que leva a `/bills?detail=id` e abre o painel dela (sem levar os outros filtros da URL); na fila offline, sem "Ver" | `src/app/(app)/bills/page-client.tsx` |
 
 ---
 
@@ -715,6 +722,7 @@ flowchart TD
     newRoute["/categories/new"] --> catForm
     listView -->|"Nova categoria"| catForm(["Formulário: tipo, nome, cor, ícone; limite do mês se despesa"])
     catForm -->|"Salvar"| savedCat[("Categoria e orçamento do mês")] --> notifCat(("G3 Notificação category_created"))
+    savedCat -->|"toast Ver, ao criar e online"| detail
     savedCat --> listView
     catForm -->|"valor inválido"| catForm
     listView -->|"⋯ Editar"| catForm
@@ -748,6 +756,7 @@ flowchart TD
 |---|---|---|
 | Assistente | Só em `/categories`, por carteira; nada redireciona para ele | `src/components/categories/categories-onboarding-wizard.tsx` |
 | Detalhe | `rpc_fetch_category_detail_bundle` | `src/lib/queries/fetch-category-detail-bundle.ts` |
+| "Ver" do toast | Criar uma categoria (pela tela ou pelo diálogo do "+ Adicionar") mostra "Categoria criada" com "Ver", que leva a `/categories/id?type=`; se o orçamento falhar, o aviso "Categoria criada, mas o orçamento não foi salvo" leva ao mesmo detalhe. Na fila offline, sem "Ver". A tela de categorias não mostrava toast nenhum ao criar | `src/components/categories/category-create-dialog.tsx`, `src/app/(app)/categories/page-client.tsx` |
 | Entradas no detalhe | Lista de categorias, gasto por categoria do cartão, notificação de orçamento | `src/components/categories/detail/` |
 | Orçamento | Avaliado depois de cada despesa e de cada conta paga | edge `evaluate-budgets` |
 | Botão direito | No cartão de categoria, o menu toma o lugar do menu do navegador sobre o link, por isso traz "Abrir em nova aba"; o ⋯ continua | `src/components/categories/category-card-context-menu.tsx` |
@@ -818,6 +827,9 @@ continuam aqui para registro.
 | 2 | G3 | O provider global expõe abrir convite, nova categoria e novo cartão, mas nada chama essas funções. |
 | 3 | G10 | `/account/sessions` e `/account/activity` redirecionam para `/login` sem `next`, então a pessoa não volta para a página depois de entrar. |
 | 4 | G1 | A política de senha não vale para a troca de senha de dentro do app (`ChangePasswordDialog`), que ainda confere só o comprimento. |
+| 5 | G8 | O detalhe de uma assinatura só abre pelo estado da tela; nenhum parâmetro de URL o abre (só existe `?new=1`). Por isso o toast de assinatura criada não tem "Ver", ao contrário de transação, cartão, conta e categoria (rodada 228). |
+| 6 | G5 | Excluir uma transação é físico e sem volta: não há `deleted_at` nem RPC de restaurar, então o "Desfazer" do toast não substitui a confirmação. Ter o desfazer exige exclusão lógica no banco. |
+| 7 | G2 | Os erros de carga do diretório de membros mostram ao usuário o arquivo SQL e a RPC a aplicar — texto de desenvolvedor (`members/page-client.tsx`). |
 
 ### Fechadas na rodada de acesso (set/2026)
 

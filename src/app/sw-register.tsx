@@ -59,7 +59,7 @@ export function SwRegister() {
                 return
             }
             updateReady = true
-            toastPersistentAction("Nova versão disponível.", {
+            toastPersistentAction("Nova versão disponível", {
                 id: "sw-update",
                 label: "Atualizar",
                 onClick: reload,

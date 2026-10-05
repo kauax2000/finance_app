@@ -40,7 +40,7 @@ import {
 } from "@/components/bills/bills-toolbar"
 import { BillsPageSkeleton } from "@/components/bills/bills-page-skeleton"
 import { BillFormDialog } from "@/components/bills/bill-form-dialog"
-import { PayBillDialog } from "@/components/bills/pay-bill-dialog"
+import { PayBillDialog, PAY_BILL_TOAST_ID } from "@/components/bills/pay-bill-dialog"
 import { BillPendingCard } from "@/components/bills/bill-pending-card"
 import { BillSummaryCard } from "@/components/bills/bill-summary-card"
 import { BillDetailSheet } from "@/components/bills/bill-detail-sheet"
@@ -48,7 +48,7 @@ import type { BillFormPayloadForSave } from "@/components/bills/bill-form-shared
 import type { BillPendingRow } from "@/components/bills/bill-list-types"
 import { useBillsPageBundleQuery } from "@/lib/queries/use-bills-page-bundle"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
-import { creditCardDetailPath } from "@/config/navigation"
+import { creditCardDetailPath, ROUTES } from "@/config/navigation"
 import { projectVirtualCreditCardBills } from "@/lib/bills/credit-card-bill-projector"
 import type { VirtualCreditCardBill } from "@/lib/bills/credit-card-bill-projector"
 import {
@@ -61,6 +61,7 @@ import type { BillInstance } from "@/lib/supabase"
 import { localYmdFromDate } from "@/lib/transaction-date"
 import { supabase } from "@/lib/supabase"
 import { toastError, toastSuccess } from "@/lib/toast"
+import { BILL_SAVE_TOAST_ID } from "@/components/bills/use-bill-form"
 import type { PayBillInput } from "@/lib/bills/pay-bill-flow"
 import type {
     BillInstanceWithBill,
@@ -89,9 +90,12 @@ async function handleSkipBillInstance(opts: {
         bill,
         currentDueYmd: dueYmd,
     })
-    if (!sk.ok) toastError(sk.error)
+    if (!sk.ok) toastError(sk.error, { id: "ignorar-parcela" })
     else {
-        toastSuccess("Parcela ignorada; próxima gerada quando aplicável.")
+        toastSuccess("Parcela ignorada", {
+            id: "ignorar-parcela",
+            description: "A próxima é gerada quando aplicável",
+        })
         await onInvalidate()
     }
 }
@@ -438,10 +442,10 @@ export default function BillsPageClient() {
                         payload,
                     })
                     if (!up.ok) {
-                        toastError(up.error)
+                        toastError(up.error, { id: BILL_SAVE_TOAST_ID })
                         return false
                     }
-                    toastSuccess("Conta atualizada.")
+                    toastSuccess("Conta atualizada", { id: BILL_SAVE_TOAST_ID })
                 } else {
                     const ins = await insertBillWithFirstInstance({
                         supabase,
@@ -450,10 +454,19 @@ export default function BillsPageClient() {
                         payload,
                     })
                     if (!ins.ok) {
-                        toastError(ins.error)
+                        toastError(ins.error, { id: BILL_SAVE_TOAST_ID })
                         return false
                     }
-                    toastSuccess("Conta criada.")
+                    // Na fila offline o id ainda é o provisório: sem "Ver".
+                    toastSuccess("Conta criada", {
+                        id: BILL_SAVE_TOAST_ID,
+                        action: ins.queued
+                            ? undefined
+                            : {
+                                  label: "Ver",
+                                  href: `${ROUTES.BILLS}?${DETAIL_QUERY}=${encodeURIComponent(ins.bill.id)}`,
+                              },
+                    })
                 }
                 await onInvalidate()
                 return true
@@ -474,9 +487,9 @@ export default function BillsPageClient() {
             billId: deletedId,
         })
         setDeletingBill(false)
-        if (!r.ok) toastError(r.error)
+        if (!r.ok) toastError(r.error, { id: "excluir-conta" })
         else {
-            toastSuccess("Conta removida.")
+            toastSuccess("Conta removida", { id: "excluir-conta" })
             await onInvalidate()
             if (detailBillId === deletedId) setDetailBillId(null)
         }
@@ -861,7 +874,7 @@ export default function BillsPageClient() {
                 saving={paySaving}
                 setSaving={setPaySaving}
                 onPaid={async () => {
-                    toastSuccess("Pagamento registrado.")
+                    toastSuccess("Pagamento registrado", { id: PAY_BILL_TOAST_ID })
                     await onInvalidate()
                 }}
             />

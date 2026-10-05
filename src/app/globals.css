@@ -1100,87 +1100,365 @@
   letter-spacing: -0.015em;
 }
 
-/* ─── A superfície do toast ────────────────────────────────────────────────────
+/* ─── O toast (rodada 228): a placa flutuante ─────────────────────────────────
+   O toast é a placa da casa — `--popover` chapado, o anel de 1px, a sombra e o
+   raio 18 —, e o tom **não pinta a superfície**: mora no poço do ícone. Até a
+   rodada 227 cada tipo tingia o toast inteiro com a superfície do `Alert`
+   (`bg-{tom}-muted`), e uma pilha de três saía em três cores; o aviso é
+   passageiro, e quem precisa gritar é o `Alert` na tela.
 
-   As cores vieram para os tokens numa rodada anterior (o bloco por tipo, logo
-   abaixo). **O trabalho parou nas cores**, e o resto continuou sendo CSS do
-   sonner. Medido no toast renderizado:
+   ## Por que estes seletores, e não classes
+   O sonner renderiza fora da árvore de classes do Tailwind, e **injeta a folha
+   dele em tempo de execução**, depois da do app: com a mesma especificidade,
+   ele ganha. Medido: empatar em 0,2,0 deixava o raio em 8px. Daí a escada —
+   a superfície em `[data-sonner-toaster] [data-sonner-toast][data-styled]`
+   (0,3,0), e os tipos e controles um degrau acima.
 
-     tipografia   ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto…
-     corpo        13px            (fora da escala: text-xs 12, text-sm 14)
-     raio         8px             (o sistema arredonda em 10)
-     sombra       0 4px 12px oklch(0 0 0 / .1), sem par no tema escuro
-
-   A primeira linha é a que decide: **o toast era a única superfície do app que
-   trocava de tipografia com o sistema operacional** — SF Pro no Mac, Segoe no
-   Windows, Roboto no Android — enquanto tudo em volta é Inter. Em 222 pontos de
-   uso.
-
-   O que **não** se mexe: largura, empilhamento, arraste, animação e tempo. A
-   física do sonner é justamente o que não se reescreve — é o mesmo julgamento
-   da rodada do `vaul`: pegar o mecanismo emprestado e vestir a cromagem
-   própria. */
-/* A tipografia vence por herança e o resto vence por especificidade, e a
-   diferença não é detalhe: o sonner declara a fonte no **contêiner**
-   (`[data-sonner-toaster]`), então declará-la aqui no próprio toast já ganha —
-   propriedade posta no elemento sempre vence a que ele herdaria. Mas raio e
-   sombra ele declara em `[data-sonner-toast][data-styled=true]`, que é 0,2,0.
-   Medido: com o seletor de um atributo só, a fonte entrou e o raio continuou em
-   8px.
-
-   **E empatar não bastou.** O sonner injeta a própria folha em tempo de
-   execução, ou seja **depois** da folha do app: com a mesma especificidade,
-   quem vem depois ganha. Medido de novo, com 0,2,0 dos dois lados, o raio
-   continuou 8px. Daí o descendente — 0,3,0 — que é o mínimo para vencer sem
-   `!important`. (O `Drawer` deste projeto precisou do `!` pela mesma razão; ali
-   o `vaul` escreve medidas em atributo inline, e não havia seletor que
-   subisse.) */
+   A fonte é declarada no próprio toast porque o sonner a declara no
+   contêiner (`ui-sans-serif, system-ui…`): sem isto, o toast era a única
+   superfície do app que trocava de tipografia com o sistema operacional. */
 [data-sonner-toast] {
   font-family: var(--font-sans);
 }
 
 [data-sonner-toaster] [data-sonner-toast][data-styled="true"] {
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  /* A tinta flutuante de vidro (`menuPanelTintClassName`), a mesma do
+     `Popover`, dos menus e do `Select`: `--popover` a 85% com o borrão da
+     `glass-surface` (24px, saturação 1,5), abrindo a 60% no escuro. Escrita à
+     mão porque o sonner renderiza fora da árvore de classes; os guardas de
+     transparência reduzida e de navegador sem borrão ficam logo abaixo. */
+  --normal-bg: color-mix(in oklab, var(--popover) 85%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  backdrop-filter: blur(24px) saturate(1.5);
+  --normal-border: transparent;
+  --normal-text: var(--popover-foreground);
+  /* O tom do tipo: o poço do ícone (e o ×N dos repetidos). */
+  --toast-well: var(--muted);
+  --toast-ink: var(--muted-foreground);
+  border-radius: var(--radius-2xl);
+  border-color: transparent;
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--foreground) 10%, transparent),
+    var(--shadow-lg);
+  padding: 12px 14px 12px 12px;
+  gap: 12px;
+  align-items: center;
+  /* A mola da casa na entrada e na pilha; o sonner anda em 400ms lineares. */
+  transition:
+    transform var(--duration-spring) var(--ease-spring),
+    opacity 400ms var(--ease-out),
+    height var(--duration-spring) var(--ease-spring),
+    box-shadow 200ms;
+}
+@supports (backdrop-filter: blur(1px)) {
+  .dark [data-sonner-toaster] [data-sonner-toast][data-styled="true"] {
+    --normal-bg: color-mix(in oklab, var(--popover) 60%, transparent);
+  }
+}
+@supports not (backdrop-filter: blur(1px)) {
+  [data-sonner-toaster] [data-sonner-toast][data-styled="true"] {
+    --normal-bg: var(--popover);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  [data-sonner-toaster] [data-sonner-toast][data-styled="true"],
+  .dark [data-sonner-toaster] [data-sonner-toast][data-styled="true"] {
+    --normal-bg: var(--popover);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+/* A saída não é mola: uma mola até fora da tela passaria do alvo e voltaria. */
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"][data-removed="true"] {
+  transition:
+    transform 200ms var(--ease-out),
+    opacity 200ms var(--ease-out),
+    height 200ms var(--ease-out);
 }
 
-/* O botão de ação — o "Desfazer" do `toastUndo`. Ele é do sonner: raio 4px e
-   corpo 12px, medidos, numa superfície onde todo o resto arredonda em 10 e o
-   texto miúdo é `--text-xs`. Ele fica com a altura de 24 (o degrau `xs` da
-   escada, que é o certo para um controle dentro de outro) e ganha o raio e o
-   corpo da casa. */
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"][data-type="success"] {
+  --toast-well: var(--success-muted);
+  --toast-ink: var(--success-muted-foreground);
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"][data-type="info"] {
+  --toast-well: var(--info-muted);
+  --toast-ink: var(--info-muted-foreground);
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"][data-type="warning"] {
+  --toast-well: var(--warning-muted);
+  --toast-ink: var(--warning-muted-foreground);
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"][data-type="error"] {
+  --toast-well: var(--destructive-muted);
+  --toast-ink: var(--destructive-muted-foreground);
+}
+
+/* O poço: 28px, redondo, na superfície `-muted` do tom e com a tinta dele —
+   o ícone de 16 no centro. O sonner o desenha em 16×16 com margens negativas
+   para o glifo encostar no texto; aqui ele é peça, e quem separa é o `gap`. */
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-icon] {
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--toast-well);
+  color: var(--toast-ink);
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-icon] svg {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+/* Título sobre descrição é **par de identidade**: sem `gap`, a entrelinha
+   separa. O título lê na cor do texto; a descrição, na secundária. */
+/* O texto pede 12rem antes de dividir a linha com os botões. Com uma ação curta
+   ("Ver", "Desfazer") os três cabem lado a lado; com duas, ou no telefone, os
+   botões descem para uma linha própria, encostados à direita (o primeiro leva
+   a margem automática do sonner) — antes eles espremiam o texto a três linhas
+   de duas palavras, medido a 375px. */
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] {
+  flex-wrap: wrap;
+  row-gap: 10px;
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-content] {
+  gap: 0;
+  min-width: 0;
+  /* O crescimento 9999 contra o 1 do botão é o que deixa o botão do tamanho
+     do rótulo quando divide a linha com o texto (ele leva 1/10000 da sobra),
+     e da linha inteira quando a quebra o leva sozinho para baixo — o CSS não
+     sabe se houve quebra, mas a sobra de uma linha só dele é toda dele. */
+  /* A base é a largura **natural** do texto, e não um mínimo cravado: com
+     12rem a linha exigia 192px antes do botão, e o Desfazer com a roda descia
+     mesmo cabendo ao lado de "Transação excluída" — medido. Agora o botão só
+     desce quando o texto e ele, juntos, passam da largura. */
+  flex: 9999 1 auto;
+}
+/* **Com duas ações, as duas vão para baixo, juntas.** Pela regra acima a
+   quebra dependia da largura que sobrava, e com um título curto a primeira
+   ("Agora não") ficava ao lado do texto e a segunda descia sozinha à esquerda
+   — medido na tela. Com `cancel` o texto toma a linha inteira (menos o poço do
+   ícone), e as duas ações formam a linha de baixo. */
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"]:has([data-cancel]) [data-content] {
+  flex-basis: calc(100% - 40px);
+}
+/* E a linha de baixo é delas inteira: as duas dividem a largura em partes
+   iguais, como os botões de um alerta do iOS — a pedido do dono. */
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"]:has([data-cancel]) [data-button] {
+  flex: 1 1 0;
+  margin-inline: 0;
+  justify-content: center;
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"]:has([data-cancel]) [data-cancel] + [data-button] {
+  margin-inline-start: -4px;
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-title] {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+  font-weight: 500;
+  color: var(--foreground);
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-description] {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  color: var(--muted-foreground);
+}
+
+/* O ×2, ×3 dos repetidos. Ele remonta a cada repetição (`key`), e entra
+   estalando — é o sinal de que o mesmo aviso voltou. */
+[data-sonner-toast] [data-slot="toast-title"] {
+  min-width: 0;
+}
+[data-sonner-toast] [data-slot="toast-count"] {
+  /* Ele divide a linha do título, e com um título longo o flex o espremia até
+     quebrar o "×" e o número em duas linhas (medido: 24×31px). Ele não encolhe
+     nem quebra; quem quebra é o texto do título. */
+  flex-shrink: 0;
+  white-space: nowrap;
+  align-self: flex-start;
+  margin-top: 1px;
+  line-height: 18px;
+  font-size: var(--text-2xs);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  padding: 0 6px;
+  border-radius: 9999px;
+  background: var(--toast-well);
+  color: var(--toast-ink);
+  animation: toast-pop var(--duration-spring) var(--ease-spring);
+}
+@keyframes toast-pop {
+  from {
+    scale: 0.6;
+    opacity: 0;
+  }
+}
+
+/* ── A roda do Desfazer ────────────────────────────────────────────────────
+   Um círculo de 12px antes do rótulo do Desfazer, que esvazia no tempo do
+   toast — a janela de arrependimento à vista, onde o dedo está. A duração vem
+   por toast (`--toast-duration`, escrita pelo `lib/toast`), e quem anima é um
+   número só, `--toast-left`, de 1 a 0 — `@property` para interpolar, e
+   herdado porque quem o lê é o botão.
+
+   **Ela para quando o sonner para**: com a pilha aberta (cursor, foco, ⌥T —
+   `data-expanded`) e com a aba escondida (`data-toast-paused` no `<html>`).
+   Se não parasse, mostraria um tempo que não é o do toast. */
+@property --toast-left {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+@keyframes toast-countdown {
+  from { --toast-left: 1; }
+  to { --toast-left: 0; }
+}
+[data-sonner-toaster] [data-sonner-toast].toast-undo {
+  animation: toast-countdown var(--toast-duration, 8000ms) linear forwards;
+}
+[data-sonner-toaster] [data-sonner-toast][data-expanded="true"],
+:root[data-toast-paused] [data-sonner-toaster] [data-sonner-toast] {
+  animation-play-state: paused;
+}
+[data-sonner-toaster] [data-sonner-toast].toast-undo [data-button]:not([data-cancel])::before {
+  content: "";
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  margin-inline-end: 6px;
+  border-radius: 9999px;
+  background: conic-gradient(
+    currentColor calc(var(--toast-left) * 1turn),
+    color-mix(in oklab, currentColor 20%, transparent) 0
+  );
+  mask: radial-gradient(circle, transparent 3px, #000 3.5px);
+}
+/* Com movimento reduzido o sonner corta as animações do toast, e uma roda
+   cheia parada mentiria. */
+@media (prefers-reduced-motion: reduce) {
+  [data-sonner-toaster] [data-sonner-toast].toast-undo [data-button]::before {
+    display: none;
+  }
+}
+
+/* ── As ações ──────────────────────────────────────────────────────────────
+   A principal é o `secondary` em pílula (o preenchimento cinza, que numa placa
+   neutra lê como botão sem disputar com o título); a segunda (`cancel`) é o
+   `tertiary`, sem fundo. Os dois na escada `sm` (28) — `[data-styled]` entra
+   pela especificidade, porque o sonner os declara em
+   `[data-sonner-toast][data-styled=true] [data-button]` (0,3,0). */
 [data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-button] {
-  border-radius: var(--radius-lg);
-  /* A entrelinha vem junto com o corpo, e faltar uma delas também não avisa:
-     com só `font-size`, o botão ficava em 18px de entrelinha contra os 16 do
-     `text-xs` — e num botão de 24px de altura isso desloca o centro óptico do
-     rótulo. Mesmo erro que a borda sem largura, um passo adiante. */
+  height: 28px;
+  padding-inline: 12px;
+  border-radius: 9999px;
+  border: 0;
   font-size: var(--text-xs);
   line-height: var(--text-xs--line-height);
   font-weight: 500;
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  white-space: nowrap;
+  transition: background-color var(--duration-base) var(--ease-out), scale 100ms;
+}
+/* As ações ficam juntas e encostadas à direita, na linha do texto ou na de
+   baixo. A margem automática do sonner vai no `:first-of-type`, e o primeiro
+   botão do toast é o ×: ela nunca chegava aos botões de ação. */
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-button] {
+  margin-inline: auto 0;
+  flex: 1 0 auto;
+  justify-content: center;
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-cancel] + [data-button] {
+  margin-inline-start: -4px;
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-button]:hover,
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-button]:active {
+  background: var(--secondary-hover);
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-button]:active {
+  scale: 0.97;
+}
+/* `[data-sonner-theme]` sobe um degrau: o sonner pinta o `cancel` em
+   `[data-sonner-toaster][data-sonner-theme=dark] … [data-cancel]` (0,5,0), um
+   cinza a 30% que empatava com esta regra e vencia pela ordem — a segunda ação
+   saía com cara de botão desabilitado, medido na tela. */
+[data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"] [data-button][data-cancel] {
+  background: transparent;
+  color: var(--muted-foreground);
+}
+[data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"] [data-button][data-cancel]:hover,
+[data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"] [data-button][data-cancel]:active {
+  background: var(--muted);
+  color: var(--foreground);
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-button]:focus-visible,
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button]:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 45%, transparent);
 }
 
-/* O corpo entra na escala. O título é `text-sm` porque é a linha que se lê, e a
-   descrição `text-xs` porque é a que se consulta — a mesma razão de 14/12 que
-   separa `ItemTitle` de `ItemDescription`. */
-[data-sonner-toast] [data-title] {
-  font-size: var(--text-sm);
-  line-height: var(--text-sm--line-height);
-}
+/* O ×: um círculo de vidro com o anel de 1px; o alvo cresce no toque por
+   pseudo-elemento (12px de cada lado levam 20 a 44). */
+/* `[data-sonner-theme]` sobe um degrau: o sonner pinta o × no escuro em
+   `[data-sonner-toaster][data-sonner-theme=dark] [data-sonner-toast]
+   [data-close-button]` (0,4,0), que empatava e vencia pela ordem — medido, o
+   fundo continuava o vidro da placa depois da troca. */
+[data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"] [data-close-button] {
+  /* **Fora do corpo do toast**, a pedido do dono: um círculo flutuante de 24px
+     à esquerda da placa, alinhado ao topo dela, a 8px de vão. O sonner o
+     prende ao canto de cima, meio dentro e meio fora (`translate(-35%,-35%)`),
+     e ali ele cobria o ícone e a curva do canto. À esquerda, e não acima: o
+     toast nasce 16px abaixo do topo da janela, e um × acima dele sairia da
+     tela.
 
-[data-sonner-toast] [data-description] {
-  font-size: var(--text-xs);
-  line-height: var(--text-xs--line-height);
+     **E ele é chapado e um degrau acima da placa**, a pedido do dono: no
+     vidro da placa (60% no escuro) e com a tinta secundária ele sumia sobre o
+     conteúdo da página. Hoje é a superfície do `secondary` (no escuro, mais
+     clara que a placa e que a página), a tinta cheia do texto, o glifo de 14
+     numa caixa de 28 e o anel a 15% com a sombra dos flutuantes. */
+  left: auto;
+  right: calc(100% + 8px);
+  /* −1px: a referência do `absolute` é a caixa de recuo, e a placa tem a borda
+     transparente de 1px do sonner — com `top: 0` o × ficava 1px abaixo. */
+  top: -1px;
+  transform: none;
+  width: 28px;
+  height: 28px;
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  border: 0;
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--foreground) 15%, transparent),
+    var(--shadow-md);
 }
-
-/* O × media 20×20. Ele cresce por pseudo-elemento e não por medida: aumentar a
-   caixa de verdade deslocaria o texto do toast, que é ancorado nela. É a mesma
-   conta do `BreadcrumbLink` — 12px de cada lado levam 20 a 44. */
-@media (pointer: coarse) {
-  [data-sonner-toast] [data-close-button] {
-    position: relative;
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button] svg {
+  width: 14px;
+  height: 14px;
+}
+/* No telefone o toast ocupa a largura menos 16px de cada lado, e à esquerda
+   dele não cabem 32px: ali o × volta ao canto, meio dentro e meio fora. */
+@media (max-width: 600px) {
+  [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"] [data-close-button] {
+    left: 0;
+    right: auto;
+    top: 0;
+    transform: translate(-35%, -35%);
+    width: 24px;
+    height: 24px;
   }
-
+}
+/* `:hover` do toast também, para empatar o seletor do sonner (0,5,0) e
+   vencê-lo pela ordem — ele pinta o × de `--gray2` no hover. */
+[data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"]:hover [data-close-button]:hover,
+[data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"] [data-close-button]:hover,
+[data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"] [data-close-button]:active {
+  background: var(--secondary-hover);
+  color: var(--secondary-foreground);
+}
+@media (pointer: coarse) {
   [data-sonner-toast] [data-close-button]::after {
     content: "";
     position: absolute;
@@ -1188,206 +1466,28 @@
   }
 }
 
-/* ─── As cores do toast: **os mesmos tokens do Alert** ────────────────────────
-
-   Uma rodada anterior tirou o `richColors` do sonner e trouxe as cores para os
-   tokens, e o comentário dizia "espelhando as variantes do Alert". **Ele não
-   espelhava**: o Alert usa `bg-{tom}-muted`, um token desenhado, e aqui havia
-   `color-mix(--{tom} 10%, --popover)` — uma segunda receita para a mesma coisa.
-   Medido no tema claro, o mesmo aviso saía em dois cremes: `255,243,216` no
-   Alert contra `252,243,230` no toast, distância RGB **14**. Os outros três
-   ficavam entre 6 e 9.
-
-   Nenhum reprovava em contraste (6,9–10,8 no claro, 10,5–12 no escuro), então
-   isto nunca foi acessibilidade — era uma medida escrita à mão ao lado de outra
-   que precisava concordar com ela, que é o defeito que este design system
-   encontra em toda rodada.
-
-   ## A cascata é carga estrutural aqui, e por duas razões
-
-   1. O sonner **injeta a folha dele em tempo de execução**, ou seja depois da
-      do app: com a mesma especificidade, quem vem depois ganha. Medido — empatar
-      em 0,2,0 não bastou.
-   2. A regra base (o toast **sem** tipo) e as regras de tipo disputam entre si.
-      Se a base tivesse especificidade maior, ela apagaria as tonais.
-
-   Daí a escada explícita: base em `[data-sonner-toaster] [data-sonner-toast]`
-   (0,3,0) e tipos em `…[data-type="…"]` (0,4,0). */
-
-/* O toast **sem tipo** — e o `loading` do `toastPromise`, que também não tem
-   tom. Não havia regra nenhuma para eles, e no tema claro isso passou batido
-   porque o branco do sonner e o `--popover` do app coincidem.
-
-   No escuro a coincidência quebra, e feio: medido, o fundo saía **`0,0,0` —
-   preto puro**, contra os `23,23,23` do `--popover`, com borda `51,51,51`
-   contra os `25,26,26` do `--border`. Preto puro é uma cor que este design
-   system não usa em superfície nenhuma; a página é `37,37,37`. Um `toast()`
-   neutro era um retângulo mais escuro que tudo em volta. */
-[data-sonner-toaster] [data-sonner-toast] {
-  --normal-bg: var(--popover);
-  --normal-border: var(--border);
-  --normal-text: var(--popover-foreground);
+/* ── A pílula (`toastPill`) ────────────────────────────────────────────────
+   A confirmação de uma palavra, **na mesma pilha dos outros avisos**, no canto
+   superior direito: a largura do conteúdo, o poço menor e o raio inteiro. Ela
+   foi ao centro do topo, à ilha dinâmica, e saiu de lá a pedido do dono — um
+   lugar só para os avisos, e no centro ela cobria a busca do cabeçalho. A
+   margem automática a encosta à direita também no telefone, onde o sonner
+   prende o item às duas bordas. */
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"].toast-pill {
+  width: fit-content;
+  margin-inline: auto 0;
+  padding: 6px 14px 6px 6px;
+  gap: 8px;
+  border-radius: 9999px;
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"].toast-pill [data-icon] {
+  width: 24px;
+  height: 24px;
 }
 
-[data-sonner-toaster] [data-sonner-toast][data-type="success"] {
-  --normal-bg: var(--success-muted);
-  --normal-border: color-mix(in oklab, var(--success) 30%, transparent);
-  --normal-text: var(--success-muted-foreground);
-}
-
-[data-sonner-toaster] [data-sonner-toast][data-type="info"] {
-  --normal-bg: var(--info-muted);
-  --normal-border: color-mix(in oklab, var(--info) 30%, transparent);
-  --normal-text: var(--info-muted-foreground);
-}
-
-[data-sonner-toaster] [data-sonner-toast][data-type="warning"] {
-  --normal-bg: var(--warning-muted);
-  --normal-border: color-mix(in oklab, var(--warning) 30%, transparent);
-  --normal-text: var(--warning-muted-foreground);
-}
-
-/* O destrutivo leva `35%` na borda, e não `30%`, porque é o que o Alert leva —
-   copiar a receita inclui copiar a exceção dela. */
-[data-sonner-toaster] [data-sonner-toast][data-type="error"] {
-  --normal-bg: var(--destructive-muted);
-  --normal-border: color-mix(in oklab, var(--destructive) 35%, transparent);
-  --normal-text: var(--destructive-muted-foreground);
-}
-
-/* A descrição herda o tom, e é o `text-current/85` do `AlertDescription`.
-
-   Ela saía em `rgb(63,63,63)` — cinza — sobre a superfície verde, com contraste
-   9,27. Passa na norma, e é literalmente a decisão que o Alert documenta e
-   reverteu: cinza sobre superfície colorida lê como texto que caiu ali por
-   acidente. */
-[data-sonner-toaster] [data-sonner-toast] [data-description] {
-  color: var(--muted-foreground);
-}
-
-[data-sonner-toaster] [data-sonner-toast][data-type] [data-description] {
-  color: color-mix(in oklab, currentColor 85%, transparent);
-}
-
-/* O × e o botão de ação vestem o tom — mas **não são a mesma peça**.
-
-   O botão de ação era um preenchido invertido (fundo na tinta do tom) e o ×
-   tinha borda cinza e tinta quase preta sobre um toast verde. Os dois passam a
-   `currentColor`, que é o que o `AlertActions` documenta: a mesma linha
-   servindo os cinco tons.
-
-   **`[data-styled]` entra aqui por especificidade, e foi medido.** O sonner
-   declara os dois em `[data-sonner-toast][data-styled=true] [data-button]`, que
-   é 0,3,0 — o mesmo que um descendente simples daqui. Com o empate, a folha
-   dele (injetada depois) ganhava: a cor e a borda pegavam, e o **preenchimento
-   não**, então o "Desfazer" continuava um bloco invertido. Com `[data-styled]`
-   são 0,4,0.
-
-   O par `active:` não é cortesia: `hover:` sozinho não existe em tela de toque,
-   e o × do toast é justamente o que se toca. */
-[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button],
-[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-button] {
-  /* **A largura e o estilo vêm junto com a cor, e faltar um deles não avisa.**
-     Havia só `border-color` aqui: a cor era aplicada — medida no elemento — e a
-     borda nunca desenhava, porque o sonner deixa `border-style: none` e
-     `border-width: 0`. O "Desfazer" saía como texto pelado.
-
-     Com os três, o botão fica **byte a byte** igual ao da `AnnouncementBar`:
-     24 de altura, `0 8px` de recuo, raio 10, corpo 12, peso 500, contorno em
-     `currentColor/25` — que é o `Button variant="tertiary" size="xs"` que ela
-     usa. Aqui não dá para usar o componente, porque quem renderiza é o sonner;
-     dá para chegar na mesma caixa. */
-  border-width: 1px;
-  border-style: solid;
-  border-color: color-mix(in oklab, currentColor 25%, transparent);
-  color: currentColor;
-}
-
-/* **O fundo é onde os dois se separam, e ignorar isso custou um bug.**
-
-   O botão de ação vive **dentro** do toast: fantasma é o certo, e é o que o
-   `AlertActions` faz. O × é `position: absolute` e **cavalga a borda** — medido,
-   ele sai 6px para fora em cima e à esquerda. Transparente, esses 6px mostram a
-   página, e o círculo lê como um furo no canto do toast.
-
-   Ele leva a superfície do próprio toast, então a parte que sai parece extensão
-   dele e não buraco. (A primeira versão pôs os dois na mesma regra com
-   `background: transparent`, e o × só quebrou quando a especificidade subiu para
-   consertar o "Desfazer" — um conserto e uma quebra na mesma linha.) */
-[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-button] {
-  background: transparent;
-}
-
-/* **O resto do `Button variant="tertiary" size="xs"`.**
-
-   Com a borda no lugar, um diff dos 693 computados do botão do toast contra o
-   da `AnnouncementBar` — que é o `Button` de verdade — ainda acusava nove
-   diferenças de estilo. Elas não são cosméticas:
-
-   - **sem anel de foco.** Medido: `box-shadow: none` e `outline: none` no
-     `:focus-visible`. O botão é alcançável por teclado e não dizia onde o foco
-     estava. É a pior da lista.
-   - **sem o afundar ao pressionar** (`translate: none`), que é a resposta que
-     todo botão do app dá.
-   - **realce em 400ms com a curva do navegador**, contra os 150ms e a curva do
-     Tailwind na barra: o mesmo gesto, uma resposta mole e outra seca.
-   - **`white-space: wrap` com `overflow-wrap: anywhere`**, herdados do sonner:
-     um rótulo de duas palavras pode quebrar dentro do botão, e no meio de uma
-     palavra.
-   - `justify-content`, `gap`, `user-select` e `background-clip` — o que o
-     `Button` declara e que só aparece quando o rótulo cresce ou ganha ícone.
-
-   `cursor: default` é de propósito e pode surpreender: é o padrão do Tailwind
-   v4 para `<button>`, e todo botão deste app o tem. Divergir aqui seria o toast
-   sendo o único com a mão. */
-[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-button] {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: --spacing(1);
-  white-space: nowrap;
-  overflow-wrap: normal;
-  user-select: none;
-  background-clip: padding-box;
-  cursor: default;
-  /* A mesma lista, duração e curva da base do `Button`. */
-  transition-property: color, background-color, border-color, box-shadow, opacity, translate;
-  transition-duration: var(--duration-fast);
-  transition-timing-function: var(--ease-out);
-}
-
-[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-button]:active {
-  translate: 0 1px;
-}
-
-/* O anel do sistema, nos dois controles. `ring-3` do projeto é uma sombra de
-   3px — e ela some junto com a de elevação do toast se for declarada sozinha,
-   por isso vem com a `--shadow-md` embutida. */
-[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-button]:focus-visible,
-[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button]:focus-visible {
-  outline: none;
-  border-color: var(--ring);
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 45%, transparent);
-}
-
-[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button] {
-  background: var(--normal-bg);
-}
-
-/* 15% e não 10%, pela mesma razão medida da `AnnouncementBar`: o × é um alvo
-   pequeno, e num alvo pequeno o mesmo delta de cor lê como menos. Aqui o
-   contorno já existe em repouso — ele fica na quina do toast e precisa de
-   definição —, então só o preenchimento sobe. */
-[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button]:hover,
-[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button]:active {
-  background: color-mix(in oklab, currentColor 15%, var(--normal-bg));
-  color: currentColor;
-}
-
-[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-button]:hover,
-[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-button]:active {
-  background: color-mix(in oklab, currentColor 10%, transparent);
-  color: currentColor;
+/* O progresso (`toastProgress`): a descrição ocupa a largura toda. */
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"].toast-progress [data-description] {
+  width: 100%;
 }
 
 /* ── A dissolução das bordas de uma região rolável ─────────────────────────

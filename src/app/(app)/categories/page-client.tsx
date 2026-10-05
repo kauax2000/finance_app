@@ -59,7 +59,7 @@ import { upsertCategoryBudget, deleteCategoryBudgetById } from "@/lib/category-b
 import { deleteCategoryById, saveCategory } from "@/lib/categories/mutations"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { parseMoneyBrl, formatMoneyBrlInput } from "@/lib/money-brl"
-import { toastError } from "@/lib/toast"
+import { toastError, toastSuccess } from "@/lib/toast"
 import { FINANCE_CATEGORIES_MUTATED_EVENT } from "@/lib/workspace-data-events"
 import { ROUTES, categoryDetailPath } from "@/config/navigation"
 import { categoriesKeys } from "@/lib/queries/keys"
@@ -420,7 +420,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             if (raw.length === 0) return true
             const amt = parseMoneyBrl(editBudgetAmount)
             if (amt === null || amt <= 0) {
-                toastError("Informe um valor válido em reais, maior que zero.")
+                toastError("Informe um valor válido em reais, maior que zero", { id: "salvar-categoria" })
                 return false
             }
             const { error: budErr } = await upsertCategoryBudget({
@@ -432,7 +432,8 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             })
             if (budErr) {
                 toastError(
-                    formatSupabasePostgrestError(budErr) ?? "Não foi possível salvar o orçamento.",
+                    formatSupabasePostgrestError(budErr) ?? "Não foi possível salvar o orçamento",
+                    { id: "salvar-categoria" },
                 )
                 return false
             }
@@ -446,7 +447,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             })
             if (!saveResult.ok) {
                 setSaving(false)
-                toastError(saveResult.errorMessage)
+                toastError(saveResult.errorMessage, { id: "salvar-categoria" })
                 return
             }
             const budgetOk = await saveExpenseBudgetForCategory(editingCategory.id)
@@ -458,7 +459,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             const saveResult = await saveCategory(categoryData)
             if (!saveResult.ok) {
                 setSaving(false)
-                toastError(saveResult.errorMessage)
+                toastError(saveResult.errorMessage, { id: "salvar-categoria" })
                 return
             }
 
@@ -469,6 +470,14 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 void fetchBudgetsAndSpend()
                 return
             }
+
+            toastSuccess("Categoria criada", {
+                id: "salvar-categoria",
+                description: name,
+                action: saveResult.queued
+                    ? undefined
+                    : { label: "Ver", href: categoryDetailPath(saveResult.categoryId, { type }) },
+            })
 
             if (!saveResult.queued) {
             void invokeEdgeJson("dispatch-notifications", {
@@ -499,7 +508,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         if (!currentWorkspaceId) return false
         const result = await deleteCategoryById(id, currentWorkspaceId)
         if (!result.ok) {
-            toastError(result.errorMessage)
+            toastError(result.errorMessage, { id: `excluir-categoria:${id}` })
             return false
         }
 
@@ -537,7 +546,8 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         setEditBudgetRemoving(false)
         if (delErr) {
             toastError(
-                formatSupabasePostgrestError(delErr) ?? "Não foi possível remover o orçamento.",
+                formatSupabasePostgrestError(delErr) ?? "Não foi possível remover o orçamento",
+                { id: "remover-orcamento" },
             )
             return
         }

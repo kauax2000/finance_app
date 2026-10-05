@@ -228,8 +228,8 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             if (error) {
                 setEditSaving(false)
                 toastError(
-                    formatSupabasePostgrestError(error) ??
-                        "Não foi possível salvar a categoria. Tente novamente.",
+                    formatSupabasePostgrestError(error) ?? "Não foi possível salvar a categoria",
+                    { id: "salvar-categoria" },
                 )
                 return
             }
@@ -244,6 +244,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                     setEditSaving(false)
                     toastError(
                         "A categoria virou receita, mas os orçamentos antigos não foram apagados. Tente de novo.",
+                        { id: "salvar-categoria" },
                     )
                     invalidateDetail()
                     return
@@ -256,7 +257,9 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                     const amt = parseMoneyBrl(editBudgetAmount)
                     if (amt === null || amt <= 0) {
                         setEditSaving(false)
-                        toastError("Informe um valor válido em reais, maior que zero.")
+                        toastError("Informe um valor válido em reais, maior que zero", {
+                            id: "salvar-categoria",
+                        })
                         return
                     }
                     const { error: budErr } = await upsertCategoryBudget({
@@ -270,7 +273,8 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                         setEditSaving(false)
                         toastError(
                             formatSupabasePostgrestError(budErr) ??
-                                "Não foi possível salvar o orçamento.",
+                                "Não foi possível salvar o orçamento",
+                            { id: "salvar-categoria" },
                         )
                         return
                     }
@@ -315,7 +319,8 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
         setEditBudgetRemoving(false)
         if (delErr) {
             toastError(
-                formatSupabasePostgrestError(delErr) ?? "Não foi possível remover o orçamento.",
+                formatSupabasePostgrestError(delErr) ?? "Não foi possível remover o orçamento",
+                { id: "remover-orcamento" },
             )
             return
         }
@@ -335,8 +340,8 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
         setDeleteDeleting(false)
         if (error) {
             toastError(
-                formatSupabasePostgrestError(error) ??
-                    "Não foi possível excluir a categoria. Tente novamente.",
+                formatSupabasePostgrestError(error) ?? "Não foi possível excluir a categoria",
+                { id: "excluir-categoria" },
             )
             return
         }

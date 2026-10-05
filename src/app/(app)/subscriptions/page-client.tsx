@@ -27,6 +27,7 @@ import {
     type WorkspaceSubscriptionListRow,
 } from "@/lib/supabase"
 import { toastError, toastSuccess } from "@/lib/toast"
+import { SUBSCRIPTION_SAVE_TOAST_ID } from "@/components/subscriptions/use-subscription-form"
 import {
     Card,
     CardContent,
@@ -353,14 +354,15 @@ export default function SubscriptionsPageClient() {
                     payload,
                 })
                 if (!result.ok) {
-                    toastError(result.errorMessage)
+                    toastError(result.errorMessage, { id: SUBSCRIPTION_SAVE_TOAST_ID })
                     return false
                 }
-                toastSuccess(
-                    result.queued
-                        ? "Assinatura atualizada (sincroniza ao voltar online)."
-                        : "Assinatura atualizada."
-                )
+                toastSuccess("Assinatura atualizada", {
+                    id: SUBSCRIPTION_SAVE_TOAST_ID,
+                    description: result.queued
+                        ? "Sincroniza ao voltar online"
+                        : undefined,
+                })
             } else {
                 const result = await createSubscription({
                     workspaceId: currentWorkspaceId,
@@ -368,14 +370,15 @@ export default function SubscriptionsPageClient() {
                     payload,
                 })
                 if (!result.ok) {
-                    toastError(result.errorMessage)
+                    toastError(result.errorMessage, { id: SUBSCRIPTION_SAVE_TOAST_ID })
                     return false
                 }
-                toastSuccess(
-                    result.queued
-                        ? "Assinatura cadastrada (sincroniza ao voltar online)."
-                        : "Assinatura cadastrada."
-                )
+                toastSuccess("Assinatura cadastrada", {
+                    id: SUBSCRIPTION_SAVE_TOAST_ID,
+                    description: result.queued
+                        ? "Sincroniza ao voltar online"
+                        : undefined,
+                })
             }
             dispatchFinanceSubscriptionsMutated()
             void refreshBundle()
@@ -419,11 +422,11 @@ export default function SubscriptionsPageClient() {
 
         const result = currentWorkspaceId
             ? await deleteSubscriptions({ workspaceId: currentWorkspaceId, ids })
-            : ({ ok: false, errorMessage: "Carteira indisponível." } as const)
+            : ({ ok: false, errorMessage: "Carteira indisponível" } as const)
 
         setDeleting(false)
         if (!result.ok) {
-            toastError(result.errorMessage)
+            toastError(result.errorMessage, { id: "excluir-assinatura" })
             return
         }
         dispatchFinanceSubscriptionsMutated()
@@ -431,8 +434,9 @@ export default function SubscriptionsPageClient() {
         const n = ids.length
         toastSuccess(
             n === 1
-                ? "Assinatura removida."
-                : `${numberBR(n)} assinaturas removidas.`
+                ? "Assinatura removida"
+                : `${numberBR(n)} assinaturas removidas`,
+            { id: "excluir-assinatura" }
         )
         setPendingDelete(null)
         setRowSelection({})

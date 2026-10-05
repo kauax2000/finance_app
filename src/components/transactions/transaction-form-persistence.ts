@@ -1,4 +1,7 @@
-import type { InstallmentPlanFormSavePayload } from "@/components/transactions/transaction-form-types"
+import {
+    TRANSACTION_SAVE_TOAST_ID,
+    type InstallmentPlanFormSavePayload,
+} from "@/components/transactions/transaction-form-types"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { toastError, toastSuccess } from "@/lib/toast"
@@ -30,7 +33,7 @@ export async function persistInstallmentPlanCreate(options: {
         p_next_billing_date: payload.firstBillingYmd,
     }
 
-    const { error: rpcError } = await supabase.rpc(
+    const { data: planId, error: rpcError } = await supabase.rpc(
         "create_workspace_installment_plan",
         rpcArgs
     )
@@ -41,7 +44,8 @@ export async function persistInstallmentPlanCreate(options: {
         console.error("create_workspace_installment_plan:", rpcError)
         toastError(
             formatSupabasePostgrestError(rpcError) ??
-                "Não foi possível criar o plano parcelado."
+                "Não foi possível criar o plano parcelado",
+            { id: TRANSACTION_SAVE_TOAST_ID }
         )
         return false
     }
@@ -55,9 +59,15 @@ export async function persistInstallmentPlanCreate(options: {
         /* non-blocking */
     })
 
-    toastSuccess(
-        "Compra parcelada registrada. Cada parcela aparece no extrato com o valor da prestação."
-    )
+    // A RPC devolve o id do plano; o "Ver" abre a lista filtrada nas parcelas dele.
+    toastSuccess("Compra parcelada registrada", {
+        id: TRANSACTION_SAVE_TOAST_ID,
+        description: "Cada parcela aparece no extrato com o valor da prestação.",
+        action:
+            typeof planId === "string"
+                ? { label: "Ver", href: `/transactions?plan=${planId}` }
+                : undefined,
+    })
     await onAfterSuccess()
     return true
 }

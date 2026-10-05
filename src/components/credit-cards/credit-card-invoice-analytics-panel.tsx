@@ -93,6 +93,9 @@ const SLICE_LABEL: Record<InvoiceSliceKey, string> = {
 
 const SLICE_KEYS: InvoiceSliceKey[] = ["installments_recurring", "one_off"]
 
+/** Marcar e desmarcar a fatura são o mesmo assunto: o resultado substitui o anterior. */
+const INVOICE_PAYMENT_TOAST_ID = "pagamento-fatura"
+
 type InvoiceHeroStatus = "open" | "future" | "paid" | "unpaid"
 
 function findPaymentForClose(
@@ -593,18 +596,20 @@ export function CreditCardInvoiceAnalyticsPanel({
         setPaymentSaving(false)
         if (error) {
             if (isPostgrestRelationMissingError(error)) {
-                toastError(
-                    "Tabela de pagamentos indisponível. Aplique a migração do banco de dados."
-                )
+                toastError("Tabela de pagamentos indisponível", {
+                    id: INVOICE_PAYMENT_TOAST_ID,
+                    description: "Aplique a migração do banco de dados",
+                })
             } else {
                 toastError(
                     formatSupabasePostgrestError(error) ??
-                        "Não foi possível marcar a fatura como paga."
+                        "Não foi possível marcar a fatura como paga",
+                    { id: INVOICE_PAYMENT_TOAST_ID }
                 )
             }
             return
         }
-        toastSuccess("Fatura marcada como paga.")
+        toastSuccess("Fatura marcada como paga", { id: INVOICE_PAYMENT_TOAST_ID })
         if (workspaceId) {
             void queryClient.invalidateQueries({
                 queryKey: transactionsWorkspaceAuxKeys.detail(workspaceId),
@@ -632,18 +637,20 @@ export function CreditCardInvoiceAnalyticsPanel({
         setPaymentSaving(false)
         if (error) {
             if (isPostgrestRelationMissingError(error)) {
-                toastError(
-                    "Tabela de pagamentos indisponível. Aplique a migração do banco de dados."
-                )
+                toastError("Tabela de pagamentos indisponível", {
+                    id: INVOICE_PAYMENT_TOAST_ID,
+                    description: "Aplique a migração do banco de dados",
+                })
             } else {
                 toastError(
                     formatSupabasePostgrestError(error) ??
-                        "Não foi possível desmarcar o pagamento."
+                        "Não foi possível desmarcar o pagamento",
+                    { id: INVOICE_PAYMENT_TOAST_ID }
                 )
             }
             return
         }
-        toastSuccess("Pagamento desmarcado.")
+        toastSuccess("Pagamento desmarcado", { id: INVOICE_PAYMENT_TOAST_ID })
         if (workspaceId) {
             void queryClient.invalidateQueries({
                 queryKey: transactionsWorkspaceAuxKeys.detail(workspaceId),

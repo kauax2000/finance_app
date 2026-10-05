@@ -1619,6 +1619,24 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   coluna, levava a moldura a `w-full` e espremia o painel numa fresta; a
   coluna fica na largura das abas, em `self-start`, e o `floating` vira placa
   (`rounded-2xl`) em vez de estádio.
+- **O `Toast` é a placa flutuante, e o tom mora no ícone** (rodada 228). A
+  superfície é a dos flutuantes — a tinta de vidro do `menuPanelTintClassName`
+  (`--popover` 85/60 com o borrão), o anel de 1px, a sombra, raio 18 — nos
+  cinco tipos; o tipo pinta só o **poço do ícone** (`-muted` do tom).
+  **Não há barra de tempo** (saiu a pedido do dono); a contagem é a **roda**
+  antes do rótulo do Desfazer (`@property --toast-left`), e ela e o relógio
+  param quando o sonner para: pilha aberta, foco dentro (o `Toaster`
+  despacha o `mousemove` que o sonner ouve), aba escondida. Uma ação só fica ao lado do texto; se a quebra a leva para
+  baixo, ela ocupa a linha inteira, e duas dividem a linha de baixo. **Nenhuma tela importa o
+  `toast` do sonner**: os helpers de `@/lib/toast` levam `description`
+  (nó), `id` (o **assunto** — o sucesso substitui o erro do mesmo
+  formulário), `action` (`href` é o "Ver", pelo roteador) e `cancel`;
+  repetidos sem `id` viram ×2, ×3. Novos: `toastPill` (a confirmação de uma
+  palavra, no canto dos outros avisos), `toastProgress` (a porcentagem na mesma bolha) e
+  o `toastUndo` com a roda que esvazia e o resultado na mesma bolha. Erro entra
+  com `role="alert"`; Esc fecha o toast com foco. A pilha nasce **abaixo da barra do topo** (a base medida da
+  `TopBar` mais 12px — 48 no app, 56 no catálogo), e não por cima dela. As peças com JSX moram em
+  `lib/toast-parts.tsx` — `lib/toast.ts` continua `.ts`.
 - **O `Timeline` ganhou o estado, a coluna de data, a linha compacta e o
   feed** (rodada 227). **O fim é CSS e a forma é contexto**: `:last-child`
   apaga o conector do último (`isLast={false}` é a exceção), e nada mais é

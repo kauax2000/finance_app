@@ -79,7 +79,7 @@ export async function fetchTransactionsWorkspaceAux(
     if (anyTxRes.error) {
         maybeToastAuxError(
             anyTxRes.error,
-            "Não foi possível verificar transações.",
+            "Não foi possível verificar transações",
         )
         workspaceHasTransactions = false
     } else {
@@ -92,7 +92,7 @@ export async function fetchTransactionsWorkspaceAux(
             if (!isPostgrestRelationMissingError(plansRes.error)) {
                 maybeToastAuxError(
                     plansRes.error,
-                    "Não foi possível carregar os planos parcelados.",
+                    "Não foi possível carregar os planos parcelados",
                 )
             }
         }
@@ -107,7 +107,7 @@ export async function fetchTransactionsWorkspaceAux(
         if (!isPostgrestRelationMissingError(subsRes.error)) {
             maybeToastAuxError(
                 subsRes.error,
-                "Não foi possível carregar as assinaturas.",
+                "Não foi possível carregar as assinaturas",
             )
         }
         subscriptions = []
@@ -123,7 +123,7 @@ export async function fetchTransactionsWorkspaceAux(
         if (!isPostgrestRelationMissingError(invoicePayRes.error)) {
             maybeToastAuxError(
                 invoicePayRes.error,
-                "Não foi possível carregar pagamentos de fatura.",
+                "Não foi possível carregar pagamentos de fatura",
             )
         }
         invoicePayments = []

@@ -81,7 +81,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
             if (seq !== fetchSeq.current) return
             toastPageFetchError(
                 "notifications",
-                e instanceof Error ? e.message : "Erro ao carregar notificações"
+                e instanceof Error ? e.message : "Não foi possível carregar as notificações"
             )
         } finally {
             if (seq === fetchSeq.current) setLoading(false)
@@ -121,7 +121,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
         try {
             await markRead(user.id, currentWorkspaceId, id)
         } catch (e) {
-            toastError(e instanceof Error ? e.message : "Erro ao marcar como lida")
+            toastError(e instanceof Error ? e.message : "Não foi possível marcar como lida")
             void fetchNotifications()
         }
     }
@@ -135,7 +135,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
         try {
             await deleteNotification(user.id, currentWorkspaceId, id)
         } catch (e) {
-            toastError(e instanceof Error ? e.message : "Erro ao excluir")
+            toastError(e instanceof Error ? e.message : "Não foi possível excluir a notificação")
             void fetchNotifications()
         }
     }
@@ -155,7 +155,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
         try {
             await clearAllNotifications(user.id, currentWorkspaceId)
         } catch (e) {
-            toastError(e instanceof Error ? e.message : "Erro ao limpar")
+            toastError(e instanceof Error ? e.message : "Não foi possível limpar as notificações")
             void fetchNotifications()
         }
     }

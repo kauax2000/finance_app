@@ -207,7 +207,8 @@ export default function CreditCardDetailPageClient() {
             } else {
                 toastError(
                     formatSupabasePostgrestError(cardRes.error) ??
-                        "Não foi possível carregar o cartão."
+                        "Não foi possível carregar o cartão",
+                    { id: "carregar-cartao" }
                 )
                 setCard(null)
             }
@@ -222,7 +223,8 @@ export default function CreditCardDetailPageClient() {
             if (!isPostgrestRelationMissingError(txPack.error)) {
                 toastError(
                     formatSupabasePostgrestError(txPack.error) ??
-                        "Não foi possível carregar transações do cartão."
+                        "Não foi possível carregar as transações do cartão",
+                    { id: "carregar-cartao-transacoes" }
                 )
             }
             setCcAnalyticsRows([])
@@ -234,7 +236,8 @@ export default function CreditCardDetailPageClient() {
             if (!isPostgrestRelationMissingError(plansPack.error)) {
                 toastError(
                     formatSupabasePostgrestError(plansPack.error) ??
-                        "Não foi possível carregar parcelamentos."
+                        "Não foi possível carregar os parcelamentos",
+                    { id: "carregar-cartao-parcelamentos" }
                 )
             }
             setInstallmentPlans([])
@@ -246,7 +249,8 @@ export default function CreditCardDetailPageClient() {
             if (!isPostgrestRelationMissingError(paymentsPack.error)) {
                 toastError(
                     formatSupabasePostgrestError(paymentsPack.error) ??
-                        "Não foi possível carregar pagamentos de fatura."
+                        "Não foi possível carregar os pagamentos de fatura",
+                    { id: "carregar-cartao-pagamentos" }
                 )
             }
             setInvoicePayments([])
@@ -268,7 +272,8 @@ export default function CreditCardDetailPageClient() {
             if (!isPostgrestRelationMissingError(pack.error)) {
                 toastError(
                     formatSupabasePostgrestError(pack.error) ??
-                        "Não foi possível atualizar pagamentos de fatura."
+                        "Não foi possível atualizar os pagamentos de fatura",
+                    { id: "carregar-cartao-pagamentos" }
                 )
             }
             setInvoicePayments([])
@@ -323,7 +328,7 @@ export default function CreditCardDetailPageClient() {
             if (!user || !currentWorkspaceId) return
             const txId = transactionIdForInstallmentPlan(ccAnalyticsRows, planId)
             if (!txId) {
-                toastError("Nenhuma parcela encontrada para este plano.")
+                toastError("Nenhuma parcela encontrada para este plano")
                 return
             }
             const { transaction, errorMessage } = await fetchTransactionForDetailSheet(
@@ -339,7 +344,7 @@ export default function CreditCardDetailPageClient() {
                 return
             }
             if (!transaction) {
-                toastError("Transação não encontrada.")
+                toastError("Transação não encontrada")
                 return
             }
             setDetailTransaction(transaction)
@@ -573,7 +578,7 @@ export default function CreditCardDetailPageClient() {
                     creditCards: sheetCreditCards,
                 })
             if (!transaction) {
-                toastError(errorMessage ?? "Transação não encontrada.")
+                toastError(errorMessage ?? "Transação não encontrada")
                 return
             }
             setDetailTransaction(transaction)
@@ -595,7 +600,7 @@ export default function CreditCardDetailPageClient() {
             },
         })
         if (!resolved.ok) {
-            toastError(resolved.message)
+            toastError(resolved.message, { id: "salvar-cartao" })
             return
         }
         if (resolved.luhnWarning) {
@@ -613,13 +618,13 @@ export default function CreditCardDetailPageClient() {
             dueN < 1 ||
             dueN > 31
         ) {
-            toastError("Dia de fechamento e vencimento devem ser entre 1 e 31.")
+            toastError("Dia de fechamento e vencimento devem ser entre 1 e 31", { id: "salvar-cartao" })
             return
         }
 
         const exp = parseExpiryFields(editExpiryMonth, editExpiryYear)
         if (!exp.ok) {
-            toastError(exp.message)
+            toastError(exp.message, { id: "salvar-cartao" })
             return
         }
 
@@ -647,11 +652,11 @@ export default function CreditCardDetailPageClient() {
         setEditSaving(false)
 
         if (!result.ok) {
-            toastError(result.errorMessage)
+            toastError(result.errorMessage, { id: "salvar-cartao" })
             return
         }
 
-        toastSuccess("Cartão atualizado.")
+        toastSuccess("Cartão atualizado", { id: "salvar-cartao" })
         closeEdit()
         void load()
     }
@@ -661,13 +666,13 @@ export default function CreditCardDetailPageClient() {
         setDeleting(true)
         const result = currentWorkspaceId
             ? await deleteCreditCard({ workspaceId: currentWorkspaceId, cardId: card.id })
-            : ({ ok: false, errorMessage: "Carteira indisponível." } as const)
+            : ({ ok: false, errorMessage: "Carteira indisponível" } as const)
         setDeleting(false)
         if (!result.ok) {
-            toastError(result.errorMessage)
+            toastError(result.errorMessage, { id: "excluir-cartao" })
             return
         }
-        toastSuccess("Cartão removido.")
+        toastSuccess("Cartão removido", { id: "excluir-cartao" })
         setPendingCardDelete(false)
         router.push(ROUTES.CREDIT_CARDS)
     }
@@ -680,10 +685,10 @@ export default function CreditCardDetailPageClient() {
             isActive: active,
         })
         if (!result.ok) {
-            toastError(result.errorMessage)
+            toastError(result.errorMessage, { id: "ativar-cartao" })
             return
         }
-        toastSuccess(active ? "Cartão ativado." : "Cartão desativado.")
+        toastSuccess(active ? "Cartão ativado" : "Cartão desativado", { id: "ativar-cartao" })
         setCard((prev) => (prev ? { ...prev, is_active: active } : prev))
     }
 

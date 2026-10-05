@@ -402,10 +402,13 @@ export default function MembersPage() {
             }
             await fetchMembersAndInvites()
             dispatchFinanceMembersMutated()
-            toastSuccess("Convite enviado com sucesso.")
+            toastSuccess("Convite enviado", { id: "convite-email", description: emailLower })
         } catch (error) {
             console.error("Error creating invite:", error)
-            toastError(error instanceof Error ? error.message : "Falha ao enviar convite.")
+            toastError(
+                error instanceof Error ? error.message : "Não foi possível enviar o convite",
+                { id: "convite-email" },
+            )
         } finally {
             setSavingInvite(false)
         }
@@ -433,13 +436,17 @@ export default function MembersPage() {
             const exp =
                 typeof res.expires_at === "string" ? res.expires_at.trim() : ""
             if (exp) setGeneratedLinkExpiresAt(exp)
-            toastSuccess(
-                "Link gerado. Copie agora: por segurança ele não fica salvo.",
-            )
+            toastSuccess("Link gerado", {
+                id: "convite-link",
+                description: "Copie agora: por segurança ele não fica salvo.",
+            })
             await fetchMembersAndInvites()
         } catch (error) {
             console.error("Error creating link invite:", error)
-            toastError(error instanceof Error ? error.message : "Falha ao gerar link de convite.")
+            toastError(
+                error instanceof Error ? error.message : "Não foi possível gerar o link de convite",
+                { id: "convite-link" },
+            )
         } finally {
             setSavingLink(false)
         }
@@ -452,7 +459,7 @@ export default function MembersPage() {
             setLinkCopied(true)
             later(() => setLinkCopied(false), 2000)
         } catch {
-            toastError("Não foi possível copiar o link.")
+            toastError("Não foi possível copiar o link")
         }
     }
 
@@ -466,13 +473,14 @@ export default function MembersPage() {
                     invite_id: inviteId,
                 },
             })
-            toastSuccess("Convite reenviado por e-mail.")
+            toastSuccess("Convite reenviado por e-mail", { id: `reenviar-convite:${inviteId}` })
         } catch (error) {
             console.error("Error resending invite:", error)
             toastError(
                 error instanceof Error
                     ? error.message
-                    : "Não foi possível reenviar o convite.",
+                    : "Não foi possível reenviar o convite",
+                { id: `reenviar-convite:${inviteId}` },
             )
         } finally {
             setBusyResendInviteId(null)
@@ -482,7 +490,7 @@ export default function MembersPage() {
     const { confirm: confirmRevoke, dialog: revokeConfirmDialog } = useConfirmDialog()
     const handleRevokeInvite = async (inviteId: string) => {
         if (!canManageMembers) {
-            toastError("Apenas owner pode revogar convites.")
+            toastError("Só o owner pode revogar convites")
             return
         }
         const ok = await confirmRevoke({
@@ -498,9 +506,9 @@ export default function MembersPage() {
             .eq("id", inviteId)
 
         if (error) {
-            toastError("Não foi possível revogar o convite.")
+            toastError("Não foi possível revogar o convite", { id: `revogar-convite:${inviteId}` })
         } else {
-            toastSuccess("Convite revogado.")
+            toastSuccess("Convite revogado", { id: `revogar-convite:${inviteId}` })
             setLinkCopied(false)
             setGeneratedLinkUrl(null)
             setGeneratedLinkExpiresAt(null)
@@ -513,7 +521,7 @@ export default function MembersPage() {
     const handleRemoveMember = async (memberUserId: string) => {
         if (!currentWorkspaceId) return
         if (!canManageMembers) {
-            toastError("Apenas owner pode remover membros.")
+            toastError("Só o owner pode remover membros")
             return
         }
 
@@ -525,9 +533,9 @@ export default function MembersPage() {
             .eq("user_id", memberUserId)
 
         if (error) {
-            toastError("Não foi possível remover o membro.")
+            toastError("Não foi possível remover o membro", { id: `remover-membro:${memberUserId}` })
         } else {
-            toastSuccess("Membro removido com sucesso.")
+            toastSuccess("Membro removido", { id: `remover-membro:${memberUserId}` })
         }
         await fetchMembersAndInvites()
         setBusyMemberId(null)

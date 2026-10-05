@@ -146,7 +146,7 @@ export default function DashboardPageClient() {
                     creditCards: d.creditCards,
                 })
             if (!transaction) {
-                toastError(errorMessage ?? "Transação não encontrada.")
+                toastError(errorMessage ?? "Transação não encontrada")
                 return
             }
             setDetailTransaction(transaction)
@@ -166,7 +166,7 @@ export default function DashboardPageClient() {
             if (!transactionId) {
                 toastError(
                     errorMessage ??
-                        "Nenhuma transação lançada para esta compra parcelada ainda.",
+                        "Nenhuma transação lançada para esta compra parcelada ainda",
                 )
                 return
             }

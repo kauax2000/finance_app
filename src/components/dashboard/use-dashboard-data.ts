@@ -399,10 +399,8 @@ export function useDashboardData() {
         if (!hadTxDataRef.current) return
         if (isPostgrestTransientNetworkError(txQuery.error)) return
         toastError(
-            userFacingFetchError(
-                txQuery.error,
-                "Não foi possível atualizar o painel. Mostrando a última versão carregada.",
-            ),
+            userFacingFetchError(txQuery.error, "Não foi possível atualizar o painel"),
+            { description: "Mostrando a última versão carregada." },
         )
     }, [queriesEnabled, txQuery.isError, txQuery.error])
 

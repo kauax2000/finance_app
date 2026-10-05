@@ -18,9 +18,13 @@ import {
 import { CreditCardFormFields } from "@/components/credit-cards/credit-card-form-fields"
 import { parseExpiryFields } from "@/components/credit-cards/credit-card-form-shared"
 import { toastError, toastSuccess, toastWarning } from "@/lib/toast"
+import { creditCardDetailPath } from "@/config/navigation"
 import { resolveCreditCardForSave } from "@/lib/credit-card-number"
 import { createCreditCard } from "@/lib/credit-cards/mutations"
 import { dispatchFinanceCreditCardsMutated } from "@/lib/workspace-data-events"
+
+/** O assunto dos toasts do formulário: o sucesso substitui o erro anterior. */
+const TOAST_ID = "cadastrar-cartao"
 
 export type CreditCardCreateDialogProps = {
     open: boolean
@@ -72,7 +76,7 @@ export function CreditCardCreateDialog({
             mode: "create",
         })
         if (!resolved.ok) {
-            toastError(resolved.message)
+            toastError(resolved.message, { id: TOAST_ID })
             return
         }
         if (resolved.luhnWarning) {
@@ -90,13 +94,13 @@ export function CreditCardCreateDialog({
             dueN < 1 ||
             dueN > 31
         ) {
-            toastError("Dia de fechamento e vencimento devem ser entre 1 e 31.")
+            toastError("Dia de fechamento e vencimento devem ser entre 1 e 31", { id: TOAST_ID })
             return
         }
 
         const exp = parseExpiryFields(expiryMonth, expiryYear)
         if (!exp.ok) {
-            toastError(exp.message)
+            toastError(exp.message, { id: TOAST_ID })
             return
         }
 
@@ -122,8 +126,8 @@ export function CreditCardCreateDialog({
         let result: Awaited<ReturnType<typeof createCreditCard>>
         try {
             result = await createCreditCard(insertRow)
-        } catch (err) {
-            toastError(err instanceof Error ? err.message : "Não foi possível cadastrar o cartão.")
+        } catch {
+            toastError("Não foi possível cadastrar o cartão", { id: TOAST_ID })
             return
         } finally {
             // Se a criação lançar, o botão não fica preso em "salvando".
@@ -131,15 +135,21 @@ export function CreditCardCreateDialog({
         }
 
         if (!result.ok) {
-            toastError(result.errorMessage)
+            toastError(result.errorMessage, { id: TOAST_ID })
             return
         }
 
-        toastSuccess(
-            result.queued
-                ? "Cartão salvo offline. Será sincronizado quando houver conexão."
-                : "Cartão cadastrado."
-        )
+        if (result.queued) {
+            toastSuccess("Cartão salvo offline", {
+                id: TOAST_ID,
+                description: "Será sincronizado quando houver conexão",
+            })
+        } else {
+            toastSuccess("Cartão cadastrado", {
+                id: TOAST_ID,
+                action: { label: "Ver", href: creditCardDetailPath(result.cardId) },
+            })
+        }
         resetCreateForm()
         onOpenChange(false)
         dispatchFinanceCreditCardsMutated()

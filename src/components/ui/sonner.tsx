@@ -1,8 +1,9 @@
 "use client"
 
-import type { ComponentProps } from "react"
+import { useEffect, useState, type ComponentProps } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
-import { Toaster as Sonner } from "sonner"
+import { Toaster as Sonner, toast } from "sonner"
 import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
@@ -12,7 +13,7 @@ import {
 } from "@heroicons/react/16/solid"
 
 import { Spinner } from "@/components/ui/spinner"
-import { TOAST_DEFAULT_MS } from "@/lib/toast"
+import { registrarNavegacaoDoToast, TOAST_DEFAULT_MS } from "@/lib/toast"
 
 type ToasterProps = ComponentProps<typeof Sonner>
 
@@ -21,51 +22,115 @@ type ToasterProps = ComponentProps<typeof Sonner>
  *
  * ## O que é decisão, e o que é padrão do sonner
  *
- * **Decisão:** a posição (`top-right`), o desvio no telefone e o botão de
- * fechar. **Padrão do sonner, mantido de propósito:** empilhamento, arraste
- * para dispensar, `promise`, deduplicação por `id` e a largura de 356px. Essa
- * física é justamente o que não se reescreve — é o mesmo julgamento da rodada
- * do `vaul`: pega-se o mecanismo emprestado e veste-se a cromagem própria.
+ * **Decisão:** a posição (`top-right`), o desvio no telefone, o botão de
+ * fechar e — desde a rodada 228 — a placa flutuante de vidro, a pausa honesta
+ * e o Esc. **Padrão do sonner, mantido de propósito:** empilhamento (3
+ * à vista, abrindo no cursor), arraste para dispensar (no telefone, para cima
+ * ou para o lado), `promise`, deduplicação por `id` e o ⌥T que leva o foco à
+ * pilha. É o mesmo julgamento da rodada do `vaul`: pega-se o mecanismo
+ * emprestado e veste-se a cromagem própria.
  *
- * A cromagem mora em `globals.css`, no bloco `[data-sonner-toast]`: tipografia,
- * corpo, raio, sombra e o alvo de toque do ×. Ela precisa estar lá, e não aqui,
- * porque o sonner renderiza fora da árvore de classes do Tailwind.
+ * A cromagem mora em `globals.css`, no bloco `[data-sonner-toast]`, porque o
+ * sonner renderiza fora da árvore de classes do Tailwind. **Nenhuma tela chama
+ * o `toast` do sonner**: os helpers de `@/lib/toast` levam a duração, o
+ * assunto e a contagem.
  *
- * ## Os ícones são Heroicons, e não os da biblioteca
+ * ## Os ícones são Heroicons
  *
- * O sonner desenha os próprios — medido no DOM: `viewBox="0 0 20 20"` sem
- * `data-slot` no ícone de tipo, `0 0 24 24` no ×. É a regra **G** do projeto
- * ("Heroicons, e só"), e era o único lugar onde ela vazava sem que nenhum
- * guarda pegasse: o ESLint olha imports e o auditor olha o repositório, e estes
- * SVGs moram em `node_modules`.
- *
- * O `Spinner` entra como ícone de `loading` pela mesma razão que ele está na
- * lista de SVG desenhado do auditor — a roda é o comportamento, não um glifo.
+ * O sonner desenha os próprios, e eles moram em `node_modules`, fora do alcance
+ * do ESLint e do auditor. Entram pelo prop `icons`; o `Spinner` é o do
+ * `loading`, porque a roda é o comportamento, não um glifo.
  *
  * ## O desvio no telefone tem uma causa
  *
  * `mobileOffset.top` soma a área segura ao cabeçalho do app (4rem). Sem isso
  * o toast nasce **atrás** do cabeçalho fixo. No topo e não no rodapé porque
- * embaixo está a ilha de navegação, e um toast sobre ela cobre o alvo de toque
- * mais usado do app.
+ * embaixo está a ilha de navegação.
  */
 export function Toaster({ ...props }: ToasterProps) {
   const { resolvedTheme } = useTheme()
+  const router = useRouter()
+  const pathname = usePathname()
+  const topo = useAbaixoDaBarra(pathname)
+
+  // O "Ver" de um toast navega pelo roteador, sem recarregar a página.
+  useEffect(() => {
+    registrarNavegacaoDoToast((href) => router.push(href))
+    return () => registrarNavegacaoDoToast(null)
+  }, [router])
+
+  useEffect(() => {
+    /**
+     * **A pausa honesta.** O sonner para o relógio com o cursor em cima da
+     * pilha e com a aba escondida — mas não com o **foco**: quem chega ao
+     * "Desfazer" pelo Tab (ou pelo ⌥T) via o tempo correr enquanto decidia.
+     * A pausa do sonner é o estado de "aberta", que o React liga num
+     * `mousemove` e desliga num `mouseout` para fora da lista; o foco entrando
+     * despacha o primeiro, e saindo, o segundo.
+     */
+    const lista = (alvo: EventTarget | null) =>
+      alvo instanceof Element ? alvo.closest<HTMLElement>("[data-sonner-toaster]") : null
+
+    const entrou = (e: FocusEvent) => {
+      const ol = lista(e.target)
+      if (ol && !lista(e.relatedTarget)) {
+        ol.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }))
+      }
+    }
+    const saiu = (e: FocusEvent) => {
+      const ol = lista(e.target)
+      if (ol && lista(e.relatedTarget) !== ol && !ol.matches(":hover")) {
+        ol.dispatchEvent(new MouseEvent("mouseout", { bubbles: true, relatedTarget: document.body }))
+      }
+    }
+    // Esc fecha o toast que tem o foco. O sonner só recolhe a pilha.
+    const tecla = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return
+      const li = (document.activeElement as HTMLElement | null)?.closest<HTMLElement>("[data-sonner-toast]")
+      const id = li?.dataset.testid
+      if (id) toast.dismiss(id)
+    }
+
+    // A aba escondida marca o `<html>`, para a roda do Desfazer — uma animação
+    // de CSS — parar junto do relógio do sonner.
+    const visibilidade = () => {
+      document.documentElement.toggleAttribute("data-toast-paused", document.hidden)
+    }
+
+    document.addEventListener("visibilitychange", visibilidade)
+    document.addEventListener("focusin", entrou)
+    document.addEventListener("focusout", saiu)
+    document.addEventListener("keydown", tecla)
+    return () => {
+      document.removeEventListener("visibilitychange", visibilidade)
+      document.removeEventListener("focusin", entrou)
+      document.removeEventListener("focusout", saiu)
+      document.removeEventListener("keydown", tecla)
+    }
+  }, [])
 
   return (
     <Sonner
       theme={resolvedTheme === "dark" ? "dark" : "light"}
       position="top-right"
       closeButton
+      visibleToasts={3}
       // Os rótulos do sonner vêm em inglês ("Notifications", "Close toast").
       containerAriaLabel="Notificações"
       // Sem `z-(--z-toast)`: o sonner declara `z-index: 999999999` fora de
       // camada, e a utility perdia calada. O toast já fica acima de tudo.
       className="toaster"
-      offset="1rem"
+      // **Abaixo da barra do topo, e não por cima dela** (a pedido do dono): o
+      // topo da pilha é a base medida da `TopBar` mais 12px. Sem barra na tela
+      // (as telas de acesso), 16px do topo, e no telefone o desvio de sempre.
+      offset={{
+        top: topo != null ? `${topo + 12}px` : "1rem",
+        right: "1rem",
+        bottom: "1rem",
+        left: "1rem",
+      }}
       mobileOffset={{
-        // A barra do topo (48) mais 16 de respiro.
-        top: "calc(env(safe-area-inset-top, 0px) + 4rem)",
+        top: topo != null ? `${topo + 12}px` : "calc(env(safe-area-inset-top, 0px) + 4rem)",
       }}
       icons={{
         success: <CheckCircleIcon aria-hidden />,
@@ -76,9 +141,6 @@ export function Toaster({ ...props }: ToasterProps) {
         close: <XMarkIcon aria-hidden />,
       }}
       toastOptions={{
-        // A duração vive em `lib/toast.ts` junto das outras: ela era 4000 aqui
-        // e `TOAST_SUCCESS_MS = 4000` lá, dois números iguais sem relação
-        // declarada — e o primeiro a mudar deixaria o outro para trás.
         duration: TOAST_DEFAULT_MS,
         closeButtonAriaLabel: "Fechar notificação",
         classNames: {
@@ -88,4 +150,28 @@ export function Toaster({ ...props }: ToasterProps) {
       {...props}
     />
   )
+}
+
+/**
+ * A base da barra do topo, em px a partir do topo da janela — a área segura
+ * entra na conta sozinha, porque a `TopBar` a soma à própria altura. As
+ * barras não têm a mesma altura (48 no app, 56 no catálogo), então ela é
+ * medida, e não cravada; o observador acompanha a troca de degrau, e a rota
+ * troca de barra. `null` quando não há barra.
+ */
+function useAbaixoDaBarra(pathname: string | null) {
+  const [base, setBase] = useState<number | null>(null)
+  useEffect(() => {
+    const barra = document.querySelector<HTMLElement>('[data-slot="top-bar"]')
+    if (!barra) {
+      const id = window.requestAnimationFrame(() => setBase(null))
+      return () => window.cancelAnimationFrame(id)
+    }
+    const ro = new ResizeObserver(() => {
+      setBase(Math.round(barra.getBoundingClientRect().bottom))
+    })
+    ro.observe(barra)
+    return () => ro.disconnect()
+  }, [pathname])
+  return base
 }

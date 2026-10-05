@@ -80,7 +80,7 @@ export function useInstallmentSlices(planId: string | null | undefined, open: bo
             if (cancelled) return
             if (error) {
                 toastError(
-                    formatSupabasePostgrestError(error) ?? "Não foi possível carregar as parcelas."
+                    formatSupabasePostgrestError(error) ?? "Não foi possível carregar as parcelas"
                 )
                 setSlices([])
             } else {

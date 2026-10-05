@@ -35,6 +35,9 @@ function paymentMethodFromBill(
     return null
 }
 
+/** O assunto dos toasts do formulário de conta: o "salvo" substitui o erro. */
+export const BILL_SAVE_TOAST_ID = "salvar-conta"
+
 export type UseBillFormArgs = {
     active: boolean
     saving: boolean
@@ -159,7 +162,7 @@ export function useBillForm({
             })
 
             if (!parsed.ok) {
-                toastError(parsed.error)
+                toastError(parsed.error, { id: BILL_SAVE_TOAST_ID })
                 return
             }
 

@@ -162,14 +162,13 @@ export function GlobalShellDialogsProvider({
                     payload,
                 })
                 if (!result.ok) {
-                    toastError(result.errorMessage)
+                    toastError(result.errorMessage, { id: "cadastrar-assinatura" })
                     return false
                 }
-                toastSuccess(
-                    result.queued
-                        ? "Assinatura cadastrada (sincroniza ao voltar online)."
-                        : "Assinatura cadastrada.",
-                )
+                toastSuccess("Assinatura cadastrada", {
+                    id: "cadastrar-assinatura",
+                    description: result.queued ? "Sincroniza ao voltar online." : undefined,
+                })
                 dispatchFinanceSubscriptionsMutated()
                 return true
             } finally {

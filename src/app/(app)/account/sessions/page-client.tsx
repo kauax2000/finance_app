@@ -69,7 +69,9 @@ export default function SessionsPage() {
             setSessions((prev) => prev.filter((s) => s.id !== sessionId))
         } catch (err) {
             console.error("Error revoking session:", err)
-            toastError(err instanceof Error ? err.message : "Erro ao encerrar sessão")
+            toastError("Não foi possível encerrar a sessão", {
+                description: describeEdgeInvokeClientFailure(err),
+            })
         } finally {
             setRevoking(null)
         }
@@ -82,7 +84,9 @@ export default function SessionsPage() {
             setSessions((prev) => prev.filter((s) => s.is_current))
         } catch (err) {
             console.error("Error revoking all sessions:", err)
-            toastError(err instanceof Error ? err.message : "Erro ao encerrar sessões")
+            toastError("Não foi possível encerrar as sessões", {
+                description: describeEdgeInvokeClientFailure(err),
+            })
         } finally {
             setRevoking(null)
         }

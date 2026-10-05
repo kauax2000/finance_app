@@ -425,6 +425,9 @@ export function useTransactionsListController(
 
     const [didAutoOpen, setDidAutoOpen] = useState(false)
     const [didAutoOpenTxn, setDidAutoOpenTxn] = useState(false)
+    // Com o `txn` já consumido da URL, o próximo `?txn=` (o "Ver" do toast de
+    // transação criada, com esta tela aberta) tem de abrir de novo.
+    if (didAutoOpenTxn && !searchParams?.get("txn")) setDidAutoOpenTxn(false)
     const [detailTransaction, setDetailTransaction] =
         useState<Transaction | null>(null)
     const [detailOpen, setDetailOpen] = useState(false)

@@ -15,10 +15,11 @@ import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import { totalPurchaseFromPlan } from "@/lib/transaction-installment"
 import { toastError } from "@/lib/toast"
 import type { TransactionFormKind } from "@/components/transactions/transaction-type-segment"
-import type {
-    InstallmentPlanFormSavePayload,
-    InstallmentPlanUpdatePayload,
-    TransactionFormSavePayload,
+import {
+    TRANSACTION_SAVE_TOAST_ID,
+    type InstallmentPlanFormSavePayload,
+    type InstallmentPlanUpdatePayload,
+    type TransactionFormSavePayload,
 } from "@/components/transactions/transaction-form-types"
 
 type RecurringMode = "once" | "daily" | "weekly" | "monthly"
@@ -326,7 +327,7 @@ export function useTransactionForm({
                 activeCards.length > 0 &&
                 !paymentCreditCardId
             ) {
-                toastError("Selecione o cartão de crédito usado nesta compra.")
+                toastError("Selecione o cartão de crédito usado nesta compra", { id: TRANSACTION_SAVE_TOAST_ID })
                 return
             }
         }
@@ -334,14 +335,15 @@ export function useTransactionForm({
         if (isInstallmentCreate) {
             if (!onSaveInstallmentPlan) {
                 toastError(
-                    "Não foi possível salvar o plano parcelado (configuração incompleta)."
+                    "Não foi possível salvar o plano parcelado (configuração incompleta)",
+                    { id: TRANSACTION_SAVE_TOAST_ID }
                 )
                 return
             }
 
             const n = Math.floor(Number.parseInt(installmentCount, 10))
             if (!Number.isFinite(n) || n < 2) {
-                toastError("Informe pelo menos 2 parcelas.")
+                toastError("Informe pelo menos 2 parcelas", { id: TRANSACTION_SAVE_TOAST_ID })
                 return
             }
 
@@ -351,20 +353,20 @@ export function useTransactionForm({
             if (installmentValueMode === "total") {
                 const total = parseMoneyBrl(installmentTotal)
                 if (total === null || total <= 0) {
-                    toastError("Informe um valor total válido em reais.")
+                    toastError("Informe um valor total válido em reais", { id: TRANSACTION_SAVE_TOAST_ID })
                     return
                 }
                 const split = splitTotalAcrossInstallments(total, n)
                 installmentAmount = split.installmentAmount
                 finalInstallmentAmount = split.finalInstallmentAmount
                 if (installmentAmount <= 0 || finalInstallmentAmount <= 0) {
-                    toastError("Não foi possível dividir o valor nas parcelas.")
+                    toastError("Não foi possível dividir o valor nas parcelas", { id: TRANSACTION_SAVE_TOAST_ID })
                     return
                 }
             } else {
                 const per = parseMoneyBrl(installmentPerAmount)
                 if (per === null || per <= 0) {
-                    toastError("Informe o valor de cada parcela em reais.")
+                    toastError("Informe o valor de cada parcela em reais", { id: TRANSACTION_SAVE_TOAST_ID })
                     return
                 }
                 const eq = equalInstallmentsFromPortion(per, n)
@@ -399,7 +401,8 @@ export function useTransactionForm({
         if (isInstallmentPlanEdit) {
             if (!onUpdateInstallmentPlan || !editingTransaction?.installment_plan_id) {
                 toastError(
-                    "Não foi possível atualizar o plano parcelado (configuração incompleta)."
+                    "Não foi possível atualizar o plano parcelado (configuração incompleta)",
+                    { id: TRANSACTION_SAVE_TOAST_ID }
                 )
                 return
             }
@@ -408,7 +411,7 @@ export function useTransactionForm({
                 activeCards.length > 0 &&
                 !paymentCreditCardId
             ) {
-                toastError("Selecione o cartão de crédito usado nesta compra.")
+                toastError("Selecione o cartão de crédito usado nesta compra", { id: TRANSACTION_SAVE_TOAST_ID })
                 return
             }
 
@@ -417,12 +420,13 @@ export function useTransactionForm({
 
             const n = Math.floor(Number.parseInt(installmentCount, 10))
             if (!Number.isFinite(n) || n < 2) {
-                toastError("Informe pelo menos 2 parcelas.")
+                toastError("Informe pelo menos 2 parcelas", { id: TRANSACTION_SAVE_TOAST_ID })
                 return
             }
             if (n < gen) {
                 toastError(
-                    `O número de parcelas não pode ser menor que ${gen} (já geradas no plano).`
+                    `O número de parcelas não pode ser menor que ${gen} (já geradas no plano)`,
+                    { id: TRANSACTION_SAVE_TOAST_ID }
                 )
                 return
             }
@@ -433,20 +437,20 @@ export function useTransactionForm({
             if (installmentValueMode === "total") {
                 const total = parseMoneyBrl(installmentTotal)
                 if (total === null || total <= 0) {
-                    toastError("Informe um valor total válido em reais.")
+                    toastError("Informe um valor total válido em reais", { id: TRANSACTION_SAVE_TOAST_ID })
                     return
                 }
                 const split = splitTotalAcrossInstallments(total, n)
                 installmentAmount = split.installmentAmount
                 finalInstallmentAmount = split.finalInstallmentAmount
                 if (installmentAmount <= 0 || finalInstallmentAmount <= 0) {
-                    toastError("Não foi possível dividir o valor nas parcelas.")
+                    toastError("Não foi possível dividir o valor nas parcelas", { id: TRANSACTION_SAVE_TOAST_ID })
                     return
                 }
             } else {
                 const per = parseMoneyBrl(installmentPerAmount)
                 if (per === null || per <= 0) {
-                    toastError("Informe o valor de cada parcela em reais.")
+                    toastError("Informe o valor de cada parcela em reais", { id: TRANSACTION_SAVE_TOAST_ID })
                     return
                 }
                 const eq = equalInstallmentsFromPortion(per, n)
@@ -485,7 +489,7 @@ export function useTransactionForm({
 
         const parsed = parseMoneyBrl(amount)
         if (parsed === null || parsed <= 0) {
-            toastError("Informe um valor válido em reais.")
+            toastError("Informe um valor válido em reais", { id: TRANSACTION_SAVE_TOAST_ID })
             return
         }
 
@@ -497,7 +501,7 @@ export function useTransactionForm({
             activeCards.length > 0 &&
             !paymentCreditCardId
         ) {
-            toastError("Selecione o cartão de crédito usado nesta despesa.")
+            toastError("Selecione o cartão de crédito usado nesta despesa", { id: TRANSACTION_SAVE_TOAST_ID })
             return
         }
 

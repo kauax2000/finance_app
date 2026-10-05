@@ -39,7 +39,8 @@ import {
     periodBoundsFromYearMonth,
 } from "@/lib/budget-month"
 import { parseMoneyBrl } from "@/lib/money-brl"
-import { toastError } from "@/lib/toast"
+import { toastError, toastErrorWithDescription, toastSuccess } from "@/lib/toast"
+import { categoryDetailPath } from "@/config/navigation"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import {
     dispatchFinanceCategoriesMutated,
@@ -90,7 +91,7 @@ export function CategoryCreateDialog({
 
         const trimmedName = name.trim()
         if (!trimmedName) {
-            toastError("Informe o nome da categoria.")
+            toastError("Informe o nome da categoria", { id: "criar-categoria" })
             return
         }
 
@@ -99,7 +100,7 @@ export function CategoryCreateDialog({
         const rawBudget = type === "expense" ? editBudgetAmount.trim() : ""
         const budgetAmt = rawBudget ? parseMoneyBrl(rawBudget) : null
         if (rawBudget && (budgetAmt === null || budgetAmt <= 0)) {
-            toastError("Informe um valor válido em reais, maior que zero.")
+            toastError("Informe um valor válido em reais, maior que zero", { id: "criar-categoria" })
             return
         }
 
@@ -121,12 +122,17 @@ export function CategoryCreateDialog({
         if (insErr) {
             setSaving(false)
             toastError(
-                formatSupabasePostgrestError(insErr) ??
-                    "Não foi possível criar a categoria. Tente novamente.",
+                formatSupabasePostgrestError(insErr) ?? "Não foi possível criar a categoria",
+                { id: "criar-categoria" },
             )
             return
         }
 
+        const verCategoria = {
+            label: "Ver",
+            href: categoryDetailPath(inserted.id, { type }),
+        }
+        let budgetSaved = true
         if (budgetAmt !== null) {
             const { error: budErr } = await upsertCategoryBudget({
                 userId: user.id,
@@ -137,12 +143,22 @@ export function CategoryCreateDialog({
             })
             if (budErr) {
                 // A categoria existe: fecha o diálogo e diz onde terminar.
-                toastError(
-                    `Categoria criada, mas o orçamento não foi salvo. Defina-o no detalhe da categoria. ${
+                budgetSaved = false
+                toastErrorWithDescription(
+                    "Categoria criada, mas o orçamento não foi salvo",
+                    `Defina-o no detalhe da categoria. ${
                         formatSupabasePostgrestError(budErr) ?? ""
                     }`.trim(),
+                    { id: "criar-categoria", action: verCategoria },
                 )
             }
+        }
+        if (budgetSaved) {
+            toastSuccess("Categoria criada", {
+                id: "criar-categoria",
+                description: trimmedName,
+                action: verCategoria,
+            })
         }
 
         void invokeEdgeJson("dispatch-notifications", {

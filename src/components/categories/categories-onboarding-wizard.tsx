@@ -239,9 +239,9 @@ export function CategoriesOnboardingWizard({
     const applyIncomeSuggestions = () => {
         if (expenseCategories.length === 0) {
             const msg =
-                "Adicione pelo menos uma categoria de despesa para sugerir limites."
+                "Adicione pelo menos uma categoria de despesa para sugerir limites"
             setError(msg)
-            toastWarning(msg)
+            toastWarning(msg, { id: "sugerir-limites" })
             return
         }
         const income = parseMoneyBrl(monthlyIncome)
@@ -249,7 +249,7 @@ export function CategoriesOnboardingWizard({
             const msg =
                 "Informe uma renda mensal válida em reais para gerar sugestões. Use o passo anterior ou volte com Voltar."
             setError(msg)
-            toastError(msg)
+            toastError(msg, { id: "sugerir-limites" })
             return
         }
         setError(null)
@@ -260,7 +260,7 @@ export function CategoriesOnboardingWizard({
             next[c.id] = formatMoneyBrlInput(suggested)
         }
         setAmountByCategoryId(next)
-        toastSuccess("Limites sugeridos com base na renda.")
+        toastSuccess("Limites sugeridos com base na renda", { id: "sugerir-limites" })
     }
 
     const completeOnboarding = async (saveBudgets: boolean) => {

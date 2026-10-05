@@ -107,7 +107,8 @@ export function WorkspaceInviteDialog({
         if (error) {
             toastError(
                 formatSupabasePostgrestError(error) ??
-                    "Não foi possível carregar convites.",
+                    "Não foi possível carregar os convites",
+                { id: "carregar-convites" },
             )
             return
         }
@@ -158,12 +159,15 @@ export function WorkspaceInviteDialog({
                     return [row, ...prev]
                 })
             }
-            toastSuccess("Convite enviado com sucesso.")
+            toastSuccess("Convite enviado", { id: "convite-email", description: emailLower })
             await fetchInvites()
             dispatchFinanceMembersMutated()
         } catch (error) {
             console.error("Error creating invite:", error)
-            toastError(error instanceof Error ? error.message : "Falha ao enviar convite.")
+            toastError(
+                error instanceof Error ? error.message : "Não foi possível enviar o convite",
+                { id: "convite-email" },
+            )
         } finally {
             setSavingInvite(false)
         }
@@ -191,15 +195,17 @@ export function WorkspaceInviteDialog({
             const exp =
                 typeof res.expires_at === "string" ? res.expires_at.trim() : ""
             if (exp) setGeneratedLinkExpiresAt(exp)
-            toastSuccess(
-                "Link gerado. Copie agora: por segurança ele não fica salvo.",
-            )
+            toastSuccess("Link gerado", {
+                id: "convite-link",
+                description: "Copie agora: por segurança ele não fica salvo.",
+            })
             await fetchInvites()
             dispatchFinanceMembersMutated()
         } catch (error) {
             console.error("Error creating link invite:", error)
             toastError(
-                error instanceof Error ? error.message : "Falha ao gerar link de convite.",
+                error instanceof Error ? error.message : "Não foi possível gerar o link de convite",
+                { id: "convite-link" },
             )
         } finally {
             setSavingLink(false)
@@ -213,7 +219,7 @@ export function WorkspaceInviteDialog({
             setLinkCopied(true)
             later(() => setLinkCopied(false), 2000)
         } catch {
-            toastError("Não foi possível copiar o link.")
+            toastError("Não foi possível copiar o link")
         }
     }
 
@@ -227,13 +233,14 @@ export function WorkspaceInviteDialog({
                     invite_id: inviteId,
                 },
             })
-            toastSuccess("Convite reenviado por e-mail.")
+            toastSuccess("Convite reenviado por e-mail", { id: `reenviar-convite:${inviteId}` })
         } catch (error) {
             console.error("Error resending invite:", error)
             toastError(
                 error instanceof Error
                     ? error.message
-                    : "Não foi possível reenviar o convite.",
+                    : "Não foi possível reenviar o convite",
+                { id: `reenviar-convite:${inviteId}` },
             )
         } finally {
             setBusyResendInviteId(null)
@@ -243,7 +250,7 @@ export function WorkspaceInviteDialog({
     const { confirm: confirmRevoke, dialog: revokeConfirmDialog } = useConfirmDialog()
     const handleRevokeInvite = async (inviteId: string) => {
         if (!canManageMembers) {
-            toastError("Apenas owner pode revogar convites.")
+            toastError("Só o owner pode revogar convites")
             return
         }
         const ok = await confirmRevoke({
@@ -259,9 +266,9 @@ export function WorkspaceInviteDialog({
             .eq("id", inviteId)
 
         if (error) {
-            toastError("Não foi possível revogar o convite.")
+            toastError("Não foi possível revogar o convite", { id: `revogar-convite:${inviteId}` })
         } else {
-            toastSuccess("Convite revogado.")
+            toastSuccess("Convite revogado", { id: `revogar-convite:${inviteId}` })
             setLinkCopied(false)
             setGeneratedLinkUrl(null)
             setGeneratedLinkExpiresAt(null)

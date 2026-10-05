@@ -161,7 +161,7 @@ export default function ActivityPage() {
         } catch (err) {
             toastPageFetchError(
                 "activity",
-                err instanceof Error ? err.message : "Erro ao carregar atividades",
+                err instanceof Error ? err.message : "Não foi possível carregar a atividade",
             )
             console.error("Error fetching activities:", err)
         } finally {

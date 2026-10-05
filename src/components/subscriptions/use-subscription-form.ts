@@ -18,6 +18,9 @@ import {
 } from "@/components/subscriptions/subscription-form-shared"
 import type { SubscriptionFormFieldsProps } from "@/components/subscriptions/subscription-form-fields"
 
+/** O assunto dos toasts do formulário de assinatura: o "salvo" substitui o erro. */
+export const SUBSCRIPTION_SAVE_TOAST_ID = "salvar-assinatura"
+
 export type UseSubscriptionFormArgs = {
     active: boolean
     saving: boolean
@@ -105,12 +108,14 @@ export function useSubscriptionForm({
                 if (!id) {
                     if (activeCardRows.length > 0) {
                         toastError(
-                            "Selecione o cartão de crédito usado nesta assinatura."
+                            "Selecione o cartão de crédito usado nesta assinatura",
+                            { id: SUBSCRIPTION_SAVE_TOAST_ID }
                         )
                         return
                     }
                     toastError(
-                        "Cadastre um cartão em Cartões de crédito para usar esta forma de cobrança."
+                        "Cadastre um cartão em Cartões de crédito para usar esta forma de cobrança",
+                        { id: SUBSCRIPTION_SAVE_TOAST_ID }
                     )
                     return
                 }
@@ -127,7 +132,7 @@ export function useSubscriptionForm({
                 paymentCreditCardId,
             })
             if (!built.ok) {
-                toastError(built.error)
+                toastError(built.error, { id: SUBSCRIPTION_SAVE_TOAST_ID })
                 return
             }
             const updateId = editingSubscription?.id ?? null

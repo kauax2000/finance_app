@@ -19,11 +19,12 @@ function createQueryClient() {
             onError: (error, query) => {
                 if (query.meta?.errorToast === false) return
                 if (typeof navigator !== "undefined" && !navigator.onLine) return
-                const message =
+                // Repetidos viram ×2, ×3 na mesma bolha (lib/toast).
+                toastError(
                     error instanceof Error && error.message
                         ? error.message
-                        : "Não foi possível carregar os dados."
-                toastError(message, { id: `query-error:${message}` })
+                        : "Não foi possível carregar os dados"
+                )
             },
         }),
         defaultOptions: {

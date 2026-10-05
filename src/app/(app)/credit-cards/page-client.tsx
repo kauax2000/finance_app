@@ -10,6 +10,7 @@ import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { createCreditCard } from "@/lib/credit-cards/mutations"
 import { toastError, toastSuccess, toastWarning } from "@/lib/toast"
+import { creditCardDetailPath } from "@/config/navigation"
 import { CustomForm, FormCancel, FormSubmit } from "@/components/ui/form"
 import {
     Card,
@@ -63,6 +64,9 @@ const CreditCardsHistoryChart = dynamic(
         ),
     },
 )
+
+/** O assunto dos toasts do cadastro: o sucesso substitui o erro anterior. */
+const CREATE_TOAST_ID = "cadastrar-cartao"
 
 export default function CreditCardsPageClient() {
     const queryClient = useQueryClient()
@@ -177,7 +181,7 @@ export default function CreditCardsPageClient() {
             mode: "create",
         })
         if (!resolved.ok) {
-            toastError(resolved.message)
+            toastError(resolved.message, { id: CREATE_TOAST_ID })
             return
         }
         if (resolved.luhnWarning) {
@@ -195,13 +199,13 @@ export default function CreditCardsPageClient() {
             dueN < 1 ||
             dueN > 31
         ) {
-            toastError("Dia de fechamento e vencimento devem ser entre 1 e 31.")
+            toastError("Dia de fechamento e vencimento devem ser entre 1 e 31", { id: CREATE_TOAST_ID })
             return
         }
 
         const exp = parseExpiryFields(expiryMonth, expiryYear)
         if (!exp.ok) {
-            toastError(exp.message)
+            toastError(exp.message, { id: CREATE_TOAST_ID })
             return
         }
 
@@ -228,11 +232,21 @@ export default function CreditCardsPageClient() {
         setSaving(false)
 
         if (!result.ok) {
-            toastError(result.errorMessage)
+            toastError(result.errorMessage, { id: CREATE_TOAST_ID })
             return
         }
 
-        toastSuccess("Cartão cadastrado.")
+        if (result.queued) {
+            toastSuccess("Cartão salvo offline", {
+                id: CREATE_TOAST_ID,
+                description: "Será sincronizado quando houver conexão",
+            })
+        } else {
+            toastSuccess("Cartão cadastrado", {
+                id: CREATE_TOAST_ID,
+                action: { label: "Ver", href: creditCardDetailPath(result.cardId) },
+            })
+        }
         resetCreateForm()
         setCreateOpen(false)
         if (currentWorkspaceId) {

@@ -279,8 +279,8 @@
   <dl class="meta">
     <div><dt>Base</dt><dd>Leitura do código</dd></div>
     <div><dt>Branch</dt><dd>finance-app-2.0</dd></div>
-    <div><dt>Data</dt><dd>2 out 2026 · busca global, botão direito, período, rascunho, menus do telefone, prévias da lista e as tabelas de lançamentos e assinaturas na URL</dd></div>
-    <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 4 lacunas</dd></div>
+    <div><dt>Data</dt><dd>4 out 2026 · busca global, botão direito, período, rascunho, menus do telefone, prévias da lista, as tabelas na URL e o "Ver" dos avisos de criação</dd></div>
+    <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 7 lacunas</dd></div>
     <div><dt>Fonte versionada</dt><dd><code>docs/JORNADAS.md</code></dd></div>
   </dl>
 </header>
@@ -866,8 +866,8 @@ flowchart TD
         <li><div><strong>Lista.</strong> Atalhos de período, painel de filtros, chips removíveis e páginas de 100 lançamentos, agrupados por mês quando ordenados por data. Marcar uma linha traz a barra flutuante de seleção (Shift marca a faixa, a caixa do mês marca o mês); cancelar a exclusão mantém a seleção. No telefone a tabela vira uma lista com a mesma informação. As cobranças previstas aparecem apagadas e não abrem. A lista vazia oferece criar ou limpar os filtros, conforme o caso.</div></li>
         <li><div><strong>Período personalizado.</strong> No painel de filtros, o seletor de período guarda as pontas em rascunho até "Aplicar"; "Limpar" tira o filtro, e "Cancelar" ou Esc descartam a escolha.</div></li>
         <li><div><strong>Criar.</strong> O formulário muda com o tipo. Despesa no crédito exige escolher um cartão; parcelada pede o número de parcelas e se o valor é total ou por parcela.</div></li>
-        <li><div><strong>Depois de salvar.</strong> O backend avisa os outros membros e confere o orçamento da categoria e os alertas do cartão. Sem conexão, o lançamento entra na fila.</div></li>
-        <li><div><strong>Editar e excluir.</strong> Numa parcela, a pessoa escolhe entre editar só ela ou o plano todo. Excluir uma parcela cancela a compra parcelada inteira.</div></li>
+        <li><div><strong>Depois de salvar.</strong> O backend avisa os outros membros e confere o orçamento da categoria e os alertas do cartão. Sem conexão, o lançamento entra na fila. Desde 4 de outubro, o aviso de "Transação criada" traz "Ver", que abre o detalhe dela (<code>?txn=id</code>); o de compra parcelada leva às parcelas do plano (<code>?plan=id</code>). Offline não há "Ver", porque ainda não há id.</div></li>
+        <li><div><strong>Editar e excluir.</strong> Numa parcela, a pessoa escolhe entre editar só ela ou o plano todo. Excluir uma parcela cancela a compra parcelada inteira. A exclusão continua pedindo confirmação: ela apaga de verdade, e não há como restaurar — o "Desfazer" do aviso exigiria exclusão lógica no banco.</div></li>
         <li><div><strong>Rascunho protegido.</strong> Fechar o formulário com algo preenchido pergunta "Descartar alterações?" antes; salvar fecha direto, e enquanto salva nada fecha. Trocar só a aba ou o tipo não conta como alteração.</div></li>
         <li><div><strong>Botão direito.</strong> Na linha, o botão direito (ou o toque longo) abre Abrir, Editar, Selecionar e Excluir — as mesmas ações dos botões da linha, que continuam. Sobre uma linha selecionada, o menu age na seleção inteira: "Excluir 3 lançamentos".</div></li>
         <li><div><strong>Prévias nos chips.</strong> Pousar o cursor, focar ou segurar o dedo no chip de fatura mostra o cartão, o estado da fatura e as datas de fechamento e vencimento, com "Ver cartão"; no chip "Parcelada", a parcela, o total e quando termina. O clique no chip continua abrindo a linha.</div></li>
@@ -948,7 +948,9 @@ flowchart TD
     saveTx --&gt;|"erro"| keep(["Aviso; formulário continua aberto"])
     saveTx --&gt;|"sucesso"| after[("Edges notify-transaction-created, evaluate-budgets, evaluate-credit-card-alerts")]
     after --&gt; toast(["Transação criada; listas recarregam"])
+    toast --&gt;|"Ver, só online"| txOpen(("G5b Detalhe /transactions?txn=id"))
     savePlan --&gt;|"sucesso"| toastPlan(["Compra parcelada registrada"])
+    toastPlan --&gt;|"Ver, só online"| planList(("G5 /transactions?plan=id"))
     open --&gt;|"Cancelar, Esc ou fora, sem alterações"| closed(["Fecha e descarta"])
     open --&gt;|"fechar com alterações"| discard(["Descartar alterações?"])
     discard --&gt;|"Descartar"| closed
@@ -978,11 +980,11 @@ flowchart TD
     class open,expense,income,inst,catPick,cardPick,disabled,queued,keep,toast,toastPlan,closed,discard,detail,view,planInfo,editForm,scope,updated,confirm,deleted,cancelled,queuedDel dialog
     class type,editWhat,isInst decision
     class saveTx,savePlan,after,delTx,cascade backend
-    class G9,G6,G8 journey</pre></div>
+    class G9,G6,txOpen,planList,G8 journey</pre></div>
         <figcaption><strong>Figura 5b · Criar, editar e excluir</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
-      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Parâmetros</td><td>Lidos e gravados na URL; <code>new</code> e <code>txn</code> são consumidos e removidos</td><td><code>src/lib/transactions-list-search-params.ts</code></td></tr><tr><td>Ordenação e página</td><td><code>sort=date.desc</code> · <code>date.asc</code> · <code>amount.desc</code> · <code>amount.asc</code> e <code>page=N</code> (a partir de 1) vão para a URL e voltam dela, também no voltar e avançar; o padrão (<code>date.desc</code>, página 1) não é escrito. Trocar um filtro volta à página 1. Só na página, não no modo embutido</td><td><code>src/components/transactions/use-transactions-list-controller.ts</code>, <code>src/lib/transactions-list-search-params.ts</code></td></tr><tr><td>Tabela</td><td><code>DataTable</code> em modo <code>manual</code> (o banco ordena e pagina): a seleção não alcança as projetadas, que também não abrem nem têm menu; o mês só agrupa ordenado por data; a barra de seleção é flutuante e cancelar a exclusão mantém a seleção; no telefone, a lista gerada das colunas</td><td><code>src/components/transactions/transactions-table.tsx</code>, <code>src/components/ui/data-table.tsx</code></td></tr><tr><td>Formulário</td><td>Um componente para criar, e o mesmo campo a campo na edição</td><td><code>src/components/transactions/transaction-form-dialog.tsx</code>, <code>transaction-form-use.tsx</code></td></tr><tr><td>Parcelada</td><td>RPC <code>create_workspace_installment_plan</code>; editar o plano não muda parcelas já lançadas</td><td><code>src/components/transactions/transaction-form-persistence.ts</code></td></tr><tr><td>Detalhe</td><td>Mesmo painel no Painel, em Cartões e em Categorias</td><td><code>src/components/transactions/transaction-detail-sheet.tsx</code></td></tr><tr><td>Exclusão</td><td>Parcela cancela o plano inteiro por <code>delete_workspace_installment_plan_cascade</code></td><td><code>src/lib/transactions/mutations.ts</code></td></tr><tr><td>Offline</td><td>Criar e excluir entram na fila; pagar conta exige conexão</td><td><code>src/lib/offline/</code></td></tr><tr><td>Rascunho</td><td>Fechar o formulário alterado (Cancelar, Esc, toque fora, ×, arrastar a gaveta) pergunta "Descartar alterações?"; salvar fecha sem perguntar. Trocar só a aba ou o tipo não conta como alteração. Enquanto salva, nada fecha (<code>Dialog pending</code>)</td><td><code>isDirty</code> em <code>src/components/transactions/transaction-form-use.tsx</code>, <code>src/components/transactions/transaction-form-dialog.tsx</code></td></tr><tr><td>Enter</td><td>O <code>Enter</code> na busca do seletor não salva a transação</td><td><code>shouldDeferEnterToWidget</code> em <code>src/components/ui/form.tsx</code></td></tr><tr><td>Período personalizado</td><td>Um <code>DatePicker</code> de intervalo com <code>confirm</code>: as pontas ficam em rascunho até Aplicar, Limpar tira o filtro, Cancelar e Esc descartam. Era um formulário à parte (<code>transactions-date-range-form.tsx</code>, removido)</td><td><code>src/components/transactions/transactions-filters-panel.tsx</code></td></tr><tr><td>Prévias dos chips</td><td>O chip de fatura e o "Parcelada" abrem uma prévia ao pousar, no foco e no toque longo (<code>HoverCard</code>); o clique no chip continua abrindo o detalhe da linha. A da fatura leva a "Ver cartão" (o ciclo atual: a página do cartão não abre uma fatura passada por parâmetro). O chip de fatura só existe a partir de <code>md</code></td><td><code>CreditInvoiceChip</code> e <code>InstallmentChip</code> em <code>src/components/transactions/transactions-table.tsx</code></td></tr><tr><td>Botão direito na linha</td><td>Atalho das ações da linha (os botões da coluna Ações continuam); sobre uma linha selecionada age na seleção inteira (<code>contextMenuTargets</code>); linhas projetadas não têm menu</td><td><code>TransactionRowContextMenu</code> em <code>src/components/transactions/transactions-table.tsx</code></td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Parâmetros</td><td>Lidos e gravados na URL; <code>new</code> e <code>txn</code> são consumidos e removidos</td><td><code>src/lib/transactions-list-search-params.ts</code></td></tr><tr><td>Ordenação e página</td><td><code>sort=date.desc</code> · <code>date.asc</code> · <code>amount.desc</code> · <code>amount.asc</code> e <code>page=N</code> (a partir de 1) vão para a URL e voltam dela, também no voltar e avançar; o padrão (<code>date.desc</code>, página 1) não é escrito. Trocar um filtro volta à página 1. Só na página, não no modo embutido</td><td><code>src/components/transactions/use-transactions-list-controller.ts</code>, <code>src/lib/transactions-list-search-params.ts</code></td></tr><tr><td>Tabela</td><td><code>DataTable</code> em modo <code>manual</code> (o banco ordena e pagina): a seleção não alcança as projetadas, que também não abrem nem têm menu; o mês só agrupa ordenado por data; a barra de seleção é flutuante e cancelar a exclusão mantém a seleção; no telefone, a lista gerada das colunas</td><td><code>src/components/transactions/transactions-table.tsx</code>, <code>src/components/ui/data-table.tsx</code></td></tr><tr><td>Formulário</td><td>Um componente para criar, e o mesmo campo a campo na edição</td><td><code>src/components/transactions/transaction-form-dialog.tsx</code>, <code>transaction-form-use.tsx</code></td></tr><tr><td>Parcelada</td><td>RPC <code>create_workspace_installment_plan</code>; editar o plano não muda parcelas já lançadas</td><td><code>src/components/transactions/transaction-form-persistence.ts</code></td></tr><tr><td>Detalhe</td><td>Mesmo painel no Painel, em Cartões e em Categorias</td><td><code>src/components/transactions/transaction-detail-sheet.tsx</code></td></tr><tr><td>Exclusão</td><td>Parcela cancela o plano inteiro por <code>delete_workspace_installment_plan_cascade</code>. Continua com confirmação, e não com o Desfazer do toast: a exclusão é física (<code>delete</code>), sem <code>deleted_at</code> nem RPC de restaurar, e recriar mudaria o id e quebraria parcelas, recorrência e faturas (verificado na rodada 228)</td><td><code>src/lib/transactions/mutations.ts</code></td></tr><tr><td>"Ver" do toast</td><td>Criar uma transação (não editar) mostra "Ver", que leva a <code>/transactions?txn=id</code> e abre o detalhe; a compra parcelada leva a <code>?plan=id</code>. Offline não há id, e o toast sai sem "Ver". A trava que abre o <code>txn</code> uma vez só volta a soltar quando a URL perde o parâmetro — antes, com <code>/transactions</code> aberta, o segundo <code>?txn=</code> não abria nada</td><td><code>persistTransactionSave</code> em <code>src/lib/transaction-detail-sheet-mutations.ts</code>, <code>transaction-form-persistence.ts</code>, <code>use-transactions-list-controller.ts</code></td></tr><tr><td>Offline</td><td>Criar e excluir entram na fila; pagar conta exige conexão</td><td><code>src/lib/offline/</code></td></tr><tr><td>Rascunho</td><td>Fechar o formulário alterado (Cancelar, Esc, toque fora, ×, arrastar a gaveta) pergunta "Descartar alterações?"; salvar fecha sem perguntar. Trocar só a aba ou o tipo não conta como alteração. Enquanto salva, nada fecha (<code>Dialog pending</code>)</td><td><code>isDirty</code> em <code>src/components/transactions/transaction-form-use.tsx</code>, <code>src/components/transactions/transaction-form-dialog.tsx</code></td></tr><tr><td>Enter</td><td>O <code>Enter</code> na busca do seletor não salva a transação</td><td><code>shouldDeferEnterToWidget</code> em <code>src/components/ui/form.tsx</code></td></tr><tr><td>Período personalizado</td><td>Um <code>DatePicker</code> de intervalo com <code>confirm</code>: as pontas ficam em rascunho até Aplicar, Limpar tira o filtro, Cancelar e Esc descartam. Era um formulário à parte (<code>transactions-date-range-form.tsx</code>, removido)</td><td><code>src/components/transactions/transactions-filters-panel.tsx</code></td></tr><tr><td>Prévias dos chips</td><td>O chip de fatura e o "Parcelada" abrem uma prévia ao pousar, no foco e no toque longo (<code>HoverCard</code>); o clique no chip continua abrindo o detalhe da linha. A da fatura leva a "Ver cartão" (o ciclo atual: a página do cartão não abre uma fatura passada por parâmetro). O chip de fatura só existe a partir de <code>md</code></td><td><code>CreditInvoiceChip</code> e <code>InstallmentChip</code> em <code>src/components/transactions/transactions-table.tsx</code></td></tr><tr><td>Botão direito na linha</td><td>Atalho das ações da linha (os botões da coluna Ações continuam); sobre uma linha selecionada age na seleção inteira (<code>contextMenuTargets</code>); linhas projetadas não têm menu</td><td><code>TransactionRowContextMenu</code> em <code>src/components/transactions/transactions-table.tsx</code></td></tr></tbody></table></div>
     </section>
 
     <section class="block" id="j6">
@@ -997,7 +999,7 @@ flowchart TD
       </dl>
       <h3>Como funciona</h3>
       <ol class="steps">
-        <li><div><strong>Cadastro.</strong> Apelido, número, validade, limite, dia de fechamento, dia de vencimento e bandeira. Dias fora de 1 a 31 ou validade inválida não salvam.</div></li>
+        <li><div><strong>Cadastro.</strong> Apelido, número, validade, limite, dia de fechamento, dia de vencimento e bandeira. Dias fora de 1 a 31 ou validade inválida não salvam. O aviso de "Cartão cadastrado" traz "Ver", que abre a página do cartão (fora da fila offline).</div></li>
         <li><div><strong>Detalhe.</strong> Cada cartão mostra a fatura do ciclo escolhido, o gasto por categoria, as parcelas em andamento e os últimos lançamentos. Dá para editar, desativar e excluir.</div></li>
         <li><div><strong>Ciclo da fatura.</strong> Um ciclo futuro é <em>Futura</em>, o atual é <em>Aberta</em>, e um passado fica <em>Não paga</em> até alguém marcar como <em>Paga</em>. Desmarcar devolve a fatura a Contas a pagar.</div></li>
       </ol>
@@ -1010,6 +1012,7 @@ flowchart TD
     newCard --&gt;|"Salvar"| valid{"Dias 1 a 31 e validade ok?"}
     valid --&gt;|"não"| newCard
     valid --&gt;|"sim"| created(["Cartão cadastrado"]) --&gt; list
+    created --&gt;|"Ver, só online"| detail
     newCard --&gt;|"Cancelar"| list
     tiles --&gt;|"cartão"| detail["/credit-cards/id"]
 
@@ -1052,7 +1055,7 @@ flowchart TD
         <figcaption><strong>Figura 6 · Cartões e ciclo da fatura</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
-      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Status no detalhe</td><td><code>Futura</code>, <code>Aberta</code>, <code>Não paga</code>, <code>Paga</code>, pelo ciclo selecionado</td><td><code>src/app/(app)/credit-cards/[cardId]/page-client.tsx</code></td></tr><tr><td>Selo na tabela de transações</td><td><code>Aberta</code>, <code>Fechada</code>, <code>Anterior</code>, <code>Paga</code>; Aberta é verde, Fechada âmbar, Anterior vermelha</td><td><code>src/lib/credit-card-display.ts</code></td></tr><tr><td>Pagamento de fatura</td><td>Linha em <code>credit_card_invoice_payments</code>, sem criar despesa</td><td><code>src/lib/bills/pay-bill-flow.ts</code></td></tr><tr><td>Alertas</td><td>Limite, fechamento e vencimento geram notificações <code>cc_*</code></td><td>edges <code>evaluate-credit-card-alerts</code>, <code>credit-card-calendar-alerts</code></td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Status no detalhe</td><td><code>Futura</code>, <code>Aberta</code>, <code>Não paga</code>, <code>Paga</code>, pelo ciclo selecionado</td><td><code>src/app/(app)/credit-cards/[cardId]/page-client.tsx</code></td></tr><tr><td>Selo na tabela de transações</td><td><code>Aberta</code>, <code>Fechada</code>, <code>Anterior</code>, <code>Paga</code>; Aberta é verde, Fechada âmbar, Anterior vermelha</td><td><code>src/lib/credit-card-display.ts</code></td></tr><tr><td>Pagamento de fatura</td><td>Linha em <code>credit_card_invoice_payments</code>, sem criar despesa</td><td><code>src/lib/bills/pay-bill-flow.ts</code></td></tr><tr><td>"Ver" do toast</td><td>Cadastrar um cartão (pela página ou pelo diálogo do "+ Adicionar") mostra "Ver", que leva a <code>/credit-cards/id</code>; na fila offline, sem "Ver"</td><td><code>src/app/(app)/credit-cards/page-client.tsx</code>, <code>src/components/credit-cards/credit-card-create-dialog.tsx</code></td></tr><tr><td>Alertas</td><td>Limite, fechamento e vencimento geram notificações <code>cc_*</code></td><td>edges <code>evaluate-credit-card-alerts</code>, <code>credit-card-calendar-alerts</code></td></tr></tbody></table></div>
       <div class="callout note">
         <p class="label">Dois vocabulários de status</p>
         <p>O detalhe do cartão fala do ciclo (Futura, Aberta, Não paga, Paga). A tabela de lançamentos fala da compra (Aberta, Fechada, Anterior, Paga). As duas escalas existem de propósito e não se misturam.</p>
@@ -1075,7 +1078,7 @@ flowchart TD
         <li><div><strong>Dois tipos de pendência.</strong> A parcela de uma conta cadastrada e a fatura de cartão que fechou sem ser paga, que aparece aqui sozinha.</div></li>
         <li><div><strong>Pagar uma conta cria uma despesa.</strong> O pagamento vira lançamento, avança a recorrência e passa pelo orçamento. Exige conexão.</div></li>
         <li><div><strong>Pagar uma fatura não cria despesa.</strong> As compras já foram lançadas no cartão; a fatura só fica marcada como paga.</div></li>
-        <li><div><strong>Lembretes.</strong> Cada conta pode avisar três dias antes e no dia do vencimento.</div></li>
+        <li><div><strong>Lembretes.</strong> Cada conta pode avisar três dias antes e no dia do vencimento. Ao criar uma conta, o aviso traz "Ver", que abre o painel dela (<code>/bills?detail=id</code>).</div></li>
         <li><div><strong>Botão direito.</strong> No cartão de pendência, o botão direito (ou o toque longo) repete Abrir, Pagar e o menu de três pontos.</div></li>
       </ol>
       <figure>
@@ -1087,6 +1090,7 @@ flowchart TD
     tabs --&gt;|"Pendentes: todas, atrasadas, 30 dias"| pending(["Itens pendentes"])
     bills --&gt;|"Nova conta"| form(["Formulário: nome, categoria, periodicidade, vencimento, valor, início, fim, forma, cartão, lembretes, ativa"])
     form --&gt;|"Salvar"| saved(["Conta criada ou atualizada"])
+    saved --&gt;|"Ver, ao criar e online"| bills
     form --&gt;|"Cancelar"| bills
 
     bills --&gt; empty{"Vazio?"}
@@ -1143,7 +1147,7 @@ flowchart TD
         <figcaption><strong>Figura 7 · Contas a pagar</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
-      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Dados</td><td>Um RPC traz a página inteira</td><td><code>rpc_fetch_bills_page_bundle</code> em <code>src/lib/queries/fetch-bills-page-bundle.ts</code></td></tr><tr><td>Fatura como pendência</td><td>Projetada no cliente a partir dos ciclos fechados com valor em aberto</td><td><code>src/lib/bills/credit-card-bill-projector.ts</code></td></tr><tr><td>Pagar conta</td><td><code>pay_bill_instance</code> cria a despesa e avança a recorrência; bloqueado offline</td><td><code>src/lib/bills/pay-bill-flow.ts</code></td></tr><tr><td>Pagar fatura</td><td>Só marca como paga: as compras já estão lançadas no cartão</td><td><code>src/lib/bills/pay-bill-flow.ts</code></td></tr><tr><td>Recorrência</td><td>Mensal, Bimestral, Trimestral, Anual, Única</td><td><code>src/lib/bills/recurrence.ts</code></td></tr><tr><td>Botão direito</td><td>No cartão de pendência, repete o "Pagar" e o menu de três pontos, que continuam à vista</td><td><code>src/components/bills/bill-pending-card.tsx</code></td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Dados</td><td>Um RPC traz a página inteira</td><td><code>rpc_fetch_bills_page_bundle</code> em <code>src/lib/queries/fetch-bills-page-bundle.ts</code></td></tr><tr><td>Fatura como pendência</td><td>Projetada no cliente a partir dos ciclos fechados com valor em aberto</td><td><code>src/lib/bills/credit-card-bill-projector.ts</code></td></tr><tr><td>Pagar conta</td><td><code>pay_bill_instance</code> cria a despesa e avança a recorrência; bloqueado offline</td><td><code>src/lib/bills/pay-bill-flow.ts</code></td></tr><tr><td>Pagar fatura</td><td>Só marca como paga: as compras já estão lançadas no cartão</td><td><code>src/lib/bills/pay-bill-flow.ts</code></td></tr><tr><td>Recorrência</td><td>Mensal, Bimestral, Trimestral, Anual, Única</td><td><code>src/lib/bills/recurrence.ts</code></td></tr><tr><td>Botão direito</td><td>No cartão de pendência, repete o "Pagar" e o menu de três pontos, que continuam à vista</td><td><code>src/components/bills/bill-pending-card.tsx</code></td></tr><tr><td>"Ver" do toast</td><td>Criar uma conta mostra "Ver", que leva a <code>/bills?detail=id</code> e abre o painel dela (sem levar os outros filtros da URL); na fila offline, sem "Ver"</td><td><code>src/app/(app)/bills/page-client.tsx</code></td></tr></tbody></table></div>
     </section>
 
     <section class="block" id="j8">
@@ -1158,7 +1162,7 @@ flowchart TD
       </dl>
       <h3>Como funciona</h3>
       <ol class="steps">
-        <li><div><strong>Cadastro.</strong> Nome, valor, periodicidade (semanal, mensal, bimestral ou anual), próxima cobrança, forma de pagamento, cartão e categoria.</div></li>
+        <li><div><strong>Cadastro.</strong> Nome, valor, periodicidade (semanal, mensal, bimestral ou anual), próxima cobrança, forma de pagamento, cartão e categoria. O aviso de assinatura criada não tem "Ver": o painel da assinatura não abre por endereço (lacuna 5).</div></li>
         <li><div><strong>Lista.</strong> Ordenar, buscar, filtrar por status, escolher colunas e densidade e exportar em CSV. A ordenação, a página, a busca e o status ficam na URL. Marcar traz a barra flutuante (Editar só com uma, Excluir em lote); o botão direito repete Editar e Excluir.</div></li>
         <li><div><strong>Acompanhamento.</strong> O painel da assinatura mostra o resumo e as cobranças que já viraram lançamento. A edição acontece ali mesmo.</div></li>
         <li><div><strong>Cobrança automática.</strong> Um cron gera os lançamentos na data. Se ele atrasar, o Painel completa o que faltou ao abrir.</div></li>
@@ -1225,7 +1229,7 @@ flowchart TD
       <ol class="steps">
         <li><div><strong>Assistente da primeira visita.</strong> Em cada carteira, a primeira ida a Categorias abre três passos: renda mensal opcional, categorias com limites sugeridos pela renda, e confirmação. "Configurar depois" pula tudo.</div></li>
         <li><div><strong>Lista.</strong> Despesas mostram o gasto do mês contra o limite; receitas mostram só a categoria. O mês fica na URL.</div></li>
-        <li><div><strong>Limite.</strong> O limite é definido dentro da própria categoria de despesa, para o mês escolhido, e pode ser removido.</div></li>
+        <li><div><strong>Limite.</strong> O limite é definido dentro da própria categoria de despesa, para o mês escolhido, e pode ser removido. Criar uma categoria mostra "Categoria criada" com "Ver", que abre o detalhe dela; se o limite não for salvo, o aviso diz isso e leva ao mesmo detalhe.</div></li>
         <li><div><strong>Detalhe.</strong> Orçamento restante ou estourado, lançado contra projetado, médias, tendência e os lançamentos do mês, com atalho para a lista completa.</div></li>
         <li><div><strong>Botão direito.</strong> No cartão de categoria, o botão direito (ou o toque longo) abre Abrir, Abrir em nova aba, Editar e Excluir. Ele toma o lugar do menu do navegador sobre o link, e por isso traz a nova aba.</div></li>
       </ol>
@@ -1248,6 +1252,7 @@ flowchart TD
     newRoute["/categories/new"] --&gt; catForm
     listView --&gt;|"Nova categoria"| catForm(["Formulário: tipo, nome, cor, ícone; limite do mês se despesa"])
     catForm --&gt;|"Salvar"| savedCat[("Categoria e orçamento do mês")] --&gt; notifCat(("G3 Notificação category_created"))
+    savedCat --&gt;|"toast Ver, ao criar e online"| detail
     savedCat --&gt; listView
     catForm --&gt;|"valor inválido"| catForm
     listView --&gt;|"⋯ Editar"| catForm
@@ -1287,7 +1292,7 @@ flowchart TD
         <figcaption><strong>Figura 9 · Categorias e orçamentos</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
-      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Assistente</td><td>Só em <code>/categories</code>, por carteira; nada redireciona para ele</td><td><code>src/components/categories/categories-onboarding-wizard.tsx</code></td></tr><tr><td>Detalhe</td><td><code>rpc_fetch_category_detail_bundle</code></td><td><code>src/lib/queries/fetch-category-detail-bundle.ts</code></td></tr><tr><td>Entradas no detalhe</td><td>Lista de categorias, gasto por categoria do cartão, notificação de orçamento</td><td><code>src/components/categories/detail/</code></td></tr><tr><td>Orçamento</td><td>Avaliado depois de cada despesa e de cada conta paga</td><td>edge <code>evaluate-budgets</code></td></tr><tr><td>Botão direito</td><td>No cartão de categoria, o menu toma o lugar do menu do navegador sobre o link, por isso traz "Abrir em nova aba"; o ⋯ continua</td><td><code>src/components/categories/category-card-context-menu.tsx</code></td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Assistente</td><td>Só em <code>/categories</code>, por carteira; nada redireciona para ele</td><td><code>src/components/categories/categories-onboarding-wizard.tsx</code></td></tr><tr><td>Detalhe</td><td><code>rpc_fetch_category_detail_bundle</code></td><td><code>src/lib/queries/fetch-category-detail-bundle.ts</code></td></tr><tr><td>"Ver" do toast</td><td>Criar uma categoria (pela tela ou pelo diálogo do "+ Adicionar") mostra "Categoria criada" com "Ver", que leva a <code>/categories/id?type=</code>; se o orçamento falhar, o aviso "Categoria criada, mas o orçamento não foi salvo" leva ao mesmo detalhe. Na fila offline, sem "Ver". A tela de categorias não mostrava toast nenhum ao criar</td><td><code>src/components/categories/category-create-dialog.tsx</code>, <code>src/app/(app)/categories/page-client.tsx</code></td></tr><tr><td>Entradas no detalhe</td><td>Lista de categorias, gasto por categoria do cartão, notificação de orçamento</td><td><code>src/components/categories/detail/</code></td></tr><tr><td>Orçamento</td><td>Avaliado depois de cada despesa e de cada conta paga</td><td>edge <code>evaluate-budgets</code></td></tr><tr><td>Botão direito</td><td>No cartão de categoria, o menu toma o lugar do menu do navegador sobre o link, por isso traz "Abrir em nova aba"; o ⋯ continua</td><td><code>src/components/categories/category-card-context-menu.tsx</code></td></tr></tbody></table></div>
     </section>
 
     <!-- ============ PARTE IV ============ -->
@@ -1374,7 +1379,7 @@ flowchart TD
     <section class="block" id="lacunas">
       <p class="eyebrow">Fechamento</p>
       <h2>Lacunas encontradas</h2>
-      <p class="lead">Restam quatro pontos em que o código não faz o que a jornada promete. Os cinco de acesso saíram na rodada de setembro de 2026 e estão listados logo abaixo.</p>
+      <p class="lead">Restam sete pontos em que o código não faz o que a jornada promete — três deles achados na rodada dos avisos, em outubro de 2026. Os cinco de acesso saíram na rodada de setembro de 2026 e estão listados logo abaixo.</p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>#</th><th>Jornada</th><th>Tipo</th><th>O que acontece</th><th>Efeito para a pessoa</th></tr></thead>
@@ -1383,6 +1388,9 @@ flowchart TD
             <tr><td>2</td><td>03 Navegação</td><td>Código sem uso</td><td>A casca expõe abrir convite, nova categoria e novo cartão, e nada chama essas ações.</td><td>Nenhum; é manutenção sem retorno.</td></tr>
             <tr><td>3</td><td>10 Conta</td><td>Guarda</td><td>Sessões e Atividade redirecionam para <code>/login</code> sem <code>next</code>.</td><td>Depois de entrar, cai no Painel e não na página.</td></tr>
             <tr><td>4</td><td>01 Acesso</td><td>Validação</td><td>A política de senha não alcança a troca de senha de dentro do app.</td><td>Dá para trocar por uma senha que o cadastro recusaria.</td></tr>
+            <tr><td>5</td><td>08 Assinaturas</td><td>Endereço</td><td>O painel de uma assinatura só abre pelo estado da tela; nenhum parâmetro de URL o abre.</td><td>O aviso de assinatura criada não tem "Ver", e um link não leva a uma assinatura.</td></tr>
+            <tr><td>6</td><td>05 Lançamentos</td><td>Banco</td><td>Excluir uma transação apaga de verdade; não há exclusão lógica nem RPC de restaurar.</td><td>Não há "Desfazer" — a exclusão continua pedindo confirmação.</td></tr>
+            <tr><td>7</td><td>02 Carteiras</td><td>Texto</td><td>Os erros de carga do diretório de membros citam o arquivo SQL e a RPC a aplicar.</td><td>A pessoa lê uma instrução de desenvolvedor.</td></tr>
           </tbody>
         </table>
       </div>
@@ -1482,7 +1490,7 @@ flowchart TD
 </div>
 
 <footer>
-  Atlas de Jornadas do Finance App · escrito a partir do código da branch <code>finance-app-2.0</code> em 17 de setembro de 2026, navegação global revista em 1 de outubro de 2026, prévias da lista e tabelas na URL em 2 de outubro · fonte dos fluxogramas em <code>docs/JORNADAS.md</code>
+  Atlas de Jornadas do Finance App · escrito a partir do código da branch <code>finance-app-2.0</code> em 17 de setembro de 2026, navegação global revista em 1 de outubro de 2026, prévias da lista e tabelas na URL em 2 de outubro, o "Ver" dos avisos em 4 de outubro · fonte dos fluxogramas em <code>docs/JORNADAS.md</code>
 </footer>
 
 <dialog class="viewer" id="viewer" aria-labelledby="viewer-title">

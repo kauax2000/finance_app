@@ -63,6 +63,12 @@ import type { User } from "@supabase/supabase-js"
 
 const CAT_NONE = "__none__"
 
+/**
+ * O assunto dos toasts do pagamento: o "Pagamento registrado" da tela substitui
+ * o erro de validação anterior deste formulário.
+ */
+export const PAY_BILL_TOAST_ID = "pagar-conta"
+
 type PayBillDialogProps = {
     open: boolean
     onOpenChange: (v: boolean) => void
@@ -140,13 +146,13 @@ export function PayBillDialog({
         try {
             const amount = parseMoneyBrl(amountStr)
             if (amount == null || amount <= 0) {
-                toastError("Informe um valor válido.")
+                toastError("Informe um valor válido", { id: PAY_BILL_TOAST_ID })
                 return
             }
             const catFinal =
                 categoryId === CAT_NONE ? null : categoryId
             if (input.kind === "regular" && !catFinal) {
-                toastError("Selecione uma categoria.")
+                toastError("Selecione uma categoria", { id: PAY_BILL_TOAST_ID })
                 return
             }
 
@@ -156,7 +162,7 @@ export function PayBillDialog({
                     : (pmOption as TransactionPaymentMethod)
             const pcc = pm === "credit_card" ? pccId.trim() || null : null
             if (pm === "credit_card" && !pcc) {
-                toastError("Selecione o cartão de crédito.")
+                toastError("Selecione o cartão de crédito", { id: PAY_BILL_TOAST_ID })
                 return
             }
             const res = await executePayBillFlow({
@@ -175,7 +181,7 @@ export function PayBillDialog({
             })
 
             if (!res.ok) {
-                toastError(res.error)
+                toastError(res.error, { id: PAY_BILL_TOAST_ID })
                 return
             }
 
@@ -183,7 +189,7 @@ export function PayBillDialog({
             onOpenChange(false)
         } catch (err) {
             // Sem este catch, uma falha ao recarregar depois do pagamento escapava calada.
-            toastError(err instanceof Error ? err.message : "Não foi possível registrar o pagamento.")
+            toastError(err instanceof Error ? err.message : "Não foi possível registrar o pagamento")
         } finally {
             setSaving(false)
         }

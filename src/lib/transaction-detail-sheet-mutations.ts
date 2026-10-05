@@ -1,6 +1,7 @@
-import type {
-    InstallmentPlanUpdatePayload,
-    TransactionFormSavePayload,
+import {
+    TRANSACTION_SAVE_TOAST_ID,
+    type InstallmentPlanUpdatePayload,
+    type TransactionFormSavePayload,
 } from "@/components/transactions/transaction-form-types"
 import { scheduleEvaluateCreditCardAlerts } from "@/lib/credit-card-notifications"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
@@ -21,6 +22,9 @@ import type { SupabaseClient, User } from "@supabase/supabase-js"
 import { numberBR } from "@/lib/formatters"
 
 type DbClient = SupabaseClient
+
+/** O assunto da exclusão: o "excluída" da nova tentativa toma o lugar do erro. */
+const DELETE_TOAST_ID = "excluir-transacoes"
 
 export type DeleteTransactionsOptions = {
     rows?: TransactionDeleteRow[]
@@ -60,7 +64,7 @@ export async function persistTransactionSave(options: {
     )
 
     if (!result.ok) {
-        toastError(result.errorMessage)
+        toastError(result.errorMessage, { id: TRANSACTION_SAVE_TOAST_ID })
         return false
     }
 
@@ -68,9 +72,11 @@ export async function persistTransactionSave(options: {
 
     if (editing) {
         toastSuccess(
-            offline
-                ? "Transação atualizada offline. Será sincronizada quando houver conexão."
-                : "Transação atualizada."
+            offline ? "Transação atualizada offline" : "Transação atualizada",
+            {
+                id: TRANSACTION_SAVE_TOAST_ID,
+                description: offline ? "Sincroniza quando houver conexão." : undefined,
+            }
         )
         if (payload.type === "expense" && isOnline()) {
             scheduleEvaluateCreditCardAlerts({
@@ -102,11 +108,19 @@ export async function persistTransactionSave(options: {
             })
         }
 
-        toastSuccess(
-            offline
-                ? "Transação salva offline. Será sincronizada quando houver conexão."
-                : "Transação criada."
-        )
+        // O `saveTransaction` devolve o id inserido em tempo de execução
+        // (`insertedId`), embora o tipo dele não o declare. Offline não há id.
+        const insertedId =
+            "insertedId" in result && typeof result.insertedId === "string"
+                ? result.insertedId
+                : null
+        toastSuccess(offline ? "Transação salva offline" : "Transação criada", {
+            id: TRANSACTION_SAVE_TOAST_ID,
+            description: offline ? "Sincroniza quando houver conexão." : undefined,
+            action: insertedId
+                ? { label: "Ver", href: `/transactions?txn=${insertedId}` }
+                : undefined,
+        })
     }
 
     await onAfterSuccess()
@@ -124,11 +138,11 @@ export async function persistInstallmentPlanUpdate(options: {
     const result = await updateInstallmentPlan(planId, payload)
 
     if (!result.ok) {
-        toastError(result.errorMessage)
+        toastError(result.errorMessage, { id: TRANSACTION_SAVE_TOAST_ID })
         return false
     }
 
-    toastSuccess("Plano da compra atualizado.")
+    toastSuccess("Plano da compra atualizado", { id: TRANSACTION_SAVE_TOAST_ID })
     await onAfterSuccess()
     return true
 }
@@ -196,7 +210,7 @@ export async function deleteTransactionsByIds(
         options?.rows
     )
     if (!resolved.ok) {
-        toastError(resolved.errorMessage)
+        toastError(resolved.errorMessage, { id: DELETE_TOAST_ID })
         return false
     }
 
@@ -205,7 +219,7 @@ export async function deleteTransactionsByIds(
     for (const planId of planIds) {
         const result = await deleteInstallmentPlanCascade(planId, workspaceId)
         if (!result.ok) {
-            toastError(result.errorMessage)
+            toastError(result.errorMessage, { id: DELETE_TOAST_ID })
             return false
         }
     }
@@ -213,7 +227,7 @@ export async function deleteTransactionsByIds(
     for (const id of plainTransactionIds) {
         const result = await deletePlainTransactionById(id, workspaceId)
         if (!result.ok) {
-            toastError(result.errorMessage)
+            toastError(result.errorMessage, { id: DELETE_TOAST_ID })
             return false
         }
     }
@@ -226,11 +240,12 @@ export async function deleteTransactionsByIds(
         toastSuccess(
             installmentOnly
                 ? planIds.length === 1
-                    ? "Cancelamento enfileirado. Sincroniza ao voltar online."
-                    : `${numberBR(planIds.length)} cancelamentos enfileirados.`
+                    ? "Cancelamento enfileirado"
+                    : `${numberBR(planIds.length)} cancelamentos enfileirados`
                 : ids.length === 1
-                  ? "Exclusão enfileirada. Sincroniza ao voltar online."
-                  : `${numberBR(ids.length)} exclusões enfileiradas.`
+                  ? "Exclusão enfileirada"
+                  : `${numberBR(ids.length)} exclusões enfileiradas`,
+            { id: DELETE_TOAST_ID, description: "Sincroniza ao voltar online." }
         )
         return true
     }
@@ -238,16 +253,18 @@ export async function deleteTransactionsByIds(
     if (installmentOnly) {
         toastSuccess(
             planIds.length === 1
-                ? "Compra parcelada cancelada."
-                : `${numberBR(planIds.length)} compras parceladas canceladas.`
+                ? "Compra parcelada cancelada"
+                : `${numberBR(planIds.length)} compras parceladas canceladas`,
+            { id: DELETE_TOAST_ID }
         )
         return true
     }
 
     toastSuccess(
         ids.length === 1
-            ? "Transação excluída."
-            : `${numberBR(ids.length)} transações excluídas.`
+            ? "Transação excluída"
+            : `${numberBR(ids.length)} transações excluídas`,
+        { id: DELETE_TOAST_ID }
     )
     return true
 }
