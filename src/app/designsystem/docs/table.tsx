@@ -346,11 +346,7 @@ export default function TableDoc() {
         <Link href="/designsystem/data-table" className="underline">
           Data Table
         </Link>
-        , que monta estas peças; com moldura, barra e rodapé, o{" "}
-        <Link href="/designsystem/table-panel" className="underline">
-          Table Panel
-        </Link>
-        .
+        , que monta estas peças e a moldura com barra e rodapé, o <code>TablePanel</code>.
       </Usage>
 
       <DocSection
@@ -436,7 +432,9 @@ export default function TableDoc() {
         title="Esperando, falhando, recarregando"
         description="TableSkeleton é a tabela que espera: o cabeçalho de verdade e os ossos na altura do degrau, depois de 300ms. TableError é a falha, com o tentar de novo. pending esmaece o corpo enquanto os dados novos chegam — os de antes continuam na tela."
         code={`<TableSkeleton columns={[{ label: "Descrição" }, { label: "Valor", numeric: true }]} rows={3} />
-<TableError colSpan={2} onRetry={refetch} />
+<TableError colSpan={2} title="Não foi possível carregar os lançamentos" onRetry={refetch}>
+  O servidor não respondeu.
+</TableError>
 <Table pending={isFetching}>…</Table>`}
         previewClassName="flex-col items-stretch gap-6"
       >
@@ -448,8 +446,12 @@ export default function TableDoc() {
         />
         <Table variant="outline">
           <TableBody>
-            <TableError colSpan={2} onRetry={() => undefined}>
-              Não foi possível carregar os lançamentos.
+            <TableError
+              colSpan={2}
+              title="Não foi possível carregar os lançamentos"
+              onRetry={() => new Promise((r) => window.setTimeout(r, 900))}
+            >
+              O servidor não respondeu. Seus dados estão salvos.
             </TableError>
           </TableBody>
         </Table>
@@ -559,7 +561,7 @@ export default function TableDoc() {
           { prop: "TableGroupRow", type: "{ label, total, colSpan, trailing, selection, collapsible, open, onOpenChange }", description: "A faixa de grupo completa." },
           { prop: "TableRowDetail / TableExpandButton", type: "{ open, colSpan, id } / { expanded, label }", description: "O detalhe que abre na mola e a seta que gira." },
           { prop: "TableSkeleton", type: "{ columns, rows, header, label, delay }", description: "A tabela que espera, no SkeletonGroup." },
-          { prop: "TableError / TableEmpty", type: "{ colSpan, onRetry } / { colSpan }", description: "A falha e o vazio, de largura total." },
+          { prop: "TableError / TableEmpty", type: "{ colSpan, title, children, onRetry } / { colSpan }", description: "A falha (o ícone no tom de erro, o título e o porquê; um onRetry com Promise mostra a roda) e o vazio, de largura total." },
           { prop: "TableCellIdentity", type: "{ media, title, description }", description: "O ladrilho e o par nome/legenda, sem gap." },
           { prop: "TableCellMoney", type: '{ value, flash, signed, tone: "sign" | "none" }', description: "O valor pelo sinal; flash acende ao mudar." },
         ]}

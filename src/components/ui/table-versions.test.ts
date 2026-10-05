@@ -50,7 +50,12 @@ describe("as versões do Table", () => {
         h(TableRow, { key: 3, interactive: true }, h(TableCell, null, "c"))
       )
     )
-    expect(html).toMatch(/aria-current="true"[^>]*class="[^"]*bg-muted\/50/)
+    expect(html).toContain('aria-current="true"')
+    // Sem fundo desde a rodada 231: o realce lia como hover preso.
+    expect(html).not.toContain("bg-muted/50")
+    // A prevista apaga a cor junto com o texto.
+    expect(html).toContain("[data-slot=color-tile]]:opacity-50")
+    expect(html).toContain("[data-slot=money-display]]:opacity-50")
     expect(html).toMatch(/data-row-state="pending"[^>]*class="[^"]*text-muted-foreground/)
     expect(html).toMatch(/tabindex="0"[^>]*class="[^"]*cursor-pointer/)
   })
@@ -290,5 +295,33 @@ describe("a lógica pura", () => {
     expect(nextCell("ArrowRight", { row: 0, col: 3 }, dims)).toEqual({ row: 0, col: 3 })
     expect(nextCell("End", { row: 1, col: 0 }, dims)).toEqual({ row: 1, col: 3 })
     expect(nextCell("End", { row: 1, col: 0 }, dims, true)).toEqual({ row: 2, col: 3 })
+  })
+})
+
+describe("a falha da tabela (rodada 231)", () => {
+  it("fala como o ChartError: ícone no tom de erro, título, o porquê e a ação", () => {
+    const html = renderToStaticMarkup(
+      tabela(h(TableError, { colSpan: 3, onRetry: () => undefined }, "O servidor não respondeu."))
+    )
+    expect(html).toContain('role="alert"')
+    expect(html).toContain('data-slot="empty-state-icon"')
+    expect(html).toContain('data-tone="destructive"')
+    expect(html).toContain("Não foi possível carregar")
+    expect(html).toContain('data-slot="empty-state-description"')
+    expect(html).toContain("tentar de novo")
+  })
+})
+
+describe("o gêmeo do telefone (rodada 231)", () => {
+  const fonte = readFileSync(join(process.cwd(), "src/components/ui/data-table.tsx"), "utf8")
+  it("é um extrato: o valor e a data à direita, alinhados pela ponta, e a legenda numa linha", () => {
+    expect(fonte).toContain('<ItemContent data-slot="data-table-mobile-aside" className="flex-none items-end text-right">')
+    expect(fonte).toContain('<ItemDescription className="line-clamp-1 text-xs">')
+    expect(fonte).toContain('meta: { label: header, mobile: "meta", ...meta }')
+  })
+  it("a linha de agora não pinta, e a folha de ações tem o nome da linha", () => {
+    const gemeo = fonte.slice(fonte.indexOf("function GemeoDoTelefone"))
+    expect(gemeo).not.toContain('"bg-muted/50"')
+    expect(fonte).toContain("header={<DropdownMenuHeader title={label} />}")
   })
 })

@@ -42,3 +42,10 @@ describe("a lista de pares", () => {
     expect(fonte).not.toMatch(/React\.useContext\(|^"use client"/m)
   })
 })
+
+describe("columns implica grid (rodada 231)", () => {
+  it("sem layout=\"grid\" ele não é mais ignorado calado", () => {
+    const fonte = readFileSync(join(process.cwd(), "src/components/ui/description-list.tsx"), "utf8")
+    expect(fonte).toContain('if (columns) layout = "grid"')
+  })
+})

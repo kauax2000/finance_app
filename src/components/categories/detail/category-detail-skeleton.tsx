@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { TableSkeleton, type TableSkeletonColumn } from "@/components/ui/table"
-import { TablePanel, TablePanelFooter } from "@/components/ui/table-panel"
+import { TablePanel, TablePanelFooter } from "@/components/ui/data-table"
 
 type CategoryDetailSkeletonProps = {
     categoryType?: "income" | "expense" | null
@@ -206,17 +206,20 @@ function EmbeddedTransactionsSkeleton({ rowCount = 8 }: { rowCount?: number }) {
 
             {/* O painel da `TransactionsTable`: a moldura, a densidade `md` e o rodapé de
                 paginação vêm das peças. O atraso já é do grupo da página. */}
-            <TablePanel>
+            <TablePanel
+                footer={
+                    <TablePanelFooter>
+                        <Skeleton className="h-4 w-full max-w-48" />
+                        <Skeleton className="h-8 w-40 self-end rounded-md sm:self-auto" />
+                    </TablePanelFooter>
+                }
+            >
                 <TableSkeleton
                     columns={EMBEDDED_TRANSACTIONS_COLUMNS}
                     rows={rowCount}
                     group={false}
                     className="min-w-160 md:min-w-175"
                 />
-                <TablePanelFooter>
-                    <Skeleton className="h-4 w-full max-w-48" />
-                    <Skeleton className="h-8 w-40 self-end rounded-md sm:self-auto" />
-                </TablePanelFooter>
             </TablePanel>
         </section>
     )

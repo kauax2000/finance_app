@@ -74,7 +74,6 @@ import StatCardDoc from "./docs/stat-card"
 import StepperDoc from "./docs/stepper"
 import SwitchDoc from "./docs/switch"
 import TableDoc from "./docs/table"
-import TablePanelDoc from "./docs/table-panel"
 import TabsDoc from "./docs/tabs"
 import TextareaDoc from "./docs/textarea"
 import ThemeToggleDoc from "./docs/theme-toggle"
@@ -160,7 +159,6 @@ export const DOCS: Record<string, ComponentType> = {
   "stepper": StepperDoc,
   "switch": SwitchDoc,
   "table": TableDoc,
-  "table-panel": TablePanelDoc,
   "tabs": TabsDoc,
   "textarea": TextareaDoc,
   "theme-toggle": ThemeToggleDoc,

@@ -9,12 +9,21 @@ import {
   ChevronUpDownIcon,
   ChevronUpIcon,
 } from "@heroicons/react/16/solid"
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  EmptyState,
+  EmptyStateActions,
+  EmptyStateDescription,
+  EmptyStateIcon,
+  EmptyStateTitle,
+} from "@/components/ui/empty-state"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Muted } from "@/components/ui/typography"
 import {
@@ -170,11 +179,11 @@ function Table({
      * Só a ponta de baixo, porque o cabeçalho `sticky` mora dentro deste mesmo
      * viewport e sairia dissolvido.
      *
-     * **As linhas passam por trás do rodapé**, como a lista passa por trás da
-     * legenda do `Command`: o `TablePanelFooter` mede a própria altura e a
-     * publica no painel (`--table-panel-foot-h`), e o viewport a usa como faixa
-     * de baixo — sangra por baixo dela e devolve o mesmo tanto em recuo, para a
-     * última linha terminar acima do rodapé. O piso é o da casa, 0,06: sob o
+     * **As linhas podem passar por trás de um rodapé**, como a lista passa por
+     * trás da legenda do `Command`: quem publica `--table-panel-foot-h` vira
+     * faixa de baixo — o viewport sangra por baixo dela e devolve o mesmo tanto
+     * em recuo. Desde a rodada 231 o `TablePanelFooter` mora **fora** da
+     * moldura e não publica nada, então a faixa vale zero ali também. O piso é o da casa, 0,06: sob o
      * rodapé as linhas ficam como um fantasma, que é o fundo que o dono pediu.
      * Fora de um `TablePanel` a faixa vale zero e nada sangra.
      *
@@ -477,7 +486,10 @@ function TableRow({
   interactive?: boolean
   /**
    * O estado da linha que não é seleção (rodada 225). `current` é "esta é a
-   * de agora" — a parcela vigente, a fatura aberta —, com `aria-current`;
+   * de agora" — a parcela vigente, a fatura aberta —, com `aria-current` e
+   * **sem fundo** (rodada 231, pedido do dono: o `bg-muted/50` lia como hover
+   * preso ou como seleção, e uma linha só acesa no meio da lista não dizia
+   * nada sozinha);
    * `pending` é a linha prevista ou ainda não efetivada, em tinta apagada. A
    * ficha que diz *por quê* é de quem chama. A seleção continua sendo
    * `data-state="selected"`, e é ela quem o `DataTable` escreve.
@@ -516,9 +528,12 @@ function TableRow({
         // e passaria por cima do realce, então a linha publica o próprio tom
         // já composto sobre o card, e a célula o lê.
         "data-[state=selected]:[--table-pin-bg:var(--color-muted)]",
-        state === "current" &&
-          "bg-muted/50 [--table-pin-bg:color-mix(in_srgb,var(--color-muted)_50%,var(--color-card))]",
-        state === "pending" && "text-muted-foreground",
+        // A prevista apaga o texto **e a cor** (rodada 231): o ladrilho da
+        // categoria, o avatar e o valor em tinta cheia ao lado do texto
+        // apagado liam como a linha mais viva da lista. O valor mantém o
+        // vermelho e o verde — só baixa —, porque o sinal ainda é informação.
+        state === "pending" &&
+          "text-muted-foreground [&_[data-slot=avatar]]:opacity-50 [&_[data-slot=color-tile]]:opacity-50 [&_[data-slot=money-display]]:opacity-50",
         interactive &&
           "cursor-pointer hover:bg-muted/30 active:bg-muted/30 focus-visible:inset-ring-3 focus-visible:inset-ring-ring/45 focus-visible:outline-none group/table-row hover:[--table-pin-bg:color-mix(in_srgb,var(--color-muted)_30%,var(--color-card))]",
         variant === "group" &&
@@ -887,7 +902,15 @@ function TableExpandButton({
       data-slot="table-expand-button"
       aria-expanded={expanded}
       aria-label={`${expanded ? "Recolher" : "Expandir"} ${label}`}
-      className={cn("-my-1", className)}
+      className={cn(
+        "-my-1",
+        // **Ghost também aberto.** O `tertiary` deixa a flor acesa com
+        // `aria-expanded`, que é o "menu aberto" de um gatilho; aqui aberto é
+        // só a seta girada, e o fundo aceso lia como botão pressionado. A
+        // flor volta só no cursor e no toque — o par empilhado vence o simples.
+        "aria-expanded:[--button-bloom:0] aria-expanded:hover:[--button-bloom:1] aria-expanded:active:[--button-bloom:1]",
+        className
+      )}
       onClick={(e) => {
         // A linha costuma ser clicável (abre a folha): a seta não é ela.
         e.stopPropagation()
@@ -920,12 +943,22 @@ function TableExpandButton({
 function TableRowDetail({
   open,
   colSpan,
+  lead = 0,
+  depth = 0,
   id,
   className,
   children,
 }: {
   open: boolean
   colSpan: number
+  /**
+   * As colunas de utilidade antes do conteúdo (a caixa, a seta). O detalhe
+   * começa **onde o conteúdo da linha começa** (rodada 231), e não na borda
+   * da tabela: uma célula vazia ocupa essas colunas.
+   */
+  lead?: number
+  /** A profundidade da sublinha: o detalhe recua junto com o nome dela. */
+  depth?: number
   /** O alvo do `aria-controls` da seta. */
   id?: string
   className?: string
@@ -937,7 +970,12 @@ function TableRowDetail({
       data-state={open ? "open" : "closed"}
       className={cn("border-border", open ? "border-b" : "border-b-0")}
     >
-      <td colSpan={colSpan} className="p-0">
+      {lead > 0 ? <td colSpan={lead} aria-hidden className="p-0" /> : null}
+      <td
+        colSpan={colSpan - lead}
+        className="p-0"
+        style={depth > 0 ? ({ "--table-depth": depth } as React.CSSProperties) : undefined}
+      >
         <div
           id={id}
           inert={!open}
@@ -953,6 +991,7 @@ function TableRowDetail({
               data-state={open ? "open" : "closed"}
               className={cn(
                 "px-(--table-px) pb-(--table-py)",
+                depth > 0 && "ps-[calc(var(--table-px)+var(--table-depth)*1.5rem)]",
                 open && "disclosure-reveal",
                 className
               )}
@@ -1050,31 +1089,66 @@ function TableGroupRow({
 }
 
 /**
- * A falha ao buscar as linhas (rodada 225): uma linha de largura total com a
- * frase e o "Tentar de novo" — a seta que dá meia-volta no cursor, a do app
- * para refazer. `role="alert"`, para quem não vê saber que a lista não veio.
+ * A falha ao buscar as linhas (rodada 225): uma linha de largura total com o
+ * "Tentar de novo" — a seta que dá meia-volta no cursor, a do app para
+ * refazer. `role="alert"`, para quem não vê saber que a lista não veio.
+ *
+ * **Desde a rodada 231 ela fala como o `ChartError`**: o `EmptyState` sem
+ * moldura, com o poço do ícone no tom de erro, o título (o que aconteceu) e a
+ * frase como descrição (o porquê). Era uma frase cinza solta no meio da
+ * tabela, que lia como vazio e não como falha. E o botão **mostra que está
+ * refazendo**: um `onRetry` que devolve `Promise` troca a seta pela roda e
+ * trava até ela assentar — sem isso, o clique não respondia nada até as
+ * linhas chegarem.
  */
 function TableError({
   colSpan,
-  children = "Não foi possível carregar as linhas.",
+  title = "Não foi possível carregar",
+  children = "Verifique a conexão e tente de novo.",
   onRetry,
 }: {
   colSpan: number
+  title?: React.ReactNode
+  /** O porquê, na descrição. */
   children?: React.ReactNode
-  onRetry?: () => void
+  onRetry?: () => void | Promise<unknown>
 }) {
+  const [tentando, setTentando] = React.useState(false)
+  const tentar = async () => {
+    const resultado = onRetry?.()
+    if (!resultado || typeof (resultado as Promise<unknown>).then !== "function") return
+    setTentando(true)
+    try {
+      await resultado
+    } finally {
+      setTentando(false)
+    }
+  }
   return (
     <TableRow data-slot="table-error">
-      <TableCell colSpan={colSpan} className="py-8 text-center">
-        <div role="alert" className="flex flex-col items-center gap-3">
-          <Muted>{children}</Muted>
+      <TableCell colSpan={colSpan} className="p-0">
+        <EmptyState variant="plain" size="sm" role="alert" className="py-10">
+          <EmptyStateIcon tone="destructive">
+            <ExclamationTriangleIcon aria-hidden />
+          </EmptyStateIcon>
+          <EmptyStateTitle>{title}</EmptyStateTitle>
+          <EmptyStateDescription>{children}</EmptyStateDescription>
           {onRetry ? (
-            <Button type="button" variant="secondary" size="sm" iconMotion="spin" onClick={onRetry}>
-              <ArrowPathIcon aria-hidden />
-              tentar de novo
-            </Button>
+            <EmptyStateActions>
+              <Button
+                type="button"
+                variant="secondary"
+                iconMotion="spin"
+                disabled={tentando}
+                aria-busy={tentando || undefined}
+                onClick={tentar}
+              >
+                {tentando ? <Spinner /> : <ArrowPathIcon aria-hidden />}
+                {tentando ? "tentando…" : "tentar de novo"}
+              </Button>
+            </EmptyStateActions>
           ) : null}
-        </div>
+        </EmptyState>
       </TableCell>
     </TableRow>
   )

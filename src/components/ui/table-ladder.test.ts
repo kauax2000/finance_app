@@ -7,7 +7,7 @@ import * as React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 
 import { tableVariants } from "./table"
-import { TablePanel, TablePanelToolbar } from "./table-panel"
+import { TablePanel, TablePanelToolbar } from "./data-table"
 
 const UI = "src/components/ui"
 
@@ -37,7 +37,11 @@ function semComentarios(src: string) {
 
 const SRC = readFileSync(join(UI, "table.tsx"), "utf8")
 const CODE = semComentarios(SRC)
-const PANEL_CODE = semComentarios(readFileSync(join(UI, "table-panel.tsx"), "utf8"))
+// O `TablePanel` mora no `data-table.tsx` desde a rodada 231: a fatia é a da moldura.
+const DT_SRC = readFileSync(join(UI, "data-table.tsx"), "utf8")
+const PANEL_CODE = semComentarios(
+  DT_SRC.slice(DT_SRC.indexOf("/* A moldura: o TablePanel"), DT_SRC.indexOf("/**\n * A tabela de dados"))
+)
 const DEGRAUS = ["xs", "sm", "md", "lg", "xl"] as const
 
 /** A entrelinha do corpo de cada degrau, para a conta da altura da linha. */
@@ -137,7 +141,7 @@ describe("escada do Table", () => {
     }
   })
 
-  it('9. table-panel.tsx não escreve role="toolbar", e provê `md` por contexto', () => {
+  it('9. a moldura não escreve role="toolbar", e provê `md` por contexto', () => {
     expect(PANEL_CODE).not.toContain('role="toolbar"')
     // O `md` de 44 é o `lg` de antes da rodada 225 — a mesma linha dos painéis.
     expect(PANEL_CODE).toContain('TableSizeContext.Provider value="md"')
@@ -316,14 +320,13 @@ describe("escada do Table", () => {
     expect(CODE).not.toContain("ScrollFadeBlurLayers")
   })
 
-  it("19. o rodapé do painel publica a própria altura e pinta por cima das linhas", () => {
+  it("19. o rodapé do painel sai da moldura, embaixo, e não publica faixa", () => {
     const rodape = PANEL_CODE.slice(PANEL_CODE.indexOf("function TablePanelFooter"))
-    expect(PANEL_CODE.startsWith('"use client"')).toBe(true)
-    expect(rodape).toContain("new ResizeObserver(")
-    expect(rodape).toContain('painel.style.setProperty("--table-panel-foot-h", `${el.offsetHeight}px`)')
-    expect(rodape).toContain('painel.style.removeProperty("--table-panel-foot-h")')
-    // Sem `relative` o viewport posicionado pintaria por cima do rodapé.
-    expect(rodape).toMatch(/"relative flex-col/)
+    expect(DT_SRC.startsWith('"use client"')).toBe(true)
+    // Rodada 231: fora da moldura não há linhas passando por baixo dele.
+    expect(rodape).not.toContain("--table-panel-foot-h")
+    const painel = PANEL_CODE.slice(PANEL_CODE.indexOf("function TablePanel("), PANEL_CODE.indexOf("function TablePanelToolbar"))
+    expect(painel.indexOf("{footer}")).toBeGreaterThan(painel.indexOf("</Card>"))
   })
 
   it("20. a barra sai da moldura, sem fundo e sem fio", () => {
@@ -369,16 +372,16 @@ describe("escada do Table", () => {
     // Sem rodapé, o fio dela empilharia com a borda de baixo da moldura; com
     // rodapé, é ele que separa as linhas do rodapé.
     expect(PANEL_CODE).toContain(
-      '"[&:not(:has(>[data-slot=table-panel-footer]))_[data-slot=table-viewport]>table>tbody>tr:last-child]:border-b-0"'
+      '"[&_[data-slot=table-viewport]>table>tbody>tr:last-child]:border-b-0"'
     )
     expect(PANEL_CODE).not.toContain("data-fade=bottom")
   })
 
-  it("24. o rodapé do painel mede o mesmo que uma linha da tabela", () => {
-    // Linha `lg`: 12 + 20 + 12 = 44. Rodapé: recuo + botão xs (24) + recuo.
-    // Com o recuo das tiras (12) ele saía 48; com 10 fecha em 44.
+  it("24. o rodapé do painel é a barra de cima espelhada", () => {
+    // Fora da moldura (rodada 231) ele não mede mais uma linha: tem a forma da
+    // `TablePanelToolbar` — sem recuo vertical, `min-h-7` e o fio transparente.
     const rodape = PANEL_CODE.slice(PANEL_CODE.indexOf("function TablePanelFooter"))
-    expect(rodape).toContain('"py-2.5"')
+    expect(rodape).toContain('"min-h-7 border-x border-transparent py-0"')
   })
 
   it("25. a barra é slot: sai da moldura por construção, e como filho avisa", () => {
@@ -478,5 +481,42 @@ describe("escada do Table", () => {
     const util = semComentarios(css.slice(inicio, css.indexOf("\n}\n", inicio) + 2))
     expect(util).toContain("border-bottom-left-radius: var(--scroll-fade-veil-r, 0px)")
     expect(util).toContain("border-bottom-right-radius: var(--scroll-fade-veil-r, 0px)")
+  })
+})
+
+describe("a linha de totais do DataTable", () => {
+  it("recebe as colunas à vista, e nenhum colSpan cravado passa da conta", () => {
+    // Com 7 + 1 + 1 numa tabela de 8, a nona coluna era um vão na ponta de toda linha.
+    expect(DT_SRC).toContain("footer(table.getPrePaginatedRowModel().rows.map((r) => r.original), { columns: nColunas })")
+    const doc = readFileSync(join(process.cwd(), "src/app/designsystem/docs/data-table.tsx"), "utf8")
+    expect(doc).not.toMatch(/colSpan=\{\d+\}/)
+  })
+})
+
+describe("o painel Exibir do DataTable", () => {
+  const painel = DT_SRC.slice(DT_SRC.indexOf("export function DataTableViewOptions"), DT_SRC.indexOf("/** O CSV do que está filtrado"))
+  it("a coluna é uma linha inteira, a última não sai, e há o que redefinir", () => {
+    expect(painel).toContain("menuItemGeometryClassName")
+    expect(painel).toContain("const ultima = ligada && visiveis === 1")
+    expect(painel).toContain("{mudou ? (")
+    expect(painel).toContain('<Popover mobile="sheet">')
+    // A densidade diz o nome e a altura da linha, e não só a sigla.
+    expect(painel).toContain("{atual.label} · {atual.altura}px")
+  })
+})
+
+describe("a seta de expandir", () => {
+  it("é ghost também aberta: a flor só no cursor e no toque", () => {
+    expect(SRC).toContain(
+      '"aria-expanded:[--button-bloom:0] aria-expanded:hover:[--button-bloom:1] aria-expanded:active:[--button-bloom:1]"'
+    )
+  })
+})
+
+describe("o detalhe da linha", () => {
+  it("começa onde o conteúdo da linha começa, e recua com a sublinha", () => {
+    expect(SRC).toContain("{lead > 0 ? <td colSpan={lead} aria-hidden className=\"p-0\" /> : null}")
+    expect(SRC).toContain('depth > 0 && "ps-[calc(var(--table-px)+var(--table-depth)*1.5rem)]"')
+    expect(DT_SRC).toContain('lead={Math.max(0, folhas.findIndex((f) => !f.id.startsWith("__")))}')
   })
 })

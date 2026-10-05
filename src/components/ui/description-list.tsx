@@ -79,9 +79,14 @@ function DescriptionList({
   divided?: boolean
   /** `eyebrow` põe os rótulos em caixa alta, 11px e espaçados. */
   term?: "caption" | "eyebrow"
-  /** Só em `grid`: as colunas em qualquer largura, no lugar de `sm:grid-cols-2`. */
+  /**
+   * As colunas em qualquer largura, no lugar de `sm:grid-cols-2`. **Implica
+   * `grid`** (rodada 231): sozinho ele era ignorado calado, e a lista de três
+   * campos do detalhe do `DataTable` saía empilhada numa coluna alta.
+   */
   columns?: keyof typeof GRID_COLUMNS
 }) {
+  if (columns) layout = "grid"
   return (
     <dl
       data-slot="description-list"

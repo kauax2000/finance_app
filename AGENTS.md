@@ -1470,12 +1470,19 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   **consecutivas** (`groupBy` recebe a ordenação e `null` o desliga), o
   detalhe e as sublinhas, as ações à vista e no ⋯ (folha no telefone), o
   menu de contexto com os alvos do `contextMenuTargets`, o **gêmeo do
-  telefone** gerado das colunas (`meta.mobile`), o teclado entre as linhas, a
+  telefone** gerado das colunas (`meta.mobile`; desde a rodada 231 um extrato
+  — nome e legenda à esquerda, valor e `meta` à direita), o teclado entre as linhas, a
   URL, a virtualização, o CSV para o Excel em português e a edição na célula
   (a única versão em `role="grid"`). Dados do servidor: `manual`. **Na v9 o
   filtro é `constructFilterFn`** e o `arrIncludesSome` pede que o valor da
   linha já seja lista — a faceta é `arrHas`. Transações e assinaturas usam o
-  `DataTable`.
+  `DataTable`. **O `TablePanel` mora no `data-table.tsx` e na página do
+  `DataTable` desde a rodada 231** (era arquivo e página próprios, duas
+  entradas em Templates para uma tabela só): sozinho, sem estado, ele é a
+  moldura dos esqueletos de carregamento e da tabela de leitura com contagem
+  e página; importe-o de `@/components/ui/data-table`. **A barra e o rodapé
+  moram fora da moldura** — `toolbar` em cima, `footer` (o
+  `TablePanelFooter`) embaixo, com o mesmo vão; como filho, os dois avisam.
 - **O `Stepper` é o estado do fluxo desde a rodada 224.** Com `value` +
   `onValueChange` cada `StepperItem` deriva `complete`/`current`/`upcoming` do
   índice — **nenhuma tela escreve `estadoDe(i, atual)`** —, e `state` no item
@@ -2450,6 +2457,11 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   só que desliza** até a escolhida — a mecânica e a superfície do `Tabs
   solid`, e a escolhida se pinta sozinha antes da primeira medida; é escolha
   de **valor**, e quando a opção troca o painel continua sendo `Tabs`.
+  `variant="floating"` (rodada 231) é a mesma escolha **idêntica ao `Tabs`
+  padrão** — a pílula `--popover` com o anel, o item de 28 com `px-3`, a tecla
+  em relevo 2px para dentro e a viagem líquida (`viajarLiquido`,
+  `TRAJETO_MACIO`) —, sem o papel de aba; o painel Exibir do `DataTable` a usa
+  em `size="sm"`, que é o degrau de 28 do `Tabs md`.
   `variant="chip"` (também no `Toggle`) é a ficha de filtro, classe a classe
   `tagChipNeutral` e `tagChipFilterSelected`. `count` põe a contagem ao lado
   do rótulo, tabular e com um espaço de verdade antes — sem ele o nome

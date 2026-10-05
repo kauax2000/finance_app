@@ -74,3 +74,25 @@ describe("ToggleGroup, rodada 199", () => {
     expect(atividade).toContain("count={activityCounts[key]}")
   })
 })
+
+describe("ToggleGroup floating, rodada 231", () => {
+  it("é a pílula do Tabs padrão: placa com anel, tecla em relevo, e escolha de valor e não aba", () => {
+    const html = grupo(
+      { variant: "floating", defaultValue: "a" },
+      { value: "a", children: "A" },
+      { value: "b", children: "B" }
+    )
+    expect(html).toMatch(/data-slot="toggle-group"[^>]*data-variant="floating"[^>]*class="[^"]*bg-popover ring-1 ring-foreground\/10[^"]*rounded-full/)
+    // Sem medida, a escolhida se pinta com a tecla do Tabs floating.
+    expect(html).toMatch(/data-variant="floating"[^>]*class="[^"]*rounded-full px-3[^"]*data-\[state=on\]:bg-muted/)
+    expect(html).toContain('role="radio"')
+    expect(html).not.toContain('role="tab"')
+  })
+
+  it("e anda como as abas: a viagem líquida, 2px para dentro, sem transição de CSS", () => {
+    const fonte = readFileSync(join(process.cwd(), "src/components/ui/toggle-group.tsx"), "utf8")
+    expect(fonte).toContain("viajarLiquido(peca, antes.caixa, caixa, { amplitude, trajeto: TRAJETO_MACIO })")
+    expect(fonte).toContain("const recuo = flutuante ? 2 : 0")
+    expect(fonte).toContain('"gap-1.5 rounded-full px-3 text-control-sm pointer-coarse:h-9 duration-(--duration-base)"')
+  })
+})

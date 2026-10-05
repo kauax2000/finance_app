@@ -18493,3 +18493,143 @@ no claro e 18% no escuro, escolhidos entre 10–14 e 16–20 por medição: **1,
 e 1,52** sobre uma linha, 1,35 e 1,59 sobre a página. `glass` é o vidro do
 `TabsList glass` (`glass glass-control`) sobre esse mesmo tom: muda o
 material, não o contraste. A sombra subiu de `xs` para `sm`.
+
+### Rodada 231 — o TablePanel entra na página do DataTable
+
+O dono perguntou por que havia duas páginas, **Data Table** e **Table
+Panel**, e a resposta era histórica: o `TablePanel` (a moldura — `Card
+padding="none"`, a barra acima, a `Table`, o rodapé de paginação) ganhou
+página quando era a tabela do app, e o `DataTable` chegou na rodada 225 por
+cima dele. Contado antes de juntar: as duas telas com tabela de verdade
+(Transações e Assinaturas) usam o `DataTable`, e o `TablePanel` sozinho só
+aparecia em quatro esqueletos de carregamento. Eram duas entradas em
+Templates para uma tabela só.
+
+**Juntou o arquivo, não só a página.** O `taxonomy.test.ts` cobra entrada e
+página para todo arquivo de `ui/`, e o precedente é o do `NativeSelect` no
+`select.tsx`, do `FormPickerPopover` no `form.tsx` e do `DragHandle` no
+`drawer.tsx`: o código do `TablePanel` foi para o `data-table.tsx`, sem mudar
+a API, e os quatro esqueletos importam de lá. O custo, dito: um esqueleto que
+importa a moldura passa a importar o módulo do motor — e os quatro são de
+rotas que mostram o `DataTable` logo depois.
+
+**A página perdeu duas demonstrações de propósito.** A "Seleção" e as "Ações
+por linha" montavam a caixa, a contagem e a barra de seleção à mão em volta
+da moldura — o que a rodada 225 proibiu nas telas e o `DataTable` faz. Ficou
+a seção **"A moldura, sem estado"**, com um eixo de rolagem (o cabeçalho fixo
+de vidro e o véu do rodapé), as notas da densidade por contexto e do rodapé
+que empilha, e a tabela de props das três peças. A página do `Table` passou
+a apontar para o `DataTable`.
+
+**E o vão na ponta da tabela.** O dono apontou um espaço vazio à direita do
+painel da demonstração principal: o cabeçalho e a faixa do mês paravam 31px
+antes da borda. Medido: a linha de totais escrevia `colSpan={7}` + valor +
+ações — 9 colunas numa tabela de 8 (a caixa de seleção também conta) —, e o
+`<table>` em layout automático criou a nona, vazia, em todas as linhas; com
+ela a tabela passou a 956px num viewport de 908 e rolava de lado, escondendo
+as caixas. O `footer` passou a receber `{ columns }` — as colunas à vista, o
+mesmo `nColunas` que o grupo, o detalhe, o erro e o vazio já usavam —, e a
+demonstração soma a ele. Escondendo "Conta" no menu Exibir, cabeçalho e
+totais caem juntos para 7. `table-ladder.test.ts` proíbe `colSpan` cravado
+na página.
+
+
+**E o painel Exibir, redesenhado a pedido do dono.** Era um popover com dois
+rótulos soltos, a sigla da densidade (XS…XL) sem dizer o que ela muda, e
+caixas de 16px como único alvo de cada coluna. Hoje: o título à vista com
+**Redefinir** (só quando a densidade saiu de `md` ou há coluna escondida), os
+rótulos em sobrancelha com o estado à direita — "Ampla · 52px", a altura real
+da linha do degrau, e "5 de 6" —, e cada coluna é a **linha inteira**, na
+geometria e no esmaecer das linhas de menu (`menu-classes`), com a escondida
+esmaecida. A última coluna à vista não sai: uma tabela sem coluna nenhuma não
+tem por onde voltar. No telefone o painel é a gaveta (`mobile="sheet"`), com
+as linhas a 44. Os ids das seções saem de `useId`, porque uma página tem
+várias tabelas.
+
+**E o `ToggleGroup floating`, igual ao `Tabs` padrão.** O dono pediu a
+densidade do painel Exibir "na versão default das tabs", e depois a variante
+no `ToggleGroup`, exatamente igual. Ela não usa o `Tabs`: a densidade é
+escolha de valor, e uma `tablist` sem painel anunciaria abas que não existem.
+Copiada classe a classe e medida contra a página do `Tabs`: bandeja de 32 com
+2px de recuo e 2 de vão, `--popover` com o anel de 1px; item de 28, `px-3`,
+12,8px a 500, entrelinha 20, borda transparente de 1px e o esmaecer em
+`--duration-base`; o marcador é a tecla (`--muted`, anel, `shadow-xs`) de 24,
+**2px para dentro** do item — a conta é a do `useMarcador`, na caixa
+publicada, e não um `calc()` na classe — e anda pela **viagem líquida**
+(`viajarLiquido`, `TRAJETO_MACIO`: 480ms e o esticão de 768ms no mesmo
+relógio, 0,09 por item andado), sem transição de CSS. O degrau que bate com o
+`Tabs md` é o `size="sm"` do `ToggleGroup` (28); o `segmented` não mudou, e a
+reordenação das classes da bandeja manteve o teste da rodada 199 verde.
+
+**E o rodapé de paginação saiu da moldura.** O dono pediu para separar a
+contagem e as páginas da borda. O `TablePanelFooter` virou a prop `footer` do
+`TablePanel` — o espelho da `toolbar`: abaixo do `Card`, com o mesmo vão de
+8px, sem recuo vertical, `min-h-7` e o fio transparente nas laterais; como
+filho, avisa no console. Com ele saíram a medição (`--table-panel-foot-h`, que
+servia para as linhas passarem por baixo do rodapé) e a condição do último
+fio: a última linha agora nunca soma fio com a moldura. O `DataTable` e o
+esqueleto do detalhe de categoria passam o rodapé pela prop.
+
+**E a seta de expandir ficou ghost também aberta.** O `TableExpandButton` é
+`tertiary`, e o `tertiary` deixa a flor acesa com `aria-expanded` — o estado
+de um gatilho de menu aberto. Na seta que recolhe o grupo e o detalhe, aberto
+é só a seta girada, e o fundo aceso lia como botão pressionado. A flor zera
+com `aria-expanded` e volta no cursor e no toque (`aria-expanded:hover:`, que
+vence o simples por especificidade). Medido: aberta em repouso
+`--button-bloom` 0, no cursor 1.
+
+**E a linha `current` deixou de ter fundo.** O dono perguntou por que só a
+"Parcela 1 de 4" tinha o fundo aceso: era o `TableRow state="current"`
+(`bg-muted/50`), a parcela vigente — e sozinho, no meio da lista, ele lia como
+hover preso ou seleção. Saiu o fundo (e o tom de célula fixa que o
+acompanhava); fica o `aria-current`, e o `pending` continua apagando o texto,
+que o dono quis manter. Vale para a parcela vigente da compra parcelada e
+para o histórico de cobranças da assinatura.
+A prevista também apaga a **cor**: o ladrilho da categoria, o avatar e o
+valor (`MoneyDisplay`) vão a 50% de opacidade nas linhas `pending`, porque em
+tinta cheia ao lado do texto apagado eles eram a parte mais viva da linha. O
+valor guarda o vermelho e o verde, só mais baixos: o sinal ainda é
+informação.
+
+**E o detalhe da linha se distribui.** O detalhe das parcelas no catálogo
+(Conta, Categoria, Valor) saía numa coluna alta de 149px com 600px vazios à
+direita: o exemplo pedia `columns={3}`, mas o `DescriptionList` só lê
+`columns` em `layout="grid"` e o ignorava calado. Agora **`columns` implica
+`grid`**, e o detalhe mede 47px, em três colunas; o valor ganhou a cor do
+sinal. Nenhuma tela do app caía no buraco.
+E ele **começa onde o conteúdo da linha começa**: o `TableRowDetail` ganhou
+`lead` (as colunas de utilidade — a caixa e a seta —, ocupadas por uma célula
+vazia) e `depth` (o recuo da sublinha, o mesmo da primeira coluna de dados).
+O `DataTable` passa os dois. Medido: o rótulo do detalhe e o ladrilho da linha
+no mesmo pixel, na linha de primeiro nível (445) e na parcela (469).
+
+**E a falha da tabela ganhou forma.** O `TableError` era uma frase cinza solta
+no meio da tabela, com um botão embaixo — lia como vazio, não como falha. Ele
+passou a falar como o `ChartError`: o `EmptyState` sem moldura, com o poço do
+ícone no tom de erro (o triângulo), o **título** (`title`, "Não foi possível
+carregar") e a frase como **descrição** (o porquê, o `children`). E o
+"Tentar de novo" mostra que está refazendo: um `onRetry` que devolve
+`Promise` troca a seta pela roda, trava o botão e marca `aria-busy` até ela
+assentar — antes o clique não respondia nada até as linhas chegarem. O
+`error.onRetry` do `DataTable` aceita a `Promise`. Medido no catálogo:
+durante o refazer, roda, `disabled` e "Tentando…"; depois, as linhas.
+
+**E o gêmeo do telefone virou extrato.** A linha do `DataTable` abaixo de
+`md` tinha três andares: o nome, a legenda com a data quebrando em duas
+linhas e o valor numa linha própria — ~62px, e os valores não formavam
+coluna. Agora são duas colunas: à esquerda o nome e a legenda, uma linha cada
+e truncando; à direita o valor e, embaixo dele, a data — o lugar novo
+`meta.mobile: "meta"`, que é o padrão de `col.date` (as Transações declaram a
+data em `description` e seguem iguais). Medido a 375px: as oito linhas com o
+valor na mesma ponta (309px), o nome com 106–128px. A coluna da direita leva
+`flex-none`, porque o `data-slot` próprio tirava a regra do `Item` que a deixa
+do tamanho do conteúdo e ela dividia a sobra com o nome (99px cada). A linha
+`current` deixou de pintar também aqui, e a `pending` apaga a cor como na
+tabela. A folha de ações ganhou o nome da linha no título (`DropdownMenuHeader
+title`): era "Ações", e a gaveta não dizia de que linha. A demonstração passou
+ao `IphoneFrame`, o mesmo da Bottom Bar.
+
+**E a página do Data Table emagreceu, a pedido do dono.** Saíram as
+demonstrações "Na URL", "Cinco mil linhas" e "A moldura, sem estado" (com as
+duas notas dela). As props seguem documentadas — `urlState` e `virtualize` na
+tabela do `DataTable`, e as três peças do `TablePanel` na tabela dele.

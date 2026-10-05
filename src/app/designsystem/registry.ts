@@ -261,8 +261,10 @@ const LAYER: Record<string, Layer> = {
   /**
    * O `DataTable` (rodada 225) é o motor da TanStack Table por baixo do
    * `TablePanel`: ele monta o painel, a barra, o corpo, o rodapé de paginação
-   * e a barra flutuante da seleção — o `TablePanel` com o estado dentro. Um
-   * Template que compõe outro, como a página que dispõe o painel.
+   * e a barra flutuante da seleção — o `TablePanel` com o estado dentro.
+   * Desde a rodada 231 o `TablePanel` mora no mesmo arquivo e na mesma página:
+   * eram duas entradas em Templates para uma tabela só, e ele, sem estado, só
+   * servia aos esqueletos de carregamento.
    */
   "data-table": "Templates",
   "page-header": "Templates",
@@ -281,14 +283,6 @@ const LAYER: Record<string, Layer> = {
    *  Compõe `Container` e a tipografia, e recebe o campo por slot — o que ele
    *  mostra é conteúdo de produto, e conteúdo de produto não mora em `ui/`. */
   "split-shell": "Templates",
-  /**
-   * `TablePanel` compõe `Card`, `Table` e (no uso real) `Pagination` — dois ou
-   * mais organismos, dispostos num layout de página. É a definição do
-   * modelo de Frost que a régua acima cita: "os templates são feitos de
-   * organismos". Ele não mostra conteúdo nenhum por si — dispõe onde a barra,
-   * a tabela e o rodapé de paginação vão.
-   */
-  "table-panel": "Templates",
   /**
    * A barra de uma lista: dispõe onde os filtros, as ações e as fichas vão, e
    * não mostra conteúdo nenhum por si. Foi Organismo até a rodada 229 pelo
@@ -451,7 +445,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("pagination", "Pagination", "Navegação entre páginas de uma lista.", ui("pagination"), "Pagination, PaginationStatus, PaginationContent, PaginationLink, PaginationPrevious, PaginationNext, PaginationEllipsis, PaginationMore"),
   entry("radio-group", "Radio Group", "Escolha única entre poucas opções — em linha, em cartão, em ladrilho ou em fichas.", ui("radio-group"), "RadioGroup, RadioGroupItem"),
   entry("search-input", "Search Input", "O campo de busca — a pílula do cabeçalho e da paleta.", ui("search-input"), "SearchInput"),
-  entry("toggle-group", "Toggle Group", "Conjunto de toggles: seleção única ou múltipla, em fichas ou numa bandeja segmentada.", ui("toggle-group"), "ToggleGroup, ToggleGroupItem"),
+  entry("toggle-group", "Toggle Group", "Conjunto de toggles: seleção única ou múltipla, em fichas, numa bandeja segmentada ou na pílula das Tabs.", ui("toggle-group"), "ToggleGroup, ToggleGroupItem"),
 
   // ── Organisms ──────────────────────────────────────────────────────────
   entry("accordion", "Accordion", "Seções expansíveis.", ui("accordion"), "Accordion, AccordionItem, AccordionTrigger, AccordionContent, AccordionToggleAll"),
@@ -484,12 +478,11 @@ export const REGISTRY: RegistryEntry[] = [
 
   // ── Templates ───────────────────────────────────────────────────────────
   entry("bottom-bar", "Bottom Bar", "A barra de abas do telefone — o marcador do Tabs, o arraste, a contagem, o rótulo só na ativa e o some-ao-rolar.", ui("bottom-bar"), "BottomBar, BottomBarTab, BottomBarSlot, BottomBarAction, BottomBarSkeleton, BottomBarRow, BottomBarTabs, bottomBarActionClassName"),
-  entry("data-table", "Data Table", "A tabela com o estado: ordenar, filtrar, marcar, agrupar, expandir, exportar e editar.", ui("data-table"), "DataTable, dataTableColumns, DataTableSelectionBar, DataTableFacetFilter, DataTableViewOptions"),
+  entry("data-table", "Data Table", "A tabela com o estado — ordenar, filtrar, marcar, agrupar, expandir, exportar e editar — e a moldura dela.", ui("data-table"), "DataTable, TablePanel, TablePanelToolbar, TablePanelFooter, dataTableColumns, DataTableSelectionBar, DataTableFacetFilter, DataTableViewOptions"),
   entry("page-header", "Page Header", "O topo de uma tela.", ui("page-header"), "PageHeader, PageHeaderTitleRow, PageHeaderTitle, PageHeaderDescription, PageHeaderEyebrow, PageHeaderMeta, PageHeaderActions"),
   entry("page-section", "Page Section", "Bloco de uma tela, com título e ação.", ui("page-section"), "PageSection, PageSectionHeader, PageSectionTitle, PageSectionDescription"),
   entry("sidebar", "Sidebar", "A navegação lateral do app.", ui("sidebar"), "Sidebar, SidebarProvider, SidebarInset, SidebarTrigger, SidebarRail, SidebarContent, SidebarGroup, SidebarMenu, SidebarMenuButton, useSidebar"),
   entry("split-shell", "Split Shell", "Campo de um lado, coluna de conteúdo do outro.", ui("split-shell"), "SplitShell"),
-  entry("table-panel", "Table Panel", "Tabela com moldura, ações e paginação.", ui("table-panel"), "TablePanel, TablePanelToolbar, TablePanelFooter"),
   entry("toolbar", "Toolbar", "Filtros e ações acima de uma lista — presa sob a barra do topo, com o botão de filtros, as fichas, a busca, o ⋯ e o teclado de toolbar.", ui("toolbar"), "Toolbar, ToolbarFilters, ToolbarActions, ToolbarRow, ToolbarButton, ToolbarFilterButton, ToolbarSearch, ToolbarCount, ToolbarChips, ToolbarFilterIndicator"),
   entry("top-bar", "Top Bar", "A barra do topo da janela.", ui("top-bar"), "TopBar, TopBarStart, TopBarTitle, TopBarContent, TopBarActions"),
 ]

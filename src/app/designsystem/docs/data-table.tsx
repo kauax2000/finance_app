@@ -27,7 +27,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { TILE_PALETTE } from "@/lib/tile-palette"
-import { PhoneFrame } from "../ds-frame"
+import { IphoneFrame } from "../ds-frame"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 /* -------------------------------------------------------------------------- */
@@ -246,12 +246,12 @@ function DemoNaTela() {
         }
         groupTotal={(rows) => <MoneyDisplay value={rows.reduce((s, l) => s + l.valor, 0)} signed />}
         groupCollapsible
-        footer={(rows) => {
+        footer={(rows, { columns }) => {
           const entrou = rows.filter((l) => l.valor > 0).reduce((s, l) => s + l.valor, 0)
           const saiu = rows.filter((l) => l.valor < 0).reduce((s, l) => s + l.valor, 0)
           return (
             <TableRow>
-              <TableCell colSpan={7} className="text-muted-foreground">
+              <TableCell colSpan={columns - 2} className="text-muted-foreground">
                 {rows.length} lançamentos · entrou <MoneyDisplay value={entrou} tone="income" /> · saiu{" "}
                 <MoneyDisplay value={saiu} tone="expense" />
               </TableCell>
@@ -298,7 +298,7 @@ function DemoExpandir() {
       rowState={(l) => (l.id === "p0-1" ? "current" : l.status === "prevista" ? "pending" : undefined)}
       renderDetail={(l) =>
         l.parcelas ? null : (
-          <DescriptionList term="eyebrow" columns={3}>
+          <DescriptionList layout="grid" columns={3} term="eyebrow">
             <DescriptionListItem>
               <DescriptionTerm>Conta</DescriptionTerm>
               <DescriptionDetails>{l.conta}</DescriptionDetails>
@@ -310,7 +310,7 @@ function DemoExpandir() {
             <DescriptionListItem>
               <DescriptionTerm>Valor</DescriptionTerm>
               <DescriptionDetails>
-                <MoneyDisplay value={l.valor} signed />
+                <MoneyDisplay value={l.valor} signed tone={l.valor < 0 ? "expense" : "income"} />
               </DescriptionDetails>
             </DescriptionListItem>
           </DescriptionList>
@@ -375,49 +375,23 @@ function DemoServidor() {
         onPaginationChange={setPagination}
         loading={pagina === null && !erro}
         pending={buscando && pagina !== null}
-        error={erro ? { message: "O servidor não respondeu.", onRetry: () => (setFalhar(false), setTentativa((n) => n + 1)) } : null}
+        error={
+          erro
+            ? {
+                message: "O servidor não respondeu.",
+                onRetry: () =>
+                  new Promise((r) =>
+                    window.setTimeout(() => {
+                      setFalhar(false)
+                      setTentativa((n) => n + 1)
+                      r(null)
+                    }, 700)
+                  ),
+              }
+            : null
+        }
       />
     </div>
-  )
-}
-
-function DemoUrl() {
-  return (
-    <DataTable
-      aria-label="Lançamentos com o estado na URL"
-      columns={COLUNAS}
-      data={LANCAMENTOS}
-      getRowId={(l) => l.id}
-      getRowLabel={(l) => l.descricao}
-      pageSize={6}
-      urlState={{ prefix: "dt-" }}
-      toolbar={{ search: true, facets: ["categoria"] }}
-    />
-  )
-}
-
-const MUITAS: Lancamento[] = Array.from({ length: 5000 }, (_, i) => {
-  const b = BASE[i % BASE.length]
-  return {
-    ...b,
-    id: `v${i}`,
-    descricao: `${b.descricao} #${i + 1}`,
-    data: `2026-0${1 + (i % 9)}-${String(1 + (i % 28)).padStart(2, "0")}`,
-  }
-})
-
-function DemoVirtual() {
-  return (
-    <DataTable
-      aria-label="Cinco mil lançamentos"
-      columns={COLUNAS.filter((c) => !["conta", "categoria"].includes(c.id ?? ""))}
-      data={MUITAS}
-      getRowId={(l) => l.id}
-      getRowLabel={(l) => l.descricao}
-      pageSize={false}
-      virtualize={{ estimateSize: 53 }}
-      toolbar={{ search: true }}
-    />
   )
 }
 
@@ -462,8 +436,9 @@ function DemoEdicao() {
 
 function DemoTelefone() {
   return (
-    <PhoneFrame>
-      <div className="h-full overflow-y-auto bg-background p-4">
+    <IphoneFrame title="Lançamentos num iPhone">
+      {/* O topo desce da ilha do iPhone, como a página de Touch & safe area. */}
+      <div className="h-full overflow-y-auto bg-background px-4 pt-16 pb-8">
         <DataTable
           aria-label="Lançamentos no telefone"
           columns={COLUNAS}
@@ -472,11 +447,12 @@ function DemoTelefone() {
           getRowLabel={(l) => l.descricao}
           pageSize={false}
           enableSelection
+          rowState={(l) => (l.status === "prevista" ? "pending" : undefined)}
           rowActions={ACOES(() => undefined)}
           onRowClick={() => undefined}
         />
       </div>
-    </PhoneFrame>
+    </IphoneFrame>
   )
 }
 
@@ -489,11 +465,7 @@ export default function DataTableDoc() {
         <Link href="/designsystem/table" className="underline">
           Table
         </Link>{" "}
-        e da moldura do{" "}
-        <Link href="/designsystem/table-panel" className="underline">
-          Table Panel
-        </Link>
-        . Uma tabela de referência, que ninguém ordena nem marca, continua sendo a <code>Table</code> sozinha.
+        e da moldura do <code>TablePanel</code>, que mora nesta página. Uma tabela de referência, que ninguém ordena nem marca, continua sendo a <code>Table</code> sozinha.
       </Usage>
 
       <DocSection
@@ -555,7 +527,7 @@ export default function DataTableDoc() {
         description="renderDetail abre um painel sob a linha, na mola da divulgação; getSubRows abre as filhas — as parcelas de uma compra, recuadas. A parcela vigente é a linha current."
         code={`<DataTable
   getSubRows={(l) => l.parcelas}
-  renderDetail={(l) => <DescriptionList>…</DescriptionList>}
+  renderDetail={(l) => <DescriptionList layout="grid" columns={3}>…</DescriptionList>}
   rowState={(l) => (l.vigente ? "current" : undefined)}
 />`}
         previewClassName="items-stretch"
@@ -579,24 +551,6 @@ export default function DataTableDoc() {
       </DocSection>
 
       <DocSection
-        title="Na URL"
-        description="urlState escreve a ordenação, a página, a busca e as facetas na URL (sort=valor.desc, page=2), para o link ser compartilhável. prefix separa duas tabelas na mesma página. Ordene e olhe a barra de endereço."
-        code={`<DataTable urlState={{ prefix: "dt-" }} … />`}
-        previewClassName="items-stretch"
-      >
-        <DemoUrl />
-      </DocSection>
-
-      <DocSection
-        title="Cinco mil linhas"
-        description="virtualize monta só as linhas à vista (TanStack Virtual), com linhas espaçadoras em cima e embaixo para a tabela continuar sendo tabela, aria-rowcount e aria-rowindex. O cabeçalho fica fixo, e a cascata e o deslizar desligam."
-        code={`<DataTable virtualize={{ estimateSize: 53 }} viewportClassName="max-h-96" … />`}
-        previewClassName="items-stretch"
-      >
-        <DemoVirtual />
-      </DocSection>
-
-      <DocSection
         title="Editar na célula"
         description="editable liga a grade (role=grid): as setas andam entre as células, Enter ou F2 (ou dois cliques) edita, Esc desiste, Enter ou Tab confirma. onCellEdit pode devolver Promise — a célula mostra a roda, e se falhar volta ao valor de antes. Apague uma descrição para ver a falha. O saldo corrente acende quando muda."
         code={`<DataTable
@@ -616,7 +570,7 @@ export default function DataTableDoc() {
 
       <DocSection
         title="No telefone"
-        description="As colunas dizem onde moram no gêmeo (meta.mobile: media, title, description, trailing), e abaixo de md a tabela vira a lista de Item — por CSS, sem hook de largura. As ações vão para o ⋯, que abre a folha de ações."
+        description="As colunas dizem onde moram no gêmeo (meta.mobile: media, title, description, trailing, meta), e abaixo de md a tabela vira a lista de Item — por CSS, sem hook de largura. A linha é um extrato: o nome e a legenda à esquerda, numa linha cada; o valor e a data à direita, alinhados pela ponta. As ações vão para o ⋯, que abre a folha com o nome da linha no título."
         code={`col.identity({ …, meta: { mobile: "title" } })
 col.money({ … })        // trailing, de fábrica`}
         previewClassName="items-center"
@@ -663,8 +617,8 @@ col.money({ … })        // trailing, de fábrica`}
           { prop: "toolbar", type: "{ search, facets, view, export, start, end } | ReactNode", description: "A barra de cima, montada ou à mão (com useDataTable)." },
           { prop: "density / striped / dividers / headerVariant / stickyHeader", type: "os eixos da Table", description: "A densidade também se troca no menu Exibir." },
           { prop: "loading / pending / error / empty", type: "boolean / boolean / { message, onRetry } / ReactNode", description: "O esqueleto, a recarga, a falha e o vazio." },
-          { prop: "footer", type: "(rows) => ReactNode", description: "A linha de totais, das linhas filtradas." },
-          { prop: "mobile / motion / virtualize / editable / panel", type: "…", description: "O gêmeo, a cascata e o deslizar, as cinco mil linhas, a grade de edição e a moldura." },
+          { prop: "footer", type: "(rows, { columns }) => ReactNode", description: "A linha de totais, das linhas filtradas; os colSpan somam columns (as colunas à vista)." },
+          { prop: "mobile / motion / virtualize / editable / panel", type: "…", description: "O gêmeo, a cascata e o deslizar, a virtualização (só as linhas à vista), a grade de edição e a moldura." },
         ]}
       />
 
@@ -673,9 +627,17 @@ col.money({ … })        // trailing, de fábrica`}
         rows={[
           { prop: "label", type: "string", description: "O nome no menu de colunas, no CSV e no esqueleto." },
           { prop: "numeric / pin / primary", type: "boolean / \"start\" | \"end\" / boolean", description: "Os mesmos da Table." },
-          { prop: "mobile", type: "\"media\" | \"title\" | \"description\" | \"trailing\"", description: "O lugar no gêmeo do telefone." },
+          { prop: "mobile", type: "\"media\" | \"title\" | \"description\" | \"trailing\" | \"meta\"", description: "O lugar no gêmeo do telefone; meta é a linha miúda sob a ponta (a data, por padrão)." },
           { prop: "facet", type: "{ options? }", description: "O filtro por faceta, com a contagem." },
           { prop: "csv / edit", type: "false | (row) => valor / { type, options }", description: "O valor no CSV e a edição na célula." },
+        ]}
+      />
+      <PropsTable
+        title="TablePanel — a moldura"
+        rows={[
+          { prop: "TablePanel", type: "ComponentProps<typeof Card> & { toolbar?: ReactNode; footer?: ReactNode }", description: "Card padding=\"none\" variant=\"outline\" que publica md; toolbar e footer recebem a barra de topo e o rodapé, fora da moldura." },
+          { prop: "TablePanelToolbar", type: 'ComponentProps<typeof CardToolbar> · variant: "label" | "title"', default: '"label"', description: "A barra de topo; vai na prop toolbar, nunca como filho — como filho cairia dentro da moldura, e avisa no console." },
+          { prop: "TablePanelFooter", type: "ComponentProps<typeof CardNote>", description: "O rodapé de paginação; vai na prop footer, nunca como filho — avisa no console. Empilha no telefone, linha no desktop." },
         ]}
       />
     </>

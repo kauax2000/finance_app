@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardNote, CardToolbar } from "@/componen
 import { Separator } from "@/components/ui/separator"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { TableSkeleton, type TableSkeletonColumn } from "@/components/ui/table"
-import { TablePanel } from "@/components/ui/table-panel"
+import { TablePanel } from "@/components/ui/data-table"
 
 const CATEGORY_ROW_KEYS = ["cat-1", "cat-2", "cat-3"] as const
 const INSTALLMENT_KEYS = ["plan-1", "plan-2", "plan-3"] as const

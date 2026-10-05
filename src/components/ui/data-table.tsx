@@ -72,6 +72,7 @@ import { numberBR } from "@/lib/formatters"
 import { parseMoneyBrl } from "@/lib/money-brl"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardNote, CardToolbar } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Combobox,
@@ -95,6 +96,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuHeader,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -108,9 +110,15 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item"
-import { Label } from "@/components/ui/label"
 import { Pagination, PaginationStatus } from "@/components/ui/pagination"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Popover,
+  PopoverContent,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { menuItemFadeClassName, menuItemGeometryClassName } from "@/lib/menu-classes"
 import { SearchInput } from "@/components/ui/search-input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/select"
 import { Spinner } from "@/components/ui/spinner"
@@ -135,12 +143,199 @@ import {
   type TableSize,
   type TableSkeletonColumn,
 } from "@/components/ui/table"
-import {
-  TablePanel,
-  TablePanelFooter,
-  TablePanelToolbar,
-} from "@/components/ui/table-panel"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+
+/* -------------------------------------------------------------------------- */
+/* A moldura: o TablePanel                                                     */
+/* -------------------------------------------------------------------------- */
+
+// Mora aqui desde a rodada 231: era `table-panel.tsx`, com página própria, e
+// as duas páginas descreviam a mesma tabela. Sozinho, sem estado, ele serve o
+// esqueleto de carregamento; com estado, é a moldura que o `DataTable` monta.
+
+/**
+ * Verdadeiro dentro da moldura. Existe só para a `TablePanelToolbar` avisar
+ * quando é passada como filho — ali ela cairia dentro do painel, calada.
+ */
+const TablePanelFrameContext = React.createContext(false)
+
+/**
+ * A tabela como o app a mostra: moldura, barra de ações opcional, tabela e
+ * rodapé de paginação — o que `transactions-table.tsx` e
+ * `subscriptions/page-client.tsx` montavam em 7 lugares com quatro grafias
+ * diferentes de arredondar os cantos:
+ *
+ * ```
+ * <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
+ *   <CardContent className="relative flex flex-col p-0">
+ *     <div className={cn("min-w-0", …rounded-t-xl/rounded-b-xl condicionais…)}>
+ * ```
+ *
+ * `Card` já resolvia isso — `padding="none"` zera o recuo do corpo
+ * (`--card-px: 0px`) e `overflow-hidden` recorta os cantos de todo filho —,
+ * e as quatro grafias eram a prova de que faltava a peça, não de que o
+ * `Card` não bastava. `TablePanel` é essa peça: `Card padding="none"
+ * variant="outline"`, publicando `md` em `TableSizeContext` — nenhuma tela
+ * dentro dele escreve `size`, porque `md` (44, o `lg` de antes da rodada 225)
+ * é a densidade confortável que os 7 painéis já usavam. O `DataTable` publica
+ * por cima a densidade que a pessoa escolheu.
+ *
+ * **Sem eixo de superfície.** As 7 chamadas são a mesma variante do `Card`,
+ * sem uma segunda evidência — e eixo sem contagem é ficção, a régua que este
+ * sistema já aplicou ao cortar dois eixos de outros componentes. O dia em que
+ * uma tela pedir outra superfície, ela entra com o caso que a justifica.
+ *
+ * **A barra de topo mora fora da moldura**, por pedido do dono: a contagem e
+ * as ações de seleção (excluir etc.) ficam acima do painel, e a moldura começa
+ * no cabeçalho da tabela. **A barra é prop (`toolbar`), e não filho.** Ela já
+ * foi separada dos outros filhos pelo tipo da função, e isso quebrou medido: a
+ * cada edição deste arquivo o Fast Refresh troca a função, a página segue
+ * criando o elemento com a antiga, a comparação deixa de bater e as quatro
+ * barras do catálogo caíam para dentro da moldura. É a decisão que o
+ * `DropdownMenu` já registra para `header`/`footer`: detectar peça entre os
+ * filhos não funciona, e slot como prop é o idioma daqui — que também não
+ * depende de fragmento nem de embrulho. `className` vai ao envelope, que
+ * é quem dimensiona o conjunto; o resto das props segue na moldura.
+ *
+ * **O rodapé de paginação também mora fora, embaixo** (rodada 231, pedido do
+ * dono): `footer` é o espelho de `toolbar`, e a moldura fecha na última linha.
+ * Com ele saiu a faixa que o rodapé publicava (`--table-panel-foot-h`) para as
+ * linhas passarem por baixo dele — fora da moldura não há o que atravessar.
+ *
+ * O envelope declara o recuo horizontal de tira: a variável mora no `Card`, e
+ * fora dele o recuo da barra cairia a zero calado.
+ */
+function TablePanel({
+  className,
+  toolbar,
+  footer,
+  children,
+  ...props
+}: React.ComponentProps<typeof Card> & {
+  /** A barra de topo, acima da moldura. Passe uma `TablePanelToolbar`. */
+  toolbar?: React.ReactNode
+  /** O rodapé de paginação, abaixo da moldura. Passe um `TablePanelFooter`. */
+  footer?: React.ReactNode
+}) {
+  return (
+    <TableSizeContext.Provider value="md">
+      <div
+        data-slot="table-panel-group"
+        className={cn(
+          "flex min-w-0 flex-col gap-(--space-inline)",
+          "[--card-strip-px:--spacing(4)]",
+          className
+        )}
+      >
+        {toolbar}
+        <Card
+          data-slot="table-panel"
+          padding="none"
+          variant="outline"
+          className={cn(
+            "gap-0",
+            // **A última linha não soma fio com a moldura.** O `Card` fecha
+            // embaixo, e o divisor da última linha encostava na borda dele —
+            // dois fios empilhados. Desde que o rodapé saiu da moldura (rodada
+            // 231) não há mais o que ele separe ali dentro, e ele sai sempre.
+            "[&_[data-slot=table-viewport]>table>tbody>tr:last-child]:border-b-0",
+            // **`clip-path`, e não só o `overflow-hidden` do `Card`.** O borrão
+            // do cabeçalho fixo vira camada própria, e no Chrome acelerado ela
+            // escapa do recorte arredondado de um `overflow` — os cantos do
+            // vidro saíam da moldura. O `clip-path`
+            // recorta em qualquer motor, no raio que o `Card` já desenha, e
+            // ainda limita o que o borrão enxerga ao que está dentro dela.
+            "[clip-path:inset(0_round_var(--radius-xl))]",
+            // O raio de dentro da moldura, para o véu do rodapé não pintar
+            // sobre o arco da borda nos cantos de baixo.
+            "[--scroll-fade-veil-r:calc(var(--radius-xl)_-_1px)]"
+          )}
+          {...props}
+        >
+          <TablePanelFrameContext.Provider value>
+            {children}
+          </TablePanelFrameContext.Provider>
+        </Card>
+        {footer}
+      </div>
+    </TableSizeContext.Provider>
+  )
+}
+
+/**
+ * A barra de topo — contagem, filtro, seleção em massa. É `CardToolbar` com o
+ * nome do painel: mesma peça, mesmas duas variantes (`label` o rótulo apagado,
+ * `title` o dado que nomeia o painel).
+ *
+ * **Nunca `role="toolbar"`.** O papel é um contrato de teclado — foco
+ * itinerante entre os controles —, e nenhuma barra de seleção do app o
+ * implementa. O app escrevia o papel à mão em quatro lugares sem cumprir o
+ * contrato; na migração do backlog os quatro o perderam, que é exatamente o
+ * defeito que `Toolbar` documenta e se recusa a reproduzir.
+ *
+ * **Ela fica acima da moldura, sem fundo e sem borda.** Ela chegou a ter o
+ * `bg-muted/50` do cabeçalho da tabela como destaque leve, e o dono o tirou:
+ * fora da moldura, a posição já a separa da tabela. O fio **transparente** nas laterais é
+ * carga estrutural: a moldura tem 1px de borda, e sem ele o texto da barra
+ * cairia 1px à esquerda da coluna das células.
+ *
+ * **Sem recuo vertical, com `min-h-7`.** Fora da moldura quem separa a barra da
+ * tabela é o vão do envelope (8px), e os 12px de cada lado sobravam — pedido do
+ * dono. A altura mínima é a do botão de ação da seleção (`sm`, 28px), então a contagem e a seleção com
+ * "Excluir" medem o mesmo e a barra não pula ao marcar uma linha.
+ */
+function TablePanelToolbar({
+  className,
+  ...props
+}: React.ComponentProps<typeof CardToolbar>) {
+  const naMoldura = React.useContext(TablePanelFrameContext)
+  if (naMoldura && process.env.NODE_ENV !== "production") {
+    console.error(
+      "TablePanelToolbar dentro da moldura: passe a barra em <TablePanel toolbar={…}>, e não como filho."
+    )
+  }
+  return (
+    <CardToolbar
+      data-slot="table-panel-toolbar"
+      className={cn("min-h-7 border-x border-transparent py-0", className)}
+      {...props}
+    />
+  )
+}
+
+/**
+ * O rodapé de paginação — a contagem e os controles. Vai na prop `footer` do
+ * `TablePanel`, **abaixo da moldura** e separado dela pelo mesmo vão da barra
+ * de cima (rodada 231, pedido do dono): é a forma da `TablePanelToolbar`
+ * espelhada — sem fundo, sem recuo vertical, `min-h-7`, e o fio
+ * **transparente** nas laterais que alinha o texto com a coluna das células.
+ * Empilha no telefone e vira linha no desktop. Como filho cairia dentro da
+ * moldura, e avisa no console.
+ */
+function TablePanelFooter({
+  className,
+  ...props
+}: React.ComponentProps<typeof CardNote>) {
+  const naMoldura = React.useContext(TablePanelFrameContext)
+  if (naMoldura && process.env.NODE_ENV !== "production") {
+    console.error(
+      "TablePanelFooter dentro da moldura: passe o rodapé em <TablePanel footer={…}>, e não como filho."
+    )
+  }
+  return (
+    <CardNote
+      data-slot="table-panel-footer"
+      className={cn(
+        "flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between",
+        "min-h-7 border-x border-transparent py-0",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export { TablePanel, TablePanelFooter, TablePanelToolbar }
 
 /**
  * A tabela de dados (rodada 225): o motor da `TanStack Table` (v9) por baixo
@@ -175,8 +370,12 @@ export type DataTableColumnMeta = {
   primary?: boolean
   headClassName?: string
   cellClassName?: string
-  /** O lugar da coluna no gêmeo do telefone. Sem ele, ela não aparece lá. */
-  mobile?: "media" | "title" | "description" | "trailing"
+  /**
+   * O lugar da coluna no gêmeo do telefone. Sem ele, ela não aparece lá.
+   * `meta` (rodada 231) é a linha miúda sob a ponta, à direita — a data, por
+   * padrão.
+   */
+  mobile?: "media" | "title" | "description" | "trailing" | "meta"
   /**
    * As partes da célula de identidade, para o gêmeo as separar: o ladrilho na
    * mídia do `Item`, o nome no título e a legenda na descrição — e não a
@@ -339,12 +538,13 @@ function useFatia<V>(
   return [valor, set]
 }
 
-const DENSIDADES: { value: TableSize; label: string }[] = [
-  { value: "xs", label: "Mínima" },
-  { value: "sm", label: "Compacta" },
-  { value: "md", label: "Padrão" },
-  { value: "lg", label: "Ampla" },
-  { value: "xl", label: "Arejada" },
+/** A altura é a da linha da `Table` em cada degrau — o que a pessoa escolhe de fato. */
+const DENSIDADES: { value: TableSize; label: string; altura: number }[] = [
+  { value: "xs", label: "Mínima", altura: 32 },
+  { value: "sm", label: "Compacta", altura: 36 },
+  { value: "md", label: "Padrão", altura: 44 },
+  { value: "lg", label: "Ampla", altura: 52 },
+  { value: "xl", label: "Arejada", altura: 64 },
 ]
 
 /* -------------------------------------------------------------------------- */
@@ -444,10 +644,15 @@ export type DataTableProps<T extends RowData> = {
 
   loading?: boolean
   pending?: boolean
-  error?: { message?: React.ReactNode; onRetry?: () => void } | null
+  error?: { message?: React.ReactNode; onRetry?: () => void | Promise<unknown> } | null
   empty?: React.ReactNode
-  /** A linha de totais, no `<tfoot>`: recebe as linhas filtradas. */
-  footer?: (rows: T[]) => React.ReactNode
+  /**
+   * A linha de totais, no `<tfoot>`: recebe as linhas filtradas e quantas
+   * colunas estão à vista. Some os `colSpan` a `columns` — um número cravado
+   * passa da conta quando há caixa de seleção ou coluna escondida, e a coluna
+   * fantasma vira um vão vazio na ponta de todas as linhas.
+   */
+  footer?: (rows: T[], info: { columns: number }) => React.ReactNode
   /**
    * A contagem no rodapé — "12 assinaturas", "4 na lista filtrada (de 12)".
    * Com ela o rodapé aparece mesmo numa página só; sem ela, só quando há
@@ -1021,7 +1226,13 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
     return (
       <React.Fragment key={row.id}>
         {comMenu}
-        <TableRowDetail open={aberta} colSpan={nColunas} id={`detalhe-${row.id}`}>
+        <TableRowDetail
+          open={aberta}
+          colSpan={nColunas}
+          lead={Math.max(0, folhas.findIndex((f) => !f.id.startsWith("__")))}
+          depth={row.depth}
+          id={`detalhe-${row.id}`}
+        >
           {detalhe}
         </TableRowDetail>
       </React.Fragment>
@@ -1213,7 +1424,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
         )}
       </TableBody>
       {footer && !vazio && !error ? (
-        <TableFooter>{footer(table.getPrePaginatedRowModel().rows.map((r) => r.original))}</TableFooter>
+        <TableFooter>{footer(table.getPrePaginatedRowModel().rows.map((r) => r.original), { columns: nColunas })}</TableFooter>
       ) : null}
     </Table>
   )
@@ -1271,9 +1482,9 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
           <TablePanel
             className="w-full"
             toolbar={barra ? <TablePanelToolbar className="gap-2">{barra}</TablePanelToolbar> : undefined}
+            footer={rodape}
           >
             {miolo}
-            {rodape}
           </TablePanel>
         ) : (
           <div data-slot="data-table" className="flex w-full min-w-0 flex-col gap-(--space-inline)">
@@ -1384,7 +1595,14 @@ function AcoesDaLinha<T>({ row, actions, label }: { row: T; actions: DataTableAc
               <EllipsisHorizontalIcon aria-hidden />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" size="md" onClick={(e) => e.stopPropagation()}>
+          <DropdownMenuContent
+            align="end"
+            size="md"
+            // O alvo do menu: na folha do telefone era "Ações", e a pessoa não
+            // via de que linha eram as ações (rodada 231).
+            header={<DropdownMenuHeader title={label} />}
+            onClick={(e) => e.stopPropagation()}
+          >
             {resto.map((a) => (
               <DropdownMenuItem
                 key={a.label}
@@ -1455,6 +1673,7 @@ function GemeoDoTelefone<T extends RowData>({
         const [midia] = em("media")
         const descricoes = em("description")
         const pontas = em("trailing")
+        const metas = em("meta")
         const identidade = titulo ? metaDe(titulo.column).identity : undefined
         const legenda = identidade?.description?.(row.original)
         const midiaDaIdentidade = identidade?.media?.(row.original)
@@ -1466,12 +1685,14 @@ function GemeoDoTelefone<T extends RowData>({
           <Item
             variant="flush"
             size="lg"
-            // O mesmo estado da linha: a prevista apaga, a de agora se tinge.
+            // O mesmo estado da linha da tabela: a prevista apaga o texto e a
+            // cor; a de agora só leva `aria-current` (rodada 231).
             data-row-state={estado}
             aria-current={estado === "current" ? "true" : undefined}
             className={cn(
-              estado === "pending" && "text-muted-foreground [&_[data-slot=item-title]]:text-muted-foreground",
-              estado === "current" && "bg-muted/50"
+              "gap-3",
+              estado === "pending" &&
+                "text-muted-foreground [&_[data-slot=item-title]]:text-muted-foreground [&_[data-slot=color-tile]]:opacity-50 [&_[data-slot=avatar]]:opacity-50 [&_[data-slot=money-display]]:opacity-50"
             )}
             interactive={clicavel}
             selected={row.getIsSelected()}
@@ -1483,8 +1704,13 @@ function GemeoDoTelefone<T extends RowData>({
             {midiaDaIdentidade ?? midia ? (
               <ItemMedia>{midiaDaIdentidade ?? (midia ? <FlexRender cell={midia} /> : null)}</ItemMedia>
             ) : null}
+            {/* **Duas colunas, como um extrato** (rodada 231): o nome e a
+                legenda à esquerda, numa linha cada e truncando; o valor e a
+                data à direita, alinhados pela ponta. Antes o valor descia para
+                uma terceira linha e a legenda quebrava em duas — cada linha
+                media ~62px e os valores não formavam coluna. */}
             <ItemContent>
-              <ItemTitle>
+              <ItemTitle className="w-full truncate">
                 {identidade
                   ? identidade.title(row.original)
                   : titulo
@@ -1492,7 +1718,7 @@ function GemeoDoTelefone<T extends RowData>({
                     : rotuloDe(row.original)}
               </ItemTitle>
               {legenda != null || descricoes.length ? (
-                <ItemDescription>
+                <ItemDescription className="line-clamp-1 text-xs">
                   {legenda}
                   {descricoes.map((d, i) => (
                     <React.Fragment key={d.id}>
@@ -1502,31 +1728,33 @@ function GemeoDoTelefone<T extends RowData>({
                   ))}
                 </ItemDescription>
               ) : null}
-              {rowActions?.length && pontas.length ? (
-                <div className="flex flex-wrap items-center gap-2 pt-1">
-                  {pontas.map((p) => (
-                    <FlexRender key={p.id} cell={p} />
-                  ))}
-                </div>
-              ) : null}
             </ItemContent>
-            {/* **Com ações, o valor desce para o conteúdo** — a medição da
-                rodada 73: a 375px, valor e botão do mesmo lado espremiam o nome
-                a poucas letras. Sem ações, a ponta fica à direita, onde uma
-                lista de dinheiro a põe. */}
+            {pontas.length || metas.length ? (
+              <ItemContent data-slot="data-table-mobile-aside" className="flex-none items-end text-right">
+                {pontas.map((p) => (
+                  <span key={p.id} className="text-sm font-medium whitespace-nowrap">
+                    <FlexRender cell={p} />
+                  </span>
+                ))}
+                {metas.length ? (
+                  <span className="text-xs whitespace-nowrap text-muted-foreground [&_*]:text-xs">
+                    {metas.map((m, i) => (
+                      <React.Fragment key={m.id}>
+                        {i > 0 ? " · " : null}
+                        <FlexRender cell={m} />
+                      </React.Fragment>
+                    ))}
+                  </span>
+                ) : null}
+              </ItemContent>
+            ) : null}
             {rowActions?.length ? (
-              <ItemActions>
+              <ItemActions className="-me-2">
                 <AcoesDaLinha
                   row={row.original}
                   actions={rowActions.map((a) => ({ ...a, primary: false }))}
                   label={rotuloDe(row.original)}
                 />
-              </ItemActions>
-            ) : pontas.length ? (
-              <ItemActions>
-                {pontas.map((p) => (
-                  <FlexRender key={p.id} cell={p} />
-                ))}
               </ItemActions>
             ) : null}
           </Item>
@@ -1700,23 +1928,59 @@ export function DataTableFacetFilter({ column: cid, label }: { column: string; l
 }
 
 /** As colunas à vista e a densidade, guardadas por tabela. */
+/**
+ * O painel Exibir: a densidade e as colunas.
+ *
+ * As duas seções falam como o resto do sistema: o rótulo em sobrancelha com o
+ * estado à direita ("Padrão · 44px", "5 de 6"), e cada coluna é uma **linha
+ * inteira** clicável, na geometria e no esmaecer das linhas de menu — a caixa
+ * sozinha era um alvo de 16px. A última coluna à vista não sai (uma tabela sem
+ * coluna nenhuma não tem como voltar), e "Redefinir" só aparece quando há o
+ * que redefinir. No telefone é a gaveta, onde a linha sobe a 44.
+ */
 export function DataTableViewOptions() {
   const { table, density, setDensity } = useDataTableContext("DataTableViewOptions")
   const colunas = table.getAllLeafColumns().filter((c) => c.getCanHide() && !c.id.startsWith("__"))
+  const visiveis = colunas.filter((c) => c.getIsVisible()).length
+  const atual = DENSIDADES.find((d) => d.value === density) ?? DENSIDADES[2]
+  const mudou = density !== "md" || visiveis < colunas.length
+  const redefinir = () => {
+    setDensity("md")
+    for (const c of colunas) c.toggleVisibility(true)
+  }
+  const rotulo = "text-2xs font-medium tracking-wider text-muted-foreground uppercase"
+  const id = React.useId()
+
   return (
-    <Popover>
+    <Popover mobile="sheet">
       <PopoverTrigger asChild>
         <Button type="button" variant="tertiary" size="sm">
           <AdjustmentsHorizontalIcon aria-hidden />
           exibir
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" size="md" label="Exibir" className="gap-4">
-        <div className="flex flex-col gap-2">
-          <span className="text-xs font-medium text-muted-foreground">Densidade</span>
+      <PopoverContent align="end" size="md" padding="none" className="pb-1.5">
+        <PopoverHeader className="flex-row items-center justify-between px-3 pt-3 pb-1">
+          <PopoverTitle className="text-sm">Exibir</PopoverTitle>
+          {mudou ? (
+            <Button type="button" variant="tertiary" size="xs" className="-me-1.5" onClick={redefinir}>
+              redefinir
+            </Button>
+          ) : null}
+        </PopoverHeader>
+
+        <section aria-labelledby={`${id}-densidade`} className="flex flex-col gap-2 px-3 pt-2 pb-3">
+          <div className="flex items-baseline justify-between gap-2">
+            <span id={`${id}-densidade`} className={rotulo}>
+              Densidade
+            </span>
+            <span className="nums text-xs text-muted-foreground" aria-live="polite">
+              {atual.label} · {atual.altura}px
+            </span>
+          </div>
           <ToggleGroup
             type="single"
-            variant="segmented"
+            variant="floating"
             size="sm"
             stretch
             value={density}
@@ -1724,32 +1988,50 @@ export function DataTableViewOptions() {
             aria-label="Densidade"
           >
             {DENSIDADES.map((d) => (
-              <ToggleGroupItem key={d.value} value={d.value} aria-label={d.label} className="text-xs">
+              <ToggleGroupItem key={d.value} value={d.value} aria-label={d.label}>
                 {d.value.toUpperCase()}
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
-        </div>
+        </section>
+
         {colunas.length ? (
-          <div className="flex flex-col gap-2">
-            <span className="text-xs font-medium text-muted-foreground">Colunas</span>
+          <section aria-labelledby={`${id}-colunas`} className="flex flex-col gap-0.5 px-1.5">
+            <div className="flex items-baseline justify-between gap-2 px-1.5 pb-1">
+              <span id={`${id}-colunas`} className={rotulo}>
+                Colunas
+              </span>
+              <span className="nums text-xs text-muted-foreground">
+                {visiveis} de {colunas.length}
+              </span>
+            </div>
             {colunas.map((c) => {
               const nome = metaDe(c).label ?? (typeof c.columnDef.header === "string" ? c.columnDef.header : c.id)
-              const idDoCampo = `coluna-${c.id}`
+              const ligada = c.getIsVisible()
+              const ultima = ligada && visiveis === 1
               return (
-                <div key={c.id} className="flex items-center gap-2">
+                <label
+                  key={c.id}
+                  data-disabled={ultima || undefined}
+                  className={cn(
+                    menuItemGeometryClassName,
+                    menuItemFadeClassName,
+                    "gap-2.5 px-1.5 hover:bg-accent active:bg-accent has-focus-visible:bg-accent",
+                    "data-disabled:pointer-events-none data-disabled:opacity-50",
+                    !ligada && "text-muted-foreground"
+                  )}
+                >
                   <Checkbox
-                    id={idDoCampo}
-                    checked={c.getIsVisible()}
+                    checked={ligada}
+                    disabled={ultima}
                     onCheckedChange={(v) => c.toggleVisibility(v === true)}
+                    className="after:hidden"
                   />
-                  <Label htmlFor={idDoCampo} className="font-normal">
-                    {nome}
-                  </Label>
-                </div>
+                  <span className="min-w-0 flex-1 truncate">{nome}</span>
+                </label>
               )
             })}
-          </div>
+          </section>
         ) : null}
       </PopoverContent>
     </Popover>
@@ -1966,7 +2248,7 @@ export function dataTableColumns<T extends RowData>() {
         header,
         sortFn: "alphanumeric",
         cell: (ctx) => <span className="nums whitespace-nowrap text-muted-foreground">{formatDatePtBr(ctx.getValue() as string)}</span>,
-        meta: { label: header, mobile: "description", ...meta },
+        meta: { label: header, mobile: "meta", ...meta },
       }),
     status: ({
       id,

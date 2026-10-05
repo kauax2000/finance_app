@@ -1,6 +1,6 @@
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { TableSkeleton, type TableSkeletonColumn } from "@/components/ui/table"
-import { TablePanel } from "@/components/ui/table-panel"
+import { TablePanel } from "@/components/ui/data-table"
 import { cn } from "@/lib/utils"
 
 function ToolbarSkeleton() {

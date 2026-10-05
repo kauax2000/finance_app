@@ -148,11 +148,11 @@ describe("taxonomia", () => {
   })
 
   /**
-   * `table-panel` entrou nesta rodada — o primeiro Template que não é casco
-   * de página. A régua continua a mesma: ele compõe `Card`, `Table` e (no
-   * uso real) `Pagination` — dois ou mais organismos, dispostos num layout —,
-   * que é a definição de Frost que o comentário do `LAYER` já cita: "os
-   * templates são feitos de organismos".
+   * `table-panel` foi o primeiro Template que não é casco de página, e desde
+   * a rodada 231 mora dentro do `data-table`. A régua continua a mesma: a
+   * moldura compõe `Card`, `Table` e (no uso real) `Pagination` — dois ou
+   * mais organismos, dispostos num layout —, que é a definição de Frost que o
+   * comentário do `LAYER` já cita: "os templates são feitos de organismos".
    */
   it("5. Templates é o nível de página, e não uma terceira gaveta", () => {
     const templates = REGISTRY.filter((e) => e.category === "Templates")
@@ -171,7 +171,6 @@ describe("taxonomia", () => {
       // produto não mora em `ui/`. É o que separa este Template do
       // `AuthShell`, que fica em `components/layout/` amarrando os dois.
       "split-shell",
-      "table-panel",
       // A barra de uma lista, desde a rodada 229: dispõe filtros, ações e
       // fichas, e prende sob o `TopBar` como as barras da página.
       "toolbar",

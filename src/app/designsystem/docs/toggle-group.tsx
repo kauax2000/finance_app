@@ -51,7 +51,7 @@ export default function ToggleGroupDoc() {
 
       <DocSection
         title="Segmentado"
-        description="variant=&quot;segmented&quot;: a bandeja, com a escolhida levantada. O realce é um marcador só, que desliza até a escolhida — a mecânica do Tabs. A bandeja mede o item mais 4px (sm faz 32). Nenhuma escolhida também vale: o marcador some, como no período personalizado. Troque e veja deslizar."
+        description="variant=&quot;segmented&quot;: a bandeja, com a escolhida levantada. O realce é um marcador só, que desliza até a escolhida — a mecânica do Tabs. A bandeja mede o item mais 4px (sm faz 32). Nenhuma escolhida também vale: o marcador some, como no período personalizado. variant=&quot;floating&quot; é a mesma escolha na pele do Tabs padrão — a pílula com o anel e a tecla em relevo 2px para dentro —, a do painel Exibir do Data Table. Troque e veja deslizar."
         code={`<ToggleGroup type="single" variant="segmented" size="sm" value={p} onValueChange={setP}>
   <ToggleGroupItem value="7d">7d</ToggleGroupItem>
   <ToggleGroupItem value="15d">15d</ToggleGroupItem>
@@ -125,7 +125,7 @@ export default function ToggleGroupDoc() {
         rows={[
           { prop: "type", type: '"single" | "multiple"', description: "Uma ativa por vez, ou várias. Obrigatório." },
           { prop: "value · defaultValue · onValueChange", type: "string | string[]", description: "Controlado ou não. No single, a troca para vazio é engolida." },
-          { prop: "variant", type: '"plain" | "outline" | "swatch" | "chip" | "segmented"', default: '"plain"', description: "A pele dos itens; segmented é a bandeja, e só existe no grupo." },
+          { prop: "variant", type: '"plain" | "outline" | "swatch" | "chip" | "segmented" | "floating"', default: '"plain"', description: "A pele dos itens; segmented é a bandeja e floating a pílula do Tabs padrão, e as duas só existem no grupo." },
           { prop: "size · shape · tint", type: "os do Toggle", description: "Descem para todos os itens; o do item vence." },
           { prop: "stretch", type: "boolean", default: "false", description: "Os itens dividem a largura em partes iguais." },
         ]}
@@ -145,10 +145,15 @@ export default function ToggleGroupDoc() {
 
 function SegmentadoDemo() {
   const [p, setP] = React.useState("30d")
+  const [pele, setPele] = React.useState<"segmented" | "floating">("segmented")
 
   return (
     <div className="flex flex-col items-start gap-2">
-      <ToggleGroup type="single" variant="segmented" size="sm" value={p} onValueChange={setP} aria-label="Período">
+      <ToggleGroup type="single" variant="segmented" size="sm" value={pele} onValueChange={(v) => setPele(v as typeof pele)} aria-label="Pele" className="mb-2">
+        <ToggleGroupItem value="segmented" className="font-mono text-xs">segmented</ToggleGroupItem>
+        <ToggleGroupItem value="floating" className="font-mono text-xs">floating</ToggleGroupItem>
+      </ToggleGroup>
+      <ToggleGroup type="single" variant={pele} size="sm" value={p} onValueChange={setP} aria-label="Período">
         {PERIODOS.map((x) => (
           <ToggleGroupItem key={x.key} value={x.key} title={x.longo}>
             {x.label}
