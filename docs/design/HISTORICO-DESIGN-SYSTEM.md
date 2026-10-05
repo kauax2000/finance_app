@@ -19078,3 +19078,20 @@ linha, e depois que todos os rótulos dos eixos saíssem).
 outras camadas zeradas); a tecla em relevo da escolhida mantém o `shadow-xs`,
 que é a do `Tabs`. Nada mudou em `src/components/ui/`: o `floating` da rodada
 231 já pintava cada ficha ligada sozinha no `multiple`.
+
+### Rodada 239 — o CommandDialog sem a sombra atrás do conjunto
+
+**O pedido.** O dono perguntou por que a paleta tinha "uma sombra estranha
+atrás" e pediu o conserto.
+
+**A causa, medida.** Desde a rodada 143 a coluna do `CommandDialog` desenhava
+uma sombra só para a pilha inteira, num `::before`: um retângulo de 448×432 com
+18px de raio e o `shadow-xl` — no escuro, preto a 70%, 24px abaixo, 48 de
+borrão. Só que a pilha não é um retângulo: é a pílula de busca, a placa da lista
+e as cápsulas soltas da legenda, com vãos entre elas. A sombra de uma forma que
+não existe na tela aparecia como mancha escura em volta das três, mais forte
+embaixo, sob as cápsulas.
+
+**O conserto.** A sombra saiu. As três peças ficam no mesmo plano sobre o véu
+(`--overlay` com borrão), que já é o que separa a paleta da página — e é a
+mesma direção das pílulas sem sombra no fundo da rodada 238.

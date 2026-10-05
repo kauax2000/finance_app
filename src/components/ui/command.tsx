@@ -345,16 +345,14 @@ function CommandDialog({
           className={cn(
             "fixed left-1/2 z-(--z-modal) flex w-full max-w-[calc(100%-2rem)] -translate-x-1/2 flex-col text-sm outline-none sm:max-w-md",
             size === "lg" && "sm:max-w-3xl",
-            // **Uma sombra só, atrás das três superfícies** — pílula, placa e
-            // legenda ficam no mesmo plano, e o que se levanta da página é o
-            // conjunto. Ela mora num `::before` da coluna, em `z` negativo sob
-            // o contexto de empilhamento que o `fixed` + `z-index` já criam:
-            // pinta abaixo das três. É `box-shadow` e não `filter:
-            // drop-shadow`: um `filter` na coluna a tornaria **raiz de fundo**,
-            // e o vidro das três deixaria de enxergar a página. E sombra externa
-            // não pinta dentro da própria caixa, então os vãos de 8px entre as
-            // peças continuam mostrando a página.
-            "before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-2xl before:shadow-xl before:content-['']",
+            // **Sem sombra atrás do conjunto** (rodada 239). Havia uma, num
+            // `::before` da coluna — um retângulo de 18px de raio do tamanho da
+            // pilha inteira, com o `shadow-xl` (preto a 70% no escuro, 24px
+            // abaixo, 48 de borrão). Pílula, placa e legenda são formas
+            // soltas, com vãos entre elas, e a sombra de um retângulo que não é
+            // nenhuma delas aparecia como uma mancha escura em volta — mais
+            // forte sob as cápsulas da legenda. Quem separa a paleta da página
+            // é o véu com borrão; as três ficam no mesmo plano, sobre ele.
             // A posição precisa de conta própria. Centralizar pela altura
             // **real** fazia o campo de busca subir e descer sob o cursor a
             // cada tecla, conforme a lista encolhe. Aqui o topo é fixado onde a

@@ -916,9 +916,10 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `dock` — as três **sem sombra própria**, no mesmo plano (e a pílula leva o
   **feixe** da rodada 142: o preset `line` do `border-beam` portado para
   `@utility command-beam`, correndo pela base só com o campo vazio e **só no `CommandDialog`** — exceção
-  nomeada ao campo sem marca, que vale para os oito controles de formulário), com **uma sombra só atrás
-  do conjunto** (`::before` da coluna; `box-shadow`, nunca `filter`, que seria
-  raiz de fundo) — — cápsulas de vidro soltas (`CommandDock`, `CommandDockItem`, o último
+  nomeada ao campo sem marca, que vale para os oito controles de formulário), **sem sombra atrás do
+  conjunto** (havia uma, num `::before` da coluna, e o retângulo dela — que não
+  é nenhuma das três formas — lia como mancha escura em volta; saiu na rodada
+  239: quem separa a paleta da página é o véu com borrão) — cápsulas de vidro soltas (`CommandDock`, `CommandDockItem`, o último
   filho da pilha — não há mais prop `dock`), o padrão novo do iOS. Irmãs porque um ancestral com `backdrop-filter` é raiz
   de fundo e o borrão das cápsulas não veria a página. São legendas, não
   botões, e somem no toque. `CommandFooter` e `CommandHint` saíram. Na pilha a linha tem 36 e as peças

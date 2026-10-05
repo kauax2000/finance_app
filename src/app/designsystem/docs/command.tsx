@@ -128,7 +128,7 @@ export default function CommandDoc() {
 
       <DocSection
         title="Como diálogo (⌘K ou Ctrl+K)"
-        description="A mesma pilha num diálogo: topo fixo, a lista que cresce e encolhe, uma sombra só atrás do conjunto. No telefone ela é uma gaveta de baixo, com a busca em cima do teclado — estreite a janela e abra de novo."
+        description="A mesma pilha num diálogo: topo fixo, a lista que cresce e encolhe, e nenhuma sombra atrás do conjunto: o véu com borrão é que a separa da página. No telefone ela é uma gaveta de baixo, com a busca em cima do teclado — estreite a janela e abra de novo."
         code={`<CommandDialog open={open} onOpenChange={setOpen}>
   <CommandInput placeholder="Buscar…" />
   <CommandList>…</CommandList>
@@ -315,7 +315,7 @@ export default function CommandDoc() {
       </DocSection>
 
       <DocNote title="Três superfícies no mesmo plano">
-        Em <code>variant=&quot;panel&quot;</code> — solta e no <code>CommandDialog</code> — a raiz é uma coluna que não pinta, e cada peça pinta a sua: em cima a <strong>pílula</strong> de busca (o <code>SearchInput surface=&quot;plate&quot;</code>, com o campo do cmdk dentro; na paleta sem anel de foco, porque ela nasce focada), no meio a <strong>placa</strong> com a lista, embaixo as <strong>cápsulas</strong> da legenda (<code>CommandDock</code>, o último filho), a 12px uma da outra e sem sombra própria. É o padrão novo do iOS. As peças sabem que estão na pilha por um contexto. A placa é um embrulho da lista, porque a lista é o elemento mascarado e a máscara recortaria a placa junto. E elas são irmãs porque um ancestral com <code>backdrop-filter</code> é raiz de fundo: o borrão de quem estivesse dentro não enxergaria a página. No diálogo uma sombra só fica atrás do conjunto.
+        Em <code>variant=&quot;panel&quot;</code> — solta e no <code>CommandDialog</code> — a raiz é uma coluna que não pinta, e cada peça pinta a sua: em cima a <strong>pílula</strong> de busca (o <code>SearchInput surface=&quot;plate&quot;</code>, com o campo do cmdk dentro; na paleta sem anel de foco, porque ela nasce focada), no meio a <strong>placa</strong> com a lista, embaixo as <strong>cápsulas</strong> da legenda (<code>CommandDock</code>, o último filho), a 12px uma da outra e sem sombra própria. É o padrão novo do iOS. As peças sabem que estão na pilha por um contexto. A placa é um embrulho da lista, porque a lista é o elemento mascarado e a máscara recortaria a placa junto. E elas são irmãs porque um ancestral com <code>backdrop-filter</code> é raiz de fundo: o borrão de quem estivesse dentro não enxergaria a página. No diálogo não há sombra atrás do conjunto: a sombra de um retângulo do tamanho da pilha, que não é nenhuma das três formas, lia como mancha em volta delas — quem separa a paleta da página é o véu.
       </DocNote>
 
       <DocNote title="Grupos se separam por respiro e rótulo, nunca por fio">
