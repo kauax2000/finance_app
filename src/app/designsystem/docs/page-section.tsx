@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/page-section"
 import { TopBar, TopBarTitle } from "@/components/ui/top-bar"
 import { IphoneFrame } from "../ds-frame"
-import { DocNote, DocSection, Eixo, Interruptor, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, Interruptor, Interruptores, PropsTable, Usage } from "../ds-doc"
 
 
 
@@ -86,32 +86,33 @@ function DemoNaTela() {
   const [rodape, setRodape] = React.useState(false)
   const [recolher, setRecolher] = React.useState(false)
   const [cascata, setCascata] = React.useState(true)
-  const [vez, setVez] = React.useState(0)
   // Trocar um eixo remonta a seção, para a cascata tocar de novo.
-  const chave = [size, variant, acao, descricao, icone, contagem, rodape, recolher, cascata, vez].join()
+  const chave = [size, variant, acao, descricao, icone, contagem, rodape, recolher, cascata].join()
 
   return (
     <div className="flex w-full flex-col gap-6">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-        <Eixo rotulo="size" valores={["sm", "md", "lg"] as const} valor={size} onChange={setSize} />
-        <Eixo rotulo="variant" valores={["plain", "ruled"] as const} valor={variant} onChange={setVariant} />
-        <Eixo rotulo="ação" valores={ACAO} valor={acao} onChange={setAcao} />
-      </div>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <Interruptor id="ps-descricao" rotulo="descrição" valor={descricao} onChange={setDescricao} />
-        <Interruptor id="ps-icone" rotulo="ícone" valor={icone} onChange={setIcone} />
-        <Interruptor id="ps-contagem" rotulo="contagem" valor={contagem} onChange={setContagem} />
-        <Interruptor id="ps-rodape" rotulo="rodapé" valor={rodape} onChange={setRodape} />
-        <Interruptor id="ps-recolher" rotulo="recolher" valor={recolher} onChange={setRecolher} />
-        <Interruptor id="ps-cascata" rotulo="cascata" valor={cascata} onChange={setCascata} />
-        {cascata ? (
-          <Button variant="tertiary" size="sm" onClick={() => setVez((v) => v + 1)}>
-            <ArrowPathIcon aria-hidden />
-            tocar de novo
-          </Button>
-        ) : null}
-      </div>
-
+      <Controles
+        empilhar
+        inicio={
+          <>
+            <Eixo rotulo="size" valores={["sm", "md", "lg"] as const} valor={size} onChange={setSize} />
+            <Eixo rotulo="variant" valores={["plain", "ruled"] as const} valor={variant} onChange={setVariant} />
+            <Eixo rotulo="ação" valores={ACAO} valor={acao} onChange={setAcao} />
+          </>
+        }
+        fim={
+          <>
+            <Interruptores>
+              <Interruptor id="ps-descricao" rotulo="descrição" valor={descricao} onChange={setDescricao} />
+              <Interruptor id="ps-icone" rotulo="ícone" valor={icone} onChange={setIcone} />
+              <Interruptor id="ps-contagem" rotulo="contagem" valor={contagem} onChange={setContagem} />
+              <Interruptor id="ps-rodape" rotulo="rodapé" valor={rodape} onChange={setRodape} />
+              <Interruptor id="ps-recolher" rotulo="recolher" valor={recolher} onChange={setRecolher} />
+              <Interruptor id="ps-cascata" rotulo="cascata" valor={cascata} onChange={setCascata} />
+            </Interruptores>
+          </>
+        }
+      />
       <PageSection
         key={chave}
         size={size}

@@ -5,8 +5,7 @@ import type { DateRange } from "react-day-picker"
 
 import { Badge } from "@/components/ui/badge"
 import { Calendar, type CalendarMarker, type CalendarPreset } from "@/components/ui/calendar"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 export default function CalendarDoc() {
   return (
@@ -265,18 +264,17 @@ function EscadaDemo() {
   const [degrau, setDegrau] = React.useState<"sm" | "md" | "lg">("md")
   return (
     <>
-      <ToggleGroup
-        type="single"
-        variant="segmented"
-        size="sm"
-        value={degrau}
-        onValueChange={(v) => setDegrau(v as typeof degrau)}
-        aria-label="Degrau"
-      >
-        <ToggleGroupItem value="sm">sm · 28</ToggleGroupItem>
-        <ToggleGroupItem value="md">md · 32</ToggleGroupItem>
-        <ToggleGroupItem value="lg">lg · 36</ToggleGroupItem>
-      </ToggleGroup>
+      <Controles
+        inicio={
+          <Eixo
+            rotulo="size"
+            valores={["sm", "md", "lg"] as const}
+            valor={degrau}
+            onChange={setDegrau}
+            rotulos={{ sm: "sm · 28", md: "md · 32", lg: "lg · 36" }}
+          />
+        }
+      />
       <Calendar
         mode="single"
         size={degrau}

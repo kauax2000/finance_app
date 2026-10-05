@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/toolbar"
 import { TopBar, TopBarTitle } from "@/components/ui/top-bar"
 import { IphoneFrame } from "../ds-frame"
-import { DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 const DEGRAUS = ["sm", "md", "lg"] as const
 const TECLADO = ["livre", "toolbar"] as const
@@ -53,10 +53,14 @@ function DemoNaTela() {
 
   return (
     <div className="flex w-full flex-col gap-5">
-      <div className="flex flex-wrap items-center gap-3">
-        <Eixo rotulo="Degrau" valores={DEGRAUS} valor={size} onChange={setSize} />
-        <Eixo rotulo="Teclado" valores={TECLADO} valor={teclado} onChange={setTeclado} />
-      </div>
+      <Controles
+        inicio={
+          <>
+            <Eixo rotulo="size" valores={DEGRAUS} valor={size} onChange={setSize} />
+            <Eixo rotulo="keyboard" valores={TECLADO} valor={teclado} onChange={setTeclado} />
+          </>
+        }
+      />
       <Toolbar
         size={size}
         keyboard={teclado === "toolbar"}

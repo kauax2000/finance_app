@@ -17,8 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Kbd } from "@/components/ui/kbd"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 const MOLDURAS = [
   ["plain", "Fio entre itens e mais nada. Para dentro de algo que já tem moldura."],
@@ -390,18 +389,17 @@ function EscadaDemo() {
 
   return (
     <>
-      <ToggleGroup
-        type="single"
-        variant="segmented"
-        size="sm"
-        value={degrau}
-        onValueChange={(v) => setDegrau(v as typeof degrau)}
-        aria-label="Degrau"
-      >
-        <ToggleGroupItem value="md">md · 32</ToggleGroupItem>
-        <ToggleGroupItem value="lg">lg · 36</ToggleGroupItem>
-        <ToggleGroupItem value="xl">xl · 40</ToggleGroupItem>
-      </ToggleGroup>
+      <Controles
+        inicio={
+          <Eixo
+            rotulo="size"
+            valores={["md", "lg", "xl"] as const}
+            valor={degrau}
+            onChange={setDegrau}
+            rotulos={{ md: "md · 32", lg: "lg · 36", xl: "xl · 40" }}
+          />
+        }
+      />
       <Accordion
         variant="contained"
         size={degrau}

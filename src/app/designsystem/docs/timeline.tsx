@@ -38,7 +38,7 @@ import {
 import { IDENTITY_TONES } from "@/lib/avatar"
 import { formatDayHeadingPtBr, groupByLocalDay } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
-import { DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 type Evento = {
   tone: (typeof TIMELINE_TONES)[number]
@@ -127,12 +127,16 @@ function DemoNaTela() {
 
   return (
     <div className="flex w-full flex-col gap-5">
-      <div className="flex flex-wrap items-center gap-3">
-        <Eixo rotulo="Marcador" valores={MARCADORES} valor={marker} onChange={setMarker} />
-        <Eixo rotulo="Degrau" valores={DEGRAUS} valor={size} onChange={setSize} />
-        <Eixo rotulo="Orientação" valores={ORIENTACOES} valor={orientation} onChange={setOrientation} />
-        <Eixo rotulo="Layout" valores={LAYOUTS} valor={layout} onChange={setLayout} />
-      </div>
+      <Controles
+        inicio={
+          <>
+            <Eixo rotulo="marker" valores={MARCADORES} valor={marker} onChange={setMarker} />
+            <Eixo rotulo="size" valores={DEGRAUS} valor={size} onChange={setSize} />
+            <Eixo rotulo="orientation" valores={ORIENTACOES} valor={orientation} onChange={setOrientation} />
+            <Eixo rotulo="layout" valores={LAYOUTS} valor={layout} onChange={setLayout} />
+          </>
+        }
+      />
       <Timeline
         key={`${orientation}-${layout}`}
         marker={marker}
@@ -205,31 +209,33 @@ function DemoChegada() {
   const proximo = React.useRef(3)
   return (
     <div className="flex w-full flex-col gap-4">
-      <div>
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          onClick={() => {
-            const id = proximo.current++
-            setEventos((atual) => [
-              {
-                tone: "expense",
-                icon: <CreditCardIcon />,
-                titulo: `Compra aprovada #${id}`,
-                desc: "R$ 42,90 · Padaria Central",
-                tempo: "agora",
-                hora: "agora",
-                dateTime: new Date().toISOString(),
-                id,
-              },
-              ...atual,
-            ])
-          }}
-        >
-          simular evento
-        </Button>
-      </div>
+      <Controles
+        fim={
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              const id = proximo.current++
+              setEventos((atual) => [
+                {
+                  tone: "expense",
+                  icon: <CreditCardIcon />,
+                  titulo: `Compra aprovada #${id}`,
+                  desc: "R$ 42,90 · Padaria Central",
+                  tempo: "agora",
+                  hora: "agora",
+                  dateTime: new Date().toISOString(),
+                  id,
+                },
+                ...atual,
+              ])
+            }}
+          >
+            simular evento
+          </Button>
+        }
+      />
       <Timeline live reveal marker="icon" className="w-full">
         {eventos.map((e) => (
           <TimelineItem key={e.id} tone={e.tone} icon={e.icon}>

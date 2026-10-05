@@ -3,11 +3,8 @@
 import * as React from "react"
 
 import { HistogramSlider } from "@/components/ui/histogram-slider"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { currencyBRL, numberBR } from "@/lib/formatters"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, Interruptor, Interruptores, PropsTable, Usage } from "../ds-doc"
 
 /** Uma distribuição plausível de valores de transação: muitas pequenas, poucas grandes. */
 const DISTRIBUICAO = [
@@ -243,22 +240,9 @@ function VarianteDemo() {
   const [variant, setVariant] = React.useState<"default" | "brand">("default")
   return (
     <>
-      <ToggleGroup
-        type="single"
-        variant="segmented"
-        size="sm"
-        value={variant}
-        onValueChange={(v) => v && setVariant(v as typeof variant)}
-        aria-label="Variante"
-        className="self-start"
-      >
-        <ToggleGroupItem value="default" className="font-mono">
-          default
-        </ToggleGroupItem>
-        <ToggleGroupItem value="brand" className="font-mono">
-          brand
-        </ToggleGroupItem>
-      </ToggleGroup>
+      <Controles
+        inicio={<Eixo rotulo="variant" valores={["default", "brand"] as const} valor={variant} onChange={setVariant} />}
+      />
       <div className="w-full max-w-md">
         <HistogramSlider
           variant={variant}
@@ -316,30 +300,14 @@ function FormaDemo() {
   const [carregando, setCarregando] = React.useState(false)
   return (
     <>
-      <div className="flex flex-wrap items-center gap-4">
-        <ToggleGroup
-          type="single"
-          variant="segmented"
-          size="sm"
-          value={size}
-          onValueChange={(v) => v && setSize(v as typeof size)}
-          aria-label="Altura"
-        >
-          {(["sm", "md", "lg"] as const).map((t) => (
-            <ToggleGroupItem key={t} value={t} className="font-mono">
-              {t}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
-        <div className="flex items-center gap-2">
-          <Switch
-            id="ds-histogram-pending"
-            checked={carregando}
-            onCheckedChange={setCarregando}
-          />
-          <Label htmlFor="ds-histogram-pending">Carregando</Label>
-        </div>
-      </div>
+      <Controles
+        inicio={<Eixo rotulo="size" valores={["sm", "md", "lg"] as const} valor={size} onChange={setSize} />}
+        fim={
+          <Interruptores>
+            <Interruptor id="ds-histogram-pending" rotulo="pending" valor={carregando} onChange={setCarregando} />
+          </Interruptores>
+        }
+      />
       <div className="w-full max-w-md">
         <HistogramSlider
           label="Dias até o vencimento"

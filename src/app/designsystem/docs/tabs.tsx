@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { IphoneFrame } from "../ds-frame"
-import { DocNote, DocSection, Eixo, Interruptor, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, Interruptor, Interruptores, PropsTable, Usage } from "../ds-doc"
 
 const VARIANTES = ["floating", "solid", "underline", "plain"] as const
 const DEGRAUS = ["sm", "md", "lg", "xl"] as const
@@ -47,16 +47,24 @@ function DemoNaTela() {
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <Eixo rotulo="Variante" valores={VARIANTES} valor={variant} onChange={setVariant} />
-        <Eixo rotulo="Degrau" valores={["padrão", ...DEGRAUS] as const} valor={size} onChange={setSize} />
-        <Eixo rotulo="Orientação" valores={ORIENTACOES} valor={orientation} onChange={setOrientation} />
-        {/* `stretch` divide a largura de uma fileira; na coluna ele não existe. */}
-        {orientation === "horizontal" ? (
-          <Interruptor id="ds-tabs-stretch" rotulo="stretch" valor={esticar} onChange={setEsticar} />
-        ) : null}
-        <Interruptor id="ds-tabs-glass" rotulo="glass" valor={vidro} onChange={setVidro} />
-      </div>
+      <Controles
+        inicio={
+          <>
+            <Eixo rotulo="variant" valores={VARIANTES} valor={variant} onChange={setVariant} />
+            <Eixo rotulo="size" valores={["padrão", ...DEGRAUS] as const} valor={size} onChange={setSize} />
+            <Eixo rotulo="orientation" valores={ORIENTACOES} valor={orientation} onChange={setOrientation} />
+          </>
+        }
+        fim={
+          <Interruptores>
+            {/* `stretch` divide a largura de uma fileira; na coluna ele não existe. */}
+            {orientation === "horizontal" ? (
+              <Interruptor id="ds-tabs-stretch" rotulo="stretch" valor={esticar} onChange={setEsticar} />
+            ) : null}
+            <Interruptor id="ds-tabs-glass" rotulo="glass" valor={vidro} onChange={setVidro} />
+          </Interruptores>
+        }
+      />
       <Tabs defaultValue="extrato" orientation={orientation}>
         <TabsList
           variant={variant}

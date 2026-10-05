@@ -15,9 +15,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Label } from "@/components/ui/label"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { formatYearMonth, labelYearMonthPt } from "@/lib/budget-month"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 function diaDoMes(dia: number) {
   const h = new Date()
@@ -286,17 +285,17 @@ function AtalhosDemo() {
 
   return (
     <>
-      <ToggleGroup
-        type="single"
-        variant="segmented"
-        size="sm"
-        value={modo}
-        onValueChange={(v) => v && setModo(v as typeof modo)}
-        aria-label="Modo"
-      >
-        <ToggleGroupItem value="single">Data</ToggleGroupItem>
-        <ToggleGroupItem value="range">Período</ToggleGroupItem>
-      </ToggleGroup>
+      <Controles
+        inicio={
+          <Eixo
+            rotulo="mode"
+            valores={["single", "range"] as const}
+            valor={modo}
+            onChange={setModo}
+            rotulos={{ single: "Data", range: "Período" }}
+          />
+        }
+      />
       <div className="flex w-full max-w-sm flex-col gap-1.5">
         <Label htmlFor="ds-date-atalhos">
           {modo === "single" ? "Vencimento" : "Período"}
@@ -334,18 +333,16 @@ function RotuloDemo() {
 
   return (
     <>
-      <ToggleGroup
-        type="single"
-        variant="segmented"
-        size="sm"
-        value={estilo}
-        onValueChange={(v) => v && setEstilo(v as typeof estilo)}
-        aria-label="Estilo"
-      >
-        <ToggleGroupItem value="default" className="font-mono">default</ToggleGroupItem>
-        <ToggleGroupItem value="numeric" className="font-mono">numeric</ToggleGroupItem>
-        <ToggleGroupItem value="relative" className="font-mono">relative</ToggleGroupItem>
-      </ToggleGroup>
+      <Controles
+        inicio={
+          <Eixo
+            rotulo="displayStyle"
+            valores={["default", "numeric", "relative"] as const}
+            valor={estilo}
+            onChange={setEstilo}
+          />
+        }
+      />
       <div className="w-full max-w-sm">
         <DatePicker
           aria-label="Data"
@@ -388,17 +385,17 @@ function MesDemo() {
 
   return (
     <>
-      <ToggleGroup
-        type="single"
-        variant="segmented"
-        size="sm"
-        value={forma}
-        onValueChange={(v) => v && setForma(v as typeof forma)}
-        aria-label="Forma"
-      >
-        <ToggleGroupItem value="campo">Campo</ToggleGroupItem>
-        <ToggleGroupItem value="grade">MonthGrid</ToggleGroupItem>
-      </ToggleGroup>
+      <Controles
+        fim={
+          <Eixo
+            rotulo="forma"
+            valores={["campo", "grade"] as const}
+            valor={forma}
+            onChange={setForma}
+            rotulos={{ campo: "Campo", grade: "MonthGrid" }}
+          />
+        }
+      />
       {forma === "campo" ? (
         <div className="flex w-full max-w-sm flex-col gap-1.5">
           <Label htmlFor="ds-date-mes">Mês do orçamento</Label>
@@ -433,17 +430,17 @@ function IntervaloDemo() {
 
   return (
     <>
-      <ToggleGroup
-        type="single"
-        variant="segmented"
-        size="sm"
-        value={confirmar}
-        onValueChange={(v) => v && setConfirmar(v as typeof confirmar)}
-        aria-label="Confirmação"
-      >
-        <ToggleGroupItem value="sim">Com confirmação</ToggleGroupItem>
-        <ToggleGroupItem value="nao">Direto</ToggleGroupItem>
-      </ToggleGroup>
+      <Controles
+        inicio={
+          <Eixo
+            rotulo="confirm"
+            valores={["sim", "nao"] as const}
+            valor={confirmar}
+            onChange={setConfirmar}
+            rotulos={{ sim: "Com confirmação", nao: "Direto" }}
+          />
+        }
+      />
       <div className="flex w-full max-w-sm flex-col gap-1.5">
         <Label htmlFor="ds-date-range">Período</Label>
         <DatePicker

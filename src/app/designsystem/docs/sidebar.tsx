@@ -57,7 +57,7 @@ import { IDENTITY_TONES } from "@/lib/avatar"
 import { cn } from "@/lib/utils"
 import { CATEGORY_META } from "../category-meta"
 import { IphoneFrame, ViewportFrame } from "../ds-frame"
-import { DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 /** A altura da moldura: alta o bastante para a barra ler como coluna de tela. */
 const ALTURA = 440
@@ -267,12 +267,15 @@ function DemoEixos() {
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="flex flex-wrap gap-3">
-        <Eixo rotulo="Variante" valores={VARIANTES} valor={variant} onChange={setVariant} />
-        <Eixo rotulo="Recolher" valores={RECOLHER} valor={collapsible} onChange={setCollapsible} />
-        <Eixo rotulo="Espiar" valores={["sem", "peek"] as const} valor={peek} onChange={setPeek} />
-      </div>
-
+      <Controles
+        inicio={
+          <>
+            <Eixo rotulo="Variante" valores={VARIANTES} valor={variant} onChange={setVariant} />
+            <Eixo rotulo="Recolher" valores={RECOLHER} valor={collapsible} onChange={setCollapsible} />
+            <Eixo rotulo="Espiar" valores={["sem", "peek"] as const} valor={peek} onChange={setPeek} />
+          </>
+        }
+      />
       <Tela title="Prévia dos eixos da barra lateral numa tela">
         <SidebarProvider>
           <Sidebar
@@ -304,15 +307,19 @@ function DemoRedimensionavel() {
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="flex flex-wrap gap-3">
-        <Eixo rotulo="Variante" valores={VARIANTES} valor={variant} onChange={setVariant} />
-        <Eixo
-          rotulo="Recolher"
-          valores={["icon", "offcanvas"] as const}
-          valor={collapsible}
-          onChange={setCollapsible}
-        />
-      </div>
+      <Controles
+        inicio={
+          <>
+            <Eixo rotulo="Variante" valores={VARIANTES} valor={variant} onChange={setVariant} />
+            <Eixo
+              rotulo="Recolher"
+              valores={["icon", "offcanvas"] as const}
+              valor={collapsible}
+              onChange={setCollapsible}
+            />
+          </>
+        }
+      />
       <Tela title="Prévia da barra lateral redimensionável numa tela">
         <SidebarProvider resizable>
           <Sidebar collapsible={collapsible} variant={variant}>

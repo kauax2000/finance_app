@@ -19028,3 +19028,53 @@ tranca as versões.
 **E é um primeiro desenho**, como o `PageHeader` da 232: o dono avisou que a
 barra vai mudar bastante na revisão das telas do app, e o design system se
 atualiza ali. A página diz isso numa nota, e as prévias ficam.
+
+### Rodada 238 — os controles das demonstrações saem do mostrador: pílulas floating acima da moldura, os eixos à esquerda e o resto à direita
+
+**O pedido.** Com o sistema indo para o desenho flutuante, os trilhos que
+trocam o estado das demonstrações deviam ser a pílula `floating` — sem sombra
+no fundo — e ficar **acima** do mostrador, por fora dele, uns à esquerda e
+outros à direita. Os interruptores viraram fichas na mesma pílula (escolha do
+dono entre fichas e os `Switch` de antes; na mesma rodada ele pediu os
+interruptores **fantasmas e separados**, e o pedido de que tudo coubesse numa
+linha, e depois que todos os rótulos dos eixos saíssem).
+
+**O que entrou.**
+- `Preview` (`ds-doc.tsx`) ganhou um slot por cima da moldura
+  (`data-slot="preview-controls"`, `empty:hidden`), publicado por contexto.
+- `Controles({ inicio, fim })` leva os controles a ele por portal. O estado
+  continua dentro da demonstração, que é quem o tem; o slot é um callback ref em
+  estado, gravado no commit — antes da pintura, então nada pisca dentro da
+  caixa. Fora de um `Preview`, os controles ficam no lugar.
+- `Eixo` passou de `segmented` a `floating` (`size="sm"`, a pílula de 32 do
+  `Tabs md`) e ganhou `rotulos`, para os valores que mostram texto próprio.
+- `Interruptor` é um `Toggle variant="plain"` em pílula, solto — sem placa,
+  cinza só quando ligado; `Interruptores` só os agrupa para o leitor de tela.
+  (A primeira versão os punha numa `ToggleGroup type="multiple"` floating, e o
+  dono a trocou.)
+- **Uma linha só.** Medido a 1440px (coluna de 960): sete linhas estouravam
+  com os nomes. o nome da prop saiu de **todos** os eixos, a pedido do dono (fica
+  na dica do cursor e no `aria-label`); a bottom-bar trocou
+  cinco eixos "sim | não" por interruptores com o nome da prop (`glass`,
+  `BottomBarAction`, `hideOnScroll`, `count`, `BottomBarSkeleton`) e o eixo
+  `labels` passou a mostrar os valores da prop. Os vãos entre controles caíram
+  de 12 para 8. **Três não cabem nem assim** — top-bar ("Na tela", 1131px
+  sem nomes), page-section (1208) e page-header (1031) —, e o dono decidiu:
+  nelas, `Controles empilhar` põe todas as abas numa linha e os interruptores
+  na de baixo, as duas alinhadas à esquerda.
+- O "tocar de novo" da page-section saiu, a pedido do dono: trocar qualquer
+  eixo já remonta a seção e toca a cascata. O guia deixou de pedir o botão.
+  O "rever a entrada" do chart ficou: ali o eixo de período interpola o dado,
+  não remonta, e o botão é o único jeito de rever a entrada.
+- **A regra de lado**: à esquerda os eixos do componente; à direita o cenário,
+  as fichas e o "tocar de novo". O que é o espécime fica dentro.
+- As páginas com `Eixo` e as que escreviam a bandeja `segmented` à mão
+  migraram; os auxiliares locais de carousel, chart e navigation-menu saíram.
+- `demo-controls.test.ts`: o eixo e as fichas são `floating`, toda página com
+  `Eixo`/`Interruptor` usa `Controles`, nenhuma escreve `variant="segmented"`
+  fora do espécime do `ToggleGroup`, nenhuma redeclara as peças.
+
+**Medido.** A placa da pílula computa só o anel de 1px no `box-shadow` (as
+outras camadas zeradas); a tecla em relevo da escolhida mantém o `shadow-xs`,
+que é a do `Tabs`. Nada mudou em `src/components/ui/`: o `floating` da rodada
+231 já pintava cada ficha ligada sozinha no `multiple`.

@@ -125,11 +125,21 @@ não foi medido**. Ordem fixa:
 1. **`Usage`** — quando usar, quando não usar e **quem usa no app hoje**
    (contado, não suposto).
 2. **"Na tela"** — **uma** demonstração com todos os eixos e chaves, pelos
-   controles de `ds-doc.tsx`: `Eixo` (o valor de uma prop num trilho
-   segmentado, com o nome da prop em mono) e `Interruptor` (liga uma peça ou um
-   comportamento). Uma seção por variante é o que as revisões apagaram: cinco
-   cópias do mesmo exemplo não ensinam o que um trilho ensina. Se a peça tem
-   cascata ou animação de montagem, a demo tem um "tocar de novo".
+   controles de `ds-doc.tsx`: `Eixo` (o valor de uma prop na pílula
+   `floating`, sem o nome da prop à vista — ele é o nome acessível e a dica do
+   cursor; `rotulos` troca o texto de um valor) e `Interruptores` com um `Interruptor` por peça ou comportamento
+   (um `Toggle` fantasma solto cada). **Os controles moram em `Controles`,
+   numa linha só, acima do mostrador e por fora dele** (rodada 238): `inicio`
+   à esquerda leva os eixos do componente (`size`, `variant`, `surface`…),
+   `fim` à direita leva o cenário (`arranjo`, o dado de exemplo), e os
+   interruptores. Se a linha não cabe, `empilhar` põe todas as abas numa
+   linha e os interruptores na de baixo. Um ligar/desligar é interruptor, nunca
+   um eixo "sim | não", e os valores de um eixo dizem sozinhos o que ele é. O que
+   é o próprio espécime (o "Abrir" de um diálogo) fica dentro. Uma seção por
+   variante é o que as revisões apagaram: cinco cópias do mesmo exemplo não
+   ensinam o que um trilho ensina. Se a peça tem cascata ou animação de
+   montagem, trocar qualquer eixo remonta a demo (`key`) e a toca de novo —
+   sem botão de "tocar de novo", que o dono tirou na rodada 238.
 3. **`DocNote`s** com as decisões e as medições que o código carrega.
 4. **"No telefone"** — num `IphoneFrame` (nunca uma `div` de 375px: sem
    viewport própria, `sm:` mente). Se o telefone ainda é proposta, a página diz
@@ -195,3 +205,4 @@ Cada uma custou uma rodada. Não pague de novo.
 | Evento de portal | Sobe pela árvore do React até o `<form>`; Enter salva | — |
 | Texto sobre arco-íris | Sete matizes não têm um contraste só | 235 |
 | Demo que repete a variante | Página longa que ensina menos que um trilho | 231–235 |
+| Controle dentro do mostrador | Disputa o espaço do espécime e muda a moldura a cada página | 238 |

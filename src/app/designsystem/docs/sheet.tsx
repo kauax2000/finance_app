@@ -28,7 +28,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 const LADOS = ["right", "left", "top", "bottom"] as const
 const VARIANTES = ["floating", "flush"] as const
@@ -45,11 +45,15 @@ function DemoEixos() {
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="flex flex-wrap gap-3">
-        <Eixo rotulo="Lado" valores={LADOS} valor={side} onChange={setSide} />
-        <Eixo rotulo="Variante" valores={VARIANTES} valor={variant} onChange={setVariant} />
-        <Eixo rotulo="Largura" valores={TAMANHOS} valor={size} onChange={setSize} />
-      </div>
+      <Controles
+        inicio={
+          <>
+            <Eixo rotulo="Lado" valores={LADOS} valor={side} onChange={setSide} />
+            <Eixo rotulo="Variante" valores={VARIANTES} valor={variant} onChange={setVariant} />
+            <Eixo rotulo="Largura" valores={TAMANHOS} valor={size} onChange={setSize} />
+          </>
+        }
+      />
       <Sheet>
         <SheetTrigger asChild>
           <Button variant="outline" className="self-start">

@@ -23,7 +23,7 @@ import {
   BottomBarTab,
 } from "@/components/ui/bottom-bar"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, Interruptor, Interruptores, PropsTable, Usage } from "../ds-doc"
 import { IphoneFrame } from "../ds-frame"
 
 /** As três abas do app, para o espécime não inventar uma navegação própria. */
@@ -33,12 +33,7 @@ const ABAS = [
   { href: "/categories", label: "Categorias", icon: ChartPieIcon, iconActive: ChartPieSolid },
 ] as const
 
-const ROTULOS = ["não", "sim", "ativa"] as const
-const ACAO = ["com", "sem"] as const
-const ROLAR = ["fica", "some"] as const
-const CONTAGEM = ["sem", "com"] as const
-const ESTADO = ["pronta", "carregando"] as const
-const VIDRO = ["não", "sim"] as const
+const ROTULOS = ["false", "true", "active"] as const
 
 
 /** Conteúdo que rola por baixo — sem ele o vidro não tem o que borrar. */
@@ -62,40 +57,44 @@ const SLOT = ABAS.length
 
 function DemoNaTela() {
   const [ativa, setAtiva] = React.useState(1)
-  const [rotulos, setRotulos] = React.useState<(typeof ROTULOS)[number]>("não")
-  const [acao, setAcao] = React.useState<(typeof ACAO)[number]>("com")
-  const [rolar, setRolar] = React.useState<(typeof ROLAR)[number]>("fica")
-  const [contagem, setContagem] = React.useState<(typeof CONTAGEM)[number]>("sem")
-  const [estado, setEstado] = React.useState<(typeof ESTADO)[number]>("pronta")
-  const [vidro, setVidro] = React.useState<(typeof VIDRO)[number]>("não")
+  const [rotulos, setRotulos] = React.useState<(typeof ROTULOS)[number]>("false")
+  const [acao, setAcao] = React.useState(true)
+  const [rolar, setRolar] = React.useState(false)
+  const [contagem, setContagem] = React.useState(false)
+  const [carregando, setCarregando] = React.useState(false)
+  const [vidro, setVidro] = React.useState(false)
 
-  const labels = rotulos === "sim" ? true : rotulos === "ativa" ? "active" : false
+  const labels = rotulos === "true" ? true : rotulos === "active" ? "active" : false
   const titulo = ativa === SLOT ? "Conta" : ABAS[ativa].label
 
   return (
-    <div className="flex w-full flex-col items-center gap-6">
-      <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
-        <Eixo rotulo="Vidro" valores={VIDRO} valor={vidro} onChange={setVidro} />
-        <Eixo rotulo="Rótulos" valores={ROTULOS} valor={rotulos} onChange={setRotulos} />
-        <Eixo rotulo="Ação" valores={ACAO} valor={acao} onChange={setAcao} />
-        <Eixo rotulo="Ao rolar" valores={ROLAR} valor={rolar} onChange={setRolar} />
-        <Eixo rotulo="Contagem" valores={CONTAGEM} valor={contagem} onChange={setContagem} />
-        <Eixo rotulo="Estado" valores={ESTADO} valor={estado} onChange={setEstado} />
-      </div>
+    <div className="flex w-full flex-col items-center">
+      <Controles
+        inicio={<Eixo rotulo="labels" valores={ROTULOS} valor={rotulos} onChange={setRotulos} />}
+        fim={
+          <Interruptores>
+            <Interruptor id="bb-glass" rotulo="glass" valor={vidro} onChange={setVidro} />
+            <Interruptor id="bb-acao" rotulo="BottomBarAction" valor={acao} onChange={setAcao} />
+            <Interruptor id="bb-rolar" rotulo="hideOnScroll" valor={rolar} onChange={setRolar} />
+            <Interruptor id="bb-contagem" rotulo="count" valor={contagem} onChange={setContagem} />
+            <Interruptor id="bb-esqueleto" rotulo="BottomBarSkeleton" valor={carregando} onChange={setCarregando} />
+          </Interruptores>
+        }
+      />
 
       <IphoneFrame>
         <div className="h-full overflow-y-auto bg-background">
           <Conteudo titulo={titulo} />
         </div>
-        {estado === "carregando" ? (
-          <BottomBarSkeleton tabs={ABAS.length + 1} action={acao === "com"} labels={labels === true} />
+        {carregando ? (
+          <BottomBarSkeleton tabs={ABAS.length + 1} action={acao} labels={labels === true} />
         ) : (
           <BottomBar
             labels={labels}
-            glass={vidro === "sim"}
-            hideOnScroll={rolar === "some"}
+            glass={vidro}
+            hideOnScroll={rolar}
             action={
-              acao === "com" ? (
+              acao ? (
                 <BottomBarAction label="Adicionar">
                   <PlusIcon className="size-5" aria-hidden />
                 </BottomBarAction>
@@ -113,7 +112,7 @@ function DemoNaTela() {
                 icon={aba.icon}
                 iconActive={aba.iconActive}
                 active={i === ativa}
-                count={contagem === "com" && i === 1 ? 3 : undefined}
+                count={contagem && i === 1 ? 3 : undefined}
                 countLabel="novas"
                 onClick={(e) => {
                   e.preventDefault()
@@ -125,7 +124,7 @@ function DemoNaTela() {
               aria-label="Abrir menu da conta"
               label="Conta"
               active={ativa === SLOT}
-              count={contagem === "com" ? true : undefined}
+              count={contagem ? true : undefined}
               onClick={() => setAtiva(SLOT)}
             >
               <EllipsisHorizontalIcon className="size-6 shrink-0" aria-hidden />

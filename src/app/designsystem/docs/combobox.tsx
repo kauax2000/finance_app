@@ -23,11 +23,10 @@ import {
 } from "@/components/ui/combobox"
 import { ColorTile } from "@/components/ui/color-tile"
 import { Label } from "@/components/ui/label"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { TILE_PALETTE } from "@/lib/tile-palette"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Spinner } from "@/components/ui/spinner"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 const CATEGORIAS = [
   { value: "mercado", label: "Mercado", cor: TILE_PALETTE[7].hex, lancamentos: 23 },
@@ -457,20 +456,9 @@ function ComboboxDegrau() {
 
   return (
     <>
-      <ToggleGroup
-        type="single"
-        variant="segmented"
-        size="sm"
-        value={size}
-        onValueChange={(v) => v && setSize(v as typeof size)}
-        aria-label="Degrau"
-      >
-        {(["sm", "md", "lg", "xl"] as const).map((d) => (
-          <ToggleGroupItem key={d} value={d} className="font-mono">
-            {d}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+      <Controles
+        inicio={<Eixo rotulo="size" valores={["sm", "md", "lg", "xl"] as const} valor={size} onChange={setSize} />}
+      />
       <Combobox value={value} onValueChange={setValue}>
         <ComboboxField className="max-w-56">
           <ComboboxTrigger size={size} aria-label="Categoria">

@@ -40,9 +40,8 @@ import {
   PageSectionHeader,
   PageSectionTitle,
 } from "@/components/ui/page-section"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Caption } from "@/components/ui/typography"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 const CARTOES = [
   { nome: "Nubank", fatura: 1482.3 },
@@ -184,40 +183,6 @@ function CartaImagem({
   )
 }
 
-/**
- * O segmentado das demonstrações: uma demo por eixo, trocando o valor, no
- * lugar de uma cópia do carrossel para cada valor (a página tinha 30).
- */
-function Segmentado<T extends string>({
-  rotulo,
-  valores,
-  valor,
-  onChange,
-}: {
-  rotulo: string
-  valores: readonly T[]
-  valor: T
-  onChange: (v: T) => void
-}) {
-  return (
-    <ToggleGroup
-      type="single"
-      variant="segmented"
-      size="sm"
-      value={valor}
-      onValueChange={(v) => v && onChange(v as T)}
-      aria-label={rotulo}
-      className="self-start"
-    >
-      {valores.map((v) => (
-        <ToggleGroupItem key={v} value={v} className="font-mono">
-          {v}
-        </ToggleGroupItem>
-      ))}
-    </ToggleGroup>
-  )
-}
-
 /** A foto inteira, para a tela cheia: `object-contain`, e não recortada. */
 function FotoInteira({ semente, titulo }: { semente: string; titulo: string }) {
   return (
@@ -234,7 +199,7 @@ function SuperficieDemo() {
   const [v, setV] = React.useState<"plain" | "card" | "inset">("card")
   return (
     <div className="flex w-full flex-col gap-4">
-      <Segmentado rotulo="Superfície" valores={["plain", "card", "inset"] as const} valor={v} onChange={setV} />
+      <Controles inicio={<Eixo rotulo="variant" valores={["plain", "card", "inset"] as const} valor={v} onChange={setV} />} />
       <Carousel variant={v} aria-label="Saldo por mês" className="w-full">
         <CarouselContent>
           {MESES.map((m) => (
@@ -254,7 +219,7 @@ function ControlesDemo() {
   const [c, setC] = React.useState<"inside" | "outside" | "none">("inside")
   return (
     <div className="flex w-full flex-col gap-4">
-      <Segmentado rotulo="Controles" valores={["inside", "outside", "none"] as const} valor={c} onChange={setC} />
+      <Controles inicio={<Eixo rotulo="controls" valores={["inside", "outside", "none"] as const} valor={c} onChange={setC} />} />
       <Carousel controls={c} aria-label="Faturas abertas" className="w-full">
         <CarouselContent>
           {CARTOES.map((card) => (
@@ -275,7 +240,7 @@ function CalhaDemo() {
   const [g, setG] = React.useState<"none" | "sm" | "md" | "lg">("md")
   return (
     <div className="flex w-full flex-col gap-4">
-      <Segmentado rotulo="Calha" valores={["none", "sm", "md", "lg"] as const} valor={g} onChange={setG} />
+      <Controles inicio={<Eixo rotulo="gap" valores={["none", "sm", "md", "lg"] as const} valor={g} onChange={setG} />} />
       <Carousel gap={g} controls="none" aria-label="Saldo por mês" className="w-full">
         <CarouselContent>
           {MESES.map((m) => (
@@ -298,7 +263,7 @@ function IndicadorDemo() {
   const [v, setV] = React.useState<"dot" | "pill" | "bar" | "progress">("dot")
   return (
     <div className="flex w-full flex-col gap-4">
-      <Segmentado rotulo="Indicador" valores={["dot", "pill", "bar", "progress"] as const} valor={v} onChange={setV} />
+      <Controles inicio={<Eixo rotulo="indicador" valores={["dot", "pill", "bar", "progress"] as const} valor={v} onChange={setV} />} />
       <Carousel controls="none" aria-label="Saldo por mês" className="w-full">
         <CarouselContent>
           {MESES.map((m) => (
@@ -329,7 +294,7 @@ function CarregandoDemo() {
   const [estado, setEstado] = React.useState<"carregando" | "pronto">("carregando")
   return (
     <div className="flex w-full flex-col gap-4">
-      <Segmentado rotulo="Estado" valores={["carregando", "pronto"] as const} valor={estado} onChange={setEstado} />
+      <Controles fim={<Eixo rotulo="estado" valores={["carregando", "pronto"] as const} valor={estado} onChange={setEstado} />} />
       {estado === "carregando" ? (
         <CarouselSkeleton count={3} itemClassName="basis-2/3 sm:basis-1/2" label="Carregando as faturas" />
       ) : (
@@ -353,7 +318,7 @@ function DepoimentoDemo() {
   const [efeito, setEfeito] = React.useState<"fade" | "scale">("fade")
   return (
     <div className="flex w-full flex-col gap-4">
-      <Segmentado rotulo="Efeito" valores={["fade", "scale"] as const} valor={efeito} onChange={setEfeito} />
+      <Controles inicio={<Eixo rotulo="effect" valores={["fade", "scale"] as const} valor={efeito} onChange={setEfeito} />} />
       <Carousel
         key={efeito}
         controls="none"
@@ -396,7 +361,7 @@ function GaleriaDemo() {
   const [surface, setSurface] = React.useState<"glass" | "none">("glass")
   return (
     <div className="flex w-full flex-col gap-4">
-      <Segmentado rotulo="Superfície dos pontos" valores={["glass", "none"] as const} valor={surface} onChange={setSurface} />
+      <Controles inicio={<Eixo rotulo="CarouselDots surface" valores={["glass", "none"] as const} valor={surface} onChange={setSurface} />} />
       <Carousel gap="none" fade={false} effect="parallax" aria-label="Novidades" className="w-full">
         <CarouselContent viewportClassName="rounded-xl">
           {NOVIDADES.map((n) => (
@@ -440,7 +405,7 @@ function MiniaturasDemo() {
   )
   return (
     <div className="flex w-full flex-col gap-4">
-      <Segmentado rotulo="Miniaturas" valores={["vertical", "horizontal"] as const} valor={lado} onChange={setLado} />
+      <Controles inicio={<Eixo rotulo="CarouselThumbs orientation" valores={["vertical", "horizontal"] as const} valor={lado} onChange={setLado} />} />
       {lado === "vertical" ? (
         <Carousel gap="none" fade={false} controls="none" aria-label="Novidades" className="w-full">
           <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_5rem]">
@@ -466,7 +431,7 @@ function RotacaoDemo() {
   const [indicador, setIndicador] = React.useState<"pontos" | "passos">("pontos")
   return (
     <div className="flex w-full flex-col gap-4">
-      <Segmentado rotulo="Indicador" valores={["pontos", "passos"] as const} valor={indicador} onChange={setIndicador} />
+      <Controles fim={<Eixo rotulo="indicador" valores={["pontos", "passos"] as const} valor={indicador} onChange={setIndicador} />} />
       {indicador === "pontos" ? (
         <Carousel autoplay={5000} loop gap="none" fade={false} controls="none" aria-label="Novidades" className="w-full">
           <CarouselContent viewportClassName="rounded-xl">

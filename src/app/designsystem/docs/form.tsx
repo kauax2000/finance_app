@@ -49,7 +49,6 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Kbd } from "@/components/ui/kbd"
-import { Label } from "@/components/ui/label"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import {
   Select,
@@ -58,10 +57,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, Interruptor, Interruptores, PropsTable, Usage } from "../ds-doc"
 import { IphoneFrame } from "../ds-frame"
 import { Group, Spec, Stack } from "../ds-kit"
 
@@ -520,22 +517,9 @@ function LayoutDemo() {
 
   return (
     <>
-      <ToggleGroup
-        type="single"
-        variant="segmented"
-        size="sm"
-        value={layout}
-        onValueChange={(v) => v && setLayout(v as typeof layout)}
-        aria-label="Layout"
-        className="self-start"
-      >
-        <ToggleGroupItem value="stack" className="font-mono">
-          stack
-        </ToggleGroupItem>
-        <ToggleGroupItem value="inline" className="font-mono">
-          inline
-        </ToggleGroupItem>
-      </ToggleGroup>
+      <Controles
+        inicio={<Eixo rotulo="layout" valores={["stack", "inline"] as const} valor={layout} onChange={setLayout} />}
+      />
       {layout === "stack" ? (
         <Form className="w-full max-w-sm" onSubmit={enviar}>
           <FormInput
@@ -773,14 +757,13 @@ function EstadoDemo() {
 
   return (
     <div className="flex w-full max-w-sm flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <Switch
-          id="ds-form-pending"
-          checked={pending}
-          onCheckedChange={setPending}
-        />
-        <Label htmlFor="ds-form-pending">Simular envio em curso</Label>
-      </div>
+      <Controles
+        fim={
+          <Interruptores>
+            <Interruptor id="ds-form-pending" rotulo="pending" valor={pending} onChange={setPending} />
+          </Interruptores>
+        }
+      />
       <Form
         pending={pending}
         onSubmit={(e) => {

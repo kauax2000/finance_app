@@ -16,8 +16,7 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 import { IphoneFrame } from "../ds-frame"
 
 const TAMANHOS = ["sm", "md", "lg", "auto", "trigger"] as const
@@ -310,20 +309,7 @@ function LargurasDemo() {
   const [size, setSize] = React.useState<(typeof TAMANHOS)[number]>("md")
   return (
     <>
-      <ToggleGroup
-        type="single"
-        variant="segmented"
-        size="sm"
-        value={size}
-        onValueChange={(v) => v && setSize(v as typeof size)}
-        aria-label="Largura"
-      >
-        {TAMANHOS.map((t) => (
-          <ToggleGroupItem key={t} value={t} className="font-mono">
-            {t}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+      <Controles inicio={<Eixo rotulo="size" valores={TAMANHOS} valor={size} onChange={setSize} />} />
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" className="w-64 justify-start">

@@ -10,7 +10,6 @@ import {
 } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import {
   DropdownMenu,
@@ -29,7 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 export default function DropdownMenuDoc() {
   return (
@@ -486,20 +485,9 @@ function LargurasDemo() {
   const [size, setSize] = React.useState<"sm" | "md" | "lg" | "xl">("sm")
   return (
     <>
-      <ToggleGroup
-        type="single"
-        variant="segmented"
-        size="sm"
-        value={size}
-        onValueChange={(v) => v && setSize(v as typeof size)}
-        aria-label="Largura"
-      >
-        {(["sm", "md", "lg", "xl"] as const).map((t) => (
-          <ToggleGroupItem key={t} value={t} className="font-mono">
-            {t}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+      <Controles
+        inicio={<Eixo rotulo="size" valores={["sm", "md", "lg", "xl"] as const} valor={size} onChange={setSize} />}
+      />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm">

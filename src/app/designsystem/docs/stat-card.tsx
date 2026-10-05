@@ -27,7 +27,7 @@ import {
   StatCardValue,
   StatCardValueSkeleton,
 } from "@/components/ui/stat-card"
-import { DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 const VARIANTES = ["separate", "joined"] as const
 const TAMANHOS = ["sm", "md", "lg"] as const
@@ -90,11 +90,15 @@ function DemoNaTela() {
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="flex flex-wrap gap-3">
-        <Eixo rotulo="Grupo" valores={VARIANTES} valor={variant} onChange={setVariant} />
-        <Eixo rotulo="Tamanho" valores={TAMANHOS} valor={size} onChange={setSize} />
-        <Eixo rotulo="Layout" valores={LAYOUTS} valor={layout} onChange={setLayout} />
-      </div>
+      <Controles
+        inicio={
+          <>
+            <Eixo rotulo="Grupo" valores={VARIANTES} valor={variant} onChange={setVariant} />
+            <Eixo rotulo="Tamanho" valores={TAMANHOS} valor={size} onChange={setSize} />
+            <Eixo rotulo="Layout" valores={LAYOUTS} valor={layout} onChange={setLayout} />
+          </>
+        }
+      />
       {/* `key` remonta o grupo a cada troca, para a cascata e a contagem tocarem de novo. */}
       <StatCardGroup key={`${variant}-${size}-${layout}`} variant={variant} columns={horizontal ? 2 : 4}>
         {cartao("Despesas", ArrowTrendingDownIcon, "expense", 6218.4, 6480, "down")}
@@ -128,9 +132,13 @@ function DemoHeroi() {
         <StatCardValue value={saldos[periodo]} />
         <StatCardFooter>Atualizado agora há pouco</StatCardFooter>
       </StatCard>
-      <Button variant="outline" className="self-start" onClick={() => setPeriodo((p) => (p + 1) % 3)}>
-        trocar o período
-      </Button>
+      <Controles
+        fim={
+          <Button variant="tertiary" size="sm" onClick={() => setPeriodo((p) => (p + 1) % 3)}>
+            trocar o período
+          </Button>
+        }
+      />
     </div>
   )
 }

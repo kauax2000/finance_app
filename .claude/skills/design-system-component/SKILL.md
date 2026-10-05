@@ -1,6 +1,6 @@
 ---
 name: design-system-component
-description: Use SEMPRE que for criar um componente novo do design system (em `src/components/ui/`, em qualquer camada — fundação, átomo, molécula, organismo, template) ou redesenhar um que já existe numa rodada ("faça a mesma coisa com o X", "revise o componente Y", "cria um componente de Z"). Faz o componente nascer completo — as versões perguntadas ao dono nos quatro grupos (Redesenho, Peças, Comportamento, App), o checklist da API (escada, estados, esqueleto, telefone, área segura, a11y, movimento, tema), a página do catálogo na forma fixa (Usage, "Na tela" com Eixo/Interruptor, telefone no IphoneFrame, esqueleto, PropsTable) e o registro na mesma mudança (registry, docs-map, `<comp>-versions.test.ts`, AGENTS, histórico). Não use para revisar uma tela do app (isso é a `design-system-guard`) nem para lógica fora de `ui/`.
+description: Use SEMPRE que for criar um componente novo do design system (em `src/components/ui/`, em qualquer camada — fundação, átomo, molécula, organismo, template) ou redesenhar um que já existe numa rodada ("faça a mesma coisa com o X", "revise o componente Y", "cria um componente de Z"). Faz o componente nascer completo — as versões perguntadas ao dono nos quatro grupos (Redesenho, Peças, Comportamento, App), o checklist da API (escada, estados, esqueleto, telefone, área segura, a11y, movimento, tema), a página do catálogo na forma fixa (Usage, "Na tela" com Eixo/Interruptores em Controles acima do mostrador, telefone no IphoneFrame, esqueleto, PropsTable) e o registro na mesma mudança (registry, docs-map, `<comp>-versions.test.ts`, AGENTS, histórico). Não use para revisar uma tela do app (isso é a `design-system-guard`) nem para lógica fora de `ui/`.
 ---
 
 # Componente nasce completo
@@ -25,8 +25,9 @@ custou uma rodada de revisão.
    o layout depende da própria largura, nome acessível, foco sem roubar ao
    montar, movimento visível em `@utility` depois de `no-scrollbar`, tokens com
    par `.dark`, classes por extenso, peça de lugar certo **por prop**.
-4. **A página** (seção 4): `Usage` → "Na tela" com `Eixo` e `Interruptor` de
-   `ds-doc.tsx` → `DocNote`s → "No telefone" no `IphoneFrame` → comportamentos →
+4. **A página** (seção 4): `Usage` → "Na tela" com `Eixo` e `Interruptores`
+   de `ds-doc.tsx`, dentro de `Controles` (numa linha acima do
+   mostrador: eixos à esquerda, cenário e interruptores à direita) → `DocNote`s → "No telefone" no `IphoneFrame` → comportamentos →
    "Esqueleto" → `PropsTable`s. Conteúdo realista; desktop em `ViewportFrame`.
 5. **Registro na mesma mudança** (seção 5): `registry.ts`, `npm run
    ds:docs-map`, `<comp>-versions.test.ts` **novo** (nunca sobrescrever teste

@@ -27,9 +27,8 @@ import {
   HoverCardTitle,
   HoverCardTrigger,
 } from "@/components/ui/hover-card"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 const LARGURAS = [
   ["sm", "Um dado só — um saldo, uma data."],
@@ -402,20 +401,9 @@ function LarguraDemo() {
   const nota = LARGURAS.find(([t]) => t === tamanho)?.[1]
   return (
     <>
-      <ToggleGroup
-        type="single"
-        variant="segmented"
-        size="sm"
-        value={tamanho}
-        onValueChange={(v) => v && setTamanho(v as typeof tamanho)}
-        aria-label="Largura"
-      >
-        {LARGURAS.map(([t]) => (
-          <ToggleGroupItem key={t} value={t} className="font-mono">
-            {t}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+      <Controles
+        inicio={<Eixo rotulo="size" valores={LARGURAS.map(([t]) => t)} valor={tamanho} onChange={setTamanho} />}
+      />
       <HoverCard>
         <HoverCardTrigger asChild>
           <Button variant="link">Pouse aqui</Button>

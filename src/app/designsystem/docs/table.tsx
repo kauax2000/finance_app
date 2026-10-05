@@ -35,7 +35,7 @@ import {
   type TableSize,
 } from "@/components/ui/table"
 import { TILE_PALETTE } from "@/lib/tile-palette"
-import { DocNote, DocSection, Eixo, Interruptor, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, Interruptor, Interruptores, PropsTable, Usage } from "../ds-doc"
 
 const LINHAS = [
   { desc: "Mercado", cat: "Alimentação", conta: "Nubank", data: "12/03", valor: -128.4, status: "Efetivada", cor: TILE_PALETTE[5].hex },
@@ -61,14 +61,22 @@ function DemoNaTela() {
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <Eixo rotulo="Densidade" valores={TAMANHOS} valor={size} onChange={setSize} />
-        <Eixo rotulo="Fios" valores={FIOS} valor={dividers} onChange={setDividers} />
-        <Eixo rotulo="Cabeçalho" valores={CABECALHOS} valor={cabecalho} onChange={setCabecalho} />
-        <Eixo rotulo="Rótulos" valores={ROTULOS} valor={labels} onChange={setLabels} />
-        <Interruptor id="ds-table-striped" rotulo="striped" valor={striped} onChange={setStriped} />
-        <Interruptor id="ds-table-outline" rotulo="outline" valor={moldura} onChange={setMoldura} />
-      </div>
+      <Controles
+        inicio={
+          <>
+            <Eixo rotulo="size" valores={TAMANHOS} valor={size} onChange={setSize} />
+            <Eixo rotulo="dividers" valores={FIOS} valor={dividers} onChange={setDividers} />
+            <Eixo rotulo="TableHeader variant" valores={CABECALHOS} valor={cabecalho} onChange={setCabecalho} />
+            <Eixo rotulo="labels" valores={ROTULOS} valor={labels} onChange={setLabels} />
+          </>
+        }
+        fim={
+          <Interruptores>
+            <Interruptor id="ds-table-striped" rotulo="striped" valor={striped} onChange={setStriped} />
+            <Interruptor id="ds-table-outline" rotulo="outline" valor={moldura} onChange={setMoldura} />
+          </Interruptores>
+        }
+      />
       <Table size={size} dividers={dividers} striped={striped} variant={moldura ? "outline" : "plain"}>
         <TableCaption>Lançamentos de março</TableCaption>
         <TableHeader variant={cabecalho} labels={labels}>
@@ -272,15 +280,18 @@ function DemoDestaque() {
   const [valor, setValor] = React.useState(1284.6)
   return (
     <div className="flex w-full flex-col gap-3">
-      <Button
-        type="button"
-        variant="secondary"
-        size="sm"
-        className="self-start"
-        onClick={() => setValor((v) => Math.round((v - 37.9) * 100) / 100)}
-      >
-        lançar −R$ 37,90
-      </Button>
+      <Controles
+        fim={
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => setValor((v) => Math.round((v - 37.9) * 100) / 100)}
+          >
+            lançar −R$ 37,90
+          </Button>
+        }
+      />
       <Table variant="outline" size="sm">
         <TableBody>
           <TableRow>
@@ -414,21 +425,25 @@ export default function TableDoc() {
             </TableError>
           </TableBody>
         </Table>
-        <div className="flex flex-col gap-2">
-          <Interruptor id="ds-table-pending" rotulo="pending" valor={recarregando} onChange={setRecarregando} />
-          <Table variant="outline" pending={recarregando}>
-            <TableBody>
-              {LINHAS.slice(0, 2).map((l) => (
-                <TableRow key={l.desc}>
-                  <TableCell>{l.desc}</TableCell>
-                  <TableCell numeric>
-                    <TableCellMoney value={l.valor} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <Controles
+          fim={
+            <Interruptores>
+              <Interruptor id="ds-table-pending" rotulo="pending" valor={recarregando} onChange={setRecarregando} />
+            </Interruptores>
+          }
+        />
+        <Table variant="outline" pending={recarregando}>
+          <TableBody>
+            {LINHAS.slice(0, 2).map((l) => (
+              <TableRow key={l.desc}>
+                <TableCell>{l.desc}</TableCell>
+                <TableCell numeric>
+                  <TableCellMoney value={l.valor} />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </DocSection>
 
       <DocSection

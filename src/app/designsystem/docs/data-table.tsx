@@ -25,7 +25,7 @@ import { MoneyDisplay } from "@/components/ui/money-display"
 import { TableCell, TableRow } from "@/components/ui/table"
 import { TILE_PALETTE } from "@/lib/tile-palette"
 import { IphoneFrame } from "../ds-frame"
-import { DocNote, DocSection, Eixo, Interruptor, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, Interruptor, Interruptores, PropsTable, Usage } from "../ds-doc"
 
 /* -------------------------------------------------------------------------- */
 /* Os dados de mentira                                                         */
@@ -164,12 +164,20 @@ function DemoNaTela() {
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <Eixo rotulo="Fios" valores={["rows", "none", "grid"] as const} valor={dividers} onChange={setDividers} />
-        <Eixo rotulo="Cabeçalho" valores={["muted", "plain"] as const} valor={cabecalho} onChange={setCabecalho} />
-        <Interruptor id="ds-dt-striped" rotulo="striped" valor={striped} onChange={setStriped} />
-        <Interruptor id="ds-dt-grupo" rotulo="groupBy" valor={agrupar} onChange={setAgrupar} />
-      </div>
+      <Controles
+        inicio={
+          <>
+            <Eixo rotulo="Fios" valores={["rows", "none", "grid"] as const} valor={dividers} onChange={setDividers} />
+            <Eixo rotulo="Cabeçalho" valores={["muted", "plain"] as const} valor={cabecalho} onChange={setCabecalho} />
+          </>
+        }
+        fim={
+          <Interruptores>
+            <Interruptor id="ds-dt-striped" rotulo="striped" valor={striped} onChange={setStriped} />
+            <Interruptor id="ds-dt-grupo" rotulo="groupBy" valor={agrupar} onChange={setAgrupar} />
+          </Interruptores>
+        }
+      />
       <DataTable
         id="ds-data-table"
         aria-label="Lançamentos"
@@ -320,7 +328,13 @@ function DemoServidor() {
 
   return (
     <div className="flex w-full flex-col gap-3">
-      <Interruptor id="ds-dt-falhar" rotulo="o servidor falha" valor={falhar} onChange={setFalhar} />
+      <Controles
+        fim={
+          <Interruptores>
+            <Interruptor id="ds-dt-falhar" rotulo="o servidor falha" valor={falhar} onChange={setFalhar} />
+          </Interruptores>
+        }
+      />
       <DataTable
         aria-label="Lançamentos do servidor"
         columns={COLUNAS.filter((c) => c.id !== "conta")}

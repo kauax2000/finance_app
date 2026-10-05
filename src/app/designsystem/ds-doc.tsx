@@ -7,13 +7,13 @@ import {
   DocumentDuplicateIcon,
 } from "@heroicons/react/16/solid"
 import * as React from "react"
+import { createPortal } from "react-dom"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useTimeout } from "@/hooks/use-timeout"
 import { slugifyCategory } from "./registry"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
+import { Toggle } from "@/components/ui/toggle"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
   Collapsible,
@@ -432,26 +432,83 @@ export function Preview({
   previewClassName?: string
   children: React.ReactNode
 }) {
+  // O slot dos controles fica por fora da moldura, e quem o preenche é a
+  // demonstração lá de dentro (`Controles`, por portal): o estado mora nela.
+  const [slot, setSlot] = React.useState<HTMLDivElement | null>(null)
+
   return (
-    <div
-      className={cn(
-        "overflow-hidden rounded-xl border border-border bg-card",
-        className
-      )}
-    >
-      {/* As classes de layout continuam nesta camada, e não na moldura: é o que
-          os 85 `previewClassName` do catálogo sobrescrevem, `p-0` inclusive. */}
+    <div className="flex flex-col gap-3">
+      <div
+        ref={setSlot}
+        data-slot="preview-controls"
+        className="flex flex-wrap items-center gap-x-4 gap-y-2 empty:hidden"
+      />
       <div
         className={cn(
-          "flex min-h-28 flex-wrap items-center gap-4 overflow-x-auto p-6",
-          previewClassName
+          "overflow-hidden rounded-xl border border-border bg-card",
+          className
         )}
       >
-        {children}
+        {/* As classes de layout continuam nesta camada, e não na moldura: é o que
+            os 85 `previewClassName` do catálogo sobrescrevem, `p-0` inclusive. */}
+        <div
+          className={cn(
+            "flex min-h-28 flex-wrap items-center gap-4 overflow-x-auto p-6",
+            previewClassName
+          )}
+        >
+          <PreviewControlsContext.Provider value={slot}>
+            {children}
+          </PreviewControlsContext.Provider>
+        </div>
+        {code ? <PreviewCode code={code} /> : null}
       </div>
-      {code ? <PreviewCode code={code} /> : null}
     </div>
   )
+}
+
+const PreviewControlsContext = React.createContext<HTMLDivElement | null | undefined>(undefined)
+
+/**
+ * Os controles de uma demonstração, **acima** da moldura e por fora dela, numa
+ * linha só: os eixos do componente à esquerda (`inicio`), o cenário e as peças
+ * à direita (`fim`). Quando a linha não cabe, `empilhar` põe as abas numa
+ * linha e os interruptores na de baixo, os dois alinhados à esquerda. O conteúdo é levado por portal ao slot
+ * do `Preview` mais próximo; antes de o slot existir não desenha nada (o
+ * callback ref grava no commit, antes da pintura), e fora de um `Preview` fica
+ * no lugar.
+ */
+export function Controles({
+  inicio,
+  fim,
+  empilhar = false,
+}: {
+  inicio?: React.ReactNode
+  fim?: React.ReactNode
+  empilhar?: boolean
+}) {
+  const slot = React.useContext(PreviewControlsContext)
+  const conteudo = (
+    <>
+      {inicio ? (
+        <div className={cn("flex flex-wrap items-center gap-x-2 gap-y-2", empilhar && "basis-full")}>{inicio}</div>
+      ) : null}
+      {fim ? (
+        <div
+          className={cn(
+            "flex flex-wrap items-center gap-x-2 gap-y-2",
+            empilhar ? "basis-full" : "ms-auto justify-end"
+          )}
+        >
+          {fim}
+        </div>
+      ) : null}
+    </>
+  )
+  if (slot === undefined) {
+    return <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-2">{conteudo}</div>
+  }
+  return slot ? createPortal(conteudo, slot) : null
 }
 
 /** A gaveta de código no pé da moldura. */
@@ -751,37 +808,41 @@ export function DocNote({
 }
 
 /**
- * Os controles da demonstração "Na tela" (ver `docs/design/COMPONENTE-NOVO.md`):
- * um eixo é um valor do componente escolhido num trilho segmentado, e um
- * interruptor liga uma peça ou um comportamento. Treze páginas escreviam os
- * dois à mão, com o mesmo corpo; agora moram aqui, e o rótulo é o nome da prop
- * em fonte mono — quem lê a página aprende a API mexendo nela.
+ * Os controles da demonstração "Na tela" (ver `docs/design/COMPONENTE-NOVO.md`),
+ * sempre dentro de `Controles`, acima da moldura: um eixo é um valor do
+ * componente escolhido na pílula `floating` (a do `Tabs` padrão, sem sombra), e
+ * cada interruptor é um `Toggle` fantasma solto que liga uma peça ou um
+ * comportamento. O eixo não mostra o nome da prop (os valores dizem o eixo, e a
+ * linha precisa caber numa só): o `rotulo` é o nome acessível e a dica do
+ * cursor. `rotulos` troca o texto de um valor ("md · 32", "Período"), e aí ele
+ * deixa de ser mono.
  */
 export function Eixo<T extends string>({
   rotulo,
   valores,
   valor,
   onChange,
+  rotulos,
 }: {
   rotulo: string
   valores: readonly T[]
   valor: T
   onChange: (v: T) => void
+  rotulos?: Partial<Record<T, React.ReactNode>>
 }) {
   return (
-    <div className="flex items-center gap-2">
-      <span className="font-mono text-xs text-muted-foreground">{rotulo}</span>
+    <div className="flex items-center" title={rotulo}>
       <ToggleGroup
         type="single"
-        variant="segmented"
+        variant="floating"
         size="sm"
         value={valor}
         onValueChange={(v) => v && onChange(v as T)}
         aria-label={rotulo}
       >
         {valores.map((v) => (
-          <ToggleGroupItem key={v} value={v} className="font-mono">
-            {v}
+          <ToggleGroupItem key={v} value={v} className={rotulos?.[v] == null ? "font-mono" : undefined}>
+            {rotulos?.[v] ?? v}
           </ToggleGroupItem>
         ))}
       </ToggleGroup>
@@ -789,23 +850,38 @@ export function Eixo<T extends string>({
   )
 }
 
-export function Interruptor({
-  id,
-  rotulo,
-  valor,
-  onChange,
-}: {
+type InterruptorProps = {
   id: string
   rotulo: string
   valor: boolean
   onChange: (v: boolean) => void
-}) {
+}
+
+/**
+ * Os interruptores: cada peça ou comportamento é um `Toggle` fantasma solto —
+ * sem placa, cinza só quando ligado —, ao lado dos eixos. `Interruptores` só
+ * os agrupa para o leitor de tela.
+ */
+export function Interruptores({ children, rotulo = "peças" }: { children: React.ReactNode; rotulo?: string }) {
   return (
-    <div className="flex items-center gap-2">
-      <Switch id={id} size="sm" checked={valor} onCheckedChange={onChange} />
-      <Label htmlFor={id} className="font-mono text-xs font-normal">
-        {rotulo}
-      </Label>
+    <div role="group" aria-label={rotulo} className="flex flex-wrap items-center gap-1">
+      {children}
     </div>
+  )
+}
+
+export function Interruptor({ id, rotulo, valor, onChange }: InterruptorProps) {
+  return (
+    <Toggle
+      id={id}
+      variant="plain"
+      shape="pill"
+      size="md"
+      pressed={valor}
+      onPressedChange={onChange}
+      className="px-3 font-mono text-control-sm"
+    >
+      {rotulo}
+    </Toggle>
   )
 }

@@ -27,8 +27,7 @@ import {
   NavigationMenuSectionLabel,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 import { IphoneFrame } from "../ds-frame"
 
 const CONTAS = [
@@ -536,34 +535,17 @@ function EixosDemo() {
   const [variant, setVariant] = React.useState<(typeof VARIANTES)[number]>("floating")
   const [size, setSize] = React.useState<(typeof TAMANHOS)[number]>("md")
   const [indicator, setIndicator] = React.useState<(typeof MARCADORES)[number]>("highlight")
-  const trilho = <T extends string>(
-    rotulo: string,
-    valores: readonly T[],
-    valor: T,
-    mudar: (v: T) => void
-  ) => (
-    <ToggleGroup
-      type="single"
-      variant="segmented"
-      size="sm"
-      value={valor}
-      onValueChange={(v) => v && mudar(v as T)}
-      aria-label={rotulo}
-    >
-      {valores.map((v) => (
-        <ToggleGroupItem key={v} value={v} className="font-mono">
-          {v}
-        </ToggleGroupItem>
-      ))}
-    </ToggleGroup>
-  )
   return (
     <>
-      <div className="flex flex-wrap gap-3">
-        {trilho("Superfície", VARIANTES, variant, setVariant)}
-        {trilho("Tamanho", TAMANHOS, size, setSize)}
-        {trilho("Marcador", MARCADORES, indicator, setIndicator)}
-      </div>
+      <Controles
+        inicio={
+          <>
+            <Eixo rotulo="variant" valores={VARIANTES} valor={variant} onChange={setVariant} />
+            <Eixo rotulo="size" valores={TAMANHOS} valor={size} onChange={setSize} />
+            <Eixo rotulo="indicator" valores={MARCADORES} valor={indicator} onChange={setIndicator} />
+          </>
+        }
+      />
       <NavigationMenu variant={variant} size={size} indicator={indicator}>
         <NavigationMenuList>
           <NavigationMenuItem>

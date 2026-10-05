@@ -20,7 +20,7 @@ import {
   SplitShellSkeleton,
 } from "@/components/ui/split-shell"
 import { IphoneFrame, ViewportFrame } from "../ds-frame"
-import { DocNote, DocSection, Eixo, Interruptor, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, Interruptor, Interruptores, PropsTable, Usage } from "../ds-doc"
 
 
 
@@ -122,16 +122,22 @@ function DemoNaTela() {
 
   return (
     <div className="flex w-full flex-col gap-6 p-4">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-        <Eixo rotulo="side" valores={["start", "end"] as const} valor={side} onChange={setSide} />
-        <Eixo rotulo="ratio" valores={["wide", "even", "narrow"] as const} valor={ratio} onChange={setRatio} />
-        <Eixo rotulo="surface" valores={["brand", "muted"] as const} valor={surface} onChange={setSurface} />
-      </div>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <Interruptor id="ss-voltar" rotulo="voltar" valor={voltar} onChange={setVoltar} />
-        <Interruptor id="ss-pe" rotulo="pé" valor={pe} onChange={setPe} />
-        <Interruptor id="ss-passo" rotulo="passos" valor={passo} onChange={setPasso} />
-      </div>
+      <Controles
+        inicio={
+          <>
+            <Eixo rotulo="side" valores={["start", "end"] as const} valor={side} onChange={setSide} />
+            <Eixo rotulo="ratio" valores={["wide", "even", "narrow"] as const} valor={ratio} onChange={setRatio} />
+            <Eixo rotulo="surface" valores={["brand", "muted"] as const} valor={surface} onChange={setSurface} />
+          </>
+        }
+        fim={
+          <Interruptores>
+            <Interruptor id="ss-voltar" rotulo="voltar" valor={voltar} onChange={setVoltar} />
+            <Interruptor id="ss-pe" rotulo="pé" valor={pe} onChange={setPe} />
+            <Interruptor id="ss-passo" rotulo="passos" valor={passo} onChange={setPasso} />
+          </Interruptores>
+        }
+      />
       <ViewportFrame title="Casco dividido numa janela" height={620} className="rounded-lg" screenClassName="bg-background">
         <Casco side={side} ratio={ratio} surface={surface} voltar={voltar} pe={pe} passo={passo} />
       </ViewportFrame>
@@ -143,11 +149,15 @@ function DemoTelefone() {
   const [asideMobile, setAsideMobile] = React.useState<"card" | "band" | "logo" | "hidden">("card")
   return (
     <div className="flex w-full flex-col items-center gap-6 p-4">
-      <Eixo
-        rotulo="asideMobile"
-        valores={["card", "band", "logo", "hidden"] as const}
-        valor={asideMobile}
-        onChange={setAsideMobile}
+      <Controles
+        inicio={
+          <Eixo
+            rotulo="asideMobile"
+            valores={["card", "band", "logo", "hidden"] as const}
+            valor={asideMobile}
+            onChange={setAsideMobile}
+          />
+        }
       />
       <IphoneFrame title="Casco dividido num iPhone">
         <div className="h-full overflow-y-auto">

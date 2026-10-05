@@ -18,7 +18,7 @@ import {
   StepperNext,
   StepperPrevious,
 } from "@/components/ui/stepper"
-import { DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 const ETAPAS = [
   { nome: "Conta", descricao: "Nome e e-mail", icone: UserIcon },
@@ -41,12 +41,16 @@ function DemoNaTela() {
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="flex flex-wrap gap-3">
-        <Eixo rotulo="Orientação" valores={ORIENTACOES} valor={orientation} onChange={setOrientation} />
-        <Eixo rotulo="Forma" valores={FORMAS} valor={variant} onChange={setVariant} />
-        <Eixo rotulo="Tamanho" valores={TAMANHOS} valor={size} onChange={setSize} />
-        <Eixo rotulo="Marcador" valores={["número", "ícone"] as const} valor={icones} onChange={setIcones} />
-      </div>
+      <Controles
+        inicio={
+          <>
+            <Eixo rotulo="orientation" valores={ORIENTACOES} valor={orientation} onChange={setOrientation} />
+            <Eixo rotulo="variant" valores={FORMAS} valor={variant} onChange={setVariant} />
+            <Eixo rotulo="size" valores={TAMANHOS} valor={size} onChange={setSize} />
+          </>
+        }
+        fim={<Eixo rotulo="marcador" valores={["número", "ícone"] as const} valor={icones} onChange={setIcones} />}
+      />
       <div className={orientation === "vertical" ? "w-full max-w-xs" : "w-full"}>
         <Stepper
           value={passo}

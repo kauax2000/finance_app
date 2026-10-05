@@ -23,8 +23,7 @@ import { Field, FieldLabel } from "@/components/ui/field"
 import { Form, FormCancel, FormSubmit } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 const CAMPOS = [
   "Nome do cartão",
@@ -607,20 +606,11 @@ function LarguraDemo() {
 
   return (
     <>
-      <ToggleGroup
-        type="single"
-        variant="segmented"
-        size="sm"
-        value={size}
-        onValueChange={(v) => v && setSize(v as typeof size)}
-        aria-label="Largura"
-      >
-        {(["sm", "md", "lg", "xl", "full"] as const).map((s) => (
-          <ToggleGroupItem key={s} value={s} className="font-mono">
-            {s}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+      <Controles
+        inicio={
+          <Eixo rotulo="size" valores={["sm", "md", "lg", "xl", "full"] as const} valor={size} onChange={setSize} />
+        }
+      />
       <Dialog>
         <DialogTrigger asChild>
           <Button variant="outline">abrir</Button>

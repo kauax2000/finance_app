@@ -63,12 +63,11 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Caption } from "@/components/ui/typography"
 import { BUDGET_BANDS, CARD_LIMIT_BANDS } from "@/lib/budget-bands"
 import { currencyBRL, currencyCompactBRL } from "@/lib/formatters"
 import { addDaysYmd } from "@/lib/transaction-date"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 import { Group, Spec, Stack } from "../ds-kit"
 
 const FLUXO = [
@@ -247,45 +246,11 @@ const MAIORES_GASTOS = [
   { nome: "Lazer", valor: 480 },
 ]
 
-/**
- * O segmentado das demonstrações: uma demo por eixo, trocando o valor, no
- * lugar de uma cópia do gráfico para cada valor.
- */
-function Segmentado<T extends string>({
-  rotulo,
-  valores,
-  valor,
-  onChange,
-}: {
-  rotulo: string
-  valores: readonly T[]
-  valor: T
-  onChange: (v: T) => void
-}) {
-  return (
-    <ToggleGroup
-      type="single"
-      variant="segmented"
-      size="sm"
-      value={valor}
-      onValueChange={(v) => v && onChange(v as T)}
-      aria-label={rotulo}
-      className="self-start"
-    >
-      {valores.map((v) => (
-        <ToggleGroupItem key={v} value={v} className="font-mono">
-          {v}
-        </ToggleGroupItem>
-      ))}
-    </ToggleGroup>
-  )
-}
-
 function DemoArea() {
   const [v, setV] = React.useState<"solid" | "gradient" | "stepped">("solid")
   return (
     <div className="flex w-full flex-col gap-4">
-      <Segmentado rotulo="Variante" valores={["solid", "gradient", "stepped"] as const} valor={v} onChange={setV} />
+      <Controles inicio={<Eixo rotulo="variant" valores={["solid", "gradient", "stepped"] as const} valor={v} onChange={setV} />} />
       {v === "stepped" ? (
         <ChartArea
           variant="stepped"
@@ -314,7 +279,7 @@ function DemoLinha() {
   const [v, setV] = React.useState<"curved" | "straight" | "stepped">("curved")
   return (
     <div className="flex w-full flex-col gap-4">
-      <Segmentado rotulo="Variante" valores={["curved", "straight", "stepped"] as const} valor={v} onChange={setV} />
+      <Controles inicio={<Eixo rotulo="variant" valores={["curved", "straight", "stepped"] as const} valor={v} onChange={setV} />} />
       <ChartLine
         variant={v}
         dots={v === "straight" ? "all" : "hover"}
@@ -332,7 +297,7 @@ function DemoBarras() {
   const [v, setV] = React.useState<"agrupadas" | "empilhadas" | "horizontal">("agrupadas")
   return (
     <div className="flex w-full flex-col gap-4">
-      <Segmentado rotulo="Forma" valores={["agrupadas", "empilhadas", "horizontal"] as const} valor={v} onChange={setV} />
+      <Controles inicio={<Eixo rotulo="forma" valores={["agrupadas", "empilhadas", "horizontal"] as const} valor={v} onChange={setV} />} />
       {v === "horizontal" ? (
         <ChartBars
           layout="horizontal"
@@ -385,7 +350,7 @@ function DemoRosca() {
   const [v, setV] = React.useState<"donut" | "pie" | "gauge">("donut")
   return (
     <div className="flex w-full flex-col items-center gap-4">
-      <Segmentado rotulo="Variante" valores={["donut", "pie", "gauge"] as const} valor={v} onChange={setV} />
+      <Controles inicio={<Eixo rotulo="variant" valores={["donut", "pie", "gauge"] as const} valor={v} onChange={setV} />} />
       {v === "gauge" ? (
         <ChartDonut
           variant="gauge"
@@ -426,7 +391,7 @@ function DemoMedidorFaixas() {
   const pct = Math.round((usado / LIMITE) * 100)
   return (
     <div className="flex w-full flex-col items-center gap-4">
-      <Segmentado rotulo="Uso" valores={["folga", "atenção", "perigo"] as const} valor={v} onChange={setV} />
+      <Controles fim={<Eixo rotulo="uso" valores={["folga", "atenção", "perigo"] as const} valor={v} onChange={setV} />} />
       <ChartDonut
         variant="gauge"
         bands={CARD_LIMIT_BANDS}
@@ -449,7 +414,7 @@ function DemoDivisao() {
   const [v, setV] = React.useState<"below" | "legend">("below")
   return (
     <div className="flex w-full flex-col gap-4">
-      <Segmentado rotulo="Rótulos" valores={["below", "legend"] as const} valor={v} onChange={setV} />
+      <Controles inicio={<Eixo rotulo="labels" valores={["below", "legend"] as const} valor={v} onChange={setV} />} />
       <ChartSplit
         labels={v}
         config={CONFIG_DIVISAO}
@@ -467,7 +432,7 @@ function DemoAneis() {
   const [v, setV] = React.useState<"com cortes" | "na rampa">("com cortes")
   return (
     <div className="flex w-full flex-col items-center gap-4">
-      <Segmentado rotulo="Cor" valores={["com cortes", "na rampa"] as const} valor={v} onChange={setV} />
+      <Controles inicio={<Eixo rotulo="cor" valores={["com cortes", "na rampa"] as const} valor={v} onChange={setV} />} />
       <ChartRadial
         bands={v === "com cortes" ? BUDGET_BANDS : undefined}
         config={CONFIG_ORCAMENTOS}
@@ -487,7 +452,7 @@ function DemoCalendario() {
   const [v, setV] = React.useState<"quarter" | "year">("quarter")
   return (
     <div className="flex w-full flex-col gap-4">
-      <Segmentado rotulo="Período" valores={["quarter", "year"] as const} valor={v} onChange={setV} />
+      <Controles inicio={<Eixo rotulo="range" valores={["quarter", "year"] as const} valor={v} onChange={setV} />} />
       <ChartHeatmap
         range={v}
         tone={v === "year" ? "income" : "expense"}
@@ -504,7 +469,7 @@ function DemoPerfil() {
   const [v, setV] = React.useState<"polygon" | "circle">("polygon")
   return (
     <div className="flex w-full flex-col items-center gap-4">
-      <Segmentado rotulo="Grade" valores={["polygon", "circle"] as const} valor={v} onChange={setV} />
+      <Controles inicio={<Eixo rotulo="grid" valores={["polygon", "circle"] as const} valor={v} onChange={setV} />} />
       <ChartRadar
         grid={v}
         config={CONFIG_PERFIL}
@@ -522,7 +487,7 @@ function DemoProporcao() {
   const dica = ASPECTOS.find(([nome]) => nome === v)?.[1]
   return (
     <div className="flex w-full flex-col gap-4">
-      <Segmentado rotulo="Proporção" valores={ASPECTOS.map(([nome]) => nome)} valor={v} onChange={setV} />
+      <Controles inicio={<Eixo rotulo="aspect" valores={ASPECTOS.map(([nome]) => nome)} valor={v} onChange={setV} />} />
       <Caption>{dica}</Caption>
       {v === "auto" ? (
         <div className="h-10 w-full max-w-sm rounded-md border border-dashed border-border" />
@@ -537,7 +502,7 @@ function DemoEstado() {
   const [v, setV] = React.useState<"pulse" | "wave" | "vazio" | "erro">("pulse")
   return (
     <div className="flex w-full flex-col gap-4">
-      <Segmentado rotulo="Estado" valores={["pulse", "wave", "vazio", "erro"] as const} valor={v} onChange={setV} />
+      <Controles fim={<Eixo rotulo="estado" valores={["pulse", "wave", "vazio", "erro"] as const} valor={v} onChange={setV} />} />
       {v === "pulse" || v === "wave" ? (
         <ChartSkeleton variant={v} aspect="wide" bars={v === "wave" ? 14 : 7} className="w-full max-w-2xl" />
       ) : v === "vazio" ? (
@@ -590,21 +555,23 @@ function DemoMovimento() {
 
   return (
     <div className="flex w-full flex-col gap-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <Tabs value={periodo} onValueChange={(v) => setPeriodo(v as Periodo)}>
-          <TabsList>
-            {(Object.keys(PERIODOS) as Periodo[]).map((k) => (
-              <TabsTrigger key={k} value={k}>
-                {PERIODOS[k].rotulo}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-        <Button variant="tertiary" onClick={() => setRodada((r) => r + 1)}>
-          <ArrowPathIcon />
-          rever a entrada
-        </Button>
-      </div>
+      <Controles
+        fim={
+          <>
+            <Eixo
+              rotulo="período"
+              valores={Object.keys(PERIODOS) as Periodo[]}
+              valor={periodo}
+              onChange={setPeriodo}
+              rotulos={Object.fromEntries(Object.entries(PERIODOS).map(([k, p]) => [k, p.rotulo]))}
+            />
+            <Button variant="tertiary" size="sm" onClick={() => setRodada((r) => r + 1)}>
+              <ArrowPathIcon />
+              rever a entrada
+            </Button>
+          </>
+        }
+      />
       <div key={rodada} className="grid gap-8 md:grid-cols-2">
         <ChartBars
           layout="horizontal"

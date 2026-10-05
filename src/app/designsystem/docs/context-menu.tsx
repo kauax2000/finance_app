@@ -35,8 +35,7 @@ import {
   ItemTitle,
 } from "@/components/ui/item"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 /** A área de clique das demonstrações: o alvo, e não um enfeite. */
 const AREA =
@@ -55,20 +54,11 @@ function PadraoDemo() {
   )
   return (
     <>
-      <ToggleGroup
-        type="single"
-        variant="segmented"
-        size="sm"
-        value={size}
-        onValueChange={(v) => v && setSize(v as typeof size)}
-        aria-label="Largura"
-      >
-        {(["auto", "sm", "md", "lg", "xl"] as const).map((d) => (
-          <ToggleGroupItem key={d} value={d} className="font-mono">
-            {d}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+      <Controles
+        inicio={
+          <Eixo rotulo="size" valores={["auto", "sm", "md", "lg", "xl"] as const} valor={size} onChange={setSize} />
+        }
+      />
       <ContextMenu>
         <ContextMenuTrigger className={AREA}>
           Clique com o botão direito aqui
@@ -97,17 +87,17 @@ function AlvoDemo() {
   const [forma, setForma] = React.useState<"header" | "detalhe">("header")
   return (
     <>
-      <ToggleGroup
-        type="single"
-        variant="segmented"
-        size="sm"
-        value={forma}
-        onValueChange={(v) => v && setForma(v as typeof forma)}
-        aria-label="Versão"
-      >
-        <ToggleGroupItem value="header">Cabeçalho</ToggleGroupItem>
-        <ToggleGroupItem value="detalhe">Atalho e descrição</ToggleGroupItem>
-      </ToggleGroup>
+      <Controles
+        fim={
+          <Eixo
+            rotulo="versão"
+            valores={["header", "detalhe"] as const}
+            valor={forma}
+            onChange={setForma}
+            rotulos={{ header: "Cabeçalho", detalhe: "Atalho e descrição" }}
+          />
+        }
+      />
       <ContextMenu>
         <ContextMenuTrigger className={AREA}>
           Mercado · −R$ 42,90

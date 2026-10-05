@@ -12,7 +12,6 @@ import {
 import { BanknotesIcon } from "@heroicons/react/16/solid"
 
 import { Button } from "@/components/ui/button"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
   Dialog,
   DialogBody,
@@ -32,7 +31,7 @@ import {
   DrawerContent,
   DrawerTrigger,
 } from "@/components/ui/drawer"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 export default function DrawerDoc() {
   return (
@@ -333,31 +332,14 @@ function SuperficieDemo() {
 
   return (
     <>
-      <div className="flex flex-wrap gap-2">
-        <ToggleGroup
-          type="single"
-          variant="segmented"
-          size="sm"
-          value={variant}
-          onValueChange={(v) => v && setVariant(v as typeof variant)}
-          aria-label="Superfície"
-        >
-          <ToggleGroupItem value="flush" className="font-mono">flush</ToggleGroupItem>
-          <ToggleGroupItem value="inset" className="font-mono">inset</ToggleGroupItem>
-        </ToggleGroup>
-        <ToggleGroup
-          type="single"
-          variant="segmented"
-          size="sm"
-          value={size}
-          onValueChange={(v) => v && setSize(v as typeof size)}
-          aria-label="Largura"
-        >
-          <ToggleGroupItem value="full" className="font-mono">full</ToggleGroupItem>
-          <ToggleGroupItem value="md" className="font-mono">md</ToggleGroupItem>
-          <ToggleGroupItem value="lg" className="font-mono">lg</ToggleGroupItem>
-        </ToggleGroup>
-      </div>
+      <Controles
+        inicio={
+          <>
+            <Eixo rotulo="variant" valores={["flush", "inset"] as const} valor={variant} onChange={setVariant} />
+            <Eixo rotulo="size" valores={["full", "md", "lg"] as const} valor={size} onChange={setSize} />
+          </>
+        }
+      />
       <Drawer>
         <DrawerTrigger asChild>
           <Button variant="outline" size="sm">

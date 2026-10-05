@@ -42,7 +42,7 @@ import { StatCardDelta } from "@/components/ui/stat-card"
 import { TabsNav, TabsNavLink } from "@/components/ui/tabs"
 import { TopBar, TopBarTitle } from "@/components/ui/top-bar"
 import { IphoneFrame } from "../ds-frame"
-import { DocNote, DocSection, Eixo, Interruptor, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, Interruptor, Interruptores, PropsTable, Usage } from "../ds-doc"
 
 const COR = "#F97316"
 
@@ -105,21 +105,29 @@ function DemoNaTela() {
 
   return (
     <div className="flex w-full flex-col gap-6">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-        <Eixo rotulo="size" valores={["sm", "md", "lg"] as const} valor={size} onChange={setSize} />
-        <Eixo rotulo="ações" valores={["nenhuma", "uma", "três"] as const} valor={acoes} onChange={setAcoes} />
-      </div>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <Interruptor id="ph-trilha" rotulo="trilha" valor={trilha} onChange={setTrilha} />
-        <Interruptor id="ph-voltar" rotulo="voltar" valor={voltar} onChange={setVoltar} />
-        <Interruptor id="ph-midia" rotulo="mídia" valor={midia} onChange={setMidia} />
-        <Interruptor id="ph-sobrancelha" rotulo="sobrancelha" valor={sobrancelha} onChange={setSobrancelha} />
-        <Interruptor id="ph-adorno" rotulo="selo" valor={adorno} onChange={setAdorno} />
-        <Interruptor id="ph-faixa" rotulo="faixa" valor={faixa} onChange={setFaixa} />
-        <Interruptor id="ph-nav" rotulo="navegação" valor={nav} onChange={setNav} />
-        <Interruptor id="ph-longo" rotulo="título longo" valor={longo} onChange={setLongo} />
-      </div>
-
+      <Controles
+        empilhar
+        inicio={
+          <>
+            <Eixo rotulo="size" valores={["sm", "md", "lg"] as const} valor={size} onChange={setSize} />
+            <Eixo rotulo="ações" valores={["nenhuma", "uma", "três"] as const} valor={acoes} onChange={setAcoes} />
+          </>
+        }
+        fim={
+          <>
+            <Interruptores>
+              <Interruptor id="ph-trilha" rotulo="trilha" valor={trilha} onChange={setTrilha} />
+              <Interruptor id="ph-voltar" rotulo="voltar" valor={voltar} onChange={setVoltar} />
+              <Interruptor id="ph-midia" rotulo="mídia" valor={midia} onChange={setMidia} />
+              <Interruptor id="ph-sobrancelha" rotulo="sobrancelha" valor={sobrancelha} onChange={setSobrancelha} />
+              <Interruptor id="ph-adorno" rotulo="selo" valor={adorno} onChange={setAdorno} />
+              <Interruptor id="ph-faixa" rotulo="faixa" valor={faixa} onChange={setFaixa} />
+              <Interruptor id="ph-nav" rotulo="navegação" valor={nav} onChange={setNav} />
+              <Interruptor id="ph-longo" rotulo="título longo" valor={longo} onChange={setLongo} />
+            </Interruptores>
+          </>
+        }
+      />
       <PageHeader key={chave} size={size} className="w-full">
         {trilha ? (
           <PageHeaderBreadcrumb>
@@ -237,7 +245,7 @@ function DemoEsqueleto() {
   const [faixa, setFaixa] = React.useState<"0" | "3">("3")
   return (
     <div className="flex w-full flex-col gap-6">
-      <Eixo rotulo="stats" valores={["0", "3"] as const} valor={faixa} onChange={setFaixa} />
+      <Controles inicio={<Eixo rotulo="stats" valores={["0", "3"] as const} valor={faixa} onChange={setFaixa} />} />
       <PageHeaderSkeleton actions={2} stats={Number(faixa)} className="w-full" />
     </div>
   )

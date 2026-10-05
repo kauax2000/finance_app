@@ -31,8 +31,7 @@ import {
   MenubarSubTrigger,
   MenubarTrigger,
 } from "@/components/ui/menubar"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 import { IphoneFrame } from "../ds-frame"
 
 const VARIANTES = ["floating", "outline", "plain", "solid"] as const
@@ -381,36 +380,14 @@ function SuperficiesDemo() {
   const [size, setSize] = React.useState<(typeof TAMANHOS)[number]>("md")
   return (
     <>
-      <div className="flex flex-wrap gap-3">
-        <ToggleGroup
-          type="single"
-          variant="segmented"
-          size="sm"
-          value={variant}
-          onValueChange={(v) => v && setVariant(v as typeof variant)}
-          aria-label="Superfície"
-        >
-          {VARIANTES.map((v) => (
-            <ToggleGroupItem key={v} value={v} className="font-mono">
-              {v}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
-        <ToggleGroup
-          type="single"
-          variant="segmented"
-          size="sm"
-          value={size}
-          onValueChange={(v) => v && setSize(v as typeof size)}
-          aria-label="Tamanho"
-        >
-          {TAMANHOS.map((t) => (
-            <ToggleGroupItem key={t} value={t} className="font-mono">
-              {t}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
-      </div>
+      <Controles
+        inicio={
+          <>
+            <Eixo rotulo="variant" valores={VARIANTES} valor={variant} onChange={setVariant} />
+            <Eixo rotulo="size" valores={TAMANHOS} valor={size} onChange={setSize} />
+          </>
+        }
+      />
       <FileiraDeExemplo variant={variant} size={size} />
     </>
   )

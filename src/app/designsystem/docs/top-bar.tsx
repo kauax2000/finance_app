@@ -44,7 +44,7 @@ import {
 import { IDENTITY_TONES } from "@/lib/avatar"
 import { cn } from "@/lib/utils"
 import { IphoneFrame, ViewportFrame } from "../ds-frame"
-import { DocNote, DocSection, Eixo, Interruptor, PropsTable, Usage } from "../ds-doc"
+import { Controles, DocNote, DocSection, Eixo, Interruptor, Interruptores, PropsTable, Usage } from "../ds-doc"
 
 /** O tom do espaço de trabalho, por índice — como na página da barra lateral. */
 const TOM = IDENTITY_TONES[2]
@@ -205,17 +205,26 @@ function DemoNaTela() {
 
   return (
     <div className="flex w-full flex-col gap-6 p-4">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-        <Eixo rotulo="size" valores={["sm", "md", "lg"] as const} valor={size} onChange={setSize} />
-        <Eixo rotulo="variant" valores={["bar", "floating"] as const} valor={variant} onChange={setVariant} />
-        <Eixo rotulo="surface" valores={["solid", "glass", "scroll"] as const} valor={surface} onChange={setSurface} />
-        <Eixo rotulo="arranjo" valores={ARRANJOS} valor={arranjo} onChange={setArranjo} />
-      </div>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <Interruptor id="tb-busca" rotulo="TopBarSearch" valor={busca} onChange={setBusca} />
-        <Interruptor id="tb-contagem" rotulo="count" valor={contagem} onChange={setContagem} />
-        <Interruptor id="tb-progresso" rotulo="TopBarProgress" valor={progresso} onChange={setProgresso} />
-      </div>
+      <Controles
+        empilhar
+        inicio={
+          <>
+            <Eixo rotulo="size" valores={["sm", "md", "lg"] as const} valor={size} onChange={setSize} />
+            <Eixo rotulo="variant" valores={["bar", "floating"] as const} valor={variant} onChange={setVariant} />
+            <Eixo rotulo="surface" valores={["solid", "glass", "scroll"] as const} valor={surface} onChange={setSurface} />
+            <Eixo rotulo="arranjo" valores={ARRANJOS} valor={arranjo} onChange={setArranjo} />
+          </>
+        }
+        fim={
+          <>
+            <Interruptores>
+              <Interruptor id="tb-busca" rotulo="TopBarSearch" valor={busca} onChange={setBusca} />
+              <Interruptor id="tb-contagem" rotulo="count" valor={contagem} onChange={setContagem} />
+              <Interruptor id="tb-progresso" rotulo="TopBarProgress" valor={progresso} onChange={setProgresso} />
+            </Interruptores>
+          </>
+        }
+      />
       <ViewportFrame title="Barra do topo numa janela" height={360} className="rounded-lg" screenClassName="bg-background">
         <Rolagem>
           <Barra
@@ -241,12 +250,20 @@ function DemoTelefone() {
 
   return (
     <div className="flex w-full flex-col items-center gap-6 p-4">
-      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3">
-        <Eixo rotulo="titleAlign" valores={["start", "center"] as const} valor={titleAlign} onChange={setTitleAlign} />
-        <Eixo rotulo="variant" valores={["bar", "floating"] as const} valor={variant} onChange={setVariant} />
-        <Interruptor id="tb-sumir" rotulo="hideOnScroll" valor={sumir} onChange={setSumir} />
-        <Interruptor id="tb-voltar" rotulo="voltar" valor={voltar} onChange={setVoltar} />
-      </div>
+      <Controles
+        inicio={
+          <>
+            <Eixo rotulo="titleAlign" valores={["start", "center"] as const} valor={titleAlign} onChange={setTitleAlign} />
+            <Eixo rotulo="variant" valores={["bar", "floating"] as const} valor={variant} onChange={setVariant} />
+          </>
+        }
+        fim={
+          <Interruptores>
+            <Interruptor id="tb-sumir" rotulo="hideOnScroll" valor={sumir} onChange={setSumir} />
+            <Interruptor id="tb-voltar" rotulo="voltar" valor={voltar} onChange={setVoltar} />
+          </Interruptores>
+        }
+      />
       <IphoneFrame title="Barra do topo num iPhone">
         <Rolagem fixa>
           {/* Uma árvore só: `phone` diz o que cada ponta mostra abaixo de md. */}

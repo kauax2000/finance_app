@@ -177,8 +177,12 @@ para antes do nascimento:
    com `pending`, esqueleto, vazio e erro, telefone (alvo de 44 e o que ele
    vira), área segura por variável, container query, nome acessível, foco,
    movimento visível, tokens com par escuro.
-4. **A página na forma fixa**: `Usage` → "Na tela" com `Eixo` e `Interruptor`
-   (de `ds-doc.tsx`; nenhuma página os redeclara) → notas → "No telefone" no
+4. **A página na forma fixa**: `Usage` → "Na tela" com `Eixo` e
+   `Interruptores` dentro de `Controles` (de `ds-doc.tsx`; nenhuma página os
+   redeclara) — **numa linha acima** do mostrador: os eixos do componente em
+   pílulas `floating` à esquerda; o cenário e os interruptores (`Toggle`
+   fantasmas soltos) à direita, sem o nome da prop à vista
+   (rodada 238) → notas → "No telefone" no
    `IphoneFrame` → comportamentos → "Esqueleto" → `PropsTable`s. Conteúdo de
    produto realista, e nenhuma afirmação que não foi medida.
 5. **Registro na mesma mudança**: `registry.ts`, `ds:docs-map`, um
