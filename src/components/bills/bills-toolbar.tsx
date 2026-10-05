@@ -4,13 +4,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
     Toolbar,
     ToolbarActions,
-    toolbarControlClassName,
-    ToolbarFilterIndicator,
+    ToolbarFilterButton,
     ToolbarFilters,
-    toolbarIconControlClassName,
 } from "@/components/ui/toolbar"
 import {
-    AdjustmentsHorizontalIcon,
     ArrowsUpDownIcon,
     FunnelIcon,
     PlusIcon,
@@ -150,7 +147,13 @@ export function BillsToolbar({
 
     return (
         <>
-            <Toolbar>
+            {/* Presa sob a barra do topo enquanto a lista rola; a placa
+                atravessa a calha da página (16px no telefone, 24 a partir de
+                `md`, a da casca do app). */}
+            <Toolbar
+                sticky
+                className="[--toolbar-bleed:--spacing(4)] md:[--toolbar-bleed:--spacing(6)]"
+            >
                 <ToolbarFilters className="max-w-full shrink-0 flex-none">
                     {/* Aba, e não filtro: ela troca o cartão da tela e reseta o
                         eixo de ordenação. O `Tabs` de fábrica (a pílula
@@ -186,122 +189,100 @@ export function BillsToolbar({
                     </Badge>
                 </ToolbarFilters>
 
+                {/* Uma árvore só. No telefone, o botão de filtros abre a folha
+                    (filtrar e ordenar juntos) — quando a tela não o põe na
+                    barra do topo (`external`); a partir de `md`, a barra de
+                    menus filtra e ordena: o rádio marca a opção valendo e o
+                    cabeçalho do painel a repete. */}
                 <ToolbarActions className="min-w-0">
-                    <div className="flex flex-row items-stretch gap-2 md:hidden">
-                        <Button
+                    {mobileFiltersTrigger === "toolbar" ? (
+                        <ToolbarFilterButton
                             type="button"
-                            variant="primary"
-                            className={cn(toolbarControlClassName, "min-w-0 flex-1 gap-2 text-sm")}
-                            onClick={onNewBill}
-                            disabled={!hasTable}
-                        >
-                            <PlusIcon className="size-4 shrink-0" />
-                            Nova conta
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="icon-lg"
-                            className={cn(
-                                toolbarIconControlClassName,
-                                "relative shrink-0",
-                                mobileFiltersTrigger === "external" && "hidden",
-                            )}
+                            label="Filtros e ordenação"
+                            count={active ? 1 : 0}
+                            className="md:hidden"
                             onClick={() => setSheetOpen(true)}
                             disabled={!hasTable}
-                            aria-label={
-                                active || sheetOpen
-                                    ? "Filtros e ordenação"
-                                    : "Filtros e ordenação"
-                            }
-                        >
-                            <AdjustmentsHorizontalIcon className="size-4 opacity-80" />
-                            {active ? (
-                                <ToolbarFilterIndicator />
-                            ) : null}
-                        </Button>
-                    </div>
-
-                    <div className="hidden shrink-0 md:flex md:flex-wrap md:items-center md:gap-2">
-                        {/* Uma barra só para filtrar e ordenar: o rádio marca a
-                            opção valendo e o cabeçalho do painel a repete. */}
-                        <Menubar size="sm" aria-label="Filtrar e ordenar">
-                            <MenubarMenu value="filtrar">
-                                <MenubarTrigger
-                                    icon={<FunnelIcon aria-hidden />}
-                                    chevron
-                                    count={active ? 1 : undefined}
-                                    disabled={!hasTable}
-                                >
-                                    Filtrar
-                                </MenubarTrigger>
-                                <MenubarContent title="Filtrar">
-                                    {mode === "pending" ? (
-                                        <MenubarRadioGroup
-                                            value={pendingFilter}
-                                            onValueChange={(v) =>
-                                                onPendingFilterChange(v as BillsPendingFilter)
-                                            }
-                                        >
-                                            {PENDING_FILTER.map((f) => (
-                                                <MenubarRadioItem key={f.value} value={f.value}>
-                                                    {f.label}
-                                                </MenubarRadioItem>
-                                            ))}
-                                        </MenubarRadioGroup>
-                                    ) : (
-                                        <MenubarRadioGroup
-                                            value={modelFilter}
-                                            onValueChange={(v) =>
-                                                onModelFilterChange(v as BillsModelFilter)
-                                            }
-                                        >
-                                            {MODEL_FILTER.map((f) => (
-                                                <MenubarRadioItem key={f.value} value={f.value}>
-                                                    {f.label}
-                                                </MenubarRadioItem>
-                                            ))}
-                                        </MenubarRadioGroup>
-                                    )}
-                                </MenubarContent>
-                            </MenubarMenu>
-                            <MenubarMenu value="ordenar">
-                                <MenubarTrigger
-                                    icon={<ArrowsUpDownIcon aria-hidden />}
-                                    chevron
-                                    disabled={!hasTable}
-                                >
-                                    Ordenar
-                                </MenubarTrigger>
-                                <MenubarContent title="Ordenar">
+                        />
+                    ) : null}
+                    <Menubar
+                        size="sm"
+                        aria-label="Filtrar e ordenar"
+                        className="max-md:hidden"
+                    >
+                        <MenubarMenu value="filtrar">
+                            <MenubarTrigger
+                                icon={<FunnelIcon aria-hidden />}
+                                chevron
+                                count={active ? 1 : undefined}
+                                disabled={!hasTable}
+                            >
+                                Filtrar
+                            </MenubarTrigger>
+                            <MenubarContent title="Filtrar">
+                                {mode === "pending" ? (
                                     <MenubarRadioGroup
-                                        value={`${sortKey}-${sortDir}`}
-                                        onValueChange={(v) => {
-                                            const [k, d] = v.split("-") as [BillsSortKey, BillsSortDir]
-                                            onSortChange(k, d)
-                                        }}
+                                        value={pendingFilter}
+                                        onValueChange={(v) =>
+                                            onPendingFilterChange(v as BillsPendingFilter)
+                                        }
                                     >
-                                        {sortOpts.map(([k, d]) => (
-                                            <MenubarRadioItem key={`${k}-${d}`} value={`${k}-${d}`}>
-                                                {sortSummaryLabel(mode, k, d)}
+                                        {PENDING_FILTER.map((f) => (
+                                            <MenubarRadioItem key={f.value} value={f.value}>
+                                                {f.label}
                                             </MenubarRadioItem>
                                         ))}
                                     </MenubarRadioGroup>
-                                </MenubarContent>
-                            </MenubarMenu>
-                        </Menubar>
-                        <Button
-                            type="button"
-                            variant="primary"
-                            size="sm"
-                            className={cn(toolbarControlClassName, "gap-2 text-xs")}
-                            onClick={onNewBill}
-                            disabled={!hasTable}
-                        >
-                            <PlusIcon className="size-4 shrink-0" />
-                            Nova conta
-                        </Button>
-                    </div>
+                                ) : (
+                                    <MenubarRadioGroup
+                                        value={modelFilter}
+                                        onValueChange={(v) =>
+                                            onModelFilterChange(v as BillsModelFilter)
+                                        }
+                                    >
+                                        {MODEL_FILTER.map((f) => (
+                                            <MenubarRadioItem key={f.value} value={f.value}>
+                                                {f.label}
+                                            </MenubarRadioItem>
+                                        ))}
+                                    </MenubarRadioGroup>
+                                )}
+                            </MenubarContent>
+                        </MenubarMenu>
+                        <MenubarMenu value="ordenar">
+                            <MenubarTrigger
+                                icon={<ArrowsUpDownIcon aria-hidden />}
+                                chevron
+                                disabled={!hasTable}
+                            >
+                                Ordenar
+                            </MenubarTrigger>
+                            <MenubarContent title="Ordenar">
+                                <MenubarRadioGroup
+                                    value={`${sortKey}-${sortDir}`}
+                                    onValueChange={(v) => {
+                                        const [k, d] = v.split("-") as [BillsSortKey, BillsSortDir]
+                                        onSortChange(k, d)
+                                    }}
+                                >
+                                    {sortOpts.map(([k, d]) => (
+                                        <MenubarRadioItem key={`${k}-${d}`} value={`${k}-${d}`}>
+                                            {sortSummaryLabel(mode, k, d)}
+                                        </MenubarRadioItem>
+                                    ))}
+                                </MenubarRadioGroup>
+                            </MenubarContent>
+                        </MenubarMenu>
+                    </Menubar>
+                    <Button
+                        type="button"
+                        variant="primary"
+                        onClick={onNewBill}
+                        disabled={!hasTable}
+                    >
+                        <PlusIcon aria-hidden />
+                        Nova conta
+                    </Button>
                 </ToolbarActions>
             </Toolbar>
 

@@ -24,7 +24,6 @@ export function DashboardToolbar({
                     budgetMonthYm={calendarYm}
                     onBudgetMonthYmChange={onCalendarYmChange}
                     dense
-                    className="md:w-auto md:justify-end"
                 />
             </ToolbarActions>
         </Toolbar>

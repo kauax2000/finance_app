@@ -192,6 +192,7 @@ export default function TransactionsPage() {
     return (
         <div className="min-w-0 max-w-full space-y-3">
             <TransactionsToolbar
+                sticky
                 filterType={filterType}
                 onFilterTypeChange={setFilterType}
                 fullPeriod={fullPeriod}
@@ -269,6 +270,7 @@ export default function TransactionsPage() {
                             onClearDescriptionQuery={() =>
                                 setFilterDescriptionQuery("")
                             }
+                            onClearAll={resetAllFilters}
                         />
                     ) : null
                 }

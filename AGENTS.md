@@ -836,7 +836,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   [`Table`](src/components/ui/table.tsx) sozinha para a tabela de leitura.
   **Nenhuma tela escreve** a conta de ordenação, a seleção com indeterminado,
   a barra de seleção, a paginação de uma lista nem o gêmeo do telefone à mão.
-- **Listas e detalhe**: [`Item`](src/components/ui/item.tsx) para linha de lista (e para o que a `Table` vira no telefone), [`DescriptionList`](src/components/ui/description-list.tsx) para pares termo/valor, [`Timeline`](src/components/ui/timeline.tsx) para histórico, [`Toolbar`](src/components/ui/toolbar.tsx) para a linha de filtros e ações.
+- **Listas e detalhe**: [`Item`](src/components/ui/item.tsx) para linha de lista (e para o que a `Table` vira no telefone), [`DescriptionList`](src/components/ui/description-list.tsx) para pares termo/valor, [`Timeline`](src/components/ui/timeline.tsx) para histórico, [`Toolbar`](src/components/ui/toolbar.tsx) para a linha de filtros e ações (presa, com o botão de filtros e as fichas — ver a rodada 229).
 - **Tema**: [`ThemeToggle`](src/components/ui/theme-toggle.tsx) — o trilho de **três** paradas (sistema, claro, escuro), e o único controle de tema. Não escreva outro com `setTheme`. Ele é `radiogroup` e não `switch` desde a rodada 116: três estados não cabem num booleano. Tem `size`: `sm` 28 (rodada 181, barras densas), `md` 32 (o padrão, o do menu da conta) e `lg` 36 (rodada 139, ao lado de um campo `lg`) — trilho = 4 + 3 paradas, a parada é a altura menos 4, e o alvo de toque é 44 nos três. Desde a rodada 181: `labels` (ícone e texto; paradas de largura igual, e o esticão tem os mesmos pixels da versão de ícone), `variant="brand"` (o brilho na borda do trilho) e `reveal` (**ligado por padrão**: a troca abre num círculo a partir da parada tocada, pela View Transitions API, com `flushSync` para o tema trocar dentro do callback; o CSS que tira o esmaecer padrão é escopado por `.theme-reveal` no `<html>`; sem API ou com movimento reduzido, troca na hora). O app roda com `enableSystem` e `defaultTheme="system"`.
 - **Carregando**: [`Skeleton`](src/components/ui/skeleton.tsx) para uma tela esperando dado; [`Spinner`](src/components/ui/spinner.tsx) só para ação curta sem fim conhecido. O `Spinner` é uma **roda desenhada**, não o `ArrowPathIcon` — a seta é o "tentar novamente" do app (rodada 178). `size` fala a escada do ícone (`sm` 14 · **`md` 16** · `lg` 20 · `xl` 24 · `2xl` 32), e dentro de um `Button` ele não leva margem: o `gap` já dá o respiro. Sozinho, leva `label`; numa região que espera, é o `SpinnerBlock`, que anuncia e só aparece depois de 300ms (`@starting-style`, sem timer). `variant="brand"` é o anel em arco-íris da tela de abertura — uma por tela.
 - **Borda de região rolável**: a dissolução é uma **primitiva do sistema**, não
@@ -1637,6 +1637,38 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   com `role="alert"`; Esc fecha o toast com foco. A pilha nasce **abaixo da barra do topo** (a base medida da
   `TopBar` mais 12px — 48 no app, 56 no catálogo), e não por cima dela. As peças com JSX moram em
   `lib/toast-parts.tsx` — `lib/toast.ts` continua `.ts`.
+- **O `Toolbar` ganhou a barra presa, a placa, a escada e as peças que as
+  telas escreviam à mão** (rodada 229). **A altura chega sem `className`**:
+  o `Button` (o de ícone em `size`), o `SelectTrigger`, o `ComboboxTrigger` e
+  o `SearchInput` que são **filho direto** de `Toolbar`, `ToolbarFilters`,
+  `ToolbarActions`, `ToolbarRow` ou de um `ButtonGroup` leem
+  `--toolbar-control` — só filho direto, porque o × da busca e o da ficha
+  também são `Button`; `toolbarControlClassName` fica para o controle
+  embrulhado num `<div>`. `size` é a escada (`sm` 28 · **`md` 32** · `lg` 36,
+  40 no dedo nos três) e desce aos botões pelo `ButtonSizeContext`; o `Tabs`
+  fala a dele pelo próprio `size`. Não há placa flutuante (saiu a pedido do
+  dono na mesma rodada). **`sticky`** prende 8px abaixo da base
+  medida da `TopBar` (`hooks/use-top-bar-bottom`, a mesma do `Toaster`; num
+  contêiner que rola com a barra dentro, a altura dela) e só presa ganha a
+  placa de barra com o fio — sobrando 8px de cada lado, para não mudar a
+  altura; `"hide"` some ao rolar para baixo no telefone, nunca com o foco
+  dentro. **`keyboard` é o `role="toolbar"` de verdade** (setas, Home, End,
+  uma parada de Tab; campo de texto e `Tabs` guardam as setas); sem ele não
+  há papel. Peças: `ToolbarButton collapse` (só ícone abaixo de `md`, o
+  rótulo segue nome — **nenhuma tela escreve as duas árvores**
+  `md:hidden`/`hidden md:flex`), `ToolbarFilterButton` (contagem rotulada,
+  ponto no telefone, o estado no nome), `ToolbarChips` (os filtros aplicados
+  numa linha própria), `ToolbarSearch` (`/` foca), `ToolbarCount` (região
+  viva) e `ToolbarActions
+  overflow="menu"` (o ⋯ clica o botão escondido; a última ação e gatilho de
+  menu não saem). **No grupo da direita o menor fica por fora**: o
+  botão só de ícone (e o que encolhe no telefone) abre a fileira e a ação
+  principal a fecha, pela ordem do código e nunca por `order` de CSS. Não há
+  divisor nem grupo (saíram a pedido do dono). Transações e Contas prendem a barra; as fichas de
+  transações são `ToolbarChips`. **É Template desde esta rodada** (era
+  Organismo): dispõe onde filtros, ações e fichas vão, e prende sob o `TopBar`
+  como as barras da página — o argumento de conter organismos diz o piso, não
+  a camada, como na `Sidebar` (rodada 221).
 - **O `Timeline` ganhou o estado, a coluna de data, a linha compacta e o
   feed** (rodada 227). **O fim é CSS e a forma é contexto**: `:last-child`
   apaga o conector do último (`isLast={false}` é a exceção), e nada mais é

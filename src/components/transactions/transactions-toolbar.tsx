@@ -3,14 +3,11 @@
 import {
     Toolbar,
     ToolbarActions,
-    toolbarControlClassName,
-    ToolbarFilterIndicator,
-    toolbarIconControlClassName,
-    ToolbarRow,
+    ToolbarFilterButton,
 } from "@/components/ui/toolbar"
 import { formatYmdPtBr } from "@/lib/transaction-date"
 import * as React from "react"
-import { AdjustmentsHorizontalIcon, XMarkIcon } from "@heroicons/react/16/solid"
+import { XMarkIcon } from "@heroicons/react/16/solid"
 
 import {
     TransactionTypeSegment,
@@ -106,6 +103,7 @@ export function TransactionsToolbar({
     toolbarLeading,
     toolbarAfterFilters,
     toolbarTrailing,
+    sticky = false,
 }: {
     filterType: TransactionFilterType
     onFilterTypeChange: (next: TransactionFilterType) => void
@@ -132,12 +130,14 @@ export function TransactionsToolbar({
     hidePeriodInFilters?: boolean
     /** Mobile filter button: do not count period as “non-default”. */
     treatPeriodAsAlwaysDefault?: boolean
-    /** Optional content to the left of the filter control (e.g. deep-link out). Factory allows separate trees for mobile vs desktop rows. */
+    /** À esquerda das ações; no telefone, numa linha própria. */
     toolbarLeading?: () => React.ReactNode
-    /** Optional content immediately to the right of the Filters control (desktop button + mobile icon). */
+    /** Logo depois de Filtros, no mesmo grupo — filho direto, então o botão mede a barra sozinho. */
     toolbarAfterFilters?: () => React.ReactNode
-    /** Right of chips + Filtros on desktop; before the filter icon on mobile. Omit on category embedded lists. */
+    /** A ação da tela, depois de Filtros; só a partir de `md` (no telefone ela mora no "+ Adicionar"). */
     toolbarTrailing?: () => React.ReactNode
+    /** Prende a barra sob a barra do topo. Só a lista de `/transactions`: dentro da página de categoria ela rola junto. */
+    sticky?: boolean
 }) {
     const isMobile = useIsMobile()
     const [filtersSheetOpen, setFiltersSheetOpenLocal] = React.useState(false)
@@ -198,115 +198,52 @@ export function TransactionsToolbar({
         />
     )
 
-    const stackMobileLeadingRow = Boolean(toolbarLeading) && Boolean(toolbarAfterFilters)
-
-    const mobileFiltersSheetTrigger = (
-        <Button
-            type="button"
-            variant="outline"
-            size="icon-lg"
-            className={cn(toolbarIconControlClassName, "relative shrink-0 md:hidden")}
-            onClick={() => setFiltersSheetOpen(true)}
-            aria-label={
-                active
-                    ? `Filtros: ${summary}${
-                          advancedFiltersActive ? " e mais filtros ativos" : ""
-                      }`
-                    : "Filtros"
-            }
-        >
-            <AdjustmentsHorizontalIcon className="size-4 opacity-80" />
-            {active ? (
-                <ToolbarFilterIndicator />
-            ) : null}
-        </Button>
-    )
-
     return (
         <>
-            <Toolbar className="max-w-full flex-col md:flex-row">
-                <ToolbarRow className="max-w-full">
-                    {showTransactionTypeSegment ? (
-                        <TransactionTypeSegment
-                            value={filterType}
-                            onChange={onFilterTypeChange}
-                            className="min-w-0 flex-1 shrink md:max-w-fit md:shrink-0"
-                        />
-                    ) : null}
-                    {!stackMobileLeadingRow ? mobileFiltersSheetTrigger : null}
-                </ToolbarRow>
-
-                {(toolbarLeading || toolbarAfterFilters) ? (
-                    <div className="min-w-0 w-full md:hidden">
-                        {stackMobileLeadingRow ? (
-                            <div className="flex min-w-0 w-full flex-col gap-2">
-                                <div className="min-w-0">{toolbarLeading?.()}</div>
-                                <div className="flex min-w-0 w-full flex-1 items-center gap-2">
-                                    {toolbarAfterFilters?.()}
-                                    {mobileFiltersSheetTrigger}
-                                </div>
-                            </div>
-                        ) : (
-                            <div
-                                className={cn(
-                                    "flex min-w-0 w-full flex-row items-stretch gap-2",
-                                    toolbarLeading && "justify-between",
-                                    !toolbarLeading && "justify-end",
-                                )}
-                            >
-                                {toolbarLeading ? (
-                                    <div className="min-w-0 shrink">{toolbarLeading()}</div>
-                                ) : null}
-                                {toolbarAfterFilters ? (
-                                    <div className="min-w-0 shrink-0">{toolbarAfterFilters()}</div>
-                                ) : null}
-                            </div>
-                        )}
+            {/* Uma árvore só: o `ToolbarFilterButton` é o ícone com o ponto no
+                telefone e "Filtros" rotulado a partir de `md`, e as fichas são
+                a linha própria embaixo (`ToolbarChips`, `basis-full`). */}
+            <Toolbar
+                sticky={sticky}
+                className={cn(
+                    "max-w-full",
+                    // A placa presa atravessa a calha da casca (`px-4 md:p-6`).
+                    sticky && "[--toolbar-bleed:--spacing(4)] md:[--toolbar-bleed:--spacing(6)]"
+                )}
+            >
+                {showTransactionTypeSegment ? (
+                    <TransactionTypeSegment
+                        value={filterType}
+                        onChange={onFilterTypeChange}
+                        className="min-w-0 flex-1 shrink md:max-w-fit md:shrink-0"
+                    />
+                ) : null}
+                {toolbarLeading ? (
+                    <div className="min-w-0 shrink-0 max-md:basis-full">
+                        {toolbarLeading()}
                     </div>
                 ) : null}
-
-                {/* O `md:justify-between` ↔ `md:justify-end` que alternava aqui em
-                    tempo de execução era a conta que o `ms-auto` do
-                    `ToolbarActions` dispensa: sem o grupo da esquerda, ele
-                    continua na borda direita sozinho. */}
-                <div className="hidden min-w-0 max-w-full flex-1 md:flex md:flex-wrap md:items-center md:gap-2">
-                    {toolbarLeading ? (
-                        <div className="shrink-0">{toolbarLeading()}</div>
-                    ) : null}
-                    <ToolbarActions className="min-w-0 max-w-full flex-1 flex-wrap md:flex-nowrap">
-                        {activeFiltersChips ? (
-                            <div className="min-w-0 max-w-full flex-1 overflow-hidden">
-                                {activeFiltersChips}
-                            </div>
-                        ) : null}
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className={cn(toolbarControlClassName, "relative shrink-0 gap-2 text-xs")}
-                            onClick={() => setFiltersSheetOpen(true)}
-                            aria-label={
-                                advancedFiltersActive
-                                    ? "Filtros avançados ativos"
-                                    : "Filtros avançados"
-                            }
-                        >
-                            <AdjustmentsHorizontalIcon className="size-4 opacity-80" />
-                            <span className="hidden sm:inline">Filtros</span>
-                            {advancedFiltersActive ? (
-                                <ToolbarFilterIndicator />
-                            ) : null}
-                        </Button>
-                        {toolbarAfterFilters ? (
-                            <div className="shrink-0">{toolbarAfterFilters()}</div>
-                        ) : null}
-                    </ToolbarActions>
+                {/* Sem o trilho de tipo, a linha das ações é só dela no telefone, e
+                    o que vem depois de Filtros pode esticar. */}
+                <ToolbarActions className={cn(!showTransactionTypeSegment && "max-md:flex-1")}>
+                    <ToolbarFilterButton
+                        type="button"
+                        active={active}
+                        onClick={() => setFiltersSheetOpen(true)}
+                        aria-label={
+                            active
+                                ? `Filtros: ${summary}${
+                                      advancedFiltersActive ? " e mais filtros ativos" : ""
+                                  }`
+                                : "Filtros"
+                        }
+                    />
+                    {toolbarAfterFilters?.()}
                     {toolbarTrailing ? (
-                        <div className="flex shrink-0 items-stretch gap-2">
-                            {toolbarTrailing()}
-                        </div>
+                        <div className="hidden md:contents">{toolbarTrailing()}</div>
                     ) : null}
-                </div>
+                </ToolbarActions>
+                {activeFiltersChips}
             </Toolbar>
 
             <Sheet

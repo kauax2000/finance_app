@@ -8,16 +8,8 @@ import {
     paymentMethodLabel,
     type PaymentMethod,
 } from "@/lib/payment-methods"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-    Popover,
-    PopoverBody,
-    PopoverContent,
-    PopoverHeader,
-    PopoverTitle,
-    PopoverTrigger,
-} from "@/components/ui/popover"
+import { ToolbarChips, type ToolbarChip } from "@/components/ui/toolbar"
 import {
     transactionsPresetSummaryLabel,
     type TransactionsDatePresetKey,
@@ -28,16 +20,6 @@ import { cn } from "@/lib/utils"
 type InstallmentPlanLite = { id: string; description: string | null }
 type SubscriptionLite = { id: string; name: string }
 
-/** Tailwind `gap-2` default. */
-const CHIP_ROW_GAP_PX = 8
-
-type ActiveFilterChipItem = {
-    key: string
-    label: string
-    title?: string
-    onRemove: () => void
-}
-
 function typeLabelPt(filterType: TransactionFilterType): string {
     if (filterType === "expense") return "Despesas"
     if (filterType === "income") return "Receitas"
@@ -46,38 +28,6 @@ function typeLabelPt(filterType: TransactionFilterType): string {
 
 function compactId(id: string): string {
     return `${id.slice(0, 8)}…`
-}
-
-function Chip({
-    label,
-    title,
-    onRemove,
-    className,
-}: {
-    label: string
-    title?: string
-    onRemove: () => void
-    className?: string
-}) {
-    return (
-        <Badge
-            tone="success"
-            className={cn(
-                "inline-flex max-w-[9.5rem] shrink-0 items-center gap-1.5 pr-1.5 sm:max-w-[11rem]",
-                className
-            )}
-            title={title ?? label}
-        >
-            <span className="min-w-0 flex-1 truncate">{label}</span>
-            <FilterChipRemoveButton
-                aria-label={`Remover filtro: ${label}`}
-                onClick={(e) => {
-                    e.stopPropagation()
-                    onRemove()
-                }}
-            />
-        </Badge>
-    )
 }
 
 /**
@@ -138,6 +88,7 @@ export function TransactionsActiveFiltersChips({
     hideCategoryFilters = false,
     hideTypeFilter = false,
     hidePeriodFilter = false,
+    onClearAll,
     className,
 }: {
     filterType: TransactionFilterType
@@ -176,10 +127,12 @@ export function TransactionsActiveFiltersChips({
     hideTypeFilter?: boolean
     /** Hide the período chip (e.g. month is fixed by the category page header). */
     hidePeriodFilter?: boolean
+    /** O "Limpar tudo" da linha — o mesmo da folha de filtros. */
+    onClearAll?: () => void
     className?: string
 }) {
-    const filterChipItems = React.useMemo((): ActiveFilterChipItem[] => {
-        const out: ActiveFilterChipItem[] = []
+    const filterChipItems = React.useMemo((): ToolbarChip[] => {
+        const out: ToolbarChip[] = []
 
         if (!hideTypeFilter && filterType !== "all") {
             const label = `Tipo: ${typeLabelPt(filterType)}`
@@ -355,145 +308,13 @@ export function TransactionsActiveFiltersChips({
         subscriptions,
     ])
 
-    const chipItemsKey = React.useMemo(
-        () => filterChipItems.map((x) => x.key).join("\0"),
-        [filterChipItems]
-    )
-
-    const chipSlotRef = React.useRef<HTMLDivElement>(null)
-    const measureRef = React.useRef<HTMLDivElement>(null)
-
-    const [inlineCount, setInlineCount] = React.useState(
-        () => filterChipItems.length
-    )
-
-    React.useLayoutEffect(() => {
-        if (filterChipItems.length === 0) {
-            setInlineCount(0)
-            return
-        }
-
-        const run = () => {
-            const slot = chipSlotRef.current
-            const measure = measureRef.current
-            const n = filterChipItems.length
-            if (!slot || !measure || n === 0) return
-
-            const available = slot.clientWidth
-            if (available <= 0) return
-
-            const children = measure.children
-            if (children.length !== n) return
-
-            const widths: number[] = []
-            for (let i = 0; i < n; i++) {
-                widths.push(
-                    (children[i] as HTMLElement).getBoundingClientRect().width
-                )
-            }
-
-            const gap = CHIP_ROW_GAP_PX
-            let bestK = 0
-            for (let k = n; k >= 0; k--) {
-                let rowW = 0
-                for (let i = 0; i < k; i++) rowW += widths[i]!
-                if (k >= 2) rowW += (k - 1) * gap
-                if (rowW <= available + 0.5) {
-                    bestK = k
-                    break
-                }
-            }
-            setInlineCount((prev) => (prev === bestK ? prev : bestK))
-        }
-
-        run()
-        const slot = chipSlotRef.current
-        if (!slot || typeof ResizeObserver === "undefined") return
-        const ro = new ResizeObserver(() => run())
-        ro.observe(slot)
-        return () => ro.disconnect()
-    }, [chipItemsKey, filterChipItems])
-
-    if (filterChipItems.length === 0) return null
-
-    const inline = filterChipItems.slice(
-        0,
-        Math.min(inlineCount, filterChipItems.length)
-    )
-    const overflow = filterChipItems.slice(inline.length)
-
+    // A linha é do `Toolbar`: renderizada como filha direta dele, ela ocupa a
+    // linha de baixo inteira, e o que passa de seis recolhe no `+N`.
     return (
-        <div
-            className={cn(
-                "relative flex w-full min-w-0 max-w-full items-center justify-end gap-2",
-                className
-            )}
-        >
-            <div
-                ref={measureRef}
-                aria-hidden
-                className="invisible pointer-events-none absolute top-0 -left-[9999px] z-[-1] flex w-max flex-nowrap items-center gap-2"
-            >
-                {filterChipItems.map((item) => (
-                    <Chip
-                        key={item.key}
-                        label={item.label}
-                        title={item.title}
-                        onRemove={() => {}}
-                    />
-                ))}
-            </div>
-            <div
-                ref={chipSlotRef}
-                className="min-w-0 max-w-full flex-1 overflow-hidden"
-            >
-                <div className="flex min-w-0 flex-nowrap items-center justify-end gap-2">
-                    {inline.map((item) => (
-                        <Chip
-                            key={item.key}
-                            label={item.label}
-                            title={item.title}
-                            onRemove={item.onRemove}
-                        />
-                    ))}
-                </div>
-            </div>
-            {overflow.length > 0 ? (
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-7 shrink-0 px-2.5 text-xs"
-                            aria-label={`Ver mais ${overflow.length} filtros ativos`}
-                        >
-                            +{overflow.length}{" "}
-                            {overflow.length === 1 ? "filtro" : "filtros"}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" size="sm" padding="none">
-                        <PopoverHeader>
-                            <PopoverTitle className="text-2xs leading-tight text-muted-foreground">
-                                Mais filtros ativos
-                            </PopoverTitle>
-                        </PopoverHeader>
-                        <PopoverBody className="max-h-64 py-1.5">
-                            <div className="flex flex-col gap-1.5">
-                                {overflow.map((item) => (
-                                    <Chip
-                                        key={item.key}
-                                        label={item.label}
-                                        title={item.title}
-                                        onRemove={item.onRemove}
-                                        className="flex w-full min-w-0 max-w-none justify-between"
-                                    />
-                                ))}
-                            </div>
-                        </PopoverBody>
-                    </PopoverContent>
-                </Popover>
-            ) : null}
-        </div>
+        <ToolbarChips
+            items={filterChipItems}
+            onClearAll={onClearAll}
+            className={className}
+        />
     )
 }

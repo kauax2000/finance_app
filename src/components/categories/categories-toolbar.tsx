@@ -1,6 +1,6 @@
 "use client"
 
-import { Toolbar, ToolbarActions } from "@/components/ui/toolbar"
+import { Toolbar, ToolbarActions, ToolbarButton } from "@/components/ui/toolbar"
 import { CalendarIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
@@ -434,17 +434,14 @@ export function CategoriesToolbar({
                         className="hidden md:flex"
                     />
                 ) : null}
-                <Button
+                <ToolbarButton
                     type="button"
                     variant="primary"
-                    size="sm"
-                    className={cn(DENSO_QUADRADO, "shrink-0 rounded-lg p-0 text-xs md:size-auto md:h-(--toolbar-control) md:gap-2 md:px-3 md:w-auto")}
-                    aria-label="Nova categoria"
+                    collapse
+                    icon={<PlusIcon aria-hidden />}
+                    label="Nova categoria"
                     onClick={onNewCategory}
-                >
-                    <PlusIcon className="size-4 shrink-0" />
-                    <span className="hidden truncate md:inline">Nova categoria</span>
-                </Button>
+                />
             </ToolbarActions>
         </Toolbar>
     )

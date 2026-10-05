@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, type ComponentProps } from "react"
+import { useEffect, type ComponentProps } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { Toaster as Sonner, toast } from "sonner"
@@ -13,6 +13,7 @@ import {
 } from "@heroicons/react/16/solid"
 
 import { Spinner } from "@/components/ui/spinner"
+import { useTopBarBottom } from "@/hooks/use-top-bar-bottom"
 import { registrarNavegacaoDoToast, TOAST_DEFAULT_MS } from "@/lib/toast"
 
 type ToasterProps = ComponentProps<typeof Sonner>
@@ -51,7 +52,7 @@ export function Toaster({ ...props }: ToasterProps) {
   const { resolvedTheme } = useTheme()
   const router = useRouter()
   const pathname = usePathname()
-  const topo = useAbaixoDaBarra(pathname)
+  const topo = useTopBarBottom(true, pathname)
 
   // O "Ver" de um toast navega pelo roteador, sem recarregar a página.
   useEffect(() => {
@@ -150,28 +151,4 @@ export function Toaster({ ...props }: ToasterProps) {
       {...props}
     />
   )
-}
-
-/**
- * A base da barra do topo, em px a partir do topo da janela — a área segura
- * entra na conta sozinha, porque a `TopBar` a soma à própria altura. As
- * barras não têm a mesma altura (48 no app, 56 no catálogo), então ela é
- * medida, e não cravada; o observador acompanha a troca de degrau, e a rota
- * troca de barra. `null` quando não há barra.
- */
-function useAbaixoDaBarra(pathname: string | null) {
-  const [base, setBase] = useState<number | null>(null)
-  useEffect(() => {
-    const barra = document.querySelector<HTMLElement>('[data-slot="top-bar"]')
-    if (!barra) {
-      const id = window.requestAnimationFrame(() => setBase(null))
-      return () => window.cancelAnimationFrame(id)
-    }
-    const ro = new ResizeObserver(() => {
-      setBase(Math.round(barra.getBoundingClientRect().bottom))
-    })
-    ro.observe(barra)
-    return () => ro.disconnect()
-  }, [pathname])
-  return base
 }

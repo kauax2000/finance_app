@@ -1,12 +1,6 @@
 "use client"
 
-import {
-    Toolbar,
-    ToolbarActions,
-    toolbarControlClassName,
-    toolbarIconControlClassName,
-    ToolbarRow,
-} from "@/components/ui/toolbar"
+import { Toolbar, ToolbarActions, ToolbarButton } from "@/components/ui/toolbar"
 import { ArrowsUpDownIcon, ChevronDownIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,7 +10,6 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { cn } from "@/lib/utils"
 
 export type SubscriptionStatusFilter = "all" | "active" | "inactive"
 
@@ -78,72 +71,52 @@ export function SubscriptionsToolbar({
     onNewSubscription: () => void
 }) {
     return (
-        <>
-            <Toolbar>
-                <ToolbarRow>
-                    <Tabs
-                        value={statusFilter}
-                        onValueChange={(next) =>
-                            onStatusFilterChange(next as typeof statusFilter)
-                        }
-                        className="min-w-0 flex-1 md:flex-initial md:shrink-0"
-                    >
-                        <TabsList aria-label="Status da assinatura" className="w-full md:w-auto">
-                            {STATUS_TABS.map((tab) => (
-                                <TabsTrigger key={tab.value} value={tab.value}>
-                                    {tab.label}
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
-                    </Tabs>
+        <Toolbar>
+            <Tabs
+                value={statusFilter}
+                onValueChange={(next) =>
+                    onStatusFilterChange(next as typeof statusFilter)
+                }
+                className="min-w-0 flex-1 md:flex-initial md:shrink-0"
+            >
+                <TabsList aria-label="Status da assinatura" className="w-full md:w-auto">
+                    {STATUS_TABS.map((tab) => (
+                        <TabsTrigger key={tab.value} value={tab.value}>
+                            {tab.label}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+            </Tabs>
 
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="icon-lg"
-                                className={cn(toolbarIconControlClassName, "shrink-0 md:hidden")}
-                                aria-label="Ordenar"
-                            >
-                                <ArrowsUpDownIcon className="size-4 opacity-80" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" size="xl">
-                            <SortPresetDropdownItems onPick={onSortChange} />
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </ToolbarRow>
-
-                <ToolbarActions className="hidden md:flex">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className={cn(toolbarControlClassName, "gap-1.5 text-xs")}
-                            >
-                                Ordenar
-                                <ChevronDownIcon className="size-3.5 opacity-70" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" size="xl">
-                            <SortPresetDropdownItems onPick={onSortChange} />
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    <Button
-                        type="button"
-                        variant="primary"
-                        size="sm"
-                        className={cn(toolbarControlClassName, "gap-2 text-xs")}
-                        onClick={onNewSubscription}
-                    >
-                        <PlusIcon className="size-4 shrink-0" />
-                        Nova assinatura
-                    </Button>
-                </ToolbarActions>
-            </Toolbar>
-        </>
+            {/* Um "Ordenar" só: rotulado a partir de `md`, só o ícone abaixo
+                (era um par `md:hidden` / `hidden md:flex`). "Nova assinatura"
+                continua só a partir de `md`, como antes. */}
+            <ToolbarActions>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <ToolbarButton
+                            type="button"
+                            collapse
+                            icon={<ArrowsUpDownIcon aria-hidden />}
+                            label="Ordenar"
+                        >
+                            <ChevronDownIcon aria-hidden className="opacity-70" />
+                        </ToolbarButton>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" size="xl">
+                        <SortPresetDropdownItems onPick={onSortChange} />
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                <Button
+                    type="button"
+                    variant="primary"
+                    className="max-md:hidden"
+                    onClick={onNewSubscription}
+                >
+                    <PlusIcon aria-hidden />
+                    Nova assinatura
+                </Button>
+            </ToolbarActions>
+        </Toolbar>
     )
 }

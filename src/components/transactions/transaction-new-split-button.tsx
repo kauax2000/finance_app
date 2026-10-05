@@ -11,7 +11,6 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { NewTransactionMode } from "@/components/transactions/transactions-toolbar"
-import { toolbarControlClassName, toolbarIconControlClassName } from "@/components/ui/toolbar"
 import { cn } from "@/lib/utils"
 
 export type TransactionNewSplitButtonProps = {
@@ -35,7 +34,7 @@ export function TransactionNewSplitButton({
             <Button
                 type="button"
                 variant="primary"
-                className={cn(toolbarControlClassName, "min-w-0 flex-1 justify-center gap-2 text-xs")}
+                className="min-w-0 flex-1 justify-center"
                 onClick={() => onNew("expense")}
             >
                 <PlusIcon />
@@ -47,7 +46,7 @@ export function TransactionNewSplitButton({
                         type="button"
                         variant="primary"
                         size="icon-md"
-                        className={cn(toolbarIconControlClassName, "shrink-0")}
+                        className="shrink-0"
                         aria-label="Mais tipos de lançamento"
                     >
                         <ChevronDownIcon className="opacity-90" aria-hidden />

@@ -172,6 +172,9 @@ describe("taxonomia", () => {
       // `AuthShell`, que fica em `components/layout/` amarrando os dois.
       "split-shell",
       "table-panel",
+      // A barra de uma lista, desde a rodada 229: dispõe filtros, ações e
+      // fichas, e prende sob o `TopBar` como as barras da página.
+      "toolbar",
       "top-bar",
     ])
   })

@@ -18285,3 +18285,105 @@ sonner pinta o × no escuro em `[data-sonner-theme=dark] … [data-close-button]
 (0,4,0), que empatava e vencia pela ordem — o fundo continuava o vidro. A regra
 subiu um degrau com `[data-sonner-theme]`, e a do telefone junto, senão ela
 perderia para a de cima.
+
+### Rodada 229 — o Toolbar: a barra presa que ganha a placa, a escada e a altura que chega sozinha, o botão de filtros, o botão que encolhe, as fichas, a busca e a contagem, o teclado de toolbar, o ⋯ e o some-ao-rolar; as barras do app migradas
+
+**O que a página afirmava e não era mais verdade.** O cabeçalho do arquivo
+dizia que o componente tinha **zero consumidores** (eram oito) e "zero
+eixos"; a página do catálogo dizia que a contagem do filtro ficava "no verde
+da marca" (o `Badge` padrão é cinza, e a marca é preto e branco desde a
+rodada 83), que "os dois são `Tabs variant="solid"`" (o padrão é `floating`
+desde a 226), e que o `size` do `Tabs` "nomeia a bandeja" (mede o gatilho
+desde a 13). Os demos ainda passavam `glass` ao `TabsList`.
+
+**A altura chega sem `className`.** Medido antes: as oito barras escreviam
+`toolbarControlClassName` ou `toolbarIconControlClassName` em cada controle,
+quase sempre com `size="sm"`, `text-xs` e `gap-*` juntos. Agora a raiz traz
+cinco regras de **filho direto** (`:is(&, & [data-slot=toolbar-filters], …) >
+[data-slot=button]`, especificidade 0,4,0) — descendente esticaria o × da
+busca e o da ficha, que também são `Button`. Escritas por extenso: montadas
+por template literal, o Tailwind não as veria. Medido no catálogo: 28, 32 e
+36 nos três degraus, o botão de ícone quadrado, o fio a 60%.
+
+**A escada.** `size` sm · md · lg publica 28/32/36, o piso do dedo continua
+40 nos três, e o degrau desce aos botões pelo `ButtonSizeContext` (recuo e
+corpo de texto). O `Tabs` não lê a variável: ele fala a escada pelo próprio
+`size`, e o demo os amarra.
+
+**Presa.** `sticky` prende 8px abaixo da base da `TopBar`, medida pelo hook
+que o `Toaster` já tinha (`hooks/use-top-bar-bottom`, extraído). Três casos
+de quem rola: a página (a base da barra), um contêiner com a barra dentro (o
+`PhoneFrame`: a altura dela, medida 48 — 56 de base menos 8 de borda) e um
+contêiner sem barra (zero). O `top` do sticky conta da borda **de dentro**
+do contêiner: a primeira medição errava por 1px (`clientTop`) e a barra
+nunca acusava presa. A placa só aparece presa, na tinta de barra, sobrando
+8px de cada lado da fileira para não mudar a altura. `"hide"` some ao rolar
+para baixo, só no telefone, e nunca com o foco dentro. **Num iframe** a
+barra e a rolagem são as do documento da barra (`ownerDocument`), senão o
+demo do telefone mediria a barra do catálogo.
+
+**O teclado.** `keyboard` dá o papel e o comportamento: setas, Home e End
+entre os controles visíveis, uma parada de Tab. Campo de texto guarda as
+setas; o `Tabs` as consome (`defaultPrevented`) e a aba ativa fica com o
+`tabIndex` que o Radix escreve. Medido: Filtros → Exportar → Nova → Todas
+(volta), Home e End.
+
+**O ⋯.** `ToolbarActions overflow="menu"` esconde do começo para o fim os
+`Button` sem menu próprio até caber numa linha com o ⋯, e o item do menu
+**clica o botão escondido** — o `onClick`, o `href` e o diálogo são os
+mesmos, sem registro. A primeira versão media o grupo de filtros pela caixa,
+e um `flex-1` mede a sobra inteira: escondia tudo a 620px. Lido com `flex: 0
+0 auto` durante a medição, a caixa de 760/620/520/420 mostra 4/3/2/1.
+
+**Peças.** `ToolbarButton collapse`, `ToolbarFilterButton`, `ToolbarChips`,
+`ToolbarSearch`, `ToolbarCount`. As
+fichas focam a vizinha ao sair uma (medido).
+O botão que encolhe esconde no quadrado o que vem depois do rótulo (um
+chevron, a contagem) e mantém só a `marker` (o ponto do filtro); fora de um
+`Toolbar` a largura cai na reserva de 32. Com `active` e sem número, o
+`ToolbarFilterButton` mostra no desktop um ponto em linha depois do rótulo —
+antes, Transações, que sabe que há filtro mas não quantos, ficava sem marca.
+
+**O app.** As oito barras migraram: as duas árvores do telefone e do desktop
+viraram uma (assinaturas, contas, transações, cartões, categorias), os
+`size="sm"`, `text-xs`, `gap-*` e as réguas escritas em cada controle
+saíram, e o "Ordenar" das assinaturas é um menu só. Transações e Contas
+prendem a barra (`[--toolbar-bleed]` na calha da casca, 16 e 24); a da
+categoria não. As fichas de transações são `ToolbarChips` — sem a medição
+de largura e o `+N` em popover, aparecendo também no telefone, com "Limpar
+tudo" no mesmo `resetAllFilters` da folha. As telas ficam atrás de login e
+não foram vistas.
+
+**A placa flutuante saiu.** `variant="floating"` (a fileira numa pílula com
+anel e sombra, na tinta dos flutuantes) foi feita e removida a pedido do
+dono na mesma rodada; a barra é a linha solta, e só presa ganha superfície.
+
+**O divisor e o grupo saíram, e o menor fica por fora.** `ToolbarSeparator`
+(e o `ToolbarGroup`, que só existia para ser separado por ele) foram
+removidos a pedido do dono. E a ordem do grupo da direita virou regra: do
+menor para o maior, de fora para dentro — o botão só de ícone abre a fileira
+e a ação principal a fecha. Pela ordem do código, e não por `order` de CSS,
+para o Tab seguir o que se vê; as barras do app já estavam nessa ordem.
+
+**A placa presa vazava nos cantos de um contêiner arredondado.** Presa, ela
+encosta na borda de cima de quem rola, e no demo do catálogo essa caixa tem
+14px de raio: os cantos retos da placa apareciam por fora da curva, porque o
+vidro (`backdrop-filter`) escapa do recorte arredondado do contêiner no
+Chrome. A barra lê o raio de dentro de quem rola (`borderTopLeftRadius` menos
+a borda, 13px) e o publica em `--toolbar-plate-r`, que a placa usa em cima.
+Na página não há raio, e a variável não é escrita.
+
+**O ⋯ mostra o ícone de cada botão.** O item copia o `svg` do botão
+escondido, então a tela não declara o ícone duas vezes; e leva a maiúscula
+inicial que o `Button` dava por `::first-letter` — no menu, o rótulo saía
+"imprimir". O "Limpar tudo" das fichas passou de `link` a `tertiary`.
+
+**O Toolbar virou Template.** Ele foi Organismo até aqui pelo argumento de
+que contém organismos (o ⋯ é um `DropdownMenu`, e na prática ele carrega um
+`Tabs`) — o mesmo que a `Sidebar` derrubou na rodada 221: isso diz o piso, e
+não a camada. Pela régua ("o que estrutura a página, e não o que ela
+contém") ele é Template: não mostra conteúdo nenhum por si, dispõe onde os
+filtros, as ações e as fichas vão, e depois desta rodada age como as barras
+da página — prende sob o `TopBar`, mede a base dele e some ao rolar. Entrou
+na lista do `taxonomy.test.ts` (asserção 5) e na ordem alfabética dos
+Templates, entre Table Panel e Top Bar.

@@ -26,13 +26,11 @@ import {
     CreditCardsViewSegment,
     type CreditCardsPageView,
 } from "@/components/credit-cards/credit-cards-view-segment"
-import { Button } from "@/components/ui/button"
 import {
     Toolbar,
     ToolbarActions,
-    toolbarIconControlClassName,
+    ToolbarButton,
 } from "@/components/ui/toolbar"
-import { cn } from "@/lib/utils"
 import {
   Dialog,
   DialogBody,
@@ -341,18 +339,15 @@ export default function CreditCardsPageClient() {
                     className="min-w-0 flex-1 md:max-w-full md:flex-none"
                 />
                 <ToolbarActions>
-                    <Button
+                    <ToolbarButton
                         type="button"
                         variant="primary"
-                        size="sm"
-                        className={cn(toolbarIconControlClassName, "shrink-0 rounded-lg p-0 text-xs md:size-auto md:h-(--toolbar-control) md:w-auto md:gap-2 md:px-3")}
-                        aria-label="Novo cartão"
+                        collapse
+                        icon={<PlusIcon aria-hidden />}
+                        label="Novo cartão"
                         disabled={!canCreateCard}
                         onClick={() => setCreateOpen(true)}
-                    >
-                        <PlusIcon className="size-4 shrink-0" />
-                        <span className="hidden md:inline">Novo cartão</span>
-                    </Button>
+                    />
                 </ToolbarActions>
             </Toolbar>
 

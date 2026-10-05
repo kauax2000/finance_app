@@ -30,8 +30,6 @@ import {
 } from "@/lib/category-expense-month-rows"
 import type { Transaction } from "@/lib/supabase"
 import { TransactionsToolbar } from "@/components/transactions/transactions-toolbar"
-import { toolbarControlClassName } from "@/components/ui/toolbar"
-import { cn } from "@/lib/utils"
 import { TransactionsActiveFiltersChips } from "@/components/transactions/transactions-active-filters-chips"
 import { TransactionsTable } from "@/components/transactions/transactions-table"
 import { TransactionFormDialog } from "@/components/transactions/transaction-form-dialog"
@@ -293,13 +291,11 @@ export function CategoryEmbeddedTransactions({
                         toolbarAfterFilters={() => (
                             <Button
                                 asChild
-                                type="button"
                                 variant="outline"
-                                size="sm"
-                                className={cn(toolbarControlClassName, "min-w-0 flex-1 gap-2 px-2 text-xs md:w-auto")}
+                                className="min-w-0 flex-1"
                             >
                                 <Link href={transactionsListHref}>
-                                    <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0 md:size-4" />
+                                    <ArrowTopRightOnSquareIcon aria-hidden />
                                     <span className="truncate">Ver em Transações</span>
                                 </Link>
                             </Button>
@@ -381,6 +377,7 @@ export function CategoryEmbeddedTransactions({
                                     onClearDescriptionQuery={() =>
                                         setFilterDescriptionQuery("")
                                     }
+                                    onClearAll={resetAllFilters}
                                     hideCategoryFilters
                                     hideTypeFilter
                                     hidePeriodFilter={lockPeriodToDefault}

@@ -250,7 +250,6 @@ const LAYER: Record<string, Layer> = {
   timeline: "Organisms",
   /** Uma pilha de toasts, cada um ícone + título + texto + ação. */
   sonner: "Organisms",
-  toolbar: "Organisms",
 
   // ── Templates: o que estrutura a página ─────────────────────────────────
   /**
@@ -290,6 +289,15 @@ const LAYER: Record<string, Layer> = {
    * a tabela e o rodapé de paginação vão.
    */
   "table-panel": "Templates",
+  /**
+   * A barra de uma lista: dispõe onde os filtros, as ações e as fichas vão, e
+   * não mostra conteúdo nenhum por si. Foi Organismo até a rodada 229 pelo
+   * argumento de que contém organismos (o ⋯ é um `DropdownMenu`, e na
+   * prática ela carrega um `Tabs`) — o mesmo que a `Sidebar` derrubou na 221:
+   * isso diz o piso, não a camada. Desde a 229 ela age como as barras da
+   * página: prende sob o `TopBar`, mede a base dele e some ao rolar.
+   */
+  toolbar: "Templates",
   /**
    * A barra do topo da janela. Ela não mostra conteúdo nenhum por si — dispõe
    * onde o voltar, o título e as ações vão, e fica parada enquanto a tela rola.
@@ -473,7 +481,6 @@ export const REGISTRY: RegistryEntry[] = [
   entry("tabs", "Tabs", "Alterna entre painéis do mesmo nível — a pílula flutuante, o marcador que corre, a contagem, o Mais e a navegação.", ui("tabs"), "Tabs, TabsList, TabsTrigger, TabsContent, TabsAdd, TabsNav, TabsNavLink"),
   entry("timeline", "Timeline", "Feed cronológico de eventos: estado na trilha, coluna de data, linha compacta, faixa de dia presa, recolhidos, detalhe, link, tempo relativo, feed ao vivo e o fio que se desenha.", ui("timeline"), "Timeline, TimelineItem, TimelineHeader, TimelineTitle, TimelineDescription, TimelineTime, TimelineSeparator, TimelineGroup, TimelineActions, TimelineCard, TimelineDetail, TimelineLink, TimelineCollapsed, TimelineSkeleton"),
   entry("sonner", "Toast", "Confirmação passageira, fora do fluxo: a placa flutuante de vidro com o tom no ícone, o Desfazer com contagem, o Ver, o progresso, a pílula e os repetidos.", ui("sonner"), 'import { toastSuccess, toastError, toastUndo, toastPromise, toastProgress, toastPill } from "@/lib/toast"'),
-  entry("toolbar", "Toolbar", "Filtros e ações acima de uma lista.", ui("toolbar"), "Toolbar, ToolbarRow, ToolbarFilters, ToolbarActions, ToolbarFilterIndicator"),
 
   // ── Templates ───────────────────────────────────────────────────────────
   entry("bottom-bar", "Bottom Bar", "A barra de abas do telefone.", ui("bottom-bar"), "BottomBar, BottomBarRow, BottomBarTabs, BottomBarTab, BottomBarSlot, bottomBarActionClassName"),
@@ -483,6 +490,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("sidebar", "Sidebar", "A navegação lateral do app.", ui("sidebar"), "Sidebar, SidebarProvider, SidebarInset, SidebarTrigger, SidebarRail, SidebarContent, SidebarGroup, SidebarMenu, SidebarMenuButton, useSidebar"),
   entry("split-shell", "Split Shell", "Campo de um lado, coluna de conteúdo do outro.", ui("split-shell"), "SplitShell"),
   entry("table-panel", "Table Panel", "Tabela com moldura, ações e paginação.", ui("table-panel"), "TablePanel, TablePanelToolbar, TablePanelFooter"),
+  entry("toolbar", "Toolbar", "Filtros e ações acima de uma lista — presa sob a barra do topo, com o botão de filtros, as fichas, a busca, o ⋯ e o teclado de toolbar.", ui("toolbar"), "Toolbar, ToolbarFilters, ToolbarActions, ToolbarRow, ToolbarButton, ToolbarFilterButton, ToolbarSearch, ToolbarCount, ToolbarChips, ToolbarFilterIndicator"),
   entry("top-bar", "Top Bar", "A barra do topo da janela.", ui("top-bar"), "TopBar, TopBarStart, TopBarTitle, TopBarContent, TopBarActions"),
 ]
 
