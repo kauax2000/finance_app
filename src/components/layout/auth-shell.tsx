@@ -8,7 +8,7 @@ import { SplitShell } from "@/components/ui/split-shell"
  * O casco das telas de acesso: o `SplitShell` com o painel de marca deste
  * produto encaixado.
  *
- * São oito linhas, e elas existem para que as cinco telas não repitam
+ * São poucas linhas, e elas existem para que as cinco telas não repitam
  * `aside={<AuthBrandPanel />}` — e, mais importante, para que o Template do
  * design system continue sem saber o que é uma carteira. O genérico mora em
  * `ui/split-shell.tsx`; o que é deste produto mora aqui e no
@@ -17,14 +17,30 @@ import { SplitShell } from "@/components/ui/split-shell"
 export function AuthShell({
     title,
     description,
+    back,
+    footer,
+    step,
     children,
 }: {
     title: string
     description?: ReactNode
+    /** O topo da coluna: o `SplitShellBack`. */
+    back?: ReactNode
+    /** O pé da coluna: o `SplitShellFooter`. */
+    footer?: ReactNode
+    /** O passo do fluxo; ao mudar, o conteúdo desliza e o foco vai ao título. */
+    step?: string | number
     children: ReactNode
 }) {
     return (
-        <SplitShell aside={<AuthBrandPanel />} title={title} description={description}>
+        <SplitShell
+            aside={<AuthBrandPanel />}
+            title={title}
+            description={description}
+            back={back}
+            footer={footer}
+            step={step}
+        >
             {children}
         </SplitShell>
     )

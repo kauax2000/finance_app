@@ -767,8 +767,10 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   Ver as rodadas 82 e 230.
 - **A página que existe fora da casca do app**:
   [`SplitShell`](src/components/ui/split-shell.tsx) — campo de um lado, coluna
-  de conteúdo do outro, sem cartão, empilhando abaixo de `lg`. O campo entra por
-  **slot**, porque o que ele mostra é conteúdo de produto. Quem amarra os dois
+  de conteúdo do outro, sem cartão, empilhando abaixo de **48rem do próprio
+  casco** (container query, desde a rodada 235). O conteúdo do campo entra por
+  **slot**, porque o que ele mostra é conteúdo de produto; a geometria dele é o
+  `SplitShellAside`. Quem amarra os dois
   neste app é o `AuthShell`, em `components/layout/`, e as cinco telas de acesso
   o vestem. Dentro do app, **nenhuma tela usa o `PageHeader` hoje** (medido
   na rodada 232): o título mora na barra do topo, as listas abrem direto na
@@ -1739,6 +1741,23 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   balance` fora de `@layer`, e ele religava a quebra. **O telefone é um primeiro desenho**: o dono vai mexer
   bastante nele ao revisar as telas do app, e o design system se atualiza
   junto; a prévia num iPhone fica na página até lá.
+- **O `SplitShell` quebra pelo casco e ganhou o lado, a proporção, a coluna em
+  três faixas, as peças e quatro comportamentos** (rodada 235). A divisão é
+  uma container query (`@container/split-shell`, 48rem), e não `lg:` da
+  janela — dentro do campo, as telas escrevem `@3xl/split-shell:` e
+  `@max-3xl/split-shell:`. `side` (`start` | `end`, a ordem de leitura
+  intacta), `ratio` (`wide` 5:6 · `even` · `narrow` 1:2), e a coluna com
+  `back` em cima e `footer` embaixo. Peças: **`SplitShellAside`** (a
+  geometria do campo — margem, canto, a área segura do notch por
+  `--split-shell-safe-top` —, `surface` `brand` | `muted` e `brand`, a marca
+  que a faixa mantém; **nenhuma tela escreve `brand-field rounded-2xl m-4`
+  nem o `env(safe-area-inset-top)` do campo**), `SplitShellFooter` (os links
+  de dentro vestem o acento), `SplitShellBack` e `SplitShellSkeleton`.
+  Comportamentos: `asideMobile` (`card` | `band` | `logo` — a marca sozinha
+  sobre a página, pelo `logo` do `SplitShellAside` — | `hidden`), o campo **recolhe
+  com o teclado** no toque (CSS, `:has(:focus)`), `step` (a coluna entra
+  deslizando e o foco vai ao título — só quando o passo muda) e o campo
+  **preso** na altura da janela. As telas de acesso usam o pé e os passos.
 - **O `Sidebar` ganhou o `plain` e o catálogo passou a usá-lo** (rodada 234).
   `variant="plain"` é a barra **sem placa** — sem fundo nem fio, no fluxo da
   página, os grupos divididos por um fio, o rótulo em caixa alta com o ícone

@@ -23,6 +23,7 @@ import {
     ItemTitle,
 } from "@/components/ui/item"
 import { MoneyDisplay } from "@/components/ui/money-display"
+import { SplitShellAside } from "@/components/ui/split-shell"
 import { Muted } from "@/components/ui/typography"
 import { currencyBRL } from "@/lib/formatters"
 
@@ -38,15 +39,17 @@ import { currencyBRL } from "@/lib/formatters"
  * **É um cartão, não uma coluna.** A superfície é a `@utility brand-field` — o
  * arco-íris da marca com grão pesado e vinheta para o preto —, e ela tem
  * cantos, fio e margem: o campo lê como um objeto pousado na página, e não
- * como a página pintada. Abaixo de `lg` ele é o cartão do topo do formulário;
- * a partir de `lg` é a coluna esquerda inteira.
+ * como a página pintada. Abaixo da quebra do casco (a container query
+ * `@3xl/split-shell`, e não a janela) ele é o cartão do topo do formulário; a
+ * partir dela é a coluna esquerda inteira.
  *
  * **Nenhum texto corrido mora direto sobre o arco-íris.** Sete matizes não têm
  * um contraste só, e o que se lê vive dentro de `Card`, que segue o tema —
  * branco no claro, escuro no escuro — e por isso passa na norma sem tinta
  * local. A única exceção é o `AppWordmark`, branco e grande, apoiado na
- * vinheta: a utility redefine `--foreground` para ele, e é a única cor que ela
- * redefine.
+ * vinheta: ele herda o `color` branco do campo por `currentColor`. A utility
+ * não redefine token nenhum — a versão verde redefinia `--foreground`, e sobre
+ * o arco-íris isso desceu pelo `Card` e deixou o saldo branco no cartão branco.
  *
  * A pilha atrás do cartão da frente é a referência de "produto" (páginas de um
  * documento, cartões de uma carteira), e é decorativa: `aria-hidden`, sem
@@ -85,29 +88,14 @@ const AREAS = [
 
 export function AuthBrandPanel() {
     return (
-        <aside
-            className={[
-                "brand-field flex flex-col rounded-2xl",
-                // O cartão do telefone: margem em volta, e a área segura dentro
-                // da caixa — quem chama não deve saber que existe um notch.
-                "m-4 px-5 pt-[calc(--spacing(5)+env(safe-area-inset-top,0px))] pb-5",
-                // A coluna do desktop: a margem continua, e o formulário à
-                // direita traz o próprio recuo.
-                "lg:m-5 lg:mr-0 lg:justify-between lg:px-8 lg:py-10",
-            ].join(" ")}
-        >
-            {/* `self-start` é obrigatório, e custou uma medição: um `<svg>` é
-                elemento substituído, e `w-auto` **não** o protege do
-                `align-items: stretch` de uma coluna flex. Medido aqui: a marca
-                saiu com 438px de largura em vez de 135, e como o
-                `preserveAspectRatio` padrão é `xMidYMid`, o desenho ficou
-                centralizado dentro da própria caixa — parecia alinhado ao
-                centro do painel sem ninguém ter pedido isso.
-
-                Sem `rainbow`: sobre o arco-íris o lockup é branco, e é o campo
-                quem lhe dá a cor. */}
-            <AppWordmark size="lg" className="self-start" />
-
+        // A geometria do campo — o cartão do telefone com a área segura do
+        // notch dentro dele, a coluna do desktop, a superfície `brand-field` e
+        // o `self-start` da marca — é do `SplitShellAside` desde a rodada 235.
+        // Daqui sai só o conteúdo.
+        //
+        // Sem `rainbow` no wordmark: sobre o arco-íris o lockup é branco, e é
+        // o campo quem lhe dá a cor.
+        <SplitShellAside surface="brand" brand={<AppWordmark size="lg" />}>
             {/* O cartão do telefone — **com os números**.
 
                 A pilha completa empurraria os campos para fora da primeira
@@ -120,7 +108,7 @@ export function AuthBrandPanel() {
                 `DescriptionList`, que é exatamente o par termo/valor, com
                 `columns={2}` porque aqui as duas colunas valem **antes** de
                 640px. */}
-            <Card padding="sm" className="mt-4 lg:hidden">
+            <Card padding="sm" className="@3xl/split-shell:hidden">
                 <CardContent>
                     <DescriptionList layout="grid" size="sm" columns={2}>
                         <DescriptionListItem>
@@ -146,7 +134,7 @@ export function AuthBrandPanel() {
                 `absolute` e vêm antes no DOM; o da frente é `relative` e vem
                 depois, então pinta por cima sem `z-index` nenhum. O `pt-6` do
                 envelope é o espaço que as duas arestas ocupam. */}
-            <div className="relative hidden pt-6 lg:block">
+            <div className="relative hidden pt-6 @3xl/split-shell:block">
                 <Card
                     variant="elevated"
                     padding="none"
@@ -193,6 +181,6 @@ export function AuthBrandPanel() {
                     </CardNote>
                 </Card>
             </div>
-        </aside>
+        </SplitShellAside>
     )
 }

@@ -105,7 +105,7 @@ export default function AcceptInvitePageClient() {
 
     if (busy) {
         return (
-            <AuthShell title="Aceitar convite">
+            <AuthShell title="Aceitar convite" step="loading">
                 <div role="status" aria-live="polite" aria-busy="true">
                     <span className="sr-only">Processando o convite…</span>
                     <AuthFormSkeleton fields={1} />
@@ -121,6 +121,7 @@ export default function AcceptInvitePageClient() {
         return (
             <AuthShell
                 title="Você foi convidado"
+                step="gate"
                 description="Entre ou crie uma conta para participar da carteira. Use o mesmo e-mail do convite, se ele foi enviado para um endereço específico."
             >
                 <div className="flex flex-col gap-(--space-block)">
@@ -159,7 +160,7 @@ export default function AcceptInvitePageClient() {
 
     if (error) {
         return (
-            <AuthShell title="Convite indisponível">
+            <AuthShell title="Convite indisponível" step="error">
                 <div className="flex flex-col gap-(--space-block)">
                     <Alert tone="destructive">
                         <AlertTitle>{error}</AlertTitle>
@@ -176,6 +177,7 @@ export default function AcceptInvitePageClient() {
         return (
             <AuthShell
                 title="Convite aceito"
+                step="accepted"
                 description={
                     acceptedWorkspaceName ? (
                         <>
@@ -206,7 +208,7 @@ export default function AcceptInvitePageClient() {
     }
 
     return (
-        <AuthShell title="Aceitar convite">
+        <AuthShell title="Aceitar convite" step="idle">
             <Muted>Nada para fazer aqui. Confira o link do convite.</Muted>
         </AuthShell>
     )

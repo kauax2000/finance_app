@@ -14,7 +14,7 @@ import { PasswordRequirements } from "@/components/auth/password-requirements"
 import { AuthFormSkeleton, AuthShell } from "@/components/layout/auth-shell"
 import { Alert, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { Muted } from "@/components/ui/typography"
+import { SplitShellFooter } from "@/components/ui/split-shell"
 import { Form, FormInput, FormSubmit } from "@/components/ui/form"
 import {
     InputOTP,
@@ -234,6 +234,15 @@ export function PasswordRecoveryForm({
             <AuthShell
                 title="Recuperar senha"
                 description="Enviamos um código de seis dígitos para o seu e-mail."
+                step={step}
+                footer={
+                    <SplitShellFooter>
+                        <p>
+                            Lembrou a senha?{" "}
+                            <Link href={ROUTES.LOGIN}>Entrar</Link>
+                        </p>
+                    </SplitShellFooter>
+                }
             >
                 <div className="flex flex-col gap-(--space-block)">
                     {errorAlert}
@@ -258,16 +267,6 @@ export function PasswordRecoveryForm({
                         </FormSubmit>
                     </Form>
                 </div>
-
-                <Muted>
-                    Lembrou a senha?{" "}
-                    <Link
-                        href={ROUTES.LOGIN}
-                        className="font-medium text-primary-accent underline-offset-4 hover:underline active:underline"
-                    >
-                        Entrar
-                    </Link>
-                </Muted>
             </AuthShell>
         )
     }
@@ -277,6 +276,7 @@ export function PasswordRecoveryForm({
         return (
             <AuthShell
                 title="Digite o código"
+                step={step}
                 description={
                     <>
                         Enviamos seis dígitos para{" "}
@@ -356,7 +356,7 @@ export function PasswordRecoveryForm({
         // aí não há nada a preencher.
         if (linkValid === null) {
             return (
-                <AuthShell title="Nova senha">
+                <AuthShell title="Nova senha" step={step}>
                     {/* Espera com forma, e não uma frase cinza: o esqueleto já
                         existe nesta mesma mudança, e `role="status"` é o que
                         faz o leitor de tela anunciar que algo está em curso —
@@ -374,22 +374,21 @@ export function PasswordRecoveryForm({
                 <AuthShell
                     title="Link expirado"
                     description="Este link de recuperação não vale mais. Peça um novo — leva um minuto."
+                    step="link-expired"
+                    footer={
+                        <SplitShellFooter>
+                            <p>
+                                Lembrou a senha?{" "}
+                                <Link href={ROUTES.LOGIN}>Entrar</Link>
+                            </p>
+                        </SplitShellFooter>
+                    }
                 >
                     <Button asChild size="xl" className="w-full">
                         <Link href={ROUTES.FORGOT_PASSWORD}>
                             Pedir um novo código
                         </Link>
                     </Button>
-
-                    <Muted>
-                        Lembrou a senha?{" "}
-                        <Link
-                            href={ROUTES.LOGIN}
-                            className="font-medium text-primary-accent underline-offset-4 hover:underline active:underline"
-                        >
-                            Entrar
-                        </Link>
-                    </Muted>
                 </AuthShell>
             )
         }
@@ -398,6 +397,7 @@ export function PasswordRecoveryForm({
             <AuthShell
                 title="Nova senha"
                 description="Ela precisa ser tão forte quanto a do cadastro."
+                step={step}
             >
                 <div className="flex flex-col gap-(--space-block)">
                     {errorAlert}
@@ -416,6 +416,7 @@ export function PasswordRecoveryForm({
     return (
         <AuthShell
             title="Senha atualizada"
+            step={step}
             description="Pronto. Entre com a senha nova — estamos levando você para o login."
         >
             <Button asChild size="xl" className="w-full">

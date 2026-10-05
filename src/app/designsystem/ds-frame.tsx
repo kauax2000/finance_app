@@ -377,14 +377,15 @@ const IPHONE_H = Math.round((IPHONE_W / IPHONE_TELA.width) * IPHONE_TELA.height 
 
 /**
  * A área segura do topo, que o iframe não tem (`env()` vale zero nele): a
- * barra do topo, o painel solto e a gaveta alta descem da ilha, como num aparelho. É CSS fora
+ * barra do topo, o painel solto, a gaveta alta e o campo do `SplitShell` descem da ilha, como num aparelho. É CSS fora
  * de `@layer` no documento da moldura, então vence as utilities que escrevem
  * o `env()` — e só ali dentro. O número é o do aparelho: os 62 pontos de 874
  * (`IPHONE_TELA.safeTop`), 58px nesta tela — a ilha termina a 46, e com 48 o
  * painel lateral encostava nela.
  */
 const IPHONE_SEGURA_TOPO = Math.round((IPHONE_H * IPHONE_TELA.safeTop) / 100)
-const IPHONE_AREA_SEGURA = `[data-slot=top-bar]{--top-bar-safe:${IPHONE_SEGURA_TOPO}px}[role=dialog]{--sheet-gap-block-start:${IPHONE_SEGURA_TOPO}px}[data-vaul-drawer]{--sheet-drawer-h:calc(100dvh - ${IPHONE_SEGURA_TOPO}px)}`
+const IPHONE_SEGURA_BASE = Math.round((IPHONE_H * IPHONE_TELA.safeBottom) / 100)
+const IPHONE_AREA_SEGURA = `[data-slot=top-bar]{--top-bar-safe:${IPHONE_SEGURA_TOPO}px}[role=dialog]{--sheet-gap-block-start:${IPHONE_SEGURA_TOPO}px}[data-vaul-drawer]{--sheet-drawer-h:calc(100dvh - ${IPHONE_SEGURA_TOPO}px)}[data-slot=split-shell]{--split-shell-safe-top:${IPHONE_SEGURA_TOPO}px;--split-shell-safe-bottom:${IPHONE_SEGURA_BASE}px}`
 
 /**
  * O iPhone com uma viewport de telefone dentro da tela: um `ViewportFrame` de

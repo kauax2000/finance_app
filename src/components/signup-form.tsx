@@ -14,7 +14,7 @@ import { PasswordRequirements } from "@/components/auth/password-requirements"
 import { AuthShell } from "@/components/layout/auth-shell"
 import { Alert, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { Muted } from "@/components/ui/typography"
+import { SplitShellFooter } from "@/components/ui/split-shell"
 import { Form, FormInput, FormSubmit } from "@/components/ui/form"
 import {
     InputGroup,
@@ -137,6 +137,7 @@ export function SignupForm() {
         return (
             <AuthShell
                 title="Confirme seu e-mail"
+                step="confirm"
                 description={
                     <>
                         Enviamos um link de confirmação para{" "}
@@ -168,6 +169,14 @@ export function SignupForm() {
         <AuthShell
             title="Criar conta"
             description="A carteira pessoal e as categorias já vêm prontas."
+            step="form"
+            footer={
+                <SplitShellFooter>
+                    <p>
+                        Já tem uma conta? <Link href={loginHref}>Entrar</Link>
+                    </p>
+                </SplitShellFooter>
+            }
         >
             <div className="flex flex-col gap-(--space-block)">
                 {error ? (
@@ -249,16 +258,6 @@ export function SignupForm() {
                     </FormSubmit>
                 </Form>
             </div>
-
-            <Muted>
-                Já tem uma conta?{" "}
-                <Link
-                    href={loginHref}
-                    className="font-medium text-primary-accent underline-offset-4 hover:underline active:underline"
-                >
-                    Entrar
-                </Link>
-            </Muted>
         </AuthShell>
     )
 }

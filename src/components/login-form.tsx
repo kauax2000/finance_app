@@ -12,7 +12,7 @@ import { ROUTES } from "@/config/navigation"
 import { AuthShell } from "@/components/layout/auth-shell"
 import { Alert, AlertTitle } from "@/components/ui/alert"
 import { Form, FormInput, FormSubmit } from "@/components/ui/form"
-import { Muted } from "@/components/ui/typography"
+import { SplitShellFooter } from "@/components/ui/split-shell"
 import {
     InputGroup,
     InputGroupInput,
@@ -120,6 +120,14 @@ export function LoginForm() {
         <AuthShell
             title="Entrar"
             description="Uma conta, todas as suas carteiras."
+            footer={
+                <SplitShellFooter>
+                    <p>
+                        Não tem uma conta?{" "}
+                        <Link href={registerHref}>Criar conta</Link>
+                    </p>
+                </SplitShellFooter>
+            }
         >
             <div className="flex flex-col gap-(--space-block)">
                 {reason && !error ? (
@@ -206,16 +214,6 @@ export function LoginForm() {
                     </FormSubmit>
                 </Form>
             </div>
-
-            <Muted>
-                Não tem uma conta?{" "}
-                <Link
-                    href={registerHref}
-                    className="font-medium text-primary-accent underline-offset-4 hover:underline active:underline"
-                >
-                    Criar conta
-                </Link>
-            </Muted>
         </AuthShell>
     )
 }

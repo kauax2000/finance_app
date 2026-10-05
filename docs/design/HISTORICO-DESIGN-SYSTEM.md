@@ -18870,3 +18870,76 @@ do catálogo passou a emular o topo na proporção do aparelho (62 de 874 pontos
 largura dela, numa placa sobre o fundo da página, com a anatomia ao lado e a
 altura de cada degrau na ponta; e "A versão sem placa" mostra o `plain` em
 miniatura. `sidebar-plain.test.ts` tranca a variante e o catálogo sobre ela.
+
+### Rodada 235 — o SplitShell: a quebra pelo casco, o lado, a proporção e a coluna em três faixas; o campo, o pé, o voltar e o esqueleto; o campo no telefone, o recolher com o teclado, o passo e o campo preso
+
+**Levantamento antes de mexer.** O `SplitShell` tem um consumidor, o
+`AuthShell`, e por ele as telas de acesso (entrar, cadastro, recuperação de
+senha, convite). A página dizia que "dentro do app, o topo de tela é o
+`PageHeader`" — falso desde a rodada 232 — e o exemplo punha texto corrido
+direto sobre o arco-íris, contra a regra do campo de marca. E a prévia
+mostrava o layout de desktop (`lg:`, que lê a **janela**) numa caixa de 810px.
+O `AuthBrandPanel` escrevia à mão toda a geometria do campo. O dono escolheu as
+quatro versões de cada grupo e a migração das telas de acesso.
+
+**O redesenho.**
+- **A quebra é do casco**: `@container/split-shell` com a divisão em `@3xl`
+  (48rem). Era `lg` (64rem) da janela; num painel, numa prévia ou num iframe a
+  divisão agora acerta. O custo, dito: entre 768 e 1024px de janela as telas de
+  acesso passam a se dividir.
+- `side` (`start` | `end`; a ordem de leitura não muda, só a coluna visual) e
+  `ratio` (`wide` 5:6, `even`, `narrow` 1:2), com as oito grades por extenso.
+- **A coluna em três faixas**: `back` em cima, o conteúdo centrado e `footer`
+  embaixo; no telefone o conteúdo continua encostado no topo (a medição dos
+  223px fica).
+
+**As peças.** `SplitShellAside` (a geometria do campo e `surface` `brand` |
+`muted`; `brand` é a marca, que a faixa do telefone mantém), `SplitShellFooter`
+(os links de dentro com o acento), `SplitShellBack` e `SplitShellSkeleton`.
+**A área segura do campo passa por `--split-shell-safe-top`**, e não por
+`env()` direto: o iPhone do catálogo é um iframe, onde `env()` vale zero, e a
+emulação dele (`IPHONE_AREA_SEGURA`) passou a cobrir o campo — sem ela a marca
+nascia sob a ilha.
+
+**Os comportamentos.**
+- `asideMobile`: o cartão, uma faixa só com a marca, ou nenhum campo.
+- **Recolhe com o teclado**: no toque e abaixo da quebra, um campo de texto
+  focado na coluna esconde o campo — CSS puro (`group-has-[…:focus]`), sem
+  ouvinte. Não dá para ver no catálogo (o ponteiro do desktop é fino); a regra
+  compila e está no CSS servido.
+- **O passo**: `step` remonta a coluna pela chave, ela entra deslizando 16px
+  (`@utility split-shell-step`, 360ms) e o foco vai ao título. **A primeira
+  versão roubava o foco ao montar**: o `StrictMode` roda o efeito duas vezes,
+  e o "já montou" se gastava na primeira. Hoje o efeito compara com o passo
+  anterior. Medido: ao abrir, o foco fica no `body`; ao avançar, no `<h1>`.
+- **O campo preso**: a partir da quebra, a vaga do campo é `sticky` com a
+  altura da janela, para uma coluna longa (o cadastro) rolar ao lado dele.
+
+**As telas de acesso** (um agente, sem ver as telas — o login é contra o
+banco de produção): o `AuthShell` repassa `back`, `footer` e `step`; o
+`AuthBrandPanel` veste o `SplitShellAside` e trocou os `lg:` de dentro por
+`@3xl/split-shell:`; "Não tem uma conta?", "Já tem uma conta?" e "Lembrou a
+senha?" foram para o pé, com os mesmos destinos; cadastro, recuperação e convite
+passam o passo. **Nenhum voltar foi criado** — não havia link de voltar, e
+criar um seria mudança de jornada. Um comentário antigo do painel dizia que a
+utility redefine `--foreground`; ela não redefine token nenhum, e foi corrigido.
+`split-shell-versions.test.ts` tranca as versões.
+
+**Os consertos da mesma rodada** (o dono achou a página quebrada):
+- O cartão do exemplo saía com o texto colado na borda: `Card padding` recua os
+  slots, não os filhos crus — faltava o `CardContent`.
+- O cartão do campo no telefone começava a 16px do topo e a borda de cima ficava
+  sob a ilha. A área segura saiu do recuo de dentro e foi para a **margem de
+  cima** (`mt-[calc(--spacing(4)+var(--split-shell-safe-top))]`): o cartão desce
+  inteiro abaixo do notch. Inverte o "a área segura dentro da caixa" do
+  `AuthBrandPanel` de antes.
+- Com `asideMobile="hidden"` o título nascia sob a ilha: sem campo em cima, a
+  coluna soma a área segura de cima. E a coluna soma a de baixo
+  (`--split-shell-safe-bottom`), que o iPhone do catálogo também emula.
+- No telefone o pé ia para o fim da tela, longe do formulário; agora ele vem
+  logo depois do conteúdo, e só a partir da quebra a coluna tem as três faixas.
+- **`asideMobile="logo"`** (pedido do dono): no telefone o campo perde a
+  superfície e fica só a marca, sobre a página e no recuo da coluna, abaixo do
+  notch. Como o wordmark do campo é branco (herda o `color` do arco-íris), o
+  `SplitShellAside` recebe a versão da página em `logo` — no catálogo, o
+  `AppWordmark rainbow`; sem ela, a `brand` herda a tinta do texto.
