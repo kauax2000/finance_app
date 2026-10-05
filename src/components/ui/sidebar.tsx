@@ -319,7 +319,7 @@ const SidebarGatilhoMovelContext = React.createContext(false)
 const SidebarPeekContext = React.createContext(false)
 
 function Sidebar({
-  variant = "floating",
+  variant: variante = "floating",
   collapsible = "offcanvas",
   peek = false,
   className,
@@ -327,7 +327,14 @@ function Sidebar({
   dir,
   ...props
 }: React.ComponentProps<"div"> & {
-  variant?: "sidebar" | "floating" | "inset"
+  /**
+   * `plain` (rodada 233) é a barra **sem superfície** da navegação do
+   * catálogo: sem placa, sem fio, no fluxo da página — quem a prende é quem a
+   * dispõe —, com os grupos divididos por um fio, o rótulo em caixa alta e as
+   * linhas apagadas até o cursor. Ela vale com `collapsible="none"`; recolher
+   * uma barra que não tem placa não diz nada, e fora dele ela cai na `sidebar`.
+   */
+  variant?: "sidebar" | "floating" | "inset" | "plain"
   collapsible?: "offcanvas" | "icon" | "none"
   /**
    * Recolhida em ícone, o cursor parado 300ms sobre ela a abre **por cima** do
@@ -369,8 +376,12 @@ function Sidebar({
         <SidebarRealceContext.Provider value={realceId}>
           <div
             data-slot="sidebar"
+            data-variant={variante}
             className={cn(
-              "flex h-full w-(--sidebar-width) flex-col bg-sidebar text-sidebar-foreground",
+              // `group`: as peças leem a variante por `group-data-[variant=…]`,
+              // como leem o `data-collapsible` nos outros ramos.
+              "group flex h-full w-(--sidebar-width) flex-col bg-sidebar text-sidebar-foreground",
+              variante === "plain" && "bg-transparent",
               className
             )}
             {...props}
@@ -380,6 +391,10 @@ function Sidebar({
         </SidebarRealceContext.Provider>
     )
   }
+
+  // Fora do `none` o `plain` não tem o que desenhar — sem placa não há o que
+  // recolher nem o que abrir —, e a barra cai na rente.
+  const variant = variante === "plain" ? "sidebar" : variante
 
   if (isMobile) {
     return (
@@ -417,7 +432,7 @@ function Sidebar({
           // injeta, e ela só escondia o nosso — medido, `display: none`. Na
           // gaveta passava (fecha-se arrastando); num painel não há arraste, e
           // o × é a única afordância visível de fechar.
-          className="w-(--sidebar-width) bg-sidebar text-sidebar-foreground"
+          className={cn("w-(--sidebar-width) bg-sidebar text-sidebar-foreground", SIDEBAR_MOBILE_TOQUE)}
           style={
             { "--sidebar-width": SIDEBAR_WIDTH_MOBILE } as React.CSSProperties
           }
@@ -432,10 +447,24 @@ function Sidebar({
               Seções do app e as ações da conta.
             </DialogDescription>
           </DialogHeader>
+          {/* O × mora numa linha própria, acima do espaço de trabalho: no canto,
+              ele se sobrepunha à linha de cima da barra. No `floating` é a
+              mesma pílula do gatilho do desktop (`SIDEBAR_TRIGGER_FLOATING`) —
+              `--sidebar` sob a borda e o anel, sem sombra, porque já está
+              dentro da placa. 32px à vista e 44 de alvo, pelo `::after`. */}
+          <div data-slot="sidebar-close-row" className="flex shrink-0 justify-end px-2 pt-2">
+            <DialogCloseButton
+              placement="inline"
+              size="icon-md"
+              className={cn(
+                "relative me-0 after:absolute after:-inset-1.5",
+                variant === "floating" && "rounded-full bg-sidebar bg-clip-border ring-1 ring-foreground/10"
+              )}
+            />
+          </div>
             <SidebarRealceContext.Provider value={realceId}>
               <div className="flex min-h-0 w-full flex-1 flex-col">{children}</div>
             </SidebarRealceContext.Provider>
-        <DialogCloseButton />
         </SheetContent>
       </Sheet>
     )
@@ -840,13 +869,33 @@ const SIDEBAR_INSET_BAR =
   "md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:[&_[data-slot=top-bar]:not([data-surface=glass]):not([data-scrolled=true])]:bg-transparent md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:bg-transparent"
 
 /**
+ * O toque no painel do telefone (rodada 233): as linhas que no desktop medem
+ * 28 e 32 sobem a 40 e 44 — o alvo do dedo —, o campo a 40, e a ação e a
+ * contagem da linha se centram em qualquer altura (os `top-*` fixos eram
+ * contas da linha de 32). Só o painel do telefone veste isto; o desktop não
+ * muda.
+ */
+const SIDEBAR_MOBILE_TOQUE = [
+  "[&_[data-slot=sidebar-menu-button][data-size=md]]:h-11 [&_[data-slot=sidebar-menu-button][data-size=sm]]:h-10",
+  "[&_[data-slot=sidebar-menu-sub-button]]:h-10 [&_[data-slot=sidebar-input]]:h-10",
+  "[&_[data-slot=sidebar-menu-action]]:top-1/2! [&_[data-slot=sidebar-menu-action]]:-translate-y-1/2",
+  "[&_[data-slot=sidebar-menu-badge]]:top-1/2! [&_[data-slot=sidebar-menu-badge]]:-translate-y-1/2",
+  "[&_[data-slot=sidebar-menu]]:gap-0.5",
+].join(" ")
+
+/**
  * O gatilho flutua com a barra: no `floating` ele é uma pílula da mesma
  * placa — o `--sidebar` chapado, o anel e a sombra —, e não um ícone solto no
  * cabeçalho. Ele mora no `SidebarInset`, fora da barra, então quem decide é
  * o `:has` do invólucro, sem contexto.
+ *
+ * **O fundo pinta sob a borda (`bg-clip-border`).** O `Button` traz uma borda
+ * transparente de 1px com o fundo recortado no `padding-box`, e entre o
+ * preenchimento e o anel sobrava 1px da página: a aresta da pílula lia mais
+ * apagada que a da barra, com o mesmo anel nas duas.
  */
 const SIDEBAR_TRIGGER_FLOATING =
-  "md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:rounded-full md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:bg-sidebar md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:shadow-lg md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:ring-1 md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:ring-foreground/10"
+  "md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:rounded-full md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:bg-clip-border md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:bg-sidebar md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:shadow-lg md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:ring-1 md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:ring-foreground/10"
 
 function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
   const { resizable } = useSidebar()
@@ -1025,6 +1074,9 @@ function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
       data-sidebar="group"
       className={cn(
         "relative flex w-full min-w-0 flex-col justify-start p-2",
+        // No `plain` o grupo se separa do anterior por um fio: com 80 linhas
+        // rolando, um vão de 16px lê como item faltando, e não como fronteira.
+        "group-data-[variant=plain]:not-first:border-t group-data-[variant=plain]:border-sidebar-border group-data-[variant=plain]:px-0 group-data-[variant=plain]:pt-2 group-data-[variant=plain]:pb-4",
         // `action` já teve um `border-b border-sidebar-border`. Ele saiu porque
         // esta faixa é o primeiro filho do `SidebarContent`, que **é** o
         // viewport com a dissolução — o limite já está dito, e um fio ali seria
@@ -1050,6 +1102,9 @@ function SidebarGroupLabel({
       data-sidebar="group-label"
       className={cn(
         "flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70 ring-sidebar-ring outline-hidden transition-[margin,opacity] duration-(--duration-slow) ease-(--ease-emphasized) group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0 focus-visible:ring-3 [&>svg]:size-4 [&>svg]:shrink-0",
+        // No `plain` o rótulo é a sobrancelha da camada: caixa alta de 11px,
+        // na tinta do texto, com o ícone de 12px apagado.
+        "group-data-[variant=plain]:gap-1.5 group-data-[variant=plain]:text-2xs group-data-[variant=plain]:font-semibold group-data-[variant=plain]:tracking-wide group-data-[variant=plain]:text-sidebar-foreground group-data-[variant=plain]:uppercase group-data-[variant=plain]:[&>svg]:size-3 group-data-[variant=plain]:[&>svg]:text-muted-foreground",
         // A régua dos rótulos (rodada 221): ao abrir, o texto espera a largura
         // assentar (a margem não espera — ela é o espaço do rótulo); ao
         // recolher, sai na hora.
@@ -1231,6 +1286,11 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
 const sidebarMenuButtonVariants = cva(
   [
     "peer/menu-button group/menu-button relative isolate flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm ring-sidebar-ring outline-hidden transition-[width,height,padding,background-color] duration-(--duration-slow) ease-(--ease-emphasized) group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-3 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-open:hover:bg-sidebar-accent data-open:hover:text-sidebar-accent-foreground data-active:font-medium data-active:text-sidebar-accent-foreground [&_svg]:size-4 [&_svg]:shrink-0 [&>span:last-child]:truncate [&>span:nth-last-child(2):has(+[data-slot=sidebar-menu-highlight])]:truncate",
+    // ── O `plain` (rodada 233) ──────────────────────────────────────────────
+    // A linha apagada até o cursor e acesa na página atual — a lista do
+    // catálogo, onde 80 linhas na tinta cheia viravam um bloco de texto. E
+    // 44px no dedo: a régua de /designsystem/touch-safe-area.
+    "group-data-[variant=plain]:text-muted-foreground group-data-[variant=plain]:hover:text-sidebar-accent-foreground group-data-[variant=plain]:active:text-sidebar-accent-foreground group-data-[variant=plain]:data-active:text-sidebar-accent-foreground group-data-[variant=plain]:pointer-coarse:min-h-11",
     // ── Os rótulos ao recolher e abrir (rodada 221) ─────────────────────────
     // Tudo depois do primeiro filho — o ícone ou o avatar, que fica — é
     // rótulo. Ao recolher ele some em 100ms, antes de a largura fechar, em vez

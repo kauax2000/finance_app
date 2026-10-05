@@ -18831,3 +18831,42 @@ chaves (descrição, ícone, contagem, rodapé, recolher, cascata), o telefone n
 `IphoneFrame` com dois cabeçalhos presos e a ação de ícone, a seção aninhada,
 o ritmo da tela e o esqueleto. `page-section-versions.test.ts` tranca as peças e
 os comportamentos.
+
+### Rodada 234 — o Sidebar: a versão sem placa (plain) e a navegação do catálogo sobre ela; o painel do telefone com o × numa linha, abaixo da ilha e no alvo do dedo
+
+**O pedido.** Uma versão do `Sidebar` compatível com a navegação do próprio
+catálogo, e o catálogo passando a usá-la — a alternativa à barra do app.
+
+**`variant="plain"`.** A barra sem superfície: o ramo `collapsible="none"`
+ganhou `group` e `data-variant`, e as peças leem a variante por
+`group-data-[variant=plain]` — o grupo se separa do anterior por um fio
+(`not-first:border-t`), o rótulo vira a sobrancelha da camada (caixa alta de
+11px, ícone de 12 apagado), e a linha fica em `--muted-foreground` até o cursor
+e acesa na página atual, com a pílula do ativo de sempre. Fora do `none` ela cai
+na `sidebar`: sem placa não há o que recolher. A tentativa de apertar a lista
+para `gap-0.5` saiu na mesma rodada — `sidebar-ladder.test.ts` (asserção 10)
+tranca o respiro de 4px, e ele vale aqui também.
+
+**O catálogo sobre ela.** `DsNav` é `SidebarProvider` + `Sidebar collapsible="none"
+variant="plain"` + `SidebarContent` (que traz a dissolução nas bordas — a lista
+rolava sem indicador nenhum), com um `SidebarGroup` por camada e o rótulo como
+`<h2>` por `asChild`. O `DsNavLink` deixou de ser um `Button` com oito
+contra-classes e virou `SidebarMenuButton asChild`. O `revelarAtivo` continua
+achando quem rola: agora é o `SidebarContent`. **O provedor é controlado**: ele
+escuta ⌘B, e descontrolado gravaria o cookie de aberta/fechada que a barra do
+app lê no servidor.
+
+**O painel do telefone** (pedidos do dono na mesma sessão): o × saiu do canto,
+onde se sobrepunha ao espaço de trabalho, para uma linha própria; no `floating`
+ele é a pílula do gatilho do desktop (`--sidebar` sob a borda, o anel, sem
+sombra), 32px à vista e 44 de alvo. As linhas sobem a 44 (as `sm` e os
+subitens a 40), o campo a 40, e a ação e a contagem se centram em qualquer
+altura. O gatilho do desktop ganhou `bg-clip-border`: com o fundo recortado no
+`padding-box`, sobrava 1px da página entre o preenchimento e o anel. E o iPhone
+do catálogo passou a emular o topo na proporção do aparelho (62 de 874 pontos,
+58px), porque a 48 o painel encostava na ilha.
+
+**As demonstrações** "Os tipos de item" e "A escada do botão" mostram a barra na
+largura dela, numa placa sobre o fundo da página, com a anatomia ao lado e a
+altura de cada degrau na ponta; e "A versão sem placa" mostra o `plain` em
+miniatura. `sidebar-plain.test.ts` tranca a variante e o catálogo sobre ela.

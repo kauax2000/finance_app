@@ -4,9 +4,18 @@ import { Bars3Icon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+} from "@/components/ui/sidebar"
 import {
   Sheet,
   SheetContent,
@@ -47,11 +56,9 @@ export function DsShell({ children }: { children: React.ReactNode }) {
       </a>
       <DsTopBar />
       <Container size="xl" gutter="page" className="flex gap-8">
-        {/* `no-scrollbar` é o utilitário que `Sidebar` e `Command` já usam.
-            O padding vertical fica no `nav`, e não aqui: padding no contêiner
-            de rolagem não rola junto, e o primeiro item nasceria colado no
-            topo depois do primeiro gesto. */}
-        <aside className="no-scrollbar sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-60 shrink-0 overflow-y-auto lg:block">
+        {/* A coluna prende sob a barra do topo; quem rola é o
+            `SidebarContent` de dentro, com a dissolução nas bordas. */}
+        <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-60 shrink-0 lg:block">
           <DsNav />
         </aside>
         <main id="ds-conteudo" tabIndex={-1} className="min-w-0 flex-1 py-8">
@@ -354,58 +361,68 @@ function DsNav() {
     []
   )
 
+  // É o `Sidebar` do sistema, na versão `plain` (rodada 233): sem placa, os
+  // grupos por fio, o rótulo em caixa alta e as linhas apagadas até o cursor.
+  // Controlado e sempre aberto, para o ⌘B do provedor não gravar o cookie da
+  // barra do app.
   return (
-    <nav className="flex flex-col pt-4 pb-8" aria-label="Componentes">
-      {/* A volta para o índice. Sem ela, sair de uma página de componente e ver
-          o catálogo inteiro dependia de acertar a marca no cabeçalho — que não
-          se anuncia como link para lugar nenhum. */}
-      <div className="flex flex-col gap-0.5 pb-5">
-        <DsNavLink
-          href="/designsystem"
-          active={pathname === "/designsystem"}
-          ref={pathname === "/designsystem" ? revelarAtivo : undefined}
-        >
-          Visão geral
-        </DsNavLink>
-      </div>
+    <SidebarProvider open onOpenChange={() => {}} className="h-full min-h-0">
+      <Sidebar collapsible="none" variant="plain" className="w-full">
+        <SidebarContent>
+          <nav className="flex flex-col pt-2 pb-6" aria-label="Componentes">
+            {/* A volta para o índice. Sem ela, sair de uma página de componente
+                e ver o catálogo inteiro dependia de acertar a marca no
+                cabeçalho — que não se anuncia como link para lugar nenhum. */}
+            <SidebarGroup>
+              <SidebarMenu>
+                <DsNavLink
+                  href="/designsystem"
+                  active={pathname === "/designsystem"}
+                  ref={pathname === "/designsystem" ? revelarAtivo : undefined}
+                >
+                  Visão geral
+                </DsNavLink>
+              </SidebarMenu>
+            </SidebarGroup>
 
-      {groups.map((group) => {
-        const Icon = CATEGORY_META[group.category].Icon
-        return (
-        <div
-          key={group.category}
-          // O grupo era separado só por `gap-5`, e com 88 itens rolando um vão
-          // de 20px não lê como fronteira — lê como um item faltando. O fio é a
-          // divisão que o olho pega sem procurar.
-          className="flex flex-col gap-0.5 border-t border-border pb-5"
-        >
-          {/* O ícone é o mesmo da paleta (`category-meta`): a camada lê
-              igual na sidebar e no ⌘K. `size-3` para acompanhar o `text-2xs`. */}
-          <h2 className="mb-1 flex items-center gap-1.5 px-2 pt-4 pb-1.5 text-2xs font-semibold tracking-wide text-foreground uppercase">
-            <Icon aria-hidden className="size-3 text-muted-foreground" />
-            {group.category}
-          </h2>
-          {group.items.map((item) => {
-            const href = `/designsystem/${item.slug}`
-            const active = pathname === href
-            return (
-              <DsNavLink
-                key={item.slug}
-                href={href}
-                active={active}
-                // Só o ativo carrega o ref. Ao navegar, o React limpa o do item
-                // que deixou de ser ativo e chama o do novo — que é exatamente
-                // quando a lista precisa se reposicionar.
-                ref={active ? revelarAtivo : undefined}
-              >
-                {item.name}
-              </DsNavLink>
-            )
-          })}
-        </div>
-        )
-      })}
-    </nav>
+            {groups.map((group) => {
+              const Icon = CATEGORY_META[group.category].Icon
+              return (
+                <SidebarGroup key={group.category}>
+                  {/* O ícone é o mesmo da paleta (`category-meta`): a camada lê
+                      igual na lateral e no ⌘K. */}
+                  <SidebarGroupLabel asChild>
+                    <h2>
+                      <Icon aria-hidden />
+                      {group.category}
+                    </h2>
+                  </SidebarGroupLabel>
+                  <SidebarMenu>
+                    {group.items.map((item) => {
+                      const href = `/designsystem/${item.slug}`
+                      const active = pathname === href
+                      return (
+                        <DsNavLink
+                          key={item.slug}
+                          href={href}
+                          active={active}
+                          // Só o ativo carrega o ref. Ao navegar, o React limpa
+                          // o do item que deixou de ser ativo e chama o do novo
+                          // — que é quando a lista precisa se reposicionar.
+                          ref={active ? revelarAtivo : undefined}
+                        >
+                          {item.name}
+                        </DsNavLink>
+                      )
+                    })}
+                  </SidebarMenu>
+                </SidebarGroup>
+              )
+            })}
+          </nav>
+        </SidebarContent>
+      </Sidebar>
+    </SidebarProvider>
   )
 }
 
@@ -457,48 +474,15 @@ function DsNavLink({
   children: React.ReactNode
   ref?: React.Ref<HTMLAnchorElement>
 }) {
-  // O `Button` do sistema — e ele custa **sete** contra-classes, medidas: as
-  // quatro abaixo mais as três que neutralizam o hover do `tertiary` no estado
-  // ativo. É o mesmo número que fez o `sidebarMenuButtonVariants` ficar cru, e a
-  // decisão aqui foi a inversa, tomada com o número na mesa.
-  //
-  // `variant="secondary"` para o ativo está fora: `bg-accent` derruba
-  // `bg-secondary`, mas `hover:bg-secondary-hover` **sobrevive**, e o item ativo
-  // passaria a mudar de cor sob o cursor.
+  // Era um `Button` com oito contra-classes para virar linha de lista; hoje é
+  // a linha do `Sidebar`, e o `plain` dá a tinta apagada e o toque de 44.
   return (
-    <Button
-      asChild
-      variant="tertiary"
-      size="md"
-      className={cn(
-        // Contra-classe 1 e 2. `justify-center` centraliza o rótulo; e
-        // `font-medium` da base apagaria a distinção do item ativo, cujo peso é
-        // metade do sinal.
-        "justify-start font-normal",
-        // Contra-classe 3. `inline-flex` não é *block container*, e
-        // `text-overflow` não se aplica a ele: o `truncate` desce para o filho.
-        "min-w-0",
-        "rounded-md px-2 text-sm transition-colors",
-        // Contra-classe 8. Linha de lista não floresce: ela esmaece, como os
-        // menus (rodada 137, que recusou cor crescendo em linha). A flor do
-        // `tertiary` fica sem cor, e o realce é o `hover:bg-*` abaixo.
-        "[--button-bloom-fill:transparent] dark:[--button-bloom-fill:transparent]",
-        // Em ponteiro grosso o link vai aos 44px que a página
-        // /designsystem/touch-safe-area exige. Um catálogo que reprova na própria
-        // regra não é fonte de verdade de nada.
-        "pointer-coarse:min-h-11",
-        active
-          ? // Contra-classes 4 a 6: o `tertiary` acenderia `bg-muted` sobre o
-            // item já aceso.
-            "bg-accent font-medium text-accent-foreground hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent"
-          : // Contra-classe 7. O `dark:hover:bg-muted/50` do `tertiary` não é
-            // derrubado por `hover:bg-accent/60` — variante diferente.
-            "text-muted-foreground hover:bg-accent/60 hover:text-foreground active:bg-accent/60 dark:hover:bg-accent/60"
-      )}
-    >
-      <Link ref={ref} href={href} aria-current={active ? "page" : undefined}>
-        <span className="truncate">{children}</span>
-      </Link>
-    </Button>
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild isActive={active}>
+        <Link ref={ref} href={href} aria-current={active ? "page" : undefined}>
+          <span>{children}</span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   )
 }

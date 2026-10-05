@@ -10,7 +10,7 @@ const CODIGO = fonte("src/components/ui/sidebar.tsx")
 describe("as versões do Sidebar", () => {
   it("floating é o padrão, no cva e nas props", () => {
     expect(CODIGO).toContain('defaultVariants: { variant: "floating", collapsible: "offcanvas" }')
-    expect(CODIGO).toMatch(/function Sidebar\(\{\s*variant = "floating",/)
+    expect(CODIGO).toMatch(/function Sidebar\(\{\s*variant: variante = "floating",/)
   })
 
   it("a placa flutuante é uma peça só, sem o +2px da borda do vidro", () => {

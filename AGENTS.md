@@ -1739,6 +1739,17 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   balance` fora de `@layer`, e ele religava a quebra. **O telefone é um primeiro desenho**: o dono vai mexer
   bastante nele ao revisar as telas do app, e o design system se atualiza
   junto; a prévia num iPhone fica na página até lá.
+- **O `Sidebar` ganhou o `plain` e o catálogo passou a usá-lo** (rodada 234).
+  `variant="plain"` é a barra **sem placa** — sem fundo nem fio, no fluxo da
+  página, os grupos divididos por um fio, o rótulo em caixa alta com o ícone
+  apagado e as linhas em `--muted-foreground` até o cursor, 44px no dedo — e
+  vale com `collapsible="none"` (fora dele cai na `sidebar`). **A navegação do
+  `/designsystem` é ela** (`ds-shell.tsx`): o `DsNavLink` era um `Button` com
+  oito contra-classes, e hoje é `SidebarMenuButton asChild`. O provedor ali é
+  **controlado** (`open` e um `onOpenChange` vazio), para o ⌘B não gravar o
+  cookie que o app lê. No painel do telefone, o × mora numa linha própria
+  acima do espaço de trabalho (no `floating`, a pílula do gatilho do desktop,
+  sem sombra), e as linhas sobem a 44 e 40.
 - **O `PageSection` ganhou a ação no degrau, o telefone compacto, as peças e
   quatro comportamentos** (rodada 233). **A ação não declara `size`**: o
   `actions` do cabeçalho e o `PageSectionFooter` passam `sm` aos botões pelo

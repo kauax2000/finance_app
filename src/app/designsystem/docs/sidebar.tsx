@@ -16,6 +16,12 @@ import {
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
+  DescriptionDetails,
+  DescriptionList,
+  DescriptionListItem,
+  DescriptionTerm,
+} from "@/components/ui/description-list"
+import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -50,6 +56,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { TopBar, TopBarStart, TopBarTitle } from "@/components/ui/top-bar"
 import { IDENTITY_TONES } from "@/lib/avatar"
 import { cn } from "@/lib/utils"
+import { CATEGORY_META } from "../category-meta"
 import { IphoneFrame, ViewportFrame } from "../ds-frame"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
@@ -365,6 +372,200 @@ function DemoTelefone() {
   )
 }
 
+// ── As peças, na largura da barra ───────────────────────────────────────────
+
+/**
+ * A barra solta numa placa, na largura de verdade (16rem) e sobre o fundo da
+ * página — esticada à largura do espécime, uma linha de menu de 960px não lê
+ * como menu.
+ */
+function Placa({ rotulo, children }: { rotulo?: string; children: React.ReactNode }) {
+  return (
+    <div className="flex w-64 shrink-0 flex-col gap-2">
+      {rotulo ? <span className="px-1 font-mono text-xs text-muted-foreground">{rotulo}</span> : null}
+      <div className="overflow-hidden rounded-2xl bg-sidebar shadow-lg ring-1 ring-foreground/10">
+        <SidebarProvider className="min-h-0">
+          <Sidebar collapsible="none" className="w-full bg-transparent">
+            <SidebarContent>{children}</SidebarContent>
+          </Sidebar>
+        </SidebarProvider>
+      </div>
+    </div>
+  )
+}
+
+const PECAS_DO_ITEM = [
+  ["SidebarMenuButton isActive", "A página atual: o fundo e o peso acesos."],
+  ["SidebarMenuBadge", "A contagem na ponta, sem clique."],
+  ["SidebarMenuAction showOnHover", "O ⋯ que aparece com o cursor (no toque, sempre)."],
+  ["Collapsible + SidebarMenuSub", "O submenu recolhível; o SubButton tem sm e md."],
+  ["SidebarMenuSkeleton", "A linha esperando dado, com e sem ícone, em md e lg."],
+] as const
+
+function DemoTiposDeItem() {
+  return (
+    <div className="flex flex-col gap-8 bg-background p-6 md:flex-row md:items-start">
+      <Placa>
+        <SidebarGroup>
+          <SidebarGroupLabel>Busca</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarInput placeholder="Buscar…" aria-label="Buscar na navegação" />
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarSeparator />
+        <SidebarGroup>
+          <SidebarGroupLabel>Itens</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton isActive>
+                  <HomeIcon />
+                  <span>Início</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton>
+                  <ReceiptPercentIcon />
+                  <span>Transações</span>
+                </SidebarMenuButton>
+                <SidebarMenuBadge>42</SidebarMenuBadge>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton>
+                  <TagIcon />
+                  <span>Categorias</span>
+                </SidebarMenuButton>
+                <SidebarMenuAction showOnHover aria-label="Mais opções de categorias">
+                  <EllipsisHorizontalIcon />
+                </SidebarMenuAction>
+              </SidebarMenuItem>
+              <Collapsible defaultOpen className="group/colapso">
+                <SidebarMenuItem>
+                  {/* `asChild`: o gatilho **é** a linha do menu, e não um
+                      botão em volta dela. */}
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton>
+                      <WalletIcon />
+                      <span>Carteiras</span>
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton isActive>Corrente</SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton>Poupança</SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton size="sm">Reserva</SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+              <SidebarMenuItem>
+                <SidebarMenuSkeleton showIcon />
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuSkeleton size="lg" showIcon />
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </Placa>
+      <DescriptionList className="min-w-0 flex-1 md:pt-14">
+        {PECAS_DO_ITEM.map(([peca, papel]) => (
+          <DescriptionListItem key={peca}>
+            <DescriptionTerm>
+              <code>{peca}</code>
+            </DescriptionTerm>
+            <DescriptionDetails>{papel}</DescriptionDetails>
+          </DescriptionListItem>
+        ))}
+      </DescriptionList>
+    </div>
+  )
+}
+
+const ALTURA_DO_BOTAO = { sm: 28, md: 32, lg: 48 } as const
+
+function DemoEscada() {
+  return (
+    <div className="flex flex-wrap justify-center gap-8 bg-background p-6">
+      {(["plain", "outline"] as const).map((variant) => (
+        <Placa key={variant} rotulo={`variant="${variant}"`}>
+          <SidebarGroup>
+            <SidebarMenu>
+              {(["sm", "md"] as const).map((size) => (
+                <SidebarMenuItem key={size}>
+                  <SidebarMenuButton variant={variant} size={size}>
+                    <MagnifyingGlassIcon />
+                    <span>size {size}</span>
+                  </SidebarMenuButton>
+                  <SidebarMenuBadge className="font-mono text-muted-foreground">{ALTURA_DO_BOTAO[size]}</SidebarMenuBadge>
+                </SidebarMenuItem>
+              ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton variant={variant} size="lg">
+                  <Avatar size="xs">
+                    <AvatarFallback className={cn(TOM_CONTA.surface, TOM_CONTA.ink)}>A</AvatarFallback>
+                  </Avatar>
+                  <div className="grid min-w-0 flex-1 text-left leading-tight">
+                    <span className="truncate text-sm font-medium">size lg</span>
+                    <span className="truncate text-xs text-muted-foreground">ana@exemplo.com</span>
+                  </div>
+                </SidebarMenuButton>
+                <SidebarMenuBadge className="font-mono text-muted-foreground">{ALTURA_DO_BOTAO.lg}</SidebarMenuBadge>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+        </Placa>
+      ))}
+    </div>
+  )
+}
+
+const CAMADAS_PLAIN = [
+  ["Foundations", ["Brand", "Colors", "Typography"]],
+  ["Atoms", ["Avatar", "Badge", "Button"]],
+] as const
+
+/** A navegação do catálogo em miniatura: a `plain`, sobre o fundo da página. */
+function DemoPlain() {
+  const [atual, setAtual] = React.useState("Badge")
+  return (
+    <div className="flex justify-center bg-background p-6">
+      <SidebarProvider open onOpenChange={() => {}} className="min-h-0 w-60">
+        <Sidebar collapsible="none" variant="plain" className="w-full">
+          <SidebarContent>
+            {CAMADAS_PLAIN.map(([camada, itens]) => {
+              const Icone = CATEGORY_META[camada].Icon
+              return (
+              <SidebarGroup key={camada}>
+                <SidebarGroupLabel>
+                  <Icone aria-hidden />
+                  {camada}
+                </SidebarGroupLabel>
+                <SidebarMenu>
+                  {itens.map((item) => (
+                    <SidebarMenuItem key={item}>
+                      <SidebarMenuButton isActive={item === atual} onClick={() => setAtual(item)}>
+                        <span>{item}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroup>
+              )
+            })}
+          </SidebarContent>
+        </Sidebar>
+      </SidebarProvider>
+    </div>
+  )
+}
+
 // ── A página ────────────────────────────────────────────────────────────────
 
 export default function SidebarDoc() {
@@ -457,141 +658,47 @@ export default function SidebarDoc() {
 
       <DocSection
         title="Os tipos de item"
-        description="Conteúdo não depende da largura: aqui a barra roda em `none`, a coluna simples, sem moldura."
+        description="A barra na largura dela (16rem), em collapsible=&quot;none&quot;, e ao lado a peça de cada linha. Passe o cursor na terceira para ver a ação."
         code={`<SidebarMenuItem>
   <SidebarMenuButton>…</SidebarMenuButton>
   <SidebarMenuBadge>42</SidebarMenuBadge>
   <SidebarMenuAction showOnHover>…</SidebarMenuAction>
 </SidebarMenuItem>`}
-        previewClassName="items-stretch p-0"
+        previewClassName="block p-0"
       >
-        <div className="w-full overflow-hidden rounded-lg border border-border">
-          <SidebarProvider className="min-h-0">
-            <Sidebar collapsible="none" className="w-full">
-              <SidebarContent>
-                <SidebarGroup>
-                  <SidebarGroupLabel>Busca</SidebarGroupLabel>
-                  <SidebarGroupContent>
-                    <SidebarInput
-                      placeholder="Buscar…"
-                      aria-label="Buscar na navegação"
-                    />
-                  </SidebarGroupContent>
-                </SidebarGroup>
-
-                <SidebarSeparator />
-
-                <SidebarGroup>
-                  <SidebarGroupLabel>Itens</SidebarGroupLabel>
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton isActive>
-                          <HomeIcon />
-                          <span>Ativo</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-
-                      <SidebarMenuItem>
-                        <SidebarMenuButton>
-                          <ReceiptPercentIcon />
-                          <span>Com contagem</span>
-                        </SidebarMenuButton>
-                        <SidebarMenuBadge>42</SidebarMenuBadge>
-                      </SidebarMenuItem>
-
-                      <SidebarMenuItem>
-                        <SidebarMenuButton>
-                          <TagIcon />
-                          <span>Com ação no cursor</span>
-                        </SidebarMenuButton>
-                        <SidebarMenuAction
-                          showOnHover
-                          aria-label="Mais opções de categorias"
-                        >
-                          <EllipsisHorizontalIcon />
-                        </SidebarMenuAction>
-                      </SidebarMenuItem>
-
-                      <Collapsible defaultOpen className="group/colapso">
-                        <SidebarMenuItem>
-                          {/* `asChild`: o gatilho **é** a linha do menu, e não
-                              um botão em volta dela. */}
-                          <CollapsibleTrigger asChild>
-                            <SidebarMenuButton>
-                              <WalletIcon />
-                              <span>Com submenu</span>
-                            </SidebarMenuButton>
-                          </CollapsibleTrigger>
-                          <CollapsibleContent>
-                            <SidebarMenuSub>
-                              <SidebarMenuSubItem>
-                                <SidebarMenuSubButton isActive>
-                                  Corrente
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                              <SidebarMenuSubItem>
-                                <SidebarMenuSubButton>
-                                  Poupança
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                              <SidebarMenuSubItem>
-                                <SidebarMenuSubButton size="sm">
-                                  Reserva (size sm)
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                            </SidebarMenuSub>
-                          </CollapsibleContent>
-                        </SidebarMenuItem>
-                      </Collapsible>
-
-                      <SidebarMenuItem>
-                        <SidebarMenuSkeleton showIcon />
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuSkeleton size="lg" showIcon />
-                      </SidebarMenuItem>
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </SidebarGroup>
-              </SidebarContent>
-            </Sidebar>
-          </SidebarProvider>
-        </div>
+        <DemoTiposDeItem />
       </DocSection>
 
       <DocSection
         title="A escada do botão"
         description="size mede a linha (28 · 32 · 48) e variant decide o contorno. lg é para identidade — workspace no topo, conta no rodapé — e é o único degrau inteiro no modo ícone."
         code={`<SidebarMenuButton size="lg" variant="outline">`}
-        previewClassName="items-stretch p-0"
+        previewClassName="block p-0"
       >
-        <div className="w-full overflow-hidden rounded-lg border border-border">
-          <SidebarProvider className="min-h-0">
-            <Sidebar collapsible="none" className="w-full">
-              <SidebarContent>
-                {(["plain", "outline"] as const).map((variant) => (
-                  <SidebarGroup key={variant}>
-                    <SidebarGroupLabel>{variant}</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                      <SidebarMenu>
-                        {(["sm", "md", "lg"] as const).map((size) => (
-                          <SidebarMenuItem key={size}>
-                            <SidebarMenuButton variant={variant} size={size}>
-                              <MagnifyingGlassIcon />
-                              <span>size {size}</span>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        ))}
-                      </SidebarMenu>
-                    </SidebarGroupContent>
-                  </SidebarGroup>
-                ))}
-              </SidebarContent>
-            </Sidebar>
-          </SidebarProvider>
-        </div>
+        <DemoEscada />
       </DocSection>
+
+      <DocSection
+        title="A versão sem placa: plain"
+        description="A navegação do próprio catálogo, à esquerda desta página: sem placa nem fio, no fluxo da página, com os grupos divididos por um fio, o rótulo em caixa alta com o ícone da camada e as linhas apagadas até o cursor. Vale com collapsible=&quot;none&quot; — quem a prende sob a barra do topo é a casca."
+        code={`<SidebarProvider open onOpenChange={() => {}}>
+  <Sidebar collapsible="none" variant="plain">
+    <SidebarContent>
+      <SidebarGroup>
+        <SidebarGroupLabel asChild><h2><CubeIcon />Atoms</h2></SidebarGroupLabel>
+        <SidebarMenu>…</SidebarMenu>
+      </SidebarGroup>
+    </SidebarContent>
+  </Sidebar>
+</SidebarProvider>`}
+        previewClassName="block p-0"
+      >
+        <DemoPlain />
+      </DocSection>
+
+      <DocNote title="Controlada, para o ⌘B não gravar o cookie">
+        Uma barra que não recolhe ainda vive num <code>SidebarProvider</code>, e o provedor escuta ⌘B. Descontrolado, ele gravaria o cookie de aberta/fechada — o mesmo que o app lê. Com <code>open</code> e um <code>onOpenChange</code> vazio, o atalho não escreve nada.
+      </DocNote>
 
       <DocNote title="Recolhida, o rótulo vira tooltip">
         Com <code>collapsible=&quot;icon&quot;</code>, passe <code>tooltip</code> ao <code>SidebarMenuButton</code>: sem ele a barra recolhida é uma coluna de símbolos sem nome. Ele só aparece recolhida e fora do toque — no telefone o rótulo está por extenso.
@@ -610,10 +717,10 @@ export default function SidebarDoc() {
         rows={[
           {
             prop: "variant",
-            type: '"sidebar" | "floating" | "inset"',
+            type: '"sidebar" | "floating" | "inset" | "plain"',
             default: '"floating"',
             description:
-              "A superfície. floating: a placa solta; sidebar: rente, com fio; inset: solta o conteúdo, e exige um SidebarInset.",
+              "A superfície. floating: a placa solta; sidebar: rente, com fio; inset: solta o conteúdo, e exige um SidebarInset; plain: sem placa, a navegação do catálogo — só com collapsible=\"none\".",
           },
           {
             prop: "collapsible",
