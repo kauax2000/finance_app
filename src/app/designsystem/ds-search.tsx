@@ -1,6 +1,6 @@
 "use client";
 
-import { ClockIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid";
+import { ClockIcon } from "@heroicons/react/16/solid";
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -30,15 +30,8 @@ import {
 } from "@/components/ui/command";
 import { Kbd } from "@/components/ui/kbd";
 import { KbdGroup } from "@/components/ui/kbd-group";
-import { useBrandGlow } from "@/hooks/use-brand-glow";
+import { TopBarSearch } from "@/components/ui/top-bar";
 import { useCommandRecents } from "@/hooks/use-command-recents";
-import {
-  searchFieldIconClassName,
-  searchFieldShapeClassName,
-  searchFieldShortcutClassName,
-  searchFieldSizeClassName,
-  searchFieldSurfaceClassName,
-} from "@/lib/search-field-classes";
 import { CATEGORY_META } from "./category-meta";
 import type { Category } from "./ds-doc";
 import { CATEGORY_ORDER, REGISTRY, getEntry } from "./registry";
@@ -100,7 +93,22 @@ export function DsSearch() {
 
   return (
     <>
-      <DsSearchTrigger onClick={() => setOpen(true)} />
+      {/* O gatilho é o `TopBarSearch` (rodada 237): o ícone abaixo de `lg` e a
+          pílula com ⌘K acima, com o brilho de marca e a frase que troca. Quem
+          escuta ⌘K e / é esta paleta (ela alterna), então ele não escuta. */}
+      <TopBarSearch
+        onOpen={() => setOpen(true)}
+        label="Buscar no design system"
+        collapse="lg"
+        listen={false}
+        glow
+        placeholder={
+          <span className="grid min-w-0 text-left [&>*]:col-start-1 [&>*]:row-start-1">
+            <FraseRolante texto="Buscar componentes e tokens…" papel="sai" />
+            <FraseRolante texto="Abrir a busca" papel="entra" />
+          </span>
+        }
+      />
 
       <CommandDialog
         open={open}
@@ -464,89 +472,3 @@ function FraseRolante({
   );
 }
 
-/**
- * O gatilho no meio do cabeçalho.
- *
- * É um `button` com cara de campo, e não um `input`: focá-lo não deixa digitar,
- * e um campo que não aceita texto é a promessa que a paleta existe para
- * cumprir. O `Kbd` ao lado não é enfeite — é a única coisa na tela que ensina
- * que o atalho existe, e um atalho que ninguém descobre não tem uso.
- *
- * No telefone sobra só o ícone: a barra tem 56px e já carrega o menu, a marca e
- * o tema — e teclado físico, ali, não costuma haver.
- */
-function DsSearchTrigger({ onClick }: { onClick: () => void }) {
-  // O brilho de marca ao aproximar, só na pílula. Ele mora num invólucro, e
-  // não no botão: o `::before` do brilho fica em `z` negativo sob `isolate`,
-  // e no próprio botão ele pintaria **por cima** do fundo e da flor do
-  // `tertiary`. No invólucro, só o anel acende.
-  const glowRef = useBrandGlow(true);
-  const comum = {
-    type: "button" as const,
-    onClick,
-    "aria-haspopup": "dialog" as const,
-    "aria-keyshortcuts": "Meta+K Control+K",
-    "aria-label": "Buscar no design system",
-  };
-  return (
-    <>
-      {/* No telefone, um ícone entre ícones: contorno ali desenhava uma caixa
-          em volta de um botão ao lado de um switch sem caixa nenhuma. São dois
-          botões, e não um que muda de cara por `lg:`, porque a pílula veste a
-          receita de `lib/search-field-classes` (rodada 198) — e uma constante
-          não se prefixa: `lg:` montado em tempo de execução não existe. Só um
-          aparece por vez, então o leitor de tela ouve um. */}
-      <Button
-        {...comum}
-        variant="tertiary"
-        size="icon-md"
-        className="rounded-full text-muted-foreground lg:hidden"
-      >
-        <MagnifyingGlassIcon className="opacity-70" aria-hidden />
-      </Button>
-      <div
-        ref={glowRef}
-        className="relative isolate hidden w-full rounded-full brand-glow lg:flex"
-      >
-        <Button
-          {...comum}
-          variant="tertiary"
-          className={cn(
-            // A pílula de busca: a forma, o degrau `md` (32) e a superfície de
-            // campo, as mesmas do `SearchInput` e do campo do `Command`.
-            searchFieldShapeClassName,
-            searchFieldSizeClassName.md,
-            searchFieldSurfaceClassName.field,
-            "w-full justify-start font-normal text-muted-foreground",
-            // O hover não pinta o fundo: quem responde à aproximação é o
-            // brilho da borda, e os dois juntos eram demais.
-            "[--button-bloom-fill:transparent] dark:[--button-bloom-fill:transparent]",
-            // E o texto não acende: a frase troca, a cor fica a do repouso.
-            "hover:text-muted-foreground active:text-muted-foreground aria-expanded:text-muted-foreground",
-          )}
-        >
-          <MagnifyingGlassIcon className={searchFieldIconClassName} aria-hidden />
-          {/* Em repouso o campo diz o que se acha nele; com o cursor (ou o
-              foco de teclado) ele vira o convite para a ação. As duas frases
-              ocupam a mesma célula da grade, então a largura não pula, e trocam
-              **palavra a palavra** (ver `FraseRolante`).
-
-              **`text-left` é carga estrutural**: o `<button>` centraliza texto
-              por padrão do navegador, e a frase curta ficava centrada na largura
-              da longa — medido, "Buscar" nascia 40px à direita da lupa. */}
-          <span
-            aria-hidden
-            className="grid min-w-0 text-left [&>*]:col-start-1 [&>*]:row-start-1"
-          >
-            <FraseRolante texto="Buscar componentes e tokens…" papel="sai" />
-            <FraseRolante texto="Abrir a busca" papel="entra" />
-          </span>
-          {/* `aria-hidden` porque o atalho já é anunciado pelo
-              `aria-keyshortcuts` — a tecla sem pastilha, a de todo campo de
-              busca. */}
-          <Kbd keys="mod+k" aria-hidden className={searchFieldShortcutClassName} />
-        </Button>
-      </div>
-    </>
-  );
-}

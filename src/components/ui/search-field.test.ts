@@ -30,7 +30,8 @@ describe("o campo de busca é um desenho só", () => {
   it("o SearchInput e o gatilho do cabeçalho vestem a receita", () => {
     const pecas = {
       SearchInput: fonte("src/components/ui/search-input.tsx"),
-      gatilho: trecho(fonte("src/app/designsystem/ds-search.tsx"), "function DsSearchTrigger", "\n}\n"),
+      // Desde a rodada 237 o gatilho do cabeçalho é o `TopBarSearch`.
+      gatilho: trecho(fonte("src/components/ui/top-bar.tsx"), "function TopBarSearch", "\n}\n"),
     }
     for (const [nome, codigo] of Object.entries(pecas)) {
       expect(codigo, nome).toContain("searchFieldShapeClassName")

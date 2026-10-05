@@ -1767,6 +1767,20 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   balance` fora de `@layer`, e ele religava a quebra. **O telefone é um primeiro desenho**: o dono vai mexer
   bastante nele ao revisar as telas do app, e o design system se atualiza
   junto; a prévia num iPhone fica na página até lá.
+- **O `TopBar` ganhou o fio ao rolar, a pílula, o título no meio, o `lg`, as
+  peças e quatro comportamentos** (rodada 237). No `scroll` o fio de baixo
+  aparece junto com o vidro; `variant="floating"` é a pílula da casa (a placa,
+  o anel, a sombra, a 8px e abaixo do notch); `titleAlign="center"` põe o
+  título no meio no telefone; `size="lg"` é 64. A área segura passa por
+  `--top-bar-safe-area`. Peças: **`TopBarAction`** (o botão de ícone com a dica
+  e a contagem no nome — **nenhuma tela escreve o `span` da contagem** nem
+  embrulha um botão da barra num `Tooltip` à mão), **`TopBarSearch`** (a pílula
+  com a tecla a partir de `md` ou `lg` e o ícone abaixo; escuta ⌘K e `/`, menos
+  com `listen={false}`), `TopBarProgress` e `TopBarSkeleton`. **Uma árvore
+  só**: as pontas aceitam `phone` (o que mostram abaixo de `md`) — **nenhuma
+  barra escreve duas árvores com `md:hidden` e `hidden md:contents`**.
+  `hideOnScroll` some no telefone ao rolar para baixo, e tocar no título leva
+  a tela ao topo. A barra do app e a do catálogo usam as peças.
 - **O `SplitShell` quebra pelo casco e ganhou o lado, a proporção, a coluna em
   três faixas, as peças e quatro comportamentos** (rodada 235). A divisão é
   uma container query (`@container/split-shell`, 48rem), e não `lg:` da

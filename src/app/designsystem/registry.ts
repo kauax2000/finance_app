@@ -484,7 +484,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("sidebar", "Sidebar", "A navegação lateral do app — e, sem placa (plain), a do catálogo.", ui("sidebar"), "Sidebar, SidebarProvider, SidebarInset, SidebarTrigger, SidebarRail, SidebarContent, SidebarGroup, SidebarMenu, SidebarMenuButton, useSidebar"),
   entry("split-shell", "Split Shell", "Campo de um lado, coluna de conteúdo do outro — quebra pelo casco, com o voltar, o pé e os passos.", ui("split-shell"), "SplitShell, SplitShellAside, SplitShellBack, SplitShellFooter, SplitShellSkeleton"),
   entry("toolbar", "Toolbar", "Filtros e ações acima de uma lista — presa sob a barra do topo, com o botão de filtros, as fichas, a busca, o ⋯ e o teclado de toolbar.", ui("toolbar"), "Toolbar, ToolbarFilters, ToolbarActions, ToolbarRow, ToolbarButton, ToolbarFilterButton, ToolbarSearch, ToolbarCount, ToolbarChips, ToolbarFilterIndicator"),
-  entry("top-bar", "Top Bar", "A barra do topo da janela.", ui("top-bar"), "TopBar, TopBarStart, TopBarTitle, TopBarContent, TopBarActions"),
+  entry("top-bar", "Top Bar", "A barra do topo da janela — barra ou pílula, com a ação, a busca e o fio de progresso, e uma árvore para o telefone.", ui("top-bar"), "TopBar, TopBarStart, TopBarTitle, TopBarContent, TopBarActions, TopBarAction, TopBarSearch, TopBarProgress, TopBarSkeleton"),
 ]
 
 export function getEntry(slug: string): RegistryEntry | undefined {

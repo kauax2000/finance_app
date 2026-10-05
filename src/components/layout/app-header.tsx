@@ -1,10 +1,7 @@
 "use client"
 
 import * as React from "react"
-import {
-    AppCommandPalette,
-    AppSearchButton,
-} from "@/components/layout/app-command-palette"
+import { AppCommandPalette } from "@/components/layout/app-command-palette"
 import { NotificationBellLink } from "@/components/layout/notification-bell-link"
 import { PageHeaderBack } from "@/components/ui/page-header"
 import { SidebarTrigger } from "@/components/ui/sidebar"
@@ -12,6 +9,7 @@ import {
     TopBar,
     TopBarActions,
     TopBarContent,
+    TopBarSearch,
     TopBarStart,
     TopBarTitle,
 } from "@/components/ui/top-bar"
@@ -73,13 +71,15 @@ type AppHeaderProps = {
  * recolhida a barra lateral —, e
  * vidro depois que a tela rola.
  *
- * As duas árvores são `contents`: o que decide a linha é o `TopBar`, e as peças
- * continuam filhas diretas dele nos dois ramos.
+ * Uma árvore só: cada ponta diz o que mostra no telefone pelo `phone`, e os
+ * `children` valem de `md` para cima — no telefone o voltar (ou a carteira) e
+ * o título; no desktop o gatilho da barra lateral e a trilha.
  */
 export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     const chromeSlot = usePageChromeState()
-    // A busca tem um gatilho em cada árvore e uma paleta só, que também abre
-    // por ⌘K. Ela mora aqui porque a barra existe em toda tela da casca.
+    // A busca tem um gatilho (lupa no telefone, pílula no desktop) e uma
+    // paleta só, que também abre por ⌘K. Ela mora aqui porque a barra existe
+    // em toda tela da casca.
     const [searchOpen, setSearchOpen] = React.useState(false)
     const openSearch = () => setSearchOpen(true)
 
@@ -90,41 +90,44 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
 
     return (
         <TopBar position="auto" surface="scroll">
-            <div className="contents md:hidden">
-                <TopBarStart>
-                    {mobileBackHref ? (
+            <TopBarStart
+                phone={
+                    mobileBackHref ? (
                         // O voltar pelo histórico (rodada 232) fica desligado aqui:
                         // ligá-lo muda o destino do voltar do telefone, e isso é
                         // mudança de jornada (docs/JORNADAS.md e o Atlas).
                         <PageHeaderBack href={mobileBackHref} history={false} />
                     ) : (
                         <WorkspaceSwitcher appearance="header" />
-                    )}
-                </TopBarStart>
-                <TopBarTitle>{mobileTitle}</TopBarTitle>
-                <TopBarActions>
-                    {chromeSlot?.dateFilter}
-                    <AppSearchButton onClick={openSearch} />
-                    <NotificationBellLink />
-                </TopBarActions>
-            </div>
-
-            <div className="hidden md:contents">
-                <TopBarStart>
-                    <SidebarTrigger className="-ml-2" />
-                </TopBarStart>
-                <TopBarContent>
-                    {titleMode === "dashboard" ? (
-                        <DashboardPageTitle pathname={pathname} />
-                    ) : (
-                        <AppBreadcrumbNav pathname={pathname} />
-                    )}
-                </TopBarContent>
-                <TopBarActions>
-                    <AppSearchButton onClick={openSearch} />
-                    <NotificationBellLink />
-                </TopBarActions>
-            </div>
+                    )
+                }
+            >
+                <SidebarTrigger className="-ml-2" />
+            </TopBarStart>
+            {/* O título do telefone mora no meio, e não numa ponta própria:
+                uma segunda peça `flex-1` vazia dividiria a linha e o título
+                truncaria antes. */}
+            <TopBarContent phone={<TopBarTitle>{mobileTitle}</TopBarTitle>}>
+                {titleMode === "dashboard" ? (
+                    <DashboardPageTitle pathname={pathname} />
+                ) : (
+                    <AppBreadcrumbNav pathname={pathname} />
+                )}
+            </TopBarContent>
+            <TopBarActions>
+                {/* O recorte de tempo só sobe à barra no telefone. Fica fora do
+                    `phone`: lá o sino e a busca montariam duas vezes. */}
+                <span className="contents md:hidden">{chromeSlot?.dateFilter}</span>
+                {/* A paleta já escuta ⌘K; o `/` ela não escuta, então a
+                    pílula não o anuncia. */}
+                <TopBarSearch
+                    onOpen={openSearch}
+                    listen={false}
+                    slash={false}
+                    className="w-56"
+                />
+                <NotificationBellLink />
+            </TopBarActions>
 
             {/* Portalizada: não ocupa lugar na linha do `TopBar`. */}
             <AppCommandPalette open={searchOpen} onOpenChange={setSearchOpen} />

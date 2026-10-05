@@ -439,7 +439,7 @@ describe("régua da Sidebar", () => {
       "utf8"
     )
     expect(cabecalho).toMatch(
-      /transition-\[background-color\] duration-\(--duration-slow\) ease-\(--ease-emphasized\)/
+      /transition-\[background-color[^\]]*\] duration-\(--duration-slow\) ease-\(--ease-emphasized\)/
     )
     for (const [nome, fonte] of [
       ["sidebar", CODIGO],

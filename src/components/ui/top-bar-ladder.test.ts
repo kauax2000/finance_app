@@ -74,7 +74,9 @@ describe("régua do TopBar", () => {
     expect(base).toContain("pt-[var(--top-bar-safe,0px)]")
     expect(base).not.toMatch(/\bbox-content\b/)
 
-    const safe = "[--top-bar-safe:env(safe-area-inset-top,0px)]"
+    // A área segura passa por `--top-bar-safe-area` desde a rodada 237.
+    expect(base).toContain("[--top-bar-safe-area:env(safe-area-inset-top,0px)]")
+    const safe = "[--top-bar-safe:var(--top-bar-safe-area)]"
     expect(topBarVariants({ position: "fixed" })).toContain(safe)
     expect(topBarVariants({ position: "auto" })).toContain(`max-md:${safe}`)
     expect(topBarVariants({ position: "sticky" })).not.toContain(safe)

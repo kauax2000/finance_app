@@ -6,15 +6,18 @@ import {
   CalendarIcon,
   EllipsisHorizontalIcon,
   HomeIcon,
-  MagnifyingGlassIcon,
   ReceiptPercentIcon,
+  ShoppingCartIcon,
   WalletIcon,
 } from "@heroicons/react/16/solid"
 
 import { AppWordmark } from "@/components/layout/app-wordmark"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { ColorTile } from "@/components/ui/color-tile"
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
+import { MoneyDisplay } from "@/components/ui/money-display"
 import { PageHeaderBack } from "@/components/ui/page-header"
-import { SearchInput } from "@/components/ui/search-input"
 import {
   Sidebar,
   SidebarContent,
@@ -29,119 +32,240 @@ import {
 } from "@/components/ui/sidebar"
 import {
   TopBar,
+  TopBarAction,
   TopBarActions,
   TopBarContent,
+  TopBarProgress,
+  TopBarSearch,
+  TopBarSkeleton,
   TopBarStart,
   TopBarTitle,
 } from "@/components/ui/top-bar"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Muted } from "@/components/ui/typography"
 import { IDENTITY_TONES } from "@/lib/avatar"
 import { cn } from "@/lib/utils"
 import { IphoneFrame, ViewportFrame } from "../ds-frame"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { DocNote, DocSection, Eixo, Interruptor, PropsTable, Usage } from "../ds-doc"
 
 /** O tom do espaço de trabalho, por índice — como na página da barra lateral. */
 const TOM = IDENTITY_TONES[2]
 
-// ── Palco ──────────────────────────────────────────────────────────────────
-
-/** Uma janela de desktop: a moldura fluida do catálogo, acima do `md`. */
-function Desktop({
-  title,
-  height = 200,
-  children,
-}: {
-  title: string
-  height?: number
-  children: React.ReactNode
-}) {
-  return (
-    <ViewportFrame
-      title={title}
-      height={height}
-      className="rounded-lg"
-      screenClassName="bg-background"
-    >
-      {children}
-    </ViewportFrame>
-  )
-}
-
-/** O iPhone, com a tela começando no topo — é onde a barra mora, abaixo da ilha. */
-function Telefone({
-  title,
-  zoom,
-  children,
-}: {
-  title: string
-  zoom?: number
-  children: React.ReactNode
-}) {
-  return (
-    <IphoneFrame title={title} zoom={zoom}>
-      {children}
-    </IphoneFrame>
-  )
-}
+const LANCAMENTOS = [
+  ["Mercado", "Hoje · Nubank", -128.4, "#22C55E"],
+  ["Uber", "Hoje · Itaú", -23.9, "#3B82F6"],
+  ["Salário", "Ontem · Inter", 6200, "#14B8A6"],
+  ["Restaurante", "26/03 · Nubank", -86.9, "#F97316"],
+  ["Farmácia", "25/03 · Nubank", -54.3, "#EC4899"],
+  ["Padaria", "24/03 · Itaú", -18.5, "#EAB308"],
+  ["Spotify", "23/03 · Nubank", -21.9, "#8B5CF6"],
+  ["Mercado", "22/03 · Inter", -210, "#22C55E"],
+  ["Posto", "21/03 · Itaú", -180, "#EF4444"],
+  ["Cinema", "20/03 · Nubank", -64, "#6366F1"],
+] as const
 
 /**
- * Conteúdo que passa por baixo da barra. Os traços em `bg-primary` existem para
- * o vidro ter o que borrar: sobre superfície chapada o borrão não desenha nada.
+ * O que passa por baixo da barra: lançamentos com o ladrilho da categoria. As
+ * cores dão ao vidro o que borrar — sobre superfície chapada o borrão não
+ * desenha nada.
  */
 function Conteudo() {
   return (
-    <div className="space-y-3 p-4">
-      {Array.from({ length: 8 }, (_, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-3 rounded-lg border border-border bg-card p-3"
-        >
-          <div className="h-2 w-16 rounded-full bg-primary" />
-          <div className="h-2 flex-1 rounded-full bg-muted" />
-        </div>
+    <ItemGroup variant="divided" className="px-4 py-2">
+      {LANCAMENTOS.map(([nome, legenda, valor, cor], i) => (
+        <Item key={i} variant="flush" className="px-0">
+          <ItemMedia>
+            <ColorTile size="md" color={cor}>
+              <ShoppingCartIcon aria-hidden />
+            </ColorTile>
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>{nome}</ItemTitle>
+            <ItemDescription className="text-xs">{legenda}</ItemDescription>
+          </ItemContent>
+          <MoneyDisplay value={valor} signed tone={valor > 0 ? "income" : "expense"} className="text-sm" />
+        </Item>
       ))}
-    </div>
+    </ItemGroup>
   )
 }
 
-/**
- * A região que rola, com a barra dentro. O `TopBar` acende pelo primeiro
- * ancestral que rola — aqui, este `div`; no app, a janela.
- *
- * Com `position="auto"` a barra é fixa no telefone, e o conteúdo desce a altura
- * dela: é o `--mobile-header-offset` que a casca do app usa.
- */
-function Rolagem({
-  fixa = false,
-  children,
-}: {
-  fixa?: boolean
-  children: React.ReactNode
-}) {
+/** A região que rola, com a barra dentro: a barra acende pelo ancestral que rola. */
+function Rolagem({ fixa = false, children }: { fixa?: boolean; children: React.ReactNode }) {
   return (
     <div
-      className={
-        fixa
-          ? "min-h-0 flex-1 overflow-y-auto max-md:pt-(--mobile-header-offset)"
-          : "min-h-0 flex-1 overflow-y-auto"
-      }
+      className={cn(
+        "min-h-0 flex-1 overflow-y-auto",
+        fixa && "max-md:pt-[calc(var(--top-bar-h,3rem)+var(--top-bar-safe-area,0px))]"
+      )}
     >
       {children}
       <Conteudo />
+      {/* No telefone a tela é alta: uma segunda volta, para haver o que rolar. */}
+      {fixa ? <Conteudo /> : null}
     </div>
   )
 }
 
-function Sino() {
+function Sino({ count }: { count?: number }) {
   return (
-    <Button variant="tertiary" size="icon-md" aria-label="Notificações">
-      <BellIcon aria-hidden />
-    </Button>
+    <TopBarAction label="Notificações" count={count} countLabel={count ? `${count} não lidas` : undefined}>
+      <BellIcon />
+    </TopBarAction>
   )
 }
 
-// ── As versões ───────────────────────────────────────────────────────────────
+function Avatarzinho() {
+  return (
+    <Avatar size="sm">
+      <AvatarFallback className={cn(TOM.surface, TOM.ink)}>P</AvatarFallback>
+    </Avatar>
+  )
+}
+
+const ARRANJOS = ["app", "detalhe", "marca", "pública"] as const
+type Arranjo = (typeof ARRANJOS)[number]
+
+/** Os quatro arranjos que o produto usa, numa barra só: o eixo troca as pontas. */
+function Barra({
+  arranjo,
+  busca,
+  contagem,
+  progresso,
+  ...props
+}: React.ComponentProps<typeof TopBar> & {
+  arranjo: Arranjo
+  busca: boolean
+  contagem: boolean
+  progresso: boolean
+}) {
+  const sino = <Sino count={contagem ? 3 : undefined} />
+  const buscar = busca ? <TopBarSearch onOpen={() => {}} listen={false} className="w-56" /> : null
+  return (
+    <TopBar {...props}>
+      {arranjo === "app" ? (
+        <>
+          <TopBarStart>
+            <Avatarzinho />
+          </TopBarStart>
+          <TopBarTitle>Início</TopBarTitle>
+          <TopBarActions>
+            {buscar}
+            {sino}
+          </TopBarActions>
+        </>
+      ) : arranjo === "detalhe" ? (
+        <>
+          <TopBarStart>
+            <PageHeaderBack href="#" history={false} />
+          </TopBarStart>
+          <TopBarTitle>Nubank Ultravioleta</TopBarTitle>
+          <TopBarActions>
+            <Button variant="tertiary" className="max-md:hidden">
+              <CalendarIcon aria-hidden />
+              mar 2026
+            </Button>
+            <TopBarAction label="Mais ações">
+              <EllipsisHorizontalIcon />
+            </TopBarAction>
+          </TopBarActions>
+        </>
+      ) : arranjo === "marca" ? (
+        <TopBarContent className="justify-center">
+          <AppWordmark size={props.size === "lg" ? "md" : "sm"} rainbow />
+        </TopBarContent>
+      ) : (
+        <>
+          {/* Os dois lados `flex-1` e a busca no meio: ela centra na janela. */}
+          <TopBarStart className="min-w-0 flex-1 shrink">
+            <AppWordmark size={props.size === "lg" ? "md" : "sm"} rainbow />
+          </TopBarStart>
+          {busca ? (
+            <div className="flex justify-center max-md:order-last md:w-full md:max-w-sm">
+              <TopBarSearch onOpen={() => {}} listen={false} placeholder="Buscar na ajuda…" />
+            </div>
+          ) : null}
+          <TopBarActions className="flex-1 justify-end">
+            <Button variant="tertiary">entrar</Button>
+            <Button>criar conta</Button>
+          </TopBarActions>
+        </>
+      )}
+      {progresso ? <TopBarProgress /> : null}
+    </TopBar>
+  )
+}
+
+function DemoNaTela() {
+  const [size, setSize] = React.useState<"sm" | "md" | "lg">("sm")
+  const [variant, setVariant] = React.useState<"bar" | "floating">("bar")
+  const [surface, setSurface] = React.useState<"solid" | "glass" | "scroll">("scroll")
+  const [arranjo, setArranjo] = React.useState<Arranjo>("app")
+  const [busca, setBusca] = React.useState(true)
+  const [contagem, setContagem] = React.useState(true)
+  const [progresso, setProgresso] = React.useState(false)
+
+  return (
+    <div className="flex w-full flex-col gap-6 p-4">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+        <Eixo rotulo="size" valores={["sm", "md", "lg"] as const} valor={size} onChange={setSize} />
+        <Eixo rotulo="variant" valores={["bar", "floating"] as const} valor={variant} onChange={setVariant} />
+        <Eixo rotulo="surface" valores={["solid", "glass", "scroll"] as const} valor={surface} onChange={setSurface} />
+        <Eixo rotulo="arranjo" valores={ARRANJOS} valor={arranjo} onChange={setArranjo} />
+      </div>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <Interruptor id="tb-busca" rotulo="TopBarSearch" valor={busca} onChange={setBusca} />
+        <Interruptor id="tb-contagem" rotulo="count" valor={contagem} onChange={setContagem} />
+        <Interruptor id="tb-progresso" rotulo="TopBarProgress" valor={progresso} onChange={setProgresso} />
+      </div>
+      <ViewportFrame title="Barra do topo numa janela" height={360} className="rounded-lg" screenClassName="bg-background">
+        <Rolagem>
+          <Barra
+            size={size}
+            variant={variant}
+            surface={surface}
+            arranjo={arranjo}
+            busca={busca}
+            contagem={contagem}
+            progresso={progresso}
+          />
+        </Rolagem>
+      </ViewportFrame>
+    </div>
+  )
+}
+
+function DemoTelefone() {
+  const [titleAlign, setTitleAlign] = React.useState<"start" | "center">("start")
+  const [variant, setVariant] = React.useState<"bar" | "floating">("bar")
+  const [sumir, setSumir] = React.useState(true)
+  const [voltar, setVoltar] = React.useState(false)
+
+  return (
+    <div className="flex w-full flex-col items-center gap-6 p-4">
+      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3">
+        <Eixo rotulo="titleAlign" valores={["start", "center"] as const} valor={titleAlign} onChange={setTitleAlign} />
+        <Eixo rotulo="variant" valores={["bar", "floating"] as const} valor={variant} onChange={setVariant} />
+        <Interruptor id="tb-sumir" rotulo="hideOnScroll" valor={sumir} onChange={setSumir} />
+        <Interruptor id="tb-voltar" rotulo="voltar" valor={voltar} onChange={setVoltar} />
+      </div>
+      <IphoneFrame title="Barra do topo num iPhone">
+        <Rolagem fixa>
+          {/* Uma árvore só: `phone` diz o que cada ponta mostra abaixo de md. */}
+          <TopBar position="auto" surface="scroll" variant={variant} titleAlign={titleAlign} hideOnScroll={sumir}>
+            <TopBarStart phone={voltar ? <PageHeaderBack href="#" history={false} /> : <Avatarzinho />}>
+              {/* No app, o gatilho da lateral; aqui, a ponta do desktop não aparece. */}
+              <Avatarzinho />
+            </TopBarStart>
+            <TopBarTitle>{voltar ? "Nubank Ultravioleta" : "Início"}</TopBarTitle>
+            <TopBarActions>
+              <TopBarSearch onOpen={() => {}} listen={false} />
+              <Sino count={3} />
+            </TopBarActions>
+          </TopBar>
+        </Rolagem>
+      </IphoneFrame>
+    </div>
+  )
+}
 
 const SECOES = [
   { rotulo: "Início", icone: HomeIcon },
@@ -149,424 +273,156 @@ const SECOES = [
   { rotulo: "Carteiras", icone: WalletIcon },
 ] as const
 
-/** A barra do app no desktop: gatilho, fio, título e ações. */
-function BarraDoAppDesktop() {
+/** A barra do app no desktop, ao lado da barra lateral: gatilho, título e ações. */
+function DemoComALateral() {
   return (
-    <Desktop title="Prévia da barra do app no desktop" height={320}>
-      <SidebarProvider>
-        <Sidebar collapsible="icon">
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {SECOES.map((s, i) => (
-                    <SidebarMenuItem key={s.rotulo}>
-                      <SidebarMenuButton isActive={i === 0} tooltip={s.rotulo}>
-                        <s.icone />
-                        <span>{s.rotulo}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-        </Sidebar>
-        <SidebarInset className="min-h-0 overflow-y-auto">
-          <TopBar surface="scroll">
-            <TopBarStart>
-              <SidebarTrigger className="-ml-2" />
-            </TopBarStart>
-            <TopBarTitle>Início</TopBarTitle>
-            <TopBarActions>
-              <Sino />
-            </TopBarActions>
-          </TopBar>
-          <Conteudo />
-        </SidebarInset>
-      </SidebarProvider>
-    </Desktop>
-  )
-}
-
-/** A barra do app no telefone: espaço de trabalho, título e ações. */
-function BarraDoAppTelefone({ voltar = false }: { voltar?: boolean }) {
-  return (
-    <Telefone
-      title={
-        voltar
-          ? "Prévia da barra de detalhe num iPhone"
-          : "Prévia da barra do app num iPhone"
-      }
-    >
-      <Rolagem fixa>
-        <TopBar position="auto" surface="scroll">
-          <TopBarStart>
-            {voltar ? (
-              <PageHeaderBack href="#" />
-            ) : (
-              <Avatar size="sm">
-                <AvatarFallback className={cn(TOM.surface, TOM.ink)}>
-                  P
-                </AvatarFallback>
-              </Avatar>
-            )}
-          </TopBarStart>
-          <TopBarTitle>{voltar ? "Nubank Ultravioleta" : "Início"}</TopBarTitle>
-          <TopBarActions>
-            {voltar ? (
-              <Button variant="tertiary" size="icon-md" aria-label="Mais ações">
-                <EllipsisHorizontalIcon aria-hidden />
-              </Button>
-            ) : (
-              <Sino />
-            )}
-          </TopBarActions>
-        </TopBar>
-      </Rolagem>
-    </Telefone>
-  )
-}
-
-/** Detalhe: voltar, título e uma ação. */
-function BarraDeDetalhe() {
-  return (
-    <TopBar position="static">
-      <TopBarStart>
-        <PageHeaderBack href="#" />
-      </TopBarStart>
-      <TopBarTitle>Nubank Ultravioleta</TopBarTitle>
-      <TopBarActions>
-        <Button variant="tertiary" size="icon-md" aria-label="Mais ações">
-          <EllipsisHorizontalIcon aria-hidden />
-        </Button>
-      </TopBarActions>
-    </TopBar>
-  )
-}
-
-/** Marca: só o nome do produto, no meio — entrada, convite, fluxo sem casca. */
-function BarraDeMarca() {
-  return (
-    <TopBar position="static">
-      <TopBarContent className="justify-center">
-        <AppWordmark size="sm" rainbow />
-      </TopBarContent>
-    </TopBar>
-  )
-}
-
-/**
- * Pública, com a busca no meio. Os dois lados são `flex-1` e a busca não
- * encolhe: é o que a centraliza de verdade, e não no espaço que sobra.
- */
-function BarraPublica() {
-  return (
-    <TopBar position="static">
-      <TopBarStart className="min-w-0 flex-1 shrink">
-        <AppWordmark size="sm" rainbow />
-      </TopBarStart>
-      <SearchInput
-        aria-label="Buscar"
-        className="hidden w-full max-w-sm md:flex"
-      />
-      <TopBarActions className="flex-1 justify-end">
-        <Button
-          variant="tertiary"
-          size="icon-md"
-          className="md:hidden"
-          aria-label="Buscar"
-        >
-          <MagnifyingGlassIcon aria-hidden />
-        </Button>
-        <Button variant="tertiary">
-          entrar
-        </Button>
-        <Button>criar conta</Button>
-      </TopBarActions>
-    </TopBar>
-  )
-}
-
-/** Com filtro: o recorte de tempo da tela mora nas ações, antes do sino. */
-function BarraComFiltro() {
-  return (
-    <TopBar position="static">
-      <TopBarTitle>Faturas</TopBarTitle>
-      <TopBarActions>
-        <Button variant="tertiary">
-          <CalendarIcon aria-hidden />
-          set 2026
-        </Button>
-        <Sino />
-      </TopBarActions>
-    </TopBar>
-  )
-}
-
-/** A mesma barra numa janela de desktop e num telefone. */
-function NasDuas({
-  nome,
-  children,
-}: {
-  nome: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="flex w-full flex-col items-center gap-4">
-      <Desktop title={`Prévia da barra ${nome} no desktop`} height={120}>
-        {children}
-      </Desktop>
-      <Telefone title={`Prévia da barra ${nome} num iPhone`} zoom={0.6}>
-        {children}
-      </Telefone>
+    <div className="p-4">
+      <ViewportFrame title="A barra do app ao lado da barra lateral" height={320} className="rounded-lg" screenClassName="bg-background">
+        <SidebarProvider>
+          <Sidebar collapsible="icon">
+            <SidebarContent>
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {SECOES.map((s, i) => (
+                      <SidebarMenuItem key={s.rotulo}>
+                        <SidebarMenuButton isActive={i === 0} tooltip={s.rotulo}>
+                          <s.icone />
+                          <span>{s.rotulo}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </SidebarContent>
+          </Sidebar>
+          <SidebarInset className="min-h-0 overflow-y-auto">
+            <TopBar surface="scroll">
+              <TopBarStart>
+                <SidebarTrigger className="-ml-2" />
+              </TopBarStart>
+              <TopBarTitle>Início</TopBarTitle>
+              <TopBarActions>
+                <TopBarSearch onOpen={() => {}} listen={false} className="w-56" />
+                <Sino count={3} />
+              </TopBarActions>
+            </TopBar>
+            <Conteudo />
+          </SidebarInset>
+        </SidebarProvider>
+      </ViewportFrame>
     </div>
   )
 }
 
-// ── Página ───────────────────────────────────────────────────────────────────
-
 export default function TopBarDoc() {
-  const [superficie, setSuperficie] = React.useState<"solid" | "glass" | "scroll">(
-    "scroll"
-  )
-
   return (
     <>
       <Usage>
-          A barra do topo da janela, parada enquanto a tela rola: o voltar ou a marca, o nome da tela e as ações que valem em qualquer lugar. O topo de dentro da tela é o <code>PageHeader</code>; a barra de baixo do telefone é a <code>BottomBar</code>. Não escreva <code>&lt;header className=&quot;sticky …&quot;&gt;</code> nem borrão à mão.
+        A barra do topo da janela, a que fica parada enquanto a tela rola. Usam hoje a barra do app (<code>AppHeader</code>: o espaço de trabalho ou o voltar no telefone, o gatilho da lateral e a trilha no desktop, a busca e o sino) e a do catálogo. O topo <strong>de dentro</strong> da tela é o <code>PageHeader</code>; o de uma superfície, o <code>DialogHeader</code>.
       </Usage>
 
       <DocSection
-        title="O app, no desktop"
-        description="Gatilho da barra lateral, título e ações, em 48px com a lateral aberta ou recolhida. Role o conteúdo: ela vira vidro."
-        previewClassName="p-4"
-        code={`<TopBar position="auto" surface="scroll">
-  <TopBarStart>
-    <SidebarTrigger className="-ml-2" />
-  </TopBarStart>
-  <TopBarContent>{título ou trilha}</TopBarContent>
-  <TopBarActions><NotificationBellLink /></TopBarActions>
+        title="Na tela"
+        description="Os eixos e os arranjos que o produto usa: o app, o detalhe, a marca e a pública. Role a prévia — no scroll a barra vira vidro e o fio aparece."
+        code={`<TopBar surface="scroll">
+  <TopBarStart><SidebarTrigger /></TopBarStart>
+  <TopBarTitle>Início</TopBarTitle>
+  <TopBarActions>
+    <TopBarSearch onOpen={abrirBusca} className="w-56" />
+    <TopBarAction label="Notificações" count={3} countLabel="3 não lidas"><BellIcon /></TopBarAction>
+  </TopBarActions>
+  {carregando ? <TopBarProgress /> : null}
 </TopBar>`}
+        previewClassName="block p-0"
       >
-        <BarraDoAppDesktop />
-      </DocSection>
-
-      <DocSection
-        title="O app, no telefone"
-        description="Fixa no topo, com a área segura dentro da altura. Na raiz de uma seção, o espaço de trabalho; numa tela de detalhe, o voltar."
-        previewClassName="justify-center gap-6 p-4"
-        code={`<TopBar position="auto" surface="scroll">
-  <TopBarStart><PageHeaderBack href={voltar} /></TopBarStart>
-  <TopBarTitle>Nubank Ultravioleta</TopBarTitle>
-  <TopBarActions>…</TopBarActions>
-</TopBar>`}
-      >
-        <BarraDoAppTelefone />
-        <BarraDoAppTelefone voltar />
+        <DemoNaTela />
       </DocSection>
 
       <DocNote title="A altura tem o fio e a área segura dentro">
-          A caixa é <code>--top-bar-h</code> mais <code>--top-bar-safe</code> em <code>border-box</code>, então o total é o <code>--mobile-header-offset</code> que a casca usa para empurrar o conteúdo. Com o fio por fora, o conteúdo começaria 1px debaixo da barra.
+        A caixa é <code>--top-bar-h</code> mais <code>--top-bar-safe</code> em <code>border-box</code>, então o total é o <code>--mobile-header-offset</code> que a casca usa para empurrar o conteúdo. A área segura passa por <code>--top-bar-safe-area</code>, e não por <code>env()</code> direto: é o que o iPhone do catálogo consegue emular. Na <code>floating</code> ela sai de dentro e vira a distância do topo — a pílula desce inteira abaixo do notch.
+      </DocNote>
+
+      <DocNote title="O fio só aparece ao rolar">
+        No <code>scroll</code>, em repouso a barra é a página, e um fio sobre nada é ruído; ele acende junto com o vidro, quando o conteúdo passa por baixo. Em <code>solid</code> e <code>glass</code> ele fica. E ele lê <code>--sidebar-inset-rule</code>: ao lado de uma lateral <code>floating</code>, some.
+      </DocNote>
+
+      <DocNote title="A ação da barra traz o nome, a dica e a contagem">
+        <code>TopBarAction</code> é o botão de ícone da barra: o nome vira a dica (com a tecla, se houver <code>shortcut</code>), e a contagem entra no nome — &ldquo;Notificações, 3 não lidas&rdquo; —, com o número no canto escondido do leitor. <code>TopBarSearch</code> é a pílula com ⌘K a partir de <code>md</code> e o ícone abaixo; ela escuta ⌘K e <code>/</code>, menos quando a tela já escuta (<code>listen=&#123;false&#125;</code>).
+      </DocNote>
+
+      <DocNote title="Um primeiro desenho">
+        A barra é a casca de toda tela, e ela vai ser revista junto com as telas do app — o desenho, o telefone e o que a barra do app carrega devem mudar bastante ali, e esta página muda junto. Até lá, ela mostra a proposta.
       </DocNote>
 
       <DocSection
-        title="Detalhe"
-        description="Voltar, título e uma ação. O voltar é o PageHeaderBack, e todo botão da barra fica no degrau padrão, md."
-        previewClassName="p-4"
-        code={`<TopBar>
-  <TopBarStart><PageHeaderBack href="/credit-cards" /></TopBarStart>
+        title="No telefone"
+        description="Uma árvore só: phone diz o que cada ponta mostra abaixo de md. O título pode ir para o meio, a barra some ao rolar para baixo e volta ao subir, e tocar no título leva a tela ao topo. Role a tela do iPhone e toque no título."
+        code={`<TopBar position="auto" surface="scroll" titleAlign="center" hideOnScroll>
+  <TopBarStart phone={<PageHeaderBack href="/credit-cards" />}><SidebarTrigger /></TopBarStart>
   <TopBarTitle>Nubank Ultravioleta</TopBarTitle>
-  <TopBarActions>
-    <Button variant="tertiary" size="icon-md" aria-label="Mais ações">…</Button>
-  </TopBarActions>
+  <TopBarActions>…</TopBarActions>
 </TopBar>`}
+        previewClassName="block p-0"
       >
-        <NasDuas nome="de detalhe">
-          <BarraDeDetalhe />
-        </NasDuas>
+        <DemoTelefone />
       </DocSection>
 
       <DocSection
-        title="Marca"
-        description="Só o nome do produto, no meio. Para o que acontece fora da casca: entrada, convite, recuperação de senha."
-        previewClassName="p-4"
-        code={`<TopBar>
-  <TopBarContent className="justify-center">
-    <AppWordmark size="sm" rainbow />
-  </TopBarContent>
-</TopBar>`}
+        title="Ao lado da barra lateral"
+        description="O gatilho na ponta de entrada; recolhida em ícone, a lateral floating leva o gatilho para dentro dela, e a ponta devolve o gap. Ao lado do floating a barra não pinta em repouso."
+        code={`<SidebarInset>
+  <TopBar surface="scroll">
+    <TopBarStart><SidebarTrigger className="-ml-2" /></TopBarStart>
+    …
+  </TopBar>
+</SidebarInset>`}
+        previewClassName="block p-0"
       >
-        <NasDuas nome="de marca">
-          <BarraDeMarca />
-        </NasDuas>
+        <DemoComALateral />
       </DocSection>
 
       <DocSection
-        title="Pública, com a busca no meio"
-        description="Marca à esquerda, busca centralizada, ações à direita; no telefone a busca vira ícone. Os lados são flex-1 para a busca centrar na janela."
-        previewClassName="p-4"
-        code={`<TopBar>
-  <TopBarStart className="min-w-0 flex-1 shrink"><AppWordmark size="sm" rainbow /></TopBarStart>
-  <SearchInput className="hidden w-full max-w-sm md:flex" />
-  <TopBarActions className="flex-1 justify-end">…</TopBarActions>
-</TopBar>`}
+        title="Esqueleto"
+        description="TopBarSkeleton: a ponta, o título e as ações, na altura do degrau."
+        code={`<TopBarSkeleton actions={2} />`}
+        previewClassName="flex-col items-stretch gap-3"
       >
-        <NasDuas nome="pública">
-          <BarraPublica />
-        </NasDuas>
-      </DocSection>
-
-      <DocSection
-        title="Com filtro"
-        description="O recorte de tempo da tela entra nas ações, antes do sino — o dateFilter que as páginas publicam para a barra."
-        previewClassName="p-4"
-        code={`<TopBar>
-  <TopBarTitle>Faturas</TopBarTitle>
-  <TopBarActions>{dateFilter}<NotificationBellLink /></TopBarActions>
-</TopBar>`}
-      >
-        <NasDuas nome="com filtro">
-          <BarraComFiltro />
-        </NasDuas>
-      </DocSection>
-
-      <DocSection
-        title="Superfícies"
-        description="solid é o fundo da página; glass é a régua de barra; scroll é solid até o conteúdo passar por baixo, e glass depois. Role a prévia."
-        previewClassName="flex-col items-stretch gap-3 p-4"
-        code={`<TopBar surface="scroll">…</TopBar>`}
-      >
-        <div className="flex gap-2" role="group" aria-label="Superfície">
-          {(["solid", "glass", "scroll"] as const).map((s) => (
-            <Button
-              key={s}
-              size="sm"
-              variant={superficie === s ? "secondary" : "tertiary"}
-              aria-pressed={superficie === s}
-              onClick={() => setSuperficie(s)}
-            >
-              <span>{s}</span>
-            </Button>
-          ))}
-        </div>
-        <Desktop title="Prévia das superfícies da barra do topo" height={240}>
-          <Rolagem>
-            <TopBar surface={superficie}>
-              <TopBarTitle>Transações</TopBarTitle>
-              <TopBarActions>
-                <Sino />
-              </TopBarActions>
-            </TopBar>
-          </Rolagem>
-        </Desktop>
-      </DocSection>
-
-      <DocSection
-        title="Tamanhos"
-        description="sm 48, md 56. O padrão é sm, no telefone e no desktop."
-        previewClassName="flex-col items-stretch gap-4 p-4"
-        code={`<TopBar size="sm" />  // 48
-<TopBar size="md" />  // 56
-<TopBar />            // sm, o padrão`}
-      >
-        <Desktop title="Prévia dos dois degraus da barra do topo" height={128}>
-          <div className="flex flex-col gap-2 p-2">
-            {(["sm", "md"] as const).map((size) => (
-              <TopBar key={size} size={size} position="static" className="rounded-md border">
-                <TopBarTitle>{size}</TopBarTitle>
-                <Muted className="text-xs">
-                  {size === "sm" ? "48px" : "56px"}
-                </Muted>
-              </TopBar>
-            ))}
-          </div>
-        </Desktop>
-        <div className="flex justify-center">
-          <NasDuas nome="no tamanho padrão">
-            <TopBar position="static">
-              <TopBarTitle>sm</TopBarTitle>
-              <Muted className="text-xs">48 no telefone e no desktop</Muted>
-            </TopBar>
-          </NasDuas>
-        </div>
+        <TopBarSkeleton className="rounded-lg border border-border" />
+        <TopBarSkeleton size="lg" actions={1} className="rounded-lg border border-border" />
       </DocSection>
 
       <DocNote title="Grudada fica abaixo da faixa de aviso">
-          <code>sticky</code> mora em <code>--z-sticky</code>, para a faixa de sem conexão (<code>--z-banner</code>) cobrir a barra no desktop. No telefone a barra é fixa, a faixa desce para baixo dela, e ali ela vai a <code>--z-header</code>.
-      </DocNote>
-
-      <DocNote title="O fio é da barra lateral, e não da tela">
-          A borda de baixo lê <code>--sidebar-inset-rule</code>, publicada pelo <code>SidebarInset</code>: com a lateral <code>floating</code> ele some, em vez de ficar pendurado. Fora de um <code>SidebarInset</code>, 1px.
+        <code>sticky</code> mora em <code>--z-sticky</code>, para a faixa de sem conexão (<code>--z-banner</code>) cobrir a barra no desktop. No telefone a barra é fixa, a faixa desce para baixo dela, e ali ela vai a <code>--z-header</code>.
       </DocNote>
 
       <DocNote title="Telas fora da casca não têm barra">
-          Entrada, 404 e erro mostram a marca acima do conteúdo. A versão de marca é a forma delas se um dia precisarem de uma.
+        Entrada, 404 e erro mostram a marca no próprio casco (o <code>SplitShell</code>). O arranjo de marca é a forma delas se um dia precisarem de uma barra.
       </DocNote>
 
       <PropsTable
         title="Eixos de TopBar"
         rows={[
-          {
-            prop: "size",
-            type: '"sm" | "md"',
-            default: '"sm"',
-            description:
-              "Altura: 48 ou 56. O padrão é sm.",
-          },
-          {
-            prop: "position",
-            type: '"static" | "sticky" | "fixed" | "auto"',
-            default: '"sticky"',
-            description:
-              "sticky gruda na região que rola; fixed prende na janela e soma a área segura; auto é fixed no telefone e sticky acima.",
-          },
-          {
-            prop: "surface",
-            type: '"solid" | "glass" | "scroll"',
-            default: '"solid"',
-            description:
-              "solid é --background; glass é barSurfaceClassName; scroll troca de um para o outro ao rolar.",
-          },
-          {
-            prop: "gutter",
-            type: '"bar" | "none"',
-            default: '"bar"',
-            description:
-              "A calha de 16px. none para quem traz o próprio Container, como o catálogo.",
-          },
+          { prop: "size", type: '"sm" | "md" | "lg"', default: '"sm"', description: "Altura: 48, 56 ou 64. O padrão é sm, no telefone e no desktop; lg é a barra das páginas de marca." },
+          { prop: "position", type: '"static" | "sticky" | "fixed" | "auto"', default: '"sticky"', description: "sticky gruda na região que rola; fixed prende na janela e soma a área segura; auto é fixed no telefone e sticky acima." },
+          { prop: "surface", type: '"solid" | "glass" | "scroll"', default: '"solid"', description: "solid é --background; glass é a régua de barra; scroll troca de um para o outro ao rolar, e o fio vem junto." },
+          { prop: "variant", type: '"bar" | "floating"', default: '"bar"', description: "bar encosta nas bordas, com o fio; floating é a pílula solta, a 8px, com o anel e a sombra." },
+          { prop: "titleAlign", type: '"start" | "center"', default: '"start"', description: "No telefone, o título à esquerda ou no meio, com as pontas iguais." },
+          { prop: "hideOnScroll", type: "boolean", default: "false", description: "No telefone, a barra sobe ao rolar para baixo e volta ao subir; nunca com o foco dentro." },
+          { prop: "gutter", type: '"bar" | "none"', default: '"bar"', description: "A calha de 16px. none para quem traz o próprio Container, como o catálogo." },
         ]}
       />
 
       <PropsTable
         title="Peças"
         rows={[
-          {
-            prop: "TopBar",
-            type: "ComponentProps<'header'>",
-            description: "A linha, com altura, fio, camada e superfície.",
-          },
-          {
-            prop: "TopBarStart",
-            type: "ComponentProps<'div'>",
-            description: "A ponta de entrada: voltar, gatilho da barra lateral, marca.",
-          },
-          {
-            prop: "TopBarTitle",
-            type: "ComponentProps<'h1'> & { asChild?: boolean }",
-            description:
-              "O nome da tela, truncado numa linha.",
-          },
-          {
-            prop: "TopBarContent",
-            type: "ComponentProps<'div'>",
-            description: "O meio elástico, para o que não é texto: trilha, busca, título composto.",
-          },
-          {
-            prop: "TopBarActions",
-            type: "ComponentProps<'div'>",
-            description: "A ponta de saída, encostada à direita.",
-          },
+          { prop: "TopBarStart · TopBarContent · TopBarActions", type: "ComponentProps<'div'> & { phone? }", description: "As pontas e o meio. phone é o que mostram abaixo de md; null esconde no telefone." },
+          { prop: "TopBarTitle", type: "ComponentProps<'h1'> & { phone?, pageTitle?, scrollToTop?, asChild? }", description: "O nome da tela. pageTitle recebe o título que sobe do PageHeader; tocar nele no telefone sobe ao topo." },
+          { prop: "TopBarAction", type: "Button & { label, count?, countLabel?, shortcut?, tooltip? }", description: "O botão de ícone da barra, com a dica e a contagem no nome." },
+          { prop: "TopBarSearch", type: "{ onOpen, label?, placeholder?, shortcut?, slash?, listen?, collapse?, glow? }", description: "A pílula de busca com a tecla, que vira ícone abaixo da quebra, e os atalhos ⌘K e /." },
+          { prop: "TopBarProgress", type: "{ value?, label? }", description: "O fio de carregamento na aresta de baixo; sem value, indeterminado." },
+          { prop: "TopBarSkeleton", type: "{ size?, actions?, start? }", description: "A barra esperando, no SkeletonGroup." },
         ]}
       />
     </>

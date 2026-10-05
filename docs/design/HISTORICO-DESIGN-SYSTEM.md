@@ -18965,3 +18965,66 @@ rodadas de revisão que as 223 a 235 foram.
 - `doc-pages.test.ts`: toda entrada do registry tem página; toda página de
   componente (fora das Fundações) tem `Usage` e `PropsTable`; nenhuma redeclara
   os controles; nenhuma usa "Conteúdo da seção" nem lorem ipsum.
+
+### Rodada 237 — o TopBar: o fio ao rolar, a pílula, o título no meio e o lg; a ação, a busca, o esqueleto e o fio de progresso; uma árvore para o telefone, o some-ao-rolar, o toque no título e os atalhos da busca
+
+A primeira rodada pelo guia da 236 (`COMPONENTE-NOVO.md`, a skill
+`design-system-component`).
+
+**Levantamento.** Dois consumidores: a barra do app (`AppHeader`) e a do
+catálogo (`DsTopBar`). A do app escrevia **duas árvores inteiras** (`contents
+md:hidden` e `hidden md:contents`); o sino desenhava a contagem num `span`
+posicionado com nove classes; a busca era um botão com dica à mão no app e
+**dois** botões no catálogo (ícone abaixo de `lg`, pílula acima). A página
+repetia cada arranjo numa seção própria, com um par desktop + iPhone por
+seção, e o conteúdo que rolava por baixo eram barras coloridas sem sentido. O
+dono escolheu tudo, e a migração da barra do app e da do catálogo.
+
+**O redesenho.** O fio só ao rolar (`data-[scrolled=false]:border-b-transparent`,
+só no `scroll`); `variant="floating"` (a placa `--popover`, o anel, a sombra, a
+8px; com `fixed`/`auto` a distância do topo soma a área segura e a caixa perde o
+recuo de dentro — a pílula desce inteira abaixo do notch); `titleAlign="center"`
+(uma grade `1fr · max-content · 1fr` com áreas nomeadas, só abaixo de `md`);
+`size="lg"` (64; o título fica no corpo da barra — `top-bar-ladder.test.ts` tranca o `text-sm` —, e quem cresce é a marca). **A área segura virou variável**
+(`--top-bar-safe-area`), e o iPhone do catálogo a emula.
+
+**As peças.** `TopBarAction` (a dica com a tecla, a contagem no nome e o
+número escondido do leitor, 99+, alvo de 44 no dedo), `TopBarSearch` (ícone e
+pílula pelas quebras escritas por extenso; o `placeholder` aceita nó, e o
+catálogo passa a frase que troca; `glow` é o brilho de marca), `TopBarProgress`
+(`role="progressbar"`, determinado por `scale`, indeterminado pela `@utility
+top-bar-progress`) e `TopBarSkeleton`.
+
+**Os comportamentos.** `phone` nas pontas (dois `span` em `display: contents`,
+um escondido por largura); `hideOnScroll` (o hook de rolagem passou a medir a
+direção — sobe passada a altura da barra, volta ao subir, nunca com o foco
+dentro, e só o CSS decide que é só no telefone); o toque no título (no
+telefone, rola o ancestral que rola, ou a janela, ao topo — suave, salvo com
+movimento reduzido); e os atalhos da busca (⌘K e `/` fora de campo de texto,
+`listen={false}` para quem já escuta). **Medido no iPhone do catálogo**: o
+título centrado a 0,5px do meio da tela, a barra sumindo a 250px e voltando ao
+subir, e o toque no título levando a rolagem de 450 a 0. A primeira medição do
+sumir falhou por um motivo honesto: a demonstração não tinha conteúdo bastante
+para rolar numa tela de 815px.
+
+**As barras.** A do app virou uma árvore (um agente): o título do telefone mora
+no `phone` do `TopBarContent` (um `<h1>` vazio e elástico no desktop roubaria
+metade da linha), o filtro de data fica só no telefone por um `span
+md:hidden` (no `phone` das ações, a busca e o sino montariam duas vezes e o
+sino buscaria a contagem duas vezes), e a busca é `TopBarSearch` com
+`listen={false} slash={false}` — a paleta do app escuta só ⌘K. O botão de busca
+à mão (`AppSearchButton`) saiu. A do catálogo usa o `TopBarSearch` com
+`collapse="lg"`, o brilho e a frase. **Um seletor quebrou e foi consertado**: o
+`TopBarStart` devolvia o `gap` quando o gatilho da lateral ia para dentro dela
+por um filho direto, e o `phone` embrulha os filhos — o seletor ganhou a
+versão por dentro da ponta larga.
+
+**A página** é a forma do guia: "Na tela" com `size`, `variant`, `surface` e o
+arranjo (app, detalhe, marca, pública) e as chaves da busca, da contagem e do
+progresso; "No telefone" com `titleAlign`, `variant`, `hideOnScroll` e o
+voltar; a barra ao lado da lateral; o esqueleto. `top-bar-versions.test.ts`
+tranca as versões.
+
+**E é um primeiro desenho**, como o `PageHeader` da 232: o dono avisou que a
+barra vai mudar bastante na revisão das telas do app, e o design system se
+atualiza ali. A página diz isso numa nota, e as prévias ficam.

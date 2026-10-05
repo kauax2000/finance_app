@@ -10,7 +10,6 @@ import {
     ChartPieIcon,
     ClockIcon,
     CreditCardIcon,
-    MagnifyingGlassIcon,
 } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { ColorTile } from "@/components/ui/color-tile"
@@ -39,11 +38,6 @@ import {
 import { Kbd } from "@/components/ui/kbd"
 import { KbdGroup } from "@/components/ui/kbd-group"
 import { Spinner } from "@/components/ui/spinner"
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { ACCOUNT_MENU_PROFILE_LINK_ITEMS } from "@/components/layout/account-menu-links"
@@ -63,7 +57,6 @@ import { commandFilter } from "@/lib/command-filter"
 import { creditCardIdentitySubtitle } from "@/lib/credit-card-display"
 import { useCategoriesQuery } from "@/lib/queries/use-categories"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
-import { ariaShortcut } from "@/lib/shortcut"
 import { useCommandRecents } from "@/hooks/use-command-recents"
 
 /**
@@ -109,8 +102,8 @@ type AppCommandPaletteProps = {
 }
 
 /**
- * A paleta. Quem guarda o `open` é a barra do topo, porque o gatilho mora nas
- * duas árvores dela (telefone e desktop) e a paleta, uma vez só.
+ * A paleta. Quem guarda o `open` é a barra do topo, porque o gatilho mora nela
+ * (o `TopBarSearch`: ícone no telefone, pílula no desktop) e a paleta, uma vez só.
  */
 export function AppCommandPalette({ open, onOpenChange }: AppCommandPaletteProps) {
     // ⌘K vale até dentro de um campo: é o gesto de sair de onde se está, como
@@ -455,29 +448,4 @@ function vazioTitulo(pagina: string | undefined, query: string): string {
             : "Nenhum cartão cadastrado."
     }
     return `Nada encontrado para "${query}".`
-}
-
-/**
- * A lupa da barra do topo. `aria-keyshortcuts` anuncia o atalho, e a dica o
- * mostra a quem tem cursor.
- */
-export function AppSearchButton({ onClick }: { onClick: () => void }) {
-    return (
-        <Tooltip>
-            <TooltipTrigger asChild>
-                <Button
-                    type="button"
-                    variant="tertiary"
-                    size="icon-md"
-                    aria-label="Buscar"
-                    aria-haspopup="dialog"
-                    aria-keyshortcuts={ariaShortcut("mod+k")}
-                    onClick={onClick}
-                >
-                    <MagnifyingGlassIcon />
-                </Button>
-            </TooltipTrigger>
-            <TooltipContent shortcut="mod+k">Buscar</TooltipContent>
-        </Tooltip>
-    )
 }

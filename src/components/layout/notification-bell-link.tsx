@@ -2,13 +2,11 @@
 
 import { useCallback, useEffect } from "react"
 import { BellIcon } from "@heroicons/react/16/solid"
-import { Button } from "@/components/ui/button"
+import { TopBarAction } from "@/components/ui/top-bar"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { useNotificationsUi } from "@/components/layout/notifications-ui-provider"
 import { countUnreadNotifications } from "@/lib/notifications"
-import { tagChipUnreadCount } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
 
 export function NotificationBellLink() {
     const { user, loading: authLoading } = useAuth()
@@ -42,32 +40,17 @@ export function NotificationBellLink() {
     }, [refresh])
 
     return (
-        <Button
+        <TopBarAction
             type="button"
-            variant="tertiary"
-            size="icon-md"
-            className="relative"
-            aria-label={
-                unreadCount > 0
-                    ? `Notificações, ${unreadCount} não ${unreadCount === 1 ? "lida" : "lidas"}`
-                    : "Notificações"
-            }
+            label="Notificações"
+            count={unreadCount}
+            countLabel={`${unreadCount} não ${unreadCount === 1 ? "lida" : "lidas"}`}
             aria-expanded={isOpen}
             onClick={() => toggle()}
         >
             {/* `24/outline` a 16px, por decisão: não existe `16/outline`, e o
                 traço é o do sol do `ThemeToggle`. Exceção nomeada no auditor. */}
             <BellIcon className="size-4" />
-            {unreadCount > 0 ? (
-                <span
-                    className={cn(
-                        "absolute top-0 right-0 z-10 flex h-4 min-w-4 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-0 px-1 text-2xs font-semibold leading-none ring-2 ring-background",
-                        tagChipUnreadCount
-                    )}
-                >
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
-            ) : null}
-        </Button>
+        </TopBarAction>
     )
 }

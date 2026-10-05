@@ -3278,6 +3278,26 @@
   }
 }
 
+/* O fio indeterminado do TopBarProgress (rodada 237): um traço de 40% que
+   atravessa a aresta da barra e recomeça. Movimento reduzido: o traço para no
+   meio, sem viajar. */
+@keyframes top-bar-progress-run {
+  from {
+    translate: -100% 0;
+  }
+  to {
+    translate: 250% 0;
+  }
+}
+
+@utility top-bar-progress {
+  animation: top-bar-progress-run 1.2s var(--ease-in-out) infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    translate: 75% 0;
+  }
+}
+
 /* As linhas do corpo da `Table` sobem 3px em cascata (rodada 225), na
    referência de movimento do dono: 160ms de `--ease-out`, a primeira aos 40ms
    e cada uma 30ms depois, com teto na décima segunda. Quem liga é o `<tbody>`
