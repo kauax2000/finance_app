@@ -24,7 +24,6 @@ import {
   ItemGroup,
   ItemTitle,
 } from "@/components/ui/item"
-import { Label } from "@/components/ui/label"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import {
   PageHeader,
@@ -40,67 +39,14 @@ import {
   PageHeaderTitleRow,
 } from "@/components/ui/page-header"
 import { StatCardDelta } from "@/components/ui/stat-card"
-import { Switch } from "@/components/ui/switch"
 import { TabsNav, TabsNavLink } from "@/components/ui/tabs"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { TopBar, TopBarTitle } from "@/components/ui/top-bar"
 import { IphoneFrame } from "../ds-frame"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { DocNote, DocSection, Eixo, Interruptor, PropsTable, Usage } from "../ds-doc"
 
 const COR = "#F97316"
 
-function Eixo<T extends string>({
-  rotulo,
-  valores,
-  valor,
-  onChange,
-}: {
-  rotulo: string
-  valores: readonly T[]
-  valor: T
-  onChange: (v: T) => void
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="font-mono text-xs text-muted-foreground">{rotulo}</span>
-      <ToggleGroup
-        type="single"
-        variant="segmented"
-        size="sm"
-        value={valor}
-        onValueChange={(v) => v && onChange(v as T)}
-        aria-label={rotulo}
-      >
-        {valores.map((v) => (
-          <ToggleGroupItem key={v} value={v} className="font-mono">
-            {v}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
-    </div>
-  )
-}
 
-function Interruptor({
-  id,
-  rotulo,
-  valor,
-  onChange,
-}: {
-  id: string
-  rotulo: string
-  valor: boolean
-  onChange: (v: boolean) => void
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <Switch id={id} size="sm" checked={valor} onCheckedChange={onChange} />
-      <Label htmlFor={id} className="font-mono text-xs font-normal">
-        {rotulo}
-      </Label>
-    </div>
-  )
-}
 
 /** As três ações que o ⋯ reparte: as duas só de ícone por fora, a principal na borda. */
 function Acoes({ quantas }: { quantas: "uma" | "três" }) {

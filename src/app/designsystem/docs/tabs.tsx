@@ -9,8 +9,6 @@ import {
 } from "@heroicons/react/16/solid"
 
 import { Kbd } from "@/components/ui/kbd"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import {
   Tabs,
   TabsAdd,
@@ -23,9 +21,8 @@ import {
   type TabsVariant,
 } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { IphoneFrame } from "../ds-frame"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { DocNote, DocSection, Eixo, Interruptor, PropsTable, Usage } from "../ds-doc"
 
 const VARIANTES = ["floating", "solid", "underline", "plain"] as const
 const DEGRAUS = ["sm", "md", "lg", "xl"] as const
@@ -33,45 +30,7 @@ const ORIENTACOES = ["horizontal", "vertical"] as const
 
 const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
 
-function Eixo<T extends string>({
-  rotulo,
-  valores,
-  valor,
-  onChange,
-}: {
-  rotulo: string
-  valores: readonly T[]
-  valor: T
-  onChange: (v: T) => void
-}) {
-  return (
-    <ToggleGroup
-      type="single"
-      variant="segmented"
-      size="sm"
-      value={valor}
-      onValueChange={(v) => v && onChange(v as T)}
-      aria-label={rotulo}
-    >
-      {valores.map((v) => (
-        <ToggleGroupItem key={v} value={v} className="font-mono">
-          {v}
-        </ToggleGroupItem>
-      ))}
-    </ToggleGroup>
-  )
-}
 
-function Interruptor({ id, rotulo, valor, onChange }: { id: string; rotulo: string; valor: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <div className="flex items-center gap-2">
-      <Switch id={id} size="sm" checked={valor} onCheckedChange={onChange} />
-      <Label htmlFor={id} className="font-mono text-xs font-normal">
-        {rotulo}
-      </Label>
-    </div>
-  )
-}
 
 const PAINEIS = [
   { valor: "extrato", nome: "Extrato", texto: "12 transações entre 01/03 e 28/03." },

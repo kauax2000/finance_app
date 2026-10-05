@@ -18943,3 +18943,25 @@ utility redefine `--foreground`; ela não redefine token nenhum, e foi corrigido
   notch. Como o wordmark do campo é branco (herda o `color` do arco-íris), o
   `SplitShellAside` recebe a versão da página em `logo` — no catálogo, o
   `AppWordmark rainbow`; sem ela, a `brand` herda a tinta do texto.
+
+### Rodada 236 — o componente nasce completo: o guia, a skill, os controles da demonstração no ds-doc e a forma das páginas trancada
+
+**O pedido.** Que todo componente novo, em qualquer camada, já nasça com as
+versões pensadas e a página escrita na forma certa, para não precisar das
+rodadas de revisão que as 223 a 235 foram.
+
+**O que entrou.**
+- `docs/design/COMPONENTE-NOVO.md`: o levantamento, as quatro perguntas
+  (Redesenho, Peças, Comportamento, App) com de onde sai cada opção, o
+  checklist da API, a forma fixa da página, o registro na mesma mudança, a
+  verificação e uma tabela das armadilhas já pagas, com a rodada de cada uma.
+- A skill `design-system-component` (`.claude/skills/`), que dispara ao criar
+  ou redesenhar um componente e aplica o guia.
+- `AGENTS.md`: a seção "Componente novo nasce completo", e a invariante 8
+  apontando para ela.
+- **`Eixo` e `Interruptor` moram no `ds-doc.tsx`.** Treze páginas declaravam o
+  mesmo `Eixo` e seis o mesmo `Interruptor`, corpo idêntico (medido por hash);
+  saíram 508 linhas. A página nova só importa.
+- `doc-pages.test.ts`: toda entrada do registry tem página; toda página de
+  componente (fora das Fundações) tem `Usage` e `PropsTable`; nenhuma redeclara
+  os controles; nenhuma usa "Conteúdo da seção" nem lorem ipsum.

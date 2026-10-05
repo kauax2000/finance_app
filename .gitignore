@@ -67,6 +67,7 @@ supabase/.temp/
 !.claude/skills/
 .claude/skills/*
 !.claude/skills/design-system-guard/
+!.claude/skills/design-system-component/
 supabase/.branches/
 
 # Estado da skill de design; o relatório de crítica fica em docs/design/

@@ -23,8 +23,7 @@ import {
   BottomBarTab,
 } from "@/components/ui/bottom-bar"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 import { IphoneFrame } from "../ds-frame"
 
 /** As três abas do app, para o espécime não inventar uma navegação própria. */
@@ -41,37 +40,6 @@ const CONTAGEM = ["sem", "com"] as const
 const ESTADO = ["pronta", "carregando"] as const
 const VIDRO = ["não", "sim"] as const
 
-function Eixo<T extends string>({
-  rotulo,
-  valores,
-  valor,
-  onChange,
-}: {
-  rotulo: string
-  valores: readonly T[]
-  valor: T
-  onChange: (v: T) => void
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-muted-foreground">{rotulo}</span>
-      <ToggleGroup
-        type="single"
-        variant="segmented"
-        size="sm"
-        value={valor}
-        onValueChange={(v) => v && onChange(v as T)}
-        aria-label={rotulo}
-      >
-        {valores.map((v) => (
-          <ToggleGroupItem key={v} value={v} className="font-mono">
-            {v}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
-    </div>
-  )
-}
 
 /** Conteúdo que rola por baixo — sem ele o vidro não tem o que borrar. */
 function Conteudo({ titulo }: { titulo: string }) {

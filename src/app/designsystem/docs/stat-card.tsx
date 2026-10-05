@@ -27,8 +27,7 @@ import {
   StatCardValue,
   StatCardValueSkeleton,
 } from "@/components/ui/stat-card"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 const VARIANTES = ["separate", "joined"] as const
 const TAMANHOS = ["sm", "md", "lg"] as const
@@ -44,35 +43,6 @@ const SEMANAS = [
   { semana: "S7", gasto: 2140 },
 ]
 
-/** Um eixo, em pílulas segmentadas. */
-function Eixo<T extends string>({
-  rotulo,
-  valores,
-  valor,
-  onChange,
-}: {
-  rotulo: string
-  valores: readonly T[]
-  valor: T
-  onChange: (v: T) => void
-}) {
-  return (
-    <ToggleGroup
-      type="single"
-      variant="segmented"
-      size="sm"
-      value={valor}
-      onValueChange={(v) => v && onChange(v as T)}
-      aria-label={rotulo}
-    >
-      {valores.map((v) => (
-        <ToggleGroupItem key={v} value={v} className="font-mono">
-          {v}
-        </ToggleGroupItem>
-      ))}
-    </ToggleGroup>
-  )
-}
 
 /** Os quatro números do dashboard, com os eixos à mão. */
 function DemoNaTela() {

@@ -35,11 +35,10 @@ import {
   TimelineTitle,
   type TimelineMarker,
 } from "@/components/ui/timeline"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { IDENTITY_TONES } from "@/lib/avatar"
 import { formatDayHeadingPtBr, groupByLocalDay } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 type Evento = {
   tone: (typeof TIMELINE_TONES)[number]
@@ -105,34 +104,6 @@ const DEGRAUS = ["sm", "md", "lg"] as const
 const ORIENTACOES = ["vertical", "horizontal"] as const
 const LAYOUTS = ["stack", "split"] as const
 
-function Eixo<T extends string>({
-  rotulo,
-  valores,
-  valor,
-  onChange,
-}: {
-  rotulo: string
-  valores: readonly T[]
-  valor: T
-  onChange: (v: T) => void
-}) {
-  return (
-    <ToggleGroup
-      type="single"
-      variant="segmented"
-      size="sm"
-      value={valor}
-      onValueChange={(v) => v && onChange(v as T)}
-      aria-label={rotulo}
-    >
-      {valores.map((v) => (
-        <ToggleGroupItem key={v} value={v} className="font-mono">
-          {v}
-        </ToggleGroupItem>
-      ))}
-    </ToggleGroup>
-  )
-}
 
 function avatarDe(iniciais: string, tom: number) {
   return (

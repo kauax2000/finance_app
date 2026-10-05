@@ -158,7 +158,33 @@ Fundações, Átomos, `cores` ou `mobile-toque` nas rodadas abaixo são históri
    original.
 8. **Componente novo entra em três lugares na mesma mudança:** o arquivo em
    `src/components/ui/`, a entrada em `src/app/designsystem/registry.ts` e a
-   página em `src/app/designsystem/docs/`. Depois, `npm run ds:docs-map`.
+   página em `src/app/designsystem/docs/`. Depois, `npm run ds:docs-map`. E ele
+   nasce **completo** — ver "Componente novo nasce completo", abaixo.
+
+### Componente novo nasce completo
+
+Todo componente novo — em qualquer camada — e todo redesenho segue
+[`docs/design/COMPONENTE-NOVO.md`](docs/design/COMPONENTE-NOVO.md), que a skill
+`design-system-component` aplica. Ele é a rodada de revisão (223 a 235) movida
+para antes do nascimento:
+
+1. **Levantamento**: o catálogo, o que as telas escrevem à mão no lugar dele, a
+   camada, o shadcn, os vizinhos.
+2. **As quatro perguntas** ao dono, numa `AskUserQuestion` de múltipla
+   escolha: **Redesenho**, **Peças**, **Comportamento** e **App**. O escolhido
+   é implementado inteiro.
+3. **O checklist da API**: escada, `variant`/`tone`, `data-slot`, os estados
+   com `pending`, esqueleto, vazio e erro, telefone (alvo de 44 e o que ele
+   vira), área segura por variável, container query, nome acessível, foco,
+   movimento visível, tokens com par escuro.
+4. **A página na forma fixa**: `Usage` → "Na tela" com `Eixo` e `Interruptor`
+   (de `ds-doc.tsx`; nenhuma página os redeclara) → notas → "No telefone" no
+   `IphoneFrame` → comportamentos → "Esqueleto" → `PropsTable`s. Conteúdo de
+   produto realista, e nenhuma afirmação que não foi medida.
+5. **Registro na mesma mudança**: `registry.ts`, `ds:docs-map`, um
+   `<comp>-versions.test.ts` novo, o bullet aqui e a rodada no histórico.
+
+`doc-pages.test.ts` tranca a forma das páginas de componente.
 
 ### Revisão de tela — o design system é a regra
 

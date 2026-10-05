@@ -14,9 +14,7 @@ import {
   EmptyStateIcon,
   EmptyStateTitle,
 } from "@/components/ui/empty-state"
-import { Label } from "@/components/ui/label"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { Switch } from "@/components/ui/switch"
 import {
   Table,
   TableBody,
@@ -36,9 +34,8 @@ import {
   TableSkeleton,
   type TableSize,
 } from "@/components/ui/table"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { TILE_PALETTE } from "@/lib/tile-palette"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { DocNote, DocSection, Eixo, Interruptor, PropsTable, Usage } from "../ds-doc"
 
 const LINHAS = [
   { desc: "Mercado", cat: "Alimentação", conta: "Nubank", data: "12/03", valor: -128.4, status: "Efetivada", cor: TILE_PALETTE[5].hex },
@@ -52,45 +49,7 @@ const FIOS = ["rows", "none", "grid"] as const
 const CABECALHOS = ["muted", "plain"] as const
 const ROTULOS = ["text", "caps"] as const
 
-function Eixo<T extends string>({
-  rotulo,
-  valores,
-  valor,
-  onChange,
-}: {
-  rotulo: string
-  valores: readonly T[]
-  valor: T
-  onChange: (v: T) => void
-}) {
-  return (
-    <ToggleGroup
-      type="single"
-      variant="segmented"
-      size="sm"
-      value={valor}
-      onValueChange={(v) => v && onChange(v as T)}
-      aria-label={rotulo}
-    >
-      {valores.map((v) => (
-        <ToggleGroupItem key={v} value={v} className="font-mono">
-          {v}
-        </ToggleGroupItem>
-      ))}
-    </ToggleGroup>
-  )
-}
 
-function Interruptor({ id, rotulo, valor, onChange }: { id: string; rotulo: string; valor: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <div className="flex items-center gap-2">
-      <Switch id={id} size="sm" checked={valor} onCheckedChange={onChange} />
-      <Label htmlFor={id} className="font-mono text-xs font-normal">
-        {rotulo}
-      </Label>
-    </div>
-  )
-}
 
 function DemoNaTela() {
   const [size, setSize] = React.useState<TableSize>("md")

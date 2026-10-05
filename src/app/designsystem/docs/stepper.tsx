@@ -18,8 +18,7 @@ import {
   StepperNext,
   StepperPrevious,
 } from "@/components/ui/stepper"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 const ETAPAS = [
   { nome: "Conta", descricao: "Nome e e-mail", icone: UserIcon },
@@ -32,35 +31,6 @@ const ORIENTACOES = ["horizontal", "vertical", "responsive"] as const
 const FORMAS = ["default", "bar"] as const
 const TAMANHOS = ["md", "sm"] as const
 
-/** Um eixo, em pílulas segmentadas. */
-function Eixo<T extends string>({
-  rotulo,
-  valores,
-  valor,
-  onChange,
-}: {
-  rotulo: string
-  valores: readonly T[]
-  valor: T
-  onChange: (v: T) => void
-}) {
-  return (
-    <ToggleGroup
-      type="single"
-      variant="segmented"
-      size="sm"
-      value={valor}
-      onValueChange={(v) => v && onChange(v as T)}
-      aria-label={rotulo}
-    >
-      {valores.map((v) => (
-        <ToggleGroupItem key={v} value={v} className="font-mono">
-          {v}
-        </ToggleGroupItem>
-      ))}
-    </ToggleGroup>
-  )
-}
 
 function DemoNaTela() {
   const [orientation, setOrientation] = React.useState<(typeof ORIENTACOES)[number]>("horizontal")

@@ -27,9 +27,8 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 const LADOS = ["right", "left", "top", "bottom"] as const
 const VARIANTES = ["floating", "flush"] as const
@@ -37,35 +36,6 @@ const TAMANHOS = ["sm", "md", "lg", "full"] as const
 
 const CAMPOS = ["Descrição", "Valor", "Data", "Categoria"]
 
-/** Um eixo, em pílulas segmentadas. */
-function Eixo<T extends string>({
-  rotulo,
-  valores,
-  valor,
-  onChange,
-}: {
-  rotulo: string
-  valores: readonly T[]
-  valor: T
-  onChange: (v: T) => void
-}) {
-  return (
-    <ToggleGroup
-      type="single"
-      variant="segmented"
-      size="sm"
-      value={valor}
-      onValueChange={(v) => v && onChange(v as T)}
-      aria-label={rotulo}
-    >
-      {valores.map((v) => (
-        <ToggleGroupItem key={v} value={v} className="font-mono">
-          {v}
-        </ToggleGroupItem>
-      ))}
-    </ToggleGroup>
-  )
-}
 
 function DemoEixos() {
   const [side, setSide] = React.useState<(typeof LADOS)[number]>("right")

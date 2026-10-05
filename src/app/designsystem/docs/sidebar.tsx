@@ -52,13 +52,12 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { Kbd } from "@/components/ui/kbd"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { TopBar, TopBarStart, TopBarTitle } from "@/components/ui/top-bar"
 import { IDENTITY_TONES } from "@/lib/avatar"
 import { cn } from "@/lib/utils"
 import { CATEGORY_META } from "../category-meta"
 import { IphoneFrame, ViewportFrame } from "../ds-frame"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 /** A altura da moldura: alta o bastante para a barra ler como coluna de tela. */
 const ALTURA = 440
@@ -258,35 +257,6 @@ function CabecalhoComGatilho() {
 const RECOLHER = ["icon", "offcanvas", "none"] as const
 const VARIANTES = ["floating", "sidebar", "inset"] as const
 
-/** Um eixo, em pílulas segmentadas. */
-function Eixo<T extends string>({
-  rotulo,
-  valores,
-  valor,
-  onChange,
-}: {
-  rotulo: string
-  valores: readonly T[]
-  valor: T
-  onChange: (v: T) => void
-}) {
-  return (
-    <ToggleGroup
-      type="single"
-      variant="segmented"
-      size="sm"
-      value={valor}
-      onValueChange={(v) => v && onChange(v as T)}
-      aria-label={rotulo}
-    >
-      {valores.map((v) => (
-        <ToggleGroupItem key={v} value={v} className="font-mono">
-          {v}
-        </ToggleGroupItem>
-      ))}
-    </ToggleGroup>
-  )
-}
 
 function DemoEixos() {
   const [collapsible, setCollapsible] =

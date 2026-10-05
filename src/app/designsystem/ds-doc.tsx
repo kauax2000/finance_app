@@ -12,6 +12,9 @@ import { cn } from "@/lib/utils"
 import { useTimeout } from "@/hooks/use-timeout"
 import { slugifyCategory } from "./registry"
 import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
   Collapsible,
   CollapsibleContent,
@@ -743,6 +746,66 @@ export function DocNote({
       >
         {children}
       </div>
+    </div>
+  )
+}
+
+/**
+ * Os controles da demonstração "Na tela" (ver `docs/design/COMPONENTE-NOVO.md`):
+ * um eixo é um valor do componente escolhido num trilho segmentado, e um
+ * interruptor liga uma peça ou um comportamento. Treze páginas escreviam os
+ * dois à mão, com o mesmo corpo; agora moram aqui, e o rótulo é o nome da prop
+ * em fonte mono — quem lê a página aprende a API mexendo nela.
+ */
+export function Eixo<T extends string>({
+  rotulo,
+  valores,
+  valor,
+  onChange,
+}: {
+  rotulo: string
+  valores: readonly T[]
+  valor: T
+  onChange: (v: T) => void
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="font-mono text-xs text-muted-foreground">{rotulo}</span>
+      <ToggleGroup
+        type="single"
+        variant="segmented"
+        size="sm"
+        value={valor}
+        onValueChange={(v) => v && onChange(v as T)}
+        aria-label={rotulo}
+      >
+        {valores.map((v) => (
+          <ToggleGroupItem key={v} value={v} className="font-mono">
+            {v}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+    </div>
+  )
+}
+
+export function Interruptor({
+  id,
+  rotulo,
+  valor,
+  onChange,
+}: {
+  id: string
+  rotulo: string
+  valor: boolean
+  onChange: (v: boolean) => void
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <Switch id={id} size="sm" checked={valor} onCheckedChange={onChange} />
+      <Label htmlFor={id} className="font-mono text-xs font-normal">
+        {rotulo}
+      </Label>
     </div>
   )
 }

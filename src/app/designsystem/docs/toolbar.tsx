@@ -12,7 +12,6 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
   Toolbar,
   ToolbarActions,
@@ -26,39 +25,11 @@ import {
 } from "@/components/ui/toolbar"
 import { TopBar, TopBarTitle } from "@/components/ui/top-bar"
 import { IphoneFrame } from "../ds-frame"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import { DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
 
 const DEGRAUS = ["sm", "md", "lg"] as const
 const TECLADO = ["livre", "toolbar"] as const
 
-function Eixo<T extends string>({
-  rotulo,
-  valores,
-  valor,
-  onChange,
-}: {
-  rotulo: string
-  valores: readonly T[]
-  valor: T
-  onChange: (v: T) => void
-}) {
-  return (
-    <ToggleGroup
-      type="single"
-      variant="segmented"
-      size="sm"
-      value={valor}
-      onValueChange={(v) => v && onChange(v as T)}
-      aria-label={rotulo}
-    >
-      {valores.map((v) => (
-        <ToggleGroupItem key={v} value={v} className="font-mono">
-          {v}
-        </ToggleGroupItem>
-      ))}
-    </ToggleGroup>
-  )
-}
 
 const LANCAMENTOS = [
   "Mercado Pão de Açúcar",
