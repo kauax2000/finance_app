@@ -1739,6 +1739,26 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   balance` fora de `@layer`, e ele religava a quebra. **O telefone é um primeiro desenho**: o dono vai mexer
   bastante nele ao revisar as telas do app, e o design system se atualiza
   junto; a prévia num iPhone fica na página até lá.
+- **O `PageSection` ganhou a ação no degrau, o telefone compacto, as peças e
+  quatro comportamentos** (rodada 233). **A ação não declara `size`**: o
+  `actions` do cabeçalho e o `PageSectionFooter` passam `sm` aos botões pelo
+  `ButtonSizeContext`, e no dedo eles sobem a 40 — nenhuma tela escreve `h-8
+  text-xs pointer-coarse:h-10` num botão de seção. No telefone a ação com
+  ícone fica quadrada, com o rótulo como nome (a regra do `PageHeader`).
+  `reveal` é a cascata (`@utility page-section-reveal`), **desligada por
+  padrão** — uma tela tem várias seções. `PageSectionTitle` tem `icon` (antes
+  do nome) e `count` (depois, tabular, com o espaço real antes). Peças:
+  `PageSectionLink` (o "Ver todas →", `tertiary` com a seta que anda),
+  `PageSectionMeta` (o texto miúdo da ação), `PageSectionFooter` e
+  `PageSectionSkeleton` (`group={false}` dentro de um esqueleto de página).
+  **A seção é uma região nomeada pelo título** (o título se registra e a seção
+  aponta `aria-labelledby` só quando ele existe), e **o nível é da
+  profundidade**: uma seção dentro de outra rende `h3`, até `h6`, sem
+  `asChild`. `collapsible` faz do título o gatilho com a seta e recolhe o
+  resto na mola do `Collapsible` (`storageKey` guarda); `sticky` prende o
+  cabeçalho sob a barra do topo com a placa da `Toolbar sticky`
+  (`useStickyBar`, exportado de lá), sangrando até `--page-section-bleed`.
+  Nenhuma tela do app migrou nesta rodada.
 - **O `Timeline` ganhou o estado, a coluna de data, a linha compacta e o
   feed** (rodada 227). **O fim é CSS e a forma é contexto**: `:last-child`
   apaga o conector do último (`isLast={false}` é a exceção), e nada mais é

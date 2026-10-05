@@ -3220,6 +3220,46 @@
   }
 }
 
+/* A cascata da seção (rodada 233): o título, depois a descrição e a ação,
+   depois o conteúdo. A subida é a dela, e não o `menubar-rise` do PageHeader:
+   3px em 280ms passavam despercebidos numa seção inteira (o dono não viu
+   diferença). Aqui são 12px, um desfoque que assenta e 520ms, com 70ms entre
+   os degraus. Desligada por padrão — uma tela tem várias seções. */
+@keyframes page-section-rise {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+    filter: blur(4px);
+  }
+}
+
+@utility page-section-reveal {
+  & [data-slot="page-section-title"],
+  & [data-slot="page-section-description"],
+  & [data-slot="page-section-actions"],
+  & > :not([data-slot="page-section-header"]) {
+    animation: page-section-rise 520ms var(--ease-out) both;
+  }
+  & [data-slot="page-section-description"],
+  & [data-slot="page-section-actions"] {
+    animation-delay: 70ms;
+  }
+  & > :not([data-slot="page-section-header"]) {
+    animation-delay: 140ms;
+  }
+  & > :not([data-slot="page-section-header"]) ~ :not([data-slot="page-section-header"]) {
+    animation-delay: 210ms;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    & [data-slot="page-section-title"],
+    & [data-slot="page-section-description"],
+    & [data-slot="page-section-actions"],
+    & > :not([data-slot="page-section-header"]) {
+      animation: none;
+    }
+  }
+}
+
 /* As linhas do corpo da `Table` sobem 3px em cascata (rodada 225), na
    referência de movimento do dono: 160ms de `--ease-out`, a primeira aos 40ms
    e cada uma 30ms depois, com teto na décima segunda. Quem liga é o `<tbody>`

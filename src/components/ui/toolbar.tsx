@@ -821,6 +821,7 @@ function ToolbarFilterIndicator({
 export {
   OverflowActionsMenu,
   useExcessoDeAcoes as useOverflowActions,
+  usePresa as useStickyBar,
   Toolbar,
   ToolbarActions,
   ToolbarButton,

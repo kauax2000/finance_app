@@ -18756,3 +18756,78 @@ página no telefone vão mudar bastante quando as telas do app forem revistas, e
 que o design system se atualiza ali. A seção "No telefone" (a prévia num iPhone
 com a barra e o título que sobe) **fica na página** até lá, marcada como
 primeiro desenho.
+
+### Rodada 233 — o PageSection: a ação no degrau, o telefone compacto, a cascata e o ícone; link, meta, contagem, rodapé e esqueleto; a região nomeada, o nível pela profundidade, recolher e o cabeçalho preso
+
+**Levantamento antes de mexer.** O app usa o `PageSection` em **22 seções de 15
+arquivos** — o painel, a conta, os membros, os planos, a fatura e a categoria. O
+comentário do componente dizia que ele tinha "zero consumidores no app" (era
+verdade quando nasceu), e a página dizia que a ação "se centra numa caixa de uma
+linha de título" — falso desde que o cabeçalho virou grade. Os dois foram
+corrigidos. O que as telas escreviam à mão deu as versões: quatro botões de
+"Ver todas" em `outline` com `h-8 gap-2 px-2 text-xs pointer-coarse:h-10` e o
+ícone em dois tamanhos; o "Limite R$ …" num `<p>` com `text-2xs`; e um
+`aria-labelledby` com `id` escrito à mão mais um `asChild` com `<h3>` para descer
+o nível. O dono escolheu as quatro versões de cada grupo e **nenhuma tela**.
+
+**O redesenho.**
+- **A ação no degrau da seção**: `actions` e o rodapé passam `sm` pelo
+  `ButtonSizeContext` (o mecanismo do `EmptyStateActions`), e no dedo os botões
+  sobem a 40 (`pointer-coarse:min-h-10`). Um `size` no botão vence.
+- **O telefone compacto**: abaixo de `sm`, o botão com ícone fica quadrado e o
+  rótulo vira `sr-only` — as duas classes do `PageHeaderActions`. O título já
+  quebrava sem empurrar a ação, porque a coluna dele é `minmax(0, 1fr)`.
+- **A cascata**: `@utility page-section-reveal`, depois do `page-header-reveal`
+  — título, depois descrição e ação, depois o conteúdo; movimento reduzido
+  corta. **Desligada por padrão**, ao contrário do `PageHeader`: há um
+  cabeçalho por tela e várias seções. **A primeira versão usava o
+  `menubar-rise` do `PageHeader` (3px, 280ms), e o dono não viu diferença
+  nenhuma** — numa seção inteira, com o cartão embaixo, três pixels passam
+  despercebidos. Ela ganhou a própria subida, `page-section-rise`: 12px, um
+  desfoque de 4px que assenta, 520ms em `--ease-out`, 70ms entre os degraus
+  (o conteúdo a 140, o segundo bloco a 210). Medido a 120ms do início: o
+  título a 76% de opacidade e 2,9px abaixo, o cartão ainda invisível e
+  borrado. A página ganhou o "tocar de novo", porque a cascata só existe no
+  instante da montagem.
+- **O ícone no título**: `icon`, num `span` de 16px em `--muted-foreground`,
+  e com ele o título vira `flex` na linha dele.
+
+**As peças.** `PageSectionLink` (`Button tertiary asChild` com o `Link` e a seta
+`16/solid` que anda 2px no cursor), `PageSectionMeta`, `count` no título (um
+`" "` de verdade antes do `span` — sem ele o nome acessível sairia
+"Membros4"), `PageSectionFooter` (a nota e o "Mostrar mais", com o degrau dos
+botões) e `PageSectionSkeleton` (o título na altura do degrau, a descrição e a
+ação opcionais, e um bloco de 160px ou o esqueleto que se passar; `group={false}`
+dentro de um esqueleto de página).
+
+**Os comportamentos.**
+- **A região nomeada**: a seção cria um `id` (`useId`) e o título o veste — ou
+  o seu próprio, ou o do elemento do `asChild` — e **se registra**; a seção só
+  escreve `aria-labelledby` quando há título, porque apontar para um `id`
+  ausente deixa a região sem nome (a lição do `Popover`). Um `aria-label` ou
+  `aria-labelledby` de quem chama vence.
+- **O nível pela profundidade**: um contexto conta as seções aninhadas, e o
+  título rende `h2`, `h3`… até `h6`, com o mesmo estilo. **No catálogo isso
+  aparece**: todo `DocSection` é um `PageSection`, então os títulos das
+  demonstrações descem um nível ali dentro — o que é o certo.
+- **Recolher**: `collapsible` embrulha a seção num `Collapsible asChild`, o
+  título vira um `CollapsibleTrigger` com a seta dentro do cabeçalho (o padrão
+  do acordeão) e o que vem depois do **primeiro filho** vai para um
+  `CollapsibleContent` com `gap: inherit`. A primeira versão achava o
+  cabeçalho por `child.type === PageSectionHeader`, e a asserção 26 do
+  `table-ladder.test.ts` a reprovou: o Fast Refresh troca a função e a
+  identidade deixa de bater calada. Ficou a posição. No cursor só o nome sublinha — a
+  primeira versão sublinhava a contagem junto, e saiu por um `span` a mais.
+  `storageKey` lê o `localStorage` **depois** de montar, para o HTML do
+  servidor não divergir.
+- **O cabeçalho preso**: `sticky` reaproveita o `usePresa` da `Toolbar`
+  (exportado como `useStickyBar`) e a placa dela — a tinta de barra com o fio,
+  8px de sobra acima e abaixo, só presa. Ele prende **dentro da seção**, então
+  solta sozinho quando ela acaba. Medido no iPhone do catálogo: preso a 104px
+  (a barra mede 48 + 48 da ilha emulada, mais os 8).
+
+**A página** virou uma demonstração com eixos (`size`, `variant`, a ação) e
+chaves (descrição, ícone, contagem, rodapé, recolher, cascata), o telefone no
+`IphoneFrame` com dois cabeçalhos presos e a ação de ícone, a seção aninhada,
+o ritmo da tela e o esqueleto. `page-section-versions.test.ts` tranca as peças e
+os comportamentos.
