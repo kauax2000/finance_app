@@ -93,7 +93,9 @@ export default function DesignSystemIndexPage() {
                 produto de que este catálogo é o sistema. */}
             <PageHeader
                 size="lg"
-                variant="plain"
+                // O índice já entra pela `ENTRADA_CLASS`: a cascata do cabeçalho
+                // somaria um segundo movimento por cima.
+                reveal={false}
                 className={ENTRADA_CLASS}
                 style={entrada(0)}
             >

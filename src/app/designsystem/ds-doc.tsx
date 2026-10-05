@@ -120,7 +120,7 @@ export function DocPage({
           base do título, que é o que a prende à primeira linha quando o nome
           quebra em duas. `plain` porque quem fecha este cabeçalho é o campo de
           import logo abaixo, não uma régua. */}
-      <PageHeader variant="plain">
+      <PageHeader>
         <PageHeaderTitleRow
           endAdornment={
             /* O `Button variant="link"` de verdade, e não a cópia à mão que

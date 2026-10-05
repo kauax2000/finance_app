@@ -67,18 +67,16 @@ describe("PageHeader", () => {
     }
   })
 
-  it("o padrão é md, e ruled", () => {
-    expect(pageHeaderVariants({})).toBe(
-      pageHeaderVariants({ size: "md", variant: "ruled" })
-    )
+  // Rodada 232: o padrão é md, e a régua (`ruled`) saiu — quem separa é o respiro.
+  it("o padrão é md", () => {
+    expect(pageHeaderVariants({})).toBe(pageHeaderVariants({ size: "md" }))
   })
 
-  it("plain não desenha régua nenhuma", () => {
+  it("o cabeçalho não desenha régua nenhuma", () => {
     // `border-b` é substring de `border-border`: a fronteira de palavra é o
     // que faz esta asserção medir o que ela diz medir.
     const BORDA_BAIXO = /(?:^|\s)border-b(?:\s|$)/
-    expect(pageHeaderVariants({ variant: "plain" })).not.toMatch(BORDA_BAIXO)
-    expect(pageHeaderVariants({ variant: "ruled" })).toMatch(BORDA_BAIXO)
+    expect(pageHeaderVariants({})).not.toMatch(BORDA_BAIXO)
   })
 
   /**

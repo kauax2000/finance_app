@@ -770,15 +770,19 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   de conteúdo do outro, sem cartão, empilhando abaixo de `lg`. O campo entra por
   **slot**, porque o que ele mostra é conteúdo de produto. Quem amarra os dois
   neste app é o `AuthShell`, em `components/layout/`, e as cinco telas de acesso
-  o vestem. Dentro do app, o topo de tela continua sendo o `PageHeader`.
+  o vestem. Dentro do app, **nenhuma tela usa o `PageHeader` hoje** (medido
+  na rodada 232): o título mora na barra do topo, as listas abrem direto na
+  `Toolbar` e as telas de conta num `PageSection`; só o `PageHeaderBack` serve
+  o voltar do telefone.
 - **Page chrome**: [`PageHeader`](src/components/ui/page-header.tsx) +
   [`PageSection`](src/components/ui/page-section.tsx) +
   [`Container`](src/components/ui/container.tsx). Os três têm `size` (`sm` |
-  **`md`** | `lg`) e os dois primeiros têm `variant` — a régua, que no cabeçalho
-  é **embaixo** e na seção é **em cima**. O `Container` também tem `full`, e
+  **`md`** | `lg`) e a `PageSection` tem `variant` — a régua, **em cima**. O
+  cabeçalho **não tem régua** desde a rodada 232: quem o separa do conteúdo é
+  o respiro. O `Container` também tem `full`, e
   **não tem `default`** — a escada dele é 448 · **576** · 672 · 1280 · sem teto,
   e a calha (`gutter`) é **opt-in**, porque quem é dono dela neste app é a casca.
-  `PageHeaderTitleRow` recebe `back` e `endAdornment`;
+  `PageHeaderTitleRow` recebe `back`, `media` e `endAdornment`;
   `PageSectionHeader` recebe `actions` — as três apagam anatomias que o catálogo
   escrevia à mão. Não existe `PageSectionContent`: ver a rodada 15.
 - **Cartão e painel**: [`Card`](src/components/ui/card.tsx) e suas peças —
@@ -1703,6 +1707,38 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   Organismo): dispõe onde filtros, ações e fichas vão, e prende sob o `TopBar`
   como as barras da página — o argumento de conter organismos diz o piso, não
   a camada, como na `Sidebar` (rodada 221).
+- **O `PageHeader` ganhou o telefone compacto, as peças que faltavam e quatro
+  comportamentos** (rodada 232). **Não há régua**: o `variant` (`plain` |
+  `ruled`) saiu — o fio de 1px tinha o peso dos divisores de lista e, com uma
+  lista embaixo, lia como mais um; quem separa é o respiro. Tudo entra em
+  cascata ao montar (`reveal`, `@utility
+  page-header-reveal`) e a faixa de fatos perdeu o fio. **No telefone a grade
+  continua com duas colunas**: o título desce um degrau, as ações ficam na
+  linha dele e as que têm ícone viram quadradas (o rótulo vira nome), e o
+  adorno desce para baixo da descrição. **A linha do título é o eixo**: o
+  voltar, a mídia, as ações e o `endAdornment` se centram nela, e com
+  sobrancelha o cabeçalho publica `--page-header-lead` (28px) para todos
+  descerem até o título; o **`badge`** (o selo de estado ou de tipo) mora logo
+  depois do título, por uma grade densa na coluna do texto, e desce para baixo
+  da descrição no telefone. Peças: `PageHeaderMedia` (a mídia,
+  pelo `media` da linha), `PageHeaderStat` (o par rótulo/valor da faixa, que
+  é um `<dl>` de fábrica — nenhuma tela escreve `dt`/`dd` à mão),
+  `PageHeaderNav` (abas de rota sob o título; com `ruled`, a régua é a delas)
+  e `PageHeaderSkeleton`. Comportamentos: `collapse` faz o título **subir
+  para a barra** ao rolar para baixo dela (`TopBarTitle pageTitle`, por uma
+  loja **por documento** em `hooks/use-page-title-dock`, para a prévia num
+  iframe não vazar); `PageHeaderActions overflow="menu"` é o ⋯ da `Toolbar`
+  (`useOverflowActions` e `OverflowActionsMenu` saíram de lá) com a conta do
+  cabeçalho — a linha do título menos o voltar, a mídia e o adorno, e 35% da
+  largura (até 240) guardados para o nome; o voltar **volta pelo histórico**
+  (`router.back()` quando a entrada anterior é do app, o `href` como saída;
+  `history={false}` desliga, e o `app-header` o desliga — ligá-lo é mudança
+  de jornada); e `PageHeaderTitle truncate` corta numa linha com a dica do
+  texto inteiro, só quando cortou. **O componente é cliente desde então.**
+  O `truncate` leva `text-nowrap!`: o `.page-title` declara `text-wrap:
+  balance` fora de `@layer`, e ele religava a quebra. **O telefone é um primeiro desenho**: o dono vai mexer
+  bastante nele ao revisar as telas do app, e o design system se atualiza
+  junto; a prévia num iPhone fica na página até lá.
 - **O `Timeline` ganhou o estado, a coluna de data, a linha compacta e o
   feed** (rodada 227). **O fim é CSS e a forma é contexto**: `:last-child`
   apaga o conector do último (`isLast={false}` é a exceção), e nada mais é

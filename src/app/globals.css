@@ -3185,6 +3185,41 @@
   }
 }
 
+/* O cabeçalho de página entra em cascata (rodada 232): a trilha, depois
+   sobrancelha, título e descrição um depois do outro, as ações junto do
+   título, e a faixa e a navegação por último — 3px e o esmaecer, a régua das
+   linhas do `Menubar`, no tempo dos cartões de número. Uma vez, ao montar. */
+@utility page-header-reveal {
+  & > [data-slot="page-header-breadcrumb"],
+  & [data-slot="page-header-heading"] > *,
+  & [data-slot="page-header-media"],
+  & > [data-slot="page-header-actions"],
+  & > [data-slot="page-header-meta"],
+  & > [data-slot="page-header-nav"] {
+    animation: menubar-rise 280ms var(--ease-out) both;
+  }
+  & [data-slot="page-header-heading"] > :nth-child(2),
+  & > [data-slot="page-header-actions"] {
+    animation-delay: 50ms;
+  }
+  & [data-slot="page-header-heading"] > :nth-child(n + 3) {
+    animation-delay: 100ms;
+  }
+  & > [data-slot="page-header-meta"] {
+    animation-delay: 150ms;
+  }
+  & > [data-slot="page-header-nav"] {
+    animation-delay: 200ms;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    & > *,
+    & [data-slot="page-header-heading"] > *,
+    & [data-slot="page-header-media"] {
+      animation: none;
+    }
+  }
+}
+
 /* As linhas do corpo da `Table` sobem 3px em cascata (rodada 225), na
    referência de movimento do dono: 160ms de `--ease-out`, a primeira aos 40ms
    e cada uma 30ms depois, com teto na décima segunda. Quem liga é o `<tbody>`

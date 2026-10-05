@@ -419,31 +419,38 @@ function ToolbarActions({
       )}
       {...props}
     >
-      {fora.length ? (
-        <DropdownMenu mobile="sheet">
-          <DropdownMenuTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-md"
-              data-toolbar-more=""
-              aria-label={moreLabel}
-            >
-              <EllipsisHorizontalIcon aria-hidden />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" size="lg">
-            {fora.map((f) => (
-              <DropdownMenuItem key={f.i} onSelect={() => f.el.click()}>
-                {f.icone ? <IconeCopiado svg={f.icone} /> : null}
-                {f.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : null}
+      {fora.length ? <OverflowActionsMenu items={fora} label={moreLabel} /> : null}
       {children}
     </div>
+  )
+}
+
+/** O que saiu da fileira para o ⋯: o botão, o rótulo e o ícone dele. */
+type AcaoNoExcesso = { i: number; el: HTMLElement; label: string; icone: SVGElement | null }
+
+/**
+ * O ⋯ das ações que não couberam. O item clica o botão escondido, então o
+ * `onClick`, o `href` e o diálogo que ele abre são os mesmos. Mora aqui e é
+ * exportado desde a rodada 232: o `PageHeaderActions overflow="menu"` usa o
+ * mesmo menu com outra conta de espaço.
+ */
+function OverflowActionsMenu({ items, label }: { items: AcaoNoExcesso[]; label: string }) {
+  return (
+    <DropdownMenu mobile="sheet">
+      <DropdownMenuTrigger asChild>
+        <Button type="button" variant="outline" size="icon-md" data-toolbar-more="" aria-label={label}>
+          <EllipsisHorizontalIcon aria-hidden />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" size="lg">
+        {items.map((f) => (
+          <DropdownMenuItem key={f.i} onSelect={() => f.el.click()}>
+            {f.icone ? <IconeCopiado svg={f.icone} /> : null}
+            {f.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
@@ -473,12 +480,23 @@ const maiuscula = (t: string) => t.charAt(0).toLocaleUpperCase("pt-BR") + t.slic
  * os outros grupos — e deles conta o conteúdo, não a caixa: um grupo `flex-1`
  * mediria a sobra inteira.
  */
-function useExcessoDeAcoes(ref: React.RefObject<HTMLDivElement | null>, ativo: boolean) {
-  const [fora, setFora] = React.useState<{ i: number; el: HTMLElement; label: string; icone: SVGElement | null }[]>([])
+function useExcessoDeAcoes(
+  ref: React.RefObject<HTMLDivElement | null>,
+  ativo: boolean,
+  /**
+   * Outra casa para as ações (rodada 232): o seletor do contêiner que se
+   * observa e a conta de quanto cabe. Sem ele, a conta é a da barra.
+   */
+  outraCasa?: { raiz: string; espaco: (raiz: HTMLElement) => number }
+) {
+  const [fora, setFora] = React.useState<AcaoNoExcesso[]>([])
+  // A casa é uma constante de módulo de quem chama: estável entre renders.
+  const raizDaCasa = outraCasa?.raiz
+  const espacoDaCasa = outraCasa?.espaco
 
   useIsomorphicLayoutEffect(() => {
     const acoes = ref.current
-    const barra = acoes?.closest<HTMLElement>("[data-slot=toolbar]")
+    const barra = acoes?.closest<HTMLElement>(raizDaCasa ?? "[data-slot=toolbar]")
     if (!ativo || !acoes || !barra) return
 
     const medir = () => {
@@ -487,25 +505,9 @@ function useExcessoDeAcoes(ref: React.RefObject<HTMLDivElement | null>, ativo: b
       )
       for (const f of filhos) f.removeAttribute("hidden")
       const gap = parseFloat(getComputedStyle(acoes).columnGap) || 0
-      const gapBarra = parseFloat(getComputedStyle(barra).columnGap) || 0
-      const outros = [...barra.children].filter(
-        (f): f is HTMLElement =>
-          f instanceof HTMLElement &&
-          f !== acoes &&
-          !["toolbar-plate", "toolbar-chips"].includes(f.dataset.slot ?? "") &&
-          f.getClientRects().length > 0
-      )
-      // Um grupo `flex-1` mede a sobra, e não o que precisa: durante a leitura
-      // ele vai a `flex: 0 0 auto`, que é a largura do conteúdo.
-      const flex = outros.map((f) => f.style.flex)
-      for (const f of outros) f.style.flex = "0 0 auto"
-      const ocupado = outros.reduce((s, f) => s + f.offsetWidth + gapBarra, 0)
-      outros.forEach((f, i) => (f.style.flex = flex[i]))
-      const estilo = getComputedStyle(barra)
-      const cabe =
-        barra.clientWidth - parseFloat(estilo.paddingLeft) - parseFloat(estilo.paddingRight) - ocupado
       const larguras = filhos.map((f) => f.offsetWidth)
       const total = larguras.reduce((a, b) => a + b, 0) + gap * Math.max(0, filhos.length - 1)
+      const cabe = espacoDaCasa ? espacoDaCasa(barra) : espacoNaBarra(barra, acoes)
 
       if (total <= cabe + 0.5) {
         setFora((v) => (v.length ? [] : v))
@@ -514,7 +516,7 @@ function useExcessoDeAcoes(ref: React.RefObject<HTMLDivElement | null>, ativo: b
       // O ⋯ é quadrado: a largura dele é a altura de um controle.
       const mais = filhos.at(-1)?.offsetHeight ?? 32
       let soma = total + mais + gap
-      const saem: { i: number; el: HTMLElement; label: string; icone: SVGElement | null }[] = []
+      const saem: AcaoNoExcesso[] = []
       filhos.forEach((f, i) => {
         if (soma <= cabe + 0.5 || i === filhos.length - 1) return
         if (f.dataset.slot !== "button" || f.hasAttribute("aria-haspopup")) return
@@ -536,9 +538,32 @@ function useExcessoDeAcoes(ref: React.RefObject<HTMLDivElement | null>, ativo: b
     const ro = new ResizeObserver(medir)
     ro.observe(barra)
     return () => ro.disconnect()
-  }, [ativo])
+  }, [ativo, raizDaCasa, espacoDaCasa])
 
   return ativo ? fora : []
+}
+
+/**
+ * O espaço das ações na barra: ela menos os outros grupos — e deles conta o
+ * conteúdo, não a caixa.
+ */
+function espacoNaBarra(barra: HTMLElement, acoes: HTMLElement) {
+  const gapBarra = parseFloat(getComputedStyle(barra).columnGap) || 0
+  const outros = [...barra.children].filter(
+    (f): f is HTMLElement =>
+      f instanceof HTMLElement &&
+      f !== acoes &&
+      !["toolbar-plate", "toolbar-chips"].includes(f.dataset.slot ?? "") &&
+      f.getClientRects().length > 0
+  )
+  // Um grupo `flex-1` mede a sobra, e não o que precisa: durante a leitura
+  // ele vai a `flex: 0 0 auto`, que é a largura do conteúdo.
+  const flex = outros.map((f) => f.style.flex)
+  for (const f of outros) f.style.flex = "0 0 auto"
+  const ocupado = outros.reduce((s, f) => s + f.offsetWidth + gapBarra, 0)
+  outros.forEach((f, i) => (f.style.flex = flex[i]))
+  const estilo = getComputedStyle(barra)
+  return barra.clientWidth - parseFloat(estilo.paddingLeft) - parseFloat(estilo.paddingRight) - ocupado
 }
 
 /**
@@ -794,6 +819,8 @@ function ToolbarFilterIndicator({
 }
 
 export {
+  OverflowActionsMenu,
+  useExcessoDeAcoes as useOverflowActions,
   Toolbar,
   ToolbarActions,
   ToolbarButton,

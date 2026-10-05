@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
 import { useViewportWindow } from "@/hooks/use-mobile"
+import { usePageTitleDock } from "@/hooks/use-page-title-dock"
 import { barSurfaceClassName } from "@/lib/glass-classes"
 import { cn } from "@/lib/utils"
 
@@ -180,8 +181,27 @@ function TopBarStart({ className, ...props }: React.ComponentProps<"div">) {
 function TopBarTitle({
   className,
   asChild = false,
+  pageTitle = false,
+  children,
   ...props
-}: React.ComponentProps<"h1"> & { asChild?: boolean }) {
+}: React.ComponentProps<"h1"> & {
+  asChild?: boolean
+  /**
+   * **O título que sobe** (rodada 232): quando o título de um `PageHeader
+   * collapse` rola para baixo da barra, ele aparece aqui — subindo 6px e
+   * acendendo —, e o que a barra mostrava (`children`) cede o lugar. Ao
+   * voltar, desce. É o título grande do iOS. O texto que sobe é
+   * `aria-hidden`: o `<h1>` da página continua sendo o nome dela.
+   */
+  pageTitle?: boolean
+}) {
+  if (pageTitle) {
+    return (
+      <TopBarPageTitle className={className} {...props}>
+        {children}
+      </TopBarPageTitle>
+    )
+  }
   const Comp = asChild ? Slot.Root : "h1"
   return (
     <Comp
@@ -191,7 +211,46 @@ function TopBarTitle({
         className
       )}
       {...props}
-    />
+    >
+      {children}
+    </Comp>
+  )
+}
+
+const TROCA_DO_TITULO =
+  "[grid-area:1/1] min-w-0 truncate transition-[opacity,translate] duration-(--duration-base) ease-(--ease-out)"
+
+function TopBarPageTitle({ className, children, ...props }: React.ComponentProps<"div">) {
+  const [doc, setDoc] = React.useState<Document | null>(null)
+  const medir = React.useCallback((no: HTMLDivElement | null) => setDoc(no?.ownerDocument ?? null), [])
+  const dock = usePageTitleDock(doc)
+  const subiu = Boolean(dock?.docked)
+  return (
+    <div
+      ref={medir}
+      data-slot="top-bar-title"
+      data-docked={subiu || undefined}
+      className={cn(
+        "group/top-bar-title grid min-w-0 flex-1 font-heading text-sm font-medium text-foreground",
+        className
+      )}
+      {...props}
+    >
+      {children ? (
+        <span className={cn(TROCA_DO_TITULO, "group-data-docked/top-bar-title:-translate-y-1.5 group-data-docked/top-bar-title:opacity-0")}>
+          {children}
+        </span>
+      ) : null}
+      <span
+        aria-hidden
+        className={cn(
+          TROCA_DO_TITULO,
+          "translate-y-1.5 opacity-0 group-data-docked/top-bar-title:translate-y-0 group-data-docked/top-bar-title:opacity-100"
+        )}
+      >
+        {dock?.text}
+      </span>
+    </div>
   )
 }
 

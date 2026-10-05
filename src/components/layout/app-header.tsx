@@ -93,7 +93,10 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
             <div className="contents md:hidden">
                 <TopBarStart>
                     {mobileBackHref ? (
-                        <PageHeaderBack href={mobileBackHref} />
+                        // O voltar pelo histórico (rodada 232) fica desligado aqui:
+                        // ligá-lo muda o destino do voltar do telefone, e isso é
+                        // mudança de jornada (docs/JORNADAS.md e o Atlas).
+                        <PageHeaderBack href={mobileBackHref} history={false} />
                     ) : (
                         <WorkspaceSwitcher appearance="header" />
                     )}

@@ -18633,3 +18633,126 @@ ao `IphoneFrame`, o mesmo da Bottom Bar.
 demonstrações "Na URL", "Cinco mil linhas" e "A moldura, sem estado" (com as
 duas notas dela). As props seguem documentadas — `urlState` e `virtualize` na
 tabela do `DataTable`, e as três peças do `TablePanel` na tabela dele.
+
+### Rodada 232 — o PageHeader: sem régua por padrão, o telefone compacto, a cascata, a faixa sem fio; mídia, par da faixa, navegação e esqueleto; o título que sobe para a barra, o ⋯, o voltar pelo histórico e a dica do título cortado
+
+**Levantamento antes de mexer.** Um agente leu o topo de cada rota do app: **nenhuma
+tela usa o `PageHeader`**. O título mora na barra do topo (um `<h1>` de 16px em
+`page-title.tsx` e `breadcrumb.tsx`); as cinco listas abrem direto na `Toolbar`;
+conta, membros, planos e configurações abrem num `PageSection`; e os dois detalhes
+têm identidade escrita à mão — a categoria em duas árvores (telefone e desktop),
+com um chip de tipo à mão, e o cartão na face e num `CardHeader`. Só o
+`PageHeaderBack` era usado, no voltar do telefone. O `AGENTS.md` dizia que "dentro
+do app, o topo de tela continua sendo o `PageHeader`" — falso, corrigido. O dono
+escolheu as quatro versões de cada grupo e **nenhuma tela** nesta rodada.
+
+**O redesenho.**
+- `plain` virou o padrão: quem separa o cabeçalho do conteúdo é o respiro, como as
+  tiras do `Card` e do `Dialog`. `ruled` continua; com `PageHeaderNav` a régua é a
+  das abas (`pb-0`, e a navegação desce 1px sobre ela).
+- **O telefone compacto.** A grade tem duas colunas em qualquer largura; cada degrau
+  desce um abaixo de `sm` (o `md` vai a 20px), e as ações ficam na linha do título.
+  Todo `Button` com ícone vira quadrado e o rótulo vira `sr-only` — o nome
+  continua o mesmo. **O adorno desce para baixo da descrição no telefone**, e isso
+  foi medido: a 375px, na ponta da linha, ao lado do voltar, da mídia e de três
+  ações, ele deixava 50px para o nome. São duas cópias alternadas por CSS
+  (`display: none` tira a escondida da árvore de acessibilidade).
+- **A cascata**: `@utility page-header-reveal`, depois do `no-scrollbar` — a trilha,
+  depois sobrancelha, título e descrição, as ações junto do título, a faixa e a
+  navegação por último; `menubar-rise` em 280ms; movimento reduzido corta.
+- **A faixa sem fio**: `PageHeaderMeta` perdeu o `border-t` e virou um `<dl>` de
+  fábrica (`asChild` troca).
+
+**As peças.** `PageHeaderMedia` (a mídia, pelo `media` da linha, centrada no bloco
+e a 12px do texto), `PageHeaderStat` (rótulo em sobrancelha sobre o valor em
+destaque, `delta` ao lado, sem `gap` — o par de identidade), `PageHeaderNav` e
+`PageHeaderSkeleton` (o título na altura do degrau, a descrição, as ações — a
+última larga e todas quadradas no telefone — e os pares da faixa).
+
+**Os comportamentos.**
+- **O título que sobe para a barra.** `PageHeader collapse` observa o título contra o
+  documento **dele** (`root: doc`, a base medida da `TopBar` no `rootMargin`) e
+  publica o texto numa loja **por documento** (`hooks/use-page-title-dock`, um
+  `WeakMap<Document>`): a prévia do catálogo é um iframe, e o título dela não pode
+  subir para a barra do catálogo. `TopBarTitle pageTitle` lê e troca o próprio
+  texto pelo da página, subindo 6px. Medido no iPhone: rolando 220px, `docked`; de
+  volta ao topo, sai.
+- **O ⋯** é o da `Toolbar`: `useOverflowActions` e `OverflowActionsMenu` saíram de
+  lá, com uma "outra casa" (o contêiner e a conta de espaço). **A primeira conta
+  errou**: reservava metade da largura para a linha do título inteira, e a 375 o
+  nome ficava com 50px. A conta certa desconta da largura o que a linha já ocupa
+  (o voltar, a mídia, o adorno) e guarda 35% (até 240px) para o nome; a 375, com
+  três ações, saem as duas de ícone e ficam o ⋯ e a principal.
+- **O voltar pelo histórico**: `router.back()` quando a entrada anterior é da mesma
+  origem (Navigation API; sem ela, o `referrer`), o `href` como saída — link
+  aberto direto, nova aba, ⌘-clique. **O `app-header` passa `history={false}`**:
+  ligá-lo muda para onde o voltar do telefone leva, e isso é mudança de jornada.
+- **O título cortado**: `truncate` corta em uma linha e, só quando cortou, ganha
+  `tabIndex` e a `Tooltip` com o texto inteiro — no cursor e no Tab, medidos. **O
+  `truncate` sozinho não cortava**: o `.page-title` declara `text-wrap: balance`
+  fora de `@layer`, e `text-wrap` religa a quebra que `white-space: nowrap`
+  desliga; o título longo saía em quatro linhas. A saída é `text-nowrap!`.
+
+**O componente virou cliente.** Era um dos poucos de `ui/` de servidor; os quatro
+comportamentos leem o DOM. Nenhum componente de servidor o importa.
+
+**A página** trocou cinco demonstrações (completo, escada, régua, detalhe,
+sobrancelha) por uma com eixos (`size`, `variant`, ações) e oito chaves, mais o
+iPhone com a barra e o esqueleto. `page-header-versions.test.ts` tranca a rodada;
+`page-chrome-ladder.test.ts` trocou o padrão `ruled` por `plain`.
+
+**E a linha do título virou o eixo.** O dono achou a parte de cima "bem ruim", e
+era alinhamento: com sobrancelha, o voltar e o selo se alinhavam à **sobrancelha**
+(o voltar por `self-start`, o adorno pela linha de base da primeira linha), as
+ações também, e a mídia se centrava no bloco inteiro, caindo entre a sobrancelha e
+a descrição. Agora o cabeçalho publica `--page-header-lead` quando há sobrancelha
+(28px: a linha dela cravada em 16, `leading-4`, mais os 12 de respiro), e o voltar,
+a mídia, o `endAdornment` e as ações descem até a linha do título e se centram
+nela. Medido: o centro dos cinco no mesmo pixel (474). **O selo ganhou lugar
+próprio, `badge`**, logo depois do título: a coluna do texto é uma grade densa
+(`grid-flow-row-dense`, o título numa coluna `minmax(0,max-content)`, o selo na
+seguinte, o resto em linha inteira), então ele entra a 12px do título sem tirar a
+descrição do lugar, e o título cortado o mantém à vista. Na ponta da linha ele
+encostava nas ações. No telefone ele desce para baixo da descrição — ao lado do
+título, a 375, deixava o nome em "A…" —, e o `col-span-full` desse caso mora no
+**pai**: o seletor do pai é mais específico que uma classe no selo, e venceria.
+`endAdornment` fica para o que mora na ponta, como a categoria do cabeçalho do
+catálogo, que continua centrada no título.
+
+**E a régua saiu.** O dono perguntou a diferença entre `plain` e `ruled` e não
+via nenhuma. Medido: o `ruled` era só um fio de 1px (`border-border`) com 24px
+acima. No exemplo, o cabeçalho era a última coisa da prévia e o fio se confundia
+com a borda dela; com a navegação ligada ele tirava o respiro e virava a base das
+abas. Com uma lista posta embaixo para mostrar a diferença, o fio tinha o peso e
+a cor dos divisores dela e lia como mais um divisor. O dono escolheu tirar: o
+`PageHeader` perdeu o eixo `variant`, e quem separa é o respiro, como nas tiras
+do `Card` e do `Dialog`. Nenhuma tela usava `ruled`; o índice do catálogo passava
+`variant="plain"` e passou a `reveal={false}`, porque já entra pela
+`ENTRADA_CLASS`. A `PageSection` mantém a régua dela.
+
+**E a faixa de números ganhou um corpo só.** O dono pediu um desenho melhor
+para a faixa, e o defeito era medível: o `MoneyDisplay` traz o próprio
+`text-sm`, então o gasto e o orçamento saíam em 14px ao lado de um "42" em
+18px — três números da mesma faixa em dois corpos. O `PageHeaderStat` passou a
+fazer o `MoneyDisplay` ler o corpo do valor (`--page-stat-value`, 20px,
+semibold, entrelinha justa), como o `StatCardValue` faz. O rótulo deixou o versalete por texto
+comum em cinza (`text-xs`): a sobrancelha do título já fala em caixa alta, e
+três rótulos espaçados disputavam com ela. A variação é o `StatCardDelta` — a
+seta, a porcentagem e o tom de estado calculados de `current`, `previous` e
+`better`. Os pares se afastam 40px e a faixa 8px a mais do título.
+
+**E a faixa alinhou com o nome.** Com voltar ou mídia, a faixa de números
+começava sob a seta, e o texto do título 34 a 82px à direita. O `PageHeader`
+passou a publicar `--page-header-indent` — onde a coluna do texto começa,
+**medida** num efeito de layout com um `ResizeObserver` e um `MutationObserver` —
+e a faixa recua por ela. Não é número cravado porque o voltar puxa 8px para fora
+e devolve 6, e a mídia pode ser um ladrilho de 36 ou um avatar de 40. Medido nos
+quatro casos (nenhum, só voltar, só mídia, os dois): o começo da faixa e do título
+no mesmo pixel. **A navegação não recua**, a pedido do dono: ela é a régua da tela
+inteira e começa na borda.
+
+**E o telefone é um primeiro desenho.** O dono avisou que os cabeçalhos de
+página no telefone vão mudar bastante quando as telas do app forem revistas, e
+que o design system se atualiza ali. A seção "No telefone" (a prévia num iPhone
+com a barra e o título que sobe) **fica na página** até lá, marcada como
+primeiro desenho.
