@@ -61,3 +61,21 @@ describe("as versões do Drawer", () => {
     expect(CODIGO).not.toContain("escrito uma vez em\n * `sheet.tsx`")
   })
 })
+
+describe("toda gaveta do telefone é a flush (rodada 245)", () => {
+  it("nenhum consumidor pede inset — só a página do catálogo o demonstra", () => {
+    const consumidores = [
+      "src/components/ui/popover.tsx",
+      "src/components/ui/dropdown-menu.tsx",
+      "src/components/ui/menubar.tsx",
+      "src/components/ui/navigation-menu.tsx",
+      "src/components/layout/quick-actions.tsx",
+      "src/components/layout/mobile-account-menu.tsx",
+    ]
+    for (const caminho of consumidores) {
+      expect(fonte(caminho), caminho).not.toMatch(/<DrawerContent[^>]*variant="inset"/)
+    }
+    // E o padrão continua sendo a flush.
+    expect(CODIGO).toMatch(/defaultVariants: \{\s*fill: false,\s*variant: "flush"/)
+  })
+})

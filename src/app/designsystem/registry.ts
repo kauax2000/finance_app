@@ -234,6 +234,9 @@ const LAYER: Record<string, Layer> = {
   dialog: "Organisms",
   drawer: "Organisms",
   "dropdown-menu": "Organisms",
+  /** Compõe `Popover`, `Command`, `DropdownMenu` e `Calendar` — quem contém
+   *  organismo é organismo. */
+  "filter-bar": "Organisms",
   /** Compõe o StatCard, e quem contém organismo é organismo. */
   "histogram-slider": "Organisms",
   "hover-card": "Organisms",
@@ -462,6 +465,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("dialog", "Dialog", "Janela modal — e gaveta no telefone, com surface=\"auto\".", ui("dialog"), "Dialog, DialogContent, DialogHeader, DialogMedia, DialogSteps, DialogBody, DialogFooter"),
   entry("drawer", "Drawer", "Gaveta arrastável, com física de toque — e a folha de ações.", ui("drawer"), "Drawer, DrawerContent, DrawerTrigger, DrawerActions, DrawerAction, DrawerCancel"),
   entry("dropdown-menu", "Dropdown Menu", "Menu de ações, com busca, confirmação e a folha de ações no telefone.", ui("dropdown-menu"), "DropdownMenu, DropdownMenuContent, DropdownMenuHeader, DropdownMenuItem"),
+  entry("filter-bar", "Filter Bar", "Os filtros aplicados em tokens campo · operador · valor, editáveis no lugar — com o E/OU, a contagem, a URL e o teclado de toolbar.", ui("filter-bar"), "FilterBar, FilterBarSkeleton, serializeFilters, parseFilters, filterPeriodRange"),
   entry("form", "Form", "Formulário com as peças, o Enter, a validação em português e o envio que espera sozinho.", ui("form"), "Form, FormInput, FormField, FormSwitch, FormPickerPopover, FormSubmit"),
   entry("histogram-slider", "Histogram Slider", "Faixa de valor sobre uma distribuição, com atalhos, contagem, eixo e referência.", ui("histogram-slider"), "HistogramSlider"),
   entry("hover-card", "Hover Card", "Prévia ao pousar o cursor — e no toque longo, com o grupo e o carregando.", ui("hover-card"), "HoverCard, HoverCardGroup, HoverCardTrigger, HoverCardContent, HoverCardHeader, HoverCardLink"),

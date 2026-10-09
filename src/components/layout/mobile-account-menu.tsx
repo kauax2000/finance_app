@@ -88,7 +88,7 @@ export function MobileAccountMenu({ children }: MobileAccountMenuProps) {
     return (
         <Drawer open={open} onOpenChange={setOpen} scaleBackground>
             <DrawerTrigger asChild>{children}</DrawerTrigger>
-            <DrawerContent variant="inset">
+            <DrawerContent>
                 <DialogHeader className="sr-only">
                     <DialogTitle>Menu da conta</DialogTitle>
                     <DialogDescription>

@@ -21,10 +21,15 @@ describe("o campo de busca é um desenho só", () => {
     // O campo do cmdk entra como filho; a pílula, o × e a lupa são do SearchInput.
     expect(campo).toMatch(/<SearchInput[\s\S]*<CommandPrimitive\.Input[\s\S]*<\/SearchInput>/)
     expect(campo).not.toMatch(/MagnifyingGlassIcon|XMarkIcon|searchField\w+ClassName/)
-    // Na paleta, sem anel; no Combobox e solto, com. Sem piso de toque em
-    // lugar nenhum: a raiz publica a altura da faixa de busca (32 + 16).
+    // Na paleta, sem anel; no Combobox e solto, com. O piso de toque é
+    // opcional e desligado por padrão (rodada 245): a raiz publica a altura da
+    // faixa de busca (32 + 16), e quem o liga leva a faixa junto (40 + 16).
     expect(campo).toContain('focusRing={pilha !== "palette"}')
-    expect(campo).toContain("touchFloor={false}")
+    expect(campo).toContain("touchFloor = false,")
+    expect(campo).toContain("data-touch-floor={touchFloor || undefined}")
+    expect(fonte("src/components/ui/command.tsx")).toContain(
+      "pointer-coarse:has-[[data-slot=command-input-wrapper][data-touch-floor][data-size]]:[--scroll-fade-band-h:calc(--spacing(10)+--spacing(4))]"
+    )
   })
 
   it("o SearchInput e o gatilho do cabeçalho vestem a receita", () => {

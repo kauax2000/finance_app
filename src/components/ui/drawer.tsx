@@ -316,7 +316,13 @@ type DrawerDirection = "bottom" | "top"
  * E, só por existir, que há uma gaveta aberta acima — é como a de dentro sabe
  * que é aninhada.
  */
-type DrawerRaiz = { degraus: boolean; pending: boolean }
+type DrawerRaiz = {
+  degraus: boolean
+  pending: boolean
+  /** Na moldura do catálogo: o véu e o fechar no toque fora são desenhados aqui. */
+  veuEmulado: boolean
+  fechar: () => void
+}
 
 const DrawerRaizContext = React.createContext<DrawerRaiz | null>(null)
 
@@ -377,7 +383,23 @@ function Drawer({
   const degraus = Boolean(
     (props as { snapPoints?: unknown[] }).snapPoints?.length
   )
-  const raiz = React.useMemo(() => ({ degraus, pending }), [degraus, pending])
+  // Dentro da moldura do catálogo a gaveta deixa de ser modal (ver abaixo), e
+  // gaveta não modal não monta véu nem fecha no toque fora — a prévia do
+  // iPhone ficava presa, com a tela de trás sem escurecer (rodada 245). Quando
+  // a falta de modal é da moldura, e não de quem pediu `modal={false}` (a
+  // gaveta presa embaixo com a página usável), o véu é desenhado aqui. No app
+  // a gaveta continua modal e o véu continua sendo o do vaul.
+  const modal = useViewportModal()
+  const veuEmulado =
+    modal === false && (props as { modal?: boolean }).modal === undefined
+  const pedirRef = React.useRef(pedir)
+  React.useEffect(() => {
+    pedirRef.current = pedir
+  })
+  const raiz = React.useMemo(
+    () => ({ degraus, pending, veuEmulado, fechar: () => pedirRef.current(false) }),
+    [degraus, pending, veuEmulado]
+  )
   const Raiz = pai ? DrawerPrimitive.NestedRoot : DrawerPrimitive.Root
 
   return (
@@ -392,7 +414,7 @@ function Drawer({
         // Dentro da moldura do catálogo ela deixa de ser modal — senão o
         // `RemoveScroll` do Radix trava a rolagem da **página de fora**. Antes de
         // `{...props}`, para quem chama continuar mandando. Ver `useViewportModal`.
-        modal={useViewportModal()}
+        modal={modal}
         {...props}
         dismissible={pending ? false : dismissible}
         open={open}
@@ -568,6 +590,20 @@ function DrawerContent({
   return (
     <DrawerPortal>
       <DrawerOverlay />
+      {raiz?.veuEmulado ? (
+        // O véu da moldura: o mesmo desenho, e tocar nele fecha. `pointer-events-auto`
+        // porque o Radix pode deixar o `body` de dentro em `none`, e a
+        // propriedade é herdada.
+        <div
+          aria-hidden
+          data-slot="drawer-overlay"
+          className={cn(
+            SHEET_OVERLAY_CLASS,
+            "pointer-events-auto animate-in fade-in-0 animation-duration-(--duration-base)"
+          )}
+          onPointerDown={() => raiz.fechar()}
+        />
+      ) : null}
       <DrawerPrimitive.Content
         ref={conteudo}
         data-slot="drawer-content"
@@ -619,7 +655,8 @@ function DrawerActions({ className, ...props }: React.ComponentProps<"div">) {
 const drawerActionClassName = cn(
   "flex min-h-13 w-full items-center gap-3 rounded-surface px-4 text-left text-base text-foreground outline-none select-none",
   "transition-colors duration-(--duration-fast) ease-(--ease-out)",
-  "hover:bg-muted active:bg-muted focus-visible:bg-muted",
+  // Tinta sobre o vidro da gaveta, e não `bg-muted` opaco (rodada 245).
+  "hover:bg-foreground/9 active:bg-foreground/9 focus-visible:bg-foreground/9",
   "disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
   "[&_svg]:size-5 [&_svg]:shrink-0 [&_svg]:text-muted-foreground",
   "data-[variant=destructive]:text-destructive data-[variant=destructive]:[&_svg]:text-destructive"

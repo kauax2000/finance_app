@@ -191,6 +191,13 @@ export const menuItemGeometryClassName = [
 ].join(" ")
 
 /**
+ * **O realce é uma tinta, não uma cor** (rodada 245, a pedido do dono): o
+ * `--foreground` a 9% por cima do que estiver atrás. Era `bg-accent`, opaco
+ * (`oklch(0.269)` no escuro) — numa placa de vidro, a linha acesa matava a
+ * transparência e virava um retângulo chapado. Medido contra a placa
+ * composta, a 9% a tinta lê como o `accent` lia, nos dois temas: 1,21:1 no
+ * claro e 1,25:1 no escuro, contra 1,22 e 1,24.
+ *
  * O acender da linha: a cor de fundo esmaece em 300ms de `--ease-emphasized`,
  * na entrada e na saída — o ritmo do link da navegação lateral do catálogo,
  * medido nele (transparente → `accent/60`, assentando em ~300ms). Sem disco e
@@ -208,7 +215,7 @@ export const menuItemClassName = [
   "group/menu-item",
   menuItemGeometryClassName,
   menuItemFadeClassName,
-  "focus:bg-accent focus:text-accent-foreground",
+  "focus:bg-foreground/9 focus:text-accent-foreground",
   "data-inset:pl-7.5",
   "data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20",
   "data-disabled:pointer-events-none data-disabled:opacity-50",
@@ -220,8 +227,8 @@ export const menuSubTriggerClassName = [
   "group/menu-item",
   menuItemGeometryClassName,
   menuItemFadeClassName,
-  "focus:bg-accent focus:text-accent-foreground",
-  "data-inset:pl-7.5 data-open:bg-accent data-open:text-accent-foreground",
+  "focus:bg-foreground/9 focus:text-accent-foreground",
+  "data-inset:pl-7.5 data-open:bg-foreground/9 data-open:text-accent-foreground",
   // O mesmo estado das outras linhas: sem ele um submenu desabilitado saía
   // igual ao ativo nos três menus.
   "data-disabled:pointer-events-none data-disabled:opacity-50",
@@ -239,7 +246,7 @@ export const menuIndicatorItemClassName = [
   // por `cn()`, e o `twMerge` guarda o `px-2` da geometria com o `pr-8` por cima.
   "pr-8",
   menuItemFadeClassName,
-  "focus:bg-accent focus:text-accent-foreground",
+  "focus:bg-foreground/9 focus:text-accent-foreground",
   "data-inset:pl-7.5",
   "data-disabled:pointer-events-none data-disabled:opacity-50",
 ].join(" ")

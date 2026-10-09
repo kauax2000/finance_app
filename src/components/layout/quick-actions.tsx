@@ -172,7 +172,7 @@ export function QuickActionButton({ variant = "sidebar" }: QuickActionButtonProp
                         <PlusMiniIcon className="size-5 shrink-0" />
                     </BottomBarAction>
                 </DrawerTrigger>
-                <DrawerContent variant="inset">
+                <DrawerContent>
                     <DialogHeader className="sr-only">
                         <DialogTitle>Adicionar</DialogTitle>
                         <DialogDescription>

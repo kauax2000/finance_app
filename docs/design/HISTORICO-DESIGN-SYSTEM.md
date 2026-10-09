@@ -19986,3 +19986,358 @@ pela largura dela (40rem). Num laptop com a barra lateral e o painel de
 próximos, a coluna pode ficar abaixo disso — está dito no `JORNADAS.md` e no
 Atlas, e o limiar não mudou.
 
+
+### Rodada 245 — o FilterBar
+
+O dono trouxe duas referências do 21st (@laziekiki) e pediu um componente de
+filtros no estilo delas, com a marca e as peças da casa: a **Filter Token
+Bar** (o filtro como token partido em campo · operador · valor · ×) e o
+**Advanced Data Table Filter Builder** (o mesmo token, mais a pílula E/OU, a
+contagem viva e um painel de edição com título, operador segmentado, busca,
+caixas e rodapé de teclas).
+
+**O levantamento.** As duas foram medidas ao vivo (o código da segunda pede
+conta e não foi lido): token de 28px, fundo a 5% e fio a 8%, segmentos de 13px
+separados por um fio de 1px, o "+ Filter" tracejado, o roving tabindex com
+uma parada de Tab, o flash azul no segmento que mudou, o valor que abre logo
+depois de escolher o campo, e no telefone um token por linha. No app, o token
+segmentado não existia: cada valor era uma ficha plana "Campo: valor"
+(`ToolbarChips`), desenhada em três lugares (`ToolbarChips`, `ComboboxChips`
+e um `FilterChipRemoveButton` em transações). Só Transações tem fichas
+aplicadas — onze campos —, e o detalhe da categoria usa as mesmas. Achado no
+caminho, e mandado para uma tarefa à parte: o `?inst=1` do dashboard não
+acende ficha nem botão, porque `filterInstallmentsOnly` ficou fora de
+`advancedFiltersActive`.
+
+**As escolhas.** Tudo dos três primeiros grupos: o eixo `tone` (neutro e o
+verde das fichas), o telefone em faixa que rola **e** empilhado (virou o eixo
+`mobile`), o movimento; os editores de período, valor, texto e o filtro sem
+valor, o painel completo, o E/OU, a contagem; o teclado de toolbar, a URL com
+o voltar, a gaveta no telefone e as opções do servidor. **Nenhuma tela
+migra.** Três mexidas em componentes existentes, autorizadas: o teclado da
+`Toolbar` saiu para `hooks/use-toolbar-keyboard` (os controles passam a ser
+os do `role="toolbar"` mais próximo, o `inert` não conta, e a limpeza só
+desfaz o `tabindex` que escreveu); o `DatePicker` exporta
+`DATE_RANGE_PRESETS` com `id` estável (a URL guarda o id, não o rótulo); e o
+`Popover` em gaveta repassa o `onCloseAutoFocus`.
+
+**Um popover para a barra inteira.** O "+ Filtro" e o editor de valor são o
+mesmo `Popover`, ancorado por `virtualRef` (um objeto novo a cada troca,
+escrito num efeito de layout, com o `contextElement` para o `autoUpdate`
+seguir o token que cresce). Com dois, o que fecha devolve o foco ao "+ Filtro"
+depois da saída, e esse foco fecha o outro; no telefone seriam duas gavetas.
+Medido: escolher Valor no "+ Filtro" põe o editor 4px abaixo do token novo,
+alinhado à esquerda, com o foco no "De".
+
+**As medições que mudaram o código.**
+- O rodapé da lista ("2 selecionados · ↑ / ↓ navegar · Enter marcar") pedia
+  291px num painel de 288 e quebrava: a lista é `lg` (352).
+- Na faixa do telefone o token tinha `max-w-full` e o valor truncava em
+  "Mer…" — numa faixa que existe para rolar. Abaixo dos 28rem o token fica com
+  a própria largura.
+- Empilhado num iPhone de 375px, "Categoria · é qualquer de · Mercado +1 · ×"
+  pedia ~379px numa linha de 343, e o valor ficava em "M". O operador virou
+  **"é um de"** (e "não é um de"), 45px a menos, e o recuo dos segmentos desce
+  de 10 para 8 abaixo dos 28rem. Depois: "Mercado" inteiro.
+- Trocar "pelo menos R$ 50" para "entre" pelo menu deixa o filtro incompleto
+  e abre o editor; o Esc apagaria o filtro que existia. O rascunho guarda o
+  anterior e o devolve ao fechar sem completar — e guarda o que já estava
+  digitado, para o "De" abrir preenchido.
+
+**O stack virou colunas alinhadas**, a pedido do dono, depois de ver o
+empilhado no iPhone. Em flex, cada linha punha o operador e o valor onde o
+rótulo do campo terminasse — "Categoria" e "Período" deixavam a coluna de
+valores serrilhada —, o "Limpar" ficava solto à esquerda e tudo estava a 6px
+de tudo. Foram mostradas três formas (colunas alinhadas, duas linhas por
+filtro, placa única com fios — esta parente da lista agrupada recusada na
+244b), e ele escolheu as colunas. A linha é uma grade de quatro colunas e cada
+token as herda por `subgrid`; o vão entre colunas é zero porque a `subgrid`
+herda o da grade e abriria um buraco entre os segmentos. Medido a 375px:
+campo, operador, valor e × em x = 16, 110, 180 e 326 nas quatro linhas, o
+"Limpar" terminando no mesmo x dos tokens, e o ritmo 6 / 10 / 8 (entre
+filtros, até as ações, até a contagem). A coluna do campo passou a ter a
+largura do maior rótulo, e "Mercado" voltou a cortar por 2px: o ícone do campo
+sai no `stack` (22px), porque na grade os rótulos já formam a coluna. O filtro
+sem valor estende o campo pelas três colunas. O `scroll` e o desktop não
+mudaram.
+
+**Os pontos de toque seguem a régua, só no dedo**, a pedido do dono. Medido
+com a emulação de toque: o token já subia a 40, mas os segmentos dentro dele
+não — o operador "é" tinha 26px de largura, o × 33 e o E/OU 29 —, e a borda
+de 1px da cápsula deixava cada segmento com 38 de altura. Hoje cada segmento
+é 40 × 40 (`pointer-coarse:min-w-10` e um `::after` que atravessa a borda), o
+E/OU também. O "Remover" do cabeçalho do editor (24px) ganhou primeiro um alvo
+invisível de 44 por pseudo-elemento, como o voltar do `PageHeader`; o dono o
+selecionou na prévia e pediu o botão maior à vista, e no dedo ele cresce de
+verdade a 40 (`h-10`, `px-3`, `text-sm`), a régua do "+ Filtro" e do rodapé
+dos diálogos. As
+linhas da lista e do menu de operador já eram 44, e o operador segmentado é
+36 numa trilha de 40, a regra do `Tabs`. O calendário da gaveta passou a ser
+o do `DatePicker` (células `lg`, esticado), e com isso apareceram dois
+defeitos: o recuo de 12px do editor somado aos 16 da gaveta cortava o
+sábado num iPhone de 375 (sai na gaveta), e os atalhos de período, no
+`Calendar`, mediam 28 e mostravam a barra de rolagem da fileira — sobem a 40
+no dedo e a barra some, para o `DatePicker` também. No desktop nada mudou
+(token 32, operador 29, × 32). **Fica de fora, por decisão da casa:** a
+pílula de busca do editor media 32 no dedo, porque o `CommandInput` não tinha
+piso de toque em lugar nenhum (a faixa de busca publica a própria altura e a
+pílula crescendo passaria por baixo da lista). O dono pediu "mesma coisa" ao
+selecioná-la: o `CommandInput` ganhou `touchFloor`, **opcional e desligado por
+padrão**, que marca o envoltório (`data-touch-floor`) e faz a raiz publicar a
+faixa do dedo (40 + 16, num `:has()` de três atributos, que vence o `lg` sem
+depender da ordem). Medido: pílula de 40, faixa de 56 e a primeira linha rente
+à base dela; no mouse, 32 e 48. O `Combobox` e a paleta não mudaram — o
+`Combobox` tem a mesma pílula de 32 no dedo, e ligar nele é uma linha.
+
+**O iPhone do catálogo passou a emular o dedo**, depois de o dono perguntar
+por que as linhas continuavam pequenas no telefone. Elas não estavam — com a
+emulação de toque do navegador, 40 e 44 —, mas a prévia mostrava o contrário:
+o `IphoneFrame` é um iframe no navegador do desktop, e ali `(pointer: coarse)`
+responde pelo mouse. O comentário da moldura afirmava que "o toque" lia o
+telefone; não lia. A variante `pointer-coarse:` foi redefinida em
+`globals.css` para valer também sob `[data-pointer="coarse"]` (`:where()`, sem
+especificidade), e a moldura marca o `<html>` de dentro — e não um invólucro,
+porque as gavetas vão para o `body` do iframe. Escolhido para o catálogo
+inteiro: as 16 prévias de telefone mostram agora os tamanhos do aparelho.
+Medido com mouse: dentro do iPhone o token tem 40, o × 40 de largura, o
+"+ Filtro" 40 e as linhas da gaveta 44; fora dele, 32. O que pergunta ao toque
+por `matchMedia` continua lendo o mouse na prévia (o foco ao abrir um editor,
+por exemplo).
+
+**Na prévia, tocar fora da gaveta não fechava.** O dono pediu; a causa era do
+catálogo, não do app: o `Drawer` vira não modal dentro da moldura
+(`useViewportModal`, para o `RemoveScroll` do Radix não travar a página de
+fora), e gaveta não modal não monta véu — o Radix só desenha o véu modal — e o
+vaul impede o fechar por toque fora. Medido: nenhum `[data-vaul-overlay]` no
+iframe, e a tela de trás sem escurecer. Quando a falta de modal é da moldura
+(e não de um `modal={false}` de quem chama, a gaveta presa com a página
+usável), o `DrawerContent` desenha o véu com o mesmo desenho, com
+`pointer-events-auto` (o `body` de dentro estava em `none`, e a propriedade é
+herdada), e tocar nele fecha pela raiz. Medido no iPhone: véu de 375 × 815 a
+40%, o toque fora fecha o editor e mantém os filtros, descarta o rascunho do
+"+ Filtro" e fecha o menu de operador. Vale para todo `Popover`,
+`DropdownMenu` e `Drawer` nas prévias de telefone; a gaveta do `Sheet` usa o
+vaul direto e não passou por aqui.
+
+**A gaveta ficou mais alta.** O dono a selecionou e pediu: a lista do
+"+ Filtro" mostrava cinco dos oito campos numa folha de 348px, com tela
+sobrando, porque o `Command` declara um teto de 288 pensado para o popover.
+Na gaveta o `FilterBar` declara `--command-list-max-h` em 55% da altura (até
+480). Medido num iPhone de 815: o "+ Filtro" foi a 476px com os oito campos
+inteiros e sem rolar, a lista de categorias a 630 com o rodapé dentro; num de
+667, sete dos oito e o último a uma rolagem, nada cortado pela gaveta.
+
+**O editor de período ficou mais limpo**, a pedido do dono, que pediu também
+para tirar o fundo do calendário. Medido no iPhone: o `Calendar` pintava
+`--background` opaco por cima do vidro da gaveta (só ficava transparente em
+cartão e popover) — agora também em gaveta (`in-data-[surface=drawer]`). Os
+quatro atalhos rolavam de lado e "Mês passado" ficava fora da tela, até x 465
+numa fileira de 309: no telefone viraram uma grade 2 × 2 (152 × 40 cada), e a
+partir de `sm` continuam a coluna ao lado da grade. E as bordas não batiam: o
+título a 37 e os atalhos e a grade a 33 — na gaveta as faixas do editor
+recuam 8, e título, operador, busca, atalhos e grade caem na mesma linha. As
+duas mudanças do `Calendar` valem para o `DatePicker` no telefone.
+Depois, a pedido do dono ("use os outlines"), os atalhos da grade 2 × 2 ganharam
+contorno; e o escolhido, que era `secondary`, ficava a um tom dos contornados
+(fundo 0,269 contra fio de 0,31) e no vidro os dois liam iguais — no telefone
+ele é a tecla preenchida (`primary`), a mesma cor das pontas do intervalo, e o
+atalho e o intervalo que ele marca leem juntos. No desktop a coluna segue
+lista, com o `secondary`. **E um defeito meu, achado nessa medição:** o
+editor escrevia `data-slot="filter-bar-editor"` no `PopoverContent`, o que
+apagava o `data-slot="popover-content"` de que o `Calendar` depende para não
+pintar fundo — no desktop o calendário saía num bloco opaco sobre a placa. O
+editor passou a se marcar com `data-filter-bar="editor"`, e o teste proíbe o
+`data-slot` sobrescrito.
+
+**No desktop os atalhos foram linhas de lista por uma volta**, a pedido do
+dono ("melhore o design", selecionando a coluna). Medido: o título a 12 da placa e o texto do
+primeiro atalho a 33 — o recuo do editor (12), o do calendário (8) e o do
+botão (12) somados —, os atalhos como texto solto que não dizia que intervalo
+marcava, e o escolhido numa pílula cinza cheia, diferente do realce de linha
+do resto do popover. Hoje a coluna tem a geometria das linhas do `Command`
+(caixa a 8, canto de linha de 12, texto a 17), o intervalo miúdo embaixo do
+nome ("03/10 – 09/10"), e o escolhido é a linha acesa pela camada de realce
+do `Button` com peso médio. O editor deixou de somar recuo no popover. E o
+corte telefone/desktop dos atalhos passou de `sm` (640) para `md` (768), o
+mesmo do `useIsMobile` que decide a gaveta — entre 640 e 768 a coluna
+aparecia com os contornos do telefone. **O dono não gostou das linhas** e
+recusou também as três direções de layout propostas em seguida (fichas em
+cima com um mês, lista à esquerda à Linear, resumo em destaque): pediu o
+layout como estava e o desenho da gaveta do telefone. A coluna voltou às
+pílulas, agora **contornadas, com o escolhido na tecla preenchida**, sem o
+intervalo embaixo — o mesmo desenho da grade 2 × 2. Ficaram da volta das
+linhas o corte em `md` e o editor sem recuo próprio no popover. Vale para o
+`DatePicker` no desktop.
+
+**A troca de mês ganhou movimento**, a pedido do dono ("bonitas e orgânicas,
+como no resto do app"); o mês trocava de estalo. O `react-day-picker` 9.14 já
+faz a mecânica com `animate` — clona o mês que sai, sobrepõe os dois dentro da
+caixa do mês e marca cada um com uma classe por direção — e o `Calendar` não
+a ligava. O movimento é a `@utility calendar-month-motion`: o mês novo entra
+**24px** do lado para onde se andou (a largura inteira lê como carrossel
+mecânico), saindo de 2px de desfoque, na mola da casa; o velho vai para o
+outro lado e some sem mola; a legenda troca com 8px. **A legenda que sai é o
+relógio da biblioteca** — o clone sai e as classes caem no `animationend`
+dela —, então ela dura a mola inteira e some no primeiro terço; mais curta,
+cortaria a entrada no meio. Medido na grade: a entrada vai de 24px a −0,9px
+(a mola passando) e assenta em ~500ms, a saída chega a 0 de opacidade em
+~150ms, e a limpeza vem em ~540ms, depois da entrada. Duas armadilhas: a
+biblioteca **pula a animação com um dia focado**, e o editor de período abre
+com foco num dia — com o clique real na seta o foco sai do dia e ela roda
+(medido no editor também); e na abertura do `DatePicker` a subida das linhas
+alcançaria o clone do mês que sai, que tem `aria-hidden`, e ele subiria
+enquanto sai — o seletor da `date-picker-bloom` passou a excluí-lo. Fora da
+agenda, cuja grade de fios com eventos é outra conversa.
+**E um defeito anterior apareceu no caminho:** no `DatePicker` a seta "próximo
+mês" não recebia o clique — o `elementFromPoint` no centro dela devolvia a
+legenda do mês. A subida da abertura fica presa nas linhas, na legenda e na
+faixa (`fill: both`), e uma animação de deslocamento faz o elemento pintar
+como posicionado: a legenda, depois no DOM e de largura inteira, cobria as
+setas. A biblioteca põe `z-index: 1` na faixa só durante a troca; a faixa
+passou a ter `z-10` sempre (empilhamento local), e continua
+`pointer-events-none` fora dos botões, sem bloquear os seletores do meio.
+Medido depois: a seta recebe o clique, o mês troca e anima, e o clone sai sem
+a subida. `calendar-month-motion.test.ts` tranca.
+
+**Toda gaveta do telefone passou a ser a `flush`**, a pedido do dono. O
+padrão do `DrawerContent` já era `flush`, e a gaveta do `Sheet` já encostava;
+as que soltavam da tela eram as que pediam `variant="inset"`: a do `Popover
+mobile="sheet"` (o editor do `FilterBar`), a folha do `DropdownMenu`, as do
+`Menubar` e do `NavigationMenu`, o "+ Adicionar" e o menu da conta. As seis
+deixaram de pedir. O `inset` continua no tipo, demonstrado só na página do
+`Drawer`, e `drawer-versions.test.ts` impede um consumidor de voltar a ele.
+
+**O realce das linhas virou tinta.** O dono selecionou uma linha acesa na
+lista de pagamento e apontou: o realce matava a transparência do vidro. Era
+`bg-accent`, opaco (`oklch(0.269)` no escuro), e a mesma linha mora em sete
+lugares sobre vidro — o `Command`, os três menus (`menu-classes`), o
+`Select`, o `NavigationMenu`, a folha de ações da gaveta (onde o menu de
+operador vive no telefone, com `bg-muted`) e o seletor de mês do calendário.
+Medido contra a placa composta: o `accent` dava 1,215:1 no claro e 1,238:1 no
+escuro; o `--foreground` a 9% dá ~1,21 e ~1,25 — a mesma leitura, uma
+porcentagem só para os dois temas, e o vidro aparecendo por baixo. Medido na
+lista: `oklab(0.985 0 0 / 0.09)`. O `Item` e o `Toggle` também acendem com
+`bg-muted`, mas sobre superfície opaca, onde o defeito não existe — ficaram.
+`lib/row-tint.test.ts` tranca os sete arquivos.
+
+**O seletor de mês e de ano saiu da cápsula.** O dono pediu primeiro "remova
+o efeito pill", e a primeira leitura tirou o realce inteiro (só o chevron
+respondia); ele corrigiu: o realce fica, o que sai é a forma. O gatilho é um
+`SelectTrigger sm`, e a cápsula vinha de `fieldSurfaceClassName`. Pela regra
+do raio, a escolha foi na escala: os três degraus que servem a 28px — `md` 8,
+`lg` 10 e `row` 12 — lado a lado no popover, a 2,5×, com a tinta acesa. O
+dono escolheu `rounded-row`, o mesmo das linhas de lista; a 28px ele fica a
+2px da metade, e ainda lê como retângulo. Medido: 12px, `oklab(0.985 0 0 /
+0.09)` no cursor, o anel de 3px do teclado intacto.
+
+**O token surge e se dissolve; os vizinhos andam.** O dono pediu a entrada e
+a saída "bem orgânicas". A primeira versão animava a **largura** (`width: 0 →
+auto` na `MOLA`, com `overflow: clip` durante), e ela tinha cinco defeitos: a
+mola passava do alvo na largura — a pílula ia a 223px e voltava a 215 —; o
+conteúdo era revelado como cortina; o E/OU e o "Limpar" entravam secos e
+empurravam tudo; o `gap` estalava no fim; e a mola até zero cortava seco, contra
+a regra da casa de fechar em curva. Agora o token entra de `opacity 0 · scale
+0.9 · blur(4px)` — a escala na mola, opacidade e desfoque em 200ms de
+`--ease-out` (mola em desfoque passa de zero) —, nascendo onde estava o
+"+ Filtro" (`origin-left`; `origin-top` no empilhado), e sai pelo mesmo
+caminho em 150ms. Quem abre e fecha o espaço são os vizinhos, com `layout =
+"position"` na mola: os tokens, o E/OU, o grupo das ações e a contagem — e
+isso também anima a quebra de linha. Medido: o token que sai fica no lugar
+(absoluto, 374px), encolhe a 90% e some em ~150ms enquanto o vizinho desliza
+para a vaga (1034 → 640 → 654px) e o "+ Filtro" sobe da segunda linha (426 →
+892 → 875); o que entra cresce de 90% a 100,4% e assenta, a cápsula nunca
+passa da final (254 contra 253px), e o editor acompanha o token (borda
+esquerda igual, 2px para baixo com a escala).
+Quatro coisas custaram uma medição cada:
+- **`popLayout` põe a regra de posição no `document.head` de quem roda o
+  script**, e no iframe do catálogo ela ia para o documento de fora: o token
+  que saía ficava no fluxo. O `root` do `AnimatePresence` é o `<head>` do
+  documento da linha, guardado pelo `ref` dela.
+- **No empilhado, o token tirado do fluxo deixa de ser item da grade** e a
+  `subgrid` cai para nenhuma; ele declara as colunas da grade enquanto some
+  (`[&[data-motion-pop-id]]`). Os segmentos andam até 9px nesses 150ms.
+- **`motion.create(Button)` não serve**: o `Button` junta os `ref`s com o
+  `composeRefs`, uma função nova a cada render, e o React solta e prende o
+  `ref` do `motion` em todo render — o elemento animado desmontava no meio da
+  saída, e o "Limpar" ficava na tela com um filtro só. O E/OU e o "Limpar"
+  animam num `motion.div` em volta.
+- **O foco seguia o que se via, não o destino**: depois de remover, o foco vai
+  ao vizinho enquanto ele ainda está, à vista, no lugar antigo, e o navegador
+  rolava a faixa até lá — no iPhone o vizinho terminava fora dela (x −102 com a
+  faixa em 12). O foco é `preventScroll`, e quem rola é a posição final, por
+  `offsetLeft`; medido, a faixa vai de 0 a 285px junto com o deslize e o
+  vizinho termina dentro dela. (E `instanceof HTMLElement` falha no iframe —
+  o laço não o usa.)
+
+**Clicar fora fecha o editor.** O dono clicou fora do editor de Pagamento e
+ele continuou aberto. Eram duas causas. **A linha inteira segurava o editor**:
+o `onInteractOutside` impedia o fechar para qualquer clique dentro da
+`filter-bar-row`, e ela é `flex-1`, com centenas de pixels vazios depois do
+"Limpar". Agora só um token ou o "+ Filtro" o seguram — são eles que trocam o
+editor —, e o vão, a contagem e a página fecham. **E na demonstração o clique
+nem chegava**: o `Popover` ia ao `body` do documento de fora, e o
+`DismissableLayer` do Radix escuta o `pointerdown` no documento do conteúdo; um
+clique dentro da moldura (um iframe) nunca sobe até lá. O `Popover` passou a
+ler `useViewportWindow()` e a abrir dentro dela, como o `Tooltip`, o `Drawer` e
+o `Sheet` já faziam. Medido na demonstração: abre alinhado ao token (borda
+esquerda igual, 4px abaixo), troca para outro token e para a lista de campos, e
+fecha no vão da linha, na lista de lançamentos e na contagem; fora da moldura,
+fecha no vão e na página. O custo é o inverso: um clique na página de fora da
+moldura não fecha o que abriu dentro dela. No app não há moldura, e nada muda.
+
+**O ladrilho de cor cabe no `sm`.** O dono apontou o `ColorTile` de "Mercado"
+no token `sm`: o `xs` (24) é o degrau de um gatilho `md`, e num token de 28
+sobravam 2px em cima e embaixo. O `ColorTile` não tem degrau menor, e o token já
+mandava no corpo do ícone por degrau (`[&>svg]:size-3.5` no `sm`); o ladrilho
+segue a mesma régua ali — 20px, canto de 6 (`rounded-sm`, 30%, a proporção do
+`xs`). Medido: 20×20 com 4px de folga dos dois lados, como os 24 num `md` de
+32; o `md` e o `lg` não mudam.
+
+**O fio entre os segmentos aparece.** O dono pediu os divisores mais visíveis:
+eram o `--input`, o mesmo do contorno, e contra o preenchimento da cápsula
+mediam **1,12:1** no escuro e 1,16 no claro — a cápsula lia como uma peça só.
+Três alternativas foram vistas lado a lado, a 2,2×, na própria página: o fio
+inteiro mais claro, um fio curto (metade da altura) e um curto mais leve. O dono
+escolheu o **fio inteiro**, com o texto a 14% (`divide-foreground/14`, um valor
+só nos dois temas): **1,54** no escuro e **1,36** no claro, medidos compondo as
+cores num canvas. Ele fica mais forte que o contorno da cápsula (1,36 e 1,35
+contra o fundo), de propósito: é ele que parte a peça. O tom `success` já usava
+a própria tinta a 20% e não mudou.
+
+**Na página, a barra mora no fundo da página.** O dono apontou a barra de
+"Dentro da Toolbar" como diferente da de "Na tela". Os estilos do token eram
+idênticos — cápsula, contorno, fio, texto, operador —; o que mudava era o
+palco: a cápsula é translúcida, como todo campo, e "Na tela" fica sobre o
+`--background` (dentro da moldura) enquanto as demonstrações de baixo ficavam
+direto sobre o `--card` da prévia. Medido: cápsula `28,28,28` contra
+`40,40,40`. As quatro demonstrações com barra (o teclado, a URL, o servidor, a
+`Toolbar`) e o esqueleto ganharam `previewClassName="bg-background"`, o recurso
+que a página do `Card` já usa — e é o fundo em que a barra vive no app. Depois:
+`28,28,28` e o fio `59,59,59` nas duas.
+
+**Medido no navegador:** a escada (token, "+ Filtro" e E/OU com 28, 32 e 36;
+dentro de uma `Toolbar size="sm"`, 28); o contraste do operador e do × contra
+a cápsula, pior caso **5,09** (neutro, claro), o verde 6,00 e 6,46; o roving
+(uma parada, setas, Home, End), o Backspace com o foco no vizinho, o F com o
+foco na busca; o rascunho, o Esc e o foco de volta ao "+ Filtro"; a entrada
+(ver acima: a da largura, 4 → 223 → 215px, saiu); a URL (uma entrada
+por sessão do editor — duas caixas marcadas são um passo —, voltar e avançar
+sem recarregar); a faixa com a dissolução ligada e o empilhado com os tokens
+na largura da linha; a gaveta abrindo dentro do iPhone.
+
+**Custos conhecidos.**
+- Um token por campo: "≥ 50 **ou** ≤ 10" no mesmo campo não existe. Quando
+  uma tela pedir, o token ganha `id` próprio.
+- Tudo grava ao vivo, então o Esc não desfaz o que já foi marcado ou
+  digitado; ele só fecha (e devolve o filtro de uma troca de operador
+  incompleta).
+- Um intervalo de dias igual ao de um atalho vira o atalho ("Este mês"), e
+  passa a andar com o mês.
+- O flash é a `table-flash` (`--muted`): sobre o verde do `success` ele lê
+  cinza.
+- No iframe do iPhone, o Radix avisa que a gaveta não tem `DialogTitle`: ele
+  procura o título no documento de fora. O título existe e nomeia a gaveta
+  ("Editar categoria"); é a moldura do catálogo.
+
+`filter-bar-versions.test.ts` tranca as peças, os nomes, a URL, o
+comportamento e as proibições.

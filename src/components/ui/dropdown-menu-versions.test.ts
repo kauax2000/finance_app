@@ -12,7 +12,8 @@ describe("as versões do DropdownMenu", () => {
   it("no telefone, com mobile=sheet, a raiz é o Drawer e cada peça se desenha como folha", () => {
     expect(CODIGO).toContain('const folha = mobile === "sheet" && isMobile')
     expect(CODIGO).toMatch(/folha \? \(\s*<Drawer open=\{open\} onOpenChange=\{mudar\}>/)
-    expect(CODIGO).toContain('<DrawerContent variant="inset" data-slot="dropdown-menu-sheet">')
+    // Desde a rodada 245 toda gaveta do telefone é a `flush`, o padrão.
+    expect(CODIGO).toContain('<DrawerContent data-slot="dropdown-menu-sheet">')
     // Na folha o título é do Radix: um `id` próprio apontava o nome para o vazio.
     expect(CODIGO).not.toMatch(/<DialogTitle id=\{id\}>/)
     // O ícone fica no corpo do conjunto que veio (16), e não esticado a 20.

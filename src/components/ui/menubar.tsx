@@ -1232,7 +1232,7 @@ function MenubarSearch({
                 aria-selected={false}
                 data-variant={c.variant}
                 onClick={() => executar(c)}
-                className={cn(menuItemClassName, "w-full text-left focus:bg-accent")}
+                className={cn(menuItemClassName, "w-full text-left focus:bg-foreground/9")}
               >
                 <span className="flex min-w-0 flex-col">
                   <span className="truncate">{c.texto}</span>
@@ -1278,7 +1278,7 @@ function MenubarFolha({ label }: { label: string }) {
           {label}
         </Button>
       </DrawerTrigger>
-      <DrawerContent variant="inset" data-slot="menubar-sheet">
+      <DrawerContent data-slot="menubar-sheet">
         <DialogHeader className="sr-only">
           <DialogTitle>{label}</DialogTitle>
           <DialogDescription>Os comandos desta barra</DialogDescription>

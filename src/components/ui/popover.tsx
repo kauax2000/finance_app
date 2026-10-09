@@ -8,7 +8,7 @@ import { XMarkIcon } from "@heroicons/react/16/solid";
 import { menuPanelSurfaceClassName } from "@/lib/menu-classes";
 import { cn } from "@/lib/utils";
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile, useViewportWindow } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -264,6 +264,11 @@ function PopoverContent({
   const reactId = React.useId();
   const fechouPorRolagem = React.useContext(PopoverScrollCloseContext);
   const { folha } = React.useContext(PopoverModoContext);
+  // O portal vai ao `body` da janela da moldura do catálogo, como o do
+  // `Tooltip` e o do `Drawer` (rodada 245). Fora dela o contexto é `null`, e o
+  // app não muda. Ia ao documento de fora, e lá o clique dentro da moldura
+  // nunca chegava a ele: o popover não fechava ao clicar fora.
+  const janela = useViewportWindow();
   const [hasTitle, setHasTitle] = React.useState(false);
   const [hasDescription, setHasDescription] = React.useState(false);
 
@@ -316,8 +321,13 @@ function PopoverContent({
     <PopoverLabelContext.Provider value={rotulos}>
       {folha ? (
         // No telefone, a gaveta: o mesmo conteúdo, sem placa nem seta. O
-        // nome é o da gaveta — `PopoverTitle` vira `DialogTitle` nela.
-        <DrawerContent variant="inset" data-slot="popover-sheet">
+        // nome é o da gaveta — `PopoverTitle` vira `DialogTitle` nela. O
+        // destino do foco ao fechar atravessa (rodada 245): quem decide para
+        // onde ele volta no popover decide também na gaveta.
+        <DrawerContent
+          data-slot="popover-sheet"
+          onCloseAutoFocus={onCloseAutoFocus}
+        >
           {label != null ? (
             <PopoverTitle className="sr-only">{label}</PopoverTitle>
           ) : null}
@@ -331,7 +341,7 @@ function PopoverContent({
           </div>
         </DrawerContent>
       ) : (
-      <PopoverPrimitive.Portal>
+      <PopoverPrimitive.Portal container={janela?.document.body}>
         <PopoverPrimitive.Content
           data-slot="popover-content"
           align={align}

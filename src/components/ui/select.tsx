@@ -220,7 +220,7 @@ function SelectItem({
       data-slot="select-item"
       data-variant={variant}
       className={cn(
-        "concentric relative flex w-full cursor-default items-center gap-1.5 py-2 pr-8 pl-2.5 text-sm outline-hidden pointer-coarse:min-h-11 select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:not-data-[variant=none]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "concentric relative flex w-full cursor-default items-center gap-1.5 py-2 pr-8 pl-2.5 text-sm outline-hidden pointer-coarse:min-h-11 select-none focus:bg-foreground/9 focus:text-accent-foreground not-data-[variant=destructive]:not-data-[variant=none]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         // O texto da opção — ícone, ladrilho e nome em linha. Era um seletor
         // `*:[span]:last:` no item, que casava o último `span` filho; com a
         // descrição o `ItemText` deixa de ser filho direto, e a regra o acha

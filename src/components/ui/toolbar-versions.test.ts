@@ -78,16 +78,20 @@ describe("as superfícies", () => {
 })
 
 describe("o teclado", () => {
+  // Desde a rodada 245 o foco itinerante mora num hook que o `FilterBar` divide.
+  const TECLADO = fonte("src/hooks/use-toolbar-keyboard.ts")
+
   it("o papel só vem com o comportamento", () => {
     expect(CODIGO).toContain('role={keyboard ? "toolbar" : undefined}')
-    expect(CODIGO).toContain('e.key === "ArrowRight"')
-    expect(CODIGO).toContain('e.key === "Home"')
+    expect(CODIGO).toContain("useToolbarKeyboard(raiz, keyboard)")
+    expect(TECLADO).toContain('e.key === "ArrowRight"')
+    expect(TECLADO).toContain('e.key === "Home"')
   })
 
   it("campo de texto guarda as setas, e o Tabs cuida das dele", () => {
-    expect(CODIGO).toContain('alvo.matches("input:not([type=checkbox]):not([type=radio]), textarea, select")')
-    expect(CODIGO).toContain("if (e.defaultPrevented")
-    expect(CODIGO).toContain('if (n.getAttribute("role") === "tab") continue')
+    expect(TECLADO).toContain('alvo.matches("input:not([type=checkbox]):not([type=radio]), textarea, select")')
+    expect(TECLADO).toContain("if (e.defaultPrevented")
+    expect(TECLADO).toContain('if (n.getAttribute("role") === "tab") continue')
   })
 })
 

@@ -202,11 +202,11 @@ const navigationMenuTriggerVariants = cva(
     variants: {
       variant: {
         floating:
-          "rounded-full px-3 hover:bg-muted active:bg-muted aria-expanded:bg-muted aria-expanded:text-foreground",
+          "rounded-full px-3 hover:bg-foreground/9 active:bg-foreground/9 aria-expanded:bg-foreground/9 aria-expanded:text-foreground",
         plain:
-          "hover:bg-muted active:bg-muted aria-expanded:bg-muted aria-expanded:text-foreground",
+          "hover:bg-foreground/9 active:bg-foreground/9 aria-expanded:bg-foreground/9 aria-expanded:text-foreground",
         outline:
-          "hover:bg-muted active:bg-muted aria-expanded:bg-muted aria-expanded:text-foreground",
+          "hover:bg-foreground/9 active:bg-foreground/9 aria-expanded:bg-foreground/9 aria-expanded:text-foreground",
         solid:
           "border border-transparent hover:bg-background/60 active:bg-background/60 aria-expanded:border-border/80 aria-expanded:bg-background aria-expanded:text-foreground aria-expanded:shadow-xs",
       },
@@ -403,8 +403,9 @@ const navigationMenuLinkVariants = cva(
     NAVIGATION_MENU_LINK_BASE,
     "concentric text-sm pointer-coarse:min-h-11",
     menuItemFadeClassName,
-    "hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground focus-visible:bg-accent",
-    "aria-[current=page]:bg-accent/60 aria-[current=page]:font-medium",
+    // Tinta, não cor (rodada 245): o realce das linhas de lista sobre vidro.
+    "hover:bg-foreground/9 hover:text-accent-foreground active:bg-foreground/9 active:text-accent-foreground focus-visible:bg-foreground/9",
+    "aria-[current=page]:bg-foreground/6 aria-[current=page]:font-medium",
   ],
   {
     variants: {
@@ -1607,7 +1608,7 @@ function NavigationMenuFolha({
           {label}
         </Button>
       </DrawerTrigger>
-      <DrawerContent variant="inset" data-slot="navigation-menu-sheet">
+      <DrawerContent data-slot="navigation-menu-sheet">
         <DialogHeader className="sr-only">
           <DialogTitle>{label}</DialogTitle>
           <DialogDescription>A navegação desta página</DialogDescription>

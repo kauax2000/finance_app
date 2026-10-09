@@ -46,6 +46,11 @@ describe("as versões do Popover", () => {
     expect(CODIGO).toMatch(/<Button type="button" variant="tertiary" size="sm" disabled=\{pendente\}>/)
   })
 
+  it("na moldura do catálogo, o portal vai à janela dela — senão o clique lá dentro não fecha", () => {
+    expect(CODIGO).toContain("const janela = useViewportWindow();")
+    expect(CODIGO).toContain("<PopoverPrimitive.Portal container={janela?.document.body}>")
+  })
+
   it("no telefone, a gaveta: o gatilho, o fechar e o título passam a ser dela", () => {
     expect(CODIGO).toContain('const folha = mobile === "sheet" && isMobile;')
     expect(CODIGO).toContain('if (folha) return <DrawerTrigger data-slot="popover-trigger" {...props} />;')

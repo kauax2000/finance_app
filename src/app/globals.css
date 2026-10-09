@@ -12,6 +12,24 @@
    sólida no mesmo lugar em que diz a translúcida. */
 @custom-variant reduced-transparency (@media (prefers-reduced-transparency: reduce));
 
+/* O dedo, e o dedo emulado (rodada 245).
+   `pointer-coarse:` continua sendo a pergunta ao **apontador** — a régua de
+   toque nunca pergunta à largura. A segunda regra é para o iPhone do catálogo:
+   ele é um iframe dentro do navegador do desktop, e lá `(pointer: coarse)`
+   responde pelo mouse, então a prévia "No telefone" mostrava os alvos de mouse
+   (tokens de 32, linhas de 31) em vez dos 40 e 44 do aparelho. O
+   `IphoneFrame` marca o `<html>` dele com `data-pointer="coarse"`; no app
+   ninguém escreve esse atributo. `:where()` não soma especificidade, como a
+   media query. */
+@custom-variant pointer-coarse {
+  @media (pointer: coarse) {
+    @slot;
+  }
+  &:where([data-pointer="coarse"] *) {
+    @slot;
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -3546,7 +3564,10 @@
     animation: date-picker-wilt var(--duration-fast) var(--ease-out) both;
   }
 
-  &[data-state="open"] :is(.rdp-nav, .rdp-month_caption, .rdp-weekdays, .rdp-week),
+  /* O mês que sai numa troca de mês (rodada 245) é um clone com `aria-hidden`:
+     sem a exceção, as linhas dele ganhariam a subida da abertura ao entrar no
+     DOM, e subiriam enquanto saem. */
+  &[data-state="open"] :is(.rdp-nav, .rdp-month_caption, .rdp-weekdays, .rdp-week):not([aria-hidden="true"] *),
   &[data-state="open"] [data-slot="calendar-presets"] > li,
   &[data-state="open"] [data-slot="month-grid"] > *,
   &[data-state="open"] [data-slot="calendar-legend"],
@@ -3590,6 +3611,88 @@
     &[data-state="open"] * {
       animation-delay: 0ms !important;
     }
+  }
+}
+
+/* A troca de mês (rodada 245, a pedido do dono: "bonitas e orgânicas, como
+   no resto do app"). O `react-day-picker` faz a mecânica com `animate`: clona
+   o mês que sai, sobrepõe os dois dentro da caixa do mês (que recorta) e põe
+   uma classe por direção em cada um. O movimento é daqui.
+
+   - O mês que entra vem do lado para onde se andou, **24px e não a largura
+     inteira** — a largura toda lê como carrossel mecânico —, saindo de um
+     desfoque de 2px, na mola da casa: passa um pouco do alvo e assenta.
+   - O que sai vai para o outro lado e some depressa, sem mola (uma mola até
+     zero passaria por baixo de zero).
+   - A legenda troca junto, 8px.
+
+   **A legenda que sai é o relógio da biblioteca**: é no `animationend` dela
+   que o clone sai e as classes caem. Se ela durasse menos que a entrada, a
+   entrada seria cortada no meio — por isso ela dura a mola inteira e some no
+   primeiro terço. Movimento reduzido: o bloco global encurta as durações, o
+   `animationend` chega na hora e o mês troca seco. */
+@keyframes calendar-weeks-in {
+  from {
+    opacity: 0;
+    translate: var(--calendar-weeks-from) 0;
+    filter: blur(2px);
+  }
+}
+@keyframes calendar-weeks-out {
+  to {
+    opacity: 0;
+    translate: var(--calendar-weeks-to) 0;
+    filter: blur(2px);
+  }
+}
+@keyframes calendar-caption-in {
+  from {
+    opacity: 0;
+    translate: var(--calendar-caption-from) 0;
+  }
+}
+@keyframes calendar-caption-out {
+  35%,
+  to {
+    opacity: 0;
+    translate: var(--calendar-caption-to) 0;
+  }
+}
+
+@utility calendar-month-motion {
+  /* Para frente: o novo vem da direita, o velho sai pela esquerda. */
+  & .rdp-weeks_after_enter {
+    --calendar-weeks-from: 1.5rem;
+    animation: calendar-weeks-in var(--duration-spring) var(--ease-spring) both;
+  }
+  & .rdp-weeks_before_exit {
+    --calendar-weeks-to: -1.5rem;
+    animation: calendar-weeks-out var(--duration-base) var(--ease-out) both;
+  }
+  & .rdp-caption_after_enter {
+    --calendar-caption-from: 0.5rem;
+    animation: calendar-caption-in var(--duration-spring) var(--ease-spring) both;
+  }
+  & .rdp-caption_before_exit {
+    --calendar-caption-to: -0.5rem;
+    animation: calendar-caption-out var(--duration-spring) var(--ease-out) both;
+  }
+  /* Para trás: o contrário. */
+  & .rdp-weeks_before_enter {
+    --calendar-weeks-from: -1.5rem;
+    animation: calendar-weeks-in var(--duration-spring) var(--ease-spring) both;
+  }
+  & .rdp-weeks_after_exit {
+    --calendar-weeks-to: 1.5rem;
+    animation: calendar-weeks-out var(--duration-base) var(--ease-out) both;
+  }
+  & .rdp-caption_before_enter {
+    --calendar-caption-from: -0.5rem;
+    animation: calendar-caption-in var(--duration-spring) var(--ease-spring) both;
+  }
+  & .rdp-caption_after_exit {
+    --calendar-caption-to: 0.5rem;
+    animation: calendar-caption-out var(--duration-spring) var(--ease-out) both;
   }
 }
 

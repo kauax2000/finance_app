@@ -90,7 +90,7 @@ import {
 type DatePickerSize = FieldControlSize
 
 type DatePickerDayPreset = { label: string; date: Date | (() => Date) }
-type DatePickerRangePreset = { label: string; range: DateRange | (() => DateRange) }
+export type DatePickerRangePreset = { label: string; range: DateRange | (() => DateRange) }
 
 type DatePickerBaseProps = {
   id?: string
@@ -178,10 +178,15 @@ const ATALHOS_DIA: DatePickerDayPreset[] = [
   { label: "Ontem", date: () => somarDias(hoje(), -1) },
 ]
 
-const ATALHOS_PERIODO: DatePickerRangePreset[] = [
-  { label: "Últimos 7 dias", range: () => ({ from: somarDias(hoje(), -6), to: hoje() }) },
-  { label: "Últimos 30 dias", range: () => ({ from: somarDias(hoje(), -29), to: hoje() }) },
+/**
+ * Os atalhos de período do sistema. O `id` é estável (rodada 245): o
+ * `FilterBar` o grava na URL, e o rótulo pode mudar sem quebrar um link.
+ */
+export const DATE_RANGE_PRESETS: (DatePickerRangePreset & { id: string })[] = [
+  { id: "ultimos-7", label: "Últimos 7 dias", range: () => ({ from: somarDias(hoje(), -6), to: hoje() }) },
+  { id: "ultimos-30", label: "Últimos 30 dias", range: () => ({ from: somarDias(hoje(), -29), to: hoje() }) },
   {
+    id: "este-mes",
     label: "Este mês",
     range: () => {
       const h = hoje()
@@ -189,6 +194,7 @@ const ATALHOS_PERIODO: DatePickerRangePreset[] = [
     },
   },
   {
+    id: "mes-passado",
     label: "Mês passado",
     range: () => {
       const h = hoje()
@@ -365,7 +371,7 @@ export function DatePicker(props: DatePickerProps) {
   const presetsDoModo: CalendarPreset[] | undefined =
     props.mode === "range"
       ? props.presets === true
-        ? ATALHOS_PERIODO
+        ? DATE_RANGE_PRESETS
         : props.presets
       : props.mode === "month"
         ? undefined

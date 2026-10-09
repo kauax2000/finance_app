@@ -406,6 +406,10 @@ function Calendar({
   return (
     <CalendarExtrasContext.Provider value={extras}>
     <DayPicker
+      // O `react-day-picker` clona o mês que sai e marca as duas direções; o
+      // movimento é a `@utility calendar-month-motion`. Antes de `{...props}`:
+      // quem chama pode desligar.
+      animate={!agenda}
       showOutsideDays={showOutsideDays}
       numberOfMonths={meses}
       modifiers={modificadores}
@@ -422,8 +426,14 @@ function Calendar({
       // /designsystem/touch-safe-area documenta — 7 células de 44px cabem em
       // 320px. Um ponto de mudança para as 42 células e a navegação de mês.
       className={cn(
-        "group/calendar bg-background p-2 [--cell-radius:9999px] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
+        // Transparente onde quem contém já pinta: cartão, popover e, desde a
+        // rodada 245, a gaveta — que é vidro, e o fundo opaco do calendário
+        // virava um bloco chapado por cima dela.
+        "group/calendar bg-background p-2 [--cell-radius:9999px] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent in-data-[surface=drawer]:bg-transparent",
         CALENDAR_CELL[size],
+        // A troca de mês anima (rodada 245) — fora da agenda, cuja grade de
+        // fios com eventos é outra conversa. Ver `calendar-month-motion`.
+        !agenda && "calendar-month-motion",
         // A agenda ocupa a largura de quem a contém, e a célula cresce com ela.
         // Ela não pinta: quem pinta é a moldura da grade (`month_grid`). E é o
         // contêiner da virada para lista (rodada 242).
@@ -460,6 +470,13 @@ function Calendar({
         // não deve capturar nada no vão entre elas.
         nav: cn(
           "pointer-events-none absolute inset-x-0 top-0 flex w-full items-center justify-between gap-1 [&>button]:pointer-events-auto",
+          // Acima da legenda, sempre (rodada 245). Uma legenda animada — a
+          // subida da abertura do `DatePicker`, presa em `fill: both`, e a troca
+          // de mês — pinta como posicionada e, vindo depois no DOM, cobria as
+          // setas: medido, o centro da seta "próximo mês" devolvia a legenda
+          // no `elementFromPoint`. A biblioteca põe `z-index: 1` na faixa só
+          // durante a troca. Empilhamento local, por isso número cru.
+          "z-10",
           agenda && "justify-end",
           defaultClassNames.nav
         ),
@@ -605,11 +622,23 @@ function useIrParaHoje() {
   }
 }
 
+/** O atalho: a pílula contornada, na grade do telefone e na coluna do desktop (40 no dedo). */
+const ATALHO_CLASSES = "w-full justify-center font-normal pointer-coarse:h-10"
+
 function CalendarShell({ children }: { children: React.ReactNode }) {
   const { presets, showToday, markers, agenda, semNavegacao, irPara, escolher, modo, selecionado } =
     React.useContext(CalendarExtrasContext)
   const irParaHoje = useIrParaHoje()
   const intervaloAtual = selecionado as DateRange | undefined
+  // Os atalhos têm contorno, e o escolhido é a tecla preenchida — na grade
+  // 2 × 2 do telefone e na coluna do desktop (rodada 245, a pedido do dono).
+  // Soltos (`tertiary`), eram texto sobre o vidro e só o escolhido parecia
+  // botão; com o `secondary` o escolhido ficava a um tom dos contornados
+  // (0,269 contra 0,31 de fio) e os dois liam iguais. O `primary` é a mesma
+  // cor das pontas do intervalo na grade: o atalho e o que ele marca leem
+  // juntos.
+  const atalhoSolto = "outline"
+  const atalhoEscolhido = "primary"
 
   const grade = (
     <div className="flex min-w-0 flex-col">
@@ -648,12 +677,19 @@ function CalendarShell({ children }: { children: React.ReactNode }) {
   if (!presets?.length) return grade
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row">
+    // A grade 2 × 2 vira coluna em `md` (768), o mesmo corte do `useIsMobile`
+    // que decide a gaveta: a grade é do telefone, a coluna é do popover.
+    <div className="flex flex-col gap-3 md:flex-row">
       <ul
         data-slot="calendar-presets"
         aria-label={modo === "range" ? "Atalhos de período" : "Atalhos de data"}
-        className="flex gap-1 overflow-x-auto sm:w-36 sm:shrink-0 sm:flex-col sm:overflow-visible sm:border-e sm:border-border sm:pe-2"
+        // No telefone os atalhos são uma grade 2 × 2 (rodada 245): na fileira
+        // que rolava de lado, "Mês passado" ficava fora da tela, e a única
+        // pista de que havia um quarto era ele cortado na borda.
+        className="grid grid-cols-2 gap-1 md:flex md:w-36 md:shrink-0 md:flex-col md:gap-1.5 md:border-e md:border-border md:pe-2"
       >
+        {/* No dedo cada atalho sobe a 40, a régua do controle em linha
+            (rodada 245): com o `sm` de 28 eles eram o menor alvo da gaveta. */}
         {presets.map((p) => {
           if ("date" in p) {
             const dia = typeof p.date === "function" ? p.date() : p.date
@@ -664,10 +700,10 @@ function CalendarShell({ children }: { children: React.ReactNode }) {
               <li key={p.label} className="shrink-0">
                 <Button
                   type="button"
-                  variant={ativo ? "secondary" : "tertiary"}
+                  variant={ativo ? atalhoEscolhido : atalhoSolto}
                   size="sm"
                   aria-pressed={ativo}
-                  className="w-full justify-start font-normal"
+                  className={ATALHO_CLASSES}
                   onClick={() => {
                     const d = typeof p.date === "function" ? p.date() : p.date
                     irPara(d)
@@ -687,10 +723,10 @@ function CalendarShell({ children }: { children: React.ReactNode }) {
             <li key={p.label} className="shrink-0">
               <Button
                 type="button"
-                variant={ativo ? "secondary" : "tertiary"}
+                variant={ativo ? atalhoEscolhido : atalhoSolto}
                 size="sm"
                 aria-pressed={ativo}
-                className="w-full justify-start font-normal"
+                className={ATALHO_CLASSES}
                 onClick={() => {
                   const r = typeof p.range === "function" ? p.range() : p.range
                   escolher(r)
@@ -846,7 +882,10 @@ function CalendarDropdown({
       <SelectTrigger
         size="sm"
         aria-label={rotulo}
-        className="w-fit gap-1 border-transparent bg-transparent px-2 font-medium hover:bg-muted active:bg-muted"
+        // A linha, e não a cápsula (rodada 245, a pedido do dono): o seletor
+        // de mês e de ano veste o degrau `row` da escala, escolhido ao lado de
+        // `md` e `lg` com o realce aceso. O realce é a tinta das linhas.
+        className="w-fit gap-1 rounded-row border-transparent bg-transparent px-2 font-medium hover:bg-foreground/9 active:bg-foreground/9"
       >
         <SelectValue />
       </SelectTrigger>

@@ -445,7 +445,7 @@ function DropdownMenuContent({
       estado.gatilhoRef.current?.textContent?.trim() ??
       "Ações"
     return (
-      <DrawerContent variant="inset" data-slot="dropdown-menu-sheet">
+      <DrawerContent data-slot="dropdown-menu-sheet">
         <DropdownMenuTituloContext.Provider value={setTituloId}>
           {header}
         </DropdownMenuTituloContext.Provider>

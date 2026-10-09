@@ -112,7 +112,7 @@ export default function DrawerDoc() {
             Adicionar&rdquo; e o menu da conta no telefone.
           </>
         }
-        code={`<DrawerContent variant="inset">
+        code={`<DrawerContent>
   <DialogHeader className="sr-only">…</DialogHeader>
   <DrawerActions>
     <DrawerAction onClick={editar}><PencilSquareIcon />Editar</DrawerAction>
@@ -167,7 +167,11 @@ export default function DrawerDoc() {
         Gaveta de ponta a ponta numa janela larga vira linha de leitura longa
         demais. <code>full</code> é o padrão, o comportamento do telefone;{" "}
         <code>md</code> e <code>lg</code> centralizam e param, e{" "}
-        <code>variant=&quot;inset&quot;</code> solta a gaveta das bordas.
+        <code>variant=&quot;inset&quot;</code> solta a gaveta das bordas — é por
+        isso que as demonstrações desta página, abertas numa janela larga, o
+        usam. No telefone toda gaveta é a <code>flush</code>, o padrão: o{" "}
+        <code>Popover</code>, os menus, o &ldquo;+ Adicionar&rdquo; e o menu da
+        conta.
       </DocNote>
 
       <DocNote title="A cromagem vem do Dialog — aqui não existe DrawerHeader">

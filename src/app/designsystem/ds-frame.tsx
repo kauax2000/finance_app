@@ -398,11 +398,34 @@ const IPHONE_AREA_SEGURA = `[data-slot=top-bar]{--top-bar-safe:${IPHONE_SEGURA_T
  * **Ele é desenhado a 85%** (`zoom`), porque em tamanho real o aparelho media
  * 407 × 841 e não cabia na tela do catálogo com os eixos em cima. O `zoom`
  * encolhe o desenho e a caixa que ele ocupa; **a viewport de dentro continua
- * com 375 pixels de CSS** — as media queries, o `useIsMobile` e o toque leem
- * o telefone, e não o desenho. É diferente do `scale()` que o topo do arquivo
+ * com 375 pixels de CSS** — as media queries e o `useIsMobile` leem o
+ * telefone, e não o desenho. **O toque não lia, e a frase dizia que sim**: o
+ * iframe roda no navegador do desktop, onde `(pointer: coarse)` responde pelo
+ * mouse. Desde a rodada 245 a moldura marca o `<html>` de dentro com
+ * `data-pointer="coarse"`, e a variante `pointer-coarse:` de `globals.css` vale
+ * também sob ele — a prévia mostra os alvos de 40 e 44 do aparelho. O que
+ * pergunta ao toque por JavaScript (`matchMedia`) continua lendo o mouse. É diferente do `scale()` que o topo do arquivo
  * recusa: lá a moldura era uma `div` sem viewport própria, e escalar mudava o
  * que `sm:` media.
  */
+/**
+ * Marca o documento da moldura como de dedo. No `<html>` de dentro, e não num
+ * invólucro: as gavetas vão para o `body` do iframe, fora de qualquer `div` da
+ * tela. O `espelharRaiz` só reescreve `class` e `style`, então o atributo
+ * sobrevive à troca de tema.
+ */
+function ToqueEmulado() {
+  const marcar = React.useCallback((el: HTMLSpanElement | null) => {
+    const raiz = el?.ownerDocument.documentElement
+    if (!raiz) return
+    raiz.dataset.pointer = "coarse"
+    return () => {
+      delete raiz.dataset.pointer
+    }
+  }, [])
+  return <span ref={marcar} hidden />
+}
+
 function IphoneFrame({
   title = "Prévia num iPhone",
   zoom = 0.85,
@@ -433,6 +456,7 @@ function IphoneFrame({
         screenClassName={cn("bg-background", screenClassName)}
       >
         <style>{IPHONE_AREA_SEGURA}</style>
+        <ToqueEmulado />
         {children}
       </ViewportFrame>
     </IphoneBody>

@@ -388,6 +388,13 @@ export default function CommandDoc() {
               "md (32) é o gatilho do cabeçalho; lg (36) é a pílula da paleta. A faixa de dissolução acompanha.",
           },
           {
+            prop: "CommandInput touchFloor",
+            type: "boolean",
+            default: "false",
+            description:
+              "O piso de toque: a pílula vai a 40 no dedo e a raiz publica a faixa de busca junto (40 + 16), para a lista não passar por baixo. O FilterBar liga; a paleta e o Combobox ainda não.",
+          },
+          {
             prop: "CommandInput leading",
             type: "ReactNode",
             description:

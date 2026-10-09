@@ -114,6 +114,10 @@ const commandVariants = cva(
     // O campo `lg` (36) publica a própria faixa. O `:has()` com dois atributos
     // pesa mais que o de um, então vence sem depender da ordem de emissão.
     "has-[[data-slot=command-input-wrapper][data-size=lg]]:[--scroll-fade-band-h:calc(--spacing(9)+--spacing(4))]",
+    // O campo com piso de toque (rodada 245) sobe a 40 no dedo, e a faixa
+    // acompanha: 40 + 16. Três atributos no `:has()` pesam mais que os dois
+    // do `lg`, então vence sem depender da ordem de emissão.
+    "pointer-coarse:has-[[data-slot=command-input-wrapper][data-touch-floor][data-size]]:[--scroll-fade-band-h:calc(--spacing(10)+--spacing(4))]",
   ],
   {
     variants: {
@@ -540,6 +544,7 @@ function CommandInput({
   leading,
   size: sizeProp,
   surface,
+  touchFloor = false,
   "aria-label": ariaLabel = "Buscar",
   onKeyDown,
   ...props
@@ -558,6 +563,12 @@ function CommandInput({
    * `plate`.
    */
   surface?: "field" | "plate"
+  /**
+   * O piso de toque: 40 no dedo, como todo campo, e a faixa de busca da raiz
+   * acompanha (rodada 245). Desligado por padrão — a paleta tem medidas
+   * próprias, e o `Combobox` ainda não pediu. O `FilterBar` liga.
+   */
+  touchFloor?: boolean
 }) {
   const pilha = React.useContext(CommandStackContext)
   const naPilha = pilha !== null
@@ -613,6 +624,7 @@ function CommandInput({
       // aqui, e dois 85% empilhados davam 97,75% — um retângulo mais claro
       // com aresta na base, no escuro.
       data-size={size}
+      data-touch-floor={touchFloor || undefined}
       className={cn(
         "relative z-10 flex shrink-0 items-center",
         // Na pilha a pílula é solta, sem o recuo da faixa.
@@ -634,10 +646,11 @@ function CommandInput({
         surface={surface ?? (naPilha ? "plate" : "field")}
         size={size}
         focusRing={pilha !== "palette"}
-        // Sem piso de toque em nenhum lugar: a altura da faixa de busca é
-        // publicada pela raiz (`--scroll-fade-band-h`, 32 + 16), e a pílula
-        // crescendo no dedo a deixaria 8px por baixo da lista.
-        touchFloor={false}
+        // Sem piso de toque por padrão: a altura da faixa de busca é publicada
+        // pela raiz (`--scroll-fade-band-h`, 32 + 16), e a pílula crescendo
+        // no dedo sem a faixa a deixaria 8px por baixo da lista. Quem liga
+        // `touchFloor` leva a faixa junto (`data-touch-floor` no envoltório).
+        touchFloor={touchFloor}
         leading={escopo}
         value={texto}
         onClear={(event) => {
@@ -1175,7 +1188,8 @@ function CommandItem({
         menuItemGeometryClassName,
         // O acender dos menus — ver `menuItemFadeClassName`.
         menuItemFadeClassName,
-        "data-selected:bg-accent data-selected:text-accent-foreground data-selected:*:[svg]:text-accent-foreground",
+        // Tinta, não cor: o `--foreground` a 9% sobre o vidro (ver `menu-classes`).
+        "data-selected:bg-foreground/9 data-selected:text-accent-foreground data-selected:*:[svg]:text-accent-foreground",
         // `=true` e não por presença: ver o comentário acima.
         "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50",
         // Na pilha a linha tem 36. Desde a rodada 243d a geometria dos menus
