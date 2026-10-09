@@ -138,7 +138,7 @@ function DemoNaTela() {
           </Interruptores>
         }
       />
-      <ViewportFrame title="Casco dividido numa janela" height={620} className="rounded-lg" screenClassName="bg-background">
+      <ViewportFrame title="Casco dividido numa janela" height={620} className="rounded-surface" screenClassName="bg-background">
         <Casco side={side} ratio={ratio} surface={surface} voltar={voltar} pe={pe} passo={passo} />
       </ViewportFrame>
     </div>
@@ -213,7 +213,7 @@ export default function SplitShellDoc() {
         previewClassName="block p-0"
       >
         <div className="p-4">
-          <ViewportFrame title="Esqueleto do casco" height={420} className="rounded-lg" screenClassName="bg-background">
+          <ViewportFrame title="Esqueleto do casco" height={420} className="rounded-surface" screenClassName="bg-background">
             <SplitShellSkeleton />
           </ViewportFrame>
         </div>

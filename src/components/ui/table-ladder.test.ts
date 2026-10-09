@@ -122,7 +122,7 @@ describe("escada do Table", () => {
     const molduraIdx = CODE.indexOf('data-slot="table-frame"')
     expect(molduraIdx).toBeGreaterThan(-1)
     const bloco = CODE.slice(molduraIdx, CODE.indexOf(">", molduraIdx) + 1)
-    expect(bloco).toContain("overflow-hidden rounded-lg border border-border")
+    expect(bloco).toContain("overflow-hidden rounded-surface border border-border")
   })
 
   it('8. TableHeader variant="muted" nunca junta fio e tinta na mesma string — regra J', () => {
@@ -464,8 +464,8 @@ describe("escada do Table", () => {
   it("28. as molduras recortam com `clip-path`, e o fio da linha segue sendo borda", () => {
     // O borrão do cabeçalho fixo vira camada própria, e escapa do recorte
     // arredondado de um `overflow` no Chrome acelerado.
-    expect(CODE).toContain("[clip-path:inset(0_round_var(--radius-lg))]")
-    expect(PANEL_CODE).toContain('"[clip-path:inset(0_round_var(--radius-xl))]"')
+    expect(CODE).toContain("[clip-path:inset(0_round_var(--radius-surface))]")
+    expect(PANEL_CODE).toContain('"[clip-path:inset(0_round_var(--radius-surface))]"')
     // Com o véu pintando por cima de tudo, o fio não precisa virar sombra da
     // célula — a volta que a máscara no `<tbody>` exigia saiu com ela.
     expect(CODE).not.toContain("[&>tr]:border-b-0")
@@ -474,8 +474,8 @@ describe("escada do Table", () => {
     // véu é um retângulo encostado nos cantos, e os de baixo leem o raio de
     // dentro que a moldura publica (rodada 46c). Por variável, e não
     // `inherit`: entre a moldura e o véu costuma haver um embrulho sem raio.
-    expect(CODE).toContain("[--scroll-fade-veil-r:calc(var(--radius-lg)_-_1px)]")
-    expect(PANEL_CODE).toContain('"[--scroll-fade-veil-r:calc(var(--radius-xl)_-_1px)]"')
+    expect(CODE).toContain("[--scroll-fade-veil-r:calc(var(--radius-surface)_-_1px)]")
+    expect(PANEL_CODE).toContain('"[--scroll-fade-veil-r:calc(var(--radius-surface)_-_1px)]"')
     const css = readFileSync("src/app/globals.css", "utf8")
     const inicio = css.indexOf("@utility scroll-fade-veil-y {")
     const util = semComentarios(css.slice(inicio, css.indexOf("\n}\n", inicio) + 2))
@@ -506,9 +506,9 @@ describe("o painel Exibir do DataTable", () => {
 })
 
 describe("a seta de expandir", () => {
-  it("é ghost também aberta: a flor só no cursor e no toque", () => {
+  it("é ghost também aberta: o realce só no cursor e no toque", () => {
     expect(SRC).toContain(
-      '"aria-expanded:[--button-bloom:0] aria-expanded:hover:[--button-bloom:1] aria-expanded:active:[--button-bloom:1]"'
+      '"aria-expanded:[--button-hover:0] aria-expanded:hover:[--button-hover:1] aria-expanded:active:[--button-hover:1]"'
     )
   })
 })

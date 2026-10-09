@@ -136,7 +136,7 @@ const LAYER: Record<string, Layer> = {
   "scroll-area": "Atoms",
   /** Um controle. Trigger, content e item são a anatomia dele, não composição
    *  — a mesma conta pela qual o `Slider` é átomo com quatro peças por dentro. */
-  select: "Atoms",
+  select: "Molecules",
   separator: "Atoms",
   skeleton: "Atoms",
   slider: "Atoms",
@@ -420,7 +420,6 @@ export const REGISTRY: RegistryEntry[] = [
   entry("radio", "Radio", "Uma opção de escolha única.", ui("radio"), "Radio"),
   entry("resizable", "Resizable", "Painéis e colunas de tabela redimensionáveis por arraste.", ui("resizable"), "ResizablePanelGroup, ResizablePanel, ResizableHandle, ResizableColumnHandle"),
   entry("scroll-area", "Scroll Area", "Região rolável: a barra desenhada, e as bordas que dissolvem.", ui("scroll-area"), "ScrollArea, ScrollBar"),
-  entry("select", "Select", "Lista suspensa de opções predefinidas, desenhada ou do sistema.", ui("select"), "Select, SelectTrigger, SelectItem, NativeSelect"),
   entry("separator", "Separator", "Divisor entre conteúdos.", ui("separator"), "Separator"),
   entry("skeleton", "Skeleton", "Placeholder enquanto o dado carrega.", ui("skeleton"), "Skeleton"),
   entry("slider", "Slider", "Valor ou intervalo numérico contínuo.", ui("slider"), "Slider"),
@@ -445,13 +444,14 @@ export const REGISTRY: RegistryEntry[] = [
   entry("pagination", "Pagination", "Navegação entre páginas de uma lista.", ui("pagination"), "Pagination, PaginationStatus, PaginationContent, PaginationLink, PaginationPrevious, PaginationNext, PaginationEllipsis, PaginationMore"),
   entry("radio-group", "Radio Group", "Escolha única entre poucas opções — em linha, em cartão, em ladrilho ou em fichas.", ui("radio-group"), "RadioGroup, RadioGroupItem"),
   entry("search-input", "Search Input", "O campo de busca — a pílula do cabeçalho e da paleta.", ui("search-input"), "SearchInput"),
+  entry("select", "Select", "Lista suspensa de opções predefinidas, desenhada ou do sistema.", ui("select"), "Select, SelectTrigger, SelectItem, NativeSelect"),
   entry("toggle-group", "Toggle Group", "Conjunto de toggles: seleção única ou múltipla, em fichas, numa bandeja segmentada ou na pílula das Tabs.", ui("toggle-group"), "ToggleGroup, ToggleGroupItem"),
 
   // ── Organisms ──────────────────────────────────────────────────────────
   entry("accordion", "Accordion", "Seções expansíveis.", ui("accordion"), "Accordion, AccordionItem, AccordionTrigger, AccordionContent, AccordionToggleAll"),
   entry("alert-dialog", "Alert Dialog", "Confirmação de uma ação sem volta.", ui("alert-dialog"), "AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogMedia, AlertDialogList, AlertDialogError, AlertDialogConfirmInput"),
   entry("breadcrumb", "Breadcrumb", "A trilha até a tela atual.", ui("breadcrumb"), "Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbMenu, BreadcrumbSwitcher, BreadcrumbSwitcherItem"),
-  entry("calendar", "Calendar", "A grade de um mês — escolha, intervalo com atalhos, marcadores e agenda.", ui("calendar"), "Calendar, CalendarDayButton"),
+  entry("calendar", "Calendar", "A grade de um mês — escolha, intervalo com atalhos, marcadores e a agenda de fios.", ui("calendar"), "Calendar, CalendarDayButton, CalendarEvent, CalendarEvents, CalendarSkeleton"),
   entry("card", "Card", "Cartão de conteúdo e painel.", ui("card"), "Card, CardHeader, CardTitle, CardDescription, CardAction, CardToolbar, CardContent, CardBody, CardField, CardLink, CardMedia, CardMessage, CardNote, CardFooter, CardSkeleton"),
   entry("carousel", "Carousel", "Itens que deslizam na horizontal ou na vertical — uma biblioteca de versões sobre um motor só.", ui("carousel"), "Carousel, CarouselContent, CarouselItem, CarouselMore, CarouselPrevious, CarouselNext, CarouselDots, CarouselProgress, CarouselStatus, CarouselToolbar, CarouselCaption, CarouselPlayPause, CarouselSteps, CarouselStep, CarouselThumbs, CarouselThumb, CarouselFullscreen, CarouselSkeleton"),
   entry("chart", "Chart", "Gráficos ligados aos tokens do tema.", ui("chart"), "ChartAnnotation, ChartArea, ChartBarList, ChartBars, ChartContainer, ChartDonut, ChartHeatmap, ChartLine, ChartRadar, ChartRadial, ChartSparkline, ChartSplit, ChartWaterfall"),

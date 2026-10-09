@@ -257,7 +257,7 @@ export function TransactionsToolbar({
                     className={cn(
                         "flex w-full flex-col gap-0 overflow-hidden p-0",
                         isMobile
-                            ? "min-h-0 rounded-t-2xl"
+                            ? "min-h-0 rounded-t-modal"
                             : "h-full max-h-[100dvh] border-l sm:max-w-sm"
                     )}
                 >

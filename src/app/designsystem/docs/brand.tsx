@@ -22,7 +22,7 @@ import { Progress } from "@/components/ui/progress"
 import { Slider } from "@/components/ui/slider"
 import { Muted } from "@/components/ui/typography"
 import { DocNote, DocSection, Usage } from "../ds-doc"
-import { Group, Spec, SpecimenPanel, Stack } from "../ds-kit"
+import { Group, Spec, SpecChips, SpecList, SpecRow, SpecRowDescription, SpecimenPanel, Stack } from "../ds-kit"
 
 /** Altura declarada e largura que sai do viewBox de 101/24.
  *
@@ -44,7 +44,7 @@ const FAMILIAS = [
   { nome: "Letra", como: "o degradê preenche o traçado, parado, em todo tamanho", who: ["AppWordmark rainbow", "AppLogo rainbow", "EmptyStateCode"] },
   { nome: "Preenchimento", como: "o degradê é o trilho e a barra o revela — sem rótulo em cima", who: ["Progress brand", "Slider brand", "HistogramSlider brand"] },
   { nome: "Brilho", como: "só um arco da borda acende perto do ponteiro — o meio nunca é pintado; sem ele, a caixa é neutra", who: ["Alert brand", "Card brand", "Badge brand", "Button brand", "Checkbox brand", "Radio brand", "RadioGroupItem brandCard", "a busca do catálogo"] },
-  { nome: "Degradê", como: "cinco paradas florescem do centro da tecla, só no cursor e no toque; em repouso, preto chapado", who: ["Button primary"] },
+  { nome: "Degradê", como: "cinco paradas florescem do centro da tecla, só no cursor e no toque; em repouso, preto chapado", who: ["Button brandColorful"] },
   { nome: "Deslize", como: "o arco-íris na borda de baixo e brilhando embaixo da tecla, deslizando em 2s — sempre aceso", who: ["Button brandOutline"] },
   { nome: "Véu", como: "translúcido atrás do texto, deslizando em 20s — a exceção sob texto", who: ["AnnouncementBar brand"] },
   { nome: "Lava", como: "blobos de cor transitando dentro da região", who: ["brand-lava"] },
@@ -189,28 +189,18 @@ export default function BrandDoc() {
 
       <Group
         title="Onde o arco-íris mora"
-        description="Oito famílias, e cada uma tem um mecanismo que mantém o degradê longe do que se lê. Fora delas o arco-íris não entra: nem em chip, nem em gráfico, nem em fundo de cartão."
+        description="Nove famílias, e cada uma tem um mecanismo que mantém o degradê longe do que se lê. Fora delas o arco-íris não entra: nem em chip, nem em gráfico, nem em fundo de cartão."
         layout="flow"
       >
         <Spec title="Família → peças" meta="--brand-rainbow" className="mb-0" bodyClassName="p-0">
-          <dl className="divide-y divide-border">
+          <SpecList>
             {FAMILIAS.map((f) => (
-              <div
-                key={f.nome}
-                className="grid gap-x-4 gap-y-1 px-4 py-3 sm:grid-cols-[7rem_minmax(0,1fr)]"
-              >
-                <dt className="text-sm font-medium text-foreground">{f.nome}</dt>
-                <dd className="flex min-w-0 flex-col">
-                  <span className="text-xs text-muted-foreground">{f.como}</span>
-                  <span className="mt-1.5 flex flex-wrap gap-1">
-                    {f.who.map((w) => (
-                      <Code key={w}>{w}</Code>
-                    ))}
-                  </span>
-                </dd>
-              </div>
+              <SpecRow key={f.nome} term={f.nome}>
+                <SpecRowDescription>{f.como}</SpecRowDescription>
+                <SpecChips items={f.who} />
+              </SpecRow>
             ))}
-          </dl>
+          </SpecList>
         </Spec>
       </Group>
 
@@ -244,7 +234,7 @@ export default function BrandDoc() {
         title="O campo de marca"
         description="O arco-íris ocupando uma região inteira, com grão pesado e vinheta para o preto. A @utility brand-field é um cartão — cantos e um fio por dentro — e o que se lê dentro dele vive em Card, que segue o tema. Nenhum texto corrido mora direto sobre o arco-íris."
         code={`// O painel das telas de acesso
-<aside className="brand-field flex flex-col rounded-2xl p-6">
+<aside className="brand-field flex flex-col rounded-modal p-6">
   {/* herda o color do campo: branco, sem classe */}
   <AppWordmark size="lg" className="self-start" />
   <Card variant="elevated" padding="none">
@@ -254,7 +244,7 @@ export default function BrandDoc() {
 </aside>`}
         previewClassName="flex-col items-stretch"
       >
-        <div className="brand-field flex min-h-56 flex-col justify-between gap-6 rounded-2xl p-6">
+        <div className="brand-field flex min-h-56 flex-col justify-between gap-6 rounded-modal p-6">
           <AppWordmark size="lg" className="self-start" />
           <Card variant="elevated" padding="none" className="max-w-xs">
             <CardToolbar variant="title">Carteira</CardToolbar>
@@ -284,13 +274,15 @@ export default function BrandDoc() {
 
       <DocSection
         title="O botão de marca"
-        description="variant=&quot;brand&quot; é o CTA de marca neutro: a borda acende em arco-íris conforme o ponteiro se aproxima — passe o mouse perto. brandOutline é a tecla preta com o arco-íris deslizando na borda de baixo e um brilho embaixo, sempre aceso. Um por tela, para entrar e começar. O link não tem traço em repouso: no cursor um sublinhado de arco-íris entra pela esquerda, e recolhe para a direita na saída."
+        description="variant=&quot;brand&quot; é o CTA de marca neutro: a borda acende em arco-íris conforme o ponteiro se aproxima — passe o mouse perto. brandColorful é a tecla preta em que o degradê da marca floresce do centro no cursor. brandOutline é a tecla preta com o arco-íris deslizando na borda de baixo e um brilho embaixo, sempre aceso. Um por tela, para entrar e começar. O link não tem traço em repouso: no cursor um sublinhado de arco-íris entra pela esquerda, e recolhe para a direita na saída."
         code={`<Button variant="brand" size="xl">entrar</Button>
+<Button variant="brandColorful" size="xl">continuar</Button>
 <Button variant="brandOutline" size="xl">começar</Button>
 <Button variant="link">esqueceu a senha?</Button>`}
         previewClassName="items-center gap-6"
       >
         <Button variant="brand" size="xl">entrar</Button>
+        <Button variant="brandColorful" size="xl">continuar</Button>
         <Button variant="brandOutline" size="xl">começar</Button>
         <Button variant="link">esqueceu a senha?</Button>
       </DocSection>

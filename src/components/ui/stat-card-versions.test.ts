@@ -79,7 +79,7 @@ describe("as versões do StatCard", () => {
 
   it("o grupo: solto ou um painel só, e a cascata", () => {
     expect(statCardGroupVariants({})).toContain("stat-card-reveal")
-    expect(statCardGroupVariants({ variant: "joined" })).toContain("gap-px overflow-hidden rounded-xl border border-border bg-border")
+    expect(statCardGroupVariants({ variant: "joined" })).toContain("gap-px overflow-hidden rounded-surface border border-border bg-border")
     expect(CSS).toMatch(/@utility stat-card-reveal \{\s*& > \[data-slot="stat-card"\] \{\s*animation: menubar-rise 280ms/)
   })
 

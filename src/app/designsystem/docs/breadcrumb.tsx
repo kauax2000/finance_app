@@ -107,7 +107,7 @@ export default function BreadcrumbDoc() {
         code={`{/* a 240px de largura, com a trilha inteira dentro do limite */}`}
         previewClassName="items-start"
       >
-        <div className="w-60 max-w-full rounded-lg border border-dashed border-border p-3">
+        <div className="w-60 max-w-full rounded-surface border border-dashed border-border p-3">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>

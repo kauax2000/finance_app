@@ -60,7 +60,7 @@ import { ConfirmarDescarte } from "@/components/ui/dialog"
  * uma segunda separação para a mesma coisa.
  *
  * **`floating` é o padrão desde a rodada 222**, como no `Sidebar`, no `Menubar`
- * e no `NavigationMenu`: raio 18, o anel de 1px das placas e a sombra, e não a
+ * e no `NavigationMenu`: o raio `--radius-modal` (rodada 240), o anel de 1px das placas e a sombra, e não a
  * borda inteira. `flush` continua, e é o que as folhas do app pedem por
  * enquanto.
  *
@@ -94,6 +94,9 @@ const sheetContentVariants = cva(
     // o motivo de `DialogHeader` funcionar dentro dos dois.
     "[--dialog-px:--spacing(4)]",
     "[--dialog-bleed:0px]",
+    // O raio que o `concentric` de dentro lê — o mesmo do `DialogContent`. Sem
+    // ele, uma peça concêntrica na folha caía no padrão (22 − 0) e saía pílula.
+    "[--radius-parent:var(--radius-modal)] [--radius-inset:var(--dialog-px)]",
     // A reserva do × vem de **haver** um ×, não de um prop. Dentro de um
     // `DialogHeaderRow` quem reserva é a coluna do adorno.
     "[--dialog-close:0px] has-[>[data-slot=dialog-close-button]]:[--dialog-close:--spacing(11)]",
@@ -126,7 +129,7 @@ const sheetContentVariants = cva(
       variant: {
         flush: "",
         floating: [
-          "rounded-2xl ring-1 ring-foreground/10",
+          "rounded-modal ring-1 ring-foreground/10",
           // O × de canto é **círculo preenchido** (rodada 222). Sem anel e sem
           // sombra: ele já está dentro da placa, e com os dois lia como uma
           // segunda placa pousada na primeira. **O fundo é o texto a 5%, e não a
@@ -135,9 +138,9 @@ const sheetContentVariants = cva(
           // degrau abaixo. **E abaixo é mais escuro nos dois temas**: o texto a
           // 5% escurece o branco do claro, mas no escuro puxa para o branco e
           // clareia — ali o fundo é a página a 40% sobre a placa (≈0,18 contra
-          // 0,205; a página cheia, 0,145, descia mais de um degrau). A flor do hover é o texto a 10%. Só o de
+          // 0,205; a página cheia, 0,145, descia mais de um degrau). O realce do hover é o texto a 10%. Só o de
           // canto (`>`): o que mora num `DialogHeaderRow` é do cabeçalho.
-          "[&>[data-slot=dialog-close-button]]:rounded-full [&>[data-slot=dialog-close-button]]:bg-foreground/5 dark:[&>[data-slot=dialog-close-button]]:bg-background/40 [&>[data-slot=dialog-close-button]]:[--button-bloom-fill:color-mix(in_oklab,var(--foreground)_10%,transparent)]",
+          "[&>[data-slot=dialog-close-button]]:rounded-full [&>[data-slot=dialog-close-button]]:bg-foreground/5 dark:[&>[data-slot=dialog-close-button]]:bg-background/40 [&>[data-slot=dialog-close-button]]:[--button-hover-fill:color-mix(in_oklab,var(--foreground)_10%,transparent)]",
           "[--sheet-gap:--spacing(2)]",
           "[--sheet-gap-block-start:max(var(--sheet-gap),env(safe-area-inset-top,0px))]",
           "[--sheet-gap-block-end:max(var(--sheet-gap),env(safe-area-inset-bottom,0px))]",
@@ -598,7 +601,7 @@ function SheetContent({
           aria-busy={pending || undefined}
           className={cn(
             "group/dialog-content fixed inset-x-0 bottom-0 z-(--z-sheet)",
-            "flex flex-col overflow-hidden rounded-t-2xl border-t bg-popover text-sm text-popover-foreground shadow-lg",
+            "flex flex-col overflow-hidden rounded-t-modal border-t bg-popover text-sm text-popover-foreground shadow-lg",
             "sheet-reveal",
             // **A área segura é da superfície**, e ela só chegou aqui na rodada
             // 60. Até lá quem a dava era uma classe que as telas importavam
@@ -614,6 +617,7 @@ function SheetContent({
             "[--sheet-drawer-safe:calc(--spacing(6)+env(safe-area-inset-bottom,0px))]",
             // O mesmo contrato do painel, escrito lá.
             "[--dialog-px:--spacing(4)] [--dialog-bleed:0px]",
+            "[--radius-parent:var(--radius-modal)] [--radius-inset:var(--dialog-px)]",
             "[--dialog-close:0px] has-[>[data-slot=dialog-close-button]]:[--dialog-close:--spacing(11)]",
             // As duas alturas saem de variáveis, e não de valores crus, para
             // uma gaveta poder ajustar o teto sem reescrever a fórmula: uma

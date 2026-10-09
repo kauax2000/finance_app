@@ -1085,7 +1085,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                     <li
                                         key={row.plan.id}
                                         className={cn(
-                                            "rounded-lg border border-border/60 bg-muted/15 dark:bg-muted/10",
+                                            "rounded-row border border-border/60 bg-muted/15 dark:bg-muted/10",
                                             onInstallmentPlanPress ? "p-0" : "px-3 py-2.5"
                                         )}
                                     >

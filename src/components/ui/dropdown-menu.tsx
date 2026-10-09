@@ -138,11 +138,11 @@ const DropdownMenuTituloContext = React.createContext<
 /**
  * O menu com busca mede como o `Combobox` — a mesma placa com a pílula e a
  * lista dentro: pílula `md` a 8px das bordas, lista com 8px dos lados e
- * embaixo, linhas de 32 (`gap-2 px-2 py-1.5`). Com a pílula de 28 a 4px e as
+ * embaixo, linhas de 36 (`gap-2 px-2 py-2`, desde a rodada 243d). Com a pílula de 28 a 4px e as
  * linhas de 28 do menu, os dois saíam diferentes fazendo o mesmo desenho.
  */
 const DropdownMenuBuscaContext = React.createContext(false)
-const LINHA_DA_BUSCA = "gap-2 px-2 py-1.5"
+const LINHA_DA_BUSCA = "gap-2 px-2 py-2"
 
 /** O rádio da folha: o valor e quem o troca, sem o Radix. */
 const FolhaRadioContext = React.createContext<{
@@ -364,10 +364,12 @@ const dropdownMenuContentVariants = cva(
       variant: {
         menu: "",
         // O recuo sai do casco e passa para `DropdownMenuSection`, que é quem
-        // o devolve onde há comandos. Assim o `-mx-1` do separador continua
+        // o devolve onde há comandos. Assim o `-mx-2` do separador continua
         // valendo: ele sangra o recuo da seção e alcança a borda do painel.
         panel: [
-          "rounded-xl",
+          // A placa é a linha alta, e publica o próprio raio: herdando o 22 da
+          // superfície, as linhas de dentro saíam com 14, mais redondas que ela.
+          "rounded-row-lg [--radius-parent:var(--radius-row-lg)]",
           // O painel não é lista: cabeçalho de conta e blocos, que não rolam.
           // O teto das listas suspensas não vale para ele.
           "[--menu-max-h:100dvh]",
@@ -654,9 +656,9 @@ function DropdownMenuHeader({
  * A região de comandos dentro de um painel.
  *
  * Ela devolve o recuo que o `variant="panel"` tirou do casco — e é o que faz a
- * conta do separador fechar. O `-mx-1` do `DropdownMenuSeparator` sangra
- * exatamente este `p-1`, então o fio alcança a borda do painel em vez de parar
- * 4px antes. Sem a seção, o painel tinha dois traços horizontais de larguras
+ * conta do separador fechar. O `-mx-2` do `DropdownMenuSeparator` sangra
+ * exatamente este `p-2`, então o fio alcança a borda do painel em vez de parar
+ * 8px antes. Sem a seção, o painel tinha dois traços horizontais de larguras
  * diferentes: 224px o do cabeçalho, 216px o do meio.
  */
 function DropdownMenuSection({
@@ -667,7 +669,7 @@ function DropdownMenuSection({
   return (
     <div
       data-slot="dropdown-menu-section"
-      className={cn(!folha && "p-1", className)}
+      className={cn(!folha && "p-2", className)}
       {...props}
     />
   )

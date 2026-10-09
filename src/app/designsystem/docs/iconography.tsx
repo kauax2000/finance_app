@@ -118,7 +118,7 @@ export default function IconographyDoc() {
           <div key={rotulo} className="flex flex-col items-center gap-2">
             {/* A lupa: o mesmo desenho de 16px ampliado 3×, para o traço
                 ralo do outline aparecer sem precisar chegar perto da tela. */}
-            <span className="flex size-16 items-center justify-center rounded-lg bg-muted/60">
+            <span className="flex size-16 items-center justify-center rounded-surface bg-muted/60">
               <Glifo className="size-4 scale-300 text-foreground" aria-hidden />
             </span>
             <span className="flex items-center gap-1.5 text-sm text-foreground">

@@ -133,7 +133,9 @@ function Kbd({ keys, className, children, ...props }: KbdProps) {
     <kbd
       data-slot="kbd"
       className={cn(
-        "pointer-events-none inline-flex h-5 w-fit min-w-5 items-center justify-center gap-1 rounded-sm bg-muted px-1 font-sans text-xs font-medium text-muted-foreground select-none [&_svg:not([class*='size-'])]:size-3",
+        // O canto é o `rounded-md` (8px, 40% dos 20 de altura; rodada 241k),
+        // a proporção do campo ao lado — era o `rounded-sm` (6, 30%).
+        "pointer-events-none inline-flex h-5 w-fit min-w-5 items-center justify-center gap-1 rounded-md bg-muted px-1 font-sans text-xs font-medium text-muted-foreground select-none [&_svg:not([class*='size-'])]:size-3",
         // O preenchimento do tema claro desce um degrau, e a assimetria é
         // medida.
         //

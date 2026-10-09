@@ -316,7 +316,7 @@ describe("o vidro do marcador do Tabs", () => {
     expect(chapado).toBe(tabsIndicatorVariants({ variant: "solid", glass: false }))
 
     for (const classe of [
-      "rounded-md",
+      "rounded-full",
       "border",
       "border-border/80",
       "bg-background",
@@ -398,6 +398,6 @@ describe("o vidro do marcador do Tabs", () => {
     // Sem relógio de CSS: a viagem é WAAPI, como no chapado.
     expect(vidro).not.toMatch(/\bduration-\d/)
     // O raio é herdado do próprio marcador: a utility não declara nenhum.
-    expect(vidro).toContain("rounded-md")
+    expect(vidro).toContain("rounded-full")
   })
 })

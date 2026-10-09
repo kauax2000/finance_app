@@ -237,6 +237,8 @@ const drawerContentVariants = cva(
     // na folha, no painel e aqui.
     "[--dialog-px:--spacing(4)]",
     "[--dialog-bleed:0px]",
+    // O raio que o `concentric` de dentro lê, como no `DialogContent`.
+    "[--radius-parent:var(--radius-modal)] [--radius-inset:var(--dialog-px)]",
     // A reserva do × vem de **haver** um ×, não de um prop.
     "[--dialog-close:0px] has-[>[data-slot=dialog-close-button]]:[--dialog-close:--spacing(11)]",
     // As alturas saem de variáveis para uma gaveta poder baixar o teto sem
@@ -253,8 +255,8 @@ const drawerContentVariants = cva(
     "data-[vaul-drawer-direction=bottom]:[--drawer-h:calc(100dvh-max(0.5rem,env(safe-area-inset-top,0px)))]",
     "data-[vaul-drawer-direction=top]:[--drawer-h:calc(100dvh-max(0.5rem,env(safe-area-inset-bottom,0px)))]",
     // O raio e a borda ficam do lado que **não** encosta na tela.
-    "data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:rounded-t-2xl data-[vaul-drawer-direction=bottom]:border-t",
-    "data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:rounded-b-2xl data-[vaul-drawer-direction=top]:border-b",
+    "data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:rounded-t-modal data-[vaul-drawer-direction=bottom]:border-t",
+    "data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:rounded-b-modal data-[vaul-drawer-direction=top]:border-b",
   ],
   {
     variants: {
@@ -278,7 +280,7 @@ const drawerContentVariants = cva(
       variant: {
         flush: "",
         inset: [
-          "inset-x-(--drawer-inset) rounded-2xl border",
+          "inset-x-(--drawer-inset) rounded-modal border",
           "data-[vaul-drawer-direction=bottom]:bottom-(--drawer-inset)",
           "data-[vaul-drawer-direction=top]:top-(--drawer-inset)",
           "[--drawer-inset:--spacing(2)]",
@@ -615,7 +617,7 @@ function DrawerActions({ className, ...props }: React.ComponentProps<"div">) {
  * fechar no toque).
  */
 const drawerActionClassName = cn(
-  "flex min-h-13 w-full items-center gap-3 rounded-xl px-3 text-left text-base text-foreground outline-none select-none",
+  "flex min-h-13 w-full items-center gap-3 rounded-surface px-4 text-left text-base text-foreground outline-none select-none",
   "transition-colors duration-(--duration-fast) ease-(--ease-out)",
   "hover:bg-muted active:bg-muted focus-visible:bg-muted",
   "disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",

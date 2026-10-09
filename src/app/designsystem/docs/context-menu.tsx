@@ -39,7 +39,7 @@ import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-d
 
 /** A área de clique das demonstrações: o alvo, e não um enfeite. */
 const AREA =
-  "flex h-24 w-full items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground"
+  "flex h-24 w-full items-center justify-center rounded-surface border border-dashed border-border text-sm text-muted-foreground"
 
 const LANCAMENTOS = [
   { id: "1", nome: "Mercado", data: "12 set", valor: -42.9 },

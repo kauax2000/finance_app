@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { EnvelopeIcon, PhoneIcon, UserIcon } from "@heroicons/react/16/solid"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -97,6 +98,39 @@ export default function FormDoc() {
       <DocNote title="size é o controle; fieldSize é o andaime">
           <code>size</code> é a altura do <code>Input</code>; <code>fieldSize</code>, o degrau de rótulo, ajuda e erro, herdado do <code>FieldGroup</code>. Um <code>Field</code> não sabe que controle carrega.
       </DocNote>
+
+      <DocSection
+        title="Sem rótulo à vista"
+        description={
+          <>
+            <code>labels=&quot;hidden&quot;</code> tira o rótulo de cima dos campos e põe o nome no placeholder, com &quot;(opcional)&quot;. A ajuda e o erro continuam embaixo do campo.
+          </>
+        }
+        code={`<Form labels="hidden" onSubmit={salvar}>
+  <FormInput label="E-mail" type="email" icon={<EnvelopeIcon />} clearable />
+  <FormInput label="Apelido" optional />
+  <FormActions>…</FormActions>
+</Form>`}
+        previewClassName="flex-col items-stretch gap-4"
+      >
+        <SemRotuloDemo />
+      </DocSection>
+
+      <DocNote title="O nome continua lá, para quem não vê">
+          O <code>&lt;label&gt;</code> fica no DOM e nomeia o campo; o placeholder repete o nome com &quot;(opcional)&quot;. O placeholder de quem chama só vale com o rótulo à vista.
+      </DocNote>
+
+      <DocNote title="O Enter anda, e o teclado avisa">
+          Com <code>labels=&quot;hidden&quot;</code>, o <Kbd>Enter</Kbd> leva ao campo seguinte e só envia no último — e o teclado do telefone diz &quot;Seguinte&quot; até lá e &quot;Ir&quot; no fim (<code>enterkeyhint</code>).
+      </DocNote>
+
+      <DocSection
+        title="No telefone"
+        description="O formulário sem rótulo num iPhone, com o Enter passando de um campo ao outro."
+        previewClassName="justify-center"
+      >
+        <SemRotuloIphone />
+      </DocSection>
 
       <DocSection
         title="Validação no envio"
@@ -330,6 +364,13 @@ export default function FormDoc() {
               "Enviando. Desce por contexto para FormSubmit e FormCancel; um onSubmit que devolve Promise liga sozinho.",
           },
           {
+            prop: "labels",
+            type: '"visible" | "hidden"',
+            default: '"visible"',
+            description:
+              "Onde o nome dos campos aparece: em cima, ou só no placeholder, com o rótulo para o leitor de tela. Com hidden, o Enter leva ao campo seguinte.",
+          },
+          {
             prop: "noValidate",
             type: "boolean",
             description:
@@ -387,6 +428,18 @@ export default function FormDoc() {
             type: '"sm" | "md"',
             description:
               "O degrau do rótulo, ajuda e erro; a altura do controle é o size.",
+          },
+          {
+            prop: "icon",
+            type: "React.ReactNode",
+            description:
+              "FormInput e FormField: o ícone antes do texto, um 16/solid.",
+          },
+          {
+            prop: "clearable",
+            type: "boolean",
+            description:
+              "FormInput e FormField: o × que limpa o campo quando há texto, passando pelo onChange de quem chama; o foco volta ao campo.",
           },
           {
             prop: "…resto",
@@ -550,6 +603,82 @@ function LayoutDemo() {
         Envios: <span className="nums">{envios}</span>
       </span>
     </>
+  )
+}
+
+function SemRotuloDemo() {
+  const [labels, setLabels] = React.useState<"visible" | "hidden">("hidden")
+  const [icone, setIcone] = React.useState(false)
+  const [limpar, setLimpar] = React.useState(true)
+  const [nota, setNota] = React.useState(true)
+  const [erro, setErro] = React.useState(false)
+
+  return (
+    <>
+      <Controles
+        inicio={
+          <Eixo
+            rotulo="labels"
+            valores={["visible", "hidden"] as const}
+            valor={labels}
+            onChange={setLabels}
+            rotulos={{ visible: "em cima", hidden: "escondido" }}
+          />
+        }
+        fim={
+          <Interruptores>
+            <Interruptor id="sr-icone" rotulo="icon" valor={icone} onChange={setIcone} />
+            <Interruptor id="sr-limpar" rotulo="clearable" valor={limpar} onChange={setLimpar} />
+            <Interruptor id="sr-nota" rotulo="description" valor={nota} onChange={setNota} />
+            <Interruptor id="sr-erro" rotulo="error" valor={erro} onChange={setErro} />
+          </Interruptores>
+        }
+      />
+      <Form
+        key={labels}
+        className="w-full max-w-sm"
+        labels={labels}
+        onSubmit={(e) => e.preventDefault()}
+      >
+        <FormInput
+          label="E-mail"
+          name="email"
+          type="email"
+          defaultValue="ana@exemplo.com"
+          icon={icone ? <EnvelopeIcon /> : undefined}
+          clearable={limpar}
+          description={nota ? "Usamos só para o aviso de fatura." : undefined}
+          error={erro ? "Digite um e-mail válido." : undefined}
+        />
+        <FormInput
+          label="Apelido"
+          name="nick"
+          optional
+          icon={icone ? <UserIcon /> : undefined}
+          clearable={limpar}
+        />
+        <FormActions>
+          <FormCancel>Cancelar</FormCancel>
+          <FormSubmit>Salvar</FormSubmit>
+        </FormActions>
+      </Form>
+    </>
+  )
+}
+
+function SemRotuloIphone() {
+  return (
+    <IphoneFrame title="Formulário sem rótulo num iPhone">
+      <Form labels="hidden" className="px-4 pt-16" onSubmit={(e) => e.preventDefault()}>
+        <FormInput label="E-mail" type="email" icon={<EnvelopeIcon />} clearable />
+        <FormInput label="Telefone" type="tel" icon={<PhoneIcon />} clearable />
+        <FormInput label="Apelido" optional icon={<UserIcon />} />
+        <FormActions>
+          <FormCancel>Cancelar</FormCancel>
+          <FormSubmit>Salvar</FormSubmit>
+        </FormActions>
+      </Form>
+    </IphoneFrame>
   )
 }
 

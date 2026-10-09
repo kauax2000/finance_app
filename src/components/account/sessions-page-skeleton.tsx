@@ -18,7 +18,7 @@ export function SessionsPageSkeleton() {
                     <div className="flex h-6 min-w-0 items-center">
                         <Skeleton className="h-4 w-28" />
                     </div>
-                    <Skeleton className="h-8 w-32 shrink-0 rounded-md pointer-coarse:h-10" />
+                    <Skeleton className="h-8 w-32 shrink-0 rounded-full pointer-coarse:h-10" />
                 </div>
                 <Card padding="none">
                     <CardToolbar className="justify-end">
@@ -30,7 +30,7 @@ export function SessionsPageSkeleton() {
                     >
                         {[1, 2, 3].map((i) => (
                             <li key={i} className="min-w-0">
-                                <div className="rounded-lg border border-border/80 p-3 sm:p-3.5">
+                                <div className="rounded-row border border-border/80 p-3 sm:p-3.5">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex min-w-0 flex-1 items-center gap-2.5">
                                             <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
@@ -42,7 +42,7 @@ export function SessionsPageSkeleton() {
                                                 <Skeleton className="h-3 w-32 max-w-full" />
                                             </div>
                                         </div>
-                                        <Skeleton className="h-8 w-8 shrink-0 rounded-md" />
+                                        <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
                                     </div>
                                     <div className="mt-2 flex items-center justify-between border-t border-border/50 pt-2">
                                         <Skeleton className="h-3 w-24" />

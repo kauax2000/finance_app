@@ -142,7 +142,7 @@ const membersPageSkeleton = (
                 <CardContent className="flex flex-col gap-0">
                     <div className="space-y-2 px-4 py-4">
                         <Skeleton className="h-4 w-14" />
-                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full rounded-full" />
                     </div>
                     <div className="border-t border-border px-4 py-4">
                         <div className="mb-3 flex items-center gap-2">
@@ -150,7 +150,7 @@ const membersPageSkeleton = (
                             <Skeleton className="h-4 w-28" />
                         </div>
                         <Skeleton className="h-3 w-full max-w-sm" />
-                        <Skeleton className="mt-3 h-9 w-full max-w-[14rem] rounded-md" />
+                        <Skeleton className="mt-3 h-9 w-full max-w-[14rem] rounded-full" />
                     </div>
                     <CardNote>
                         <Skeleton className="mt-0.5 size-3.5 shrink-0 rounded" />
@@ -177,8 +177,8 @@ const membersPageSkeleton = (
                                     </div>
                                 </div>
                                 <div className="flex shrink-0 flex-wrap gap-2">
-                                    <Skeleton className="h-8 w-28 rounded-md" />
-                                    <Skeleton className="h-8 w-32 rounded-md" />
+                                    <Skeleton className="h-8 w-28 rounded-full" />
+                                    <Skeleton className="h-8 w-32 rounded-full" />
                                 </div>
                             </li>
                         ))}

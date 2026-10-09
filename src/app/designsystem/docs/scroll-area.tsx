@@ -75,7 +75,7 @@ export default function ScrollAreaDoc() {
         {VARIANTES.map(({ variant, rotulo }) => (
           <div key={variant} className="flex flex-col gap-2">
             <Caption>{rotulo}</Caption>
-            <ScrollArea variant={variant} className="h-44 w-full rounded-lg border border-border">
+            <ScrollArea variant={variant} className="h-44 w-full rounded-surface border border-border">
               <Categorias />
             </ScrollArea>
           </div>
@@ -90,7 +90,7 @@ export default function ScrollAreaDoc() {
 </ScrollArea>`}
         previewClassName="flex-col items-stretch gap-3"
       >
-        <ScrollArea orientation="horizontal" variant="fade" className="w-full rounded-lg border border-border">
+        <ScrollArea orientation="horizontal" variant="fade" className="w-full rounded-surface border border-border">
           <div className="flex w-max gap-2 p-3">
             {CATEGORIAS.map(([nome]) => (
               <Badge key={nome} variant="outline">
@@ -99,7 +99,7 @@ export default function ScrollAreaDoc() {
             ))}
           </div>
         </ScrollArea>
-        <ScrollArea orientation="horizontal" variant="fade" sides="end" className="w-full rounded-lg border border-border">
+        <ScrollArea orientation="horizontal" variant="fade" sides="end" className="w-full rounded-surface border border-border">
           <div className="flex w-max gap-2 p-3">
             {CATEGORIAS.map(([nome]) => (
               <Badge key={nome} variant="outline">
@@ -126,7 +126,7 @@ export default function ScrollAreaDoc() {
             <ScrollArea variant="fade" arrows className="h-44">
               <ul className="flex flex-col p-1.5">
                 {CARTEIRAS.map((c) => (
-                  <li key={c} className="rounded-md px-2.5 py-1.5 text-sm text-foreground">
+                  <li key={c} className="rounded-surface px-2.5 py-1.5 text-sm text-foreground">
                     {c}
                   </li>
                 ))}
@@ -150,7 +150,7 @@ export default function ScrollAreaDoc() {
             <Caption>{tinta ? "com a tinta do card" : "sem tinta (o padrão)"}</Caption>
             <ScrollArea
               variant="material"
-              className="h-44 w-full rounded-lg border border-border"
+              className="h-44 w-full rounded-surface border border-border"
               style={tinta ? ({ "--scroll-fade-blur-tint": tinta } as React.CSSProperties) : undefined}
             >
               <Categorias />

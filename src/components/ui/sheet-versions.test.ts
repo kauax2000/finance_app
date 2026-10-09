@@ -13,7 +13,7 @@ const CSS = fonte("src/app/globals.css")
 describe("as versões do Sheet", () => {
   it("floating é o padrão, numa placa chapada com o anel das placas", () => {
     const c = sheetContentVariants({})
-    expect(c).toContain("rounded-2xl ring-1 ring-foreground/10")
+    expect(c).toContain("rounded-modal ring-1 ring-foreground/10")
     expect(c).toContain("bg-popover")
     expect(c).not.toContain("glass-surface")
     // O comentário conta a história do vidro; o código não o veste.

@@ -2,7 +2,6 @@
 
 import { ArrowPathIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
-import { Code } from "@/components/ui/code"
 import { FormSubmit } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
@@ -39,8 +38,8 @@ export default function ButtonDoc() {
       </DocSection>
 
       <DocSection
-        title="O primário acende a marca no cursor"
-        description="Em repouso, a tecla preta (branca no escuro), chapada. No cursor e no toque, cinco paradas do arco-íris — teal, azul, violeta, magenta e coral — florescem do centro: nascem comprimidas e borradas no meio do botão e se abrem até as bordas, ganhando foco, na mola da casa. Ao sair, recolhem sem mola. É o Button Colorful da Kokonut UI, com a cor guardada para a interação. Enviando, a opacidade fica cheia, para salvando não ler como desabilitado."
+        title="O primário é a tecla chapada"
+        description="A tecla preta (branca no escuro), que muda um tom no cursor, no toque e com o menu aberto (clareia no claro, escurece no escuro), sem cor nenhuma. Enviando, a opacidade fica cheia, para salvando não ler como desabilitado."
         code={`<Button size="xl" className="w-64">continuar</Button>
 <Button>salvar</Button>
 <Button disabled>desabilitado</Button>
@@ -59,25 +58,31 @@ export default function ButtonDoc() {
 
       <DocSection
         title="Fora da escada"
-        description="outline quando o controle precisa de contorno próprio e nenhum degrau serve, destructive para o que não tem volta, link para a ação que se comporta como texto — sem traço em repouso, ele entra pela esquerda no cursor."
+        description="outline quando o controle precisa de contorno próprio e nenhum degrau serve, floating para a ação que paira sobre o conteúdo — a placa flutuante da casa, com anel e sombra —, destructive para o que não tem volta, link para a ação que se comporta como texto — sem traço em repouso, ele entra pela esquerda no cursor."
         code={`<Button variant="outline">outline</Button>
+<Button variant="floating">floating</Button>
 <Button variant="destructive">destructive</Button>
 <Button variant="link">link</Button>`}
       >
         <Button variant="outline">outline</Button>
+        <Button variant="floating">floating</Button>
         <Button variant="destructive">destructive</Button>
         <Button variant="link">link</Button>
       </DocSection>
 
       <DocSection
         title="A marca"
-        description="brand é o CTA de marca: neutro em repouso, com a borda que acende em arco-íris conforme o ponteiro se aproxima — o brilho do Alert, do Card e do Badge. Passe o mouse perto. brandOutline é a tecla preta com o arco-íris deslizando na borda de baixo e brilhando embaixo dela — o Rainbow Button da Magic UI —, sempre aceso, para quando a marca não pode depender do ponteiro. Os dois: um por tela."
+        description="brand é o CTA de marca: neutro em repouso, com a borda que acende em arco-íris conforme o ponteiro se aproxima — o brilho do Alert, do Card e do Badge. Passe o mouse perto. brandColorful é a tecla preta em que, no cursor e no toque, cinco paradas do arco-íris florescem do centro, comprimidas e borradas, abrindo até as bordas na mola da casa — o Button Colorful da Kokonut UI, que foi o primário até a rodada 240. brandOutline é a tecla preta com o arco-íris deslizando na borda de baixo e brilhando embaixo dela — o Rainbow Button da Magic UI —, sempre aceso, para quando a marca não pode depender do ponteiro. Os três: um por tela."
         code={`<Button variant="brand" size="xl">entrar</Button>
+<Button variant="brandColorful" size="xl">continuar</Button>
 <Button variant="brandOutline" size="xl">começar</Button>`}
         previewClassName="gap-6 py-10"
       >
         <Button variant="brand" size="xl">
           entrar
+        </Button>
+        <Button variant="brandColorful" size="xl">
+          continuar
         </Button>
         <Button variant="brandOutline" size="xl">
           começar
@@ -85,7 +90,7 @@ export default function ButtonDoc() {
       </DocSection>
 
       <DocNote title="Cada peso responde ao cursor de um jeito">
-        <code>primary</code>, <code>secondary</code>, <code>tertiary</code>, <code>outline</code> e <code>destructive</code> <strong>florescem do centro</strong> — a cor do hover nasce pequena e difusa no meio e se abre até as bordas, na mola da casa, e no toque também; no primário ela é o degradê da marca, nos outros a cor de hover do peso; <code>brand</code> acende o arco da borda e <strong>não troca o fundo</strong> — o anel pinta por cima dele, e a troca sumiria na fatia virada para o ponteiro; <code>brandOutline</code> escurece a tecla; e o <code>link</code> desenha o traço. A mecânica está comentada em <code>button.tsx</code> e nas utilities <code>button-bloom</code>, <code>button-colorful</code>, <code>brand-glow</code> e <code>link-sweep</code> de <code>globals.css</code>. No toque não há brilho: ele precisa de ponteiro fino, e ali o <code>brand</code> é o botão neutro.
+        <code>primary</code> muda a tecla um tom; <code>secondary</code>, <code>tertiary</code>, <code>outline</code>, <code>floating</code> e <code>destructive</code> pintam a cor de hover do peso <strong>por cima do fundo, chapada</strong>, esmaecendo no ritmo da casa, e no toque também — sem florescer; <code>brandColorful</code> floresce o degradê da marca do centro; <code>brand</code> acende o arco da borda e <strong>não troca o fundo</strong> — o anel pinta por cima dele, e a troca sumiria na fatia virada para o ponteiro; <code>brandOutline</code> muda a tecla um tom; e o <code>link</code> desenha o traço. A mecânica está comentada em <code>button.tsx</code> e nas utilities <code>button-hover</code>, <code>button-colorful</code>, <code>brand-glow</code> e <code>link-sweep</code> de <code>globals.css</code>. No toque não há brilho: ele precisa de ponteiro fino, e ali o <code>brand</code> é o botão neutro.
       </DocNote>
 
       <DocNote title="Duas ações lado a lado: a segunda não preenche">
@@ -123,39 +128,21 @@ export default function ButtonDoc() {
       </DocSection>
 
       <DocSection
-        title="A forma: pílula"
-        description="shape=&quot;pill&quot; arredonda 100%, em todo peso e todo degrau; nos icon-* vira círculo. O recuo lateral sobe meio degrau, porque a curva come o canto e com o recuo do retângulo o rótulo fica espremido contra ela. O padrão continua rounded, o canto do sistema."
-        code={`<Button shape="pill">continuar</Button>
-<Button variant="secondary" shape="pill">secondary</Button>
-<Button size="icon-md" shape="pill" aria-label="Adicionar"><PlusIcon aria-hidden /></Button>`}
-        previewClassName="flex-col items-start gap-4"
+        title="A forma: cápsula"
+        description="Todo botão é cápsula, em todo peso e todo degrau, e nos icon-* a cápsula é um círculo — o controle do iOS 26. O recuo lateral é meio degrau maior que o de um retângulo, porque a curva come o canto. Não há eixo de forma: o shape=&quot;pill&quot; de antes virou o padrão (rodada 240)."
+        code={`<Button>continuar</Button>
+<Button variant="secondary">secondary</Button>
+<Button size="icon-md" aria-label="Adicionar"><PlusIcon aria-hidden /></Button>`}
+        previewClassName="flex-wrap items-center gap-3"
       >
-        <div className="flex flex-wrap items-center gap-3">
-          <Code variant="inline" className="w-16 text-2xs text-muted-foreground">
-            rounded
-          </Code>
-          {PESOS.map((v) => (
-            <Button key={v} variant={v}>
-              {v}
-            </Button>
-          ))}
-          <Button size="icon-md" variant="secondary" aria-label="Adicionar">
-            <PlusIcon aria-hidden />
+        {PESOS.map((v) => (
+          <Button key={v} variant={v}>
+            {v}
           </Button>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <Code variant="inline" className="w-16 text-2xs text-muted-foreground">
-            pill
-          </Code>
-          {PESOS.map((v) => (
-            <Button key={v} variant={v} shape="pill">
-              {v}
-            </Button>
-          ))}
-          <Button size="icon-md" variant="secondary" shape="pill" aria-label="Adicionar">
-            <PlusIcon aria-hidden />
-          </Button>
-        </div>
+        ))}
+        <Button size="icon-md" variant="secondary" aria-label="Adicionar">
+          <PlusIcon aria-hidden />
+        </Button>
       </DocSection>
 
       <DocSection
@@ -223,21 +210,15 @@ export default function ButtonDoc() {
         rows={[
           {
             prop: "variant",
-            type: '"primary" | "secondary" | "tertiary" | "outline" | "destructive" | "link" | "brand" | "brandOutline"',
+            type: '"primary" | "secondary" | "tertiary" | "outline" | "floating" | "destructive" | "link" | "brand" | "brandColorful" | "brandOutline"',
             default: '"primary"',
-            description: "O degrau da hierarquia; outline, destructive, link e os dois de marca ficam fora da escada.",
+            description: "O degrau da hierarquia; outline, floating, destructive, link e os dois de marca ficam fora da escada.",
           },
           {
             prop: "size",
             type: '"xs" | "sm" | "md" | "lg" | "xl" | "icon-xs" | "icon-sm" | "icon-md" | "icon-lg" | "icon-xl"',
             default: '"md"',
             description: "Altura de 24 a 40; icon-* é quadrado.",
-          },
-          {
-            prop: "shape",
-            type: '"rounded" | "pill"',
-            default: '"rounded"',
-            description: "pill arredonda 100% e sobe meio degrau de recuo lateral; nos icon-* vira círculo.",
           },
           {
             prop: "iconMotion",

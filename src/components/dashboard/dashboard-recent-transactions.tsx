@@ -347,7 +347,7 @@ export function DashboardRecentTransactions({
             )}
 
             {truncationFooter ? (
-                <div className="space-y-2 rounded-lg border border-border/60 bg-card px-4 py-3 shadow-sm">
+                <div className="space-y-2 rounded-surface border border-border/60 bg-card px-4 py-3 shadow-sm">
                     <p className="text-xs text-muted-foreground">
                         {truncationFooter.message}
                     </p>

@@ -156,7 +156,7 @@ export function InstallmentPurchaseSection({
     return (
         <section className="space-y-3">
             <SectionLabel>Compra parcelada</SectionLabel>
-            <div className="overflow-hidden rounded-xl border border-border/80 bg-gradient-to-b from-muted/30 to-muted/10 p-3.5 dark:from-muted/15 dark:to-muted/5 sm:p-4">
+            <div className="overflow-hidden rounded-row-lg border border-border/80 bg-gradient-to-b from-muted/30 to-muted/10 p-3.5 dark:from-muted/15 dark:to-muted/5 sm:p-4">
                 <div className="min-w-0">
                     {kn ? (
                         <p className="text-sm font-semibold text-foreground">
@@ -177,7 +177,7 @@ export function InstallmentPurchaseSection({
                     ) : null}
                 </div>
 
-                <dl className="mt-3 grid gap-2 rounded-lg border border-border/50 bg-background/60 px-3 py-2.5 text-xs sm:text-sm">
+                <dl className="mt-3 grid gap-2 rounded-row border border-border/50 bg-background/60 px-3 py-2.5 text-xs sm:text-sm">
                     <div className="flex justify-between gap-3">
                         <dt className="text-muted-foreground">Total da compra (referência)</dt>
                         <dd className="shrink-0 tabular-nums font-medium">

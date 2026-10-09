@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
-import { ChevronDownIcon } from "@heroicons/react/16/solid"
+import { ChevronDownIcon, XMarkIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
 import {
@@ -205,9 +205,17 @@ function submitFrom(form: HTMLFormElement) {
   form.requestSubmit()
 }
 
+/**
+ * Onde o nome do campo aparece (rodada 244). `visible` é o rótulo em cima, o
+ * de sempre; `hidden` o tira da vista e o põe no placeholder (o rótulo fica
+ * para o leitor de tela).
+ */
+type FormLabels = "visible" | "hidden"
+
 type FormContextValue = {
   id: string
   pending: boolean
+  labels: FormLabels
   /** As mensagens da validação nativa, pelo `id` do controle. */
   nativos: Record<string, string>
   /** O `FormField` diz que tem lugar para a mensagem daquele `id`. */
@@ -215,6 +223,46 @@ type FormContextValue = {
 }
 
 const FormContext = React.createContext<FormContextValue | null>(null)
+
+/**
+ * Os campos por onde o Enter anda (rodada 244): o texto de uma linha, e o
+ * textarea como destino. Nunca botão, caixa, rádio, arquivo nem cor.
+ */
+const CAMPOS_QUE_AVANCAM =
+  "input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=reset]):not([type=file]):not([type=range]):not([type=color]):not(:disabled):not([readonly]), textarea:not(:disabled):not([readonly])"
+
+/**
+ * Num formulário sem rótulo à vista (`labels="hidden"`) o Enter avança ao
+ * campo de texto seguinte — o teclado do iOS diz "Seguinte". Com o rótulo em
+ * cima ele continua enviando, como sempre.
+ */
+function avancaComEnter(form: HTMLFormElement, alvo: HTMLElement): boolean {
+  // `tagName`, e não `instanceof`: dentro do iframe do catálogo o elemento é
+  // de outra janela, e o `instanceof` falha.
+  return (
+    alvo.tagName === "INPUT" &&
+    alvo.matches(CAMPOS_QUE_AVANCAM) &&
+    form.dataset.labels === "hidden"
+  )
+}
+
+/**
+ * Só os que se podem focar: um `display:none` (o `<input>` escondido do
+ * `Slider`, um painel recolhido) ou um `tabindex="-1"` recusariam o foco, e o
+ * Enter morreria calado — o `preventDefault` já teria tirado o envio.
+ */
+function camposQueAvancam(form: HTMLFormElement): HTMLElement[] {
+  return Array.from(form.querySelectorAll<HTMLElement>(CAMPOS_QUE_AVANCAM)).filter(
+    (el) => el.tabIndex >= 0 && el.getClientRects().length > 0
+  )
+}
+
+/** Exportada para poder ser testada, como `shouldDeferEnterToWidget`. */
+export function proximoCampo(form: HTMLFormElement, atual: HTMLElement): HTMLElement | null {
+  const campos = camposQueAvancam(form)
+  const i = campos.indexOf(atual)
+  return i >= 0 ? (campos[i + 1] ?? null) : null
+}
 
 /**
  * O rótulo de espera sai do verbo (rodada 214): "Salvar" → "Salvando…",
@@ -297,6 +345,11 @@ export interface FormProps
   onSubmit?: (event: React.FormEvent<HTMLFormElement>) => void | Promise<unknown>
   /** Enviando. Desce por contexto: desabilita o cancelar e ocupa o enviar. */
   pending?: boolean
+  /**
+   * Onde o nome dos campos aparece (rodada 244). Fora do `visible`, o Enter
+   * leva ao campo seguinte e só envia no último.
+   */
+  labels?: FormLabels
 }
 
 const Form = React.forwardRef<HTMLFormElement, FormProps>(
@@ -306,6 +359,7 @@ const Form = React.forwardRef<HTMLFormElement, FormProps>(
       id,
       layout,
       pending = false,
+      labels = "visible",
       noValidate = false,
       onSubmit,
       onKeyDown,
@@ -332,9 +386,32 @@ const Form = React.forwardRef<HTMLFormElement, FormProps>(
     }, [])
 
     const contexto = React.useMemo(
-      () => ({ id: formId, pending: pendente, nativos, registrar }),
-      [formId, pendente, nativos, registrar]
+      () => ({ id: formId, pending: pendente, labels, nativos, registrar }),
+      [formId, pendente, labels, nativos, registrar]
     )
+
+    // A tecla do teclado do telefone diz o que o Enter faz: "Seguinte" até o
+    // penúltimo campo, "Ir" no último (rodada 244). Uma tecla escrita por quem
+    // chama fica. O que este efeito escreveu sai antes de cada passada — e de
+    // vez fora do `hidden`, senão o iOS seguia dizendo "Seguinte" num
+    // formulário em que o Enter envia. O campo que adia o Enter (um combobox)
+    // não ganha tecla: ali ele não avança.
+    React.useEffect(() => {
+      const form = formRef.current
+      if (!form) return
+      for (const el of form.querySelectorAll<HTMLElement>("[data-form-enterkeyhint]")) {
+        el.removeAttribute("enterkeyhint")
+        el.removeAttribute("data-form-enterkeyhint")
+      }
+      if (labels !== "hidden") return
+      const campos = camposQueAvancam(form)
+      campos.forEach((el, i) => {
+        if (!avancaComEnter(form, el) || shouldDeferEnterToWidget(el)) return
+        if (el.hasAttribute("enterkeyhint")) return
+        el.setAttribute("enterkeyhint", i < campos.length - 1 ? "next" : "go")
+        el.setAttribute("data-form-enterkeyhint", "")
+      })
+    })
 
     /**
      * O foco vai ao primeiro erro (rodada 214): depois do envio — e de novo
@@ -426,9 +503,15 @@ const Form = React.forwardRef<HTMLFormElement, FormProps>(
         // tecla. É a saída para o textarea, que defere o Enter e por isso não
         // tinha nenhuma forma de enviar sem tirar a mão do teclado.
         const forced = e.metaKey || e.ctrlKey
-        if (forced || !shouldDeferEnterToWidget(e.target as HTMLElement)) {
+        const alvo = e.target as HTMLElement
+        if (forced || !shouldDeferEnterToWidget(alvo)) {
           e.preventDefault()
-          submitFrom(e.currentTarget)
+          const proximo =
+            !forced && avancaComEnter(e.currentTarget, alvo)
+              ? proximoCampo(e.currentTarget, alvo)
+              : null
+          if (proximo) proximo.focus()
+          else submitFrom(e.currentTarget)
         }
       }
       onKeyDown?.(e)
@@ -441,6 +524,7 @@ const Form = React.forwardRef<HTMLFormElement, FormProps>(
           id={formId}
           data-slot="form"
           data-layout={layout ?? "stack"}
+          data-labels={labels}
           data-pending={pendente || undefined}
           className={cn(formVariants({ layout }), className)}
           noValidate
@@ -489,6 +573,38 @@ type FormFieldOwnProps = {
   fieldClassName?: string
 }
 
+/** O que só os campos de texto aceitam (rodada 244). */
+type FormFieldTextProps = {
+  /** O ícone antes do texto, um `16/solid`. */
+  icon?: React.ReactNode
+  /** O × que limpa o campo quando há texto, como nos campos do iOS. */
+  clearable?: boolean
+}
+
+type FilhoDeCampo = React.ReactElement<{
+  id?: string
+  value?: unknown
+  defaultValue?: unknown
+  placeholder?: string
+  className?: string
+}>
+
+/**
+ * Limpar sem perder o `onChange` de quem chama, controlado ou não: o `value`
+ * escrito direto não avisa o React, e o setter do protótipo mais um `input`
+ * que borbulha passam pelo caminho de sempre. O foco volta ao campo — o ×
+ * some com o texto, e sem isso o foco caía no `<body>`.
+ */
+function limparCampo(e: React.MouseEvent<HTMLButtonElement>) {
+  const campo = e.currentTarget.parentElement?.querySelector<
+    HTMLInputElement | HTMLTextAreaElement
+  >("input, textarea")
+  if (!campo) return
+  Object.getOwnPropertyDescriptor(Object.getPrototypeOf(campo), "value")?.set?.call(campo, "")
+  campo.dispatchEvent(new Event("input", { bubbles: true }))
+  campo.focus()
+}
+
 /**
  * O campo em volta de **qualquer** controle (exportado na rodada 214): rótulo,
  * ajuda e erro ligados, para um `DatePicker`, um `InputGroup`, um `Checkbox`.
@@ -502,6 +618,17 @@ type FormFieldOwnProps = {
  * ordem em que os irmãos se registram — descrição, depois erro. O `id` é deste
  * campo (ou o que o filho já traz): é por ele que a frase da validação nativa
  * chega ao `FieldError`.
+ *
+ * **Com `labels="hidden"` (rodada 244)** quem diz o nome é o placeholder — o
+ * do rótulo, com "(opcional)" —, e o rótulo continua no DOM para o leitor de
+ * tela. O flutuante, a lista agrupada e a de ajustes foram vistos lado a lado
+ * e saíram a pedido do dono (244b).
+ *
+ * **O `hidden`, o `icon` e o `clearable` pedem um `<input>` como filho** — o
+ * `FormInput`. Num `Select` ou `Combobox` o placeholder e o recuo cairiam na
+ * raiz, e o nome não apareceria; com um rótulo que não é texto, não há
+ * placeholder a escrever. E `icon`/`clearable` se decidem na montagem: ligar
+ * um deles depois põe a caixa em volta do campo, e o campo remonta.
  */
 function FormField({
   label,
@@ -510,20 +637,84 @@ function FormField({
   optional,
   fieldSize,
   fieldClassName,
+  icon,
+  clearable,
   children,
-}: FormFieldOwnProps & { children: React.ReactElement<{ id?: string }> }) {
+}: FormFieldOwnProps & FormFieldTextProps & { children: FilhoDeCampo }) {
   const form = React.useContext(FormContext)
   const registrar = form?.registrar
   const autoId = React.useId()
   const filho = React.Children.only(children)
   const id = filho.props.id ?? autoId
+  const escondido = form?.labels === "hidden"
+  const nome = typeof label === "string" ? label : undefined
+
+  // O × só aparece com texto. Controlado, quem diz é o `value`; solto, o
+  // que se digitou — e o próprio × passa por aqui, pelo `input` que dispara.
+  const controlado = filho.props.value !== undefined
+  const [digitado, setDigitado] = React.useState(
+    () => String(filho.props.defaultValue ?? "").length > 0
+  )
+  const temTexto = controlado ? String(filho.props.value).length > 0 : digitado
+  const aoDigitar =
+    clearable && !controlado
+      ? (e: React.FormEvent) => setDigitado((e.target as HTMLInputElement).value.length > 0)
+      : undefined
 
   React.useEffect(() => registrar?.(id), [registrar, id])
 
+  const placeholder =
+    escondido && nome ? `${nome}${optional ? " (opcional)" : ""}` : filho.props.placeholder
+  const caixa = !!icon || !!clearable
+
+  const controle = (
+    <FieldControl>
+      {React.cloneElement(filho, {
+        id,
+        placeholder,
+        className: caixa
+          ? cn(filho.props.className, icon && "ps-9", clearable && "pe-9")
+          : filho.props.className,
+      })}
+    </FieldControl>
+  )
+
   return (
     <Field size={fieldSize} className={fieldClassName}>
-      <FieldLabel optional={optional}>{label}</FieldLabel>
-      <FieldControl>{React.cloneElement(filho, { id })}</FieldControl>
+      <FieldLabel optional={optional} className={escondido ? "sr-only" : undefined}>
+        {label}
+      </FieldLabel>
+      {caixa ? (
+        <div data-slot="form-field-box" className="relative" onInput={aoDigitar}>
+          {icon ? (
+            <span
+              data-slot="form-field-icon"
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-muted-foreground [&>svg]:size-4"
+            >
+              {icon}
+            </span>
+          ) : null}
+          {controle}
+          {clearable && temTexto ? (
+            <Button
+              type="button"
+              variant="tertiary"
+              size="icon-xs"
+              data-slot="form-field-clear"
+              aria-label={nome ? `Limpar ${nome.toLowerCase()}` : "Limpar campo"}
+              // Centrado por margem, e não por `translate`: o `Button` desce
+              // 1px no clique pelo `translate`.
+              className="absolute inset-y-0 end-1.5 my-auto rounded-full"
+              onClick={limparCampo}
+            >
+              <XMarkIcon aria-hidden />
+            </Button>
+          ) : null}
+        </div>
+      ) : (
+        controle
+      )}
       {description ? <FieldDescription>{description}</FieldDescription> : null}
       <FieldError>{error ?? form?.nativos[id]}</FieldError>
     </Field>
@@ -548,8 +739,12 @@ const FormControl = FieldControl
  * lá ele ainda comeria `onChange`, `type` e `defaultValue`.
  */
 type FormInputProps =
-  | (FormFieldOwnProps & InputBaseProps & React.RefAttributes<HTMLInputElement>)
   | (FormFieldOwnProps &
+      FormFieldTextProps &
+      InputBaseProps &
+      React.RefAttributes<HTMLInputElement>)
+  | (FormFieldOwnProps &
+      FormFieldTextProps &
       InputMoneyProps &
       React.RefAttributes<HTMLInputElement>)
 
@@ -560,6 +755,8 @@ function FormInput({
   optional,
   fieldSize,
   fieldClassName,
+  icon,
+  clearable,
   ...props
 }: FormInputProps) {
   return (
@@ -570,6 +767,8 @@ function FormInput({
       optional={optional}
       fieldSize={fieldSize}
       fieldClassName={fieldClassName}
+      icon={icon}
+      clearable={clearable}
     >
       <Input data-slot="form-input" {...props} />
     </FormField>
@@ -740,7 +939,7 @@ function FormSwitch({
       data-variant={variant}
       className={cn(
         "relative items-start justify-between gap-4",
-        variant === "card" && "rounded-lg border border-border p-3",
+        variant === "card" && "rounded-surface border border-border p-3",
         className
       )}
     >
@@ -1271,7 +1470,10 @@ function FormPickerPopoverItem({
       data-selected={selected || undefined}
       className={cn(
         "h-auto min-h-11 w-full justify-start px-3 py-2 text-left font-normal whitespace-normal",
-        "hover:bg-muted/60 active:bg-muted/60",
+        // A linha alta, e não a cápsula da base: uma linha de 44 com 22 de
+        // raio é pílula. E o realce é a camada do `Button`, na cor que ele
+        // sempre teve — `hover:bg-*` pintaria por baixo dela, em duas camadas.
+        "rounded-row-lg [--button-hover-fill:color-mix(in_oklab,var(--muted)_60%,transparent)]",
         selected && "bg-muted font-medium text-foreground",
         className
       )}

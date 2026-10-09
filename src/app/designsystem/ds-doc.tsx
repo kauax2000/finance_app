@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 import { useTimeout } from "@/hooks/use-timeout"
 import { slugifyCategory } from "./registry"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { Toggle } from "@/components/ui/toggle"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
@@ -164,15 +165,19 @@ export function DocPage({
 /**
  * O campo de identificação: o que se digita e onde a coisa mora.
  *
- * Ele voltou a ser um campo com moldura própria, e não uma faixa entre fios —
- * um import é para copiar, e o que se copia se anuncia como um campo. O botão
- * fica no topo, dentro dele.
+ * Uma caixa só, porque o import e o arquivo são **um dado** — o componente e o
+ * lugar em que ele está. Por isso os dois são par de identidade: empilhados,
+ * sem `gap`, separados pela entrelinha. Até a rodada 240e o caminho era a
+ * `CardNote` do cartão e o par se lia como dois blocos, com 26px de vão.
  *
- * A diferença para a primeira versão é que agora é **uma caixa só**. Antes o
- * bloco de código era emoldurado e o caminho do arquivo vinha logo abaixo num
- * segundo ladrilho solto, o que dava duas molduras para um dado que é um só: o
- * componente e o arquivo em que ele está. Aqui o caminho é o rodapé do próprio
- * campo, sob um fio.
+ * O botão de copiar tem **coluna própria**, alinhada no topo: com o `-mt-1`
+ * ele fica a 8px da borda de cima, a mesma distância da direita (`pe-2`), e
+ * assenta no canto. Antes ele era `absolute` e o texto reservava o território
+ * dele com um `pr-28` medido à mão; numa grade a coluna cresce quando ele abre
+ * em "Copiado", e o import quebra antes de passar por baixo.
+ *
+ * É o `Card` de contorno, a mesma superfície dos mostradores da página: a
+ * caixa é metadado, e o `muted` cheio a fazia pesar mais que os espécimes.
  */
 function DocMeta({
   importLine,
@@ -185,39 +190,27 @@ function DocMeta({
     return <div className="mt-6 border-b border-border" />
   }
   return (
-    <div className="relative mt-6 overflow-hidden rounded-xl border border-border bg-muted/40">
-      {importLine ? (
-        <>
-          {/* Absoluto, e não uma linha própria: o botão não deve empurrar o
-              código para baixo nem gastar altura quando o import cabe numa
-              linha só — que é o caso de quase todas as 88 páginas. */}
-          <div className="absolute top-2 right-2">
+    <Card padding="none" className="mt-6">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 py-3 ps-4 pe-2">
+        <div className="flex min-w-0 flex-col">
+          {importLine ? (
+            <pre className="font-mono text-xs leading-relaxed break-words whitespace-pre-wrap text-foreground">
+              {importLine}
+            </pre>
+          ) : null}
+          {source ? (
+            <code className="font-mono text-2xs leading-relaxed break-all text-muted-foreground">
+              {source}
+            </code>
+          ) : null}
+        </div>
+        {importLine ? (
+          <div className="-mt-1">
             <CopyButton code={importLine} />
           </div>
-          {/* O `pr-28` reserva o território do botão em todas as linhas. Sem
-              ele, um import longo passa por baixo do botão ao quebrar — e o
-              território cresceu: aberto em "Copiado" a pílula mede 85,2px
-              medidos, mais os 8px do `right-2`. Eram 56 (`pr-14`), de quando o
-              botão era quadrado. `pr-24` (96) chegou a bastar por 2,8px, que é
-              menos que os 3px do próprio anel de foco do botão; 112 dão 18,8. */}
-          <pre className="overflow-x-auto px-4 py-3.5 pr-28 font-mono text-xs leading-relaxed whitespace-pre-wrap text-foreground">
-            {importLine}
-          </pre>
-        </>
-      ) : null}
-      {source ? (
-        <div
-          className={cn(
-            "px-4 py-2",
-            importLine && "border-t border-border"
-          )}
-        >
-          <code className="font-mono text-2xs break-all text-muted-foreground">
-            {source}
-          </code>
-        </div>
-      ) : null}
-    </div>
+        ) : null}
+      </div>
+    </Card>
   )
 }
 
@@ -311,13 +304,12 @@ function DocPagerLink({
         // dentro do `nav` (`justify-between`), e aí o `truncate` do nome **nunca
         // dispara**: "Mobile Sheet Form Chrome" transborda em vez de reticenciar.
         "shrink",
-        // Contra-classe 2. O `dark:hover:bg-muted/50` do `tertiary` **não** é
-        // derrubado por `hover:bg-accent` — variante diferente, e no escuro
-        // `&:is(.dark *)` vence por especificidade. Na mesma linha que o
-        // `hover:` porque a regra H do auditor exige o par no mesmo literal.
-        "hover:bg-accent active:bg-accent active:text-foreground dark:hover:bg-accent",
+        // Contra-classe 2. O realce do `Button` é uma camada por cima do fundo
+        // (rodada 241): um `hover:bg-accent` ficaria embaixo dela. Quem muda a
+        // cor é `--button-hover-fill`, e a transição continua a da base, que
+        // já esmaece a camada.
+        "[--button-hover-fill:var(--accent)] active:text-foreground",
         "min-w-0 px-2.5 text-muted-foreground",
-        "transition-colors duration-(--duration-fast) ease-(--ease-out)",
         // Em ponteiro grosso o alvo vai aos 44px que a própria página
         // /designsystem/touch-safe-area exige. É a mesma cortesia da lateral.
         "pointer-coarse:min-h-11",
@@ -443,12 +435,7 @@ export function Preview({
         data-slot="preview-controls"
         className="flex flex-wrap items-center gap-x-4 gap-y-2 empty:hidden"
       />
-      <div
-        className={cn(
-          "overflow-hidden rounded-xl border border-border bg-card",
-          className
-        )}
-      >
+      <Card padding="none" className={className}>
         {/* As classes de layout continuam nesta camada, e não na moldura: é o que
             os 85 `previewClassName` do catálogo sobrescrevem, `p-0` inclusive. */}
         <div
@@ -462,7 +449,7 @@ export function Preview({
           </PreviewControlsContext.Provider>
         </div>
         {code ? <PreviewCode code={code} /> : null}
-      </div>
+      </Card>
     </div>
   )
 }
@@ -579,6 +566,9 @@ function CopyButton({ code }: { code: string }) {
     <>
       <Button
         type="button"
+        // O ghost (`tertiary`) nos dois lugares: chegou a ser `floating`
+        // (rodada 240g), e o dono o preferiu sem placa — o botão é ferramenta
+        // da caixa, não uma peça pousada sobre ela.
         variant="tertiary"
         // `sm` e não `icon-sm`: o degrau de ícone é `size-7`, largura cravada, e
         // a palavra precisa de largura livre. O `gap-0` tira os 4px que o
@@ -650,13 +640,12 @@ function CopyButton({ code }: { code: string }) {
           </span>
         </span>
         {/* O ícone segue como sempre foi: uma troca seca, o cheque no lugar do
-            papel duplicado. O `size-4` explicito mantém os 16px de quando o
-            degrau era `icon-sm` — o `sm` encolheria para 14. */}
-        {copied ? (
-          <CheckIcon className="size-4" aria-hidden />
-        ) : (
-          <DocumentDuplicateIcon className="size-4" aria-hidden />
-        )}
+            papel duplicado. **Sem tamanho cravado**: o degrau `sm` o desenha
+            em 14, e é isso que fecha o círculo em repouso — 14 + 12 de recuo
+            + 2 de borda = 28, a altura. Com o `size-4` de antes (os 16 de
+            quando o degrau era `icon-sm`) o botão media 30 × 28, oval
+            (rodada 240g). */}
+        {copied ? <CheckIcon aria-hidden /> : <DocumentDuplicateIcon aria-hidden />}
       </Button>
       {/* Fora do botão de propósito: com `aria-label` no botão, o conteúdo dele
           não é anunciado, e a confirmação nunca chegaria a quem usa leitor de
@@ -727,7 +716,7 @@ export function PropsTable({
           moldura não pinta fundo, e esta precisa do mesmo `bg-card` do
           espécime — ds-doc é a segunda superfície nomeada que o auditor já
           isenta. */}
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <Card padding="none">
         <Table size="sm">
           {/* O hover de linha é opt-in agora (`interactive`), então não há
               mais nada a neutralizar aqui: uma tabela de referência sem
@@ -763,7 +752,7 @@ export function PropsTable({
             ))}
           </TableBody>
         </Table>
-      </div>
+      </Card>
     </PageSection>
   )
 }
@@ -875,7 +864,6 @@ export function Interruptor({ id, rotulo, valor, onChange }: InterruptorProps) {
     <Toggle
       id={id}
       variant="plain"
-      shape="pill"
       size="md"
       pressed={valor}
       onPressedChange={onChange}

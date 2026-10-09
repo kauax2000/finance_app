@@ -3,9 +3,18 @@
 import * as React from "react"
 import type { DateRange } from "react-day-picker"
 
-import { Badge } from "@/components/ui/badge"
-import { Calendar, type CalendarMarker, type CalendarPreset } from "@/components/ui/calendar"
-import { Controles, DocNote, DocSection, Eixo, PropsTable, Usage } from "../ds-doc"
+import {
+  Calendar,
+  CalendarEvent,
+  CalendarEvents,
+  CalendarSkeleton,
+  type CalendarMarker,
+  type CalendarMarkerTone,
+  type CalendarPreset,
+} from "@/components/ui/calendar"
+import { Caption } from "@/components/ui/typography"
+import { Controles, DocNote, DocSection, Eixo, Interruptor, Interruptores, PropsTable, Usage } from "../ds-doc"
+import { IphoneFrame, ViewportFrame } from "../ds-frame"
 
 export default function CalendarDoc() {
   return (
@@ -51,7 +60,7 @@ export default function CalendarDoc() {
 
       <DocSection
         title="Marcadores"
-        description="markers põe pontos sob o número do dia, um tom por tipo (até três por dia), com a legenda embaixo — e o nome do dia soma os rótulos para o leitor de tela: “5 de março, assinatura, parcela”. É a grade do calendário de pagamentos no telefone."
+        description="markers põe pontos sob o número do dia, um tom por tipo (até três por dia), com a legenda embaixo — e o nome do dia soma os rótulos para o leitor de tela: “5 de março, assinatura, parcela”."
         code={`<Calendar
   markers={[
     { dates: assinaturas, tone: "info", label: "Assinatura" },
@@ -62,37 +71,48 @@ export default function CalendarDoc() {
         <Calendar
           defaultMonth={new Date(2026, 2, 1)}
           markers={MARCADORES}
-          className="rounded-lg border border-border"
+          className="rounded-surface border border-border"
         />
       </DocSection>
 
       <DocSection
         title="Agenda"
-        description="variant=&quot;agenda&quot; é a visão de mês: a célula alta, o número no canto (hoje numa pastilha) e o conteúdo do dia por renderDay. Ela ocupa a largura de quem a contém. É a grade do calendário de pagamentos no desktop; o clique no dia vem de onDayClick."
+        description="variant=&quot;agenda&quot; é a visão de mês: uma moldura só, as células separadas por fios, o mês à esquerda e o Hoje junto das setas. O conteúdo do dia vem de renderDay, num CalendarEvents com os CalendarEvent do dia — até max na célula, e o resto num “+N mais”. O mês vizinho recua, o fim de semana tem um véu, e o dia escolhido ganha um anel interno."
         code={`<Calendar
   variant="agenda"
   weekStartsOn={1}
-  renderDay={(dia) => <Fichas eventos={porDia(dia)} />}
+  showToday
+  renderDay={(dia) => (
+    <CalendarEvents max={2}>
+      {doDia(dia).map((e) => (
+        <CalendarEvent key={e.id} tone={e.tom} amount={e.valor} onSelect={() => abrir(e)}>
+          {e.titulo}
+        </CalendarEvent>
+      ))}
+    </CalendarEvents>
+  )}
 />`}
         previewClassName="items-stretch"
       >
-        <div className="w-full overflow-x-auto">
-          <div className="min-w-160">
-            <Calendar
-              variant="agenda"
-              weekStartsOn={1}
-              defaultMonth={new Date(2026, 2, 1)}
-              renderDay={(dia) => {
-                const e = AGENDA[dia.getDate()]
-                return dia.getMonth() === 2 && e ? (
-                  <Badge size="xs" tone={e.tom} className="max-w-full truncate">
-                    {e.texto}
-                  </Badge>
-                ) : null
-              }}
-            />
-          </div>
-        </div>
+        <AgendaNaTela />
+      </DocSection>
+
+      <DocSection
+        title="No telefone, a agenda vira lista"
+        description="Abaixo de 40rem da própria largura a grade some e entra a lista do mês: só os dias com eventos, cada evento uma linha de 44px com o ponto do tom — e um botão, quando tem onSelect. É container query, e não a janela: num painel estreito do desktop ela também vira lista."
+        code={`<Calendar variant="agenda" renderDay={…} listEmpty="Nada neste mês" />`}
+        previewClassName="justify-center"
+      >
+        <AgendaNoTelefone />
+      </DocSection>
+
+      <DocSection
+        title="Esqueleto"
+        description="CalendarSkeleton variant=&quot;agenda&quot; tem a forma da grade de fios: o título, a régua dos dias e as 6 semanas, com uma ficha fantasma em algumas. Dentro de um esqueleto de página, group={false}."
+        code={`<CalendarSkeleton variant="agenda" />`}
+        previewClassName="items-stretch"
+      >
+        <CalendarSkeleton variant="agenda" />
       </DocSection>
 
       <DocSection
@@ -106,7 +126,7 @@ export default function CalendarDoc() {
           defaultMonth={new Date(2026, 2, 1)}
           startMonth={new Date(2021, 0, 1)}
           endMonth={new Date(2031, 11, 31)}
-          className="rounded-lg border border-border"
+          className="rounded-surface border border-border"
         />
       </DocSection>
 
@@ -140,7 +160,7 @@ export default function CalendarDoc() {
       </DocNote>
 
       <DocNote title="Onde o app usa">
-        No <code>DatePicker</code> — todo campo de data — e no calendário de pagamentos do dashboard, desde a rodada 203: os pontos no telefone e a agenda no desktop, com um popover só, ancorado no dia clicado. As duas grades eram escritas à mão, com botões crus e os pontos em cinco cores cruas.
+        No <code>DatePicker</code> — todo campo de data — e no calendário de pagamentos do dashboard, que é a agenda desde a rodada 203 e veste as peças dela desde a 242: a grade com o popover do dia no desktop, e a lista no telefone. As grades eram escritas à mão, com botões crus e os pontos em cinco cores cruas, e as fichas do dia também (o <code>EventChips</code>, com o &ldquo;+N&rdquo; à mão).
       </DocNote>
 
       <DocNote title="Para dia do mês recorrente, ele é o componente errado">
@@ -192,7 +212,13 @@ export default function CalendarDoc() {
             prop: "showToday",
             type: "boolean",
             default: "false",
-            description: "O “Hoje”: volta ao mês atual e, na escolha única, marca o dia.",
+            description: "O “Hoje”: volta ao mês atual e, na escolha única, marca o dia. Na agenda ele mora no cabeçalho, ao lado das setas.",
+          },
+          {
+            prop: "listEmpty",
+            type: "ReactNode",
+            default: '"Nenhum evento neste mês"',
+            description: "Na agenda estreita (a lista), o texto do mês sem nada.",
           },
           {
             prop: "presets",
@@ -213,7 +239,158 @@ export default function CalendarDoc() {
           },
         ]}
       />
+
+      <PropsTable
+        title="CalendarEvent"
+        rows={[
+          {
+            prop: "tone",
+            type: '"default" | "primary" | "info" | "success" | "warning" | "destructive" | "income" | "expense"',
+            default: '"default"',
+            description: "A cor: a superfície -muted do tom na ficha da grade, o ponto na linha da lista.",
+          },
+          { prop: "amount", type: "number | null", description: "O valor à direita, na lista. Na ficha da grade só cabe o título." },
+          {
+            prop: "onSelect",
+            type: "() => void",
+            description: "Só na lista: a linha vira botão de 44px. Na grade quem clica é o dia.",
+          },
+        ]}
+      />
+
+      <PropsTable
+        title="CalendarEvents · CalendarSkeleton"
+        rows={[
+          {
+            prop: "CalendarEvents · max",
+            type: "number",
+            default: "2",
+            description: "Quantos eventos cabem na célula; o resto vira “+N mais”. Na lista, todos.",
+          },
+          {
+            prop: "CalendarSkeleton · variant",
+            type: '"default" | "agenda"',
+            default: '"default"',
+            description: "A forma da espera: a grade pequena ou a grade de fios da agenda.",
+          },
+          {
+            prop: "CalendarSkeleton · group",
+            type: "boolean",
+            default: "true",
+            description: "false dentro de um esqueleto de página, que já anuncia a espera.",
+          },
+        ]}
+      />
     </>
+  )
+}
+
+type EventoDemo = { id: string; titulo: string; tom: CalendarMarkerTone; valor: number }
+
+/** Março de 2026 no calendário de pagamentos: o dia 25 tem quatro, para o "+N". */
+const EVENTOS_AGENDA: Record<number, EventoDemo[]> = {
+  5: [{ id: "spotify", titulo: "Spotify", tom: "info", valor: -21.9 }],
+  10: [{ id: "luz", titulo: "Conta de luz", tom: "primary", valor: -187.42 }],
+  12: [{ id: "parcela", titulo: "Parcela 3/10", tom: "warning", valor: -412.3 }],
+  18: [{ id: "netflix", titulo: "Netflix", tom: "info", valor: -55.9 }],
+  20: [{ id: "salario", titulo: "Salário", tom: "income", valor: 8432.15 }],
+  25: [
+    { id: "aluguel", titulo: "Aluguel", tom: "primary", valor: -2450 },
+    { id: "condominio", titulo: "Condomínio", tom: "primary", valor: -680 },
+    { id: "internet", titulo: "Internet", tom: "info", valor: -119.9 },
+    { id: "academia", titulo: "Academia", tom: "info", valor: -99.9 },
+  ],
+}
+
+function AgendaDemo({
+  max,
+  hoje,
+  escolha,
+  vazio,
+  onAbrir,
+}: {
+  max: number
+  hoje: boolean
+  escolha: boolean
+  vazio: boolean
+  onAbrir?: (titulo: string) => void
+}) {
+  const [dia, setDia] = React.useState<Date | undefined>(new Date(2026, 2, 12))
+  const renderDay = (data: Date) => {
+    const lista = vazio || data.getMonth() !== 2 ? undefined : EVENTOS_AGENDA[data.getDate()]
+    return lista ? (
+      <CalendarEvents max={max}>
+        {lista.map((e) => (
+          <CalendarEvent key={e.id} tone={e.tom} amount={e.valor} onSelect={() => onAbrir?.(e.titulo)}>
+            {e.titulo}
+          </CalendarEvent>
+        ))}
+      </CalendarEvents>
+    ) : null
+  }
+  const comum = {
+    variant: "agenda" as const,
+    weekStartsOn: 1 as const,
+    defaultMonth: new Date(2026, 2, 1),
+    showToday: hoje,
+    renderDay,
+    listEmpty: "Nenhum pagamento neste mês",
+  }
+  return escolha ? (
+    <Calendar {...comum} mode="single" selected={dia} onSelect={setDia} />
+  ) : (
+    <Calendar {...comum} />
+  )
+}
+
+function AgendaNaTela() {
+  const [max, setMax] = React.useState<"1" | "2" | "3">("2")
+  const [hoje, setHoje] = React.useState(true)
+  const [escolha, setEscolha] = React.useState(true)
+  const [vazio, setVazio] = React.useState(false)
+  return (
+    <>
+      <Controles
+        inicio={
+          <Eixo
+            rotulo="Eventos por dia (max)"
+            valores={["1", "2", "3"] as const}
+            valor={max}
+            onChange={setMax}
+            rotulos={{ "1": "max 1", "2": "max 2", "3": "max 3" }}
+          />
+        }
+        fim={
+          <Interruptores>
+            <Interruptor id="agenda-hoje" rotulo="Hoje" valor={hoje} onChange={setHoje} />
+            <Interruptor id="agenda-escolha" rotulo="Dia escolhido" valor={escolha} onChange={setEscolha} />
+            <Interruptor id="agenda-vazio" rotulo="Sem eventos" valor={vazio} onChange={setVazio} />
+          </Interruptores>
+        }
+      />
+      <ViewportFrame
+        title="Agenda do mês numa janela"
+        height={700}
+        className="w-full rounded-surface"
+        screenClassName="bg-background p-6"
+      >
+        <AgendaDemo max={Number(max)} hoje={hoje} escolha={escolha} vazio={vazio} />
+      </ViewportFrame>
+    </>
+  )
+}
+
+function AgendaNoTelefone() {
+  const [aberto, setAberto] = React.useState<string>()
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <IphoneFrame title="A agenda num iPhone">
+        <div className="h-full overflow-y-auto px-4 pt-16 pb-8">
+          <AgendaDemo max={2} hoje escolha={false} vazio={false} onAbrir={setAberto} />
+        </div>
+      </IphoneFrame>
+      <Caption aria-live="polite">{aberto ? `Tocou em ${aberto}` : "Toque num evento"}</Caption>
+    </div>
   )
 }
 
@@ -227,7 +404,7 @@ function CalendarDemo() {
       onSelect={setData}
       defaultMonth={new Date(2026, 2, 1)}
       showToday
-      className="rounded-lg border border-border"
+      className="rounded-surface border border-border"
     />
   )
 }
@@ -239,12 +416,6 @@ const MARCADORES: CalendarMarker[] = [
   { dates: [new Date(2026, 2, 3), new Date(2026, 2, 12)], tone: "success", label: "Lançado" },
 ]
 
-const AGENDA: Record<number, { texto: string; tom: "info" | "warning" | "success" }> = {
-  5: { texto: "Spotify", tom: "info" },
-  12: { texto: "Parcela 3/10", tom: "warning" },
-  18: { texto: "Netflix", tom: "info" },
-  20: { texto: "Salário", tom: "success" },
-}
 
 function intervaloDe(dias: number) {
   const fim = new Date(2026, 2, 20)
@@ -279,7 +450,7 @@ function EscadaDemo() {
         mode="single"
         size={degrau}
         defaultMonth={new Date(2026, 2, 1)}
-        className="rounded-lg border border-border"
+        className="rounded-surface border border-border"
       />
     </>
   )
@@ -298,7 +469,7 @@ function CalendarRangeDemo() {
       onSelect={setPeriodo}
       defaultMonth={new Date(2026, 1, 1)}
       presets={ATALHOS}
-      className="rounded-lg border border-border"
+      className="rounded-surface border border-border"
     />
   )
 }

@@ -14,9 +14,16 @@ import { extendTailwindMerge } from "tailwind-merge"
  * `2xs` —, mas fica declarado de propósito: o próximo degrau de texto que
  * alguém acrescentar tem que passar por esta lista, e uma lista com um item só
  * não ensina isso.
+ *
+ * Os degraus de raio da escala (`rounded-surface`, `rounded-modal`, `rounded-row`, `rounded-row-lg`) entram
+ * pelo mesmo motivo: sem eles, `cn("rounded-lg", "rounded-surface")` deixa as
+ * duas classes e quem vence é a ordem de emissão do Tailwind.
  */
 const twMerge = extendTailwindMerge({
   extend: {
+    theme: {
+      radius: ["surface", "modal", "row", "row-lg"],
+    },
     classGroups: {
       "font-size": [{ text: ["2xs", "control-sm"] }],
     },

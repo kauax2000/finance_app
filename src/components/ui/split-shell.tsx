@@ -242,7 +242,7 @@ function SplitShellAside({
       data-slot="split-shell-aside"
       data-surface={surface}
       className={cn(
-        "flex flex-1 flex-col gap-5 rounded-2xl",
+        "flex flex-1 flex-col gap-5 rounded-modal",
         surface === "brand" ? "brand-field" : "bg-muted text-foreground",
         // A marca sozinha: sem superfície no telefone, no recuo da coluna.
         soLogo &&
@@ -360,7 +360,7 @@ function SplitShellSkeleton({
         <div className={cn("flex", side === "end" && "@3xl/split-shell:order-last")}>
           <Skeleton
             className={cn(
-              "m-4 h-40 flex-1 rounded-2xl @3xl/split-shell:m-5 @3xl/split-shell:h-auto",
+              "m-4 h-40 flex-1 rounded-modal @3xl/split-shell:m-5 @3xl/split-shell:h-auto",
               side === "end" ? "@3xl/split-shell:ms-0" : "@3xl/split-shell:me-0"
             )}
           />

@@ -47,12 +47,12 @@ export function CategoriesOnboardingLoadingShell() {
 
                 <div className="shrink-0 space-y-2 px-4 py-3 sm:px-5">
                     <Skeleton className="h-3 w-40 rounded-md" />
-                    <Skeleton className="h-9 w-full rounded-md" />
+                    <Skeleton className="h-9 w-full rounded-full" />
                 </div>
 
                 <CardNote>
                     <div className="flex flex-col gap-2">
-                        <Skeleton className="h-10 w-full rounded-md" />
+                        <Skeleton className="h-10 w-full rounded-full" />
                         <div className="flex justify-center">
                             <Skeleton className="h-3 w-32 rounded-md" />
                         </div>

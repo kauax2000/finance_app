@@ -387,7 +387,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
             )}
 
             {showInstallmentFields && segmentMode === "edit" ? (
-                <p className="rounded-lg border border-warning/25 bg-warning-muted px-3 py-2 text-2xs leading-snug text-warning-muted-foreground">
+                <p className="rounded-row border border-warning/25 bg-warning-muted px-3 py-2 text-2xs leading-snug text-warning-muted-foreground">
                     Parcelas já lançadas no extrato não mudam automaticamente;
                     só as próximas cobranças usam os novos valores do plano.
                 </p>
@@ -558,7 +558,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                     // superfície dele, sem ser controle.
                     <p
                         id="tx-date"
-                        className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-sm text-muted-foreground"
+                        className="rounded-row border border-border/60 bg-muted/20 px-3 py-2 text-sm text-muted-foreground"
                     >
                         Plano concluído — não há próxima cobrança agendada.
                     </p>

@@ -144,7 +144,7 @@ function TooltipTrigger({
           tabIndex={0}
           aria-label={filho.props["aria-label"]}
           aria-disabled
-          className="inline-flex rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/45"
+          className="inline-flex rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/45"
         >
           {filho}
         </span>
@@ -192,9 +192,13 @@ function TooltipTrigger({
  */
 const tooltipContentVariants = cva("font-medium", {
   variants: {
+    // O raio é do degrau, e nunca cápsula (rodadas 241q e 241s): `sm` (24)
+    // veste o `rounded-lg` (10, 42%) e `md` (32) a linha (12) — o degrau
+    // seguinte de cada um seria a metade da altura, e a dica sairia pílula. Ele
+    // vence o `rounded-surface` da placa pelo `twMerge`, porque vem depois.
     size: {
-      sm: "px-2 py-1 text-xs",
-      md: "px-3 py-1.5 text-sm",
+      sm: "rounded-lg px-2 py-1 text-xs",
+      md: "rounded-row px-3 py-1.5 text-sm",
     },
     /**
      * `plate` (o padrão) é a placa flutuante dos menus. `contrast` (rodada 185)
@@ -210,7 +214,7 @@ const tooltipContentVariants = cva("font-medium", {
       // num tema ou num ambiente. Anular um por um é o que esta casa chama de
       // compensar por seletor.
       contrast: [
-        "rounded-lg bg-primary text-primary-foreground shadow-md",
+        "bg-primary text-primary-foreground shadow-md",
         "**:data-[slot=kbd]:bg-primary-foreground/15 **:data-[slot=kbd]:text-primary-foreground",
         // O par `dark:` não é redundância: o `Kbd` declara `dark:bg-muted` e
         // `dark:text-muted-foreground`, que empatam com a regra de cima e
@@ -220,7 +224,9 @@ const tooltipContentVariants = cva("font-medium", {
       ].join(" "),
     },
   },
-  defaultVariants: { size: "md", variant: "plate" },
+  // `sm` é o padrão desde a rodada 241r, a pedido do dono: a dica de 32px
+  // com texto de 14 pesava mais que o ícone que ela nomeia.
+  defaultVariants: { size: "sm", variant: "plate" },
 })
 
 /**

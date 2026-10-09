@@ -130,7 +130,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                                 </DescriptionList>
                             </div>
 
-                            <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background/80 px-2.5 py-2 text-2xs dark:bg-background/50">
+                            <div className="flex items-center justify-between gap-3 rounded-row border border-border/60 bg-background/80 px-2.5 py-2 text-2xs dark:bg-background/50">
                                 <span className="text-muted-foreground">Comparação</span>
                                 <span
                                     className={cn(
@@ -214,7 +214,7 @@ export function CreditCardTileSkeleton() {
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background/80 px-2.5 py-2 dark:bg-background/50">
+                    <div className="flex items-center justify-between gap-3 rounded-row border border-border/60 bg-background/80 px-2.5 py-2 dark:bg-background/50">
                         <Skeleton className="h-3 w-20" />
                         <Skeleton className="h-3 w-16 shrink-0 tabular-nums" />
                     </div>

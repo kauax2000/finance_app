@@ -40,7 +40,7 @@ export function WorkspaceSwitcher({
                     aria-label="Trocar carteira"
                     className={cn(
                         "w-auto min-w-8 shrink-0 gap-1.5 px-1 font-normal",
-                        "[--button-bloom-fill:color-mix(in_oklab,var(--accent)_80%,transparent)] dark:[--button-bloom-fill:color-mix(in_oklab,var(--accent)_80%,transparent)] group-active:[--button-bloom:1]",
+                        "[--button-hover-fill:color-mix(in_oklab,var(--accent)_80%,transparent)] dark:[--button-hover-fill:color-mix(in_oklab,var(--accent)_80%,transparent)] group-active:[--button-hover:1]",
                     )}
                 >
                     {loading ? (
@@ -70,7 +70,7 @@ export function WorkspaceSwitcher({
             <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                     size="lg"
-                    className="h-12 w-full min-w-0 rounded-lg data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                    className="h-12 w-full min-w-0 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                     {loading ? (
                         <Skeleton className="size-8 shrink-0 rounded-lg" />
@@ -113,7 +113,7 @@ export function WorkspaceSwitcher({
                 side={appearance === "header" ? "bottom" : "right"}
                 align={appearance === "header" ? "start" : "start"}
                 sideOffset={8}
-                className="w-64 max-w-[calc(100vw-2rem)] rounded-xl p-0"
+                className="w-64 max-w-[calc(100vw-2rem)] p-0"
             >
                 <WorkspacePickerMenuBody
                     callbacks={{

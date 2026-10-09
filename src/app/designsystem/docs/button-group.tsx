@@ -9,7 +9,7 @@ import {
 } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group"
-import { Input } from "@/components/ui/input"
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group"
 import { Caption } from "@/components/ui/typography"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
@@ -87,22 +87,28 @@ export default function ButtonGroupDoc() {
       </DocSection>
 
       <DocSection
-        title="Campo no grupo"
-        description="Um Input colado à sua ação. O campo ocupa a sobra e o grupo passa a ter a largura de quem o contém; o anel de foco do campo sobe acima do vizinho. No dedo o campo sobe a 40 pela régua de campo, e o grupo leva os botões junto."
-        code={`<ButtonGroup>
-  <Input placeholder="Buscar transação" aria-label="Buscar transação" />
-  <Button variant="outline">Buscar</Button>
-</ButtonGroup>`}
+        title="Campo com a sua ação"
+        description="A ação de um campo mora dentro dele: InputGroup com o InputGroupButton na ponta, um degrau abaixo do campo (rodada 241u). Um Input dentro de um ButtonGroup fica separado do botão por 8px, sem emenda: a separação nasceu quando o campo era um retângulo de 12, que não fechava contra a cápsula, e ficou quando ele voltou à cápsula."
+        code={`<InputGroup>
+  <InputGroupInput placeholder="Buscar transação" aria-label="Buscar transação" />
+  <InputGroupAddon align="inline-end">
+    <InputGroupButton>Buscar</InputGroupButton>
+  </InputGroupAddon>
+</InputGroup>`}
         previewClassName="flex-col items-stretch gap-3"
       >
-        <ButtonGroup className="max-w-sm">
-          <Input placeholder="Buscar transação" aria-label="Buscar transação" />
-          <Button variant="outline">buscar</Button>
-        </ButtonGroup>
-        <ButtonGroup className="max-w-sm">
-          <Input type="email" placeholder="email@exemplo.com" aria-label="E-mail do convite" />
-          <Button>convidar</Button>
-        </ButtonGroup>
+        <InputGroup className="max-w-sm">
+          <InputGroupInput placeholder="Buscar transação" aria-label="Buscar transação" />
+          <InputGroupAddon align="inline-end">
+            <InputGroupButton>buscar</InputGroupButton>
+          </InputGroupAddon>
+        </InputGroup>
+        <InputGroup className="max-w-sm">
+          <InputGroupInput type="email" placeholder="email@exemplo.com" aria-label="E-mail do convite" />
+          <InputGroupAddon align="inline-end">
+            <InputGroupButton variant="primary">convidar</InputGroupButton>
+          </InputGroupAddon>
+        </InputGroup>
       </DocSection>
 
       <DocSection

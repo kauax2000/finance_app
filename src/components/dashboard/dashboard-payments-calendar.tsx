@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/page-section"
 import * as React from "react"
 
-import { useIsMobile } from "@/hooks/use-mobile"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
 import {
     Popover,
@@ -21,16 +20,15 @@ import {
     PopoverHeader,
     PopoverTitle,
 } from "@/components/ui/popover"
-import { Calendar, type CalendarMarker } from "@/components/ui/calendar"
+import { Calendar, CalendarEvent, CalendarEvents } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
-import { currencyBRL } from "@/lib/formatters"
 import { labelYearMonthPt, parseYearMonth } from "@/lib/budget-month"
 import { formatYmdPtBr, parseYmdLocal, localYmdFromDate } from "@/lib/transaction-date"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { tagChipWarning, transactionRowChipShell } from "@/components/ui/badge"
+import { transactionRowChipShell } from "@/components/ui/badge"
 import {
-    paymentEventChipClass,
     paymentEventMetaBadge,
+    paymentEventTone,
 } from "@/components/dashboard/payment-event-badge"
 import type {
     PaymentEvent,
@@ -79,15 +77,12 @@ function ChargeRowCompactInner({
     installmentPlanId,
     amount,
     amountWhenNull = "hide",
-    neutralAmount = false,
 }: {
     title: string
     kind: PaymentEventKind
     installmentPlanId?: string | null
     amount: number | null
     amountWhenNull?: "hide" | "dash"
-    /** When true, amount uses foreground color (no income/expense red-green). */
-    neutralAmount?: boolean
 }) {
     const meta = paymentEventMetaBadge(kind, installmentPlanId)
     return (
@@ -109,9 +104,7 @@ function ChargeRowCompactInner({
             {amount != null ? (
                 <MoneyDisplay
                     value={amount}
-                    tone={
-                        neutralAmount ? "default" : paymentEventAmountTone(kind)
-                    }
+                    tone={paymentEventAmountTone(kind)}
                     size="sm"
                     className="shrink-0 font-medium text-xs"
                 />
@@ -208,57 +201,6 @@ function PaymentDayEventsListContent({
     )
 }
 
-function EventChips({
-    events,
-    max = 2,
-}: {
-    events: PaymentEvent[]
-    max?: number
-}) {
-    const shown = events.slice(0, max)
-    const rest = events.length - shown.length
-    return (
-        <div className="flex flex-col gap-0.5">
-            {shown.map((e) => {
-                const postedParcela =
-                    (e.kind === "posted_income" ||
-                        e.kind === "posted_expense") &&
-                    Boolean(e.installmentPlanId?.trim())
-                return (
-                <div
-                    key={e.id}
-                    className={cn(
-                        "truncate rounded px-1 py-0.5 text-2xs font-medium leading-tight",
-                        postedParcela
-                            ? tagChipWarning
-                            : e.kind === "posted_income" ||
-                                e.kind === "posted_expense"
-                              ? "bg-muted/50 text-muted-foreground"
-                              : paymentEventChipClass(e.kind),
-                    )}
-                    title={e.title}
-                >
-                    {e.kind === "posted_income" || e.kind === "posted_expense"
-                        ? e.amount != null
-                            ? (
-                                  <span className="tabular-nums">
-                                      {currencyBRL(e.amount)}
-                                  </span>
-                              )
-                            : e.title.slice(0, 12)
-                        : e.title.slice(0, 14)}
-                </div>
-                )
-            })}
-            {rest > 0 ? (
-                <span className="text-2xs font-medium text-muted-foreground">
-                    +{rest}
-                </span>
-            ) : null}
-        </div>
-    )
-}
-
 export function DashboardPaymentsCalendar({
     calendarYm,
     events,
@@ -282,64 +224,67 @@ export function DashboardPaymentsCalendar({
     onPaymentEventPreview: (event: PaymentEvent) => void
     onUpcomingPaymentClick: (row: UpcomingPaymentRow) => void
 }) {
-    const isMobile = useIsMobile()
     const byYmd = React.useMemo(() => groupByYmd(events), [events])
     const calendarMonth = React.useMemo(() => {
         const { y, m } = parseYearMonth(calendarYm)
         return new Date(y, m - 1, 1)
     }, [calendarYm])
 
-    const modifierDates = React.useMemo(() => {
-        const sub: Date[] = []
-        const inst: Date[] = []
-        const bills: Date[] = []
-        const card: Date[] = []
-        const posted: Date[] = []
-        for (const e of events) {
-            const d = parseYmdLocal(e.dateYmd)
-            if (!d) continue
-            if (e.kind === "subscription") sub.push(d)
-            else if (e.kind === "installment") inst.push(d)
-            else if (e.kind === "bill_due") bills.push(d)
-            else if (e.kind === "card_close" || e.kind === "card_due") card.push(d)
-            else posted.push(d)
-        }
-        return { sub, inst, bills, card, posted }
-    }, [events])
-
-    // Os pontos da grade do telefone, um tom por tipo — os tokens semânticos
-    // no lugar das cinco cores cruas que a grade escrita à mão usava.
-    const paymentMarkers = React.useMemo<CalendarMarker[]>(
-        () => [
-            { dates: modifierDates.sub, tone: "info", label: "Assinatura" },
-            { dates: modifierDates.inst, tone: "warning", label: "Parcela" },
-            { dates: modifierDates.bills, tone: "primary", label: "Conta a pagar" },
-            { dates: modifierDates.card, tone: "default", label: "Fatura do cartão" },
-            { dates: modifierDates.posted, tone: "success", label: "Lançado" },
-        ],
-        [modifierDates],
+    // O que um evento abre: o lançamento, ou a prévia do que ainda não foi
+    // lançado. Na lista da agenda estreita cada evento é o próprio botão.
+    const openEvent = React.useCallback(
+        (e: PaymentEvent) => {
+            const postedId = postedTransactionIdFromEvent(e)
+            if (postedId) onTransactionPostedClick(postedId)
+            else onPaymentEventPreview(e)
+        },
+        [onTransactionPostedClick, onPaymentEventPreview],
     )
 
-    // O conteúdo da célula da agenda: as fichas do dia, até duas.
+    // O conteúdo do dia na agenda (rodada 242): as peças do Calendar — até
+    // duas fichas na grade, com o "+N mais", e todas na lista do telefone,
+    // com o selo do tipo depois do título, como a lista antiga.
     const renderAgendaDay = React.useCallback(
         (date: Date) => {
             const list = byYmd.get(localYmdFromDate(date)) ?? []
-            return list.length > 0 ? <EventChips events={list} max={2} /> : null
+            if (list.length === 0) return null
+            return (
+                <CalendarEvents max={2}>
+                    {list.map((e) => {
+                        const meta = paymentEventMetaBadge(e.kind, e.installmentPlanId)
+                        return (
+                            <CalendarEvent
+                                key={e.id}
+                                tone={paymentEventTone(e.kind, e.installmentPlanId)}
+                                amount={e.amount}
+                                meta={
+                                    meta ? (
+                                        <span className={cn(transactionRowChipShell, "whitespace-nowrap", meta.chipClass)}>
+                                            {meta.label}
+                                        </span>
+                                    ) : undefined
+                                }
+                                onSelect={() => openEvent(e)}
+                            >
+                                {e.title}
+                            </CalendarEvent>
+                        )
+                    })}
+                </CalendarEvents>
+            )
         },
-        [byYmd],
+        [byYmd, openEvent],
     )
 
-    const mobileGrouped = React.useMemo(() => {
-        const keys = [...byYmd.keys()].sort()
-        return keys.map((k) => ({
-            ymd: k,
-            list: byYmd.get(k) ?? [],
-        }))
-    }, [byYmd])
-
-    const mobileGroupedForList = React.useMemo(
-        () => limitMobileCalendarDayGroups(mobileGrouped, todayYmd, 5),
-        [mobileGrouped, todayYmd],
+    // Na lista do telefone, só os últimos 5 dias passados com evento e todos
+    // os que vêm — o teto que a lista sempre teve. A grade mostra o mês todo.
+    const diasDaLista = React.useMemo(() => {
+        const dias = [...byYmd.keys()].sort().map((ymd) => ({ ymd }))
+        return new Set(limitMobileCalendarDayGroups(dias, todayYmd, 5).map((d) => d.ymd))
+    }, [byYmd, todayYmd])
+    const listDays = React.useCallback(
+        (date: Date) => diasDaLista.has(localYmdFromDate(date)),
+        [diasDaLista],
     )
 
     const upcomingGrouped = React.useMemo(
@@ -489,36 +434,35 @@ export function DashboardPaymentsCalendar({
                         )}
                     </div>
                     <div className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-4 p-3 md:p-4">
-                {/* As duas grades são o `Calendar` (rodada 203): a do
-                    telefone com os pontos por tipo de evento, a do desktop na
-                    agenda, com as fichas do dia. Eram escritas à mão — botões
-                    crus, os pontos em cinco cores cruas, e um popover por
-                    célula no desktop. Agora um popover só, ancorado no dia
-                    clicado, serve as duas. */}
-                <div ref={mobileCalendarShellRef} className={isMobile ? "min-w-0 w-full shrink-0" : "overflow-x-auto"}>
-                    <div className={isMobile ? undefined : "min-w-180"}>
-                        <Calendar
-                            variant={isMobile ? "default" : "agenda"}
-                            stretch
-                            month={calendarMonth}
-                            weekStartsOn={1}
-                            hideNavigation
-                            disableNavigation
-                            showOutsideDays
-                            markers={isMobile ? paymentMarkers : undefined}
-                            renderDay={renderAgendaDay}
-                            modifiers={{ vazio: (d) => !byYmd.has(localYmdFromDate(d)) }}
-                            modifiersClassNames={{ vazio: "[&>button]:cursor-default" }}
-                            classNames={{ month_caption: "sr-only" }}
-                            className={isMobile ? "rounded-lg border border-border/60 p-1" : undefined}
-                            onDayClick={(date, _mods, e) => {
-                                const ymd = localYmdFromDate(date)
-                                if (!byYmd.has(ymd)) return
-                                mobileCalendarDayAnchorRef.current = e.currentTarget as HTMLElement
-                                setMobileDayPopoverYmd(ymd)
-                            }}
-                        />
-                    </div>
+                {/* A agenda do `Calendar` (rodadas 203 e 242): a grade de
+                    fios com as fichas do dia, e abaixo de 40rem da própria
+                    largura a lista do mês, onde cada evento é o botão. O dia
+                    clicado na grade abre o popover e fica marcado. A grade de
+                    pontos do telefone e a lista escrita à mão saíram. */}
+                <div ref={mobileCalendarShellRef} className="min-w-0">
+                    <Calendar
+                        variant="agenda"
+                        month={calendarMonth}
+                        weekStartsOn={1}
+                        hideNavigation
+                        disableNavigation
+                        showOutsideDays
+                        mode="single"
+                        selected={mobileDayPopoverYmd ? (parseYmdLocal(mobileDayPopoverYmd) ?? undefined) : undefined}
+                        onSelect={() => {}}
+                        renderDay={renderAgendaDay}
+                        listEmpty="Nenhum evento neste mês"
+                        listDays={listDays}
+                        modifiers={{ vazio: (d) => !byYmd.has(localYmdFromDate(d)) }}
+                        modifiersClassNames={{ vazio: "[&>button]:cursor-default" }}
+                        classNames={{ month_caption: "sr-only" }}
+                        onDayClick={(date, _mods, e) => {
+                            const ymd = localYmdFromDate(date)
+                            if (!byYmd.has(ymd)) return
+                            mobileCalendarDayAnchorRef.current = e.currentTarget as HTMLElement
+                            setMobileDayPopoverYmd(ymd)
+                        }}
+                    />
                 </div>
                 {mobileDayPopoverYmd ? (
                     // No telefone o dia abre numa gaveta (`mobile="sheet"`): a
@@ -566,64 +510,6 @@ export function DashboardPaymentsCalendar({
                             />
                         </PopoverContent>
                     </Popover>
-                ) : null}
-                {isMobile ? (
-                        <div className="relative z-0 space-y-3">
-                            {mobileGroupedForList.length === 0 ? (
-                                <p className="py-6 text-center text-sm text-muted-foreground">
-                                    Nenhum evento neste mês
-                                </p>
-                            ) : (
-                                mobileGroupedForList.map(({ ymd, list }) => (
-                                    <div key={ymd} className="space-y-1.5">
-                                        <div className="bg-card px-2 py-1 text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-                                            {formatYmdPtBr(ymd)}
-                                        </div>
-                                        <div className="space-y-1.5 pl-1">
-                                            {list.map((e) => (
-                                                <Item
-                                                    key={e.id}
-                                                    asChild
-                                                    interactive
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="justify-between gap-2 border-border/60 px-2 py-2"
-                                                >
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const postedId =
-                                                            postedTransactionIdFromEvent(
-                                                                e,
-                                                            )
-                                                        if (postedId) {
-                                                            onTransactionPostedClick(
-                                                                postedId,
-                                                            )
-                                                        } else {
-                                                            onPaymentEventPreview(
-                                                                e,
-                                                            )
-                                                        }
-                                                    }}
-                                                >
-                                                    <ChargeRowCompactInner
-                                                        title={e.title}
-                                                        kind={e.kind}
-                                                        installmentPlanId={
-                                                            e.installmentPlanId
-                                                        }
-                                                        amount={e.amount}
-                                                        neutralAmount
-                                                    />
-                                                </button>
-                                                </Item>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
                 ) : null}
                     </div>
                     </div>

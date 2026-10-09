@@ -231,7 +231,6 @@ export default function ActivityPage() {
                             <ToggleGroup
                                 type="single"
                                 variant="outline"
-                                shape="pill"
                                 size="sm"
                                 value={filter}
                                 onValueChange={(next) => setFilter(next as typeof filter)}

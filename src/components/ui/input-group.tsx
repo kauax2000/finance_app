@@ -113,6 +113,9 @@ function InputGroup({
         // `data-[size=md]:h-8` os dois empatariam, e um textarea dentro do
         // grupo ficaria travado em 32px conforme a ordem de emissão.
         fieldControlHeightClassName[size],
+        // Com bloco ou textarea o grupo cresce em altura e veste o raio do
+        // `Textarea`, a linha alta (rodadas 240, 241h e 241p).
+        "has-[>textarea]:rounded-row-lg has-[>[data-align=block-end]]:rounded-row-lg has-[>[data-align=block-start]]:rounded-row-lg",
         pending && "[&>[data-align=inline-end]:not([data-pending])]:hidden",
         className
       )}
@@ -136,7 +139,7 @@ const inputGroupAddonVariants = cva(
   // `has-disabled:opacity-50` da moldura.
   // O que o `Label` já dá — `flex items-center gap-2 text-sm font-medium
   // select-none` — não se repete aqui. Fica o que é do addon.
-  "h-auto cursor-text justify-center py-1.5 text-muted-foreground [&>kbd]:rounded-[calc(var(--radius)-5px)] [&>svg:not([class*='size-'])]:size-4",
+  "h-auto cursor-text justify-center py-1.5 text-muted-foreground [&>svg:not([class*='size-'])]:size-4",
   {
     variants: {
       align: {

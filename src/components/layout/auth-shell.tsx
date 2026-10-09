@@ -61,10 +61,10 @@ export function AuthFormSkeleton({ fields = 2 }: { fields?: number }) {
             {Array.from({ length: fields }, (_, i) => (
                 <div key={i} className="flex flex-col gap-2">
                     <Skeleton className="h-4 w-20" />
-                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full rounded-full" />
                 </div>
             ))}
-            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full rounded-full" />
         </div>
     )
 }

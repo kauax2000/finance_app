@@ -20,23 +20,23 @@ function ToolbarSkeleton() {
         >
             <div
                 className={cn(
-                    "inline-flex h-8 w-fit max-w-full shrink-0 items-stretch gap-0.5 rounded-lg bg-muted p-0.5 pointer-coarse:h-10"
+                    "inline-flex h-8 w-fit max-w-full shrink-0 items-stretch gap-0.5 rounded-full bg-muted p-0.5 pointer-coarse:h-10"
                 )}
             >
                 <div className="flex h-full w-fit min-h-0 items-center gap-0.5 px-0.5">
-                    <Skeleton className="h-[calc(100%-2px)] w-19 shrink-0 rounded-md" />
-                    <Skeleton className="h-[calc(100%-2px)] w-22 shrink-0 rounded-md" />
+                    <Skeleton className="h-[calc(100%-2px)] w-19 shrink-0 rounded-full" />
+                    <Skeleton className="h-[calc(100%-2px)] w-22 shrink-0 rounded-full" />
                 </div>
             </div>
             <div className="ml-auto flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-2">
                 <div className="flex flex-row items-stretch gap-2 md:hidden">
-                    <Skeleton className="h-10 min-w-0 flex-1 rounded-[min(var(--radius-md),12px)]" />
-                    <Skeleton className="size-10 shrink-0 rounded-[min(var(--radius-md),12px)]" />
+                    <Skeleton className="h-10 min-w-0 flex-1 rounded-full" />
+                    <Skeleton className="size-10 shrink-0 rounded-full" />
                 </div>
                 <div className="hidden shrink-0 md:flex md:flex-wrap md:items-center md:gap-2">
-                    <Skeleton className="h-8 w-30 rounded-md" />
-                    <Skeleton className="h-8 w-26 rounded-md" />
-                    <Skeleton className="h-8 w-30 rounded-md" />
+                    <Skeleton className="h-8 w-30 rounded-full" />
+                    <Skeleton className="h-8 w-26 rounded-full" />
+                    <Skeleton className="h-8 w-30 rounded-full" />
                 </div>
             </div>
         </div>
@@ -70,7 +70,7 @@ function BillCardSkeleton({ seed }: { seed: number }) {
                 <Skeleton className="mt-2 h-3 w-full max-w-56" />
             </CardContent>
             <CardFooter className="justify-end">
-                <Skeleton className="h-8 w-22 rounded-md" />
+                <Skeleton className="h-8 w-22 rounded-full" />
                 <Skeleton shape="tile" />
             </CardFooter>
         </Card>

@@ -43,7 +43,7 @@ function Conteudo({ titulo }: { titulo: string }) {
     <div className="flex flex-col gap-2 px-4 pt-14 pb-40">
       <p className="text-lg font-semibold">{titulo}</p>
       {Array.from({ length: 18 }).map((_, i) => (
-        <div key={i} className="flex items-center justify-between rounded-xl bg-muted px-3 py-3">
+        <div key={i} className="flex items-center justify-between rounded-surface bg-muted px-3 py-3">
           <span className="text-sm">Mercado</span>
           <MoneyDisplay value={-(i + 1) * 37.4} size="sm" />
         </div>

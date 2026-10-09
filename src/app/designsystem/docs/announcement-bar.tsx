@@ -299,7 +299,7 @@ function EntradaDemo() {
       <Button variant="secondary" size="sm" className="self-start" onClick={() => setOffline((v) => !v)}>
         {offline ? "voltar a conexão" : "derrubar a conexão"}
       </Button>
-      <div className="h-44 overflow-y-auto rounded-lg border border-border">
+      <div className="h-44 overflow-y-auto rounded-surface border border-border">
         {offline ? (
           <AnnouncementBar tone="warning" position="sticky" size="sm" icon={<SignalSlashIcon />}>
             Você está offline.

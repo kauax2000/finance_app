@@ -819,11 +819,11 @@ function ComboboxItem({
         toggle(value, { label: texto, exclusive: ausencia })
         onSelect?.(next)
       }}
-      // A linha de 32 com 8px de recuo — a do popover da demonstração —, e
-      // `pr-8` para o tique. Os 32 saem do `py-1.5` sobre a entrelinha de 20,
-      // e não de um `h-*`: a linha não é um degrau da escada de controles.
+      // A linha de 36 com 8px de recuo — a dos outros dropdowns desde a rodada
+      // 243d —, e `pr-8` para o tique. Os 36 saem do `py-2` sobre a entrelinha
+      // de 20, e não de um `h-*`: a linha não é um degrau da escada de controles.
       className={cn(
-        "gap-2 px-2 py-1.5 pr-8",
+        "gap-2 px-2 py-2 pr-8",
         ausencia && "text-muted-foreground",
         className
       )}
@@ -1089,7 +1089,7 @@ function ComboboxCreate({
         setInputText(multiple ? "" : busca)
         if (!multiple) setOpen(false)
       }}
-      className={cn("gap-2 px-2 py-1.5 text-primary-accent", className)}
+      className={cn("gap-2 px-2 py-2 text-primary-accent", className)}
     >
       <PlusIcon aria-hidden />
       <span className="min-w-0 truncate">{children(busca)}</span>

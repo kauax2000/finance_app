@@ -14,7 +14,8 @@ import { cn } from "@/lib/utils"
  * ## Marcar floresce (rodada 154)
  *
  * O preenchimento marcado não troca de cor: ele **floresce do centro**, a
- * mesma flor do `Button` (`@utility button-bloom`, `--button-bloom` de 0 a 1),
+ * flor que foi do `Button` até a rodada 240 e hoje é só daqui (`@utility
+ * button-bloom`, `--button-bloom` de 0 a 1),
  * na mola da casa ao marcar e em `--ease-out` ao desmarcar. O tique entra
  * junto, crescendo de 50%; e como ele tem a cor do fundo desmarcado, é a flor
  * que o revela. A borda vira `--primary` no mesmo ritmo.
@@ -37,7 +38,7 @@ import { cn } from "@/lib/utils"
  */
 const checkboxVariants = cva(
   [
-    "group peer relative size-4 shrink-0 rounded border border-input bg-background shadow-xs outline-none",
+    "group peer relative size-4 shrink-0 rounded-sm border border-input bg-background shadow-xs outline-none",
     // A flor do marcado: a cor, a variável ligada nos dois estados cheios, e o
     // ritmo de cada lado — mola ao marcar, `--ease-out` ao desmarcar. A lista
     // de `transition` enumera a variável; `transition-colors` a deixaria de

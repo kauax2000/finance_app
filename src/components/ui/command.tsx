@@ -888,11 +888,16 @@ function CommandList({
   // A faixa do topo zera aqui — ela existia para o conteúdo passar por baixo do
   // campo, e agora não há nada por cima. Declarada no embrulho, ela vence o
   // valor que a raiz publica sem disputar os seletores `has-[…]` de lá.
+  //
+  // O canto é a superfície (22; rodada 243c, a pedido do dono, depois de a
+  // 242c a ter levado à linha alta com os menus), e as linhas são
+  // concêntricas com o recuo real da lista (`px-2`, 8): 22 − 8 = 14 numa
+  // linha de 36.
   return (
     <div
       data-slot="command-dialog-panel"
       className={cn(
-        "relative flex min-h-0 flex-col overflow-hidden rounded-xl ring-1 ring-foreground/10 [--scroll-fade-band-h:0px]",
+        "relative flex min-h-0 flex-col overflow-hidden rounded-surface ring-1 ring-foreground/10 [--scroll-fade-band-h:0px] [--radius-parent:var(--radius-surface)] [--radius-inset:--spacing(2)]",
         menuPanelTintClassName
       )}
     >
@@ -1173,8 +1178,8 @@ function CommandItem({
         "data-selected:bg-accent data-selected:text-accent-foreground data-selected:*:[svg]:text-accent-foreground",
         // `=true` e não por presença: ver o comentário acima.
         "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50",
-        // Na pilha a linha tem 36, e não os 28 dos menus: a paleta é um
-        // destino de busca, lida uma linha por vez, e não uma lista de ações.
+        // Na pilha a linha tem 36. Desde a rodada 243d a geometria dos menus
+        // já mede 36 (`py-2`), e isto só garante o piso se ela mudar.
         naPaleta && "min-h-9",
         className
       )}
@@ -1287,7 +1292,7 @@ function CommandPreview({
       aria-label="Pré-visualização"
       className={cn(
         "hidden w-72 shrink-0 flex-col gap-3 overflow-y-auto p-4 text-sm md:flex",
-        naPilha && cn("rounded-xl ring-1 ring-foreground/10", menuPanelTintClassName),
+        naPilha && cn("rounded-surface ring-1 ring-foreground/10", menuPanelTintClassName),
         className
       )}
     >

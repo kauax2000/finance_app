@@ -45,7 +45,7 @@ export function FilterChipRemoveButton(
             size="icon-xs"
             {...props}
             className={cn(
-                "size-5 shrink-0 rounded-full text-current opacity-70 hover:opacity-100 active:opacity-100 [--button-bloom-fill:color-mix(in_oklab,var(--success)_20%,transparent)] dark:[--button-bloom-fill:color-mix(in_oklab,var(--success)_20%,transparent)]",
+                "size-5 shrink-0 rounded-full text-current opacity-70 hover:opacity-100 active:opacity-100 [--button-hover-fill:color-mix(in_oklab,var(--success)_20%,transparent)] dark:[--button-hover-fill:color-mix(in_oklab,var(--success)_20%,transparent)]",
                 props.className
             )}
         >

@@ -225,7 +225,7 @@ function DemoNaTela() {
           </>
         }
       />
-      <ViewportFrame title="Barra do topo numa janela" height={360} className="rounded-lg" screenClassName="bg-background">
+      <ViewportFrame title="Barra do topo numa janela" height={360} className="rounded-surface" screenClassName="bg-background">
         <Rolagem>
           <Barra
             size={size}
@@ -294,7 +294,7 @@ const SECOES = [
 function DemoComALateral() {
   return (
     <div className="p-4">
-      <ViewportFrame title="A barra do app ao lado da barra lateral" height={320} className="rounded-lg" screenClassName="bg-background">
+      <ViewportFrame title="A barra do app ao lado da barra lateral" height={320} className="rounded-surface" screenClassName="bg-background">
         <SidebarProvider>
           <Sidebar collapsible="icon">
             <SidebarContent>
@@ -406,8 +406,8 @@ export default function TopBarDoc() {
         code={`<TopBarSkeleton actions={2} />`}
         previewClassName="flex-col items-stretch gap-3"
       >
-        <TopBarSkeleton className="rounded-lg border border-border" />
-        <TopBarSkeleton size="lg" actions={1} className="rounded-lg border border-border" />
+        <TopBarSkeleton className="rounded-surface border border-border" />
+        <TopBarSkeleton size="lg" actions={1} className="rounded-surface border border-border" />
       </DocSection>
 
       <DocNote title="Grudada fica abaixo da faixa de aviso">

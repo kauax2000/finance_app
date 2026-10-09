@@ -35,9 +35,9 @@ import { cn } from "@/lib/utils"
  *
  * ## As versões da rodada 183
  *
- * - **`shape="pill"`** — o eixo do `Button`, com meio degrau a mais de recuo;
- *   nos degraus de ícone vira círculo. Os filtros da atividade o escreviam à
- *   mão (`rounded-full px-3`).
+ * - **A cápsula** — era `shape="pill"`, e desde a rodada 240 é a forma de
+ *   todo toggle, como a de todo controle (o iOS 26); nos degraus de ícone vira
+ *   círculo. A amostra (`swatch`) fica de canto, a família do `ColorTile`.
  * - **`size="icon-*"`** — quadrados, 28 · 32 · 36 · 40, como a coluna de
  *   ícone do `Button`. As grades de ícone escreviam `size-9` e `size-11`.
  * - **`variant="swatch"` com `color`** — a amostra de cor dos seletores. A
@@ -66,7 +66,7 @@ import { cn } from "@/lib/utils"
  */
 const toggleVariants = cva(
   cn(
-    "group/toggle inline-flex items-center justify-center gap-2 rounded-lg border border-transparent bg-transparent",
+    "group/toggle inline-flex items-center justify-center gap-2 rounded-full border border-transparent bg-transparent",
     // Desligado é tinta apagada. É metade do sinal: sem essa diferença de
     // tinta, ligar só acrescentaria um fundo, e o fundo sozinho é a caixa que
     // fazia o controle parecer botão.
@@ -109,7 +109,7 @@ const toggleVariants = cva(
         // tique. O realce de cinza não vale aqui — a cor é o conteúdo —, e o
         // `outline` não disputa com o anel de foco, que é `box-shadow`.
         swatch: [
-          "p-0 bg-(--tile-surface) text-(--tile-ink)",
+          "rounded-lg p-0 bg-(--tile-surface) text-(--tile-ink)",
           "hover:bg-(--tile-surface) active:bg-(--tile-surface)",
           "data-[state=on]:bg-(--tile-surface) data-[state=on]:text-(--tile-ink)",
           "data-[state=on]:hover:bg-(--tile-surface) data-[state=on]:active:bg-(--tile-surface)",
@@ -123,17 +123,13 @@ const toggleVariants = cva(
         // constante não se prefixa; `toggle.test.ts` cobra a igualdade. O
         // foco é `outline`, porque o anel de 1px da escolha já é `ring`.
         chip: [
-          "rounded-full text-xs font-semibold",
+          "text-xs font-semibold",
           "bg-muted text-muted-foreground",
           "hover:bg-muted hover:text-foreground active:bg-muted active:text-foreground",
           "data-[state=on]:bg-primary-muted data-[state=on]:text-primary-muted-foreground data-[state=on]:ring-1 data-[state=on]:ring-primary-accent/25 dark:data-[state=on]:ring-primary-accent/40",
           "data-[state=on]:hover:bg-primary-muted data-[state=on]:active:bg-primary-muted",
           "focus-visible:border-transparent focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-ring",
         ].join(" "),
-      },
-      shape: {
-        rounded: "",
-        pill: "rounded-full",
       },
       // A versão da amostra (rodada 184): as utilities só publicam
       // `--tile-surface` e `--tile-ink`, então fora do `swatch` não pintam nada.
@@ -146,9 +142,10 @@ const toggleVariants = cva(
       // `SelectTrigger` e `NativeSelect` justamente para o compilador acusar
       // quem o escrevesse; este era o último lugar que ainda o dizia.
       size: {
-        sm: "h-7 min-w-7 px-1.5 text-xs",
-        md: "h-8 min-w-8 px-2",
-        lg: "h-9 min-w-9 px-2.5",
+        // O recuo é o da cápsula: meio degrau acima do retângulo de antes.
+        sm: "h-7 min-w-7 px-2.5 text-xs",
+        md: "h-8 min-w-8 px-3",
+        lg: "h-9 min-w-9 px-3.5",
         // A coluna de ícone do `Button`, degrau a degrau (rodada 183).
         "icon-sm": "size-7 p-0",
         "icon-md": "size-8 p-0",
@@ -156,19 +153,8 @@ const toggleVariants = cva(
         "icon-xl": "size-10 p-0 [&_svg:not([class*='size-'])]:size-5",
       },
     },
-    // A pílula ganha meio degrau de recuo, como no `Button`.
-    compoundVariants: [
-      { shape: "pill", size: "sm", class: "px-2.5" },
-      { shape: "pill", size: "md", class: "px-3" },
-      { shape: "pill", size: "lg", class: "px-3.5" },
-      // A ficha é pílula por natureza, com o mesmo meio degrau de recuo.
-      { variant: "chip", size: "sm", class: "px-2.5" },
-      { variant: "chip", size: "md", class: "px-3" },
-      { variant: "chip", size: "lg", class: "px-3.5" },
-    ],
     defaultVariants: {
       variant: "plain",
-      shape: "rounded",
       tint: "vivid",
       size: "md",
     },
@@ -249,7 +235,6 @@ function ToggleContent({
 function Toggle({
   className,
   variant,
-  shape,
   tint,
   size,
   icon,
@@ -266,7 +251,7 @@ function Toggle({
     <TogglePrimitive.Root
       data-slot="toggle"
       data-variant={variant ?? "plain"}
-      className={cn(toggleVariants({ variant, shape, tint, size, className }))}
+      className={cn(toggleVariants({ variant, tint, size, className }))}
       style={toggleStyle(color, style)}
       {...props}
     >

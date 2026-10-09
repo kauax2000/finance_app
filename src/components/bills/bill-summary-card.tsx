@@ -176,7 +176,7 @@ export function BillSummaryCard({
                     </DescriptionList>
 
                     <div className="grid grid-cols-3 gap-2 text-center">
-                        <div className="rounded-lg border border-border/60 bg-background/60 px-2 py-2">
+                        <div className="rounded-row border border-border/60 bg-background/60 px-2 py-2">
                             <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                 Pago 90d
                             </p>
@@ -187,7 +187,7 @@ export function BillSummaryCard({
                                 {paid90Count} pag.
                             </p>
                         </div>
-                        <div className="rounded-lg border border-border/60 bg-background/60 px-2 py-2">
+                        <div className="rounded-row border border-border/60 bg-background/60 px-2 py-2">
                             <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                 Média
                             </p>
@@ -199,7 +199,7 @@ export function BillSummaryCard({
                                 )}
                             </p>
                         </div>
-                        <div className="rounded-lg border border-border/60 bg-background/60 px-2 py-2">
+                        <div className="rounded-row border border-border/60 bg-background/60 px-2 py-2">
                             <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                                 Atrasos 90d
                             </p>

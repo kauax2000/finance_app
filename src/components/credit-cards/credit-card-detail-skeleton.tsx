@@ -37,7 +37,7 @@ function SectionTitleRow({
                 <div className="flex h-6 min-w-0 items-center">
                     <Skeleton className={titleClassName} />
                 </div>
-                <Skeleton className="h-8 w-40 shrink-0 rounded-md pointer-coarse:h-10" />
+                <Skeleton className="h-8 w-40 shrink-0 rounded-full pointer-coarse:h-10" />
             </div>
         )
     }
@@ -49,7 +49,7 @@ function SectionTitleRow({
                 </div>
                 <div className="flex shrink-0 items-center justify-end gap-1">
                     <Skeleton shape="tile" />
-                    <Skeleton className="h-8 w-full max-w-36 rounded-md" />
+                    <Skeleton className="h-8 w-full max-w-36 rounded-full" />
                     <Skeleton shape="tile" />
                 </div>
             </div>
@@ -76,7 +76,7 @@ function CategorySpendSectionSkeleton() {
                 {CATEGORY_ROW_KEYS.map((key) => (
                     <li
                         key={key}
-                        className="rounded-lg border border-border/50 px-3 py-2.5"
+                        className="rounded-row border border-border/50 px-3 py-2.5"
                     >
                         <div className="flex min-w-0 items-center gap-2">
                             <Skeleton className="size-8 shrink-0 rounded-md sm:size-9" />
@@ -135,7 +135,7 @@ function InvoicePanelSkeleton() {
                 <CardContent className="space-y-5 pb-4 pt-5">
                     <CategorySpendSectionSkeleton />
 
-                    <div className="rounded-md border border-border/50 bg-muted/20 px-2.5 py-2 dark:bg-muted/10">
+                    <div className="rounded-row border border-border/50 bg-muted/20 px-2.5 py-2 dark:bg-muted/10">
                         <div className="flex items-start gap-2">
                             <Skeleton className="size-7 shrink-0 rounded-full" />
                             <div className="min-w-0 flex-1 space-y-2 pt-0.5">
@@ -176,7 +176,7 @@ function InstallmentsBlockSkeleton() {
                         {INSTALLMENT_KEYS.map((key) => (
                             <li
                                 key={key}
-                                className="overflow-hidden rounded-lg border border-border/60 bg-muted/15 dark:bg-muted/10"
+                                className="overflow-hidden rounded-row border border-border/60 bg-muted/15 dark:bg-muted/10"
                             >
                                 <CardToolbar>
                                     <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
@@ -258,7 +258,7 @@ export function CreditCardDetailSkeleton() {
                 <div className="mx-auto w-full max-w-sm">
                     <Skeleton className="aspect-[1.586] w-full rounded-2xl" />
                 </div>
-                <Skeleton className="h-8 w-full max-w-64 rounded-md" />
+                <Skeleton className="h-8 w-full max-w-64 rounded-full" />
             </div>
 
             <Card padding="none">
@@ -274,7 +274,7 @@ export function CreditCardDetailSkeleton() {
                     </div>
                 </CardHeader>
                 <CardContent className="border-t border-border/50 px-4 py-3">
-                    <Skeleton className="h-8 w-full rounded-md" />
+                    <Skeleton className="h-8 w-full rounded-full" />
                 </CardContent>
             </Card>
 

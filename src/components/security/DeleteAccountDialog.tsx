@@ -240,7 +240,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                                 return (
                                     <li
                                         key={w.id}
-                                        className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm"
+                                        className="rounded-row border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm"
                                     >
                                         <span className="block font-medium text-foreground">{w.name}</span>
                                         {i === undefined ? (

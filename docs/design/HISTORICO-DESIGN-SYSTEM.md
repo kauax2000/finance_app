@@ -19095,3 +19095,894 @@ embaixo, sob as cápsulas.
 **O conserto.** A sombra saiu. As três peças ficam no mesmo plano sobre o véu
 (`--overlay` com borrão), que já é o que separa a paleta da página — e é a
 mesma direção das pílulas sem sombra no fundo da rodada 238.
+
+### Rodada 240 — o raio no modelo do iOS 26
+
+**O pedido.** Com o branding novo, o dono quis o raio do sistema parecido com o
+do iOS 26 (Liquid Glass) — só o raio, sem vidro nem cor —, com referências do
+Ajustes, de um menu de contexto, da Central de Controle e do compositor do
+WhatsApp.
+
+**A referência.** A sessão 356 da WWDC25 ("Get to know the new design system")
+e a página "Adopting Liquid Glass" da Apple: três formas — **fixa**,
+**cápsula** (metade da altura) e **concêntrica** (raio do pai menos o recuo,
+com mínimo) —; controle é cápsula no toque; as seções agrupadas subiram para
+~26pt, a metade da linha de 52; sheets ganharam raio maior.
+
+**As decisões do dono.** Cápsula em todos os degraus e nos dois apontadores;
+a escala cheia (superfície 26, modal 34, concêntrico dentro); sem squircle.
+
+**O que mudou.**
+- `--radius-surface` (1,625rem) e `--radius-sheet` (2,125rem) no `@theme`, e a
+  `@utility concentric`. O `cn` passou a conhecer os dois nomes — sem isso
+  `cn("rounded-lg", "rounded-surface")` deixava as duas classes.
+- O `lg` deixou de servir dois papéis (controle **e** placa flutuante). Os
+  controles foram para `rounded-full`, e os eixos `shape` do `Button` e do
+  `Toggle` saíram do tipo, com o recuo da antiga pílula virando o recuo de cada
+  degrau. Superfícies em 26, modais em 34.
+- Os dois aninhamentos não concêntricos que havia — painel de menu 10 com itens
+  8, plate do `CommandDialog` 14 com itens 8 — viraram a conta: 26 − 4 = 22, que
+  numa linha de 29px renderiza cápsula.
+- O `Checkbox` usava `rounded` puro, que dava **4px** — o `--radius` mora em
+  `:root` e não no `@theme`, então o Tailwind caía no padrão dele. Virou
+  `rounded-sm`.
+- O app: esqueletos de controle e trilhos segmentados em cápsula, gavetas do
+  telefone em `rounded-t-sheet`, cartões à mão em `rounded-surface` e as caixas
+  dentro de cartão ou folha em `concentric`. O cartão de crédito (objeto
+  físico) e os ladrilhos de ícone ficaram.
+
+**Medido** no catálogo: botão e campo com o raio limitado à metade da altura;
+`Card` 26 e o `CardField` dentro dele 10 (26 − 16); painel de menu 26 e a linha
+22 numa altura de 29; `Dialog` 34.
+
+**Fora, por medição de suporte.** `corner-shape: superellipse()` desenha o canto
+contínuo da Apple, mas só no Chrome/Edge 139+; Safari e iOS não o suportam.
+Fica registrado o passo futuro: `@supports` com o raio compensado ~1,5× (o
+squircle lê menos redondo com o mesmo raio), sem tocar cápsula nem círculo.
+
+### Rodada 240b — um degrau a menos
+
+**O pedido.** Ver a rodada 240 aplicada e pedir as bordas "um ou dois degraus"
+menos arredondadas.
+
+**O que mudou.** A superfície desceu um degrau da escada, de 26 para 22 (o
+`3xl`), e o modal desceu na mesma proporção, de 34 para 28. Os controles
+continuam cápsula, e o concêntrico acompanha sozinho, porque lê os dois tokens:
+a linha de menu passa a 18 (22 − 4), o `CardField` a 6 (22 − 16, no piso), o
+`Dialog` com `--dialog-px` 24 a 6. A propriedade que fazia a seção baixa sair
+cápsula continua, só que o corte vai de 52 para 44px de altura.
+
+### Rodada 240c — o raio se muda na escala, e não no componente
+
+**O pedido.** O dono vai revisar o desenho componente por componente e quer que
+toda mudança de raio aconteça na fundação Shape & Elevation, e não dentro do
+arquivo do componente.
+
+**Uma leitura errada, desfeita na mesma rodada.** A primeira resposta criou um
+token por componente (31: `--radius-button`, `--radius-dialog`…). O dono a
+recusou: não é um token por componente, é **a escala**. Quando ele pedir outro
+raio para um componente, o trabalho é medir o componente contra a escala de
+Shape & Elevation, mostrar como fica e mudar ali — trocando o degrau do
+componente, ajustando um degrau ou propondo um novo.
+
+**O que ficou.** A escala: cápsula (`rounded-full`), superfície
+(`rounded-surface`, 22) e modal (`rounded-modal`, 28 — era `rounded-sheet`,
+renomeado para não ser confundido com o componente `Sheet`), mais o
+concêntrico e a escada pequena. Os dois degraus nomeados moram num bloco
+`@theme static` (o `concentric` os lê em tempo de execução) com o comentário
+da regra. A página Shape & Elevation mostra a escala com o valor ao vivo e
+quem veste cada degrau, e `radius-roles.test.ts` proíbe raio em número nos
+arquivos de `ui/`.
+
+### Rodada 240d — as molduras do catálogo vestem a escala
+
+**O pedido.** Na página Brand, o dono viu que os mostradores do catálogo — o
+bloco do import, os cartões de especificação, as caixas internas e as molduras
+das demonstrações — não tinham mudado com a escala de raio, e pediu que virassem
+componentes do design system.
+
+**A causa.** Eram molduras escritas à mão em `ds-doc.tsx` e `ds-kit.tsx`
+(`rounded-xl border border-border bg-card`, `rounded-xl bg-card ring-1`), e
+outras ~60 dentro das páginas.
+
+**O que mudou.**
+- `DocMeta` é `Card variant="muted" padding="none"` com o caminho na
+  `CardNote` (o fio sob o import saiu, como em toda tira do sistema);
+  `Preview` e `PropsTable` são `Card padding="none"`; `Spec` é `Card` com
+  `CardToolbar variant="title"`.
+- O corpo do `Spec` (16px) e o do `Preview` (24px) publicam `--radius-inset`,
+  e `SpecimenPanel`, `SurfaceNest` e a amostra de cor vestem `concentric` —
+  6px dentro de um cartão de 22.
+- Nas páginas: as molduras passadas a um componente (Calendar, ScrollArea,
+  Resizable, Skeleton, `ViewportFrame`, o viewport do Carousel) são
+  `rounded-surface`; as caixas soltas dentro do mostrador, `concentric`; o
+  campo de marca e a placa da Sidebar, `rounded-modal`. Ladrilhos fixos
+  (`size-9`, `size-16`) ficam na escada pequena.
+- `radius-roles.test.ts` passou a reprovar `rounded-xl|2xl|3xl` também no
+  catálogo (fora o texto em `<code>`).
+
+### Rodada 240f — a superfície desce para 16
+
+**O pedido.** Reduzir o raio das caixas do catálogo.
+
+**Medido na escala, como a regra pede.** As caixas vestem `rounded-surface`
+(22). Três caminhos foram postos lado a lado com as consequências: o degrau a
+16, o degrau a 12 (linha de menu e tooltip deixariam de ser cápsula acima de
+24px) e um degrau novo só para o catálogo. O dono escolheu **o degrau a 16**,
+valendo para toda superfície — Card, menus, popover, alerta, tooltip, toast,
+tabela e as molduras do catálogo. O corte da cápsula automática vai de 44 para
+32px de altura; o concêntrico dentro de um cartão continua no piso de 6.
+
+**Desfeito na mesma sessão.** Vista no catálogo, a superfície a 16 não ficou:
+o dono pediu a volta para 22, e o degrau voltou ao valor da rodada 240b.
+
+### Rodada 240g — o botão flutuante
+
+**O pedido.** O botão de copiar do bloco do import "em estado flutuante".
+
+**A decisão.** O `Button` não tinha esse estado, e escrever a receita no
+catálogo seria estilo solto. Com o ok do dono, entrou `variant="floating"`:
+a placa das peças soltas (`--popover` chapado, anel de 1px, `shadow-sm`,
+`bg-clip-border` pela razão do `secondary`), a tinta do `tertiary` e o
+florescer do centro no cursor. Ele fica fora da escada, ao lado do `outline`,
+na página do `Button`; `button-primary.test.ts` (9d) tranca a receita. O
+`CopyButton` do catálogo o veste — nos 80 blocos de import e no rodapé de
+código dos mostradores.
+
+
+### Rodada 240h — o mostrador em três peças soltas
+
+**O pedido.** Na estética das placas soltas, separar a parte de baixo dos
+mostradores do catálogo: o mostrador em cima e, embaixo, o "Código" e o botão
+de copiar, cada um solto.
+
+**O que mudou.** O `Preview` deixou de ser uma caixa com rodapé. São três
+peças a 8px umas das outras: o `Card` do espécime; o "Código" como
+`Collapsible variant="card"` com a `CollapsibleRow` (`xl`, marcador à
+esquerda) e o código abrindo dentro do mesmo cartão, sem fio; e o copiar
+(`Button variant="floating"`, 28 × 28) fora do cartão, centrado na linha do
+"Código" — `mt-1.5` mais `translate-y-px` pela borda de 1px do cartão
+(medido: 1px acima do centro sem ele), `mt-2` no dedo. O `PreviewCode` deixou
+de desenhar o próprio fio e tinta, e com isso a exceção nomeada da regra J
+para ele não tem mais objeto.
+
+**Ajustado na mesma sessão.** A `CollapsibleRow` (40px, corpo `sm`, tinta
+cheia, rótulo que sublinha) deixou o "Código" pesado demais para um caminho
+secundário. Ele virou uma cápsula de 28 — a altura do copiar —, com o
+`CollapsibleTrigger` cru: texto `xs` em `--muted-foreground` que só acende no
+cursor e aberto, sem sublinhado, marcador de 14, recuo de 12. Os dois lado a
+lado leem como um par, e os centros coincidem (medido, fechado e aberto).
+
+**Desfeito.** Visto inteiro, o dono preferiu a forma anterior: o mostrador
+voltou a ser uma caixa só, com o "Código" e o copiar no rodapé sob um fio (o
+`PreviewCode` de antes, que é a exceção nomeada da regra J). O copiar continua
+no `variant="floating"` da rodada 240g.
+
+**O copiar voltou ao ghost.** Visto nas duas caixas, o dono pediu o botão de
+copiar em `tertiary` — primeiro no rodapé dos mostradores, depois no bloco do
+import. A variante `floating` fica no `Button`, documentada e testada, sem
+consumidor por enquanto.
+
+
+### Rodada 240j — a lista do `Spec` vira peça do catálogo
+
+**O pedido.** A caixa "Família → peças" da página Brand foi redesenhada, e o
+dono notou que nas outras páginas a mesma caixa continuava com o desenho
+antigo: ela não era componente.
+
+**A causa.** A lista dentro de um `Spec` com `bodyClassName="p-0"` era escrita
+à mão em quatro páginas — Brand, Colors ("Papel → token"), Layers ("Do toast
+ao conteúdo") e Touch & safe area ("Da solta à de mouse") —, cada uma com o
+seu `divide-y` ou `border-b … last:border-b-0` cheio.
+
+**O que mudou.** O `ds-kit` ganhou `SpecList` (o fio `Separator tone="soft"`
+recuado até o texto entre as linhas; o cheio é só o do título do `Spec`),
+`SpecRow` (termo à esquerda numa coluna de `termWidth`, corpo à direita,
+empilhados no telefone, linha de base dividida), `SpecRowDescription` (14px,
+cinza de apoio) e `SpecChips`. As quatro páginas usam as peças; Colors ganhou
+o termo em `font-medium`, como as outras.
+
+### Rodada 240k — o canto de dentro dos painéis de amostra
+
+**Medido na página Colors.** 53 ladrilhos e painéis soltos vestem `concentric`
+fora de qualquer cartão e caem no reserva de 22 — certo, é o concêntrico com
+raio de reserva. Mas 20 peças **dentro** de um painel de amostra (as camadas
+do `SurfaceNest`, as faixas da `Ramp`, os campos `brand-lava` e
+`brand-field`) saíam com 22 ou 10px dentro de um painel de 22 com 16 de
+recuo: o canto de dentro engordava. O `SpecimenPanel` e o `SurfaceNest` não
+publicavam nada para os filhos, e o `concentric` lia o contêiner de fora.
+
+**O conserto.** Os dois painéis publicam, para o filho direto,
+`--radius-parent: var(--radius-surface)` e `--radius-inset: 16px`
+(`PAINEL_PUBLICA`, no `ds-kit`); as faixas da `Ramp` e os dois campos de marca
+viraram `concentric`. Medido depois: as 20 peças em 6px (22 − 16, o piso). Os
+chips de preenchimento do `SurfaceNest` ficam na escada pequena.
+
+**Ajustado (240l).** No `SurfaceNest` a conta concêntrica batia no piso já na
+primeira camada (22 − 16 = 6) e achatava as três, e os chips de preenchimento
+(10) ficavam mais redondos que a caixa (6). A pedido do dono — "use o
+componente shape" —, cada peça veste o degrau da escala que ela tem na tela:
+as camadas `--background`, `--card` e `--popover` são superfícies
+(`rounded-surface`, como o `Card` e o `Popover`), e os preenchimentos
+`--muted`, `--accent` e `--secondary` são de controle e chip (cápsula).
+
+### Rodada 240m — o `Code chip` vira cápsula
+
+**Medido contra a escala.** O `Code variant="chip"` vestia `rounded-sm` (6px),
+o degrau da peça miúda dentro de texto, e era o único chip do sistema em
+retângulo — o `Badge` e os chips de filtro são cápsula. Ele passou a
+`rounded-full`, com meio degrau a mais de recuo lateral (`px-2`, era `px-1.5`),
+pela mesma razão do `Button`: a curva come o canto. Só o catálogo o usa. Na
+página Shape & Elevation ele saiu da linha de `rounded-sm` e entrou na da
+cápsula.
+
+**Ajustado.** Em cápsula o dono o recusou. Num chip de 20px de altura,
+`rounded-lg` (10) já fecharia em cápsula, então o degrau ficou `rounded-md`
+(8px) — um acima do original —, com o recuo de volta a `px-1.5`. Na página
+Shape & Elevation ele mora na linha de `rounded-md`.
+
+
+**Ladrilhos da Iconography (240m).** Os três ladrilhos de 64px de "Por que o
+conjunto muda" vestiam `rounded-lg` à mão. Postos os dois papéis da escala lado
+a lado — superfície (22) e concêntrico (6, o piso dentro do mostrador) —, o
+dono escolheu a superfície: `rounded-surface`.
+
+### Rodada 240n — o catálogo veste os papéis da escala
+
+**O pedido.** Na rampa categórica da página Colors, as faixas de dentro
+(`concentric`, 6px dentro de um painel de 22) não liam como "as bordas do
+sistema"; o dono pediu para consertar toda borda do catálogo que não usasse o
+componente de Shape & Elevation.
+
+**O que mudou.** Todo `concentric` do `/designsystem` virou `rounded-surface`
+(painéis de amostra, ladrilhos de token, faixas da `Ramp`, molduras das
+páginas, campos de marca), e os blocos e linhas escritos com `rounded-md` ou
+`rounded-lg` foram para o papel do que representam: placeholder, bloco e
+linha de lista como superfície; o trilho e o pino da demonstração de movimento
+e os alvos de toque como cápsula. Saíram o `PAINEL_PUBLICA` e os
+`--radius-inset` do corpo do `Spec` e do `Preview`, que só serviam ao
+concêntrico. Ficam na escada pequena, de propósito: o chip de código
+(`rounded-md`, 240m), as linhas de texto falso, a amostra de 12px da legenda,
+as miniaturas e os ladrilhos de 36, e o foco do logo e do link de pular no
+cabeçalho do catálogo. Medido na Colors depois: só três raios na página —
+22 (superfície), 8 (chip de código) e cápsula.
+
+
+### Rodada 241 — o primário fica chapado, o colorido vira marca e o hover deixa de florescer
+
+**O pedido.** O dono pediu que o primário deixasse de acender o degradê no
+cursor e mantivesse a tecla com um hover padrão; o degradê vira uma variante da
+marca. E que `outline`, `floating`, `tertiary`, `destructive` e os outros pesos
+perdessem a animação orgânica do hover.
+
+**O que mudou.**
+- `primary` é a tecla chapada, e escurece para `--primary-hover` no cursor, no
+  toque e em `aria-expanded`.
+- O desenho de antes (o Button Colorful das rodadas 149 a 151) é o
+  `brandColorful`, intacto: a mesma `@utility button-colorful` e a mesma mola.
+- `secondary`, `tertiary`, `outline`, `floating` e `destructive` trocaram a
+  elipse que florescia do centro (`button-bloom`, desde a 152) por uma camada
+  chapada (`@utility button-hover`), que esmaece no ritmo da base
+  (`--duration-fast`, `--ease-out`). Ela continua sendo camada, e não
+  `background-color`, porque os alfas são compostos sobre o repouso e quem
+  muda o realce por fora só declara a cor.
+- O contrato mudou de nome com o mecanismo: `--button-bloom-fill` →
+  `--button-hover-fill` e `--button-bloom` → `--button-hover` no `Alert`, na
+  `AnnouncementBar`, na `Table`, no `TopBar`, no `WorkspaceSwitcher`, nos
+  chips de filtro e na lateral do catálogo. A `button-bloom` fica só para o
+  `Checkbox`, que não estava no pedido.
+- As páginas `button` e `brand` mostram o `brandColorful` ao lado de `brand` e
+  `brandOutline`; `button-primary.test.ts` e
+  `button-touch-response.test.ts` trancam a troca.
+
+### Rodada 241b — o hover do Button se vê
+
+**O pedido.** Melhorar o contraste do hover.
+
+**A medição** (hover contra repouso, sobre o `--card`):
+
+| Peso | Claro antes → depois | Escuro antes → depois |
+| --- | --- | --- |
+| `primary` | 1,10 → 1,42 | 1,22 → 1,42 |
+| `secondary` | 1,27 (igual) | 1,39 (igual) |
+| `tertiary` | 1,19 → 1,31 | 1,08 → 1,40 |
+| `outline` | 1,14 → 1,31 | 1,14 → 1,44 |
+| `floating` | 1,19 → 1,31 | 1,08 → 1,40 |
+| `destructive` | 1,20 → 1,44 | 1,21 → 1,48 |
+
+**O que mudou.**
+- `--primary-hover` **clareia no claro** (0,145 → 0,32), porque escurecer uma
+  tecla quase preta não aparece; no escuro desce de 0,92 para 0,87. O
+  `brandOutline` lê o mesmo token e ganha junto.
+- `tertiary`, `outline` e `floating` realçam com `--foreground` a 12%, como
+  camada. Um valor só serve os dois temas e qualquer superfície, e o par
+  `dark:` saiu.
+- `destructive`: de 11% para 22% (12,5% → 25% no escuro). O rótulo continua
+  acima de 4,5 sobre o hover (4,64 no claro, 6,80 no escuro).
+- `secondary` ficou, porque `--secondary-hover` serve outras peças.
+
+### Rodada 241c — a linha da Sidebar deixa de ser pílula
+
+**O pedido.** A aba ativa da navegação estava em pílula, e o dono a quis
+retângulo de canto arredondado.
+
+**A medição.** A linha mede 32px (o subitem, 28). Ela vestia `concentric`, que
+dá 22px na barra sem placa (o fallback da superfície) e 20 na `floating`
+(28 − 8). Nos dois casos o raio passa da metade da altura, e o CSS a desenha
+cápsula. O dono escolheu, entre 10, 8 e 6, o degrau `rounded-lg` (10px) da
+escada pequena.
+
+**O que mudou.** `SidebarMenuButton` e `SidebarMenuSubButton` vestem
+`rounded-lg` nas três variantes. A pílula do ativo (`rounded-[inherit]`)
+acompanha sozinha. A placa da `floating` continua publicando
+`--radius-parent`/`--radius-inset` para o que ela contiver.
+
+### Rodada 241d — o degrau da linha
+
+**O pedido.** Na 241c a linha da Sidebar foi para 10px, e o dono quis mais
+raio. A escala não tinha nada entre o `rounded-lg` (10) e a superfície (22),
+que numa linha de 32 volta a ser pílula. Das opções medidas (um degrau novo de
+14 ou de 12, ou a escada pequena inteira subindo para 12, que mexeria em cerca
+de 20 componentes), o dono escolheu o degrau novo de 14.
+
+**O que mudou.**
+- `--radius-row: 0.875rem` no `@theme static` (`rounded-row`), ao lado da
+  superfície e do modal, e o degrau no `extendTailwindMerge`.
+- `SidebarMenuButton` e `SidebarMenuSubButton` o vestem.
+- A página Shape & Elevation lista a linha, com a amostra em 32px.
+- `radius-roles.test.ts` aceita os três degraus no bloco.
+
+Numa linha de 32 o canto mede 14, contra os 16 da cápsula; no subitem de 28,
+14 é exatamente a metade, e ele sai cápsula. Esse custo é conhecido.
+
+### Rodada 241e — a linha desce para 12
+
+O dono pediu o degrau da linha em 12px. `--radius-row` vai de `0.875rem` para
+`0.75rem`. Quem muda junto: só o `SidebarMenuButton` e o
+`SidebarMenuSubButton`, os dois que vestem o degrau. Com isso, o subitem de
+28 deixa de ser cápsula (12 < 14) e fica retângulo arredondado, como a linha.
+
+### Rodada 241f — o degrau da linha alta
+
+A lista de seleção da página Checkbox (linhas de 44) saiu da superfície,
+porque 22 é a metade de 44 e ela lia como pílula, que o dono recusou. A linha
+(12) ficou pequena para ela. O dono escolheu um degrau novo de 16:
+`--radius-row-lg: 1rem` (`rounded-row-lg`), entre a linha e a superfície. A
+Sidebar continua na linha (12). A página Shape & Elevation lista o degrau com a
+amostra em 44px, e `radius-roles.test.ts` aceita os quatro degraus no bloco.
+
+### Rodada 241g — o canto do ColorTile
+
+O dono pediu para ajustar o canto do `ColorTile` com os degraus que já
+existem. Medido antes: 8px no `xs`, `md` e `lg`, 10 no `xl` e no `2xl`. A
+proporção caía conforme o ladrilho crescia, de 33% da altura (24) para 22%
+(36). Agora `md`, `lg`, `xl` e `2xl` vestem a linha (`rounded-row`, 12px), de
+27% a 37% da altura. O `xs` fica no `rounded-md` (8, 33%), porque 12 num
+ladrilho de 24 lê como círculo, que é a forma do `Avatar`. Nenhum degrau da
+escala mudou de valor.
+
+### Rodada 241h — o campo deixa de ser cápsula
+
+O dono pediu para tirar a pílula do input. `fieldSurfaceClassName` foi de
+`rounded-full` para a linha (`rounded-row`, 12px), e com ele mudaram os oito
+controles que o vestem: `Input`, `NativeSelect`, `SelectTrigger`,
+`ComboboxTrigger`, `DatePicker`, `FormPickerPopoverTrigger` e o `InputGroup`.
+Nos degraus de 28 a 40 o canto fica entre 30% e 43% da altura. A linha alta
+(16) ficou de fora porque seria cápsula no `md` de 32. A busca
+(`search-field-classes`) continua pílula. O botão também: o pedido foi só o
+campo.
+
+### Rodada 241i — o InputOTP veste a linha
+
+O `InputOTP` estava no `rounded-lg` (10px) nas pontas do grupo e nas casas
+das pontas, fora do campo, que foi para a linha na 241h. Agora o grupo e as
+casas `first`/`last` vestem `rounded-row` (12px), o mesmo canto do `Input`
+ao lado. As casas do meio continuam retas, porque o grupo é uma peça só.
+
+### Rodada 241j — o raio do campo cresce com o degrau
+
+O dono pediu o raio do `InputOTP` crescendo com o tamanho, e o do `Input`
+também. O raio saiu da superfície e foi para a escada de altura
+(`fieldControlHeightClassName`), que já é o que os oito controles leem por
+degrau. Cada degrau usa um degrau da escala:
+
+| Degrau | Altura | Canto | % da altura |
+| --- | --- | --- | --- |
+| `sm` | 28 | `rounded-lg` 10 | 36% |
+| `md` | 32 | `rounded-row` 12 | 37% |
+| `lg` | 36 | `rounded-row` 12 | 33% |
+| `xl` | 40 | `rounded-row-lg` 16 | 40% |
+
+Entre 12 e 16 a escala não tem degrau, e 16 a 36px ficaria a 2px da cápsula;
+por isso `lg` repete o `md`. O `InputOTP` lê a mesma tabela nas pontas do
+grupo e nas casas da ponta. `field-control-ladder.test.ts` (4b) tranca a
+tabela.
+
+### Rodada 241k — o canto do Kbd
+
+O `Kbd` (20px de altura, um degrau só) estava no `rounded-sm` (6, 30%), e
+passou ao `rounded-md` (8, 40%), a proporção do campo ao lado depois da 241j.
+Dentro do `InputGroup` havia `[&>kbd]:rounded-[calc(var(--radius)-5px)]`, um
+raio de 5px escrito à mão que o `radius-roles.test.ts` não via, porque o
+número vem depois de `calc(`. Ele saiu, e a pastilha veste o próprio degrau
+em todo lugar.
+
+### Rodada 241l — a linha de dentro acompanha a moldura
+
+Na página Resizable, o dono pediu que o canto das linhas casasse com a moldura
+de fora: o de fora maior, o de dentro menor, os dois em harmonia, e não um
+degrau solto da escala. Essa é a regra do `concentric`. As duas molduras
+(`ResizablePanelGroup`, `rounded-surface`) passaram a publicar
+`--radius-parent` (22) e `--radius-inset` (o fio de 1px mais o `p-1.5` da
+lista, 7). As linhas vestem `concentric`: 22 − 7 = 15px, medido.
+
+A rodada 240n tinha tirado o `concentric` do catálogo porque, sem a moldura
+publicar o recuo, ele caía no mínimo de 6. Com a moldura publicando, ele
+acompanha.
+
+Nas linhas de 32 da segunda demonstração, 15 fica a 1px da metade.
+
+### Rodada 241m — o concêntrico perto da borda
+
+O dono pediu a regra da 241l nas outras caixas do catálogo. Uma varredura
+das 83 páginas com Playwright mediu cada caixa aninhada contra a moldura
+visível mais próxima. Quase todas ficam a 17–25px da borda do cartão, onde a
+regra daria 6 (o mínimo). Entre três saídas (piso de 12, regra pura com piso
+de 6, ou só perto da borda), o dono escolheu **só perto da borda**: até ~14px
+a peça acompanha a moldura; dali para dentro fica no próprio degrau.
+
+Perto da borda havia três casos:
+- a linha do extrato da Resizable (241l);
+- o toast da página Layers, a 13px do canto do palco: o palco publica o raio e
+  o recuo, e o toast veste `concentric` (22 − 13 = 9, medido). O popover e o
+  dialog do mesmo palco estão no meio e ficam na superfície;
+- o pino da trilha na página Motion e os exemplos da página Shape &
+  Elevation. O pino já é concêntrico (cápsula em cápsula). Os exemplos ficaram
+  intactos de propósito, porque um deles demonstra justamente o erro ("22
+  dentro de 22").
+
+### Rodada 241n2 — o gatilho de colapso do Resizable em `md`
+
+O `ResizableCollapseTrigger` nascia `icon-sm` (28). A pedido do dono, o
+padrão passou a `icon-md` (32), o degrau padrão do sistema. Quem passar
+`size` continua vencendo.
+
+### Rodada 241o — o Select vira molécula
+
+O dono perguntou por que o `Select` era átomo, se se parece com o campo, e
+pediu que ele compusesse peças reais. Ele importava só a `Caption`, então era
+átomo pela régua do `taxonomy.test.ts`. Agora:
+- o `SelectSeparator` é o `Separator` do sistema (`asChild` no do Radix,
+  sangrando o `p-1` da lista com `-mx-1`). Era um `h-px bg-border` à mão;
+- a descrição da opção é a `Caption` (`asChild` num `span`, porque o `<p>`
+  não cabe dentro do item);
+- no `registry.ts` o `Select` foi para Molecules, em ordem alfabética, e o
+  `ds:docs-map` foi regerado.
+
+**O `Input` ficou de fora, e não por escolha.** O gatilho é o `<button>` com
+papel de combobox do Radix, sem texto digitável, e um `<input>` ali quebraria
+o teclado e o leitor de tela. O que gatilho e `Input` dividem é a superfície
+de `lib/field-classes` (fundo, borda, altura e raio por degrau). O seletor em
+que se digita já existe: é o `Combobox variant="input"`.
+
+### Rodada 241p — o Textarea desce para a linha alta
+
+O dono pediu menos raio no `Textarea`. Ele vestia a superfície (22), que
+pesava num campo de 64px ao lado do `Input` de 12. Agora veste a linha alta
+(`rounded-row-lg`, 16), o mesmo raio do campo `xl`. O `InputGroup` com
+textarea ou bloco acompanha, porque é o mesmo campo alto.
+
+### Rodada 241q — o Tooltip deixa de ser cápsula
+
+A dica vestia a superfície (22) da placa flutuante, e numa linha só (24 a 32px)
+o CSS a desenhava cápsula. O dono pediu que ela não seja pílula. O raio foi
+para o degrau de tamanho: `sm` (24) no `rounded-md` (8) e `md` (32) na linha
+(`rounded-row`, 12), a mesma proporção do campo. Vale nas duas variantes; no
+`contrast` saiu o `rounded-surface` próprio. A placa dos menus não mudou.
+
+### Rodada 241r — a dica menor por padrão
+
+O dono pediu a tooltip menor. O padrão do `TooltipContent` passou de `md`
+(32px, texto de 14) para `sm` (24px, texto de 12, canto de 8). O `md` fica
+para a frase mais longa, com `size="md"`. Nenhuma chamada do app declarava
+`md`, então todas encolhem. As duas `size="sm"` (a coluna de ações da `Table`)
+ficam iguais.
+
+### Rodada 241s — a dica pequena um degrau mais redonda
+
+O dono pediu a tooltip mais arredondada, para combinar com o resto do
+sistema. O `sm` (24px, o padrão) foi do `rounded-md` (8) para o `rounded-lg`
+(10, 42% da altura). O `md` (32) fica na linha (12). Nos dois, o degrau
+seguinte seria a metade da altura, e a dica voltaria a ser pílula.
+
+### Rodada 241t — o Alert desce um degrau, e o pequeno não é pílula
+
+O dono pediu o `Alert` um degrau abaixo, e o corpo pequeno sem pílula. O
+raio saiu da base (`rounded-surface`, 22) e foi para o eixo `size`: `md`
+veste a linha alta (16) e `sm` (34px) a linha (12, 35%). Com 22, o `sm` saía
+cápsula. Isso derruba a regra da rodada do `Alert` de que "o raio não desce
+com o `size`": o campo (241j) e a dica (241q) já descem.
+
+### Rodada 241u — a ação do campo vai para dentro dele
+
+No `ButtonGroup`, o `Input` ficava colado ao botão: o canto de 12 do campo
+encostava na cápsula, e nenhum dos dois cantos fechava. O dono pediu primeiro
+para separar e depois para levar os botões para dentro do campo.
+
+- `ButtonGroup`: com um `Input` filho, as classes da emenda (sobreposição,
+  cantos achatados, filete) deixam de valer (`not-has-[>[data-slot=input]]:`,
+  escrito por extenso) e o grupo ganha `gap-2`. Medido: campo de 12, botão em
+  cápsula, 8px entre os dois. A emenda entre botões continua igual.
+- A página do `ButtonGroup` trocou a seção "Campo no grupo" por "Campo com a
+  sua ação": `InputGroup` com o `InputGroupButton` na ponta (24px dentro do
+  campo de 32, com 4px de respiro). O "Convidar" usa `variant="primary"`.
+
+### Rodada 241v — o Collapsible card deixa de ser pílula
+
+Fechado, o `Collapsible variant="card"` é uma linha de 42px, e a superfície
+(22) o desenhava cápsula. Agora ele veste a linha alta (`rounded-row-lg`, 16).
+O item do `Accordion variant="separated"` tinha o mesmo defeito. Ele mede 34px
+no `md`, e 16 ficaria a 1px da cápsula, então veste a linha (12).
+O `Accordion contained` (uma caixa com vários itens, alta) fica em 22.
+
+### Rodada 241w — o hover do dia escolhido no Calendar
+
+O dia escolhido herdava o hover do `tertiary`: o cursor trocava o número para
+`--foreground`, e no escuro isso é branco sobre a tecla branca (no claro,
+preto sobre a preta), então o número sumia. A camada de 12% do texto também
+não se via sobre a tecla. Agora o dia escolhido e as pontas do intervalo
+realçam como o `primary`: a tecla vai a `--primary-hover` e o número fica em
+`--primary-foreground`, com o par `dark:` porque `dark:hover:text-foreground`
+empatava. O meio do intervalo (`--muted`) continua com o realce do
+`tertiary`, que ali se vê.
+
+### Rodada 241x — as pontas do intervalo viram para fora
+
+No `Calendar`, a ponta de início de um intervalo saía reta à esquerda e
+redonda do lado da faixa, e a de fim o contrário: as meias-luas viravam para
+dentro. A causa era aritmética. O botão somava `rounded-full`
+(`calc(infinity·1px)`, 3,3·10⁷px) a `rounded-l-(--cell-radius)` (9999px) na
+mesma aresta. Quando a soma dos raios passa do lado, o CSS encolhe todos na
+mesma proporção, e o lado de 9999 caía a ~0,01px. Agora a ponta de início é
+`rounded-r-none` e a de fim `rounded-l-none`: redondas para fora, retas do
+lado da faixa, completando-a. Um intervalo de um dia só é círculo. Medido:
+início 3,3·10⁷/0 e fim 0/3,3·10⁷.
+
+### Rodada 241y — a legenda do Calendar ganha faixa própria
+
+A legenda dos marcadores ficava colada à última semana, alinhada à esquerda e
+com 12px entre os itens, e lia como mais uma linha da grade. Agora ela é uma
+faixa: um `Separator tone="soft"` a separa da grade, os itens ficam
+**centrados** sob as sete colunas, com 16px entre eles e 6px entre o ponto e
+o nome, e cada item não quebra no meio. O ponto da legenda tem 8px, o dobro do
+da célula (4), porque ali ele é a chave. O `data-slot="calendar-legend"` foi
+para o invólucro, e o brotar do `DatePicker` (`globals.css`) continua
+achando-o.
+
+### Rodada 242 — a agenda do Calendar vira grade de fios
+
+**O pedido.** "Melhore o design deste componente como um todo", olhando a
+`Calendar variant="agenda"`.
+
+**O levantamento.**
+- A raiz era uma placa escura de cantos retos (`bg-background`, `p-0`, sem
+  raio) dentro do cartão arredondado, e os dias eram 42 caixinhas
+  (`rounded-lg`, borda e cartão próprios).
+- O mês vizinho pesava igual ao mês atual, e o fim de semana não se
+  distinguia.
+- As setas ficavam nas pontas, e o "Hoje", embaixo da grade.
+- O conteúdo do dia era escrito à mão em cada tela: o `Badge` do catálogo e o
+  `EventChips` do dashboard, com `tagChip*`, "+N" e `title.slice()`.
+- No telefone, o dashboard trocava para a grade de pontos por `isMobile` e
+  ainda escrevia uma lista própria.
+
+**As escolhas do dono** (as quatro perguntas): a grade de fios; todas as peças
+(`CalendarEvent`, o "+N", o esqueleto e o Hoje no cabeçalho); todos os
+comportamentos (lista quando estreita, dia escolhido, fim de semana); e o
+calendário do dashboard migrando junto.
+
+**O que mudou.**
+- **Moldura.** O `month_grid` vira uma moldura flex (`rounded-surface`,
+  `border`, `bg-card`, `overflow-hidden`). O `thead` e o `tbody` viram blocos
+  sozinhos, por serem itens de flex.
+- **Células.** O `td` desenha só o fio à direita e embaixo; a última coluna e
+  a última semana não desenham. As colunas têm `w-0 flex-1`. Medido antes
+  disso: a ficha longa alargava a coluna, e a régua desalinhava.
+- **Realce e foco.** O realce é a camada do `Button` a 5%, e o foco é um anel
+  interno.
+- **Véus.** O mês vizinho fica em `muted/30` e o fim de semana em `muted/15`.
+  O fim de semana entra como modificador `dayOfWeek`, com
+  `[&:not([data-outside])]`, porque as duas classes de fundo brigariam pela
+  ordem de emissão.
+- **Cabeçalho.** O mês fica à esquerda, em `text-base` e com a primeira letra
+  maiúscula. O `Nav` é sobrescrito para pôr o "Hoje" antes das setas, só na
+  agenda com `showToday`.
+- **`CalendarEvent`.** Um contexto de forma decide entre a ficha `-muted` de
+  20px na grade (um `span`, porque o dia já é o botão) e a linha de 44px na
+  lista (`concentric` dentro da moldura da lista, e `button` com `onSelect`).
+  **O valor saiu da ficha**: numa coluna de 123px ele espremia o título para
+  "Spo…" e "Co…".
+- **`CalendarEvents max`.** Mostra os primeiros eventos e um "+N mais" na
+  grade, e todos na lista. O dia aponta o conteúdo em `aria-describedby`.
+- **A lista.** Abaixo de 40rem da própria largura, a lista (`useDayPicker`,
+  os dias com conteúdo, "Hoje · " no dia de hoje, `listEmpty`) substitui a
+  grade, por container query.
+- **Dia escolhido.** Fica `muted` com um anel interno (`AGENDA_SELECIONADO`).
+- **`CalendarSkeleton`.** Tem as variantes `default` e `agenda`.
+- **Dashboard.**
+  - Uma agenda só; saíram o `EventChips`, o ramo `isMobile` (os pontos e a
+    lista à mão) e o `todayYmd`.
+  - Entrou `paymentEventTone` em `payment-event-badge.ts`.
+  - O dia do popover fica marcado (`mode="single"`).
+  - Na lista, o evento abre direto o detalhe ou a prévia.
+  - É mudança de jornada: o `JORNADAS.md`, o template do Atlas e o Atlas
+    republicado foram atualizados.
+- **Página do catálogo.** A agenda numa `ViewportFrame` com os controles
+  (`max`, Hoje, Dia escolhido, Sem eventos), a lista num `IphoneFrame`, o
+  esqueleto e as `PropsTable` das peças.
+- **Teste.** `calendar-agenda.test.ts` é novo.
+
+**Ficou de fora.** `limitMobileCalendarDayGroups` continua exportada e
+testada, mas o calendário não a usa mais: a lista mostra o mês inteiro.
+
+### Rodada 242b — o esqueleto da agenda ocupa a largura
+
+No catálogo, o `CalendarSkeleton variant="agenda"` saía espremido em 260px.
+O `SkeletonGroup` não tinha largura e, dentro do `Preview` (um contêiner
+flex), encolhia ao conteúdo. Agora:
+- o grupo leva `w-full` na agenda;
+- as colunas e a régua têm `w-0 flex-1`, como a grade de verdade;
+- a moldura tem o `bg-card` dela.
+
+O cabeçalho imita o real: o título à esquerda, e o "Hoje" com as duas setas à
+direita. Medido: o esqueleto mede 910px, com as sete colunas de 130px, a
+mesma largura da régua.
+
+### Rodada 242c — a placa flutuante desce para a linha alta
+
+O dono pediu menos raio na lista suspensa e as linhas sem pílula. A placa
+flutuante (`menuPanelSurfaceClassName`) vestia a superfície (22). As linhas
+de dentro são `concentric` (22 − 4 = 18), e numa linha de 28 a 32px isso dava
+pílula. Entre só o `Select` e toda placa flutuante, o dono escolheu toda.
+
+Agora a placa veste a linha alta (`rounded-row-lg`, 16) e publica
+`--radius-parent: var(--radius-row-lg)`; as linhas ficam em 12. Mudam juntos
+`Select`, `DropdownMenu` (inclusive o `panel`), `ContextMenu`, `Menubar`,
+`Popover`, `Combobox`, `HoverCard`, `NavigationMenu` (viewport) e a placa e a
+prévia do `Command`. Medido no seletor de mês do `Calendar`: placa de 16, linha
+de 28px com 12.
+
+### Rodada 242d — o CardField sai do concêntrico
+
+O ladrilho rótulo/valor do `Card` era `concentric`. No cartão `md` ele fica a
+16px da borda, e 22 − 16 caía no mínimo de 6; no `padding="none"` (recuo 0)
+saía 22, o raio do próprio cartão. Pela regra da 241m, a peça longe da borda
+veste o próprio degrau: a linha alta (`rounded-row-lg`, 16). Medido na página
+do `Card`: 16px nos ladrilhos de 62 a 66px.
+
+### Rodada 243 — o Chart no desenho novo
+
+**O pedido.** Uma varredura no `Chart`, para ele combinar com o desenho novo
+da casa.
+
+**O levantamento**, contra as regras novas (escala de raio, realce chapado,
+cápsula só em controle, linha nunca pílula):
+- a ponta das barras era 4 (a faísca, 2) e lia como quase reta;
+- as amostras de cor eram quadradinhos de 2px, enquanto o `Calendar` e o
+  `CalendarEvent` usam pontos;
+- a legenda interativa era um `rounded-md` com o hover antigo
+  (`bg-accent/60`);
+- as linhas da legenda em lista da rosca eram `rounded-md`;
+- o hover das barras pintava um retângulo cinza atrás da coluna;
+- as células do mapa de calor eram `rounded-xs`.
+
+**As escolhas do dono:** pontas macias, todas as peças, foco no hover, e só o
+componente (as telas herdam).
+
+**O que mudou.**
+- `CHART_BAR_TIP = 8` nas barras e na cascata, com a base reta; a faísca vai a
+  3. O esqueleto já tinha `rounded-t-md` (8).
+- Barras e cascata: `cursor={false}`. A categoria do cursor ou do teclado
+  (`ChartActiveLabel`, agora sempre montado) fica, e as outras vão a 0,45, com
+  a transição de `fill-opacity`. A seleção continua a 0,35 e vence o hover.
+- As amostras são pontos (`rounded-full`, e `size-2` no tooltip `dot`); o
+  traço do `line` e o tracejado continuam traço.
+- A legenda interativa é cápsula (`rounded-full px-2`), com
+  `hover:bg-foreground/8` e o par `active:`.
+- A lista da rosca veste `rounded-row`, com 28px de altura. A 24, 12 era a
+  metade e ela saía pílula; medido depois: 28px com 12.
+- O mapa de calor usa `rounded-sm` (6 em 16).
+- A página: a nota da ponta e a anatomia livre passam a 8.
+- Testes: `chart-ladder.test.ts` (asserção 6) segue a constante, e
+  `chart-design.test.ts` é novo.
+
+### Rodada 243b — o Combobox um degrau acima
+
+O dono pediu a placa e o realce das linhas do `Combobox` um degrau acima. A
+placa era a flutuante dos menus (16), e as linhas, concêntricas com o recuo de
+4 que a placa publica, saíam 12. Esse recuo era o do `p-1` dos menus; a lista
+do `Combobox` recua 8 (`px-2`).
+
+Agora o `ComboboxContent` (as duas variantes) veste `COMBOBOX_PLACA`: a
+superfície (22), `--radius-parent: var(--radius-surface)` e o recuo real,
+`--spacing(2)`. As linhas ficam em 22 − 8 = 14. Medido: placa de 22, linhas
+de 48px com 14. Uma linha de 32 (sem descrição) também fica abaixo da metade.
+Os menus de linha única (o `Select`, o `DropdownMenu`) continuam em 16 e 12,
+onde 22 os faria pílula de novo.
+
+### Rodada 243c — a placa da paleta volta à superfície
+
+A placa da lista do `Command` (`command-dialog-panel`, e a prévia na pilha)
+tinha ido com os menus para a linha alta (16) na 242c. O dono pediu o raio
+maior, e ela volta à superfície (22). A placa não publicava recuo, então as
+linhas, concêntricas, pegavam o raio inteiro dela: 16 então, e 22 agora, o que
+seria cápsula numa linha de 36. Agora ela publica o recuo real da lista,
+`--spacing(2)`. Medido: placa de 22, linhas de 36px com 14.
+
+### Rodada 243d — todo dropdown como o Combobox, com a linha de 36
+
+O dono pediu os menus iguais ao `Combobox` e à paleta do `Command` (placa de
+22), e depois uma linha mais alta, para o realce do meio não parecer pílula.
+
+**Placa.** `menuPanelSurfaceClassName` volta à superfície (22) e publica
+`--radius-parent: var(--radius-surface)` e `--radius-inset: --spacing(2)`.
+Com isso o `COMBOBOX_PLACA` da 243b ficou redundante e saiu.
+
+**Recuo de 8**, o da lista do `Combobox`, em todas as listas:
+- `menuViewportClassName` vai de `p-1` a `p-2`, e o separador
+  (`menuSeparatorClassName`, `SelectSeparator`) sangra `-mx-2`;
+- seguem o mesmo recuo o viewport do `Select`, a `DropdownMenuSection`, a
+  lista de busca do `Menubar` e o painel do `NavigationMenu`.
+
+**Linha de 36** (`py-2`, o degrau `lg`; era 28):
+- A 28, o concêntrico de 14 era a metade da linha, e o realce saía cápsula.
+  Medido antes de subir: `ContextMenu` 28px com 14.
+- Vale para `menuItemGeometryClassName`, a opção do `Select`, a linha do
+  `Combobox` e a da busca do `DropdownMenu` (`LINHA_DA_BUSCA`).
+- Medido depois: `ContextMenu` e `Select` com placa de 22 e linhas de 36px com
+  14. O separador alcança a borda (208 de 208).
+
+**O custo.** A lista de 288px mostra quase oito linhas, e não mais dez. No dedo
+a linha continua subindo a 44.
+
+### Rodada 243e — o campo volta à cápsula
+
+O dono pediu os inputs de volta à pílula.
+- `fieldSurfaceClassName` volta a `rounded-full`, e com ele `Input`,
+  `NativeSelect`, `SelectTrigger`, `ComboboxTrigger`, `DatePicker`,
+  `FormPickerPopoverTrigger` e `InputGroup`.
+- O raio por degrau da 241j saiu de `fieldControlHeightClassName`, que volta a
+  ser só altura.
+- As pontas do `InputOTP` (o grupo e as casas `first`/`last`) também vão à
+  cápsula; a tabela por degrau da 241j saiu.
+- O `Textarea` e o `InputGroup` com bloco ou textarea continuam na linha alta
+  (16), porque crescem em altura.
+- `field-control-ladder.test.ts` (4b) passa a proibir raio no degrau, e
+  `radius-roles.test.ts` volta a cobrar a cápsula.
+
+### Rodada 244 — o formulário sem rótulo à vista
+
+O dono pediu uma versão sem os rótulos dos campos, como no iOS, ou outra forma
+mais minimalista. Ele escolheu ver **todas** antes de decidir, com as quatro
+peças e os quatro comportamentos. Nenhuma tela migrou.
+
+**Os cinco desenhos**, na seção "Sem rótulo à vista" de `/designsystem/form`:
+- `Form labels="visible"` é o de sempre.
+- `labels="hidden"` tira o rótulo da vista. O placeholder diz o nome, com
+  "(opcional)", e o `<label>` fica no DOM para o leitor de tela.
+- `labels="floating"` põe o nome dentro da pílula, e ele sobe ao digitar
+  (`peer-focus`, `:placeholder-shown`, `autofill`), por `translate` e `scale`.
+  A pílula mede 52: em 40 não cabem duas linhas, e em 48 o texto de 16px do
+  telefone recortava.
+- `FormGroup variant="inset"` é a lista agrupada do iOS. Os campos ficam numa
+  placa de superfície (22), com o fio entre as linhas começando onde o texto
+  começa, e o rótulo fica escondido.
+- `FormGroup variant="settings"` põe o rótulo à esquerda e o valor à direita,
+  como em Ajustes. O opcional diz "Opcional" no lugar do valor.
+
+**As peças:**
+- `FormGroup title`: a sobrancelha que nomeia o grupo.
+- `FormGroup note`: a nota que o descreve.
+- `FormInput icon`: o ícone antes do texto. Na lista, o fio começa depois dele.
+- `FormInput clearable`: o × que limpa o campo, passando pelo `onChange` de
+  quem chama (o setter do protótipo e um `input` que borbulha), e devolve o
+  foco ao campo.
+
+**Os comportamentos:**
+- O Enter avança ao próximo campo de texto do formulário e só envia no último,
+  num `FormGroup` ou com `labels` fora do `visible`. O `enterkeyhint` diz
+  "Seguinte" e "Ir".
+- O erro pinta a linha (`bg-destructive-muted/50`), e a frase desce para baixo
+  da placa por portal. Ela continua dentro do `Field` na árvore do React, então
+  o `aria-describedby` segue ligado.
+- A linha mede 40 no cursor e 44 no dedo.
+
+**Três medições:**
+- O `Field horizontal` estica o rótulo (`*:data-[slot=field-label]:flex-auto`),
+  e nos `settings` ele comia metade da linha e cortava o e-mail. A linha
+  escreve `*:data-[slot=field-label]:flex-none`, e o `cn` troca um pelo outro.
+- No iPhone do catálogo o `enterkeyhint` não aparecia: o `instanceof
+  HTMLInputElement` falha num elemento de outra janela. A regra pergunta o
+  `tagName`.
+- O × da pílula se centra por `inset-y-0 my-auto`, e não por `translate`,
+  porque o `Button` desce 1px no clique pelo `translate`.
+
+**Custos conhecidos:**
+- Se uma linha ganha o erro depois das outras, a frase dela entra no fim da
+  lista, e não na ordem das linhas.
+- O `enterkeyhint` é posto num efeito do `Form`, e um campo que monta depois
+  sem o `Form` renderizar de novo fica sem ele até o próximo render.
+
+`form-labels.test.ts` tranca o desenho.
+
+### Rodada 244b — ficam em cima e escondido
+
+O dono viu os cinco desenhos lado a lado e ficou com dois: `labels="visible"`
+e `labels="hidden"`. Saíram:
+- o rótulo flutuante (`labels="floating"`, a pílula de 52);
+- o `FormGroup`, com a lista `inset` e a de `settings`, e com ele o título e a
+  nota do grupo, a linha de 40/44, o erro que pintava a linha e o portal das
+  mensagens.
+
+Ficaram o `icon` e o `clearable` do `FormInput`, o "(opcional)" no
+placeholder e o Enter que avança, agora só com `labels="hidden"`. As medições
+da 244 sobre o iframe (`tagName` no lugar de `instanceof`) e sobre o × centrado
+por margem continuam valendo; as da linha e do flutuante saíram com eles.
+`form-labels.test.ts` cobra que os três não voltem.
+
+### Rodada 244c — a revisão das rodadas 240 a 244b
+
+O dono pediu uma revisão de tudo o que as rodadas 240 a 244b mexeram (146
+arquivos) e a correção de tudo, **sem mexer no desenho**: cada conserto
+devolve o degrau que a regra já pedia, ou o comportamento que existia antes.
+
+**Pílulas que a escala produzia sem ninguém pedir:**
+- O `Item` foi a `rounded-surface` na 240, e uma linha de 38 a 44px saía
+  cápsula. Hoje `sm` veste a linha (12), `md`/`lg` a linha alta (16).
+- O `concentric` sem pai que publique cai em 22. O `Sheet` e o `Drawer` não
+  publicavam (agora publicam, como o `DialogContent`), e o `Card` sem recuo
+  publica 0. As 26 caixas do app que o vestiam voltaram ao degrau mais perto do
+  raio de antes: `rounded-lg` → `rounded-row`, `rounded-xl` → `rounded-row-lg`.
+  `radius-roles.test.ts` proíbe `concentric` fora de `ui/` e do catálogo.
+- A linha do `FormPickerPopover` (44px, cápsula da base do `Button`), o cartão
+  do `RadioGroup` e o cartão de escolha do `FieldLabel` foram à linha alta.
+- O ícone do `EmptyState` calculava 22,5% do lado (7,2 a 12,6px); hoje veste
+  8 · 10 · 12 pelo degrau. O teste passou a pegar `rounded-[calc(…)]`.
+- O osso `tile` do `Skeleton` acompanha o `ColorTile` (12).
+- O painel do `DropdownMenu` (16) publica o próprio raio: as linhas de dentro
+  herdavam o 22 da superfície e saíam com 14, mais redondas que a placa.
+
+**Comportamento que tinha regredido:**
+- A lista do telefone no dashboard voltou ao teto de 5 dias passados (pelo
+  `listDays` novo do `Calendar`), ao selo do tipo (pelo `meta` do
+  `CalendarEvent`) e ao valor neutro.
+- O "Hoje" da agenda sumia com `hideNavigation`; volta para baixo da grade.
+- O dia escolhido da agenda não realçava no cursor.
+- O texto dos menus desalinhou 2px quando a linha foi de `px-1.5` a `px-2`: o
+  `inset` e o recuo sem ícone foram a 30px (`pl-7.5`), o rótulo de grupo a
+  `px-2` e o `SelectLabel` a `px-2.5`.
+- O × da folha ainda declarava `--button-bloom-fill`, que nada lia.
+- O pager do catálogo pintava `hover:bg-accent` por baixo da camada do
+  `Button` e trocava a transição da base; agora declara `--button-hover-fill`.
+- Com uma barra escolhida no `Chart`, a do cursor não tinha marca; agora fica
+  a 0,7.
+- No `labels="hidden"`, o Enter morria num campo invisível (o `<input>`
+  escondido do `Slider`): o avanço pula o que não se foca, e o
+  `enterkeyhint` sai fora do `hidden` e não vai a quem adia o Enter.
+- O esqueleto do dashboard desenhava a grade antiga; veste o
+  `CalendarSkeleton` da agenda.
+- Cada dia da lista da agenda era uma região para o leitor de tela; é grupo.
+
+**Textos:** o `AGENTS.md` (o primário que "escurecia", o eixo `shape` que
+saiu, o raio 18 de folha, barra e toast, o `rounded-2xl` das abas, as linhas
+de 28/32), comentários de `globals.css`, `button-group`, `checkbox`, `alert`,
+`sidebar`, `sheet`, `ds-kit`, `combobox` e `command`, a página Shape &
+Elevation (que punha os dropdowns na linha alta) e o `JORNADAS.md`, que dizia
+que a gaveta do dia tinha saído. Os testes da agenda e do Enter passaram a
+afirmar sobre o que sai, e não sobre o código-fonte.
+
+**Fica como está, por decisão de desenho:** a virada da agenda para lista
+pela largura dela (40rem). Num laptop com a barra lateral e o painel de
+próximos, a coluna pode ficar abaixo disso — está dito no `JORNADAS.md` e no
+Atlas, e o limiar não mudou.
+

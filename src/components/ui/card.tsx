@@ -57,7 +57,7 @@ import { Skeleton, SkeletonText } from "@/components/ui/skeleton"
  */
 const cardVariants = cva(
   [
-    "group/card relative flex min-w-0 flex-col overflow-hidden rounded-xl text-sm",
+    "group/card relative flex min-w-0 flex-col overflow-hidden rounded-surface text-sm [--radius-parent:var(--radius-surface)] [--radius-inset:var(--card-px)]",
     // O `overflow-hidden` já recorta os cantos de todo filho. Por isso não há
     // `rounded-t-xl` no cabeçalho nem `rounded-b-xl` no rodapé: eram três
     // declarações mantendo à mão o que o casco resolve uma vez, e que saíam de
@@ -641,7 +641,11 @@ function CardField({
     <div
       data-slot="card-field"
       className={cn(
-        "flex min-w-0 flex-col gap-1 rounded-lg border border-border/60 bg-background/80 p-3 text-sm",
+        // O ladrilho veste a linha alta (16; rodada 242d), e não o
+        // concêntrico: no cartão `md` ele fica a 16px da borda, e 22 − 16 caía
+        // no mínimo de 6 — e no `padding="none"` (recuo 0) saía 22, o raio do
+        // próprio cartão. Longe da borda, a peça veste o próprio degrau.
+        "rounded-row-lg flex min-w-0 flex-col gap-1 border border-border/60 bg-background/80 p-3 text-sm",
         className
       )}
       {...props}
@@ -717,8 +721,8 @@ function CardSkeleton({
       </CardContent>
       {footer ? (
         <CardFooter className="justify-end">
-          <Skeleton className="h-8 w-20 rounded-lg" />
-          <Skeleton className="h-8 w-24 rounded-lg" />
+          <Skeleton className="h-8 w-20 rounded-full" />
+          <Skeleton className="h-8 w-24 rounded-full" />
         </CardFooter>
       ) : null}
     </Card>

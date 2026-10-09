@@ -27,25 +27,33 @@ export interface ButtonGroupProps extends React.HTMLAttributes<HTMLDivElement> {
  * e pousado em `-left-px` para cair exatamente sobre a borda compartilhada:
  * numa variante de contorno as duas somariam 2px de emenda.
  */
+// A emenda só vale entre botões. Com um campo no grupo (rodada 241u, a pedido
+// do dono) as peças ficam **separadas**, com o vão de 8px entre elas. A razão
+// era o canto: o campo era um retângulo de 12 que encostava na cápsula do
+// botão, e nenhum dos dois fechava. O campo voltou à cápsula na 243e, e a
+// separação ficou — a ação de um campo mora dentro dele. Por isso cada
+// classe da emenda leva `not-has-[>[data-slot=input]]:`, escrito por extenso:
+// o Tailwind lê o código como texto, e um prefixo montado num template não
+// gera classe nenhuma.
 const HORIZONTAL = [
     "inline-flex items-center justify-start",
-    "[&>*:not(:first-child)]:-ml-px",
-    "[&>*:not(:first-child)]:rounded-l-none",
-    "[&>*:not(:last-child)]:rounded-r-none",
-    "[&>*:not(:first-child)]:before:inset-y-1.5",
-    "[&>*:not(:first-child)]:before:-left-px",
-    "[&>*:not(:first-child)]:before:w-px",
+    "not-has-[>[data-slot=input]]:[&>*:not(:first-child)]:-ml-px",
+    "not-has-[>[data-slot=input]]:[&>*:not(:first-child)]:rounded-l-none",
+    "not-has-[>[data-slot=input]]:[&>*:not(:last-child)]:rounded-r-none",
+    "not-has-[>[data-slot=input]]:[&>*:not(:first-child)]:before:inset-y-1.5",
+    "not-has-[>[data-slot=input]]:[&>*:not(:first-child)]:before:-left-px",
+    "not-has-[>[data-slot=input]]:[&>*:not(:first-child)]:before:w-px",
     // O `secondary` não tem borda que desenhe a emenda, e o filete recuado lia
     // como risco no meio de um bloco. No lugar dele a emenda é um vão de 1px
     // de cima a baixo, **transparente**: o botão deixa de sobrepor o vizinho e
     // passa a 1px dele, e o que aparece ali é a superfície de trás, qualquer
     // que seja — o grupo não precisa saber a cor do fundo.
-    "[&>[data-variant=secondary]:not(:first-child)]:ml-px",
-    // O campo colado (rodada 188) ocupa a sobra, e o grupo passa a ter a
-    // largura de quem o contém — senão `w-full` do `Input` numa caixa que
-    // encolhe ao conteúdo não resolve. No dedo o campo sobe a 40
-    // (`pointer-coarse:h-10`, a régua de campo) e o botão não: o grupo iguala.
-    "has-[>[data-slot=input]]:flex has-[>[data-slot=input]]:w-full [&>[data-slot=input]]:flex-1",
+    "not-has-[>[data-slot=input]]:[&>[data-variant=secondary]:not(:first-child)]:ml-px",
+    // O campo (rodada 188) ocupa a sobra, e o grupo passa a ter a largura de
+    // quem o contém — senão `w-full` do `Input` numa caixa que encolhe ao
+    // conteúdo não resolve. No dedo o campo sobe a 40 (`pointer-coarse:h-10`,
+    // a régua de campo) e o botão não: o grupo iguala.
+    "has-[>[data-slot=input]]:flex has-[>[data-slot=input]]:w-full has-[>[data-slot=input]]:gap-2 [&>[data-slot=input]]:flex-1",
     "pointer-coarse:has-[>[data-slot=input]]:*:h-10",
 ]
 
@@ -100,9 +108,9 @@ export function ButtonGroup({
                 // `ml-px` do `secondary`**, e é medido: o fundo dele é recortado
                 // no `padding-box` (a `bg-clip-padding` da base), então a borda
                 // transparente de 1px de cada lado já é vão, e com a margem a
-                // emenda somava 3px. O degradê do primário mora no `::after`,
-                // e não no `::before`, justamente porque este seletor o
-                // esconderia.
+                // emenda somava 3px. (O degradê que o primário teve até a
+                // rodada 240 é o `brandColorful`, e mora no `::after` para este
+                // seletor nunca o alcançar.)
                 "[&>[data-variant=primary]]:before:hidden",
                 "[&>[data-variant=secondary]]:before:hidden",
                 // O divisor mora 1px fora da própria caixa, por cima da aresta
@@ -140,7 +148,7 @@ export function ButtonGroupText({
         <div
             data-slot="button-group-text"
             className={cn(
-                "inline-flex items-center justify-center gap-1.5 self-stretch rounded-lg border border-border bg-muted px-3",
+                "inline-flex items-center justify-center gap-1.5 self-stretch rounded-full border border-border bg-muted px-3",
                 "text-sm whitespace-nowrap text-muted-foreground tabular-nums",
                 "group-data-[size=xs]/button-group:px-2 group-data-[size=xs]/button-group:text-xs group-data-[size=sm]/button-group:px-2.5 group-data-[size=sm]/button-group:text-control-sm",
                 className

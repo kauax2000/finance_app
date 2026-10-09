@@ -29,7 +29,7 @@ import { Separator } from "@/components/ui/separator"
  */
 const itemVariants = cva(
   [
-    "group/item flex w-full items-center rounded-lg border text-start text-sm transition-colors duration-(--duration-instant) outline-none",
+    "group/item flex w-full items-center rounded-row-lg border text-start text-sm transition-colors duration-(--duration-instant) outline-none",
     // **Só quebra quando há faixa** (rodada 194): `ItemHeader` e
     // `ItemFooter` ocupam a largura toda (`basis-full`) e precisam descer de
     // linha; sem eles, conteúdo e ações ficam lado a lado e o título trunca.
@@ -55,7 +55,9 @@ const itemVariants = cva(
         flush: "rounded-none border-transparent",
       },
       size: {
-        sm: "gap-2 px-2.5 py-2",
+        // O raio é a linha (rodada 244c): com a superfície (22), uma linha de
+        // 38 a 44px saía cápsula. `sm` (38) veste a linha, os outros a alta.
+        sm: "gap-2 px-2.5 py-2 rounded-row",
         md: "gap-2.5 px-3 py-2.5",
         lg: "gap-3 px-4 py-3.5",
       },
@@ -91,7 +93,7 @@ const itemVariants = cva(
       },
     },
     compoundVariants: [
-      { variant: "flush", size: "sm", className: "px-4 py-2" },
+      { variant: "flush", size: "sm", className: "px-4 py-2 rounded-none" },
       { variant: "flush", size: "md", className: "px-4 py-3" },
       { variant: "flush", size: "lg", className: "px-4 py-3.5" },
     ],

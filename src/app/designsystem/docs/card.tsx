@@ -127,7 +127,7 @@ export default function CardDoc() {
               <span className="tabular-nums">{hint}</span>
             </CardToolbar>
             <CardContent>
-              <div className="rounded-md bg-muted py-3 text-center text-xs text-muted-foreground">
+              <div className="rounded-surface bg-muted py-3 text-center text-xs text-muted-foreground">
                 corpo
               </div>
             </CardContent>

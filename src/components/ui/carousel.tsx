@@ -330,8 +330,8 @@ const carouselVariants = cva("group/carousel relative [--carousel-control-x:50%]
   variants: {
     variant: {
       plain: "",
-      card: "rounded-xl border border-border bg-card p-3",
-      inset: "rounded-xl bg-muted p-3",
+      card: "rounded-surface border border-border bg-card p-3",
+      inset: "rounded-surface bg-muted p-3",
     },
     controls: { inside: "", outside: "", none: "" },
     orientation: { horizontal: "", vertical: "" },
@@ -1256,7 +1256,7 @@ function CarouselItem({
             "min-w-0 basis-0 grow-(--carousel-weight) cursor-pointer transition-[flex-grow] duration-(--duration-spring) ease-(--ease-spring)"
           : "min-w-0 shrink-0 grow-0 basis-full",
         acordeao &&
-          "rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/45 focus-visible:ring-inset",
+          "rounded-surface outline-none focus-visible:ring-3 focus-visible:ring-ring/45 focus-visible:ring-inset",
         GAP_CLASSES[orientation][gap].item,
         until && orientation === "horizontal" && UNTIL_ITEM[until],
         ITEM_HOVER[hover],

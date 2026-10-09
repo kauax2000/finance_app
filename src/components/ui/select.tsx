@@ -20,6 +20,7 @@ import {
   type FieldControlSize,
 } from "@/lib/field-classes"
 import { CheckIcon, ChevronDownIcon } from "@heroicons/react/16/solid"
+import { Separator } from "@/components/ui/separator"
 import { Caption } from "@/components/ui/typography"
 function Select({
   ...props
@@ -132,7 +133,7 @@ function SelectContent({
             // gatilho mas o viewport encolhia para o conteúdo: com um gatilho
             // de largura fixa sobravam dezenas de pixels vazios à direita, e o
             // separador parava no meio do painel.
-            "w-full p-1",
+            "w-full p-2",
             // **Sem a classe de altura sobre `--radix-select-trigger-height`.**
             // (Escrita assim, sem a sintaxe de utilitário, de propósito: o
             // Tailwind varre **o arquivo inteiro**, comentário incluído, e citar
@@ -172,7 +173,7 @@ function SelectLabel({
 }: React.ComponentProps<typeof SelectPrimitive.Label>) {
   return (
     <SelectPrimitive.Label asChild data-slot="select-label" {...props}>
-      <Caption className={cn("px-2 py-1", className)}>{children}</Caption>
+      <Caption className={cn("px-2.5 py-1", className)}>{children}</Caption>
     </SelectPrimitive.Label>
   )
 }
@@ -219,7 +220,7 @@ function SelectItem({
       data-slot="select-item"
       data-variant={variant}
       className={cn(
-        "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-2 text-sm outline-hidden pointer-coarse:min-h-11 select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:not-data-[variant=none]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "concentric relative flex w-full cursor-default items-center gap-1.5 py-2 pr-8 pl-2.5 text-sm outline-hidden pointer-coarse:min-h-11 select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:not-data-[variant=none]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         // O texto da opção — ícone, ladrilho e nome em linha. Era um seletor
         // `*:[span]:last:` no item, que casava o último `span` filho; com a
         // descrição o `ItemText` deixa de ser filho direto, e a regra o acha
@@ -242,7 +243,9 @@ function SelectItem({
         // Nome sobre explicação é par de identidade: sem `gap`.
         <span data-slot="select-item-content" className="flex min-w-0 flex-col">
           {texto}
-          <span className="text-xs text-muted-foreground">{description}</span>
+          <Caption asChild>
+            <span>{description}</span>
+          </Caption>
         </span>
       ) : (
         texto
@@ -264,11 +267,14 @@ function SelectSeparator({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Separator>) {
   return (
-    <SelectPrimitive.Separator
-      data-slot="select-separator"
-      className={cn("pointer-events-none -mx-1 my-1 h-px bg-border", className)}
-      {...props}
-    />
+    // O fio é o `Separator` do sistema (rodada 241o), sangrando o `p-2` da
+    // lista — o mesmo peso de fio de todo o resto, e não um `bg-border` à mão.
+    <SelectPrimitive.Separator asChild {...props}>
+      <Separator
+        data-slot="select-separator"
+        className={cn("pointer-events-none -mx-2 my-1 w-auto", className)}
+      />
+    </SelectPrimitive.Separator>
   )
 }
 

@@ -96,7 +96,12 @@ const MENU_TOUCH_TARGET = "pointer-coarse:min-h-11"
  * o primeiro suspeito — e aqui era.
  */
 export const menuPanelSurfaceClassName = [
-  "rounded-lg text-foreground shadow-md ring-1 ring-foreground/10",
+  // O canto é a superfície (22), como o `Combobox` e a paleta do `Command`
+  // (rodada 243d, a pedido do dono). A 242c o tinha levado à linha alta (16),
+  // porque com o recuo de 4 das listas as linhas concêntricas davam
+  // 22 − 4 = 18, pílula numa linha de 32. Hoje as listas recuam 8 (`p-2`, o
+  // da lista do `Combobox`), e as linhas ficam em 22 − 8 = 14.
+  "rounded-surface text-foreground shadow-md ring-1 ring-foreground/10 [--radius-parent:var(--radius-surface)] [--radius-inset:--spacing(2)]",
   // **O teto de uma lista suspensa** (rodada 174, a pedido do dono): 288px,
   // umas nove linhas, o mesmo `--spacing(72)` que a lista do `Command` já
   // usava. Cada primitiva o lê dentro de um `min()` com a altura disponível
@@ -138,14 +143,15 @@ export const menuSurfaceClassName = [
  * Ele existe porque a máscara recorta o alfa do elemento **inteiro**: fundo,
  * borda e sombra externa junto. Aplicada na casca, ela apagaria o
  * `ring-1 ring-foreground/10` e o `shadow-md` nas duas pontas — e os
- * `rounded-lg` de 8px caem inteiros dentro da zona de dissolução, então os
+ * cantos de `rounded-surface` caem inteiros dentro da zona de dissolução, então os
  * quatro arcos de canto seriam desenhados no piso enquanto os lados continuam
  * opacos. Isso lê como falha de renderização, não como fade. Pior: o
  * `bg-popover` mora na casca, e mascarar ali deixaria as pontas translúcidas
  * contra a página, trocando "a lista continua por baixo da superfície" por "o
  * painel está se dissolvendo".
  *
- * O `p-1` desceu da casca para cá, e o `-mx-1` do `menuSeparatorClassName`
+ * O recuo desceu da casca para cá (`p-2` desde a rodada 243d; era `p-1`), e
+ * o `-mx-2` do `menuSeparatorClassName`
  * continua correto: ele sangra o recuo do **seu pai**, que agora é este nó. É a
  * mesma cirurgia que o `variant="panel"` do `DropdownMenu` já fazia ao ceder o
  * recuo para o `DropdownMenuSection`.
@@ -154,7 +160,7 @@ export const menuSurfaceClassName = [
  * em cada menu, pela razão do bloco acima.
  */
 export const menuViewportClassName =
-  "min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain p-1 outline-hidden"
+  "min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain p-2 outline-hidden [--radius-inset:--spacing(2)]"
 
 /**
  * O submenu. Ele **é** a casca — antes divergia dela dentro do mesmo arquivo
@@ -174,8 +180,12 @@ export const menuSubSurfaceClassName = `${menuSurfaceClassName} min-w-32`
  * Compartilhar o corpo e deixar cada superfície declarar o próprio realce é o
  * que faz as quatro medirem igual sem uma mentir sobre a outra.
  */
+// A linha mede 36 (`py-2`, o degrau `lg`) desde a rodada 243d, a pedido do
+// dono: com a placa em 22 e o recuo de 8, o canto concêntrico é 14, e numa
+// linha de 28 isso era a metade — o realce saía pílula. A 36 ele é
+// retângulo de canto cheio, a altura da linha da paleta do `Command`.
 export const menuItemGeometryClassName = [
-  "relative flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none",
+  "concentric relative flex cursor-default items-center gap-1.5 px-2 py-2 text-sm outline-hidden select-none",
   MENU_TOUCH_TARGET,
   "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
 ].join(" ")
@@ -199,7 +209,7 @@ export const menuItemClassName = [
   menuItemGeometryClassName,
   menuItemFadeClassName,
   "focus:bg-accent focus:text-accent-foreground",
-  "data-inset:pl-7",
+  "data-inset:pl-7.5",
   "data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20",
   "data-disabled:pointer-events-none data-disabled:opacity-50",
   "focus:*:[svg]:text-accent-foreground data-[variant=destructive]:*:[svg]:text-destructive",
@@ -211,7 +221,7 @@ export const menuSubTriggerClassName = [
   menuItemGeometryClassName,
   menuItemFadeClassName,
   "focus:bg-accent focus:text-accent-foreground",
-  "data-inset:pl-7 data-open:bg-accent data-open:text-accent-foreground",
+  "data-inset:pl-7.5 data-open:bg-accent data-open:text-accent-foreground",
   // O mesmo estado das outras linhas: sem ele um submenu desabilitado saía
   // igual ao ativo nos três menus.
   "data-disabled:pointer-events-none data-disabled:opacity-50",
@@ -226,11 +236,11 @@ export const menuIndicatorItemClassName = [
   "group/menu-item",
   menuItemGeometryClassName,
   // O indicador mora à direita: o recuo desse lado cresce. Quem compõe passa
-  // por `cn()`, e o `twMerge` guarda o `px-1.5` da geometria com o `pr-8` por cima.
+  // por `cn()`, e o `twMerge` guarda o `px-2` da geometria com o `pr-8` por cima.
   "pr-8",
   menuItemFadeClassName,
   "focus:bg-accent focus:text-accent-foreground",
-  "data-inset:pl-7",
+  "data-inset:pl-7.5",
   "data-disabled:pointer-events-none data-disabled:opacity-50",
 ].join(" ")
 
@@ -244,10 +254,10 @@ export const menuIndicatorSlotClassName =
  * com as próprias linhas do menu.
  */
 export const menuLabelClassName =
-  "px-1.5 py-1 text-xs font-medium text-muted-foreground data-inset:pl-7"
+  "px-2 py-1 text-xs font-medium text-muted-foreground data-inset:pl-7.5"
 
 /** `bg-border`, o fio do projeto — `bg-muted` é preenchimento, não traço. */
-export const menuSeparatorClassName = "-mx-1 my-1 h-px bg-border"
+export const menuSeparatorClassName = "-mx-2 my-1 h-px bg-border"
 
 /** O atalho acompanha o realce da linha em vez de ficar cinza sobre o acento. */
 export const menuShortcutClassName =

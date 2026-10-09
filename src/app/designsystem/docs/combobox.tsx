@@ -379,7 +379,7 @@ export default function ComboboxDoc() {
       </DocNote>
 
       <DocNote title="Uma placa, com a busca dentro">
-        Aberto, o <code>Combobox</code> é a placa do popover com a <strong>pílula</strong> de busca e a lista <strong>dentro</strong> dela — a forma do <code>SearchInput surface=&quot;plate&quot;</code> num popover, que a página do <code>SearchInput</code> demonstra, medida a medida: a pílula de 32 a 8px das bordas, linhas de 32 com o texto a 16px, 8px embaixo. A pílula é o próprio <code>SearchInput</code>, com o anel de foco e o × de limpar. O <code>Command</code> de dentro não pinta — placa em volta de placa seria a placa dupla que a régua proíbe. Até a rodada 197 ele foi a pilha da paleta (pílula e placa soltas); o dono quis a busca dentro. Ele continua ancorado ao gatilho, com a largura dele, e abre com o primeiro valor realçado, como um select.
+        Aberto, o <code>Combobox</code> é a placa do popover com a <strong>pílula</strong> de busca e a lista <strong>dentro</strong> dela — a forma do <code>SearchInput surface=&quot;plate&quot;</code> num popover, que a página do <code>SearchInput</code> demonstra, medida a medida: a pílula de 32 a 8px das bordas, linhas de 36 com o texto a 16px, 8px embaixo. A pílula é o próprio <code>SearchInput</code>, com o anel de foco e o × de limpar. O <code>Command</code> de dentro não pinta — placa em volta de placa seria a placa dupla que a régua proíbe. Até a rodada 197 ele foi a pilha da paleta (pílula e placa soltas); o dono quis a busca dentro. Ele continua ancorado ao gatilho, com a largura dele, e abre com o primeiro valor realçado, como um select.
       </DocNote>
 
       <DocNote title="Combobox, Select ou FormPickerPopover">

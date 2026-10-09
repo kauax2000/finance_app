@@ -291,7 +291,7 @@ export function BillsToolbar({
                     side="bottom"
                     variant="flush"
                     fillMobileViewport
-                    className="flex w-full flex-col gap-4 rounded-t-2xl pt-0 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
+                    className="flex w-full flex-col gap-4 rounded-t-modal pt-0 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
                 >
                     <DialogHeader>
                         <DialogTitle>Filtros e ordenação</DialogTitle>

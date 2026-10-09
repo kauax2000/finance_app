@@ -14,13 +14,13 @@ function ToolbarSkeleton() {
         <div className="flex min-w-0 max-w-full flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-3">
             <div className="flex min-w-0 max-w-full items-center gap-2 md:contents">
                 <div
-                    className="inline-flex h-8 min-w-0 max-w-full flex-1 shrink items-stretch gap-0.5 rounded-lg bg-muted p-0.5 pointer-coarse:h-10 md:max-w-fit md:shrink-0"
+                    className="inline-flex h-8 min-w-0 max-w-full flex-1 shrink items-stretch gap-0.5 rounded-full bg-muted p-0.5 pointer-coarse:h-10 md:max-w-fit md:shrink-0"
                     aria-hidden
                 >
                     <div className="flex h-full w-full min-h-0 items-center gap-0.5 px-0.5 md:w-auto">
-                        <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-md md:min-w-17 md:flex-none" />
-                        <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-md md:min-w-17 md:flex-none" />
-                        <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-md md:min-w-17 md:flex-none" />
+                        <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-full md:min-w-17 md:flex-none" />
+                        <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-full md:min-w-17 md:flex-none" />
+                        <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-full md:min-w-17 md:flex-none" />
                     </div>
                 </div>
                 <Skeleton
@@ -38,7 +38,7 @@ function ToolbarSkeleton() {
                             <Skeleton className="h-7 w-20 shrink-0 rounded-full" />
                         </div>
                     </div>
-                    <Skeleton className="h-8 w-23 shrink-0 rounded-md" />
+                    <Skeleton className="h-8 w-23 shrink-0 rounded-full" />
                 </div>
             </div>
         </div>

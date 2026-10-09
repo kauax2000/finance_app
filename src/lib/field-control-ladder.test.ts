@@ -92,6 +92,13 @@ describe("escada de controle da família de campo", () => {
     expect(fieldControlHeightClassName.xl).toBe("h-10")
   })
 
+  it("4b. o campo é cápsula, e o degrau não carrega raio", () => {
+    // Rodada 243e: o raio por degrau da 241j saiu com a volta da cápsula.
+    for (const d of DEGRAUS) {
+      expect(fieldControlHeightClassName[d], d).not.toMatch(/rounded-/)
+    }
+  })
+
   it("5. nenhum dos oito controles reescreve a escada por conta própria", () => {
     // A asserção que teria impedido as cinco cópias.
     for (const nome of CONTROLES) {

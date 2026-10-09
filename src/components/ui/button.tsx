@@ -8,20 +8,27 @@ import { composeRefs, useBrandGlow } from "@/hooks/use-brand-glow"
 import { cn } from "@/lib/utils"
 
 /**
- * O florescer do hover (rodadas 151 e 152): liga `--button-bloom` no cursor e
- * no toque, e escolhe o ritmo de cada lado — a mola da casa ao entrar,
- * `--ease-out` ao sair. A pintura é das `@utility button-bloom` e
- * `button-colorful`, no `globals.css`. A lista de `transition` é restatada com
- * a variável no fim, porque o `tailwind-merge` troca a lista da base em vez de
- * acrescentar.
+ * O realce do hover (rodada 241): liga `--button-hover` no cursor e no toque, e
+ * a `@utility button-hover` pinta por cima do repouso a cor que o peso declara
+ * em `--button-hover-fill`. Esmaece na transição da base, sem mola: os pesos
+ * deixaram de florescer a pedido do dono.
+ */
+const REALCE = "button-hover hover:[--button-hover:1] active:[--button-hover:1]"
+/** O mesmo realce para quem acende também com o menu aberto. */
+const REALCE_EXPANDIDO = `${REALCE} aria-expanded:[--button-hover:1]`
+
+/**
+ * O florescer do `brandColorful` (rodadas 151 e 152): liga `--button-bloom` no
+ * cursor e no toque, e escolhe o ritmo de cada lado — a mola da casa ao entrar,
+ * `--ease-out` ao sair. A pintura é da `@utility button-colorful`, no
+ * `globals.css`. A lista de `transition` é restatada com a variável no fim,
+ * porque o `tailwind-merge` troca a lista da base em vez de acrescentar.
  */
 const FLORESCER =
-  "hover:[--button-bloom:1] active:[--button-bloom:1] transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-bloom] duration-(--duration-slow) ease-(--ease-out) hover:duration-(--duration-spring) hover:ease-(--ease-spring) active:duration-(--duration-spring) active:ease-(--ease-spring)"
-/** O mesmo florescer para quem realça também o menu aberto. */
-const FLORESCER_EXPANDIDO = `${FLORESCER} aria-expanded:[--button-bloom:1] aria-expanded:duration-(--duration-spring) aria-expanded:ease-(--ease-spring)`
+  "hover:[--button-bloom:1] active:[--button-bloom:1] aria-expanded:[--button-bloom:1] transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-bloom] duration-(--duration-slow) ease-(--ease-out) hover:duration-(--duration-spring) hover:ease-(--ease-spring) active:duration-(--duration-spring) active:ease-(--ease-spring) aria-expanded:duration-(--duration-spring) aria-expanded:ease-(--ease-spring)"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow,opacity,translate] duration-(--duration-fast) ease-(--ease-out) outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/45 active:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&>[data-slot=button-label]]:first-letter:uppercase [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-hover] duration-(--duration-fast) ease-(--ease-out) outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/45 active:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&>[data-slot=button-label]]:first-letter:uppercase [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       // A hierarquia é uma escada, e ela desce em peso visual, não só em nome:
@@ -38,21 +45,26 @@ const buttonVariants = cva(
       // peso, e nenhuma tela do app chegou a usá-los. Estado de sucesso e de
       // atenção continua sendo trabalho do `Badge` e do `Alert`.
       variant: {
-        // **O primário é o "Button Colorful" da Kokonut UI** (21st, MIT;
-        // rodadas 149 a 151), com a cor guardada para a interação: em repouso
-        // ele é a tecla preta (branca no escuro) **chapada** — a identidade
-        // preto e branco —, e no cursor, no toque e com o menu aberto cinco
-        // paradas do arco-íris (teal, azul, violeta, magenta, coral)
-        // **florescem do centro**, comprimidas e borradas, abrindo até as
-        // bordas enquanto ganham foco — o `FLORESCER` de todo peso, com a
-        // pintura da `@utility button-colorful`.
+        // **O primário é a tecla chapada** (rodada 241): preta no claro,
+        // branca no escuro, e no cursor, no toque e com o menu aberto ela vai
+        // a `--primary-hover` — clareando no claro, escurecendo no escuro,
+        // 1,4:1 contra o repouso nos dois (rodada 241b). O degradê que
+        // florescia aqui virou o `brandColorful`.
         //
         // O fundo fica recortado no `padding-box` (a `bg-clip-padding` da
         // base), e não em `border-box` como no `secondary`: é o vão de 1px da
         // borda transparente que desenha a emenda do primário no `ButtonGroup`.
         // Enviando (`aria-busy`) a opacidade fica cheia, para "salvando" não
         // ler como "desabilitado".
-        primary: `button-colorful bg-primary text-primary-foreground ${FLORESCER_EXPANDIDO} aria-busy:disabled:opacity-100`,
+        primary:
+          "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-hover aria-expanded:bg-primary-hover aria-busy:disabled:opacity-100",
+        // **O "Button Colorful" da Kokonut UI** (21st, MIT; rodadas 149 a 151;
+        // era o `primary` até a 240): a tecla do primário em repouso, e no
+        // cursor, no toque e com o menu aberto cinco paradas do arco-íris
+        // (teal, azul, violeta, magenta, coral) **florescem do centro**,
+        // comprimidas e borradas, abrindo até as bordas enquanto ganham foco.
+        // A pintura é a `@utility button-colorful`. Um CTA de marca por tela.
+        brandColorful: `button-colorful bg-primary text-primary-foreground ${FLORESCER} aria-busy:disabled:opacity-100`,
         // **O CTA de marca é neutro, e a borda acende de perto** (rodada 145).
         // Em repouso é a superfície do `secondary` com o fio do sistema; o
         // arco-íris acende num arco da borda conforme o ponteiro se aproxima e
@@ -93,26 +105,36 @@ const buttonVariants = cva(
         // geometria igual entre as variantes: com `border-0` o rótulo do
         // `secondary` recuava para 12px contra os 13px das outras, e os chips
         // que alternam entre `secondary` e `outline` saltavam 2px ao selecionar.
-        secondary: `button-bloom bg-clip-border bg-secondary text-secondary-foreground [--button-bloom-fill:var(--secondary-hover)] ${FLORESCER} aria-expanded:bg-secondary aria-expanded:text-secondary-foreground`,
-        // **O hover floresce do centro, como o do primário** (rodada 152): a
-        // cor do hover nasce pequena e difusa no meio e se abre até as bordas
-        // (`@utility button-bloom`, uma elipse no próprio fundo — o `::after`
-        // destes pesos é o alvo de toque ampliado de várias peças). Cada peso
-        // declara só a cor (`--button-bloom-fill`, com par `dark:` onde o
-        // escuro tem outra); os alfas do escuro e do `destructive` são
-        // **compostos** (`repouso + a·(1 − repouso) = hover`: 11%, 12,5%, 29%),
-        // porque a elipse pinta por cima do repouso. Da rodada 99 à 148 a cor
-        // crescia num disco a partir do ponteiro; na 149 virou a troca seca;
-        // na 152, o florescer do primário.
+        secondary: `bg-clip-border bg-secondary text-secondary-foreground [--button-hover-fill:var(--secondary-hover)] ${REALCE} aria-expanded:bg-secondary aria-expanded:text-secondary-foreground`,
+        // **O realce é chapado** (rodada 241): a cor do peso
+        // (`--button-hover-fill`) pinta por cima do repouso e esmaece em
+        // `--duration-fast`. Da rodada 152 à 240 a cor florescia do centro.
+        //
+        // **`tertiary`, `outline` e `floating` realçam com a tinta do texto a
+        // 12%** (rodada 241b): `--muted` media 1,08:1 contra o repouso no
+        // escuro e 1,19 no claro, e o hover não se via. Como camada sobre o
+        // repouso, o `--foreground` escurece no claro e clareia no escuro com
+        // um valor só, sobre qualquer superfície: 1,29–1,45:1. O
+        // `destructive` subiu de 11% para 22% (25% no escuro) pela mesma
+        // razão.
         //
         // O par `active:` não é redundante com o `hover:`: `hover:` compila
         // dentro de `@media (hover: hover)`, então sem ele **o terciário não
         // devolvia nada ao toque** — em nenhuma das telas que o usam (rodada
         // 29b). O conserto mora aqui e não em cada chamada, que é onde `Toggle`,
         // `Tabs`, `Menubar`, `Item` e `Calendar` já o escreviam à mão.
-        tertiary: `button-bloom [--button-bloom-fill:var(--muted)] dark:[--button-bloom-fill:color-mix(in_oklab,var(--muted)_50%,transparent)] hover:text-foreground active:text-foreground aria-expanded:text-foreground ${FLORESCER_EXPANDIDO}`,
-        outline: `button-bloom border-border bg-background [--button-bloom-fill:var(--muted)] dark:[--button-bloom-fill:color-mix(in_oklab,var(--input-fill)_29%,transparent)] hover:text-foreground active:text-foreground aria-expanded:text-foreground dark:border-input dark:bg-input-fill/30 ${FLORESCER_EXPANDIDO}`,
-        destructive: `button-bloom bg-destructive/10 text-destructive-muted-foreground [--button-bloom-fill:color-mix(in_oklab,var(--destructive)_11%,transparent)] dark:[--button-bloom-fill:color-mix(in_oklab,var(--destructive)_12.5%,transparent)] focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 ${FLORESCER}`,
+        tertiary: `[--button-hover-fill:color-mix(in_oklab,var(--foreground)_12%,transparent)] hover:text-foreground active:text-foreground aria-expanded:text-foreground ${REALCE_EXPANDIDO}`,
+        outline: `border-border bg-background [--button-hover-fill:color-mix(in_oklab,var(--foreground)_12%,transparent)] hover:text-foreground active:text-foreground aria-expanded:text-foreground dark:border-input dark:bg-input-fill/30 ${REALCE_EXPANDIDO}`,
+        // **A pílula flutuante** (rodada 240g): a receita das placas soltas da
+        // casa — o `--popover` chapado, o anel de 1px e a sombra — num botão,
+        // para a ação que paira sobre o conteúdo (o copiar do catálogo; o
+        // gatilho da `Sidebar floating` e as abas `floating` são a mesma
+        // placa). A tinta é a do `tertiary`, apagada até o cursor, e o realce
+        // é o chapado dos outros pesos. `bg-clip-border` pela
+        // razão do `secondary`: com o fundo no `padding-box`, sobrava 1px da
+        // página entre a placa e o anel.
+        floating: `bg-clip-border bg-popover text-muted-foreground shadow-sm ring-1 ring-foreground/10 [--button-hover-fill:color-mix(in_oklab,var(--foreground)_12%,transparent)] hover:text-foreground active:text-foreground aria-expanded:text-foreground ${REALCE_EXPANDIDO}`,
+        destructive: `bg-destructive/10 text-destructive-muted-foreground [--button-hover-fill:color-mix(in_oklab,var(--destructive)_22%,transparent)] dark:[--button-hover-fill:color-mix(in_oklab,var(--destructive)_25%,transparent)] focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 ${REALCE}`,
         // O link é sublinhado **sempre**: com a marca preta ele tem a cor do
         // texto, e sem o traço nada o distinguia até o cursor passar — o que
         // no toque é nunca. No cursor e no toque o traço **troca de tinta**,
@@ -159,12 +181,17 @@ const buttonVariants = cva(
       // O padrão é `md` (32), o corpo da ação comum. `lg` (36) é a altura de
       // `Input` e `SelectTrigger`: botão colado a campo pede `lg` e alinha sem
       // ajuste.
+      //
+      // Todo botão é cápsula (rodada 240, o controle do iOS 26), e nos `icon-*`
+      // a cápsula é um círculo. O recuo lateral é o da antiga `shape="pill"`,
+      // meio degrau acima do retângulo: a curva come o canto, e com o recuo do
+      // retângulo o rótulo ficava espremido contra ela.
       size: {
-        xs: "h-6 gap-1 px-2 text-xs has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-7 gap-1 px-2.5 text-control-sm has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
-        md: "h-8 gap-1.5 px-3 has-data-[icon=inline-end]:pr-2.5 has-data-[icon=inline-start]:pl-2.5",
-        lg: "h-9 gap-1.5 px-3 has-data-[icon=inline-end]:pr-2.5 has-data-[icon=inline-start]:pl-2.5",
-        xl: "h-10 gap-1.5 px-3.5 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
+        xs: "h-6 gap-1 px-2.5 text-xs has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-3",
+        sm: "h-7 gap-1 px-3 text-control-sm has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-3.5",
+        md: "h-8 gap-1.5 px-3.5 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
+        lg: "h-9 gap-1.5 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
+        xl: "h-10 gap-1.5 px-4.5 has-data-[icon=inline-end]:pr-3.5 has-data-[icon=inline-start]:pl-3.5",
         "icon-xs": "size-6 [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-7",
         "icon-md": "size-8",
@@ -177,31 +204,14 @@ const buttonVariants = cva(
       // meia-volta lê como uma volta inteira. É `rotate`, a propriedade
       // independente do Tailwind v4 — ela não disputa com o `translate` do
       // clique —, e o bloco global de movimento reduzido corta a transição.
-      // A forma. `rounded` é o canto do sistema (`rounded-lg`, da base);
-      // `pill` é a borda 100% arredondada. Na pílula o recuo lateral sobe meio
-      // degrau (compostas abaixo): a curva come o canto, e com o recuo do
-      // retângulo o rótulo fica espremido contra ela. Nos `icon-*` a pílula é
-      // um círculo.
-      shape: {
-        rounded: "",
-        pill: "rounded-full",
-      },
       iconMotion: {
         none: "",
         spin: "[&_svg]:transition-[rotate] [&_svg]:duration-(--duration-spring) [&_svg]:ease-(--ease-spring) hover:[&_svg]:rotate-180 active:[&_svg]:rotate-180",
       },
     },
-    compoundVariants: [
-      { shape: "pill", size: "xs", class: "px-2.5" },
-      { shape: "pill", size: "sm", class: "px-3" },
-      { shape: "pill", size: "md", class: "px-3.5" },
-      { shape: "pill", size: "lg", class: "px-4" },
-      { shape: "pill", size: "xl", class: "px-4.5" },
-    ],
     defaultVariants: {
       variant: "primary",
       size: "md",
-      shape: "rounded",
       iconMotion: "none",
     },
   }
@@ -219,7 +229,6 @@ function Button({
   className,
   variant = "primary",
   size: sizeProp,
-  shape,
   iconMotion,
   asChild = false,
   children,
@@ -266,9 +275,8 @@ function Button({
       data-variant={variant}
       ref={composeRefs(glowRef, ref)}
       data-size={size}
-      data-shape={shape ?? "rounded"}
       data-icon-motion={iconMotion ?? undefined}
-      className={cn(buttonVariants({ variant, size, shape, iconMotion, className }))}
+      className={cn(buttonVariants({ variant, size, iconMotion, className }))}
       {...props}
     >
       {content}

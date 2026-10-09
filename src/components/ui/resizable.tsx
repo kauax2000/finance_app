@@ -561,7 +561,7 @@ function ResizableCollapseTrigger({
   className,
   collapsed,
   side,
-  size = "icon-sm",
+  size = "icon-md",
   ...props
 }: ResizableCollapseTriggerProps) {
   const { orientation } = useResizableContext()

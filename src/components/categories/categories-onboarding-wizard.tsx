@@ -496,7 +496,7 @@ export function CategoriesOnboardingWizard({
         return (
             <div
                 key={c.id}
-                className="flex flex-col gap-2 rounded-lg border border-border/80 bg-background/80 px-2 py-2 sm:flex-row sm:items-center"
+                className="flex flex-col gap-2 rounded-row border border-border/80 bg-background/80 px-2 py-2 sm:flex-row sm:items-center"
             >
                 <div className="flex min-w-0 flex-1 items-center gap-2">
                     <ColorTile color={bg} className="shrink-0">
@@ -849,7 +849,7 @@ export function CategoriesOnboardingWizard({
                                             <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
                                                 Receitas
                                             </p>
-                                            <div className="space-y-2 rounded-xl border border-border/50 bg-muted/10 p-2">
+                                            <div className="space-y-2 rounded-row-lg border border-border/50 bg-muted/10 p-2">
                                                 {incomeCategories.map((c) => renderCategoryRow(c))}
                                             </div>
                                         </div>
@@ -866,7 +866,7 @@ export function CategoriesOnboardingWizard({
                                                 </EmptyStateDescription>
                                             </EmptyState>
                                         ) : (
-                                            <div className="space-y-2 rounded-xl border border-border/50 bg-muted/10 p-2">
+                                            <div className="space-y-2 rounded-row-lg border border-border/50 bg-muted/10 p-2">
                                                 {expenseCategories.map((c) => renderCategoryRow(c))}
                                             </div>
                                         )}
@@ -897,7 +897,7 @@ export function CategoriesOnboardingWizard({
                     >
                         {/* Poço de rolagem à mão de propósito, como as duas listas do
                             passo 1: o `overflow-hidden` do `Card` recortaria a rolagem. */}
-                        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain rounded-xl border border-border/50 bg-muted/10 p-2">
+                        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain rounded-row-lg border border-border/50 bg-muted/10 p-2">
                         {expenseCategories.map((c) => {
                             const raw = (amountByCategoryId[c.id] ?? "").trim()
                             const amt = raw === "" ? null : parseMoneyBrl(raw)
@@ -908,7 +908,7 @@ export function CategoriesOnboardingWizard({
                                 <div
                                     key={c.id}
                                     className={cn(
-                                        "flex flex-col gap-2 rounded-lg border border-border/80 bg-background/80 px-3 py-2.5",
+                                        "flex flex-col gap-2 rounded-row border border-border/80 bg-background/80 px-3 py-2.5",
                                         "sm:flex-row sm:items-center sm:justify-between sm:gap-3",
                                     )}
                                 >

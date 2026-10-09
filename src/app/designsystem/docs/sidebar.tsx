@@ -83,7 +83,7 @@ function Tela({
     <ViewportFrame
       title={title}
       height={height}
-      className="rounded-lg"
+      className="rounded-surface"
       screenClassName="bg-background"
     >
       {children}
@@ -233,10 +233,10 @@ function Conteudo({ children }: { children?: React.ReactNode }) {
         <TopBarTitle>Início</TopBarTitle>
       </TopBar>
       <div className="min-h-0 flex-1 space-y-3 p-4">
-        <div className="h-20 rounded-lg border border-border bg-card" />
+        <div className="h-20 rounded-surface border border-border bg-card" />
         <div className="grid grid-cols-2 gap-3">
-          <div className="h-24 rounded-lg border border-border bg-card" />
-          <div className="h-24 rounded-lg border border-border bg-card" />
+          <div className="h-24 rounded-surface border border-border bg-card" />
+          <div className="h-24 rounded-surface border border-border bg-card" />
         </div>
       </div>
     </>
@@ -360,7 +360,7 @@ function Placa({ rotulo, children }: { rotulo?: string; children: React.ReactNod
   return (
     <div className="flex w-64 shrink-0 flex-col gap-2">
       {rotulo ? <span className="px-1 font-mono text-xs text-muted-foreground">{rotulo}</span> : null}
-      <div className="overflow-hidden rounded-2xl bg-sidebar shadow-lg ring-1 ring-foreground/10">
+      <div className="overflow-hidden rounded-modal bg-sidebar shadow-lg ring-1 ring-foreground/10">
         <SidebarProvider className="min-h-0">
           <Sidebar collapsible="none" className="w-full bg-transparent">
             <SidebarContent>{children}</SidebarContent>

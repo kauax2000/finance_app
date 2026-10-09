@@ -32,7 +32,7 @@ export function NotificationsSheet() {
                 className={cn(
                     "flex w-full flex-col gap-0 p-0",
                     isMobile
-                        ? "rounded-t-xl pb-[calc(1rem+env(safe-area-inset-bottom,0px))]"
+                        ? "rounded-t-modal pb-[calc(1rem+env(safe-area-inset-bottom,0px))]"
                         : "h-full max-h-[100dvh] border-l sm:max-w-md"
                 )}
             >

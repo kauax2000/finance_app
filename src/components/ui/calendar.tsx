@@ -3,12 +3,16 @@
 import * as React from "react"
 import {
   DayPicker,
+  Nav as DayPickerNav,
   getDefaultClassNames,
+  useDayPicker,
   type DateRange,
   type DayButton,
   type Matcher,
+  type NavProps,
 } from "react-day-picker"
 
+import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 
 import { cn } from "@/lib/utils"
@@ -18,6 +22,9 @@ import {
   localYmdFromDate,
 } from "@/lib/transaction-date"
 import { Button } from "@/components/ui/button"
+import { MoneyDisplay } from "@/components/ui/money-display"
+import { Separator } from "@/components/ui/separator"
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import {
   Select,
   SelectContent,
@@ -153,12 +160,16 @@ type CalendarExtras = {
   escolher: (valor: Date | DateRange) => void
   modo?: string
   selecionado?: unknown
+  listEmpty?: React.ReactNode
+  listDays?: (date: Date) => boolean
+  semNavegacao: boolean
 }
 
 const CalendarExtrasContext = React.createContext<CalendarExtras>({
   markers: [],
   agenda: false,
   showToday: false,
+  semNavegacao: false,
   irPara: () => {},
   escolher: () => {},
 })
@@ -190,6 +201,9 @@ function Calendar({
   stretch = false,
   numberOfMonths,
   modifiers,
+  modifiersClassNames,
+  listEmpty,
+  listDays,
   ...props
 }: React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>["variant"]
@@ -198,8 +212,20 @@ function Calendar({
   markers?: CalendarMarker[]
   /** `agenda` é a célula grande, com o conteúdo do dia sob o número. */
   variant?: "default" | "agenda"
-  /** Com `agenda`: o que vai na célula, sob o número. */
+  /**
+   * Com `agenda`: o que vai na célula, sob o número — de preferência um
+   * `CalendarEvents` com os `CalendarEvent` do dia. `null` é dia vazio, e na
+   * lista (a agenda estreita) o dia vazio não aparece.
+   */
   renderDay?: (date: Date) => React.ReactNode
+  /** Com `agenda`, estreita: o texto da lista quando o mês não tem nada. */
+  listEmpty?: React.ReactNode
+  /**
+   * Com `agenda`, estreita: os dias que entram na lista, entre os que têm
+   * conteúdo. A grade não muda. O dashboard o usa para mostrar só os últimos
+   * dias passados, como a lista do telefone sempre fez.
+   */
+  listDays?: (date: Date) => boolean
   /** O "Hoje" que volta ao mês atual. */
   showToday?: boolean
   /** Atalhos ao lado da grade: intervalos em `mode="range"`, dias em `single`. */
@@ -242,8 +268,10 @@ function Calendar({
     markers.forEach((mk, i) => {
       m[`marker-${i}`] = mk.dates
     })
+    // Na agenda, o fim de semana tem um véu na coluna (rodada 242).
+    if (agenda) m.fimDeSemana = { dayOfWeek: [0, 6] }
     return m
-  }, [markers, modifiers])
+  }, [markers, modifiers, agenda])
 
   const extras = React.useMemo<CalendarExtras>(
     () => ({
@@ -256,9 +284,12 @@ function Calendar({
       escolher,
       modo: props.mode,
       selecionado: (props as { selected?: unknown }).selected,
+      listEmpty,
+      listDays,
+      semNavegacao: props.hideNavigation ?? false,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [markers, agenda, renderDay, showToday, presets, irPara, escolher, props.mode, (props as { selected?: unknown }).selected]
+    [markers, agenda, renderDay, showToday, presets, irPara, escolher, props.mode, (props as { selected?: unknown }).selected, listEmpty, listDays, props.hideNavigation]
   )
 
   // O nome do dia soma os marcadores: "5 de março, assinatura, parcela".
@@ -313,6 +344,7 @@ function Calendar({
           <ChevronDownIcon className={cn("size-4", className)} {...props} />
         )
       },
+      Nav: (props) => <CalendarNav {...props} />,
       DayButton: ({ ...props }) => <CalendarDayButton {...props} />,
       Day: ({ day, modifiers, ...props }) => (
         <CalendarDay day={day} modifiers={modifiers as Record<string, boolean>} {...props} />
@@ -377,6 +409,11 @@ function Calendar({
       showOutsideDays={showOutsideDays}
       numberOfMonths={meses}
       modifiers={modificadores}
+      modifiersClassNames={
+        agenda
+          ? { fimDeSemana: AGENDA_FIM_DE_SEMANA, ...modifiersClassNames }
+          : modifiersClassNames
+      }
       {...(controlaMes
         ? { month: props.month ?? mesInterno, onMonthChange: irPara }
         : {})}
@@ -385,10 +422,12 @@ function Calendar({
       // /designsystem/touch-safe-area documenta — 7 células de 44px cabem em
       // 320px. Um ponto de mudança para as 42 células e a navegação de mês.
       className={cn(
-        "group/calendar bg-background p-2 [--cell-radius:var(--radius-md)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
+        "group/calendar bg-background p-2 [--cell-radius:9999px] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
         CALENDAR_CELL[size],
         // A agenda ocupa a largura de quem a contém, e a célula cresce com ela.
-        agenda && "p-0",
+        // Ela não pinta: quem pinta é a moldura da grade (`month_grid`). E é o
+        // contêiner da virada para lista (rodada 242).
+        agenda && "@container/calendar bg-transparent p-0",
         // O toque vence a escada, e vem depois dela de propósito: 44px é piso
         // de alvo, não um degrau a mais.
         "pointer-coarse:[--cell-size:--spacing(11)]",
@@ -421,6 +460,7 @@ function Calendar({
         // não deve capturar nada no vão entre elas.
         nav: cn(
           "pointer-events-none absolute inset-x-0 top-0 flex w-full items-center justify-between gap-1 [&>button]:pointer-events-auto",
+          agenda && "justify-end",
           defaultClassNames.nav
         ),
         // Só a classe da biblioteca: o seletor `rtl:**:[.rdp-button_previous>svg]`
@@ -429,6 +469,9 @@ function Calendar({
         button_next: defaultClassNames.button_next,
         month_caption: cn(
           "flex h-(--cell-size) w-full items-center justify-center px-(--cell-size)",
+          // Na agenda o mês é o título da tela, à esquerda; a navegação fica
+          // junta à direita (rodada 242).
+          agenda && "justify-start ps-1 pe-0",
           defaultClassNames.month_caption
         ),
         dropdowns: cn(
@@ -451,19 +494,31 @@ function Calendar({
         // desenhava o rótulo falso, que também deixou de existir.
         caption_label: cn(
           "text-sm font-medium select-none",
+          agenda && "inline-block text-base font-semibold first-letter:uppercase",
           defaultClassNames.caption_label
         ),
         table: "w-full border-collapse",
-        // Na agenda as semanas têm vão de 4px; o cabeçalho acompanha, senão
-        // os nomes desalinham das colunas.
-        weekdays: cn("flex", agenda && "gap-1", defaultClassNames.weekdays),
+        // **A grade de fios** (rodada 242): na agenda, a tabela é uma moldura
+        // só — o canto da superfície, o fio de 1px e o cartão —, e as células
+        // são separadas por fios, sem caixinha própria. Como item de flex, o
+        // `thead` e o `tbody` viram blocos sozinhos. Abaixo de 40rem da
+        // própria agenda ela some, e a lista do `CalendarShell` aparece.
+        month_grid: cn(
+          agenda &&
+            "flex w-full flex-col overflow-hidden rounded-surface border border-border bg-card @max-[40rem]/calendar:hidden",
+          defaultClassNames.month_grid
+        ),
+        weekdays: cn("flex", agenda && "border-b border-border", defaultClassNames.weekdays),
         weekday: cn(
           "flex-1 rounded-(--cell-radius) text-control-sm font-normal text-muted-foreground select-none",
           // Na agenda, o cabeçalho é a régua da coluna: versalete pequeno.
-          agenda && "pb-1 text-2xs font-medium tracking-wide uppercase",
+          agenda && "py-2 text-2xs font-medium tracking-wide uppercase",
           defaultClassNames.weekday
         ),
-        week: cn(agenda ? "mt-1 flex w-full gap-1" : "mt-2 flex w-full", defaultClassNames.week),
+        week: cn(
+          agenda ? "flex w-full [&:last-child>td]:border-b-0" : "mt-2 flex w-full",
+          defaultClassNames.week
+        ),
         week_number_header: cn(
           "w-(--cell-size) select-none",
           defaultClassNames.week_number_header
@@ -474,7 +529,11 @@ function Calendar({
         ),
         day: cn(
           "group/day relative aspect-square h-full w-full rounded-(--cell-radius) p-0 text-center select-none [&:last-child[data-selected=true]_button]:rounded-r-(--cell-radius)",
-          agenda && "aspect-auto",
+          // Na agenda a célula não tem caixa: o fio à direita e embaixo, que a
+          // última coluna e a última semana não desenham. E as sete colunas
+          // têm a mesma largura (`w-0 flex-1`): com a base no conteúdo, o dia
+          // com uma ficha longa alargava a coluna e a régua desalinhava.
+          agenda && "aspect-auto w-0 min-w-0 flex-1 rounded-none border-e border-b border-border/60 last:border-e-0",
           props.showWeekNumber
             ? "[&:nth-child(2)[data-selected=true]_button]:rounded-l-(--cell-radius)"
             : "[&:first-child[data-selected=true]_button]:rounded-l-(--cell-radius)",
@@ -495,11 +554,17 @@ function Calendar({
           defaultClassNames.range_end
         ),
         today: cn(
-          "rounded-(--cell-radius) bg-muted text-foreground data-[selected=true]:rounded-none",
+          // Na agenda o hoje é o número na pastilha (`DiaConteudo`), e não a
+          // célula inteira acesa.
+          agenda
+            ? "text-foreground"
+            : "rounded-(--cell-radius) bg-muted text-foreground data-[selected=true]:rounded-none",
           defaultClassNames.today
         ),
         outside: cn(
           "text-muted-foreground aria-selected:text-muted-foreground",
+          // O mês vizinho recua: um véu mais fundo que o do fim de semana.
+          agenda && "bg-muted/30",
           defaultClassNames.outside
         ),
         disabled: cn(
@@ -523,44 +588,56 @@ function Calendar({
  * os mesmos entre renders — um objeto novo remontaria a grade e soltaria o
  * foco (ver o comentário em `componentes`).
  */
-function CalendarShell({ children }: { children: React.ReactNode }) {
-  const { presets, showToday, markers, irPara, escolher, modo, selecionado } =
-    React.useContext(CalendarExtrasContext)
-  const hoje = () => {
-    const d = new Date()
-    d.setHours(0, 0, 0, 0)
-    return d
+/** Meia-noite de hoje, na hora do clique. */
+function hojeMeiaNoite() {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+/** O "Hoje": volta ao mês atual e, na escolha única, marca o dia. */
+function useIrParaHoje() {
+  const { irPara, escolher, modo } = React.useContext(CalendarExtrasContext)
+  return () => {
+    const d = hojeMeiaNoite()
+    irPara(d)
+    if (modo === "single") escolher(d)
   }
+}
+
+function CalendarShell({ children }: { children: React.ReactNode }) {
+  const { presets, showToday, markers, agenda, semNavegacao, irPara, escolher, modo, selecionado } =
+    React.useContext(CalendarExtrasContext)
+  const irParaHoje = useIrParaHoje()
   const intervaloAtual = selecionado as DateRange | undefined
 
   const grade = (
     <div className="flex min-w-0 flex-col">
       {children}
+      {agenda ? <CalendarAgendaList /> : null}
       {markers.length > 0 ? (
-        <ul
-          data-slot="calendar-legend"
-          className="mt-3 flex flex-wrap gap-x-3 gap-y-1 px-1 text-xs text-muted-foreground"
-        >
-          {markers.map((mk) => (
-            <li key={mk.label} className="inline-flex items-center gap-1.5">
-              <span aria-hidden className={cn("size-1.5 rounded-full", MARCADOR_TOM[mk.tone])} />
-              {mk.label}
-            </li>
-          ))}
-        </ul>
+        // A legenda é uma faixa própria (rodada 241y): um fio suave a separa da
+        // grade — ela não é mais uma semana —, centrada sob as sete colunas, com
+        // respiro de 16px entre os itens para cada ponto ler como do seu nome,
+        // e não do vizinho. O ponto tem o dobro do da célula (8 contra 4),
+        // porque aqui ele é a chave, e lá é a marca.
+        <div data-slot="calendar-legend" className="mt-3">
+          <Separator tone="soft" />
+          <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 px-1 pt-3 pb-1 text-xs text-muted-foreground">
+            {markers.map((mk) => (
+              <li key={mk.label} className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                <span aria-hidden className={cn("size-2 shrink-0 rounded-full", MARCADOR_TOM[mk.tone])} />
+                {mk.label}
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
-      {showToday ? (
+      {/* Na agenda o "Hoje" mora no cabeçalho (`CalendarNav`) — menos com
+          `hideNavigation`, quando o cabeçalho não monta e ele volta para cá. */}
+      {showToday && (!agenda || semNavegacao) ? (
         <div className="mt-2 flex justify-center">
-          <Button
-            type="button"
-            variant="tertiary"
-            size="xs"
-            onClick={() => {
-              const d = hoje()
-              irPara(d)
-              if (modo === "single") escolher(d)
-            }}
-          >
+          <Button type="button" variant="tertiary" size="xs" onClick={irParaHoje}>
             hoje
           </Button>
         </div>
@@ -627,6 +704,86 @@ function CalendarShell({ children }: { children: React.ReactNode }) {
         })}
       </ul>
       {grade}
+    </div>
+  )
+}
+
+/**
+ * A faixa de navegação. Fora da agenda é a do `react-day-picker`, intacta. Na
+ * agenda com `showToday`, o "Hoje" entra na faixa, antes das setas — o mês à
+ * esquerda e a navegação junta à direita, como a visão de mês do iOS
+ * (rodada 242).
+ */
+function CalendarNav({ className, ...props }: NavProps) {
+  const { agenda, showToday } = React.useContext(CalendarExtrasContext)
+  const irParaHoje = useIrParaHoje()
+  if (!(agenda && showToday)) return <DayPickerNav className={className} {...props} />
+  return (
+    <div data-slot="calendar-nav" className={className}>
+      <Button
+        type="button"
+        variant="tertiary"
+        size="sm"
+        className="pointer-events-auto"
+        onClick={irParaHoje}
+      >
+        hoje
+      </Button>
+      <DayPickerNav {...props} className="flex items-center gap-1 [&>button]:pointer-events-auto" />
+    </div>
+  )
+}
+
+/** A forma do `CalendarEvent`: ficha na grade, linha na lista. */
+const CalendarLayoutContext = React.createContext<"grid" | "list">("grid")
+
+/**
+ * A agenda estreita (rodada 242): abaixo de 40rem da **própria** largura a
+ * grade some e entra a lista do mês — só os dias com conteúdo, cada um com o
+ * rótulo e os eventos em linha. É a container query, e não a janela: num
+ * painel de 560px no desktop ela também vira lista.
+ */
+function CalendarAgendaList() {
+  const { renderDay, listEmpty, listDays } = React.useContext(CalendarExtrasContext)
+  const { months } = useDayPicker()
+  const mes = months[0]
+  const hoje = localYmdFromDate(new Date())
+  const dias = (mes?.weeks.flatMap((w) => w.days) ?? [])
+    .filter((d) => !d.outside && (listDays?.(d.date) ?? true))
+    .map((d) => ({ date: d.date, conteudo: renderDay?.(d.date) }))
+    .filter((d) => d.conteudo != null && d.conteudo !== false)
+
+  return (
+    <div
+      data-slot="calendar-agenda-list"
+      className="hidden flex-col gap-1 rounded-surface border border-border bg-card p-1.5 @max-[40rem]/calendar:flex [--radius-inset:calc(--spacing(1.5)+1px)] [--radius-parent:var(--radius-surface)]"
+    >
+      {dias.length === 0 ? (
+        <p className="py-6 text-center text-sm text-muted-foreground">
+          {listEmpty ?? "Nenhum evento neste mês"}
+        </p>
+      ) : (
+        dias.map(({ date, conteudo }) => {
+          const ymd = localYmdFromDate(date)
+          return (
+            // Um grupo e não uma `section`: com nome, a `section` vira região, e
+            // um mês cheio punha 25 regiões na navegação do leitor de tela.
+            <div
+              key={ymd}
+              role="group"
+              data-day={ymd}
+              aria-label={formatDateLongPtBr(ymd)}
+              className="flex flex-col pb-1"
+            >
+              <p className="px-3 pt-2 pb-1 text-2xs font-medium tracking-wide text-muted-foreground uppercase">
+                {ymd === hoje ? <span className="text-foreground">Hoje · </span> : null}
+                {format(date, "EEE, d", { locale: ptBR })}
+              </p>
+              <CalendarLayoutContext value="list">{conteudo}</CalendarLayoutContext>
+            </div>
+          )
+        })
+      )}
     </div>
   )
 }
@@ -708,9 +865,41 @@ function CalendarDropdown({
   )
 }
 
-/** A célula da agenda: alta, o número no canto e o conteúdo embaixo. */
+/**
+ * A célula da agenda: alta, o número no canto e o conteúdo embaixo — **sem
+ * caixa** (rodada 242). Era `rounded-lg` com borda e cartão próprios, 42
+ * caixinhas; hoje quem separa os dias são os fios do `td`, e a célula só
+ * realça: a camada do `Button` a 5% da tinta do texto, que numa célula de 96px
+ * é o bastante. O foco é um anel **interno**, porque a moldura recorta o de
+ * fora nas bordas.
+ */
 const AGENDA_CELULA =
-  "aspect-auto min-h-24 items-stretch justify-start gap-1 rounded-lg border border-border/60 bg-card p-1.5 text-left"
+  "aspect-auto min-h-24 w-full items-stretch justify-start gap-1 rounded-none border-0 bg-transparent p-2 text-left [--button-hover-fill:color-mix(in_oklab,var(--foreground)_5%,transparent)] focus-visible:ring-0 focus-visible:inset-ring-2 focus-visible:inset-ring-ring/45 group-data-[focused=true]/day:ring-0 group-data-[focused=true]/day:inset-ring-2 group-data-[focused=true]/day:inset-ring-ring/45"
+
+/**
+ * O dia escolhido na agenda **não acende em `primary`** — numa célula de 96px
+ * a tecla preta inteira apagaria o conteúdo. Ele fica `muted` com um anel
+ * interno, e o número na tinta do texto. Vence as regras do dia escolhido do
+ * calendário pequeno porque vem depois no `cn` — inclusive a camada do realce,
+ * que lá é zerada e aqui volta aos 5% das outras células.
+ */
+const AGENDA_SELECIONADO =
+  "data-[selected-single=true]:[--button-hover-fill:color-mix(in_oklab,var(--foreground)_5%,transparent)] data-[selected-single=true]:bg-muted data-[selected-single=true]:text-foreground data-[selected-single=true]:inset-ring-2 data-[selected-single=true]:inset-ring-ring/45 data-[selected-single=true]:hover:bg-muted data-[selected-single=true]:active:bg-muted data-[selected-single=true]:hover:text-foreground data-[selected-single=true]:active:text-foreground dark:data-[selected-single=true]:hover:text-foreground dark:data-[selected-single=true]:active:text-foreground"
+
+/** O véu da coluna do fim de semana, mais leve que o do mês vizinho. */
+const AGENDA_FIM_DE_SEMANA = "[&:not([data-outside])]:bg-muted/15"
+
+/** A superfície da ficha de evento, por tom — os `-muted` do sistema. */
+const EVENTO_TOM: Record<CalendarMarkerTone, string> = {
+  default: "bg-muted text-muted-foreground",
+  primary: "bg-primary-muted text-primary-muted-foreground",
+  info: "bg-info-muted text-info-muted-foreground",
+  success: "bg-success-muted text-success-muted-foreground",
+  warning: "bg-warning-muted text-warning-muted-foreground",
+  destructive: "bg-destructive-muted text-destructive-muted-foreground",
+  income: "bg-income-muted text-income-muted-foreground",
+  expense: "bg-expense-muted text-expense-muted-foreground",
+}
 
 /**
  * O miolo do dia, igual no botão e no dia estático: na agenda, o número (hoje
@@ -719,10 +908,13 @@ const AGENDA_CELULA =
 function DiaConteudo({
   day,
   modifiers,
+  contentId,
   children,
 }: {
   day: { date: Date }
   modifiers: Record<string, boolean>
+  /** O `id` do conteúdo, que o botão do dia aponta em `aria-describedby`. */
+  contentId?: string
   children: React.ReactNode
 }) {
   const { markers, agenda, renderDay } = React.useContext(CalendarExtrasContext)
@@ -733,13 +925,15 @@ function DiaConteudo({
           data-slot="calendar-day-number"
           className={cn(
             "inline-flex size-6 items-center justify-center self-start rounded-full text-xs font-semibold tabular-nums",
+            (modifiers.outside || modifiers.fimDeSemana) && "text-muted-foreground",
+            modifiers.outside && "font-normal",
             modifiers.today && "bg-primary text-primary-foreground"
           )}
         >
           {children}
         </span>
-        <span data-slot="calendar-day-content" className="w-full min-w-0 flex-1">
-          {renderDay?.(day.date)}
+        <span id={contentId} data-slot="calendar-day-content" className="w-full min-w-0 flex-1">
+          <CalendarLayoutContext value="grid">{renderDay?.(day.date)}</CalendarLayoutContext>
         </span>
       </>
     )
@@ -814,6 +1008,7 @@ function CalendarDayButton({
 }: React.ComponentProps<typeof DayButton>) {
   const defaultClassNames = getDefaultClassNames()
   const { agenda } = React.useContext(CalendarExtrasContext)
+  const contentId = React.useId()
 
   const ref = React.useRef<HTMLButtonElement>(null)
   React.useEffect(() => {
@@ -841,6 +1036,9 @@ function CalendarDayButton({
       data-range-start={modifiers.range_start}
       data-range-end={modifiers.range_end}
       data-range-middle={modifiers.range_middle}
+      // Na agenda o nome do dia continua "5 de março", e o que há nele — os
+      // eventos e o "+2 mais" — é a descrição (rodada 242).
+      aria-describedby={agenda ? contentId : undefined}
       className={cn(
         // **`p-0` é carga estrutural, não cosmética.** A raiz é `w-fit`, e a
         // largura da grade sai do `max-content` das células. Enquanto o botão
@@ -849,22 +1047,226 @@ function CalendarDayButton({
         // `min-w-(--cell-size)` nunca chegando a valer e o `size` do `Calendar`
         // sem efeito nenhum. Com o recuo em zero, quem dimensiona volta a ser a
         // célula.
-        "relative isolate z-10 flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 border-0 p-0 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-3 group-data-[focused=true]/day:ring-ring/45 data-[range-end=true]:rounded-r-(--cell-radius) data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground data-[range-middle=true]:rounded-none data-[range-middle=true]:bg-muted data-[range-middle=true]:text-foreground data-[range-start=true]:rounded-l-(--cell-radius) data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground dark:hover:text-foreground [&>span]:text-xs [&>span]:opacity-70",
+        "relative isolate z-10 flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 border-0 p-0 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-3 group-data-[focused=true]/day:ring-ring/45 data-[range-end=true]:rounded-l-none data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground data-[range-middle=true]:rounded-none data-[range-middle=true]:bg-muted data-[range-middle=true]:text-foreground data-[range-start=true]:rounded-r-none data-[range-start=true]:data-[range-end=true]:rounded-full data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground dark:hover:text-foreground [&>span]:text-xs [&>span]:opacity-70",
         defaultClassNames.day,
+        // **As pontas do intervalo são meia-lua voltada para fora** (rodada
+        // 241x): a ponta de início é redonda à esquerda e reta do lado da
+        // faixa, a de fim o contrário, e as duas completam a faixa. Antes elas
+        // somavam `rounded-full` (calc(infinity·1px)) a `--cell-radius`
+        // (9999px) na mesma aresta, e a regra de proporção do CSS encolhia o
+        // lado de 9999 a quase zero — a meia-lua saía virada para dentro. O
+        // intervalo de um dia só, com as duas pontas no mesmo dia, é círculo.
+        // **O dia escolhido realça como o `primary`** (rodada 241w): a tecla vai
+        // a `--primary-hover` e o número fica na tinta dela. Herdando o
+        // `tertiary`, o cursor trocava o número para `--foreground` — branco
+        // sobre a tecla branca no escuro, preto sobre a preta no claro: o
+        // número sumia — e a camada de 12% do texto não se via sobre a tecla.
+        // O `dark:` repete porque `dark:hover:text-foreground` empata com a
+        // regra sem tema.
+        "data-[selected-single=true]:[--button-hover-fill:transparent] data-[selected-single=true]:hover:bg-primary-hover data-[selected-single=true]:active:bg-primary-hover data-[selected-single=true]:hover:text-primary-foreground data-[selected-single=true]:active:text-primary-foreground dark:data-[selected-single=true]:hover:text-primary-foreground dark:data-[selected-single=true]:active:text-primary-foreground",
+        "data-[range-start=true]:[--button-hover-fill:transparent] data-[range-start=true]:hover:bg-primary-hover data-[range-start=true]:active:bg-primary-hover data-[range-start=true]:hover:text-primary-foreground data-[range-start=true]:active:text-primary-foreground dark:data-[range-start=true]:hover:text-primary-foreground dark:data-[range-start=true]:active:text-primary-foreground",
+        "data-[range-end=true]:[--button-hover-fill:transparent] data-[range-end=true]:hover:bg-primary-hover data-[range-end=true]:active:bg-primary-hover data-[range-end=true]:hover:text-primary-foreground data-[range-end=true]:active:text-primary-foreground dark:data-[range-end=true]:hover:text-primary-foreground dark:data-[range-end=true]:active:text-primary-foreground",
         // A agenda: a célula alta, o número no canto e o conteúdo do dia
         // embaixo. Contorno e chão próprios, e o "hoje" é o número numa
         // pastilha, não a célula inteira acesa.
-        agenda && [AGENDA_CELULA, "hover:bg-muted/40 active:bg-muted/40"],
+        agenda && [AGENDA_CELULA, AGENDA_SELECIONADO],
         className
       )}
       {...props}
     >
-      <DiaConteudo day={day} modifiers={modifiers}>
+      <DiaConteudo day={day} modifiers={modifiers} contentId={contentId}>
         {children}
       </DiaConteudo>
     </Button>
   )
 }
 
-export { Calendar, CalendarDayButton }
-export type { CalendarMarker, CalendarPreset }
+/**
+ * Um evento do dia (rodada 242), na forma que a agenda pede: na grade, a ficha
+ * de 20px na superfície `-muted` do tom, só com o título; na lista, a linha de
+ * 44px com o ponto do tom, o `meta` (o tipo) depois do título e o valor à
+ * direita — e ela é `button` quando há `onSelect`. Na grade ela nunca é botão:
+ * o dia já é. O valor sai na tinta do texto, como no resto da agenda do app: o
+ * tom do evento já está no ponto.
+ *
+ * **O valor não entra na ficha, e é medido**: numa coluna de 123px (a agenda
+ * de 862) o valor ficava inteiro e o título caía para "Spo…" e "Co…". O
+ * título é o que diz o que é; o valor está na lista e no que o dia abre.
+ */
+function CalendarEvent({
+  tone = "default",
+  amount,
+  meta,
+  onSelect,
+  className,
+  children,
+}: {
+  tone?: CalendarMarkerTone
+  /** O valor à direita, em reais — só na lista. */
+  amount?: number | null
+  /** Só na lista: o que vem depois do título — o tipo do evento. */
+  meta?: React.ReactNode
+  /** Só na lista: a linha vira botão. */
+  onSelect?: () => void
+  className?: string
+  children: React.ReactNode
+}) {
+  const layout = React.useContext(CalendarLayoutContext)
+
+  if (layout === "grid") {
+    return (
+      <span
+        data-slot="calendar-event"
+        data-tone={tone}
+        className={cn(
+          "flex h-5 min-w-0 items-center gap-1 rounded-md px-1.5 text-2xs leading-none font-medium",
+          EVENTO_TOM[tone],
+          className
+        )}
+      >
+        <span className="min-w-0 flex-1 truncate">{children}</span>
+      </span>
+    )
+  }
+
+  const linha = (
+    <>
+      <span aria-hidden className={cn("size-2 shrink-0 rounded-full", MARCADOR_TOM[tone])} />
+      <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+        <span className="min-w-0 truncate">{children}</span>
+        {meta}
+      </span>
+      {amount != null ? <MoneyDisplay value={amount} className="shrink-0" /> : null}
+    </>
+  )
+  const forma = "concentric flex min-h-11 w-full items-center gap-3 px-3 text-left text-sm"
+  return onSelect ? (
+    <button
+      type="button"
+      data-slot="calendar-event"
+      data-tone={tone}
+      onClick={onSelect}
+      className={cn(
+        forma,
+        "transition-colors duration-(--duration-fast) ease-(--ease-out) outline-none hover:bg-muted focus-visible:inset-ring-2 focus-visible:inset-ring-ring/45 active:bg-muted",
+        className
+      )}
+    >
+      {linha}
+    </button>
+  ) : (
+    <div data-slot="calendar-event" data-tone={tone} className={cn(forma, className)}>
+      {linha}
+    </div>
+  )
+}
+
+/**
+ * Os eventos de um dia. Na grade mostra os `max` primeiros e um "+N mais"
+ * que não estoura a célula; na lista mostra todos. Era escrito à mão em cada
+ * tela — o "+N" do dashboard, o `Badge` do catálogo.
+ */
+function CalendarEvents({
+  max = 2,
+  className,
+  children,
+}: {
+  max?: number
+  className?: string
+  children: React.ReactNode
+}) {
+  const layout = React.useContext(CalendarLayoutContext)
+  const itens = React.Children.toArray(children)
+  if (itens.length === 0) return null
+  const visiveis = layout === "grid" ? itens.slice(0, max) : itens
+  const resto = itens.length - visiveis.length
+  return (
+    <div
+      data-slot="calendar-events"
+      className={cn("flex min-w-0 flex-col", layout === "grid" ? "gap-0.5" : "gap-0", className)}
+    >
+      {visiveis}
+      {resto > 0 ? (
+        <span data-slot="calendar-events-more" className="px-1.5 text-2xs font-medium text-muted-foreground">
+          +{resto} mais
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
+/**
+ * O esqueleto do calendário (rodada 242). `agenda` é a grade de fios — o
+ * título, a régua dos dias e 6 × 7 células com uma ficha fantasma em algumas;
+ * `default` é a grade pequena. Dentro de um esqueleto de página, `group={false}`.
+ */
+function CalendarSkeleton({
+  variant = "default",
+  group = true,
+  className,
+}: {
+  variant?: "default" | "agenda"
+  group?: boolean
+  className?: string
+}) {
+  const ossos =
+    variant === "agenda" ? (
+      <div data-slot="calendar-skeleton" data-variant="agenda" className={cn("flex w-full flex-col gap-4", className)}>
+        <div className="flex h-8 items-center justify-between ps-1">
+          <Skeleton className="h-5 w-32" />
+          {/* O "Hoje" e as duas setas, na forma do cabeçalho da agenda. */}
+          <div className="flex items-center gap-1">
+            <Skeleton className="h-7 w-14 rounded-full" />
+            <Skeleton className="size-8 rounded-full" />
+            <Skeleton className="size-8 rounded-full" />
+          </div>
+        </div>
+        <div className="overflow-hidden rounded-surface border border-border bg-card">
+          <div className="flex border-b border-border py-2">
+            {Array.from({ length: 7 }, (_, c) => (
+              <div key={c} className="flex w-0 min-w-0 flex-1 justify-center">
+                <Skeleton className="h-3 w-7 rounded-sm" />
+              </div>
+            ))}
+          </div>
+          {Array.from({ length: 6 }, (_, r) => (
+            <div key={r} className="flex [&:last-child>div]:border-b-0">
+              {Array.from({ length: 7 }, (_, c) => (
+                <div
+                  key={c}
+                  className="flex min-h-24 w-0 min-w-0 flex-1 flex-col gap-1.5 border-e border-b border-border/60 p-2 last:border-e-0"
+                >
+                  <Skeleton className="size-5 rounded-full" />
+                  {(r * 7 + c) % 5 === 3 ? <Skeleton className="h-5 w-4/5" /> : null}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    ) : (
+      <div data-slot="calendar-skeleton" data-variant="default" className={cn("flex w-fit flex-col gap-3 p-2", className)}>
+        <Skeleton className="mx-auto h-5 w-28" />
+        {Array.from({ length: 6 }, (_, r) => (
+          <div key={r} className="flex gap-1">
+            {Array.from({ length: 7 }, (_, c) => (
+              <Skeleton key={c} className="size-8 rounded-full" />
+            ))}
+          </div>
+        ))}
+      </div>
+    )
+  // A agenda ocupa a largura de quem a contém, como a agenda de verdade: sem
+  // `w-full` no grupo, num contêiner flex ele encolhia ao conteúdo e a grade
+  // saía espremida em 260px.
+  return group ? (
+    <SkeletonGroup label="Carregando o calendário…" className={cn(variant === "agenda" && "w-full")}>
+      {ossos}
+    </SkeletonGroup>
+  ) : (
+    ossos
+  )
+}
+
+export { Calendar, CalendarDayButton, CalendarEvent, CalendarEvents, CalendarSkeleton }
+export type { CalendarMarker, CalendarMarkerTone, CalendarPreset }

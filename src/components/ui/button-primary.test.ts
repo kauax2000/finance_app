@@ -6,16 +6,20 @@ import { buttonVariants } from "./button"
 import { cn } from "@/lib/utils"
 
 /**
- * O primário é o **Button Colorful** da Kokonut UI (rodadas 149 a 151): a
- * tecla preta (branca no escuro) chapada em repouso, com um degradê borrado de
- * cinco paradas da marca florescendo do centro no cursor. Ele foi tecla da rodada 78 à 97,
- * lava e brilho da 98 à 147 e cru na 148; cada asserção aqui tranca ou um
- * pedaço do desenho novo, ou um pedaço dos antigos que não pode voltar.
+ * O primário é a **tecla chapada** (rodada 241): preta no claro, branca no
+ * escuro, indo a `--primary-hover` no cursor (clareia no claro, escurece no
+ * escuro: a tecla preta já não tinha para onde escurecer). O **Button Colorful**
+ * da Kokonut UI (rodadas 149 a 151) — o degradê de cinco paradas da marca
+ * florescendo do centro — saiu dele e virou o `brandColorful`. O primário foi
+ * tecla em relevo da rodada 78 à 97, lava e brilho da 98 à 147, cru na 148 e
+ * colorido da 149 à 240; cada asserção aqui tranca ou um pedaço do desenho
+ * de hoje, ou um pedaço dos antigos que não pode voltar.
  */
 
 const RAIZ = resolve(process.cwd(), "src")
 const CSS = readFileSync(join(RAIZ, "app/globals.css"), "utf8")
 const PRIMARIO = buttonVariants({ variant: "primary" }).split(/\s+/)
+const COLORIDO = buttonVariants({ variant: "brandColorful" }).split(/\s+/)
 
 function bloco(inicio: string) {
   const i = CSS.indexOf(inicio)
@@ -40,18 +44,26 @@ function arquivosTsx(dir: string): string[] {
   })
 }
 
-describe("o primário é o colorido", () => {
-  it("1. em repouso é a tecla chapada; no cursor, no toque e no menu aberto as cores florescem", () => {
+describe("o primário é a tecla chapada, e o colorido é de marca", () => {
+  it("0. o primário vai a --primary-hover no cursor, no toque e no menu aberto, sem cor nenhuma", () => {
     expect(PRIMARIO).toContain("bg-primary")
-    expect(PRIMARIO).toContain("button-colorful")
+    for (const estado of ["hover", "active", "aria-expanded"]) {
+      expect(PRIMARIO, estado).toContain(`${estado}:bg-primary-hover`)
+    }
+    expect(PRIMARIO.filter((c) => /^(button-colorful|button-hover|brand-)|--button-(bloom|hover):/.test(c))).toStrictEqual([])
+    expect(PRIMARIO.join(" ")).not.toMatch(/bg-primary\/\d/)
+  })
+
+  it("1. `brandColorful` em repouso é a tecla chapada; no cursor, no toque e no menu aberto as cores florescem", () => {
+    expect(COLORIDO).toContain("bg-primary")
+    expect(COLORIDO).toContain("button-colorful")
     for (const c of ["hover:[--button-bloom:1]", "active:[--button-bloom:1]", "aria-expanded:[--button-bloom:1]"]) {
-      expect(PRIMARIO, c).toContain(c)
+      expect(COLORIDO, c).toContain(c)
     }
     // O fundo não troca — quem responde ao cursor é a camada. E a camada nunca
     // vem por classe `before:`/`after:` na variante: mora na utility.
-    expect(PRIMARIO.filter((c) => /^(hover|active):bg-/.test(c))).toStrictEqual([])
-    expect(PRIMARIO.filter((c) => /(^|:)(before|after):/.test(c))).toStrictEqual([])
-    expect(PRIMARIO.join(" ")).not.toMatch(/bg-primary\/\d/)
+    expect(COLORIDO.filter((c) => /^(hover|active):bg-/.test(c))).toStrictEqual([])
+    expect(COLORIDO.filter((c) => /(^|:)(before|after):/.test(c))).toStrictEqual([])
   })
 
   it("1a. a utility: a camada é o `::after`, cinco paradas da marca, e um número só anima tudo", () => {
@@ -86,23 +98,25 @@ describe("o primário é o colorido", () => {
   })
 
   it("2. nenhuma cor literal — a cor vem de token", () => {
-    expect(PRIMARIO.join(" ")).not.toMatch(/oklch\(|rgba?\(|#[0-9a-f]{3}|\bwhite\b|\bblack\b/i)
+    expect([...PRIMARIO, ...COLORIDO].join(" ")).not.toMatch(/oklch\(|rgba?\(|#[0-9a-f]{3}|\bwhite\b|\bblack\b/i)
   })
 
   it("3. nem contorno, nem sombra, nem o arco-íris inteiro", () => {
     // O `border-transparent` é da **base** — a borda de 1px existe para a
     // geometria de todo peso ficar igual à do `outline`, e não pinta.
-    expect(PRIMARIO.filter((c) => /^border-/.test(c) && c !== "border-transparent")).toStrictEqual([])
-    expect(PRIMARIO.filter((c) => /shadow-/.test(c))).toStrictEqual([])
-    expect(PRIMARIO.join(" ")).not.toMatch(/brand-rainbow|primary-wash|--button-wash|button-fill/)
+    for (const classes of [PRIMARIO, COLORIDO]) {
+      expect(classes.filter((c) => /^border-/.test(c) && c !== "border-transparent")).toStrictEqual([])
+      expect(classes.filter((c) => /shadow-/.test(c))).toStrictEqual([])
+      expect(classes.join(" ")).not.toMatch(/brand-rainbow|primary-wash|--button-wash|button-fill/)
+    }
   })
 
-  it("4. entra na mola, sai sem ela, e a variável está na lista de transição", () => {
-    const resolvido = cn(buttonVariants({ variant: "primary" }))
+  it("4. o colorido entra na mola, sai sem ela, e a variável está na lista de transição", () => {
+    const resolvido = cn(buttonVariants({ variant: "brandColorful" }))
     expect(resolvido).toMatch(/transition-\[[^\]]*\btranslate\b[^\]]*--button-bloom\]/)
     for (const estado of ["hover", "active", "aria-expanded"]) {
-      expect(PRIMARIO, estado).toContain(`${estado}:duration-(--duration-spring)`)
-      expect(PRIMARIO, estado).toContain(`${estado}:ease-(--ease-spring)`)
+      expect(COLORIDO, estado).toContain(`${estado}:duration-(--duration-spring)`)
+      expect(COLORIDO, estado).toContain(`${estado}:ease-(--ease-spring)`)
     }
   })
 
@@ -130,19 +144,15 @@ describe("o primário é o colorido", () => {
     // pesos que preenchiam entraram na rodada 99, pelo disco de `button-fill`,
     // e saíram com ele na 149.
     //
-    // **O florescer entrou na 151 (primário) e na 152 (os outros pesos com
-    // fundo no hover)**: a saída recolhe em `--duration-slow` com `--ease-out`
+    // **O florescer entrou na 151 e na 152, e na 241 ficou só no
+    // `brandColorful`**: a saída recolhe em `--duration-slow` com `--ease-out`
     // — a 150ms a flor se fechava num piscar — e a entrada é a mola da casa
-    // (asserção 4 e `button-touch-response.test.ts`).
+    // (asserção 4). Os outros pesos voltaram ao ritmo da casa.
     const FLOR = { duracao: "duration-(--duration-slow)", curva: "ease-(--ease-out)" }
     const RITMO_PROPRIO: Partial<Record<string, { duracao: string; curva: string }>> = {
-      primary: FLOR,
-      secondary: FLOR,
-      tertiary: FLOR,
-      outline: FLOR,
-      destructive: FLOR,
+      brandColorful: FLOR,
     }
-    for (const variant of ["primary", "secondary", "tertiary", "outline", "destructive", "link"] as const) {
+    for (const variant of ["primary", "brandColorful", "secondary", "tertiary", "outline", "floating", "destructive", "link"] as const) {
       const classes = cn(buttonVariants({ variant }))
       const proprio = RITMO_PROPRIO[variant]
       expect(classes, variant).not.toContain("transition-all")
@@ -171,14 +181,15 @@ describe("o primário é o colorido", () => {
       expect(ESCURO, `${t} no .dark`).not.toContain(`${t}:`)
     }
     expect(CSS).not.toContain("--color-primary-edge")
-    // O que fica: `--primary-hover`, porque o `brand` o lê como `--brand-fill`.
-    // Opaco e escurecendo nos dois temas — o alfa clareava num e escurecia
-    // no outro.
+    // O que fica: `--primary-hover`, o hover do primário (e o `--brand-fill`
+    // do `brandOutline`). Opaco, e longe o bastante do repouso para se ver
+    // (rodada 241b): clareia no claro, onde a tecla já é quase preta, e
+    // escurece no escuro — ao menos 0,1 de claridade de distância nos dois.
     expect(CSS).toContain("--color-primary-hover: var(--primary-hover)")
+    expect(claridade(CLARO, "--primary-hover"), "claro: hover clareia").toBeGreaterThan(claridade(CLARO, "--primary"))
+    expect(claridade(ESCURO, "--primary-hover"), "escuro: hover escurece").toBeLessThan(claridade(ESCURO, "--primary"))
     for (const [nome, b] of [["claro", CLARO], ["escuro", ESCURO]] as const) {
-      expect(claridade(b, "--primary-hover"), `${nome}: hover escurece`).toBeLessThan(
-        claridade(b, "--primary")
-      )
+      expect(Math.abs(claridade(b, "--primary-hover") - claridade(b, "--primary")), nome).toBeGreaterThanOrEqual(0.1)
     }
   })
 
@@ -211,18 +222,24 @@ describe("o primário é o colorido", () => {
     expect(PRIMARIO.join(" ")).not.toContain("brand-rainbow")
   })
 
-  it("9b. `shape=\"pill\"` arredonda 100% e sobe meio degrau de recuo", () => {
-    // O padrão continua o canto do sistema, sem classe nenhuma a mais.
-    expect(buttonVariants({})).not.toContain("rounded-full")
-    expect(buttonVariants({ shape: "pill" })).toContain("rounded-full")
-    // A curva come o canto: o recuo lateral da pílula é meio degrau maior, e
-    // o `twMerge` tem de deixar só ele (o do degrau sai).
+  it("9b. todo botão é cápsula, com o recuo da antiga pílula", () => {
+    // Rodada 240: o controle do iOS 26 é cápsula em todos os degraus, e o eixo
+    // `shape` saiu do tipo.
+    expect(buttonVariants({})).toContain("rounded-full")
+    expect(buttonVariants({})).not.toContain("rounded-lg")
     const RECUO = { xs: "px-2.5", sm: "px-3", md: "px-3.5", lg: "px-4", xl: "px-4.5" } as const
     for (const [size, px] of Object.entries(RECUO)) {
-      const classes = cn(buttonVariants({ shape: "pill", size: size as keyof typeof RECUO })).split(/\s+/)
-      expect(classes, size).toContain(px)
+      const classes = cn(buttonVariants({ size: size as keyof typeof RECUO })).split(/\s+/)
       expect(classes.filter((c) => /^px-/.test(c)), size).toStrictEqual([px])
     }
+  })
+
+  it("9d. `floating` é a placa flutuante: --popover, anel de 1px, sombra, e o realce chapado", () => {
+    const FLOAT = buttonVariants({ variant: "floating" }).split(/\s+/)
+    for (const c of ["bg-popover", "bg-clip-border", "ring-1", "ring-foreground/10", "shadow-sm", "button-hover", "rounded-full"]) {
+      expect(FLOAT, c).toContain(c)
+    }
+    expect(FLOAT).toContain("active:text-foreground")
   })
 
   it("9c. `brandOutline` é o Rainbow Button: arco-íris na borda de baixo e brilho embaixo, deslizando", () => {
@@ -253,12 +270,13 @@ describe("o primário é o colorido", () => {
     expect(CSS).toMatch(/@keyframes brand-rainbow-slide \{\s*from \{\s*background-position: 0% center;\s*\}\s*to \{\s*background-position: 200% center;/)
   })
 
-  it("10. a camada é o `::after`, e a razão é o `ButtonGroup`", () => {
-    // `[&>[data-variant=primary]]:before:hidden` esconderia um `::before`. Um
-    // `::after` em `z` negativo só fica **acima** do fundo do botão dentro da
-    // raiz de empilhamento dele — sem `isolate`, cairia atrás do `background`.
-    // As duas coisas moram na `@utility button-colorful` (asserção 1a).
-    expect(PRIMARIO.filter((c) => /(^|:)before:/.test(c))).toStrictEqual([])
+  it("10. a camada colorida é o `::after`, e o `::before` fica para o divisor do grupo", () => {
+    // O `ButtonGroup` usa e esconde o `::before` (o divisor). Um `::after` em
+    // `z` negativo só fica **acima** do fundo do botão dentro da raiz de
+    // empilhamento dele — sem `isolate`, cairia atrás do `background`. As duas
+    // coisas moram na `@utility button-colorful` (asserção 1a).
+    expect(COLORIDO.filter((c) => /(^|:)before:/.test(c))).toStrictEqual([])
+    // A emenda do primário, que não tem divisor: o vão de 1px da borda.
     const grupo = readFileSync(join(RAIZ, "components/ui/button-group.tsx"), "utf8")
     expect(grupo).toContain("[&>[data-variant=primary]]:before:hidden")
     // O vão de 1px do primário é a **sobreposição**, e não o `ml-px` do

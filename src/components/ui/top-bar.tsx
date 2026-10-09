@@ -108,7 +108,7 @@ const topBarVariants = cva(
       variant: {
         bar: "",
         floating:
-          "h-(--top-bar-h)! pt-0! mx-2 mt-2 w-[calc(100%-1rem)] rounded-2xl border-b-0 shadow-lg ring-1 ring-foreground/10 [--top-bar-r:var(--radius-2xl)]",
+          "h-(--top-bar-h)! pt-0! mx-2 mt-2 w-[calc(100%-1rem)] rounded-full border-b-0 shadow-lg ring-1 ring-foreground/10 [--top-bar-r:9999px]",
       },
       gutter: {
         bar: "px-4",
@@ -625,9 +625,9 @@ function TopBarSearch({
             searchFieldSizeClassName.md,
             searchFieldSurfaceClassName.field,
             "w-full justify-start font-normal text-muted-foreground",
-            // A pílula não floresce nem acende o texto: é um campo, e campo
+            // A pílula não realça nem acende o texto: é um campo, e campo
             // não muda de cor no cursor.
-            "[--button-bloom-fill:transparent] dark:[--button-bloom-fill:transparent]",
+            "[--button-hover-fill:transparent] dark:[--button-hover-fill:transparent]",
             "hover:text-muted-foreground active:text-muted-foreground aria-expanded:text-muted-foreground"
           )}
         >

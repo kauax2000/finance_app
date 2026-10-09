@@ -58,7 +58,7 @@ describe("Calendar, rodada 203", () => {
   it("o calendário de pagamentos é o Calendar, e não uma grade à mão", () => {
     const tela = fonte("src/components/dashboard/dashboard-payments-calendar.tsx")
     expect(tela).toContain("<Calendar")
-    expect(tela).toContain('variant={isMobile ? "default" : "agenda"}')
+    expect(tela).toContain('variant="agenda"')
     expect(tela).not.toMatch(/grid-cols-7|MOBILE_DAY_MODIFIER_DOT|function buildCells|after:bg-/)
   })
 })

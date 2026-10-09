@@ -57,7 +57,7 @@ const CreditCardsHistoryChart = dynamic(
         ssr: false,
         loading: () => (
             <div className="flex aspect-video w-full items-center justify-center rounded-md border border-border/60 p-4">
-                <Skeleton className="h-40 w-full max-w-md rounded-lg" />
+                <Skeleton className="h-40 w-full max-w-md rounded-surface" />
             </div>
         ),
     },

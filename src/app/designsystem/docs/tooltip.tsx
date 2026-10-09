@@ -118,9 +118,9 @@ export default function TooltipDoc() {
 
       <DocSection
         title="Contraste e tamanho"
-        description="variant=&quot;contrast&quot; é a pílula grave, preta no claro e branca no escuro, sem vidro: para o rótulo de ícone que precisa se destacar do que está atrás. size=&quot;sm&quot; (12px, recuo menor) rotula ícones em fileira densa, como a coluna de ações da Table; md (14px) é o de uma frase."
+        description="variant=&quot;contrast&quot; é a pílula grave, preta no claro e branca no escuro, sem vidro: para o rótulo de ícone que precisa se destacar do que está atrás. size=&quot;sm&quot; (24px, texto de 12) é o padrão; size=&quot;md&quot; (32px, texto de 14) é para uma frase mais longa."
         code={`<TooltipContent variant="contrast">Editar Mercado</TooltipContent>
-<TooltipContent size="sm">Editar Mercado</TooltipContent>`}
+<TooltipContent size="md">Mantém o saldo de ontem até a fatura fechar</TooltipContent>`}
       >
         {(
           [
@@ -200,7 +200,7 @@ export default function TooltipDoc() {
         rows={[
           { prop: "Tooltip · confirmation", type: "ReactNode", description: "Enquanto existir, a dica fica aberta mostrando-a, e ela é anunciada. Ligue pelo resultado da ação." },
           { prop: "TooltipContent · variant", type: '"plate" | "contrast"', default: '"plate"', description: "A placa dos menus, ou a pílula grave." },
-          { prop: "TooltipContent · size", type: '"sm" | "md"', default: '"md"', description: "md é 14px, para uma frase; sm é 12px, para ícone em fileira densa." },
+          { prop: "TooltipContent · size", type: '"sm" | "md"', default: '"sm"', description: "sm (24px, texto de 12) é o padrão; md (32px, texto de 14) para uma frase mais longa." },
           { prop: "TooltipContent · shortcut", type: "string", description: 'O atalho, na grafia do Kbd ("mod+b").' },
           { prop: "TooltipContent · side · align", type: "Radix", default: '"top" · "center"', description: "De onde sai e como se alinha. Vira sozinho quando falta espaço." },
           { prop: "TooltipContent · sideOffset", type: "number", default: "6", description: "Distância até o gatilho." },

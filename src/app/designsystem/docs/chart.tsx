@@ -490,7 +490,7 @@ function DemoProporcao() {
       <Controles inicio={<Eixo rotulo="aspect" valores={ASPECTOS.map(([nome]) => nome)} valor={v} onChange={setV} />} />
       <Caption>{dica}</Caption>
       {v === "auto" ? (
-        <div className="h-10 w-full max-w-sm rounded-md border border-dashed border-border" />
+        <div className="h-10 w-full max-w-sm rounded-surface border border-dashed border-border" />
       ) : (
         <ChartSkeleton aspect={v} bars={5} className="w-full max-w-sm" />
       )}
@@ -1014,7 +1014,7 @@ const config = {
       </DocSection>
 
       <DocNote title="A ponta arredonda e a base não">
-        <code>radius={`{[4, 4, 0, 0]}`}</code>, nunca <code>radius={`{4}`}</code>: a base é onde a barra diz a magnitude, e arredondá-la a levanta da linha do zero. Na horizontal, <code>{`[0, 4, 4, 0]`}</code>; empilhado, só o segmento de cima arredonda.
+        <code>radius={`{[8, 8, 0, 0]}`}</code> (<code>CHART_BAR_TIP</code>, desde a rodada 243; era 4), nunca <code>radius={`{8}`}</code>: a base é onde a barra diz a magnitude, e arredondá-la a levanta da linha do zero. Na horizontal, <code>{`[0, 8, 8, 0]`}</code>; empilhado, só o segmento de cima arredonda. O Recharts limita o raio à meia largura, então a barra fina sai com a ponta em cápsula. E o hover não pinta retângulo atrás da coluna: a barra do cursor fica, e as outras apagam a 45%.
       </DocNote>
 
       <DocNote title="Os 2px entre segmentos são pintados, não vazados">
@@ -1371,8 +1371,8 @@ const config = {
               }
             />
             <ChartLegend content={<ChartLegendContent />} />
-            <Bar dataKey="entradas" fill="var(--color-entradas)" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="saidas" fill="var(--color-saidas)" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="entradas" fill="var(--color-entradas)" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="saidas" fill="var(--color-saidas)" radius={[8, 8, 0, 0]} />
           </ComposedChart>
         </ChartContainer>
       </DocSection>
@@ -1411,7 +1411,7 @@ const config = {
     <ChartXAxis dataKey="mes" />
     <ChartYAxis />
     <ChartReferenceLine y={media} tone="average" />
-    <Bar dataKey="saidas" fill="var(--color-saidas)" radius={[4, 4, 0, 0]} />
+    <Bar dataKey="saidas" fill="var(--color-saidas)" radius={[8, 8, 0, 0]} />
     <Line dataKey="saldo" stroke="var(--chart-3)" strokeWidth={2} dot={false} />
   </ComposedChart>
 </ChartContainer>`}
@@ -1429,7 +1429,7 @@ const config = {
             <ChartYAxis />
             <ChartTooltip content={<ChartTooltipContent format="currency" />} />
             <ChartReferenceLine y={7036} tone="average" />
-            <Bar dataKey="saidas" fill="var(--color-saidas)" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="saidas" fill="var(--color-saidas)" radius={[8, 8, 0, 0]} />
             <Line
               dataKey="saldo"
               type="monotone"

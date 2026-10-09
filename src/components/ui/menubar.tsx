@@ -159,7 +159,7 @@ const IndiceRadioContext = React.createContext<{
   onValueChange?: (v: string) => void
 } | null>(null)
 
-const menubarVariants = cva("relative isolate flex w-fit items-center gap-0.5 rounded-lg p-0.5", {
+const menubarVariants = cva("relative isolate flex w-fit items-center gap-0.5 rounded-full p-0.5", {
   variants: {
     variant: {
       /**
@@ -202,7 +202,7 @@ const menubarVariants = cva("relative isolate flex w-fit items-center gap-0.5 ro
  */
 const menubarTriggerVariants = cva(
   [
-    "group/menubar-trigger relative flex shrink-0 items-center gap-1.5 rounded-md px-2 text-sm font-medium whitespace-nowrap outline-hidden select-none",
+    "group/menubar-trigger relative flex shrink-0 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium whitespace-nowrap outline-hidden select-none",
     "transition-[color,scale] duration-(--duration-fast) ease-(--ease-out) active:scale-[0.985]",
     "focus-visible:ring-3 focus-visible:ring-ring/45",
     "disabled:pointer-events-none disabled:opacity-50",
@@ -783,7 +783,7 @@ function useEscolha({
  * de grupo inclusive. Sem `inset` à mão.
  */
 const RECUO_SEM_ICONE =
-  "[[data-slot=menubar-viewport]:has([data-slot=menubar-item-icon])_&]:ps-7"
+  "[[data-slot=menubar-viewport]:has([data-slot=menubar-item-icon])_&]:ps-7.5"
 
 /** Registra a linha no índice, com o que a barra precisa dela. */
 function useRegistro(c: Omit<Comando, "id" | "menu"> | null) {
@@ -1207,7 +1207,7 @@ function MenubarSearch({
           ref={listaRef}
           role="listbox"
           aria-label="Comandos encontrados"
-          className="flex flex-col p-1"
+          className="flex flex-col p-2"
           onKeyDown={(e) => {
             const botoes = Array.from(
               listaRef.current?.querySelectorAll<HTMLElement>("button") ?? []

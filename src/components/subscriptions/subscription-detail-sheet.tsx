@@ -465,7 +465,7 @@ export function SubscriptionDetailSheet({
 
                 <section className="space-y-3">
                     <SectionLabel>Cobranças em transações</SectionLabel>
-                    <div className="overflow-hidden rounded-xl border border-border/80 bg-gradient-to-b from-muted/30 to-muted/10 p-3.5 dark:from-muted/15 dark:to-muted/5 sm:p-4">
+                    <div className="overflow-hidden rounded-row-lg border border-border/80 bg-gradient-to-b from-muted/30 to-muted/10 p-3.5 dark:from-muted/15 dark:to-muted/5 sm:p-4">
                         <div className="flex flex-wrap items-start justify-between gap-2">
                             <div className="min-w-0">
                                 <p className="text-sm font-semibold text-foreground">
@@ -576,7 +576,7 @@ export function SubscriptionDetailSheet({
                 fillMobileViewport={isMobile}
                 className={cn(
                     "flex w-full flex-col gap-0 overflow-hidden p-0 data-[side=right]:sm:max-w-md",
-                    isMobile && "rounded-t-2xl pt-0 sm:max-w-full"
+                    isMobile && "rounded-t-modal pt-0 sm:max-w-full"
                 )}
             >
                 {detailMode === "edit" ? (

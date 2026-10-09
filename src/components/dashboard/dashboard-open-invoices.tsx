@@ -282,7 +282,7 @@ export function DashboardOpenInvoices({
                             <CardToolbar>
                                 <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-1.5">
                                     <div
-                                        className="min-w-0 space-y-2 rounded-lg border border-border/60 bg-background/60 p-3 max-sm:shadow-xs sm:space-y-1.5 sm:rounded-none sm:border-transparent sm:bg-transparent sm:p-0 sm:shadow-none"
+                                        className="min-w-0 space-y-2 rounded-row border border-border/60 bg-background/60 p-3 max-sm:shadow-xs sm:space-y-1.5 sm:rounded-none sm:border-transparent sm:bg-transparent sm:p-0 sm:shadow-none"
                                     >
                                         <div className="flex min-w-0 flex-col gap-1">
                                             <dt className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -297,7 +297,7 @@ export function DashboardOpenInvoices({
                                         </div>
                                     </div>
                                     <div
-                                        className="min-w-0 space-y-2 rounded-lg border border-border/60 bg-background/60 p-3 max-sm:shadow-xs sm:space-y-1.5 sm:rounded-none sm:border-transparent sm:bg-transparent sm:p-0 sm:shadow-none"
+                                        className="min-w-0 space-y-2 rounded-row border border-border/60 bg-background/60 p-3 max-sm:shadow-xs sm:space-y-1.5 sm:rounded-none sm:border-transparent sm:bg-transparent sm:p-0 sm:shadow-none"
                                     >
                                         <div className="flex min-w-0 flex-col gap-1">
                                             <dt className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">

@@ -519,18 +519,18 @@ const tabsListFrameVariants = cva("flex", {
        * app é fixo, e não há nada passando por baixo para borrar.
        */
       //
-      // **Na vertical a pílula vira placa** (`rounded-2xl`, 16px): numa coluna
-      // de três abas o `rounded-full` virava um estádio de 50px de raio, com
-      // as pontas cortando a primeira e a última aba. Os 16 são concêntricos
-      // ao marcador — 12 de raio mais os 4 de vão.
+      // **Na vertical a pílula vira placa** (`rounded-surface`): numa
+      // coluna de três abas o `rounded-full` virava um estádio de 50px de raio,
+      // com as pontas cortando a primeira e a última aba. É a seção agrupada do
+      // iOS 26 — a placa de superfície com as linhas em cápsula dentro.
       floating:
-        "rounded-full bg-popover ring-1 ring-foreground/10 data-[orientation=vertical]:self-start data-[orientation=vertical]:rounded-2xl",
+        "rounded-full bg-popover ring-1 ring-foreground/10 data-[orientation=vertical]:self-start data-[orientation=vertical]:rounded-surface",
       /**
        * A bandeja preenchida — o padrão até a rodada 225. Na vertical ela não
        * acompanha a altura do painel (`self-start`): uma bandeja que desce até
        * o fim do texto ao lado lê como coluna vazia.
        */
-      solid: "rounded-lg bg-muted data-[orientation=vertical]:self-start",
+      solid: "rounded-full bg-muted data-[orientation=vertical]:self-start data-[orientation=vertical]:rounded-surface",
       /**
        * Sem bandeja: um fio percorre a fileira e o marcador do gatilho pousa
        * sobre ele. É separador de **itens**, a categoria que nunca perdeu o
@@ -671,7 +671,7 @@ const tabsTriggerVariants = cva(
           "data-[state=active]:text-foreground",
         ].join(" "),
         solid: [
-          "rounded-md border border-transparent px-2",
+          "rounded-full border border-transparent px-2.5",
           "text-muted-foreground hover:text-foreground active:text-foreground",
           "data-[state=active]:text-foreground",
         ].join(" "),
@@ -685,7 +685,7 @@ const tabsTriggerVariants = cva(
           "data-[state=active]:text-foreground",
         ].join(" "),
         plain: [
-          "rounded-md border border-transparent px-2",
+          "rounded-full border border-transparent px-2.5",
           "text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted active:text-foreground",
           "data-[state=active]:text-foreground",
         ].join(" "),
@@ -794,7 +794,7 @@ const tabsIndicatorVariants = cva(
       // classe que morre calada sob o shorthand `background` da utility.
       variant: {
         floating: "rounded-full",
-        solid: "rounded-md",
+        solid: "rounded-full",
         underline: [
           "border-primary-accent",
           "data-[orientation=horizontal]:border-b-2 data-[orientation=vertical]:border-e-2",
@@ -803,7 +803,7 @@ const tabsIndicatorVariants = cva(
         // que o gatilho desenharia — mas ele nunca é montado: ver
         // `VARIANTE_VIAJA`. Deixá-lo aqui evita que um `variant` novo passe a
         // cair num `undefined` silencioso.
-        plain: "rounded-md bg-muted",
+        plain: "rounded-full bg-muted",
       },
       glass: { true: "", false: "" },
     },
@@ -1226,7 +1226,6 @@ function TabsMoreMenu({ abas }: { abas: { value: string; label: string }[] }) {
           type="button"
           variant="tertiary"
           size="sm"
-          shape="pill"
           data-slot="tabs-more"
           className="ms-0.5 shrink-0"
         >
@@ -1256,7 +1255,6 @@ function TabsAdd({
       type="button"
       variant="tertiary"
       size="icon-sm"
-      shape="pill"
       aria-label={label}
       data-slot="tabs-add"
       className={cn("ms-0.5 shrink-0", className)}

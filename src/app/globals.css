@@ -120,6 +120,40 @@
   --tracking-eyebrow: 0.18em;
 }
 
+/* ── Shape: a escala do raio (rodadas 240 e 240c) ──────────────────────────────
+
+   **O raio de um componente se muda aqui, e não no componente.** A escala do
+   sistema é esta e só esta; cada componente veste um degrau dela, e quem quer
+   outro raio troca o degrau do componente ou ajusta o degrau aqui — nunca
+   escreve um número (`rounded-[18px]`) no arquivo do componente.
+
+   O modelo é o do iOS 26, em três formas:
+   - **cápsula**: `rounded-full`, metade da altura — todo controle;
+   - **superfície**: `rounded-surface`, o que contém. O CSS limita o raio à
+     metade do lado, então tudo com até 44px de altura já sai cápsula;
+   - **modal**: `rounded-modal`, a placa que cobre a tela;
+   - **linha**: `rounded-row`, 12px, a linha de lista selecionável — a aba
+     da `Sidebar` (rodadas 241d e 241e). Numa linha de 32 ela é retângulo
+     arredondado; a cápsula seria 16;
+   - **linha alta**: `rounded-row-lg`, 16px, a linha selecionável de 44 — a
+     lista de seleção (rodada 241f). A superfície daria 22, a metade, e ela
+     sairia cápsula;
+   e, dentro de um contêiner, o **concêntrico** (`@utility concentric`, o raio
+   do pai menos o recuo), que acompanha sozinho. A escada t-shirt
+   (`rounded-xs`…`lg`, no `@theme inline` acima) é a forma fixa pequena — Kbd,
+   ladrilho, miniatura.
+
+   `static` porque o `concentric` lê estes tokens em tempo de execução
+   (`--radius-parent: var(--radius-surface)`), e o Tailwind só emitiria os
+   usados por classe. A página `/designsystem/shape-elevation` mostra a escala
+   e quem veste cada degrau. */
+@theme static {
+  --radius-surface: 1.375rem;
+  --radius-modal: 1.75rem;
+  --radius-row: 0.75rem;
+  --radius-row-lg: 1rem;
+}
+
 /* `.light` repete o seletor da paleta clara para que uma subárvore possa voltar
    ao tema claro dentro de uma página escura. Serve à página de Cores do
    /designsystem, que mostra cada token nos dois temas lado a lado: sem isso, a
@@ -145,12 +179,16 @@
      e plinto em `--primary-edge`, fio de luz em `--primary-highlight`, véu,
      sombra —, e o dono pediu tudo fora: nem relevo, nem profundidade. Os seis
      tokens da tecla saíram com ela, e `button-primary.test.ts` cobra que
-     nenhum volte. `--primary-hover` fica: é a cor do disco do hover do
-     primário e do `brandOutline`, e é opaco porque um alfa sobre a superfície clareava num tema e
-     escurecia no outro. */
+     nenhum volte. `--primary-hover` fica: é o hover do primário e do
+     `brandOutline`, e é opaco porque um alfa sobre a superfície clareava num
+     tema e escurecia no outro.
+     **No claro ele clareia** (rodada 241b): a tecla já é quase preta, e
+     escurecer de 0,205 para 0,145 media 1,10:1 contra o repouso — o hover não
+     se via. A 0,32 a troca mede 1,4:1, e o rótulo branco continua acima de
+     10:1. */
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
-  --primary-hover: oklch(0.145 0 0);
+  --primary-hover: oklch(0.32 0 0);
   /* `--primary` preenche e é medido contra o texto em cima; `--primary-accent`
      é a marca **sobre a página** — texto, ícone, traço. Com a marca preta os
      dois coincidem com `--foreground` nos dois temas, mas o papel continua
@@ -223,7 +261,7 @@
   --brand-coral: oklch(0.66 0.2 35);
   --brand-amber: oklch(0.78 0.17 85);
   --brand-green: oklch(0.78 0.18 130);
-  /* A força do degradê do `Button primary` no cursor (rodada 150). É por tema
+  /* A força do degradê do `Button brandColorful` no cursor (rodada 150; era o `primary` até a 240). É por tema
      porque o rótulo muda de lado: no claro ele é branco, e o teal e o azul
      são as paradas claras — a 80% o rótulo do `salvar` media 4,26. A 0,70 o
      pior ponto sob o rótulo mede 5,09 (0,75 dava 4,67, rente ao piso de 4,5). */
@@ -775,10 +813,11 @@
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
   /* A tecla branca, chapada. O rótulo é preto, então "puxar na direção do
-     rótulo" escurece o hover aqui também. */
+     rótulo" escurece o hover aqui. A 0,92 a troca media 1,22:1; a 0,87 (rodada
+     241b) mede 1,4:1. */
   --primary: oklch(0.985 0 0);
   --primary-foreground: oklch(0.145 0 0);
-  --primary-hover: oklch(0.92 0 0);
+  --primary-hover: oklch(0.87 0 0);
   --primary-accent: oklch(0.985 0 0);
   --primary-muted: oklch(0.269 0 0);
   --primary-muted-foreground: oklch(0.985 0 0);
@@ -1143,7 +1182,7 @@
   /* O tom do tipo: o poço do ícone (e o ×N dos repetidos). */
   --toast-well: var(--muted);
   --toast-ink: var(--muted-foreground);
-  border-radius: var(--radius-2xl);
+  border-radius: var(--radius-surface);
   border-color: transparent;
   box-shadow:
     0 0 0 1px color-mix(in oklab, var(--foreground) 10%, transparent),
@@ -1939,6 +1978,24 @@
   }
 }
 
+/* ── O raio concêntrico ──────────────────────────────────────────────────────
+
+   O `ConcentricRectangle` do iOS 26: o raio de quem está dentro é o do
+   contêiner menos o recuo, com um mínimo quando a conta dá pouco. Quem contém
+   publica `--radius-parent` (o próprio raio) e `--radius-inset` (o próprio
+   recuo); variável herda, então um cartão dentro de um diálogo republica a
+   dele e vence. Numa linha baixa a conta passa da metade da altura e o item
+   sai cápsula — o realce do menu do iOS.
+
+   **Nunca no mesmo elemento que um `rounded-*`**: o `tailwind-merge` não sabe
+   que os dois brigam, e quem decidiria é a ordem de emissão. */
+@utility concentric {
+  border-radius: max(
+    var(--radius-min, 0.375rem),
+    calc(var(--radius-parent, var(--radius-surface)) - var(--radius-inset, 0px))
+  );
+}
+
 /* ── O traço do `Button variant="link"` ─────────────────────────────────────
 
    A mecânica é a do `link-button` do 21st (Hyperiux, MIT), lida do bundle do
@@ -2036,10 +2093,13 @@
    cinco paradas precisam de borrão de verdade, e aí a camada é o `::after`
    (`@utility button-colorful`) — que o primário não empresta a alvo nenhum.
 
-   Cada peso declara só a cor (`--button-bloom-fill`); os alfas do escuro e do
-   `destructive` são **compostos** (`repouso + a·(1 − repouso) = hover`: 11%,
-   12,5%, 29%), porque a elipse pinta por cima do fundo de repouso. Movimento
-   reduzido: o bloco global corta a transição, e a cor aparece de uma vez. */
+   **Desde a rodada 241 os pesos do `Button` não florescem** (ver o realce,
+   abaixo): a elipse ficou com o `Checkbox`, e o degradê com o
+   `Button brandColorful`.
+
+   Quem floresce declara só a cor (`--button-bloom-fill`) — hoje, o
+   `Checkbox` marcado. Movimento reduzido: o bloco global corta a transição, e
+   a cor aparece de uma vez. */
 @property --button-bloom {
   syntax: "<number>";
   inherits: true;
@@ -2059,7 +2119,32 @@
   background-image: var(--button-bloom-image);
 }
 
-/* O degradê do primário: a mesma flor, com as cinco paradas da marca num
+/* ── O realce do hover (rodada 241) ─────────────────────────────────────────
+
+   Os pesos chapados do `Button` (`secondary`, `tertiary`, `outline`,
+   `floating`, `destructive`) deixaram de florescer a pedido do dono: o realce
+   é uma **camada chapada** da cor do peso por cima do fundo de repouso, que
+   esmaece em `--duration-fast`. O florescer acima fica para o `Checkbox` e
+   para o `Button brandColorful`.
+
+   Por que camada e não `background-color`: a cor de cada peso pinta **por
+   cima** do repouso (o `destructive` põe 22% sobre o próprio 10%), e quem muda o realce por
+   fora (`AlertAction`, a `AnnouncementBar`, os chips) declara só
+   `--button-hover-fill`, que pinta por cima de qualquer fundo. A variável é
+   tipada para a camada esmaecer — imagem de fundo não interpola. */
+@property --button-hover {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+@utility button-hover {
+  background-image: linear-gradient(
+    color-mix(in oklab, var(--button-hover-fill) calc(var(--button-hover) * 100%), transparent) 0 0
+  );
+}
+
+/* O degradê do `brandColorful` (o primário até a rodada 240): a mesma flor, com as cinco paradas da marca num
    `::after` borrado — nasce comprimido (30% × 60%) e com 16px de borrão, e
    abre até as bordas com 8px. `isolate` põe o `-z-10` acima do fundo e abaixo
    do rótulo; `overflow: hidden` recorta o borrão. A força máxima é

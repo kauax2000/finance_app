@@ -148,7 +148,7 @@ export function BillDetailSheet({
                 fillMobileViewport={isMobile}
                 className={cn(
                     "flex w-full flex-col gap-0 overflow-hidden p-0 data-[side=right]:sm:max-w-md",
-                    isMobile && "rounded-t-2xl pt-0 sm:max-w-full"
+                    isMobile && "rounded-t-modal pt-0 sm:max-w-full"
                 )}
             >
                 <DialogDescription className="sr-only">
@@ -296,9 +296,9 @@ export function BillDetailSheet({
                 <DialogBody>
                     {loading ? (
                         <div className="space-y-3">
-                            <Skeleton className="h-24 w-full rounded-xl" />
-                            <Skeleton className="h-16 w-full rounded-xl" />
-                            <Skeleton className="h-40 w-full rounded-xl" />
+                            <Skeleton className="h-24 w-full rounded-surface" />
+                            <Skeleton className="h-16 w-full rounded-surface" />
+                            <Skeleton className="h-40 w-full rounded-surface" />
                         </div>
                     ) : !bill ? (
                         <p className="text-sm text-muted-foreground">
@@ -307,7 +307,7 @@ export function BillDetailSheet({
                     ) : (
                         <div className="space-y-6">
                             {nextInst ? (
-                                <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+                                <div className="rounded-surface border border-border bg-card p-4 shadow-xs">
                                     <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
                                         Próxima parcela
                                     </p>

@@ -61,18 +61,18 @@ const emptyStateVariants = cva(
   {
     variants: {
       variant: {
-        dashed: "rounded-xl border border-dashed border-border bg-muted/20",
-        card: "rounded-xl border border-border bg-card/40",
+        dashed: "rounded-surface border border-dashed border-border bg-muted/20",
+        card: "rounded-surface border border-border bg-card/40",
         // Sem moldura, para dentro de um `Card` ou de uma célula de tabela que
         // já tem a sua. Cartão dentro de cartão é sempre errado.
         plain: "",
       },
       size: {
-        sm: "gap-2 px-4 py-6 [--empty-state-icon:--spacing(9)]",
-        md: "gap-3 px-6 py-10 [--empty-state-icon:--spacing(12)]",
-        lg: "gap-4 px-6 py-16 [--empty-state-icon:--spacing(14)]",
+        sm: "gap-2 px-4 py-6 [--empty-state-icon:--spacing(9)] [--empty-state-tile-r:var(--radius-md)]",
+        md: "gap-3 px-6 py-10 [--empty-state-icon:--spacing(12)] [--empty-state-tile-r:var(--radius-lg)]",
+        lg: "gap-4 px-6 py-16 [--empty-state-icon:--spacing(14)] [--empty-state-tile-r:var(--radius-row)]",
         // A página de erro, que ocupa a tela como nas referências.
-        page: "gap-4 px-6 py-24 [--empty-state-icon:--spacing(14)]",
+        page: "gap-4 px-6 py-24 [--empty-state-icon:--spacing(14)] [--empty-state-tile-r:var(--radius-row)]",
       },
       /**
        * `inline` (rodada 191): o vazio pequeno, dentro de um formulário ou de
@@ -85,7 +85,7 @@ const emptyStateVariants = cva(
       layout: {
         stack: "",
         inline: [
-          "grid items-start justify-stretch gap-x-3 gap-y-0.5 p-3 text-left [--empty-state-icon:--spacing(8)]",
+          "grid items-start justify-stretch gap-x-3 gap-y-0.5 p-3 text-left [--empty-state-icon:--spacing(8)] [--empty-state-tile-r:var(--radius-md)]",
           "has-[>[data-slot=empty-state-icon]]:grid-cols-[auto_1fr]",
           "[&>[data-slot=empty-state-icon]]:row-span-3",
           "has-[>[data-slot=empty-state-icon]]:[&>:not([data-slot=empty-state-icon])]:col-start-2",
@@ -235,7 +235,9 @@ function EmptyStateIcon({
                 key={i}
                 data-slot="empty-state-icon-tile"
                 className={cn(
-                  "flex size-(--empty-state-icon) items-center justify-center rounded-xl border border-border bg-card shadow-sm",
+                  // O canto é o degrau da escada mais perto do 22,5% que ele
+                  // calculava (rodada 244c): 8 · 10 · 12, pelo degrau do vazio.
+                  "flex size-(--empty-state-icon) items-center justify-center rounded-(--empty-state-tile-r) border border-border bg-card shadow-sm",
                   "transition-[rotate,translate] duration-(--duration-spring) ease-(--ease-spring)",
                   TILE_POSICAO[i]
                 )}

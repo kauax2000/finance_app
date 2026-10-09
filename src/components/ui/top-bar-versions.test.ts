@@ -20,7 +20,7 @@ describe("o redesenho", () => {
 
   it("a flutuante é a pílula da casa, abaixo do notch", () => {
     const flutuante = topBarVariants({ variant: "floating" })
-    expect(flutuante).toContain("rounded-2xl")
+    expect(flutuante).toContain("rounded-full")
     expect(flutuante).toContain("ring-1 ring-foreground/10")
     expect(flutuante).toContain("pt-0!")
     expect(topBarVariants({ variant: "floating", position: "fixed" })).toContain(

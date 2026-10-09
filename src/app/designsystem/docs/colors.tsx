@@ -1,12 +1,14 @@
 "use client"
 
-import { Code } from "@/components/ui/code"
 import { DocNote, Usage } from "../ds-doc"
 import {
   Group,
   IdentityDiscs,
   Ramp,
   Spec,
+  SpecChips,
+  SpecList,
+  SpecRow,
   SurfaceNest,
   SpecimenPanel,
   TokenGrid,
@@ -53,21 +55,13 @@ export default function ColorsDoc() {
         description="A pergunta é o que a cor faz, não o tom que ela tem hoje — dois tokens iguais hoje podem divergir amanhã. Cada linha é explicada numa seção abaixo."
       >
         <Spec title="Papel → token" meta="globals.css" className="mb-0" bodyClassName="p-0">
-          <dl className="divide-y divide-border">
+          <SpecList>
             {PAPEIS.map((p) => (
-              <div
-                key={p.papel}
-                className="grid gap-x-4 gap-y-1 px-4 py-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:items-center"
-              >
-                <dt className="text-sm text-foreground">{p.papel}</dt>
-                <dd className="flex flex-wrap gap-1">
-                  {p.tokens.map((t) => (
-                    <Code key={t}>{t}</Code>
-                  ))}
-                </dd>
-              </div>
+              <SpecRow key={p.papel} term={p.papel} termWidth="minmax(0,1fr)" align="center">
+                <SpecChips items={p.tokens} className="mt-0" />
+              </SpecRow>
             ))}
-          </dl>
+          </SpecList>
         </Spec>
       </Group>
 
@@ -384,13 +378,13 @@ export default function ColorsDoc() {
               <span className="text-2xs font-medium tracking-wide text-muted-foreground uppercase">
                 brand-lava · o movimento
               </span>
-              <div className="brand-lava h-24 rounded-lg" />
+              <div className="brand-lava rounded-surface h-24" />
             </div>
             <div className="flex flex-col gap-1.5">
               <span className="text-2xs font-medium tracking-wide text-muted-foreground uppercase">
                 brand-field · com grão
               </span>
-              <div className="brand-field h-24 rounded-lg" />
+              <div className="brand-field rounded-surface h-24" />
             </div>
           </div>
           <Ramp

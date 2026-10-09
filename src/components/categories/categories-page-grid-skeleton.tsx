@@ -60,25 +60,25 @@ function CategoriesToolbarSkeleton({ variant }: { variant: CategoriesPageSkeleto
             )}
         >
             <div
-                className={cn("inline-flex h-8 w-full items-stretch gap-0.5 rounded-lg bg-muted p-0.5 pointer-coarse:h-10 md:w-auto", "max-w-full shrink-0")}
+                className={cn("inline-flex h-8 w-full items-stretch gap-0.5 rounded-full bg-muted p-0.5 pointer-coarse:h-10 md:w-auto", "max-w-full shrink-0")}
                 aria-hidden
             >
                 <div className="flex h-full min-h-0 w-full gap-0.5 md:w-auto">
-                    <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-md md:min-w-17 md:flex-none" />
-                    <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-md md:min-w-17 md:flex-none" />
+                    <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-full md:min-w-17 md:flex-none" />
+                    <Skeleton className="h-[calc(100%-2px)] min-w-0 flex-1 rounded-full md:min-w-17 md:flex-none" />
                 </div>
             </div>
 
             <div className="hidden shrink-0 md:flex md:flex-wrap md:items-center md:justify-end md:gap-2">
                 {showMonth ? (
                     <div className="flex w-full min-w-0 items-center justify-between gap-2 md:w-auto md:justify-end md:gap-1.5">
-                        <Skeleton className="h-8 w-16 shrink-0 rounded-md" />
+                        <Skeleton className="h-8 w-16 shrink-0 rounded-full" />
                         <Skeleton shape="tile" />
-                        <Skeleton className="h-8 max-w-[min(100%,16rem)] min-w-0 flex-1 rounded-md md:w-44 md:flex-none" />
+                        <Skeleton className="h-8 max-w-[min(100%,16rem)] min-w-0 flex-1 rounded-full md:w-44 md:flex-none" />
                         <Skeleton shape="tile" />
                     </div>
                 ) : null}
-                <Skeleton className="h-8 w-39 shrink-0 rounded-md" />
+                <Skeleton className="h-8 w-39 shrink-0 rounded-full" />
             </div>
         </div>
     )

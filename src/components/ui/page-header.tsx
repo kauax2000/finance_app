@@ -691,7 +691,7 @@ function PageHeaderSkeleton({
           {Array.from({ length: actions }, (_, i) => (
             <Skeleton
               key={i}
-              className={cn("size-8 rounded-lg", i === actions - 1 && "sm:w-32")}
+              className={cn("size-8 rounded-full", i === actions - 1 && "sm:w-32")}
             />
           ))}
         </div>

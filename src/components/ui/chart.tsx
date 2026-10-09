@@ -823,7 +823,10 @@ function ChartTooltipContent({
                         className={cn(
                           "shrink-0 rounded-xs border-(--indicator-border) bg-(--indicator-bg)",
                           {
-                            "h-2.5 w-2.5": indicator === "dot",
+                            // A amostra é um ponto (rodada 243), como a da
+                            // legenda e os marcadores do Calendar; o traço do
+                            // `line` e o tracejado continuam traço.
+                            "size-2 rounded-full": indicator === "dot",
                             "w-1": indicator === "line",
                             "w-0 border-[1.5px] border-dashed bg-transparent":
                               indicator === "dashed",
@@ -1039,7 +1042,7 @@ function ChartLegendContent({
             ) : (
               <span
                 aria-hidden
-                className="size-2 shrink-0 rounded-xs"
+                className="size-2 shrink-0 rounded-full"
                 style={{ backgroundColor: item.color }}
               />
             )}
@@ -1078,8 +1081,11 @@ function ChartLegendContent({
             onClick={() => onToggle?.(key)}
             className={cn(
               classes,
-              "rounded-md px-1 py-0.5 -mx-1 outline-none transition-colors",
-              "hover:bg-accent/60 active:bg-accent/60",
+              // Ligar e desligar uma série é controle, e controle é cápsula
+              // (rodada 243). O realce é o chapado da casa, a tinta do texto a
+              // 8% por cima, que se vê em cartão, popover e página.
+              "rounded-full px-2 py-0.5 -mx-1 outline-none transition-colors duration-(--duration-fast) ease-(--ease-out)",
+              "hover:bg-foreground/8 active:bg-foreground/8",
               "focus-visible:ring-3 focus-visible:ring-ring/45",
               // O estado não é só opacidade: o rótulo risca, e é isso que
               // sobrevive a quem não distingue o degrau de transparência.
@@ -1735,6 +1741,28 @@ function ChartActiveLabel({ onChange }: { onChange: (label: unknown) => void }) 
 /** O apagado do que não está selecionado — o mesmo degrau da divisão. */
 const CHART_DIM_OPACITY = 0.35
 
+/**
+ * O apagado do que não está sob o cursor (rodada 243): as outras barras
+ * recuam e a do cursor fica — no lugar do retângulo cinza do Recharts por
+ * trás da coluna, que era um segundo objeto para dizer "esta". Mais leve que o
+ * da seleção, porque é passagem e não escolha.
+ */
+const CHART_HOVER_DIM_OPACITY = 0.45
+
+/**
+ * Com uma barra escolhida, a do cursor (ou do teclado) fica no meio do
+ * caminho: sem o retângulo do Recharts, apagada como as outras ela não tinha
+ * marca nenhuma além da dica.
+ */
+const CHART_HOVER_OVER_SELECTION_OPACITY = 0.7
+
+/**
+ * A ponta da barra (rodada 243): 8px, e a base reta. O Recharts limita o raio
+ * à meia largura, então uma barra fina sai com a ponta em cápsula sozinha.
+ * Era 4, e ao lado dos cantos novos da casa a barra lia como quase reta.
+ */
+const CHART_BAR_TIP = 8
+
 function ChartBars({
   layout = "vertical",
   stacked = false,
@@ -1812,14 +1840,27 @@ function ChartBars({
   // grande é a pílula em qualquer tamanho de barra.
   const pilula = shape === "pill" ? CHART_PILL_RADIUS : null
   const pontaRaio: [number, number, number, number] = horizontal
-    ? [0, 4, 4, 0]
-    : [4, 4, 0, 0]
+    ? [0, CHART_BAR_TIP, CHART_BAR_TIP, 0]
+    : [CHART_BAR_TIP, CHART_BAR_TIP, 0, 0]
   const mostrarLegenda = legend ?? (!signed && chaves.length >= 2)
   // O rótulo que o teclado alcançou, para o Enter selecionar.
   const ativoRef = React.useRef<unknown>(undefined)
+  // A categoria sob o cursor (ou o teclado), que acende e apaga as outras.
+  const [emFoco, setEmFoco] = React.useState<string | null>(null)
   const lerAtivo = React.useCallback((v: unknown) => {
     ativoRef.current = v
+    setEmFoco(v == null ? null : String(v))
   }, [])
+  const apagada = (linha: Record<string, unknown>) =>
+    selected != null
+      ? String(linha[x]) === selected
+        ? 1
+        : String(linha[x]) === emFoco
+          ? CHART_HOVER_OVER_SELECTION_OPACITY
+          : CHART_DIM_OPACITY
+      : emFoco != null && String(linha[x]) !== emFoco
+        ? CHART_HOVER_DIM_OPACITY
+        : 1
   const alternar = (valor: unknown) => {
     if (!onSelect || valor == null) return
     const chave = String(valor)
@@ -1913,11 +1954,13 @@ function ChartBars({
               <ChartReferenceLine y={0} tone="zero" ifOverflow="extendDomain" />
             )
           ) : null}
-          {onSelect ? <ChartActiveLabel onChange={lerAtivo} /> : null}
+          <ChartActiveLabel onChange={lerAtivo} />
           {tooltip ? (
             <ChartTooltip
               {...CHART_TOOLTIP_MOTION}
-              cursor={{ fillOpacity: 0.5 }}
+              // Sem o retângulo por trás da coluna: quem marca a categoria é
+              // a própria barra, com as outras apagando (rodada 243).
+              cursor={false}
               content={
                 <ChartTooltipContent
                   format={format}
@@ -1968,19 +2011,14 @@ function ChartBars({
               }
               style={onSelect ? { cursor: "pointer" } : undefined}
             >
-              {signed || selected != null
-                ? data.map((linha, j) => (
-                    <Cell
-                      key={String(linha[x] ?? j)}
-                      fill={corDaBarra(key, i, linha)}
-                      fillOpacity={
-                        selected != null && String(linha[x]) !== selected
-                          ? CHART_DIM_OPACITY
-                          : 1
-                      }
-                    />
-                  ))
-                : null}
+              {data.map((linha, j) => (
+                <Cell
+                  key={String(linha[x] ?? j)}
+                  fill={corDaBarra(key, i, linha)}
+                  fillOpacity={apagada(linha)}
+                  className="transition-[fill-opacity] duration-(--duration-base) ease-(--ease-out)"
+                />
+              ))}
               {valueLabels && (!stacked || i === chaves.length - 1) ? (
                 <LabelList
                   position={horizontal ? "right" : "top"}
@@ -2311,7 +2349,9 @@ function ChartDonut({
                 key={chaves[i] || i}
                 data-active={ativo === i || undefined}
                 className={cn(
-                  "flex items-center gap-2 rounded-md px-1.5 py-1",
+                  // A linha da lista veste o degrau linha (rodada 243), com
+                  // 28px de altura: a 24, 12 era a metade e ela saía pílula.
+                  "flex items-center gap-2 rounded-row px-2 py-1.5",
                   "transition-[opacity,background-color] duration-(--duration-base) ease-(--ease-out)",
                   ativo === i && "bg-muted",
                   ativo != null && ativo !== i && "opacity-60",
@@ -2326,7 +2366,7 @@ function ChartDonut({
               >
                 <span
                   aria-hidden
-                  className="size-2 shrink-0 rounded-xs"
+                  className="size-2 shrink-0 rounded-full"
                   style={{ backgroundColor: corDaFatia(i) }}
                 />
                 <span className="min-w-0 flex-1 truncate">
@@ -2914,7 +2954,7 @@ function ChartRadial({
               >
                 <span
                   aria-hidden
-                  className="size-2 shrink-0 rounded-xs"
+                  className="size-2 shrink-0 rounded-full"
                   style={{ backgroundColor: anel.cor }}
                 />
                 <span className="min-w-0 flex-1 truncate">
@@ -3178,7 +3218,7 @@ function ChartHeatmap({
                       key={dia.date}
                       data-level={dia.nivel}
                       className={cn(
-                        "size-(--heat-cell) rounded-xs",
+                        "size-(--heat-cell) rounded-sm",
                         CHART_HEAT_LEVEL[dia.nivel],
                         chartHeatCellClassName(m.fase),
                         lido?.date === dia.date && "ring-2 ring-foreground/60"
@@ -3217,7 +3257,7 @@ function ChartHeatmap({
           <div aria-hidden className="flex items-center gap-1">
             <span className="pr-1">menos</span>
             {CHART_HEAT_LEVEL.map((classe) => (
-              <span key={classe} className={cn("size-(--heat-cell) rounded-xs", classe)} />
+              <span key={classe} className={cn("size-(--heat-cell) rounded-sm", classe)} />
             ))}
             <span className="pl-1">mais</span>
           </div>
@@ -3439,6 +3479,8 @@ function ChartWaterfall({
 }) {
   const m = useChartReveal()
   const degraus = React.useMemo(() => waterfallSteps(data), [data])
+  const [emFoco, setEmFoco] = React.useState<string | null>(null)
+  const notarFoco = React.useCallback((v: unknown) => setEmFoco(v == null ? null : String(v)), [])
 
   return (
     <ChartFrame
@@ -3469,19 +3511,25 @@ function ChartWaterfall({
                 domain={[(min: number) => Math.min(0, min), "auto"] as never}
               />
               <ChartReferenceLine y={0} tone="zero" />
+              <ChartActiveLabel onChange={notarFoco} />
               {tooltip ? (
                 <ChartTooltip
                   {...CHART_TOOLTIP_MOTION}
-                  cursor={{ fillOpacity: 0.5 }}
+                  cursor={false}
                   content={<ChartWaterfallTooltip format={format} />}
                 />
               ) : null}
               {/* A ponta arredonda e a base não, como em toda barra da casa:
                   o saldo (`total`) nasce na linha do zero, e um degrau
                   flutuante não ganha nada com a base redonda. */}
-              <Bar {...chartMarkMotion(m.fase)} dataKey="faixa" radius={[4, 4, 0, 0]}>
+              <Bar {...chartMarkMotion(m.fase)} dataKey="faixa" radius={[CHART_BAR_TIP, CHART_BAR_TIP, 0, 0]}>
                 {degraus.map((d, i) => (
-                  <Cell key={`${d.name}-${i}`} fill={CHART_WATERFALL_COLOR[d.tipo]} />
+                  <Cell
+                    key={`${d.name}-${i}`}
+                    fill={CHART_WATERFALL_COLOR[d.tipo]}
+                    fillOpacity={emFoco != null && d.name !== emFoco ? CHART_HOVER_DIM_OPACITY : 1}
+                    className="transition-[fill-opacity] duration-(--duration-base) ease-(--ease-out)"
+                  />
                 ))}
                 {valueLabels ? (
                   <LabelList
@@ -3650,7 +3698,7 @@ function ChartSparkline({
         <Bar
           dataKey={y}
           fill={cor}
-          radius={[2, 2, 0, 0]}
+          radius={[3, 3, 0, 0]}
           {...chartMarkMotion(m.fase)}
         />
       </BarChart>

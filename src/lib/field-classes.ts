@@ -83,9 +83,14 @@
  *
  * `text-base md:text-sm` é a rampa que impede o zoom automático do iOS: abaixo
  * de 16px o Safari amplia a página ao focar o campo.
+ *
+ * O campo de uma linha é cápsula (rodadas 240 e 243e). Da 241h à 243d ele
+ * vestiu a linha (12) e um raio por degrau (241j); o dono o devolveu à
+ * cápsula. Quem cresce em altura — o `Textarea` e o `InputGroup` com bloco ou
+ * textarea — sobrescreve com `rounded-row-lg`.
  */
 export const fieldSurfaceClassName =
-  "rounded-lg border border-input bg-input-fill/50 text-base transition-colors outline-none md:text-sm"
+  "rounded-full border border-input bg-input-fill/50 text-base transition-colors outline-none md:text-sm"
 
 /**
  * O anel de foco do sistema — `ring-3`, e não `ring-2`.

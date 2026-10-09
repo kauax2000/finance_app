@@ -192,7 +192,7 @@ function useVisivel() {
  */
 const navigationMenuTriggerVariants = cva(
   [
-    "group/navigation-menu-trigger relative isolate flex shrink-0 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium whitespace-nowrap outline-hidden select-none",
+    "group/navigation-menu-trigger relative isolate flex shrink-0 items-center gap-1.5 rounded-full px-3 text-sm font-medium whitespace-nowrap outline-hidden select-none",
     "transition-[color,scale] duration-(--duration-fast) ease-(--ease-out) active:scale-[0.985]",
     "focus-visible:ring-3 focus-visible:ring-ring/45",
     "disabled:pointer-events-none disabled:opacity-50",
@@ -241,13 +241,13 @@ const SEM_FUNDO_PROPRIO =
  */
 const navigationMenuListVariants = cva(
   [
-    "flex list-none items-center gap-0.5 rounded-lg p-0.5",
-    "data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch",
+    "flex list-none items-center gap-0.5 rounded-full p-0.5",
+    "data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch data-[orientation=vertical]:rounded-surface",
   ],
   {
     variants: {
       variant: {
-        floating: `rounded-full p-1 shadow-lg ring-1 ring-foreground/10 data-[orientation=vertical]:rounded-2xl ${menuPanelTintClassName}`,
+        floating: `rounded-full p-1 shadow-lg ring-1 ring-foreground/10 data-[orientation=vertical]:rounded-surface ${menuPanelTintClassName}`,
         plain: "border border-transparent bg-transparent",
         outline: "border border-border bg-background",
         solid: "border border-transparent bg-muted",
@@ -347,7 +347,7 @@ const navigationMenuContentVariants = cva(
  */
 const navigationMenuPanelVariants = cva(
   [
-    "grid w-(--navigation-menu-panel-w) max-w-(--navigation-menu-panel-max-w) gap-0.5 p-1",
+    "grid w-(--navigation-menu-panel-w) max-w-(--navigation-menu-panel-max-w) gap-0.5 p-2",
     "max-h-(--navigation-menu-panel-max-h) overflow-y-auto overscroll-contain",
     "[--navigation-menu-panel-max-h:min(60dvh,32rem)]",
     // Os links sobem em cascata ao abrir e ao aprofundar (rodada 219).
@@ -401,7 +401,7 @@ const navigationMenuTopLinkVariants = cva(NAVIGATION_MENU_LINK_BASE, {
 const navigationMenuLinkVariants = cva(
   [
     NAVIGATION_MENU_LINK_BASE,
-    "rounded-md text-sm pointer-coarse:min-h-11",
+    "concentric text-sm pointer-coarse:min-h-11",
     menuItemFadeClassName,
     "hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground focus-visible:bg-accent",
     "aria-[current=page]:bg-accent/60 aria-[current=page]:font-medium",
@@ -1095,7 +1095,7 @@ function NavigationMenuPanel({
             data-panel-focavel
             aria-label="Voltar"
             onClick={() => entrar(caminho.slice(0, -1))}
-            className="flex size-6 items-center justify-center rounded-md text-muted-foreground outline-hidden hover:bg-muted hover:text-foreground active:bg-muted active:text-foreground focus-visible:ring-3 focus-visible:ring-ring/45"
+            className="flex size-6 items-center justify-center rounded-full text-muted-foreground outline-hidden hover:bg-muted hover:text-foreground active:bg-muted active:text-foreground focus-visible:ring-3 focus-visible:ring-ring/45"
           >
             <ChevronLeftIcon aria-hidden className="size-4" />
           </button>
@@ -1570,7 +1570,7 @@ function NavigationMenuPreview({
       data-slot="navigation-menu-preview"
       aria-live="polite"
       className={cn(
-        "m-1 hidden w-56 shrink-0 flex-col justify-end gap-1 rounded-md bg-muted/60 p-3 text-sm sm:flex",
+        "concentric m-1 hidden w-56 shrink-0 flex-col justify-end gap-1 bg-muted/60 p-3 text-sm sm:flex",
         className
       )}
     >

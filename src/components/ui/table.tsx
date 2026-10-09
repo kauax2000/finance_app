@@ -294,7 +294,7 @@ function Table({
           // vira camada própria, e no Chrome acelerado ela escapa do recorte
           // arredondado de um `overflow`. O `clip-path` recorta em qualquer
           // motor, no mesmo raio.
-          className="w-full min-w-0 overflow-hidden rounded-lg border border-border [clip-path:inset(0_round_var(--radius-lg))] [--scroll-fade-veil-r:calc(var(--radius-lg)_-_1px)]"
+          className="w-full min-w-0 overflow-hidden rounded-surface border border-border [clip-path:inset(0_round_var(--radius-surface))] [--scroll-fade-veil-r:calc(var(--radius-surface)_-_1px)]"
         >
           {corpo}
         </div>
@@ -896,19 +896,16 @@ function TableExpandButton({
       type="button"
       variant="tertiary"
       size="icon-xs"
-      // Redondo, como os botões de ação da `Sidebar` e o × da folha: um
-      // marcador dentro de uma linha, e não uma tecla.
-      shape="pill"
       data-slot="table-expand-button"
       aria-expanded={expanded}
       aria-label={`${expanded ? "Recolher" : "Expandir"} ${label}`}
       className={cn(
         "-my-1",
-        // **Ghost também aberto.** O `tertiary` deixa a flor acesa com
+        // **Ghost também aberto.** O `tertiary` deixa o realce aceso com
         // `aria-expanded`, que é o "menu aberto" de um gatilho; aqui aberto é
         // só a seta girada, e o fundo aceso lia como botão pressionado. A
-        // flor volta só no cursor e no toque — o par empilhado vence o simples.
-        "aria-expanded:[--button-bloom:0] aria-expanded:hover:[--button-bloom:1] aria-expanded:active:[--button-bloom:1]",
+        // cor volta só no cursor e no toque — o par empilhado vence o simples.
+        "aria-expanded:[--button-hover:0] aria-expanded:hover:[--button-hover:1] aria-expanded:active:[--button-hover:1]",
         className
       )}
       onClick={(e) => {
@@ -1238,7 +1235,7 @@ function TableSkeleton({
                   {c.selection ? (
                     <Skeleton className="size-4 rounded-sm" />
                   ) : c.actions ? (
-                    <Skeleton className="ms-auto size-7 rounded-md" />
+                    <Skeleton className="ms-auto size-7 rounded-full" />
                   ) : (
                     <Skeleton
                       shape="text"

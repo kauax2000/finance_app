@@ -17,7 +17,7 @@ function DemoBloco() {
       <Button type="button" variant="secondary" size="sm" onClick={() => setChave((k) => k + 1)}>
         recarregar
       </Button>
-      <SpinnerBlock key={chave} label="Carregando os membros…" className="h-32 w-full rounded-lg border border-dashed border-border" />
+      <SpinnerBlock key={chave} label="Carregando os membros…" className="h-32 w-full rounded-surface border border-dashed border-border" />
     </div>
   )
 }

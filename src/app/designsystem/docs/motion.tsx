@@ -174,10 +174,10 @@ animate(el, { height: "auto" }, MOLA)`}
                   {p.duration.replace("--duration-", "")} · {p.ease.replace("--ease-", "")}
                 </span>
               </div>
-              <div className="relative h-8 rounded-md bg-muted/60">
+              <div className="relative h-8 rounded-full bg-muted/60">
                 <span
                   className={cn(
-                    "absolute top-1 left-1 size-6 rounded-sm bg-primary transition-[left]",
+                    "absolute top-1 left-1 size-6 rounded-full bg-primary transition-[left]",
                     p.cls,
                     on && "left-[calc(100%-1.75rem)]"
                   )}

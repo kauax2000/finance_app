@@ -20,13 +20,15 @@ import { cn } from "@/lib/utils"
  *   iguais aos do `<code>` da prosa, para os dois não brigarem na mesma página.
  * - `chip` — sozinho, como rótulo: o `meta` de um espécime, o token ao lado de
  *   um ladrilho de cor. Aí o fundo é o que separa o literal do que está em
- *   volta, já que não há frase para ancorá-lo.
+ *   volta, já que não há frase para ancorá-lo. O canto é `rounded-md` (8px,
+ *   rodada 240m): um degrau acima da peça miúda, e **não** cápsula — o dono a
+ *   recusou; num chip de 20px de altura, 10px já fecharia em cápsula.
  */
 const codeVariants = cva("font-mono", {
   variants: {
     variant: {
       inline: "text-xs text-foreground",
-      chip: "rounded-sm bg-muted px-1.5 py-0.5 text-2xs text-muted-foreground",
+      chip: "rounded-md bg-muted px-1.5 py-0.5 text-2xs text-muted-foreground",
     },
   },
   defaultVariants: {

@@ -37,9 +37,9 @@ function HeroSkeleton() {
 
                 <div className="flex min-h-10 min-w-0 max-w-[min(100%,24rem)] items-center justify-end">
                     <div className="flex w-full min-w-0 items-center justify-between gap-2">
-                        <Skeleton className="h-8 w-16 shrink-0 rounded-md" />
+                        <Skeleton className="h-8 w-16 shrink-0 rounded-full" />
                         <Skeleton shape="tile" />
-                        <Skeleton className="h-8 flex-1 rounded-md" />
+                        <Skeleton className="h-8 flex-1 rounded-full" />
                         <Skeleton shape="tile" />
                     </div>
                 </div>
@@ -90,7 +90,7 @@ function SummaryIncomeSkeleton() {
 function BudgetMoMMobileCardSkeleton() {
     return (
         <div
-            className="w-full min-w-0 rounded-lg border border-border/80 bg-muted/20 p-3 md:hidden"
+            className="w-full min-w-0 rounded-row border border-border/80 bg-muted/20 p-3 md:hidden"
             aria-hidden
         >
             <div className="flex min-w-0 items-start gap-2.5">
@@ -157,10 +157,10 @@ function TrendsSkeleton() {
                 <div className="flex h-6 min-w-0 items-center">
                     <Skeleton className="h-4 w-24" />
                 </div>
-                <div className="inline-flex h-8 w-40 shrink-0 items-stretch gap-0.5 rounded-lg bg-muted p-0.5 pointer-coarse:h-10">
+                <div className="inline-flex h-8 w-40 shrink-0 items-stretch gap-0.5 rounded-full bg-muted p-0.5 pointer-coarse:h-10">
                     <div className="flex h-full w-full min-h-0 items-center gap-0.5 px-0.5">
-                        <Skeleton className="h-[calc(100%-2px)] flex-1 rounded-md" />
-                        <Skeleton className="h-[calc(100%-2px)] flex-1 rounded-md" />
+                        <Skeleton className="h-[calc(100%-2px)] flex-1 rounded-full" />
+                        <Skeleton className="h-[calc(100%-2px)] flex-1 rounded-full" />
                     </div>
                 </div>
             </div>
@@ -199,8 +199,8 @@ function EmbeddedTransactionsSkeleton({ rowCount = 8 }: { rowCount?: number }) {
                     <Skeleton className="h-3 w-36" />
                 </div>
                 <div className="flex w-full min-w-0 flex-col gap-2 md:w-auto md:flex-row md:items-center md:justify-end md:gap-2">
-                    <Skeleton className="h-8 w-full rounded-md pointer-coarse:h-10 md:w-56" />
-                    <Skeleton className="h-8 w-full rounded-md pointer-coarse:h-10 md:w-32" />
+                    <Skeleton className="h-8 w-full rounded-full pointer-coarse:h-10 md:w-56" />
+                    <Skeleton className="h-8 w-full rounded-full pointer-coarse:h-10 md:w-32" />
                 </div>
             </div>
 
@@ -210,7 +210,7 @@ function EmbeddedTransactionsSkeleton({ rowCount = 8 }: { rowCount?: number }) {
                 footer={
                     <TablePanelFooter>
                         <Skeleton className="h-4 w-full max-w-48" />
-                        <Skeleton className="h-8 w-40 self-end rounded-md sm:self-auto" />
+                        <Skeleton className="h-8 w-40 self-end rounded-full sm:self-auto" />
                     </TablePanelFooter>
                 }
             >

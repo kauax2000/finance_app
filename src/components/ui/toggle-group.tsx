@@ -27,7 +27,6 @@ const ToggleGroupContext = React.createContext<
 >({
   size: "md",
   variant: "plain",
-  shape: "rounded",
   tint: "vivid",
 })
 
@@ -91,7 +90,6 @@ const PILULA_SEM_MARCADOR =
 function ToggleGroup({
   className,
   variant,
-  shape,
   tint,
   size,
   stretch = false,
@@ -196,8 +194,6 @@ function ToggleGroup({
     }
   }, [viaja, flutuante, size, stretch])
 
-  const pilula = shape === "pill"
-
   return (
     <ToggleGroupPrimitive.Root
       ref={trilhaRef}
@@ -210,8 +206,7 @@ function ToggleGroup({
         segmentado && [
           "relative inline-flex w-fit items-stretch gap-0.5",
           flutuante ? "bg-popover ring-1 ring-foreground/10" : "bg-muted",
-          "p-0.5",
-          flutuante || pilula ? "rounded-full" : "rounded-lg",
+          "rounded-full p-0.5",
         ],
         stretch && "flex w-full [&>[data-slot=toggle-group-item]]:flex-1",
         className
@@ -235,14 +230,13 @@ function ToggleGroup({
                 "rounded-full bg-muted ring-1 ring-foreground/10 shadow-xs"
               : [
                   // A superfície do marcador do `Tabs solid`, no mesmo tempo.
-                  "border border-border/80 bg-background shadow-xs",
-                  pilula ? "rounded-full" : "rounded-md",
+                  "rounded-full border border-border/80 bg-background shadow-xs",
                   "transition-[translate,width,height] duration-(--duration-base) ease-(--ease-out)",
                 ]
           )}
         />
       ) : null}
-      <ToggleGroupContext.Provider value={{ variant, shape, tint, size, indicatorReady }}>
+      <ToggleGroupContext.Provider value={{ variant, tint, size, indicatorReady }}>
         {children}
       </ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
@@ -253,7 +247,6 @@ function ToggleGroupItem({
   className,
   children,
   variant,
-  shape,
   tint,
   size,
   icon,
@@ -269,7 +262,6 @@ function ToggleGroupItem({
   const flutuante = !variant && context.variant === "floating"
   const segmentado = (!variant && context.variant === "segmented") || flutuante
   const pele: ToggleVariant = variant ?? (segmentado ? "plain" : (context.variant as ToggleVariant))
-  const forma = shape ?? context.shape
 
   return (
     <ToggleGroupPrimitive.Item
@@ -278,7 +270,6 @@ function ToggleGroupItem({
       className={cn(
         toggleVariants({
           variant: pele,
-          shape: forma,
           tint: tint ?? context.tint,
           size: size ?? context.size,
         }),
@@ -288,7 +279,7 @@ function ToggleGroupItem({
             ? // O gatilho do `Tabs floating`, classe a classe: a pílula, o ar
               // nas pontas, o corpo dos controles e o esmaecer no tempo de lá.
               "gap-1.5 rounded-full px-3 text-control-sm pointer-coarse:h-9 duration-(--duration-base)"
-            : forma !== "pill" && "rounded-md",
+            : null,
         ],
         segmentado && !context.indicatorReady && (flutuante ? PILULA_SEM_MARCADOR : SEGMENTO_SEM_MARCADOR),
         className

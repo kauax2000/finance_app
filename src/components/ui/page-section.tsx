@@ -510,10 +510,10 @@ function PageSectionSkeleton({
         <div className="flex h-(--page-section-title-line) items-center">
           <Skeleton className="h-[calc(var(--page-section-title)*0.8)] w-40 max-w-full" />
         </div>
-        {actions ? <Skeleton className="h-7 w-24 rounded-md" /> : null}
+        {actions ? <Skeleton className="h-7 w-24 rounded-full" /> : null}
         {description ? <Skeleton shape="text" className="col-start-1 w-72 max-w-full" /> : null}
       </div>
-      {children ?? <Skeleton className="h-40 w-full rounded-xl" />}
+      {children ?? <Skeleton className="h-40 w-full rounded-surface" />}
     </>
   )
   const classes = cn(pageSectionVariants({ size }), className)

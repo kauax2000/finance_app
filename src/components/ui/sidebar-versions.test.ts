@@ -124,7 +124,7 @@ describe("as versões do Sidebar", () => {
 
   it("o inset é placa com anel, e a margem anima", () => {
     expect(CODIGO).toContain(
-      "transition-[margin] duration-(--duration-slow) ease-(--ease-emphasized) md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:m-2 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:rounded-2xl md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ring-1"
+      "transition-[margin] duration-(--duration-slow) ease-(--ease-emphasized) md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:m-2 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:rounded-modal md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ring-1"
     )
     expect(CODIGO).not.toContain("peer-data-[variant=inset]:shadow-sm")
   })

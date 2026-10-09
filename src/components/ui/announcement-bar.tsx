@@ -276,9 +276,9 @@ function AnnouncementBar({
             // no escuro.
             //
             // O `dark:` não é redundante: `.cls:is(.dark *)` é (0,2,0) contra
-            // os (0,1,0) de `.cls`, então a cor da flor que o `tertiary`
+            // os (0,1,0) de `.cls`, então a cor do realce que o `tertiary`
             // declara sob `dark:` vence a classe simples no tema escuro.
-            "[--button-bloom-fill:color-mix(in_oklab,currentColor_15%,transparent)] dark:[--button-bloom-fill:color-mix(in_oklab,currentColor_15%,transparent)]",
+            "[--button-hover-fill:color-mix(in_oklab,currentColor_15%,transparent)] dark:[--button-hover-fill:color-mix(in_oklab,currentColor_15%,transparent)]",
             // E a tinta do ícone tem de ser presa: o `tertiary` declara
             // `hover:text-foreground`, que é (0,2,0) contra o (0,1,0) do
             // `text-current` da base — sem este par, o × trocava a tinta do tom
@@ -361,7 +361,7 @@ function AnnouncementBarActions({
  * O realce é `current/10`, e não `foreground/10`: os dois são quase iguais no
  * escuro e visivelmente diferentes no claro, e o `AlertAction` — o precedente
  * documentado — usa `current`. O realce é a **flor** do `tertiary`
- * (`--button-bloom-fill`), e o par `dark:` é obrigatório pela mesma aritmética
+ * (`--button-hover-fill`), e o par `dark:` é obrigatório pela mesma aritmética
  * escrita no × acima.
  *
  * **E ele fica mais fraco que o ×, de propósito**: 10% aqui contra 15% lá. O ×
@@ -380,9 +380,9 @@ function AnnouncementBarAction({
       size="xs"
       className={cn(
         "border-current/25 bg-transparent text-current",
-        // A cor da flor na pele da barra — `currentColor` a 10%. O par
+        // A cor do realce na pele da barra — `currentColor` a 10%. O par
         // `dark:` é obrigatório por especificidade; as medições estão no ×.
-        "[--button-bloom-fill:color-mix(in_oklab,currentColor_10%,transparent)] dark:[--button-bloom-fill:color-mix(in_oklab,currentColor_10%,transparent)]",
+        "[--button-hover-fill:color-mix(in_oklab,currentColor_10%,transparent)] dark:[--button-hover-fill:color-mix(in_oklab,currentColor_10%,transparent)]",
         "hover:text-current active:text-current",
         className
       )}

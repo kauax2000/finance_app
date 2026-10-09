@@ -125,7 +125,10 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           fieldFocusRingClassName,
           fieldInvalidClassName,
           fieldDisabledClassName,
-          "field-sizing-content flex w-full py-2 placeholder:text-muted-foreground",
+          // O bloco alto veste a linha alta (`rounded-row-lg`, 16px; rodada
+          // 241p): a superfície (22) pesava num campo de 64px, ao lado do
+          // `Input` de 12. É o mesmo raio do campo `xl`.
+          "rounded-row-lg field-sizing-content flex w-full py-2 placeholder:text-muted-foreground",
           minRows === undefined && "min-h-16",
           maxRows !== undefined && "overflow-y-auto",
           resize === "none" ? "resize-none" : "resize-y",

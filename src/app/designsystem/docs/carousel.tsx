@@ -331,7 +331,7 @@ function DepoimentoDemo() {
           {SERVICOS.map((s) => (
             <CarouselItem key={s.semente}>
               <div className="grid items-center gap-4 sm:grid-cols-[2fr_3fr]">
-                <div className="overflow-hidden rounded-xl">
+                <div className="overflow-hidden rounded-surface">
                   <CardMedia src={FOTO(s.semente, 600, 600)} alt="" aspect="square" />
                 </div>
                 <Card variant="elevated" className="sm:-ms-10">
@@ -363,7 +363,7 @@ function GaleriaDemo() {
     <div className="flex w-full flex-col gap-4">
       <Controles inicio={<Eixo rotulo="CarouselDots surface" valores={["glass", "none"] as const} valor={surface} onChange={setSurface} />} />
       <Carousel gap="none" fade={false} effect="parallax" aria-label="Novidades" className="w-full">
-        <CarouselContent viewportClassName="rounded-xl">
+        <CarouselContent viewportClassName="rounded-surface">
           {NOVIDADES.map((n) => (
             <CarouselItem key={n.semente}>
               <CardMedia src={FOTO(n.semente, 1280, 720)} alt={n.titulo} aspect="video" />
@@ -395,7 +395,7 @@ function MiniaturasDemo() {
     </CarouselThumb>
   ))
   const principal = (
-    <CarouselContent viewportClassName="rounded-xl">
+    <CarouselContent viewportClassName="rounded-surface">
       {NOVIDADES.map((n) => (
         <CarouselItem key={n.semente}>
           <CardMedia src={FOTO(n.semente, 1280, 720)} alt={n.titulo} aspect="video" />
@@ -434,7 +434,7 @@ function RotacaoDemo() {
       <Controles fim={<Eixo rotulo="indicador" valores={["pontos", "passos"] as const} valor={indicador} onChange={setIndicador} />} />
       {indicador === "pontos" ? (
         <Carousel autoplay={5000} loop gap="none" fade={false} controls="none" aria-label="Novidades" className="w-full">
-          <CarouselContent viewportClassName="rounded-xl">
+          <CarouselContent viewportClassName="rounded-surface">
             {NOVIDADES.map((n) => (
               <CarouselItem key={n.semente}>
                 <CartaImagem {...n} aspect="video" />
@@ -844,7 +844,7 @@ export default function CarouselDoc() {
                 <CarouselStep key={s.semente} index={i} label={s.titulo} description={s.texto} />
               ))}
             </CarouselSteps>
-            <div className="relative overflow-hidden rounded-xl">
+            <div className="relative overflow-hidden rounded-surface">
               <CarouselContent>
                 {SERVICOS.map((s) => (
                   <CarouselItem key={s.semente}>
@@ -951,7 +951,7 @@ export default function CarouselDoc() {
         title="Galeria de imagem"
         description="Um item por vez, com as setas, os pontos e a contagem dentro da foto, e o botão de tela cheia no canto. A tinta dos pontos é a do véu, branca nos dois temas, porque a foto não muda com o tema. A tela cheia abre no item atual e devolve o índice ao fechar."
         code={`<Carousel gap="none" fade={false}>
-  <CarouselContent viewportClassName="rounded-xl">…</CarouselContent>
+  <CarouselContent viewportClassName="rounded-surface">…</CarouselContent>
   <CarouselStatus placement="overlay" />
   <CarouselFullscreen title="Novidades">
     <CarouselItem><img className="object-contain" … /></CarouselItem>
@@ -970,7 +970,7 @@ export default function CarouselDoc() {
         description="A imagem grande e a tira que a escolhe — embaixo, entre as setas, ou ao lado. A tira é um segundo embla, livre, sincronizado nos dois sentidos. Ao lado, ela é coluna a partir de md e deita embaixo no telefone; a altura é a da foto."
         code={`<Carousel gap="none" fade={false} controls="none">
   <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_5rem]">
-    <CarouselContent viewportClassName="rounded-xl">…</CarouselContent>
+    <CarouselContent viewportClassName="rounded-surface">…</CarouselContent>
     <CarouselThumbs orientation="vertical">
       <CarouselThumb index={0}><img src={miniatura} alt="" /></CarouselThumb>
     </CarouselThumbs>
@@ -1003,7 +1003,7 @@ export default function CarouselDoc() {
           <CarouselContent viewportClassName="h-80">
             {NOVIDADES.map((n) => (
               <CarouselItem key={n.semente}>
-                <div className="relative h-full overflow-hidden rounded-xl">
+                <div className="relative h-full overflow-hidden rounded-surface">
                   <CardMedia src={FOTO(n.semente, 900, 700)} alt={n.titulo} aspect="auto" className="h-full">
                     {/* Só o item aberto mostra o rótulo: colapsado, ele não cabe e
                         sairia cortado. */}
@@ -1038,7 +1038,7 @@ export default function CarouselDoc() {
         title="Rotação automática"
         description="autoplay em milissegundos. O indicador ativo é o temporizador — o ponto enche, e no passo nomeado um fio corre na base da pílula —, e ele pausa junto da rotação: sob o cursor, com foco dentro, com a aba escondida ou pelo botão. Com movimento reduzido, nasce pausada."
         code={`<Carousel autoplay={5000} loop gap="none" fade={false}>
-  <CarouselContent viewportClassName="rounded-xl">…</CarouselContent>
+  <CarouselContent viewportClassName="rounded-surface">…</CarouselContent>
   <CarouselToolbar align="center" className="mt-3">
     <CarouselPlayPause />
     <CarouselDots variant="pill" />

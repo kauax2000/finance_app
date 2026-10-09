@@ -148,7 +148,7 @@ function DemoBusca() {
 
 function DemoExcesso() {
   return (
-    <div className="w-full max-w-full min-w-64 resize-x overflow-hidden rounded-xl border border-dashed border-border p-3">
+    <div className="w-full max-w-full min-w-64 resize-x overflow-hidden rounded-surface border border-dashed border-border p-3">
       <Toolbar>
         <ToolbarFilters>
           <Tabs defaultValue="abertas">
@@ -175,7 +175,7 @@ function DemoExcesso() {
 
 function DemoPresa() {
   return (
-    <div className="h-80 w-full overflow-y-auto rounded-xl border border-border">
+    <div className="h-80 w-full overflow-y-auto rounded-surface border border-border">
       <div className="flex flex-col gap-3 p-4">
         <p className="text-sm text-muted-foreground">
           Role a caixa: a barra prende no topo dela e só então ganha a placa.

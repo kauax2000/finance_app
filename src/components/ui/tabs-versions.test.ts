@@ -76,7 +76,7 @@ describe("a vertical", () => {
     )
     expect(html).not.toContain("flex-1")
     expect(html).toMatch(/data-slot="tabs-list-frame"[^>]*w-fit/)
-    expect(tabsListFrameVariants({})).toContain("data-[orientation=vertical]:rounded-2xl")
+    expect(tabsListFrameVariants({})).toContain("data-[orientation=vertical]:rounded-surface")
     expect(tabsListFrameVariants({})).toContain("data-[orientation=vertical]:self-start")
     expect(TABS).toContain('scrollable || overflow || orientation === "vertical"')
   })

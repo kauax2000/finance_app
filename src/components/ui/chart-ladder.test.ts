@@ -149,11 +149,13 @@ describe("escada e invariantes do Chart", () => {
   })
 
   it("6. a ponta da barra arredonda e a base não", () => {
-    // Arredondar os quatro cantos levanta a barra da linha do zero.
-    expect(CODIGO).toContain("[4, 4, 0, 0]")
-    expect(CODIGO).toContain("[0, 4, 4, 0]")
-    expect(CODIGO).not.toMatch(/radius=\{4\}/)
-    expect(CODIGO).not.toContain("[4, 4, 4, 4]")
+    // Arredondar os quatro cantos levanta a barra da linha do zero. A ponta
+    // é 8 desde a rodada 243 (era 4), na constante `CHART_BAR_TIP`.
+    expect(CODIGO).toContain("const CHART_BAR_TIP = 8")
+    expect(CODIGO).toContain("[CHART_BAR_TIP, CHART_BAR_TIP, 0, 0]")
+    expect(CODIGO).toContain("[0, CHART_BAR_TIP, CHART_BAR_TIP, 0]")
+    expect(CODIGO).not.toMatch(/radius=\{(4|8|CHART_BAR_TIP)\}/)
+    expect(CODIGO).not.toContain("[CHART_BAR_TIP, CHART_BAR_TIP, CHART_BAR_TIP, CHART_BAR_TIP]")
   })
 
   it("7. o eixo de valor ancora em zero por padrão", () => {

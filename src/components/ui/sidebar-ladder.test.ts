@@ -226,7 +226,7 @@ describe("régua da Sidebar", () => {
       CODIGO.indexOf("if (resizable) {", CODIGO.indexOf("const miolo = ("))
     )
     expect(miolo).toContain(
-      '"group-data-[variant=floating]:rounded-2xl group-data-[variant=floating]:shadow-lg group-data-[variant=floating]:ring-1 group-data-[variant=floating]:ring-foreground/10"'
+      '"group-data-[variant=floating]:rounded-modal group-data-[variant=floating]:[--radius-parent:var(--radius-modal)] group-data-[variant=floating]:[--radius-inset:--spacing(2)] group-data-[variant=floating]:shadow-lg group-data-[variant=floating]:ring-1 group-data-[variant=floating]:ring-foreground/10"'
     )
     expect([...CODIGO.matchAll(/group-data-\[variant=floating\]:ring-1/g)]).toHaveLength(1)
   })

@@ -308,7 +308,7 @@ const dialogContentVariants = cva(
   [
     "group/dialog-content fixed top-1/2 left-1/2 z-(--z-modal)",
     "w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2",
-    "rounded-xl text-sm shadow-lg ring-1 ring-foreground/10 outline-none",
+    "rounded-modal text-sm shadow-lg ring-1 ring-foreground/10 outline-none [--radius-parent:var(--radius-modal)] [--radius-inset:var(--dialog-px)]",
     // A placa é o material da casa, e o alfa é o mesmo par das superfícies
     // flutuantes — a receita fica igual em todo overlay do sistema. Ver o
     // bloco do doc-comment acima para o que o véu limita.

@@ -120,20 +120,20 @@ import { StarIcon as StarSolidIcon } from "@heroicons/react/16/solid"
       </DocSection>
 
       <DocSection
-        title="Pílula"
-        description="shape=&quot;pill&quot;, o eixo do Button: 100% arredondado, com meio degrau a mais de recuo; nos degraus de ícone vira círculo. É a forma dos filtros da tela de atividade."
-        code={`<ToggleGroup type="single" variant="outline" shape="pill" size="sm" defaultValue="todas">
+        title="Cápsula"
+        description="Todo toggle é cápsula, como todo controle (rodada 240, o iOS 26): 100% arredondado, com meio degrau a mais de recuo que um retângulo; nos degraus de ícone vira círculo. A amostra de cor fica de canto, a família do ColorTile."
+        code={`<ToggleGroup type="single" variant="outline" size="sm" defaultValue="todas">
   <ToggleGroupItem value="todas" count={12}>Todas</ToggleGroupItem>
   …
 </ToggleGroup>`}
         previewClassName="flex-col items-start gap-3"
       >
-        <ToggleGroup type="single" variant="outline" shape="pill" size="sm" defaultValue="todas" aria-label="Filtrar atividades" className="flex-wrap gap-2">
+        <ToggleGroup type="single" variant="outline" size="sm" defaultValue="todas" aria-label="Filtrar atividades" className="flex-wrap gap-2">
           <ToggleGroupItem value="todas" count={12}>Todas</ToggleGroupItem>
           <ToggleGroupItem value="transacoes" count={8}>Transações</ToggleGroupItem>
           <ToggleGroupItem value="contas" count={4}>Contas</ToggleGroupItem>
         </ToggleGroup>
-        <ToggleGroup type="single" variant="outline" shape="pill" size="icon-md" defaultValue="casa" aria-label="Ícone">
+        <ToggleGroup type="single" variant="outline" size="icon-md" defaultValue="casa" aria-label="Ícone">
           <ToggleGroupItem value="casa" icon={HomeIcon} aria-label="Casa" />
           <ToggleGroupItem value="mercado" icon={ShoppingCartIcon} aria-label="Mercado" />
           <ToggleGroupItem value="transporte" icon={TruckIcon} aria-label="Transporte" />
@@ -164,7 +164,7 @@ import { StarIcon as StarSolidIcon } from "@heroicons/react/16/solid"
       </DocNote>
 
       <DocNote title="Onde o app usa">
-        Nenhuma tela usa o <code>Toggle</code> solto; o app o usa pelo <code>ToggleGroup</code>, em seis grupos — o sexto, as fichas de período da folha de filtros das transações, é <code>variant=&quot;chip&quot;</code> desde a rodada 199. Desde a rodada 183 eles saíram das classes à mão: os filtros da atividade (<code>rounded-full px-3</code>) são <code>shape=&quot;pill&quot;</code>; as duas paletas de cor são <code>variant=&quot;swatch&quot;</code>, e a do workspace deixou de soletrar o hexadecimal no leitor de tela; as grades de ícone (<code>size-9</code> e <code>size-11</code>) são <code>icon-lg</code> e <code>icon-xl</code> — a do workspace passou de 44 para 40, o degrau da escada.
+        Nenhuma tela usa o <code>Toggle</code> solto; o app o usa pelo <code>ToggleGroup</code>, em seis grupos — o sexto, as fichas de período da folha de filtros das transações, é <code>variant=&quot;chip&quot;</code> desde a rodada 199. Desde a rodada 183 eles saíram das classes à mão: os filtros da atividade (<code>rounded-full px-3</code>) são a cápsula, que desde a rodada 240 é a forma de todo toggle; as duas paletas de cor são <code>variant=&quot;swatch&quot;</code>, e a do workspace deixou de soletrar o hexadecimal no leitor de tela; as grades de ícone (<code>size-9</code> e <code>size-11</code>) são <code>icon-lg</code> e <code>icon-xl</code> — a do workspace passou de 44 para 40, o degrau da escada.
       </DocNote>
 
       <PropsTable
@@ -172,7 +172,6 @@ import { StarIcon as StarSolidIcon } from "@heroicons/react/16/solid"
           { prop: "pressed · defaultPressed", type: "boolean", description: "Controlado ou não." },
           { prop: "variant", type: '"plain" | "outline" | "swatch" | "chip"', default: '"plain"', description: "Sem cromo em repouso, com contorno desde o repouso, a amostra de cor, ou a ficha de filtro." },
           { prop: "size", type: '"sm" | "md" | "lg" | "icon-sm" | "icon-md" | "icon-lg" | "icon-xl"', default: '"md"', description: "28, 32, 36; os de ícone são quadrados de 28 a 40." },
-          { prop: "shape", type: '"rounded" | "pill"', default: '"rounded"', description: "pill arredonda 100% e dá meio degrau de recuo; nos de ícone, círculo." },
           { prop: "icon · iconOn", type: "HeroIcon", description: "O ícone, e o par sólido que o substitui quando liga." },
           { prop: "color", type: "string", description: "Com swatch, a cor gravada — a mesma que o ColorTile recebe." },
           { prop: "tint", type: '"vivid" | "soft"', default: '"vivid"', description: "Com swatch, a versão da cor: a do ColorTile." },

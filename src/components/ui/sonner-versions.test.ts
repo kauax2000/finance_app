@@ -22,7 +22,7 @@ function arquivos(dir: string): string[] {
 }
 
 describe("a placa flutuante", () => {
-  it("é a placa da casa: --popover, o anel de 1px, a sombra e o raio 18", () => {
+  it("é a placa da casa: --popover, o anel de 1px, a sombra e o raio da superfície", () => {
     expect(BLOCO.length).toBeGreaterThan(2000)
     // A tinta de vidro dos flutuantes: 85% com borrão, 60% no escuro, e
     // chapada com transparência reduzida ou sem `backdrop-filter`.
@@ -31,7 +31,7 @@ describe("a placa flutuante", () => {
     expect(BLOCO).toContain("--normal-bg: color-mix(in oklab, var(--popover) 60%, transparent);")
     expect(BLOCO).toMatch(/prefers-reduced-transparency: reduce\)[\s\S]*?--normal-bg: var\(--popover\);/)
     expect(BLOCO).toContain("0 0 0 1px color-mix(in oklab, var(--foreground) 10%, transparent)")
-    expect(BLOCO).toContain("border-radius: var(--radius-2xl);")
+    expect(BLOCO).toContain("border-radius: var(--radius-surface);")
   })
 
   it("o tom mora no poço do ícone, e nunca pinta a superfície", () => {

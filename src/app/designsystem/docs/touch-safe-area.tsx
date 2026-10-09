@@ -8,7 +8,7 @@ import { Code } from "@/components/ui/code";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { DocNote, DocSection, Usage } from "../ds-doc";
-import { Group, Spec } from "../ds-kit";
+import { Group, Spec, SpecChips, SpecList, SpecRow, SpecRowDescription } from "../ds-kit";
 import { IPHONE_TELA as TELA, IphoneBody } from "../ds-frame";
 
 /**
@@ -144,39 +144,38 @@ export default function TouchSafeAreaDoc() {
           className="mb-0"
           bodyClassName="p-0"
         >
-          {ALVOS.map((a) => (
-            <section
-              key={a.px}
-              className="grid grid-cols-[3.5rem_minmax(0,1fr)] gap-x-4 border-b border-border px-4 py-4 last:border-b-0"
-            >
-              <div className="flex flex-col items-center gap-1">
-                <span
-                  aria-hidden
-                  className={cn(
-                    "w-full rounded-md border border-dashed border-foreground/30 bg-muted",
-                    a.px === 44 ? "h-11" : a.px === 40 ? "h-10" : "h-7",
-                  )}
-                />
-                <span className="nums text-sm font-medium text-foreground">
-                  {a.px}
-                </span>
-              </div>
-              <div className="flex min-w-0 flex-col">
+          <SpecList>
+            {ALVOS.map((a) => (
+              <SpecRow
+                key={a.px}
+                termWidth="3.5rem"
+                align="start"
+                term={
+                  <div className="flex flex-col items-center gap-1">
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "w-full rounded-full border border-dashed border-foreground/30 bg-muted",
+                        a.px === 44 ? "h-11" : a.px === 40 ? "h-10" : "h-7",
+                      )}
+                    />
+                    <span className="nums text-sm font-medium text-foreground">
+                      {a.px}
+                    </span>
+                  </div>
+                }
+              >
                 <div className="flex flex-wrap items-baseline gap-x-2">
                   <span className="text-sm font-medium text-foreground">
                     {a.titulo}
                   </span>
                   <Code variant="inline">{a.cls}</Code>
                 </div>
-                <span className="text-xs text-muted-foreground">{a.use}</span>
-                <div className="mt-1.5 flex flex-wrap gap-1">
-                  {a.who.map((w) => (
-                    <Code key={w}>{w}</Code>
-                  ))}
-                </div>
-              </div>
-            </section>
-          ))}
+                <SpecRowDescription>{a.use}</SpecRowDescription>
+                <SpecChips items={a.who} />
+              </SpecRow>
+            ))}
+          </SpecList>
         </Spec>
       </Group>
 
@@ -241,9 +240,7 @@ export default function TouchSafeAreaDoc() {
 {/* certo: o toque recebe a mesma resposta */}
 <div className="group hover:bg-accent active:bg-accent group-active:bg-accent">…</div>`}
       >
-        <Button variant="outline">
-          toque ou passe o cursor
-        </Button>
+        <Button variant="outline">toque ou passe o cursor</Button>
       </DocSection>
 
       <DocNote title="Não remova hover: do código para “otimizar para mobile”">
@@ -291,7 +288,7 @@ export default function TouchSafeAreaDoc() {
               <div className="flex flex-1 flex-col gap-1.5 px-3 py-2">
                 <span className="h-2 w-2/3 rounded-sm bg-muted" />
                 <span className="h-2 w-1/2 rounded-sm bg-muted" />
-                <span className="h-10 w-full rounded-md bg-muted" />
+                <span className="h-10 w-full rounded-full bg-muted" />
                 <span className="h-2 w-3/5 rounded-sm bg-muted" />
               </div>
               <div className="shrink-0 px-2.5 pb-1.5">

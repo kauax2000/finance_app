@@ -25,6 +25,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
   português no `FormField`, e o foco vai ao primeiro `aria-invalid` — também
   para quem valida à mão com `noValidate`. Um controle nativo sem `FormField`
   volta ao balão do navegador.
+- **Desde a rodada 244 o nome do campo pode sair da vista.** `Form labels`
+  é `visible` (o padrão) ou `hidden`: o placeholder diz o nome, com
+  "(opcional)", e o `<label>` fica para o leitor de tela. Com `hidden`, **o
+  Enter avança** ao campo seguinte e só envia no último, com o
+  `enterkeyhint`. `FormInput icon` e `clearable` (o × que limpa e devolve o
+  foco) valem nos dois. O rótulo flutuante e a lista agrupada do iOS
+  (`FormGroup inset`/`settings`) foram vistos lado a lado e saíram (244b).
+  Nenhuma tela usa ainda.
 - Use **`type="submit"`** only for that primary action. Use **`type="button"`** for cancel, dismiss, toggles, and auxiliary actions.
 - Avoid raw **`<form>`** for submit flows unless there is a documented exception.
 - If you add a control that uses **Enter** for its own behavior (e.g. another Radix primitive), either mark it with a stable **`data-slot`** and extend `shouldDeferEnterToWidget` in `form.tsx`, or document the exception.
@@ -274,7 +282,11 @@ campo.** `size` desce a todos os botões pelo `ButtonSizeContext` (o do próprio
 botão vence); `orientation="vertical"` empilha e deita a emenda;
 `ButtonGroupText` é o segmento que não se clica, na altura da fileira (a
 paginação da tabela o usou até a rodada 196, quando virou `Pagination`); e um
-`Input` colado ocupa a sobra, com o grupo levando os botões aos 40 do dedo.
+`Input` ocupa a sobra, com o grupo levando os botões aos 40 do dedo —
+**separado** dos botões por 8px desde a rodada 241u, sem emenda (o canto do
+campo não fecha contra uma cápsula). **A ação de um campo mora dentro dele**:
+`InputGroup` com o `InputGroupButton` na ponta, que é a forma que a página do
+`ButtonGroup` mostra.
 
 ### Rodapé de diálogo: uma hierarquia só
 
@@ -519,7 +531,8 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   (`background-size: 100% 200%`, com e sem `position: center`) esticam a rampa
   e a cortam em coral e em violeta. Quem for consertar o ângulo, meça primeiro.
   **O recuo vertical da régua vem do raio, e é ele que proíbe o degrau `sm` do
-  `Alert`**: num `rounded-xl` de 12px, a 8px do topo a aresta recua 0,69px, mas
+  `Alert`**: num `rounded-xl` de 14px (era o raio do alerta até a rodada 240;
+  hoje é `rounded-surface`, 22), a 8px do topo a aresta recua 0,69px, mas
   a 4px recua **3,06px** e um fio de 2px em `start-0` ficaria fora da
   superfície pintada. Oito pixels é o piso, e numa caixa `sm` de 34px isso
   deixa 47% de fio — tracinho, não régua. O tipo proíbe o par, porque **não há
@@ -639,11 +652,12 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   — invisível — e em direções trocadas, clareando no claro e afundando o botão
   na página no escuro. O token puxa a base na direção do próprio texto: escurece
   no claro (1,26:1), clareia no escuro (1,39:1). Sempre na direção do contato.
-  **`--primary-hover` segue a mesma regra e por isso escurece nos dois temas**:
-  o contato do primário é o rótulo branco, e escurecer é o único sentido que
-  sobe o contraste dele (9,01 no claro, 6,21 no escuro). Com ele vêm
-  `--primary-edge` e `--primary-highlight`, a aresta e a luz da tecla — ver a
-  rodada 78.
+  **`--primary-hover` não segue mais essa regra no claro** (rodada 241b): a
+  tecla já é quase preta, e escurecer de 0,205 para 0,145 media 1,10:1 contra
+  o repouso — o hover não se via. Hoje ele **clareia no claro** (0,32) e
+  **escurece no escuro** (0,87), 1,42:1 contra o repouso nos dois, com o
+  rótulo acima de 12:1. (`--primary-edge` e `--primary-highlight`, da rodada
+  78, saíram com a tecla em relevo.)
   `--primary` **preenche** (botão, checkbox, switch, faixa do slider) e é medido
   contra o texto que fica em cima; `--primary-accent` é **marca sobre o fundo**
   — texto, ícone, e todo traço fino: barra lateral de citação, contorno de chip
@@ -702,6 +716,87 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   de DOM, não pela escala. E o `DatePicker` escalava o próprio popover até
   `--z-toast` para vencer uma disputa que `--z-popover` já ganhava — o sintoma
   de sempre.
+- **Raio: a escala mora em Shape & Elevation, e o raio se muda lá** (rodadas
+  240 e 240c). O modelo é o do iOS 26, e todo componente veste um degrau desta
+  escala, e só dela:
+  - **Cápsula** (`rounded-full`): todo controle, em todo degrau e nos dois
+    apontadores — `Button` (o eixo `shape` saiu do tipo), o campo de uma linha
+    (`fieldSurfaceClassName`: `Input`, `SelectTrigger`, `ComboboxTrigger`,
+    `DatePicker`, `InputGroup`, e as pontas do `InputOTP`; voltou à cápsula na
+    rodada 243e, depois de vestir a linha da 241h à 243d), busca, `Toggle`,
+    `ToggleGroup`,
+    `Tabs`, `Menubar`, `NavigationMenu`, `Badge`, `TopBar floating`.
+  - **Superfície** (`rounded-surface`, `--radius-surface`, 22px): o que
+    contém — `Card`,
+    `Accordion`, toast, `Table`. O CSS limita o raio à
+    metade do lado: até 44px de altura já sai cápsula sem regra própria.
+  - **Modal** (`rounded-modal`, `--radius-modal`, 28px): `Dialog`,
+    `AlertDialog`, `Sheet`, `Drawer`, `Sidebar floating`, `SplitShell`.
+  - **Linha** (`rounded-row`, `--radius-row`, 12px; rodadas 241d e 241e): a linha
+    de lista selecionável — a linha e o subitem da `Sidebar` —, e o
+    `ColorTile` do `md` ao `2xl` (rodada 241g; o `xs` fica no `rounded-md`),
+    o `Item sm` e as caixas do app que eram `rounded-lg` (rodada 244c).
+    Numa linha de 32 é retângulo de canto arredondado; a cápsula seria 16.
+  - **Linha alta** (`rounded-row-lg`, `--radius-row-lg`, 16px; rodada 241f):
+    a linha selecionável de 44 — a lista de seleção da página Checkbox —, e o
+    `Textarea` e o `InputGroup` com bloco ou textarea (rodada 241p, eram 22). A
+    superfície daria 22, a metade, e ela sairia cápsula, que o dono recusou.
+    Desde a 244c também o `Item` (`md`/`lg`), o cartão do `RadioGroup`, o
+    cartão de escolha do `FieldLabel`, a linha do `FormPickerPopover`, o
+    painel do `DropdownMenu` (que publica o próprio raio) e as caixas do app que
+    eram `rounded-xl` — a revisão os achou em 22, cápsula a 38–44px.
+  - **O `Collapsible card` veste a linha alta (16) e o item do `Accordion
+    separated` a linha (12)** (rodada 241v): fechados são linhas de 34 a 42px,
+    e a superfície os desenhava cápsula. O `Accordion contained` (vários itens) fica em 22.
+  - **A placa flutuante é a superfície** (22; rodada 243d, depois de passar
+    pela linha alta na 242c): `menuPanelSurfaceClassName` — `Select`,
+    `DropdownMenu`, `ContextMenu`, `Menubar`, `Popover`, `Combobox`,
+    `HoverCard`, `NavigationMenu` — e a placa da paleta do `Command`. As
+    listas recuam 8 (`p-2`, o separador sangra `-mx-2`) e a placa publica
+    esse recuo, então as linhas concêntricas ficam em 22 − 8 = 14. **A linha
+    mede 36** (`py-2`, o degrau `lg`; era 28): a 28, 14 era a metade e o realce
+    saía pílula.
+  - **O `CardField` veste a linha alta** (16; rodada 242d): era `concentric`,
+    e a 16px da borda do cartão caía no mínimo de 6.
+  - **O `Tooltip` não é cápsula** (rodadas 241q e 241s): `sm` (24px) no
+    `rounded-lg` (10) e `md` (32px) na linha (12), nas duas variantes. O padrão é `sm` desde a 241r.
+  - **Concêntrico** (`@utility concentric`): o que está dentro — o raio do pai
+    menos o recuo, com mínimo de 6px. Quem contém publica `--radius-parent` e
+    `--radius-inset`; nunca junto de um `rounded-*` na mesma classe. Publicam
+    a placa flutuante, o `Card`, o `DialogContent` e, desde a 244c, o
+    `SheetContent` e o `DrawerContent`. **Sem pai que publique ele cai em 22**
+    e sai pílula — por isso **fora de `ui/` e do catálogo ninguém o usa**: a
+    caixa do app veste o degrau (`radius-roles.test.ts` tranca).
+  - **A escada pequena** (`rounded-xs`…`lg`): a forma fixa — Kbd (`rounded-md`,
+    8px de 20, rodada 241k), `Checkbox`,
+    `ColorTile`, miniatura.
+  **Quando o dono pedir outro raio para um componente**, a mudança não se
+  escreve no componente: meça o componente contra a escala da página
+  `/designsystem/shape-elevation`, mostre como fica em cada degrau que serve
+  (lado a lado, medido), e mude **na escala** — apontando o componente para
+  outro degrau, ajustando o valor de um degrau (que muda todos que o vestem;
+  diga quais) ou, se nenhum serve, propondo um degrau novo na escala. Nunca
+  `rounded-[18px]` nem um token só daquele componente (a rodada 240c tentou e
+  foi recusada). `radius-roles.test.ts` tranca: o bloco `@theme static` tem
+  só `surface`, `modal`, `row` e `row-lg`, e nenhum arquivo de `ui/` escreve raio em número nem
+  `rounded-xl|2xl`.
+  **Sem squircle**: `corner-shape: superellipse()` só existe no Chrome e no
+  Edge, e no iPhone não apareceria.
+  **O catálogo também veste a escala** (rodada 240d): as molduras do
+  `/designsystem` — `DocMeta`, `Preview`, `PropsTable`, `Spec`,
+  `SpecimenPanel` e as caixas das páginas — compõem o `Card` e vestem os
+  papéis da escala: o que contém (painel, ladrilho, faixa, bloco, linha de
+  lista) é `rounded-surface`, o que representa controle é cápsula. **O
+  catálogo usa `concentric` só onde a moldura publica o próprio raio e o
+  recuo** (rodada 240n: sem isso ele dava 6, e o dono o leu como "fora do
+  sistema"; rodada 241l: na página Resizable a linha de dentro acompanha a
+  moldura, 22 − 7 = 15, a pedido do dono). **Só vale perto da borda**
+  (rodada 241m, decisão do dono): a peça a até ~14px da moldura é
+  concêntrica; a que está a 17px ou mais (painéis de amostra no corpo de um
+  `Preview`) fica no próprio degrau, como no iOS, onde a peça solta no meio do
+  cartão não acompanha o canto. Fica na escada pequena só o que é
+  miúdo — chip de código (`rounded-md`), linha de texto falso, miniatura,
+  ladrilho de 36. O mesmo teste reprova `rounded-xl` à mão.
 - **Shadows**: `shadow-xs` / `shadow-sm` / `shadow-md` / `shadow-lg` /
   `shadow-xl`, todos com valores próprios no tema escuro.
 - **Texto**: além da escala do Tailwind, `text-2xs` (0,6875rem, para contagem
@@ -928,8 +1023,8 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   de 8 da placa e o respiro dos grupos; a tela não escreve nada disso. **O
   `Combobox` saiu da pilha na rodada 198**: é a placa do popover com a
   pílula (`SearchInput surface="plate"`, pelo `CommandInput surface="plate"`)
-  e a lista dentro — pílula de 32 a 8px das bordas, linhas de 32, 8px
-  embaixo —, a forma do `SearchInput` num popover, que o dono pediu "exatamente
+  e a lista dentro — pílula de 32 a 8px das bordas, linhas de 36 (desde a
+  243d), 8px embaixo —, a forma do `SearchInput` num popover, que o dono pediu "exatamente
   a mesma". A `density="menu"` e o `PopoverContent surface="none"` ficaram sem
   consumidor no app. O campo da paleta é `CommandInput size="lg"` (36); `md` (32) continua o padrão, o gatilho do cabeçalho. **E o ponteiro
   conta como navegação** no modo ocioso
@@ -941,51 +1036,51 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
 - **`Badge`**: `variant` (forma) + `tone` (cor) + `size` (`xs` | `sm` | `md`); as classes de chip moram no próprio `badge.tsx` e não se duplicam fora dele. **`variant` tem quatro valores**: `soft`, `outline`, `contrast` (a pílula grave — `primary` no claro, `secondary` no escuro, **sem inverter**; ali o `tone` não pinta superfície, fica só no dot) e `brand` (um chip neutro, `muted`, cuja borda acende em arco-íris conforme o ponteiro se aproxima — a família do brilho, com `useBrandGlow`; uma por tela). **`tone` tem oito** — `info` entrou na rodada 89, e ele já era usado sem existir: duas telas escreviam `tone="neutral"` e anulavam a tinta com `tagChipInfo` por `className`. **O respiro e o corpo do ícone são do componente** (`gap-1` na base, `size-2.5` no `xs` e `size-3` nos outros), porque sete telas os escreviam à mão e uma delas usava `mr-1` por não haver `gap` nenhum; o conjunto é sempre `16/solid`. **`BadgeDot` é o ponto de estado**, com `pulse` para o que acontece agora e sem ele para o que só é relatado — a cor sai de `--badge-dot`, que o `tone` publica. Ele é `animate-ping` e **não** `animate-pulse`, de propósito: o bloco global de `prefers-reduced-motion` isenta `spin` e `pulse` do corte, e um ponto decorativo não tem a desculpa do spinner.
 - **`Button` — a hierarquia é uma escada, e ela desce em peso visual**:
   `primary` preenche de preto (branco no escuro), `secondary` preenche de
-  cinza, `tertiary` não preenche nada. **O `primary` é o Button Colorful da
-  Kokonut UI com a cor guardada para a interação** (rodadas 149 a 151, MIT):
-  em repouso, a tecla preta (branca no escuro) **chapada** — a identidade preto
-  e branco —; no cursor, no toque e em `aria-expanded`, um degradê de
-  cinco paradas da marca (`--brand-teal`, `-blue`, `-violet`, `-magenta`,
-  `-coral`) **floresce do centro** até `--button-colorful-opacity` (**0,70 no
-  claro, 0,80 no escuro**): nasce comprimido (30% × 60%) e borrado (16px) e se
-  abre até as bordas ganhando foco (8px), na mola da casa, e recolhe sem mola
-  em `--duration-slow` (rodada 151). A pintura é a `@utility button-colorful`,
-  e **um número só anima tudo**: `@property --button-colorful` (0 → 1,
-  `inherits: true`, porque quem a lê é o `::after`), da qual escala, borrão e
-  opacidade derivam — o `Button` só a liga e enumera na `transition`. A versão da 149 era a referência crua —
-  40% sempre aceso, só o roxo indigo→magenta — e saiu porque punha cor de
-  marca em toda tela (disputando com as peças `brand`) e o roxo de três
-  paradas lia como template, não como o nosso arco-íris. A camada é o **`::after`** —
-  `isolate` a põe acima do fundo e abaixo do rótulo, `overflow-hidden` recorta
-  o borrão de 8px — porque o `ButtonGroup` usa e esconde o `::before`. **É cor
-  sob o rótulo, e é exceção consciente à invariante 3, por decisão do dono**:
-  sob o rótulo aceso, o pior ponto mede **5,09** no claro e 7,70 no escuro
-  (piso 4,5). O claro fica abaixo dos 0,80 da referência por medição: o rótulo
-  é branco, teal e azul são as paradas claras, e a 0,80 o `salvar` media 4,26.
-  **O volume se mexe no token, nunca nas paradas.** Da rodada 78 à 97 ele foi tecla, da 98 à 147 lava e
-  brilho do Shiny Button, e na 148 cru; `button-primary.test.ts` cobra que
-  `primary-wash`, `--button-wash` e companhia não voltem. O fundo continua
-  recortado no `padding-box` (a `bg-clip-padding` da base), e não em
-  `border-box` como no `secondary`: é o vão de 1px da borda transparente que
-  desenha a emenda do primário no `ButtonGroup`. **Os outros pesos com fundo
-  no hover florescem do mesmo jeito** (rodada 152): a cor do hover é uma
-  elipse no próprio fundo (`@utility button-bloom`, `farthest-corner` a partir
-  do centro, com a borda indo de difusa a nítida), na mesma variável e na
-  mesma mola. **Não pode ser pseudo-elemento**: o `::after` desses pesos é o
-  alvo de toque ampliado do `PageHeader`, do `Breadcrumb`, do × da
+  cinza, `tertiary` não preenche nada. **O `primary` é a tecla chapada**
+  (rodada 241): preta no claro, branca no escuro, e no cursor, no toque e em
+  `aria-expanded` ela vai a `--primary-hover` (`hover:bg-primary-hover`; clareia no claro e escurece no escuro),
+  sem cor nenhuma. O fundo continua recortado no `padding-box` (a
+  `bg-clip-padding` da base): é o vão de 1px da borda transparente que desenha
+  a emenda do primário no `ButtonGroup`. **O degradê que florescia nele é o
+  `brandColorful`** — o Button Colorful da Kokonut UI (rodadas 149 a 151, MIT;
+  o primário até a 240): a mesma tecla em repouso e, no cursor, no toque e em
+  `aria-expanded`, cinco paradas da marca (`--brand-teal`, `-blue`,
+  `-violet`, `-magenta`, `-coral`) **florescendo do centro** até
+  `--button-colorful-opacity` (**0,70 no claro, 0,80 no escuro**): nasce
+  comprimido (30% × 60%) e borrado (16px) e se abre até as bordas ganhando
+  foco (8px), na mola da casa, e recolhe sem mola em `--duration-slow`. A
+  pintura é a `@utility button-colorful`, num `::after` (`isolate` acima do
+  fundo e abaixo do rótulo, porque o `ButtonGroup` usa e esconde o `::before`),
+  e **um número só anima tudo**: `@property --button-bloom`. **É cor sob o
+  rótulo, exceção consciente à invariante 3**: o pior ponto mede **5,09** no
+  claro e 7,70 no escuro (piso 4,5); **o volume se mexe no token, nunca nas
+  paradas.** Um por tela, como as outras peças de marca. Da rodada 78 à 97 o
+  primário foi tecla em relevo, da 98 à 147 lava e brilho do Shiny Button, na
+  148 cru e da 149 à 240 colorido; `button-primary.test.ts` cobra que
+  `primary-wash`, `--button-wash` e companhia não voltem. **Os outros pesos
+  com fundo no hover não florescem** (rodada 241, a pedido do dono; floresciam
+  desde a 152): `secondary`, `tertiary`, `outline`, `floating` e
+  `destructive` pintam a cor do hover **chapada por cima do fundo**
+  (`@utility button-hover`, uma camada de `background-image`), e ela esmaece
+  na transição da base (`--duration-fast`), porque `--button-hover` (0 → 1) é
+  `@property` tipada. **Não pode ser pseudo-elemento**: o `::after` desses
+  pesos é o alvo de toque ampliado do `PageHeader`, do `Breadcrumb`, do × da
   `AnnouncementBar` e das setas do `Carousel`, e o `::before` é o divisor do
-  `ButtonGroup`. Cada peso declara só `--button-bloom-fill` (`secondary`
-  `--secondary-hover`, `tertiary` e `outline` `muted`, `destructive` 11%),
-  com par `dark:` onde o escuro difere, e os alfas são **compostos**
-  (`repouso + a·(1 − repouso) = hover`: 11%, 12,5%, 29%). **Quem muda o realce
-  de um `Button` por fora muda a cor da flor, não o fundo**: `hover:bg-*` numa
-  chamada pinta por baixo da elipse e some — `AlertAction`, a `AnnouncementBar`,
-  o `WorkspaceSwitcher` e os chips de filtro declaram `--button-bloom-fill`; o
-  link da lateral do catálogo zera a flor e mantém o esmaecer, porque linha de
-  lista esmaece (rodada 137). E `transition-colors` numa chamada troca a lista
-  e faz a flor estalar. Da rodada 99 à 148 a cor crescia num disco a partir do
-  ponteiro (`button-fill`), e `button-touch-response.test.ts` cobra que ele
-  não volte. `brand`, `brandOutline` e `link`
+  `ButtonGroup`. Cada peso declara só `--button-hover-fill`: `secondary`
+  `--secondary-hover`; `tertiary`, `outline` e `floating` **a tinta do texto
+  a 12%** (um valor só, que escurece no claro e clareia no escuro — o
+  `--muted` de antes media 1,08:1 contra o repouso no escuro); `destructive`
+  22% (25% no escuro). Medido na rodada 241b, hover contra repouso: 1,27 a
+  1,48:1 nos seis pesos e nos dois temas.
+  **Quem muda o realce de um `Button` por fora muda a cor da camada, não o
+  fundo**: `hover:bg-*` numa chamada pinta por baixo dela e some —
+  `AlertAction`, a `AnnouncementBar`, o `WorkspaceSwitcher` e os chips de
+  filtro declaram `--button-hover-fill`, e o pager do catálogo (`ds-doc`) a
+  aponta para `--accent`. A
+  `@utility button-bloom` (a elipse) continua, só para o `Checkbox`. Da
+  rodada 99 à 148 a cor crescia num disco a partir do ponteiro
+  (`button-fill`), e `button-touch-response.test.ts` cobra que ele
+  não volte. `brand`, `brandColorful`, `brandOutline` e `link`
   mantêm o hover próprio. **`tertiary` acende no cursor e no toque** — o par
   `active:` entrou na origem na rodada 29b, porque `hover:` compila dentro de
   `@media (hover: hover)` e sem ele o degrau ficava inerte no dedo. Uma tela tem um `primary` só. Fora da escada, de propósito:
@@ -1029,18 +1124,26 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   laço de 2s (`@utility brand-rainbow-button`, `::before` e `::after`, e não
   o fundo do botão, porque a base declara `bg-clip-padding`). A lista de cores
   **fecha no coral**, então o laço não tem a emenda da referência. Sempre
-  aceso, para quando a marca não pode depender do ponteiro. Os dois:
-  **um por tela**, para o CTA de marca. O `primary` não veste o arco-íris
-  inteiro: veste cinco paradas dele, borradas por dentro e só no cursor
-  (rodada 150).
-  **`shape`** é a forma (`rounded`, o padrão, ou `pill`, 100% arredondado, com
-  meio degrau a mais de recuo lateral; nos `icon-*` vira círculo) — rodada 145. **Não existe `variant="default"` nem `variant="ghost"`**
+  aceso, para quando a marca não pode depender do ponteiro. Os três
+  (`brand`, `brandColorful`, `brandOutline`): **um por tela**, para o CTA de
+  marca. O `brandColorful` não veste o arco-íris inteiro: veste cinco paradas
+  dele, borradas por dentro e só no cursor (rodada 150).
+  **Não há eixo `shape`** desde a rodada 240: todo `Button` é cápsula (nos
+  `icon-*`, círculo). **Não existe `variant="default"` nem `variant="ghost"`**
   — viraram `primary` e `tertiary`, para o nome dizer o degrau; os dois saíram
   do tipo, então o compilador acusa quem os escrever. **`success` e `warning`
   também saíram**: nomeavam um estado, não um peso, e nenhuma tela do app
   chegou a usá-los — estado de sucesso e de atenção é trabalho do `Badge` e do
   `Alert`, que mantêm os deles. Ação principal segue `type="submit"` dentro de
   `CustomForm`.
+- **`Button variant="floating"`** (rodada 240g): a pílula flutuante — a
+  placa das peças soltas da casa (`--popover` chapado, anel de 1px,
+  `shadow-sm`, `bg-clip-border`) com a tinta do `tertiary` e o realce chapado
+  dos outros pesos. Fora da escada, para a ação que paira sobre o conteúdo
+  (nenhuma tela a usa hoje: o copiar do catálogo voltou ao `tertiary` a
+  pedido do dono). Sobre um `Card` a placa tem a mesma cor
+  dele, e quem a separa é o anel e a sombra — o custo já dito da tinta
+  flutuante.
 - **`Button iconMotion="spin"`** (rodada 138): o ícone gira meia-volta no
   cursor e no toque, na mola da casa (`--ease-spring`, 500ms), e volta ao
   sair. Ele é o do "tentar novamente": o `ArrowPathIcon` é simétrico a 180°,
@@ -1162,7 +1265,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   opaco, os quatro tons convergiam no **mesmo** `235,235,235` — o realce
   apagava o tom. **Ninguém viu porque a razão de luminância é 1,007–1,078**: o
   defeito é cromático, e os scripts da casa só medem luminância. Com
-  `currentColor` na cor da flor (`--button-bloom-fill` a 15% e 10%, com o par
+  `currentColor` na cor do realce (`--button-hover-fill` a 15% e 10%, com o par
   `dark:`), 1,16–1,19
   no claro e 1,26–1,30 no escuro, e a assimetria de área (15% no ×, 10% na
   ação) continua.
@@ -1170,10 +1273,10 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   — `soft` trazia `rounded-xl` e `plain` trazia `rounded-lg` —, e o resultado
   era medível: **14px contra 10px**, dois alertas lado a lado com cantos
   diferentes. Canto não é moldura; o que o `variant` decide é ter borda ou não.
-  Ele também **não desce com o `size`**, pela mesma razão que o
-  `data-[size=sm]:rounded-md` saiu do `NativeSelect`: raio por degrau é desvio,
-  e nenhum outro controle do sistema o faz. Medido depois: **um raio só, 14px,
-  nos 13 alertas da página**.
+  **Desde a rodada 241t ele desce com o `size`**, como o campo (241j) e a
+  dica (241q): `md` na linha alta (16) e `sm` na linha (12). Com a superfície
+  (22), o `sm` de 34px saía cápsula, que o dono recusou. A regra antiga ("raio
+  por degrau é desvio") caiu com o campo.
 - **O deslocamento do ícone é por degrau, e a conta é `(entrelinha − ícone) / 2`.**
   Ele vivia cravado em `translate-y-0.5` na base, o que é certo só no `md`
   (20 − 16) / 2 = 2px. No `sm` a conta dá 1px, e **todo alerta `sm` saía com o
@@ -1379,7 +1482,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   do `button-fill` crescendo sob o ponteiro. Não volte com elas.
   `menu-fade.test.ts` tranca as duas.
 - **A linha do menu cresce no toque, não no telefone.** `pointer-coarse:min-h-11`
-  leva o item de 28 para 44px quando o **apontador** é grosso — medido nos dois
+  leva o item de 36 (28 até a rodada 243d) para 44px quando o **apontador** é grosso — medido nos dois
   ponteiros. A pergunta é sobre o dispositivo e não sobre a largura, pela mesma
   razão que `hover: hover` é (ver `tailwind-hover-policy.test.ts`): um telefone
   em paisagem continua grosso, um desktop estreito continua fino.
@@ -1560,7 +1663,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `KpiCard`, `DeltaBadge` nem a conta de variação**: o dashboard, o resumo da
   categoria e as contas usam as peças.
 - **O `Sheet` ganhou o redesenho da casa e as versões que as folhas pediam**
-  (rodada 222). **`floating` é o padrão**: raio 18, o anel de 1px das placas e
+  (rodada 222). **`floating` é o padrão**: o raio modal (28, desde a 240), o anel de 1px das placas e
   a sombra, numa placa **chapada** (`--popover`) — o vidro saiu, porque o véu
   já separa a folha da página. Ela **entra na mola e sai em 200ms**, e o
   conteúdo sobe em cascata (`@utility sheet-reveal`; o × de canto da flutuante é círculo um degrau mais escuro que a placa (o texto a 5% no claro, `--background` a 40% no escuro), sem anel nem sombra, porque já está dentro da placa (a tinta da placa o apagava, e `--muted` era claro demais); com movimento reduzido o
@@ -1580,7 +1683,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   enquanto, por decisão do dono; o material e a mola valem para elas.
 - **O `Sidebar` flutua por padrão desde a rodada 221, sem vidro e numa peça
   só.** `variant="floating"` é a placa solta dos outros flutuantes (o
-  `--sidebar` chapado, `ring-1 ring-foreground/10`, `shadow-lg`, raio 18); o
+  `--sidebar` chapado, `ring-1 ring-foreground/10`, `shadow-lg`, o raio modal, 28); o
   aro, as nuvens e o reflexo da `@utility glass` saíram dela — a utility
   continua para quem a veste. **A pílula do ativo é o `layoutId` do `motion`**,
   na mola do `Menubar`, nas três variantes e do item ao subitem; a medição à
@@ -1663,10 +1766,10 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   **Na vertical não há `stretch`** (rodada 227): ele dividia a largura e, na
   coluna, levava a moldura a `w-full` e espremia o painel numa fresta; a
   coluna fica na largura das abas, em `self-start`, e o `floating` vira placa
-  (`rounded-2xl`) em vez de estádio.
+  (`rounded-surface`) em vez de estádio.
 - **O `Toast` é a placa flutuante, e o tom mora no ícone** (rodada 228). A
   superfície é a dos flutuantes — a tinta de vidro do `menuPanelTintClassName`
-  (`--popover` 85/60 com o borrão), o anel de 1px, a sombra, raio 18 — nos
+  (`--popover` 85/60 com o borrão), o anel de 1px, a sombra, o raio da superfície (22) — nos
   cinco tipos; o tipo pinta só o **poço do ícone** (`-muted` do tom).
   **Não há barra de tempo** (saiu a pedido do dono); a contagem é a **roda**
   antes do rótulo do Desfazer (`@property --toast-left`), e ela e o relógio
@@ -2008,8 +2111,9 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   **lista** somando as faixas de sangramento — senão, no seletor, a de baixo
   cairia sobre o rodapé. São indicação: sem altura, sem clique, `aria-hidden`.
   Por isso a superfície dos menus e o `PopoverContent` ganharam `relative`.
-  A peça mora em `lib/` e não em `ui/` porque o `Select` é átomo e já importa
-  o seu único componente (`Caption`).
+  A peça mora em `lib/` e não em `ui/` porque o `Select` era átomo até a rodada
+  241o; hoje ele é molécula (compõe `Separator` e `Caption`), e ela poderia
+  subir para `ui/` se ganhar página.
 - **Um dropdown não passa de 288px de altura** (rodada 174, a pedido do dono):
   `--menu-max-h` (`--spacing(72)`, o mesmo teto da lista do `Command`) é
   declarado na superfície flutuante (`menuPanelSurfaceClassName`) e lido no
@@ -2018,6 +2122,13 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   é menor. O `FormPickerPopoverContent`, com busca e rodapé, para em 384px,
   para a lista ficar nos mesmos ~288. O `DropdownMenu variant="panel"` não é
   lista e devolve o teto à altura disponível (`[--menu-max-h:100dvh]`).
+- **O `Select` é molécula desde a rodada 241o**: o fio entre grupos é o
+  `Separator` do sistema (`SelectSeparator`, sangrando o `p-2` da lista) e a
+  descrição da opção é a `Caption`. **O gatilho não compõe o `Input` e não
+  pode**: ele é o `<button>` com papel de combobox do Radix, sem texto
+  digitável. O que ele divide com o `Input` é a superfície de
+  `lib/field-classes`. O seletor em que se digita é o `Combobox
+  variant="input"`.
 - **A opção de ausência de um `Select` é `variant="none"`** (rodada 173):
   "Sem categoria", "Não informado", "Qualquer plano" — esmaecida na lista e
   no gatilho, com o próprio separador, sem travessões. Ela é para quando não
@@ -2550,6 +2661,28 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   também entra no dia estático. **O calendário de pagamentos do dashboard é
   o `Calendar`**: as duas grades eram escritas à mão, com os pontos em
   cinco cores cruas e um popover por célula.
+  **A agenda é uma grade de fios desde a rodada 242**: uma moldura só
+  (`rounded-surface`, o cartão, o fio de 1px), as células separadas por fios
+  e sem caixa (`AGENDA_CELULA`), sete colunas de largura igual, o mês vizinho
+  num véu de `muted/30` e o fim de semana num de `muted/15`, o mês à esquerda
+  e o "Hoje" junto das setas (`CalendarNav`). **O dia é descrito pelos
+  eventos**: `CalendarEvents max` mostra os primeiros e um "+N mais", e cada
+  `CalendarEvent` (`tone`, `amount`, `onSelect`) é ficha na grade — só o
+  título; o valor espremia o nome para "Spo…" — e linha de 44px na lista,
+  onde vira botão. **Abaixo de 40rem da própria largura** (container query,
+  `@container/calendar`) a grade some e entra a lista do mês, só com os dias
+  que têm conteúdo. O dia escolhido (`mode="single"`) fica `muted` com anel
+  interno, nunca a tecla `primary`. `CalendarSkeleton variant="agenda"` é a
+  espera. **Nenhuma tela escreve as fichas do dia à mão** nem troca a agenda
+  por `isMobile` — `calendar-agenda.test.ts` tranca. **Desde a 244c**: a
+  lista aceita `listDays` (os dias que entram; o dashboard a usa para os
+  últimos 5 passados, o teto antigo da lista do telefone), o `CalendarEvent`
+  tem `meta` (o tipo depois do título, só na lista) e o valor sai neutro, o
+  "Hoje" volta para baixo da grade com `hideNavigation`, cada dia da lista é
+  `role="group"` (e não uma região), e o dia escolhido realça a 5% como as
+  outras células. **A virada é pela largura da agenda**, e num laptop com a
+  barra lateral aberta e o painel de próximos ao lado a coluna pode ficar
+  abaixo de 40rem: ali aparece a lista.
 - **`Breadcrumb` troca de irmão, volta no telefone, leva ícone e separador por
   nome** (rodada 202). `BreadcrumbSwitcher` é a página atual com um menu dos
   irmãos ("Cartões › Nubank ▾"), sem crescer a linha; `collapse="back"`
@@ -2709,7 +2842,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   superfície do `ColorTile` (`tileColorFor`, claridade do sistema), contorno de
   `--foreground` e tique na escolhida; **não pinte amostra com
   `style={{ backgroundColor: hex }}`**, que mostra uma cor e o ladrilho outra.
-  `shape="pill"` é o eixo do `Button`; `size="icon-sm…icon-xl"` são os
+  A cápsula é de fábrica (o `shape` saiu na rodada 240); `size="icon-sm…icon-xl"` são os
   quadrados de 28 a 40; `icon` + `iconOn` trocam o contorno pelo sólido ao
   ligar. Nenhuma chamada escreve `rounded-full px-*`, `size-*` ou borda de
   seleção num `ToggleGroupItem`. No `type="single"` clicar no ativo **não**
@@ -2810,6 +2943,14 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   **opaco** nos dois temas, que abre no item atual e devolve o índice). **Dê
   `aria-label` a todo carrossel**: o padrão "Carrossel" não diz o que há dentro.
   `carousel-versions.test.ts` tranca.
+- **`Chart` no desenho novo** (rodada 243): a ponta da barra é 8px
+  (`CHART_BAR_TIP`, base reta; a faísca 3), e o hover das barras e da cascata
+  **não pinta retângulo atrás da coluna** — a barra do cursor fica e as outras
+  apagam a 45% (`CHART_HOVER_DIM_OPACITY`; a seleção continua 35%). As
+  amostras de cor (legenda, tooltip `dot`, rosca, anéis) são pontos, a
+  legenda interativa é cápsula com o realce chapado (`foreground/8`), a lista
+  da rosca veste o degrau linha (28px, 12) e o mapa de calor `rounded-sm`.
+  `chart-design.test.ts` tranca.
 - **`Chart` — nove formas, e a marca não entra no dado** (rodada 135). Além
   de área, linha, barras, rosca e faísca: `ChartSplit` (divisão de um total
   em 2–4 partes, porcentagens pelo maior resto), `ChartRadial` (um anel por
@@ -2858,7 +2999,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `onSelect` que devolve `Promise` (a linha carrega, o menu fecha no fim).
   `DropdownMenuContent search` filtra pelo nome; no campo a tecla é texto,
   senão o Radix buscaria por digitação e levaria o foco. **Com busca, o menu mede
-  como o `Combobox`** (pílula `md` a 8px, linhas de 32 a 8px), sem ser ele: o
+  como o `Combobox`** (pílula `md` a 8px, linhas de 36 a 8px), sem ser ele: o
   menu age e o `Combobox` escolhe valor. **A caixa não fecha
   o menu** (`closeOnSelect` volta ao Radix): a página afirmava isso e o Radix
   fechava. `shortcut` na raiz abre pela tecla — a linha com o foco, ou a tela

@@ -28,7 +28,7 @@ export default function ToggleGroupDoc() {
 
       <DocSection
         title="Uma ou várias"
-        description="type=&quot;single&quot; deixa uma ativa por vez; type=&quot;multiple&quot;, quantas a pessoa quiser. variant, shape e size descem do grupo para os itens."
+        description="type=&quot;single&quot; deixa uma ativa por vez; type=&quot;multiple&quot;, quantas a pessoa quiser. variant e size descem do grupo para os itens."
         code={`<ToggleGroup type="single" defaultValue="mes">
   <ToggleGroupItem value="semana">Semana</ToggleGroupItem>
   <ToggleGroupItem value="mes">Mês</ToggleGroupItem>
@@ -60,7 +60,7 @@ export default function ToggleGroupDoc() {
         previewClassName="flex-col items-start gap-4"
       >
         <SegmentadoDemo />
-        <ToggleGroup type="single" variant="segmented" shape="pill" defaultValue="mensal" aria-label="Cobrança">
+        <ToggleGroup type="single" variant="segmented" defaultValue="mensal" aria-label="Cobrança">
           <ToggleGroupItem value="mensal">Mensal</ToggleGroupItem>
           <ToggleGroupItem value="anual">Anual</ToggleGroupItem>
         </ToggleGroup>
@@ -126,7 +126,7 @@ export default function ToggleGroupDoc() {
           { prop: "type", type: '"single" | "multiple"', description: "Uma ativa por vez, ou várias. Obrigatório." },
           { prop: "value · defaultValue · onValueChange", type: "string | string[]", description: "Controlado ou não. No single, a troca para vazio é engolida." },
           { prop: "variant", type: '"plain" | "outline" | "swatch" | "chip" | "segmented" | "floating"', default: '"plain"', description: "A pele dos itens; segmented é a bandeja e floating a pílula do Tabs padrão, e as duas só existem no grupo." },
-          { prop: "size · shape · tint", type: "os do Toggle", description: "Descem para todos os itens; o do item vence." },
+          { prop: "size · tint", type: "os do Toggle", description: "Descem para todos os itens; o do item vence." },
           { prop: "stretch", type: "boolean", default: "false", description: "Os itens dividem a largura em partes iguais." },
         ]}
       />

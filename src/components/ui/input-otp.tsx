@@ -112,7 +112,9 @@ function InputOTPGroup({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="input-otp-group"
       className={cn(
-        "flex items-center rounded-lg has-data-invalid:ring-3 has-data-invalid:ring-destructive/20 dark:has-data-invalid:ring-destructive/40",
+        // O raio é o do campo — a cápsula (rodada 243e) —, nas pontas do grupo
+        // e nas casas da ponta.
+        "flex items-center rounded-full has-data-invalid:ring-3 has-data-invalid:ring-destructive/20 dark:has-data-invalid:ring-destructive/40",
         className
       )}
       {...props}
@@ -144,7 +146,7 @@ function InputOTPSlot({
         // O anel da casa ativa é o do campo — `ring-3` de `--ring` a 30% desde
         // a rodada 162, mais suave a pedido do dono e abaixo dos 3:1 por
         // decisão registrada em `field-classes.ts`.
-        "nums relative flex items-center justify-center border-y border-r border-input bg-input-fill/30 transition-all outline-none first:rounded-l-lg first:border-l last:rounded-r-lg data-invalid:border-destructive data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-3 data-[active=true]:ring-ring/30 data-[active=true]:data-invalid:border-destructive data-[active=true]:data-invalid:ring-destructive/20 dark:data-[active=true]:data-invalid:ring-destructive/40",
+        "nums relative flex items-center justify-center border-y border-r border-input bg-input-fill/30 transition-all outline-none first:rounded-l-full first:border-l last:rounded-r-full data-invalid:border-destructive data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-3 data-[active=true]:ring-ring/30 data-[active=true]:data-invalid:border-destructive data-[active=true]:data-invalid:ring-destructive/20 dark:data-[active=true]:data-invalid:ring-destructive/40",
         slotSizes[size],
         className
       )}

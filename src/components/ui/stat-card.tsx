@@ -85,7 +85,7 @@ const statCardVariants = cva("gap-0", {
       vertical: "",
       horizontal: [
         "grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3",
-        "[&>[data-slot=stat-card-icon]]:row-span-2 [&>[data-slot=stat-card-icon]]:size-10 [&>[data-slot=stat-card-icon]]:rounded-xl",
+        "[&>[data-slot=stat-card-icon]]:row-span-2 [&>[data-slot=stat-card-icon]]:size-10 [&>[data-slot=stat-card-icon]]:rounded-lg",
         "[&>[data-slot=stat-card-label]]:col-start-2 [&>[data-slot=stat-card-label]]:self-end",
         "[&>[data-slot=stat-card-value]]:col-start-2 [&>[data-slot=stat-card-value]]:self-start",
         "[&>[data-slot=stat-card-delta]]:col-start-3 [&>[data-slot=stat-card-delta]]:row-span-2 [&>[data-slot=stat-card-delta]]:row-start-1 [&>[data-slot=stat-card-delta]]:mt-0",
@@ -661,7 +661,7 @@ const statCardGroupVariants = cva("stat-card-reveal grid min-w-0", {
     variant: {
       separate: "gap-2",
       joined: [
-        "gap-px overflow-hidden rounded-xl border border-border bg-border",
+        "gap-px overflow-hidden rounded-surface border border-border bg-border",
         "[&>[data-slot=stat-card]]:rounded-none [&>[data-slot=stat-card]]:border-0 [&>[data-slot=stat-card]]:shadow-none",
       ].join(" "),
     },

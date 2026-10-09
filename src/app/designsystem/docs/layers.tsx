@@ -6,7 +6,7 @@ import { Code } from "@/components/ui/code"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { cn } from "@/lib/utils"
 import { DocNote, DocSection, Usage } from "../ds-doc"
-import { Group, Spec } from "../ds-kit"
+import { Group, Spec, SpecList, SpecRow } from "../ds-kit"
 
 /**
  * A escada lida de cima para baixo, como ela empilha na tela: o primeiro da
@@ -51,7 +51,7 @@ const PECAS = [
 ]
 
 const peca =
-  "absolute flex flex-col gap-0.5 rounded-lg bg-popover px-3 py-2 text-2xs text-foreground ring-1 ring-border transition-opacity duration-(--duration-base) ease-(--ease-out)"
+  "absolute flex flex-col gap-0.5 bg-popover px-3 py-2 text-2xs text-foreground ring-1 ring-border transition-opacity duration-(--duration-base) ease-(--ease-out)"
 
 export default function LayersDoc() {
   const [ligadas, setLigadas] = React.useState(PECAS.map((p) => p.value))
@@ -69,11 +69,9 @@ export default function LayersDoc() {
         layout="flow"
       >
         <Spec title="Do toast ao conteúdo" meta="globals.css" bodyClassName="p-0">
+          <SpecList>
           {BANDS.map((band) => (
-            <section
-              key={band.title}
-              className="border-b border-border px-4 py-4 last:border-b-0"
-            >
+            <SpecRow key={band.title}>
               <p className="text-2xs font-medium tracking-wider text-muted-foreground uppercase">
                 {band.title}
               </p>
@@ -103,8 +101,9 @@ export default function LayersDoc() {
                   </li>
                 ))}
               </ol>
-            </section>
+            </SpecRow>
           ))}
+          </SpecList>
         </Spec>
       </Group>
 
@@ -135,9 +134,13 @@ export default function LayersDoc() {
           ))}
         </ToggleGroup>
 
-        <div className="relative isolate h-72 overflow-hidden rounded-lg border border-border bg-background">
+        {/* O palco publica o raio e o recuo (`right-3` mais o fio) para o toast,
+            que encosta no canto, vestir `concentric`: 22 − 13 = 9 (rodada
+            241m). As peças do meio não encostam em borda nenhuma e ficam na
+            superfície. */}
+        <div className="relative isolate h-72 overflow-hidden rounded-surface border border-border bg-background [--radius-parent:var(--radius-surface)] [--radius-inset:calc(--spacing(3)+1px)]">
           <div
-            className={cn(peca, "right-3 bottom-3 z-(--z-toast) shadow-lg", off("toast"))}
+            className={cn(peca, "concentric right-3 bottom-3 z-(--z-toast) shadow-lg", off("toast"))}
           >
             <span className="font-medium">Toast</span>
             <Code variant="inline" className="text-2xs text-muted-foreground">
@@ -146,7 +149,7 @@ export default function LayersDoc() {
           </div>
 
           <div
-            className={cn(peca, "top-24 right-24 z-(--z-popover) shadow-md", off("popover"))}
+            className={cn(peca, "rounded-surface top-24 right-24 z-(--z-popover) shadow-md", off("popover"))}
           >
             <span className="font-medium">Popover</span>
             <Code variant="inline" className="text-2xs text-muted-foreground">
@@ -166,7 +169,7 @@ export default function LayersDoc() {
 
           <div className={cn("absolute inset-0 z-(--z-modal) transition-opacity duration-(--duration-base) ease-(--ease-out)", off("dialog"))}>
             <div className="absolute inset-0 bg-overlay" />
-            <div className={cn(peca, "top-1/2 left-1/2 w-44 -translate-1/2 py-6 shadow-xl")}>
+            <div className={cn(peca, "rounded-surface top-1/2 left-1/2 w-44 -translate-1/2 py-6 shadow-xl")}>
               <span className="font-medium">Dialog</span>
               <Code variant="inline" className="text-2xs text-muted-foreground">
                 --z-modal
@@ -185,7 +188,7 @@ export default function LayersDoc() {
             <div className="h-3 w-1/3 rounded-sm bg-muted" />
             <div className="h-3 w-2/3 rounded-sm bg-muted" />
             <div className="h-3 w-1/2 rounded-sm bg-muted" />
-            <div className="mt-3 h-16 w-full rounded-md bg-muted" />
+            <div className="mt-3 h-16 w-full rounded-surface bg-muted" />
             <div className="h-3 w-3/5 rounded-sm bg-muted" />
           </div>
         </div>

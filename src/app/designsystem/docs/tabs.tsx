@@ -214,7 +214,7 @@ function DemoArrastar() {
             ))}
           </TabsList>
           {PAINEIS.map((p) => (
-            <TabsContent key={p.valor} value={p.valor} className="min-h-80 rounded-2xl bg-muted/40 p-4">
+            <TabsContent key={p.valor} value={p.valor} className="min-h-80 rounded-surface bg-muted/40 p-4">
               <p className="text-sm text-muted-foreground">
                 {p.texto} Arraste para os lados para trocar de aba.
               </p>

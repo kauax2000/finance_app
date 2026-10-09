@@ -90,11 +90,12 @@ const alertVariants = cva(
     // O raio é do **componente**, não da variante: `variant` decide a moldura
     // (ter borda ou não), e canto não é moldura. Ele estava dentro dela, e o
     // resultado era medível — `soft` saía 14px e `plain` 10px, dois alertas
-    // lado a lado com cantos diferentes. E ele também não desce com o `size`,
-    // pela mesma razão que o `data-[size=sm]:rounded-md` saiu do
-    // `NativeSelect`: raio diferente por degrau é desvio, e nenhum outro
-    // controle do sistema o faz.
-    "rounded-xl",
+    // lado a lado com cantos diferentes.
+    //
+    // **Desde a rodada 241t ele desce com o `size`**, como o do campo e o da
+    // dica: `md` veste a linha alta (16) e `sm` a linha (12). Com a
+    // superfície (22), o `sm` de 34px saía cápsula, que o dono recusou. O
+    // raio mora no eixo `size`, abaixo.
     // O deslocamento do ícone **é por degrau**, e a conta é `(entrelinha −
     // ícone) / 2`: no `md`, (20 − 16) / 2 = 2px; no `sm`, (16 − 14) / 2 = 1px.
     // Ele vivia aqui cravado em 2px e servia só o `md` — medido, todo alerta
@@ -175,8 +176,8 @@ const alertVariants = cva(
         ].join(" "),
       },
       size: {
-        sm: "px-3 py-2 text-xs [--alert-icon:--spacing(3.5)] has-[>svg]:gap-x-2 [&>svg]:translate-y-px",
-        md: "px-4 py-3 text-sm [--alert-icon:--spacing(4)] has-[>svg]:gap-x-3 [&>svg]:translate-y-0.5",
+        sm: "rounded-row px-3 py-2 text-xs [--alert-icon:--spacing(3.5)] has-[>svg]:gap-x-2 [&>svg]:translate-y-px",
+        md: "rounded-row-lg px-4 py-3 text-sm [--alert-icon:--spacing(4)] has-[>svg]:gap-x-3 [&>svg]:translate-y-0.5",
       },
     },
     defaultVariants: {
@@ -293,7 +294,7 @@ function Alert({
             // pedido do dono): flor em `currentColor`, tinta presa no cursor,
             // alvo de 46 no dedo por pseudo-elemento.
             "text-current",
-            "[--button-bloom-fill:color-mix(in_oklab,currentColor_15%,transparent)] dark:[--button-bloom-fill:color-mix(in_oklab,currentColor_15%,transparent)]",
+            "[--button-hover-fill:color-mix(in_oklab,currentColor_15%,transparent)] dark:[--button-hover-fill:color-mix(in_oklab,currentColor_15%,transparent)]",
             "hover:text-current active:text-current",
             "pointer-coarse:after:absolute pointer-coarse:after:-inset-3 pointer-coarse:after:content-['']"
           )}
@@ -413,14 +414,14 @@ function AlertActions({
  * **A pele sai de `currentColor`**, então a mesma linha serve os cinco tons sem
  * nomear nenhum. `tertiary` é o degrau certo porque ele já não preenche nada em
  * repouso, e o que se corrige aqui é só a **cor** da flor do hover
- * (`--button-bloom-fill`): `currentColor` a 10%, em vez do cinza de `--muted`.
+ * (`--button-hover-fill`): `currentColor` a 10%, em vez do cinza de `--muted`.
  * O toque vem da própria variante.
  *
- * **O par `dark:` continua obrigatório**, e não por cor: o `tertiary` declara
- * a cor da flor também sob `dark:`, que é `.dark *` mais classe e vence a classe
- * simples daqui no tema escuro. Medido na página do catálogo: sem o par, o
- * hover do alerta saía no cinza de `--muted`. `currentColor` inverte sozinho,
- * mas a regra que o lê precisa vencer a do peso.
+ * **O par `dark:` é defensivo desde a rodada 241**: até ali o `tertiary`
+ * declarava a cor do realce também sob `dark:`, que vence a classe simples no
+ * tema escuro, e sem o par o hover do alerta saía no cinza de `--muted`. Hoje
+ * só o `destructive` tem esse par, e o daqui fica para um peso que volte a
+ * tê-lo.
  *
  * `asChild` continua valendo: uma das seis chamadas é um `<Link>` dentro do
  * botão, e o tipo o carrega.
@@ -437,9 +438,9 @@ function AlertAction({
       size="sm"
       className={cn(
         "border-current/25 bg-transparent text-current",
-        // A cor da flor do `tertiary` na pele do alerta: `currentColor` a
+        // A cor do realce do `tertiary` na pele do alerta: `currentColor` a
         // 10%. O par `dark:` é obrigatório por especificidade (ver acima).
-        "[--button-bloom-fill:color-mix(in_oklab,currentColor_10%,transparent)] dark:[--button-bloom-fill:color-mix(in_oklab,currentColor_10%,transparent)]",
+        "[--button-hover-fill:color-mix(in_oklab,currentColor_10%,transparent)] dark:[--button-hover-fill:color-mix(in_oklab,currentColor_10%,transparent)]",
         "hover:text-current active:text-current",
         className
       )}

@@ -279,7 +279,7 @@
   <dl class="meta">
     <div><dt>Base</dt><dd>Leitura do código</dd></div>
     <div><dt>Branch</dt><dd>finance-app-2.0</dd></div>
-    <div><dt>Data</dt><dd>4 out 2026 · busca global, botão direito, período, rascunho, menus do telefone, prévias da lista, as tabelas na URL e o "Ver" dos avisos de criação</dd></div>
+    <div><dt>Data</dt><dd>8 out 2026 · busca global, botão direito, período, rascunho, menus do telefone, prévias da lista, as tabelas na URL, o "Ver" dos avisos de criação e a agenda do Painel</dd></div>
     <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 7 lacunas</dd></div>
     <div><dt>Fonte versionada</dt><dd><code>docs/JORNADAS.md</code></dd></div>
   </dl>
@@ -791,7 +791,7 @@ flowchart TD
       <ol class="steps">
         <li><div><strong>Ao abrir.</strong> O Painel gera as cobranças de assinaturas e parcelas que ainda não viraram lançamento e recarrega as listas quando encontra alguma.</div></li>
         <li><div><strong>Indicadores.</strong> Despesas, receitas, resultado e faturas abertas do mês escolhido, comparados ao mês anterior.</div></li>
-        <li><div><strong>Calendário.</strong> Cada dia mostra o que venceu ou vai vencer. Um evento já lançado abre o detalhe; um previsto abre uma prévia com "Ver origem", que leva à assinatura, à parcela, ao cartão ou à conta.</div></li>
+        <li><div><strong>Calendário.</strong> Cada dia mostra o que venceu ou vai vencer. Na grade, tocar num dia abre o popover dele (uma gaveta, com a janela estreita), e o dia fica marcado. Quando a própria agenda fica estreita — no telefone, e também num laptop com a barra lateral aberta — ela vira a lista do mês: os últimos 5 dias passados e todos os que vêm, cada evento com o tipo, e tocar num evento abre direto o detalhe ou a prévia, sem o popover. Um evento já lançado abre o detalhe; um previsto abre uma prévia com "Ver origem", que leva à assinatura, à parcela, ao cartão ou à conta.</div></li>
         <li><div><strong>Blocos de atalho.</strong> Despesas por categoria, faturas do mês e compras parceladas, cada um com o caminho para a área completa.</div></li>
       </ol>
       <figure>
@@ -805,7 +805,10 @@ flowchart TD
     state --&gt;|"ok"| blocks(["Seletor de mês, KPIs: despesas, receitas, resultado, faturas abertas"])
 
     blocks --&gt; calendar(["Calendário de pagamentos"])
-    calendar --&gt;|"dia com eventos"| dayPop(["Popover do dia"])
+    calendar --&gt;|"grade: dia com eventos"| dayPop(["Popover do dia"])
+    calendar --&gt;|"lista, abaixo de 40rem: evento"| eventPick{"Evento lançado?"}
+    eventPick --&gt;|"sim"| detail
+    eventPick --&gt;|"não"| preview
     dayPop --&gt;|"evento já lançado"| detail(("G5b Detalhe da transação"))
     dayPop --&gt;|"evento previsto"| preview(["Prévia do pagamento"])
     preview --&gt;|"Ver origem: assinatura"| s["/transactions?sub=id"]
@@ -834,13 +837,13 @@ flowchart TD
     classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
     class dash,s,p,c,b,instList route
     class retry,pick,invalidate,blocks,calendar,dayPop,preview,donut,invoices,inst dialog
-    class state decision
+    class state,eventPick decision
     class catchup backend
     class detail,cat,cards,G5,G6,G7 journey</pre></div>
         <figcaption><strong>Figura 4 · Painel</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
-      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Dados</td><td>Um hook agrega os blocos por mês e carteira</td><td><code>src/components/dashboard/use-dashboard-data.ts</code></td></tr><tr><td>Cobranças atrasadas</td><td><code>catch_up_recurring_billing</code> roda uma vez por carteira ao montar; é idempotente com o cron</td><td><code>src/lib/queries/use-recurring-billing-catchup.ts</code></td></tr><tr><td>Calendário</td><td>Eventos: assinatura, parcela, fechamento, vencimento de cartão, vencimento de conta, receita e despesa lançadas</td><td><code>src/components/dashboard/dashboard-payments-calendar.tsx</code></td></tr><tr><td>Prévia</td><td>"Ver origem" monta a rota pelo tipo do evento</td><td><code>src/components/dashboard/dashboard-payment-event-preview-sheet.tsx</code></td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Dados</td><td>Um hook agrega os blocos por mês e carteira</td><td><code>src/components/dashboard/use-dashboard-data.ts</code></td></tr><tr><td>Cobranças atrasadas</td><td><code>catch_up_recurring_billing</code> roda uma vez por carteira ao montar; é idempotente com o cron</td><td><code>src/lib/queries/use-recurring-billing-catchup.ts</code></td></tr><tr><td>Calendário</td><td>Eventos: assinatura, parcela, fechamento, vencimento de cartão, vencimento de conta, receita e despesa lançadas. É a agenda do <code>Calendar</code> (rodada 242): na grade, o dia abre o popover e fica marcado (com a janela abaixo de 768px o popover abre como gaveta); abaixo de 40rem da largura da própria agenda ela vira a lista do mês — no telefone, e também num laptop estreito com a barra lateral aberta e o painel de próximos ao lado —, e o evento abre direto o detalhe ou a prévia, sem o popover. A lista mostra os últimos 5 dias passados com evento e todos os que vêm, com o selo do tipo. A grade de pontos do telefone saiu</td><td><code>src/components/dashboard/dashboard-payments-calendar.tsx</code></td></tr><tr><td>Prévia</td><td>"Ver origem" monta a rota pelo tipo do evento</td><td><code>src/components/dashboard/dashboard-payment-event-preview-sheet.tsx</code></td></tr></tbody></table></div>
     </section>
 
     <!-- ============ PARTE III ============ -->
@@ -1490,7 +1493,7 @@ flowchart TD
 </div>
 
 <footer>
-  Atlas de Jornadas do Finance App · escrito a partir do código da branch <code>finance-app-2.0</code> em 17 de setembro de 2026, navegação global revista em 1 de outubro de 2026, prévias da lista e tabelas na URL em 2 de outubro, o "Ver" dos avisos em 4 de outubro · fonte dos fluxogramas em <code>docs/JORNADAS.md</code>
+  Atlas de Jornadas do Finance App · escrito a partir do código da branch <code>finance-app-2.0</code> em 17 de setembro de 2026, navegação global revista em 1 de outubro de 2026, prévias da lista e tabelas na URL em 2 de outubro, o "Ver" dos avisos em 4 de outubro, a agenda do Painel em 8 de outubro · fonte dos fluxogramas em <code>docs/JORNADAS.md</code>
 </footer>
 
 <dialog class="viewer" id="viewer" aria-labelledby="viewer-title">

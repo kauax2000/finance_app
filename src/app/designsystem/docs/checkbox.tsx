@@ -14,7 +14,7 @@ function SelecionarTodas() {
   const todos = marcados.size === ITENS.length
   const alguns = marcados.size > 0 && !todos
   return (
-    <div className="flex w-full max-w-sm flex-col rounded-lg border border-border">
+    <div className="flex w-full max-w-sm flex-col rounded-surface border border-border">
       <Label className="flex min-h-11 items-center gap-3 border-b border-border px-3 font-medium">
         <Checkbox
           checked={todos ? true : alguns ? "indeterminate" : false}
@@ -111,7 +111,7 @@ export default function CheckboxDoc() {
       <DocSection
         title="Lista de seleção"
         description="Numa lista, o rótulo inteiro é o alvo do toque, com 44px de altura."
-        code={`<Label className="flex min-h-11 items-center gap-3 rounded-lg border px-3">
+        code={`<Label className="flex min-h-11 items-center gap-3 rounded-row-lg border px-3">
   <Checkbox />
   <span>Mercado</span>
 </Label>`}
@@ -120,7 +120,7 @@ export default function CheckboxDoc() {
         {ITENS.map((cat) => (
           <Label
             key={cat}
-            className="flex min-h-11 items-center gap-3 rounded-lg border border-border px-3 font-normal hover:bg-accent/60 active:bg-accent/60"
+            className="flex min-h-11 items-center gap-3 rounded-row-lg border border-border px-3 font-normal hover:bg-accent/60 active:bg-accent/60"
           >
             <Checkbox />
             <span className="text-sm">{cat}</span>

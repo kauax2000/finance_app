@@ -52,7 +52,7 @@ export default function SkeletonDoc() {
 <Skeleton shape="circle" size="sm" />
 <Skeleton shape="tile" />
 <Skeleton shape="pill" size="sm" />
-<Skeleton className="h-24 w-full rounded-xl" />`}
+<Skeleton className="h-24 w-full rounded-surface" />`}
         previewClassName="flex-col items-stretch gap-5"
       >
         {(
@@ -84,7 +84,7 @@ export default function SkeletonDoc() {
           <Code variant="inline" className="w-12 text-muted-foreground">
             block
           </Code>
-          <Skeleton className="h-16 w-full max-w-sm rounded-xl" />
+          <Skeleton className="h-16 w-full max-w-sm rounded-surface" />
         </div>
       </DocSection>
 

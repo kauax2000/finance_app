@@ -57,6 +57,15 @@ function Rotulo({ children }: { children: React.ReactNode }) {
   )
 }
 
+/**
+ * A moldura que publica o próprio raio e o recuo até a linha (o fio de 1px e o
+ * `p-1.5` da lista), para a linha de dentro vestir `concentric`: 22 − 7 = 15px.
+ * O canto de dentro acompanha o de fora em vez de cair num degrau da escala
+ * (rodada 241l, a pedido do dono).
+ */
+const MOLDURA_CONCENTRICA =
+  "rounded-surface border border-border [--radius-parent:var(--radius-surface)] [--radius-inset:calc(--spacing(1.5)+1px)]"
+
 function Extrato({ ativo }: { ativo: string }) {
   return (
     <ul className="flex h-full flex-col overflow-hidden p-1.5">
@@ -64,7 +73,7 @@ function Extrato({ ativo }: { ativo: string }) {
         <li
           key={t.id}
           className={cn(
-            "flex items-baseline justify-between gap-3 rounded-md px-2.5 py-2 text-sm",
+            "concentric flex items-baseline justify-between gap-3 px-2.5 py-2 text-sm",
             t.id === ativo && "bg-muted"
           )}
         >
@@ -112,7 +121,7 @@ function DemoExtrato() {
       <ResizablePanelGroup
         key={layout.groupKey}
         {...layout.groupProps}
-        className="rounded-lg border border-border"
+        className={MOLDURA_CONCENTRICA}
       >
         <ResizablePanel id="extrato" defaultSize="45" minSize="30">
           <Extrato ativo="1" />
@@ -130,7 +139,7 @@ function DemoColapso() {
   const lateral = useResizablePanel()
   return (
     <Palco>
-      <ResizablePanelGroup className="rounded-lg border border-border">
+      <ResizablePanelGroup className={MOLDURA_CONCENTRICA}>
         <ResizablePanel
           {...lateral.panelProps}
           collapsible
@@ -142,7 +151,7 @@ function DemoColapso() {
             {CATEGORIAS.map((c, i) => (
               <li
                 key={c}
-                className={cn("truncate rounded-md px-2.5 py-1.5", i === 0 ? "bg-muted text-foreground" : "text-muted-foreground")}
+                className={cn("concentric truncate px-2.5 py-1.5", i === 0 ? "bg-muted text-foreground" : "text-muted-foreground")}
               >
                 {c}
               </li>
@@ -246,7 +255,7 @@ export default function ResizableDoc() {
         previewClassName="flex-col flex-nowrap items-stretch p-6"
       >
         <Palco className="md:h-28">
-          <ResizablePanelGroup className="rounded-lg border border-border">
+          <ResizablePanelGroup className="rounded-surface border border-border">
             <ResizablePanel minSize="15">
               <Rotulo>line →</Rotulo>
             </ResizablePanel>
@@ -283,7 +292,7 @@ export default function ResizableDoc() {
         previewClassName="flex-col flex-nowrap items-stretch p-6"
       >
         <div className="w-full md:h-64">
-          <ResizablePanelGroup className="rounded-lg border border-border">
+          <ResizablePanelGroup className="rounded-surface border border-border">
             <ResizablePanel defaultSize="30" minSize="20">
               <Rotulo>Categorias</Rotulo>
             </ResizablePanel>
@@ -312,7 +321,7 @@ export default function ResizableDoc() {
         previewClassName="flex-col flex-nowrap items-stretch p-6"
       >
         <Palco className="md:h-28">
-          <ResizablePanelGroup className="rounded-lg border border-border">
+          <ResizablePanelGroup className="rounded-surface border border-border">
             <ResizablePanel defaultSize="12rem" minSize="10rem" maxSize="18rem">
               <Rotulo>10 a 18rem</Rotulo>
             </ResizablePanel>

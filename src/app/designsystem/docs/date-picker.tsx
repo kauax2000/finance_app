@@ -409,7 +409,7 @@ function MesDemo() {
         </div>
       ) : (
         <div className="flex flex-col items-start gap-2">
-          <div className="rounded-xl border border-border">
+          <div className="rounded-surface border border-border">
             <MonthGrid value={mes} onChange={setMes} showToday />
           </div>
           <p className="text-sm text-muted-foreground" aria-live="polite">

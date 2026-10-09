@@ -90,7 +90,7 @@ import { cn } from "@/lib/utils"
  */
 /** O que os dois cartões têm em comum — só o brilho de marca os separa. */
 const CARTAO = [
-  "min-h-11 w-full items-start gap-3 rounded-lg border border-input p-2.5 leading-snug font-normal transition-colors",
+  "min-h-11 w-full items-start gap-3 rounded-row-lg border border-input p-2.5 leading-snug font-normal transition-colors",
   // O par `active:` não é cortesia com a regra H: num alvo que é para o
   // dedo, `hover:` compila dentro de `@media (hover: hover)` e não vale.
   "not-has-[:disabled,[data-disabled]]:hover:bg-muted/50 not-has-[:disabled,[data-disabled]]:active:bg-muted/50",

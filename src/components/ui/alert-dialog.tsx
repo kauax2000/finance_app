@@ -233,7 +233,7 @@ function AlertDialogFooter({
         "flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end",
         // A geometria do `DialogFooter`: sem ela a confirmação fechava com 24px
         // embaixo e o diálogo com 16, na mesma moldura.
-        "-mx-(--dialog-bleed) -mb-(--dialog-bleed) rounded-b-xl px-(--dialog-px) py-4",
+        "-mx-(--dialog-bleed) -mb-(--dialog-bleed) rounded-b-modal px-(--dialog-px) py-4",
         className
       )}
       {...props}

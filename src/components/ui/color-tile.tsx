@@ -81,10 +81,14 @@ const colorTileVariants = cva(
         // (rodada 173): 24px cabem numa opção de `Select` e num gatilho `md`
         // sem crescer nenhum dos dois. É o `xs` da escada de controle.
         xs: "size-6 rounded-md [&>svg]:size-3.5",
-        md: "size-8 rounded-md [&>svg]:size-4",
-        lg: "size-9 rounded-md [&>svg]:size-4",
-        xl: "size-10 rounded-lg [&>svg]:size-5",
-        "2xl": "size-11 rounded-lg [&>svg]:size-5",
+        // Do `md` para cima o canto é a linha (`rounded-row`, 12px; rodada
+        // 241g): 27% a 37% da altura, onde antes caía de 25% a 22% conforme o
+        // ladrilho crescia. O `xs` fica no `rounded-md` (8, 33%): 12 num
+        // ladrilho de 24 já lê como círculo, que é a forma do `Avatar`.
+        md: "size-8 rounded-row [&>svg]:size-4",
+        lg: "size-9 rounded-row [&>svg]:size-4",
+        xl: "size-10 rounded-row [&>svg]:size-5",
+        "2xl": "size-11 rounded-row [&>svg]:size-5",
       },
     },
     defaultVariants: {

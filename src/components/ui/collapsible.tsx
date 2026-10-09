@@ -95,9 +95,13 @@ const CollapsibleContext = React.createContext<CollapsibleState | null>(null)
  * caminho. Se o `outline` do `Card` mudar, muda aqui. A linha e o conteúdo
  * recuam pelo `--collapsible-px`, e **não há fio entre eles**: é a regra das
  * tiras, e o painel da fatura desenhava um `border-t` no conteúdo.
+ *
+ * O canto é a linha alta (`rounded-row-lg`, 16; rodada 241v), e não a
+ * superfície do `Card`: fechado, o cartão é uma linha de 42px, e 22 o
+ * desenhava cápsula.
  */
 const COLLAPSIBLE_CARD =
-  "overflow-hidden rounded-xl border border-border bg-card text-card-foreground [--collapsible-px:--spacing(4)]"
+  "overflow-hidden rounded-row-lg border border-border bg-card text-card-foreground [--collapsible-px:--spacing(4)]"
 
 function Collapsible({
   open: openProp,

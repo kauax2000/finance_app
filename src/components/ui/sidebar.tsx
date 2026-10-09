@@ -484,10 +484,10 @@ function Sidebar({
         // `Menubar`, as peças do `CommandDialog`: o `--sidebar` chapado, o anel
         // de 1px delas e a sombra. Uma peça só, a pedido do dono.
         //
-        // Raio 18 (`--radius-2xl`), o das placas modais; a elevação é `lg`
+        // O raio é `--radius-modal` (o papel modal, rodada 240); a elevação é `lg`
         // pelo motivo da rodada 36: placa e página estão a 1,04 uma da outra
         // no tema claro, e uma sombra de 6% não define nada ali.
-        "group-data-[variant=floating]:rounded-2xl group-data-[variant=floating]:shadow-lg group-data-[variant=floating]:ring-1 group-data-[variant=floating]:ring-foreground/10"
+        "group-data-[variant=floating]:rounded-modal group-data-[variant=floating]:[--radius-parent:var(--radius-modal)] group-data-[variant=floating]:[--radius-inset:--spacing(2)] group-data-[variant=floating]:shadow-lg group-data-[variant=floating]:ring-1 group-data-[variant=floating]:ring-foreground/10"
       )}
     >
       {children}
@@ -918,7 +918,7 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
             "md:group-has-[[data-slot=sidebar][data-variant=floating][data-state=expanded]]/sidebar-wrapper:pl-2",
             // O `inset` também aqui: a placa do conteúdo, com a calha de 8px
             // em cima, embaixo e do lado de fora (a costura fica do outro).
-            "md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:my-2 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:mr-2 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:h-[calc(100%-1rem)] md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:w-[calc(100%-0.5rem)] md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:rounded-2xl md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ring-1 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ring-foreground/10",
+            "md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:my-2 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:mr-2 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:h-[calc(100%-1rem)] md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:w-[calc(100%-0.5rem)] md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:rounded-modal md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ring-1 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ring-foreground/10",
             SIDEBAR_INSET_RULE,
             SIDEBAR_INSET_BAR,
             className
@@ -937,10 +937,10 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
         // ela recolhe.
         //
         // Desde a rodada 221 o conteúdo é a **placa** do `inset`, na língua das
-        // outras placas soltas: raio 18 e o anel, sem a `shadow-sm` que não
+        // outras placas soltas: o raio `--radius-modal` e o anel, sem a `shadow-sm` que não
         // separava nada sobre o `--sidebar`. E a margem anima — ela saltava
         // 8px no fim do recolher.
-        "relative flex min-w-0 w-full flex-1 flex-col bg-background transition-[margin] duration-(--duration-slow) ease-(--ease-emphasized) md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:m-2 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:rounded-2xl md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ring-1 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ring-foreground/10",
+        "relative flex min-w-0 w-full flex-1 flex-col bg-background transition-[margin] duration-(--duration-slow) ease-(--ease-emphasized) md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:m-2 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:rounded-modal md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ring-1 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ring-foreground/10",
         "md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ml-0 md:group-has-[[data-slot=sidebar][data-variant=inset][data-state=collapsed]]/sidebar-wrapper:ml-2",
         SIDEBAR_INSET_RULE,
         SIDEBAR_INSET_BAR,
@@ -1285,7 +1285,11 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
  */
 const sidebarMenuButtonVariants = cva(
   [
-    "peer/menu-button group/menu-button relative isolate flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm ring-sidebar-ring outline-hidden transition-[width,height,padding,background-color] duration-(--duration-slow) ease-(--ease-emphasized) group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-3 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-open:hover:bg-sidebar-accent data-open:hover:text-sidebar-accent-foreground data-active:font-medium data-active:text-sidebar-accent-foreground [&_svg]:size-4 [&_svg]:shrink-0 [&>span:last-child]:truncate [&>span:nth-last-child(2):has(+[data-slot=sidebar-menu-highlight])]:truncate",
+    // A linha é retângulo arredondado (`rounded-row`, 12px, o degrau da
+    // linha), e não pílula (rodadas 241c e 241d, a pedido do dono): o
+    // concêntrico dava 20–22px numa linha de 32, e o CSS a desenhava cápsula.
+    // O subitem veste o mesmo.
+    "peer/menu-button group/menu-button relative isolate flex w-full items-center gap-2 overflow-hidden rounded-row p-2 text-left text-sm ring-sidebar-ring outline-hidden transition-[width,height,padding,background-color] duration-(--duration-slow) ease-(--ease-emphasized) group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-3 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-open:hover:bg-sidebar-accent data-open:hover:text-sidebar-accent-foreground data-active:font-medium data-active:text-sidebar-accent-foreground [&_svg]:size-4 [&_svg]:shrink-0 [&>span:last-child]:truncate [&>span:nth-last-child(2):has(+[data-slot=sidebar-menu-highlight])]:truncate",
     // ── O `plain` (rodada 233) ──────────────────────────────────────────────
     // A linha apagada até o cursor e acesa na página atual — a lista do
     // catálogo, onde 80 linhas na tinta cheia viravam um bloco de texto. E
@@ -1423,7 +1427,7 @@ function SidebarMenuBadge({
       data-slot="sidebar-menu-badge"
       data-sidebar="menu-badge"
       className={cn(
-        "pointer-events-none absolute right-1 flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-xs font-medium text-sidebar-foreground tabular-nums select-none group-data-[collapsible=icon]:hidden peer-hover/menu-button:text-sidebar-accent-foreground peer-data-[size=md]/menu-button:top-1.5 peer-data-[size=lg]/menu-button:top-2.5 peer-data-[size=sm]/menu-button:top-1 peer-data-active/menu-button:text-sidebar-accent-foreground",
+        "pointer-events-none absolute right-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs font-medium text-sidebar-foreground tabular-nums select-none group-data-[collapsible=icon]:hidden peer-hover/menu-button:text-sidebar-accent-foreground peer-data-[size=md]/menu-button:top-1.5 peer-data-[size=lg]/menu-button:top-2.5 peer-data-[size=sm]/menu-button:top-1 peer-data-active/menu-button:text-sidebar-accent-foreground",
         className
       )}
       {...props}
@@ -1544,7 +1548,7 @@ function SidebarMenuSubButton({
       data-size={size}
       data-active={isActive}
       className={cn(
-        "relative isolate flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground ring-sidebar-ring outline-hidden transition-[background-color] duration-(--duration-slow) ease-(--ease-emphasized) group-data-[collapsible=icon]:hidden hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-3 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[size=md]:text-sm data-[size=sm]:text-xs data-active:text-sidebar-accent-foreground [&>span:last-child]:truncate [&>span:nth-last-child(2):has(+[data-slot=sidebar-menu-highlight])]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-sidebar-accent-foreground",
+        "relative isolate flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-row px-2.5 text-sidebar-foreground ring-sidebar-ring outline-hidden transition-[background-color] duration-(--duration-slow) ease-(--ease-emphasized) group-data-[collapsible=icon]:hidden hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-3 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[size=md]:text-sm data-[size=sm]:text-xs data-active:text-sidebar-accent-foreground [&>span:last-child]:truncate [&>span:nth-last-child(2):has(+[data-slot=sidebar-menu-highlight])]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-sidebar-accent-foreground",
         className
       )}
       {...props}

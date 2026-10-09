@@ -120,7 +120,7 @@ export function DashboardPaymentEventPreviewSheet({
                 fillMobileViewport={isMobile}
                 className={cn(
                     "flex w-full flex-col gap-0 overflow-hidden p-0 data-[side=right]:sm:max-w-md",
-                    isMobile && "rounded-t-2xl pt-0 sm:max-w-full"
+                    isMobile && "rounded-t-modal pt-0 sm:max-w-full"
                 )}
             >
                 {preview ? (

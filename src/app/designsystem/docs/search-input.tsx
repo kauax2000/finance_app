@@ -241,7 +241,7 @@ function PlacaDemo() {
         </div>
         <ul className="px-2 pb-2 text-sm">
           {achadas.map((c) => (
-            <li key={c} className="rounded-md px-2 py-1.5">
+            <li key={c} className="rounded-surface px-2 py-1.5">
               {c}
             </li>
           ))}

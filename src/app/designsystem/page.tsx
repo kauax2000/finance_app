@@ -299,14 +299,14 @@ export default function DesignSystemIndexPage() {
                                     variant="tertiary"
                                     size="md"
                                     className={cn(
-                                        "group h-auto min-h-10 w-full justify-start gap-3 rounded-md px-2 py-2 font-normal bg-clip-border",
-                                        // A flor do `tertiary` na cor do
+                                        "group h-auto min-h-10 w-full justify-start gap-3 rounded-surface px-2 py-2 font-normal bg-clip-border",
+                                        // O realce do `tertiary` na cor do
                                         // accent. `--accent` e `--muted` são a
                                         // mesma cor no escuro hoje; o par
                                         // `dark:` vence o do peso por
                                         // especificidade.
-                                        "[--button-bloom-fill:color-mix(in_oklab,var(--accent)_50%,transparent)]",
-                                        "dark:[--button-bloom-fill:color-mix(in_oklab,var(--accent)_50%,transparent)]"
+                                        "[--button-hover-fill:color-mix(in_oklab,var(--accent)_50%,transparent)]",
+                                        "dark:[--button-hover-fill:color-mix(in_oklab,var(--accent)_50%,transparent)]"
                                     )}
                                 >
                                 <Link href={`/designsystem/${item.slug}`}>

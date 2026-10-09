@@ -52,6 +52,33 @@ export function paymentEventChipClass(kind: PaymentEventKind): string {
     }
 }
 
+/**
+ * O tom do evento na agenda (`CalendarEvent`, rodada 242): o mesmo mapa das
+ * fichas, nos tons do design system. Lançamento ligado a um plano de parcelas
+ * fala como parcela.
+ */
+export function paymentEventTone(
+    kind: PaymentEventKind,
+    installmentPlanId?: string | null
+): "default" | "info" | "warning" | "income" | "expense" {
+    if ((kind === "posted_income" || kind === "posted_expense") && installmentPlanId?.trim()) {
+        return "warning"
+    }
+    switch (kind) {
+        case "subscription":
+        case "bill_due":
+            return "info"
+        case "installment":
+            return "warning"
+        case "posted_income":
+            return "income"
+        case "posted_expense":
+            return "expense"
+        default:
+            return "default"
+    }
+}
+
 /** “Parcelada” + warning para lançamento ligado a um plano de parcelas. */
 export function paymentEventMetaBadge(
     kind: PaymentEventKind,

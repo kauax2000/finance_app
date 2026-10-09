@@ -2,6 +2,7 @@
 
 import { Card, CardNote, CardToolbar } from "@/components/ui/card"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
+import { CalendarSkeleton } from "@/components/ui/calendar"
 import {
     StatCard,
     StatCardGroup,
@@ -23,9 +24,6 @@ const INSTALLMENT_KEYS = ["plan-1", "plan-2"] as const
 const UPCOMING_GROUP_KEYS = ["g-1", "g-2", "g-3"] as const
 const UPCOMING_ITEM_KEYS = ["item-1", "item-2"] as const
 const SUMMARY_KEYS = ["projected", "paid", "closings"] as const
-const WEEKDAY_KEYS = ["seg", "ter", "qua", "qui", "sex", "sab", "dom"] as const
-const MOBILE_WEEK_KEYS = ["w1", "w2", "w3", "w4", "w5", "w6"] as const
-const DESKTOP_CELL_KEYS = Array.from({ length: 35 }, (_, i) => `cell-${i + 1}`)
 
 function CardSectionHeader() {
     return (
@@ -48,7 +46,7 @@ function SectionTitleRow({
                 <div className="flex h-6 min-w-0 items-center">
                     <Skeleton className={titleClassName} />
                 </div>
-                <Skeleton className="h-8 w-32 shrink-0 rounded-md pointer-coarse:h-10" />
+                <Skeleton className="h-8 w-32 shrink-0 rounded-full pointer-coarse:h-10" />
             </div>
         )
     }
@@ -63,10 +61,10 @@ function DashboardToolbarSkeleton() {
     return (
         <div className="hidden min-w-0 max-w-full md:flex md:flex-row md:flex-wrap md:items-center md:justify-end md:gap-3">
             <div className="flex w-full min-w-0 items-center justify-between gap-2 md:w-auto md:justify-end md:gap-1.5">
-                <Skeleton className="h-8 w-20 shrink-0 rounded-md" />
+                <Skeleton className="h-8 w-20 shrink-0 rounded-full" />
                 <Skeleton shape="tile" />
                 <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5 md:max-w-64">
-                    <Skeleton className="h-8 w-44 rounded-md" />
+                    <Skeleton className="h-8 w-44 rounded-full" />
                 </div>
                 <Skeleton shape="tile" />
             </div>
@@ -126,26 +124,10 @@ function CalendarSummarySkeleton({
     )
 }
 
+/** O telefone mostra a lista do mês da agenda (rodada 242): só os grupos. */
 function CalendarMobileSkeleton() {
     return (
         <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 p-3 md:hidden">
-            <div className="min-w-0 rounded-lg border border-border/60 p-3">
-                <div className="mb-2 grid grid-cols-7 gap-1">
-                    {WEEKDAY_KEYS.map((key) => (
-                        <Skeleton key={key} className="mx-auto h-3 w-6 rounded-md" />
-                    ))}
-                </div>
-                <div className="grid grid-cols-7 gap-1">
-                    {MOBILE_WEEK_KEYS.flatMap((wk) =>
-                        WEEKDAY_KEYS.map((d) => (
-                            <Skeleton
-                                key={`${wk}-${d}`}
-                                className="aspect-square w-full rounded-md"
-                            />
-                        )),
-                    )}
-                </div>
-            </div>
             <div className="space-y-3">
                 {UPCOMING_GROUP_KEYS.slice(0, 2).map((g) => (
                     <div key={g} className="space-y-1.5">
@@ -154,7 +136,7 @@ function CalendarMobileSkeleton() {
                             {UPCOMING_ITEM_KEYS.map((i) => (
                                 <div
                                     key={`${g}-${i}`}
-                                    className="flex items-center justify-between gap-2 rounded-lg border border-border/60 px-2 py-2"
+                                    className="flex items-center justify-between gap-2 rounded-row border border-border/60 px-2 py-2"
                                 >
                                     <div className="flex min-w-0 flex-1 items-center gap-2">
                                         <Skeleton className="h-4 max-w-40 flex-1 rounded-md" />
@@ -184,7 +166,7 @@ function CalendarDesktopSkeleton() {
                                 {UPCOMING_ITEM_KEYS.map((i) => (
                                     <div
                                         key={`${g}-${i}`}
-                                        className="flex items-center justify-between gap-2 rounded-lg border border-border/60 px-2 py-2"
+                                        className="flex items-center justify-between gap-2 rounded-row border border-border/60 px-2 py-2"
                                     >
                                         <div className="flex min-w-0 flex-1 items-center gap-2">
                                             <Skeleton className="h-4 max-w-40 flex-1 rounded-md" />
@@ -199,28 +181,7 @@ function CalendarDesktopSkeleton() {
                 </div>
             </div>
             <div className="min-h-0 min-w-0 flex-1 p-4">
-                <div className="overflow-x-auto">
-                    <div className="min-w-180">
-                        <div className="mb-1 grid grid-cols-7 gap-1">
-                            {WEEKDAY_KEYS.map((key) => (
-                                <div
-                                    key={key}
-                                    className="flex justify-center px-1 py-1"
-                                >
-                                    <Skeleton className="h-3 w-10 rounded-md" />
-                                </div>
-                            ))}
-                        </div>
-                        <div className="grid grid-cols-7 gap-1">
-                            {DESKTOP_CELL_KEYS.map((key) => (
-                                <Skeleton
-                                    key={key}
-                                    className="min-h-24 w-full rounded-lg"
-                                />
-                            ))}
-                        </div>
-                    </div>
-                </div>
+                <CalendarSkeleton variant="agenda" group={false} />
             </div>
         </div>
     )
@@ -291,11 +252,11 @@ function DashboardInvoicesSkeleton() {
                 <CardSectionHeader />
                 <CardToolbar>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-1.5">
-                        <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-border/60 bg-background/60 p-3 max-sm:shadow-xs sm:gap-1.5 sm:rounded-none sm:border-transparent sm:bg-transparent sm:p-0 sm:shadow-none">
+                        <div className="flex min-w-0 flex-col gap-2 rounded-row border border-border/60 bg-background/60 p-3 max-sm:shadow-xs sm:gap-1.5 sm:rounded-none sm:border-transparent sm:bg-transparent sm:p-0 sm:shadow-none">
                             <Skeleton className="h-3 w-32 rounded-md" />
                             <Skeleton className="h-8 w-44 max-w-full rounded-md" />
                         </div>
-                        <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-border/60 bg-background/60 p-3 max-sm:shadow-xs sm:gap-1.5 sm:rounded-none sm:border-transparent sm:bg-transparent sm:p-0 sm:shadow-none">
+                        <div className="flex min-w-0 flex-col gap-2 rounded-row border border-border/60 bg-background/60 p-3 max-sm:shadow-xs sm:gap-1.5 sm:rounded-none sm:border-transparent sm:bg-transparent sm:p-0 sm:shadow-none">
                             <Skeleton className="h-3 w-24 rounded-md" />
                             <Skeleton className="h-8 w-36 max-w-full rounded-md" />
                             <Skeleton className="h-3 w-32 rounded-md" />
@@ -320,7 +281,7 @@ function DashboardInvoicesSkeleton() {
                                         <div className="space-y-2">
                                             <div className="flex flex-col gap-2 min-[480px]:flex-row min-[480px]:items-baseline min-[480px]:justify-between">
                                                 <Skeleton className="h-3 w-24 rounded-md" />
-                                                <Skeleton className="h-7 w-28 rounded-md min-[480px]:ml-auto" />
+                                                <Skeleton className="h-7 w-28 rounded-full min-[480px]:ml-auto" />
                                             </div>
                                             <div className="space-y-1 border-t border-border/50 pt-3">
                                                 <Skeleton className="h-3 w-full max-w-56 rounded-md" />

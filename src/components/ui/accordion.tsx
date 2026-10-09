@@ -127,7 +127,7 @@ const accordionVariants = cva("flex w-full flex-col", {
     variant: {
       plain: "[--accordion-px:0px]",
       contained:
-        "overflow-hidden rounded-xl border border-border bg-card [--accordion-px:--spacing(4)]",
+        "overflow-hidden rounded-surface border border-border bg-card [--accordion-px:--spacing(4)]",
       separated: "gap-2 [--accordion-px:--spacing(4)]",
     },
   },
@@ -241,8 +241,11 @@ function AccordionItem({
         // ela casava o `data-variant` de **qualquer** ancestral — o `Carousel`
         // publica `plain`, o `Alert` e o `EmptyState` publicam os seus.
         variant !== "separated" && "not-last:border-b",
+        // Cada item solto é uma linha de 34 a 42px fechado: a linha (12), e
+        // não a superfície, que o desenhava cápsula (rodada 241v). A linha
+        // alta (16) ficaria a 1px da cápsula no degrau `md` de 34.
         variant === "separated" &&
-          "overflow-hidden rounded-xl border border-border bg-card",
+          "overflow-hidden rounded-row border border-border bg-card",
         "min-w-0",
         // O ícone do gatilho empurra o conteúdo para baixo do rótulo.
         "has-[[data-slot=accordion-trigger-icon]]:[--accordion-icon-ps:--spacing(7)]",

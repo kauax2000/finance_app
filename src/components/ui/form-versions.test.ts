@@ -76,7 +76,7 @@ describe("as versões do Form", () => {
     const html = renderToStaticMarkup(h(FormSwitch, { label: "Avisos", description: "Três dias antes", variant: "card" }))
     expect(html).toContain("after:absolute after:inset-0")
     expect(html).toContain('role="switch"')
-    expect(html).toContain("rounded-lg border border-border p-3")
+    expect(html).toContain("rounded-surface border border-border p-3")
   })
 
   it("a ação à esquerda vem antes no DOM; o inline empilha no telefone", () => {

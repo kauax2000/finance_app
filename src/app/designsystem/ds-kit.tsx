@@ -3,7 +3,9 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { Card, CardToolbar } from "@/components/ui/card"
 import { Code } from "@/components/ui/code"
+import { Separator } from "@/components/ui/separator"
 import {
   PageSection,
   PageSectionDescription,
@@ -67,7 +69,13 @@ export function Group({
   )
 }
 
-/** Um cartão de especificação dentro do grupo. */
+/**
+ * Um cartão de especificação dentro do grupo. É o `Card` do sistema, e não uma
+ * moldura escrita aqui: o raio, o fio e a tira vêm de lá, então uma mudança na
+ * escala de Shape & Elevation chega também ao catálogo. O que mora dentro
+ * dele (`SpecimenPanel`, as amostras) veste o próprio degrau: o concêntrico do
+ * corpo saiu na rodada 240n.
+ */
 export function Spec({
   title,
   meta,
@@ -82,18 +90,108 @@ export function Spec({
   children: React.ReactNode
 }) {
   return (
+    <Card padding="none" className={cn("mb-4 break-inside-avoid", className)}>
+      <CardToolbar variant="title">
+        <h3>{title}</h3>
+        {meta ? <Code className="shrink-0">{meta}</Code> : null}
+      </CardToolbar>
+      {/* O fio sob o título é do `Spec`, e não da tira: o `CardToolbar` não
+          desenha fio (regra das tiras), mas aqui o corpo é quase sempre uma
+          lista de linhas divididas, e sem a régua o título lia como a primeira
+          delas (rodada 240i, a pedido do dono — era o `border-b` de antes do
+          `Card`). */}
+      <Separator />
+      <div className={cn("p-4", bodyClassName)}>{children}</div>
+    </Card>
+  )
+}
+
+/**
+ * A lista de dentro de um `Spec` com `bodyClassName="p-0"`: uma linha por
+ * item, cada uma com um termo à esquerda (nome, valor, amostra) e o corpo à
+ * direita (descrição e chips).
+ *
+ * O fio entre as linhas é o `Separator tone="soft"`, recuado até o texto, como
+ * a lista agrupada do iOS; o fio cheio é só o do título do `Spec`, que é
+ * estrutura. Com o mesmo peso nos dois, a lista lia como uma grade (rodada
+ * 240j). Era escrita à mão em quatro páginas — Brand, Colors, Layers e Touch &
+ * safe area —, cada uma com o seu `divide-y` cheio.
+ */
+export function SpecList({
+  className,
+  children,
+}: {
+  className?: string
+  children: React.ReactNode
+}) {
+  const linhas = React.Children.toArray(children)
+  return (
+    <dl className={className}>
+      {linhas.map((linha, i) => (
+        <React.Fragment key={i}>
+          {i > 0 ? (
+            <div aria-hidden className="ps-4">
+              <Separator tone="soft" />
+            </div>
+          ) : null}
+          {linha}
+        </React.Fragment>
+      ))}
+    </dl>
+  )
+}
+
+/**
+ * Uma linha da `SpecList`. Com `term`, duas colunas a partir de `sm` (a do
+ * termo com a largura de `termWidth`); no telefone, empilhadas. O termo e a
+ * primeira linha do corpo dividem a linha de base (`align="baseline"`); quando
+ * o termo é uma amostra e não texto, `align="start"`.
+ */
+export function SpecRow({
+  term,
+  termWidth = "8rem",
+  align = "baseline",
+  className,
+  children,
+}: {
+  term?: React.ReactNode
+  termWidth?: string
+  align?: "baseline" | "start" | "center"
+  className?: string
+  children: React.ReactNode
+}) {
+  if (!term) {
+    return <div className={cn("px-4 py-3.5", className)}>{children}</div>
+  }
+  return (
     <div
       className={cn(
-        "mb-4 break-inside-avoid overflow-hidden rounded-xl bg-card ring-1 ring-border",
+        "grid gap-x-6 gap-y-0.5 px-4 py-3.5 sm:grid-cols-[var(--spec-term-w)_minmax(0,1fr)]",
+        align === "baseline" ? "items-baseline" : align === "center" ? "sm:items-center" : "items-start",
         className
       )}
+      style={{ "--spec-term-w": termWidth } as React.CSSProperties}
     >
-      <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2.5">
-        <h3 className="text-sm font-medium text-foreground">{title}</h3>
-        {meta ? <Code className="shrink-0">{meta}</Code> : null}
-      </div>
-      <div className={cn("p-4", bodyClassName)}>{children}</div>
+      <dt className="text-sm font-medium text-foreground">{term}</dt>
+      <dd className="flex min-w-0 flex-col">{children}</dd>
     </div>
+  )
+}
+
+/** A descrição de uma `SpecRow`: o corpo do texto, no cinza de apoio. */
+export function SpecRowDescription({ children }: { children: React.ReactNode }) {
+  return <span className="text-sm text-pretty text-muted-foreground">{children}</span>
+}
+
+/** Os chips de código de uma `SpecRow` — as peças, os tokens. */
+export function SpecChips({ items, className }: { items: readonly string[]; className?: string }) {
+  if (!items.length) return null
+  return (
+    <span className={cn("mt-2 flex flex-wrap gap-1.5", className)}>
+      {items.map((w) => (
+        <Code key={w}>{w}</Code>
+      ))}
+    </span>
   )
 }
 
@@ -158,7 +256,9 @@ export function SpecimenPanel({
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-col gap-3 overflow-hidden rounded-xl p-4 ring-1 ring-border ring-inset",
+        // Painel e o que mora dentro vestem a superfície da escala (rodada
+        // 240n, a pedido do dono): o concêntrico dava 6 dentro de um cartão.
+        `rounded-surface flex min-w-0 flex-col gap-3 overflow-hidden p-4 ring-1 ring-border ring-inset`,
         surface === "card" ? "bg-card" : "bg-background",
         className
       )}
@@ -190,6 +290,12 @@ export type SurfaceLayer = {
  * caixa só, e o desenho parecia quebrado justamente onde ele tinha algo a
  * dizer. Com o fio, a igualdade é visível como igualdade, e a `note` de cada
  * camada conta o que de fato as separa na tela.
+ *
+ * **O canto é o da escala de Shape & Elevation, como a tela usa cada token**
+ * (rodada 240l, a pedido do dono): cada camada é uma superfície e veste
+ * `rounded-surface`, como o `Card` e o `Popover` reais; os preenchimentos de
+ * dentro são os de controle e chip, e vestem a cápsula. A conta concêntrica
+ * (pai − 16) batia no piso de 6 já na primeira camada e achatava as três.
  */
 export function SurfaceNest({
   layers,
@@ -206,7 +312,7 @@ export function SurfaceNest({
         {fills.map((fill) => (
           <span
             key={fill.token}
-            className="rounded-lg px-2.5 py-1.5 font-mono text-xs"
+            className="rounded-full px-3 py-1.5 font-mono text-xs"
             style={{
               backgroundColor: `var(${fill.token})`,
               color: `var(${fill.onToken})`,
@@ -220,7 +326,7 @@ export function SurfaceNest({
   }
   return (
     <div
-      className="flex flex-col gap-2.5 rounded-xl p-4 ring-1 ring-border ring-inset"
+      className="rounded-surface flex flex-col gap-2.5 p-4 ring-1 ring-border ring-inset"
       style={{ backgroundColor: `var(${layer.token})` }}
     >
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
@@ -266,7 +372,7 @@ export function Ramp({
         {tokens.map((t) => (
           <div
             key={t.token}
-            className="h-20 flex-1 rounded-lg"
+            className="rounded-surface h-20 flex-1"
             style={{ backgroundColor: `var(${t.token})` }}
           />
         ))}
@@ -387,7 +493,7 @@ export function TokenTile({
         // O cartão por baixo é o que faz um token translúcido — `--border` é
         // branco a 10%, `--overlay` é 60% de preto — aparecer composto, que é
         // como a tela o mostra, e não como a cor declarada.
-        className="relative flex h-24 items-center justify-center overflow-hidden rounded-xl bg-card ring-1 ring-border ring-inset"
+        className="rounded-surface relative flex h-24 items-center justify-center overflow-hidden bg-card ring-1 ring-border ring-inset"
       >
         <div
           className="absolute inset-0"

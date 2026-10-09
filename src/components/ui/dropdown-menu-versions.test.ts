@@ -67,8 +67,8 @@ describe("as versões do DropdownMenu", () => {
   it("o menu com busca mede como o Combobox: pílula de 32 a 8px, linhas de 32 a 8px", () => {
     const codigo = readFileSync(join(process.cwd(), "src/components/ui/dropdown-menu.tsx"), "utf8")
     const combobox = readFileSync(join(process.cwd(), "src/components/ui/combobox.tsx"), "utf8")
-    expect(codigo).toContain('const LINHA_DA_BUSCA = "gap-2 px-2 py-1.5"')
-    expect(combobox).toContain('"gap-2 px-2 py-1.5 pr-8"')
+    expect(codigo).toContain('const LINHA_DA_BUSCA = "gap-2 px-2 py-2"')
+    expect(combobox).toContain('"gap-2 px-2 py-2 pr-8"')
     expect(combobox).toContain('"px-2 pt-(--scroll-fade-band-h) pb-2"')
     expect(codigo).toContain('search && "px-2 pt-0 pb-2"')
     expect(codigo).toMatch(/data-slot="dropdown-menu-search"\s*className="relative z-10 shrink-0 p-2"/)

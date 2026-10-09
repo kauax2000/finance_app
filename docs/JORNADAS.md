@@ -360,7 +360,10 @@ flowchart TD
     state -->|"ok"| blocks(["Seletor de mês, KPIs: despesas, receitas, resultado, faturas abertas"])
 
     blocks --> calendar(["Calendário de pagamentos"])
-    calendar -->|"dia com eventos"| dayPop(["Popover do dia"])
+    calendar -->|"grade: dia com eventos"| dayPop(["Popover do dia"])
+    calendar -->|"lista, abaixo de 40rem: evento"| eventPick{"Evento lançado?"}
+    eventPick -->|"sim"| detail
+    eventPick -->|"não"| preview
     dayPop -->|"evento já lançado"| detail(("G5b Detalhe da transação"))
     dayPop -->|"evento previsto"| preview(["Prévia do pagamento"])
     preview -->|"Ver origem: assinatura"| s["/transactions?sub=id"]
@@ -389,7 +392,7 @@ flowchart TD
 |---|---|---|
 | Dados | Um hook agrega os blocos por mês e carteira | `src/components/dashboard/use-dashboard-data.ts` |
 | Cobranças atrasadas | `catch_up_recurring_billing` roda uma vez por carteira ao montar; é idempotente com o cron | `src/lib/queries/use-recurring-billing-catchup.ts` |
-| Calendário | Eventos: assinatura, parcela, fechamento, vencimento de cartão, vencimento de conta, receita e despesa lançadas | `src/components/dashboard/dashboard-payments-calendar.tsx` |
+| Calendário | Eventos: assinatura, parcela, fechamento, vencimento de cartão, vencimento de conta, receita e despesa lançadas. É a agenda do `Calendar` (rodada 242): na grade, o dia abre o popover e fica marcado (com a janela abaixo de 768px o popover abre como gaveta); abaixo de 40rem da largura da própria agenda ela vira a lista do mês — no telefone, e também num laptop estreito com a barra lateral aberta e o painel de próximos ao lado —, e o evento abre direto o detalhe ou a prévia, sem o popover. A lista mostra os últimos 5 dias passados com evento e todos os que vêm, com o selo do tipo. A grade de pontos do telefone saiu | `src/components/dashboard/dashboard-payments-calendar.tsx` |
 | Prévia | "Ver origem" monta a rota pelo tipo do evento | `src/components/dashboard/dashboard-payment-event-preview-sheet.tsx` |
 
 ---

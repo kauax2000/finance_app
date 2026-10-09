@@ -84,7 +84,7 @@ export default function ContainerDoc() {
         {(
           Object.keys(containerGutters) as (keyof typeof containerGutters)[]
         ).map((name) => (
-          <div key={name} className="rounded-lg bg-muted/40 py-2">
+          <div key={name} className="rounded-surface bg-muted/40 py-2">
             <Container
               size="full"
               gutter={name}
@@ -108,9 +108,9 @@ export default function ContainerDoc() {
         previewClassName="flex-col items-stretch gap-3"
       >
         {(["none", "page"] as const).map((gutter) => (
-          <div key={gutter} className="rounded-lg border border-dashed border-border px-4 py-2">
+          <div key={gutter} className="rounded-surface border border-dashed border-border px-4 py-2">
             <Container size="full" gutter={gutter}>
-              <div className="rounded-md bg-muted px-3 py-2">
+              <div className="rounded-row-lg bg-muted px-3 py-2">
                 <Code className="bg-transparent px-0">
                   gutter=&quot;{gutter}&quot;
                 </Code>
@@ -151,7 +151,7 @@ export default function ContainerDoc() {
               {[1, 2].map((n) => (
                 <div
                   key={n}
-                  className="rounded-lg border border-dashed border-border px-3 py-2 text-2xs text-muted-foreground"
+                  className="rounded-row border border-dashed border-border px-3 py-2 text-2xs text-muted-foreground"
                 >
                   bloco {n}
                 </div>
