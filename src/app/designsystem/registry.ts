@@ -218,6 +218,9 @@ const LAYER: Record<string, Layer> = {
    *  é item que tem estado. */
   accordion: "Organisms",
   "alert-dialog": "Organisms",
+  /** Uma pilha de `Avatar`s seria molécula; a lista do +N é um `Popover` (e,
+   *  no telefone, a gaveta), e quem contém organismo é organismo. */
+  "avatar-group": "Organisms",
   /** Contém um `DropdownMenu` no miolo dobrado — quem contém organismo é
    *  organismo. */
   breadcrumb: "Organisms",
@@ -453,6 +456,7 @@ export const REGISTRY: RegistryEntry[] = [
   // ── Organisms ──────────────────────────────────────────────────────────
   entry("accordion", "Accordion", "Seções expansíveis.", ui("accordion"), "Accordion, AccordionItem, AccordionTrigger, AccordionContent, AccordionToggleAll"),
   entry("alert-dialog", "Alert Dialog", "Confirmação de uma ação sem volta.", ui("alert-dialog"), "AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogMedia, AlertDialogList, AlertDialogError, AlertDialogConfirmInput"),
+  entry("avatar-group", "Avatar Group", "Pessoas empilhadas: o rosto sobe, a dica viaja, o +N abre a lista.", ui("avatar-group"), "AvatarGroup, AvatarGroupItem, AvatarGroupAdd, AvatarGroupSkeleton"),
   entry("breadcrumb", "Breadcrumb", "A trilha até a tela atual.", ui("breadcrumb"), "Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbMenu, BreadcrumbSwitcher, BreadcrumbSwitcherItem"),
   entry("calendar", "Calendar", "A grade de um mês — escolha, intervalo com atalhos, marcadores e a agenda de fios.", ui("calendar"), "Calendar, CalendarDayButton, CalendarEvent, CalendarEvents, CalendarSkeleton"),
   entry("card", "Card", "Cartão de conteúdo e painel.", ui("card"), "Card, CardHeader, CardTitle, CardDescription, CardAction, CardToolbar, CardContent, CardBody, CardField, CardLink, CardMedia, CardMessage, CardNote, CardFooter, CardSkeleton"),

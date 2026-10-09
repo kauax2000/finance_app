@@ -20341,3 +20341,73 @@ na largura da linha; a gaveta abrindo dentro do iPhone.
 
 `filter-bar-versions.test.ts` tranca as peças, os nomes, a URL, o
 comportamento e as proibições.
+
+### Rodada 246 — o AvatarGroup
+
+O dono trouxe o Avatar Group do Animate UI (Elliot Sutton, no 21st) e pediu a
+pilha de pessoas com os componentes e a marca da casa.
+
+**O levantamento.** O fonte foi lido do registry do Animate UI
+(`primitives-animate-avatar-group` e o `tooltip` dele): a pilha com
+`-space-x-3` e uma borda de 3px na cor do fundo, o rosto que sobe `-30%` numa
+mola 300/17 no cursor e no toque, e **uma dica só** por grupo, que viaja de
+um rosto ao outro numa mola 300/35 (a mesma família da `MOLA` da casa, que
+veio do `base-tooltip` dele). No app, nenhuma tela empilha avatares; quatro
+lugares montam `identityToneFor` + `getInitials` + `AvatarFallback` à mão
+para uma pessoa, e Membros escreve a contagem "4 membros" como texto.
+
+**As escolhas.** Tudo dos três primeiros grupos: o leque no cursor, a dica
+grave (`contrast`, a da referência) como padrão, `stacking`, `tint`; o `max`
+com o +N, o `AvatarGroupAdd`, o `summary`, o selo; as setas entre os rostos,
+o toque no telefone, o +N que abre a lista, o rosto clicável. **Nenhuma tela
+migra.** Uma mexida num componente existente: `tooltip.tsx` exporta
+`tooltipContentVariants`, para a dica da pilha vestir a mesma pílula em vez
+de copiar as classes.
+
+**A dica não é um `Tooltip`.** A âncora de um `Tooltip` do Radix é o próprio
+gatilho, e não se troca; uma dica por rosto fecha e abre em vez de viajar. A
+pilha calcula o ponto (o meio de cima do rosto, pela posição de **layout** —
+`offsetLeft` —, porque no leque as vagas ainda deslizam por transformação) e o
+anima num `MotionValue`; a primeira aparição salta para o lugar e só então
+cresce. Ela é `aria-hidden`: o nome é o nome acessível do rosto. Medido com
+Playwright (o painel do navegador estava escondido e o `rAF` rodava a 2
+quadros por segundo): de Bruno a Diego, de 1056 a 1116px em ~350ms sem
+salto; a subida vai de 632 a 618 e assenta em 620 — 12px, 30% de 40, com o
+quique da referência. Com movimento reduzido, a subida acontece num quadro e
+a dica não escala.
+
+**Três defeitos achados medindo.**
+- **O anel da tela perdia.** A regra "dentro de um cartão, o anel é
+  `--card`" morava na raiz e escrevia `--avatar-group-ring`; uma variável
+  declarada na raiz vence a herdada, e um painel `muted` dentro de um cartão
+  saía com o anel do cartão. Agora são duas: `--avatar-group-ring` é da tela
+  e é lida primeiro, `--avatar-group-surface` é a automática. Depois:
+  `--card` no cartão e `--muted` no painel, nos dois temas.
+- **O +N sumia num painel `muted`**, porque era `bg-muted`. O fundo é a
+  tinta a 10% misturada na superfície da pilha (`color-mix` em oklab, opaco):
+  1,25 a 1,29:1 contra a superfície, em qualquer uma. O texto passou de
+  `--muted-foreground` (3,93 no claro sobre o painel) a `foreground/75`: 7,08
+  a 8,34.
+- **Com o último por cima, o vizinho cobria o selo**, que morava no canto
+  direito. Em `stacking="last"` ele vai ao canto esquerdo.
+
+**Uma divergência da referência.** Lá o rosto erguido continua atrás do
+vizinho que o cobria; aqui ele passa à frente enquanto está aceso.
+
+**Na gaveta**, o título fica a 16px e as linhas recuavam 34: a lista sangra os
+10px do recuo da linha (`-mx-2.5`), e o nome cai em 17. No popover, o
+cabeçalho recua 8 + 10 e as linhas 8, e os dois alinham em 18.
+
+**Custos conhecidos.**
+- O alvo no dedo é 44 de altura, mas a largura é a fatia à vista (30px no
+  `md`); o leque é a resposta.
+- O Esc fecha a dica e não para aí: dentro de um diálogo, ele fecha os dois.
+- A cor automática do anel conhece `Card` e `Popover`; um cartão `muted` ou
+  outra superfície declara `--avatar-group-ring`.
+- Os filhos são `AvatarGroupItem`: o grupo lê as props deles para a dica, o +N
+  e a lista. Um componente próprio em volta do item some da lista.
+
+`avatar-group-versions.test.ts` tranca as peças, o teclado, o +N, a ordem, a
+escada da sobreposição, o resumo, o selo, o esqueleto e as proibições (a
+variável da tela antes da automática, o +N sem `bg-muted`, sem `.type ===` e
+sem `env()`).

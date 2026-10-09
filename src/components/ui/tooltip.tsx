@@ -333,4 +333,6 @@ function TooltipContent({
   )
 }
 
-export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger }
+// `tooltipContentVariants` sai para o `AvatarGroup`, cuja dica viaja entre os
+// rostos e não é um `Tooltip` do Radix: ela veste a mesma pílula.
+export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, tooltipContentVariants }

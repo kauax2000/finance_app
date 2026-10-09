@@ -95,7 +95,7 @@ Mermaid (`href` já quebrou um diagrama).
 O design system deste projeto tem três partes, e nenhuma delas se presume de
 memória:
 
-- **Componentes** em [`src/components/ui/`](src/components/ui) — 77 hoje.
+- **Componentes** em [`src/components/ui/`](src/components/ui) — 78 hoje.
 - **Tokens** em [`src/app/globals.css`](src/app/globals.css).
 - **Documentação viva** em `/designsystem`, com uma página por componente e por
   padrão. Sempre disponível em desenvolvimento; em produção, atrás de
@@ -3288,6 +3288,27 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   não tem emenda porque as linhas são duplicadas e o respiro é margem, não
   `gap`.
 - **`Avatar`**: Radix-based with `size`; keep `data-slot` for tests and form deferrals. Duas peças: `AvatarImage` (a foto) ou `AvatarFallback` (iniciais sobre a cor chapada de identidade, com `tint` `vivid` — o padrão — ou `soft`, desde a rodada 184). Sem `variant` de superfície — houve um, enquanto o degradê e o chapado conviveram, e saiu com o degradê. Sem vidro, sem anel, e **uma forma só, o círculo** — `shape="rounded"` saiu na rodada 85, porque canto arredondado é a família do `ColorTile` e da marca de workspace, que identificam coisa e não pessoa. A cor da pessoa vem de `identityToneFor`, nunca de classe montada.
+- **`AvatarGroup` são pessoas empilhadas** (rodada 246, referência: o Avatar
+  Group do Animate UI). A pilha fala a escada do `Avatar` (xs 24 … xl 56), com
+  a sobreposição de um quarto do diâmetro e o anel na cor da superfície: a tela
+  declara `--avatar-group-ring`, e sem ela vale `--avatar-group-surface`, que a
+  raiz escreve sozinha dentro de `Card` e `Popover` — **duas variáveis porque
+  uma só não deixava a tela vencer** (medido). No cursor, no foco e no toque o
+  rosto **sobe 30% na mola da referência** (300/17) e passa à frente, e **uma
+  dica só viaja** entre os rostos (300/35): ela não é um `Tooltip` do Radix
+  (a âncora dele não se troca), veste `tooltipContentVariants` e é
+  `aria-hidden`, porque o nome já é o nome acessível do rosto; fecha no Esc,
+  ao rolar e no toque fora. Os filhos são `AvatarGroupItem` (`name`, `src`,
+  `color` por `identityToneFor`, `description`, o selo `status` +
+  `statusLabel`, `href`/`onSelect`) — **nenhuma tela monta
+  `identityToneFor` + `getInitials` + `AvatarFallback` para uma pilha**. `max`
+  põe o +N (o fundo é a tinta misturada na superfície, nunca `bg-muted`), que
+  abre a lista inteira (`Popover`, gaveta no telefone); `add` é o
+  `AvatarGroupAdd`; `summary` escreve "Ana, Bruno e mais 5" e descreve o
+  grupo; `spread` abre o leque; `stacking`, `tooltip` (`contrast` |
+  `plate`) e `tint`. Uma parada de Tab, setas entre os rostos. É Organismo
+  pela lista do +N. Nenhuma tela usa ainda. `avatar-group-versions.test.ts`
+  tranca.
 - **Overlays**: `Dialog` / `Sheet` / `AlertDialog` use `bg-overlay` (not hardcoded `bg-black/10`).
 - **`DialogFooter` empilha ao contrário** (`flex-col-reverse`), para a ação
   principal ficar em cima no telefone. O antigo `SheetFooter` empilhava na
