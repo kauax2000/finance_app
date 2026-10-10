@@ -88,16 +88,24 @@ export function useBrandGlow<T extends HTMLElement = HTMLDivElement>(ativo: bool
 
   React.useEffect(() => {
     if (!ativo) return
-    if (!window.matchMedia("(hover: hover)").matches) return
     const el = ref.current
     if (!el) return
+    // O documento e a janela **do elemento**: dentro da moldura do catálogo (um
+    // iframe) o ponteiro se move no documento de dentro, e o de fora nunca o
+    // via — o brilho não acendia. No app os dois são o `document` de sempre.
+    const doc = el.ownerDocument
+    const win = doc.defaultView ?? window
+    if (!win.matchMedia("(hover: hover)").matches) return
+    // O quadro também é o da janela do elemento (o iframe pinta no dele).
+    const requestAnimationFrame = win.requestAnimationFrame.bind(win)
+    const cancelAnimationFrame = win.cancelAnimationFrame.bind(win)
 
     // **Movimento reduzido tem de ser perguntado à mão aqui.** O bloco global
     // de `prefers-reduced-motion` encurta *transição* de CSS, e um tween de JS
     // escapa dele — é o precedente que a rodada do `ThemeToggle` registrou ao
     // trocar transição por WAAPI. Com a preferência ligada o arco vai direto
     // para o ângulo, sem percurso: seguir o ponteiro não é animação e continua.
-    const semMovimento = window.matchMedia("(prefers-reduced-motion: reduce)")
+    const semMovimento = win.matchMedia("(prefers-reduced-motion: reduce)")
       .matches
 
     // A última posição conhecida do ponteiro. **Ela é o que faz a rolagem
@@ -212,15 +220,15 @@ export function useBrandGlow<T extends HTMLElement = HTMLDivElement>(ativo: bool
     // `use-close-on-scroll` já usa nesta casa.
     const aoRolar = () => agendar()
 
-    document.addEventListener("pointermove", aoMover, { passive: true })
-    window.addEventListener("scroll", aoRolar, { capture: true, passive: true })
-    window.addEventListener("resize", aoRolar)
+    doc.addEventListener("pointermove", aoMover, { passive: true })
+    win.addEventListener("scroll", aoRolar, { capture: true, passive: true })
+    win.addEventListener("resize", aoRolar)
     return () => {
       tween?.stop()
       if (quadro) cancelAnimationFrame(quadro)
-      document.removeEventListener("pointermove", aoMover)
-      window.removeEventListener("scroll", aoRolar, { capture: true })
-      window.removeEventListener("resize", aoRolar)
+      doc.removeEventListener("pointermove", aoMover)
+      win.removeEventListener("scroll", aoRolar, { capture: true })
+      win.removeEventListener("resize", aoRolar)
     }
   }, [ativo])
 

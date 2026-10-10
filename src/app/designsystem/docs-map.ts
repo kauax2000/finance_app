@@ -52,6 +52,7 @@ import MenubarDoc from "./docs/menubar"
 import MoneyDisplayDoc from "./docs/money-display"
 import MotionDoc from "./docs/motion"
 import NavigationMenuDoc from "./docs/navigation-menu"
+import OnboardingDoc from "./docs/onboarding"
 import PageHeaderDoc from "./docs/page-header"
 import PageSectionDoc from "./docs/page-section"
 import PaginationDoc from "./docs/pagination"
@@ -139,6 +140,7 @@ export const DOCS: Record<string, ComponentType> = {
   "money-display": MoneyDisplayDoc,
   "motion": MotionDoc,
   "navigation-menu": NavigationMenuDoc,
+  "onboarding": OnboardingDoc,
   "page-header": PageHeaderDoc,
   "page-section": PageSectionDoc,
   "pagination": PaginationDoc,

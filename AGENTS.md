@@ -3309,6 +3309,102 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `plate`) e `tint`. Uma parada de Tab, setas entre os rostos. É Organismo
   pela lista do +N. Nenhuma tela usa ainda. `avatar-group-versions.test.ts`
   tranca.
+- **`Onboarding` são cinco superfícies para apresentar o produto** (rodada
+  247, referências do 21st: originui e patrick-xin, onboarding-01,
+  onboarding-6, o Info Card do KarrixLee; o tour não tem referência).
+  `OnboardingDialog` são as boas-vindas em passos, sobre `Dialog
+  surface="auto"` (gaveta no telefone): **um índice só, o do `Carousel`** —
+  arrastar a mídia, a seta, a pílula e o botão andam pelo mesmo `api`, e o
+  resto lê o evento `select`; o texto de todos os passos mora **na mesma
+  célula da grade** (a janela não pula; medido, 413px nos quatro), com o nome
+  num `DialogTitle` `sr-only`; as pílulas alargam de 16 a 24 na `MOLA`; o
+  clique fora não pula (`onPointerDownOutside`, que o vaul também respeita),
+  e o foco vai ao primário, não a um slide escondido. `OnboardingChecklist`
+  (`accordion` | `list`) tem o `done` **da tela** e abre a próxima pendente
+  quando a aberta fica feita — derivado, sem efeito; completo, celebra com o
+  `EmptyStateIcon done`. **O gesto dele é a persiana**: ao aparecer desenrola
+  (o espaço abre até o cabeçalho, o cartão desce 10px, as linhas abrem de cima
+  para baixo e o tique dos feitos estala na mola), e ao dispensar enrola (as
+  linhas sobem de baixo para cima, o cabeçalho sobe e se dissolve, o espaço
+  fecha). Mede só depois de a altura assentar — na montagem, dentro da moldura,
+  o texto ainda quebra em colunas estreitas. `OnboardingCard` é a novidade no rodapé da barra
+  lateral: 75px recortados que crescem até a altura da imagem (com a folga
+  exata do leque, `folgaDoLeque`, e a máscara quadrada) e abrem as imagens em leque
+  (−5°/0°/+5°, mola 300/30), e **abre pelo cursor, pelo foco e pelo toque** —
+  a referência só abria no `mouseenter`; ele veste o brilho de marca (`Card
+  variant="brand"`, a peça de marca da tela) e o rodapé é o par dispensar
+  `tertiary` + saiba mais `primary`, meio a meio; o × no canto, na linha do
+  título, fecha a qualquer momento (o rodapé só aparece aberto). **Fechar é
+  colapsar, diminuir e sair pela esquerda**: as faixas se fecham de verdade, de
+  baixo para cima, até sobrar a linha do título (o espaço acompanha); o cartão
+  dá um impulso para a direita, encolhe a 72% e desliza 115% para a esquerda,
+  esmaecendo no fim; o que sobrou do espaço fecha por último, medido depois do
+  colapso. É uma sequência na **Web Animations API** do próprio elemento — o
+  `exit` do `AnimatePresence` fixava a altura do espaço em px, e o `animate`
+  imperativo do motion não reconhece nó de iframe (`instanceof` da janela de
+  fora), então na moldura nada se movia. Em curva, não em mola.
+  **`variant`** tem três
+  valores: `brand` (esse, o brilho no ponteiro), `beam` (o mesmo arco da
+  `@utility brand-glow` dando a volta sozinho, num laço de 4 s com o ângulo
+  escrito por JS, a 0,8 de intensidade; parado no topo com movimento reduzido)
+  e `contrast` (o `brand` **dentro do tema oposto**: o cartão vira uma ilha
+  `.light` no escuro e `.dark` no claro — as paletas do `globals.css`, lidas do
+  `<html>` do próprio documento por observador — e tudo nele, a mídia
+  incluída, se pinta no outro tema; espera o cliente, porque o servidor não
+  sabe o tema. Dentro da ilha `.light`, a variante `dark:` ainda casa, porque
+  ela pergunta por `.dark` num ancestral — o mesmo limite da página de Cores).
+  **O `beam` é exceção consciente à recusa do giro da rodada 100**, pedida pelo
+  dono: o que gira é a janela do brilho, e não o degradê. O leque aberto é recortado
+  12px fora da mídia (`overflow-clip-margin`), na borda de dentro do cartão,
+  porque o casco de marca recorta 4px **fora** da borda, para o anel. `OnboardingTour` é **o foco num botão
+  real**: o véu é a sombra de 100vmax de um elemento sem eventos, quatro
+  bloqueios cercam o buraco, e **o clique cai no próprio botão**; um passo
+  `advanceOn: "target"` avança num `click` em bolha no documento (depois do
+  handler do app), conferindo o `pointerdown` em captura (com menu modal o
+  `click` cai no `<html>`). O recorte é a caixa + 4 com o raio **do alvo** + 4,
+  e em volta dele corre **o degradê da marca** (`--brand-rainbow`, o linear de
+  135°, pela `brand-rainbow-image`): um traço nítido de 2px, parado e
+  concêntrico com o buraco (o raio dele por `--onboarding-raio`); o brilho
+  borrado que corria em volta saiu a pedido do dono. A `brand-glow` foi tentada e saiu: as vinte faixas dela liam
+  como listras numa pílula larga. No escuro o `--overlay` quase não aparece, e
+  quem marca o alvo é o
+  anel. **O gesto dele é o foco**, uma íris: ao abrir o véu fecha sobre o alvo
+  vindo das bordas (`irisDe`, o buraco maior que a janela); ao trocar de passo
+  a placa some para dentro do alvo com a âncora **congelada**, o buraco viaja
+  em curva (a `MOLA` passava do alvo e espremia a placa contra a borda) até o
+  **alvo ao vivo** e pousa com um pulso do anel, e só então a placa nova monta
+  (`key` por passo, já posicionada) e surge do lado dele; ao fechar a placa
+  some, o anel se dissolve e a íris abre. A placa é um `Popover` ancorado num
+  retângulo virtual que lê o recorte (`updatePositionStrategy="always"`), com
+  a seta à vista (`overflow-visible`) e o rodapé de forma fixa: o × do canto
+  pula e a seta de voltar some no primeiro passo sem sair do lugar. Pelo
+  ponteiro o foco vai à placa, sem anel (e só se ninguém o tem — o menu que o
+  clique abriu fecharia); pelo teclado, ao primário ou ao alvo. `waitFor`
+  espera o alvo montar (`MutationObserver`). **Um passo `advanceOn: "target"`
+  não se pula** (`passoAlcancavel`): a seta e as pílulas não passam por cima
+  dele (o anel pulsa no alvo), a retomada do `storageKey` não cai depois dele,
+  e voltar a um passo com `waitFor` cujo alvo sumiu volta até ele — pulado, o
+  passo seguinte esperava cinco segundos sem placa um alvo que não vinha. **A camada é `--z-popover` + 1 (a placa + 2)**,
+  a exceção consciente à regra de não escalar: o menu que o clique abriu fica
+  sob o véu, com o buraco no item. No telefone a placa prende acima da
+  `BottomBar` ou sob a `TopBar` — do lado oposto ao alvo —, com a área segura
+  em `--onboarding-safe-top`/`-bottom` (o `IphoneFrame` as emula).
+  `OnboardingHotspot` é o ponto (`BadgeDot pulse`) sobre um botão, que some
+  quando o botão é usado; a dica **brota do ponto** (60% → 1 na mola, a origem
+  do popover, e a descrição e o botão se desdobram em cascata — no lugar da
+  entrada genérica do popover) e o "entendi" faz **o avesso**, e não a saída do
+  card: as faixas dobram de baixo para cima, o balão volta para dentro do ponto
+  (60%, desfoque, a mesma origem, em curva de saída) e o ponto pulsa (1,35) e
+  se apaga.
+  A entrada roda numa `ref` de função **uma vez por balão**: o Radix recompõe a
+  `ref` a cada render, e cada chamada recomeçava a animação. `storageKey` guarda em `localStorage` o passo, a
+  conclusão, o dispensar e o visto, e quem tem chave não renderiza antes de
+  ler. **No telefone** todo alvo sobe a 40–44 no dedo, a gaveta das boas-vindas
+  põe o voltar e o próximo numa linha (empilhados, o voltar entrava no segundo
+  passo e a gaveta crescia), e o card abre só pelo toque — o JavaScript lê
+  também o `data-pointer="coarse"` da moldura do iPhone (`deDedo`) — e, aberto
+  pelo toque ou pelo teclado, rola até aparecer (respeitando o `scroll-padding`
+  da tela). Nenhuma tela usa ainda. `onboarding-versions.test.ts` tranca.
 - **Overlays**: `Dialog` / `Sheet` / `AlertDialog` use `bg-overlay` (not hardcoded `bg-black/10`).
 - **`DialogFooter` empilha ao contrário** (`flex-col-reverse`), para a ação
   principal ficar em cima no telefone. O antigo `SheetFooter` empilhava na

@@ -20411,3 +20411,439 @@ cabeçalho recua 8 + 10 e as linhas 8, e os dois alinham em 18.
 escada da sobreposição, o resumo, o selo, o esqueleto e as proibições (a
 variável da tela antes da automática, o +N sem `bg-muted`, sem `.type ===` e
 sem `env()`).
+
+### Rodada 247 — o Onboarding
+
+O dono trouxe seis referências do 21st e pediu as variantes delas, e mais uma
+sem referência: o tour com foco **num botão real**, em que a pessoa clica no
+próprio lugar.
+
+**O levantamento.** As fontes foram lidas dos registries públicos dos autores
+(lumiui.dev, 7ovr.com, karrix.dev, blocks.so) e da página do originui:
+- **originui** — um diálogo de 400px com a imagem recuada 8px, pontos de 6px
+  e Pular/Próximo; a imagem é a mesma em todos os passos e não há voltar.
+- **patrick-xin** — a imagem de cada passo num carrossel do embla (arraste), o
+  texto de todos os passos numa célula só da grade cruzando em 240ms, e as
+  pílulas que alargam de 16 a 24px; o clique fora não fecha.
+- **onboarding-01** — o checklist em sanfona, com o anel de progresso de 14px,
+  e a ação que marca o item e abre a próxima pendente.
+- **onboarding-6** — o widget com a barra de progresso e as linhas-link
+  riscadas quando feitas.
+- **KarrixLee** (com vídeo e com imagens) — o card do rodapé da barra lateral,
+  a mídia recortada a 75px que cresce a 150 e abre em leque na mola 300/30. Só
+  o `mouseenter` o abria e o dispensar era uma `div`: no telefone, nada dele se
+  alcançava.
+
+Para o tour, três mecânicas lidas: o driver.js (o `advanceOnClick` em bolha,
+o recorte num caminho `evenodd`), o NextStep (a máscara SVG e os quatro
+bloqueios em volta do buraco) e o Product Tour do 21st (a sombra de 9999px, que
+não deixa clicar no alvo). No app não havia tour nem coachmark; o assistente de
+categorias é um formulário em passos, e o aviso do PWA é o único "visto" em
+`localStorage`.
+
+**As escolhas.** Tudo de Redesenho, Peças e Comportamento (a mídia que desliza,
+as pílulas, o recorte com anel e seta, o leque; o hotspot, o vídeo, a
+celebração, o esqueleto; o passo que espera o alvo, o guardado, o teclado e o
+telefone). **Nenhuma tela migra.**
+
+**O tour.** O véu é a sombra de 100vmax de um elemento sem eventos, com o anel
+de 2px do `--ring` na mesma caixa; quatro retângulos transparentes bloqueiam em
+volta do buraco, e dentro dele não há nada — o clique cai no botão. O passo
+`advanceOn: "target"` avança num `click` em bolha no documento, depois do
+handler do app, conferindo o `pointerdown` registrado em captura. A placa é um
+`Popover` ancorado num retângulo virtual que lê os motion values do recorte
+(`updatePositionStrategy="always"`), então ela viaja com a mola. Medido na
+página: o recorte da busca é 626, 0, 240 × 48, raio 24 — a pílula de 224 × 32
+em 634, 8, mais 8 de folga —; o `elementFromPoint` no centro do buraco devolve
+o "+ Adicionar", e 40px ao lado, o bloqueio; o clique no botão abre o menu e
+avança, o passo `waitFor` acha a "Despesa" pelo `MutationObserver` e o
+recorte vai a ela; o checklist ganha raio 30 (22 + 8). Fechar guarda
+`completed` e devolve o foco a "fazer o tour"; reabrir com o passo 4 guardado
+começa nele. No iPhone, com o alvo no + da barra de baixo, a placa prende em
+cima, a 70px (os 58 da área segura emulada + 12); com o saldo no topo, embaixo,
+a 84 da base (a barra de 72 + 12).
+
+**A camada.** `--z-popover` + 1 para o véu e + 2 para a placa — a exceção
+consciente à regra de não escalar, porque o menu que o clique abre (no mesmo
+degrau, montado depois) pintava por cima do recorte e escondia o anel.
+
+**O diálogo.** Um índice só, o do `Carousel`: arrastar, a seta, a pílula e o
+botão andam pelo mesmo `api`, e o resto lê o `select`. A janela mediu 413px nos
+quatro passos.
+
+**O card.** Cursor (só mouse), foco e toque, que alterna. Medido no toque: a
+mídia vai de 75 a 150px, as três imagens pousam em −20/−10/0,95/−5°,
+0/−5/0,97 e +20/0/0,99/+5°, e o rodapé abre a 32px.
+
+**O que deu errado no caminho.**
+- **A página respondia 500.** O guardado comparava `leitura?.chave === chave`,
+  e sem chave os dois lados são `undefined`: `leitura!.valor` lia `null`.
+- **O foco do diálogo caía num slide escondido**: o Radix foca o primeiro
+  focável, e era o `AvatarGroup` da ilustração do quarto passo. Agora o foco vai
+  ao primário, e a ilustração em JSX é `inert` e `aria-hidden`.
+- **A placa espremida contra a borda cortava o "concluir"**: o rodapé da
+  placa quebra linha.
+- **O leque cobria a descrição** em 2px (as imagens sobem 10, o respiro era 8):
+  12.
+
+**Duas mudanças em relação ao plano.** Um alvo que não aparece leva a placa ao
+centro, sem recorte (com aviso no console em desenvolvimento), em vez de pular
+o passo: o texto continua legível. E a doca do telefone mede a `TopBar` e a
+`BottomBar` no mesmo quadro do recorte, em vez do `useTopBarBottom`, que é
+estado e chegaria um quadro depois.
+
+**Custos conhecidos.**
+- O `Dialog` e o `DropdownMenu` não portalizam para dentro da moldura do
+  catálogo: o diálogo de desktop tem seção própria, e o "+ Adicionar" da
+  demonstração é um `Popover`.
+- Dentro do `IphoneFrame`, o Radix avisa que falta `DialogTitle` na gaveta: ele
+  procura o id no documento de fora. O nome existe — o `aria-labelledby` aponta
+  para "Tudo num lugar só" no documento da moldura.
+- Com um menu modal aberto por cima, o Radix congela a placa; o passo avança
+  pelo alvo, e o foco vai ao alvo.
+- Quando o menu da demonstração fecha, o Radix devolve o foco ao gatilho dele,
+  depois do foco do tour; o Tab seguinte volta à placa.
+- `updatePositionStrategy="always"` mantém um laço de quadro enquanto o tour
+  está aberto.
+- O painel do navegador estava escondido, e o `rAF` andava aos solavancos: as
+  molas foram medidas no fim, não no meio.
+
+`onboarding-versions.test.ts` tranca as peças puras (o recorte, a doca, o
+leque, o passo guardado), a marcação do checklist, do card, do ponto, da mídia
+e do esqueleto, o mecanismo do tour pela fonte (o `pointerdown` em captura e o
+`click` sem captura, os quatro bloqueios, a âncora virtual, as duas camadas, a
+área segura em variável) e as proibições (cor crua, peça achada pelo tipo,
+classe montada, `z-50`, o storage num lugar só).
+
+**Revisão do dono, na mesma rodada.**
+- **O cabeçalho do checklist colava na borda.** O `Card padding="none"` zera o
+  recuo do corpo (`--card-px: 0`), e o título, a contagem e o × herdaram zero.
+  Agora o cartão é `padding="md"`, e a sanfona e a lista recuam 8 e devolvem 8
+  por dentro (a lista, 7 + a borda transparente do `Item`): título, anel,
+  círculos e barra a 17px da borda esquerda, setas e o × a 17 da direita, nas
+  duas formas.
+- **O card de novidade ganhou o brilho de marca e o par de ações.** `Card
+  variant="brand"` na borda, e o rodapé virou dispensar `tertiary` + saiba mais
+  `primary`, cada um com metade da linha (103 + 8 + 103 = 214px). Dois
+  defeitos vieram junto e foram medidos: o leque passou a vazar 4px pela borda,
+  porque o casco de marca troca o `overflow-hidden` por `clip` com folga para o
+  anel — a mídia aberta agora recorta a 12px de si mesma, na borda de dentro;
+  e o brilho não acendia dentro da moldura do catálogo, porque o
+  `useBrandGlow` escutava o `document` de fora. O hook passou a escutar o
+  documento e a janela do próprio elemento (no app, o mesmo `document`), e
+  dentro da moldura o arco acendeu a 67,8° com o ponteiro à direita.
+- **O leque cortava em cima e sobrava embaixo.** A mídia abria a 150px fixos
+  (o número da referência), mas as imagens medem 120: sobravam ~30px embaixo.
+  E o cartão de trás, subindo 10px e girando −5°, passava ~16px acima da
+  mídia, onde a folga de recorte era 12, e perdia o canto. Agora a altura
+  aberta é `auto` (a primeira imagem fica no fluxo e as outras se empilham
+  sobre ela) mais a folga que o leque ocupa, só quando abre (`folgaDoLeque`:
+  16/8 com três, 12/0 com duas, 6/0 com o vídeo). Medido: 144px com três e
+  126 com o vídeo, o canto mais alto a 12px da descrição e o mais baixo a 12
+  dos botões. **E a máscara ficou quadrada**, a pedido do dono: o `rounded-row`
+  na mídia fazia o recorte comer os cantos dos cartões do leque; quem tem canto
+  são as imagens.
+- **A abertura do card quebrava.** Duas causas, as duas medidas. A mídia
+  animava `height: "auto"` junto com o `padding`: o motion mede o "auto" no
+  começo, com o padding ainda em 0 (120px), anima até lá enquanto o padding
+  cresce, e no fim troca para `auto` de verdade — saltava de 120 para 144. E o
+  recorte trocava por classe (`overflow-hidden` ↔ `overflow-clip` com 12px de
+  folga): ao abrir, a imagem aparecia de uma vez 12px abaixo da caixa, por cima
+  do rodapé; ao fechar, o leque ainda aberto era cortado. Agora **um número
+  só**, `abertura` (0 → 1 na mola 300/30), dá a altura (75 até a imagem medida
+  por `ResizeObserver` mais a folga), a folga e o recorte, que é um
+  `clip-path: inset()` quadrado indo de 0 a −12px num palco interno (no botão
+  ele cortaria o anel de foco). Amostrado quadro a quadro: 75 → 79 → 89 → 101
+  → … → 144, sem salto no fim, e o fechamento simétrico, 144 → 75.
+- **O card não fechava quando o mouse saía, depois de um clique dentro.** O
+  `pointerleave` não fechava com o foco dentro do card — a regra é para o
+  teclado, e quem chegou pelo Tab não pode vê-lo fechar sob o foco —, mas um
+  clique de mouse na mídia também deixa o foco no botão. Agora só o foco
+  `:focus-visible` segura o card aberto. Medido com eventos de ponteiro:
+  entrar abre, sair fecha, clicar e sair fecha, entrar e sair de novo fecha.
+- **Duas superfícies novas para o card**, a pedido do dono: o eixo `variant`
+  (`brand` · `beam` · `contrast`).
+  - `beam` é o brilho de marca sem o ponteiro: a mesma `@utility brand-glow` (o
+    arco-íris parado, a janela de 80° que viaja), com o `--brand-glow-start`
+    girando de 0 a 360 em 4 s pelo `animate` do motion, em laço, e o
+    `--brand-glow-active` sempre em 1, a 0,8 de intensidade (o do ponteiro é
+    0,5). Nenhum CSS novo. Medido: o ângulo andou de 125,7° a 215,8° e a
+    máscara saiu `conic-gradient(from 175.82deg …)` — o início menos o
+    espalhamento. **Contraria a rodada 100**, em que o dono recusou o degradê
+    girando; aqui quem gira é a janela, e foi ele quem pediu a borda passando
+    em volta.
+  - `contrast` é o cartão invertido, a tecla do primário: no escuro, branco
+    (0,985) com o texto em 0,145; no claro, preto (0,205) com o texto em
+    0,985. Na linha das ações o `--foreground` vira a cor da frente, e o
+    `tertiary` lê dele o texto do realce e a camada de 12%; o saiba mais vira
+    `secondary`, a tecla clara no cartão preto (0,93) e a escura no branco
+    (0,269). O anel de foco é a cor da frente. A ilustração da mídia não
+    herda: é uma captura do app no tema dele.
+- **O `contrast` passou a ser o `brand` no tema oposto**, a pedido do dono —
+  a primeira versão era um cartão invertido à parte, sem o brilho e com o
+  saiba mais na tecla secundária. Agora ele veste o `Card variant="brand"` (o
+  mesmo brilho no ponteiro) e troca só as cores pelo par oposto: `--primary`
+  atrás e `--primary-foreground` na frente, o fio na frente a 10% (o
+  `--border` de cada tema sobre o fundo do outro), a descrição na frente a
+  60% (o `--muted-foreground` oposto: 0,48 sobre o branco contra 0,5, e 0,67
+  sobre o preto contra 0,71). Na linha das ações, `--onboarding-ink` e
+  `--onboarding-paper` (publicadas no cartão, para a troca não referenciar a si
+  mesma) invertem a tecla do primário: medido, no escuro o saiba mais é 0,145
+  com o texto em 0,985 (a tecla preta do claro), e no claro 0,985 com 0,205 (a
+  branca do escuro); o realce vai 15% na direção do fundo.
+- **E ainda não era igual**: o dono comparou o `contrast` do escuro com o
+  `brand` do claro e a mídia diferia — as ilustrações continuavam no tema
+  escuro dentro do cartão branco, porque só as cores do cartão tinham sido
+  trocadas. Agora o `contrast` é o `brand` **dentro do tema oposto**: o
+  cartão ganha a classe `.light` no escuro e `.dark` no claro (a `.light`
+  repete a paleta clara desde a página de Cores), lida do `<html>` do
+  documento do componente (o do iframe, na moldura) por um
+  `MutationObserver`. Saiu a troca de tokens à mão (`--onboarding-ink`,
+  `--onboarding-paper`). Medido, peça por peça, nos dois sentidos: cartão,
+  fio, título, descrição, dispensar, saiba mais e a ilustração de dentro, todos
+  iguais aos do `brand` do tema oposto. Custos: ele espera o cliente para
+  aparecer (o servidor não sabe o tema), e dentro da ilha `.light` a variante
+  `dark:` ainda casa — ela pergunta por `.dark` num ancestral —, o mesmo
+  limite da página de Cores; no card, só o `Badge` da ilustração tem `dark:`.
+- **O × do card**, a pedido do dono: na linha do título, sempre à vista — o
+  dispensar do rodapé só aparece com o card aberto. `icon-xs` (24px), recuado
+  para dentro do recuo do cartão para não empurrar o título, com o alvo
+  crescendo por fora no dedo. Medido: centrado na linha do título (os dois a
+  21px do topo), a 7px da borda; clicar esconde o card e grava `dismissed`.
+- **Um fechar mais orgânico**, a pedido do dono. Era um desvanecimento seco de
+  200ms descendo 10px, e o espaço do card sumia de uma vez no fim. Agora são
+  dois tempos, em curva (fechar é curva, não mola): o cartão se recolhe **em
+  direção ao ×** — a origem no canto do botão —, encolhendo a 92%, subindo
+  6px, desfocando a 6px e esmaecendo em `--ease-emphasized` (260ms); o espaço
+  fecha logo atrás, de 80ms em diante, em `--ease-in-out` (340ms), recortando
+  com 4px de folga para o anel do brilho. Abrir é o caminho de volta. Medido
+  quadro a quadro: o cartão chega a opacidade zero em ~120ms, a altura desce
+  de 167 a 0 entre ~100 e 425ms sem degrau, e o nó sai em 434ms; em repouso
+  não sobra filtro (`transitionEnd`) nem transformação. Com movimento
+  reduzido, só a opacidade.
+- **"Não ficou bom; sumir para baixo, e não para cima."** Duas tentativas
+  depois do recolher em direção ao ×:
+  - A primeira coreografia apagava o conteúdo em cascata (de baixo para cima)
+    e depois deixava cair o cartão. A tira de quadros (Playwright headless,
+    porque o painel escondido pausa o `requestAnimationFrame`) mostrou o
+    defeito: o que caía era uma **caixa vazia**, escura sobre a barra escura, e
+    a queda não se via.
+  - A atual: **o cartão cai inteiro**. Antecipação nos primeiros 18% (sobe 2%
+    da altura, cresce 2%, gira −0,6°), e então ele desce 110% da própria altura
+    acelerando (curva de queda), girando 4° e encolhendo a 96%, com o conteúdo
+    legível; só na segunda metade desfoca (3px) e esmaece. O espaço recorta a
+    4px da borda de baixo, e o cartão desliza para dentro dessa linha, como numa
+    fenda; a altura fecha de 340ms em diante. Medido a cada quadro: −3px até
+    ~100ms, depois 4px em 205ms, 35 em 340, 115 em 470; o espaço vai de 167 a 0
+    entre ~340 e 700ms. O conteúdo ainda chega em cascata ao abrir.
+- **"Colapsando, diminuindo e saindo pela esquerda"**, a pedido do dono.
+  Três etapas emendadas: as faixas (ações, mídia, descrição) se fecham de
+  verdade, de baixo para cima, até sobrar a linha do título; o cartão dá um
+  impulso de 1,5% para a direita, encolhe a 72% com a origem na borda esquerda
+  e desliza 115% para a esquerda, acelerando, esmaecendo e desfocando no fim;
+  o que sobra do espaço fecha por último. Dois mecanismos falharam no caminho,
+  e os dois foram medidos:
+  - o `exit` do `AnimatePresence` **fixava a altura do espaço em px** no
+    instante em que a saída começava — o espaço ficou em 167px enquanto as
+    faixas colapsavam por dentro, um buraco vazio;
+  - o `animate` imperativo do motion (`useAnimate`) **não reconhece um nó de
+    iframe**: o teste dele é `instanceof HTMLElement` da janela de fora, e na
+    moldura do catálogo ele tratou o elemento como objeto comum ("height can't
+    be read from the animated subject") e nada se moveu.
+  A saída é uma sequência na Web Animations API do próprio elemento, o
+  precedente do `ThemeToggle` e do `viajarLiquido`, e grava o dispensado só no
+  fim (senão o `guardado` desmontaria o card no meio). Medido a cada quadro
+  (Playwright headless): o espaço desce de 167 para 46px até ~270ms
+  acompanhando o colapso, o cartão chega a +3,6px e 96% e então a −276px e 72%
+  em ~640ms, e o espaço vai a zero em ~700ms.
+- **O checklist ganhou a mesma animação**, a pedido do dono: a mesma
+  sequência (`sairPelaEsquerda`) e a mesma entrada em cascata do card. O que
+  colapsa é o corpo — a barra da `list` e a sanfona, a lista ou a celebração
+  —, e o cabeçalho fica até o cartão sair. O checklist ganhou um espaço que
+  recorta (`onboarding-checklist-space`, que agora recebe o `className`) e o
+  invólucro que se move (`onboarding-checklist-motion`). Medido a cada quadro:
+  o corpo vai de 256 a 0px e o espaço de 338 a 82 (o cabeçalho) até ~240ms, o
+  cartão chega a +5,8px e então sai a −297px, e o espaço fecha em ~605ms.
+- **A dica do hotspot ganhou a entrada e a saída**, a pedido do dono. Ao
+  clicar em "entendi", a mesma saída do card e do checklist (o balão é o
+  próprio espaço: não há o que deslizar em volta de uma camada flutuante, e a
+  altura dele fechando é o fim do colapso); a origem da transformação passou a
+  ir nos quadros, porque a do popover (a do lado de onde abriu) venceria a
+  borda esquerda. Ao abrir, o caminho de volta: o balão **brota do ponto** —
+  de 60% a 1, desfocado e transparente, na mola da casa lida dos tokens no
+  próprio elemento — e a descrição e o botão se desdobram em cascata; a entrada
+  genérica do popover sai (`data-open:animate-none`). Dois defeitos no caminho:
+  um efeito em `dica` disparava antes de o Radix montar o conteúdo (a entrada
+  não rodava), e a `ref` de função que o substituiu era chamada a cada render —
+  o Radix recompõe a `ref` (a medição da rodada 212) — e cada chamada
+  recomeçava a entrada medindo as faixas já presas em zero. Agora ela roda uma
+  vez por balão. Medido a cada quadro: abrir leva a escala de 0,6 a 1,02 e
+  assenta, e o balão de 50 a 118px em ~410ms; fechar o leva de 118 a 50px até
+  ~230ms e a −258px e 72% em ~680ms.
+- **"Não gostei da saída igual às outras; quero que ela complemente a
+  entrada."** O dono gostou da entrada (o balão brotando do ponto) e recusou a
+  saída copiada do card. Agora ela é **o avesso da entrada**: as faixas se
+  dobram de baixo para cima (o botão, depois a descrição — o espelho do
+  desdobrar), o balão volta para dentro do ponto (a 60%, desfocado e
+  transparente, com a mesma origem, em curva de saída e mais curto que a
+  entrada), e o ponto absorve o balão e se apaga — uma pulsada a 1,35 e some.
+  Medido a cada quadro: o botão dobra até ~100ms e a descrição até ~200ms; o
+  balão vai a 0,6 e zero de opacidade de ~140 a 400ms; o ponto pulsa até 1,35
+  em ~500ms e chega a zero em ~750ms. A lição fica para a casa: **a saída de
+  uma peça que brota de um ponto volta para o ponto** — a coreografia de outra
+  peça não serve só por ser da mesma família.
+- **"Personalize a animação do checklist, para não ficar igual."** Cada peça
+  ficou com um gesto: o card sai pela esquerda, a dica volta para o ponto, e
+  o checklist **enrola e desenrola como uma persiana** — o que uma lista de
+  passos sugere. Desenrolar: o espaço abre até o cabeçalho, o cartão desce 10px
+  até o lugar, e as linhas (`[data-onboarding-row]`: a barra, os itens, ou a
+  celebração inteira) abrem de cima para baixo, 45ms entre uma e outra, com o
+  tique dos feitos estalando na mola quando a linha chega. Enrolar: as linhas
+  sobem e somem de baixo para cima, o cabeçalho começa a subir e se dissolver
+  enquanto a última ainda enrola, e o espaço fecha. Três correções medidas:
+  - **as alturas medidas na montagem eram de milhares de pixels**: dentro da
+    moldura o iframe recém-criado ainda se assentava, e o texto quebrava em
+    colunas estreitas. Agora o checklist fica escondido e espera a altura do
+    cartão repetir entre dois quadros (no app, o segundo quadro);
+  - **o espaço dava um tranco** ao abrir até a altura final e voltar à natural
+    com as linhas ainda abrindo (337 → 288 → 307px). Ele abre só até o
+    cabeçalho e cresce junto com as linhas;
+  - **o cabeçalho ficava ~250ms sozinho** antes de sumir: a dissolução começa
+    com a última linha.
+  Medido a cada quadro: aparecer leva o espaço de 0 a 82px em ~150ms e a 338
+  em ~600ms, sempre crescendo; fechar o leva a 82px até ~350ms e a zero em
+  ~650ms. O checklist saiu do `AnimatePresence` e das variantes do motion: as
+  duas pontas são da Web Animations API.
+- **"Personalize a animação do tour, cole mais as bordas ativas e deixe elas
+  com as cores da marca; melhore o design e a transição das placas — o layout
+  quebra em vários momentos."** Percorrido passo a passo no Playwright antes de
+  mexer, cinco quebras medidas:
+  - **a placa trocava o texto na hora e atravessava a tela** seguindo a mola do
+    recorte, por cima do que estivesse no caminho;
+  - **no último passo a mola espremia a placa**: o buraco passava do alvo (400
+    × 354 chegava a 427 × 393), a placa ancorada descia, a altura disponível
+    encolhia e o rodapé era cortado (116px de 141);
+  - **o rodapé mudava de forma**: com o voltar, pular e próximo, ele quebrava
+    em duas linhas a partir do segundo passo;
+  - **a seta nunca apareceu**: o `overflow-y-auto` da placa a recortava;
+  - **o anel encostava na borda** da moldura no item da barra lateral (x = 0).
+  O gesto do tour virou **o foco**, uma íris de câmera: ao abrir o véu fecha
+  sobre o alvo vindo das bordas (o buraco nasce maior que a janela, `irisDe`);
+  ao trocar de passo a placa some para dentro do alvo com a âncora congelada,
+  o buraco viaja em curva (500ms, sem passar do alvo) até o alvo **ao vivo** —
+  um progresso de 0 a 1, então o checklist crescendo no caminho não recomeça a
+  viagem — e pousa com um pulso do anel; só então a placa do passo novo monta,
+  já posicionada, e surge do lado do alvo na mola da casa, com as faixas
+  subindo em cascata e a pílula do passo anterior cedendo a vez. Ao fechar, a
+  placa some, o anel se dissolve (crescendo junto, ele virava um arco enorme
+  cortando a tela) e a íris abre. O anel é o brilho de marca: a folga caiu de
+  8 para 4, a `brand-glow` vai a 3px, e como a janela dela é um triângulo
+  (zero nas pontas) um segundo anel mais baixo, defasado 180°, acende a metade
+  escura — o arco-íris dá a volta inteira e o trecho mais forte gira. O × do
+  canto pula, a seta de voltar some no primeiro passo sem sair do lugar, a
+  seta da placa aparece (`overflow-visible`), e o anel de foco branco no
+  "próximo" e no alvo, a cada passo, só aparece para quem navega pelo teclado
+  (pelo ponteiro o foco vai à placa — e só se ninguém o tem, senão o menu que o
+  clique abriu fechava). Medido: a placa de cada passo aparece ~700ms depois do
+  clique, no lugar final, sem espremer (141px no último passo); no telefone o
+  recorte do + é 64 × 64 em volta de 56 e a placa prende em cima. Achado no
+  caminho, fora daqui: o `PopoverContent` avisa "sem nome" ao montar **fechado**
+  (o título só existe aberto) — o popover do hotspot dispara o aviso nesta
+  página.
+- **"Adicione setas para o botão próximo."** O "próximo" do tour e o do
+  diálogo levam a seta (`ChevronRightIcon`, a mesma da seta de voltar
+  virada), que anda 2px no cursor e no toque, como a do `PageSectionLink`; o
+  "concluir" do último passo não leva — ali não há para onde ir.
+- **"Deixe o contorno rainbow mais bonito" — e só no onboarding.** O anel era
+  a `brand-glow` a 3px com um segundo anel defasado, e de perto lia como
+  listra: o brilho da casa repete o arco-íris 2,5 vezes na volta (vinte faixas
+  de 18°, feitas para um arco curto passando pela borda), e numa pílula larga
+  as faixas se espremiam no meio da aresta comprida e esticavam nos cantos;
+  as duas camadas sobrepostas deixavam o brilho manchado. Agora o anel é
+  desenho do tour: o degradê oficial da marca (`--brand-rainbow`, em oklch,
+  pela `brand-rainbow-image`) num traço nítido de 2px colado no buraco e
+  concêntrico com ele (o raio publicado em `--onboarding-raio`), mais o mesmo
+  traço borrado (4px) e afastado 4px para fora — o primeiro ensaio, borrado
+  8px junto do traço, vazava para dentro do buraco e embaçava a borda do botão
+  no tema claro —, com uma janela acesa de meia volta (20% no resto) que dá a
+  volta: a luz corre, a cor fica parada. Uma volta de arco-íris em cônico
+  também foi vista e saiu: num alvo largo o cônico espreme as cores no meio
+  da aresta; o linear de 135° da marca as distribui. Nada mudou fora do
+  `onboarding.tsx`.
+- **"Ficou bom, só remova o glow que se movimenta."** Saiu o brilho borrado
+  que corria em volta do traço (a camada `onboarding-tour-glow`, a janela em
+  `--onboarding-giro` e o efeito que girava o ângulo). O anel é só o traço da
+  marca, parado; o pulso do pouso e o sumiço ao fechar continuam.
+- **"O tour não está funcionando."** O console da aba do dono dizia "o alvo do
+  passo 4 não apareceu": o passo da Despesa só existe com o menu do +
+  Adicionar aberto, e o passo anterior, que pede o clique, podia ser pulado
+  pela seta → ou por uma pílula. Reproduzido: cinco segundos sem placa
+  nenhuma, o recorte parado no + Adicionar, e a placa no centro, sem alvo. O
+  mesmo acontecia ao voltar do último passo (o menu já fechado) e, em tese, ao
+  retomar um tour guardado depois do clique. A regra é `passoAlcancavel`: para
+  a frente, nada passa por cima de um passo `advanceOn: "target"` (a pílula
+  do último, do primeiro, para nele; a seta nele faz o anel pulsar no alvo —
+  "é aqui que se clica"); só o clique no alvo avança; a retomada cai nele; e
+  voltar a um passo com `waitFor` cujo alvo não está na tela volta até o
+  clique que o faz aparecer. Medido: pílula 5 a partir do 1 → "Lance um
+  gasto"; seta → nele → pulso a 0,52 aos 120ms e o passo não muda; clique →
+  "Uma despesa"; seta ← do último → "Lance um gasto".
+- **"Adicione seta no voltar."** O "voltar" do diálogo leva a seta para a
+  esquerda antes do rótulo, e ela e a seta de voltar do tour andam 2px para
+  trás no cursor e no toque — o espelho da do "próximo". As setas levam
+  `data-icon` (`inline-start` / `inline-end`), que tira do botão o recuo do
+  lado delas.
+- **"Remova o pular e deixe só o ×."** O rodapé do diálogo de boas-vindas
+  perde o "pular": pular é o × do canto (e o Esc), como na placa do tour, e o
+  rodapé fica com o par voltar · próximo. O `skipLabel` passa a ser só o nome
+  do ×, e o padrão vira "pular as boas-vindas" — "pular", sozinho, era rótulo
+  de botão com texto ao lado.
+- **"Melhore tudo no mobile, revise e ajuste" — "como se fosse no mobile, com
+  touchpoint e o que mais for do mobile".** Revisado estado a estado no
+  iPhone, medindo os alvos. O que estava errado:
+  - **alvos abaixo de 40**: os botões do card (28), o ×, o voltar e o
+    concluir da placa do tour (24, 28, 28), o × da gaveta (28), a ação das
+    linhas do checklist e o "entendi" da dica. Todos sobem a 40 no dedo, e os
+    × crescem o alvo a 44 por `::after` sem crescer o círculo;
+  - **a gaveta pulava de altura**: no segundo passo o voltar entrava embaixo
+    do próximo. O par fica numa linha (o próximo ocupa a sobra) e a gaveta
+    mede 431 nos dois passos;
+  - **o card abria ao passar o cursor no telefone**: a moldura roda no
+    desktop, e o `pointerType` dizia "mouse". O card lê também a marca
+    `data-pointer="coarse"` da moldura (`deDedo`); o foco só abre quando é de
+    teclado (o toque que focava a mídia abria e o clique logo fechava, no
+    Chrome do Android); e, aberto pelo toque ou pelo teclado, ele rola até
+    aparecer — no fim do feed o rodapé dele ia para baixo da barra de baixo
+    (rolou 142px; o card termina em 703, a barra começa em 743);
+  - **a tela não era uma tela**: botões de demonstração soltos, sem barra do
+    topo, sem checklist nem dica, e um vazio embaixo. Agora é o Início do app
+    no telefone — a barra do topo fixa com o sino e o ponto, o saldo, o
+    checklist (é ele que abre as boas-vindas, que viram a gaveta, e o tour), o
+    card no fim do feed, a barra de baixo — e o que é do aparelho: a barra de
+    status (9:41, sinal, wi-fi, bateria), o indicador de início e **o ponto de
+    toque**: o cursor some dentro do telefone e um círculo o segue, afundando
+    ao tocar. Sem barra de rolagem e sem seleção de texto ao tocar. O tour do
+    telefone passou a ir do saldo ao checklist e terminar no +.
+- **"Ajuste o posicionamento e o layout do ×" — "para cima da parte de
+  imagem".** Na gaveta das boas-vindas o × ficava montado na borda da
+  ilustração (de 401 a 429, com ela começando em 419): ancorado no canto da
+  janela, e a alça empurrava a ilustração para baixo. Agora, na gaveta, ele é
+  o × de fábrica das gavetas, no canto de cima, e a ilustração desce para
+  baixo dele (10px de folga). No diálogo, onde não há alça, ele continua no
+  canto da ilustração, a 8px dela, com a placa flutuante atrás. **E
+  quebrou o diálogo do desktop, consertado em seguida**: o invólucro novo da
+  ilustração (para ancorar o ×) é item da grade do diálogo, e sem `min-w-0` o
+  mínimo automático dele era a largura do trilho do carrossel — a imagem, o
+  texto e o "próximo" estouravam a janela de 448. A medição desta rodada
+  conferia só o × contra a ilustração, e não a ilustração contra a janela.
+- **"Por que o ×, o título e o subtítulo estão em posições diferentes? No
+  mobile, como ambos são cards, podem ter o mesmo layout — use o do Primeiros
+  passos como referência; esse texto ficou muito pequeno no mobile. Só no
+  mobile."** Medido no telefone: o checklist com recuo 16, título 14/600, a
+  descrição a 4px e o × de 28 a 11px da borda; o card com recuo 12, título
+  12/500, a descrição a 6px e o × de 24 a 7px. Abaixo de `md` o card passa a
+  ter o cabeçalho do checklist pelas mesmas peças (`CardTitle sm`,
+  `CardDescription`, o `X_DO_CARTAO` dividido), e os números batem pixel a
+  pixel; o × ocupa só a altura da linha do título (`-my-1`), senão a
+  descrição caía a 8px. A partir de `md` — a barra lateral — o card volta ao
+  compacto, com os mesmos números de antes.

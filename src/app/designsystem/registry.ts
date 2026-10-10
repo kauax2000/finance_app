@@ -245,6 +245,9 @@ const LAYER: Record<string, Layer> = {
   "hover-card": "Organisms",
   menubar: "Organisms",
   "navigation-menu": "Organisms",
+  /** Compõe `Dialog`, `Popover`, `Carousel`, `Card` e `Accordion` — quem
+   *  contém organismo é organismo. */
+  onboarding: "Organisms",
   popover: "Organisms",
   sheet: "Organisms",
   /** Especializa o `Card`; especializar mantém o degrau. */
@@ -475,6 +478,7 @@ export const REGISTRY: RegistryEntry[] = [
   entry("hover-card", "Hover Card", "Prévia ao pousar o cursor — e no toque longo, com o grupo e o carregando.", ui("hover-card"), "HoverCard, HoverCardGroup, HoverCardTrigger, HoverCardContent, HoverCardHeader, HoverCardLink"),
   entry("menubar", "Menubar", "Fileira de menus com o realce que viaja, a busca de comandos e a folha no telefone.", ui("menubar"), "Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarRadioGroup"),
   entry("navigation-menu", "Navigation Menu", "Navegação de um cabeçalho público, com o realce que viaja e o painel que aprofunda.", ui("navigation-menu"), "NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent, NavigationMenuPanel, NavigationMenuGroup, NavigationMenuLink"),
+  entry("onboarding", "Onboarding", "Apresentar o produto: as boas-vindas em passos, os primeiros passos, a novidade na barra, o tour com foco num botão real e o ponto que pulsa.", ui("onboarding"), "OnboardingDialog, OnboardingChecklist, OnboardingCard, OnboardingTour, OnboardingHotspot, OnboardingMedia, OnboardingSkeleton"),
   entry("popover", "Popover", "Camada flutuante ancorada a um gatilho — com a confirmação curta e a gaveta no telefone.", ui("popover"), "Popover, PopoverContent, PopoverTrigger, PopoverHeader, PopoverConfirm"),
   entry("sheet", "Sheet", "Painel de borda no desktop, gaveta no telefone.", ui("sheet"), "Sheet, SheetContent, SheetTrigger, SheetClose"),
   entry("stat-card", "Stat Card", "Um número que importa, com sua variação.", ui("stat-card"), "StatCard, StatCardGroup, StatCardHeader, StatCardLabel, StatCardIcon, StatCardValue, StatCardDelta"),
