@@ -14,7 +14,7 @@ import {
 import { cn } from "@/lib/utils"
 import { Muted } from "@/components/ui/typography"
 import { Button } from "@/components/ui/button"
-import { dialogContentVariants } from "@/components/ui/dialog"
+import { dialogContentVariants, juntarRefs, useOrigemDoClique } from "@/components/ui/dialog"
 import { Field, FieldControl, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
@@ -113,14 +113,18 @@ function AlertDialogContent({
   className,
   size,
   onEscapeKeyDown,
+  ref,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Content> &
   Pick<VariantProps<typeof dialogContentVariants>, "size">) {
   const { pending } = React.useContext(AlertDialogContext)
+  // Nasce de onde se clicou, como o `Dialog` (rodada 248).
+  const origem = useOrigemDoClique()
   return (
     <AlertDialogPortal>
       <AlertDialogOverlay />
       <AlertDialogPrimitive.Content
+        ref={juntarRefs(ref, origem)}
         data-slot="alert-dialog-content"
         data-layout="auto"
         aria-busy={pending || undefined}

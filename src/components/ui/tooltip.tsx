@@ -284,7 +284,21 @@ function TooltipContent({
   // que ignora a preferência seria esta.
   const reduzido = useReducedMotion()
 
-  const fechada = { opacity: 0, scale: reduzido ? 1 : 0.5 }
+  // **O estalo** (rodada 248): a dica nasce a 70%, 4px para o lado do gatilho,
+  // e cresce na mola; sai em 100ms, sem mola e sem se mover de volta — uma
+  // dica que some não recua. Era 50%, sem lado: lia como um balão inflando.
+  // Sem desfoque: num texto de 12px ele só borra a leitura.
+  const lado = props.side ?? "top"
+  const desvio = reduzido
+    ? {}
+    : lado === "top"
+      ? { y: 4 }
+      : lado === "bottom"
+        ? { y: -4 }
+        : lado === "left"
+          ? { x: 4 }
+          : { x: -4 }
+  const fechada = { opacity: 0, scale: reduzido ? 1 : 0.7, ...desvio }
 
   return (
     <AnimatePresence>
@@ -303,8 +317,12 @@ function TooltipContent({
             <motion.div
               key="tooltip-content"
               initial={fechada}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={fechada}
+              animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+              exit={{
+                opacity: 0,
+                scale: reduzido ? 1 : 0.92,
+                transition: { duration: reduzido ? 0 : 0.1, ease: "easeOut" },
+              }}
               transition={reduzido ? { duration: 0 } : MOLA}
               className={cn(
                 // 20rem é o teto de leitura; o `available-width` é o teto da

@@ -204,7 +204,8 @@ describe("Onboarding, rodada 247 — o card, o ponto, a mídia e o esqueleto", (
     // faixas se desdobram; a entrada genérica do popover sai.
     expect(CODIGO).toContain('{ opacity: 0, transform: "scale(0.6)", filter: "blur(6px)" }')
     expect(CODIGO).toContain('estilo.getPropertyValue("--ease-spring")')
-    expect(CODIGO).toContain('className="data-open:animate-none"')
+    // A entrada do popover sai: a dica brota pela Web Animations API.
+    expect(CODIGO.match(/motion="none"/g)).toHaveLength(2)
     // Uma vez por balão: o Radix recompõe a ref a cada render.
     expect(CODIGO).toContain("if (!balao || balao === brotou.current) return")
     // O entendi é o avesso da entrada, e não a saída do card: as faixas dobram
@@ -304,7 +305,7 @@ describe("Onboarding, rodada 247 — o mecanismo, pela fonte", () => {
     expect(CODIGO).toContain("key={placaPasso ?? undefined}")
     expect(CODIGO).toContain("void surgirDoAlvo(placa)")
     expect(CODIGO).toContain("sumirNoAlvo(placa)")
-    expect(CODIGO).toContain('"overflow-visible data-open:animate-none data-closed:animate-none"')
+    expect(CODIGO).toContain('className={cn(CAMADA_PLACA, "overflow-visible")}')
     // O rodapé com a mesma forma em todos os passos: o × pula, o voltar some
     // sem sair do lugar.
     expect(CODIGO).toContain('data-slot="onboarding-tour-close"')

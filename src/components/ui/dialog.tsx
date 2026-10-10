@@ -304,6 +304,55 @@ function DialogOverlay({
  * nos poppers. Refeita limpa, a medição disse o contrário; a história está em
  * `lib/menu-classes`.
  */
+/**
+ * O ponto do último clique (rodada 248): é de onde o diálogo nasce e para onde
+ * ele volta. Um ouvinte só, em captura na janela, registrado ao carregar o
+ * módulo — o clique que abre o diálogo acontece antes de ele montar. Dentro de
+ * uma moldura do catálogo (um iframe) o clique é de outra janela, e o diálogo
+ * nasce do centro.
+ */
+let ultimoClique: { x: number; y: number; t: number } | null = null
+if (typeof window !== "undefined") {
+  window.addEventListener(
+    "pointerdown",
+    (e) => {
+      ultimoClique = { x: e.clientX, y: e.clientY, t: e.timeStamp }
+    },
+    { capture: true, passive: true }
+  )
+}
+
+/**
+ * Escreve `--dialog-origin` no casco: o ponto do clique, nas coordenadas da
+ * caixa dele. Sem clique recente (o teclado, o código), nada — o centro. Uma
+ * vez por casco, porque o Radix recompõe a `ref` a cada render. A escala de
+ * entrada já vale quando a `ref` chega, mas em volta do centro (a origem ainda
+ * não existe): o centro medido é o da caixa, e o canto sai do `offsetWidth`.
+ */
+function useOrigemDoClique() {
+  const feito = React.useRef<HTMLElement | null>(null)
+  return React.useCallback((el: HTMLElement | null) => {
+    if (!el || el === feito.current) return
+    feito.current = el
+    const clique = ultimoClique
+    if (!clique || performance.now() - clique.t > 1000) return
+    const caixa = el.getBoundingClientRect()
+    const x = clique.x - (caixa.left + caixa.width / 2 - el.offsetWidth / 2)
+    const y = clique.y - (caixa.top + caixa.height / 2 - el.offsetHeight / 2)
+    el.style.setProperty("--dialog-origin", `${Math.round(x)}px ${Math.round(y)}px`)
+  }, [])
+}
+
+/** Junta a `ref` de quem chama com a do casco. */
+function juntarRefs<T>(...refs: (React.Ref<T> | undefined)[]) {
+  return (el: T | null) => {
+    for (const r of refs) {
+      if (typeof r === "function") r(el)
+      else if (r) (r as React.RefObject<T | null>).current = el
+    }
+  }
+}
+
 const dialogContentVariants = cva(
   [
     "group/dialog-content fixed top-1/2 left-1/2 z-(--z-modal)",
@@ -313,11 +362,10 @@ const dialogContentVariants = cva(
     // flutuantes — a receita fica igual em todo overlay do sistema. Ver o
     // bloco do doc-comment acima para o que o véu limita.
     modalSurfaceClassName,
-    // `animation-duration-*`, e não `duration-*`: o segundo também escreve
-    // `transition-duration`, e sem `transition-property` isso anima tudo.
-    "animation-duration-(--duration-slow) ease-(--ease-out)",
-    "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95",
-    "data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+    // **Nasce de onde se clicou** (rodada 248, `@utility dialog-sprout`): a
+    // origem é o ponto do clique que o abriu (`--dialog-origin`, escrito pelo
+    // `useOrigemDoClique`), e fechar volta a ele. Era o zoom genérico de 95%.
+    "dialog-sprout",
     // O recuo do diálogo é **um**, e são os 24px que vinte chamadas já
     // escreviam à mão como `px-6`. Ninguém escolheu os 16 anteriores: eles eram
     // o que sobrava para quem não sobrescrevia.
@@ -371,12 +419,14 @@ function DialogContent({
   size,
   layout,
   showCloseButton = true,
+  ref,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> &
   VariantProps<typeof dialogContentVariants> & {
     showCloseButton?: boolean
   }) {
   const { gaveta, pending } = React.useContext(DialogEstadoContext)
+  const origem = useOrigemDoClique()
 
   // No telefone, com `surface="auto"`: a gaveta do `Sheet`. A largura não
   // vale ali, e a gaveta alta é a do formulário (`fixed`), a da tela cheia e a
@@ -384,6 +434,7 @@ function DialogContent({
   if (gaveta) {
     return (
       <SheetContent
+        ref={ref}
         fillMobileViewport={layout === "fixed" || size === "full"}
         aria-busy={pending || undefined}
         className={cn(
@@ -402,6 +453,7 @@ function DialogContent({
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
+        ref={juntarRefs(ref, origem)}
         data-slot="dialog-content"
         data-layout={layout ?? "auto"}
         aria-busy={pending || undefined}
@@ -818,4 +870,7 @@ export {
   DialogTitle,
   DialogTrigger,
   dialogContentVariants,
+  // A origem do clique, que o `AlertDialog` também usa (rodada 248).
+  juntarRefs,
+  useOrigemDoClique,
 }

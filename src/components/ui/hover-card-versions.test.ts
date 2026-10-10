@@ -60,9 +60,9 @@ describe("as versões do HoverCard", () => {
     expect(CODIGO).toMatch(/onContextMenu: [\s\S]*?ultimoToqueRef\.current\) \{\s*e\.preventDefault\(\)/)
   })
 
-  it("a entrada é a mola; a saída, não", () => {
-    expect(CODIGO).toContain("data-open:duration-(--duration-spring) data-open:ease-(--ease-spring)")
-    expect(CODIGO).toContain("data-closed:duration-(--duration-instant) data-closed:ease-(--ease-out)")
+  it("a prévia se desvela e sai dissolvendo no lugar (rodada 248)", () => {
+    expect(CODIGO).toContain('"hover-card-unveil"')
+    expect(CODIGO).not.toContain("data-open:zoom-in-90")
   })
 
   it("a lista de lançamentos: os chips viram prévia, e o clique continua indo à linha", () => {

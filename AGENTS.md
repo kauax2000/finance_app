@@ -1462,7 +1462,8 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   da tinta da placa, a do `HoverCard` é a primeira) para o gatilho que é um
   entre iguais; `PopoverHeader closeButton`; `PopoverConfirm` é a confirmação
   de baixo risco (`alertdialog`, a `Promise` trava e fecha) — o que não tem
-  volta continua `AlertDialog`. A entrada é a mola dos menus. **`mobile="sheet"`
+  volta continua `AlertDialog`. A entrada é o eixo `motion` desde a rodada 248
+  (`sprout`, `field` ou `none`; ver "O movimento do que se sobrepõe"). **`mobile="sheet"`
   troca o `modal={isMobile}` à mão** por uma gaveta, onde `PopoverTitle` vira
   `DialogTitle`. `label` é o nome sem título à vista, e em desenvolvimento um
   popover que abre sem nome avisa no console.
@@ -1704,7 +1705,8 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
 - **O `Sheet` ganhou o redesenho da casa e as versões que as folhas pediam**
   (rodada 222). **`floating` é o padrão**: o raio modal (28, desde a 240), o anel de 1px das placas e
   a sombra, numa placa **chapada** (`--popover`) — o vidro saiu, porque o véu
-  já separa a folha da página. Ela **entra na mola e sai em 200ms**, e o
+  já separa a folha da página. Ela **entra na mola e sai em 200ms** — desde a
+  rodada 248 deslizando da borda inteira, e não 48px —, e o
   conteúdo sobe em cascata (`@utility sheet-reveal`; o × de canto da flutuante é círculo um degrau mais escuro que a placa (o texto a 5% no claro, `--background` a 40% no escuro), sem anel nem sombra, porque já está dentro da placa (a tinta da placa o apagava, e `--muted` era claro demais); com movimento reduzido o
   bloco global corta e ela aparece). **O casco de formulário é o de fábrica**
   (`gap-0`, `overflow-hidden`, sem recuo): nenhuma folha escreve `flex w-full
@@ -2568,8 +2570,9 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   por 300ms depois) — conta a **transição**, porque o Radix pede `false` de
   novo para uma já fechada. **No toque, segurar 500ms abre**, o clique do
   soltar é engolido (senão o link levaria a prévia embora) e o `contextmenu`
-  do toque para no gatilho, para o menu da linha não abrir junto. A entrada é
-  a mola da casa; a saída, não. **A lista de lançamentos usa**: o chip de
+  do toque para no gatilho, para o menu da linha não abrir junto. A entrada
+  **se desvela** desde a rodada 248 (sobe saindo de um desfoque, sem pulo) e a
+  saída dissolve no lugar. **A lista de lançamentos usa**: o chip de
   fatura e o "Parcelada" abrem a prévia, e o clique no chip continua abrindo
   a linha.
 - **Os atrasos do `HoverCard` são decisão, e o padrão do Radix não serve.**
@@ -3405,6 +3408,34 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   também o `data-pointer="coarse"` da moldura do iPhone (`deDedo`) — e, aberto
   pelo toque ou pelo teclado, rola até aparecer (respeitando o `scroll-padding`
   da tela). Nenhuma tela usa ainda. `onboarding-versions.test.ts` tranca.
+- **O movimento do que se sobrepõe à tela** (rodada 248): cada superfície tem
+  um gesto que diz o que ela é, em `@utility` no `globals.css`, e não o zoom
+  genérico de 95% do shadcn. **Entrar é mola, sair é curva e volta ao
+  gatilho**; os keyframes animam `transform` (nunca `translate`/`scale`
+  soltos, que brigam com o `translate-y-1` do `Select` e a centragem do
+  `Dialog`); o estado entra por `&[data-state=…]`; e as cascatas zeram o
+  atraso com `!important` no movimento reduzido.
+  - `DropdownMenu` e todo submenu: **brotam do gatilho** (`menu-sprout`: 90%,
+    6px do lado do botão ou do item, desfocados), com as linhas em cascata
+    (`overlay-cascade`, no viewport).
+  - `ContextMenu`: **abre do cursor** (`context-menu-burst`: 82% a partir do
+    canto que encosta no ponteiro, sem deslocamento).
+  - `Select`, `Combobox` e o seletor do `Form`: **desdobram do campo**
+    (`field-bloom`, o gesto do calendário do `DatePicker`), com as opções em
+    cascata. O `Select` fecha sem animação: o Radix o desmonta na hora.
+  - `Popover`: **a placa do tour** (`popover-sprout`: 92%, 10px, desfoque de
+    6px, as faixas subindo), pelo eixo `motion` (`sprout` | `field` | `none`).
+    `none` é de quem anima sozinho — o `DatePicker` e o onboarding.
+  - `HoverCard`: **desvela** (`hover-card-unveil`: sobe 8px saindo de um
+    desfoque, sem escala) e dissolve no lugar.
+  - `Tooltip`: **o estalo** (o `motion` dele: 70% e 4px do lado do botão, na
+    mola; sai em 100ms sem recuar).
+  - `Dialog` e `AlertDialog`: **nascem de onde se clicou** (`dialog-sprout`;
+    a origem é o último `pointerdown`, em `--dialog-origin`, pelo
+    `useOrigemDoClique`; sem clique, o centro) e voltam a ele.
+  - `Sheet`: desliza **da borda inteira**, na mola.
+  - `Menubar`, `NavigationMenu` e `DatePicker` guardam os gestos deles (as
+    rodadas 218, 219 e 210). `overlay-motion.test.ts` tranca.
 - **Overlays**: `Dialog` / `Sheet` / `AlertDialog` use `bg-overlay` (not hardcoded `bg-black/10`).
 - **`DialogFooter` empilha ao contrário** (`flex-col-reverse`), para a ação
   principal ficar em cima no telefone. O antigo `SheetFooter` empilhava na

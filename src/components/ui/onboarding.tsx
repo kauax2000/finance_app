@@ -1920,10 +1920,10 @@ function OnboardingHotspot({
         side={side}
         align={align}
         sideOffset={8}
-        // A entrada é a do `brotarDoPonto`; a genérica do popover (fade, 97% e
-        // 6px na mola) sai, senão as duas animariam a mesma transformação. Com
+        // A entrada é a do `brotarDoPonto`, pela Web Animations API; a do
+        // popover sai, senão as duas animariam a mesma transformação. Com
         // movimento reduzido, a dica aparece na hora.
-        className="data-open:animate-none"
+        motion="none"
       >
         <PopoverArrow />
         <div className="flex flex-col">
@@ -2751,7 +2751,8 @@ function OnboardingTour({
           updatePositionStrategy="always"
           // A entrada e a saída são as do tour (`surgirDoAlvo`, `sumirNoAlvo`),
           // e a seta mora fora da caixa: o `overflow` da placa a recortava.
-          className={cn(CAMADA_PLACA, "overflow-visible data-open:animate-none data-closed:animate-none")}
+          motion="none"
+          className={cn(CAMADA_PLACA, "overflow-visible")}
           onOpenAutoFocus={(e) => e.preventDefault()}
           onCloseAutoFocus={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}

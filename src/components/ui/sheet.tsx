@@ -77,10 +77,12 @@ const sheetContentVariants = cva(
     // escreviam `flex w-full flex-col gap-0 overflow-hidden p-0` à mão.
     "group/dialog-content fixed z-(--z-sheet) flex flex-col gap-0 overflow-hidden",
     "bg-clip-padding bg-popover text-sm text-popover-foreground shadow-lg",
-    // **Entra na mola, sai curta** — a régua dos menus e do `Popover`: o
-    // deslize de 48px assenta com o quique de 3,8% da mola da casa; fechar não
-    // quica. Com movimento reduzido o bloco global corta a animação, e a folha
-    // simplesmente aparece.
+    // **Entra na mola, sai curta**: desde a rodada 248 ela **desliza da borda
+    // inteira** — de fora da tela, a própria largura — e assenta com o quique
+    // de 3,8% da mola da casa; fechar volta para a mesma borda, sem quique.
+    // Eram 48px a partir do meio do caminho: uma folha que surge perto da
+    // borda, e não uma que vem dela. Com movimento reduzido o bloco global
+    // corta a animação, e a folha simplesmente aparece.
     "will-change-transform motion-reduce:will-change-auto",
     "data-open:animate-in data-open:fade-in-0 data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring)",
     "data-closed:animate-out data-closed:fade-out-0 data-closed:animation-duration-[200ms] data-closed:ease-(--ease-out)",
@@ -105,12 +107,12 @@ const sheetContentVariants = cva(
     variants: {
       /** De qual borda ele entra — no desktop; no telefone é sempre a gaveta de baixo. */
       side: {
-        top: "inset-x-[var(--sheet-gap,0px)] top-[var(--sheet-gap-block-start,0px)] h-auto data-open:slide-in-from-top-12 data-closed:slide-out-to-top-12",
+        top: "inset-x-[var(--sheet-gap,0px)] top-[var(--sheet-gap-block-start,0px)] h-auto data-open:slide-in-from-top data-closed:slide-out-to-top",
         right:
-          "top-[var(--sheet-gap-block-start,0px)] right-[var(--sheet-gap,0px)] bottom-[var(--sheet-gap-block-end,0px)] w-3/4 data-open:slide-in-from-right-12 data-closed:slide-out-to-right-12",
+          "top-[var(--sheet-gap-block-start,0px)] right-[var(--sheet-gap,0px)] bottom-[var(--sheet-gap-block-end,0px)] w-3/4 data-open:slide-in-from-right data-closed:slide-out-to-right",
         bottom:
-          "inset-x-[var(--sheet-gap,0px)] bottom-[var(--sheet-gap-block-end,0px)] h-auto data-open:slide-in-from-bottom-12 data-closed:slide-out-to-bottom-12",
-        left: "top-[var(--sheet-gap-block-start,0px)] left-[var(--sheet-gap,0px)] bottom-[var(--sheet-gap-block-end,0px)] w-3/4 data-open:slide-in-from-left-12 data-closed:slide-out-to-left-12",
+          "inset-x-[var(--sheet-gap,0px)] bottom-[var(--sheet-gap-block-end,0px)] h-auto data-open:slide-in-from-bottom data-closed:slide-out-to-bottom",
+        left: "top-[var(--sheet-gap-block-start,0px)] left-[var(--sheet-gap,0px)] bottom-[var(--sheet-gap-block-end,0px)] w-3/4 data-open:slide-in-from-left data-closed:slide-out-to-left",
       },
       /**
        * A largura das laterais (rodada 222): `sm` 384 — o padrão de sempre — ·

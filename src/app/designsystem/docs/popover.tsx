@@ -43,7 +43,7 @@ export default function PopoverDoc() {
 
       <DocSection
         title="Padrão"
-        description="O cabeçalho com o × no canto, para o popover que se lê e se dispensa, e a seta. A entrada é a mola dos menus: desce 6px de 97%."
+        description="O cabeçalho com o × no canto, para o popover que se lê e se dispensa, e a seta. Ele brota do gatilho — a placa do tour: nasce a 92%, desfocado, 10px do lado do botão, e as faixas sobem atrás —, e ao fechar volta para dentro dele."
         code={`<Popover>
   <PopoverTrigger asChild><Button variant="outline">Como calculamos</Button></PopoverTrigger>
   <PopoverContent>

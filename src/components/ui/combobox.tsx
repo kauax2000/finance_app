@@ -581,8 +581,10 @@ function ComboboxContent({
         onInteractOutside={(e) => {
           if (campoRef.current?.contains(e.target as Node)) e.preventDefault()
         }}
+        // Desdobra do campo, e as linhas sobem em cascata (rodada 248).
+        motion="field"
         className={cn(
-          "w-(--radix-popover-trigger-width) min-w-48",
+          "w-(--radix-popover-trigger-width) min-w-48 [--command-reveal:var(--duration-spring)]",
           // As medidas que a raiz do `Command` publicaria: aqui ela fica fora
           // do portal, e variável não atravessa portal no DOM.
           scrollFadeBandsClassName,
@@ -607,7 +609,13 @@ function ComboboxContent({
       data-slot="combobox-content"
       align={align}
       padding="none"
-      className={cn("w-(--radix-popover-trigger-width) min-w-48", className)}
+      // Desdobra do campo, e as linhas sobem em cascata (a `command-reveal`
+      // da lista, que fica parada sem a duração).
+      motion="field"
+      className={cn(
+        "w-(--radix-popover-trigger-width) min-w-48 [--command-reveal:var(--duration-spring)]",
+        className
+      )}
       {...props}
     >
       <Command

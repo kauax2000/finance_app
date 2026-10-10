@@ -170,7 +170,8 @@ const ContextMenuTitleContext = React.createContext<
   ((id: string | null) => void) | null
 >(null)
 
-const contextMenuContentVariants = cva([menuSurfaceClassName, CONTEXT_POPPER], {
+// Abre do cursor e volta para ele (rodada 248, `@utility context-menu-burst`).
+const contextMenuContentVariants = cva([menuSurfaceClassName, CONTEXT_POPPER, "context-menu-burst"], {
   variants: {
     // A escada de largura do `DropdownMenuContent`, com os mesmos nomes.
     size: {
@@ -225,7 +226,7 @@ function ContextMenuContent({
         <div
           ref={useScrollFade({ arrows: true })}
           data-slot="context-menu-viewport"
-          className={cn(menuViewportClassName, scrollFadeViewportClassName)}
+          className={cn(menuViewportClassName, scrollFadeViewportClassName, "overlay-cascade")}
         >
           {children}
         </div>
@@ -370,13 +371,14 @@ function ContextMenuSubContent({
       <ContextMenuPrimitive.SubContent
         data-slot="context-menu-sub-content"
         collisionPadding={collisionPadding}
-        className={cn(menuSubSurfaceClassName, CONTEXT_POPPER, className)}
+        // O submenu brota do item que o abriu.
+        className={cn(menuSubSurfaceClassName, CONTEXT_POPPER, "menu-sprout", className)}
         {...props}
       >
         <div
           ref={useScrollFade({ arrows: true })}
           data-slot="context-menu-sub-viewport"
-          className={cn(menuViewportClassName, scrollFadeViewportClassName)}
+          className={cn(menuViewportClassName, scrollFadeViewportClassName, "overlay-cascade")}
         >
           {children}
         </div>

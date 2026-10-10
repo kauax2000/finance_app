@@ -26,6 +26,7 @@ import {
   menuIndicatorSlotClassName,
   menuItemClassName,
   menuLabelClassName,
+  menuMotionClassName,
   menuSeparatorClassName,
   menuShortcutClassName,
   menuSubSurfaceClassName,
@@ -678,6 +679,9 @@ function MenubarContent({
           data-trocando={saindoNaTroca ? "" : undefined}
           className={cn(
             menuSurfaceClassName,
+            // O gesto da referência (rodada 218) mora aqui: a superfície dos
+            // menus deixou de animar na rodada 248.
+            menuMotionClassName,
             MENUBAR_POPPER,
             // A entrada da referência, em CSS: desce 6px de 97% na mola da
             // casa; a saída é curta e sem mola. Trocando de menu, o que sai
@@ -1116,6 +1120,7 @@ function MenubarSubContent({
         collisionPadding={collisionPadding}
         className={cn(
           menuSubSurfaceClassName,
+          menuMotionClassName,
           MENUBAR_POPPER,
           // O submenu entra de lado, de 98%, em 140ms — a referência.
           "data-open:zoom-in-[0.98] data-[side=right]:slide-in-from-left-1.5 data-[side=left]:slide-in-from-right-1.5 data-open:animation-duration-[140ms]",

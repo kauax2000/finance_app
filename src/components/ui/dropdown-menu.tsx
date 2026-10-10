@@ -358,7 +358,8 @@ function DropdownMenuRadioGroup({
  * com `padding="none"`: a casca cede o recuo para o conteúdo sangrar.
  */
 const dropdownMenuContentVariants = cva(
-  [menuSurfaceClassName, DROPDOWN_POPPER],
+  // Brota do botão e volta para ele (rodada 248, `@utility menu-sprout`).
+  [menuSurfaceClassName, DROPDOWN_POPPER, "menu-sprout"],
   {
     variants: {
       variant: {
@@ -560,6 +561,7 @@ function DropdownMenuContent({
           className={cn(
             menuViewportClassName,
             scrollFadeViewportClassName,
+            "overlay-cascade",
             search && "px-2 pt-0 pb-2",
             "[&:not(:has([role^=menuitem]))>[data-slot=dropdown-menu-empty]]:block"
           )}
@@ -916,13 +918,14 @@ function DropdownMenuSubContent({
       <DropdownMenuPrimitive.SubContent
         data-slot="dropdown-menu-sub-content"
         collisionPadding={collisionPadding}
-        className={cn(menuSubSurfaceClassName, DROPDOWN_POPPER, className)}
+        // O submenu brota do item que o abriu: a origem do Radix é o lado dele.
+        className={cn(menuSubSurfaceClassName, DROPDOWN_POPPER, "menu-sprout", className)}
         {...props}
       >
         <div
           ref={dissolver}
           data-slot="dropdown-menu-sub-viewport"
-          className={cn(menuViewportClassName, scrollFadeViewportClassName)}
+          className={cn(menuViewportClassName, scrollFadeViewportClassName, "overlay-cascade")}
         >
           {/* O submenu não tem busca, e o contexto atravessa o portal. */}
           <DropdownMenuBuscaContext.Provider value={false}>

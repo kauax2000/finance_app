@@ -20,11 +20,11 @@ describe("as versões do Popover", () => {
     expect(popoverContentVariants({ size: "auto" })).toContain("w-auto")
   })
 
-  it("a entrada é a mola de 97%, e a saída é curta", () => {
-    const c = popoverContentVariants({})
-    expect(c).toContain("data-open:zoom-in-[0.97]")
-    expect(c).toContain("data-open:ease-(--ease-spring)")
-    expect(c).toContain("data-closed:animation-duration-[130ms]")
+  it("o movimento é um eixo: brota do gatilho, desdobra do campo, ou nenhum (rodada 248)", () => {
+    expect(popoverContentVariants({})).toContain("popover-sprout")
+    expect(popoverContentVariants({ motion: "field" })).toContain("field-bloom")
+    const nenhum = popoverContentVariants({ motion: "none" })
+    expect(nenhum).not.toMatch(/popover-sprout|field-bloom|animate-in/)
   })
 
   it("o × do cabeçalho fica preso ao topo do título", () => {

@@ -20847,3 +20847,70 @@ classe montada, `z-50`, o storage num lugar só).
   pixel; o × ocupa só a altura da linha do título (`-my-1`), senão a
   descrição caía a 8px. A partir de `md` — a barra lateral — o card volta ao
   compacto, com os mesmos números de antes.
+
+### Rodada 248 — o movimento do que se sobrepõe à tela
+
+**O pedido:** "uma animação bonita, como as que fizemos para o onboarding,
+para todos os dropdowns e componentes que se sobrepõem na tela". Nas quatro
+perguntas o dono escolheu as quatro famílias (menus e seletores, popovers e
+prévias, tooltip, modais), a cascata das linhas, a saída que volta ao gatilho
+e o submenu que nasce do item — e, no gesto, "avaliar um por um e fazer uma
+animação bonita para cada".
+
+**O levantamento:** `DropdownMenu`, `ContextMenu`, `Select` e `Dialog` abriam
+com o zoom genérico de 95% do shadcn; o `Popover` e o `HoverCard` cresciam na
+mola, sem cascata; o `AlertDialog` só esmaecia; o `Tooltip` inflava de 50%.
+`Menubar`, `NavigationMenu` (a referência das rodadas 218 e 219, com a
+cascata e a troca de menu deslizando) e o `DatePicker` (o desdobrar da
+rodada 210) já tinham gesto próprio e ficaram como estão.
+
+**Um gesto por peça**, todos em `@utility` no `globals.css`:
+
+- `DropdownMenu` e todo submenu **brotam do gatilho** (`menu-sprout`): 90%,
+  6px do lado do botão — ou do item, no submenu —, desfoque de 4px, na mola;
+  fecham voltando a ele em 140ms. As linhas sobem 4px em cascata
+  (`overlay-cascade`, no viewport, 25ms de passo).
+- `ContextMenu` **abre do cursor** (`context-menu-burst`): 82% a partir do
+  canto que encosta no ponteiro, sem deslocamento — o gatilho é um ponto —, e
+  fecha encolhendo de volta em 110ms.
+- `Select`, `Combobox` e o seletor do `Form` **desdobram do campo**
+  (`field-bloom`): a família dos campos ganhou o gesto do calendário do
+  `DatePicker` — o recorte que se abre da aresta do campo, com a aresta curva,
+  6px, 3% e um desfoque —, e fecham dobrando de volta. As opções em cascata
+  (no `Combobox`, a `command-reveal` da lista, que passou a ter duração). O
+  `Select` fecha sem animação: o Radix o desmonta na hora — já era assim.
+- `Popover` é **a placa do tour** (`popover-sprout`): 92%, 10px, desfoque de
+  6px, e as faixas subindo 45ms uma da outra; a seta fica parada. Ele ganhou o
+  eixo `motion` (`sprout` | `field` | `none`): o `DatePicker` e o onboarding
+  pedem `none`, porque animam por conta própria.
+- `HoverCard` **se desvela** (`hover-card-unveil`): sem escala nenhuma — ele
+  chega porque o cursor parou, não por um clique —, sobe 8px saindo de um
+  desfoque de 8px em 420ms, e sai dissolvendo no lugar.
+- `Tooltip` **estala**: 70% e 4px do lado do botão, na mola de JS dele; sai em
+  100ms, sem mola e sem recuar. Medido: 0,82 aos 60ms, 1,01 aos 260ms
+  (a mola passando do alvo), e fechada aos 160ms da saída.
+- `Dialog` e `AlertDialog` **nascem de onde se clicou** (`dialog-sprout`): um
+  ouvinte de `pointerdown` em captura guarda o último clique, e o casco
+  escreve `--dialog-origin` ao montar (`useOrigemDoClique`); sem clique
+  recente — o teclado, o código —, o centro. Fecham voltando ao mesmo ponto.
+- `Sheet` desliza **da borda inteira** (eram 48px a partir do meio do caminho).
+
+**Três regras valem para todas.** Entrar é mola e sair é curva — e animação,
+porque o `Presence` do Radix só espera animação para desmontar. Os keyframes
+animam `transform`, nunca `translate` e `scale` soltos: o `Select` desloca o
+popper com `translate-y-1` e o `Dialog` se centra com `translate`, e animar a
+propriedade solta daria um salto no fim. E o estado entra por
+`&[data-state=…]` (0,2,0), que vence as variantes do tw-animate sem depender
+da ordem de emissão. A superfície compartilhada dos menus (`menuSurfaceClassName`)
+deixou de animar: o zoom dela foi para `menuMotionClassName`, que só o
+`Menubar` veste.
+
+**Um defeito medido no caminho:** com movimento reduzido, a placa aparecia
+na hora mas algumas linhas ficavam invisíveis por até 190ms — os atrasos por
+`:nth-child` são mais seletivos que a regra que os zera. Os quatro blocos de
+movimento reduzido levam `!important`, como o do `DatePicker`.
+
+Conferido quadro a quadro a 25% da velocidade (o `Animation.setPlaybackRate`
+do DevTools), nos dois temas, em cada página do catálogo; o tour, a dica do
+sino e o diálogo do onboarding continuam iguais. `overlay-motion.test.ts`
+tranca as utilities, as regras e quem veste cada uma.

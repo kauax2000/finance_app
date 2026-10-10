@@ -236,8 +236,8 @@ export default function HoverCardDoc() {
         O Radix ignora o toque, e a prévia não existia no telefone. Agora segurar o gatilho por meio segundo a abre; o toque simples continua sendo do gatilho, e o clique que o soltar dispara é engolido — senão o link levaria embora a prévia no mesmo gesto. Numa linha com <code>ContextMenu</code>, o toque longo no gatilho é da prévia. <code>touch=&#123;false&#125;</code> desliga.
       </DocNote>
 
-      <DocNote title="A entrada é a mola da casa">
-        Ela cresce de 90% passando um pouco do alvo e assenta em 500ms — a mola do <code>Tooltip</code>, em CSS. A saída é curva, sem mola: uma mola até zero passaria por baixo de zero.
+      <DocNote title="A prévia se desvela">
+        Sem pulo: ela chega porque o cursor parou, e não por um clique. Sobe 8px saindo de um desfoque de 8px, numa curva longa (420ms), e as faixas vêm atrás; ao sair, dissolve no lugar — o cursor que vai embora não quer ver a placa correr atrás dele. Até a rodada 248 ela crescia de 90% na mola, o mesmo pulo dos menus.
       </DocNote>
 
       <PropsTable

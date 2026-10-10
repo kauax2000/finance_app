@@ -3614,6 +3614,348 @@
   }
 }
 
+/* ── O movimento do que se sobrepõe à tela (rodada 248) ───────────────────
+   Cada superfície ganhou um gesto que diz o que ela é, como as peças do
+   onboarding — e não o zoom genérico de 95% que quase todas herdavam do
+   shadcn. Três regras valem para todas:
+
+   - **Entrar é mola, sair é curva.** A entrada na mola da casa
+     (`--ease-spring`, `--duration-spring`); a saída curta e sem mola — uma
+     mola até zero passaria de zero —, e como **animação**, porque o
+     `Presence` do Radix só espera animação para desmontar.
+   - **Sair volta ao gatilho.** A saída é o avesso da entrada, encolhendo para
+     a origem que o Radix aponta (o botão, o campo, o cursor, o item), e não um
+     sumiço genérico.
+   - **`transform`, e não `translate` e `scale` soltos**: o `Select` desloca o
+     popper com `translate-y-1` e o `Dialog` se centra com `translate`; animar a
+     propriedade solta brigaria com elas e daria um salto no fim.
+
+   O estado entra pela seletividade (`&[data-state=open]`, 0,2,0), que vence as
+   variantes do tw-animate sem depender da ordem de emissão. O lado do gatilho
+   (`data-side`) vira o deslocamento: a placa sai **de perto** dele. O
+   movimento reduzido encurta as durações (o bloco global) e zera os atrasos
+   das cascatas aqui — com `!important`, porque os atrasos por `:nth-child`
+   são mais seletivos que a regra que os zera: medido, as linhas ficavam
+   invisíveis por até 190ms com a preferência ligada. Menubar, NavigationMenu e DatePicker ficam com os gestos
+   deles (as rodadas 218, 219 e 210). */
+
+@keyframes overlay-sprout {
+  from {
+    opacity: 0;
+    transform: translate(var(--overlay-shift-x, 0px), var(--overlay-shift-y, 0px))
+      scale(var(--overlay-scale, 0.9));
+    filter: blur(var(--overlay-blur, 4px));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+@keyframes overlay-unsprout {
+  to {
+    opacity: 0;
+    transform: translate(
+        calc(var(--overlay-shift-x, 0px) / 2),
+        calc(var(--overlay-shift-y, 0px) / 2)
+      )
+      scale(var(--overlay-scale-out, 0.95));
+    filter: blur(calc(var(--overlay-blur, 4px) / 2));
+  }
+}
+
+@keyframes overlay-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.25rem);
+  }
+}
+
+/* As linhas de uma lista flutuante sobem em cascata (os filhos diretos do
+   viewport: linhas, rótulos, grupos e separadores), 25ms uma depois da outra
+   e com teto em 190ms — a régua da `menubar-reveal`, um pouco mais funda. */
+@utility overlay-cascade {
+  & > * {
+    animation: overlay-rise 220ms var(--ease-out) 40ms both;
+  }
+  & > :nth-child(2) {
+    animation-delay: 65ms;
+  }
+  & > :nth-child(3) {
+    animation-delay: 90ms;
+  }
+  & > :nth-child(4) {
+    animation-delay: 115ms;
+  }
+  & > :nth-child(5) {
+    animation-delay: 140ms;
+  }
+  & > :nth-child(6) {
+    animation-delay: 165ms;
+  }
+  & > :nth-child(n + 7) {
+    animation-delay: 190ms;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    & > * {
+      animation-delay: 0ms !important;
+    }
+  }
+}
+
+/* O menu de ações (`DropdownMenu`) e todo submenu **brotam do gatilho**: nascem
+   a 90%, 6px para o lado do botão (ou do item, no submenu, que abre de lado),
+   desfocados, e crescem na mola; ao fechar, voltam para ele em 140ms. */
+@utility menu-sprout {
+  --overlay-shift: 0.375rem;
+  --overlay-scale: 0.9;
+  --overlay-blur: 4px;
+  &[data-side="bottom"] {
+    --overlay-shift-y: calc(var(--overlay-shift) * -1);
+  }
+  &[data-side="top"] {
+    --overlay-shift-y: var(--overlay-shift);
+  }
+  &[data-side="right"] {
+    --overlay-shift-x: calc(var(--overlay-shift) * -1);
+  }
+  &[data-side="left"] {
+    --overlay-shift-x: var(--overlay-shift);
+  }
+  &[data-state="open"] {
+    animation: overlay-sprout var(--duration-spring) var(--ease-spring) backwards;
+  }
+  &[data-state="closed"] {
+    animation: overlay-unsprout 140ms var(--ease-in-out) both;
+  }
+}
+
+/* O menu de contexto **abre do cursor**: a origem do Radix é o canto que
+   encosta no ponteiro, e a placa sai de lá a 82% — mais escala que o menu de
+   botão, e nenhum deslocamento, porque o gatilho é um ponto. Fecha encolhendo
+   de volta ao cursor, mais rápido. */
+@utility context-menu-burst {
+  --overlay-scale: 0.82;
+  --overlay-scale-out: 0.9;
+  --overlay-blur: 3px;
+  &[data-state="open"] {
+    animation: overlay-sprout var(--duration-spring) var(--ease-spring) backwards;
+  }
+  &[data-state="closed"] {
+    animation: overlay-unsprout 110ms var(--ease-in-out) both;
+  }
+}
+
+/* O popover **é a placa do tour**: brota do gatilho a 92%, 10px para o lado
+   dele e desfocada em 6px, e as faixas (cabeçalho, corpo, rodapé) sobem logo
+   atrás, 45ms uma da outra; ao fechar, volta para dentro do gatilho. A seta
+   fica parada: ela é da caixa, não do conteúdo. */
+@utility popover-sprout {
+  --overlay-shift: 0.625rem;
+  --overlay-scale: 0.92;
+  --overlay-scale-out: 0.94;
+  --overlay-blur: 6px;
+  &[data-side="bottom"] {
+    --overlay-shift-y: calc(var(--overlay-shift) * -1);
+  }
+  &[data-side="top"] {
+    --overlay-shift-y: var(--overlay-shift);
+  }
+  &[data-side="right"] {
+    --overlay-shift-x: calc(var(--overlay-shift) * -1);
+  }
+  &[data-side="left"] {
+    --overlay-shift-x: var(--overlay-shift);
+  }
+  &[data-state="open"] {
+    animation: overlay-sprout var(--duration-spring) var(--ease-spring) backwards;
+  }
+  &[data-state="closed"] {
+    animation: overlay-unsprout 170ms var(--ease-in-out) both;
+  }
+  &[data-state="open"] > :not(:has(> [data-slot="popover-arrow"])) {
+    animation: overlay-rise 300ms var(--ease-emphasized) 90ms both;
+  }
+  &[data-state="open"] > :nth-child(2):not(:has(> [data-slot="popover-arrow"])) {
+    animation-delay: 135ms;
+  }
+  &[data-state="open"] > :nth-child(3):not(:has(> [data-slot="popover-arrow"])) {
+    animation-delay: 180ms;
+  }
+  &[data-state="open"] > :nth-child(n + 4):not(:has(> [data-slot="popover-arrow"])) {
+    animation-delay: 225ms;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &[data-state="open"] > * {
+      animation-delay: 0ms !important;
+    }
+  }
+}
+
+/* O que se escolhe num campo (`Select`, `Combobox`, o seletor do `Form`)
+   **desdobra do campo** — o gesto do calendário do `DatePicker`, a família dos
+   campos: a placa se abre da aresta que encosta no campo, com a aresta que
+   avança curva (uma elipse de 2rem que se achata), 6px, 3% de escala e um
+   desfoque que assenta, na mola. Fechar dobra de volta para a mesma aresta.
+   O recorte termina em `inset(-1rem)` para não cortar o anel e a sombra. */
+@keyframes field-unfold {
+  from {
+    opacity: 0;
+    clip-path: var(--field-bloom-clip);
+    transform: translateY(var(--field-bloom-y)) scale(0.97);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(-1rem round 0);
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+@keyframes field-fold {
+  from {
+    clip-path: inset(-1rem round 0);
+  }
+  to {
+    opacity: 0;
+    clip-path: var(--field-bloom-clip);
+    transform: translateY(calc(var(--field-bloom-y) / 2)) scale(0.98);
+    filter: blur(2px);
+  }
+}
+
+@utility field-bloom {
+  --field-bloom-clip: inset(-1rem -1rem 100% -1rem round 0 0 50% 50% / 0 0 2rem 2rem);
+  --field-bloom-y: -0.375rem;
+  &[data-side="top"] {
+    --field-bloom-clip: inset(100% -1rem -1rem -1rem round 50% 50% 0 0 / 2rem 2rem 0 0);
+    --field-bloom-y: 0.375rem;
+  }
+  /* O `Select` alinhado ao item (`item-aligned`) abre sobre o campo, e ali
+     não há aresta de onde desdobrar. */
+  &[data-state="open"]:not([data-align-trigger="true"]) {
+    animation: field-unfold var(--duration-spring) var(--ease-spring) backwards;
+  }
+  &[data-state="closed"]:not([data-align-trigger="true"]) {
+    animation: field-fold 160ms var(--ease-in-out) both;
+  }
+}
+
+/* A prévia (`HoverCard`) **se desvela**: sem pulo nenhum — ela chega porque o
+   cursor parou, e não por um clique —, sobe 8px saindo de um desfoque de 8px
+   numa curva longa e assentada, e as faixas vêm atrás. Sai **dissolvendo no
+   lugar**: o cursor que vai embora não quer ver a placa correr atrás dele. */
+@keyframes overlay-unveil {
+  from {
+    opacity: 0;
+    transform: translate(var(--overlay-shift-x, 0px), var(--overlay-shift-y, 0px));
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+@keyframes overlay-dissolve {
+  to {
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+
+@utility hover-card-unveil {
+  --overlay-shift: 0.5rem;
+  &[data-side="bottom"] {
+    --overlay-shift-y: calc(var(--overlay-shift) * -1);
+  }
+  &[data-side="top"] {
+    --overlay-shift-y: var(--overlay-shift);
+  }
+  &[data-side="right"] {
+    --overlay-shift-x: calc(var(--overlay-shift) * -1);
+  }
+  &[data-side="left"] {
+    --overlay-shift-x: var(--overlay-shift);
+  }
+  &[data-state="open"] {
+    animation: overlay-unveil 420ms var(--ease-out) backwards;
+  }
+  &[data-state="closed"] {
+    animation: overlay-dissolve var(--duration-fast) var(--ease-out) both;
+  }
+  &[data-state="open"] > :not(:has(> [data-slot="hover-card-arrow"])) {
+    animation: overlay-rise 320ms var(--ease-out) 120ms both;
+  }
+  &[data-state="open"] > :nth-child(2):not(:has(> [data-slot="hover-card-arrow"])) {
+    animation-delay: 170ms;
+  }
+  &[data-state="open"] > :nth-child(n + 3):not(:has(> [data-slot="hover-card-arrow"])) {
+    animation-delay: 220ms;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &[data-state="open"] > * {
+      animation-delay: 0ms !important;
+    }
+  }
+}
+
+/* O diálogo **nasce de onde se clicou**: a origem é o ponto do clique que o
+   abriu (`--dialog-origin`, escrito pelo componente; sem clique — o teclado,
+   o código —, o centro), a 90% e desfocado, na mola; o conteúdo sobe em
+   cascata atrás. Fechar volta ao mesmo ponto. Só `transform`: a centragem é o
+   `translate` do casco. */
+@keyframes dialog-sprout {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+@keyframes dialog-unsprout {
+  to {
+    opacity: 0;
+    transform: scale(0.94);
+    filter: blur(4px);
+  }
+}
+
+@utility dialog-sprout {
+  transform-origin: var(--dialog-origin, 50% 50%);
+  &[data-state="open"] {
+    animation: dialog-sprout var(--duration-spring) var(--ease-spring) backwards;
+  }
+  &[data-state="closed"] {
+    animation: dialog-unsprout 180ms var(--ease-in-out) both;
+  }
+  &[data-state="open"] > :not([data-slot="dialog-close-button"]) {
+    animation: overlay-rise 300ms var(--ease-emphasized) 80ms both;
+  }
+  &[data-state="open"] > :nth-child(2):not([data-slot="dialog-close-button"]) {
+    animation-delay: 120ms;
+  }
+  &[data-state="open"] > :nth-child(3):not([data-slot="dialog-close-button"]) {
+    animation-delay: 160ms;
+  }
+  &[data-state="open"] > :nth-child(n + 4):not([data-slot="dialog-close-button"]) {
+    animation-delay: 200ms;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &[data-state="open"] > * {
+      animation-delay: 0ms !important;
+    }
+  }
+}
+
 /* A troca de mês (rodada 245, a pedido do dono: "bonitas e orgânicas, como
    no resto do app"). O `react-day-picker` faz a mecânica com `animate`: clona
    o mês que sai, sobrepõe os dois dentro da caixa do mês (que recorta) e põe

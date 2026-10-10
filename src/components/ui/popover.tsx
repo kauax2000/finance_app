@@ -172,28 +172,9 @@ const popoverContentVariants = cva(
     // popover e o `PopoverBody` rolariam os dois, um dentro do outro. Quem não
     // declara continua exatamente como antes.
     "has-[[data-slot=popover-body]]:overflow-hidden",
-    // A entrada é a do sistema — fade, 8px do lado de onde veio e `zoom-95` —,
-    // e o que faltava era a curva chegar até aqui. `animate-in` do
-    // tw-animate-css é `enter var(--tw-animation-duration, …) var(--tw-ease,
-    // ease)`, e quem escreve `--tw-ease` é a classe `ease-*`: sem ela,
-    // medido, `--tw-ease` saía **vazio** e o popover abria com o `ease` do
-    // navegador. É o mesmo defeito que o `NavigationMenu` tinha.
-    //
-    // `animation-duration-*` e não `duration-*`: o segundo escreve
-    // `transition-duration` junto, e sem nenhum `transition-property` isso
-    // deixa `transition: all` — medido aqui, `all 0.1s`. Numa superfície que
-    // só anima e não transiciona, o utilitário certo é o que mexe só na
-    // animação.
-    //
-    // **Desde a rodada 220 a entrada é a mola** dos menus redesenhados
-    // (`Menubar`, `NavigationMenu`): desce 6px de 97% em `--ease-spring`. A
-    // saída continua curta e sem mola — uma mola até zero passaria por baixo
-    // de zero.
-    "data-[side=bottom]:slide-in-from-top-1.5 data-[side=left]:slide-in-from-right-1.5 data-[side=right]:slide-in-from-left-1.5 data-[side=top]:slide-in-from-bottom-1.5",
-    "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-[0.97] data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring)",
-    // A saída não se move e é mais curta: um popover que se fecha some, não
-    // recua.
-    "data-closed:animate-out data-closed:fade-out-0 data-closed:animation-duration-[130ms] data-closed:ease-(--ease-out)",
+    // O movimento é o eixo `motion` (rodada 248), e não mais o fade com
+    // `zoom-[0.97]` da rodada 220: `sprout` é a placa do tour, `field` o
+    // desdobrar dos campos, `none` para quem anima por conta própria.
   ],
   {
     variants: {
@@ -226,6 +207,19 @@ const popoverContentVariants = cva(
         plate: menuPanelSurfaceClassName,
         none: "overflow-visible",
       },
+      /**
+       * Como a placa entra e sai (rodada 248), com a saída sempre voltando ao
+       * gatilho. `sprout` — o padrão — **brota do gatilho**: a placa do tour,
+       * a 92%, desfocada, com as faixas subindo atrás. `field` **desdobra do
+       * campo**, o gesto da família dos campos (o `Combobox`, o seletor do
+       * `Form`). `none` não anima: o `DatePicker` tem o próprio desdobrar, e o
+       * tour e a dica do onboarding animam pela Web Animations API.
+       */
+      motion: {
+        sprout: "popover-sprout",
+        field: "field-bloom",
+        none: "",
+      },
       padding: {
         // O recuo das tiras acompanha o do casco: onde o casco já recua, a tira
         // não recua duas vezes. Em `none` ela vira dona do próprio — e os 12/8
@@ -236,7 +230,7 @@ const popoverContentVariants = cva(
         none: "gap-0 p-0 [--popover-strip-px:--spacing(3)] [--popover-strip-py:--spacing(2)]",
       },
     },
-    defaultVariants: { surface: "plate", padding: "default", size: "md" },
+    defaultVariants: { surface: "plate", padding: "default", size: "md", motion: "sprout" },
   },
 );
 
@@ -248,6 +242,7 @@ function PopoverContent({
   padding,
   surface,
   size,
+  motion,
   label,
   onCloseAutoFocus,
   children,
@@ -357,7 +352,7 @@ function PopoverContent({
             fechouPorRolagem,
             onCloseAutoFocus,
           )}
-          className={cn(popoverContentVariants({ size, surface, padding }), className)}
+          className={cn(popoverContentVariants({ size, surface, padding, motion }), className)}
           {...props}
         >
           {label != null ? (

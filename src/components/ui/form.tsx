@@ -1289,6 +1289,8 @@ function FormPickerPopoverContent({
       side="bottom"
       align="start"
       sideOffset={6}
+      // O seletor é um campo: desdobra dele (rodada 248).
+      motion="field"
       // Abrir não rouba o foco **no toque**: ali isso fecharia o teclado do
       // telefone e faria a folha inteira saltar. Com mouse e teclado, o foco
       // entra — sem ele, quem navega por teclado no desktop não alcançava a

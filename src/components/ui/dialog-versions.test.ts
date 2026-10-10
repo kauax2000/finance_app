@@ -23,7 +23,7 @@ describe("as versões do Dialog", () => {
 
   it("no telefone, com surface auto, o conteúdo é a gaveta do Sheet", () => {
     expect(CODIGO).toContain('const gaveta = surface === "auto" && isMobile')
-    expect(CODIGO).toMatch(/if \(gaveta\) \{\s*return \(\s*<SheetContent\s*fillMobileViewport=\{layout === "fixed" \|\| size === "full"\}/)
+    expect(CODIGO).toMatch(/if \(gaveta\) \{\s*return \(\s*<SheetContent\s*ref=\{ref\}\s*fillMobileViewport=\{layout === "fixed" \|\| size === "full"\}/)
   })
 
   it("a pergunta de descartar não importa o AlertDialog da casa — ele importa este arquivo", () => {

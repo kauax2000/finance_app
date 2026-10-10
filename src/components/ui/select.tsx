@@ -105,7 +105,10 @@ function SelectContent({
         className={cn(
           /** Above Sheet overlay/content (`z-(--z-sheet)`); below Toaster (`z-(--z-toast)`). */
           menuPanelSurfaceClassName,
-          "relative z-(--z-popover) max-h-[min(var(--radix-select-content-available-height),var(--menu-max-h))] max-w-(--radix-select-content-available-width) min-w-36 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto duration-(--duration-instant) data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "relative z-(--z-popover) max-h-[min(var(--radix-select-content-available-height),var(--menu-max-h))] max-w-(--radix-select-content-available-width) min-w-36 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto",
+          // Desdobra do campo, o gesto da família dos campos (rodada 248, o do
+          // calendário do `DatePicker`); alinhado ao item, não anima.
+          "field-bloom",
           position === "popper" &&
             "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
           className,
@@ -134,6 +137,8 @@ function SelectContent({
             // de largura fixa sobravam dezenas de pixels vazios à direita, e o
             // separador parava no meio do painel.
             "w-full p-2",
+            // As opções chegam em cascata atrás do desdobrar.
+            "overlay-cascade",
             // **Sem a classe de altura sobre `--radix-select-trigger-height`.**
             // (Escrita assim, sem a sintaxe de utilitário, de propósito: o
             // Tailwind varre **o arquivo inteiro**, comentário incluído, e citar

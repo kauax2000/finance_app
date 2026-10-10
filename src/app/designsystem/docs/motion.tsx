@@ -188,6 +188,10 @@ animate(el, { height: "auto" }, MOLA)`}
         </div>
       </DocSection>
 
+      <DocNote title="O que se sobrepõe à tela tem um gesto por peça">
+        Desde a rodada 248, cada superfície flutuante se move de um jeito que diz o que ela é, e não com o zoom genérico de 95% do shadcn. Entrar é mola; sair é curva e volta ao gatilho. O <code>DropdownMenu</code> e os submenus <strong>brotam do botão</strong> (ou do item), com as linhas em cascata; o <code>ContextMenu</code> <strong>abre do cursor</strong>; o <code>Select</code>, o <code>Combobox</code> e o seletor do <code>Form</code> <strong>desdobram do campo</strong>, o gesto do calendário do <code>DatePicker</code>; o <code>Popover</code> é <strong>a placa do tour</strong>; o <code>HoverCard</code> <strong>se desvela</strong>, sem pulo, e dissolve no lugar; o <code>Tooltip</code> <strong>estala</strong>; o <code>Dialog</code> e o <code>AlertDialog</code> <strong>nascem de onde se clicou</strong>; o <code>Sheet</code> desliza da borda inteira. As utilities moram no <code>globals.css</code> (<code>menu-sprout</code>, <code>context-menu-burst</code>, <code>field-bloom</code>, <code>popover-sprout</code>, <code>hover-card-unveil</code>, <code>dialog-sprout</code>, <code>overlay-cascade</code>) e animam <code>transform</code>, nunca <code>translate</code> e <code>scale</code> soltos: o <code>Select</code> desloca o popper com <code>translate-y-1</code> e o <code>Dialog</code> se centra com <code>translate</code>.
+      </DocNote>
+
       <DocNote title="A mola vem com a própria duração">
         <code>--ease-spring</code> só anda com <code>--duration-spring</code>. Uma mola não tem duração, tem rigidez — os 500ms são o tempo que o trajeto leva para assentar. Com outra duração, a volta fica comprimida ou arrastada, e deixa de ser a mesma mola. No JS ela é <code>MOLA</code>, em <code>lib/spring.ts</code> — rigidez 300, amortecimento 25 —, e <code>--ease-spring</code> é essa mesma mola amostrada num <code>linear()</code>.
       </DocNote>

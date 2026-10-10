@@ -579,7 +579,9 @@ export function DatePicker(props: DatePickerProps) {
       <PopoverAnchor asChild>{campo}</PopoverAnchor>
       <PopoverContent
         padding="none"
-        // A entrada que brota do campo (`@utility date-picker-bloom`).
+        // A entrada que brota do campo (`@utility date-picker-bloom`), no lugar
+        // da do popover.
+        motion="none"
         className={cn("date-picker-bloom w-auto", popoverClassName)}
         align="start"
       >

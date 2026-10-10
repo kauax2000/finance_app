@@ -74,12 +74,11 @@ const hoverCardContentVariants = cva(
     menuPanelSurfaceClassName,
     "text-sm outline-hidden",
     "max-h-(--radix-hover-card-content-available-height) max-w-(--radix-hover-card-content-available-width) overflow-y-auto overscroll-contain",
-    // A entrada é a mola da casa (rodada 217) — a do `Tooltip`, em CSS: cresce
-    // de 90% passando um pouco do alvo e assenta em 500ms. A saída não tem
-    // mola: uma mola até zero passaria por baixo de zero.
-    "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
-    "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-90 data-open:duration-(--duration-spring) data-open:ease-(--ease-spring)",
-    "data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-closed:duration-(--duration-instant) data-closed:ease-(--ease-out)",
+    // **A prévia se desvela** (rodada 248, `@utility hover-card-unveil`): sem
+    // pulo — ela chega porque o cursor parou, não por um clique —, sobe 8px
+    // saindo de um desfoque, com as faixas atrás, e sai dissolvendo no lugar.
+    // Era o crescer de 90% na mola (rodada 217), o mesmo pulo dos menus.
+    "hover-card-unveil",
   ],
   {
     variants: {
