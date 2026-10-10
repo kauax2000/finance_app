@@ -65,8 +65,10 @@ concorrentes é de uma pessoa só.
 
 - O nome escrito é **Finance**. O lockup é o `AppWordmark`; o símbolo sozinho é
   o `AppLogo`.
-- O verde da marca, `--primary`, com dois papéis distintos: `--primary`
-  preenche, `--primary-accent` é marca sobre o fundo.
+- A marca é preta e branca: `--primary` é a tecla preta (branca no escuro) e
+  `--primary-accent` coincide com `--foreground`. A única cor da marca é o
+  arco-íris (`--brand-rainbow`), e ele mora só nas peças de marca — o
+  wordmark, o campo de marca e as variantes `brand` —, uma por tela.
 - Tipografia: Inter (`--font-sans`), Ledger (`--font-display`, restrita a
   `.page-title` e `.wordmark`), Geist Mono (`--font-mono`).
 - Não existe logo, símbolo, ilustração ou cor de marca além disso. O que uma

@@ -20914,3 +20914,42 @@ Conferido quadro a quadro a 25% da velocidade (o `Animation.setPlaybackRate`
 do DevTools), nos dois temas, em cada página do catálogo; o tour, a dica do
 sino e o diálogo do onboarding continuam iguais. `overlay-motion.test.ts`
 tranca as utilities, as regras e quem veste cada uma.
+
+
+### Rodada 249 — a visão geral do catálogo com a marca nova
+
+O dono pediu para rever a visão geral (`/designsystem`) pela marca nova.
+
+**Dois defeitos medidos.**
+- A linha **Brand** do sumário saía vazia, um `<li>` de 5px já no HTML do
+  servidor: a fundação que define a marca não tinha link na capa.
+- O cabeçalho quebrava a hidratação (`PageHeaderMeta asChild` com um `<dl>`
+  à mão).
+
+A causa é a do `EmptyState`: a página era server component e passava
+elementos por `asChild` a componentes cliente (`Button`, `PageHeader`), e o
+`Slot` recebia uma referência preguiçosa do RSC. A página agora é cliente, e
+os dois somem.
+
+**A marca na capa.**
+- O "Comece aqui" abre com Brand, em largura inteira, num
+  `Card variant="brand"`: o símbolo neutro e o brilho na borda, que é a peça
+  de marca da tela.
+- As quatro de antes ficam embaixo.
+- A sobrancelha "Finance App" saiu: o nome já está no wordmark da barra, logo
+  acima.
+
+**O que era markup à mão virou peça.**
+- A faixa de fatos é `PageHeaderStat` (Componentes e Fundações, derivados).
+- As seções são `PageSection` (`ruled` nas camadas), com o ícone da camada e a
+  contagem no `PageSectionTitle`. O numeral 01–05 saiu.
+- As 86 linhas são `Item interactive` num `ItemGroup divided`, com o sumário
+  em duas colunas mantido e a `ItemChevron`. Saiu o `Button` com quatro
+  contra-classes e o realce reapontado para `--accent`.
+- As aberturas do "Comece aqui" são `Item` com ícone.
+- A cascata à mão saiu, e fica a do `PageHeader`.
+
+**Decisão do dono:** os ícones das camadas ficam neutros, sem a tinta de cada
+camada que o escopo do ⌘K usa.
+
+`PRODUCT.md` deixou de dizer que a marca é verde.

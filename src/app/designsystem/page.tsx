@@ -1,38 +1,60 @@
+"use client"
+
+/*
+ * Cliente de propósito. Como server component, esta página passava `<Link>`
+ * por `asChild` a componentes cliente (`Button`, `PageHeaderMeta`), e o
+ * elemento chegava ao `Slot` como referência preguiçosa do RSC: a linha
+ * "Brand" saía vazia já no HTML do servidor e o cabeçalho quebrava a
+ * hidratação. É a medição que o `EmptyState` já registrou no AGENTS.
+ */
+
 import {
-  ArrowRightIcon,
-  ArrowUturnLeftIcon,
-  BanknotesIcon,
-  CursorArrowRaysIcon,
-  SwatchIcon,
+    ArrowUturnLeftIcon,
+    BanknotesIcon,
+    CursorArrowRaysIcon,
+    SwatchIcon,
 } from "@heroicons/react/16/solid"
 import Link from "next/link"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { AppLogo } from "@/components/layout/app-logo"
+import {
+    Card,
+    CardDescription,
+    CardHeader,
+    CardLink,
+    CardTitle,
+} from "@/components/ui/card"
 import { Code } from "@/components/ui/code"
+import {
+    Item,
+    ItemChevron,
+    ItemContent,
+    ItemDescription,
+    ItemGroup,
+    ItemMedia,
+    ItemTitle,
+} from "@/components/ui/item"
 import {
     PageHeader,
     PageHeaderDescription,
-    PageHeaderEyebrow,
     PageHeaderMeta,
+    PageHeaderStat,
     PageHeaderTitle,
     PageHeaderTitleRow,
 } from "@/components/ui/page-header"
 import {
-    CATEGORY_ORDER,
-    REGISTRY,
-    getEntry,
-    groupedRegistry,
-    slugifyCategory,
-} from "./registry"
+    PageSection,
+    PageSectionDescription,
+    PageSectionHeader,
+    PageSectionTitle,
+} from "@/components/ui/page-section"
+import { CATEGORY_META } from "./category-meta"
+import { REGISTRY, getEntry, groupedRegistry, slugifyCategory } from "./registry"
 
 /**
- * Por onde se começa.
- *
- * O índice listava 87 cartões de peso idêntico, e um catálogo sem ponto de
- * entrada obriga cada pessoa a inventar o próprio. Estes quatro não são os mais
- * usados: são os que mudam o que alguém vai escrever nos outros — o valor em
- * reais, o formulário, o toque e a página que governa todas as cores.
+ * Por onde se começa: a marca, e as quatro páginas que mudam o que alguém vai
+ * escrever nas outras — a cor, o valor em reais, o formulário e o toque.
  */
+const BRAND_SLUG = "brand"
 const START_HERE = [
     { slug: "colors", Icon: SwatchIcon },
     { slug: "money-display", Icon: BanknotesIcon },
@@ -40,6 +62,7 @@ const START_HERE = [
     { slug: "form", Icon: ArrowUturnLeftIcon },
     { slug: "touch-safe-area", Icon: CursorArrowRaysIcon },
 ]
+const START_HERE_COUNT = START_HERE.length + 1
 
 const CATEGORY_BLURB: Record<string, string> = {
     Foundations: "As decisões que todo o resto herda: cor, tipo, forma, movimento, camada.",
@@ -49,58 +72,15 @@ const CATEGORY_BLURB: Record<string, string> = {
     Templates: "O que estrutura a página, e não o que ela contém.",
 }
 
-/** `01`, `02` — a numeração do sumário, não a contagem de itens. */
-function ordinal(index: number): string {
-    return String(index + 1).padStart(2, "0")
-}
-
-/**
- * A entrada em cascata.
- *
- * Um único gesto de carga, escalonado pelo token de movimento em vez de
- * milissegundos escritos à mão — do mesmo jeito que a escala de raio deriva de
- * `--radius`.
- *
- * O degrau para no quarto bloco de propósito. `fill-mode-both` mantém o
- * elemento invisível até a vez dele, e escalonar os sete blocos deixaria a
- * última categoria em branco por quase um segundo e meio — tempo suficiente
- * para alguém rolar até ela e encontrar vão. Cascata é para o que está na
- * primeira tela; o resto entra junto, fora de vista.
- *
- * O kill global de `prefers-reduced-motion` em `globals.css` já anula qualquer
- * animação de uma passada, então não há tratamento por elemento aqui.
- */
-const ENTRADA_MAX_STEP = 3
-
-function entrada(step: number): React.CSSProperties {
-    const degrau = Math.min(step, ENTRADA_MAX_STEP)
-    return { animationDelay: `calc(var(--duration-fast) / 2 * ${degrau})` }
-}
-
-const ENTRADA_CLASS =
-    "animate-in fade-in slide-in-from-bottom-2 fill-mode-both duration-500 ease-out"
-
 export default function DesignSystemIndexPage() {
     const groups = groupedRegistry()
+    const foundations = REGISTRY.filter((item) => item.category === "Foundations").length
+    const brand = getEntry(BRAND_SLUG)
 
     return (
-        <div className="flex flex-col gap-14 pb-24">
-            {/* O cabeçalho ocupa espaço de propósito: é o único lugar da página
-                sem densidade, e é ele que faz a lista abaixo ler como lista. */}
-            {/* O `size="lg"` é o degrau que esta página já renderizava — 30/36px
-                —, e a faixa de fatos é o `dl` que estava escrito à mão aqui.
-                A sobrancelha se paga porque há um pai de verdade a nomear: o
-                produto de que este catálogo é o sistema. */}
-            <PageHeader
-                size="lg"
-                // O índice já entra pela `ENTRADA_CLASS`: a cascata do cabeçalho
-                // somaria um segundo movimento por cima.
-                reveal={false}
-                className={ENTRADA_CLASS}
-                style={entrada(0)}
-            >
+        <div className="flex flex-col gap-12 pb-24">
+            <PageHeader size="lg">
                 <PageHeaderTitleRow>
-                    <PageHeaderEyebrow>Finance App</PageHeaderEyebrow>
                     <PageHeaderTitle>Design system</PageHeaderTitle>
                     <PageHeaderDescription className="max-w-none">
                         Uma página por componente e por padrão, com o espécime vivo ao
@@ -109,259 +89,115 @@ export default function DesignSystemIndexPage() {
                         <Code variant="inline">src/app/globals.css</Code>.
                     </PageHeaderDescription>
                 </PageHeaderTitleRow>
-                <PageHeaderMeta asChild>
-                    <dl>
-                        <div className="flex items-baseline gap-2">
-                            <dt className="text-muted-foreground">Páginas</dt>
-                            <dd className="nums font-medium text-foreground">
-                                {REGISTRY.length}
-                            </dd>
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                            <dt className="text-muted-foreground">Categorias</dt>
-                            <dd className="nums font-medium text-foreground">
-                                {CATEGORY_ORDER.length}
-                            </dd>
-                        </div>
-                    </dl>
+                <PageHeaderMeta>
+                    <PageHeaderStat label="Componentes">
+                        {REGISTRY.length - foundations}
+                    </PageHeaderStat>
+                    <PageHeaderStat label="Fundações">{foundations}</PageHeaderStat>
                 </PageHeaderMeta>
             </PageHeader>
 
-            {/* O único bloco com cartão. É o contraste com as listas de fio
-                abaixo que faz ele pesar — não uma cor mais forte. */}
-            <section
-                aria-labelledby="comece-aqui"
-                className={cn("flex flex-col gap-4", ENTRADA_CLASS)}
-                style={entrada(1)}
-            >
-                <div className="flex flex-col">
-                    <h2
-                        id="comece-aqui"
-                        className="font-heading text-lg font-semibold tracking-tight text-foreground"
-                    >
-                        Comece aqui
-                    </h2>
-                    <p className="text-sm text-pretty text-muted-foreground">
-                        Quatro páginas antes das outras {REGISTRY.length - 4}. Elas não
-                        descrevem um componente: descrevem a decisão que os componentes
-                        obedecem.
-                    </p>
-                </div>
-                {/* Sem cartão, de propósito.
+            <PageSection size="lg">
+                <PageSectionHeader>
+                    <PageSectionTitle>Comece aqui</PageSectionTitle>
+                    <PageSectionDescription>
+                        Cinco páginas antes das outras {REGISTRY.length - START_HERE_COUNT}.
+                        Elas não descrevem um componente: descrevem a decisão que os
+                        componentes obedecem.
+                    </PageSectionDescription>
+                </PageSectionHeader>
 
-                    Fundo tingido, anel na cor de acento, ícone dentro de um
-                    quadradinho arredondado e hover que acende a superfície: é o
-                    cartão que aparece em toda página gerada por máquina, e num
-                    catálogo que existe para ter opinião ele era justamente o
-                    lugar sem nenhuma.
+                {/* A peça de marca da tela: a marca é o que se lê primeiro. */}
+                {brand ? (
+                    <Card variant="brand">
+                        <CardHeader media={<AppLogo size="md" />}>
+                            <CardTitle>
+                                <CardLink asChild>
+                                    <Link href={`/designsystem/${brand.slug}`}>
+                                        {brand.name}
+                                    </Link>
+                                </CardLink>
+                            </CardTitle>
+                            <CardDescription>
+                                A marca é preta, branca no escuro, e o arco-íris é a
+                                única cor dela.
+                            </CardDescription>
+                        </CardHeader>
+                    </Card>
+                ) : null}
 
-                    Aqui as quatro viraram aberturas sob fio. O que faz este
-                    bloco pesar mais que as listas abaixo é escala e ar — título
-                    em `text-base` contra `text-sm`, três vezes a altura de uma
-                    linha de sumário —, e não uma caixa em volta. */}
-                <ol className="grid grid-cols-1 gap-x-10 sm:grid-cols-2">
-                    {START_HERE.map(({ slug, Icon }, index) => {
+                <ItemGroup role="list" className="grid gap-2 sm:grid-cols-2">
+                    {START_HERE.map(({ slug, Icon }) => {
                         const item = getEntry(slug)
                         if (!item) return null
                         return (
-                            <li key={item.slug} className="flex">
-                                <Link
-                                    href={`/designsystem/${item.slug}`}
-                                    className={cn(
-                                        "group flex flex-1 flex-col border-t border-border pt-4 pb-6",
-                                        "transition-colors duration-(--duration-fast) ease-(--ease-out)",
-                                        // O fio de cima é o que responde ao
-                                        // toque: some a superfície, sobra a
-                                        // régua, e é ela que acende.
-                                        "hover:border-foreground/40 active:border-foreground/40",
-                                        "focus-visible:ring-3 focus-visible:ring-ring/45 focus-visible:outline-none"
-                                    )}
-                                >
-                                    {/* Ícone nu, sem ladrilho. Ele e o ordinal
-                                        são a linha de metadado; o título vem
-                                        depois, no tamanho que manda. */}
-                                    <div className="flex items-center justify-between gap-2">
-                                        <Icon
-                                            aria-hidden
-                                            className="size-4 shrink-0 text-muted-foreground transition-colors duration-(--duration-fast) ease-(--ease-out) group-hover:text-foreground group-active:text-foreground"
-                                        />
-                                        <span className="nums text-2xs font-medium text-muted-foreground">
-                                            {ordinal(index)}
-                                        </span>
-                                    </div>
-
-                                    {/* Título sobre descrição é o mesmo dado em
-                                        duas linhas: separa a entrelinha, não um
-                                        `gap`. */}
-                                    <div className="mt-3 flex flex-col">
-                                        <div className="flex items-center gap-2">
-                                            <h3 className="font-heading text-base font-medium tracking-tight text-foreground underline-offset-4 group-hover:underline group-active:underline">
-                                                {item.name}
-                                            </h3>
-                                            <ArrowRightIcon
-                                                aria-hidden
-                                                className={cn(
-                                                    "size-4 shrink-0 -translate-x-1 text-foreground opacity-0",
-                                                    "transition-[opacity,translate] duration-(--duration-fast) ease-(--ease-out)",
-                                                    "group-hover:translate-x-0 group-hover:opacity-100",
-                                                    "group-active:translate-x-0 group-active:opacity-100",
-                                                    "group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
-                                                )}
-                                            />
-                                        </div>
-                                        <p className="text-xs leading-relaxed text-muted-foreground">
-                                            {item.description}
-                                        </p>
-                                    </div>
+                            <Item key={item.slug} role="listitem" interactive asChild>
+                                <Link href={`/designsystem/${item.slug}`}>
+                                    <ItemMedia variant="icon">
+                                        <Icon aria-hidden className="text-muted-foreground" />
+                                    </ItemMedia>
+                                    <ItemContent>
+                                        <ItemTitle>{item.name}</ItemTitle>
+                                        <ItemDescription>{item.description}</ItemDescription>
+                                    </ItemContent>
+                                    <ItemChevron />
                                 </Link>
-                            </li>
+                            </Item>
                         )
                     })}
-                </ol>
-            </section>
+                </ItemGroup>
+            </PageSection>
 
-            {groups.map((group, index) => (
-                <section
-                    key={group.category}
-                    id={slugifyCategory(group.category)}
-                    aria-labelledby={`${slugifyCategory(group.category)}-titulo`}
-                    className={cn("flex scroll-mt-20 flex-col gap-5", ENTRADA_CLASS)}
-                    style={entrada(index + 2)}
-                >
-                    {/* No telefone o numeral vai para cima do nome. Ao lado, ele
-                        comia uma coluna de 40px de uma tela de 375 e empurrava a
-                        legenda para três linhas; e como a coluna era fixa, o
-                        nome da categoria nunca começava na margem. */}
-                    <header className="flex flex-col gap-1 border-b border-border pb-4 sm:flex-row sm:items-start sm:gap-4">
-                        {/* O numeral era um matiz diferente por categoria. Cinco
-                            cores em cinco cabeçalhos lê como legenda de gráfico,
-                            não como sumário — e a página inteira ficava mais
-                            colorida que qualquer tela do produto que ela
-                            documenta.
-
-                            Quem distingue as seções agora é o tamanho e o
-                            contraste baixo do número: grande o bastante para
-                            marcar o começo, apagado o bastante para o nome da
-                            categoria continuar sendo o que se lê primeiro. */}
-                        <span
-                            aria-hidden
-                            className="nums font-heading text-3xl leading-none font-semibold text-muted-foreground/45 sm:w-10 sm:shrink-0"
-                        >
-                            {ordinal(index)}
-                        </span>
-                        {/* Título sobre legenda é o mesmo dado em duas linhas:
-                            quem os separa é a entrelinha, não um `gap`. */}
-                        <div className="flex min-w-0 flex-col">
-                            <h2
-                                id={`${slugifyCategory(group.category)}-titulo`}
-                                className="font-heading text-lg font-semibold tracking-tight text-foreground"
-                            >
+            {groups.map((group) => {
+                const Icon = CATEGORY_META[group.category].Icon
+                return (
+                    <PageSection
+                        key={group.category}
+                        id={slugifyCategory(group.category)}
+                        size="lg"
+                        variant="ruled"
+                        className="scroll-mt-20"
+                    >
+                        <PageSectionHeader>
+                            <PageSectionTitle icon={<Icon />} count={group.items.length}>
                                 {group.category}
-                                <span className="nums ml-2 text-sm font-normal text-muted-foreground">
-                                    {group.items.length}
-                                </span>
-                            </h2>
-                            <p className="text-sm text-pretty text-muted-foreground">
+                            </PageSectionTitle>
+                            <PageSectionDescription>
                                 {CATEGORY_BLURB[group.category]}
-                            </p>
-                        </div>
-                    </header>
+                            </PageSectionDescription>
+                        </PageSectionHeader>
 
-                    {/* Linha com fio, e não cartão. O cartão gastava um cabeçalho
-                        e um corpo para mostrar um nome e uma frase, 88 vezes; a
-                        linha alinha os nomes numa coluna e as descrições em
-                        outra, que é o que se lê num sumário. */}
-                    {/* O fio pertence à `li` e atravessa a linha inteira; a faixa
-                        de hover é o `a`, recuado 2px em cima e embaixo pelo
-                        `py-0.5`. É esse respiro que deixa o canto arredondado
-                        existir sem encostar na régua — antes a faixa terminava
-                        exatamente onde o fio começava, e os quatro cantos abriam
-                        fresta. A altura da linha continua 44px. */}
-                    <ul className="flex flex-col">
-                        {group.items.map((item) => (
-                            <li
-                                key={item.slug}
-                                className="border-b border-border/70 py-0.5"
-                            >
-                                {/* O `Button` do sistema, com **quatro**
-                                    contra-classes medidas: `w-full` (a base é
-                                    `inline-flex` e encolhia até o conteúdo — a
-                                    faixa de hover e a seta paravam no meio da
-                                    coluna), `h-auto` (o `h-8` do
-                                    degrau e o `min-h-10` convivem, e no telefone
-                                    a grade cai para uma coluna e transborda),
-                                    `font-normal` (a base engordaria as 88
-                                    descrições) e `bg-clip-border` (o
-                                    `bg-clip-padding` reabre a fresta de 1px que
-                                    o comentário acima diz ter fechado). */}
-                                <Button
+                        {/* Um sumário: os nomes numa coluna e as descrições em
+                            outra, numa linha só, para a lista continuar varrível. */}
+                        <ItemGroup role="list" variant="divided">
+                            {group.items.map((item) => (
+                                <Item
+                                    key={item.slug}
+                                    role="listitem"
+                                    size="sm"
+                                    interactive
                                     asChild
-                                    variant="tertiary"
-                                    size="md"
-                                    className={cn(
-                                        "group h-auto min-h-10 w-full justify-start gap-3 rounded-surface px-2 py-2 font-normal bg-clip-border",
-                                        // O realce do `tertiary` na cor do
-                                        // accent. `--accent` e `--muted` são a
-                                        // mesma cor no escuro hoje; o par
-                                        // `dark:` vence o do peso por
-                                        // especificidade.
-                                        "[--button-hover-fill:color-mix(in_oklab,var(--accent)_50%,transparent)]",
-                                        "dark:[--button-hover-fill:color-mix(in_oklab,var(--accent)_50%,transparent)]"
-                                    )}
                                 >
-                                <Link href={`/designsystem/${item.slug}`}>
-                                    <span className="grid min-w-0 flex-1 grid-cols-1 items-baseline gap-x-6 leading-snug sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)]">
-                                        <span className="flex min-w-0 items-baseline gap-2">
-                                            <span className="truncate text-sm font-medium text-foreground">
-                                                {item.name}
-                                            </span>
-                                        </span>
-                                        {/* Uma linha, com reticências no que
-                                            passar. Descrição que quebra faz a
-                                            linha crescer, e um sumário com
-                                            alturas diferentes perde o ritmo que
-                                            o torna varrível. O `title` devolve o
-                                            texto inteiro a quem para o cursor. */}
-                                        <span
-                                            title={item.description}
-                                            className="truncate text-xs text-muted-foreground"
-                                        >
-                                            {item.description}
-                                        </span>
-                                    </span>
-                                    {/* A seta diz que a linha leva para outro
-                                        lugar — a lista inteira é link, e nada
-                                        na régua dizia isso.
-
-                                        Ela ocupa o espaço mesmo invisível, então
-                                        aparecer não empurra o texto. `active:`
-                                        acompanha `hover:` porque no telefone o
-                                        segundo não existe, e `focus-visible:`
-                                        porque quem anda de Tab merece a mesma
-                                        pista. */}
-                                    <ArrowRightIcon
-                                        aria-hidden
-                                        className={cn(
-                                            "size-4 shrink-0 -translate-x-1 text-muted-foreground opacity-0",
-                                            // `translate`, não `transform`: no
-                                            // Tailwind v4 o `-translate-x-1`
-                                            // escreve a propriedade `translate`,
-                                            // e uma transição que só nomeia
-                                            // `transform` deixa a seta aparecer
-                                            // de estalo em vez de deslizar.
-                                            "transition-[opacity,translate] duration-(--duration-fast) ease-(--ease-out)",
-                                            "group-hover:translate-x-0 group-hover:opacity-100",
-                                            "group-active:translate-x-0 group-active:opacity-100",
-                                            "group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
-                                        )}
-                                    />
-                                </Link>
-                                </Button>
-                            </li>
-                        ))}
-                    </ul>
-                </section>
-            ))}
+                                    <Link href={`/designsystem/${item.slug}`}>
+                                        <ItemContent className="grid items-baseline gap-x-6 sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)]">
+                                            <ItemTitle className="w-auto min-w-0">
+                                                <span className="min-w-0 truncate">{item.name}</span>
+                                            </ItemTitle>
+                                            <ItemDescription
+                                                title={item.description}
+                                                className="truncate"
+                                            >
+                                                {item.description}
+                                            </ItemDescription>
+                                        </ItemContent>
+                                        <ItemChevron />
+                                    </Link>
+                                </Item>
+                            ))}
+                        </ItemGroup>
+                    </PageSection>
+                )
+            })}
         </div>
     )
 }
