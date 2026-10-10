@@ -600,8 +600,10 @@ function TopBarSearch({
         variant="tertiary"
         size="icon-md"
         data-slot="top-bar-search"
+        // `relative` ancora o alvo de toque no botão. Sem ele o `::after` se
+        // estendia pela barra inteira e engolia o toque no ☰ do telefone.
         className={cn(
-          "rounded-full text-muted-foreground pointer-coarse:after:absolute pointer-coarse:after:-inset-1.5 pointer-coarse:after:content-['']",
+          "relative rounded-full text-muted-foreground pointer-coarse:after:absolute pointer-coarse:after:-inset-1.5 pointer-coarse:after:content-['']",
           BUSCA_QUEBRA[collapse].icone
         )}
       >

@@ -100,16 +100,15 @@ describe("régua do Sheet", () => {
     // funciona por acidente — quem vence depende da ordem em que o `cva` emite
     // `side` e `variant`.
     expect(EIXO_SIDE).not.toMatch(/\bborder(-[trbl])?\b/)
-    for (const [lado, gume] of [
-      ["top", "border-b"],
-      ["right", "border-l"],
-      ["bottom", "border-t"],
-      ["left", "border-r"],
+    // E a aba: a cópia da placa para fora da tela, que cobre o quique da mola.
+    for (const [lado, gume, aba] of [
+      ["top", "border-b", "0_-4rem_0"],
+      ["right", "border-l", "4rem_0_0"],
+      ["bottom", "border-t", "0_4rem_0"],
+      ["left", "border-r", "-4rem_0_0"],
     ] as const) {
-      expect(COMPOSTAS, lado).toMatch(
-        new RegExp(
-          `variant:\\s*"flush",\\s*side:\\s*"${lado}",\\s*class:\\s*"${gume}"`
-        )
+      expect(COMPOSTAS, lado).toContain(
+        `{ variant: "flush", side: "${lado}", class: "${gume} shadow-[${aba}_var(--color-popover),var(--shadow-lg)]" }`
       )
     }
     // Nenhuma composta fora do encostado: o flutuante fecha a borda sozinho —

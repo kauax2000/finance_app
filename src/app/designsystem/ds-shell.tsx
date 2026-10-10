@@ -116,11 +116,10 @@ function DsTopBar() {
         className="flex h-full min-w-0 items-center gap-2 sm:gap-3"
       >
         <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-        {/* `Sheet`: painel de borda a partir de 768px, gaveta abaixo — e é
-            gaveta também para navegação, que é a inversão da rodada 64. O
-            gatilho é `lg:hidden`, então entre 768 e 1024px o que abre é o
-            painel da esquerda, e `side` vale ali. */}
-        <Sheet open={navAberta} onOpenChange={setNavAberta}>
+        {/* `surface="panel"`: navegação entra pelo lado em qualquer largura,
+            como o `Sidebar` do app (rodada 66). Toda outra folha vira gaveta
+            no telefone; esta não. */}
+        <Sheet surface="panel" open={navAberta} onOpenChange={setNavAberta}>
           <SheetTrigger asChild>
             <Button
               variant="tertiary"
@@ -149,13 +148,11 @@ function DsTopBar() {
               não correr por baixo do botão. */}
           <SheetContent
             side="left"
-            fillMobileViewport
-            // `md:w-72` e não `w-72`: o ramo gaveta é `inset-x-0`, e uma
-            // largura ali venceria o `right: 0` — a gaveta sairia com 288px
-            // ancorada à esquerda em vez de ocupar a tela. O `md` é o mesmo
-            // 768 de `useIsMobile`, então a largura só existe onde existe o
-            // painel.
-            className="gap-0 overflow-hidden md:w-72"
+            // Colado nas bordas, como a navegação rente do app.
+            variant="flush"
+            // 288px, a largura do `Sidebar` do app no telefone: sobra uma
+            // faixa da página para tocar e fechar.
+            className="w-72 gap-0 overflow-hidden"
             // O efeito acima cobre toda navegação, menos uma: clicar no link da
             // página em que já se está não muda a rota, e o painel ficaria
             // aberto sobre a página que ele acabou de dizer que é a atual.

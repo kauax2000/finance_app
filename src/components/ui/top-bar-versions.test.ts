@@ -63,6 +63,13 @@ describe("as peças", () => {
     expect(CODIGO).toContain('lg: { icone: "lg:hidden", pilula: "hidden lg:flex" }')
   })
 
+  it("todo alvo de toque ampliado da barra se ancora no próprio botão", () => {
+    // Sem `relative`, o `::after` absoluto cobria a barra e engolia o ☰.
+    const alvos = CODIGO.match(/"[^"]*pointer-coarse:after:absolute[^"]*"/g) ?? []
+    expect(alvos.length).toBeGreaterThan(0)
+    for (const alvo of alvos) expect(alvo).toMatch(/"relative /)
+  })
+
   it("o fio de progresso é progressbar, e o indeterminado mora numa @utility depois do no-scrollbar", () => {
     expect(CODIGO).toContain('role="progressbar"')
     const i = CSS.indexOf("@utility top-bar-progress")

@@ -149,11 +149,18 @@ const sheetContentVariants = cva(
         ].join(" "),
       },
     },
+    // **A aba do encostado.** A mola passa 3,8% do alvo, e o recuo de
+    // "folha sobre folha" anda 24px: nos dois o painel descola da borda e a
+    // página aparecia na fresta (11px num painel de 288). Uma cópia chapada da
+    // placa, 4rem para fora da tela (`box-shadow`, que o `overflow-hidden` não
+    // recorta), cobre o vão sem mexer na animação.
+    // ponytail: cobre quique até 4rem (painel até ~1680px no eixo); o `full`
+    // mais largo que isso ainda abriria fresta.
     compoundVariants: [
-      { variant: "flush", side: "top", class: "border-b" },
-      { variant: "flush", side: "right", class: "border-l" },
-      { variant: "flush", side: "bottom", class: "border-t" },
-      { variant: "flush", side: "left", class: "border-r" },
+      { variant: "flush", side: "top", class: "border-b shadow-[0_-4rem_0_var(--color-popover),var(--shadow-lg)]" },
+      { variant: "flush", side: "right", class: "border-l shadow-[4rem_0_0_var(--color-popover),var(--shadow-lg)]" },
+      { variant: "flush", side: "bottom", class: "border-t shadow-[0_4rem_0_var(--color-popover),var(--shadow-lg)]" },
+      { variant: "flush", side: "left", class: "border-r shadow-[-4rem_0_0_var(--color-popover),var(--shadow-lg)]" },
     ],
     defaultVariants: {
       side: "right",
