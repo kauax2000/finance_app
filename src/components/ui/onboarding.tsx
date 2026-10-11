@@ -2738,10 +2738,6 @@ function OnboardingTour({
           ref={refDaPlaca}
           data-slot="onboarding-tour-card"
           data-dock="anchored"
-          // O nome também pelo título visível (o `PopoverTitle` se registra),
-          // mas aqui de saída: a placa remonta a cada passo, e o registro chega
-          // depois do aviso de "popover sem nome" do `PopoverContent`.
-          aria-label={stepDaPlaca.title}
           side={stepDaPlaca.side ?? "bottom"}
           align={stepDaPlaca.align ?? "center"}
           sideOffset={12}

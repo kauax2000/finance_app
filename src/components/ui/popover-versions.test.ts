@@ -60,6 +60,9 @@ describe("as versões do Popover", () => {
   it("o nome: label vira título sr-only, e sem nome há aviso em desenvolvimento", () => {
     expect(CODIGO).toContain('<PopoverTitle className="sr-only">{label}</PopoverTitle>')
     expect(CODIGO).toContain("PopoverContent sem nome")
+    // Filho do Content (fechado não monta) e o título pelo DOM, não pelo estado.
+    expect(CODIGO).toMatch(/\{children\}\s*\{process\.env\.NODE_ENV !== "production" &&[\s\S]*?<PopoverNameWarning/)
+    expect(CODIGO).toContain(".getElementById(titleId)")
   })
 
   it("as telas: sem largura nem rolagem à mão, e os seletores de mês com nome", () => {

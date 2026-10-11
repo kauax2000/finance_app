@@ -267,22 +267,6 @@ function PopoverContent({
   const [hasTitle, setHasTitle] = React.useState(false);
   const [hasDescription, setHasDescription] = React.useState(false);
 
-  // Um popover é `role="dialog"`, e sem nome o leitor de tela anuncia só
-  // "diálogo". Em desenvolvimento, quem abre um sem nome fica sabendo. O
-  // título se registra no efeito do filho, que roda antes deste — por isso o
-  // aviso espera um quadro, e o render com o título o cancela.
-  const nomeado =
-    hasTitle || label != null || props["aria-label"] != null || props["aria-labelledby"] != null;
-  React.useEffect(() => {
-    if (process.env.NODE_ENV === "production" || nomeado) return;
-    const t = window.setTimeout(() => {
-      console.warn(
-        "PopoverContent sem nome: passe `label` ou um `PopoverTitle` (pode ser sr-only).",
-      );
-    }, 0);
-    return () => window.clearTimeout(t);
-  }, [nomeado]);
-
   const rotulos = React.useMemo<PopoverLabelContextValue>(
     () => ({
       titleId: `${reactId}-title`,
@@ -359,11 +343,44 @@ function PopoverContent({
             <PopoverTitle className="sr-only">{label}</PopoverTitle>
           ) : null}
           {children}
+          {process.env.NODE_ENV !== "production" &&
+          props["aria-label"] == null &&
+          props["aria-labelledby"] == null ? (
+            <PopoverNameWarning titleId={rotulos.titleId} janela={janela} />
+          ) : null}
         </PopoverPrimitive.Content>
       </PopoverPrimitive.Portal>
       )}
     </PopoverLabelContext.Provider>
   );
+}
+
+/**
+ * Um popover é `role="dialog"`, e sem nome o leitor de tela anuncia só
+ * "diálogo". Em desenvolvimento, quem abre um sem nome fica sabendo.
+ *
+ * O aviso é **filho do `Content`**, e é isso que o prende ao popover aberto:
+ * fechado, o Radix não monta os filhos. Quando morava na raiz do
+ * `PopoverContent`, ele disparava em todo popover fechado cujo nome vem de um
+ * `PopoverTitle` — o título não estava montado para se registrar. E ele
+ * procura o título **no DOM**, não no `hasTitle`: o `h2` nasce com o `id`, e o
+ * `setHasTitle` só chega um render depois. É o `TitleWarning` do `Dialog` do
+ * Radix. Na gaveta não há aviso nosso, porque o do Radix já cobre.
+ */
+function PopoverNameWarning({
+  titleId,
+  janela,
+}: {
+  titleId: string;
+  janela: ReturnType<typeof useViewportWindow>;
+}) {
+  React.useEffect(() => {
+    if ((janela?.document ?? document).getElementById(titleId)) return;
+    console.warn(
+      "PopoverContent sem nome: passe `label` ou um `PopoverTitle` (pode ser sr-only).",
+    );
+  }, [titleId, janela]);
+  return null;
 }
 
 function PopoverAnchor({
