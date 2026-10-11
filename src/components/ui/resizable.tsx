@@ -755,7 +755,7 @@ function ResizableColumnHandle({
         // pousar na costura, ao focar e ao arrastar. 2px centrados, e só a cor
         // transiciona — o realce do `ResizableHandle`.
         "before:absolute before:inset-y-1.5 before:left-1/2 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-transparent before:transition-colors before:duration-(--duration-fast) before:ease-(--ease-out)",
-        "in-[th:hover]:before:bg-border",
+        "[@media(hover:hover)]:in-[th:hover]:before:bg-border",
         "hover:before:bg-primary-accent/60 focus-visible:before:bg-primary-accent/60",
         "data-dragging:before:bg-primary-accent",
         "focus-visible:ring-3 focus-visible:ring-ring/45",

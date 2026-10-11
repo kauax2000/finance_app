@@ -11,6 +11,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { LayoutGroup, motion, useReducedMotion } from "motion/react"
 import { Menubar as MenubarPrimitive } from "radix-ui"
 
+import { ehCursor } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
 import { commandFilter } from "@/lib/command-filter"
 import { barSurfaceClassName, menuPanelTintClassName } from "@/lib/glass-classes"
@@ -584,7 +585,8 @@ function MenubarTrigger({
         className
       )}
       onPointerEnter={(e) => {
-        bar.setHover(menu)
+        // O realce que viaja segue o cursor; o toque o deixaria preso.
+        if (ehCursor(e)) bar.setHover(menu)
         onPointerEnter?.(e)
       }}
       onFocus={(e) => {

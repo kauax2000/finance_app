@@ -880,6 +880,30 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   falha se alguém redefinir a variante para `:hover` puro.
 - Em superfícies tocáveis, **some** `active:` ou `group-active:` para o toque ter
   a mesma resposta. O auditor sinaliza isso como regra **H**.
+- **O que depende de um cursor parado em cima fica desarmado no toque**
+  (rodada 250). Quatro mecanismos, cada um com a sua trava:
+  - **`:hover` à mão** (`has-[…:hover]`, `[&>a:hover]`, `in-[th:hover]`) não
+    ganha a mídia da variante, e no telefone o toque o acendia e ele **grudava**
+    até o toque seguinte. Escreva `[&>a]:hover:` quando couber, ou o prefixo
+    `[@media(hover:hover)]:`; em CSS, o `:hover` mora dentro de
+    `@media (hover: hover)`. Regra **H2** do auditor.
+  - **Ouvinte de "passou por cima"** (`onPointerEnter`, `onMouseEnter`,
+    `onMouseMove`) pergunta `ehCursor(e)` (`lib/pointer.ts`): o toque dispara
+    esses eventos, e o realce que viaja no `Menubar` e no `NavigationMenu`, as
+    listas do `Chart`, a pausa do `Carousel`, a seleção da paleta, a inclinação
+    do cartão e a rosca da fatura ficavam presos onde o dedo pousou. Gesto
+    pensado para o dedo (o toque do mapa de calor, o do `AvatarGroup`, o toque
+    longo do `HoverCard`) pergunta `pointerType` e fica.
+  - **Tecla de atalho desenhada** some com `pointer-coarse:hidden` no ponto em
+    que a peça a desenha (`menuShortcutClassName`,
+    `searchFieldShortcutClassName`, `CommandShortcut`, o `shortcut` dos menus e
+    do `Tooltip`), e **não no `Kbd`**: a tecla citada numa frase do catálogo é
+    conteúdo.
+  - **A moldura do iPhone**: `@custom-variant hover` mantém a mídia
+    `(hover: hover)` e exclui `[data-pointer="coarse"] *` — `group-hover:` e
+    `peer-hover:` compõem com ela, medido —, o `Tooltip` não abre por hover lá
+    dentro e o brilho de marca não acende (`deDedo`).
+  `tailwind-hover-policy.test.ts` tranca os quatro.
 - **`pointer-coarse:` também vale sob `[data-pointer="coarse"]`** (rodada 245,
   `@custom-variant` em `globals.css`). É para o `IphoneFrame` do catálogo, que
   é um iframe no navegador do desktop: lá `(pointer: coarse)` responde pelo

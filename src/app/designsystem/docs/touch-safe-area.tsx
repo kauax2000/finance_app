@@ -252,6 +252,16 @@ export default function TouchSafeAreaDoc() {
         ausente como regra <strong>H</strong>.
       </DocNote>
 
+      <DocNote title="O que depende do cursor fica desarmado no toque">
+        Um <code>:hover</code> escrito à mão num seletor arbitrário não ganha a
+        mídia, e no telefone ele gruda depois do toque: ele mora em{" "}
+        <code>[@media(hover:hover)]:</code> (regra <strong>H2</strong>). Um
+        ouvinte de <code>pointerenter</code> pergunta <code>ehCursor</code>,
+        porque o toque também entra no elemento. E a tecla de atalho some no
+        toque, onde não há teclado. Nas prévias do iPhone o hover também não
+        acende: a variante exclui a moldura.
+      </DocNote>
+
       <Group
         title="Área segura"
         description="O entalhe em cima e o indicador de home embaixo comem pixels que o navegador ainda desenha. Toda peça que encosta numa dessas bordas soma a área segura dela."

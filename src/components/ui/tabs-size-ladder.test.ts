@@ -355,12 +355,12 @@ describe("o vidro do marcador do Tabs", () => {
     expect(claros).toHaveLength(2)
     expect(escuros).toHaveLength(2)
 
-    // O par `:active` não é simetria: um `:hover` dentro de um seletor
-    // arbitrário não ganha o `@media (hover: hover)` da variante do Tailwind,
-    // mas também não existe no dedo. Sem ele o controle fica inerte no
-    // telefone — a regra H, que o auditor não alcança dentro de um `cva`.
+    // O `:hover` à mão não ganha o `@media (hover: hover)` da variante do
+    // Tailwind, e no dedo grudava: ele mora na mídia escrita à mão (rodada
+    // 250). O par `:active` é a resposta do toque — a regra H, que o auditor
+    // não alcança dentro de um `cva`.
     for (const grupo of [claros, escuros]) {
-      expect(grupo.some((c) => c.includes(":hover]"))).toBe(true)
+      expect(grupo.some((c) => c.includes("[@media(hover:hover)]:") && c.includes(":hover]"))).toBe(true)
       expect(grupo.some((c) => c.includes(":active]"))).toBe(true)
     }
 

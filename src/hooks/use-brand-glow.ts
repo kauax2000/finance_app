@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { animate } from "motion/react"
+import { deDedo } from "@/lib/pointer"
 
 /**
  * O ponteiro do **brilho de marca** — o arco de arco-íris que acende na borda
@@ -95,7 +96,8 @@ export function useBrandGlow<T extends HTMLElement = HTMLDivElement>(ativo: bool
     // via — o brilho não acendia. No app os dois são o `document` de sempre.
     const doc = el.ownerDocument
     const win = doc.defaultView ?? window
-    if (!win.matchMedia("(hover: hover)").matches) return
+    // Nem na moldura do iPhone, que é dedo emulado num iframe do desktop.
+    if (!win.matchMedia("(hover: hover)").matches || deDedo(el)) return
     // O quadro também é o da janela do elemento (o iframe pinta no dele).
     const requestAnimationFrame = win.requestAnimationFrame.bind(win)
     const cancelAnimationFrame = win.cancelAnimationFrame.bind(win)
@@ -204,6 +206,8 @@ export function useBrandGlow<T extends HTMLElement = HTMLDivElement>(ativo: bool
     }
 
     const aoMover = (e: PointerEvent) => {
+      // O brilho segue o cursor; num aparelho híbrido o dedo também move.
+      if (e.pointerType !== "mouse") return
       ultimaX = e.clientX
       ultimaY = e.clientY
       temPosicao = true

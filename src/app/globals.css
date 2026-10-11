@@ -30,6 +30,20 @@
   }
 }
 
+/* O hover é do cursor, e o dedo emulado não tem (rodada 250). A mídia
+   `(hover: hover)` é a do Tailwind de fábrica — no telefone o `hover:` não
+   existe —, mas o iPhone do catálogo é um iframe no desktop, onde a mídia
+   responde pelo mouse: as prévias "No telefone" acendiam com o cursor. A
+   mesma marca do `pointer-coarse:` as desliga. `:where()` não soma
+   especificidade. */
+@custom-variant hover {
+  @media (hover: hover) {
+    &:hover:not(:where([data-pointer="coarse"] *)) {
+      @slot;
+    }
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -2073,7 +2087,14 @@
       cubic-bezier(0.62, 0.05, 0.01, 0.99);
   }
 
-  &:hover [data-slot="button-label"]::after,
+  /* O `:hover` mora na mídia (rodada 250): solto, o toque o acendia e o
+     traço ficava riscado até o toque seguinte. */
+  @media (hover: hover) {
+    &:hover [data-slot="button-label"]::after {
+      transform: scaleX(1);
+      transform-origin: left;
+    }
+  }
   &:active [data-slot="button-label"]::after,
   &:focus-visible [data-slot="button-label"]::after {
     transform: scaleX(1);

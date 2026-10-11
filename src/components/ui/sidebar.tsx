@@ -740,7 +740,7 @@ function SidebarTriggerButton({
           <Kbd
             aria-hidden
             keys={`mod+${SIDEBAR_KEYBOARD_SHORTCUT}`}
-            className="ml-auto"
+            className="ml-auto pointer-coarse:hidden"
           />
         </SidebarMenuButton>
       ) : (

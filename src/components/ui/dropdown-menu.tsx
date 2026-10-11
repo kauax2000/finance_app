@@ -777,7 +777,7 @@ function DropdownMenuItem({
       {carregando ? (
         <Spinner className="ms-auto" />
       ) : shortcut && !estado.folha ? (
-        <span data-slot="dropdown-menu-item-shortcut" className="ms-auto">
+        <span data-slot="dropdown-menu-item-shortcut" className="ms-auto pointer-coarse:hidden">
           <Kbd
             keys={shortcut}
             className="group-focus/menu-item:bg-background/70"

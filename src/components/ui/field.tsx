@@ -617,7 +617,7 @@ function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
       // A escada do `Field` vence o `text-sm` do átomo por `cn()`, verificado.
       className={cn(
         "text-left leading-normal font-normal group-has-data-horizontal/field:text-balance",
-        "[&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary-accent",
+        "[&>a]:underline [&>a]:underline-offset-4 [&>a]:hover:text-primary-accent",
         fieldTextScale[size].description,
         className
       )}

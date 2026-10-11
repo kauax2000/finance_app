@@ -121,7 +121,7 @@ export function ButtonGroup({
                 // A sobreposição faz o vizinho recortar o anel de foco e a
                 // borda de hover. Quem está ativo sobe. Empilhamento local, e
                 // por isso número cru em vez de token de camada.
-                "[&>*:hover]:z-10 [&>*:focus-visible]:z-10",
+                "[&>*]:hover:z-10 [&>*:focus-visible]:z-10",
                 className
             )}
             role="group"

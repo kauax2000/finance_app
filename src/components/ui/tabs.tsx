@@ -610,10 +610,10 @@ const tabsListTrackVariants = cva(
        * herança. É a mesma razão pela qual o `useScrollFade` tem a opção
        * `shell`.
        *
-       * **O par `:active` é obrigatório, e não é simetria.** Um `:hover`
-       * dentro de um seletor arbitrário não ganha o `@media (hover: hover)`
-       * que a variante `hover:` do Tailwind traz — mas também não existe no
-       * dedo. Sem o par, o controle fica inerte no telefone, que é a regra H.
+       * **O `:hover` mora dentro de `@media (hover: hover)`, à mão** (rodada
+       * 250). Num seletor arbitrário ele não ganha a mídia que a variante
+       * `hover:` traz, e no telefone o toque o acendia e ele **grudava** até o
+       * toque seguinte. O par `:active` é a resposta do dedo.
        *
        * E o realce vira de direção com o tema, pela régua do
        * `--secondary-hover`: a lâmina clara é 92% branca, e um realce branco
@@ -622,9 +622,9 @@ const tabsListTrackVariants = cva(
        */
       glass: {
         true: [
-          "has-[[data-slot=tabs-trigger][data-state=active]:hover]:[--glass-sheen:oklch(0_0_0_/_5%)]",
+          "[@media(hover:hover)]:has-[[data-slot=tabs-trigger][data-state=active]:hover]:[--glass-sheen:oklch(0_0_0_/_5%)]",
           "has-[[data-slot=tabs-trigger][data-state=active]:active]:[--glass-sheen:oklch(0_0_0_/_9%)]",
-          "dark:has-[[data-slot=tabs-trigger][data-state=active]:hover]:[--glass-sheen:oklch(1_0_0_/_7%)]",
+          "dark:[@media(hover:hover)]:has-[[data-slot=tabs-trigger][data-state=active]:hover]:[--glass-sheen:oklch(1_0_0_/_7%)]",
           "dark:has-[[data-slot=tabs-trigger][data-state=active]:active]:[--glass-sheen:oklch(1_0_0_/_12%)]",
         ].join(" "),
         false: "",

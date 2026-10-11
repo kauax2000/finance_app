@@ -20932,10 +20932,9 @@ elementos por `asChild` a componentes cliente (`Button`, `PageHeader`), e o
 os dois somem.
 
 **A marca na capa.**
-- O "Comece aqui" abre com Brand, em largura inteira, num
-  `Card variant="brand"`: o símbolo neutro e o brilho na borda, que é a peça
-  de marca da tela.
-- As quatro de antes ficam embaixo.
+- O "Comece aqui" abriu com Brand num `Card variant="brand"` (o símbolo e o
+  brilho na borda), e o dono o tirou na mesma rodada: as quatro de antes
+  ficam sozinhas, e Brand fica no sumário de Foundations, de volta ao lugar.
 - A sobrancelha "Finance App" saiu: o nome já está no wordmark da barra, logo
   acima.
 
@@ -20953,3 +20952,50 @@ os dois somem.
 camada que o escopo do ⌘K usa.
 
 `PRODUCT.md` deixou de dizer que a marca é verde.
+
+
+### Rodada 250 — no toque, o hover fica desarmado
+
+O dono pediu para tirar do telefone o que não é usual nele, a começar pelo
+hover: nenhum mouse vai parar em cima de um elemento. A resposta ao toque pode
+pintar, mudar tinta, o que for — os pares `active:` da regra H ficam. O que sai
+é o que depende de um cursor parado em cima.
+
+**Medido:** com o telefone emulado, `(hover: hover)` responde falso, então a
+variante `hover:` já não age no toque. Quem agia eram quatro mecanismos que
+escapavam dela.
+
+- **`:hover` à mão** — sete seletores fora da mídia, que o toque acendia e
+  deixava grudados: o `CardLink` (sombra), o link da descrição do `Item` e do
+  `Field`, o brilho do vidro do `Tabs`, a costura de coluna do `Resizable`, o
+  `z-10` do `ButtonGroup` e o sublinhado do `link-sweep`. Foram para
+  `[&>a]:hover:` ou `[@media(hover:hover)]:`, e o `link-sweep` para dentro de
+  `@media (hover: hover)`. O `toast` ficou: o `:hover` dele empata com o do
+  `sonner` para vencê-lo, e o toque no × ou na ação já fecha o aviso.
+- **Ouvintes de "passou por cima"** — o realce que viaja no `Menubar` e no
+  `NavigationMenu`, as listas da rosca e da divisão do `Chart`, a pausa do
+  autoplay do `Carousel`, a seleção por ponteiro do `Command` (o dedo rolando
+  a lista acendia a linha), a inclinação do cartão de crédito (eram eventos de
+  mouse, que o telefone dispara depois do toque: o cartão inclinava e ficava
+  torto) e a rosca da fatura. Todos perguntam `ehCursor` (`lib/pointer.ts`,
+  com o `deDedo` da moldura). O brilho de marca ignora o dedo num aparelho
+  híbrido.
+- **Teclas de atalho** — `pointer-coarse:hidden` onde a peça desenha a tecla
+  (os três menus, `CommandShortcut`, `Tooltip`, a pílula do `TopBarSearch`, o
+  `SearchInput`, o "Manter aberta" do `Sidebar`). O `Kbd` não muda: a tecla
+  citada numa frase é conteúdo.
+- **A moldura do iPhone** — a variante `hover` foi redefinida com a mesma
+  mídia e `:not(:where([data-pointer="coarse"] *))`; medido no CSS compilado,
+  `group-hover:` e `peer-hover:` compõem com ela. Lá dentro o `Tooltip` não
+  abre por hover (o `preventDefault` no `pointermove` do gatilho) e o brilho
+  de marca não monta. Medido: mouse sobre o gatilho da prévia, `:hover`
+  verdadeiro, `--button-hover` em 0 e nenhuma dica; fora da prévia, a linha
+  ganha o fundo e a seta anda.
+
+**Ficaram, por serem gestos do dedo:** o toque do mapa de calor do `Chart`,
+o do `AvatarGroup`, o toque longo do `HoverCard`, o arraste da `BottomBar`.
+
+**Travas:** a regra **H2** do auditor e quatro casos novos em
+`tailwind-hover-policy.test.ts` (a variante, o `link-sweep`, nenhum `:hover`
+solto nas classes, todo ouvinte de entrada perguntando pelo cursor, e as
+teclas que somem). O `tabs-size-ladder` passou a cobrar o `:hover` na mídia.

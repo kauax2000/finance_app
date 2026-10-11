@@ -6,6 +6,7 @@ import { Tooltip as TooltipPrimitive } from "radix-ui"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 
 import { Kbd } from "@/components/ui/kbd"
+import { deDedo } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
 import { useViewportWindow } from "@/hooks/use-mobile"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
@@ -129,8 +130,16 @@ function Tooltip({
 function TooltipTrigger({
   asChild,
   children,
+  onPointerMove,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
+  // A dica abre com o cursor parado em cima, e a moldura do iPhone do catálogo
+  // é dedo emulado: lá o Radix via um mouse e abria (rodada 250). Ele respeita
+  // o `preventDefault` e não abre; no telefone de verdade ele já ignora o toque.
+  const semHoverNaMoldura = (e: React.PointerEvent<HTMLButtonElement>) => {
+    onPointerMove?.(e)
+    if (deDedo(e.currentTarget)) e.preventDefault()
+  }
   const filho = React.isValidElement<{ disabled?: boolean; "aria-label"?: string }>(
     children
   )
@@ -138,7 +147,12 @@ function TooltipTrigger({
     : null
   if (asChild && filho?.props.disabled) {
     return (
-      <TooltipPrimitive.Trigger data-slot="tooltip-trigger" asChild {...props}>
+      <TooltipPrimitive.Trigger
+        data-slot="tooltip-trigger"
+        asChild
+        {...props}
+        onPointerMove={semHoverNaMoldura}
+      >
         <span
           data-slot="tooltip-disabled-trigger"
           tabIndex={0}
@@ -152,7 +166,12 @@ function TooltipTrigger({
     )
   }
   return (
-    <TooltipPrimitive.Trigger data-slot="tooltip-trigger" asChild={asChild} {...props}>
+    <TooltipPrimitive.Trigger
+      data-slot="tooltip-trigger"
+      asChild={asChild}
+      {...props}
+      onPointerMove={semHoverNaMoldura}
+    >
       {children}
     </TooltipPrimitive.Trigger>
   )
@@ -340,7 +359,7 @@ function TooltipContent({
               {confirmacao ?? (
                 <>
                   {children}
-                  {shortcut ? <Kbd keys={shortcut} /> : null}
+                  {shortcut ? <Kbd keys={shortcut} className="pointer-coarse:hidden" /> : null}
                 </>
               )}
             </motion.div>

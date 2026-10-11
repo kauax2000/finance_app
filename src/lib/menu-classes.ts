@@ -275,6 +275,9 @@ export const menuLabelClassName =
 /** `bg-border`, o fio do projeto — `bg-muted` é preenchimento, não traço. */
 export const menuSeparatorClassName = "-mx-2 my-1 h-px bg-border"
 
-/** O atalho acompanha o realce da linha em vez de ficar cinza sobre o acento. */
+/**
+ * O atalho acompanha o realce da linha em vez de ficar cinza sobre o acento, e
+ * some no toque (rodada 250): sem teclado físico, a tecla não diz nada.
+ */
 export const menuShortcutClassName =
-  "ml-auto text-xs tracking-widest text-muted-foreground group-focus/menu-item:text-accent-foreground"
+  "ml-auto text-xs tracking-widest text-muted-foreground group-focus/menu-item:text-accent-foreground pointer-coarse:hidden"

@@ -35,6 +35,7 @@ import {
 } from "@/lib/scroll-fade-classes"
 import { disclosureRevealClassName } from "@/lib/disclosure-classes"
 import { menuPanelTintClassName } from "@/lib/glass-classes"
+import { ehCursor } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
 
 /**
@@ -855,7 +856,9 @@ function Carousel({
         ref={composeRefs(rootRef, ref)}
         onKeyDownCapture={handleKeyDown}
         onPointerEnter={(e) => {
-          autoplay.pausar("cursor")
+          // Pausar com o cursor em cima é coisa de mouse: no toque o
+          // `pointerenter` vem do próprio toque.
+          if (ehCursor(e)) autoplay.pausar("cursor")
           onPointerEnter?.(e)
         }}
         onPointerLeave={(e) => {

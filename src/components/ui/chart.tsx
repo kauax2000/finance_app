@@ -33,6 +33,7 @@ import {
 
 import { animate, useReducedMotion } from "motion/react"
 
+import { ehCursor } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
 import { menuPanelSurfaceClassName } from "@/lib/menu-classes"
 import {
@@ -2362,7 +2363,10 @@ function ChartDonut({
                     ? { transitionDelay: `${150 + i * CHART_STAGGER_MS}ms` }
                     : undefined
                 }
-                onPointerEnter={() => setAtivoLista(i)}
+                // A fatia acende com o cursor; o toque a deixaria acesa.
+                onPointerEnter={(e) => {
+                  if (ehCursor(e)) setAtivoLista(i)
+                }}
               >
                 <span
                   aria-hidden
@@ -2764,7 +2768,9 @@ function ChartSplit({
                   flex: `${valores[i]} 1 0`,
                   backgroundColor: cores[i],
                 }}
-                onPointerEnter={() => setAtivo(i)}
+                onPointerEnter={(e) => {
+                  if (ehCursor(e)) setAtivo(i)
+                }}
               />
             ) : null
           )}

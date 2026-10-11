@@ -751,6 +751,24 @@ function auditFile(absPath, project) {
     }
   }
 
+  // ── H2. `:hover` escrito à mão, fora da mídia (rodada 250) ────────────────
+  // A variante `hover:` traz `@media (hover: hover)`; um `:hover` dentro de
+  // seletor arbitrário (`has-[…:hover]`, `[&>a:hover]`, `in-[th:hover]`) não
+  // traz, e no telefone o toque o acende e ele gruda até o toque seguinte.
+  // A saída é `[&>a]:hover:` quando cabe, ou o prefixo `[@media(hover:hover)]:`.
+  for (const m of src.matchAll(/className=\{?["'`]([^"'`]{0,2000})["'`]/g)) {
+    for (const token of m[1].split(/\s+/)) {
+      if (token.includes(":hover]") && !token.includes("[@media(hover:hover)]:")) {
+        add(
+          "H2",
+          m.index,
+          "`:hover` à mão fora de `@media (hover: hover)` — no toque ele gruda",
+          token.slice(0, 70)
+        )
+      }
+    }
+  }
+
   // ── I. Formatação de dinheiro ou data fora dos helpers ────────────────────
   // (Calada no catálogo: `docs/dinheiro.tsx` e `docs/money-display.tsx`
   //  documentam justamente a formatação.)
@@ -834,6 +852,7 @@ const RULE_LABEL = {
   F: "semântica / acessibilidade",
   G: "ícone fora do Heroicons",
   H: "hover: sem par de toque",
+  H2: ":hover à mão fora da mídia de hover",
   I: "formatação fora dos helpers",
   M: "dinheiro fora da régua",
   J: "faixa de superfície desenhada à mão",

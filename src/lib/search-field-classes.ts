@@ -89,7 +89,8 @@ export const searchFieldClearClassName = "-me-1.5 shrink-0 rounded-full"
 /**
  * A tecla do atalho **sem pastilha**, à direita: dentro de uma pílula a
  * pastilha do `Kbd` era uma caixa dentro de outra caixa (a decisão do
- * cabeçalho, e a das teclas da legenda da paleta).
+ * cabeçalho, e a das teclas da legenda da paleta). Some no toque (rodada
+ * 250): sem teclado físico, a tecla não diz nada.
  */
 export const searchFieldShortcutClassName =
-  "ms-auto min-w-0 bg-transparent px-0 dark:bg-transparent"
+  "ms-auto min-w-0 bg-transparent px-0 dark:bg-transparent pointer-coarse:hidden"

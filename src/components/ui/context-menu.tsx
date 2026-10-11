@@ -317,7 +317,7 @@ function ContextMenuItem({
     >
       {children}
       {shortcut ? (
-        <span data-slot="context-menu-shortcut" className="ml-auto">
+        <span data-slot="context-menu-shortcut" className="ml-auto pointer-coarse:hidden">
           <Kbd
             keys={shortcut}
             className="group-focus/menu-item:bg-background/70"

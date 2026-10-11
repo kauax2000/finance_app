@@ -21,6 +21,7 @@ import { Muted } from "@/components/ui/typography"
 import { InvoiceDeltaVsPriorChip } from "@/components/credit-cards/invoice-delta-vs-prior-chip"
 import { categoryDetailPath } from "@/config/navigation"
 import type { CategoryComparisonRow } from "@/lib/credit-card-invoice-analytics"
+import { ehCursor } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
 import { ColorTile } from "@/components/ui/color-tile"
 
@@ -166,7 +167,13 @@ export function CreditCardInvoiceCategorySpendSection({
                                 </div>
                             )
                             return (
-                                <li key={key} onPointerEnter={() => setAtiva(fatiaDa(c))}>
+                                // A fatia acende com o cursor; o toque abre a categoria.
+                                <li
+                                    key={key}
+                                    onPointerEnter={(e) => {
+                                        if (ehCursor(e)) setAtiva(fatiaDa(c))
+                                    }}
+                                >
                                     {c.categoryId != null ? (
                                         <Item
                                             asChild

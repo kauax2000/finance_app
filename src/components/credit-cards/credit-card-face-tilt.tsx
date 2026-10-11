@@ -6,8 +6,9 @@ import {
     useRef,
     useState,
     type ReactNode,
-    type MouseEvent,
+    type PointerEvent,
 } from "react"
+import { ehCursor } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
 
 const MAX_DEG = 11
@@ -27,6 +28,10 @@ export type CreditCardFaceTiltProps = {
 /**
  * 3D tilt from pointer position (edge under cursor recedes). Disabled when
  * `prefers-reduced-motion: reduce`.
+ *
+ * Só com mouse (rodada 250): eram eventos de mouse, que o telefone também
+ * dispara depois de um toque, e o cartão inclinava para o dedo e ficava torto
+ * até o toque seguinte.
  *
  * Só anima sob o cursor. Havia uma oscilação ociosa num requestAnimationFrame
  * sem fim, com setState a cada quadro em cada cartão da tela — uma lista de
@@ -93,8 +98,8 @@ export function CreditCardFaceTilt({
     }, [disabled, reduceMotion, hovered, stopRaf])
 
     const onMove = useCallback(
-        (e: MouseEvent<HTMLDivElement>) => {
-            if (disabled || reduceMotion) return
+        (e: PointerEvent<HTMLDivElement>) => {
+            if (disabled || reduceMotion || !ehCursor(e)) return
             const el = rootRef.current
             if (!el) return
             const r = el.getBoundingClientRect()
@@ -115,8 +120,8 @@ export function CreditCardFaceTilt({
         setTilt({ rx: 0, ry: 0 })
     }, [])
 
-    const onEnter = useCallback(() => {
-        setHovered(true)
+    const onEnter = useCallback((e: PointerEvent<HTMLDivElement>) => {
+        if (ehCursor(e)) setHovered(true)
     }, [])
 
     const active = !disabled && !reduceMotion
@@ -125,9 +130,9 @@ export function CreditCardFaceTilt({
         <div
             ref={rootRef}
             className={cn("[perspective:1200px]", className)}
-            onMouseEnter={onEnter}
-            onMouseMove={onMove}
-            onMouseLeave={onLeave}
+            onPointerEnter={onEnter}
+            onPointerMove={onMove}
+            onPointerLeave={onLeave}
         >
             <div
                 className={cn(

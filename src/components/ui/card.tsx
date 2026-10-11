@@ -89,7 +89,7 @@ const cardVariants = cva(
     // ao foco do link como se fosse ele, e todo outro alvo de dentro — os
     // botões do rodapé, o menu — sobe acima da película do link.
     "has-[[data-slot=card-link]]:transition-[box-shadow,border-color] has-[[data-slot=card-link]]:duration-(--duration-fast)",
-    "has-[[data-slot=card-link]:hover]:shadow-md has-[[data-slot=card-link]:active]:shadow-md",
+    "[@media(hover:hover)]:has-[[data-slot=card-link]:hover]:shadow-md has-[[data-slot=card-link]:active]:shadow-md",
     "has-[[data-slot=card-link]:focus-visible]:ring-3 has-[[data-slot=card-link]:focus-visible]:ring-ring/45",
     "has-[[data-slot=card-link]]:[&_:is(button,a,[role=button]):not([data-slot=card-link])]:relative has-[[data-slot=card-link]]:[&_:is(button,a,[role=button]):not([data-slot=card-link])]:z-10",
   ],

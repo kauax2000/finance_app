@@ -299,7 +299,7 @@ function ItemDescription({ className, ...props }: React.ComponentProps<"p">) {
     <Muted
       data-slot="item-description"
       className={cn(
-        "line-clamp-2 text-left leading-normal font-normal group-data-[size=sm]/item:text-xs [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary-accent [&>a:active]:text-primary-accent",
+        "line-clamp-2 text-left leading-normal font-normal group-data-[size=sm]/item:text-xs [&>a]:underline [&>a]:underline-offset-4 [&>a]:hover:text-primary-accent [&>a:active]:text-primary-accent",
         className
       )}
       {...props}

@@ -154,6 +154,7 @@ entender a tela antes de mexer: o script vê linhas, não intenção.
 | **D3** | paleta padrão do Tailwind | **Corrigir direto.** `bg-white` → `bg-card`, `text-gray-600` → `text-muted-foreground`, `text-emerald-600` → `text-income` ou `text-success`. |
 | **F** | semântica / acessibilidade | **Corrigir direto.** `<div onClick>` → `<Button>`, `alt` na imagem, `aria-label` no botão só-ícone. |
 | **H** | `hover:` sem `active:` | **Corrigir direto** somando `active:` ou `group-active:`. Nunca removendo o `hover:` — ver abaixo. |
+| **H2** | `:hover` à mão fora de `@media (hover: hover)` | **Corrigir direto**: `[&>a:hover]:x` vira `[&>a]:hover:x`; `has-[…:hover]` ganha o prefixo `[@media(hover:hover)]:`. Solto, o toque o acende e ele gruda. Ouvinte de `pointerenter` pergunta `ehCursor` (`lib/pointer.ts`). |
 | **I** | `Intl.*` ou `toLocaleString` inline | **Corrigir direto** para `@/lib/formatters` ou `@/lib/transaction-date`. |
 | **G** | ícone fora do Heroicons, ou conjunto errado para o tamanho | **Corrigir direto.** `size-4` e abaixo usam `16/solid`, `size-5` usa `20/solid`, `size-6`+ usa `24/outline`. `<svg>` colado só nos `DRAWN_SVG_FILES`. |
 | **J** | faixa de superfície com fio **e** tinta | **Corrigir direto** para a tira do componente (`CardToolbar`, `DialogFooter`…), que não pinta nem desenha fio. |

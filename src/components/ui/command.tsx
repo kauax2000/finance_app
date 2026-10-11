@@ -9,6 +9,7 @@ import { SearchInput } from "@/components/ui/search-input"
 import { Kbd } from "@/components/ui/kbd"
 import { Drawer, DrawerContent } from "@/components/ui/drawer"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { ehCursor } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
 import { ariaShortcut, matchShortcut } from "@/lib/shortcut"
 import { Caption, P } from "@/components/ui/typography"
@@ -231,6 +232,13 @@ function Command({
         ocioso.onInput?.(event)
       }}
       onPointerMoveCapture={(event) => {
+        // O cmdk acende a linha no `pointermove` do item, e o dedo rolando a
+        // lista a acendia por onde passava: a seleção pelo ponteiro é do
+        // cursor. Em captura, o item nem recebe o movimento do toque.
+        if (!ehCursor(event)) {
+          event.stopPropagation()
+          return
+        }
         props.onPointerMoveCapture?.(event)
         ocioso.onPointerMoveCapture?.(event)
       }}
@@ -1486,7 +1494,8 @@ function CommandShortcut({
     <span
       data-slot="command-shortcut"
       className={cn(
-        "ml-auto text-xs tracking-widest text-muted-foreground group-data-selected/command-item:text-accent-foreground",
+        // Some no toque: sem teclado físico, a tecla não diz nada.
+        "ml-auto text-xs tracking-widest text-muted-foreground group-data-selected/command-item:text-accent-foreground pointer-coarse:hidden",
         className
       )}
       {...props}

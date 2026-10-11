@@ -12,6 +12,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { LayoutGroup, motion, useReducedMotion } from "motion/react"
 import { NavigationMenu as NavigationMenuPrimitive, Slot } from "radix-ui"
 
+import { ehCursor } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { menuPanelTintClassName } from "@/lib/glass-classes"
@@ -856,11 +857,11 @@ function NavigationMenuTrigger({
       )}
       onPointerEnter={(e) => {
         onPointerEnter?.(e)
-        if (!segurar(e)) ctx.setHover(item)
+        if (!segurar(e) && ehCursor(e)) ctx.setHover(item)
       }}
       onPointerMove={(e) => {
         onPointerMove?.(e)
-        if (!segurar(e)) ctx.setHover(item)
+        if (!segurar(e) && ehCursor(e)) ctx.setHover(item)
       }}
       onPointerLeave={(e) => {
         window.clearTimeout(esperaRef.current)
@@ -1394,6 +1395,7 @@ function NavigationMenuLink({
       )}
       onPointerEnter={(e) => {
         onPointerEnter?.(e)
+        if (!ehCursor(e)) return
         if (inPanel) {
           if (preview) previewCtx?.setAtual(preview)
         } else ctx.setHover(item)
