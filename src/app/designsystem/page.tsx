@@ -15,14 +15,6 @@ import {
     SwatchIcon,
 } from "@heroicons/react/16/solid"
 import Link from "next/link"
-import { AppLogo } from "@/components/layout/app-logo"
-import {
-    Card,
-    CardDescription,
-    CardHeader,
-    CardLink,
-    CardTitle,
-} from "@/components/ui/card"
 import { Code } from "@/components/ui/code"
 import {
     Item,
@@ -51,10 +43,9 @@ import { CATEGORY_META } from "./category-meta"
 import { REGISTRY, getEntry, groupedRegistry, slugifyCategory } from "./registry"
 
 /**
- * Por onde se começa: a marca, e as quatro páginas que mudam o que alguém vai
- * escrever nas outras — a cor, o valor em reais, o formulário e o toque.
+ * Por onde se começa: as quatro páginas que mudam o que alguém vai escrever
+ * nas outras — a cor, o valor em reais, o formulário e o toque.
  */
-const BRAND_SLUG = "brand"
 const START_HERE = [
     { slug: "colors", Icon: SwatchIcon },
     { slug: "money-display", Icon: BanknotesIcon },
@@ -62,7 +53,6 @@ const START_HERE = [
     { slug: "form", Icon: ArrowUturnLeftIcon },
     { slug: "touch-safe-area", Icon: CursorArrowRaysIcon },
 ]
-const START_HERE_COUNT = START_HERE.length + 1
 
 const CATEGORY_BLURB: Record<string, string> = {
     Foundations: "As decisões que todo o resto herda: cor, tipo, forma, movimento, camada.",
@@ -75,7 +65,6 @@ const CATEGORY_BLURB: Record<string, string> = {
 export default function DesignSystemIndexPage() {
     const groups = groupedRegistry()
     const foundations = REGISTRY.filter((item) => item.category === "Foundations").length
-    const brand = getEntry(BRAND_SLUG)
 
     return (
         <div className="flex flex-col gap-12 pb-24">
@@ -101,30 +90,11 @@ export default function DesignSystemIndexPage() {
                 <PageSectionHeader>
                     <PageSectionTitle>Comece aqui</PageSectionTitle>
                     <PageSectionDescription>
-                        Cinco páginas antes das outras {REGISTRY.length - START_HERE_COUNT}.
+                        Quatro páginas antes das outras {REGISTRY.length - START_HERE.length}.
                         Elas não descrevem um componente: descrevem a decisão que os
                         componentes obedecem.
                     </PageSectionDescription>
                 </PageSectionHeader>
-
-                {/* A peça de marca da tela: a marca é o que se lê primeiro. */}
-                {brand ? (
-                    <Card variant="brand">
-                        <CardHeader media={<AppLogo size="md" />}>
-                            <CardTitle>
-                                <CardLink asChild>
-                                    <Link href={`/designsystem/${brand.slug}`}>
-                                        {brand.name}
-                                    </Link>
-                                </CardLink>
-                            </CardTitle>
-                            <CardDescription>
-                                A marca é preta, branca no escuro, e o arco-íris é a
-                                única cor dela.
-                            </CardDescription>
-                        </CardHeader>
-                    </Card>
-                ) : null}
 
                 <ItemGroup role="list" className="grid gap-2 sm:grid-cols-2">
                     {START_HERE.map(({ slug, Icon }) => {
