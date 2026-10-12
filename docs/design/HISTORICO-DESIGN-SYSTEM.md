@@ -25081,3 +25081,75 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   principal ficar em cima no telefone. O antigo `SheetFooter` empilhava na
   ordem do DOM — então os 17 rodapés que vieram da folha declaram `flex-col`
   explicitamente, e é de propósito.
+
+### Rodada 252 — o resto da auditoria
+
+Continuação da 251, com o mesmo compromisso: **nenhum componente, peça,
+variante ou prop saiu**. As variantes do `ds:catalog` e o `docs-map` saíram
+idênticos ao commit de partida (só a coluna de primitivo do `kbd` e do `sonner`
+mudou, porque deixaram de importar `cmdk` e `vaul`).
+
+**O que juntou, e com quais parâmetros**
+
+- **O esconder ao rolar** das três barras é `lib/hide-on-scroll`, e o "⋯" de
+  transbordo do `Tabs`, da `Toolbar` e do `PageHeader` é um mecanismo só
+  (`lib/overflow-menu.tsx`). O gatilho das abas é o "⋯" com o nome "Mais abas",
+  na altura da aba (`sm` 24 · `md` 28 · `lg` 32 · `xl` 36).
+- **Os véus** são `overlayClassName` (em `drawer.tsx`, reexportado por
+  `dialog.tsx`); o do descarte ganhou o borrão dos outros.
+- **O `AlertDialog`** veste o cabeçalho, o rodapé e o título do `Dialog`: o
+  espaçamento dele agora é o do `Dialog`.
+- **No telefone o `Sheet` é o `Drawer`**: a mesma gaveta, a mesma superfície de
+  vidro e um aninhamento só; o meio da gaveta é marcado pelo JS e achado pelo
+  CSS, sem a cadeia de `:not()`. Cinco folhas do app com `p-0` ganharam 24px
+  mais a área segura embaixo no telefone (e o rodapé deixou de ficar sob o
+  indicador do iPhone).
+- **O marcador** do `Tabs`, da `BottomBar` e do `ToggleGroup` é o hook
+  `useMarcador`; o `ToggleGroup segmented` passou a correr como o `Tabs`.
+- **O `Collapsible`** guarda o aberto pelo `useControllableState` do Radix.
+- **O `rise`** é um keyframe só para as cascatas de subir, com a distância em
+  `--rise-distance`; o `page-section-rise` ficou à parte, por ser o único que
+  desfoca (um `filter` compartilhado vira animação `none → none` no Chrome).
+- **A base da barra do topo** é uma variável de CSS por documento, e não um
+  `ResizeObserver` por barra.
+- **O `Chart`** perdeu as fases e o `IntersectionObserver`: a entrada é a
+  animação do próprio Recharts (`CHART_ENTER_MS`) e anima ao montar; a troca de
+  dado volta a `CHART_UPDATE_MS` (300ms), e a onda, a mola e as cascatas do
+  mapa de calor e das listas ficaram.
+- **Os scripts** (`catalog.mjs`, `audit.mjs`) tiram comentários pela mesma
+  função (`sem-comentarios.mjs`); o catálogo segue variáveis na `cva`.
+- **Os testes de escada** (`*-ladder.test.ts`) viraram uma tabela só,
+  `escadas.test.ts`, e o vidro da placa é testado num lugar só.
+
+**O que trocou por nativo**
+
+- O **Enter do `Form`** é a submissão implícita do navegador: todo botão de
+  envio pertence a um formulário, `ENTER_DEFERRAL_RULES` e
+  `shouldDeferEnterToWidget` saíram, e o ⌘Enter usa o botão padrão. Por isso o
+  **`Button` nasce `type="button"`** (fora do `asChild`); quem envia declara
+  `type="submit"`, e o `FormSubmit` já declara.
+- O **estado do `Collapsible`** e o **`composeRefs`** vêm do Radix, não de
+  cópias nossas.
+
+**Visível ao dono**
+
+- Espaçamento do `AlertDialog` = o do `Dialog`; `Sheet` no telefone = `Drawer`;
+  `ToggleGroup segmented` viaja como o `Tabs`; o gatilho de excesso do `Tabs` é
+  o "⋯ Mais abas"; os gráficos animam ao montar; o toast das telas sem barra do
+  topo no telefone (login, cadastro) nasce na área segura + 12px (era + 4rem,
+  que pressupunha a barra do app); `Button` nasce `type="button"`.
+
+**Tamanho**
+
+- **`AGENTS.md`: 3.503 → 1.427 linhas.** A narrativa foi inteira, na ordem,
+  para este arquivo (preâmbulo dizendo que a regra vigente é a do `AGENTS.md`).
+- **Comentários de história** viraram uma linha de porquê em 217 arquivos
+  (componentes, css, lib, hooks, testes e o casco do catálogo): 18.665 linhas
+  removidas e 7.532 escritas, **11.133 a menos** — só comentário, conferido
+  por comparação do código sem comentários, arquivo a arquivo, antes e depois.
+  Saíram também os relatórios de registro histórico e o A/B do grão.
+
+**Medido no fim:** `tsc` limpo; lint 0 erros e 57 avisos; 140 arquivos e 1.910
+testes passando; `ds:audit` sem achado; variantes do catálogo idênticas;
+`ds:docs-map` sem diferença; varredura no navegador de todas as páginas do
+catálogo e do `/login` sem erro do Next e sem `console.error`.
