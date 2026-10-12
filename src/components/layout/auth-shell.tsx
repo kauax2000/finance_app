@@ -28,7 +28,7 @@ export function AuthShell({
     description?: ReactNode
     /** O topo da coluna: o `SplitShellBack`. */
     back?: ReactNode
-    /** O pé da coluna: o `SplitShellFooter`. */
+    /** O `SplitShellFooter`, logo abaixo do formulário. */
     footer?: ReactNode
     /** O passo do fluxo; ao mudar, o conteúdo desliza e o foco vai ao título. */
     step?: string | number
@@ -47,10 +47,12 @@ export function AuthShell({
             title={title}
             description={description}
             back={back}
-            footer={footer}
             step={step}
         >
             {children}
+            {/* O pé mora junto do formulário, e não preso à base da coluna:
+                "Criar conta" é a alternativa a ele, e longe dele some. */}
+            {footer}
         </SplitShell>
     )
 }
