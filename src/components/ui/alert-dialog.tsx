@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils"
 import { Muted } from "@/components/ui/typography"
 import { Button } from "@/components/ui/button"
 import {
-  DIALOG_OVERLAY_CLASS,
+  overlayClassName,
   DialogFooter,
   DialogHeader,
   dialogContentVariants,
@@ -97,7 +97,7 @@ function AlertDialogOverlay({
   return (
     <AlertDialogPrimitive.Overlay
       data-slot="alert-dialog-overlay"
-      className={cn(DIALOG_OVERLAY_CLASS, className)}
+      className={cn(overlayClassName("modal"), className)}
       {...props}
     />
   )

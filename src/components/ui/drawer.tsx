@@ -13,13 +13,31 @@ import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { Button } from "@/components/ui/button"
 
 /**
- * O véu das superfícies de borda — desta gaveta e do `Sheet`, nos dois ramos.
- * Ele morava no `sheet.tsx`, e a gaveta o importava de lá; quando a alça veio
- * para cá (rodada 159) o `Sheet` passou a importar deste arquivo, e o véu veio
- * junto para a dependência correr num sentido só.
+ * O véu de todo modal do sistema, numa função só: a camada é o único
+ * parâmetro. Ele mora aqui, e não no `dialog.tsx`, porque a dependência corre
+ * num sentido só — `dialog` importa `sheet`, que importa este arquivo — e o
+ * `dialog.tsx` o reexporta. As camadas ficam num mapa de literais, porque o
+ * Tailwind lê o texto e uma classe montada por template não chega ao CSS.
+ *
+ * `fade` é o esmaecer de entrada e saída por keyframe. A gaveta o desliga: o
+ * vaul anima o próprio véu e o acompanha no arraste, e um keyframe brigaria.
  */
-const SHEET_OVERLAY_CLASS =
-  "fixed inset-0 z-(--z-sheet) bg-overlay supports-backdrop-filter:backdrop-blur-xs"
+const OVERLAY_Z = {
+  modal: "z-(--z-modal)",
+  sheet: "z-(--z-sheet)",
+} as const
+
+function overlayClassName(camada: keyof typeof OVERLAY_Z, fade = true) {
+  return cn(
+    "fixed inset-0 isolate bg-overlay supports-backdrop-filter:backdrop-blur-xs",
+    OVERLAY_Z[camada],
+    fade &&
+      "animation-duration-(--duration-slow) ease-(--ease-out) data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0"
+  )
+}
+
+/** O véu das superfícies de borda: o de `overlayClassName("sheet")`, sem o esmaecer. */
+const SHEET_OVERLAY_CLASS = overlayClassName("sheet", false)
 
 /**
  * O contrato que a cromagem do `Dialog` lê, nas superfícies de borda — esta
@@ -775,6 +793,7 @@ export {
   DrawerRaizContext,
   DrawerTrigger,
   drawerContentVariants,
+  overlayClassName,
   SHEET_OVERLAY_CLASS,
   SURFACE_CONTRACT_CLASS,
 }

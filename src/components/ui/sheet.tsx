@@ -15,6 +15,7 @@ import {
   Drawer,
   DrawerContent,
   DrawerRaizContext,
+  overlayClassName,
   SHEET_OVERLAY_CLASS,
   SURFACE_CONTRACT_CLASS,
 } from "@/components/ui/drawer"
@@ -396,12 +397,11 @@ function SheetOverlay({
     <Comp
       data-slot="sheet-overlay"
       className={cn(
-        SHEET_OVERLAY_CLASS,
         // Só o painel anima o véu por keyframe. Na gaveta o vaul já anima o
         // próprio véu (`fadeIn`, medido no computado) e o acompanha no arraste;
         // as classes de entrada ali eram mortas.
-        surface === "panel" &&
-          "data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0 ease-in-out data-open:animation-duration-(--duration-slow) data-closed:animation-duration-(--duration-slow)",
+        overlayClassName("sheet", surface === "panel"),
+        surface === "panel" && "ease-in-out",
         className
       )}
       {...props}

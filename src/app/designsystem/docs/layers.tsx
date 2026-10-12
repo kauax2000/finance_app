@@ -20,7 +20,7 @@ const BANDS = [
     layers: [
       { token: "--z-toast", value: 100, use: "o aviso, sempre por último", who: ["Toaster", "o atalho “pular para o conteúdo”"] },
       { token: "--z-popover", value: 80, use: "toda superfície ancorada e portalizada — abre por cima da folha que a contém", who: ["Popover", "DropdownMenu", "ContextMenu", "Menubar", "Select", "Combobox", "Tooltip", "HoverCard"] },
-      { token: "--z-sheet", value: 70, use: "cobre o modal e a barra de baixo", who: ["Sheet", "Drawer"] },
+      { token: "--z-sheet", value: 70, use: "cobre o modal e a barra de baixo; o \"Descartar alterações?\" fica por cima da folha que pergunta", who: ["Sheet", "Drawer"] },
       { token: "--z-modal", value: 50, use: "o que interrompe a tela", who: ["Dialog", "AlertDialog", "CommandDialog", "BottomBar", "a tela de carregamento"] },
     ],
   },

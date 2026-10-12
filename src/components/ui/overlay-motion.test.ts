@@ -4,6 +4,8 @@ import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
 import { popoverContentVariants } from "@/components/ui/popover"
 import { menuSurfaceClassName } from "@/lib/menu-classes"
+import { DIALOG_OVERLAY_CLASS, overlayClassName } from "@/components/ui/dialog"
+import { SHEET_OVERLAY_CLASS } from "@/components/ui/drawer"
 
 const CSS = lerFonte("src/app/globals.css")
 const ui = (nome: string) => lerFonte(`src/components/ui/${nome}.tsx`)
@@ -105,5 +107,24 @@ describe("O movimento do que se sobrepõe à tela, rodada 248", () => {
     for (const lado of ["top", "right", "bottom", "left"]) {
       expect(folha).toContain(`data-open:slide-in-from-${lado} data-closed:slide-out-to-${lado}`)
     }
+  })
+})
+
+describe("Os véus, rodada 252", () => {
+  it("o véu é um só, com a camada como parâmetro", () => {
+    expect(overlayClassName("modal")).toContain("z-(--z-modal)")
+    expect(overlayClassName("sheet")).toContain("z-(--z-sheet)")
+    for (const c of ["modal", "sheet"] as const) {
+      expect(overlayClassName(c)).toContain("bg-overlay")
+      expect(overlayClassName(c)).toContain("backdrop-blur-xs")
+    }
+  })
+
+  it("as constantes antigas saem dele, e o descarte veste o véu de sheet", () => {
+    expect(DIALOG_OVERLAY_CLASS).toBe(overlayClassName("modal"))
+    expect(SHEET_OVERLAY_CLASS).toBe(overlayClassName("sheet", false))
+    expect(overlayClassName("sheet")).toContain("data-open:fade-in-0")
+    expect(SHEET_OVERLAY_CLASS).not.toContain("animate-in")
+    expect(ui("dialog")).toContain('className={overlayClassName("sheet")}')
   })
 })

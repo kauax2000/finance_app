@@ -23,6 +23,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { overlayClassName } from "@/components/ui/drawer"
 
 /**
  * O recuo que desvia do botão de fechar.
@@ -212,7 +213,7 @@ function ConfirmarDescarte({
       <AlertDialogPrimitive.Portal>
         <AlertDialogPrimitive.Overlay
           data-slot="dialog-discard-overlay"
-          className="fixed inset-0 z-(--z-sheet) bg-overlay animation-duration-(--duration-base) data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0"
+          className={overlayClassName("sheet")}
         />
         <AlertDialogPrimitive.Content
           data-slot="dialog-discard"
@@ -278,8 +279,7 @@ function DialogClose({
 }
 
 /** O véu do diálogo — o mesmo do `AlertDialog`, que o importa daqui. */
-const DIALOG_OVERLAY_CLASS =
-  "fixed inset-0 isolate z-(--z-modal) bg-overlay animation-duration-(--duration-slow) ease-(--ease-out) supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0"
+const DIALOG_OVERLAY_CLASS = overlayClassName("modal")
 
 function DialogOverlay({
   className,
@@ -906,6 +906,7 @@ export {
   DialogTitle,
   DialogTrigger,
   DIALOG_OVERLAY_CLASS,
+  overlayClassName,
   dialogContentVariants,
   dialogTitleClassName,
   // A origem do clique, que o `AlertDialog` também usa (rodada 248).
