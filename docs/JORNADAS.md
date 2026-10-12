@@ -98,7 +98,7 @@ e-mail e senha.
 
 As cinco telas dividem uma casca só, o `AuthShell`: painel de marca com uma cena
 por tela, a partir de 48rem do próprio casco (container query); no telefone só o
-wordmark (`asideMobile="logo"`); coluna de formulário à direita. Quem monta a casca é o **formulário**, não a página, porque o título
+wordmark (`asideMobile="logo"`); coluna de formulário à esquerda, painel à direita (`side="end"`). Quem monta a casca é o **formulário**, não a página, porque o título
 muda com o estado (o cadastro vira "Confira seu e-mail", a recuperação troca a
 cada passo). No desktop o painel de marca mostra uma cena própria por tela; no
 telefone fica só o wordmark.

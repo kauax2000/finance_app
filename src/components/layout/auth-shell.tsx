@@ -41,6 +41,7 @@ export function AuthShell({
     return (
         <SplitShell
             aside={<AuthBrandPanel>{scene}</AuthBrandPanel>}
+            side="end"
             asideMobile="logo"
             media={media}
             title={title}
