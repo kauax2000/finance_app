@@ -7,7 +7,7 @@ import { tagChipFilterSelected, tagChipNeutral } from "./badge"
 import { toggleVariants } from "./toggle"
 import { ToggleGroup, ToggleGroupItem } from "./toggle-group"
 
-/** As versões da rodada 199. */
+/** As versões do `ToggleGroup`. */
 
 const grupo = (props: Record<string, unknown>, ...itens: Record<string, unknown>[]) =>
   renderToStaticMarkup(
@@ -18,7 +18,7 @@ const grupo = (props: Record<string, unknown>, ...itens: Record<string, unknown>
     )
   )
 
-describe("ToggleGroup, rodada 199", () => {
+describe("ToggleGroup", () => {
   it("a ficha é, classe a classe, o chip de filtro do Badge", () => {
     const ficha = toggleVariants({ variant: "chip" }).split(/\s+/)
     for (const c of tagChipNeutral.split(/\s+/)) expect(ficha).toContain(c)
@@ -81,7 +81,7 @@ describe("ToggleGroup, rodada 199", () => {
   })
 })
 
-describe("ToggleGroup floating, rodada 231", () => {
+describe("ToggleGroup floating", () => {
   it("é a pílula do Tabs padrão: placa com anel, tecla em relevo, e escolha de valor e não aba", () => {
     const html = grupo(
       { variant: "floating", defaultValue: "a" },

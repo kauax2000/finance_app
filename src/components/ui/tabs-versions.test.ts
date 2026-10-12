@@ -21,11 +21,11 @@ import {
   tabsListTrackVariants,
 } from "./tabs"
 
-/** A rodada 226: o `floating` sem sombra como padrão e as versões novas. */
+/** O `floating` sem sombra como padrão e as versões novas. */
 
 const TABS = lerFonte("src/components/ui/tabs.tsx")
 const LIQUIDO = lerFonte("src/lib/liquid-move.ts")
-/** Desde a rodada 252 a medição e a viagem moram num hook só, com o BottomBar e o ToggleGroup. */
+/** A medição e a viagem moram num hook só, com o BottomBar e o ToggleGroup. */
 const MARCADOR = lerFonte("src/hooks/use-marcador.ts")
 
 const render = (...filhos: ReturnType<typeof h>[]) =>
@@ -62,7 +62,7 @@ describe("o floating, padrão do sistema", () => {
     expect(LIQUIDO).toContain('window.matchMedia("(prefers-reduced-motion: reduce)")')
     // Proporcional às abas andadas, um pouco mais macio que o alternador.
     expect(MARCADOR).toContain("Math.min(0.18, passo > 0 ? (andado / passo) * 0.09 : 0.09)")
-    // Desde a rodada 230 o trajeto macio mora na lib, e o BottomBar o divide.
+    // O trajeto macio mora na lib, e o BottomBar o divide.
     expect(MARCADOR).toContain("trajeto: TRAJETO_MACIO")
     expect(LIQUIDO).toContain('export const TRAJETO_MACIO = { duration: 480, easing: "cubic-bezier(0.65,0,0.25,1)" }')
     // O esticão acompanha o trajeto, para continuar em fase.
@@ -186,25 +186,10 @@ describe("o app", () => {
 })
 
 /**
- * A escada do `Tabs`, trancada.
- *
- * Este teste existe por causa de um defeito específico e medido: o gatilho das
- * abas media **27px**. A lista era `h-9` (36) com `p-1` (8), o que deixa 28 de
- * caixa de conteúdo, e o gatilho era `h-[calc(100%-1px)]` — 27, um pixel abaixo
- * do piso da escada de controles do projeto.
- *
- * O que o deixou passar não foi a falta de teste; foi a **direção da âncora**.
- * Com a altura declarada no contêiner, a do gatilho é um resto de subtração, e
- * um resto de subtração não tem nome para ninguém conferir. É o mesmo defeito
- * que o `Menubar` teve (lá, 24px), e o conserto é o mesmo: a escada nomeia o
- * gatilho, e o contêiner cresce em volta.
- *
- * Por isso a asserção que de fato vale é a de número 4 — **a lista não pode
- * declarar altura nenhuma**. As outras são baratas e ficam; essa é a que
- * impediria a regressão de voltar pela mesma porta.
- *
- * Segue o idioma de `src/lib/tailwind-hover-policy.test.ts`: uma política do
- * design system trancada por asserção, e não por captura de tela.
+ * A escada do `Tabs`, trancada. O defeito: o gatilho media 27px porque a altura era declarada
+ * no contêiner (`h-9` com `p-1`) e o gatilho era um resto de subtração. A escada nomeia o
+ * gatilho e o contêiner cresce em volta. Segue o idioma de `tailwind-hover-policy.test.ts`:
+ * política do design system trancada por asserção.
  */
 
 const SIZES = ["sm", "md", "lg", "xl"] as const
@@ -249,11 +234,8 @@ describe("a escada mede a bandeja", () => {
 
 describe("quem declara a altura é a moldura", () => {
   /**
-   * Esta asserção era o **oposto** até esta rodada: ela exigia que a moldura
-   * não declarasse altura nenhuma, para o gatilho ser a fonte da verdade.
-   * Invertê-la é a rodada inteira — e o que a torna segura é que os dois
-   * números continuam sendo degraus reais e continuam escritos, que é
-   * exatamente o que faltava quando o componente entregava 27.
+   * A moldura declara a altura (gatilho + bandeja), e os dois números são degraus reais e
+   * continuam escritos.
    */
   it("a moldura declara a bandeja — e só na horizontal", () => {
     for (const variant of VARIANTS) {
@@ -297,9 +279,8 @@ describe("o marcador viaja com os tokens do sistema", () => {
   const VARIANTS_ = ["floating", "solid", "underline", "plain"] as const
 
   it("a viagem é a do ThemeToggle, em WAAPI — e nenhuma transição de CSS disputa com ela", () => {
-    // Desde a rodada 226 o marcador corre pela receita compartilhada de
-    // `lib/liquid-move` (o trajeto com inércia e o esticão). Uma transição de
-    // CSS em `translate`/`width` correria junto, e as duas brigariam.
+    // O marcador corre pela receita de `lib/liquid-move`; uma transição de CSS em
+    // `translate`/`width` correria junto e as duas brigariam.
     for (const variant of VARIANTS_) {
       const classes = tabsIndicatorVariants({ variant })
       expect(classes).not.toMatch(/transition-\[translate/)
@@ -334,11 +315,8 @@ describe("o marcador viaja com os tokens do sistema", () => {
 
 describe("a escada do Tabs — `size` nomeia a bandeja", () => {
   /**
-   * O defeito que originou isto: `size="md"` entregava um componente de **40**
-   * numa linha de controles de 32, e a promessa da casa — *"alinha sem ninguém
-   * dizer `size`"*, escrita nas páginas do `Button`, do `Input` e do `Toggle` —
-   * era falsa só aqui, porque o `Tabs` era o único em que `size` nomeava uma
-   * peça interna.
+   * `size="md"` entregava um componente de 40 numa linha de controles de 32; a promessa da casa
+   * ("alinha sem ninguém dizer `size`") valia em todo controle menos aqui.
    */
   const ESCADA = [24, 28, 32, 36, 40] as const
   const DEGRAUS = ["sm", "md", "lg", "xl"] as const
@@ -351,7 +329,7 @@ describe("a escada do Tabs — `size` nomeia a bandeja", () => {
   })
 
   it("2. `md` é 32 — a mesma altura de um `Button md`", () => {
-    // É a promessa da casa, e a asserção que fecha a rodada.
+    // É a promessa da casa: alinha sem `size`.
     expect(TABS_SIZES.md.tray).toBe(32)
     expect(TABS_TRAY_HEIGHTS.md).toBe(32)
   })
@@ -363,8 +341,8 @@ describe("a escada do Tabs — `size` nomeia a bandeja", () => {
   })
 
   it("6. o piso de toque é o degrau que a Toolbar publica", () => {
-    // A `Toolbar` vai a 40 no ponteiro grosso; a bandeja acompanha, e o
-    // `pointer-coarse:min-h-11` que empurrava tudo para 48 saiu.
+    // A `Toolbar` vai a 40 no ponteiro grosso e a bandeja acompanha; `pointer-coarse:min-h-11`
+    // não volta.
     expect(TABS_SIZES.xl.tray).toBe(40)
     const fonte = FONTE.replace(/\/\*[\s\S]*?\*\//g, "")
     expect(fonte).not.toContain("min-h-11")
@@ -372,10 +350,8 @@ describe("a escada do Tabs — `size` nomeia a bandeja", () => {
   })
 
   it("7. os literais de altura batem com a escada — e são literais", () => {
-    // A armadilha que esta rodada pagou: `pointer-coarse:h-9` montada por
-    // template literal ficava no elemento e nunca chegava ao CSS. As classes
-    // são escritas por extenso; este teste é quem garante que elas não
-    // divergem da tabela.
+    // Classe montada por template literal ficava no elemento e nunca chegava ao CSS; as classes
+    // são escritas por extenso e este teste garante que não divergem da tabela.
     for (const size of DEGRAUS) {
       expect(tabsListFrameVariants({ size })).toContain(
         `data-[orientation=horizontal]:${ALTURA_CLASS[TABS_SIZES[size].tray]}`
@@ -393,8 +369,7 @@ describe("a escada do Tabs — `size` nomeia a bandeja", () => {
   })
 
   it("8. cada variante tem o seu degrau padrão — as três não são a mesma coisa", () => {
-    // O defeito medido: sem `size` declarado, `solid`, `underline` e `plain`
-    // saíam idênticos — moldura 32, gatilho 28, fonte 12,8px nas três.
+    // Sem `size` declarado, `solid`, `underline` e `plain` saíam idênticos.
     expect(defaultTabsSize("solid")).toBe("md")
     expect(defaultTabsSize("underline")).toBe("lg")
     expect(defaultTabsSize("plain")).toBe("lg")
@@ -423,16 +398,9 @@ describe("a escada do Tabs — `size` nomeia a bandeja", () => {
 })
 
 /**
- * O modo de vidro do marcador.
- *
- * Ele é o *thumb* que viaja, e a decisão que este bloco tranca é **onde** o
- * vidro entra: na peça que se move, e nunca na bandeja. A bandeja foi medida
- * numa fileira idêntica a esta — o `Menubar solid`, rodada 59 —, e a 60% no
- * escuro ela cai de rgb 38 para 27 e deixa de ler como bandeja.
- *
- * A garantia que faz a troca ser segura é aritmética, e é a asserção 2: o corpo
- * do marcador de vidro é o **mesmo** do chapado, porque `--glass-tone` é
- * `--background` opaco. O que entra é o aro. Nenhum contraste se move.
+ * O modo de vidro do marcador: o vidro entra na peça que se move, nunca na bandeja (a 60% no
+ * escuro a bandeja deixa de ler como bandeja). O corpo do marcador de vidro é o mesmo do
+ * chapado, porque `--glass-tone` é `--background` opaco.
  */
 describe("o vidro do marcador do Tabs", () => {
   it("1. o ramo de vidro veste a régua e não escreve o que ela apagaria", () => {
@@ -485,10 +453,8 @@ describe("o vidro do marcador do Tabs", () => {
     const trilha = tabsListTrackVariants({ variant: "solid", glass: true })
 
     /**
-     * Por token, e não por regex sobre a string inteira: o seletor tem
-     * colchetes **aninhados** (`has-[[data-slot=…][data-state=…]:hover]`), e um
-     * `[^\]]*` para no primeiro `]` — reprovou código correto na primeira
-     * escrita deste teste. Separar os tokens também deixa a conta explícita.
+     * Por token, e não por regex sobre a string inteira: o seletor tem colchetes aninhados e um
+     * `[^\]]*` para no primeiro `]`.
      */
     const realces = trilha.split(/\s+/).filter((c) => c.includes("--glass-sheen"))
     const claros = realces.filter((c) => !c.startsWith("dark:"))
@@ -497,10 +463,8 @@ describe("o vidro do marcador do Tabs", () => {
     expect(claros).toHaveLength(2)
     expect(escuros).toHaveLength(2)
 
-    // O `:hover` à mão não ganha o `@media (hover: hover)` da variante do
-    // Tailwind, e no dedo grudava: ele mora na mídia escrita à mão (rodada
-    // 250). O par `:active` é a resposta do toque — a regra H, que o auditor
-    // não alcança dentro de um `cva`.
+    // O `:hover` à mão não ganha o `@media (hover: hover)` da variante e grudava no dedo: mora
+    // na mídia escrita à mão, com o par `:active` (a regra H não alcança um `cva`).
     for (const grupo of [claros, escuros]) {
       expect(grupo.some((c) => c.includes("[@media(hover:hover)]:") && c.includes(":hover]"))).toBe(true)
       expect(grupo.some((c) => c.includes(":active]"))).toBe(true)

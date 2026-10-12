@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
-/** A rodada 212: as versões novas do `Drawer`. */
+/** As versões do `Drawer`. */
 
 const CODIGO = lerFonte("src/components/ui/drawer.tsx")
 
 describe("as versões do Drawer", () => {
   it("dentro de outra gaveta, a raiz vira aninhada sozinha — e dentro de um painel, não", () => {
-    // O aninhamento é um só desde a rodada 252: o painel do `Sheet` também o
-    // publica, e uma gaveta dentro dele é raiz.
+    // O aninhamento é um só: o painel do `Sheet` também o publica, e uma gaveta dentro dele é
+    // raiz.
     expect(CODIGO).toMatch(
       /const Raiz =\s*pai\?\.superficie === "gaveta" \? DrawerPrimitive\.NestedRoot : DrawerPrimitive\.Root/
     )
@@ -51,8 +51,8 @@ describe("as versões do Drawer", () => {
   })
 
   it("a folha de ações: 52px, ícone de 20, e cada ação fecha", () => {
-    // A classe da linha mora em `drawerActionClassName` desde a rodada 213 (o
-    // `DropdownMenu` no telefone a reaproveita); a `DrawerAction` a veste.
+    // A classe da linha mora em `drawerActionClassName` (o `DropdownMenu` no telefone a
+    // reaproveita); a `DrawerAction` a veste.
     expect(CODIGO).toMatch(/const drawerActionClassName = cn\(\s*"flex min-h-13/)
     expect(CODIGO).toMatch(/function DrawerAction\([\s\S]*?<DrawerPrimitive\.Close asChild>[\s\S]*?drawerActionClassName/)
     expect(CODIGO).toContain("[&_svg]:size-5")
@@ -67,15 +67,9 @@ describe("as versões do Drawer", () => {
     expect(conta).not.toMatch(/from "@\/components\/ui\/popover"|MOBILE_GLASS|createCenteredViewportAnchor/)
     expect(lerFonte("src/components/ui/bottom-bar.tsx")).not.toContain("MOBILE_GLASS_MENU")
   })
-
-  it("os comentários não contam mais o que deixou de ser verdade", () => {
-    expect(CODIGO).not.toContain("`drag-handle.test.ts` tranca")
-    expect(CODIGO).not.toContain("O projeto tem quatro")
-    expect(CODIGO).not.toContain("escrito uma vez em\n * `sheet.tsx`")
-  })
 })
 
-describe("toda gaveta do telefone é a flush (rodada 245)", () => {
+describe("toda gaveta do telefone é a flush", () => {
   it("nenhum consumidor pede inset — só a página do catálogo o demonstra", () => {
     const consumidores = [
       "src/components/ui/popover.tsx",

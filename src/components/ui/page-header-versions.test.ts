@@ -4,7 +4,7 @@ import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
 import { pageHeaderVariants } from "./page-header"
 
-/** A rodada 232: o redesenho, as peças e os comportamentos do `PageHeader`. */
+/** O redesenho, as peças e os comportamentos do `PageHeader`. */
 
 const CODIGO = semComentarios(lerFonte("src/components/ui/page-header.tsx"), "linha-inteira")
 const CSS = lerFonte("src/app/globals.css")
@@ -118,9 +118,8 @@ describe("os comportamentos", () => {
 })
 
 /**
- * As medidas do cabeçalho. `PageHeaderTitle` oferecia um corpo só
- * (`text-2xl sm:text-3xl`) enquanto o catálogo renderizava dois; a escada que
- * nasceu daí tem os degraus distintos e subindo trancados em `escadas.test.ts`.
+ * As medidas do cabeçalho: `PageHeaderTitle` oferecia um corpo só; os degraus distintos e
+ * subindo estão trancados em `escadas.test.ts`.
  */
 const HEADER_SIZES = ["sm", "md", "lg"] as const
 
@@ -144,7 +143,7 @@ describe("PageHeader", () => {
     }
   })
 
-  // Rodada 232: o padrão é md, e a régua (`ruled`) saiu — quem separa é o respiro.
+  // O padrão é md, e não há régua: quem separa é o respiro.
   it("o padrão é md", () => {
     expect(pageHeaderVariants({})).toBe(pageHeaderVariants({ size: "md" }))
   })
@@ -157,10 +156,8 @@ describe("PageHeader", () => {
   })
 
   /**
-   * A trilha e a faixa de fatos atravessam as duas colunas, e isso só é
-   * possível numa grade. Enquanto era `sm:flex-row` sem `flex-wrap`, a trilha
-   * caía **dentro** da linha do título — medido a 1280px, com a coluna do
-   * título saindo com largura zero.
+   * A trilha e a faixa de fatos atravessam as duas colunas, o que só é possível numa grade
+   * (como `flex-row` sem `flex-wrap` a trilha caía dentro da linha do título).
    */
   it("é grade, e não uma linha de flex", () => {
     const cls = pageHeaderVariants({})

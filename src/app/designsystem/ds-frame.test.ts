@@ -6,14 +6,9 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 import { PHONE_FRAME_WIDTH } from "./ds-frame"
 
 /**
- * A moldura de telefone, trancada.
- *
- * Ela existe por um defeito medido: a demonstração "Em folha no telefone"
- * enquadrava o chrome numa `<div>` de 384px e o chamava de telefone. Como os
- * componentes usam breakpoints de **viewport**, e não container queries, a
- * 1443px tudo resolvia no ramo desktop — o corpo saía com 20px de recuo em vez
- * de 16, o cabeçalho com 12 em vez de 8, e o rodapé `flex-row justify-end` em
- * vez de empilhado. O botão saía `justify-end` **e** `w-full` ao mesmo tempo.
+ * A moldura de telefone, trancada: componentes usam breakpoints de viewport e não container
+ * queries, então enquadrar o chrome numa `<div>` de 384px resolvia no ramo desktop. Só um
+ * iframe de 375 de viewport mostra o telefone de verdade.
  */
 
 const FONTE = lerFonte("src/app/designsystem/ds-frame.tsx")
@@ -41,10 +36,8 @@ describe("moldura de telefone do catálogo", () => {
     // Um `transform: scale()` daria a aparência de um telefone com o viewport
     // do desktop, que é o defeito que a peça existe para não repetir.
     expect(CODIGO).not.toMatch(/scale\(|transform:/)
-    // A exceção nomeada (rodada 230): o `IphoneFrame` é desenhado a 85% por
-    // `zoom`, **por fora** de uma viewport de 375 — o iframe continua medindo
-    // 375 pixels de CSS (medido: `innerWidth` 375 e a media query de telefone
-    // casando). Fora dele, nada usa `zoom`.
+    // A exceção nomeada: o `IphoneFrame` é desenhado a 85% por `zoom`, por fora de uma viewport
+    // de 375 (o iframe continua medindo 375 de CSS). Fora dele, nada usa `zoom`.
     const zooms = CODIGO.match(/\bzoom\b/g) ?? []
     expect(zooms.length).toBeGreaterThan(0)
     const foraDoIphone = CODIGO.slice(0, CODIGO.indexOf("function IphoneFrame("))
@@ -53,16 +46,14 @@ describe("moldura de telefone do catálogo", () => {
   })
 
   it("3. nenhuma página do catálogo volta a desenhar a moldura à mão", () => {
-    // A exceção nominal que vivia aqui era `docs/sheet-drag-handle.tsx`, e ela
-    // saiu com a página: a alça é demonstrada na página do `Drawer`, em gavetas
-    // de verdade, então não tem moldura à mão para isentar.
+    // Nenhuma exceção nominal sobrou: a alça é demonstrada na página do `Drawer`, em gavetas de
+    // verdade.
     const aMao = PAGINAS.filter(
       (p) => p.texto.includes("rounded-t-2xl") && p.texto.includes("bg-card")
     )
     expect(aMao.map((p) => p.nome)).toEqual([])
 
-    // E a que a usa, usa. Eram duas até a rodada 60, quando a página do chrome
-    // de folha foi apagada junto com o componente.
+    // E a que usa a moldura, usa.
     for (const nome of ["form.tsx"]) {
       const p = PAGINAS.find((x) => x.nome === nome)!
       expect(p.texto, nome).toContain("IphoneFrame")
@@ -71,11 +62,8 @@ describe("moldura de telefone do catálogo", () => {
   })
 
   it("4. a moldura não copia a área segura — quem a dá é a superfície", () => {
-    // Ela já teve uma maquete de folha (`PhoneFrameSheet`) que vestia uma
-    // classe importada só para não copiar o `env()`. A maquete saiu na rodada
-    // 60 junto com o chrome de folha, e a demonstração passou a abrir um
-    // `Sheet` de verdade — a área segura mora no `SheetContent`, e a moldura
-    // não tem o que copiar.
+    // A demonstração abre um `Sheet` de verdade: a área segura mora no `SheetContent` e a
+    // moldura não tem o que copiar.
     expect(CODIGO).not.toContain("safe-area-inset-bottom")
     expect(CODIGO).not.toContain("PhoneFrameSheet")
     const form = PAGINAS.find((p) => p.nome === "form.tsx")!.texto
@@ -129,16 +117,10 @@ describe("moldura de telefone do catálogo", () => {
   })
 
   it("10. o que portaliza para a moldura não é modal dentro dela", () => {
-    // O Radix monta um `RemoveScroll` dentro do `DialogOverlay` sempre que
-    // `modal`, e o `react-remove-scroll` trava o `document` **global** — o da
-    // página de fora —, porque o React roda na janela de fora ainda que o DOM
-    // viva no `<iframe>`. Medido com a folha do `Form` aberta:
-    // `data-scroll-locked` no `<body>` do catálogo, `overflow` `hidden` e um
-    // `wheel` na página saindo `defaultPrevented`; com ela fechada, nada disso.
-    // Quem lê a janela ativa é quem portaliza para lá, e são estes três.
-    // A raiz, e não o arquivo: `{...props}` aparece em toda peça, e um
-    // `indexOf` solto acharia o da peça seguinte — a asserção passaria com o
-    // padrão escrito **depois** do espalhamento. Verificado sabotando.
+    // O Radix monta um `RemoveScroll` no `DialogOverlay` quando `modal`, e o `react-remove-
+    // scroll` trava o `document` global (o React roda na janela de fora). Quem lê a janela
+    // ativa é quem portaliza para lá, e são estes três. A asserção olha a raiz e não o arquivo:
+    // `{...props}` aparece em toda peça e um `indexOf` solto acharia o da peça seguinte.
     for (const [arquivo, raiz] of [
       ["sheet.tsx", "Sheet"],
       ["drawer.tsx", "Drawer"],
@@ -150,10 +132,9 @@ describe("moldura de telefone do catálogo", () => {
       const i = src.indexOf(`function ${raiz}(`)
       const bloco = src.slice(i, src.indexOf("\nfunction ", i + 1))
       expect(bloco.length, `${arquivo}: raiz não achada`).toBeGreaterThan(0)
-      // Antes do espalhamento: é padrão, não imposição — quem chama manda.
-      // Aos pares, porque o `Sheet` tem **duas** raízes (gaveta e painel): com
-      // um índice só, mover o `modal` de uma delas passava batido — o `modal`
-      // da outra ainda vinha antes do primeiro espalhamento. Sabotado nas duas.
+      // Antes do espalhamento: é padrão, não imposição. Aos pares, porque o `Sheet` tem duas
+      // raízes (gaveta e painel) e com um índice só mover o `modal` de uma delas passava
+      // batido.
       const posicoes = (re: RegExp) =>
         [...bloco.matchAll(re)].map((m) => m.index!)
       const modais = posicoes(/modal=\{(modal|useViewportModal\(\))\}/g)

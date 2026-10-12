@@ -2,7 +2,7 @@ import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 import { arquivosTsx, lerFonte } from "@/test/fonte"
 
-/** A lista de pares, trancada na rodada 190. */
+/** A lista de pares, trancada. */
 
 const TELAS = arquivosTsx(join(process.cwd(), "src")).map((caminho) => ({
   caminho,
@@ -33,7 +33,7 @@ describe("a lista de pares", () => {
   })
 })
 
-describe("columns implica grid (rodada 231)", () => {
+describe("columns implica grid", () => {
   it("sem layout=\"grid\" ele não é mais ignorado calado", () => {
     const fonte = lerFonte("src/components/ui/description-list.tsx")
     expect(fonte).toContain('if (columns) layout = "grid"')

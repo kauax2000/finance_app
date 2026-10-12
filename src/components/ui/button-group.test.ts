@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { lerFonte } from "@/test/fonte"
 
-/** O grupo de botões, trancado na rodada 188. */
+/** O grupo de botões, trancado. */
 
 const GRUPO = lerFonte("src/components/ui/button-group.tsx")
 const BOTAO = lerFonte("src/components/ui/button.tsx")

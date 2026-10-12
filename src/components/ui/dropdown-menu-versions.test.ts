@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { lerFonte } from "@/test/fonte"
 
-/** A rodada 213: as versões novas do `DropdownMenu`. */
+/** As versões do `DropdownMenu`. */
 
 const CODIGO = lerFonte("src/components/ui/dropdown-menu.tsx")
 const DOC = lerFonte("src/app/designsystem/docs/dropdown-menu.tsx")
@@ -10,7 +10,7 @@ describe("as versões do DropdownMenu", () => {
   it("no telefone, com mobile=sheet, a raiz é o Drawer e cada peça se desenha como folha", () => {
     expect(CODIGO).toContain('const folha = mobile === "sheet" && isMobile')
     expect(CODIGO).toMatch(/folha \? \(\s*<Drawer open=\{open\} onOpenChange=\{mudar\}>/)
-    // Desde a rodada 245 toda gaveta do telefone é a `flush`, o padrão.
+    // Toda gaveta do telefone é a `flush`, o padrão.
     expect(CODIGO).toContain('<DrawerContent data-slot="dropdown-menu-sheet">')
     // Na folha o título é do Radix: um `id` próprio apontava o nome para o vazio.
     expect(CODIGO).not.toMatch(/<DialogTitle id=\{id\}>/)

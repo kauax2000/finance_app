@@ -12,14 +12,10 @@ import {
   EmptyStateTitle,
 } from "./empty-state"
 
-/**
- * O redesign da rodada 131, trancado: a forma diz a situação, e o arco-íris
- * nunca fica sob o texto.
- */
+/** A forma diz a situação, e o arco-íris nunca fica sob o texto. */
 describe("EmptyState", () => {
   it("o primeiro uso não tem arco-íris", () => {
-    // Quatro versões dele — atrás dos fantasmas e no contorno — foram
-    // recusadas na tela. A marca fica só no numeral das páginas de erro.
+    // A marca fica só no numeral das páginas de erro (atrás dos fantasmas e no contorno, não).
     const html = renderToStaticMarkup(h(EmptyState, { variant: "plain", size: "lg" }, h(EmptyStateGhost)))
     expect(html).not.toMatch(/brand|rainbow|empty-state-contour|empty-state-veil/)
     const css = lerFonte("src/app/globals.css")
@@ -76,7 +72,7 @@ describe("EmptyState", () => {
 
 const FONTE = lerFonte("src/components/ui/empty-state.tsx")
 
-describe("EmptyState, rodada 191", () => {
+describe("EmptyState", () => {
   it("o degrau dos botões é do bloco, e nenhuma tela o reescreve", () => {
     expect(FONTE).toContain("<ButtonSizeContext value={ACOES_DEGRAU[size]}>")
     const culpados = arquivosTsx(join(process.cwd(), "src"))

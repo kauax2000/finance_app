@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
 /**
- * As colunas redimensionáveis (rodada 170). O arraste é nosso, e não da lib,
- * então as decisões que o fazem funcionar numa tabela só existem no código.
+ * As colunas redimensionáveis. O arraste é nosso, e não da lib, então as decisões que o fazem
+ * funcionar numa tabela só existem no código.
  */
 const RESIZABLE = semComentarios(lerFonte("src/components/ui/resizable.tsx"), "numa-passada")
 const TABLE = semComentarios(lerFonte("src/components/ui/table.tsx"), "numa-passada")

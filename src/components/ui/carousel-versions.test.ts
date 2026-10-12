@@ -25,7 +25,7 @@ import {
 } from "./carousel"
 import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
-/** A rodada 205: as versões novas do `Carousel`. */
+/** As versões do `Carousel`. */
 
 const carrossel = (props: Record<string, unknown>, ...filhos: React.ReactNode[]) =>
   renderToStaticMarkup(h(Carousel, { "aria-label": "Teste", ...props }, ...filhos))
@@ -104,18 +104,9 @@ describe("as versões do Carousel", () => {
 })
 
 /**
- * A escada e a caixa do `Carousel`, trancadas.
- *
- * O defeito que este teste existe para não deixar voltar é geométrico e foi
- * medido: as setas moravam **fora** da caixa do componente (`-left-12`,
- * `-right-12`), e num contêiner de 958px isso punha 8px de cada seta fora da
- * região de recorte do pai, dava ao pai 8px de rolagem horizontal fantasma
- * (`scrollWidth` 966 contra `clientWidth` 958) e deixava parte da seta seguinte
- * sem responder ao clique.
- *
- * Por isso a asserção que mais vale aqui não é sobre degraus: é a **4**, que
- * proíbe coordenada negativa em qualquer posição de controle. Um componente não
- * desenha fora da própria caixa; quem precisa de calha a reserva.
+ * A escada e a caixa do `Carousel`, trancadas. As setas moravam fora da caixa (`-left-12`,
+ * `-right-12`), o que dava ao pai 8px de rolagem horizontal fantasma e deixava parte da seta
+ * sem responder ao clique; a asserção 4 proíbe coordenada negativa em qualquer controle.
  */
 const EIXOS = ["horizontal", "vertical"] as const
 const DEGRAUS = ["none", "sm", "md", "lg"] as const
@@ -137,8 +128,7 @@ const fonte = lerFonte("src/components/ui/carousel.tsx")
 describe("escada e caixa do Carousel", () => {
   it("1. `md` é o padrão da calha, e ele está escrito uma vez só", () => {
     expect(carouselDefaultGap).toBe("md")
-    // Escrito duas vezes — na desestruturação e numa tabela de padrões — os
-    // dois se separam. O `Container` pagou isso na rodada 16.
+    // Escrito duas vezes (na desestruturação e numa tabela de padrões), os dois se separam.
     const ocorrencias = fonte.match(/DEFAULT_GAP:\s*CarouselGap\s*=\s*"md"/g)
     expect(ocorrencias).toHaveLength(1)
   })
@@ -179,8 +169,8 @@ describe("escada e caixa do Carousel", () => {
   })
 
   it("4b. a seta se centra no viewport, e nunca em `1/2` da raiz", () => {
-    // A raiz também carrega os pontos e a contagem: medido, `top-1/2` punha a
-    // seta 28px abaixo do centro do trilho, com a borda dela já fora dele.
+    // A raiz também carrega os pontos e a contagem: `top-1/2` punha a seta 28px abaixo do
+    // centro do trilho.
     for (const modo of ["inside", "outside"] as const) {
       const h = carouselControlPosition[modo].horizontal
       const v = carouselControlPosition[modo].vertical
@@ -224,42 +214,33 @@ describe("escada e caixa do Carousel", () => {
   })
 
   it("7. a seta passa dos 44 no toque, por pseudo-elemento", () => {
-    // O bloco que contém um absoluto é a caixa de **padding** do ancestral: o
-    // `Button` tem 1px de borda, então a base do `icon-sm` são 26, e não 28.
-    // Medido, `-inset-2` dava 42 — abaixo do piso. `-inset-2.5` dá 26+20 = 46.
+    // O bloco que contém um absoluto é a caixa de padding do ancestral: o `Button` tem 1px de
+    // borda, a base do `icon-sm` são 26 e `-inset-2.5` dá 26+20 = 46.
     expect(carouselControlTouchTarget).toContain("pointer-coarse:after:-inset-2.5")
     expect(carouselControlTouchTarget).toContain("pointer-coarse:after:absolute")
     expect(carouselControlTouchTarget).toContain("pointer-coarse:after:content-['']")
   })
 
   it("8. a âncora medida (`top`) não transiciona — foi o defeito da viagem", () => {
-    // `top` sai de uma variável medida por JS, e a base do `Button` declara
-    // `transition-all`: sem esta troca, toda remedição vira uma animação da seta
-    // atravessando o cartão. A lista enumerada e `transition-all` são o mesmo
-    // grupo no `twMerge`, então esta **substitui** aquela — e `top` fica de fora
-    // dela de propósito. A cobertura do que ela **inclui** está na 8a2.
+    // `top` sai de uma variável medida por JS e a base do `Button` declara `transition-all`:
+    // sem esta troca, toda remedição vira uma animação da seta. A lista enumerada e
+    // `transition-all` são o mesmo grupo no `twMerge`, e `top` fica de fora dela.
     expect(carouselControlTransition).not.toMatch(/\btop\b/)
     expect(carouselControlTransition).not.toContain("transition-all")
     expect(fonte).toContain("CONTROL_TRANSITION")
-    // E a medição roda antes da pintura, senão o cliente pinta o palpite de 50%
-    // do `cva` — que resolve contra a raiz, não contra o trilho — e a seta salta.
-    // A medição da âncora tem de estar **dentro** do layout effect. O motor da
-    // dissolução continua sendo um `useEffect` normal, e é correto: ele não
-    // decide posição nenhuma, então não precisa correr antes da pintura.
+    // A medição roda antes da pintura (dentro do layout effect), senão o cliente pinta o
+    // palpite de 50% do `cva` e a seta salta. O motor da dissolução não decide posição, então
+    // um `useEffect` normal basta.
     const blocoLayout = fonte.split("React.useLayoutEffect(")[1] ?? ""
     expect(blocoLayout).toContain("--carousel-control-y")
     expect(blocoLayout).toContain("--carousel-control-x")
   })
 
   it("8a. o press afunda 1px E mantém a centragem — as duas na mesma declaração", () => {
-    // No Tailwind v4 `translate` é propriedade independente, e `-translate-y-1/2`
-    // e o `active:translate-y-px` da base do `Button` escrevem a **mesma** custom
-    // property. `.classe:active` é (0,2,0) contra (0,1,0), então herdar o nudge
-    // cru levava a seta de −14px para +1px: 15px para baixo, sem centragem.
-    //
-    // Somar os dois numa declaração só devolve o feedback sem o defeito. E a
-    // entrega é pelo `twMerge`, não por especificidade: mesma família sob o mesmo
-    // variante, então esta classe **remove** a da base da lista.
+    // No Tailwind v4 `translate` é propriedade independente, e `-translate-y-1/2` e o
+    // `active:translate-y-px` da base escrevem a mesma custom property: herdar o nudge cru
+    // levava a seta 15px para baixo. Somar os dois numa declaração só devolve o feedback; a
+    // entrega é pelo `twMerge`.
     expect(carouselControlPressFix.horizontal).toBe(
       "active:translate-y-[calc(-50%_+_1px)]"
     )
@@ -277,20 +258,17 @@ describe("escada e caixa do Carousel", () => {
   })
 
   it("8a2. `translate` transiciona e `top` não — é o que separa press de remedição", () => {
-    // `top` é a âncora medida por JS: transicioná-la faz a seta viajar a cada
-    // remedição. `translate` é só o press. Enumerar é obrigatório —
-    // `transition-all` traria `top` de volta e `transition-colors` não alcança
-    // `translate`.
+    // `top` é a âncora medida por JS, e transicioná-la faz a seta viajar a cada remedição;
+    // `translate` é só o press. Enumerar é obrigatório: `transition-all` traria `top` de volta
+    // e `transition-colors` não alcança `translate`.
     expect(carouselControlTransition).toContain("translate")
     expect(carouselControlTransition).not.toContain("all")
     // O `top` de fora é a asserção 8.
   })
 
   it("8b. a seta é quadrada de cantos arredondados, sem fundo em repouso", () => {
-    // `rounded-full` era a única do repositório; `Calendar` e `Pagination` já
-    // entregam `tertiary` + o `rounded-lg` do próprio `Button`.
-    // Desde a rodada 134 há setas redondas, mas só nas aparências que pedem
-    // isso — `glass` sobre foto e `solid` numa barra. A padrão continua quadrada.
+    // As setas são quadradas (`tertiary` com o `rounded-lg` do `Button`) e redondas só nas
+    // aparências que pedem: `glass` sobre foto e `solid` numa barra.
     const controle = fonte.slice(
       fonte.indexOf("function CarouselControl("),
       fonte.indexOf("function CarouselPrevious(")
@@ -304,9 +282,8 @@ describe("escada e caixa do Carousel", () => {
     }
     expect(controle).toMatch(/appearance = "tertiary"/)
     expect(fonte).toMatch(/variant = "tertiary"/)
-    // Uma função que escolhe entre dois pesos, com um peso só, é constante. Ela
-    // não pode voltar como declaração nem como export — citá-la num comentário
-    // que explica por que ela saiu é justamente o que deve continuar passando.
+    // Uma função que escolhe entre dois pesos, com um peso só, é constante e não volta como
+    // declaração nem como export; citá-la num comentário continua passando.
     expect(fonte).not.toMatch(/function defaultControlVariant/)
     expect(fonte).not.toMatch(/^\s*defaultControlVariant,$/m)
   })
@@ -334,16 +311,9 @@ describe("escada e caixa do Carousel", () => {
   })
 
   it("10. quem carrega a máscara não desenha nada — invariante 2 da dissolução", () => {
-    // O viewport é o elemento mascarado. Uma `bg`, um `ring` ou um `radius` ali
-    // sai com os quatro cantos apagados e os lados opacos. A asserção olha as
-    // classes literais do nó, e não a forma da chamada: casar a string exata do
-    // `cn()` fazia o teste passar por acidente e quebrar a cada refatoração.
-    // **A fatia é o `cn()` do viewport, e não os últimos N caracteres.** Ela era
-    // `.slice(-900)`, e 900 é um número mágico: bastou o viewport ganhar uma
-    // classe com um comentário de uma linha para o `overflow-hidden` sair da
-    // janela por **7 caracteres** e a asserção reprovar código correto. O corte
-    // pelo `className={cn(` é o bloco de verdade — mais estrito, e não mais
-    // frouxo.
+    // O viewport é o elemento mascarado: `bg`, `ring` ou `radius` ali saem com os quatro cantos
+    // apagados. A asserção olha as classes literais do nó, e a fatia é o `cn()` do viewport
+    // (não os últimos N caracteres, número mágico que reprovou código correto).
     const antes = fonte.split('data-slot="carousel-content"')[0]!
     const bloco = antes.slice(antes.lastIndexOf("className={cn("))
     for (const proibida of ["bg-", "ring-", "rounded-", "shadow-", "border-"]) {
@@ -373,29 +343,27 @@ describe("escada e caixa do Carousel", () => {
   })
 
   it("11b. o trilho vertical mede o viewport — sem isso o embla desabilita as setas", () => {
-    // Medido: o embla mede o **contêiner**, não o viewport. Com a altura só no
-    // viewport, o trilho crescia até o conteúdo (160 contra 362) e as duas
-    // setas saíam desabilitadas com o conteúdo transbordando calado.
+    // O embla mede o contêiner, não o viewport: com a altura só no viewport o trilho crescia
+    // até o conteúdo e as duas setas saíam desabilitadas.
     expect(fonte).toContain('orientation === "horizontal" ? "" : "h-full flex-col"')
   })
 
   it("12. o efeito desinscreve tudo o que inscreve", () => {
     const inscritos = [...fonte.matchAll(/api\.on\("(\w+)"/g)].map((m) => m[1])
     const desinscritos = [...fonte.matchAll(/api\.off\("(\w+)"/g)].map((m) => m[1])
-    // Era o defeito: `reInit` ficava inscrito para sempre.
+    // `reInit` não pode ficar inscrito para sempre.
     expect(new Set(inscritos)).toStrictEqual(new Set(desinscritos))
   })
 
-  it("13. os efeitos só leem a variável do driver, e nada transiciona (rodada 134)", () => {
+  it("13. os efeitos só leem a variável do driver, e nada transiciona", () => {
     const css = lerFonte("src/app/globals.css")
     for (const [efeito, classe] of Object.entries(carouselEffectClasses)) {
       if (efeito === "none") continue
       const bloco = esperarDepoisDeNoScrollbar(css, `@utility ${classe} {`, { mensagem: `${classe} não existe` })
       expect(bloco, classe).toMatch(/--carousel-slide-[ds]/)
       expect(bloco, `${classe} transiciona`).not.toMatch(/transition/)
-      // Movimento reduzido zera o que se move. A exceção é o `fade` (rodada
-      // 205): o deslocamento dele é o empilhamento, não movimento — zerado,
-      // os itens voltariam a correr lado a lado —, e a troca já é só opacidade.
+      // Movimento reduzido zera o que se move. A exceção é o `fade`: o deslocamento dele é o
+      // empilhamento, não movimento, e a troca já é só opacidade.
       if (efeito === "fade") {
         expect(bloco, "o fade não pode desfazer o empilhamento").not.toContain("translate: none")
         continue

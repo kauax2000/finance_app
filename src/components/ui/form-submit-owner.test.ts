@@ -3,11 +3,9 @@ import { describe, expect, it } from "vitest"
 import { arquivosTsx, lerFonte, semComentarios } from "@/test/fonte"
 
 /**
- * Sem o desvio do Enter, quem envia é a submissão implícita do navegador: ela
- * aciona o primeiro botão de envio do formulário. O teste é por arquivo — um
- * arquivo com `type="submit"`/`FormSubmit` também tem um `<form>`/`Form` ou um
- * `form=` —, e a árvore JSX de cada formulário do app foi conferida à mão na
- * rodada 252.
+ * Sem o desvio do Enter, quem envia é a submissão implícita do navegador, que aciona o primeiro
+ * botão de envio. O teste é por arquivo: um arquivo com `type="submit"`/`FormSubmit` também tem
+ * um `<form>`/`Form` ou um `form=`.
  */
 describe("todo submit tem um formulário no mesmo arquivo", () => {
   const arquivos = arquivosTsx("src", ["designsystem"])

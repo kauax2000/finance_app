@@ -5,13 +5,13 @@ import { lerFonte } from "@/test/fonte"
 
 import { Calendar } from "./calendar"
 
-/** As versões da rodada 203. */
+/** As versões do `Calendar`. */
 
 const MARCO = new Date(2026, 2, 1)
 const render = (props: Record<string, unknown>) =>
   renderToStaticMarkup(h(Calendar, { month: MARCO, ...props } as never))
 
-describe("Calendar, rodada 203", () => {
+describe("Calendar", () => {
   it("os marcadores aparecem até num calendário só de leitura, com legenda e nome", () => {
     const html = render({
       markers: [

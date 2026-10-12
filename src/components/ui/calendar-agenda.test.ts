@@ -6,9 +6,9 @@ import { lerFonte } from "@/test/fonte"
 import { Calendar, CalendarEvent, CalendarEvents, CalendarSkeleton } from "./calendar"
 
 /**
- * A agenda da rodada 242: a grade de fios, as peças do dia (`CalendarEvent`,
- * `CalendarEvents`), a lista quando estreita, o fim de semana, o dia escolhido
- * e o esqueleto — e o dashboard sem as fichas escritas à mão.
+ * A agenda: a grade de fios, as peças do dia (`CalendarEvent`, `CalendarEvents`), a lista
+ * quando estreita, o fim de semana, o dia escolhido e o esqueleto, e o dashboard sem as fichas
+ * escritas à mão.
  */
 
 const MARCO = new Date(2026, 2, 1)
@@ -34,7 +34,7 @@ const agenda = (props: Record<string, unknown> = {}) =>
     } as never)
   )
 
-describe("Calendar agenda, rodada 242", () => {
+describe("Calendar agenda", () => {
   it("é uma moldura só, com as células separadas por fios e sem caixa", () => {
     const html = agenda()
     expect(html).toMatch(/<table[^>]*class="[^"]*rounded-surface[^"]*border-border[^"]*bg-card/)

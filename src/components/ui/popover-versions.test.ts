@@ -5,7 +5,7 @@ import { lerFonte } from "@/test/fonte"
 
 import { Popover, PopoverHeader, PopoverTitle, popoverContentVariants } from "./popover"
 
-/** A rodada 220: as versões novas do `Popover`. */
+/** As versões do `Popover`. */
 
 const CODIGO = lerFonte("src/components/ui/popover.tsx")
 
@@ -18,7 +18,7 @@ describe("as versões do Popover", () => {
     expect(popoverContentVariants({ size: "auto" })).toContain("w-auto")
   })
 
-  it("o movimento é um eixo: brota do gatilho, desdobra do campo, ou nenhum (rodada 248)", () => {
+  it("o movimento é um eixo: brota do gatilho, desdobra do campo, ou nenhum", () => {
     expect(popoverContentVariants({})).toContain("popover-sprout")
     expect(popoverContentVariants({ motion: "field" })).toContain("field-bloom")
     const nenhum = popoverContentVariants({ motion: "none" })

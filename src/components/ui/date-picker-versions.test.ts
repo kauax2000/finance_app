@@ -7,7 +7,7 @@ import { lerFonte } from "@/test/fonte"
 
 import { DatePicker, MonthGrid, maskTypedDate, parseTypedDate } from "./date-picker"
 
-/** A rodada 210: as versões novas do `DatePicker`. */
+/** As versões do `DatePicker`. */
 
 const CODIGO = lerFonte("src/components/ui/date-picker.tsx")
 

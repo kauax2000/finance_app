@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest"
 import { arquivosTsx, lerFonte } from "@/test/fonte"
 
 /**
- * A régua (rodada 175): peso por `tone`, desenho por `variant`, o recuo
- * atravessado por `bleed` e o rótulo do meio por `children`.
+ * A régua: peso por `tone`, desenho por `variant`, o recuo atravessado por `bleed` e o rótulo
+ * do meio por `children`.
  */
 const SRC = lerFonte("src/components/ui/separator.tsx")
 const RAIZ = join(process.cwd(), "src")

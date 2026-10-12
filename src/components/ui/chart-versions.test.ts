@@ -13,7 +13,7 @@ import {
 } from "./chart"
 import { esperarDistintos } from "@/test/regras"
 
-/** A rodada 206: as versões novas do `Chart`. */
+/** As versões novas do `Chart`. */
 
 const CODIGO = lerFonte("src/components/ui/chart.tsx")
 
@@ -110,37 +110,21 @@ describe("as versões do Chart", () => {
   })
 })
 
-// A escada e as invariantes do Chart. O bloco guarda as constantes delas: o
-// `CODIGO` daqui é o fonte sem comentários, e o de cima é o fonte inteiro.
+// A escada e as invariantes do Chart. O `CODIGO` daqui é o fonte sem comentários, e o de cima é
+// o fonte inteiro.
 {
   /**
-   * O gráfico, trancado.
-   *
-   * Este teste existe por causa de defeitos medidos, não por completude:
-   *
-   * - **O foco de teclado estava apagado.** A versão anterior escrevia
-   *   `outline-hidden` em `.recharts-layer`, `.recharts-sector` e
-   *   `.recharts-surface` — e o que isso apagava era o anel que o
-   *   `accessibilityLayer` do Recharts v3 desenha, ligado de fábrica na 3.8.0
-   *   instalada aqui. Uma tela chegava a passar `accessibilityLayer={false}`.
-   * - **O tooltip formatava com `numberBR`.** Num app de finanças, uma série em
-   *   reais saía `8.432`, sem `R$` — e foi por isso que sete das oito telas
-   *   escreveram a própria tooltip, com o próprio `Intl` redeclarado.
-   * - **A rampa tem cinco degraus e o app pedia seis.** `BAR_COLORS[idx % 5]`
-   *   dá duas barras da mesma cor a quem tem seis cartões.
-   * - **A base da barra arredondava junto com a ponta**, o que levanta a marca
-   *   da linha do zero — que é justamente onde um gráfico de barras diz a
-   *   magnitude.
+   * O gráfico, trancado por defeitos medidos: o foco de teclado apagado (`outline-hidden` nas
+   * camadas do Recharts e `accessibilityLayer={false}`), o tooltip formatando com `numberBR`
+   * (sem `R$`), a rampa de cinco degraus para seis séries e a base da barra arredondando junto
+   * com a ponta.
    */
 
   const FONTE = lerFonte("src/components/ui/chart.tsx")
 
   /**
-   * O mesmo fonte sem comentários. Metade das asserções abaixo pergunta o que o
-   * componente **faz**, e os comentários dele citam de propósito o que ele
-   * deixou de fazer — `outline-hidden`, `Intl.NumberFormat`, `% 5`. Sem esta
-   * separação, cada defeito documentado reprovaria o teste que existe para
-   * impedi-lo de voltar. É a mesma correção que o auditor já fez em `lineOf`.
+   * O mesmo fonte sem comentários: metade das asserções pergunta o que o componente faz, e os
+   * comentários citam o que ele deixou de fazer (`outline-hidden`, `Intl.NumberFormat`, `% 5`).
    */
   const CODIGO = semComentarios(FONTE)
 
@@ -164,8 +148,7 @@ describe("as versões do Chart", () => {
       for (const aspect of ASPECTOS) {
         expect(chartContainerVariants({ aspect })).toBeTruthy()
       }
-      // O nome `default` dizia *o padrão* em vez de dizer a medida, e saiu de
-      // `Button`, `Input`, `SelectTrigger`, `NativeSelect` e `Container`.
+      // O nome `default` não volta: dizia o padrão em vez da medida.
       expect(CODIGO).not.toMatch(/^\s*default:\s*"aspect-/m)
     })
 
@@ -180,16 +163,13 @@ describe("as versões do Chart", () => {
     })
 
     it("3. o foco visível não volta a ser apagado — foi o defeito", () => {
-      // Medido nas classes emitidas, e não no texto do arquivo: o comentário
-      // acima cita `outline-hidden` de propósito, e uma asserção que casasse o
-      // fonte estaria testando a digitação em vez do comportamento.
+      // Medido nas classes emitidas, e não no texto do arquivo, que cita `outline-hidden` de
+      // propósito.
       expect(chartContainerVariants()).not.toContain("outline-hidden")
 
-      // Suprimir o foco não-visível continua certo; o visível ganha o token.
-      // A supressão vai na base **sem pseudo**, e não em `:focus`: empatada em
-      // (0,2,0) com o anel, ela não perde — e como `outline-none` escreve
-      // `outline-style` e `outline-2` escreve `outline-width`, as duas valiam
-      // ao mesmo tempo e o anel saía com 2px de estilo `none`. Medido com `Tab`.
+      // Suprimir o foco não-visível continua certo; o visível ganha o token. A supressão vai na
+      // base sem pseudo: empatada em (0,2,0) com o anel ela não perde, e `outline-none` e
+      // `outline-2` valeriam juntas, deixando o anel com estilo `none`.
       for (const alvo of ["recharts-sector", "recharts-surface"]) {
         expect(CODIGO).toContain(`[&_.${alvo}]:outline-none`)
         expect(CODIGO).not.toContain(`[&_.${alvo}:focus]:outline-none`)
@@ -210,15 +190,11 @@ describe("as versões do Chart", () => {
       }
 
       expect(formatChartValue(1234.5, "currency")).toContain("R$")
-      // O eixo comprime e o tooltip não: são medidas diferentes, de propósito.
-      // A 1.234,50 as duas escrevem 11 caracteres e o teste não diria nada; o
-      // ganho aparece na ordem de grandeza em que um rótulo de eixo estoura.
-      // Escrito com `\u00a0`, e isso não é preciosismo: o `Intl` separa com
-      // espaço inseparável nos dois vãos, e uma asserção com o espaço do teclado
-      // reprova comparando duas strings que se desenham iguais na tela.
+      // O eixo comprime e o tooltip não. Escrito com ` `: o `Intl` separa com espaço
+      // inseparável, e o espaço do teclado reprovaria duas strings que se desenham iguais.
       expect(formatChartValue(1234567, "compact")).toBe("R$\u00a01,23\u00a0mi")
-      // E abaixo de mil ele larga os centavos: um eixo não os quer, e era o que
-      // fazia o zero da base sair como "R$ 0,00".
+      // Abaixo de mil ele larga os centavos: um eixo não os quer (o zero da base não pode sair
+      // "R$ 0,00").
       expect(formatChartValue(0, "compact")).toBe("R$\u00a00")
       expect(formatChartValue(600, "compact")).toBe("R$\u00a0600")
       expect(formatChartValue(600, "currency")).toBe("R$\u00a0600,00")
@@ -226,8 +202,7 @@ describe("as versões do Chart", () => {
         formatChartValue(1234567, "currency").length
       )
 
-      // A regra I do auditor: `Intl` mora em `lib/formatters` e
-      // `lib/transaction-date`, e este arquivo era onde ela vazava.
+      // A regra I do auditor: `Intl` mora em `lib/formatters` e `lib/transaction-date`.
       expect(CODIGO).not.toContain("Intl.")
     })
 
@@ -246,8 +221,8 @@ describe("as versões do Chart", () => {
     })
 
     it("6. a ponta da barra arredonda e a base não", () => {
-      // Arredondar os quatro cantos levanta a barra da linha do zero. A ponta
-      // é 8 desde a rodada 243 (era 4), na constante `CHART_BAR_TIP`.
+      // Arredondar os quatro cantos levanta a barra da linha do zero; a ponta é 8
+      // (`CHART_BAR_TIP`).
       expect(CODIGO).toContain("const CHART_BAR_TIP = 8")
       expect(CODIGO).toContain("[CHART_BAR_TIP, CHART_BAR_TIP, 0, 0]")
       expect(CODIGO).toContain("[0, CHART_BAR_TIP, CHART_BAR_TIP, 0]")
@@ -281,11 +256,9 @@ describe("as versões do Chart", () => {
     })
 
     it("11. toda marca anima pelo Recharts, e a rosca começa sem espera", () => {
-      // Rodada 136: a rodada 30 desligou a animação por duas razões que a
-      // medição derrubou. O Recharts 3.8 olha `prefers-reduced-motion` (é o
-      // `'auto'` de fábrica), e a rosca vazia vinha do `animationBegin` de 400ms
-      // somado a re-renders que reiniciavam do zero — não de visibilidade.
-      // Rodada 252: sem fases; a entrada ao montar e a troca depois, por relógio.
+      // O Recharts 3.8 respeita `prefers-reduced-motion` (`'auto'` de fábrica), e a rosca vazia
+      // vinha do `animationBegin` de 400ms somado a re-renders. Sem fases: a entrada ao montar
+      // e a troca depois, por relógio.
       expect(CODIGO).not.toContain("CHART_ANIMATION")
       const marcas = CODIGO.match(/<(Area|Line|Bar|Pie|Radar|RadialBar)\b/g) ?? []
       const comMovimento =
@@ -298,11 +271,8 @@ describe("as versões do Chart", () => {
     })
 
     it("12. o anel da rosca fica centrado sobre a própria legenda", () => {
-      // Com o alinhamento padrão (`stretch`) e uma largura própria no
-      // `ChartContainer`, o anel encosta na esquerda de uma caixa que a legenda
-      // define: medido, 208px de rosca num envelope de 412 saíam 102px fora do
-      // centro. O medidor escondia o defeito, porque a legenda de dois itens é
-      // mais estreita que o anel.
+      // Com o alinhamento padrão (`stretch`) e largura própria no `ChartContainer`, o anel
+      // encosta na esquerda de uma caixa que a legenda define.
       expect(CODIGO).toContain('"flex w-fit flex-col items-center"')
       // `w-fit` é `fit-content` e respeita o espaço disponível — é o que mantém
       // a legenda quebrando linha a 375px em vez de esticar o envelope.
@@ -310,15 +280,14 @@ describe("as versões do Chart", () => {
     })
 
     it("13. o medidor tem geometria própria, e não a da rosca", () => {
-      // Com o anel da rosca a corda interna na altura do topo do texto media
-      // 42px e `76%` já ocupava 43 — encostava no arco. E o meio-arco num
-      // quadrado deixava 68px mortos embaixo, que era o que afastava a legenda.
+      // Com o anel da rosca a corda interna na altura do topo do texto mede 42px e `76%` ocupa
+      // 43; o meio-arco num quadrado deixa 68px mortos embaixo.
       expect(CODIGO).toContain("const chartGaugeThickness")
       expect(CODIGO).toContain("const CHART_GAUGE_OUTER = 130")
       expect(CODIGO).toContain("const CHART_GAUGE_CY = 86")
 
-      // O arco do medidor é mais fino que o anel da rosca em todos os degraus —
-      // é o que abre a corda de 42 para 103.
+      // O arco do medidor é mais fino que o anel da rosca em todos os degraus, o que abre a
+      // corda de 42 para 103.
       const degraus = ["sm", "md", "lg"] as const
       const tabela = (nome: string) =>
         Object.fromEntries(
@@ -351,8 +320,8 @@ describe("as versões do Chart", () => {
       // (`ChartContainer`) não cobra, porque ela não pode.
       expect(CODIGO).toMatch(/type ChartFormProps = \{[\s\S]*?\n {2}label: string\n/)
       expect(CODIGO).toMatch(/ {4}label\?: string\n/)
-      // `img` quando só se lê; `group` quando o gráfico recebe ação (rodada
-      // 206) — `img` tornaria apresentacional o que se aperta.
+      // `img` quando só se lê; `group` quando o gráfico recebe ação (`img` tornaria
+      // apresentacional o que se aperta).
       expect(CODIGO).toContain('role={label ? (interactive ? "group" : "img") : undefined}')
     })
   })

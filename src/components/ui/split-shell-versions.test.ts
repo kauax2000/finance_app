@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
-/** A rodada 235: o redesenho, as peças e os comportamentos do `SplitShell`. */
+/** O redesenho, as peças e os comportamentos do `SplitShell`. */
 
 const fonte = (caminho: string) => semComentarios(lerFonte(caminho), "linha-inteira")
 const CODIGO = fonte("src/components/ui/split-shell.tsx")

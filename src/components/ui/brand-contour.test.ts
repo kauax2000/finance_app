@@ -16,22 +16,9 @@ import { radioGroupItemVariants } from "./radio-group"
 import { sliderRangeVariants } from "./slider"
 
 /**
- * O contorno de marca, e o que ele não pode virar.
- *
- * Cinco peças desenharam o arco-íris da marca por **contorno** — os dois pesos
- * do `Button`, o `Badge`, o `Checkbox`, o `Radio` e o cartão do `RadioGroup`
- * —, e desde a rodada 169 nenhuma desenha: todas foram para o brilho, o véu ou
- * o Rainbow Button. As asserções 1 e 2 impedem a volta. A receita tinha três
- * jeitos conhecidos de quebrar calada, e o terceiro ainda vale:
- *
- * 1. alguém declara `bg-*` no próprio elemento e o núcleo some, porque numa
- *    raiz de empilhamento o fundo pinta **antes** dos filhos de `z` negativo;
- * 2. alguém apaga `brand-rainbow-image` por parecer decoração, e `--brand-rainbow`
- *    deixa de ser declarado no elemento (rodada 88);
- * 3. alguém acrescenta o halo do botão ao `Checkbox` ou ao `Radio`, onde o
- *    `::after` **já é o alvo de toque de 44px**.
- *
- * Nenhum dos três derruba tipo nem lint.
+ * O contorno de marca não volta: as peças de escolha vestem o brilho. Três coisas quebram
+ * calado: `bg-*` no próprio elemento, apagar `brand-rainbow-image` e halo no `::after` de
+ * `Checkbox`/`Radio`, que já é o alvo de toque de 44px.
  */
 
 const RAIZ = join(process.cwd(), "src/components/ui")
@@ -49,11 +36,7 @@ const PORTADORES = {
 
 describe("contorno de marca", () => {
   it("1. o contorno parado saiu da casa, e os dois rádios vestem o brilho", () => {
-    // A família do contorno — 1px de `border-box` sobre um núcleo chapado,
-    // acendendo só marcada — teve cinco membros e perdeu o último na rodada
-    // 169: o `Radio brand` e o `brandCard` foram para o brilho, como o
-    // `Checkbox brand` na 155. Duas peças de escolha falando marcas
-    // diferentes era o defeito; o contorno de volta num deles é a regressão.
+    // O contorno parado não volta: os dois rádios vestem o brilho, como o `Checkbox brand`.
     for (const [nome, classes] of Object.entries(PORTADORES)) {
       const lista = classes.split(/\s+/)
       expect(lista, nome).toContain("brand-glow")
@@ -85,7 +68,7 @@ describe("contorno de marca", () => {
   })
 
   it("5. o rádio marcado acende o anel e faz o ponto nascer na mola", () => {
-    // Rodada 169: a mesma entrada do tique do `Checkbox`.
+    // Mesma entrada do tique do `Checkbox`.
     const base = radioVariants({ variant: "default" })
     expect(base).toContain("data-[state=checked]:border-primary-accent")
     expect(fonte("radio")).toMatch(/zoom-in-0 animation-duration-\(--duration-spring\) ease-\(--ease-spring\)/)
@@ -94,10 +77,7 @@ describe("contorno de marca", () => {
   })
 
   it("6. o cartão de marca soma o brilho ao realce do cartão", () => {
-    // Até a 168 o contorno **substituía** o realce de seleção. O brilho acende
-    // pelo ponteiro, e não pelo estado, então quem diz "selecionado" volta a
-    // ser o realce do `card` — e os dois não disputam: arco na aresta, lavagem
-    // no miolo.
+    // O brilho soma ao realce de seleção do `card`, e não o substitui: ele acende pelo ponteiro, não pelo estado.
     const marca = PORTADORES["radio-group/brandCard"]
     const sistema = radioGroupItemVariants({ variant: "card" })
     for (const classe of [
@@ -114,9 +94,7 @@ describe("contorno de marca", () => {
   })
 
   it("7. os oito controles de campo seguem sem marca", () => {
-    // A régua de `input-versions` não muda com esta rodada: a marca entra
-    // nos controles de **escolha**, e o campo de texto continua fora — cinco
-    // tentativas recusadas na tela, e `fieldFocusRingClassName` é o anel dele.
+    // A marca entra nos controles de escolha; o campo de texto fica fora (o anel dele é `fieldFocusRingClassName`).
     for (const nome of [
       "input",
       "textarea",
@@ -131,12 +109,8 @@ describe("contorno de marca", () => {
   })
 
   it("8. a família do preenchimento — `Progress` e `Slider` — declara a variável", () => {
-    // Estas duas não desenham contorno: o arco-íris **preenche**, e o que as
-    // liberta da invariante 3 é não haver rótulo em cima. O modo de quebrar
-    // calado é outro e é o mesmo dos dois: apagar `brand-rainbow-image` por
-    // parecer decoração. É ela que declara `--brand-rainbow` no elemento — sem
-    // ela `bg-(image:--brand-rainbow)` cai para `none` e a faixa fica
-    // transparente, sem erro nenhum.
+    // Sem `brand-rainbow-image` o `--brand-rainbow` não é declarado no elemento e a faixa fica
+    // transparente, sem erro.
     const faixa = sliderRangeVariants({ variant: "brand" })
     expect(faixa.split(/\s+/)).toContain("brand-rainbow-image")
     expect(faixa).toContain("bg-(image:--brand-rainbow)")
@@ -145,22 +119,17 @@ describe("contorno de marca", () => {
     // E o `Progress` continua na mesma receita.
     expect(fonte("progress")).toContain("brand-rainbow-image")
 
-    // O trilho é o **mesmo token** nos dois, e é isso que faz os números do
-    // claro coincidirem (pior caso 1,42 na lima, cinco paradas abaixo de 3:1).
+    // O trilho é o mesmo token nos dois.
     for (const nome of ["progress", "slider"]) {
       expect(fonte(nome), nome).toContain("bg-input-fill")
     }
 
-    // **O arco-íris do `Slider` é ancorado no trilho, e por medição.** A conta
-    // do `Progress` (`background-size: 10000 / pct`) continua proibida aqui:
-    // ela exige saber a porcentagem no render, e um slider não controlado não a
-    // tem — congelaria no valor inicial. Quem ancora é a caixa medida.
+    // O arco-íris do `Slider` é ancorado na caixa medida do trilho; a conta `10000 / pct` do
+    // `Progress` não serve a um slider não controlado.
     const src = fonte("slider")
     expect(src).not.toMatch(/10000/)
 
-    // As quatro variáveis, **todas com fallback**: é o fallback que faz a peça
-    // degradar para "degradê preenche a faixa" antes da primeira medição e sem
-    // JavaScript, em vez de derrubar a declaração.
+    // As quatro variáveis, todas com fallback: sem medição ou sem JS o degradê preenche a faixa.
     for (const v of [
       "--slider-rainbow-w,100%",
       "--slider-rainbow-h,100%",
@@ -187,29 +156,21 @@ describe("contorno de marca", () => {
   })
 
   it("9. a família do véu — `AnnouncementBar`", () => {
-    // A barra saiu da família da régua (um fio de 1px na base) e virou o véu
-    // do `Banner` rainbow do Fumadocs: o arco-íris translúcido **atrás** do
-    // texto, mascarado a partir do topo central e deslizando em 20s. É a
-    // exceção consciente à invariante 3, paga pelo alfa `--brand-flow-alpha`
-    // e medida em `scripts/tone-contrast.mjs`.
+    // O véu do `AnnouncementBar` é a exceção consciente à invariante 3, paga pelo alfa `--brand-flow-alpha`.
     const barra = announcementBarVariants({ variant: "brand" })
     const classes = barra.split(/\s+/)
     const CSS = fonteCss()
 
-    // O véu mora num pseudo em `z` negativo, e o `isolate` é o que o mantém
-    // visível: sem raiz de empilhamento própria o pseudo cai atrás do fundo
-    // de um ancestral (barra não `sticky`) e some sem erro nenhum.
+    // O véu mora num pseudo em `z` negativo; sem `isolate` ele some atrás do fundo de um ancestral.
     for (const c of ["isolate", "before:-z-1", "before:inset-0", "before:brand-flow"]) {
       expect(classes, c).toContain(c)
     }
 
-    // A régua saiu: dois arco-íris na mesma faixa seria o defeito.
+    // Dois arco-íris na mesma faixa seria o defeito.
     expect(barra).not.toContain("after:bg-(image:--brand-rainbow)")
     expect(barra).not.toMatch(/blur/)
 
-    // A utility existe, com a máscara de duas camadas da referência, e mora
-    // depois de `no-scrollbar` — a faixa `glass-control…no-scrollbar` é
-    // fatiada pelo `glass.test.ts` e reprova utility nova.
+    // A utility mora depois de `no-scrollbar`: a faixa anterior é fatiada pelo `glass.test.ts`.
     const bloco = esperarDepoisDeNoScrollbar(CSS, "@utility brand-flow", { fecha: "@utility" })
     expect(bloco).toMatch(/mask-composite: intersect/)
     expect(bloco).toMatch(/var\(--brand-flow-alpha\)/)
@@ -221,30 +182,18 @@ describe("contorno de marca", () => {
     // **O véu substitui o fio do `sticky`, e não se soma a ele.**
     expect(classes).toContain("border-b-0")
 
-    // E a ordem das chaves no `cva` é **carga estrutural**, não estilo: o `cva`
-    // concatena na ordem em que os eixos são declarados e o `tailwind-merge`
-    // resolve por último-vence. Com `variant` antes de `sticky`, o `border-b`
-    // do `sticky` venceria o `border-b-0` daqui e o fio cinza voltaria.
+    // A ordem das chaves no `cva` é carga estrutural: com `variant` antes de `position`, o
+    // `border-b` do `sticky` venceria o `border-b-0`.
     const src = fonte("announcement-bar")
     expect(src.indexOf("position: {")).toBeGreaterThan(0)
     expect(src.indexOf("variant: {")).toBeGreaterThan(src.indexOf("position: {"))
 
-    // Pelo mesmo mecanismo, a superfície neutra da marca vence a tonal — e é
-    // por isso que os dois tipos proíbem `tone` junto de `brand`, em vez de
-    // deixar a tela escrever uma cor que não pinta. O precedente é o
-    // `Progress`, com `tone`, `bands` e `brand`.
+    // A superfície neutra da marca vence a tonal, por isso o tipo proíbe `tone` junto de `brand`.
     for (const nome of ["alert", "announcement-bar"]) {
       expect(fonte(nome), nome).toMatch(/variant: "brand"; tone\?: never/)
     }
 
-    // **E quem garante esse "vence" é o `tailwind-merge`, não a cascata.**
-    // Medido: pondo as duas classes cruas no mesmo `class` — sem passar pelo
-    // `cn` —, a faixa de marca saía com o texto **azul**
-    // (`oklch(0.36 0.1 240)`, o `--info-muted-foreground`), porque
-    // `text-foreground` e `text-info-muted-foreground` empatam em (0,1,0) e
-    // quem decide é a ordem de emissão do Tailwind, não a ordem no atributo.
-    // O `cn` **remove** o perdedor, e é essa remoção que a peça depende.
-    // Quem montar as variantes à mão traz o defeito de volta.
+    // Quem garante o "vence" é o `tailwind-merge` (`cn`), não a cascata: sem ele `text-foreground` e `text-info-muted-foreground` empatam.
     const barraMesclada = cn(
       announcementBarVariants({ tone: "info", variant: "brand", position: "sticky" })
     ).split(/\s+/)
@@ -256,8 +205,7 @@ describe("contorno de marca", () => {
     // disputa: duas linhas de 1px empilhadas é o defeito.
     expect(barraMesclada).toContain("border-b-0")
     expect(barraMesclada).not.toContain("border-b")
-    // E ela continua **presa**: o `relative` que o véu pedia morava na marca e
-    // vencia o `sticky` pelo mesmo último-vence (rodada 187).
+    // A barra continua presa: o `relative` do véu não pode vencer o `sticky`.
     expect(barraMesclada).toContain("sticky")
     expect(barraMesclada).not.toContain("relative")
 
@@ -272,36 +220,23 @@ describe("contorno de marca", () => {
   })
 
   it("10. a família do brilho — `Alert`", () => {
-    // A quarta família: o arco-íris acende num **arco da borda** conforme o
-    // ponteiro passa, com um leve borrão. Ela nasceu da referência
-    // `GlowingEffect` da Aceternity, e **não** é o giro da rodada 100 — lá o
-    // degradê rodava sozinho num laço e o dono o recusou inteiro; aqui nada se
-    // move sem o ponteiro se mover, que é a forma que a rodada 98 sancionou.
+    // A família do brilho: o arco-íris acende num arco da borda conforme o ponteiro passa; nada se move sem o ponteiro.
     const alerta = alertVariants({ variant: "brand" })
     const classes = alerta.split(/\s+/)
     const CSS = fonteCss()
 
-    // A cor sai do mesmo token das outras peças, e `brand-rainbow-image` é
-    // quem o declara no elemento — sem ela o `background` cai para `none` e o
-    // brilho some sem erro nenhum.
+    // `brand-rainbow-image` declara o token no elemento; sem ela o `background` cai para `none`.
     expect(classes).toContain("brand-rainbow-image")
     expect(classes).toContain("brand-glow")
 
-    // **`isolate` é obrigatório, e foi medido.** Sem ele o pseudo de `z`
-    // negativo cai atrás do fundo de um ancestral e não aparece.
+    // `isolate` é obrigatório: sem ele o pseudo de `z` negativo some atrás do fundo de um ancestral.
     expect(classes).toContain("isolate")
 
-    // A régua saiu: quem herdar este arquivo não pode achar que as duas
-    // convivem. Uma marca em repouso **e** um arco aceso seriam dois
-    // arco-íris na mesma caixa.
+    // Marca em repouso e arco aceso seriam dois arco-íris na mesma caixa.
     expect(alerta).not.toContain("before:w-0.5")
     expect(alerta).not.toContain("before:rounded-full")
 
-    // A utility existe, e as quatro decisões medidas estão nela.
-    // A fatia termina na `@utility` seguinte. Ela já terminou no
-    // `@property --brand-glow-start`, e quando esse bloco saiu (o ângulo
-    // passou a ser animado por JS) o `indexOf` devolveu −1, a fatia engoliu o
-    // resto do arquivo e a asserção de ausência casou com outro componente.
+    // A fatia da utility termina na `@utility` seguinte (um `indexOf` de −1 engoliria o resto do arquivo).
     const iniUtil = CSS.indexOf("@utility brand-glow")
     const util = CSS.slice(
       iniUtil,
@@ -309,18 +244,7 @@ describe("contorno de marca", () => {
     )
     expect(util.length).toBeGreaterThan(0)
 
-    // **A cor fica parada e a janela é que anda — e eu errei isto duas vezes.**
-    // Medido no bundle ao vivo da referência (21st): o `background-image` dela
-    // é um `repeating-conic-gradient(from 236.84deg …)`, de ângulo **fixo**, e
-    // quem carrega o `--start` é o `mask-image`. É isso que faz o arco **trocar
-    // de cor** conforme viaja: a janela revela faixas diferentes de um
-    // arco-íris parado.
-    //
-    // A 1ª tentativa mascarava o `--brand-rainbow`, que é **linear**, e a
-    // janela revelava sempre a mesma cor naquela aresta. A 2ª girou o cônico
-    // **junto** com o arco, e aí ele carrega sempre a mesma sequência e só muda
-    // de lugar. As duas asserções abaixo são a invariante que separa o certo
-    // dos dois erros.
+    // A cor fica parada e a janela é que anda: o `background` é um cônico de ângulo fixo e só o `mask-image` carrega `--brand-glow-start`.
     const corpoBg = util.slice(
       util.indexOf("background:"),
       util.indexOf("filter:")
@@ -330,46 +254,28 @@ describe("contorno de marca", () => {
     expect(corpoBg).not.toMatch(/--brand-glow-start/) // a cor NÃO gira
     expect(corpoMask).toMatch(/--brand-glow-start/) // a janela gira
 
-    // **A máscara recorta o anel, e o meio nunca é pintado** (rodada 156).
-    // Até a 155 o anel vinha com um núcleo chapado em `padding-box`, e a
-    // janela — uma cunha que sai do centro — o mostrava como um feixe: com o
-    // ponteiro perto, de 297 a 4.748 pixels do miolo mudavam. Hoje são três
-    // camadas: a janela menos a `padding-box` (rodada 182). As três de antes
-    // (caixa, `exclude` da `padding-box`, `intersect` com a janela) deixavam,
-    // no Chrome, o anel inteiro bem fino do lado oposto ao arco — 253 pixels
-    // medidos na ponta de um `ThemeToggle brand`. Esta forma mede zero.
+    // A máscara recorta o anel (janela menos `padding-box`) e o meio nunca é pintado; a forma de três camadas deixava o anel fino do lado oposto ao arco.
     expect(corpoMask.match(/conic-gradient/g)?.length).toBe(2) // mask + -webkit
     expect(util).toMatch(/-webkit-mask-clip: border-box, padding-box;/)
     expect(util).toMatch(/-webkit-mask-composite: source-out;/)
     expect(util).toMatch(/\bmask-clip: border-box, padding-box;/)
     expect(util).toMatch(/\bmask-composite: subtract;/)
     expect(util).not.toMatch(/intersect, exclude|source-in, xor/)
-    // O risco que baniu a composição era uma camada `none`: a janela é a única
-    // com variável, e o fallback mora no próprio `var()`.
+    // Uma camada `none` num `intersect` apagaria a peça: a janela é a única com variável, e o
+    // fallback mora no próprio `var()`.
     expect(corpoMask).toMatch(/var\(--brand-glow-start, 0\)/)
     expect(corpoMask).not.toMatch(/var\(--brand-glow-start\)/)
     // E o pseudo não pinta miolo nenhum: só o arco-íris, na `border-box`.
     expect(corpoBg).not.toMatch(/padding-box|--brand-glow-core|--brand-glow-overlay/)
 
-    // A janela é um **triângulo puro**: três paradas, opaco no meio, fechando
-    // em `spread * 2` — o `transparent, #fff, transparent 80deg` da
-    // referência. Com platô no miolo ela lê como bloco aceso, não como brilho.
+    // A janela é um triângulo puro: três paradas, opaco no meio, fechando em `spread * 2`.
     expect(corpoMask).toMatch(/transparent,\s*#000,\s*transparent/)
     expect(corpoMask).toMatch(/var\(--brand-glow-spread\) \* 2deg/)
 
-    // **Nenhum `radial-gradient`, e isso é medição e não esquecimento.** A
-    // referência tem quatro aqui; eles foram portados e saíram porque **não
-    // pintam nada**: são círculos no interior da caixa (degradê morrendo em
-    // 15–20% do raio) e o que se vê desta peça é só o anel de 2px na aresta.
-    // Vale igual na referência — num cartão de 374×230 o raio efetivo é ~44px
-    // contra um anel de 3px na borda. Repô-las exige raio de 60–80% da caixa,
-    // e aí deixa de ser port.
+    // Sem `radial-gradient`: círculos no interior da caixa não alcançam o anel de 2px da aresta.
     expect(corpoBg).not.toMatch(/radial-gradient/)
 
-    // A largura de faixa é o que importa, e ela vem do par cores × voltas. A
-    // referência: 4 cores × 5 = 20 faixas de 18°. Com as 8 paradas da marca, 5
-    // voltas dariam 40 faixas de 9° — metade da largura, que sob o borrão vira
-    // lama. 2,5 devolve os 18°.
+    // 8 paradas × 2,5 voltas = 20 faixas de 18°, a largura de banda da referência.
     expect(util).toMatch(/--brand-glow-repeat:\s*2\.5/)
 
     // A rampa linear do token não serve aqui: ela não é cônica. As oito
@@ -391,39 +297,23 @@ describe("contorno de marca", () => {
     // A abertura sai do `spread`, e não de medidas soltas.
     expect(util).toMatch(/--brand-glow-spread/)
 
-    // A máscara que recorta o anel é o que impede o degradê de cobrir o
-    // texto: numa raiz de empilhamento o filho de `z` negativo pinta **por
-    // cima** do fundo do elemento.
+    // A máscara que recorta o anel impede o degradê de cobrir o texto.
     expect(classes).toContain("bg-card")
     expect(util).not.toMatch(/--brand-glow-core|--brand-glow-overlay/)
     expect(util).toMatch(/border-box/)
     expect(util).toMatch(/z-index:\s*-10/)
 
-    // O borrão é o efeito, e aqui ele é legítimo — ao contrário da régua, que
-    // o proíbe (teste 9).
+    // O borrão é o efeito aqui.
     expect(util).toMatch(/filter:\s*blur/)
 
-    // **O ângulo é animado por JavaScript, e a propriedade NÃO é registrada** —
-    // exatamente como na referência, que escreve `--start` a cada quadro com o
-    // `animate` do `motion`. Aqui houve uma `@property` registrada com
-    // `transition: … 2s`, defendida por três rodadas como equivalente; era
-    // dedução, não medição, e o dono disse três vezes que não era a animação
-    // dela. Registrar de novo não quebra, mas ressuscita a dúvida.
+    // O ângulo é animado por JavaScript e a propriedade não é registrada: nada de `@property` com `transition`.
     expect(CSS).not.toMatch(/@property --brand-glow-start/)
     expect(util).not.toMatch(/transition:\s*--brand-glow-start/)
 
-    // **E o ângulo tem valor inicial na utility**, porque a `@property` que o
-    // dava saiu com o registro. Sem ele o `calc()` é inválido, `mask-image`
-    // cai para `none` — nenhuma máscara — e o anel aparece **inteiro** até o
-    // tween escrever o primeiro número. Era o "a linha já aparece inteira em
-    // vez de crescer" do dono, e é uma falha que não derruba nada: o CSS é
-    // válido, o efeito só fica errado.
+    // O ângulo tem valor inicial na utility: sem ele o `calc()` é inválido, `mask-image` vira `none` e o anel aparece inteiro.
     expect(util).toMatch(/--brand-glow-start:\s*0;/)
 
-    // O lado React: sem ponteiro fino não monta nada, e o listener sai no
-    // unmount.
-    // O hook saiu do `alert.tsx` na rodada 133 (`useBrandGlow`), quando o
-    // `Card` quis a mesma borda. As asserções leem o arquivo dele.
+    // Sem ponteiro fino não monta nada, e o listener sai no unmount.
     const src = semComentarios(lerFonte("src/hooks/use-brand-glow.ts"), "numa-passada")
     expect(fonte("alert")).toMatch(/useBrandGlow\(variant === "brand"\)/)
     expect(src).toMatch(/\(hover: hover\)/)
@@ -431,43 +321,28 @@ describe("contorno de marca", () => {
     // E nada de estado React para a posição: é `setProperty`, como no `Button`.
     expect(src).toMatch(/setProperty\("--brand-glow-start"/)
 
-    // **A animação é a da referência, literalmente**: o `animate` do `motion`,
-    // com a duração e a ease dela, escrevendo a variável no `onUpdate`.
+    // A animação é o `animate` do `motion`, com a duração e a ease da referência, escrevendo a variável no `onUpdate`.
     expect(src).toMatch(/from "motion\/react"/)
     expect(src).toMatch(/animate\(atual, atual \+ delta/)
     expect(src).toMatch(/duration: GLOW_DURACAO/)
     expect(src).toMatch(/GLOW_DURACAO = 2/)
     expect(src).toMatch(/GLOW_EASE = \[0\.16, 1, 0\.3, 1\]/)
-    // E o ângulo atual sai do DOM, não de um acumulador — um acumulador guarda
-    // o *alvo*, não onde a animação está.
+    // O ângulo atual sai do DOM, não de um acumulador: ele guarda o alvo, não onde a animação está.
     expect(src).toMatch(/getPropertyValue\("--brand-glow-start"\)/)
-    // **Movimento reduzido é perguntado à mão**, porque o bloco global da casa
-    // encurta transição de CSS e um tween de JS escapa dele — o precedente do
-    // `ThemeToggle` ao trocar transição por WAAPI.
+    // Movimento reduzido é perguntado à mão: um tween de JS escapa do bloco global que encurta transição de CSS.
     expect(src).toMatch(/prefers-reduced-motion: reduce/)
     expect(src).toMatch(/if \(semMovimento\)/)
     expect(src).not.toMatch(/let angulo/)
-    // O tween anterior para antes do novo, e no unmount: a referência não
-    // para, e deixa ~120 tweens vivos escrevendo a mesma variável.
+    // O tween anterior para antes do novo, e no unmount.
     expect(src.match(/tween\?\.stop\(\)/g)?.length).toBe(2)
 
-    // **A rolagem recalcula o estado, e não só a geometria.** Medido antes do
-    // conserto: rolando 260px com o ponteiro parado, a caixa ia de `top 255`
-    // para `-5` e `--brand-glow-active` continuava em `1` — o aviso ficava
-    // aceso apontando para onde o mouse não estava mais. O conserto é o da
-    // referência: guardar a última posição do ponteiro e refazer a conta.
+    // A rolagem recalcula o estado, não só a geometria: guarda a última posição do ponteiro e refaz a conta.
     expect(src).toMatch(/ultimaX/)
     expect(src).toMatch(/const aoRolar = \(\) => agendar\(\)/)
-    // E `capture: true`, que é a divergência deliberada: `scroll` não borbulha
-    // mas captura, então sem isto a rolagem **dentro de um container** passa
-    // despercebida — o caso que a própria referência erra.
+    // `capture: true`: `scroll` não borbulha mas captura, e sem isso a rolagem dentro de um container passa despercebida.
     expect(src).toMatch(/addEventListener\("scroll", aoRolar, \{ capture: true/)
 
-    // **`rAF` aqui coalesce, e o precedente proibido é o laço.** O que esta
-    // casa recusou (no marcador do `Tabs`) é o `rAF` que se **re-agenda** para
-    // fazer polling. Coalescer uma rajada de `pointermove` num quadro é outra
-    // coisa, e é o que a referência faz. O que separa os dois: **um** ponto de
-    // agendamento, e um cancelamento — um laço não cancela, ele se renova.
+    // O `rAF` coalesce uma rajada de `pointermove` num quadro (um ponto de agendamento, e um cancelamento); não é o laço de polling.
     expect(src.match(/requestAnimationFrame\(/g)?.length).toBe(1)
     expect(src).toMatch(/cancelAnimationFrame/)
     // O tween e o quadro pendentes morrem no unmount, junto dos listeners.
@@ -482,11 +357,7 @@ describe("contorno de marca", () => {
   })
 
   it("11. o Card veste o mesmo brilho, e o recorte deixa folga para o anel", () => {
-    // A segunda peça da família do brilho (rodada 133). O casco tem
-    // `overflow-hidden` para recortar os cantos dos filhos, e o anel mora 2px
-    // **fora** da caixa: recortado ali, sumia. O cartão de marca troca por
-    // `overflow: clip` com 4px de margem — `var(--spacing)` cru, porque o
-    // Chrome rejeita `calc()` nessa propriedade (medido: computava `0px`).
+    // O casco recorta com `overflow: clip` e 4px de margem (`var(--spacing)` cru, o Chrome rejeita `calc()` ali) para o anel, 2px fora da caixa, não sumir.
     const cartao = cn(cardVariants({ variant: "brand" })).split(/\s+/)
     for (const c of ["brand-rainbow-image", "brand-glow", "isolate", "overflow-clip", "[overflow-clip-margin:var(--spacing)]"]) {
       expect(cartao, c).toContain(c)
@@ -495,10 +366,7 @@ describe("contorno de marca", () => {
     expect(cartao).not.toContain("overflow-hidden")
     expect(fonte("card")).toMatch(/useBrandGlow\(variant === "brand"\)/)
 
-    // A terceira: o `Badge`, que era do contorno até o dono o querer neutro.
-    // Em repouso é um chip `muted`; o núcleo do anel é a mesma cor, senão a
-    // região que a máscara apaga lê como outra superfície. E o halo sempre
-    // aceso do contorno não pode sobreviver ao lado do brilho.
+    // O `Badge` em repouso é um chip `muted`; o núcleo do anel é a mesma cor, e o halo do contorno não pode sobreviver ao lado do brilho.
     const chip = cn(badgeVariants({ variant: "brand" })).split(/\s+/)
     for (const c of ["brand-rainbow-image", "brand-glow", "relative", "isolate", "bg-muted", "[--brand-glow-opacity:1]"]) {
       expect(chip, c).toContain(c)
@@ -506,16 +374,14 @@ describe("contorno de marca", () => {
     expect(chip.join(" ")).not.toMatch(/after:blur|--brand-fill/)
     expect(fonte("badge")).toMatch(/useBrandGlow<HTMLSpanElement>\(variant === "brand"\)/)
 
-    // A quarta: o `Button brand` (rodada 145), neutro sobre o `secondary`.
+    // O `Button brand`, neutro sobre o `secondary`.
     const botao = cn(buttonVariants({ variant: "brand" })).split(/\s+/)
     for (const c of ["brand-rainbow-image", "brand-glow", "relative", "isolate", "bg-secondary"]) {
       expect(botao, c).toContain(c)
     }
     expect(fonte("button")).toMatch(/useBrandGlow<HTMLButtonElement>\(variant === "brand"\)/)
 
-    // A quinta: o `Checkbox brand` (rodada 155; foi do contorno até a 153 e
-    // deslizou na 154). Só o anel acende, e o preenchimento marcado aparece
-    // intacto sob ele.
+    // O `Checkbox brand`: só o anel acende, e o preenchimento marcado aparece intacto sob ele.
     const caixa = cn(checkboxVariants({ variant: "brand" })).split(/\s+/)
     for (const c of ["brand-glow", "isolate", "[--brand-glow-opacity:1]"]) {
       expect(caixa, c).toContain(c)
@@ -525,7 +391,7 @@ describe("contorno de marca", () => {
     expect(caixa.join(" ")).not.toMatch(/(^|\s)before:|brand-rainbow-slide|--brand-fill/)
     expect(fonte("checkbox")).toMatch(/useBrandGlow<HTMLButtonElement>\(variant === "brand"\)/)
 
-    // A sexta e a sétima: o `Radio brand` e o `brandCard` (rodada 169).
+    // O `Radio brand` e o `brandCard`.
     const anel = cn(radioVariants({ variant: "brand" })).split(/\s+/)
     for (const c of ["brand-glow", "isolate", "[--brand-glow-opacity:1]", "after:-inset-3.5"]) {
       expect(anel, c).toContain(c)

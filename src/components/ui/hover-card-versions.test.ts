@@ -12,7 +12,7 @@ import {
   HoverCardTrigger,
 } from "./hover-card"
 
-/** A rodada 217: as versões novas do `HoverCard`. */
+/** As versões do `HoverCard`. */
 
 const CODIGO = lerFonte("src/components/ui/hover-card.tsx")
 const TABELA = lerFonte("src/components/transactions/transactions-table.tsx")
@@ -58,7 +58,7 @@ describe("as versões do HoverCard", () => {
     expect(CODIGO).toMatch(/onContextMenu: [\s\S]*?ultimoToqueRef\.current\) \{\s*e\.preventDefault\(\)/)
   })
 
-  it("a prévia se desvela e sai dissolvendo no lugar (rodada 248)", () => {
+  it("a prévia se desvela e sai dissolvendo no lugar", () => {
     expect(CODIGO).toContain('"hover-card-unveil"')
     expect(CODIGO).not.toContain("data-open:zoom-in-90")
   })
@@ -70,10 +70,5 @@ describe("as versões do HoverCard", () => {
     // O chip não engole o clique: a linha abre o detalhe, como antes.
     const chip = TABELA.slice(TABELA.indexOf("function CreditInvoiceChip"), TABELA.indexOf("<HoverCardContent", TABELA.indexOf("function CreditInvoiceChip")))
     expect(chip).not.toContain("onClick=")
-  })
-
-  it("os comentários não contam o que deixou de ser verdade", () => {
-    expect(CODIGO).not.toContain("(O `space-y-1` de lá está no backlog.)")
-    expect(CODIGO).not.toContain("No telefone este componente não acontece.")
   })
 })

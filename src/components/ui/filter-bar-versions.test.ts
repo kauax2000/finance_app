@@ -13,7 +13,7 @@ import {
   type FilterValue,
 } from "./filter-bar"
 
-/** A rodada 245: o FilterBar — o token partido, o editor, a URL e o teclado. */
+/** O FilterBar: o token partido, o editor, a URL e o teclado. */
 
 const FONTE = lerFonte("src/components/ui/filter-bar.tsx")
 const CODIGO = semComentarios(FONTE, "linha-inteira")

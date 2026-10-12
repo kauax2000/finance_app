@@ -5,27 +5,10 @@ import { buttonVariants } from "./button"
 import { cn } from "@/lib/utils"
 
 /**
- * Todo peso preenchível do `Button` responde ao **toque**, e não só ao cursor.
- *
- * Este teste existe por causa de um item de backlog nomeado no `AGENTS.md`:
- * *"`Button variant="tertiary"` não tem par `active:` — vale para o app inteiro:
- * todo botão terciário fica sem resposta ao toque."*
- *
- * A razão é mecânica e vale para o Tailwind v4 inteiro: `hover:` compila dentro
- * de **`@media (hover: hover)`**, então num telefone ele não existe. Um controle
- * cujo único realce é `hover:` fica inerte no dedo — a pessoa toca e a interface
- * não responde. O resto do sistema já resolvia isso escrevendo o par à mão em
- * `toggle.tsx`, `tabs.tsx`, `menubar.tsx`, `item.tsx` e `calendar.tsx`; o
- * conserto passou a morar na origem.
- *
- * E o par escuro entra junto pela aritmética que o `ThemeToggle` já pagou:
- * `&:active` e `&:is(.dark *)` empatam em especificidade, e o `dark:` é emitido
- * depois — sem `dark:active:`, o realce de toque perderia para o de tema, calado
- * e só num tema.
- *
- * `link` fica de fora de propósito: ele não preenche nada, e o realce dele é o
- * sublinhado. `destructive`, `primary`, `secondary`, `tertiary` e `outline`
- * pintam fundo, e por isso todos precisam do par.
+ * Todo peso preenchível do `Button` responde ao toque, e não só ao cursor: `hover:` compila
+ * dentro de `@media (hover: hover)` e um controle só com `hover:` fica inerte no dedo. O par
+ * escuro entra junto, porque `&:active` e `&:is(.dark *)` empatam em especificidade e o `dark:`
+ * é emitido depois. `link` fica de fora: não preenche nada e o realce é o sublinhado.
  */
 const PESOS_QUE_PREENCHEM = [
   "primary",
@@ -53,11 +36,8 @@ function fundos(classes: string) {
 
 describe("resposta ao toque do Button", () => {
   it("1. `tertiary` responde ao toque como ao cursor — hoje pelo realce chapado", () => {
-    // Era o item de backlog da rodada 29b: `hover:` compila dentro de
-    // `@media (hover: hover)`, e sem o par `active:` o terciário não devolvia
-    // nada ao toque. Desde a rodada 241 o hover dos pesos com fundo é a camada
-    // chapada (`--button-hover` de 0 a 1), e a regra continua: o que o cursor
-    // liga, o toque liga.
+    // O que o cursor liga, o toque liga: sem o par `active:` o terciário não devolvia nada ao
+    // toque. O hover dos pesos com fundo é a camada chapada (`--button-hover` de 0 a 1).
     const classes = buttonVariants({ variant: "tertiary" })
     expect(classes).toContain("hover:[--button-hover:1]")
     expect(classes).toContain("active:[--button-hover:1]")
@@ -65,9 +45,7 @@ describe("resposta ao toque do Button", () => {
   })
 
   /**
-   * As que ainda **não** têm o par: nenhuma. A lista chegou a ter quatro
-   * nomes (a rodada 29b consertou `tertiary`, a 78 o `primary`, o plano 3 os
-   * outros três). Ela fica, vazia, porque a asserção 3 é o que impede uma
+   * As que ainda não têm o par: nenhuma. A lista fica vazia porque a asserção 3 impede uma
    * variante nova de nascer sem o par.
    */
   const PENDENTES = [] as const
@@ -94,25 +72,13 @@ describe("resposta ao toque do Button", () => {
     expect([...semPar].sort()).toStrictEqual([...PENDENTES].sort())
   })
 
-  // **Por que o traço não é `text-decoration`.** Esta asserção exigia
-  // `" underline "` até a rodada 92, quando a emenda foi medida: o
-  // `::first-letter` da base — a maiúscula inicial do CTA — cria caixa
-  // separada para a primeira letra, e a decoração propagada sai partida em
-  // dois segmentos. Sublinhar também o `::first-letter`,
-  // `text-decoration-skip-ink: none` e mover a decoração para o `<span>`
-  // **mantêm** a emenda; só a camada de `background` a elimina. Se alguém
-  // devolver `underline` aqui, a emenda volta junto.
-  //
-  // **E o traço voltou a andar.** As rodadas 91–93 varreram e recuaram, e a 94
-  // encerrou pedindo a troca seca; o dono trouxe depois o `link-button` do
-  // 21st como referência, e com ele a mecânica que faltava — `scaleX` com a
-  // origem trocando de lado. A diferença para as rodadas antigas é que agora
-  // **não há traço em repouso**: ele nasce da esquerda no cursor e recolhe
-  // para a direita na saída.
+  // O traço do `link` não é `text-decoration`: o `::first-letter` da base cria caixa separada
+  // para a primeira letra e a decoração sai partida em dois segmentos; só a camada de
+  // `background` elimina a emenda. Não há traço em repouso: ele nasce da esquerda no cursor
+  // (`scaleX` com a origem trocando de lado) e recolhe para a direita na saída.
   it("5. os pesos com fundo no hover realçam chapado, sem florescer, e o disco do ponteiro não volta", () => {
-    // Rodada 241: a cor do peso pinta por cima do repouso e esmaece no ritmo
-    // da casa (`@utility button-hover`). Cada peso declara só a cor, e a
-    // transição da base carrega a variável **e** mantém `translate`.
+    // A cor do peso pinta por cima do repouso e esmaece no ritmo da casa (`@utility button-
+    // hover`); a transição da base carrega a variável e mantém `translate`.
     for (const variant of ["secondary", "tertiary", "outline", "floating", "destructive"] as const) {
       const cru = buttonVariants({ variant })
       expect(cru, variant).toContain("button-hover")
@@ -121,9 +87,8 @@ describe("resposta ao toque do Button", () => {
       const resolvido = cn(cru)
       expect(resolvido, variant).toMatch(/transition-\[[^\]]*\btranslate\b[^\]]*--button-hover\]/)
     }
-    // Os pesos sem cor realçam com a tinta do texto a 12% — um valor só, que
-    // escurece no claro e clareia no escuro (rodada 241b; o `--muted` media
-    // 1,08:1 no escuro). O `destructive` tem par `dark:`.
+    // Os pesos sem cor realçam com a tinta do texto a 12%: um valor só, que escurece no claro e
+    // clareia no escuro. O `destructive` tem par `dark:`.
     for (const variant of ["tertiary", "outline", "floating"] as const) {
       expect(buttonVariants({ variant }), variant).toContain(
         "[--button-hover-fill:color-mix(in_oklab,var(--foreground)_12%,transparent)]"
@@ -135,7 +100,7 @@ describe("resposta ao toque do Button", () => {
     for (const variant of ["primary", "brand", "brandOutline", "link"] as const) {
       expect(buttonVariants({ variant }), variant).not.toMatch(/button-bloom|button-colorful/)
     }
-    // Rodadas 99 a 148: o disco que crescia a partir do ponteiro.
+    // O disco que crescia a partir do ponteiro não volta.
     for (const variant of ["primary", "secondary", "tertiary", "outline", "destructive"] as const) {
       expect(buttonVariants({ variant }), variant).not.toMatch(/button-fill/)
     }

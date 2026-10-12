@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 import { realcesSemParDeToque } from "@/test/regras"
 
-/** A rodada 221: o `Sidebar` flutuante como padrão, sem vidro, e a animação revista. */
+/** O `Sidebar` flutuante é o padrão, sem vidro, e a animação revista. */
 
 const CODIGO = lerFonte("src/components/ui/sidebar.tsx")
 
@@ -111,8 +111,7 @@ describe("as versões do Sidebar", () => {
   })
 
   it("as ações de grupo e de linha são círculos", () => {
-    // Rodada 221: a pílula é a forma das peças soltas, e o botão de 20px que
-    // mora na ponta da linha a acompanha.
+    // A pílula é a forma das peças soltas, e o botão de 20px na ponta da linha a acompanha.
     expect(CODIGO).toContain('"absolute top-3.5 right-3 flex aspect-square w-5 items-center justify-center rounded-full p-0')
     expect(CODIGO).toContain('"absolute top-1.5 right-1 flex aspect-square w-5 items-center justify-center rounded-full p-0')
   })
@@ -149,38 +148,13 @@ describe("as versões do Sidebar", () => {
   })
 })
 
-// A régua da Sidebar. O bloco guarda as constantes dela: o `CODIGO` daqui é o
-// fonte sem comentários, e o de cima é o fonte inteiro.
+// A régua da Sidebar. O `CODIGO` daqui é o fonte sem comentários, e o de cima é o fonte
+// inteiro.
 {
   /**
-   * A régua da barra lateral, trancada.
-   *
-   * Este teste existe por causa de quatro defeitos medidos, e cada um deu uma
-   * asserção.
-   *
-   * **O primeiro estava em produção e era visível.** O `cva` foi renomeado de
-   * `default` para `md`, e dois seletores ficaram para trás:
-   * `peer-data-[size=default]/menu-button:top-1.5` em `SidebarMenuAction` e em
-   * `SidebarMenuBadge`. Com `data-size="md"` nenhuma regra casava, o badge caía
-   * para a posição estática e renderizava **20px abaixo da própria linha**, em
-   * cima do item seguinte. Medido antes: `top: 32px`, centro 26px fora do centro
-   * do botão. Depois: `top: 6px`, desalinho **zero**.
-   *
-   * **O segundo era o cursor.** `SidebarRail` declarava `cursor-w-resize` e um
-   * fio de 2px que acende no cursor — a gramática inteira de uma costura de
-   * arraste — e o `onClick` só alternava. É a quarta ocorrência da família que o
-   * `SheetDragHandle`, o `Drawer` e a alça do `vaul` já custaram, e a pior: aqui
-   * quem mentia era o cursor do sistema operacional.
-   *
-   * **O terceiro era a língua.** O nome acessível do menu no telefone era a
-   * palavra inglesa "Sidebar", e a descrição era "Displays the mobile sidebar" —
-   * uma frase de desenvolvedor. É o achado do `Calendar`, na navegação primária.
-   *
-   * **O quarto era de catálogo.** O `ds:catalog` lê o primeiro `cva` do arquivo,
-   * e o único era o do botão de menu — então ele reportava `plain | outline` como
-   * se fossem os eixos da barra.
-   *
-   * Zero render: todas leem o fonte, sem comentários.
+   * A régua da barra lateral, trancada: seletores `peer-data-[size=…]` que acompanham o `cva`,
+   * o `SidebarRail` sem cursor de arraste, a língua do nome acessível e o primeiro `cva` do
+   * arquivo (o que o `ds:catalog` lê). Zero render: tudo lê o fonte, sem comentários.
    */
 
   // O vidro da placa é testado em glass.test.ts (#1–#4, #7).
@@ -207,17 +181,14 @@ describe("as versões do Sidebar", () => {
     })
 
     it("2. `default` não é nome de degrau nem de variante", () => {
-      // O nome saiu de `Button`, `Input`, `SelectTrigger`, `NativeSelect`,
-      // `Container`, `Badge` e `Item` por dizer *o padrão* em vez da medida.
-      // A barra era o último lugar de `ui/` onde ele sobrevivia.
+      // O nome `default` não volta aos controles: diz o padrão em vez da medida.
       expect(CODIGO).not.toMatch(/["']default["']/)
       expect(CODIGO).not.toMatch(/size=default/)
     })
 
     it("3. o trilho não promete redimensionar", () => {
-      // Quem redimensiona é o átomo `Resizable`, sob `SidebarProvider resizable`.
-      // Um cursor de redimensionar num controle que só alterna é a promessa mais
-      // forte que uma interface consegue fazer, e ela era falsa.
+      // Quem redimensiona é o átomo `Resizable`, sob `SidebarProvider resizable`; um cursor de
+      // redimensionar num controle que só alterna é uma promessa falsa.
       expect(CODIGO).not.toMatch(/cursor-[a-z]+-resize/)
     })
 
@@ -235,7 +206,7 @@ describe("as versões do Sidebar", () => {
       const proibidas =
         /\b(Sidebar|Toggle|Displays|Search|Close|Menu|Open|Collapse|Expand)\b/
       expect(visiveis.filter((t) => proibidas.test(t))).toStrictEqual([])
-      // E o nome acessível do menu no telefone, que era a pior das três.
+      // O nome acessível do menu no telefone também é português.
       expect(CODIGO).not.toContain("Displays the mobile sidebar")
       expect(CODIGO).toContain("<DialogTitle>Navegação</DialogTitle>")
     })
@@ -251,8 +222,8 @@ describe("as versões do Sidebar", () => {
     })
 
     it("7. o trilho não desenha nada: sem arraste, sem fio", () => {
-      // Rodada 221: um fio que acende na borda promete arrastar, e o trilho só
-      // alterna. Quem redimensiona é o modo `resizable`, que nem o monta.
+      // Um fio que acende na borda promete arrastar, e o trilho só alterna; quem redimensiona é
+      // o modo `resizable`, que nem o monta.
       const inicio = CODIGO.indexOf("function SidebarRail")
       const trilho = CODIGO.slice(inicio, CODIGO.indexOf("\n}\n", inicio))
       expect(trilho).not.toMatch(/after:|hover:|active:|bg-/)
@@ -267,10 +238,8 @@ describe("as versões do Sidebar", () => {
     })
 
     it("10. a lista respira, e o grupo respira quatro vezes mais", () => {
-      // A lista era `gap-0` — as linhas se encostavam —, e a navegação do produto
-      // desfazia isso à mão nos dois menus que têm mais de um item. Padrão que
-      // ninguém escolhe não é padrão. Medido depois: 4px entre itens e 16 entre o
-      // conteúdo de dois grupos (o `p-2` de cada lado).
+      // A lista tem `gap`: a navegação do produto desfazia o `gap-0` à mão nos menus com mais
+      // de um item.
       const trecho = (nome: string) => {
         const i = CODIGO.indexOf(`function ${nome}(`)
         return CODIGO.slice(i, CODIGO.indexOf("function ", i + 10))
@@ -284,17 +253,15 @@ describe("as versões do Sidebar", () => {
     })
 
     it("12. recolhida, o recuo centra o ícone em todo degrau", () => {
-      // A conta é `(32 - filho) / 2`. O degrau padrão carrega um ícone de 16 e
-      // pede 8; o `lg` carrega um avatar de 24 e pede 4. O arquivo escrevia
-      // `p-0!` no `lg`, e o avatar encostava na esquerda — 4px fora do centro,
-      // medidos, numa coluna em que todo o resto está no meio. Depois: zero.
+      // A conta é `(32 - filho) / 2`: o degrau padrão (ícone de 16) pede 8 e o `lg` (avatar de
+      // 24) pede 4; `p-0!` descentra o filho.
       const cva = CODIGO.slice(
         CODIGO.indexOf("const sidebarMenuButtonVariants"),
         CODIGO.indexOf("function SidebarMenuButton")
       )
       expect(cva).toContain("group-data-[collapsible=icon]:p-2!") // md, ícone 16
       expect(cva).toContain("group-data-[collapsible=icon]:p-1!") // lg, avatar 24
-      // `p-0!` era o defeito: recuo zero não centra filho nenhum.
+      // `p-0!` descentra: recuo zero não centra filho nenhum.
       expect(cva).not.toContain("group-data-[collapsible=icon]:p-0!")
       // E não se conserta com `justify-center`: o rótulo continua no fluxo em
       // modo ícone, a linha transborda, e centrar transbordo empurra para fora.
@@ -306,61 +273,47 @@ describe("as versões do Sidebar", () => {
         CODIGO.indexOf("function SidebarMenuButton"),
         CODIGO.indexOf("function SidebarMenuAction")
       )
-      // A versão anterior passava `hidden` ao conteúdo, e isso esconde pixel e
-      // mais nada: medido com a barra expandida — o estado padrão do app —, o
-      // Radix continuava abrindo a dica e ligando o `aria-describedby` do botão a
-      // ela. O item "Início" saía descrito por uma dica invisível escrita
-      // "Início": o mesmo texto do rótulo, em cada linha, para leitor de tela.
+      // `hidden` no conteúdo da dica esconde só o pixel: o Radix ainda abre a dica e liga o
+      // `aria-describedby` ao botão, descrevendo cada linha com o próprio rótulo.
       expect(btn).not.toMatch(/hidden=\{/)
-      // A guarda mora no retorno curto, junto da que já existia para `!tooltip`
-      // — e, desde a rodada 221, espiando o rótulo também está na tela.
+      // A guarda mora no retorno curto, junto da de `!tooltip`; espiando, o rótulo também está
+      // na tela.
       expect(btn).toMatch(/if \(!tooltip \|\| state !== "collapsed" \|\| isMobile \|\| espiando \|\| espia\)/)
     })
 
     it("14. a dica não segura o ponteiro entre um ícone e o vizinho", () => {
-      // O defeito foi medido aqui, mas mora no `Tooltip`: o Radix mantém a dica
-      // aberta enquanto o ponteiro caminha dentro de um polígono de graça até
-      // ela. No trilho recolhido os ícones ficam a 36px e a dica abre à direita,
-      // então o polígono cobre os vizinhos — passando por "Início" e indo até
-      // "Carteiras", a dica continuava escrita "Início" e o `aria-describedby`
-      // continuava no primeiro botão. A asserção mora nesta suíte porque é aqui
-      // que o custo aparece.
+      // O defeito mora no `Tooltip` (o polígono de graça do Radix cobre os ícones vizinhos do
+      // trilho recolhido), e a asserção fica nesta suíte porque é aqui que o custo aparece.
       const tooltip = lerFonte("src/components/ui/tooltip.tsx")
       expect(tooltip).toMatch(/disableHoverableContent = true/)
     })
 
     it("15. a placa flutuante não declara borrão", () => {
-      // Medido com `elementsFromPoint`: sob o painel flutuante há `sidebar` e
-      // `sidebar-wrapper`, os dois transparentes, e depois o `body`. O `floating`
-      // reserva a folga no fluxo, então o conteúdo **não passa por baixo** — um
-      // `backdrop-filter` ali borraria cor chapada e não desenharia nada. É a lei
-      // que a paleta de comandos escreveu e que nunca tinha sido trancada.
+      // Sob o painel flutuante só há `sidebar`, `sidebar-wrapper` e o `body`, e o `floating`
+      // reserva a folga no fluxo: um `backdrop-filter` ali borraria cor chapada e não
+      // desenharia nada.
       expect(CODIGO).not.toMatch(/backdrop-blur|backdrop-filter/)
     })
 
     it("17. o fio do cabeçalho é da variante, e não da tela", () => {
-      // No `floating` a placa não tem `border-r` para o fio encostar, e ele fica
-      // pendurado: medido, a placa termina em x=248 e o fio ia de x=256 a 778 —
-      // 522px começando a 8px de nada. Quem decide agora é a variável que o
-      // `SidebarInset` publica; a tela só a lê.
+      // No `floating` a placa não tem `border-r` para o fio encostar: quem decide é a variável
+      // que o `SidebarInset` publica, e a tela só a lê.
       expect(CODIGO).toContain("--sidebar-inset-rule:1px")
       expect(CODIGO).toContain("--sidebar-inset-rule:0px")
-      // Desde a rodada 80 quem desenha o cabeçalho é o `TopBar`.
+      // Quem desenha o cabeçalho é o `TopBar`.
       const header = lerFonte("src/components/ui/top-bar.tsx")
       expect(header).toContain("var(--sidebar-inset-rule,1px)")
     })
 
     it("18. a placa flutuante é chapada, uma peça só, e não veste o vidro", () => {
-      // Rodada 221: o dono tirou o vidro do `floating`. A barra reserva a própria
-      // calha, então nada passa por baixo dela — o vidro era o aro e as nuvens
-      // pintados sobre uma lâmina, e a forma da casa hoje é a placa solta do
-      // `CommandDialog`. A `@utility glass` continua: outras peças a vestem.
+      // O `floating` não tem vidro: a barra reserva a própria calha, e a forma da casa é a
+      // placa solta do `CommandDialog`. A `@utility glass` continua para outras peças.
       const css = lerFonte("src/app/globals.css")
       expect(css).toContain("@utility glass")
       expect(CODIGO).not.toContain("group-data-[variant=floating]:glass")
       expect(CODIGO).not.toMatch(/inset-shadow/)
-      // A placa é o anel das placas do `Command`, sobre o `--sidebar` chapado —
-      // e é o miolo inteiro: o dono pediu uma peça só, sem dividir as faixas.
+      // A placa é o anel das placas do `Command` sobre o `--sidebar` chapado, e é o miolo
+      // inteiro.
       const miolo = CODIGO.slice(
         CODIGO.indexOf("const miolo = ("),
         CODIGO.indexOf("if (resizable) {", CODIGO.indexOf("const miolo = ("))
@@ -372,11 +325,8 @@ describe("as versões do Sidebar", () => {
     })
 
     it("22. os tokens de desenhos anteriores da barra não voltaram", () => {
-      // A lâmina, as nuvens e o aro são do vidro e moram em `glass.test.ts`
-      // (#1–#4 e #7). Fica aqui o que é da barra: os tokens `--sidebar-*` de
-      // desenhos que saíram — a família "sobreviveu à remoção" que esta base já
-      // pagou cinco vezes. O `glass.test.ts` #9 cobre só os nomes da receita
-      // `sidebar-glass`; estes quatro são de outro desenho.
+      // A lâmina, as nuvens e o aro moram em `glass.test.ts`; aqui ficam os tokens
+      // `--sidebar-*` de desenhos que saíram.
       const css = lerFonte("src/app/globals.css")
       for (const morto of [
         "--sidebar-surface-top",
@@ -389,20 +339,15 @@ describe("as versões do Sidebar", () => {
     })
 
     it("20. nenhum realce acende no cursor e fica inerte no dedo", () => {
-      // `hover:` compila dentro de `@media (hover: hover)` — verificado no CSS
-      // emitido nas rodadas anteriores —, então um realce sem par `active:` não
-      // existe no telefone. A regra **H** do auditor não alcança este arquivo:
-      // ela varre `className="…"`, e aqui tudo mora dentro de `cva()` e `cn()`.
-      // É o ponto cego que o `AGENTS.md` já registra três vezes, e foi ele que
-      // deixou a variante `outline` acendendo a sombra só no cursor.
+      // `hover:` compila dentro de `@media (hover: hover)`, então um realce sem par `active:`
+      // não existe no telefone; a regra H do auditor não alcança este arquivo porque tudo mora
+      // em `cva()`/`cn()`.
       expect(realcesSemParDeToque(CODIGO)).toEqual([])
     })
 
     it("21. o realce do ativo é o token, nas três variantes, e não alfa de vidro", () => {
-      // O alfa `bg-current/N` existia porque a placa era degradê, e um token
-      // opaco apagava o degradê dentro do realce. Sem o vidro (rodada 221) a
-      // placa é chapada, e o realce volta a ser `--sidebar-accent` — o mesmo nas
-      // três variantes.
+      // Sem vidro a placa é chapada, e o realce é `--sidebar-accent` nas três variantes (um
+      // `bg-current/N` só servia ao degradê).
       expect(CODIGO).not.toMatch(/SIDEBAR_GLASS_|bg-current\//)
       expect(CODIGO).toMatch(/absolute inset-0 -z-10 rounded-\[inherit\] bg-sidebar-accent/)
       // Quem pinta o ativo é a pílula: a base não o pinta mais, senão haveria
@@ -411,7 +356,7 @@ describe("as versões do Sidebar", () => {
     })
 
     it("22b. sem o vidro, sem o reflexo", () => {
-      // O `--glass-sheen` era o reflexo da lâmina de vidro, e saiu com ela.
+      // O `--glass-sheen` era o reflexo da lâmina de vidro e saiu com ela.
       const miolo = CODIGO.slice(
         CODIGO.indexOf("const miolo = ("),
         CODIGO.indexOf("if (resizable) {", CODIGO.indexOf("const miolo = ("))
@@ -422,33 +367,28 @@ describe("as versões do Sidebar", () => {
     })
 
     it("26. no telefone a navegação é painel, e é a única folha que fixa isso", () => {
-      // Medido antes da rodada 66, na moldura de 375px: `data-surface="drawer"`,
-      // `data-side="bottom"`, com `[data-vaul-handle]`. Um menu de seis links
-      // subindo do rodapé com alça de arraste é o defeito que o `EdgePanel`
-      // existiu para consertar — e o comportamento voltou como prop, não como
-      // arquivo.
+      // Seis links subindo do rodapé com alça de arraste é o defeito que o painel existe para
+      // evitar: no telefone a navegação continua painel.
       const mobile = CODIGO.slice(
         CODIGO.indexOf("if (isMobile) {"),
         CODIGO.indexOf("const miolo = (")
       )
       expect(mobile.length).toBeGreaterThan(0)
       expect(mobile).toContain('surface="panel"')
-      // A barra mora à esquerda (não há `side` desde a rodada 221), e o painel
-      // entra de onde ela mora.
+      // A barra mora à esquerda (não há `side`), e o painel entra de onde ela mora.
       expect(mobile).toContain('side="left"')
       // `fillMobileViewport` é a altura **da gaveta**. No painel ela sai do par
       // `top`/`bottom` do `cva`, e passá-lo seria prop inerte.
       expect(mobile).not.toContain("fillMobileViewport")
-      // A classe do shadcn que escondia o nosso × — medido, `display: none`. Na
-      // gaveta passava (fecha-se arrastando); num painel não há arraste.
+      // A classe do shadcn escondia o nosso × (`display: none`); na gaveta fecha-se arrastando,
+      // num painel não há arraste.
       expect(mobile).not.toContain("[&>button]:hidden")
       expect(mobile).toContain("dialog-close-button".replace("dialog-close-button", "DialogCloseButton"))
     })
 
     it("23. não há `side`: a barra mora à esquerda", () => {
-      // Rodada 221, decisão do dono: nenhuma tela usa a barra à direita. O eixo
-      // custava a ordem visual invertida (`order-last`), as margens espelhadas
-      // do `inset`, o trilho e o painel do telefone dos dois lados.
+      // Nenhuma tela usa a barra à direita: o eixo custava `order-last`, as margens espelhadas
+      // do `inset` e o painel do telefone dos dois lados.
       expect(CODIGO).not.toMatch(/data-side[=\]]|\[side=|side\?: "left" \| "right"|order-last/)
       const inset = CODIGO.slice(
         CODIGO.indexOf("function SidebarInset("),
@@ -460,12 +400,9 @@ describe("as versões do Sidebar", () => {
     })
 
     it("24. a página fala a curva das folhas; só as placas soltas falam a mola", () => {
-      // `ease-linear` é o movimento de quem não escolheu curva. O que reflui a
-      // página — a folga, a margem do `inset`, o rótulo de grupo e o fundo do
-      // cabeçalho — anda na curva das folhas, junto. **O trilho das placas
-      // soltas anda na mola** (rodada 221): ele é `fixed` e não reflui nada,
-      // então o quique fica nas placas e não sacode o conteúdo. A rente, que
-      // encosta no conteúdo, fica na curva.
+      // `ease-linear` é o movimento de quem não escolheu curva. O que reflui a página anda na
+      // curva das folhas; o trilho das placas soltas é `fixed` e anda na mola, para o quique
+      // não sacudir o conteúdo.
       const cabecalho = lerFonte("src/components/ui/top-bar.tsx")
       expect(cabecalho).toMatch(
         /transition-\[background-color[^\]]*\] duration-\(--duration-slow\) ease-\(--ease-emphasized\)/
@@ -494,10 +431,8 @@ describe("as versões do Sidebar", () => {
     })
 
     it("25. a pílula do ativo é um objeto só, e viaja pelo motion", () => {
-      // Rodada 221: a medição à mão (`offsetParent`, dois observadores, o
-      // `<li>` marcador) saiu. Quem anima é o `layoutId` — a mecânica do
-      // `Menubar` —, e por isso a pílula vale nas três variantes e já nasce no
-      // HTML do servidor.
+      // Quem anima a pílula é o `layoutId` (a mecânica do `Menubar`): vale nas três variantes e
+      // já nasce no HTML do servidor.
       expect(CODIGO).not.toMatch(/caixaRelativa|ResizeObserver|sidebar-marker|requestAnimationFrame/)
       // O outro `layoutId` é o do gatilho, que viaja do topo à barra.
       expect([...CODIGO.matchAll(/layoutId=/g)]).toHaveLength(2)
@@ -515,8 +450,7 @@ describe("as versões do Sidebar", () => {
     })
 
     it("11. nenhuma tela reescreve o ritmo da lista", () => {
-      // Uma tela compensando o `gap` à mão é o sinal de que o componente errou o
-      // padrão — foi assim que este defeito foi achado.
+      // Uma tela compensando o `gap` à mão é o sinal de que o componente errou o padrão.
       const app = lerFonte("src/components/layout/app-sidebar.tsx")
       expect(app).not.toMatch(/<SidebarMenu[^>]*className="[^"]*gap-/)
     })

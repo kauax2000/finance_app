@@ -3,7 +3,7 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 
 import { sheetContentVariants } from "./sheet"
 
-/** A rodada 222: as versões novas do `Sheet`. */
+/** As versões do `Sheet`. */
 
 const CODIGO = lerFonte("src/components/ui/sheet.tsx")
 const CSS = lerFonte("src/app/globals.css")

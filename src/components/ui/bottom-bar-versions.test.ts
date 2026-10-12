@@ -3,7 +3,7 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 
 import { bottomBarVariants } from "./bottom-bar"
 
-/** A rodada 230: o `BottomBar` com o `Tabs` de referência. */
+/** O `BottomBar` com o `Tabs` de referência. */
 
 const CODIGO = semComentarios(lerFonte("src/components/ui/bottom-bar.tsx"), "linha-inteira")
 const FRAME = lerFonte("src/app/designsystem/ds-frame.tsx")
@@ -17,7 +17,7 @@ describe("o desenho do Tabs", () => {
   it("o marcador é a tecla em relevo, 2px para dentro, num tom que o conteúdo não usa", () => {
     expect(CODIGO).toContain('"bg-(--bottom-bar-key) ring-1 ring-foreground/10 shadow-sm"')
     expect(CODIGO).toContain("const RECUO_DO_MARCADOR = 2")
-    // Era `--muted` — o fundo das linhas que passam por trás: ~1,09:1 sobre uma linha.
+    // Não é `--muted`: o fundo das linhas que passam por trás dá ~1,09:1 sobre uma linha.
     expect(CODIGO).toContain('"[--bottom-bar-key:color-mix(in_oklab,var(--foreground)_12%,var(--popover))]"')
     expect(CODIGO).toContain('"dark:[--bottom-bar-key:color-mix(in_oklab,var(--foreground)_18%,var(--popover))]"')
     // A pílula mais densa, redeclarada só aqui: a gaveta e o menu ficam no token.
@@ -31,7 +31,7 @@ describe("o desenho do Tabs", () => {
   })
 
   it("e viaja líquido, com o trajeto que as Tabs dividem", () => {
-    // Desde a rodada 252 o marcador das duas é um hook só, `useMarcador`.
+    // O marcador das duas é um hook só, `useMarcador`.
     expect(CODIGO).toContain('import { useMarcador } from "@/hooks/use-marcador"')
     expect(lerFonte("src/components/ui/tabs.tsx")).toContain('import { useMarcador } from "@/hooks/use-marcador"')
     // Só quando o item muda: redimensionar só reposiciona.
@@ -123,28 +123,18 @@ describe("o catálogo e o app", () => {
   })
 })
 
-// A régua do BottomBar. O bloco guarda as constantes dela: o `CODIGO` daqui
-// tira todo comentário, e o de cima só as linhas inteiras.
+// A régua do BottomBar. O `CODIGO` daqui tira todo comentário, e o de cima só as linhas
+// inteiras.
 {
   /**
-   * A régua da barra de baixo, trancada.
-   *
-   * Ela nasceu de **seis arquivos** em `components/layout/` sem um teste sequer,
-   * e cada defeito medido virou uma asserção: o token de margem declarado e sem
-   * leitor (a ilha escrevia `mx-4` e `0.5rem` literais, e a reserva contava a
-   * margem uma vez só), o `duration-300 ease-out` fora da escala, as abas sem
-   * `hover:` e sem `focus-visible:`, a tinta do ativo em `--primary-foreground`
-   * (o token de *sobre o preenchimento primário*, sobre um fundo `foreground/12`),
-   * o `grid-cols-4` cravado no consumidor, e os **seis `!important`** do FAB
-   * anulando a tecla que o `primary` virou na rodada 78.
-   *
-   * Zero render: tudo lê o `cva` e o fonte **sem comentários** — a prosa do
-   * arquivo cita de propósito o que ele deixou de fazer, e uma varredura ingênua
-   * se acusaria sozinha.
+   * A régua da barra de baixo, trancada: o token de margem declarado e sem leitor, o
+   * `duration-300 ease-out` fora da escala, as abas sem `hover:`/`focus-visible:`, a tinta do
+   * ativo em `--primary-foreground`, o `grid-cols-4` cravado no consumidor e os `!important` do
+   * FAB anulando a tecla do `primary`. Zero render: tudo lê o `cva` e o fonte sem comentários.
    */
 
   const CODIGO = semComentarios(lerFonte("src/components/ui/bottom-bar.tsx"))
-  /** A medição e a viagem, desde a rodada 252 no hook que o Tabs e o ToggleGroup dividem. */
+  /** A medição e a viagem moram no hook que o Tabs e o ToggleGroup dividem. */
   const MARCADOR = semComentarios(lerFonte("src/hooks/use-marcador.ts"))
 
   const CSS = lerFonte("src/app/globals.css")
@@ -199,13 +189,10 @@ describe("o catálogo e o app", () => {
       expect(CODIGO).not.toMatch(/\bbackdrop-blur/)
       expect(CODIGO).not.toMatch(/\bbackdrop-filter/)
 
-      // Aqui havia um `not.toMatch(/ring-1\s+ring-border/)`, e ele **passava sem
-      // ser verdade**: o anel mora dentro da constante importada, não neste
-      // arquivo — a asserção media a chamada, e não o resultado. Quem viu foi o
-      // navegador. O anel fica: a borda é branca e mede **1,007** contra a pílula
-      // no tema claro — ali quem desenha a aresta é o anel, e no escuro a conta
-      // se inverte. O que sobra a trancar é a peça **vestir** a receita
-      // compartilhada em vez de reescrevê-la, que é a linha acima.
+      // O anel mora dentro da constante importada, e não neste arquivo: a asserção
+      // `not.toMatch(/ring-1\s+ring-border/)` media a chamada e passava sem ser verdade. A
+      // borda é branca (1,007 contra a pílula no claro), e quem desenha a aresta é o anel. O
+      // que se tranca é a peça vestir a receita compartilhada em vez de reescrevê-la.
     })
 
     it("6. a margem vem do token nos três lados, sem literal", () => {
@@ -256,7 +243,7 @@ describe("o catálogo e o app", () => {
     })
 
     it("11. a tinta do ativo é o foreground, nos dois temas", () => {
-      // Desde a rodada 230 o fundo do ativo é a tecla, num tom próprio.
+      // O fundo do ativo é a tecla, num tom próprio.
       expect(CODIGO).toMatch(/group-data-\[active\]\/bottom-bar-item:bg-\(--bottom-bar-key\)/)
       expect(CODIGO).toMatch(
         /group-data-\[active\]\/bottom-bar-item:text-foreground/
@@ -318,8 +305,8 @@ describe("o catálogo e o app", () => {
       for (const eixo of ["x", "y", "w", "h"]) {
         expect(marcador).toContain(`--bottom-bar-marker-${eixo}`)
       }
-      // Desde a rodada 230 ele não transiciona: viaja por WAAPI
-      // (`viajarLiquido`, o trajeto macio das abas), e o repouso são as variáveis.
+      // Ele não transiciona: viaja por WAAPI (`viajarLiquido`, o trajeto macio das abas), e o
+      // repouso são as variáveis.
       expect(marcador).not.toContain("transition-")
       expect(CODIGO).toContain('prefixo: "bottom-bar-marker"')
       expect(MARCADOR).toContain("viajarLiquido(peca, antes.caixa, caixa")
@@ -359,7 +346,7 @@ describe("o catálogo e o app", () => {
       expect(CODIGO).toMatch(/!temMarcador && itemFallbackClassName/)
       const fallback = CODIGO.slice(CODIGO.indexOf("const itemFallbackClassName"))
         .slice(0, 300)
-      // A mesma tecla do marcador (rodada 230): o tom próprio, o anel e a sombra.
+      // A mesma tecla do marcador: o tom próprio, o anel e a sombra.
       expect(fallback).toContain("bg-(--bottom-bar-key)")
       expect(fallback).toContain("ring-foreground/10")
       expect(fallback).toContain("shadow-sm")

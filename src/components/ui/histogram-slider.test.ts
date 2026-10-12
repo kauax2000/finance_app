@@ -8,22 +8,17 @@ import {
 } from "./histogram-slider"
 
 /**
- * As três contas do histograma.
- *
- * O resto da peça é composição (`Slider`, `StatCard`, `MoneyDisplay`), e quem
- * a guarda são os testes daqueles. O que é próprio daqui é a aritmética: qual
- * barra acende, que altura ela tem, e onde o arco-íris é ancorado nela.
+ * As três contas do histograma: qual barra acende, que altura ela tem e onde o arco-íris é
+ * ancorado nela. O resto é composição, guardada pelos testes dos componentes.
  */
 
 const FAIXA = { min: 0, max: 100, total: 10 }
 
 describe("HistogramSlider", () => {
   it("1. a coluna acende só quando cabe inteira entre as guias", () => {
-    // **Isto inverte a rodada 107 de propósito.** Lá a faixa acendia por
-    // *sobreposição*, para a coluna da ponta acender assim que o punho entrava
-    // nela. Com a linha-guia desenhada, a sobreposição passou a mentir: a
-    // coluna sob o punho acendia metade para fora da linha. Com as guias na
-    // tela, elas são a fronteira — e o que acende é o que está entre elas.
+    // A coluna acende quando cabe inteira entre as guias (contenção, e não sobreposição): com a
+    // linha-guia desenhada, a sobreposição acendia a coluna sob o punho metade para fora da
+    // linha.
     const ativa = (i: number, de: number, ate: number) =>
       faixaAtiva(i, { ...FAIXA, de, ate })
 
@@ -77,10 +72,9 @@ describe("HistogramSlider", () => {
   })
 
   it("4. a travessia é opacidade, e o degradê não volta a estalar", () => {
-    // O defeito que motivou a rodada 108, e ele era medível: `transition-colors`
-    // cobre `background-color` e **não** `background-image`, então na variante
-    // de marca o degradê aparecia de estalo enquanto a tinta apagada dissolvia
-    // em 150ms. Degradê não interpola — quem liga e desliga é uma opacidade.
+    // `transition-colors` cobre `background-color` e não `background-image`: na variante de
+    // marca o degradê aparecia de estalo. Degradê não interpola, quem liga e desliga é uma
+    // opacidade.
     const src = semComentarios(lerFonte("src/components/ui/histogram-slider.tsx"), "numa-passada")
 
     // A camada acesa existe **sempre**, e só a opacidade muda: montar e
@@ -91,10 +85,8 @@ describe("HistogramSlider", () => {
     // E a coluna não volta a apostar numa transição de cor para a tinta ativa.
     expect(src).not.toContain("transition-colors")
 
-    // **A guia se ancora na coluna, e não no punho.** O Radix recua o punho
-    // meia-largura nas pontas (`left: calc(70% - 2.8px)`), então o centro dele
-    // não cai no mesmo x que a coluna — medido, 1,73px de desvio numa coluna
-    // de 6,02px. Presa ao punho ela nunca acerta o eixo.
+    // A guia se ancora na coluna, e não no punho: o Radix recua o punho meia-largura nas
+    // pontas, e o centro dele não cai no x da coluna (1,73px de desvio numa coluna de 6,02px).
     expect(src).toContain('data-slot="histogram-slider-guide"')
     expect(src).toContain("frestaDaGuia(")
     // E ela **não** volta a ser pseudo do punho — nem o `::after`, que é o
@@ -111,10 +103,8 @@ describe("HistogramSlider", () => {
     expect(src).toContain("mix-blend-difference")
     expect(src).toMatch(/pointer-events-none absolute top-1\/2/)
 
-    // **Toda coluna leva o mesmo tempo entre o neutro e o pintado**, e quem
-    // acende antes é aquela por onde o punho passou antes — ordem que o
-    // arraste produz sozinho. Um atraso por coluna calcularia uma ordem que já
-    // existe, e foi por isso que o escalonamento por distância saiu.
+    // Toda coluna leva o mesmo tempo entre o neutro e o pintado; a ordem de acender é a do
+    // arraste, e um atraso por coluna calcularia uma ordem que já existe.
     expect(src).not.toMatch(/transitionDelay:/)
     expect(src).not.toMatch(/--bar-delay/)
     expect(src).not.toMatch(/\bdelay-/)
@@ -132,9 +122,8 @@ describe("HistogramSlider", () => {
     expect(src).toMatch(/step=\{passo/)
     expect(src, "`step` não pode voltar a ser prop").not.toMatch(/step\?: number/)
 
-    // E o estado **nasce na grade**: sem isto o punho recebe o valor encaixado
-    // e as guias leem o cru, e os dois discordam até o primeiro arraste — o
-    // desvio medido foi de meio punho.
+    // O estado nasce na grade: senão o punho recebe o valor encaixado e as guias leem o cru, e
+    // os dois discordam até o primeiro arraste.
     expect(src).toMatch(/useState<\[number, number\]>\(inicialNaGrade\)/)
 
     // A régua recua meio punho de cada lado, senão a grade das colunas e a

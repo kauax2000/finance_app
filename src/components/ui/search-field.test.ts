@@ -5,7 +5,7 @@ import { lerFonte } from "@/test/fonte"
 
 import { SearchInput } from "./search-input"
 
-/** A rodada 198: uma receita de busca, três peças. */
+/** Uma receita de busca, três peças. */
 
 const trecho = (texto: string, de: string, ate: string) =>
   texto.slice(texto.indexOf(de), texto.indexOf(ate, texto.indexOf(de)))
@@ -19,9 +19,9 @@ describe("o campo de busca é um desenho só", () => {
     // O campo do cmdk entra como filho; a pílula, o × e a lupa são do SearchInput.
     expect(campo).toMatch(/<SearchInput[\s\S]*<CommandPrimitive\.Input[\s\S]*<\/SearchInput>/)
     expect(campo).not.toMatch(/MagnifyingGlassIcon|XMarkIcon|searchField\w+ClassName/)
-    // Na paleta, sem anel; no Combobox e solto, com. O piso de toque é
-    // opcional e desligado por padrão (rodada 245): a raiz publica a altura da
-    // faixa de busca (32 + 16), e quem o liga leva a faixa junto (40 + 16).
+    // Na paleta, sem anel; no Combobox e solto, com. O piso de toque é opcional e desligado por
+    // padrão: a raiz publica a altura da faixa de busca (32 + 16), e quem o liga leva a faixa
+    // junto (40 + 16).
     expect(campo).toContain('focusRing={pilha !== "palette"}')
     expect(campo).toContain("touchFloor = false,")
     expect(campo).toContain("data-touch-floor={touchFloor || undefined}")
@@ -33,7 +33,7 @@ describe("o campo de busca é um desenho só", () => {
   it("o SearchInput e o gatilho do cabeçalho vestem a receita", () => {
     const pecas = {
       SearchInput: lerFonte("src/components/ui/search-input.tsx"),
-      // Desde a rodada 237 o gatilho do cabeçalho é o `TopBarSearch`.
+      // O gatilho do cabeçalho é o `TopBarSearch`.
       gatilho: trecho(lerFonte("src/components/ui/top-bar.tsx"), "function TopBarSearch", "\n}\n"),
     }
     for (const [nome, codigo] of Object.entries(pecas)) {

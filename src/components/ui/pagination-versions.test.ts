@@ -11,8 +11,8 @@ import {
 } from "./pagination"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
-/** As versões da rodada 196. */
-describe("Pagination, rodada 196", () => {
+/** As versões da `Pagination`. */
+describe("Pagination", () => {
   it("a janela tem pontas, vizinhas e reticência só quando esconde mais de uma", () => {
     expect(janelaDePaginas(5, 18)).toEqual([1, "…", 4, 5, 6, "…", 18])
     // A reticência que esconderia só a página 2 vira a página 2.
@@ -53,16 +53,10 @@ describe("Pagination, rodada 196", () => {
 })
 
 /**
- * A escada da `Pagination`, trancada.
- *
- * Medido antes dela: a fileira inteira em **14px** — número, extremo e status
- * no corpo de um parágrafo —, e o tamanho decidido em quatro lugares que não se
- * conheciam, com a reticência cravada em `size-8`. E um buraco do `Button` que
- * só esta peça expõe: os degraus `icon-*` não declaram `font-size`, então
- * encolher a caixa sozinha daria um dígito de 14px numa caixa de 28.
- *
- * O fonte é lido **sem comentários**: a prosa do arquivo cita de propósito o
- * `size-8` cravado que deixou de existir, e uma varredura ingênua se acusaria.
+ * A escada da `Pagination`, trancada: a fileira inteira saía em 14px e o tamanho era decidido
+ * em quatro lugares, com a reticência cravada em `size-8`. Os degraus `icon-*` não declaram
+ * `font-size`, então encolher a caixa sozinha daria um dígito de 14px numa caixa de 28. O fonte
+ * é lido sem comentários.
  */
 
 const FONTE = lerFonte("src/components/ui/pagination.tsx")
@@ -138,8 +132,7 @@ describe("escada da Pagination", () => {
       expect(passos(d.salto), `${s}: reticência`).toBe(caixa)
     }
 
-    // A reticência era `size-8` cravado, e o quadrado do telefone era o mesmo
-    // número escrito à mão. Fora da tabela não sobra medida literal nenhuma.
+    // A reticência e o quadrado do telefone não têm medida literal: tudo sai da tabela.
     const tabela = corpo("const paginationSteps", "as const satisfies")
     const fora = CODIGO.replace(tabela, "")
     expect(fora).not.toMatch(/(?:^|[\s"'])(?:max-sm:)?size-\d/)

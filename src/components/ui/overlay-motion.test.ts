@@ -10,7 +10,7 @@ import { SHEET_OVERLAY_CLASS } from "@/components/ui/drawer"
 const CSS = lerFonte("src/app/globals.css")
 const ui = (nome: string) => lerFonte(`src/components/ui/${nome}.tsx`)
 
-/** O bloco da rodada 248, do título até a troca de mês do calendário. */
+/** O movimento das superfícies sobrepostas, do título até a troca de mês do calendário. */
 const BLOCO = CSS.slice(
   CSS.indexOf("/* ── O movimento do que se sobrepõe à tela"),
   CSS.indexOf("/* A troca de mês. O `react-day-picker`")
@@ -20,7 +20,7 @@ const utility = (nome: string) => {
   return blocoCss(BLOCO, `@utility ${nome} {`)
 }
 
-describe("O movimento do que se sobrepõe à tela, rodada 248", () => {
+describe("O movimento do que se sobrepõe à tela", () => {
   it("as utilities moram depois de no-scrollbar, fora da fatia do vidro", () => {
     expect(BLOCO.length).toBeGreaterThan(0)
     esperarDepoisDeNoScrollbar(CSS, "@utility menu-sprout")
@@ -116,11 +116,11 @@ describe("O movimento do que se sobrepõe à tela, rodada 248", () => {
   })
 })
 
-describe("Um keyframe de subir, rodada 252", () => {
+describe("Um keyframe de subir", () => {
   it("o `rise` lê a distância por variável, e os três antigos saíram", () => {
     const rise = esperarDepoisDeNoScrollbar(CSS, "@keyframes rise {")
-    // Sem `filter`: nem padrão (`blur(0px)`) nem `var()` sem padrão — os dois
-    // animam filtro em toda linha (medido). O desfoque da seção é dela.
+    // Sem `filter`: nem padrão (`blur(0px)`) nem `var()` sem padrão, os dois animam filtro em
+    // toda linha. O desfoque da seção é dela.
     expect(rise).toMatch(/from \{\s*opacity: 0;\s*translate: 0 var\(--rise-distance, 3px\);\s*\}/)
     expect(rise).not.toContain("filter")
     expect(CSS.match(/@keyframes rise \{/g)).toHaveLength(1)
@@ -131,7 +131,7 @@ describe("Um keyframe de subir, rodada 252", () => {
   })
 })
 
-describe("Os véus, rodada 252", () => {
+describe("Os véus", () => {
   it("o véu é um só, com a camada como parâmetro", () => {
     expect(overlayClassName("modal")).toContain("z-(--z-modal)")
     expect(overlayClassName("sheet")).toContain("z-(--z-sheet)")

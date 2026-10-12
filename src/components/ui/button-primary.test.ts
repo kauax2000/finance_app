@@ -6,14 +6,10 @@ import { buttonVariants } from "./button"
 import { cn } from "@/lib/utils"
 
 /**
- * O primário é a **tecla chapada** (rodada 241): preta no claro, branca no
- * escuro, indo a `--primary-hover` no cursor (clareia no claro, escurece no
- * escuro: a tecla preta já não tinha para onde escurecer). O **Button Colorful**
- * da Kokonut UI (rodadas 149 a 151) — o degradê de cinco paradas da marca
- * florescendo do centro — saiu dele e virou o `brandColorful`. O primário foi
- * tecla em relevo da rodada 78 à 97, lava e brilho da 98 à 147, cru na 148 e
- * colorido da 149 à 240; cada asserção aqui tranca ou um pedaço do desenho
- * de hoje, ou um pedaço dos antigos que não pode voltar.
+ * O primário é a tecla chapada: preta no claro, branca no escuro, indo a `--primary-hover` no
+ * cursor (clareia no claro, escurece no escuro). O degradê de cinco paradas é o
+ * `brandColorful`; cada asserção tranca um pedaço do desenho de hoje ou um pedaço dos antigos
+ * que não pode voltar.
  */
 
 const RAIZ = resolve(process.cwd(), "src")
@@ -62,8 +58,8 @@ describe("o primário é a tecla chapada, e o colorido é de marca", () => {
     for (const c of ["isolation: isolate", "overflow: hidden", "&::after", "z-index: -10"]) {
       expect(util, c).toContain(c)
     }
-    // Cinco paradas do arco-íris da marca (rodada 150); o roxo de três
-    // paradas da referência lia como template, não como a nossa marca.
+    // Cinco paradas do arco-íris da marca; o roxo de três paradas da referência lia como
+    // template.
     for (const t of ["--brand-teal", "--brand-blue", "--brand-violet", "--brand-magenta", "--brand-coral"]) {
       expect(util, t).toContain(`var(${t})`)
     }
@@ -110,9 +106,8 @@ describe("o primário é a tecla chapada, e o colorido é de marca", () => {
   })
 
   it("5. a lava e o brilho não voltam", () => {
-    // Rodadas 98 a 147: a lava (vidro e blobos seguindo o ponteiro) e depois o
-    // brilho do Shiny Button. Quem repuser um destes está repondo cor num
-    // botão que o dono pediu cru.
+    // A lava e o brilho do Shiny Button não voltam: repô-los é repor cor num botão que o dono
+    // pediu cru.
     expect(CSS).not.toMatch(/@utility primary-wash\b/)
     for (const t of ["--button-wash", "--button-breathe", "--button-lava", "--button-glow-strength", "--button-glass-min", "--button-lava-l"]) {
       expect(CSS, t).not.toContain(`${t}:`)
@@ -122,21 +117,12 @@ describe("o primário é a tecla chapada, e o colorido é de marca", () => {
     expect(botao).not.toMatch(/girarLava|LAVA_STOPS/)
   })
 
-  // A duração é afirmada sobre a string **resolvida** pelo `tailwind-merge`, e
-  // não sobre a saída crua do `cva`. A versão anterior lia a crua, onde a
-  // classe da base sobrevive mesmo quando a variante a vence — então
-  // `duration-(--duration-fast)` aparecia sempre e a asserção não podia
-  // falhar. Foi essa brecha que deixou o `link` mudar de ritmo em silêncio na
-  // rodada 91.
+  // A duração é afirmada sobre a string resolvida pelo `tailwind-merge`, e não sobre a saída
+  // crua do `cva`, onde a classe da base sobrevive mesmo quando a variante a vence.
   it("6. a transição é enumerada e usa a curva da casa, em todo peso", () => {
-    // Quem foge do ritmo da casa entra aqui, com a razão escrita. Os quatro
-    // pesos que preenchiam entraram na rodada 99, pelo disco de `button-fill`,
-    // e saíram com ele na 149.
-    //
-    // **O florescer entrou na 151 e na 152, e na 241 ficou só no
-    // `brandColorful`**: a saída recolhe em `--duration-slow` com `--ease-out`
-    // — a 150ms a flor se fechava num piscar — e a entrada é a mola da casa
-    // (asserção 4). Os outros pesos voltaram ao ritmo da casa.
+    // Quem foge do ritmo da casa entra aqui, com a razão escrita. O florescer é só do
+    // `brandColorful`: a saída recolhe em `--duration-slow` com `--ease-out` (a 150ms a flor se
+    // fechava num piscar) e a entrada é a mola da casa (asserção 4).
     const FLOR = { duracao: "duration-(--duration-slow)", curva: "ease-(--ease-out)" }
     const RITMO_PROPRIO: Partial<Record<string, { duracao: string; curva: string }>> = {
       brandColorful: FLOR,
@@ -156,8 +142,8 @@ describe("o primário é a tecla chapada, e o colorido é de marca", () => {
   })
 
   it("7. a tecla não volta: os seis tokens dela não existem em tema nenhum", () => {
-    // Rodadas 78 a 97. Quem for repor um destes está repondo relevo num botão
-    // que o dono pediu chapado — e a rodada 98 explica por quê.
+    // O relevo da tecla antiga não volta: repô-lo é repor relevo num botão que o dono pediu
+    // chapado.
     for (const t of [
       "--primary-edge",
       "--primary-highlight",
@@ -170,10 +156,9 @@ describe("o primário é a tecla chapada, e o colorido é de marca", () => {
       expect(ESCURO, `${t} no .dark`).not.toContain(`${t}:`)
     }
     expect(CSS).not.toContain("--color-primary-edge")
-    // O que fica: `--primary-hover`, o hover do primário (e o `--brand-fill`
-    // do `brandOutline`). Opaco, e longe o bastante do repouso para se ver
-    // (rodada 241b): clareia no claro, onde a tecla já é quase preta, e
-    // escurece no escuro — ao menos 0,1 de claridade de distância nos dois.
+    // Fica `--primary-hover` (e o `--brand-fill` do `brandOutline`): opaco e longe o bastante
+    // do repouso para se ver, clareando no claro e escurecendo no escuro (ao menos 0,1 de
+    // claridade nos dois).
     expect(CSS).toContain("--color-primary-hover: var(--primary-hover)")
     expect(claridade(CLARO, "--primary-hover"), "claro: hover clareia").toBeGreaterThan(claridade(CLARO, "--primary"))
     expect(claridade(ESCURO, "--primary-hover"), "escuro: hover escurece").toBeLessThan(claridade(ESCURO, "--primary"))
@@ -191,13 +176,12 @@ describe("o primário é a tecla chapada, e o colorido é de marca", () => {
 
   it("9. `brand` é o CTA neutro com o brilho na borda, e o fundo não muda no cursor", () => {
     const BRAND = buttonVariants({ variant: "brand" }).split(/\s+/)
-    // A família do brilho (rodada 145): a mesma utility e o mesmo `isolate`
-    // do `Alert`, do `Card` e do `Badge`.
+    // A família do brilho: a mesma utility e o mesmo `isolate` do `Alert`, do `Card` e do
+    // `Badge`.
     for (const c of ["brand-rainbow-image", "brand-glow", "relative", "isolate", "bg-secondary"]) {
       expect(BRAND, c).toContain(c)
     }
-    // Sem núcleo (rodada 156): a máscara recorta o anel, e o meio do botão
-    // nunca é pintado — o núcleo chapado era o que virava feixe no centro.
+    // Sem núcleo: a máscara recorta o anel e o meio do botão nunca é pintado.
     expect(BRAND.join(" ")).not.toMatch(/--brand-glow-(core|overlay)/)
     // O halo e a tecla preta do desenho anterior não podem sobreviver ao lado
     // do brilho: seriam dois arco-íris na mesma caixa.
@@ -212,8 +196,7 @@ describe("o primário é a tecla chapada, e o colorido é de marca", () => {
   })
 
   it("9b. todo botão é cápsula, com o recuo da antiga pílula", () => {
-    // Rodada 240: o controle do iOS 26 é cápsula em todos os degraus, e o eixo
-    // `shape` saiu do tipo.
+    // O controle do iOS 26 é cápsula em todos os degraus, e o eixo `shape` não volta ao tipo.
     expect(buttonVariants({})).toContain("rounded-full")
     expect(buttonVariants({})).not.toContain("rounded-lg")
     const RECUO = { xs: "px-2.5", sm: "px-3", md: "px-3.5", lg: "px-4", xl: "px-4.5" } as const
@@ -245,8 +228,8 @@ describe("o primário é a tecla chapada, e o colorido é de marca", () => {
     for (const c of ["isolation: isolate", "&::before", "&::after", "animation: brand-rainbow-slide 2s linear infinite", "background-clip: padding-box, border-box, border-box", "bottom: -20%", "filter: blur(0.8rem)"]) {
       expect(util, c).toContain(c)
     }
-    // A lista mora na `brand-rainbow-slide` (rodada 154, o `Checkbox` a lê
-    // também), e o laço fecha na cor em que abre — sem a emenda da referência.
+    // A lista mora na `brand-rainbow-slide` (o `Checkbox` a lê também), e o laço fecha na cor
+    // em que abre.
     expect(OUTLINE).toContain("brand-rainbow-slide")
     const lista = bloco("@utility brand-rainbow-slide {")
     const cores = [...lista.matchAll(/var\((--brand-[a-z]+)\)/g)].map((m) => m[1])

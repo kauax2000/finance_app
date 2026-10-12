@@ -14,7 +14,7 @@ import {
   statCardVariants,
 } from "./stat-card"
 
-/** A rodada 223: o redesenho do `StatCard` e as versões novas. */
+/** O redesenho do `StatCard` e as versões novas. */
 
 const CSS = lerFonte("src/app/globals.css")
 

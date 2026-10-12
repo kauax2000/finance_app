@@ -4,7 +4,7 @@ import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
 import { pageSectionVariants } from "./page-section"
 
-/** A rodada 233: o redesenho, as peças e os comportamentos do `PageSection`. */
+/** O redesenho, as peças e os comportamentos do `PageSection`. */
 
 const CODIGO = semComentarios(lerFonte("src/components/ui/page-section.tsx"), "linha-inteira")
 const CSS = lerFonte("src/app/globals.css")
@@ -116,11 +116,9 @@ describe("PageSection", () => {
   })
 
   /**
-   * Medido: uma seção usada como item de uma **linha** de flex estoura para o
-   * próprio min-content — 5241px dentro de um pai de 400 —, e leva a rolagem
-   * interna junto. O `min-w-0` é da seção; no conteúdo ele não fazia nada,
-   * porque o tamanho mínimo automático vale no eixo principal, e numa coluna o
-   * eixo principal é o vertical.
+   * Uma seção usada como item de uma linha de flex estoura para o próprio min-content (5241px
+   * num pai de 400) e leva a rolagem interna junto. O `min-w-0` é da seção; no conteúdo não
+   * fazia nada, porque o tamanho mínimo automático vale no eixo principal.
    */
   it("declara min-w-0, que é o que a impede de estourar numa linha de flex", () => {
     expect(pageSectionVariants({})).toMatch(/(?:^|\s)min-w-0(?:\s|$)/)

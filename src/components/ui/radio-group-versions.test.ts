@@ -6,12 +6,12 @@ import { lerFonte } from "@/test/fonte"
 import { tagChipFilterSelected, tagChipNeutral } from "./badge"
 import { RadioGroup, RadioGroupItem, radioGroupItemVariants } from "./radio-group"
 
-/** As versões da rodada 197. */
+/** As versões do `RadioGroup`. */
 
 const grupo = (props: Record<string, unknown>, ...itens: ReturnType<typeof h>[]) =>
   renderToStaticMarkup(h(RadioGroup, props, ...itens))
 
-describe("RadioGroup, rodada 197", () => {
+describe("RadioGroup", () => {
   it("a ficha é, classe a classe, o chip de filtro do Badge", () => {
     const ficha = radioGroupItemVariants({ variant: "chip" }).split(/\s+/)
     for (const c of tagChipNeutral.split(/\s+/)) expect(ficha).toContain(c)

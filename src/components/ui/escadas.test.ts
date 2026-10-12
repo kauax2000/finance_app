@@ -26,12 +26,8 @@ import { TOOLBAR_CONTROL_HEIGHTS } from "./toolbar"
 import { topBarVariants } from "./top-bar"
 
 /**
- * As regras que toda escada de tamanho cumpre, numa tabela só. O que é de uma
- * peça só mora no `<peça>-versions.test.ts` dela.
- *
- * Cada linha lê o que o teste de escada de origem lia, e só liga as regras
- * que ele cobrava: uma escada sem `classes` não tinha a asserção de degraus
- * distintos, e assim por diante.
+ * As regras que toda escada de tamanho cumpre, numa tabela só; cada linha só liga as regras que
+ * a escada de origem cobrava. O que é de uma peça mora no `<peça>-versions.test.ts` dela.
  */
 type Escada = {
   nome: string

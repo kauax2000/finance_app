@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
 /**
- * A rodada 233: o `Sidebar variant="plain"`, a barra sem placa da navegação do
- * catálogo — e o catálogo passando a usá-la, em vez de uma lista à mão.
+ * O `Sidebar variant="plain"`, a barra sem placa da navegação do catálogo, e o catálogo
+ * usando-a em vez de uma lista à mão.
  */
 
 const fonte = (caminho: string) => semComentarios(lerFonte(caminho), "linha-inteira")

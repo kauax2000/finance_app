@@ -7,11 +7,9 @@ import { lerFonte } from "@/test/fonte"
 import { REGISTRY } from "./registry"
 
 /**
- * A forma das páginas de componente, trancada (`docs/design/COMPONENTE-NOVO.md`,
- * seção 4). As rodadas 223 a 235 refizeram página por página o mesmo trabalho
- * — juntar as demonstrações repetidas num trilho de eixos, tirar o retângulo
- * tracejado, pôr a tabela de props —, e este teste é o que impede a próxima
- * página de nascer precisando dele.
+ * A forma das páginas de componente, trancada (`docs/design/COMPONENTE-NOVO.md`, seção 4): o
+ * trilho de eixos, sem retângulo tracejado, com a tabela de props. Impede a próxima página de
+ * nascer precisando de retrabalho.
  */
 
 const DOCS = "src/app/designsystem/docs"

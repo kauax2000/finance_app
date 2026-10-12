@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 import { Kbd } from "./kbd"
 import { KbdGroup } from "./kbd-group"
 
-/** O grupo de teclas, trancado na rodada 195. */
+/** O grupo de teclas, trancado. */
 describe("KbdGroup", () => {
   it("a sequência diz “depois”, e as alternativas dizem “ou”", () => {
     const seq = renderToStaticMarkup(h(KbdGroup, { keys: ["g", "h"] }))

@@ -10,7 +10,7 @@ import {
   valorDeSaida,
 } from "./histogram-slider"
 
-/** A rodada 216: as versões novas do `HistogramSlider`. */
+/** As versões do `HistogramSlider`. */
 
 const CODIGO = lerFonte("src/components/ui/histogram-slider.tsx")
 const BINS = [4, 6, 10, 5, 3, 2]

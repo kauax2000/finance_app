@@ -11,7 +11,7 @@ import {
   InputGroupTextarea,
 } from "./input-group"
 
-/** O grupo de campo, trancado na rodada 193. */
+/** O grupo de campo, trancado. */
 
 describe("InputGroup", () => {
   it("a senha nasce escondida, com o olho rotulado", () => {

@@ -5,7 +5,7 @@ import { lerFonte } from "@/test/fonte"
 
 import { Stepper, StepperContent, StepperItem } from "./stepper"
 
-/** A rodada 224: o redesenho do `Stepper` e o fluxo controlado. */
+/** O redesenho do `Stepper` e o fluxo controlado. */
 
 const CODIGO = lerFonte("src/components/ui/stepper.tsx")
 

@@ -50,10 +50,7 @@ describe("Container", () => {
     }
   })
 
-  /**
-   * `default` dizia *o padrão* em vez de dizer a medida — o nome que já saiu
-   * de `Button`, `Input`, `SelectTrigger` e `NativeSelect`.
-   */
+  /** `default` dizia o padrão em vez de dizer a medida, como nos outros controles. */
   it("não existe um degrau chamado default", () => {
     expect(Object.keys(containerSizes)).not.toContain("default")
   })
@@ -71,10 +68,8 @@ describe("Container", () => {
   })
 
   /**
-   * 1024 tinha zero usos no repositório e era o padrão. Ele saiu, e esta
-   * asserção é o que impede que volte pela porta dos fundos — como o
-   * `in-data-[variant=dialog]` do `Command`, que sobreviveu à remoção da
-   * variante e passou a não casar com nada.
+   * O degrau de 1024 não tem uso e não volta pela porta dos fundos (uma classe `in-
+   * data-[variant=dialog]` sobreviveu assim no `Command` e deixou de casar com algo).
    */
   it("max-w-5xl não voltou para a escada", () => {
     expect(Object.values(containerSizes)).not.toContain("max-w-5xl")

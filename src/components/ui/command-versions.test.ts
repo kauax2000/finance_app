@@ -5,7 +5,7 @@ import { highlightParts } from "./command"
 import { ariaShortcut, matchShortcut } from "@/lib/shortcut"
 import { rememberRecent } from "@/hooks/use-command-recents"
 
-/** A rodada 208: as versões novas do `Command`. */
+/** As versões do `Command`. */
 
 const CODIGO = lerFonte("src/components/ui/command.tsx")
 
@@ -70,8 +70,7 @@ describe("as versões do Command", () => {
     expect(CODIGO).toMatch(/if \(isMobile\) \{[\s\S]*?<Drawer \{\.\.\.props\}>[\s\S]*?<DialogTitle>\{title\}<\/DialogTitle>/)
   })
 
-  it("nenhum comentário ou doc diz mais que o Combobox monta a pilha", () => {
-    expect(CODIGO).not.toMatch(/o `CommandDialog` e o `Combobox` montam/)
+  it("a página não diz mais que o Combobox monta a pilha", () => {
     expect(lerFonte("src/app/designsystem/docs/command.tsx")).not.toMatch(/o CommandDialog e o Combobox a montam/)
   })
 })

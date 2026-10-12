@@ -1,25 +1,10 @@
 /**
- * A regra das superfícies ancoradas, trancada por asserção.
- *
- * Ela existe pelo mesmo motivo que
- * [`tailwind-hover-policy.test.ts`](./tailwind-hover-policy.test.ts): uma
- * política do design system se verifica por asserção, e não por captura de
- * tela. O defeito que ela guarda foi medido antes de existir — quatro
- * superfícies (`DropdownMenu`, `ContextMenu`, `Menubar`, `Tooltip`) abriam com
- * `collisionPadding` **0**, encostando na borda da janela, e
- * `max-w-…-available-width` existia em **3 arquivos de 11**.
- *
- * **Os fontes são lidos sem comentários.** Vários deles citam de propósito o
- * que deixaram de fazer — o `select.tsx` explica por extenso a classe
- * a classe de altura que saiu do viewport, e o `navigation-menu.tsx` fala do
- * `collisionPadding` do `Popover`. Assertar sobre o texto cru testaria o
- * comentário, não o código; é a mesma correção que a rodada do gráfico fez.
- *
- * E as classes proibidas são **montadas por concatenação**, nunca escritas por
- * extenso: o Tailwind varre `.ts` junto com o `.tsx`, e citar a classe aqui a
- * faria voltar para a folha de estilo — verificado, ela continuou emitida
- * depois de sair do JSX, mantida viva só por este arquivo. É a armadilha que
- * esta base documenta em três lugares, usada a favor.
+ * A regra das superfícies ancoradas, trancada por asserção (como `tailwind-hover-
+ * policy.test.ts`): `DropdownMenu`, `ContextMenu`, `Menubar` e `Tooltip` abriam com
+ * `collisionPadding` 0 e `max-w-…-available-width` existia em 3 arquivos de 11. Os fontes são
+ * lidos sem comentários, porque vários citam o que deixaram de fazer. As classes proibidas são
+ * montadas por concatenação: o Tailwind varre `.ts` e citar a classe aqui a manteria na folha
+ * de estilo.
  */
 import { readdirSync, statSync } from "node:fs"
 import { join } from "node:path"
@@ -29,21 +14,11 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 import { ANCHORED_COLLISION_PADDING } from "./anchored-surface"
 
 /**
- * As superfícies que a regra alcança: arquivo → nome da primitiva no Radix.
- *
- * Ela é ao mesmo tempo o **alcance declarado** da regra e o que este teste
- * itera para provar que cada uma escreve os dois tetos por extenso. Uma superfície ancorada nova entra aqui na mesma mudança
- * em que nasce — senão o teste não a vê, e o alcance vira promessa.
- *
- * Fora da lista, com motivo:
- *
- * - **`combobox.tsx`, `date-picker.tsx`** — não têm `Content` próprio; compõem
- *   `PopoverContent` e herdam dele os três.
- * - **`command.tsx`** — não é ancorado. Ele vive dentro de um `Popover` (pelo
- *   `Combobox`) ou de um `Dialog`, e o teto dele é `--command-list-max-h`.
- * - **`navigation-menu.tsx`** — não usa Popper: o Radix não expõe colisão nesta
- *   primitiva, e o trilho é feito à mão em `medir()`. Ele lê a constante, mas
- *   não tem as variáveis `--radix-*-content-available-*` para declarar.
+ * As superfícies que a regra alcança: arquivo → nome da primitiva no Radix. É o alcance
+ * declarado e o que o teste itera; uma superfície ancorada nova entra aqui na mesma mudança.
+ * Ficam fora: `combobox.tsx` e `date-picker.tsx` (compõem `PopoverContent`), `command.tsx` (não
+ * é ancorado; o teto é `--command-list-max-h`) e `navigation-menu.tsx` (sem Popper; o trilho é
+ * feito à mão em `medir()`).
  */
 const ANCHORED_SURFACES = {
   "popover.tsx": "popover",
@@ -116,15 +91,13 @@ describe("toda superfície ancorada cabe inteira na janela", () => {
   }
 
   it("5. o Select não volta para item-aligned", () => {
-    // Naquele modo `collisionPadding`, `avoidCollisions`, `side` e `sideOffset`
-    // **não existem** no Radix: a superfície ignora a borda da janela. Era o
-    // padrão, e 9 das 36 chamadas do app já escreviam `position="popper"` à mão
-    // para escapar dele.
+    // Naquele modo `collisionPadding`, `avoidCollisions`, `side` e `sideOffset` não existem no
+    // Radix: a superfície ignora a borda da janela.
     const src = fonte(join(UI, "select.tsx"))
     expect(src).toContain('position = "popper"')
     expect(src).not.toContain('position = "item-aligned"')
-    // E a altura do viewport não volta a ser a do gatilho: medido, o painel
-    // abria com 36px — a caixa do gatilho — em vez dos 92 do conteúdo.
+    // A altura do viewport não volta a ser a do gatilho (o painel abria com 36px em vez dos 92
+    // do conteúdo).
     expect(src).not.toContain("h-(--radix-select-trigger" + "-height)")
   })
 
@@ -137,17 +110,14 @@ describe("toda superfície ancorada cabe inteira na janela", () => {
   })
 
   it("7. o NavigationMenu clampa ao retângulo que o recorta, não à janela", () => {
-    // Ele é a **única** superfície ancorada que não é portalizada: as outras
-    // vão para o `body` e escapam de qualquer `overflow`, e o viewport daqui é
-    // filho da raiz. Medido dentro do `Preview` do catálogo — janela de 0 a
-    // 420, recorte real de 17 a 403 —, um clamp contra a janela deixava 9px do
-    // painel fora. Ele sobe a árvore procurando quem recorta.
+    // É a única superfície ancorada que não é portalizada: o viewport é filho da raiz, então
+    // ele sobe a árvore procurando quem recorta (um clamp contra a janela deixava 9px do painel
+    // fora no `Preview`).
     const src = fonte(join(UI, "navigation-menu.tsx"))
     expect(src).toContain('overflowX !== "visible"')
     expect(src).toContain("--navigation-menu-panel-max-w")
-    // O teto tem de **descer da casca**: declarado dentro do cva do painel, o
-    // valor local vence o herdado e a medida nunca chega — medido, o
-    // `max-width` computado saía 884px enquanto a raiz publicava 304.
+    // O teto tem de descer da casca: declarado dentro do `cva` do painel, o valor local vence o
+    // herdado e a medida nunca chega.
     const cvaDoPainel = src.slice(
       src.indexOf("const navigationMenuPanelVariants"),
       src.indexOf("const navigationMenuLinkVariants")
@@ -157,9 +127,8 @@ describe("toda superfície ancorada cabe inteira na janela", () => {
   })
 
   it("8. nenhuma tela decide a geometria de colisão", () => {
-    // A folga da borda é do sistema. Eram 12 chamadas em 8 arquivos, com cinco
-    // grafias — incluindo um `undefined` que anulava o default e devolvia a
-    // folga a zero.
+    // A folga da borda é do sistema: nenhuma chamada a escreve, nem com `undefined`, que
+    // anularia o default e devolveria a folga a zero.
     const fora = todosOsTsx(RAIZ, ["components/ui", "app/designsystem"])
     const culpados = fora.filter((f) => {
       const src = fonte(f)

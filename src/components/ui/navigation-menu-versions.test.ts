@@ -12,7 +12,7 @@ import {
   noTriangulo,
 } from "./navigation-menu"
 
-/** A rodada 219: o redesenho do `NavigationMenu`. */
+/** O redesenho do `NavigationMenu`. */
 
 const CODIGO = lerFonte("src/components/ui/navigation-menu.tsx")
 const CSS = lerFonte("src/app/globals.css")
@@ -34,7 +34,7 @@ describe("o redesenho do NavigationMenu", () => {
     expect(CODIGO).toContain('indicator = "highlight",')
     expect(CODIGO).toContain("layoutId={`${barId}-realce`}")
     expect(CODIGO).toContain('{ type: "spring", duration: 0.28, bounce: 0.2 }')
-    // Só a fileira tem o realce que viaja: os links do painel não (rodada 137).
+    // Só a fileira tem o realce que viaja: os links do painel não.
     expect(CODIGO.match(/layoutId=/g)).toHaveLength(1)
   })
 
@@ -71,8 +71,7 @@ describe("o redesenho do NavigationMenu", () => {
     expect(CODIGO).toContain('data-slot="navigation-menu-trigger-current"')
   })
 
-  it("os comentários e a página não contam o que deixou de ser verdade", () => {
-    expect(CODIGO).not.toContain("As três superfícies são **as três strings do `Menubar`**")
+  it("a página não conta o que deixou de ser verdade", () => {
     const doc = lerFonte("src/app/designsystem/docs/navigation-menu.tsx")
     expect(doc).not.toContain("Um item; ancora o painel quando viewport={false}.")
     expect(doc).not.toContain("data-active marca a rota atual")

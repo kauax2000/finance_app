@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
-/** O bloco que expande, trancado na rodada 189. */
+/** O bloco que expande, trancado. */
 
 const FONTE = lerFonte("src/components/ui/collapsible.tsx")
 
@@ -22,7 +22,7 @@ describe("o collapsible", () => {
     // Com o atributo ainda lá, `content-visibility: hidden` mede 0 e o bloco
     // abre sem trajeto.
     expect(FONTE).toMatch(/if \(proximo\) \{\s*raiz\.current[\s\S]{0,120}removeAttribute\("hidden"\)/)
-    // A mecânica mora no hook desde a rodada 200, dividida com o `Accordion`.
+    // A mecânica mora no hook dividido com o `Accordion`.
     expect(FONTE).toContain("useUntilFound(")
     const HOOK = lerFonte("src/hooks/use-until-found.ts")
     expect(HOOK).toContain('el.setAttribute("hidden", "until-found")')

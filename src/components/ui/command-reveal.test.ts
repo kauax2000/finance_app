@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import { lerFonte } from "@/test/fonte"
 import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
-describe("as linhas da paleta sobem ao aparecer (rodada 139)", () => {
+describe("as linhas da paleta sobem ao aparecer", () => {
   const css = lerFonte("src/app/globals.css")
   const paleta = lerFonte("src/components/ui/command.tsx")
 
@@ -16,8 +16,8 @@ describe("as linhas da paleta sobem ao aparecer (rodada 139)", () => {
   it("a lista veste a utility e só a pilha liga a duração", () => {
     const lista = paleta.slice(paleta.indexOf("function CommandList"), paleta.indexOf("function CommandEmpty"))
     expect(lista).toContain('"command-reveal"')
-    // Desde a rodada 143 quem liga é a variante `panel` — a pilha, no diálogo,
-    // solta e no Combobox. `plain` fica em `0s`.
+    // Quem liga é a variante `panel` (a pilha, no diálogo, solta e no Combobox); `plain` fica
+    // em `0s`.
     const cva = paleta.slice(paleta.indexOf("const commandVariants"), paleta.indexOf("defaultVariants"))
     expect(cva).toMatch(/panel: "[^"]*\[--command-reveal:var\(--duration-spring\)\]/)
     expect(paleta.replace(cva, "")).not.toContain("--command-reveal:")

@@ -2,10 +2,9 @@ import { describe, expect, it } from "vitest"
 import { blocoCss, lerFonte } from "@/test/fonte"
 
 /**
- * O `Skeleton` (rodada 176). A linha de texto depende de uma `@utility` do
- * `globals.css`, e ela já sumiu uma vez sem erro nenhum: a classe continuou no
- * elemento, a regra deixou de existir, e todo `shape="text"` ficou com altura
- * zero — buracos no lugar das linhas.
+ * O `Skeleton`. A linha de texto depende de uma `@utility` do `globals.css`; se ela some, a
+ * classe continua no elemento, a regra deixa de existir e todo `shape="text"` fica com altura
+ * zero, sem erro.
  */
 const CSS = lerFonte("src/app/globals.css")
 const SRC = lerFonte("src/components/ui/skeleton.tsx")

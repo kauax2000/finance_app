@@ -10,13 +10,9 @@ import {
 } from "@/lib/scroll-fade-classes"
 
 /**
- * O `scroll-fade` viveu sem teste próprio: as quatro invariantes dele só eram
- * cobradas de raspão por `carousel-versions.test.ts`, contra **um** consumidor.
- * A rodada do borrão fechou isso.
- *
- * O corte é o de `glass.test.ts`, e a razão é a mesma: **asserção que varre
- * texto cru testa o comentário, não o código** — os comentários daqui citam de
- * propósito `mask-composite` e `backdrop-filter` como o que não se faz.
+ * As invariantes do `scroll-fade`, trancadas contra mais de um consumidor. O corte é o de
+ * `glass.test.ts`: asserção que varre texto cru testa o comentário, e os comentários daqui
+ * citam `mask-composite` e `backdrop-filter` como o que não se faz.
  */
 const CSS = lerFonte("src/app/globals.css")
 
@@ -51,17 +47,13 @@ describe("a dissolução das bordas", () => {
       expect(camada).not.toContain(scrollFadeViewportClassName)
     }
 
-    // **A camada é uma peça só, e cada consumidor a declara depois do
-    // rolável.** O bloco de JSX chegou a estar escrito em três lugares — aqui,
-    // na paleta e no corpo modal —, e virou `ScrollFadeBlurLayers`. A asserção
-    // deixou de olhar a posição de um `<div>` e passa a olhar a **ordem** em
-    // cada consumidor: o rolável primeiro, a peça depois.
+    // A camada de borrão é uma peça só (`ScrollFadeBlurLayers`), e cada consumidor a declara
+    // depois do rolável: a asserção olha a ordem, não a posição de um `<div>`.
     expect(COMPONENTE).toContain('data-slot="scroll-fade-blur"')
     for (const [nome, caminho, ancoraDoRolavel] of [
       ["scroll-area", "src/components/ui/scroll-area.tsx", "ref={dissolve ? fadeRef : undefined}"],
-      // O diálogo e a folha saíram desta lista na rodada 57, e a paleta na 58:
-      // nenhum deles monta mais as camadas — a asserção 16 é quem tranca isso,
-      // e a 17 tranca o que ficou no lugar (só a máscara).
+      // Diálogo, folha e paleta não montam mais as camadas: a asserção 16 tranca isso, e a 17
+      // tranca o que ficou (só a máscara).
     ] as const) {
       const src = lerFonte(caminho)
       const rolavel = src.indexOf(ancoraDoRolavel)
@@ -147,19 +139,9 @@ describe("a dissolução das bordas", () => {
       "clamp(0px, var(--scroll-fade-end, 0px), var(--scroll-fade-x-h))"
     )
 
-    // **E a faixa é somada à medida, nunca usada como âncora.**
-    //
-    // Esta metade da asserção era por substring — ela exigia que
-    // `var(--scroll-fade-band-h, 0px)` *aparecesse*, e não **onde**. Passava
-    // com a camada deslocada (`top: band-h`) e passava com ela somada, ou
-    // seja: não provava nada. É o defeito que este projeto já registrou duas
-    // vezes — *asserção que casa a forma do texto testa a digitação*.
-    //
-    // O que ela protege agora é a geometria: a camada começa na borda da casca
-    // e **cobre** a faixa, que é a mesma conta que `--scroll-fade-top-h` faz na
-    // rampa. Deslocada, o borrão começava depois do cabeçalho e o conteúdo
-    // atrás dele saía dissolvido a 6% porém **nítido** — fantasma legível
-    // colado a um borrão, com uma aresta entre os dois.
+    // A faixa é somada à medida, nunca usada como âncora: a camada começa na borda da casca e
+    // cobre a faixa. Deslocada, o borrão começava depois do cabeçalho e deixava um fantasma
+    // nítido colado a ele. Casar a forma do texto não provaria a geometria.
     const pontas = [
       ["Y", BLUR_Y, "top", "bottom", "height", "--scroll-fade-h"],
       ["X", BLUR_X, "inset-inline-start", "inset-inline-end", "width", "--scroll-fade-x-h"],
@@ -176,9 +158,8 @@ describe("a dissolução das bordas", () => {
         expect(css, `${eixo}: ${ancora} não pode ancorar na faixa`).not.toMatch(
           new RegExp(`${ancora}:\\s*var\\(${faixa}`)
         )
-        // E a medida soma a faixa ao `clamp` — com o fallback `, 0px`, que é o
-        // que mantém isto no-op para quem não tem faixa (`ScrollFade`,
-        // `Carousel`): `calc(0px + clamp(…))` é a geometria de sempre.
+        // A medida soma a faixa ao `clamp` com o fallback `, 0px`, que mantém isto no-op para
+        // quem não tem faixa (`calc(0px + clamp(…))`).
         expect(css, `${eixo}: ${medida} precisa somar ${faixa}`).toMatch(
           new RegExp(
             `${medida}:\\s*calc\\(\\s*var\\(${faixa}, 0px\\)\\s*\\+\\s*clamp\\(0px, var\\(${viva}, 0px\\), var\\(${teto}\\)\\)\\s*\\);`
@@ -295,7 +276,7 @@ describe("a dissolução das bordas", () => {
     // CSS. O índice desce por custom property inline, e não por classe.
     expect(REGUA).not.toMatch(/`[^`]*\$\{/)
     expect(COMPONENTE).toContain('"--scroll-fade-blur-i"')
-    // O fade é variante do `ScrollArea` desde a rodada 171.
+    // O fade é variante do `ScrollArea`.
     expect(COMPONENTE).toMatch(/type ScrollAreaVariant = "plain" \| "fade" \| "blur" \| "material"/)
     expect(COMPONENTE).not.toMatch(/`scroll-fade-blur[^`]*\$\{/)
   })
@@ -325,9 +306,8 @@ describe("a dissolução das bordas", () => {
     expect(HOOK).toContain('casca.style.removeProperty("--scroll-fade-end")')
     expect(HOOK).toContain("delete casca.dataset.scrollFade")
     expect(HOOK).toContain("[axis, sides, shell, arrows]")
-    // A medição de faixa que a rodada 56 pôs aqui saiu com ela: sem consumidor,
-    // era código morto — e um hook que mede layout por conta própria é o tipo
-    // de peça que se esquece de tirar.
+    // Sem consumidor a medição de faixa seria código morto, e um hook que mede layout por conta
+    // própria é peça que se esquece de tirar.
     expect(HOOK).not.toContain("bands")
     expect(HOOK).not.toContain("offsetParent")
   })
@@ -349,11 +329,8 @@ describe("a dissolução das bordas", () => {
   })
 
   it("15. nenhuma utility de borrão declara sobra", () => {
-    // A rodada 55 deu à camada uma **sobra** de 44px para fora do rolável,
-    // apostando que a aresta cairia em fundo chapado. Ela não resolveu e
-    // piorou: o trecho era borrão cheio, então a área afetada dobrou e virou um
-    // slab — "muito grande e blocado", com a linha ainda visível. A aresta não
-    // era o problema; a ausência de faixa era.
+    // A camada não ganha uma sobra de 44px para fora do rolável: o trecho era borrão cheio e
+    // virava um slab com a linha ainda visível. O que faltava era a faixa.
     for (const [eixo, camada] of CAMADAS) {
       expect(camada, `${eixo} ainda tem a sobra`).not.toContain(
         "--scroll-fade-blur-over"
@@ -368,12 +345,9 @@ describe("a dissolução das bordas", () => {
   })
 
   it("16. nenhuma peça de ui/ monta as camadas de borrão", () => {
-    // A camada é um `backdrop-filter`, e a borda de um `backdrop-filter` é
-    // dura: sem faixa a aresta cai no meio da superfície; com faixa medida, a
-    // máscara leva o conteúdo ao piso e o borrão fica sem o que borrar; dentro
-    // de um casco que já borra, cada aresta vira uma linha de tom. Medido no
-    // diálogo, na folha e por fim na paleta. A peça fica em `scroll-area.tsx`
-    // para o `variant="blur|material"` de quem não tem casca própria — e só lá.
+    // A borda de um `backdrop-filter` é dura: sem faixa a aresta cai no meio da superfície, e
+    // dentro de um casco que já borra cada aresta vira uma linha de tom. A peça fica em
+    // `scroll-area.tsx`, para quem não tem casca própria, e só lá.
     const montam = readdirSync("src/components/ui")
       .filter((f) => f.endsWith(".tsx") && f !== "scroll-area.tsx")
       .filter((f) =>
@@ -385,11 +359,9 @@ describe("a dissolução das bordas", () => {
   })
 
   it("17. diálogo e folha estão em modo sem faixa — só a máscara", () => {
-    // O que o dono pediu depois de três reprovações: o fade mínimo de todo
-    // componente da casa, na própria borda do rolável, e nada somado a ele. Sem
-    // faixa medida, sem sangramento, sem modo material, sem casca em volta —
-    // o corpo é só o rolável, e o `useScrollFade()` não espelha nada porque não
-    // há irmão para ler.
+    // O fade mínimo de todo componente da casa fica na própria borda do rolável, sem faixa
+    // medida, sangramento, modo material nem casca em volta; o `useScrollFade()` não espelha
+    // nada porque não há irmão para ler.
     const semImports = (t: string) =>
       t.replace(/import\s*\{[\s\S]*?\}\s*from\s*"[^"]*"/g, "")
     for (const nome of ["dialog"] as const) {
@@ -401,21 +373,17 @@ describe("a dissolução das bordas", () => {
       expect(src, `${nome} desliga a máscara`).not.toContain("data-scroll-fade-mode")
       expect(src, `${nome} espelha sem irmão`).not.toMatch(/useScrollFade\(\{\s*shell/)
       expect(src, `${nome} perdeu a máscara`).toContain("scrollFadeViewportClassName")
-      // E o piso é zero: a borda do rolável é a emenda com a tira, que não
-      // pinta nada. A 0,06 o texto que a atravessa é recortado em seco a 6–15%
-      // — uma linha nítida sob o título, medida. Por variável, no próprio nó:
-      // herda e não disputa, e os 0,06 da casa ficam para a paleta.
+      // O piso é zero: a borda do rolável é a emenda com a tira, que não pinta nada, e a 0,06 o
+      // texto que a atravessa era recortado em seco. Por variável no próprio nó (herda e não
+      // disputa); os 0,06 ficam para a paleta.
       expect(src, `${nome} recorta a emenda`).toContain("[--scroll-fade-floor:0]")
     }
   })
 
   it("17b. as três tiras não pintam nada, nem fio", () => {
-    // Elas chegaram a pintar um degradê `from-popover` → transparente para "a
-    // cor cheia encostar na dissolução". Sobre a placa translúcida (`--popover`
-    // a 60%) o opaco do topo é **mais claro** que ela, e saía como banda atrás
-    // da alça da gaveta — medido. Cor com alfa não tem cor cheia pintável sem
-    // empilhar; e a tira não precisa: o corpo é irmão dela e se mascara sozinho,
-    // então o fundo da tira já é a placa. Sem fio também — regra **J**.
+    // As tiras não pintam degradê `from-popover`: sobre a placa translúcida o opaco do topo é
+    // mais claro que ela e vira banda atrás da alça da gaveta. O corpo é irmão da tira e se
+    // mascara sozinho; sem fio também (regra J).
     const semImports = (t: string) =>
       t.replace(/import\s*\{[\s\S]*?\}\s*from\s*"[^"]*"/g, "")
     const dialog = semImports(semComentarios(lerFonte("src/components/ui/dialog.tsx"), "linha-inteira"))
@@ -465,7 +433,7 @@ describe("a dissolução das bordas", () => {
   })
 })
 
-describe("as setas de \"tem mais\" dos dropdowns (rodada 172)", () => {
+describe("as setas de \"tem mais\" dos dropdowns", () => {
   const HOOK = semComentarios(lerFonte("src/hooks/use-scroll-fade.ts"), "linha-inteira")
   const SETAS = semComentarios(lerFonte("src/lib/scroll-fade-arrows.tsx"), "linha-inteira")
 

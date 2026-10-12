@@ -12,7 +12,7 @@ import {
   MenubarTrigger,
 } from "./menubar"
 
-/** A rodada 218: o redesenho do `Menubar`. */
+/** O redesenho do `Menubar`. */
 
 const CODIGO = lerFonte("src/components/ui/menubar.tsx")
 const CSS = lerFonte("src/app/globals.css")
@@ -35,7 +35,7 @@ describe("o redesenho do Menubar", () => {
   it("o realce é um objeto só, na mola da referência, e as linhas não ganham o realce que viaja", () => {
     expect(CODIGO).toContain("layoutId={`${bar.barId}-realce`}")
     expect(CODIGO).toContain('{ type: "spring", duration: 0.28, bounce: 0.2 }')
-    // O realce que corre entre as linhas foi recusado na rodada 137.
+    // O realce que corre entre as linhas não volta.
     expect(CODIGO.match(/layoutId=/g)).toHaveLength(1)
   })
 
@@ -49,8 +49,8 @@ describe("o redesenho do Menubar", () => {
     expect(CODIGO).toContain("data-open:zoom-in-[0.97] data-[side=bottom]:slide-in-from-top-1.5")
     expect(CODIGO).toContain('"menubar-reveal"')
     expect(CSS).toMatch(/@utility menubar-reveal \{\s*& > \[role\^="menuitem"\] \{\s*animation: rise 160ms var\(--ease-out\) 40ms both;\s*--rise-distance: 3px;/)
-    // A escada é a compartilhada (rodada 252): 40, 70… até 190ms na sexta
-    // linha. Era `:nth-of-type`, que conta igual porque rótulo e fio são `div`.
+    // A escada é a compartilhada: 40, 70… até 190ms na sexta linha. `:nth-of-type` contava
+    // igual porque rótulo e fio são `div`.
     const cascata = esperarDepoisDeNoScrollbar(CSS, "@utility menubar-reveal {", { fecha: "@utility" })
     expect(cascata).toMatch(/--stagger-base: 40ms;\s*--stagger-step: 30ms;\s*--stagger-cap: 5;\s*@apply stagger-ladder;/)
     expect(cascata).not.toContain("nth-of-type")

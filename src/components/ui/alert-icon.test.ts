@@ -2,7 +2,7 @@ import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 import { arquivosTsx, lerFonte } from "@/test/fonte"
 
-/** O alerta (rodada 186) e a faixa (rodada 187). */
+/** O alerta e a faixa. */
 
 const ALERT = lerFonte("src/components/ui/alert.tsx")
 const BARRA = lerFonte("src/components/ui/announcement-bar.tsx")
@@ -14,9 +14,8 @@ const TELAS = arquivosTsx(join(process.cwd(), "src")).map((caminho) => ({
 
 describe("o alerta", () => {
   it("o ícone é do tom, e nenhuma chamada o escreve como filho", () => {
-    // Seis telas escolhiam o ícone à mão, e o destrutivo saía triângulo em
-    // cinco e círculo no catálogo. Quem quer outro passa `icon`.
-    // Vale para a `AnnouncementBar` desde a rodada 187, com a mesma API.
+    // Cada tom traz o seu ícone (o destrutivo é círculo, não triângulo); quem quer outro passa
+    // `icon`. Vale para a `AnnouncementBar`, com a mesma API.
     const filho = /<(?:Alert|AnnouncementBar)\b[^>]*>\s*(?:\{\/\*[\s\S]*?\*\/\}\s*)?<[A-Z]\w*Icon\b/
     const culpados = TELAS.filter(({ texto }) => filho.test(texto)).map(
       ({ caminho }) => caminho

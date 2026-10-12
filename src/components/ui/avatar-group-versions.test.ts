@@ -11,7 +11,7 @@ import {
   resumirNomes,
 } from "./avatar-group"
 
-/** O AvatarGroup da rodada 246. */
+/** O `AvatarGroup`. */
 
 const CODIGO = lerFonte("src/components/ui/avatar-group.tsx")
 
@@ -20,7 +20,7 @@ const NOMES = ["Ana Ribeiro", "Bruno Lima", "Carla Mendes", "Diego Souza", "Elis
 const pilha = (props: Record<string, unknown> = {}, itens = NOMES.map((name) => h(AvatarGroupItem, { key: name, name }))) =>
   renderToStaticMarkup(h(AvatarGroup, { label: "Membros da carteira Casa", ...props } as never, ...itens))
 
-describe("AvatarGroup, rodada 246", () => {
+describe("AvatarGroup", () => {
   it("é um grupo com nome, e cada rosto tem o nome da pessoa", () => {
     const html = pilha()
     expect(html).toMatch(/data-slot="avatar-group"[^>]*role="group"[^>]*aria-label="Membros da carteira Casa"/)

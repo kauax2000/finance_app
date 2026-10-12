@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import { CATEGORY_META } from "./category-meta"
 import { CATEGORY_ORDER } from "./registry"
 
-describe("cada camada tem ícone e nome em português (rodada 139)", () => {
+describe("cada camada tem ícone e nome em português", () => {
   it("cobre as cinco camadas do registry", () => {
     for (const c of CATEGORY_ORDER) {
       expect(CATEGORY_META[c]?.Icon, c).toBeTruthy()

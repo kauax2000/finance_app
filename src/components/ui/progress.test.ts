@@ -10,12 +10,7 @@ import {
 import { BUDGET_BANDS, CARD_LIMIT_BANDS } from "@/lib/budget-bands"
 
 /**
- * A rede que não existia.
- *
- * Até esta rodada nenhum teste tocava o `Progress`, e tudo o que os comentários
- * do arquivo afirmam — o piso de 1%, o clamp, o `aria-valuetext` do estouro —
- * vivia sem guarda. O `aria-valuetext` já regrediu uma vez e voltou num commit
- * de conserto; é o tipo de coisa que some sem ninguém ver, porque ela só
+ * A rede de guarda do `Progress`: o piso de 1%, o clamp e o `aria-valuetext` do estouro, que só
  * aparece para quem usa leitor de tela.
  */
 
@@ -86,14 +81,13 @@ describe("Progress", () => {
   })
 
   it("7. a marca usa o trilho de todo mundo, e o arco-íris é do trilho", () => {
-    // O trilho da marca é o mesmo das outras barras, nos dois temas — decisão
-    // do dono, que custa a divergência da 1.4.11 registrada em `progress.tsx`.
-    // Um leito próprio aqui é a regressão que este teste pergunta.
-    // O trilho não tem eixo de variante: ele é um só, e é isso que se tranca.
+    // O trilho da marca é o mesmo das outras barras, nos dois temas; um leito próprio aqui é a
+    // regressão que este teste pergunta (a divergência da 1.4.11 está registrada em
+    // `progress.tsx`).
     expect(progressVariants({ size: "md" })).toContain("bg-input-fill")
     expect(FONTE).not.toMatch(/brand-well|bg-black/)
-    // `brand-rainbow-image` declara `--brand-rainbow` no elemento; sem ela a
-    // variável não existe ali. Ver a medição da rodada 88.
+    // `brand-rainbow-image` declara `--brand-rainbow` no elemento; sem ela a variável não
+    // existe ali.
     expect(FONTE).toContain("brand-rainbow-image")
     // O degradê tem a largura do **trilho**, não a do preenchido: é isso que
     // faz completar a barra completar a marca.
@@ -102,7 +96,7 @@ describe("Progress", () => {
     expect(FONTE).toContain("1,42")
   })
 
-  it("9. as versões da rodada 167: casa inteira, zonas no lugar do traço, rótulo registrado", () => {
+  it("9. as versões novas: casa inteira, zonas no lugar do traço, rótulo registrado", () => {
     // A casa só acende coberta inteira — 7 de 12 são sete, nunca sete e meia.
     expect(FONTE).toContain("Math.floor((pct / 100) * casas + 1e-9)")
     // Com zonas o corte já está pintado: o traço sairia como segundo sinal.
@@ -119,9 +113,8 @@ describe("Progress", () => {
   })
 
   it("8. nenhuma tela desenha uma barra de progresso à mão", () => {
-    // O achado que motivou a rodada: cinco barras de orçamento e de limite
-    // feitas com `div` + `bg-muted`, nenhuma sabendo da outra, duas com o mapa
-    // de limiar duplicado. Esta asserção é o que impede que voltem.
+    // Barras de orçamento e de limite feitas com `div` + `bg-muted`, com o mapa de limiar
+    // duplicado, não voltam.
     const culpados = arquivosTsx(join(RAIZ, "components"))
       .filter((f) => !f.includes(join("components", "ui")))
       .filter((f) => lerFonte(f).includes('role="progressbar"'))

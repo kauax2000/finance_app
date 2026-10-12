@@ -12,22 +12,18 @@ import {
 import { TABS_TRAY_HEIGHTS } from "./tabs"
 
 /**
- * A escada de altura da família de campo, trancada — e a sexta grafia trancada
- * fora.
- *
- * **A asserção que de fato vale é a de número 5.** Antes desta rodada a mesma
- * escada estava escrita em **cinco** lugares: uma constante em
- * `field-classes`, um condicional em JS no `Input`, literais inline no
- * `SelectTrigger` e no `ComboboxTrigger`, e um registro local no `InputGroup`.
- * Nada garantia que continuassem iguais, e nenhum teste as via — um grep por
- * `h-7` em todo `*.test.ts` não achava nada. Cinco cópias de uma decisão não
- * são cinco decisões: são uma decisão sem dono.
+ * A escada de altura da família de campo, trancada. A asserção que vale é a 5: a mesma escada
+ * estava escrita em cinco lugares (uma constante, um condicional no `Input`, literais no
+ * `SelectTrigger` e no `ComboboxTrigger`, um registro no `InputGroup`) sem nada garantir que
+ * continuassem iguais.
  */
 
 const DEGRAUS = ["sm", "md", "lg", "xl"] as const satisfies readonly FieldControlSize[]
 
-/** Os oito que vestem a régua, em sete arquivos: o `NativeSelect` mora em
- *  `select.tsx` desde a rodada 165. O `Textarea` entra pelo recuo, não pela altura. */
+/**
+ * Os oito que vestem a régua, em sete arquivos (o `NativeSelect` mora em `select.tsx`). O
+ * `Textarea` entra pelo recuo, não pela altura.
+ */
 const CONTROLES = [
   "input",
   "textarea",
@@ -80,7 +76,7 @@ describe("escada de controle da família de campo", () => {
   })
 
   it("4b. o campo é cápsula, e o degrau não carrega raio", () => {
-    // Rodada 243e: o raio por degrau da 241j saiu com a volta da cápsula.
+    // O raio por degrau não existe: o campo é cápsula.
     for (const d of DEGRAUS) {
       expect(fieldControlHeightClassName[d], d).not.toMatch(/rounded-/)
     }
@@ -100,8 +96,8 @@ describe("escada de controle da família de campo", () => {
   })
 
   it("6. o recuo é um só, e a ponta final fica de fora", () => {
-    // `px-2.5` era o `Textarea` e o `NativeSelect` — 10px contra os 12 do
-    // `Input`, e a borda esquerda do texto serrilhava num formulário.
+    // `px-2.5` (10px, contra os 12 do `Input`) serrilhava a borda esquerda do texto num
+    // formulário.
     for (const d of DEGRAUS) {
       expect(fieldControlPaddingClassName[d], d).toMatch(/\bpx-(?:2|3)\b/)
       expect(fieldControlPaddingClassName[d], d).not.toMatch(/\bp[re]-\d/)
@@ -123,12 +119,8 @@ const FOLHAS = ["input", "textarea"] as const
 
 describe("o foco do campo é o anel do sistema", () => {
   it("7. nenhum dos oito controles veste marca", () => {
-    // **Cinco rodadas puseram arco-íris aqui** — contorno estático, feixe
-    // animado (o `border-beam` do 21st portado em CSS), halo por `box-shadow`,
-    // a receita do `Button variant="brand"`, e ela com teto de croma e de luz.
-    // O dono recusou todas na tela: marca no campo não funciona neste app, e
-    // o que sempre esteve certo é o anel do sistema. Esta asserção existe
-    // porque nada impedia a sexta tentativa.
+    // Marca no campo não volta (contorno estático, feixe, halo, receita do `Button brand`): o
+    // foco do campo é o anel do sistema, e nada impedia a próxima tentativa.
     for (const nome of [...FOLHAS, ...CASCAS]) {
       expect(fonte(nome), nome).not.toMatch(/--brand-|field-brand|brand-rainbow/)
     }
@@ -137,11 +129,9 @@ describe("o foco do campo é o anel do sistema", () => {
   })
 
   it("8. o anel é preto no claro e branco no escuro, por `--ring`", () => {
-    // É o que o dono chamou de "as bordas brancas e pretas", e ele nunca foi
-    // reescrito: o que o anulava era o `ring-0` que as constantes de marca
-    // carregavam para não cobrir a cor de 1px.
-    // Rodada 162: 30%, mais suave a pedido do dono e fora dos 3:1 por decisão
-    // registrada em `field-classes.ts`. A largura e a cor não mudaram.
+    // As "bordas brancas e pretas" do foco nunca foram reescritas: o que as anulava era o
+    // `ring-0` das constantes de marca. O anel é 30%, mais suave e fora dos 3:1 por decisão
+    // registrada em `field-classes.ts`; a largura e a cor não mudam.
     for (const token of ["focus-visible:ring-3", "focus-visible:ring-ring/30", "focus-visible:border-ring"]) {
       expect(fieldFocusRingClassName.split(/\s+/), token).toContain(token)
     }

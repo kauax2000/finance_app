@@ -5,10 +5,9 @@ import { describe, expect, it } from "vitest"
 import { lerFonte } from "@/test/fonte"
 
 /**
- * A rodada 238: os controles das demonstrações saem do mostrador. Os eixos são
- * a pílula `floating` (a do `Tabs` padrão, sem sombra), os interruptores são
- * `Toggle` fantasmas soltos, e os dois moram em `Controles`, acima da moldura,
- * numa linha só.
+ * Os controles das demonstrações saem do mostrador: os eixos são a pílula `floating`, os
+ * interruptores são `Toggle` fantasmas soltos, e os dois moram em `Controles`, acima da
+ * moldura, numa linha só.
  */
 
 const DOCS = "src/app/designsystem/docs"

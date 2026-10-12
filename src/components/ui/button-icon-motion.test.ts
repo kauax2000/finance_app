@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { buttonVariants } from "@/components/ui/button"
 
-describe("iconMotion (rodada 138)", () => {
+describe("iconMotion", () => {
     it("spin gira o ícone meia-volta na mola, no cursor e no toque", () => {
         const classes = buttonVariants({ iconMotion: "spin" })
         expect(classes).toContain("hover:[&_svg]:rotate-180")

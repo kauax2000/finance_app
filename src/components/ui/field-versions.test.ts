@@ -14,9 +14,9 @@ import {
 } from "./field"
 import { esperarDistintos } from "@/test/regras"
 
-/** As peças da rodada 192. */
+/** As peças do `Field`. */
 
-describe("Field, rodada 192", () => {
+describe("Field", () => {
   it("o contador só aparece perto do teto", () => {
     const longe = renderToStaticMarkup(h(FieldCounter, { value: "abc", max: 40 }))
     expect(longe).not.toContain('data-slot="field-counter"')
@@ -66,16 +66,8 @@ describe("Field, rodada 192", () => {
 })
 
 /**
- * A escada do `Field`, trancada — e os cinco seletores mortos, trancados fora.
- *
- * O eixo `size` nasceu de uma contagem: **29 `<Label className="text-xs">`** no
- * app (os formulários novos reduzem o rótulo, os antigos não) e **73 textos de
- * ajuda em `text-xs`/`text-2xs`** enquanto `FieldDescription` era `text-sm`.
- * Um degrau existindo sem nome.
- *
- * A asserção que de fato vale é a de número 2, herdada do teste do `Item`:
- * **nenhum par de degraus produz a mesma string**. Foi assim que se descobriu
- * que `Item` tinha `default` e `sm` idênticos.
+ * A escada do `Field`, trancada, e os cinco seletores mortos trancados fora. A asserção que
+ * vale é a 2, herdada do teste do `Item`: nenhum par de degraus produz a mesma string.
  */
 const FONTE = lerFonte("src/components/ui/field.tsx")
 

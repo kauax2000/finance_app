@@ -18,7 +18,7 @@ import {
   recorteDoAlvo,
 } from "./onboarding"
 
-/** O Onboarding da rodada 247. */
+/** O Onboarding. */
 
 const CODIGO = lerFonte("src/components/ui/onboarding.tsx")
 
@@ -33,7 +33,7 @@ const ITENS = [
 const lista = (props: Record<string, unknown> = {}) =>
   renderToStaticMarkup(h(OnboardingChecklist, { title: "Primeiros passos", items: ITENS, ...props } as never))
 
-describe("Onboarding, rodada 247 — as peças puras", () => {
+describe("Onboarding — as peças puras", () => {
   it("o recorte é a caixa mais a folga, com o raio do alvo mais a folga", () => {
     // A folga é 4: o anel de marca cola no alvo.
     expect(recorteDoAlvo({ left: 634, top: 8, width: 224, height: 32 }, 16)).toEqual({
@@ -92,9 +92,8 @@ describe("Onboarding, rodada 247 — as peças puras", () => {
     expect(folgaDoLeque(3)).toEqual({ paddingTop: 16, paddingBottom: 8 })
     expect(folgaDoLeque(2)).toEqual({ paddingTop: 12, paddingBottom: 0 })
     expect(folgaDoLeque(1)).toEqual({ paddingTop: 6, paddingBottom: 0 })
-    // A altura aberta é a da imagem medida mais a folga, e não os 150px fixos da
-    // referência — nem `height: "auto"` animado junto com o padding, que media
-    // 120 no começo e saltava para 144 no fim.
+    // A altura aberta é a da imagem medida mais a folga, e não 150px fixos nem `height: "auto"`
+    // animado junto com o padding (que saltava de 120 para 144).
     expect(CODIGO).toContain("new ResizeObserver(() => alturaImagem.set(el.offsetHeight))")
     expect(CODIGO).toContain("animate(abertura, aberto ? 1 : 0, MOLA_LEQUE)")
     expect(CODIGO).not.toContain("height: aberto ? 150 : 75")
@@ -111,7 +110,7 @@ describe("Onboarding, rodada 247 — as peças puras", () => {
   })
 })
 
-describe("Onboarding, rodada 247 — o checklist", () => {
+describe("Onboarding — o checklist", () => {
   it("conta o que foi feito, e a primeira pendente nasce aberta", () => {
     const html = lista()
     expect(html).toContain("1 de 5 concluídos")
@@ -165,7 +164,7 @@ describe("Onboarding, rodada 247 — o checklist", () => {
   })
 })
 
-describe("Onboarding, rodada 247 — o card, o ponto, a mídia e o esqueleto", () => {
+describe("Onboarding — o card, o ponto, a mídia e o esqueleto", () => {
   const card = (props: Record<string, unknown> = {}) =>
     renderToStaticMarkup(
       h(OnboardingCard, {
@@ -236,7 +235,7 @@ describe("Onboarding, rodada 247 — o card, o ponto, a mídia e o esqueleto", (
   })
 })
 
-describe("Onboarding, rodada 247 — o mecanismo, pela fonte", () => {
+describe("Onboarding — o mecanismo, pela fonte", () => {
   it("o diálogo: gaveta no telefone, um índice só (o carrossel), o clique fora não pula", () => {
     expect(CODIGO).toContain('surface="auto"')
     expect(CODIGO).toContain("onPointerDownOutside={(e) => e.preventDefault()}")
@@ -339,8 +338,8 @@ describe("Onboarding, rodada 247 — o mecanismo, pela fonte", () => {
     // E o "voltar" leva a dele, que anda para trás.
     expect(CODIGO).toContain('<ChevronLeftIcon aria-hidden data-icon="inline-start" className={SETA_QUE_VOLTA} />')
     expect(CODIGO).toContain("<ChevronLeftIcon className={SETA_QUE_VOLTA} />")
-    // O anel: o degradê da marca (e não as vinte faixas do brilho), num traço
-    // nítido concêntrico com o buraco, parado — o brilho que corria saiu.
+    // O anel é o degradê da marca (e não as vinte faixas do brilho), num traço nítido
+    // concêntrico com o buraco e parado.
     expect(CODIGO).toContain('const ARCO_IRIS_DO_ANEL = "brand-rainbow-image bg-(image:--brand-rainbow)"')
     expect(CODIGO).toContain("rounded-[var(--onboarding-raio)] p-0.5")
     expect(CODIGO).toContain("const raioDoAnel = useTransform(() => `${mr.get() + 2}px`)")

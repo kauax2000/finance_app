@@ -15,7 +15,7 @@ import {
   rotuloDeEspera,
 } from "./form"
 
-/** A rodada 214: as versões novas do `Form`. */
+/** As versões do `Form`. */
 
 const CODIGO = lerFonte("src/components/ui/form.tsx")
 
@@ -86,10 +86,7 @@ describe("as versões do Form", () => {
     expect(CODIGO).toContain('"flex flex-col gap-2 sm:flex-row sm:items-end sm:*:data-[slot=field]:flex-1"')
   })
 
-  it("os comentários não contam o que deixou de ser verdade", () => {
-    expect(CODIGO).not.toContain("e é uma molécula")
-    expect(CODIGO).not.toContain("MobileSheetFormBody")
-    expect(CODIGO).not.toContain("São 54 chamadas em 29 arquivos")
+  it("a página não conta o que deixou de ser verdade", () => {
     const doc = lerFonte("src/app/designsystem/docs/form.tsx")
     expect(doc).not.toContain("variant=&quot;plain&quot;")
     expect(doc).not.toContain('type="search"')

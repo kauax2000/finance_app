@@ -3,7 +3,7 @@ import { lerFonte } from "@/test/fonte"
 
 import { contextMenuTargets } from "./context-menu"
 
-/** A rodada 209: as versões novas do `ContextMenu`. */
+/** As versões do `ContextMenu`. */
 
 const CODIGO = lerFonte("src/components/ui/context-menu.tsx")
 
@@ -16,7 +16,7 @@ describe("as versões do ContextMenu", () => {
   })
 
   it("com asChild o gatilho não escreve data-slot por cima do filho", () => {
-    // Medido: o `Item` saía `data-slot="context-menu-trigger"`.
+    // O `Item` saía `data-slot="context-menu-trigger"`.
     expect(CODIGO).toContain('{...(asChild ? {} : { "data-slot": "context-menu-trigger" })}')
     expect(CODIGO).toContain("data-[state=open]:bg-muted/60")
   })
@@ -43,9 +43,9 @@ describe("as versões do ContextMenu", () => {
   })
 
   it("as telas migradas repetem as ações visíveis pelo botão direito", () => {
-    // Desde a rodada 225 a tabela de transações é um `DataTable`: o menu entra
-    // por `rowContextMenu`, que calcula os alvos com `contextMenuTargets`, e a
-    // linha projetada não tem menu (a função devolve `null`).
+    // A tabela de transações é um `DataTable`: o menu entra por `rowContextMenu`, que calcula
+    // os alvos com `contextMenuTargets`, e a linha projetada não tem menu (a função devolve
+    // `null`).
     const tabela = lerFonte("src/components/transactions/transactions-table.tsx")
     expect(tabela).toMatch(/rowContextMenu=\{\(t, \{ targets, selected \}\) =>\s*isProjectedTransactionRow\(t\) \? null/)
     expect(lerFonte("src/components/ui/data-table.tsx")).toContain("contextMenuTargets(row.id, idsMarcados)")

@@ -9,11 +9,9 @@ import {
 } from "./tile-palette"
 
 /**
- * A dobra é o que faz o dado já gravado ler como marca sem ninguém escrever no
- * banco, e ela tem uma propriedade que o resto do código assume: **é
- * idempotente**. `ColorTile` a aplica em todos os sítios de uma vez, e a tela de
- * detalhe da categoria a aplica de novo antes do gráfico — se ela não fosse,
- * uma cor passaria por duas dobras e sairia em outro matiz.
+ * A dobra é idempotente, e o resto do código assume isso: `ColorTile` a aplica em todos os
+ * sítios e a tela de detalhe da categoria a aplica de novo antes do gráfico; sem isso uma cor
+ * passaria por duas dobras e sairia em outro matiz.
  */
 describe("tileColorFor", () => {
     it("deixa passar o que já é parada da marca, e por isso é idempotente", () => {
@@ -69,11 +67,9 @@ describe("tileColorFor", () => {
     it("as oito paradas são distintas e cobrem o círculo", () => {
         expect(new Set(TILE_COLORS).size).toBe(8)
         const matizes = [...TILE_PALETTE.map((p) => p.matiz)].sort((a, b) => a - b)
-        // **O espaçamento não é decisão deste arquivo** — ele é o da rampa da
-        // marca, e a asserção existe para acusar quem mexer nela sem olhar para
-        // o seletor de amostras. Os vãos medidos são 60 · 50 · 45 · 65 · 30 ·
-        // 37 · 28 · 45, e o menor é índigo→violeta: 28°. Duas amostras a menos
-        // que isso leem como a mesma cor numa fileira.
+        // O espaçamento é o da rampa da marca, e a asserção acusa quem mexer nela sem olhar o
+        // seletor de amostras. O menor vão é índigo→violeta, 28°; duas amostras a menos que
+        // isso leem como a mesma cor.
         const gaps = matizes.map((m, i) =>
             i === 0 ? m + 360 - matizes[matizes.length - 1]! : m - matizes[i - 1]!
         )

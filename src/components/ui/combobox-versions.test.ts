@@ -5,7 +5,7 @@ import { lerFonte } from "@/test/fonte"
 
 import { Combobox, ComboboxChips, ComboboxValue } from "./combobox"
 
-/** A rodada 207: as versões novas do `Combobox`. */
+/** As versões do `Combobox`. */
 
 const CODIGO = lerFonte("src/components/ui/combobox.tsx")
 
@@ -41,8 +41,8 @@ describe("as versões do Combobox", () => {
   })
 
   it("selecionar tudo filtra os valores registrados, e não o mapa de ids do cmdk", () => {
-    // O `filtered.items` do cmdk é indexado pelo id da linha: medido, o
-    // "Selecionar tudo" escolhia `radix-_r_k_`.
+    // O `filtered.items` do cmdk é indexado pelo id da linha: o "Selecionar tudo" escolhia
+    // `radix-_r_k_`.
     expect(CODIGO).not.toMatch(/filtered\.items\.entries\(\)/)
     expect(CODIGO).toContain("commandFilter(valor, busca, palavras) > 0")
   })

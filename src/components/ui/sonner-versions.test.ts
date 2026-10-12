@@ -3,7 +3,7 @@ import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 import { lerFonte } from "@/test/fonte"
 
-/** A rodada 228: a placa flutuante de vidro, os helpers novos e o app. */
+/** A placa flutuante de vidro, os helpers novos e o app. */
 
 const LIB = lerFonte("src/lib/toast.ts")
 const PARTES = lerFonte("src/lib/toast-parts.tsx")

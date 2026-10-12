@@ -26,7 +26,7 @@ import {
   timelineToneVariants,
 } from "./timeline"
 
-/** A rodada 227: o relevo, o estado, as peças, os comportamentos e o app. */
+/** O relevo, o estado, as peças, os comportamentos e o app da `Timeline`. */
 
 const TIMELINE = lerFonte("src/components/ui/timeline.tsx")
 const CSS = lerFonte("src/app/globals.css")
@@ -145,7 +145,7 @@ describe("as peças", () => {
     expect(presa).toContain('data-slot="timeline-separator-veil"')
     expect(presa).toContain("[@container_scroll-state(stuck:top)]:opacity-100")
     expect(presa).toContain("linear-gradient(to_bottom,var(--tl-surface)_50%")
-    // A faixa em si não pinta: a opaca escondia o conteúdo de vez, e saiu.
+    // A faixa em si não pinta: a opaca escondia o conteúdo.
     expect(presa).not.toMatch(/sticky[^"]*bg-\(--tl-surface\)/)
     expect(presa).toMatch(/data-slot="timeline-separator-end"[^>]*>−R\$ 162,55/)
     expect(timelineVariants({})).toContain("[--tl-surface:var(--color-background)]")
@@ -226,26 +226,11 @@ describe("o app", () => {
 })
 
 /**
- * A escada da `Timeline`, trancada.
- *
- * Cada asserção existe por causa de um defeito **medido**, e quase todos já
- * tinham sido pagos noutro componente desta casa antes de aparecerem aqui:
- *
- * - o ponto a **4,4px** do centro óptico do título (`mt-0.5` cravado contra uma
- *   caixa de 22,75px) — a família do ícone do `Alert`;
- * - `isLast` como prop de quem chama — o defeito que o `Stepper` e a
- *   `BreadcrumbList` já tinham corrigido, e que aqui sobreviveu **com a página
- *   do catálogo afirmando o contrário**;
- * - `ring-4 ring-background` supondo a superfície — a régua do `Accordion`;
- * - `in-*` para propagar orientação, que compila com `:where()` e perde para a
- *   classe base — o defeito do `DescriptionList`;
- * - classe montada em tempo de execução, que o Tailwind nunca emite — esta base
- *   já pagou essa lição **cinco** vezes.
- *
- * O arquivo é lido **sem comentários**: a prosa acima cita de propósito o que o
- * componente deixou de fazer, e uma varredura ingênua se acusaria sozinha. É o
- * conserto que o auditor já tinha feito em `lineOf`, e que os testes do `Chart`
- * e do `Sheet` repetem.
+ * A escada da `Timeline`, trancada. Cada asserção vem de um defeito medido: o ponto a 4,4px do
+ * centro óptico do título (`mt-0.5` cravado), `isLast` como prop de quem chama, `ring-4 ring-
+ * background` supondo a superfície, `in-*` propagando orientação (compila com `:where()` e
+ * perde para a classe base) e classe montada em tempo de execução. O arquivo é lido sem
+ * comentários, porque a prosa cita o que o componente deixou de fazer.
  */
 
 const FONTE = lerFonte("src/components/ui/timeline.tsx")
@@ -272,8 +257,8 @@ function passos(valor: string | undefined) {
 
 describe("escada da Timeline", () => {
   it("2. as medidas sobem monotonicamente, e `md` é o padrão", () => {
-    // O poço `md` é 32px — 8 passos —, que é a medida que `account/activity`
-    // já renderiza à mão. Âncora real, e não escala inventada.
+    // O poço `md` é 32px (8 passos), a medida que `account/activity` renderiza à mão: âncora
+    // real, e não escala inventada.
     expect(passos(medida("md", "well-size"))).toBe(8)
     expect(timelineVariants({})).toBe(
       timelineVariants({ orientation: "vertical", marker: "dot", size: "md" })
@@ -295,10 +280,8 @@ describe("escada da Timeline", () => {
     expect(CODIGO).toMatch(/margin-block-start:max\(0px,calc\(/)
     expect(CODIGO).toContain("var(--tl-lead)")
 
-    // `--tl-lead` é fonte única: o título a veste como `line-height` e a
-    // fórmula a lê como entrelinha. Foram duas fontes por uma medição — o
-    // `text-(length:…)` derrubou o `leading-relaxed` do `P`, e o ponto saiu
-    // 0,88px fora do centro com o código "certo".
+    // `--tl-lead` é fonte única: o título a veste como `line-height` e a fórmula a lê como
+    // entrelinha (o `text-(length:…)` derrubava o `leading-relaxed` do `P`).
     expect(CODIGO).toMatch(/leading-\(--tl-lead\)/)
     for (const size of DEGRAUS) {
       expect(timelineVariants({ size }), `${size} não publica --tl-lead`).toMatch(
@@ -313,7 +296,7 @@ describe("escada da Timeline", () => {
     expect(formula).toContain("_-_")
     expect(formula).not.toMatch(/\s/)
 
-    // O `mt-0.5` cravado não volta: era ele que punha o ponto 4,4px acima.
+    // O `mt-0.5` cravado não volta: punha o ponto 4,4px acima.
     expect(CODIGO).not.toMatch(/(?:^|\s)mt-0\.5(?:\s|"|')/)
 
     // E a centragem é ligada pela orientação, nunca por um segundo `mt`.
@@ -343,9 +326,8 @@ describe("escada da Timeline", () => {
   })
 
   it("7. a lista decide o fim pelo CSS e a forma pelo contexto — sem clone", () => {
-    // Rodada 227: o clone derramava props na faixa de data e não alcançava um
-    // filho que não fosse elemento direto. O fim é `:last-child`, com a
-    // exceção `isLast={false}` no mesmo variante.
+    // O clone derramava props na faixa de data e não alcançava um filho que não fosse elemento
+    // direto. O fim é `:last-child`, com a exceção `isLast={false}` no mesmo variante.
     expect(CODIGO).not.toContain("cloneElement")
     expect(CODIGO).toContain("last:not-data-[end=false]:[--tl-conn:none]")
     expect(CODIGO).toContain("data-[end=true]:[--tl-conn:none]")
@@ -389,15 +371,14 @@ describe("escada da Timeline", () => {
     // interrompe.
     expect(sep).toContain("bg-border")
 
-    // Sem clone, a faixa não recebe mais `isLast` nem `marker` — eram eles que
-    // vazavam para o `<li>`, três vezes na mesma página.
+    // Sem clone, a faixa não recebe `isLast` nem `marker`, que vazavam para o `<li>`.
     expect(sep).not.toMatch(/_isLast|_marker/)
   })
 
-  it("12. o vidro saiu, e nenhuma forma o veste (rodada 227)", () => {
-    // O eixo `glass` entrou na rodada 70 e saiu a pedido do dono: com o relevo
-    // (o halo do tom no ponto, o fio no poço) ele era um terceiro acabamento
-    // que nenhuma tela pedia. Nem prop, nem utility, nem a régua do vidro.
+  it("12. o vidro saiu, e nenhuma forma o veste", () => {
+    // O eixo `glass` não volta à `Timeline`: com o relevo (halo do tom no ponto, fio no poço)
+    // seria um terceiro acabamento que nenhuma tela pede. Nem prop, nem utility, nem a régua do
+    // vidro.
     expect(CODIGO).not.toMatch(/\bglass\b/)
     expect(CODIGO).not.toContain("glassRoundSurfaceClassName")
     for (const marker of MARCADORES) {
@@ -426,15 +407,10 @@ describe("escada da Timeline", () => {
   })
 
   it("17. a calha alinha ao topo — o último marcador não se centra", () => {
-    // O conector é `flex-1`: com ele não sobra espaço livre, e `justify-content`
-    // não decide nada. Sem ele — no último item — um `justify-center` centrava
-    // o marcador sozinho na altura da calha: medido, **23,44px** abaixo do
-    // centro do título, contra 0 nos outros três. O defeito só existia na
-    // última linha de cada trilha, que é o que o fez atravessar a rodada 69.
-    //
-    // Quem alinha o marcador é `MARCADOR_OFFSET`. Um `justify` que só age
-    // quando falta um irmão sobrescreve a fórmula pelas costas.
-    // Uma calha só, que o evento, a faixa e o recolhido vestem.
+    // O conector é `flex-1`: com ele não sobra espaço livre e `justify-content` não decide
+    // nada; sem ele, no último item, um `justify-center` centrava o marcador na altura da calha
+    // (23,44px abaixo do centro do título). Quem alinha o marcador é `MARCADOR_OFFSET`. Uma
+    // calha só, que o evento, a faixa e o recolhido vestem.
     const calhas = CODIGO.match(
       /flex shrink-0 items-center justify-\w+ \[flex-direction/g
     ) ?? []
@@ -450,14 +426,10 @@ describe("escada da Timeline", () => {
   })
 
   it("18. a medida do marcador mora no item, e o conteúdo a enxerga", () => {
-    // A raiz publica `--tl-marker` como largura da **calha**, uniforme para a
-    // faixa de data alinhar. Mas o deslocamento vertical e a centragem
-    // horizontal precisam da medida do marcador **renderizado** — e as duas
-    // divergem no item que sobrescreve o `marker`: um ponto de 10px numa
-    // trilha de poço lia 32 e saía 6,38px acima do centro do título.
-    //
-    // Ela mora no `<li>` e não no marcador porque o conteúdo é **irmão** do
-    // marcador, e custom property não atravessa para o lado.
+    // A raiz publica `--tl-marker` como largura da calha, uniforme; o deslocamento vertical e a
+    // centragem horizontal precisam da medida do marcador renderizado, que diverge no item que
+    // sobrescreve o `marker`. Ela mora no `<li>` porque o conteúdo é irmão do marcador, e
+    // custom property não atravessa para o lado.
     expect(CODIGO).toMatch(/const MEDIDA_DO_MARCADOR/)
     expect(CODIGO).toMatch(/MEDIDA_DO_MARCADOR\[forma\]/)
     for (const m of MARCADORES) {
@@ -472,9 +444,8 @@ describe("escada da Timeline", () => {
   })
 
   it("19. na horizontal o texto se centra no marcador; na vertical é no-op", () => {
-    // Medido antes: o centro da caixa de texto ficava a **161,4px** do centro
-    // do marcador — o olho lia a palavra pendurada na trilha em vez de presa
-    // ao evento. É o defeito que o `Stepper` mediu em 127px.
+    // O centro da caixa de texto ficava a 161,4px do centro do marcador: a palavra lia
+    // pendurada na trilha em vez de presa ao evento.
     const h = timelineVariants({ orientation: "horizontal" })
     const v = timelineVariants({ orientation: "vertical" })
 
@@ -493,9 +464,8 @@ describe("escada da Timeline", () => {
     expect(v).toContain("[--tl-content-align:start]")
     expect(v).toContain("[--tl-content-w:auto]")
 
-    // O recuo é `calc(medida/2 * centro)` **no conteúdo**, e não uma variável
-    // pronta da raiz: `var(--tl-marker)` precisa resolver no item, com a
-    // medida do marcador dele.
+    // O recuo é `calc(medida/2 * centro)` no conteúdo, e não uma variável pronta da raiz:
+    // `var(--tl-marker)` precisa resolver no item, com a medida do marcador dele.
     expect(CODIGO).toContain(
       "[margin-inline-start:calc(var(--tl-marker)/2*var(--tl-content-center))]"
     )
@@ -503,10 +473,8 @@ describe("escada da Timeline", () => {
   })
 
   it("11. o `cva` da raiz vem primeiro — o `ds:catalog` lê só o primeiro", () => {
-    // O `Item` passou uma rodada inteira reportando os eixos do grupo como se
-    // fossem os dele, por causa da ordem no arquivo. Escrever o comentário
-    // "este é o primeiro de propósito" não basta: nesta mesma rodada ele foi
-    // escrito acima do `cva` errado, e o catálogo saiu reportando `tone`.
+    // O primeiro `cva` do arquivo é o do `Item`, de propósito: o `ds:catalog` lê o primeiro, e
+    // escrito acima do `cva` errado ele reportava `tone`.
     const ordem = [...CODIGO.matchAll(/const (\w+) = cva\(/g)].map((m) => m[1])
     expect(ordem[0]).toBe("timelineVariants")
 

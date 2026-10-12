@@ -2,15 +2,9 @@ import { describe, expect, it } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
 /**
- * O registro do service worker, trancado num ponto só.
- *
- * Ele existe por um defeito medido: quatro componentes novos "não apareciam" no
- * catálogo com **tudo** no lugar — arquivos, registry, `docs-map`,
- * `search-index`, e as rotas respondendo 200 com os nomes no HTML do servidor.
- *
- * A causa era client-side, e a falha é silenciosa: **não registrar não é o
- * mesmo que não estar registrado.** Um service worker instalado antes segue
- * controlando a página e servindo o casco do precache, e nada avisa.
+ * O registro do service worker, trancado num ponto só: não registrar não é o mesmo que não
+ * estar registrado. Um service worker instalado antes segue controlando a página e servindo o
+ * casco do precache, e nada avisa.
  */
 
 const FONTE = lerFonte("src/app/sw-register.tsx")

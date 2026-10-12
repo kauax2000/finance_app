@@ -2,15 +2,14 @@ import { describe, expect, it } from "vitest"
 import { lerFonte } from "@/test/fonte"
 
 /**
- * A rodada 243: o Chart no desenho novo da casa — a ponta da barra de 8px, o
- * foco no hover no lugar do retângulo do cursor, as amostras em ponto, a
- * legenda interativa em cápsula com o realce chapado, a lista da rosca no
- * degrau linha e o mapa de calor em `rounded-sm`.
+ * O Chart no desenho novo da casa: a ponta da barra de 8px, o foco no hover no lugar do
+ * retângulo do cursor, as amostras em ponto, a legenda interativa em cápsula com o realce
+ * chapado, a lista da rosca no degrau linha e o mapa de calor em `rounded-sm`.
  */
 
 const CODIGO = lerFonte("src/components/ui/chart.tsx")
 
-describe("Chart, rodada 243", () => {
+describe("Chart", () => {
   it("a barra não tem retângulo de cursor; quem marca é a própria barra", () => {
     expect(CODIGO).not.toContain("cursor={{ fillOpacity: 0.5 }}")
     expect(CODIGO).toContain("const CHART_HOVER_DIM_OPACITY = 0.45")

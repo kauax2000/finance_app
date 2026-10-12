@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from "./card"
 
-/** A rodada 204: as versões do `Card`. */
+/** As versões do `Card`. */
 
 const html = (el: React.ReactElement) => renderToStaticMarkup(el)
 const casco = (props: Record<string, unknown>) => html(h(Card, props, "x"))

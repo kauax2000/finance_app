@@ -13,7 +13,7 @@ import {
   toolbarRowClassName,
 } from "./toolbar"
 
-/** A rodada 229: a barra presa, a placa, a escada, as peças e o teclado. */
+/** A barra presa, a placa, a escada, as peças e o teclado. */
 
 const FONTE = lerFonte("src/components/ui/toolbar.tsx")
 const CODIGO = semComentarios(FONTE, "linha-inteira")
@@ -87,7 +87,7 @@ describe("as superfícies", () => {
 })
 
 describe("o teclado", () => {
-  // Desde a rodada 245 o foco itinerante mora num hook que o `FilterBar` divide.
+  // O foco itinerante mora num hook que o `FilterBar` divide.
   const TECLADO = lerFonte("src/hooks/use-toolbar-keyboard.ts")
 
   it("o papel só vem com o comportamento", () => {
@@ -153,13 +153,9 @@ describe("o app", () => {
 })
 
 /**
- * A densidade da barra, trancada.
- *
- * A asserção que de fato vale é a de número 2, e ela é descendente direta do
- * teste do `Tabs` ("a lista não declara altura nenhuma"): quatro rodadas da
- * história deste design system são um contêiner nomeando a altura de um
- * controle — `Menubar` entregou 24px, `Tabs` entregou 27, `Item` teve dois
- * degraus com a mesma string, `Calendar` prometeu 36 e mediu 28.
+ * A densidade da barra, trancada. A asserção que vale é a 2, descendente do teste do `Tabs` ("a
+ * lista não declara altura nenhuma"): um contêiner nomeando a altura de um controle foi o
+ * defeito de `Menubar` (24px), `Tabs` (27), `Item` e `Calendar`.
  */
 const ESCADA = { xs: 24, sm: 28, md: 32, lg: 36, xl: 40 } as const
 
@@ -232,8 +228,7 @@ describe("densidade do Toolbar", () => {
   })
 
   it("10. o indicador cabe dentro do canto arredondado, e sai da frente do ícone", () => {
-    // A geometria, trancada em aritmética — foi ela que originou esta rodada, e
-    // a primeira medição a leu ao contrário (confundiu folga com sobreposição).
+    // A geometria trancada em aritmética (folga, e não sobreposição).
     const RAIO = 10 // `rounded-lg` do Button, medido
     const BORDA = 1
     const DIAMETRO = 8 // `size-2`

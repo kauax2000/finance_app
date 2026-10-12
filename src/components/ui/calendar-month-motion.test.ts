@@ -2,10 +2,9 @@ import { describe, expect, it } from "vitest"
 import { blocoCss, lerFonte } from "@/test/fonte"
 
 /**
- * A rodada 245: a troca de mês do `Calendar` anima — o mês que entra vem do
- * lado para onde se andou, 24px e da mola da casa; o que sai some depressa
- * para o outro lado. A mecânica é a do `react-day-picker` (`animate`), o
- * movimento é a `@utility calendar-month-motion`.
+ * A troca de mês do `Calendar` anima: o mês que entra vem do lado para onde se andou (24px, na
+ * mola da casa) e o que sai some depressa para o outro. A mecânica é o `animate` do `react-day-
+ * picker`; o movimento é a `@utility calendar-month-motion`.
  */
 
 const CALENDARIO = lerFonte("src/components/ui/calendar.tsx")

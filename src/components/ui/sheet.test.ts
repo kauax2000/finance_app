@@ -3,17 +3,9 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 import { realcesSemParDeToque } from "@/test/regras"
 
 /**
- * A régua da folha, trancada.
- *
- * Ela nasceu como a régua do `EdgePanel`, que era um componente à parte; a
- * rodada 64 dissolveu aquele arquivo aqui, e o teste veio junto com o `cva`.
- *
- * Cada asserção aqui nomeia o defeito que a produziu, e as nove foram
- * verificadas **reintroduzindo** esse defeito. É o procedimento que
- * `glass.test.ts` e `scroll-fade.test.ts` já usam, e é o único jeito de saber
- * que a asserção testa o código e não o comentário.
- *
- * Zero render: tudo lê o fonte.
+ * A régua da folha, trancada. Cada asserção nomeia o defeito que a produziu e foi verificada
+ * reintroduzindo-o (o procedimento de `glass.test.ts` e `scroll-fade.test.ts`). Zero render:
+ * tudo lê o fonte.
  */
 
 const ler = (nome: string) => lerFonte(`src/components/ui/${nome}.tsx`)
@@ -38,11 +30,8 @@ const LADOS = ["top", "right", "bottom", "left"] as const
 
 describe("régua do Sheet", () => {
   it("1. `h-full` não aparece no eixo side", () => {
-    // Ele era redundante em `flush` — o bloco contentor de um `fixed` é o
-    // viewport, então `height: 100%` e o par `top: 0`/`bottom: 0` resolvem no
-    // mesmo número. Sob `floating` ele deixa de ser: com `top: 8px` e altura
-    // definida o painel mede a tela inteira 8px abaixo e **transborda 8px na
-    // base**, com o canto de baixo fora da tela.
+    // Em `flush` ele é redundante (o bloco contentor de um `fixed` é o viewport); sob
+    // `floating`, com `top: 8px` e altura definida, o painel transborda 8px na base.
     expect(EIXO_SIDE).not.toMatch(/\bh-full\b/)
     // E a altura das laterais vem do par de âncoras, não de uma medida.
     for (const lado of ["right", "left"] as const) {
@@ -58,9 +47,7 @@ describe("régua do Sheet", () => {
   })
 
   it("2. `default` não é nome de variante", () => {
-    // O nome saiu de `Button`, `Input`, `SelectTrigger`, `NativeSelect`,
-    // `Container`, `Badge`, `Item` e `Sidebar` por dizer *o padrão* em vez de
-    // dizer o que a peça faz.
+    // O nome `default` não volta: dizia o padrão em vez do que a peça faz.
     expect(CVA).not.toMatch(/\bdefault:/)
     expect(CODIGO).not.toMatch(/variant=["']default["']/)
   })
@@ -107,8 +94,8 @@ describe("régua do Sheet", () => {
         `{ variant: "flush", side: "${lado}", class: "${gume} shadow-[${aba}_var(--color-popover),var(--shadow-lg)]" }`
       )
     }
-    // Nenhuma composta fora do encostado: o flutuante fecha a borda sozinho —
-    // desde a rodada 222 com o anel das placas soltas, e não com `border`.
+    // Nenhuma composta fora do encostado: o flutuante fecha a borda sozinho com o anel das
+    // placas soltas, e não com `border`.
     expect(COMPOSTAS).not.toContain('variant: "floating"')
     const flutuante = EIXO_VARIANT.slice(EIXO_VARIANT.indexOf("floating:"))
     expect(flutuante).toContain("ring-1 ring-foreground/10")
@@ -116,35 +103,25 @@ describe("régua do Sheet", () => {
   })
 
   it("5. a área segura entra nas duas verticais e em nenhuma horizontal", () => {
-    // Uma calha medida a partir do viewport põe o canto de baixo atrás do
-    // indicador de home num iPhone, e o telefone é onde vive o consumidor
-    // principal deste componente. A horizontal fica de fora porque
-    // `safe-area-inset-left/right` não aparece nenhuma vez no repositório — o
-    // dono dessa lacuna é a casca do app, e fechá-la só aqui seria a segunda
-    // gramática para a mesma coisa.
+    // Uma calha medida a partir do viewport põe o canto de baixo atrás do indicador de home num
+    // iPhone. A horizontal fica de fora: `safe-area-inset-left/right` não aparece no
+    // repositório, e é lacuna da casca do app.
     expect(EIXO_VARIANT).toContain("env(safe-area-inset-top,0px)")
     expect(EIXO_VARIANT).toContain("env(safe-area-inset-bottom,0px)")
     expect(CODIGO).not.toMatch(/safe-area-inset-(left|right)/)
   })
 
   it("6. nenhum realce acende no cursor e fica inerte no dedo", () => {
-    // `hover:` compila dentro de `@media (hover: hover)`, então um realce sem
-    // par `active:` não existe no telefone. Hoje são zero — é guarda, e existe
-    // porque a regra **H** do `ds:audit` varre `className="…"` e não enxerga
-    // dentro de `cva()` nem de `cn()`.
+    // `hover:` compila dentro de `@media (hover: hover)`, então um realce sem par `active:` não
+    // existe no telefone; a regra H do `ds:audit` não enxerga dentro de `cva()` nem de `cn()`.
     expect(realcesSemParDeToque(CODIGO)).toEqual([])
   })
 
   it("7. o eixo vale no ramo painel e não vaza para a gaveta", () => {
-    // O tipo do `SheetContent` herda o eixo sozinho, por
-    // `VariantProps<typeof sheetContentVariants>`. Sem destruturar, `side` e
-    // `variant` caem em `{...props}` e são espalhados no
-    // `DrawerPrimitive.Content` do ramo telefone — atributo desconhecido no
-    // DOM, com aviso do React.
-    // Os cortes são ancorados a partir do início de `SheetContent`: um
-    // `indexOf` solto acha o `useSheetSurface()` do `SheetOverlay`, que vem
-    // antes no arquivo, e a fatia sai **vazia** — uma asserção que acerta por
-    // vazio. Este teste caiu nisso na primeira escrita.
+    // O tipo do `SheetContent` herda o eixo por `VariantProps`; sem destruturar, `side` e
+    // `variant` caem em `{...props}` e vão ao `DrawerPrimitive.Content`. Os cortes são
+    // ancorados a partir do início de `SheetContent`: um `indexOf` solto acha o
+    // `useSheetSurface()` do `SheetOverlay` e a fatia sai vazia.
     const inicio = CODIGO.indexOf("function SheetContent(")
     expect(inicio).toBeGreaterThan(-1)
     const assinatura = CODIGO.slice(
@@ -171,10 +148,8 @@ describe("régua do Sheet", () => {
   })
 
   it("9. a superfície é eixo, e `auto` continua sendo o padrão de todo mundo", () => {
-    // O pedido da rodada 66 foi *a navegação vira painel no telefone, e a regra
-    // das outras folhas não muda*. As duas metades são trancadas aqui: o eixo
-    // existe, e o padrão dele é `auto` — se ele virar `panel`, as ~40 folhas do
-    // app param de virar gaveta de uma vez, calado.
+    // A navegação vira painel no telefone e a regra das outras folhas não muda: o eixo existe e
+    // o padrão é `auto`; se virar `panel`, as ~40 folhas param de virar gaveta.
     const modo = CODIGO.slice(
       CODIGO.indexOf("type SheetSurfaceMode"),
       CODIGO.indexOf("const SheetSurfaceContext")

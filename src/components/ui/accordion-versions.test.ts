@@ -20,7 +20,7 @@ import {
   disclosureRowClassName,
 } from "@/lib/disclosure-classes"
 
-/** As versões da rodada 200. */
+/** As versões do `Accordion` e do `Collapsible`. */
 
 const FONTE = lerFonte("src/components/ui/accordion.tsx")
 
@@ -35,7 +35,7 @@ const item = (value: string, trigger: Record<string, unknown>, content: Record<s
 const render = (props: Record<string, unknown>, ...filhos: ReturnType<typeof h>[]) =>
   renderToStaticMarkup(h(Accordion, props as never, ...filhos))
 
-describe("Accordion, rodada 200", () => {
+describe("Accordion", () => {
   it("o gatilho leva ícone e descrição, e só o rótulo sublinha", () => {
     const html = render(
       { type: "single", collapsible: true },
@@ -94,30 +94,17 @@ describe("Accordion, rodada 200", () => {
 })
 
 /**
- * A escada da linha de divulgação, trancada.
- *
- * Este projeto já mediu o mesmo defeito duas vezes, nos dois componentes que
- * **ancoravam a escada no contêiner**: o `Menubar` entregou um gatilho de 24px
- * dentro de uma barra de 32, e o `Tabs` entregou 27 dentro de uma bandeja de 36.
- * Nos dois casos a altura do gatilho era um **resto de subtração**, e resto de
- * subtração não tem nome para ninguém conferir.
- *
- * O `Accordion` era a terceira porta: a linha media um `py-2.5` sem nome nenhum,
- * o que dá ~40px por acidente de tipografia — mude o corpo do texto e a linha
- * muda de altura sem que nada no código diga que mudou.
- *
- * Segue o idioma de [`tabs-versions.test.ts`](./tabs-versions.test.ts) e
- * de `src/lib/tailwind-hover-policy.test.ts`: política do design system trancada
- * por asserção, e não por captura de tela.
+ * A escada da linha de divulgação, trancada. Ancorar a escada no contêiner (como `Menubar` e
+ * `Tabs`) deixa a altura do gatilho um resto de subtração; a linha do `Accordion` media um
+ * `py-2.5` sem nome, e mudar o corpo do texto mudaria a altura. Segue o idioma de `tabs-
+ * versions.test.ts`.
  */
 
 const DEGRAUS = ["md", "lg", "xl"] as const
 
 /**
- * O piso desta escada é 32, e não os 28 da escada de controles.
- *
- * Uma linha de divulgação carrega uma **frase** — "Quando a fatura fecha?" —, e
- * não o rótulo de um botão. A 28 o texto encosta nas duas bordas.
+ * O piso desta escada é 32, e não os 28 da escada de controles: a linha carrega uma frase, e a
+ * 28 o texto encosta nas bordas.
  */
 const PISO = 32
 
@@ -129,13 +116,8 @@ describe("a escada mede a linha", () => {
   })
 
   /**
-   * A asserção que de fato vale.
-   *
-   * O AGENTS.md é explícito: "nem todo controle oferece todos os degraus, mas
-   * nenhum usa um nome para uma altura diferente". `md` é 32 no `Button`, no
-   * `Input`, no `SelectTrigger` e no `Tabs` — e tem que ser 32 aqui. Um `md` de
-   * 40 nesta escada faria um acordeão desalinhar de um botão ao lado dele sem
-   * que ninguém conseguisse dizer por quê.
+   * `md` é 32 no `Button`, no `Input`, no `SelectTrigger` e no `Tabs`, e tem que ser 32 aqui:
+   * nenhum controle usa um nome para uma altura diferente.
    */
   it("os nomes batem com os do resto do sistema", () => {
     expect(DISCLOSURE_ROW_HEIGHTS).toEqual({ md: 32, lg: 36, xl: 40 })
@@ -150,12 +132,8 @@ describe("a escada mede a linha", () => {
   })
 
   /**
-   * `min-h` e nunca `h`.
-   *
-   * O rótulo de um acordeão é uma frase, e frase quebra: num telefone, "O
-   * orçamento considera parcelas?" ocupa duas linhas. Com `h-8` a segunda linha
-   * é **recortada** — e o recorte só aparece na largura em que a quebra
-   * acontece, que é exatamente a largura que ninguém olha ao revisar.
+   * `min-h` e nunca `h`: a frase quebra no telefone, e com `h-8` a segunda linha seria
+   * recortada justo na largura que ninguém olha.
    */
   it("a altura é piso, não medida fixa", () => {
     for (const classe of Object.values(DISCLOSURE_ROW_HEIGHT_CLASS)) {
@@ -168,11 +146,8 @@ describe("a escada mede a linha", () => {
 
 describe("o marcador é um só, e ele gira", () => {
   /**
-   * O `Accordion` trazia dois ícones — `ChevronDown` e `ChevronUp` — se
-   * revezando por `hidden`/`inline`. É a mesma decisão que a rodada do `Tabs`
-   * julgou e reverteu: dois marcadores piscando não dizem o que um marcador se
-   * movendo diz. Aqui o conserto era de graça, porque a seta para baixo girada
-   * em 180° **é** a seta para cima.
+   * Um marcador que gira, e não dois (`ChevronDown`/`ChevronUp`) se revezando: a seta para
+   * baixo girada em 180° é a seta para cima.
    */
   it("o estado aberto é uma rotação, e não uma troca de glifo", () => {
     expect(disclosureMarkerClassName).toContain("rotate-180")
@@ -180,12 +155,8 @@ describe("o marcador é um só, e ele gira", () => {
   })
 
   /**
-   * A transição nomeia as propriedades por extenso, e não `transition-transform`.
-   *
-   * No Tailwind v4 `rotate` e `translate` são propriedades **independentes** — e
-   * `transition-transform` de fato cobre as duas —, mas ele **não** cobre `color`,
-   * e a tinta do marcador também muda no cursor. Antes ela trocava de estalo
-   * enquanto a seta girava suave, no mesmo elemento.
+   * A transição nomeia as propriedades por extenso: `transition-transform` não cobre `color`, e
+   * a tinta do marcador também muda no cursor.
    */
   it("a rotação tem trajeto, e a tinta viaja junto", () => {
     expect(disclosureMarkerClassName).toContain("transition-[rotate,translate,color]")
@@ -195,16 +166,9 @@ describe("o marcador é um só, e ele gira", () => {
 
 describe("o realce não troca a cor de fundo", () => {
   /**
-   * A asserção que vale nesta seção, e ela tranca uma decisão de design.
-   *
-   * Um acordeão não sabe sobre o que está pousado: ele mora dentro de `Card`,
-   * dentro de `muted`, dentro de diálogo e direto na página. Um realce que pinta
-   * fundo precisa combinar com a superfície de baixo — e essa é uma informação
-   * que o componente não tem. Sobre `bg-muted` o `accent` quase some; sobre
-   * `bg-card` num dos temas ele é quase o próprio cartão.
-   *
-   * Então o realce mora no **rótulo** (sublinhado) e no **marcador** (tinta mais
-   * o empurrão), e nenhum dos dois depende do fundo.
+   * O realce não pinta fundo: o acordeão não sabe sobre o que está pousado (`Card`, `muted`,
+   * diálogo, página). Mora no rótulo (sublinhado) e no marcador (tinta e empurrão), que não
+   * dependem do fundo.
    */
   it("nenhuma classe de fundo em hover ou toque", () => {
     for (const classe of [disclosureRowClassName, disclosureLabelClassName]) {
@@ -225,10 +189,9 @@ describe("o realce não troca a cor de fundo", () => {
   })
 
   /**
-   * O empurrão depende de dois estados ao mesmo tempo — cursor **e** aberto —, e
-   * variante empilhada apontando para o mesmo elemento compila uma cadeia de
-   * descendente que não casa com nada. A saída registrada no `ThemeToggle` é
-   * a variável na raiz; este teste impede a volta da forma que não funciona.
+   * O empurrão depende de dois estados (cursor e aberto), e variante empilhada no mesmo
+   * elemento compila uma cadeia que não casa com nada: a saída é a variável na raiz, como no
+   * `ThemeToggle`.
    */
   it("a direção do empurrão vem de variável, não de variante empilhada", () => {
     expect(disclosureRowClassName).toContain("[--disclosure-nudge:")
@@ -245,10 +208,8 @@ describe("o realce não troca a cor de fundo", () => {
   })
 
   /**
-   * O conteúdo sobe em cascata nos **dois** — a mesma interação, o mesmo
-   * movimento. E a regra do texto solto não pode alcançar a `Content` do
-   * `Collapsible`: a animação dela é a de altura, a que o Radix espera para
-   * desmontar.
+   * O conteúdo sobe em cascata nos dois, e a regra do texto solto não pode alcançar a `Content`
+   * do `Collapsible`: a animação dela é a de altura, a que o Radix espera para desmontar.
    */
   it("o conteúdo aparece em cascata, nos dois componentes", () => {
     for (const nome of ["accordion", "collapsible"]) {

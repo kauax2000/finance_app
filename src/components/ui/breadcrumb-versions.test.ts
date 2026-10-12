@@ -11,14 +11,14 @@ import {
   BreadcrumbPage,
 } from "./breadcrumb"
 
-/** As versões da rodada 202. */
+/** As versões do `Breadcrumb`. */
 
 const trilha = (lista: Record<string, unknown>, ...itens: ReturnType<typeof h>[]) =>
   renderToStaticMarkup(h(Breadcrumb, null, h(BreadcrumbList, lista as never, ...itens)))
 
 const degrau = (filho: ReturnType<typeof h>, key: string) => h(BreadcrumbItem, { key }, filho)
 
-describe("Breadcrumb, rodada 202", () => {
+describe("Breadcrumb", () => {
   it("o voltar do telefone é o link do degrau de cima, e o resto some abaixo de sm", () => {
     const html = trilha(
       { collapse: "back" },

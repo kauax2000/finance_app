@@ -35,8 +35,8 @@ describe("Tailwind hover policy (touch-safe defaults)", () => {
 })
 
 /**
- * Rodada 250: no telefone, o que depende de um cursor parado em cima fica
- * desarmado. O par `active:` continua sendo a resposta do dedo (regra H).
+ * No telefone, o que depende de um cursor parado em cima fica desarmado. O par `active:`
+ * continua sendo a resposta do dedo (regra H).
  */
 describe("o hover desarmado no toque", () => {
     it("a variante `hover` mantém a mídia e exclui a moldura do iPhone", () => {

@@ -27,7 +27,7 @@ import {
   tableVariants,
 } from "./table"
 
-/** A rodada 225: o redesenho do `Table` e o motor do `DataTable`. */
+/** O redesenho do `Table` e o motor do `DataTable`. */
 
 const CSS = lerFonte("src/app/globals.css")
 const TABLE = lerFonte("src/components/ui/table.tsx")
@@ -54,7 +54,7 @@ describe("as versões do Table", () => {
       )
     )
     expect(html).toContain('aria-current="true"')
-    // Sem fundo desde a rodada 231: o realce lia como hover preso.
+    // Sem fundo: o realce lia como hover preso.
     expect(html).not.toContain("bg-muted/50")
     // A prevista apaga a cor junto com o texto.
     expect(html).toContain("[data-slot=color-tile]]:opacity-50")
@@ -313,7 +313,7 @@ describe("a lógica pura", () => {
   })
 })
 
-describe("a falha da tabela (rodada 231)", () => {
+describe("a falha da tabela", () => {
   it("fala como o ChartError: ícone no tom de erro, título, o porquê e a ação", () => {
     const html = renderToStaticMarkup(
       tabela(h(TableError, { colSpan: 3, onRetry: () => undefined }, "O servidor não respondeu."))
@@ -327,7 +327,7 @@ describe("a falha da tabela (rodada 231)", () => {
   })
 })
 
-describe("o gêmeo do telefone (rodada 231)", () => {
+describe("o gêmeo do telefone", () => {
   const fonte = lerFonte("src/components/ui/data-table.tsx")
   it("é um extrato: o valor e a data à direita, alinhados pela ponta, e a legenda numa linha", () => {
     expect(fonte).toContain('<ItemContent data-slot="data-table-mobile-aside" className="flex-none items-end text-right">')
@@ -344,28 +344,15 @@ describe("o gêmeo do telefone (rodada 231)", () => {
 const UI = "src/components/ui"
 
 /**
- * A escada do `Table`, trancada.
- *
- * Cinco degraus desde a rodada 225 (`xs` 32 · `sm` 36 · `md` 44 · `lg` 52 ·
- * `xl` 64, a altura da linha); eram três (`sm`/`md`/`lg`), medidos contra o
- * que o app já escrevia à mão em 8 lugares (`h-11 px-4 py-0` nos painéis,
- * `h-8 px-2` nas folhas). O
- * teste garante o que as rodadas anteriores desta base já aprenderam a
- * exigir de uma escada: nenhum par produz a mesma string, as medidas sobem
- * de verdade, e nenhuma delas foi montada em tempo de execução — o Tailwind
- * varre o código como texto, e um template literal nunca chegaria ao CSS.
- *
- * As duas invariantes da dissolução (`table-viewport` não desenha nada, e a
- * moldura mora fora dele) e a regra J do auditor (fio + tinta numa mesma
- * string) também são verificadas aqui, lendo o arquivo como texto — do
- * mesmo jeito que o auditor faz. As buscas estruturais rodam sobre o código
- * **sem comentários**: a prosa do próprio arquivo cita `bg-`, `border` e
- * `role="toolbar"` para explicar o que evita, e um corte que não distingue
- * comentário de código acusa a explicação em vez do defeito.
+ * A escada do `Table`, trancada: cinco degraus (`xs` 32 · `sm` 36 · `md` 44 · `lg` 52 · `xl`
+ * 64, a altura da linha), nenhum par produz a mesma string, as medidas sobem, e nenhuma é
+ * montada em tempo de execução. Também tranca a dissolução (`table-viewport` não desenha nada,
+ * a moldura mora fora dele) e a regra J do auditor, lendo o fonte sem comentários: a prosa cita
+ * `bg-`, `border` e `role="toolbar"` para explicar o que evita.
  */
 const SRC = lerFonte(join(UI, "table.tsx"))
 const CODE = semComentarios(SRC)
-// O `TablePanel` mora no `data-table.tsx` desde a rodada 231: a fatia é a da moldura.
+// O `TablePanel` mora no `data-table.tsx`: a fatia é a da moldura.
 const DT_SRC = lerFonte(join(UI, "data-table.tsx"))
 const PANEL_CODE = semComentarios(
   DT_SRC.slice(DT_SRC.indexOf("/* A moldura: o TablePanel"), DT_SRC.indexOf("/**\n * A tabela de dados"))
@@ -462,7 +449,7 @@ describe("escada do Table", () => {
 
   it('9. a moldura não escreve role="toolbar", e provê `md` por contexto', () => {
     expect(PANEL_CODE).not.toContain('role="toolbar"')
-    // O `md` de 44 é o `lg` de antes da rodada 225 — a mesma linha dos painéis.
+    // O `md` de 44 é a linha dos painéis.
     expect(PANEL_CODE).toContain('TableSizeContext.Provider value="md"')
   })
 
@@ -618,9 +605,8 @@ describe("escada do Table", () => {
   it("18. `fade` escolhe um eixo só; o de baixo é um véu irmão, e o viewport não se mascara", () => {
     const tabela = CODE.slice(CODE.indexOf("function Table("), CODE.indexOf("function TableHeader"))
     expect(tabela).toContain('fade = "sides"')
-    // Só a ponta de baixo, espelhada na casca para o véu (irmão) poder ler.
-    // `arrows` no eixo x publica `data-scroll-more-*`, que a sombra da coluna
-    // fixa lê (rodada 225).
+    // Só a ponta de baixo, espelhada na casca para o véu (irmão) poder ler. `arrows` no eixo x
+    // publica `data-scroll-more-*`, que a sombra da coluna fixa lê.
     expect(tabela).toMatch(
       /useScrollFade\(\s*fundo \? \{ axis: "y", sides: "end", shell: true \} : \{ axis: "x", arrows: true \}\s*\)/
     )
@@ -635,14 +621,14 @@ describe("escada do Table", () => {
       '"relative -mb-(--scroll-fade-foot-h) [--scroll-fade-h:--spacing(8)] [--scroll-fade-foot-h:var(--table-panel-foot-h,0px)]"'
     )
     expect(tabela).toContain('<div aria-hidden data-slot="table-fade-veil" className={scrollFadeVeilClassName} />')
-    // Sem borrão de faixa: num corpo com rodapé ele virou retângulo de tom três vezes.
+    // Sem borrão de faixa: num corpo com rodapé ele virava retângulo de tom.
     expect(CODE).not.toContain("ScrollFadeBlurLayers")
   })
 
   it("19. o rodapé do painel sai da moldura, embaixo, e não publica faixa", () => {
     const rodape = PANEL_CODE.slice(PANEL_CODE.indexOf("function TablePanelFooter"))
     expect(DT_SRC.startsWith('"use client"')).toBe(true)
-    // Rodada 231: fora da moldura não há linhas passando por baixo dele.
+    // Fora da moldura não há linhas passando por baixo dele.
     expect(rodape).not.toContain("--table-panel-foot-h")
     const painel = PANEL_CODE.slice(PANEL_CODE.indexOf("function TablePanel("), PANEL_CODE.indexOf("function TablePanelToolbar"))
     expect(painel.indexOf("{footer}")).toBeGreaterThan(painel.indexOf("</Card>"))
@@ -697,8 +683,8 @@ describe("escada do Table", () => {
   })
 
   it("24. o rodapé do painel é a barra de cima espelhada", () => {
-    // Fora da moldura (rodada 231) ele não mede mais uma linha: tem a forma da
-    // `TablePanelToolbar` — sem recuo vertical, `min-h-7` e o fio transparente.
+    // Fora da moldura ele não mede uma linha: tem a forma da `TablePanelToolbar` (sem recuo
+    // vertical, `min-h-7`, fio transparente).
     const rodape = PANEL_CODE.slice(PANEL_CODE.indexOf("function TablePanelFooter"))
     expect(rodape).toContain('"min-h-7 border-x border-transparent py-0"')
   })
@@ -752,9 +738,8 @@ describe("escada do Table", () => {
   })
 
   it("27. o viewport de um cabeçalho de vidro não se mascara — a borda de baixo é véu", () => {
-    // Medido no Chromium: `backdrop-filter` dentro de um elemento mascarado não
-    // borra, e a máscara num `<tbody>` não é redesenhada ao mudar (100%
-    // transparente, as linhas seguiam visíveis). Nada nesta tabela se mascara.
+    // `backdrop-filter` dentro de um elemento mascarado não borra, e a máscara num `<tbody>`
+    // não é redesenhada ao mudar: nada nesta tabela se mascara.
     expect(CODE).not.toContain("scrollFadeViewportClassName")
     expect(CODE).not.toMatch(/mask-image/)
     const css = lerFonte("src/app/globals.css")
@@ -785,14 +770,12 @@ describe("escada do Table", () => {
     // arredondado de um `overflow` no Chrome acelerado.
     expect(CODE).toContain("[clip-path:inset(0_round_var(--radius-surface))]")
     expect(PANEL_CODE).toContain('"[clip-path:inset(0_round_var(--radius-surface))]"')
-    // Com o véu pintando por cima de tudo, o fio não precisa virar sombra da
-    // célula — a volta que a máscara no `<tbody>` exigia saiu com ela.
+    // Com o véu pintando por cima de tudo, o fio não precisa virar sombra da célula.
     expect(CODE).not.toContain("[&>tr]:border-b-0")
     expect(PANEL_CODE).not.toContain("tr:last-child>td]:shadow-none")
-    // O `clip-path` recorta pelo raio de fora e não protege o arco da borda: o
-    // véu é um retângulo encostado nos cantos, e os de baixo leem o raio de
-    // dentro que a moldura publica (rodada 46c). Por variável, e não
-    // `inherit`: entre a moldura e o véu costuma haver um embrulho sem raio.
+    // O `clip-path` recorta pelo raio de fora e não protege o arco da borda: os cantos de baixo
+    // leem o raio de dentro que a moldura publica, por variável e não `inherit` (entre a
+    // moldura e o véu costuma haver um embrulho sem raio).
     expect(CODE).toContain("[--scroll-fade-veil-r:calc(var(--radius-surface)_-_1px)]")
     expect(PANEL_CODE).toContain('"[--scroll-fade-veil-r:calc(var(--radius-surface)_-_1px)]"')
     const css = lerFonte("src/app/globals.css")
@@ -805,7 +788,7 @@ describe("escada do Table", () => {
 
 describe("a linha de totais do DataTable", () => {
   it("recebe as colunas à vista, e nenhum colSpan cravado passa da conta", () => {
-    // Com 7 + 1 + 1 numa tabela de 8, a nona coluna era um vão na ponta de toda linha.
+    // Com 7 + 1 + 1 numa tabela de 8, a nona coluna seria um vão na ponta de toda linha.
     expect(DT_SRC).toContain("footer(table.getPrePaginatedRowModel().rows.map((r) => r.original), { columns: nColunas })")
     const doc = lerFonte("src/app/designsystem/docs/data-table.tsx")
     expect(doc).not.toMatch(/colSpan=\{\d+\}/)

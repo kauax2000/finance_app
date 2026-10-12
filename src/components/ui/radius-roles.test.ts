@@ -11,10 +11,9 @@ import { searchFieldShapeClassName } from "@/lib/search-field-classes"
 import { cn } from "@/lib/utils"
 
 /**
- * As rodadas 240 e 240c: o raio mora na escala de Shape & Elevation. Cada
- * componente veste um degrau dela — cápsula, superfície, modal, concêntrico ou
- * a escada pequena —, e o raio de um componente se muda lá, nunca com um
- * número no arquivo do componente.
+ * O raio mora na escala de Shape & Elevation. Cada componente veste um degrau dela (cápsula,
+ * superfície, modal, concêntrico ou a escada pequena), e o raio de um componente se muda lá,
+ * nunca com um número no arquivo do componente.
  */
 
 const CSS = lerFonte("src/app/globals.css")
@@ -46,8 +45,8 @@ describe("a escala do raio", () => {
   })
 
   it("no app, o concêntrico não sai de `ui/`: fora dele ninguém publica o pai", () => {
-    // Uma caixa `concentric` numa folha ou num cartão sem recuo caía em 22 e
-    // saía pílula (rodada 244c). No app a caixa veste o degrau.
+    // Uma caixa `concentric` numa folha ou num cartão sem recuo cai em 22 e sai pílula; no app
+    // a caixa veste o degrau.
     const achados = execSync("grep -rln '\\bconcentric\\b' src --include='*.tsx' || true", { encoding: "utf8" })
       .split("\n")
       .filter((f) => f && !f.startsWith("src/components/ui/") && !f.startsWith("src/app/designsystem/"))
@@ -61,8 +60,8 @@ describe("a escala do raio", () => {
   })
 
   it("o catálogo também veste a escala: nenhuma moldura escrita à mão", () => {
-    // As molduras do `/designsystem` (DocMeta, Preview, Spec, as caixas das
-    // páginas) desenhavam `rounded-xl` à mão e não ouviam a escala (rodada 240d).
+    // As molduras do `/designsystem` (DocMeta, Preview, Spec, as caixas das páginas) não
+    // escrevem `rounded-xl` à mão: ouvem a escala.
     const DS = "src/app/designsystem"
     const arquivos = [
       ...readdirSync(join(process.cwd(), DS)).filter((n) => n.endsWith(".tsx")).map((n) => join(DS, n)),

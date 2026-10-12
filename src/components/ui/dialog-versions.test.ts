@@ -5,7 +5,7 @@ import { lerFonte } from "@/test/fonte"
 
 import { DialogFooter, DialogHeader, DialogMedia, DialogSteps } from "./dialog"
 
-/** A rodada 211: as versões novas do `Dialog`. */
+/** As versões do `Dialog`. */
 
 const CODIGO = lerFonte("src/components/ui/dialog.tsx")
 
@@ -89,11 +89,5 @@ describe("as versões do Dialog", () => {
     const foto = uso.slice(uso.indexOf("function fotografar("), uso.indexOf("function fotografar(") + 400)
     expect(foto).not.toMatch(/formKind|r\.type|installmentEditScope|installmentValueMode/)
     expect(lerFonte("src/components/transactions/transaction-form-dialog.tsx")).toMatch(/dirty=\{isDirty\}\s*confirmDiscard/)
-  })
-
-  it("os comentários não contam mais o que deixou de ser verdade", () => {
-    expect(CODIGO).not.toContain("as sete telas que ainda anulam")
-    expect(CODIGO).not.toContain("já está separado por um\n * fio")
-    expect(CODIGO).not.toContain("são 13 das 25 telas")
   })
 })

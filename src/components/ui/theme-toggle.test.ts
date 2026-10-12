@@ -2,26 +2,14 @@ import { describe, expect, it } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
 /**
- * O alternador de tema, trancado na rodada 116.
- *
- * Ele deixou de ser um `Switch` binário de duas faces e virou um trilho de três
- * paradas — sistema, claro e escuro —, sem vidro, com a viagem orgânica: a
- * cabeça sai na frente, o rastro fica para trás e um pescoço liga os dois.
- *
- * Três coisas quebram calado aqui, e as três estão abaixo:
- *
- * 1. **A fusão é de cor.** Cabeça, rastro e pescoço são o mesmo `bg-background`,
- *    e é só isso que faz as três peças lerem como uma. Um fio ou uma sombra
- *    numa delas desenha exatamente a emenda que a fusão existe para apagar.
- * 2. **A aritmética.** O trilho é 4 de recuo mais três paradas de 28, e a
- *    viagem é `i × 1.75rem`. Mexer num dos dois números sem o outro tira a
- *    cabeça do centro da face, e nada no tipo acusa.
- * 3. **O vidro não volta.** Ele saiu por decisão do dono, e com ele a entrada
- *    em `COM_MODO` de `glass.test.ts` — que é o teste que cobrava o eixo.
+ * O alternador de tema, trancado. Três coisas quebram calado: (1) a fusão é de cor — cabeça,
+ * rastro e pescoço são o mesmo `bg-background`, e um fio ou sombra numa delas desenha a emenda;
+ * (2) a aritmética — trilho = 4 de recuo + três paradas de 28, viagem `i × 1.75rem`; (3) o
+ * vidro não volta.
  */
 
-// A receita da viagem mora em `lib/liquid-move.ts` desde a rodada 226, quando
-// o `Tabs` passou a usá-la também: o trilho é lido junto com ela.
+// A receita da viagem mora em `lib/liquid-move.ts`, que o `Tabs` também usa: o trilho é lido
+// junto com ela.
 const FONTE =
     lerFonte("src/components/ui/theme-toggle.tsx") +
     "\n" +
@@ -45,8 +33,8 @@ describe("o trilho de tema", () => {
         for (const valor of ["system", "light", "dark"]) {
             expect(CODIGO).toContain(`valor: "${valor}"`)
         }
-        // A ordem é decisão do dono (a do menu do macOS), e é ela que o trilho
-        // desenha. Trocá-la sem querer inverteria o que cada posição mostra.
+        // A ordem é a do menu do macOS, e é ela que o trilho desenha; trocá-la inverteria o que
+        // cada posição mostra.
         expect(CODIGO.indexOf('valor: "system"')).toBeLessThan(
             CODIGO.indexOf('valor: "light"'),
         )
@@ -65,9 +53,8 @@ describe("o trilho de tema", () => {
     })
 
     it("3. a aritmética fecha nos três degraus: trilho = 4 + 3 paradas, e a viagem é uma parada", () => {
-        // Rodada 181: a geometria é uma tabela só, e desce por estilo inline —
-        // número calculado não pode ser classe, porque classe montada em tempo
-        // de execução não chega ao CSS.
+        // A geometria é uma tabela só e desce por estilo inline: classe montada em tempo de
+        // execução não chega ao CSS.
         expect(CODIGO).toContain("sm: { altura: 28")
         expect(CODIGO).toContain("md: { altura: 32")
         expect(CODIGO).toContain("lg: { altura: 36")
@@ -89,10 +76,8 @@ describe("o trilho de tema", () => {
     })
 
     it("4. é uma peça só — a regressão que o dono nomeou", () => {
-        // A primeira versão tinha cabeça, rastro e pescoço, fundidos por serem
-        // do mesmo `--background`. Na tela isso lê como **duas bolas
-        // transitando**, e não como matéria: a fusão por cor apaga a costura,
-        // mas não faz uma forma só.
+        // Cabeça, rastro e pescoço fundidos só por cor leem como duas bolas transitando; a
+        // forma única vem do esticão.
         expect(CODIGO).not.toContain("theme-toggle-trail")
         expect(CODIGO).not.toContain("theme-toggle-neck")
         // Só um nó com `absolute` dentro do trilho.
@@ -109,18 +94,10 @@ describe("o trilho de tema", () => {
         // A curva do trajeto é a da referência, por decisão do dono.
         expect(CODIGO).toContain('easing: "cubic-bezier(1,0,0.4,1)"')
 
-        // **A asserção que importa.** A referência põe o pico do esticão no meio
-        // do *seu* relógio (0,44s contra 0,40s de viagem), e com esta curva isso
-        // sai anticorrelacionado: medido, aos 30% do caminho a escala estava em
-        // 1,33 com a velocidade a **6%** do máximo, e aos 70%, com 68% da
-        // velocidade, a escala já tinha caído para 1,04 — a forma esticava
-        // **parada** e atravessava contraída.
-        //
-        // O conserto é os dois relógios serem o mesmo e o pico ficar em 0,58,
-        // perto do pico de velocidade da curva (0,667). Devolver relógios
-        // diferentes desfaz a fase sem quebrar nada.
-        // O relógio da escala passa do trajeto de propósito: 640 contra 400.
-        // Os 240 que sobram são o pouso.
+        // A asserção que importa: o pico do esticão e o relógio da escala têm de estar em fase
+        // com a velocidade do trajeto (pico em 0,58, perto do pico de velocidade 0,667), senão
+        // a forma estica parada e atravessa contraída. O relógio da escala passa do trajeto de
+        // propósito (640 contra 400): os 240 que sobram são o pouso.
         expect(CODIGO).toContain("const ESTICAO = { duration: 640")
         expect(CODIGO).toContain("const TRAJETO = { duration: 400")
         expect(CODIGO).toContain("const PICO_EM = 0.58")
@@ -130,27 +107,17 @@ describe("o trilho de tema", () => {
     })
 
     it("5f. o volume se conserva — esticar em X afina em Y", () => {
-        // Sem isto a forma **engorda** em vez de esticar, que é o que separa
-        // matéria elástica de uma pílula que cresce. Medido na animação real:
-        // no auge a peça vai a 34,1 de largura com 25,2 de altura, e no
-        // contragolpe do pouso a 26,5 por 28,7 — a altura em contrafase.
+        // Sem isto a forma engorda em vez de esticar: a altura entra em contrafase com a
+        // largura.
         expect(CODIGO).toContain("const ACOPLAMENTO_Y = 0.45")
         expect(CODIGO).toContain("amplitude * k * ACOPLAMENTO_Y")
     })
 
     it("5g. a origem vira no cruzamento por zero, e o degrau é de propósito", () => {
-        // Enquanto corre, a forma estica a partir da borda de **trás** (para a
-        // frente); ao chegar, ela se acomoda a partir da borda da **frente**
-        // (para dentro do trilho). É o que libera a amplitude do pouso: presa
-        // atrás, ela crescia contra a borda.
-        //
-        // A troca acontece onde `k` é 0 — escala 1, transformação identidade,
-        // origem que não pinta nada —, então é invisível por construção. Os
-        // dois quadros a 0,0001 fazem disso um **degrau**: interpolada, a
-        // origem deslizaria com a escala fora de 1, e isso se vê.
-        // A virada é derivada, e não um número solto: é onde o trajeto acaba
-        // na régua da escala. Cravá-la à mão é o jeito de ela sair de fase
-        // quando alguém mexer numa das duas durações.
+        // Correndo, a forma estica a partir da borda de trás; ao chegar, acomoda a partir da
+        // borda da frente. A troca acontece onde `k` é 0 (identidade), em dois quadros a 0,0001
+        // que fazem um degrau. A virada é derivada do fim do trajeto na régua da escala, não um
+        // número solto.
         expect(CODIGO).toContain(
             "const VIRADA = TRAJETO.duration / ESTICAO.duration",
         )
@@ -160,10 +127,8 @@ describe("o trilho de tema", () => {
     })
 
     it("5h. o pouso é um mergulho só — nenhum repique", () => {
-        // A primeira versão oscilava três vezes em 160ms (+0,5 · −0,28 · +0,12)
-        // e ficava estalada. Hoje é uma compressão que vai e volta em 240ms.
-        // Medido na animação real: **uma** travessia da largura de repouso
-        // depois da chegada, com o fundo em 26,8 × 28,6.
+        // O pouso é uma compressão que vai e volta em 240ms: uma travessia da largura de
+        // repouso depois da chegada.
         const pouso = CODIGO.slice(
             CODIGO.indexOf("[VIRADA + 0.0001"),
             CODIGO.indexOf("[1, 0, FRENTE]"),
@@ -180,10 +145,8 @@ describe("o trilho de tema", () => {
         // As duas viagens duram o mesmo e a longa percorre o dobro: ela corre ao
         // dobro e estica o dobro. 0,11 e 0,22.
         expect(CODIGO).toContain("const AMPLITUDE_POR_SALTO = [0, 0.11, 0.22]")
-        // O teto não é gosto: com o pico em 0,58 a borda dianteira da forma
-        // chega a 87,7 dos 88px do trilho no salto longo (medido por scrubbing
-        // da animação real: largura 28 → 34,2 → 28, dianteira máxima em 84).
-        // Em 1,26 ela passa e a peça sai da pílula.
+        // O teto não é gosto: com o pico em 0,58 a borda dianteira chega a 87,7 dos 88px do
+        // trilho no salto longo; em 1,26 a peça sai da pílula.
         const amp = Number(
             /AMPLITUDE_POR_SALTO = \[0, [\d.]+, ([\d.]+)\]/.exec(CODIGO)?.[1],
         )
@@ -191,12 +154,9 @@ describe("o trilho de tema", () => {
     })
 
     it("5b. quem desloca é a WAAPI, e nunca uma transição nem um rAF adiado", () => {
-        // O next-themes roda com `disableTransitionOnChange`, que injeta
-        // `* { transition: none !important }`. A versão anterior fugia disso
-        // aplicando a posição dois `requestAnimationFrame` depois — e quando o
-        // rAF não corria no ritmo esperado o `setState` adiado **nunca rodava**
-        // e o polegar ficava parado. Medido: clique, 1400ms, cabeça sem sair do
-        // lugar e `document.getAnimations()` vazio.
+        // O next-themes injeta `* { transition: none !important }` com
+        // `disableTransitionOnChange`; aplicar a posição dois `rAF` depois deixava o polegar
+        // parado quando o rAF não corria no ritmo esperado.
         expect(CODIGO).not.toContain("requestAnimationFrame")
         expect(peca(PECA)).not.toMatch(/transition-|duration-|ease-|delay-/)
         // A animação não pode sobreviver ao próprio trajeto: quem manda no
@@ -208,33 +168,22 @@ describe("o trilho de tema", () => {
     })
 
     it("5e. a origem vira com o sentido — é o mecanismo inteiro do esticão", () => {
-        // Com a origem na borda **de trás** e `scaleX > 1`, a forma estica para
-        // a *frente*, na direção da viagem. Presa num valor fixo, ela esticaria
-        // para trás em metade dos saltos — e nada quebraria, o movimento só
-        // ficaria errado. É para isto, e só para isto, que a referência mantém
-        // um `data-previous` no trilho.
+        // Com a origem na borda de trás e `scaleX > 1` a forma estica para a frente, na direção
+        // da viagem; presa num valor fixo esticaria para trás em metade dos saltos.
         expect(CODIGO).toContain('paraDireita ? "0% 50%" : "100% 50%"')
     })
 
     it("5c. nascer é chegar, não viajar", () => {
-        // O gate de montagem leva `indice` de 0 para a parada real, e sem
-        // guarda o polegar entra deslizando da esquerda **toda vez que o
-        // componente nasce** — no app, a cada abertura do menu da conta, já que
-        // o conteúdo de um `DropdownMenu` desmonta ao fechar. Medido depois da
-        // guarda: zero animações durante a hidratação.
+        // Sem a guarda o polegar entra deslizando da esquerda toda vez que o componente nasce
+        // (o conteúdo do `DropdownMenu` desmonta ao fechar).
         expect(CODIGO).toContain("jaPintou")
         expect(CODIGO).toContain("if (!montado) return")
     })
 
     it("5i. a bandeja é sobreposição, e não tinta chapada", () => {
-        // `bg-muted` é opaco: medido, ele pintava **38,38,38** tanto no
-        // cabeçalho quanto dentro do painel de um cartão, ignorando o que está
-        // atrás. Este controle não vive numa superfície conhecida — barra de
-        // vidro, painel de `DropdownMenu`, `Popover` do telefone, cartão —, e
-        // chapado ele lê como um bloco estrangeiro colado sobre o preto do app.
-        //
-        // Com a superfície do campo: **28** sobre a página e **40** sobre o
-        // cartão, no escuro. Ela responde ao que está atrás, que é o ponto.
+        // `bg-muted` é opaco e não responde ao que está atrás; este controle não vive numa
+        // superfície conhecida, então veste a superfície do campo (28 sobre a página, 40 sobre
+        // o cartão, no escuro).
         const raiz = peca("theme-toggle")
         expect(raiz).toContain("bg-input-fill/50")
         expect(raiz).not.toMatch(/bg-muted\b/)
@@ -242,12 +191,11 @@ describe("o trilho de tema", () => {
 
     it("6. o vidro não volta, e a marca só entra pelo brilho", () => {
         expect(FONTE).not.toMatch(/glass/i)
-        // O contorno de arco-íris foi recusado na tela; desde a rodada 181 a
-        // marca entra pelo brilho da família (`variant="brand"`), a pedido do
-        // dono, e só por ele.
+        // O contorno de arco-íris não volta; a marca entra só pelo brilho da família
+        // (`variant="brand"`).
         expect(FONTE).not.toMatch(/brand-rainbow|brand-contour/)
         expect(CODIGO).toContain('variant === "brand" && "brand-glow isolate')
-        // E `glass.test.ts` não pode continuar cobrando um eixo que saiu.
+        // `glass.test.ts` não cobra mais um eixo que saiu.
         const GLASS = lerFonte("src/components/ui/glass.test.ts")
         const comModo = GLASS.slice(
             GLASS.indexOf("const COM_MODO = ["),
@@ -259,8 +207,7 @@ describe("o trilho de tema", () => {
     it("7. o alvo de toque e o par de toque continuam de pé", () => {
         // A pílula tem 32 de altura; o pseudo a leva aos 44 que um dedo pede.
         expect(CODIGO).toContain("after:-inset-y-1.5")
-        // `hover:` compila dentro de `@media (hover: hover)` e não existe no
-        // dedo — é a regra H, e ela já custou uma rodada neste arquivo.
+        // `hover:` compila dentro de `@media (hover: hover)` e não existe no dedo (regra H).
         expect(CODIGO).toContain("group-hover/face:text-foreground")
         expect(CODIGO).toContain("group-active/face:text-foreground")
         // O anel de foco é o do sistema, no gatilho que recebe o foco.
@@ -268,11 +215,9 @@ describe("o trilho de tema", () => {
     })
 
     it("8. a seleção segue o foco, e não a heurística do Radix", () => {
-        // O Radix marca uma flag num `keydown` de `document` e clica no
-        // `onFocus` do item se ela estiver de pé. O React 19 delega os eventos
-        // no contêiner da raiz, **abaixo** de `document`: o foco muda antes de
-        // a flag subir, e a seta passa a mover o foco sem escolher nada.
-        // Medido no navegador — com o teclado, o controle ficava inerte.
+        // O Radix marca uma flag num `keydown` de `document` e o React 19 delega os eventos
+        // abaixo dele: o foco muda antes de a flag subir e a seta move o foco sem escolher
+        // nada.
         expect(CODIGO).toContain("onFocus=")
         expect(CODIGO).toContain("dataset?.parada")
         // O valor tem de estar no elemento que recebe o foco, senão o handler
@@ -281,10 +226,8 @@ describe("o trilho de tema", () => {
     })
 
     it("9. movimento reduzido é perguntado à mão, porque a WAAPI escapa do bloco global", () => {
-        // O bloco de `globals.css` encurta **transição**, e a WAAPI não é uma.
-        // Então aqui a pergunta é feita no código, e a resposta é não animar:
-        // o `translate` inline já pôs a peça no lugar certo, e o estado final
-        // chega igual.
+        // O bloco global de `globals.css` encurta transição, e a WAAPI não é uma: a pergunta é
+        // feita no código, e a resposta é não animar.
         expect(CODIGO).toContain('matchMedia("(prefers-reduced-motion: reduce)")')
     })
 })

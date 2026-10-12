@@ -5,7 +5,7 @@ import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 import { topBarVariants } from "./top-bar"
 import { barSurfaceClassName } from "@/lib/glass-classes"
 
-/** A rodada 237: o redesenho, as peças e os comportamentos do `TopBar`. */
+/** O redesenho, as peças e os comportamentos do `TopBar`. */
 
 const fonte = (caminho: string) => semComentarios(lerFonte(caminho), "linha-inteira")
 const CODIGO = fonte("src/components/ui/top-bar.tsx")
@@ -106,20 +106,13 @@ describe("os comportamentos", () => {
   })
 })
 
-// A régua do TopBar. O bloco guarda as constantes dela: o `CODIGO` daqui tira
-// todo comentário, e o de cima só as linhas inteiras.
+// A régua do TopBar. O `CODIGO` daqui tira todo comentário, e o de cima só as linhas inteiras.
 {
   /**
-   * A régua da barra do topo, trancada.
-   *
-   * Ela nasceu da fusão de duas barras escritas à mão, e cada divergência medida
-   * entre elas virou uma asserção: o `AppHeader` media o fio **por fora** da
-   * altura (o telefone ficava 1px mais alto que `--mobile-header-offset`),
-   * escrevia o próprio borrão (8px, sem `saturate`, sem guarda de transparência
-   * reduzida), vivia num `z-10` cru e animava o fundo em `duration-200` com a
-   * curva do navegador.
-   *
-   * Zero render: tudo lê o `cva` e o fonte sem comentários.
+   * A régua da barra do topo, trancada: o `AppHeader` medindo o fio por fora da altura (o
+   * telefone ficava 1px mais alto que `--mobile-header-offset`), escrevendo o próprio borrão,
+   * num `z-10` cru e animando o fundo em `duration-200` com a curva do navegador. Zero render:
+   * tudo lê o `cva` e o fonte sem comentários.
    */
 
   const CODIGO = semComentarios(lerFonte("src/components/ui/top-bar.tsx"))
@@ -171,7 +164,7 @@ describe("os comportamentos", () => {
       expect(base).toContain("pt-[var(--top-bar-safe,0px)]")
       expect(base).not.toMatch(/\bbox-content\b/)
 
-      // A área segura passa por `--top-bar-safe-area` desde a rodada 237.
+      // A área segura passa por `--top-bar-safe-area`.
       expect(base).toContain("[--top-bar-safe-area:env(safe-area-inset-top,0px)]")
       const safe = "[--top-bar-safe:var(--top-bar-safe-area)]"
       expect(topBarVariants({ position: "fixed" })).toContain(safe)

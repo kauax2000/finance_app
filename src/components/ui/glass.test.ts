@@ -7,36 +7,21 @@ import { esperarSemClasseMontada } from "@/test/regras"
 import { barSurfaceClassName, menuPanelTintClassName } from "@/lib/glass-classes"
 
 /**
- * As invariantes do vidro.
- *
- * Elas moravam na régua da Sidebar enquanto a receita era da barra. Com
- * a extração, o que é do **vidro** vem para cá e o que é da **barra** fica lá —
- * a de lá tranca, desde a rodada 221, que a placa flutuante **não** veste mais
- * a peça.
- *
- * Cada asserção aqui saiu de um defeito medido nas rodadas 36 a 39, e o
- * comentário de cada uma diz qual.
+ * As invariantes do vidro. O que é da barra mora na régua da Sidebar (a placa flutuante não
+ * veste mais a peça); cada asserção aqui diz qual defeito tranca.
  */
 
 const CSS = lerFonte("src/app/globals.css")
 
 /**
- * Só o corpo da receita.
- *
- * O corte ia até `@utility glass-control` e **engolia o doc-comment inteiro do
- * vizinho** — 17 linhas de prosa que a asserção 7 varria como se fossem código.
- * Hoje ele para no próximo doc-comment de topo; os comentários internos da
- * receita são indentados, então `\n/**` não casa com nenhum deles.
+ * Só o corpo da receita: o corte para no próximo doc-comment de topo, para a asserção 7 não
+ * varrer a prosa do vizinho como se fosse código.
  */
 const RECEITA = blocoCss(CSS, "@utility glass {", "\n/**")
 
 /**
- * Os blocos de tema **de verdade**.
- *
- * `CLARO` e `ESCURO` são fatias abertas — a segunda vai de `.dark {` até o fim
- * do arquivo e engole todas as `@utility`. Serve para procurar a declaração de
- * um token, não para provar que ele **não** é declarado num tema: uma
- * utility que o publique seria achada pela busca aberta.
+ * Os blocos de tema de verdade. `ESCURO` vai até o fim do arquivo e engole as `@utility`: serve
+ * para achar a declaração de um token, não para provar que ele não é declarado num tema.
  */
 const TEMA_CLARO = blocoCss(CSS, ":root {", "\n}")
 const TEMA_ESCURO = blocoCss(CSS, ".dark {", "\n}")
@@ -47,12 +32,8 @@ const semComentariosDe = (caminho: string) => semComentarios(lerFonte(caminho), 
 const SUPERFICIE_FLUTUANTE = semComentarios(lerFonte("src/lib/menu-classes.ts"), "bloco")
 
 /**
- * A receita **sem comentários**.
- *
- * Ela cita de propósito o que deixou de fazer — o `color-mix(--glass-rim 45%)`
- * que o extremo do aro era antes de virar token. Uma asserção que varre o texto
- * cru testa o comentário e não o código, e este projeto já pagou essa medição
- * na rodada do gráfico.
+ * A receita sem comentários: ela cita de propósito o que deixou de fazer, e uma asserção sobre
+ * o texto cru testaria o comentário e não o código.
  */
 const RECEITA_CODIGO = semComentarios(RECEITA, "bloco")
 
@@ -74,11 +55,8 @@ describe("a superfície de vidro", () => {
     })
 
     it("2. a luz são focos, e nunca uma rampa de altura inteira", () => {
-        // Houve uma versão com um radial de `105%` cobrindo a placa toda,
-        // chegando a **rgb 62** no topo. Ela lia como degradê de fundo dos anos
-        // 2000 — forte demais, branca demais, com o eixo à vista. O que importa
-        // não é a família da curva, é a **escala**: luz que ocupa a peça inteira
-        // é fundo, não é luz.
+        // O que importa não é a família da curva, é a escala: luz que ocupa a peça inteira (um
+        // radial de 105% chegava a rgb 62) lê como fundo, não como luz.
         expect((RECEITA.match(/radial-gradient/g) ?? []).length).toBeGreaterThanOrEqual(1)
 
         // Um único gradiente carrega eixo, e ele é o aro — no `border-box`, ou
@@ -154,18 +132,14 @@ describe("a superfície de vidro", () => {
         expect(RECEITA).not.toMatch(/mask-composite|-webkit-mask|mask-image/)
         expect(RECEITA).not.toMatch(/soft-light|background-blend-mode/)
 
-        // **A varredura é no código, não no texto cru.** Esta asserção lia
-        // `RECEITA` com os comentários dentro: um comentário que apenas
-        // *mencionasse* `backdrop-filter` já a reprovava, sem mudança nenhuma
-        // de código. É a lição que a rodada do gráfico registrou.
+        // A varredura é no código, não no texto cru: um comentário que mencionasse `backdrop-
+        // filter` não pode reprovar a asserção.
         expect(RECEITA_CODIGO).not.toMatch(/backdrop-filter|backdrop-blur/)
     })
 
     it("20. o aro e o realce são contrato, e sem produtor nada muda", () => {
-        // As duas camadas viraram `var(--x, <o valor de hoje>)`. O fallback é o
-        // que garante que o painel e o preset de controle não se mexem —
-        // medido no navegador: as duas superfícies saem byte a byte iguais às
-        // de antes.
+        // As duas camadas são `var(--x, <valor>)`: o fallback garante que o painel e o preset
+        // de controle saem byte a byte iguais.
         expect(RECEITA_CODIGO).toContain("var(\n        --glass-rim-image,")
         expect(RECEITA_CODIGO).toContain("var(\n        --glass-sheen-image,")
 
@@ -188,20 +162,14 @@ describe("a superfície de vidro", () => {
     })
 
     it("23. três superfícies, três tintas — lado a lado em glass-classes", () => {
-        // Uma superfície elevada tem conteúdo passando por baixo — é o lado do
-        // `backdrop-filter` da régua dos vidros, e o material é o do cabeçalho.
-        //
-        // **As três tintas moram juntas** (rodada 132): moravam em três
-        // arquivos, uma delas como alias de outra, e foi assim que a flutuante
-        // virou a barra sem ninguém ver as duas lado a lado.
+        // Uma superfície elevada tem conteúdo passando por baixo (o lado do `backdrop-filter`
+        // da régua dos vidros, com o material do cabeçalho). As três tintas moram juntas, para
+        // nenhuma virar alias de outra.
         expect(existsSync(join(process.cwd(), "src/lib/bar-classes.ts")), "bar-classes voltou").toBe(false)
         expect(existsSync(join(process.cwd(), "src/lib/modal-classes.ts")), "modal-classes voltou").toBe(false)
 
-        // **A flutuante tem receita própria de novo, e não é a barra.** A
-        // rodada 9f0ba8a a trocou pela tinta da barra (`--background` 95/60)
-        // para ela se separar do cartão; na tela ela virou uma chapa escura sem
-        // vidro, e o dono pediu a de antes de volta: `--popover` a 85, abrindo
-        // a 60 só no escuro.
+        // A flutuante tem receita própria e não é a barra: `--popover` a 85, abrindo a 60 só no
+        // escuro (a tinta da barra virava uma chapa escura sem vidro).
         expect(menuPanelTintClassName, "a flutuante voltou a ser a barra").not.toBe(barSurfaceClassName)
         expect(SUPERFICIE_FLUTUANTE, "a flutuante voltou a ser alias").not.toMatch(
             /menuPanelTintClassName\s*=\s*barSurfaceClassName/
@@ -255,22 +223,18 @@ describe("a superfície de vidro", () => {
     })
 
     it("24. uma placa por superfície — o Command hospedado não pinta", () => {
-        // Duas placas a 60% empilhadas dão 84%: o Combobox (popover + `Command`)
-        // saía mais claro que o DatePicker (o mesmo popover, uma placa). Era o
-        // que lia como "fundo quebrado" — o tom, não o material. Quem hospeda
-        // pinta; o `Command` só pinta na variante `panel`, solto numa página.
+        // Duas placas a 60% empilhadas dão 84%: o Combobox (popover + `Command`) saía mais
+        // claro que o DatePicker. Quem hospeda pinta; o `Command` só pinta na variante `panel`,
+        // solto numa página.
         const paleta = semComentariosDe("src/components/ui/command.tsx")
         const cva = paleta.slice(paleta.indexOf("const commandVariants"), paleta.indexOf("defaultVariants", paleta.indexOf("const commandVariants")))
         const base = cva.slice(0, cva.indexOf("variants:"))
         expect(base, "a base do Command pinta").not.toContain("menuPanelSurfaceClassName")
         expect(base, "a base do Command tem tinta").not.toMatch(/\bbg-popover/)
-        // Desde a rodada 143 a variante `panel` é a pilha: a raiz não pinta, e
-        // quem pinta são a pílula e a placa (asserções abaixo).
+        // A variante `panel` é a pilha: a raiz não pinta, e quem pinta são a pílula e a placa.
         expect(cva, "a variante panel voltou a pintar").not.toMatch(/panel:\s*menuPanelSurfaceClassName/)
-        // E o `CommandDialog` não neutraliza nada. Desde a rodada 141 ele é uma
-        // coluna que **não pinta** — e não por um `bg-transparent`, mas por não
-        // declarar fundo nenhum. (O `bg-transparent` do `<input>`, mais abaixo,
-        // é outro elemento.)
+        // O `CommandDialog` não neutraliza nada: é uma coluna que não pinta por não declarar
+        // fundo, e não por um `bg-transparent` (o do `<input>`, mais abaixo, é outro elemento).
         const dialogo = paleta.slice(paleta.indexOf("function CommandDialog"), paleta.indexOf("function CommandInput"))
         expect(dialogo.length, "bloco do CommandDialog não achado").toBeGreaterThan(0)
         expect(dialogo).not.toMatch(/\bbg-transparent\b/)
@@ -281,7 +245,7 @@ describe("a superfície de vidro", () => {
         // são os da asserção 23, e uma cópia aqui divergiria dela.
         const campo = paleta.slice(paleta.indexOf("function CommandInput"), paleta.indexOf("function CommandScope"))
         const lista = paleta.slice(paleta.indexOf("function CommandList"), paleta.indexOf("function CommandEmpty"))
-        // A tinta chega pela receita da busca (rodada 198), que a importa da régua.
+        // A tinta chega pela receita da busca, que a importa da régua.
         expect(campo, "a pílula de busca não pinta").toMatch(/<SearchInput\s+surface=\{surface \?\? \(naPilha \? "plate" : "field"\)\}/)
         expect(
             lerFonte("src/lib/search-field-classes.ts"),
@@ -299,9 +263,8 @@ describe("a superfície de vidro", () => {
         // `border` contra o `rounded-lg` e o `ring` de todas as outras.
         for (const nome of ["select", "popover", "hover-card", "command", "tooltip", "chart"] as const) {
             const src = semComentariosDe(`src/components/ui/${nome}.tsx`)
-            // O `command` pinta por peças desde a rodada 143 (a pílula e a
-            // placa da pilha), e veste a **tinta** da régua, que é a metade
-            // da receita que as peças soltas usam.
+            // O `command` pinta por peças (a pílula e a placa da pilha) e veste a tinta da
+            // régua, a metade da receita que as peças soltas usam.
             const regua = nome === "command" ? "menuPanelTintClassName" : "menuPanelSurfaceClassName"
             expect(src, `${nome} precisa vestir a régua`).toContain(regua)
             expect(src, `${nome} tem cópia da superfície`).not.toMatch(
@@ -315,11 +278,9 @@ describe("a superfície de vidro", () => {
     })
 
     it("26. as quatro superfícies modais vestem a régua, e nada repinta por dentro", () => {
-        // O `Sheet` traz os dois ramos no mesmo arquivo desde a rodada 64: a
-        // placa do painel mora no `cva` e a da gaveta no ramo do `vaul`.
-        // O `Sheet` saiu da lista na rodada 222: a folha passou a ser a placa
-        // **chapada** (`--popover`), a pedido do dono — o véu já a separa da
-        // página. Ela não pode voltar a vestir o vidro por cópia.
+        // O `Sheet` traz os dois ramos no mesmo arquivo (a placa do painel no `cva`, a da
+        // gaveta no ramo do `vaul`). A folha é a placa chapada (`--popover`), e não pode voltar
+        // a vestir o vidro por cópia.
         const folha = semComentariosDe("src/components/ui/sheet.tsx")
         expect(folha).not.toContain("modalSurfaceClassName")
         expect(folha).toContain("bg-clip-padding bg-popover text-sm text-popover-foreground shadow-lg")
@@ -356,10 +317,8 @@ describe("a superfície de vidro", () => {
     })
 
     it("9. os tokens antigos não voltaram pela porta dos fundos", () => {
-        // A receita nasceu como `sidebar-glass` com cinco tokens `--sidebar-*`.
-        // Manter os dois nomes seria a mesma "duas receitas para a mesma borda"
-        // que a rodada 36 removeu — e é a família "sobreviveu à remoção" que
-        // este projeto já pagou cinco vezes.
+        // A receita não volta a ter dois nomes (`sidebar-glass` e `glass`): seriam duas
+        // receitas para a mesma borda.
         for (const morto of [
             "--sidebar-glass-tint",
             "--sidebar-cloud",
@@ -371,26 +330,14 @@ describe("a superfície de vidro", () => {
     })
 
     it("11. o bisel tem um lado aceso, e no claro ele só existe por token próprio", () => {
-        // **O que faz um vidro brilhar não é o realce sozinho: é o par.** O
-        // extremo `100%` do aro já foi derivado do pico
-        // (`color-mix(--glass-rim 45%, transparent)`), o que vale enquanto os
-        // dois extremos são da mesma natureza — no escuro os dois são luz.
-        //
-        // No claro **não são**: ali o pico é sombra, e derivado o outro extremo
-        // só podia ser uma sombra mais fraca. Medido: os quatro cantos saíam em
-        // 210, 232, 232 e 235 contra uma placa de 255 — todos **abaixo** dela.
-        // Isso é um contorno, não um bisel; a peça não tinha lado aceso.
-        //
-        // Com o token próprio: 205 na sombra contra **255** no realce, e a placa
-        // cedeu para 252 para o realce ter onde existir. Amplitude 50, contra 25.
+        // O que faz um vidro brilhar é o par realce/sombra: no claro o pico do aro é sombra, e
+        // derivar o outro extremo dele só dá uma sombra mais fraca (sem lado aceso). Cada
+        // extremo tem token próprio.
         expect(RECEITA).toContain("var(--glass-rim-far)")
 
-        // A proibição é **derivar um extremo do outro na declaração do token**,
-        // que é onde o defeito morava. Ela ficava escrita contra a receita
-        // (`RECEITA_CODIGO.not.toMatch(/color-mix[^)]*--glass-rim/)`) e passou a
-        // valer nada quando a receita ganhou o `color-mix` do tingimento: o
-        // `[^)]*` não atravessa o `)` de `var(--glass-ink)`, então ela seguia
-        // verde por acidente. Agora ela olha os blocos de tema.
+        // A proibição é derivar um extremo do outro na declaração do token, e a asserção olha
+        // os blocos de tema (um `[^)]*` contra a receita não atravessa o `)` de `var(--glass-
+        // ink)`).
         for (const tema of [CLARO, ESCURO]) {
             const decl = tema.match(/--glass-rim-far:\s*([^;]+);/)?.[1] ?? ""
             expect(decl).not.toContain("--glass-rim")
@@ -413,13 +360,9 @@ describe("a superfície de vidro", () => {
     })
 
     it("12. o tom fica acima da lâmina, e o realce acima de tudo", () => {
-        // **A ordem é o mecanismo.** As nuvens ficam abaixo da lâmina de
-        // propósito — é a atenuação por 82% de preto que as faz ler como
-        // estando *atrás*. O tom é o oposto: ele é a cor do próprio material, e
-        // abaixo da lâmina seria esmagado para quase nada.
-        //
-        // E o realce fica acima do tom, senão ele mudaria de força conforme a
-        // cor da peça.
+        // A ordem é o mecanismo: as nuvens ficam abaixo da lâmina (a atenuação as faz ler como
+        // atrás), o tom é a cor do material, e o realce fica acima do tom para não mudar de
+        // força com a cor da peça.
         const realce = RECEITA_CODIGO.indexOf("var(--glass-sheen")
         const tom = RECEITA_CODIGO.indexOf("var(--glass-tone")
         const lamina = RECEITA_CODIGO.indexOf("var(--glass-tint)")
@@ -443,53 +386,15 @@ describe("a superfície de vidro", () => {
     })
 
     it("13. quem tem o modo traduz cor, e o eixo é eixo — não embrulho mudado de lugar", () => {
-        // Houve cinco peças separadas — `GlassButton`, `GlassBadge`,
-        // `GlassAvatar`, `GlassCheckbox`, `GlassColorTile` —, cada uma
-        // importando **um** átomo e renderizando **um** elemento. Foram
-        // absorvidas como o eixo `glass`, pela terceira vez que este projeto faz
-        // isso: `MoneyInput` virou `<Input money>` e `KbdShortcut` virou
-        // `<Kbd keys>`.
-        //
-        // A régua que sobrou: o que decide "componente ou modo?" **não é haver
-        // tradução** — é a tradução precisar de uma peça para existir.
-        //
-        // **Sem comentários.** Os doc-comments destes arquivos explicam a
-        // tradução e citam `--glass-tone` por extenso; varrer o texto cru
-        // testaria o comentário e não o código. Verificado: com a tradução
-        // removida do `Button`, a versão que lia o texto cru **passava**.
+        // O eixo `glass` absorveu as peças separadas; o que decide "componente ou modo" é a
+        // tradução precisar de uma peça para existir. A varredura é sem comentários, porque os
+        // doc-comments citam `--glass-tone` por extenso.
         const base = (nome: string) => semComentariosDe(`src/components/ui/${nome}.tsx`)
 
         /**
-         * **Não são só átomos**, e por isso o nome mudou: `tabs` é Organismo,
-         * e entrou na rodada 68 — o marcador dele é o *thumb* que viaja, a
-         * peça de vidro de um controle segmentado.
-         *
-         * A `timeline` entrou na rodada 70: o marcador é superfície de
-         * histórico, e o eixo é da **lista** — como `marker` é sobrescrevível
-         * por item, um eixo por item deixaria escrever a trilha com um poço de
-         * vidro ao lado de um avatar chapado.
-         *
-         * **A `timeline` saiu na rodada 227**, a pedido do dono: com o
-         * relevo do marcador (o halo do tom), o vidro era um terceiro
-         * acabamento que nenhuma tela vestia.
-         *
-         * **O `theme-toggle` saiu na rodada 116**, e pela mesma linha que tirou
-         * o `ColorTile`: o dono descartou o vidro no alternador, e um modo que
-         * ninguém veste é uma linha a manter. O polegar dele continua sendo o
-         * marcador do `tabs-indicator` — a anatomia que o fazia caber aqui —,
-         * só que chapado, e agora com um rastro e um pescoço do mesmo token,
-         * que é fusão de cor e não material.
-         *
-         * O que os dois têm em comum não é a camada, é a régua: **nenhuma das
-         * peças de vidro é clicável**. No `Tabs` quem recebe o clique é o
-         * gatilho e no alternador é a raiz; o polegar é superfície, e fica atrás
-         * dela. É a mesma linha que manteve `Avatar` e `ColorTile` depois de o
-         * `Button` reprovar quatro vezes na tela.
-         *
-         * **O `ColorTile` saiu na rodada 95**, e não por essa régua: o eixo
-         * existia com **zero** telas do produto, e o `Avatar` tinha acabado de
-         * largar o vidro junto com o degradê. Um modo que ninguém veste é uma
-         * linha a manter, não uma opção a oferecer.
+         * As peças que vestem o eixo `glass`. Nenhuma peça de vidro é clicável: no `Tabs` quem
+         * recebe o clique é o gatilho e no alternador é a raiz; o polegar é superfície e fica
+         * atrás dela.
          */
         const COM_MODO = [
             "tabs",
@@ -510,48 +415,29 @@ describe("a superfície de vidro", () => {
             expect(base(nome)).toMatch(/\bglass\??:/)
         }
 
-        // 3. (A identidade não entrava na tabela semântica: o avatar de vidro
-        //    saiu, e com ele a tabela de identidade. Fica a régua: identidade
-        //    distingue pessoas, tom significa estado.)
+        // 3. A identidade distingue pessoas e o tom significa estado; ela não entra na tabela
+        // semântica.
 
-        // 4. **A asserção que prova que a absorção é eixo.** Onde o eixo
-        //    dispensa o neutralizador, ele não pode existir: nestes dois, a
-        //    superfície que o vidro apagaria simplesmente não é escrita no ramo
-        //    de vidro. Como embrulho, eles empilhavam `bg-transparent` — e
-        //    o `Badge` deixava o `bg-primary-muted` da linha `soft` **vivo na
-        //    lista**, perdendo calado para o shorthand `background`.
-        //
-        //    O `Button` fica de fora, e o motivo é escrito: ali o `tertiary` é
-        //    base de verdade, e os seis neutralizadores dele são reais.
-        //
-        //    O que se proíbe é o **neutralizador**, e não a palavra: um
-        //    `bg-transparent` cru é superfície legítima — é o que o `outline` do
-        //    `Badge` declara. Neutralizador é o que vem com prefixo de variante
-        //    (`hover:`, `data-[state=checked]:`) ou com par `dark:`, porque
-        //    ele existe para desfazer uma classe que outra regra emitiu. E
-        //    `ring-0` só aparece para anular um anel.
+        // 4. A asserção que prova que a absorção é eixo: onde o eixo dispensa o neutralizador,
+        // ele não pode existir (um `bg-transparent` empilhado deixava o `bg-primary-muted` do
+        // `Badge` vivo na lista). O `Button` fica de fora, onde o `tertiary` é base de verdade.
+        // Neutralizador é o que vem com prefixo de variante ou par `dark:`; `bg-transparent`
+        // cru é superfície legítima e `ring-0` só aparece para anular um anel.
         for (const nome of COM_MODO) {
             expect(base(nome)).not.toMatch(/[:\]]bg-transparent|dark:bg-transparent|ring-0\b/)
         }
 
-        // 5. E a peça separada não volta pela porta dos fundos. O vidro é a
-        //    `@utility glass` com a régua de `lib/glass-classes.ts` — o próprio
-        //    `glass.tsx` saiu na rodada 160 —, e qualquer `glass-*.tsx` em `ui/`
-        //    é a forma que esta rodada enterrou.
+        // 5. A peça separada não volta pela porta dos fundos: o vidro é a `@utility glass` com
+        // a régua de `lib/glass-classes.ts`, e nenhum `glass-*.tsx` existe em `ui/`.
         const sobrando = readdirSync(join(process.cwd(), "src/components/ui"))
             .filter((f) => f.startsWith("glass-") && f.endsWith(".tsx"))
         expect(sobrando).toEqual([])
     })
 
     it("14. o tingimento é opt-in, e o padrão é idêntico ao vidro sem cor", () => {
-        // A cor do elemento entra por `--glass-ink`, e **não** por
-        // `--glass-tone`: o tom é uma camada com alfa próprio que pinta o
-        // corpo, a tinta é só um matiz de onde o aro e as nuvens puxam. Manter
-        // as duas separadas é o que deixa a asserção 12 continuar verdadeira.
-        //
-        // O padrão precisa ser um no-op **exato**, porque a barra lateral
-        // flutuante veste a utility sem declarar cor nenhuma. Duas coisas o
-        // garantem, e as duas se checam aqui.
+        // A cor do elemento entra por `--glass-ink`, e não por `--glass-tone` (uma camada com
+        // alfa próprio que pinta o corpo). O padrão precisa ser um no-op exato, porque a barra
+        // lateral veste a utility sem declarar cor; as duas garantias se checam aqui.
         expect(CLARO).toMatch(/--glass-ink-amount:\s*0%/)
 
         // **E o no-op é estrutural, não uma consequência da quantidade.** Cada
@@ -567,12 +453,9 @@ describe("a superfície de vidro", () => {
     })
 
     it("15. tinge o aro e as nuvens, e nada além deles", () => {
-        // O escopo é decisão, e fica trancado em vez de combinado.
-        //
-        // **Dentro:** os dois extremos do aro e as duas nuvens. **Fora:** o
-        // vale do bisel (`--glass-rim-shade`), que a 5% e 10% de alfa não
-        // carrega matiz que se enxergue, e o realce de cursor
-        // (`--glass-sheen`), que é a cor da **fonte de luz** e não do material.
+        // O escopo é decisão: dentro, os dois extremos do aro e as duas nuvens; fora, o vale do
+        // bisel (`--glass-rim-shade`, sem matiz que se enxergue) e o realce de cursor
+        // (`--glass-sheen`, cor da fonte de luz).
         const camada = (de: string, ate?: string) => {
             const i = RECEITA_CODIGO.indexOf(de)
             const f = ate ? RECEITA_CODIGO.indexOf(ate) : RECEITA_CODIGO.length
@@ -605,15 +488,12 @@ describe("a superfície de vidro", () => {
     })
 
     it("10. a régua não monta nome de classe em tempo de execução", () => {
-        // O Tailwind varre o código como texto. Uma classe interpolada não chega
-        // ao CSS, e o defeito é calado: a classe fica no elemento e a regra não
-        // existe. Este projeto já pagou essa medição três vezes — e uma quarta
-        // ao escrever esta própria peça.
+        // O Tailwind varre o código como texto: uma classe interpolada fica no elemento e a
+        // regra não existe, sem erro.
         esperarSemClasseMontada(semComentariosDe("src/lib/glass-classes.ts"))
 
         const sidebar = lerFonte("src/components/ui/sidebar.tsx")
-        // A `Sidebar` vestiu o vidro por extenso até a rodada 221, quando o
-        // `floating` virou placas chapadas; ela não pode voltar a vesti-lo.
+        // A `Sidebar` flutuante é placa chapada e não pode voltar a vestir o vidro.
         expect(sidebar).not.toContain("group-data-[variant=floating]:glass")
     })
 
@@ -648,10 +528,8 @@ describe("a superfície de vidro", () => {
             /supports-backdrop-filter:dark:/
         )
 
-        // Os dois consumidores: a extração só é real com dois, e é o que
-        // impede a cópia à mão do cabeçalho de voltar.
-        // Desde a rodada 80 o cabeçalho é o `TopBar`, e as duas barras que o
-        // vestem — a do catálogo e a do app — não escrevem borrão próprio.
+        // Os dois consumidores (o `TopBar` do catálogo e o do app) impedem a cópia à mão do
+        // cabeçalho de voltar e não escrevem borrão próprio.
         const topo = semComentariosDe("src/components/ui/top-bar.tsx")
         const menubar = semComentariosDe("src/components/ui/menubar.tsx")
         expect(topo, "o cabeçalho não veste a régua").toContain("barSurfaceClassName")
@@ -692,12 +570,9 @@ describe("a superfície de vidro", () => {
     })
 
     it("28. a folha carrega a própria área segura, e o quarto chrome não volta", () => {
-        // A área segura é **da superfície**. Até a rodada 60 quem a dava era uma
-        // classe que as telas importavam do chrome de folha, e por isso 19
-        // folhas a tinham e 7 não — as que não tinham punham o botão de salvar
-        // sob a barra de gestos do iPhone. O `DrawerContent` já fazia certo; o
-        // ramo gaveta do `SheetContent` passou a fazer também — e desde a
-        // rodada 252 ele **é** o `DrawerContent`, com a área segura dele.
+        // A área segura é da superfície: com a classe importada pelas telas, 19 folhas a tinham
+        // e 7 punham o botão de salvar sob a barra de gestos. O ramo gaveta do `SheetContent` é
+        // o `DrawerContent`, com a área segura dele.
         const folha = semComentariosDe("src/components/ui/sheet.tsx")
         expect(folha, "o ramo gaveta da folha não é o DrawerContent").toMatch(
             /if \(surface === "drawer"\) \{[\s\S]*?<DrawerContent\b/
@@ -711,9 +586,8 @@ describe("a superfície de vidro", () => {
             /--drawer-safe:calc\([\s\S]*?env\(safe-area-inset-bottom/
         )
 
-        // E o chrome não volta: quem o substituiu é a cromagem do `Dialog`, que
-        // é a regra da casa ("a cromagem da folha vem do `Dialog`") — ele era o
-        // quarto, e anterior a ela.
+        // O chrome de folha não volta: quem o substituiu é a cromagem do `Dialog`, a regra da
+        // casa.
         const arquivos = readdirSync("src/components/ui")
         expect(
             arquivos.filter((f) => f.startsWith("mobile-sheet-form-chrome")),

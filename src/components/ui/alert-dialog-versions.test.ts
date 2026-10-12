@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
 } from "./alert-dialog"
 
-/** As versões da rodada 201. */
+/** As versões do `AlertDialog`. */
 
 const FONTE = lerFonte("src/components/ui/alert-dialog.tsx")
 
@@ -31,7 +31,7 @@ const TELAS = [
   "src/components/categories/detail/category-detail-dialogs.tsx",
 ]
 
-describe("AlertDialog, rodada 201", () => {
+describe("AlertDialog", () => {
   it("pending trava os dois botões e segura o Esc", () => {
     expect(FONTE).toMatch(/disabled=\{disabled \|\| pending \|\| bloqueado\}/)
     expect(FONTE).toMatch(/AlertDialogCancel[\s\S]*disabled=\{disabled \|\| pending\}/)

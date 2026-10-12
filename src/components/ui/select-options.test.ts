@@ -3,9 +3,8 @@ import { describe, expect, it } from "vitest"
 import { arquivosTsx, lerFonte, semComentarios } from "@/test/fonte"
 
 /**
- * A opção e a lista do `Select` são do componente (rodada 173). Doze opções
- * reescreviam a geometria e perdiam o piso de toque, oito listas somavam
- * `p-1` ao respiro do viewport, e oito seletores escreviam a ausência à mão.
+ * A opção e a lista do `Select` são do componente: a geometria da opção, o piso de toque, o
+ * respiro do viewport e a opção de ausência não se escrevem à mão.
  */
 const RAIZ = join(process.cwd(), "src/components")
 const TELAS = arquivosTsx(RAIZ, ["ui"]).map((f) => [f, lerFonte(f)] as const)

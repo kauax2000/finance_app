@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { lerFonte } from "@/test/fonte"
 
-describe("a pilha: pílula, placa e legenda (rodadas 140–143)", () => {
+describe("a pilha: pílula, placa e legenda", () => {
   const paleta = lerFonte("src/components/ui/command.tsx")
 
   it("a pilha é a variante panel: o diálogo e o Combobox a montam", () => {
@@ -13,9 +13,8 @@ describe("a pilha: pílula, placa e legenda (rodadas 140–143)", () => {
     // A raiz provê o contexto quando é `panel`, e a variante é a coluna.
     expect(paleta).toContain('const pilha = resolvida === "panel" ? (density ?? "palette") : null')
     expect(paleta).toContain("<CommandStackContext.Provider value={pilha}>")
-    // O Combobox **saiu da pilha** na rodada 198: uma placa só, a do popover,
-    // com a pílula `plate` e a lista dentro — a forma do `SearchInput` num
-    // popover, que o dono pediu "exatamente a mesma".
+    // O Combobox não monta a pilha: uma placa só, a do popover, com a pílula `plate` e a lista
+    // dentro.
     const combobox = lerFonte("src/components/ui/combobox.tsx")
     expect(combobox).not.toContain('variant="panel"')
     expect(combobox).not.toContain('surface="none"')
@@ -29,8 +28,8 @@ describe("a pilha: pílula, placa e legenda (rodadas 140–143)", () => {
     expect(lista).toContain("[--scroll-fade-band-h:0px]")
     // E o campo é uma pílula de vidro solta.
     const campo = paleta.slice(paleta.indexOf("function CommandInput"), paleta.indexOf("function CommandScope"))
-    // Desde a rodada 198 a pílula é o `SearchInput`, na superfície `plate`
-    // dentro da pilha; a receita é que é pílula e vidro.
+    // A pílula é o `SearchInput`, na superfície `plate` dentro da pilha; a receita é que é
+    // pílula e vidro.
     expect(campo).toMatch(/<SearchInput\s+surface=\{surface \?\? \(naPilha \? "plate" : "field"\)\}/)
     expect(lerFonte("src/components/ui/search-input.tsx")).toContain("searchFieldSurfaceClassName[surface]")
     const receita = lerFonte("src/lib/search-field-classes.ts")
@@ -56,7 +55,7 @@ describe("a pilha: pílula, placa e legenda (rodadas 140–143)", () => {
     expect(busca).not.toContain("dock={")
     expect(paleta).not.toContain("function CommandFooter")
     expect(paleta).not.toContain("function CommandHint")
-    // O que a tela escrevia à mão (rodada 143) mora na pilha e nas peças.
+    // O que a tela escrevia à mão mora na pilha e nas peças.
     expect(busca).not.toMatch(/min-h-9|size-6|className="px-2"/)
     expect(busca).toContain("<CommandItemIcon>")
     expect(busca).toContain("<CommandItemArrow />")

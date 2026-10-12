@@ -5,7 +5,7 @@ import { lerFonte } from "@/test/fonte"
 
 import { Form, FormInput, proximoCampo } from "./form"
 
-/** A rodada 244: o formulário sem rótulo à vista (244b: só em cima e escondido). */
+/** O formulário sem rótulo à vista (só em cima e escondido). */
 
 const CODIGO = lerFonte("src/components/ui/form.tsx")
 
