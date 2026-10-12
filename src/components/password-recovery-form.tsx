@@ -6,7 +6,7 @@ import Link from "next/link"
 
 import { supabase } from "@/lib/supabase"
 import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
-import { isPasswordValid, passwordErrorMessage } from "@/lib/password-policy"
+import { passwordErrorMessage } from "@/lib/password-policy"
 import { isValidEmail } from "@/lib/email"
 import { useTimeout } from "@/hooks/use-timeout"
 import { ROUTES } from "@/config/navigation"
@@ -222,7 +222,7 @@ export function PasswordRecoveryForm({
                 <InputGroupPasswordToggle />
             </InputGroup>
             {fieldError ? <FieldError>{fieldError}</FieldError> : null}
-            {!fieldError && !isPasswordValid(password) ? (
+            {!fieldError ? (
                 <PasswordRequirements password={password} />
             ) : null}
         </Field>

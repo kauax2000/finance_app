@@ -38,6 +38,16 @@ export function failedPasswordRules(password: string): PasswordRule[] {
     return PASSWORD_RULES.filter((rule) => !rule.test(password))
 }
 
+export type PasswordStrengthTone = "destructive" | "warning" | "success"
+
+/** Quantas regras a senha cumpre, e o tom da barra: a régua é a política. */
+export function passwordStrength(password: string): { score: number; tone: PasswordStrengthTone } {
+    const score = PASSWORD_RULES.length - failedPasswordRules(password).length
+    const tone: PasswordStrengthTone =
+        score === PASSWORD_RULES.length ? "success" : score >= 3 ? "warning" : "destructive"
+    return { score, tone }
+}
+
 export function isPasswordValid(password: string): boolean {
     return failedPasswordRules(password).length === 0
 }

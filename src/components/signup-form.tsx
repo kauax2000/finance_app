@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase"
 import { getSafeInternalNextPath } from "@/lib/auth-return-path"
 import { isValidEmail } from "@/lib/email"
 import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
-import { isPasswordValid, passwordErrorMessage } from "@/lib/password-policy"
+import { passwordErrorMessage } from "@/lib/password-policy"
 import { ROUTES } from "@/config/navigation"
 import { PasswordRequirements } from "@/components/auth/password-requirements"
 import { AuthShell } from "@/components/layout/auth-shell"
@@ -249,7 +249,7 @@ export function SignupForm() {
                         {fieldErrors.password ? (
                             <FieldError>{fieldErrors.password}</FieldError>
                         ) : null}
-                        {!fieldErrors.password && !isPasswordValid(password) ? (
+                        {!fieldErrors.password ? (
                             <PasswordRequirements password={password} />
                         ) : null}
                     </Field>
