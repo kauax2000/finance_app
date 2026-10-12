@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { lerFonte } from "@/test/fonte"
+import { lerFonte, semComentarios } from "@/test/fonte"
 import {
     CHART_EASING,
     CHART_ENTER_MS,
@@ -20,5 +20,14 @@ describe("o movimento do gráfico fala os tokens da casa", () => {
 
     it("a curva das marcas é --ease-out, que não passa do alvo", () => {
         expect(token("--ease-out")).toBe(CHART_EASING)
+    })
+})
+
+describe("a entrada do gráfico é a do Recharts", () => {
+    it("a entrada é a do Recharts: sem IntersectionObserver nem fases", () => {
+        const fonte = semComentarios(lerFonte("src/components/ui/chart.tsx"), "tudo")
+        expect(fonte).not.toContain("IntersectionObserver")
+        expect(fonte).not.toContain("useChartReveal")
+        expect(fonte).toMatch(/isAnimationActive="auto"|isAnimationActive: "auto"/)
     })
 })

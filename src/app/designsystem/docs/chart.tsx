@@ -1445,7 +1445,7 @@ const config = {
         title="Movimento"
         description={
           <>
-            Todo gráfico <strong>chega</strong> e <strong>se ajusta</strong>. A entrada toca uma vez, quando a caixa rola para dentro da tela: as barras sobem da base, o traço se desenha, as fatias e os anéis varrem, as células do calendário entram em onda, e os números contam de zero. Depois, cada troca de dado interpola do quadro anterior. Troque o período para ver.
+            Todo gráfico <strong>chega</strong> e <strong>se ajusta</strong>. A entrada toca uma vez, ao montar: as barras sobem da base, o traço se desenha, as fatias e os anéis varrem, as células do calendário aparecem, e os números contam de zero. Depois, cada troca de dado interpola do quadro anterior. Troque o período para ver.
           </>
         }
         code={`// Nada a declarar: toda forma já entra e já interpola.
@@ -1460,14 +1460,14 @@ const config = {
         <Spec title="Entrada">
           <Stack className="gap-2 text-xs text-muted-foreground">
             <p>
-              <strong className="text-foreground">{CHART_ENTER_MS}ms</strong> (<code>--duration-spring</code>) em <code>--ease-out</code>, com as séries escalonadas a 60ms. Ela é disparada pelo <code>IntersectionObserver</code>. Até lá o gráfico já está montado, com o dado final e invisível, e aparece na impressão.
+              <strong className="text-foreground">{CHART_ENTER_MS}ms</strong> (<code>--duration-spring</code>) em <code>--ease-out</code>, ao montar. Quem anima as marcas é o próprio Recharts (<code>isAnimationActive</code> <code>&apos;auto&apos;</code>); as formas em HTML entram por <code>@starting-style</code>. Nada fica escondido à espera, e a impressão mostra o gráfico pronto.
             </p>
           </Stack>
         </Spec>
         <Spec title="Troca de dado">
           <Stack className="gap-2 text-xs text-muted-foreground">
             <p>
-              <strong className="text-foreground">{CHART_UPDATE_MS}ms</strong> (<code>--duration-slow</code>) em <code>--ease-out</code>. Quem interpola é o Recharts, do quadro anterior. A divisão transiciona o <code>flex-grow</code>, o calendário a cor do degrau, e o número conta do valor antigo.
+              As marcas interpolam do quadro anterior no mesmo tempo da entrada, pelo Recharts. <strong className="text-foreground">{CHART_UPDATE_MS}ms</strong> (<code>--duration-slow</code>) em <code>--ease-out</code> é o do tooltip e da cor do calendário. A divisão transiciona o <code>flex-grow</code>, o calendário a cor do degrau, e o número conta do valor antigo.
             </p>
           </Stack>
         </Spec>

@@ -10,27 +10,20 @@ import { animate, useReducedMotion } from "motion/react"
  * número de uma página, é trabalho que ninguém vê. Com movimento reduzido, ou
  * sem distância a andar, salta.
  *
- * Quem chama diz o resto: de onde a primeira contagem parte (`inicio`), se a
- * caixa ainda espera (`pendente`: escreve o final e esquece o que mostrou) e
- * quando a contagem é a longa (`entrando`; sem ele, só a primeira). `chave` é o
- * formato: o efeito recomeça quando ela muda, e `formatar` é lido junto.
+ * A primeira contagem parte de 0, ao montar, no tempo de `entrada`; as
+ * seguintes partem do valor anterior, no de `troca`. `chave` é o formato: o
+ * efeito recomeça quando ela muda, e `formatar` é lido junto.
  */
 export function useCountUp(
   value: number,
   formatar: (v: number) => string,
   {
     chave,
-    inicio = 0,
-    pendente = false,
-    entrando,
     entrada,
     troca,
     ease,
   }: {
     chave: string
-    inicio?: number
-    pendente?: boolean
-    entrando?: boolean
     /** Segundos. */
     entrada: number
     /** Segundos. */
@@ -48,19 +41,14 @@ export function useCountUp(
     const escrever = (v: number) => {
       el.textContent = formatar(v)
     }
-    if (pendente) {
-      mostrado.current = null
-      escrever(value)
-      return
-    }
-    const de = mostrado.current ?? inicio
+    const de = mostrado.current ?? 0
     if (reduzido || de === value) {
       mostrado.current = value
       escrever(value)
       return
     }
     const controles = animate(de, value, {
-      duration: (entrando ?? mostrado.current === null) ? entrada : troca,
+      duration: mostrado.current === null ? entrada : troca,
       ease,
       onUpdate: (v) => {
         mostrado.current = v
@@ -71,7 +59,7 @@ export function useCountUp(
     // `formatar` é derivado de `chave`: listá-lo recomeçaria a contagem a
     // cada render, porque quem chama o cria inline.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chave, entrando, inicio, pendente, reduzido, value])
+  }, [chave, reduzido, value])
 
   return ref
 }

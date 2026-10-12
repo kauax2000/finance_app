@@ -280,21 +280,20 @@ describe("as versões do Chart", () => {
       expect(regras.length).toBeGreaterThanOrEqual(4)
     })
 
-    it("11. toda marca anima pela fase, e a rosca começa sem espera", () => {
+    it("11. toda marca anima pelo Recharts, e a rosca começa sem espera", () => {
       // Rodada 136: a rodada 30 desligou a animação por duas razões que a
       // medição derrubou. O Recharts 3.8 olha `prefers-reduced-motion` (é o
       // `'auto'` de fábrica), e a rosca vazia vinha do `animationBegin` de 400ms
       // somado a re-renders que reiniciavam do zero — não de visibilidade.
+      // Rodada 252: sem fases, toda marca veste a mesma constante.
       expect(CODIGO).not.toContain("CHART_ANIMATION")
       const marcas = CODIGO.match(/<(Area|Line|Bar|Pie|Radar|RadialBar)\b/g) ?? []
-      const comFase = CODIGO.match(/\{\.\.\.chartMarkMotion\(m\.fase/g) ?? []
-      expect(comFase.length).toBe(marcas.length)
+      const comMovimento = CODIGO.match(/\{\.\.\.(CHART_MARK_MOTION|movimento)\}/g) ?? []
+      expect(comMovimento.length).toBe(marcas.length)
       // Nenhuma escreve o booleano à mão, que é como uma marca nova escaparia.
       expect(CODIGO).not.toMatch(/isAnimationActive=\{(true|false)\}/)
-      // A rosca e os anéis não escalonam: o `begin` deles é zero.
-      expect(
-        (CODIGO.match(/chartMarkMotion\(m\.fase, 0, \{ stagger: false \}\)/g) ?? []).length
-      ).toBe(2)
+      // A entrada não espera: o `begin` é zero para todas, a rosca incluída.
+      expect(CODIGO).toMatch(/animationBegin: 0,/)
     })
 
     it("12. o anel da rosca fica centrado sobre a própria legenda", () => {
