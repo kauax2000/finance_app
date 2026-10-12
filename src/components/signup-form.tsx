@@ -11,7 +11,9 @@ import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
 import { passwordErrorMessage } from "@/lib/password-policy"
 import { ROUTES } from "@/config/navigation"
 import { PasswordRequirements } from "@/components/auth/password-requirements"
-import { LoginScene } from "@/components/auth/scenes/login-scene"
+import { AuthStatus } from "@/components/auth/auth-status"
+import { RegisterScene } from "@/components/auth/scenes/register-scene"
+import { ResendButton } from "@/components/auth/resend-button"
 import { AuthShell } from "@/components/layout/auth-shell"
 import { Alert, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -57,6 +59,8 @@ export function SignupForm() {
     const [success, setSuccess] = useState(false)
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
 
+    const redirectTo = () => `${window.location.origin}${nextPath ?? ROUTES.DASHBOARD}`
+
     const validateFields = (): boolean => {
         const errors: FieldErrors = {}
 
@@ -93,9 +97,6 @@ export function SignupForm() {
 
         setLoading(true)
 
-        const origin = typeof window !== "undefined" ? window.location.origin : ""
-        const emailRedirectTo = `${origin}${nextPath ?? ROUTES.DASHBOARD}`
-
         const { data, error } = await supabase.auth.signUp({
             // Aparado, como no login. Sem isto dava para criar a conta num
             // endereço com espaço na ponta e depois não entrar nele, porque
@@ -109,7 +110,7 @@ export function SignupForm() {
                 // `src/` o busca. Era atrito no cadastro em troca de um campo
                 // que morria no metadata.
                 data: { full_name: fullName },
-                emailRedirectTo,
+                emailRedirectTo: redirectTo(),
             },
         })
 
@@ -136,40 +137,55 @@ export function SignupForm() {
     // estado está.
     if (success) {
         return (
-            <AuthShell
-                scene={<LoginScene />} // provisório: a cena da tela vem nas Tarefas 5-7
-                title="Confirme seu e-mail"
+            <AuthStatus
+                title="Confira seu e-mail"
+                icon="mail"
+                scene={<RegisterScene />}
                 step="confirm"
                 description={
                     <>
-                        Enviamos um link de confirmação para{" "}
-                        <strong className="font-medium text-foreground">
-                            {email}
-                        </strong>
-                        . Clique nele para ativar a conta.
+                        Enviamos um link para{" "}
+                        <strong className="font-medium text-foreground">{email.trim()}</strong>. Abra-o para
+                        ativar a conta.
                     </>
+                }
+                footer={
+                    <SplitShellFooter>
+                        <p>
+                            Já confirmou? <Link href={loginHref}>Entrar</Link>
+                        </p>
+                    </SplitShellFooter>
                 }
             >
                 {nextPath ? (
                     <Alert tone="info">
                         <AlertTitle>
-                            Depois de confirmar, você volta para concluir o
-                            convite. Se isso não acontecer, entre com o mesmo
-                            e-mail — o convite continua esperando.
+                            Depois de confirmar, você volta para concluir o convite.
                         </AlertTitle>
                     </Alert>
                 ) : null}
-
-                <Button asChild variant="secondary" size="xl" className="w-full">
-                    <Link href={loginHref}>Ir para o login</Link>
+                <ResendButton
+                    label="Reenviar e-mail"
+                    successMessage="E-mail reenviado"
+                    onResend={async () => {
+                        const { error } = await supabase.auth.resend({
+                            type: "signup",
+                            email: email.trim(),
+                            options: { emailRedirectTo: redirectTo() },
+                        })
+                        if (error) throw new Error(error.message)
+                    }}
+                />
+                <Button variant="tertiary" size="xl" className="w-full" onClick={() => setSuccess(false)}>
+                    Usar outro e-mail
                 </Button>
-            </AuthShell>
+            </AuthStatus>
         )
     }
 
     return (
         <AuthShell
-            scene={<LoginScene />} // provisório: a cena da tela vem nas Tarefas 5-7
+            scene={<RegisterScene />}
             title="Criar conta"
             description="A carteira pessoal e as categorias já vêm prontas."
             step="form"
