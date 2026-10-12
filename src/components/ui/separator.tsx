@@ -8,41 +8,17 @@ import { cn } from "@/lib/utils"
 
 /**
  * A régua.
- *
- * ## O peso é um prop (`tone`)
- *
- * O app tinha **três** pesos da mesma linha escritos à mão — `bg-border`,
- * `bg-border/60`, `bg-border/80` e um `opacity-60` —, medidos contra o cartão
- * em 1,35, 1,19 e 1,26: diferenças reais, nenhuma dita em lugar nenhum. A
- * intenção era uma só, e é legítima: a régua que **estrutura** uma página pesa
- * mais que a que **arruma** o interior de uma superfície já delimitada.
- *
- * O peso mora numa variável (`--separator-color`), e não numa classe de fundo,
- * porque três desenhos a leem de jeitos diferentes: o `solid` pinta o fundo, o
- * `dashed` pinta a borda, e o `fade` a põe no meio de um degradê.
- *
- * ## O desenho é `variant` (rodada 175)
- *
- * - **`solid`** (o padrão) — a linha de 1px.
- * - **`dashed`** — tracejada, a do extrato antes de um total: diz "o que vem
- *   abaixo é a soma do que vem acima".
- * - **`fade`** — some nas duas pontas, para separar blocos soltos numa página
- *   sem desenhar a aresta de uma caixa.
- *
- * ## `bleed` atravessa o recuo da superfície
- *
- * A régua encosta nas bordas de quem a contém, lendo o recuo que a superfície
- * **publica**: `--card-px` num `Card`, `--dialog-px` num `Dialog` ou numa
- * folha (a ordem é essa porque um cartão dentro de um diálogo tem o recuo
- * dele). Quem não publica recuo escreve `--separator-bleed`. Era o `-mx-4
- * w-[calc(100%+2rem)] sm:-mx-5 …` que os filtros de transação escreviam em
- * cinco réguas — e erravam, porque a folha recua 16px em toda largura.
- *
- * ## `children` é o rótulo do meio
- *
- * Duas meias-réguas e o texto entre elas: o "ou" de um formulário, o "Hoje"
- * de uma lista. Sem retângulo mascarando o meio de uma linha inteira — ele só
- * acerta a cor direto na página. O `FieldSeparator` compõe esta peça.
+ * `tone` é o peso: a que **estrutura** uma página pesa mais que a que **arruma**
+ * o interior de uma superfície já delimitada. O peso mora em `--separator-color`
+ * porque três desenhos o leem de jeitos diferentes (`solid` pinta o fundo,
+ * `dashed` a borda, `fade` o põe no meio de um degradê).
+ * `variant` é o desenho: `solid` (padrão, 1px), `dashed` (a do extrato antes de
+ * um total) e `fade` (some nas pontas, para blocos soltos).
+ * `bleed` atravessa o recuo da superfície, lendo o que ela **publica**:
+ * `--card-px`, depois `--dialog-px` (um cartão dentro de um diálogo tem o recuo
+ * dele); quem não publica escreve `--separator-bleed`.
+ * `children` é o rótulo do meio: duas meias-réguas e o texto entre elas, sem
+ * retângulo mascarando o meio da linha. O `FieldSeparator` compõe esta peça.
  */
 const separatorVariants = cva("shrink-0", {
   variants: {
@@ -144,15 +120,9 @@ function Separator({
       orientation={orientation}
       className={cn(
         separatorVariants({ tone }),
-        // As medidas saem de uma condicional, e não de
-        // `data-[orientation=…]:h-4` como antes. Classe com variante não entra
-        // no mesmo grupo do merge do Tailwind, então uma classe crua no
-        // `className` não a substituía — ela simplesmente não fazia nada.
-        //
-        // Custou preço duas vezes: o cabeçalho do catálogo pediu `h-5` num
-        // separador vertical e continuou com 16px, e o painel de filtros de
-        // transações teve que copiar o prefixo inteiro para vencer a base. Um
-        // componente que promete um ponto de extensão precisa entregá-lo.
+        // As medidas saem de uma condicional, e não de `data-[orientation=…]:h-4`: classe
+        // com variante não entra no mesmo grupo do merge do Tailwind, então uma classe
+        // crua em `className` não a substituía. Um ponto de extensão tem de funcionar.
         horizontal ? "h-px w-full" : "h-4 w-px self-center",
         linha(variant, orientation),
         horizontal && bleed && BLEED,

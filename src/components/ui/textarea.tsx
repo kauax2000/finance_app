@@ -12,45 +12,24 @@ import {
 
 /**
  * O campo de mais de uma linha.
- *
- * ## O degrau **não mede altura aqui**
- *
- * A altura vem de `field-sizing-content` — ela cresce com o conteúdo, e um
- * `h-*` brigaria com ela. O que o degrau carrega é o recuo e, no `sm`, o corpo
- * do texto, para um `FormTextarea` poder ficar ao lado de um
- * `FormInput size="lg"` falando o mesmo nome.
- *
- * ## A altura se diz em linhas (rodada 180)
- *
- * `field-sizing-content` **ignora `rows`** — medido: `rows={3}` e `rows={10}`
- * dão a mesma caixa. Quem manda é `minRows` (o piso, 64px sem ele) e
- * `maxRows` (o teto: dali em diante o campo rola). As duas são `lh` da
- * própria caixa mais o recuo e a borda, então acompanham o corpo do texto.
- *
- * O teto **não dissolve aqui**: a máscara recorta o elemento inteiro, e o
- * textarea pinta a própria borda e o preenchimento — a dissolução os apagaria
- * junto (a invariante da primitiva: o elemento mascarado não desenha nada).
- * Dentro de um `InputGroup` quem pinta é o grupo, e ali o `InputGroupTextarea`
- * dissolve.
- *
- * ## Onde `field-sizing` não existe, um ajuste de altura em JS
- *
- * Firefox e Safari antigo não têm `field-sizing`, e o campo ficava no piso,
- * rolando. Lá — e só lá, perguntado por `CSS.supports` — a altura é
- * `scrollHeight` a cada digitação, e o teto continua sendo o `max-height`.
- *
- * ## `maxLength` traz o contador
- *
- * "42/280" embaixo, à direita, em âmbar nos últimos 10% (ou 20 caracteres, o
- * que for maior). O número é `aria-hidden`; quem fala é uma região viva que só
- * aparece nessa faixa ("Restam 12 caracteres") — anunciar cada tecla seria
- * ruído. `showCount={false}` o desliga.
- *
- * ## `resize` é do componente
- *
- * `none` (o padrão, porque o campo cresce sozinho) ou `vertical`. A alça do
- * navegador arrastava nos dois eixos e, arrastada, cravava uma altura que
- * desligava o crescimento.
+ * O degrau não mede altura aqui: ela vem de `field-sizing-content` (cresce com o
+ * conteúdo, e um `h-*` brigaria com ela). O degrau carrega o recuo e, no `sm`, o
+ * corpo do texto, para ficar ao lado de um `FormInput size="lg"` falando o mesmo nome.
+ * A altura se diz em linhas: `field-sizing-content` ignora `rows`, então
+ * `minRows` (piso, 64px sem ele) e `maxRows` (teto: dali o campo rola) são `lh`
+ * da própria caixa mais recuo e borda, e acompanham o corpo do texto.
+ * O teto não dissolve aqui: a máscara recortaria o elemento inteiro, e o
+ * textarea pinta a própria borda e preenchimento. Dentro de um `InputGroup` quem
+ * pinta é o grupo, e ali o `InputGroupTextarea` dissolve.
+ * Onde `field-sizing` não existe (Firefox, Safari antigo; perguntado por
+ * `CSS.supports`), a altura é o `scrollHeight` a cada digitação, e o teto segue
+ * sendo o `max-height`.
+ * `maxLength` traz o contador ("42/280") embaixo à direita, em âmbar nos últimos
+ * 10% (ou 20 caracteres, o que for maior). O número é `aria-hidden`; fala uma
+ * região viva só nessa faixa ("Restam 12 caracteres"), porque anunciar cada
+ * tecla seria ruído. `showCount={false}` o desliga.
+ * `resize` é `none` (padrão, o campo cresce sozinho) ou `vertical`: a alça do
+ * navegador arrastava nos dois eixos e cravava uma altura que desligava o crescimento.
  */
 type TextareaProps = Omit<React.ComponentProps<"textarea">, "size"> & {
   size?: FieldControlSize
@@ -119,9 +98,8 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         data-size={size}
         className={cn(
           fieldControlClassName,
-          // O bloco alto veste a linha alta (`rounded-row-lg`, 16px; rodada
-          // 241p): a superfície (22) pesava num campo de 64px, ao lado do
-          // `Input` de 12. É o mesmo raio do campo `xl`.
+          // O bloco alto veste a linha alta (`rounded-row-lg`, 16px): a superfície (22)
+          // pesava num campo de 64px ao lado do `Input` de 12. É o mesmo raio do campo `xl`.
           "rounded-row-lg field-sizing-content flex w-full py-2 placeholder:text-muted-foreground",
           minRows === undefined && "min-h-16",
           maxRows !== undefined && "overflow-y-auto",

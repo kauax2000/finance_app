@@ -14,13 +14,7 @@ const moneyDisplayVariants = cva("nums", {
       expense: "text-expense",
       muted: "text-muted-foreground",
     },
-    /**
-     * A **face**, não a figura tabular.
-     *
-     * O prop se chamava `tabular` e mentia: a figura tabular está na base e
-     * está sempre ligada — `tabular={false}` não a desligava, desligava a
-     * Geist Mono. O nome descrevia a coisa errada.
-     */
+    /** A **face** das figuras (Geist Mono ou Inter); a figura tabular está sempre ligada. */
     mono: {
       true: "font-mono",
       false: "",
@@ -40,16 +34,9 @@ const moneyDisplayVariants = cva("nums", {
 })
 
 /**
- * Os tamanhos em que o valor é o assunto da tela, e não um dado de linha.
- *
- * Nestes, as figuras vão para Geist Mono por padrão. O saldo é o herói deste
- * produto, e a face de extrato é a que ele merece: dígito de largura fixa, a
- * coluna que não dança, e o registro de livro-caixa que combina com a serifa
- * dos títulos. Nas linhas de lista o valor volta a ser Inter com figura
- * tabular, que é o certo — mono em 46 linhas de extrato viraria textura.
- *
- * `mono` continua sobrescrevendo nos dois sentidos: passe `false` num saldo
- * grande e ele volta para a sans.
+ * Os tamanhos em que o valor é o assunto da tela: aí as figuras vão para
+ * Geist Mono por padrão. Nas linhas de lista, Inter com figura tabular.
+ * `mono` sobrescreve nos dois sentidos.
  */
 const FIGURE_SIZES = new Set(["xl", "2xl"])
 
@@ -84,15 +71,10 @@ function MoneyDisplay({
     maximumFractionDigits,
   }
 
-  // `null` é ausência de dado, não zero. Ele desenhava R$ 0,00 — a mesma coisa
-  // que um saldo zerado de verdade — enquanto um `NaN` já respondia "—". Duas
-  // respostas para a mesma pergunta, e num app de finanças a errada é a que
-  // afirma um número que ninguém apurou. `NaN` cai no travessão do formatador.
+  // `null` é ausência de dado, não zero: não afirma um número que ninguém apurou.
   const text = currencyBRL(value ?? NaN, { ...opts, compact })
 
-  // A notação compacta joga fora a precisão: `R$ 1,23 mi` não diz se são
-  // 1.234.567 ou 1.230.000. O valor cheio fica no `title`, para o ponteiro, e
-  // no nome acessível, para quem não tem ponteiro.
+  // A notação compacta perde precisão: o valor cheio vai no `title` e no nome acessível.
   const exact =
     compact && value != null && Number.isFinite(value)
       ? currencyBRL(value, opts)

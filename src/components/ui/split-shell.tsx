@@ -11,29 +11,18 @@ import { H1, Muted } from "@/components/ui/typography"
 import { cn } from "@/lib/utils"
 
 /**
- * A página dividida: um campo de um lado, uma coluna de conteúdo do outro.
- *
- * É o casco de uma tela que existe **fora** da casca do app — acesso, convite,
- * qualquer página que tenha algo a mostrar antes de pedir alguma coisa. Abaixo
- * da quebra as duas partes empilham: o campo vira o cartão do topo (ou uma
- * faixa, ou nada — `asideMobile`) e a coluna ocupa o resto.
- *
- * **Não há cartão, e é a decisão que ele carrega.** O cartão centrado existe
- * para dar moldura a um formulário solto no meio de um fundo cinza; com o campo
- * segurando metade da tela, a moldura já está dada, e um retângulo com borda
- * dentro dela é uma segunda fronteira para o mesmo limite — a mesma conta que
- * tirou o fio das tiras do `Card`. A coluna é a superfície.
- *
- * **O conteúdo do campo é de quem chama** — marca, números, prova são
- * conteúdo de produto, e conteúdo de produto não mora em `ui/`. A **geometria**
- * dele (margem, canto, a área segura do notch, coluna no desktop e cartão no
- * telefone) é daqui desde a rodada 235: `SplitShellAside`. No app, quem o veste
- * é o `AuthBrandPanel`.
- *
- * **A quebra é do casco, e não da janela** (rodada 235): a divisão responde a
- * uma container query (`@container/split-shell`, 48rem), então o casco se
- * divide certo num painel, numa prévia ou num iframe. Era `lg:` — e a página
- * do catálogo mostrava o layout de desktop numa caixa de 810px.
+ * A página dividida: um campo de um lado, uma coluna de conteúdo do outro, para
+ * telas fora da casca do app (acesso, convite). Abaixo da quebra as duas partes
+ * empilham: o campo vira o cartão do topo (ou uma faixa, ou nada: `asideMobile`)
+ * e a coluna ocupa o resto.
+ * Não há cartão: com o campo segurando metade da tela a moldura já está dada, e
+ * um retângulo com borda seria uma segunda fronteira para o mesmo limite. A
+ * coluna é a superfície.
+ * O conteúdo do campo é de quem chama (conteúdo de produto não mora em `ui/`); a
+ * geometria dele é `SplitShellAside`, que no app o `AuthBrandPanel` veste.
+ * A quebra é do casco, e não da janela: uma container query
+ * (`@container/split-shell`, 48rem), para o casco dividir certo num painel, numa
+ * prévia ou num iframe.
  */
 
 type SplitShellSide = "start" | "end"
@@ -46,10 +35,9 @@ const SplitShellContext = React.createContext<{
 }>({ side: "start", asideMobile: "card" })
 
 /**
- * As colunas, escritas por extenso porque classe montada não chega ao CSS.
- * `wide` é o `5fr 6fr` de sempre: o campo em ~45% e a coluna, que tem trabalho
- * a fazer, a mais larga. `narrow` dá o terço ao campo, para telas com mais
- * formulário; `end` espelha.
+ * As colunas, por extenso porque classe montada não chega ao CSS. `wide` é o
+ * `5fr 6fr` (campo em ~45%, a coluna com trabalho a fazer mais larga); `narrow`
+ * dá o terço ao campo; `end` espelha.
  */
 const COLUNAS: Record<SplitShellSide, Record<SplitShellRatio, string>> = {
   start: {
@@ -65,10 +53,9 @@ const COLUNAS: Record<SplitShellSide, Record<SplitShellRatio, string>> = {
 }
 
 /**
- * **O campo recolhe com o teclado** (rodada 235): no toque, abaixo da quebra,
- * um campo de texto focado na coluna esconde o campo de marca, e o formulário
- * sobe para a parte da tela que o teclado deixa. É CSS (`:has(:focus)`), sem
- * ouvinte; sair do campo devolve o cartão.
+ * O campo recolhe com o teclado: no toque, abaixo da quebra, um campo de texto
+ * focado na coluna esconde o campo de marca e o formulário sobe para a parte da
+ * tela que o teclado deixa. É CSS (`:has(:focus)`); sair do campo devolve o cartão.
  */
 const RECOLHE_COM_O_TECLADO =
   "pointer-coarse:@max-3xl/split-shell:group-has-[[data-slot=split-shell-main]_:is(input:not([type=checkbox]):not([type=radio]),textarea):focus]/split-shell:hidden"
@@ -133,16 +120,15 @@ function SplitShell({
         data-aside-mobile={asideMobile}
         className={cn(
           "group/split-shell @container/split-shell min-h-svh",
-          // As áreas seguras por variável, e não `env()` direto: a prévia num
-          // iPhone do catálogo (um iframe, onde `env()` vale zero) as emula.
+          // As áreas seguras por variável, e não `env()` direto: a prévia num iPhone do
+          // catálogo (um iframe, onde `env()` vale zero) as emula.
           "[--split-shell-safe-top:env(safe-area-inset-top,0px)] [--split-shell-safe-bottom:env(safe-area-inset-bottom,0px)]",
           className
         )}
         {...props}
       >
         <div className={cn("flex min-h-svh flex-col @3xl/split-shell:grid", COLUNAS[side][ratio])}>
-          {/* O campo fica preso na altura da janela enquanto uma coluna longa
-              rola (o cadastro) — **campo preso**, rodada 235. */}
+          {/* O campo fica preso na altura da janela enquanto uma coluna longa rola (o cadastro). */}
           <div
             data-slot="split-shell-aside-slot"
             className={cn(
@@ -154,11 +140,11 @@ function SplitShell({
           >
             {aside}
           </div>
-          {/* **A coluna em três faixas** (rodada 235): o voltar em cima, o
-              conteúdo no meio e o pé embaixo. No telefone o conteúdo encosta
-              no topo, logo abaixo do campo; centrado na vertical ele flutuava
-              a 223px dele (medido a 375×812) e o campo deixava de ancorar coisa
-              nenhuma. A sobra que fica embaixo é onde o teclado sobe. */}
+          {/*
+             A coluna em três faixas: o voltar em cima, o conteúdo no meio e o pé embaixo.
+             No telefone o conteúdo encosta no topo, logo abaixo do campo (centrado na
+             vertical ele flutuaria longe dele); a sobra embaixo é onde o teclado sobe.
+          */}
           <main
             data-slot="split-shell-main"
             className={cn(
@@ -174,8 +160,7 @@ function SplitShell({
                 {back}
               </div>
             ) : null}
-            {/* No telefone o pé vem logo depois do conteúdo; empurrado para o
-                fim da tela, ele ficava a uma tela de distância do formulário. */}
+            {/* No telefone o pé vem logo depois do conteúdo; empurrado para o fim da tela, ficaria a uma tela do formulário. */}
             <div className="flex flex-col @3xl/split-shell:flex-1 @3xl/split-shell:justify-center @3xl/split-shell:py-10">
               <Container
                 key={step}
@@ -205,17 +190,14 @@ function SplitShell({
 }
 
 /**
- * A geometria do campo (rodada 235): o cartão do telefone, com margem em volta
- * e descendo abaixo do notch — quem chama não deve saber que existe um notch —,
- * e a coluna do desktop, com a margem do lado de fora e a
- * coluna de conteúdo trazendo o próprio recuo do lado de dentro.
- *
- * `surface="brand"` é a `@utility brand-field` (o arco-íris com grão e
- * vinheta) e `muted` é a superfície neutra. **Nenhum texto corrido mora direto
- * sobre o `brand`**: o que se lê vive em `Card`, e a única exceção é a marca.
- *
- * `brand` é o que fica sempre — a marca, no topo; os filhos são o resto, e na
- * faixa do telefone (`asideMobile="band"`) só a marca aparece.
+ * A geometria do campo: o cartão do telefone, com margem em volta e descendo
+ * abaixo do notch (quem chama não deve saber que ele existe), e a coluna do
+ * desktop, com a margem do lado de fora e a coluna de conteúdo trazendo o
+ * próprio recuo do lado de dentro.
+ * `surface="brand"` é a `@utility brand-field` e `muted` a superfície neutra.
+ * Nenhum texto corrido mora direto sobre o `brand`: o que se lê vive em `Card`;
+ * a única exceção é a marca. `brand` é o que fica sempre (a marca, no topo); na
+ * faixa do telefone (`asideMobile="band"`) só ela aparece.
  */
 function SplitShellAside({
   surface = "brand",
@@ -247,8 +229,8 @@ function SplitShellAside({
         // A marca sozinha: sem superfície no telefone, no recuo da coluna.
         soLogo &&
           "@max-3xl/split-shell:rounded-none @max-3xl/split-shell:bg-transparent @max-3xl/split-shell:bg-none @max-3xl/split-shell:p-0 @max-3xl/split-shell:text-foreground @max-3xl/split-shell:shadow-none @max-3xl/split-shell:mx-6 @max-3xl/split-shell:mb-0 @max-3xl/split-shell:mt-[calc(--spacing(6)+var(--split-shell-safe-top))] @xl/split-shell:@max-3xl/split-shell:mx-10",
-        // O cartão desce **inteiro** abaixo do notch: com a área segura no
-        // recuo de dentro, a borda de cima ficava sob a ilha.
+        // O cartão desce inteiro abaixo do notch: com a área segura no recuo de dentro,
+        // a borda de cima ficaria sob a ilha.
         "mx-4 mt-[calc(--spacing(4)+var(--split-shell-safe-top))] mb-4 p-5",
         asideMobile === "band" && "@max-3xl/split-shell:py-3",
         "@3xl/split-shell:m-5 @3xl/split-shell:mt-5 @3xl/split-shell:justify-between @3xl/split-shell:px-8 @3xl/split-shell:py-10",
@@ -258,9 +240,8 @@ function SplitShellAside({
       {...props}
     >
       {brand ? (
-        // `self-start`: um `<svg>` é elemento substituído, e `w-auto` não o
-        // protege do `align-items: stretch` da coluna — a marca sairia com a
-        // largura do campo, centrada dentro da própria caixa.
+        // `self-start`: um `<svg>` é elemento substituído, e `w-auto` não o protege do
+        // `align-items: stretch` da coluna (a marca sairia com a largura do campo).
         <div
           data-slot="split-shell-aside-brand"
           className={cn("flex self-start", soLogo && logo && "@max-3xl/split-shell:hidden")}
@@ -287,9 +268,8 @@ function SplitShellAside({
 }
 
 /**
- * O pé da coluna (rodada 235): "Não tem uma conta? Criar conta", os termos, a
- * ajuda. Os links de dentro vestem o acento e sublinham no cursor — nenhuma
- * tela escreve `text-primary-accent underline-offset-4` à mão.
+ * O pé da coluna: "Não tem uma conta? Criar conta", os termos, a ajuda. Os
+ * links de dentro vestem o acento e sublinham no cursor.
  */
 function SplitShellFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -306,9 +286,8 @@ function SplitShellFooter({ className, ...props }: React.ComponentProps<"div">) 
 }
 
 /**
- * O voltar do topo da coluna (rodada 235): "‹ Entrar" na recuperação de senha
- * e no convite. É um link de verdade, para o `href` — sem histórico: quem
- * chega por um e-mail não tem "anterior" no app.
+ * O voltar do topo da coluna ("‹ Entrar"): um link de verdade, para o `href`,
+ * sem histórico (quem chega por um e-mail não tem "anterior" no app).
  */
 function SplitShellBack({
   href,
@@ -335,9 +314,8 @@ function SplitShellBack({
 }
 
 /**
- * A espera do casco inteiro (rodada 235): o campo e a coluna com o título, a
- * descrição, os campos e o botão, no `SkeletonGroup`. Para a espera só do
- * formulário, dentro de um casco já montado, o app tem o `AuthFormSkeleton`.
+ * A espera do casco inteiro (campo e coluna), no `SkeletonGroup`. Para a espera
+ * só do formulário, dentro de um casco montado, o app tem o `AuthFormSkeleton`.
  */
 function SplitShellSkeleton({
   fields = 2,

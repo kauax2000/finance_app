@@ -30,10 +30,9 @@ const ToggleGroupContext = React.createContext<
 })
 
 /**
- * O item dentro da bandeja (rodada 199): sem chão próprio — quem pinta a
- * escolhida é o marcador —, tinta apagada que acende no cursor, e a escolhida
- * com a tinta cheia. `relative` para pintar por cima do marcador, que vem
- * antes no DOM.
+ * O item dentro da bandeja: sem chão próprio (quem pinta a escolhida é o
+ * marcador), tinta apagada que acende no cursor, e a escolhida com a tinta
+ * cheia. `relative` para pintar por cima do marcador, que vem antes no DOM.
  */
 const SEGMENTO = [
   "relative border-transparent bg-transparent text-muted-foreground",
@@ -43,9 +42,9 @@ const SEGMENTO = [
 ].join(" ")
 
 /**
- * Antes da primeira medida — e sem JavaScript —, a escolhida se pinta sozinha
- * com a superfície do marcador, a decisão do `Tabs`: um marcador sem posição
- * deixaria a escolha sem marca na primeira pintura.
+ * Antes da primeira medida (e sem JavaScript) a escolhida se pinta sozinha com a
+ * superfície do marcador, a decisão do `Tabs`: um marcador sem posição deixaria
+ * a escolha sem marca na primeira pintura.
  */
 const SEGMENTO_SEM_MARCADOR =
   "data-[state=on]:border-border/80 data-[state=on]:bg-background data-[state=on]:shadow-xs data-[state=on]:hover:bg-background data-[state=on]:active:bg-background"
@@ -55,36 +54,25 @@ const PILULA_SEM_MARCADOR =
   "data-[state=on]:bg-muted data-[state=on]:ring-1 data-[state=on]:ring-foreground/10 data-[state=on]:shadow-xs data-[state=on]:hover:bg-muted data-[state=on]:active:bg-muted"
 
 /**
- * **Em `type="single"`, clicar no item ativo não desmarca tudo.**
- *
- * Medido no Radix: ele trata o grupo de um valor como um toggle, então o
- * segundo clique no item selecionado devolve `""` e o grupo fica com **zero**
- * selecionados. Num filtro que já tem "Todas" como neutro isso é um quarto
- * estado que ninguém pediu — e era o que impedia os três filtros do app de
- * saírem de `role="tab"`, porque cada tela precisaria do próprio guarda
- * (`onValueChange={(v) => v && setX(v)}`), em seis grafias.
- *
- * O guarda mora aqui: a mudança para vazio é engolida, e o grupo `single` passa
- * a ser controlado por dentro quando quem chama não controla — senão o Radix
- * desmarca antes de avisar. `type="multiple"` não passa por isto — lá esvaziar é uma
- * resposta legítima.
- *
- * ## As versões da rodada 199
- *
- * - **`variant="segmented"`** — a bandeja: o trilho `bg-muted` com a escolhida
- *   levantada, e o realce é **um marcador só que desliza** até ela, a
- *   mecânica do `Tabs` (`useMarcador`: a caixa publicada em
- *   `--toggle-indicator-*`, e desde a rodada 252 a viagem líquida, como lá). A bandeja
- *   mede o item mais 4px. O seletor de período da tabela de transações a
- *   escrevia à mão, com `aria-pressed` e uma sombra em `rgb()` cru. É escolha
- *   de **valor**: quando a opção troca o conteúdo da tela, é `Tabs`.
- * - **`variant="floating"`** (rodada 231) — a mesma escolha na pele do `Tabs`
- *   padrão: a pílula `--popover` com o anel de 1px, e o marcador é a tecla em
- *   relevo (`--muted`, anel, `shadow-xs`) 2px para dentro do item. O painel
- *   Exibir do `DataTable` a usa. É o visual das abas sem o papel delas: uma
- *   `tablist` sem painel anunciaria abas que não existem.
- * - **`variant="chip"`** e **`count`** — ver o `Toggle`.
- * - **`stretch`** — os itens dividem a largura em partes iguais.
+ * Em `type="single"`, clicar no item ativo não desmarca tudo. O Radix trata o
+ * grupo de um valor como um toggle: o segundo clique devolve `""` e o grupo fica
+ * com zero selecionados, um quarto estado que ninguém pediu num filtro que já
+ * tem "Todas" como neutro. O guarda mora aqui (a mudança para vazio é engolida) e
+ * o grupo `single` passa a ser controlado por dentro quando quem chama não
+ * controla, senão o Radix desmarca antes de avisar. `type="multiple"` não passa
+ * por isto: lá esvaziar é uma resposta legítima.
+ * - `variant="segmented"`: a bandeja `bg-muted` com a escolhida levantada, e o
+ *   realce é um marcador só que desliza até ela (a mecânica do `Tabs`,
+ *   `useMarcador`: caixa publicada em `--toggle-indicator-*`, viagem líquida). A
+ *   bandeja mede o item mais 4px. É escolha de valor: quando a opção troca o
+ *   conteúdo da tela, é `Tabs`.
+ * - `variant="floating"`: a mesma escolha na pele do `Tabs` padrão (pílula
+ *   `--popover` com anel de 1px; marcador em tecla em relevo, `--muted`, anel e
+ *   `shadow-xs`, 2px para dentro do item). O painel Exibir do `DataTable` a usa.
+ *   É o visual das abas sem o papel: uma `tablist` sem painel anunciaria abas
+ *   que não existem.
+ * - `variant="chip"` e `count`: ver o `Toggle`.
+ * - `stretch`: os itens dividem a largura em partes iguais.
  */
 function ToggleGroup({
   className,
@@ -102,10 +90,9 @@ function ToggleGroup({
     stretch?: boolean
   }) {
   const unico = props.type === "single"
-  // Num grupo não controlado quem guarda o valor é o Radix, e ali o guarda de
-  // callback não alcança: ele já desmarcou por dentro antes de avisar. Por isso
-  // o `single` passa a ser sempre controlado — com `defaultValue` como semente
-  // quando quem chama não controla.
+  // Num grupo não controlado quem guarda o valor é o Radix, e o guarda de callback
+  // não alcança (ele já desmarcou por dentro antes de avisar): o `single` é sempre
+  // controlado, com `defaultValue` como semente.
   const [interno, setInterno] = React.useState<string>(
     typeof props.defaultValue === "string" ? props.defaultValue : ""
   )
@@ -121,9 +108,9 @@ function ToggleGroup({
     [controlado, onValueChange, unico]
   )
 
-  // A união discriminada do Radix (`single` | `multiple`) não sobrevive a um
-  // valor calculado no espalhamento: o objeto é montado aqui e convertido uma
-  // vez só, que é o mesmo idioma da ponte de tipos em `form.tsx`.
+  // A união discriminada do Radix (`single` | `multiple`) não sobrevive a um valor
+  // calculado no espalhamento: o objeto é montado aqui e convertido uma vez só (o
+  // idioma da ponte de tipos em `form.tsx`).
   const raiz = {
     ...props,
     ...(unico ? { value: valor as string, defaultValue: undefined } : {}),
@@ -137,10 +124,10 @@ function ToggleGroup({
   const viaja = segmentado && unico
   const trilhaRef = React.useRef<HTMLDivElement>(null)
   const marcadorRef = React.useRef<HTMLSpanElement>(null)
-  // A mecânica do `Tabs` (`useMarcador`), nas duas peles: a viagem líquida,
-  // em WAAPI, só quando a escolhida muda — redimensionar só reposiciona. No
-  // `floating` o marcador recua 2px para dentro do item, o
-  // `RECUO_DO_MARCADOR` de lá; no `segmented` ele é o item inteiro.
+  // A mecânica do `Tabs` (`useMarcador`) nas duas peles: a viagem líquida, em WAAPI,
+  // só quando a escolhida muda (redimensionar só reposiciona). No `floating` o
+  // marcador recua 2px para dentro do item (o `RECUO_DO_MARCADOR` de lá); no
+  // `segmented` é o item inteiro.
   const indicatorReady = useMarcador({
     trilha: trilhaRef,
     marcador: marcadorRef,

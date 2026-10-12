@@ -4,43 +4,22 @@ import { Slot } from "radix-ui"
 import { cn } from "@/lib/utils"
 
 /**
- * Os nove átomos de texto — e a base que o resto do sistema veste.
- *
- * Eles nasceram sem consumidor dentro de `ui/`: `PageHeaderTitle`,
- * `PageSectionTitle`, `CardDescription`, `EmptyStateTitle` e mais dezoito
- * lugares escreviam `text-sm text-muted-foreground` ou `font-heading …
- * font-semibold tracking-tight` à mão, cada um livre para divergir. A regra da
- * casa — **um componente não reimplementa o que a camada de baixo já dá** — é
- * o que os trouxe para cá.
- *
- * ## `asChild`
- *
- * O mesmo `Slot` do `Button`. Existe para o **nível**: `PageHeaderTitle` é um
- * `<h1>` que às vezes precisa ser `<h2>`, `EmptyStateTitle` é um `<p>` que numa
- * página 404 vira `<h1>`, `TableCaption` é um `<caption>`. O átomo dá o estilo;
- * o filho dá o elemento.
- *
- * **Com `asChild`, a sobrescrita vai no `className` do átomo, nunca no filho.**
- * O `Slot` concatena as duas `className` sem `twMerge`: `<H4 asChild><p
- * className="text-base"/></H4>` deixa `text-lg` **e** `text-base` no DOM, e
- * quem vence é a ordem de emissão do CSS, não a intenção.
- *
- * ## O que muda por `className`, e o que não
- *
- * `cn()` resolve tamanho contra tamanho e entrelinha contra entrelinha —
- * verificado: `cn("text-3xl text-(length:--page-title)")` devolve só a
- * variável. É por isso que `PageHeaderTitle` veste `H1` e troca o corpo sem
- * eixo novo. O que **não** se troca é a família: `H1` é a serifa de display por
- * `.page-title`, e os outros são a sans — quem precisa de outra coisa não está
- * escrevendo um título.
- *
- * ## `H2` não traz régua
- *
- * Trazia — `border-b border-border pb-2`, herança do shadcn, que a chamava de
- * divisor de seção de prosa. Zero consumidores no app; e `PageSectionTitle`, que
- * é o `<h2>` real de toda tela, é um `h2` **sem** régua. Um átomo que o template
- * precisa desfazer para vestir não é a peça de baixo. A régua de seção existe, e
- * é de quem dispõe: `PageSection variant="ruled"`.
+ * Os nove átomos de texto, e a base que o resto do sistema veste. Existem porque
+ * vinte e tantos lugares escreviam `text-sm text-muted-foreground` ou
+ * `font-heading … font-semibold tracking-tight` à mão, livres para divergir.
+ * `asChild` (o `Slot` do `Button`) existe para o nível: `PageHeaderTitle` é um
+ * `<h1>` que às vezes precisa ser `<h2>`, `EmptyStateTitle` é um `<p>` que na 404
+ * vira `<h1>`, `TableCaption` é um `<caption>`. O átomo dá o estilo; o filho, o elemento.
+ * Com `asChild`, a sobrescrita vai no `className` do átomo, nunca no filho: o
+ * `Slot` concatena as duas `className` sem `twMerge` (`text-lg` e `text-base`
+ * ficariam no DOM, e venceria a ordem de emissão).
+ * `cn()` resolve tamanho contra tamanho e entrelinha contra entrelinha
+ * (`cn("text-3xl text-(length:--page-title)")` devolve só a variável), por isso
+ * `PageHeaderTitle` veste `H1` e troca o corpo sem eixo novo. A família não se
+ * troca: `H1` é a serifa de display (`.page-title`) e os outros são a sans.
+ * `H2` não traz régua: o `PageSectionTitle`, o `<h2>` real de toda tela, não a
+ * tem, e um átomo que o template precisa desfazer não é a peça de baixo. A régua
+ * de seção é de quem dispõe: `PageSection variant="ruled"`.
  */
 
 type TextProps<T extends keyof React.JSX.IntrinsicElements> =

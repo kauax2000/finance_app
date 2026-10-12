@@ -4,39 +4,18 @@ import { cn } from "@/lib/utils"
 
 /**
  * A roda de espera, para ação curta e sem fim conhecido.
- *
- * ## Uma roda desenhada, e não a seta de atualizar (rodada 178)
- *
- * Até a rodada 177 o spinner era o `ArrowPathIcon` girando — e no app essa
- * seta **é o "tentar novamente"**: a tela de erro, o `Button iconMotion="spin"`.
- * Um botão salvando e um botão de atualizar desenhavam o mesmo glifo. Agora é
- * um arco de 25% sobre um trilho de 20% de tinta, desenhado — a exceção de
- * `DRAWN_SVG_FILES` do auditor, que sempre nomeou o spinner como primitivo
- * cuja geometria é o comportamento. O traço tem 3 unidades de 24: 2px a 16,
- * 4px a 32.
- *
- * ## `size` é a escada do ícone
- *
- * `sm` 14 · **`md` 16** · `lg` 20 · `xl` 24 · `2xl` 32 — os corpos em que o
- * app o escrevia à mão (`size-3.5`, `size-6`, `size-8`).
- *
- * ## `variant="brand"` é o arco em arco-íris
- *
- * Um anel em `conic-gradient` da marca, com a cauda transparente, recortado
- * por máscara (`@utility spinner-brand`). É da tela de abertura do app, ao lado
- * do wordmark em arco-íris. Uma por tela.
- *
- * ## Decorativo por padrão
- *
- * O rótulo quase sempre já está do lado — um botão que diz "Salvando…" não
- * quer ouvir "Carregando" depois. Sem `label` o spinner é `aria-hidden`; com
- * ele, vira `role="status"` com nome. (O `ArrowPathIcon` punha `aria-hidden`
- * no próprio `<svg>`, e o `role` que a peça declarava nunca valeu nada.)
- *
- * ## Ele gira com movimento reduzido
- *
- * O bloco global de `prefers-reduced-motion` **isenta** `animate-spin`: uma
- * roda parada não diz que algo acontece.
+ * É uma roda desenhada, e não o `ArrowPathIcon`: no app essa seta é o "tentar
+ * novamente" (a tela de erro, `Button iconMotion="spin"`). Um arco de 25% sobre
+ * um trilho de 20% de tinta; a exceção de `DRAWN_SVG_FILES` do auditor, porque a
+ * geometria é o comportamento. Traço de 3 unidades de 24 (2px a 16, 4px a 32).
+ * `size` é a escada do ícone: `sm` 14 · **`md` 16** · `lg` 20 · `xl` 24 · `2xl` 32.
+ * `variant="brand"` é o arco em arco-íris (`conic-gradient` com cauda
+ * transparente, recortado por máscara, `@utility spinner-brand`), da tela de
+ * abertura do app. Uma por tela.
+ * Decorativo por padrão: o rótulo quase sempre já está do lado ("Salvando…"). Sem
+ * `label` é `aria-hidden`; com ele, `role="status"` com nome.
+ * Gira com movimento reduzido: o bloco global isenta `animate-spin` (uma roda
+ * parada não diz que algo acontece).
  */
 const TAMANHOS = {
   sm: "size-3.5",
@@ -107,14 +86,11 @@ function Spinner({
 }
 
 /**
- * O bloco de espera: o spinner com o texto, centrado numa região.
- *
- * É o anunciador (`role="status"`, e o texto é o que se lê — o spinner de
- * dentro é decorativo). E ele **atrasa**: com `delay` o bloco só aparece depois
- * de 300ms (ou dos milissegundos que receber), esmaecendo, por
- * `@starting-style` — a espera curta não pisca, e o espaço fica reservado
- * desde o primeiro quadro, então nada salta quando ele entra. É o que a tela de
- * abertura do app fazia à mão, com um `setTimeout` e um `opacity` trocado.
+ * O bloco de espera: o spinner com o texto, centrado numa região. É o
+ * anunciador (`role="status"`; o spinner de dentro é decorativo). Com `delay`
+ * aparece só depois de 300ms (ou dos ms recebidos), esmaecendo por
+ * `@starting-style`: a espera curta não pisca e o espaço fica reservado desde o
+ * primeiro quadro, sem salto.
  */
 function SpinnerBlock({
   className,

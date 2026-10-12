@@ -5,38 +5,18 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 /**
- * O osso da tela enquanto o dado não chegou.
- *
- * ## As formas são as das peças reais (rodada 176)
- *
- * O app escrevia 403 ossos à mão em 32 arquivos, e as formas mais repetidas
- * eram peças do sistema com outro nome: `size-8 shrink-0 rounded-md` (18×) é
- * o `ColorTile md`, `h-5 w-14 rounded-full` (6×) é um `Badge`. `shape` dá o
- * nome, e `size` fala a escada da peça que o osso substitui — o osso tem a
- * medida dela, e a troca não salta.
- *
- * - **`block`** (o padrão) — o retângulo, medido por `className`.
- * - **`text`** — uma linha de texto: a caixa tem a **entrelinha** do corpo em
- *   volta (`1lh`) e o osso pinta 0,8em no meio dela. Ponha a classe de texto
- *   da linha real (`text-sm`) e a largura; a altura sai certa sozinha.
- * - **`circle`** — o `Avatar`: xs 24 · sm 32 · md 40 · lg 48 · xl 56.
- * - **`tile`** — o `ColorTile`: xs 24 · md 32 · lg 36 · xl 40 · 2xl 44.
- * - **`pill`** — o `Badge`, medido na tela: xs 14 · sm 18 · md 22.
- *
- * ## Um movimento só: o pulso
- *
- * Houve um `animation="shimmer"` (uma faixa de luz fixa na janela) na mesma
- * rodada, e ele saiu a pedido do dono: dois movimentos para o mesmo estado
- * deixam cada tela escolher o seu, e esqueletos vizinhos se mexendo diferente
- * é a divergência que o sistema existe para impedir. O pulso é o que o bloco
- * global de movimento reduzido isenta, e segue valendo para quem o pede.
- *
- * ## `SkeletonGroup` é o bloco que espera
- *
- * Quem anuncia o carregamento é o contêiner (`role="status"`, `aria-busy` e o
- * rótulo para o leitor de tela), e é nele que mora o `delay` — o bloco só
- * aparece depois de 300ms, esmaecendo, para uma resposta rápida não piscar
- * esqueleto.
+ * O osso da tela enquanto o dado não chegou. `shape` dá nome às formas das
+ * peças reais e `size` fala a escada da peça que o osso substitui, então a troca não salta.
+ * - `block` (padrão): o retângulo, medido por `className`.
+ * - `text`: uma linha de texto; a caixa tem a entrelinha do corpo (`1lh`) e o
+ *   osso pinta 0,8em no meio. Ponha a classe de texto da linha real e a largura.
+ * - `circle`: o `Avatar` (xs 24 … xl 56).
+ * - `tile`: o `ColorTile` (xs 24 … 2xl 44).
+ * - `pill`: o `Badge` (xs 14 · sm 18 · md 22).
+ * Um movimento só, o pulso (o bloco global de movimento reduzido o isenta): dois
+ * movimentos para o mesmo estado deixariam cada tela escolher o seu.
+ * `SkeletonGroup` é o bloco que espera: o contêiner anuncia (`role="status"`,
+ * `aria-busy`, rótulo) e guarda o `delay`, para uma resposta rápida não piscar esqueleto.
  */
 type SkeletonShape = "block" | "text" | "circle" | "tile" | "pill"
 
@@ -103,10 +83,8 @@ function Skeleton({
 }
 
 /**
- * O parágrafo, ou a pilha de linhas. Cada linha é um `Skeleton shape="text"`,
- * então a altura do bloco é a do texto real (`lines` × a entrelinha do corpo);
- * a última sai mais curta, como a última linha de um parágrafo. Ponha o corpo
- * (`text-sm`) no `className`.
+ * O parágrafo ou a pilha de linhas: cada uma é um `Skeleton shape="text"`, então
+ * a altura é a do texto real; a última sai mais curta. Ponha o corpo (`text-sm`) no `className`.
  */
 function SkeletonText({
   className,
@@ -131,9 +109,8 @@ function SkeletonText({
 /**
  * O bloco que espera: `role="status"`, `aria-busy` e o rótulo lido pelo leitor
  * de tela (os ossos são `aria-hidden`). `delay` o esconde nos primeiros 300ms
- * (ou nos milissegundos que receber) e o faz entrar esmaecendo — pelo
- * `@starting-style`, sem JavaScript; onde não houver suporte, ele aparece na
- * hora, que é o comportamento de antes.
+ * (ou nos ms recebidos) e o faz entrar esmaecendo por `@starting-style`; sem
+ * suporte, aparece na hora.
  */
 function SkeletonGroup({
   className,

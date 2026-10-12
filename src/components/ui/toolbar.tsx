@@ -17,47 +17,34 @@ import { cn } from "@/lib/utils"
 
 /**
  * A linha de ações e filtros acima de uma tabela ou lista.
- *
- * ## `role="toolbar"` só com o teclado dele
- *
- * Esse papel é um contrato de teclado: o grupo inteiro ocupa uma parada de
- * tabulação e as setas andam entre os controles. Sem `keyboard`, cada controle
- * é tabulável por conta própria e a barra é uma linha de layout — o papel
- * anunciaria um widget que não existe (o app já escreveu `role="toolbar"` à
- * mão em quatro barras de seleção, nenhuma com foco itinerante). Com
- * `keyboard` (rodada 229) o comportamento existe, e o papel vem junto.
- *
- * ## O telefone troca de conteúdo, não quebra
- *
- * As barras do app escreviam duas árvores — `md:hidden` com o botão de ícone,
- * `hidden md:flex` com o mesmo comando rotulado. `ToolbarButton collapse` é as
- * duas num nó só: o rótulo vira `sr-only` abaixo de `md` e o botão fica
- * quadrado. `ToolbarRow` continua para a linha do telefone que se dissolve.
- *
- * ## A altura é a da barra, e o controle não precisa pedir
- *
- * A raiz publica `--toolbar-control` (`size`: sm 28 · **md 32** · lg 36, e 40
- * com o ponteiro grosso) e **os controles filhos diretos de uma peça da barra
- * a leem sozinhos**: `Button` (o de ícone em `size`), `SelectTrigger`,
- * `ComboboxTrigger` e `SearchInput`. O seletor é de filho direto, de
- * propósito — o × de um `SearchInput` e o de uma ficha também são `Button`, e
- * um seletor descendente os esticaria a 32. Especificidade (0,4,0): vence a
- * altura do próprio controle sem `!`. `toolbarControlClassName` fica para o
- * controle embrulhado num `<div>` da tela.
+ * `role="toolbar"` só com o teclado dele: o papel é um contrato de teclado (o
+ * grupo ocupa uma parada de Tab e as setas andam entre os controles). Sem
+ * `keyboard`, cada controle é tabulável por conta própria e a barra é uma linha
+ * de layout; o papel anunciaria um widget que não existe.
+ * O telefone troca de conteúdo, não quebra: `ToolbarButton collapse` substitui
+ * as duas árvores (`md:hidden` + `hidden md:flex`) num nó só (o rótulo vira
+ * `sr-only` abaixo de `md` e o botão fica quadrado). `ToolbarRow` é a linha do
+ * telefone que se dissolve.
+ * A altura é a da barra: a raiz publica `--toolbar-control` (`size`: sm 28 · **md
+ * 32** · lg 36, e 40 com o ponteiro grosso) e os controles filhos diretos de uma
+ * peça da barra a leem sozinhos (`Button` de ícone em `size`, `SelectTrigger`,
+ * `ComboboxTrigger`, `SearchInput`). O seletor é de filho direto porque o × de um
+ * `SearchInput` e o de uma ficha também são `Button`, e um descendente os
+ * esticaria a 32. Especificidade (0,4,0): vence a altura do controle sem `!`.
+ * `toolbarControlClassName` é para o controle embrulhado num `<div>`.
  */
 
 /**
- * Os degraus, com os nomes da escada do sistema (xs 24, sm 28, md 32, lg 36,
- * xl 40). `fine`/`coarse` são o `md` e o piso do dedo.
+ * Os degraus, com os nomes da escada do sistema (xs 24 … xl 40). `fine`/`coarse`
+ * são o `md` e o piso do dedo.
  */
 export const TOOLBAR_CONTROL_HEIGHTS = { fine: 32, coarse: 40 } as const
 export const TOOLBAR_SIZES = { sm: 28, md: 32, lg: 36 } as const
 type ToolbarSize = keyof typeof TOOLBAR_SIZES
 
 /**
- * A raiz publica a densidade; ela **não** declara altura nenhuma. A pergunta
- * do piso é o dedo, não a largura (`pointer-coarse:`, a régua do item de menu
- * e do `Calendar`): com `md:`, um desktop estreito ganharia 40px sem pedir.
+ * A raiz publica a densidade e não declara altura. A pergunta do piso é o dedo,
+ * não a largura (`pointer-coarse:`): com `md:`, um desktop estreito ganharia 40px sem pedir.
  */
 const toolbarClassName = [
   "flex min-w-0 flex-wrap items-center gap-2 md:gap-3",
@@ -71,9 +58,8 @@ const TOOLBAR_SIZE_CLASS: Record<ToolbarSize, string> = {
 }
 
 /**
- * O controle **filho direto** de uma peça da barra lê a altura. Escrito por
- * extenso, cinco vezes: o Tailwind lê o fonte como texto, e uma classe montada
- * com template literal não chegaria ao CSS.
+ * O controle filho direto de uma peça da barra lê a altura. Escrito por extenso,
+ * cinco vezes: o Tailwind lê o fonte como texto.
  */
 const toolbarControlsClassName = [
   "[:is(&,&_[data-slot=toolbar-filters],&_[data-slot=toolbar-actions],&_[data-slot=toolbar-row],&_[data-slot=button-group])>[data-slot=button]:not([data-size^=icon])]:h-(--toolbar-control)",
@@ -85,9 +71,9 @@ const toolbarControlsClassName = [
 
 /**
  * Para o controle que a tela embrulhou num `<div>` (fora do alcance do seletor
- * de filho direto). **Só vale dentro de um `Toolbar`.** Chega por `className`
- * e não por `in-*`/`group-*`, que compilam com `:where()` e perderiam para o
- * `h-8` do próprio controle; por `className` o `twMerge` remove o degrau.
+ * de filho direto). Só vale dentro de um `Toolbar`. Chega por `className` e não
+ * por `in-*`/`group-*`, que compilam com `:where()` e perderiam para o `h-8` do
+ * controle; por `className` o `twMerge` remove o degrau.
  */
 export const toolbarControlClassName = "h-(--toolbar-control)"
 
@@ -95,10 +81,11 @@ export const toolbarControlClassName = "h-(--toolbar-control)"
 export const toolbarIconControlClassName = "size-(--toolbar-control)"
 
 /**
- * Presa: logo abaixo da barra do topo, com 8px de folga (`--top-bar-bottom`,
- * do `globals.css`; `--toolbar-top` zera num contêiner que rola sem a barra). Some ao rolar para baixo — só no telefone, onde a
- * altura é cara — e volta ao subir; o deslocamento é a altura mais 16px, para
- * a placa (que sobra 8px de cada lado) sumir inteira atrás da barra do topo.
+ * Presa: logo abaixo da barra do topo, com 8px de folga (`--top-bar-bottom`, do
+ * `globals.css`; `--toolbar-top` zera num contêiner que rola sem a barra). Some
+ * ao rolar para baixo, só no telefone (onde a altura é cara), e volta ao subir; o
+ * deslocamento é a altura mais 16px, para a placa (que sobra 8px de cada lado)
+ * sumir inteira atrás da barra do topo.
  */
 const toolbarStickyClassName = [
   "sticky top-[calc(var(--toolbar-top,var(--top-bar-bottom))+--spacing(2))] z-(--z-sticky) isolate",
@@ -107,11 +94,10 @@ const toolbarStickyClassName = [
 ].join(" ")
 
 /**
- * A placa da barra presa: só existe presa, na tinta de barra (a do `TopBar`)
- * e com o fio de baixo. Ela sobra 8px acima e abaixo da fileira, para a altura
- * da barra não mudar ao prender (padding mudaria, e a página pularia), e
- * atravessa `--toolbar-bleed` de cada lado — a calha da página, que é de quem
- * monta a tela.
+ * A placa da barra presa: só existe presa, na tinta de barra (a do `TopBar`) e
+ * com o fio de baixo. Sobra 8px acima e abaixo da fileira, para a altura não
+ * mudar ao prender (padding mudaria, e a página pularia), e atravessa
+ * `--toolbar-bleed` de cada lado (a calha da página, de quem monta a tela).
  */
 const toolbarPlateClassName = cn(
   barSurfaceClassName,
@@ -120,19 +106,18 @@ const toolbarPlateClassName = cn(
 )
 
 /**
- * A linha do telefone que **se dissolve** na barra a partir de `md`
- * (`display: contents`): os filhos sobem a itens de flex da própria barra. Em
- * `md` a caixa não existe — o `gap` e o `flex-1` dela deixam de valer, e
- * `role`/`aria-label` aqui confundiriam a árvore; nomeie com `ToolbarFilters`.
+ * A linha do telefone que se dissolve na barra a partir de `md` (`display:
+ * contents`): os filhos sobem a itens de flex da própria barra. Em `md` a caixa
+ * não existe (o `gap` e o `flex-1` dela deixam de valer, e `role`/`aria-label`
+ * confundiriam a árvore); nomeie com `ToolbarFilters`.
  */
 const toolbarRowClassName = "flex min-w-0 items-center gap-2 md:contents"
 
 /**
- * O ponto de "há filtro ativo" — **só para botão sem rótulo**; com rótulo a
- * marca é a contagem. `top-1 right-1` saem de medição: a 1 ele invade o ícone
- * em 1px e fica a 4,59px da curva do canto (`toolbar-density-ladder.test.ts`).
- * `bg-primary-accent`: um ponto de 8px precisa ser visto contra a página, não
- * carregar texto. `aria-hidden`: o estado mora no nome do controle.
+ * O ponto de "há filtro ativo", só para botão sem rótulo (com rótulo a marca é a
+ * contagem). `top-1 right-1` saem de medição: a 1 ele invade o ícone em 1px e
+ * fica a 4,59px da curva do canto. `bg-primary-accent`: um ponto de 8px precisa
+ * ser visto contra a página. `aria-hidden`: o estado mora no nome do controle.
  */
 const toolbarFilterIndicatorClassName =
   "pointer-events-none absolute top-1 right-1 size-2 rounded-full bg-primary-accent"
@@ -157,8 +142,8 @@ function Toolbar({
 }: ToolbarProps) {
   const raiz = React.useRef<HTMLDivElement>(null)
   usePresa(raiz, Boolean(sticky), sticky === "hide")
-  // O foco itinerante mora em `hooks/use-toolbar-keyboard` desde a rodada
-  // 245: o `FilterBar` é o outro `role="toolbar"` do sistema.
+  // O foco itinerante mora em `hooks/use-toolbar-keyboard`: o `FilterBar` é o
+  // outro `role="toolbar"` do sistema.
   useToolbarKeyboard(raiz, keyboard)
 
   const barra = (
@@ -195,14 +180,12 @@ function Toolbar({
 }
 
 /**
- * Presa e escondida. Um ouvinte de `scroll` passivo em quem rola: presa é a barra encostada no seu `top`
- * com o contêiner rolado; escondida é presa e rolando para baixo — e nunca com
- * o foco dentro dela.
- *
- * **O `top` depende de quem rola.** Na página, é a base da barra do topo; num
- * contêiner que rola com a própria barra do topo dentro (a tela do
- * `IphoneFrame`, que começa no topo do documento), a mesma; num contêiner sem
- * barra, zero.
+ * Presa e escondida. Um ouvinte de `scroll` passivo em quem rola: presa é a
+ * barra encostada no seu `top` com o contêiner rolado; escondida é presa e
+ * rolando para baixo, e nunca com o foco dentro dela.
+ * O `top` depende de quem rola: na página, a base da barra do topo; num
+ * contêiner que rola com a própria barra do topo dentro (a tela do `IphoneFrame`),
+ * a mesma; num contêiner sem barra, zero.
  */
 function usePresa(
   raiz: React.RefObject<HTMLDivElement | null>,
@@ -219,10 +202,10 @@ function usePresa(
     let caixa: Element = pagina
     let comBarra = true
     let antes = 0
-    // Quem rola: o primeiro ancestral com `overflow`, ou a página. O ouvinte
-    // fica no documento, em captura (`scroll` não borbulha), e troca de caixa
-    // se outro ancestral rolar — no iframe da prévia o CSS chega depois da
-    // montagem, e a primeira busca acha a página.
+    // Quem rola: o primeiro ancestral com `overflow`, ou a página. O ouvinte fica no
+    // documento, em captura (`scroll` não borbulha), e troca de caixa se outro
+    // ancestral rolar (no iframe da prévia o CSS chega depois da montagem, e a
+    // primeira busca acha a página).
     const usar = (nova: Element) => {
       caixa = nova
       antes = nova.scrollTop
@@ -231,9 +214,9 @@ function usePresa(
       comBarra = naPagina || Boolean(barraDoTopo && nova.contains(barraDoTopo))
       if (comBarra) el.style.removeProperty("--toolbar-top")
       else el.style.setProperty("--toolbar-top", "0px")
-      // Presa num contêiner arredondado, a placa encosta na borda de cima dele:
-      // os cantos dela seguem o raio de dentro. Sem isso eles vazam — o vidro
-      // (`backdrop-filter`) escapa do recorte arredondado do contêiner no Chrome.
+      // Presa num contêiner arredondado, a placa encosta na borda de cima dele: os
+      // cantos dela seguem o raio de dentro, senão vazam (o `backdrop-filter` escapa
+      // do recorte arredondado no Chrome).
       if (naPagina) el.style.removeProperty("--toolbar-plate-r")
       else {
         const raio = parseFloat(janela.getComputedStyle(nova).borderTopLeftRadius) || 0
@@ -254,9 +237,8 @@ function usePresa(
         const nova = alvo === doc ? pagina : (alvo as Element)
         if (nova !== caixa) {
           // Só troca para quem rola na vertical (o `overflow-x` também computa
-          // `overflow-y: auto`, daí a altura); para a página, só se a caixa
-          // deixou de rolar. Rolar a página, ou um ancestral de lado, não tira
-          // a barra da caixa dela.
+          // `overflow-y: auto`); para a página, só se a caixa deixou de rolar. Rolar a
+          // página, ou um ancestral de lado, não tira a barra da caixa dela.
           const troca = nova === pagina ? !rolaY(caixa) : nova.contains(el) && rolaY(nova) && nova.scrollHeight > nova.clientHeight
           if (!troca) return
           usar(nova)
@@ -318,23 +300,18 @@ function ToolbarFilters({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 /**
- * O grupo da direita: as ações. Nunca encolhe — menos com `overflow="menu"`.
- *
- * **A ordem é do menor para o maior, de fora para dentro**: o botão só de
- * ícone (e o que encolhe no telefone) vem primeiro, na ponta esquerda do
- * grupo, e a ação principal fecha a fileira na borda. É a ordem do DOM, e não
- * um `order` de CSS — o foco e o leitor de tela seguem o que se vê. O ⋯ do
- * excesso nasce nessa ponta pela mesma regra.
- *
- * **`ms-auto`, e não `justify-between` na raiz**: a margem acerta um, dois e
- * três grupos. Ela é a **única** margem automática do arquivo, e isso é carga
- * estrutural — duas na mesma linha dividem a sobra em vez de empurrar.
- *
- * **`overflow="menu"`**: o que não cabe vai para o ⋯. Só sai `Button` sem menu
- * próprio (um gatilho de `DropdownMenu` abre no `pointerdown`, e um item de
- * menu não tem como abri-lo); o **último** filho nunca sai — é a ação
- * principal. O item do ⋯ clica o botão escondido, então o `onClick`, o
- * `href` e o diálogo que ele abre são os mesmos.
+ * O grupo da direita: as ações. Nunca encolhe, menos com `overflow="menu"`.
+ * A ordem é do menor para o maior, de fora para dentro: o botão só de ícone (e o
+ * que encolhe no telefone) vem primeiro, na ponta esquerda do grupo, e a ação
+ * principal fecha a fileira na borda. É a ordem do DOM, e não `order` de CSS (o
+ * foco e o leitor de tela seguem o que se vê). O ⋯ do excesso nasce nessa ponta.
+ * `ms-auto`, e não `justify-between` na raiz: a margem acerta um, dois e três
+ * grupos. É a única margem automática do arquivo, e isso é carga estrutural: duas
+ * na mesma linha dividem a sobra em vez de empurrar.
+ * `overflow="menu"`: o que não cabe vai para o ⋯. Só sai `Button` sem menu
+ * próprio (um gatilho de `DropdownMenu` abre no `pointerdown`, e um item de menu
+ * não tem como abri-lo); o último filho nunca sai (é a ação principal). O item do
+ * ⋯ clica o botão escondido, então `onClick`, `href` e o diálogo são os mesmos.
  */
 function ToolbarActions({
   className,
@@ -376,16 +353,16 @@ type AcaoNoExcesso = ItemNoExcesso & { el: HTMLElement }
 
 /**
  * Quem cabe. Mostra tudo, mede, e esconde do começo para o fim os botões que
- * podem sair até a fileira caber numa linha com o ⋯. O espaço é a barra menos
- * os outros grupos — e deles conta o conteúdo, não a caixa: um grupo `flex-1`
- * mediria a sobra inteira.
+ * podem sair até a fileira caber numa linha com o ⋯. O espaço é a barra menos os
+ * outros grupos, e deles conta o conteúdo, não a caixa (um grupo `flex-1` mediria
+ * a sobra inteira).
  */
 function useExcessoDeAcoes(
   ref: React.RefObject<HTMLDivElement | null>,
   ativo: boolean,
   /**
-   * Outra casa para as ações (rodada 232): o seletor do contêiner que se
-   * observa e a conta de quanto cabe. Sem ele, a conta é a da barra.
+   * Outra casa para as ações: o seletor do contêiner que se observa e a conta de
+   * quanto cabe. Sem ele, a conta é a da barra.
    */
   outraCasa?: { raiz: string; espaco: (raiz: HTMLElement) => number }
 ) {
@@ -447,7 +424,7 @@ function useExcessoDeAcoes(
 }
 
 /**
- * O espaço das ações na barra: ela menos os outros grupos — e deles conta o
+ * O espaço das ações na barra: ela menos os outros grupos, e deles conta o
  * conteúdo, não a caixa.
  */
 function espacoNaBarra(barra: HTMLElement, acoes: HTMLElement) {
@@ -470,11 +447,10 @@ function espacoNaBarra(barra: HTMLElement, acoes: HTMLElement) {
 }
 
 /**
- * Um comando da barra com ícone e rótulo. Com `collapse`, abaixo de `md` ele
- * fica só com o ícone, quadrado — o rótulo vira `sr-only` e continua sendo o
- * nome. É o que substitui as duas árvores (`md:hidden` + `hidden md:flex`).
- * O rótulo leva o `data-slot="button-label"`, para a maiúscula do CTA valer.
- * Fora de um `Toolbar` a largura quadrada cai na reserva de 32 (`md`).
+ * Um comando da barra com ícone e rótulo. Com `collapse`, abaixo de `md` fica só
+ * com o ícone, quadrado (o rótulo vira `sr-only` e segue sendo o nome). O rótulo
+ * leva o `data-slot="button-label"`, para a maiúscula do CTA valer. Fora de um
+ * `Toolbar` a largura quadrada cai na reserva de 32 (`md`).
  */
 function ToolbarButton({
   icon,
@@ -519,10 +495,10 @@ function ToolbarButton({
 }
 
 /**
- * O botão de filtros. Rotulado, a marca é a **contagem** (diz quantos); só
- * ícone, no telefone, é o ponto. O nome já diz o estado ("Filtros — 2
- * ativos"), e o `Badge` e o ponto ficam fora da árvore de acessibilidade.
- * `active` é para quem sabe que há filtro mas não quantos.
+ * O botão de filtros. Rotulado, a marca é a contagem; só ícone, no telefone, é o
+ * ponto. O nome já diz o estado ("Filtros — 2 ativos"), e o `Badge` e o ponto
+ * ficam fora da árvore de acessibilidade. `active` é para quem sabe que há
+ * filtro mas não quantos.
  */
 function ToolbarFilterButton({
   count = 0,
@@ -566,9 +542,9 @@ function ToolbarFilterButton({
 }
 
 /**
- * A busca da barra: o `SearchInput` que cresce no grupo, com `/` para focar
- * (fora de campo de texto). O piso de 160px é o que ela guarda quando as ações
- * apertam — e o que o ⋯ conta como dela.
+ * A busca da barra: o `SearchInput` que cresce no grupo, com `/` para focar (fora
+ * de campo de texto). O piso de 160px é o que ela guarda quando as ações apertam,
+ * e o que o ⋯ conta como dela.
  */
 function ToolbarSearch({
   className,
@@ -585,7 +561,7 @@ function ToolbarSearch({
 }
 
 /**
- * A contagem do que a lista mostra ("42 resultados"), numa região viva — quem
+ * A contagem do que a lista mostra ("42 resultados"), numa região viva: quem
  * filtra ouve o resultado sem sair do controle.
  */
 function ToolbarCount({
@@ -620,9 +596,9 @@ type ToolbarChip = {
 }
 
 /**
- * Os filtros aplicados, em fichas removíveis, numa linha **própria** sob a
- * barra (`basis-full`). Passado `max`, o resto recolhe em `+N`. Tirar uma
- * ficha leva o foco à vizinha — a ficha que tinha o foco sumiu.
+ * Os filtros aplicados, em fichas removíveis, numa linha própria sob a barra
+ * (`basis-full`). Passado `max`, o resto recolhe em `+N`. Tirar uma ficha leva o
+ * foco à vizinha.
  */
 function ToolbarChips({
   items,

@@ -15,68 +15,27 @@ import { Caption, Muted } from "@/components/ui/typography"
 
 /**
  * Navegação entre páginas de uma lista.
- *
- * ## Paginação não é uma fileira de números
- *
- * É uma **posição** e dois **movimentos**. Numa lista de transações, "1–20 de
- * 342" responde a pergunta que a pessoa realmente tem; um link para a página 7
- * quase nunca responde. Por isso `PaginationStatus` existe como peça: a
- * documentação antiga já citava esse texto ("o texto 'página 2 de 8' ao lado é
- * o que continua orientando") sem entregá-lo, e toda tela o escreveria à mão.
- *
- * ## A fileira inteira estava no corpo do texto da página
- *
- * Medido antes da escada: número, extremo e status em **14px**, caixas em 32 —
- * o dígito `font-medium` tinha o mesmo corpo de um parágrafo, e é isso que o olho
- * lia como "grande demais". O rodapé de paginação **real** do app, escrito à mão
- * em `transactions-table.tsx`, já rodava em 12px.
- *
- * **Encolher só a caixa não resolveria**, e o motivo é do `Button`: os degraus
- * `icon-*` **nunca declaram `font-size`** — só `xs` e `sm` da coluna de texto o
- * fazem. A coluna de ícone espelha a de texto na **caixa**, não no **tipo**.
- * Num botão de ícone isso é invisível; esta é a única peça do sistema que põe
- * **texto** dentro de um `icon-*`, então `icon-sm` sozinho daria um dígito de
- * 14px numa caixa de 28. Por isso cada degrau declara o tipo junto com a caixa
- * — a lição que o `Tabs` registrou.
- *
- * ## Uma fonte para o tamanho
- *
- * O tamanho era decidido em quatro lugares que precisavam concordar e não se
- * conheciam: o extremo (`size="md"`), o número (`size="icon-md"`), a reticência
- * (`size-8` cravado) e o quadrado do telefone (`max-sm:size-8`, "na medida dos
- * números ao lado" — escrito à mão). Hoje os quatro saem de `paginationSteps`, e
- * a raiz publica o degrau por contexto.
- *
- * **Contexto, e não clone, e isso custa `"use client"`.** As peças são **netas**
- * da raiz (`Pagination > Content > Item > Link`), e `cloneElement` só alcança
- * filho direto. A troca é barata — o `Button` já é módulo cliente e nada aqui
- * tem estado —, mas este arquivo era componente de servidor, e deixou de ser.
- *
- * ## Rodada 196
- *
- * Nenhuma tela usava este componente: ele só aceitava `href`, e as duas listas
- * paginadas do app trocam de página por estado. Agora:
- *
- * - **por botões** — sem `href`, número e extremo viram `<button>`;
- * - **fileira gerada** — `page` e `total` montam a janela (`1 … 4 5 6 … 20`),
- *   com `getHref` (links) ou `onPageChange` (botões);
- * - **compacta** — abaixo de `sm` os números somem e fica `‹ 2 de 8 ›`, que era
- *   o defeito aberto desta página (a fileira transbordava a 375px);
- *   `variant="compact"` a força em qualquer largura;
- * - **`PaginationMore`** — o "Mostrar mais" com a contagem.
+ * Paginação é uma posição e dois movimentos, não uma fileira de números: "1–20
+ * de 342" responde o que a pessoa tem, por isso existe `PaginationStatus`.
+ * O tamanho vem de uma fonte só, `paginationSteps`, e a raiz o publica por
+ * contexto (as peças são netas da raiz, e `cloneElement` só alcança filho
+ * direto; por isso o arquivo é cliente).
+ * Os degraus `icon-*` do `Button` nunca declaram `font-size` e esta é a única
+ * peça que põe texto dentro de um deles: cada degrau declara o tipo junto com a
+ * caixa.
+ * Sem `href`, número e extremo viram `<button>`; `page` e `total` montam a janela
+ * (`1 … 4 5 6 … 20`) com `getHref` ou `onPageChange`; abaixo de `sm` (ou em
+ * `variant="compact"`) fica `‹ 2 de 8 ›`; `PaginationMore` é o "Mostrar mais".
  */
 
 type PaginationSize = "xs" | "sm" | "md" | "lg"
 
 /**
- * A raiz. **É o primeiro `cva` do arquivo de propósito**: o `ds:catalog` lê só o
- * primeiro `variants:` de cada fonte, e sem ele esta peça saía com `—` na coluna
- * de eixos — como se não tivesse decisão nenhuma a tomar.
- *
- * O `size` daqui emite o respiro entre o status e os controles, que é
- * declaração real da raiz. O **tipo** não pode descer por herança a partir
- * dela: o `Button` declara `text-sm` na base do próprio `cva`, e classe no
- * elemento vence herança. Cada peça escreve o seu.
+ * A raiz. É o primeiro `cva` do arquivo de propósito: o `ds:catalog` lê só o
+ * primeiro `variants:` de cada fonte.
+ * O `size` daqui emite o respiro entre o status e os controles. O tipo não
+ * desce por herança: o `Button` declara `text-sm` na base e vence; cada peça
+ * escreve o seu.
  */
 const paginationVariants = cva("flex w-full flex-wrap items-center", {
   variants: {
@@ -113,34 +72,18 @@ type PaginationStep = {
 }
 
 /**
- * O degrau inteiro, numa tabela só — e com **literais**, porque o Tailwind
- * varre o código como texto e classe montada em tempo de execução não existe.
- *
+ * O degrau inteiro, numa tabela só e com literais (o Tailwind varre texto).
  * | degrau | caixa | corpo |
  * | --- | --- | --- |
  * | **`xs`** (padrão) | 24 | 12px |
  * | `sm` | 28 | 12,8px |
  * | `md` | 32 | 12,8px |
  * | `lg` | 36 | 14px |
- *
- * **`md` não é a geometria antiga**, e é de propósito: a antiga era caixa 32
- * com tipo 14, que é o defeito relatado. `md` mantém a caixa e desce o tipo.
- *
- * **`xs` é o padrão, e entrou contra a régua da casa, por decisão do dono.** A
- * escada reserva `xs` e `icon-xs` para controles que moram dentro de outro
- * controle, e uma fileira de paginação não mora dentro de nada. O pedido foi
- * uma versão ainda menor que o `sm`, e que ela fosse o padrão. Ele sai inteiro
- * da escada do `Button` — `xs` no extremo, `icon-xs` no número, e o `text-xs`
- * que o próprio `Button xs` usa, o mesmo 12px do rodapé real do app. No toque
- * nada muda: todo controle cresce a 44 de qualquer jeito.
- *
- * `xl` (40) continua fora: é a altura de campo alto, e um paginador maior que
- * tudo em volta não tem caso.
- *
- * O recuo do lado do chevron repete os números que o próprio `Button` usa para
- * ícone na borda (`1.5` no `sm`, `2.5` acima). Ele não vem do mecanismo
- * `has-data-[icon=…]` do `Button` porque aquele seletor soma especificidade e
- * venceria o `max-sm:px-0` — o extremo deixaria de ser quadrado no telefone.
+ * `xs` é o padrão contra a régua da casa (que o reserva a controle dentro de
+ * outro), por decisão do dono; no toque todo controle cresce a 44. `xl` fica fora.
+ * O recuo do lado do chevron repete os números do `Button`; o mecanismo
+ * `has-data-[icon=…]` dele soma especificidade e venceria o `max-sm:px-0`, e o
+ * extremo deixaria de ser quadrado no telefone.
  */
 const paginationSteps = {
   xs: {
@@ -188,9 +131,8 @@ const paginationSteps = {
 const PaginationSizeContext = React.createContext<PaginationSize>("xs")
 
 /**
- * A janela de páginas: a primeira, a última, a atual e as vizinhas; o resto
- * vira reticência — e uma reticência que esconderia **uma** página só vira a
- * página, porque "…" no lugar de um número não economiza nada.
+ * A janela de páginas: a primeira, a última, a atual e as vizinhas; o resto vira
+ * reticência, exceto quando ela esconderia uma página só (vira a própria página).
  */
 function janelaDePaginas(page: number, total: number, vizinhos = 1): (number | "…")[] {
   const alvo = new Set([1, total])
@@ -214,11 +156,7 @@ function usePaginationStep(size?: PaginationSize): PaginationStep {
   return paginationSteps[size ?? herdado]
 }
 
-/**
- * `align` existe porque `mx-auto … justify-center` estava cravado, e a forma
- * mais comum numa lista de app é outra: contagem à esquerda, controles à
- * direita. Não dava para chegar nela sem desfazer duas classes por fora.
- */
+/** `align`: a forma comum numa lista de app é contagem à esquerda e controles à direita. */
 function Pagination({
   className,
   align = "center",
@@ -307,8 +245,7 @@ function PaginationAuto({
       <PaginationItem>
         <PaginationPrevious {...destino(page - 1)} disabled={page <= 1} />
       </PaginationItem>
-      {/* No telefone (e sempre, em `compact`) a posição toma o lugar dos
-          números: a fileira de sete peças a 44px transbordava a 375px. */}
+      {/* No telefone (e sempre, em `compact`) a posição toma o lugar dos números: sete peças a 44px transbordam a 375px. */}
       <PaginationItem className={compact ? undefined : "sm:hidden"}>
         <PaginationPosition page={page} total={ultima} />
       </PaginationItem>
@@ -346,16 +283,9 @@ function PaginationContent({
 }
 
 /**
- * A posição, em palavras.
- *
- * `.nums` porque os três números mudam a cada página e, sem figuras tabulares,
- * a frase inteira muda de largura junto — o olho lê isso como a linha se
- * mexendo, não como o dado mudando.
- *
- * **Ela costuma morar fora da raiz** — no rodapé de uma tabela, o status fica à
- * esquerda e a `Pagination` à direita, como irmãos. Fora da raiz não há
- * contexto a herdar, então ela nasce no mesmo padrão (`xs`) e aceita `size`
- * próprio para acompanhar uma fileira de outro degrau.
+ * A posição, em palavras. `.nums` porque os números mudam a cada página e a
+ * frase não pode mudar de largura. Costuma morar fora da raiz (status à esquerda,
+ * `Pagination` à direita), sem contexto a herdar: nasce em `xs` e aceita `size`.
  */
 function PaginationStatus({
   className,
@@ -377,16 +307,9 @@ function PaginationItem({ className, ...props }: React.ComponentProps<"li">) {
 }
 
 /**
- * Um número. A página atual é `secondary`, e não `outline`.
- *
- * Medido no tema claro: `outline` entrega `oklch(0.985)` de preenchimento
- * contra uma página de `oklch(1)` — 1,03:1. Numa fileira de links
- * transparentes, "você está aqui" era um contorno de 1px e um branco quase
- * idêntico ao fundo. `secondary` preenche de cinza, que é a língua de
- * "selecionado" que `Button`, `Toggle` e a bandeja do `Tabs` já falam.
- *
- * `.nums` porque 1, 10 e 100 têm larguras diferentes em figuras
- * proporcionais — a fileira inteira se reacomoda ao virar a página.
+ * Um número. A página atual é `secondary`, e não `outline`: este entrega 1,03:1
+ * contra a página no tema claro, e `secondary` é a língua de "selecionado" de
+ * `Button`, `Toggle` e `Tabs`. `.nums` porque 1, 10 e 100 têm larguras diferentes.
  */
 function PaginationLink({
   className,
@@ -395,13 +318,11 @@ function PaginationLink({
   ...props
 }: { isActive?: boolean; size?: PaginationSize } & React.ComponentProps<"a">) {
   const degrau = usePaginationStep(size)
-  // Sem `href` é um botão (rodada 196): a lista de estado local troca de
-  // página sem URL, e um `<a>` sem `href` não é focável nem anunciado.
+  // Sem `href` é um botão: a lista de estado local troca de página sem URL, e um
+  // `<a>` sem `href` não é focável nem anunciado.
   const Elemento = props.href === undefined ? "button" : "a"
-  // `Button asChild` sobre o `<a>`, e não `buttonVariants()` no `<a>`: a
-  // garantia é do componente — o `data-variant`, o embrulho do rótulo, o par
-  // `active:` que vier. O `font-medium` que se somava quando ativo saiu: já é a
-  // base.
+  // `Button asChild` sobre o `<a>`, e não `buttonVariants()`: a garantia
+  // (`data-variant`, embrulho do rótulo, par `active:`) é do componente.
   return (
     <Button
       asChild
@@ -411,17 +332,11 @@ function PaginationLink({
       className={cn(
         "nums",
         degrau.tipo,
-        // **A mesma caixa nos dois estados; o que muda é o fundo.** O
-        // `secondary` da página atual pinta até a borda (`bg-clip-border`) e o
-        // `tertiary` das outras só até dentro dela: o quadrado da atual saía
-        // com 24px e o realce das outras com 22, a borda transparente de 1px
-        // sem tinta de cada lado. Medido: em repouso as duas diferiam em
-        // `background-color` e em `background-clip`, e em mais nada.
+        // A mesma caixa nos dois estados, só o fundo muda: o `secondary` da atual pinta
+        // até a borda (`bg-clip-border`) e o `tertiary` só até dentro dela.
         "bg-clip-border",
-        // Alvo de dedo. Aqui não dá para usar o pseudo-elemento do Checkbox: os
-        // links ficam lado a lado com 4px de intervalo, e áreas expandidas se
-        // sobreporiam — a pessoa tocaria na página 3 mirando a 2. Então o
-        // controle cresce de verdade, só em ponteiro grosso.
+        // Alvo de dedo: o pseudo-elemento não serve aqui, os links ficam a 4px e as
+        // áreas expandidas se sobreporiam; o controle cresce de verdade, só em ponteiro grosso.
         "pointer-coarse:min-h-11 pointer-coarse:min-w-11",
         className
       )}
@@ -437,10 +352,9 @@ function PaginationLink({
 }
 
 /**
- * Um `<a>` não desabilita, e nas duas pontas da lista os dois botões precisam
- * disso — "Anterior" na página 1 era um link que levava à própria página.
- * Com `disabled` sai um `<span>`: sem `href`, sem foco, `aria-disabled` para o
- * leitor de tela, e a mesma opacidade que o `Button` usa.
+ * Um `<a>` não desabilita, e nas pontas da lista os botões precisam disso. Com
+ * `disabled` sai um `<span>` sem `href` nem foco, com `aria-disabled` e a
+ * opacidade do `Button`.
  */
 function PaginationEdge({
   className,
@@ -453,20 +367,16 @@ function PaginationEdge({
   const degrau = usePaginationStep(size)
   const classes = cn(
     degrau.tipo,
-    // Abaixo de `sm` o rótulo some e o controle fica quadrado, **na medida do
-    // número** do mesmo degrau. Antes ele saía 40×32, com 10px de recuo à
-    // esquerda e 12 à direita — um retângulo torto numa fileira de quadrados.
+    // Abaixo de `sm` o rótulo some e o controle fica quadrado, na medida do número do mesmo degrau.
     degrau.quadrado,
     "max-sm:gap-0 max-sm:px-0",
-    // O mesmo recorte do número: sem ele o realce do extremo pinta só dentro
-    // da borda transparente — 1px a menos de cada lado que o das páginas.
+    // O mesmo recorte do número: sem ele o realce do extremo pinta 1px a menos de cada lado.
     "bg-clip-border",
     "pointer-coarse:min-h-11 pointer-coarse:min-w-11",
     className
   )
 
-  // Sem `href`, botão (rodada 196) — e o desabilitado é o do próprio botão,
-  // que sai do foco e do clique sem precisar de `span`.
+  // Sem `href`, botão; o desabilitado é o do próprio botão (sai do foco e do clique, sem `span`).
   if (props.href === undefined) {
     return (
       <Button asChild variant="tertiary" size={degrau.extremo} className={classes}>
@@ -552,15 +462,8 @@ function PaginationNext({
 }
 
 /**
- * O salto de páginas.
- *
- * O `<span class="sr-only">Mais páginas</span>` que morava aqui estava **dentro**
- * de um `aria-hidden="true"`: texto morto, que nunca chegou à árvore de
- * acessibilidade. Um marcador de salto é decoração — a navegação de verdade são
- * os links ao lado —, então ele fica escondido e sem nome.
- *
- * A caixa era `size-8` **cravado**, sem seguir nada, e o corpo era herdado da
- * página (16px, medido). Hoje os dois vêm do degrau.
+ * O salto de páginas: decoração (a navegação são os links ao lado), então fica
+ * escondido e sem nome. Caixa e corpo vêm do degrau.
  */
 function PaginationEllipsis({
   className,
@@ -586,11 +489,9 @@ function PaginationEllipsis({
 }
 
 /**
- * O "Mostrar mais" (rodada 196): o botão com a contagem do que já está à
- * vista, para a lista que cresce em vez de trocar de página. Some quando tudo
- * já foi mostrado. `pending` troca o rótulo pelo `Spinner` e marca `aria-busy`
- * enquanto a próxima leva chega. O histórico de pagamentos da conta escrevia o
- * botão à mão, sem contagem.
+ * O "Mostrar mais": o botão com a contagem do que já está à vista, para a lista
+ * que cresce em vez de trocar de página. Some quando tudo foi mostrado.
+ * `pending` troca o rótulo pelo `Spinner` e marca `aria-busy`.
  */
 function PaginationMore({
   shown,

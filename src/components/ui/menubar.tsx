@@ -60,51 +60,17 @@ const MENUBAR_POPPER =
 
 /**
  * A barra de menus.
- *
- * ## A superfície do painel é a mesma dos outros dois menus
- *
- * `DropdownMenu`, `ContextMenu` e `Menubar` desenham o mesmo painel e diferem
- * só em como são invocados. Por isso a casca, a linha, o rótulo, o fio e o
- * atalho vêm de `lib/menu-classes`. O que é só da barra mora aqui: a fileira,
- * os gatilhos, o realce que viaja entre eles e o movimento.
- *
- * ## O redesenho (rodada 218)
- *
- * A referência de movimento é um seletor em cascata do dono (mola no realce,
- * mola na entrada do painel, linhas em cascata, tique que estala, submenu que
- * entra de lado). Dela vieram os números; **não** veio o realce que corre
- * entre as linhas do painel — esse foi recusado na rodada 137 e o
- * `menu-fade.test.ts` o proíbe. Aqui quem viaja é o realce **da fileira**, o
- * mesmo gesto do marcador do `Tabs`.
- *
- * - **O realce é um objeto só**, com `layoutId` do `motion` e a mola da
- *   referência (0,28s, 20% de quique). Ele acompanha o menu aberto, o cursor e
- *   o foco. Antes cada gatilho acendia e apagava o próprio fundo — três
- *   realces piscando não dizem o que um realce andando diz.
- * - **O painel desliza de um menu para o vizinho.** Com um aberto, passar ao
- *   próximo não fecha e abre: o novo entra vindo de onde o anterior estava
- *   (`--tw-enter-translate-x` com a distância entre os gatilhos), e o antigo
- *   sai sem animação. A largura não interpola — dois painéis são dois nós.
- * - **A entrada é a mola** (desce 6px de 97%); a saída é curta, sem mola. As
- *   linhas sobem 3px em cascata (`@utility menubar-reveal`), o tique estala na
- *   mola, o submenu entra de lado.
- *
- * ## O índice: a barra sabe o que tem dentro sem abrir
- *
- * O Radix só monta as linhas de um menu aberto, e quatro versões precisam
- * delas fechadas: a tecla que dispara, a busca, a folha do telefone e o estado
- * no gatilho. Então cada `MenubarContent` renderiza os filhos **duas vezes**:
- * no painel, quando aberto, e num índice que nunca pinta. No índice cada linha
- * só se registra (texto, tecla, se está marcada, como executar) e devolve
- * `null`. Uma fonte, sem lista paralela de comandos.
- *
- * **A pílula flutuante é o padrão** — o desenho novo da barra, a pedido do
- * dono. `outline`, `plain` e `solid` continuam, para quando o contexto pede.
- *
- * ## O tamanho é do gatilho, e não da barra
- *
- * Ancorar no contêiner deu 24px ao gatilho, o degrau `xs`. `size` mede o
- * gatilho — `sm` 28, `md` 32, `lg` 36 — e a barra cresce em volta.
+ * `DropdownMenu`, `ContextMenu` e `Menubar` desenham o mesmo painel; a casca,
+ * a linha, o fio e o atalho vêm de `lib/menu-classes`. Aqui mora o que é só da
+ * barra: a fileira, os gatilhos, o realce que viaja e o movimento.
+ * O realce da fileira é um objeto só (`layoutId`); o que corre entre as linhas
+ * do painel é proibido (`menu-fade.test.ts`). Com um menu aberto, passar ao
+ * vizinho desliza o painel.
+ * O índice: o Radix só monta as linhas de um menu aberto, e a tecla, a busca,
+ * a folha do telefone e o estado do gatilho precisam delas fechadas. Cada
+ * `MenubarContent` renderiza os filhos também num índice que nunca pinta, onde
+ * a linha só se registra e devolve `null`.
+ * `size` mede o gatilho (28, 32, 36), não a barra.
  */
 
 type MenubarSize = "sm" | "md" | "lg"
@@ -165,33 +131,15 @@ const menubarVariants = cva("relative isolate flex w-fit items-center gap-0.5 ro
   variants: {
     variant: {
       /**
-       * **O padrão é a pílula flutuante, abaixo** (rodada 218, a pedido do
-       * dono): é o desenho novo da barra. As outras três ficam para quando o
-       * contexto pede — esta, sobre a página, sem sombra.
-       *
-       * A barra que se sustenta sozinha, sobre a página — a régua de barra
-       * (`lib/glass-classes`), a mesma do cabeçalho fixo: opaca de base,
-       * abrindo a 60% só onde o borrão existe.
+       * O padrão é a pílula flutuante (abaixo); esta é a barra que se sustenta
+       * sozinha, na régua de barra (`lib/glass-classes`).
        */
       outline: `border border-border ${barSurfaceClassName}`,
-      /**
-       * Dentro de um cabeçalho que já tem a própria moldura — e por isso sem
-       * material: uma segunda superfície de vidro sobre a primeira empilha
-       * borrão sem desenhar nada.
-       */
+      /** Dentro de um cabeçalho que já tem moldura: sem material, para não empilhar borrão. */
       plain: "border border-transparent bg-transparent",
-      /**
-       * Bandeja preenchida, da mesma tinta da do `TabsList`, e opaca: a 60%
-       * no escuro ela cai de rgb 38 para 27 sobre a página e deixa de ler como
-       * bandeja.
-       */
+      /** Bandeja da mesma tinta do `TabsList`, opaca: a 60% no escuro deixa de ler como bandeja. */
       solid: "border border-transparent bg-muted",
-      /**
-       * A pílula flutuante (rodada 218): solta sobre o conteúdo, com sombra —
-       * a barra de ferramentas do topo de uma região. Ela veste a tinta
-       * **flutuante** dos menus, e não a de barra: é uma superfície que paira,
-       * como o painel que ela abre.
-       */
+      /** A pílula solta sobre o conteúdo, com sombra e na tinta **flutuante** dos menus. */
       floating: `rounded-full p-1 shadow-lg ring-1 ring-foreground/10 ${menuPanelTintClassName}`,
     },
   },
@@ -312,8 +260,6 @@ function Menubar({
   // O índice: as linhas de todos os menus, abertos ou não.
   const [comandos, setComandos] = React.useState<Comando[]>([])
   const registrar = React.useCallback((c: Comando) => {
-    // No lugar, e não no fim: marcar uma caixa registra a linha de novo, e a
-    // ordem da folha e da busca não pode andar com isso.
     setComandos((lista) => {
       const i = lista.findIndex((x) => x.id === c.id)
       if (i < 0) return [...lista, c]
@@ -435,10 +381,8 @@ function Menubar({
       {folha ? <MenubarFolha label={mobileLabel} /> : null}
       <LayoutGroup id={barId}>
         {comBusca ? (
-          // Com a busca, quem recebe o `className` (o `sticky`, a margem) é o
-          // invólucro: a fileira presa dentro dele só grudaria na própria
-          // altura — medido, a pílula sumia ao rolar. `items-stretch` é o que
-          // dá à busca a altura da fileira, em qualquer degrau e superfície.
+          // Com a busca, o `className` vai ao invólucro: a fileira presa dentro dele só
+          // grudaria na própria altura. `items-stretch` dá à busca a altura da fileira.
           <div
             data-slot="menubar-shell"
             className={cn("flex items-stretch gap-2", className)}
@@ -513,10 +457,8 @@ function textoDe(no: React.ReactNode): string {
 }
 
 /**
- * O gatilho, com o que a rodada 218 deu a ele: `icon` antes do rótulo,
- * `count` (o quanto está valendo — sem ele, as caixas marcadas do menu), a
- * seta que gira ao abrir (`chevron`) e a letra de acesso (`mnemonic`), que
- * aparece sublinhada com o Alt descido.
+ * O gatilho: `icon`, `count` (sem ele, as caixas marcadas do menu), `chevron`
+ * e `mnemonic` (letra de acesso, sublinhada com o Alt).
  */
 function MenubarTrigger({
   className,
@@ -560,8 +502,7 @@ function MenubarTrigger({
   if (mnemonic && typeof children === "string") {
     const i = children.toLowerCase().indexOf(mnemonic.toLowerCase())
     if (i >= 0) {
-      // Um `<span>` só em volta: solto no gatilho, cada pedaço do texto vira
-      // um item do flex, e o `gap` partia o rótulo ("A rquivo") — medido.
+      // Um `<span>` só: solto, cada pedaço do texto vira item do flex e o `gap` parte o rótulo.
       rotuloDesenhado = (
         <span>
           {children.slice(0, i)}
@@ -634,9 +575,8 @@ function MenubarTrigger({
 }
 
 /**
- * O painel. `title` e `description` (rodada 218) são o cabeçalho — o nome do
- * menu e o que ele está valendo. Sem `description`, ela diz os rádios
- * marcados ("Vencimento ↑"): o estado à vista sem procurar o ponto na lista.
+ * O painel. `title` e `description` são o cabeçalho; sem `description`, ela
+ * diz os rádios marcados ("Vencimento ↑").
  */
 function MenubarContent({
   className,
@@ -681,13 +621,10 @@ function MenubarContent({
           data-trocando={saindoNaTroca ? "" : undefined}
           className={cn(
             menuSurfaceClassName,
-            // O gesto da referência (rodada 218) mora aqui: a superfície dos
-            // menus deixou de animar na rodada 248.
             menuMotionClassName,
             MENUBAR_POPPER,
-            // A entrada da referência, em CSS: desce 6px de 97% na mola da
-            // casa; a saída é curta e sem mola. Trocando de menu, o que sai
-            // some na hora e o que chega desliza de lado (o `style` abaixo).
+            // Entrada em CSS (desce 6px de 97%, na mola); ao trocar de menu o que sai some
+            // na hora e o que chega desliza de lado (o `style` abaixo).
             "data-open:zoom-in-[0.97] data-[side=bottom]:slide-in-from-top-1.5 data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring)",
             "data-closed:zoom-out-[0.98] data-closed:animation-duration-[130ms] data-[trocando]:data-closed:animate-none",
             className
@@ -737,9 +674,8 @@ function MenubarContent({
 }
 
 /**
- * A confirmação e a linha que carrega (rodada 218), as do `DropdownMenu`:
- * `confirm` arma no primeiro toque (3s), e um `onSelect` que devolve `Promise`
- * mantém o menu aberto, com a linha ocupada, até ela assentar.
+ * `confirm` arma no primeiro toque (3s); um `onSelect` que devolve `Promise`
+ * mantém o menu aberto, com a linha ocupada, até assentar.
  */
 function useEscolha({
   confirm,
@@ -923,10 +859,7 @@ function MenubarItem({
   )
 }
 
-/**
- * A caixa **não fecha o menu** (rodada 218): marcar uma é para marcar outra.
- * O Radix fecha; os menus irmãos já tinham corrigido.
- */
+/** A caixa não fecha o menu: marcar uma é para marcar outra. */
 function MenubarCheckboxItem({
   className,
   children,
@@ -1113,9 +1046,8 @@ function MenubarSubContent({
   const dissolver = useScrollFade({ arrows: true })
   if (indice) return <>{children}</>
   return (
-    // No portal: dentro do menu, o vidro (`backdrop-filter`) vira o bloco de
-    // contenção do `fixed` do popper e o `overflow-hidden` o recorta — o
-    // submenu abria e não aparecia (medido, rodada 213).
+    // No portal: dentro do menu, o `backdrop-filter` vira o bloco de contenção do
+    // `fixed` do popper e o `overflow-hidden` recorta o submenu.
     <MenubarPrimitive.Portal>
       <MenubarPrimitive.SubContent
         data-slot="menubar-sub-content"
@@ -1124,7 +1056,7 @@ function MenubarSubContent({
           menuSubSurfaceClassName,
           menuMotionClassName,
           MENUBAR_POPPER,
-          // O submenu entra de lado, de 98%, em 140ms — a referência.
+          // O submenu entra de lado, de 98%, em 140ms.
           "data-open:zoom-in-[0.98] data-[side=right]:slide-in-from-left-1.5 data-[side=left]:slide-in-from-right-1.5 data-open:animation-duration-[140ms]",
           className
         )}
@@ -1144,10 +1076,8 @@ function MenubarSubContent({
 }
 
 /**
- * A busca de comandos (rodada 218) — a Ajuda > Buscar do macOS. Um campo que
- * procura entre as linhas de **todos** os menus, pelo índice, e executa a
- * escolhida. Mora fora da fileira (`role="menubar"` só tem gatilhos), ao lado
- * dela — é a prop `search` do `Menubar` que a monta.
+ * A busca de comandos: procura entre as linhas de todos os menus, pelo índice,
+ * e executa a escolhida. Mora ao lado da fileira (`role="menubar"` só tem gatilhos).
  */
 function MenubarSearch({
   placeholder = "Buscar comandos…",
@@ -1179,9 +1109,7 @@ function MenubarSearch({
     <Popover open={busca.trim() !== ""} onOpenChange={(o) => !o && setBusca("")}>
       <PopoverAnchor asChild>
         <div className={cn("flex w-56", className)} data-slot="menubar-search">
-          {/* A altura é a da fileira ao lado (o invólucro estica), e o degrau —
-              recuo, respiro, corpo do texto — é o do gatilho. Com o `sm` fixo
-              ela saía com 28px ao lado de uma barra de 38. */}
+          {/* A altura é a da fileira (o invólucro estica) e o degrau é o do gatilho. */}
           <SearchInput
             size={bar.size}
             className="h-full"
@@ -1267,10 +1195,8 @@ function MenubarSearch({
 }
 
 /**
- * No telefone, a folha de ações (rodada 218, `mobile="sheet"`). Uma fileira de
- * menus não cabe em 375px — ela transbordava a linha —, e uma barra de menus
- * é interface de cursor. A folha lista o índice agrupado por menu, com as
- * marcas, e cada linha executa e fecha.
+ * No telefone (`mobile="sheet"`) a fileira não cabe em 375px: a folha lista o
+ * índice agrupado por menu, e cada linha executa e fecha.
  */
 function MenubarFolha({ label }: { label: string }) {
   const bar = useMenubar()
@@ -1309,7 +1235,7 @@ function MenubarFolha({ label }: { label: string }) {
                     className={drawerActionClassName}
                     onClick={() => {
                       c.executar()
-                      // A caixa não fecha a folha: marcar uma é para marcar outra.
+                      // A caixa não fecha a folha.
                       if (c.tipo !== "checkbox") setAberta(false)
                     }}
                   >

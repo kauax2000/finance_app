@@ -29,49 +29,25 @@ import { Caption, P } from "@/components/ui/typography"
 
 /**
  * Feed cronológico de eventos: marcador, conector e conteúdo.
- *
- * ## O docblock antigo descrevia um trabalho que ninguém fazia
- *
- * Ele dizia que a atividade do workspace e o histórico de fatura *"hoje
- * desenham a linha à mão"*. **Não desenhavam.** As duas telas eram listas
- * chatas — e na rodada 227 elas passaram a ser `Timeline`: a atividade da
- * conta (o poço por tipo) e o histórico de cobranças de uma conta (o ponto por
- * estado, com as ações).
- *
- * ## A lista sabe o fim pelo CSS, e a forma pelo contexto (rodada 227)
- *
- * `isLast` e `marker` desciam por `cloneElement`, como no `Stepper`. Saíram os
- * dois: o fim é `:last-child` (o conector e o respiro somem por variável), e a
- * forma, a orientação e o `layout` descem por contexto. O clone tinha
- * dois custos medidos — ele derramava as props no `<li>` da faixa de data, e
- * um filho que não fosse elemento direto (um fragmento, o `TimelineCollapsed`
- * que vira vários itens) ficava sem fim certo. `isLast` continua como prop para
- * a exceção: a lista que segue além do último item renderizado.
- *
- * ## O ponto nunca esteve no centro
- *
- * Era `mt-0.5` — 2px — mais metade de `size-2.5`: centro a **7px** do topo,
- * contra a caixa de 22,75px do título. **4,4px de desalinho.** A conta é a que
- * o `Alert` registrou: `(entrelinha − marcador) / 2`, em `MARCADOR_OFFSET`, e o
- * `max(0px, …)` faz o poço — maior que uma linha — alinhar pelo topo do bloco.
- *
- * ## O anel de superfície não volta
- *
- * `ring-4 ring-background` furava um conector que nunca passou atrás do ponto,
- * e entalhava o fio com `--background` sobre qualquer `--card`. O relevo da
- * rodada 227 é outra coisa: um **halo do próprio tom** (`--tl-well`) em volta
- * do ponto, que não supõe a superfície de baixo.
- *
- * ## Cliente desde a rodada 227
- *
- * O tempo relativo, o recolhido, o detalhe, a chegada e o fio que se desenha
- * são estado. Um componente de servidor ainda renderiza a `Timeline` com o dado
- * já buscado — ela só hidrata no cliente.
+ * A lista sabe o fim pelo CSS (`:last-child` apaga o conector e o respiro, por
+ * variável; `isLast={false}` é a exceção) e a forma, a orientação e o `layout`
+ * descem por contexto, sem `cloneElement`: o clone derramava as props no `<li>`
+ * da faixa de data e deixava sem fim certo o filho que não era elemento direto
+ * (um fragmento, o `TimelineCollapsed`).
+ * O ponto se centra na primeira linha do título pela conta do `Alert`,
+ * `(entrelinha − marcador) / 2`, em `MARCADOR_OFFSET`; o `max(0px, …)` faz o poço
+ * (maior que uma linha) alinhar pelo topo do bloco.
+ * Sem anel de superfície no ponto (`ring-4 ring-background` entalharia o fio com
+ * `--background` sobre qualquer `--card`): o relevo é um halo do próprio tom
+ * (`--tl-well`), que não supõe a superfície de baixo.
+ * É cliente: o tempo relativo, o recolhido, o detalhe, a chegada e o fio que se
+ * desenha são estado. Um componente de servidor ainda a renderiza com o dado
+ * buscado; ela só hidrata no cliente.
  */
 
 /**
- * A lista dos tons, exportada para o teste e a página do catálogo iterarem **o
- * `cva` de verdade** em vez de uma cópia que envelhece sozinha.
+ * A lista dos tons, exportada para o teste e a página do catálogo iterarem o
+ * `cva` de verdade, e não uma cópia que envelhece.
  */
 const TIMELINE_TONES = [
   "default",
@@ -84,19 +60,17 @@ const TIMELINE_TONES = [
 ] as const
 
 /**
- * A raiz. **Este é o primeiro `cva` do arquivo de propósito**: o
- * `npm run ds:catalog` lê só o primeiro `variants:` de cada fonte.
- *
- * `marker` é da **lista** e não do item porque uma trilha tem uma calha só. O
- * item ainda pode sobrescrever para a exceção.
+ * A raiz. É o primeiro `cva` do arquivo de propósito: o `npm run ds:catalog` lê
+ * só o primeiro `variants:` de cada fonte. `marker` é da lista e não do item
+ * porque uma trilha tem uma calha só; o item pode sobrescrever.
  */
 const timelineVariants = cva(
   [
     "flex",
     // O fio de fábrica, que o estado do item troca por variável.
     "[--tl-line-bg:var(--color-border)]",
-    // A coluna de data do `layout="split"`, o topo da faixa presa e a
-    // superfície que ela pinta (a página; dentro de um cartão, `--color-card`).
+    // A coluna de data do `layout="split"`, o topo da faixa presa e a superfície que
+    // ela pinta (a página; dentro de um cartão, `--color-card`).
     "[--tl-opposite-w:--spacing(24)] [--tl-sticky-top:0px] [--tl-surface:var(--color-background)]",
   ],
   {
@@ -106,8 +80,8 @@ const timelineVariants = cva(
           "flex-col",
           "[--tl-rail-dir:column] [--tl-item-dir:row]",
           "[--tl-rail-w:var(--tl-marker)] [--tl-rail-h:auto] [--tl-grow:0_1_auto]",
-          // O conector cresce no eixo principal da calha (é `flex-1`); o que se
-          // declara aqui é a **espessura**, que é o eixo cruzado.
+          // O conector cresce no eixo principal da calha (`flex-1`); aqui se declara a
+          // espessura, que é o eixo cruzado.
           "[--tl-line-w:1px] [--tl-line-h:auto] [--tl-dash-dir:to_bottom]",
           // Liga a centragem do marcador na primeira linha do título.
           "[--tl-center:1]",
@@ -122,9 +96,9 @@ const timelineVariants = cva(
           "[--tl-line-w:auto] [--tl-line-h:1px] [--tl-dash-dir:to_right]",
           // Na horizontal o marcador tem linha própria: não há o que centrar.
           "[--tl-center:0]",
-          // Na deitada o texto se **centra no marcador** — medido antes, o
-          // centro do texto ficava a 161,4px do centro do marcador. O primeiro
-          // também se centra, por decisão do dono: passa 6,62px da borda.
+          // Na deitada o texto se centra no marcador (o centro do texto ficava a 161,4px
+          // do centro do marcador). O primeiro também se centra, por decisão do dono:
+          // passa 6,62px da borda.
           "[--tl-content-grow:0_0_auto] [--tl-content-w:max-content]",
           "[--tl-content-center:1] [--tl-content-tx:-50%] [--tl-content-align:center]",
           "[--tl-pb:0px]",
@@ -136,18 +110,16 @@ const timelineVariants = cva(
         lg: "[--tl-dot:--spacing(3)] [--tl-icon:--spacing(5)] [--tl-pad:--spacing(8)] [--tl-rail-gap:--spacing(2)] [--tl-lead:calc(var(--text-sm)*1.625)] [--tl-title:var(--text-sm)] [--tl-well-size:--spacing(10)] [--tl-halo:4px] [--tl-gap:--spacing(4)] gap-(--tl-gap)",
       },
       /**
-       * A forma do marcador, e com ela a largura da calha. `dot` é o ponto,
-       * `icon` o poço tingido, `avatar` a casca sem tinta (a identidade traz a
-       * cor dela), `none` só o fio.
+       * A forma do marcador, e com ela a largura da calha. `dot` é o ponto, `icon` o
+       * poço tingido, `avatar` a casca sem tinta (a identidade traz a cor dela), `none` só o fio.
        */
       marker: {
         dot: "[--tl-marker:var(--tl-dot)]",
         icon: "[--tl-marker:var(--tl-well-size)]",
         avatar: "[--tl-marker:var(--tl-well-size)]",
-        // **`none` é a trilha sem marcador: o fio é a espinha.** A calha mede o
-        // fio (1px) e o texto se afasta dele 12px em todo degrau. Com a calha
-        // em zero o fio sobrava por fora dela, a 6px do texto, e lia como a
-        // barra lateral de uma citação, não como cronologia.
+        // `none` é a trilha sem marcador: o fio é a espinha. A calha mede o fio (1px) e
+        // o texto se afasta dele 12px em todo degrau; com a calha em zero o fio sobraria
+        // por fora, a 6px do texto, e leria como a barra lateral de uma citação.
         none: "[--tl-marker:1px] [--tl-rail-gap:--spacing(3)]",
       },
     },
@@ -156,16 +128,13 @@ const timelineVariants = cva(
 )
 
 /**
- * O tom publica **quatro** variáveis e não pinta nada: a cor cheia do ponto, a
- * superfície do poço, a tinta dentro dele e a cor **forte** (rodada 227) — o
- * ponto concluído, o fio andado e o contorno do previsto. No `default` a cor
- * cheia é a do fio (`--border`), fraca demais para dizer "aconteceu"; a forte é
- * a tinta secundária.
- *
- * **É aqui que o colapso de tons se desfaz.** `--income` é `var(--success)` e
- * `--expense` é `var(--destructive)`, então na cor cheia os pares saem
- * idênticos. Na família `-muted` eles divergem: o poço é o único lugar do
- * componente onde sete tons rendem sete cores.
+ * O tom publica quatro variáveis e não pinta nada: a cor cheia do ponto, a
+ * superfície do poço, a tinta dentro dele e a cor forte (o ponto concluído, o fio
+ * andado e o contorno do previsto). No `default` a cor cheia é a do fio
+ * (`--border`), fraca demais para dizer "aconteceu"; a forte é a tinta secundária.
+ * É no poço que o colapso de tons se desfaz: `--income` é `var(--success)` e
+ * `--expense` é `var(--destructive)`, idênticos na cor cheia, mas divergem na
+ * família `-muted`; ali sete tons rendem sete cores.
  */
 const timelineToneVariants = cva("", {
   variants: {
@@ -190,9 +159,9 @@ const timelineToneVariants = cva("", {
 })
 
 /**
- * `(entrelinha − marcador) / 2`, por degrau, com o fator de orientação
- * embutido. O `max(0px, …)` faz o poço — maior que uma linha — alinhar pelo
- * topo. Todo `-` binário dentro de um `calc()` arbitrário vai como `_-_`.
+ * `(entrelinha − marcador) / 2`, por degrau, com o fator de orientação embutido.
+ * O `max(0px, …)` faz o poço alinhar pelo topo. Todo `-` binário dentro de um
+ * `calc()` arbitrário vai como `_-_`.
  */
 const MARCADOR_OFFSET =
   "[margin-block-start:max(0px,calc((var(--tl-lead)_-_var(--tl-marker))/2*var(--tl-center)))]"
@@ -211,12 +180,8 @@ type TimelineContextValue = {
 
 /**
  * O que a lista sabe e o item não. A forma aceita exceção: o `marker` do item
- * vence o da lista.
- *
- * **O vidro saiu na rodada 227**, a pedido do dono: o eixo `glass` (rodada 70)
- * vestia os marcadores com a lâmina do sistema, e com o relevo — o halo do tom
- * no ponto e o fio no poço — ele virou um terceiro acabamento sem tela que o
- * pedisse.
+ * vence o da lista. Sem eixo `glass`: com o relevo (halo do tom no ponto, fio no
+ * poço) seria um terceiro acabamento sem tela que o pedisse.
  */
 const TimelineContext = React.createContext<TimelineContextValue>({
   marker: "dot",
@@ -233,10 +198,9 @@ const CONECTOR =
   "flex-1 rounded-full [display:var(--tl-conn,block)] [background:var(--tl-line-bg)] [height:var(--tl-line-h)] [width:var(--tl-line-w)]"
 
 /**
- * Sem marcador o fio é a espinha, e ele **não para no último**: não há ponto
- * para dizer onde a trilha termina, e um fio que some antes do último evento
- * deixava esse evento solto, fora da trilha — medido, os três primeiros com
- * 87px de fio e o quarto com zero.
+ * Sem marcador o fio é a espinha e não para no último: não há ponto para dizer
+ * onde a trilha termina, e um fio que some antes do último evento o deixaria
+ * solto, fora da trilha.
  */
 const CONECTOR_ESPINHA =
   "flex-1 rounded-full [background:var(--tl-line-bg)] [height:var(--tl-line-h)] [width:var(--tl-line-w)]"
@@ -246,20 +210,19 @@ const TRACEJADO =
   "[--tl-line-bg:repeating-linear-gradient(var(--tl-dash-dir),color-mix(in_oklab,var(--color-muted-foreground)_45%,transparent)_0_3px,transparent_3px_7px)]"
 
 /**
- * O trecho até um evento **previsto** também é tracejado, venha a lista em que
- * ordem vier. O conector de um item é o trecho até o irmão seguinte; numa
- * lista cronológica o previsto vem depois do atual, e numa do mais recente
- * para o mais antigo ele vem antes — e aí é o trecho **acima** dele que ainda
- * não aconteceu. Medido no histórico de cobranças, que é decrescente: sem esta
- * regra o fio entre uma cobrança paga e a próxima prevista saía cheio.
+ * O trecho até um evento previsto também é tracejado, venha a lista em que ordem
+ * vier. O conector de um item é o trecho até o irmão seguinte: numa lista
+ * cronológica o previsto vem depois do atual; numa decrescente vem antes, e é o
+ * trecho acima dele que ainda não aconteceu (senão o fio entre uma cobrança paga
+ * e a próxima prevista sairia cheio).
  */
 const TRACEJADO_ATE_PREVISTO =
   "[&:has(+[data-state=upcoming])]:[--tl-line-bg:repeating-linear-gradient(var(--tl-dash-dir),color-mix(in_oklab,var(--color-muted-foreground)_45%,transparent)_0_3px,transparent_3px_7px)]"
 
 /**
- * O `layout="split"` é uma grade de três colunas — a data, a calha, o conteúdo
- * — que no telefone vira duas, com a data **embaixo** do conteúdo. A calha
- * atravessa as duas linhas, senão o fio pararia antes da data.
+ * O `layout="split"` é uma grade de três colunas (a data, a calha, o conteúdo)
+ * que no telefone vira duas, com a data embaixo do conteúdo. A calha atravessa
+ * as duas linhas, senão o fio pararia antes da data.
  */
 const SPLIT_LINHA =
   "grid grid-cols-[var(--tl-rail-w)_minmax(0,1fr)] sm:grid-cols-[var(--tl-opposite-w)_var(--tl-rail-w)_minmax(0,1fr)]"
@@ -281,8 +244,8 @@ function Timeline({
 }: React.ComponentProps<"ol"> &
   VariantProps<typeof timelineVariants> & {
     /**
-     * `split` põe a data numa coluna à esquerda do fio (o `opposite` de cada
-     * item). Só na vertical; no telefone a data desce para baixo do conteúdo.
+     * `split` põe a data numa coluna à esquerda do fio (o `opposite` de cada item).
+     * Só na vertical; no telefone a data desce para baixo do conteúdo.
      */
     layout?: "stack" | "split"
     /** Os eventos sobem em cascata ao montar (`@utility timeline-reveal`). */
@@ -332,18 +295,18 @@ function Timeline({
 }
 
 /**
- * A medida do marcador, republicada **no item**: o deslocamento vertical e a
- * centragem do texto na horizontal precisam da medida do marcador
- * **renderizado**, e ela diverge da calha no item que sobrescreve o `marker` —
- * um ponto de 10px numa trilha de poço saía 6,38px acima do título.
+ * A medida do marcador, republicada no item: o deslocamento vertical e a
+ * centragem do texto na horizontal precisam da medida do marcador renderizado,
+ * que diverge da calha no item que sobrescreve o `marker` (um ponto de 10px numa
+ * trilha de poço saía 6,38px acima do título).
  */
 const MEDIDA_DO_MARCADOR: Record<TimelineMarker, string> = {
   dot: "[--tl-marker:var(--tl-dot)]",
   icon: "[--tl-marker:var(--tl-well-size)]",
   avatar: "[--tl-marker:var(--tl-well-size)]",
   // Na deitada não há marcador onde centrar o texto: centrado no começo do
-  // trecho, o primeiro passava 39px para fora da trilha (medido). Sem marcador
-  // o texto começa onde o trecho dele começa, como numa régua.
+  // trecho, o primeiro passaria 39px para fora da trilha. Sem marcador o texto
+  // começa onde o trecho dele começa, como numa régua.
   none: "[--tl-marker:1px] [--tl-content-center:0] [--tl-content-tx:none] [--tl-content-align:start]",
 }
 
@@ -366,7 +329,7 @@ const timelineMarkerVariants = cva(
           "size-(--tl-well-size) overflow-hidden [&>*]:size-full [&>*]:rounded-full",
         none: "hidden",
       },
-      /** O estado na trilha (rodada 227). `none` é o evento que só aconteceu. */
+      /** O estado na trilha. `none` é o evento que só aconteceu. */
       state: { none: "", done: "", current: "", upcoming: "", skipped: "" },
     },
     compoundVariants: [
@@ -435,16 +398,14 @@ const timelineMarkerVariants = cva(
 
 /**
  * Um evento.
- *
  * - `state`: `done` (o fio até o vizinho na cor forte), `current` (o anel, e
- *   `aria-current="step"`), `upcoming` (vazado, o fio de e até ele tracejado, título apagado
- *   e "Previsto" para o leitor de tela) e `skipped` (o que não aconteceu de
- *   propósito — a cobrança ignorada: o ponto na cor do fio, sem halo).
- * - `density="compact"`: o evento de sistema numa linha só — ponto pequeno,
- *   texto miúdo, a hora na ponta.
+ *   `aria-current="step"`), `upcoming` (vazado, fio tracejado de e até ele, título
+ *   apagado e "Previsto" para o leitor de tela) e `skipped` (o que não aconteceu
+ *   de propósito, como a cobrança ignorada: ponto na cor do fio, sem halo).
+ * - `density="compact"`: o evento de sistema numa linha só.
  * - `opposite`: a coluna da esquerda do `layout="split"`.
- * - `isLast`: a lista o sabe pelo CSS; passe `false` à mão na lista que segue
- *   além do último item renderizado.
+ * - `isLast`: a lista o sabe pelo CSS; passe `false` na lista que segue além do
+ *   último item renderizado.
  */
 function TimelineItem({
   className,
@@ -487,15 +448,11 @@ function TimelineItem({
   const lado = lista.split && opposite != null ? opposite : null
   const chegada = lista.live && !reduzir
 
-  // O recorte da chegada é **só durante o crescer**. Ele era um
-  // `transitionEnd` que devolvia o `visible`, e o motion nunca o aplicou —
-  // medido, os itens revelados ficavam com `overflow: clip` para sempre, e o
-  // halo dos pontos (que passa 3px da calha) saía cortado. E ele é **só
-  // vertical**: o crescer é de altura, e com `overflow: clip` nos dois eixos o
-  // halo saía aparado de lado durante a abertura. `clip` num eixo e `visible`
-  // no outro é combinação válida — ao contrário de `hidden`, não vira rolagem.
-  // Quem o tira agora
-  // é o fim da animação, no próprio nó.
+  // O recorte da chegada é só durante o crescer, e só vertical: o crescer é de
+  // altura, e `overflow: clip` nos dois eixos apara o halo dos pontos (que passa
+  // 3px da calha) de lado durante a abertura. `clip` num eixo e `visible` no outro
+  // é válido (não vira rolagem, ao contrário de `hidden`). Quem o tira é o fim da
+  // animação, no próprio nó (o `transitionEnd` do motion nunca o aplicou).
   const no = React.useRef<HTMLLIElement | null>(null)
   const refs = React.useCallback(
     (el: HTMLLIElement | null) => {
@@ -538,10 +495,9 @@ function TimelineItem({
         lista.split
           ? cn(SPLIT_LINHA, "[column-gap:var(--tl-rail-gap)]")
           : "flex [flex-direction:var(--tl-item-dir)] [gap:var(--tl-rail-gap)]",
-        // O fim: o último não estica, não reserva respiro e não desenha
-        // conector. Vai por variável, e a exceção (`isLast={false}`) é o
-        // `not-data-[end=false]` na mesma regra — um variante só, no mesmo
-        // elemento, que compila certo.
+        // O fim: o último não estica, não reserva respiro e não desenha conector. Vai por
+        // variável, e a exceção (`isLast={false}`) é o `not-data-[end=false]` na mesma
+        // regra: um variante só, no mesmo elemento.
         "last:not-data-[end=false]:[--tl-grow:0_0_auto] last:not-data-[end=false]:[--tl-pb:0px] last:not-data-[end=false]:[--tl-conn:none]",
         "data-[end=true]:[--tl-grow:0_0_auto] data-[end=true]:[--tl-pb:0px] data-[end=true]:[--tl-conn:none]",
         // O link esticado (`TimelineLink`) cobre o item a partir daqui.
@@ -557,9 +513,11 @@ function TimelineItem({
       )}
       {...props}
     >
-      {/* A calha. Largura fixa em `--tl-marker`, `justify-start` e nunca
-          `center`: sem conector (o último), um `center` centrava o marcador
-          na altura inteira — medido, 23,44px abaixo do título. */}
+      {/*
+         A calha. Largura fixa em `--tl-marker`, `justify-start` e nunca `center`: sem
+         conector (o último), `center` centraria o marcador na altura inteira (23,44px
+         abaixo do título).
+      */}
       <div
         aria-hidden
         data-slot="timeline-rail"
@@ -583,9 +541,11 @@ function TimelineItem({
         />
       </div>
 
-      {/* O recuo é `calc(medida/2 * centro)`: `var(--tl-marker)` resolve aqui,
-          com a medida do marcador deste item. O `translate` é `none` na
-          vertical, porque qualquer valor cria bloco de contenção. */}
+      {/*
+         O recuo é `calc(medida/2 * centro)`: `var(--tl-marker)` resolve aqui, com a
+         medida do marcador deste item. O `translate` é `none` na vertical, porque
+         qualquer valor cria bloco de contenção.
+      */}
       <div
         data-slot="timeline-content"
         className={cn(
@@ -623,23 +583,16 @@ function TimelineItem({
 }
 
 /**
- * A faixa de data — "Hoje", "Ontem", "Março de 2026" —, com o que resume o dia
- * na ponta (`end`: o total, a contagem).
- *
- * O fio **continua** através dela, porque a data não interrompe a cronologia:
- * ela a rotula. Sem traço próprio (regra J).
- *
- * **`sticky`** (rodada 227) a prende no topo enquanto o dia rola, com o rótulo
- * numa **pílula flutuante** (a placa da casa: `--popover` e o anel de 1px). A
- * pílula sozinha deixava o evento rolado aparecer em volta dela; a faixa
- * opaca que a substituiu escondia o conteúdo de vez e foi recusada pelo dono.
- * Hoje o que fica por trás da pílula é um **véu** — a cor da superfície
- * (`--tl-surface`; dentro de um cartão, `[--tl-surface:var(--color-card)]`),
- * cheia até a metade da faixa e se desfazendo numa rampa que passa 20px abaixo
- * dela —, e ele só existe com a faixa **presa**: a pergunta é a
- * `scroll-state(stuck: top)` da própria faixa. No lugar natural não há véu
- * nenhum, e a pílula fica sobre a trilha como qualquer marcador. Onde a
- * consulta não existe, a pílula flutua sem véu. O topo é `--tl-sticky-top`.
+ * A faixa de data ("Hoje", "Ontem", "Março de 2026") com o que resume o dia na
+ * ponta (`end`: o total, a contagem). O fio continua através dela, porque a data
+ * rotula a cronologia sem interrompê-la; sem traço próprio (regra J).
+ * `sticky` a prende no topo enquanto o dia rola, com o rótulo numa pílula
+ * flutuante (a placa da casa: `--popover` e o anel de 1px). Por trás da pílula
+ * fica um véu da cor da superfície (`--tl-surface`; dentro de um cartão,
+ * `[--tl-surface:var(--color-card)]`), cheio até a metade da faixa e se desfazendo
+ * numa rampa que passa 20px abaixo dela, e só com a faixa presa
+ * (`scroll-state(stuck: top)`). No lugar natural não há véu; onde a consulta não
+ * existe, a pílula flutua sem véu. O topo é `--tl-sticky-top`.
  */
 function TimelineSeparator({
   className,
@@ -666,9 +619,10 @@ function TimelineSeparator({
       )}
       {...props}
     >
-      {/* O véu vem primeiro e é posicionado; a calha e o rótulo, `relative`,
-          pintam por cima dele pela ordem do documento. A rampa tem cinco
-          paradas para não ter quina: cheia até 50%, e daí a 100% em curva. */}
+      {/*
+         O véu vem primeiro e é posicionado; a calha e o rótulo, `relative`, pintam por
+         cima pela ordem do documento. A rampa tem cinco paradas para não ter quina.
+      */}
       {sticky ? (
         <span
           aria-hidden
@@ -711,17 +665,13 @@ function TimelineSeparator({
 }
 
 /**
- * Um dia (ou um mês) com a faixa e os eventos dele, num contêiner próprio
- * (rodada 227). **É o que faz a faixa seguinte empurrar a anterior**: um
- * elemento `sticky` só fica preso dentro do pai, e com todas as faixas irmãs na
- * mesma lista elas se sobrepunham no topo — a de hoje sob a de ontem, as duas
- * pílulas no mesmo lugar. Dentro do grupo, a faixa sai junto com o último
- * evento do dia, empurrada pela do dia seguinte.
- *
- * Estrutura: `<li>` com uma `<ol>` dentro — a lista de eventos do dia, na
- * mesma lista da trilha. **O fio atravessa o grupo**: o último evento de um
- * grupo que não é o último continua com conector e respiro, porque o fim da
- * trilha é o último evento do último dia, não o de cada dia. Só na vertical.
+ * Um dia (ou um mês) com a faixa e os eventos dele, num contêiner próprio. É o
+ * que faz a faixa seguinte empurrar a anterior: um elemento `sticky` só fica
+ * preso dentro do pai, e com todas as faixas irmãs elas se sobreporiam no topo.
+ * Estrutura: `<li>` com uma `<ol>` dentro (a lista de eventos do dia). O fio
+ * atravessa o grupo: o último evento de um grupo que não é o último continua com
+ * conector e respiro, porque o fim da trilha é o último evento do último dia. Só
+ * na vertical.
  */
 function TimelineGroup({
   className,
@@ -742,16 +692,14 @@ function TimelineGroup({
     <li
       data-slot="timeline-group"
       className={cn(
-        // O fim **do grupo** não é o fim da trilha: no grupo que tem um irmão
-        // depois, o último evento volta a ter conector e respiro. O seletor
-        // (classe + `:not(:last-child)` + `:last-child`) pesa mais que o
-        // `last:not-data-[end=false]:` do item, e por isso vence sem `!`.
+        // O fim do grupo não é o fim da trilha: no grupo com um irmão depois, o último
+        // evento volta a ter conector e respiro. O seletor (classe + `:not(:last-child)`
+        // + `:last-child`) pesa mais que o `last:not-data-[end=false]:` do item e vence sem `!`.
         "[&:not(:last-child)>ol>li:last-child]:[--tl-conn:block]",
-        // E o vão entre os grupos mora **dentro** do grupo: o último evento leva
-        // o respiro mais o vão, e o grupo devolve o vão com margem negativa.
-        // Sem isso a caixa do grupo terminava 12px antes da faixa seguinte, e
-        // a faixa presa começava a subir antes de ser tocada — medido, as duas
-        // ficavam a 48px quando a de cima já se movia.
+        // O vão entre os grupos mora dentro do grupo: o último evento leva o respiro
+        // mais o vão, e o grupo devolve o vão com margem negativa. Senão a caixa do
+        // grupo terminaria 12px antes da faixa seguinte e a faixa presa começaria a
+        // subir antes de ser tocada.
         "[&:not(:last-child)>ol>li:last-child]:[--tl-pb:calc(var(--tl-pad)+var(--tl-gap))]",
         "not-last:-mb-(--tl-gap)",
         className
@@ -769,10 +717,9 @@ function TimelineGroup({
 }
 
 /**
- * Os eventos que não cabem, numa linha só (rodada 227): "8 eventos ocultos ·
- * Mostrar". Os filhos **são** os itens escondidos; ao mostrar, eles tomam o
- * lugar da linha, crescem na mola e o foco vai ao primeiro deles — o botão
- * some, e o foco não pode cair no `<body>`.
+ * Os eventos que não cabem, numa linha só ("8 eventos ocultos · Mostrar"). Os
+ * filhos são os itens escondidos; ao mostrar, tomam o lugar da linha, crescem na
+ * mola e o foco vai ao primeiro (o botão some, e o foco não pode cair no `<body>`).
  */
 function TimelineCollapsed({
   className,
@@ -789,8 +736,7 @@ function TimelineCollapsed({
   const lista = React.useContext(TimelineContext)
   const { split } = lista
   const [aberto, setAberto] = React.useState(false)
-  // Os itens que aparecem crescem no lugar — a chegada do feed ao vivo, ligada
-  // só para eles.
+  // Os itens que aparecem crescem no lugar (a chegada do feed ao vivo, ligada só para eles).
   const revelados = React.useMemo(() => ({ ...lista, live: true }), [lista])
   const linha = React.useRef<HTMLLIElement>(null)
   const ancora = React.useRef<{ antes: Element | null; pai: Element | null }>({
@@ -858,12 +804,11 @@ function TimelineCollapsed({
 }
 
 /**
- * O fio que se desenha (rodada 227, `progress="scroll"`): um traço da cor do
- * texto por cima dos conectores e por baixo dos marcadores, do centro do
- * primeiro ao do último, que enche conforme a trilha passa pela tela — o
- * `Timeline` da Aceternity. A caixa é **medida** (o primeiro e o último
- * marcador), e não deduzida: assim ela serve a calha simples e a do `split`.
- * Ele é um `<li>` porque é filho de `<ol>`, e vem **primeiro** para não virar o
+ * O fio que se desenha (`progress="scroll"`): um traço da cor do texto por cima
+ * dos conectores e por baixo dos marcadores, do centro do primeiro ao do último,
+ * que enche conforme a trilha passa pela tela. A caixa é medida (o primeiro e o
+ * último marcador), e não deduzida, para servir a calha simples e a do `split`.
+ * É um `<li>` porque é filho de `<ol>`, e vem primeiro para não virar o
  * `:last-child` que decide o fim da trilha. Com movimento reduzido, cheio.
  */
 function TimelineProgress() {
@@ -903,12 +848,10 @@ function TimelineProgress() {
       el.style.setProperty("--tl-beam-h", `${Math.max(0, b.y - a.y)}px`)
     }
 
-    // O andamento é a lista passando pela janela: 0 quando o topo dela chega a
-    // 75% da altura, 1 quando o fim chega a 60%. Ele lê a caixa contra a janela,
-    // então serve a página e qualquer contêiner que role — `scroll` não
-    // borbulha, mas captura, e é na captura que o documento o ouve. (O
-    // `useScroll` do motion pede o contêiner de antemão, e ele só se sabe
-    // depois de montar.)
+    // O andamento é a lista passando pela janela: 0 quando o topo dela chega a 75%
+    // da altura, 1 quando o fim chega a 60%. Lê a caixa contra a janela, então serve
+    // a página e qualquer contêiner que role (`scroll` não borbulha, mas captura; o
+    // `useScroll` do motion pede o contêiner de antemão, que só se sabe depois de montar).
     const andar = () => {
       const r = ol.getBoundingClientRect()
       const inicio = window.innerHeight * 0.75
@@ -948,10 +891,10 @@ function TimelineProgress() {
 }
 
 /**
- * Título do evento. **A entrelinha é declarada, e não herdada**: o
- * `text-(length:…)` escreve `line-height` junto e derrubava o `leading-relaxed`
- * do `P` — o ponto caiu 0,88px fora do centro. O degrau publica `--tl-lead`, e
- * o título e `MARCADOR_OFFSET` leem a mesma fonte.
+ * Título do evento. A entrelinha é declarada, e não herdada: o `text-(length:…)`
+ * escreve `line-height` junto e derrubaria o `leading-relaxed` do `P` (o ponto
+ * cairia 0,88px fora do centro). O degrau publica `--tl-lead`, e o título e
+ * `MARCADOR_OFFSET` leem a mesma fonte.
  */
 function TimelineTitle({ className, ...props }: React.ComponentProps<"p">) {
   return (
@@ -967,10 +910,9 @@ function TimelineTitle({ className, ...props }: React.ComponentProps<"p">) {
 }
 
 /**
- * A primeira linha do evento (rodada 227): o título à esquerda — com um
- * `Badge` ao lado, se houver — e a hora ou o valor na ponta, em `end`. É a
- * forma que a atividade da conta escrevia à mão. Ela tem a altura do título,
- * então o marcador continua centrado nela.
+ * A primeira linha do evento: o título à esquerda (com um `Badge` ao lado, se
+ * houver) e a hora ou o valor na ponta, em `end`. Tem a altura do título, então
+ * o marcador continua centrado nela.
  */
 function TimelineHeader({
   className,
@@ -1007,28 +949,26 @@ function TimelineDescription({
 }
 
 /**
- * O relógio de um minuto, para o tempo relativo. No servidor (e na hidratação)
- * ele é `null`, e o `<time>` mostra o que a tela escreveu — então o HTML do
- * servidor e o primeiro quadro do cliente batem, e o relativo entra em seguida.
+ * O relógio de um minuto, para o tempo relativo. No servidor (e na hidratação) é
+ * `null` e o `<time>` mostra o que a tela escreveu, então o HTML do servidor e o
+ * primeiro quadro do cliente batem e o relativo entra em seguida.
  */
 function assinarMinuto(avisar: () => void) {
   const id = window.setInterval(avisar, 30_000)
   return () => window.clearInterval(id)
 }
 // Meio minuto, e não um: o instante é arredondado para baixo, e com um minuto
-// inteiro o evento que acabou de chegar ficava até 60s "no futuro" — medido, o
-// feed ao vivo escrevia "Em 1 min" para a compra que entrou agora.
+// inteiro o evento que acabou de chegar ficaria até 60s "no futuro" ("Em 1 min"
+// para a compra que entrou agora).
 const minutoAtual = () => Math.floor(Date.now() / 30_000) * 30_000
 const semRelogio = () => null
 const semAssinatura = () => () => {}
 
 /**
- * Carimbo de tempo. **Passe `dateTime`**: um `<time>` sem ele não é data para
- * máquina nenhuma.
- *
- * `relative` (rodada 227) escreve "Há 5 min", "Ontem", "Em 3 dias" a partir do
- * `dateTime` e se atualiza sozinho a cada minuto; a data completa vai no
- * `title`. Os filhos são o que aparece antes de o cliente assumir.
+ * Carimbo de tempo. Passe `dateTime`: um `<time>` sem ele não é data para máquina
+ * nenhuma. `relative` escreve "Há 5 min", "Ontem", "Em 3 dias" a partir do
+ * `dateTime` e se atualiza a cada minuto; a data completa vai no `title`. Os
+ * filhos são o que aparece antes de o cliente assumir.
  */
 function TimelineTime({
   className,
@@ -1066,9 +1006,9 @@ function TimelineTime({
 }
 
 /**
- * As ações do evento — "Pagar", "Ignorar" (rodada 227). O degrau desce aos
- * botões pelo `ButtonSizeContext` (`sm`): nenhuma chamada declara `size` nem
- * `h-7`. Elas ficam acima do link esticado.
+ * As ações do evento ("Pagar", "Ignorar"). O degrau desce aos botões pelo
+ * `ButtonSizeContext` (`sm`): nenhuma chamada declara `size` nem `h-7`. Ficam
+ * acima do link esticado.
  */
 function TimelineActions({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -1083,9 +1023,8 @@ function TimelineActions({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 /**
- * O conteúdo numa placa (rodada 227) — a nota, o comentário, o trecho que
- * mudou —, como o comentário dentro do histórico do GitHub. É `muted`, e não
- * um `Card`: um cartão dentro do cartão que hospeda a trilha seria a segunda
+ * O conteúdo numa placa (a nota, o comentário, o trecho que mudou). É `muted`, e
+ * não um `Card`: um cartão dentro do cartão que hospeda a trilha seria a segunda
  * moldura sem fronteira nova.
  */
 function TimelineCard({ className, ...props }: React.ComponentProps<"div">) {
@@ -1102,8 +1041,8 @@ function TimelineCard({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 /**
- * O evento que se abre (rodada 227): um gatilho "Detalhes" que troca de rótulo
- * e o conteúdo na mola da divulgação — é o `Collapsible`, com a mesma régua.
+ * O evento que se abre: um gatilho "Detalhes" que troca de rótulo e o conteúdo
+ * na mola da divulgação (o `Collapsible`, com a mesma régua).
  */
 function TimelineDetail({
   className,
@@ -1146,10 +1085,10 @@ function TimelineDetail({
 }
 
 /**
- * O evento clicável (rodada 227): o título leva o link, e o `::after` dele
- * cobre o evento inteiro — o padrão do `CardLink`. O sublinhado acende no
- * cursor e no toque, o anel de foco contorna o evento, e as ações e o detalhe
- * ficam por cima. `asChild` para o `<Link>` do Next.
+ * O evento clicável: o título leva o link e o `::after` dele cobre o evento
+ * inteiro (o padrão do `CardLink`). O sublinhado acende no cursor e no toque, o
+ * anel de foco contorna o evento, e as ações e o detalhe ficam por cima.
+ * `asChild` para o `<Link>` do Next.
  */
 function TimelineLink({
   className,
@@ -1172,9 +1111,9 @@ function TimelineLink({
 }
 
 /**
- * A trilha esperando dado (rodada 227): a mesma forma e o mesmo degrau da
- * lista, com os marcadores pulsando e as linhas em osso. É um `SkeletonGroup`
- * — o leitor de tela ouve o `label`, e os ossos são `aria-hidden`.
+ * A trilha esperando dado: a mesma forma e degrau da lista, com os marcadores
+ * pulsando e as linhas em osso. É um `SkeletonGroup` (o leitor de tela ouve o
+ * `label`; os ossos são `aria-hidden`).
  */
 function TimelineSkeleton({
   className,
@@ -1192,9 +1131,8 @@ function TimelineSkeleton({
   size?: VariantProps<typeof timelineVariants>["size"]
   label?: string
   /**
-   * `false` dentro de um esqueleto de página que já é um `SkeletonGroup`:
-   * duas regiões de status aninhadas seriam dois anúncios — a régua do
-   * `TableSkeleton group`.
+   * `false` dentro de um esqueleto de página que já é um `SkeletonGroup`: duas
+   * regiões de status aninhadas seriam dois anúncios (a régua do `TableSkeleton group`).
    */
   group?: boolean
 }) {

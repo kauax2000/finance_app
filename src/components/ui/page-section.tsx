@@ -20,49 +20,18 @@ import { barSurfaceClassName } from "@/lib/glass-classes"
 import { cn } from "@/lib/utils"
 
 /**
- * O bloco que dá ritmo vertical a uma tela.
- *
- * Quando nasceu, ele tinha zero consumidores no app — e **269 cópias dentro
- * do próprio catálogo**: `DocSection` (247 usos) e `Group` (22), dois arquivos
- * declarando a mesma string de cabeçalho de seção. Hoje o app o usa em 22
- * seções de 15 arquivos (o painel, a conta, os membros, os planos, a fatura e
- * a categoria), e o catálogo continua sendo o maior consumidor.
- *
- * Os eixos saem dessa contagem. `ruled` é a régua **em cima**, que é onde as
- * 269 já a punham: ela diz "começa outro bloco", e não "este bloco tem um
- * rodapé". `lg` é o corpo que elas usam.
- *
- * A escada desce por variável, e não por contexto nem por `in-*` — o mesmo
- * mecanismo e a mesma razão do `PageHeader`.
- *
- * O respiro dos dois degraus de cima é `--space-block` — o token que nomeia a
- * distância entre blocos. `sm` fica em `gap-3` porque ali o degrau é mais
- * apertado que a regra geral, e um token que se aplica a dois de três casos é
- * mais honesto que um quarto token para o terceiro.
- *
- * **O `min-w-0` é dele, e não do conteúdo.** Havia um `PageSectionContent` que
- * era um `<div>` com string de classe vazia, e a primeira versão desta rodada
- * tentou justificá-lo dando-lhe o `min-w-0` — "a tabela larga estoura a página
- * em vez de rolar". Medido, isso é falso: o tamanho mínimo automático de um
- * item de flex vale no **eixo principal**, e numa coluna o eixo principal é o
- * vertical, então `min-width: auto` já resolve para zero ali. Com e sem o
- * `min-w-0` no conteúdo, os mesmos 400px.
- *
- * O defeito real é um nível acima: uma seção usada como item de uma **linha**
- * de flex estoura para o próprio min-content — medido, **5241px** dentro de um
- * pai de 400 —, e some com a rolagem interna junto. Com `min-w-0` na seção:
- * 400px, e a região de dentro volta a rolar. A peça sem trabalho foi apagada, e
- * o trabalho ficou onde ele é.
+ * O bloco que dá ritmo vertical a uma tela. `ruled` é a régua em cima ("começa
+ * outro bloco"); `lg` é o corpo de uso comum. A escada desce por variável, como
+ * no `PageHeader`. O respiro dos dois degraus de cima é `--space-block`.
+ * O `min-w-0` é da seção, não do conteúdo: uma seção usada como item de uma
+ * **linha** de flex estoura para o próprio min-content e some com a rolagem
+ * interna; numa coluna o `min-width: auto` já resolve para zero.
  */
 const pageSectionVariants = cva("flex min-w-0 flex-col", {
   variants: {
     /**
-     * Encolhe o título e o respiro **juntos**, como o `size` do `Alert`.
-     *
-     * A entrelinha vem em par com o corpo porque `text-(length:…)` declara só
-     * o tamanho: sem a segunda variável o título herdaria a entrelinha do
-     * parágrafo em volta, e um `text-lg` a 1,5 lê diferente de um `text-lg` a
-     * 1,555 — que é a medida que o catálogo renderiza hoje (18/28).
+     * Encolhe o título e o respiro juntos, como o `size` do `Alert`. A entrelinha
+     * vem em par com o corpo porque `text-(length:…)` declara só o tamanho.
      */
     size: {
       sm: "gap-3 [--page-section-title:0.875rem] [--page-section-title-line:1.25rem]",
@@ -73,8 +42,10 @@ const pageSectionVariants = cva("flex min-w-0 flex-col", {
       plain: "",
       ruled: "border-t border-border pt-8",
     },
-    /** A cascata de entrada (rodada 233), a do `PageHeader`. Desligada por
-     *  padrão: uma tela tem várias seções, e todas subindo juntas é ruído. */
+    /**
+     * A cascata de entrada, a do `PageHeader`. Desligada por padrão: uma tela tem
+     * várias seções, e todas subindo juntas é ruído.
+     */
     reveal: {
       true: "page-section-reveal",
       false: "",
@@ -118,12 +89,11 @@ function useGuardado(chave: string | undefined, inicial: boolean) {
 }
 
 /**
- * A seção. Desde a rodada 233 ela é uma **região nomeada pelo título**
- * (`aria-labelledby` apontando para o `PageSectionTitle`, sem a tela escrever
- * `id`), sabe a própria profundidade (uma seção dentro de outra rende o título
- * um nível abaixo) e tem dois comportamentos: `collapsible`, em que o título
- * vira o gatilho e o resto recolhe na mola do `Collapsible`, e `sticky`, em que
- * o cabeçalho prende sob a barra do topo enquanto o conteúdo dela rola.
+ * A seção: região nomeada pelo título (`aria-labelledby` para o
+ * `PageSectionTitle`), sabe a própria profundidade (uma seção dentro de outra
+ * rende o título um nível abaixo) e tem `collapsible` (o título vira o gatilho e
+ * o resto recolhe na mola do `Collapsible`) e `sticky` (o cabeçalho prende sob a
+ * barra do topo).
  */
 function PageSection({
   className,
@@ -179,10 +149,10 @@ function PageSection({
   const nome =
     props["aria-label"] || props["aria-labelledby"] ? undefined : (titulo ?? undefined)
 
-  // No `collapsible`, o **primeiro filho** — o cabeçalho — fica de fora e o
-  // resto recolhe. É pela posição, e não por `child.type === PageSectionHeader`:
-  // o Fast Refresh troca a função a cada edição e a identidade deixa de bater
-  // calada (`table-ladder.test.ts`, asserção 26).
+  // No `collapsible`, o primeiro filho (o cabeçalho) fica de fora e o resto
+  // recolhe. É pela posição, não por `child.type === PageSectionHeader`: o Fast
+  // Refresh troca a função a cada edição e a identidade deixa de bater calada
+  // (trancado em `table-versions.test.ts`).
   const filhos = collapsible
     ? (() => {
         const [cabeca, ...resto] = React.Children.toArray(children)
@@ -224,10 +194,9 @@ function PageSection({
 }
 
 /**
- * Os botões da ação descem ao degrau `sm` sozinhos (rodada 233): quatro telas
- * escreviam `size="sm"` mais `h-8 text-xs pointer-coarse:h-10` à mão. No dedo
- * eles sobem a 40, e no telefone o de ícone fica quadrado com o rótulo como
- * nome — a regra do `PageHeader`. Um `size` no botão vence.
+ * Os botões da ação descem ao degrau `sm` sozinhos; no dedo sobem a 40, e no
+ * telefone o de ícone fica quadrado com o rótulo como nome (regra do
+ * `PageHeader`). Um `size` no botão vence.
  */
 const pageSectionButtonsClassName = [
   "pointer-coarse:[&>[data-slot=button]]:min-h-10",
@@ -237,9 +206,9 @@ const pageSectionButtonsClassName = [
 
 /**
  * A placa do cabeçalho preso: a tinta de barra do `TopBar` com o fio de baixo,
- * só presa. Ela sobra 8px acima e abaixo, para a altura não mudar ao prender,
- * e atravessa `--page-section-bleed` dos lados — a calha da página, que é de
- * quem monta a tela. A mesma da `Toolbar sticky`.
+ * só presa. Sobra 8px acima e abaixo, para a altura não mudar ao prender, e
+ * atravessa `--page-section-bleed` dos lados (a calha, de quem monta a tela).
+ * A mesma da `Toolbar sticky`.
  */
 const pageSectionPlateClassName = cn(
   barSurfaceClassName,
@@ -248,27 +217,13 @@ const pageSectionPlateClassName = cn(
 )
 
 /**
- * Título, descrição e — quando existe — a ação da seção.
- *
- * `actions` é prop porque a peça estava faltando e a demonstração da própria
- * página a inventava por `className`: `<PageSectionHeader className="flex-row
- * items-center justify-between">` desmontava o empilhamento do cabeçalho para
- * caber um "Ver todas". É o precedente de `FormPickerPopoverEmpty` e de
- * `HoverCardBody` — quando o catálogo escreve a anatomia, falta uma peça.
- *
- * A ação se centra na **linha do título**, e não com `items-center` no bloco
- * todo: com uma descrição de duas linhas, centrar no bloco desce o botão para o
- * meio do parágrafo.
- *
- * A caixa de ações tinha a altura exata de uma linha de título (24px no `md`),
- * e um controle é mais alto que isso: medido no dashboard, o "Ver categorias"
- * de 32px vazava 4px para cima e para baixo a 1280px, e o de 40px vazava 8px no
- * telefone — o respiro até o cartão caía de 16 para 8px, e o vazamento de cima
- * invadia a seção anterior. Agora o cabeçalho é uma grade: o título e a ação
- * dividem a primeira linha, que mede o maior dos dois, e a descrição desce para
- * a segunda. A ação continua centrada no título, e a altura dela entra na conta.
- *
- * Título e descrição **não levam `gap`** — par de identidade.
+ * Título, descrição e, quando existe, a ação da seção. `actions` é prop porque
+ * sobrescrever o cabeçalho por `className` desmonta o empilhamento dele.
+ * A ação se centra na linha do título, não no bloco (com descrição de duas
+ * linhas, o botão desceria ao meio do parágrafo). O cabeçalho é uma grade: título
+ * e ação dividem a primeira linha, que mede o maior dos dois (um controle é mais
+ * alto que uma linha de título), e a descrição desce para a segunda.
+ * Título e descrição não levam `gap`: par de identidade.
  */
 function PageSectionHeader({
   className,
@@ -295,8 +250,7 @@ function PageSectionHeader({
       {...props}
     >
       {preso ? <span aria-hidden data-slot="page-section-plate" className={pageSectionPlateClassName} /> : null}
-      {/* `contents`: título e descrição viram itens da grade, sempre na primeira
-          coluna — o título na linha da ação, a descrição logo abaixo. */}
+      {/* `contents`: título e descrição viram itens da grade, sempre na primeira coluna. */}
       <div className="contents *:col-start-1 *:min-w-0">{children}</div>
       {actions ? (
         <div
@@ -311,18 +265,12 @@ function PageSectionHeader({
 }
 
 /**
- * O nome da seção.
- *
- * **O nível é da profundidade** (rodada 233): `h2` na seção de fora, `h3` na de
- * dentro, até `h6` — a tela não escreve `asChild` com um `<h3>` para isso.
- * `asChild` continua existindo para o caso raro; o estilo nunca muda com o
- * nível. O `id` é o que nomeia a região; um `id` passado aqui vence.
- *
- * `icon` é o glifo `16/solid` antes do nome, na linha do título; `count` é a
- * contagem depois dele, tabular e com o espaço de verdade antes — sem ele o
- * nome acessível sairia "Membros4". Numa seção `collapsible` o conteúdo vira
- * um botão com a seta, dentro do cabeçalho (o padrão do acordeão); no cursor
- * só o nome sublinha, e não a contagem — a regra da linha de divulgação.
+ * O nome da seção. O nível é da profundidade: `h2` na seção de fora, `h3` na de
+ * dentro, até `h6`; `asChild` existe para o caso raro e o estilo nunca muda com
+ * o nível. O `id` nomeia a região; um `id` passado aqui vence.
+ * `icon` é o glifo `16/solid` antes do nome; `count` é a contagem depois, tabular
+ * e com espaço real antes (senão o nome acessível sai "Membros4"). Em seção
+ * `collapsible` o conteúdo vira um botão com a seta; no cursor só o nome sublinha.
  */
 function PageSectionTitle({
   className,
@@ -383,8 +331,7 @@ function PageSectionTitle({
   )
 
   return (
-    // O `H2` dá família, peso e tracking; o corpo e a entrelinha vêm do degrau
-    // declarado pelo `PageSection`. É por isso que o `H2` não traz régua.
+    // O `H2` dá família, peso e tracking; corpo e entrelinha vêm do degrau do `PageSection`.
     <H2
       asChild
       data-slot="page-section-title"
@@ -421,11 +368,7 @@ function PageSectionDescription({
   )
 }
 
-/**
- * O "Ver todas" da seção (rodada 233): um link `tertiary` com a seta que anda
- * 2px no cursor. O painel escrevia quatro botões `outline` de link à mão, cada
- * um com o ícone num tamanho.
- */
+/** O "Ver todas" da seção: link `tertiary` com a seta que anda 2px no cursor. */
 function PageSectionLink({
   href,
   className,
@@ -446,10 +389,7 @@ function PageSectionLink({
   )
 }
 
-/**
- * O texto miúdo do lado da ação (rodada 233): "Limite R$ 800", "Atualizado há
- * 2 min". Ele vai no `actions` do cabeçalho, sozinho ou ao lado de um botão.
- */
+/** O texto miúdo do lado da ação ("Limite R$ 800"); vai no `actions` do cabeçalho. */
 function PageSectionMeta({ className, ...props }: React.ComponentProps<"p">) {
   return (
     <p
@@ -460,10 +400,7 @@ function PageSectionMeta({ className, ...props }: React.ComponentProps<"p">) {
   )
 }
 
-/**
- * O rodapé da seção (rodada 233): a nota ou o "Mostrar mais" embaixo do
- * conteúdo, no mesmo respiro da seção. Os botões descem a `sm` como na ação.
- */
+/** O rodapé da seção: a nota ou o "Mostrar mais" embaixo do conteúdo. Os botões descem a `sm` como na ação. */
 function PageSectionFooter({ className, children, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -481,9 +418,8 @@ function PageSectionFooter({ className, children, ...props }: React.ComponentPro
 }
 
 /**
- * O esqueleto da seção (rodada 233): o título na linha dele, a descrição se
- * houver, a ação e o bloco do conteúdo. `group={false}` dentro de um esqueleto
- * de página, que já anuncia — dois `role="status"` aninhados falam duas vezes.
+ * O esqueleto da seção. `group={false}` dentro de um esqueleto de página, que
+ * já anuncia (dois `role="status"` aninhados falam duas vezes).
  */
 function PageSectionSkeleton({
   size = "md",

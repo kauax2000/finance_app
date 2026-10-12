@@ -11,35 +11,19 @@ import { cn } from "@/lib/utils"
 
 /**
  * A alternância que vale no instante em que é tocada.
- *
- * ## `size` mede o trilho, e o polegar deriva (rodada 179)
- *
- * `sm` 14×24 · **`md` 18×32** · `lg` 24×44. O polegar é a altura menos a
- * borda de 1px de cada lado, e a viagem é `largura − altura` — que é o
- * `calc(100% − 2px)` do polegar nos três degraus, então uma classe serve a
- * escada. `size="default"` saiu, como saiu de `Button`, `Input` e `Select`.
- *
- * ## O alvo é 44px de altura
- *
- * O `::after` crescia `-inset-y-2`: 34px no `md` e 30 no `sm`, abaixo do alvo
- * que o `Checkbox` e o `Radio` já davam. Agora ele é centrado com 44 de altura
- * nos três degraus e 11px a mais de cada lado da caixa (`-inset-x-3` conta da
- * borda de dentro): 46 · 54 · 66 de largura, medidos.
- *
- * ## O polegar anda na mola
- *
- * O deslocamento usa `--ease-spring`/`--duration-spring`, a mola da casa; o
+ * `size` mede o trilho: `sm` 14×24 · `md` 18×32 · `lg` 24×44; o polegar deriva
+ * (altura menos a borda de 1px, e a viagem é `largura − altura`), então uma
+ * classe (`calc(100% − 2px)`) serve a escada.
+ * O alvo é 44px de altura nos três degraus (o `::after` centrado, 11px a mais de
+ * cada lado da caixa: 46 · 54 · 66 de largura), como `Checkbox` e `Radio`.
+ * O polegar anda na mola da casa (`--ease-spring`/`--duration-spring`); o
  * trilho troca de cor em `--duration-slow`.
- *
- * ## `pending`, `icons` e `brand`
- *
- * - **`pending`**: o `Spinner` dentro do polegar enquanto o valor salva.
- *   Trava o controle (`disabled` do Radix) sem o apagar, e marca `aria-busy`.
- * - **`icons`**: um tique no ligado e um × no desligado, para o estado não
- *   depender só da cor e da posição.
- * - **`variant="brand"`**: a borda que acende em arco-íris perto do ponteiro,
- *   a família do brilho (`@utility brand-glow` + `useBrandGlow`) do
- *   `Checkbox` e do `Radio`. Uma por tela.
+ * - `pending`: o `Spinner` no polegar enquanto salva; trava (`disabled` do
+ *   Radix) sem apagar, e marca `aria-busy`.
+ * - `icons`: tique no ligado e × no desligado, para o estado não depender só de
+ *   cor e posição.
+ * - `variant="brand"`: a borda que acende em arco-íris perto do ponteiro (a
+ *   família do `Checkbox` e do `Radio`). Uma por tela.
  */
 const TRILHO = {
   sm: "h-3.5 w-6",

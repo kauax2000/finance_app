@@ -16,119 +16,45 @@ import { cn } from "@/lib/utils"
 
 /**
  * Painéis redimensionáveis.
- *
- * ## A costura não é uma borda
- *
- * O arquivo anterior pintava a alça com `bg-border`, 1px, sem estado nenhum —
- * exatamente o mesmo desenho de um `Separator` estático. A única peça de
- * cromagem do app cujo trabalho inteiro é dizer *esta linha não é uma parede,
- * ela se move* não dizia nada, e a pega do `withHandle` era **também**
- * `bg-border`: uma pastilha da cor do fio em que ela se apoia, ≈1,3:1 contra a
- * superfície — o mesmo número que o `AGENTS.md` registra para o contorno de
- * campo fora da 1.4.11.
- *
- * A lib publica a máquina de estados desde a v4 e o arquivo lia **zero**:
- * `data-separator` vale `inactive`, `hover`, `active`, `focus` ou `disabled`.
- * Hoje a costura acende no acento da marca ao pousar e ao arrastar.
- *
- * `--primary-accent` e não `--primary`: a régua da casa diz que traço fino é
- * acento, e que **traço com alfa é sempre acento** — `--primary` a 60% sobre a
- * página escura cai para 2:1 e some.
- *
- * ## O realce é pintado fora do fluxo
- *
- * Engrossar a alça de verdade reflui os dois painéis a cada passagem do cursor.
- * O realce é um `::before` absoluto de 2px centrado na costura, e só a **cor**
- * transiciona — nenhuma propriedade de layout entra na conta. É o mecanismo do
- * marcador do `Tabs`. `::before` e não `::after` de propósito: pseudo-elemento
- * `after` é o último filho e pintaria por cima da pega, o que exigiria um
- * `z-index` para desfazer.
- *
- * ## A região de arraste é da lib desde a v4, e o número era 20
- *
- * A doc antiga dizia que a alça tinha 4px e era "impossível com o dedo". Isso
- * descrevia uma versão que não está instalada: a v4 faz o próprio hit-testing,
- * expandindo a `DOMRect` da costura por `resizeTargetMinimumSize`, cujo padrão
- * é `{ coarse: 20, fine: 10 }` — escolhido por `isCoarsePointer()`. O `after:`
- * de 4px do arquivo antigo não era o alvo de nada havia uma versão inteira.
- *
- * O que restava de verdadeiro é que **20 é menos que os 44 do sistema**, e a
- * prop que fecha isso nunca tinha sido plugada. O padrão daqui é
- * `{ coarse: 44, fine: 10 }`: 44 é a medida de dedo desta casa, e `fine` fica
- * no valor da lib porque 10px de alvo de mouse sobre uma linha de 1px não tem
- * defeito medido. Continua sendo prop.
- *
- * ## Por que o colapsar não mora na alça
- *
- * Não é escolha. A lib liga `pointerdown`, `dblclick`, `contextmenu` e
- * `pointerup` **no documento, em fase de captura** (`addEventListener(t, f,
- * true)`), e decide por hit-testing de ponto contra as `DOMRect` expandidas.
- *
- * Um `<button>` dentro da alça é impossível: a captura do documento dispara
- * antes do handler do botão, e `stopPropagation` de dentro não alcança um
- * ancestral que já correu. Pior — qualquer controle a menos de **metade da
- * região de arraste** da costura (22px, com `coarse: 44`) tem o próprio clique
- * engolido pelo início de um arraste.
- *
- * Por isso o colapso é `useResizablePanel` + `ResizableCollapseTrigger`, que o
- * consumidor posiciona no cabeçalho do próprio painel, longe da costura por
- * construção. O colapso por arraste continua sendo o da lib (`collapsible` +
- * `collapsedSize`).
- *
- * ## A orientação vem do contexto, e não do `aria-orientation`
- *
- * O `Separator` emite `aria-orientation` **invertido** em relação ao grupo
- * (`grupo horizontal → separador vertical`), e o `Group` **não emite atributo
- * de orientação nenhum**. O arquivo antigo dependia dessa inversão sem
- * registrá-la, e é a armadilha exata que faz a próxima pessoa "corrigir" para o
- * lado errado. Aqui a geometria sai de uma condicional sobre o contexto — o
- * precedente do `separator.tsx`, que tirou as medidas de `data-[orientation=…]`
- * pelo mesmo motivo.
- *
- * ## Três classes do arquivo antigo não faziam nada
- *
- * **`flex h-full w-full` no grupo.** O `Group` declara `display`,
- * `flex-direction`, `flex-wrap`, `overflow`, `height` e `width` por **estilo
- * inline** — o próprio `.d.ts` avisa que as quatro primeiras não podem ser
- * sobrescritas. Inline vence classe: a `className` do grupo era inteiramente
- * inerte. Quem precisa mudar a caixa do grupo usa `style`, não classe.
- *
- * **`aria-[orientation=vertical]:flex-col` no grupo.** O nó do grupo só carrega
- * `data-group`, `data-testid` e `id`. O seletor não casava com nada.
- *
- * **`ring-offset-background` sem largura de offset**, e `rounded-lg` (10px)
- * numa pega de 4px, que o navegador clampa para 2. A família do "Desfazer" do
- * toast, que declarava `border-color` e nenhum `border-style`.
- *
- * ## O que ele não faz
- *
- * **Não tem eixo `size`.** Nenhuma contagem o pede — o precedente é a
- * `Toolbar`, que não ganhou eixo nenhum e registrou isso como a leitura honesta
- * das contagens.
- *
- * **Não importa a régua do `DragHandle`.** A pega usa a mesma tinta de arraste
- * que a folha e a gaveta, e no **mesmo** degrau: 70% — a rodada da alça varreu
- * os degraus contra `--background` e chegou ao mesmo piso desta varredura, por
- * caminho independente. Com isso cai o argumento que esta nota fazia, de que a
- * área explicaria alças mais claras: área muda como a cor **lê**, não o que a
- * 1.4.11 **exige**. A tinta é escrita literal aqui: o `DragHandle` mora no
- * `drawer.tsx`, um Organismo, e a asserção 2 do `taxonomy.test.ts` deixa este
- * arquivo — Átomo — importar **um** componente de `ui/`, que tem de ser Átomo. O
- * orçamento inteiro vai para o `Button` do gatilho de colapso. Pela mesma
- * razão, o fio do modo empilhado é uma `div` e **não** um `<Separator>`.
+ * A costura não é uma borda: a lib publica a máquina de estados em
+ * `data-separator` (`inactive`, `hover`, `active`, `focus`, `disabled`) e a
+ * costura acende no acento da marca ao pousar e ao arrastar (`--primary-accent`:
+ * traço fino é acento, e traço com alfa também).
+ * O realce é um `::before` absoluto de 2px fora do fluxo, e só a cor transiciona
+ * (engrossar a alça refluiria os painéis); `::before` e não `::after` porque o
+ * `after` pintaria por cima da pega.
+ * A região de arraste é da lib (v4): expande a `DOMRect` da costura por
+ * `resizeTargetMinimumSize`, padrão `{ coarse: 20, fine: 10 }`. Aqui
+ * `{ coarse: 44, fine: 10 }`: 44 é a medida de dedo da casa. Continua sendo prop.
+ * O colapsar não mora na alça: a lib liga `pointerdown`, `dblclick`,
+ * `contextmenu` e `pointerup` no documento em captura, então um `<button>` na
+ * alça é impossível e qualquer controle a menos de metade da região de arraste
+ * (22px) tem o clique engolido. O colapso é `useResizablePanel` +
+ * `ResizableCollapseTrigger`, no cabeçalho do painel; o colapso por arraste é o
+ * da lib (`collapsible` + `collapsedSize`).
+ * A orientação vem do contexto, não do `aria-orientation`: o `Separator` emite
+ * o valor invertido em relação ao grupo e o `Group` não emite nenhum (armadilha
+ * de "corrigir" para o lado errado).
+ * O `Group` declara `display`, `flex-direction`, `flex-wrap`, `overflow`,
+ * `height` e `width` por estilo inline: a `className` do grupo não os muda
+ * (use `style`).
+ * Sem eixo `size` (nenhuma contagem o pede, como na `Toolbar`). A tinta da pega
+ * é escrita literal aqui, sem importar o `DragHandle` (do `drawer.tsx`, um
+ * Organismo): um Átomo importa **um** componente de `ui/`, e esse tem de ser
+ * Átomo (`taxonomy.test.ts`), e o orçamento vai para o `Button` do gatilho. Pelo
+ * mesmo motivo o fio do modo empilhado é uma `div`, e não um `<Separator>`.
  */
 
 /**
- * O alvo de arraste. `coarse` é a medida de dedo do sistema, a mesma do
- * `pointer-coarse:min-h-11`; `fine` é o padrão da lib.
+ * O alvo de arraste. `coarse` é a medida de dedo do sistema (a do
+ * `pointer-coarse:min-h-11`); `fine` é o padrão da lib.
  */
 const DRAG_TARGET = { coarse: 44, fine: 10 } as const
 
 /**
- * As props que a lib entende e uma `div` não. No modo empilhado não há `Group`
- * nem `Panel` para recebê-las, e deixá-las passar vira atributo desconhecido no
- * DOM. As duas listas são o contrato escrito, e não um descarte por
- * destructuring — que compila igual e não diz o que está sendo jogado fora.
+ * As props que a lib entende e uma `div` não: no modo empilhado não há `Group`
+ * nem `Panel`, e deixá-las passar vira atributo desconhecido no DOM. As duas
+ * listas são o contrato escrito, em vez de um descarte por destructuring.
  */
 const GROUP_ONLY_PROPS = [
   "defaultLayout",
@@ -174,41 +100,17 @@ const ResizableContext = React.createContext<{
 const useResizableContext = () => React.useContext(ResizableContext)
 
 /**
- * O movimento do colapso, e por que ele é declarado no **grupo**.
- *
- * Quem carrega o `flex-grow` é a **raiz** de cada painel, e a `className` do
- * `ResizablePanel` cai num `div` **interno** — o `.d.ts` da lib diz isso com
- * todas as letras ("Class is applied to nested HTMLDivElement to avoid styles
- * that interfere with Flex layout"). Então a transição não tem como ser escrita
- * no painel: ela é um seletor de filho a partir do grupo, que é o único nó com
- * `className` na mesma árvore.
- *
- * ## Ela desliga durante o arraste, e isso é o ponto
- *
- * `flex-grow` transiciona (é um `<number>`), mas transição durante arraste é
- * **atraso**: o painel passaria a perseguir o cursor com 200ms de sobra. O mesmo
- * vale para o teclado, onde cada seta é um passo e a repetição de tecla
- * empilharia interpolações.
- *
- * Os dois estados já estão publicados pela lib no `data-separator` — `active`
- * enquanto arrasta, `focus` enquanto o teclado manda —, então a regra é ler
- * esses dois e zerar a duração. Sobra exatamente o caso que **é** um comando
- * discreto: colapsar e expandir.
- *
- * ## Variável, e não uma segunda classe disputando
- *
- * A duração desce por `--resizable-anim` em vez de um
- * `has-…:[&>…]:transition-none` empilhado sobre a classe base. As duas
- * escreveriam a **mesma** propriedade no mesmo elemento, e quem venceria seria a
- * ordem de emissão do Tailwind — não o que se escreveu. Variável herda e não
- * disputa; é o mecanismo de `--toolbar-control` e de `--disclosure-nudge`.
- *
- * ## O custo, dito
- *
- * Animar `flex-grow` reflui o conteúdo dos painéis a cada quadro. Num painel com
- * tabela longa isso é caro, e é a razão de o movimento ficar restrito ao
- * comando em vez de valer para toda mudança de tamanho. `prefers-reduced-motion`
- * não precisa de regra própria: o bloco global encurta transições para 0,01ms.
+ * O movimento do colapso, declarado no **grupo**: o `flex-grow` está na raiz de
+ * cada painel e a `className` do `ResizablePanel` cai num `div` interno, então
+ * a transição é um seletor de filho a partir do grupo.
+ * Desliga durante o arraste e o teclado (`data-separator` `active`/`focus`):
+ * transição aí é atraso, e a repetição de tecla empilharia interpolações. Sobra
+ * o comando discreto, colapsar e expandir.
+ * A duração desce por `--resizable-anim`, e não por um `transition-none`
+ * empilhado: duas classes na mesma propriedade seriam decididas pela ordem de
+ * emissão do Tailwind.
+ * Custo: animar `flex-grow` reflui o conteúdo a cada quadro; por isso só o comando
+ * anima. `prefers-reduced-motion` é coberto pelo bloco global.
  */
 const resizableGroupMotionClassName = [
   "[--resizable-anim:var(--duration-base)]",
@@ -222,16 +124,15 @@ const resizableGroupMotionClassName = [
 const resizableHandleVariants = cva(
   [
     "relative flex shrink-0 items-center justify-center outline-hidden",
-    // O realce. 2px sobre uma costura de 1px, e só a cor transiciona.
+    // O realce: 2px sobre uma costura de 1px, e só a cor transiciona.
     "before:absolute before:bg-transparent before:transition-colors",
     "before:duration-(--duration-fast) before:ease-(--ease-out)",
-    // O acento acende ao pousar, ao focar pelo teclado e enquanto arrasta.
-    // `focus` desloca `hover` na máquina da lib, então os três são declarados.
+    // O acento acende ao pousar, ao focar pelo teclado e enquanto arrasta; `focus`
+    // desloca `hover` na máquina da lib, então os três são declarados.
     "data-[separator=hover]:before:bg-primary-accent/60",
     "data-[separator=focus]:before:bg-primary-accent/60",
     "data-[separator=active]:before:bg-primary-accent",
-    // O anel do sistema. Era `ring-1` mais um `ring-offset-background` sem
-    // largura — a única peça de `ui/` fora do `ring-3`.
+    // O anel do sistema (`ring-3`).
     "focus-visible:ring-3 focus-visible:ring-ring/45",
     // Desabilitado volta a ser um fio, sem acento e sem pega.
     "data-[separator=disabled]:before:bg-transparent",
@@ -255,13 +156,10 @@ const resizableHandleVariants = cva(
 
 type ResizablePanelGroupProps = ResizablePrimitive.GroupProps & {
   /**
-   * Abaixo de 768px o grupo vira fluxo empilhado: os painéis soltam as
-   * proporções e a costura deixa de arrastar. Um split é móvel de desktop, e é
-   * o mesmo par que o `Sheet` já faz entre painel e gaveta — uma API só,
-   * nenhuma tela escreve `isMobile`.
-   *
-   * O padrão é `orientation === "horizontal"`. Um grupo vertical num telefone
-   * **já** é uma coluna, e o telefone é alto: ele mantém as alças.
+   * Abaixo de 768px o grupo vira fluxo empilhado: os painéis soltam as proporções
+   * e a costura deixa de arrastar (o mesmo par do `Sheet` entre painel e gaveta;
+   * nenhuma tela escreve `isMobile`). O padrão é `orientation === "horizontal"`:
+   * um grupo vertical num telefone já é uma coluna e mantém as alças.
    */
   stack?: boolean
 }
@@ -354,9 +252,8 @@ function ResizableHandle({
   const { orientation, stacked } = useResizableContext()
 
   if (stacked) {
-    // Empilhado não há o que arrastar, e a costura perde o papel e o foco. O
-    // fio fica: duas regiões de conteúdo empilhadas sem nada entre elas leem
-    // como um bloco só, e fio entre itens é a categoria que nunca o perde.
+    // Empilhado não há o que arrastar: a costura perde o papel e o foco. O fio fica,
+    // senão duas regiões empilhadas leem como um bloco só.
     if (variant === "plain") return null
 
     return (
@@ -382,21 +279,11 @@ function ResizableHandle({
         <div
           data-slot="resizable-grip"
           className={cn(
-            // A mesma tinta de arraste da folha e da gaveta, num alfa maior — e
-            // o que separa os dois é **área**. A alça da gaveta é 48×6 numa
-            // superfície que a pessoa acabou de abrir; esta pega é 4×32 entre
-            // dois painéis de conteúdo, e a mesma cor lê como menos: é a
-            // medição da `AnnouncementBar`, onde 12px de ícone precisaram de
-            // mais tinta que um botão de texto pelo mesmo motivo.
-            //
-            // Varridos os degraus sobre o fundo real, **70% é o primeiro que
-            // alcança 3:1 nos dois temas** — 3,16 no claro e 4,05 no escuro,
-            // contra 1,66 e 1,92 a 35%. É a varredura que o cartão de escolha
-            // do `Field` já fez, e o mesmo critério.
-            //
-            // `shrink-0` é carga estrutural, não enfeite: a pega é filha de um
-            // flex de **1px** de largura, e sem ela o flex a esmaga. Medido sem
-            // a classe, ela saía 1×32 em vez de 4×32.
+            // A mesma tinta de arraste da folha e da gaveta, num alfa maior porque a área é
+            // menor (4×32 entre dois painéis de conteúdo). 70% é o primeiro degrau que
+            // alcança 3:1 nos dois temas (3,16 no claro, 4,05 no escuro).
+            // `shrink-0` é carga estrutural: a pega é filha de um flex de 1px de largura e
+            // sem ele sai 1×32.
             "pointer-events-none shrink-0 rounded-full bg-muted-foreground/70",
             orientation === "horizontal" ? "h-8 w-1" : "h-1 w-8"
           )}
@@ -407,12 +294,9 @@ function ResizableHandle({
 }
 
 /**
- * `localStorage` com as duas guardas que a lib não tem.
- *
- * O padrão do `useDefaultLayout` é `storage = localStorage`, avaliado na
- * chamada do hook — e o `getServerSnapshot` dele também lê o storage. Num
- * componente cliente pré-renderizado pelo Next isso é `ReferenceError` no
- * servidor. O `setItem` ainda pode lançar por cota ou por janela anônima.
+ * `localStorage` com as duas guardas que a lib não tem: o padrão do
+ * `useDefaultLayout` o lê na chamada do hook (e no `getServerSnapshot`), o que é
+ * `ReferenceError` no servidor, e o `setItem` pode lançar por cota ou janela anônima.
  */
 const safeLayoutStorage: ResizablePrimitive.LayoutStorage = {
   getItem: (key) => {
@@ -428,21 +312,17 @@ const safeLayoutStorage: ResizablePrimitive.LayoutStorage = {
     try {
       window.localStorage.setItem(key, value)
     } catch {
-      // Cota estourada ou armazenamento bloqueado. A proporção volta ao padrão
-      // no próximo carregamento, que é o pior caso aceitável.
+      // Cota estourada ou armazenamento bloqueado: a proporção volta ao padrão no
+      // próximo carregamento.
     }
   },
 }
 
 /**
- * Lembra a proporção entre carregamentos.
- *
- * Um split cuja proporção reseta a cada navegação é um split que ninguém
- * ajusta. Espalhe o retorno no `ResizablePanelGroup`, e dê `id` a cada
- * `ResizablePanel` — é por ele que a proporção é reencontrada.
- *
- * `onlySaveAfterUserInteractions` fica ligado: redimensionar a janela não é a
- * pessoa escolhendo uma proporção.
+ * Lembra a proporção entre carregamentos. Espalhe o retorno no
+ * `ResizablePanelGroup` e dê `id` a cada `ResizablePanel` (é por ele que a
+ * proporção é reencontrada). `onlySaveAfterUserInteractions` fica ligado:
+ * redimensionar a janela não é escolher uma proporção.
  */
 function useResizableLayout({
   id,
@@ -463,24 +343,16 @@ function useResizableLayout({
       storage,
     })
 
-  // A proporção guardada só entra **depois** da hidratação, e isso não é
-  // cautela: medido no catálogo, o grupo lançava
-  // `A tree hydrated but some attributes … didn't match` com um diff inteiro de
-  // `flexGrow`. A causa é a lib passar **a mesma função** como `getSnapshot` e
-  // como `getServerSnapshot` do `useSyncExternalStore` — então, na passagem de
-  // hidratação, o cliente lê o `localStorage` e discorda do HTML que o servidor
-  // acabou de mandar, onde nada havia. Nenhuma guarda de `typeof window` pega
-  // isso: na hidratação o `window` existe.
+  // A proporção guardada só entra depois da hidratação: a lib passa a mesma
+  // função como `getSnapshot` e `getServerSnapshot` do `useSyncExternalStore`, o
+  // cliente lê o `localStorage` e discorda do HTML do servidor (erro de
+  // hidratação com diff de `flexGrow`). Nenhuma guarda de `typeof window` pega.
   const [hidratado, setHidratado] = React.useState(false)
   React.useEffect(() => setHidratado(true), [])
 
-  // E adiar sozinho não basta — medido: com o `defaultLayout` chegando depois,
-  // o grupo o **ignora** e fica no `defaultSize` de cada painel (25/75 guardado,
-  // 40/60 na tela). `defaultLayout` é lido na montagem, e só nela. Por isso o
-  // `groupKey`: ele troca uma vez, na hidratação, e remonta o grupo já com a
-  // proporção certa. O custo é uma remontagem por carregamento, e é por isso
-  // que ele é `key` explícito em vez de vir no espalhamento — quem paga tem de
-  // ver o preço escrito na chamada.
+  // Adiar sozinho não basta: `defaultLayout` é lido só na montagem. O `groupKey`
+  // troca uma vez, na hidratação, e remonta o grupo já com a proporção certa. O
+  // custo é uma remontagem por carregamento, por isso é `key` explícito.
   const groupProps = React.useMemo(
     () => ({
       defaultLayout: hidratado ? defaultLayout : undefined,
@@ -489,28 +361,23 @@ function useResizableLayout({
     [defaultLayout, hidratado, onLayoutChanged]
   )
 
-  // `groupKey` sai **fora** de `groupProps` de propósito: ele é `key`, não
-  // prop. Devolvido junto com os outros, o espalhamento o levava até a `div` do
-  // grupo e o React reclamava de atributo desconhecido — medido.
+  // `groupKey` fica fora de `groupProps` de propósito: é `key`, não prop; no
+  // espalhamento chegaria à `div` do grupo.
   return { groupKey: hidratado ? "hidratado" : "servidor", groupProps }
 }
 
 /**
- * O colapso de um painel, e o estado dele.
- *
- * `isCollapsed()` da lib é um getter, não uma assinatura reativa — quem
- * re-renderiza é o `onResize`, por isso ele vem dentro de `panelProps`. Passe
- * `collapsible` e, quando fizer sentido, `collapsedSize` no próprio painel:
- * são eles que também dão o colapso por arraste.
+ * O colapso de um painel e o estado dele. `isCollapsed()` da lib é um getter,
+ * não uma assinatura reativa: quem re-renderiza é o `onResize`, por isso vem em
+ * `panelProps`. Passe `collapsible` (e `collapsedSize`) no próprio painel: é o
+ * que dá o colapso por arraste.
  */
 function useResizablePanel() {
   const [handle, setHandle] = ResizablePrimitive.usePanelCallbackRef()
   const [isCollapsed, setIsCollapsed] = React.useState(false)
 
-  // O painel pode guardar o primeiro `onResize` que recebeu, de quando o
-  // `handle` ainda era nulo: lido pela ref, o colapso sempre consulta o atual.
-  // Sem isso a largura ia a 48 e `isCollapsed` seguia falso — a barra
-  // redimensionável nunca entrava em modo ícone.
+  // O painel pode guardar o primeiro `onResize` que recebeu, de quando o `handle`
+  // era nulo: lido pela ref, o colapso consulta sempre o atual.
   const handleRef = React.useRef(handle)
   React.useLayoutEffect(() => {
     handleRef.current = handle
@@ -550,11 +417,8 @@ type ResizableCollapseTriggerProps = Omit<
 }
 
 /**
- * O gatilho de colapso.
- *
- * Ele mora no cabeçalho do painel, e **não** na alça: qualquer controle a menos
- * de metade da região de arraste da costura tem o clique engolido pelo início
- * de um arraste. A medição está no cabeçalho deste arquivo.
+ * O gatilho de colapso: mora no cabeçalho do painel, não na alça (um controle a
+ * menos de metade da região de arraste tem o clique engolido).
  */
 function ResizableCollapseTrigger({
   className,
@@ -593,23 +457,14 @@ function ResizableCollapseTrigger({
 }
 
 /**
- * # As colunas de uma tabela (rodada 170)
- *
- * A mesma costura, no cabeçalho de uma `Table`. **Não é a lib**: os painéis
- * dela são caixas flex, e uma tabela é `table-layout`, onde quem manda na
- * largura de uma coluna é a célula da primeira linha. Aqui o arraste é
- * nosso — `pointer` com captura, as setas do teclado, o duplo-clique —, e o
- * desenho é o do `ResizableHandle plain`: nada em repouso, o fio ao pousar na
- * célula, o acento ao pousar na costura e ao arrastar.
- *
- * ## Uma coluna fica sem largura, e ela é a folga
- *
- * Com `table-layout: fixed`, as colunas com largura declarada medem
- * exatamente isso e a que **não** tem largura absorve a sobra. É o que faz o
- * arraste andar com o ponteiro: sem ela, a tabela de 100% redistribuiria a
- * sobra entre todas e a costura escorregaria do cursor. O piso da folga
+ * As colunas de uma tabela: a mesma costura, no cabeçalho de uma `Table`. Não é
+ * a lib (os painéis dela são flex; numa tabela quem manda na largura é a célula
+ * da primeira linha): o arraste é nosso (`pointer` com captura, setas,
+ * duplo-clique) e o desenho é o do `ResizableHandle plain`.
+ * Uma coluna fica sem largura e é a folga: com `table-layout: fixed` ela
+ * absorve a sobra, e é o que faz o arraste andar com o ponteiro. O piso dela
  * (`fluidMinWidth`, 192px) entra no `min-width` da tabela; abaixo dele o
- * viewport da `Table` rola na horizontal, que é o que ele já faz.
+ * viewport da `Table` rola na horizontal.
  */
 type ResizableColumn = {
   /** A largura inicial, em px. */
@@ -635,13 +490,11 @@ function lerLarguras(id: string | undefined): Record<string, number> | null {
 }
 
 /**
- * As larguras das colunas, o arraste e a memória.
- *
- * Espalhe `tableStyle` na `Table`, `columnStyle(chave)` em cada `TableHead`
- * redimensionável e `handleProps(chave, rótulo)` num `ResizableColumnHandle`
- * dentro dele. Com `id`, as larguras são lembradas entre carregamentos — lidas
- * **depois** da hidratação, pela lição do `useResizableLayout`: o HTML do
- * servidor não sabe do `localStorage`.
+ * As larguras das colunas, o arraste e a memória. Espalhe `tableStyle` na
+ * `Table`, `columnStyle(chave)` em cada `TableHead` redimensionável e
+ * `handleProps(chave, rótulo)` num `ResizableColumnHandle` dentro dele. Com `id`
+ * as larguras são lembradas, lidas depois da hidratação (como no
+ * `useResizableLayout`).
  */
 function useResizableColumns<K extends string>({
   id,
@@ -718,12 +571,9 @@ type ResizableColumnHandleProps = {
 }
 
 /**
- * A costura de uma coluna: o `role="separator"` na borda direita do
- * `TableHead`, que se posiciona sozinho quando ela está dentro dele.
- *
- * O alvo é de 10px no mouse e 24px no dedo, centrado na borda — e não os 44
- * da casa: numa coluna de 88px, 44 de alvo cobririam metade do rótulo, e o
- * clique de ordenar passaria a arrastar. É o teto consciente desta peça.
+ * A costura de uma coluna: o `role="separator"` na borda direita do `TableHead`.
+ * O alvo é de 10px no mouse e 24px no dedo, e não os 44 da casa: numa coluna de
+ * 88px, 44 cobririam metade do rótulo e o clique de ordenar passaria a arrastar.
  */
 function ResizableColumnHandle({
   label,
@@ -750,9 +600,8 @@ function ResizableColumnHandle({
       data-dragging={arrastando ? "" : undefined}
       className={cn(
         "absolute inset-y-0 right-0 z-10 w-2.5 translate-x-1/2 cursor-col-resize touch-none outline-hidden select-none pointer-coarse:w-6",
-        // O fio: nada em repouso, a borda ao pousar na célula, o acento ao
-        // pousar na costura, ao focar e ao arrastar. 2px centrados, e só a cor
-        // transiciona — o realce do `ResizableHandle`.
+        // O fio: nada em repouso, a borda ao pousar na célula, o acento ao pousar na
+        // costura, ao focar e ao arrastar. 2px centrados, só a cor transiciona.
         "before:absolute before:inset-y-1.5 before:left-1/2 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-transparent before:transition-colors before:duration-(--duration-fast) before:ease-(--ease-out)",
         "[@media(hover:hover)]:in-[th:hover]:before:bg-border",
         "hover:before:bg-primary-accent/60 focus-visible:before:bg-primary-accent/60",

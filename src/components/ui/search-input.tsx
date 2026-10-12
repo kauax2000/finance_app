@@ -26,59 +26,26 @@ import { Kbd } from "@/components/ui/kbd"
 import { Spinner } from "@/components/ui/spinner"
 
 /**
- * O campo de busca do projeto — a pílula do cabeçalho e da paleta.
- *
- * ## Rodada 198: a mesma pílula das referências
- *
- * Ele era um `InputGroup` — caixa `rounded-lg`, fio de campo de formulário,
- * recuo de addon — enquanto as três buscas que a pessoa mais vê (o gatilho do
- * cabeçalho do catálogo, o `CommandDialog` e o `Combobox`) eram uma pílula
- * com a lupa quieta. Agora os três e ele vestem `lib/search-field-classes`:
- * a forma, a escada, as duas superfícies, a lupa, o × e a tecla do atalho são
- * escritos uma vez. Ele deixou de compor o `InputGroup` porque a pílula não é
- * o grupo de campo: o recuo, o raio e o fio seriam todos sobrescritos.
- *
- * ## O × do navegador sai; a semântica fica
- *
- * `type="search"` traz um × desenhado pelo WebKit — azul do sistema, fora do
- * tema e da escada. O desenho é suprimido e o botão é nosso. A semântica
- * **fica**: é ela que dá a tecla "Buscar" no teclado do iOS e o
- * `role="searchbox"` que o leitor de tela anuncia.
- *
- * **O × só aparece quando há texto, e só com `onClear`** — um × que não limpa
- * nada é pior que nenhum. Ao limpar, o foco volta ao campo: o botão some com o
- * texto, e sem isso o foco caía no `<body>`.
- *
- * ## `className` dimensiona o campo, e não o texto
- *
- * Ele vai para a pílula, porque é ela que desenha a borda e a largura. Medido
- * numa versão antiga, em que ia para o `<input>`: um `max-w-xs` encolhia só a
- * área de digitação e deixava a moldura com a largura toda, com o × **354px**
- * à direita do texto. Para o `<input>` existe `inputClassName`.
- *
- * ## As versões
- *
- * - `surface="plate"`: a pílula de vidro da pilha do `Command`, para busca
- *   dentro de painel flutuante (o `FormPickerPopoverSearch`).
- * - `shortcut`: a tecla à direita, sem pastilha, como o ⌘K do cabeçalho — e
- *   o atalho **foca** o campo. Sem modificadora (`"/"`), ele não dispara com
- *   o foco num campo de texto: ali a tecla é texto.
- * - `variant="brand"`: o brilho de marca na borda ao aproximar o ponteiro, o
- *   do gatilho do cabeçalho. Só na superfície `field` — a `plate` já é vidro,
- *   e o brilho é a borda de uma peça na página. Uma por tela.
- * - `pending`: a lupa vira `Spinner` e a pílula ganha `aria-busy`, sem
- *   mudar de tamanho.
- *
- * ## O campo pode ser de outro (rodada 198)
- *
- * O `CommandInput` — a busca do `CommandDialog` e do `Combobox` — monta
- * **este** componente, com o `Command.Input` do cmdk como filho: o cmdk
- * precisa do campo dele para filtrar a lista, e o `Slot` funde nele as classes,
- * o `type` e o `ref` daqui. É o que faz o `Combobox` ser o `SearchInput
- * surface="plate"`, e não uma cópia da receita. Para ele existem também
- * `leading` (o escopo da paleta, entre a lupa e o texto), `focusRing` (a
- * paleta nasce focada e não acende anel), `touchFloor` (a pilha tem medidas
- * próprias) e `rootProps` (o `data-waiting` do feixe).
+ * O campo de busca do projeto: a pílula do cabeçalho e da paleta. Veste
+ * `lib/search-field-classes` (forma, escada, as duas superfícies, lupa, × e tecla
+ * do atalho), como o gatilho do cabeçalho, o `CommandDialog` e o `Combobox`. Não
+ * compõe o `InputGroup`: o recuo, o raio e o fio dele seriam todos sobrescritos.
+ * O × do navegador sai e a semântica fica: `type="search"` traz um × do WebKit
+ * (fora do tema e da escada), mas dá a tecla "Buscar" do iOS e o
+ * `role="searchbox"`. O nosso só aparece com texto e com `onClear`, e ao limpar o
+ * foco volta ao campo (o botão some com o texto).
+ * `className` dimensiona a pílula, que desenha a borda e a largura; para o
+ * `<input>` existe `inputClassName`.
+ * - `surface="plate"`: a pílula de vidro da pilha do `Command`, para busca dentro
+ *   de painel flutuante.
+ * - `shortcut`: a tecla à direita, sem pastilha; o atalho foca o campo, e sem
+ *   modificadora (`"/"`) não dispara com o foco num campo de texto.
+ * - `variant="brand"`: o brilho de marca na borda ao aproximar o ponteiro, só na
+ *   superfície `field`. Uma por tela.
+ * - `pending`: a lupa vira `Spinner` e a pílula ganha `aria-busy`.
+ * O `CommandInput` monta **este** componente com o `Command.Input` do cmdk como
+ * filho (o `Slot` funde classes, `type` e `ref`); daí `leading` (o escopo da
+ * paleta), `focusRing` (a paleta nasce focada), `touchFloor` e `rootProps`.
  */
 
 type SearchInputProps = Omit<React.ComponentProps<"input">, "size"> & {

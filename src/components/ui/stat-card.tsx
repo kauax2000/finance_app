@@ -14,31 +14,15 @@ import { Progress, type ProgressBands } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
 
 /**
- * O número que a tela veio dizer, com o rótulo que o explica.
- *
- * ## Ele compõe o `Card`, e não reimplementa um
- *
- * A versão anterior montava a superfície à mão: `rounded-xl border
- * border-border/80 bg-card p-4 shadow-xs ring-1 ring-foreground/5`. Cada
- * pedaço disso é um eixo que o `Card` já governa — e o `border-border/80` era um
- * **quarto peso de borda** no app, exatamente o que o `tone` do `Separator`
- * existe para não deixar acontecer.
- *
- * ## O tom mora no detalhe (rodada 223)
- *
- * O cartão inteiro era tingido — verde, vermelho, âmbar —, e quatro lado a lado
- * disputavam o olho com o próprio número. Hoje a superfície é a do `Card`, e o
- * tom aparece onde ele **diz** alguma coisa: no ladrilho do ícone, na cor do
- * número de dinheiro e na faísca. Cada tom publica quatro variáveis
- * (`--stat-tile`, `--stat-tile-ink`, `--stat-figure`, `--stat-chart`), e as
- * peças só as leem — o mecanismo de `--badge-dot` e `--toggle-indicator-*`.
- *
- * ## O rótulo e o valor não levam `gap`
- *
- * Rótulo sobre valor é o par de identidade que o `AGENTS.md` nomeia com estas
- * palavras, e o invariante diz "nem `gap-1`". O respiro existe **entre**
- * blocos diferentes — o cabeçalho, a nota, a faísca, a meta —, e quem o declara
- * é o contêiner, por seletor de filho, como o `ItemGroup variant="divided"`.
+ * O número que a tela veio dizer, com o rótulo que o explica. Compõe o `Card`
+ * (cada pedaço da superfície é um eixo dele; um `border-border/80` à mão seria
+ * um quarto peso de borda).
+ * O tom mora no detalhe: a superfície é a do `Card`, e o tom aparece onde diz
+ * algo: o ladrilho do ícone, o número de dinheiro e a faísca. Cada tom publica
+ * `--stat-tile`, `--stat-tile-ink`, `--stat-figure` e `--stat-chart`, que as
+ * peças só leem (o mecanismo de `--badge-dot`).
+ * Rótulo e valor não levam `gap` (par de identidade); o respiro é entre blocos
+ * diferentes e o contêiner o declara por seletor de filho.
  */
 const statCardVariants = cva("gap-0", {
   variants: {
@@ -53,14 +37,11 @@ const statCardVariants = cva("gap-0", {
         "[--stat-tile:var(--warning-muted)] [--stat-tile-ink:var(--warning-muted-foreground)] [--stat-figure:var(--foreground)] [--stat-chart:var(--warning)]",
       info: "[--stat-tile:var(--info-muted)] [--stat-tile-ink:var(--info-muted-foreground)] [--stat-figure:var(--foreground)] [--stat-chart:var(--info)]",
     },
-    // O corpo do número, o recuo e o respiro entre os blocos — três medidas que
-    // andam juntas. `sm` é o de dentro de uma folha; `md`, o de painel, que
-    // sobe um degrau a partir de `sm:` (no telefone a grade é 2×2 e o número
-    // de 24px não cabe); `lg`, o herói — o saldo.
-    //
-    // O valor e a faixa leem `--stat-card-value` e `--stat-card-range`, e o
-    // `MoneyDisplay` composto dentro do valor também: quem chama não escreve
-    // `size` nele.
+    // O corpo do número, o recuo e o respiro entre os blocos andam juntos. `sm` é o
+    // de dentro de uma folha; `md`, o de painel, que sobe um degrau a partir de
+    // `sm:` (no telefone a grade é 2×2 e 24px não cabe); `lg`, o herói. O valor e a
+    // faixa leem `--stat-card-value` e `--stat-card-range`, e o `MoneyDisplay`
+    // composto dentro do valor também.
     size: {
       sm: [
         "p-3 [--stat-card-value:var(--text-lg)] [--stat-card-range:var(--text-sm)]",
@@ -76,9 +57,8 @@ const statCardVariants = cva("gap-0", {
       ].join(" "),
     },
     /**
-     * `horizontal` é a linha compacta: o ladrilho à esquerda ocupando as duas
-     * linhas, o rótulo sobre o valor no meio e a variação na ponta. Para dentro
-     * de folhas e listas, onde o cartão vertical seria alto demais.
+     * `horizontal` é a linha compacta: ladrilho nas duas linhas, rótulo sobre valor
+     * no meio e variação na ponta. Para folhas e listas, onde o vertical seria alto demais.
      */
     layout: {
       vertical: "",
@@ -119,10 +99,8 @@ function StatCard({
         data-tone={tone ?? "default"}
         data-size={size ?? "md"}
         data-layout={layout ?? "vertical"}
-        // `padding="none"` porque o recuo é do `size` daqui — o do `Card` não
-        // conhece o corpo do número. `interactive` e `asChild` descem inteiros:
-        // o cartão que abre a lista filtrada é o caso óbvio, e o `Card` já traz
-        // elevação, par de toque e anel de foco.
+        // `padding="none"` porque o recuo é do `size` daqui. `interactive` e `asChild`
+        // descem inteiros (o cartão que abre a lista filtrada).
         padding="none"
         interactive={interactive}
         asChild={asChild}
@@ -133,16 +111,12 @@ function StatCard({
   )
 }
 
-/**
- * A linha de cima: o rótulo (com o ladrilho) à esquerda e a variação à
- * direita. É o desenho que o dashboard escrevia à mão.
- */
+/** A linha de cima: o rótulo (com o ladrilho) à esquerda e a variação à direita. */
 function StatCardHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="stat-card-header"
-      // Na linha do rótulo a variação desce um degrau, para os dois caberem
-      // num cartão de quatro colunas.
+      // Na linha do rótulo a variação desce um degrau, para os dois caberem num cartão de quatro colunas.
       className={cn(
         "flex min-w-0 items-center justify-between gap-2 [&>[data-slot=stat-card-delta]]:px-1.5 [&>[data-slot=stat-card-delta]]:text-2xs",
         className
@@ -153,8 +127,8 @@ function StatCardHeader({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 /**
- * O ícone num **ladrilho tonal** — é o primeiro lugar do tom. Recebe um
- * Heroicon `16/solid`; na linha compacta o ladrilho cresce e o ícone não.
+ * O ícone num ladrilho tonal (o primeiro lugar do tom). Recebe um Heroicon
+ * `16/solid`; na linha compacta o ladrilho cresce e o ícone não.
  */
 function StatCardIcon({ className, ...props }: React.ComponentProps<"span">) {
   return (
@@ -171,8 +145,8 @@ function StatCardIcon({ className, ...props }: React.ComponentProps<"span">) {
 }
 
 /**
- * O rótulo em sobrancelha — caixa alta de 11px, a régua do `DescriptionTerm
- * term="eyebrow"` e do cabeçalho da `Table`. Aceita um `StatCardIcon` antes do
+ * O rótulo em sobrancelha (caixa alta de 11px, a régua do `DescriptionTerm
+ * term="eyebrow"` e do cabeçalho da `Table`). Aceita um `StatCardIcon` antes do
  * texto, e o texto trunca em vez de empurrar a variação.
  */
 function StatCardLabel({ className, children, ...props }: React.ComponentProps<"div">) {
@@ -185,9 +159,10 @@ function StatCardLabel({ className, children, ...props }: React.ComponentProps<"
       )}
       {...props}
     >
-      {/* Texto cru num flex vira item anônimo, e item anônimo não trunca: o
-          rótulo passava por baixo da variação (medido, "Resultado" num cartão
-          de 192px). O texto entra num `span` que trunca. */}
+      {/*
+         Texto cru num flex vira item anônimo, e item anônimo não trunca: o rótulo
+         passaria por baixo da variação. O texto entra num `span` que trunca.
+      */}
       {React.Children.map(children, (filho) =>
         typeof filho === "string" || typeof filho === "number" ? (
           <span className="min-w-0 truncate">{filho}</span>
@@ -216,13 +191,11 @@ function formatarValor(
 }
 
 /**
- * O número que conta (rodada 223): ao montar, de zero até o valor; ao mudar,
- * do que está escrito até o novo — o mecanismo dos centros dos gráficos. O
- * HTML do servidor já traz o valor final, e o zero só é escrito no efeito de
- * layout, antes da primeira pintura. Com movimento reduzido, salta.
- *
- * A largura não dança: o valor final mora invisível na mesma célula da grade,
- * e o leitor de tela ouve só ele.
+ * O número que conta: ao montar, de zero até o valor; ao mudar, do que está
+ * escrito até o novo (o mecanismo dos centros dos gráficos). O HTML do servidor
+ * traz o valor final e o zero só é escrito no efeito de layout, antes da
+ * primeira pintura. Com movimento reduzido, salta. A largura não dança: o valor
+ * final mora invisível na mesma célula da grade, e o leitor de tela ouve só ele.
  */
 function NumeroQueConta({
   value,
@@ -258,13 +231,10 @@ function NumeroQueConta({
 }
 
 /**
- * O valor.
- *
- * **Com `value`, o cartão escreve e conta o número** (`format`: `currency`,
- * `number` ou `percent`), na cor do tom — dinheiro de entrada em verde, de saída
- * em vermelho; os tons de estado mantêm o número neutro. **Com `children`**, é a
- * figura de antes: um `MoneyDisplay` composto dentro herda o corpo do degrau
- * (`--stat-card-value`), sem `size` escrito na chamada.
+ * O valor. Com `value`, o cartão escreve e conta o número (`format`: `currency`,
+ * `number` ou `percent`) na cor do tom (entrada em verde, saída em vermelho; os
+ * tons de estado mantêm o número neutro). Com `children`, um `MoneyDisplay`
+ * composto herda o corpo do degrau (`--stat-card-value`), sem `size` na chamada.
  */
 function StatCardValue({
   className,
@@ -284,8 +254,7 @@ function StatCardValue({
     <div
       data-slot="stat-card-value"
       className={cn(
-        // `.nums` e não `tabular-nums` cru: a utility existe, e é o que o resto
-        // do sistema escreve.
+        // `.nums` e não `tabular-nums` cru: é o que o resto do sistema escreve.
         "nums min-w-0 font-mono leading-tight font-semibold text-(--stat-figure)",
         "text-(length:--stat-card-value)",
         "[&_[data-slot=money-display]]:text-(length:--stat-card-value) [&_[data-slot=money-display]]:leading-tight [&_[data-slot=money-display]]:font-semibold",
@@ -303,18 +272,13 @@ function StatCardValue({
 }
 
 /**
- * A variação, e por que ela não deduz o tom do sinal.
- *
- * **Em finanças a direção não determina se é boa notícia.** Despesa caindo é
- * bom; entrada caindo é ruim. Escrita à mão, `direction` desenha a seta e
- * `tone` continua sendo escolha de quem chama.
- *
- * **Calculada** (rodada 223), ela recebe `current`, `previous` e `better` — o
- * sentido que é boa notícia — e decide tudo: a porcentagem, a seta, o tom de
- * **estado** (`success`/`destructive`, e não `income`/`expense`: "melhorou" não
- * é "entrou dinheiro", invariante 3), o "0%" e o "Sem base" quando o período
- * anterior é zero. Era o `DeltaBadge` do dashboard e a conta do resumo da
- * categoria, duas cópias da mesma regra.
+ * A variação não deduz o tom do sinal: em finanças a direção não diz se é boa
+ * notícia (despesa caindo é bom; entrada caindo é ruim). Escrita à mão,
+ * `direction` desenha a seta e `tone` é de quem chama.
+ * Calculada, recebe `current`, `previous` e `better` (o sentido que é boa
+ * notícia) e decide a porcentagem, a seta, o tom de estado (`success`/
+ * `destructive`, e não `income`/`expense`: "melhorou" não é "entrou dinheiro",
+ * invariante 3), o "0%" e o "Sem base" quando o período anterior é zero.
  */
 const statCardDeltaVariants = cva(
   "inline-flex w-fit shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap nums [&_svg]:size-3",
@@ -439,10 +403,7 @@ function StatCardDelta({
   )
 }
 
-/**
- * A nota do pé: o "Previsto no mês R$ …", o "de 8 categorias". Ela não é a
- * segunda linha do valor, então vem com respiro.
- */
+/** A nota do pé ("Previsto no mês R$ …"): não é a segunda linha do valor, então vem com respiro. */
 function StatCardFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -456,10 +417,7 @@ function StatCardFooter({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-/**
- * A faixa — mínimo e máximo, um intervalo — na figura do valor, um degrau
- * abaixo (`--stat-card-range`). A análise de contas a escrevia à mão.
- */
+/** A faixa (mínimo e máximo, um intervalo) na figura do valor, um degrau abaixo (`--stat-card-range`). */
 function StatCardRange({
   className,
   min,
@@ -495,9 +453,8 @@ function StatCardRange({
 }
 
 /**
- * A faísca no pé do cartão: a tendência dos últimos períodos, na cor do tom.
- * Ela é o `ChartSparkline` (sem eixo, sem grade), e o nome acessível continua
- * obrigatório.
+ * A faísca no pé do cartão: a tendência dos últimos períodos, na cor do tom. É o
+ * `ChartSparkline` (sem eixo nem grade), com nome acessível obrigatório.
  */
 function StatCardChart({
   className,
@@ -523,7 +480,7 @@ function StatCardChart({
 
 /**
  * A meta: "R$ 612 de R$ 800", a barra do `Progress` e os cortes do orçamento
- * (`BUDGET_BANDS`, 85 e 100) — a cor sai da escada de risco, não do tom do
+ * (`BUDGET_BANDS`, 85 e 100); a cor sai da escada de risco, não do tom do
  * cartão. `children` é a legenda da esquerda; a porcentagem fica na direita.
  */
 function StatCardProgress({
@@ -561,9 +518,9 @@ const DIVISAO_COR = {
 } as const
 
 /**
- * A comparação dividida: dois ou três valores no mesmo cartão — entrou · saiu,
- * este mês · o anterior — e a barra da proporção entre eles. As porcentagens
- * somam 100 pelo maior resto (`splitPercents`, a régua do `ChartSplit`).
+ * A comparação dividida: dois ou três valores no mesmo cartão (entrou · saiu,
+ * este mês · o anterior) e a barra da proporção, cujas porcentagens somam 100
+ * pelo maior resto (`splitPercents`, a régua do `ChartSplit`).
  */
 function StatCardSplit({
   className,
@@ -604,11 +561,8 @@ function StatCardSplit({
 }
 
 /**
- * O esqueleto na medida do valor.
- *
- * Um cartão de número é *a* coisa que espera dado, e sem isto cada tela
- * inventava a própria espera. A altura sai de `--stat-card-value`, então ela
- * acompanha o `size` do cartão em vez de ser uma medida chutada em pixels.
+ * O esqueleto na medida do valor: a altura sai de `--stat-card-value`, então
+ * acompanha o `size` do cartão em vez de uma medida em pixels.
  */
 function StatCardValueSkeleton({
   className,
@@ -627,13 +581,10 @@ function StatCardValueSkeleton({
 }
 
 /**
- * A faixa de cartões (rodada 223).
- *
- * `separate`: cartões soltos com 8px entre eles. `joined`: **um painel só**,
- * dividido por fios — a grade com `gap-px` sobre a cor da borda, e os cartões
- * perdendo moldura, canto e sombra —, como o painel de métricas do Stripe.
- * Duas colunas no telefone e `columns` a partir de `lg`. Os cartões entram em
- * cascata, uma vez (`@utility stat-card-reveal`).
+ * A faixa de cartões. `separate`: cartões soltos com 8px entre eles. `joined`:
+ * um painel só dividido por fios (grade com `gap-px` sobre a cor da borda, e os
+ * cartões sem moldura, canto nem sombra). Duas colunas no telefone e `columns` a
+ * partir de `lg`. Os cartões entram em cascata, uma vez (`@utility stat-card-reveal`).
  */
 const statCardGroupVariants = cva("stat-card-reveal grid min-w-0", {
   variants: {

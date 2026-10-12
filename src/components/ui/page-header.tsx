@@ -18,48 +18,24 @@ import { OverflowMenu } from "@/lib/overflow-menu"
 import { cn } from "@/lib/utils"
 
 /**
- * O topo de uma tela.
- *
- * **Ele era uma linha de flex, e a trilha caía dentro dela.** Medido a 1280px,
- * na demonstração "Completo" da própria página do componente: `sm:flex-row` sem
- * `flex-wrap` punha `PageHeaderBreadcrumb` (618px) **à esquerda** do título, o
- * `PageHeaderTitleRow` saía com **largura 0** e 362px de altura — a descrição
- * quebrando uma palavra por linha — e o título passava por baixo do botão de
- * ação. Hoje é grade. A trilha, a faixa de fatos e a navegação atravessam as
- * duas colunas; título e ações dividem a linha do meio.
- *
- * **A grade tem duas colunas também no telefone** (rodada 232, o "telefone
- * compacto"): as ações ficam na linha do título, e as que têm ícone viram
- * botões só de ícone — o rótulo vira `sr-only` e continua sendo o nome. Antes
- * elas empilhavam embaixo, cada uma numa largura, e o título descia um degrau
- * a menos do que precisava.
- *
- * **Não há régua** (rodada 232): quem separa o cabeçalho do conteúdo é o
- * respiro, como as tiras do `Card` e do `Dialog`. Havia `variant="ruled"`, um
- * fio de 1px embaixo, e ele saiu a pedido do dono: no peso e na cor dos
- * divisores de lista, com uma lista logo abaixo ele lia como mais um divisor, e
- * ninguém via diferença para o `plain`. Nenhuma tela o usava.
- *
- * **A escada desce por variável, e não por contexto React.** `--page-title` é
- * declarada aqui e lida lá embaixo — o mesmo mecanismo de `--toolbar-control`.
- * `in-*` e `group-*` compilam com `:where()`, que não soma especificidade e
- * perderia para a classe base no mesmo elemento. Variável herda e não disputa.
- *
- * **É cliente desde a rodada 232.** Era um dos poucos componentes de `ui/` de
- * servidor; os comportamentos que entraram — o título que sobe para a barra, o
- * ⋯ das ações, o voltar pelo histórico e a dica do título cortado — leem o
- * DOM. Nenhuma tela o importa de um componente de servidor.
+ * O topo de uma tela: uma grade de duas colunas (também no telefone). A trilha,
+ * a faixa de fatos e a navegação atravessam as duas; título e ações dividem a
+ * linha do meio. No telefone as ações com ícone viram botões só de ícone (o
+ * rótulo vira `sr-only` e continua o nome).
+ * Sem régua: quem separa o cabeçalho do conteúdo é o respiro.
+ * A escada desce por variável (`--page-title`, como `--toolbar-control`) e não
+ * por contexto: `in-*` e `group-*` compilam com `:where()`, que perderia para a
+ * classe base.
+ * É cliente: o título que sobe para a barra, o ⋯, o voltar pelo histórico e a
+ * dica do título cortado leem o DOM.
  */
 const pageHeaderVariants = cva(
   "grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-4",
   {
     variants: {
       /**
-       * O corpo do título. Abaixo de `sm` cada degrau **desce um**: o `md` do
-       * telefone é o que o `sm` tinha (20), e o `sm` desce a 18 — a linha do
-       * título divide a largura com as ações agora.
-       *
-       * A entrelinha não entra aqui: `.page-title` declara `1.25` e vence, por
+       * O corpo do título. Abaixo de `sm` cada degrau desce um (o `md` do telefone é
+       * o `sm`, 20). A entrelinha não entra: `.page-title` declara `1.25` e vence, por
        * estar fora de `@layer`.
        */
       size: {
@@ -88,8 +64,8 @@ function PageHeader({
 }: React.ComponentProps<"header"> &
   VariantProps<typeof pageHeaderVariants> & {
     /**
-     * O título sobe para a barra do topo quando rola para baixo dela — o
-     * título grande do iOS. A barra mostra com `TopBarTitle pageTitle`.
+     * O título sobe para a barra do topo quando rola para baixo dela; a barra mostra
+     * com `TopBarTitle pageTitle`.
      */
     collapse?: boolean
   }) {
@@ -107,10 +83,8 @@ function PageHeader({
           // A caixa de linha do título, derivada uma vez. É o que o voltar, a
           // mídia, o adorno e as ações usam para se centrar nela.
           "[--page-title-line:calc(var(--page-title)*1.25)]",
-          // **A linha do título é o eixo** (rodada 232): com sobrancelha, ela
-          // desce 28px (16 de linha + 12 de respiro), e quem se alinha ao
-          // título desce junto. Sem isso o voltar, o adorno e as ações se
-          // alinhavam à sobrancelha, e a mídia flutuava no meio do bloco.
+          // A linha do título é o eixo: com sobrancelha ela desce 28px (16 de linha + 12
+          // de respiro), e quem se alinha ao título desce junto.
           "has-[[data-slot=page-header-eyebrow]]:[--page-header-lead:1.75rem]",
           className
         )}
@@ -121,12 +95,9 @@ function PageHeader({
 }
 
 /**
- * Onde o texto do título começa, publicado em `--page-header-indent` (rodada
- * 232): com voltar e mídia, a faixa de números recua até a coluna do nome,
- * em vez de começar sob a seta. A navegação não — ela fica na borda. **Medido, e não cravado**: o
- * voltar puxa 8px para fora e devolve 6, e a mídia pode ser um ladrilho de 36
- * ou um avatar de 40 — um número na classe erraria um dos casos. Sem voltar
- * nem mídia o recuo é zero.
+ * Onde o texto do título começa, publicado em `--page-header-indent`: com voltar
+ * e mídia, a faixa de números recua até a coluna do nome. A navegação não: fica
+ * na borda. Medido em runtime (o voltar puxa 8px e devolve 6; a mídia varia).
  */
 function useRecuoDoTexto(ref: React.RefObject<HTMLElement | null>) {
   React.useLayoutEffect(() => {
@@ -152,10 +123,8 @@ function useRecuoDoTexto(ref: React.RefObject<HTMLElement | null>) {
 }
 
 /**
- * A trilha, acima de tudo e atravessando as duas colunas.
- *
- * `order-first` porque uma tela de detalhe costuma declarar o título antes da
- * trilha no JSX, e a ordem de leitura da tela é a inversa.
+ * A trilha, acima de tudo e atravessando as duas colunas. `order-first` porque
+ * uma tela de detalhe costuma declarar o título antes dela no JSX.
  */
 function PageHeaderBreadcrumb({
   className,
@@ -171,11 +140,8 @@ function PageHeaderBreadcrumb({
 }
 
 /**
- * A sobrancelha em versalete.
- *
- * **Não é enfeite acima de todo título.** Ela só se paga quando há um rótulo de
- * pai de verdade a dizer — a carteira de onde a tela veio, o mês de uma fatura,
- * a marca no índice. Um título que precisa de uma palavra pequena em cima para
+ * A sobrancelha em versalete. Só se paga quando há um rótulo de pai de verdade
+ * (a carteira de onde veio, o mês de uma fatura); título que precisa dela para
  * se explicar está mal escrito.
  */
 const pageEyebrowClassName =
@@ -193,11 +159,9 @@ function PageHeaderEyebrow({ className, ...props }: React.ComponentProps<"p">) {
 }
 
 /**
- * A identidade ao lado do título (rodada 232): o `ColorTile` da categoria, o
- * `Avatar` de quem, o ícone de uma conta. **Centrada na linha do título**, e
- * não no bloco: no meio do bloco ela caía entre a sobrancelha e a descrição e
- * não pertencia a linha nenhuma. O `-me-1` aproxima o texto dela (12, e não
- * os 16 do `gap`), porque ela pertence ao nome.
+ * A identidade ao lado do título (`ColorTile`, `Avatar`, ícone), centrada na
+ * linha do título e não no bloco. O `-me-1` aproxima o texto dela (12, e não
+ * 16), porque ela pertence ao nome.
  */
 function PageHeaderMedia({ className, ...props }: React.ComponentProps<"span">) {
   return (
@@ -214,25 +178,14 @@ function PageHeaderMedia({ className, ...props }: React.ComponentProps<"span">) 
 
 /**
  * A linha do título: [voltar] · [mídia] · sobrancelha/título [selo]/descrição · [adorno].
- *
- * `back`, `media`, `badge` e `endAdornment` são props, e não composição,
- * porque cada um tem um lugar que a tela erraria.
- *
- * **Tudo se alinha à linha do título** (rodada 232): o voltar, a mídia e o
- * adorno se centram numa caixa de exatamente uma linha de título
- * (`--page-title-line`), descendo `--page-header-lead` quando há sobrancelha.
- * Antes o adorno alinhava pela linha de base da primeira linha — que, com
- * sobrancelha, é a sobrancelha — e a mídia se centrava no bloco inteiro.
- *
- * **O selo (`badge`) mora ao lado do título**, e não na ponta da linha: o
- * estado qualifica o nome, e na ponta ele encostava nas ações. A coluna do
- * texto é uma grade densa — o título numa coluna que encolhe até zero, o selo
- * na seguinte, e o resto em linha inteira —, então ele entra logo depois do
- * título sem tirar a descrição do lugar, e o título cortado em `…` o mantém à
- * vista. `endAdornment` fica para o que mora na ponta — um link, uma categoria.
- *
- * O par sobrancelha/título/descrição **não leva `gap`**: é o mesmo dado em
- * linhas, e quem o separa é a entrelinha.
+ * `back`, `media`, `badge` e `endAdornment` são props porque cada um tem um
+ * lugar que a tela erraria. Tudo se centra numa caixa de uma linha de título
+ * (`--page-title-line`), descendo `--page-header-lead` com sobrancelha.
+ * O selo mora ao lado do título (o estado qualifica o nome): a coluna do texto é
+ * uma grade densa, então ele entra logo depois do título sem tirar a descrição
+ * do lugar, e o título cortado em `…` o mantém à vista. `endAdornment` é para o
+ * que mora na ponta.
+ * O par sobrancelha/título/descrição não leva `gap`: quem separa é a entrelinha.
  */
 function PageHeaderTitleRow({
   className,
@@ -264,10 +217,8 @@ function PageHeaderTitleRow({
       {...props}
     >
       {back ? (
-        // O `-me-1.5` não é compensação de gosto: o `gap` é a distância mínima
-        // entre **caixas**, e a caixa do voltar (32) é 8px mais larga que o
-        // glifo desse lado. Devolvendo 6 deles, a distância seta→título cai nos
-        // mesmos 18px que o cabeçalho do app renderiza.
+        // O `-me-1.5` não é gosto: o `gap` é a distância mínima entre caixas, e a caixa
+        // do voltar (32) é 8px mais larga que o glifo desse lado.
         <span className="-me-1.5 mt-[var(--page-header-lead,0px)] flex h-(--page-title-line) shrink-0 items-center self-start">
           <PageHeaderBack href={back} label={backLabel} history={backHistory} />
         </span>
@@ -290,8 +241,7 @@ function PageHeaderTitleRow({
       >
         {children}
         {badge ? (
-          // No telefone o selo desce para baixo da descrição: ao lado do
-          // título, a 375, ele deixava o nome em "A…" — medido.
+          // No telefone o selo desce para baixo da descrição: ao lado do título deixaria o nome em "A…".
           <span
             data-slot="page-header-badge"
             className="ms-3 flex items-center self-center max-sm:ms-0 max-sm:mt-2 max-sm:justify-self-start"
@@ -300,19 +250,17 @@ function PageHeaderTitleRow({
           </span>
         ) : null}
         {endAdornment ? (
-          // **No telefone o adorno desce para baixo da descrição**: na ponta da
-          // linha, ao lado do voltar, da mídia e das ações, ele deixava 50px
-          // para o nome a 375 — medido. São duas cópias que o CSS alterna; a
-          // escondida sai da árvore de acessibilidade junto (`display: none`).
+          // No telefone o adorno desce para baixo da descrição (na ponta da linha sobram
+          // 50px ao nome a 375). São duas cópias que o CSS alterna; a escondida sai da
+          // árvore de acessibilidade (`display: none`).
           <span data-slot="page-header-adornment" className="mt-2 flex sm:hidden">
             {endAdornment}
           </span>
         ) : null}
       </div>
       {endAdornment ? (
-        // `flex` e não `block`: um filho de flex é blocado, e é isso que faz
-        // um `<a>` de 11px medir a caixa de linha inteira (16) em vez dos 14
-        // de uma caixa em linha.
+        // `flex` e não `block`: filho de flex é blocado, e isso faz um `<a>` de 11px
+        // medir a caixa de linha inteira (16).
         <span
           data-slot="page-header-adornment"
           className="mt-[var(--page-header-lead,0px)] flex h-(--page-title-line) shrink-0 items-center self-start max-sm:hidden"
@@ -339,10 +287,9 @@ function useCortado(el: HTMLElement | null, ativo: boolean) {
 }
 
 /**
- * O título sobe para a barra: ele publica o próprio texto e se já passou por
- * baixo dela. O observador mede contra o documento **dele** (`root: doc`, com
- * a barra descontada no `rootMargin`), então funciona também dentro do iframe
- * da prévia num iPhone.
+ * O título sobe para a barra: publica o próprio texto e se já passou por baixo
+ * dela. O observador mede contra o documento dele (`root: doc`, barra
+ * descontada no `rootMargin`), então funciona no iframe da prévia.
  */
 function useTituloQueSobe(el: HTMLElement | null, ativo: boolean) {
   React.useEffect(() => {
@@ -377,8 +324,8 @@ function PageHeaderTitle({
 }: React.ComponentProps<"h1"> & {
   asChild?: boolean
   /**
-   * Uma linha só, com o resto em `…` — e o texto inteiro numa dica no cursor
-   * e no foco, que só existe quando ele de fato não coube (rodada 232).
+   * Uma linha só, com o resto em `…` e o texto inteiro numa dica, que só existe
+   * quando ele de fato não coube.
    */
   truncate?: boolean
 }) {
@@ -399,9 +346,8 @@ function PageHeaderTitle({
       // o corpo vem do degrau declarado pelo `PageHeader`.
       className={cn(
         "text-(length:--page-title)",
-        // `text-nowrap!` porque o `.page-title` declara `text-wrap: balance`
-        // fora de `@layer` — e `text-wrap` religa a quebra que o `truncate`
-        // desliga: medido, o título longo saía em quatro linhas.
+        // `text-nowrap!` porque o `.page-title` declara `text-wrap: balance` fora de
+        // `@layer`, e isso religa a quebra que o `truncate` desliga.
         truncate && "truncate text-nowrap!",
         cortado && "rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/45",
         className
@@ -434,10 +380,9 @@ function PageHeaderDescription({
 }
 
 /**
- * A faixa de fatos sob o título — **sem fio desde a rodada 232**: os números
- * ficam como pares em destaque (`PageHeaderStat`), separados por respiro. É um
- * `<dl>` de fábrica, porque o caso comum num app de finanças é termo e valor;
- * `asChild` troca o elemento quando ela carrega outra coisa.
+ * A faixa de fatos sob o título, sem fio: os números ficam como pares em
+ * destaque (`PageHeaderStat`), separados por respiro. É um `<dl>` de fábrica;
+ * `asChild` troca o elemento.
  */
 function PageHeaderMeta({
   className,
@@ -459,15 +404,10 @@ function PageHeaderMeta({
 }
 
 /**
- * Um par da faixa (rodada 232): o rótulo e, embaixo, o valor em destaque —
- * rótulo sobre valor é o mesmo dado em duas linhas, sem `gap`.
- *
- * **Um corpo só para todo valor**: o `MoneyDisplay` traz o próprio `text-sm`,
- * e na primeira versão o dinheiro saía em 14px ao lado de um "42" em 18. Aqui
- * ele herda o corpo do par (20px, semibold), como no `StatCardValue`. O rótulo
- * é texto comum em cinza, e não versalete: a sobrancelha do título já fala em
- * caixa alta, e três rótulos espaçados disputavam com ela. `delta` é a
- * variação ao lado do valor — o `StatCardDelta`, com a seta e o tom de estado.
+ * Um par da faixa: rótulo sobre valor, o mesmo dado em duas linhas, sem `gap`.
+ * Um corpo só para todo valor: o `MoneyDisplay` herda o do par (20px, semibold).
+ * O rótulo é texto comum em cinza, não versalete, para não disputar com a
+ * sobrancelha. `delta` é o `StatCardDelta` ao lado do valor.
  */
 function PageHeaderStat({
   className,
@@ -497,8 +437,8 @@ function PageHeaderStat({
 }
 
 /**
- * A linha de navegação sob o título (rodada 232): abas de rota (`TabsNav`) ou
- * um segmento. Atravessa as duas colunas e encosta na base do cabeçalho.
+ * A linha de navegação sob o título: abas de rota (`TabsNav`) ou um segmento.
+ * Atravessa as duas colunas e encosta na base do cabeçalho.
  */
 function PageHeaderNav({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -512,15 +452,11 @@ function PageHeaderNav({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 /**
- * As ações, à direita da linha do título — **também no telefone**.
- *
- * Abaixo de `sm` todo `Button` que tem ícone vira quadrado e o rótulo vira
- * `sr-only` (o nome continua o mesmo); um botão sem ícone fica com o texto.
- * O ⋯ (`overflow="menu"`) é o da `Toolbar`, com outra conta: as ações cabem
- * no cabeçalho menos o que a linha do título já ocupa (o voltar, a mídia, o
- * adorno) e menos a reserva do nome — 35% da largura, até 240px. A primeira
- * conta reservava só metade da largura para a linha inteira, e a 375 o nome
- * ficava com 50px.
+ * As ações, à direita da linha do título, também no telefone: abaixo de `sm`
+ * todo `Button` com ícone vira quadrado e o rótulo vira `sr-only`.
+ * O ⋯ (`overflow="menu"`) é o da `Toolbar`, com outra conta: as ações cabem no
+ * cabeçalho menos o que a linha do título ocupa (voltar, mídia, adorno) e menos
+ * a reserva do nome (35% da largura, até 240px).
  */
 function PageHeaderActions({
   className,
@@ -574,9 +510,9 @@ const CASA_DO_CABECALHO = {
 }
 
 /**
- * A pessoa veio de dentro do app? Então voltar é o histórico — a lista volta
- * com o filtro e a rolagem em que ela estava. A Navigation API diz qual é a
- * entrada anterior; sem ela, o `referrer` da mesma origem é a pista.
+ * A pessoa veio de dentro do app? Então voltar é o histórico (a lista volta com
+ * filtro e rolagem). A Navigation API diz qual é a entrada anterior; sem ela, o
+ * `referrer` da mesma origem é a pista.
  */
 function veioDeDentro(): boolean {
   const nav = (window as Window & {
@@ -599,16 +535,11 @@ function veioDeDentro(): boolean {
 }
 
 /**
- * O voltar compacto, `icon-md` (32) — o mesmo do voltar do `TopBar` no
- * telefone.
- *
- * **Volta pelo histórico** (rodada 232): quando a pessoa veio de dentro do app,
- * o clique é `router.back()`, e a lista de onde ela saiu volta com o filtro e
- * a rolagem; o `href` fica como saída — link aberto direto, nova aba, ⌘-clique.
- * `history={false}` volta ao link simples.
- *
- * O recuo é `-ms-2` porque o ícone tem 16 dentro de uma caixa de 32: 8px de
- * folga de cada lado. Puxando exatamente isso, **o ícone alinha com o texto**.
+ * O voltar compacto, `icon-md` (32), o mesmo do `TopBar` no telefone. Quando a
+ * pessoa veio de dentro do app o clique é `router.back()`; o `href` fica como
+ * saída (link direto, nova aba, ⌘-clique). `history={false}` volta ao link simples.
+ * O recuo `-ms-2` existe porque o ícone (16) tem 8px de folga de cada lado: assim
+ * o ícone alinha com o texto.
  */
 function PageHeaderBack({
   href,
@@ -628,8 +559,8 @@ function PageHeaderBack({
       size="icon-md"
       className={cn(
         "relative -ms-2 shrink-0",
-        // O alvo cresce por pseudo-elemento porque crescer de verdade mudaria a
-        // caixa que `--page-title-line` centraliza. 30 + 16 = 46.
+        // O alvo cresce por pseudo-elemento porque crescer de verdade mudaria a caixa
+        // que `--page-title-line` centraliza. 30 + 16 = 46.
         "pointer-coarse:after:absolute pointer-coarse:after:-inset-2 pointer-coarse:after:content-['']",
         className
       )}
@@ -653,9 +584,8 @@ function PageHeaderBack({
 }
 
 /**
- * O esqueleto com a forma do cabeçalho (rodada 232), para os `loading.tsx`:
- * o título na altura do degrau, a descrição, as ações (a última larga, as
- * outras quadradas, e no telefone todas quadradas) e a faixa de pares.
+ * O esqueleto com a forma do cabeçalho, para os `loading.tsx`: título na altura
+ * do degrau, descrição, ações e faixa de pares.
  */
 function PageHeaderSkeleton({
   size = "md",

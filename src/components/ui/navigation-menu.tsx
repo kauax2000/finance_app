@@ -39,49 +39,19 @@ import {
 import { Kbd } from "@/components/ui/kbd"
 
 /**
- * A fileira de navegação com painéis suspensos.
- *
- * ## O que ele é, e onde ele é a resposta certa
- *
- * A navegação **deste app** é a `Sidebar` no desktop e a ilha na base no
- * telefone, e continua sendo — um terceiro lugar onde procurar a mesma tela é
- * um a mais. Este componente é o cabeçalho de uma superfície **pública**:
- * landing, preços, institucional. Nenhuma tela do app o usa.
- *
- * ## O redesenho (rodada 219)
- *
- * A referência de movimento é a mesma da rodada 218 — o seletor em cascata do
- * dono —, e a fileira passou a falar com o `Menubar` de novo:
- *
- * - **A pílula flutuante é o padrão**, e o realce é **um objeto só** que viaja
- *   entre os gatilhos na mola da referência (`indicator="highlight"`, o
- *   padrão): acompanha o aberto, o cursor e o foco, e descansa no link da
- *   página atual. Como no `Menubar`, ele mora só na fileira — o realce
- *   correndo entre os links do painel foi recusado na rodada 137.
- * - **O painel entra na mola** (desce 6px de 97%), sai curto, e os links sobem
- *   em cascata (`@utility navigation-menu-reveal`). A troca entre painéis
- *   continua o morph de largura e altura.
- * - **Aprofundar no lugar** (`NavigationMenuGroup`): um grupo abre o nível
- *   seguinte dentro do mesmo painel, com a trilha em cima para voltar — o
- *   coração da referência, sem empilhar painéis. As setas andam, `→` aprofunda,
- *   `←` volta, e o `Esc` sobe um nível antes de fechar.
- * - **O índice**, como no `Menubar`: o Radix só monta o painel aberto, e o
- *   ponto da rota atual no gatilho e o "abre na rota atual" precisam dele
- *   fechado. Cada `NavigationMenuContent` renderiza os filhos também num nó
- *   que nunca pinta, onde cada link só se registra.
- *
- * ## `aria-expanded:` e não `data-open:`, e a razão é especificidade
- *
- * No Tailwind 4.2.2 o variante `data-open:` compila com `:where()` — **zero
- * especificidade** — e perde para `hover:` no mesmo elemento. O Radix carimba
- * `aria-expanded` no gatilho, e `[aria-expanded="true"]` é seletor de atributo
- * de verdade. `data-open:` fica onde não há disputa: nas animações.
- *
- * ## O teto mora no painel, e não no viewport
- *
- * O Radix calcula `--radix-navigation-menu-viewport-height` a partir do
- * `offsetHeight` do conteúdo: capar o **conteúdo** devolve a altura já capada,
- * e o viewport anima para o número certo sem `max-h` nenhum.
+ * A fileira de navegação com painéis suspensos, para superfície **pública**
+ * (landing, preços, institucional). A navegação do app é a `Sidebar` e a ilha
+ * do telefone; nenhuma tela do app usa este componente.
+ * O realce é um objeto só que viaja entre os gatilhos (`indicator="highlight"`)
+ * e descansa no link da página atual; ele mora só na fileira, como no
+ * `Menubar` (o realce entre os links do painel é proibido).
+ * `NavigationMenuGroup` aprofunda no lugar, com a trilha em cima para voltar.
+ * O índice, como no `Menubar`: o Radix só monta o painel aberto, e o ponto da
+ * rota atual e o "abre na rota atual" precisam dele fechado.
+ * Estado aberto é `aria-expanded:`, e não `data-open:`: este compila com
+ * `:where()` (especificidade zero) e perde para `hover:`.
+ * O teto mora no painel, não no viewport: o Radix mede o `offsetHeight` do
+ * conteúdo, então capar o conteúdo já dá a altura certa ao viewport.
  */
 
 type NavigationMenuVariant = "floating" | "plain" | "outline" | "solid"
@@ -150,10 +120,7 @@ const PreviewContext = React.createContext<{
   setAtual: (p: React.ReactNode) => void
 } | null>(null)
 
-/**
- * Se este link está dentro de um `NavigationMenuPanel` — que é um `<ul>`, e por
- * isso quer o `<li>` que o link passa a trazer sozinho.
- */
+/** Se este link está dentro de um `NavigationMenuPanel` (um `<ul>`, que quer o `<li>`). */
 const NavigationMenuPanelContext = React.createContext(false)
 
 /** O aprofundamento do painel: o caminho aberto e quem anda nele. */
@@ -177,10 +144,9 @@ function useVisivel() {
 
 /**
  * Nota de ordem: `npm run ds:catalog` lê o **primeiro** bloco `variants:` de
- * cada fonte, e por isso o do gatilho vem antes do da fileira.
- *
- * O gatilho, na escada do sistema: 28 · 32 · 36. `pointer-coarse:h-10`
- * pergunta pelo **apontador**, e não pela largura.
+ * cada fonte, por isso o do gatilho vem antes do da fileira.
+ * O gatilho fala a escada do sistema (28 · 32 · 36); `pointer-coarse:h-10`
+ * pergunta pelo apontador, não pela largura.
  */
 const navigationMenuTriggerVariants = cva(
   [
@@ -214,22 +180,16 @@ const navigationMenuTriggerVariants = cva(
 )
 
 /**
- * Com o realce que viaja, o gatilho não pinta o próprio fundo: o `tailwind-merge`
- * derruba o `hover:bg-*` e o `aria-expanded:bg-*` da variante, e quem acende é o
- * objeto por baixo do rótulo. A tinta do texto continua dizendo quem está aceso.
+ * Com o realce que viaja o gatilho não pinta fundo: o `tailwind-merge` derruba
+ * o `hover:bg-*` e o `aria-expanded:bg-*` da variante.
  */
 const SEM_FUNDO_PROPRIO =
   "text-muted-foreground hover:bg-transparent active:bg-transparent aria-expanded:bg-transparent aria-expanded:border-transparent aria-expanded:shadow-none data-[aceso]:text-foreground"
 
 /**
- * A fileira. `floating` — o padrão desde a rodada 219 — é a pílula do
- * `Menubar`, na tinta **flutuante** dos menus; `plain`, `outline` e `solid`
- * continuam, como escolha explícita. **As fileiras não são mais "as mesmas
- * strings" do `Menubar`**, como este arquivo dizia: a `outline` de lá veste a
- * régua de barra (vidro), a daqui é chapada.
- *
- * Ela **não declara altura**: quem mede é o gatilho, e a fileira cresce em
- * volta.
+ * A fileira. `floating` (padrão) é a pílula do `Menubar` na tinta flutuante;
+ * `plain`, `outline` e `solid` são escolha explícita. Não declara altura: quem
+ * mede é o gatilho.
  */
 const navigationMenuListVariants = cva(
   [
@@ -287,11 +247,8 @@ const navigationMenuIndicatorVariants = cva(
 )
 
 /**
- * O conteúdo. Com viewport é só a lâmina que desliza dentro de uma superfície
- * que já existe; sem viewport ele **é** a superfície.
- *
- * A troca entre painéis é um crossfade com drift de 16px em `--duration-base`
- * — o suficiente para dizer a direção, não para viajar —, no eixo da
+ * O conteúdo. Com viewport é só a lâmina que desliza; sem viewport ele **é** a
+ * superfície. A troca entre painéis é um crossfade com drift de 16px no eixo da
  * `orientation`.
  */
 const navigationMenuContentVariants = cva(
@@ -342,15 +299,13 @@ const navigationMenuPanelVariants = cva(
     "grid w-(--navigation-menu-panel-w) max-w-(--navigation-menu-panel-max-w) gap-0.5 p-2",
     "max-h-(--navigation-menu-panel-max-h) overflow-y-auto overscroll-contain",
     "[--navigation-menu-panel-max-h:min(60dvh,32rem)]",
-    // Os links sobem em cascata ao abrir e ao aprofundar (rodada 219).
+    // Os links sobem em cascata ao abrir e ao aprofundar.
     "navigation-menu-reveal",
   ],
   {
     variants: {
       columns: {
-        // A largura de uma coluna sai do conteúdo: 224 com linhas (o degrau
-        // mais largo do `DropdownMenuContent`), 288 com cartões — derivado do
-        // texto da descrição mais longa sem quebrar.
+        // A largura de uma coluna sai do conteúdo: 224 com linhas, 288 com cartões.
         1: "[--navigation-menu-panel-w:--spacing(56)] has-[[data-variant=card]]:[--navigation-menu-panel-w:--spacing(72)]",
         2: "[--navigation-menu-panel-w:--spacing(150)] sm:grid-cols-2",
         3: "[--navigation-menu-panel-w:--spacing(216)] sm:grid-cols-2 lg:grid-cols-3",
@@ -368,9 +323,8 @@ const NAVIGATION_MENU_LINK_BASE = [
 ].join(" ")
 
 /**
- * **O link do topo veste a régua do gatilho**, e o realce de rota atual é
- * `aria-[current=page]:` (e não `data-active:`, que tem especificidade zero e
- * apagaria ao passar o cursor).
+ * O link do topo veste a régua do gatilho; a página atual é `aria-[current=page]:`
+ * (`data-active:` tem especificidade zero e apagaria ao passar o cursor).
  */
 const navigationMenuTopLinkVariants = cva(NAVIGATION_MENU_LINK_BASE, {
   variants: {
@@ -395,7 +349,7 @@ const navigationMenuLinkVariants = cva(
     NAVIGATION_MENU_LINK_BASE,
     "concentric text-sm pointer-coarse:min-h-11",
     menuItemFadeClassName,
-    // Tinta, não cor (rodada 245): o realce das linhas de lista sobre vidro.
+    // Tinta, não cor: o realce das linhas de lista sobre vidro.
     "hover:bg-foreground/9 hover:text-accent-foreground active:bg-foreground/9 active:text-accent-foreground focus-visible:bg-foreground/9",
     "aria-[current=page]:bg-foreground/6 aria-[current=page]:font-medium",
   ],
@@ -416,9 +370,8 @@ const navigationMenuLinkVariants = cva(
 )
 
 /**
- * O ponto em que o cursor está a caminho do painel: dentro do triângulo entre
- * onde ele estava e os dois cantos do painel voltados para a fileira. É a
- * "diagonal segura" — o *menu aim* da Amazon.
+ * O cursor a caminho do painel: dentro do triângulo entre onde ele estava e os
+ * dois cantos do painel voltados para a fileira (a "diagonal segura").
  */
 export function noTriangulo(
   p: { x: number; y: number },
@@ -437,14 +390,10 @@ export function noTriangulo(
 }
 
 /**
- * ## O painel segue o gatilho, e por que isso precisou de medição
- *
- * Com viewport há **um** painel para a fileira inteira, e o Radix não o desloca.
- * `align="trigger"` — o padrão — mede o gatilho aberto e publica o **centro**
- * dele em `--navigation-menu-anchor-cx` / `-cy`. Verifique medindo contra o
- * centro de **cada** gatilho, e nunca só do primeiro, para quem zero é o valor
- * certo por acidente. O mecanismo é o do marcador do `Tabs`: `ResizeObserver`
- * e `MutationObserver`, nada de laço por quadro.
+ * O painel segue o gatilho: com viewport há um painel só e o Radix não o
+ * desloca; `align="trigger"` mede o gatilho aberto e publica o centro dele em
+ * `--navigation-menu-anchor-cx` / `-cy`. Mecanismo do marcador do `Tabs`
+ * (`ResizeObserver` e `MutationObserver`).
  */
 function NavigationMenu({
   className,
@@ -481,15 +430,9 @@ function NavigationMenu({
   const folha = mobile === "sheet" && isMobile
   const raizRef = React.useRef<HTMLElement | null>(null)
   /**
-   * A âncora medida, **no estado do React**, e não escrita à mão na raiz.
-   *
-   * Até a rodada 219 `medir()` fazia `raiz.style.setProperty(...)`. Quando o
-   * elemento da raiz era recriado — o recarregamento a quente faz isso —, o
-   * estado "já ancorado" sobrevivia e a variável não: `left: var(--x)`
-   * indefinido virava inválido, o painel voltava à posição estática (o começo
-   * da raiz, que é `flex`) e o `-translate-x-1/2` punha metade dele para fora,
-   * onde a área da demonstração recorta. Medido: 144px fora, e o dono via o
-   * painel cortado. Pela prop `style`, a medida acompanha o elemento.
+   * A âncora medida vive no estado do React, não escrita à mão na raiz: se o
+   * elemento é recriado (recarga a quente), a variável some e o painel cai na
+   * posição estática, meio fora da área.
    */
   const [ancora, setAncora] = React.useState<{
     cx: number
@@ -557,10 +500,9 @@ function NavigationMenu({
     let ultimoPainel: Element | null = null
 
     /**
-     * O retângulo em que o painel precisa caber. **Não é a janela**: esta é a
-     * única superfície ancorada do sistema que não é portalizada, e todo
-     * ancestral que recorta a recorta — medido no `Preview` do catálogo, 9px
-     * do painel ficavam fora. É o `collisionBoundary` do Radix, à mão.
+     * O retângulo em que o painel precisa caber. Não é a janela: esta é a única
+     * superfície ancorada que não é portalizada, e todo ancestral que recorta a
+     * recorta. É o `collisionBoundary` do Radix, à mão.
      */
     const janela = raiz.ownerDocument.defaultView ?? window
     const limite = () => {
@@ -609,8 +551,7 @@ function NavigationMenu({
       }
 
       const cy = g.top - r.top + g.height / 2
-      // Só troca o estado quando a medida muda: o observador chama a cada
-      // quadro da animação de largura.
+      // Só troca o estado quando a medida muda: o observador chama a cada quadro da animação.
       setAncora((a) =>
         a && a.cx === cx && a.cy === cy && a.maxW === maxW ? a : { cx, cy, maxW }
       )
@@ -688,8 +629,8 @@ function NavigationMenu({
           onValueChange={setValue}
           onPointerLeave={() => setHover(null)}
           className={cn(
-            // `z-(--z-raised)`: o painel não é portalizado, então a raiz é a
-            // camada dele — acima do conteúdo, **abaixo** do header sticky.
+            // `z-(--z-raised)`: o painel não é portalizado, então a raiz é a camada dele,
+            // acima do conteúdo e abaixo do header sticky.
             "relative z-(--z-raised) flex w-fit max-w-full",
             "[--navigation-menu-panel-max-w:100vw]",
             className
@@ -740,9 +681,8 @@ function NavigationMenuList({
 }
 
 /**
- * **Ele não é `relative`, e isso é carga estrutural**: o `Indicator` do Radix
- * se posiciona por `offsetLeft`, medido contra o `offsetParent`; com `relative`
- * aqui ele valeria 0 para todo gatilho.
+ * Não é `relative` (carga estrutural): o `Indicator` do Radix se posiciona por
+ * `offsetLeft`, e com `relative` aqui ele valeria 0 para todo gatilho.
  */
 function NavigationMenuItem({
   className,
@@ -792,11 +732,9 @@ function Realce() {
 }
 
 /**
- * O gatilho. Ele ganha o **ponto** quando um link do painel dele é a página
- * atual (rodada 219): a pessoa sabe em que seção está sem abrir. E segura a
- * troca de painel quando o cursor só passa a caminho do aberto (a diagonal
- * segura): o Radix pula o próprio handler quando o nosso chama
- * `preventDefault`, e um temporizador abre este gatilho se o cursor parar nele.
+ * O gatilho ganha o ponto quando um link do painel é a página atual, e segura
+ * a troca de painel quando o cursor só passa a caminho do aberto (diagonal
+ * segura): o Radix pula o próprio handler se o nosso chama `preventDefault`.
  */
 function NavigationMenuTrigger({
   className,
@@ -885,10 +823,7 @@ function NavigationMenuTrigger({
   )
 }
 
-/**
- * O marcador `underline`. Ele não desenha nada dentro de si: o bico de balão
- * que já teve saiu, e o realce que viaja (`highlight`) é o padrão.
- */
+/** O marcador `underline`: não desenha nada dentro de si; o padrão é o realce que viaja. */
 function NavigationMenuIndicator({
   className,
   indicator = "underline",
@@ -910,8 +845,7 @@ const VIEWPORT_ANCHOR: Record<
   Record<NavigationMenuAlign, string>
 > = {
   horizontal: {
-    // O `50%` de reserva: sem a medida, o centro da fileira — nunca a posição
-    // estática, que punha metade do painel para fora (ver `ancora`).
+    // O `50%` de reserva: sem a medida, o centro da fileira, nunca a posição estática.
     trigger: "top-full left-[var(--navigation-menu-anchor-cx,50%)] -translate-x-1/2",
     start: "top-full left-0",
     center: "top-full left-1/2 -translate-x-1/2",
@@ -926,11 +860,8 @@ const VIEWPORT_ANCHOR: Record<
 }
 
 /**
- * O viewport, e o wrapper que o alinha. Na vertical o painel voa para o lado.
- *
- * A entrada é a da referência (rodada 219): desce 6px de 97% na mola da casa;
- * a saída não se move e dura 130ms — um menu que fecha ao tirar o cursor não
- * pode demorar.
+ * O viewport e o wrapper que o alinha. Na vertical o painel voa para o lado.
+ * Entra descendo 6px de 97% na mola; a saída dura 130ms e não se move.
  */
 function NavigationMenuViewport({
   className,
@@ -999,9 +930,10 @@ function NavigationMenuContent({
         )}
         {...props}
       >
-        {/* Com viewport o Radix desenha estes filhos **dentro do viewport**,
-            fora do item na árvore do React: sem reenviar o item, o painel não
-            sabia de quem era — medido, o "abre na rota atual" abria na raiz. */}
+        {/*
+           Com viewport o Radix desenha estes filhos dentro do viewport, fora do item
+           na árvore do React: sem reenviar o item, o painel não sabe de quem é.
+        */}
         <ItemContext.Provider value={item}>
           <PreviewContext.Provider value={previewCtx}>{children}</PreviewContext.Provider>
         </ItemContext.Provider>
@@ -1011,13 +943,11 @@ function NavigationMenuContent({
 }
 
 /**
- * O painel. Ele guarda o **aprofundamento** (rodada 219): o caminho aberto
- * pelos `NavigationMenuGroup`, a trilha em cima para voltar, e as setas — `↑↓`
- * andam, `→` aprofunda, `←` volta, e o `Esc` sobe um nível antes de fechar.
- * Ao abrir, ele já mostra o nível do link da página atual.
- *
- * As setas são tratadas **na captura**: o Radix já as move entre os links do
- * conteúdo, mas só entre links — a linha que aprofunda ficaria de fora.
+ * O painel guarda o aprofundamento: o caminho aberto pelos `NavigationMenuGroup`,
+ * a trilha para voltar e as setas (`↑↓` andam, `→` aprofunda, `←` volta, `Esc`
+ * sobe um nível antes de fechar). Ao abrir mostra o nível do link da página atual.
+ * As setas são tratadas na captura: o Radix só as move entre links, e a linha
+ * que aprofunda ficaria de fora.
  */
 function NavigationMenuPanel({
   className,
@@ -1050,9 +980,8 @@ function NavigationMenuPanel({
   React.useEffect(() => {
     if (!focarPrimeiroRef.current) return
     focarPrimeiroRef.current = false
-    // O primeiro do nível novo: o "voltar" da trilha, ou — na raiz, onde não
-    // há trilha — o primeiro link ou grupo. Sem isto o foco caía no `<body>`
-    // ao voltar à raiz, com o nó focado desmontado.
+    // O primeiro do nível novo: o "voltar" da trilha ou, na raiz, o primeiro link
+    // ou grupo; sem isto o foco cai no `<body>` com o nó focado desmontado.
     listaRef.current
       ?.querySelector<HTMLElement>(
         "[data-panel-focavel], [data-slot=navigation-menu-link], [data-slot=navigation-menu-group]"
@@ -1063,8 +992,7 @@ function NavigationMenuPanel({
     () => ({ caminho, entrar, rotulos, registrarRotulo }),
     [caminho, entrar, rotulos, registrarRotulo]
   )
-  // Memorizada: refeita a cada render, a ref de função religaria o observador
-  // da dissolução — o defeito medido no `Drawer` (rodada 212).
+  // Memorizada: refeita a cada render, a ref de função religaria o observador da dissolução.
   const panelRef = React.useMemo(() => composeRefs(dissolver, listaRef), [dissolver])
 
   const conteudo = (
@@ -1186,9 +1114,8 @@ function NavigationMenuPanel({
 }
 
 /**
- * Um grupo que **aprofunda no lugar** (rodada 219): no nível dele, é uma linha
- * com a seta; tocada, o painel passa a mostrar os filhos, com a trilha em cima.
- * Grupos aninham — a trilha cresce, a largura não.
+ * Um grupo que aprofunda no lugar: no nível dele é uma linha com a seta; tocada,
+ * o painel mostra os filhos com a trilha em cima. Grupos aninham.
  */
 function NavigationMenuGroup({
   label,
@@ -1200,10 +1127,8 @@ function NavigationMenuGroup({
 }: {
   label: React.ReactNode
   /**
-   * A identidade do grupo no caminho. Sem ela, o rótulo em texto. **Não é um
-   * `useId`**: o índice e o painel são instâncias diferentes do mesmo grupo,
-   * e com ids diferentes o caminho da página atual, registrado no índice, não
-   * bate com o do painel — medido, ele abria na raiz.
+   * A identidade do grupo no caminho; sem ela, o rótulo em texto. Não é `useId`:
+   * o índice e o painel são instâncias diferentes do grupo e os ids não bateriam.
    */
   value?: string
   description?: React.ReactNode
@@ -1288,9 +1213,8 @@ function NavigationMenuSectionLabel({
 }
 
 /**
- * O link. No índice ele só se registra (se é a página atual, e em que nível
- * mora); fora do nível aberto ele não aparece; com `preview`, ele escreve na
- * prévia ao lado quando o cursor ou o foco chegam.
+ * O link. No índice só se registra (página atual e nível); fora do nível aberto
+ * não aparece; com `preview`, escreve na prévia quando o cursor ou o foco chegam.
  */
 function NavigationMenuLink({
   className,
@@ -1431,10 +1355,7 @@ function comRealceDentro(children: React.ReactNode, asChild?: boolean) {
   )
 }
 
-/**
- * O título do link em cartão. `badge` (rodada 219) é a pílula pequena ao lado
- * do nome — "Novo", "Beta" —, a da referência.
- */
+/** O título do link em cartão. `badge` é a pílula pequena ao lado do nome. */
 function NavigationMenuLinkTitle({
   className,
   badge,
@@ -1473,11 +1394,7 @@ function NavigationMenuLinkDescription({
   )
 }
 
-/**
- * O cabeçalho do painel (rodada 219): o título e a descrição, os da
- * referência. Mora no `NavigationMenuContent`, ao lado do painel, e não dentro
- * do `<ul>`.
- */
+/** O cabeçalho do painel: título e descrição. Mora no `NavigationMenuContent`, ao lado do painel. */
 function NavigationMenuPanelHeader({
   title,
   description,
@@ -1503,11 +1420,7 @@ function NavigationMenuPanelHeader({
   )
 }
 
-/**
- * O rodapé do painel (rodada 219): o "Ver tudo" à esquerda e, com `legend`, as
- * teclas do painel à direita — `↑↓ ← → ↵`, como na referência. A legenda some
- * no toque.
- */
+/** O rodapé do painel: o "Ver tudo" e, com `legend`, as teclas (some no toque). */
 function NavigationMenuPanelFooter({
   children,
   legend = false,
@@ -1542,10 +1455,8 @@ function NavigationMenuPanelFooter({
 }
 
 /**
- * A prévia ao lado (rodada 219): uma coluna à direita do painel que mostra o
- * `preview` do link sob o cursor ou com o foco. `children` é o que ela mostra
- * antes de qualquer um. Compõe com o painel numa linha:
- * `<div className="flex"><NavigationMenuPanel/><NavigationMenuPreview/></div>`.
+ * A prévia ao lado: coluna à direita que mostra o `preview` do link sob o
+ * cursor ou foco; `children` é o que mostra antes de qualquer um.
  */
 function NavigationMenuPreview({
   children,
@@ -1580,9 +1491,8 @@ function NavigationMenuPreview({
 }
 
 /**
- * No telefone, a folha (rodada 219, `mobile="sheet"`). A fileira com painéis
- * não cabe em 375px; a folha desenha as mesmas peças como seções, com os
- * grupos aprofundando no lugar e a trilha em cima, e cada link fecha a gaveta.
+ * No telefone (`mobile="sheet"`) a fileira não cabe: a folha desenha as mesmas
+ * peças como seções, com os grupos aprofundando no lugar.
  */
 function NavigationMenuFolha({
   label,

@@ -21,16 +21,12 @@ import { cn } from "@/lib/utils"
 import { AMPLITUDE_POR_SALTO, viajarLiquido } from "@/lib/liquid-move"
 
 /**
- * As três paradas, na ordem do trilho. A ordem é decisão do dono — a do menu de
- * tema do macOS —, e a consequência fica dita: **o eixo do trilho não significa
- * escuro→claro**, então não há nada a derivar da posição. Quem quiser um eixo
- * com sentido reordena aqui e em mais lugar nenhum.
- *
- * O par de ícones é **misto**, e isso é exceção nomeada no auditor
- * (`HEROICON_SET_EXCEPTIONS`): o Heroicons não tem `16/outline`, então a face
- * apagada é o glifo de 24 desenhado a 16. O traço fino trabalha a favor dela —
- * contorno é o estado apagado —, e o peso do traço é o sinal que a cor sozinha
- * não entrega num glifo de 16px no tema escuro.
+ * As três paradas, na ordem do trilho (a do menu de tema do macOS, por decisão
+ * do dono): o eixo do trilho não significa escuro→claro, então não há nada a
+ * derivar da posição.
+ * O par de ícones é misto (exceção nomeada no auditor, `HEROICON_SET_EXCEPTIONS`):
+ * o Heroicons não tem `16/outline`, então a face apagada é o glifo de 24 desenhado
+ * a 16, e o traço fino é o sinal que a cor sozinha não entrega no escuro.
  */
 const PARADAS = [
     {
@@ -61,17 +57,13 @@ const indiceDe = (tema: string | undefined) => {
 }
 
 /**
- * **Três degraus, na escada de controle**: `sm` 28 (rodada 181, para barras
- * densas), `md` 32 — o padrão, o do menu da conta — e `lg` 36, para ficar ao
- * lado de um campo `lg`. A aritmética é a mesma nos três: trilho = 4 de recuo
- * + 3 paradas, a parada é a altura menos 4, e a viagem é uma parada por
- * índice. A área de toque continua em 44 (o `::after` cresce o que falta).
- *
- * **Com `labels` a parada alarga** (rodada 181): ícone e texto não cabem num
- * círculo, e a parada passa a ter a largura de `LARGURA_COM_ROTULO`, igual nas
- * três para a viagem continuar sendo uma conta. A geometria desce por estilo
- * inline, e não por classe, porque ela é número calculado — e classe montada
- * em tempo de execução não chega ao CSS.
+ * Três degraus, na escada de controle: `sm` 28 (barras densas), `md` 32 (padrão,
+ * o do menu da conta) e `lg` 36 (ao lado de um campo `lg`). Trilho = 4 de recuo
+ * + 3 paradas, a parada é a altura menos 4 e a viagem é uma parada por índice. A
+ * área de toque segue em 44 (o `::after` cresce o que falta).
+ * Com `labels` a parada alarga (`LARGURA_COM_ROTULO`, igual nas três para a
+ * viagem continuar uma conta). A geometria desce por estilo inline porque é
+ * número calculado, e classe montada em runtime não chega ao CSS.
  */
 const DEGRAU = {
     sm: { altura: 28, toque: "after:-inset-y-2" },
@@ -83,15 +75,13 @@ const DEGRAU = {
 const LARGURA_COM_ROTULO = { sm: 76, md: 88, lg: 100 } as const
 
 /**
- * **A revelação circular** (rodada 181): a troca de tema abre num círculo que
- * parte da parada tocada e cobre a tela, pela View Transitions API. O navegador
- * fotografa a página velha, a nova vive por baixo, e o que anima é o recorte
- * do `::view-transition-new(root)` — o polegar continua viajando dentro dele.
- * O `flushSync` é o que faz o tema trocar **dentro** do callback, antes da
- * foto nova. Sem a API, sem a parada, com `reveal={false}` ou com movimento
- * reduzido, troca como sempre. A curva é a do brilho, que sai rápido e pousa
- * longo; o CSS que desliga o esmaecer padrão mora em `globals.css`, escopado
- * por `.theme-reveal` no `<html>` enquanto a transição dura.
+ * A revelação circular: a troca de tema abre num círculo que parte da parada
+ * tocada, pela View Transitions API (o navegador fotografa a página velha, a nova
+ * vive por baixo e o que anima é o recorte do `::view-transition-new(root)`). O
+ * `flushSync` faz o tema trocar dentro do callback, antes da foto nova. Sem a
+ * API, sem a parada, com `reveal={false}` ou com movimento reduzido, troca como
+ * sempre. O CSS que desliga o esmaecer padrão mora em `globals.css`, escopado por
+ * `.theme-reveal` no `<html>` enquanto a transição dura.
  */
 const REVELACAO = { duration: 560, easing: "cubic-bezier(0.16, 1, 0.3, 1)" }
 
@@ -135,9 +125,9 @@ export function ThemeToggle({
     const indice = montado ? indiceDe(theme) : 0
 
     const raizRef = useRef<HTMLDivElement>(null)
-    // `montado` entra na condição porque o hook liga o ponteiro num efeito,
-    // na montagem: antes dela quem está na tela é o `Skeleton`, o ref é nulo e
-    // o brilho nunca acendia. Medido — sem isso, zero arco com o ponteiro colado.
+    // `montado` entra na condição porque o hook liga o ponteiro num efeito, na
+    // montagem: antes dela quem está na tela é o `Skeleton`, o ref é nulo e o brilho
+    // nunca acenderia.
     const glowRef = useBrandGlow<HTMLDivElement>(variant === "brand" && montado)
     const cabecaRef = useRef<HTMLSpanElement>(null)
     const anterior = useRef(indice)
@@ -194,11 +184,10 @@ export function ThemeToggle({
         const de = anterior.current
         anterior.current = indice
 
-        // **A primeira pintura não anima.** O gate de montagem faz `indice` sair
-        // de 0 para a parada real, e sem esta guarda o polegar entra deslizando
-        // da esquerda toda vez que o componente nasce — o que no app é **toda
-        // abertura do menu da conta**, já que o conteúdo de um `DropdownMenu`
-        // desmonta ao fechar. Nascer é chegar, não viajar.
+        // A primeira pintura não anima: o gate de montagem faz `indice` sair de 0 para a
+        // parada real, e sem esta guarda o polegar entraria deslizando da esquerda toda
+        // vez que o componente nasce (todo abrir do menu da conta, cujo conteúdo
+        // desmonta ao fechar). Nascer é chegar, não viajar.
         if (!jaPintou.current) {
             jaPintou.current = true
             return
@@ -206,31 +195,28 @@ export function ThemeToggle({
 
         if (de === indice) return
 
-        // Um salto novo cancela o anterior: sem isto, dois cliques seguidos
-        // deixam duas animações disputando a mesma propriedade.
+        // Um salto novo cancela o anterior: senão dois cliques seguidos deixam duas
+        // animações disputando a mesma propriedade.
         for (const a of emCurso.current) a.cancel()
         emCurso.current = []
 
-        // O bloco global de `globals.css` corta transição, e não WAAPI — aqui a
-        // pergunta tem de ser feita à mão. Sem movimento, o estilo de repouso
-        // já pôs tudo no lugar certo: não há nada a fazer.
+        // O bloco global de `globals.css` corta transição, e não WAAPI: a pergunta de
+        // movimento reduzido é feita à mão. Sem movimento, o estilo de repouso já pôs
+        // tudo no lugar.
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
 
         const peca = cabecaRef.current
         if (!peca) return
 
         const salto = Math.abs(indice - de)
-        // **O esticão é o mesmo em pixels**, com rótulo ou sem: a amplitude é
-        // proporcional à parada de ícone, e uma parada larga estica a mesma
-        // distância em proporção menor. Sem isso a pílula de 88px esticava 19px
-        // e lia como elástico, não como matéria.
+        // O esticão é o mesmo em pixels, com rótulo ou sem: a amplitude é proporcional à
+        // parada de ícone, e uma pílula de 88px esticaria 19px e leria como elástico.
         const amplitude = (AMPLITUDE_POR_SALTO[salto] ?? 0.22) * (face / passo)
         const paraDireita = indice > de
 
-        // **As duas origens** (enquanto corre, a borda de trás; no pouso, a da
-        // frente) são do `viajarLiquido`. O repouso fica com a de trás; com
-        // escala 1 ela não pinta nada, e é a que vale no próximo salto antes de
-        // o quadro 0 assumir.
+        // As duas origens (a borda de trás enquanto corre, a da frente no pouso) são do
+        // `viajarLiquido`. O repouso fica com a de trás; com escala 1 não pinta nada, e
+        // é a que vale no próximo salto antes de o quadro 0 assumir.
         peca.style.transformOrigin = paraDireita ? "0% 50%" : "100% 50%"
 
         // Sem tamanho nas caixas: a peça não muda de tamanho, e só a posição e
@@ -266,66 +252,43 @@ export function ThemeToggle({
             data-visual={PARADAS[indice].valor}
             style={{ width: larguraTrilho, height: degrau.altura }}
             className={cn(
-                // **A bandeja é sobreposição, e não tinta chapada — e isto diverge do
-                // `TabsList` de propósito.**
-                //
-                // `bg-muted` é opaco: medido, ele pintava **38,38,38** tanto no
-                // cabeçalho quanto dentro do painel de um cartão, ignorando o que
-                // está atrás. Um trilho de abas vive dentro de uma tela conhecida;
-                // este controle não — ele mora na barra do catálogo (vidro sobre a
-                // página), no painel do `DropdownMenu`, no `Popover` do telefone e
-                // solto num cartão. Chapado, ele lê como um bloco estrangeiro
-                // colado sobre o preto do app.
-                //
-                // A superfície passa a ser a do campo, `bg-input-fill/50` — a mesma
-                // de `field-classes`, e por isso a placa lê como o fundo de um
-                // `Input`. No escuro `--input-fill` é branco a 15%, então a /50 são
-                // 7,5% de sobreposição: **28** sobre a página e **40** sobre o
-                // cartão, contra os 38 fixos de antes. No claro o token é opaco por
-                // construção, e a placa continua se comportando como campo.
+                // A bandeja é sobreposição, e não tinta chapada, e isto diverge do `TabsList` de
+                // propósito: o `bg-muted` opaco pintava 38,38,38 no cabeçalho e dentro do painel
+                // de um cartão, ignorando o que está atrás, e este controle mora em lugares
+                // diferentes (barra do catálogo em vidro, `DropdownMenu`, `Popover` do telefone,
+                // solto num cartão). A superfície é a do campo, `bg-input-fill/50` (a de
+                // `field-classes`): no escuro `--input-fill` é branco a 15%, então a /50 dá 28
+                // sobre a página e 40 sobre o cartão; no claro o token é opaco e a placa segue
+                // se comportando como campo.
                 "group/theme relative inline-flex shrink-0 items-center rounded-full bg-input-fill/50 p-0.5",
-                // O alvo de toque real: o pseudo-elemento leva a pílula aos 44px
-                // que um dedo pede sem mexer no layout de quem a posiciona.
+                // O alvo de toque real: o pseudo-elemento leva a pílula aos 44px sem mexer no layout.
                 "after:absolute after:-inset-x-1 after:content-['']",
                 degrau.toque,
                 // O brilho mora no `::before`; o `::after` segue sendo o alvo.
                 variant === "brand" && "brand-glow isolate [--brand-glow-opacity:1]",
                 className,
             )}
-            // Ele vive dentro de menus suspensos (conta e menu mobile): sem isto,
-            // o pointer down fecha o menu antes do clique chegar.
+            // Ele vive dentro de menus suspensos (conta e menu mobile): sem isto o pointer
+            // down fecha o menu antes do clique chegar.
             onPointerDown={(e) => e.stopPropagation()}
-            // **A seleção segue o foco, e isso é escrito à mão de propósito.**
-            //
-            // O Radix já tenta fazer isso: ele marca uma flag num `keydown` de
-            // `document` e, no `onFocus` do item, clica se a flag estiver de pé.
-            // Só que o React 19 delega os eventos no **contêiner da raiz**, que
-            // fica abaixo de `document` — então o `onKeyDown` do item move o
-            // foco *antes* de o listener de `document` levantar a flag, e o
-            // `onFocus` a lê como falsa. Medido aqui: a seta movia o foco e
-            // **não** trocava o tema, e o Espaço também não pegava. Com o
-            // teclado, o controle ficava inerte.
-            //
-            // Ler o foco é a fonte de verdade que não depende de ordem de
-            // entrega: entrar por Tab foca a parada marcada e não muda nada;
-            // clicar foca a que já foi escolhida; a seta foca a vizinha e a
-            // escolhe — que é o comportamento de `radiogroup` da WAI-ARIA.
+            // A seleção segue o foco, escrito à mão de propósito. O Radix marca uma flag num
+            // `keydown` de `document` e clica no `onFocus` do item se ela estiver de pé, mas
+            // o React 19 delega os eventos no contêiner da raiz (abaixo de `document`): o
+            // `onKeyDown` do item move o foco antes de o listener levantar a flag, e a seta
+            // não troca o tema nem o Espaço pega. Ler o foco não depende de ordem de
+            // entrega: entrar por Tab foca a marcada e não muda nada; clicar foca a já
+            // escolhida; a seta foca a vizinha e a escolhe (o `radiogroup` da WAI-ARIA).
             onFocus={(e) => {
                 const alvo = (e.target as HTMLElement).dataset?.parada
                 if (alvo && alvo !== PARADAS[indice].valor) trocar(alvo as Tema)
             }}
         >
             {/*
-             * A peça. **Uma só** — ver o cabeçalho: cabeça, rastro e pescoço
-             * liam como duas bolas viajando, e não como matéria.
-             *
-             * Sem borda, por decisão do dono: o fio duro é o que denuncia a
-             * distorção quando a forma estica, porque o contorno deixa de ser
-             * circular e o olho vê a elipse. Sem ele, quem segura a peça contra
-             * a bandeja é a sombra — e essa é a conta apertada do tema claro,
-             * onde `--background` e `--muted` estão a ΔRGB 15 (contra 28 no
-             * escuro).
-             */}
+               A peça, uma só (cabeça, rastro e pescoço leriam como duas bolas). Sem borda,
+               por decisão do dono: o fio duro denunciaria a distorção quando a forma estica;
+               quem segura a peça contra a bandeja é a sombra, a conta apertada do tema claro,
+               onde `--background` e `--muted` estão a ΔRGB 15 (contra 28 no escuro).
+            */}
             <span
                 aria-hidden
                 ref={cabecaRef}
@@ -349,17 +312,12 @@ export function ThemeToggle({
 }
 
 /**
- * Uma das três faces. Vem depois dos discos no DOM de propósito: assim ela pinta
- * por cima deles sem precisar de `z-index` entre irmãos, e o glifo que está
- * valendo aparece *sobre* a pastilha em vez de sumir debaixo dela.
- *
- * Os dois glifos ficam empilhados e trocam por opacidade, e não por condicional
- * no JSX: desmontar e montar não tem o que esmaecer. **Estes dois esmaecem por
- * transição de CSS**, então o `disableTransitionOnChange` do next-themes os
- * pega e eles trocam de estalo no momento da viagem — o que é o certo aqui: a
- * página inteira troca de cor no mesmo instante, e um glifo dissolvendo sozinho
- * ficaria fora de compasso. Quem tem de animar é o que se **desloca**, e esse
- * usa WAAPI justamente para escapar do mesmo `!important`.
+ * Uma das três faces. Vem depois dos discos no DOM para pintar por cima deles
+ * sem `z-index`. Os dois glifos ficam empilhados e trocam por opacidade (montar e
+ * desmontar não tem o que esmaecer); esmaecem por transição de CSS, então o
+ * `disableTransitionOnChange` do next-themes os troca de estalo no momento da
+ * viagem, o certo aqui: a página inteira troca de cor no mesmo instante. O que se
+ * desloca usa WAAPI para escapar do mesmo `!important`.
  */
 function ThemeFace({
     parada,
@@ -388,16 +346,13 @@ function ThemeFace({
             // que recebe o foco.
             data-parada={valor}
             className={cn(
-                // `group/face` porque quem recebe o ponteiro é este botão e quem
-                // carrega a tinta é o glifo lá dentro. Assim cada classe fica
-                // com **um variante só** — a armadilha das variantes empilhadas
-                // que este arquivo já documentou.
+                // `group/face` porque quem recebe o ponteiro é este botão e quem carrega a tinta
+                // é o glifo de dentro: cada classe fica com um variante só (a armadilha das
+                // variantes empilhadas).
                 "group/face",
-                // `z-10` não é enfeite: o `::after` que expande o alvo de toque
-                // da raiz é gerado **depois** das faces e, sem `z-index`, pinta
-                // por cima delas — ele engolia o ponteiro, e a face nunca
-                // recebia `:hover`. Subindo a face, o anel externo do `::after`
-                // continua capturando o que está fora da pílula.
+                // `z-10` não é enfeite: o `::after` que expande o alvo de toque da raiz é gerado
+                // depois das faces e, sem `z-index`, pinta por cima delas e a face nunca recebe
+                // `:hover`. O anel externo do `::after` segue capturando o que está fora da pílula.
                 "relative z-10 flex items-center justify-center gap-1.5 rounded-full outline-none",
                 "focus-visible:ring-3 focus-visible:ring-ring/45",
             )}
@@ -406,14 +361,12 @@ function ThemeFace({
             <span
                 className={cn(
                     "relative block size-4 scale-90 text-muted-foreground transition-[transform,color] duration-(--duration-slow) ease-(--ease-emphasized)",
-                    // **O realce é tinta, e só.** É a régua do `TabsTrigger`
-                    // inativo (`hover:text-foreground`): no cursor a face acende
-                    // o rótulo, sem pintar superfície e sem deslocar objeto — o
-                    // movimento fica reservado para a troca de verdade.
+                    // O realce é só tinta: a régua do `TabsTrigger` inativo (`hover:text-foreground`).
+                    // No cursor a face acende o rótulo, sem pintar superfície nem deslocar objeto; o
+                    // movimento fica para a troca de verdade.
                     "group-hover/face:text-foreground",
-                    // `hover:` compila para `@media (hover: hover)` e não vale no
-                    // telefone. Sem o par, a regra H do projeto acusa — e o toque
-                    // ficaria sem resposta nenhuma antes do dedo sair.
+                    // `hover:` compila para `@media (hover: hover)` e não vale no telefone; sem o
+                    // par, a regra H do projeto acusa e o toque ficaria sem resposta.
                     "group-active/face:text-foreground",
                     ativo && "scale-100 text-foreground",
                 )}

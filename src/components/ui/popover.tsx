@@ -28,28 +28,12 @@ import {
 } from "@/hooks/use-close-on-scroll";
 
 /**
- * Um popover é um `role="dialog"` — e ele precisa de nome.
- *
- * O `Popover.Content` do Radix renderiza `role="dialog"` e **nunca escreve
- * `aria-labelledby`**. Um papel de diálogo sem nome é anunciado como "diálogo",
- * e mais nada: quem usa leitor de tela sabe que alguma coisa abriu, e não o
- * quê.
- *
- * O `PopoverTitle` daqui não corrigia isso — ele era uma `<div>` tipada como
- * `h2`, sem `id`, sem ligação nenhuma com o conteúdo. O
- * `MobileAccountMenu` chegou a escrever `<PopoverHeader className="sr-only">`
- * com título e descrição dentro, exatamente para nomear o popover; o texto
- * existia no DOM e não chegava ao papel.
- *
- * Agora o título e a descrição **se registram**: cada um recebe um `id` deste
- * contexto, e o `PopoverContent` só aponta `aria-labelledby` /
- * `aria-describedby` para eles quando eles de fato foram renderizados —
- * apontar para um `id` que não existe deixa o nome vazio, que é onde
- * estávamos. É o mesmo mecanismo do `Dialog` do Radix, aplicado à superfície
- * que compartilha o papel dele.
- *
- * Quem passa o próprio `aria-labelledby` continua ganhando: os props do
- * chamador são espalhados depois.
+ * Um popover é um `role="dialog"` e precisa de nome: o Radix nunca escreve
+ * `aria-labelledby`, e sem ele o leitor de tela anuncia só "diálogo".
+ * `PopoverTitle` e `PopoverDescription` se registram neste contexto, e o
+ * `PopoverContent` só aponta `aria-labelledby` / `aria-describedby` para eles
+ * quando foram renderizados (apontar para um `id` ausente deixa o nome vazio).
+ * O `aria-labelledby` passado por quem chama vence.
  */
 type PopoverLabelContextValue = {
   titleId: string;
@@ -75,12 +59,9 @@ const PopoverModoContext = React.createContext<{
 }>({ folha: false, fechar: () => {} });
 
 /**
- * Não modal, o popover fecha quando a página rola — ver `useCloseOnScroll`.
- * `Combobox` e `DatePicker` herdam daqui.
- *
- * `mobile="sheet"` (rodada 220): abaixo de 768px o mesmo conteúdo abre numa
- * gaveta. As telas decidiam isso à mão com `modal={isMobile}` — um popover
- * modal no telefone ainda é um popover de 288px pendurado num dedo.
+ * Não modal, o popover fecha quando a página rola (ver `useCloseOnScroll`);
+ * `Combobox` e `DatePicker` herdam daqui. `mobile="sheet"`: abaixo de 768px o
+ * mesmo conteúdo abre numa gaveta, em vez de `modal={isMobile}` à mão.
  */
 function Popover({
   open: openProp,
@@ -152,39 +133,27 @@ function PopoverClose({
 }
 
 /**
- * O recuo é um eixo, como no `Card`.
- *
- * Cinco chamadas o anulam à mão — três escrevem `w-auto p-0` para pôr um
- * calendário dentro, e o `Combobox` e o `FormPickerPopoverContent` fazem o
- * mesmo porque quem manda no respiro é a lista de dentro. Um popover que
- * hospeda um componente inteiro não quer recuo nenhum: o conteúdo sangra até a
- * borda e cuida do próprio.
- *
- * `none` tira o `gap` junto. As chamadas escreviam `gap-0 p-0` porque as duas
- * coisas andam juntas — sem recuo, a folga entre filhos é do conteúdo também.
+ * O recuo é um eixo, como no `Card`. `none` serve o popover que hospeda um
+ * componente inteiro (calendário, `Command`, lista): o conteúdo sangra até a
+ * borda, e tira o `gap` junto.
  */
 const popoverContentVariants = cva(
   [
     /** Above Sheet overlay/content (`z-(--z-sheet)`); below Toaster (`z-(--z-toast)`). */
     "relative z-(--z-popover) flex origin-(--radix-popover-content-transform-origin) flex-col text-sm outline-hidden",
     "max-h-(--radix-popover-content-available-height) max-w-(--radix-popover-content-available-width) overflow-y-auto overscroll-contain",
-    // Quem declara um corpo rolável **cede a rolagem da casca**. Sem isto o
-    // popover e o `PopoverBody` rolariam os dois, um dentro do outro. Quem não
-    // declara continua exatamente como antes.
+    // Quem declara um corpo rolável cede a rolagem da casca; senão o popover e o
+    // `PopoverBody` rolariam os dois.
     "has-[[data-slot=popover-body]]:overflow-hidden",
-    // O movimento é o eixo `motion` (rodada 248), e não mais o fade com
-    // `zoom-[0.97]` da rodada 220: `sprout` é a placa do tour, `field` o
+    // O movimento é o eixo `motion`: `sprout` é a placa do tour, `field` o
     // desdobrar dos campos, `none` para quem anima por conta própria.
   ],
   {
     variants: {
       /**
-       * A largura, na escada (rodada 220): `md` 288 é o padrão de sempre;
-       * `sm` 224 para uma frase, `lg` 352 para um formulário curto, `auto`
-       * para quem hospeda um componente com largura própria (o calendário, a
-       * grade de meses) e `trigger` para a largura do gatilho. Quatro telas
-       * escreviam `w-auto`, `w-max`, `w-[min(…)]` e
-       * `w-[var(--radix-popover-trigger-width)]` à mão.
+       * A largura, na escada: `md` 288 (padrão), `sm` 224 para uma frase, `lg` 352
+       * para um formulário curto, `auto` para quem hospeda um componente com largura
+       * própria e `trigger` para a largura do gatilho.
        */
       size: {
         auto: "w-auto",
@@ -194,26 +163,19 @@ const popoverContentVariants = cva(
         trigger: "w-(--radix-popover-trigger-width)",
       },
       /**
-       * Quem pinta (rodada 143). `plate` é a placa flutuante da régua — o
-       * padrão, e o que todo popover do app veste. `none` não pinta nada —
-       * sem placa, sem anel, sem sombra, sem recorte —, para o conteúdo que
-       * traz as **próprias** superfícies. Ela foi feita para a pilha do
-       * `Command` no `Combobox`, que saiu dela na rodada 198 — **hoje nenhuma
-       * tela a usa**, e a página afirmava o contrário. Placa em volta de placa
-       * seria o "fundo quebrado" que a regra de uma placa por superfície
-       * proíbe.
+       * Quem pinta. `plate` (padrão) é a placa flutuante da régua. `none` não pinta
+       * nada, para conteúdo que traz as próprias superfícies (placa em volta de placa
+       * é o "fundo quebrado" que a regra proíbe); hoje nenhuma tela o usa.
        */
       surface: {
         plate: menuPanelSurfaceClassName,
         none: "overflow-visible",
       },
       /**
-       * Como a placa entra e sai (rodada 248), com a saída sempre voltando ao
-       * gatilho. `sprout` — o padrão — **brota do gatilho**: a placa do tour,
-       * a 92%, desfocada, com as faixas subindo atrás. `field` **desdobra do
-       * campo**, o gesto da família dos campos (o `Combobox`, o seletor do
-       * `Form`). `none` não anima: o `DatePicker` tem o próprio desdobrar, e o
-       * tour e a dica do onboarding animam pela Web Animations API.
+       * Como a placa entra e sai, sempre voltando ao gatilho. `sprout` (padrão) brota
+       * do gatilho, como a placa do tour; `field` desdobra do campo (`Combobox`,
+       * seletor do `Form`); `none` não anima (o `DatePicker`, o tour e a dica do
+       * onboarding animam por conta própria).
        */
       motion: {
         sprout: "popover-sprout",
@@ -221,10 +183,8 @@ const popoverContentVariants = cva(
         none: "",
       },
       padding: {
-        // O recuo das tiras acompanha o do casco: onde o casco já recua, a tira
-        // não recua duas vezes. Em `none` ela vira dona do próprio — e os 12/8
-        // são exatamente o que as seis faixas escritas à mão pelo app já
-        // escreviam (`px-3 py-2`).
+        // O recuo das tiras acompanha o do casco: onde o casco já recua, a tira não recua
+        // duas vezes. Em `none` ela é dona do próprio (12/8).
         default:
           "gap-2.5 p-2.5 [--popover-strip-px:0px] [--popover-strip-py:0px]",
         none: "gap-0 p-0 [--popover-strip-px:--spacing(3)] [--popover-strip-py:--spacing(2)]",
@@ -249,20 +209,14 @@ function PopoverContent({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content> &
   VariantProps<typeof popoverContentVariants> & {
-    /**
-     * O nome para o leitor de tela, sem título à vista (rodada 220): vira um
-     * `PopoverTitle` `sr-only`. Era o que o calendário do painel escrevia à
-     * mão, e o que os seletores de mês das categorias esqueciam.
-     */
+    /** O nome para o leitor de tela, sem título à vista: vira um `PopoverTitle` `sr-only`. */
     label?: React.ReactNode;
   }) {
   const reactId = React.useId();
   const fechouPorRolagem = React.useContext(PopoverScrollCloseContext);
   const { folha } = React.useContext(PopoverModoContext);
-  // O portal vai ao `body` da janela da moldura do catálogo, como o do
-  // `Tooltip` e o do `Drawer` (rodada 245). Fora dela o contexto é `null`, e o
-  // app não muda. Ia ao documento de fora, e lá o clique dentro da moldura
-  // nunca chegava a ele: o popover não fechava ao clicar fora.
+  // O portal vai ao `body` da janela da moldura do catálogo, como o do `Tooltip`
+  // e o do `Drawer`; fora dela o contexto é `null` e o app não muda.
   const janela = useViewportWindow();
   const [hasTitle, setHasTitle] = React.useState(false);
   const [hasDescription, setHasDescription] = React.useState(false);
@@ -278,31 +232,15 @@ function PopoverContent({
   );
 
   return (
-    // **O Provider fica por fora do Portal, e isso é o que faz a saída
-    // existir.** O `Portal` do Radix é `<Presence>` em volta de um
-    // `PortalPrimitive asChild`, e o `Presence` decide se espera a animação
-    // lendo `getComputedStyle` do **ref do filho**. Com o Provider no meio, o
-    // `Slot` do `asChild` tenta pôr o ref num context provider — que não é
-    // elemento —, o ref se perde, `getAnimationName(undefined)` devolve
-    // `"none"` e o Radix desmonta **no mesmo commit** em que escreve
-    // `data-state="closed"`. Medido: no instante do `state=closed` o
-    // `getComputedStyle` do conteúdo já vinha **vazio**, ou seja o nó estava
-    // destacado, e nenhum `animationstart` de `exit` chegava a disparar — as
-    // três classes `data-closed:*` eram código morto desde sempre. O
-    // `DropdownMenu`, que tem `Portal → Content` direto, sempre animou.
-    //
-    // O contexto continua alcançando o título e a descrição: ele está acima do
-    // Portal na árvore do React, e contexto atravessa portal.
-    //
-    // Saiu junto o `data-slot="popover-portal"`, que também não existia: as
-    // props iam para o mesmo `Slot` e morriam no Provider. Verificado no DOM
-    // com um popover aberto — `[data-slot=popover-portal]` não casava nada.
+    // O Provider fica por fora do Portal, e é isso que faz a saída existir: o
+    // `Presence` do Radix lê o `getComputedStyle` do ref do filho, e com o Provider
+    // no meio o ref se perde e o conteúdo desmonta no mesmo commit do
+    // `data-state="closed"`, sem animação de saída. O contexto ainda alcança título e
+    // descrição (atravessa portal).
     <PopoverLabelContext.Provider value={rotulos}>
       {folha ? (
-        // No telefone, a gaveta: o mesmo conteúdo, sem placa nem seta. O
-        // nome é o da gaveta — `PopoverTitle` vira `DialogTitle` nela. O
-        // destino do foco ao fechar atravessa (rodada 245): quem decide para
-        // onde ele volta no popover decide também na gaveta.
+        // No telefone, a gaveta: o mesmo conteúdo, sem placa nem seta; `PopoverTitle`
+        // vira `DialogTitle` nela, e o destino do foco ao fechar atravessa.
         <DrawerContent
           data-slot="popover-sheet"
           onCloseAutoFocus={onCloseAutoFocus}
@@ -325,9 +263,8 @@ function PopoverContent({
           data-slot="popover-content"
           align={align}
           sideOffset={sideOffset}
-          // Sem isto o popover encosta na borda da tela. O
-          // `FormPickerPopoverContent` já somava a folga à mão (16/16/12/12) —
-          // era o único que somava, e não é um caso especial dele.
+          // Sem isto o popover encosta na borda da tela (a folga que o
+          // `FormPickerPopoverContent` somava à mão).
           collisionPadding={collisionPadding}
           aria-labelledby={hasTitle ? rotulos.titleId : undefined}
           aria-describedby={hasDescription ? rotulos.descriptionId : undefined}
@@ -356,16 +293,10 @@ function PopoverContent({
 }
 
 /**
- * Um popover é `role="dialog"`, e sem nome o leitor de tela anuncia só
- * "diálogo". Em desenvolvimento, quem abre um sem nome fica sabendo.
- *
- * O aviso é **filho do `Content`**, e é isso que o prende ao popover aberto:
- * fechado, o Radix não monta os filhos. Quando morava na raiz do
- * `PopoverContent`, ele disparava em todo popover fechado cujo nome vem de um
- * `PopoverTitle` — o título não estava montado para se registrar. E ele
- * procura o título **no DOM**, não no `hasTitle`: o `h2` nasce com o `id`, e o
- * `setHasTitle` só chega um render depois. É o `TitleWarning` do `Dialog` do
- * Radix. Na gaveta não há aviso nosso, porque o do Radix já cobre.
+ * Sem nome, o leitor de tela anuncia só "diálogo": em desenvolvimento, quem
+ * abre um popover sem nome fica sabendo. O aviso é filho do `Content` (fechado,
+ * o Radix não monta os filhos) e procura o título no DOM, não no `hasTitle`, que
+ * só chega um render depois. Na gaveta o aviso é o do Radix.
  */
 function PopoverNameWarning({
   titleId,
@@ -393,11 +324,9 @@ function PopoverAnchor({
 }
 
 /**
- * A seta (rodada 220). Ela se paga quando o gatilho é **um entre iguais** — o
- * dia numa grade de trinta, uma célula de tabela —, e a posição do painel não
- * basta para dizer de qual ele fala. É a do `HoverCard`: `fill` e não `bg`, e
- * os alfas da placa espelhados à mão — agora são **dois** espelhos da mesma
- * receita, e este fica no mesmo número do outro.
+ * A seta se paga quando o gatilho é um entre iguais (o dia numa grade, uma
+ * célula de tabela). É a do `HoverCard`: `fill` e não `bg`, com os alfas da
+ * placa espelhados à mão (são os dois espelhos da receita).
  */
 function PopoverArrow({
   className,
@@ -422,26 +351,12 @@ function PopoverArrow({
 }
 
 /**
- * A faixa de topo — e ela **não tem fio**.
- *
- * Ela não tinha borda nenhuma, e era por isso que seis telas escreviam a faixa
- * à mão em duas grafias (`border-b border-border px-3 py-2` e
- * `border-b border-border/60 px-2 py-1.5`) — inclusive a demonstração dentro da
- * doc deste componente, que ensinava a grafia. Agora a faixa é a peça, e o que
- * a separa do corpo é o respiro que ela traz mais a dissolução, quando há
- * `PopoverBody`.
- *
- * O `relative z-10` é o que põe a faixa **sobre** o corpo em vez de ao lado
- * dele: o conteúdo passa por trás. É o mesmo do `FormPickerPopoverSearch`.
- *
- * Ele **não** ganha tipo de rótulo (`text-xs text-muted-foreground`): este é o
- * par título+descrição que registra `aria-labelledby`, e carimbar tipo de
- * rótulo aqui faria a peça mentir sobre a própria função. Uma faixa que é só um
- * rótulo põe um `<p>` com esse tipo dentro.
- *
- * Título sobre descrição é **o mesmo dado em duas linhas**, e quem os separa é
- * a entrelinha. O `gap-0.5` que estava aqui bastava para o par deixar de ler
- * como uma coisa só.
+ * A faixa de topo, sem fio: o que a separa do corpo é o respiro dela mais a
+ * dissolução do `PopoverBody`. O `relative z-10` a põe sobre o corpo (como no
+ * `FormPickerPopoverSearch`).
+ * Não ganha tipo de rótulo: é o par título+descrição que registra
+ * `aria-labelledby`; uma faixa que é só rótulo põe um `<p>` com esse tipo dentro.
+ * Título sobre descrição é par de identidade: sem `gap`.
  */
 function PopoverHeader({
   className,
@@ -450,9 +365,8 @@ function PopoverHeader({
   ...props
 }: React.ComponentProps<"div"> & {
   /**
-   * O × no canto (rodada 220), preso ao topo do título como o `endAdornment`
-   * do `DialogHeaderRow` — para o popover que se lê e se dispensa. Na gaveta
-   * do telefone ele some: lá a alça e o toque fora fecham.
+   * O × no canto, preso ao topo do título como o `endAdornment` do
+   * `DialogHeaderRow`. Na gaveta some: a alça e o toque fora fecham.
    */
   closeButton?: boolean;
 }) {
@@ -491,18 +405,11 @@ function PopoverHeader({
 }
 
 /**
- * O corpo rolável, para o popover que hospeda uma lista longa.
- *
- * Ele existe porque **o `PopoverContent` não pode ser o elemento mascarado**: a
- * máscara recorta o alfa do elemento inteiro, e ali moram o `bg-popover`, o
- * `ring-1`, o `rounded-lg` e a sombra — os quatro cantos do painel sairiam
- * apagados enquanto os lados continuam opacos. Quem rola e dissolve é este nó,
- * que não desenha nada.
- *
- * **Modo sem faixa**, de propósito: o cabeçalho tem `PopoverDescription`
- * opcional, logo altura variável, e medi-la exigiria um observador escrevendo
- * a altura do JS. A dissolução acontece na borda do próprio corpo, logo abaixo
- * da faixa — que é a delimitação que se quer.
+ * O corpo rolável, para o popover que hospeda uma lista longa. Existe porque o
+ * `PopoverContent` não pode ser o elemento mascarado (a máscara apagaria os
+ * cantos do `bg-popover`, do anel e da sombra); quem rola e dissolve é este nó.
+ * Modo sem faixa: o cabeçalho tem altura variável, e a dissolução acontece na
+ * borda do corpo, logo abaixo dele.
  */
 function PopoverBody({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -523,7 +430,7 @@ function PopoverBody({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-/** A faixa de pé — espelho do cabeçalho, e sem fio pela mesma razão. */
+/** A faixa de pé: espelho do cabeçalho, sem fio pela mesma razão. */
 function PopoverFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -604,13 +511,10 @@ function PopoverDescription({
 }
 
 /**
- * A confirmação curta (rodada 220): título, uma linha e Cancelar/Confirmar —
- * a ação de baixo risco que não merece um diálogo modal (remover um filtro,
- * desfazer uma marcação). O que não tem volta continua sendo `AlertDialog`.
- *
- * É um `PopoverContent` inteiro: vai no lugar dele, dentro do `Popover`. Um
- * `onConfirm` que devolve `Promise` trava os dois botões com o `Spinner` e
- * fecha quando ela assenta; o Cancelar segue a tabela do rodapé (`tertiary`).
+ * A confirmação curta: título, uma linha e Cancelar/Confirmar, para a ação de
+ * baixo risco sem diálogo modal (o que não tem volta é `AlertDialog`). É um
+ * `PopoverContent` inteiro. Um `onConfirm` que devolve `Promise` trava os botões
+ * com o `Spinner` e fecha quando assenta.
  */
 function PopoverConfirm({
   title,

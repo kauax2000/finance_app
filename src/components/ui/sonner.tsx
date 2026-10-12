@@ -19,33 +19,19 @@ type ToasterProps = ComponentProps<typeof Sonner>
 
 /**
  * A pilha de toasts do app.
- *
- * ## O que é decisão, e o que é padrão do sonner
- *
- * **Decisão:** a posição (`top-right`), o desvio no telefone, o botão de
- * fechar e — desde a rodada 228 — a placa flutuante de vidro, a pausa honesta
- * e o Esc. **Padrão do sonner, mantido de propósito:** empilhamento (3
- * à vista, abrindo no cursor), arraste para dispensar (no telefone, para cima
- * ou para o lado), `promise`, deduplicação por `id` e o ⌥T que leva o foco à
- * pilha. É o mesmo julgamento da rodada do `vaul`: pega-se o mecanismo
- * emprestado e veste-se a cromagem própria.
- *
+ * Decisão: a posição (`top-right`), o desvio no telefone, o botão de fechar, a
+ * placa flutuante de vidro, a pausa honesta e o Esc. Padrão do sonner, mantido:
+ * empilhamento (3 à vista, abrindo no cursor), arraste para dispensar,
+ * `promise`, deduplicação por `id` e o ⌥T que leva o foco à pilha.
  * A cromagem mora em `globals.css`, no bloco `[data-sonner-toast]`, porque o
- * sonner renderiza fora da árvore de classes do Tailwind. **Nenhuma tela chama
- * o `toast` do sonner**: os helpers de `@/lib/toast` levam a duração, o
- * assunto e a contagem.
- *
- * ## Os ícones são Heroicons
- *
- * O sonner desenha os próprios, e eles moram em `node_modules`, fora do alcance
- * do ESLint e do auditor. Entram pelo prop `icons`; o `Spinner` é o do
- * `loading`, porque a roda é o comportamento, não um glifo.
- *
- * ## O desvio no telefone tem uma causa
- *
- * `mobileOffset.top` parte da base da barra fixa, ou da área segura sem ela.
- * Sem isso o toast nasce **atrás** da barra ou do notch. No topo e não no
- * rodapé porque embaixo está a ilha de navegação.
+ * sonner renderiza fora da árvore de classes do Tailwind. Nenhuma tela chama o
+ * `toast` do sonner: os helpers de `@/lib/toast` levam duração, assunto e contagem.
+ * Os ícones são Heroicons (o sonner desenha os próprios, em `node_modules`, fora
+ * do alcance do ESLint e do auditor), entrando pelo prop `icons`; o `Spinner` é
+ * o do `loading`, porque a roda é o comportamento.
+ * `mobileOffset.top` parte da base da barra fixa, ou da área segura sem ela; sem
+ * isso o toast nasce atrás da barra ou do notch. No topo porque embaixo está a
+ * ilha de navegação.
  */
 export function Toaster({ ...props }: ToasterProps) {
   const { resolvedTheme } = useTheme()
@@ -59,10 +45,9 @@ export function Toaster({ ...props }: ToasterProps) {
 
   useEffect(() => {
     /**
-     * **A pausa honesta.** O sonner para o relógio com o cursor em cima da
-     * pilha e com a aba escondida — mas não com o **foco**: quem chega ao
-     * "Desfazer" pelo Tab (ou pelo ⌥T) via o tempo correr enquanto decidia.
-     * A pausa do sonner é o estado de "aberta", que o React liga num
+     * A pausa honesta: o sonner para o relógio com o cursor na pilha e com a aba
+     * escondida, mas não com o foco, e quem chega ao "Desfazer" pelo Tab (ou ⌥T)
+     * veria o tempo correr. A pausa é o estado "aberta", que o React liga num
      * `mousemove` e desliga num `mouseout` para fora da lista; o foco entrando
      * despacha o primeiro, e saindo, o segundo.
      */
@@ -115,12 +100,12 @@ export function Toaster({ ...props }: ToasterProps) {
       visibleToasts={3}
       // Os rótulos do sonner vêm em inglês ("Notifications", "Close toast").
       containerAriaLabel="Notificações"
-      // Sem `z-(--z-toast)`: o sonner declara `z-index: 999999999` fora de
-      // camada, e a utility perdia calada. O toast já fica acima de tudo.
+      // Sem `z-(--z-toast)`: o sonner declara `z-index: 999999999` fora de camada, e a
+      // utility perderia calada. O toast já fica acima de tudo.
       className="toaster"
-      // **Abaixo da barra do topo, e não por cima dela** (a pedido do dono): o
-      // topo da pilha é `--top-bar-bottom` mais 12px. Sem barra (as telas de
-      // acesso), 16px do topo; no telefone, abaixo do notch.
+      // Abaixo da barra do topo, e não por cima dela: o topo da pilha é
+      // `--top-bar-bottom` mais 12px. Sem barra (as telas de acesso), 16px do topo; no
+      // telefone, abaixo do notch.
       offset={{
         top: "max(calc(var(--top-bar-bottom) + 12px), 1rem)",
         right: "1rem",

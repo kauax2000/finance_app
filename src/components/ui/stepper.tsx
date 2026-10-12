@@ -9,28 +9,15 @@ import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 
 /**
- * Progresso por etapas de um fluxo.
- *
- * ## A lista assume o que é dela
- *
- * `StepperItem` recebia `step` (o número) e `isLast` como props. Os dois são
- * exatamente o que o **pai** sabe e o filho não: o índice e o fim da lista. É
- * a mesma correção que a `BreadcrumbList` recebeu ao assumir os separadores: o
- * contêiner deriva do índice, e o item volta a aceitar `children`.
- *
- * ## O passo é da lista (rodada 224)
- *
- * Com `value` (ou `defaultValue`) a `Stepper` **é** o estado do fluxo: cada
- * item deriva `complete`/`current`/`upcoming` do próprio índice, e ninguém
- * escreve `estadoDe(i, atual)`. `state` no item continua valendo, e vence —
- * é o que marca uma etapa com `error`. Com `onValueChange` as etapas
- * concluídas viram botão sozinhas (as futuras também, com `linear={false}`),
- * as setas andam entre elas, e uma região viva anuncia "Passo 3 de 4,
- * Categorias" ao trocar.
- *
- * ## O estado chega ao leitor de tela
- *
- * `data-state` não é lido por tecnologia assistiva, e o tique é `aria-hidden`:
+ * Progresso por etapas de um fluxo. A lista assume o que é dela: o índice e o
+ * fim da lista são do pai, não do item (como a `BreadcrumbList` com os
+ * separadores), e o item volta a aceitar `children`.
+ * Com `value` (ou `defaultValue`) a `Stepper` é o estado do fluxo: cada item
+ * deriva `complete`/`current`/`upcoming` do próprio índice. `state` no item vence
+ * (é como uma etapa fica `error`). Com `onValueChange` as concluídas viram botão
+ * (as futuras também, com `linear={false}`), as setas andam entre elas e uma
+ * região viva anuncia "Passo 3 de 4, Categorias".
+ * `data-state` não é lido por tecnologia assistiva e o tique é `aria-hidden`:
  * cada item carrega o estado em `sr-only`, depois do rótulo.
  */
 
@@ -52,9 +39,8 @@ const MARCADOR: Record<StepperSize, string> = {
 }
 
 /**
- * A medida do marcador, publicada como variável para o **rótulo** e o
- * **conector** se centrarem nela — um número só, e não dois que precisam
- * concordar.
+ * A medida do marcador, publicada como variável para o rótulo e o conector se
+ * centrarem nela (um número só, e não dois que precisam concordar).
  */
 const MARCADOR_VAR: Record<StepperSize, string> = {
   sm: "[--stepper-marker:--spacing(5)]",
@@ -120,9 +106,8 @@ function Stepper({
 }: Omit<React.ComponentProps<"div">, "children" | "defaultValue"> & {
   children?: React.ReactNode
   /**
-   * `responsive` é a fila horizontal a partir de `sm` e, no telefone, a
-   * contagem compacta — "Passo 2 de 4", o nome da etapa e a barra fina —, em
-   * vez de "1 2 3 4" sem nome.
+   * `responsive` é a fila horizontal a partir de `sm` e, no telefone, a contagem
+   * compacta ("Passo 2 de 4", o nome da etapa e a barra fina), em vez de "1 2 3 4" sem nome.
    */
   orientation?: StepperOrientation
   size?: StepperSize
@@ -137,10 +122,10 @@ function Stepper({
   linear?: boolean
 }) {
   const todos = React.Children.toArray(children).filter(React.isValidElement)
-  // Os itens vão para a lista; o resto (painéis, botões) vem depois dela. **Pela
-  // marca, e não pela identidade da função**: o Fast Refresh troca a função a
-  // cada edição e `c.type === StepperItem` deixa de bater calado (o 26 de
-  // `table-ladder.test.ts`). A marca é reaplicada quando o módulo recarrega.
+  // Os itens vão para a lista; o resto (painéis, botões) vem depois. Pela marca, e
+  // não pela identidade da função: o Fast Refresh troca a função a cada edição e
+  // `c.type === StepperItem` deixa de bater calado (`table-versions.test.ts`). A
+  // marca é reaplicada quando o módulo recarrega.
   const ehItem = (c: React.ReactElement) =>
     Boolean((c.type as { [MARCA_DE_ITEM]?: boolean })[MARCA_DE_ITEM])
   const itens = todos.filter(ehItem)
@@ -246,8 +231,7 @@ function Stepper({
         ) : (
           lista
         )}
-        {/* No telefone a fila vira a contagem com o nome — a barra fina, sem os
-            números soltos. Ela é só desenho: a lista continua na árvore. */}
+        {/* No telefone a fila vira a contagem com o nome (a barra fina). É só desenho: a lista continua na árvore. */}
         {orientation === "responsive" && variant === "default" && atual >= 0 ? (
           <div aria-hidden data-slot="stepper-compact" className="flex flex-col gap-1.5 sm:hidden">
             <div className="flex gap-1">
@@ -373,8 +357,7 @@ function StepperItem({
       )}
     >
       {concluida ? (
-        // `key` remonta o tique quando a etapa conclui: ele estala na mola, a
-        // régua do tique do `Menubar`.
+        // `key` remonta o tique quando a etapa conclui: ele estala na mola, como o tique do `Menubar`.
         <CheckIcon
           key="tique"
           aria-hidden
@@ -402,8 +385,7 @@ function StepperItem({
         className={cn(
           "absolute inset-0 rounded-full bg-primary-accent transition-[scale] duration-(--duration-spring) ease-(--ease-spring)",
           direcao === "x" ? "origin-left" : "origin-top",
-          // `scale` direto (e não as variáveis `--tw-scale-*`): a transição
-          // anima a propriedade, e o valor de cada estado fica legível aqui.
+          // `scale` direto (e não as variáveis `--tw-scale-*`): a transição anima a propriedade.
           concluida ? "[scale:1_1]" : direcao === "x" ? "[scale:0_1]" : "[scale:1_0]"
         )}
       />
@@ -432,8 +414,7 @@ function StepperItem({
   )
 
   const corpo = vertical ? (
-    // Na vertical: o marcador e o conector numa coluna, os textos ao lado — o
-    // conector cresce com a descrição em vez de ter altura cravada.
+    // Na vertical: o marcador e o conector numa coluna, os textos ao lado; o conector cresce com a descrição.
     <span className="flex min-w-0 gap-3">
       <span className="flex flex-col items-start">
         {marcador}
@@ -452,11 +433,10 @@ function StepperItem({
       {conteudo ? (
         <span
           className={cn(
-            // `sr-only` abaixo de `sm`, e não `hidden`: o leitor de tela continua
-            // ouvindo o nome. A saída para o telefone é `responsive` ou `vertical`.
+            // `sr-only` abaixo de `sm`, e não `hidden`: o leitor de tela continua ouvindo o
+            // nome. A saída para o telefone é `responsive` ou `vertical`.
             "sr-only sm:not-sr-only sm:block",
-            // Centrado no marcador, e não na célula; a primeira é a exceção,
-            // porque o marcador dela encosta na borda da trilha.
+            // Centrado no marcador, e não na célula; a primeira é a exceção, porque o marcador dela encosta na borda da trilha.
             "sm:w-max sm:max-w-40 sm:ms-[calc(var(--stepper-marker)/2)] sm:-translate-x-1/2 sm:text-center",
             step === 1 && "sm:ms-0 sm:translate-x-0 sm:text-left"
           )}
@@ -470,12 +450,12 @@ function StepperItem({
   const estadoAudivel = <span className="sr-only">{ESTADO_EM_PALAVRAS[state]}</span>
 
   const corpoClassName = cn(
-    // `text-left` em todos: o item do modo interativo é sempre `button`, e
-    // botão centra o texto por padrão — os desabilitados saíam recuados.
+    // `text-left` em todos: o item do modo interativo é sempre `button`, e botão
+    // centra o texto por padrão.
     "flex min-w-0 flex-col text-left",
     !vertical && "gap-1.5",
-    // Só quando a etapa navega. O par `active:` não é cortesia: `hover:`
-    // compila dentro de `@media (hover: hover)` e não existe no telefone.
+    // Só quando a etapa navega. O par `active:` é do telefone: `hover:` compila
+    // dentro de `@media (hover: hover)`.
     (asChild || clicavel) &&
       "cursor-pointer rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/45 [&_[data-slot=stepper-label]]:hover:text-foreground [&_[data-slot=stepper-label]]:hover:underline [&_[data-slot=stepper-label]]:active:text-foreground"
   )
@@ -487,8 +467,7 @@ function StepperItem({
       aria-current={state === "current" ? "step" : undefined}
       className={cn(
         "flex min-w-0 flex-col",
-        // O último não estica — senão reserva a largura de um item inteiro
-        // para mostrar um marcador de 24px.
+        // O último não estica, senão reservaria a largura de um item inteiro para um marcador de 24px.
         !vertical && (isLast ? "flex-none" : "flex-1"),
         className
       )}
@@ -506,9 +485,9 @@ function StepperItem({
           )}
         </Slot.Root>
       ) : irPara !== null ? (
-        // **No modo interativo todo item é botão**, desabilitado quando não
-        // clica. Trocar de `div` para `button` ao concluir remontava a
-        // subárvore, e a trilha nascia cheia em vez de encher — medido.
+        // No modo interativo todo item é botão, desabilitado quando não clica: trocar
+        // de `div` para `button` ao concluir remontaria a subárvore e a trilha nasceria
+        // cheia em vez de encher.
         <button
           type="button"
           data-slot="stepper-trigger"
@@ -532,9 +511,8 @@ function StepperItem({
 Object.assign(StepperItem, { [MARCA_DE_ITEM]: true })
 
 /**
- * O painel de uma etapa. Só o da etapa atual monta, e ele entra deslizando
- * do lado para onde o fluxo andou — da direita ao avançar, da esquerda ao
- * voltar.
+ * O painel de uma etapa: só o da atual monta, e entra deslizando do lado para
+ * onde o fluxo andou (da direita ao avançar, da esquerda ao voltar).
  */
 function StepperContent({
   className,
@@ -593,10 +571,9 @@ function StepperPrevious({
 }
 
 /**
- * Continuar — e, na última etapa, **Concluir**. `onNext` pode devolver uma
- * `Promise` (validar, salvar): o botão mostra a roda e trava até ela
- * assentar, e só avança se ela não devolver `false`. `pending` liga a espera
- * por fora.
+ * Continuar, e na última etapa Concluir. `onNext` pode devolver uma `Promise`: o
+ * botão mostra a roda e trava até ela assentar, e só avança se ela não devolver
+ * `false`. `pending` liga a espera por fora.
  */
 function StepperNext({
   children,

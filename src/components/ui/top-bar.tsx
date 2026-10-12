@@ -26,56 +26,43 @@ import { ariaShortcut, isEditableTarget, matchShortcut } from "@/lib/shortcut"
 import { cn } from "@/lib/utils"
 
 /**
- * A barra do topo da janela.
- *
- * `PageHeader` é o topo **de dentro** da tela, e `DialogHeader`/`CardHeader`
- * são o topo de uma superfície. Esta é a barra que fica parada enquanto a tela
- * rola — e ela existia escrita à mão duas vezes: o `AppHeader` do produto e o
- * `DsTopBar` do catálogo, já divergentes em borrão, camada e altura.
- *
- * **A altura é do `<header>`, com o fio e a área segura dentro.** O degrau
- * publica `--top-bar-h`, `fixed` publica `--top-bar-safe`, e a caixa é a soma
- * das duas em `border-box`. Assim o total no telefone é exatamente
- * `--mobile-header-offset` — o `AppHeader` media o fio **por fora**, e o
- * conteúdo começava 1px debaixo dele.
- *
- * **`sticky` mora em `--z-sticky`, e não em `--z-header`.** A faixa de aviso
+ * A barra do topo da janela, a que fica parada enquanto a tela rola (o
+ * `PageHeader` é o topo de dentro da tela, e `DialogHeader`/`CardHeader` o de uma
+ * superfície). Substitui o `AppHeader` e o `DsTopBar`, que divergiam em borrão,
+ * camada e altura.
+ * A altura é do `<header>`, com o fio e a área segura dentro: o degrau publica
+ * `--top-bar-h`, `fixed` publica `--top-bar-safe`, e a caixa é a soma das duas em
+ * `border-box`, de modo que o total no telefone é `--mobile-header-offset`.
+ * `sticky` mora em `--z-sticky`, e não em `--z-header`: a faixa de aviso
  * (`offline-banner`) é `fixed md:top-0` em `--z-banner` e cobre a barra do
- * desktop de propósito; a 40 a barra a esconderia. `fixed` é o telefone, onde a
- * faixa desce para baixo da barra, e ali ela vai a `--z-header`.
- *
- * **O fio lê `--sidebar-inset-rule`**, que o `SidebarInset` publica: numa
- * `Sidebar` `floating` a placa não tem `border-r` para ele encostar, e ele
- * sumiria em vez de ficar pendurado. Fora de um `SidebarInset`, 1px.
- *
- * O padrão é `sm`: **48 no telefone e no desktop**, um tamanho só, com a
- * barra lateral aberta ou recolhida — decisão do dono. No telefone a área
- * segura soma por dentro. O que anima é o fundo, quando o vidro acende, na
- * curva da casa.
+ * desktop de propósito; `fixed` é o telefone, onde a faixa desce para baixo da
+ * barra e ali vai a `--z-header`.
+ * O fio lê `--sidebar-inset-rule`, que o `SidebarInset` publica: numa `Sidebar`
+ * `floating` a placa não tem `border-r` para ele encostar. Fora de um
+ * `SidebarInset`, 1px.
+ * O padrão é `sm`: 48 no telefone e no desktop, com a barra lateral aberta ou
+ * recolhida (decisão do dono). No telefone a área segura soma por dentro. O que
+ * anima é o fundo, quando o vidro acende.
  */
 const topBarVariants = cva(
   [
     "flex w-full min-w-0 shrink-0 items-center gap-2",
-    // A área segura por variável (`--top-bar-safe-area`), e não `env()` cru:
-    // a prévia num iPhone do catálogo é um iframe, onde `env()` vale zero, e
-    // só uma variável ela consegue emular.
+    // A área segura por variável (`--top-bar-safe-area`), e não `env()` cru: a prévia
+    // num iPhone do catálogo é um iframe, onde `env()` vale zero.
     "[--top-bar-safe-area:env(safe-area-inset-top,0px)]",
     "h-[calc(var(--top-bar-h)+var(--top-bar-safe,0px))] pt-[var(--top-bar-safe,0px)]",
     "border-b border-b-[length:var(--sidebar-inset-rule,1px)] border-border",
-    // **O fio só ao rolar** (rodada 237): no `scroll`, ele aparece junto com o
-    // vidro — em repouso a barra é a página, e o fio sobre nada é ruído.
+    // O fio só ao rolar: no `scroll`, aparece junto com o vidro (em repouso a barra é a página).
     "data-[scrolled=false]:border-b-transparent",
-    // **Some ao rolar** (rodada 237): no telefone, a barra sobe inteira — a
-    // área segura e a calha da flutuante junto.
+    // Some ao rolar: no telefone a barra sobe inteira, com a área segura e a calha da flutuante.
     "max-md:data-hidden:-translate-y-[calc(100%+var(--top-bar-safe-area)+--spacing(4))]",
-    // **O título no meio** (rodada 237), no telefone: uma grade de três áreas
-    // com as pontas iguais, para o título ficar no meio da tela, e não do vão.
+    // O título no meio, no telefone: uma grade de três áreas com as pontas iguais,
+    // para o título ficar no meio da tela, e não do vão.
     "data-[title-align=center]:max-md:grid data-[title-align=center]:max-md:grid-cols-[minmax(0,1fr)_minmax(0,max-content)_minmax(0,1fr)] data-[title-align=center]:max-md:[grid-template-areas:'start_title_actions']",
-    // O borrão do `backdrop-filter` ignora o recorte de todo ancestral no
-    // Chromium — `overflow-hidden`, `clip-path`, máscara e `contain: paint`,
-    // os quatro medidos — e só respeita o raio do **próprio** elemento. Quem põe
-    // a barra no topo de uma caixa arredondada publica `--top-bar-r` (a moldura
-    // do catálogo publica); fora disso, 0.
+    // O borrão do `backdrop-filter` ignora o recorte de todo ancestral no Chromium
+    // (`overflow-hidden`, `clip-path`, máscara, `contain: paint`) e só respeita o raio
+    // do próprio elemento. Quem põe a barra no topo de uma caixa arredondada publica
+    // `--top-bar-r` (a moldura do catálogo publica); fora disso, 0.
     "rounded-t-[var(--top-bar-r,0px)]",
     "transition-[background-color,border-color,translate] duration-(--duration-slow) ease-(--ease-emphasized)",
   ],
@@ -84,8 +71,8 @@ const topBarVariants = cva(
       size: {
         sm: "[--top-bar-h:3rem]",
         md: "[--top-bar-h:3.5rem]",
-        // **O degrau `lg`** (rodada 237): 64, a barra das páginas públicas e
-        // de marca. O título fica no corpo da barra; a marca é que cresce.
+        // O degrau `lg` (64): a barra das páginas públicas e de marca. O título fica no
+        // corpo da barra; a marca é que cresce.
         lg: "[--top-bar-h:4rem]",
       },
       position: {
@@ -101,10 +88,9 @@ const topBarVariants = cva(
         glass: barSurfaceClassName,
       },
       /**
-       * **A flutuante** (rodada 237): a pílula solta da casa — a placa, o anel
-       * de 1px e a sombra, a 8px das bordas —, a família do `Tabs` e do
-       * `Sidebar` flutuantes. A área segura sai de dentro da caixa e vai para a
-       * distância do topo: a pílula desce inteira abaixo do notch.
+       * A flutuante: a pílula solta da casa (a placa, o anel de 1px e a sombra, a 8px
+       * das bordas), a família do `Tabs` e do `Sidebar` flutuantes. A área segura sai
+       * de dentro da caixa e vai para a distância do topo: a pílula desce inteira abaixo do notch.
        */
       variant: {
         bar: "",
@@ -146,20 +132,15 @@ type TopBarSurface = "solid" | "glass" | "scroll"
 /**
  * O que acontece na rolagem: se o conteúdo saiu do topo (o vidro e o fio do
  * `scroll`) e se a barra deve sumir (`hideOnScroll`).
- *
  * Quem faz o conteúdo passar por baixo de uma barra `sticky` é o ancestral que
- * rola — a janela, no app; uma região rolável, na moldura do catálogo ou numa
- * coluna de painel. Por isso a escuta é em **captura** na janela, e o alvo é
- * decidido a cada evento: vale a janela, ou um ancestral da barra. Uma lista
- * rolando **dentro** da tela não é ancestral, e não acende nada.
- *
- * Resolver o ancestral uma vez, na montagem, foi a primeira versão, e falhou
- * medida: dentro da moldura o CSS chega depois do efeito, o `overflow` ainda
- * lia `visible`, e a barra passava a escutar a janela errada para sempre.
- *
- * **Sumir** é rolar para baixo passada a altura da barra; voltar é rolar para
- * cima. Nunca com o foco dentro dela — quem está num campo da barra não pode
- * vê-lo fugir —, e quem decide que só vale no telefone é o CSS (`max-md:`).
+ * rola (a janela, no app; uma região rolável na moldura do catálogo ou numa
+ * coluna de painel). Por isso a escuta é em captura na janela e o alvo é decidido
+ * a cada evento: vale a janela, ou um ancestral da barra; uma lista rolando dentro
+ * da tela não acende nada. Resolver o ancestral uma vez, na montagem, falhou: na
+ * moldura o CSS chega depois do efeito e o `overflow` ainda lia `visible`.
+ * Sumir é rolar para baixo passada a altura da barra; voltar é rolar para cima.
+ * Nunca com o foco dentro dela (quem está num campo da barra não pode vê-lo
+ * fugir); que só vale no telefone o CSS decide (`max-md:`).
  */
 function useRolagem(
   ref: React.RefObject<HTMLElement | null>,
@@ -180,8 +161,8 @@ function useRolagem(
       if (y == null) return
       setRolou(y > 0)
       if (sumir) {
-        // Os valores entram já lidos: o React pode rodar o atualizador depois
-        // de `antes` virar `y`, e aí não haveria movimento nenhum.
+        // Os valores entram já lidos: o React pode rodar o atualizador depois de
+        // `antes` virar `y`, e não haveria movimento.
         const s = { y, antes, focada: el.contains(el.ownerDocument.activeElement), mostrarAte: el.offsetHeight }
         setEscondida((v) => proximoEscondido(v, s))
       }
@@ -250,11 +231,10 @@ function TopBar({
 }
 
 /**
- * **Uma árvore para os dois tamanhos** (rodada 237): toda ponta aceita
- * `phone`, o que ela mostra abaixo de `md`. Sem ele, a ponta é a mesma nas
- * duas larguras; com `phone={null}`, ela some no telefone. A barra do app
- * escrevia duas árvores inteiras, uma `md:hidden` e outra `hidden
- * md:contents`.
+ * Uma árvore para os dois tamanhos: toda ponta aceita `phone`, o que mostra
+ * abaixo de `md`. Sem ele, a ponta é a mesma nas duas larguras; com
+ * `phone={null}`, some no telefone. Evita duas árvores (`md:hidden` e `hidden
+ * md:contents`).
  */
 function comTelefone(children: React.ReactNode, phone: React.ReactNode | undefined) {
   if (phone === undefined) return children
@@ -280,9 +260,9 @@ function TopBarStart({
   return (
     <div
       data-slot="top-bar-start"
-      // Quando o gatilho da barra lateral vai para dentro dela e esta ponta
-      // fica vazia, ela devolve o `gap` da barra, e o título encosta na calha
-      // deslizando, no passo da vaga que encolhe.
+      // Quando o gatilho da barra lateral vai para dentro dela e esta ponta fica
+      // vazia, ela devolve o `gap` da barra, e o título encosta na calha deslizando,
+      // no passo da vaga que encolhe.
       className={cn(
         "flex shrink-0 items-center gap-2 transition-[margin] duration-(--duration-slow) ease-(--ease-emphasized) has-[>[data-slot=sidebar-trigger-slot][data-vazio]:only-child]:-me-2",
         // O mesmo com `phone`: aí o gatilho mora dentro da ponta larga.
@@ -299,10 +279,8 @@ function TopBarStart({
 
 /**
  * O nome da tela. Um `<h1>` porque, no telefone, é o único título que a tela
- * mostra; `asChild` para quando a tela já tem o seu.
- *
- * Fica cru, e não sobre `H4`: o átomo traria corpo, peso e entrelinha que os
- * três seriam anulados aqui — é a mesma conta do `CardTitle`.
+ * mostra; `asChild` para quando a tela já tem o seu. Fica cru, e não sobre `H4`:
+ * o átomo traria corpo, peso e entrelinha que os três anulariam (a conta do `CardTitle`).
  */
 function TopBarTitle({
   className,
@@ -316,19 +294,17 @@ function TopBarTitle({
 }: React.ComponentProps<"h1"> & {
   asChild?: boolean
   /**
-   * **O título que sobe** (rodada 232): quando o título de um `PageHeader
-   * collapse` rola para baixo da barra, ele aparece aqui — subindo 6px e
-   * acendendo —, e o que a barra mostrava (`children`) cede o lugar. Ao
-   * voltar, desce. É o título grande do iOS. O texto que sobe é
-   * `aria-hidden`: o `<h1>` da página continua sendo o nome dela.
+   * O título que sobe: quando o título de um `PageHeader collapse` rola para baixo
+   * da barra, ele aparece aqui (subindo 6px e acendendo) e o que a barra mostrava
+   * (`children`) cede o lugar; ao voltar, desce. É o título grande do iOS. O texto
+   * que sobe é `aria-hidden`: o `<h1>` da página segue sendo o nome dela.
    */
   pageTitle?: boolean
   /** O título abaixo de `md`; `null` o esconde no telefone. */
   phone?: React.ReactNode
   /**
-   * **Tocar no título sobe ao topo** (rodada 237), no telefone — o gesto da
-   * barra de status do iOS. É um atalho a mais, e não o único caminho: o
-   * título continua um `<h1>`, sem papel de botão.
+   * Tocar no título sobe ao topo, no telefone (o gesto da barra de status do iOS).
+   * É um atalho a mais, e não o único caminho: o título segue um `<h1>`, sem papel de botão.
    */
   scrollToTop?: boolean
 }) {
@@ -460,13 +436,10 @@ function TopBarActions({
 }
 
 /**
- * **A ação da barra** (rodada 237): o botão de ícone com o nome, a dica — com
- * a tecla, se houver atalho — e a contagem. O sino e a busca do app escreviam
- * isso à mão, e a contagem do sino era um `span` posicionado com nove classes.
- *
- * A contagem é `aria-hidden` e entra **no nome** (`countLabel`, ou o número):
- * "Notificações, 3 não lidas". Acima de 99, "99+". No dedo o alvo vai a 44
- * por pseudo-elemento, para a fileira não crescer.
+ * A ação da barra: o botão de ícone com o nome, a dica (com a tecla, se houver
+ * atalho) e a contagem. A contagem é `aria-hidden` e entra no nome (`countLabel`,
+ * ou o número): "Notificações, 3 não lidas". Acima de 99, "99+". No dedo o alvo vai
+ * a 44 por pseudo-elemento, para a fileira não crescer.
  */
 function TopBarAction({
   label,
@@ -533,15 +506,12 @@ const BUSCA_QUEBRA = {
 } as const
 
 /**
- * **O gatilho de busca** (rodada 237): a pílula com a tecla a partir da
- * quebra, e o ícone abaixo dela — as duas formas de uma peça só, porque o
- * catálogo escrevia dois botões e o app um terceiro. É um `button` com cara de
- * campo, e não um `input`: focá-lo não deixa digitar, e quem recebe o texto é
- * a paleta que ele abre.
- *
- * **Os atalhos** são dele (`listen`): `shortcut` (⌘K) em qualquer lugar, e
- * `/` fora de campo de texto. Quem já escuta o atalho — a paleta do app —
- * passa `listen={false}`, e a tecla continua só desenhada.
+ * O gatilho de busca: a pílula com a tecla a partir da quebra, e o ícone abaixo
+ * dela (as duas formas de uma peça). É um `button` com cara de campo, e não um
+ * `input`: focá-lo não deixa digitar, e quem recebe o texto é a paleta que ele
+ * abre. Os atalhos são dele (`listen`): `shortcut` (⌘K) em qualquer lugar, e `/`
+ * fora de campo de texto. Quem já escuta o atalho (a paleta do app) passa
+ * `listen={false}`, e a tecla continua só desenhada.
  */
 function TopBarSearch({
   onOpen,
@@ -602,8 +572,8 @@ function TopBarSearch({
         variant="tertiary"
         size="icon-md"
         data-slot="top-bar-search"
-        // `relative` ancora o alvo de toque no botão. Sem ele o `::after` se
-        // estendia pela barra inteira e engolia o toque no ☰ do telefone.
+        // `relative` ancora o alvo de toque no botão; sem ele o `::after` se estenderia
+        // pela barra inteira e engoliria o toque no ☰ do telefone.
         className={cn(
           "relative rounded-full text-muted-foreground pointer-coarse:after:absolute pointer-coarse:after:-inset-1.5 pointer-coarse:after:content-['']",
           BUSCA_QUEBRA[collapse].icone
@@ -629,8 +599,7 @@ function TopBarSearch({
             searchFieldSizeClassName.md,
             searchFieldSurfaceClassName.field,
             "w-full justify-start font-normal text-muted-foreground",
-            // A pílula não realça nem acende o texto: é um campo, e campo
-            // não muda de cor no cursor.
+            // A pílula não realça nem acende o texto: é um campo, e campo não muda de cor no cursor.
             "[--button-hover-fill:transparent] dark:[--button-hover-fill:transparent]",
             "hover:text-muted-foreground active:text-muted-foreground aria-expanded:text-muted-foreground"
           )}
@@ -649,8 +618,8 @@ function TopBarSearch({
 }
 
 /**
- * **A barra esperando** (rodada 237): a ponta, o título e as ações, na altura
- * do degrau. É o `TopBar` estático, para medir igual.
+ * A barra esperando: a ponta, o título e as ações, na altura do degrau. É o
+ * `TopBar` estático, para medir igual.
  */
 function TopBarSkeleton({
   size = "sm",
@@ -681,9 +650,8 @@ function TopBarSkeleton({
 }
 
 /**
- * **O fio de carregamento** (rodada 237), na aresta de baixo da barra: com
- * `value`, a proporção; sem ele, indeterminado (`@utility top-bar-progress`).
- * É `role="progressbar"`, com nome.
+ * O fio de carregamento, na aresta de baixo da barra: com `value`, a proporção;
+ * sem ele, indeterminado (`@utility top-bar-progress`). É `role="progressbar"`, com nome.
  */
 function TopBarProgress({
   value,

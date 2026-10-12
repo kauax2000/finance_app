@@ -1,25 +1,15 @@
 "use client"
 
 /**
- * **Onboarding** (rodada 247) — cinco superfícies para apresentar o produto,
- * e cada uma veio de uma referência do 21st (todas MIT):
- *
- * - `OnboardingDialog` — as boas-vindas em passos (originui e patrick-xin): a
- *   mídia de cada passo desliza de lado, com arraste, o texto cruza numa célula
- *   só da grade (a janela não muda de altura) e as pílulas alargam na mola.
- * - `OnboardingChecklist` — os primeiros passos (onboarding-01 e
- *   onboarding-6): `accordion`, a linha que abre com a ação, ou `list`, os
- *   links riscados quando feitos. Completo, celebra.
- * - `OnboardingCard` — a novidade no rodapé da barra lateral (KarrixLee): as
- *   imagens recortadas que, abertas, crescem e se abrem em leque.
- * - `OnboardingTour` — **o foco num botão real**, sem referência: o véu
- *   recorta o elemento da tela, o clique passa pelo buraco e cai nele, e o
- *   passo avança depois que o próprio app tratou o clique.
- * - `OnboardingHotspot` — o ponto que pulsa sobre um botão sem escurecer nada.
- *
- * O que a casa já tinha e elas compõem: `Dialog surface="auto"` (gaveta no
- * telefone), o `Carousel` (o arraste), o `Popover` com âncora virtual (o
- * `FilterBar` fez primeiro), `Accordion`, `Item`, `ProgressRing`, `EmptyState`.
+ * **Onboarding**: cinco superfícies para apresentar o produto.
+ * - `OnboardingDialog`: as boas-vindas em passos (a mídia desliza com arraste,
+ *   o texto cruza numa célula só da grade, as pílulas alargam na mola).
+ * - `OnboardingChecklist`: os primeiros passos, `accordion` ou `list`.
+ * - `OnboardingCard`: a novidade no rodapé da barra lateral, com leque de imagens.
+ * - `OnboardingTour`: o foco num botão real; o clique passa pelo buraco do véu.
+ * - `OnboardingHotspot`: o ponto que pulsa sobre um botão sem escurecer nada.
+ * Compõem `Dialog surface="auto"`, `Carousel`, `Popover` com âncora virtual,
+ * `Accordion`, `Item`, `ProgressRing`, `EmptyState`.
  */
 
 import * as React from "react"
@@ -145,26 +135,21 @@ type OnboardingChecklistItem = {
 const CONCLUIDO = "completed"
 const DISPENSADO = "dismissed"
 const VISTO = "seen"
-/** A mola do leque, a da referência (KarrixLee): um pouco mais amortecida que a `MOLA`. */
+/** A mola do leque: um pouco mais amortecida que a `MOLA`. */
 const MOLA_LEQUE = { type: "spring", stiffness: 300, damping: 30 } as const
 const FOLGA_PADRAO = 4
 /**
- * As setas do "próximo" e do "voltar", que andam 2px para o lado em que levam,
- * no cursor e no toque — a do `PageSectionLink`. O "concluir" do último passo
- * não leva seta: ali não há para onde ir. O `data-icon` de cada uma tira do
- * botão o recuo do lado dela.
+ * As setas do "próximo" e do "voltar" andam 2px para o lado em que levam, no
+ * cursor e no toque. O "concluir" do último passo não leva seta; o `data-icon`
+ * tira do botão o recuo do lado dela.
  */
 const SETA_QUE_ANDA =
   "transition-transform duration-(--duration-base) ease-(--ease-out) group-hover/button:translate-x-0.5 group-active/button:translate-x-0.5"
 /**
- * O × do canto do checklist — e do card de novidade **no telefone**: 28px,
- * recuado para dentro do recuo de 16 (`-me-1.5 -my-1`), ocupando só a altura
- * da linha do título (20), e no dedo o alvo cresce a 44 por fora da caixa.
- * No telefone os dois cartões ficam um sobre o outro no mesmo feed, e com
- * cabeçalhos diferentes — 16 contra 12 de recuo, título de 14 contra 12, × de
- * 28 contra 24 — liam como peças de famílias diferentes; o texto do card,
- * aliás, era pequeno demais ali. Na barra lateral do desktop o card continua
- * compacto (o `md:` dele).
+ * O × do canto do checklist e do card **no telefone**: 28px, recuado para
+ * dentro do recuo de 16, e no dedo o alvo cresce a 44 por fora da caixa. No
+ * telefone os dois cartões dividem o feed e precisam ler como a mesma família;
+ * na barra lateral do desktop o card continua compacto (o `md:` dele).
  */
 const X_DO_CARTAO =
   "relative -me-1.5 -my-1 shrink-0 pointer-coarse:after:absolute pointer-coarse:after:-inset-2 pointer-coarse:after:content-['']"
@@ -183,9 +168,8 @@ const FOCAVEIS =
 type Recorte = { x: number; y: number; w: number; h: number; r: number }
 
 /**
- * O buraco em volta do alvo: a caixa dele mais a folga, e o raio **dele**
- * mais a folga — um botão cápsula ganha um recorte cápsula, um cartão de 22
- * ganha 30. Limitado à metade da altura, que é o raio máximo que o CSS desenha.
+ * O buraco em volta do alvo: a caixa dele mais a folga, e o raio **dele** mais a
+ * folga. Limitado à metade da altura, o raio máximo que o CSS desenha.
  */
 function recorteDoAlvo(
   caixa: { left: number; top: number; width: number; height: number },
@@ -216,8 +200,8 @@ function ladoDaDoca(
 }
 
 /**
- * O leque das imagens do card, com os números da referência: até três, a do
- * meio parada, as das pontas a ±5° e ±20px, a da frente um pouco maior.
+ * O leque das imagens do card: até três, a do meio parada, as das pontas a ±5°
+ * e ±20px, a da frente um pouco maior.
  */
 function lequeDaMidia(indice: number, total: number) {
   if (total <= 1) return { rotate: 0, x: 0, y: -5, scale: 1 }
@@ -231,10 +215,8 @@ function lequeDaMidia(indice: number, total: number) {
 }
 
 /**
- * O espaço que o leque aberto ocupa acima e abaixo da imagem, em px, medido
- * num card de barra lateral (imagem de 214px): com três, o de trás sobe ~16
- * e o da frente desce ~9; com duas (±2,5°), só sobe ~12; com uma (o vídeo),
- * sobe 5 e não gira.
+ * O espaço que o leque aberto ocupa acima e abaixo da imagem, em px, num card
+ * de barra lateral (imagem de 214px).
  */
 function folgaDoLeque(total: number) {
   if (total <= 1) return { paddingTop: 6, paddingBottom: 0 }
@@ -249,11 +231,9 @@ function passoGuardado(valor: string | null, total: number) {
 }
 
 /**
- * Até onde se chega indo de um passo do tour a outro: para trás, sempre; para
- * a frente, **nunca por cima de um passo que avança pelo clique no alvo**. O
- * passo seguinte costuma depender desse clique (a Despesa só existe com o menu
- * do + Adicionar aberto), e pular pela seta ou pela pílula deixava o tour
- * esperando um alvo que não vinha — cinco segundos sem placa, e ela no centro.
+ * Até onde se chega indo de um passo do tour a outro: para trás, sempre; para a
+ * frente, nunca por cima de um passo que avança pelo clique no alvo, porque o
+ * seguinte costuma depender desse clique e o tour esperaria um alvo que não vem.
  */
 function passoAlcancavel(steps: { advanceOn?: "next" | "target" }[], de: number, para: number) {
   for (let i = Math.max(0, de); i < para; i++) if (steps[i]?.advanceOn === "target") return i
@@ -267,10 +247,9 @@ function armazem(area: "local" | "session") {
 }
 
 /**
- * O que foi visto, guardado — lido **depois** de montar (o servidor não tem
- * `localStorage`), com `try/catch` (janela privada, armazenamento bloqueado).
- * `lido` diz se a leitura já aconteceu: quem tem `storageKey` não renderiza
- * antes dela, senão um card dispensado piscaria a cada carga.
+ * O que foi visto, guardado: lido **depois** de montar (o servidor não tem
+ * `localStorage`), com `try/catch`. `lido` diz se a leitura já aconteceu; quem
+ * tem `storageKey` não renderiza antes dela, senão um card dispensado piscaria.
  */
 function useGuardado(chave: string | undefined, area: "local" | "session" = "local") {
   const [leitura, setLeitura] = React.useState<{ chave: string; valor: string | null } | null>(null)
@@ -299,9 +278,8 @@ function useGuardado(chave: string | undefined, area: "local" | "session" = "loc
 
 /**
  * O documento está no tema escuro? Lido da classe do `<html>` **do documento
- * onde o componente vive** — dentro da moldura do catálogo, o do iframe — e
- * acompanhado por um observador, porque o tema troca sem recarregar. No
- * servidor não há tema a ler: `null`, e quem depende dele espera o cliente.
+ * onde o componente vive** (no catálogo, o do iframe) e acompanhado por um
+ * observador. No servidor é `null`: quem depende dele espera o cliente.
  */
 function useTemaEscuro() {
   const janela = useViewportWindow()
@@ -368,10 +346,8 @@ function eFonte(media: unknown): media is OnboardingMediaSource {
 }
 
 /**
- * A mídia de um passo: imagem, vídeo ou uma ilustração em JSX. O `CardMedia`
- * só desenha `<img>`; aqui o vídeo é mudo, em laço, `playsInline` (o iOS
- * abriria em tela cheia) e, com movimento reduzido, **parado** com os
- * controles à vista — quem quiser vê, ninguém é obrigado.
+ * A mídia de um passo: imagem, vídeo ou ilustração em JSX. O vídeo é mudo, em
+ * laço, `playsInline` e, com movimento reduzido, parado com os controles à vista.
  */
 function OnboardingMedia({
   media,
@@ -432,10 +408,9 @@ function OnboardingMedia({
 /* ── As pílulas ─────────────────────────────────────────────────────────── */
 
 /**
- * O indicador do diálogo e do tour (patrick-xin): a pílula ativa alarga de 16
- * para 24px na mola, e cada uma é um botão que leva ao passo. As setas andam
- * entre elas com o foco junto. O alvo de toque cresce só na vertical: elas
- * encostam umas nas outras.
+ * O indicador do diálogo e do tour: a pílula ativa alarga de 16 para 24px na
+ * mola, e cada uma é um botão que leva ao passo. O alvo de toque cresce só na
+ * vertical: elas encostam umas nas outras.
  */
 function OnboardingPills({
   titulos,
@@ -530,9 +505,9 @@ type OnboardingDialogProps = {
 }
 
 /**
- * As boas-vindas em passos. **Um índice só**, o do `Carousel`: arrastar a
- * mídia, a seta do teclado, a pílula e o botão andam pelo mesmo `api`, e o
- * resto (texto, pílulas, rodapé) lê o passo do evento `select` dele.
+ * As boas-vindas em passos. Um índice só, o do `Carousel`: arrastar, a seta do
+ * teclado, a pílula e o botão andam pelo mesmo `api`, e o resto lê o passo do
+ * evento `select` dele.
  */
 function OnboardingDialog({
   steps,
@@ -612,9 +587,8 @@ function OnboardingDialog({
       <DialogContent
         data-slot="onboarding-dialog"
         showCloseButton={false}
-        // Um clique fora não pula as boas-vindas: Esc e o × pulam. O vaul
-        // respeita o mesmo `preventDefault`, e o `onInteractOutside` não chega
-        // à gaveta.
+        // Um clique fora não pula as boas-vindas: Esc e o × pulam. O vaul respeita o
+        // mesmo `preventDefault`.
         onPointerDownOutside={(e) => e.preventDefault()}
         // O foco vai ao botão principal, e não ao primeiro focável da árvore —
         // que podia ser um slide fora da vista.
@@ -650,10 +624,8 @@ function OnboardingDialog({
 
         {temMidia ? (
           // Na gaveta, a ilustração desce para baixo da faixa da alça e do ×.
-          // **`min-w-0` é carga estrutural**: este invólucro é item da grade do
-          // diálogo, e sem ele o mínimo automático é a largura do trilho do
-          // carrossel — a ilustração, o texto e o rodapé estouravam a janela.
-          // O `overflow-hidden` de dentro só recorta; quem limita é aqui.
+          // `min-w-0` é carga estrutural: este invólucro é item da grade do diálogo, e
+          // sem ele o mínimo automático é a largura do trilho do carrossel.
           <div className={cn("relative m-2 mb-0 min-w-0", gaveta && "mt-6")}>
             <div className="overflow-hidden bg-muted concentric [--radius-inset:--spacing(2)]">
               <Carousel
@@ -676,11 +648,10 @@ function OnboardingDialog({
                 </CarouselContent>
               </Carousel>
             </div>
-            {/* No diálogo, o × mora no canto **da ilustração**, a 8px dela, com
-                a placa flutuante atrás (o glifo cru some numa imagem clara). Na
-                gaveta ele fica **acima** dela, na faixa da alça: ancorado na
-                janela, a alça empurrava a ilustração para baixo e ele ficava
-                montado na borda, metade no fundo e metade na imagem. */}
+            {/*
+               No diálogo, o × mora no canto **da ilustração**, com a placa flutuante atrás
+               (o glifo cru some numa imagem clara). Na gaveta fica acima dela, na faixa da alça.
+            */}
             {gaveta ? null : (
               <DialogCloseButton
                 label={skipLabel}
@@ -730,8 +701,7 @@ function OnboardingDialog({
           })}
         </div>
 
-        {/* Na gaveta, o par numa linha só: empilhado, o voltar entrava embaixo
-            do próximo no segundo passo e a gaveta crescia. */}
+        {/* Na gaveta o par fica numa linha só: empilhado, a gaveta cresceria no segundo passo. */}
         <DialogFooter
           className={gaveta ? "flex-row" : undefined}
           start={
@@ -823,13 +793,10 @@ type OnboardingChecklistProps = {
 }
 
 /**
- * Os primeiros passos. O `done` de cada item é da tela — "tem uma
- * transação?" é pergunta aos dados, e o componente não a sabe responder.
- *
- * Na sanfona, abre a primeira pendente, e **quando a linha aberta fica feita,
- * a próxima pendente abre sozinha** (onboarding-01). Isso é derivado, não
- * efeito: a escolha guarda se o item já estava feito quando foi aberto, e um
- * item que passou a feito depois devolve a sanfona ao automático.
+ * Os primeiros passos. O `done` de cada item é da tela. Na sanfona abre a
+ * primeira pendente, e quando a linha aberta fica feita a próxima abre sozinha;
+ * é derivado, não efeito: a escolha guarda se o item já estava feito quando foi
+ * aberto.
  */
 function OnboardingChecklist({
   title,
@@ -1075,10 +1042,9 @@ type OnboardingCardProps = {
   dismiss?: "session" | "forever"
   onDismiss?: () => void
   /**
-   * A superfície. `brand` (padrão): o brilho de marca acende na borda conforme
-   * o ponteiro chega. `beam`: o mesmo arco dá a volta na borda sozinho, num
-   * laço, para chamar a atenção. `contrast`: o `brand` no tema oposto — o
-   * cartão do claro no escuro e o do escuro no claro, com o mesmo brilho.
+   * A superfície. `brand` (padrão): o brilho de marca acende na borda conforme o
+   * ponteiro chega. `beam`: o mesmo arco dá a volta sozinho, num laço.
+   * `contrast`: o `brand` no tema oposto.
    */
   variant?: "brand" | "beam" | "contrast"
   className?: string
@@ -1088,23 +1054,15 @@ type OnboardingCardProps = {
 const VOLTA_DO_FEIXE = 4
 
 /**
- * **O fechar do card: ele colapsa, diminui e sai pela esquerda**, uma etapa
- * emendando na outra. Fechar é curva, não mola (uma mola até zero passaria por
- * baixo de zero):
- *
- * 1. **Colapsa** (os primeiros 40%): o leque recolhe e as faixas se fecham de
- *    verdade — altura até zero, de baixo para cima: ações, mídia, descrição —,
- *    até sobrar a linha do título. O espaço acompanha, porque a altura dele é
- *    `auto` até a etapa 4.
- * 2. **Diminui**: o cartão, já compacto, encolhe a 72%, com a origem na borda
- *    esquerda, depois de um impulso de 1,5% para a direita.
- * 3. **Sai pela esquerda**: desliza 115% da própria largura, acelerando; só no
- *    fim desfoca e esmaece.
- * 4. **O espaço que sobrou fecha por último.**
- *
- * Abrir é a volta, mais curta: o espaço abre, o cartão sobe nele e as faixas
- * chegam em cascata. `--ease-emphasized` e `--ease-in-out` escritas aqui
- * porque o motion não lê variável de CSS; a saída é uma curva de aceleração.
+ * O fechar do card: colapsa, diminui e sai pela esquerda, uma etapa emendando na
+ * outra. Fechar é curva, não mola (uma mola passaria por baixo de zero).
+ * 1. Colapsa (40%): o leque recolhe e as faixas se fecham de baixo para cima
+ *    até sobrar a linha do título; o espaço acompanha (altura `auto` até a 4).
+ * 2. Diminui: encolhe a 72% na borda esquerda, depois de um impulso de 1,5%.
+ * 3. Sai pela esquerda: desliza 115% acelerando; só no fim desfoca e esmaece.
+ * 4. O espaço que sobrou fecha por último.
+ * Abrir é a volta, mais curta. As curvas estão aqui porque o motion não lê
+ * variável de CSS.
  */
 const CURVA_ENFATICA = [0.32, 0.72, 0, 1] as const
 const CURVA_SUAVE = [0.65, 0, 0.35, 1] as const
@@ -1143,24 +1101,15 @@ const FAIXA_DO_CARD = {
 const bezier = (c: readonly number[]) => `cubic-bezier(${c.join(",")})`
 
 /**
- * A saída, como **sequência imperativa na Web Animations API**, e não como
- * `exit` do `AnimatePresence`:
- *
- * - o motion fixa em px a altura de quem sai no instante em que a saída
- *   começa, e o espaço ficava preso em 167px enquanto as faixas colapsavam por
- *   dentro — um buraco vazio que só fechava no fim. Aqui o espaço continua
- *   `auto`, acompanha o colapso, e o que sobra (a linha do título) é medido
- *   **depois** dele;
- * - e não o `animate` imperativo do motion, que reconhece elemento por
- *   `instanceof HTMLElement` da janela de fora: dentro da moldura do catálogo
- *   (um iframe) ele tratava o nó como objeto comum e nada se movia. A WAAPI é a
- *   do próprio elemento — o precedente do `ThemeToggle` e do `viajarLiquido`.
+ * A saída é uma sequência imperativa na Web Animations API, e não `exit` do
+ * `AnimatePresence` (que fixa em px a altura de quem sai e deixa um buraco) nem
+ * o `animate` do motion (reconhece elemento por `instanceof` da janela de fora,
+ * e no iframe do catálogo nada se move).
  */
 async function sairPelaEsquerda(espaco: HTMLElement, cartao: HTMLElement) {
   const fim = { fill: "forwards" } as const
-  // As faixas colapsam de baixo para cima: ações, mídia, descrição. O recorte
-  // entra agora — aberto, o leque transborda a faixa da mídia. Altura e recuo
-  // medidos antes de qualquer coisa mudar.
+  // As faixas colapsam de baixo para cima. O recorte entra agora (aberto, o leque
+  // transborda a faixa da mídia); altura e recuo são medidos antes de mudar.
   const faixas = [...espaco.querySelectorAll<HTMLElement>("[data-onboarding-collapse]")].reverse()
   const medidas = faixas.map((faixa) => ({
     altura: faixa.offsetHeight,
@@ -1176,10 +1125,8 @@ async function sairPelaEsquerda(espaco: HTMLElement, cartao: HTMLElement) {
       { ...fim, duration: 240, delay: i * 50, easing: bezier(CURVA_ENFATICA) }
     ).finished
   )
-  // O cartão diminui e sai pela esquerda, depois de um impulso para a direita;
-  // cada trecho com a sua curva (a da casa, depois a de aceleração).
-  // A origem (a borda esquerda) vai nos próprios quadros: o balão do
-  // `Popover` tem a dele, a do lado de onde abriu, e ela venceria.
+  // O cartão diminui e sai pela esquerda, depois do impulso para a direita. A
+  // origem vai nos próprios quadros: a do balão do `Popover` venceria.
   const saida = cartao.animate(
     [
       { transform: "translateX(0%) scale(1)", transformOrigin: "0% 50%", easing: bezier(CURVA_ENFATICA) },
@@ -1205,13 +1152,10 @@ async function sairPelaEsquerda(espaco: HTMLElement, cartao: HTMLElement) {
 }
 
 /**
- * A entrada do balão do hotspot, o caminho de volta da saída: ele **brota do
- * ponto** — nasce a 60%, desfocado e transparente, com a origem no lado de
- * onde o `Popover` abre (o ponto), e cresce na mola da casa —, e logo atrás as
- * faixas (descrição e botão) **se desdobram** em cascata, de cima para baixo,
- * o espelho do colapso. A mola e a duração são lidas dos tokens
- * (`--ease-spring`, `--duration-spring`) no próprio elemento; sem `fill`
- * para a frente, então no fim tudo volta ao natural (a altura `auto`).
+ * A entrada do balão do hotspot: **brota do ponto** (60%, desfocado, com a
+ * origem do lado de onde o `Popover` abre) na mola da casa, e as faixas se
+ * desdobram em cascata atrás. Mola e duração vêm dos tokens, lidos no próprio
+ * elemento; sem `fill` para a frente, no fim tudo volta ao natural.
  */
 async function brotarDoPonto(balao: HTMLElement) {
   const estilo = getComputedStyle(balao)
@@ -1246,17 +1190,9 @@ async function brotarDoPonto(balao: HTMLElement) {
 }
 
 /**
- * A saída do balão do hotspot é **o avesso da entrada**, e não a do card: o
- * caminho de volta para o ponto de onde ele brotou.
- *
- * 1. As faixas se **dobram de baixo para cima** — o botão, depois a descrição
- *    —, o espelho do desdobrar.
- * 2. O balão **volta para dentro do ponto**: a 60%, desfocado e transparente,
- *    com a mesma origem da entrada (a do popover, no ponto), começando enquanto
- *    as faixas ainda dobram. Mais curta que a entrada e em curva de saída —
- *    fechar é curva, não mola.
- * 3. Quem fecha a cena é o ponto, que absorve o balão e se apaga (o `exit`
- *    dele, no componente).
+ * A saída do balão do hotspot é o avesso da entrada: as faixas dobram de baixo
+ * para cima e o balão volta para dentro do ponto (60%, desfocado, mesma origem),
+ * em curva de saída. Quem fecha a cena é o ponto, que o absorve e se apaga.
  */
 async function recolherNoPonto(balao: HTMLElement) {
   const fim = { fill: "forwards" } as const
@@ -1286,21 +1222,14 @@ async function recolherNoPonto(balao: HTMLElement) {
 }
 
 /**
- * O checklist tem o gesto dele: **enrola e desenrola, como uma persiana** —
- * o que uma lista de passos sugere, e não a saída lateral do card nem a volta
- * ao ponto da dica.
- *
- * Desenrolar (aparecer): o espaço abre, o cartão desce de leve até o lugar, e
- * as linhas (`[data-onboarding-row]`) se desenrolam **de cima para baixo**,
- * uma a uma; o tique dos passos feitos estala na mola quando a linha chega.
- * Sem `fill` para a frente: no fim, tudo volta ao natural.
+ * O checklist enrola e desenrola como uma persiana. Aparecer: o espaço abre, o
+ * cartão desce de leve e as linhas (`[data-onboarding-row]`) se desenrolam de
+ * cima para baixo; o tique dos feitos estala na mola. Sem `fill` para a frente.
  */
 async function desenrolar(espaco: HTMLElement, cartao: HTMLElement) {
-  // **Medir só depois de a altura assentar.** Na montagem o conteúdo pode
-  // ainda não ter a largura final — dentro da moldura do catálogo, o iframe
-  // recém-criado está se assentando —, e o texto, quebrado em colunas
-  // estreitas, media milhares de pixels. Escondido enquanto isso, espera até a
-  // altura do cartão repetir entre dois quadros (no app, é o segundo quadro).
+  // Mede só depois de a altura assentar: na montagem o conteúdo pode não ter a
+  // largura final (o iframe do catálogo) e o texto quebrado em colunas estreitas
+  // mediria milhares de px. Espera a altura repetir entre dois quadros.
   espaco.style.height = "0px"
   cartao.style.opacity = "0"
   const janela = espaco.ownerDocument.defaultView ?? window
@@ -1316,10 +1245,8 @@ async function desenrolar(espaco: HTMLElement, cartao: HTMLElement) {
   const mola = estilo.getPropertyValue("--ease-spring").trim() || bezier(CURVA_ENFATICA)
   const linhas = [...cartao.querySelectorAll<HTMLElement>("[data-onboarding-row]")]
   const alturas = linhas.map((linha) => linha.offsetHeight)
-  // O espaço abre só até o cabeçalho (o cartão com as linhas fechadas); dali
-  // em diante ele cresce sozinho, junto com as linhas. Abrir até a altura final
-  // dava um tranco: ao terminar, ele voltava à natural com as linhas ainda
-  // abrindo.
+  // O espaço abre só até o cabeçalho e dali cresce junto com as linhas; abrir até
+  // a altura final dá um tranco no fim.
   const cabeca = cartao.offsetHeight - alturas.reduce((soma, altura) => soma + altura, 0)
   for (const linha of linhas) linha.style.overflow = "hidden"
   const animacoes = [
@@ -1365,10 +1292,8 @@ async function desenrolar(espaco: HTMLElement, cartao: HTMLElement) {
 }
 
 /**
- * Enrolar (fechar), o avesso: as linhas sobem e somem **de baixo para cima**
- * (a última primeiro), como enroladas no cabeçalho; com o cabeçalho sozinho,
- * o cartão sobe 10px e se dissolve, e o espaço — medido nesse instante —
- * fecha. Em curva, não em mola.
+ * Enrolar (fechar), o avesso: as linhas somem de baixo para cima; com o
+ * cabeçalho sozinho, o cartão sobe 10px e se dissolve, e o espaço fecha. Em curva.
  */
 async function enrolar(espaco: HTMLElement, cartao: HTMLElement) {
   const fim = { fill: "forwards" } as const
@@ -1413,13 +1338,10 @@ const CARTAO_REDUZIDO = {
 }
 
 /**
- * A novidade no rodapé da barra lateral (KarrixLee). Em repouso a mídia fica
- * recortada a 75px, dissolvendo no cartão; aberto, cresce até a altura da imagem e as imagens
- * se abrem em leque, e o rodapé (dispensar e saiba mais) desce.
- *
- * **Abre de três jeitos, e a referência só tinha um**: o cursor (só mouse), o
- * foco de teclado e o toque — que alterna. Na referência só o `mouseenter`
- * abria, então no telefone o dispensar era inalcançável, e ele era uma `div`.
+ * A novidade no rodapé da barra lateral. Em repouso a mídia fica recortada a
+ * 75px, dissolvendo no cartão; aberto, cresce até a altura da imagem, as imagens
+ * se abrem em leque e o rodapé desce. Abre pelo cursor (só mouse), pelo foco de
+ * teclado e pelo toque (que alterna).
  */
 function OnboardingCard({
   title,
@@ -1444,19 +1366,15 @@ function OnboardingCard({
   const [aberto, setAberto] = React.useState(false)
   const ponteiro = React.useRef<string>("mouse")
   const itens = media.slice(0, 3)
-  // O `contrast` espera o cliente: o tema oposto só se sabe lendo o `<html>`, e
-  // um palpite no servidor pintaria o cartão errado no primeiro quadro.
+  // O `contrast` espera o cliente: o tema oposto só se sabe lendo o `<html>`.
   const visivel =
     lido && !dispensado && guardado !== DISPENSADO && !(contraste && escuro === null)
   const mola = reduzido ? { duration: 0 } : MOLA_LEQUE
   const faixa = reduzido ? undefined : FAIXA_DO_CARD
 
-  // **Um número só abre a mídia**: `abertura` vai de 0 a 1 na mola do leque, e
-  // a altura, a folga e o recorte saem dele. A primeira versão animava
-  // `height: "auto"` junto com o `padding`: o motion mede o "auto" no começo,
-  // com o padding ainda em 0 (120px), anima até lá enquanto o padding cresce, e
-  // no fim troca para `auto` de verdade — o salto de 120 para 144 que quebrava a
-  // abertura. Aqui a altura aberta é a da imagem, medida, mais a folga.
+  // Um número só abre a mídia: `abertura` (0 a 1, na mola do leque) dá a altura,
+  // a folga e o recorte. A altura aberta é a da imagem, medida, mais a folga;
+  // animar `height: "auto"` junto do `padding` salta no fim.
   const abertura = useMotionValue(0)
   const alturaImagem = useMotionValue(0)
   const folga = folgaDoLeque(itens.length)
@@ -1481,15 +1399,12 @@ function OnboardingCard({
   )
   const paddingTop = useTransform(() => folgaCima.get() * t.get())
   const paddingBottom = useTransform(() => folgaBaixo.get() * t.get())
-  // O recorte é **quadrado** e anima junto: em repouso, a caixa (75px); aberto,
-  // 12px além dela — a borda de dentro do cartão, cujo casco de marca recorta
-  // 4px fora da borda, para o anel. Trocar `overflow` por classe saltava: ao
-  // abrir, a imagem aparecia de uma vez 12px abaixo da caixa; ao fechar, o
-  // leque ainda aberto era cortado.
+  // O recorte é quadrado e anima junto: em repouso, a caixa (75px); aberto, 12px
+  // além dela (a borda de dentro do cartão, cujo casco recorta 4px fora, para o
+  // anel). Trocar `overflow` por classe salta.
   const recorte = useTransform(() => `inset(${-12 * t.get()}px)`)
-  // A primeira imagem dá a altura, e o observador a acompanha se a largura
-  // mudar. Memorizada: uma `ref` de função refeita a cada render religaria o
-  // observador a cada render (a medição da rodada 212).
+  // A primeira imagem dá a altura, e o observador a acompanha se a largura mudar.
+  // Memorizada: uma `ref` de função refeita a cada render religaria o observador.
   const medirImagem = React.useCallback(
     (el: HTMLSpanElement | null) => {
       if (!el) return
@@ -1502,12 +1417,9 @@ function OnboardingCard({
 
   const escopo = React.useRef<HTMLDivElement>(null)
 
-  // **Aberto pelo toque ou pelo teclado, o card rola até aparecer inteiro**:
-  // no fim de um feed de telefone ele cresce para baixo da barra de baixo, e o
-  // rodapé (dispensar, saiba mais) ficava escondido. Pelo cursor ele já está
-  // à vista. Depois da abertura (a mola do leque assenta em ~400ms), e só o
-  // necessário — quem rola respeita o `scroll-padding` da tela, que desconta
-  // as barras.
+  // Aberto pelo toque ou pelo teclado, o card rola até aparecer inteiro (no fim
+  // de um feed de telefone ele cresce para baixo da barra de baixo), depois da
+  // abertura e só o necessário; respeita o `scroll-padding` da tela.
   const mostrarAoAbrir = React.useRef(false)
   React.useEffect(() => {
     const el = escopo.current
@@ -1538,10 +1450,9 @@ function OnboardingCard({
     onDismiss?.()
   }
 
-  // **O `beam` é o brilho de marca sem o ponteiro**: a mesma `@utility
-  // brand-glow` (o arco-íris parado, a janela que viaja), com o ângulo girando
-  // sozinho — o `--brand-glow-start` escrito a cada quadro, como o
-  // `useBrandGlow` faz. Com movimento reduzido o arco fica parado no topo.
+  // O `beam` é o brilho de marca sem o ponteiro: a mesma `@utility brand-glow`
+  // com o ângulo girando sozinho (`--brand-glow-start` escrito a cada quadro).
+  // Com movimento reduzido o arco fica parado no topo.
   const superficieRef = React.useRef<HTMLDivElement>(null)
   React.useEffect(() => {
     const el = superficieRef.current
@@ -1583,10 +1494,8 @@ function OnboardingCard({
           }}
           onPointerLeave={(e) => {
             if (e.pointerType !== "mouse" || deDedo(e.currentTarget)) return
-            // Só o foco **de teclado** segura o card aberto quando o mouse sai:
-            // quem chegou pelo Tab não pode vê-lo fechar sob o foco. O foco que
-            // um clique de mouse deixa num botão não é `:focus-visible`, e era
-            // ele que prendia o card aberto depois de clicar na mídia.
+            // Só o foco de teclado segura o card aberto quando o mouse sai: o foco que um
+            // clique deixa num botão não é `:focus-visible`.
             const foco = e.currentTarget.ownerDocument.activeElement
             if (foco && e.currentTarget.contains(foco) && foco.matches(":focus-visible")) return
             setAberto(false)
@@ -1627,18 +1536,13 @@ function OnboardingCard({
               // ele existe para ser visto.
               variant === "beam" &&
                 "brand-glow isolate overflow-clip [overflow-clip-margin:var(--spacing)] [--brand-glow-active:1] [--brand-glow-opacity:0.8]",
-              // **O `contrast` é o `brand` dentro do tema oposto**, e não uma
-              // imitação dele: o cartão vira uma ilha de tema — `.light` no
-              // escuro, `.dark` no claro, as duas paletas do `globals.css` (a
-              // `.light` já servia à página de Cores) — e tudo dentro dele, as
-              // ilustrações incluídas, se pinta no outro tema. A primeira
-              // versão trocava só as cores do cartão, e a mídia ficava escura
-              // num cartão branco.
+              // O `contrast` é o `brand` dentro do tema oposto: o cartão vira uma ilha de
+              // tema (`.light` no escuro, `.dark` no claro) e tudo dentro dele, a mídia
+              // incluída, se pinta no outro tema.
               contraste && (escuro ? "light" : "dark")
             )}
           >
-            {/* O × fecha a qualquer momento — o dispensar do rodapé só aparece
-                com o card aberto. */}
+            {/* O × fecha a qualquer momento; o dispensar do rodapé só aparece com o card aberto. */}
             <motion.div variants={faixa} className="flex items-start gap-2">
               <CardTitle size="sm" className="min-w-0 flex-1 md:text-xs md:font-medium">
                 {title}
@@ -1689,10 +1593,11 @@ function OnboardingCard({
                   "focus-visible:ring-3 focus-visible:ring-ring/45"
                 )}
               >
-                {/* O palco: a altura, a folga e o recorte saem da `abertura`. O
-                    recorte mora aqui, e não no botão, para não cortar o anel de
-                    foco dele. A primeira imagem fica no fluxo e dá a altura; as
-                    outras se empilham sobre ela. */}
+                {/*
+                   O palco: altura, folga e recorte saem da `abertura`. O recorte mora aqui, e
+                   não no botão, para não cortar o anel de foco dele. A primeira imagem dá a
+                   altura; as outras se empilham sobre ela.
+                */}
                 <motion.span
                   data-slot="onboarding-card-stage"
                   className="block"
@@ -1728,11 +1633,12 @@ function OnboardingCard({
               </motion.div>
             ) : null}
 
-            {/* O par de ações divide a linha ao meio: o saiba mais é o primário,
-                o dispensar o acompanha em `tertiary`. A folga de 4px em volta é
-                do anel de foco, que o `overflow-hidden` da altura cortaria. */}
-            {/* A faixa por fora; a de dentro anima a própria altura (abrir e
-                recolher o rodapé) e não herda os rótulos do cartão. */}
+            {/*
+               O par de ações divide a linha ao meio: o saiba mais é o primário, o dispensar
+               o acompanha em `tertiary`. A folga de 4px é do anel de foco, que o
+               `overflow-hidden` da altura cortaria.
+               A faixa por fora; a de dentro anima a própria altura e não herda os rótulos do cartão.
+            */}
             <motion.div variants={faixa} data-onboarding-collapse>
             <motion.div
               initial={false}
@@ -1778,10 +1684,8 @@ type OnboardingHotspotProps = {
 }
 
 /**
- * O ponto que pulsa sobre um botão, sem escurecer a tela — o "olhe aqui" que
- * não interrompe. Tocar no ponto abre a dica ancorada; **usar o botão o
- * apaga**, porque quem usou já descobriu. O pulso é o `BadgeDot`, que o bloco
- * global de movimento reduzido corta.
+ * O ponto que pulsa sobre um botão, sem escurecer a tela. Tocar no ponto abre a
+ * dica ancorada; usar o botão o apaga. O pulso é o `BadgeDot`.
  */
 function OnboardingHotspot({
   children,
@@ -1809,12 +1713,10 @@ function OnboardingHotspot({
     setDica(false)
   }
 
-  // Abrir a dica: ela brota do ponto (no lugar da entrada genérica do popover,
-  // que a classe abaixo desliga). Por `ref` de função, que roda no instante em
-  // que o balão entra no DOM: um efeito em `dica` disparava antes de o Radix
-  // montar o conteúdo, e o balão aparecia inteiro. **E só uma vez por balão**:
-  // o Radix recompõe a `ref` a cada render (a medição da rodada 212), e cada
-  // chamada recomeçava a entrada medindo as faixas já presas em zero.
+  // A dica brota do ponto (no lugar da entrada genérica do popover). Por `ref` de
+  // função, que roda quando o balão entra no DOM (um efeito disparava antes de o
+  // Radix montar o conteúdo), e uma vez por balão: o Radix recompõe a `ref` a
+  // cada render.
   const brotou = React.useRef<HTMLDivElement | null>(null)
   const refDaDica = React.useCallback(
     (balao: HTMLDivElement | null) => {
@@ -1827,9 +1729,8 @@ function OnboardingHotspot({
     [reduzido]
   )
 
-  // O "entendi" recolhe a dica de volta para o ponto (`recolherNoPonto`), o
-  // avesso do brotar — e então o ponto, que a absorveu, se apaga. Usar o botão
-  // real continua apagando só o ponto.
+  // O "entendi" recolhe a dica de volta para o ponto e então o ponto se apaga.
+  // Usar o botão real apaga só o ponto.
   const entendi = async () => {
     if (saindo.current) return
     saindo.current = true
@@ -1860,8 +1761,7 @@ function OnboardingHotspot({
                 key="ponto"
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                // O ponto absorve o balão e se apaga: uma pulsada (1,35) e some
-                // — o fim da volta do balão para a fonte. Com movimento
+                // O ponto absorve o balão e se apaga numa pulsada (1,35). Com movimento
                 // reduzido, só esmaece.
                 exit={
                   reduzido
@@ -1901,9 +1801,8 @@ function OnboardingHotspot({
         side={side}
         align={align}
         sideOffset={8}
-        // A entrada é a do `brotarDoPonto`, pela Web Animations API; a do
-        // popover sai, senão as duas animariam a mesma transformação. Com
-        // movimento reduzido, a dica aparece na hora.
+        // A entrada é a do `brotarDoPonto` (WAAPI); a do popover sai, senão as duas
+        // animariam a mesma transformação.
         motion="none"
       >
         <PopoverArrow />
@@ -1949,30 +1848,21 @@ type OnboardingTourProps = {
 /** Os quatro bloqueios em volta do buraco: o clique no véu não chega à tela. */
 const BLOQUEIO = "pointer-events-auto absolute"
 /**
- * A camada do tour fica **um degrau acima** dos popovers, e é a exceção
- * consciente à regra de não escalar: o menu que o clique abriu (o "+
- * Adicionar") tem de ficar **sob** o véu, com o buraco no item, senão ele
- * pinta por cima do recorte e esconde o anel. Os toasts continuam acima.
+ * A camada do tour fica um degrau acima dos popovers (exceção à regra de não
+ * escalar): o menu que o clique abriu tem de ficar sob o véu, com o buraco no
+ * item. Os toasts continuam acima.
  */
 const CAMADA_VEU = "z-[calc(var(--z-popover)+1)]"
 const CAMADA_PLACA = "z-[calc(var(--z-popover)+2)]"
 
 /**
- * **O gesto do tour é o foco**, o de uma íris de câmera — e não a saída
- * lateral do card, a volta ao ponto da dica nem a persiana do checklist:
- *
- * - **Abrir**: o véu fecha sobre o alvo vindo das bordas (o buraco nasce
- *   maior que a janela e encolhe até o recorte), com o anel de marca
- *   chegando junto; a placa surge depois que ele pousa.
- * - **Trocar de passo**: a placa some para dentro do alvo de agora, o buraco
- *   viaja ao próximo e pousa com um **pulso** do anel, e só então a placa nova
- *   surge do lado do alvo, com as faixas subindo em cascata.
- * - **Fechar**: a placa some e a íris abre — o buraco cresce além da tela e o
- *   véu sai pelas bordas.
- *
- * Em curva, e não na `MOLA`: com ela o buraco passava do alvo (num cartão de
- * 400 × 354, chegava a 427 × 393), e a placa ancorada nele era espremida
- * contra a borda, cortando o rodapé.
+ * O gesto do tour é o foco, o de uma íris.
+ * - Abrir: o véu fecha sobre o alvo vindo das bordas, com o anel de marca; a
+ *   placa surge depois que ele pousa.
+ * - Trocar de passo: a placa some para dentro do alvo, o buraco viaja e pousa
+ *   com um pulso do anel, e a placa nova surge do lado do alvo.
+ * - Fechar: a placa some e a íris abre.
+ * Em curva, não na `MOLA`: ela faria o buraco passar do alvo e espremeria a placa.
  */
 const IRIS_FECHA = { duration: 0.75, ease: CURVA_ENFATICA }
 const VIAGEM = { duration: 0.5, ease: CURVA_ENFATICA }
@@ -1981,20 +1871,11 @@ const PULSO = { duration: 0.8, ease: CURVA_ENFATICA }
 /** Quanto o pulso se afasta do recorte ao pousar, em px. */
 const ALCANCE_DO_PULSO = 14
 /**
- * **O anel de marca é desenho do tour**, e não a `@utility brand-glow`: o
- * brilho da casa repete o arco-íris 2,5 vezes na volta (vinte faixas de 18°,
- * feitas para um arco curto passando pela borda), e numa pílula larga as
- * faixas se espremiam no meio da aresta comprida e esticavam nos cantos —
- * lia como listra, não como anel. Aqui é o degradê oficial da marca
- * (`--brand-rainbow`, o linear de 135° em oklch), que atravessa o anel uma vez
- * e parado (a cor não gira; a regra da rodada 100). Um cônico de uma volta
- * também foi visto: num alvo largo ele espreme as cores no meio da aresta.
- *
- * É um traço nítido de 2px, colado na borda do buraco e concêntrico com ele (o
- * raio dele mais 2, em `--onboarding-raio`, que o recorte publica), e **parado**:
- * houve um brilho borrado correndo em volta dele, e saiu a pedido do dono.
- *
- * A máscara recorta o anel com uma cor de token opaca: ela só lê o alfa.
+ * O anel de marca é desenho do tour, e não a `@utility brand-glow`: ela repete
+ * o arco-íris 2,5 vezes (feita para um arco curto) e numa pílula larga leria
+ * como listra. Aqui é o `--brand-rainbow` linear, que atravessa o anel uma vez.
+ * Traço nítido de 2px, colado na borda e concêntrico com o buraco (raio dele
+ * mais 2, em `--onboarding-raio`), e parado. A máscara só lê o alfa.
  */
 const ARCO_IRIS_DO_ANEL = "brand-rainbow-image bg-(image:--brand-rainbow)"
 const TRACO_DO_ANEL = [
@@ -2010,9 +1891,9 @@ function irisDe(r: Recorte, largura: number, altura: number): Recorte {
 }
 
 /**
- * O lado do alvo, visto da placa: é de lá que ela surge e para lá que ela
- * some. A ancorada diz pelo `data-side` do Radix (já desviado da borda); a
- * presa no telefone sobe da borda em que prende; a do centro não se desloca.
+ * O lado do alvo, visto da placa: de lá ela surge e para lá ela some. A ancorada
+ * lê o `data-side` do Radix; a presa no telefone sobe da borda em que prende; a
+ * do centro não se desloca.
  */
 function rumoAoAlvo(placa: HTMLElement, px: number) {
   const doca = placa.dataset.dock
@@ -2027,11 +1908,10 @@ function rumoAoAlvo(placa: HTMLElement, px: number) {
 const umQuadro = (win: Window) => new Promise<void>((pronto) => win.requestAnimationFrame(() => pronto()))
 
 /**
- * A placa surge **do lado do alvo**: nasce a 92%, desfocada, deslocada 10px na
- * direção dele e com a origem que o Radix aponta para a âncora, e cresce na
- * mola da casa; as faixas (`[data-onboarding-rise]`) sobem logo atrás, em
- * cascata. Espera dois quadros escondida, porque o lado só é o de verdade
- * depois que a âncora virtual posiciona.
+ * A placa surge do lado do alvo: nasce a 92%, desfocada, deslocada 10px e com a
+ * origem que o Radix aponta para a âncora, e cresce na mola; as faixas
+ * (`[data-onboarding-rise]`) sobem atrás. Espera dois quadros escondida, porque
+ * o lado só é o de verdade depois que a âncora virtual posiciona.
  */
 async function surgirDoAlvo(placa: HTMLElement) {
   const win = placa.ownerDocument.defaultView ?? window
@@ -2078,25 +1958,15 @@ async function sumirNoAlvo(placa: HTMLElement) {
 
 /**
  * O tour com foco num botão real.
- *
- * **O clique passa pelo buraco.** Quem escurece é a sombra de 100vmax de um
- * elemento sem eventos (`pointer-events-none`), e quem bloqueia são quatro
- * retângulos transparentes **em volta** do recorte: dentro dele não há nada, e
- * o clique cai no elemento da tela. O passo `advanceOn: "target"` avança num
- * `click` em **bolha** no documento — depois que o handler do app já rodou —,
- * conferindo onde o `pointerdown` aconteceu: com um menu modal aberto o Radix
- * tira os eventos do `body`, e o `click` cai no `<html>`.
- *
- * **O anel é de marca**: o arco-íris numa volta só, num traço nítido colado
- * no buraco, e um brilho borrado do mesmo traço que corre em volta dele (ver
- * `ARCO_IRIS_DO_ANEL`). Ele cola no alvo: a folga caiu de 8 para 4.
- *
- * **A placa espera o buraco pousar.** No desktop ela é um `Popover` ancorado
- * num retângulo virtual que lê o recorte; ao trocar de passo, ela some com a
- * âncora **congelada** onde estava, e a do passo novo só monta quando o buraco
- * chega — posicionada de primeira, sem atravessar a tela com o texto trocado.
- * No telefone ela prende embaixo — ou em cima, se o alvo está na metade de
- * baixo —, e o recorte continua: uma gaveta cobriria o alvo.
+ * O clique passa pelo buraco: quem escurece é a sombra de 100vmax de um
+ * elemento sem eventos, e quem bloqueia são quatro retângulos em volta do
+ * recorte. `advanceOn: "target"` avança num `click` em bolha no documento
+ * (depois do handler do app), conferindo onde o `pointerdown` aconteceu: com
+ * menu modal aberto o `click` cai no `<html>`.
+ * A placa espera o buraco pousar: no desktop é um `Popover` ancorado num
+ * retângulo virtual; ao trocar de passo ela some com a âncora congelada e a nova
+ * só monta quando o buraco chega. No telefone prende embaixo (ou em cima, se o
+ * alvo está embaixo) e o recorte continua.
  */
 function OnboardingTour({
   steps,
@@ -2176,15 +2046,14 @@ function OnboardingTour({
   const pulsoW = useTransform(() => mw.get() + alcance.get() * 2)
   const pulsoH = useTransform(() => mh.get() + alcance.get() * 2)
   const pulsoOpacidade = useTransform(() => 1 - pulso.get())
-  // O raio que o anel lê para ficar concêntrico com o buraco: o do alvo (não
-  // um degrau da escala) mais o traço. O motion escreve variável de CSS pelo
-  // `style`; o tipo dele é que não a conhece.
+  // O raio que o anel lê para ficar concêntrico com o buraco: o do alvo mais o
+  // traço. O motion escreve variável de CSS pelo `style`; o tipo dele não a conhece.
   const raioDoAnel = useTransform(() => `${mr.get() + 2}px`)
   const raioDoPulso = useTransform(() => `${mr.get() + alcance.get() + 2}px`)
 
-  // A âncora da placa: o buraco, lido ao vivo — ou congelado onde estava,
-  // enquanto a placa do passo anterior some. Um objeto novo quando o alvo
-  // muda, para o `Popper` reler o `contextElement` (o padrão do `FilterBar`).
+  // A âncora da placa: o buraco ao vivo, ou congelado onde estava enquanto a
+  // placa anterior some. Objeto novo quando o alvo muda, para o `Popper` reler o
+  // `contextElement`.
   const ancoraRef = React.useRef<{ getBoundingClientRect: () => DOMRect; contextElement?: Element }>({
     getBoundingClientRect: () => new DOMRect(),
   })
@@ -2215,8 +2084,8 @@ function OnboardingTour({
     animate(pulso, 1, PULSO)
   }
 
-  // `peloAlvo`: quem avança é o clique no próprio alvo, o único caminho para a
-  // frente num passo `advanceOn: "target"`.
+  // `peloAlvo`: o clique no próprio alvo é o único caminho para a frente num passo
+  // `advanceOn: "target"`.
   const ir = (indice: number, peloAlvo = false) => {
     if (fechando.current) return
     const pedido = Math.max(0, Math.min(total - 1, indice))
@@ -2263,16 +2132,15 @@ function OnboardingTour({
     else onSkip?.()
   }
 
-  // Fechar é o avesso de abrir: a placa some e a íris abre, e só então o tour
-  // desmonta. Quem fecha por fora (o `open` controlado) só esmaece.
+  // Fechar é o avesso de abrir: a placa some, a íris abre e só então o tour
+  // desmonta. Quem fecha por fora (`open` controlado) só esmaece.
   const fechar = async (motivo: typeof CONCLUIDO | typeof DISPENSADO) => {
     if (fechando.current) return
     fechando.current = true
     pararViagem.current()
     if (!reduzido) {
       const win = janela ?? window
-      // O anel se dissolve enquanto a íris abre: crescendo junto, ele virava
-      // um arco enorme cortando a tela.
+      // O anel se dissolve enquanto a íris abre; crescendo junto viraria um arco enorme.
       if (anelRef.current) anelRef.current.style.opacity = "0"
       const fim = irisDe(
         { x: mx.get(), y: my.get(), w: mw.get(), h: mh.get(), r: mr.get() },
@@ -2349,10 +2217,11 @@ function OnboardingTour({
     }
   }, [aberto, passo, step, janela])
 
-  /* 2. O recorte: rola até o alvo se precisar, viaja (a íris, na primeira vez)
-     e acompanha. A viagem é um progresso de 0 a 1 entre o recorte de onde
-     saiu e o **alvo ao vivo**: se o alvo muda de tamanho no caminho (o
-     checklist abrindo a próxima linha), o destino acompanha sem recomeçar. */
+  /*
+   * 2. O recorte: rola até o alvo se precisar, viaja (a íris, na primeira vez) e
+   * acompanha. A viagem é um progresso de 0 a 1 até o alvo ao vivo, que acompanha
+   * mudanças de tamanho sem recomeçar.
+   */
 
   React.useEffect(() => {
     if (!aberto || el === undefined) return
@@ -2565,13 +2434,12 @@ function OnboardingTour({
     }
   }, [aberto, el, popoverAberto, janela, acoes])
 
-  /* 6. O foco, quando a placa do passo aparece — nunca ao montar fechado, e
-     comparado com o passo anterior (o `StrictMode` roda o efeito duas vezes;
-     quem marca é o quadro). **Quem navega pelo teclado** vai ao primário (ou
-     ao alvo, no passo que avança por ele), com o anel de foco; **quem usa o
-     ponteiro** vai à própria placa, sem anel nenhum: o anel branco no
-     "próximo" e no alvo, a cada passo, brigava com o anel de marca. O Tab
-     continua levando ao alvo e aos botões. */
+  /*
+   * 6. O foco, quando a placa do passo aparece (nunca ao montar fechado; o
+   * `StrictMode` roda o efeito duas vezes, então compara com o passo anterior).
+   * Quem navega pelo teclado vai ao primário (ou ao alvo), com o anel de foco;
+   * quem usa o ponteiro vai à própria placa, sem anel.
+   */
 
   React.useEffect(() => {
     if (!aberto || !visivel || focadoNoPasso.current === passo) return
@@ -2579,9 +2447,7 @@ function OnboardingTour({
     const quadro = win.requestAnimationFrame(() => {
       focadoNoPasso.current = passo
       if (!peloTeclado.current) {
-        // Sem roubar o foco de quem o tem: o menu que o clique no alvo abriu
-        // fecharia (o foco sai dele). Quem chega aqui pelo "próximo" está no
-        // `body`, porque a placa anterior desmontou.
+        // Sem roubar o foco de quem o tem: o menu que o clique no alvo abriu fecharia.
         const ativo = win.document.activeElement
         if (!ativo || ativo === win.document.body) placaEl.current?.focus({ preventScroll: true })
         return
@@ -2724,11 +2590,11 @@ function OnboardingTour({
           align={stepDaPlaca.align ?? "center"}
           sideOffset={12}
           size={stepDaPlaca.media ? "lg" : "md"}
-          // A placa acompanha o recorte quadro a quadro (a rolagem, o alvo que
-          // cresce) — e fica parada enquanto ele viaja, porque a âncora congela.
+          // A placa acompanha o recorte quadro a quadro e fica parada enquanto ele
+          // viaja, porque a âncora congela.
           updatePositionStrategy="always"
-          // A entrada e a saída são as do tour (`surgirDoAlvo`, `sumirNoAlvo`),
-          // e a seta mora fora da caixa: o `overflow` da placa a recortava.
+          // A entrada e a saída são as do tour (`surgirDoAlvo`, `sumirNoAlvo`); a seta
+          // mora fora da caixa porque o `overflow` da placa a recortaria.
           motion="none"
           className={cn(CAMADA_PLACA, "overflow-visible")}
           onOpenAutoFocus={(e) => e.preventDefault()}
@@ -2749,10 +2615,8 @@ function OnboardingTour({
 }
 
 /**
- * O miolo da placa do tour, o mesmo ancorada, presa ou no centro. **O rodapé
- * tem a mesma forma em todos os passos**: o × do canto pula (era um terceiro
- * botão no rodapé, que quebrava em duas linhas quando o voltar aparecia), e o
- * voltar some no primeiro passo sem sair do lugar.
+ * O miolo da placa do tour. O rodapé tem a mesma forma em todos os passos: o ×
+ * do canto pula, e o voltar some no primeiro passo sem sair do lugar.
  */
 function CorpoDoTour({
   ref,
