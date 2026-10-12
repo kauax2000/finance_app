@@ -7,27 +7,15 @@ import { OTPInput, OTPInputContext } from "input-otp"
 import { cn } from "@/lib/utils"
 
 /**
- * A escada é a do projeto, com os mesmos nomes e as mesmas alturas: 28, 32, 36,
- * 40. Um código de verificação nunca fica ao lado de um botão numa linha de
- * formulário — o motivo original da escada não se aplica aqui —, mas a promessa
- * de que `lg` mede 36 em qualquer componente vale mesmo onde o alinhamento não
- * cobra. Um nome que significa duas alturas custa mais caro que um degrau que
- * sobra.
- *
- * O que a escada **não** resolve é o alvo de toque: ela termina em 40 e o piso
- * confortável é 44. Isso está tratado no contêiner, não aqui.
+ * A escada é a do projeto (28, 32, 36, 40). Ela termina em 40 e o piso de toque
+ * é 44, que o contêiner trata.
  */
 type InputOTPSize = "sm" | "md" | "lg" | "xl"
 
 /**
- * O degrau e o erro, descendo do campo para as casas.
- *
- * **O erro precisa do contexto, e isso foi medido.** O `aria-invalid` cai no
- * `<input>` do `OTPInput`, que é **irmão** dos grupos no contêiner, e não
- * descendente deles. O `has-aria-invalid` do grupo e o `aria-invalid:` da casa
- * nunca casavam: com o campo marcado inválido (o `FieldControl` da recuperação
- * de senha faz isso), a borda da casa continuava `oklch(0.9)` e o grupo sem
- * anel. Rodada 163.
+ * O degrau e o erro, descendo do campo para as casas. O `aria-invalid` cai no
+ * `<input>` do `OTPInput`, que é irmão dos grupos, então o `has-aria-invalid`
+ * do grupo nunca casaria; por isso o erro vem por contexto.
  */
 const InputOTPContext = React.createContext<{ size: InputOTPSize; invalid: boolean }>({
   size: "md",
@@ -35,10 +23,8 @@ const InputOTPContext = React.createContext<{ size: InputOTPSize; invalid: boole
 })
 
 /**
- * `Omit` comum achataria a união de props do `OTPInput` — ele aceita `children`
- * **ou** `render`, e um `Omit` sobre a união inteira apaga a distinção e faz o
- * `children` deixar de compilar. Distribuir o `Omit` por cada membro preserva
- * a escolha.
+ * `Omit` comum achataria a união de props do `OTPInput` (`children` **ou**
+ * `render`); distribuí-lo por membro preserva a escolha.
  */
 type OmitDistributivo<T, K extends PropertyKey> = T extends unknown
   ? Omit<T, K>
@@ -88,14 +74,9 @@ function InputOTP({
         data-size={size}
         containerClassName={cn(
           "flex items-center has-disabled:opacity-50",
-          // O campo real é um `<input>` só, esticado por cima do contêiner
-          // inteiro — então o alvo de toque é este retângulo, e não cada casa.
-          // A 32px de altura ele fica 12px abaixo do piso de
-          // /designsystem/touch-safe-area, e mesmo o degrau `xl` para em 40.
-          //
-          // Em ponteiro grosso o contêiner cresce para 44 sem crescer o
-          // desenho: as casas continuam na altura do degrau, centradas na
-          // faixa. Mesma saída do link da navegação do catálogo.
+          // O `<input>` real é um só, esticado sobre o contêiner: o alvo de
+          // toque é este retângulo. Em ponteiro grosso ele cresce a 44 sem
+          // crescer o desenho.
           "pointer-coarse:min-h-11",
           containerClassName
         )}
@@ -112,8 +93,7 @@ function InputOTPGroup({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="input-otp-group"
       className={cn(
-        // O raio é o do campo — a cápsula (rodada 243e) —, nas pontas do grupo
-        // e nas casas da ponta.
+        // O raio é o do campo (cápsula), nas pontas do grupo e nas casas da ponta.
         "flex items-center rounded-full has-data-invalid:ring-3 has-data-invalid:ring-destructive/20 dark:has-data-invalid:ring-destructive/40",
         className
       )}
@@ -139,13 +119,8 @@ function InputOTPSlot({
       data-active={isActive}
       data-invalid={invalid || undefined}
       className={cn(
-        // `nums` porque isto é uma grade de dígitos: sem figuras tabulares o
-        // "1" é mais estreito que o "8", e cada casa centra o próprio glifo
-        // num lugar diferente. A 32px passa; a 40 a fileira treme.
-        //
-        // O anel da casa ativa é o do campo — `ring-3` de `--ring` a 30% desde
-        // a rodada 162, mais suave a pedido do dono e abaixo dos 3:1 por
-        // decisão registrada em `field-classes.ts`.
+        // `nums`: sem figuras tabulares o "1" é mais estreito que o "8" e a
+        // fileira treme. O anel da casa ativa é o do campo.
         "nums relative flex items-center justify-center border-y border-r border-input bg-input-fill/30 transition-all outline-none first:rounded-l-full first:border-l last:rounded-r-full data-invalid:border-destructive data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-3 data-[active=true]:ring-ring/30 data-[active=true]:data-invalid:border-destructive data-[active=true]:data-invalid:ring-destructive/20 dark:data-[active=true]:data-invalid:ring-destructive/40",
         slotSizes[size],
         className
@@ -176,9 +151,8 @@ function InputOTPSeparator({
   return (
     <div
       data-slot="input-otp-separator"
-      // Sem `role="separator"`. O campo é um `<input>` só, com rótulo próprio;
-      // o traço entre os blocos é desenho. Anunciá-lo como separador punha uma
-      // fronteira no meio da leitura de um valor que não tem duas partes.
+      // Sem `role="separator"`: o campo é um `<input>` só e o traço é desenho;
+      // anunciá-lo partiria a leitura de um valor sem duas partes.
       aria-hidden
       className={cn(
         "flex items-center text-muted-foreground",

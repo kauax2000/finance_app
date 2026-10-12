@@ -7,22 +7,10 @@ import { cn } from "@/lib/utils"
  * Trecho de código ou identificador literal: nome de token, caminho de arquivo,
  * classe, atalho de teclado escrito.
  *
- * **Duas aparências, e agora a regra está escrita.** O catálogo tinha três
- * tratamentos convivendo sem ninguém dizer qual usar quando: a pastilha deste
- * componente (11px, fundo `muted`), o `<code>` da prosa estilizado pelas
- * páginas (12px, `foreground`, sem fundo) e um punhado de `<code>` com classes
- * escritas à mão. O primeiro aparecia em 6 lugares, o segundo em mais de 500.
- *
- * A divisão que faz sentido é a de **contexto**, não de gosto:
- *
- * - `inline` — dentro de uma frase. Sem fundo, porque uma pastilha no meio de
- *   um parágrafo pica a linha e atrapalha a leitura corrida. Corpo e tinta
- *   iguais aos do `<code>` da prosa, para os dois não brigarem na mesma página.
- * - `chip` — sozinho, como rótulo: o `meta` de um espécime, o token ao lado de
- *   um ladrilho de cor. Aí o fundo é o que separa o literal do que está em
- *   volta, já que não há frase para ancorá-lo. O canto é `rounded-md` (8px,
- *   rodada 240m): um degrau acima da peça miúda, e **não** cápsula — o dono a
- *   recusou; num chip de 20px de altura, 10px já fecharia em cápsula.
+ * - `inline` — dentro de uma frase, sem fundo (pastilha picaria a linha); corpo
+ *   e tinta iguais aos do `<code>` da prosa.
+ * - `chip` — sozinho, como rótulo; o fundo separa o literal do entorno. O canto
+ *   é `rounded-md`, não cápsula.
  */
 const codeVariants = cva("font-mono", {
   variants: {

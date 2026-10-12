@@ -81,67 +81,26 @@ import {
 /**
  * # Chart
  *
- * ## Ele tinha 1 consumidor em 8, e a causa cabia numa linha
+ * Duas camadas. A anatomia (`ChartContainer`, `ChartGrid`, `ChartXAxis`,
+ * `ChartYAxis`, `ChartTooltip`, `ChartLegend`, `ChartReferenceLine`) é a régua e
+ * fica livre: quem monta um `ComposedChart` compõe estas peças. As formas
+ * (`ChartArea`, `ChartLine`, `ChartBars`, `ChartDonut`, `ChartSparkline`,
+ * `ChartSplit`, `ChartRadial`, `ChartHeatmap`, `ChartRadar`, `ChartWaterfall`,
+ * `ChartBarList`) são a forma curta sobre a anatomia, como `FormInput` é sobre
+ * `Field` + `Input`, e cobram `label` (o nome acessível), que a composição livre
+ * não pode cobrar.
  *
- * A versão anterior fazia **uma** coisa: ler `config` e emitir
- * `--color-<chave>` num `<style>` escopado por `[data-chart]`. Tudo o mais que
- * um gráfico precisa — o tooltip que formata dinheiro, a legenda, os eixos, a
- * altura, o estado vazio — ficava de fora, e sete das oito telas que renderizam
- * Recharts neste app escreviam tudo à mão: 4 tooltips (a mesma casca
- * `rounded-lg border-border/80 bg-popover`, quatro vezes), 3 legendas,
- * 4 `Intl.NumberFormat` redeclarados com `currencyBRL` existindo ao lado, e
- * 4 `tickFormatter` compactos inline sem nenhum chamar `currencyCompactBRL` —
- * que é exatamente a regra que a página `/designsystem/chart` manda seguir.
- *
- * A raiz do abandono era esta linha:
- *
- * ```tsx
- * {typeof item.value === "number" ? numberBR(item.value) : item.value}
- * ```
- *
- * Num app de finanças, uma série em reais saía `8.432` — **sem `R$`**. Quem
- * precisava de dinheiro no tooltip não tinha como pedir, e escrevia o próprio.
- * É a mesma inversão que as rodadas do `Form`, do `MoneyInput` e do `Alert` já
- * registraram: a resposta não é reclassificar o componente, é fazer o
- * componente ser o que o nome promete.
- *
- * ## Rodada 206: o que o dashboard ainda escrevia à mão
- *
- * - Formas: `ChartWaterfall` (a cascata do saldo, com barras de faixa) e
- *   `ChartBarList` (o ranking em lista HTML, que é texto e não imagem).
- * - Barras: `signed` (o saldo cruzando o zero, income acima e expense
- *   abaixo), `valueLabels` (o valor na ponta; empilhado, o total) e
- *   `selected` + `onSelect` (clicar seleciona; setas e Enter também — o
- *   gráfico vira `role="group"` e anuncia a seleção).
- * - Rosca: a fatia ativa (tooltip ou lista acendem uma, o miolo passa a ser
- *   dela), `legend="list"` (valor e % ao lado do anel) e `bands` no `gauge`
- *   (o arco usado pinta o estado, o resto é trilho).
- * - Área e linha: `brush` (o recorte de período), `delta` (a variação contra o
- *   ponto anterior no tooltip, também nas barras) e `config.dashed` (a série
- *   projetada ou de referência, tracejada).
- * - `ChartAnnotation`: o fio vertical com rótulo num ponto do tempo.
- * - O tooltip da rosca escreve a fatia em % do total.
- *
- * ## As duas camadas
- *
- * **A anatomia** (`ChartContainer`, `ChartGrid`, `ChartXAxis`, `ChartYAxis`,
- * `ChartTooltip`, `ChartLegend`, `ChartReferenceLine`) é a régua, e continua
- * livre: quem monta um `ComposedChart` compõe estas peças.
- *
- * **As formas** (`ChartArea`, `ChartLine`, `ChartBars`, `ChartDonut`,
- * `ChartSparkline`, e depois `ChartSplit`, `ChartRadial`, `ChartHeatmap`,
- * `ChartRadar`, `ChartWaterfall` e `ChartBarList`) são a forma curta sobre a
- * anatomia, como `FormInput` é
- * sobre `Field` + `Input`. Elas cobram `label` — o nome acessível — porque a
- * forma curta pode cobrar e a composição livre não pode.
+ * O `ChartContainer` emite `--color-<chave>` num `<style>` escopado por
+ * `[data-chart]`; o tooltip formata dinheiro (`format`, senão uma série em reais
+ * sairia `8.432` sem `R$`), e a legenda, os eixos, a altura e o estado vazio
+ * também são daqui. Barras: `signed`, `valueLabels`, `selected` + `onSelect`
+ * (o gráfico vira `role="group"` e anuncia a seleção). Rosca: fatia ativa,
+ * `legend="list"`, `bands` no `gauge`. Área e linha: `brush`, `delta`,
+ * `config.dashed`. `ChartAnnotation` é o fio vertical com rótulo num ponto do
+ * tempo. O tooltip da rosca escreve a fatia em % do total.
  */
 
-/**
- * A proporção é do componente, e é eixo porque quatro telas responderam com
- * um literal de pixel (`height={300}` ×2, `240`, `200`) a um componente que
- * cravava `aspect-video` e ensinava proporção. `auto` é a saída para quem
- * dimensiona por fora — e é o que o `ChartSparkline` usa.
- */
+/** A proporção é do componente (eixo, para telas não cravarem `height` em pixel); `auto` é a saída de quem dimensiona por fora, e é o que o `ChartSparkline` usa. */
 const chartContainerVariants = cva(
   [
     "flex justify-center text-xs",
@@ -159,28 +118,17 @@ const chartContainerVariants = cva(
     "[&_.recharts-reference-line_[stroke='#ccc']]:stroke-border",
     "[&_.recharts-dot[stroke='#fff']]:stroke-transparent",
     "[&_.recharts-sector[stroke='#fff']]:stroke-transparent",
-    // O recorte de período (rodada 206): o Brush do Recharts nasce com o
-    // texto preto e a moldura `#fff` — os tokens da casa entram por aqui.
+    // O recorte de período: o Brush do Recharts nasce com texto preto e moldura `#fff`; os tokens da casa entram por aqui.
     "[&_.recharts-brush-texts_text]:fill-muted-foreground",
     "[&_.recharts-brush-traveller_rect]:fill-muted-foreground",
-    // O anel de foco. A versão anterior escrevia `outline-hidden` em
-    // `.recharts-layer`, `.recharts-sector` e `.recharts-surface` — e o que
-    // isso apagava era o foco de teclado que o `accessibilityLayer` do
-    // Recharts v3 desenha, que vem ligado de fábrica na 3.8.0 instalada aqui.
-    // Suprimir o foco não-visível continua certo; suprimir o visível é tirar a
-    // única pista de que o gráfico é navegável.
-    //
-    // Duas armadilhas, as duas medidas com `Tab` de verdade:
-    //
-    // 1. **`outline-none` e `outline-2` escrevem propriedades diferentes** —
-    //    `outline-style` e `outline-width`. Com a supressão em `:focus` e o
-    //    anel em `:focus-visible`, os dois seletores empatam em (0,2,0) e as
-    //    duas declarações valem: chegava largura 2px com estilo `none`, ou
-    //    seja, anel nenhum. Por isso a supressão é a base **sem pseudo**
-    //    (0,2,0) e o anel é `:focus-visible` (0,3,0), que vence sempre — e por
-    //    isso `outline-solid` precisa estar escrito.
-    // 2. Foco por script não liga `:focus-visible`. Verificar isto com
-    //    `element.focus()` reporta "sem anel" numa implementação correta.
+    // O anel de foco: suprimir o foco não-visível é certo, mas o `outline-hidden`
+    // antigo apagava também o foco de teclado do `accessibilityLayer` do
+    // Recharts v3. `outline-none` e `outline-2` escrevem propriedades diferentes
+    // (`outline-style` e `outline-width`), e a supressão e o anel em `:focus` /
+    // `:focus-visible` empatam em (0,2,0); por isso a supressão é a base sem
+    // pseudo (0,2,0), o anel é `:focus-visible` (0,3,0) e `outline-solid`
+    // precisa estar escrito. Foco por script não liga `:focus-visible`: teste
+    // com `Tab` de verdade.
     "[&_.recharts-sector]:outline-none",
     "[&_.recharts-surface]:outline-none",
     "[&_.recharts-sector:focus-visible]:outline-solid",
@@ -214,11 +162,7 @@ export type ChartConfig = {
   [key: string]: {
     label?: React.ReactNode
     icon?: React.ComponentType<{ className?: string }>
-    /**
-     * A série tracejada (rodada 206): a projeção que continua o real — o saldo
-     * até o fim do mês — ou a referência — a média. O traço é o segundo canal:
-     * cor sozinha não diz "isto ainda não aconteceu".
-     */
+    /** A série tracejada: a projeção que continua o real, ou a referência (a média). O traço é o segundo canal: cor sozinha não diz "isto ainda não aconteceu". */
     dashed?: boolean
   } & (
     | { color?: string; theme?: never }
@@ -231,10 +175,9 @@ export type ChartConfig = {
  * ---------------------------------------------------------------------- */
 
 /**
- * Um nome para cada formatação, e cada um resolve num helper de `lib/`. A
+ * Um nome para cada formatação, cada um resolvendo num helper de `lib/` (a
  * regra **I** do auditor proíbe `Intl` fora de `lib/formatters` e
- * `lib/transaction-date`, e este arquivo era onde ela vazava: o tooltip
- * chamava `numberBR` direto e as telas respondiam redeclarando o `Intl` delas.
+ * `lib/transaction-date`).
  */
 export type ChartFormat =
   | "text"
@@ -249,11 +192,8 @@ const CHART_FORMATTERS: Record<ChartFormat, (value: unknown) => string> = {
   text: (v) => (v == null ? "" : String(v)),
   number: (v) => (typeof v === "number" ? numberBR(v) : String(v ?? "")),
   currency: (v) => (typeof v === "number" ? currencyBRL(v) : String(v ?? "")),
-  // `minimumFractionDigits: 0` é o que torna `compact` de fato compacto abaixo
-  // de mil: com o padrão de 2 do `currencyBRL`, o eixo saía "R$ 0,00" e
-  // "R$ 600,00" — centavos num rótulo de eixo são ruído, e é justamente a
-  // largura que `compact` existe para economizar. Acima de mil nada muda:
-  // 1.234.567 continua "R$ 1,23 mi".
+  // `minimumFractionDigits: 0` torna `compact` de fato compacto abaixo de mil
+  // (o padrão de 2 escreveria "R$ 600,00" num eixo); acima de mil nada muda.
   compact: (v) =>
     typeof v === "number"
       ? currencyCompactBRL(v, { minimumFractionDigits: 0 })
@@ -268,11 +208,7 @@ export function formatChartValue(value: unknown, format: ChartFormat): string {
   return CHART_FORMATTERS[format](value)
 }
 
-/**
- * O eixo comprime e o tooltip não, e isso é decisão e não descuido: um rótulo
- * de eixo precisa caber numa coluna de ~48px, e um tooltip precisa dizer o
- * centavo. `currency` no gráfico vira `compact` no eixo; o resto não muda.
- */
+/** O eixo comprime e o tooltip não: um rótulo de eixo cabe em ~48px, um tooltip diz o centavo. `currency` vira `compact` no eixo. */
 function axisFormatFor(format: ChartFormat): ChartFormat {
   return format === "currency" ? "compact" : format
 }
@@ -282,41 +218,25 @@ function axisFormatFor(format: ChartFormat): ChartFormat {
  * ---------------------------------------------------------------------- */
 
 /**
- * # O movimento do gráfico (rodadas 136 e 252)
+ * # O movimento do gráfico
  *
- * Todo gráfico **chega** e **se ajusta**: entra ao montar e interpola do
- * quadro anterior quando o dado troca — um filtro, um período, uma série
- * religada na legenda. Nenhum valor se move sem o dado mudar; o que se move é
- * a chegada e a troca.
+ * Todo gráfico chega e se ajusta: entra ao montar e interpola do quadro
+ * anterior quando o dado troca (um filtro, um período, uma série religada).
+ * Quem anima é o próprio Recharts: o `isAnimationActive` `'auto'` desliga a
+ * animação sob movimento reduzido e no SSR, e a impressão vê o gráfico pronto.
+ * Um relógio (`useChartEntering`) separa a entrada (`CHART_ENTER_MS`, séries
+ * escalonadas) da troca (`CHART_UPDATE_MS`) que vem depois.
  *
- * **Quem anima é o próprio Recharts** (rodada 252). Até ali havia três fases
- * (`pending`, `entering`, `idle`), um `IntersectionObserver` que esperava a
- * caixa rolar para a tela e uma remontagem por `key` para as marcas
- * desenharem do zero. Saiu tudo: o Recharts já anima ao montar e na troca, e o
- * `isAnimationActive` `'auto'` desliga a animação sob movimento reduzido e no
- * SSR. A impressão vê o gráfico pronto, porque nada o esconde. Um relógio
- * (`useChartEntering`) separa a entrada (`CHART_ENTER_MS`, séries escalonadas)
- * da troca (`CHART_UPDATE_MS`) que vem depois dela.
+ * As formas HTML (divisão, calendário, lista de barras, legendas) entram por
+ * `@starting-style` (`starting:`), e o bloco global de movimento reduzido corta
+ * a transição. A rosca começa em `begin: 0`: o `Pie` esperando 400ms de
+ * `animationBegin` reiniciava a animação a cada re-render e gravava o quadro
+ * anterior em t=0, deixando setores com ângulo zero (que o `Sector` não
+ * desenha). A faísca não entra, só transita.
  *
- * As formas que são HTML (a divisão, o calendário, a lista de barras, as
- * legendas) entram por `@starting-style` (`starting:`): o estilo do primeiro
- * quadro, sem fase nem estado. O bloco global de movimento reduzido corta a
- * transição.
- *
- * A rosca começa em `begin: 0`, e isso continua medido: o `Pie` esperava 400ms
- * de `animationBegin`, cada re-render dele reinicia a animação do zero, e ele
- * grava o quadro anterior já em t=0 — re-renders dentro da espera deixavam os
- * setores com ângulo zero, que o `Sector` não desenha.
- *
- * A faísca não entra: dez numa lista entrando juntas são ruído. Ela aparece
- * pronta e só transita quando o dado muda.
- *
- * ## A curva é serena no dado
- *
- * Marca de dado usa `--ease-out`, que **não passa do alvo**: uma barra nunca
- * mostra, nem por um quadro, um valor maior que o real. A mola da casa
- * (`--ease-spring`) fica para o que *aparece* — célula do calendário, rótulo,
- * legenda —, onde passar 3,8% do lugar não diz número nenhum.
+ * A curva no dado é `--ease-out`, que não passa do alvo (uma barra nunca mostra
+ * valor maior que o real); a mola da casa fica para o que aparece (célula,
+ * rótulo, legenda).
  */
 export const CHART_ENTER_MS = 500
 export const CHART_UPDATE_MS = 300
@@ -340,11 +260,9 @@ const CHART_MARK_UPDATE = {
 } as const
 
 /**
- * Se a forma ainda está entrando. Não é um observador nem uma fase: é um
- * relógio que corre do mount até o fim da entrada mais o escalonamento, e
- * depois disso toda troca de dado anima no tempo de atualização. Trocar a
- * duração **depois** do fim não reanima nada: o Recharts parte do último
- * quadro desenhado, que já é o alvo.
+ * Se a forma ainda está entrando: um relógio do mount até o fim da entrada mais
+ * o escalonamento. Trocar a duração depois do fim não reanima nada, porque o
+ * Recharts parte do último quadro, que já é o alvo.
  */
 function useChartEntering() {
   const [entrando, setEntrando] = React.useState(true)
@@ -358,11 +276,7 @@ function useChartEntering() {
   return entrando
 }
 
-/**
- * Os props de animação de uma marca: a entrada ao montar, escalonada por
- * série (`i`), e a troca depois dela. A rosca e os anéis passam `i` 0 — o
- * `begin` deles é zero (ver acima).
- */
+/** Os props de animação de uma marca: a entrada escalonada por série (`i`) e a troca depois. A rosca e os anéis passam `i` 0 (o `begin` deles é zero). */
 function chartMarkMotion(entrando: boolean, i = 0) {
   if (!entrando) return CHART_MARK_UPDATE
   return {
@@ -384,12 +298,9 @@ const CHART_TOOLTIP_MOTION = {
 const CHART_RAMP_LENGTH = 5
 
 /**
- * A rampa tem cinco degraus e não tem um sexto. Uma sexta série não é um matiz
- * novo — ela vira "Outros", e quem agrega é quem tem os dados. O que este
- * resolvedor garante é que ele **não minta**: do sexto em diante a cor é
- * `--muted-foreground`, que lê como "não identificado", em vez de repetir
- * `--chart-1` e dar duas fatias da mesma cor. O `credit-cards-history-chart`
- * fazia `BAR_COLORS[idx % 5]`, que é exatamente esse defeito, até a rodada 206.
+ * A rampa tem cinco degraus: uma sexta série vira "Outros", e quem agrega é quem
+ * tem os dados. Do sexto em diante a cor é `--muted-foreground`, para não
+ * repetir `--chart-1` e dar duas fatias da mesma cor.
  */
 export function chartSeriesColor(index: number): string {
   return index < CHART_RAMP_LENGTH
@@ -431,27 +342,13 @@ function ChartContainer({
   VariantProps<typeof chartContainerVariants> & {
     config: ChartConfig
     children: React.ComponentProps<typeof ResponsiveContainer>["children"]
-    /**
-     * O nome acessível. Um `<svg>` sem nome é anunciado como "imagem" e nada
-     * mais — a mesma medição que o `Popover` e o `resizable` já pagaram. Ele
-     * é opcional aqui porque a composição livre não pode cobrar; todas as
-     * formas curtas cobram.
-     */
+    /** O nome acessível (um `<svg>` sem nome é anunciado só como "imagem"); opcional aqui porque a composição livre não pode cobrar, mas as formas curtas cobram. */
     label?: string
     /** Uma frase sobre o que o gráfico mostra, ligada por `aria-describedby`. */
     description?: string
-    /**
-     * O que se sobrepõe ao gráfico — hoje, o `ChartDonutCenter`. Ele é prop e
-     * não irmão porque **a caixa que tem tamanho é esta**: medido, com o
-     * envelope `relative` por fora, um `ChartContainer` de 176px dentro de uma
-     * coluna larga deixava o miolo 118px à direita do centro do anel.
-     */
+    /** O que se sobrepõe ao gráfico (hoje o `ChartDonutCenter`); é prop porque a caixa que tem tamanho é esta, e com um envelope `relative` por fora o miolo saía 118px fora do centro. */
     overlay?: React.ReactNode
-    /**
-     * O gráfico **recebe** ação (barra que seleciona, recorte de período). Aí
-     * o papel deixa de ser `img` — `img` torna os filhos apresentacionais, e
-     * o que se aperta sumiria para o leitor de tela — e passa a `group`.
-     */
+    /** O gráfico recebe ação (barra que seleciona, recorte): o papel deixa de ser `img` (que torna os filhos apresentacionais) e passa a `group`. */
     interactive?: boolean
   }) {
   const uniqueId = React.useId()
@@ -481,16 +378,10 @@ function ChartContainer({
             {description}
           </span>
         ) : null}
-        {/*
-          O `ResponsiveContainer` é item de um flex, então a largura dele seria
-          automática — encolhe até o conteúdo. As dimensões explícitas mais
-          `min-w-0` tiram essa ambiguidade.
-          Elas **não** calam o aviso "The width(-1) and height(-1) of chart
-          should be greater than 0" do Recharts na primeira medição: medido, ele
-          continua saindo na carga da página e some assim que o layout assenta,
-          com os gráficos desenhando certo. É medição de primeiro quadro, não
-          defeito de caixa — e fica dito assim em vez de aparentar consertado.
-        */}
+        {/* O `ResponsiveContainer` é item de um flex e a largura seria
+            automática; as dimensões explícitas mais `min-w-0` tiram a
+            ambiguidade. O aviso "The width(-1) and height(-1)…" do Recharts na
+            primeira medição continua saindo: é medição de primeiro quadro. */}
         <ResponsiveContainer
           width="100%"
           height="100%"
@@ -513,11 +404,7 @@ function ChartContainer({
  */
 const SAFE_CHART_KEY = /^[A-Za-z0-9_-]+$/
 
-/**
- * A chave de série como nome de variável CSS. "Cartão Nubank" vira
- * "Cart-o-Nubank" em vez de ser descartada — antes a série ficava sem cor.
- * Quem escreve a cor (o `<style>`) e quem a lê (`serieColor`) passam por aqui.
- */
+/** A chave de série como nome de variável CSS ("Cartão Nubank" vira "Cart-o-Nubank"); quem escreve a cor e quem a lê (`serieColor`) passam por aqui. */
 function chartKeyToken(key: string): string {
   return key.replace(/[^A-Za-z0-9_-]/g, "-")
 }
@@ -611,11 +498,7 @@ function ChartTooltipContent({
   hideIndicator?: boolean
   /** A forma do marcador de série. Já existia e nunca tinha sido documentada. */
   indicator?: "line" | "dot" | "dashed"
-  /**
-   * Como o valor é escrito. O padrão continua `number` para não trocar por
-   * baixo o único chamador que existia antes desta rodada; as formas curtas
-   * passam `currency`, que é o que um app de finanças quer sete vezes em oito.
-   */
+  /** Como o valor é escrito; o padrão é `number`, e as formas curtas passam `currency`. */
   format?: ChartFormat
   /** O cabeçalho do tooltip, quando ele carrega uma data em vez de um rótulo. */
   labelFormat?: ChartFormat
@@ -624,11 +507,7 @@ function ChartTooltipContent({
   totalLabel?: string
   nameKey?: string
   labelKey?: string
-  /**
-   * A variação contra o ponto anterior (rodada 206): "+12% vs. fev". O
-   * tooltip só recebe o ponto ativo, então quem sabe o anterior é a série
-   * inteira — as formas a passam com a chave do eixo.
-   */
+  /** A variação contra o ponto anterior ("+12% vs. fev"); o tooltip só recebe o ponto ativo, então as formas passam a série inteira com a chave do eixo. */
   delta?: { data: Record<string, unknown>[]; x: string; xFormat?: ChartFormat }
   /** O total da rosca: cada fatia ganha a porcentagem dele ao lado do valor. */
   share?: number
@@ -680,10 +559,7 @@ function ChartTooltipContent({
     <div
       data-slot="chart-tooltip-content"
       className={cn(
-        // A placa flutuante da casa — a mesma do `Tooltip`, do `Popover` e dos
-        // menus. Era `bg-popover` opaco com `border`, a última superfície
-        // flutuante com a tinta velha: delta 0 contra o cartão onde o gráfico
-        // mora, e só a sombra a separava dele (rodada 135).
+        // A placa flutuante da casa, a mesma do `Tooltip`, do `Popover` e dos menus.
         "grid min-w-32 items-start gap-1.5 px-2.5 py-1.5 text-xs",
         menuPanelSurfaceClassName,
         className
@@ -716,9 +592,7 @@ function ChartTooltipContent({
                         className={cn(
                           "shrink-0 rounded-xs border-(--indicator-border) bg-(--indicator-bg)",
                           {
-                            // A amostra é um ponto (rodada 243), como a da
-                            // legenda e os marcadores do Calendar; o traço do
-                            // `line` e o tracejado continuam traço.
+                            // A amostra é um ponto, como a da legenda; o traço do `line` e o tracejado continuam traço.
                             "size-2 rounded-full": indicator === "dot",
                             "w-1": indicator === "line",
                             "w-0 border-[1.5px] border-dashed bg-transparent":
@@ -790,11 +664,7 @@ function ChartTooltipContent({
   )
 }
 
-/**
- * A variação contra o ponto anterior, numa linha miúda sob o valor. O sinal é
- * escrito (`+`/`−`) e a tinta é neutra: subir é bom no saldo e ruim no gasto,
- * e o tooltip não sabe qual dos dois a série é.
- */
+/** A variação contra o ponto anterior, numa linha miúda sob o valor. O sinal é escrito (`+`/`−`) e a tinta é neutra: subir é bom no saldo e ruim no gasto. */
 function ChartTooltipDelta({
   delta,
   row,
@@ -850,12 +720,7 @@ function ChartLegendContent({
   config: configProp,
 }: Omit<React.ComponentProps<"div">, "onToggle"> & {
   payload?: LegendPayloadItem[]
-  /**
-   * A legenda da rosca vive **fora** do `ChartContainer`, e por isso ela lê o
-   * contexto sem exigi-lo. Dentro do SVG o Recharts reserva a faixa da legenda
-   * encolhendo o anel — e o centro do anel deixa de ser o centro da caixa,
-   * que é onde o `ChartDonutCenter` se apoia.
-   */
+  /** A legenda da rosca vive fora do `ChartContainer` (dentro do SVG o Recharts reservaria a faixa encolhendo o anel e o centro deixaria de ser o da caixa), então lê o contexto sem exigi-lo. */
   config?: ChartConfig
   verticalAlign?: "top" | "bottom"
   /** Onde a fileira encosta. `center` é o padrão do Recharts e continua sendo. */
@@ -864,17 +729,9 @@ function ChartLegendContent({
   nameKey?: string
   /** O valor ao lado do rótulo. As três legendas à mão do app mostram um. */
   format?: ChartFormat
-  /**
-   * Clicar isola a série. `dashboard-expense-categories` já faz isso com um
-   * `<ul>` próprio de 40 linhas. Quando ligado, cada item vira `<button>` com
-   * `aria-pressed` — o estado não chega por opacidade e nada mais.
-   */
+  /** Clicar isola a série: cada item vira `<button>` com `aria-pressed`. */
   interactive?: boolean
-  /**
-   * As séries desligadas. Chama-se `hiddenSeries` e não `hidden` porque
-   * `hidden` é atributo de `<div>` — um `boolean` — e a colisão não é teórica:
-   * o `tsc` a pegou como `Type 'string[]' is not assignable to 'true'`.
-   */
+  /** As séries desligadas. Não se chama `hidden`, que é atributo de `<div>` (`boolean`) e colide no tipo. */
   hiddenSeries?: string[]
   onToggle?: (key: string) => void
 }) {
@@ -906,11 +763,9 @@ function ChartLegendContent({
       )}
     >
       {payload.map((item, index) => {
-        // Duas chaves, e confundi-las é bug medido: `nameKey` diz **em que
-        // campo do payload** está o nome, então usá-la como chave do React dá
-        // a mesma chave para todos os itens — cinco fatias de rosca com
-        // `key="nome"`, e o React reclamando de chave duplicada. A identidade
-        // do item vem do payload dele.
+        // Duas chaves: `nameKey` diz em que campo do payload está o nome, então
+        // usá-la como chave do React daria a mesma chave a todos os itens. A
+        // identidade do item vem do payload.
         const key = `${item.dataKey ?? item.value ?? index}`
         const configKey = `${nameKey ?? item.dataKey ?? item.value ?? "value"}`
         const itemConfig = getPayloadConfigFromPayload(config, item, configKey)
@@ -959,13 +814,10 @@ function ChartLegendContent({
           )
         }
 
-        // `<button>` cru, e o motivo fica escrito, como a rodada da composição
-        // pede. Vestir `Button variant="tertiary" size="xs"` exigiria quatro
-        // contra-classes — `h-auto` (o item quebra de linha na fileira e não
-        // tem altura de controle), `text-xs`, `font-normal` — mais o `<span>`
-        // de escape da maiúscula inicial do CTA, que aqui seria errada: o
-        // rótulo vem do `config` e pode ser "iFood". Quatro de quatro anuladas
-        // é reimplementar ao contrário.
+        // `<button>` cru: vestir `Button variant="tertiary" size="xs"` exigiria
+        // quatro contra-classes mais o `<span>` de escape da maiúscula inicial
+        // do CTA, que aqui seria errada (o rótulo vem do `config`, pode ser
+        // "iFood").
         return (
           <button
             key={key}
@@ -974,9 +826,8 @@ function ChartLegendContent({
             onClick={() => onToggle?.(key)}
             className={cn(
               classes,
-              // Ligar e desligar uma série é controle, e controle é cápsula
-              // (rodada 243). O realce é o chapado da casa, a tinta do texto a
-              // 8% por cima, que se vê em cartão, popover e página.
+              // Ligar e desligar uma série é controle, e controle é cápsula; o
+              // realce é o chapado da casa (tinta do texto a 8%).
               "rounded-full px-2 py-0.5 -mx-1 outline-none transition-colors duration-(--duration-fast) ease-(--ease-out)",
               "hover:bg-foreground/8 active:bg-foreground/8",
               "focus-visible:ring-3 focus-visible:ring-ring/45",
@@ -997,11 +848,7 @@ function ChartLegendContent({
  * Anatomia cartesiana
  * ---------------------------------------------------------------------- */
 
-/**
- * A grade é horizontal e recessiva. Cada tela do app escreve
- * `<CartesianGrid vertical={false} />`; aqui isso é o padrão, e a linha
- * vertical volta com `vertical`.
- */
+/** A grade é horizontal e recessiva por padrão; `vertical` traz a linha vertical. */
 function ChartGrid({
   vertical = false,
   horizontal = true,
@@ -1038,21 +885,17 @@ function ChartXAxis({
 }
 
 /**
- * O eixo de valor começa em zero, e isso é padrão e não conselho. Truncar a
- * base multiplica visualmente uma diferença de 3% — é a regra que
- * `/designsystem/chart` escreve e que nenhum eixo do app aplicava sozinho.
- * Quem tiver um caso legítimo (uma série que não cruza zero, num gráfico de
- * linha) passa `domain` e assume.
+ * O eixo de valor começa em zero por padrão: truncar a base multiplica
+ * visualmente uma diferença de 3%. Quem tiver caso legítimo (série que não
+ * cruza zero, num gráfico de linha) passa `domain` e assume.
  */
 function ChartYAxis({
   format = "compact",
   tickLine = false,
   axisLine = false,
   tickMargin = 8,
-  // `auto` e não um número: com largura fixa, um rótulo mais longo que a calha
-  // é **cortado à esquerda**. Medido a 375px, `R$ 22 mil` e `R$ 5,5 mil` saíam
-  // como `$ 22 mil` e `$ 5,5 mil` — o cifrão comido — num eixo de 56px que
-  // servia bem no desktop. O Recharts 3 calcula a calha a partir dos rótulos.
+  // `auto` e não um número: com largura fixa um rótulo mais longo que a calha é
+  // cortado à esquerda (`R$ 22 mil` saía `$ 22 mil` a 375px). O Recharts 3 calcula a calha a partir dos rótulos.
   width = "auto" as const,
   domain,
   ...props
@@ -1078,10 +921,7 @@ const chartReferenceTone = {
   zero: "var(--color-foreground)",
 } as const
 
-/**
- * A linha de referência tem tom, não cor: zero, média e neutra são três
- * papéis, e duas telas do app desenham dois deles à mão.
- */
+/** A linha de referência tem tom, não cor: zero, média e neutra são três papéis. */
 function ChartReferenceLine({
   tone = "neutral",
   strokeDasharray = "4 4",
@@ -1100,13 +940,10 @@ function ChartReferenceLine({
 }
 
 /**
- * Uma anotação no eixo do tempo (rodada 206): o fio vertical num ponto do
- * eixo X, com o rótulo no topo — "salário", "fechamento da fatura". É a
- * `ChartReferenceLine` com `x`, mais o rótulo que o Recharts desenharia preto
- * e no meio do fio. Entra como filho de qualquer forma cartesiana.
- *
- * O rótulo é texto do SVG e não chega ao leitor de tela pelo `role="img"`:
- * quem tem anotação que importa a escreve também no `description`.
+ * Uma anotação no eixo do tempo: o fio vertical num ponto do eixo X, com o
+ * rótulo no topo ("salário", "fechamento da fatura"); é a `ChartReferenceLine`
+ * com `x`. O rótulo é texto do SVG e não chega ao leitor de tela pelo
+ * `role="img"`: quem tem anotação que importa a escreve também no `description`.
  */
 function ChartAnnotation({
   x,
@@ -1156,10 +993,7 @@ type ChartFormProps = {
   format?: ChartFormat
   aspect?: VariantProps<typeof chartContainerVariants>["aspect"]
   className?: string
-  /**
-   * A legenda. O padrão é a regra, não um gosto: **duas séries ou mais sempre
-   * têm legenda; uma série nunca tem** — ali quem nomeia é o título.
-   */
+  /** A legenda: duas séries ou mais sempre têm; uma série nunca (quem nomeia é o título). */
   legend?: boolean
   tooltip?: boolean
   /** A mesma série como tabela, dentro de um `Collapsible`. */
@@ -1182,10 +1016,7 @@ function serieColor(key: string, index: number, config: ChartConfig): string {
   return chartSeriesColor(index)
 }
 
-/**
- * O casco das formas. Ele não desenha nada quando `dataTable` está
- * desligado — sem invólucro, sem `gap`, sem nó a mais na árvore.
- */
+/** O casco das formas. Não desenha nada quando `dataTable` está desligado (sem invólucro, sem `gap`, sem nó a mais). */
 function ChartFrame({
   dataTable,
   data,
@@ -1233,11 +1064,7 @@ function ChartFrame({
   )
 }
 
-/**
- * O último ponto com valor de cada série — o "hoje" de um saldo que o mês
- * ainda não terminou. Uma série do mês inteiro traz os dias futuros como
- * `null`, e o último índice do array seria o dia 30, não hoje.
- */
+/** O último ponto com valor de cada série (o "hoje" de um saldo): uma série do mês inteiro traz os dias futuros como `null`. */
 function ultimoIndiceComValor(data: Record<string, unknown>[], key: string) {
   for (let i = data.length - 1; i >= 0; i--) {
     if (data[i]?.[key] != null) return i
@@ -1248,19 +1075,12 @@ function ultimoIndiceComValor(data: Record<string, unknown>[], key: string) {
 type ChartDotProps = { cx?: number; cy?: number; index?: number }
 
 /**
- * O marcador de "hoje": o ponto de 8px da casa, com um halo que pulsa atrás.
- *
- * **É a única coisa que se move dentro de um gráfico, e é de propósito.** A
- * regra "um valor que se move enquanto a pessoa o lê é hostil" continua de
- * pé: o que pulsa aqui não é valor nenhum, é a marca do ponto em que a série
- * está agora — o precedente é o `BadgeDot pulse`, "o que acontece agora". E é
- * `animate-ping` pela mesma razão que lá: o bloco global de movimento reduzido
- * o corta, e ele não tem a desculpa do spinner.
- *
- * **`transform-box: fill-box` é carga estrutural.** Num SVG a origem de uma
- * transformação é a do sistema de coordenadas do `<svg>`, não a do círculo:
- * sem ela o `scale(2)` do ping afasta o halo em direção ao canto de baixo e à
- * direita, e ele pulsa longe do ponto.
+ * O marcador de "hoje": o ponto de 8px da casa com um halo que pulsa atrás.
+ * É a única coisa que se move num gráfico, de propósito: não é valor, é a marca
+ * do ponto em que a série está agora (como o `BadgeDot pulse`), e é
+ * `animate-ping` para o movimento reduzido cortá-lo. `transform-box: fill-box`
+ * é estrutural: num SVG a origem da transformação é a do `<svg>`, e sem ela o
+ * `scale(2)` afasta o halo do ponto.
  */
 function ChartMarkerDot({
   cx,
@@ -1292,10 +1112,7 @@ function ChartMarkerDot({
   )
 }
 
-/**
- * O `dot` de uma série com `marker="last"`: o marcador no último ponto com
- * valor, e nos outros o ponto comum (`dots="all"`) ou nada.
- */
+/** O `dot` de uma série com `marker="last"`: o marcador no último ponto com valor, e nos outros o ponto comum (`dots="all"`) ou nada. */
 function chartMarkerDot(ultimo: number, color: string, todos: boolean) {
   function MarkerDot({ cx, cy, index }: ChartDotProps) {
     if (cx == null || cy == null) return <g />
@@ -1323,10 +1140,9 @@ function tracejada(config: ChartConfig, key: string) {
 }
 
 /**
- * O recorte de período (rodada 206), para série longa: a faixa de baixo
- * escolhe o trecho, e o gráfico desenha só ele. `true` abre nos últimos 12
- * pontos; um número abre nos últimos N. É o `Brush` do Recharts com a
- * moldura e o fundo dos tokens — o texto e as alças vêm do `ChartContainer`.
+ * O recorte de período, para série longa: a faixa de baixo escolhe o trecho e o
+ * gráfico desenha só ele (`true` abre nos últimos 12 pontos; um número, nos
+ * últimos N). É o `Brush` do Recharts com moldura e fundo dos tokens.
  */
 function chartBrush(
   data: Record<string, unknown>[],
@@ -1614,13 +1430,7 @@ function ChartLine({
 /** Maior que qualquer meia barra: o Recharts o reduz ao que cabe. */
 const CHART_PILL_RADIUS = 999
 
-/**
- * O rótulo ativo do tooltip, publicado para fora do SVG. É o que liga a
- * seleção de barra ao teclado: o `accessibilityLayer` anda pelas barras com
- * as setas movendo o tooltip, e o Enter do contêiner seleciona o rótulo que
- * este componente leu. Precisa morar **dentro** do gráfico — o gancho lê o
- * estado do Recharts.
- */
+/** O rótulo ativo do tooltip, publicado para fora do SVG: liga a seleção de barra ao teclado (o Enter do contêiner seleciona o rótulo lido aqui). Mora dentro do gráfico porque o gancho lê o estado do Recharts. */
 function ChartActiveLabel({ onChange }: { onChange: (label: unknown) => void }) {
   const ativo = useActiveTooltipLabel()
   React.useEffect(() => {
@@ -1632,26 +1442,13 @@ function ChartActiveLabel({ onChange }: { onChange: (label: unknown) => void }) 
 /** O apagado do que não está selecionado — o mesmo degrau da divisão. */
 const CHART_DIM_OPACITY = 0.35
 
-/**
- * O apagado do que não está sob o cursor (rodada 243): as outras barras
- * recuam e a do cursor fica — no lugar do retângulo cinza do Recharts por
- * trás da coluna, que era um segundo objeto para dizer "esta". Mais leve que o
- * da seleção, porque é passagem e não escolha.
- */
+/** O apagado do que não está sob o cursor: as outras barras recuam e a do cursor fica (no lugar do retângulo cinza do Recharts). Mais leve que o da seleção, porque é passagem e não escolha. */
 const CHART_HOVER_DIM_OPACITY = 0.45
 
-/**
- * Com uma barra escolhida, a do cursor (ou do teclado) fica no meio do
- * caminho: sem o retângulo do Recharts, apagada como as outras ela não tinha
- * marca nenhuma além da dica.
- */
+/** Com uma barra escolhida, a do cursor (ou do teclado) fica no meio do caminho; sem o retângulo do Recharts, apagada ela não teria marca além da dica. */
 const CHART_HOVER_OVER_SELECTION_OPACITY = 0.7
 
-/**
- * A ponta da barra (rodada 243): 8px, e a base reta. O Recharts limita o raio
- * à meia largura, então uma barra fina sai com a ponta em cápsula sozinha.
- * Era 4, e ao lado dos cantos novos da casa a barra lia como quase reta.
- */
+/** A ponta da barra: 8px e base reta. O Recharts limita o raio à meia largura, então uma barra fina sai com ponta de cápsula sozinha. */
 const CHART_BAR_TIP = 8
 
 function ChartBars({
@@ -1679,49 +1476,24 @@ function ChartBars({
   delta = false,
   children,
 }: ChartFormProps & {
-  /**
-   * Barras com sinal (rodada 206): o saldo mês a mês cruzando o zero. Acima,
-   * `--chart-income`; abaixo, `--chart-expense`; e a linha do zero desenhada,
-   * porque o lado dela é o segundo canal — cor não é o único. O eixo de valor
-   * passa a incluir o negativo. Uma série.
-   */
+  /** Barras com sinal (saldo cruzando o zero): acima `--chart-income`, abaixo `--chart-expense`, com a linha do zero desenhada (cor não é o único canal). Uma série. */
   signed?: boolean
   /** O valor escrito na ponta de cada barra, comprimido como o eixo. Empilhado, o total. */
   valueLabels?: boolean
   /** O valor de `x` da barra selecionada. As outras apagam. */
   selected?: string | null
-  /**
-   * Clicar numa barra a seleciona, e clicar de novo solta (`null`). Pelo
-   * teclado: as setas andam pelas barras e Enter seleciona. Com ele, o
-   * gráfico é `role="group"` e anuncia a seleção numa região viva.
-   */
+  /** Clicar seleciona e clicar de novo solta (`null`); pelo teclado, setas andam e Enter seleciona. Com ele o gráfico é `role="group"` e anuncia a seleção numa região viva. */
   onSelect?: (x: string | null) => void
   /** O tooltip mostra a variação contra o ponto anterior. */
   delta?: boolean
   x: string
   xFormat?: ChartFormat
-  /**
-   * `vertical` são barras que sobem (o padrão); `horizontal` são barras que
-   * correm para a direita, que é a forma de um ranking de categorias com nome
-   * comprido. Barra horizontal no Recharts precisa do eixo de categoria
-   * declarado — sem ele todas as barras caem na mesma posição —, e é o que
-   * esta peça faz por quem chama.
-   */
+  /** `vertical` (padrão) sobe; `horizontal` corre para a direita (ranking de nomes compridos); o Recharts precisa do eixo de categoria declarado, o que esta peça faz. */
   layout?: "vertical" | "horizontal"
   stacked?: boolean
-  /**
-   * `rounded` arredonda só a ponta (o padrão, e a regra da base reta abaixo).
-   * `pill` arredonda o segmento inteiro — a barra deixa de encostar na linha
-   * do zero e passa a ler como **peça**, que é o desenho de quem mostra poucas
-   * colunas sem eixo Y. No empilhado cada segmento vira uma pílula solta, e o
-   * vão de 2px pintado com `--chart-surface` continua sendo quem as separa.
-   */
+  /** `rounded` (padrão) arredonda só a ponta; `pill` arredonda o segmento inteiro e lê como peça (poucas colunas sem eixo Y), com o vão de 2px em `--chart-surface` entre os segmentos. */
   shape?: "rounded" | "pill"
-  /**
-   * O trilho: a coluna inteira em `--muted` atrás da barra, até o máximo do
-   * eixo. Ele mostra o espaço que sobra — quanto falta para o maior mês —, e é
-   * a primeira série que o desenha, senão o empilhado pintaria um por segmento.
-   */
+  /** O trilho: a coluna inteira em `--muted` atrás da barra, até o máximo do eixo; só a primeira série o desenha. */
   track?: boolean
 }) {
   const entrando = useChartEntering()
@@ -1757,11 +1529,9 @@ function ChartBars({
     const chave = String(valor)
     onSelect(chave === selected ? null : chave)
   }
-  // O eixo de valor inclui o negativo: com sinal, a base `[0, auto]` cortaria
-  // os meses no vermelho fora do gráfico. `auto` nos dois lados, e não funções
-  // de mínimo e máximo: com funções o Recharts não arredonda, e o eixo saía
-  // com degraus de `−R$ 20` e `R$ 1,18 mil`. Quem garante o zero no domínio é
-  // a linha do zero, com `ifOverflow="extendDomain"`.
+  // O eixo de valor inclui o negativo (a base `[0, auto]` cortaria os meses no
+  // vermelho). `auto` nos dois lados e não funções: com funções o Recharts não
+  // arredonda. A linha do zero garante o zero com `ifOverflow="extendDomain"`.
   const dominioComSinal = ["auto", "auto"]
   const corDaBarra = (key: string, i: number, linha: Record<string, unknown>) =>
     signed
@@ -1848,8 +1618,7 @@ function ChartBars({
           {tooltip ? (
             <ChartTooltip
               {...CHART_TOOLTIP_MOTION}
-              // Sem o retângulo por trás da coluna: quem marca a categoria é
-              // a própria barra, com as outras apagando (rodada 243).
+              // Sem o retângulo por trás da coluna: quem marca a categoria é a própria barra, com as outras apagando.
               cursor={false}
               content={
                 <ChartTooltipContent
@@ -1880,10 +1649,9 @@ function ChartBars({
                 track && i === 0
                   ? {
                       fill: "var(--color-muted)",
-                      // O tipo do `background` diz `number`, mas quem o
-                      // desenha é o mesmo `Rectangle` da barra, que aceita os
-                      // quatro cantos — e o trilho precisa da base reta da
-                      // barra, senão os cantos dela sobram para fora dele.
+                      // O tipo do `background` diz `number`, mas quem o desenha é
+                      // o mesmo `Rectangle` da barra (aceita os quatro cantos), e
+                      // o trilho precisa da base reta dela.
                       radius: (pilula ?? pontaRaio) as number,
                     }
                   : undefined
@@ -1936,12 +1704,7 @@ function ChartBars({
 
 const chartDonutThickness = { sm: 0.72, md: 0.62, lg: 0.48 } as const
 
-/**
- * A fatia sob o tooltip, publicada para fora do SVG — é o que acende a rosca
- * ativa pelo ponteiro **e** pelo teclado, porque o `accessibilityLayer` move
- * o mesmo tooltip. O ponto chega como o Recharts o guarda; o nome é o que
- * casa com a linha de `data`.
- */
+/** A fatia sob o tooltip, publicada para fora do SVG: acende a rosca ativa pelo ponteiro e pelo teclado (o `accessibilityLayer` move o mesmo tooltip). */
 function ChartActiveSlice({
   nameKey,
   onChange,
@@ -1959,18 +1722,11 @@ function ChartActiveSlice({
 }
 
 /**
- * O medidor tem geometria própria, e ela saiu de três medidas.
- *
- * **O arco era grosso demais para o número.** Com o anel da rosca (raio interno
- * 62% do máximo), a corda interna no topo do texto media **42px** e `76%` já
- * ocupava 43 — encostava. `100%` invadiria. Um medidor é convencionalmente um
- * arco fino: o miolo dele é o número, não uma reserva.
- *
- * **E a caixa era quase metade vazia.** O Recharts centraliza o círculo
- * inteiro, então um meio-arco num quadrado deixava **68px mortos embaixo** —
- * era esse vazio, e não um `gap`, que afastava a legenda das outras formas.
- * `cy` a 86% encosta o arco na base, e o raio passa de 130% do máximo, que o
- * Recharts aceita: a caixa deixa de ser quadrada e o arco cresce nela.
+ * O medidor tem geometria própria: o arco é fino (com o anel da rosca, 62% de
+ * raio interno, a corda interna media 42px e `76%` já ocupava 43) e a caixa não
+ * é quadrada. O Recharts centraliza o círculo inteiro, deixando 68px mortos
+ * embaixo de um meio-arco; `cy` a 86% encosta o arco na base, e o raio passa de
+ * 130% do máximo, que o Recharts aceita.
  */
 const chartGaugeThickness = { sm: 0.86, md: 0.78, lg: 0.66 } as const
 
@@ -2001,32 +1757,15 @@ function ChartDonut({
   onActiveChange,
   children,
 }: Omit<ChartFormProps, "series" | "legend"> & {
-  /**
-   * A fatia acesa, pelo nome (`nameKey`), quando quem chama tem a própria
-   * lista — a da fatura, em que cada linha é um link e a lista do componente
-   * não serve. Com ela, a tela acende a fatia pousando na linha dela.
-   */
+  /** A fatia acesa pelo nome (`nameKey`), para quem tem a própria lista (a da fatura, de links). */
   active?: string | null
   /** A fatia que o ponteiro ou o teclado acendeu no gráfico, para a tela acender a linha. */
   onActiveChange?: (nome: string | null) => void
-  /**
-   * `true` é a fileira embaixo (o padrão a partir de duas fatias); `list` é a
-   * lista ao lado do anel (rodada 206), com o valor e a porcentagem de cada
-   * fatia — a que o dashboard de categorias escrevia à mão. Abaixo de `sm` ela
-   * desce para baixo do anel.
-   */
+  /** `true` é a fileira embaixo (padrão a partir de duas fatias); `list` é a lista ao lado do anel, com valor e porcentagem (desce abaixo do anel em `sm`). */
   legend?: boolean | "list"
-  /**
-   * Os cortes de aviso e perigo, só no `gauge` (rodada 206): o arco usado
-   * pinta o **estado** — os mesmos tokens e cortes do `Progress` e dos anéis
-   * — e o resto vira o trilho em `--muted`. Sem eles, o medidor pinta a rampa.
-   */
+  /** Os cortes de aviso e perigo, só no `gauge`: o arco usado pinta o estado (mesmos tokens e cortes do `Progress`) e o resto vira o trilho em `--muted`. */
   bands?: ProgressBands
-  /**
-   * `donut` deixa o miolo livre para o total (é a forma dos três donuts do
-   * app); `pie` fecha o miolo; `gauge` é o meio-círculo de progresso contra
-   * um teto — orçamento consumido, limite de cartão.
-   */
+  /** `donut` deixa o miolo livre para o total; `pie` fecha o miolo; `gauge` é o meio-círculo de progresso contra um teto (orçamento, limite de cartão). */
   variant?: "donut" | "pie" | "gauge"
   thickness?: keyof typeof chartDonutThickness
   nameKey: string
@@ -2053,8 +1792,7 @@ function ChartDonut({
   const mostrarLegenda = legend ?? data.length >= 2
   const emLista = legend === "list"
 
-  // A rosca ativa (rodada 206): o tooltip (ponteiro e teclado) e a lista
-  // acendem uma fatia, as outras apagam, e o miolo passa a mostrá-la.
+  // A rosca ativa: o tooltip (ponteiro e teclado) e a lista acendem uma fatia, as outras apagam, e o miolo passa a mostrá-la.
   const [ativoGrafico, setAtivoGraficoLocal] = React.useState<string | null>(null)
   const [ativoLista, setAtivoLista] = React.useState<number | null>(null)
   const setAtivoGrafico = React.useCallback(
@@ -2087,9 +1825,7 @@ function ChartDonut({
         : "var(--color-muted)"
       : serieColor(chaves[i], i, config)
 
-  // Quem chama escreve `<ChartDonutCenter value="76%" />` sem saber que o
-  // medidor ancora diferente: a variante é do `ChartDonut`, então é ele que
-  // injeta. Mesmo recurso que o `Button` e o `Stepper` usam com `asChild`.
+  // A variante é do `ChartDonut`, então é ele que a injeta no `ChartDonutCenter` (quem escreve o rótulo não decide o medidor).
   const centroFixo =
     medidor && React.isValidElement<{ align?: "center" | "gauge" }>(center)
       ? React.cloneElement(center, { align: "gauge" })
@@ -2106,11 +1842,9 @@ function ChartDonut({
       centroFixo
     )
 
-  // A legenda da rosca é HTML ao lado do gráfico, e não a `<Legend>` do
-  // Recharts. Dentro do SVG ela reserva espaço encolhendo o anel, e o centro
-  // do anel deixa de coincidir com o centro da caixa — que é exatamente onde o
-  // `ChartDonutCenter` se apoia. Fora, o anel fica centrado e a fileira ganha
-  // quebra de linha de verdade.
+  // A legenda é HTML ao lado do gráfico, e não a `<Legend>` do Recharts: dentro
+  // do SVG ela reserva espaço encolhendo o anel e o centro deixa de coincidir
+  // com o da caixa, onde o `ChartDonutCenter` se apoia.
   const legendaPayload = React.useMemo(
     () =>
       data.map((linha, i) => ({
@@ -2137,18 +1871,10 @@ function ChartDonut({
       xLabel="Categoria"
       format={format}
     >
-      {/*
-        `items-center` centra o anel sobre a legenda. Sem ele o alinhamento é
-        `stretch`, e como o `ChartContainer` tem largura própria ele encosta na
-        esquerda de uma caixa que a legenda define: medido, uma rosca de 208px
-        dentro de um envelope de 412 saía **102px fora do centro** da própria
-        legenda. O medidor escondia isso, porque a legenda de dois itens é mais
-        estreita que o anel.
-
-        `w-fit` fica: ele é `fit-content`, que respeita o espaço disponível,
-        então a legenda continua quebrando linha no telefone em vez de esticar
-        o envelope.
-      */}
+      {/* `items-center` centra o anel sobre a legenda (com `stretch` ele
+          encostava na esquerda: 102px fora do centro). `w-fit` respeita o
+          espaço disponível, então a legenda quebra linha no telefone em vez de
+          esticar o envelope. */}
       <div
         className={cn(
           "flex flex-col items-center",
@@ -2175,9 +1901,8 @@ function ChartDonut({
                     ? chartGaugeThickness[thickness]
                     : chartDonutThickness[thickness]) * 100
               )}%`,
-              // Onde o rótulo do medidor se apoia: 5 pontos acima da origem do
-              // arco. `bottom` em porcentagem resolve contra a **altura**, e é
-              // isso que faz esta âncora não depender da proporção da caixa.
+              // O rótulo do medidor se apoia 5 pontos acima da origem do arco;
+              // `bottom` em porcentagem resolve contra a altura, sem depender da proporção da caixa.
               "--chart-donut-label-b": `${100 - CHART_GAUGE_CY + 5}%`,
             } as React.CSSProperties
           }
@@ -2234,8 +1959,7 @@ function ChartDonut({
                 key={chaves[i] || i}
                 data-active={ativo === i || undefined}
                 className={cn(
-                  // A linha da lista veste o degrau linha (rodada 243), com
-                  // 28px de altura: a 24, 12 era a metade e ela saía pílula.
+                  // A linha da lista veste o degrau linha, com 28px: a 24, 12 era a metade e saía pílula.
                   "flex items-center gap-2 rounded-row px-2 py-1.5",
                   "transition-[opacity,background-color] duration-(--duration-base) ease-(--ease-out)",
                   ativo === i && "bg-muted",
@@ -2285,14 +2009,10 @@ type ChartDonutCenterValue =
   | { value?: never; amount: number; format?: ChartFormat }
 
 /**
- * O miolo da rosca. Ele chega pelo prop `center` e **não** pelos `children`,
- * porque `children` desce para dentro do `<PieChart>`, que é SVG: uma `<div>`
- * ali não renderiza. O `ChartDonut` o entrega ao `overlay` do
- * `ChartContainer`, que é a caixa que tem tamanho — ver a nota lá.
- *
- * A escada de corpo por comprimento do valor está hoje duplicada em dois
- * arquivos do app e ausente num terceiro, que trunca. `R$ 1.284,60` e
- * `R$ 128.400,00` não cabem na mesma medida dentro de um furo de rosca.
+ * O miolo da rosca. Chega pelo prop `center` e não por `children`, que desce
+ * para dentro do `<PieChart>` (SVG, onde uma `<div>` não renderiza); o
+ * `ChartDonut` o entrega ao `overlay` do `ChartContainer`, a caixa que tem
+ * tamanho.
  */
 function ChartDonutCenter({
   value,
@@ -2311,30 +2031,15 @@ function ChartDonutCenter({
    */
   align?: "center" | "gauge"
 }) {
-  // O corpo é conta, e não escada de faixas — as faixas mentiam de dois jeitos.
-  // Por não conhecerem a caixa: `R$ 3.510,00` cabe folgado numa rosca de 300px
-  // e transborda numa de 176. E por suporem que o texto quebra: o `Intl`
-  // separa `R$` do número com espaço **inseparável**, então `text-balance` e
-  // `max-width` não fazem nada — medido, 145px de texto dentro de um furo de
-  // 109, numa linha só, por cima do anel.
-  //
-  // A conta: o furo mede `--chart-donut-hole` da caixa (62% no degrau padrão),
-  // a face mono avança ~0,6em por caractere, logo cabe
-  // `62 / (0,6 × n)` ≈ `103 / n` por cento da caixa. O 88 é isso com folga —
-  // medido depois, 93px de texto num furo de 109, 8px de cada lado. A 96 cabia
-  // pela conta e encostava no anel à vista, que é a diferença entre passar e
-  // ficar bom.
-  //
-  // O 0,6 custou uma medição errada antes: uma sonda que clonava o `<span>`
-  // para fora do contexto de container query lia `cqw` como inválido, media a
-  // fonte herdada e reportava 0,75em. A constante saiu 20% pequena demais e o
-  // número da rosca encolheu à vista. Quando a medida contraria o mecanismo,
-  // o instrumento é o primeiro suspeito.
-  //
-  // Vai em `style` e não em classe porque **classe montada em tempo de
-  // execução não existe** — o Tailwind varre o código como texto.
-  // Com `amount`, a medida sai do texto **final**: a contagem passa por
-  // valores mais curtos, e o corpo não pode encolher e crescer junto.
+  // O corpo é conta, e não escada de faixas, que não conheceriam a caixa
+  // (`R$ 3.510,00` cabe numa rosca de 300px e transborda numa de 176) e supõem
+  // que o texto quebra (o `Intl` separa `R$` com espaço inseparável, então
+  // `text-balance` e `max-width` não agem). O furo mede `--chart-donut-hole`
+  // da caixa (62%), a face mono avança ~0,6em por caractere, logo cabe
+  // `62 / (0,6 × n)` ≈ `103 / n` por cento; o 88 é isso com folga (a 96 cabia
+  // e encostava no anel). Em `style` e não em classe: classe montada em tempo
+  // de execução não existe para o Tailwind. Com `amount`, a medida sai do texto
+  // final, para o corpo não encolher e crescer junto na contagem.
   const texto = amount != null ? formatChartValue(amount, format) : (value ?? "")
   const corpo = `min(1.5rem, ${(88 / Math.max(texto.length, 1)).toFixed(2)}cqw)`
 
@@ -2374,16 +2079,13 @@ function ChartDonutCenter({
   )
 }
 
-/* -------------------------------------------------------------------------
- * As formas da rodada 135 — divisão, anéis, calendário e perfil
- * ---------------------------------------------------------------------- */
+/* As formas de divisão, anéis, calendário e perfil */
 
 /**
- * A raiz das formas que são HTML e não SVG (`ChartSplit`, `ChartHeatmap`).
- * Elas não passam pelo `ChartContainer` porque ele embrulha os filhos num
- * `ResponsiveContainer`, que só sabe medir um gráfico do Recharts. O que elas
- * precisam dele é o resto: o escopo `data-chart` com as `--color-<chave>` do
- * `config`, o contexto e o nome acessível.
+ * A raiz das formas que são HTML e não SVG (`ChartSplit`, `ChartHeatmap`): elas
+ * não passam pelo `ChartContainer` (o `ResponsiveContainer` só mede gráfico do
+ * Recharts), mas precisam do escopo `data-chart` com as `--color-<chave>` do
+ * `config`, do contexto e do nome acessível.
  */
 function ChartHtmlRoot({
   config,
@@ -2425,19 +2127,11 @@ function ChartHtmlRoot({
 }
 
 /**
- * O número que conta: de 0 na entrada, do valor anterior na troca. É o que
- * faz o olho seguir uma mudança de filtro — o miolo da rosca, os `%` dos
- * anéis e da divisão.
- *
- * **Ele escreve por `ref`, e não por estado**: um re-render por quadro, em
- * cada número de uma página de gráficos, é trabalho que ninguém vê. E o `span`
- * que conta **não tem filho do React** — trocar `textContent` de um nó que o
- * React acha que é dele troca o nó de texto por baixo, e a desmontagem depois
- * tenta remover um filho que não existe mais.
- *
- * A caixa é reservada pelo valor **final**, num irmão invisível na mesma
- * célula da grade, e o leitor de tela ouve só o final (`sr-only`): os
- * intermediários são `aria-hidden`.
+ * O número que conta: de 0 na entrada, do valor anterior na troca. Escreve por
+ * `ref` e não por estado (um re-render por quadro seria trabalho invisível), e o
+ * `span` que conta não tem filho do React (trocar `textContent` de um nó que o
+ * React acha dele quebra a desmontagem). A caixa é reservada pelo valor final
+ * num irmão invisível, e o leitor de tela ouve só o final (`sr-only`).
  */
 function ChartNumber({
   value,
@@ -2477,11 +2171,7 @@ function ChartNumber({
   )
 }
 
-/**
- * Porcentagens inteiras que **somam 100**, pelo maior resto. Arredondar cada
- * parte sozinha escreve "33% · 33% · 33%" para três terços, e numa divisão de
- * um total a soma exibida é a primeira coisa que a pessoa confere.
- */
+/** Porcentagens inteiras que somam 100, pelo maior resto (arredondar cada parte daria "33% · 33% · 33%" para três terços). */
 export function splitPercents(values: number[]): number[] {
   const positivos = values.map((v) => (Number.isFinite(v) && v > 0 ? v : 0))
   const total = positivos.reduce((acc, v) => acc + v, 0)
@@ -2501,39 +2191,22 @@ export function splitPercents(values: number[]): number[] {
   return inteiros
 }
 
-/**
- * O comprimento de um segmento da divisão é **dado**: na troca ele
- * transiciona em `--ease-out`, que não passa do alvo. O esmaecer do hover
- * divide a mesma transição.
- */
+/** O comprimento de um segmento da divisão é dado: na troca transiciona em `--ease-out`, que não passa do alvo; o esmaecer do hover divide a mesma transição. */
 const chartSplitGrowClassName =
   "transition-[flex-grow,opacity] duration-(--duration-slow) ease-(--ease-out)"
 
-/**
- * A entrada da divisão é uma **revelação da esquerda**, e não o `flex-grow`
- * subindo de 0 — medido: todos os segmentos crescendo juntos a partir de zero
- * mantêm a mesma proporção entre si a cada quadro, e a barra saía pronta no
- * primeiro. É a entrada da área do Recharts, em CSS.
- */
+/** A entrada da divisão é uma revelação da esquerda, e não o `flex-grow` subindo de 0 (todos crescendo juntos mantêm a proporção e a barra saía pronta no primeiro quadro). */
 const chartSplitRevealClassName =
   "[clip-path:inset(0)] transition-[clip-path] duration-(--duration-spring) ease-(--ease-out) starting:[clip-path:inset(0_100%_0_0)]"
 
-/**
- * O que **aparece** — rótulo, legenda, item de lista — sobe 4px e acende na
- * mola da casa. Não é dado, então passar 3,8% do lugar não mente nada.
- */
+/** O que aparece (rótulo, legenda, item de lista) sobe 4px e acende na mola da casa; não é dado. */
 const chartRiseClassName =
   "transition-[opacity,translate] duration-(--duration-spring) ease-(--ease-spring) starting:translate-y-1 starting:opacity-0"
 
 /** Abaixo disto o segmento não cabe o próprio rótulo, e ele vai para a legenda. */
 const CHART_SPLIT_LABEL_MIN = 12
 
-/**
- * A divisão de um total em duas a quatro partes, numa barra só. É a forma
- * certa quando a pergunta é "quanto de cada" e as partes são poucas: a rosca
- * responde o mesmo gastando um quadrado inteiro, e com duas fatias ela é um
- * círculo cortado ao meio.
- */
+/** A divisão de um total em duas a quatro partes numa barra só: a forma certa para "quanto de cada" com poucas partes (a rosca gastaria um quadrado inteiro). */
 function ChartSplit({
   labels = "below",
   nameKey,
@@ -2548,12 +2221,7 @@ function ChartSplit({
 }: Omit<ChartFormProps, "series" | "aspect" | "legend" | "tooltip" | "children"> & {
   nameKey: string
   dataKey: string
-  /**
-   * `below` escreve nome e porcentagem sob o começo de cada segmento; o que
-   * tem menos de 12% não cabe e cai para uma legenda embaixo, sozinho.
-   * `legend` põe todos numa legenda só — para quando o título do cartão já
-   * carrega o veredito e a barra é o detalhe.
-   */
+  /** `below` escreve nome e porcentagem sob o começo de cada segmento (o que tem menos de 12% cai para uma legenda embaixo); `legend` põe todos numa legenda só. */
   labels?: "below" | "legend"
 }) {
   const [ativo, setAtivo] = React.useState<number | null>(null)
@@ -2599,8 +2267,7 @@ function ChartSplit({
                   chartSplitGrowClassName,
                   ativo !== null && ativo !== i && "opacity-35"
                 )}
-                // `flex-grow` com o valor cru, e não a porcentagem arredondada:
-                // o comprimento é a medida exata, o texto é que arredonda.
+                // `flex-grow` com o valor cru: o comprimento é a medida exata, o texto é que arredonda.
                 style={{
                   flex: `${valores[i]} 1 0`,
                   backgroundColor: cores[i],
@@ -2660,12 +2327,7 @@ function ChartSplit({
   )
 }
 
-/**
- * A cor de um anel. Com `bands` ela diz **estado** — dentro, perto, estourou —
- * e por isso usa os tokens de estado e não a rampa: é o único gráfico da casa
- * em que verde e vermelho significam o que significam, e a invariante 3 fica
- * do lado certo. Sem `bands`, a cor só identifica a categoria.
- */
+/** A cor de um anel. Com `bands` diz estado (tokens de estado, não a rampa): o único gráfico em que verde e vermelho significam o que significam. Sem `bands` só identifica a categoria. */
 export function chartRadialColor(
   pct: number,
   bands: ProgressBands | undefined,
@@ -2675,12 +2337,7 @@ export function chartRadialColor(
   return `var(--color-${progressToneForBands(pct, bands)})`
 }
 
-/**
- * Anéis concêntricos, um por categoria, cada um contra o próprio teto — o
- * orçamento do mês por categoria. É o `Progress` dobrado em círculo: mesmo
- * trilho, mesmos cortes (`BUDGET_BANDS`), o mesmo estouro que enche e fica
- * vermelho. Cinco anéis no máximo, pela regra da sexta série.
- */
+/** Anéis concêntricos, um por categoria contra o próprio teto: o `Progress` dobrado em círculo (mesmos cortes `BUDGET_BANDS`, mesmo estouro). Cinco no máximo. */
 function ChartRadial({
   bands,
   nameKey,
@@ -2813,12 +2470,7 @@ function ChartRadial({
   )
 }
 
-/**
- * Os degraus do calendário, de 0 a 4. Zero é sempre o dia sem movimento; os
- * outros quatro são os quartis **dos dias com valor**. Uma escala linear até o
- * máximo deixaria o mês inteiro no primeiro degrau por causa de um dia só —
- * o do aluguel.
- */
+/** Os degraus do calendário, de 0 a 4: zero é o dia sem movimento e os outros quatro são os quartis dos dias com valor (uma escala linear até o máximo deixaria o mês no primeiro degrau por causa do aluguel). */
 export function chartHeatLevels(values: number[]): number[] {
   const comValor = values.filter((v) => v > 0).sort((a, b) => a - b)
   if (!comValor.length) return values.map(() => 0)
@@ -2835,15 +2487,11 @@ export function chartHeatLevels(values: number[]): number[] {
 }
 
 /**
- * Os cinco degraus, escritos por extenso: classe montada em tempo de execução
- * não existe, o Tailwind varre o código como texto. O tom entra por
- * `--chart-heat`, que a variante publica, e o degrau só mistura mais ou menos
- * dele sobre `--muted` — o mesmo leito do trilho das barras e dos anéis.
- *
- * **A mistura é em `oklab`, não em `oklch`**, e foi medido: `--muted` é cinza
- * com matiz 0, e em `oklch` a interpolação de matiz parte do verde (152) em
- * direção ao 0 — os degraus do meio de `income` saíam **marrons e oliva**. Em
- * `oklab` não há matiz a interpolar: o degrau só perde croma rumo ao cinza.
+ * Os cinco degraus, escritos por extenso (o Tailwind varre o código como
+ * texto). O tom entra por `--chart-heat`, e o degrau mistura mais ou menos dele
+ * sobre `--muted`. A mistura é em `oklab` e não em `oklch`: `--muted` é cinza
+ * de matiz 0, e em `oklch` a interpolação partia do verde (152) para o 0, com
+ * os degraus do meio de `income` saindo marrons e oliva.
  */
 const CHART_HEAT_LEVEL = [
   "bg-muted",
@@ -2857,12 +2505,7 @@ const chartHeatmapVariants = cva(
   "flex w-full flex-col gap-2 [--heat-cell:calc(var(--spacing)*3)]",
   {
     variants: {
-      /**
-       * A intensidade é **dinheiro**, e o tom diz de que lado: `expense` para
-       * o ritmo de gasto, `income` para o de entrada. Não há tom neutro — a
-       * rampa de identidade não é sequencial, e cinco degraus de uma cor de
-       * série diriam "categoria", não "quanto".
-       */
+      /** A intensidade é dinheiro e o tom diz de que lado: `expense` para o ritmo de gasto, `income` para o de entrada; não há tom neutro (cinco degraus de uma cor de série diriam "categoria"). */
       tone: {
         expense: "[--chart-heat:var(--color-chart-expense)]",
         income: "[--chart-heat:var(--color-chart-income)]",
@@ -2879,13 +2522,7 @@ const chartHeatmapVariants = cva(
 /** Quanto a onda da entrada leva para cruzar o calendário, qualquer largura. */
 const CHART_HEAT_SWEEP_MS = 400
 
-/**
- * A célula **aparece** ao montar (opacidade e escala, na mola, por
- * `@starting-style`) — o degrau dela não cresce, então não há valor para a
- * mola exagerar. A troca de filtro só muda a cor do degrau, no ritmo da
- * atualização. Cada propriedade tem a própria transição: a onda
- * (`--heat-delay`, por coluna) atrasa só a entrada, e a cor muda junta.
- */
+/** A célula aparece ao montar (opacidade e escala na mola, por `@starting-style`); a troca de filtro só muda a cor do degrau. Cada propriedade tem a própria transição: a onda (`--heat-delay`, por coluna) atrasa só a entrada. */
 const chartHeatCellClassName =
   "[transition:opacity_var(--duration-spring)_var(--ease-spring)_var(--heat-delay,0ms),scale_var(--duration-spring)_var(--ease-spring)_var(--heat-delay,0ms),background-color_var(--duration-slow)_var(--ease-out)] starting:scale-50 starting:opacity-0"
 
@@ -2896,12 +2533,10 @@ const CHART_HEAT_WEEKDAYS = ["", "seg", "", "qua", "", "sex", ""] as const
 type ChartHeatmapDay = { date: string; value: number }
 
 /**
- * O ritmo por dia — o calendário de gasto. Cada coluna é uma semana, cada
- * linha um dia da semana, e a tinta sobe em cinco degraus do tom de dinheiro.
- *
- * **As células não são focáveis**, de propósito: um ano são 365 paradas de
- * `Tab`, e isso é hostil. O caminho completo por teclado e leitor de tela é o
- * `dataTable`; o nome acessível resume o total e o dia de pico.
+ * O ritmo por dia (calendário de gasto): cada coluna uma semana, cada linha um
+ * dia da semana, em cinco degraus do tom de dinheiro. As células não são
+ * focáveis (365 paradas de `Tab` seriam hostis); o caminho por teclado e leitor
+ * de tela é o `dataTable`, e o nome acessível resume o total e o dia de pico.
  */
 function ChartHeatmap({
   data,
@@ -2945,8 +2580,7 @@ function ChartHeatmap({
       dias.slice(s * 7, s * 7 + 7).map((dia, d) => (dia ? { ...dia, nivel: niveis[s * 7 + d] } : null))
     )
 
-    // Um rótulo de mês onde o mês da coluna muda — e só se houver três colunas
-    // de espaço desde o anterior, senão "ago" e "set" se sobrepõem.
+    // Um rótulo de mês onde o mês da coluna muda, e só se houver três colunas de espaço desde o anterior.
     const meses: { coluna: number; nome: string }[] = []
     let anterior = -1
     colunas.forEach((col, s) => {
@@ -2980,10 +2614,9 @@ function ChartHeatmap({
     }
   }, [data, end, format, semanas])
 
-  // O ano não cabe no telefone: a grade rola, e abre rolada até hoje, que é
-  // o fim da fileira. O viewport do `ScrollArea` não é o pai da grade — o
-  // Radix põe um invólucro `display: table` no meio —, então ele é achado
-  // pelo atributo que o Radix carimba.
+  // O ano não cabe no telefone: a grade rola e abre rolada até hoje. O viewport
+  // do `ScrollArea` não é o pai da grade (o Radix põe um invólucro `display:
+  // table`), então é achado pelo atributo que o Radix carimba.
   const gradeRef = React.useRef<HTMLDivElement>(null)
   React.useLayoutEffect(() => {
     const viewport = gradeRef.current?.closest<HTMLElement>(
@@ -3092,12 +2725,7 @@ function ChartHeatmap({
   )
 }
 
-/**
- * O perfil: várias categorias ao mesmo tempo, uma por eixo, com duas ou três
- * séries sobrepostas — este mês contra a média. É a forma de "onde o mês
- * fugiu do normal", e não de magnitude: comparar comprimentos em eixos que
- * irradiam é impreciso, e quem precisa do número vai às barras.
- */
+/** O perfil: várias categorias, uma por eixo, com duas ou três séries sobrepostas (este mês contra a média). Serve a "onde o mês fugiu do normal", não a magnitude; para o número, as barras. */
 function ChartRadar({
   grid = "polygon",
   x,
@@ -3175,18 +2803,12 @@ function ChartRadar({
   )
 }
 
-/* -------------------------------------------------------------------------
- * As formas da rodada 206 — cascata e ranking
- * ---------------------------------------------------------------------- */
+/* Cascata e ranking */
 
 /** Um degrau da cascata. `total` é um saldo desenhado do zero; sem `value`, o acumulado. */
 export type ChartWaterfallStep = { name: string; value?: number; total?: boolean }
 
-/**
- * Os degraus da cascata, com a faixa de cada barra (`[de, até]`) e o saldo
- * acumulado depois dela. Um `total` sem valor fecha no acumulado — o saldo
- * final se escreve sozinho. Exportada para teste.
- */
+/** Os degraus da cascata, com a faixa de cada barra (`[de, até]`) e o saldo acumulado depois dela; um `total` sem valor fecha no acumulado. Exportada para teste. */
 export function waterfallSteps(data: ChartWaterfallStep[]) {
   let acumulado = 0
   return data.map((d) => {
@@ -3266,12 +2888,10 @@ function ChartWaterfallTooltip({
 }
 
 /**
- * A cascata do saldo (rodada 206): do saldo inicial ao final, passando por
- * cada entrada que o sobe e cada saída que o desce. Cada barra flutua da
- * altura em que a anterior terminou — é uma barra de faixa do Recharts
- * (`dataKey` devolvendo `[de, até]`), o que deixa o saldo cruzar o zero sem
- * a pilha de barras transparentes que se costuma usar. A cor diz o sentido e
- * a posição também: cor não é o único canal.
+ * A cascata do saldo: do saldo inicial ao final, cada entrada sobe e cada saída
+ * desce. É uma barra de faixa do Recharts (`dataKey` devolvendo `[de, até]`),
+ * que deixa o saldo cruzar o zero sem pilha de barras transparentes. A cor diz o
+ * sentido e a posição também.
  */
 function ChartWaterfall({
   data,
@@ -3385,15 +3005,11 @@ function ChartWaterfall({
 }
 
 /**
- * O ranking em lista (rodada 206): nome e valor numa linha, a barra
- * proporcional embaixo. É o "maiores gastos" e o "top categorias" — e é
- * **texto de verdade**: o nome quebra em vez de cortar, o leitor de tela lê a
- * lista como lista (a raiz é `figure`, e não `img`), e o valor conta na
- * entrada como os outros números do gráfico.
- *
- * A barra nunca fica sob o texto, e a cor é uma só (`--chart-1`) a menos que o
- * `config` dê cor por nome: a ordem é o ranking, e cor que muda com o ranking
- * é cor seguindo a posição, não a entidade. A ordem é de quem chama.
+ * O ranking em lista: nome e valor numa linha, a barra proporcional embaixo
+ * ("maiores gastos", "top categorias"). É texto de verdade: o nome quebra, o
+ * leitor lê uma lista (a raiz é `figure`) e o valor conta na entrada. A cor é
+ * uma só (`--chart-1`) a menos que o `config` dê cor por nome (cor que segue a
+ * posição não segue a entidade); a ordem é de quem chama.
  */
 function ChartBarList({
   data,
@@ -3478,12 +3094,7 @@ function ChartBarList({
   )
 }
 
-/**
- * A tendência sem eixo, para dentro de um `StatCard` ou de uma linha de lista.
- * Ela não tem grade, nem eixo, nem legenda, e por padrão nem tooltip: uma
- * faísca é a forma da curva, não os números dela. O nome acessível continua
- * obrigatório — é ele que diz o que a curva mostra.
- */
+/** A tendência sem eixo, para dentro de um `StatCard` ou de uma linha: sem grade, eixo, legenda nem tooltip por padrão (a forma da curva, não os números). O nome acessível continua obrigatório. */
 function ChartSparkline({
   variant = "line",
   y,
@@ -3499,8 +3110,7 @@ function ChartSparkline({
   y: string
 }) {
   const cor = serieColor(y, 0, config)
-  // A faísca não entra: dez numa lista entrando juntas são ruído. O primeiro
-  // quadro desenha parado, e só depois dele a marca passa a animar a troca.
+  // A faísca não entra (dez numa lista seriam ruído): o primeiro quadro desenha parado e só a troca anima.
   const [montado, setMontado] = React.useState(false)
   React.useEffect(() => setMontado(true), [])
   const movimento = montado ? CHART_MARK_UPDATE : CHART_MARK_STILL
@@ -3567,11 +3177,7 @@ function ChartSparkline({
  * Estado
  * ---------------------------------------------------------------------- */
 
-/**
- * O esqueleto ocupa a **mesma caixa** do gráfico cheio, e é por isso que ele
- * carrega o eixo `aspect`: um esqueleto de altura arbitrária faz a tela saltar
- * quando o dado chega.
- */
+/** O esqueleto ocupa a mesma caixa do gráfico cheio (daí o eixo `aspect`), senão a tela salta quando o dado chega. */
 const CHART_SKELETON_HEIGHTS = [52, 78, 40, 92, 64, 84, 48]
 
 function ChartSkeleton({
@@ -3583,12 +3189,7 @@ function ChartSkeleton({
 }: React.ComponentProps<"div"> &
   VariantProps<typeof chartContainerVariants> & {
     bars?: number
-    /**
-     * `pulse` é o esqueleto da casa, que só respira a tinta. `wave` sobe e
-     * desce as barras em onda — para o gráfico que é a peça principal da tela
-     * e demora, onde um bloco que só pisca não diz que é um gráfico chegando.
-     * Um por tela, pela mesma razão que a marca é uma por tela.
-     */
+    /** `pulse` é o esqueleto da casa; `wave` sobe e desce as barras em onda, para o gráfico que é a peça principal da tela e demora. Um por tela. */
     variant?: "pulse" | "wave"
   }) {
   return (
@@ -3689,11 +3290,7 @@ function ChartError({
  * A alternativa não-visual
  * ---------------------------------------------------------------------- */
 
-/**
- * A mesma série como tabela. É a alternativa que um gráfico deve ter e que não
- * existia em lugar nenhum deste app — quem lê com leitor de tela, quem imprime
- * e quem precisa do número exato saem todos do mesmo lugar.
- */
+/** A mesma série como tabela: a alternativa para quem lê com leitor de tela, imprime ou precisa do número exato. */
 function ChartDataTable({
   data,
   series,

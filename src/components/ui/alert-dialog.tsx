@@ -28,18 +28,10 @@ import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 
 /**
- * ## Rodada 201
- *
- * - **`pending`** na raiz: a ação em andamento. A ação ganha o `Spinner` e o
- *   rótulo de andamento (`pendingLabel`) e trava, o Cancelar trava, e **Esc
- *   deixa de fechar** — dez telas escreviam `disabled={deleting}` nos dois
- *   botões e `deleting ? "Excluindo…" : "Excluir"` à mão, e nenhuma segurava
- *   o Esc: fechar no meio da exclusão deixava a tela mentindo.
- * - **`AlertDialogMedia`**: o ícone na linha do título, na cor dele.
- * - **`AlertDialogList`** e **`AlertDialogError`**: a lista do que acontece,
- *   dentro da descrição, e a falha dentro do diálogo, `role="alert"`.
- * - **`AlertDialogConfirmInput`**: o "digite o nome para confirmar". Montado,
- *   ele trava a ação até o texto conferir.
+ * `pending` na raiz trava a ação (com `Spinner` e `pendingLabel`) e o Cancelar,
+ * e o Esc deixa de fechar. `AlertDialogMedia` é o ícone na linha do título;
+ * `AlertDialogList` e `AlertDialogError` vão dentro da descrição e do diálogo;
+ * `AlertDialogConfirmInput` trava a ação até o texto conferir.
  */
 
 type AlertDialogContextValue = {
@@ -104,15 +96,9 @@ function AlertDialogOverlay({
 }
 
 /**
- * A moldura, e ela é **a mesma** do `Dialog`.
- *
- * Os dois eram irmãos que mediam diferente: `Dialog` abria em `sm:max-w-sm` e
- * `AlertDialog` em `sm:max-w-md`, com a mesma string de posicionamento,
- * animação e anel copiada nos dois arquivos — de modo que corrigir a sombra ou
- * a curva num deles deixava o outro para trás. Agora a régua é uma
- * (`dialogContentVariants`), e o que muda é só o que tem razão para mudar: o
- * alerta não oferece `layout="fixed"`, porque uma confirmação que precisa de
- * corpo rolável não é uma confirmação.
+ * A moldura é a mesma do `Dialog` (`dialogContentVariants`), sem
+ * `layout="fixed"`: uma confirmação que precisa de corpo rolável não é uma
+ * confirmação.
  */
 function AlertDialogContent({
   className,
@@ -123,7 +109,7 @@ function AlertDialogContent({
 }: React.ComponentProps<typeof AlertDialogPrimitive.Content> &
   Pick<VariantProps<typeof dialogContentVariants>, "size">) {
   const { pending } = React.useContext(AlertDialogContext)
-  // Nasce de onde se clicou, como o `Dialog` (rodada 248).
+  // Nasce de onde se clicou, como o `Dialog`.
   const origem = useOrigemDoClique()
   const cascoRef = useComposedRefs<HTMLDivElement>(ref, origem)
   return (
@@ -136,9 +122,8 @@ function AlertDialogContent({
         aria-busy={pending || undefined}
         className={cn(
           dialogContentVariants({ size, layout: "auto" }),
-          // O teto que o `auto` do `Dialog` não tem: uma confirmação curta
-          // nunca chega nele, e a que leva um campo (o "digite o nome") rola
-          // em vez de sair da tela quando o teclado do telefone sobe.
+          // O teto que o `auto` do `Dialog` não tem: a confirmação com campo
+          // rola em vez de sair da tela quando o teclado do telefone sobe.
           "max-h-[calc(100dvh-2rem)] overflow-y-auto",
           className
         )}
@@ -162,15 +147,9 @@ const MEDIA_ICONE = {
 } as const
 
 /**
- * O ícone do título (rodada 201): vai **dentro** do `AlertDialogHeader`,
- * antes do título, e fica na linha dele, na cor dele, sem poço — a
- * referência que o dono escolheu. A descrição passa embaixo, na largura toda.
- * O `tone` escolhe o glifo (a lixeira no `destructive`); `children` troca.
- * 16px, `16/solid`, como o corpo do título.
- *
- * Ele passou por três desenhos na mesma rodada: em cima do título num poço de
- * 40 tingido, à esquerda do texto num poço de 44 com o título centrado nele,
- * e este. O poço tingido pesava mais que a frase que ele acompanha.
+ * O ícone do título: dentro do `AlertDialogHeader`, na linha do título e na cor
+ * dele, sem poço. O `tone` escolhe o glifo (lixeira no `destructive`);
+ * `children` troca.
  */
 function AlertDialogMedia({
   tone = "default",
@@ -195,20 +174,14 @@ function AlertDialogMedia({
   )
 }
 
-/**
- * **Sem fio**, pela mesma razão do `DialogHeader`: o diálogo é uma superfície
- * só, e o que separa as faixas é o respiro — ou o conteúdo dissolvendo, onde há
- * rolagem. Numa confirmação, que costuma ser cabeçalho e rodapé e nada no meio,
- * um traço em cada emenda era o mais gratuito de todos.
- */
+/** Sem fio, como o `DialogHeader`: o que separa as faixas é o respiro. */
 function AlertDialogHeader(props: React.ComponentProps<"div">) {
   return <DialogHeader data-slot="alert-dialog-header" {...props} />
 }
 
 /**
- * Cancelar primeiro, ação depois — e no telefone a ordem se inverte na tela
- * (`flex-col-reverse`), para o polegar encontrar a ação em cima da pilha sem
- * que a ordem do DOM, que é a que o teclado e o leitor de tela seguem, mude.
+ * Cancelar primeiro, ação depois; no telefone a ordem se inverte na tela
+ * (`flex-col-reverse`) sem mudar a ordem do DOM.
  */
 function AlertDialogFooter(props: React.ComponentProps<"div">) {
   // O `sm:flex-row sm:justify-end`, a ordem invertida e o piso de 40 no dedo
@@ -230,10 +203,8 @@ function AlertDialogTitle({
 }
 
 /**
- * A descrição é um `<div>` desde a rodada 201: ela recebe a
- * `AlertDialogList`, e uma lista dentro de `<p>` não é HTML válido — as telas
- * escreviam `asChild` com um `<div>` à mão para caber a lista. Os parágrafos
- * de dentro se afastam 8px.
+ * A descrição é um `<div>` porque recebe a `AlertDialogList`, e lista dentro de
+ * `<p>` não é HTML válido.
  */
 function AlertDialogDescription({
   className,
@@ -260,10 +231,8 @@ function AlertDialogDescription({
 }
 
 /**
- * O que acontece, item a item (rodada 201) — as consequências, ou o que sai.
- * Mora **dentro** da `AlertDialogDescription`, para o leitor de tela lê-la
- * como parte do aviso. A tinta é a cheia: a lista é o conteúdo da decisão, e
- * a frase de cima é o contexto.
+ * O que acontece, item a item. Mora dentro da `AlertDialogDescription`, para o
+ * leitor de tela ler como parte do aviso.
  */
 function AlertDialogList({ className, ...props }: React.ComponentProps<"ul">) {
   return (
@@ -278,7 +247,7 @@ function AlertDialogList({ className, ...props }: React.ComponentProps<"ul">) {
   )
 }
 
-/** A falha dentro do diálogo (rodada 201): a ação não deu certo, e ele fica aberto. */
+/** A falha dentro do diálogo: a ação não deu certo e ele fica aberto. */
 function AlertDialogError({ className, ...props }: React.ComponentProps<"p">) {
   return (
     <p
@@ -291,10 +260,8 @@ function AlertDialogError({ className, ...props }: React.ComponentProps<"p">) {
 }
 
 /**
- * O "digite o nome para confirmar" (rodada 201). Montado, trava a
- * `AlertDialogAction` até o texto conferir com `expected` — sem espaços nas
- * pontas, e com maiúsculas como estão. O estado é dele: fechar o diálogo
- * desmonta o conteúdo e o campo volta vazio.
+ * O "digite o nome para confirmar": trava a `AlertDialogAction` até o texto
+ * conferir com `expected` (sem espaços nas pontas). O estado é dele.
  */
 function AlertDialogConfirmInput({
   expected,
@@ -341,29 +308,11 @@ function AlertDialogConfirmInput({
 }
 
 /**
- * A ação que o alerta veio propor — e ela é **um `Button` de verdade**.
- *
- * Antes eram as classes de botão carimbadas num primitivo do Radix
- * (`cn(buttonVariants(), className)`), sem `variant`, sem `size` e sem o
- * `<span>` que o `Button` embrulha em volta do rótulo. Duas consequências, e
- * as duas estão no app:
- *
- * 1. **A maiúscula inicial do CTA não alcançava aqui.** É o ponto que o
- *    AGENTS.md já registrava — "a garantia é do `Button`, não do
- *    `buttonVariants()`" —, e este arquivo era um dos nove.
- * 2. **Todas as oito confirmações do app precisaram repintar o botão.** Cinco
- *    passam `className={buttonVariants({ variant: "destructive" })}`; as outras
- *    três escrevem `bg-destructive text-destructive-foreground
- *    hover:bg-destructive/90` — que não é o `destructive` do design system (esse
- *    é tonal), é um vermelho sólido inventado na tela, sem par `active:`. E como
- *    `tailwind-merge` resolve fundo com fundo mas não tem o que fazer com uma
- *    borda que ninguém sobrescreveu, **o `border-primary` do `primary` sobrevive
- *    embaixo**: um botão vermelho com um fio verde em volta, em três telas de
- *    excluir. Medido, não suposto.
- *
- * Por isso o padrão é `destructive`: um `AlertDialog` existe para a ação que não
- * tem volta, e foi o que oito de oito chamadas pediram. Uma confirmação que não
- * destrói nada passa `variant="primary"` — e aí o nome diz o que a tela quis.
+ * A ação que o alerta veio propor, um `Button` de verdade (a maiúscula inicial
+ * do CTA só alcança `Button`). O padrão é `destructive`, porque o `AlertDialog`
+ * existe para o que não tem volta; uma confirmação que não destrói passa
+ * `variant="primary"`. Não pinte o botão à mão: o `border-primary` do `primary`
+ * sobrevive embaixo como fio verde.
  */
 function AlertDialogAction({
   className,
@@ -404,13 +353,7 @@ function AlertDialogAction({
   )
 }
 
-/**
- * A saída, e ela também é um `Button` — mesmo motivo.
- *
- * `tertiary` não preenche nada, e é o degrau certo: dois botões de contorno
- * lado a lado pesam igual, e o olho tem que ler os dois para descobrir qual é a
- * saída.
- */
+/** A saída, também um `Button`: `tertiary`, porque dois contornos lado a lado pesam igual. */
 function AlertDialogCancel({
   className,
   variant = "tertiary",

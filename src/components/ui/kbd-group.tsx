@@ -6,47 +6,22 @@ import { cn } from "@/lib/utils"
 import { Kbd, formatKey } from "@/components/ui/kbd"
 
 /**
- * A sequência: teclas apertadas **uma depois da outra**, cada uma na própria
- * pastilha — o atalho de dois tempos, como o `g h` do GitHub.
+ * A sequência: teclas apertadas uma depois da outra, cada uma na própria
+ * pastilha (o `g h` do GitHub). O acorde (`⌘K`) é uma pastilha só e mora no
+ * `Kbd keys`.
  *
- * O **acorde** (`⌘K`) é outra coisa: os dedos descem juntos, e ele é uma
- * pastilha só. Mora no `Kbd`, em `keys`. Trocar um pelo outro ensina o atalho
- * errado, e é o defeito que a página do `Kbd` narra.
+ * `mode="either"` são opções (↑ ou ↓), não passos; `separator` desenha o "›";
+ * `live` acende as pastilhas com o teclado. O leitor de tela ouve "depois"
+ * entre passos e "ou" entre opções. Um passo pode ser acorde (`["mod+k", "s"]`).
  *
- * ## Por que ele é molécula, e por que `keys` existe
- *
- * Ele importava **zero** componentes: os `<Kbd>` vinham de quem chamava, e uma
- * molécula que não compõe nada é o padrão fraco que este catálogo já mediu —
- * 26 das 38 moléculas importavam zero. `keys` faz a classificação virar
- * verdade: um `Kbd` por tecla, o átomo importado de fato.
- *
- * ## Por que ele é cliente
- *
- * `kbd.tsx` é módulo cliente, e **todo export de um módulo cliente vira uma
- * *client reference*** quando um componente de servidor o importa — inclusive o
- * que não é componente. Sem a diretiva, o `formatKey()` abaixo seria chamado no
- * servidor e estouraria. Desde a rodada 195 há também o `live`, que escuta o
- * teclado.
- *
- * ## Rodada 195
- *
- * - **Um passo pode ser acorde** (`["mod+k", "s"]`). Cada passo passava só por
- *   `formatKey`, que não conhece modificadora: "mod+k" sairia escrito cru.
- * - **`mode="either"`**: teclas que são **opções**, e não passos. A legenda da
- *   paleta escrevia `<Kbd>↑</Kbd><Kbd>↓</Kbd>` com o sentido de "↑ ou ↓" —
- *   pastilhas lado a lado, que é o desenho da sequência.
- * - **`separator`**: o "›" entre os passos, para quem não conhece a convenção.
- * - **`live`**: as pastilhas acendem com as teclas apertadas.
- *
- * O leitor de tela ouve "depois" entre os passos e "ou" entre as opções, com
- * ou sem o separador à vista: a diferença entre os dois gestos é o que este
- * componente existe para dizer.
+ * É cliente porque `kbd.tsx` é: todo export de módulo cliente vira *client
+ * reference* num componente de servidor, inclusive o `formatKey()`.
  */
 
 type KbdGroupMode = "sequence" | "either"
 
 type KbdGroupProps = Omit<React.ComponentProps<"kbd">, "children"> & {
-  /** `either`: as teclas são opções (↑ ou ↓), e um "/" fica entre elas. */
+  /** `either`: as teclas são opções, com um "/" entre elas. */
   mode?: KbdGroupMode
   /** Só na sequência: o "›" à vista entre os passos. */
   separator?: boolean
@@ -77,8 +52,7 @@ const NOME_DO_EVENTO: Record<string, string> = {
 
 /**
  * Se a tecla apertada é a de um passo. As modificadoras pedidas têm de estar
- * descidas (`mod` aceita ⌘ ou Ctrl); as que sobram não reprovam — a dica
- * acende, não valida.
+ * descidas (`mod` aceita ⌘ ou Ctrl); as que sobram não reprovam.
  */
 function casa(passo: string, e: KeyboardEvent) {
   const partes = passo.toLowerCase().split("+").map((p) => p.trim())
@@ -93,10 +67,8 @@ function casa(passo: string, e: KeyboardEvent) {
 }
 
 /**
- * O que está aceso. Na sequência é o **progresso**: acertou o primeiro passo,
- * ele acende; errou, volta ao começo (ou ao primeiro, se a tecla errada for o
- * primeiro passo). Completa, fica acesa um instante e apaga; parada, apaga
- * sozinha. Nas opções é a tecla que está descida agora.
+ * O que está aceso. Na sequência é o progresso (errou, volta ao começo); nas
+ * opções é a tecla descida agora.
  */
 function useTeclasAcesas(keys: string[] | undefined, mode: KbdGroupMode, ligado: boolean) {
   const [acesas, setAcesas] = React.useState<boolean[]>([])
@@ -179,8 +151,8 @@ function KbdGroup({
       data-mode={mode}
       className={cn(
         "inline-flex items-center gap-1",
-        // A pastilha acesa: o seletor tem mais especificidade que o
-        // `dark:bg-muted` do próprio `Kbd`, que empataria com um `data-lit:`.
+        // O seletor vence o `dark:bg-muted` do `Kbd`, que empataria com um
+        // `data-lit:`.
         "[&>[data-slot=kbd]]:transition-colors [&>[data-slot=kbd]]:duration-(--duration-fast)",
         "[&>[data-slot=kbd][data-lit]]:bg-primary [&>[data-slot=kbd][data-lit]]:text-primary-foreground",
         className

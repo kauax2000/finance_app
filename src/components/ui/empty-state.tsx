@@ -11,30 +11,8 @@ import { ButtonSizeContext, type ButtonSize } from "@/components/ui/button"
 import { H1, H4, Muted } from "@/components/ui/typography"
 
 /**
- * O que a tela diz quando não há nada nela.
- *
- * ## O respiro é do pai, e não dos filhos
- *
- * As quatro peças carregavam `mb-4`, `mb-2` e `mb-6`, e o contêiner ficava em
- * `gap: normal` — medido. O layout era decidido de baixo para cima: tirar a
- * descrição mudava sozinho o respiro entre o ícone e o título, e a última peça
- * da pilha deixava 24px de margem contra a borda de baixo do bloco. Agora o
- * `gap` é do `EmptyState`, e nenhum filho declara margem.
- *
- * ## `variant` existe porque duas telas já a escreviam
- *
- * `not-found-shell.tsx` e `route-error-fallback.tsx` abrem **com a mesma
- * string**: `className="w-full border-border/80 bg-card/40 py-10"`. Duas cópias
- * idênticas de uma sobrescrita são uma variante faltando — e o
- * `border-border/80` era ainda um quarto peso de borda no app.
- *
- * ## A forma diz a situação (rodada 131)
- *
- * Os 27 estados vazios do app eram o mesmo círculo cinza, servissem ao
- * primeiro uso, a um filtro sem resultado, a um erro ou a um período vazio.
- * Agora cada situação tem uma forma. O arco-íris da marca fica só no
- * numeral das páginas de erro — quatro versões dele no primeiro uso (atrás
- * dos fantasmas e no contorno deles) foram recusadas na tela:
+ * O que a tela diz quando não há nada nela. O respiro é do pai (`gap`), e nenhum
+ * filho declara margem. A forma diz a situação:
  *
  * | Situação | Forma |
  * | --- | --- |
@@ -42,19 +20,12 @@ import { H1, H4, Muted } from "@/components/ui/typography"
  * | filtro, período ou lista vazia | `EmptyStateIcon variant="stack"` |
  * | não encontrado | `size="page"` + `EmptyStateCode` ("404") |
  * | erro de runtime | `size="page"` + `EmptyStateCode` ("Ops!") |
- * | boa notícia (nada a fazer) | `EmptyStateIcon variant="done"` (rodada 191) |
- * | o vazio pequeno de um formulário | `layout="inline"` (rodada 191) |
+ * | boa notícia (nada a fazer) | `EmptyStateIcon variant="done"` |
+ * | o vazio pequeno de um formulário | `layout="inline"` |
  *
- * As referências são o `empty-state-04` do shadcnui-blocks (os fantasmas), o
- * `empty-state` do serafimcloud (o leque) e o `not-found-2` da Efferd (o
- * numeral que dissolve).
- *
- * ## O título não é um `<h2>` cravado
- *
- * Ele era, e isso põe um `h2` na página toda vez que um bloco vazio aparece —
- * inclusive dentro de uma seção que já tem o seu, que é o caso de duas das
- * quatro telas. O padrão passa a ser um `<p>` estilizado, e quem precisa de
- * cabeçalho de verdade usa `asChild` com o nível certo.
+ * O arco-íris da marca fica só no numeral das páginas de erro. O título é um
+ * `<p>` estilizado, não um `<h2>` cravado (o bloco pode estar dentro de uma
+ * seção que já tem o seu); `asChild` traz o nível certo.
  */
 const emptyStateVariants = cva(
   "flex flex-col items-center justify-center text-center",
@@ -63,24 +34,21 @@ const emptyStateVariants = cva(
       variant: {
         dashed: "rounded-surface border border-dashed border-border bg-muted/20",
         card: "rounded-surface border border-border bg-card/40",
-        // Sem moldura, para dentro de um `Card` ou de uma célula de tabela que
-        // já tem a sua. Cartão dentro de cartão é sempre errado.
+        // Sem moldura, para dentro de um `Card` ou de uma célula de tabela que já tem a sua.
         plain: "",
       },
       size: {
         sm: "gap-2 px-4 py-6 [--empty-state-icon:--spacing(9)] [--empty-state-tile-r:var(--radius-md)]",
         md: "gap-3 px-6 py-10 [--empty-state-icon:--spacing(12)] [--empty-state-tile-r:var(--radius-lg)]",
         lg: "gap-4 px-6 py-16 [--empty-state-icon:--spacing(14)] [--empty-state-tile-r:var(--radius-row)]",
-        // A página de erro, que ocupa a tela como nas referências.
+        // A página de erro ocupa a tela.
         page: "gap-4 px-6 py-24 [--empty-state-icon:--spacing(14)] [--empty-state-tile-r:var(--radius-row)]",
       },
       /**
-       * `inline` (rodada 191): o vazio pequeno, dentro de um formulário ou de
-       * um painel estreito — o ícone à esquerda e o texto e a ação à direita,
-       * alinhados à esquerda. É grade e não `flex-row`: título, descrição e
-       * ações ficam na mesma coluna, e o ícone atravessa as linhas. Declarado
-       * depois do `size`, então o `tailwind-merge` troca o respiro e a medida
-       * do ícone do degrau pelos daqui.
+       * `inline`: o vazio pequeno de formulário ou painel estreito, com o ícone
+       * à esquerda e o texto e a ação à direita. É grade (o ícone atravessa as
+       * linhas) e vem depois do `size`, para o `tailwind-merge` trocar o respiro
+       * e a medida do ícone do degrau pelos daqui.
        */
       layout: {
         stack: "",
@@ -145,16 +113,13 @@ const emptyStateIconVariants = cva(
       variant: {
         circle: "size-(--empty-state-icon) rounded-full",
         // O leque não pinta a própria caixa: quem tem superfície são os
-        // ladrilhos. O `tone` fica só na tinta dos ícones.
+        // ladrilhos, e o `tone` fica na tinta dos ícones.
         stack: "h-(--empty-state-icon)",
         /**
-         * **Tudo em dia** (rodada 191): o vazio que é boa notícia — nenhuma
-         * sessão aberta, nenhuma parcela terminando. O círculo nasce na mola
-         * (`scale` 50% → 100%) e o tique **se desenha** da esquerda para a
-         * direita, por `clip-path` e não por traço de SVG: o ícone continua
-         * sendo o do Heroicons, e a regra G não abre exceção. Os dois pelo
-         * `@starting-style`, sem timer; o movimento reduzido corta os dois.
-         * O `clip-path` final é declarado (`inset(0)`) porque `none` não
+         * Tudo em dia: o vazio que é boa notícia. O círculo nasce na mola e o
+         * tique se desenha por `clip-path` (e não por traço de SVG, para o
+         * ícone continuar o do Heroicons), pelo `@starting-style`. O
+         * `clip-path` final é declarado (`inset(0)`) porque `none` não
          * interpola com `inset()`.
          */
         done: [
@@ -164,9 +129,7 @@ const emptyStateIconVariants = cva(
           "starting:[&_svg]:[clip-path:inset(0_100%_0_0)]",
         ].join(" "),
       },
-      // `route-error-fallback.tsx` pintava `bg-destructive-muted
-      // text-destructive-muted-foreground` à mão. Um estado de erro é um estado
-      // vazio de outra natureza, e a cor é do sistema.
+      // Um estado de erro é um estado vazio de outra natureza, e a cor é do sistema.
       tone: {
         default: "text-muted-foreground",
         info: "text-info-muted-foreground",
@@ -175,8 +138,7 @@ const emptyStateIconVariants = cva(
         destructive: "text-destructive-muted-foreground",
       },
     },
-    // A superfície tonal é só do círculo; no leque, quem tem superfície são
-    // os ladrilhos, e o tom fica na tinta.
+    // A superfície tonal é só do círculo; no leque o tom fica na tinta.
     compoundVariants: [
       { variant: "done", tone: "default", className: "bg-muted" },
       { variant: "done", tone: "success", className: "bg-success-muted" },
@@ -194,11 +156,9 @@ const emptyStateIconVariants = cva(
 )
 
 /**
- * Os três ladrilhos do leque (a referência é o `empty-state` do
- * serafimcloud): o do meio levantado, os laterais inclinados por baixo dele.
- * Sob o cursor — ou no toque, pelo par `active:` — eles se afastam na mola da
- * casa (`--ease-spring`). Escrito por posição, porque o leque tem três lugares
- * e cada um se move para o seu lado.
+ * Os três ladrilhos do leque: o do meio levantado, os laterais inclinados por
+ * baixo. No cursor ou no toque (par `active:`) eles se afastam na mola da casa.
+ * Escrito por posição, porque cada um se move para o seu lado.
  */
 const TILE_POSICAO = [
   "-me-3 -rotate-8 translate-y-1 group-hover/empty-state:-rotate-14 group-hover/empty-state:-translate-x-2 group-active/empty-state:-rotate-14 group-active/empty-state:-translate-x-2",
@@ -235,8 +195,7 @@ function EmptyStateIcon({
                 key={i}
                 data-slot="empty-state-icon-tile"
                 className={cn(
-                  // O canto é o degrau da escada mais perto do 22,5% que ele
-                  // calculava (rodada 244c): 8 · 10 · 12, pelo degrau do vazio.
+                  // O canto é o degrau da escada (8 · 10 · 12) pelo degrau do vazio.
                   "flex size-(--empty-state-icon) items-center justify-center rounded-(--empty-state-tile-r) border border-border bg-card shadow-sm",
                   "transition-[rotate,translate] duration-(--duration-spring) ease-(--ease-spring)",
                   TILE_POSICAO[i]
@@ -251,11 +210,8 @@ function EmptyStateIcon({
 }
 
 /**
- * O título.
- *
- * `asChild` é a saída para quando ele precisa **ser** um cabeçalho — uma página
- * 404 inteira quer um `<h1>`; um bloco vazio no meio de uma lista não quer
- * nível nenhum. O padrão é o segundo caso, que é o comum.
+ * O título. `asChild` é a saída para quando ele precisa ser um cabeçalho (uma
+ * 404 quer `<h1>`; um bloco no meio de uma lista não quer nível nenhum).
  */
 function EmptyStateTitle({
   className,
@@ -263,13 +219,9 @@ function EmptyStateTitle({
   ...props
 }: React.ComponentProps<"p"> & { asChild?: boolean }) {
   const { size } = React.useContext(EmptyStateContext)
-  // Na página de erro o título é o da tela: o `H1` do sistema, na serifa de
-  // `.page-title`, dois degraus acima — o "Page not found" das referências. E
-  // ele **nasce `<h1>`**, sem `asChild`, por uma razão medida: um server
-  // component (o `not-found-shell`) que passava `<h1>` por `asChild` o
-  // entregava ao `Slot` do Radix como referência preguiçosa do RSC, e não
-  // como elemento — o `Slot` não o reconhecia e o título sumia da página sem
-  // erro nenhum. `asChild` continua valendo para quem precisa de outro nível.
+  // Na página de erro o título nasce `<h1>`, sem `asChild`: um server component
+  // que passava `<h1>` por `asChild` o entregava ao `Slot` do Radix como
+  // referência preguiçosa do RSC e o título sumia sem erro.
   if (size === "page") {
     const PageComp = asChild ? Slot.Root : "h1"
     return (
@@ -279,9 +231,8 @@ function EmptyStateTitle({
     )
   }
   const Comp = asChild ? Slot.Root : "p"
-  // O estilo é o do `H4` — família, peso, tracking — um degrau abaixo no corpo.
-  // O elemento continua sendo o `<p>` (ou o que `asChild` trouxer): o átomo dá
-  // o estilo e o filho dá o nível, e a sobrescrita fica no átomo.
+  // O estilo é o do `H4`, um degrau abaixo no corpo; o elemento segue sendo o
+  // `<p>` (ou o que `asChild` trouxer).
   return (
     <H4 asChild data-slot="empty-state-title" className={cn("text-base text-balance", className)}>
       <Comp {...props} />
@@ -303,18 +254,12 @@ function EmptyStateDescription({
 }
 
 /**
- * As ações.
- *
- * Ela ganha uma folga a mais que o `gap` do bloco: um botão logo abaixo de um
- * parágrafo lê como parte do parágrafo. É a mesma razão de 2 para 1 que separa
- * "outro assunto" de "mesmo assunto" no `HoverCardBody`.
+ * As ações. Ganham uma folga a mais que o `gap` do bloco: um botão logo abaixo
+ * de um parágrafo lê como parte dele.
  */
 /**
- * O degrau dos botões sai do bloco (rodada 191), pelo `ButtonSizeContext` do
- * `ButtonGroup`: sete telas escreviam `size="xl"` e os tamanhos dos ícones à
- * mão nos blocos `lg`, e uma escrevia `size="sm" h-8 text-xs`. Os números são
- * os que o app já usava — `sm` e `md` ficam em `sm` (o vazio de um cartão do
- * painel), `lg` e `page` em `xl` (a tela inteira). Um `size` no botão vence.
+ * O degrau dos botões sai do bloco pelo `ButtonSizeContext`: `sm` e `md` ficam
+ * em `sm`, `lg` e `page` em `xl`. Um `size` no botão vence.
  */
 const ACOES_DEGRAU: Record<EmptyStateSize, ButtonSize> = {
   sm: "sm",
@@ -334,9 +279,8 @@ function EmptyStateActions({
       data-slot="empty-state-actions"
       className={cn(
         "mt-1 flex flex-wrap items-center justify-center gap-2",
-        // Em linha, a ação alinha com o texto: o `link` do `Button` traz
-        // recuo lateral, que aqui deixava "Cadastrar cartão" 22px para dentro
-        // da descrição. O seletor de atributo vence a classe do degrau.
+        // Em linha, a ação alinha com o texto: o `link` do `Button` traz recuo
+        // lateral. O seletor de atributo vence a classe do degrau.
         layout === "inline" && "justify-start [&>[data-variant=link]]:px-0",
         className
       )}
@@ -348,19 +292,11 @@ function EmptyStateActions({
 }
 
 /**
- * Os fantasmas (a referência é o `empty-state-04` do shadcnui-blocks): linhas
- * da lista que ainda não existe, subindo devagar atrás do título e
- * dissolvendo nas bordas. Mostram o que vai aparecer ali — o primeiro uso é um
- * convite, não uma ausência.
- *
- * As props são de **forma**, e não de domínio: "transação" é conteúdo de
- * tela, "ladrilho e valor" é desenho. A tela de transações pede
- * `leading="tile" trailing="amount"`; a de cartões, `leading="card"`.
- *
- * **O laço não tem emenda porque as linhas são duplicadas e o respiro é
- * margem, não `gap`**: com `gap`, metade da altura cairia no meio de um vão e
- * o laço saltaria meio respiro a cada volta. O movimento reduzido o congela no
- * quadro 0 pelo bloco global.
+ * Os fantasmas: linhas da lista que ainda não existe, subindo devagar atrás do
+ * título e dissolvendo nas bordas (o primeiro uso é um convite, não uma
+ * ausência). As props são de forma (`leading`, `trailing`), não de domínio. O
+ * laço não tem emenda porque as linhas são duplicadas e o respiro é margem, não
+ * `gap`; o movimento reduzido o congela no quadro 0.
  */
 const GHOST_LEADING = {
   tile: "size-7 rounded-md",
@@ -418,18 +354,10 @@ function EmptyStateGhost({
 }
 
 /**
- * O numeral — ou a palavra — da página de erro ("404", "Ops!"), sempre
- * `aria-hidden`: quem diz o que houve é o título.
- *
- * É o `not-found-2` da Efferd: enorme, na Ledger, com o arco-íris
- * **preenchendo o glifo** (o precedente do wordmark) e dissolvendo para baixo
- * até o título pousar na base — o arco-íris nunca fica sob o texto. O
- * preenchimento desliza de ida e volta, porque o `--brand-rainbow` é linear e
- * um laço só de ida emendaria a lima no teal.
- *
- * Houve uma segunda forma, `watermark` (a palavra gigante a 10% atrás do
- * título, do `not-found` do nevsky118), e ela saiu: o dono quis o erro de
- * runtime igual ao 404, com o "Ops!" acima do texto.
+ * O numeral — ou a palavra — da página de erro ("404", "Ops!"), `aria-hidden`
+ * (quem diz o que houve é o título). Na Ledger, com o arco-íris preenchendo o
+ * glifo e dissolvendo para baixo até o título pousar na base; desliza de ida e
+ * volta porque o `--brand-rainbow` é linear.
  */
 const EMPTY_STATE_CODE = [
   "pointer-events-none select-none font-display leading-none",
@@ -439,10 +367,8 @@ const EMPTY_STATE_CODE = [
 ].join(" ")
 
 /**
- * O corpo do numeral acompanha o bloco (rodada 191). O recuo negativo de baixo
- * é o que faz o título pousar na base dissolvida, e ele cresce com o corpo —
- * por isso os dois moram juntos. O cartão não encontrado é `lg` e escrevia os
- * quatro números à mão.
+ * O corpo do numeral acompanha o bloco. O recuo negativo de baixo faz o título
+ * pousar na base dissolvida e cresce com o corpo.
  */
 const CODE_DEGRAU: Record<EmptyStateSize, string> = {
   sm: "-mb-3 text-5xl",

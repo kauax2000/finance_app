@@ -35,47 +35,19 @@ import {
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid"
 import { useIsMobile } from "@/hooks/use-mobile"
 /**
- * A grade de um mês.
+ * A grade de um mês. O `locale` tem padrão (`ptBR`) porque o app tem um só.
  *
- * ## O `locale` tem padrão porque o app tem um só
- *
- * O `DatePicker` já passava `ptBR`; o `Calendar` usado direto caía no inglês do
- * `react-day-picker` e mostrava "August" e "Mo Tu We" no meio de uma tela em
- * português. Um padrão que só vale quando alguém lembra de passar não é padrão.
- *
- * ## A célula entra na escada
- *
- * `--cell-size` era um número solto (`--spacing(7)`, 28px) e o botão de dia
- * declarava `size="icon-lg"` — que a escada define como 36 e que **nunca
- * valeu**: o `className` do próprio componente o sobrescrevia com `size-auto
- * w-full min-w(--cell-size)`. Medido: botão de **28×28** com
- * `data-size="icon-lg"`. Um componente que declara um tamanho e entrega outro é
- * o defeito que `Menubar` (24px) e `Tabs` (27px) já pagaram.
- *
- * Agora `size` nomeia o **piso** da célula — `sm` 28, `md` 32, `lg` 36 —, e é
- * piso mesmo: a grade é elástica (`week` é `flex`, `day` é `w-full
- * aspect-square`), então a célula cresce com a largura disponível e nenhum
- * degrau da escada descreve a caixa final. É por isso que o botão de dia deixou
- * de carimbar `data-size`: um atributo que não corresponde à caixa é pior que
- * atributo nenhum.
- *
- * O salto para 44px em ponteiro grosso continua, e ali o piso é o que importa:
- * são os 44 que a página /designsystem/touch-safe-area documenta, e sete deles
- * cabem em 320px.
+ * `size` nomeia o piso da célula (`sm` 28, `md` 32, `lg` 36), não a caixa
+ * final: a grade é elástica (`week` é `flex`, `day` é `w-full aspect-square`),
+ * então nenhum degrau descreve a caixa, e por isso o botão de dia não carimba
+ * `data-size`. Em ponteiro grosso o piso salta a 44px (sete células cabem em
+ * 320px).
  */
 /**
- * Os rótulos de acessibilidade, em português.
- *
- * O `locale` do `date-fns` traduz **nomes** — meses, dias da semana —, e nada
- * mais. As frases conectivas do `react-day-picker` são strings cravadas em
- * inglês no pacote: `"Go to the Previous Month"`, `"Choose the Month"`,
- * `"Choose the Year"`, e o `"Today, …"` / `"…, selected"` que o leitor de tela
- * anuncia em **cada uma das 42 células**.
- *
- * Ou seja: a grade parecia traduzida e a camada de acessibilidade nunca esteve.
- * É o mesmo defeito que o `locale` padrão deste arquivo já tinha consertado na
- * parte visível — um idioma que só vale quando alguém lembra de passar não é o
- * idioma do app.
+ * Os rótulos de acessibilidade, em português: o `locale` do `date-fns` traduz
+ * só nomes (meses, dias), e as frases conectivas do `react-day-picker`
+ * ("Go to the Previous Month", "Today, …", "…, selected" em cada uma das 42
+ * células) são strings em inglês do pacote.
  */
 const ROTULOS_PT_BR = {
   labelPrevious: () => "Ir para o mês anterior",
@@ -96,19 +68,11 @@ const ROTULOS_PT_BR = {
 } satisfies Partial<React.ComponentProps<typeof DayPicker>["labels"]>
 
 /**
- * ## Rodada 203
- *
- * - **`markers`**: pontos sob o número do dia, por tom (até três por dia),
- *   com a legenda embaixo e os rótulos somados ao nome do dia. O calendário
- *   de pagamentos do dashboard escrevia a grade inteira à mão, com os pontos
- *   em `after:` de cinco cores cruas.
- * - **`variant="agenda"`**: a célula grande, com o conteúdo do dia
- *   (`renderDay`) sob o número — a visão de mês. A grade do desktop do mesmo
- *   calendário também era escrita à mão.
- * - **`showToday`**: o "Hoje" que volta ao mês atual (e marca o dia, na
- *   escolha única). Antes, só seta a seta.
- * - **`presets`**: atalhos ao lado da grade num intervalo, e dois meses lado a
- *   lado no desktop (um no telefone).
+ * `markers`: pontos sob o número do dia, por tom (até três), com legenda e
+ * rótulos somados ao nome do dia. `variant="agenda"`: a célula grande com o
+ * conteúdo do dia (`renderDay`) sob o número. `showToday`: o "Hoje" que volta
+ * ao mês atual. `presets`: atalhos ao lado de um intervalo, e dois meses lado a
+ * lado no desktop.
  */
 
 type CalendarMarkerTone =
@@ -141,11 +105,7 @@ const MARCADOR_TOM: Record<CalendarMarkerTone, string> = {
   expense: "bg-expense",
 }
 
-/**
- * Um atalho: um intervalo (`range`) ou, desde a rodada 210, um dia (`date`) —
- * o "Hoje" e o "Ontem" do `DatePicker`. Os dois podem ser calculados na hora do
- * clique.
- */
+/** Um atalho: um intervalo (`range`) ou um dia (`date`), ambos calculáveis na hora do clique. */
 type CalendarPreset =
   | { label: string; range: DateRange | (() => DateRange) }
   | { label: string; date: Date | (() => Date) }
@@ -213,36 +173,27 @@ function Calendar({
   /** `agenda` é a célula grande, com o conteúdo do dia sob o número. */
   variant?: "default" | "agenda"
   /**
-   * Com `agenda`: o que vai na célula, sob o número — de preferência um
-   * `CalendarEvents` com os `CalendarEvent` do dia. `null` é dia vazio, e na
-   * lista (a agenda estreita) o dia vazio não aparece.
+   * Com `agenda`: o que vai na célula sob o número, de preferência um
+   * `CalendarEvents`. `null` é dia vazio, que na lista estreita não aparece.
    */
   renderDay?: (date: Date) => React.ReactNode
   /** Com `agenda`, estreita: o texto da lista quando o mês não tem nada. */
   listEmpty?: React.ReactNode
-  /**
-   * Com `agenda`, estreita: os dias que entram na lista, entre os que têm
-   * conteúdo. A grade não muda. O dashboard o usa para mostrar só os últimos
-   * dias passados, como a lista do telefone sempre fez.
-   */
+  /** Com `agenda`, estreita: os dias que entram na lista, entre os que têm conteúdo; a grade não muda. */
   listDays?: (date: Date) => boolean
   /** O "Hoje" que volta ao mês atual. */
   showToday?: boolean
   /** Atalhos ao lado da grade: intervalos em `mode="range"`, dias em `single`. */
   presets?: CalendarPreset[]
-  /**
-   * A grade ocupa a largura de quem a contém, e as células crescem com ela.
-   * O padrão é a largura das células (`w-fit`); a agenda já estica.
-   */
+  /** A grade ocupa a largura de quem a contém e as células crescem com ela (padrão `w-fit`; a agenda já estica). */
   stretch?: boolean
 }) {
   const defaultClassNames = getDefaultClassNames()
   const agenda = variant === "agenda"
   const isMobile = useIsMobile()
 
-  // O mês só passa a ser controlado aqui quando alguém de fora da grade o
-  // move — o "Hoje" e os atalhos. Sem eles, o `DayPicker` segue dono, como
-  // sempre foi, e o `DatePicker` não sente diferença.
+  // O mês só é controlado aqui quando alguém de fora da grade o move (o "Hoje"
+  // e os atalhos); sem eles o `DayPicker` segue dono.
   const controlaMes = showToday || presets != null
   const [mesInterno, setMesInterno] = React.useState<Date>(
     () => props.month ?? props.defaultMonth ?? new Date()
@@ -261,14 +212,14 @@ function Calendar({
     [onSelect]
   )
 
-  // Os marcadores viram modificadores do `react-day-picker` — `marker-0`,
-  // `marker-1`… —, e a célula lê quais estão ligados nela.
+  // Os marcadores viram modificadores do `react-day-picker` (`marker-0`,
+  // `marker-1`…) e a célula lê quais estão ligados nela.
   const modificadores = React.useMemo(() => {
     const m: Record<string, Matcher | Matcher[] | undefined> = { ...modifiers }
     markers.forEach((mk, i) => {
       m[`marker-${i}`] = mk.dates
     })
-    // Na agenda, o fim de semana tem um véu na coluna (rodada 242).
+    // Na agenda o fim de semana tem um véu na coluna.
     if (agenda) m.fimDeSemana = { dayOfWeek: [0, 6] }
     return m
   }, [markers, modifiers, agenda])
@@ -308,9 +259,9 @@ function Calendar({
   // Um intervalo com atalhos ganha dois meses lado a lado no desktop.
   const meses = numberOfMonths ?? (presets && props.mode === "range" && !isMobile ? 2 : 1)
 
-  // Um objeto novo a cada render faz o React remontar toda a subárvore — o foco
-  // caía depois de clicar "próximo mês" sempre que o pai re-renderizava. Os
-  // componentes de dentro não dependem de nada além da variante das setas.
+  // Um objeto novo a cada render remontaria toda a subárvore e o foco caía
+  // depois de "próximo mês". Os componentes não dependem de nada além da
+  // variante das setas.
   const componentes = React.useMemo<
     React.ComponentProps<typeof DayPicker>["components"]
   >(
@@ -367,13 +318,9 @@ function Calendar({
           </td>
         )
       },
-      // As setas de mês são o `Button` do sistema. O `react-day-picker` entrega
-      // `type`, `className` (a classe da biblioteca), `tabIndex`,
-      // `aria-disabled`, `aria-label`, `onClick` e o `Chevron` como filho — e
-      // **não** entrega `disabled`, por isso o `aria-disabled:opacity-50`
-      // continua necessário. Sem `ref`: não há o que devolver. `data-size` sai
-      // porque `size-(--cell-size)` anula o degrau, e um atributo que não
-      // corresponde à caixa é pior que atributo nenhum.
+      // As setas de mês são o `Button` do sistema. O `react-day-picker` não
+      // entrega `disabled`, por isso o `aria-disabled:opacity-50` continua
+      // necessário. `data-size` sai porque `size-(--cell-size)` anula o degrau.
       PreviousMonthButton: ({ className, ...props }) => (
         <Button
           variant={buttonVariant}
@@ -406,9 +353,7 @@ function Calendar({
   return (
     <CalendarExtrasContext.Provider value={extras}>
     <DayPicker
-      // O `react-day-picker` clona o mês que sai e marca as duas direções; o
-      // movimento é a `@utility calendar-month-motion`. Antes de `{...props}`:
-      // quem chama pode desligar.
+      // O movimento é a `@utility calendar-month-motion`. Antes de `{...props}`: quem chama pode desligar.
       animate={!agenda}
       showOutsideDays={showOutsideDays}
       numberOfMonths={meses}
@@ -421,25 +366,19 @@ function Calendar({
       {...(controlaMes
         ? { month: props.month ?? mesInterno, onMonthChange: irPara }
         : {})}
-      // A grade inteira sai de `--cell-size`. Em ponteiro grosso ela vai de
-      // 28px para 44px, o mínimo de alvo de dedo que a página
-      // /designsystem/touch-safe-area documenta — 7 células de 44px cabem em
-      // 320px. Um ponto de mudança para as 42 células e a navegação de mês.
+      // A grade inteira sai de `--cell-size`; em ponteiro grosso vai de 28px
+      // para 44px, o alvo de dedo mínimo.
       className={cn(
-        // Transparente onde quem contém já pinta: cartão, popover e, desde a
-        // rodada 245, a gaveta — que é vidro, e o fundo opaco do calendário
-        // virava um bloco chapado por cima dela.
+        // Transparente onde quem contém já pinta (cartão, popover e a gaveta,
+        // que é vidro).
         "group/calendar bg-background p-2 [--cell-radius:9999px] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent in-data-[surface=drawer]:bg-transparent",
         CALENDAR_CELL[size],
-        // A troca de mês anima (rodada 245) — fora da agenda, cuja grade de
-        // fios com eventos é outra conversa. Ver `calendar-month-motion`.
+        // A troca de mês anima, fora da agenda (ver `calendar-month-motion`).
         !agenda && "calendar-month-motion",
-        // A agenda ocupa a largura de quem a contém, e a célula cresce com ela.
-        // Ela não pinta: quem pinta é a moldura da grade (`month_grid`). E é o
-        // contêiner da virada para lista (rodada 242).
+        // A agenda ocupa a largura de quem a contém e não pinta (quem pinta é
+        // a moldura `month_grid`); é o contêiner da virada para lista.
         agenda && "@container/calendar bg-transparent p-0",
-        // O toque vence a escada, e vem depois dela de propósito: 44px é piso
-        // de alvo, não um degrau a mais.
+        // O toque vence a escada e vem depois dela: 44px é piso de alvo, não um degrau.
         "pointer-coarse:[--cell-size:--spacing(11)]",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
         String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
@@ -459,23 +398,14 @@ function Calendar({
           defaultClassNames.months
         ),
         month: cn("flex w-full flex-col gap-4", defaultClassNames.month),
-        // A faixa de navegação é `absolute inset-x-0 w-full` com um botão em
-        // cada ponta — ou seja, **ela cobre também o meio do cabeçalho**, que é
-        // onde vivem os seletores de mês e ano. Sendo posicionada, ela pinta por
-        // cima e engolia o clique: medido com `elementFromPoint` no centro do
-        // gatilho, quem respondia era o `<nav>`.
-        //
-        // O conserto é de raiz: a faixa não recebe ponteiro, e os dois botões
-        // recebem. Um contêiner de largura total que só tem conteúdo nas pontas
-        // não deve capturar nada no vão entre elas.
+        // A faixa de navegação é `absolute inset-x-0 w-full` e cobriria o meio
+        // do cabeçalho, onde vivem os seletores de mês e ano, engolindo o
+        // clique. Ela não recebe ponteiro; só os dois botões recebem.
         nav: cn(
           "pointer-events-none absolute inset-x-0 top-0 flex w-full items-center justify-between gap-1 [&>button]:pointer-events-auto",
-          // Acima da legenda, sempre (rodada 245). Uma legenda animada — a
-          // subida da abertura do `DatePicker`, presa em `fill: both`, e a troca
-          // de mês — pinta como posicionada e, vindo depois no DOM, cobria as
-          // setas: medido, o centro da seta "próximo mês" devolvia a legenda
-          // no `elementFromPoint`. A biblioteca põe `z-index: 1` na faixa só
-          // durante a troca. Empilhamento local, por isso número cru.
+          // Acima da legenda, sempre: uma legenda animada (a subida da abertura
+          // do `DatePicker`, a troca de mês) pinta como posicionada e cobria as
+          // setas. Empilhamento local, número cru.
           "z-10",
           agenda && "justify-end",
           defaultClassNames.nav
@@ -486,8 +416,7 @@ function Calendar({
         button_next: defaultClassNames.button_next,
         month_caption: cn(
           "flex h-(--cell-size) w-full items-center justify-center px-(--cell-size)",
-          // Na agenda o mês é o título da tela, à esquerda; a navegação fica
-          // junta à direita (rodada 242).
+          // Na agenda o mês é o título da tela, à esquerda; a navegação fica junta à direita.
           agenda && "justify-start ps-1 pe-0",
           defaultClassNames.month_caption
         ),
@@ -495,31 +424,24 @@ function Calendar({
           "flex h-(--cell-size) w-full items-center justify-center gap-1.5 text-sm font-medium",
           defaultClassNames.dropdowns
         ),
-        // O `relative` daqui **não era resto**, e tirá-lo custou um bug: ele
-        // punha o seletor no contexto de empilhamento, acima do `<nav>`
-        // absoluto que atravessa o cabeçalho. Sem ele o seletor virou estático,
-        // caiu para trás da faixa e parou de responder ao clique — medido.
-        //
-        // Ele volta, e o `pointer-events` do `nav` acima resolve a causa. Os
-        // dois juntos: a faixa não captura o vão, e o seletor pinta por cima de
-        // qualquer jeito.
+        // O `relative` é necessário: põe o seletor no contexto de empilhamento
+        // acima do `<nav>` absoluto que atravessa o cabeçalho; sem ele o
+        // seletor caía para trás da faixa e parava de responder ao clique.
         dropdown_root: cn("relative z-10", defaultClassNames.dropdown_root),
         // `dropdown` continua sem classe: ele vestia o `<select>` nativo
         // `absolute inset-0 opacity-0` que o `Dropdown` do sistema substituiu.
         dropdown: cn(defaultClassNames.dropdown),
-        // O `caption_label` só se aplica ao layout `label`. Sob `dropdown` ele
-        // desenhava o rótulo falso, que também deixou de existir.
+        // O `caption_label` só se aplica ao layout `label`.
         caption_label: cn(
           "text-sm font-medium select-none",
           agenda && "inline-block text-base font-semibold first-letter:uppercase",
           defaultClassNames.caption_label
         ),
         table: "w-full border-collapse",
-        // **A grade de fios** (rodada 242): na agenda, a tabela é uma moldura
-        // só — o canto da superfície, o fio de 1px e o cartão —, e as células
-        // são separadas por fios, sem caixinha própria. Como item de flex, o
-        // `thead` e o `tbody` viram blocos sozinhos. Abaixo de 40rem da
-        // própria agenda ela some, e a lista do `CalendarShell` aparece.
+        // A grade de fios: na agenda a tabela é uma moldura só (canto da
+        // superfície, fio de 1px, cartão) e as células se separam por fios. Como
+        // item de flex, `thead` e `tbody` viram blocos sozinhos. Abaixo de 40rem
+        // da própria agenda ela some e a lista do `CalendarShell` aparece.
         month_grid: cn(
           agenda &&
             "flex w-full flex-col overflow-hidden rounded-surface border border-border bg-card @max-[40rem]/calendar:hidden",
@@ -547,20 +469,17 @@ function Calendar({
         day: cn(
           "group/day relative aspect-square h-full w-full rounded-(--cell-radius) p-0 text-center select-none [&:last-child[data-selected=true]_button]:rounded-r-(--cell-radius)",
           // Na agenda a célula não tem caixa: o fio à direita e embaixo, que a
-          // última coluna e a última semana não desenham. E as sete colunas
-          // têm a mesma largura (`w-0 flex-1`): com a base no conteúdo, o dia
-          // com uma ficha longa alargava a coluna e a régua desalinhava.
+          // última coluna e a última semana não desenham. As sete colunas têm a
+          // mesma largura (`w-0 flex-1`), senão uma ficha longa alargava a
+          // coluna e a régua desalinhava.
           agenda && "aspect-auto w-0 min-w-0 flex-1 rounded-none border-e border-b border-border/60 last:border-e-0",
           props.showWeekNumber
             ? "[&:nth-child(2)[data-selected=true]_button]:rounded-l-(--cell-radius)"
             : "[&:first-child[data-selected=true]_button]:rounded-l-(--cell-radius)",
           defaultClassNames.day
         ),
-        // A ponte entre a ponta e o miolo era `after:w-4` — **16px fixos**
-        // contra uma célula que vai de 28 a 44 no ponteiro grosso, medidos nos
-        // dois. Um número que não acompanha a variável que ele existe para
-        // acompanhar. Metade da célula é a medida certa: ela cobre o raio da
-        // ponta em qualquer degrau.
+        // A ponte entre a ponta e o miolo é metade da célula (cobre o raio da
+        // ponta em qualquer degrau; `after:w-4` fixo não acompanhava a variável).
         range_start: cn(
           "relative isolate z-0 rounded-l-(--cell-radius) bg-muted after:absolute after:inset-y-0 after:right-0 after:w-[calc(var(--cell-size)/2)] after:bg-muted",
           defaultClassNames.range_start
@@ -571,8 +490,7 @@ function Calendar({
           defaultClassNames.range_end
         ),
         today: cn(
-          // Na agenda o hoje é o número na pastilha (`DiaConteudo`), e não a
-          // célula inteira acesa.
+          // Na agenda o hoje é o número na pastilha (`DiaConteudo`), não a célula acesa.
           agenda
             ? "text-foreground"
             : "rounded-(--cell-radius) bg-muted text-foreground data-[selected=true]:rounded-none",
@@ -599,11 +517,10 @@ function Calendar({
 }
 
 /**
- * O que a raiz acrescenta em volta da grade: os atalhos do intervalo (ao lado
- * no desktop, em cima no telefone), o "Hoje" e a legenda dos marcadores. Lê o
- * contexto, e não as props, para os `components` do `DayPicker` continuarem
- * os mesmos entre renders — um objeto novo remontaria a grade e soltaria o
- * foco (ver o comentário em `componentes`).
+ * O que a raiz acrescenta em volta da grade: os atalhos do intervalo, o "Hoje"
+ * e a legenda dos marcadores. Lê o contexto e não as props, para os
+ * `components` do `DayPicker` continuarem os mesmos entre renders (ver
+ * `componentes`).
  */
 /** Meia-noite de hoje, na hora do clique. */
 function hojeMeiaNoite() {
@@ -630,13 +547,10 @@ function CalendarShell({ children }: { children: React.ReactNode }) {
     React.useContext(CalendarExtrasContext)
   const irParaHoje = useIrParaHoje()
   const intervaloAtual = selecionado as DateRange | undefined
-  // Os atalhos têm contorno, e o escolhido é a tecla preenchida — na grade
-  // 2 × 2 do telefone e na coluna do desktop (rodada 245, a pedido do dono).
-  // Soltos (`tertiary`), eram texto sobre o vidro e só o escolhido parecia
-  // botão; com o `secondary` o escolhido ficava a um tom dos contornados
-  // (0,269 contra 0,31 de fio) e os dois liam iguais. O `primary` é a mesma
-  // cor das pontas do intervalo na grade: o atalho e o que ele marca leem
-  // juntos.
+  // Os atalhos têm contorno e o escolhido é a tecla preenchida (`primary`, a
+  // mesma cor das pontas do intervalo, para o atalho e o que ele marca lerem
+  // juntos). Soltos, só o escolhido parecia botão; com `secondary` ele ficava a
+  // um tom dos contornados.
   const atalhoSolto = "outline"
   const atalhoEscolhido = "primary"
 
@@ -645,11 +559,9 @@ function CalendarShell({ children }: { children: React.ReactNode }) {
       {children}
       {agenda ? <CalendarAgendaList /> : null}
       {markers.length > 0 ? (
-        // A legenda é uma faixa própria (rodada 241y): um fio suave a separa da
-        // grade — ela não é mais uma semana —, centrada sob as sete colunas, com
-        // respiro de 16px entre os itens para cada ponto ler como do seu nome,
-        // e não do vizinho. O ponto tem o dobro do da célula (8 contra 4),
-        // porque aqui ele é a chave, e lá é a marca.
+        // A legenda é uma faixa própria, separada da grade por um fio suave,
+        // com respiro de 16px entre itens. O ponto tem o dobro do da célula
+        // (aqui é a chave, lá é a marca).
         <div data-slot="calendar-legend" className="mt-3">
           <Separator tone="soft" />
           <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 px-1 pt-3 pb-1 text-xs text-muted-foreground">
@@ -677,19 +589,16 @@ function CalendarShell({ children }: { children: React.ReactNode }) {
   if (!presets?.length) return grade
 
   return (
-    // A grade 2 × 2 vira coluna em `md` (768), o mesmo corte do `useIsMobile`
-    // que decide a gaveta: a grade é do telefone, a coluna é do popover.
+    // A grade 2 × 2 vira coluna em `md` (768), o corte do `useIsMobile` que decide a gaveta.
     <div className="flex flex-col gap-3 md:flex-row">
       <ul
         data-slot="calendar-presets"
         aria-label={modo === "range" ? "Atalhos de período" : "Atalhos de data"}
-        // No telefone os atalhos são uma grade 2 × 2 (rodada 245): na fileira
-        // que rolava de lado, "Mês passado" ficava fora da tela, e a única
-        // pista de que havia um quarto era ele cortado na borda.
+        // No telefone os atalhos são uma grade 2 × 2: numa fileira que rolava
+        // de lado "Mês passado" ficava fora da tela.
         className="grid grid-cols-2 gap-1 md:flex md:w-36 md:shrink-0 md:flex-col md:gap-1.5 md:border-e md:border-border md:pe-2"
       >
-        {/* No dedo cada atalho sobe a 40, a régua do controle em linha
-            (rodada 245): com o `sm` de 28 eles eram o menor alvo da gaveta. */}
+        {/* No dedo cada atalho sobe a 40, a régua do controle em linha. */}
         {presets.map((p) => {
           if ("date" in p) {
             const dia = typeof p.date === "function" ? p.date() : p.date
@@ -745,10 +654,8 @@ function CalendarShell({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * A faixa de navegação. Fora da agenda é a do `react-day-picker`, intacta. Na
- * agenda com `showToday`, o "Hoje" entra na faixa, antes das setas — o mês à
- * esquerda e a navegação junta à direita, como a visão de mês do iOS
- * (rodada 242).
+ * A faixa de navegação. Fora da agenda é a do `react-day-picker`, intacta; na
+ * agenda com `showToday` o "Hoje" entra antes das setas, com o mês à esquerda.
  */
 function CalendarNav({ className, ...props }: NavProps) {
   const { agenda, showToday } = React.useContext(CalendarExtrasContext)
@@ -774,10 +681,8 @@ function CalendarNav({ className, ...props }: NavProps) {
 const CalendarLayoutContext = React.createContext<"grid" | "list">("grid")
 
 /**
- * A agenda estreita (rodada 242): abaixo de 40rem da **própria** largura a
- * grade some e entra a lista do mês — só os dias com conteúdo, cada um com o
- * rótulo e os eventos em linha. É a container query, e não a janela: num
- * painel de 560px no desktop ela também vira lista.
+ * A agenda estreita: abaixo de 40rem da própria largura a grade some e entra a
+ * lista do mês, só com os dias com conteúdo. É container query, não a janela.
  */
 function CalendarAgendaList() {
   const { renderDay, listEmpty, listDays } = React.useContext(CalendarExtrasContext)
@@ -802,7 +707,7 @@ function CalendarAgendaList() {
         dias.map(({ date, conteudo }) => {
           const ymd = localYmdFromDate(date)
           return (
-            // Um grupo e não uma `section`: com nome, a `section` vira região, e
+            // Um grupo e não uma `section`: com nome a `section` vira região, e
             // um mês cheio punha 25 regiões na navegação do leitor de tela.
             <div
               key={ymd}
@@ -825,36 +730,15 @@ function CalendarAgendaList() {
 }
 
 /**
- * O seletor de mês e de ano — o do design system, e não o nativo.
+ * O seletor de mês e de ano do design system, no lugar do `<select>` nativo
+ * `absolute inset-0 opacity-0` do `react-day-picker` (cujo painel é do sistema
+ * operacional): o `Select`, com `field-classes` no gatilho.
  *
- * ## O que havia antes
- *
- * O `react-day-picker` desenha o salto de mês assim: um `<select>` **nativo**
- * com `absolute inset-0 opacity-0` por cima de um rótulo falso, que é quem
- * recebe a tipografia e o chevron. Funciona, e é como o shadcn entrega — mas o
- * painel que abre é o do sistema operacional: fonte, medida, cantos e realce
- * fora do tema, sem tema escuro, e sem nenhuma das decisões que este projeto já
- * tomou sobre superfície de comando.
- *
- * Aqui ele passa a ser o `Select` do design system, que já veste
- * `field-classes` no gatilho e a superfície de popover no painel.
- *
- * ## A ponte com o `react-day-picker`
- *
- * O `onChange` dele é um `ChangeEventHandler<HTMLSelectElement>`, e o handler
- * interno lê **só `e.target.value`** (`DayPicker.js`: `Number(e.target.value)`).
- * O `Select` do Radix entrega `onValueChange(valor: string)`, então a ponte é
- * um objeto com a única propriedade que o outro lado consulta. É um `as` sobre
- * um objeto incompleto de propósito — e o comentário existe para que a próxima
- * pessoa saiba que a incompletude foi medida, não esquecida.
- *
- * ## O gatilho é compacto, e não `sm`
- *
- * A fileira de dois seletores vive dentro de um `month_caption` que já reserva
- * `--cell-size` de cada lado para as setas. Com o recuo padrão do
- * `SelectTrigger` os dois somam mais que sete células, e como a raiz é `w-fit`
- * **a grade inteira cresceria para caber a legenda** — o calendário passaria a
- * ser dimensionado pelo cabeçalho em vez das células.
+ * A ponte: o `onChange` do `react-day-picker` lê só `e.target.value`, e o
+ * `Select` do Radix entrega `onValueChange(valor)`; o `as` sobre um objeto
+ * incompleto é proposital. O gatilho é compacto e não `sm`: a fileira de dois
+ * seletores vive num `month_caption` que já reserva `--cell-size` de cada lado
+ * e, com o recuo padrão, a raiz `w-fit` cresceria para caber a legenda.
  */
 function CalendarDropdown({
   options,
@@ -882,9 +766,7 @@ function CalendarDropdown({
       <SelectTrigger
         size="sm"
         aria-label={rotulo}
-        // A linha, e não a cápsula (rodada 245, a pedido do dono): o seletor
-        // de mês e de ano veste o degrau `row` da escala, escolhido ao lado de
-        // `md` e `lg` com o realce aceso. O realce é a tinta das linhas.
+        // A linha, e não a cápsula: o degrau `row` da escala, com o realce aceso.
         className="w-fit gap-1 rounded-row border-transparent bg-transparent px-2 font-medium hover:bg-foreground/9 active:bg-foreground/9"
       >
         <SelectValue />
@@ -905,22 +787,18 @@ function CalendarDropdown({
 }
 
 /**
- * A célula da agenda: alta, o número no canto e o conteúdo embaixo — **sem
- * caixa** (rodada 242). Era `rounded-lg` com borda e cartão próprios, 42
- * caixinhas; hoje quem separa os dias são os fios do `td`, e a célula só
- * realça: a camada do `Button` a 5% da tinta do texto, que numa célula de 96px
- * é o bastante. O foco é um anel **interno**, porque a moldura recorta o de
- * fora nas bordas.
+ * A célula da agenda: alta, o número no canto e o conteúdo embaixo, sem caixa
+ * (quem separa os dias são os fios do `td`). Só realça, a 5% da tinta do texto.
+ * O foco é um anel interno, porque a moldura recorta o de fora nas bordas.
  */
 const AGENDA_CELULA =
   "aspect-auto min-h-24 w-full items-stretch justify-start gap-1 rounded-none border-0 bg-transparent p-2 text-left [--button-hover-fill:color-mix(in_oklab,var(--foreground)_5%,transparent)] focus-visible:ring-0 focus-visible:inset-ring-2 focus-visible:inset-ring-ring/45 group-data-[focused=true]/day:ring-0 group-data-[focused=true]/day:inset-ring-2 group-data-[focused=true]/day:inset-ring-ring/45"
 
 /**
- * O dia escolhido na agenda **não acende em `primary`** — numa célula de 96px
- * a tecla preta inteira apagaria o conteúdo. Ele fica `muted` com um anel
- * interno, e o número na tinta do texto. Vence as regras do dia escolhido do
- * calendário pequeno porque vem depois no `cn` — inclusive a camada do realce,
- * que lá é zerada e aqui volta aos 5% das outras células.
+ * O dia escolhido na agenda não acende em `primary` (a tecla preta apagaria o
+ * conteúdo de uma célula de 96px): fica `muted` com um anel interno e o número
+ * na tinta do texto. Vem depois no `cn` e vence as regras do calendário
+ * pequeno, inclusive a camada do realce, que aqui volta aos 5%.
  */
 const AGENDA_SELECIONADO =
   "data-[selected-single=true]:[--button-hover-fill:color-mix(in_oklab,var(--foreground)_5%,transparent)] data-[selected-single=true]:bg-muted data-[selected-single=true]:text-foreground data-[selected-single=true]:inset-ring-2 data-[selected-single=true]:inset-ring-ring/45 data-[selected-single=true]:hover:bg-muted data-[selected-single=true]:active:bg-muted data-[selected-single=true]:hover:text-foreground data-[selected-single=true]:active:text-foreground dark:data-[selected-single=true]:hover:text-foreground dark:data-[selected-single=true]:active:text-foreground"
@@ -1000,11 +878,9 @@ function DiaConteudo({
 }
 
 /**
- * O dia **estático**. O `react-day-picker` só desenha o dia como botão quando
- * a grade é interativa (`mode` ou `onDayClick`); sem isso a célula recebe o
- * número em texto, e a agenda e os pontos — que moram no botão — sumiam
- * calados num calendário só de leitura. Aqui o mesmo miolo entra no dia
- * estático. Medido: a agenda sem `onDayClick` saía só com "12" na célula.
+ * O dia estático. O `react-day-picker` só desenha o dia como botão quando a
+ * grade é interativa; sem isso a agenda e os pontos sumiam calados num
+ * calendário só de leitura, então o mesmo miolo entra aqui.
  */
 function CalendarDay({
   day,
@@ -1058,12 +934,8 @@ function CalendarDayButton({
     <Button
       ref={ref}
       variant="tertiary"
-      // **Sem `size`, e sem `data-size`.** Ele dizia `icon-lg` (36) e nunca
-      // valeu: as classes abaixo (`size-auto w-full min-w-(--cell-size)`) o
-      // sobrescrevem, e o botão media 28. Deixar o padrão `md` do `Button`
-      // apenas trocaria a mentira de 36 para 32 — a célula é elástica, então
-      // **nenhum** degrau da escada a descreve, e carimbar um atributo que não
-      // corresponde à caixa é pior que não ter atributo.
+      // Sem `size` e sem `data-size`: a célula é elástica e nenhum degrau da
+      // escada a descreve; um atributo que não corresponde à caixa é pior que nenhum.
       data-size={undefined}
       data-day={localYmdFromDate(day.date)}
       data-selected-single={
@@ -1075,39 +947,28 @@ function CalendarDayButton({
       data-range-start={modifiers.range_start}
       data-range-end={modifiers.range_end}
       data-range-middle={modifiers.range_middle}
-      // Na agenda o nome do dia continua "5 de março", e o que há nele — os
-      // eventos e o "+2 mais" — é a descrição (rodada 242).
+      // Na agenda o nome do dia continua "5 de março", e o que há nele (os eventos e o "+2 mais") é a descrição.
       aria-describedby={agenda ? contentId : undefined}
       className={cn(
-        // **`p-0` é carga estrutural, não cosmética.** A raiz é `w-fit`, e a
-        // largura da grade sai do `max-content` das células. Enquanto o botão
-        // trouxer o `px-3` do degrau `md` do `Button`, esse recuo é o que
-        // dimensiona a coluna: medido, **39px em todos os degraus**, com o
-        // `min-w-(--cell-size)` nunca chegando a valer e o `size` do `Calendar`
-        // sem efeito nenhum. Com o recuo em zero, quem dimensiona volta a ser a
-        // célula.
+        // `p-0` é estrutural: a raiz é `w-fit` e, com o `px-3` do `Button
+        // md`, esse recuo dimensionaria a coluna (39px em todos os degraus) e
+        // o `size` do `Calendar` não valeria nada.
         "relative isolate z-10 flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 border-0 p-0 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-3 group-data-[focused=true]/day:ring-ring/45 data-[range-end=true]:rounded-l-none data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground data-[range-middle=true]:rounded-none data-[range-middle=true]:bg-muted data-[range-middle=true]:text-foreground data-[range-start=true]:rounded-r-none data-[range-start=true]:data-[range-end=true]:rounded-full data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground dark:hover:text-foreground [&>span]:text-xs [&>span]:opacity-70",
         defaultClassNames.day,
-        // **As pontas do intervalo são meia-lua voltada para fora** (rodada
-        // 241x): a ponta de início é redonda à esquerda e reta do lado da
-        // faixa, a de fim o contrário, e as duas completam a faixa. Antes elas
-        // somavam `rounded-full` (calc(infinity·1px)) a `--cell-radius`
-        // (9999px) na mesma aresta, e a regra de proporção do CSS encolhia o
-        // lado de 9999 a quase zero — a meia-lua saía virada para dentro. O
-        // intervalo de um dia só, com as duas pontas no mesmo dia, é círculo.
-        // **O dia escolhido realça como o `primary`** (rodada 241w): a tecla vai
-        // a `--primary-hover` e o número fica na tinta dela. Herdando o
-        // `tertiary`, o cursor trocava o número para `--foreground` — branco
-        // sobre a tecla branca no escuro, preto sobre a preta no claro: o
-        // número sumia — e a camada de 12% do texto não se via sobre a tecla.
-        // O `dark:` repete porque `dark:hover:text-foreground` empata com a
-        // regra sem tema.
+        // As pontas do intervalo são meia-lua voltada para fora: a de início é
+        // redonda à esquerda e reta do lado da faixa, a de fim o contrário
+        // (somar `rounded-full` a `--cell-radius` na mesma aresta virava a
+        // meia-lua para dentro). Um dia só é círculo.
+        // O dia escolhido realça como o `primary`: a tecla vai a
+        // `--primary-hover` e o número fica na tinta dela (herdando o
+        // `tertiary`, o cursor trocaria o número para `--foreground` e ele
+        // sumiria sobre a tecla). O `dark:` repete porque
+        // `dark:hover:text-foreground` empata com a regra sem tema.
         "data-[selected-single=true]:[--button-hover-fill:transparent] data-[selected-single=true]:hover:bg-primary-hover data-[selected-single=true]:active:bg-primary-hover data-[selected-single=true]:hover:text-primary-foreground data-[selected-single=true]:active:text-primary-foreground dark:data-[selected-single=true]:hover:text-primary-foreground dark:data-[selected-single=true]:active:text-primary-foreground",
         "data-[range-start=true]:[--button-hover-fill:transparent] data-[range-start=true]:hover:bg-primary-hover data-[range-start=true]:active:bg-primary-hover data-[range-start=true]:hover:text-primary-foreground data-[range-start=true]:active:text-primary-foreground dark:data-[range-start=true]:hover:text-primary-foreground dark:data-[range-start=true]:active:text-primary-foreground",
         "data-[range-end=true]:[--button-hover-fill:transparent] data-[range-end=true]:hover:bg-primary-hover data-[range-end=true]:active:bg-primary-hover data-[range-end=true]:hover:text-primary-foreground data-[range-end=true]:active:text-primary-foreground dark:data-[range-end=true]:hover:text-primary-foreground dark:data-[range-end=true]:active:text-primary-foreground",
-        // A agenda: a célula alta, o número no canto e o conteúdo do dia
-        // embaixo. Contorno e chão próprios, e o "hoje" é o número numa
-        // pastilha, não a célula inteira acesa.
+        // A agenda: célula alta, o número no canto e o conteúdo embaixo; o
+        // "hoje" é o número numa pastilha, não a célula acesa.
         agenda && [AGENDA_CELULA, AGENDA_SELECIONADO],
         className
       )}
@@ -1121,16 +982,11 @@ function CalendarDayButton({
 }
 
 /**
- * Um evento do dia (rodada 242), na forma que a agenda pede: na grade, a ficha
- * de 20px na superfície `-muted` do tom, só com o título; na lista, a linha de
- * 44px com o ponto do tom, o `meta` (o tipo) depois do título e o valor à
- * direita — e ela é `button` quando há `onSelect`. Na grade ela nunca é botão:
- * o dia já é. O valor sai na tinta do texto, como no resto da agenda do app: o
- * tom do evento já está no ponto.
- *
- * **O valor não entra na ficha, e é medido**: numa coluna de 123px (a agenda
- * de 862) o valor ficava inteiro e o título caía para "Spo…" e "Co…". O
- * título é o que diz o que é; o valor está na lista e no que o dia abre.
+ * Um evento do dia: na grade, a ficha de 20px na superfície `-muted` do tom,
+ * só com o título; na lista, a linha de 44px com o ponto do tom, o `meta`
+ * depois do título e o valor à direita (`button` quando há `onSelect`). Na
+ * grade nunca é botão, o dia já é. O valor não entra na ficha: numa coluna de
+ * 123px ele espremia o título para "Spo…".
  */
 function CalendarEvent({
   tone = "default",
@@ -1200,11 +1056,7 @@ function CalendarEvent({
   )
 }
 
-/**
- * Os eventos de um dia. Na grade mostra os `max` primeiros e um "+N mais"
- * que não estoura a célula; na lista mostra todos. Era escrito à mão em cada
- * tela — o "+N" do dashboard, o `Badge` do catálogo.
- */
+/** Os eventos de um dia: na grade os `max` primeiros e um "+N mais" que não estoura a célula; na lista, todos. */
 function CalendarEvents({
   max = 2,
   className,
@@ -1235,9 +1087,9 @@ function CalendarEvents({
 }
 
 /**
- * O esqueleto do calendário (rodada 242). `agenda` é a grade de fios — o
- * título, a régua dos dias e 6 × 7 células com uma ficha fantasma em algumas;
- * `default` é a grade pequena. Dentro de um esqueleto de página, `group={false}`.
+ * O esqueleto do calendário: `agenda` é a grade de fios (título, régua dos
+ * dias, 6 × 7 células com fichas fantasma); `default` é a grade pequena. Dentro
+ * de um esqueleto de página, `group={false}`.
  */
 function CalendarSkeleton({
   variant = "default",
@@ -1295,9 +1147,7 @@ function CalendarSkeleton({
         ))}
       </div>
     )
-  // A agenda ocupa a largura de quem a contém, como a agenda de verdade: sem
-  // `w-full` no grupo, num contêiner flex ele encolhia ao conteúdo e a grade
-  // saía espremida em 260px.
+  // A agenda ocupa a largura de quem a contém; sem `w-full` num contêiner flex o grupo encolhia ao conteúdo.
   return group ? (
     <SkeletonGroup label="Carregando o calendário…" className={cn(variant === "agenda" && "w-full")}>
       {ossos}

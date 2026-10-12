@@ -30,50 +30,25 @@ import {
 } from "@/lib/menu-classes"
 
 /**
- * As duas classes que trazem o nome da primitiva — escritas por extenso, e não
- * montadas. O Tailwind varre o código como texto: uma classe interpolada em
- * tempo de execução não existe para o scanner, e o CSS dela nunca é gerado.
- * Medido: com a versão interpolada, o `max-height` computado era `none` mesmo
- * com a variável do Radix valendo 318,75px.
+ * As duas classes que trazem o nome da primitiva ficam escritas por extenso: o
+ * Tailwind varre o código como texto, e uma classe interpolada nunca gera CSS
+ * (o `max-height` computava `none` com a variável do Radix valendo).
  */
 const CONTEXT_POPPER =
   "max-h-[min(var(--radix-context-menu-content-available-height),var(--menu-max-h))] max-w-(--radix-context-menu-content-available-width) origin-(--radix-context-menu-content-transform-origin)"
 
 /**
- * O menu do botão direito.
+ * O menu do botão direito. Mesma superfície do `DropdownMenu` (as medidas moram
+ * em [`lib/menu-classes`](../../lib/menu-classes.ts)); difere em como é
+ * invocado. `RadioItem` desenha o ponto (rádio é ponto, caixa é tique) e o
+ * submenu veste a superfície do próprio `Content`.
  *
- * Ele desenha a mesma superfície do `DropdownMenu` e difere só em como é
- * invocado — por isso as medidas moram em
- * [`lib/menu-classes`](../../lib/menu-classes.ts), e não aqui. Este arquivo era
- * o mais moderno do par e virou a régua; o que sobrou dele para corrigir foram
- * três coisas próprias:
- *
- * 1. **`RadioItem` usava `CheckIcon`** — o mesmo tique do `CheckboxItem`.
- *    "Escolha uma" e "marque quantas quiser" passavam o mesmo desenho, e a
- *    diferença entre os dois sumia.
- * 2. **`Content` declarava um prop `side`** que o Radix não tem: um menu de
- *    contexto abre onde o cursor está, não num lado. O tipo prometia um
- *    controle inexistente.
- * 3. **`SubContent` divergia do próprio `Content`** no mesmo arquivo —
- *    `border` + `shadow-lg` contra `ring-1` + `shadow-md`. Um submenu não
- *    flutua mais alto que o menu que o abriu.
- *
- * ## Rodada 209 — o que o menu ganhou
- *
- * - **`header`** + `ContextMenuHeader`: diz sobre o que o menu age ("Mercado ·
- *   −R$ 42,90"), e o título nomeia o menu (`aria-labelledby`). É prop e não
- *   filho pela razão do `DropdownMenuContent`: a faixa é irmã do viewport,
- *   senão a dissolução a apagaria ao rolar.
- * - **`size`**: a escada de largura do `DropdownMenuContent` (176 a 224).
- * - **`ContextMenuItem shortcut`** desenha a tecla com o `Kbd`, e
- *   **`description`** é a segunda linha miúda, alinhada com o rótulo.
- * - **O gatilho**: Shift+F10 e a tecla Menu abrem o menu sob o elemento
- *   focado (antes só o mouse abria); o toque longo já era do Radix (700ms,
- *   balão do iOS desligado) e não vaza clique para a linha — medido; e o alvo
- *   aberto acende (`data-state=open`), o que torna
- *   `asChild` sobre uma linha, um `Item` ou um `Card` a forma normal.
- * - **`contextMenuTargets`**: a regra das ações da seleção — sobre uma linha
- *   selecionada o menu age em toda a seleção; fora dela, só na linha.
+ * `header` + `ContextMenuHeader` dizem sobre o que o menu age e o nomeiam
+ * (`aria-labelledby`); é prop porque a faixa é irmã do viewport, senão a
+ * dissolução a apagaria. `size` é a escada de largura do `DropdownMenuContent`;
+ * `shortcut` desenha a tecla com o `Kbd`; `description` é a segunda linha.
+ * Shift+F10 e a tecla Menu abrem o menu sob o elemento focado, e o alvo aberto
+ * acende (`data-state=open`). `contextMenuTargets` é a regra da seleção.
  */
 
 /** As ações de um menu aberto sobre `id`: a seleção, se ele faz parte dela. */
@@ -88,16 +63,11 @@ function ContextMenu({
 }
 
 /**
- * O alvo. Com `asChild` ele **é** a linha, o `Item` ou o `Card`, sem nó no
- * meio, e acende enquanto o menu dele está aberto.
- *
- * - **Teclado**: Shift+F10 e a tecla Menu despacham um `contextmenu` no
- *   elemento focado — o próprio alvo ou um botão dentro dele —, e o menu nasce
- *   sob ele. O Radix só escuta o evento, que o Mac não produz pelo teclado.
- * - **Toque longo**: é do Radix — abre em 700ms e desliga o balão do iOS
- *   (`WebkitTouchCallout: none` inline). Medido com toque emulado no
- *   Chromium: o soltar do dedo **não** entrega clique à linha, com ou sem
- *   trava, então não há trava. O Safari do iOS não foi medido.
+ * O alvo. Com `asChild` ele é a linha, o `Item` ou o `Card`, sem nó no meio, e
+ * acende enquanto o menu está aberto. Shift+F10 e a tecla Menu despacham um
+ * `contextmenu` no elemento focado (o Radix só escuta o evento, que o Mac não
+ * produz pelo teclado). O toque longo é do Radix (700ms, balão do iOS
+ * desligado) e o soltar não entrega clique à linha.
  */
 function ContextMenuTrigger({
   className,
@@ -107,9 +77,8 @@ function ContextMenuTrigger({
 }: React.ComponentProps<typeof ContextMenuPrimitive.Trigger>) {
   return (
     <ContextMenuPrimitive.Trigger
-      // Com `asChild` o atributo não é escrito: o `Slot` o passaria por cima
-      // do `data-slot` do filho (medido, o `Item` saía `context-menu-trigger`),
-      // e o `Card` e o `Item` se reconhecem por ele.
+      // Com `asChild` o atributo não é escrito: o `Slot` o passaria por cima do
+      // `data-slot` do filho, e o `Card` e o `Item` se reconhecem por ele.
       {...(asChild ? {} : { "data-slot": "context-menu-trigger" })}
       asChild={asChild}
       className={cn(
@@ -170,7 +139,7 @@ function ContextMenuRadioGroup({
   )
 }
 
-// Abre do cursor e volta para ele (rodada 248, `@utility context-menu-burst`).
+// Abre do cursor e volta para ele (`@utility context-menu-burst`).
 const contextMenuContentVariants = cva([menuSurfaceClassName, CONTEXT_POPPER, "context-menu-burst"], {
   variants: {
     // A escada de largura do `DropdownMenuContent`, com os mesmos nomes.
@@ -185,10 +154,7 @@ const contextMenuContentVariants = cva([menuSurfaceClassName, CONTEXT_POPPER, "c
   defaultVariants: { size: "auto" },
 })
 
-/**
- * Sem `side`: o menu de contexto nasce onde o cursor estava. O prop existia no
- * tipo, não fazia nada, e prometia um controle que a primitiva não oferece.
- */
+/** Sem `side`: o menu de contexto nasce onde o cursor estava. */
 function ContextMenuContent({
   className,
   children,
@@ -199,7 +165,7 @@ function ContextMenuContent({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Content> &
   VariantProps<typeof contextMenuContentVariants> & {
-    /** A faixa do alvo — `ContextMenuHeader`. Irmã do viewport, com o fio. */
+    /** A faixa do alvo (`ContextMenuHeader`), irmã do viewport. */
     header?: React.ReactNode
   }) {
   const [tituloId, setTituloId] = React.useState<string | null>(null)
@@ -237,9 +203,8 @@ function ContextMenuContent({
 }
 
 /**
- * Sobre o que o menu age: o nome do alvo e uma legenda (a data e o valor, ou
- * "3 lançamentos selecionados"). Título sobre legenda é par de identidade —
- * sem `gap`. O título nomeia o menu.
+ * Sobre o que o menu age: o nome do alvo e uma legenda. Título sobre legenda é
+ * par de identidade (sem `gap`); o título nomeia o menu.
  */
 function ContextMenuHeader(
   props: Omit<React.ComponentProps<"div">, "title"> & {
@@ -252,12 +217,10 @@ function ContextMenuHeader(
 }
 
 /**
- * `shortcut` desenha a tecla com o `Kbd` (`"mod+e"` sai ⌘E no Mac e Ctrl+E no
- * resto). Ela é a dica de um atalho que **já existe na tela**: com o menu
- * aberto a tecla não dispara nada, por isso não há `aria-keyshortcuts`.
- *
- * `description` é a segunda linha, alinhada com o rótulo quando há ícone — e o
- * lugar de dizer por que um item está desabilitado.
+ * `shortcut` desenha a tecla com o `Kbd`; é a dica de um atalho que já existe na
+ * tela (com o menu aberto a tecla não dispara nada, por isso sem
+ * `aria-keyshortcuts`). `description` é a segunda linha, e o lugar de dizer por
+ * que um item está desabilitado.
  */
 function ContextMenuItem({
   className,
@@ -280,11 +243,9 @@ function ContextMenuItem({
       data-variant={variant}
       className={cn(
         menuItemClassName,
-        // Com descrição a linha vira grade: ícone, rótulo e tecla na primeira
-        // fileira, a descrição sob o rótulo. `flex-wrap` foi a primeira
-        // versão, e o rótulo — um nó de texto solto — descia para baixo do
-        // ícone quando não cabia ao lado dele. Sem `gap` vertical: rótulo e
-        // descrição são o mesmo item em duas linhas.
+        // Com descrição a linha vira grade (ícone, rótulo e tecla na primeira
+        // fileira): com `flex-wrap` o rótulo, um nó de texto solto, descia para
+        // baixo do ícone. Sem `gap` vertical: é o mesmo item em duas linhas.
         description &&
           "grid grid-cols-[minmax(0,1fr)_auto] gap-y-0 has-[>svg]:grid-cols-[auto_minmax(0,1fr)_auto]",
         className
@@ -340,9 +301,8 @@ function ContextMenuSubContent({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.SubContent>) {
   return (
-    // No portal: dentro do menu, o vidro (`backdrop-filter`) vira o bloco de
-    // contenção do `fixed` do popper e o `overflow-hidden` o recorta — o
-    // submenu abria e não aparecia (medido, rodada 213).
+    // No portal: dentro do menu o vidro (`backdrop-filter`) vira o bloco de
+    // contenção do `fixed` do popper e o `overflow-hidden` recorta o submenu.
     <ContextMenuPrimitive.Portal>
       <ContextMenuPrimitive.SubContent
         data-slot="context-menu-sub-content"

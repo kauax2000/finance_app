@@ -18,37 +18,13 @@ import { cn } from "@/lib/utils"
 const MOBILE_GLASS_SURFACE_CLASSNAME = "mobile-glass-surface shadow-lg ring-1 ring-foreground/10"
 
 /**
- * A barra de baixo do telefone — a irmã do `TopBar`.
- *
- * ## A referência é o `Tabs` (rodada 230)
- *
- * A pílula e o marcador são os do `Tabs floating`: o anel de 1px em
- * `--foreground` a 10%, o marcador em relevo (a tecla: `--muted`, anel e
- * `shadow-xs`, 2px para dentro do item) e a viagem líquida
- * (`viajarLiquido`, o trajeto macio das abas). O vidro fica — a ilha flutua
- * sobre a lista, e é a premissa do `backdrop-filter`.
- *
- * **O anel substituiu a borda, e resolve os dois temas sozinho.** A pílula
- * tinha borda **e** anel porque cada um só desenhava num tema: a borda era
- * `--mobile-glass-border` (branco, 1,007 no claro) e o anel `--border` a 20%
- * (1,042 no escuro). Em `--foreground` a 10% o anel escurece no claro e
- * clareia no escuro — a direção do contato nos dois, como o das `Tabs`.
- *
- * ## A altura é do degrau, e a área segura entra dentro da caixa
- *
- * `--bottom-bar-h` é publicada pelo eixo `labels`, como o `TopBar` publica
- * `--top-bar-h`. O que fica no tema é `--bottom-bar-margin`, que é o que a
- * casca precisa saber para reservar espaço.
- *
- * ## A casca não recebe eventos
- *
- * O `<nav>` cobre a largura toda e a folga de baixo; sem `pointer-events-none`
- * ele engoliria o toque na base da tela, fora da pílula. Quem recebe é a linha.
- *
- * ## A camada é `--z-modal`, e é decisão registrada
- *
- * Ela empata com o `Dialog` e vence por ordem de DOM — o diálogo é
- * portalizado ao `body`, depois dela (`docs/layers.tsx`).
+ * A barra de baixo do telefone, irmã do `TopBar`. A pílula e o marcador são os
+ * do `Tabs floating` (anel em `--foreground` a 10%, tecla em relevo, viagem
+ * líquida); o vidro fica porque a ilha flutua sobre a lista. A altura é do
+ * degrau (`--bottom-bar-h`, publicada pelo eixo `labels`) e a área segura entra
+ * dentro da caixa. O `<nav>` não recebe eventos (cobre a largura toda e engoliria
+ * o toque fora da pílula); quem recebe é a linha. A camada é `--z-modal`:
+ * empata com o `Dialog` e perde por ordem de DOM.
  */
 const bottomBarVariants = cva(
   [
@@ -60,20 +36,16 @@ const bottomBarVariants = cva(
   {
     variants: {
       /**
-       * Sem rótulo a barra é uma fileira de ícones de 24 numa caixa de 56.
-       * Com rótulo o par ícone+texto precisa de 64. `active` põe o nome só na
-       * aba ativa, **ao lado** do ícone — a aba se abre como uma de `Tabs` e
-       * as outras encolhem —, e cabe nos mesmos 56.
+       * Sem rótulo a barra é uma fileira de ícones numa caixa de 56; com rótulo
+       * o par ícone+texto pede 64. `active` põe o nome só na aba ativa, ao lado
+       * do ícone, e cabe nos 56.
        */
       labels: {
         false: "[--bottom-bar-h:3.5rem]",
         true: "[--bottom-bar-h:4rem]",
         active: "[--bottom-bar-h:3.5rem]",
       },
-      /**
-       * `island` flutua, com margem nos quatro lados. Um valor só, de
-       * propósito: é ele que dá dono ao `--bottom-bar-margin`.
-       */
+      /** `island` flutua, com margem nos quatro lados; é ele que dá dono ao `--bottom-bar-margin`. */
       shape: {
         island: "[--bottom-bar-margin:1rem]",
       },
@@ -85,9 +57,9 @@ const bottomBarVariants = cva(
 type Rotulos = boolean | "active"
 
 /**
- * O que desce da barra aos itens: o eixo `labels` (por contexto, e não por
- * `in-*`, que compila com `:where()` e empataria com o `hidden` do próprio
- * rótulo) e o "subir ao topo" da aba ativa.
+ * O que desce da barra aos itens: o eixo `labels` (por contexto; `in-*`
+ * compila com `:where()` e empataria com o `hidden` do rótulo) e o "subir ao
+ * topo" da aba ativa.
  */
 const BottomBarContext = React.createContext<{
   labels: Rotulos
@@ -95,10 +67,7 @@ const BottomBarContext = React.createContext<{
   subirAoTopo: () => void
 }>({ labels: false, glass: false, subirAoTopo: () => {} })
 
-/**
- * Se o marcador já mediu — e portanto se o item cede a ele o preenchimento.
- * Contexto e não seletor pela razão de sempre (`:where()`).
- */
+/** Se o marcador já mediu, e portanto se o item cede a ele o preenchimento (contexto, pela razão do `:where()`). */
 const BottomBarMarkerContext = React.createContext(false)
 
 function BottomBar({
@@ -112,7 +81,7 @@ function BottomBar({
   ...props
 }: React.ComponentProps<"nav"> &
   VariantProps<typeof bottomBarVariants> & {
-    /** A ação primária, à direita da pílula — de preferência um `BottomBarAction`. */
+    /** A ação primária, à direita da pílula (de preferência um `BottomBarAction`). */
     action?: React.ReactNode
     /** Rolando para baixo a pílula e a ação afundam juntas; rolando para cima, voltam. */
     hideOnScroll?: boolean
@@ -154,14 +123,11 @@ function BottomBar({
 }
 
 /**
- * Quem rola a tela, e o que a barra faz com isso. Um ouvinte de `scroll` em
- * captura no documento da barra (a rolagem de um contêiner não borbulha),
- * passivo, que guarda **o último que rolou** — é ele que a aba ativa leva ao
- * topo, seja a página, seja a tela do `IphoneFrame`. Só conta quem é alto
- * (60% da janela): um carrossel ou a lista de um menu não escondem a barra.
- *
- * Com `esconder`, rolar para baixo marca `data-hidden` na barra e rolar para
- * cima tira; no topo, e com o foco dentro dela, ela nunca some.
+ * Quem rola a tela, e o que a barra faz com isso: um ouvinte de `scroll` em
+ * captura (a rolagem de um contêiner não borbulha), passivo, que guarda o
+ * último que rolou, o que a aba ativa leva ao topo. Só conta quem é alto (60%
+ * da janela). Com `esconder`, rolar para baixo marca `data-hidden`; no topo, e
+ * com o foco dentro, a barra nunca some.
  */
 function useRolagemDaTela(navRef: React.RefObject<HTMLElement | null>, esconder: boolean) {
   const ultimo = React.useRef<Element | null>(null)
@@ -221,26 +187,12 @@ function BottomBarRow({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 /**
- * **O tom da pílula e o da tecla, e o contraste entre os dois** (rodada 230,
- * pedido do dono: "fraco, principalmente quando tem algo atrás").
- *
- * A pílula vestia `--mobile-glass-bg` (55% no claro, 45% no escuro) e a tecla
- * era `--muted` — que é **o fundo das linhas da lista que passa por trás**.
- * Sobre uma linha, a pílula composta ia a ~0,24 de luz no escuro e a tecla
- * ficava em 0,269: ~1,09:1, e ~1,08:1 no claro. A tecla empatava com o que a
- * pílula deixava ver.
- *
- * Dois movimentos, os dois locais (a variável do vidro é redeclarada só aqui;
- * a gaveta e o menu da conta continuam no token):
- * - a pílula passa à tinta dos flutuantes, `--popover` a 82% — o conteúdo de
- *   trás pesa menos, e o vidro continua (o borrão é do `mobile-glass-surface`);
- * - a tecla ganha tom próprio, `--bottom-bar-key`: a tinta do texto misturada
- *   ao `--popover`, 12% no claro e 18% no escuro — o mais claro (no escuro) ou
- *   mais escuro (no claro) da barra, e **nunca** um tom que o conteúdo usa.
- * Medido depois (luminância relativa, a pílula composta em sRGB sobre o que
- * está atrás): **1,52:1** no escuro e **1,32:1** no claro sobre uma linha da
- * lista, 1,59 e 1,35 sobre a página. Não é texto, é forma; quem identifica a ativa
- * também é o ícone sólido e a tinta cheia.
+ * O tom da pílula e o da tecla. A pílula vai à tinta dos flutuantes (`--popover`
+ * a 82%, o vidro fica); a tecla ganha tom próprio, `--bottom-bar-key` (a tinta
+ * do texto misturada ao `--popover`), porque `--muted` empatava com o fundo das
+ * linhas que passam por trás (~1,09:1). Não é texto, é forma; a ativa também se
+ * identifica pelo ícone sólido e pela tinta cheia. A variável do vidro é
+ * redeclarada só aqui.
  */
 const pilulaTomClassName = [
   "[--mobile-glass-bg:color-mix(in_oklab,var(--popover)_82%,transparent)]",
@@ -252,24 +204,12 @@ const pilulaTomClassName = [
 const RECUO_DO_MARCADOR = 2
 
 /**
- * A pílula de vidro, e a fileira.
- *
- * ## A pílula e o realce são `rounded-full`, e isso é concentricidade de graça
- *
- * Com `rounded-full` o raio é metade da menor dimensão de cada caixa, e os
- * arcos da pílula, do item e do marcador continuam concêntricos em qualquer
- * degrau sem ninguém recalcular nada.
- *
- * **A contagem de colunas é derivada** (`Children.count`), e com
- * `labels="active"` a fileira vira flex: a aba ativa toma a largura do
- * rótulo e as outras dividem o resto.
- *
- * ## O arraste
- *
- * O dedo desliza pela pílula e o marcador segue o item sob ele; soltar num
- * item diferente o clica — o link navega, o slot abre o menu. O arraste só
- * começa depois de 8px de lado; antes disso é um toque comum. Com o ponteiro
- * capturado, o soltar não vira clique no item onde o dedo desceu.
+ * A pílula de vidro, e a fileira. Com `rounded-full` os arcos da pílula, do
+ * item e do marcador ficam concêntricos em qualquer degrau. A contagem de
+ * colunas é derivada (`Children.count`); com `labels="active"` a fileira vira
+ * flex. O dedo desliza pela pílula e o marcador segue o item sob ele; soltar
+ * em outro item o clica. O arraste começa depois de 8px de lado, e com o
+ * ponteiro capturado o soltar não vira clique no item onde o dedo desceu.
  */
 function BottomBarTabs({
   className,
@@ -291,17 +231,10 @@ function BottomBarTabs({
   }, [labels])
 
   /**
-   * **O rótulo abre no relógio do marcador** (`labels="active"`). Quando a
-   * ativa muda, o layout já está no fim — o rótulo novo inteiro, o velho em
-   * zero — e é ele que o marcador mede como destino. Daí a largura dos dois
-   * rótulos anda de onde estava até onde fica, no mesmo trajeto e na mesma
-   * duração da viagem: as abas abrem e fecham juntas, os ícones deslizam em
-   * vez de saltar, e o marcador e a aba chegam no mesmo quadro. As
-   * animações não guardam estado (`fill: none`): no fim, quem manda é o CSS,
-   * que já está no destino.
-   *
-   * Devolve se o rótulo abriu: aí o marcador acompanha a largura nova sem
-   * esticar, mesmo quando o arraste já o tinha levado até a aba.
+   * O rótulo abre no relógio do marcador (`labels="active"`): a largura dos
+   * dois rótulos anda no mesmo trajeto e na mesma duração da viagem, e as
+   * animações não guardam estado (`fill: none`). Devolve se o rótulo abriu,
+   * para o marcador acompanhar a largura nova sem esticar.
    */
   function abrirRotulo() {
     const trilha = trilhaRef.current
@@ -337,9 +270,8 @@ function BottomBarTabs({
   }
 
   /**
-   * O marcador é o do `Tabs` (`useMarcador`): o repouso nas variáveis, a
-   * viagem em WAAPI só quando o item **muda** (redimensionar só reposiciona),
-   * e o arraste (`data-scrub`) também é troca de item.
+   * O marcador é o do `Tabs` (`useMarcador`): a viagem em WAAPI só quando o
+   * item muda, e o arraste (`data-scrub`) também é troca de item.
    */
   const medido = useMarcador({
     trilha: trilhaRef,
@@ -348,7 +280,7 @@ function BottomBarTabs({
       const alvo =
         trilha.querySelector<HTMLElement>(":scope > [data-scrub]") ??
         trilha.querySelector<HTMLElement>(":scope > [data-active]")
-      // O arraste soltou e a rota chegou: a marca do arraste já não é preciso.
+      // O arraste soltou e a rota chegou: a marca do arraste não é mais preciso.
       if (alvo?.hasAttribute("data-scrub") && alvo.hasAttribute("data-active")) {
         alvo.removeAttribute("data-scrub")
       }
@@ -410,18 +342,11 @@ function BottomBarTabs({
 }
 
 /**
- * **Some ao rolar, devagar nas duas direções** (pedido do dono). Quem decide
- * a transição é o estado de destino: indo, a peça afunda (com a folga e a área
- * segura), encolhe a 95% a partir da base e apaga em `--ease-in-out` —
- * começa devagar e assenta devagar; voltando, sobe na mola, com o quique. As
- * duas em `--duration-gentle` (700ms). O que lia mal não era a mola, era a
- * velocidade: em 300ms e na curva enfatizada, com 90ms a peça já tinha feito
- * 60% do caminho. `scale` e não `filter`: um borrão faria da pílula uma raiz
- * de fundo, e o vidro sumiria durante a saída.
- *
- * **A pílula e a ação vestem a mesma régua**, e saem juntas: uma ação
- * flutuando sozinha no canto, sem a barra que a ancora, lê como um botão
- * esquecido — e cobre a lista que a pessoa está rolando para ler.
+ * Some ao rolar, devagar nas duas direções: indo, afunda, encolhe a 95% a
+ * partir da base e apaga em `--ease-in-out`; voltando, sobe na mola. As duas em
+ * `--duration-gentle`. `scale` e não `filter`: um borrão faria da pílula uma
+ * raiz de fundo e o vidro sumiria. A pílula e a ação vestem a mesma régua e
+ * saem juntas (uma ação sozinha lê como botão esquecido).
  */
 const someAoRolarClassName = [
   "origin-bottom transition-[translate,scale,opacity] duration-(--duration-gentle) ease-(--ease-spring)",
@@ -429,13 +354,13 @@ const someAoRolarClassName = [
   "group-data-hidden/bottom-bar:ease-(--ease-in-out)",
 ].join(" ")
 
-/** O arraste pela pílula — ver `BottomBarTabs`. */
+/** O arraste pela pílula (ver `BottomBarTabs`). */
 function useArraste(trilhaRef: React.RefObject<HTMLDivElement | null>) {
   const estado = React.useRef<{ id: number; x0: number; ativo: boolean; alvo: HTMLElement | null } | null>(null)
   const limpeza = React.useRef<number | undefined>(undefined)
 
-  // O item sob o dedo, pelo documento da pílula (no `IphoneFrame` ele é o do
-  // iframe). Fora da pílula — o dedo subiu demais — não troca de item.
+  // O item sob o dedo, pelo documento da pílula (no `IphoneFrame`, o do iframe).
+  // Fora da pílula não troca de item.
   const itemEm = (x: number, y: number) => {
     const trilha = trilhaRef.current
     const no = trilha?.ownerDocument.elementFromPoint(x, y)
@@ -497,11 +422,9 @@ function useArraste(trilhaRef: React.RefObject<HTMLDivElement | null>) {
 }
 
 /**
- * A caixa de um item — a aba e o slot dividem esta régua.
- *
- * **O alvo é a caixa, e não um pseudo-elemento**: numa fileira de alvos
- * adjacentes um `::after` de 44px engoliria o vizinho. O anel de foco é
- * externo — há `p-0.5` de folga até a borda da pílula.
+ * A caixa de um item, dividida pela aba e pelo slot. O alvo é a caixa e não um
+ * pseudo-elemento (um `::after` de 44px engoliria o vizinho); o anel de foco é
+ * externo, há `p-0.5` de folga até a borda da pílula.
  */
 const itemRootClassName = [
   "group/bottom-bar-item relative flex h-full w-full min-w-0 items-stretch rounded-full",
@@ -511,19 +434,16 @@ const itemRootClassName = [
 ].join(" ")
 
 /**
- * Com `labels="active"`: cada aba parte do próprio conteúdo (`flex: auto`) e
- * a sobra se divide igual — a ativa é mais larga pelo rótulo, que é o que se
- * anima. Nunca abaixo dos 44 do alvo de toque (medido sem o piso: 37px com
- * quatro itens numa pílula de 279). Sem espaço, quem cede é o rótulo, que
- * trunca. `w-auto`: com o `w-full` da caixa, `basis: auto` seria 100%.
+ * Com `labels="active"`: cada aba parte do próprio conteúdo (`flex: auto`) e a
+ * sobra se divide igual. Nunca abaixo dos 44 do alvo de toque; sem espaço o
+ * rótulo trunca. `w-auto`: com o `w-full` da caixa, `basis: auto` seria 100%.
  */
 const itemFlexClassName = "w-auto min-w-11 flex-auto"
 
 /**
- * O miolo, e as tintas. `active` escreve `aria-current="page"` na aba de link
- * (a verdade semântica) e `data-active` em todos, que é o que o estilo lê. O
- * par `hover:`/`active:` é obrigatório: `hover:` não existe no dedo, `active:`
- * não existe no trackpad do iPad.
+ * O miolo e as tintas. `active` escreve `aria-current="page"` na aba de link e
+ * `data-active` em todos. O par `hover:`/`active:` é obrigatório: `hover:` não
+ * existe no dedo, `active:` não existe no trackpad do iPad.
  */
 const itemInnerClassName = [
   "flex h-full w-full items-center justify-center gap-0.5 rounded-full",
@@ -533,21 +453,14 @@ const itemInnerClassName = [
   "group-data-[active]/bottom-bar-item:text-foreground group-data-[scrub]/bottom-bar-item:text-foreground",
 ].join(" ")
 
-/**
- * O realce **enquanto não há medida** — a mesma tecla do marcador, pintada no
- * próprio item, para a primeira pintura e para quem roda sem JavaScript.
- */
+/** O realce enquanto não há medida: a tecla do marcador pintada no item, para a primeira pintura e para quem roda sem JavaScript. */
 const itemFallbackClassName = [
   "group-data-[active]/bottom-bar-item:bg-(--bottom-bar-key)",
   "group-data-[active]/bottom-bar-item:ring-1 group-data-[active]/bottom-bar-item:ring-foreground/10",
   "group-data-[active]/bottom-bar-item:shadow-sm",
 ].join(" ")
 
-/**
- * O glifo, e o toque com mola: ele afunda a 88% no toque e volta na mola da
- * casa. `scale`, e não `transform`, para não disputar com o `translate` do
- * afundamento da caixa.
- */
+/** O glifo, que afunda a 88% no toque e volta na mola; `scale` para não disputar com o `translate` do afundamento da caixa. */
 const glifoClassName =
   "relative flex shrink-0 transition-[scale] duration-(--duration-spring) ease-(--ease-spring) group-active/bottom-bar-item:scale-88"
 
@@ -555,9 +468,8 @@ function BottomBarLabel({ children, ativo }: { children: React.ReactNode; ativo?
   const { labels } = React.useContext(BottomBarContext)
   if (!labels) return null
   if (labels === "active") {
-    // Montado em todas as abas, e fechado (largura zero) nas inativas: é a
-    // largura dele que a pílula anima ao trocar de aba. O recuo mora dentro,
-    // para fechar junto.
+    // Montado em todas as abas e fechado (largura zero) nas inativas: é a
+    // largura dele que a pílula anima. O recuo mora dentro, para fechar junto.
     return (
       <span
         aria-hidden
@@ -575,11 +487,7 @@ function BottomBarLabel({ children, ativo }: { children: React.ReactNode; ativo?
   )
 }
 
-/**
- * A contagem no canto do ícone: um número (até 99+) ou, com `true`, o ponto.
- * Ela é `aria-hidden` — o número entra no nome do item, que é quem o leitor
- * de tela anuncia.
- */
+/** A contagem no canto do ícone (até 99+, ou `true` para o ponto). `aria-hidden`: o número entra no nome do item. */
 function BottomBarCount({ count }: { count: number | boolean }) {
   if (count === false || count === 0) return null
   if (count === true) {
@@ -610,10 +518,9 @@ function nomeComContagem(label: string | undefined, count?: number | boolean, co
 }
 
 /**
- * O estalo do sólido: quando o item **passa** a ativo (e não na montagem), o
- * glifo nasce a 75% e assenta na mola. WAAPI, porque uma classe de animação
- * adicionada na hidratação tocaria na primeira pintura; movimento reduzido é
- * perguntado à mão.
+ * O estalo do sólido: quando o item passa a ativo (não na montagem), o glifo
+ * nasce a 75% e assenta na mola. WAAPI, porque uma classe adicionada na
+ * hidratação tocaria na primeira pintura.
  */
 function useEstalo(ativo: boolean | undefined) {
   const ref = React.useRef<HTMLSpanElement>(null)
@@ -635,14 +542,11 @@ function useEstalo(ativo: boolean | undefined) {
 }
 
 type BottomBarTabProps = Omit<React.ComponentProps<typeof Link>, "href"> & {
-  /** Sem `href` a aba é um `<button>` — a tela que troca de vista sem rota. */
+  /** Sem `href` a aba é um `<button>`, para a tela que troca de vista sem rota. */
   href?: string
   label: string
   icon: HeroIcon
-  /**
-   * O par preenchido, para a aba ativa — a convenção de tab bar do iOS. É
-   * prop e não derivação: adivinhar por nome quebraria no build de produção.
-   */
+  /** O par preenchido para a aba ativa; é prop porque adivinhar por nome quebraria no build de produção. */
   iconActive?: HeroIcon
   active?: boolean
   /** O número no canto do ícone, ou `true` para o ponto. Entra no nome. */
@@ -727,9 +631,8 @@ function BottomBarTab({
 }
 
 /**
- * A mesma caixa da aba, sem `href` — para hospedar o gatilho de um popover ou
- * de uma gaveta. Não recebe `aria-current`: o que abre um painel não é a
- * página atual. O conteúdo é de quem chama.
+ * A mesma caixa da aba, sem `href`, para hospedar o gatilho de um popover ou
+ * gaveta. Não recebe `aria-current`.
  */
 function BottomBarSlot({
   className,
@@ -783,15 +686,14 @@ function BottomBarSlot({
 /**
  * A ação primária, à direita da pílula: redonda, na altura da barra
  * (`--bottom-bar-h`; 56 não é degrau do `Button`), com o anel e a sombra da
- * pílula — as duas peças são uma família. Ela **não declara cor**: quem pinta
- * é o `variant` do `Button`.
+ * pílula. Não declara cor: quem pinta é o `variant` do `Button`.
  */
 const bottomBarActionClassName = [
   "size-(--bottom-bar-h) shrink-0 rounded-full p-0 ring-1 ring-foreground/10 shadow-lg",
   "[&_svg:not([class*='size-'])]:size-5",
 ].join(" ")
 
-/** O `Button` da ação, com o nome obrigatório — ela é só ícone. */
+/** O `Button` da ação, com o nome obrigatório (ela é só ícone). */
 function BottomBarAction({
   label,
   variant = "primary",
@@ -810,10 +712,7 @@ function BottomBarAction({
   )
 }
 
-/**
- * A barra enquanto a casca carrega: a pílula com os círculos dos ícones e a
- * ação, no mesmo lugar e na mesma altura — a barra de verdade entra sem pular.
- */
+/** A barra enquanto a casca carrega: a pílula com os círculos dos ícones e a ação, no mesmo lugar e altura. */
 function BottomBarSkeleton({
   tabs = 4,
   action = true,

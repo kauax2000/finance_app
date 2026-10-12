@@ -53,42 +53,17 @@ import {
 } from "@/lib/menu-classes"
 
 /**
- * As duas classes que trazem o nome da primitiva — escritas por extenso, e não
- * montadas. O Tailwind varre o código como texto: uma classe interpolada em
- * tempo de execução não existe para o scanner, e o CSS dela nunca é gerado.
- * Medido: com a versão interpolada, o `max-height` computado era `none` mesmo
- * com a variável do Radix valendo 318,75px.
+ * As duas classes que trazem o nome da primitiva ficam escritas por extenso: o
+ * Tailwind varre o código como texto, e uma classe interpolada nunca gera CSS.
  */
 const DROPDOWN_POPPER =
   "max-h-[min(var(--radix-dropdown-menu-content-available-height),var(--menu-max-h))] max-w-(--radix-dropdown-menu-content-available-width) origin-(--radix-dropdown-menu-content-transform-origin)"
 
 /**
- * O menu de um gatilhoRef.
- *
- * ## O que esta revisão corrigiu
- *
- * Este era o arquivo mais atrasado do diretório — quase o do shadcn intacto —
- * e ao mesmo tempo o mais usado: **21 telas, 54 linhas de menu**. O
- * `ContextMenu`, que desenha a mesma superfície, não tinha nenhum consumidor e
- * já estava moderno. A régua que venceu foi a dele, e agora as duas vivem em
- * [`lib/menu-classes`](../../lib/menu-classes.ts).
- *
- * Quatro defeitos eram funcionais, não cosméticos:
- *
- * 1. **`SubTrigger` não desenhava chevron nenhum** — medido. Nada dizia que
- *    havia submenu; a pessoa descobria por acidente ao passar o cursor.
- * 2. **Sem teto de altura** (`max-height: none`, medido). Um menu longo saía da
- *    tela, sem rolagem e sem fim.
- * 3. **`[&_svg]:size-4` forçava o tamanho** e engolia um `size-5` explícito de
- *    quem chamava.
- * 4. **Os indicadores eram SVG do Radix Icons colados** — outro conjunto de
- *    ícone dentro de um projeto que usa Heroicons, e a regra **G** do auditor
- *    os acusava.
- *
- * A conversão de `forwardRef` para função veio junto: no React 19 `ref` é um
- * prop comum e desce no `{...props}`, então o embrulho não fazia mais nada além
- * de manter dois estilos de arquivo no mesmo diretório — e a indentação deste
- * arquivo era literalmente as duas, 2 espaços no topo e 4 do meio para baixo.
+ * O menu de um gatilho. Desenha a mesma superfície do `ContextMenu`; a régua
+ * mora em [`lib/menu-classes`](../../lib/menu-classes.ts). O `SubTrigger` traz
+ * o chevron, o painel tem teto de altura, os indicadores são Heroicons e o
+ * tamanho do ícone é do conjunto (não força `size-4`).
  */
 
 /** A marca de "fechou por rolagem", da raiz para o `Content`. */
@@ -96,26 +71,16 @@ const DropdownMenuScrollCloseContext =
   React.createContext<React.RefObject<boolean> | null>(null)
 
 /**
- * ## Rodada 213
- *
- * - **`mobile="sheet"`**: no telefone o mesmo menu é a folha de ações do
- *   `Drawer` — linhas de 52px, o cabeçalho do alvo, o Cancelar embaixo —, sem a
- *   tela reescrever nada. Cada peça lê o `DropdownMenuEstadoContext` e se
- *   desenha como menu ou como folha; caixas, rádios e submenus viram linhas
- *   (o submenu, um grupo com rótulo).
- * - **`shortcut`** na raiz abre o menu pela tecla: o da linha focada (o
- *   gatilhoRef dentro de uma `tr`, de um `Item` ou de um `Card` com o foco) ou,
- *   fora de linha, o da tela quando nada tem foco. O gatilhoRef anuncia a tecla
- *   (`aria-keyshortcuts`).
- * - **`DropdownMenuHeader title/description`**: o alvo em cima das ações, e o
- *   título nomeia o menu. **`DropdownMenuContent search`**: um campo filtra as
- *   linhas pelo nome (`commandFilter`).
- * - **`DropdownMenuItem`**: `shortcut` (o `Kbd`), `description` (a segunda
- *   linha), `confirm` (a destrutiva pede um segundo toque) e o `onSelect`
- *   que devolve uma `Promise` — a linha carrega, e o menu fecha quando ela
- *   termina.
- * - **A caixa não fecha o menu.** A página dizia que ficava aberto ao marcar,
- *   e o Radix fechava; `closeOnSelect` volta ao comportamento dele.
+ * `mobile="sheet"`: no telefone o mesmo menu é a folha de ações do `Drawer`;
+ * cada peça lê o `DropdownMenuEstadoContext` e se desenha como menu ou como
+ * linha (caixas, rádios e submenus viram linhas). `shortcut` na raiz abre o
+ * menu pela tecla: o da linha com o foco ou, fora de linha, o da tela quando
+ * nada tem foco. `DropdownMenuHeader title/description` é o alvo e nomeia o
+ * menu; `DropdownMenuContent search` filtra as linhas (`commandFilter`).
+ * `DropdownMenuItem`: `shortcut`, `description`, `confirm` (a destrutiva pede
+ * um segundo toque) e um `onSelect` que devolve `Promise` (a linha carrega e o
+ * menu fecha no fim). A caixa não fecha o menu (`closeOnSelect` volta ao
+ * comportamento do Radix).
  */
 type MenuEstado = {
   /** No telefone, com `mobile="sheet"`: a folha de ações. */
@@ -136,10 +101,8 @@ const DropdownMenuEstadoContext = React.createContext<MenuEstado>({
 })
 
 /**
- * O menu com busca mede como o `Combobox` — a mesma placa com a pílula e a
- * lista dentro: pílula `md` a 8px das bordas, lista com 8px dos lados e
- * embaixo, linhas de 36 (`gap-2 px-2 py-2`, desde a rodada 243d). Com a pílula de 28 a 4px e as
- * linhas de 28 do menu, os dois saíam diferentes fazendo o mesmo desenho.
+ * O menu com busca mede como o `Combobox` (a mesma placa com a pílula e a
+ * lista dentro): pílula `md` a 8px das bordas, linhas de 36.
  */
 const DropdownMenuBuscaContext = React.createContext(false)
 const LINHA_DA_BUSCA = "gap-2 px-2 py-2"
@@ -173,10 +136,7 @@ function trocarTexto(no: React.ReactNode, texto: string): React.ReactNode {
   )
 }
 
-/**
- * Com `modal={false}` a página rola com o menu aberto, e ele fecha — ver
- * `useCloseOnScroll`. O padrão (modal) já trava a rolagem.
- */
+/** Com `modal={false}` a página rola com o menu aberto e ele fecha (`useCloseOnScroll`); o modal já trava a rolagem. */
 function DropdownMenu({
   open: openProp,
   defaultOpen,
@@ -221,7 +181,7 @@ function DropdownMenu({
       if (!alvo || !alvo.isConnected) return
       const ativo = document.activeElement
       // O menu de uma linha abre só com o foco nela; o da tela, só com nada
-      // focado — senão uma tecla abriria o menu de todas as linhas.
+      // focado, senão uma tecla abriria o menu de todas.
       const escopo = alvo.closest(
         "tr, [data-slot=item], [data-slot=card], [data-menu-scope]"
       )
@@ -343,39 +303,27 @@ function DropdownMenuRadioGroup({
 }
 
 /**
- * Os dois eixos do painel, e ambos saem de contagem, não de gosto.
- *
- * **`size` é a largura**, como no `Dialog` — e não uma altura de controle. Das
- * 25 chamadas do app, **18 declaram só uma largura**, e sempre uma destas
- * quatro: `w-44` (8×), `w-48` (5×), `w-56` (3×), `w-52` (2×). Quatro valores
- * repetidos dezoito vezes é uma escala que já existe; só não tinha nome.
- * `auto` continua o padrão, então nada muda para quem não pede.
- *
- * **`variant` é a superfície.** `menu` é a lista de comandos. `panel` é o que
- * o `UserMenu` e o `WorkspaceSwitcher` montavam à mão — `rounded-xl p-0` mais
- * uma sombra e um anel próprios — porque ali dentro não há comandos, e sim um
- * cabeçalho de conta, um avatar, blocos. É a mesma distinção que o `Card` faz
- * com `padding="none"`: a casca cede o recuo para o conteúdo sangrar.
+ * `size` é a largura (`auto` por padrão, e `sm` a `xl` nomeiam as quatro que as
+ * telas já repetiam). `variant`: `menu` é a lista de comandos; `panel` é a
+ * casca que cede o recuo, para cabeçalho de conta e blocos (o `UserMenu`, o
+ * `WorkspaceSwitcher`).
  */
 const dropdownMenuContentVariants = cva(
-  // Brota do botão e volta para ele (rodada 248, `@utility menu-sprout`).
+  // Brota do botão e volta para ele (`@utility menu-sprout`).
   [menuSurfaceClassName, DROPDOWN_POPPER, "menu-sprout"],
   {
     variants: {
       variant: {
         menu: "",
-        // O recuo sai do casco e passa para `DropdownMenuSection`, que é quem
-        // o devolve onde há comandos. Assim o `-mx-2` do separador continua
-        // valendo: ele sangra o recuo da seção e alcança a borda do painel.
+        // O recuo sai do casco e vai para `DropdownMenuSection`, que o devolve
+        // onde há comandos, para o `-mx-2` do separador alcançar a borda.
         panel: [
-          // A placa é a linha alta, e publica o próprio raio: herdando o 22 da
-          // superfície, as linhas de dentro saíam com 14, mais redondas que ela.
+          // A placa é a linha alta e publica o próprio raio: herdando o 22 as
+          // linhas de dentro sairiam com 14.
           "rounded-row-lg [--radius-parent:var(--radius-row-lg)]",
-          // O painel não é lista: cabeçalho de conta e blocos, que não rolam.
-          // O teto das listas suspensas não vale para ele.
+          // O painel não é lista: o teto das listas suspensas não vale.
           "[--menu-max-h:100dvh]",
-          // O recuo mudou de dono: ele saiu da casca e foi para o viewport, e
-          // aqui o painel o cede de novo para o `DropdownMenuSection`.
+          // O painel cede de novo o recuo para o `DropdownMenuSection`.
           "[&>[data-slot=dropdown-menu-viewport]]:p-0",
         ].join(" "),
       },
@@ -407,14 +355,10 @@ function DropdownMenuContent({
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Content> &
   VariantProps<typeof dropdownMenuContentVariants> & {
     /**
-     * A faixa de cima — a identidade do painel, ou o alvo do menu
-     * (`DropdownMenuHeader title`).
-     *
-     * Ela é **prop e não filho** por um motivo medido: para o conteúdo dissolver
-     * por baixo dela, ela precisa ser **irmã** do viewport, e não estar dentro
-     * dele. Detectar isso em tempo de execução com `React.Children` não
-     * funcionaria — o consumidor real do padrão é o `UserMenu`, e ali a faixa
-     * não é um `DropdownMenuHeader`, é um `<AccountMenuUserSummary />`.
+     * A faixa de cima (a identidade do painel, ou o alvo do menu). É prop e
+     * não filho porque precisa ser irmã do viewport para o conteúdo dissolver
+     * por baixo dela, e o `UserMenu` passa um `AccountMenuUserSummary`, não um
+     * `DropdownMenuHeader`.
      */
     header?: React.ReactNode
     /** A faixa de pé, pelas mesmas razões. */
@@ -427,8 +371,7 @@ function DropdownMenuContent({
   const [tituloId, setTituloId] = React.useState<string | null>(null)
   const campo = React.useRef<HTMLInputElement>(null)
   const placeholder = typeof search === "string" ? search : "Buscar…"
-  // Antes do `return` da folha: um hook depois dele mudaria a ordem quando o
-  // menu troca de desenho.
+  // Antes do `return` da folha: um hook depois dele mudaria a ordem quando o menu troca de desenho.
   const dissolver = useScrollFade({ arrows: true })
 
   const vazio = estado.busca ? (
@@ -501,13 +444,8 @@ function DropdownMenuContent({
         {...props}
       >
         {header ? (
-          // **O fio é do slot, não da faixa.** Ele vive aqui e não em
-          // `DropdownMenuHeader` porque o consumidor real do padrão não usa
-          // aquela peça: o `UserMenu` passa um `DropdownMenuLabel` embrulhando
-          // um `<AccountMenuUserSummary />`. Uma regra escrita na faixa
-          // alcançaria o catálogo e deixaria o app de fora — que é exatamente
-          // como o `border-t` do `DialogFooter` já enganou este projeto uma
-          // vez.
+          // O fio é do slot e não da faixa: o `UserMenu` não usa
+          // `DropdownMenuHeader`, e uma regra na faixa deixaria o app de fora.
           <div
             data-slot="dropdown-menu-header-slot"
             className="relative z-10 shrink-0 border-b border-border"
@@ -521,15 +459,13 @@ function DropdownMenuContent({
           <div
             data-slot="dropdown-menu-search"
             className="relative z-10 shrink-0 p-2"
-            // Com busca, o foco vai para o campo. O conteúdo do Radix não
-            // expõe `onOpenAutoFocus`, e ele mesmo foca o menu ao abrir — o
-            // quadro seguinte é depois disso.
+            // Com busca o foco vai para o campo; o conteúdo do Radix não expõe
+            // `onOpenAutoFocus`, e ele mesmo foca o menu ao abrir.
             ref={(el) => {
               if (el) requestAnimationFrame(() => campo.current?.focus())
             }}
-            // O Radix busca por digitação dentro do menu e leva o foco à linha
-            // que casa — no campo, a tecla é texto. Só a seta para baixo e o
-            // Esc passam: a seta desce para a primeira linha.
+            // O Radix busca por digitação e levaria o foco à linha que casa;
+            // no campo a tecla é texto. Só a seta para baixo e o Esc passam.
             onKeyDown={(e) => {
               if (e.key === "Escape") return
               if (e.key === "ArrowDown") {
@@ -579,16 +515,10 @@ function DropdownMenuContent({
 }
 
 /**
- * A faixa de cima do menu.
- *
- * Com `title` (rodada 213) ela é o **alvo** — "Mercado", "12 set · −R$ 42,90"
- * —, e o título nomeia o menu; na folha do telefone, é o cabeçalho da gaveta.
- * Sem `title` ela é a faixa de identidade do painel — avatar, nome, contexto —,
- * que sangra até a borda, como `CardToolbar` e `DialogHeader`. Existe porque o
- * `variant="panel"` sem ela empurrava a geometria para quem chama.
- *
- * **O fio que a separa dos comandos é do slot, e não daqui** — ver o
- * `DropdownMenuContent`. Ela mesma não desenha fio nem tinta.
+ * A faixa de cima do menu. Com `title` é o alvo ("Mercado", "12 set · −R$
+ * 42,90") e nomeia o menu (na folha, é o cabeçalho da gaveta); sem ele é a
+ * faixa de identidade do painel, que sangra até a borda. O fio que a separa dos
+ * comandos é do slot (ver `DropdownMenuContent`).
  */
 function DropdownMenuHeader({
   className,
@@ -643,13 +573,9 @@ function DropdownMenuHeader({
 }
 
 /**
- * A região de comandos dentro de um painel.
- *
- * Ela devolve o recuo que o `variant="panel"` tirou do casco — e é o que faz a
- * conta do separador fechar. O `-mx-2` do `DropdownMenuSeparator` sangra
- * exatamente este `p-2`, então o fio alcança a borda do painel em vez de parar
- * 8px antes. Sem a seção, o painel tinha dois traços horizontais de larguras
- * diferentes: 224px o do cabeçalho, 216px o do meio.
+ * A região de comandos dentro de um painel: devolve o recuo que o
+ * `variant="panel"` tirou do casco, para o `-mx-2` do `DropdownMenuSeparator`
+ * alcançar a borda do painel.
  */
 function DropdownMenuSection({
   className,
@@ -714,17 +640,12 @@ function useEscolha({
 }
 
 /**
- * `variant="destructive"` existe porque as telas escreviam
- * `text-destructive focus:text-destructive` na mão. **As 13 chamadas em 11
- * arquivos migraram**, e com elas vieram o `focus:bg-destructive/10`, o par
- * escuro e a tinta do ícone, que a grafia manual não tinha.
- *
- * Rodada 213: `shortcut` desenha a tecla com o `Kbd` (só a dica — com o menu
- * aberto ela não dispara); `description` é a segunda linha, e com ela a
- * linha vira grade, como no `ContextMenu`; `confirm` pede o segundo toque
- * ("toque de novo para excluir"); e um `onSelect` que devolve `Promise`
- * mostra o `Spinner` e fecha o menu só quando ela termina. `pending` é o
- * mesmo estado, controlado por quem chama.
+ * `variant="destructive"` traz o `focus:bg-destructive/10`, o par escuro e a
+ * tinta do ícone. `shortcut` desenha a tecla com o `Kbd` (só a dica);
+ * `description` vira a segunda linha (a linha vira grade, como no
+ * `ContextMenu`); `confirm` pede o segundo toque; um `onSelect` que devolve
+ * `Promise` mostra o `Spinner` e fecha o menu ao terminar. `pending` é o mesmo
+ * estado, controlado por quem chama.
  */
 function DropdownMenuItem({
   className,
@@ -788,8 +709,7 @@ function DropdownMenuItem({
 
   if (estado.folha) {
     const Comp = asChild ? Slot.Root : "button"
-    // O `onClick` da tela roda primeiro, e o da linha depois — com ele por
-    // último no espalhamento, a linha não fecharia a gaveta.
+    // O `onClick` da tela roda primeiro: com ele por último no espalhamento, a linha não fecharia a gaveta.
     const { onClick: aoClicar, ...resto } = props as React.ComponentProps<"button">
     return (
       <Comp
@@ -803,8 +723,7 @@ function DropdownMenuItem({
         className={cn(
           "group/menu-item",
           drawerActionClassName,
-          // As telas passam o ícone de 16 (o do menu), e a folha o desenhava a
-          // 20: o desenho de 16 esticado. Fica no corpo do conjunto que veio.
+          // As telas passam o ícone de 16 (o do menu); a folha o desenhava a 20.
           "[&_svg]:size-4",
           grade,
           description && "py-2",
@@ -899,9 +818,8 @@ function DropdownMenuSubContent({
   const dissolver = useScrollFade({ arrows: true })
   if (folha) return <div className="flex flex-col">{children}</div>
   return (
-    // No portal: dentro do menu, o vidro (`backdrop-filter`) vira o bloco de
-    // contenção do `fixed` do popper e o `overflow-hidden` o recorta — o
-    // submenu abria e não aparecia (medido, rodada 213).
+    // No portal: dentro do menu o vidro (`backdrop-filter`) vira o bloco de
+    // contenção do `fixed` do popper e o `overflow-hidden` recorta o submenu.
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.SubContent
         data-slot="dropdown-menu-sub-content"
@@ -926,11 +844,7 @@ function DropdownMenuSubContent({
   )
 }
 
-/**
- * A caixa **não fecha o menu** ao marcar (rodada 213): quem marca uma opção
- * costuma marcar outra. A página dizia isso, e o Radix fechava — medido.
- * `closeOnSelect` devolve o comportamento dele.
- */
+/** A caixa não fecha o menu ao marcar (quem marca uma opção costuma marcar outra); `closeOnSelect` devolve o comportamento do Radix. */
 function DropdownMenuCheckboxItem({
   className,
   children,

@@ -26,44 +26,22 @@ import {
 import { overlayClassName } from "@/components/ui/drawer"
 
 /**
- * O recuo que desvia do botão de fechar.
- *
- * `--dialog-close` é o território do × medido da borda do diálogo, e
- * `--dialog-px` é onde a caixa do cabeçalho termina. A diferença é o quanto
- * ainda falta desviar — zero quando não há × para desviar.
- *
- * Ele desvia de um lado só porque o cabeçalho é alinhado à esquerda nas duas
- * larguras. Enquanto ele era centralizado no telefone, o recuo precisava ser
- * simétrico — um recuo de um lado só tirava o título do eixo em 10px, medidos,
- * enquanto a descrição ficava no lugar.
- *
- * A classe é escrita por extenso, e não montada a partir de uma constante com a
- * medida: o Tailwind varre o **texto** do fonte atrás de candidatos, e uma
- * classe interpolada num template literal não existe para ele — sairia daqui
- * como string e não sairia do CSS como regra.
+ * O recuo que desvia do botão de fechar: `--dialog-close` é o território do × e
+ * `--dialog-px` onde a caixa do cabeçalho termina; a diferença é quanto falta
+ * desviar (zero sem ×). Desvia de um lado só porque o cabeçalho é alinhado à
+ * esquerda. A classe é escrita por extenso: uma interpolada num template não
+ * existe para o scanner do Tailwind.
  */
 const DIALOG_CLOSE_RESERVE =
   "pe-[max(0px,calc(var(--dialog-close)-var(--dialog-px)))]"
 
 /**
- * ## Rodada 211
- *
- * - **`surface="auto"`**: abaixo de 768px o diálogo vira a gaveta do `Sheet`
- *   (arrastável, com a área segura), com a mesma API — gatilho, conteúdo,
- *   fechar e cromagem. Dezessete telas escreviam o par `Dialog`/`Sheet` à mão,
- *   cada uma com um `if (isMobile)` e as classes da folha em três grafias. É
- *   possível pelo mesmo motivo que a cromagem serve os dois: as três
- *   superfícies são a mesma primitiva do Radix.
- * - **`pending`**: enquanto salva, Esc, véu, ×, Cancelar e o arraste da gaveta
- *   não fecham, e o casco marca `aria-busy` — o `pending` do `AlertDialog`,
- *   que já segurava o Esc. O botão de enviar continua sendo o `FormSubmit`.
- * - **`dirty` + `confirmDiscard`**: fechar um formulário alterado pergunta
- *   "Descartar alterações?" antes. A pergunta usa a primitiva do Radix, e não o
- *   `AlertDialog` da casa, porque ele importa este arquivo.
- * - **`DialogSteps`**, **`DialogMedia`**, **`DialogFooter start`** e
- *   **`size="full"`**: ver cada peça.
- * - **O título e a descrição deixaram de ter `gap`** — par de identidade, a
- *   regra da casa. Quem os separa é a entrelinha do título (`leading-snug`).
+ * `surface="auto"`: abaixo de 768px o diálogo vira a gaveta do `Sheet`, com a
+ * mesma API e cromagem (as três superfícies são a mesma primitiva do Radix).
+ * `pending` trava Esc, véu, ×, Cancelar e o arraste, e marca `aria-busy`.
+ * `dirty` + `confirmDiscard` perguntam "Descartar alterações?" antes de fechar
+ * (com a primitiva do Radix, porque o `AlertDialog` importa este arquivo).
+ * Título sobre descrição é par de identidade, separado pela entrelinha.
  */
 type DialogEstado = {
   /** No telefone, com `surface="auto"`: a gaveta do `Sheet`. */
@@ -133,11 +111,10 @@ function Dialog({
 }
 
 /**
- * O aberto e o pedido de fechar, do `Dialog` e do `Sheet`. Todo pedido de
- * fechar passa por `pedir`: Esc, véu, ×, o fechar e o arraste da gaveta.
- * Fechar por fora — o `open` que a tela controla — não: depois de salvar,
- * ninguém pergunta. `pergunta` é o "Descartar alterações?", para renderizar
- * ao lado da raiz.
+ * O aberto e o pedido de fechar, do `Dialog` e do `Sheet`. Todo pedido de fechar
+ * (Esc, véu, ×, o fechar, o arraste da gaveta) passa por `pedir`; fechar pelo
+ * `open` controlado não. `pergunta` é o "Descartar alterações?", renderizado ao
+ * lado da raiz.
  */
 function usePedidoDeFechar({
   open: openProp,
@@ -191,9 +168,8 @@ function usePedidoDeFechar({
 }
 
 /**
- * "Descartar alterações?" — a confirmação de fechar um formulário alterado.
- * Mora na camada da folha (`--z-sheet`) e depois dela no DOM, para ficar por
- * cima tanto de um diálogo quanto de uma gaveta. Esc fecha só ela.
+ * "Descartar alterações?": mora na camada da folha (`--z-sheet`) e depois dela
+ * no DOM, para ficar por cima de um diálogo e de uma gaveta. Esc fecha só ela.
  */
 function ConfirmarDescarte({
   open,
@@ -295,57 +271,21 @@ function DialogOverlay({
 }
 
 /**
- * A moldura do diálogo.
+ * A moldura do diálogo. `layout`: `auto` (a altura vem do conteúdo) ou `fixed`
+ * (a altura é teto, e o corpo rola entre cabeçalho e rodapé parados, a forma do
+ * formulário em diálogo). `size` é a largura, `md` por padrão.
  *
- * A versão anterior descrevia **um** diálogo, e o app constrói **dois**. Treze
- * das quinze chamadas com `className` abriam com a mesma string para desmontar
- * o que vinha de fábrica — `flex flex-col gap-0 overflow-hidden p-0
- * sm:max-w-md`, mais um teto de altura em `min(90dvh, 36rem)`.
- *
- * E o que elas montavam no lugar não existia aqui: **32 corpos roláveis**
- * escritos à mão (`min-h-0 flex-1 overflow-y-auto`), **16 cabeçalhos** que
- * precisam dizer `shrink-0 px-6` toda vez, em cinco grafias, e um rodapé que
- * sete chamadas anulavam com `mx-0 mb-0 mt-0` — porque o `-mx-4 -mb-4` daqui
- * pressupunha um `p-4` no casco, e o casco delas é `p-0`. (Contado na rodada
- * 211: nenhuma chamada anula mais o rodapé.)
- *
- * Então o eixo virou o que as telas já separavam: **`layout`**.
- *
- * - `auto` — a altura vem do conteúdo. Confirmação curta, um campo, um aviso.
- * - `fixed` — a altura é teto, e o corpo rola entre um cabeçalho e um rodapé
- *   parados. É o formulário em diálogo — 14 dos 18 diálogos do app, contados
- *   na rodada 211.
- *
- * E **`size`** deixou de ser um `sm:max-w-*` escrito na tela: o padrão é `md`,
- * que é o que 17 das 19 chamadas explícitas pediam e o que o `AlertDialog` já
- * usava. Os dois gêmeos passam a medir igual.
- *
- * ## A placa é `--background` de vidro, e o véu é quem mais borra
- *
- * Ela veste `modalSurfaceClassName`: `--background` a 85%, 40% no escuro onde o
- * borrão existe, com o material do iOS — mais aberta que a flutuante (`--popover` a 60%),
- * porque a 60% sobre a página ela lia como fosca. Uma rodada a levou a `--popover` para
- * igualar o DatePicker, e a tela reprovou: a 60% sobre a página velada o
- * `--popover` compõe acima de tudo que está atrás e a placa lê como opaca. O
- * `--background` afunda no véu, e é o borrão que a distingue (ver
- * `lib/glass-classes`).
- *
- * O `backdrop-filter` renderiza aqui, e o que ele vê é o `--overlay` a 40% mais
- * a página: medido, delta 0 sobre um card, 2 sobre a página, 15 sobre um botão
- * `primary`. Só cor cheia atrás faz o vidro aparecer; quem quiser o efeito mais
- * visível mexe no véu (rodada 52c), e não aqui.
- *
- * Houve uma rodada em que a placa ficou opaca por uma medição errada — capturas
- * cedo demais e uma comparação viciada concluíram que o borrão não renderizava
- * nos poppers. Refeita limpa, a medição disse o contrário; a história está em
- * `lib/menu-classes`.
+ * A placa veste `modalSurfaceClassName` (`--background` a 85%, 40% no escuro),
+ * mais aberta que a flutuante: a 60% sobre a página velada o `--popover` compõe
+ * acima de tudo e a placa lê como opaca. O `backdrop-filter` só aparece com cor
+ * cheia atrás; quem quiser o efeito mais visível mexe no véu, não aqui (ver
+ * `lib/glass-classes` e `lib/menu-classes`).
  */
 /**
- * O ponto do último clique (rodada 248): é de onde o diálogo nasce e para onde
- * ele volta. Um ouvinte só, em captura na janela, registrado ao carregar o
- * módulo — o clique que abre o diálogo acontece antes de ele montar. Dentro de
- * uma moldura do catálogo (um iframe) o clique é de outra janela, e o diálogo
- * nasce do centro.
+ * O ponto do último clique, de onde o diálogo nasce e para onde volta. Um
+ * ouvinte só, em captura na janela, registrado ao carregar o módulo (o clique
+ * que abre acontece antes de o diálogo montar). Numa moldura do catálogo o
+ * clique é de outra janela e o diálogo nasce do centro.
  */
 let ultimoClique: { x: number; y: number; t: number } | null = null
 if (typeof window !== "undefined") {
@@ -359,12 +299,10 @@ if (typeof window !== "undefined") {
 }
 
 /**
- * Escreve `--dialog-origin` no casco: o ponto do clique, nas coordenadas da
- * caixa dele. Sem clique recente (o teclado, o código), nada — o centro. Uma
- * vez por casco, porque uma `ref` de função de quem chama, refeita a cada
- * render, recompõe a do casco junto. A escala de
- * entrada já vale quando a `ref` chega, mas em volta do centro (a origem ainda
- * não existe): o centro medido é o da caixa, e o canto sai do `offsetWidth`.
+ * Escreve `--dialog-origin` no casco: o ponto do clique nas coordenadas da
+ * caixa; sem clique recente, o centro. Uma vez por casco, porque uma `ref` de
+ * função refeita a cada render recompõe a do casco. A escala de entrada já vale
+ * quando a `ref` chega, em volta do centro.
  */
 function useOrigemDoClique() {
   const feito = React.useRef<HTMLElement | null>(null)
@@ -385,24 +323,16 @@ const dialogContentVariants = cva(
     "group/dialog-content fixed top-1/2 left-1/2 z-(--z-modal)",
     "w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2",
     "rounded-modal text-sm shadow-lg ring-1 ring-foreground/10 outline-none [--radius-parent:var(--radius-modal)] [--radius-inset:var(--dialog-px)]",
-    // A placa é o material da casa, e o alfa é o mesmo par das superfícies
-    // flutuantes — a receita fica igual em todo overlay do sistema. Ver o
-    // bloco do doc-comment acima para o que o véu limita.
+    // A placa é o material da casa, no mesmo par de alfa das superfícies flutuantes.
     modalSurfaceClassName,
-    // **Nasce de onde se clicou** (rodada 248, `@utility dialog-sprout`): a
-    // origem é o ponto do clique que o abriu (`--dialog-origin`, escrito pelo
-    // `useOrigemDoClique`), e fechar volta a ele. Era o zoom genérico de 95%.
+    // Nasce de onde se clicou (`@utility dialog-sprout`, `--dialog-origin`) e volta a ele.
     "dialog-sprout",
-    // O recuo do diálogo é **um**, e são os 24px que vinte chamadas já
-    // escreviam à mão como `px-6`. Ninguém escolheu os 16 anteriores: eles eram
-    // o que sobrava para quem não sobrescrevia.
+    // O recuo do diálogo é um, 24px (o `px-6` que vinte chamadas já escreviam).
     "[--dialog-px:--spacing(6)]",
-    // O teto de altura do `fixed`, na variável, para uma tela alta poder subi-lo
-    // sem reescrever a cadeia de flex que o acompanha.
+    // O teto de altura do `fixed` vai em variável, para uma tela alta subi-lo.
     "[--dialog-max-h:min(90dvh,36rem)]",
-    // Quanto território o × ocupa a partir da borda direita: 12 de folga + 28
-    // de botão + 4 de respiro. Zero quando não há × — e é o caso do
-    // `AlertDialog`, que herda esta mesma régua e nunca mostra um.
+    // O território do × a partir da borda direita (12 + 28 + 4). Zero sem ×,
+    // como no `AlertDialog`, que herda esta régua.
     "[--dialog-close:0px]",
   ],
   {
@@ -412,20 +342,16 @@ const dialogContentVariants = cva(
         md: "sm:max-w-md",
         lg: "sm:max-w-lg",
         xl: "sm:max-w-xl",
-        // Tela cheia (rodada 211): a janela com 2rem de margem, para conteúdo
-        // largo. Com `fixed` a altura é a da janela, e não o teto.
+        // Tela cheia: a janela com 2rem de margem; com `fixed` a altura é a da janela.
         full: "sm:max-w-[calc(100%-4rem)] [--dialog-max-h:calc(100dvh-2rem)] sm:[--dialog-max-h:calc(100dvh-4rem)]",
       },
       layout: {
-        // `--dialog-bleed` é quanto o rodapé precisa recuar para alcançar a
-        // borda. Ele é uma **variável**, e não uma regra `group-data-*`, para
-        // quem anular o rodapé com `mx-0` vencer por `tailwind-merge` — as
-        // duas classes disputam a mesma propriedade.
+        // `--dialog-bleed` é quanto o rodapé recua para alcançar a borda; é
+        // variável (e não `group-data-*`) para `mx-0` vencer por `tailwind-merge`.
         auto: "grid gap-4 p-(--dialog-px) [--dialog-bleed:--spacing(6)]",
         fixed: [
           "flex max-h-(--dialog-max-h) flex-col gap-0 overflow-hidden p-0 [--dialog-bleed:0px]",
-          // Com passos, a janela não muda de altura de um passo para outro:
-          // ela ocupa o teto, e quem rola é o corpo.
+          // Com passos a janela ocupa o teto e quem rola é o corpo.
           "has-[[data-slot=dialog-steps]]:h-(--dialog-max-h)",
         ].join(" "),
       },
@@ -456,9 +382,9 @@ function DialogContent({
   const origem = useOrigemDoClique()
   const cascoRef = useComposedRefs<HTMLDivElement>(ref, origem)
 
-  // No telefone, com `surface="auto"`: a gaveta do `Sheet`. A largura não
-  // vale ali, e a gaveta alta é a do formulário (`fixed`), a da tela cheia e a
-  // dos passos — esta por classe, porque só o DOM sabe que há passos.
+  // No telefone, com `surface="auto"`: a gaveta do `Sheet`. A gaveta alta é a
+  // do formulário (`fixed`), a da tela cheia e a dos passos (esta por classe,
+  // porque só o DOM sabe que há passos).
   if (gaveta) {
     return (
       <SheetContent
@@ -529,14 +455,8 @@ function DialogHeaderRow({
 
 /**
  * O cabeçalho. Sem fio: o que o separa do corpo é o respiro, e a dissolução
- * quando há rolagem.
- *
- * `shrink-0` e o recuo passaram a vir de fábrica: eram exatamente as duas
- * coisas que as 16 chamadas escreviam toda vez (`shrink-0 px-6 pt-6 pb-2`), em
- * cinco grafias que divergiam no pé.
- *
- * No `layout="auto"` o casco já dá o recuo, então aqui ele é zero — senão o
- * título entraria 48px.
+ * onde há rolagem. `shrink-0` e o recuo vêm de fábrica; em `layout="auto"` o
+ * casco já dá o recuo, então aqui ele é zero.
  */
 function DialogHeader({
   className,
@@ -547,33 +467,20 @@ function DialogHeader({
     <div
       data-slot="dialog-header"
       className={cn(
-        // Sempre à esquerda. `text-center sm:text-left` centralizava o título
-        // no telefone — e dentro de um `DialogHeaderRow`, que é uma grade de
-        // duas colunas, ele centralizava numa coluna de 188px que termina a
-        // 131px da borda direita: um eixo que não é o de nada. Um cabeçalho
-        // de diálogo é o mesmo cabeçalho nas duas larguras.
-        // **Sem `gap`** (rodada 211): título sobre descrição é par de
-        // identidade, e quem os separa é a entrelinha do título. Os passos
-        // trazem o próprio respiro.
+        // Sempre à esquerda, nas duas larguras. Sem `gap`: título sobre
+        // descrição é par de identidade, separado pela entrelinha do título.
         "flex w-full min-w-0 shrink-0 flex-col text-left",
         // Com o ícone, ele vai na linha do título e a descrição atravessa a
-        // largura embaixo. Os seletores casam o **sufixo** do slot
-        // (`$=-media`, `$=-title`), porque o `AlertDialogHeader` é este
-        // cabeçalho com os slots `alert-dialog-*`: casar o nome inteiro o
-        // deixava sem a grade (e o ícone sobre o título, medido).
+        // largura embaixo. Os seletores casam o sufixo do slot (`$=-media`,
+        // `$=-title`) porque o `AlertDialogHeader` é este cabeçalho com slots
+        // `alert-dialog-*`.
         "has-[>[data-slot$=-media]]:grid has-[>[data-slot$=-media]]:grid-cols-[auto_minmax(0,1fr)] has-[>[data-slot$=-media]]:gap-x-2",
-        // Incondicionais: sem ícone o cabeçalho é flex, e `col-*` não faz nada
-        // nele.
+        // Incondicionais: sem ícone o cabeçalho é flex, e `col-*` não faz nada.
         "[&>[data-slot$=-title]]:col-start-2",
         "[&>:not([data-slot$=-media]):not([data-slot$=-title])]:col-span-2",
-        // **Sem tinta, e o motivo é medido.** A tira chegou a pintar um degradê
-        // (`from-popover` → transparente) para "a cor cheia encostar na
-        // dissolução". Sobre a placa translúcida isso é impossível: a placa é
-        // translúcida a 60% sobre o véu, e um token opaco no topo da tira é
-        // **mais claro** que ela — a faixa aparecia como banda na gaveta.
-        // Cor com alfa não tem "cor cheia" pintável sem empilhar. E a tira não
-        // precisa de tinta: o corpo é irmão dela e se mascara sozinho, então o
-        // fundo da tira **já é** a placa. Sem fio também — regra **J**.
+        // Sem tinta: sobre a placa translúcida, um token opaco no topo da tira
+        // aparece como banda. O corpo é irmão e se mascara sozinho, então o
+        // fundo da tira já é a placa. Sem fio também (regra J).
         "group-data-[layout=fixed]/dialog-content:px-(--dialog-px)",
         "group-data-[layout=fixed]/dialog-content:pt-(--dialog-px)",
         "group-data-[layout=fixed]/dialog-content:pb-4",
@@ -587,28 +494,12 @@ function DialogHeader({
 }
 
 /**
- * O × — **uma peça, não uma injeção**.
- *
- * O `DialogContent` ainda insere um por conta própria, e ali a conveniência se
- * paga: um diálogo é curto, o conteúdo não rola por baixo do botão, e só 6 das
- * 25 chamadas o desligam. Na folha a conta se inverte — **16 das 36 desligam**,
- * porque lá o cabeçalho é fixo e o × flutuante desaparece atrás dele assim que
- * a pessoa rola. Por isso o `SheetContent` deixou de injetar, e quem quer o
- * botão o compõe.
- *
- * Funciona nos dois porque é a mesma primitiva do Radix.
- *
- * **`placement` é onde ele pousa**, e o eixo nasceu de contagem: `floating` é o
- * canto da superfície, o caso comum e o padrão; `inline` é dentro do cabeçalho,
- * no `endAdornment` de um `DialogHeaderRow`. Numa folha de formulário o
- * flutuante desaparece atrás do cabeçalho fixo assim que a pessoa rola, e por
- * isso 9 telas montavam o botão à mão ali — 5 pelo
- * `MobileSheetFormHeaderCloseButton`, que existia só para isso, e 4 escrevendo
- * `Close` + `Button` + ícone por extenso. Com o eixo, a peça é uma só.
- *
- * O `-me-1` de `inline` é o recuo negativo que aquele componente trazia, na
- * forma lógica: a caixa do botão é mais larga que o glifo, e sem ele o × fica
- * visualmente afastado da borda do cabeçalho.
+ * O × como peça composta, não injeção. O `DialogContent` ainda insere um (um
+ * diálogo é curto e o conteúdo não rola por baixo); na folha o cabeçalho é fixo
+ * e o × flutuante some atrás dele, então o `SheetContent` não injeta.
+ * `placement`: `floating` (canto da superfície, padrão) ou `inline` (no
+ * `endAdornment` de um `DialogHeaderRow`). O `-me-1` de `inline` compensa a
+ * caixa do botão, mais larga que o glifo.
  */
 const dialogCloseButtonVariants = cva("", {
   variants: {
@@ -647,17 +538,10 @@ function DialogCloseButton({
 }
 
 /**
- * O corpo que rola, entre um cabeçalho e um rodapé parados.
- *
- * São 32 regiões `min-h-0 flex-1 overflow-y-auto` escritas à mão no app — e
- * cada uma das três classes é obrigatória por um motivo que não se lembra
- * sozinho: `flex-1` para ocupar a sobra, `min-h-0` porque sem ele um item de
- * flex não encolhe abaixo do conteúdo e a rolagem nunca aparece, e
- * `overflow-y-auto` para rolar. Esquecer o do meio é o erro clássico, e ele
- * falha calado: o diálogo simplesmente cresce até sair da tela.
- *
- * `overscroll-contain` é o que impede a página atrás de rolar junto quando o
- * corpo chega ao fim — no telefone, sem ele, o gesto vaza para o documento.
+ * O corpo que rola, entre um cabeçalho e um rodapé parados. As três classes são
+ * obrigatórias: `flex-1` ocupa a sobra, `min-h-0` deixa o item de flex encolher
+ * (sem ele o diálogo cresce até sair da tela, calado) e `overflow-y-auto` rola.
+ * `overscroll-contain` impede a página atrás de rolar junto.
  */
 function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -666,26 +550,13 @@ function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="dialog-body"
       className={cn(
         "min-h-0 flex-1 overflow-y-auto overscroll-contain px-(--dialog-px) py-4",
-        // A dissolução das duas bordas, **no lugar dos dois fios** — e nada
-        // mais: sem faixa, sem sangramento, sem camada de borrão. É o modo sem
-        // faixa: o cabeçalho e o rodapé têm altura variável (título com ou sem
-        // descrição, botões que empilham no telefone), e o conteúdo dissolve na
-        // borda do próprio corpo, nos 44px de todo componente da casa.
-        //
-        // **O piso aqui é zero, e não os 0,06 da casa.** A borda do corpo é a
-        // emenda com a tira, e a tira não pinta nada (sobre a placa translúcida,
-        // tinta vira banda). Com piso 0,06 o texto que atravessa a borda sai a
-        // 6–15% e é **recortado em seco** ali — uma linha nítida logo abaixo do
-        // título, medida. A zero o recorte cai em alfa zero e não existe. Os
-        // 0,06 servem à paleta, onde a ponta precisa dizer "há mais" sob um
-        // campo; aqui quem diz isso é a dissolução, e a emenda tem de sumir.
-        //
-        // Três rodadas tentaram somar o borrão do iOS aqui (sobra, faixa
-        // medida, faixa + material) e as três viraram um retângulo de tom —
-        // ver a invariante 6 em `lib/scroll-fade-classes`.
-        //
-        // Ele também traz a folga de rolagem, bem-vinda num formulário: um
-        // campo que ganha foco perto da borda para 48px dentro, fora da zona.
+        // A dissolução das duas bordas no lugar dos fios, sem faixa nem camada
+        // de borrão: cabeçalho e rodapé têm altura variável, e o conteúdo
+        // dissolve na borda do próprio corpo. O piso é zero (não os 0,06 da
+        // casa): a emenda com a tira não pinta nada, e com piso o texto que a
+        // atravessa seria recortado em seco (invariante 6 em
+        // `lib/scroll-fade-classes`). Traz também a folga de rolagem de 48px
+        // para o campo focado perto da borda.
         scrollFadeViewportClassName,
         "[--scroll-fade-floor:0]",
         className
@@ -696,24 +567,10 @@ function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 /**
- * O rodapé — uma tira encostada na borda de baixo, nos dois layouts.
- *
- * O `-mx-4 -mb-4` anterior era um recuo negativo fixo, calculado para um `p-4`
- * que a forma dominante do app não usa: em `p-0`, ele arrancava o rodapé para
- * fora do diálogo. Daí as sete chamadas com `mx-0 mb-0 mt-0` — telas anulando
- * o componente para poder usá-lo.
- *
- * Agora o recuo negativo sai da mesma variável do recuo positivo e **só existe
- * no layout que tem recuo**. Em `fixed` o casco é `p-0` e não há o que anular.
- *
- * O tingido também saiu. Era `bg-muted/50`, e sete das nove chamadas o
- * trocavam por `bg-background`: o peso dos botões já separa o rodapé, e a
- * faixa cinza só acrescentava outro sinal para a mesma divisão. (O fio que
- * aqui se dizia separar o rodapé também saiu, numa rodada depois.)
- *
- * **`start`** (rodada 211) é a ação que fica do outro lado — "Excluir",
- * "Voltar" —, encostada à esquerda no desktop e, pelo `flex-col-reverse`,
- * embaixo de tudo no telefone.
+ * O rodapé: uma tira na borda de baixo, nos dois layouts. O recuo negativo sai
+ * da mesma variável do recuo positivo e só existe no layout que tem recuo. Sem
+ * tingido: o peso dos botões já separa o rodapé. `start` é a ação do outro lado
+ * ("Excluir", "Voltar"), à esquerda no desktop e embaixo de tudo no telefone.
  */
 function DialogFooter({
   className,
@@ -729,20 +586,14 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        // **Sem fio.** Nem aqui nem no cabeçalho: o diálogo é uma superfície só,
-        // e o que separa as faixas é o conteúdo dissolvendo quando há rolagem, e
-        // o respiro quando não há. Um traço horizontal para cada emenda numa
-        // caixa de três blocos era o que o próprio arquivo já criticava ao
-        // explicar por que o `bg-muted/50` saiu daqui: o peso dos botões e o
-        // recuo já dizem que ali começa outra coisa.
+        // Sem fio, nem aqui nem no cabeçalho: o diálogo é uma superfície só, e
+        // o que separa as faixas é a dissolução (com rolagem) ou o respiro.
         "flex shrink-0 flex-col-reverse gap-2",
-        // O par do cabeçalho: sem tinta, pelo mesmo motivo escrito lá.
+        // O par do cabeçalho: sem tinta.
         "-mx-(--dialog-bleed) -mb-(--dialog-bleed)",
         "px-(--dialog-px) py-4 sm:flex-row sm:justify-end",
-        // **No dedo, os botões do rodapé sobem a 40**, o piso de toque da casa.
-        // As telas o escreviam à mão (`h-10 w-full`) só no ramo do telefone;
-        // com um diálogo só nas duas larguras (rodada 211), o piso é daqui. A
-        // pergunta é sobre o apontador, como na escada de campo.
+        // No dedo os botões do rodapé sobem a 40, o piso de toque da casa (a
+        // pergunta é sobre o apontador).
         "pointer-coarse:[&_button]:min-h-10",
         className
       )}
@@ -770,24 +621,15 @@ function DialogFooter({
   )
 }
 
-/**
- * A tinta do título, dividida com o `AlertDialogTitle`: o mesmo título nas duas
- * confirmações, e por isso a receita mora num lugar só.
- */
+/** A tinta do título, dividida com o `AlertDialogTitle`. */
 const dialogTitleClassName = cn(
-  // `leading-snug`, e não `leading-none`: sem `gap` no cabeçalho, é a
-  // entrelinha do título que o separa da descrição.
+  // `leading-snug`: sem `gap` no cabeçalho, a entrelinha separa o título da descrição.
   "min-w-0 font-heading text-base leading-snug font-medium text-balance",
-  // O × é `absolute` e não reserva lugar nenhum: sem isto, um título
-  // longo passa por baixo dele — 16px medidos, e não é hipótese.
-  //
-  // A conta é uma só nos dois layouts porque a caixa do cabeçalho sempre
-  // termina a `--dialog-px` da borda do diálogo: em `auto` pelo recuo do
-  // casco, em `fixed` pelo recuo do próprio cabeçalho. Sobra o que o ×
-  // avança além disso.
+  // O × é `absolute` e não reserva lugar: sem isto um título longo passa por
+  // baixo dele. A conta é uma só nos dois layouts porque a caixa do cabeçalho
+  // sempre termina a `--dialog-px` da borda; sobra o que o × avança além disso.
   DIALOG_CLOSE_RESERVE,
-  // Dentro de `DialogHeaderRow` quem reserva é a coluna do adorno; aqui
-  // o recuo só encolheria a coluna do texto à toa.
+  // Dentro de `DialogHeaderRow` quem reserva é a coluna do adorno.
   "in-data-[slot=dialog-header-row]:pe-0"
 )
 
@@ -809,8 +651,7 @@ function DialogDescription({
   children,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Description>) {
-  // A primitiva fica por fora: é ela que escreve o `id` do `aria-describedby`.
-  // O corpo e a tinta são do `Muted`.
+  // A primitiva fica por fora: ela escreve o `id` do `aria-describedby`.
   return (
     <DialogPrimitive.Description asChild data-slot="dialog-description" {...props}>
       <Muted
@@ -825,11 +666,7 @@ function DialogDescription({
   )
 }
 
-/**
- * O ícone do título (rodada 211), na linha dele e na cor dele, sem poço — o
- * `AlertDialogMedia` sem os tons. Vai dentro do `DialogHeader`, antes do
- * título; a descrição passa embaixo, na largura toda.
- */
+/** O ícone do título, na linha dele e na cor dele, sem poço. Vai dentro do `DialogHeader`, antes do título. */
 function DialogMedia({
   className,
   ...props
@@ -848,9 +685,8 @@ function DialogMedia({
 }
 
 /**
- * "Passo 2 de 3", com a barra segmentada (rodada 211). Vai dentro do
- * `DialogHeader`, antes do título. Com ela, um diálogo `fixed` ocupa o teto
- * de altura, e a janela não pula quando o passo troca.
+ * "Passo 2 de 3", com a barra segmentada. Vai dentro do `DialogHeader`, antes
+ * do título. Com ela um diálogo `fixed` ocupa o teto, e a janela não pula.
  */
 function DialogSteps({
   current,
@@ -870,8 +706,7 @@ function DialogSteps({
   return (
     <div
       data-slot="dialog-steps"
-      // Desvia do × como o título desvia: a barra é a primeira linha do
-      // cabeçalho, e corria por baixo do botão — medido na demonstração.
+      // Desvia do × como o título: a barra é a primeira linha do cabeçalho.
       className={cn("flex flex-col gap-1.5 pb-3", DIALOG_CLOSE_RESERVE, className)}
     >
       <Progress
@@ -888,7 +723,7 @@ function DialogSteps({
 }
 
 export {
-  // A pergunta de descarte (rodada 222); o `Sheet` a faz por `usePedidoDeFechar`.
+  // A pergunta de descarte; o `Sheet` a faz por `usePedidoDeFechar`.
   ConfirmarDescarte,
   Dialog,
   DialogBody,
@@ -909,7 +744,7 @@ export {
   overlayClassName,
   dialogContentVariants,
   dialogTitleClassName,
-  // A origem do clique, que o `AlertDialog` também usa (rodada 248).
+  // A origem do clique, que o `AlertDialog` também usa.
   useOrigemDoClique,
   // O pedido de fechar, que o `Sheet` também faz.
   usePedidoDeFechar,

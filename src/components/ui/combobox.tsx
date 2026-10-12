@@ -40,67 +40,27 @@ import {
 } from "@/components/ui/popover"
 
 /**
- * Select com busca.
+ * Select com busca, montado sobre `Command` (cmdk) + `Popover` (a versão do
+ * registry vem sobre Base UI, uma segunda biblioteca de primitivos). Não é o
+ * `FormPickerPopover` (lista longa com painel próprio e rodapé de ação): este
+ * é o select com busca preso a um campo, com semântica de listbox, que também
+ * cria pela busca, sem rodapé.
  *
- * A versão do registry para o estilo `radix-nova` vem sobre Base UI, e trazê-la
- * como está adicionaria uma segunda biblioteca de primitivos por causa de um
- * componente só — o resto do design system é Radix. Este é o mesmo componente
- * montado sobre `Command` (cmdk) + `Popover`, que já existiam no projeto.
+ * `ComboboxChips` mostra as escolhas de `multiple` em fichas removíveis embaixo
+ * do campo (não cabem no gatilho, que é um `<button>`); `ComboboxActions` é
+ * "Selecionar tudo"/"Limpar" sobre o que a busca deixou visível;
+ * `ComboboxItem variant="none"` é a ausência, esmaecida e, em `multiple`,
+ * exclusiva; `ComboboxCreate` cria o que se digitou; `ComboboxGroup recent`
+ * some ao digitar; `variant="input"` com `ComboboxTextField` faz o campo ser a
+ * busca.
  *
- * Não confundir com `FormPickerPopover`: aquele é o seletor de lista longa com
- * painel próprio — busca, lista e **rodapé** com ação (o "criar categoria" da
- * transação). Este é o select com busca preso a um campo, com a semântica de
- * listbox; desde a rodada 207 ele também cria pela busca, mas sem rodapé.
- *
- * ## Rodada 207: o que o filtro de transações escrevia à mão
- *
- * - `ComboboxChips` — as escolhas de `multiple` em fichas removíveis embaixo
- *   do campo, recolhendo em `+N` (a ficha é `Badge`, o × é `Button`: fichas
- *   não cabem **dentro** do gatilho, que é um `<button>`).
- * - `ComboboxActions` — "Selecionar tudo" e "Limpar" no topo da lista, que
- *   leem **o que a busca deixou visível** (`useCommandState`).
- * - `ComboboxItem` com `media` (o `ColorTile` da categoria), `description` e
- *   `variant="none"` — a ausência ("Sem categoria"), esmaecida e, em
- *   `multiple`, **exclusiva**: escolhê-la solta as outras, e o contrário.
- * - `ComboboxCreate` — quando nada casa, a última linha cria o que se digitou.
- * - `ComboboxGroup recent` — o grupo das usadas há pouco, que some ao digitar.
- * - `variant="input"` com `ComboboxTextField` — o campo **é** a busca. A raiz
- *   do cmdk passa a envolver o campo e o painel (o painel é portal, mas o
- *   contexto do React atravessa), e o teclado do campo chega ao cmdk porque o
- *   campo mora dentro da raiz no DOM.
- *
- * ## O gatilho era um botão, e parecia um botão
- *
- * Ele nascia de `Button variant="outline"` — `border-border` + `bg-background`
- * no tema claro —, enquanto `Select` e `Input` são `border-input` +
- * `bg-input-fill/30`. Os dois só convergiam sob `dark:`, então no tema claro um
- * combobox ao lado de um select eram **duas superfícies visivelmente
- * diferentes** fazendo o mesmo trabalho. Um combobox é um select com busca: até
- * abrir, ele tem de ser indistinguível de um.
- *
- * Agora ele veste a régua de [`lib/field-classes`](../../lib/field-classes.ts),
- * a mesma do `Input` e do `SelectTrigger`. Consequências assumidas: ele sai do
- * `Button`, logo sai da garantia de maiúscula inicial do CTA — o que é correto,
- * porque o placeholder de um campo não é rótulo de ação. E o
- * `FormPickerPopoverTrigger` continua em `Button variant="outline"` por decisão
- * registrada: a divergência de três pontas fica anotada, não resolvida à
- * revelia.
- *
- * ## O indicador foi para a direita
- *
- * Ele era um check à esquerda com `opacity-0` reservando espaço. `SelectItem`,
- * `DropdownMenuCheckboxItem` e `ContextMenuCheckboxItem` põem o indicador à
- * **direita**, e o motivo já está escrito em `menu-classes`: à esquerda ele
- * empurra o rótulo para longe do ícone da ação, e as duas colunas de recuo
- * disputam o mesmo lugar. Três superfícies onde se escolhe uma opção, três
- * indicadores no mesmo lugar. O truque do `opacity-0` sai junto — com o
- * indicador absoluto não há o que reservar.
- *
- * ## A busca é a do projeto, não a do cmdk
- *
- * O padrão do cmdk casa por subsequência difusa e não conhece acento. Aqui a
- * lista usa [`lib/command-filter`](../../lib/command-filter.ts), a mesma da
- * paleta do catálogo — ver lá a razão e a tabela de notas.
+ * O gatilho é um campo e veste [`lib/field-classes`](../../lib/field-classes.ts),
+ * a régua do `Input` e do `SelectTrigger`, para ser indistinguível de um select
+ * até abrir; por isso sai da garantia de maiúscula do CTA. O
+ * `FormPickerPopoverTrigger` segue em `Button variant="outline"`, divergência
+ * anotada. O indicador fica à direita, como em `SelectItem` e nos menus.
+ * A busca é [`lib/command-filter`](../../lib/command-filter.ts), a da paleta do
+ * catálogo (o padrão do cmdk é difuso e não conhece acento).
  */
 
 type ComboboxVariant = "select" | "input"
@@ -135,9 +95,8 @@ type ComboboxContextValue = {
   campoRef: React.RefObject<HTMLDivElement | null>
   /**
    * As linhas montadas, valor → palavras-chave. O `useCommandState` do cmdk
-   * indexa o filtrado pelo **id** da linha, e não pelo valor — medido: o
-   * "Selecionar tudo" escolhia `radix-_r_k_`. Quem precisa de valores filtra
-   * este registro com o mesmo `commandFilter`.
+   * indexa o filtrado pelo id da linha, não pelo valor; quem precisa de valores
+   * filtra este registro com o mesmo `commandFilter`.
    */
   itens: React.RefObject<Map<string, string[]>>
 }
@@ -170,11 +129,7 @@ type ComboboxMultipleProps = {
 
 type ComboboxProps = (
   | (ComboboxSingleProps & {
-      /**
-       * `select` (o padrão): o gatilho é um campo-botão e a busca mora no
-       * painel. `input`: o campo **é** a busca (autocomplete) — ver
-       * `ComboboxTextField`. Só com uma escolha.
-       */
+      /** `select` (padrão): o gatilho é um campo-botão e a busca mora no painel. `input`: o campo é a busca (ver `ComboboxTextField`); só com uma escolha. */
       variant?: ComboboxVariant
     })
   | (ComboboxMultipleProps & { variant?: "select" })
@@ -182,27 +137,17 @@ type ComboboxProps = (
   open?: boolean
   defaultOpen?: boolean
   onOpenChange?: (open: boolean) => void
-  /**
-   * Trava a rolagem de trás. O padrão é ligar no telefone, como o
-   * `FormPickerPopover`: sem isso, rolar a lista arrasta a folha que a contém e
-   * o dedo não distingue as duas.
-   */
+  /** Trava a rolagem de trás; o padrão é ligar no telefone, como o `FormPickerPopover`, senão rolar a lista arrasta a folha. */
   modal?: boolean
   children: React.ReactNode
 }
 
 /**
- * A união discriminada obriga três cuidados, e os três estão aqui de propósito:
- *
- * 1. **`props` não é desestruturado.** O estreitamento por desestruturação
- *    quebra assim que um campo é renomeado ou ganha valor padrão — que é
- *    exatamente o que o corpo de um componente faz.
- * 2. **A união nunca desce pelo contexto.** O `ComboboxItem` recebe
- *    `isSelected` e `toggle`, e não vê genérico nenhum.
- * 3. **A emissão passa por ramo estreitado**, e não por um `as`.
- *
- * Limitação conhecida: `<Combobox multiple={umBooleano}>` não estreita. É
- * preciso um literal, ou duas chamadas.
+ * Cuidados da união discriminada: `props` não é desestruturado (o
+ * estreitamento quebra com renomeação ou valor padrão); a união nunca desce
+ * pelo contexto (o `ComboboxItem` recebe `isSelected` e `toggle`); a emissão
+ * passa por ramo estreitado, sem `as`. `<Combobox multiple={umBooleano}>` não
+ * estreita: precisa de literal.
  */
 function Combobox(props: ComboboxProps) {
   const { open: openProp, defaultOpen = false, onOpenChange, modal, children } = props
@@ -234,11 +179,8 @@ function Combobox(props: ComboboxProps) {
     [isOpenControlled, onOpenChange]
   )
 
-  // `props` inteiro na dependência, e não os campos desestruturados: o
-  // estreitamento da união só sobrevive enquanto o acesso é `props.multiple`
-  // dentro do corpo — ver o cuidado 1 acima. Um objeto novo a cada render faz
-  // este memo render pouco, e tudo bem: o provider só re-renderiza quando o pai
-  // já re-renderizou, e aí os consumidores iriam junto de qualquer forma.
+  // `props` inteiro na dependência: o estreitamento da união só sobrevive
+  // enquanto o acesso é `props.multiple` dentro do corpo.
   const context = React.useMemo<ComboboxContextValue>(() => {
     const multiple = props.multiple === true
 
@@ -261,8 +203,7 @@ function Combobox(props: ComboboxProps) {
             commit(selected.filter((v) => v !== value))
             return
           }
-          // A ausência é exclusiva nos dois sentidos: escolhê-la solta as
-          // outras, e escolher outra a solta.
+          // A ausência é exclusiva nos dois sentidos.
           commit(
             options?.exclusive
               ? [value]
@@ -307,10 +248,9 @@ function Combobox(props: ComboboxProps) {
         modal={variant === "input" ? false : (modal ?? isMobile)}
       >
         {variant === "input" ? (
-          // A raiz do cmdk envolve o campo **e** o painel: o campo é a busca,
-          // e o teclado dele precisa chegar ao `onKeyDown` da raiz — o que só
-          // acontece se ele morar dentro dela no DOM. O painel é portal, mas o
-          // contexto do React atravessa portal, e a lista o encontra.
+          // A raiz do cmdk envolve o campo e o painel: o teclado do campo só
+          // chega ao `onKeyDown` dela se ele morar dentro no DOM (o contexto do
+          // React atravessa o portal do painel).
           <Command filter={commandFilter} className="contents">
             {children}
           </Command>
@@ -329,16 +269,10 @@ function normalizeValue(value: string | string[] | undefined): string[] {
 }
 
 /**
- * A casca do campo.
- *
- * Ela existe por uma razão mecânica: `<button>` não aninha em `<button>`, então
- * o × de limpar **não pode** morar dentro do gatilho. Ele é irmão, posicionado
- * por cima. (Isto não é o arranjo do `InputGroup`, que usa irmãos de flex de
- * verdade — ali o controle é um `<input>`, que divide a linha sem reclamar.)
- *
- * O `PopoverAnchor` é obrigatório e não decorativo: `--radix-popover-trigger-width`
- * mede a **âncora**, e sem ele o painel sairia com a largura do gatilho em vez
- * da largura do campo que se vê.
+ * A casca do campo. `<button>` não aninha em `<button>`, então o × de limpar é
+ * irmão do gatilho, posicionado por cima. O `PopoverAnchor` é obrigatório:
+ * `--radix-popover-trigger-width` mede a âncora, e sem ele o painel sairia com
+ * a largura do gatilho em vez da do campo.
  */
 function ComboboxField({ className, ...props }: React.ComponentProps<"div">) {
   const { campoRef } = useCombobox("ComboboxField")
@@ -349,20 +283,10 @@ function ComboboxField({ className, ...props }: React.ComponentProps<"div">) {
         data-slot="combobox-field"
         className={cn(
           "relative w-full",
-          // Quem recua é o **rótulo**, não o gatilho.
-          //
-          // Recuar o gatilho foi a primeira tentativa, e ela empilhou o × em
-          // cima do chevron: o `padding-inline-end` empurra o chevron para
-          // dentro, e ele foi parar exatamente sobre o × — 25px de sobreposição,
-          // medidos. O chevron mora na aresta e não se mexe; o que precisa
-          // desviar do × é o texto.
-          //
-          // E o recuo vem por **variável**, não por variante: medido, tanto
-          // `in-[…]:pe-7` quanto `group-has-…:pe-7` compilam para (0,1,0) — o
-          // mesmo peso da classe base no próprio elemento —, porque o Tailwind
-          // envolve o ancestral em `:where()`, que não soma especificidade. Os
-          // dois só venceriam pela ordem de emissão, que é do framework e não
-          // do autor. Variável herda e não disputa.
+          // Quem recua para o × é o rótulo, não o gatilho (recuar o gatilho
+          // empurra o chevron sobre o ×). O recuo vem por variável, não por
+          // variante: `in-[…]:pe-7` e `group-has-…:pe-7` compilam para (0,1,0)
+          // por causa do `:where()` e só venceriam por ordem de emissão.
           "has-[[data-slot=combobox-clear]]:[--combobox-value-pe:--spacing(7)]",
           className
         )}
@@ -373,25 +297,14 @@ function ComboboxField({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 /**
- * O gatilho — que **é** o campo.
- *
- * `aria-haspopup="listbox"` é declarado de propósito: o `PopoverTrigger` do
- * Radix anuncia `dialog`, e o que abre aqui é a lista do cmdk. O leitor de tela
- * prometia um diálogo — com o contrato de foco preso e Esc que um diálogo tem —
- * e entregava uma listbox. Vem antes de `{...props}` para o consumidor ainda
- * poder trocar.
- *
- * `aria-controls` aponta para o `ComboboxList`, que é quem o cmdk marca como
- * `role="listbox"`. Ele faltava, e sem ele o papel de combobox ficava
- * incompleto — o gatilho dizia "abro uma lista" sem dizer qual.
+ * O gatilho, que é o campo. `aria-haspopup="listbox"` de propósito: o
+ * `PopoverTrigger` do Radix anuncia `dialog`, e o que abre é a lista do cmdk.
+ * Vem antes de `{...props}` para o consumidor poder trocar. `aria-controls`
+ * aponta para o `ComboboxList` (o `role="listbox"`).
  */
 /**
- * Um `<button role="combobox">` cru **de propósito**. A regra da casa manda usar
- * o `Button` onde a peça é um botão — mas este gatilho é um **campo**: ele veste
- * `field-classes`, a mesma régua do `Input` e do `SelectTrigger`, e é isso que
- * o torna indistinguível de um select até abrir. `Button` daria contorno e
- * preenchimento de ação, que é a superfície de que ele saiu (ver o cabeçalho de
- * `field-classes.ts`). A peça de baixo de um campo é a régua de campo.
+ * Um `<button role="combobox">` cru de propósito: este gatilho é um campo (veste
+ * `field-classes`), e o `Button` daria contorno e preenchimento de ação.
  */
 function ComboboxTrigger({
   className,
@@ -400,8 +313,7 @@ function ComboboxTrigger({
   size = "md",
   ...props
 }: Omit<React.ComponentProps<"button">, "children"> & {
-  /** A escada do sistema, os mesmos nomes: sm 28, md 32, lg 36, xl 40 — e o
-      piso de 40 no dedo, como toda a família de campo. */
+  /** A escada do sistema (sm 28, md 32, lg 36, xl 40), com o piso de 40 no dedo. */
   size?: FieldControlSize
   placeholder?: string
   children?: React.ReactNode
@@ -443,15 +355,9 @@ function ComboboxTrigger({
 }
 
 /**
- * O rótulo do que está escolhido.
- *
- * O rótulo continua vindo de quem chama, e não de auto-registro dos itens: o
- * conteúdo do popover só **monta quando ele abre** (`<Presence present={open}>`,
- * sem `forceMount`), então um combobox que nunca foi aberto não teria rótulo
- * nenhum para mostrar. Quem tem os dados antes de abrir é o consumidor.
- *
- * O que esta peça resolve é o resto: o placeholder, a truncagem e o resumo
- * `+N` de várias escolhas, que senão cada tela escreveria de um jeito.
+ * O rótulo do que está escolhido. Vem de quem chama, e não de auto-registro dos
+ * itens, porque o conteúdo do popover só monta ao abrir. A peça resolve o
+ * placeholder, a truncagem e o resumo `+N`.
  */
 function ComboboxValue({
   className,
@@ -462,12 +368,7 @@ function ComboboxValue({
   media,
   ...props
 }: React.ComponentProps<"span"> & {
-  /**
-   * O ladrilho ou ícone antes do rótulo — o `ColorTile size="xs"` da
-   * categoria. É prop, e não filho, porque o rótulo trunca: dentro do mesmo
-   * `<span>` de truncar, o ladrilho (que é flex) empilhava sobre o texto e o
-   * empurrava para fora do campo — medido, 44px de altura num gatilho de 32.
-   */
+  /** O ladrilho ou ícone antes do rótulo; é prop porque dentro do `<span>` que trunca ele empilharia sobre o texto. */
   media?: React.ReactNode
   placeholder?: string
   /** Quantas escolhas ficaram de fora do rótulo. Só em `multiple`. */
@@ -505,12 +406,8 @@ function ComboboxValue({
 }
 
 /**
- * O × que limpa a escolha.
- *
- * Irmão do gatilho, e não filho — ver `ComboboxField`. Ele repete a receita do
- * × do `CommandInput` (`tertiary`, `icon-xs`, `XMarkIcon`) para os dois clears
- * do sistema lerem como uma decisão só, e some quando não há o que limpar:
- * um controle que não faz nada não deve ocupar lugar.
+ * O × que limpa a escolha. Irmão do gatilho (ver `ComboboxField`), com a receita
+ * do × do `CommandInput`; some quando não há o que limpar.
  */
 function ComboboxClear({
   className,
@@ -528,14 +425,12 @@ function ComboboxClear({
       aria-label="Limpar seleção"
       data-slot="combobox-clear"
       className={cn(
-        // 32px da borda: o chevron ocupa de 10 a 26, e o × fica logo antes
-        // dele, com 6px de respiro entre os dois.
+        // 32px da borda: o chevron ocupa de 10 a 26, e o × fica antes dele, com 6px de respiro.
         "absolute inset-y-0 end-8 my-auto text-muted-foreground",
         className
       )}
       onClick={(event) => {
-        // O × some quando não há seleção: sem devolver o foco ao gatilho, ele
-        // caía no <body> e o teclado recomeçava do topo da página.
+        // O × some sem seleção: sem devolver o foco ao gatilho, ele cairia no <body>.
         const gatilho = event.currentTarget.parentElement?.querySelector<HTMLElement>(
           '[data-slot="combobox-trigger"]'
         )
@@ -557,7 +452,7 @@ function ComboboxContent({
   commandProps,
   ...props
 }: React.ComponentProps<typeof PopoverContent> & {
-  /** O que a raiz do cmdk precisa receber — `shouldFilter={false}` para busca no servidor, por exemplo. */
+  /** O que a raiz do cmdk precisa receber (`shouldFilter={false}` para busca no servidor). */
   commandProps?: React.ComponentProps<typeof Command>
 }) {
   const { variant, campoRef } = useCombobox("ComboboxContent")
@@ -567,19 +462,18 @@ function ComboboxContent({
         data-slot="combobox-content"
         align={align}
         padding="none"
-        // O foco fica no campo, que é onde se digita: sem isto o Radix o
-        // levaria para o painel na primeira tecla.
+        // O foco fica no campo, onde se digita; senão o Radix o levaria ao painel na primeira tecla.
         onOpenAutoFocus={(e) => e.preventDefault()}
         // Clicar no próprio campo não é "fora".
         onInteractOutside={(e) => {
           if (campoRef.current?.contains(e.target as Node)) e.preventDefault()
         }}
-        // Desdobra do campo, e as linhas sobem em cascata (rodada 248).
+        // Desdobra do campo, e as linhas sobem em cascata.
         motion="field"
         className={cn(
           "w-(--radix-popover-trigger-width) min-w-48 [--command-reveal:var(--duration-spring)]",
-          // As medidas que a raiz do `Command` publicaria: aqui ela fica fora
-          // do portal, e variável não atravessa portal no DOM.
+          // As medidas que a raiz do `Command` publicaria: ela fica fora do
+          // portal, e variável não atravessa portal no DOM.
           scrollFadeBandsClassName,
           "[--command-list-max-h:--spacing(72)]",
           className
@@ -591,19 +485,14 @@ function ComboboxContent({
     )
   }
   return (
-    // **Uma placa só** (rodada 198, a pedido do dono): o popover pinta a
-    // placa flutuante, e a pílula de busca e a lista moram **dentro** dela —
-    // a forma do `SearchInput surface="plate"` num popover, que o catálogo
-    // demonstra. Da rodada 143 à 197 ele foi a pilha do `CommandDialog`
-    // (pílula e placa soltas, o popover sem pintar, uma sombra por peça).
-    // O `Command` de dentro não pinta (`plain`): placa em volta de placa é a
-    // placa dupla que a régua proíbe.
+    // Uma placa só: o popover pinta a placa flutuante, e a pílula de busca e a
+    // lista moram dentro (a forma do `SearchInput surface="plate"`). O
+    // `Command` de dentro não pinta (`plain`): placa dupla é proibida.
     <PopoverContent
       data-slot="combobox-content"
       align={align}
       padding="none"
-      // Desdobra do campo, e as linhas sobem em cascata (a `command-reveal`
-      // da lista, que fica parada sem a duração).
+      // Desdobra do campo; as linhas sobem em cascata (a `command-reveal` da lista).
       motion="field"
       className={cn(
         "w-(--radix-popover-trigger-width) min-w-48 [--command-reveal:var(--duration-spring)]",
@@ -615,13 +504,10 @@ function ComboboxContent({
         filter={commandFilter}
         {...commandProps}
         className={cn(
-          // Com as ações, a faixa de cima soma a linha delas (24 do botão + 4
-          // de folga) aos 48 da busca: a lista sobe por trás da faixa
-          // (`-mt-(--scroll-fade-band-h)`) e, sem a soma, cobria as ações — o
-          // clique em "Selecionar tudo" caía numa linha da lista. Por `:has()`
-          // com **dois** atributos, e não por identidade do filho (que a casa
-          // proíbe): ele pesa mais que o `:has()` de um da raiz do `Command`,
-          // e vence sem depender da ordem de emissão.
+          // Com as ações, a faixa de cima soma a linha delas (24 + 4) aos 48 da
+          // busca; sem a soma, a lista que sobe por trás da faixa as cobriria.
+          // Por `:has()` com dois atributos (não por identidade do filho), que
+          // pesa mais que o `:has()` da raiz do `Command`.
           "has-[[data-slot=command-input-wrapper]~[data-slot=combobox-actions]]:[--scroll-fade-band-h:calc(--spacing(8)+--spacing(4)+--spacing(7))]",
           commandProps?.className
         )}
@@ -650,14 +536,10 @@ function ComboboxInput({
 }
 
 /**
- * A listbox. Ela leva o `id` que o `aria-controls` do gatilho aponta — o cmdk
- * já lhe dá `role="listbox"` e `aria-activedescendant`, então o que faltava era
- * só a ponta do outro lado.
- *
- * O idref fica pendurado enquanto o popover está fechado, porque o conteúdo do
- * portal só monta ao abrir. É o comportamento das implementações de referência,
- * e um idref inexistente é ignorado — o contrário (não declarar) deixa o papel
- * de combobox incompleto o tempo todo.
+ * A listbox, com o `id` que o `aria-controls` do gatilho aponta (o cmdk já dá
+ * `role="listbox"` e `aria-activedescendant`). O idref fica pendurado com o
+ * popover fechado, porque o portal só monta ao abrir; um idref inexistente é
+ * ignorado, e não declará-lo deixaria o papel de combobox incompleto.
  */
 function ComboboxList({
   className,
@@ -669,10 +551,8 @@ function ComboboxList({
       id={listId}
       data-slot="combobox-list"
       arrows
-      // 8px dos lados e embaixo, o recuo da pílula: a linha acesa alinha com
-      // as bordas dela. Em cima a linha nasce rente à faixa da pílula (sem os
-      // 4px de folga da dissolução), que passam para baixo — a altura da lista
-      // soma os mesmos 8.
+      // 8px dos lados e embaixo, o recuo da pílula; em cima a linha nasce rente
+      // à faixa da pílula, e os 4px de folga da dissolução passam para baixo.
       className={cn("px-2 pt-(--scroll-fade-band-h) pb-2", className)}
       {...props}
     />
@@ -690,25 +570,14 @@ function ComboboxEmpty({
   )
 }
 
-/**
- * A lista carregando.
- *
- * Armadilha do cmdk a conhecer: `Command.Empty` renderiza sempre que a
- * contagem filtrada é zero, então o vazio pisca por baixo do carregamento a
- * menos que quem chama esconda um dos dois.
- */
+/** A lista carregando. Armadilha do cmdk: `Command.Empty` renderiza com contagem zero, então o vazio pisca sob o carregamento a menos que quem chama esconda um dos dois. */
 function ComboboxLoading({
   ...props
 }: React.ComponentProps<typeof CommandLoading>) {
   return <CommandLoading data-slot="combobox-loading" {...props} />
 }
 
-/**
- * O prefixo do valor do cmdk dentro de um grupo de recentes. O mesmo item
- * aparece lá e na lista inteira, e duas linhas com o mesmo `value` acendem
- * juntas no cmdk — o recente leva um valor do cmdk próprio, e o valor da
- * escolha continua o do item.
- */
+/** O prefixo do valor do cmdk no grupo de recentes: duas linhas com o mesmo `value` acendem juntas, então o recente leva um valor próprio. */
 const PREFIXO_RECENTE = "recente:"
 const ComboboxGroupContext = React.createContext<string>("")
 
@@ -717,11 +586,7 @@ function ComboboxGroup({
   recent = false,
   ...props
 }: React.ComponentProps<typeof CommandGroup> & {
-  /**
-   * O grupo das usadas há pouco (rodada 207): fica no topo com o painel
-   * ocioso e **some ao digitar** — buscando, a lista inteira já acha, e o
-   * mesmo nome duas vezes seria ruído.
-   */
+  /** O grupo das usadas há pouco: fica no topo com o painel ocioso e some ao digitar (a lista inteira já acha). */
   recent?: boolean
 }) {
   const buscando = useCommandState((estado) => estado.search.trim() !== "")
@@ -746,16 +611,10 @@ function ComboboxSeparator({
 }
 
 /**
- * A linha.
- *
- * `keywords` sai do próprio rótulo quando ele é texto, e é isso que faz a busca
- * funcionar com dados de verdade: num combobox real o `value` é a chave de
- * máquina (`"cat_7f3a"`), e casar a consulta contra ela não acha nada. Quem
- * passa um rótulo que não é string (um ícone mais o nome, por exemplo) declara
- * `keywords` na mão — ou `textValue`, que serve às duas coisas.
- *
- * A escolha usa o `value` do item, e não o que o cmdk devolve: no grupo de
- * recentes o valor do cmdk leva prefixo (ver `ComboboxGroup`).
+ * A linha. `keywords` sai do rótulo quando ele é texto, porque num combobox real
+ * o `value` é uma chave de máquina; um rótulo que não é string declara
+ * `keywords` (ou `textValue`). A escolha usa o `value` do item, não o que o
+ * cmdk devolve (no grupo de recentes ele leva prefixo).
  */
 function ComboboxItem({
   className,
@@ -774,10 +633,7 @@ function ComboboxItem({
   media?: React.ReactNode
   /** A linha de explicação embaixo do rótulo — par de identidade, sem `gap`. */
   description?: React.ReactNode
-  /**
-   * `none` é a ausência ("Sem categoria"): esmaecida e, em `multiple`,
-   * exclusiva — escolhê-la solta as outras, e escolher outra a solta.
-   */
+  /** `none` é a ausência ("Sem categoria"): esmaecida e, em `multiple`, exclusiva nos dois sentidos. */
   variant?: "default" | "none"
   /** O texto da linha quando `children` não é texto: busca e campo do `input`. */
   textValue?: string
@@ -791,8 +647,7 @@ function ComboboxItem({
   const palavras = keywords ?? (texto ? [texto] : undefined)
   const chavePalavras = palavras?.join("\u0000") ?? ""
   React.useEffect(() => {
-    // O recente é a mesma linha da lista inteira: registrá-lo duas vezes não
-    // muda nada, e desregistrá-lo ao sumir não pode apagar a outra.
+    // O recente é a mesma linha da lista inteira: registrá-lo duas vezes não muda nada.
     if (prefixo) return
     const registro = itens.current
     registro.set(value, chavePalavras ? chavePalavras.split("\u0000") : [])
@@ -820,9 +675,8 @@ function ComboboxItem({
         toggle(value, { label: texto, exclusive: ausencia })
         onSelect?.(next)
       }}
-      // A linha de 36 com 8px de recuo — a dos outros dropdowns desde a rodada
-      // 243d —, e `pr-8` para o tique. Os 36 saem do `py-2` sobre a entrelinha
-      // de 20, e não de um `h-*`: a linha não é um degrau da escada de controles.
+      // A linha de 36 com 8px de recuo, e `pr-8` para o tique; os 36 vêm do
+      // `py-2` sobre a entrelinha de 20, não de um `h-*`.
       className={cn(
         "gap-2 px-2 py-2 pr-8",
         ausencia && "text-muted-foreground",
@@ -860,14 +714,10 @@ function ComboboxItem({
 }
 
 /**
- * O campo que **é** a busca (rodada 207), para `<Combobox variant="input">`:
- * digitar abre a lista embaixo e filtra, as setas andam por ela, Enter
- * escolhe e o campo passa a mostrar o rótulo escolhido. É o `Command.Input`
- * do cmdk vestindo a régua de campo — a mesma do `ComboboxTrigger` — e por
- * isso o cmdk lhe dá `role="combobox"`, `aria-controls` e
- * `aria-activedescendant` de fábrica.
- *
- * Esc fecha pelo `Popover`; seta para baixo abre sem digitar.
+ * O campo que é a busca (`variant="input"`): digitar abre a lista e filtra,
+ * Enter escolhe e o campo mostra o rótulo escolhido. É o `Command.Input` do cmdk
+ * com a régua de campo (o cmdk dá `role="combobox"`, `aria-controls` e
+ * `aria-activedescendant`). Esc fecha; seta para baixo abre sem digitar.
  */
 function ComboboxTextField({
   className,
@@ -911,12 +761,9 @@ function ComboboxTextField({
 }
 
 /**
- * As escolhas de `multiple` em fichas (rodada 207), embaixo do campo — dentro
- * dele não cabe: o gatilho é um `<button>`, e o × de cada ficha é outro.
- *
- * O rótulo vem de quem chama, pela mesma razão do `ComboboxValue`: os itens só
- * montam com o painel aberto. Acima de `max` as fichas recolhem num `+N`, que
- * é um botão e as mostra todas.
+ * As escolhas de `multiple` em fichas, embaixo do campo (o gatilho é um
+ * `<button>`). O rótulo vem de quem chama, como no `ComboboxValue`. Acima de
+ * `max` as fichas recolhem num `+N`.
  */
 function ComboboxChips({
   className,
@@ -995,21 +842,15 @@ function ComboboxChips({
 }
 
 /**
- * "Selecionar tudo" e "Limpar", no topo da lista de `multiple` (rodada 207).
- *
- * **"Tudo" é o que a busca deixou visível**, e não a lista inteira: quem
- * digitou "ali" e apertou "Selecionar tudo" quis as categorias de alimentação,
- * não as quarenta. O que o cmdk filtrou chega por `useCommandState`. A
- * ausência e os recentes ficam de fora — a primeira é exclusiva, e os segundos
- * são a mesma linha duas vezes.
+ * "Selecionar tudo" e "Limpar", no topo da lista de `multiple`. "Tudo" é o que a
+ * busca deixou visível (`useCommandState`), sem a ausência e os recentes.
  */
 function ComboboxActions({ className, ...props }: React.ComponentProps<"div">) {
   const { selectMany, clear, count, exclusivos, itens } = useCombobox("ComboboxActions")
   const busca = useCommandState((estado) => estado.search.trim())
   const algumVisivel = useCommandState((estado) => estado.filtered.count > 0)
 
-  // Calculado no clique, e não no render: o registro se enche nos efeitos das
-  // linhas, depois do primeiro render do painel.
+  // Calculado no clique: o registro se enche nos efeitos das linhas, depois do primeiro render.
   const selecionarVisiveis = () =>
     selectMany(
       [...itens.current.entries()]
@@ -1021,7 +862,7 @@ function ComboboxActions({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="combobox-actions"
-      // Acima da lista, que sobe por trás da faixa — ver `ComboboxContent`.
+      // Acima da lista, que sobe por trás da faixa (ver `ComboboxContent`).
       className={cn("relative z-10 flex items-center gap-1 px-2 pb-1", className)}
       {...props}
     >
@@ -1045,12 +886,9 @@ function ComboboxActions({ className, ...props }: React.ComponentProps<"div">) {
 const VALOR_CRIAR = "\u0000criar"
 
 /**
- * Criar o que se digitou (rodada 207): quando a busca não casa com nenhuma
- * linha, a última vira "Criar ‘Farmácia’". Ela **substitui** o vazio — o
- * `ComboboxEmpty` só aparece com contagem zero, e esta linha conta.
- *
- * Quem cria é quem chama (`onCreate` recebe o texto): ele grava e escolhe o
- * novo valor. Numa escolha só, o painel fecha junto.
+ * Criar o que se digitou: sem nenhuma linha casando, a última vira "Criar
+ * ‘Farmácia’". Substitui o vazio. Quem cria é quem chama (`onCreate` recebe o
+ * texto); numa escolha só o painel fecha junto.
  */
 function ComboboxCreate({
   onCreate,
@@ -1065,9 +903,8 @@ function ComboboxCreate({
   const { multiple, setOpen, setInputText } = useCombobox("ComboboxCreate")
   const busca = useCommandState((estado) => estado.search.trim())
   const contagem = useCommandState((estado) => estado.filtered.count)
-  // A contagem do cmdk inclui esta própria linha quando ela está montada (as
-  // palavras-chave dela são a busca, então ela sempre casa). Sem descontá-la,
-  // a linha aparecia, se contava, e sumia — medido, nunca chegava à tela.
+  // A contagem do cmdk inclui esta própria linha (as palavras-chave dela são a
+  // busca); sem descontá-la ela aparecia, se contava e sumia.
   const [mostrando, setMostrando] = React.useState(false)
   const outras = mostrando ? contagem - 1 : contagem
   const mostrar = busca !== "" && outras <= 0

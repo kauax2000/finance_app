@@ -41,46 +41,17 @@ import {
 } from "@/components/ui/popover"
 
 /**
- * A escolha de uma data, de um intervalo ou de um mês, em pt-BR.
+ * A escolha de uma data, de um intervalo ou de um mês, em pt-BR. O gatilho é
+ * um campo (superfície e altura do `Input`), não um `Button`, e por isso sai da
+ * garantia de maiúscula do CTA: "Selecione a data" é placeholder, não rótulo.
  *
- * ## O gatilho é um campo, não um botão
- *
- * Ele era `Button variant="outline" size="md"`. Medido no tema claro, lado a
- * lado com o `Input`: **32px contra 36**, e preenchimento `oklch(0.985)` opaco
- * contra `oklab(0.9 0 0 / 0.3)` translúcido. Um campo de data ao lado de um
- * campo de texto era mais baixo e de outra superfície. É a mesma medição que
- * tirou o `Combobox` do `Button` na rodada 06.
- *
- * Sair do `Button` também tira o gatilho da garantia de maiúscula inicial do
- * CTA — o que é correto: `Selecione a data` é placeholder de campo, não rótulo
- * de ação.
- *
- * ## `mode` é união discriminada
- *
- * `<DatePicker mode={x}>` com uma variável não estreita: precisa de literal. É
- * a mesma forma do `multiple` do `Combobox` — `value` e `onChange` mudam de
- * tipo junto com ela.
- *
- * ## Rodada 210
- *
- * - **`presets`**: atalhos ao lado da grade — dias (`Hoje`, `Ontem`) numa
- *   data, intervalos num período (dois meses no desktop). `true` usa os
- *   atalhos padrão do modo. O `Calendar` ganhou o atalho de dia para isto.
- * - **`showToday`** e **`markers`**: repassados ao `Calendar`, que os tem
- *   desde a rodada 203.
- * - **`displayStyle="relative"`**: "Hoje · 1 de outubro de 2026" — ontem,
- *   hoje e amanhã ganham a palavra; o resto fica por extenso.
- * - **`variant="input"`**: o campo é digitável (dd/mm/aaaa com máscara, e
- *   "hoje", "ontem", "amanhã"); o ícone abre a grade. Só data única.
- * - **`mode="month"`**: a grade de doze meses (`MonthGrid`, também exportada
- *   para quem tem gatilho próprio, como a navegação de mês das categorias).
- * - **No telefone a grade abre numa gaveta** (`Drawer`), com as células no
- *   degrau `lg` e esticadas — o popover saía espremido na largura do campo.
- * - **`confirm`** no intervalo: as pontas ficam em rascunho até "Aplicar".
- *
- * O comentário daqui dizia que o filtro de período das transações montava
- * **dois** `DatePicker` independentes; ele usa um só, em intervalo, desde que
- * o intervalo existe.
+ * `mode` é união discriminada (precisa de literal, não de variável; `value` e
+ * `onChange` mudam de tipo junto). `presets` põe atalhos ao lado da grade;
+ * `displayStyle="relative"` escreve "Hoje · 1 de outubro de 2026";
+ * `variant="input"` é o campo digitável (só data única); `mode="month"` é a
+ * grade de doze meses (`MonthGrid`, também exportada); `confirm` guarda as
+ * pontas do intervalo em rascunho até "Aplicar". No telefone a grade abre numa
+ * gaveta (`Drawer`), com as células no degrau `lg` e esticadas.
  */
 
 type DatePickerSize = FieldControlSize
@@ -98,8 +69,7 @@ type DatePickerBaseProps = {
   disabled?: boolean
   className?: string
   placeholder?: string
-  /** A altura, na escada do sistema — e `md` (32) é o padrão da família
-      inteira, `Input` incluído. */
+  /** A altura, na escada do sistema (`md` 32 é o padrão da família). */
   size?: DatePickerSize
   /**
    * `numeric` é dd/mm/aaaa, para linha apertada; `relative` põe "Hoje",
@@ -174,10 +144,7 @@ const ATALHOS_DIA: DatePickerDayPreset[] = [
   { label: "Ontem", date: () => somarDias(hoje(), -1) },
 ]
 
-/**
- * Os atalhos de período do sistema. O `id` é estável (rodada 245): o
- * `FilterBar` o grava na URL, e o rótulo pode mudar sem quebrar um link.
- */
+/** Os atalhos de período do sistema. O `id` é estável: o `FilterBar` o grava na URL, e o rótulo pode mudar sem quebrar um link. */
 export const DATE_RANGE_PRESETS: (DatePickerRangePreset & { id: string })[] = [
   { id: "ultimos-7", label: "Últimos 7 dias", range: () => ({ from: somarDias(hoje(), -6), to: hoje() }) },
   { id: "ultimos-30", label: "Últimos 30 dias", range: () => ({ from: somarDias(hoje(), -29), to: hoje() }) },
@@ -205,9 +172,8 @@ export const DATE_RANGE_PRESETS: (DatePickerRangePreset & { id: string })[] = [
 const PALAVRA_RELATIVA: Record<number, string> = { [-1]: "Ontem", 0: "Hoje", 1: "Amanhã" }
 
 /**
- * A formatação sai dos helpers, e não de um `toLocaleDateString` local. Os
- * helpers recebem `YYYY-MM-DD`, então a `Date` passa por `localYmdFromDate`
- * primeiro; é o caminho que evita o pulo de fuso que converter para ISO produz.
+ * A formatação sai dos helpers (que recebem `YYYY-MM-DD`), e a `Date` passa por
+ * `localYmdFromDate` primeiro, para evitar o pulo de fuso da conversão para ISO.
  */
 function rotularData(
   value: Date,
@@ -245,7 +211,7 @@ function rotularMes(value: Date, displayStyle: DatePickerBaseProps["displayStyle
 /**
  * O texto digitado vira data: dd/mm/aaaa, dd/mm/aa, dd/mm (ano corrente) e as
  * palavras "hoje", "ontem" e "amanhã". Uma data que não existe (31/02) é
- * `null`, e não o 3 de março que o `Date` inventaria.
+ * `null`, não o 3 de março que o `Date` inventaria.
  */
 export function parseTypedDate(texto: string): Date | null {
   const t = texto.trim().toLocaleLowerCase("pt-BR")
@@ -371,8 +337,7 @@ export function DatePicker(props: DatePickerProps) {
           ? ATALHOS_DIA
           : props.presets
 
-  // Na gaveta as células sobem ao degrau `lg` e esticam: o popover saía na
-  // largura do campo, e no dedo a célula de 32 é pequena.
+  // Na gaveta as células sobem ao degrau `lg` e esticam; no dedo a de 32 é pequena.
   const naGaveta = isMobile
   const calendarioComum = {
     captionLayout: "dropdown" as const,
@@ -465,8 +430,7 @@ export function DatePicker(props: DatePickerProps) {
   const ariaComum = {
     "aria-label": ariaLabel,
     "aria-labelledby": ariaLabelledBy,
-    // O `FieldControl` injeta a descrição e o erro aqui; sem repassar, o leitor
-    // de tela nunca os lia.
+    // O `FieldControl` injeta a descrição e o erro aqui; sem repassar, o leitor de tela não os lia.
     "aria-describedby": ariaDescribedBy,
     "aria-invalid": ariaInvalid,
   }
@@ -508,8 +472,7 @@ export function DatePicker(props: DatePickerProps) {
       data-empty={temValor ? undefined : "true"}
       className={cn(
         gatilhoClassName(size),
-        // Recuo para o ×: quem recua é o **rótulo**, não a caixa — recuar o
-        // campo empurraria o ícone para dentro. Lição do `Combobox`.
+        // Quem recua para o × é o rótulo, não a caixa: recuar o campo empurraria o ícone para dentro.
         clearable && temValor && "[--date-picker-value-pe:--spacing(7)]"
       )}
     >
@@ -571,8 +534,7 @@ export function DatePicker(props: DatePickerProps) {
       <PopoverAnchor asChild>{campo}</PopoverAnchor>
       <PopoverContent
         padding="none"
-        // A entrada que brota do campo (`@utility date-picker-bloom`), no lugar
-        // da do popover.
+        // A entrada que brota do campo (`@utility date-picker-bloom`).
         motion="none"
         className={cn("date-picker-bloom w-auto", popoverClassName)}
         align="start"
@@ -583,10 +545,7 @@ export function DatePicker(props: DatePickerProps) {
   )
 }
 
-/**
- * O gatilho no desktop é o `PopoverTrigger`; no telefone, um botão que abre a
- * gaveta — o Radix não tem gatilho comum aos dois.
- */
+/** O gatilho no desktop é o `PopoverTrigger`; no telefone, um botão que abre a gaveta (o Radix não tem gatilho comum aos dois). */
 function GatilhoCampo({
   naGaveta,
   open,
@@ -642,9 +601,8 @@ function BotaoDaGrade({
 }
 
 /**
- * O campo que se digita: dd/mm/aaaa com máscara, e as palavras do dia.
- * Confirma no Enter e ao sair; o que não vira data fica no campo, marcado
- * inválido, em vez de sumir.
+ * O campo que se digita: dd/mm/aaaa com máscara e as palavras do dia. Confirma
+ * no Enter e ao sair; o que não vira data fica no campo, marcado inválido.
  */
 function CampoDigitavel({
   id,
@@ -726,9 +684,8 @@ function CampoDigitavel({
 }
 
 /**
- * Os doze meses de um ano, com o ano entre as setas. É o painel do
- * `mode="month"`, e é exportado para quem tem gatilho próprio — a navegação de
- * mês das categorias, que eram dois `Select` lado a lado.
+ * Os doze meses de um ano, com o ano entre as setas: o painel do `mode="month"`,
+ * exportado para quem tem gatilho próprio (a navegação de mês das categorias).
  */
 export function MonthGrid({
   value,
@@ -825,15 +782,9 @@ export function MonthGrid({
 }
 
 /**
- * O alcance do seletor de ano.
- *
- * Com `captionLayout="dropdown"` e sem limites, o `react-day-picker` oferece
- * **±100 anos** — medido: 101 opções começando em 1926. Ninguém lança uma
- * transação em 1926, e uma lista de cem itens é pior que paginar o mês.
- *
- * Cinco para trás e cinco para frente cobrem o que este app faz: lançamento
- * retroativo de meses (às vezes de um ano fiscal anterior) e agendamento de
- * conta futura. Quem precisar de mais passa `min` / `max`.
+ * O alcance do seletor de ano: sem limites o `react-day-picker` oferece ±100
+ * anos (101 opções desde 1926). Cinco para trás e para frente cobrem o app
+ * (lançamento retroativo, conta futura); quem precisar de mais passa `min` / `max`.
  */
 const ALCANCE_PADRAO_ANOS = 5
 

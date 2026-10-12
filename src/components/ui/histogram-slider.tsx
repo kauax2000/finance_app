@@ -17,43 +17,15 @@ import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import { cn } from "@/lib/utils"
 
 /**
- * A faixa de valor sobre uma **distribuição**: um histograma atrás de um slider
- * de dois punhos, com as barras dentro da seleção acesas e as de fora
- * apagadas, e a leitura do mínimo e do máximo embaixo.
+ * A faixa de valor sobre uma distribuição: um histograma atrás de um slider de
+ * dois punhos, com as barras dentro da seleção acesas e as de fora apagadas, e
+ * a leitura do mínimo e do máximo embaixo. O título é chrome de tela e não é
+ * daqui; a leitura das pontas é.
  *
- * É o filtro de preço que todo marketplace tem, e aqui ele serve para escolher
- * faixa de valor sabendo **onde o dado está** — um intervalo entre R$ 0 e
- * R$ 5.000 não diz nada; o mesmo intervalo com o histograma mostra que metade
- * das transações cai abaixo de R$ 200.
- *
- * ## O que é da peça, e o que é da tela
- *
- * A referência desenha um título em cima ("Price Range"). Ele **não** mora
- * aqui: título é chrome de tela, e quem o escreve é o `PageSectionHeader` ou o
- * `FieldLabel` (invariante 1). A leitura das duas pontas, sim, é da peça — ela é a
- * leitura do próprio controle, e não um bloco que por acaso ficou ao lado.
- *
- * ## `bins` é contagem crua
- *
- * Quem chama entrega a distribuição e a peça normaliza. Ela não busca dado
- * nenhum, não agrupa nada e não sabe de onde vieram os números — o que a
- * mantém utilizável com qualquer fonte.
- *
- * ## As barras não são `ChartSparkline`, e isso é exceção deliberada
- *
- * A primitiva de distribuição decorativa da casa é a `ChartSparkline
- * variant="bars"`, e ela seria a escolha certa se as barras fossem só um
- * desenho. Mas ela **não expõe `<Cell>`**, e "barra fora da seleção apaga" é
- * exatamente uma decisão por barra. Recharts precisaria de um `Cell` por
- * barra, que a peça não oferece. Então as barras são elementos próprios — por
- * um limite medido da primitiva, não por desconhecê-la.
- *
- * ## O alvo, o foco e o teclado são do `Slider`
- *
- * Nada de punho desenhado à mão: o `Slider` já traz o alvo de 44px num
- * pseudo-elemento, o anel de foco do sistema, as setas do teclado e os rótulos
- * em pt-BR dos dois punhos. As barras são `aria-hidden` porque quem carrega a
- * semântica é ele.
+ * `bins` é contagem crua: a peça normaliza e não busca nem agrupa dado. As
+ * barras são elementos próprios porque a `ChartSparkline` não expõe `<Cell>`, e
+ * "barra fora da seleção apaga" é decisão por barra. Alvo de 44px, foco e
+ * teclado são do `Slider`; as barras são `aria-hidden`.
  */
 
 /** A largura de uma faixa, em unidades do valor. */
@@ -62,18 +34,10 @@ function larguraDaFaixa(min: number, max: number, total: number): number {
 }
 
 /**
- * A faixa `i` acende quando está **inteira dentro** das duas linhas-guia.
- *
- * **Isto inverte a regra da rodada 107 de propósito.** Lá a faixa acendia por
- * *sobreposição*, para a coluna da ponta acender assim que o punho entrava
- * nela. Com a linha-guia desenhada, a sobreposição passou a mentir: a coluna
- * sob o punho acendia **metade para fora** da linha, e o olho lia a borda da
- * seleção num lugar e o corte em outro. Com as linhas na tela, elas são a
- * fronteira — e o que acende é o que está entre elas.
- *
- * O custo aceito é o inverso do de lá: a coluna da ponta só acende quando o
- * punho a ultrapassa por inteiro, então a travessia é um degrau mais tardia.
- * Em troca, o que se vê aceso é exatamente o que as linhas delimitam.
+ * A faixa `i` acende quando está inteira dentro das duas linhas-guia
+ * (contenção, não sobreposição): com a guia desenhada, acender por
+ * sobreposição deixava a coluna sob o punho acesa metade para fora da linha. A
+ * coluna da ponta só acende quando o punho a ultrapassa por inteiro.
  */
 export function faixaAtiva(
   index: number,
@@ -94,11 +58,8 @@ export function faixaAtiva(
 }
 
 /**
- * A altura de uma barra, em porcentagem.
- *
- * O **piso** existe para contagem 1 contra um máximo alto não sair em 0% — uma
- * faixa que tem dado precisa desenhar alguma coisa, senão o histograma mente
- * dizendo que ali não há nada. Contagem **zero** continua zero, que é verdade.
+ * A altura de uma barra, em porcentagem. O piso evita que contagem 1 contra um
+ * máximo alto saia em 0%; contagem zero continua zero.
  */
 export function alturaDaBarra(contagem: number, maximo: number): number {
   if (contagem <= 0 || maximo <= 0) return 0
@@ -106,16 +67,9 @@ export function alturaDaBarra(contagem: number, maximo: number): number {
 }
 
 /**
- * A **fresta** antes da coluna `index`, em porcentagem da largura.
- *
- * A guia marca a **fronteira** da seleção, e por isso pousa entre duas colunas
- * e não sobre uma: com a regra de contenção, o corte é exatamente a aresta
- * entre a última apagada e a primeira acesa. Uma guia no eixo de uma coluna
- * diria que o corte passa pelo meio dela, que é o que ela não faz.
- *
- * A conta ideal é `index / total`. A fresta real é levemente deslocada, porque
- * o respiro de 1px entra no passo — o erro é `g · (index/total − 0,5)`, ou
- * seja **no máximo meio pixel** com `g = 1`.
+ * A fresta antes da coluna `index`, em porcentagem da largura. A guia marca a
+ * fronteira da seleção, entre duas colunas e não sobre uma. A conta é `index /
+ * total`; o respiro de 1px desloca a fresta real em no máximo meio pixel.
  */
 export function frestaDaGuia(index: number, total: number): number {
   if (total <= 0) return 0
@@ -123,17 +77,10 @@ export function frestaDaGuia(index: number, total: number): number {
 }
 
 /**
- * A coluna em que uma guia pousa.
- *
- * **A guia não pode ficar presa ao punho, e a razão é do Radix.** Ele recua o
- * punho em meia-largura nas pontas (`left: calc(70% - 2.8px)`), então o centro
- * dele **não** cai no mesmo x que a coluna — medido, 1,73px de desvio numa
- * coluna de 6,02px. Presa ao punho ela nunca acerta a fresta.
- *
- * Então a guia se ancora na **fresta**: antes da primeira coluna acesa e
- * depois da última, que é onde o corte de fato está. Sem nenhuma acesa
- * (seleção mais estreita que uma faixa), ela cai na fresta mais próxima do
- * valor — a linha tem de existir mesmo quando não há o que acender.
+ * A coluna em que uma guia pousa. Ela não pode ficar presa ao punho: o Radix
+ * recua o punho em meia-largura nas pontas, e o centro dele não cai no x da
+ * coluna. A guia se ancora na fresta (antes da primeira coluna acesa e depois
+ * da última); sem nenhuma acesa, na fresta mais próxima do valor.
  */
 export function colunaDaGuia(
   valor: number,
@@ -160,18 +107,10 @@ export function colunaDaGuia(
 }
 
 /**
- * A âncora do arco-íris numa barra, em porcentagem — **aritmética, não
- * medida**.
- *
- * No `Slider` a mesma ancoragem precisou de `ResizeObserver` porque a largura
- * da faixa preenchida é arbitrária. Aqui as barras são uma divisão **igual e
- * conhecida**, então a posição sai do índice e não há o que observar. A
- * medição não é um reflexo: é o que se usa quando a geometria não se sabe.
- *
- * A conta é o posicionamento percentual do CSS resolvido para este caso: `P%`
- * alinha `P%` da imagem com `P%` do elemento, logo `offset = P/100 · (E − W)`.
- * Com a imagem do tamanho do contêiner (`W`), `N` barras iguais (`E = W/N`) e o
- * deslocamento desejado `−i·W/N`, sai `P = 100i/(N−1)`.
+ * A âncora do arco-íris numa barra, em porcentagem: aritmética, não medida (as
+ * barras são uma divisão igual e conhecida, ao contrário da faixa do `Slider`).
+ * `P%` alinha `P%` da imagem com `P%` do elemento; com `N` barras iguais e o
+ * deslocamento `−i·W/N`, sai `P = 100i/(N−1)`.
  */
 export function ancoraDaBarra(index: number, total: number): number {
   if (total <= 1) return 0
@@ -179,22 +118,11 @@ export function ancoraDaBarra(index: number, total: number): number {
 }
 
 /*
- * **Não há atraso por coluna, e isso é decisão.**
- *
- * Houve um: o esmaecimento era escalonado pela distância até a guia, para a
- * cor "sair" das linhas. Ele saiu porque calculava uma ordem que **já existe**
- * — quem acende antes é a coluna por onde o punho passou antes, e isso o
- * arraste produz sozinho. Toda coluna leva o **mesmo tempo** entre o neutro e
- * o pintado; o que varia é o instante em que ela é alcançada.
- *
- * A consequência, dita: num **salto** (clique longe, mudança programática) não
- * há ordem de passagem, e a seleção inteira dissolve junta. É o certo pela
- * mesma regra — sem punho passando, não há quem venha antes.
+ * Não há atraso por coluna: toda coluna leva o mesmo tempo entre o neutro e o
+ * pintado, e quem acende antes é a que o punho alcançou antes. Num salto não há
+ * ordem de passagem, e a seleção dissolve junta.
  */
-/**
- * Quantos estão na faixa (rodada 216): a soma das colunas **acesas**, com a
- * mesma regra de contenção que as acende — o número diz o que a pessoa vê.
- */
+/** Quantos estão na faixa: a soma das colunas acesas, pela mesma regra de contenção. */
 export function contagemNaFaixa(
   bins: number[],
   { min, max, de, ate }: { min: number; max: number; de: number; ate: number }
@@ -216,9 +144,9 @@ export function marcasDoEixo(min: number, max: number, n: number): number[] {
 }
 
 /**
- * O valor que sai para quem chama. Com a **cauda aberta**, o punho no fim
- * quer dizer "daí para cima", e sai `Infinity` — um filtro que recebesse
- * `max` cortaria fora o gasto de R$ 30.000 que a última coluna diz conter.
+ * O valor que sai para quem chama. Com a cauda aberta, o punho no fim quer dizer
+ * "daí para cima" e sai `Infinity` (um `max` cortaria fora o gasto grande que a
+ * última coluna contém).
  */
 export function valorDeSaida(
   par: [number, number],
@@ -326,15 +254,8 @@ function HistogramSlider({
   const total = bins.length
 
   /**
-   * **O passo é a largura de uma faixa, e não uma prop.**
-   *
-   * É o que faz o punho parar sempre numa fronteira de coluna — e só assim ele
-   * e a guia coincidem, porque a guia mora na fresta. Com passo livre, uma
-   * linha presa às frestas não tem como estar sempre sob um punho que anda
-   * contínuo: os dois se afastam até meia coluna.
-   *
-   * E é honesto como API: num filtro de faixa quem escolhe escolhe **faixas**,
-   * e a resolução do histograma já diz qual é a menor delas.
+   * O passo é a largura de uma faixa, não uma prop: o punho só para em fronteira
+   * de coluna, que é o que o faz coincidir com a guia (na fresta).
    */
   const passo = larguraDaFaixa(min, max, total)
   const naGrade = (v: number) =>
@@ -344,9 +265,8 @@ function HistogramSlider({
     naGrade(inicial[1]),
   ]
 
-  // **O estado nasce na grade.** Sem isto o punho recebe o valor encaixado e as
-  // guias leem o cru: os dois discordam até o primeiro arraste, e o desvio
-  // medido foi de meio punho.
+  // O estado nasce na grade: senão o punho recebe o valor encaixado e as guias
+  // leem o cru, discordando até o primeiro arraste.
   const [interno, setInterno] = React.useState<[number, number]>(inicialNaGrade)
   const atual = value ? paraDentro(value) : interno
 
@@ -357,8 +277,7 @@ function HistogramSlider({
     if (confirmar) onValueCommit?.(saida)
   }
 
-  // A leitura editável: o texto do campo só é rascunho enquanto ele tem foco;
-  // fora dele, é o valor atual escrito.
+  // O texto do campo só é rascunho enquanto ele tem foco.
   const [rascunho, setRascunho] = React.useState<{ ponta: 0 | 1; texto: string } | null>(null)
   const textoDoCampo = (v: number) =>
     dinheiro ? formatMoneyBrlInput(v) : String(v)
@@ -380,8 +299,7 @@ function HistogramSlider({
   }
 
   const marcas = axis ? marcasDoEixo(min, max, axis === true ? 5 : axis) : []
-  // No eixo o dinheiro é curto — "R$ 1,6 mil", não "R$ 1,60 mil": a marca é
-  // escala, e não um valor que alguém vá conferir centavo a centavo.
+  // No eixo o dinheiro é curto ("R$ 1,6 mil"): a marca é escala.
   const escreverMarca = (m: number) =>
     dinheiro
       ? currencyBRL(m, { compact: true, minimumFractionDigits: 0, maximumFractionDigits: 1 })
@@ -474,21 +392,14 @@ function HistogramSlider({
           references?.length && "mt-5"
         )}
       >
-        {/* **A régua, recuada meio punho de cada lado.**
-
-            O centro do punho do Radix viaja de `7px` a `largura − 7px` — é a
-            correção de meia-largura que ele aplica para o punho não sair do
-            trilho. Uma grade de colunas que encosta nas bordas vive noutro
-            sistema de coordenadas, e aí punho e fresta nunca coincidem: foi
-            esse o desvio medido (1,73px no meio, até 7px nas pontas).
-
-            Recuada, a grade passa a ocupar **exatamente** a faixa que o punho
-            percorre, e uma fronteira de coluna cai no mesmo x que o valor
-            correspondente. O `1.75` é meio punho (`size-3.5` = 14px). */}
+        {/* A régua, recuada meio punho (`size-3.5` = 14px) de cada lado: o centro
+            do punho do Radix viaja de `7px` a `largura − 7px`, e uma grade que
+            encosta nas bordas vive noutro sistema de coordenadas (punho e
+            fresta nunca coincidem). Recuada, a fronteira de coluna cai no mesmo
+            x que o valor. */}
         <div className="absolute inset-y-0 inset-x-1.75">
           {pending ? (
-            // O esqueleto tem a forma das colunas, e pulsa — o movimento único
-            // do `Skeleton`. As colunas reais não existem ainda.
+            // O esqueleto tem a forma das colunas e pulsa (o movimento único do `Skeleton`).
             <div
               aria-hidden
               data-slot="histogram-slider-skeleton"
@@ -521,15 +432,10 @@ function HistogramSlider({
                     data-slot="histogram-slider-bar"
                     data-active={ativa ? "" : undefined}
                     className={cn(
-                      // O topo é **domo**, e não um canto de 2px: com a coluna
-                      // fina, `rounded-t-full` dá meia-circunferência da
-                      // largura dela e o histograma lê como uma crista, não
-                      // como uma cerca de tijolos. O `min-h-1` é o piso do
-                      // desenho — abaixo disso o domo não chega a existir.
-                      //
-                      // A coluna é a superfície **apagada**, e ela não
-                      // transiciona cor nenhuma: quem atravessa é a camada de
-                      // cima.
+                      // O topo é domo: com a coluna fina, `rounded-t-full` lê
+                      // como crista. O `min-h-1` é o piso do desenho. A coluna
+                      // é a superfície apagada e não transiciona cor; quem
+                      // atravessa é a camada de cima.
                       "relative min-h-1 flex-1 rounded-t-full bg-input-fill"
                     )}
                     style={{ height: `${alturaDaBarra(contagemDaFaixa, maximo)}%` }}
@@ -551,17 +457,14 @@ function HistogramSlider({
                       data-slot="histogram-slider-fill"
                       className={cn(
                         "absolute inset-0 rounded-t-full",
-                        // `--duration-slow` e não `--duration-base`: a
-                        // travessia é decoração de estado, não resposta a um
-                        // clique, e a 200ms ela ainda lê como troca. A 300 ela
-                        // lê como dissolução.
+                        // `--duration-slow`: a travessia é decoração de estado,
+                        // e a 200ms ainda lê como troca.
                         "opacity-0 transition-opacity duration-(--duration-slow) ease-(--ease-out)",
                         ativa && "opacity-100",
                         variant !== "brand" && "bg-primary",
                         // `brand-rainbow-image` declara `--brand-rainbow` no
-                        // elemento; sem ela o `bg-(image:…)` cai para `none`
-                        // calado. E `bg-no-repeat` não é zelo: a imagem é mais
-                        // larga que a coluna, e sem ele ela ladrilharia.
+                        // elemento (senão o `bg-(image:…)` cai para `none`);
+                        // `bg-no-repeat` porque a imagem é mais larga que a coluna.
                         variant === "brand" &&
                           "brand-rainbow-image bg-(image:--brand-rainbow) bg-no-repeat"
                       )}
@@ -603,15 +506,11 @@ function HistogramSlider({
                     data-slot="histogram-slider-guide"
                     className={cn(
                       "pointer-events-none absolute top-1/2 bottom-0 w-px -translate-x-1/2",
-                      // Quem a torna visível é a **inversão**, e não um fio em
-                      // volta. No escuro `--primary-accent` e `--primary` são
-                      // a mesma cor (`oklch(0.985)`), então na variante padrão
-                      // a linha sumia dentro da coluna acesa — e um `outline`
-                      // de 1px em volta de um fio de 1px é metade da peça
-                      // sendo moldura. `mix-blend-difference` não escolhe cor
-                      // nenhuma: escura sobre coluna clara, clara sobre a
-                      // superfície escura. Os 70% deixam a inversão
-                      // **parcial**, que é marcar sem cortar a coluna.
+                      // Quem a torna visível é a inversão, não um fio: no
+                      // escuro `--primary-accent` e `--primary` são a mesma cor
+                      // e a linha sumiria na coluna acesa.
+                      // `mix-blend-difference` não escolhe cor; os 70% deixam a
+                      // inversão parcial.
                       "bg-primary-accent/70 mix-blend-difference"
                     )}
                     style={{ left: `${frestaDaGuia(coluna, total).toFixed(3)}%` }}
@@ -649,17 +548,15 @@ function HistogramSlider({
             "[&_[data-slot=slider-range]]:bg-none [&_[data-slot=slider-range]]:bg-transparent"
           )}
           aria-label={label}
-          // O leitor de tela ouve o valor escrito — em reais, por padrão, e
-          // "R$ 6.400+" no fim da cauda aberta (o `format` do `Slider`,
-          // rodada 177).
+          // O leitor de tela ouve o valor escrito em reais ("R$ 6.400+" no fim
+          // da cauda aberta), pelo `format` do `Slider`.
           format={escreverPonta}
           min={min}
           max={max}
           step={passo > 0 ? passo : undefined}
           disabled={pending}
-          // **Sempre controlado.** Com atalho e campo, o valor muda por fora do
-          // arraste, e um `defaultValue` deixava o punho onde estava enquanto
-          // as colunas e a leitura iam para a faixa nova — medido.
+          // Sempre controlado: com atalho e campo o valor muda por fora do
+          // arraste, e um `defaultValue` deixaria o punho parado.
           value={[...atual]}
           onValueChange={(v) => mudar([v[0] ?? min, v[1] ?? max], false)}
           onValueCommit={(v) =>

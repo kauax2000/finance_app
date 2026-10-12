@@ -60,34 +60,22 @@ import {
 import { cn } from "@/lib/utils"
 
 /**
- * A barra de filtros (rodada 245): cada filtro é um **token** — uma cápsula
- * partida em campo · operador · valor · ×, e cada segmento se edita no lugar.
- * A referência é a Filter Token Bar e o Advanced Filter Builder do 21st
- * (@laziekiki), refeitos com as peças da casa: a superfície de campo, o
- * `Popover` com o `Command`, o `DropdownMenu` de rádios, o `Calendar` com os
- * atalhos de período e o `Input money`.
+ * A barra de filtros: cada filtro é um token, uma cápsula partida em campo ·
+ * operador · valor · ×, e cada segmento se edita no lugar (superfície de campo,
+ * `Popover` com o `Command`, `DropdownMenu` de rádios, `Calendar` com atalhos
+ * de período e `Input money`).
  *
- * ## Um popover para a barra inteira
+ * Um popover só para a barra inteira, ancorado por `virtualRef` no que estiver
+ * aberto: escolher um campo troca conteúdo e âncora no mesmo lote (com dois, o
+ * que fecha devolve o foco ao "+ Filtro" e esse foco fecha o outro).
  *
- * O "+ Filtro" e o editor de valor são o **mesmo** `Popover`, ancorado por
- * `virtualRef` no que estiver aberto. Escolher um campo troca o conteúdo e a
- * âncora no mesmo lote: com dois popovers, o que fecha devolve o foco ao
- * "+ Filtro" depois da animação de saída, e esse foco fecha o outro; no
- * telefone seriam duas gavetas cruzando.
+ * ponytail: um token por campo (escolher um já usado abre o editor dele). Simplifica
+ * a URL, o E/OU e o foco; o teto é "dois Valores ao mesmo tempo" (≥ 50 ou ≤ 10),
+ * e quando uma tela pedir o token ganha um `id` próprio.
  *
- * ## Um token por campo
- *
- * ponytail: escolher um campo já usado abre o editor dele em vez de criar um
- * segundo token. Simplifica a URL, o E/OU e o foco; o teto é "dois Valores ao
- * mesmo tempo" (≥ 50 **ou** ≤ 10) — quando uma tela pedir, o token ganha um
- * `id` próprio.
- *
- * ## Tudo grava ao vivo
- *
- * Marcar uma caixa, clicar num dia, digitar um valor: o filtro muda na hora,
- * e a contagem da barra responde. O que fica incompleto (a lista vazia, o
- * "entre" com uma ponta só) vira **rascunho**: o token continua à vista com
- * "Selecionar…", nunca é emitido, e some ao fechar o editor.
+ * Tudo grava ao vivo; o que fica incompleto (lista vazia, "entre" com uma ponta
+ * só) é rascunho: o token fica à vista com "Selecionar…", nunca é emitido, e
+ * some ao fechar o editor.
  */
 
 export type FilterFieldType = "enum" | "period" | "money" | "text" | "boolean"
@@ -146,11 +134,7 @@ const OPERADORES: Record<FilterFieldType, FilterOperator[]> = {
   boolean: ["is"],
 }
 
-/**
- * O operador segue a contagem: "é um de" com um valor só não existe. Curto de
- * propósito — "é qualquer de" custava 45px, e num iPhone de 375px empilhado o
- * valor ficava em "M…" (medido).
- */
+/** O operador segue a contagem ("é um de" com um valor só não existe), e é curto de propósito: "é qualquer de" custava 45px e num iPhone empilhado o valor ficava em "M…". */
 function rotuloOperador(op: FilterOperator, n: number): string {
   if (op === "is") return n > 1 ? "é um de" : "é"
   if (op === "is-not") return n > 1 ? "não é um de" : "não é"
@@ -170,10 +154,7 @@ function intervaloDoAtalho(id: string) {
   return r.from && r.to ? { from: localYmdFromDate(r.from), to: localYmdFromDate(r.to) } : null
 }
 
-/**
- * O intervalo de um filtro de período, em `YYYY-MM-DD` — o atalho ("este-mes")
- * resolvido na data de hoje. É o que a tela passa à consulta.
- */
+/** O intervalo de um filtro de período em `YYYY-MM-DD`, com o atalho ("este-mes") resolvido na data de hoje; é o que a tela passa à consulta. */
 export function filterPeriodRange(values: string[]): { from: string; to: string } | null {
   if (values.length === 1) return intervaloDoAtalho(values[0])
   if (values.length === 2 && ymdValido(values[0]) && ymdValido(values[1])) {
@@ -182,10 +163,7 @@ export function filterPeriodRange(values: string[]): { from: string; to: string 
   return null
 }
 
-/**
- * Os valores normalizados, ou `null` quando o filtro está incompleto ou não
- * se entende. É a régua do rascunho, da URL e do editor — uma só.
- */
+/** Os valores normalizados, ou `null` quando o filtro está incompleto ou não se entende; a régua única do rascunho, da URL e do editor. */
 function normalizar(
   campo: FilterField,
   operador: FilterOperator,
@@ -322,18 +300,16 @@ function descrever(
   }
 }
 
-/* ── As classes, por extenso ─────────────────────────────────────────────
+/* ── As classes, por extenso ────────────────────────────────────────────
  * O Tailwind lê o fonte como texto: uma classe montada num template não chega
  * ao CSS. Constantes da superfície primeiro, degrau depois (o `twMerge`
  * resolve o corpo de texto pelo grupo `font-size`). */
 
 /**
  * A cápsula: a superfície de campo, e o fio entre os segmentos. O fio é o texto
- * a 14%, e não o `--input` do contorno (rodada 245, escolhido ao lado do fio
- * curto): contra o preenchimento, o `--input` dava 1,12:1 no escuro e 1,16 no
- * claro, e os segmentos não se separavam; a 14% dá 1,54 e 1,36. Um valor só
- * nos dois temas, como o realce das linhas, e mais forte que o contorno de
- * propósito — é ele que parte a cápsula.
+ * a 14% e não o `--input` do contorno (que dava 1,12:1 no escuro e 1,16 no
+ * claro, sem separar os segmentos): a 14% dá 1,54 e 1,36, um valor só nos dois
+ * temas, de propósito mais forte que o contorno porque é ele que parte a cápsula.
  */
 const CAPSULA_TOM: Record<FilterBarTone, string> = {
   neutral: cn(fieldSurfaceClassName, "divide-x divide-foreground/14"),
@@ -352,11 +328,8 @@ const CAPSULA_TAMANHO: Record<FilterBarSize, string> = {
 
 /**
  * O segmento. Sem `overflow-hidden` na cápsula: o anel de foco é de cada
- * segmento, e o recorte o cortaria. As pontas arredondam com a cápsula.
- *
- * No dedo cada segmento tem a régua do controle em linha, 40 × 40: pelo menos
- * 40 de largura (o operador "é" media ~26px e o × ~33), e o alvo atravessa a
- * borda de 1px da cápsula por pseudo-elemento — sem ele, 38 de altura.
+ * segmento e o recorte o cortaria. No dedo cada segmento tem 40 × 40 (pelo
+ * menos 40 de largura) e o alvo atravessa a borda de 1px por pseudo-elemento.
  */
 const SEGMENTO =
   "relative flex min-w-0 items-center whitespace-nowrap outline-none transition-colors first:rounded-s-full last:rounded-e-full focus-visible:z-10 focus-visible:ring-3 focus-visible:ring-ring/45 disabled:pointer-events-none disabled:opacity-50 pointer-coarse:min-w-10 pointer-coarse:after:absolute pointer-coarse:after:inset-x-0 pointer-coarse:after:-inset-y-px pointer-coarse:after:content-['']"
@@ -397,10 +370,8 @@ const REMOVER_TOM: Record<FilterBarTone, string> = {
 /** O miolo do segmento fica **sobre** o flash (que é absoluto). */
 const MIOLO = "relative flex min-w-0 items-center"
 
-// O degrau manda no corpo do que vai no segmento: o ícone e o ladrilho de cor.
-// O `ColorTile xs` (24) é o de um gatilho `md`; num token `sm` de 28 ele
-// sobrava 2px em cima e embaixo. Aqui desce a 20, com a folga de 4 do `md`, e
-// o canto a 6px — a proporção do `xs` (8 de 24).
+// O degrau manda no corpo do que vai no segmento: o `ColorTile xs` (24) sobrava
+// 2px num token `sm` de 28, e aqui desce a 20 com o canto a 6px (a proporção do `xs`).
 const MIOLO_TAMANHO: Record<FilterBarSize, string> = {
   sm: "gap-1 [&>svg]:size-3.5 [&_[data-slot=color-tile]]:size-5 [&_[data-slot=color-tile]]:rounded-sm",
   md: "gap-1.5 [&>svg]:size-4",
@@ -408,14 +379,11 @@ const MIOLO_TAMANHO: Record<FilterBarSize, string> = {
 }
 
 /**
- * Abaixo de 28rem **da própria barra** (container query, nunca a janela).
- *
- * `stack` é uma **grade de colunas alinhadas**: campo · operador · valor · ×,
- * e cada token herda as quatro colunas (`subgrid`), então os operadores e os
- * valores de todas as linhas começam no mesmo x — empilhados em flex, cada
- * linha os punha onde o rótulo do campo terminasse, e a coluna de valores não
- * se lia. O vão entre colunas é zero porque a `subgrid` herda o da grade: ele
- * abriria um buraco entre os segmentos de cada cápsula.
+ * Abaixo de 28rem da própria barra (container query, nunca a janela). `stack` é
+ * uma grade de colunas alinhadas (campo · operador · valor · ×): cada token herda
+ * as quatro colunas por `subgrid`, para os operadores e valores de todas as
+ * linhas começarem no mesmo x. O vão entre colunas é zero porque a `subgrid`
+ * herda o da grade e abriria um buraco entre os segmentos.
  */
 const LINHA_TELEFONE: Record<FilterBarMobile, string> = {
   scroll:
@@ -424,22 +392,17 @@ const LINHA_TELEFONE: Record<FilterBarMobile, string> = {
     "@max-md/filter-bar:grid @max-md/filter-bar:grid-cols-[auto_auto_minmax(0,1fr)_auto] @max-md/filter-bar:gap-x-0 @max-md/filter-bar:gap-y-1.5",
 }
 
-// Na faixa que rola, o token tem a largura dele: o `max-w-full` o prenderia
-// à largura da faixa e truncaria o valor — medido, "Mer…" a 375px.
+// Na faixa que rola o token tem a largura dele (`max-w-full` truncaria o valor).
 // No empilhado, o token que sai é tirado do fluxo (`data-motion-pop-id`, do
-// `popLayout`) e deixa de ser item da grade: a `subgrid` cai para nenhuma e os
-// quatro segmentos empilhariam. Ele declara as colunas da grade enquanto se
-// dissolve. E surge de cima, de onde estava o "+ Filtro".
+// `popLayout`) e deixa de ser item da grade; ele declara as colunas enquanto se
+// dissolve, e surge de cima, de onde estava o "+ Filtro".
 const TOKEN_TELEFONE: Record<FilterBarMobile, string> = {
   scroll: "@max-md/filter-bar:shrink-0 @max-md/filter-bar:max-w-none",
   stack:
     "@max-md/filter-bar:col-span-full @max-md/filter-bar:grid @max-md/filter-bar:grid-cols-subgrid @max-md/filter-bar:[&[data-motion-pop-id]]:grid-cols-[auto_auto_minmax(0,1fr)_auto] @max-md/filter-bar:origin-top",
 }
 
-/**
- * Na grade alinhada os rótulos já formam a coluna do campo, e o ícone custava
- * 22px ao valor: com ele, "Mercado" cortava num iPhone de 375px (medido).
- */
+/** Na grade alinhada os rótulos já formam a coluna do campo, e o ícone custava 22px ao valor ("Mercado" cortava a 375px). */
 const CAMPO_ICONE_TELEFONE: Record<FilterBarMobile, string> = {
   scroll: "",
   stack: "@max-md/filter-bar:[&>svg]:hidden",
@@ -462,11 +425,7 @@ const MATCH_TELEFONE: Record<FilterBarMobile, string> = {
   stack: "@max-md/filter-bar:col-span-full @max-md/filter-bar:justify-self-start",
 }
 
-/**
- * As ações atravessam a grade: "+ Filtro" na coluna do campo, "Limpar" na
- * ponta dos ×, que é a ação dele por linha. Um respiro a mais (6 + 4) separa
- * o grupo dos filtros do grupo das ações.
- */
+/** As ações atravessam a grade: "+ Filtro" na coluna do campo, "Limpar" na ponta dos ×; um respiro a mais (6 + 4) separa o grupo dos filtros do das ações. */
 const ACOES_TELEFONE: Record<FilterBarMobile, string> = {
   scroll: "",
   stack:
@@ -478,13 +437,11 @@ const FLASH = "pointer-events-none absolute inset-0 rounded-[inherit]"
 
 /**
  * O token surge e se dissolve; quem abre e fecha o espaço são os vizinhos,
- * deslizando na mola (`layout="position"`), de uma linha para outra se for o
- * caso. Até aqui animava a largura, e a mola passava do alvo nela — medido,
- * 4 → 223 → 215px: a pílula inchava além do conteúdo, que era revelado como
- * cortina. A escala anda na mola; opacidade e desfoque numa curva
- * (`--duration-base`, `--ease-out`), porque mola em desfoque passa de zero. A
- * saída é curva, sem mola, como fecha toda a casa. O E/OU e o "Limpar" usam o
- * mesmo caminho.
+ * deslizando na mola (`layout="position"`), inclusive de uma linha para outra.
+ * Animar a largura não serve (a mola passava do alvo e a pílula inchava). A
+ * escala anda na mola; opacidade e desfoque numa curva (`--duration-base`,
+ * `--ease-out`), porque mola em desfoque passa de zero. A saída é curva, sem
+ * mola. O E/OU e o "Limpar" usam o mesmo caminho.
  */
 const CURVA = [0.16, 1, 0.3, 1] as const
 const SURGIR = {
@@ -506,11 +463,7 @@ const SURGIR = {
 /** Com movimento reduzido: aparece e some, sem escala, desfoque nem deslize. */
 const SURGIR_REDUZIDO = { initial: false, exit: { opacity: 0, transition: { duration: 0 } } } as const
 
-/**
- * Conta as trocas de um texto — o padrão "ajustar estado quando a prop muda"
- * do `TableCellMoney`. A sobreposição remonta pela contagem e pisca; o botão
- * nunca remonta, senão perderia o foco.
- */
+/** Conta as trocas de um texto (o padrão "ajustar estado quando a prop muda" do `TableCellMoney`): a sobreposição remonta pela contagem e pisca; o botão nunca remonta, senão perderia o foco. */
 function useTrocas(texto: string) {
   const [antes, setAntes] = React.useState(texto)
   const [trocas, setTrocas] = React.useState(0)
@@ -521,13 +474,7 @@ function useTrocas(texto: string) {
   return trocas
 }
 
-/**
- * O teto da lista na gaveta do telefone. O do `Command` é 288 (pensado para o
- * popover), e na gaveta a lista do "+ Filtro" mostrava cinco dos oito campos
- * numa folha de 348px, com espaço sobrando na tela. 55% da altura (até 480)
- * mostra os oito num iPhone de 815, e num de 667 o cabeçalho, o operador e o
- * rodapé ainda cabem nos 85% da gaveta.
- */
+/** O teto da lista na gaveta: o do `Command` (288) é do popover e mostrava cinco dos oito campos; 55% da altura (até 480) mostra os oito num iPhone de 815. */
 const LISTA_NA_GAVETA = "[--command-list-max-h:min(55dvh,--spacing(120))]"
 
 /** No dedo, nenhum editor foca ao abrir: o teclado do telefone cobriria a lista. */
@@ -602,9 +549,9 @@ function FilterBar({
     onMatchChange?.(proximo)
   }
 
-  // O rascunho guarda o que já foi digitado: trocar para "entre" pelo menu
-  // abre o editor com o "De" ainda preenchido. `anterior` é o filtro que a
-  // troca de operador desfez — fechar sem completar o devolve.
+  // O rascunho guarda o que já foi digitado (trocar para "entre" abre o editor
+  // com o "De" preenchido); `anterior` é o filtro que a troca de operador
+  // desfez, e fechar sem completar o devolve.
   const [rascunho, setRascunho] = React.useState<{
     field: string
     operator: FilterOperator
@@ -665,10 +612,9 @@ function FilterBar({
   // Fechou por um clique fora: o foco fica onde a pessoa clicou.
   const clicouFora = React.useRef(false)
 
-  // O foco não rola a faixa: enquanto desliza, o vizinho ainda está, à vista,
-  // onde estava, e o navegador rolaria até lá — medido no iPhone, o vizinho
-  // terminava fora da faixa (x −102 com ela começando em 12). Quem rola é a
-  // caixa de destino, a do layout (`offsetLeft`), que o deslize não mexe.
+  // O foco não rola a faixa: enquanto desliza, o vizinho ainda está onde
+  // estava e o navegador rolaria até lá. Quem rola é a caixa de destino do
+  // layout (`offsetLeft`), que o deslize não mexe.
   const focar = (alvo: HTMLElement | null | undefined) => {
     if (!alvo) return
     alvo.focus({ preventScroll: true })
@@ -908,10 +854,9 @@ function FilterBar({
     })
     if (proximo === atual.toString()) return
     const url = `${window.location.pathname}${proximo ? `?${proximo}` : ""}${window.location.hash}`
-    // `null`, e não `history.state`: com `null` o Next copia o estado dele e
-    // o `useSearchParams` acompanha (docs do Next, "Native History API").
-    // Uma entrada por sessão do editor — o voltar desfaz um filtro, não uma
-    // caixa marcada.
+    // `null` e não `history.state`: com `null` o Next copia o estado e o
+    // `useSearchParams` acompanha. Uma entrada por sessão do editor (o voltar
+    // desfaz um filtro, não uma caixa marcada).
     if (sessao.current === "replace") {
       window.history.replaceState(null, "", url)
     } else {
@@ -962,11 +907,10 @@ function FilterBar({
               LINHA_TELEFONE[mobile]
             )}
           >
-            {/* O E/OU e o "Limpar" animam num invólucro, e não por
+            {/* O E/OU e o "Limpar" animam num invólucro e não por
                 `motion.create(Button)`: o `Button` junta os `ref`s numa função
-                nova a cada render, o React solta e prende o do `motion` em todo
-                render, e isso desmontava o elemento animado no meio da saída —
-                medido, o "Limpar" ficava na tela com um filtro só. */}
+                nova a cada render, e isso desmontava o elemento animado no meio
+                da saída. */}
             <AnimatePresence initial={false} mode="popLayout" root={cabeca}>
               {onMatchChange && completos.length >= 2 ? (
                 <motion.div
@@ -1097,8 +1041,7 @@ function FilterBar({
           data-filter-bar="editor"
           align="start"
           padding="none"
-          // A lista é `lg` (352): a contagem por opção e o rodapé com as
-          // teclas não cabem em 288 — medido, o rodapé quebrava com 291px.
+          // A lista é `lg` (352): a contagem por opção e o rodapé com as teclas não cabem em 288.
           size={
             aberto?.tipo === "campos" ? "sm"
             : campoAberto?.type === "period" ? "auto"
@@ -1108,9 +1051,8 @@ function FilterBar({
           label={aberto?.tipo === "campos" ? "Adicionar filtro" : undefined}
           onOpenAutoFocus={(e) => e.preventDefault()}
           onInteractOutside={(e) => {
-            // Um clique num token ou no "+ Filtro" não dispensa: ele troca o
-            // editor. O resto — o vão da linha, que é larga, a contagem, a
-            // página — fecha; antes a linha inteira segurava o editor aberto.
+            // Um clique num token ou no "+ Filtro" não dispensa, troca o editor;
+            // o resto (o vão da linha, a contagem, a página) fecha.
             const alvo = e.target as Element | null
             if (
               linhaRef.current?.contains(alvo) &&
@@ -1416,9 +1358,8 @@ function EditorDeValor(props: EditorProps) {
   const dedo = noDedo()
   // A mesma pergunta do `Popover mobile="sheet"`: é ela que decide a gaveta.
   const naGaveta = useIsMobile()
-  // Na gaveta as faixas recuam 8, e não 12: a gaveta já recua 16 dos lados, e
-  // com 12 o título e o operador ficavam 4px para dentro da busca, dos
-  // atalhos e da grade do calendário, que recuam 8 (medido, x 37 contra 33).
+  // Na gaveta as faixas recuam 8 e não 12: a gaveta já recua 16, e com 12 o
+  // título e o operador ficavam 4px para dentro da busca, dos atalhos e da grade.
   const recuo = naGaveta ? "px-2" : "px-3"
   const periodo = campo.type === "period" ? filterPeriodRange(valores) : null
 
@@ -1456,9 +1397,7 @@ function EditorDeValor(props: EditorProps) {
           type="button"
           variant="tertiary"
           size="xs"
-          // No dedo o botão cresce de verdade, a 40 — a régua do "+ Filtro",
-          // do "Limpar" e do rodapé dos diálogos. Foi um alvo invisível de 44
-          // em volta de uma caixa de 24, e o dono pediu o botão maior à vista.
+          // No dedo o botão cresce de verdade, a 40 (a régua do "+ Filtro", do "Limpar" e do rodapé dos diálogos).
           className="-me-1.5 pointer-coarse:-me-3 pointer-coarse:h-10 pointer-coarse:px-3 pointer-coarse:text-sm"
           onClick={onRemover}
         >
@@ -1495,11 +1434,9 @@ function EditorDeValor(props: EditorProps) {
       ) : null}
 
       {campo.type === "period" ? (
-        // A gaveta já recua 16px dos lados: somados aos 12 daqui, as sete
-        // células de 44 não cabiam num iPhone de 375 (medido, "sáb" cortado).
-        // No popover o recuo é só o do calendário (8): com mais 12 daqui a
-        // coluna de atalhos começava a 33 da placa, contra o título a 12 —
-        // as linhas ficam como as do `Command`, caixa a 8 e texto a 16.
+        // A gaveta já recua 16px dos lados; somados a 12, as sete células de 44
+        // não cabiam a 375px. No popover o recuo é só o do calendário (8): as
+        // linhas ficam como as do `Command`, caixa a 8 e texto a 16.
         <div className={naGaveta ? "pt-1 pb-2" : undefined}>
           <Calendar
             mode="range"

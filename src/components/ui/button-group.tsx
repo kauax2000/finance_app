@@ -6,35 +6,21 @@ import { cn } from "@/lib/utils"
 
 export interface ButtonGroupProps extends React.HTMLAttributes<HTMLDivElement> {
     children: React.ReactNode
-    /**
-     * O degrau de todos os botões do grupo (rodada 188), pelo
-     * `ButtonSizeContext`. Um `size` no próprio botão vence.
-     */
+    /** O degrau de todos os botões do grupo (pelo `ButtonSizeContext`); um `size` no próprio botão vence. */
     size?: ButtonSize
     /** `vertical` empilha, e a emenda passa a ser horizontal. */
     orientation?: "horizontal" | "vertical"
 }
 
 /**
- * A emenda deitada: cantos internos achatados à esquerda e à direita, e as
- * bordas vizinhas sobrepostas em 1px, então a emenda é um fio só.
- *
- * Divisor da emenda. Numa variante de contorno a borda compartilhada já marca a
- * divisão, mas num botão preenchido os dois viram um bloco só. O filete é
- * `currentColor` a 20%: segue a cor do texto de cada variante, então clareia
- * sobre o `destructive` e escurece sobre o claro, sem token novo e sem escolher
- * cor na mão. Recuado nas pontas para não encostar no arredondamento externo,
- * e pousado em `-left-px` para cair exatamente sobre a borda compartilhada:
- * numa variante de contorno as duas somariam 2px de emenda.
+ * A emenda deitada: cantos internos achatados e bordas vizinhas sobrepostas em
+ * 1px. O filete divisor é `currentColor` a 20% (segue a cor de cada variante),
+ * recuado nas pontas e pousado em `-left-px` sobre a borda compartilhada.
  */
-// A emenda só vale entre botões. Com um campo no grupo (rodada 241u, a pedido
-// do dono) as peças ficam **separadas**, com o vão de 8px entre elas. A razão
-// era o canto: o campo era um retângulo de 12 que encostava na cápsula do
-// botão, e nenhum dos dois fechava. O campo voltou à cápsula na 243e, e a
-// separação ficou — a ação de um campo mora dentro dele. Por isso cada
-// classe da emenda leva `not-has-[>[data-slot=input]]:`, escrito por extenso:
-// o Tailwind lê o código como texto, e um prefixo montado num template não
-// gera classe nenhuma.
+// A emenda só vale entre botões; com um campo no grupo as peças ficam separadas
+// por 8px. Cada classe leva `not-has-[>[data-slot=input]]:` por extenso: o
+// Tailwind lê o código como texto, e um prefixo montado num template não gera
+// classe nenhuma.
 const HORIZONTAL = [
     "inline-flex items-center justify-start",
     "not-has-[>[data-slot=input]]:[&>*:not(:first-child)]:-ml-px",
@@ -43,16 +29,11 @@ const HORIZONTAL = [
     "not-has-[>[data-slot=input]]:[&>*:not(:first-child)]:before:inset-y-1.5",
     "not-has-[>[data-slot=input]]:[&>*:not(:first-child)]:before:-left-px",
     "not-has-[>[data-slot=input]]:[&>*:not(:first-child)]:before:w-px",
-    // O `secondary` não tem borda que desenhe a emenda, e o filete recuado lia
-    // como risco no meio de um bloco. No lugar dele a emenda é um vão de 1px
-    // de cima a baixo, **transparente**: o botão deixa de sobrepor o vizinho e
-    // passa a 1px dele, e o que aparece ali é a superfície de trás, qualquer
-    // que seja — o grupo não precisa saber a cor do fundo.
+    // O `secondary` não tem borda que desenhe a emenda: no lugar do filete, um
+    // vão transparente de 1px mostra a superfície de trás, qualquer que seja.
     "not-has-[>[data-slot=input]]:[&>[data-variant=secondary]:not(:first-child)]:ml-px",
-    // O campo (rodada 188) ocupa a sobra, e o grupo passa a ter a largura de
-    // quem o contém — senão `w-full` do `Input` numa caixa que encolhe ao
-    // conteúdo não resolve. No dedo o campo sobe a 40 (`pointer-coarse:h-10`,
-    // a régua de campo) e o botão não: o grupo iguala.
+    // O campo ocupa a sobra e o grupo ganha a largura de quem o contém; no dedo
+    // o campo sobe a 40 e o grupo iguala os botões.
     "has-[>[data-slot=input]]:flex has-[>[data-slot=input]]:w-full has-[>[data-slot=input]]:gap-2 [&>[data-slot=input]]:flex-1",
     "pointer-coarse:has-[>[data-slot=input]]:*:h-10",
 ]
@@ -70,16 +51,9 @@ const VERTICAL = [
 ]
 
 /**
- * Botões que agem sobre a mesma coisa e por isso viram uma peça só: uma ação
- * com seu menu, um par de navegação, um campo com a sua ação.
- *
- * O grupo é quem manda no raio. Antes o `Button` carregava
- * `in-data-[slot=button-group]:rounded-xl`, que dentro do grupo deixava cada
- * filho *mais* arredondado — o oposto de colar: três pílulas encostadas, com
- * linha dupla em cada emenda.
- *
- * Não serve para um conjunto onde uma opção fica marcada: isso é `ToggleGroup`,
- * que carrega o estado pressionado e a semântica que o botão não tem.
+ * Botões que agem sobre a mesma coisa e viram uma peça só: uma ação com seu
+ * menu, um par de navegação, um campo com a sua ação. O grupo manda no raio.
+ * Conjunto com opção marcada é `ToggleGroup`.
  */
 export function ButtonGroup({
     className,
@@ -100,27 +74,19 @@ export function ButtonGroup({
                 "[&>*:not(:first-child)]:before:pointer-events-none",
                 "[&>*:not(:first-child)]:before:absolute",
                 "[&>*:not(:first-child)]:before:bg-current/20",
-                // Quem tem borda visível desenha a própria emenda, e o filete
-                // por cima era um segundo traço para ela: o `outline` tem o
-                // contorno no nome, e o texto do grupo também tem.
+                // Quem tem borda visível desenha a própria emenda; o filete
+                // por cima seria um segundo traço.
                 "[&>[data-variant=outline]]:before:hidden [&>[data-slot=button-group-text]]:before:hidden",
-                // O primário emenda por um vão transparente de 1px **sem o
-                // `ml-px` do `secondary`**, e é medido: o fundo dele é recortado
-                // no `padding-box` (a `bg-clip-padding` da base), então a borda
-                // transparente de 1px de cada lado já é vão, e com a margem a
-                // emenda somava 3px. (O degradê que o primário teve até a
-                // rodada 240 é o `brandColorful`, e mora no `::after` para este
-                // seletor nunca o alcançar.)
+                // O primário emenda por um vão transparente de 1px sem o
+                // `ml-px` do `secondary`: o fundo recortado no `padding-box`
+                // já deixa o vão, e com a margem a emenda somava 3px.
                 "[&>[data-variant=primary]]:before:hidden",
                 "[&>[data-variant=secondary]]:before:hidden",
-                // O divisor mora 1px fora da própria caixa, por cima da aresta
-                // do vizinho. Quando esse vizinho entra em hover ele sobe para
-                // z-10 e cobria o filete; como o dono do divisor fica em
-                // `z-auto`, o pseudo compete direto no grupo, e 20 vence 10.
+                // O divisor mora 1px fora da caixa; o vizinho em hover sobe a
+                // z-10 e cobria o filete, então o pseudo usa 20.
                 "[&>*:not(:first-child)]:before:z-20",
-                // A sobreposição faz o vizinho recortar o anel de foco e a
-                // borda de hover. Quem está ativo sobe. Empilhamento local, e
-                // por isso número cru em vez de token de camada.
+                // A sobreposição recorta o anel de foco do vizinho; quem está
+                // ativo sobe. Empilhamento local, número cru.
                 "[&>*]:hover:z-10 [&>*:focus-visible]:z-10",
                 className
             )}
@@ -133,12 +99,8 @@ export function ButtonGroup({
 }
 
 /**
- * Um segmento que não se clica — o "2 de 5" entre as setas, o rótulo antes do
- * seletor (rodada 188). Ele tem borda própria (o divisor do grupo se esconde
- * nele) e o fundo `muted`, que é o que diz "isto não é botão" ao lado de
- * botões de contorno. A altura é a da fileira (`self-stretch`), então ele
- * acompanha o degrau dos botões sem saber qual é; o corpo do texto desce com
- * `xs` e `sm`, como o do `Button`.
+ * Um segmento que não se clica (o "2 de 5" entre as setas). Borda própria, fundo
+ * `muted` e a altura da fileira (`self-stretch`).
  */
 export function ButtonGroupText({
     className,

@@ -149,61 +149,25 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 /* A moldura: o TablePanel                                                     */
 /* -------------------------------------------------------------------------- */
 
-// Mora aqui desde a rodada 231: era `table-panel.tsx`, com página própria, e
-// as duas páginas descreviam a mesma tabela. Sozinho, sem estado, ele serve o
-// esqueleto de carregamento; com estado, é a moldura que o `DataTable` monta.
+// Sozinho, sem estado, serve o esqueleto de carregamento; com estado, é a moldura que o `DataTable` monta.
 
-/**
- * Verdadeiro dentro da moldura. Existe só para a `TablePanelToolbar` avisar
- * quando é passada como filho — ali ela cairia dentro do painel, calada.
- */
+/** Verdadeiro dentro da moldura; a `TablePanelToolbar` avisa quando é passada como filho (cairia dentro do painel, calada). */
 const TablePanelFrameContext = React.createContext(false)
 
 /**
  * A tabela como o app a mostra: moldura, barra de ações opcional, tabela e
- * rodapé de paginação — o que `transactions-table.tsx` e
- * `subscriptions/page-client.tsx` montavam em 7 lugares com quatro grafias
- * diferentes de arredondar os cantos:
+ * rodapé de paginação. É `Card padding="none" variant="outline"` (zera o recuo
+ * do corpo e recorta os cantos de todo filho), publicando `md` (44) em
+ * `TableSizeContext`; nenhuma tela dentro dele escreve `size`, e o `DataTable`
+ * publica por cima a densidade escolhida. Sem eixo de superfície: eixo sem
+ * contagem é ficção.
  *
- * ```
- * <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
- *   <CardContent className="relative flex flex-col p-0">
- *     <div className={cn("min-w-0", …rounded-t-xl/rounded-b-xl condicionais…)}>
- * ```
- *
- * `Card` já resolvia isso — `padding="none"` zera o recuo do corpo
- * (`--card-px: 0px`) e `overflow-hidden` recorta os cantos de todo filho —,
- * e as quatro grafias eram a prova de que faltava a peça, não de que o
- * `Card` não bastava. `TablePanel` é essa peça: `Card padding="none"
- * variant="outline"`, publicando `md` em `TableSizeContext` — nenhuma tela
- * dentro dele escreve `size`, porque `md` (44, o `lg` de antes da rodada 225)
- * é a densidade confortável que os 7 painéis já usavam. O `DataTable` publica
- * por cima a densidade que a pessoa escolheu.
- *
- * **Sem eixo de superfície.** As 7 chamadas são a mesma variante do `Card`,
- * sem uma segunda evidência — e eixo sem contagem é ficção, a régua que este
- * sistema já aplicou ao cortar dois eixos de outros componentes. O dia em que
- * uma tela pedir outra superfície, ela entra com o caso que a justifica.
- *
- * **A barra de topo mora fora da moldura**, por pedido do dono: a contagem e
- * as ações de seleção (excluir etc.) ficam acima do painel, e a moldura começa
- * no cabeçalho da tabela. **A barra é prop (`toolbar`), e não filho.** Ela já
- * foi separada dos outros filhos pelo tipo da função, e isso quebrou medido: a
- * cada edição deste arquivo o Fast Refresh troca a função, a página segue
- * criando o elemento com a antiga, a comparação deixa de bater e as quatro
- * barras do catálogo caíam para dentro da moldura. É a decisão que o
- * `DropdownMenu` já registra para `header`/`footer`: detectar peça entre os
- * filhos não funciona, e slot como prop é o idioma daqui — que também não
- * depende de fragmento nem de embrulho. `className` vai ao envelope, que
- * é quem dimensiona o conjunto; o resto das props segue na moldura.
- *
- * **O rodapé de paginação também mora fora, embaixo** (rodada 231, pedido do
- * dono): `footer` é o espelho de `toolbar`, e a moldura fecha na última linha.
- * Com ele saiu a faixa que o rodapé publicava (`--table-panel-foot-h`) para as
- * linhas passarem por baixo dele — fora da moldura não há o que atravessar.
- *
- * O envelope declara o recuo horizontal de tira: a variável mora no `Card`, e
- * fora dele o recuo da barra cairia a zero calado.
+ * A barra de topo (`toolbar`) e o rodapé (`footer`) moram fora da moldura, que
+ * começa no cabeçalho da tabela e fecha na última linha. São props e não
+ * filhos: detectar a peça entre os filhos pelo tipo da função quebra com o Fast
+ * Refresh (a função troca e a comparação deixa de bater). `className` vai ao
+ * envelope, que dimensiona o conjunto. O envelope declara o recuo horizontal de
+ * tira, porque a variável mora no `Card` e fora dele o recuo cairia a zero.
  */
 function TablePanel({
   className,
@@ -234,17 +198,12 @@ function TablePanel({
           variant="outline"
           className={cn(
             "gap-0",
-            // **A última linha não soma fio com a moldura.** O `Card` fecha
-            // embaixo, e o divisor da última linha encostava na borda dele —
-            // dois fios empilhados. Desde que o rodapé saiu da moldura (rodada
-            // 231) não há mais o que ele separe ali dentro, e ele sai sempre.
+            // A última linha não soma fio com a moldura (o `Card` já fecha embaixo).
             "[&_[data-slot=table-viewport]>table>tbody>tr:last-child]:border-b-0",
-            // **`clip-path`, e não só o `overflow-hidden` do `Card`.** O borrão
-            // do cabeçalho fixo vira camada própria, e no Chrome acelerado ela
-            // escapa do recorte arredondado de um `overflow` — os cantos do
-            // vidro saíam da moldura. O `clip-path`
-            // recorta em qualquer motor, no raio que o `Card` já desenha, e
-            // ainda limita o que o borrão enxerga ao que está dentro dela.
+            // `clip-path` e não só o `overflow-hidden` do `Card`: o borrão do
+            // cabeçalho fixo vira camada própria e, no Chrome acelerado, escapa
+            // do recorte arredondado de um `overflow`. O `clip-path` recorta em
+            // qualquer motor, no raio que o `Card` já desenha.
             "[clip-path:inset(0_round_var(--radius-surface))]",
             // O raio de dentro da moldura, para o véu do rodapé não pintar
             // sobre o arco da borda nos cantos de baixo.
@@ -263,26 +222,13 @@ function TablePanel({
 }
 
 /**
- * A barra de topo — contagem, filtro, seleção em massa. É `CardToolbar` com o
- * nome do painel: mesma peça, mesmas duas variantes (`label` o rótulo apagado,
- * `title` o dado que nomeia o painel).
- *
- * **Nunca `role="toolbar"`.** O papel é um contrato de teclado — foco
- * itinerante entre os controles —, e nenhuma barra de seleção do app o
- * implementa. O app escrevia o papel à mão em quatro lugares sem cumprir o
- * contrato; na migração do backlog os quatro o perderam, que é exatamente o
- * defeito que `Toolbar` documenta e se recusa a reproduzir.
- *
- * **Ela fica acima da moldura, sem fundo e sem borda.** Ela chegou a ter o
- * `bg-muted/50` do cabeçalho da tabela como destaque leve, e o dono o tirou:
- * fora da moldura, a posição já a separa da tabela. O fio **transparente** nas laterais é
- * carga estrutural: a moldura tem 1px de borda, e sem ele o texto da barra
- * cairia 1px à esquerda da coluna das células.
- *
- * **Sem recuo vertical, com `min-h-7`.** Fora da moldura quem separa a barra da
- * tabela é o vão do envelope (8px), e os 12px de cada lado sobravam — pedido do
- * dono. A altura mínima é a do botão de ação da seleção (`sm`, 28px), então a contagem e a seleção com
- * "Excluir" medem o mesmo e a barra não pula ao marcar uma linha.
+ * A barra de topo (contagem, filtro, seleção em massa): é `CardToolbar` com o
+ * nome do painel, nas duas variantes (`label`, `title`). Nunca `role="toolbar"`,
+ * que é um contrato de teclado que nenhuma barra de seleção do app cumpre.
+ * Fica acima da moldura, sem fundo nem borda; o fio transparente nas laterais é
+ * estrutural (a moldura tem 1px e o texto cairia 1px à esquerda da coluna das
+ * células). Sem recuo vertical e com `min-h-7`, a altura do botão `sm`, para a
+ * barra não pular ao marcar uma linha.
  */
 function TablePanelToolbar({
   className,
@@ -304,13 +250,10 @@ function TablePanelToolbar({
 }
 
 /**
- * O rodapé de paginação — a contagem e os controles. Vai na prop `footer` do
- * `TablePanel`, **abaixo da moldura** e separado dela pelo mesmo vão da barra
- * de cima (rodada 231, pedido do dono): é a forma da `TablePanelToolbar`
- * espelhada — sem fundo, sem recuo vertical, `min-h-7`, e o fio
- * **transparente** nas laterais que alinha o texto com a coluna das células.
- * Empilha no telefone e vira linha no desktop. Como filho cairia dentro da
- * moldura, e avisa no console.
+ * O rodapé de paginação (contagem e controles), na prop `footer` do
+ * `TablePanel`, abaixo da moldura: o espelho da `TablePanelToolbar` (sem fundo,
+ * sem recuo vertical, `min-h-7`, fio transparente nas laterais). Empilha no
+ * telefone; como filho cairia dentro da moldura, e avisa no console.
  */
 function TablePanelFooter({
   className,
@@ -338,26 +281,15 @@ function TablePanelFooter({
 export { TablePanel, TablePanelFooter, TablePanelToolbar }
 
 /**
- * A tabela de dados (rodada 225): o motor da `TanStack Table` (v9) por baixo
- * das peças da `Table` e do `TablePanel`. Ele **não desenha nada** que a
- * `Table` já desenhe — só decide o estado e compõe:
- *
- * - **ordenar** por uma coluna ou várias (Shift+clique), com a seta que gira;
- * - **marcar** com o indeterminado, a faixa (Shift+clique), o grupo e o
- *   "marcar todos os N", com a **barra flutuante** das ações em massa;
- * - **buscar** sem acento, **filtrar** por faceta com a contagem, **esconder
- *   colunas** e trocar a **densidade**, guardadas por tabela;
- * - **agrupar** linhas consecutivas com o total, **expandir** o detalhe e as
- *   **sublinhas**;
- * - as **ações** da linha à vista e no ⋯ (folha no telefone), repetidas no
- *   menu de contexto;
- * - o **gêmeo do telefone**, gerado das colunas e trocado por CSS;
- * - o **teclado** entre as linhas, a **URL**, a **virtualização**, o **CSV**
- *   e a **edição** na célula (esta, numa grade de verdade).
- *
- * **Os dados podem vir do servidor** (`manual`): aí ordenar, paginar e
- * filtrar só escrevem o estado, e quem chama busca a página — a forma das
- * transações, que pagina e ordena no banco.
+ * A tabela de dados: o motor da `TanStack Table` (v9) por baixo das peças da
+ * `Table` e do `TablePanel`. Não desenha nada que a `Table` já desenhe, só
+ * decide o estado: ordenar (Shift para várias), marcar (indeterminado, faixa,
+ * grupo, barra flutuante), buscar sem acento, filtrar por faceta, esconder
+ * colunas e trocar a densidade (guardadas por tabela), agrupar linhas
+ * consecutivas, expandir detalhe e sublinhas, ações da linha (à vista e no ⋯,
+ * repetidas no menu de contexto), o gêmeo do telefone gerado das colunas,
+ * teclado, URL, virtualização, CSV e edição na célula. Com `manual`, ordenar,
+ * paginar e filtrar só escrevem o estado e quem chama busca a página.
  */
 
 /** O que cada coluna diz de si além do que a TanStack já sabe. */
@@ -370,17 +302,9 @@ export type DataTableColumnMeta = {
   primary?: boolean
   headClassName?: string
   cellClassName?: string
-  /**
-   * O lugar da coluna no gêmeo do telefone. Sem ele, ela não aparece lá.
-   * `meta` (rodada 231) é a linha miúda sob a ponta, à direita — a data, por
-   * padrão.
-   */
+  /** O lugar da coluna no gêmeo do telefone (sem ele ela não aparece lá); `meta` é a linha miúda sob a ponta, à direita. */
   mobile?: "media" | "title" | "description" | "trailing" | "meta"
-  /**
-   * As partes da célula de identidade, para o gêmeo as separar: o ladrilho na
-   * mídia do `Item`, o nome no título e a legenda na descrição — e não a
-   * célula inteira dentro do título. A fábrica `identity` as preenche.
-   */
+  /** As partes da célula de identidade, para o gêmeo as separar (ladrilho na mídia, nome no título, legenda na descrição); a fábrica `identity` as preenche. */
   identity?: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     title: (row: any) => React.ReactNode
@@ -397,12 +321,7 @@ export type DataTableColumnMeta = {
   facet?: { options?: { value: string; label: string }[] }
 }
 
-/**
- * A busca sem acento — "alimentacao" acha "Alimentação" —, a mesma régua da
- * paleta de comandos e do `Combobox` (`normalizeSearchText`). Na v9 um filtro
- * é um comparador de valores com os normalizadores ao lado
- * (`constructFilterFn`), então esta é a `includesString` com os dois trocados.
- */
+/** A busca sem acento ("alimentacao" acha "Alimentação"), a régua da paleta e do `Combobox` (`normalizeSearchText`): na v9 é a `includesString` com os normalizadores trocados. */
 const filtroSemAcento = constructFilterFn({
   ...filterFn_includesString,
   resolveFilterValue: (v: unknown) => normalizeSearchText(String(v ?? "")),
@@ -472,12 +391,7 @@ export type DataTableAction<T> = {
 export type DataTableBulkAction<T> = {
   label: string
   icon?: React.ReactNode
-  /**
-   * Recebe as linhas marcadas que estão carregadas e os ids de todas. A
-   * seleção limpa quando ela termina — **menos se devolver `false`**: a ação
-   * que só abre uma confirmação devolve `false`, e cancelar não perde a
-   * seleção (a tela limpa ao confirmar).
-   */
+  /** Recebe as linhas marcadas carregadas e os ids de todas. A seleção limpa ao terminar, menos se devolver `false` (a ação que só abre uma confirmação; cancelar não perde a seleção). */
   onSelect: (rows: T[], ids: string[]) => void | false | Promise<unknown>
   variant?: "default" | "destructive"
   /** A ação não vale para esta seleção — "Editar" com mais de uma marcada. */
@@ -571,10 +485,7 @@ export type DataTableProps<T extends RowData> = {
   getRowId: (row: T) => string
   /** O nome de cada linha, para os rótulos acessíveis ("Selecionar Mercado"). */
   getRowLabel?: (row: T) => string
-  /**
-   * A chave das escolhas guardadas (densidade e colunas), em `localStorage`.
-   * Sem ela, nada é guardado.
-   */
+  /** A chave das escolhas guardadas (densidade e colunas) em `localStorage`; sem ela nada é guardado. */
   id?: string
   "aria-label"?: string
 
@@ -600,20 +511,12 @@ export type DataTableProps<T extends RowData> = {
   urlState?: boolean | { prefix?: string }
 
   onRowClick?: (row: T) => void
-  /**
-   * Quais linhas o clique abre. Sem ela, todas — com ela, a linha que não
-   * abre (a projetada das transações) não tem cursor, realce, Tab nem Enter,
-   * em vez de parecer clicável e não fazer nada.
-   */
+  /** Quais linhas o clique abre; as que não abrem não têm cursor, realce, Tab nem Enter. */
   rowClickable?: (row: T) => boolean
   rowState?: (row: T) => "current" | "pending" | undefined
   renderDetail?: (row: T) => React.ReactNode
   getSubRows?: (row: T) => T[] | undefined
-  /**
-   * Agrupa linhas **consecutivas** pela chave — o mês das transações. Recebe a
-   * ordenação, e `null` desliga o grupo: o mês só faz sentido ordenado por
-   * data, e ordenado por valor ele viraria uma faixa a cada linha.
-   */
+  /** Agrupa linhas consecutivas pela chave (o mês das transações). Recebe a ordenação, e `null` desliga o grupo: ordenado por valor ele viraria uma faixa a cada linha. */
   groupBy?: (row: T, ctx: { sorting: SortingState }) => { key: string; label: React.ReactNode } | null
   groupTotal?: (rows: T[]) => React.ReactNode
   groupCollapsible?: boolean
@@ -623,12 +526,7 @@ export type DataTableProps<T extends RowData> = {
   /** "Marcar todos os N" quando a seleção pede o que não está carregado. */
   onSelectAllMatching?: () => void
   rowActions?: DataTableAction<T>[]
-  /**
-   * O botão direito (e o toque longo). `true` repete as `rowActions`; uma
-   * função monta o `ContextMenuContent` inteiro e recebe os **alvos** pela
-   * regra do `contextMenuTargets`: a seleção toda se a linha faz parte dela,
-   * só ela se não faz.
-   */
+  /** O botão direito (e o toque longo): `true` repete as `rowActions`; uma função monta o `ContextMenuContent` e recebe os alvos pelo `contextMenuTargets`. */
   rowContextMenu?: boolean | ((row: T, ctx: { targets: T[]; selected: boolean }) => React.ReactNode)
 
   toolbar?: DataTableToolbarConfig | React.ReactNode
@@ -646,18 +544,9 @@ export type DataTableProps<T extends RowData> = {
   pending?: boolean
   error?: { message?: React.ReactNode; onRetry?: () => void | Promise<unknown> } | null
   empty?: React.ReactNode
-  /**
-   * A linha de totais, no `<tfoot>`: recebe as linhas filtradas e quantas
-   * colunas estão à vista. Some os `colSpan` a `columns` — um número cravado
-   * passa da conta quando há caixa de seleção ou coluna escondida, e a coluna
-   * fantasma vira um vão vazio na ponta de todas as linhas.
-   */
+  /** A linha de totais no `<tfoot>`. Soma os `colSpan` a `columns`: um número cravado passa da conta com caixa de seleção ou coluna escondida. */
   footer?: (rows: T[], info: { columns: number }) => React.ReactNode
-  /**
-   * A contagem no rodapé — "12 assinaturas", "4 na lista filtrada (de 12)".
-   * Com ela o rodapé aparece mesmo numa página só; sem ela, só quando há
-   * mais de uma, com "1–20 de 340".
-   */
+  /** A contagem no rodapé ("12 assinaturas"); com ela o rodapé aparece numa página só, sem ela só quando há mais de uma. */
   countLabel?: (total: number, ctx: { filtered: boolean; all: number }) => React.ReactNode
 
   /** O gêmeo do telefone, das colunas com `meta.mobile`. Ligado se houver título. */
@@ -1533,12 +1422,7 @@ export function DataTable<T extends RowData>(props: DataTableProps<T>) {
 /* Peças internas                                                              */
 /* -------------------------------------------------------------------------- */
 
-/**
- * A caixa da linha. **O clique vai para o handler da TanStack** com o Shift
- * que ele traz — é o que marca a faixa entre a última marcada e esta. O
- * `onCheckedChange` do Radix não carrega o evento, e por isso não é usado: o
- * estado mora na tabela, e a caixa só o mostra.
- */
+/** A caixa da linha: o clique vai para o handler da TanStack com o Shift que ele traz (marca a faixa); o `onCheckedChange` do Radix não carrega o evento, e o estado mora na tabela. */
 function CaixaDaLinha<T extends RowData>({ row, label }: { row: DataTableRow<T>; label: string }) {
   if (!row.getCanSelect()) return null
   const selecionada = row.getIsSelected()
@@ -1555,12 +1439,7 @@ function CaixaDaLinha<T extends RowData>({ row, label }: { row: DataTableRow<T>;
   )
 }
 
-/**
- * As ações da linha: as `primary` à vista (botões de ícone, com o tooltip e a
- * lixeira neutra que a coluna `actions` da `Table` já dá), o resto no ⋯ — um
- * `DropdownMenu` que vira folha de ações no telefone e já sabe confirmar e
- * esperar a `Promise`.
- */
+/** As ações da linha: as `primary` à vista (botões de ícone com tooltip) e o resto no ⋯, um `DropdownMenu` que vira folha de ações no telefone e sabe confirmar e esperar a `Promise`. */
 function AcoesDaLinha<T>({ row, actions, label }: { row: T; actions: DataTableAction<T>[]; label: string }) {
   const visiveis = actions.filter((a) => !a.hidden?.(row))
   const avista = visiveis.filter((a) => a.primary)
@@ -1598,8 +1477,7 @@ function AcoesDaLinha<T>({ row, actions, label }: { row: T; actions: DataTableAc
           <DropdownMenuContent
             align="end"
             size="md"
-            // O alvo do menu: na folha do telefone era "Ações", e a pessoa não
-            // via de que linha eram as ações (rodada 231).
+            // O alvo do menu: na folha do telefone dizia só "Ações", sem a linha de origem.
             header={<DropdownMenuHeader title={label} />}
             onClick={(e) => e.stopPropagation()}
           >
@@ -1621,12 +1499,7 @@ function AcoesDaLinha<T>({ row, actions, label }: { row: T; actions: DataTableAc
   )
 }
 
-/**
- * O gêmeo do telefone: a mesma linha como `Item`, montada das colunas que
- * dizem onde moram (`meta.mobile`). **A troca é por CSS** — a tabela em
- * `hidden md:block`, o gêmeo em `md:hidden` —, nunca por um hook de largura,
- * que erra no servidor e faz a tela piscar no primeiro quadro.
- */
+/** O gêmeo do telefone: a mesma linha como `Item`, das colunas com `meta.mobile`. A troca é por CSS (`hidden md:block` / `md:hidden`), nunca por hook de largura, que erra no servidor e pisca no primeiro quadro. */
 function GemeoDoTelefone<T extends RowData>({
   rows,
   rowState,
@@ -1685,8 +1558,7 @@ function GemeoDoTelefone<T extends RowData>({
           <Item
             variant="flush"
             size="lg"
-            // O mesmo estado da linha da tabela: a prevista apaga o texto e a
-            // cor; a de agora só leva `aria-current` (rodada 231).
+            // O mesmo estado da linha da tabela: a prevista apaga texto e cor; a de agora só leva `aria-current`.
             data-row-state={estado}
             aria-current={estado === "current" ? "true" : undefined}
             className={cn(
@@ -1704,11 +1576,9 @@ function GemeoDoTelefone<T extends RowData>({
             {midiaDaIdentidade ?? midia ? (
               <ItemMedia>{midiaDaIdentidade ?? (midia ? <FlexRender cell={midia} /> : null)}</ItemMedia>
             ) : null}
-            {/* **Duas colunas, como um extrato** (rodada 231): o nome e a
-                legenda à esquerda, numa linha cada e truncando; o valor e a
-                data à direita, alinhados pela ponta. Antes o valor descia para
-                uma terceira linha e a legenda quebrava em duas — cada linha
-                media ~62px e os valores não formavam coluna. */}
+            {/* Duas colunas, como um extrato: nome e legenda à esquerda, uma
+                linha cada e truncando; valor e data à direita, alinhados pela
+                ponta (para os valores formarem coluna). */}
             <ItemContent>
               <ItemTitle className="w-full truncate">
                 {identidade
@@ -1878,10 +1748,7 @@ export function DataTableSearch({ placeholder = "Buscar…" }: { placeholder?: s
   )
 }
 
-/**
- * O filtro por faceta: o `Combobox multiple` com a contagem de cada valor ao
- * lado do nome — "Ativa 12" —, das linhas que os **outros** filtros deixam.
- */
+/** O filtro por faceta: o `Combobox multiple` com a contagem de cada valor ("Ativa 12"), das linhas que os outros filtros deixam. */
 export function DataTableFacetFilter({ column: cid, label }: { column: string; label?: string }) {
   const { table } = useDataTableContext("DataTableFacetFilter")
   const coluna = table.getColumn(cid)
@@ -1929,14 +1796,10 @@ export function DataTableFacetFilter({ column: cid, label }: { column: string; l
 
 /** As colunas à vista e a densidade, guardadas por tabela. */
 /**
- * O painel Exibir: a densidade e as colunas.
- *
- * As duas seções falam como o resto do sistema: o rótulo em sobrancelha com o
- * estado à direita ("Padrão · 44px", "5 de 6"), e cada coluna é uma **linha
- * inteira** clicável, na geometria e no esmaecer das linhas de menu — a caixa
- * sozinha era um alvo de 16px. A última coluna à vista não sai (uma tabela sem
- * coluna nenhuma não tem como voltar), e "Redefinir" só aparece quando há o
- * que redefinir. No telefone é a gaveta, onde a linha sobe a 44.
+ * O painel Exibir (densidade e colunas): cada coluna é uma linha inteira
+ * clicável na geometria dos menus (a caixa sozinha era um alvo de 16px). A
+ * última coluna à vista não sai, e "Redefinir" só aparece quando há o que
+ * redefinir. No telefone é a gaveta.
  */
 export function DataTableViewOptions() {
   const { table, density, setDensity } = useDataTableContext("DataTableViewOptions")
@@ -2054,16 +1917,11 @@ export function DataTableExport() {
 /* -------------------------------------------------------------------------- */
 
 /**
- * A pílula das ações em massa (rodada 225): sobe na mola quando a primeira
- * linha é marcada — de 12px abaixo e 97% —, e sai em 0,13s. Ela é **fixa**,
- * no centro da janela e acima da `BottomBar` no telefone (`--bottom-bar-pad`),
- * e vai para o `body` por portal: o painel recorta com `clip-path`, que
- * apagaria qualquer descendente fixo.
- *
- * Ela substitui as duas barras de seleção que transações e assinaturas
- * escreviam à mão (cerca de 100 linhas cada, uma para o telefone e outra para
- * o desktop). Uma ação que devolve `Promise` trava a barra com a roda, e a
- * seleção limpa quando ela termina.
+ * A pílula das ações em massa: sobe na mola quando a primeira linha é marcada e
+ * sai em 0,13s. É fixa, no centro da janela e acima da `BottomBar` no telefone
+ * (`--bottom-bar-pad`), e vai para o `body` por portal, porque o painel recorta
+ * com `clip-path`, que apagaria qualquer descendente fixo. Uma ação que devolve
+ * `Promise` trava a barra com a roda, e a seleção limpa quando ela termina.
  */
 export function DataTableSelectionBar({
   count,
@@ -2160,8 +2018,8 @@ export function DataTableSelectionBar({
 type BadgeTone = React.ComponentProps<typeof Badge>["tone"]
 
 /**
- * As colunas prontas (rodada 225), para a tela não reescrever a célula de
- * identidade, de dinheiro, de data, de estado e de saldo em cada tabela.
+ * As colunas prontas (identidade, dinheiro, data, estado, saldo), para a tela
+ * não reescrever a célula em cada tabela.
  *
  * ```ts
  * const col = dataTableColumns<Lancamento>()
@@ -2276,10 +2134,7 @@ export function dataTableColumns<T extends RowData>() {
         },
         meta: { label: header, facet: {}, ...meta },
       }),
-    /**
-     * O saldo depois de cada linha. Só é verdade em ordem de data e sem
-     * filtro — fora disso a célula diz "—" (`runningBalance`).
-     */
+    /** O saldo depois de cada linha; só é verdade em ordem de data e sem filtro (fora disso a célula diz "—"). */
     balance: ({
       id,
       header,

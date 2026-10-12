@@ -39,197 +39,48 @@ import { ehCursor } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
 
 /**
- * Itens que deslizam.
+ * Itens que deslizam. Uma biblioteca e um motor só: cada versão é prop ou peça
+ * do mesmo `Carousel`, nunca um componente paralelo.
  *
- * ## As setas moravam fora da caixa
- *
- * O arquivo anterior era o shadcn intacto, e nele `CarouselPrevious` é
- * `absolute -left-12` — 48px **para fora** da própria região. O componente não
- * se dimensionava: ele exigia que o pai lhe cedesse sala, e todo pai que
- * recorta ou rola comia as setas.
- *
- * Medido na página do catálogo, num contêiner de 958px: a caixa de recorte ia
- * de 297 a 1255, a seta anterior de **289 a 317** e a seguinte de **1235 a
- * 1263** — 8px fora de cada lado. O `scrollWidth` do pai dava **966 contra 958
- * de `clientWidth`**, ou seja o carrossel dava ao contêiner uma barra de
- * rolagem horizontal fantasma; e `elementsFromPoint` a 90% da largura da seta
- * seguinte devolvia uma `div`, **não o botão** — um pedaço da seta não era
- * clicável.
- *
- * Hoje o padrão é `controls="inside"`: as setas pousam sobre as bordas do
- * viewport, dentro da caixa. `outside` continua existindo para quem tem a
- * calha de verdade, e é opt-in — a família do defeito que a rodada do
- * `Container` corrigiu ao tornar a calha opt-in pelo mesmo motivo.
- *
- * ## A documentação afirmava um comportamento que o código nunca teve
- *
- * A página dizia, com todas as letras, que *"as setas não existem no
- * telefone"*. Medido a 375px: `display: flex` nas duas, **28×28**, sobrepostas
- * ao conteúdo. Elas sempre existiram, e abaixo dos 44px que esta casa usa para
- * dedo. Hoje existem de propósito e **crescem por pseudo-elemento** —
- * `pointer-coarse:after:-inset-2.5` leva a caixa de 28 a um alvo de 46 sem
- * mexer na caixa — a saída do `PageHeaderBack`, do × da `AnnouncementBar` e
- * dos degraus do `Breadcrumb`. Aqui ela é segura porque as duas setas ficam em pontas
- * opostas; numa fileira de alvos adjacentes ela seria errada, e é por isso que
- * os pontos do `CarouselDots` crescem de verdade (ver a peça).
- *
- * ## A lib publicava treze mecanismos e o arquivo lia quatro
- *
- * `embla-carousel` 8.6 expõe `scrollProgress()`, `scrollSnapList()`,
- * `selectedScrollSnap()`, `scrollTo()`, `slidesInView()` e os eventos
- * `scroll`, `settle`, `slidesInView`, `slideFocus` e `slidesChanged`. O
- * arquivo lia `canScrollPrev/Next` e os eventos `select`/`reInit`, e mais
- * nada: um carrossel de quatro faturas sem nenhum sinal de quantas existem.
- * É o mesmo diagnóstico da rodada do `resizable`.
- *
- * `CarouselDots` e `CarouselStatus` são o que sai daí. O contexto passou a
- * publicar `selectedIndex`, `snapCount` e `scrollTo`.
- *
- * ## Dois papéis que não tinham nome
- *
- * `role="region"` sem `aria-label` — medido, `hasAccessibleName: false`. É a
- * medição que o `Popover` e o `resizable` já pagaram nesta base: um papel sem
- * nome é anunciado como o papel, e nada mais. O rótulo tem padrão em pt-BR
- * pela mesma razão que o `locale` do `Calendar` tem — um idioma que só vale
- * quando alguém lembra de passar não é o idioma do app.
- *
- * E cada item era `role="group" aria-roledescription="slide"` **sem rótulo**:
- * quatro grupos anônimos. A posição agora vem do **contêiner**, que é quem a
- * sabe — `CarouselContent` deriva índice e total, do mesmo jeito que a
- * `BreadcrumbList` assumiu os separadores e o `Stepper` passou a derivar o
- * `isLast`. Quem escreve a tela não conta itens à mão.
- *
- * ## Três defeitos menores, os três reais
- *
- * O teclado tratava **só `ArrowLeft`/`ArrowRight`**, inclusive com
- * `orientation="vertical"` — a seta do eixo certo não fazia nada. A limpeza do
- * efeito desinscrevia `select` e **não** `reInit`. E
- * `orientation || (opts?.axis === "y" ? …)` era inalcançável, porque
- * `orientation` tem padrão: código morto, a família que esta base já documenta.
- *
- * ## A dissolução reusa a rampa e traz motor próprio
- *
- * A borda em seco lê como lista terminada, e a casa já tem a primitiva. Mas
- * **`useScrollFade` não pode dirigi-la aqui**, e isso é medido: o embla
- * translada o **trilho**, então o viewport fica com `scrollLeft: 0` enquanto
- * `scrollWidth` é 1476 contra `clientWidth` 730. O hook lê `scrollLeft` e
- * reportaria início 0 e fim 746 para sempre — a ponta esquerda nunca acenderia.
- *
- * ## A zona é o triplo da do sistema, e a razão é o que o item carrega
- *
- * `--scroll-fade-x-h` vale 2rem, calibrado para **glifo** — uma trilha de abas,
- * uma célula de tabela, onde a rampa só precisa apagar letra. Aqui o item é um
- * `Card` **com borda**, e um fio de 1px é o que mais resiste: ele corre a
- * altura toda e não tem contrafundo que o dissolva. Medido, o alfa desse fio a
- * 15px da ponta:
- *
- * | zona | alfa do fio |
- * | --- | --- |
- * | 2rem (o sistema) | **31%** — legível, e é o "fade fraco" que se vê |
- * | 4rem | 13% |
- * | **6rem** | **9,5%** |
- *
- * E o **último** pixel nunca chega a zero: `--scroll-fade-floor` é 0,06 de
- * propósito, para a ponta dizer que há mais e não que acabou. Baixá-lo foi
- * medido ao vivo e é indistinguível — 6% de uma borda de 1px dá ~1 unidade de
- * RGB. Quem decide aqui é a **largura** da zona, não o piso.
- *
- * É **variável e não propriedade**: ela herda para a rampa sem disputar com
- * nada, e os outros consumidores da dissolução horizontal não se mexem.
- *
- * A rampa continua sendo a do sistema (`scroll-fade-x`, de `globals.css`); só
- * o motor é daqui, publicando `--scroll-fade-start/end` a partir de
- * `api.scrollProgress()`. As invariantes de `scroll-fade-classes` valem: a
- * máscara vai no **viewport**, que não desenha nada, e quem pinta é a raiz —
- * as setas são irmãs do viewport, então a máscara não as alcança.
- *
- * ## O `variant` de superfície entrou contra a contagem
- *
- * Nenhuma tela do app pede uma superfície para o carrossel — ele tem zero
- * consumidores, e a régua desta casa é que eixo sem contagem é ficção (o
- * precedente é a `Toolbar`, que não ganhou eixo nenhum e registrou isso como a
- * leitura honesta das contagens). O eixo existe por decisão explícita do dono,
- * tomada com esse custo na mesa, e fica registrado assim em vez de ser
- * apresentado como se a medida o tivesse pedido.
- *
- * `card` e `inset` **forçam `controls="inside"`**, com precedência explícita: a
- * raiz passa a pintar, e uma seta a `-left-12` flutuaria fora da superfície que
- * a contém. É a forma com que `scrollable` vence `stretch` no `Tabs`.
- *
- * Nenhuma das duas declara `overflow-hidden`. Ela não é necessária — o recuo da
- * raiz já mantém os itens dentro do raio, e o viewport recorta o trilho —, e
- * declará-la cortaria o anel de foco de 3px das setas contra a borda.
- *
- * ## A seta viajava, e ancorar em variável foi o que a fez viajar
- *
- * A primeira versão desta ancoragem resolveu a geometria e criou um defeito de
- * **movimento**, que medir posição não pega: `top` passou a sair de uma variável
- * escrita por JS, e a base do `Button` declara `transition-all`. Toda remedição
- * — fonte carregando, `snapCount` chegando e os pontos aparecendo, resize —
- * virava uma animação da seta atravessando o cartão.
- *
- * Somavam-se duas coisas. O `cva` declara `50%` como palpite pré-medição, e esse
- * `top: 50%` resolve contra a **raiz**, que inclui pontos e contagem: medido na
- * demonstração padrão, raiz 111px dá 55, contra os 37,5 do centro do trilho —
- * **17,5px** percorridos animadamente na primeira pintura.
- *
- * São dois consertos independentes, e é de propósito: o **layout effect** mata a
- * viagem da primeira pintura (o cliente nunca pinta o palpite), e
- * `CONTROL_TRANSITION` mata a das remedições posteriores, que efeito nenhum
- * alcança. Nenhum dos dois sozinho fecha o caso.
- *
- * ## Uma biblioteca, e um motor só (rodada 134)
- *
- * O dono pediu uma biblioteca de carrossel a partir de onze referências. Cada
- * versão é **composição do mesmo motor**, nunca um componente paralelo:
- *
- * - `effect` — `scale`, `spotlight` (o cartão em destaque no centro),
- *   `parallax` e `curve` (a galeria curva, em CSS e não em WebGL). Um driver
- *   só escreve `--carousel-slide-d` / `-s` em cada slide; os efeitos são
- *   `@utility carousel-effect-*` que só leem a variável;
- * - `loop`, `autoplay` (com `CarouselPlayPause` e o ponto-temporizador),
- *   `bleed` (de borda a borda, sem dissolução) e `layout="accordion"` (os
- *   itens colapsados que abrem conforme se passa);
- * - peças satélite: `CarouselToolbar` (setas no topo, embaixo ou em volta dos
- *   pontos), `CarouselCaption` (a legenda e a ação do item atual),
- *   `CarouselSteps` (passos nomeados) e `CarouselThumbs` (miniaturas). Moram
- *   todas neste arquivo e nesta página: nenhuma se usa sem o `Carousel`, e um
- *   arquivo à parte cobraria do catálogo uma página para um modo.
- *
- * ## A seta não tem fundo, e a dissolução é o que a sustenta
- *
- * `variant="tertiary"` nos dois modos: nada em repouso, fundo no cursor **e no
- * toque** — o par `active:` entrou na origem, em `button.tsx`, porque `hover:`
- * compila dentro de `@media (hover: hover)` e sem ele a seta não acenderia no
- * telefone. E `fade` passou a ser padrão pela mesma decisão: sem preenchimento o
- * glifo pousa direto sobre o conteúdo, e a rampa é o que abre chão para ele.
- *
- * ## Rodada 205: o que faltava a uma tira de verdade
- *
- * - `until="md" | "lg"` — **carrossel só no telefone**: o embla desliga por
- *   breakpoint (`active: false`), o trilho vira grade e setas, pontos,
- *   contagem e barra somem (`group-data-[until=…]/carousel`). A grade usa a
- *   mesma calha do `gap`.
- * - `snap="free"` — arraste livre, com inércia (`dragFree`). Pontos não dizem
- *   nada aqui; quem diz é o `CarouselProgress`.
- * - `selectOnClick` (**ligado**) — o item cortado na borda, clicado, vem para
- *   a vista **antes de agir**: o clique é engolido em captura e o embla rola.
- *   No `spotlight` e no `curve` a régua é ser o central, não estar inteiro.
- * - `wheel` (**ligado**) — o gesto horizontal de dois dedos passa um item por
- *   gesto. A inércia do trackpad manda eventos por quase um segundo, então o
- *   passo trava até 160ms de silêncio. Ouvinte nativo com `passive: false`:
- *   o `onWheel` do React é passivo, e sem `preventDefault` o Chrome do Mac
- *   leria o mesmo gesto como "voltar".
- * - `effect="fade"` — um item por vez, trocando por dissolução: o driver dos
- *   efeitos já sabe a distância de cada item, e a utility o desloca de volta
- *   para a origem e apaga pela distância. Força `gap="none"` e tira a rampa
- *   das pontas (ela apagaria o item inteiro).
- * - Peças: `CarouselProgress` (a barra de rolagem da tira), `CarouselSkeleton`
- *   (o carrossel carregando, com o `basis` real), `CarouselMore` (o último
- *   item é o caminho para a lista), `CarouselStatus placement="overlay"` (o
- *   "3 de 6" sobre a foto), `CarouselThumbs orientation="vertical"` (as
- *   miniaturas ao lado da foto a partir de `md`) e `CarouselFullscreen` (a
- *   galeria num `Dialog` de tela cheia, que devolve o índice ao fechar).
+ * - `controls="inside"` (padrão): as setas pousam dentro da caixa, sobre as
+ *   bordas do viewport; `outside` reserva a própria calha (o `-left-12` do
+ *   shadcn fazia o componente exigir sala do pai, que recortava ou rolava as
+ *   setas). `card` e `inset` forçam `inside`: a raiz passa a pintar e uma seta
+ *   fora flutuaria fora da superfície.
+ * - As setas crescem por pseudo-elemento no toque (`pointer-coarse:after:-inset-2.5`),
+ *   seguro porque ficam em pontas opostas; os pontos de `CarouselDots`
+ *   crescem de verdade, por serem alvos adjacentes.
+ * - A região tem `aria-label` padrão em pt-BR, e cada item é um grupo rotulado
+ *   com posição e total derivados pelo `CarouselContent`. O contexto publica
+ *   `selectedIndex`, `snapCount` e `scrollTo` (`CarouselDots`, `CarouselStatus`).
+ * - A dissolução reusa a rampa `scroll-fade-x`, mas `useScrollFade` não pode
+ *   dirigi-la: o embla translada o trilho e o viewport fica com `scrollLeft: 0`.
+ *   O motor daqui publica `--scroll-fade-start/end` a partir de
+ *   `api.scrollProgress()`, e a máscara vai no viewport. A zona é 6rem (o
+ *   triplo da do sistema, calibrada para glifo): o item é um `Card` com borda,
+ *   e um fio de 1px resiste (alfa de 31% a 2rem, 9,5% a 6rem). A variável herda
+ *   para a rampa sem afetar os outros consumidores.
+ * - O `variant` de superfície (`card`, `inset`) existe por decisão do dono, sem
+ *   contagem de uso; não declaram `overflow-hidden`, que cortaria o anel de
+ *   foco das setas.
+ * - A seta ancora em `--carousel-control-y`, escrito a partir da caixa medida do
+ *   viewport. Como a base do `Button` declara `transition-all`, toda remedição
+ *   virava uma viagem da seta: o layout effect do `CarouselContent` mata a da
+ *   primeira pintura e `CONTROL_TRANSITION` a das posteriores.
+ * - `effect` (`scale`, `spotlight`, `parallax`, `curve`, `fade`) lê só variáveis
+ *   que um driver escreve em cada slide; `loop`, `autoplay` (com
+ *   `CarouselPlayPause`), `bleed`, `layout="accordion"`, `until`, `snap="free"`,
+ *   `selectOnClick` e `wheel` (ligados) e as peças satélite moram neste arquivo.
+ * - A seta é `tertiary` (fundo no cursor e no toque, pelo par `active:`), e
+ *   `fade` é padrão porque sem preenchimento o glifo pousa direto sobre o
+ *   conteúdo e a rampa abre chão para ele.
+ * - `until`: o embla desliga por breakpoint (`active: false`), o trilho vira
+ *   grade e setas, pontos, contagem e barra somem. `selectOnClick`: o item
+ *   cortado, clicado, vem para a vista antes de agir (o clique é engolido em
+ *   captura). `wheel`: o gesto horizontal passa um item por gesto, e o passo trava
+ *   até 160ms de silêncio por causa da inércia do trackpad; o ouvinte é nativo
+ *   com `passive: false` (o do React é passivo, e o Chrome do Mac leria o
+ *   gesto como "voltar"). `effect="fade"` força `gap="none"` e tira a rampa.
  */
 
 type CarouselApi = UseEmblaCarouselType[1]
@@ -308,25 +159,14 @@ const ROTULO_PADRAO = "Carrossel"
 const DEFAULT_GAP: CarouselGap = "md"
 
 /**
- * A superfície da raiz, e a calha das setas.
- *
- * Ela é quem pinta — o viewport carrega a máscara e por isso não desenha nada
- * (invariante 2 de `scroll-fade-classes`).
- *
- * **`outside` reserva a própria calha.** É aqui que o defeito desta rodada se
- * fecha de verdade: na versão antiga o modo "seta fora" punha o botão a
- * `-left-12` e ia buscar 48px no pai, que ninguém tinha prometido. Hoje a raiz
- * declara a calha e a seta pousa em `left-0`, então o componente **nunca**
- * desenha fora da própria caixa, em nenhum dos três modos. A medida da calha
- * está nos `compoundVariants`, com o motivo.
- *
- * `orientation` é eixo do `cva` pela mesma razão: a calha do modo vertical é
- * `py`, e o par só se resolve por `compoundVariants`.
+ * A superfície da raiz e a calha das setas. A raiz é quem pinta (o viewport
+ * carrega a máscara e não desenha nada). `outside` reserva a própria calha, e a
+ * seta pousa em `left-0`: o componente nunca desenha fora da própria caixa.
+ * `orientation` é eixo do `cva` porque a calha do vertical é `py`.
  */
-// As duas âncoras nascem em 50%, e isso é o **estado do HTML do servidor**, antes
-// de existir caixa para medir. É uma aproximação da *raiz*, não do trilho: onde a
-// raiz carrega pontos ou contagem, os dois diferem. Na hidratação o layout effect
-// do `CarouselContent` corrige antes da primeira pintura do cliente.
+// As duas âncoras nascem em 50% (o estado do HTML do servidor, uma aproximação
+// da raiz e não do trilho); o layout effect do `CarouselContent` corrige antes
+// da primeira pintura do cliente.
 const carouselVariants = cva("group/carousel relative [--carousel-control-x:50%] [--carousel-control-y:50%]", {
   variants: {
     variant: {
@@ -338,17 +178,9 @@ const carouselVariants = cva("group/carousel relative [--carousel-control-x:50%]
     orientation: { horizontal: "", vertical: "" },
   },
   compoundVariants: [
-    // A calha é **a seta mais um respiro**, e não um número herdado.
-    //
-    // Ela era `px-12` (48), que veio do `-left-12` do shadcn e que eu preservei
-    // por fidelidade à distância antiga. Medido, aquilo deixava **20px de fundo
-    // puro** entre a borda de dentro da seta (28) e o começo do conteúdo (48) —
-    // e como a dissolução mora na borda do viewport, ela nascia depois desse
-    // vão. A seta lia como solta, e não como parte da tira que ela controla.
-    //
-    // 36 = 28 do botão + 8, que é `--space-inline`: a distância que esta casa
-    // usa **dentro** de um bloco. A seta e o trilho são o mesmo bloco, então a
-    // dissolução passa a encostar nela, como já acontece em `inside`.
+    // A calha é a seta mais um respiro: 36 = 28 do botão + 8 (`--space-inline`).
+    // Com `px-12` ficavam 20px de fundo puro entre a seta e o conteúdo, e a
+    // seta lia como solta da tira que ela controla.
     { controls: "outside", orientation: "horizontal", class: "px-9" },
     { controls: "outside", orientation: "vertical", class: "py-9" },
   ],
@@ -360,16 +192,9 @@ const carouselVariants = cva("group/carousel relative [--carousel-control-x:50%]
 })
 
 /**
- * A calha entre itens, por degrau e por eixo.
- *
- * Escrita **literal**, e não montada a partir de um número: o Tailwind varre o
- * código como texto, e a armadilha já pegou a mesma pessoa que a escreveu na
- * rodada do `Tabs` — `pointer-coarse:${…}` estava no elemento e não existia na
- * folha.
- *
- * A calha é margem negativa no trilho mais recuo no item, e não `gap` no flex,
- * porque `gap` entraria na conta de `basis-*`: com `basis-1/2` e um `gap`, dois
- * itens deixam de caber em 100%.
+ * A calha entre itens, por degrau e por eixo, escrita literal (o Tailwind varre
+ * o código como texto). É margem negativa no trilho mais recuo no item, e não
+ * `gap`, que entraria na conta de `basis-*`.
  */
 const GAP_CLASSES = {
   horizontal: {
@@ -390,22 +215,11 @@ const GAP_CLASSES = {
 >
 
 /**
- * Onde a seta pousa. Nos dois modos ela fica **dentro** da caixa da raiz: em
- * `inside`, sobre a borda do viewport; em `outside`, dentro da calha que o
- * `cva` acima reserva. Nenhuma coordenada é negativa — foi o defeito.
- *
- * ## Ela se centra no viewport, e não na raiz
- *
- * `top-1/2` parece a resposta e não é: a raiz **também contém os pontos e a
- * contagem**, então metade dela fica abaixo do meio do trilho. Medido, com um
- * `CarouselDots` no telefone: raiz 131, viewport 75, e a seta saindo **28px
- * abaixo do centro** — com a borda de baixo dela já **fora** do viewport.
- *
- * Por isso a âncora é `--carousel-control-y`, que o `CarouselContent` escreve
- * a partir da caixa medida do viewport. O padrão declarado no `cva` é `50%`,
- * então antes da medição o comportamento é o de `top-1/2` e não há salto — a
- * mesma ideia do gatilho do `Tabs`, que se pinta sozinho enquanto o marcador
- * não tem caixa para medir.
+ * Onde a seta pousa: sempre dentro da caixa da raiz, em nenhuma coordenada
+ * negativa. Ela se centra no viewport e não na raiz (`top-1/2` ignora os pontos
+ * e a contagem que a raiz também contém), por isso a âncora é
+ * `--carousel-control-y`, escrita a partir da caixa medida; o padrão `50%`
+ * evita salto antes da medição.
  */
 const CONTROL_POSITION = {
   inside: {
@@ -431,86 +245,35 @@ const CONTROL_POSITION = {
 } as const
 
 /**
- * O alvo de dedo das setas, por pseudo-elemento, sem mexer na caixa. Seguro
- * aqui porque as duas ficam em pontas opostas — ver o cabeçalho.
- *
- * **A conta não é `28 + 2×inset`, e isso foi medido.** O bloco que contém um
- * absoluto é a **caixa de padding** do ancestral posicionado, não a de borda:
- * o `Button` tem 1px de borda, então a base são **26**, e não 28. Com
- * `-inset-2` o alvo sai **42×42** — medido, `getComputedStyle(seta,"::after")`
- * devolve `42px`.
- *
- * Por isso o degrau é `2.5`: 26 + 2×10 = **46**, e 44 é piso, não teto. Os 2px
- * a mais não custam nada num controle sem vizinho.
- *
- * As três ocorrências que esta casa já tinha carregavam o mesmo desconto e
- * afirmavam 44 nos comentários. As três foram pagas: o `PageHeaderBack` (32
- * com `-inset-2` → 46), o × da `AnnouncementBar` (`-inset-3`) e os degraus do
- * `Breadcrumb` (`-inset-y-3`, que só crescem na altura, porque são vizinhos).
+ * O alvo de dedo das setas, por pseudo-elemento. O bloco que contém um absoluto
+ * é a caixa de padding, e o `Button` tem 1px de borda, então a base são 26 e não
+ * 28: com `-inset-2.5` o alvo sai 26 + 2×10 = 46 (44 é piso).
  */
 const CONTROL_TOUCH_TARGET =
   "pointer-coarse:after:absolute pointer-coarse:after:-inset-2.5 pointer-coarse:after:content-['']"
 
 /**
- * A lista é escrita à mão porque a distinção é o ponto: **`translate` transiciona,
- * `top` não.**
- *
- * `top` é ancorado numa variável que o JS mede, e a base do `Button` declara
- * `transition-all`: com ela, toda remedição virava uma **animação** da seta
- * atravessando o cartão. Medido — trocando a variável, a seta ainda estava na
- * origem um quadro depois e só assentava 300ms adiante.
- *
- * Mas trocar por `transition-colors` matava junto o **press**, que é feedback
- * legítimo e que esta seta deve ter como qualquer botão. Os dois convivem porque
- * são propriedades diferentes: a âncora medida mexe em `top` e salta; o press
- * mexe em `translate` e desliza.
- *
- * Enumerar é obrigatório — `transition-all` traria `top` de volta, e
- * `transition-colors` não alcança `translate`. É o mesmo idioma de
- * `transition-[rotate,translate,color]` em `disclosure-classes` e de
- * `transition-[translate,width,height]` no marcador do `Tabs`. E, sendo o mesmo
- * grupo no `twMerge`, esta classe **substitui** a da base em vez de disputar com
- * ela.
+ * A lista de `transition` é escrita à mão: `translate` transiciona e `top` não.
+ * `top` sai de uma variável medida por JS e a base do `Button` declara
+ * `transition-all`, o que animava cada remedição; `transition-colors` mataria o
+ * press. Enumerar é obrigatório, e como é o mesmo grupo no `twMerge` esta
+ * classe substitui a da base.
  */
 const CONTROL_TRANSITION =
   "transition-[color,background-color,border-color,translate]"
 
 /**
- * O afundamento de press **compõe** com a centragem, em vez de substituí-la.
- *
- * A seta tem o mesmo feedback de clique que qualquer botão da casa — 1px para
- * baixo, com a mesma curva. O que ela não pode é herdá-lo cru, e a razão é uma
- * colisão de propriedade, não de gosto.
- *
- * No Tailwind v4 `translate` é propriedade independente, e `-translate-y-1/2` e
- * `active:translate-y-px` escrevem a **mesma** custom property. Verificado no CSS
- * emitido:
- *
- * ```
- * .-translate-y-1\/2        { --tw-translate-y: calc(calc(1 / 2 * 100%) * -1) }
- * .active\:translate-y-px   { &:active { --tw-translate-y: 1px } }
- * ```
- *
- * `.classe:active` é (0,2,0) contra os (0,1,0) da centragem, então ao apertar a
- * seta ia de **−14px para +1px — 15px para baixo**, perdendo a centragem inteira.
- *
- * A saída é somar as duas na **mesma declaração** — `calc(-50% + 1px)` —, e
- * entregá-la pelo **`twMerge` e não por especificidade**: mesma família de
- * utilitário sob o mesmo variante, então esta classe **remove**
- * `active:translate-y-px` da lista em vez de disputar com ela por ordem de
- * emissão, que é o que esta base já registra como decidido "pela ordem do
- * Tailwind e não pelo que se escreveu".
- *
- * O afundamento continua existindo, com a mesma medida do `Button`; o que ele
- * deixou de fazer é apagar a centragem no caminho.
+ * O afundamento de press compõe com a centragem em vez de substituí-la:
+ * `-translate-y-1/2` e `active:translate-y-px` escrevem a mesma custom property
+ * (`--tw-translate-y`), e `.classe:active` (0,2,0) vence a centragem — ao apertar
+ * a seta cairia 15px. A saída é somar as duas na mesma declaração
+ * (`calc(-50% + 1px)`) e entregá-la pelo `twMerge`, que remove o
+ * `active:translate-y-px` da base.
  */
 const CONTROL_PRESS_FIX = {
-  // A centragem e o afundamento somados na mesma declaração. O `-50%` é a
-  // centragem, o `1px` é o mesmo degrau que o `Button` usa — o que muda é que
-  // aqui eles **compõem** em vez de um apagar o outro.
+  // A centragem (`-50%`) e o afundamento (`1px`, o degrau do `Button`) somados na mesma declaração.
   horizontal: "active:translate-y-[calc(-50%_+_1px)]",
-  // Na vertical a centragem é em X, então o `active:translate-y-px` da base não
-  // colide com nada e já é exatamente o afundamento certo.
+  // Na vertical a centragem é em X, então o `active:translate-y-px` da base não colide.
   vertical: "",
 } as const
 
@@ -523,44 +286,19 @@ type CarouselProps = {
   controls?: CarouselControls
   /** A calha entre itens. */
   gap?: CarouselGap
-  /**
-   * Dissolve as duas pontas do viewport conforme o trilho anda. **Padrão.**
-   *
-   * Ela é o que torna a seta sem fundo legível: sem preenchimento o glifo pousa
-   * direto sobre o conteúdo, e a rampa é o que abre chão para ele nas duas
-   * pontas. Continua sendo prop para quem precisar desligar, e não custa nada
-   * quando não há transbordo — o motor só liga `data-scroll-fade` nesse caso.
-   */
+  /** Dissolve as duas pontas do viewport conforme o trilho anda. Padrão: é o que abre chão para a seta sem fundo; o motor só liga `data-scroll-fade` quando há transbordo. */
   fade?: boolean
   /** Volta ao começo depois do último. `spotlight` liga por padrão. */
   loop?: boolean
-  /**
-   * O movimento dos itens conforme se afastam do centro. `spotlight` também
-   * centraliza (`align: "center"`) e liga o `loop`.
-   */
+  /** O movimento dos itens conforme se afastam do centro; `spotlight` também centraliza e liga o `loop`. */
   effect?: CarouselEffect
-  /**
-   * Rotação automática, em milissegundos. Só em conteúdo editorial, nunca
-   * sobre dado da pessoa. Pausa sob o cursor, com foco dentro, com a aba
-   * escondida e pelo `CarouselPlayPause`; com movimento reduzido nasce pausada.
-   */
+  /** Rotação automática, em ms. Só em conteúdo editorial, nunca sobre dado da pessoa; pausa sob o cursor, com foco dentro, com a aba escondida e pelo `CarouselPlayPause`; com movimento reduzido nasce pausada. */
   autoplay?: number
-  /**
-   * De borda a borda: sem dissolução, e a raiz sangra a calha da casca
-   * (`-mx-4 md:-mx-6`, os números do `Container gutter="page"`), com o
-   * primeiro item alinhado ao conteúdo.
-   */
+  /** De borda a borda: sem dissolução, e a raiz sangra a calha da casca (`-mx-4 md:-mx-6`), com o primeiro item alinhado ao conteúdo. */
   bleed?: boolean
-  /**
-   * `accordion`: os itens ficam lado a lado, colapsados, e o selecionado abre.
-   * O embla fica inativo — o índice é do contexto, e setas, pontos, passos e
-   * teclado funcionam iguais porque leem dele.
-   */
+  /** `accordion`: itens colapsados lado a lado, o selecionado abre; o embla fica inativo e o índice é do contexto. */
   layout?: CarouselLayout
-  /**
-   * Carrossel só abaixo do degrau: a partir dele, grade, sem setas nem
-   * pontos. O caso da tira de cartões que no desktop cabe inteira.
-   */
+  /** Carrossel só abaixo do degrau; a partir dele, grade sem setas nem pontos. */
   until?: CarouselUntil
   /** `free`: arraste livre, com inércia, parando onde o dedo soltar. */
   snap?: "item" | "free"
@@ -637,12 +375,10 @@ function Carousel({
   ...props
 }: React.ComponentProps<"div"> &
   CarouselProps &
-  // Só o eixo de superfície vem do `cva`. `controls` e `orientation` são props
-  // de verdade, com padrão e com precedência própria — herdá-los de
-  // `VariantProps` os deixaria anuláveis e duplicaria o padrão em dois lugares.
+  // Só o eixo de superfície vem do `cva`: `controls` e `orientation` são props
+  // com padrão e precedência próprias.
   Pick<VariantProps<typeof carouselVariants>, "variant">) {
-  // Uma superfície pintada não tem controle flutuando fora dela. Precedência
-  // explícita, como `scrollable` vencendo `stretch` no `Tabs`.
+  // Uma superfície pintada não tem controle flutuando fora dela.
   const controls: CarouselControls =
     variant === "plain" ? (controlsProp ?? "inside") : "inside"
 
@@ -658,8 +394,7 @@ function Carousel({
 
   const [carouselRef, api] = useEmblaCarousel(
     {
-      // 32 e não os 25 do embla: a transição entre itens lia apressada, e a
-      // curva do embla é física — a duração é o que a deixa assentar.
+      // 32 e não os 25 do embla: a duração é o que deixa a curva física assentar.
       duration: 32,
       ...(effect === "spotlight" && { align: "center" as const }),
       ...(loopEfetivo !== undefined && { loop: loopEfetivo }),
@@ -711,8 +446,7 @@ function Carousel({
     : canScrollNext
   const contagem = acordeao ? total : snapCount
 
-  // A rotação avança e, no fim sem `loop`, volta ao começo — senão ela
-  // pararia calada no último item com o relógio ainda desenhado.
+  // A rotação avança e, no fim sem `loop`, volta ao começo; senão pararia calada no último item com o relógio ainda desenhado.
   const avancar = React.useCallback(() => {
     if (podeSeguinte) scrollNext()
     else scrollTo(0)
@@ -731,8 +465,7 @@ function Carousel({
       if (alvo.closest("input, textarea, select, [contenteditable=''], [contenteditable='true']")) return
       // Na grade não há para onde andar, e a seta é do navegador.
       if (naGrade(until)) return
-      // A seta segue o eixo. Antes eram sempre as horizontais, inclusive num
-      // carrossel vertical, onde a tecla certa não fazia nada.
+      // A seta segue o eixo (num carrossel vertical as horizontais não faziam nada).
       const anterior = orientation === "horizontal" ? "ArrowLeft" : "ArrowUp"
       const seguinte = orientation === "horizontal" ? "ArrowRight" : "ArrowDown"
 
@@ -803,8 +536,7 @@ function Carousel({
     api.on("slidesChanged", onSelect)
 
     return () => {
-      // `reInit` e `slidesChanged` ficavam inscritos para sempre: a limpeza
-      // antiga desinscrevia só o `select`.
+      // A limpeza desinscreve também `reInit` e `slidesChanged`, não só o `select`.
       api.off("reInit", onSelect)
       api.off("select", onSelect)
       api.off("slidesChanged", onSelect)
@@ -900,13 +632,8 @@ function Carousel({
 }
 
 /**
- * O viewport e o trilho.
- *
- * `className` vai no **trilho**, que é onde `basis-*` e a calha operam;
- * `viewportClassName` vai na caixa que recorta. Os dois existem porque o
- * `data-slot` fica no viewport e quem escrevia `className` não dimensionava o
- * que via — o mesmo defeito que o `SearchInput` pagou e resolveu com
- * `inputClassName`.
+ * O viewport e o trilho. `className` vai no trilho (onde operam `basis-*` e a
+ * calha) e `viewportClassName` na caixa que recorta (onde fica o `data-slot`).
  */
 function CarouselContent({
   className,
@@ -929,33 +656,20 @@ function CarouselContent({
   const viewportRef = React.useRef<HTMLDivElement | null>(null)
   const acordeao = layout === "accordion"
 
-  // A âncora das setas é o **centro do viewport**, e não o da raiz — que também
-  // carrega os pontos e a contagem. Ver a nota em `CONTROL_POSITION`: sem isto,
-  // medido, a seta saía 28px abaixo e com a borda fora do trilho.
-  //
-  // Um `ResizeObserver` e não uma leitura no render: a altura só existe depois
-  // do layout. É o mecanismo de `useScrollFade` e do marcador do `Tabs`.
-  //
-  // E **layout effect**, não `useEffect`: com o efeito depois da pintura, o
-  // cliente chegava a pintar o palpite de `50%` do `cva` — que resolve contra a
-  // **raiz**, e não contra o trilho — e a seta viajava dali até o valor medido.
-  // Medido na demonstração padrão: raiz 111px, logo 50% = 55, contra os 37,5 do
-  // centro do trilho. Dezessete pixels e meio de viagem, animados pelo
-  // `transition-all` da base do `Button`. Os dois consertos são independentes:
-  // este mata a viagem da primeira pintura, e `CONTROL_TRANSITION` mata a das
-  // remedições posteriores, que efeito nenhum alcança.
+  // A âncora das setas é o centro do viewport, não o da raiz (que também carrega
+  // pontos e contagem; ver `CONTROL_POSITION`). Um `ResizeObserver` porque a
+  // altura só existe depois do layout, e um layout effect porque com o efeito
+  // depois da pintura o cliente pintava o palpite de `50%` (que resolve contra a
+  // raiz) e a seta viajava até o valor medido; `CONTROL_TRANSITION` mata a
+  // viagem das remedições posteriores.
   React.useLayoutEffect(() => {
     const node = viewportRef.current
     const raiz = node?.closest<HTMLElement>("[data-slot=carousel]")
     if (!node || !raiz) return
 
-    // `offsetTop`/`offsetLeft` e não `getBoundingClientRect`: o bloco que
-    // contém um absoluto é a **caixa de padding** da raiz, que desconta a
-    // borda mas **não** o recuo — e `offsetTop` é medido a partir dessa mesma
-    // caixa. Só a metade da altura não basta: em `card` e `inset` o `p-3`
-    // empurra o viewport 12px para baixo enquanto o `top` continua contando do
-    // topo, e a seta saía **11px acima** do centro (medido, nas duas). É a
-    // mesma escolha que o marcador do `Tabs` registra pelo mesmo motivo.
+    // `offsetTop`/`offsetLeft` e não `getBoundingClientRect`: o bloco que contém
+    // um absoluto é a caixa de padding da raiz, que desconta a borda mas não o
+    // recuo (em `card` e `inset` o `p-3` empurra o viewport 12px).
     const medir = () => {
       raiz.style.setProperty(
         "--carousel-control-y",
@@ -973,8 +687,7 @@ function CarouselContent({
     return () => observer.disconnect()
   }, [])
 
-  // A rampa é a do sistema; o motor é daqui, porque o embla translada o trilho
-  // e o `scrollLeft` do viewport nunca sai de zero. Ver o cabeçalho.
+  // A rampa é a do sistema; o motor é daqui, porque o embla translada o trilho e o `scrollLeft` do viewport nunca sai de zero.
   React.useEffect(() => {
     const node = viewportRef.current
     if (!api || !fade || !node) return
@@ -1013,15 +726,10 @@ function CarouselContent({
     }
   }, [api, fade, orientation])
 
-  // **O driver dos efeitos.** Um só, para os quatro: ele escreve em cada slide a
-  // distância ao ponto de encaixe atual, em passos — `--carousel-slide-s` com
-  // sinal (direita positiva) e `--carousel-slide-d` sem —, e o CSS decide o que
-  // fazer com ela (`@utility carousel-effect-*`). É o método do exemplo de
-  // tween do próprio embla, inclusive o desvio do `loop`: um slide reposto na
-  // outra ponta pelo `slideLooper` mede a distância pelo lado de lá.
-  //
-  // Nada transiciona: a variável muda a cada quadro de rolagem, e quem suaviza
-  // é o próprio embla.
+  // O driver dos efeitos: escreve em cada slide a distância ao encaixe atual, em
+  // passos (`--carousel-slide-s` com sinal, `-d` sem), e o CSS decide o que fazer
+  // (`@utility carousel-effect-*`). É o método do tween do embla, inclusive o
+  // desvio do `loop`. Nada transiciona: quem suaviza é o embla.
   React.useEffect(() => {
     if (!api || effect === "none" || acordeao) return
 
@@ -1070,9 +778,7 @@ function CarouselContent({
     }
   }, [api, effect, acordeao])
 
-  // A posição do item é derivada por quem a conhece — o contêiner —, e não
-  // escrita à mão em cada item. É o que a `BreadcrumbList` fez ao assumir os
-  // separadores e o `Stepper` ao derivar o `isLast`.
+  // A posição do item é derivada pelo contêiner, que a conhece, e não escrita à mão em cada item.
   const itens = React.Children.toArray(children).filter(React.isValidElement)
   const total = itens.length
 
@@ -1089,17 +795,11 @@ function CarouselContent({
       // nada — invariante 2 de `scroll-fade-classes`.
       className={cn(
         "overflow-hidden",
-        // O triplo da zona do sistema — ver o cabeçalho.
+        // O triplo da zona do sistema (ver o cabeçalho).
         fade && "[--scroll-fade-x-h:--spacing(24)]",
-        // A rampa segue o eixo. Cravar a horizontal aqui foi um defeito real:
-        // um carrossel vertical saía dissolvendo as bordas **laterais**,
-        // enquanto o conteúdo entrava e saía por cima e por baixo. As duas
-        // utilities leem as mesmas `--scroll-fade-start/end` que o motor
-        // publica — muda só o eixo do gradiente e o teto do clamp (44px na
-        // vertical, 32 na horizontal), então o driver não precisou mudar.
-        //
-        // E é uma **ou** a outra, nunca as duas: a invariante 3 de
-        // `scroll-fade-classes` é um gradiente por elemento.
+        // A rampa segue o eixo (cravar a horizontal dissolvia as bordas laterais
+        // de um carrossel vertical). É uma ou outra, nunca as duas: a invariante
+        // 3 de `scroll-fade-classes` é um gradiente por elemento.
         fade &&
           (orientation === "horizontal"
             ? scrollFadeViewportXClassName
@@ -1114,18 +814,11 @@ function CarouselContent({
       <div
         className={cn(
           "flex",
-          // `h-full` na vertical é **carga estrutural**, e foi medido.
-          //
-          // O embla mede o **contêiner** (este trilho) para achar o
-          // comprimento do eixo, e não o viewport. Com a altura só no viewport
-          // o trilho cresce até o conteúdo — medido, viewport 160 e trilho 362
-          // —, o embla conclui que tudo cabe e **desabilita as duas setas**,
-          // com o conteúdo transbordando calado. Com `h-full` o trilho passa a
-          // medir o viewport, e aí `basis-1/2` também volta a significar
-          // metade do que se vê.
-          //
-          // É por isso que a altura de um carrossel vertical vai em
-          // `viewportClassName`, e não aqui.
+          // `h-full` na vertical é estrutural: o embla mede o contêiner (este
+          // trilho) para achar o comprimento do eixo, e com a altura só no
+          // viewport o trilho cresce até o conteúdo, o embla conclui que tudo
+          // cabe e desabilita as setas. Por isso a altura de um carrossel
+          // vertical vai em `viewportClassName`.
           orientation === "horizontal" ? "" : "h-full flex-col",
           // O acordeão estica os itens na altura do viewport — a altura dele é
           // de quem chama, em `viewportClassName`.
@@ -1154,12 +847,9 @@ function CarouselContent({
 }
 
 /**
- * A resposta ao cursor, no **filho** do item e não nele: o item carrega a
- * calha (`pl-*`), e uma sombra nele contornaria a calha junto.
- *
- * `lift` e `zoom` não combinam com `effect="curve"` nem `"parallax"`: os dois
- * efeitos também escrevem `translate`/`scale`, e a transição do cursor
- * arrastaria o valor que o driver escreve a cada quadro.
+ * A resposta ao cursor, no filho do item e não nele (o item carrega a calha).
+ * `lift` e `zoom` não combinam com `effect="curve"` nem `"parallax"`, que
+ * também escrevem `translate`/`scale`.
  */
 const ITEM_HOVER = {
   none: "",
@@ -1201,10 +891,9 @@ function CarouselItem({
   const acordeao = layout === "accordion"
   const selecionado = index === selectedIndex
 
-  // O item cortado na borda vem para a vista **antes de agir**: o clique é
-  // engolido em captura, e o embla rola até o encaixe que contém o item. No
-  // `spotlight` e no `curve` a régua é ser o central, e não estar inteiro.
-  // Arrasto não chega aqui: o embla 8 cancela o clique que termina um arrasto.
+  // O item cortado na borda vem para a vista antes de agir: o clique é engolido
+  // em captura e o embla rola até o encaixe que contém o item (no `spotlight`
+  // e no `curve` a régua é ser o central). Arrasto não chega aqui.
   const trazerParaVista = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!selectOnClick || acordeao || effect === "fade" || !api || naGrade(until)) return
     const encaixe = api
@@ -1280,14 +969,8 @@ function CarouselItem({
 function CarouselControl({
   direction,
   className,
-  // `tertiary` nos dois modos: nada em repouso, fundo só no cursor e no toque.
-  //
-  // É convergência, e não exceção. Das três famílias de seta da casa, o
-  // `Calendar` e a `Pagination` já são `tertiary` + `rounded-lg`; esta era **a
-  // única seta `rounded-full` do repositório e a única com fundo em repouso**.
-  //
-  // Não há mais `defaultControlVariant`: com um peso só, uma função que escolhe
-  // entre dois pesos é uma constante disfarçada. `controls` decide só a posição.
+  // `tertiary` nos dois modos: nada em repouso, fundo só no cursor e no toque,
+  // como as setas do `Calendar` e da `Pagination`. `controls` decide só a posição.
   variant = "tertiary",
   size = "icon-sm",
   placement = "overlay",
@@ -1315,8 +998,7 @@ function CarouselControl({
     canScrollNext,
   } = useCarousel()
 
-  // `none` esconde as setas **sobrepostas**; as de uma barra são pedidas à
-  // mão, e quem as pôs lá quer vê-las.
+  // `none` esconde as setas sobrepostas; as de uma barra são pedidas à mão.
   if (controls === "none" && placement === "overlay") return null
   const sobreposta = placement === "overlay"
 
@@ -1336,35 +1018,24 @@ function CarouselControl({
       variant={appearance === "solid" ? "secondary" : variant}
       size={size}
       className={cn(
-        // Sem `rounded-full` no padrão: o raio é o do `Button` (`rounded-lg`,
-        // 10px), que é o que `Calendar` e `Pagination` já entregam nas setas.
+        // Sem `rounded-full` no padrão: o raio é o do `Button`, como no `Calendar` e na `Pagination`.
         sobreposta && "absolute",
         ESCONDE_NA_GRADE,
         CONTROL_TRANSITION,
         sobreposta && CONTROL_POSITION[controls === "none" ? "inside" : controls][orientation][direction],
         sobreposta && CONTROL_PRESS_FIX[orientation],
-        // Na barra as setas são vizinhas: o alvo cresce de verdade, porque um
-        // `::after` de 46px engoliria a do lado — a razão dos pontos.
+        // Na barra as setas são vizinhas: o alvo cresce de verdade (um `::after` de 46px engoliria a do lado).
         sobreposta ? CONTROL_TOUCH_TARGET : "pointer-coarse:size-11",
         // Sobre foto, a placa é a tinta flutuante (`background-color`) e o
-        // realce do `tertiary` é o disco (`background-image`): propriedades
-        // diferentes, que compõem em vez de disputar.
+        // realce do `tertiary` é `background-image`: compõem em vez de disputar.
         appearance === "glass" &&
           cn(menuPanelTintClassName, "rounded-full shadow-sm ring-1 ring-foreground/10"),
         appearance === "solid" && "rounded-full shadow-xs",
-        // Redonda, apagada em vez de sumir: numa foto ou numa barra, a seta que
-        // some faz a moldura piscar a cada ponta.
+        // Redonda, apagada em vez de sumir: numa foto ou barra a seta que some faz a moldura piscar.
         appearance !== "tertiary" && "disabled:opacity-30",
-        // Em `inside` a seta pousa **sobre** o conteúdo, e desabilitada ela não
-        // faz nada: no início do trilho a seta anterior ficava por cima do
-        // primeiro item, que é o único que está inteiro na tela — medido, o
-        // botão cobria o "R$" de um valor. Um controle morto tapando conteúdo
-        // vivo é pior que um controle ausente.
-        //
-        // `invisible` e não `hidden`: ela é absoluta, então não há refluxo a
-        // evitar, mas manter a caixa deixa a medição do alvo estável. Em
-        // `outside` ela continua visível — lá existe calha reservada, e um
-        // botão sumindo faria a moldura piscar a cada ponta.
+        // Em `inside` a seta pousa sobre o conteúdo, e desabilitada tapava o
+        // primeiro item inteiro; `invisible` (e não `hidden`) mantém a caixa e a
+        // medição do alvo. Em `outside` fica visível, na calha reservada.
         sobreposta && appearance === "tertiary" && controls === "inside" && "disabled:invisible",
         className
       )}
@@ -1391,16 +1062,9 @@ function CarouselNext(
 }
 
 /**
- * O indicador de posição.
- *
- * O alvo **cresce de verdade**, e não por pseudo-elemento: o `pagination.tsx`
- * já recusou o `-inset` pelo motivo que vale aqui — alvos pequenos e
- * adjacentes se sobrepõem, e um `::after` de 44px em cada ponto engoliria o
- * vizinho. O botão *é* a área de toque, e o ponto é o filho que ele centraliza.
- *
- * O ativo é `bg-primary-accent`: marca sobre o fundo, que é a régua da casa
- * para o traço que precisa ser enxergado contra a página — `--primary` é o que
- * preenche e carrega texto por cima.
+ * O indicador de posição. O alvo cresce de verdade e não por pseudo-elemento
+ * (como no `pagination.tsx`): alvos adjacentes se sobreporiam. O ativo é
+ * `bg-primary-accent`, a marca sobre o fundo.
  */
 function CarouselDots({
   className,
@@ -1476,18 +1140,10 @@ function CarouselDots({
                 "relative overflow-hidden rounded-full",
                 "transition-[background-color,width] duration-(--duration-spring) ease-(--ease-spring)",
                 barra ? "h-1 w-full" : cn("h-2", pilula && ativo ? "w-6" : "w-2"),
-                // O ponto apagado também é um controle, e a 1.4.11 pede 3:1.
-                // Varridos os degraus contra o fundo real nos dois temas, **45%
-                // é o primeiro que passa nos dois** — 3,15 no claro e 4,36 no
-                // escuro, contra 1,78 e 2,22 dos 25% que estavam aqui. O ativo
-                // é `--primary-accent`: 7,66 e 6,14.
-                //
-                // **Sobre foto a tinta é a do véu** (`--scrim-foreground`,
-                // branca nos dois temas): o `--foreground` do tema claro é
-                // quase preto, e some numa foto escura.
-                //
-                // Os degraus são literais, e não montados: o Tailwind varre o
-                // código como texto.
+                // O ponto apagado também é controle e a 1.4.11 pede 3:1; 45% é o
+                // primeiro degrau que passa nos dois temas. Sobre foto a tinta é
+                // a do véu (`--scrim-foreground`, branca nos dois temas). Os
+                // degraus são literais: o Tailwind varre o código como texto.
                 sobreFoto
                   ? ativo
                     ? relogio
@@ -1518,22 +1174,14 @@ function CarouselDots({
   )
 }
 
-/**
- * "3 de 12" — e **é** a região viva que a APG pede para o carrossel.
- *
- * `role="status"` sozinho: o papel já implica `aria-live="polite"`, e declarar
- * os dois é a contradição que o `FormError` registra.
- */
+/** "3 de 12", a região viva que a APG pede para o carrossel. `role="status"` sozinho: já implica `aria-live="polite"`. */
 function CarouselStatus({
   className,
   children,
   placement = "below",
   ...props
 }: React.ComponentProps<typeof Caption> & {
-  /**
-   * `overlay`: a pílula de vidro no canto de cima da foto — a tinta
-   * flutuante, que segue o tema, com o texto do corpo por cima.
-   */
+  /** `overlay`: a pílula de vidro no canto de cima da foto, na tinta flutuante. */
   placement?: "below" | "overlay"
 }) {
   const { selectedIndex, snapCount, autoplay } = useCarousel()
@@ -1564,13 +1212,8 @@ function CarouselStatus({
 }
 
 /**
- * A barra de controles — o lugar das setas `placement="inline"`, e também dos
- * pontos, da contagem e do `CarouselPlayPause`.
- *
- * Ela não se posiciona: é quem a põe que decide. No `actions` de um
- * `PageSectionHeader` dentro do `Carousel` ela vira as setas do topo, à
- * direita do título; depois do conteúdo, as de baixo; com `align="center"` e
- * os pontos entre as setas, a barra de depoimento.
+ * A barra de controles: o lugar das setas `placement="inline"`, dos pontos, da
+ * contagem e do `CarouselPlayPause`. Não se posiciona; quem a põe decide.
  */
 function CarouselToolbar({
   className,
@@ -1594,12 +1237,8 @@ function CarouselToolbar({
 }
 
 /**
- * A legenda do item atual — título, texto e ação — fora do trilho.
- *
- * Ela remonta a cada troca (`key`) e entra com a `disclosure-reveal`, a mesma
- * cascata da divulgação: o texto sobe junto com o item que chegou, e não troca
- * de estalo. É a legenda com "Ler as notas" da referência do acordeão, e
- * serve qualquer versão.
+ * A legenda do item atual (título, texto e ação), fora do trilho. Remonta a
+ * cada troca (`key`) e entra com a `disclosure-reveal`.
  */
 function CarouselCaption({
   className,
@@ -1624,12 +1263,9 @@ function CarouselCaption({
 }
 
 /**
- * Pausar e retomar a rotação — obrigatório onde há `autoplay` (WCAG 2.2.2).
- *
- * O ícone diz o que o botão **faz**, e o rótulo também: pausa quando está
- * rodando, retoma quando o usuário pausou. As pausas automáticas (cursor,
- * foco, aba escondida) não mexem nele, senão o botão mudaria de sentido sob o
- * próprio cursor que foi apertá-lo.
+ * Pausar e retomar a rotação, obrigatório onde há `autoplay` (WCAG 2.2.2). O
+ * ícone e o rótulo dizem o que o botão faz; as pausas automáticas (cursor,
+ * foco, aba) não mexem nele, senão mudaria de sentido sob o cursor.
  */
 function CarouselPlayPause({
   className,
@@ -1660,25 +1296,11 @@ function CarouselPlayPause({
 }
 
 /**
- * Os passos nomeados de um carrossel — a navegação que diz **o que** vem, e
- * não só quantos.
- *
- * Duas referências do dono moram aqui: as pílulas numeradas no topo de uma
- * vitrine ("Step 1 · Step 2 · …") e a lista de serviços com o trilho à
- * esquerda, em que só o ativo mostra a descrição. São `orientation`
- * `horizontal` e `vertical` da mesma peça, porque as duas respondem à mesma
- * pergunta: escolher o item pelo nome.
- *
- * ## Botões com `aria-current`, e não abas
- *
- * O padrão de "carrossel com abas" da APG pede `tablist` com `tabpanel`, e
- * aqui os painéis são os slides do embla — `role="group"` com
- * `aria-roledescription="slide"`. Declarar `role="tab"` sem painel é a posse
- * ARIA quebrada que o `ButtonGroup` já registra; um grupo de botões com
- * `aria-current` diz a verdade.
- *
- * Tem de morar dentro de um `<Carousel>`: lê e escreve o índice do contexto,
- * então setas, pontos, teclado e autoplay andam juntos com ele.
+ * Os passos nomeados de um carrossel: pílulas numeradas (`horizontal`) ou lista
+ * com trilho à esquerda em que só o ativo mostra a descrição (`vertical`).
+ * Botões com `aria-current` e não abas: os painéis são os slides do embla
+ * (`role="group"`), e `role="tab"` sem painel quebra a posse ARIA. Lê e escreve
+ * o índice do contexto, então mora dentro de um `<Carousel>`.
  */
 type StepsContextValue = { orientation: "horizontal" | "vertical" }
 const StepsContext = React.createContext<StepsContextValue>({
@@ -1695,10 +1317,8 @@ function CarouselSteps({
   const listaRef = React.useRef<HTMLDivElement | null>(null)
   const [medido, setMedido] = React.useState(false)
 
-  // O marcador do trilho viaja até o passo ativo — a mecânica do `Tabs`: a
-  // caixa é medida (`offsetTop`/`offsetHeight`, relativos à lista) e escrita
-  // em variáveis, e o marcador transiciona para elas. Antes da primeira
-  // medição ele não transiciona, senão nasceria viajando do topo.
+  // O marcador do trilho viaja até o passo ativo (a mecânica do `Tabs`: caixa
+  // medida em variáveis); antes da primeira medição ele não transiciona.
   React.useLayoutEffect(() => {
     const lista = listaRef.current
     if (!lista || orientation !== "vertical") return
@@ -1803,8 +1423,7 @@ function CarouselStep({
             {label}
           </span>
           {description ? (
-            // A descrição abre só no ativo: `grid-rows` de 0fr a 1fr anima a
-            // altura sem medir nada, na mola da casa.
+            // A descrição abre só no ativo: `grid-rows` de 0fr a 1fr anima a altura sem medir.
             <span
               className={cn(
                 "grid transition-[grid-template-rows] duration-(--duration-spring) ease-(--ease-spring)",
@@ -1865,17 +1484,10 @@ function CarouselStep({
 }
 
 /**
- * A tira de miniaturas de uma galeria — a referência do skate: a imagem
- * grande em cima, e embaixo as miniaturas que a escolhem.
- *
- * É um **segundo embla**, livre (`dragFree`), sincronizado com o principal
- * nos dois sentidos pelo contexto do `Carousel`: escolher uma miniatura rola o
- * principal, e rolar o principal traz a miniatura ativa para a vista. Quem
- * põe as setas nas pontas é uma `CarouselToolbar` com `CarouselPrevious` e
- * `CarouselNext` em `placement="inline"`.
- *
- * Arrastar a tira não escolhe a miniatura em que o arrasto termina: o embla 8
- * cancela sozinho o clique que vem de um arrasto.
+ * A tira de miniaturas de uma galeria: um segundo embla, livre (`dragFree`),
+ * sincronizado com o principal nos dois sentidos pelo contexto. Arrastar a
+ * tira não escolhe a miniatura em que o arrasto termina (o embla 8 cancela o
+ * clique de um arrasto).
  */
 
 function CarouselThumbs({
@@ -1884,12 +1496,7 @@ function CarouselThumbs({
   children,
   ...props
 }: React.ComponentProps<"div"> & {
-  /**
-   * `vertical`: a coluna ao lado da foto, **a partir de `md`** — abaixo dele
-   * ela deita embaixo, porque uma coluna de 80px come a foto no telefone. O
-   * eixo troca pelo `breakpoints` do embla, e a coluna não mede nada
-   * (`contain: size`): quem dá a altura é a foto, na mesma linha da grade.
-   */
+  /** `vertical`: a coluna ao lado da foto a partir de `md` (abaixo, deita embaixo); a coluna não mede nada (`contain: size`) e a foto dá a altura. */
   orientation?: "horizontal" | "vertical"
 }) {
   const { selectedIndex } = useCarousel()
@@ -1918,8 +1525,7 @@ function CarouselThumbs({
       )}
       {...props}
     >
-      {/* O recuo dá lugar ao anel de foco e ao da seleção, que o recorte do
-            viewport cortaria rente à borda. */}
+      {/* O recuo dá lugar ao anel de foco e ao da seleção, que o recorte do viewport cortaria. */}
       <div className={cn("flex gap-2 p-1", vertical && "md:flex-col")}>{children}</div>
     </div>
   )
@@ -1963,14 +1569,10 @@ function CarouselThumb({
 }
 
 /**
- * A barra de rolagem da tira — quanto já passou, e quanto cabe de uma vez.
- *
- * É o indicador do arraste livre (`snap="free"`), onde pontos mentem: não há
- * "item 3" quando a tira para em qualquer lugar. O polegar tem a largura da
- * fração visível (viewport sobre trilho) e anda com `scrollProgress()` do
- * embla. Decorativa (`aria-hidden`): a posição falada é a do
- * `CarouselStatus`. Some quando tudo cabe. Horizontal, e sem `loop` — no
- * laço o progresso dá a volta e o polegar saltaria de uma ponta à outra.
+ * A barra de rolagem da tira, o indicador do arraste livre (`snap="free"`),
+ * onde pontos mentem. O polegar tem a largura da fração visível e anda com
+ * `scrollProgress()`. Decorativa (`aria-hidden`); some quando tudo cabe;
+ * horizontal e sem `loop` (no laço o polegar saltaria de ponta a ponta).
  */
 function CarouselProgress({ className, ...props }: React.ComponentProps<"div">) {
   const { api } = useCarousel()
@@ -2022,11 +1624,9 @@ function CarouselProgress({ className, ...props }: React.ComponentProps<"div">) 
 }
 
 /**
- * O carrossel carregando, na forma que ele vai ter: o mesmo `basis` e a
- * mesma calha, para a tira não pular quando o dado chega. Fica **fora** de um
- * `<Carousel>` — não há o que rolar —, e é um `SkeletonGroup`: a região
- * anuncia "Carregando…" e os ossos ficam calados. O osso de cada item é um
- * `CardSkeleton` sem barra, ou o que vier em `children`.
+ * O carrossel carregando, na forma que ele vai ter (mesmo `basis` e calha). Fica
+ * fora de um `<Carousel>` e é um `SkeletonGroup`; o osso de cada item é um
+ * `CardSkeleton` sem barra, ou `children`.
  */
 function CarouselSkeleton({
   count = 3,
@@ -2068,12 +1668,9 @@ function CarouselSkeleton({
 }
 
 /**
- * O último item é o caminho para a lista — "Ver todos" —, e o fim da tira
- * deixa de ser parede. É um item de verdade (entra na contagem e no teclado),
- * com a superfície do lugar vazio (`Card variant="dashed"`) clicável.
- *
- * O filho é o link (`<Link href>`), que recebe a superfície por `asChild`; a
- * seta e a contagem entram em volta do texto dele.
+ * O último item é o caminho para a lista ("Ver todos"): um item de verdade
+ * (entra na contagem e no teclado) com a superfície `Card variant="dashed"`
+ * clicável. O filho é o link, que recebe a superfície por `asChild`.
  */
 function CarouselMore({
   count,
@@ -2108,15 +1705,11 @@ function CarouselMore({
 }
 
 /**
- * A galeria em tela cheia: o botão de expandir no canto da foto e um `Dialog`
- * com outro `Carousel` dentro, que **abre no item atual** (`startIndex`) e
- * devolve o índice ao fechar — o principal salta, sem animação, para onde a
- * pessoa parou. Os itens vêm em `children` outra vez, porque em tela cheia a
- * foto é outra: inteira (`object-contain`), e não recortada.
- *
- * As setas do teclado andam na tela cheia de qualquer foco: o diálogo abre com
- * o foco no ×, fora da região, e sem isto o teclado só voltaria a andar
- * depois de tabular até ela.
+ * A galeria em tela cheia: o botão de expandir e um `Dialog` com outro
+ * `Carousel` que abre no item atual (`startIndex`) e devolve o índice ao
+ * fechar. Os itens vêm em `children` outra vez, porque em tela cheia a foto é
+ * inteira (`object-contain`). As setas do teclado andam de qualquer foco: o
+ * diálogo abre com o foco no ×, fora da região.
  */
 function CarouselFullscreen({
   title = "Imagens",
@@ -2161,8 +1754,7 @@ function CarouselFullscreen({
       </DialogTrigger>
       <DialogContent
         data-slot="carousel-fullscreen"
-        // Opaca nos dois temas: a placa modal é vidro (85% no claro, 40% no
-        // escuro), e atrás de uma foto em tela cheia a página não pode aparecer.
+        // Opaca nos dois temas: a placa modal é vidro, e a página não pode aparecer atrás de uma foto em tela cheia.
         className="flex h-dvh max-h-none w-screen max-w-none flex-col justify-center rounded-none bg-background p-0 ring-0 sm:max-w-none dark:bg-background"
         onKeyDown={(e) => {
           // Dentro da região a captura já andou e marcou o evento.

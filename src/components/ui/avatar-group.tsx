@@ -29,18 +29,12 @@ import { MOLA } from "@/lib/spring"
 import { cn, getInitials } from "@/lib/utils"
 
 /**
- * Pessoas empilhadas — rodada 246, a partir do Avatar Group do Animate UI
- * (Elliot Sutton, `primitives-animate-avatar-group`, lido do registry).
- *
- * Da referência vêm três coisas: a pilha com o anel na cor do fundo, o rosto
- * que **sobe** na mola quando o ponteiro chega, e **uma dica só**, que viaja de
- * um rosto ao outro em vez de fechar e abrir. A dica não é um `Tooltip` do
- * Radix: a âncora de um `Tooltip` é o gatilho dele, e não se troca. Aqui a
- * posição é calculada a cada troca e animada num `MotionValue`; o visual é o
- * da `Tooltip` (`tooltipContentVariants`).
- *
- * O nome de cada pessoa é o nome acessível do rosto, então a dica é
- * `aria-hidden`: ela repete à vista o que o leitor de tela já ouve.
+ * Pessoas empilhadas, a partir do Avatar Group do Animate UI: a pilha com o
+ * anel na cor do fundo, o rosto que sobe na mola quando o ponteiro chega, e uma
+ * dica só que viaja de um rosto ao outro. A dica não é um `Tooltip` do Radix
+ * (a âncora dele não se troca): a posição é animada num `MotionValue` e o
+ * visual é o de `tooltipContentVariants`. O nome da pessoa é o nome acessível
+ * do rosto, então a dica é `aria-hidden`.
  */
 
 type Tamanho = "xs" | "sm" | "md" | "lg" | "xl"
@@ -77,22 +71,14 @@ const ANEL: Record<Tamanho, string> = {
   xl: "ring-3",
 }
 /**
- * A cor do anel é a da superfície onde a pilha pousa. Quem a declara primeiro
- * é a tela (`--avatar-group-ring`, num ancestral ou na própria pilha); sem ela,
- * vale `--avatar-group-surface`, que a raiz escreve sozinha dentro de um `Card`
- * e de um `Popover`; fora deles, a página.
- *
- * São duas variáveis porque uma só não deixava a tela vencer: a regra "dentro
- * de um cartão" mora na raiz, e uma variável declarada na raiz vence a herdada
- * — medido, um painel `muted` dentro de um cartão saía com o anel do cartão.
+ * A cor do anel é a da superfície onde a pilha pousa: a tela declara
+ * `--avatar-group-ring`; sem ela vale `--avatar-group-surface`, que a raiz
+ * escreve sozinha dentro de `Card` e `Popover`. São duas variáveis porque uma
+ * só não deixava a tela vencer (uma declarada na raiz vence a herdada).
  */
 const ANEL_COR =
   "ring-[color:var(--avatar-group-ring,var(--avatar-group-surface,var(--color-background)))]"
-/**
- * O fundo do +N: a tinta a 10% misturada na superfície da pilha, opaca. Era
- * `bg-muted`, e sobre um painel `muted` o +N sumia — medido, a mesma cor do
- * fundo. Misturado, ele fica um degrau acima de qualquer superfície.
- */
+/** O fundo do +N: a tinta a 10% misturada na superfície da pilha, opaca (`bg-muted` sumia sobre um painel `muted`). */
 const MAIS_FUNDO =
   "bg-[color-mix(in_oklab,var(--color-foreground)_10%,var(--avatar-group-ring,var(--avatar-group-surface,var(--color-background))))]"
 const SUPERFICIE =

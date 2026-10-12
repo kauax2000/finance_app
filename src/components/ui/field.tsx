@@ -11,85 +11,29 @@ import { Caption, Muted } from "@/components/ui/typography"
 import { Separator } from "@/components/ui/separator"
 
 /**
- * A estrutura de um campo — e, agora, a ligação entre as peças dele.
+ * A estrutura de um campo e a ligação entre as peças dele: o `FieldControl`
+ * escreve `htmlFor`, `id`, `aria-describedby` e `aria-invalid`. As peças se
+ * registram, e o `aria-describedby` só é escrito quando existe alvo (apontar
+ * para um `id` ausente deixa a descrição vazia, pior que não apontar). O
+ * próprio `Field` carimba `data-invalid` e `data-disabled`.
  *
- * **O que este arquivo prometia e não fazia.** Três lugares do repositório
- * diziam que o `Field` entrega `htmlFor`, `aria-describedby` e `aria-invalid`
- * "já ligados": o `AGENTS.md`, o índice de busca do catálogo e a própria
- * página. Um quarto — `lib/field-classes.ts` — dizia o contrário, e era o que
- * estava certo: não havia `useId`, nem contexto, nem `aria-describedby` em
- * lugar nenhum.
- *
- * A prova mais dura estava na página do catálogo: **19 `htmlFor` escritos à
- * mão, 4 `aria-invalid` e 1 `aria-describedby`** em 313 linhas que anunciavam
- * os três como automáticos. No app a conta era **24 `aria-invalid` contra 5
- * `aria-describedby`** — campos marcados como inválidos cujo texto de erro
- * nunca chegava ao leitor de tela.
- *
- * O mecanismo é o que o `Popover` já usa nesta base: as peças **se registram**,
- * e o `aria-describedby` só é escrito quando existe alvo. Apontar para um `id`
- * ausente deixa a descrição vazia — pior que não apontar.
- *
- * ## Cinco seletores mortos saíram
- *
- * Todos da família "sobreviveu à remoção", que este projeto já nomeia (o
- * `in-data-[variant=dialog]` do `Command`):
- *
- * 1. `data-[invalid=true]:text-destructive` — ninguém escrevia `data-invalid`.
- *    Agora o próprio `Field` o carimba, e o seletor passa a valer.
- * 2. `group-data-[disabled=true]/field:opacity-50` — ninguém escrevia
- *    `data-disabled`. Idem: virou o prop `disabled`.
- * 3. `has-[>[data-slot=checkbox-group]]:gap-3` no `FieldSet` — **não existe**
- *    `data-slot="checkbox-group"` neste projeto. (`radio-group` existe, e fica.)
- * 4. `data-[slot=checkbox-group]:gap-3` no `FieldGroup` — o mesmo slot
- *    inexistente, e ainda testando o slot do **próprio** elemento, que é
- *    `field-group`.
- * 5. `group-data-[variant=outline]/field-group:-mb-2` no `FieldSeparator` —
- *    `FieldGroup` nunca teve prop `variant`.
- *
- * ## Um contêiner não consulta a si mesmo
- *
- * `orientation="responsive"` depende de `@md/field-group:`, e **exige um
- * `FieldGroup`, `FieldSet` ou `FieldRow` em volta**. Não é preguiça: uma
- * *container query* vale para os **descendentes** do contêiner, e a direção do
- * flex é declarada no próprio `Field`. Pôr `@container/field` aqui não faria
- * nada — a classe estaria no elemento que ela precisa consultar.
- *
- * Sem um grupo em volta, `responsive` se comporta como `vertical`. Está dito
- * aqui, na página do catálogo e na tabela de props, porque foi assim que ela
- * passou a existir sem nunca ter sido vista funcionando: `FieldGroup` tinha
- * **zero** usos, inclusive no catálogo.
+ * `orientation="responsive"` depende de `@md/field-group:` e exige um
+ * `FieldGroup`, `FieldSet` ou `FieldRow` em volta: uma container query vale
+ * para os descendentes do contêiner, e a direção do flex é declarada no próprio
+ * `Field`. Sem um grupo, `responsive` se comporta como `vertical`.
  */
 
 type FieldSize = "sm" | "md"
 
 /**
- * O degrau do andaime — rótulo, descrição e erro. **Não é a altura do
- * controle.**
- *
- * Ancorar a escada de altura no contêiner é o defeito que este design system já
- * cometeu quatro vezes: `Menubar` entregou 24px, `Tabs` entregou 27, `Item`
- * teve dois degraus com a mesma string, `Calendar` prometeu 36 e mediu 28. Um
- * `Field` não sabe que controle carrega, e não decide a caixa dele.
- *
- * Os nomes são os da escada de propósito: `Field size="sm"` se escreve ao lado
- * de `Input size="sm"`.
- *
- * A contagem que o justifica: **29 `<Label className="text-xs">`** no app — os
- * formulários novos reduzem o rótulo, os antigos não — e **73 textos de ajuda
- * em `text-xs`/`text-2xs`** enquanto `FieldDescription` era `text-sm`. Um
- * degrau existindo sem nome.
+ * O degrau do andaime (rótulo, descrição e erro), não a altura do controle: um
+ * `Field` não sabe que controle carrega e não decide a caixa dele (ancorar a
+ * escada no contêiner é o defeito que `Menubar` e `Tabs` já tiveram). Os nomes
+ * são os da escada: `Field size="sm"` se escreve ao lado de `Input size="sm"`.
  */
 const FieldSizeContext = React.createContext<FieldSize | null>(null)
 
-/**
- * A escada do andaime, num lugar só — para poder ser lida por um teste.
- *
- * Enquanto os degraus eram ternários espalhados por cinco componentes, não
- * havia como afirmar que eles diferiam. É o defeito que o `Item` teve
- * (`default` e `sm` com a **mesma string**) e que só apareceu quando a escada
- * virou um objeto inspecionável.
- */
+/** A escada do andaime num lugar só, para poder ser lida por um teste (degraus em ternários espalhados não se comparam). */
 const fieldTextScale = {
   sm: {
     label: "text-xs",
@@ -131,13 +75,10 @@ type FieldContextValue = {
 const FieldContext = React.createContext<FieldContextValue | null>(null)
 
 /**
- * O degrau vigente. `Field`, `FieldSet`, `FieldGroup` e `FieldRow` o publicam,
- * então um formulário inteiro se declara uma vez.
- *
- * Contexto, e não `data-*` com `in-*`: o `in-*` do Tailwind compila com
- * `:where()`, que **não soma especificidade**, e uma classe sob esse variante
- * perde para a classe base no mesmo elemento. O `Command` e o
- * `DescriptionList` já pagaram essa medição.
+ * O degrau vigente: `Field`, `FieldSet`, `FieldGroup` e `FieldRow` o publicam,
+ * então um formulário inteiro se declara uma vez. É contexto e não `data-*` com
+ * `in-*`, que compila com `:where()` e perde para a classe base no mesmo
+ * elemento.
  */
 function useFieldSize(explicit?: FieldSize): FieldSize {
   const inherited = React.useContext(FieldSizeContext)
@@ -165,15 +106,7 @@ function FieldSet({
   )
 }
 
-/**
- * A legenda de um conjunto.
- *
- * `variant="label"` passou a seguir o degrau em vez de cravar `text-sm`, e é o
- * que faltava para a peça servir: o app escreve **~50 cabeçalhos de seção** em
- * `text-xs font-medium` e nenhum deles usava `FieldLegend`, porque ela era
- * `text-base`/`text-sm`. Não foi preciso inventar um `FormSection` — a peça já
- * existia, com o corpo errado.
- */
+/** A legenda de um conjunto. `variant="label"` segue o degrau em vez de cravar `text-sm`. */
 function FieldLegend({
   className,
   variant = "legend",
@@ -218,16 +151,9 @@ function FieldGroup({
 }
 
 /**
- * A linha de dois campos.
- *
- * Existe porque o app a escreve **8 vezes em 4 grafias** —
- * `grid grid-cols-2 gap-3` (×3), `grid grid-cols-2 gap-2` (×2),
- * `grid gap-3 sm:grid-cols-2` e `grid gap-4 sm:grid-cols-2` (×2). Nas cinco
- * primeiras os campos **não empilham no telefone**: dois selects de dia de
- * fechamento a 160px cada, num aparelho de 375.
- *
- * Ela declara o contêiner, então um `Field orientation="responsive"` dentro de
- * uma linha também funciona.
+ * A linha de dois campos. Empilha no telefone (dois selects a 160px cada não
+ * cabem) e declara o contêiner, então um `Field orientation="responsive"`
+ * dentro dela também funciona.
  */
 function FieldRow({
   className,
@@ -236,11 +162,7 @@ function FieldRow({
   ...props
 }: React.ComponentProps<"div"> & {
   size?: FieldSize
-  /**
-   * `false` (rodada 192): os dois continuam lado a lado no telefone. Para o
-   * par **curto** — MM/AAAA, DDD/número —, e não para dois selects de 160px:
-   * esses são o defeito que esta peça existe para empilhar.
-   */
+  /** `false`: os dois continuam lado a lado no telefone, para o par curto (MM/AAAA, DDD/número); não para dois selects. */
   stack?: boolean
 }) {
   const resolved = useFieldSize(size)
@@ -261,9 +183,9 @@ function FieldRow({
 }
 
 /**
- * Os filhos diretos esticam até a largura do campo, **menos** os controles de
- * medida própria (`Switch`, `Checkbox`, `Radio`). A classe é escrita por
- * extenso, uma vez, porque o Tailwind varre o fonte como texto.
+ * Os filhos diretos esticam até a largura do campo, menos os controles de
+ * medida própria (`Switch`, `Checkbox`, `Radio`). Classe escrita por extenso:
+ * o Tailwind varre o fonte como texto.
  */
 const ESTICA_FILHOS =
   "*:not-data-[slot=switch]:not-data-[slot=checkbox]:not-data-[slot=radio]:w-full"
@@ -273,14 +195,12 @@ const fieldVariants = cva(
   {
     variants: {
       orientation: {
-        // `*:w-full` estica o controle até a coluna — menos os que têm medida
-        // própria: um `Switch` esticado virava um trilho de 406px (visto na
-        // página, com o `responsive` empilhado).
+        // `*:w-full` estica o controle até a coluna, menos os de medida própria
+        // (um `Switch` esticado virava um trilho de 406px).
         vertical: `flex-col ${ESTICA_FILHOS} [&>.sr-only]:w-auto`,
         horizontal:
           "flex-row items-center has-[>[data-slot=field-content]]:items-start *:data-[slot=field-label]:flex-auto *:data-[slot=field-title]:flex-auto has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px",
-        // Exige `FieldGroup` / `FieldSet` / `FieldRow` em volta — ver o
-        // cabeçalho do arquivo. Um contêiner não consulta a si mesmo.
+        // Exige `FieldGroup` / `FieldSet` / `FieldRow` em volta (ver o cabeçalho).
         responsive:
           `flex-col ${ESTICA_FILHOS} @md/field-group:flex-row @md/field-group:items-center @md/field-group:*:w-auto @md/field-group:has-[>[data-slot=field-content]]:items-start @md/field-group:*:data-[slot=field-label]:flex-auto @md/field-group:*:data-[slot=field-title]:flex-auto [&>.sr-only]:w-auto @md/field-group:has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px`,
       },
@@ -292,17 +212,10 @@ const fieldVariants = cva(
 )
 
 /**
- * Um campo.
- *
- * **`role="group"` deixou de ser carimbado sempre.** Ele vinha em todo campo,
- * inclusive no de um controle só, e **sem nome** — a mesma medição que o
- * `Popover` registrou nesta base: um papel sem nome é anunciado como o papel, e
- * nada mais. Num campo de um controle o rótulo já está ligado ao controle, e o
- * grupo em volta não acrescenta informação nenhuma; só ruído.
- *
- * Passe `role="group"` (ou `radiogroup`) quando o `Field` de fato agrupa — um
- * `RadioGroup`, uma grade de cores, um par de controles. Aí ele sai **com
- * nome**: o `aria-labelledby` aponta para o `FieldLabel`, sozinho.
+ * Um campo. `role="group"` não é carimbado sempre: um papel sem nome é
+ * anunciado como o papel, e num campo de um controle o grupo só faz ruído.
+ * Passe `role="group"` (ou `radiogroup`) quando o `Field` de fato agrupa; aí
+ * o `aria-labelledby` aponta para o `FieldLabel`.
  */
 function Field({
   className,
@@ -316,11 +229,7 @@ function Field({
 }: React.ComponentProps<"div"> &
   VariantProps<typeof fieldVariants> & {
     size?: FieldSize
-    /**
-     * O estado inválido quando ele **não** vem de um `FieldError` — validação
-     * que mora fora do campo. Com um `FieldError` renderizado, isto é
-     * desnecessário: o `Field` percebe sozinho.
-     */
+    /** O estado inválido quando ele não vem de um `FieldError` (validação que mora fora do campo). */
     invalid?: boolean
     disabled?: boolean
   }) {
@@ -336,8 +245,7 @@ function Field({
 
   const field = React.useMemo<FieldContextValue>(
     () => ({
-      // Um `id` escrito no controle vence o gerado — e o rótulo precisa saber
-      // disso: apontava para o gerado, e o `<label for>` ficava sem alvo.
+      // Um `id` escrito no controle vence o gerado, e o rótulo precisa saber disso.
       controlId: explicitControlId ?? `${reactId}-control`,
       labelId: `${reactId}-label`,
       descriptionId: `${reactId}-description`,
@@ -367,8 +275,7 @@ function Field({
           data-invalid={isInvalid || undefined}
           data-disabled={disabled || undefined}
           role={role}
-          // Um papel sem nome não diz nada. Só nomeia quando há papel — e o
-          // nome é o rótulo que o contexto já conhece.
+          // Um papel sem nome não diz nada: só nomeia quando há papel.
           aria-labelledby={role ? (ariaLabelledBy ?? field.labelId) : ariaLabelledBy}
           className={cn(fieldVariants({ orientation }), className)}
           {...props}
@@ -379,34 +286,19 @@ function Field({
 }
 
 /**
- * O controle do campo — e é ele que fecha a ligação.
+ * O controle do campo: injeta `id`, `aria-describedby` e `aria-invalid` no
+ * filho único. É um embrulho explícito e não um hook no `Input`, porque um
+ * `Field` pode conter mais de um controle (dois reivindicariam o mesmo `id`).
  *
- * Injeta `id`, `aria-describedby` e `aria-invalid` no filho único.
+ * Embrulha o controle e não a raiz do Radix: `Select.Root` e `RadioGroup.Root`
+ * não viram DOM ou não repassam `id` ao gatilho, então o embrulho vai no
+ * gatilho (`<Select><FieldControl><SelectTrigger/></FieldControl>…`). Vale igual
+ * para o `InputGroup`: o embrulho vai no `InputGroupInput`, senão o `id` pousa
+ * na `div` do grupo.
  *
- * **Por que um embrulho explícito, e não um hook dentro do `Input`.** Um
- * `Field` pode conter mais de um controle: o app tem 8 linhas de dois campos
- * lado a lado. Um hook que lesse o contexto faria os dois reivindicarem o mesmo
- * `id`, e a reivindicação seria estado durante o render. O embrulho diz qual é
- * o controle, uma vez, sem ambiguidade — é o idioma que `Button asChild` e
- * `DialogClose asChild` já estabeleceram.
- *
- * **Ele embrulha o controle, e não a raiz do Radix.** `Select.Root`,
- * `RadioGroup.Root` e companhia ou não renderizam nó nenhum ou não repassam
- * `id` ao gatilho: `<FieldControl><Select>…</Select></FieldControl>` clona um
- * componente que não vira DOM, o `id` não chega a lugar nenhum, e o rótulo
- * passa a apontar para o vazio — exatamente o defeito que este arquivo existe
- * para eliminar, e que a demonstração do catálogo reproduziu antes de ser
- * medida. A forma certa põe o embrulho no gatilho:
- * `<Select><FieldControl><SelectTrigger/></FieldControl><SelectContent/></Select>`.
- * Vale igual para invólucro que **é** DOM: no `InputGroup` o embrulho vai no
- * `InputGroupInput`, senão o `id` pousa na `div` do grupo e o `<label for>`
- * aponta para um elemento que não é rotulável — ele existe, e não faz nada.
- *
- * **Por que `cloneElement` e não `Slot`.** O `Slot` do Radix resolve conflito
- * de prop com `{...slotProps, ...childProps}` — o filho vence. Para `id` isso é
- * o que se quer; para `aria-describedby` **não é**: um controle que já tenha o
- * próprio descritor perderia calado o da descrição e o do erro. Aqui os três
- * são **compostos**, na ordem em que devem ser lidos.
+ * `cloneElement` e não `Slot`: o `Slot` deixa o filho vencer conflitos, e um
+ * controle com `aria-describedby` próprio perderia calado o da descrição e o do
+ * erro. Aqui os três são compostos, na ordem de leitura.
  */
 function FieldControl({ children }: { children: React.ReactNode }) {
   const field = React.useContext(FieldContext)
@@ -459,10 +351,7 @@ function FieldContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="field-content"
-      // `gap-0`, e não `gap-0.5`. Título sobre descrição é **par de
-      // identidade** — o mesmo dado em duas linhas —, e quem os separa é a
-      // entrelinha. Dois pixels bastam para o par deixar de ler como uma coisa
-      // só. Mesmo defeito que `ItemContent` e `StatCard` já corrigiram.
+      // `gap-0`: título sobre descrição é par de identidade, separado pela entrelinha.
       className={cn(
         "group/field-content flex flex-1 flex-col gap-0 leading-snug",
         className
@@ -473,18 +362,10 @@ function FieldContent({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 /**
- * O rótulo.
- *
- * O `htmlFor` sai sozinho — **e só quando existe um `FieldControl`**. Apontar
- * para um `id` ausente deixa o rótulo órfão, que é o defeito que o `Popover`
- * já registrou. Um `htmlFor` explícito continua vencendo, para o rótulo que
- * aponta para outra coisa.
- *
- * `optional` escreve o marcador de campo dispensável. **A convenção deste app é
- * invertida** — marca-se o opcional, não o obrigatório: `bill-form-fields` faz
- * isso três vezes e `edit-profile-dialog` uma, todas digitando "(opcional)"
- * dentro do texto do rótulo. Codificar a convenção que existe é melhor que
- * inventar um asterisco que ninguém usa.
+ * O rótulo. O `htmlFor` sai sozinho, só quando existe um `FieldControl` (apontar
+ * para um `id` ausente deixa o rótulo órfão); um `htmlFor` explícito vence.
+ * `optional` escreve o marcador de campo dispensável: a convenção do app é
+ * invertida, marca-se o opcional.
  */
 function FieldLabel({
   className,
@@ -504,25 +385,11 @@ function FieldLabel({
       htmlFor={htmlFor ?? (field?.hasControl ? field.controlId : undefined)}
       className={cn(
         "group/field-label peer/field-label flex w-fit gap-2 leading-snug group-data-[disabled=true]/field:opacity-50",
-        // O cartão de escolha: um `FieldLabel` que embrulha outro `Field` vira
-        // o alvo inteiro.
-        //
-        // O contorno é `primary-accent` a 60%, e os dois números são medidos.
-        //
-        // **O token**: no tema claro `--primary` e `--primary-accent` são a
-        // mesma cor, então a troca não muda nada ali; no escuro elas divergem,
-        // e a 30% o antigo dava 1,32:1 contra 1,64:1 do acento. "Traço com alfa
-        // é sempre acento".
-        //
-        // **O alfa**: 30% não bastava em tema nenhum. Varrendo os degraus
-        // contra o fundo real do cartão, 60% é o primeiro que alcança a norma
-        // de traço não-textual — **3,01:1 no claro e 2,99:1 no escuro** —, e
-        // 100% sobe para 7,66 / 6,14, que lê como borda de erro num cartão que
-        // só está selecionado.
-        //
-        // E o realce tem par `active:` — sem ele, num alvo que é para o dedo,
-        // o toque não responde: `hover:` compila dentro de `@media (hover:
-        // hover)`.
+        // O cartão de escolha: um `FieldLabel` que embrulha outro `Field` vira o
+        // alvo inteiro. O contorno é `primary-accent` a 60% (traço com alfa é
+        // sempre acento; 60% é o primeiro degrau que alcança 3:1 nos dois
+        // temas). O realce tem par `active:`, porque `hover:` compila dentro de
+        // `@media (hover: hover)`.
         "has-data-checked:border-primary-accent/60 has-data-checked:bg-primary/5 dark:has-data-checked:bg-primary/10",
         "has-[>[data-slot=field]]:w-full has-[>[data-slot=field]]:flex-col has-[>[data-slot=field]]:rounded-row-lg has-[>[data-slot=field]]:border",
         "has-[>[data-slot=field]]:not-has-[:disabled,[data-disabled]]:hover:bg-muted/50 has-[>[data-slot=field]]:not-has-[:disabled,[data-disabled]]:active:bg-muted/50",
@@ -539,14 +406,7 @@ function FieldLabel({
   )
 }
 
-/**
- * A marca do campo dispensável.
- *
- * Ela existe como peça porque **dois** rotuladores a usam: o `FieldLabel`, que
- * rotula um controle, e o `FieldTitle`, que rotula um grupo. Um grupo também
- * pode ser dispensável, e a convenção deste app é invertida — marca-se o
- * opcional, não o obrigatório.
- */
+/** A marca do campo dispensável, dividida pelo `FieldLabel` (controle) e pelo `FieldTitle` (grupo). */
 function FieldOptionalMark() {
   return (
     <span data-slot="field-optional" className="font-normal text-muted-foreground">
@@ -556,12 +416,8 @@ function FieldOptionalMark() {
 }
 
 /**
- * O título de um campo que **não** é um `<label>` — o que rotula um grupo, e
- * não um controle.
- *
- * `data-slot="field-title"`, e não `field-label`. Os dois emitiam o mesmo slot,
- * e nenhum seletor conseguia distingui-los; os variantes de `orientation`
- * listam os dois agora.
+ * O título de um campo que não é um `<label>`: o que rotula um grupo. Usa
+ * `data-slot="field-title"` para os seletores o distinguirem do `field-label`.
  */
 function FieldTitle({
   className,
@@ -574,8 +430,7 @@ function FieldTitle({
   const field = React.useContext(FieldContext)
   return (
     <div
-      // O `aria-labelledby` do grupo aponta para o `labelId`: sem este `id`, o
-      // grupo apontava para um elemento que não existe e ficava sem nome.
+      // O `aria-labelledby` do grupo aponta para o `labelId`; sem este `id` o grupo ficava sem nome.
       id={id ?? field?.labelId}
       data-slot="field-title"
       className={cn(
@@ -591,14 +446,7 @@ function FieldTitle({
   )
 }
 
-/**
- * O texto de ajuda.
- *
- * As margens negativas saíram — `[[data-variant=legend]+&]:-mt-1.5` e
- * `nth-last-2:-mt-1` corrigiam a geometria de outra peça por seletor, e
- * "compensar geometria por seletor é sintoma de que falta uma peça". O respiro
- * é do contêiner.
- */
+/** O texto de ajuda. O respiro é do contêiner (sem margens negativas corrigindo a geometria de outra peça por seletor). */
 function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
   const field = React.useContext(FieldContext)
   const size = useFieldSize()
@@ -614,7 +462,7 @@ function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
     <Muted
       data-slot="field-description"
       id={field?.descriptionId}
-      // A escada do `Field` vence o `text-sm` do átomo por `cn()`, verificado.
+      // A escada do `Field` vence o `text-sm` do átomo por `cn()`.
       className={cn(
         "text-left leading-normal font-normal group-has-data-horizontal/field:text-balance",
         "[&>a]:underline [&>a]:underline-offset-4 [&>a]:hover:text-primary-accent",
@@ -633,10 +481,7 @@ function FieldSeparator({
 }: React.ComponentProps<"div"> & {
   children?: React.ReactNode
 }) {
-  // O rótulo do meio é do `Separator` desde a rodada 175: duas meias-réguas e
-  // o texto entre elas, sem retângulo mascarando o meio de uma linha inteira —
-  // ele pintava `bg-background`, que só acerta direto na página. Aqui ficam só
-  // o corpo do texto e o respiro do campo.
+  // O rótulo do meio é do `Separator`; aqui ficam só o corpo do texto e o respiro do campo.
   if (children) {
     return (
       <Separator
@@ -662,11 +507,9 @@ function FieldSeparator({
 }
 
 /**
- * O rótulo e o que mora à direita dele (rodada 192) — o "Esqueceu a senha?" do
- * login, o contador do nome da carteira. Duas telas escreviam a `div` à mão.
- * O vizinho fica **fora** do `<label>`: um link dentro dele, ao ser clicado,
- * também focaria o campo. Linha de base, porque rótulo e link têm corpos
- * diferentes.
+ * O rótulo e o que mora à direita dele (o "Esqueceu a senha?", o contador). O
+ * vizinho fica fora do `<label>`, senão clicar num link também focaria o campo.
+ * Linha de base, porque rótulo e link têm corpos diferentes.
  */
 function FieldHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -679,11 +522,9 @@ function FieldHeader({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 /**
- * O contador de um campo de uma linha (rodada 192). Visível só perto do teto
- * (`lib/char-count`: a régua do `Textarea`, que lá é sempre visível e só troca
- * de tinta; aqui um "3/40" ao lado do rótulo seria ruído),
- * em âmbar, e anunciado uma vez por mudança pela região viva — o número à vista
- * é `aria-hidden`, para não ser lido em cada foco. Vai no `FieldHeader`.
+ * O contador de um campo de uma linha: visível só perto do teto (`lib/char-count`),
+ * em âmbar, e anunciado uma vez por mudança pela região viva; o número à vista
+ * é `aria-hidden`. Vai no `FieldHeader`.
  */
 function FieldCounter({
   value,
@@ -712,15 +553,10 @@ function FieldCounter({
 }
 
 /**
- * A lista viva de regras (rodada 192): ✓ atendido, – falta, em duas colunas.
- * Ela é **descrição** do controle — o `FieldControl` soma o `id` dela ao
- * `aria-describedby` —, e a região viva é educada, porque ela acompanha a
- * digitação e não interrompe. O texto escondido diz o estado de cada regra,
- * já que a cor e o ícone não chegam ao leitor de tela.
- *
- * Existia duas vezes: `PasswordRequirements` (cadastro e redefinição) e um
- * `ReqRow` declarado dentro do diálogo de trocar senha, com um sexto item
- * ("senha forte") que só repetia a conjunção dos outros cinco.
+ * A lista viva de regras (✓ atendido, – falta, em duas colunas). É descrição do
+ * controle (o `FieldControl` soma o `id` ao `aria-describedby`) e a região viva
+ * é educada. O texto escondido diz o estado de cada regra, já que cor e ícone
+ * não chegam ao leitor de tela.
  */
 function FieldChecklist({
   items,
@@ -770,12 +606,7 @@ function FieldChecklist({
   )
 }
 
-/**
- * A mensagem de erro. Ela **é** o que torna o campo inválido: renderizá-la
- * carimba `data-invalid` no `Field` e `aria-invalid` no controle. O app
- * escrevia os dois fatos à mão, em três dialetos de tipografia —
- * `text-sm font-normal`, `text-control-sm font-medium` e `text-sm font-medium`.
- */
+/** A mensagem de erro: renderizá-la carimba `data-invalid` no `Field` e `aria-invalid` no controle. */
 function FieldError({
   className,
   children,

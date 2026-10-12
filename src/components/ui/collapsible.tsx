@@ -23,62 +23,20 @@ import { MOLA } from "@/lib/spring"
 import { composeRefs, useControllableState } from "radix-ui/internal"
 
 /**
- * Um bloco que expande — o `Accordion` de um item só, sem a semântica de lista.
+ * Um bloco que expande: o `Accordion` de um item só, sem a semântica de lista.
+ * `CollapsibleRow` é a linha inteira, na régua de
+ * [`lib/disclosure-classes`](../../lib/disclosure-classes.ts) que o `Accordion`
+ * veste. O `Collapsible` controla o Radix e publica `{ open, setOpen }`, para o
+ * `CollapsibleLabel` trocar o texto e o conteúdo `findable` abrir com o ⌘F.
  *
- * ## Ele não desenhava nada, e por isso cada tela desenhava um pouco diferente
- *
- * Este arquivo eram três passa-tudo e um `overflow-hidden`, e cada consumidor
- * montou a linha por conta própria. `CollapsibleMarker` foi o primeiro
- * conserto; **`CollapsibleRow`** (rodada 189) é o segundo: a linha inteira,
- * na régua de [`lib/disclosure-classes`](../../lib/disclosure-classes.ts) que
- * o `Accordion` veste. As duas telas que escreviam a linha à mão — um `Button
- * tertiary` com `h-9 w-full justify-between` no formulário de cartão, e um
- * gatilho cru com `px-4 py-3` no painel da fatura — a vestem.
- *
- * ## O estado mora aqui (rodada 189)
- *
- * O `Collapsible` controla o Radix e publica `{ open, setOpen }`: é o que deixa
- * o `CollapsibleLabel` trocar o texto sem `useState` na tela e o conteúdo
- * `findable` abrir quando o ⌘F o encontra. `open`, `defaultOpen` e
- * `onOpenChange` funcionam como antes.
- *
- * ## `peek`: o fechado que não é altura zero
- *
- * A segunda forma deste componente é o **"mostrar mais"** — a descrição longa, a
- * lista que continua, o texto legal. Ali o fechado não é ausência: é uma
- * espiada, e o que diz "tem mais" é o conteúdo **dissolvendo** na base, que é a
- * primitiva que este projeto já elegeu no lugar de um véu pintado (máscara é
- * alfa, e alfa não precisa saber de que cor é o fundo).
- *
- * Ele custa três coisas, e as três são armadilhas conhecidas desta casa:
- *
- * 1. **`forceMount`, e o `hidden` que vem com ele.** Sem `forceMount` o Radix
- *    desmonta o conteúdo fechado, e não há o que espiar. Com ele o nó fica, mas
- *    o Radix ainda escreve o atributo `hidden` — que é `display: none` na folha
- *    do agente. Qualquer declaração de autor vence essa, e é o que
- *    `data-closed:block` faz. **O que importa é que o texto continue na árvore
- *    de acessibilidade**, e ele continua porque os navegadores computam
- *    exposição a partir do que é renderizado, não do atributo. Medido, não
- *    suposto.
- * 2. **Os keyframes saem de cena, e a medida do Radix também.** `collapsible-down/up`
- *    animam de 0 até a variável do Radix, e em `peek` o trajeto não parte de
- *    zero. E a variável não serve de destino: o Radix a calcula lendo a caixa da
- *    própria `Content`, que em `peek` é o nó **preso** à espiada — ele publicava
- *    a espiada como "altura do conteúdo". Ver `useEspiada`, abaixo, que também
- *    é quem faz a espiada deslizar: a altura da casca é escrita por JS.
- * 3. **`_-_` em todo `-` binário dentro de `calc()` arbitrário.** O Tailwind
- *    normaliza espaço em torno de `+`, `*` e `/`, mas não pode com `-`, que
- *    seria indistinguível de `--var`. Escrito com espaço literal, a classe é
- *    cortada no meio e a máscara cai para `none` — em silêncio.
- *
- * ## A altura anima nos dois sentidos
- *
- * Isso já era verdade e continua: os keyframes vêm do `tw-animate-css` que o
- * projeto instala, ligados a `--radix-collapsible-content-height`, e sem
- * `overflow-hidden` o conteúdo vaza durante o trajeto. O que mudou é que a
- * duração e a curva agora saem da régua compartilhada, e não deste arquivo — o
- * `Accordion` rodava no padrão de fábrica enquanto este pedia os tokens do
- * projeto, dois componentes com a mesma interação abrindo em curvas diferentes.
+ * `peek` é o "mostrar mais": o fechado é uma espiada, e o que diz "tem mais" é
+ * o conteúdo dissolvendo na base. Custa três coisas: (1) `forceMount`, e o
+ * texto continua na árvore de acessibilidade mesmo com o `hidden` que o Radix
+ * escreve (`data-closed:block` o vence); (2) os keyframes `collapsible-down/up`
+ * saem, e a medida do Radix não serve de destino (ver `useEspiada`); (3) `_-_`
+ * em todo `-` binário dentro de `calc()` arbitrário, senão a classe é cortada e
+ * a máscara cai para `none` em silêncio. A altura anima nos dois sentidos com
+ * os keyframes do `tw-animate-css`; sem `overflow-hidden` o conteúdo vazaria.
  */
 
 type CollapsibleState = {
@@ -90,15 +48,11 @@ type CollapsibleState = {
 const CollapsibleContext = React.createContext<CollapsibleState | null>(null)
 
 /**
- * `card` é a superfície do `Card` (`outline`) — escrita aqui, e não importada:
- * o `Collapsible` é molécula e o `Card` é organismo, e a taxonomia proíbe o
- * caminho. Se o `outline` do `Card` mudar, muda aqui. A linha e o conteúdo
- * recuam pelo `--collapsible-px`, e **não há fio entre eles**: é a regra das
- * tiras, e o painel da fatura desenhava um `border-t` no conteúdo.
- *
- * O canto é a linha alta (`rounded-row-lg`, 16; rodada 241v), e não a
- * superfície do `Card`: fechado, o cartão é uma linha de 42px, e 22 o
- * desenhava cápsula.
+ * `card` é a superfície do `Card` (`outline`), escrita aqui porque molécula não
+ * importa organismo; se o `outline` do `Card` mudar, muda aqui. Linha e
+ * conteúdo recuam por `--collapsible-px`, sem fio entre eles. O canto é a linha
+ * alta (`rounded-row-lg`, 16): fechado o cartão é uma linha de 42px, e 22 o
+ * desenharia cápsula.
  */
 const COLLAPSIBLE_CARD =
   "overflow-hidden rounded-row-lg border border-border bg-card text-card-foreground [--collapsible-px:--spacing(4)]"
@@ -125,10 +79,9 @@ function Collapsible({
   const raiz = React.useRef<HTMLDivElement>(null)
   const setOpen = React.useCallback(
     (proximo: boolean) => {
-      // O conteúdo `findable` fechado é `hidden="until-found"`, e o Radix mede
-      // a altura de abrir num efeito de layout que roda **antes** de qualquer
-      // efeito daqui: com o atributo ainda lá, `content-visibility: hidden`
-      // mede 0 e o bloco abre sem trajeto. Por isso ele sai já no pedido.
+      // O Radix mede a altura de abrir num efeito de layout que roda antes de
+      // qualquer efeito daqui; com `hidden="until-found"` ainda lá o
+      // `content-visibility: hidden` mediria 0. Por isso o atributo sai no pedido.
       if (proximo) {
         raiz.current
           ?.querySelector(":scope > [data-slot=collapsible-content][hidden]")
@@ -159,16 +112,10 @@ function Collapsible({
 }
 
 /**
- * O gatilho continua sendo o primitivo cru, de propósito.
- *
- * Ele é quase sempre usado com `asChild` em volta de um `Button`, e com
- * `asChild` o Radix **funde** a `className` no filho: carimbar cromagem aqui
- * vazaria para dentro de todo botão que já existe. Quem quer a linha inteira
- * desenhada usa o `Accordion` — que é este componente com semântica de lista.
- *
- * O `group/disclosure` é a única coisa que ele ganha, e é o que faz o
- * `CollapsibleMarker` girar sem que o consumidor escreva o seletor. Com
- * `asChild` ele desce para o filho junto com o resto da `className`.
+ * O gatilho continua sendo o primitivo cru: com `asChild` o Radix funde a
+ * `className` no filho, e carimbar cromagem aqui vazaria para todo botão. Quem
+ * quer a linha desenhada usa `CollapsibleRow`. O `group/disclosure` faz o
+ * `CollapsibleMarker` girar sem seletor de quem chama.
  */
 function CollapsibleTrigger({
   className,
@@ -183,10 +130,7 @@ function CollapsibleTrigger({
   )
 }
 
-/**
- * O marcador. Gira porque o gatilho é `group/disclosure` e o Radix escreve
- * `data-state` nele — nada a declarar do lado de quem chama.
- */
+/** O marcador. Gira porque o gatilho é `group/disclosure` e o Radix escreve `data-state` nele. */
 function CollapsibleMarker({
   className,
   ...props
@@ -202,11 +146,10 @@ function CollapsibleMarker({
 }
 
 /**
- * A linha inteira como gatilho (rodada 189) — a do `AccordionTrigger`, sem a
- * semântica de lista: degrau `md`/`lg`/`xl`, rótulo que sublinha, `trailing`
- * na outra ponta (prop, pela mesma razão de lá: duas `ml-auto` dividem a
- * sobra), marcador de qualquer lado e 44px no dedo. Num `variant="card"` ela
- * recua pelo `--collapsible-px`.
+ * A linha inteira como gatilho, a do `AccordionTrigger` sem a semântica de
+ * lista: degrau `md`/`lg`/`xl`, rótulo que sublinha, `trailing` na outra ponta
+ * (prop, porque duas `ml-auto` dividem a sobra), marcador de qualquer lado e
+ * 44px no dedo.
  */
 function CollapsibleRow({
   className,
@@ -246,14 +189,10 @@ function CollapsibleRow({
 }
 
 /**
- * O texto do gatilho que acompanha o estado (rodada 189): "Continuar lendo"
- * fechado, "Mostrar menos" aberto — depois de aberto a primeira seria uma
- * promessa falsa. Lê o estado do `Collapsible`, então a tela não guarda
- * `useState` só para trocar a frase.
- *
- * O `data-slot="button-label"` é emprestado de propósito: dentro de um
- * `Button asChild` é ele que recebe a maiúscula inicial e o traço do `link`,
- * e um `span` qualquer ficaria sem os dois. Fora de um `Button`, não faz nada.
+ * O texto do gatilho que acompanha o estado ("Continuar lendo" / "Mostrar
+ * menos"), lido do `Collapsible`. O `data-slot="button-label"` é emprestado de
+ * propósito: dentro de um `Button asChild` é ele que recebe a maiúscula inicial
+ * e o traço do `link`.
  */
 function CollapsibleLabel({
   open,
@@ -267,9 +206,8 @@ function CollapsibleLabel({
 }
 
 /**
- * `findable` (rodada 189): o fechado fica no DOM como `hidden="until-found"`, e
- * abre quando o ⌘F o acha. A mecânica mora em `hooks/use-until-found`, que o
- * `Accordion` divide desde a rodada 200.
+ * `findable`: o fechado fica no DOM como `hidden="until-found"` e abre quando o
+ * ⌘F o acha (mecânica em `hooks/use-until-found`, dividida com o `Accordion`).
  */
 function useEncontravel(ligado: boolean) {
   const estado = React.useContext(CollapsibleContext)
@@ -279,16 +217,9 @@ function useEncontravel(ligado: boolean) {
 }
 
 /**
- * A espiada, em três degraus.
- *
- * Os números são alturas de leitura, e não da escada de controles: `sm` são
- * ~3 linhas de `text-sm`, `md` ~5, `lg` ~7. Abaixo de três linhas a espiada não
- * informa nada que o rótulo do gatilho já não informe.
- *
- * A rampa da dissolução vale `min(2.5rem, 40%)` — os 40px da mesma ordem de
- * grandeza dos 44 que a paleta de comandos usa, com teto proporcional para o
- * degrau curto. Ela come **a última linha e meia** em `md` e `lg`, e pouco mais
- * de uma em `sm`.
+ * A espiada em três degraus: alturas de leitura (~3, ~5 e ~7 linhas de
+ * `text-sm`), não da escada de controles. A rampa da dissolução é `min(2.5rem,
+ * 40%)`, proporcional com teto para o degrau curto.
  */
 const collapsibleContentVariants = cva(disclosureMotionClassName, {
   variants: {
@@ -303,13 +234,9 @@ const collapsibleContentVariants = cva(disclosureMotionClassName, {
 })
 
 /**
- * A variável do degrau mora **na casca**, e não no `cva` do conteúdo.
- *
- * A casca não pode vestir `collapsibleContentVariants`: a base dele é
- * `disclosureMotionClassName`, que traz `duration-` e `ease-` sem
- * `transition-property` — e o valor inicial dessa propriedade é `all`. A casca
- * ficava transicionando **tudo** em 200ms, medido. Movimento é do conteúdo; da
- * casca é só a geometria.
+ * A variável do degrau mora na casca e não no `cva` do conteúdo: a base dele
+ * (`disclosureMotionClassName`) traz `duration-` sem `transition-property`, e
+ * o valor inicial é `all` — a casca transicionaria tudo.
  */
 const COLLAPSIBLE_PEEK_VAR = {
   none: "",
@@ -319,34 +246,17 @@ const COLLAPSIBLE_PEEK_VAR = {
 } as const
 
 /**
- * **Quem mede não pode ser quem é medido**, e isto foi um defeito de verdade,
- * encontrado no navegador.
+ * Quem mede não pode ser quem é medido: o Radix lê a caixa da própria
+ * `Content`, que em `peek` é o nó preso à espiada, então quem é medido aqui é
+ * um envelope interno livre de altura.
  *
- * O Radix descobre a altura do conteúdo lendo a caixa da própria `Content`, e
- * com `peek` a `Content` é o nó **preso** à espiada: ele publicava a espiada
- * (100px) como "altura do conteúdo", contra um `scrollHeight` de 206. Quem é
- * medido aqui é um envelope interno, livre de altura.
- *
- * ## E a espiada desliza, porque a altura da casca é escrita por JS
- *
- * Por cinco rodadas a espiada abriu de uma vez. A altura morava no CSS
- * (`has-[…open]:h-(--collapsible-full)`), e o Radix envolve a troca de estado
- * num recálculo forçado com `transition-duration: 0s`: a altura nova era
- * resolvida **na mesma passagem** em que o `data-state` virava `open`, e não
- * havia transição para começar. Quatro consertos de CSS e de WAAPI falharam, e
- * o que falhava em todos era a mesma coisa: a caixa mudava **dentro** do
- * recálculo do Radix, antes de alguém poder lê-la.
- *
- * Com a altura como estilo inline escrito aqui, o recálculo não a alcança: um
- * `data-state` novo não muda estilo inline. Um `MutationObserver` no
- * `data-state` lê a altura atual da casca (ainda a de antes) e anima até o
- * destino com o `animate` do `motion`. Abrir é a mola da casa (`MOLA`), e
- * fechar é o `--ease-out` em `--duration-base` (a regra da rodada 129: uma
- * mola até a espiada passaria por baixo dela). Ao fim da abertura a altura
- * volta a `auto`, para um parágrafo que reflua não ser recortado.
- *
- * A mola é de JavaScript, e o bloco global de `prefers-reduced-motion` só
- * alcança CSS. Por isso a preferência é perguntada à mão, como no `Alert`.
+ * A espiada desliza porque a altura da casca é estilo inline escrito por JS: o
+ * Radix resolve a altura de CSS na mesma passagem em que o `data-state` vira
+ * `open`, sem transição para começar, e um `data-state` novo não muda estilo
+ * inline. Um `MutationObserver` lê a altura de antes e anima até o destino com
+ * o `animate` do `motion` (abrir na `MOLA`, fechar em `--ease-out`, pois uma
+ * mola passaria por baixo da espiada); ao fim da abertura volta a `auto`. A
+ * preferência de movimento reduzido é perguntada à mão, porque a mola é de JS.
  */
 function useEspiada() {
   return React.useCallback((envelope: HTMLElement | null) => {
@@ -392,20 +302,12 @@ function useEspiada() {
   }, [])
 }
 
-/**
- * A casca da espiada. A altura **não** mora aqui: é estilo inline, escrito
- * por `useEspiada`.
- */
+/** A casca da espiada. A altura não mora aqui: é estilo inline escrito por `useEspiada`. */
 const COLLAPSIBLE_PEEK_SHELL = [
   "overflow-hidden",
 
-  // A rampa, **proporcional com teto**. Fixa em 40px ela comia dois terços do
-  // degrau `sm`: 40 de rampa num peek de 60 deixa uma linha nítida e duas
-  // dissolvendo, e a amostra passa a esconder mais do que mostra.
-  // `min(2.5rem, 40%)` dá 24px em `sm` e os 40 cheios em `md` e `lg`.
-  //
-  // `_-_` obrigatório no `-` binário: com espaço literal a classe é cortada no
-  // meio, a rampa vira inválida em cascata e a máscara cai para `none`.
+  // A rampa é proporcional com teto (fixa em 40px comeria dois terços do
+  // degrau `sm`). `_-_` obrigatório no `-` binário.
   "[mask-image:linear-gradient(to_bottom,#000_calc(100%_-_min(2.5rem,40%)),transparent)]",
   "has-[>[data-slot=collapsible-content][data-state=open]]:[mask-image:none]",
 ].join(" ")
@@ -432,23 +334,15 @@ function CollapsibleContent({
     <CollapsiblePrimitive.Content
       data-slot="collapsible-content"
       data-peek={espiando ? peek : undefined}
-      // `forceMount` é consequência de `peek`, não uma segunda decisão de quem
-      // chama: sem ele o nó fechado não existe, e não há o que espiar. Quem
-      // passar o seu continua ganhando.
-      //
-      // Sob `forceMount` o Radix calcula `isOpen = open || isPresent` com
-      // `isPresent` sempre verdadeiro — então ele **nunca** escreve `hidden` e
-      // sempre renderiza os filhos. Verificado no DOM: é por isso que não há
-      // nada aqui vencendo um `display: none`.
+      // `forceMount` é consequência de `peek` (sem ele não há o que espiar);
+      // sob ele o Radix nunca escreve `hidden`. Quem passar o seu ganha.
       forceMount={espiando || findable ? true : forceMount}
       ref={composeRefs(refEncontravel, ref)}
       className={cn(
         collapsibleContentVariants({ peek }),
         espiando ? "h-full" : disclosureRevealClassName,
-        // No cartão: o recuo dos lados, e o de baixo como pseudo-elemento —
-        // `padding-bottom` no nó que anima a altura deixaria o piso em 16px e
-        // o bloco estalaria no fim do fechamento. O `::after` entra na altura
-        // e a cascata (`& > *`) não o alcança.
+        // No cartão: o recuo de baixo é pseudo-elemento, porque `padding-bottom`
+        // no nó que anima a altura estalaria no fim do fechamento.
         cartao && "px-(--collapsible-px) after:block after:h-(--collapsible-px) after:content-['']",
         className
       )}

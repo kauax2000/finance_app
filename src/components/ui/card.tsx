@@ -11,72 +11,21 @@ import { Muted } from "@/components/ui/typography"
 import { Skeleton, SkeletonText } from "@/components/ui/skeleton"
 
 /**
- * O casco do cartão.
- *
- * A versão anterior descrevia um cartão que o app não constrói. Ela vinha com
- * anel (`ring-1 ring-foreground/10`), respiro vertical e um `size="sm"` que
- * significava "sem padding" — e 46 chamadas do produto abriam com a **mesma
- * string** para desligar tudo isso:
- *
- *     <Card className="gap-0 overflow-hidden border border-border py-0 shadow-none ring-0">
- *
- * Cinquenta e duas delas carregavam `shadow-none` num componente **sem sombra
- * nenhuma** — classe morta copiada adiante por quem não tinha como saber. E o
- * cabeçalho e o rodapé que essas telas realmente usam não existiam aqui: 24
- * barras de topo e 18 faixas de pé feitas à mão, em cinco e nove grafias
- * diferentes, contra dois usos de `CardFooter` no app inteiro.
- *
- * Então os eixos passaram a ser os dois que as telas já separavam na prática:
- *
- * - **`variant`** decide a **borda e a superfície** — o cartão está chapado
- *   sobre a página, levantado dela, rebaixado nela, ou não tem borda alguma.
- * - **`padding`** decide o **ritmo interno** — e `none` é o painel: casco sem
- *   respiro, para o conteúdo sangrar de borda a borda.
- *
- * Os dois eixos são independentes de propósito. O painel do app é
- * `outline` + `none`; o cartão de conteúdo é `outline` + `md`; e nenhuma das
- * duas combinações precisa de uma terceira palavra para existir.
- *
- * ## Rodada 204
- *
- * Um levantamento das telas achou o que elas escreviam em volta do cartão, e
- * cada versão abaixo nasce de uma contagem:
- *
- * - **`CardField`** — o ladrilho "rótulo + valor" aninhado, em 24 cópias e um
- *   `FieldCard` local.
- * - **`CardHeader media`** — o ícone, o ladrilho de cor ou o avatar à
- *   esquerda do título, montado com grade à mão nos cartões de conta e de
- *   categoria.
- * - **`CardLink`** — o link esticado: o cartão inteiro clica, e os botões do
- *   rodapé e o menu continuam alvos próprios. Cinco cartões o faziam à mão,
- *   porque `interactive asChild` não aceita botão dentro.
- * - **`CardTitle size`** — `md` (`text-base`) passa a ser o padrão: 9 dos 10
- *   títulos do app o escreviam por `className`.
- * - **`inactive`**, **`selected`**, **`orientation`** e
- *   **`variant="dashed"`** no casco; **`CardMessage`** e **`CardSkeleton`**
- *   como peças.
+ * O casco do cartão, com dois eixos independentes: `variant` decide a borda e a
+ * superfície, `padding` o ritmo interno (`none` é o painel, que sangra de borda
+ * a borda). Peças: `CardField` (ladrilho rótulo/valor), `CardHeader media`,
+ * `CardLink` (link esticado), `CardTitle size`, `inactive`, `selected`,
+ * `orientation`, `CardMessage` e `CardSkeleton`.
  */
 const cardVariants = cva(
   [
     "group/card relative flex min-w-0 flex-col overflow-hidden rounded-surface text-sm [--radius-parent:var(--radius-surface)] [--radius-inset:var(--card-px)]",
-    // O `overflow-hidden` já recorta os cantos de todo filho. Por isso não há
-    // `rounded-t-xl` no cabeçalho nem `rounded-b-xl` no rodapé: eram três
-    // declarações mantendo à mão o que o casco resolve uma vez, e que saíam de
-    // sincronia assim que o raio mudasse.
-    //
-    // Uma tira sangra até a borda; o respiro vertical do casco a empurraria
-    // para dentro, deixando um filete de `bg-card` acima ou abaixo dela. O
-    // casco recolhe o próprio padding **daquele lado** — e só quando a tira
-    // está na ponta, porque uma barra no meio da pilha não toca borda nenhuma.
-    // O ritmo vertical da tira, e ele é **constante** em todas as variantes de
-    // `padding`. A razão está três linhas abaixo: os `has-[]` recolhem o respiro
-    // do casco daquele lado sempre que a tira está na ponta, então quem dá o ar
-    // acima do rótulo é a própria tira — em `padding="none"` e em `md` igual.
-    //
-    // 12px, e a conta é neutra: a tira tingida media `py-2.5` (10) + `text-xs`
-    // (16) = 36, forçados a 40 pelo `min-h-10`. Aqui 12+16+12 = **40**. Nenhuma
-    // tira muda de altura ao perder o fio e a tinta, e é isso que torna a
-    // migração das cópias verificável: qualquer deslocamento é bug.
+    // O `overflow-hidden` já recorta os cantos de todo filho, então cabeçalho e
+    // rodapé não levam raio próprio. Uma tira sangra até a borda: o casco
+    // recolhe o próprio padding daquele lado, só quando a tira está na ponta.
+    // O ritmo vertical da tira é constante em todos os `padding` (12+16+12 =
+    // 40), porque quem dá o ar acima do rótulo é a
+    // própria tira.
     "[--card-strip-py:--spacing(3)]",
     "has-[>[data-slot=card-toolbar]:first-child]:pt-0",
     "has-[>[data-slot=card-footer]:last-child]:pb-0",
@@ -86,9 +35,8 @@ const cardVariants = cva(
     // A capa encosta nas bordas como a imagem crua encostava.
     "has-[>[data-slot=card-media]:first-child]:pt-0",
     "has-[>[data-slot=card-media]:last-child]:pb-0",
-    // O link esticado (`CardLink`, rodada 204): o cartão responde ao cursor e
-    // ao foco do link como se fosse ele, e todo outro alvo de dentro — os
-    // botões do rodapé, o menu — sobe acima da película do link.
+    // O link esticado: o cartão responde ao cursor e ao foco do link, e todo
+    // outro alvo de dentro sobe acima da película.
     "has-[[data-slot=card-link]]:transition-[box-shadow,border-color] has-[[data-slot=card-link]]:duration-(--duration-fast)",
     "[@media(hover:hover)]:has-[[data-slot=card-link]:hover]:shadow-md has-[[data-slot=card-link]:active]:shadow-md",
     "has-[[data-slot=card-link]:focus-visible]:ring-3 has-[[data-slot=card-link]:focus-visible]:ring-ring/45",
@@ -102,60 +50,33 @@ const cardVariants = cva(
         /** O mesmo, levantado. Para o que flutua sobre uma lista atrás. */
         elevated: "border border-border bg-card text-card-foreground shadow-sm",
         /**
-         * Contêiner de segunda ordem: material diferente do cartão, para o
-         * bloco de apoio que não deve disputar com ele.
-         *
-         * `bg-muted` inteiro, e não um alfa dele, porque um alfa não atravessa
-         * os dois temas: a 40% ele dava 0,976 no claro — a um passo do branco
-         * do cartão *e* do fundo da página — e 0,243 no escuro, contra os 0,205
-         * do cartão. Invisível dos dois lados. O tingido cheio é o único valor
-         * que se lê nos dois, e é o mesmo `--muted` que a barra e a nota usam.
+         * Contêiner de segunda ordem, para o bloco de apoio. `bg-muted` inteiro
+         * e não um alfa: um alfa não atravessa os dois temas (invisível nos dois).
          */
         muted: "border border-border/60 bg-muted text-foreground",
         /** Sem borda e sem preenchimento: só agrupa, onde a superfície já existe. */
         plain: "border border-transparent bg-transparent text-foreground",
         /**
-         * **O brilho de marca** — o `outline` com a borda que se ilumina num
-         * arco de arco-íris conforme o ponteiro se aproxima, o mesmo do
-         * `Alert variant="brand"` (`@utility brand-glow` e `useBrandGlow`).
-         *
-         * **O recorte deixa 4px de folga**, e isso foi medido duas vezes. O
-         * casco tem `overflow-hidden` para recortar os cantos dos filhos, e o
-         * anel do `Alert` mora 2px **fora** da caixa: recortado ali, sumia
-         * inteiro. Pôr o anel **dentro** da borda o salvou só pela metade — o
-         * borrão de 2px sangra para fora e era cortado, e o arco quase não se
-         * via. A saída é `overflow: clip` com `overflow-clip-margin`: o
-         * conteúdo continua recortado nos cantos, e sobram 4px para o anel e o
-         * borrão. **A folga é `var(--spacing)` cru**, porque o Chrome rejeita
-         * `calc()` nessa propriedade — medido, `calc(var(--spacing)*2)`
-         * computava `0px`. Sem suporte à propriedade, o recorte fica na
-         * borda e o brilho sai tímido, como na primeira versão.
-         *
-         * `isolate` é obrigatório pela mesma medição do `Alert` — sem ele o
-         * pseudo de `z` negativo cai atrás do fundo de um ancestral.
-         *
-         * Uma por tela, como toda peça de marca. Sem ponteiro fino (telefone)
-         * não há brilho, e ela fica igual ao `outline`.
+         * O brilho de marca: o `outline` com a borda que se ilumina num arco de
+         * arco-íris conforme o ponteiro se aproxima, como o `Alert
+         * variant="brand"` (`@utility brand-glow` e `useBrandGlow`). O recorte
+         * é `overflow: clip` com `overflow-clip-margin`, para sobrar 4px ao anel
+         * e ao borrão; a folga é `var(--spacing)` cru, porque o Chrome rejeita
+         * `calc()` nessa propriedade. `isolate` é obrigatório (sem ele o
+         * pseudo de `z` negativo cai atrás do fundo de um ancestral). Uma por
+         * tela; sem ponteiro fino fica igual ao `outline`.
          */
         brand: [
           "brand-rainbow-image brand-glow isolate overflow-clip [overflow-clip-margin:var(--spacing)]",
           "border border-border bg-card text-card-foreground",
         ].join(" "),
-        /**
-         * O tracejado (rodada 204): o lugar de um cartão que ainda não existe —
-         * o "adicionar" no fim de uma grade, o vazio de uma lista de cartões.
-         * Sem preenchimento, porque não há nada ali ainda.
-         */
+        /** O tracejado: o lugar de um cartão que ainda não existe (o "adicionar", a lista vazia). */
         dashed: "border border-dashed border-border bg-transparent text-muted-foreground",
       },
       /**
-       * Uma medida, dois destinos: `--card-px` é o recuo do **corpo** (cabeçalho,
-       * conteúdo) e `--card-strip-px` é o das **tiras** (barra, rodapé, nota).
-       *
-       * Eles só divergem em `none`, e é o ponto inteiro do painel: o corpo perde
-       * o recuo para a lista sangrar até a borda, enquanto a barra de topo
-       * continua com os seus 16px — que é exatamente o que as 24 barras feitas à
-       * mão escreviam (`px-4`) dentro de cartões `py-0`.
+       * `--card-px` é o recuo do corpo (cabeçalho, conteúdo) e `--card-strip-px`
+       * o das tiras (barra, rodapé, nota). Só divergem em `none`: o corpo perde
+       * o recuo para a lista sangrar, e a barra mantém os 16px.
        */
       // `--card-gap` e `--card-py` repetem o `gap` e o `py` do casco para o
       // `CardBody` do cartão horizontal, que é quem os aplica ali.
@@ -166,39 +87,26 @@ const cardVariants = cva(
         lg: "gap-6 py-6 [--card-px:--spacing(6)] [--card-strip-px:--spacing(6)] [--card-gap:--spacing(6)] [--card-py:--spacing(6)]",
       },
       /**
-       * O cartão inteiro é o alvo.
-       *
-       * Existia no app antes de existir aqui: os cartões de categoria embrulham
-       * o `Card` num `<Link>` e penduram `group-hover:shadow-md` de fora. Com
-       * `interactive` + `asChild` o link **é** o cartão — um nó a menos, o foco
-       * no lugar certo, e o `active:` que o toque exige (regra H) vindo junto,
-       * em vez de depender de quem lembrar de escrevê-lo.
+       * O cartão inteiro é o alvo: com `asChild` o link é o cartão, e o
+       * `active:` que o toque exige vem junto.
        */
-      /**
-       * Inativo (rodada 204): o cartão continua legível e clicável, só recua.
-       * Era `opacity-[0.82]` em três telas, sempre ao lado de um `Badge`
-       * "Inativo" — que continua sendo de quem chama: a opacidade sozinha não
-       * diz o porquê.
-       */
+      /** Inativo: continua legível e clicável, só recua. O `Badge` "Inativo" é de quem chama. */
       inactive: {
         true: "opacity-80",
         false: "",
       },
       /**
-       * Escolhido (rodada 204): o contorno e o tingido do cartão de escolha do
-       * `RadioGroup` e do `Item` — a 60%, porque cheio lê como erro. O papel
-       * (`aria-pressed`, `aria-current`) é de quem chama: o cartão não sabe se
-       * é uma opção ou "você" numa lista.
+       * Escolhido: contorno e tingido a 60% (cheio lê como erro). O papel
+       * (`aria-pressed`, `aria-current`) é de quem chama.
        */
       selected: {
         true: "border-primary-accent/60 bg-primary/5 dark:bg-primary/10",
         false: "",
       },
       /**
-       * Horizontal (rodada 204): a mídia — capa, face do cartão, ícone grande —
-       * à esquerda e o `CardBody` à direita, a partir de `sm`; abaixo, empilha.
-       * O casco perde o respiro vertical ao deitar, e quem o devolve é o
-       * `CardBody`, para a mídia sangrar de cima a baixo.
+       * Horizontal: a mídia à esquerda e o `CardBody` à direita a partir de
+       * `sm`; abaixo, empilha. O casco perde o respiro vertical, que o
+       * `CardBody` devolve.
        */
       orientation: {
         vertical: "",
@@ -266,16 +174,9 @@ function Card({
 }
 
 /**
- * Título, descrição e ação — o cabeçalho **dentro** do respiro do cartão.
- *
- * Ele não é a barra de topo: essa é o `CardToolbar`, uma tira que sangra até a
- * borda (sem fio nem tinta — ver as tiras). Aqui o cabeçalho compartilha a superfície do corpo, e o que o
- * separa do conteúdo é o `gap` do casco.
- *
- * O `pt-4` que ele carregava saiu. Somado ao `py-4` do casco, dava **32px acima
- * do título contra 16 abaixo do conteúdo** — um cartão que abria torto, em
- * todas as 30 chamadas com cabeçalho. O respiro vertical é do casco, o recuo
- * horizontal é daqui, e nenhum dos dois é escrito duas vezes.
+ * Título, descrição e ação, dentro do respiro do cartão. Não é a barra de topo
+ * (essa é o `CardToolbar`, que sangra até a borda); o separador do conteúdo é o
+ * `gap` do casco. O respiro vertical é do casco e o recuo horizontal é daqui.
  */
 function CardHeader({
   className,
@@ -283,11 +184,7 @@ function CardHeader({
   children,
   ...props
 }: React.ComponentProps<"div"> & {
-  /**
-   * O ícone, o ladrilho de cor ou o avatar à esquerda do título e da
-   * descrição (rodada 204), centrado nas duas linhas. Os cartões de conta e
-   * de categoria montavam essa grade à mão.
-   */
+  /** O ícone, o ladrilho de cor ou o avatar à esquerda do título e da descrição, centrado nas duas linhas. */
   media?: React.ReactNode
 }) {
   return (
@@ -303,9 +200,8 @@ function CardHeader({
         "has-[>[data-slot=card-header-media]]:has-data-[slot=card-action]:grid-cols-[auto_minmax(0,1fr)_auto]",
         "has-[>[data-slot=card-header-media]]:[&>[data-slot=card-title]]:col-start-2 has-[>[data-slot=card-header-media]]:[&>[data-slot=card-description]]:col-start-2",
         "has-[>[data-slot=card-header-media]]:[&>[data-slot=card-action]]:col-start-3",
-        // Quem põe um fio no cabeçalho o transforma em tira, e uma tira precisa
-        // do próprio pé. Continua atendido — mas o caminho novo é `CardToolbar`,
-        // a tira que sangra até a borda com altura mínima.
+        // Quem põe um fio no cabeçalho o transforma em tira; o caminho novo é
+        // o `CardToolbar`.
         className
       )}
       {...props}
@@ -337,17 +233,11 @@ function CardTitle({
   size = "md",
   ...props
 }: React.ComponentProps<"div"> & {
-  /**
-   * O corpo do título (rodada 204). `md` (`text-base`) é o padrão: era `lg`,
-   * e 9 dos 10 títulos do app o rebaixavam por `className`. `lg` fica para o
-   * cartão que é a seção da tela; `sm`, para o cartão denso numa grade.
-   */
+  /** O corpo do título: `md` (padrão), `lg` para o cartão que é a seção da tela, `sm` para o denso. */
   size?: keyof typeof CARD_TITLE_SIZE
   /**
-   * O título é `div` porque um cartão dentro de uma lista de doze não deve
-   * despejar doze headings na árvore. Quando o cartão **é** uma seção da
-   * página, `asChild` devolve o `<h2>` — e aí a navegação por cabeçalho do
-   * leitor de tela encontra o que o olho já encontrava.
+   * O título é `div` para um cartão numa lista de doze não despejar doze
+   * headings; quando o cartão é uma seção da página, `asChild` devolve o `<h2>`.
    */
   asChild?: boolean
 }) {
@@ -402,17 +292,7 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
 
 /**
  * A barra de topo: rótulo à esquerda, contagem ou ação à direita.
- *
- * É a peça que faltava. O app tem 24 delas escritas à mão, em cinco grafias —
- * `flex min-h-10 shrink-0 items-center border-b border-border bg-muted/30 px-4
- * py-2.5`, com e sem `justify-end`, com e sem `gap-3` —, o que é o invariante 1
- * do design system sendo violado 24 vezes por culpa deste arquivo, que não
- * oferecia o slot.
- *
- * `justify-between` é o padrão porque com **um** filho ele desenha igual a
- * `flex-start`, e com dois desenha o que a barra quer. O tipo já vem posto para
- * o caso comum — texto curto e apagado —; `Badge` e `Button` dentro trazem o
- * próprio.
+ * `justify-between` é o padrão porque com um filho desenha igual a `flex-start`.
  */
 const cardToolbarVariants = cva(
   [
@@ -422,15 +302,8 @@ const cardToolbarVariants = cva(
   {
     variants: {
       /**
-       * **Sem tinta, o tipo é o componente.**
-       *
-       * Enquanto a barra era tingida, título e rótulo dentro dela liam como a
-       * mesma coisa — a banda dizia "isto é uma tira" e a letra só variava. Sem
-       * a tinta, a letra é a única coisa que distingue tira de conteúdo, e
-       * cravar um tipo só faria as chamadas de título sobrescreverem por
-       * `className` no mesmo dia. A divisão sai de contagem: das 23 barras
-       * escritas à mão no app, **8 são título** (o mês do dashboard, o período
-       * da fatura) e 7 são rótulo.
+       * Sem tinta, o tipo é o componente: título (o dado que nomeia o cartão) e
+       * rótulo se distinguem só pela letra.
        */
       variant: {
         /** `text-xs font-medium text-muted-foreground` — o mesmo `menuLabelClassName`. */
@@ -459,18 +332,9 @@ function CardToolbar({
 }
 
 /**
- * O rodapé de ações: onde ficam os botões que fecham o cartão.
- *
- * **Sem fio e sem tinta**, como a barra de topo e a nota. Barra e rodapé são a
- * mesma coisa — estrutura que emoldura o corpo —, e o que os separa do corpo é o
- * respiro que eles trazem (`--card-strip-py`), não um degrau de cor. Quem é mais
- * quieto é a `CardNote`, e ela é mais quieta porque é letra miúda, não porque
- * está embaixo.
- *
- * O tingido já foi `bg-muted/50`, depois `bg-muted/30`. Ele saiu inteiro: uma
- * tira pintada é uma **superfície diferente** do corpo, e é o mesmo defeito que
- * o rodapé da paleta de comandos e o do seletor de formulário já registraram ao
- * perder o deles.
+ * O rodapé de ações: onde ficam os botões que fecham o cartão. Sem fio e sem
+ * tinta, como a barra de topo e a nota: o que o separa do corpo é o respiro
+ * (`--card-strip-py`), e uma tira pintada seria outra superfície.
  */
 function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -487,17 +351,8 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 /**
- * A letra miúda no pé: a contagem, a origem do número, a ressalva.
- *
- * São 18 no app, em nove grafias. **Sem fio e sem tinta**: o par
- * `bg-muted/15 dark:bg-muted/25` existia porque 15% de `--muted` sobre `--card`
- * desaparece no escuro — um remendo que só era preciso porque havia tinta. Sem
- * ela não há o que medir, e quem dá profundidade ao pé é o respiro.
- *
- * Não é `CardFooter`. Um rodapé de ações tem alvos de toque e pesa; uma nota
- * não se clica e não deve pesar. Eram dois papéis usando um nome — e como o
- * nome já estava ocupado pelo papel errado, as 18 notas nasceram fora do
- * design system.
+ * A letra miúda no pé: a contagem, a origem do número, a ressalva. Sem fio e
+ * sem tinta. Não é `CardFooter`: uma nota não se clica e não deve pesar.
  */
 function CardNote({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -515,20 +370,10 @@ function CardNote({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 /**
- * A capa do cartão — a imagem, e opcionalmente o texto sobre ela (rodada 134).
- *
- * Nasceu para as galerias do carrossel ("carta com informação em imagem, ou só
- * imagem"), e mora no `Card` porque serve qualquer cartão com capa.
- *
- * **O texto sobre a foto não é o do tema.** Ele pousa num véu `--scrim` (preto
- * a 62%, subindo da base) com a tinta `--scrim-foreground` (branca), e os dois
- * são iguais nos dois temas: a foto não muda com o tema, e o texto sobre ela
- * também não pode.
- *
- * A imagem é `object-cover` na proporção pedida; `auto` deixa a altura com
- * quem chama (`h-full` dentro de um carrossel com altura fixa, por exemplo).
- * O recorte é da própria capa (`overflow-hidden`), que é o que os efeitos do
- * carrossel (`parallax`, `zoom`) precisam para a imagem andar dentro dela.
+ * A capa do cartão: a imagem e, opcionalmente, o texto sobre ela. O texto pousa
+ * num véu `--scrim` com a tinta `--scrim-foreground`, iguais nos dois temas
+ * (a foto não muda com o tema). `auto` deixa a altura com quem chama; o
+ * `overflow-hidden` deixa os efeitos do carrossel moverem a imagem dentro dela.
  */
 const CARD_MEDIA_ASPECT = {
   video: "aspect-video",
@@ -576,16 +421,10 @@ function CardMedia({
 }
 
 /**
- * O link esticado (rodada 204): o cartão inteiro clica, e os outros alvos de
- * dentro — o menu da linha do título, os botões do rodapé — continuam sendo
- * alvos próprios. **Vai no título**: o nome do link é o nome do cartão, e não
- * um `aria-label` que apaga o conteúdo. A película (`::after`) cobre o cartão;
- * o casco sobe os outros botões acima dela e acende o anel e a sombra quando o
- * link tem foco ou cursor.
- *
- * `interactive asChild` continua certo para o cartão que é **só** a ação. Com
- * um botão dentro ele não serve — botão dentro de link é inválido —, e era por
- * isso que cinco cartões do app faziam a película à mão.
+ * O link esticado: o cartão inteiro clica e os outros alvos de dentro (menu,
+ * botões do rodapé) continuam próprios. Vai no título, para o nome do link ser
+ * o nome do cartão. A película (`::after`) cobre o cartão. `interactive
+ * asChild` serve ao cartão que é só a ação (botão dentro de link é inválido).
  */
 function CardLink({
   asChild = false,
@@ -606,10 +445,7 @@ function CardLink({
   )
 }
 
-/**
- * A coluna de conteúdo do cartão horizontal (rodada 204): devolve o respiro
- * vertical que o casco perde ao deitar, para a mídia sangrar de cima a baixo.
- */
+/** A coluna de conteúdo do cartão horizontal: devolve o respiro vertical que o casco perde ao deitar. */
 function CardBody({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -621,12 +457,9 @@ function CardBody({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 /**
- * O ladrilho "rótulo + valor" de dentro de um cartão ou de uma folha (rodada
- * 204). Era escrito à mão 24 vezes — `rounded-lg border border-border/60
- * bg-background/80 p-3` com o rótulo em `text-xs font-medium` — e havia um
- * `FieldCard` local na folha de prévia de pagamento. O valor é `children`, e
- * o rótulo e o valor são par de identidade: o respiro entre eles é a
- * entrelinha mais 4px, não um `gap` maior.
+ * O ladrilho "rótulo + valor" de dentro de um cartão ou de uma folha. O valor é
+ * `children`; rótulo e valor são par de identidade (entrelinha mais 4px, sem
+ * `gap`).
  */
 function CardField({
   label,
@@ -642,10 +475,8 @@ function CardField({
     <div
       data-slot="card-field"
       className={cn(
-        // O ladrilho veste a linha alta (16; rodada 242d), e não o
-        // concêntrico: no cartão `md` ele fica a 16px da borda, e 22 − 16 caía
-        // no mínimo de 6 — e no `padding="none"` (recuo 0) saía 22, o raio do
-        // próprio cartão. Longe da borda, a peça veste o próprio degrau.
+        // Veste a linha alta (16), não o concêntrico: a 16px da borda 22 − 16
+        // cairia no mínimo de 6, e em `padding="none"` sairia 22.
         "rounded-row-lg flex min-w-0 flex-col gap-1 border border-border/60 bg-background/80 p-3 text-sm",
         className
       )}
@@ -662,10 +493,8 @@ function CardField({
 }
 
 /**
- * A mensagem que ocupa o cartão (rodada 204): o erro de carregar, o "nenhuma
- * carteira", a lista vazia curta. Eram 16 `CardContent` com `py-6` ou
- * `py-8` e a tinta escrita à mão. `destructive` é `role="alert"`; o resto é
- * texto. Para o vazio que pede ação, o `EmptyState`.
+ * A mensagem que ocupa o cartão (erro de carregar, lista vazia curta);
+ * `destructive` é `role="alert"`. Para o vazio que pede ação, o `EmptyState`.
  */
 function CardMessage({
   tone = "default",
@@ -688,11 +517,9 @@ function CardMessage({
 }
 
 /**
- * O cartão esperando dado (rodada 204): a barra, as linhas e o rodapé na
- * forma do cartão de verdade. Os esqueletos do app escreviam o casco à mão
- * (`rounded-xl border bg-card`, um com um `ring` morto) e dois arquivos
- * tinham o mesmo `CardSectionShell`. `children` troca as linhas pelo miolo
- * próprio. Ele não anuncia nada: quem espera é o `SkeletonGroup` da página.
+ * O cartão esperando dado, na forma do cartão de verdade; `children` troca as
+ * linhas pelo miolo próprio. Não anuncia nada: quem espera é o `SkeletonGroup`
+ * da página.
  */
 function CardSkeleton({
   toolbar = true,

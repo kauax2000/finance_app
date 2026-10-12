@@ -24,77 +24,32 @@ import {
 /**
  * Assuntos em que se lê um ou outro, não todos.
  *
- * ## Ele não tinha eixo nenhum, e o que ele desenhava era um resto
+ * Geometria, marcador, realce, alvo de toque e foco moram em
+ * [`lib/disclosure-classes`](../../lib/disclosure-classes.ts), dividida com o
+ * `Collapsible`; aqui ficam a moldura, o recuo e o conteúdo. O envelope interno
+ * não declara altura: quem anima é a `Content` do Radix contra a variável que
+ * ele mede do envelope, e declarar essa medida como altura recortaria texto que
+ * reflui.
  *
- * Este arquivo era o do shadcn com duas trocas. Não havia `variant`, não havia
- * `size`, a altura da linha era um `py-2.5` sem nome, o realce de cursor era um
- * `hover:underline` atravessando a linha inteira, e o anel de foco carregava um
- * `focus-visible:after:border-ring` apontando para um `::after` **que este
- * componente nunca desenhou** — um seletor da família "sobreviveu à remoção" que
- * o AGENTS.md já documenta duas vezes.
+ * `plain` é fio entre itens, para dentro de algo que já tem moldura; `contained`
+ * é uma caixa só; `separated` solta cada item e não vai dentro de um `Card`.
+ * O recuo é `--accordion-px` (0 em `plain`, 16 nas molduradas).
  *
- * A geometria, o marcador, o realce, o alvo de toque e o foco saíram daqui para
- * [`lib/disclosure-classes`](../../lib/disclosure-classes.ts), que é a régua que
- * este componente divide com o `Collapsible`. O que fica aqui é o que é só do
- * acordeão: a moldura, o recuo e o conteúdo.
- *
- * ## A altura de conteúdo era circular
- *
- * O corpo trazia `h-(--radix-accordion-content-height)` no **envelope interno**.
- * A variável é escrita pelo Radix a partir do `offsetHeight` desse mesmo nó, ou
- * seja: o elemento declarava como altura a medida que ele próprio produz. Na
- * primeira pintura ela não existe e a declaração cai para `auto`; depois ela
- * congela. Um parágrafo que reflui — janela estreitando, fonte do sistema
- * maior, tradução mais longa — passa a ser **recortado**, porque a altura ficou
- * na medida de antes da quebra.
- *
- * O envelope não precisa de altura nenhuma. Quem anima altura é a `Content` do
- * Radix, por keyframes, contra a variável — e é justamente por isso que o
- * envelope tem que ser livre para ser medido.
- *
- * ## As três molduras
- *
- * `plain` é o que existia: fio entre itens e mais nada, para dentro de algo que
- * já tem moldura. `contained` é uma caixa só com os fios por dentro, para o
- * acordeão que mora direto na tela e não dentro de cartão. `separated` solta cada item, e é a única das três que **não vai dentro
- * de um `Card`**: cartão dentro de cartão é sempre errado, e aqui a regra tem
- * consequência prática, não só estética — a segunda moldura não acrescenta
- * fronteira nenhuma que a primeira já não tenha desenhado.
- *
- * O recuo horizontal é uma variável (`--accordion-px`), e não um número repetido
- * em duas peças: em `plain` ele é zero, porque o texto tem que alinhar com o
- * conteúdo em volta; nas duas molduradas ele é 16, porque agora existe uma borda
- * de onde se afastar. É o mesmo mecanismo do `--dialog-px`.
- *
- * ## Rodada 200
- *
- * - **O estado mora aqui.** O Radix guardava o valor sozinho quando ninguém o
- *   controlava, e duas versões precisam escrever nele de fora da linha: o ⌘F
- *   abrindo o item que achou e o "abrir todos". A raiz agora controla o Radix
- *   sempre, com `defaultValue` como semente — o mesmo idioma do `ToggleGroup`
- *   e do `RadioGroup deselectable`.
- * - **`findable`** no `AccordionContent`: a mecânica do `Collapsible`
- *   (`hooks/use-until-found`).
- * - **`icon` e `description`** no gatilho: o ícone antes do rótulo, e a linha
- *   de apoio sob ele, par de identidade sem `gap`.
- * - **`AccordionToggleAll`**: "Abrir todos" / "Fechar todos" em
- *   `type="multiple"`. Os itens se registram na raiz, e o rótulo troca sozinho.
- * - **O conteúdo alinha com o rótulo**, e não com a seta nem com o ícone: com
- *   `markerSide="start"` ele começava sob o marcador, 28px antes do texto que
- *   encabeça, e o `icon` novo repetiria o defeito.
+ * O estado mora na raiz (controla o Radix, `defaultValue` é a semente), porque
+ * o ⌘F e o "abrir todos" escrevem nele de fora da linha.
  */
 
 type AccordionContextValue = {
   size: DisclosureSize
   markerSide: "start" | "end"
   variant: "plain" | "contained" | "separated"
-  /** Os itens abertos, sempre como lista — no `single`, zero ou um. */
+  /** Os itens abertos, sempre como lista (no `single`, zero ou um). */
   abertos: string[]
   /** Abre um item (o ⌘F que o achou). */
   abrir: (valor: string) => void
   /** Só no `multiple`: abre ou fecha todos. */
   todos?: (abrir: boolean) => void
-  /** Quantos itens existem — o "abrir todos" precisa saber se já estão. */
+  /** Quantos itens existem, para o "abrir todos" saber se já estão. */
   itens: string[]
   registrar: (valor: string) => () => void
 }
@@ -145,15 +100,7 @@ function Accordion({
   VariantProps<typeof accordionVariants> & {
     /** O degrau da escada de controles que a linha ocupa: 32, 36, 40. */
     size?: DisclosureSize
-    /**
-     * De que lado fica o marcador.
-     *
-     * `end` é o padrão e é o acordeão de perguntas: o rótulo começa na margem e
-     * a seta espera na outra ponta. `start` é o acordeão de **estrutura** — uma
-     * árvore, um agrupamento aninhado —, onde a seta antes do rótulo é o que
-     * deixa a hierarquia legível numa varredura vertical, porque todas as setas
-     * ficam na mesma coluna.
-     */
+    /** De que lado fica o marcador: `end` (padrão) para perguntas; `start` para estrutura, com as setas na mesma coluna. */
     markerSide?: "start" | "end"
   }) {
   const multiplo = props.type === "multiple"
@@ -197,8 +144,7 @@ function Accordion({
   )
 
   // A união discriminada do Radix (`single` | `multiple`) não sobrevive a um
-  // valor calculado no espalhamento: montado aqui e convertido uma vez, o
-  // idioma do `ToggleGroup`.
+  // valor calculado no espalhamento: montado aqui e convertido uma vez.
   const primitiva = {
     ...props,
     defaultValue: undefined,
@@ -237,13 +183,11 @@ function AccordionItem({
       data-slot="accordion-item"
       data-value={props.value}
       className={cn(
-        // A variante chega por contexto. Por seletor de ascendente (`in-data-…`)
-        // ela casava o `data-variant` de **qualquer** ancestral — o `Carousel`
-        // publica `plain`, o `Alert` e o `EmptyState` publicam os seus.
+        // A variante chega por contexto: o seletor de ascendente casaria o
+        // `data-variant` de qualquer ancestral (`Carousel`, `Alert`…).
         variant !== "separated" && "not-last:border-b",
-        // Cada item solto é uma linha de 34 a 42px fechado: a linha (12), e
-        // não a superfície, que o desenhava cápsula (rodada 241v). A linha
-        // alta (16) ficaria a 1px da cápsula no degrau `md` de 34.
+        // Item solto fechado é uma linha de 34 a 42px: a linha (12), não a
+        // superfície, que o desenharia cápsula.
         variant === "separated" &&
           "overflow-hidden rounded-row border border-border bg-card",
         "min-w-0",
@@ -270,14 +214,9 @@ function AccordionTrigger({
     /** A linha de apoio sob o rótulo: "4 transações · última em 12/03". */
     description?: React.ReactNode
     /**
-     * O que acompanha o rótulo na outra ponta da linha — uma contagem, um total,
-     * um `Badge`.
-     *
-     * É prop e não peça componível porque a alternativa exigia duas margens
-     * automáticas na mesma linha de flex, e **duas `ml-auto` dividem a sobra em
-     * partes iguais** em vez de empurrar a segunda para a borda: o valor
-     * terminaria flutuando no meio da linha. Com um slot nomeado a ordem é
-     * declarada, e ela continua correta com o marcador dos dois lados.
+     * O que acompanha o rótulo na outra ponta (contagem, total, `Badge`). É prop
+     * porque duas `ml-auto` na mesma linha dividem a sobra em vez de empurrar a
+     * segunda para a borda.
      */
     trailing?: React.ReactNode
   }) {
@@ -315,8 +254,8 @@ function AccordionTrigger({
           </span>
         ) : null}
         {description ? (
-          // Rótulo sobre apoio é **par de identidade**: sem `gap`, quem os
-          // separa é a entrelinha. Só o rótulo sublinha no cursor.
+          // Rótulo sobre apoio é par de identidade (sem `gap`). Só o rótulo
+          // sublinha no cursor.
           <span data-slot="accordion-trigger-content" className="flex min-w-0 flex-1 flex-col">
             <span data-slot="accordion-trigger-label" className={disclosureLabelClassName}>
               {children}
@@ -376,8 +315,8 @@ function AccordionContent({
   return (
     <AccordionPrimitive.Content
       data-slot="accordion-content"
-      // Sob `forceMount` o Radix nunca escreve `hidden` e mantém os filhos —
-      // quem fecha de verdade é o `until-found` do hook.
+      // Sob `forceMount` o Radix nunca escreve `hidden`: quem fecha de verdade
+      // é o `until-found` do hook.
       forceMount={findable ? true : forceMount}
       ref={composeRefs(refEncontravel, ref)}
       className={cn(
@@ -392,10 +331,8 @@ function AccordionContent({
         className={cn(
           disclosureRevealClassName,
           "px-(--accordion-px) pt-0 pb-3 text-muted-foreground",
-          // O texto alinha com o rótulo, e não com a seta nem com o ícone: o
-          // recuo soma o que estiver antes dele — a seta (`markerSide="start"`)
-          // e o ícone do gatilho, 16 + o vão de 12 cada um. Cada um publica a
-          // sua parcela; sem nenhum, é o recuo da moldura.
+          // O texto alinha com o rótulo: o recuo soma a seta (`markerSide="start"`)
+          // e o ícone do gatilho, cada um publica a sua parcela.
           "ps-[calc(var(--accordion-px)+var(--accordion-marker-ps,0px)+var(--accordion-icon-ps,0px))]",
           "[&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-primary-accent [&_a]:active:text-primary-accent",
           "[&_p:not(:last-child)]:mb-3",
@@ -409,10 +346,8 @@ function AccordionContent({
 }
 
 /**
- * "Abrir todos" / "Fechar todos" (rodada 200), para `type="multiple"` — no
- * `single` não há "todos" a abrir, e ele não renderiza. Fica **dentro** do
- * `Accordion`, antes dos itens, numa faixa alinhada ao fim no recuo da
- * moldura. O rótulo lê o estado: com todos abertos, fecha; senão, abre.
+ * "Abrir todos" / "Fechar todos", só para `type="multiple"`. Fica dentro do
+ * `Accordion`, antes dos itens; o rótulo lê o estado.
  */
 function AccordionToggleAll({
   className,
