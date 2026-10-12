@@ -323,7 +323,7 @@ export default function FormDoc() {
       </DocSection>
 
       <DocNote title="O Enter é a submissão implícita do navegador">
-          Ele aciona o primeiro <code>type=&quot;submit&quot;</code> cujo dono é o formulário — dentro do <code>&lt;form&gt;</code> ou ligado por <code>form=</code> — e decide pelo dono do campo <strong>no DOM</strong>: um campo num portal não envia, mesmo que o evento suba pela árvore do React. <code>form-submit-owner.test.ts</code> reprova o submit sem dono.
+          Ele aciona o primeiro <code>type=&quot;submit&quot;</code> cujo dono é o formulário — dentro do <code>&lt;form&gt;</code> ou ligado por <code>form=</code> — e decide pelo dono do campo <strong>no DOM</strong>: um campo num portal não envia, mesmo que o evento suba pela árvore do React. Com o botão desabilitado, o Enter não faz nada. Um <code>&lt;button&gt;</code> sem <code>type</code> também é de envio — o <code>Button</code> nasce <code>type=&quot;button&quot;</code> para não roubar o Enter. <code>form-submit-owner.test.ts</code> confere no fonte que o arquivo com submit tem um formulário ou um <code>form=</code>, e que nenhum <code>&lt;button&gt;</code> cru fica sem <code>type</code>.
       </DocNote>
 
       <PropsTable

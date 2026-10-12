@@ -12,10 +12,16 @@ This version has breaking changes — APIs, conventions, and file structure may 
   pertence a um formulário** — dentro do `<form>` ou ligado por `form=` (o
   `FormSubmit` escreve `form={id}` pelo contexto, que atravessa portal; um
   rodapé em slot irmão, como o `footer=` do assistente de categorias, leva
-  `form="um-id"` explícito). `form-submit-owner.test.ts` reprova o contrário.
-  O `Form` só acrescenta duas coisas: **⌘/Ctrl+Enter envia de um `<textarea>`**
-  (o Enter sozinho quebra a linha) e, com `labels="hidden"`, o Enter avança ao
-  campo seguinte.
+  `form="um-id"` explícito). Com o submit desabilitado, o Enter não faz nada
+  (a regra nativa). **Um `<button>` sem `type` é de envio** e, vindo antes,
+  roubaria o Enter: o `Button` nasce `type="button"`, e todo `<button>` cru
+  declara o seu. `form-submit-owner.test.ts` confere o que dá para conferir no
+  fonte — o arquivo com submit tem um `<form>`/`Form` ou um `form=`, e nenhum
+  `<button>` cru fica sem `type`; a árvore de cada formulário do app foi
+  conferida à mão na rodada 252. O `Form` só acrescenta duas coisas:
+  **⌘/Ctrl+Enter envia de um `<textarea>`** pelo mesmo botão padrão (o Enter
+  sozinho quebra a linha) e, com `labels="hidden"`, o Enter avança ao campo
+  seguinte.
 - **As peças são a forma curta**, e cada uma compõe um átomo: `FormInput` /
   `FormTextarea` (sobre `Field` — rótulo, ajuda e erro já ligados),
   `FormSubmit` (sobre `Button` + `Spinner` — `pending` desabilita, marca

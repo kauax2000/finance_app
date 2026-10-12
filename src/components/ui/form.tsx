@@ -83,7 +83,8 @@ import { SearchInput } from "@/components/ui/search-input"
  * rodapé portalizado continua dono. O que ele **não** atravessa é *slot irmão*:
  * quando o rodapé é renderizado por outro componente ao lado do formulário — o
  * `footer=` do assistente de categorias —, `form={UM_ID}` explícito é a
- * resposta. `form-submit-owner.test.ts` reprova o submit sem dono.
+ * resposta. `form-submit-owner.test.ts` confere no fonte o arquivo com submit
+ * sem formulário nem `form=`, e o `<button>` cru sem `type`.
  *
  * O navegador decide pelo dono do campo **no DOM**: o Enter na busca de um
  * popover portalizado não envia o formulário, mesmo que o evento suba pela
@@ -153,6 +154,20 @@ function camposQueAvancam(form: HTMLFormElement): HTMLElement[] {
   return Array.from(form.querySelectorAll<HTMLElement>(CAMPOS_QUE_AVANCAM)).filter(
     (el) => el.tabIndex >= 0 && el.getClientRects().length > 0
   )
+}
+
+/**
+ * O botão padrão do formulário, como o navegador o escolhe: o primeiro de
+ * envio entre os controles dele, em ordem do documento — inclusive os ligados
+ * por `form=` — e um `<button>` sem `type` conta como de envio.
+ */
+function botaoPadrao(form: HTMLFormElement): HTMLButtonElement | HTMLInputElement | null {
+  for (const el of Array.from(form.elements)) {
+    if ((el.tagName === "BUTTON" || el.tagName === "INPUT") && (el as HTMLButtonElement).type === "submit") {
+      return el as HTMLButtonElement | HTMLInputElement
+    }
+  }
+  return null
 }
 
 /** Exportada para poder ser testada. */
@@ -409,7 +424,10 @@ const Form = React.forwardRef<HTMLFormElement, FormProps>(
         (alvo as HTMLTextAreaElement).form === e.currentTarget
       ) {
         e.preventDefault()
-        e.currentTarget.requestSubmit()
+        // O mesmo botão que o Enter num campo acionaria: o primeiro de envio do
+        // formulário. Desabilitado, não envia — a regra nativa.
+        const padrao = botaoPadrao(e.currentTarget)
+        if (padrao && !padrao.disabled) e.currentTarget.requestSubmit(padrao)
         return
       }
       const proximo =

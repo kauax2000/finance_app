@@ -278,6 +278,9 @@ function Button({
       data-size={size}
       data-icon-motion={iconMotion ?? undefined}
       className={cn(buttonVariants({ variant, size, iconMotion, className }))}
+      // Um `<button>` sem `type` é de envio, e a submissão implícita do Enter
+      // aciona o primeiro: o botão de ícone antes do "Salvar" a roubaria.
+      type={asChild ? undefined : "button"}
       {...props}
     >
       {content}

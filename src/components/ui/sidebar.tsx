@@ -805,6 +805,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
 
   return (
     <button
+      type="button"
       data-sidebar="rail"
       data-slot="sidebar-rail"
       aria-label="Alternar a navegação"
@@ -1125,6 +1126,7 @@ function SidebarGroupAction({
   return (
     <Comp
       data-slot="sidebar-group-action"
+      type={asChild ? undefined : "button"}
       data-sidebar="group-action"
       className={cn(
         "absolute top-3.5 right-3 flex aspect-square w-5 items-center justify-center rounded-full p-0 text-sidebar-foreground ring-sidebar-ring outline-hidden transition-transform group-data-[collapsible=icon]:hidden after:absolute after:-inset-3 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground focus-visible:ring-3 md:after:hidden [&>svg]:size-4 [&>svg]:shrink-0",
@@ -1347,6 +1349,7 @@ function SidebarMenuButton({
   const button = (
     <Comp
       data-slot="sidebar-menu-button"
+      type={asChild ? undefined : "button"}
       data-sidebar="menu-button"
       data-size={size}
       data-active={isActive}
@@ -1405,6 +1408,7 @@ function SidebarMenuAction({
   return (
     <Comp
       data-slot="sidebar-menu-action"
+      type={asChild ? undefined : "button"}
       data-sidebar="menu-action"
       className={cn(
         "absolute top-1.5 right-1 flex aspect-square w-5 items-center justify-center rounded-full p-0 text-sidebar-foreground ring-sidebar-ring outline-hidden transition-transform group-data-[collapsible=icon]:hidden peer-hover/menu-button:text-sidebar-accent-foreground peer-data-[size=md]/menu-button:top-1.5 peer-data-[size=lg]/menu-button:top-2.5 peer-data-[size=sm]/menu-button:top-1 after:absolute after:-inset-3 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground focus-visible:ring-3 md:after:hidden [&>svg]:size-4 [&>svg]:shrink-0",

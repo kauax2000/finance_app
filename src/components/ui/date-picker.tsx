@@ -600,6 +600,7 @@ function GatilhoCampo({
   if (naGaveta) {
     return (
       <button
+        type="button"
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={onOpen}
