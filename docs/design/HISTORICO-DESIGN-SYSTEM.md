@@ -25101,7 +25101,7 @@ mudou, porque deixaram de importar `cmdk` e `vaul`).
   espaçamento dele agora é o do `Dialog`.
 - **No telefone o `Sheet` é o `Drawer`**: a mesma gaveta, a mesma superfície de
   vidro e um aninhamento só; o meio da gaveta é marcado pelo JS e achado pelo
-  CSS, sem a cadeia de `:not()`. Cinco folhas do app com `p-0` ganharam 24px
+  CSS, sem a cadeia de `:not()`. As folhas do app que zeravam o padding ganharam 24px
   mais a área segura embaixo no telefone (e o rodapé deixou de ficar sob o
   indicador do iPhone).
 - **O marcador** do `Tabs`, da `BottomBar` e do `ToggleGroup` é o hook
@@ -25113,13 +25113,16 @@ mudou, porque deixaram de importar `cmdk` e `vaul`).
 - **A base da barra do topo** é uma variável de CSS por documento, e não um
   `ResizeObserver` por barra.
 - **O `Chart`** perdeu as fases e o `IntersectionObserver`: a entrada é a
-  animação do próprio Recharts (`CHART_ENTER_MS`) e anima ao montar; a troca de
+  animação do próprio Recharts (`CHART_ENTER_MS`) e anima ao montar. Resta um relógio de entrada de uma vez só
+  (`useChartEntering`, a flag `entrando`) que troca as marcas da duração de
+  entrada para `CHART_UPDATE_MS`; não há `IntersectionObserver`, fases nem
+  `data-reveal`. A troca de
   dado volta a `CHART_UPDATE_MS` (300ms), e a onda, a mola e as cascatas do
   mapa de calor e das listas ficaram.
 - **Os scripts** (`catalog.mjs`, `audit.mjs`) tiram comentários pela mesma
   função (`sem-comentarios.mjs`); o catálogo segue variáveis na `cva`.
 - **Os testes de escada** (`*-ladder.test.ts`) viraram uma tabela só,
-  `escadas.test.ts`, e o vidro da placa é testado num lugar só.
+  `escadas.test.ts`, e os testes duplicados do vidro da placa (os da sidebar) saíram.
 
 **O que trocou por nativo**
 
@@ -25127,7 +25130,8 @@ mudou, porque deixaram de importar `cmdk` e `vaul`).
   envio pertence a um formulário, `ENTER_DEFERRAL_RULES` e
   `shouldDeferEnterToWidget` saíram, e o ⌘Enter usa o botão padrão. Por isso o
   **`Button` nasce `type="button"`** (fora do `asChild`); quem envia declara
-  `type="submit"`, e o `FormSubmit` já declara.
+  `type="submit"`, e o `FormSubmit` já declara. Com `labels="hidden"` o Enter
+  continua avançando ao campo seguinte, e só o último envia.
 - O **estado do `Collapsible`** e o **`composeRefs`** vêm do Radix, não de
   cópias nossas.
 
@@ -25151,5 +25155,9 @@ mudou, porque deixaram de importar `cmdk` e `vaul`).
 
 **Medido no fim:** `tsc` limpo; lint 0 erros e 57 avisos; 140 arquivos e 1.910
 testes passando; `ds:audit` sem achado; variantes do catálogo idênticas;
-`ds:docs-map` sem diferença; varredura no navegador de todas as páginas do
-catálogo e do `/login` sem erro do Next e sem `console.error`.
+`ds:docs-map` sem diferença. No navegador, as 86 páginas do catálogo e o
+`/login` respondem 200; `/designsystem/input-otp` mostra o overlay do Next por
+um `console.error` ("input of type %s with both value and defaultValue"), do
+`docs/input-otp.tsx:92`, que passa `defaultValue` à biblioteca `input-otp`.
+Já existia: a página mudou pela última vez antes da rodada (00dedd6) e o
+`input-otp.tsx` só teve comentários editados (40a0694).
