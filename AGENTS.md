@@ -1415,6 +1415,9 @@ declaração de `background-color` no trilho).
   cobra).
 - `in-*` e `group-*` compilam com `:where()` e perdem para a classe base:
   prefira variável.
+- **`instanceof` falha atravessando o iframe do catálogo** (`IphoneFrame`): o
+  `HTMLElement` é da janela de fora. Use `nodeType`, `elementFromPoint` ou
+  duck typing.
 
 ## Histórico e backlog
 

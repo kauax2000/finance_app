@@ -85,4 +85,8 @@ describe("toda gaveta do telefone é a flush", () => {
     // E o padrão continua sendo a flush.
     expect(CODIGO).toMatch(/defaultVariants: \{\s*fill: false,\s*variant: "flush"/)
   })
+
+  it("o meio nunca é um título ou descrição sr-only", () => {
+    expect(CODIGO).toMatch(/"dialog-title",\s*"dialog-description"/)
+  })
 })

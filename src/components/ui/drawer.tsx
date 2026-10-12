@@ -109,7 +109,7 @@ function DragHandle({
 /**
  * A gaveta, em qualquer largura de tela. `Sheet` troca de superfície (painel de
  * borda acima de 768px, gaveta abaixo); `Drawer` é gaveta sempre, para quando o
- * gesto é a afordância. Usa `--z-sheet`, `bg-background`, `dvh` + área segura e
+ * gesto é a afordância. Usa `--z-sheet`, `modalSurfaceClassName`, `dvh` + área segura e
  * `repositionInputs` (a gaveta não encolhe quando o teclado do iOS sobe).
  *
  * A cromagem (cabeçalho, título, corpo rolável, rodapé) vem do `Dialog`: o
@@ -363,6 +363,8 @@ function acharMeio(el: HTMLElement): HTMLElement | null {
     "dialog-footer",
     "dialog-close-button",
     "dialog-body",
+    "dialog-title",
+    "dialog-description",
     "drawer-cancel",
   ])
   for (const filho of Array.from(el.children)) {
