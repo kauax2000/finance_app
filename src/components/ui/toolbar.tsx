@@ -1,26 +1,18 @@
 "use client"
 
 import * as React from "react"
-import {
-  AdjustmentsHorizontalIcon,
-  EllipsisHorizontalIcon,
-  XMarkIcon,
-} from "@heroicons/react/16/solid"
+import { AdjustmentsHorizontalIcon, XMarkIcon } from "@heroicons/react/16/solid"
 
 import { Badge } from "@/components/ui/badge"
 import { Button, ButtonSizeContext } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { SearchInput } from "@/components/ui/search-input"
 import { useToolbarKeyboard } from "@/hooks/use-toolbar-keyboard"
 import { useTopBarBottom } from "@/hooks/use-top-bar-bottom"
 import { numberBR } from "@/lib/formatters"
 import { barSurfaceClassName } from "@/lib/glass-classes"
 import { proximoEscondido } from "@/lib/hide-on-scroll"
+import { limparExcesso, quemSai } from "@/lib/overflow"
+import { OverflowMenu, type ItemNoExcesso } from "@/lib/overflow-menu"
 import { cn } from "@/lib/utils"
 
 /**
@@ -348,60 +340,14 @@ function ToolbarActions({
       )}
       {...props}
     >
-      {fora.length ? <OverflowActionsMenu items={fora} label={moreLabel} /> : null}
+      {fora.length ? <OverflowMenu items={fora} label={moreLabel} /> : null}
       {children}
     </div>
   )
 }
 
-/** O que saiu da fileira para o ⋯: o botão, o rótulo e o ícone dele. */
-type AcaoNoExcesso = { i: number; el: HTMLElement; label: string; icone: SVGElement | null }
-
-/**
- * O ⋯ das ações que não couberam. O item clica o botão escondido, então o
- * `onClick`, o `href` e o diálogo que ele abre são os mesmos. Mora aqui e é
- * exportado desde a rodada 232: o `PageHeaderActions overflow="menu"` usa o
- * mesmo menu com outra conta de espaço.
- */
-function OverflowActionsMenu({ items, label }: { items: AcaoNoExcesso[]; label: string }) {
-  return (
-    <DropdownMenu mobile="sheet">
-      <DropdownMenuTrigger asChild>
-        <Button type="button" variant="outline" size="icon-md" data-toolbar-more="" aria-label={label}>
-          <EllipsisHorizontalIcon aria-hidden />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" size="lg">
-        {items.map((f) => (
-          <DropdownMenuItem key={f.i} onSelect={() => f.el.click()}>
-            {f.icone ? <IconeCopiado svg={f.icone} /> : null}
-            {f.label}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
-/**
- * O ícone do botão escondido, no item do ⋯: uma cópia do `svg` dele, então o
- * menu mostra o mesmo desenho sem a tela declarar o ícone duas vezes. O corpo
- * é o da linha do menu, que dimensiona o `svg`.
- */
-function IconeCopiado({ svg }: { svg: SVGElement }) {
-  return (
-    <span
-      aria-hidden
-      className="flex shrink-0"
-      ref={(no) => {
-        if (no && !no.firstChild) no.append(svg.cloneNode(true))
-      }}
-    />
-  )
-}
-
-/** A maiúscula inicial que o `Button` dá ao rótulo (`::first-letter`) e o item de menu não. */
-const maiuscula = (t: string) => t.charAt(0).toLocaleUpperCase("pt-BR") + t.slice(1)
+/** Um item do ⋯ com o botão escondido que ele clica — o que diz se a lista mudou. */
+type AcaoNoExcesso = ItemNoExcesso & { el: HTMLElement }
 
 /**
  * Quem cabe. Mostra tudo, mede, e esconde do começo para o fim os botões que
@@ -428,35 +374,35 @@ function useExcessoDeAcoes(
     const barra = acoes?.closest<HTMLElement>(raizDaCasa ?? "[data-slot=toolbar]")
     if (!ativo || !acoes || !barra) return
 
-    const medir = () => {
-      const filhos = [...acoes.children].filter(
-        (f): f is HTMLElement => f instanceof HTMLElement && !f.hasAttribute("data-toolbar-more")
+    const lerFilhos = () =>
+      [...acoes.children].filter(
+        (f): f is HTMLElement => f instanceof HTMLElement && !f.hasAttribute("data-overflow-more")
       )
-      for (const f of filhos) f.removeAttribute("hidden")
+    const medir = () => {
+      const filhos = lerFilhos()
+      limparExcesso(filhos)
       const gap = parseFloat(getComputedStyle(acoes).columnGap) || 0
       const larguras = filhos.map((f) => f.offsetWidth)
-      const total = larguras.reduce((a, b) => a + b, 0) + gap * Math.max(0, filhos.length - 1)
       const cabe = espacoDaCasa ? espacoDaCasa(barra) : espacoNaBarra(barra, acoes)
-
-      if (total <= cabe + 0.5) {
-        setFora((v) => (v.length ? [] : v))
-        return
-      }
       // O ⋯ é quadrado: a largura dele é a altura de um controle.
       const mais = filhos.at(-1)?.offsetHeight ?? 32
-      let soma = total + mais + gap
-      const saem: AcaoNoExcesso[] = []
-      filhos.forEach((f, i) => {
-        if (soma <= cabe + 0.5 || i === filhos.length - 1) return
-        if (f.dataset.slot !== "button" || f.hasAttribute("aria-haspopup")) return
+      // Saem do começo; a última ação e um gatilho de menu nunca saem.
+      const saem = quemSai(larguras, cabe, {
+        ponta: "inicio",
+        fixos: new Set([filhos.length - 1]),
+        podeSair: (i) => filhos[i].dataset.slot === "button" && !filhos[i].hasAttribute("aria-haspopup"),
+        reserva: mais,
+        gap,
+      }).map((i): AcaoNoExcesso => {
+        const f = filhos[i]
         f.setAttribute("hidden", "")
-        soma -= larguras[i] + gap
-        saem.push({
-          i,
+        return {
+          key: String(i),
           el: f,
-          label: maiuscula(f.getAttribute("aria-label") ?? f.textContent?.trim() ?? ""),
+          label: f.getAttribute("aria-label") ?? f.textContent?.trim() ?? "",
           icone: f.querySelector("svg"),
-        })
+          onSelect: () => f.click(),
+        }
       })
       setFora((v) =>
         v.length === saem.length && v.every((x, k) => x.el === saem[k].el) ? v : saem
@@ -466,7 +412,10 @@ function useExcessoDeAcoes(
     medir()
     const ro = new ResizeObserver(medir)
     ro.observe(barra)
-    return () => ro.disconnect()
+    return () => {
+      ro.disconnect()
+      limparExcesso(lerFilhos())
+    }
   }, [ativo, raizDaCasa, espacoDaCasa, ref])
 
   return ativo ? fora : []
@@ -748,7 +697,7 @@ function ToolbarFilterIndicator({
 }
 
 export {
-  OverflowActionsMenu,
+  OverflowMenu as OverflowActionsMenu,
   useExcessoDeAcoes as useOverflowActions,
   usePresa as useStickyBar,
   Toolbar,

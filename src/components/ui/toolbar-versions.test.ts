@@ -124,13 +124,16 @@ describe("as peças", () => {
   })
 
   it("o ⋯ clica o próprio botão, não tira a última ação nem um gatilho de menu", () => {
-    expect(CODIGO).toContain("onSelect={() => f.el.click()}")
+    expect(CODIGO).toContain("onSelect: () => f.click()")
     // O item leva o ícone do botão (uma cópia do svg) e a maiúscula do rótulo.
-    expect(CODIGO).toContain("{f.icone ? <IconeCopiado svg={f.icone} /> : null}")
+    const MENU = lerFonte("src/lib/overflow-menu.tsx")
+    expect(MENU).toContain("{f.icone ? <IconeCopiado svg={f.icone} /> : null}")
+    expect(MENU).toContain("{maiuscula(f.label)}")
     expect(CODIGO).toContain('icone: f.querySelector("svg")')
-    expect(CODIGO).toContain("label: maiuscula(")
-    expect(CODIGO).toContain("i === filhos.length - 1")
-    expect(CODIGO).toContain('f.hasAttribute("aria-haspopup")')
+    // Saem do começo; a última fica, e um gatilho de menu não pode sair.
+    expect(CODIGO).toContain('ponta: "inicio"')
+    expect(CODIGO).toContain("fixos: new Set([filhos.length - 1])")
+    expect(CODIGO).toContain('!filhos[i].hasAttribute("aria-haspopup")')
     // O grupo flex-1 é medido pelo conteúdo, não pela sobra.
     expect(CODIGO).toContain('f.style.flex = "0 0 auto"')
   })

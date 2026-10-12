@@ -302,7 +302,7 @@ export default function TabsDoc() {
 
       <DocSection
         title="O que não cabe vai para o Mais"
-        description="overflow='menu' mede a fileira e manda as abas que não cabem para o menu Mais ▾, no fim. A ativa nunca sai: se ela não cabe, sai a última que cabia. É a alternativa ao scrollable para quem não quer rolar."
+        description="overflow='menu' mede a fileira e manda as abas que não cabem para o ⋯ (Mais abas), no fim. A ativa nunca sai: se ela não cabe, sai a última que cabia. É a alternativa ao scrollable para quem não quer rolar."
         code={`<TabsList overflow="menu">{meses.map(…)}</TabsList>`}
         previewClassName="items-start"
       >

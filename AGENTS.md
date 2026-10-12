@@ -1843,7 +1843,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `onClose` (o × é `aria-hidden` — botão dentro de aba é controle aninhado — e
   Delete fecha, levando o foco à vizinha); `TabsList` tem `end` (fora do
   `tablist`, onde mora o `TabsAdd`) e `overflow="menu"` (o excesso vai para o
-  **Mais ▾**, e a ativa nunca sai). **Abas que são rotas são `TabsNav` +
+  **⋯ (Mais abas)**, e a ativa nunca sai). **Abas que são rotas são `TabsNav` +
   `TabsNavLink`**, num `<nav>` com `aria-current="page"` e sem `role="tab"`.
   **Na vertical não há `stretch`** (rodada 227): ele dividia a largura e, na
   coluna, levava a moldura a `w-full` e espremia o painel numa fresta; a

@@ -9,11 +9,12 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { Button } from "@/components/ui/button"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
-import { OverflowActionsMenu, useOverflowActions } from "@/components/ui/toolbar"
+import { useOverflowActions } from "@/components/ui/toolbar"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Caption, H1, Muted } from "@/components/ui/typography"
 import { publishPageTitle } from "@/hooks/use-page-title-dock"
 import { useTopBarBottom } from "@/hooks/use-top-bar-bottom"
+import { OverflowMenu } from "@/lib/overflow-menu"
 import { cn } from "@/lib/utils"
 
 /**
@@ -549,7 +550,7 @@ function PageHeaderActions({
       )}
       {...props}
     >
-      {fora.length ? <OverflowActionsMenu items={fora} label={moreLabel} /> : null}
+      {fora.length ? <OverflowMenu items={fora} label={moreLabel} /> : null}
       {children}
     </div>
   )

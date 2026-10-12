@@ -4,17 +4,13 @@ import * as React from "react"
 import { cva } from "class-variance-authority"
 import { Slot, Tabs as TabsPrimitive } from "radix-ui"
 import { composeRefs } from "radix-ui/internal"
-import { ChevronDownIcon, PlusIcon, XMarkIcon } from "@heroicons/react/16/solid"
+import { PlusIcon, XMarkIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { glassControlSurfaceClassName } from "@/lib/glass-classes"
+import { limparExcesso, quemSai } from "@/lib/overflow"
+import { OverflowMenu } from "@/lib/overflow-menu"
 import {
   scrollFadeViewportClassName,
   scrollFadeViewportXClassName,
@@ -1117,9 +1113,10 @@ function TabsList({
 
 /**
  * Quem cabe na fileira. Mede as abas **todas à vista** (tira o `hidden` antes
- * de ler a largura), soma até a moldura menos o botão "Mais", e esconde o
- * resto — menos a ativa, que troca de lugar com a última que cabia. Ele roda
- * num `ResizeObserver` da moldura, e de novo quando a aba ativa muda.
+ * de ler a largura) e manda para o ⋯ as do fim que não cabem com ele — menos a
+ * ativa, que fica: sai a última que cabia (`quemSai`, de `lib/overflow`, a
+ * mesma conta das ações da `Toolbar`). Ele roda num `ResizeObserver` da
+ * moldura, e de novo quando a aba ativa muda.
  */
 function useExcesso(
   ligado: boolean,
@@ -1133,40 +1130,25 @@ function useExcesso(
     const trilha = trilhaRef.current
     if (!ligado || !moldura || !trilha) return
     const RESERVA_DO_MAIS = 40
+    const lerAbas = () => [...trilha.querySelectorAll<HTMLElement>('[data-slot="tabs-trigger"]')]
 
     const medir = () => {
-      const abas = [...trilha.querySelectorAll<HTMLElement>('[data-slot="tabs-trigger"]')]
-      for (const a of abas) a.removeAttribute("hidden")
+      const abas = lerAbas()
+      limparExcesso(abas)
       const outros = [...moldura.children]
         .filter((f) => f !== trilha && f.getAttribute("data-slot") !== "tabs-more")
         .reduce((soma, f) => soma + (f as HTMLElement).offsetWidth, 0)
       const larguras = abas.map((a) => a.offsetWidth + 2)
-      const total = larguras.reduce((x, y) => x + y, 0)
       const cabe = moldura.clientWidth - outros - 6
-      if (total <= cabe) {
-        setEscondidas((v) => (v.length ? [] : v))
-        return
-      }
-      const limite = cabe - RESERVA_DO_MAIS
-      const visiveis = new Set<number>()
-      let soma = 0
-      abas.forEach((_, i) => {
-        if (soma + larguras[i] <= limite) {
-          visiveis.add(i)
-          soma += larguras[i]
-        }
-      })
       const iAtiva = abas.findIndex((a) => a.dataset.value === ativa)
-      if (iAtiva !== -1 && !visiveis.has(iAtiva)) {
-        const ultima = Math.max(...visiveis)
-        if (Number.isFinite(ultima)) visiveis.delete(ultima)
-        visiveis.add(iAtiva)
-      }
-      const fora: { value: string; label: string }[] = []
-      abas.forEach((a, i) => {
-        if (visiveis.has(i)) return
+      const fora = quemSai(larguras, cabe, {
+        ponta: "fim",
+        fixos: new Set(iAtiva >= 0 ? [iAtiva] : []),
+        reserva: RESERVA_DO_MAIS,
+      }).map((i) => {
+        const a = abas[i]
         a.setAttribute("hidden", "")
-        fora.push({ value: a.dataset.value ?? "", label: a.dataset.label ?? a.textContent ?? "" })
+        return { value: a.dataset.value ?? "", label: a.dataset.label ?? a.textContent ?? "" }
       })
       setEscondidas((v) =>
         v.length === fora.length && v.every((x, i) => x.value === fora[i].value) ? v : fora
@@ -1176,36 +1158,29 @@ function useExcesso(
     medir()
     const ro = new ResizeObserver(medir)
     ro.observe(moldura)
-    return () => ro.disconnect()
+    return () => {
+      ro.disconnect()
+      limparExcesso(lerAbas())
+    }
   }, [ligado, ativa, molduraRef, trilhaRef])
   return ligado ? escondidas : []
 }
 
-/** O "Mais ▾": as abas que não couberam, num menu que troca de aba de fora. */
+/**
+ * O ⋯ (Mais abas): as abas que não couberam, num menu que troca de aba de
+ * fora. É o `OverflowMenu` da `Toolbar`; o invólucro guarda o
+ * `data-slot="tabs-more"`, que a medição pula ao somar os vizinhos.
+ */
 function TabsMoreMenu({ abas }: { abas: { value: string; label: string }[] }) {
   const raiz = React.useContext(TabsRootContext)
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="tertiary"
-          size="sm"
-          data-slot="tabs-more"
-          className="ms-0.5 shrink-0"
-        >
-          mais
-          <ChevronDownIcon aria-hidden />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" size="md">
-        {abas.map((a) => (
-          <DropdownMenuItem key={a.value} onSelect={() => raiz?.setValue(a.value)}>
-            {a.label}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div data-slot="tabs-more" className="ms-0.5 flex shrink-0">
+      <OverflowMenu
+        label="Mais abas"
+        align="end"
+        items={abas.map((a) => ({ key: a.value, label: a.label, onSelect: () => raiz?.setValue(a.value) }))}
+      />
+    </div>
   )
 }
 
