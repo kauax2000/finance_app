@@ -268,7 +268,7 @@ export default function BrandDoc() {
 
       <DocNote title="O grão é pesado de propósito, e o método de medir é o de sempre">
         <p>
-          O <code>feTurbulence</code> do campo verde com os três números mudados: <code>baseFrequency</code> 0,75 (mais baixo é grão mais graúdo, de filme), <code>slope</code> 1 (a compressão protegia texto sobre painel escuro, e aqui não há texto sobre o grão) e alfa 0,85 no claro, 0,75 no escuro, em <code>overlay</code> sobre o degradê. <strong>A ordem das camadas é o grão existir ou não</strong>: a primeira versão o punha embaixo do arco-íris opaco e ele sumia — medido, σ idêntico com e sem grão. O método também mudou: desvio-padrão da diferença entre pixels vizinhos, porque o degradê varia ~15 unidades ao longo do retalho e afogava a textura na luminância crua. Os números e o script (<code>scripts/brand-grain-ab.mjs</code>) moram em <code>globals.css</code>, e só lá — σ sem método não compara.
+          O <code>feTurbulence</code> do campo verde com os três números mudados: <code>baseFrequency</code> 0,75 (mais baixo é grão mais graúdo, de filme), <code>slope</code> 1 (a compressão protegia texto sobre painel escuro, e aqui não há texto sobre o grão) e alfa 0,85 no claro, 0,75 no escuro, em <code>overlay</code> sobre o degradê. <strong>A ordem das camadas é o grão existir ou não</strong>: a primeira versão o punha embaixo do arco-íris opaco e ele sumia — medido, σ idêntico com e sem grão. O método também mudou: desvio-padrão da diferença entre pixels vizinhos, porque o degradê varia ~15 unidades ao longo do retalho e afogava a textura na luminância crua. Os números e o método (A/B de grão) moram em <code>globals.css</code>, e só lá — σ sem método não compara.
         </p>
       </DocNote>
 

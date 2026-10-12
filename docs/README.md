@@ -24,9 +24,6 @@ As regras do projeto para quem escreve código (humano ou agente) estão em
 | Arquivo | Para quê |
 |---|---|
 | [`design/HISTORICO-DESIGN-SYSTEM.md`](design/HISTORICO-DESIGN-SYSTEM.md) | Diário das rodadas e backlog de migração: o porquê de cada regra do `AGENTS.md` |
-| [`design/CONFORMIDADE-02.md`](design/CONFORMIDADE-02.md) | Estado atual da conformidade das telas com o DS |
-| [`design/CONFORMIDADE-01.md`](design/CONFORMIDADE-01.md) | Registro histórico (substituído pela 02) |
-| [`design/REVISAO-IMPECCABLE-01.md`](design/REVISAO-IMPECCABLE-01.md) | Diagnóstico de design de antes das correções |
 
 ## Arquivo
 

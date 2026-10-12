@@ -282,8 +282,8 @@
      varia ~15 unidades ao longo dos 220px e afoga a textura. O que se mede
      agora é o desvio-padrão da **diferença entre pixels vizinhos** — vizinho
      menos vizinho cancela o que é suave e sobra o que é grão. Sem grão o
-     degradê sozinho dá 0,64 nos dois temas; o script
-     `scripts/brand-grain-ab.mjs` é o método, e os números de cada variante
+     degradê sozinho dá 0,64 nos dois temas; o método
+     é o A/B de grão, e os números de cada variante
      estão no comentário da `@utility brand-field`. */
   --brand-teal: oklch(0.72 0.13 195);
   --brand-blue: oklch(0.7 0.15 225);
@@ -2435,7 +2435,7 @@
    grão, arco-íris`: o grão fica sobre o degradê e é ele que o `overlay`
    texturiza. (O mesmo valia para `brand-rainbow` enquanto ela teve grão.)
 
-   Os números, com `scripts/brand-grain-ab.mjs` (σ da diferença entre pixels
+   Os números, medidos por A/B de grão (σ da diferença entre pixels
    vizinhos, retalho de 220×140 sem texto, captura a 1440×900, animação
    parada):
 
