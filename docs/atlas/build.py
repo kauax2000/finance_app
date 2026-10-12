@@ -52,10 +52,10 @@ def table(block):
 
 diagrams = re.findall(r"```mermaid\n(.*?)```", md, re.S)
 tables = re.findall(r"((?:^\|.*\|\n)+)", md, re.M)
-# 13 tabelas: a da legenda, dez de "Regras técnicas", a de lacunas abertas e a
-# de lacunas fechadas. A última entrou na rodada de acesso e fica no fim do
+# 14 tabelas: a da legenda, dez de "Regras técnicas", a de lacunas abertas e as
+# duas de lacunas fechadas. As últimas ficam no fim do
 # arquivo, então não deslocou nenhum índice de @@Tn@@.
-assert len(diagrams) == 14 and len(tables) == 13, (len(diagrams), len(tables))
+assert len(diagrams) == 14 and len(tables) == 14, (len(diagrams), len(tables))
 out = re.sub(r"@@D(\d+)@@", lambda m: diagram(diagrams[int(m.group(1))]), tpl)
 out = re.sub(r"@@T(\d+)@@", lambda m: table(tables[int(m.group(1))]), out)
 assert "@@" not in out

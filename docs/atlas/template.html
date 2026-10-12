@@ -279,8 +279,8 @@
   <dl class="meta">
     <div><dt>Base</dt><dd>Leitura do código</dd></div>
     <div><dt>Branch</dt><dd>finance-app-2.0</dd></div>
-    <div><dt>Data</dt><dd>8 out 2026 · busca global, botão direito, período, rascunho, menus do telefone, prévias da lista, as tabelas na URL, o "Ver" dos avisos de criação e a agenda do Painel</dd></div>
-    <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 7 lacunas</dd></div>
+    <div><dt>Data</dt><dd>12 out 2026 · telas de acesso com cena, reenviar e <code>next</code> na recuperação, convite aceito; antes: busca global, botão direito, período, rascunho, menus do telefone, prévias da lista, as tabelas na URL, o "Ver" dos avisos de criação e a agenda do Painel</dd></div>
+    <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 7 lacunas (3 fechadas em 12 out)</dd></div>
     <div><dt>Fonte versionada</dt><dd><code>docs/JORNADAS.md</code></dd></div>
   </dl>
 </header>
@@ -421,8 +421,8 @@
         <li><div><strong>Abertura.</strong> Em <code>/</code>, o app espera a sessão carregar e manda para <code>/dashboard</code> ou para <code>/login</code>.</div></li>
         <li><div><strong>Guarda, nas duas direções.</strong> Rota do app sem sessão vai para <code>/login?next=rota</code>, e depois de entrar a pessoa volta para onde estava. E quem <em>já</em> entrou não vê mais o formulário: as rotas de acesso mandam para o Painel, com três isentas — as duas de senha, porque a conferência do código cria sessão antes da troca, e a do convite, que serve os dois estados.</div></li>
         <li><div><strong>Login.</strong> E-mail e senha. O login social saiu. Erro fica na tela em português; sucesso segue o <code>next</code> ou vai ao Painel. Quando a saída não foi a pessoa que pediu — sessão encerrada em outro aparelho — o login diz isso no topo.</div></li>
-        <li><div><strong>Cadastro.</strong> Nome, e-mail e senha; o telefone saiu, porque era obrigatório e nenhuma parte do app o lia. A senha tem checklist ao vivo. O banco cria sozinho o perfil, a carteira pessoal e doze categorias. Se o cadastro já volta com sessão, a pessoa entra direto — "Confirme seu e-mail" só aparece quando há mesmo um e-mail a confirmar.</div></li>
-        <li><div><strong>Senha.</strong> Um fluxo só: código de seis dígitos pedido em <code>/forgot-password</code>, conferido, e a senha nova na sequência — com a mesma política do cadastro, que antes valia só lá. <code>/reset-password</code> continua existindo como a porta do link de e-mail e monta o mesmo formulário no passo da senha, porque o template de e-mail do Supabase mora fora do repositório.</div></li>
+        <li><div><strong>Cadastro.</strong> Nome, e-mail e senha; o telefone saiu, porque era obrigatório e nenhuma parte do app o lia. A senha tem checklist ao vivo. O banco cria sozinho o perfil, a carteira pessoal e doze categorias. Se o cadastro já volta com sessão, a pessoa entra direto — "Confira seu e-mail" só aparece quando há mesmo um e-mail a confirmar, e ali dá para reenviar (espera de 60 s), usar outro e-mail ou entrar.</div></li>
+        <li><div><strong>Senha.</strong> Um fluxo só: código de seis dígitos pedido em <code>/forgot-password</code>, conferido, e a senha nova na sequência — com a mesma política do cadastro, que antes valia só lá. O código também se reenvia (60 s), e o <code>next</code> atravessa o fluxo até o login final; "Link expirado" oferece "Pedir novo código". <code>/reset-password</code> continua existindo como a porta do link de e-mail e monta o mesmo formulário no passo da senha, porque o template de e-mail do Supabase mora fora do repositório.</div></li>
         <li><div><strong>Saída.</strong> Sair limpa sessão, caches, fila offline e push, e o <code>AuthGuard</code> faz o resto. Uma sessão encerrada em outro aparelho sai do mesmo jeito na próxima abertura, e agora leva o motivo junto.</div></li>
       </ol>
       <figure>
@@ -440,7 +440,8 @@
         <ul>
           <li>As cinco telas dividem uma casca só: campo da cor da marca à esquerda a partir de 1024px, faixa de marca no topo no telefone, coluna de formulário à direita. Não há cartão — o painel já é a moldura.</li>
           <li>O painel mostra o escopo do produto antes de pedir a senha: carteira, cartões, contas a pagar e assinaturas, cada um com o número que teria. Os números são de exemplo, e a tela diz isso.</li>
-          <li>Quem monta a casca é o formulário, não a página, porque o título depende do estado — o cadastro vira "Confirme seu e-mail" e a recuperação troca a cada passo.</li>
+          <li>No desktop o painel de marca mostra uma cena própria por tela; no telefone fica só o wordmark.</li>
+          <li>Quem monta a casca é o formulário, não a página, porque o título depende do estado — o cadastro vira "Confira seu e-mail" e a recuperação troca a cada passo.</li>
         </ul>
       </div>
       <div class="callout gap">
@@ -448,6 +449,7 @@
         <ul>
           <li>A política de senha ainda não alcança a troca de senha de dentro do app, que confere só o comprimento.</li>
           <li>O template de e-mail do Supabase não está no repositório, então daqui não dá para saber se ele manda código ou link. É por isso que as duas portas continuam abertas — e por isso o pedido de recuperação diz explicitamente para onde o link deve voltar, em vez de confiar na configuração de fora.</li>
+          <li>O <code>redirectTo</code> com <code>?next=</code> depende de a lista de redirecionamentos permitidos do Supabase, configurada fora do repositório, aceitar a query string. Sem <code>next</code> a URL não muda.</li>
         </ul>
       </div>
     </section>
@@ -467,7 +469,7 @@
         <li><div><strong>Carteira atual.</strong> O app lembra a última escolhida em <code>user_settings</code>. Se ela não vale mais, usa a primeira, que é sempre a pessoal.</div></li>
         <li><div><strong>Trocar e criar.</strong> O seletor troca de carteira sem sair da página. "Criar carteira" pede nome, ícone e cor, e a nova já vira a atual.</div></li>
         <li><div><strong>Convidar.</strong> Só a dona convida: por email ou por link copiável. Ela também reenvia, revoga e remove membros.</div></li>
-        <li><div><strong>Aceitar.</strong> O link abre <code>/invites/accept</code>. Sem sessão, a pessoa entra ou cria conta e volta ao convite pelo <code>next</code>. Com sessão, o convite é aceito e a carteira convidada vira a atual.</div></li>
+        <li><div><strong>Aceitar.</strong> O link abre <code>/invites/accept</code>. Sem sessão, a pessoa entra ou cria conta e volta ao convite pelo <code>next</code>. Com sessão, o convite é aceito, a carteira convidada vira a atual e a tela mostra "Convite aceito" com "Abrir a carteira", sem redirecionar sozinha. O carregamento também veste o casco de acesso.</div></li>
         <li><div><strong>Configurar.</strong> Em <code>/settings</code>, a dona edita ou exclui a carteira, e o membro pode sair dela. Na mesma tela ficam a instalação do app e as preferências de notificação.</div></li>
       </ol>
       <figure>
@@ -754,6 +756,18 @@
         </table>
       </div>
 
+      <h3>Fechadas em 12 de outubro de 2026</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Era</th><th>Lacuna</th><th>O que fechou</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>O <code>next</code> se perdia na recuperação de senha</td><td>Atravessa o pedido, o <code>redirectTo</code>, "Pedir novo código" e o login final</td></tr>
+            <tr><td>2</td><td>Sem como reenviar o código ou o e-mail de confirmação</td><td>"Reenviar código" e "Reenviar e-mail", com espera de 60 s</td></tr>
+            <tr><td>3</td><td>O carregamento do convite ficava fora do casco</td><td>Passou a vestir o <code>AuthShell</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
       <h3>Fechadas na rodada de acesso</h3>
       <p>Cinco lacunas saíram junto com o redesenho das telas de acesso, em setembro de 2026.</p>
       <div class="table-wrap">
@@ -781,7 +795,7 @@
             <tr><td><code>/</code></td><td>Abertura, só redireciona</td><td>Pública</td><td>01</td></tr>
             <tr><td><code>/login</code></td><td>Entrar</td><td>Pública</td><td>01</td></tr>
             <tr><td><code>/register</code></td><td>Criar conta</td><td>Pública</td><td>01</td></tr>
-            <tr><td><code>/forgot-password</code></td><td>Recuperar senha: código, conferência e senha nova</td><td>Pública</td><td>01</td></tr>
+            <tr><td><code>/forgot-password</code></td><td>Recuperar senha: código (com reenvio), conferência e senha nova; carrega <code>?next</code></td><td>Pública</td><td>01</td></tr>
             <tr><td><code>/reset-password</code></td><td>A mesma recuperação, entrando pelo link do e-mail</td><td>Pública</td><td>01</td></tr>
             <tr><td><code>/invites/accept</code></td><td>Aceitar convite</td><td>Pública, fora da casca do app</td><td>02</td></tr>
             <tr><td><code>/members</code></td><td>Membros e convites</td><td>Com sessão</td><td>02</td></tr>
@@ -849,7 +863,7 @@
 </div>
 
 <footer>
-  Atlas de Jornadas do Finance App · escrito a partir do código da branch <code>finance-app-2.0</code> em 17 de setembro de 2026, navegação global revista em 1 de outubro de 2026, prévias da lista e tabelas na URL em 2 de outubro, o "Ver" dos avisos em 4 de outubro, a agenda do Painel em 8 de outubro · fonte dos fluxogramas em <code>docs/JORNADAS.md</code>
+  Atlas de Jornadas do Finance App · escrito a partir do código da branch <code>finance-app-2.0</code> em 17 de setembro de 2026, navegação global revista em 1 de outubro de 2026, prévias da lista e tabelas na URL em 2 de outubro, o "Ver" dos avisos em 4 de outubro, a agenda do Painel em 8 de outubro, as telas de acesso em 12 de outubro · fonte dos fluxogramas em <code>docs/JORNADAS.md</code>
 </footer>
 
 <dialog class="viewer" id="viewer" aria-labelledby="viewer-title">

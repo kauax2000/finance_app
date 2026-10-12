@@ -99,8 +99,9 @@ e-mail e senha.
 As cinco telas dividem uma casca só, o `AuthShell`: painel de marca à esquerda
 a partir de `lg`, faixa de marca no topo no telefone, coluna de formulário à
 direita. Quem monta a casca é o **formulário**, não a página, porque o título
-muda com o estado (o cadastro vira "Confirme seu e-mail", a recuperação troca a
-cada passo).
+muda com o estado (o cadastro vira "Confira seu e-mail", a recuperação troca a
+cada passo). No desktop o painel de marca mostra uma cena própria por tela; no
+telefone fica só o wordmark.
 
 ### 1a. Entrada, login e cadastro
 
@@ -126,7 +127,7 @@ flowchart TD
     signin -->|"sucesso"| nextOk{"Tem next seguro?"}
     nextOk -->|"sim"| back["Rota do next"]
     nextOk -->|"não"| dash
-    login -->|"Esqueceu a senha?"| forgot["/forgot-password"]
+    login -->|"Esqueceu a senha?"| forgot["/forgot-password?next"]
     login -->|"Criar conta"| register["/register?next"]
     revoked(["reason=session-expired"]) -.->|"aviso no topo"| login
 
@@ -137,8 +138,10 @@ flowchart TD
     signup -->|"sucesso"| trigger[("Trigger handle_new_user: perfil, carteira pessoal, 12 categorias")]
     trigger --> hasSession{"Voltou com sessão?"}
     hasSession -->|"sim"| back
-    hasSession -->|"não"| confirm(["Confirme seu e-mail"])
-    confirm -->|"Ir para o login"| login
+    hasSession -->|"não"| confirm(["Confira seu e-mail"])
+    confirm -->|"Reenviar e-mail, 60 s"| resendSignup[("auth.resend signup")] --> confirm
+    confirm -->|"Usar outro e-mail"| register
+    confirm -->|"Já confirmou? Entrar, com next"| login
     confirm -.->|"link do e-mail"| nextOk
     register -->|"Entrar"| login
 ```
@@ -148,21 +151,22 @@ flowchart TD
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart TD
-    forgot["/forgot-password: passo e-mail"] -->|"Enviar código"| resetMail[("resetPasswordForEmail")]
+    forgot["/forgot-password?next: passo e-mail"] -->|"Enviar código"| resetMail[("resetPasswordForEmail redirectTo /reset-password?next")]
     resetMail -->|"erro"| forgotErr(["Alerta em português"]) --> forgot
     resetMail -->|"sucesso"| code(["Passo código: 6 dígitos"])
     code -->|"Usar outro e-mail"| forgot
+    code -->|"Reenviar código, 60 s"| resetMail
     code -->|"Continuar"| verify[("verifyOtp recovery")]
     verify -->|"erro"| code
     verify -->|"sucesso"| newPass(["Passo senha nova"])
     newPass -->|"Salvar senha"| update[("updateUser; depois signOut")]
     update -->|"erro"| newPass
-    update -->|"sucesso"| done(["Senha atualizada"]) -->|"3 s"| loginPwd["/login?reason=password-updated"]
+    update -->|"sucesso"| done(["Senha atualizada"]) -->|"3 s ou Entrar agora"| loginPwd["/login?reason=password-updated&next"]
 
-    mailLink["Link do e-mail"] --> reset["/reset-password#access_token"]
+    mailLink["Link do e-mail"] --> reset["/reset-password?next#access_token"]
     reset --> token{"Token no hash ou sessão de recuperação?"}
     token -->|"não"| expired(["Link expirado"])
-    expired -->|"Pedir um novo código"| forgot
+    expired -->|"Pedir novo código"| forgot
     expired -->|"Entrar"| loginPlain["/login"]
     token -->|"sim"| newPass
 
@@ -186,6 +190,9 @@ flowchart TD
 | Casca | As cinco telas vestem o `AuthShell`; quem o monta é o formulário, porque o título depende do estado | `src/components/layout/auth-shell.tsx` |
 | Senha | Uma política só — 8+, minúscula, maiúscula, número e símbolo — aplicada no cadastro e na redefinição | `src/lib/password-policy.ts` |
 | Recuperação | Um formulário, duas portas: `/forgot-password` começa no código de 6 dígitos, `/reset-password` entra no passo da senha lendo o token do hash. O `resetPasswordForEmail` manda `redirectTo` para `/reset-password`, senão o link do e-mail cai na Site URL do projeto, que mora fora deste repositório | `src/components/password-recovery-form.tsx` |
+| `next` na recuperação | `/forgot-password?next` e `/reset-password?next` leem o `next` por `recoveryLinks`, que usa `getSafeInternalNextPath`; o `redirectTo` do e-mail vira `/reset-password?next=…` e "Senha atualizada" leva a `/login?reason=password-updated&next=…`. "Pedir novo código" volta a `/forgot-password?next=…`. Sem `next` a URL não muda. Depende de a allowlist de redirecionamento do Supabase (fora do repositório) aceitar a query string | `src/lib/recovery-links.ts`, `src/components/password-recovery-form.tsx` |
+| Reenviar | "Reenviar e-mail" (cadastro, `auth.resend({type:"signup"})`) e "Reenviar código" (recuperação, novo `resetPasswordForEmail`) esperam 60 s; a falha não zera a espera | `src/components/signup-form.tsx`, `src/components/password-recovery-form.tsx` |
+| Convite aceito | Depois do `workspace-invites-accept` a página mostra o status "Convite aceito" com "Abrir a carteira" para `/dashboard`; não há redirecionamento automático. O fallback de carregamento já veste o `AuthShell` | `src/app/(auth)/invites/accept/page-client.tsx` |
 | Erros | Tudo passa por `formatAuthErrorMessagePt`, inclusive esqueci e redefinir senha | `src/lib/supabase-errors.ts` |
 | Primeira conta | Trigger `on_auth_user_created` → `handle_new_user` cria perfil, carteira "Carteira pessoal de Nome" e 7 categorias de despesa + 5 de receita | `supabase/migrations/00000000000000_baseline.sql` |
 | Sessões | Ao entrar registra o aparelho; ao abrir confere se foi revogado | `src/components/providers.tsx`, edge `sessions` |
@@ -254,9 +261,10 @@ flowchart TD
     login -.->|"volta pelo next"| acceptPage
     register -.->|"volta pelo next"| acceptPage
     logged -->|"sim"| acceptFn[("Edge workspace-invites-accept")]
-    acceptFn -->|"erro: usado, expirado, outro email"| fail(["Mensagem e Tentar após entrar"])
+    acceptFn -->|"erro: usado, expirado, outro email"| fail(["Mensagem e Tentar depois de entrar"])
     acceptFn -->|"sucesso"| switched(["Atualiza carteiras e troca para a convidada"])
-    switched -->|"Ir para o Dashboard"| dash(("G4 Painel"))
+    switched --> accepted(["Status Convite aceito"])
+    accepted -->|"Abrir a carteira"| dash(("G4 Painel"))
 ```
 
 ### Regras técnicas
@@ -843,3 +851,15 @@ continuam aqui para registro.
 | 3 | Dois fluxos de redefinir senha que não se conversavam | Um formulário só, com duas portas de entrada |
 | 4 | Erro de esqueci/redefinir senha em inglês | Tudo passa por `formatAuthErrorMessagePt` |
 | 5 | `/invites/accept` cercada pela casca do app para quem não entrou | A rota foi para o grupo `(auth)` |
+
+### Fechadas em 12/out/2026
+
+| Era | Lacuna | O que fechou |
+|---|---|---|
+| 1 | O `next` se perdia na recuperação de senha | `recoveryLinks` o leva do pedido ao `redirectTo`, a "Pedir novo código" e ao login final |
+| 2 | Sem como reenviar o código ou o e-mail de confirmação | "Reenviar código" e "Reenviar e-mail", com espera de 60 s |
+| 3 | O fallback de carregamento do convite ficava fora do casco | Passou a vestir o `AuthShell` |
+
+Risco conhecido: o `redirectTo` com `?next=` só funciona se a allowlist de
+redirecionamento do Supabase, configurada fora do repositório, aceitar a query
+string. Se recusar, o link cai na Site URL como antes.
