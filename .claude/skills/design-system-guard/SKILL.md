@@ -16,7 +16,7 @@ componente. Na tela seguinte outra pessoa escreve o mesmo cartão, um pouco
 diferente. Em três meses o design system descreve uma minoria do produto e
 ninguém confia nele.
 
-Hoje o produto já tem **1.179 achados em 144 arquivos**. A skill existe para fazer duas coisas
+A primeira auditoria achou 1.179 achados em 144 arquivos; hoje `ds:audit` sai sem achado. A skill existe para fazer duas coisas
 simétricas, e ambas importam:
 
 1. **Puxar da tela para o design system** — nenhum componente nasce em `src/app/`.
