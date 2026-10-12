@@ -24,19 +24,12 @@ export function Group({
   id?: string
   title: string
   description?: React.ReactNode
-  /**
-   * "masonry" e "grid" são hoje a mesma grade `auto-fit` (os dois nomes
-   * ficam para não mexer nas 31 chamadas); "flow" não fatia nada — para um
-   * grupo cujo conteúdo já governa a própria largura.
-   */
+  /** "masonry" e "grid" são a mesma grade `auto-fit`; "flow" não fatia nada (o conteúdo governa a própria largura). */
   layout?: "masonry" | "grid" | "flow"
   children: React.ReactNode
 }) {
   return (
-    // O mesmo cabeçalho de seção das páginas de componente — e agora
-    // literalmente o mesmo: as duas escreviam a string à mão, em dois arquivos.
-    // O que fica sendo do `Group` é só o `layout`, porque ele é sobre os filhos
-    // e não sobre a seção.
+    // O cabeçalho de seção é o mesmo das páginas de componente; do `Group` fica só o `layout`.
     <PageSection
       id={id}
       variant="ruled"
@@ -49,13 +42,7 @@ export function Group({
           <PageSectionDescription>{description}</PageSectionDescription>
         ) : null}
       </PageSectionHeader>
-      {/* O grupo sempre ocupa a largura da coluna. As duas grades de antes
-          deixavam colunas vazias à direita: a de colunas (masonry) equilibra
-          por altura, e com um cartão alto e dois baixos empilhava os baixos e
-          largava a terceira coluna; a `grid` cravava três no `xl` mesmo com
-          dois filhos. Agora as duas são `auto-fit`, que colapsa as trilhas
-          vazias e estica as ocupadas. O `mb-4` do `Spec` sai aqui dentro,
-          porque quem espaça as linhas é o `gap`. */}
+      {/* Ocupa a largura da coluna: `auto-fit` colapsa as trilhas vazias (colunas por altura largavam a terceira vazia). */}
       <div
         className={
           layout === "flow"
@@ -69,13 +56,7 @@ export function Group({
   )
 }
 
-/**
- * Um cartão de especificação dentro do grupo. É o `Card` do sistema, e não uma
- * moldura escrita aqui: o raio, o fio e a tira vêm de lá, então uma mudança na
- * escala de Shape & Elevation chega também ao catálogo. O que mora dentro
- * dele (`SpecimenPanel`, as amostras) veste o próprio degrau: o concêntrico do
- * corpo saiu na rodada 240n.
- */
+/** Um cartão de especificação: o `Card` do sistema, para a escala de Shape & Elevation chegar ao catálogo. */
 export function Spec({
   title,
   meta,
@@ -95,11 +76,7 @@ export function Spec({
         <h3>{title}</h3>
         {meta ? <Code className="shrink-0">{meta}</Code> : null}
       </CardToolbar>
-      {/* O fio sob o título é do `Spec`, e não da tira: o `CardToolbar` não
-          desenha fio (regra das tiras), mas aqui o corpo é quase sempre uma
-          lista de linhas divididas, e sem a régua o título lia como a primeira
-          delas (rodada 240i, a pedido do dono — era o `border-b` de antes do
-          `Card`). */}
+      {/* O fio sob o título é do `Spec`: o `CardToolbar` não desenha fio, e sem a régua o título lia como a primeira linha da lista. */}
       <Separator />
       <div className={cn("p-4", bodyClassName)}>{children}</div>
     </Card>
@@ -107,15 +84,8 @@ export function Spec({
 }
 
 /**
- * A lista de dentro de um `Spec` com `bodyClassName="p-0"`: uma linha por
- * item, cada uma com um termo à esquerda (nome, valor, amostra) e o corpo à
- * direita (descrição e chips).
- *
- * O fio entre as linhas é o `Separator tone="soft"`, recuado até o texto, como
- * a lista agrupada do iOS; o fio cheio é só o do título do `Spec`, que é
- * estrutura. Com o mesmo peso nos dois, a lista lia como uma grade (rodada
- * 240j). Era escrita à mão em quatro páginas — Brand, Colors, Layers e Touch &
- * safe area —, cada uma com o seu `divide-y` cheio.
+ * A lista de dentro de um `Spec` com `bodyClassName="p-0"`: uma linha por item, termo à esquerda
+ * e corpo à direita. O fio entre linhas é `Separator tone="soft"` recuado; com o peso cheio a lista lia como grade.
  */
 export function SpecList({
   className,
@@ -141,12 +111,7 @@ export function SpecList({
   )
 }
 
-/**
- * Uma linha da `SpecList`. Com `term`, duas colunas a partir de `sm` (a do
- * termo com a largura de `termWidth`); no telefone, empilhadas. O termo e a
- * primeira linha do corpo dividem a linha de base (`align="baseline"`); quando
- * o termo é uma amostra e não texto, `align="start"`.
- */
+/** Uma linha da `SpecList`. Com `term`, duas colunas a partir de `sm` (largura `termWidth`), empilhadas no telefone. */
 export function SpecRow({
   term,
   termWidth = "8rem",
@@ -207,17 +172,8 @@ export function Stack({
 }
 
 /**
- * O painel de um espécime.
- *
- * Ele já mostrou os dois temas lado a lado, e a troca é deliberada: a página
- * agora segue o tema escolhido no alternador do cabeçalho, e mostra só metade
- * da informação de uma vez. O que se perdeu — comparar claro e escuro sem
- * trocar de tema — voltou onde ele realmente pesa: a medição de contraste
- * continua sendo feita nos **dois** temas, e o outro tema só se anuncia quando
- * reprova. Ver que passou nunca foi a parte útil.
- *
- * Sem `.light` ou `.dark` forçados aqui dentro, os `var(--token)` dos espécimes
- * resolvem sozinhos para o tema que está valendo.
+ * O painel de um espécime. Segue o tema do alternador; a medição de contraste cobre os dois
+ * temas e o outro só se anuncia quando reprova.
  */
 export function SpecimenPanel({
   surface = "card",
@@ -232,8 +188,7 @@ export function SpecimenPanel({
   return (
     <div
       className={cn(
-        // Painel e o que mora dentro vestem a superfície da escala (rodada
-        // 240n, a pedido do dono): o concêntrico dava 6 dentro de um cartão.
+        // Painel e o que mora dentro vestem a superfície da escala; o concêntrico dava 6 dentro de um cartão.
         `rounded-surface flex min-w-0 flex-col gap-3 overflow-hidden p-4 ring-1 ring-border ring-inset`,
         surface === "card" ? "bg-card" : "bg-background",
         className
@@ -252,26 +207,9 @@ export type SurfaceLayer = {
 }
 
 /**
- * As superfícies como elas são: uma dentro da outra.
- *
- * A hierarquia background → card → popover estava escrita na legenda do grupo e
- * desenhada em lugar nenhum: seis linhas de amostra, todas do mesmo tamanho e
- * lado a lado, não dizem que uma se apoia na outra. Aqui o aninhamento é o
- * desenho, e cada camada carrega o próprio texto na cor que lhe corresponde —
- * então a superfície e o texto que ela sustenta aparecem juntos, que é como a
- * tela os usa.
- *
- * Cada camada leva um fio próprio. Sem ele, duas camadas de mesmo valor —
- * `--card` e `--popover` são a mesma cor nos dois temas — apareciam como uma
- * caixa só, e o desenho parecia quebrado justamente onde ele tinha algo a
- * dizer. Com o fio, a igualdade é visível como igualdade, e a `note` de cada
- * camada conta o que de fato as separa na tela.
- *
- * **O canto é o da escala de Shape & Elevation, como a tela usa cada token**
- * (rodada 240l, a pedido do dono): cada camada é uma superfície e veste
- * `rounded-surface`, como o `Card` e o `Popover` reais; os preenchimentos de
- * dentro são os de controle e chip, e vestem a cápsula. A conta concêntrica
- * (pai − 16) batia no piso de 6 já na primeira camada e achatava as três.
+ * As superfícies como elas são: uma dentro da outra, cada camada com o texto na sua cor e um fio próprio
+ * (`--card` e `--popover` são a mesma cor e sem fio liam como uma caixa só). O canto é
+ * `rounded-surface` nas camadas e cápsula nos preenchimentos; o concêntrico batia no piso de 6.
  */
 export function SurfaceNest({
   layers,
@@ -321,15 +259,7 @@ export function SurfaceNest({
   )
 }
 
-/**
- * Uma rampa categórica, encostada.
- *
- * O teste de uma rampa é se as faixas se distinguem **umas das outras**, e cinco
- * amostras em cinco linhas separadas não respondem isso: o olho compara o que
- * está junto. O vão de 4px entre elas deixa o cartão aparecer, então a mesma
- * imagem também mostra cada cor contra a superfície em que ela é desenhada —
- * que é a outra pergunta, a dos 3:1.
- */
+/** Uma rampa categórica, encostada: o olho compara o que está junto; o vão de 4px deixa o cartão aparecer (a pergunta dos 3:1). */
 export function Ramp({
   label,
   tokens,
@@ -368,14 +298,8 @@ export function Ramp({
 }
 
 /**
- * A identidade na forma em que ela existe: discos com iniciais.
- *
- * Estes tokens não são cor de gráfico nem de estado — são o fundo de um avatar
- * com as iniciais de alguém em cima. Mostrados como faixa, a única pergunta que
- * dava para fazer era "são seis matizes diferentes?"; mostrados como disco, dá
- * para ver a pergunta que importa, que é se as iniciais se leem. É por isso que
- * eles não viram `TokenTile`: o ladrilho mede uma cor contra uma superfície, e
- * aqui o que importa é a tinta em cima.
+ * A identidade como disco com iniciais, e não como `TokenTile`: o ladrilho mede uma cor contra uma
+ * superfície, e aqui o que importa é a tinta em cima.
  */
 export function IdentityDiscs({
   label,
@@ -396,8 +320,6 @@ export function IdentityDiscs({
           <span
             key={item.surface}
             className="flex size-12 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
-            // A identidade voltou a ser cor na rodada 87, quando o degradê
-            // foi apagado — antes disto era `backgroundImage`.
             style={{
               backgroundColor: `var(${item.surface})`,
               color: `var(${item.onToken})`,
@@ -412,17 +334,8 @@ export function IdentityDiscs({
 }
 
 /**
- * O contrato de um token de cor — a pergunta que a tela faz dele.
- *
- * Um token não é bom ou ruim em abstrato. `--primary` sustenta texto branco,
- * então a pergunta é AA para texto (4,5:1). `--border` é o contorno de um
- * controle, então a pergunta é a da WCAG 1.4.11: 3:1 contra a superfície. E
- * `--skeleton` não responde a nenhuma das duas — um osso de carregamento com
- * 3:1 seria berrante, e carimbar "falha" nele faria a página mentir para o
- * outro lado.
- *
- * Por isso a regra é declarada e não adivinhada: sem regra, a amostra mede e
- * mostra o número, e não dá veredito nenhum.
+ * O contrato de um token de cor: a pergunta que a tela faz dele (AA de texto, 3:1 de 1.4.11, ou nenhuma).
+ * Sem regra declarada a amostra mede e mostra o número, sem veredito.
  */
 export type SwatchRule = "text" | "ui"
 
@@ -434,18 +347,7 @@ const RULE_NAME: Record<SwatchRule, string> = {
 }
 
 /**
- * A amostra de um token: um campo de cor.
- *
- * Antes era uma linha de tabela — dois quadrados de 40px, o nome, o token e
- * duas pílulas —, e numa página chamada Cores a cor ocupava um oitavo da
- * largura enquanto o resto era metadado. Aqui ela é a superfície: o ladrilho
- * tem a altura de um cartão e o texto de exemplo é grande o bastante para se
- * julgar de fato.
- *
- * O ladrilho era cortado ao meio entre os dois temas. Agora é inteiro, e mostra
- * o tema que está valendo — o corte gastava metade do campo de cor para exibir
- * o que ninguém está olhando naquele momento. `var(--token)` resolve sozinho
- * conforme o `.dark` da página.
+ * A amostra de um token: um campo de cor. Mostra o tema que está valendo; `var(--token)` resolve pelo `.dark` da página.
  */
 export function TokenTile({
   name,
@@ -466,9 +368,7 @@ export function TokenTile({
   return (
     <figure className="flex min-w-0 flex-col gap-2">
       <div
-        // O cartão por baixo é o que faz um token translúcido — `--border` é
-        // branco a 10%, `--overlay` é 60% de preto — aparecer composto, que é
-        // como a tela o mostra, e não como a cor declarada.
+        // O cartão por baixo faz um token translúcido (`--border`, `--overlay`) aparecer composto, como a tela o mostra.
         className="rounded-surface relative flex h-24 items-center justify-center overflow-hidden bg-card ring-1 ring-border ring-inset"
       >
         <div
@@ -490,8 +390,7 @@ export function TokenTile({
           {name}
         </span>
         <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
-          {/* O nome do token e o valor dele são o mesmo dado: ficam juntos, e
-              quem se separa deles é a medição, do outro lado da linha. */}
+          {/* Nome e valor do token são o mesmo dado: ficam juntos. */}
           <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
             <code className="font-mono text-2xs break-all text-muted-foreground">
               {token}
@@ -541,22 +440,9 @@ export function TokenGrid({
 }
 
 /**
- * O hexadecimal do token, no tema que está valendo.
- *
- * Os tokens são escritos em `oklch`, e é assim que eles devem ser editados —
- * mas ninguém abre o Figma, o seletor de cor do sistema ou a paleta de um
- * gráfico digitando `oklch(0.42 0.12 166)`. O hex é a ponte para fora do CSS, e
- * ele não fica no fonte porque aí seriam dois valores para manter em acordo:
- * este é lido da cor que o browser resolveu, como a razão de contraste ao lado.
- *
- * **Ele é uma projeção em sRGB, não o token.** O canvas de leitura é sRGB, e um
- * `oklch` fora desse gamute chega aqui já aparado — num monitor P3 a tela mostra
- * mais cor do que este número descreve. Para editar o token, o valor é o de
- * `globals.css`; este aqui é para levar a cor embora.
- *
- * Token translúcido responde com a cor de base mais o alpha (`--border` é
- * branco a 10%, e é isso que aparece), porque é o que se copia. O composto —
- * a cor que a tela de fato mostra — está no ladrilho logo acima.
+ * O hexadecimal do token, no tema que está valendo, lido da cor que o browser resolveu. É uma projeção
+ * em sRGB (num monitor P3 a tela mostra mais cor); para editar o token, o valor é o de `globals.css`.
+ * Token translúcido responde com a cor de base mais o alpha.
  */
 function SwatchHex({ token }: { token: string }) {
   const [values, setValues] = React.useState<{
@@ -601,15 +487,7 @@ function SwatchHex({ token }: { token: string }) {
   )
 }
 
-/**
- * Lê uma cor CSS resolvida como `#RRGGBB`, com o alpha atrás quando existe.
- *
- * Mesmo motivo do compositor: `getComputedStyle` devolve `oklch(...)` ou
- * `color(srgb ...)`, e converter essas strings à mão é reescrever o conversor do
- * browser. Aqui a camada é **uma só** e sobre o canvas limpo, justamente porque
- * `getImageData` devolve os bytes sem o alpha aplicado — é o que separa a cor de
- * base do alpha dela, e o que o compositor ao lado precisa evitar.
- */
+/** Lê uma cor CSS resolvida como `#RRGGBB`, com o alpha atrás quando existe (`getImageData` devolve os bytes sem o alpha aplicado). */
 function createColorReader() {
   const canvas = document.createElement("canvas")
   canvas.width = 1
@@ -629,20 +507,8 @@ function createColorReader() {
     const [r, g, b, a] = paint(css)
     if (a === 0) return null
 
-    // A cor de base sai de `rgb(from … r g b / 1)`, a mesma cor sem o alpha.
-    //
-    // O `/ 1` não é enfeite: omitir o canal alpha na sintaxe relativa **herda o
-    // da origem**, então `rgb(from oklch(1 0 0 / 0.1) r g b)` volta a 10% e o
-    // pixel translúcido de novo — que é o problema que esta linha resolve.
-    //
-    // Lê-la direto do pixel translúcido não serve: o canvas guarda o byte
-    // premultiplicado e `getImageData` desfaz a conta, e a 10% de alpha sobram
-    // 26 níveis por canal para reconstruir 256. Branco a 10% — que é o
-    // `--border` do tema escuro — voltava como `#F5FFFF`.
-    //
-    // Opaca, a cor atravessa o canvas byte a byte. O sentinela detecta browser
-    // sem sintaxe relativa: `fillStyle` ignora valor que não sabe analisar, e
-    // aí o que resta é a leitura translúcida, imprecisa mas presente.
+    // A base sai de `rgb(from … r g b / 1)`: sem o `/ 1` a sintaxe relativa herda o alpha da origem, e o pixel
+    // translúcido (26 níveis por canal a 10%) não reconstrói a cor. O sentinela detecta browser sem sintaxe relativa.
     ctx.fillStyle = "#123456"
     ctx.fillStyle = `rgb(from ${css} r g b / 1)`
     const base = ctx.fillStyle === "#123456" ? [r, g, b] : paint(ctx.fillStyle)
@@ -650,28 +516,14 @@ function createColorReader() {
     const hex = `#${[base[0], base[1], base[2]]
       .map((c) => c.toString(16).padStart(2, "0"))
       .join("")}`.toUpperCase()
-    // 255 não é "100%": o alpha do canvas é um byte, então 10% volta como 26.
     return a === 255 ? hex : `${hex} ${Math.round((a / 255) * 100)}%`
   }
 }
 
 /**
- * A razão de contraste, calculada no cliente a partir da cor que o browser
- * realmente resolveu. Vale para `oklch`, para `color-mix` e para qualquer coisa
- * que venha a substituir os dois.
- *
- * O que se mede depende do contrato: com par de texto, o texto contra o token;
- * sem ele, o token contra o cartão em que ele é desenhado.
- *
- * Os **dois** temas continuam sendo medidos, mesmo com a página mostrando um só.
- * Na tela aparece o número do tema que está valendo; o outro só se anuncia
- * quando reprova — e aí ele é exatamente a informação que ninguém descobriria
- * sem trocar de tema e refazer a comparação de memória.
- *
- * Quem escolhe o que aparece é o CSS, e não um `useTheme`: a variante `dark` do
- * projeto é `&:is(.dark *)`, então basta um par `dark:hidden` / `hidden
- * dark:inline-flex`. Sem estado, sem re-render, e sem risco de o servidor
- * renderizar um tema e o cliente outro.
+ * A razão de contraste, calculada no cliente a partir da cor que o browser resolveu. Com par de texto mede o
+ * texto contra o token; sem ele, o token contra o cartão. Os dois temas são medidos; quem escolhe o que
+ * aparece é o CSS (`dark:hidden`), sem `useTheme`, para servidor e cliente não divergirem.
  */
 function SwatchContrast({
   token,
@@ -703,10 +555,7 @@ function SwatchContrast({
         el.remove()
         return value
       }
-      // A pilha começa no fundo da página, e não no token: `--border` vale
-      // `oklch(1 0 0 / 10%)` e `--overlay` vale 60% de preto. Medir a cor
-      // declarada de um token translúcido responde por uma cor que a tela
-      // nunca mostra.
+      // A pilha começa no fundo da página: medir a cor declarada de um token translúcido responde por uma cor que a tela nunca mostra.
       const under = [resolve("var(--background)"), resolve("var(--card)")]
       const surface = flatten([...under, resolve(`var(${token})`)])
       const card = flatten(under)
@@ -770,13 +619,7 @@ function SwatchContrast({
   )
 }
 
-/**
- * O tema que não está na tela reprovou.
- *
- * É o único caso em que mostrar um tema de cada vez custaria alguma coisa, e por
- * isso é o único que atravessa. Quando o outro tema passa, nada aparece: ver que
- * passou nunca ajudou ninguém a decidir coisa nenhuma.
- */
+/** O tema que não está na tela reprovou — o único caso em que ele atravessa. */
 function OtherThemeAlert({
   theme,
   value,
@@ -810,16 +653,8 @@ function OtherThemeAlert({
 }
 
 /**
- * O veredito não pode chegar só pela cor.
- *
- * Antes, verde significava passa e âmbar significava falha, com a palavra
- * escondida num `title` — que leitor de tela nem sempre anuncia e que o toque
- * nunca revela. Numa página que argumenta contra depender de cor, era o pior
- * lugar possível para depender de cor. Agora o número traz um símbolo e um
- * texto só para leitor de tela.
- *
- * Sem regra declarada não há símbolo nem cor de estado: o número aparece em
- * cinza, porque medir não é o mesmo que reprovar.
+ * O veredito não pode chegar só pela cor: o número traz um símbolo e um texto para leitor de tela.
+ * Sem regra declarada, aparece em cinza (medir não é reprovar).
  */
 function RatioPill({
   value,
@@ -866,21 +701,8 @@ function RatioPill({
 }
 
 /**
- * Achata uma pilha de camadas de cor numa cor sRGB, usando o próprio browser.
- *
- * `getComputedStyle` não devolve `rgb()`: um token em `oklch` computa como
- * `oklch(...)` e um `color-mix` computa como `color(srgb ...)`. Ler os números
- * dessas strings como se fossem RGB dá lixo — foi o que fez toda razão de
- * contraste marcar 1,0 na primeira versão desta página.
- *
- * Pintar num canvas de 1×1 e ler o pixel de volta delega a conversão para quem
- * já sabe fazê-la, e continua funcionando quando aparecer o próximo espaço de
- * cor que ainda não existe.
- *
- * As camadas vêm de baixo para cima e o `source-over` do canvas compõe o alpha
- * de cada uma. Antes se lia uma cor só, com o canvas limpo por baixo, e o
- * `getImageData` devolvia os bytes **sem** o alpha aplicado: `--border`, que é
- * branco a 10%, respondia como branco puro.
+ * Achata uma pilha de camadas de cor numa cor sRGB, pintando num canvas de 1×1 (o `getComputedStyle` não
+ * devolve `rgb()`). As camadas vão de baixo para cima e o `source-over` compõe o alpha de cada uma.
  */
 function createColorCompositor() {
   const canvas = document.createElement("canvas")

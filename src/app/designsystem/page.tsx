@@ -1,11 +1,8 @@
 "use client"
 
 /*
- * Cliente de propósito. Como server component, esta página passava `<Link>`
- * por `asChild` a componentes cliente (`Button`, `PageHeaderMeta`), e o
- * elemento chegava ao `Slot` como referência preguiçosa do RSC: a linha
- * "Brand" saía vazia já no HTML do servidor e o cabeçalho quebrava a
- * hidratação. É a medição que o `EmptyState` já registrou no AGENTS.
+ * Cliente de propósito: como server component, passava `<Link>` por `asChild` a componentes cliente, e o
+ * elemento chegava ao `Slot` como referência preguiçosa do RSC (a linha "Brand" saía vazia no HTML).
  */
 
 import {

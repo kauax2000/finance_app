@@ -14,17 +14,9 @@ export const metadata: Metadata = {
 }
 
 /**
- * A rota fica na raiz de `src/app/`, fora de `(app)` e `(dashboard)`, então não
- * passa pelo `AuthGuard` — o catálogo não depende de sessão nem de workspace.
- *
- * Em produção ela só existe se `NEXT_PUBLIC_DS_DOCS` estiver ligada. O inventário
- * interno de um produto financeiro não precisa ser público, e uma rota que
- * responde 404 é mais barata de defender do que uma que responde 200 e depende
- * de ninguém ter achado o link.
- *
- * Não declara `ThemeProvider`: o layout raiz já monta um dentro do `AuthProvider`
- * (`attribute="class"`), e um segundo aninhado brigaria com ele pelo atributo do
- * `<html>`. O alternador de tema da casca consome aquele mesmo provider.
+ * A rota fica fora de `(app)` e `(dashboard)`, então não passa pelo `AuthGuard`. Em produção só existe com
+ * `NEXT_PUBLIC_DS_DOCS` ligada (404 é mais barato de defender). Não declara `ThemeProvider`: o do layout raiz
+ * serve, e um segundo aninhado brigaria com ele pelo atributo do `<html>`.
  */
 export default function DesignSystemLayout({
     children,

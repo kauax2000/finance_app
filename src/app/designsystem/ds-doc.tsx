@@ -49,48 +49,20 @@ export type Category =
   | "Atoms"
   | "Molecules"
   | "Organisms"
-  // O nível que faltava para o modelo ficar completo: objetos de nível de
-  // página, que dispõem componentes num layout em vez de serem o conteúdo.
+  // Objetos de nível de página: dispõem componentes, não são o conteúdo.
   | "Templates"
 
 export type DocNeighbor = { slug: string; name: string; category?: Category }
 
-/**
- * A sobrancelha em versalete do catálogo.
- *
- * Ela era a mesma medida escrita **duas vezes** — aqui e no índice —, e agora é
- * uma: a régua mora em `PageHeaderEyebrow`, que é onde ela é usada como peça, e
- * o que resta aqui é o apelido local para os dois lugares deste arquivo que a
- * usam sem ser cabeçalho de página (a categoria e o "quando usar").
- */
+/** A sobrancelha em versalete do catálogo; a régua mora em `PageHeaderEyebrow`. */
 const EYEBROW = pageEyebrowClassName
 
-/**
- * `<code>` cru na prosa da documentação.
- *
- * Mono e na cor do texto forte, sem ladrilho: com 141 notas na casa, um chip de
- * fundo por identificador transformava cada parágrafo em pontilhado.
- */
+/** `<code>` cru na prosa: mono, sem ladrilho (um chip por identificador pontilhava cada parágrafo). */
 const PROSE_CODE = "[&_code]:font-mono [&_code]:text-xs [&_code]:text-foreground"
 
 /**
- * O casco de uma página de componente.
- *
- * A régua desta página é o **fio**, não a caixa. Antes cada informação vinha
- * dentro do próprio cartão arredondado — import, "quando usar", espécime, aba
- * de código, nota, tabela de props e o par do rodapé, sete significados
- * diferentes usando a mesma borda —, e quando tudo está emoldurado nada está
- * em destaque: a página lia como painel de controle, não como especificação.
- *
- * Ficou uma caixa só, e ela é a moldura do espécime: o único lugar onde a borda
- * trabalha, separando a cromagem da documentação do componente de verdade que
- * está sendo medido. O resto se organiza por fio, versalete e ar — que é
- * exatamente o que o índice já fazia, e que estas 88 páginas contradiziam.
- *
- * Estes primitivos de documentação vivem dentro da própria rota, e não em
- * `components/ui/`, de propósito. Eles só existem aqui: `Preview`, `PropsTable`
- * e companhia não têm sentido em nenhuma tela do produto, e promovê-los ao
- * design system só faria o catálogo descrever a si mesmo.
+ * O casco de uma página de componente. A régua é o fio, não a caixa: só a moldura
+ * do espécime tem borda. Estes primitivos moram na rota porque só o catálogo os usa.
  */
 export function DocPage({
   name,
@@ -113,28 +85,12 @@ export function DocPage({
 }) {
   return (
     <article className="flex min-w-0 flex-col pb-16">
-      {/* Sem trilha. Ela tinha três degraus para uma hierarquia de dois — o
-          catálogo e a página —, e o terceiro degrau era o nome do componente,
-          que o título repete dois centímetros abaixo. A categoria não era um
-          degrau de caminho: é a classificação da peça, e voltou para onde uma
-          classificação mora, na borda direita da linha do título. */}
-      {/* `PageHeader` de verdade, e não a cópia à mão que estava aqui. A
-          categoria é o `endAdornment` — a mesma peça, com o mesmo nome, que
-          `DialogHeaderRow` e `HoverCardHeader` já têm; ela alinha pela linha de
-          base do título, que é o que a prende à primeira linha quando o nome
-          quebra em duas. `plain` porque quem fecha este cabeçalho é o campo de
-          import logo abaixo, não uma régua. */}
+      {/* Sem trilha: a categoria fica na borda direita da linha do título. */}
+      {/* A categoria é o `endAdornment`; `plain` porque o campo de import fecha o cabeçalho. */}
       <PageHeader>
         <PageHeaderTitleRow
           endAdornment={
-            /* O `Button variant="link"` de verdade, e não a cópia à mão que
-               estava aqui: eram sete classes reimplementando tinta, sublinhado,
-               transição, par de toque e anel de foco — tudo o que a variante já
-               traz, inclusive o traço de arco-íris que varre da esquerda.
-               `h-auto p-0 align-baseline` tira a caixa do botão para ele pousar
-               na linha de base do título, que é o precedente do `HoverCard`; o
-               `EYEBROW` vem depois e vence o `text-sm` da base pelo grupo de
-               `font-size`. */
+            /* `h-auto p-0 align-baseline` pousa o link na linha de base do título; o `EYEBROW` vence o `text-sm` da base. */
             <Button asChild variant="link" className={cn(EYEBROW, "h-auto p-0 align-baseline")}>
               <Link href={`/designsystem#${slugifyCategory(category)}`}>
                 {category}
@@ -143,10 +99,7 @@ export function DocPage({
           }
         >
           <PageHeaderTitle>{name}</PageHeaderTitle>
-          {/* Nome sobre descrição é o mesmo dado em duas linhas: quem separa é
-              a entrelinha, não um `gap` — e agora é o componente que garante
-              isso, em vez de cada cabeçalho lembrar. A coluna do catálogo já
-              tem a medida de leitura, então o teto de `max-w-2xl` sai. */}
+          {/* Nome sobre descrição: quem separa é a entrelinha, sem `gap`. */}
           <PageHeaderDescription className="max-w-none">
             {description}
           </PageHeaderDescription>
@@ -163,21 +116,8 @@ export function DocPage({
 }
 
 /**
- * O campo de identificação: o que se digita e onde a coisa mora.
- *
- * Uma caixa só, porque o import e o arquivo são **um dado** — o componente e o
- * lugar em que ele está. Por isso os dois são par de identidade: empilhados,
- * sem `gap`, separados pela entrelinha. Até a rodada 240e o caminho era a
- * `CardNote` do cartão e o par se lia como dois blocos, com 26px de vão.
- *
- * O botão de copiar tem **coluna própria**, alinhada no topo: com o `-mt-1`
- * ele fica a 8px da borda de cima, a mesma distância da direita (`pe-2`), e
- * assenta no canto. Antes ele era `absolute` e o texto reservava o território
- * dele com um `pr-28` medido à mão; numa grade a coluna cresce quando ele abre
- * em "Copiado", e o import quebra antes de passar por baixo.
- *
- * É o `Card` de contorno, a mesma superfície dos mostradores da página: a
- * caixa é metadado, e o `muted` cheio a fazia pesar mais que os espécimes.
+ * O campo de identificação: import e arquivo são um dado, par de identidade sem `gap`.
+ * O botão de copiar tem coluna própria no topo, para o import quebrar antes de passar por baixo dele.
  */
 function DocMeta({
   importLine,
@@ -214,23 +154,7 @@ function DocMeta({
   )
 }
 
-/**
- * O par anterior/próximo no pé.
- *
- * Sem ele, a única saída de uma página era voltar à lista e procurar de novo —
- * e o catálogo tem uma ordem de leitura real, categoria por categoria, que
- * ninguém conseguia seguir. É a mesma ordem da navegação lateral.
- *
- * Ele encolheu de rodapé de documento para navegação. Eram dois blocos de
- * 110px, cada um com uma sobrancelha em versalete, o nome e a categoria em três
- * linhas empilhadas, separados por um fio vertical: a forma de um livro, não a
- * de uma interface. Agora são dois controles de 36px numa linha só, sob a mesma
- * régua.
- *
- * O que sumiu da tela continua existindo para quem não a vê: o rótulo de
- * direção virou `sr-only`, porque a seta já diz para o olho o que a palavra
- * dizia — e sem ela um leitor de tela ouviria dois nomes sem saber qual é qual.
- */
+/** O par anterior/próximo no pé, na ordem da navegação lateral. O rótulo de direção é `sr-only` porque a seta já o diz ao olho. */
 function DocPager({
   previous,
   next,
@@ -270,10 +194,7 @@ function DocPagerLink({
 }) {
   const isNext = direction === "next"
   const Chevron = isNext ? ChevronRightIcon : ChevronLeftIcon
-  // A categoria do vizinho só aparece quando ela **muda**. Em quase todas as
-  // páginas ela seria a mesma da página atual — informação que não informa,
-  // ocupando uma linha inteira. Nas fronteiras entre categorias (cinco, com
-  // seis categorias) ela é exatamente o que interessa saber antes de avançar.
+  // A categoria do vizinho só aparece quando muda (nas fronteiras entre categorias).
   const crossing = Boolean(entry.category && entry.category !== from)
   const chevron = (
     <Chevron
@@ -287,34 +208,22 @@ function DocPagerLink({
       )}
     />
   )
-  // O `Button` do sistema, e não a receita dele reescrita: a `className` caía de
-  // 23 para 14 tokens, e o que sobra são **duas** contra-classes, medidas.
   return (
     <Button
       asChild
       variant="tertiary"
       size="md"
       className={cn(
-        // O `Button` declara `group/button`, que é **outra** classe:
-        // `group-hover:` compila para `:is(:where(.group):hover *)` e precisa da
-        // literal. As duas convivem — medido, o `twMerge` não colapsa uma na
-        // outra. Sem esta, as setas param de animar.
+        // `group-hover:` precisa da classe literal `group`; o `group/button` do Button é outra.
         "group",
-        // Contra-classe 1. O `shrink-0` da base impediria o par de encolher
-        // dentro do `nav` (`justify-between`), e aí o `truncate` do nome **nunca
-        // dispara**: "Mobile Sheet Form Chrome" transborda em vez de reticenciar.
+        // O `shrink-0` da base impediria o `truncate` do nome de disparar.
         "shrink",
-        // Contra-classe 2. O realce do `Button` é uma camada por cima do fundo
-        // (rodada 241): um `hover:bg-accent` ficaria embaixo dela. Quem muda a
-        // cor é `--button-hover-fill`, e a transição continua a da base, que
-        // já esmaece a camada.
+        // Muda a cor do realce (`--button-hover-fill`), não o fundo: a camada fica por cima dele.
         "[--button-hover-fill:var(--accent)] active:text-foreground",
         "min-w-0 px-2.5 text-muted-foreground",
-        // Em ponteiro grosso o alvo vai aos 44px que a própria página
-        // /designsystem/touch-safe-area exige. É a mesma cortesia da lateral.
+        // Em ponteiro grosso, o alvo de 44px (touch-safe-area).
         "pointer-coarse:min-h-11",
-        // O recuo tira o padding do controle da margem do conteúdo: o nome
-        // alinha com o texto acima, e a superfície de hover é que avança.
+        // O recuo alinha o nome com o texto acima.
         isNext ? "-mr-2.5" : "-ml-2.5"
       )}
     >
@@ -335,17 +244,7 @@ function DocPagerLink({
   )
 }
 
-/**
- * O "quando usar" — a frase mais importante de cada uma das 88 páginas.
- *
- * Era um `Alert`, e por isso era uma caixa com fundo, borda e ícone: o mesmo
- * peso visual de um aviso de erro, para um texto que só explica a regra. Virou
- * o que sempre foi, uma abertura sob régua de acento, em `text-foreground` —
- * porque é tese, não legenda.
- *
- * De quebra some a região viva: como `Alert`, este painel estático se
- * reanunciava ao leitor de tela a cada carga de página.
- */
+/** O "quando usar": tese, não legenda — abertura sob régua de acento, sem `Alert` (que se reanunciava ao leitor de tela). */
 export function Usage({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col border-l-2 border-primary-accent/60 pl-4">
@@ -379,11 +278,7 @@ export function DocSection({
   children: React.ReactNode
 }) {
   return (
-    // `size="lg"` porque é o corpo que estas 247 seções já renderizam, e
-    // `ruled` porque a régua de uma seção é **em cima**: ela diz que começa
-    // outro bloco. O `mt-4` que o espécime carregava saiu — o `gap` da seção é
-    // o mesmo 16, e ele vale também entre o título e o espécime quando não há
-    // descrição.
+    // `ruled`: a régua de uma seção é em cima e diz que começa outro bloco.
     <PageSection
       variant="ruled"
       size="lg"
@@ -404,15 +299,7 @@ export function DocSection({
   )
 }
 
-/**
- * A moldura do espécime — a única caixa da página.
- *
- * O código deixou de ser uma aba acima dela. A `TabsList` era um controle
- * emoldurado flutuando sobre uma moldura, uma vez em cada uma das 124 seções do
- * catálogo, e escolher "Código" trocava o espécime pela fonte: para comparar as
- * duas coisas era preciso ir e voltar. Agora a fonte abre **dentro** da mesma
- * moldura, sob um fio, com o espécime continuando à vista.
- */
+/** A moldura do espécime — a única caixa da página; a fonte abre dentro dela, sob um fio. */
 export function Preview({
   code,
   className,
@@ -424,8 +311,7 @@ export function Preview({
   previewClassName?: string
   children: React.ReactNode
 }) {
-  // O slot dos controles fica por fora da moldura, e quem o preenche é a
-  // demonstração lá de dentro (`Controles`, por portal): o estado mora nela.
+  // O slot fica por fora da moldura; a demonstração o preenche por portal (`Controles`).
   const [slot, setSlot] = React.useState<HTMLDivElement | null>(null)
 
   return (
@@ -436,8 +322,7 @@ export function Preview({
         className="flex flex-wrap items-center gap-x-4 gap-y-2 empty:hidden"
       />
       <Card padding="none" className={className}>
-        {/* As classes de layout continuam nesta camada, e não na moldura: é o que
-            os 85 `previewClassName` do catálogo sobrescrevem, `p-0` inclusive. */}
+        {/* O layout fica nesta camada porque os `previewClassName` do catálogo o sobrescrevem. */}
         <div
           className={cn(
             "flex min-h-28 flex-wrap items-center gap-4 overflow-x-auto p-6",
@@ -457,13 +342,8 @@ export function Preview({
 const PreviewControlsContext = React.createContext<HTMLDivElement | null | undefined>(undefined)
 
 /**
- * Os controles de uma demonstração, **acima** da moldura e por fora dela, numa
- * linha só: os eixos do componente à esquerda (`inicio`), o cenário e as peças
- * à direita (`fim`). Quando a linha não cabe, `empilhar` põe as abas numa
- * linha e os interruptores na de baixo, os dois alinhados à esquerda. O conteúdo é levado por portal ao slot
- * do `Preview` mais próximo; antes de o slot existir não desenha nada (o
- * callback ref grava no commit, antes da pintura), e fora de um `Preview` fica
- * no lugar.
+ * Os controles de uma demonstração, acima da moldura: eixos à esquerda (`inicio`),
+ * cenário e peças à direita (`fim`); levados por portal ao slot do `Preview` mais próximo.
  */
 export function Controles({
   inicio,
@@ -516,8 +396,7 @@ function PreviewCode({ code }: { code: string }) {
             "transition-colors duration-(--duration-fast) ease-(--ease-out)",
             "hover:text-foreground active:text-foreground",
             "focus-visible:ring-3 focus-visible:ring-ring/45 focus-visible:outline-none",
-            // A mesma cortesia da navegação lateral: em ponteiro grosso o alvo
-            // vai aos 44px que a página /designsystem/touch-safe-area exige.
+            // Em ponteiro grosso, o alvo de 44px.
             "pointer-coarse:min-h-11"
           )}
         >
@@ -535,24 +414,10 @@ function PreviewCode({ code }: { code: string }) {
   )
 }
 
-/**
- * Copiar, com a confirmação no próprio botão.
- *
- * Um só peso nos dois lugares onde ele aparece. Chegou a ser `outline` sobre a
- * superfície tingida do campo de import, para se anunciar como controle — mas
- * com o mesmo degrau do outro, o contorno não mudava o tamanho, só fazia
- * parecer que mudava. Dois botões que fazem a mesma coisa não têm por que ter
- * pesos diferentes.
- *
- * A confirmação é o cheque **e** a palavra: um ícone que troca sozinho diz que
- * algo aconteceu sem dizer o quê, e era a única resposta que este botão dava.
- * O botão se abre **para a esquerda** para caber "Copiado" e fecha em 1,5s —
- * quem paga a conta da largura aberta é o `pr-24` do campo de import.
- */
+/** Copiar, com a confirmação ("Copiado") no próprio botão, que se abre para a esquerda e fecha em 1,5s. */
 function CopyButton({ code }: { code: string }) {
   const [copied, setCopied] = React.useState(false)
-  // O `setTimeout` cru sobrevivia ao desmonte. O hook existe para isto — o
-  // docstring dele nomeia "o 'Copiado' que volta ao normal".
+  // O hook limpa o timer no desmonte.
   const later = useTimeout()
 
   function copy() {
@@ -566,53 +431,19 @@ function CopyButton({ code }: { code: string }) {
     <>
       <Button
         type="button"
-        // O ghost (`tertiary`) nos dois lugares: chegou a ser `floating`
-        // (rodada 240g), e o dono o preferiu sem placa — o botão é ferramenta
-        // da caixa, não uma peça pousada sobre ela.
         variant="tertiary"
-        // `sm` e não `icon-sm`: o degrau de ícone é `size-7`, largura cravada, e
-        // a palavra precisa de largura livre. O `gap-0` tira os 4px que o
-        // degrau somaria com a faixa ainda fechada — o respiro mora dentro
-        // dela, no `pr-1` do texto.
+        // `sm`, não `icon-sm`: a palavra precisa de largura livre; `gap-0` porque o respiro mora no `pr-1` do texto.
         size="sm"
         onClick={copy}
         aria-label="Copiar código"
         className={cn(
           "shrink-0 gap-0 px-1.5 text-muted-foreground",
-          // O verde de sucesso, `--success`, por decisão do dono — e o ícone e
-          // a palavra no mesmo, que dois verdes no mesmo botão seriam piores
-          // que o que havia. É `success` e não `income`: "deu certo" não é
-          // "entrou dinheiro" (invariante 3).
-          //
-          // O custo está medido, contra as duas superfícies reais em que este
-          // botão pousa (`bg-muted/40` do campo de import e `bg-muted/30` da
-          // gaveta), nos dois temas: escuro 7,24 e 6,81 — passa; **claro 4,29 e
-          // 4,48** — acima do piso 3 de ícone e um fio abaixo do 4,5 de texto.
-          // É conhecida e aceita, como a do contorno de campo. Quem carrega
-          // contraste nos quatro casos é `--success-muted-foreground`
-          // (10,94 a 13,03), um verde mais fechado: a volta é uma linha.
-          //
-          // O par `hover:`/`active:` não é zelo: o degrau `tertiary` declara
-          // `hover:text-foreground`, que é (0,2,0) e **vence** um `text-success`
-          // solto (0,1,0). Como quem clica de mouse fica com o cursor em cima
-          // do botão, o verde simplesmente não aparecia no desktop — medido:
-          // a cor durante o 1,5s inteiro era o branco do `foreground`.
+          // `success` e não `income`: "deu certo" não é "entrou dinheiro". O claro mede 4,29/4,48 (aceito); a volta é `--success-muted-foreground`.
+          // `hover:`/`active:` porque o `tertiary` declara `hover:text-foreground`, que vence um `text-success` solto.
           copied && "text-success hover:text-success active:text-success"
         )}
       >
-        {/* A palavra vem **antes** do ícone, e é isso que deixa o ícone parado:
-            nos dois sítios a borda direita do botão é que está ancorada — no
-            campo de import por `absolute right-2`, na gaveta por ser o último
-            item de uma fila cujo vizinho é `flex-1` e só encolhe. O botão
-            cresce para a esquerda, e o cheque nasce exatamente onde o ícone de
-            copiar estava.
-
-            Flutuar para fora do botão não é opção: os dois contêineres que o
-            hospedam são `overflow-hidden`. A largura anima pelo truque do grid
-            — `width: auto` não interpola, e um `max-w-*` interpolaria sobre um
-            alcance maior que o conteúdo, com a metade final em tempo morto. O
-            `overflow-hidden` do filho é o que zera o mínimo automático da
-            faixa; sem ele o truque não colapsa. */}
+        {/* A palavra vem antes do ícone para o botão crescer à esquerda e o ícone ficar parado; a largura anima pelo grid, e o `overflow-hidden` do filho zera o mínimo automático. */}
         <span
           className={cn(
             "grid grid-cols-[0fr]",
@@ -621,13 +452,7 @@ function CopyButton({ code }: { code: string }) {
           )}
         >
           <span className="overflow-hidden">
-            {/* O `translate-x-2` é o que faz a palavra **vir da direita**: ela
-                nasce 8px adiante, por baixo do recorte, e desliza para a
-                esquerda até o lugar enquanto a faixa abre. `whitespace-nowrap`
-                é estrutural — sem ele o texto quebra letra a letra enquanto a
-                faixa é estreita, dentro de um botão de altura fixa. E como
-                aqui passa elemento e não texto cru, a maiúscula inicial do
-                `Button` não age: "Copiado" já nasce maiúsculo. */}
+            {/* `translate-x-2`: a palavra vem da direita; `whitespace-nowrap` evita quebra letra a letra com a faixa estreita. */}
             <span
               className={cn(
                 "block pr-1 whitespace-nowrap",
@@ -639,17 +464,10 @@ function CopyButton({ code }: { code: string }) {
             </span>
           </span>
         </span>
-        {/* O ícone segue como sempre foi: uma troca seca, o cheque no lugar do
-            papel duplicado. **Sem tamanho cravado**: o degrau `sm` o desenha
-            em 14, e é isso que fecha o círculo em repouso — 14 + 12 de recuo
-            + 2 de borda = 28, a altura. Com o `size-4` de antes (os 16 de
-            quando o degrau era `icon-sm`) o botão media 30 × 28, oval
-            (rodada 240g). */}
+        {/* Sem tamanho cravado: o degrau `sm` desenha o ícone em 14, o que fecha o círculo em repouso. */}
         {copied ? <CheckIcon aria-hidden /> : <DocumentDuplicateIcon aria-hidden />}
       </Button>
-      {/* Fora do botão de propósito: com `aria-label` no botão, o conteúdo dele
-          não é anunciado, e a confirmação nunca chegaria a quem usa leitor de
-          tela — que é o estado de hoje, com o cheque verde mudo. */}
+      {/* Fora do botão: com `aria-label` o conteúdo dele não é anunciado. */}
       <span role="status" className="sr-only">
         {copied ? "Código copiado" : ""}
       </span>
@@ -665,38 +483,8 @@ export type PropRow = {
 }
 
 /**
- * A tabela de props é curada, não gerada: o que importa é o que o consumidor
- * precisa decidir, e uma extração automática lista as 300 props nativas de um
- * campo de texto junto com as três que interessam.
- *
- * Ela tem moldura, e a moldura é `bg-card`, a mesma do espécime.
- *
- * Chegou a ficar sem preenchimento, sob o argumento de que o espécime é uma
- * superfície e a tabela é uma região. A distinção não sobrevive à pergunta de
- * se alguém lendo a página a formularia: quando o leitor não consegue nomear a
- * diferença, ela não é distinção, é inconsistência. E no app tabela mora dentro
- * de cartão — deixá-la sobre o fundo da página era mostrá-la de um jeito que o
- * produto nunca mostra.
- *
- * O que sobra é um sistema de dois preenchimentos: `card` para superfície de
- * conteúdo, `muted` para código. O campo de import é o único do segundo tipo.
- *
- * Sem a moldura, a tabela não tinha fim: o `Table` remove o fio da última linha
- * (`[&_tr:last-child]:border-0`), o que é certo quando existe uma borda externa
- * fechando embaixo e errado quando não existe — a última linha se dissolvia na
- * página. E a região de rolagem horizontal não tinha margem: numa tela estreita
- * a tabela deslizava por baixo de nada.
- *
- * A faixa de cabeçalho tingida é o sinal mais legível de "isto é uma tabela", e
- * ela sozinha já resolveria metade da questão.
- *
- * As larguras saíram de porcentagem arbitrária para a escala de doze
- * colunas — as mesmas proporções, no vocabulário do resto do app.
- *
- * Sem `table-fixed`: com ele a tabela inteira deixa de pintar neste caminho de
- * renderização — fio, cabeçalho e células —, embora continue no DOM, com as
- * medidas certas e respondendo ao ponteiro. Em `auto`, a largura declarada é a
- * dica que sempre foi, que é como as porcentagens anteriores já funcionavam.
+ * Tabela de props curada, não gerada. A moldura é `bg-card`, como o espécime; sem ela a
+ * última linha (sem fio) se dissolvia na página. Sem `table-fixed`: neste caminho a tabela deixa de pintar.
  */
 export function PropsTable({
   title = "Props",
@@ -710,18 +498,9 @@ export function PropsTable({
       <PageSectionHeader>
         <PageSectionTitle>{title}</PageSectionTitle>
       </PageSectionHeader>
-      {/* `Table` já traz o próprio contêiner de rolagem horizontal; esta camada
-          é a moldura, e o `overflow-hidden` é o que faz o tingido do cabeçalho
-          respeitar os cantos arredondados. Não é `variant="outline"`: aquela
-          moldura não pinta fundo, e esta precisa do mesmo `bg-card` do
-          espécime — ds-doc é a segunda superfície nomeada que o auditor já
-          isenta. */}
+      {/* A moldura é `bg-card` com `overflow-hidden` para o cabeçalho respeitar os cantos; `variant="outline"` não pinta fundo. */}
       <Card padding="none">
         <Table size="sm">
-          {/* O hover de linha é opt-in agora (`interactive`), então não há
-              mais nada a neutralizar aqui: uma tabela de referência sem
-              `interactive` já não acende ao passar o cursor — nada acontece
-              ao clicar, e a linha acender era promessa falsa. */}
           <TableHeader variant="muted">
             <TableRow>
               <TableHead className="w-3/12">Prop</TableHead>
@@ -736,9 +515,7 @@ export function PropsTable({
                 <TableCell className="font-mono text-xs break-words text-foreground">
                   {r.prop}
                 </TableCell>
-                {/* Uma união de oito literais é o conteúdo mais longo da
-                    tabela. Em ladrilho ela quebrava em três retângulos
-                    desalinhados; em texto mono ela quebra como texto. */}
+                {/* Texto mono, não ladrilho: uma união longa quebra como texto. */}
                 <TableCell className="font-mono text-xs break-words text-primary-accent">
                   {r.type}
                 </TableCell>
@@ -758,19 +535,8 @@ export function PropsTable({
 }
 
 /**
- * Nota de decisão. Serve para o "por quê" que não cabe numa descrição de prop e
- * que, sem um lugar, acabaria só no comentário do componente.
- *
- * Régua à esquerda, sem preenchimento e sem caixa: são 141 delas no catálogo, e
- * emolduradas faziam a metade de baixo de toda página virar pilha de cartão.
- *
- * A régua tem a mesma espessura da abertura de "quando usar" — a 1px ela
- * sumia —, e o que distingue as duas é a cor: acento lá, fio comum aqui.
- *
- * O corpo ocupa a largura da coluna, como toda a prosa daqui. A regra: teto de
- * medida só onde alguma coisa divide a linha pela direita, porque aí a folga
- * tem dono. Um parágrafo sozinho na linha, com o teto, só produzia um degrau
- * entre onde o texto termina e onde termina o conteúdo logo abaixo dele.
+ * Nota de decisão: o "por quê" que não cabe na descrição de uma prop. Régua à esquerda, sem caixa;
+ * sem teto de medida, que só vale onde algo divide a linha pela direita.
  */
 export function DocNote({
   title,
@@ -797,14 +563,9 @@ export function DocNote({
 }
 
 /**
- * Os controles da demonstração "Na tela" (ver `docs/design/COMPONENTE-NOVO.md`),
- * sempre dentro de `Controles`, acima da moldura: um eixo é um valor do
- * componente escolhido na pílula `floating` (a do `Tabs` padrão, sem sombra), e
- * cada interruptor é um `Toggle` fantasma solto que liga uma peça ou um
- * comportamento. O eixo não mostra o nome da prop (os valores dizem o eixo, e a
- * linha precisa caber numa só): o `rotulo` é o nome acessível e a dica do
- * cursor. `rotulos` troca o texto de um valor ("md · 32", "Período"), e aí ele
- * deixa de ser mono.
+ * Os controles de "Na tela", dentro de `Controles`: o eixo é um valor escolhido na pílula `floating`,
+ * o interruptor um `Toggle` fantasma. O eixo não mostra o nome da prop: `rotulo` é o nome acessível;
+ * `rotulos` troca o texto de um valor (e ele deixa de ser mono).
  */
 export function Eixo<T extends string>({
   rotulo,
@@ -846,11 +607,7 @@ type InterruptorProps = {
   onChange: (v: boolean) => void
 }
 
-/**
- * Os interruptores: cada peça ou comportamento é um `Toggle` fantasma solto —
- * sem placa, cinza só quando ligado —, ao lado dos eixos. `Interruptores` só
- * os agrupa para o leitor de tela.
- */
+/** Os interruptores de "Na tela": `Toggle` fantasmas soltos; só agrupam para o leitor de tela. */
 export function Interruptores({ children, rotulo = "peças" }: { children: React.ReactNode; rotulo?: string }) {
   return (
     <div role="group" aria-label={rotulo} className="flex flex-wrap items-center gap-1">

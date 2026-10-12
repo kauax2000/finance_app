@@ -23,32 +23,10 @@ export const CATEGORY_ORDER: Category[] = [
 const ui = (name: string) => `@/components/ui/${name}`
 
 /**
- * A camada de cada peça, pelo modelo do atomic design.
- *
- * **Isto era dois `Set` e um *fall-through*.** O que não estivesse em `ATOMS`
- * nem em `MOLECULES` virava Organismo em silêncio — e foi assim que
- * `Typography` (nove átomos de texto que não compõem nada) apareceu ao lado da
- * `Sidebar`, e `Container` (uma `div`) ao lado do `Dialog`. Medido antes da
- * correção: **32 dos 75 componentes estavam na camada errada**, 43% do
- * catálogo. O comentário que vivia aqui já previa a falha — *"com 80 itens, a
- * repetição é onde a lista começa a mentir"* —, e a saída dele (derivar do
- * slug) foi o que produziu a mentira.
- *
- * **E a régua que substituiu os `Set` media o embrulho, não a peça.** Ela dizia
- * que átomo é o que "não compõe componente do sistema e é **um** elemento" —
- * lido como *importa zero de `ui/` e exporta um*. Medido: `Slider` passava como
- * átomo renderizando **quatro** primitivas Radix por dentro (root, track,
- * range, thumb), enquanto `Select`, com as mesmas peças expostas em dez
- * exports e **zero** imports, tinha ido para Moléculas. A diferença era só onde
- * a composição mora — dentro do arquivo ou na API —, e uma refatoração de
- * assinatura mudaria a camada sem mudar um pixel. Pior: **21 dos 21 átomos
- * importavam zero**, então a cláusula não distinguia nada; e 26 das 38
- * moléculas também importavam zero, então "grupos de átomos" não descrevia
- * dois terços delas.
- *
- * Agora cada `entry()` mora dentro do `layer()` da sua camada, e isso é
- * **exaustivo por tipo**: um componente novo sem camada não compila. Nascer
- * classificado é a única forma de a lista não voltar a mentir.
+ * A camada de cada peça, pelo modelo do atomic design. Cada `entry()` mora dentro do `layer()` da sua camada,
+ * e isso é exaustivo por tipo: um componente novo sem camada não compila (derivar do slug classificava errado
+ * em silêncio). A régua mede a composição que a API expõe, não o embrulho: um `Slider` com quatro primitivas
+ * Radix por dentro é átomo.
  *
  * ## A regra: a hierarquia é de composição, e cresce
  *
@@ -60,23 +38,12 @@ const ui = (name: string) => `@/components/ui/${name}`
  * | `Organismos` | feita de moléculas | seção com estrutura própria — **faixas** (cabeçalho/corpo/rodapé), grupos, submenus, linhas. Superfície com faixas é organismo. Lista cuja **unidade é uma molécula** é organismo. **Quem contém organismo é organismo** |
  * | `Templates` | objetos de nível de página, que dispõem componentes num layout | o que estrutura a página, e não o que ela contém |
  *
- * `Container` é **Átomo** e não Template: ele é indivisível — uma `div` com
- * largura —, e não dispõe nada. Quem dispõe é o `PageHeader`, o
- * `PageSection` e o `TopBar` — a barra do topo da janela —, e por isso são
- * Templates.
+ * `Container` é Átomo (uma `div` com largura, não dispõe nada); quem dispõe é o `PageHeader`, o `PageSection`
+ * e o `TopBar`, que por isso são Templates. Não existe uma sexta gaveta: uma decisão sem dono é um componente
+ * ou um token faltando, e não uma página.
  *
- * **Não existe uma sexta gaveta.** Havia `Padrões` — sete páginas que "não
- * são componente" —, e medido, quase todo o conteúdo delas já estava nas
- * páginas de camada, em cópias que divergiam. A decisão mora em quem a
- * implementa: o dinheiro no `MoneyDisplay`, o Enter no `Form`, a paleta de
- * gráfico no `Chart` e em Cores, os chips no `Badge`, as datas em Tipografia,
- * o toque numa Fundação. Uma decisão sem dono é um componente ou um token
- * faltando, e não uma página.
- *
- * O `taxonomy.test.ts` tranca a parte mecânica (o grafo de imports) e a ordem
- * alfabética dentro de cada categoria. A parte que o grafo não alcança — a
- * anatomia de um `Select`, a diferença entre especializar e compor — é decisão,
- * e mora nos comentários sobre cada `entry()` do `REGISTRY`.
+ * O `taxonomy.test.ts` tranca a parte mecânica (o grafo de imports) e a ordem alfabética dentro de cada
+ * categoria. O que o grafo não alcança mora nos comentários sobre cada `entry()`.
  */
 type Layer = Exclude<Category, "Foundations">
 
@@ -107,11 +74,8 @@ function entry(
 }
 
 /**
- * A camada de um bloco de componentes. Sem padrão: um `entry()` fora de um
- * `layer()` não tem `category` e não compila dentro do `REGISTRY`.
- *
- * Os comentários sobre cada `entry()` dizem **por que** ele está na camada, e
- * não o que — a camada já está no bloco.
+ * A camada de um bloco de componentes. Sem padrão: um `entry()` fora de um `layer()` não tem `category` e não
+ * compila dentro do `REGISTRY`. Os comentários sobre cada `entry()` dizem por que ele está na camada.
  */
 function layer(category: Layer, entries: Unlayered[]): RegistryEntry[] {
   return entries.map(({ slug, name, ...rest }) => ({ slug, name, category, ...rest }))
@@ -164,9 +128,7 @@ export const REGISTRY: RegistryEntry[] = [
     source: "src/app/globals.css",
   },
   {
-    // Era um Padrão, e o conteúdo é token e política de variante — os
-    // `--mobile-*` da área segura e o `@custom-variant` de hover, todos em
-    // `globals.css`. É a definição de Fundação.
+    // Token e política de variante (`--mobile-*`, `@custom-variant` de hover), todos em `globals.css`.
     slug: "touch-safe-area",
     name: "Touch & safe area",
     category: "Foundations",
@@ -174,9 +136,7 @@ export const REGISTRY: RegistryEntry[] = [
     source: "src/app/globals.css",
   },
   {
-    // O slug é o do **arquivo**, e não o do nome exibido: a asserção 1 de
-    // `taxonomy.test.ts` exige que todo `.tsx` de `ui/` tenha entrada com o
-    // slug do arquivo, e o arquivo é `typography.tsx`.
+    // O slug é o do arquivo (`typography.tsx`): a asserção 1 de `taxonomy.test.ts` o exige.
     slug: "typography",
     name: "Typography",
     category: "Foundations",
@@ -197,41 +157,17 @@ export const REGISTRY: RegistryEntry[] = [
     entry("color-tile", "Color Tile", "Ladrilho com a cor escolhida pela pessoa.", ui("color-tile"), "ColorTile"),
     /** Uma `div` com largura e calha. Indivisível — átomo por decisão do dono. */
     entry("container", "Container", "Largura, calha e ritmo do conteúdo.", ui("container"), "Container, containerSizes, containerGutters, containerStacks"),
-    /** **O vidro é modo, e não peça.** Houve cinco entradas aqui —
-     *  `glass-button`, `glass-badge`, `glass-avatar`, `glass-checkbox` e
-     *  `glass-color-tile` —, cada uma importando **um** átomo e renderizando
-     *  **um** elemento. O comentário que morava neste lugar já previa a rodada
-     *  que as absorveria: *"no dia em que virarem só uma classe a mais, a
-     *  pergunta certa é «componente ou modo?»"*. A previsão se cumpriu, e hoje o
-     *  eixo `glass` mora nos próprios átomos.
-     *
-     *  A régua que sobra, e que vale para a próxima especialização: o que decide
-     *  "componente ou modo?" **não é haver tradução** — é a tradução precisar de
-     *  uma peça para existir. Aqui ela cabia num eixo, e coube melhor: como
-     *  eixo, a superfície que o vidro apagaria simplesmente não é emitida. */
+    /** O vidro é modo, e não peça: a tradução cabe num eixo `glass` dos próprios átomos. O que decide "componente ou modo?" é a tradução precisar de uma peça para existir. */
     entry("input", "Input", "Campo de uma linha, inclusive de dinheiro.", ui("input"), "Input"),
     entry("input-otp", "Input OTP", "Entrada de código de verificação.", ui("input-otp"), "InputOTP, InputOTPSlot"),
-    /** Uma tecla, ou o acorde inteiro numa pastilha só. As partes do acorde são
-     *  anatomia dele — a mesma conta pela qual o `Slider` é átomo com quatro
-     *  peças por dentro. A **sequência** junta átomos, e é o `kbd-group`. */
+    /** Uma tecla, ou o acorde inteiro numa pastilha só (as partes do acorde são anatomia). A sequência junta átomos, e é o `kbd-group`. */
     entry("kbd", "Kbd", "Uma tecla ou um atalho.", ui("kbd"), "Kbd"),
     entry("label", "Label", "Rótulo acessível ligado a um controle.", ui("label"), "Label"),
     entry("money-display", "Money Display", "Todo valor em reais que o app mostra.", ui("money-display"), "MoneyDisplay"),
     entry("progress", "Progress", "Quanto de um total foi consumido: barra, segmentada ou anel.", ui("progress"), "Progress, ProgressHeader, ProgressLabel, ProgressValue, ProgressFooter, ProgressRing"),
-    /** O controle inteiro — o anel e o ponto. **Não é especialização de nada**:
-     *  ele é a unidade, e quem compõe é o `radio-group`, uma camada acima. É o
-     *  par `kbd` / `kbd-group` outra vez. Com uma diferença que fica escrita:
-     *  este é o primeiro átomo que **exige contexto para renderizar** — o Radix
-     *  não exporta rádio independente, e `RadioGroup.Item` lança fora do `Root`.
-     *  Contexto de primitiva não é composição, pela mesma conta que faz o
-     *  `Slider` átomo com quatro peças Radix por dentro. */
+    /** O controle inteiro — o anel e o ponto; quem compõe é o `radio-group`. Exige contexto para renderizar, e contexto de primitiva não é composição. */
     entry("radio", "Radio", "Uma opção de escolha única.", ui("radio"), "Radio"),
-    /** Group, Panel e Separator são a anatomia de **uma** coisa — a mesma conta
-     *  que devolveu o `Select` a Átomos, e que faz o `Slider` átomo com quatro
-     *  peças Radix por dentro. Ele não compõe nenhum átomo: um painel
-     *  redimensionável não é um grupo de peças menores, é um controle de
-     *  proporção com regiões dentro. O `Button` do gatilho de colapso é o único
-     *  import de `ui/`, e a asserção 2 deixa exatamente um. */
+    /** Group, Panel e Separator são a anatomia de uma coisa (um controle de proporção). O `Button` do gatilho de colapso é o único import de `ui/`, e a asserção 2 deixa exatamente um. */
     entry("resizable", "Resizable", "Painéis e colunas de tabela redimensionáveis por arraste.", ui("resizable"), "ResizablePanelGroup, ResizablePanel, ResizableHandle, ResizableColumnHandle"),
     /** Uma casca rolável, e uma máscara. */
     entry("scroll-area", "Scroll Area", "Região rolável: a barra desenhada, e as bordas que dissolvem.", ui("scroll-area"), "ScrollArea, ScrollBar"),
@@ -253,18 +189,9 @@ export const REGISTRY: RegistryEntry[] = [
 
   // ── Molecules ───────────────────────────────────────────────────────────
   ...layer("Molecules", [
-    /** O aviso e a ação dele. Ele entrou aqui **sem argumento** e por um tempo
-     *  não tinha nenhum: importava zero componentes, e as quatro peças eram
-     *  quatro `<div>` — a posição em que o `Select` estava quando foi devolvido
-     *  a Átomos. O que faltava não era reclassificá-lo, era o `AlertAction`: a
-     *  linha de ação alcançava o `Button` por seletor descendente e *pedia* que
-     *  quem chamasse escrevesse `variant="tertiary"`. Compondo o átomo de fato,
-     *  a camada deixa de ser herdada. */
+    /** O aviso e a ação dele: `AlertAction` compõe o `Button`, em vez de a tela escrever `variant="tertiary"`. */
     entry("alert", "Alert", "Aviso dentro do conteúdo.", ui("alert"), "Alert, AlertTitle, AlertDescription, AlertActions, AlertAction"),
-    /** A faixa de estado global, e as peças dela. Ela sempre compôs o átomo — o
-     *  × de dispensar é um `Button` —, então esta camada nunca foi herdada; o que
-     *  faltava era a **ação** ser peça também, e não um seletor descendente
-     *  pedindo `variant="tertiary"` a quem chamasse. */
+    /** A faixa de estado global e as peças dela; o × de dispensar é um `Button`, e a ação também é peça. */
     entry("announcement-bar", "Announcement Bar", "Aviso de largura total sobre o app.", ui("announcement-bar"), "AnnouncementBar, AnnouncementBarContent, AnnouncementBarActions, AnnouncementBarAction"),
     entry("button-group", "Button Group", "Botões colados que agem como uma unidade.", ui("button-group"), "ButtonGroup, ButtonGroupText"),
     entry("collapsible", "Collapsible", "Bloco que expande e recolhe.", ui("collapsible"), "Collapsible, CollapsibleTrigger, CollapsibleRow, CollapsibleMarker, CollapsibleLabel, CollapsibleContent"),
@@ -274,21 +201,14 @@ export const REGISTRY: RegistryEntry[] = [
     entry("field", "Field", "Rótulo, controle, ajuda e erro ligados.", ui("field"), "Field, FieldControl, FieldLabel, FieldHeader, FieldCounter, FieldDescription, FieldChecklist, FieldError, FieldGroup, FieldRow, FieldSet, FieldLegend, FieldSeparator"),
     entry("input-group", "Input Group", "Campo com ícones, texto ou botões acoplados.", ui("input-group"), "InputGroup, InputGroupInput, InputGroupTextarea, InputGroupAddon, InputGroupText, InputGroupButton, InputGroupPasswordToggle, InputGroupSelect"),
     entry("item", "Item", "Linha de lista com mídia, conteúdo e ações.", ui("item"), "ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions, ItemChevron, ItemHeader, ItemFooter, ItemSeparator"),
-    /** A sequência: um `Kbd` por tecla. É a junção dos átomos, e importa o átomo
-     *  de fato — o `keys` existe justamente para isso ser verdade. */
+    /** A sequência: um `Kbd` por tecla. Importa o átomo de fato (`keys`). */
     entry("kbd-group", "Kbd Group", "Sequência de teclas.", ui("kbd-group"), "KbdGroup"),
     entry("pagination", "Pagination", "Navegação entre páginas de uma lista.", ui("pagination"), "Pagination, PaginationStatus, PaginationContent, PaginationLink, PaginationPrevious, PaginationNext, PaginationEllipsis, PaginationMore"),
-    /** A junção: `Radio` + `Label`, e o cartão. Ele importa os átomos de fato — o
-     *  `children` da opção existe justamente para isso ser verdade, e não para o
-     *  rótulo continuar do lado de fora, escrito à mão por quem chama, como
-     *  estava. */
+    /** A junção: `Radio` + `Label`, e o cartão. Importa os átomos de fato (`children` da opção). */
     entry("radio-group", "Radio Group", "Escolha única entre poucas opções — em linha, em cartão, em ladrilho ou em fichas.", ui("radio-group"), "RadioGroup, RadioGroupItem"),
-    /** A pílula de busca: `Button` (o ×), `Kbd` (o atalho) e `Spinner`
-     *  (`pending`). Até a rodada 198 especializava o `InputGroup`; a pílula não é
-     *  o grupo de campo, e passou a compor os átomos direto. */
+    /** A pílula de busca: `Button` (o ×), `Kbd` (o atalho) e `Spinner` (`pending`); não é o grupo de campo. */
     entry("search-input", "Search Input", "O campo de busca — a pílula do cabeçalho e da paleta.", ui("search-input"), "SearchInput"),
-    /** Um controle. Trigger, content e item são a anatomia dele, não composição
-     *  — a mesma conta pela qual o `Slider` é átomo com quatro peças por dentro. */
+    /** Um controle. Trigger, content e item são a anatomia dele, não composição. */
     entry("select", "Select", "Lista suspensa de opções predefinidas, desenhada ou do sistema.", ui("select"), "Select, SelectTrigger, SelectItem, NativeSelect"),
     entry("toggle-group", "Toggle Group", "Conjunto de toggles: seleção única ou múltipla, em fichas, numa bandeja segmentada ou na pílula das Tabs.", ui("toggle-group"), "ToggleGroup, ToggleGroupItem"),
   ]),
@@ -296,19 +216,7 @@ export const REGISTRY: RegistryEntry[] = [
   // ── Organisms ──────────────────────────────────────────────────────────
   ...layer("Organisms", [
     /** A unidade é um `Collapsible` — uma molécula. */
-    /** Lista cuja **unidade** é uma molécula, que é a segunda forma do nível.
-     *  E não por analogia: `AccordionItem` + `Trigger` + `Content` **é** um
-     *  `Collapsible`, que está em Moléculas — os dois arquivos importam a mesma
-     *  régua, `lib/disclosure-classes`.
-     *
-     *  Não é átomo, e a conta é direta: medido, uma raiz renderiza **3 itens, 3
-     *  gatilhos focáveis e 3 painéis**, cada um com o próprio `aria-expanded`.
-     *  "Um controle, um elemento, uma casca" não descreve isso.
-     *
-     *  E a cláusula de anatomia não o salva. Ela vale para o `Select`, cujo item
-     *  é uma **escolha entre valores** de um controle só; aqui cada item é uma
-     *  divulgação **operável sozinha e com estado próprio**. Item que é dado não
-     *  é item que tem estado. */
+    /** Lista cuja unidade é uma molécula: `AccordionItem` + `Trigger` + `Content` é um `Collapsible`, e cada item tem estado próprio, o que a anatomia de um `Select` (escolha entre valores) não tem. */
     entry("accordion", "Accordion", "Seções expansíveis.", ui("accordion"), "Accordion, AccordionItem, AccordionTrigger, AccordionContent, AccordionToggleAll"),
     entry("alert-dialog", "Alert Dialog", "Confirmação de uma ação sem volta.", ui("alert-dialog"), "AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogMedia, AlertDialogList, AlertDialogError, AlertDialogConfirmInput"),
     /** Uma pilha de `Avatar`s seria molécula; a lista do +N é um `Popover` (e,
@@ -333,17 +241,7 @@ export const REGISTRY: RegistryEntry[] = [
     /** Compõe `Popover`, `Command`, `DropdownMenu` e `Calendar` — quem contém
      *  organismo é organismo. */
     entry("filter-bar", "Filter Bar", "Os filtros aplicados em tokens campo · operador · valor, editáveis no lugar — com o E/OU, a contagem, a URL e o teclado de toolbar.", ui("filter-bar"), "FilterBar, FilterBarSkeleton, serializeFilters, parseFilters, filterPeriodRange"),
-    /** Era átomo — só o `<form>` com a política do Enter, sem input e sem botão.
-     *  Virou molécula ao ganhar as peças: `FormInput` sobre `Field`, `FormSubmit`
-     *  sobre `Button` + `Spinner`. Inversão registrada, e a régua é a mesma. */
-    /** Ele era Molécula, e a rodada do `RadioGroup` mostrou que já não era.
-     *  `form.tsx` compõe `field` **e** `radio-group` — duas moléculas —, e a
-     *  régua acima diz que isso é organismo. Ele já estava na fronteira antes:
-     *  compunha `field` e tinha estado próprio (a política do Enter, o `id` em
-     *  contexto), que é a segunda cláusula do nível. O que mudou foi o limiar
-     *  mecânico da asserção 3 ser cruzado, e com ele a classificação deixar de
-     *  poder mentir. É a mesma inversão que o próprio `form` já registra uma vez
-     *  — de átomo para molécula, quando ganhou as peças. */
+    /** Compõe `field` e `radio-group` (duas moléculas) e tem estado próprio (a política do Enter, o `id` em contexto): organismo. */
     entry("form", "Form", "Formulário com as peças, o Enter, a validação em português e o envio que espera sozinho.", ui("form"), "Form, FormInput, FormField, FormSwitch, FormPickerPopover, FormSubmit"),
     /** Compõe o StatCard, e quem contém organismo é organismo. */
     entry("histogram-slider", "Histogram Slider", "Faixa de valor sobre uma distribuição, com atalhos, contagem, eixo e referência.", ui("histogram-slider"), "HistogramSlider"),
@@ -368,50 +266,25 @@ export const REGISTRY: RegistryEntry[] = [
 
   // ── Templates ───────────────────────────────────────────────────────────
   ...layer("Templates", [
-    /**
-     * A barra de baixo do telefone — a irmã do `top-bar`. Ela não mostra
-     * conteúdo nenhum por si: dispõe onde as abas, o slot de conta e a ação
-     * primária vão, e fica parada sobre a tela que rola por baixo dela.
-     */
+    /** A barra de baixo do telefone, irmã do `top-bar`: dispõe onde as abas, o slot de conta e a ação primária vão. */
     entry("bottom-bar", "Bottom Bar", "A barra de abas do telefone — o marcador do Tabs, o arraste, a contagem, o rótulo só na ativa e o some-ao-rolar.", ui("bottom-bar"), "BottomBar, BottomBarTab, BottomBarSlot, BottomBarAction, BottomBarSkeleton, BottomBarRow, BottomBarTabs, bottomBarActionClassName"),
-    /**
-     * O `DataTable` (rodada 225) é o motor da TanStack Table por baixo do
-     * `TablePanel`: ele monta o painel, a barra, o corpo, o rodapé de paginação
-     * e a barra flutuante da seleção — o `TablePanel` com o estado dentro.
-     * Desde a rodada 231 o `TablePanel` mora no mesmo arquivo e na mesma página:
-     * eram duas entradas em Templates para uma tabela só, e ele, sem estado, só
-     * servia aos esqueletos de carregamento.
-     */
+    /** O motor da TanStack Table por baixo do `TablePanel`, que mora no mesmo arquivo e na mesma página. */
     entry("data-table", "Data Table", "A tabela com o estado — ordenar, filtrar, marcar, agrupar, expandir, exportar e editar — e a moldura dela.", ui("data-table"), "DataTable, TablePanel, TablePanelToolbar, TablePanelFooter, dataTableColumns, DataTableSelectionBar, DataTableFacetFilter, DataTableViewOptions"),
     entry("page-header", "Page Header", "O topo de uma tela: título, identidade, ações, números e navegação — compacto no telefone, e o título sobe para a barra.", ui("page-header"), "PageHeader, PageHeaderTitleRow, PageHeaderTitle, PageHeaderDescription, PageHeaderEyebrow, PageHeaderMedia, PageHeaderMeta, PageHeaderStat, PageHeaderNav, PageHeaderActions, PageHeaderBack, PageHeaderBreadcrumb, PageHeaderSkeleton"),
     entry("page-section", "Page Section", "Bloco de uma tela, com título e ação — uma região nomeada pelo título, que recolhe e prende o cabeçalho sob a barra.", ui("page-section"), "PageSection, PageSectionHeader, PageSectionTitle, PageSectionDescription, PageSectionLink, PageSectionMeta, PageSectionFooter, PageSectionSkeleton"),
     /**
-     * A casca da página com navegação — a irmã do `top-bar` e do `bottom-bar`.
-     * Ela foi Organismo até a rodada 221 pelo argumento de que contém
-     * organismos (o painel de borda no telefone); isso diz o piso, não a
-     * camada, e Templates também são feitos de organismos. O que decide é o que
-     * `SidebarProvider` e `SidebarInset` fazem: dispõem a página — a barra de um
-     * lado, o conteúdo do outro, o estado que atravessa as duas. Menus, grupos e
-     * submenus são anatomia dela, e nenhum se usa fora.
-     */
+         * A casca da página com navegação, irmã do `top-bar` e do `bottom-bar`. Conter organismos diz o piso, não a
+         * camada: o que decide é dispor a página (a barra de um lado, o conteúdo do outro, o estado entre as duas).
+         */
     entry("sidebar", "Sidebar", "A navegação lateral do app — e, sem placa (plain), a do catálogo.", ui("sidebar"), "Sidebar, SidebarProvider, SidebarInset, SidebarTrigger, SidebarRail, SidebarContent, SidebarGroup, SidebarMenu, SidebarMenuButton, useSidebar"),
-    /** A página dividida: campo de um lado, coluna de conteúdo do outro.
-     *  Compõe `Container` e a tipografia, e recebe o campo por slot — o que ele
-     *  mostra é conteúdo de produto, e conteúdo de produto não mora em `ui/`. */
+    /** A página dividida: campo de um lado, coluna do outro. Recebe o campo por slot, porque conteúdo de produto não mora em `ui/`. */
     entry("split-shell", "Split Shell", "Campo de um lado, coluna de conteúdo do outro — quebra pelo casco, com o voltar, o pé e os passos.", ui("split-shell"), "SplitShell, SplitShellAside, SplitShellBack, SplitShellFooter, SplitShellSkeleton"),
     /**
-     * A barra de uma lista: dispõe onde os filtros, as ações e as fichas vão, e
-     * não mostra conteúdo nenhum por si. Foi Organismo até a rodada 229 pelo
-     * argumento de que contém organismos (o ⋯ é um `DropdownMenu`, e na
-     * prática ela carrega um `Tabs`) — o mesmo que a `Sidebar` derrubou na 221:
-     * isso diz o piso, não a camada. Desde a 229 ela age como as barras da
-     * página: prende sob o `TopBar`, mede a base dele e some ao rolar.
-     */
+         * A barra de uma lista: dispõe onde os filtros, as ações e as fichas vão. Conter organismos diz o piso, não a
+         * camada; ela prende sob o `TopBar`, como as barras da página.
+         */
     entry("toolbar", "Toolbar", "Filtros e ações acima de uma lista — presa sob a barra do topo, com o botão de filtros, as fichas, a busca, o ⋯ e o teclado de toolbar.", ui("toolbar"), "Toolbar, ToolbarFilters, ToolbarActions, ToolbarRow, ToolbarButton, ToolbarFilterButton, ToolbarSearch, ToolbarCount, ToolbarChips, ToolbarFilterIndicator"),
-    /**
-     * A barra do topo da janela. Ela não mostra conteúdo nenhum por si — dispõe
-     * onde o voltar, o título e as ações vão, e fica parada enquanto a tela rola.
-     */
+    /** A barra do topo da janela: dispõe onde o voltar, o título e as ações vão. */
     entry("top-bar", "Top Bar", "A barra do topo da janela — barra ou pílula, com a ação, a busca e o fio de progresso, e uma árvore para o telefone.", ui("top-bar"), "TopBar, TopBarStart, TopBarTitle, TopBarContent, TopBarActions, TopBarAction, TopBarSearch, TopBarProgress, TopBarSkeleton"),
   ]),
 ]
@@ -427,13 +300,7 @@ export function groupedRegistry(): { category: Category; items: RegistryEntry[] 
   }))
 }
 
-/**
- * A ordem de leitura do catálogo: a mesma da navegação lateral, categoria por
- * categoria — e, dentro da categoria, alfabética pelo `name` exibido, trancada
- * pela asserção 7 do `taxonomy.test.ts`. A posição no array não carrega
- * decisão. É ela que sustenta o anterior/próximo no pé de cada página — sem
- * isso, a única saída de uma página era voltar à lista e procurar de novo.
- */
+/** A ordem de leitura do catálogo: a da navegação lateral, e alfabética pelo `name` dentro da categoria (asserção 7 do `taxonomy.test.ts`). Sustenta o anterior/próximo no pé de cada página. */
 export function readingOrder(): RegistryEntry[] {
   return groupedRegistry().flatMap((g) => g.items)
 }

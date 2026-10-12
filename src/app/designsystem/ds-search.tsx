@@ -37,32 +37,14 @@ import type { Category } from "./ds-doc";
 import { CATEGORY_ORDER, REGISTRY, getEntry } from "./registry";
 
 /**
- * A busca do catálogo: um gatilho no meio do cabeçalho e a paleta de comandos.
- *
- * Ela saiu da barra lateral por dois motivos. O campo lá filtrava a navegação,
- * então buscar e navegar eram o mesmo gesto e um desfazia o outro: achar
- * "Cores" escondia as outras 87 entradas. E o campo só existia no desktop — no
- * telefone ficava dentro da folha de navegação, atrás de dois toques.
- *
- * **Ela abre por camadas** (rodada 139). Vazia, mostra as cinco camadas e as
- * últimas páginas abertas; escolher uma camada põe um chip no campo e a busca
- * segue só ali. Sem chip, digitar traz camadas, recentes e páginas que batem.
- *
- * **Desde a rodada 208 cada camada é uma sub-página** (`CommandPages`): a pilha,
- * o Backspace em dois toques e o campo que esvazia a cada passo são do
- * componente, e esta tela só diz o que cada página mostra.
+ * A busca do catálogo: um gatilho no meio do cabeçalho e a paleta de comandos. Abre por camadas (cada uma é uma
+ * sub-página do `CommandPages`: pilha, Backspace e campo são do componente); esta tela só diz o que cada página mostra.
  */
 export function DsSearch() {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
 
-  /**
-   * `⌘K` e `/` abrem a paleta.
-   *
-   * `/` é ignorado enquanto se digita em outro campo, senão a barra some do meio
-   * de uma palavra. `⌘K` vale sempre: é o gesto que a pessoa faz justamente para
-   * sair de onde está.
-   */
+  /** `⌘K` e `/` abrem a paleta; `/` é ignorado enquanto se digita em outro campo, `⌘K` vale sempre. */
   React.useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       const target = event.target as HTMLElement | null;
@@ -93,9 +75,7 @@ export function DsSearch() {
 
   return (
     <>
-      {/* O gatilho é o `TopBarSearch` (rodada 237): o ícone abaixo de `lg` e a
-          pílula com ⌘K acima, com o brilho de marca e a frase que troca. Quem
-          escuta ⌘K e / é esta paleta (ela alterna), então ele não escuta. */}
+      {/* O gatilho é o `TopBarSearch`: ícone abaixo de `lg`, pílula a partir dele. */}
       <TopBarSearch
         onOpen={() => setOpen(true)}
         label="Buscar no design system"
@@ -116,16 +96,11 @@ export function DsSearch() {
         title="Buscar no design system"
         description={`Busque entre as ${REGISTRY.length} páginas pelo nome, ou entre numa camada.`}
         commandProps={{
-          // A busca por substring sem acento, graduada, mora em
-          // `lib/command-filter` — a mesma que o `Combobox` usa. Era escrita
-          // aqui, inline, e o segundo consumidor não tinha como achá-la.
+          // A busca por substring sem acento mora em `lib/command-filter`, a mesma do `Combobox`.
           filter: commandFilter,
         }}
       >
-        {/* Fechar zera a busca, o escopo e a pilha sem efeito nenhum: o
-            conteúdo do diálogo desmonta ao fechar, e o estado mora nele.
-            Reabrir com o texto anterior parece memória útil e não é — o que
-            vale lembrar é o **destino**, e ele fica nos recentes. */}
+        {/* Fechar zera a busca, o escopo e a pilha sem efeito. */}
         <CommandPages>
           <DsPaleta onNavigate={navegar} />
         </CommandPages>
@@ -139,21 +114,14 @@ function DsPaleta({ onNavigate }: { onNavigate: (slug: string) => void }) {
   const [query, setQuery] = React.useState("");
   const pages = useCommandPages();
   const scope = pages.current as Category | undefined;
-  // Mesma chave da versão anterior (`recent-pages.ts`), para quem já tinha
-  // recentes não os perder. O gancho lê ao montar, e o miolo monta a cada
-  // abertura — então a lista é a do momento, e não a do primeiro render.
+  // Mesma chave da versão anterior (`recent-pages.ts`); o miolo monta a cada abertura, então a lista é a do momento.
   const { recents, add } = useCommandRecents("ds:recentes");
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   /**
-   * Trocar de página devolve a paleta ao estado ocioso.
-   *
-   * O `useCommandIdleSelection` só volta ao ocioso em `input`, e o campo
-   * esvazia por estado, sem digitar nada: a linha "Organisms" que acabou de
-   * ser escolhida sairia da lista, e o cmdk selecionaria a primeira da página
-   * nova como se alguém tivesse navegado até ela. É o mesmo evento sintético
-   * que o × do campo dispara.
-   */
+     * Trocar de página devolve a paleta ao estado ocioso: o `useCommandIdleSelection` só volta em `input`, e o campo
+     * esvazia por estado; o evento sintético é o mesmo que o × do campo dispara.
+     */
   React.useEffect(() => {
     inputRef.current?.dispatchEvent(new Event("input", { bubbles: true }));
   }, [scope]);
@@ -170,12 +138,7 @@ function DsPaleta({ onNavigate }: { onNavigate: (slug: string) => void }) {
 
   const scoped = scope ? REGISTRY.filter((e) => e.category === scope) : null;
 
-  /**
-   * Uma página recente não se repete no grupo da camada. É o que mantém o
-   * `value` de cada linha único no cmdk — duas linhas com o mesmo valor
-   * acendem juntas. Vazia, a paleta mostra as camadas e, abaixo, os recentes;
-   * com texto, quem bate melhor sobe — o cmdk ordena os grupos pela nota.
-   */
+  /** Uma página recente não se repete no grupo da camada: duas linhas com o mesmo `value` acendem juntas no cmdk. */
   const recentes = recents.flatMap((slug) => {
     const entry = getEntry(slug);
     return entry ? [entry] : [];
@@ -196,13 +159,8 @@ function DsPaleta({ onNavigate }: { onNavigate: (slug: string) => void }) {
         autoFocus
         value={query}
         onValueChange={setQuery}
-        // A busca casa só com o nome da página: descrição e texto do corpo
-        // traziam páginas que apenas mencionavam o que se procurava.
-        //
-        // O placeholder diz o que se acha, e não repete o que já está na
-        // tela: na raiz, que a busca cobre páginas **e** camadas; no escopo,
-        // o nome da camada já está pintado ao lado, então ele diz o tamanho
-        // do que sobrou para filtrar.
+        // A busca casa só com o nome da página (descrição e corpo traziam páginas que só mencionavam o termo).
+        // O placeholder diz o que se acha: na raiz, páginas e camadas; no escopo, o tamanho do que sobrou.
         placeholder={
           scoped
             ? `Filtrar ${scoped.length} páginas…`
@@ -213,9 +171,7 @@ function DsPaleta({ onNavigate }: { onNavigate: (slug: string) => void }) {
             ? `Buscar nas ${scoped?.length ?? 0} páginas de ${scope}`
             : "Buscar uma página ou camada"
         }
-        // A trilha que as sub-páginas desenham sozinhas não tem `tint`; a
-        // camada pinta o escopo na cor dela, então ele vem daqui — o estado
-        // armado continua sendo o da pilha.
+        // A trilha das sub-páginas não tem `tint`; a camada pinta o escopo na cor dela.
         leading={
           scope && ScopeIcon ? (
             <CommandScope
@@ -230,8 +186,7 @@ function DsPaleta({ onNavigate }: { onNavigate: (slug: string) => void }) {
       />
 
       <CommandList>
-        {/* Busca vazia não pode ser beco sem saída: além de dizer o que a
-              busca cobre, ela oferece a volta. */}
+        {/* Busca vazia não é beco sem saída. */}
         <CommandEmpty>
           <CommandEmptyTitle>
             {scope
@@ -265,8 +220,7 @@ function DsPaleta({ onNavigate }: { onNavigate: (slug: string) => void }) {
           </div>
         </CommandEmpty>
 
-        {/* Cada página remonta ao entrar, e é a remontagem que faz as linhas
-            subirem (`command-reveal`). */}
+        {/* Cada página remonta ao entrar: é a remontagem que faz as linhas subirem em cascata. */}
         <CommandPage>
           <CommandGroup heading="Camadas">
             {CATEGORY_ORDER.map((category) => {
@@ -298,8 +252,7 @@ function DsPaleta({ onNavigate }: { onNavigate: (slug: string) => void }) {
             })}
           </CommandGroup>
 
-          {/* Abaixo das camadas, uma linha só por página — o desenho de
-              "Go to …" que o dono trouxe: a seta e o nome. */}
+          {/* Abaixo das camadas, uma linha só por página. */}
           {recentes.length > 0 ? (
             <CommandGroup heading="Recentes">
               {recentes.map((item) => (
@@ -318,9 +271,7 @@ function DsPaleta({ onNavigate }: { onNavigate: (slug: string) => void }) {
             </CommandGroup>
           ) : null}
 
-          {/* As páginas só entram quando há o que buscar: vazia, a paleta é
-              as camadas e os recentes. Com texto, cada camada diz quantas
-              bateram. */}
+          {/* As páginas só entram quando há o que buscar. */}
           {query
             ? groups.map((group) => (
                 <CommandGroup
@@ -361,9 +312,7 @@ function DsPaleta({ onNavigate }: { onNavigate: (slug: string) => void }) {
         ))}
       </CommandList>
 
-      {/* A legenda de teclado, em cápsulas soltas embaixo da placa — o último
-          filho da pilha. Navegar fica à esquerda; abrir e fechar andam
-          juntos à direita, porque os dois encerram a interação. */}
+      {/* A legenda de teclado, em cápsulas soltas embaixo da placa. */}
       <CommandDock>
         <div className="flex items-center gap-2">
           <CommandDockItem>
@@ -425,20 +374,9 @@ function DsPageItem({
 }
 
 /**
- * Uma frase que se **dissolve** na outra, palavra a palavra, quando o gatilho
- * recebe o cursor ou o foco.
- *
- * O gesto já foi letra a letra rolando (chamava atenção demais) e depois
- * palavra a palavra deslizando 4px (discreto, mas mecânico). Hoje as duas
- * frases **ocupam o mesmo lugar e trocam de foco**, como uma lente: a que sai
- * desfoca e some, a que entra vem do desfoque até ficar nítida, com um
- * respiro de 1px e escala de 98% → 100%. Cada palavra começa 45ms depois da
- * anterior, em `--duration-slow` com `--ease-emphasized` — a curva que acelera
- * cedo e pousa devagar, a do link do catálogo. Não há trajeto a ler, só a
- * passagem de uma frase para a outra.
- *
- * Com movimento reduzido o bloco global encurta a duração, mas **não o
- * atraso**: ele é zerado à mão, como na `command-reveal`.
+ * Uma frase que se dissolve na outra, palavra a palavra, quando o gatilho recebe o cursor ou o foco: as duas
+ * ocupam o mesmo lugar e trocam de foco, 45ms por palavra. Com movimento reduzido o atraso é zerado à mão,
+ * como na `command-reveal`.
  */
 function FraseRolante({
   texto,
