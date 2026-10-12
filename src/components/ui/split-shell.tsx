@@ -64,6 +64,7 @@ function SplitShell({
   aside,
   title,
   description,
+  media,
   back,
   footer,
   side = "start",
@@ -79,6 +80,8 @@ function SplitShell({
   title: string
   /** Uma linha. Título sobre descrição é par de identidade — sem `gap`. */
   description?: React.ReactNode
+  /** O ícone acima do título (status: confira seu e-mail, senha atualizada). */
+  media?: React.ReactNode
   /** O topo da coluna: o `SplitShellBack`. */
   back?: React.ReactNode
   /** O pé da coluna: o `SplitShellFooter`. */
@@ -169,6 +172,11 @@ function SplitShell({
                 className={cn(step !== undefined && "split-shell-step")}
               >
                 <header>
+                  {media ? (
+                    <div data-slot="split-shell-media" className="mb-5 flex">
+                      {media}
+                    </div>
+                  ) : null}
                   <H1 ref={titulo} tabIndex={-1} className="outline-none">
                     {title}
                   </H1>

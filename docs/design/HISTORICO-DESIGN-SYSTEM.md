@@ -25161,3 +25161,11 @@ um `console.error` ("input of type %s with both value and defaultValue"), do
 `docs/input-otp.tsx:92`, que passa `defaultValue` à biblioteca `input-otp`.
 Já existia: a página mudou pela última vez antes da rodada (00dedd6) e o
 `input-otp.tsx` só teve comentários editados (40a0694).
+
+### Rodada 253 — `SplitShell media`
+
+O `SplitShell` ganhou `media`: o ícone de status (`EmptyStateIcon variant="done"`
+e afins) acima do título, num `<div data-slot="split-shell-media">` dentro do
+`<header>`. Nasceu das telas de status da jornada de acesso (confira seu
+e-mail, senha atualizada), que consomem a prop. O foco do `step` segue no
+título. Nenhuma outra prop mudou.

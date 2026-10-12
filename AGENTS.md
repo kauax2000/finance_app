@@ -1313,7 +1313,8 @@ declaração de `background-color` no trilho).
   `@max-3xl/split-shell:`); `side`, `ratio`, `back`, `footer`;
   `SplitShellAside` — **nenhuma tela escreve `brand-field rounded-2xl m-4` nem
   o `env(safe-area-inset-top)` do campo**; `SplitShellFooter`,
-  `SplitShellBack`, `SplitShellSkeleton`; `asideMobile`, `step`.
+  `SplitShellBack`, `SplitShellSkeleton`; `asideMobile`, `step`, `media` (o
+  ícone de status acima do título).
 - **`Stepper`**: com `value` + `onValueChange` o item deriva o estado —
   **nenhuma tela escreve `estadoDe(i, atual)`** —; no modo interativo todo item
   é `button`. `variant="bar"`, `orientation="responsive"`, `StepperContent`,

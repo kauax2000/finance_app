@@ -30,6 +30,12 @@ describe("o redesenho", () => {
 })
 
 describe("as peças", () => {
+  it("a mídia acima do título, dentro do cabeçalho", () => {
+    expect(CODIGO).toContain("media?: React.ReactNode")
+    expect(CODIGO).toContain('data-slot="split-shell-media"')
+    expect(CODIGO.indexOf('data-slot="split-shell-media"')).toBeLessThan(CODIGO.indexOf("<H1 ref={titulo}"))
+  })
+
   it("o campo, o pé, o voltar e o esqueleto", () => {
     for (const peca of ["SplitShellAside", "SplitShellFooter", "SplitShellBack", "SplitShellSkeleton"]) {
       expect(CODIGO).toContain(`function ${peca}(`)

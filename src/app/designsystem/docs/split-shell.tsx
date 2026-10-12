@@ -10,6 +10,7 @@ import {
   DescriptionListItem,
   DescriptionTerm,
 } from "@/components/ui/description-list"
+import { EmptyStateIcon } from "@/components/ui/empty-state"
 import { FormInput } from "@/components/ui/form"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import {
@@ -71,6 +72,7 @@ function Casco({
   voltar = true,
   pe = true,
   passo = true,
+  midia = false,
 }: {
   side?: "start" | "end"
   ratio?: "wide" | "even" | "narrow"
@@ -79,6 +81,7 @@ function Casco({
   voltar?: boolean
   pe?: boolean
   passo?: boolean
+  midia?: boolean
 }) {
   const [i, setI] = React.useState(0)
   const atual = PASSOS[passo ? i : 0]
@@ -88,7 +91,8 @@ function Casco({
       ratio={ratio}
       asideMobile={asideMobile}
       aside={<Campo surface={surface} />}
-      title={atual.titulo}
+      title={midia ? "Senha atualizada" : atual.titulo}
+      media={midia ? <EmptyStateIcon variant="done" className="[--empty-state-icon:--spacing(12)]" /> : undefined}
       description={atual.descricao}
       step={passo ? i : undefined}
       back={voltar ? <SplitShellBack href="#">entrar</SplitShellBack> : undefined}
@@ -119,6 +123,7 @@ function DemoNaTela() {
   const [voltar, setVoltar] = React.useState(true)
   const [pe, setPe] = React.useState(true)
   const [passo, setPasso] = React.useState(true)
+  const [midia, setMidia] = React.useState(false)
 
   return (
     <div className="flex w-full flex-col gap-6 p-4">
@@ -135,11 +140,12 @@ function DemoNaTela() {
             <Interruptor id="ss-voltar" rotulo="voltar" valor={voltar} onChange={setVoltar} />
             <Interruptor id="ss-pe" rotulo="pé" valor={pe} onChange={setPe} />
             <Interruptor id="ss-passo" rotulo="passos" valor={passo} onChange={setPasso} />
+            <Interruptor id="ss-midia" rotulo="mídia" valor={midia} onChange={setMidia} />
           </Interruptores>
         }
       />
       <ViewportFrame title="Casco dividido numa janela" height={620} className="rounded-surface" screenClassName="bg-background">
-        <Casco side={side} ratio={ratio} surface={surface} voltar={voltar} pe={pe} passo={passo} />
+        <Casco side={side} ratio={ratio} surface={surface} voltar={voltar} pe={pe} passo={passo} midia={midia} />
       </ViewportFrame>
     </div>
   )
@@ -197,6 +203,10 @@ export default function SplitShellDoc() {
         A partir da quebra, o campo mede a altura da janela e fica preso enquanto uma coluna longa — o cadastro — rola. A coluna põe o voltar em cima e o pé embaixo, com o conteúdo centrado no meio; no telefone o conteúdo encosta no topo, logo abaixo do campo, porque centrado ele flutuava a 223px dele (medido a 375×812) e a sobra de baixo é onde o teclado sobe.
       </DocNote>
 
+      <DocNote title="A mídia é o ícone de status">
+        A mídia fica acima do título, dentro do cabeçalho: o ícone da tela de status (confira seu e-mail, senha atualizada). O foco do <code>step</code> continua no título, e não nela.
+      </DocNote>
+
       <DocSection
         title="No telefone"
         description="asideMobile: o cartão de hoje, uma faixa só com a marca, a marca sozinha sobre a página (logo — o SplitShellAside recebe a versão dela em logo), ou nenhum campo — o formulário na primeira dobra. No toque, com um campo de texto focado, o campo de marca recolhe e o formulário sobe para a vista do teclado (sem toque, nesta prévia, ele fica)."
@@ -233,6 +243,7 @@ export default function SplitShellDoc() {
           { prop: "aside", type: "ReactNode", description: "O campo. Vista o SplitShellAside para ter a geometria do casco." },
           { prop: "title", type: "string", description: "O H1 da coluna, em .page-title. Recebe o foco quando o passo muda." },
           { prop: "description", type: "ReactNode", description: "Uma linha sob o título. Par de identidade: sem gap entre os dois." },
+          { prop: "media", type: "ReactNode", description: "O ícone de status acima do título, dentro do cabeçalho (confira seu e-mail, senha atualizada)." },
           { prop: "back", type: "ReactNode", description: "O topo da coluna: o SplitShellBack." },
           { prop: "footer", type: "ReactNode", description: "O pé da coluna: o SplitShellFooter." },
           { prop: "side", type: '"start" | "end"', default: '"start"', description: "De que lado mora o campo. A ordem de leitura não muda." },
