@@ -12,9 +12,9 @@ import {
   useViewportWindow,
 } from "@/hooks/use-mobile"
 import {
-  DragHandle,
-  DrawerOverlay,
-  DrawerPortal,
+  Drawer,
+  DrawerContent,
+  DrawerRaizContext,
   SHEET_OVERLAY_CLASS,
   SURFACE_CONTRACT_CLASS,
 } from "@/components/ui/drawer"
@@ -206,21 +206,12 @@ type SheetSurfaceMode = "auto" | "panel"
 
 const SheetSurfaceContext = React.createContext<SheetSurface>("panel")
 
-/** O que a raiz decide e o conteúdo lê. */
+/** O que a raiz decide e o painel lê (a gaveta lê o do `Drawer`). */
 const SheetEstadoContext = React.createContext({
   pending: false,
   /** `modal={false}` pedido pela tela: o painel ao lado. */
   aoLado: false,
-  /** A gaveta tem `snapPoints`, e então mede a tela inteira. */
-  degraus: false,
 })
-
-/**
- * O canal da folha de baixo: cada `SheetContent` o publica, e uma `Sheet` que
- * abre dentro dele avisa que a está cobrindo.
- */
-const SheetPaiContext = React.createContext<((coberta: boolean) => void) | null>(null)
-
 
 /** Qual superfície está ativa — é o que faz gatilho, fechar, portal e véu
  *  trocarem de primitiva sem quem chama saber. */
@@ -308,50 +299,47 @@ function Sheet({
   if (!open && travada !== null) setTravada(null)
   const surface = travada ?? escolhida
 
-  // **Folha sobre folha.** Uma folha aberta de dentro de outra avisa a de
-  // baixo, que recua; na gaveta, quem empilha é o próprio `vaul`.
-  const pai = React.useContext(SheetPaiContext)
+  // **Folha sobre folha.** Uma folha aberta de dentro de um painel avisa o de
+  // baixo, que recua. Na gaveta quem empilha é o `Drawer`: o aninhamento é um
+  // só, o do `drawer.tsx`, e folha e gaveta viram `NestedRoot` uma da outra.
+  const pai = React.useContext(DrawerRaizContext)
   React.useEffect(() => {
-    if (!pai || !open) return
-    pai(true)
-    return () => pai(false)
+    if (pai?.superficie !== "painel" || !open) return
+    pai.cobrir(true)
+    return () => pai.cobrir(false)
   }, [pai, open])
 
-  // Dentro da moldura do catálogo ela deixa de ser modal — senão o
+  // Dentro da moldura do catálogo o painel deixa de ser modal — senão o
   // `RemoveScroll` do Radix trava a rolagem da **página de fora**. Ver
-  // `useViewportModal`. E `modal={false}` pedido pela tela é o **painel ao
-  // lado**: sem véu, a página continua clicável e clicar fora não fecha.
+  // `useViewportModal`. Na gaveta quem decide é o `Drawer` (e é ele que
+  // desenha o véu da moldura), então ela recebe só o que a tela pediu. E
+  // `modal={false}` pedido pela tela é o **painel ao lado**: sem véu, a
+  // página continua clicável e clicar fora não fecha.
   const modalDaMoldura = useViewportModal()
   const aoLado = modalProp === false
-  const modal = modalProp ?? modalDaMoldura
+  const modal = surface === "drawer" ? modalProp : (modalProp ?? modalDaMoldura)
 
-  const estado = React.useMemo(
-    () => ({ pending, aoLado, degraus: Boolean(snapPoints?.length) }),
-    [pending, aoLado, snapPoints]
-  )
-  const Gaveta = pai ? DrawerPrimitive.NestedRoot : DrawerPrimitive.Root
+  const estado = React.useMemo(() => ({ pending, aoLado }), [pending, aoLado])
 
   return (
     <SheetSurfaceContext.Provider value={surface}>
       <SheetEstadoContext.Provider value={estado}>
         {surface === "drawer" ? (
-          // `repositionInputs` é o motivo de o `fillMobileViewport` ter existido:
-          // é ele que impede a superfície de encolher quando o teclado do iOS
-          // sobe. O vaul faz isso de fábrica; o CSS anterior tentava fazer à mão.
-          <Gaveta
+          // **No telefone a folha é o `Drawer`** (rodada 252): a mesma raiz,
+          // com `repositionInputs`, a trava do `pending` (que respeita o
+          // `dismissible` de quem chama) e o aninhamento. O pedido de fechar
+          // continua passando por `pedir`, com a pergunta de descarte.
+          <Drawer
             direction="bottom"
-            repositionInputs
             modal={modal}
             snapPoints={snapPoints}
+            pending={pending}
             {...props}
-            // Com `dismissible` falso o vaul fecha no toque da alça — por isso
-            // o pedido também é barrado em `pedir` (a medição do `Drawer`).
-            dismissible={!pending}
             open={open}
             onOpenChange={pedir}
           >
             {children}
-          </Gaveta>
+          </Drawer>
         ) : (
           <SheetPrimitive.Root
             data-slot="sheet"
@@ -557,12 +545,11 @@ function SheetContent({
     resizable?: boolean | string
   }) {
   const surface = useSheetSurface()
-  const { pending, aoLado, degraus } = React.useContext(SheetEstadoContext)
-  // O portal — dos dois ramos — vai para o `body` da **janela ativa**. Fora da
-  // moldura do catálogo o contexto
-  // é `null` e o vaul usa o próprio documento — o app não muda. Dentro dela é o
-  // que impede a folha de escapar do `<iframe>`: a moldura faz o `useIsMobile`
-  // ler a janela de dentro, então a 375px o ramo gaveta é o que renderiza ali.
+  const { pending, aoLado } = React.useContext(SheetEstadoContext)
+  // O portal do painel vai para o `body` da **janela ativa** (o da gaveta é o
+  // do `Drawer`, que faz o mesmo). Fora da moldura do catálogo o contexto é
+  // `null` e o Radix usa o próprio documento — o app não muda. Dentro dela é o
+  // que impede a folha de escapar do `<iframe>`.
   const janela = useViewportWindow()
   // Coberta por uma folha aberta de dentro desta.
   const [coberta, setCoberta] = React.useState(false)
@@ -571,71 +558,37 @@ function SheetContent({
     typeof resizable === "string" ? resizable : null
   )
   const conteudo = React.useRef<HTMLDivElement | null>(null)
+  const aninhamento = React.useMemo(
+    () => ({ superficie: "painel" as const, cobrir: setCoberta }),
+    []
+  )
 
   if (surface === "drawer") {
+    // **No telefone a folha é a gaveta do `Drawer`** (rodada 252): a mesma
+    // peça — a superfície de vidro, a alça, a altura que acompanha o conteúdo,
+    // o meio que rola, a área segura e o portal na janela ativa. Só o nome do
+    // slot é da folha. A gaveta alta é o `fill`; sem ele, os degraus da raiz
+    // decidem, como em qualquer `Drawer`.
     return (
-      // O portal e o véu são os do `Drawer` — o portal na janela ativa, o véu
-      // com o nome da folha. A raiz e o conteúdo não: a gaveta da folha é a
-      // raiz do vaul direto (sem o contexto de pilha do `Drawer`), com a
-      // superfície, a cascata e as variáveis `--sheet-drawer-*` dela.
-      <DrawerPortal>
-        <DrawerOverlay data-slot="sheet-overlay" />
-        <DrawerPrimitive.Content
-          data-slot="sheet-content"
-          data-surface="drawer"
-          data-side="bottom"
-          data-layout="fixed"
-          aria-busy={pending || undefined}
-          className={cn(
-            "group/dialog-content fixed inset-x-0 bottom-0 z-(--z-sheet)",
-            "flex flex-col overflow-hidden rounded-t-modal border-t bg-popover text-sm text-popover-foreground shadow-lg",
-            "sheet-reveal",
-            // **A área segura é da superfície**, e ela só chegou aqui na rodada
-            // 60. Até lá quem a dava era uma classe que as telas importavam
-            // (`mobileFormSheetContentClassName`), e por isso 19 folhas a
-            // tinham e 7 não — as que não tinham punham o botão de salvar sob a
-            // barra de gestos do iPhone. O `DrawerContent` já fazia certo; esta
-            // é a mesma conta, com os 24px que a classe trazia preservados.
-            //
-            // Variável, e não número, pelo mesmo motivo do `Drawer`: uma folha
-            // que precise de outro respiro sobrescreve sem reescrever a fórmula
-            // do `env()`.
-            "pb-(--sheet-drawer-safe)",
-            "[--sheet-drawer-safe:calc(--spacing(6)+env(safe-area-inset-bottom,0px))]",
-            // O mesmo contrato do painel.
-            SURFACE_CONTRACT_CLASS,
-            // As duas alturas saem de variáveis, e não de valores crus, para
-            // uma gaveta poder ajustar o teto sem reescrever a fórmula: uma
-            // lista curta pede menos que 85%, e a folga do topo muda com o
-            // aparelho.
-            "[--sheet-drawer-h:calc(100dvh-max(0.5rem,env(safe-area-inset-top,0px)))]",
-            "[--sheet-drawer-max-h:85dvh]",
-            // Com degraus a gaveta mede a tela inteira, e o vaul a desliza até
-            // o degrau — como no `Drawer`.
-            fillMobileViewport || degraus
-              ? "h-(--sheet-drawer-h)"
-              : "max-h-(--sheet-drawer-max-h)",
-            className
-          )}
-          style={style}
-          {...props}
-        >
-          {/* A alça é da superfície, não do conteúdo: é o que se agarra para
-              arrastá-la, como a borda e a sombra são dela. Uma tela nunca a
-              escreve — 31 chamadas que faziam isso saíram na rodada em que ela
-              virou peça. */}
-          <DragHandle />
-          <SheetPaiContext.Provider value={setCoberta}>{children}</SheetPaiContext.Provider>
-        </DrawerPrimitive.Content>
-      </DrawerPortal>
+      <DrawerContent
+        data-slot="sheet-content"
+        data-side="bottom"
+        fill={fillMobileViewport || undefined}
+        className={className}
+        style={style}
+        onInteractOutside={onInteractOutside}
+        {...props}
+      >
+        {children}
+      </DrawerContent>
     )
   }
 
   // No desktop a folha **é** um painel de borda. `side`, `variant` e `size` são
   // destruturados acima e **não** chegam ao ramo gaveta: ali a superfície é o
-  // `vaul`, e as props não valem. Sem destruturar cairiam em `{...props}` e
-  // seriam espalhadas como atributo desconhecido no DOM — o tipo herda o eixo
-  // sozinho, via `VariantProps<typeof sheetContentVariants>`.
+  // `Drawer`, e as props não valem (ele tem `variant` e `size` próprios, com
+  // outros valores). Sem destruturar cairiam em `{...props}` — o tipo herda o
+  // eixo sozinho, via `VariantProps<typeof sheetContentVariants>`.
   return (
     <SheetPrimitive.Portal container={janela?.document.body}>
       <SheetOverlay />
@@ -663,7 +616,7 @@ function SheetContent({
         }}
         {...props}
       >
-        <SheetPaiContext.Provider value={setCoberta}>{children}</SheetPaiContext.Provider>
+        <DrawerRaizContext.Provider value={aninhamento}>{children}</DrawerRaizContext.Provider>
         {resizable && lateral ? (
           <SheetResizeHandle
             side={side}

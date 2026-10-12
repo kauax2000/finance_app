@@ -58,15 +58,29 @@ describe("as versões do Sheet", () => {
   it("pending, dirty e confirmDiscard passam por um pedido só", () => {
     // A régua é a do `Dialog`, a mesma função: `dialog-versions.test.ts` tranca o `pedir`.
     expect(CODIGO).toContain("const { open, pedir, pergunta } = usePedidoDeFechar({")
-    expect(CODIGO).toContain("dismissible={!pending}")
+    // No telefone a trava é a do `Drawer`, que respeita o `dismissible` de quem chama.
+    expect(CODIGO).toContain("pending={pending}")
     expect(CODIGO).toContain("aria-busy={pending || undefined}")
     expect(CODIGO).toContain('import { usePedidoDeFechar } from "@/components/ui/dialog"')
   })
 
-  it("folha sobre folha: a de baixo recua, e na gaveta empilha o vaul", () => {
+  it("folha sobre folha: o painel de baixo recua, e na gaveta empilha o Drawer", () => {
     expect(CODIGO).toContain("data-coberta={coberta ? \"\" : undefined}")
     expect(CODIGO).toContain("data-[coberta]:scale-[0.96] data-[coberta]:data-[side=right]:-translate-x-6")
-    expect(CODIGO).toContain("const Gaveta = pai ? DrawerPrimitive.NestedRoot : DrawerPrimitive.Root")
+    // O aninhamento é o do `drawer.tsx`: o painel o publica para cobrir, e a
+    // gaveta é o `Drawer`, que vira `NestedRoot` sob outra gaveta.
+    expect(CODIGO).toContain('if (pai?.superficie !== "painel" || !open) return')
+    expect(CODIGO).toContain("<DrawerRaizContext.Provider value={aninhamento}>")
+    expect(lerFonte("src/components/ui/drawer.tsx")).toContain(
+      'pai?.superficie === "gaveta" ? DrawerPrimitive.NestedRoot : DrawerPrimitive.Root'
+    )
+  })
+
+  it("no telefone a folha é o Drawer, e o aninhamento é um só", () => {
+    const sheet = semComentarios(lerFonte("src/components/ui/sheet.tsx"), "tudo")
+    expect(sheet).toMatch(/<DrawerContent\b/)
+    expect(sheet).not.toContain("SheetPaiContext")
+    expect(sheet).not.toMatch(/--sheet-drawer-h/)
   })
 
   it("a largura arrasta pela aresta de dentro, com teclado e guardada", () => {
@@ -83,7 +97,8 @@ describe("as versões do Sheet", () => {
 
   it("degraus na gaveta: snapPoints só no telefone, e a gaveta mede a tela", () => {
     expect(CODIGO).toContain("snapPoints={snapPoints}")
-    expect(CODIGO).toContain("fillMobileViewport || degraus")
+    // Sem `fillMobileViewport`, os degraus da raiz decidem — como em qualquer `Drawer`.
+    expect(CODIGO).toContain("fill={fillMobileViewport || undefined}")
   })
 
   it("as folhas do app ficam encostadas por enquanto", () => {

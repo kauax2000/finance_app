@@ -253,7 +253,7 @@ export default function SheetDoc() {
   return (
     <>
       <Usage>
-        <strong>Folha no desktop, gaveta no telefone</strong>, com uma API só: acima de 768px é uma placa que desliza de uma borda; abaixo, uma gaveta do <code>vaul</code>, que acompanha o dedo. <code>surface=&quot;panel&quot;</code> fixa o painel em qualquer largura, e só a navegação usa. Título, corpo e rodapé vêm do <code>Dialog</code>; gaveta em toda largura é <code>Drawer</code>.
+        <strong>Folha no desktop, gaveta no telefone</strong>, com uma API só: acima de 768px é uma placa que desliza de uma borda; abaixo, ela <strong>é</strong> o <code>Drawer</code> — a mesma gaveta, com a superfície de vidro dele, a alça e a altura que acompanha o conteúdo. <code>surface=&quot;panel&quot;</code> fixa o painel em qualquer largura, e só a navegação usa. Título, corpo e rodapé vêm do <code>Dialog</code>; gaveta em toda largura é <code>Drawer</code>.
       </Usage>
 
       <DocSection
@@ -274,7 +274,7 @@ export default function SheetDoc() {
       </DocSection>
 
       <DocNote title="floating é o padrão, numa placa chapada">
-        Como o <code>Sidebar</code> e o <code>Menubar</code>: calha de 8px, raio 18, o anel de 1px das placas e a sombra. O material é <code>--popover</code>, chapado — o véu já separa a folha da página, e o borrão por baixo dele era uma segunda separação para a mesma coisa. <code>flush</code> encosta na tela e desenha só o gume de dentro; as folhas do app o pedem por enquanto.
+        Como o <code>Sidebar</code> e o <code>Menubar</code>: calha de 8px, raio 18, o anel de 1px das placas e a sombra. O material é <code>--popover</code>, chapado — o véu já separa a folha da página, e o borrão por baixo dele era uma segunda separação para a mesma coisa. <code>flush</code> encosta na tela e desenha só o gume de dentro; as folhas do app o pedem por enquanto. Os dois são do desktop: no telefone a superfície é a do <code>Drawer</code>.
       </DocNote>
 
       <DocNote title="Entra na mola, sai curta, e o conteúdo sobe atrás">
@@ -291,7 +291,7 @@ export default function SheetDoc() {
 
       <DocSection
         title="Folha sobre folha"
-        description="Uma folha aberta de dentro de outra cobre a de baixo, que recua — encolhe e se afasta da borda — e volta quando a de cima fecha. No telefone quem empilha é o vaul, com a gaveta aninhada."
+        description="Uma folha aberta de dentro de outra cobre a de baixo, que recua — encolhe e se afasta da borda — e volta quando a de cima fecha. No telefone a folha é o Drawer, e Drawer e Sheet se empilham entre si: a gaveta de dentro vira aninhada sozinha, e a de baixo recua."
         code={`<SheetContent>
   …
   <Sheet>

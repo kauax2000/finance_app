@@ -466,7 +466,7 @@ function DialogContent({
         fillMobileViewport={layout === "fixed" || size === "full"}
         aria-busy={pending || undefined}
         className={cn(
-          "has-[[data-slot=dialog-steps]]:h-(--sheet-drawer-h)",
+          "has-[[data-slot=dialog-steps]]:h-(--drawer-h)",
           className
         )}
         {...props}

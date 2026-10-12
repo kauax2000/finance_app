@@ -696,19 +696,19 @@ describe("a superfície de vidro", () => {
         // classe que as telas importavam do chrome de folha, e por isso 19
         // folhas a tinham e 7 não — as que não tinham punham o botão de salvar
         // sob a barra de gestos do iPhone. O `DrawerContent` já fazia certo; o
-        // ramo gaveta do `SheetContent` passou a fazer também.
+        // ramo gaveta do `SheetContent` passou a fazer também — e desde a
+        // rodada 252 ele **é** o `DrawerContent`, com a área segura dele.
         const folha = semComentariosDe("src/components/ui/sheet.tsx")
-        const gaveta = folha.slice(
-            folha.indexOf('data-surface="drawer"'),
-            folha.indexOf("{...props}", folha.indexOf('data-surface="drawer"'))
+        expect(folha, "o ramo gaveta da folha não é o DrawerContent").toMatch(
+            /if \(surface === "drawer"\) \{[\s\S]*?<DrawerContent\b/
         )
-        expect(gaveta.length, "o ramo gaveta não foi achado").toBeGreaterThan(0)
-        expect(gaveta, "a folha não dá área segura").toContain(
-            "pb-(--sheet-drawer-safe)"
+        const gaveta = semComentariosDe("src/components/ui/drawer.tsx")
+        expect(gaveta, "a gaveta não dá área segura").toContain(
+            "data-[vaul-drawer-direction=bottom]:pb-(--drawer-safe)"
         )
         // `[^)]*` não serve: o `)` de `--spacing(6)` vem antes do `env(`.
         expect(gaveta, "a fórmula do env() não está aqui").toMatch(
-            /--sheet-drawer-safe:calc\([\s\S]*?env\(safe-area-inset-bottom/
+            /--drawer-safe:calc\([\s\S]*?env\(safe-area-inset-bottom/
         )
 
         // E o chrome não volta: quem o substituiu é a cromagem do `Dialog`, que

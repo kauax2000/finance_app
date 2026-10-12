@@ -317,18 +317,30 @@ const drawerContentVariants = cva(
 type DrawerDirection = "bottom" | "top"
 
 /**
- * O que a raiz diz ao conteúdo: se há degraus (a gaveta então é alta — o vaul
- * a desloca por `transform` de um degrau a outro) e se ela está salvando.
- * E, só por existir, que há uma gaveta aberta acima — é como a de dentro sabe
- * que é aninhada.
+ * O aninhamento das superfícies de borda — **um só**, para esta gaveta e para
+ * o `Sheet` (rodada 252). Até lá a folha tinha o canal dela, e uma gaveta
+ * aberta de dentro de uma folha (ou o contrário) abria como raiz separada.
+ *
+ * - **`gaveta`**: o que a raiz do `Drawer` diz ao conteúdo — se há degraus (a
+ *   gaveta então é alta: o vaul a desloca por `transform` de um degrau a
+ *   outro) e se ela está salvando. E, só por existir, que há uma gaveta aberta
+ *   acima: é como a de dentro sabe que é aninhada e vira `NestedRoot`. No
+ *   telefone a folha é este `Drawer`, então folha e gaveta se empilham.
+ * - **`painel`**: o painel de borda do `Sheet` no desktop. Uma folha aberta de
+ *   dentro dele avisa que o cobre (`cobrir`), e ele recua. Ele também zera a
+ *   pilha: uma gaveta dentro de um painel é raiz, e não filha de outra gaveta
+ *   lá de fora.
  */
-type DrawerRaiz = {
-  degraus: boolean
-  pending: boolean
-  /** Na moldura do catálogo: o véu e o fechar no toque fora são desenhados aqui. */
-  veuEmulado: boolean
-  fechar: () => void
-}
+type DrawerRaiz =
+  | {
+      superficie: "gaveta"
+      degraus: boolean
+      pending: boolean
+      /** Na moldura do catálogo: o véu e o fechar no toque fora são desenhados aqui. */
+      veuEmulado: boolean
+      fechar: () => void
+    }
+  | { superficie: "painel"; cobrir: (coberta: boolean) => void }
 
 const DrawerRaizContext = React.createContext<DrawerRaiz | null>(null)
 
@@ -337,9 +349,9 @@ const DrawerRaizContext = React.createContext<DrawerRaiz | null>(null)
  *
  * - **Gaveta sobre gaveta**: uma `Drawer` aberta dentro de outra vira
  *   `NestedRoot` sozinha, e a de baixo recua e escurece como no iOS. Antes
- *   eram duas raízes que não se conheciam. (A gaveta do `Sheet` é a raiz do
- *   vaul direto, sem este contexto — a data e a busca sobre uma folha ainda
- *   abrem como raízes separadas.)
+ *   eram duas raízes que não se conheciam. Desde a rodada 252 a gaveta do
+ *   `Sheet` é este `Drawer`, então folha e gaveta se empilham entre si — a
+ *   data e a busca sobre uma folha também.
  * - **`scaleBackground`**: a página recua e arredonda atrás da gaveta. O vaul
  *   escala o `[data-vaul-drawer-wrapper]`, que a raiz do app (`layout.tsx`)
  *   passou a ter.
@@ -358,6 +370,7 @@ function Drawer({
   scaleBackground = false,
   pending = false,
   dismissible = true,
+  modal: modalProp,
   open: openProp,
   defaultOpen,
   onOpenChange,
@@ -395,18 +408,28 @@ function Drawer({
   // a falta de modal é da moldura, e não de quem pediu `modal={false}` (a
   // gaveta presa embaixo com a página usável), o véu é desenhado aqui. No app
   // a gaveta continua modal e o véu continua sendo o do vaul.
-  const modal = useViewportModal()
-  const veuEmulado =
-    modal === false && (props as { modal?: boolean }).modal === undefined
+  // `modal` é desestruturado, e não lido de `{...props}`: um `modal={undefined}`
+  // explícito (o do `Sheet`, que repassa o que a tela pediu) apagaria o padrão
+  // da moldura no espalhamento, e o vaul cairia no `true` dele.
+  const modalDaMoldura = useViewportModal()
+  const modal = modalProp ?? modalDaMoldura
+  const veuEmulado = modalDaMoldura === false && modalProp === undefined
   const pedirRef = React.useRef(pedir)
   React.useEffect(() => {
     pedirRef.current = pedir
   })
   const raiz = React.useMemo(
-    () => ({ degraus, pending, veuEmulado, fechar: () => pedirRef.current(false) }),
+    () => ({
+      superficie: "gaveta" as const,
+      degraus,
+      pending,
+      veuEmulado,
+      fechar: () => pedirRef.current(false),
+    }),
     [degraus, pending, veuEmulado]
   )
-  const Raiz = pai ? DrawerPrimitive.NestedRoot : DrawerPrimitive.Root
+  const Raiz =
+    pai?.superficie === "gaveta" ? DrawerPrimitive.NestedRoot : DrawerPrimitive.Root
 
   return (
     <DrawerRaizContext.Provider value={raiz}>
@@ -573,7 +596,8 @@ function DrawerContent({
      */
     showHandle?: boolean
   }) {
-  const raiz = React.useContext(DrawerRaizContext)
+  const contexto = React.useContext(DrawerRaizContext)
+  const raiz = contexto?.superficie === "gaveta" ? contexto : null
   // Com degraus a gaveta é alta: o vaul a desloca de um degrau a outro, e o
   // conteúdo precisa existir inteiro por baixo.
   const alta = fill ?? raiz?.degraus ?? false
@@ -748,6 +772,7 @@ export {
   DrawerContent,
   DrawerOverlay,
   DrawerPortal,
+  DrawerRaizContext,
   DrawerTrigger,
   drawerContentVariants,
   SHEET_OVERLAY_CLASS,

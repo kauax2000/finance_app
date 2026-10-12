@@ -453,10 +453,12 @@ describe("a dissolução das bordas", () => {
     expect(drawer, "drawer portaliza sem container").toMatch(
       /DrawerPrimitive\.Portal\s+container=\{janela\?\.document\.body\}/
     )
-    // O ramo gaveta da folha usa o portal do `Drawer`, e o painel o dele.
+    // O ramo gaveta da folha é o `DrawerContent` (o portal do `Drawer`), e o
+    // painel usa o dele.
     const sheet = semComentarios(lerFonte("src/components/ui/sheet.tsx"), "linha-inteira")
     expect(sheet, "sheet não lê a janela ativa").toContain("useViewportWindow")
-    expect(sheet, "a gaveta da folha portaliza sem container").toMatch(/<DrawerPortal>\s*<DrawerOverlay/)
+    expect(drawer, "a gaveta portaliza fora do DrawerContent").toMatch(/<DrawerPortal>\s*<DrawerOverlay/)
+    expect(sheet, "a gaveta da folha não é o DrawerContent").toMatch(/<DrawerContent\b/)
     expect(sheet, "o painel portaliza sem container").toMatch(
       /SheetPrimitive\.Portal\s+container=\{janela\?\.document\.body\}/
     )

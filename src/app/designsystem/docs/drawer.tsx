@@ -39,7 +39,8 @@ export default function DrawerDoc() {
       <Usage>
         Uma gaveta que se arrasta, <strong>em qualquer largura de tela</strong>.
         O <code>Sheet</code> troca de superfície com a largura — painel no
-        desktop, gaveta no telefone; o <code>Drawer</code> é gaveta sempre.
+        desktop e, no telefone, <strong>este</strong> <code>Drawer</code>, a
+        mesma peça; o <code>Drawer</code> é gaveta sempre.
         Escolha-o quando o gesto é a afordância.
       </Usage>
 
@@ -130,7 +131,9 @@ export default function DrawerDoc() {
           <>
             <code>snapPoints</code> faz a gaveta parar em degraus — aqui, 45%
             da tela e a tela cheia; puxe para subir. Uma <code>Drawer</code>{" "}
-            aberta dentro de outra vira aninhada sozinha, e a de baixo recua.{" "}
+            aberta dentro de outra vira aninhada sozinha, e a de baixo recua —
+            e <code>Drawer</code> e <code>Sheet</code> se empilham entre si,
+            porque no telefone a folha é esta gaveta.{" "}
             <code>scaleBackground</code> encolhe a página atrás, o gesto do
             iOS.
           </>

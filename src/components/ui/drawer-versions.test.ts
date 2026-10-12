@@ -6,8 +6,12 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 const CODIGO = lerFonte("src/components/ui/drawer.tsx")
 
 describe("as versões do Drawer", () => {
-  it("dentro de outra gaveta, a raiz vira aninhada sozinha", () => {
-    expect(CODIGO).toContain("const Raiz = pai ? DrawerPrimitive.NestedRoot : DrawerPrimitive.Root")
+  it("dentro de outra gaveta, a raiz vira aninhada sozinha — e dentro de um painel, não", () => {
+    // O aninhamento é um só desde a rodada 252: o painel do `Sheet` também o
+    // publica, e uma gaveta dentro dele é raiz.
+    expect(CODIGO).toMatch(
+      /const Raiz =\s*pai\?\.superficie === "gaveta" \? DrawerPrimitive\.NestedRoot : DrawerPrimitive\.Root/
+    )
   })
 
   it("salvando: dismissible desliga E o pedido de fechar é barrado — a alça fecha quando dismissible é falso", () => {
