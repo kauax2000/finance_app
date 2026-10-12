@@ -18,6 +18,7 @@ import { readFileSync, readdirSync, statSync, existsSync } from "node:fs"
 import { join, relative, resolve, dirname, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 import { FORBIDDEN_ICON_PACKAGES } from "../../../../scripts/lib/forbidden-icon-packages.mjs"
+import { semComentariosPreservando } from "../../../../scripts/lib/sem-comentarios.mjs"
 
 // ---------------------------------------------------------------------------
 // Tabelas de conhecimento
@@ -276,9 +277,7 @@ function walk(target, acc = []) {
  * um `hover:` explicado numa nota viram achado.
  */
 function semComentarios(src) {
-  return src
-    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
-    .replace(/(^|[^:])\/\/[^\n]*/g, (m, p) => p + m.slice(p.length).replace(/./g, " "))
+  return semComentariosPreservando(src)
 }
 
 /**
@@ -296,8 +295,8 @@ function semEspecimes(src) {
       // descreve a peça, e o `<fieldset>` dentro da frase não é marcação.
       .replace(/\b(?:description|title)="[^"]*"/g, (m) => m.replace(/[^\n]/g, " "))
       // E a mesma prosa nas linhas da `PropsTable`, que são objeto e não JSX:
-      // `description: "… fora do <label>."`.
-      .replace(/\b(?:description|title):\s*"(?:[^"\\\n]|\\.)*"/g, (m) =>
+      // `description: "… fora do <label>."`, e o nome da prop: `prop: "…props de <input>"`.
+      .replace(/\b(?:description|title|prop):\s*"(?:[^"\\\n]|\\.)*"/g, (m) =>
         m.replace(/[^\n]/g, " ")
       )
   )
