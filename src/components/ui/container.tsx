@@ -6,10 +6,11 @@ import { cn } from "@/lib/utils"
 /**
  * Os degraus de largura, como tabela.
  *
- * Ela existe separada do `cva` para as páginas que desenham a régua poderem
- * iterá-la — e `page-chrome-ladder.test.ts` tranca que as duas não divergem. É
- * a mesma forma do `Tabs`: o Tailwind varre o código como **texto**, então o
- * `cva` fica com os literais e a tabela fica com os nomes.
+ * O `cva` lê as três tabelas (`size: containerSizes`, …) e as páginas que
+ * desenham a régua as iteram: uma fonte só, e `container-versions.test.ts`
+ * tranca que o `cva` as referencia. O Tailwind varre o código como **texto**, e
+ * por isso cada tabela é um literal — a classe está escrita aqui, inteira, e é
+ * dela que o CSS sai.
  *
  * **Os números são contados, e não escolhidos.** A escada anterior oferecia
  * 672 / 1024 / 1280, com 1024 de padrão. Medido nas nove cascas de página
@@ -81,22 +82,9 @@ const containerStacks = {
 
 const containerVariants = cva("mx-auto w-full", {
   variants: {
-    size: {
-      sm: "max-w-md",
-      md: "max-w-xl",
-      lg: "max-w-2xl",
-      xl: "max-w-7xl",
-      full: "max-w-none",
-    },
-    gutter: {
-      none: "",
-      page: "px-4 md:px-6",
-    },
-    stack: {
-      none: "",
-      block: "flex flex-col gap-(--space-block)",
-      section: "flex flex-col gap-(--space-section)",
-    },
+    size: containerSizes,
+    gutter: containerGutters,
+    stack: containerStacks,
   },
   defaultVariants: { size: "md", gutter: "none", stack: "none" },
 })

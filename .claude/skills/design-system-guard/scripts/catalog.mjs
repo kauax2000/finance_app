@@ -49,6 +49,47 @@ function matchBrace(src, openIdx) {
 }
 
 /**
+ * As chaves de primeiro nível do corpo de um objeto literal (o que fica entre
+ * as chaves, sem elas).
+ */
+function topLevelKeys(objBody) {
+  const keys = []
+  // Uma chave é `nome:` ou `"nome":` no primeiro nível deste objeto. As entre
+  // aspas importam: os tamanhos de ícone do Button são `"icon-sm"` e afins, e
+  // uma varredura que descarta o conteúdo das aspas os perde silenciosamente.
+  let depth = 0
+  let quote = null
+  let token = ""
+  for (let j = 0; j < objBody.length; j++) {
+    const c = objBody[j]
+    if (quote) {
+      if (c === "\\") {
+        j++
+      } else if (c === quote) {
+        quote = null
+      } else if (depth === 0) {
+        token += c
+      }
+      continue
+    }
+    if (c === '"' || c === "'" || c === "`") {
+      quote = c
+      if (depth === 0) token = ""
+      continue
+    }
+    if (c === "{" || c === "[" || c === "(") depth++
+    else if (c === "}" || c === "]" || c === ")") depth--
+    else if (depth === 0 && c === ":") {
+      const key = token.trim()
+      if (/^[\w-]+$/.test(key)) keys.push(key)
+      token = ""
+    } else if (depth === 0 && c === ",") token = ""
+    else if (depth === 0) token += c
+  }
+  return keys
+}
+
+/**
  * Extrai os grupos de variant de um `cva(...)`.
  *
  * Lê as chaves do objeto `variants` com contagem de chaves balanceadas, e não
@@ -68,49 +109,29 @@ function extractVariants(src) {
 
   let i = 0
   while (i < body.length) {
-    const m = /(\w+)\s*:\s*\{/g
+    // O grupo é um objeto literal (`size: { ... }`) ou o nome de uma tabela do
+    // mesmo arquivo (`size: containerSizes`), cujas chaves são as do `const`.
+    const m = /(\w+)\s*:\s*(?:\{|([A-Za-z_]\w*)\s*(?=[,}\n]))/g
     m.lastIndex = i
     const found = m.exec(body)
     if (!found) break
     const groupName = found[1]
+    if (found[2]) {
+      const table = new RegExp(`const\\s+${found[2]}\\s*=\\s*\\{`).exec(clean)
+      if (table) {
+        const tableOpen = table.index + table[0].length - 1
+        const tableClose = matchBrace(clean, tableOpen)
+        if (tableClose !== -1) {
+          out[groupName] = topLevelKeys(clean.slice(tableOpen + 1, tableClose))
+        }
+      }
+      i = found.index + found[0].length
+      continue
+    }
     const groupOpen = found.index + found[0].length - 1
     const groupClose = matchBrace(body, groupOpen)
     if (groupClose === -1) break
-    const groupBody = body.slice(groupOpen + 1, groupClose)
-    const keys = []
-    // Uma chave é `nome:` ou `"nome":` no primeiro nível deste objeto. As entre
-    // aspas importam: os tamanhos de ícone do Button são `"icon-sm"` e afins, e
-    // uma varredura que descarta o conteúdo das aspas os perde silenciosamente.
-    let depth = 0
-    let quote = null
-    let token = ""
-    for (let j = 0; j < groupBody.length; j++) {
-      const c = groupBody[j]
-      if (quote) {
-        if (c === "\\") {
-          j++
-        } else if (c === quote) {
-          quote = null
-        } else if (depth === 0) {
-          token += c
-        }
-        continue
-      }
-      if (c === '"' || c === "'" || c === "`") {
-        quote = c
-        if (depth === 0) token = ""
-        continue
-      }
-      if (c === "{" || c === "[" || c === "(") depth++
-      else if (c === "}" || c === "]" || c === ")") depth--
-      else if (depth === 0 && c === ":") {
-        const key = token.trim()
-        if (/^[\w-]+$/.test(key)) keys.push(key)
-        token = ""
-      } else if (depth === 0 && c === ",") token = ""
-      else if (depth === 0) token += c
-    }
-    out[groupName] = keys
+    out[groupName] = topLevelKeys(body.slice(groupOpen + 1, groupClose))
     i = groupClose + 1
   }
   return out

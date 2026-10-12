@@ -226,8 +226,8 @@ gap-(--space-section)    /* entre seções */`}
         <strong>md</strong> nos layouts de configurações, conta, membros e planos, e no aceite de convite; <strong>lg</strong> no layout do detalhe de cartão; <strong>sm</strong> na tela de não encontrado, no erro de rota e no <code>SplitShell</code>, que as telas de acesso vestem pelo <code>AuthShell</code>; <strong>xl</strong> com <code>gutter=&quot;page&quot;</code> no topo e no corpo deste catálogo, o único lugar sem casca do app por cima. <code>stack=&quot;section&quot;</code> aparece no não encontrado e no <code>SplitShell</code>. O erro de rota ainda escreve o ritmo à mão (<code>space-y-6</code>, 24px, fora da escala) — é o próximo a migrar.
       </DocNote>
 
-      <DocNote title="As classes ficam literais no cva">
-        O Tailwind varre o código como texto, então classe montada em tempo de execução não chega ao CSS. <code>containerSizes</code>, <code>containerGutters</code> e <code>containerStacks</code> existem ao lado do <code>cva</code> para esta página iterar, e <code>page-chrome-ladder.test.ts</code> falha se qualquer uma divergir — a de ritmo entrou na guarda na rodada 158.
+      <DocNote title="As classes ficam literais nas tabelas">
+        O Tailwind varre o código como texto, então classe montada em tempo de execução não chega ao CSS. <code>containerSizes</code>, <code>containerGutters</code> e <code>containerStacks</code> são literais, e o <code>cva</code> as lê (<code>size: containerSizes</code>) — uma fonte só, que esta página também itera. <code>container-versions.test.ts</code> falha se o <code>cva</code> deixar de referenciá-las.
       </DocNote>
 
       <PropsTable

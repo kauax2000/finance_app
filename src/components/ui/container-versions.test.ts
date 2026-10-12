@@ -11,41 +11,27 @@ import {
 /**
  * A escada do `Container`, trancada.
  *
- * O Tailwind varre o código como texto: uma classe que só existe depois de uma
- * interpolação nunca chega ao CSS. Por isso `containerSizes` e o `cva` são dois
- * lugares, e este teste é o que impede que eles divirjam. Os degraus distintos
- * estão em `escadas.test.ts`.
+ * O Tailwind varre o código como texto, então as tabelas são literais, e o
+ * `cva` as lê em vez de repetir as classes. Os degraus distintos estão em
+ * `escadas.test.ts`.
  */
 describe("Container", () => {
   /**
-   * As tabelas existem para as páginas que desenham a régua poderem iterá-las;
-   * o `cva` existe porque só literal chega ao CSS. Divergir é o defeito.
+   * Cada tabela alimenta o `cva`: o resultado de cada chave contém as classes
+   * dela. Se alguém voltar a escrever literais no `cva`, a divergência aparece
+   * aqui — e o catálogo (`ds:catalog`) lê as chaves das mesmas tabelas.
    */
-  it("as tabelas e o cva não divergem", () => {
-    for (const [size, esperado] of Object.entries(containerSizes)) {
-      const cls = containerVariants({
-        size: size as keyof typeof containerSizes,
-      })
-      expect(cls.split(" ")).toContain(esperado)
-    }
-    for (const [gutter, esperado] of Object.entries(containerGutters)) {
-      if (!esperado) continue
-      const cls = containerVariants({
-        gutter: gutter as keyof typeof containerGutters,
-      })
-      for (const parte of esperado.split(" ")) {
-        expect(cls.split(" ")).toContain(parte)
-      }
-    }
-    // O ritmo também: a página do `Container` itera esta tabela para desenhar
-    // os exemplos, e ela ficava de fora da guarda (rodada 158).
-    for (const [stack, esperado] of Object.entries(containerStacks)) {
-      if (!esperado) continue
-      const cls = containerVariants({
-        stack: stack as keyof typeof containerStacks,
-      })
-      for (const parte of esperado.split(" ")) {
-        expect(cls.split(" ")).toContain(parte)
+  it("o cva lê as tabelas, e cada chave aplica as classes dela", () => {
+    const tabelas = {
+      size: containerSizes,
+      gutter: containerGutters,
+      stack: containerStacks,
+    } as const
+    for (const [eixo, tabela] of Object.entries(tabelas)) {
+      for (const [chave, esperado] of Object.entries(tabela)) {
+        if (!esperado) continue
+        const cls = containerVariants({ [eixo]: chave }).split(" ")
+        for (const parte of esperado.split(" ")) expect(cls).toContain(parte)
       }
     }
   })
