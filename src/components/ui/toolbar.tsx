@@ -20,6 +20,7 @@ import { useToolbarKeyboard } from "@/hooks/use-toolbar-keyboard"
 import { useTopBarBottom } from "@/hooks/use-top-bar-bottom"
 import { numberBR } from "@/lib/formatters"
 import { barSurfaceClassName } from "@/lib/glass-classes"
+import { proximoEscondido } from "@/lib/hide-on-scroll"
 import { cn } from "@/lib/utils"
 
 /**
@@ -253,9 +254,15 @@ function usePresa(
       const presa = y > 0 && el.getBoundingClientRect().top <= encosto + 0.5
       el.toggleAttribute("data-stuck", presa)
       if (esconder) {
-        if (!presa || el.contains(doc.activeElement)) el.removeAttribute("data-hidden")
-        else if (y - antes > 4) el.setAttribute("data-hidden", "")
-        else if (antes - y > 4) el.removeAttribute("data-hidden")
+        el.toggleAttribute(
+          "data-hidden",
+          presa &&
+            proximoEscondido(el.hasAttribute("data-hidden"), {
+              y,
+              antes,
+              focada: el.contains(doc.activeElement),
+            })
+        )
       }
       antes = y
     }
@@ -267,6 +274,7 @@ function usePresa(
       alvo.removeEventListener("scroll", medir)
       el.style.removeProperty("--toolbar-top")
       el.style.removeProperty("--toolbar-plate-r")
+      el.removeAttribute("data-hidden")
     }
   }, [raiz, ativo, esconder, topo])
 }

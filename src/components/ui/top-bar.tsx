@@ -14,6 +14,7 @@ import { useBrandGlow } from "@/hooks/use-brand-glow"
 import { useViewportWindow } from "@/hooks/use-mobile"
 import { usePageTitleDock } from "@/hooks/use-page-title-dock"
 import { barSurfaceClassName } from "@/lib/glass-classes"
+import { alvoDaRolagem, proximoEscondido } from "@/lib/hide-on-scroll"
 import {
   searchFieldIconClassName,
   searchFieldShapeClassName,
@@ -175,23 +176,24 @@ function useRolagem(
     const janela = janelaDaMoldura ?? window
     let antes = 0
     const ler = (e?: Event) => {
-      const alvo = e?.target as Element | Document | undefined
-      let y: number
-      if (!alvo || alvo === el.ownerDocument) y = janela.scrollY
-      else if ("contains" in alvo && alvo.contains(el)) y = (alvo as Element).scrollTop
-      else return
+      const y = alvoDaRolagem(e ?? new Event("scroll"), el)
+      if (y == null) return
       setRolou(y > 0)
       if (sumir) {
-        const focada = el.contains(el.ownerDocument.activeElement)
-        if (focada || y <= el.offsetHeight) setEscondida(false)
-        else if (y - antes > 4) setEscondida(true)
-        else if (antes - y > 4) setEscondida(false)
+        // Os valores entram já lidos: o React pode rodar o atualizador depois
+        // de `antes` virar `y`, e aí não haveria movimento nenhum.
+        const s = { y, antes, focada: el.contains(el.ownerDocument.activeElement), mostrarAte: el.offsetHeight }
+        setEscondida((v) => proximoEscondido(v, s))
       }
       antes = y
     }
     ler()
     janela.addEventListener("scroll", ler, { capture: true, passive: true })
-    return () => janela.removeEventListener("scroll", ler, { capture: true })
+    return () => {
+      janela.removeEventListener("scroll", ler, { capture: true })
+      // Desligar `hideOnScroll` com a barra escondida a mostra.
+      setEscondida(false)
+    }
   }, [ref, vidro, sumir, janelaDaMoldura])
 
   return { rolou, escondida }

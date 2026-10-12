@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TRAJETO_MACIO, viajarLiquido, type CaixaLiquida } from "@/lib/liquid-move"
 import { glassControlSurfaceClassName } from "@/lib/glass-classes"
+import { proximoEscondido } from "@/lib/hide-on-scroll"
 import type { HeroIcon } from "@/types/navigation"
 import { cn } from "@/lib/utils"
 
@@ -179,9 +180,14 @@ function useRolagemDaTela(navRef: React.RefObject<HTMLElement | null>, esconder:
       const antes = posicoes.get(alvo) ?? y
       posicoes.set(alvo, y)
       if (!esconder) return
-      if (y <= 0 || nav.contains(doc.activeElement)) nav.removeAttribute("data-hidden")
-      else if (y - antes > 4) nav.setAttribute("data-hidden", "")
-      else if (antes - y > 4) nav.removeAttribute("data-hidden")
+      nav.toggleAttribute(
+        "data-hidden",
+        proximoEscondido(nav.hasAttribute("data-hidden"), {
+          y,
+          antes,
+          focada: nav.contains(doc.activeElement),
+        })
+      )
     }
 
     doc.addEventListener("scroll", rolou, { capture: true, passive: true })

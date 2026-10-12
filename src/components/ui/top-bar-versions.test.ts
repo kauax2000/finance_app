@@ -89,7 +89,9 @@ describe("os comportamentos", () => {
   })
 
   it("some ao rolar, só no telefone e nunca com o foco dentro", () => {
-    expect(CODIGO).toContain("if (focada || y <= el.offsetHeight) setEscondida(false)")
+    // A regra mora em `lib/hide-on-scroll` (testada lá); a barra só a chama, com a própria altura.
+    expect(CODIGO).toContain("mostrarAte: el.offsetHeight }")
+    expect(CODIGO).toContain("setEscondida((v) => proximoEscondido(v, s))")
     expect(topBarVariants({})).toContain("max-md:data-hidden:-translate-y-")
   })
 
