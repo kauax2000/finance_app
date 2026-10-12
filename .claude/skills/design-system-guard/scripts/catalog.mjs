@@ -18,51 +18,11 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs"
 import { join, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { semComentariosPreservando } from "../../../../scripts/lib/sem-comentarios.mjs"
 
 // ---------------------------------------------------------------------------
 // Parsing
 // ---------------------------------------------------------------------------
-
-/** Remove comentários // e block sem estragar o conteúdo de strings. */
-function stripComments(src) {
-  let out = ""
-  let quote = null
-  for (let i = 0; i < src.length; i++) {
-    const c = src[i]
-    const n = src[i + 1]
-    if (quote) {
-      out += c
-      if (c === "\\") {
-        out += n ?? ""
-        i++
-      } else if (c === quote) {
-        quote = null
-      }
-      continue
-    }
-    if (c === '"' || c === "'" || c === "`") {
-      quote = c
-      out += c
-      continue
-    }
-    if (c === "/" && n === "/") {
-      while (i < src.length && src[i] !== "\n") i++
-      out += "\n"
-      continue
-    }
-    if (c === "/" && n === "*") {
-      i += 2
-      while (i < src.length && !(src[i] === "*" && src[i + 1] === "/")) {
-        if (src[i] === "\n") out += "\n"
-        i++
-      }
-      i++
-      continue
-    }
-    out += c
-  }
-  return out
-}
 
 /** Dado o índice de um `{`, devolve o índice do `}` que o fecha. */
 function matchBrace(src, openIdx) {
@@ -96,7 +56,7 @@ function matchBrace(src, openIdx) {
  * aspas dentro, e qualquer regex ingênua para no lugar errado.
  */
 function extractVariants(src) {
-  const clean = stripComments(src)
+  const clean = semComentariosPreservando(src)
   const out = {}
   const variantsIdx = clean.indexOf("variants:")
   if (variantsIdx === -1) return out
@@ -158,7 +118,7 @@ function extractVariants(src) {
 
 /** Os nomes exportados por um arquivo de componente. */
 function extractExports(src) {
-  const clean = stripComments(src)
+  const clean = semComentariosPreservando(src)
   const names = new Set()
   const blockMatch = clean.match(/export\s*\{([^}]*)\}/)
   if (blockMatch) {
