@@ -1,3 +1,7 @@
+import { Suspense } from "react"
+
+import { RecoveryScene } from "@/components/auth/scenes/recovery-scene"
+import { AuthFormSkeleton, AuthShell } from "@/components/layout/auth-shell"
 import { PasswordRecoveryForm } from "@/components/password-recovery-form"
 
 /**
@@ -9,5 +13,18 @@ import { PasswordRecoveryForm } from "@/components/password-recovery-form"
  * implementações divergentes desta mesma tela; agora é uma, com duas entradas.
  */
 export default function ResetPasswordPage() {
-    return <PasswordRecoveryForm entry="link" />
+    return (
+        <Suspense
+            fallback={
+                <AuthShell
+                    title="Nova senha"
+                    scene={<RecoveryScene step="password" />}
+                >
+                    <AuthFormSkeleton fields={1} />
+                </AuthShell>
+            }
+        >
+            <PasswordRecoveryForm entry="link" />
+        </Suspense>
+    )
 }

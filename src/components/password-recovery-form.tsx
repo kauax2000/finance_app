@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useMemo, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 
 import { supabase } from "@/lib/supabase"
@@ -9,9 +9,11 @@ import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
 import { passwordErrorMessage } from "@/lib/password-policy"
 import { isValidEmail } from "@/lib/email"
 import { useTimeout } from "@/hooks/use-timeout"
-import { ROUTES } from "@/config/navigation"
+import { recoveryLinks } from "@/lib/recovery-links"
 import { PasswordRequirements } from "@/components/auth/password-requirements"
-import { LoginScene } from "@/components/auth/scenes/login-scene"
+import { AuthStatus } from "@/components/auth/auth-status"
+import { ResendButton } from "@/components/auth/resend-button"
+import { RecoveryScene } from "@/components/auth/scenes/recovery-scene"
 import { AuthFormSkeleton, AuthShell } from "@/components/layout/auth-shell"
 import { Alert, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -70,6 +72,11 @@ export function PasswordRecoveryForm({
 }) {
     const router = useRouter()
     const later = useTimeout()
+    const searchParams = useSearchParams()
+    const links = useMemo(
+        () => recoveryLinks(searchParams.get("next")),
+        [searchParams],
+    )
 
     const [step, setStep] = useState<Step>(entry === "link" ? "password" : "email")
     const [email, setEmail] = useState("")
@@ -122,6 +129,14 @@ export function PasswordRecoveryForm({
         setLoading(false)
     }
 
+    // **`redirectTo` não é opcional aqui.** Sem ele o Supabase usa a Site
+    // URL do projeto, que mora fora deste repositório — e se ela não
+    // apontar para `/reset-password`, a porta do link nunca é alcançada.
+    const requestCode = (address: string) =>
+        supabase.auth.resetPasswordForEmail(address, {
+            redirectTo: `${window.location.origin}${links.resetPath}`,
+        })
+
     const sendCode = async (e: React.FormEvent) => {
         e.preventDefault()
         setError("")
@@ -133,14 +148,7 @@ export function PasswordRecoveryForm({
         setFieldError(undefined)
         setLoading(true)
 
-        // **`redirectTo` não é opcional aqui.** Sem ele o Supabase usa a Site
-        // URL do projeto, que mora fora deste repositório — e se ela não
-        // apontar para `/reset-password`, a porta do link nunca é alcançada e
-        // o desenho de duas entradas vira uma só, com a tela de "Link
-        // expirado" como resultado mais provável do caminho por link.
-        const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
-            redirectTo: `${window.location.origin}${ROUTES.RESET_PASSWORD}`,
-        })
+        const { error } = await requestCode(trimmed)
         // Toda mensagem passa pelo tradutor. Antes estas duas telas mostravam o
         // `error.message` cru do GoTrue, em inglês — lacuna 4.
         if (error) return fail(error.message)
@@ -191,7 +199,7 @@ export function PasswordRecoveryForm({
         // funciona, e é o que fecha a sessão de recuperação.
         void supabase.auth.signOut()
         later(
-            () => router.push(`${ROUTES.LOGIN}?reason=password-updated`),
+            () => router.push(links.loginUpdated),
             3000,
         )
     }
@@ -233,7 +241,7 @@ export function PasswordRecoveryForm({
     if (step === "email") {
         return (
             <AuthShell
-                scene={<LoginScene />} // provisório: a cena da tela vem nas Tarefas 5-7
+                scene={<RecoveryScene step={step} />}
                 title="Recuperar senha"
                 description="Enviamos um código de seis dígitos para o seu e-mail."
                 step={step}
@@ -241,7 +249,7 @@ export function PasswordRecoveryForm({
                     <SplitShellFooter>
                         <p>
                             Lembrou a senha?{" "}
-                            <Link href={ROUTES.LOGIN}>Entrar</Link>
+                            <Link href={links.login}>Entrar</Link>
                         </p>
                     </SplitShellFooter>
                 }
@@ -277,7 +285,7 @@ export function PasswordRecoveryForm({
     if (step === "code") {
         return (
             <AuthShell
-                scene={<LoginScene />} // provisório: a cena da tela vem nas Tarefas 5-7
+                scene={<RecoveryScene step={step} />}
                 title="Digite o código"
                 step={step}
                 description={
@@ -336,6 +344,14 @@ export function PasswordRecoveryForm({
                     </Form>
                 </div>
 
+                <ResendButton
+                    label="Reenviar código"
+                    successMessage="Código reenviado"
+                    onResend={async () => {
+                        const { error } = await requestCode(email.trim())
+                        if (error) throw new Error(error.message)
+                    }}
+                />
                 <Button
                     variant="tertiary"
                     size="xl"
@@ -359,7 +375,7 @@ export function PasswordRecoveryForm({
         // aí não há nada a preencher.
         if (linkValid === null) {
             return (
-                <AuthShell scene={<LoginScene />} title="Nova senha" step={step}>
+                <AuthShell scene={<RecoveryScene step="password" />} title="Nova senha" step={step}>
                     {/* Espera com forma, e não uma frase cinza: o esqueleto já
                         existe nesta mesma mudança, e `role="status"` é o que
                         faz o leitor de tela anunciar que algo está em curso —
@@ -374,32 +390,31 @@ export function PasswordRecoveryForm({
 
         if (linkValid === false) {
             return (
-                <AuthShell
-                    scene={<LoginScene />} // provisório: a cena da tela vem nas Tarefas 5-7
+                <AuthStatus
+                    icon="expired"
                     title="Link expirado"
-                    description="Este link de recuperação não vale mais. Peça um novo — leva um minuto."
+                    description="Este link de recuperação não vale mais. Peça um código novo."
+                    scene={<RecoveryScene step="email" />}
                     step="link-expired"
                     footer={
                         <SplitShellFooter>
                             <p>
                                 Lembrou a senha?{" "}
-                                <Link href={ROUTES.LOGIN}>Entrar</Link>
+                                <Link href={links.login}>Entrar</Link>
                             </p>
                         </SplitShellFooter>
                     }
                 >
                     <Button asChild size="xl" className="w-full">
-                        <Link href={ROUTES.FORGOT_PASSWORD}>
-                            Pedir um novo código
-                        </Link>
+                        <Link href={links.forgot}>Pedir novo código</Link>
                     </Button>
-                </AuthShell>
+                </AuthStatus>
             )
         }
 
         return (
             <AuthShell
-                scene={<LoginScene />} // provisório: a cena da tela vem nas Tarefas 5-7
+                scene={<RecoveryScene step={step} />}
                 title="Nova senha"
                 description="Ela precisa ser tão forte quanto a do cadastro."
                 step={step}
@@ -419,17 +434,16 @@ export function PasswordRecoveryForm({
 
     // ---- Fim -------------------------------------------------------------
     return (
-        <AuthShell
-            scene={<LoginScene />} // provisório: a cena da tela vem nas Tarefas 5-7
+        <AuthStatus
+            icon="done"
             title="Senha atualizada"
+            description="Entre com a senha nova. Levando você ao login…"
+            scene={<RecoveryScene step="done" />}
             step={step}
-            description="Pronto. Entre com a senha nova — estamos levando você para o login."
         >
             <Button asChild size="xl" className="w-full">
-                <Link href={`${ROUTES.LOGIN}?reason=password-updated`}>
-                    Ir para o login
-                </Link>
+                <Link href={links.loginUpdated}>Entrar agora</Link>
             </Button>
-        </AuthShell>
+        </AuthStatus>
     )
 }
