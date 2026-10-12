@@ -7,7 +7,8 @@ import { Slot } from "radix-ui"
 
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { TRAJETO_MACIO, viajarLiquido, type CaixaLiquida } from "@/lib/liquid-move"
+import { TRAJETO_MACIO } from "@/lib/liquid-move"
+import { useMarcador } from "@/hooks/use-marcador"
 import { glassControlSurfaceClassName } from "@/lib/glass-classes"
 import { proximoEscondido } from "@/lib/hide-on-scroll"
 import type { HeroIcon } from "@/types/navigation"
@@ -279,27 +280,71 @@ function BottomBarTabs({
   const colunas = React.Children.toArray(children).length
   const trilhaRef = React.useRef<HTMLDivElement | null>(null)
   const marcadorRef = React.useRef<HTMLSpanElement | null>(null)
-  const anterior = React.useRef<{ el: HTMLElement; caixa: CaixaLiquida } | null>(null)
-  const emCurso = React.useRef<Animation[]>([])
   const ativoAnterior = React.useRef<HTMLElement | null>(null)
   const larguraDoRotulo = React.useRef(0)
   const rotulosEmCurso = React.useRef<Animation[]>([])
-  const [medido, setMedido] = React.useState(false)
+
+  // Trocar o eixo `labels` não é trocar de aba: o rótulo começa do zero.
+  // Declarado antes do `useMarcador`, para rodar antes da medida dele.
+  React.useLayoutEffect(() => {
+    ativoAnterior.current = null
+  }, [labels])
 
   /**
-   * A medição do marcador — o mecanismo do `Tabs`: um `ResizeObserver` na
-   * pílula e nos itens, um `MutationObserver` em `data-active` e `data-scrub`,
-   * e nada de laço por quadro. O repouso mora nas variáveis; a viagem é WAAPI
-   * sobre elas, e só acontece quando o item **muda** (redimensionar só
-   * reposiciona).
+   * **O rótulo abre no relógio do marcador** (`labels="active"`). Quando a
+   * ativa muda, o layout já está no fim — o rótulo novo inteiro, o velho em
+   * zero — e é ele que o marcador mede como destino. Daí a largura dos dois
+   * rótulos anda de onde estava até onde fica, no mesmo trajeto e na mesma
+   * duração da viagem: as abas abrem e fecham juntas, os ícones deslizam em
+   * vez de saltar, e o marcador e a aba chegam no mesmo quadro. As
+   * animações não guardam estado (`fill: none`): no fim, quem manda é o CSS,
+   * que já está no destino.
+   *
+   * Devolve se o rótulo abriu: aí o marcador acompanha a largura nova sem
+   * esticar, mesmo quando o arraste já o tinha levado até a aba.
    */
-  React.useLayoutEffect(() => {
+  function abrirRotulo() {
     const trilha = trilhaRef.current
-    if (!trilha) return
-    // Trocar o eixo `labels` não é trocar de aba: o rótulo começa do zero.
-    ativoAnterior.current = null
+    if (!trilha) return false
+    const ativo = trilha.querySelector<HTMLElement>(":scope > [data-active]")
+    const velho = ativoAnterior.current
+    ativoAnterior.current = ativo
+    const rotulo = (el: HTMLElement | null) =>
+      el?.querySelector<HTMLElement>('[data-slot="bottom-bar-label"]') ?? null
+    const novo = rotulo(ativo)
+    if (!velho || velho === ativo) {
+      if (novo) larguraDoRotulo.current = novo.offsetWidth
+      return false
+    }
+    const janela = trilha.ownerDocument.defaultView ?? window
+    const final = novo?.offsetWidth ?? 0
+    const de = larguraDoRotulo.current
+    larguraDoRotulo.current = final
+    for (const a of rotulosEmCurso.current) a.cancel()
+    if (janela.matchMedia("(prefers-reduced-motion: reduce)").matches) return false
+    const saindo = rotulo(velho)
+    rotulosEmCurso.current = [
+      novo?.animate(
+        [{ width: "0px", opacity: 0 }, { width: final + "px", opacity: 1 }],
+        { ...TRAJETO_MACIO, fill: "none" }
+      ),
+      saindo?.animate(
+        [{ width: de + "px", opacity: 1 }, { width: "0px", opacity: 0 }],
+        { ...TRAJETO_MACIO, fill: "none" }
+      ),
+    ].filter((a): a is Animation => a != null)
+    return true
+  }
 
-    const medir = () => {
+  /**
+   * O marcador é o do `Tabs` (`useMarcador`): o repouso nas variáveis, a
+   * viagem em WAAPI só quando o item **muda** (redimensionar só reposiciona),
+   * e o arraste (`data-scrub`) também é troca de item.
+   */
+  const medido = useMarcador({
+    trilha: trilhaRef,
+    marcador: marcadorRef,
+    ativo: (trilha) => {
       const alvo =
         trilha.querySelector<HTMLElement>(":scope > [data-scrub]") ??
         trilha.querySelector<HTMLElement>(":scope > [data-active]")
@@ -307,101 +352,15 @@ function BottomBarTabs({
       if (alvo?.hasAttribute("data-scrub") && alvo.hasAttribute("data-active")) {
         alvo.removeAttribute("data-scrub")
       }
-      if (!alvo) {
-        anterior.current = null
-        setMedido(false)
-        return
-      }
-      const caixa: CaixaLiquida = {
-        x: alvo.offsetLeft + RECUO_DO_MARCADOR,
-        y: alvo.offsetTop + RECUO_DO_MARCADOR,
-        w: alvo.offsetWidth - RECUO_DO_MARCADOR * 2,
-        h: alvo.offsetHeight - RECUO_DO_MARCADOR * 2,
-      }
-      trilha.style.setProperty("--bottom-bar-marker-x", `${caixa.x}px`)
-      trilha.style.setProperty("--bottom-bar-marker-y", `${caixa.y}px`)
-      trilha.style.setProperty("--bottom-bar-marker-w", `${caixa.w}px`)
-      trilha.style.setProperty("--bottom-bar-marker-h", `${caixa.h}px`)
-
-      const antes = anterior.current
-      anterior.current = { el: alvo, caixa }
-      const peca = marcadorRef.current
-      const abriu = labels === "active" && abrirRotulo()
-      if (antes && peca && (antes.el !== alvo || abriu)) {
-        for (const a of emCurso.current) a.cancel()
-        const andado = Math.abs(caixa.x - antes.caixa.x)
-        // Se só o rótulo mudou (o arraste já tinha levado o marcador), ele
-        // acompanha a largura sem esticar.
-        const amplitude =
-          antes.el === alvo ? 0 : Math.min(0.18, caixa.w > 0 ? (andado / caixa.w) * 0.09 : 0.09)
-        emCurso.current = viajarLiquido(peca, antes.caixa, caixa, {
-          amplitude,
-          trajeto: TRAJETO_MACIO,
-        })
-      }
-      setMedido(true)
-    }
-
-    /**
-     * **O rótulo abre no relógio do marcador** (`labels="active"`). Quando a
-     * ativa muda, o layout já está no fim — o rótulo novo inteiro, o velho em
-     * zero — e é ele que o marcador mede como destino. Daí a largura dos dois
-     * rótulos anda de onde estava até onde fica, no mesmo trajeto e na mesma
-     * duração da viagem: as abas abrem e fecham juntas, os ícones deslizam em
-     * vez de saltar, e o marcador e a aba chegam no mesmo quadro. As
-     * animações não guardam estado (`fill: none`): no fim, quem manda é o CSS,
-     * que já está no destino.
-     */
-    function abrirRotulo() {
-      const ativo = trilha!.querySelector<HTMLElement>(":scope > [data-active]")
-      const velho = ativoAnterior.current
-      ativoAnterior.current = ativo
-      const rotulo = (el: HTMLElement | null) =>
-        el?.querySelector<HTMLElement>('[data-slot="bottom-bar-label"]') ?? null
-      const novo = rotulo(ativo)
-      if (!velho || velho === ativo) {
-        if (novo) larguraDoRotulo.current = novo.offsetWidth
-        return false
-      }
-      const janela = trilha!.ownerDocument.defaultView ?? window
-      const final = novo?.offsetWidth ?? 0
-      const de = larguraDoRotulo.current
-      larguraDoRotulo.current = final
-      for (const a of rotulosEmCurso.current) a.cancel()
-      if (janela.matchMedia("(prefers-reduced-motion: reduce)").matches) return false
-      const saindo = rotulo(velho)
-      rotulosEmCurso.current = [
-        novo?.animate(
-          [{ width: "0px", opacity: 0 }, { width: final + "px", opacity: 1 }],
-          { ...TRAJETO_MACIO, fill: "none" }
-        ),
-        saindo?.animate(
-          [{ width: de + "px", opacity: 1 }, { width: "0px", opacity: 0 }],
-          { ...TRAJETO_MACIO, fill: "none" }
-        ),
-      ].filter((a): a is Animation => a != null)
-      return true
-    }
-
-    medir()
-
-    const ro = new ResizeObserver(medir)
-    ro.observe(trilha)
-    for (const item of trilha.children) ro.observe(item)
-
-    const mo = new MutationObserver(medir)
-    mo.observe(trilha, {
-      attributes: true,
-      attributeFilter: ["data-active", "data-scrub"],
-      subtree: true,
-      childList: true,
-    })
-
-    return () => {
-      ro.disconnect()
-      mo.disconnect()
-    }
-  }, [labels])
+      return alvo
+    },
+    atributos: ["data-active", "data-scrub"],
+    prefixo: "bottom-bar-marker",
+    insete: RECUO_DO_MARCADOR,
+    viajar: true,
+    acompanhar: labels === "active" ? abrirRotulo : undefined,
+    deps: [labels],
+  })
 
   const arraste = useArraste(trilhaRef)
 

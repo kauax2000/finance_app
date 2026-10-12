@@ -31,10 +31,11 @@ describe("o desenho do Tabs", () => {
   })
 
   it("e viaja líquido, com o trajeto que as Tabs dividem", () => {
-    expect(CODIGO).toContain('import { TRAJETO_MACIO, viajarLiquido, type CaixaLiquida } from "@/lib/liquid-move"')
-    expect(lerFonte("src/components/ui/tabs.tsx")).toContain("const TRAJETO_DAS_ABAS = TRAJETO_MACIO")
+    // Desde a rodada 252 o marcador das duas é um hook só, `useMarcador`.
+    expect(CODIGO).toContain('import { useMarcador } from "@/hooks/use-marcador"')
+    expect(lerFonte("src/components/ui/tabs.tsx")).toContain('import { useMarcador } from "@/hooks/use-marcador"')
     // Só quando o item muda: redimensionar só reposiciona.
-    expect(CODIGO).toContain("antes.el !== alvo")
+    expect(lerFonte("src/hooks/use-marcador.ts")).toContain("antes.el !== ativa")
   })
 
   it("a ação é da mesma família: o anel e a sombra da pílula", () => {
@@ -52,7 +53,8 @@ describe("o desenho do Tabs", () => {
     expect(CODIGO).toContain('[{ width: "0px", opacity: 0 }, { width: final + "px", opacity: 1 }]')
     expect(CODIGO).toContain("{ ...TRAJETO_MACIO, fill: \"none\" }")
     // Só o rótulo mudou (depois do arraste): o marcador acompanha sem esticar.
-    expect(CODIGO).toContain("antes.el === alvo ? 0 :")
+    expect(CODIGO).toContain('acompanhar: labels === "active" ? abrirRotulo : undefined')
+    expect(lerFonte("src/hooks/use-marcador.ts")).toContain("antes.el === ativa ? 0 :")
   })
 })
 
@@ -142,6 +144,8 @@ describe("o catálogo e o app", () => {
    */
 
   const CODIGO = semComentarios(lerFonte("src/components/ui/bottom-bar.tsx"))
+  /** A medição e a viagem, desde a rodada 252 no hook que o Tabs e o ToggleGroup dividem. */
+  const MARCADOR = semComentarios(lerFonte("src/hooks/use-marcador.ts"))
 
   const CSS = lerFonte("src/app/globals.css")
 
@@ -317,8 +321,9 @@ describe("o catálogo e o app", () => {
       // Desde a rodada 230 ele não transiciona: viaja por WAAPI
       // (`viajarLiquido`, o trajeto macio das abas), e o repouso são as variáveis.
       expect(marcador).not.toContain("transition-")
-      expect(CODIGO).toContain("viajarLiquido(peca, antes.caixa, caixa")
-      expect(CODIGO).toContain("trajeto: TRAJETO_MACIO")
+      expect(CODIGO).toContain('prefixo: "bottom-bar-marker"')
+      expect(MARCADOR).toContain("viajarLiquido(peca, antes.caixa, caixa")
+      expect(MARCADOR).toContain("trajeto: TRAJETO_MACIO")
       expect(marcador).not.toMatch(/\bduration-\d/)
       expect(marcador).not.toMatch(/\bease-\[/)
       // Camada negativa escaparia para trás da própria pílula.
@@ -326,13 +331,15 @@ describe("o catálogo e o app", () => {
     })
 
     it("18. a medição é em coordenada de conteúdo, por observador", () => {
-      expect(CODIGO).toContain("offsetLeft")
-      expect(CODIGO).toContain("offsetTop")
-      expect(CODIGO).not.toContain("getBoundingClientRect")
-      expect(CODIGO).not.toContain("requestAnimationFrame")
-      expect(CODIGO).toContain("new ResizeObserver")
-      expect(CODIGO).toContain("new MutationObserver")
-      expect(CODIGO).toMatch(/attributeFilter:\s*\["data-active", "data-scrub"\]/)
+      expect(MARCADOR).toContain("offsetLeft")
+      expect(MARCADOR).toContain("offsetTop")
+      for (const fonte of [CODIGO, MARCADOR]) {
+        expect(fonte).not.toContain("getBoundingClientRect")
+        expect(fonte).not.toContain("requestAnimationFrame")
+      }
+      expect(MARCADOR).toContain("new ResizeObserver")
+      expect(MARCADOR).toContain("new MutationObserver")
+      expect(CODIGO).toContain('atributos: ["data-active", "data-scrub"]')
     })
 
     it("19. o item fica por cima, e o fallback é trocado por contexto", () => {

@@ -25,6 +25,8 @@ import {
 
 const TABS = lerFonte("src/components/ui/tabs.tsx")
 const LIQUIDO = lerFonte("src/lib/liquid-move.ts")
+/** Desde a rodada 252 a medição e a viagem moram num hook só, com o BottomBar e o ToggleGroup. */
+const MARCADOR = lerFonte("src/hooks/use-marcador.ts")
 
 const render = (...filhos: ReturnType<typeof h>[]) =>
   renderToStaticMarkup(h(Tabs, { defaultValue: "a" }, ...filhos))
@@ -53,19 +55,20 @@ describe("o floating, padrão do sistema", () => {
   })
 
   it("o marcador corre com a receita do ThemeToggle, que mora numa lib só", () => {
-    expect(TABS).toContain('from "@/lib/liquid-move"')
+    expect(TABS).toContain('from "@/hooks/use-marcador"')
+    expect(MARCADOR).toContain('from "@/lib/liquid-move"')
     expect(lerFonte("src/components/ui/theme-toggle.tsx")).toContain('from "@/lib/liquid-move"')
     expect(LIQUIDO).toContain('export const TRAJETO = { duration: 400, easing: "cubic-bezier(1,0,0.4,1)" }')
     expect(LIQUIDO).toContain('window.matchMedia("(prefers-reduced-motion: reduce)")')
     // Proporcional às abas andadas, um pouco mais macio que o alternador.
-    expect(TABS).toContain("Math.min(0.18, passo > 0 ? (andado / passo) * 0.09 : 0.09)")
+    expect(MARCADOR).toContain("Math.min(0.18, passo > 0 ? (andado / passo) * 0.09 : 0.09)")
     // Desde a rodada 230 o trajeto macio mora na lib, e o BottomBar o divide.
-    expect(TABS).toContain("const TRAJETO_DAS_ABAS = TRAJETO_MACIO")
+    expect(MARCADOR).toContain("trajeto: TRAJETO_MACIO")
     expect(LIQUIDO).toContain('export const TRAJETO_MACIO = { duration: 480, easing: "cubic-bezier(0.65,0,0.25,1)" }')
     // O esticão acompanha o trajeto, para continuar em fase.
     expect(LIQUIDO).toContain("duration: Math.round(trajeto.duration / VIRADA)")
     // A viagem só acontece quando a aba muda, e não num redimensionamento.
-    expect(TABS).toContain("antes.el !== ativa")
+    expect(MARCADOR).toContain("antes.el !== ativa")
   })
 })
 
@@ -302,9 +305,8 @@ describe("o marcador viaja com os tokens do sistema", () => {
       expect(classes).not.toMatch(/transition-\[translate/)
       expect(classes).not.toMatch(/\bduration-\d/)
     }
-    expect(FONTE).toContain(
-      "viajarLiquido(peca, antes.caixa, caixa"
-    )
+    expect(FONTE).toContain('prefixo: "tabs-indicator"')
+    expect(MARCADOR).toContain("viajarLiquido(peca, antes.caixa, caixa")
   })
 
   it("a caixa vem das quatro variáveis publicadas pela trilha", () => {

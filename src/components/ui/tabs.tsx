@@ -15,9 +15,9 @@ import {
   scrollFadeViewportClassName,
   scrollFadeViewportXClassName,
 } from "@/lib/scroll-fade-classes"
+import { useMarcador } from "@/hooks/use-marcador"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { isEditableTarget } from "@/lib/shortcut"
-import { TRAJETO_MACIO, viajarLiquido, type CaixaLiquida } from "@/lib/liquid-move"
 
 /**
  * Painéis irmãos do mesmo nível, dos quais só um aparece por vez.
@@ -811,119 +811,6 @@ const tabsIndicatorVariants = cva(
   }
 )
 
-/**
- * A medição do marcador viajante, e a viagem.
- *
- * Ela lê `offsetLeft`/`offsetTop` **relativos à trilha**, e não
- * `getBoundingClientRect`: com `scrollable` a trilha rola, e uma caixa em
- * coordenada de viewport faria o marcador escorregar para fora da aba a cada
- * pixel rolado. Em coordenada de conteúdo ele acompanha a rolagem de graça,
- * porque é filho do mesmo elemento que rola.
- *
- * Os dois observadores cobrem coisas diferentes: o `ResizeObserver` pega
- * mudança de largura (janela, fonte, rótulo que troca) e o `MutationObserver`
- * pega a troca de aba, que é uma mudança de `data-state` (ou de
- * `aria-current`, no `TabsNav`). Observar o DOM em vez de receber o valor por
- * prop é o que faz o marcador seguir **também** a troca programática e a
- * navegação por seta.
- *
- * **A viagem** (rodada 226): quando a peça ativa **muda** — e não quando a
- * mesma só muda de tamanho —, o marcador corre da caixa velha para a nova pela
- * receita do `ThemeToggle` (`viajarLiquido`). O esticão é proporcional ao
- * caminho em larguras de aba: 0,11 por aba andada, com o teto de 0,22 do
- * alternador, que é o que cabe dentro da pílula no contragolpe do pouso.
- */
-/**
- * **A viagem das abas é um pouco mais macia que a do alternador** (pedido do
- * dono). O `cubic-bezier(1,0,0.4,1)` do `ThemeToggle` quase não sai do lugar e
- * depois dispara — certo num trilho de três paradas curtas, um pouco seco numa
- * fileira em que a aba anda 300px. Aqui a saída é menos presa (0,65 em vez de
- * 1), o relógio tem 80ms a mais, e o esticão é 0,09 por aba (teto 0,18) em vez
- * de 0,11 (teto 0,22). A forma do movimento — inércia, esticão em fase, pouso —
- * é a mesma.
- */
-const TRAJETO_DAS_ABAS = TRAJETO_MACIO
-
-function useMarcador(
-  trilhaRef: React.RefObject<HTMLElement | null>,
-  seletor: string,
-  viaja: boolean,
-  orientation: TabsOrientation,
-  deps: React.DependencyList,
-  /** Quanto o marcador recua para dentro da aba, em px — ver `RECUO_DO_MARCADOR`. */
-  recuo = 0
-) {
-  const [medido, setMedido] = React.useState(false)
-  const marcadorRef = React.useRef<HTMLSpanElement | null>(null)
-  const anterior = React.useRef<{ el: HTMLElement; caixa: CaixaLiquida } | null>(null)
-  const emCurso = React.useRef<Animation[]>([])
-
-  React.useLayoutEffect(() => {
-    const trilha = trilhaRef.current
-    // O `plain` não mede nem observa nada: sem marcador, não há caixa a
-    // publicar, e os dois observadores seriam custo puro.
-    if (!trilha || !viaja) return
-
-    const medir = () => {
-      const ativa = trilha.querySelector<HTMLElement>(seletor)
-      if (!ativa) {
-        setMedido(false)
-        return
-      }
-      const caixa: CaixaLiquida = {
-        x: ativa.offsetLeft + recuo,
-        y: ativa.offsetTop + recuo,
-        w: ativa.offsetWidth - recuo * 2,
-        h: ativa.offsetHeight - recuo * 2,
-      }
-      trilha.style.setProperty("--tabs-indicator-x", `${caixa.x}px`)
-      trilha.style.setProperty("--tabs-indicator-y", `${caixa.y}px`)
-      trilha.style.setProperty("--tabs-indicator-w", `${caixa.w}px`)
-      trilha.style.setProperty("--tabs-indicator-h", `${caixa.h}px`)
-
-      const antes = anterior.current
-      anterior.current = { el: ativa, caixa }
-      const peca = marcadorRef.current
-      if (antes && antes.el !== ativa && peca) {
-        for (const a of emCurso.current) a.cancel()
-        const vertical = orientation === "vertical"
-        const passo = vertical ? caixa.h : caixa.w
-        const andado = Math.abs(vertical ? caixa.y - antes.caixa.y : caixa.x - antes.caixa.x)
-        const amplitude = Math.min(0.18, passo > 0 ? (andado / passo) * 0.09 : 0.09)
-        emCurso.current = viajarLiquido(peca, antes.caixa, caixa, {
-          amplitude,
-          eixo: vertical ? "y" : "x",
-          trajeto: TRAJETO_DAS_ABAS,
-        })
-      }
-      setMedido(true)
-    }
-
-    medir()
-
-    const ro = new ResizeObserver(medir)
-    ro.observe(trilha)
-    for (const filho of trilha.children) ro.observe(filho)
-
-    const mo = new MutationObserver(medir)
-    mo.observe(trilha, {
-      attributes: true,
-      attributeFilter: ["data-state", "aria-current", "hidden"],
-      subtree: true,
-      childList: true,
-    })
-
-    return () => {
-      ro.disconnect()
-      mo.disconnect()
-    }
-    // `deps` é de quem chama; `trilhaRef` é um `useRef`, estável.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viaja, seletor, orientation, recuo, ...deps])
-
-  return { medido: viaja && medido, marcadorRef }
-}
-
 function TabsList({
   className,
   size,
@@ -1011,14 +898,6 @@ function TabsList({
 
   const trilhaRef = React.useRef<HTMLDivElement | null>(null)
   const viaja = VARIANTE_VIAJA[variant]
-  const { medido: indicatorReady, marcadorRef } = useMarcador(
-    trilhaRef,
-    '[data-slot="tabs-trigger"][data-state="active"]:not([hidden])',
-    viaja,
-    orientation,
-    [variant, doesStretch, resolvedSize, scrollable],
-    RECUO_DO_MARCADOR[variant]
-  )
 
   const molduraRef = React.useRef<HTMLDivElement | null>(null)
   const escondidas = useExcesso(overflow === "menu", molduraRef, trilhaRef, raiz?.value)
@@ -1030,6 +909,20 @@ function TabsList({
     () => composeRefs(trilhaRef, scrollable ? scrollFadeRef : undefined),
     [trilhaRef, scrollable, scrollFadeRef]
   )
+
+  const marcadorRef = React.useRef<HTMLSpanElement | null>(null)
+  const indicatorReady = useMarcador({
+    trilha: trilhaRef,
+    marcador: marcadorRef,
+    ativo: (t) =>
+      t.querySelector<HTMLElement>('[data-slot="tabs-trigger"][data-state="active"]:not([hidden])'),
+    atributos: ["data-state", "aria-current", "hidden"],
+    prefixo: "tabs-indicator",
+    insete: RECUO_DO_MARCADOR[variant],
+    eixo: orientation === "vertical" ? "y" : "x",
+    viajar: viaja,
+    deps: [variant, doesStretch, resolvedSize, scrollable],
+  })
 
   return (
     <TabsListContext.Provider
@@ -1414,14 +1307,17 @@ function TabsNav({
   const doesStretch = stretch ?? SEGMENTADA[variant]
   const vidro = glass && SEGMENTADA[variant]
   const trilhaRef = React.useRef<HTMLDivElement | null>(null)
-  const { medido, marcadorRef } = useMarcador(
-    trilhaRef,
-    '[data-slot="tabs-nav-link"][aria-current="page"]',
-    VARIANTE_VIAJA[variant],
-    "horizontal",
-    [variant, doesStretch, resolvedSize],
-    RECUO_DO_MARCADOR[variant]
-  )
+  const marcadorRef = React.useRef<HTMLSpanElement | null>(null)
+  const medido = useMarcador({
+    trilha: trilhaRef,
+    marcador: marcadorRef,
+    ativo: (t) => t.querySelector<HTMLElement>('[data-slot="tabs-nav-link"][aria-current="page"]'),
+    atributos: ["data-state", "aria-current", "hidden"],
+    prefixo: "tabs-indicator",
+    insete: RECUO_DO_MARCADOR[variant],
+    viajar: VARIANTE_VIAJA[variant],
+    deps: [variant, doesStretch, resolvedSize],
+  })
   return (
     <TabsListContext.Provider
       value={{ size: resolvedSize, variant, stretch: doesStretch, indicatorReady: medido }}

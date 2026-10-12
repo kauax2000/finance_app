@@ -1,7 +1,7 @@
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
-import { lerFonte } from "@/test/fonte"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 import { tagChipFilterSelected, tagChipNeutral } from "./badge"
 import { toggleVariants } from "./toggle"
@@ -42,11 +42,20 @@ describe("ToggleGroup, rodada 199", () => {
     expect(html).toContain('role="radio"')
   })
 
-  it("o marcador lê a caixa da escolhida, e transiciona", () => {
+  it("o marcador lê a caixa da escolhida", () => {
     const codigo = lerFonte("src/components/ui/toggle-group.tsx")
     expect(codigo).toContain('[data-slot="toggle-group-item"][data-state="on"]')
-    expect(codigo).toMatch(/translate-x-\(--toggle-indicator-x\)[\s\S]*transition-\[translate,width,height\]/)
-    expect(codigo).toContain("new MutationObserver(medir)")
+    expect(codigo).toContain('prefixo: "toggle-indicator"')
+    expect(codigo).toContain('atributos: ["data-state"]')
+  })
+
+  it("o segmented corre como o Tabs (sem transição de CSS no marcador)", () => {
+    const fonte = semComentarios(lerFonte("src/components/ui/toggle-group.tsx"), "tudo")
+    expect(fonte).toMatch(/useMarcador\(/)
+    expect(fonte).not.toMatch(/toggle-group-indicator[^"]*transition-/)
+    // O trecho do marcador inteiro, e não só o atributo: nenhuma das peles transiciona.
+    const marcador = fonte.slice(fonte.indexOf('data-slot="toggle-group-indicator"'))
+    expect(marcador.slice(0, marcador.indexOf("/>"))).not.toContain("transition-")
   })
 
   it("a contagem entra no nome com um espaço, no peso normal", () => {
@@ -88,8 +97,8 @@ describe("ToggleGroup floating, rodada 231", () => {
 
   it("e anda como as abas: a viagem líquida, 2px para dentro, sem transição de CSS", () => {
     const fonte = lerFonte("src/components/ui/toggle-group.tsx")
-    expect(fonte).toContain("viajarLiquido(peca, antes.caixa, caixa, { amplitude, trajeto: TRAJETO_MACIO })")
-    expect(fonte).toContain("const recuo = flutuante ? 2 : 0")
+    expect(fonte).toContain("useMarcador({")
+    expect(fonte).toContain("insete: flutuante ? 2 : 0")
     expect(fonte).toContain('"gap-1.5 rounded-full px-3 text-control-sm pointer-coarse:h-9 duration-(--duration-base)"')
   })
 })

@@ -5,7 +5,7 @@ import type { VariantProps } from "class-variance-authority"
 import { ToggleGroup as ToggleGroupPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
-import { TRAJETO_MACIO, viajarLiquido, type CaixaLiquida } from "@/lib/liquid-move"
+import { useMarcador } from "@/hooks/use-marcador"
 import {
   ToggleContent,
   toggleStyle,
@@ -73,8 +73,8 @@ const PILULA_SEM_MARCADOR =
  *
  * - **`variant="segmented"`** — a bandeja: o trilho `bg-muted` com a escolhida
  *   levantada, e o realce é **um marcador só que desliza** até ela, a
- *   mecânica do `Tabs` (`ResizeObserver` mais `MutationObserver` em
- *   `data-state`, a caixa publicada em `--toggle-indicator-*`). A bandeja
+ *   mecânica do `Tabs` (`useMarcador`: a caixa publicada em
+ *   `--toggle-indicator-*`, e desde a rodada 252 a viagem líquida, como lá). A bandeja
  *   mede o item mais 4px. O seletor de período da tabela de transações a
  *   escrevia à mão, com `aria-pressed` e uma sombra em `rgb()` cru. É escolha
  *   de **valor**: quando a opção troca o conteúdo da tela, é `Tabs`.
@@ -137,61 +137,20 @@ function ToggleGroup({
   const viaja = segmentado && unico
   const trilhaRef = React.useRef<HTMLDivElement>(null)
   const marcadorRef = React.useRef<HTMLSpanElement>(null)
-  const anterior = React.useRef<{ el: HTMLElement; caixa: CaixaLiquida } | null>(null)
-  const emCurso = React.useRef<Animation[]>([])
-  const [medido, setMedido] = React.useState(false)
-  const indicatorReady = viaja && medido
-
-  React.useLayoutEffect(() => {
-    const trilha = trilhaRef.current
-    if (!trilha || !viaja) return
-    const medir = () => {
-      const ativa = trilha.querySelector<HTMLElement>(
-        '[data-slot="toggle-group-item"][data-state="on"]'
-      )
-      if (!ativa) {
-        // Nenhuma escolhida (o período personalizado, por exemplo): sem marca.
-        setMedido(false)
-        return
-      }
-      // Relativos à trilha, e não à janela, como no `Tabs`. No `floating` o
-      // marcador recua 2px para dentro do item, o `RECUO_DO_MARCADOR` dele.
-      const recuo = flutuante ? 2 : 0
-      const caixa: CaixaLiquida = {
-        x: ativa.offsetLeft + recuo,
-        y: ativa.offsetTop + recuo,
-        w: ativa.offsetWidth - recuo * 2,
-        h: ativa.offsetHeight - recuo * 2,
-      }
-      trilha.style.setProperty("--toggle-indicator-x", `${caixa.x}px`)
-      trilha.style.setProperty("--toggle-indicator-y", `${caixa.y}px`)
-      trilha.style.setProperty("--toggle-indicator-w", `${caixa.w}px`)
-      trilha.style.setProperty("--toggle-indicator-h", `${caixa.h}px`)
-      // No `floating` a viagem é a do `Tabs`: líquida, em WAAPI, e só quando
-      // a escolhida muda — redimensionar só reposiciona. 0,09 por item andado,
-      // teto de 0,18, a conta do `useMarcador` de lá.
-      const antes = anterior.current
-      anterior.current = { el: ativa, caixa }
-      const peca = marcadorRef.current
-      if (flutuante && antes && antes.el !== ativa && peca) {
-        for (const a of emCurso.current) a.cancel()
-        const andado = Math.abs(caixa.x - antes.caixa.x)
-        const amplitude = Math.min(0.18, caixa.w > 0 ? (andado / caixa.w) * 0.09 : 0.09)
-        emCurso.current = viajarLiquido(peca, antes.caixa, caixa, { amplitude, trajeto: TRAJETO_MACIO })
-      }
-      setMedido(true)
-    }
-    medir()
-    const ro = new ResizeObserver(medir)
-    ro.observe(trilha)
-    for (const item of trilha.querySelectorAll('[data-slot="toggle-group-item"]')) ro.observe(item)
-    const mo = new MutationObserver(medir)
-    mo.observe(trilha, { attributes: true, attributeFilter: ["data-state"], subtree: true, childList: true })
-    return () => {
-      ro.disconnect()
-      mo.disconnect()
-    }
-  }, [viaja, flutuante, size, stretch])
+  // A mecânica do `Tabs` (`useMarcador`), nas duas peles: a viagem líquida,
+  // em WAAPI, só quando a escolhida muda — redimensionar só reposiciona. No
+  // `floating` o marcador recua 2px para dentro do item, o
+  // `RECUO_DO_MARCADOR` de lá; no `segmented` ele é o item inteiro.
+  const indicatorReady = useMarcador({
+    trilha: trilhaRef,
+    marcador: marcadorRef,
+    ativo: (t) => t.querySelector<HTMLElement>('[data-slot="toggle-group-item"][data-state="on"]'),
+    atributos: ["data-state"],
+    prefixo: "toggle-indicator",
+    insete: flutuante ? 2 : 0,
+    viajar: viaja,
+    deps: [size, stretch],
+  })
 
   return (
     <ToggleGroupPrimitive.Root
@@ -223,15 +182,12 @@ function ToggleGroup({
             "pointer-events-none absolute top-0 left-0",
             "translate-x-(--toggle-indicator-x) translate-y-(--toggle-indicator-y)",
             "w-(--toggle-indicator-w) h-(--toggle-indicator-h)",
+            // Sem transição de CSS nas duas peles: quem anda é a viagem líquida.
             flutuante
-              ? // A tecla em relevo do `Tabs floating`, e sem transição de CSS:
-                // quem anda é a viagem líquida.
+              ? // A tecla em relevo do `Tabs floating`.
                 "rounded-full bg-muted ring-1 ring-foreground/10 shadow-xs"
-              : [
-                  // A superfície do marcador do `Tabs solid`, no mesmo tempo.
-                  "rounded-full border border-border/80 bg-background shadow-xs",
-                  "transition-[translate,width,height] duration-(--duration-base) ease-(--ease-out)",
-                ]
+              : // A superfície do marcador do `Tabs solid`.
+                "rounded-full border border-border/80 bg-background shadow-xs"
           )}
         />
       ) : null}
