@@ -11,6 +11,7 @@ import { isValidEmail } from "@/lib/email"
 import { useTimeout } from "@/hooks/use-timeout"
 import { ROUTES } from "@/config/navigation"
 import { PasswordRequirements } from "@/components/auth/password-requirements"
+import { LoginScene } from "@/components/auth/scenes/login-scene"
 import { AuthFormSkeleton, AuthShell } from "@/components/layout/auth-shell"
 import { Alert, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -232,6 +233,7 @@ export function PasswordRecoveryForm({
     if (step === "email") {
         return (
             <AuthShell
+                scene={<LoginScene />} // provisório: a cena da tela vem nas Tarefas 5-7
                 title="Recuperar senha"
                 description="Enviamos um código de seis dígitos para o seu e-mail."
                 step={step}
@@ -275,6 +277,7 @@ export function PasswordRecoveryForm({
     if (step === "code") {
         return (
             <AuthShell
+                scene={<LoginScene />} // provisório: a cena da tela vem nas Tarefas 5-7
                 title="Digite o código"
                 step={step}
                 description={
@@ -356,7 +359,7 @@ export function PasswordRecoveryForm({
         // aí não há nada a preencher.
         if (linkValid === null) {
             return (
-                <AuthShell title="Nova senha" step={step}>
+                <AuthShell scene={<LoginScene />} title="Nova senha" step={step}>
                     {/* Espera com forma, e não uma frase cinza: o esqueleto já
                         existe nesta mesma mudança, e `role="status"` é o que
                         faz o leitor de tela anunciar que algo está em curso —
@@ -372,6 +375,7 @@ export function PasswordRecoveryForm({
         if (linkValid === false) {
             return (
                 <AuthShell
+                    scene={<LoginScene />} // provisório: a cena da tela vem nas Tarefas 5-7
                     title="Link expirado"
                     description="Este link de recuperação não vale mais. Peça um novo — leva um minuto."
                     step="link-expired"
@@ -395,6 +399,7 @@ export function PasswordRecoveryForm({
 
         return (
             <AuthShell
+                scene={<LoginScene />} // provisório: a cena da tela vem nas Tarefas 5-7
                 title="Nova senha"
                 description="Ela precisa ser tão forte quanto a do cadastro."
                 step={step}
@@ -415,6 +420,7 @@ export function PasswordRecoveryForm({
     // ---- Fim -------------------------------------------------------------
     return (
         <AuthShell
+            scene={<LoginScene />} // provisório: a cena da tela vem nas Tarefas 5-7
             title="Senha atualizada"
             step={step}
             description="Pronto. Entre com a senha nova — estamos levando você para o login."

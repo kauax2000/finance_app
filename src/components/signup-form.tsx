@@ -11,6 +11,7 @@ import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
 import { passwordErrorMessage } from "@/lib/password-policy"
 import { ROUTES } from "@/config/navigation"
 import { PasswordRequirements } from "@/components/auth/password-requirements"
+import { LoginScene } from "@/components/auth/scenes/login-scene"
 import { AuthShell } from "@/components/layout/auth-shell"
 import { Alert, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -136,6 +137,7 @@ export function SignupForm() {
     if (success) {
         return (
             <AuthShell
+                scene={<LoginScene />} // provisório: a cena da tela vem nas Tarefas 5-7
                 title="Confirme seu e-mail"
                 step="confirm"
                 description={
@@ -167,6 +169,7 @@ export function SignupForm() {
 
     return (
         <AuthShell
+            scene={<LoginScene />} // provisório: a cena da tela vem nas Tarefas 5-7
             title="Criar conta"
             description="A carteira pessoal e as categorias já vêm prontas."
             step="form"

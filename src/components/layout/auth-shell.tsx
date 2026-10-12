@@ -20,6 +20,8 @@ export function AuthShell({
     back,
     footer,
     step,
+    scene,
+    media,
     children,
 }: {
     title: string
@@ -30,11 +32,17 @@ export function AuthShell({
     footer?: ReactNode
     /** O passo do fluxo; ao mudar, o conteúdo desliza e o foco vai ao título. */
     step?: string | number
+    /** A cena do painel de marca: cada tela mostra o pedaço do produto que lhe cabe. */
+    scene: ReactNode
+    /** O ícone ou ilustração acima do título (a tela de status). */
+    media?: ReactNode
     children: ReactNode
 }) {
     return (
         <SplitShell
-            aside={<AuthBrandPanel />}
+            aside={<AuthBrandPanel>{scene}</AuthBrandPanel>}
+            asideMobile="logo"
+            media={media}
             title={title}
             description={description}
             back={back}

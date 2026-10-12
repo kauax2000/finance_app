@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
+import { LoginScene } from "@/components/auth/scenes/login-scene"
 import { AuthFormSkeleton, AuthShell } from "@/components/layout/auth-shell"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -105,7 +106,7 @@ export default function AcceptInvitePageClient() {
 
     if (busy) {
         return (
-            <AuthShell title="Aceitar convite" step="loading">
+            <AuthShell scene={<LoginScene />} title="Aceitar convite" step="loading">
                 <div role="status" aria-live="polite" aria-busy="true">
                     <span className="sr-only">Processando o convite…</span>
                     <AuthFormSkeleton fields={1} />
@@ -120,6 +121,7 @@ export default function AcceptInvitePageClient() {
     if (authGate) {
         return (
             <AuthShell
+                scene={<LoginScene />} // provisório: a cena da tela vem nas Tarefas 5-7
                 title="Você foi convidado"
                 step="gate"
                 description="Entre ou crie uma conta para participar da carteira. Use o mesmo e-mail do convite, se ele foi enviado para um endereço específico."
@@ -160,7 +162,7 @@ export default function AcceptInvitePageClient() {
 
     if (error) {
         return (
-            <AuthShell title="Convite indisponível" step="error">
+            <AuthShell scene={<LoginScene />} title="Convite indisponível" step="error">
                 <div className="flex flex-col gap-(--space-block)">
                     <Alert tone="destructive">
                         <AlertTitle>{error}</AlertTitle>
@@ -176,6 +178,7 @@ export default function AcceptInvitePageClient() {
     if (showSuccess) {
         return (
             <AuthShell
+                scene={<LoginScene />} // provisório: a cena da tela vem nas Tarefas 5-7
                 title="Convite aceito"
                 step="accepted"
                 description={
@@ -208,7 +211,7 @@ export default function AcceptInvitePageClient() {
     }
 
     return (
-        <AuthShell title="Aceitar convite" step="idle">
+        <AuthShell scene={<LoginScene />} title="Aceitar convite" step="idle">
             <Muted>Nada para fazer aqui. Confira o link do convite.</Muted>
         </AuthShell>
     )

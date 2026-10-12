@@ -1,5 +1,6 @@
 import { Suspense } from "react"
 
+import { LoginScene } from "@/components/auth/scenes/login-scene"
 import { AuthFormSkeleton, AuthShell } from "@/components/layout/auth-shell"
 import { LoginForm } from "@/components/login-form"
 
@@ -18,7 +19,8 @@ export default function LoginPage() {
             fallback={
                 <AuthShell
                     title="Entrar"
-                    description="Uma conta, todas as suas carteiras."
+                    description="Bem-vindo de volta."
+                    scene={<LoginScene />}
                 >
                     <AuthFormSkeleton />
                 </AuthShell>

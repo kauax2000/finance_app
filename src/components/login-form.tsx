@@ -9,8 +9,10 @@ import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
 import { getSafeInternalNextPath } from "@/lib/auth-return-path"
 import { isValidEmail } from "@/lib/email"
 import { ROUTES } from "@/config/navigation"
+import { LoginScene } from "@/components/auth/scenes/login-scene"
 import { AuthShell } from "@/components/layout/auth-shell"
 import { Alert, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 import { Form, FormInput, FormSubmit } from "@/components/ui/form"
 import { SplitShellFooter } from "@/components/ui/split-shell"
 import {
@@ -119,7 +121,8 @@ export function LoginForm() {
     return (
         <AuthShell
             title="Entrar"
-            description="Uma conta, todas as suas carteiras."
+            description="Bem-vindo de volta."
+            scene={<LoginScene />}
             footer={
                 <SplitShellFooter>
                     <p>
@@ -173,18 +176,9 @@ export function LoginForm() {
                     <Field>
                         <FieldHeader>
                             <FieldLabel>Senha</FieldLabel>
-                            {/* Sublinhado **sempre**, não só no cursor: é o
-                                link que alguém procura justamente por estar
-                                travado, e sem traço ele era a coisa menos
-                                visível da tela. E ele carrega o `next`, como
-                                todos os outros — quem redefine a senha também
-                                está voltando para algum lugar. */}
-                            <Link
-                                href={forgotHref}
-                                className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground active:text-foreground"
-                            >
-                                Esqueceu a senha?
-                            </Link>
+                            <Button asChild variant="link" size="sm">
+                                <Link href={forgotHref}>Esqueceu a senha?</Link>
+                            </Button>
                         </FieldHeader>
                         <InputGroup size="xl">
                             <FieldControl>
