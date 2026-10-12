@@ -17,7 +17,10 @@ import { Muted } from "@/components/ui/typography"
 import { Button } from "@/components/ui/button"
 import {
   DIALOG_OVERLAY_CLASS,
+  DialogFooter,
+  DialogHeader,
   dialogContentVariants,
+  dialogTitleClassName,
   useOrigemDoClique,
 } from "@/components/ui/dialog"
 import { Field, FieldControl, FieldLabel } from "@/components/ui/field"
@@ -198,30 +201,8 @@ function AlertDialogMedia({
  * rolagem. Numa confirmação, que costuma ser cabeçalho e rodapé e nada no meio,
  * um traço em cada emenda era o mais gratuito de todos.
  */
-function AlertDialogHeader({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="alert-dialog-header"
-      className={cn(
-        "flex w-full min-w-0 shrink-0 flex-col gap-2 text-left",
-        // Com o ícone, ele vai **na linha do título**, e a descrição ocupa a
-        // largura toda embaixo, a partir da borda do ícone — a referência que
-        // o dono escolheu. Uma grade de duas colunas: o ícone e o título na
-        // primeira linha, centrados entre si; o resto atravessa as duas.
-        "has-[>[data-slot=alert-dialog-media]]:grid has-[>[data-slot=alert-dialog-media]]:grid-cols-[auto_minmax(0,1fr)] has-[>[data-slot=alert-dialog-media]]:gap-x-2",
-        "[&>[data-slot=alert-dialog-title]]:col-start-2",
-        "[&>:not([data-slot=alert-dialog-media]):not([data-slot=alert-dialog-title])]:col-span-2",
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </div>
-  )
+function AlertDialogHeader(props: React.ComponentProps<"div">) {
+  return <DialogHeader data-slot="alert-dialog-header" {...props} />
 }
 
 /**
@@ -229,23 +210,10 @@ function AlertDialogHeader({
  * (`flex-col-reverse`), para o polegar encontrar a ação em cima da pilha sem
  * que a ordem do DOM, que é a que o teclado e o leitor de tela seguem, mude.
  */
-function AlertDialogFooter({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="alert-dialog-footer"
-      className={cn(
-        "flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end",
-        // A geometria do `DialogFooter`: sem ela a confirmação fechava com 24px
-        // embaixo e o diálogo com 16, na mesma moldura.
-        "-mx-(--dialog-bleed) -mb-(--dialog-bleed) rounded-b-modal px-(--dialog-px) py-4",
-        className
-      )}
-      {...props}
-    />
-  )
+function AlertDialogFooter(props: React.ComponentProps<"div">) {
+  // O `sm:flex-row sm:justify-end`, a ordem invertida e o piso de 40 no dedo
+  // vêm do rodapé do `Dialog`.
+  return <DialogFooter data-slot="alert-dialog-footer" {...props} />
 }
 
 function AlertDialogTitle({
@@ -255,10 +223,7 @@ function AlertDialogTitle({
   return (
     <AlertDialogPrimitive.Title
       data-slot="alert-dialog-title"
-      className={cn(
-        "min-w-0 font-heading text-base leading-none font-medium text-balance",
-        className
-      )}
+      className={cn(dialogTitleClassName, className)}
       {...props}
     />
   )

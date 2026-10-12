@@ -1,9 +1,17 @@
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
-import { lerFonte } from "@/test/fonte"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
-import { AlertDialogError, AlertDialogList, AlertDialogMedia } from "./alert-dialog"
+import {
+  AlertDialog,
+  AlertDialogError,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogList,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "./alert-dialog"
 
 /** As versões da rodada 201. */
 
@@ -61,9 +69,11 @@ describe("AlertDialog, rodada 201", () => {
   })
 
   it("com o ícone, a descrição atravessa as duas colunas", () => {
-    expect(FONTE).toContain("has-[>[data-slot=alert-dialog-media]]:grid has-[>[data-slot=alert-dialog-media]]:grid-cols-[auto_minmax(0,1fr)]")
-    expect(FONTE).toContain("[&>[data-slot=alert-dialog-title]]:col-start-2")
-    expect(FONTE).toContain("[&>:not([data-slot=alert-dialog-media]):not([data-slot=alert-dialog-title])]:col-span-2")
+    // A grade é a do `DialogHeader`, que casa o sufixo do slot.
+    const dialog = lerFonte("src/components/ui/dialog.tsx")
+    expect(dialog).toContain("has-[>[data-slot$=-media]]:grid has-[>[data-slot$=-media]]:grid-cols-[auto_minmax(0,1fr)]")
+    expect(dialog).toContain("[&>[data-slot$=-title]]:col-start-2")
+    expect(dialog).toContain("[&>:not([data-slot$=-media]):not([data-slot$=-title])]:col-span-2")
     expect(renderToStaticMarkup(h(AlertDialogMedia))).toMatch(/class="col-start-1 row-start-1 [^"]*self-center/)
   })
 
@@ -76,5 +86,24 @@ describe("AlertDialog, rodada 201", () => {
 
   it("a descrição é um div, para a lista caber", () => {
     expect(FONTE).toMatch(/<Muted\s+asChild[\s\S]*?<div>\{children\}<\/div>/)
+  })
+
+  it("o cabeçalho, o rodapé e o título são os do Dialog (sem gap, leading-snug, 40 no dedo)", () => {
+    const html = renderToStaticMarkup(
+      h(AlertDialog, null,
+        h(AlertDialogHeader, null, h(AlertDialogTitle, null, "Excluir carteira?")),
+        h(AlertDialogFooter, null, "x"))
+    )
+    const classe = (slot: string) =>
+      html.match(new RegExp(`data-slot="${slot}"[^>]*class="([^"]*)"`))?.[1] ??
+      html.match(new RegExp(`class="([^"]*)"[^>]*data-slot="${slot}"`))?.[1] ?? ""
+    expect(classe("alert-dialog-header")).not.toMatch(/\bgap-2\b/)
+    expect(classe("alert-dialog-title")).toContain("leading-snug")
+    expect(classe("alert-dialog-footer")).toContain("pointer-coarse:[&amp;_button]:min-h-10")
+    // Compõem as peças do Dialog em vez de repetir a receita.
+    const codigo = semComentarios(FONTE, "tudo")
+    expect(codigo).toMatch(/<DialogHeader/)
+    expect(codigo).toMatch(/<DialogFooter/)
+    expect(codigo).toContain("dialogTitleClassName")
   })
 })

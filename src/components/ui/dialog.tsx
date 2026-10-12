@@ -557,12 +557,15 @@ function DialogHeader({
         // trazem o próprio respiro.
         "flex w-full min-w-0 shrink-0 flex-col text-left",
         // Com o ícone, ele vai na linha do título e a descrição atravessa a
-        // largura embaixo — a grade do `AlertDialogHeader`.
-        "has-[>[data-slot=dialog-media]]:grid has-[>[data-slot=dialog-media]]:grid-cols-[auto_minmax(0,1fr)] has-[>[data-slot=dialog-media]]:gap-x-2",
-        // Incondicionais, como no `AlertDialogHeader`: sem ícone o cabeçalho é
-        // flex, e `col-*` não faz nada nele.
-        "[&>[data-slot=dialog-title]]:col-start-2",
-        "[&>:not([data-slot=dialog-media]):not([data-slot=dialog-title])]:col-span-2",
+        // largura embaixo. Os seletores casam o **sufixo** do slot
+        // (`$=-media`, `$=-title`), porque o `AlertDialogHeader` é este
+        // cabeçalho com os slots `alert-dialog-*`: casar o nome inteiro o
+        // deixava sem a grade (e o ícone sobre o título, medido).
+        "has-[>[data-slot$=-media]]:grid has-[>[data-slot$=-media]]:grid-cols-[auto_minmax(0,1fr)] has-[>[data-slot$=-media]]:gap-x-2",
+        // Incondicionais: sem ícone o cabeçalho é flex, e `col-*` não faz nada
+        // nele.
+        "[&>[data-slot$=-title]]:col-start-2",
+        "[&>:not([data-slot$=-media]):not([data-slot$=-title])]:col-span-2",
         // **Sem tinta, e o motivo é medido.** A tira chegou a pintar um degradê
         // (`from-popover` → transparente) para "a cor cheia encostar na
         // dissolução". Sobre a placa translúcida isso é impossível: a placa é
@@ -767,6 +770,27 @@ function DialogFooter({
   )
 }
 
+/**
+ * A tinta do título, dividida com o `AlertDialogTitle`: o mesmo título nas duas
+ * confirmações, e por isso a receita mora num lugar só.
+ */
+const dialogTitleClassName = cn(
+  // `leading-snug`, e não `leading-none`: sem `gap` no cabeçalho, é a
+  // entrelinha do título que o separa da descrição.
+  "min-w-0 font-heading text-base leading-snug font-medium text-balance",
+  // O × é `absolute` e não reserva lugar nenhum: sem isto, um título
+  // longo passa por baixo dele — 16px medidos, e não é hipótese.
+  //
+  // A conta é uma só nos dois layouts porque a caixa do cabeçalho sempre
+  // termina a `--dialog-px` da borda do diálogo: em `auto` pelo recuo do
+  // casco, em `fixed` pelo recuo do próprio cabeçalho. Sobra o que o ×
+  // avança além disso.
+  DIALOG_CLOSE_RESERVE,
+  // Dentro de `DialogHeaderRow` quem reserva é a coluna do adorno; aqui
+  // o recuo só encolheria a coluna do texto à toa.
+  "in-data-[slot=dialog-header-row]:pe-0"
+)
+
 function DialogTitle({
   className,
   ...props
@@ -774,23 +798,7 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn(
-        // `leading-snug`, e não `leading-none`: sem `gap` no cabeçalho, é a
-        // entrelinha do título que o separa da descrição.
-        "min-w-0 font-heading text-base leading-snug font-medium text-balance",
-        // O × é `absolute` e não reserva lugar nenhum: sem isto, um título
-        // longo passa por baixo dele — 16px medidos, e não é hipótese.
-        //
-        // A conta é uma só nos dois layouts porque a caixa do cabeçalho sempre
-        // termina a `--dialog-px` da borda do diálogo: em `auto` pelo recuo do
-        // casco, em `fixed` pelo recuo do próprio cabeçalho. Sobra o que o ×
-        // avança além disso.
-        DIALOG_CLOSE_RESERVE,
-        // Dentro de `DialogHeaderRow` quem reserva é a coluna do adorno; aqui
-        // o recuo só encolheria a coluna do texto à toa.
-        "in-data-[slot=dialog-header-row]:pe-0",
-        className
-      )}
+      className={cn(dialogTitleClassName, className)}
       {...props}
     />
   )
@@ -899,6 +907,7 @@ export {
   DialogTrigger,
   DIALOG_OVERLAY_CLASS,
   dialogContentVariants,
+  dialogTitleClassName,
   // A origem do clique, que o `AlertDialog` também usa (rodada 248).
   useOrigemDoClique,
   // O pedido de fechar, que o `Sheet` também faz.
