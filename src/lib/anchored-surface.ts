@@ -1,51 +1,17 @@
 /**
- * A régua das superfícies ancoradas num gatilho.
+ * A régua das superfícies ancoradas num gatilho: ela cabe inteira na janela, em
+ * três cláusulas que precisam valer juntas. (1) Centra no gatilho quando cabe.
+ * (2) Quando não cabe, desloca para dentro (`avoidCollisions`, o padrão do
+ * Radix) com a folga de {@link ANCHORED_COLLISION_PADDING}. (3) Quando é maior
+ * que o espaço, encolhe: `max-w-(--radix-<primitiva>-content-available-width)`
+ * e o `max-h` correspondente — deslocar não resolve a que é mais larga que a
+ * janela. Não modal, ela fecha quando a página rola (`useCloseOnScroll`).
  *
- * # Toda superfície ancorada cabe inteira na janela
- *
- * (E, não modal, ela fecha quando a página rola — `useCloseOnScroll`, em
- * `hooks/use-close-on-scroll`. Rolar é sair dela, e portalizada em
- * `--z-popover` ela passaria por cima do header sticky.)
- *
- * A regra tem **três cláusulas**, e as três precisam valer juntas:
- *
- * 1. Ela **centra no gatilho** quando cabe.
- * 2. Quando não cabe, **desloca para dentro** — `avoidCollisions` ligado (é o
- *    padrão do Radix, e nenhuma superfície deste projeto o desliga), com a
- *    folga de {@link ANCHORED_COLLISION_PADDING}.
- * 3. Quando é **maior que o espaço disponível**, ela encolhe:
- *    `max-w-(--radix-<primitiva>-content-available-width)` e o `max-h`
- *    correspondente.
- *
- * **A terceira é a que sempre falta, e sem ela as outras duas não fecham.**
- * Deslocar resolve a superfície que *cabe* e está mal posta; não resolve a que
- * é mais larga que a janela — ali não existe posição que a torne visível. Antes
- * desta régua, `max-w-…-available-width` existia em **3 arquivos de 11**.
- *
- * ## A folga é do sistema, não da tela
- *
- * Ela estava escrita em **cinco grafias**: `8` (Popover, HoverCard), `12` e
- * `16` espalhados por 12 chamadas do app, um objeto
- * `{top:16,bottom:16,left:12,right:12}` no `FormPickerPopover`, e —
- * em `quick-actions.tsx` — **`undefined`**, que anulava o default do componente
- * e devolvia a folga a zero justamente no ramo que não era FAB. Uma decisão,
- * um lugar. A regra **K** do `ds:audit` é o que impede a sexta grafia.
- *
- * ## As classes ficam literais em cada arquivo, e isso não é descuido
- *
- * Elas carregam o nome da primitiva, e o Tailwind varre o código como **texto**:
- * uma classe montada em tempo de execução nunca chega ao CSS. A medição está em
- * [`menu-classes`](./menu-classes.ts) — a variável do Radix valia 318,75px, a
- * classe estava no elemento, e o `max-height` computado era `none`. Por isso
- * este arquivo compartilha o **número**, e o teste ao lado a **lista**, nunca a
- * string.
+ * A folga é do sistema, não da tela: a regra K do `ds:audit` impede outra
+ * grafia. As classes ficam literais em cada arquivo, porque carregam o nome da
+ * primitiva e o Tailwind varre texto (ver `menu-classes`); este arquivo
+ * compartilha o número, e o teste ao lado a lista.
  */
 
-/**
- * A folga entre uma superfície ancorada e a borda da janela, em pixels.
- *
- * Oito é o que `Popover` e `HoverCard` já usavam, e o que o `NavigationMenu`
- * copiou por prosa num comentário quando ganhou o trilho próprio — ele agora lê
- * daqui.
- */
+/** A folga entre uma superfície ancorada e a borda da janela, em pixels. */
 export const ANCHORED_COLLISION_PADDING = 8

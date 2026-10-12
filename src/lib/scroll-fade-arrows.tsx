@@ -12,8 +12,8 @@ import { cn } from "@/lib/utils"
  * faixas por onde a lista sangra (`--scroll-fade-band-h` e `-foot-h`), para
  * não cair debaixo da busca ou do rodapé.
  *
- * **Não é o `ScrollUpButton` do Radix**, que a rodada 166 tirou do `Select`:
- * aquele era uma faixa de 24px que rolava ao pousar e ocupava altura da lista.
+ * **Não é o `ScrollUpButton` do Radix**, que o `Select` não usa:
+ * aquele é uma faixa de 24px que rolava ao pousar e ocupava altura da lista.
  * Esta é indicação: não ocupa espaço, não pega clique (`pointer-events-none`,
  * o clique vai ao item por baixo) e não fala (`aria-hidden` — o leitor de
  * tela já anuncia a posição na lista).

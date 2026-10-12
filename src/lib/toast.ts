@@ -69,7 +69,7 @@ function paraAcao(a: ToastAction | undefined): ExternalToast["action"] {
 }
 
 /**
- * Os repetidos (rodada 228). O mesmo aviso disparado com a bolha ainda à vista
+ * Os repetidos. O mesmo aviso disparado com a bolha ainda à vista
  * não empilha: a bolha fica, mostra ×2, ×3, e o tempo recomeça. Uma rajada de
  * cinco requisições falhando vira um toast só.
  *
@@ -167,7 +167,7 @@ export function toastPersistentAction(
 }
 
 /**
- * A confirmação de uma palavra (rodada 228): "Copiado", "Salvo". Uma pílula
+ * A confirmação de uma palavra: "Copiado", "Salvo". Uma pílula
  * no mesmo canto dos outros avisos, sem descrição nem ×, por dois segundos.
  * Para o que tem consequência, o toast inteiro.
  */
@@ -269,7 +269,7 @@ export function toastPromise<T>(
 }
 
 /**
- * O progresso com número (rodada 228): importar, enviar. Chame de novo com o
+ * O progresso com número: importar, enviar. Chame de novo com o
  * mesmo `id` a cada passo — a bolha é a mesma, e a barra anda. Ao terminar,
  * `toastSuccess(…, { id })` a substitui pelo resultado.
  */

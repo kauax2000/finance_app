@@ -3,10 +3,9 @@ import type { ReactNode } from "react"
 import { Progress } from "@/components/ui/progress"
 
 /**
- * As peças com JSX dos toasts (rodada 228). Elas moram aqui, e não em
- * `lib/toast.ts`, para aquele continuar `.ts`: é o arquivo que 30 telas
- * importam, e renomeá-lo deixou o servidor de desenvolvimento procurando o
- * caminho antigo.
+ * As peças com JSX dos toasts. Moram aqui e não em `lib/toast.ts`, para aquele
+ * continuar `.ts`: 30 telas o importam, e renomeá-lo deixou o servidor de
+ * desenvolvimento procurando o caminho antigo.
  */
 
 /**

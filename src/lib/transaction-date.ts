@@ -270,7 +270,7 @@ function diasDeCalendario(de: Date, ate: Date): number {
 }
 
 /**
- * O tempo relativo de um evento (rodada 227): "Agora", "Há 5 min", "Há 3 h",
+ * O tempo relativo de um evento: "Agora", "Há 5 min", "Há 3 h",
  * "Ontem", "Há 3 dias", "Amanhã", "Em 3 dias" — e, a partir de uma semana, a
  * data (dd/mm no ano corrente, dd/mm/aaaa fora dele). `agora` entra como
  * argumento para o `TimelineTime relative` decidir quando recalcular, e para o

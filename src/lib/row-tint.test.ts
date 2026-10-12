@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import { lerFonte } from "@/test/fonte"
 
 /**
- * A rodada 245: o realce das linhas sobre vidro é uma **tinta** — o
+ * O realce das linhas sobre vidro é uma **tinta** — o
  * `--foreground` a 9% por cima do que estiver atrás —, e não uma cor opaca.
  * `bg-accent` e `bg-muted` matavam a transparência da placa e da gaveta: a
  * linha acesa virava um retângulo chapado. A 9% a tinta lê como o `accent`

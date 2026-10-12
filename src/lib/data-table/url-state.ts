@@ -1,5 +1,5 @@
 /**
- * A tabela na URL (rodada 225): ordenação, página e filtros por chave, para o
+ * A tabela na URL: ordenação, página e filtros por chave, para o
  * link ser compartilhável e o voltar do navegador devolver a mesma vista.
  *
  * O formato é o curto e legível — `sort=valor.desc,data.asc`, `page=3`,

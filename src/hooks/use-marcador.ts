@@ -20,17 +20,12 @@ type UseMarcadorOptions = {
   insete: number
   /** O eixo da fileira: decide o esticão e a régua do salto. */
   eixo?: "x" | "y"
-  /**
-   * Há marcador. Sem ele (o `Tabs plain`, o `ToggleGroup` múltiplo) nada é
-   * medido nem observado: não há caixa a publicar, e os dois observadores
-   * seriam custo puro.
-   */
+  /** Há marcador. Sem ele (`Tabs plain`, `ToggleGroup` múltiplo) nada é medido nem observado. */
   viajar: boolean
   /**
    * Chamado a cada medida, com o ativo já publicado. Devolver `true` faz o
-   * marcador **acompanhar** a caixa nova do mesmo item, sem esticão — o rótulo
-   * do `BottomBar` que abre no relógio dele. Sem isto, o mesmo item mudando de
-   * tamanho só reposiciona.
+   * marcador acompanhar a caixa nova do mesmo item, sem esticão (o rótulo do
+   * `BottomBar` que abre); sem isso o mesmo item só reposiciona.
    */
   acompanhar?: () => boolean
   /** O que, além das opções, refaz a medição (degrau, variante…). */
@@ -38,33 +33,20 @@ type UseMarcadorOptions = {
 }
 
 /**
- * O marcador que viaja — um mecanismo só para o `Tabs`, o `BottomBar` e o
- * `ToggleGroup` (rodada 252). Cada um guarda o prefixo das variáveis e o DOM;
- * a medição, a observação e a viagem moram aqui.
+ * O marcador que viaja, um mecanismo só para `Tabs`, `BottomBar` e
+ * `ToggleGroup`: cada um guarda o prefixo das variáveis e o DOM.
  *
- * Ele lê `offsetLeft`/`offsetTop` **relativos à trilha**, e não
- * `getBoundingClientRect`: com uma trilha que rola, uma caixa em coordenada de
- * viewport faria o marcador escorregar para fora do item a cada pixel rolado.
- * Em coordenada de conteúdo ele acompanha a rolagem de graça, porque é filho
- * do mesmo elemento que rola.
+ * Lê `offsetLeft`/`offsetTop` relativos à trilha, não `getBoundingClientRect`:
+ * em coordenada de viewport o marcador escorregaria a cada pixel rolado. O
+ * `ResizeObserver` pega mudança de largura e o `MutationObserver` nos
+ * `atributos` pega a troca de ativo, o que faz o marcador seguir também a troca
+ * programática e a seta; nada de laço por quadro.
  *
- * Os dois observadores cobrem coisas diferentes: o `ResizeObserver` (a trilha
- * e os filhos, inclusive os que entram depois) pega mudança de largura —
- * janela, fonte, rótulo que troca —, e o `MutationObserver` nos `atributos`
- * pega a troca de ativo. Observar o DOM em vez de receber o valor por prop é o
- * que faz o marcador seguir **também** a troca programática e a navegação por
- * seta. Nada de laço por quadro.
- *
- * **A viagem** (rodada 226): quando o ativo **muda** — e não quando o mesmo só
- * muda de tamanho —, o marcador corre da caixa velha para a nova pela receita
- * do `ThemeToggle` (`viajarLiquido`), no trajeto macio. O esticão é
- * proporcional ao caminho em larguras de item: 0,09 por item andado, teto de
- * 0,18. O repouso mora nas variáveis; a animação (`fill: "none"`) só cobre o
- * caminho.
- *
- * Devolve se já mediu: antes disso — e sem JavaScript — quem marca a escolha
- * é o próprio item, e o marcador não monta (montado antes, escorregaria de 0,0
- * até o lugar na primeira pintura).
+ * Quando o ativo muda (e não quando o mesmo só muda de tamanho), o marcador corre
+ * pela receita do `ThemeToggle` (`viajarLiquido`), com esticão de 0,09 por item
+ * andado e teto de 0,18. Devolve se já mediu: antes disso, e sem JavaScript,
+ * quem marca a escolha é o próprio item, e o marcador não monta (escorregaria
+ * de 0,0 até o lugar).
  */
 export function useMarcador(o: UseMarcadorOptions): boolean {
   const [medido, setMedido] = React.useState(false)
@@ -123,12 +105,10 @@ export function useMarcador(o: UseMarcadorOptions): boolean {
 
     medir()
 
-    // O marcador não entra: a largura dele anima durante a viagem, e cada
-    // quadro seria uma medida à toa.
+    // O marcador não entra: a largura dele anima durante a viagem.
     const ro = new ResizeObserver(medir)
     const observar = (no: Node) => {
-      // `nodeType`, e não `instanceof Element`: no `IphoneFrame` o nó é de
-      // outra janela, e o `Element` daqui não o reconhece.
+      // `nodeType` e não `instanceof Element`: no `IphoneFrame` o nó é de outra janela.
       if (no.nodeType === Node.ELEMENT_NODE && no !== marcador.current) ro.observe(no as Element)
     }
     ro.observe(trilha)

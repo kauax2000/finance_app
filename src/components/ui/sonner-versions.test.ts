@@ -10,7 +10,7 @@ const PARTES = lerFonte("src/lib/toast-parts.tsx")
 const TOASTER = lerFonte("src/components/ui/sonner.tsx")
 const CSS = lerFonte("src/app/globals.css")
 const BLOCO = CSS.slice(
-  CSS.indexOf("/* ─── O toast (rodada 228)"),
+  CSS.indexOf("/* ─── O toast: a placa flutuante"),
   CSS.indexOf("/* ── A dissolução das bordas de uma região rolável")
 )
 

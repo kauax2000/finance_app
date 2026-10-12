@@ -1,5 +1,5 @@
 /**
- * O teclado da tabela (rodada 225), puro, para o `DataTable` e para o teste.
+ * O teclado da tabela, puro, para o `DataTable` e para o teste.
  *
  * **Linhas** (a tabela de leitura, semântica de `table`): ↑ ↓ andam uma, Home
  * e End vão às pontas, PageUp e PageDown andam dez. **Células** (a versão

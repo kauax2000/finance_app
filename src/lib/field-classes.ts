@@ -1,196 +1,65 @@
 /**
- * A superfície de campo — uma só, para os controles que **são** um campo.
+ * A superfície de campo: uma só, para os controles que são um campo (`Input`,
+ * `Textarea`, `NativeSelect`, `SelectTrigger`, `ComboboxTrigger`, `DatePicker`,
+ * `FormPickerPopoverTrigger`). O `InputGroup` é uma moldura em volta de um
+ * controle e lê os estados por `has-`: são as variantes `fieldGroup*ClassName`,
+ * e `field-classes.test.ts` tranca que as duas grafias não se separem. O
+ * `InputOTPSlot` não veste: é célula segmentada, e a régua seria anulada.
  *
- * O que `menu-classes` é para as quatro superfícies de comando, este arquivo é
- * para os controles de formulário. E a razão de existir é a mesma: a mesma
- * decisão estava escrita quatro vezes, em quatro arquivos, e nada garantia que
- * continuassem iguais.
+ * Sem `cva` aqui (regra A2 do auditor: fora de `components/ui/`); strings
+ * literais, como em `menu-classes`.
  *
- * Quem veste, hoje: `Input`, `Textarea`, `NativeSelect`, `SelectTrigger`,
- * `ComboboxTrigger`, `DatePicker` e `FormPickerPopoverTrigger` — inline, no
- * próprio controle —, e o `InputGroup`, que é uma **moldura** em volta de um
- * controle e por isso lê os estados pelo que está dentro: são as variantes
- * `fieldGroup*ClassName`, no fim do arquivo, com os mesmos tokens sob `has-`.
- * `field-classes.test.ts` tranca que as duas grafias não se separem.
+ * A ordem de composição é carga estrutural: `cn` é `twMerge(clsx(…))` e o
+ * projeto estende o grupo `font-size` com `text-2xs` e `text-control-sm`. Quem
+ * compuser o degrau antes da constante faz o `sm` perder o corpo de texto,
+ * calado — constantes primeiro, tamanho e variante por último.
  *
- * O `InputOTPSlot` **não** veste, e é decisão: ele é uma célula de superfície
- * segmentada — `border-y border-r`, canto só nas pontas, foco por
- * `data-[active]` porque o `<input>` real é invisível por cima. Três de quatro
- * declarações da régua seriam anuladas; vestir seria reimplementar ao contrário.
- *
- * (Quando isto nasceu, a tabela tinha quatro colunas — `Input`,
- * `SelectTrigger`, `InputGroup` em `has-[…]` e `ComboboxTrigger` sobre
- * `Button variant="outline"` — e é a essa quarta que o parágrafo abaixo se
- * refere.)
- *
- * O `Combobox` era o que mais destoava, e não por descuido: ele era montado
- * sobre `Button variant="outline"`, que no tema claro é `border-border` +
- * `bg-background` — uma superfície **visivelmente outra** que a do `Select` ao
- * lado dele. Os dois só convergiam sob `dark:`. Um combobox é um select com
- * busca; até abrir, ele tem de ser indistinguível de um.
- *
- * ## A escada entrou, e com ela o piso de toque
- *
- * Por duas rodadas este cabeçalho argumentou que a altura não podia morar aqui,
- * porque os consumidores a aplicavam por mecânicas diferentes — condicional em
- * JS no `Input`, `data-[size=…]` inline no `SelectTrigger` e no
- * `ComboboxTrigger`, um registro local no `InputGroup`, e a constante daqui nos
- * outros três. O argumento estava certo sobre a mecânica e errado sobre a
- * conclusão: **cinco grafias da mesma escada não são cinco decisões, são uma
- * decisão sem dono**, e nenhum teste as via (grep em todo `*.test.ts`: zero
- * asserções sobre `h-7`).
- *
- * Hoje a altura e o recuo são dois registros, indexados em JS por quem já tem
- * o `size` em mãos. Ver `fieldControlHeightClassName` e
- * `fieldControlPaddingClassName`, no fim do arquivo.
- *
- * ## Duas armadilhas mecânicas
- *
- * **Nada de `cva` aqui.** A regra A2 do auditor reprova essa fábrica de variantes fora de
- * `components/ui/`, e `src/lib/` está fora. Strings literais, como em
- * [`menu-classes`](./menu-classes.ts) e [`scroll-fade-classes`](./scroll-fade-classes.ts).
- *
- * **A ordem de composição é carga estrutural.** `cn` é `twMerge(clsx(…))`, e o
- * projeto estende o grupo `font-size` com `text-2xs` e `text-control-sm`. O
- * `Input size="sm"` resolve `md:text-sm` (daqui) contra `md:text-control-sm`
- * (do degrau) por esse grupo — quem compuser o degrau **antes** da constante
- * faz o `sm` perder o corpo de texto, calado. Constantes primeiro, tamanho e
- * variante por último.
- *
- * ## Um teto conhecido, e ele não é consertado aqui
- *
- * O piso de toque pergunta ao **ponteiro** (`pointer-coarse`), e a regra de
- * 16px do `@layer base` em `globals.css` pergunta à **largura**
- * (`max-width: 767px`). Uma janela de desktop com 700px ganha texto de
- * 16px/24px numa caixa de 32 — 24 de linha, 8 de recuo e 2 de borda dão 34 — e
- * **nenhum piso**, porque o ponteiro dela é fino. Já era o comportamento antes
- * desta rodada, o campo apenas recorta, e cruzar os dois eixos é uma decisão
- * própria: ou o piso passa a perguntar pela largura também, ou a regra de
- * fonte passa a perguntar pelo ponteiro. Fica anotado em vez de resolvido de
- * passagem.
+ * Teto conhecido: o piso de toque pergunta ao ponteiro (`pointer-coarse`) e a
+ * regra de 16px do `@layer base` pergunta à largura (`max-width: 767px`); uma
+ * janela de desktop com 700px ganha texto de 16px numa caixa de 32 e nenhum piso.
  */
 
 /**
- * O contorno, o preenchimento e o corpo do texto.
- *
- * `border-input` e não `border-border`: são dois tokens porque medem coisas
- * diferentes — `--border` separa superfícies, `--input` **identifica um
- * controle**. Hoje os dois valem o mesmo no claro, e é decisão: o fio do campo
- * quase some (1,16:1 contra o fill) e quem identifica o controle é o
- * **preenchimento**, a `/50` — a conta do `border-beam` do 21st, que o dono
- * trouxe como referência. Fora da 1.4.11 de propósito; a nota está em
- * `globals.css`, no próprio token, com a saída registrada.
- *
- * `text-base md:text-sm` é a rampa que impede o zoom automático do iOS: abaixo
- * de 16px o Safari amplia a página ao focar o campo.
- *
- * O campo de uma linha é cápsula (rodadas 240 e 243e). Da 241h à 243d ele
- * vestiu a linha (12) e um raio por degrau (241j); o dono o devolveu à
- * cápsula. Quem cresce em altura — o `Textarea` e o `InputGroup` com bloco ou
- * textarea — sobrescreve com `rounded-row-lg`.
+ * O contorno, o preenchimento e o corpo do texto. `border-input` e não
+ * `border-border`: `--border` separa superfícies, `--input` identifica um
+ * controle — e quem o identifica é o preenchimento a `/50`, fora da 1.4.11 de
+ * propósito (a nota está em `globals.css`, no token). `text-base md:text-sm`
+ * impede o zoom do iOS abaixo de 16px. Cápsula; quem cresce em altura
+ * (`Textarea`, `InputGroup` com bloco) sobrescreve com `rounded-row-lg`.
  */
 export const fieldSurfaceClassName =
   "rounded-full border border-input bg-input-fill/50 text-base transition-colors outline-none md:text-sm"
 
 /**
- * O anel de foco do sistema — `ring-3`, e não `ring-2`.
- *
- * É o mesmo valor no `Button`, no `Input`, no `SelectTrigger` e no
- * `MenubarTrigger`. O `TabsTrigger` era o único em `ring-2`, e a diferença de
- * 1px só aparecia quando os dois ficavam na mesma linha.
- *
- * ## O alfa é 45%, e 45 é o piso
- *
- * Ele foi **70%** da origem até esta rodada, e o dono o pediu mais suave: no
- * escuro, 3px de quase-branco a 70% sobre um cartão quase preto leem como
- * marca-texto. Medido contra as **sete** superfícies (`--background`, `--card`,
- * `--popover`, `--muted`, `--secondary`, `--accent`, `--sidebar`) nos dois
- * temas, que é a régua certa porque um campo focado pousa em qualquer uma
- * delas:
- *
- *     alfa        pior caso claro   pior caso escuro
- *     70% (antes)      6,94              7,83
- *     50%              3,55              4,74
- *     45% (hoje)       3,05              4,12   ← o piso
- *     40%              2,63 ✗            3,57
- *
- * A WCAG pede 3:1, e **45 é o último valor que passa nos dois temas**. O pior
- * caso é `--secondary`/`--accent` no claro, a 3,05 — **0,05 de folga**, aceita
- * de olhos abertos depois de ver o número. Quem empurrar `--secondary` ou
- * `--accent` derruba o foco da norma sem nenhum teste cair: não há script de
- * guarda aqui, ao contrário de `tone-contrast` e `tile-contrast`.
- *
- * **Medir contra o cartão só é medir metade.** A primeira leitura desta rodada
- * deu 3,16 para o 45% no claro, porque olhou o `--card` e parou. A superfície
- * que decide é outra.
- *
- * **Rodada 162: 30%, fora da norma por decisão do dono.** Ele pediu o campo
- * focado mais suave e escolheu mais fino e mais claro, com o custo dito na
- * pergunta; o mais fino (`ring-2`) voltou a 3px na mesma rodada, a pedido
- * dele, e ficou só a cor. Medido de novo contra as sete
- * superfícies:
- *
- *     alfa        pior caso claro   pior caso escuro
- *     35%              2,30              3,05
- *     30% (hoje)       1,99 ✗            2,53 ✗
- *     25%              1,75              2,10
- *
- * **É a terceira divergência consciente da WCAG 1.4.11 nesta casa**, ao lado do
- * contorno de campo e do trilho claro do `Progress brand`, e a primeira num
- * indicador de foco (2.4.7 continua atendida: o foco é visível; o que cai é o
- * contraste de 3:1 do indicador). O caminho de volta é trocar `/30` por `/45`
- * — 3,05 e 4,10, a tabela de cima. Os outros anéis do sistema (`Button`,
- * `Switch`, `Checkbox`, `Radio`…) continuam a 45%: o pedido foi o do campo.
- *
- * **O que não mudou, e é de propósito:** a largura (`ring-3`, o valor do
- * sistema), a cor (`--ring`, quase preto no claro e quase branco no escuro) e
- * a ausência de transição. Esta última é um teto conhecido:
- * `fieldSurfaceClassName` declara `transition-colors`, que **não cobre
- * `box-shadow`** — então o anel do campo aparece de estalo enquanto o do
- * `Button`, que transiciona `box-shadow`, esmaece. Medido nos dois; o dono
- * recusou mexer nisso nesta rodada.
- *
- * **E ele é o único indicador de foco do campo.** Houve cinco rodadas pondo
- * marca aqui — contorno estático, feixe animado, halo por sombra, a receita do
- * `Button brand`, e ela com teto de croma e de luz —, e o dono as recusou na
- * tela: arco-íris no campo não funciona neste app. O que sobra é o que sempre
- * esteve certo — `--ring`, que é quase preto no claro e quase branco no
- * escuro. `field-control-ladder.test.ts` proíbe a sexta tentativa.
+ * O anel de foco do sistema: `ring-3` de `--ring` a 30%, e único indicador de
+ * foco do campo (`escadas.test.ts` proíbe marca
+ * de arco-íris aqui). Fora dos 3:1 da 1.4.11 por decisão do dono: pior caso
+ * 1,99 no claro e 2,53 no escuro, contra as sete superfícies; o caminho de
+ * volta é `/45` (3,05 e 4,12, piso de 3:1 nos dois temas). Sem script de guarda:
+ * mexer em `--secondary` ou `--accent` derruba o foco sem nenhum teste cair.
+ * `transition-colors` não cobre `box-shadow`, então o anel estala.
  */
 export const fieldFocusRingClassName =
   "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
 
-/**
- * O estado inválido. Vem de `aria-invalid`, escrito por quem chama — o `Field`
- * deste projeto **não** tem contexto, e o `data-invalid` que ele carimba serve
- * ao rótulo e à mensagem, não ao controle.
- */
+/** O estado inválido vem de `aria-invalid`, escrito por quem chama; o `data-invalid` do `Field` serve ao rótulo, não ao controle. */
 export const fieldInvalidClassName = [
   "aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20",
   "dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
 ].join(" ")
 
-/**
- * O desabilitado — **sem** `pointer-events-none`. Ver a divergência 1 no
- * cabeçalho: o `Input` a declara inline, e é ele quem está fora do padrão.
- */
+/** O desabilitado, sem `pointer-events-none`. */
 export const fieldDisabledClassName = [
   "disabled:cursor-not-allowed disabled:bg-input-fill/50 disabled:opacity-50",
   "dark:disabled:bg-input-fill/80",
 ].join(" ")
 
 /**
- * As mesmas três réguas, para a **moldura** que acende pelo controle de dentro
- * — o `InputGroup`. Ele não é o campo: é uma `div` em volta de um `<input>`, e
- * o foco, o inválido e o desabilitado vivem no filho. Por isso cada token
- * aparece aqui sob `has-…`, e **escrito por extenso**: montar a variante por
- * `.replace()` em runtime seria classe que o Tailwind nunca vê — a armadilha que
- * o AGENTS.md registra três vezes. A paridade com as constantes de cima é
- * trancada em `field-classes.test.ts`, token a token.
- *
- * O foco é só o do controle (`data-slot="input-group-control"`), e não de
- * qualquer descendente: um botão acoplado tem anel próprio, e dois anéis na
- * mesma caixa é o defeito.
+ * As mesmas três réguas para a moldura que acende pelo controle de dentro (o
+ * `InputGroup`), cada token escrito por extenso sob `has-…` — montar a variante
+ * em runtime é classe que o Tailwind nunca vê. O foco é só o de
+ * `data-slot="input-group-control"`: um botão acoplado tem anel próprio, e dois
+ * anéis na mesma caixa é o defeito.
  */
 export const fieldGroupFocusRingClassName =
   "has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot=input-group-control]:focus-visible]:ring-3 has-[[data-slot=input-group-control]:focus-visible]:ring-ring/30"
@@ -206,27 +75,14 @@ export const fieldGroupDisabledClassName = [
 ].join(" ")
 
 /**
- * A resposta ao ponteiro, só para o campo que **abre** alguma coisa.
- *
- * O par `active:` não é enfeite nem cortesia com a regra H do auditor: em tela
- * de toque `hover:` compila para `@media (hover: hover)` e simplesmente não
- * vale, então sem ele o gatilho não responde ao dedo. Mesmo alvo nas duas
- * entradas, mesma tinta.
- *
- * **Ele fica sem efeito enquanto o campo está focado**, e é consequência e não
- * defeito: o contorno de marca pinta `background`, que é uma camada acima de
- * `background-color`, e ainda vence em especificidade (0,3,0 contra 0,2,0). Um
- * gatilho focado já está dizendo o que o realce diria.
+ * A resposta ao ponteiro, só para o campo que abre alguma coisa. O par `active:`
+ * é o que faz o gatilho responder ao dedo (`hover:` não vale no toque). Fica sem
+ * efeito com o campo focado: o foco já diz o que o realce diria.
  */
 export const fieldTriggerHoverClassName =
   "hover:bg-input-fill/50 active:bg-input-fill/50"
 
-/**
- * A régua inteira de um controle que **é** um campo — superfície, foco,
- * inválido e desabilitado, nessa ordem —, escrita uma vez para as oito
- * chamadas que a montavam à mão. Vem **primeiro** no `cn`, antes do degrau
- * (ver "A ordem de composição é carga estrutural", no topo).
- */
+/** Superfície, foco, inválido e desabilitado, nessa ordem; vem primeiro no `cn`, antes do degrau. */
 export const fieldControlClassName = [
   fieldSurfaceClassName,
   fieldFocusRingClassName,
@@ -243,13 +99,7 @@ export const fieldTriggerClassName = [
 /** A escada de controle do projeto: os mesmos nomes do `Button` e do `Tabs`. */
 export type FieldControlSize = "sm" | "md" | "lg" | "xl"
 
-/**
- * Os números, para um teste poder afirmar que eles não se mexeram.
- *
- * Enquanto a escada era cinco strings espalhadas, não havia como comparar dois
- * degraus — é o defeito que o `Item` teve (`default` e `sm` com a **mesma
- * string**) e que só apareceu quando a escada virou um objeto inspecionável.
- */
+/** Os números, para um teste poder comparar os degraus. */
 export const FIELD_CONTROL_HEIGHTS = {
   sm: 28,
   md: 32,
@@ -258,38 +108,12 @@ export const FIELD_CONTROL_HEIGHTS = {
 } as const satisfies Record<FieldControlSize, number>
 
 /**
- * A altura do controle, com o **piso de toque** embutido.
- *
- * Medido a 375px com ponteiro grosso, antes desta rodada: `sm` 28, `md` 32,
- * `lg` 36 — três degraus abaixo do piso, e o `sm` era uma caixa de 28px
- * carregando uma linha de 24. No dedo a hierarquia de altura não é usável: ela
- * só produz alvos pequenos de tamanhos diferentes.
- *
- * **O piso é 40, e a pergunta é o apontador.** É o degrau que a `Toolbar`
- * publica em `--toolbar-control`, o mesmo que o `Tabs` aplica, e a altura que
- * o app já renderiza no telefone. A pergunta é sobre o **ponteiro** e não sobre
- * a largura da janela, pela mesma razão que `hover: hover` é: um telefone em
- * paisagem continua grosso, um desktop estreito continua fino.
- *
- * `xl` **não** leva o piso: ele já é 40, e um piso redundante é uma segunda
- * grafia esperando para divergir.
- *
- * **Duas armadilhas, as duas medidas em outros componentes desta casa:**
- *
- * 1. **Literais, nunca template.** O Tailwind varre o código como texto; uma
- *    classe montada em runtime nunca chega ao CSS. O `Tabs` pagou essa medição.
- * 2. **Quem decide entre `h-8` e `pointer-coarse:h-10` é a ordem de emissão, e
- *    não a especificidade** — uma media query soma zero, e os dois seletores
- *    empatam. O Tailwind emite a utility com mais variantes depois, no mesmo
- *    arquivo e no mesmo build. E `twMerge` chaveia por modificadores + grupo,
- *    então os dois nunca colapsam um no outro.
- *
- * **Sem prefixo de `data-size`, e isso é carga estrutural para o `InputGroup`.**
- * Ele tem escapes `has-[>textarea]:h-auto` e `has-[>[data-align=block-end]]:h-auto`,
- * ambos (0,2,0), que vencem um `h-8` limpo (0,1,0). Numa grafia
- * `data-[size=…]:h-8` os dois empatariam em (0,2,0) e **um textarea dentro de um
- * grupo ficaria travado em 32px na sorte da ordem**. Indexado em JS, o registro
- * emite a classe crua e o escape continua ganhando.
+ * A altura do controle, com o piso de toque embutido: 40 no dedo (o degrau da
+ * `Toolbar`), perguntado ao ponteiro e não à largura. `xl` já é 40 e não leva
+ * o piso. Literais, nunca template (o Tailwind varre texto). `h-8` e
+ * `pointer-coarse:h-10` não colapsam no `twMerge`, e a ordem de emissão decide.
+ * Sem prefixo `data-size`: os escapes `has-[>textarea]:h-auto` do `InputGroup`
+ * (0,2,0) precisam vencer a altura, e `data-[size=…]:h-8` empataria com eles.
  */
 export const fieldControlHeightClassName = {
   sm: "h-7 pointer-coarse:h-10",
@@ -299,20 +123,10 @@ export const fieldControlHeightClassName = {
 } as const satisfies Record<FieldControlSize, string>
 
 /**
- * O recuo de **início** e o corpo do texto.
- *
- * Medido antes desta rodada: `Input md` recuava 12px, `Textarea` 10 e
- * `NativeSelect` 10. Empilhados num formulário, a borda esquerda do texto saía
- * serrilhada — 2px é pouco para nomear a olho e suficiente para o olho notar.
- *
- * **A ponta final não entra aqui, e é de propósito:** `NativeSelect` precisa de
- * `pr-8` para o chevron, `SelectTrigger` e `ComboboxTrigger` de `pr-2.5`, e o
- * `Input` de nenhum. Quem tem chevron sobrescreve `pe-*` **depois** deste
- * registro — `twMerge` mantém os dois e a ponta vence, que é o resultado certo.
- *
- * O `md:text-control-sm` do `sm` vem junto porque ele é o degrau e não a
- * superfície: composto antes de `fieldSurfaceClassName`, o `md:text-sm` de lá
- * o apagaria pelo grupo `font-size`.
+ * O recuo de início e o corpo do texto. A ponta final fica de fora: quem tem
+ * chevron sobrescreve `pe-*` depois deste registro, e a ponta vence. O
+ * `md:text-control-sm` do `sm` é o degrau, e `fieldSurfaceClassName` o apagaria
+ * se fosse composto antes.
  */
 export const fieldControlPaddingClassName = {
   sm: "px-2 md:text-control-sm",

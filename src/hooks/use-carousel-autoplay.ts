@@ -3,35 +3,16 @@
 import * as React from "react"
 
 /**
- * A rotação automática do `Carousel` — sem dependência, e sem esconder de
- * ninguém que ela está rodando.
+ * A rotação automática do `Carousel`, sem dependência: o plugin não expõe o
+ * tempo restante, que o ponto-temporizador precisa. Autoplay só em conteúdo
+ * editorial, nunca sobre dado da pessoa.
  *
- * A página do catálogo recusava autoplay ("hostil num app de finanças") e
- * recusava a dependência do plugin. A segunda recusa ficou: são ~50 linhas, e
- * o plugin não expõe o tempo restante, que é o que o ponto-temporizador precisa
- * para andar junto do relógio. A primeira virou **regra de uso**: autoplay só
- * em conteúdo editorial (novidades, dicas), nunca sobre dado da pessoa.
- *
- * ## Quatro motivos param a rotação, e cada um é um motivo, não um booleano
- *
- * O cursor sobre a região, o foco dentro dela, a aba escondida e o próprio
- * usuário (o botão de pausar). Guardados num conjunto: um booleano só faria o
- * `blur` retomar uma rotação que o usuário tinha pausado.
- *
- * **Movimento reduzido começa pausado pelo usuário**, e não desligado: a
- * pessoa ainda pode apertar play. É a WCAG 2.2.2 pelos dois lados — quem não
- * quer movimento não o recebe, e quem quer pode ligá-lo.
- *
- * ## O relógio pausa, e não recomeça
- *
- * Pausar guarda o tempo que faltava, e retomar agenda só o resto. É o que
- * mantém o JS no mesmo passo do CSS: o preenchimento do ponto ativo é uma
- * animação com `animation-play-state: paused` sob `data-autoplay="paused"`, e
- * ela também continua de onde parou. Recomeçar do zero no JS deixaria a barra
- * cheia com o slide ainda parado.
- *
- * Trocar de slide (`chave`) zera o relógio, pela mão de quem trocou ou pela
- * própria rotação.
+ * Quatro motivos param a rotação (cursor, foco, aba escondida, usuário), num
+ * conjunto: um booleano faria o `blur` retomar uma rotação que o usuário pausou.
+ * Movimento reduzido começa pausado pelo usuário (WCAG 2.2.2), e a pessoa ainda
+ * pode dar play. Pausar guarda o tempo que faltava e retomar agenda só o resto,
+ * para o JS ficar no passo do preenchimento do ponto (`animation-play-state:
+ * paused`). Trocar de slide (`chave`) zera o relógio.
  */
 type Motivo = "cursor" | "foco" | "oculta" | "usuario"
 
@@ -78,9 +59,7 @@ export function useCarouselAutoplay({
     })
   }, [])
 
-  // Movimento reduzido: começa pausado pelo usuário. Perguntado à mão porque o
-  // bloco global de `prefers-reduced-motion` só alcança CSS — o precedente do
-  // `useBrandGlow`.
+  // Movimento reduzido é perguntado à mão: o bloco global só alcança CSS.
   React.useEffect(() => {
     if (!ativo) return
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -105,10 +84,9 @@ export function useCarouselAutoplay({
   const rodando = ativo && motivos.size === 0
   const restante = React.useRef(intervalo)
 
-  // **A ordem destes dois efeitos é carga estrutural.** Quando a chave muda,
-  // o React roda primeiro as limpezas (a do relógio desconta o tempo corrido)
-  // e depois as montagens na ordem de declaração: este zera, e o relógio
-  // abaixo agenda o intervalo inteiro.
+  // A ordem destes dois efeitos é carga estrutural: na troca de `chave` as
+  // limpezas rodam primeiro (a do relógio desconta o tempo corrido), este zera,
+  // e o relógio abaixo agenda o intervalo inteiro.
   React.useEffect(() => {
     restante.current = intervalo
   }, [chave, intervalo])

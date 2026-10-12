@@ -3,8 +3,7 @@
 import * as React from "react"
 
 /**
- * O bloco fechado que a busca do navegador encontra (rodada 189, no
- * `Collapsible`; dividido com o `Accordion` na rodada 200).
+ * O bloco fechado que a busca do navegador encontra (`Collapsible` e `Accordion`).
  *
  * O fechado fica no DOM como `hidden="until-found"`. O ⌘F o encontra, dispara
  * `beforematch`, e `abrir` é chamado. O Radix desta versão não tem a opção,

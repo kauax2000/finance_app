@@ -8,65 +8,40 @@ type UseScrollFadeOptions = {
   /** Desliga uma das pontas sem tocar no gradiente: a variável dela fica em zero. */
   sides?: "both" | "start" | "end"
   /**
-   * Espelha as duas variáveis e o `data-scroll-fade` na **casca** (o pai do
-   * rolável), para irmãos poderem lê-los — as camadas de borrão são irmãs, e
-   * custom property não atravessa para o lado.
-   *
-   * Opt-in de propósito: sem isto o hook escreve num nó só, e nenhuma casca do
-   * Radix ou do cmdk recebe mutação de atributo que não pediu.
+   * Espelha as duas variáveis e o `data-scroll-fade` na casca (o pai do
+   * rolável), para irmãos poderem lê-los: custom property não atravessa para o
+   * lado. Opt-in, para nenhuma casca do Radix ou do cmdk receber mutação que não pediu.
    */
   shell?: boolean
   /**
-   * Publica, para as setas de `ScrollFadeArrows`, se ainda há conteúdo antes
-   * e depois (`data-scroll-more-start` / `-end` no rolável) e onde o rolável
-   * está dentro do pai (`--scroll-fade-box-top` / `-bottom` no pai) — para a
-   * seta pousar na borda da **lista**, e não na do painel, que pode ter busca
-   * em cima e rodapé embaixo. Opt-in, pela mesma razão do `shell`.
+   * Publica para as setas de `ScrollFadeArrows` se há conteúdo antes e depois
+   * (`data-scroll-more-start`/`-end`) e onde o rolável está dentro do pai
+   * (`--scroll-fade-box-top`/`-bottom`), para a seta pousar na borda da lista.
+   * Opt-in, como o `shell`.
    */
   arrows?: boolean
 }
 
 /**
  * O mecanismo da dissolução de bordas. Devolve um callback ref para o elemento
- * que **rola** — ele é quem carrega `scroll-fade-y` (ou `-x`), e o hook escreve
- * só nele.
+ * que rola (o que carrega `scroll-fade-y` ou `-x`); o hook escreve só nele.
  *
  * ```tsx
  * <div ref={useScrollFade()} className={cn(scrollFadeViewportClassName, "overflow-y-auto")} />
  * ```
  *
- * ## O que ele escreve, e por que assim
+ * `--scroll-fade-start` e `--scroll-fade-end` são a distância rolada e a que
+ * falta; a zona cresce no passo em que cada ponta consome o conteúdo, sem
+ * interruptor, e por isso não há `@property` nem transição. `data-scroll-fade`
+ * liga a máscara e não pode alimentar layout (invariante 1 em
+ * `lib/scroll-fade-classes`).
  *
- * `--scroll-fade-start` e `--scroll-fade-end` são a distância já rolada e a que
- * falta. A zona **cresce no mesmo passo em que cada ponta consome o conteúdo**,
- * em vez de ligar de uma vez: um interruptor seria um pop severo, porque o item
- * da ponta nasce a poucos pixels da borda e cabe inteiro dentro da zona — ligá-la
- * de uma vez o levaria de chapado a um degradê em 1px de rolagem. Crescendo
- * junto, nos dois extremos não há zona e o item da ponta fica nítido. Contínuo
- * por construção, e por isso não há `@property` nem transição aqui: transição só
- * borraria a chegada a um estado final errado.
- *
- * `data-scroll-fade` liga a máscara. Ele **não pode** alimentar nada que mexa em
- * layout — ver a invariante 1 em `lib/scroll-fade-classes`.
- *
- * ## As leituras
- *
- * O handler de rolagem lê **só** `scrollTop`/`scrollLeft`, que é barato. As
- * métricas de layout vêm de um cache preenchido no `ResizeObserver`, cujo
- * callback roda depois do layout — ali a leitura é grátis. Sem isso, escrever uma
- * custom property e depois ler `scrollHeight` força recálculo a cada tick.
- *
- * Os valores vão quantizados em 4px, com guarda de valor anterior. Os dois
- * `clamp` são do CSS, e é lá que o rubber-band do macOS — que produz posição
- * negativa nas duas pontas — é aparado.
- *
- * ## O observador
- *
- * Observa o viewport e os filhos dele, com um `MutationObserver` mantendo as
- * inscrições em dia. Uma lista filtrada troca de filhos a cada tecla, e um
- * `ResizeObserver` só no primeiro filho enxerga isso apenas quando o conteúdo é
- * um wrapper único (o caso do cmdk); num menu com oito filhos diretos, não
- * enxergaria nada.
+ * O handler de rolagem lê só `scrollTop`/`scrollLeft`; as métricas de layout
+ * vêm de um cache do `ResizeObserver`. Os valores vão quantizados em 4px, e os
+ * dois `clamp` do CSS aparam o rubber-band do macOS. O observador cobre o
+ * viewport e todos os filhos (um `MutationObserver` mantém as inscrições): uma
+ * lista filtrada troca de filhos a cada tecla, e observar só o primeiro serve
+ * apenas ao wrapper único do cmdk.
  */
 export function useScrollFade({
   axis = "y",
@@ -79,8 +54,7 @@ export function useScrollFade({
       if (!el) return
 
       const vertical = axis === "y"
-      // A casca é o pai. Nulo quando o rolável é a raiz de quem chama, e aí o
-      // espelho simplesmente não acontece — não há irmão para ler.
+      // A casca é o pai; nula quando o rolável é a raiz, e aí não há irmão para ler.
       const casca = shell ? el.parentElement : null
       let rolagemMax = 0
       let ultimoInicio = -1
@@ -122,9 +96,7 @@ export function useScrollFade({
         el.dataset.scrollFade = ligado
         if (casca) casca.dataset.scrollFade = ligado
         if (pai) {
-          // Lido no `ResizeObserver`, depois do layout: a leitura é grátis. As
-          // variáveis só posicionam as setas, que são absolutas — nada de
-          // layout depende delas, então a invariante 1 fica de pé.
+          // Lido no `ResizeObserver`, depois do layout; as variáveis só posicionam as setas absolutas.
           const a = el.getBoundingClientRect()
           const b = pai.getBoundingClientRect()
           pai.style.setProperty("--scroll-fade-box-top", `${a.top - b.top - pai.clientTop}px`)
@@ -151,9 +123,7 @@ export function useScrollFade({
       })
       mo.observe(el, { childList: true })
 
-      // O listener mora aqui, e não numa prop `onScroll`: o hook já é dono do
-      // elemento e já tem cleanup, então não é preciso mesclar com um `onScroll`
-      // de quem chama nem abrir mão do `passive`.
+      // O listener mora aqui e não numa prop `onScroll`: o hook já é dono do elemento e do cleanup, e mantém o `passive`.
       el.addEventListener("scroll", pintar, { passive: true })
       return () => {
         ro.disconnect()

@@ -12,16 +12,11 @@ const SURFACE_SELECTOR = [
 ].join(", ")
 
 /**
- * A rolagem tira a superfície do lugar?
- *
- * Fecha quando rola a página (o alvo é o `document`) ou um container que
- * **contém o gatilho aberto** — é isso que move o gatilho, e a superfície com
- * ele. Rolar a própria lista não fecha, e rolar um container sem relação também
- * não: a coluna do catálogo rola sozinha na montagem para revelar o item ativo,
- * e fechava um menu aberto por `defaultValue`. É a regra do `Tooltip` do Radix.
- *
- * O gatilho é achado por `aria-expanded="true"` cujo `aria-controls` aponta para
- * um conteúdo de superfície: um `Collapsible` aberto não conta.
+ * A rolagem tira a superfície do lugar? Fecha quando rola a página (o alvo é o
+ * `document`) ou um container que contém o gatilho aberto. Rolar a própria lista
+ * ou um container sem relação não fecha (a coluna do catálogo rola sozinha na
+ * montagem). O gatilho é achado por `aria-expanded="true"` cujo `aria-controls`
+ * aponta para um conteúdo de superfície: um `Collapsible` aberto não conta.
  */
 export function shouldCloseOnScroll(target: EventTarget | null) {
   const el = target as Partial<Element> | null
@@ -37,20 +32,12 @@ export function shouldCloseOnScroll(target: EventTarget | null) {
 }
 
 /**
- * Estado controlável de uma raiz ancorada, que se fecha quando a página rola.
- *
- * Uma superfície **não modal** acompanha o gatilho durante a rolagem, e,
- * portalizada em `--z-popover`, passa por cima do header sticky. Rolar é sair
- * dela: o Radix só fecha no Escape e no clique fora (o `Tooltip` é a exceção, e
- * faz exatamente isto por dentro), então o fechamento mora aqui.
- *
- * As modais ficam de fora com `enabled = false`: elas já travam a rolagem, e no
- * telefone o foco num input rola a janela sozinho, o que fecharia a superfície
- * no instante em que ela abre.
- *
- * Devolve `[valor, setValor, fechouPorRolagem]`. O ref existe para o `Content`
- * cancelar a devolução de foco ao gatilho: o Radix chama `trigger.focus()` sem
- * `preventScroll`, e a página pularia de volta para onde a pessoa saiu.
+ * Estado controlável de uma raiz ancorada que se fecha quando a página rola:
+ * uma superfície não modal acompanha o gatilho e, em `--z-popover`, passaria por
+ * cima do header sticky. As modais ficam de fora com `enabled = false` (já
+ * travam a rolagem, e no telefone o foco num input rola a janela e a fecharia ao
+ * abrir). Devolve `[valor, setValor, fechouPorRolagem]`; o ref é para o
+ * `Content` cancelar a devolução de foco, que o Radix faz sem `preventScroll`.
  */
 export function useCloseOnScroll<T>({
   value,
@@ -77,8 +64,7 @@ export function useCloseOnScroll<T>({
   })
 
   const set = React.useCallback((proximo: T) => {
-    // Reabrir zera a marca: um fechamento por rolagem que não passou pelo
-    // `onCloseAutoFocus` não pode engolir a volta de foco do próximo.
+    // Reabrir zera a marca: um fechamento por rolagem sem `onCloseAutoFocus` não pode engolir a volta de foco do próximo.
     if (proximo !== closed) fechouPorRolagem.current = false
     setInterno(proximo)
     onChangeRef.current?.(proximo)

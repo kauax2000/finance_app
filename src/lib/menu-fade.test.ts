@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import { lerFonte } from "@/test/fonte"
 import { menuItemFadeClassName } from "@/lib/menu-classes"
 
-describe("a linha de lista acende como o link do catálogo (rodada 137)", () => {
+describe("a linha de lista acende como o link do catálogo", () => {
     it("esmaece a cor no ritmo do tertiary, sem disco e sem realce viajante", () => {
         expect(menuItemFadeClassName).toBe(
             "transition-colors duration-(--duration-slow) ease-(--ease-emphasized)"

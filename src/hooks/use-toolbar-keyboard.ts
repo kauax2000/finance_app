@@ -7,9 +7,8 @@ const FOCAVEIS = "button, a[href], input, select, textarea, [role=tab]"
 
 /**
  * O foco itinerante do `role="toolbar"` (WAI-ARIA APG), da `Toolbar keyboard`
- * e do `FilterBar` (rodada 245, que o tirou de `toolbar.tsx` para os dois
- * dividirem). As setas andam entre os controles visíveis, Home e End vão às
- * pontas, e só o último focado fica no Tab. Três exceções medidas:
+ * e do `FilterBar`. As setas andam entre os controles visíveis, Home e End vão às
+ * pontas, e só o último focado fica no Tab. Três exceções:
  * - **campo de texto** guarda as setas para o cursor;
  * - **o `Tabs`** cuida das próprias setas (e as consome — `defaultPrevented`),
  *   e a aba ativa continua com o `tabIndex` que o Radix escreve;

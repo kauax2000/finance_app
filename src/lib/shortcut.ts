@@ -1,8 +1,8 @@
 /**
  * O atalho de teclado, na grafia do `Kbd` (`"mod+k"`, `"/"`, `"alt+n"`).
  *
- * Morava dentro do `SearchInput`; desde a rodada 208 o `CommandItem` também
- * dispara por atalho, e a regra não pode divergir entre os dois. `mod` é ⌘ no
+ * O `SearchInput` e o `CommandItem` disparam por atalho, e a regra não pode
+ * divergir entre os dois. `mod` é ⌘ no
  * Apple e Ctrl no resto, como no `Kbd`.
  */
 

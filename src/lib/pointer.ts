@@ -9,7 +9,7 @@ export function deDedo(el: Element) {
 }
 
 /**
- * Hover de verdade: um mouse, fora da moldura do iPhone (rodada 250).
+ * Hover de verdade: um mouse, fora da moldura do iPhone.
  *
  * `pointerenter` e `pointermove` disparam também no toque — o dedo "entra" no
  * elemento que tocou —, e um realce que acompanha o cursor fica preso onde o

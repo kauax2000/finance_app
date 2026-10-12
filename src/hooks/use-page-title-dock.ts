@@ -3,7 +3,7 @@
 import * as React from "react"
 
 /**
- * O título da página que subiu para a barra do topo (rodada 232).
+ * O título da página que subiu para a barra do topo.
  *
  * O `PageHeader collapse` publica aqui o texto do título e se ele já rolou
  * para baixo da barra; o `TopBarTitle pageTitle` lê e o mostra. Os dois não

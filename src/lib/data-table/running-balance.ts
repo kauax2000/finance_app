@@ -1,5 +1,5 @@
 /**
- * O saldo corrente (rodada 225): o saldo **depois** de cada lançamento, na
+ * O saldo corrente: o saldo **depois** de cada lançamento, na
  * ordem em que a tabela os mostra.
  *
  * Ele só é verdade numa condição: as linhas em ordem de data e **sem filtro**.

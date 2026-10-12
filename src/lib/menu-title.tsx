@@ -3,8 +3,7 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 /**
- * O título que nomeia o menu — do `DropdownMenu` e do `ContextMenu`, que
- * escreviam esta mesma peça duas vezes (rodadas 209 e 213).
+ * O título que nomeia o menu — do `DropdownMenu` e do `ContextMenu`.
  *
  * O conteúdo guarda o `id` num estado e o publica por este contexto em volta
  * da faixa de cima; o cabeçalho com `title` se registra, e o conteúdo aponta

@@ -21,7 +21,7 @@ export type ItemNoExcesso = {
 
 /**
  * O ⋯ do que não coube na fileira — o mesmo no `Tabs`, na `ToolbarActions` e
- * no `PageHeaderActions` (rodada 252). Quem decide quem sai é o `quemSai` de
+ * no `PageHeaderActions`. Quem decide quem sai é o `quemSai` de
  * `lib/overflow`; aqui mora só o menu. O gatilho leva `data-overflow-more`,
  * que é o que a medição pula ao ler os vizinhos.
  */

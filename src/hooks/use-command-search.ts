@@ -3,7 +3,7 @@
 import * as React from "react"
 
 /**
- * A busca de uma paleta que pergunta ao servidor (rodada 208).
+ * A busca de uma paleta que pergunta ao servidor.
  *
  * Três garantias, e cada uma é um defeito clássico de busca assíncrona:
  *

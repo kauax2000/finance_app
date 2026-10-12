@@ -8,6 +8,6 @@
  * Os números são os da referência da `Tooltip`
  * (`@animate-ui/components-base-tooltip`), lidos do registry. A espiada do
  * `Collapsible` anda nela, e `--ease-spring` é esta mesma mola amostrada num
- * `linear()` de CSS, para as animações de keyframes (rodada 129).
+ * `linear()` de CSS, para as animações de keyframes.
  */
 export const MOLA = { type: "spring", stiffness: 300, damping: 25 } as const

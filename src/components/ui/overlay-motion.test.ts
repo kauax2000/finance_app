@@ -12,8 +12,8 @@ const ui = (nome: string) => lerFonte(`src/components/ui/${nome}.tsx`)
 
 /** O bloco da rodada 248, do título até a troca de mês do calendário. */
 const BLOCO = CSS.slice(
-  CSS.indexOf("/* ── O movimento do que se sobrepõe à tela (rodada 248)"),
-  CSS.indexOf("/* A troca de mês (rodada 245")
+  CSS.indexOf("/* ── O movimento do que se sobrepõe à tela"),
+  CSS.indexOf("/* A troca de mês. O `react-day-picker`")
 )
 const utility = (nome: string) => {
   expect(BLOCO.indexOf(`@utility ${nome} {`), nome).toBeGreaterThan(-1)

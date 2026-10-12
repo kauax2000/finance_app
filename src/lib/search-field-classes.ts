@@ -1,36 +1,22 @@
 import { menuPanelTintClassName } from "@/lib/glass-classes"
 
 /**
- * O campo de busca do sistema — uma receita, três peças (rodada 198).
- *
- * O gatilho do cabeçalho do catálogo, a pílula do `CommandInput` (no
- * `CommandDialog` e no `Combobox`) e o `SearchInput` são o **mesmo desenho**:
- * pílula, lupa quieta à esquerda, texto, × de limpar e, às vezes, a tecla do
- * atalho sem pastilha. Até aqui cada um o escrevia à mão — o cabeçalho e a
- * paleta concordavam por cópia, e o `SearchInput` era outra coisa (caixa
- * `rounded-lg` do `InputGroup`, recuo e lupa de campo de formulário). Quem
- * abria a paleta pelo gatilho encontrava a mesma pílula do outro lado; quem
- * buscava na tabela de transações, não.
- *
- * Nenhuma das três pode ser a outra: o gatilho é um `<button>` (um campo que
- * não aceita texto é a promessa que a paleta cumpre), e o campo da paleta tem
- * de ser o `Command.Input` do cmdk. Por isso o que se divide é a régua, e não
- * o componente — o precedente de `menu-classes` e `field-classes`.
- * `search-field.test.ts` cobra que as três a importem.
- *
- * Nada de `cva` aqui: a regra A2 do auditor o reprova fora de `components/ui/`.
+ * O campo de busca do sistema: uma receita, três peças (o gatilho do cabeçalho
+ * do catálogo, o `CommandInput` e o `SearchInput`). Nenhuma pode ser a outra —
+ * o gatilho é um `<button>` e o campo da paleta é o `Command.Input` do cmdk —,
+ * então o que se divide é a régua. `search-field.test.ts` cobra que as três a
+ * importem. Sem `cva` (regra A2 do auditor).
  */
 
 export type SearchFieldSize = "sm" | "md" | "lg" | "xl"
 
-/** Pílula, sempre — a forma que o dono pediu para o gatilho e a paleta. */
+/** Pílula, sempre. */
 export const searchFieldShapeClassName = "flex min-w-0 items-center rounded-full"
 
 /**
- * A escada: os degraus de campo (28 · 32 · 36 · 40), com o respiro e o recuo
- * crescendo junto. `md` e `lg` são, número a número, o gatilho do cabeçalho
- * (32, `gap-2`, `px-3`) e a pílula da paleta (36, `gap-2.5`, `px-3.5`); `sm` e
- * `xl` seguem a mesma progressão. O corpo do texto é do `<input>`, não daqui.
+ * A escada de campo (28 · 32 · 36 · 40), com respiro e recuo crescendo junto;
+ * `md` e `lg` são, número a número, o gatilho do cabeçalho e a pílula da
+ * paleta. O corpo do texto é do `<input>`.
  */
 export const searchFieldSizeClassName = {
   sm: "h-7 gap-1.5 px-2.5",
@@ -39,23 +25,14 @@ export const searchFieldSizeClassName = {
   xl: "h-10 gap-2.5 px-4",
 } as const satisfies Record<SearchFieldSize, string>
 
-/**
- * O piso de toque dos campos (`pointer-coarse:h-10`, a régua de
- * `fieldControlHeightClassName`). Só o campo **na página** o veste: na pilha do
- * `Command` a pílula é parte de um painel com medidas próprias.
- */
+/** O piso de toque (`pointer-coarse:h-10`, a régua de `fieldControlHeightClassName`); só o campo na página o veste, não a pílula da pilha do `Command`. */
 export const searchFieldCoarseClassName = "pointer-coarse:h-10"
 
 /**
- * As duas superfícies.
- *
- * - `field` — o gatilho do cabeçalho: o fio de **separar** (`border-border`, e
- *   não o `border-input` de campo de formulário) sobre o preenchimento a 30%.
- *   Busca na página.
- * - `plate` — a pílula da pilha do `Command`: a tinta da placa flutuante e um
- *   anel de 1px, sem borda. Busca **dentro** de um painel flutuante, onde um
- *   campo preenchido seria uma segunda superfície sobre a placa — o dono quis
- *   a pílula do `Combobox` igual ao fundo do dropdown (rodada 143).
+ * As duas superfícies. `field` é a busca na página: o fio de separar
+ * (`border-border`, não o `border-input` de formulário) sobre o preenchimento a
+ * 30%. `plate` é a busca dentro de um painel flutuante: a tinta da placa e um
+ * anel de 1px, sem borda, para não pôr um campo preenchido sobre a placa.
  */
 export const searchFieldSurfaceClassName = {
   field: "border border-border bg-input-fill/30",
@@ -65,32 +42,23 @@ export const searchFieldSurfaceClassName = {
 export type SearchFieldSurface = keyof typeof searchFieldSurfaceClassName
 
 /**
- * O foco: o anel de campo (`ring-3` de `--ring` a 30%, rodada 162), aceso pelo
- * `<input>` de dentro. O `CommandInput` solto usava 45% por cópia anterior à
- * rodada 162; agora os dois falam o mesmo. Na paleta não há anel — o campo
- * nasce focado e quem carrega o foco visível é a linha selecionada.
+ * O foco: o anel de campo (`ring-3` de `--ring` a 30%), aceso pelo `<input>` de
+ * dentro. Na paleta não há anel: o campo nasce focado e quem carrega o foco
+ * visível é a linha selecionada.
  */
 export const searchFieldFocusClassName =
   "has-[input:focus-visible]:border-ring has-[input:focus-visible]:ring-3 has-[input:focus-visible]:ring-ring/30"
 
-/** A lupa: 16px, quieta — a do cabeçalho e a da paleta. */
+/** A lupa: 16px, quieta. */
 export const searchFieldIconClassName = "size-4 shrink-0 text-muted-foreground opacity-70"
 
 /** O `<input>`: sem moldura própria; a pílula é quem desenha. */
 export const searchFieldInputClassName =
   "min-w-0 flex-1 bg-transparent outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed"
 
-/**
- * O × de limpar: `Button tertiary icon-xs`, redondo como a pílula e puxado 6px
- * para a borda, para a caixa de 24 não roubar o recuo dela.
- */
+/** O × de limpar: `Button tertiary icon-xs`, redondo e puxado 6px para a borda, para a caixa de 24 não roubar o recuo. */
 export const searchFieldClearClassName = "-me-1.5 shrink-0 rounded-full"
 
-/**
- * A tecla do atalho **sem pastilha**, à direita: dentro de uma pílula a
- * pastilha do `Kbd` era uma caixa dentro de outra caixa (a decisão do
- * cabeçalho, e a das teclas da legenda da paleta). Some no toque (rodada
- * 250): sem teclado físico, a tecla não diz nada.
- */
+/** A tecla do atalho sem pastilha (dentro de uma pílula seria caixa dentro de caixa); some no toque, onde a tecla não diz nada. */
 export const searchFieldShortcutClassName =
   "ms-auto min-w-0 bg-transparent px-0 dark:bg-transparent pointer-coarse:hidden"

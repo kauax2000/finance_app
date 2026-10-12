@@ -103,7 +103,7 @@ describe("toda superfície ancorada cabe inteira na janela", () => {
           new RegExp(`max-w-(\\(|\\[min\\([^\\]]*var\\()--radix-${primitiva}-content-available-width\\)`),
         )
         // Nas listas suspensas o teto de altura mora num `min()` com
-        // `--menu-max-h` (rodada 174); o espaço disponível continua valendo.
+        // `--menu-max-h`; o espaço disponível continua valendo.
         expect(src).toMatch(
           new RegExp(`max-h-(\\(|\\[min\\(var\\()--radix-${primitiva}-content-available-height\\)`),
         )

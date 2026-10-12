@@ -1,5 +1,5 @@
 /**
- * A exportação em CSV do `DataTable` (rodada 225), escrita para o Excel em
+ * A exportação em CSV do `DataTable`, escrita para o Excel em
  * português, que é onde a pessoa abre o arquivo:
  *
  * - **`;` separa**, porque a vírgula é a casa decimal — com vírgula como

@@ -1,17 +1,9 @@
 import type { ProgressBands } from "@/components/ui/progress"
 
 /**
- * Os cortes da escada de cor das barras de consumo.
- *
- * Eles moram juntos porque a semelhança engana: as duas rampas têm a mesma
- * forma e respondem a **perguntas diferentes**, e enquanto estavam em arquivos
- * separados pareciam a mesma regra escrita com números errados num dos lados.
- * Lado a lado, a diferença fica óbvia e cada número fica com a sua razão.
- *
- * Antes desta rodada, `budgetFillColor` estava duplicado byte a byte em
- * `expense-category-card` e `category-detail-summary-section`, e
- * `limitGaugeFillClass` vivia no painel de fatura — três funções, duas
- * políticas, nenhum dono.
+ * Os cortes da escada de cor das barras de consumo. As duas rampas têm a mesma
+ * forma e respondem a perguntas diferentes; moram juntas para cada número ficar
+ * com a sua razão.
  */
 
 /**

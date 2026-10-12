@@ -1,7 +1,6 @@
 /**
- * O contador de caracteres. A régua é uma só para o `Textarea` (rodada 180),
- * o `FieldCounter` (rodada 192) e o contador do `InputGroup` (rodada 193) —
- * eram três cópias da mesma conta e da mesma frase. Cada peça continua dona
+ * O contador de caracteres. A régua é uma só para o `Textarea`, o
+ * `FieldCounter` e o contador do `InputGroup`. Cada peça continua dona
  * de quando o número aparece (sempre, ou só perto do teto) e de onde.
  */
 

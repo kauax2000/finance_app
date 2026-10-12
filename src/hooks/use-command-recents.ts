@@ -3,7 +3,7 @@
 import * as React from "react"
 
 /**
- * As últimas escolhas de uma paleta, guardadas por chave (rodada 208).
+ * As últimas escolhas de uma paleta, guardadas por chave.
  *
  * Guarda **destinos**, não termos: o termo costuma ser meio caminho ("but"), e
  * o que a pessoa quer de volta é aonde foi. Mora no `localStorage` porque é

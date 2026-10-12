@@ -1,131 +1,41 @@
 /**
- * A superfície de menu — uma só, para os três menus do projeto e o `Command`.
- *
- * `DropdownMenu` e `ContextMenu` desenham a mesma coisa e diferem só em como
- * são invocados: um por clique num gatilho, outro pelo botão direito. Mesmo
- * assim eles divergiam em **todas** as medidas, e a divergência foi medida:
- *
- * | | Dropdown | Context |
- * | --- | --- | --- |
- * | altura do item | 32px | 28px |
- * | raio da casca | 8px | 10px |
- * | moldura | borda 1px | anel |
- * | teto de altura | `none` | a janela |
- * | largura mínima | 128px | 144px |
- * | separador | `bg-muted` | `bg-border` |
- *
- * O `Dropdown` estava em 21 telas e era o mais atrasado; o `Context`, em
- * nenhuma, e era o mais moderno — e já concordava com `Select`, `Menubar` e
- * `Popover`. A régua que venceu foi a dele, e agora ela mora aqui: mudar o
- * respiro de um menu passa a mudar o do outro, que é o comportamento que a
- * tabela acima mostra não existir antes.
- *
+ * A superfície de menu: uma só, para os três menus do projeto e o `Command`.
  * Classe compartilhada entre componentes é `lib/`, não um componente vazio em
- * `ui/`. (As classes de chip abriram esse precedente e moraram em `lib/` até a
- * rodada 77 — mas elas tinham dono, o `Badge`, e foram para ele.)
- */
-
-/**
- * O alvo de toque.
- *
- * Um item de menu tem 28px, e o dedo pede 44. A altura não é única porque a
- * resposta não é única: no mouse, 44px espalha um menu de seis linhas por meia
- * tela sem ganhar precisão nenhuma; no toque, 28px é um alvo que erra.
- *
- * `(pointer: coarse)` é a pergunta certa — ela descreve o **dispositivo
- * apontador**, não a largura da janela. Um telefone em paisagem continua
- * grosso; um desktop de 800px continua fino. É a mesma família de decisão que
- * o projeto já tomou em `hover: hover` (ver `tailwind-hover-policy.test.ts`):
- * perguntar sobre o ponteiro, e não adivinhar pelo breakpoint.
- *
- * O `Dropdown` é justamente o menu que vive em cartão de categoria, cartão de
- * fatura e barra de ferramentas — tudo tocado no telefone.
+ * `ui/`; mudar o respiro de um menu muda o dos outros.
  */
 import { menuPanelTintClassName } from "./glass-classes"
 
-/**
- * A tinta da placa mora em `glass-classes`, junto das outras duas de vidro, e
- * é reexportada daqui porque quem hospeda comando (`command.tsx`) a importa
- * deste arquivo.
- */
+/** A tinta da placa mora em `glass-classes`; é reexportada porque `command.tsx` a importa daqui. */
 export { menuPanelTintClassName }
 
+/**
+ * O alvo de toque cresce de 36 para 44 só com ponteiro grosso (`pointer:
+ * coarse`): a pergunta é sobre o dispositivo, não sobre a largura da janela.
+ */
 const MENU_TOUCH_TARGET = "pointer-coarse:min-h-11"
 
 /**
- * **A superfície, e só ela** — raio, tinta, sombra e fio, sem geometria, sem
- * camada e sem animação.
- *
- * Ela existe porque essa receita estava escrita **quatro vezes** no
- * repositório: aqui, no `popover.tsx`, no `select.tsx` e — duas vezes dentro
- * do mesmo arquivo — no `navigation-menu.tsx`, que ainda por cima divergia,
- * com `shadow` no lugar do `shadow-md` dos outros três.
- *
- * O `menuSurfaceClassName` abaixo passou a compô-la, então **a saída dos três
- * menus é byte a byte a mesma**: isto é extração, não mudança. E quem quer só
- * a superfície — um painel que não é menu, sem `data-[side=…]`, sem
- * `min-w-36`, sem `flex-col` — veste esta em vez de vestir a casca inteira
- * para desfazer três quartos dela por `className`.
- *
- * ## O material é o do iOS, e a placa é **uma** por superfície
- *
- * Uma superfície flutuante tem conteúdo passando por baixo, então ela é o lado
- * do `backdrop-filter` da régua dos vidros. A tinta é
- * `menuPanelTintClassName` (em `glass-classes`): `--popover` a 85%, abrindo a
- * 60% no escuro onde o borrão existe, com `glass-surface` (24px e
- * `saturate(1.5)`, os mesmos do cabeçalho) e o guarda de
- * `prefers-reduced-transparency`.
- *
- * `text-foreground` e não `text-popover-foreground`: os dois tokens têm o
- * mesmo valor nos dois temas — a troca é **zero pixel**.
- *
- * **A regra que entrou depois: uma placa só.** Duas superfícies aninhadas com
- * esta receita — o `Popover` e um `Command` dentro dele — somavam 84% no escuro
- * e saíam **mais claras** que o `DatePicker`, que é o mesmo popover com uma
- * placa. Era o que lia como "fundo quebrado": não o material, o **tom**. Quem
- * hospeda pinta; o `Command` hospedado é transparente (ver `command.tsx`).
- *
- * **E uma lição de instrumento, registrada porque quase custou a receita.** Uma
- * rodada concluiu que "o borrão não renderiza dentro de popper" e deixou tudo
- * opaco. A conclusão veio de capturas tiradas 0,6s depois do clique e de uma
- * comparação com/sem filtro em que **o filtro aninhado do `Command` ainda
- * estava lá**. Refeito limpo — receita original, sem CSS injetado, 1,5s de
- * espera — o texto da página fica escondido atrás do popover: o borrão
- * renderiza. `transform` e `will-change` no wrapper do Radix não o bloqueiam
- * (testados um a um). Quando a medição contraria o mecanismo, o instrumento é
- * o primeiro suspeito — e aqui era.
+ * A superfície, e só ela: raio, tinta, sombra e fio, sem geometria, camada nem
+ * animação. Uma placa só por superfície: duas aninhadas com esta receita (um
+ * `Popover` e um `Command` dentro) somam 84% no escuro e saem mais claras que o
+ * `DatePicker`; quem hospeda pinta, e o `Command` hospedado é transparente.
+ * `text-foreground` e não `text-popover-foreground`: mesmo valor nos dois temas.
  */
 export const menuPanelSurfaceClassName = [
-  // O canto é a superfície (22), como o `Combobox` e a paleta do `Command`
-  // (rodada 243d, a pedido do dono). A 242c o tinha levado à linha alta (16),
-  // porque com o recuo de 4 das listas as linhas concêntricas davam
-  // 22 − 4 = 18, pílula numa linha de 32. Hoje as listas recuam 8 (`p-2`, o
-  // da lista do `Combobox`), e as linhas ficam em 22 − 8 = 14.
+  // O canto é a superfície (22); as listas recuam 8 (`p-2`), então as linhas
+  // concêntricas ficam em 22 − 8 = 14.
   "rounded-surface text-foreground shadow-md ring-1 ring-foreground/10 [--radius-parent:var(--radius-surface)] [--radius-inset:--spacing(2)]",
-  // **O teto de uma lista suspensa** (rodada 174, a pedido do dono): 288px,
-  // umas nove linhas, o mesmo `--spacing(72)` que a lista do `Command` já
-  // usava. Cada primitiva o lê dentro de um `min()` com a altura disponível
-  // do Radix, e a lista longa rola com a dissolução e a seta de "tem mais".
-  // Quem não é lista (o `DropdownMenu variant="panel"`) o devolve à altura
-  // disponível.
+  // O teto de uma lista suspensa: 288px, lido por cada primitiva dentro de um
+  // `min()` com a altura disponível do Radix. Quem não é lista (o
+  // `DropdownMenu variant="panel"`) o devolve à altura disponível.
   "[--menu-max-h:--spacing(72)]",
   menuPanelTintClassName,
 ].join(" ")
 
 /**
- * A casca — tudo menos o teto de altura e a origem da transformação.
- *
- * Aqueles dois ficam de fora por uma razão mecânica, e ela custou uma medição
- * para aparecer: **o Tailwind varre o código como texto.** A primeira versão
- * deste arquivo montava as classes com o nome da primitiva interpolado —
- * `` `max-h-(--radix-${prefix}-content-available-height)` `` —, e o resultado
- * foi que o nome da classe só passava a existir em tempo de execução. Nenhum
- * arquivo continha a string, o scanner não a encontrava, e o CSS nunca era
- * gerado: medido no navegador, a variável do Radix valia 318,75px, a classe
- * estava no elemento, e o `max-height` computado era `none`.
- *
- * Por isso cada menu escreve as duas por extenso, no próprio arquivo. Só o que
- * é literal chega ao CSS.
+ * A casca, menos o teto de altura e a origem da transformação: o Tailwind varre
+ * o código como texto, então uma classe montada com o nome da primitiva
+ * interpolado nunca chega ao CSS. Cada menu escreve as duas por extenso.
  */
 export const menuSurfaceClassName = [
   /** Acima do véu da Sheet (`z-(--z-sheet)`); abaixo do Toaster (`z-(--z-toast)`). */
@@ -133,12 +43,7 @@ export const menuSurfaceClassName = [
   menuPanelSurfaceClassName,
 ].join(" ")
 
-/**
- * **O movimento não é da superfície, é de cada menu** (rodada 248): o
- * `DropdownMenu` brota do botão (`menu-sprout`), o `ContextMenu` abre do cursor
- * (`context-menu-burst`), e o `Menubar` guarda o gesto da referência dele — o
- * zoom genérico de 95% que os três herdavam daqui, esse sim.
- */
+/** O movimento não é da superfície, é de cada menu: este é só o zoom genérico do `Menubar`; os outros têm o seu. */
 export const menuMotionClassName = [
   "animation-duration-(--duration-instant) ease-(--ease-out)",
   "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
@@ -146,53 +51,24 @@ export const menuMotionClassName = [
 ].join(" ")
 
 /**
- * O **viewport** — o nó de dentro que de fato rola, e que recebe a dissolução
- * das bordas.
- *
- * Ele existe porque a máscara recorta o alfa do elemento **inteiro**: fundo,
- * borda e sombra externa junto. Aplicada na casca, ela apagaria o
- * `ring-1 ring-foreground/10` e o `shadow-md` nas duas pontas — e os
- * cantos de `rounded-surface` caem inteiros dentro da zona de dissolução, então os
- * quatro arcos de canto seriam desenhados no piso enquanto os lados continuam
- * opacos. Isso lê como falha de renderização, não como fade. Pior: o
- * `bg-popover` mora na casca, e mascarar ali deixaria as pontas translúcidas
- * contra a página, trocando "a lista continua por baixo da superfície" por "o
- * painel está se dissolvendo".
- *
- * O recuo desceu da casca para cá (`p-2` desde a rodada 243d; era `p-1`), e
- * o `-mx-2` do `menuSeparatorClassName`
- * continua correto: ele sangra o recuo do **seu pai**, que agora é este nó. É a
- * mesma cirurgia que o `variant="panel"` do `DropdownMenu` já fazia ao ceder o
- * recuo para o `DropdownMenuSection`.
- *
- * O teto de altura **não** desce junto — ele fica na casca, escrito por extenso
- * em cada menu, pela razão do bloco acima.
+ * O viewport: o nó de dentro que rola e recebe a dissolução das bordas. A
+ * máscara recorta o alfa do elemento inteiro (fundo, anel, sombra), então
+ * aplicada na casca ela apagaria os cantos; o recuo mora aqui, e o `-mx-2` do
+ * separador sangra o recuo do pai. O teto de altura fica na casca.
  */
 export const menuViewportClassName =
   "min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain p-2 outline-hidden [--radius-inset:--spacing(2)]"
 
-/**
- * O submenu. Ele **é** a casca — antes divergia dela dentro do mesmo arquivo
- * (`border` + `shadow-lg` contra `ring-1` + `shadow-md`), e nenhum submenu
- * flutua mais alto que o menu que o abriu.
- */
+/** O submenu é a casca, nenhum flutua mais alto que o menu que o abriu. */
 export const menuSubSurfaceClassName = `${menuSurfaceClassName} min-w-32`
 
 /**
- * A geometria da linha, sem nenhuma regra de estado.
- *
- * Ela sai daqui porque a **quarta** superfície de comandos do projeto — o
- * `Command` (cmdk) — quer o mesmo corpo e não pode reusar os estados: o cmdk
- * marca a linha ativa com `data-selected`, e não com `:focus`, e mantém
- * `data-disabled="false"` **sempre presente** no elemento, então a regra
- * `data-disabled:` dos menus (que casa por presença) apagaria toda linha.
- * Compartilhar o corpo e deixar cada superfície declarar o próprio realce é o
- * que faz as quatro medirem igual sem uma mentir sobre a outra.
+ * A geometria da linha, sem regra de estado: o `Command` (cmdk) quer o mesmo
+ * corpo mas marca a ativa com `data-selected` e mantém `data-disabled="false"`
+ * sempre presente, então a regra `data-disabled:` dos menus apagaria toda linha.
  */
-// A linha mede 36 (`py-2`, o degrau `lg`) desde a rodada 243d, a pedido do
-// dono: com a placa em 22 e o recuo de 8, o canto concêntrico é 14, e numa
-// linha de 28 isso era a metade — o realce saía pílula. A 36 ele é
-// retângulo de canto cheio, a altura da linha da paleta do `Command`.
+// A linha mede 36 (`py-2`): com a placa em 22 e o recuo de 8, o canto
+// concêntrico é 14, e numa linha de 28 isso era a metade e o realce saía pílula.
 export const menuItemGeometryClassName = [
   "concentric relative flex cursor-default items-center gap-1.5 px-2 py-2 text-sm outline-hidden select-none",
   MENU_TOUCH_TARGET,
@@ -200,26 +76,15 @@ export const menuItemGeometryClassName = [
 ].join(" ")
 
 /**
- * **O realce é uma tinta, não uma cor** (rodada 245, a pedido do dono): o
- * `--foreground` a 9% por cima do que estiver atrás. Era `bg-accent`, opaco
- * (`oklch(0.269)` no escuro) — numa placa de vidro, a linha acesa matava a
- * transparência e virava um retângulo chapado. Medido contra a placa
- * composta, a 9% a tinta lê como o `accent` lia, nos dois temas: 1,21:1 no
- * claro e 1,25:1 no escuro, contra 1,22 e 1,24.
- *
- * O acender da linha: a cor de fundo esmaece em 300ms de `--ease-emphasized`,
- * na entrada e na saída — o ritmo do link da navegação lateral do catálogo,
- * medido nele (transparente → `accent/60`, assentando em ~300ms). Sem disco e
- * sem nada que siga o ponteiro: o realce que viajava entre as linhas e o disco
- * do `button-fill` foram tentados e recusados na rodada 137.
+ * O realce é uma tinta, não uma cor: `--foreground` a 9% por cima do que
+ * estiver atrás, para a linha acesa não matar a transparência da placa. A cor
+ * esmaece em 300ms na entrada e na saída; nada segue o ponteiro (o realce que
+ * viaja entre as linhas está recusado).
  */
 export const menuItemFadeClassName =
   "transition-colors duration-(--duration-slow) ease-(--ease-emphasized)"
 
-/**
- * A linha. `group/menu-item` é o nome que o atalho procura para acender junto —
- * um nome só, para as duas superfícies.
- */
+/** A linha. `group/menu-item` é o nome que o atalho procura para acender junto. */
 export const menuItemClassName = [
   "group/menu-item",
   menuItemGeometryClassName,
@@ -238,21 +103,15 @@ export const menuSubTriggerClassName = [
   menuItemFadeClassName,
   "focus:bg-foreground/9 focus:text-accent-foreground",
   "data-inset:pl-7.5 data-open:bg-foreground/9 data-open:text-accent-foreground",
-  // O mesmo estado das outras linhas: sem ele um submenu desabilitado saía
-  // igual ao ativo nos três menus.
+  // Sem o desabilitado um submenu desabilitado sai igual ao ativo.
   "data-disabled:pointer-events-none data-disabled:opacity-50",
 ].join(" ")
 
-/**
- * A linha com marca — caixa ou rádio. O indicador fica à **direita**: à
- * esquerda ele empurraria o rótulo para longe do ícone da ação, e as duas
- * colunas de recuo (a do indicador e a do `inset`) brigariam pelo mesmo lugar.
- */
+/** A linha com marca (caixa ou rádio): o indicador fica à direita, para não brigar com a coluna de recuo do `inset`. */
 export const menuIndicatorItemClassName = [
   "group/menu-item",
   menuItemGeometryClassName,
-  // O indicador mora à direita: o recuo desse lado cresce. Quem compõe passa
-  // por `cn()`, e o `twMerge` guarda o `px-2` da geometria com o `pr-8` por cima.
+  // O recuo do lado do indicador cresce; o `twMerge` guarda o `px-2` com o `pr-8` por cima.
   "pr-8",
   menuItemFadeClassName,
   "focus:bg-foreground/9 focus:text-accent-foreground",
@@ -264,20 +123,13 @@ export const menuIndicatorItemClassName = [
 export const menuIndicatorSlotClassName =
   "pointer-events-none absolute right-2 flex items-center justify-center"
 
-/**
- * O rótulo de grupo. `text-xs` esmaecido, e não `text-sm font-semibold`: um
- * rótulo de grupo é sinalização, não conteúdo — no peso de antes ele competia
- * com as próprias linhas do menu.
- */
+/** O rótulo de grupo é sinalização, não conteúdo: `text-xs` esmaecido para não competir com as linhas. */
 export const menuLabelClassName =
   "px-2 py-1 text-xs font-medium text-muted-foreground data-inset:pl-7.5"
 
 /** `bg-border`, o fio do projeto — `bg-muted` é preenchimento, não traço. */
 export const menuSeparatorClassName = "-mx-2 my-1 h-px bg-border"
 
-/**
- * O atalho acompanha o realce da linha em vez de ficar cinza sobre o acento, e
- * some no toque (rodada 250): sem teclado físico, a tecla não diz nada.
- */
+/** O atalho acompanha o realce da linha e some no toque: sem teclado físico, a tecla não diz nada. */
 export const menuShortcutClassName =
   "ml-auto text-xs tracking-widest text-muted-foreground group-focus/menu-item:text-accent-foreground pointer-coarse:hidden"
