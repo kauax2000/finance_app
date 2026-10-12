@@ -118,12 +118,17 @@ function extractVariants(src) {
     const groupName = found[1]
     if (found[2]) {
       const table = new RegExp(`const\\s+${found[2]}\\s*=\\s*\\{`).exec(clean)
-      if (table) {
+      const tableClose = table
+        ? matchBrace(clean, table.index + table[0].length - 1)
+        : -1
+      if (tableClose !== -1) {
         const tableOpen = table.index + table[0].length - 1
-        const tableClose = matchBrace(clean, tableOpen)
-        if (tableClose !== -1) {
-          out[groupName] = topLevelKeys(clean.slice(tableOpen + 1, tableClose))
-        }
+        out[groupName] = topLevelKeys(clean.slice(tableOpen + 1, tableClose))
+      } else {
+        // stderr, para o markdown/JSON do catálogo ficar intacto.
+        console.warn(
+          `catalog: o grupo "${groupName}" aponta para "${found[2]}", que não é um const de objeto literal neste arquivo`
+        )
       }
       i = found.index + found[0].length
       continue

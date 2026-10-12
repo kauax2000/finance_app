@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest"
 
+import { lerFonte, semComentarios } from "@/test/fonte"
+
 import {
   containerGutters,
   containerSizes,
@@ -16,6 +18,18 @@ import {
  * `escadas.test.ts`.
  */
 describe("Container", () => {
+  /**
+   * O `cva` referencia as tabelas no fonte. Só o resultado não basta: literais
+   * idênticos colados de volta no `cva` produziriam as mesmas classes.
+   */
+  it("o cva do fonte referencia as três tabelas", () => {
+    const codigo = semComentarios(lerFonte("src/components/ui/container.tsx"), "tudo")
+    const cva = codigo.slice(codigo.indexOf("const containerVariants = cva("))
+    expect(cva).toMatch(/size:\s*containerSizes\b/)
+    expect(cva).toMatch(/gutter:\s*containerGutters\b/)
+    expect(cva).toMatch(/stack:\s*containerStacks\b/)
+  })
+
   /**
    * Cada tabela alimenta o `cva`: o resultado de cada chave contém as classes
    * dela. Se alguém voltar a escrever literais no `cva`, a divergência aparece
