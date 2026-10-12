@@ -80,7 +80,7 @@ describe("os comportamentos", () => {
   })
 
   it("preso: o mecanismo e a placa da Toolbar sticky, só presa", () => {
-    expect(CODIGO).toContain("useStickyBar(ref, preso, false, topo)")
+    expect(CODIGO).toContain("useStickyBar(ref, preso, false)")
     expect(CODIGO).toContain("group-data-stuck/page-section-header:opacity-100")
     expect(lerFonte("src/components/ui/toolbar.tsx")).toContain("usePresa as useStickyBar")
   })

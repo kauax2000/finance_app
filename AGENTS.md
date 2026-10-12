@@ -1913,8 +1913,8 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   40 no dedo nos três) e desce aos botões pelo `ButtonSizeContext`; o `Tabs`
   fala a dele pelo próprio `size`. Não há placa flutuante (saiu a pedido do
   dono na mesma rodada). **`sticky`** prende 8px abaixo da base
-  medida da `TopBar` (`hooks/use-top-bar-bottom`, a mesma do `Toaster`; num
-  contêiner que rola com a barra dentro, a altura dela) e só presa ganha a
+  da `TopBar` (`--top-bar-bottom`, declarada por CSS no `:root` de cada
+  documento, a mesma do `Toaster`; num contêiner que rola sem a barra, zero) e só presa ganha a
   placa de barra com o fio — sobrando 8px de cada lado, para não mudar a
   altura; `"hide"` some ao rolar para baixo no telefone, nunca com o foco
   dentro. **`keyboard` é o `role="toolbar"` de verdade** (setas, Home, End,

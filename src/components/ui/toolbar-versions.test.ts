@@ -67,7 +67,7 @@ describe("as superfícies", () => {
   })
 
   it("presa: abaixo da barra do topo, a placa só presa e sem mudar a altura", () => {
-    expect(CODIGO).toContain("sticky top-[calc(var(--toolbar-top,0px)+--spacing(2))] z-(--z-sticky)")
+    expect(CODIGO).toContain("sticky top-[calc(var(--toolbar-top,var(--top-bar-bottom))+--spacing(2))] z-(--z-sticky)")
     expect(CODIGO).toContain("barSurfaceClassName")
     expect(CODIGO).toContain("absolute -inset-y-2")
     expect(CODIGO).toContain("group-data-stuck/toolbar:opacity-100")
@@ -75,8 +75,9 @@ describe("as superfícies", () => {
     // escapa do recorte arredondado no Chrome, e os cantos vazavam.
     expect(CODIGO).toContain("rounded-t-(--toolbar-plate-r,0px)")
     expect(CODIGO).toContain('el.style.setProperty("--toolbar-plate-r"')
-    // A medição é a da TopBar, dividida com o Toaster.
-    expect(CODIGO).toContain("useTopBarBottom(Boolean(sticky), undefined, raiz)")
+    // A base é a variável de CSS da TopBar, dividida com o Toaster; só zera
+    // num contêiner que rola sem a barra.
+    expect(CODIGO).toContain('el.style.setProperty("--toolbar-top", "0px")')
   })
 
   it("some ao rolar só no telefone, e nunca com o foco dentro", () => {

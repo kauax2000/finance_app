@@ -120,11 +120,9 @@ describe("o ×", () => {
 })
 
 describe("o lugar da pilha", () => {
-  it("abaixo da barra do topo, medida — e não por cima dela", () => {
-    // A medição mora em `hooks/use-top-bar-bottom` desde a rodada 229.
-    expect(TOASTER).toContain("useTopBarBottom(true, pathname)")
-    expect(lerFonte("src/hooks/use-top-bar-bottom.ts")).toContain('doc.querySelector<HTMLElement>(\'[data-slot="top-bar"]\')')
-    expect(TOASTER).toContain("top: topo != null ? `${topo + 12}px` : \"1rem\"")
+  it("abaixo da barra do topo, pela variável — e não por cima dela", () => {
+    expect(TOASTER).toContain('top: "max(calc(var(--top-bar-bottom) + 12px), 1rem)"')
+    expect(TOASTER).toContain('top: "calc(max(var(--top-bar-bottom), env(safe-area-inset-top, 0px)) + 12px)"')
   })
 })
 

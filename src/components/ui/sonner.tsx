@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, type ComponentProps } from "react"
-import { usePathname, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { Toaster as Sonner, toast } from "sonner"
 import {
@@ -13,7 +13,6 @@ import {
 } from "@heroicons/react/16/solid"
 
 import { Spinner } from "@/components/ui/spinner"
-import { useTopBarBottom } from "@/hooks/use-top-bar-bottom"
 import { registrarNavegacaoDoToast, TOAST_DEFAULT_MS } from "@/lib/toast"
 
 type ToasterProps = ComponentProps<typeof Sonner>
@@ -44,15 +43,13 @@ type ToasterProps = ComponentProps<typeof Sonner>
  *
  * ## O desvio no telefone tem uma causa
  *
- * `mobileOffset.top` soma a área segura ao cabeçalho do app (4rem). Sem isso
- * o toast nasce **atrás** do cabeçalho fixo. No topo e não no rodapé porque
- * embaixo está a ilha de navegação.
+ * `mobileOffset.top` parte da base da barra fixa, ou da área segura sem ela.
+ * Sem isso o toast nasce **atrás** da barra ou do notch. No topo e não no
+ * rodapé porque embaixo está a ilha de navegação.
  */
 export function Toaster({ ...props }: ToasterProps) {
   const { resolvedTheme } = useTheme()
   const router = useRouter()
-  const pathname = usePathname()
-  const topo = useTopBarBottom(true, pathname)
 
   // O "Ver" de um toast navega pelo roteador, sem recarregar a página.
   useEffect(() => {
@@ -122,16 +119,16 @@ export function Toaster({ ...props }: ToasterProps) {
       // camada, e a utility perdia calada. O toast já fica acima de tudo.
       className="toaster"
       // **Abaixo da barra do topo, e não por cima dela** (a pedido do dono): o
-      // topo da pilha é a base medida da `TopBar` mais 12px. Sem barra na tela
-      // (as telas de acesso), 16px do topo, e no telefone o desvio de sempre.
+      // topo da pilha é `--top-bar-bottom` mais 12px. Sem barra (as telas de
+      // acesso), 16px do topo; no telefone, abaixo do notch.
       offset={{
-        top: topo != null ? `${topo + 12}px` : "1rem",
+        top: "max(calc(var(--top-bar-bottom) + 12px), 1rem)",
         right: "1rem",
         bottom: "1rem",
         left: "1rem",
       }}
       mobileOffset={{
-        top: topo != null ? `${topo + 12}px` : "calc(env(safe-area-inset-top, 0px) + 4rem)",
+        top: "calc(max(var(--top-bar-bottom), env(safe-area-inset-top, 0px)) + 12px)",
       }}
       icons={{
         success: <CheckCircleIcon aria-hidden />,

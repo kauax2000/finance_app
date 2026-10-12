@@ -16,7 +16,6 @@ import {
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { useStickyBar } from "@/components/ui/toolbar"
 import { H2, Muted } from "@/components/ui/typography"
-import { useTopBarBottom } from "@/hooks/use-top-bar-bottom"
 import { barSurfaceClassName } from "@/lib/glass-classes"
 import { cn } from "@/lib/utils"
 
@@ -280,8 +279,7 @@ function PageSectionHeader({
   const secao = React.useContext(PageSectionContext)
   const preso = Boolean(secao?.sticky)
   const ref = React.useRef<HTMLDivElement>(null)
-  const topo = useTopBarBottom(preso, undefined, ref)
-  useStickyBar(ref, preso, false, topo)
+  useStickyBar(ref, preso, false)
   return (
     <div
       ref={ref}
@@ -291,7 +289,7 @@ function PageSectionHeader({
         "grid min-w-0 items-center",
         actions ? "grid-cols-[minmax(0,1fr)_auto] gap-x-4" : "grid-cols-1",
         preso &&
-          "group/page-section-header sticky top-[calc(var(--toolbar-top,0px)+--spacing(2))] z-(--z-sticky) isolate",
+          "group/page-section-header sticky top-[calc(var(--toolbar-top,var(--top-bar-bottom))+--spacing(2))] z-(--z-sticky) isolate",
         className
       )}
       {...props}

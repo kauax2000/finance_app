@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button, ButtonSizeContext } from "@/components/ui/button"
 import { SearchInput } from "@/components/ui/search-input"
 import { useToolbarKeyboard } from "@/hooks/use-toolbar-keyboard"
-import { useTopBarBottom } from "@/hooks/use-top-bar-bottom"
+import { topBarBottom } from "@/lib/top-bar-bottom"
 import { numberBR } from "@/lib/formatters"
 import { barSurfaceClassName } from "@/lib/glass-classes"
 import { proximoEscondido } from "@/lib/hide-on-scroll"
@@ -95,13 +95,13 @@ export const toolbarControlClassName = "h-(--toolbar-control)"
 export const toolbarIconControlClassName = "size-(--toolbar-control)"
 
 /**
- * Presa: logo abaixo da barra do topo, com 8px de folga (`--toolbar-top` é a
- * base medida da `TopBar`). Some ao rolar para baixo — só no telefone, onde a
+ * Presa: logo abaixo da barra do topo, com 8px de folga (`--top-bar-bottom`,
+ * do `globals.css`; `--toolbar-top` zera num contêiner que rola sem a barra). Some ao rolar para baixo — só no telefone, onde a
  * altura é cara — e volta ao subir; o deslocamento é a altura mais 16px, para
  * a placa (que sobra 8px de cada lado) sumir inteira atrás da barra do topo.
  */
 const toolbarStickyClassName = [
-  "sticky top-[calc(var(--toolbar-top,0px)+--spacing(2))] z-(--z-sticky) isolate",
+  "sticky top-[calc(var(--toolbar-top,var(--top-bar-bottom))+--spacing(2))] z-(--z-sticky) isolate",
   "transition-[translate,opacity] duration-(--duration-base) ease-(--ease-out)",
   "max-md:data-hidden:-translate-y-[calc(100%+--spacing(4))] max-md:data-hidden:opacity-0",
 ].join(" ")
@@ -156,8 +156,7 @@ function Toolbar({
   ...props
 }: ToolbarProps) {
   const raiz = React.useRef<HTMLDivElement>(null)
-  const topo = useTopBarBottom(Boolean(sticky), undefined, raiz)
-  usePresa(raiz, Boolean(sticky), sticky === "hide", topo)
+  usePresa(raiz, Boolean(sticky), sticky === "hide")
   // O foco itinerante mora em `hooks/use-toolbar-keyboard` desde a rodada
   // 245: o `FilterBar` é o outro `role="toolbar"` do sistema.
   useToolbarKeyboard(raiz, keyboard)
@@ -202,13 +201,13 @@ function Toolbar({
  *
  * **O `top` depende de quem rola.** Na página, é a base da barra do topo; num
  * contêiner que rola com a própria barra do topo dentro (a tela do
- * `IphoneFrame`), é a altura dela; num contêiner sem barra, zero.
+ * `IphoneFrame`, que começa no topo do documento), a mesma; num contêiner sem
+ * barra, zero.
  */
 function usePresa(
   raiz: React.RefObject<HTMLDivElement | null>,
   ativo: boolean,
-  esconder: boolean,
-  topo: number | null
+  esconder: boolean
 ) {
   React.useEffect(() => {
     const el = raiz.current
@@ -216,33 +215,48 @@ function usePresa(
     const doc = el.ownerDocument
     const janela = doc.defaultView ?? window
 
+    const pagina = doc.scrollingElement!
+    let caixa: Element = pagina
+    let comBarra = true
+    let antes = 0
+    // Quem rola: o primeiro ancestral com `overflow`, ou a página. O ouvinte
+    // fica no documento, em captura (`scroll` não borbulha), e troca de caixa
+    // se outro ancestral rolar — no iframe da prévia o CSS chega depois da
+    // montagem, e a primeira busca acha a página.
+    const usar = (nova: Element) => {
+      caixa = nova
+      antes = nova.scrollTop
+      const naPagina = nova === pagina
+      const barraDoTopo = doc.querySelector('[data-slot="top-bar"]')
+      comBarra = naPagina || Boolean(barraDoTopo && nova.contains(barraDoTopo))
+      if (comBarra) el.style.removeProperty("--toolbar-top")
+      else el.style.setProperty("--toolbar-top", "0px")
+      // Presa num contêiner arredondado, a placa encosta na borda de cima dele:
+      // os cantos dela seguem o raio de dentro. Sem isso eles vazam — o vidro
+      // (`backdrop-filter`) escapa do recorte arredondado do contêiner no Chrome.
+      if (naPagina) el.style.removeProperty("--toolbar-plate-r")
+      else {
+        const raio = parseFloat(janela.getComputedStyle(nova).borderTopLeftRadius) || 0
+        el.style.setProperty("--toolbar-plate-r", `${Math.max(0, raio - nova.clientTop)}px`)
+      }
+    }
     let rolavel: Element | null = el.parentElement
     while (rolavel && rolavel !== doc.body && !/(auto|scroll)/.test(janela.getComputedStyle(rolavel).overflowY)) {
       rolavel = rolavel.parentElement
     }
-    const naPagina = !rolavel || rolavel === doc.body
-    const caixa = naPagina ? doc.scrollingElement! : rolavel!
-    const barraDoTopo = doc.querySelector('[data-slot="top-bar"]')
-    const desvio =
-      topo == null ? 0
-      : naPagina ? topo
-      : barraDoTopo && caixa.contains(barraDoTopo) ? topo - caixa.getBoundingClientRect().top
-      : 0
-    el.style.setProperty("--toolbar-top", `${Math.max(0, desvio)}px`)
-    // Presa num contêiner arredondado, a placa encosta na borda de cima dele:
-    // os cantos dela seguem o raio de dentro. Sem isso eles vazam — o vidro
-    // (`backdrop-filter`) escapa do recorte arredondado do contêiner no Chrome.
-    if (!naPagina) {
-      const raio = parseFloat(janela.getComputedStyle(caixa).borderTopLeftRadius) || 0
-      el.style.setProperty("--toolbar-plate-r", `${Math.max(0, raio - caixa.clientTop)}px`)
-    }
+    usar(!rolavel || rolavel === doc.body ? pagina : rolavel)
 
-    let antes = caixa.scrollTop
-    const medir = () => {
+    const medir = (e?: Event) => {
+      const alvo = e?.target
+      if (alvo) {
+        const nova = alvo === doc ? pagina : (alvo as Element)
+        if (nova !== pagina && !nova.contains(el)) return
+        if (nova !== caixa) usar(nova)
+      }
       const y = caixa.scrollTop
       // O `top` do sticky conta da borda de dentro do contêiner (`clientTop`).
-      const borda = naPagina ? 0 : caixa.getBoundingClientRect().top + caixa.clientTop
-      const encosto = borda + Math.max(0, desvio) + 8
+      const borda = caixa === pagina ? 0 : caixa.getBoundingClientRect().top + caixa.clientTop
+      const encosto = borda + (comBarra ? topBarBottom(doc) : 0) + 8
       const presa = y > 0 && el.getBoundingClientRect().top <= encosto + 0.5
       el.toggleAttribute("data-stuck", presa)
       if (esconder) {
@@ -260,15 +274,14 @@ function usePresa(
     }
 
     medir()
-    const alvo = naPagina ? doc : caixa
-    alvo.addEventListener("scroll", medir, { passive: true })
+    doc.addEventListener("scroll", medir, { capture: true, passive: true })
     return () => {
-      alvo.removeEventListener("scroll", medir)
+      doc.removeEventListener("scroll", medir, { capture: true })
       el.style.removeProperty("--toolbar-top")
       el.style.removeProperty("--toolbar-plate-r")
       el.removeAttribute("data-hidden")
     }
-  }, [raiz, ativo, esconder, topo])
+  }, [raiz, ativo, esconder])
 }
 
 function ToolbarRow({ className, ...props }: React.ComponentProps<"div">) {

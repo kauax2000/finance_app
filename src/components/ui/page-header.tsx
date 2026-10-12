@@ -13,7 +13,7 @@ import { useOverflowActions } from "@/components/ui/toolbar"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Caption, H1, Muted } from "@/components/ui/typography"
 import { publishPageTitle } from "@/hooks/use-page-title-dock"
-import { useTopBarBottom } from "@/hooks/use-top-bar-bottom"
+import { topBarBottom } from "@/lib/top-bar-bottom"
 import { OverflowMenu } from "@/lib/overflow-menu"
 import { cn } from "@/lib/utils"
 
@@ -345,12 +345,12 @@ function useCortado(el: HTMLElement | null, ativo: boolean) {
  * da prévia num iPhone.
  */
 function useTituloQueSobe(el: HTMLElement | null, ativo: boolean) {
-  // O documento é o do título — no iframe da prévia, o dele.
-  const ref = React.useMemo(() => ({ current: el }), [el])
-  const base = useTopBarBottom(ativo, el, ref)
   React.useEffect(() => {
-    if (!ativo || !el || base == null) return
+    if (!ativo || !el) return
+    // O documento é o do título — no iframe da prévia, o dele.
     const doc = el.ownerDocument
+    if (!doc.querySelector('[data-slot="top-bar"]')) return
+    const base = topBarBottom(doc)
     const janela = doc.defaultView
     if (!janela) return
     const io = new janela.IntersectionObserver(
@@ -365,7 +365,7 @@ function useTituloQueSobe(el: HTMLElement | null, ativo: boolean) {
       io.disconnect()
       publishPageTitle(doc, null)
     }
-  }, [el, ativo, base])
+  }, [el, ativo])
 }
 
 function PageHeaderTitle({

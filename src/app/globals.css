@@ -825,6 +825,26 @@
   );
 }
 
+/* A base da barra do topo, no documento dela: o `Toaster`, a `Toolbar sticky`
+   e os cabeçalhos presos assentam abaixo. Uma regra por degrau da `TopBar`; a
+   área segura conta como na barra (o iPhone do catálogo a emula no `:root` do
+   iframe). Registrada como `<length>` para o JS ler px já resolvidos; sem
+   barra, 0. A `floating` (8px abaixo) não tem regra: nenhuma tela a usa. */
+@property --top-bar-bottom {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+:root:has([data-slot="top-bar"][data-size="sm"]) {
+  --top-bar-bottom: calc(3rem + var(--top-bar-safe-area, env(safe-area-inset-top, 0px)));
+}
+:root:has([data-slot="top-bar"][data-size="md"]) {
+  --top-bar-bottom: calc(3.5rem + var(--top-bar-safe-area, env(safe-area-inset-top, 0px)));
+}
+:root:has([data-slot="top-bar"][data-size="lg"]) {
+  --top-bar-bottom: calc(4rem + var(--top-bar-safe-area, env(safe-area-inset-top, 0px)));
+}
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);

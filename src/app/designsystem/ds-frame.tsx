@@ -386,7 +386,7 @@ const IPHONE_H = Math.round((IPHONE_W / IPHONE_TELA.width) * IPHONE_TELA.height 
  */
 const IPHONE_SEGURA_TOPO = Math.round((IPHONE_H * IPHONE_TELA.safeTop) / 100)
 const IPHONE_SEGURA_BASE = Math.round((IPHONE_H * IPHONE_TELA.safeBottom) / 100)
-const IPHONE_AREA_SEGURA = `[data-slot=top-bar]{--top-bar-safe:${IPHONE_SEGURA_TOPO}px;--top-bar-safe-area:${IPHONE_SEGURA_TOPO}px}[role=dialog]{--sheet-gap-block-start:${IPHONE_SEGURA_TOPO}px}[data-vaul-drawer]{--drawer-h:calc(100dvh - ${IPHONE_SEGURA_TOPO}px)}[data-slot=split-shell]{--split-shell-safe-top:${IPHONE_SEGURA_TOPO}px;--split-shell-safe-bottom:${IPHONE_SEGURA_BASE}px}[data-slot=onboarding-tour]{--onboarding-safe-top:${IPHONE_SEGURA_TOPO}px;--onboarding-safe-bottom:${IPHONE_SEGURA_BASE}px}`
+const IPHONE_AREA_SEGURA = `:root{--top-bar-safe-area:${IPHONE_SEGURA_TOPO}px}[data-slot=top-bar]{--top-bar-safe:${IPHONE_SEGURA_TOPO}px;--top-bar-safe-area:${IPHONE_SEGURA_TOPO}px}[role=dialog]{--sheet-gap-block-start:${IPHONE_SEGURA_TOPO}px}[data-vaul-drawer]{--drawer-h:calc(100dvh - ${IPHONE_SEGURA_TOPO}px)}[data-slot=split-shell]{--split-shell-safe-top:${IPHONE_SEGURA_TOPO}px;--split-shell-safe-bottom:${IPHONE_SEGURA_BASE}px}[data-slot=onboarding-tour]{--onboarding-safe-top:${IPHONE_SEGURA_TOPO}px;--onboarding-safe-bottom:${IPHONE_SEGURA_BASE}px}`
 
 /**
  * O iPhone com uma viewport de telefone dentro da tela: um `ViewportFrame` de

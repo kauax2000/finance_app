@@ -241,3 +241,13 @@ describe("os comportamentos", () => {
     })
   })
 }
+
+describe("a base da barra", () => {
+  it("a base da barra é CSS, não medida", () => {
+    const css = lerFonte("src/app/globals.css")
+    expect(css).toMatch(/--top-bar-bottom:/)
+    for (const f of ["sonner", "toolbar", "page-header", "page-section"]) {
+      expect(lerFonte(`src/components/ui/${f}.tsx`)).not.toContain("useTopBarBottom")
+    }
+  })
+})
