@@ -11,8 +11,6 @@ import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
 import { passwordErrorMessage } from "@/lib/password-policy"
 import { ROUTES } from "@/config/navigation"
 import { PasswordRequirements } from "@/components/auth/password-requirements"
-import { AuthStatus } from "@/components/auth/auth-status"
-import { RegisterScene } from "@/components/auth/scenes/register-scene"
 import { ResendButton } from "@/components/auth/resend-button"
 import { AuthShell } from "@/components/layout/auth-shell"
 import { Alert, AlertTitle } from "@/components/ui/alert"
@@ -58,6 +56,10 @@ export function SignupForm() {
     const [error, setError] = useState("")
     const [success, setSuccess] = useState(false)
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
+
+    // Só o `next` de convite volta para "concluir o convite"; qualquer outro
+    // `next` (uma tela do app) não é convite e não pode prometer isso.
+    const fromInvite = nextPath?.startsWith("/invites/accept") ?? false
 
     const redirectTo = () => `${window.location.origin}${nextPath ?? ROUTES.DASHBOARD}`
 
@@ -137,10 +139,10 @@ export function SignupForm() {
     // estado está.
     if (success) {
         return (
-            <AuthStatus
+            <AuthShell
+                scene={fromInvite ? "register.confirm-invite" : "register.confirm"}
                 title="Confira seu e-mail"
                 icon="mail"
-                scene={<RegisterScene />}
                 step="confirm"
                 description={
                     <>
@@ -157,7 +159,7 @@ export function SignupForm() {
                     </SplitShellFooter>
                 }
             >
-                {nextPath ? (
+                {fromInvite ? (
                     <Alert tone="info">
                         <AlertTitle>
                             Depois de confirmar, você volta para concluir o convite.
@@ -179,13 +181,13 @@ export function SignupForm() {
                 <Button variant="tertiary" size="xl" className="w-full" onClick={() => setSuccess(false)}>
                     Usar outro e-mail
                 </Button>
-            </AuthStatus>
+            </AuthShell>
         )
     }
 
     return (
         <AuthShell
-            scene={<RegisterScene />}
+            scene="register"
             title="Criar conta"
             description="A carteira pessoal e as categorias já vêm prontas."
             step="form"

@@ -1,4 +1,13 @@
+import { AuthFrame } from "@/components/layout/auth-frame"
 import { AuthSignedInRedirect } from "@/components/layout/auth-signed-in-redirect"
+
+/**
+ * CONTRATO DO CASCO — a casca das telas de acesso vive **aqui**, e não em cada
+ * página: o `AuthFrame` monta o `SplitShellRoot` e o painel de marca uma vez,
+ * e o painel continua o mesmo nó entre as rotas de `(auth)`. Cada formulário
+ * devolve só a coluna (`AuthShell`) e publica o id da cena (`scene`); o
+ * painel desenha a publicada, ou a padrão do caminho.
+ */
 
 /**
  * =============================================================================
@@ -54,5 +63,9 @@ export default function AuthLayout({
 }: {
     children: React.ReactNode
 }) {
-    return <AuthSignedInRedirect>{children}</AuthSignedInRedirect>
+    return (
+        <AuthSignedInRedirect>
+            <AuthFrame>{children}</AuthFrame>
+        </AuthSignedInRedirect>
+    )
 }

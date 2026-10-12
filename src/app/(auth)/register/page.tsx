@@ -1,6 +1,5 @@
 import { Suspense } from "react"
 
-import { RegisterScene } from "@/components/auth/scenes/register-scene"
 import { AuthFormSkeleton, AuthShell } from "@/components/layout/auth-shell"
 import { SignupForm } from "@/components/signup-form"
 
@@ -9,9 +8,9 @@ export default function RegisterPage() {
         <Suspense
             fallback={
                 <AuthShell
+                    scene="register"
                     title="Criar conta"
                     description="A carteira pessoal e as categorias já vêm prontas."
-                    scene={<RegisterScene />}
                 >
                     <AuthFormSkeleton fields={3} />
                 </AuthShell>

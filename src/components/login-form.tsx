@@ -9,7 +9,6 @@ import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
 import { getSafeInternalNextPath } from "@/lib/auth-return-path"
 import { isValidEmail } from "@/lib/email"
 import { ROUTES } from "@/config/navigation"
-import { LoginScene } from "@/components/auth/scenes/login-scene"
 import { AuthShell } from "@/components/layout/auth-shell"
 import { Alert, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -57,11 +56,16 @@ function getFieldErrors(email: string, password: string): FieldErrors {
  * redirecionar — o que funcionava, mas devolvia uma tela de login sem
  * explicação nenhuma no lugar da página em que a pessoa estava.
  */
-const REASONS: Record<string, string> = {
+const REASONS = {
     "session-expired":
         "Sua sessão foi encerrada. Entre de novo para continuar de onde parou.",
     "password-updated": "Senha atualizada. Entre com a senha nova.",
-}
+} as const
+
+type Reason = keyof typeof REASONS
+
+const isReason = (value: string | null): value is Reason =>
+    value !== null && Object.hasOwn(REASONS, value)
 
 export function LoginForm() {
     const router = useRouter()
@@ -85,7 +89,8 @@ export function LoginForm() {
             ? `${ROUTES.REGISTER}?next=${encodeURIComponent(safe)}`
             : ROUTES.REGISTER
     }, [searchParams])
-    const reason = REASONS[searchParams.get("reason") ?? ""]
+    const rawReason = searchParams.get("reason")
+    const reason = isReason(rawReason) ? rawReason : undefined
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [loading, setLoading] = useState(false)
@@ -120,9 +125,10 @@ export function LoginForm() {
 
     return (
         <AuthShell
+            scene={reason ? `login.${reason}` : "login"}
             title="Entrar"
             description="Bem-vindo de volta."
-            scene={<LoginScene />}
+            step={reason ?? "default"}
             footer={
                 <SplitShellFooter>
                     <p>
@@ -135,7 +141,7 @@ export function LoginForm() {
             <div className="flex flex-col gap-(--space-block)">
                 {reason && !error ? (
                     <Alert tone="info">
-                        <AlertTitle>{reason}</AlertTitle>
+                        <AlertTitle>{REASONS[reason]}</AlertTitle>
                     </Alert>
                 ) : null}
                 {error ? (

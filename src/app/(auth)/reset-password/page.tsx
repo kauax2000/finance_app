@@ -1,6 +1,5 @@
 import { Suspense } from "react"
 
-import { RecoveryScene } from "@/components/auth/scenes/recovery-scene"
 import { AuthFormSkeleton, AuthShell } from "@/components/layout/auth-shell"
 import { PasswordRecoveryForm } from "@/components/password-recovery-form"
 
@@ -16,10 +15,7 @@ export default function ResetPasswordPage() {
     return (
         <Suspense
             fallback={
-                <AuthShell
-                    title="Nova senha"
-                    scene={<RecoveryScene step="password" />}
-                >
+                <AuthShell scene="recovery.link-checking" title="Nova senha">
                     <AuthFormSkeleton fields={1} />
                 </AuthShell>
             }

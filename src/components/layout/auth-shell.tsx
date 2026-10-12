@@ -1,59 +1,71 @@
-import type { ReactNode } from "react"
+"use client"
 
-import { AuthBrandPanel } from "@/components/layout/auth-brand-panel"
+import type { ReactNode } from "react"
+import { EnvelopeIcon, ExclamationTriangleIcon, UserGroupIcon } from "@heroicons/react/24/outline"
+
+import { useAuthScene, type AuthSceneId } from "@/components/auth/showcase/scene-context"
+import { EmptyStateIcon } from "@/components/ui/empty-state"
 import { Skeleton } from "@/components/ui/skeleton"
-import { SplitShell } from "@/components/ui/split-shell"
+import { SplitShellMain } from "@/components/ui/split-shell"
+
+const ICONE = {
+    mail: <EmptyStateIcon><EnvelopeIcon /></EmptyStateIcon>,
+    done: <EmptyStateIcon variant="done" />,
+    expired: <EmptyStateIcon tone="warning"><ExclamationTriangleIcon /></EmptyStateIcon>,
+    invite: <EmptyStateIcon><UserGroupIcon /></EmptyStateIcon>,
+} as const
 
 /**
- * O casco das telas de acesso: o `SplitShell` com o painel de marca deste
- * produto encaixado.
+ * A coluna das telas de acesso: um `SplitShellMain` dentro do casco que mora
+ * no layout de `(auth)` (`AuthFrame`).
  *
- * São poucas linhas, e elas existem para que as cinco telas não repitam
- * `aside={<AuthBrandPanel />}` — e, mais importante, para que o Template do
- * design system continue sem saber o que é uma carteira. O genérico mora em
- * `ui/split-shell.tsx`; o que é deste produto mora aqui e no
- * `auth-brand-panel.tsx`, na mesma prateleira de `auth-guard.tsx`.
+ * **Todo estado de todo formulário devolve um `AuthShell` no mesmo lugar da
+ * árvore** — o formulário, o "Confira seu e-mail", o link expirado, a porta do
+ * convite. Assim a coluna não remonta ao trocar de estado, o `step` muda e o
+ * foco vai ao título; antes, a tela de status era outro componente, a coluna
+ * remontava com o passo novo e o foco caía no `<body>`.
+ *
+ * Com `icon`, é a tela de status: o ícone acima do título e as ações
+ * empilhadas (a primária primeiro, a `tertiary` depois).
+ *
+ * `scene` é o id que o painel de marca desenha, publicado por `useAuthScene`.
  */
 export function AuthShell({
+    scene,
     title,
     description,
+    icon,
     back,
     footer,
     step,
-    scene,
-    media,
     children,
 }: {
+    scene: AuthSceneId
     title: string
     description?: ReactNode
+    icon?: keyof typeof ICONE
     /** O topo da coluna: o `SplitShellBack`. */
     back?: ReactNode
     /** O `SplitShellFooter`, logo abaixo do formulário. */
     footer?: ReactNode
     /** O passo do fluxo; ao mudar, o conteúdo desliza e o foco vai ao título. */
     step?: string | number
-    /** A cena do painel de marca: cada tela mostra o pedaço do produto que lhe cabe. */
-    scene: ReactNode
-    /** O ícone ou ilustração acima do título (a tela de status). */
-    media?: ReactNode
-    children: ReactNode
+    children?: ReactNode
 }) {
+    useAuthScene(scene)
     return (
-        <SplitShell
-            aside={<AuthBrandPanel>{scene}</AuthBrandPanel>}
-            side="end"
-            asideMobile="logo"
-            media={media}
+        <SplitShellMain
+            media={icon ? <span className="contents [--empty-state-icon:--spacing(12)]">{ICONE[icon]}</span> : undefined}
             title={title}
             description={description}
             back={back}
             step={step}
         >
-            {children}
+            {icon && children ? <div className="flex flex-col gap-3">{children}</div> : children}
             {/* O pé mora junto do formulário, e não preso à base da coluna:
                 "Criar conta" é a alternativa a ele, e longe dele some. */}
             {footer}
-        </SplitShell>
+        </SplitShellMain>
     )
 }
 

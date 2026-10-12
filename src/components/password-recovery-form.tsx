@@ -11,9 +11,7 @@ import { isValidEmail } from "@/lib/email"
 import { useTimeout } from "@/hooks/use-timeout"
 import { recoveryLinks } from "@/lib/recovery-links"
 import { PasswordRequirements } from "@/components/auth/password-requirements"
-import { AuthStatus } from "@/components/auth/auth-status"
 import { ResendButton } from "@/components/auth/resend-button"
-import { RecoveryScene } from "@/components/auth/scenes/recovery-scene"
 import { AuthFormSkeleton, AuthShell } from "@/components/layout/auth-shell"
 import { Alert, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -241,7 +239,7 @@ export function PasswordRecoveryForm({
     if (step === "email") {
         return (
             <AuthShell
-                scene={<RecoveryScene step={step} />}
+                scene="recovery.email"
                 title="Recuperar senha"
                 description="Enviamos um código de seis dígitos para o seu e-mail."
                 step={step}
@@ -285,7 +283,7 @@ export function PasswordRecoveryForm({
     if (step === "code") {
         return (
             <AuthShell
-                scene={<RecoveryScene step={step} />}
+                scene="recovery.code"
                 title="Digite o código"
                 step={step}
                 description={
@@ -375,7 +373,7 @@ export function PasswordRecoveryForm({
         // aí não há nada a preencher.
         if (linkValid === null) {
             return (
-                <AuthShell scene={<RecoveryScene step="password" />} title="Nova senha" step={step}>
+                <AuthShell scene="recovery.link-checking" title="Nova senha" step={step}>
                     {/* Espera com forma, e não uma frase cinza: o esqueleto já
                         existe nesta mesma mudança, e `role="status"` é o que
                         faz o leitor de tela anunciar que algo está em curso —
@@ -390,11 +388,11 @@ export function PasswordRecoveryForm({
 
         if (linkValid === false) {
             return (
-                <AuthStatus
+                <AuthShell
+                    scene="recovery.link-expired"
                     icon="expired"
                     title="Link expirado"
                     description="Este link de recuperação não vale mais. Peça um código novo."
-                    scene={<RecoveryScene step="email" />}
                     step="link-expired"
                     footer={
                         <SplitShellFooter>
@@ -408,13 +406,13 @@ export function PasswordRecoveryForm({
                     <Button asChild size="xl" className="w-full">
                         <Link href={links.forgot}>Pedir novo código</Link>
                     </Button>
-                </AuthStatus>
+                </AuthShell>
             )
         }
 
         return (
             <AuthShell
-                scene={<RecoveryScene step={step} />}
+                scene="recovery.password"
                 title="Nova senha"
                 description="Ela precisa ser tão forte quanto a do cadastro."
                 step={step}
@@ -434,16 +432,16 @@ export function PasswordRecoveryForm({
 
     // ---- Fim -------------------------------------------------------------
     return (
-        <AuthStatus
+        <AuthShell
+            scene="recovery.done"
             icon="done"
             title="Senha atualizada"
             description="Entre com a senha nova. Levando você ao login…"
-            scene={<RecoveryScene step="done" />}
-            step={step}
+            step="done"
         >
             <Button asChild size="xl" className="w-full">
                 <Link href={links.loginUpdated}>Entrar agora</Link>
             </Button>
-        </AuthStatus>
+        </AuthShell>
     )
 }

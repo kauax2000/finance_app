@@ -96,12 +96,17 @@ Criar conta e entrar são a mesma jornada: as duas telas se ligam e dividem o
 parâmetro `next`. **O login social saiu** em set/2026; a autenticação é
 e-mail e senha.
 
-As cinco telas dividem uma casca só, o `AuthShell`: painel de marca com uma cena
-por tela, a partir de 48rem do próprio casco (container query); no telefone só o
-wordmark (`asideMobile="logo"`); coluna de formulário à esquerda, painel à direita (`side="end"`). Quem monta a casca é o **formulário**, não a página, porque o título
-muda com o estado (o cadastro vira "Confira seu e-mail", a recuperação troca a
-cada passo). No desktop o painel de marca mostra uma cena própria por tela; no
-telefone fica só o wordmark.
+As cinco telas dividem uma casca só, e **a casca vive no layout de `(auth)`; o
+formulário publica o id da cena.** O `AuthFrame` (`src/components/layout/auth-frame.tsx`)
+monta o `SplitShellRoot` com o painel de marca uma vez, então o painel é o
+mesmo nó entre as cinco rotas e troca de cena em vez de remontar: a partir de
+48rem do próprio casco (container query); no telefone só o wordmark
+(`asideMobile="logo"`); coluna de formulário à esquerda, painel à direita
+(`side="end"`). Cada formulário devolve só a coluna, o `AuthShell`, com o id
+da cena (`scene`), porque o título e a cena mudam com o estado (o cadastro vira
+"Confira seu e-mail", a recuperação troca a cada passo). Sem id publicado, a
+cena sai do caminho (`defaultSceneFor`). Todo estado devolve o `AuthShell` no
+mesmo lugar da árvore, e a troca de `step` leva o foco ao título.
 
 ### 1a. Entrada, login e cadastro
 
@@ -187,7 +192,7 @@ flowchart TD
 | Guarda | Toda rota de `(app)` sem usuário vai para `/login?next=` com `replace`. Sem exceções: `/invites/accept` saiu do grupo | `src/components/layout/auth-guard.tsx` |
 | Guarda invertida | Quem já entrou em `(auth)` vai para o `next` ou o Painel. Isentas: `/forgot-password` e `/reset-password` (o `verifyOtp` cria sessão antes da troca de senha) e `/invites/accept` | `src/components/layout/auth-signed-in-redirect.tsx` |
 | `next` | Só caminho interno começando com `/`; o padrão é `/dashboard` | `src/lib/auth-return-path.ts` |
-| Casca | As cinco telas vestem o `AuthShell`; quem o monta é o formulário, porque o título depende do estado | `src/components/layout/auth-shell.tsx` |
+| Casca | A casca vive no layout de `(auth)` (`AuthFrame`: `SplitShellRoot` e painel de marca, o mesmo nó entre as rotas); o formulário devolve só a coluna (`AuthShell`, um `SplitShellMain`) e publica o id da cena por `useAuthScene`. Sem publicação, `defaultSceneFor(pathname)`; o frame nunca lê a query. O `AuthStatus` saiu: a tela de status é o `AuthShell` com `icon` e `step` próprio | `src/app/(auth)/layout.tsx`, `src/components/layout/auth-frame.tsx`, `src/components/layout/auth-shell.tsx`, `src/components/auth/showcase/scene-context.tsx` |
 | Senha | Uma política só — 8+, minúscula, maiúscula, número e símbolo — aplicada no cadastro e na redefinição | `src/lib/password-policy.ts` |
 | Recuperação | Um formulário, duas portas: `/forgot-password` começa no código de 6 dígitos, `/reset-password` entra no passo da senha lendo o token do hash. O `resetPasswordForEmail` manda `redirectTo` para `/reset-password`, senão o link do e-mail cai na Site URL do projeto, que mora fora deste repositório | `src/components/password-recovery-form.tsx` |
 | `next` na recuperação | `/forgot-password?next` e `/reset-password?next` leem o `next` por `recoveryLinks`, que usa `getSafeInternalNextPath`; o `redirectTo` do e-mail vira `/reset-password?next=…` e "Senha atualizada" leva a `/login?reason=password-updated&next=…`. "Pedir novo código" volta a `/forgot-password?next=…`. Sem `next` a URL não muda. Depende de a allowlist de redirecionamento do Supabase (fora do repositório) aceitar a query string | `src/lib/recovery-links.ts`, `src/components/password-recovery-form.tsx` |
