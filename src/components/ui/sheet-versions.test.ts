@@ -1,14 +1,12 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 import { sheetContentVariants } from "./sheet"
 
 /** A rodada 222: as versões novas do `Sheet`. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/sheet.tsx")
-const CSS = fonte("src/app/globals.css")
+const CODIGO = lerFonte("src/components/ui/sheet.tsx")
+const CSS = lerFonte("src/app/globals.css")
 
 describe("as versões do Sheet", () => {
   it("floating é o padrão, numa placa chapada com o anel das placas", () => {
@@ -17,8 +15,7 @@ describe("as versões do Sheet", () => {
     expect(c).toContain("bg-popover")
     expect(c).not.toContain("glass-surface")
     // O comentário conta a história do vidro; o código não o veste.
-    const semComentarios = CODIGO.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/.*$/gm, "$1")
-    expect(semComentarios).not.toContain("modalSurfaceClassName")
+    expect(semComentarios(CODIGO, "fora-de-url")).not.toContain("modalSurfaceClassName")
   })
 
   it("o × de canto da folha flutuante é círculo preenchido, sem anel nem sombra", () => {
@@ -59,10 +56,11 @@ describe("as versões do Sheet", () => {
   })
 
   it("pending, dirty e confirmDiscard passam por um pedido só", () => {
-    expect(CODIGO).toMatch(/const pedir = \(proximo: boolean\) => \{\s*if \(proximo\) return mudar\(true\)\s*if \(pending\) return\s*if \(dirty && confirmDiscard\)/)
+    // A régua é a do `Dialog`, a mesma função: `dialog-versions.test.ts` tranca o `pedir`.
+    expect(CODIGO).toContain("const { open, pedir, pergunta } = usePedidoDeFechar({")
     expect(CODIGO).toContain("dismissible={!pending}")
     expect(CODIGO).toContain("aria-busy={pending || undefined}")
-    expect(CODIGO).toContain('import { ConfirmarDescarte } from "@/components/ui/dialog"')
+    expect(CODIGO).toContain('import { usePedidoDeFechar } from "@/components/ui/dialog"')
   })
 
   it("folha sobre folha: a de baixo recua, e na gaveta empilha o vaul", () => {
@@ -99,12 +97,12 @@ describe("as versões do Sheet", () => {
       "src/components/dashboard/dashboard-payment-event-preview-sheet.tsx",
       "src/components/pwa/install-pwa-sheet.tsx",
     ]) {
-      expect(fonte(arquivo), arquivo).toContain('variant="flush"')
+      expect(lerFonte(arquivo), arquivo).toContain('variant="flush"')
     }
   })
 
   it("a página não conta o que deixou de ser verdade", () => {
-    const doc = fonte("src/app/designsystem/docs/sheet.tsx")
+    const doc = lerFonte("src/app/designsystem/docs/sheet.tsx")
     expect(doc).not.toContain("o deslize vira um fade curto")
     expect(doc).not.toContain("com <code>fillMobileViewport</code>, o keyframe de gaveta")
     expect(doc).not.toContain("O material é o mesmo em flush e floating")

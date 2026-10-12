@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import { tagChipFilterSelected, tagChipNeutral } from "./badge"
 import { RadioGroup, RadioGroupItem, radioGroupItemVariants } from "./radio-group"
@@ -76,10 +75,7 @@ describe("RadioGroup, rodada 197", () => {
   })
 
   it("a forma de pagamento é rádio, e não botões de alternar", () => {
-    const tela = readFileSync(
-      join(__dirname, "../transactions/transaction-form-fields.tsx"),
-      "utf8"
-    )
+    const tela = lerFonte("src/components/transactions/transaction-form-fields.tsx")
     expect(tela).not.toContain("PaymentMethodChips")
     expect(tela).not.toMatch(/aria-pressed/)
     expect(tela).toMatch(/label="Forma de pagamento"\s+variant="chip"\s+deselectable/)

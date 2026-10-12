@@ -7,8 +7,9 @@ import { REGISTRY, getEntry, getNeighbors } from "../registry"
 /**
  * Uma rota para todas as páginas do catálogo. O registry decide o que existe; o
  * mapa de docs decide o que cada slug renderiza. Um slug listado no registry sem
- * documento correspondente é erro de build, não uma página vazia em produção
- * (ver a checagem em `docs-map.ts`).
+ * documento correspondente não vira página vazia: o `doc-pages.test.ts` reprova
+ * a entrada sem arquivo em `docs/`, e um slug que falte no mapa (o
+ * `npm run ds:docs-map` esquecido) cai no `notFound()` abaixo.
  */
 export function generateStaticParams() {
     return REGISTRY.map((entry) => ({ slug: entry.slug }))
@@ -47,7 +48,7 @@ export default async function DesignSystemDocPage({
             description={entry.description}
             source={entry.source}
             importLine={entry.importLine}
-            // A categoria do vizinho vai junto: numa ordem de leitura de 88
+            // A categoria do vizinho vai junto: numa ordem de leitura de 86
             // páginas, o que se precisa saber ao avançar é se o próximo passo
             // ainda é da mesma categoria ou se a leitura mudou de capítulo.
             previous={

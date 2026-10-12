@@ -13,13 +13,10 @@ import { cn } from "@/lib/utils"
 import { commandFilter } from "@/lib/command-filter"
 import { scrollFadeBandsClassName } from "@/lib/scroll-fade-classes"
 import {
+  fieldControlClassName,
   fieldControlHeightClassName,
   fieldControlPaddingClassName,
-  fieldDisabledClassName,
-  fieldFocusRingClassName,
-  fieldInvalidClassName,
-  fieldSurfaceClassName,
-  fieldTriggerHoverClassName,
+  fieldTriggerClassName,
   type FieldControlSize,
 } from "@/lib/field-classes"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -423,11 +420,7 @@ function ComboboxTrigger({
         data-size={size}
         data-placeholder={count > 0 ? undefined : ""}
         className={cn(
-          fieldSurfaceClassName,
-          fieldFocusRingClassName,
-          fieldInvalidClassName,
-          fieldDisabledClassName,
-          fieldTriggerHoverClassName,
+          fieldTriggerClassName,
           "flex w-full items-center justify-between gap-1.5 py-1 text-left whitespace-nowrap select-none",
           fieldControlHeightClassName[size],
           fieldControlPaddingClassName[size],
@@ -904,10 +897,7 @@ function ComboboxTextField({
       }}
       placeholder={placeholder}
       className={cn(
-        fieldSurfaceClassName,
-        fieldFocusRingClassName,
-        fieldInvalidClassName,
-        fieldDisabledClassName,
+        fieldControlClassName,
         "w-full min-w-0 py-1 text-base outline-none placeholder:text-muted-foreground md:text-sm",
         fieldControlHeightClassName[size],
         fieldControlPaddingClassName[size],

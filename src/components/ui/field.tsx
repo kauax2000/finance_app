@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { CheckIcon, MinusIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
-import { pertoDoLimite } from "@/lib/char-count"
+import { CharCountLive, contarCaracteres } from "@/lib/char-count"
 import { Label } from "@/components/ui/label"
 import { Caption, Muted } from "@/components/ui/typography"
 import { Separator } from "@/components/ui/separator"
@@ -694,8 +694,7 @@ function FieldCounter({
   max: number
   className?: string
 }) {
-  const restam = max - value.length
-  const perto = pertoDoLimite(restam, max)
+  const { restam, perto } = contarCaracteres(value.length, max)
   return (
     <>
       {perto ? (
@@ -707,9 +706,7 @@ function FieldCounter({
           {value.length}/{max}
         </span>
       ) : null}
-      <span className="sr-only" aria-live="polite">
-        {perto ? `Restam ${restam} caracteres` : ""}
-      </span>
+      <CharCountLive restam={restam} perto={perto} />
     </>
   )
 }

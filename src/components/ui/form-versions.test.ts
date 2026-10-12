@@ -1,8 +1,9 @@
-import { existsSync, readFileSync } from "node:fs"
+import { existsSync } from "node:fs"
 import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import {
   Form,
@@ -16,8 +17,7 @@ import {
 
 /** A rodada 214: as versões novas do `Form`. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/form.tsx")
+const CODIGO = lerFonte("src/components/ui/form.tsx")
 
 /** Um campo com a validade que a função consulta — o ambiente é `node`. */
 function campo(validity: Partial<ValidityState>, extra: Record<string, unknown> = {}) {
@@ -90,7 +90,7 @@ describe("as versões do Form", () => {
     expect(CODIGO).not.toContain("e é uma molécula")
     expect(CODIGO).not.toContain("MobileSheetFormBody")
     expect(CODIGO).not.toContain("São 54 chamadas em 29 arquivos")
-    const doc = fonte("src/app/designsystem/docs/form.tsx")
+    const doc = lerFonte("src/app/designsystem/docs/form.tsx")
     expect(doc).not.toContain("variant=&quot;plain&quot;")
     expect(doc).not.toContain('type="search"')
   })
@@ -99,8 +99,8 @@ describe("as versões do Form", () => {
     expect(existsSync(join(process.cwd(), "src/components/ui/form-picker-popover.tsx"))).toBe(false)
     expect(existsSync(join(process.cwd(), "src/app/designsystem/docs/form-picker-popover.tsx"))).toBe(false)
     expect(CODIGO).toMatch(/export \{[\s\S]*FormPickerPopoverTrigger,[\s\S]*\}/)
-    expect(fonte("src/app/designsystem/docs/form.tsx")).toContain("<PickerDemo />")
-    expect(fonte("src/app/designsystem/registry.ts")).not.toContain('"form-picker-popover"')
+    expect(lerFonte("src/app/designsystem/docs/form.tsx")).toContain("<PickerDemo />")
+    expect(lerFonte("src/app/designsystem/registry.ts")).not.toContain('"form-picker-popover"')
   })
 })
 

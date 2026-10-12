@@ -1,22 +1,12 @@
-import { readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { arquivosTsx, lerFonte } from "@/test/fonte"
 
 /** A lista de pares, trancada na rodada 190. */
 
-const arquivos = (dir: string): string[] =>
-  readdirSync(dir).flatMap((nome) => {
-    const caminho = join(dir, nome)
-    return statSync(caminho).isDirectory()
-      ? arquivos(caminho)
-      : /\.tsx$/.test(nome)
-        ? [caminho]
-        : []
-  })
-
-const TELAS = arquivos(join(process.cwd(), "src")).map((caminho) => ({
+const TELAS = arquivosTsx(join(process.cwd(), "src")).map((caminho) => ({
   caminho,
-  texto: readFileSync(caminho, "utf8"),
+  texto: lerFonte(caminho),
 }))
 
 describe("a lista de pares", () => {
@@ -36,7 +26,7 @@ describe("a lista de pares", () => {
   })
 
   it("a sobrancelha vence o Caption por especificidade, um nível só", () => {
-    const fonte = readFileSync(join(process.cwd(), "src/components/ui/description-list.tsx"), "utf8")
+    const fonte = lerFonte("src/components/ui/description-list.tsx")
     expect(fonte).toContain("[&>*>[data-slot=description-term]]:uppercase")
     // Sem hook: o painel de acesso é server component.
     expect(fonte).not.toMatch(/React\.useContext\(|^"use client"/m)
@@ -45,7 +35,7 @@ describe("a lista de pares", () => {
 
 describe("columns implica grid (rodada 231)", () => {
   it("sem layout=\"grid\" ele não é mais ignorado calado", () => {
-    const fonte = readFileSync(join(process.cwd(), "src/components/ui/description-list.tsx"), "utf8")
+    const fonte = lerFonte("src/components/ui/description-list.tsx")
     expect(fonte).toContain('if (columns) layout = "grid"')
   })
 })

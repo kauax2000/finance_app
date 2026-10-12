@@ -1,6 +1,5 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { blocoCss, lerFonte } from "@/test/fonte"
 
 /**
  * A rodada 245: a troca de mês do `Calendar` anima — o mês que entra vem do
@@ -9,11 +8,9 @@ import { describe, expect, it } from "vitest"
  * movimento é a `@utility calendar-month-motion`.
  */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CALENDARIO = fonte("src/components/ui/calendar.tsx")
-const CSS = fonte("src/app/globals.css")
-const utility = CSS.slice(CSS.indexOf("@utility calendar-month-motion"))
-const bloco = utility.slice(0, utility.indexOf("\n}\n"))
+const CALENDARIO = lerFonte("src/components/ui/calendar.tsx")
+const CSS = lerFonte("src/app/globals.css")
+const bloco = blocoCss(CSS, "@utility calendar-month-motion")
 
 describe("a troca de mês", () => {
   it("liga a mecânica da biblioteca fora da agenda, e quem chama pode desligar", () => {

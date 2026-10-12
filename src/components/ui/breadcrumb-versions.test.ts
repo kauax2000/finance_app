@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import {
   Breadcrumb,
@@ -13,8 +12,6 @@ import {
 } from "./breadcrumb"
 
 /** As versões da rodada 202. */
-
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
 
 const trilha = (lista: Record<string, unknown>, ...itens: ReturnType<typeof h>[]) =>
   renderToStaticMarkup(h(Breadcrumb, null, h(BreadcrumbList, lista as never, ...itens)))
@@ -62,12 +59,12 @@ describe("Breadcrumb, rodada 202", () => {
   })
 
   it("o trocador não cresce a linha e diz a página atual", () => {
-    const codigo = fonte("src/components/ui/breadcrumb.tsx")
+    const codigo = lerFonte("src/components/ui/breadcrumb.tsx")
     expect(codigo).toMatch(/aria-current="page"[\s\S]{0,400}"-mx-1 h-auto min-w-0 gap-1 rounded-sm border-0 px-1 py-0/)
   })
 
   it("a barra do app usa a trilha do sistema", () => {
-    const barra = fonte("src/components/layout/breadcrumb.tsx")
+    const barra = lerFonte("src/components/layout/breadcrumb.tsx")
     expect(barra).toContain("<BreadcrumbPage asChild>")
     expect(barra).not.toMatch(/ChevronRightIcon|max-w-\[45%\]|SubPageBackButton/)
   })

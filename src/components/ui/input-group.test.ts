@@ -1,8 +1,8 @@
-import { readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { arquivosTsx, lerFonte } from "@/test/fonte"
 
 import {
   InputGroup,
@@ -12,16 +12,6 @@ import {
 } from "./input-group"
 
 /** O grupo de campo, trancado na rodada 193. */
-
-const arquivos = (dir: string): string[] =>
-  readdirSync(dir).flatMap((nome) => {
-    const caminho = join(dir, nome)
-    return statSync(caminho).isDirectory()
-      ? arquivos(caminho)
-      : /\.tsx$/.test(nome)
-        ? [caminho]
-        : []
-  })
 
 describe("InputGroup", () => {
   it("a senha nasce escondida, com o olho rotulado", () => {
@@ -34,9 +24,9 @@ describe("InputGroup", () => {
   })
 
   it("nenhuma tela escreve o olho da senha à mão", () => {
-    const culpados = arquivos(join(process.cwd(), "src"))
+    const culpados = arquivosTsx(join(process.cwd(), "src"))
       .filter((c) => !c.includes("components/ui/"))
-      .filter((c) => /\? "text" : "password"/.test(readFileSync(c, "utf8")))
+      .filter((c) => /\? "text" : "password"/.test(lerFonte(c)))
     expect(culpados).toEqual([])
   })
 

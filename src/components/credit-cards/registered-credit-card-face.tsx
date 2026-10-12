@@ -76,7 +76,7 @@ function BrandMark({
         return (
             <span
                 className={cn(
-                    "flex h-6 min-w-[2.5rem] items-center justify-center rounded-md border border-border/50 bg-muted/40 px-1.5 text-2xs font-bold tracking-wide text-foreground backdrop-blur-sm @3xs:h-7 @3xs:min-w-[2.85rem] @3xs:px-2 @3xs:text-2xs @2xs:text-2xs",
+                    "flex h-6 min-w-10 items-center justify-center rounded-md border border-border/50 bg-muted/40 px-1.5 text-2xs font-bold tracking-wide text-foreground backdrop-blur-sm @3xs:h-7 @3xs:min-w-11.5 @3xs:px-2 @3xs:text-2xs @2xs:text-2xs",
                     className
                 )}
                 aria-hidden
@@ -94,7 +94,7 @@ function BrandMark({
             aria-hidden
         >
             <CreditCardIcon
-                className="size-4 @3xs:size-[18px] @xs:size-5"
+                className="size-4 @3xs:size-4.5 @xs:size-5"
             />
         </span>
     )
@@ -256,7 +256,7 @@ export function RegisteredCreditCardFace({
 
             <div
                 className={cn(
-                    "pointer-events-none absolute z-[1] text-white/95 drop-shadow-md dark:text-white/90",
+                    "pointer-events-none absolute z-1 text-white/95 drop-shadow-md dark:text-white/90",
                     isSmall
                         ? "bottom-2.5 right-2.5 opacity-[0.34] @3xs:bottom-3 @3xs:right-3 @xs:bottom-3.5 @xs:right-3.5"
                         : "bottom-3 right-3 opacity-[0.38]"
@@ -303,8 +303,8 @@ export function RegisteredCreditCardFace({
                         className={cn(
                             "items-center justify-center overflow-hidden rounded-md border border-white/25 bg-white/16 text-white shadow-sm shadow-black/15 backdrop-blur-md",
                             isSmall
-                                ? "h-5 min-w-8 px-1.5 text-2xs @3xs:h-6 @3xs:min-w-9 @3xs:text-2xs @2xs:text-2xs @xs:h-7 @xs:min-w-[2.85rem] [&>svg]:h-5 [&>svg]:w-11 @3xs:[&>svg]:h-6 @3xs:[&>svg]:w-12 @xs:[&>svg]:h-7 @xs:[&>svg]:w-[3.9rem]"
-                                : "h-7 min-w-[2.85rem] [&>svg]:h-7 [&>svg]:w-[3.9rem]"
+                                ? "h-5 min-w-8 px-1.5 text-2xs @3xs:h-6 @3xs:min-w-9 @3xs:text-2xs @2xs:text-2xs @xs:h-7 @xs:min-w-11.5 [&>svg]:h-5 [&>svg]:w-11 @3xs:[&>svg]:h-6 @3xs:[&>svg]:w-12 @xs:[&>svg]:h-7 @xs:[&>svg]:w-15.5"
+                                : "h-7 min-w-11.5 [&>svg]:h-7 [&>svg]:w-15.5"
                         )}
                     />
                 </div>

@@ -3,6 +3,7 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
+import { useComposedRefs } from "radix-ui/internal"
 import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "@/lib/utils"
@@ -19,6 +20,18 @@ import { Button } from "@/components/ui/button"
  */
 const SHEET_OVERLAY_CLASS =
   "fixed inset-0 z-(--z-sheet) bg-overlay supports-backdrop-filter:backdrop-blur-xs"
+
+/**
+ * O contrato que a cromagem do `Dialog` lê, nas superfícies de borda — esta
+ * gaveta e o `Sheet`, nos dois ramos —, para o cabeçalho e o rodapé medirem
+ * igual na folha, no painel e aqui. O recuo e o sangramento; o raio que o
+ * `concentric` de dentro lê, como no `DialogContent` (sem ele, uma peça
+ * concêntrica caía no padrão, 22 − 0, e saía pílula); e a reserva do ×, que
+ * vem de **haver** um ×, não de um prop — dentro de um `DialogHeaderRow` quem
+ * reserva é a coluna do adorno. O `DialogContent` escreve o dele, com 24px.
+ */
+const SURFACE_CONTRACT_CLASS =
+  "[--dialog-px:--spacing(4)] [--dialog-bleed:0px] [--radius-parent:var(--radius-modal)] [--radius-inset:var(--dialog-px)] [--dialog-close:0px] has-[>[data-slot=dialog-close-button]]:[--dialog-close:--spacing(11)]"
 
 /**
  * A alça: a única pista de que aquela superfície se arrasta — e o próprio
@@ -232,15 +245,8 @@ const drawerContentVariants = cva(
     "flex flex-col text-sm shadow-lg",
     modalSurfaceClassName,
     "focus:outline-none",
-    // O contrato que a cromagem do `Dialog` lê — o mesmo que `SheetContent`
-    // declara, palavra por palavra, para o cabeçalho e o rodapé medirem igual
-    // na folha, no painel e aqui.
-    "[--dialog-px:--spacing(4)]",
-    "[--dialog-bleed:0px]",
-    // O raio que o `concentric` de dentro lê, como no `DialogContent`.
-    "[--radius-parent:var(--radius-modal)] [--radius-inset:var(--dialog-px)]",
-    // A reserva do × vem de **haver** um ×, não de um prop.
-    "[--dialog-close:0px] has-[>[data-slot=dialog-close-button]]:[--dialog-close:--spacing(11)]",
+    // O contrato que a cromagem do `Dialog` lê — o mesmo do `SheetContent`.
+    SURFACE_CONTRACT_CLASS,
     // As alturas saem de variáveis para uma gaveta poder baixar o teto sem
     // reescrever a fórmula: uma lista curta pede menos que 85%.
     "[--drawer-max-h:85dvh]",
@@ -572,14 +578,7 @@ function DrawerContent({
   // desligar o anterior — medido, seis ao abrir e três a cada clique, que
   // disputavam a altura entre si.
   const [el, setEl] = React.useState<HTMLDivElement | null>(null)
-  const conteudo = React.useCallback(
-    (no: HTMLDivElement | null) => {
-      setEl(no)
-      if (typeof ref === "function") ref(no)
-      else if (ref) ref.current = no
-    },
-    [ref]
-  )
+  const conteudo = useComposedRefs<HTMLDivElement>(setEl, ref)
   useAlturaQueAcompanha(el, !alta)
   const dissolver = useScrollFade()
   React.useEffect(() => {
@@ -726,4 +725,5 @@ export {
   DrawerTrigger,
   drawerContentVariants,
   SHEET_OVERLAY_CLASS,
+  SURFACE_CONTRACT_CLASS,
 }

@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import {
   Carousel,
@@ -19,7 +18,6 @@ import {
 
 /** A rodada 205: as versões novas do `Carousel`. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
 const carrossel = (props: Record<string, unknown>, ...filhos: React.ReactNode[]) =>
   renderToStaticMarkup(h(Carousel, { "aria-label": "Teste", ...props }, ...filhos))
 const itens = (n: number) =>
@@ -44,14 +42,14 @@ describe("as versões do Carousel", () => {
     const html = carrossel({ effect: "fade", gap: "lg" }, itens(2))
     expect(html).not.toContain("-ml-6")
     expect(html).toContain("carousel-effect-fade")
-    const css = fonte("src/app/globals.css")
+    const css = lerFonte("src/app/globals.css")
     expect(css).toMatch(/@utility carousel-effect-fade \{[\s\S]*?translate: calc\(var\(--carousel-slide-s, 0\) \* -100%\) 0;/)
     expect(css).toMatch(/carousel-effect-fade[\s\S]*?:not\(\[data-selected\]\) \{\s*pointer-events: none;/)
   })
 
   it("snap free liga o dragFree; a roda e o clique no item cortado são padrão", () => {
     expect(carrossel({ snap: "free" }, itens(2))).toContain('data-snap="free"')
-    const codigo = fonte("src/components/ui/carousel.tsx")
+    const codigo = lerFonte("src/components/ui/carousel.tsx")
     expect(codigo).toContain('...(snap === "free" && { dragFree: true })')
     expect(codigo).toContain("selectOnClick = true")
     expect(codigo).toContain("wheel = true")
@@ -90,7 +88,7 @@ describe("as versões do Carousel", () => {
   })
 
   it("a tela cheia é opaca nos dois temas e devolve o índice", () => {
-    const codigo = fonte("src/components/ui/carousel.tsx")
+    const codigo = lerFonte("src/components/ui/carousel.tsx")
     expect(codigo).toMatch(/data-slot="carousel-fullscreen"[\s\S]*?bg-background[\s\S]*?dark:bg-background"/)
     expect(codigo).toContain("principal?.scrollTo(interna.selectedScrollSnap(), true)")
   })

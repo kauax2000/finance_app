@@ -21,19 +21,45 @@
  * depois de sair do JSX, mantida viva só por este arquivo. É a armadilha que
  * esta base documenta em três lugares, usada a favor.
  */
-import { readFileSync, readdirSync, statSync } from "node:fs"
+import { readdirSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
-import { ANCHORED_COLLISION_PADDING, ANCHORED_SURFACES } from "./anchored-surface"
+import { ANCHORED_COLLISION_PADDING } from "./anchored-surface"
+
+/**
+ * As superfícies que a regra alcança: arquivo → nome da primitiva no Radix.
+ *
+ * Ela é ao mesmo tempo o **alcance declarado** da regra e o que este teste
+ * itera para provar que cada uma escreve os dois tetos por extenso. Uma superfície ancorada nova entra aqui na mesma mudança
+ * em que nasce — senão o teste não a vê, e o alcance vira promessa.
+ *
+ * Fora da lista, com motivo:
+ *
+ * - **`combobox.tsx`, `date-picker.tsx`** — não têm `Content` próprio; compõem
+ *   `PopoverContent` e herdam dele os três.
+ * - **`command.tsx`** — não é ancorado. Ele vive dentro de um `Popover` (pelo
+ *   `Combobox`) ou de um `Dialog`, e o teto dele é `--command-list-max-h`.
+ * - **`navigation-menu.tsx`** — não usa Popper: o Radix não expõe colisão nesta
+ *   primitiva, e o trilho é feito à mão em `medir()`. Ele lê a constante, mas
+ *   não tem as variáveis `--radix-*-content-available-*` para declarar.
+ */
+const ANCHORED_SURFACES = {
+  "popover.tsx": "popover",
+  "dropdown-menu.tsx": "dropdown-menu",
+  "context-menu.tsx": "context-menu",
+  "menubar.tsx": "menubar",
+  "select.tsx": "select",
+  "tooltip.tsx": "tooltip",
+  "hover-card.tsx": "hover-card",
+} as const
 
 const UI = join(import.meta.dirname, "..", "components", "ui")
 const RAIZ = join(import.meta.dirname, "..")
 
 function fonte(caminho: string) {
-  return readFileSync(caminho, "utf8")
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/^\s*\/\/.*$/gm, "")
+  return semComentarios(lerFonte(caminho), "linha-inteira")
 }
 
 function todosOsTsx(dir: string, fora: string[] = []): string[] {

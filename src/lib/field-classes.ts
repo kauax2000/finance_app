@@ -221,6 +221,25 @@ export const fieldGroupDisabledClassName = [
 export const fieldTriggerHoverClassName =
   "hover:bg-input-fill/50 active:bg-input-fill/50"
 
+/**
+ * A régua inteira de um controle que **é** um campo — superfície, foco,
+ * inválido e desabilitado, nessa ordem —, escrita uma vez para as oito
+ * chamadas que a montavam à mão. Vem **primeiro** no `cn`, antes do degrau
+ * (ver "A ordem de composição é carga estrutural", no topo).
+ */
+export const fieldControlClassName = [
+  fieldSurfaceClassName,
+  fieldFocusRingClassName,
+  fieldInvalidClassName,
+  fieldDisabledClassName,
+].join(" ")
+
+/** A mesma régua, mais o realce do ponteiro: o campo que **abre** alguma coisa. */
+export const fieldTriggerClassName = [
+  fieldControlClassName,
+  fieldTriggerHoverClassName,
+].join(" ")
+
 /** A escada de controle do projeto: os mesmos nomes do `Button` e do `Tabs`. */
 export type FieldControlSize = "sm" | "md" | "lg" | "xl"
 

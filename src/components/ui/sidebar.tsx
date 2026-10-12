@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import { cva, type VariantProps } from "class-variance-authority"
 import { motion, useReducedMotion } from "motion/react"
 import { Slot } from "radix-ui"
@@ -974,7 +973,7 @@ function SidebarHeader({
   const movel = React.useContext(SidebarGatilhoMovelContext)
   // O cabeçalho registra que existe: sem ele o gatilho não teria para onde ir,
   // e ficaria no topo da tela.
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     setGatilhoMovel(movel)
     return () => setGatilhoMovel(false)
   }, [movel, setGatilhoMovel])

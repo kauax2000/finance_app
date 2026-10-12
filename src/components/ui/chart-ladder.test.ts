@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs"
-
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
+import { esperarDistintos } from "@/test/regras"
 
 import {
   chartContainerVariants,
@@ -29,7 +29,7 @@ import {
  *   magnitude.
  */
 
-const FONTE = readFileSync(new URL("./chart.tsx", import.meta.url), "utf8")
+const FONTE = lerFonte("src/components/ui/chart.tsx")
 
 /**
  * O mesmo fonte sem comentários. Metade das asserções abaixo pergunta o que o
@@ -38,7 +38,7 @@ const FONTE = readFileSync(new URL("./chart.tsx", import.meta.url), "utf8")
  * separação, cada defeito documentado reprovaria o teste que existe para
  * impedi-lo de voltar. É a mesma correção que o auditor já fez em `lineOf`.
  */
-const CODIGO = FONTE.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "")
+const CODIGO = semComentarios(FONTE)
 
 const ASPECTOS = ["video", "wide", "standard", "square", "auto"] as const
 
@@ -136,7 +136,7 @@ describe("escada e invariantes do Chart", () => {
 
   it("5. a rampa tem cinco degraus, e o sexto não repete o primeiro", () => {
     const cinco = [0, 1, 2, 3, 4].map(chartSeriesColor)
-    expect(new Set(cinco).size).toBe(5)
+    esperarDistintos(cinco)
     for (let i = 0; i < 5; i++) {
       expect(cinco[i]).toBe(`var(--chart-${i + 1})`)
     }

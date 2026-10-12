@@ -1,10 +1,9 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 /** O bloco que expande, trancado na rodada 189. */
 
-const FONTE = readFileSync(join(process.cwd(), "src/components/ui/collapsible.tsx"), "utf8")
+const FONTE = lerFonte("src/components/ui/collapsible.tsx")
 
 describe("o collapsible", () => {
   it("a linha é a régua do Accordion", () => {
@@ -19,7 +18,7 @@ describe("o collapsible", () => {
     expect(FONTE).toMatch(/if \(proximo\) \{\s*raiz\.current[\s\S]{0,120}removeAttribute\("hidden"\)/)
     // A mecânica mora no hook desde a rodada 200, dividida com o `Accordion`.
     expect(FONTE).toContain("useUntilFound(")
-    const HOOK = readFileSync(join(process.cwd(), "src/hooks/use-until-found.ts"), "utf8")
+    const HOOK = lerFonte("src/hooks/use-until-found.ts")
     expect(HOOK).toContain('el.setAttribute("hidden", "until-found")')
     expect(HOOK).toContain('addEventListener("beforematch"')
     // Só o `animationend` do próprio nó: a cascata dos filhos também dispara.

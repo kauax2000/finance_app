@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { AlertDialog as AlertDialogPrimitive } from "radix-ui"
+import { useComposedRefs } from "radix-ui/internal"
 import { type VariantProps } from "class-variance-authority"
 
 import {
@@ -14,7 +15,11 @@ import {
 import { cn } from "@/lib/utils"
 import { Muted } from "@/components/ui/typography"
 import { Button } from "@/components/ui/button"
-import { dialogContentVariants, juntarRefs, useOrigemDoClique } from "@/components/ui/dialog"
+import {
+  DIALOG_OVERLAY_CLASS,
+  dialogContentVariants,
+  useOrigemDoClique,
+} from "@/components/ui/dialog"
 import { Field, FieldControl, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
@@ -89,10 +94,7 @@ function AlertDialogOverlay({
   return (
     <AlertDialogPrimitive.Overlay
       data-slot="alert-dialog-overlay"
-      className={cn(
-        "fixed inset-0 isolate z-(--z-modal) bg-overlay animation-duration-(--duration-slow) ease-(--ease-out) supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
-        className
-      )}
+      className={cn(DIALOG_OVERLAY_CLASS, className)}
       {...props}
     />
   )
@@ -120,11 +122,12 @@ function AlertDialogContent({
   const { pending } = React.useContext(AlertDialogContext)
   // Nasce de onde se clicou, como o `Dialog` (rodada 248).
   const origem = useOrigemDoClique()
+  const cascoRef = useComposedRefs<HTMLDivElement>(ref, origem)
   return (
     <AlertDialogPortal>
       <AlertDialogOverlay />
       <AlertDialogPrimitive.Content
-        ref={juntarRefs(ref, origem)}
+        ref={cascoRef}
         data-slot="alert-dialog-content"
         data-layout="auto"
         aria-busy={pending || undefined}

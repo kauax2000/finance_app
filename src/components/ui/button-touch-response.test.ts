@@ -1,6 +1,5 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { blocoCss, lerFonte } from "@/test/fonte"
 
 import { buttonVariants } from "./button"
 import { cn } from "@/lib/utils"
@@ -140,12 +139,12 @@ describe("resposta ao toque do Button", () => {
     for (const variant of ["primary", "secondary", "tertiary", "outline", "destructive"] as const) {
       expect(buttonVariants({ variant }), variant).not.toMatch(/button-fill/)
     }
-    const CSS = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+    const CSS = lerFonte("src/app/globals.css")
     expect(CSS).toMatch(/@utility button-hover \{\s*background-image: linear-gradient\(/)
     expect(CSS).toMatch(/@property --button-hover \{\s*syntax: "<number>";/)
     expect(CSS).not.toMatch(/@property --button-fill\b/)
     expect(CSS).not.toMatch(/@utility button-fill\b/)
-    const botao = readFileSync(join(process.cwd(), "src/components/ui/button.tsx"), "utf8")
+    const botao = lerFonte("src/components/ui/button.tsx")
     expect(botao).not.toMatch(/--button-mx|PESOS_COM_PONTEIRO/)
   })
 
@@ -162,9 +161,8 @@ describe("resposta ao toque do Button", () => {
     expect(classes).not.toContain("bg-[image:")
     expect(classes).not.toContain("bg-[length:")
 
-    const CSS = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
-    const corpo = CSS.slice(CSS.indexOf("@utility link-sweep {"))
-    const utility = corpo.slice(0, corpo.indexOf("\n}"))
+    const CSS = lerFonte("src/app/globals.css")
+    const utility = blocoCss(CSS, "@utility link-sweep {", "\n}")
     // Em repouso, colapsado à direita; no cursor, cheio a partir da esquerda.
     // A troca de origem é o truque: sem ela o traço voltaria por onde veio.
     expect(utility).toContain("transform: scaleX(0)")

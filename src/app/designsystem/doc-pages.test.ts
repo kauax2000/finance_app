@@ -1,7 +1,8 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs"
+import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import { REGISTRY } from "./registry"
 
@@ -14,7 +15,7 @@ import { REGISTRY } from "./registry"
  */
 
 const DOCS = "src/app/designsystem/docs"
-const pagina = (slug: string) => readFileSync(join(DOCS, `${slug}.tsx`), "utf8")
+const pagina = (slug: string) => lerFonte(join(DOCS, `${slug}.tsx`))
 
 const COMPONENTES = REGISTRY.filter((e) => e.category !== "Foundations")
 
@@ -35,14 +36,14 @@ describe("as páginas de componente", () => {
   it("nenhuma redeclara os controles da demonstração: Eixo e Interruptor moram no ds-doc", () => {
     const aMao = readdirSync(DOCS)
       .filter((f) => f.endsWith(".tsx"))
-      .filter((f) => /^function (Eixo|Interruptor)\b/m.test(readFileSync(join(DOCS, f), "utf8")))
+      .filter((f) => /^function (Eixo|Interruptor)\b/m.test(lerFonte(join(DOCS, f))))
     expect(aMao).toEqual([])
   })
 
   it("nenhuma usa conteúdo de mentira no lugar do conteúdo de produto", () => {
     const vazias = readdirSync(DOCS)
       .filter((f) => f.endsWith(".tsx"))
-      .filter((f) => /Conteúdo da seção|lorem ipsum/i.test(readFileSync(join(DOCS, f), "utf8")))
+      .filter((f) => /Conteúdo da seção|lorem ipsum/i.test(lerFonte(join(DOCS, f))))
     expect(vazias).toEqual([])
   })
 })

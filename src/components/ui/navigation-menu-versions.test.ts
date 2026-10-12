@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import {
   NavigationMenu,
@@ -15,9 +14,8 @@ import {
 
 /** A rodada 219: o redesenho do `NavigationMenu`. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/navigation-menu.tsx")
-const CSS = fonte("src/app/globals.css")
+const CODIGO = lerFonte("src/components/ui/navigation-menu.tsx")
+const CSS = lerFonte("src/app/globals.css")
 
 const fileira = (props: Record<string, unknown> = {}) =>
   renderToStaticMarkup(
@@ -75,7 +73,7 @@ describe("o redesenho do NavigationMenu", () => {
 
   it("os comentários e a página não contam o que deixou de ser verdade", () => {
     expect(CODIGO).not.toContain("As três superfícies são **as três strings do `Menubar`**")
-    const doc = fonte("src/app/designsystem/docs/navigation-menu.tsx")
+    const doc = lerFonte("src/app/designsystem/docs/navigation-menu.tsx")
     expect(doc).not.toContain("Um item; ancora o painel quando viewport={false}.")
     expect(doc).not.toContain("data-active marca a rota atual")
   })

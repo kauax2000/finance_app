@@ -1,16 +1,13 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import { tagChipFilterSelected, tagChipNeutral } from "./badge"
 import { toggleVariants } from "./toggle"
 import { ToggleGroup, ToggleGroupItem } from "./toggle-group"
 
 /** As versões da rodada 199. */
-
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
 
 const grupo = (props: Record<string, unknown>, ...itens: Record<string, unknown>[]) =>
   renderToStaticMarkup(
@@ -46,7 +43,7 @@ describe("ToggleGroup, rodada 199", () => {
   })
 
   it("o marcador lê a caixa da escolhida, e transiciona", () => {
-    const codigo = fonte("src/components/ui/toggle-group.tsx")
+    const codigo = lerFonte("src/components/ui/toggle-group.tsx")
     expect(codigo).toContain('[data-slot="toggle-group-item"][data-state="on"]')
     expect(codigo).toMatch(/translate-x-\(--toggle-indicator-x\)[\s\S]*transition-\[translate,width,height\]/)
     expect(codigo).toContain("new MutationObserver(medir)")
@@ -65,11 +62,11 @@ describe("ToggleGroup, rodada 199", () => {
   })
 
   it("nenhuma tela escreve a escolha de período nem a contagem à mão", () => {
-    const presets = fonte("src/components/transactions/transactions-date-presets.tsx")
+    const presets = lerFonte("src/components/transactions/transactions-date-presets.tsx")
     expect(presets).not.toMatch(/aria-pressed|tagChipFilter|shadow-\[/)
     expect(presets).toContain('variant="segmented"')
     expect(presets).toContain('variant="chip"')
-    const atividade = fonte("src/app/(app)/account/activity/page-client.tsx")
+    const atividade = lerFonte("src/app/(app)/account/activity/page-client.tsx")
     expect(atividade).not.toMatch(/\{label\} \(/)
     expect(atividade).toContain("count={activityCounts[key]}")
   })
@@ -90,7 +87,7 @@ describe("ToggleGroup floating, rodada 231", () => {
   })
 
   it("e anda como as abas: a viagem líquida, 2px para dentro, sem transição de CSS", () => {
-    const fonte = readFileSync(join(process.cwd(), "src/components/ui/toggle-group.tsx"), "utf8")
+    const fonte = lerFonte("src/components/ui/toggle-group.tsx")
     expect(fonte).toContain("viajarLiquido(peca, antes.caixa, caixa, { amplitude, trajeto: TRAJETO_MACIO })")
     expect(fonte).toContain("const recuo = flutuante ? 2 : 0")
     expect(fonte).toContain('"gap-1.5 rounded-full px-3 text-control-sm pointer-coarse:h-9 duration-(--duration-base)"')

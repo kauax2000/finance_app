@@ -41,8 +41,8 @@ export function CategoriesOnboardingLoadingShell() {
 
                 <div className="shrink-0 space-y-1 border-b border-border/80 px-4 py-3 sm:px-5">
                     <Skeleton className="h-5 w-36 rounded-md" />
-                    <Skeleton className="h-3 w-full max-w-[17.5rem] rounded-md" />
-                    <Skeleton className="h-3 w-full max-w-[13rem] rounded-md" />
+                    <Skeleton className="h-3 w-full max-w-70 rounded-md" />
+                    <Skeleton className="h-3 w-full max-w-52 rounded-md" />
                 </div>
 
                 <div className="shrink-0 space-y-2 px-4 py-3 sm:px-5">

@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs"
-
 import { describe, expect, it } from "vitest"
+import { blocoCss, lerFonte, semComentarios } from "@/test/fonte"
+import { esperarCrescente, esperarDepoisDeNoScrollbar, esperarDistintos } from "@/test/regras"
 
 import {
   carouselControlPosition,
@@ -43,7 +43,7 @@ function medida(classe: string) {
   return m ? Number(m[1]) : 0
 }
 
-const fonte = readFileSync(new URL("./carousel.tsx", import.meta.url), "utf8")
+const fonte = lerFonte("src/components/ui/carousel.tsx")
 
 describe("escada e caixa do Carousel", () => {
   it("1. `md` é o padrão da calha, e ele está escrito uma vez só", () => {
@@ -56,10 +56,9 @@ describe("escada e caixa do Carousel", () => {
 
   it("2. nenhum par de degraus de calha produz a mesma string", () => {
     for (const eixo of EIXOS) {
-      const strings = DEGRAUS.map(
-        (g) => `${carouselGapClasses[eixo][g].track}|${carouselGapClasses[eixo][g].item}`
+      esperarDistintos(
+        DEGRAUS.map((g) => `${carouselGapClasses[eixo][g].track}|${carouselGapClasses[eixo][g].item}`)
       )
-      expect(new Set(strings).size).toBe(DEGRAUS.length)
     }
   })
 
@@ -68,7 +67,7 @@ describe("escada e caixa do Carousel", () => {
       const trilho = DEGRAUS.map((g) => medida(carouselGapClasses[eixo][g].track))
       const item = DEGRAUS.map((g) => medida(carouselGapClasses[eixo][g].item))
 
-      expect(trilho).toStrictEqual([...trilho].sort((a, b) => a - b))
+      esperarCrescente(trilho)
       // A margem negativa do trilho tem de cancelar exatamente o recuo do item,
       // senão o primeiro item nasce deslocado da borda do viewport.
       expect(trilho).toStrictEqual(item)
@@ -167,7 +166,7 @@ describe("escada e caixa do Carousel", () => {
     // A medição da âncora tem de estar **dentro** do layout effect. O motor da
     // dissolução continua sendo um `useEffect` normal, e é correto: ele não
     // decide posição nenhuma, então não precisa correr antes da pintura.
-    const blocoLayout = fonte.split("useIsomorphicLayoutEffect(")[1] ?? ""
+    const blocoLayout = fonte.split("React.useLayoutEffect(")[1] ?? ""
     expect(blocoLayout).toContain("--carousel-control-y")
     expect(blocoLayout).toContain("--carousel-control-x")
   })
@@ -204,7 +203,7 @@ describe("escada e caixa do Carousel", () => {
     // `translate`.
     expect(carouselControlTransition).toContain("translate")
     expect(carouselControlTransition).not.toContain("all")
-    expect(carouselControlTransition).not.toMatch(/\btop\b/)
+    // O `top` de fora é a asserção 8.
   })
 
   it("8b. a seta é quadrada de cantos arredondados, sem fundo em repouso", () => {
@@ -308,12 +307,10 @@ describe("escada e caixa do Carousel", () => {
   })
 
   it("13. os efeitos só leem a variável do driver, e nada transiciona (rodada 134)", () => {
-    const css = readFileSync(new URL("../../app/globals.css", import.meta.url), "utf8")
+    const css = lerFonte("src/app/globals.css")
     for (const [efeito, classe] of Object.entries(carouselEffectClasses)) {
       if (efeito === "none") continue
-      const i = css.indexOf(`@utility ${classe} {`)
-      expect(i, `${classe} não existe`).toBeGreaterThan(css.indexOf("@utility no-scrollbar"))
-      const bloco = css.slice(i, css.indexOf("\n}\n", i))
+      const bloco = esperarDepoisDeNoScrollbar(css, `@utility ${classe} {`, { mensagem: `${classe} não existe` })
       expect(bloco, classe).toMatch(/--carousel-slide-[ds]/)
       expect(bloco, `${classe} transiciona`).not.toMatch(/transition/)
       // Movimento reduzido zera o que se move. A exceção é o `fade` (rodada
@@ -344,19 +341,15 @@ describe("escada e caixa do Carousel", () => {
   })
 
   it("16. o autoplay pausa no cursor, no foco e com a aba escondida — e o relógio é o CSS", () => {
-    const hook = readFileSync(
-      new URL("../../hooks/use-carousel-autoplay.ts", import.meta.url),
-      "utf8"
-    )
+    const hook = lerFonte("src/hooks/use-carousel-autoplay.ts")
     expect(fonte).toContain('autoplay.pausar("cursor")')
     expect(fonte).toContain('autoplay.pausar("foco")')
     expect(hook).toContain('pausar("oculta")')
     // Movimento reduzido nasce pausado pelo usuário, e não desligado.
     expect(hook).toMatch(/prefers-reduced-motion: reduce[\s\S]{0,80}pausar\("usuario"\)/)
     // O relógio do CSS lê o intervalo publicado na raiz e pausa com ela.
-    const css = readFileSync(new URL("../../app/globals.css", import.meta.url), "utf8")
-    const i = css.indexOf("@utility carousel-timer {")
-    const bloco = css.slice(i, css.indexOf("\n}\n", i))
+    const css = lerFonte("src/app/globals.css")
+    const bloco = blocoCss(css, "@utility carousel-timer {")
     expect(bloco).toContain("var(--carousel-autoplay-ms")
     expect(bloco).toMatch(/\[data-autoplay="paused"\] &[\s\S]*animation-play-state: paused/)
     expect(fonte).toContain('"--carousel-autoplay-ms"')
@@ -368,12 +361,12 @@ describe("escada e caixa do Carousel", () => {
   })
 
   it("18. passos e miniaturas dizem qual é o atual, sem abas quebradas", () => {
-    const semComentarios = fonte.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, " ")
-    const passos = semComentarios.slice(
-      semComentarios.indexOf("function CarouselSteps("),
-      semComentarios.indexOf("function CarouselThumbs(")
+    const codigo = semComentarios(fonte, "numa-passada")
+    const passos = codigo.slice(
+      codigo.indexOf("function CarouselSteps("),
+      codigo.indexOf("function CarouselThumbs(")
     )
-    const miniaturas = semComentarios.slice(semComentarios.indexOf("function CarouselThumbs("))
+    const miniaturas = codigo.slice(codigo.indexOf("function CarouselThumbs("))
     expect(passos).toContain('aria-current={ativo ? "step" : undefined}')
     expect(passos).not.toMatch(/role="tab"/)
     expect(miniaturas).toContain('aria-current={ativa ? "true" : undefined}')

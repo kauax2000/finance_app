@@ -1,7 +1,5 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
-
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 import {
   alturaDaBarra,
@@ -83,10 +81,7 @@ describe("HistogramSlider", () => {
     // cobre `background-color` e **não** `background-image`, então na variante
     // de marca o degradê aparecia de estalo enquanto a tinta apagada dissolvia
     // em 150ms. Degradê não interpola — quem liga e desliga é uma opacidade.
-    const src = readFileSync(
-      join(process.cwd(), "src/components/ui/histogram-slider.tsx"),
-      "utf8"
-    ).replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, " ")
+    const src = semComentarios(lerFonte("src/components/ui/histogram-slider.tsx"), "numa-passada")
 
     // A camada acesa existe **sempre**, e só a opacidade muda: montar e
     // desmontar não deixa nada para esmaecer.
@@ -105,10 +100,7 @@ describe("HistogramSlider", () => {
     // E ela **não** volta a ser pseudo do punho — nem o `::after`, que é o
     // alvo de toque de 44px: escrever ali o apagaria sem erro nenhum.
     expect(src).not.toMatch(/slider-thumb\]\]:(before|after):/)
-    const alvo = readFileSync(
-      join(process.cwd(), "src/components/ui/slider.tsx"),
-      "utf8"
-    )
+    const alvo = lerFonte("src/components/ui/slider.tsx")
     expect(alvo, "o alvo de 44px do punho").toContain("after:size-11")
 
     // Ela nasce na altura do centro do punho e desce até a base, é invertida
@@ -131,10 +123,7 @@ describe("HistogramSlider", () => {
   })
 
   it("5. o slider é travado na grade, e é isso que centra punho e guia", () => {
-    const src = readFileSync(
-      join(process.cwd(), "src/components/ui/histogram-slider.tsx"),
-      "utf8"
-    ).replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, " ")
+    const src = semComentarios(lerFonte("src/components/ui/histogram-slider.tsx"), "numa-passada")
 
     // **O passo é a largura de uma faixa, e não uma prop.** Com passo livre,
     // uma guia presa às frestas não tem como estar sempre sob um punho que

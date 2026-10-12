@@ -1,11 +1,9 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 import {
-  FILTER_BAR_SIZES,
   FilterBar,
   FilterBarSkeleton,
   filterPeriodRange,
@@ -17,9 +15,8 @@ import {
 
 /** A rodada 245: o FilterBar — o token partido, o editor, a URL e o teclado. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const FONTE = fonte("src/components/ui/filter-bar.tsx")
-const CODIGO = FONTE.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "")
+const FONTE = lerFonte("src/components/ui/filter-bar.tsx")
+const CODIGO = semComentarios(FONTE, "linha-inteira")
 
 const CAMPOS: FilterField[] = [
   {
@@ -44,7 +41,6 @@ const barra = (props: Partial<React.ComponentProps<typeof FilterBar>> = {}) =>
 
 describe("a escada e as superfícies", () => {
   it("sm 28 · md 32 · lg 36, e o piso de 40 no dedo vem da régua de campo", () => {
-    expect(FILTER_BAR_SIZES).toEqual({ sm: 28, md: 32, lg: 36 })
     expect(CODIGO).toContain("fieldControlHeightClassName[size]")
     expect(barra({ defaultValue: [{ field: "parcelado", operator: "is", values: [] }] })).toContain(
       "pointer-coarse:h-10"
@@ -64,7 +60,7 @@ describe("a escada e as superfícies", () => {
     // O calendário na gaveta é o do DatePicker: células lg, esticadas.
     expect(CODIGO).toContain('size={naGaveta ? "lg" : "md"}')
     // Os atalhos de período sobem a 40 no Calendar.
-    const calendario = fonte("src/components/ui/calendar.tsx")
+    const calendario = lerFonte("src/components/ui/calendar.tsx")
     expect(calendario).toContain("w-full justify-center font-normal pointer-coarse:h-10")
     // No telefone os atalhos são 2 × 2, e na gaveta o calendário não pinta fundo.
     expect(calendario).toContain('className="grid grid-cols-2 gap-1 md:flex')
@@ -82,15 +78,15 @@ describe("a escada e as superfícies", () => {
   })
 
   it("o iPhone do catálogo é dedo: a variante vale sob [data-pointer=coarse], e a moldura marca o documento", () => {
-    const css = fonte("src/app/globals.css")
+    const css = lerFonte("src/app/globals.css")
     expect(css).toMatch(/@custom-variant pointer-coarse \{\s*@media \(pointer: coarse\) \{\s*@slot;\s*\}\s*&:where\(\[data-pointer="coarse"\] \*\) \{\s*@slot;/)
-    const moldura = fonte("src/app/designsystem/ds-frame.tsx")
+    const moldura = lerFonte("src/app/designsystem/ds-frame.tsx")
     expect(moldura).toContain('raiz.dataset.pointer = "coarse"')
     expect(moldura).toContain("<ToqueEmulado />")
   })
 
   it("na moldura do iPhone a gaveta não é modal, mas tem véu e fecha no toque fora", () => {
-    const gaveta = fonte("src/components/ui/drawer.tsx")
+    const gaveta = lerFonte("src/components/ui/drawer.tsx")
     // Só quando a falta de modal é da moldura — `modal={false}` de quem chama continua sem véu.
     expect(gaveta).toContain('modal === false && (props as { modal?: boolean }).modal === undefined')
     expect(gaveta).toContain("onPointerDown={() => raiz.fechar()}")
@@ -335,7 +331,7 @@ describe("o comportamento", () => {
   it("o flash é a utility da casa, numa sobreposição que remonta — nunca o botão", () => {
     expect(CODIGO).toContain('trocasValor > 0 && "table-flash"')
     expect(CODIGO).toMatch(/<span aria-hidden key=\{trocasValor\}/)
-    expect(fonte("src/app/globals.css")).not.toContain("filter-bar")
+    expect(lerFonte("src/app/globals.css")).not.toContain("filter-bar")
   })
 
   it("o operador troca num menu de rádios, e no telefone ele e o editor viram gaveta", () => {

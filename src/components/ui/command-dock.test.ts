@@ -1,11 +1,8 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
-
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
+import { lerFonte } from "@/test/fonte"
 
 describe("a pilha: pílula, placa e legenda (rodadas 140–143)", () => {
-  const paleta = fonte("src/components/ui/command.tsx")
+  const paleta = lerFonte("src/components/ui/command.tsx")
 
   it("a pilha é a variante panel: o diálogo e o Combobox a montam", () => {
     const dialogo = paleta.slice(paleta.indexOf("function CommandDialog"), paleta.indexOf("function CommandInput"))
@@ -19,7 +16,7 @@ describe("a pilha: pílula, placa e legenda (rodadas 140–143)", () => {
     // O Combobox **saiu da pilha** na rodada 198: uma placa só, a do popover,
     // com a pílula `plate` e a lista dentro — a forma do `SearchInput` num
     // popover, que o dono pediu "exatamente a mesma".
-    const combobox = fonte("src/components/ui/combobox.tsx")
+    const combobox = lerFonte("src/components/ui/combobox.tsx")
     expect(combobox).not.toContain('variant="panel"')
     expect(combobox).not.toContain('surface="none"')
     expect(combobox).toMatch(/<CommandInput[\s\S]*surface="plate"/)
@@ -35,12 +32,12 @@ describe("a pilha: pílula, placa e legenda (rodadas 140–143)", () => {
     // Desde a rodada 198 a pílula é o `SearchInput`, na superfície `plate`
     // dentro da pilha; a receita é que é pílula e vidro.
     expect(campo).toMatch(/<SearchInput\s+surface=\{surface \?\? \(naPilha \? "plate" : "field"\)\}/)
-    expect(fonte("src/components/ui/search-input.tsx")).toContain("searchFieldSurfaceClassName[surface]")
-    const receita = fonte("src/lib/search-field-classes.ts")
+    expect(lerFonte("src/components/ui/search-input.tsx")).toContain("searchFieldSurfaceClassName[surface]")
+    const receita = lerFonte("src/lib/search-field-classes.ts")
     expect(receita).toMatch(/searchFieldShapeClassName = "[^"]*rounded-full/)
     expect(receita).toMatch(/plate: `[^`]*\$\{menuPanelTintClassName\}`/)
     // O popover do Combobox pinta a placa da régua, e o `Command` de dentro não.
-    const popover = fonte("src/components/ui/popover.tsx")
+    const popover = lerFonte("src/components/ui/popover.tsx")
     expect(popover).toMatch(/plate: menuPanelSurfaceClassName/)
     expect(popover).toMatch(/defaultVariants: \{ surface: "plate"/)
   })
@@ -54,7 +51,7 @@ describe("a pilha: pílula, placa e legenda (rodadas 140–143)", () => {
   })
 
   it("a legenda é o último filho, e a linha é do componente, não da tela", () => {
-    const busca = fonte("src/app/designsystem/ds-search.tsx")
+    const busca = lerFonte("src/app/designsystem/ds-search.tsx")
     expect(busca).toContain("<CommandDock>")
     expect(busca).not.toContain("dock={")
     expect(paleta).not.toContain("function CommandFooter")

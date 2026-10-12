@@ -1,6 +1,5 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { blocoCss, lerFonte } from "@/test/fonte"
 
 /**
  * O `Skeleton` (rodada 176). A linha de texto depende de uma `@utility` do
@@ -8,15 +7,14 @@ import { describe, expect, it } from "vitest"
  * elemento, a regra deixou de existir, e todo `shape="text"` ficou com altura
  * zero — buracos no lugar das linhas.
  */
-const CSS = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
-const SRC = readFileSync(join(process.cwd(), "src/components/ui/skeleton.tsx"), "utf8")
+const CSS = lerFonte("src/app/globals.css")
+const SRC = lerFonte("src/components/ui/skeleton.tsx")
 
 describe("Skeleton", () => {
   it("1. a linha de texto tem a utility que lhe dá altura", () => {
     expect(SRC).toContain('base: "skeleton-text rounded-sm"')
-    const i = CSS.indexOf("@utility skeleton-text {")
-    expect(i, "a @utility skeleton-text sumiu do globals.css").toBeGreaterThan(-1)
-    const bloco = CSS.slice(i, CSS.indexOf("}", i))
+    expect(CSS.indexOf("@utility skeleton-text {"), "a @utility skeleton-text sumiu do globals.css").toBeGreaterThan(-1)
+    const bloco = blocoCss(CSS, "@utility skeleton-text {", "}")
     expect(bloco).toContain("height: 0.8em")
     expect(bloco).toContain("margin-block: calc((1lh - 0.8em) / 2)")
   })

@@ -1,8 +1,8 @@
-import { readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { arquivosTsx, lerFonte } from "@/test/fonte"
 
 import {
   Card,
@@ -19,14 +19,6 @@ import {
 
 const html = (el: React.ReactElement) => renderToStaticMarkup(el)
 const casco = (props: Record<string, unknown>) => html(h(Card, props, "x"))
-
-function telas(dir: string): string[] {
-  return readdirSync(dir).flatMap((nome) => {
-    const caminho = join(dir, nome)
-    if (statSync(caminho).isDirectory()) return telas(caminho)
-    return /\.tsx$/.test(nome) ? [caminho] : []
-  })
-}
 
 describe("as versões do Card", () => {
   it("inativo, selecionado, horizontal e tracejado são eixos próprios", () => {
@@ -61,9 +53,9 @@ describe("as versões do Card", () => {
   })
 
   it("nenhuma tela escreve o campo, o esmaecido ou o link esticado à mão", () => {
-    for (const arquivo of telas(join(process.cwd(), "src"))) {
+    for (const arquivo of arquivosTsx(join(process.cwd(), "src"))) {
       if (arquivo.includes(join("components", "ui"))) continue
-      const codigo = readFileSync(arquivo, "utf8")
+      const codigo = lerFonte(arquivo)
       expect(codigo, arquivo).not.toContain("rounded-lg border border-border/60 bg-background/80 p-3")
       expect(codigo, arquivo).not.toContain("opacity-[0.82]")
       expect(codigo, arquivo).not.toMatch(/after:absolute after:inset-0/)

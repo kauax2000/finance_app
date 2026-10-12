@@ -1,8 +1,8 @@
-import { readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { arquivosTsx, lerFonte } from "@/test/fonte"
 
 import {
   EmptyState,
@@ -22,7 +22,7 @@ describe("EmptyState", () => {
     // recusadas na tela. A marca fica só no numeral das páginas de erro.
     const html = renderToStaticMarkup(h(EmptyState, { variant: "plain", size: "lg" }, h(EmptyStateGhost)))
     expect(html).not.toMatch(/brand|rainbow|empty-state-contour|empty-state-veil/)
-    const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+    const css = lerFonte("src/app/globals.css")
     expect(css).not.toMatch(/@utility empty-state-(veil|contour)/)
   })
 
@@ -34,7 +34,7 @@ describe("EmptyState", () => {
     // O respiro é margem, e não `gap`: com `gap`, metade da altura cairia no
     // meio de um vão e o laço saltaria meio respiro por volta.
     expect(html).toContain('class="empty-state-drift"')
-    const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+    const css = lerFonte("src/app/globals.css")
     expect(css).toMatch(/@keyframes empty-state-drift \{\s*to \{\s*transform: translateY\(-50%\)/)
     // Em `@utility`, e não em `animate-[…]`: o Tailwind v4 descarta keyframes
     // que nenhuma utility referencia, e os fantasmas ficavam parados.
@@ -74,25 +74,15 @@ describe("EmptyState", () => {
   })
 })
 
-const FONTE = readFileSync(join(process.cwd(), "src/components/ui/empty-state.tsx"), "utf8")
-
-const arquivos = (dir: string): string[] =>
-  readdirSync(dir).flatMap((nome) => {
-    const caminho = join(dir, nome)
-    return statSync(caminho).isDirectory()
-      ? arquivos(caminho)
-      : /\.tsx$/.test(nome)
-        ? [caminho]
-        : []
-  })
+const FONTE = lerFonte("src/components/ui/empty-state.tsx")
 
 describe("EmptyState, rodada 191", () => {
   it("o degrau dos botões é do bloco, e nenhuma tela o reescreve", () => {
     expect(FONTE).toContain("<ButtonSizeContext value={ACOES_DEGRAU[size]}>")
-    const culpados = arquivos(join(process.cwd(), "src"))
+    const culpados = arquivosTsx(join(process.cwd(), "src"))
       .filter((c) => !c.includes("components/ui/"))
       .filter((c) =>
-        [...readFileSync(c, "utf8").matchAll(/<EmptyStateActions>([\s\S]*?)<\/EmptyStateActions>/g)].some((m) =>
+        [...lerFonte(c).matchAll(/<EmptyStateActions>([\s\S]*?)<\/EmptyStateActions>/g)].some((m) =>
           /\bsize="/.test(m[1])
         )
       )

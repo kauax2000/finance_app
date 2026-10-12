@@ -1,17 +1,13 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
-
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
+import { lerFonte } from "@/test/fonte"
+import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
 describe("o feixe da pílula de busca espera a primeira tecla (rodada 142)", () => {
-  const css = fonte("src/app/globals.css")
-  const paleta = fonte("src/components/ui/command.tsx")
+  const css = lerFonte("src/app/globals.css")
+  const paleta = lerFonte("src/components/ui/command.tsx")
 
   it("a utility mora depois de no-scrollbar, pausa sem data-waiting e pinta a marca", () => {
-    const util = css.indexOf("@utility command-beam {")
-    expect(util).toBeGreaterThan(css.indexOf("@utility no-scrollbar"))
-    const bloco = css.slice(util, css.indexOf("\n}\n", util))
+    const bloco = esperarDepoisDeNoScrollbar(css, "@utility command-beam {")
     expect(bloco).toContain("animation-play-state: paused")
     expect(bloco).toMatch(/&\[data-waiting\] \{[^}]*running/)
     expect(bloco).toMatch(/var\(--brand-teal\)[\s\S]*var\(--brand-green\)/)
@@ -37,6 +33,6 @@ describe("o feixe da pílula de busca espera a primeira tecla (rodada 142)", () 
     const dialogo = paleta.slice(paleta.indexOf("function CommandDialog"), paleta.indexOf("function CommandInput"))
     expect(dialogo).toContain("<CommandBeamContext.Provider value>")
     expect(paleta.match(/<CommandBeamContext\.Provider/g)?.length).toBe(1)
-    expect(fonte("src/components/ui/combobox.tsx")).not.toContain("CommandBeam")
+    expect(lerFonte("src/components/ui/combobox.tsx")).not.toContain("CommandBeam")
   })
 })

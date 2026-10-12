@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import * as ResizablePrimitive from "react-resizable-panels"
 import {
   ChevronDownIcon,
@@ -513,7 +512,7 @@ function useResizablePanel() {
   // Sem isso a largura ia a 48 e `isCollapsed` seguia falso — a barra
   // redimensionável nunca entrava em modo ícone.
   const handleRef = React.useRef(handle)
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     handleRef.current = handle
   }, [handle])
   const sync = React.useCallback(() => {

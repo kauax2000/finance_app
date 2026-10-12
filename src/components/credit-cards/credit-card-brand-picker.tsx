@@ -49,12 +49,12 @@ function LogoNone({ className }: { className?: string }) {
     return (
         <span
             className={cn(
-                "flex h-7 w-[3.35rem] shrink-0 items-center justify-center rounded-md border border-dashed border-muted-foreground/45 bg-muted/20 text-muted-foreground",
+                "flex h-7 w-13.5 shrink-0 items-center justify-center rounded-md border border-dashed border-muted-foreground/45 bg-muted/20 text-muted-foreground",
                 className
             )}
             aria-hidden
         >
-            <NoSymbolIcon className="size-[18px] shrink-0 opacity-70" />
+            <NoSymbolIcon className="size-4.5 shrink-0 opacity-70" />
         </span>
     )
 }
@@ -103,8 +103,8 @@ function BrandRow({
 function OtherRow({ label }: { label: string }) {
     return (
         <span className="flex min-w-0 items-center gap-2 text-left text-sm">
-            <span className="flex h-7 w-[3.35rem] shrink-0 items-center justify-center rounded-md border border-border/40 bg-muted/15 text-muted-foreground dark:bg-input-fill/25">
-                <CreditCardIcon className="size-[18px] shrink-0" aria-hidden />
+            <span className="flex h-7 w-13.5 shrink-0 items-center justify-center rounded-md border border-border/40 bg-muted/15 text-muted-foreground dark:bg-input-fill/25">
+                <CreditCardIcon className="size-4.5 shrink-0" aria-hidden />
             </span>
             <span className="min-w-0 flex-1 truncate">{label}</span>
         </span>

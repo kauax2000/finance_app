@@ -1,15 +1,13 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import { DialogFooter, DialogHeader, DialogMedia, DialogSteps } from "./dialog"
 
 /** A rodada 211: as versões novas do `Dialog`. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/dialog.tsx")
+const CODIGO = lerFonte("src/components/ui/dialog.tsx")
 
 describe("as versões do Dialog", () => {
   it("todo pedido de fechar passa pela trava: salvando não fecha, alterado pergunta", () => {
@@ -78,7 +76,7 @@ describe("as versões do Dialog", () => {
       "src/components/categories/detail/category-detail-dialogs.tsx",
       "src/components/categories/categories-onboarding-wizard.tsx",
     ]) {
-      const codigo = fonte(arquivo)
+      const codigo = lerFonte(arquivo)
       expect(codigo, arquivo).toContain('surface="auto"')
       expect(codigo, arquivo).not.toContain("<SheetContent")
       // O "Salvando…" é do `FormSubmit`, não de um ternário.
@@ -87,10 +85,10 @@ describe("as versões do Dialog", () => {
   })
 
   it("o rascunho do lançamento: trocar a aba ou o tipo não é alteração", () => {
-    const uso = fonte("src/components/transactions/transaction-form-use.tsx")
+    const uso = lerFonte("src/components/transactions/transaction-form-use.tsx")
     const foto = uso.slice(uso.indexOf("function fotografar("), uso.indexOf("function fotografar(") + 400)
     expect(foto).not.toMatch(/formKind|r\.type|installmentEditScope|installmentValueMode/)
-    expect(fonte("src/components/transactions/transaction-form-dialog.tsx")).toMatch(/dirty=\{isDirty\}\s*confirmDiscard/)
+    expect(lerFonte("src/components/transactions/transaction-form-dialog.tsx")).toMatch(/dirty=\{isDirty\}\s*confirmDiscard/)
   })
 
   it("os comentários não contam mais o que deixou de ser verdade", () => {

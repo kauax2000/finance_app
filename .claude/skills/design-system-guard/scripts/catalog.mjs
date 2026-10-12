@@ -253,7 +253,7 @@ function readTokens(cssPath) {
     ),
     semPar: Object.keys(dark).filter((k) => !(k in root)),
     soNoClaro: Object.keys(root).filter(
-      (k) => !(k in dark) && precisaDePar(k, root[k])
+      (k) => !(k in dark) && !MESMO_NOS_DOIS_TEMAS.test(k) && precisaDePar(k, root[k])
     ),
   }
 }
@@ -277,6 +277,14 @@ function readTokens(cssPath) {
  * `--mobile-bottom-pad` apareceu no relatório como se fosse perder a cor no
  * escuro.
  */
+/**
+ * Cor que é um valor só nos dois temas, por desenho: mora só no `:root`, e o
+ * `.dark` (o mesmo `<html>`) a herda. A identidade de uma pessoa não muda com
+ * o tema (rodada 184). Só valor literal entra aqui — um apelido `var(--x)`
+ * resolve no elemento que o declara, e numa ilha de tema herdaria o errado.
+ */
+const MESMO_NOS_DOIS_TEMAS = /^--identity-/
+
 function precisaDePar(nome, valor) {
   const v = String(valor).trim().replace(/\s+/g, " ")
   if (/^var\(--[a-z0-9-]+\)$/i.test(v)) return true

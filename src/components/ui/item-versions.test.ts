@@ -1,23 +1,13 @@
-import { readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { arquivosTsx, lerFonte } from "@/test/fonte"
 
 import { cn } from "@/lib/utils"
 import { Item, itemVariants } from "./item"
 
 /** As versões da rodada 194. */
-
-const arquivos = (dir: string): string[] =>
-  readdirSync(dir).flatMap((nome) => {
-    const caminho = join(dir, nome)
-    return statSync(caminho).isDirectory()
-      ? arquivos(caminho)
-      : /\.tsx$/.test(nome)
-        ? [caminho]
-        : []
-  })
 
 describe("Item, rodada 194", () => {
   it("a linha rente tem o recuo da tira do cartão, e vence o do degrau", () => {
@@ -42,10 +32,10 @@ describe("Item, rodada 194", () => {
   })
 
   it("nenhuma tela desliga a quebra nem alinha à esquerda à mão", () => {
-    const culpados = arquivos(join(process.cwd(), "src"))
+    const culpados = arquivosTsx(join(process.cwd(), "src"))
       .filter((c) => !c.includes("components/ui/"))
       .filter((c) =>
-        [...readFileSync(c, "utf8").matchAll(/<Item\b[^>]*className=(?:"[^"]*"|\{[^}]*\})/g)].some((m) =>
+        [...lerFonte(c).matchAll(/<Item\b[^>]*className=(?:"[^"]*"|\{[^}]*\})/g)].some((m) =>
           /\b(flex-nowrap|text-left)\b/.test(m[0])
         )
       )

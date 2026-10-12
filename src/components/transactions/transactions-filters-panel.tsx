@@ -396,7 +396,7 @@ export function TransactionsFiltersPanel({
                                         className="inline-flex items-center gap-1.5 pr-1.5"
                                         title={label}
                                     >
-                                        <span className="min-w-0 max-w-[12rem] truncate">
+                                        <span className="min-w-0 max-w-48 truncate">
                                             {label}
                                         </span>
                                         <FilterChipRemoveButton

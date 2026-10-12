@@ -1,17 +1,14 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
+import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
 import { topBarVariants } from "./top-bar"
 
 /** A rodada 237: o redesenho, as peças e os comportamentos do `TopBar`. */
 
-const fonte = (caminho: string) =>
-  readFileSync(join(process.cwd(), caminho), "utf8")
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/^\s*\/\/.*$/gm, "")
+const fonte = (caminho: string) => semComentarios(lerFonte(caminho), "linha-inteira")
 const CODIGO = fonte("src/components/ui/top-bar.tsx")
-const CSS = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+const CSS = lerFonte("src/app/globals.css")
 
 describe("o redesenho", () => {
   it("o fio só aparece ao rolar, no scroll", () => {
@@ -72,9 +69,7 @@ describe("as peças", () => {
 
   it("o fio de progresso é progressbar, e o indeterminado mora numa @utility depois do no-scrollbar", () => {
     expect(CODIGO).toContain('role="progressbar"')
-    const i = CSS.indexOf("@utility top-bar-progress")
-    expect(i).toBeGreaterThan(CSS.indexOf("@utility no-scrollbar"))
-    expect(CSS.slice(i, CSS.indexOf("\n}\n", i))).toContain("prefers-reduced-motion")
+    expect(esperarDepoisDeNoScrollbar(CSS, "@utility top-bar-progress")).toContain("prefers-reduced-motion")
   })
 
   it("a barra do app usa as peças, numa árvore só", () => {

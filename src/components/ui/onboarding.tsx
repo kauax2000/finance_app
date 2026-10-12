@@ -34,6 +34,7 @@ import {
   useReducedMotion,
   useTransform,
 } from "motion/react"
+import { useIsHydrated } from "radix-ui/internal"
 import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, CursorArrowRaysIcon, XMarkIcon } from "@heroicons/react/16/solid"
 
 import {
@@ -81,9 +82,9 @@ import { Progress, ProgressRing } from "@/components/ui/progress"
 import { Skeleton, SkeletonGroup, SkeletonText } from "@/components/ui/skeleton"
 import { Muted } from "@/components/ui/typography"
 import { useIsMobile, useViewportWindow } from "@/hooks/use-mobile"
-import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import { menuPanelTintClassName } from "@/lib/glass-classes"
 import { menuPanelSurfaceClassName } from "@/lib/menu-classes"
+import { deDedo } from "@/lib/pointer"
 import { MOLA } from "@/lib/spring"
 import { cn } from "@/lib/utils"
 
@@ -261,16 +262,6 @@ function passoAlcancavel(steps: { advanceOn?: "next" | "target" }[], de: number,
 
 /* ── Hooks internos ─────────────────────────────────────────────────────── */
 
-const assinarNada = () => () => {}
-/** `true` no cliente, `false` no servidor e na hidratação — sem efeito. */
-function useNoCliente() {
-  return React.useSyncExternalStore(
-    assinarNada,
-    () => true,
-    () => false
-  )
-}
-
 function armazem(area: "local" | "session") {
   return area === "session" ? window.sessionStorage : window.localStorage
 }
@@ -331,7 +322,7 @@ function useTemaEscuro() {
 /** A versão mais recente de uma função, para os ouvintes montados uma vez. */
 function useAtual<T>(valor: T) {
   const ref = React.useRef(valor)
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     ref.current = valor
   })
   return ref
@@ -358,16 +349,6 @@ function foraDaVista(caixa: DOMRect, janela: Window) {
     caixa.bottom > janela.innerHeight ||
     caixa.right > janela.innerWidth
   )
-}
-
-/**
- * O documento é de dedo? Num telefone o `pointerType` já diz; a moldura do
- * iPhone do catálogo roda no navegador do desktop, onde ele diz "mouse", e marca
- * o `<html>` de dentro com `data-pointer="coarse"` — a mesma marca que faz a
- * variante `pointer-coarse:` valer lá. No app ninguém a escreve.
- */
-function deDedo(el: Element) {
-  return el.ownerDocument.documentElement.dataset.pointer === "coarse"
 }
 
 function focavel(el: HTMLElement) {
@@ -2132,7 +2113,8 @@ function OnboardingTour({
   hint = "Clique no botão destacado para continuar.",
 }: OnboardingTourProps) {
   const janela = useViewportWindow()
-  const noCliente = useNoCliente()
+  // `true` no cliente, `false` no servidor e na hidratação — sem efeito.
+  const noCliente = useIsHydrated()
   const mobile = useIsMobile()
   const reduzido = useReducedMotion() ?? false
   const [guardado, gravar, lido] = useGuardado(storageKey)
@@ -2206,7 +2188,7 @@ function OnboardingTour({
   const ancoraRef = React.useRef<{ getBoundingClientRect: () => DOMRect; contextElement?: Element }>({
     getBoundingClientRect: () => new DOMRect(),
   })
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     ancoraRef.current = {
       getBoundingClientRect: () => congelado.current ?? new DOMRect(mx.get(), my.get(), mw.get(), mh.get()),
       contextElement: alvoDaPlaca ?? undefined,

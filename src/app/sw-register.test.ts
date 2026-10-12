@@ -1,6 +1,5 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 /**
  * O registro do service worker, trancado num ponto só.
@@ -14,17 +13,11 @@ import { describe, expect, it } from "vitest"
  * controlando a página e servindo o casco do precache, e nada avisa.
  */
 
-const FONTE = readFileSync(
-    join(process.cwd(), "src/app/sw-register.tsx"),
-    "utf8"
-)
+const FONTE = lerFonte("src/app/sw-register.tsx")
 
 /** O comentário explica o defeito e cita as APIs; varrer o texto cru testaria
  *  o comentário e não o código. */
-const CODIGO = FONTE.replace(/\/\*[\s\S]*?\*\//g, " ").replace(
-    /(^|[^:])\/\/.*$/gm,
-    "$1"
-)
+const CODIGO = semComentarios(FONTE, "fora-de-url")
 
 describe("o registro do service worker", () => {
     it("o ramo de não-registrar desregistra o que existir", () => {

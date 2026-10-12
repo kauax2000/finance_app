@@ -5,7 +5,8 @@ import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/16/solid"
 import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
-import { composeRefs, useBrandGlow } from "@/hooks/use-brand-glow"
+import { composeRefs } from "radix-ui/internal"
+import { useBrandGlow } from "@/hooks/use-brand-glow"
 import { ariaShortcut, isEditableTarget, matchShortcut } from "@/lib/shortcut"
 import {
   searchFieldClearClassName,

@@ -1,11 +1,9 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 /** A rodada 221: o `Sidebar` flutuante como padrão, sem vidro, e a animação revista. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/sidebar.tsx")
+const CODIGO = lerFonte("src/components/ui/sidebar.tsx")
 
 describe("as versões do Sidebar", () => {
   it("floating é o padrão, no cva e nas props", () => {
@@ -20,7 +18,7 @@ describe("as versões do Sidebar", () => {
   })
 
   it("o trilho das placas soltas anda na mola; a folga da página, na curva", () => {
-    expect(CODIGO).toContain('"p-2 transition-[left,width] duration-(--duration-spring) ease-(--ease-spring)')
+    // A mola do trilho é a asserção 24 de `sidebar-ladder.test.ts`, que lê o código sem comentários.
     expect(CODIGO).toContain(
       '"relative w-(--sidebar-width) bg-transparent transition-[width] duration-(--duration-slow) ease-(--ease-emphasized)"'
     )
@@ -71,7 +69,7 @@ describe("as versões do Sidebar", () => {
     expect(CODIGO).toContain("{gatilhoNaBarra ? null : <SidebarTriggerButton {...props} />}")
     // A vaga encolhe em vez de sumir, e a ponta do topo devolve o `gap`.
     expect(CODIGO).toContain("inline-flex w-8 shrink-0 transition-[width,margin] duration-(--duration-slow) ease-(--ease-emphasized) data-vazio:w-0")
-    expect(fonte("src/components/ui/top-bar.tsx")).toContain(
+    expect(lerFonte("src/components/ui/top-bar.tsx")).toContain(
       "has-[>[data-slot=sidebar-trigger-slot][data-vazio]:only-child]:-me-2"
     )
   })
@@ -132,18 +130,18 @@ describe("as versões do Sidebar", () => {
   it("o que o app escrevia à mão é do componente, e o app fica rente", () => {
     expect(CODIGO).toContain("[interpolate-size:allow-keywords] group-data-[collapsible=icon]:h-12")
     expect(CODIGO).toContain('"h-12 p-2 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0!"')
-    const app = fonte("src/components/layout/app-sidebar.tsx")
+    const app = lerFonte("src/components/layout/app-sidebar.tsx")
     expect(app).toContain('<Sidebar collapsible="icon" variant="sidebar">')
     expect(app).not.toContain("group-data-[collapsible=icon]:overflow-y-auto")
-    expect(fonte("src/components/layout/workspace-switcher.tsx")).not.toContain("group-data-[collapsible=icon]:h-12")
-    const perfil = fonte("src/components/layout/sidebar-user-profile.tsx")
+    expect(lerFonte("src/components/layout/workspace-switcher.tsx")).not.toContain("group-data-[collapsible=icon]:h-12")
+    const perfil = lerFonte("src/components/layout/sidebar-user-profile.tsx")
     // O comentário do arquivo cita a classe; o que não pode voltar é ela num `className`.
     expect(perfil).not.toContain('group-data-[collapsible=icon]:p-0!"')
     expect(perfil).toContain('<SidebarMenuSkeleton size="lg" showIcon')
   })
 
   it("a página não fala mais de vidro nem de pílula medida", () => {
-    const doc = fonte("src/app/designsystem/docs/sidebar.tsx")
+    const doc = lerFonte("src/app/designsystem/docs/sidebar.tsx")
     expect(doc).not.toContain("floating é vidro pintado")
     expect(doc).not.toContain("somando a cadeia de offsetParent")
     expect(doc).not.toContain("NativeSelect")

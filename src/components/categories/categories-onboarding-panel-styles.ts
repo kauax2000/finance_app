@@ -15,18 +15,18 @@ export const CATEGORIES_ONBOARDING_PANEL_CARD_CLASS = cn(
 export function categoriesOnboardingPanelShellClass(stepIndex: number): string {
     if (stepIndex <= 0) {
         return cn(
-            "flex min-h-0 w-full max-w-[22rem] flex-col sm:max-w-md",
+            "flex min-h-0 w-full max-w-88 flex-col sm:max-w-md",
             "max-h-[min(75dvh,28rem)]",
         )
     }
     if (stepIndex === 1) {
         return cn(
-            "flex min-h-0 w-full max-w-[22rem] flex-col sm:max-w-lg",
+            "flex min-h-0 w-full max-w-88 flex-col sm:max-w-lg",
             "max-h-[min(88dvh,36rem)]",
         )
     }
     return cn(
-        "flex min-h-0 w-full max-w-[22rem] flex-col sm:max-w-xl",
+        "flex min-h-0 w-full max-w-88 flex-col sm:max-w-xl",
         "max-h-[min(88dvh,38rem)]",
     )
 }

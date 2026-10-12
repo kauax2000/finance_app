@@ -4,6 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { createPortal } from "react-dom"
 import { animate, motion, useMotionValue, useReducedMotion } from "motion/react"
+import { useIsHydrated } from "radix-ui/internal"
 import { PlusIcon } from "@heroicons/react/16/solid"
 
 import { Avatar, AvatarFallback, AvatarImage, avatarVariants } from "@/components/ui/avatar"
@@ -21,7 +22,6 @@ import {
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { tooltipContentVariants } from "@/components/ui/tooltip"
 import { useIsMobile, useViewportWindow } from "@/hooks/use-mobile"
-import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
 import { identityToneFor } from "@/lib/avatar"
 import { menuPanelSurfaceClassName } from "@/lib/menu-classes"
@@ -374,8 +374,6 @@ function Vaga({
 
 /* ── O grupo ──────────────────────────────────────────────────────────────── */
 
-const semAssinatura = () => () => {}
-
 type AvatarGroupProps = Omit<React.ComponentProps<"div">, "children"> & {
   /** O nome do grupo para o leitor de tela, e o título da lista do +N ("Membros da carteira"). */
   label: string
@@ -415,7 +413,7 @@ function AvatarGroup({
 }: AvatarGroupProps) {
   const reduzido = useReducedMotion() ?? false
   const janela = useViewportWindow()
-  const montado = React.useSyncExternalStore(semAssinatura, () => true, () => false)
+  const montado = useIsHydrated()
   const resumoId = React.useId()
 
   // Os filhos são `AvatarGroupItem`: a lista do +N e a dica leem as props deles.
@@ -476,7 +474,7 @@ function AvatarGroup({
   const visivelRef = React.useRef(false)
   const texto = rotulos[ativo ?? ultimo] ?? ""
 
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     if (ativo == null) {
       visivelRef.current = false
       return
@@ -508,7 +506,7 @@ function AvatarGroup({
       animate(y, alvoY, VIAGEM)
     }
     visivelRef.current = true
-  }, [ativo, aberto, texto, size, janela, reduzido])
+  }, [ativo, aberto, texto, size, janela, reduzido, x, y])
 
   const ativar = (i: number) => {
     setAtivo(i)

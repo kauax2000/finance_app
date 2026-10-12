@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import {
   Accordion,
@@ -14,7 +13,7 @@ import {
 
 /** As versões da rodada 200. */
 
-const FONTE = readFileSync(join(process.cwd(), "src/components/ui/accordion.tsx"), "utf8")
+const FONTE = lerFonte("src/components/ui/accordion.tsx")
 
 const item = (value: string, trigger: Record<string, unknown>, content: Record<string, unknown> = {}) =>
   h(

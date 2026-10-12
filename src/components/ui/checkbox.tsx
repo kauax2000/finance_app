@@ -5,7 +5,8 @@ import { Checkbox as CheckboxPrimitive } from "radix-ui"
 import { CheckIcon, MinusIcon } from "@heroicons/react/16/solid"
 import { cva, type VariantProps } from "class-variance-authority"
 
-import { composeRefs, useBrandGlow } from "@/hooks/use-brand-glow"
+import { composeRefs } from "radix-ui/internal"
+import { useBrandGlow } from "@/hooks/use-brand-glow"
 import { cn } from "@/lib/utils"
 
 /**

@@ -1,11 +1,10 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 /** O grupo de botões, trancado na rodada 188. */
 
-const GRUPO = readFileSync(join(process.cwd(), "src/components/ui/button-group.tsx"), "utf8")
-const BOTAO = readFileSync(join(process.cwd(), "src/components/ui/button.tsx"), "utf8")
+const GRUPO = lerFonte("src/components/ui/button-group.tsx")
+const BOTAO = lerFonte("src/components/ui/button.tsx")
 
 describe("o grupo de botões", () => {
   it("o degrau desce por contexto, e o do botão vence", () => {

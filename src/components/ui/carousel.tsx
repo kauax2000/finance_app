@@ -11,8 +11,8 @@ import {
   PlayIcon,
 } from "@heroicons/react/16/solid"
 import { Slot } from "radix-ui"
+import { composeRefs } from "radix-ui/internal"
 import * as React from "react"
-import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import { useCarouselAutoplay } from "@/hooks/use-carousel-autoplay"
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
@@ -608,22 +608,6 @@ function useCarousel() {
   return context
 }
 
-/**
- * Medição de caixa acontece **antes da pintura**, senão o cliente chega a pintar
- * o palpite do `cva` e a seta salta dele para o valor medido. O `Tabs` tem o
- * mesmo, local, pelo mesmo motivo.
- */
-
-/** Junta o ref do embla ao ref de medição. O `Tabs` tem o mesmo, local. */
-function composeRefs<T>(...refs: (React.Ref<T> | undefined)[]) {
-  return (node: T | null) => {
-    for (const ref of refs) {
-      if (typeof ref === "function") ref(node)
-      else if (ref) (ref as React.RefObject<T | null>).current = node
-    }
-  }
-}
-
 function Carousel({
   orientation = "horizontal",
   opts,
@@ -960,7 +944,7 @@ function CarouselContent({
   // `transition-all` da base do `Button`. Os dois consertos são independentes:
   // este mata a viagem da primeira pintura, e `CONTROL_TRANSITION` mata a das
   // remedições posteriores, que efeito nenhum alcança.
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     const node = viewportRef.current
     const raiz = node?.closest<HTMLElement>("[data-slot=carousel]")
     if (!node || !raiz) return
@@ -1715,7 +1699,7 @@ function CarouselSteps({
   // caixa é medida (`offsetTop`/`offsetHeight`, relativos à lista) e escrita
   // em variáveis, e o marcador transiciona para elas. Antes da primeira
   // medição ele não transiciona, senão nasceria viajando do topo.
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     const lista = listaRef.current
     if (!lista || orientation !== "vertical") return
     const medir = () => {

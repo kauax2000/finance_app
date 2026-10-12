@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
@@ -11,6 +10,7 @@ import { Bars3Icon } from "@heroicons/react/20/solid"
 import { cva, type VariantProps } from "class-variance-authority"
 import { LayoutGroup, motion, useReducedMotion } from "motion/react"
 import { NavigationMenu as NavigationMenuPrimitive, Slot } from "radix-ui"
+import { composeRefs } from "radix-ui/internal"
 
 import { ehCursor } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
@@ -92,15 +92,6 @@ type NavigationMenuOrientation = "horizontal" | "vertical"
 
 /** Um link registrado no índice. */
 type Entrada = { id: string; item: string; nivel: string[]; ativo: boolean }
-
-function composeRefs<T>(...refs: Array<React.Ref<T> | undefined>) {
-  return (node: T | null) => {
-    for (const ref of refs) {
-      if (typeof ref === "function") ref(node)
-      else if (ref) (ref as React.RefObject<T | null>).current = node
-    }
-  }
-}
 
 type NavigationMenuContextValue = {
   size: NavigationMenuSize
@@ -559,7 +550,7 @@ function NavigationMenu({
     [value, orientation]
   )
 
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     const raiz = raizRef.current
     if (!raiz || !segueGatilho) return
 

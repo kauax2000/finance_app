@@ -1,15 +1,15 @@
-import { existsSync, readFileSync } from "node:fs"
+import { existsSync } from "node:fs"
 import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import { DatePicker, MonthGrid, maskTypedDate, parseTypedDate } from "./date-picker"
 
 /** A rodada 210: as versões novas do `DatePicker`. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/date-picker.tsx")
+const CODIGO = lerFonte("src/components/ui/date-picker.tsx")
 
 describe("as versões do DatePicker", () => {
   it("o campo digitado vira data, e uma data que não existe não vira o dia seguinte", () => {
@@ -57,12 +57,12 @@ describe("as versões do DatePicker", () => {
   it("o intervalo com confirm só escreve no Aplicar, e o Calendar tem atalho de dia", () => {
     expect(CODIGO).toContain("onSelect={(r) => (props.confirm ? setRascunho(r) : props.onChange(r))}")
     expect(CODIGO).toContain("disabled={!rascunho?.from}")
-    expect(fonte("src/components/ui/calendar.tsx")).toContain('if ("date" in p) {')
+    expect(lerFonte("src/components/ui/calendar.tsx")).toContain('if ("date" in p) {')
   })
 
   it("o calendário brota do campo, e o recorte não fica valendo depois", () => {
     expect(CODIGO).toContain('className={cn("date-picker-bloom w-auto", popoverClassName)}')
-    const css = fonte("src/app/globals.css")
+    const css = lerFonte("src/app/globals.css")
     // `inset(-1rem)` e `backwards`: `inset(0)` cortaria o anel e a sombra, e
     // `both` deixaria o recorte valendo para sempre.
     expect(css).toMatch(/@keyframes date-picker-bloom \{[\s\S]*?clip-path: inset\(-1rem round 0\);/)
@@ -77,15 +77,15 @@ describe("as versões do DatePicker", () => {
   it("as telas migradas usam as peças, e os formulários à mão saíram", () => {
     expect(existsSync(join(process.cwd(), "src/components/transactions/transactions-date-range-form.tsx"))).toBe(false)
     expect(existsSync(join(process.cwd(), "src/components/categories/budget-month-selects.tsx"))).toBe(false)
-    expect(fonte("src/components/transactions/transactions-filters-panel.tsx")).toMatch(/mode="range"\s*confirm/)
-    expect(fonte("src/components/categories/categories-toolbar.tsx")).toContain("<MonthGrid")
+    expect(lerFonte("src/components/transactions/transactions-filters-panel.tsx")).toMatch(/mode="range"\s*confirm/)
+    expect(lerFonte("src/components/categories/categories-toolbar.tsx")).toContain("<MonthGrid")
     for (const arquivo of [
       "src/components/transactions/transaction-form-fields.tsx",
       "src/components/bills/pay-bill-dialog.tsx",
       "src/components/subscriptions/subscription-form-fields.tsx",
     ]) {
-      expect(fonte(arquivo), arquivo).toContain('displayStyle="relative"')
+      expect(lerFonte(arquivo), arquivo).toContain('displayStyle="relative"')
     }
-    expect(fonte("src/components/bills/bill-form-fields.tsx")).toMatch(/placeholder="Sem data final"\s*clearable/)
+    expect(lerFonte("src/components/bills/bill-form-fields.tsx")).toMatch(/placeholder="Sem data final"\s*clearable/)
   })
 })

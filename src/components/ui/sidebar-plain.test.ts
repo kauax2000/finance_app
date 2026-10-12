@@ -1,16 +1,12 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 /**
  * A rodada 233: o `Sidebar variant="plain"`, a barra sem placa da navegação do
  * catálogo — e o catálogo passando a usá-la, em vez de uma lista à mão.
  */
 
-const fonte = (caminho: string) =>
-  readFileSync(join(process.cwd(), caminho), "utf8")
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/^\s*\/\/.*$/gm, "")
+const fonte = (caminho: string) => semComentarios(lerFonte(caminho), "linha-inteira")
 const SIDEBAR = fonte("src/components/ui/sidebar.tsx")
 const SHELL = fonte("src/app/designsystem/ds-shell.tsx")
 

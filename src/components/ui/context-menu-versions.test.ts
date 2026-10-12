@@ -1,13 +1,11 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import { contextMenuTargets } from "./context-menu"
 
 /** A rodada 209: as versões novas do `ContextMenu`. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/context-menu.tsx")
+const CODIGO = lerFonte("src/components/ui/context-menu.tsx")
 
 describe("as versões do ContextMenu", () => {
   it("sobre uma linha selecionada o menu age na seleção; fora dela, só na linha", () => {
@@ -41,22 +39,22 @@ describe("as versões do ContextMenu", () => {
   it("o cabeçalho nomeia o menu, e a largura fala a escada do DropdownMenu", () => {
     expect(CODIGO).toContain("aria-labelledby={ariaLabelledBy ?? tituloId ?? undefined}")
     expect(CODIGO).toMatch(/sm: "w-44",\s*md: "w-48",\s*lg: "w-52",\s*xl: "w-56"/)
-    expect(fonte("src/app/designsystem/docs/context-menu.tsx")).not.toContain('className="w-52"')
+    expect(lerFonte("src/app/designsystem/docs/context-menu.tsx")).not.toContain('className="w-52"')
   })
 
   it("as telas migradas repetem as ações visíveis pelo botão direito", () => {
     // Desde a rodada 225 a tabela de transações é um `DataTable`: o menu entra
     // por `rowContextMenu`, que calcula os alvos com `contextMenuTargets`, e a
     // linha projetada não tem menu (a função devolve `null`).
-    const tabela = fonte("src/components/transactions/transactions-table.tsx")
+    const tabela = lerFonte("src/components/transactions/transactions-table.tsx")
     expect(tabela).toMatch(/rowContextMenu=\{\(t, \{ targets, selected \}\) =>\s*isProjectedTransactionRow\(t\) \? null/)
-    expect(fonte("src/components/ui/data-table.tsx")).toContain("contextMenuTargets(row.id, idsMarcados)")
-    expect(fonte("src/components/bills/bill-pending-card.tsx")).toMatch(/<ContextMenuTrigger asChild>\s*<Card/)
+    expect(lerFonte("src/components/ui/data-table.tsx")).toContain("contextMenuTargets(row.id, idsMarcados)")
+    expect(lerFonte("src/components/bills/bill-pending-card.tsx")).toMatch(/<ContextMenuTrigger asChild>\s*<Card/)
     for (const arquivo of [
       "src/components/categories/expense-category-card.tsx",
       "src/components/categories/income-category-card.tsx",
     ]) {
-      expect(fonte(arquivo), arquivo).toMatch(/<CategoryCardContextMenu[\s\S]*?<Card /)
+      expect(lerFonte(arquivo), arquivo).toMatch(/<CategoryCardContextMenu[\s\S]*?<Card /)
     }
   })
 })

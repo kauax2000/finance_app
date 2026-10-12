@@ -534,7 +534,7 @@ export function CategoriesOnboardingWizard({
                                         [c.id]: masked,
                                     }))
                                 }
-                                className="min-w-[6.75rem] w-[6.75rem] shrink-0 text-right sm:min-w-[7.25rem] sm:w-[7.25rem]"
+                                className="min-w-27 w-27 shrink-0 text-right sm:min-w-29 sm:w-29"
                             />
                             </FieldControl>
                         </Field>

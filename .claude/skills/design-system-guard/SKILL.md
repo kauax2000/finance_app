@@ -108,8 +108,8 @@ escuro". Nunca presuma de memória o que existe.
 vivo, a tabela de props curada e as decisões que não cabem numa prop. Não há
 páginas de "padrão": cada decisão que atravessa telas mora na página de quem a
 implementa — dinheiro em `money-display`, Enter em `form`, paleta de gráfico em
-`chart` e `cores`, chips em `badge`, datas em `typography`, toque e área segura
-em `mobile-toque` (Fundação).
+`chart` e `colors`, chips em `badge`, datas em `typography`, toque e área segura
+em `touch-safe-area` (Foundation).
 
 **3. Mapear a tela para o catálogo.** Antes de escrever JSX, percorra os
 elementos que a tela precisa e aponte cada um para um componente. Os que sobrarem
@@ -249,9 +249,8 @@ npm run test:unit
 
 Trocar primitivo por componente do design system muda tipos de props —
 `<input onChange>` e `<Input size="sm">` não são a mesma coisa. O typecheck pega
-isso. **Base de comparação:** hoje o projeto tem 2 erros de tipo pré-existentes
-(`payment-events.test.ts`, `mutation-gateway.test.ts`) e 85 avisos de lint. Se o
-número subir, foi você.
+isso. **Base de comparação:** hoje o typecheck passa sem erro nenhum e o lint
+dá 57 avisos (zero erros). Se o número subir, foi você.
 
 ## Referências
 

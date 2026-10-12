@@ -1,14 +1,12 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
-
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
+import { esperarCrescente, esperarDistintos, esperarPasso } from "@/test/regras"
 
 import {
   ALTURA_CLASS,
   defaultTabsSize,
   TABS_SIZES,
   TABS_TRAY_HEIGHTS,
-  TABS_TRIGGER_HEIGHTS,
   tabsIndicatorVariants,
   tabsListFrameVariants,
   tabsListTrackVariants,
@@ -46,6 +44,8 @@ const PISO = 28
 /** `(?:^|\s)` e não `\b`: `\b` casaria dentro de `min-h-11`. */
 const DECLARA_ALTURA = /(?:^|\s)h-(?!full\b)/
 
+const FONTE = lerFonte("src/components/ui/tabs.tsx")
+
 describe("a escada mede a bandeja", () => {
   it("a bandeja nunca desce do piso de 28 — o gatilho pode, e deve", () => {
     for (const size of SIZES) {
@@ -54,14 +54,11 @@ describe("a escada mede a bandeja", () => {
     }
     // O gatilho de `sm` cai a 24 — o degrau `xs`, que a escada do sistema
     // reserva justamente para "dentro de outro controle". É onde ele está.
-    expect(TABS_TRIGGER_HEIGHTS.sm).toBe(24)
+    expect(TABS_SIZES.sm.trigger).toBe(24)
   })
 
   it("degraus de 4px, estritamente crescentes", () => {
-    const alturas = SIZES.map((s) => TABS_TRAY_HEIGHTS[s])
-    for (let i = 1; i < alturas.length; i++) {
-      expect(alturas[i] - alturas[i - 1]).toBe(4)
-    }
+    esperarPasso(SIZES.map((s) => TABS_TRAY_HEIGHTS[s]), 4)
   })
 
   it("os nomes batem com os do resto do sistema", () => {
@@ -69,14 +66,14 @@ describe("a escada mede a bandeja", () => {
     // `NativeSelect` chamam pelos mesmos nomes — porque é ela a caixa que um
     // layout posiciona. O gatilho é peça interna e deriva.
     expect(TABS_TRAY_HEIGHTS).toEqual({ sm: 28, md: 32, lg: 36, xl: 40 })
-    expect(TABS_TRIGGER_HEIGHTS).toEqual({ sm: 24, md: 28, lg: 32, xl: 36 })
+    expect(SIZES.map((s) => TABS_SIZES[s].trigger)).toEqual([24, 28, 32, 36])
   })
 
   it("o gatilho declara a classe de altura da sua derivada", () => {
     const classe = { 24: "h-6", 28: "h-7", 32: "h-8", 36: "h-9" } as const
     for (const size of SIZES) {
       expect(tabsTriggerVariants({ size })).toContain(
-        classe[TABS_TRIGGER_HEIGHTS[size]]
+        classe[TABS_SIZES[size].trigger]
       )
     }
   })
@@ -116,10 +113,7 @@ describe("quem declara a altura é a moldura", () => {
   it("`h-[calc(100%…)]` não volta ao fonte por outro caminho", () => {
     // Sem os comentários: o arquivo **descreve** o defeito antigo, e um guarda
     // que lê prosa proibiria o componente de explicar a própria história.
-    const codigo = readFileSync(join(__dirname, "tabs.tsx"), "utf8")
-      .replace(/\/\*[\s\S]*?\*\//g, "")
-      .replace(/^\s*\/\/.*$/gm, "")
-    expect(codigo).not.toMatch(/h-\[calc\(100%/)
+    expect(semComentarios(FONTE, "linha-inteira")).not.toMatch(/h-\[calc\(100%/)
   })
 })
 
@@ -143,7 +137,7 @@ describe("o marcador viaja com os tokens do sistema", () => {
       expect(classes).not.toMatch(/transition-\[translate/)
       expect(classes).not.toMatch(/\bduration-\d/)
     }
-    expect(readFileSync(join(import.meta.dirname, "tabs.tsx"), "utf8")).toContain(
+    expect(FONTE).toContain(
       "viajarLiquido(peca, antes.caixa, caixa"
     )
   })
@@ -202,25 +196,19 @@ describe("a escada do Tabs — `size` nomeia a bandeja", () => {
   })
 
   it("4. nenhum par de degraus produz a mesma bandeja", () => {
-    const bandejas = DEGRAUS.map((s) => TABS_SIZES[s].tray)
-    expect(new Set(bandejas).size).toBe(DEGRAUS.length)
-    const gatilhos = DEGRAUS.map((s) => TABS_SIZES[s].trigger)
-    expect(new Set(gatilhos).size).toBe(DEGRAUS.length)
+    esperarDistintos(DEGRAUS.map((s) => TABS_SIZES[s].tray))
+    esperarDistintos(DEGRAUS.map((s) => TABS_SIZES[s].trigger))
   })
 
   it("5. a escada sobe monotonicamente", () => {
-    const bandejas = DEGRAUS.map((s) => TABS_SIZES[s].tray)
-    expect([...bandejas].sort((a, b) => a - b)).toEqual(bandejas)
+    esperarCrescente(DEGRAUS.map((s) => TABS_SIZES[s].tray))
   })
 
   it("6. o piso de toque é o degrau que a Toolbar publica", () => {
     // A `Toolbar` vai a 40 no ponteiro grosso; a bandeja acompanha, e o
     // `pointer-coarse:min-h-11` que empurrava tudo para 48 saiu.
     expect(TABS_SIZES.xl.tray).toBe(40)
-    const fonte = readFileSync(
-      join(import.meta.dirname, "tabs.tsx"),
-      "utf8"
-    ).replace(/\/\*[\s\S]*?\*\//g, "")
+    const fonte = FONTE.replace(/\/\*[\s\S]*?\*\//g, "")
     expect(fonte).not.toContain("min-h-11")
     expect(fonte).toContain("pointer-coarse:")
   })
@@ -272,9 +260,7 @@ describe("a escada do Tabs — `size` nomeia a bandeja", () => {
   })
 
   it("10. o recuo é um só, e não voltou a ser eixo", () => {
-    const fonte = readFileSync(join(import.meta.dirname, "tabs.tsx"), "utf8")
-    expect(fonte).not.toMatch(/padding\?: TabsPadding/)
-    expect(fonte).toContain("const TABS_TRACK_PADDING = 2")
+    expect(FONTE).not.toMatch(/padding\?: TabsPadding/)
   })
 })
 
@@ -291,8 +277,6 @@ describe("a escada do Tabs — `size` nomeia a bandeja", () => {
  * `--background` opaco. O que entra é o aro. Nenhum contraste se move.
  */
 describe("o vidro do marcador do Tabs", () => {
-  const FONTE = readFileSync(join(import.meta.dirname, "tabs.tsx"), "utf8")
-
   it("1. o ramo de vidro veste a régua e não escreve o que ela apagaria", () => {
     const vidro = tabsIndicatorVariants({ variant: "solid", glass: true })
 

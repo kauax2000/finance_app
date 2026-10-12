@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { ChevronDownIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
-import { pertoDoLimite } from "@/lib/char-count"
+import { CharCountLive, contarCaracteres } from "@/lib/char-count"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { Label } from "@/components/ui/label"
@@ -345,8 +345,7 @@ function InputGroupCount({
   max: number
   hideUntilNear?: boolean
 }) {
-  const restam = max - count
-  const perto = pertoDoLimite(restam, max)
+  const { restam, perto } = contarCaracteres(count, max)
   const visivel = perto || !hideUntilNear
   return (
     <>
@@ -364,9 +363,7 @@ function InputGroupCount({
           </InputGroupText>
         </InputGroupAddon>
       ) : null}
-      <span className="sr-only" aria-live="polite">
-        {perto ? `Restam ${restam} caracteres` : ""}
-      </span>
+      <CharCountLive restam={restam} perto={perto} />
     </>
   )
 }

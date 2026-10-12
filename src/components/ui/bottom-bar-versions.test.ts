@@ -1,22 +1,17 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 import { bottomBarVariants } from "./bottom-bar"
 
 /** A rodada 230: o `BottomBar` com o `Tabs` de referência. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/bottom-bar.tsx")
-  .replace(/\/\*[\s\S]*?\*\//g, "")
-  .replace(/^\s*\/\/.*$/gm, "")
-const VIDRO = fonte("src/lib/mobile-glass-surface.ts")
-const FRAME = fonte("src/app/designsystem/ds-frame.tsx")
+const CODIGO = semComentarios(lerFonte("src/components/ui/bottom-bar.tsx"), "linha-inteira")
+const FRAME = lerFonte("src/app/designsystem/ds-frame.tsx")
 
 describe("o desenho do Tabs", () => {
   it("a pílula tem um anel só, o das Tabs, e nenhuma borda", () => {
-    expect(VIDRO).toContain('"mobile-glass-surface shadow-lg ring-1 ring-foreground/10"')
-    expect(VIDRO).not.toMatch(/mobile-glass-surface border/)
+    expect(CODIGO).toContain('"mobile-glass-surface shadow-lg ring-1 ring-foreground/10"')
+    expect(CODIGO).not.toMatch(/mobile-glass-surface border/)
   })
 
   it("o marcador é a tecla em relevo, 2px para dentro, num tom que o conteúdo não usa", () => {
@@ -37,7 +32,7 @@ describe("o desenho do Tabs", () => {
 
   it("e viaja líquido, com o trajeto que as Tabs dividem", () => {
     expect(CODIGO).toContain('import { TRAJETO_MACIO, viajarLiquido, type CaixaLiquida } from "@/lib/liquid-move"')
-    expect(fonte("src/components/ui/tabs.tsx")).toContain("const TRAJETO_DAS_ABAS = TRAJETO_MACIO")
+    expect(lerFonte("src/components/ui/tabs.tsx")).toContain("const TRAJETO_DAS_ABAS = TRAJETO_MACIO")
     // Só quando o item muda: redimensionar só reposiciona.
     expect(CODIGO).toContain("antes.el !== alvo")
   })
@@ -102,7 +97,7 @@ describe("os comportamentos", () => {
     expect(CODIGO).toContain('cn("flex h-(--bottom-bar-h) shrink-0 items-center", someAoRolarClassName)')
     expect(CODIGO).toContain("group-data-hidden/bottom-bar:scale-95 group-data-hidden/bottom-bar:opacity-0")
     // Os dois tokens existem no tema, com o par de valores combinado.
-    const css = fonte("src/app/globals.css")
+    const css = lerFonte("src/app/globals.css")
     expect(css).toContain("--duration-gentle: 700ms;")
     expect(css).toContain("--ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);")
   })
@@ -117,11 +112,11 @@ describe("o catálogo e o app", () => {
   it("o iPhone é peça do ds-frame, com uma viewport de verdade e sem scale()", () => {
     expect(FRAME).toContain("function IphoneFrame(")
     expect(FRAME).toContain("<ViewportFrame")
-    expect(fonte("src/app/designsystem/docs/bottom-bar.tsx")).toContain("<IphoneFrame>")
-    expect(fonte("src/app/designsystem/docs/touch-safe-area.tsx")).toContain("<IphoneBody")
+    expect(lerFonte("src/app/designsystem/docs/bottom-bar.tsx")).toContain("<IphoneFrame>")
+    expect(lerFonte("src/app/designsystem/docs/touch-safe-area.tsx")).toContain("<IphoneBody")
   })
 
   it("o + do app é o BottomBarAction", () => {
-    expect(fonte("src/components/layout/quick-actions.tsx")).toContain('<BottomBarAction label="Adicionar">')
+    expect(lerFonte("src/components/layout/quick-actions.tsx")).toContain('<BottomBarAction label="Adicionar">')
   })
 })

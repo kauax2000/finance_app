@@ -5,7 +5,8 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
-import { composeRefs, useBrandGlow } from "@/hooks/use-brand-glow"
+import { composeRefs } from "radix-ui/internal"
+import { useBrandGlow } from "@/hooks/use-brand-glow"
 import { Muted } from "@/components/ui/typography"
 import { Skeleton, SkeletonText } from "@/components/ui/skeleton"
 

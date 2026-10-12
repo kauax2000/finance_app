@@ -1,6 +1,6 @@
-import { readFileSync, readdirSync, statSync } from "node:fs"
 import { join, resolve } from "node:path"
 import { describe, expect, it } from "vitest"
+import { arquivosTsx, blocoCss, lerFonte } from "@/test/fonte"
 
 import { buttonVariants } from "./button"
 import { cn } from "@/lib/utils"
@@ -17,31 +17,22 @@ import { cn } from "@/lib/utils"
  */
 
 const RAIZ = resolve(process.cwd(), "src")
-const CSS = readFileSync(join(RAIZ, "app/globals.css"), "utf8")
+const CSS = lerFonte(join(RAIZ, "app/globals.css"))
 const PRIMARIO = buttonVariants({ variant: "primary" }).split(/\s+/)
 const COLORIDO = buttonVariants({ variant: "brandColorful" }).split(/\s+/)
 
 function bloco(inicio: string) {
-  const i = CSS.indexOf(inicio)
-  expect(i, `bloco ${inicio} não achado`).toBeGreaterThan(-1)
-  return CSS.slice(i, CSS.indexOf("\n}\n", i))
+  expect(CSS.indexOf(inicio), `bloco ${inicio} não achado`).toBeGreaterThan(-1)
+  return blocoCss(CSS, inicio)
 }
 const CLARO = bloco(":root,\n.light {")
 const ESCURO = bloco("\n.dark {")
 
 /** A claridade de um `oklch(L …)` — ou de um número puro — declarado no bloco. */
-function claridade(blocoCss: string, token: string) {
-  const m = blocoCss.match(new RegExp(`\\n\\s*${token}:\\s*(?:oklch\\()?([\\d.]+)`))
+function claridade(trecho: string, token: string) {
+  const m = trecho.match(new RegExp(`\\n\\s*${token}:\\s*(?:oklch\\()?([\\d.]+)`))
   expect(m, `${token} sem valor`).not.toBeNull()
   return Number(m![1])
-}
-
-function arquivosTsx(dir: string): string[] {
-  return readdirSync(dir).flatMap((nome) => {
-    const caminho = join(dir, nome)
-    if (statSync(caminho).isDirectory()) return arquivosTsx(caminho)
-    return caminho.endsWith(".tsx") ? [caminho] : []
-  })
 }
 
 describe("o primário é a tecla chapada, e o colorido é de marca", () => {
@@ -67,9 +58,7 @@ describe("o primário é a tecla chapada, e o colorido é de marca", () => {
   })
 
   it("1a. a utility: a camada é o `::after`, cinco paradas da marca, e um número só anima tudo", () => {
-    const i = CSS.indexOf("@utility button-colorful {")
-    expect(i).toBeGreaterThan(-1)
-    const util = CSS.slice(i, CSS.indexOf("\n}\n", i))
+    const util = bloco("@utility button-colorful {")
     for (const c of ["isolation: isolate", "overflow: hidden", "&::after", "z-index: -10"]) {
       expect(util, c).toContain(c)
     }
@@ -129,7 +118,7 @@ describe("o primário é a tecla chapada, e o colorido é de marca", () => {
       expect(CSS, t).not.toContain(`${t}:`)
       expect(CSS, t).not.toContain(`@property ${t} `)
     }
-    const botao = readFileSync(join(RAIZ, "components/ui/button.tsx"), "utf8")
+    const botao = lerFonte(join(RAIZ, "components/ui/button.tsx"))
     expect(botao).not.toMatch(/girarLava|LAVA_STOPS/)
   })
 
@@ -196,7 +185,7 @@ describe("o primário é a tecla chapada, e o colorido é de marca", () => {
   it("8. nenhuma tela remenda o hover do primário à mão", () => {
     const culpados = arquivosTsx(RAIZ)
       .filter((f) => !f.includes(`${join("components", "ui")}`))
-      .filter((f) => readFileSync(f, "utf8").includes("hover:bg-primary/90"))
+      .filter((f) => lerFonte(f).includes("hover:bg-primary/90"))
     expect(culpados).toStrictEqual([])
   })
 
@@ -252,18 +241,14 @@ describe("o primário é a tecla chapada, e o colorido é de marca", () => {
     // A pintura mora nos pseudos da utility, e não no fundo do botão: a base
     // declara `bg-clip-padding`, que disputaria com o recorte de três camadas.
     expect(OUTLINE.filter((c) => /(^|:)bg-(?!clip)/.test(c))).toStrictEqual([])
-    const i = CSS.indexOf("@utility brand-rainbow-button {")
-    expect(i).toBeGreaterThan(-1)
-    const util = CSS.slice(i, CSS.indexOf("\n}\n", i))
+    const util = bloco("@utility brand-rainbow-button {")
     for (const c of ["isolation: isolate", "&::before", "&::after", "animation: brand-rainbow-slide 2s linear infinite", "background-clip: padding-box, border-box, border-box", "bottom: -20%", "filter: blur(0.8rem)"]) {
       expect(util, c).toContain(c)
     }
     // A lista mora na `brand-rainbow-slide` (rodada 154, o `Checkbox` a lê
     // também), e o laço fecha na cor em que abre — sem a emenda da referência.
     expect(OUTLINE).toContain("brand-rainbow-slide")
-    const j = CSS.indexOf("@utility brand-rainbow-slide {")
-    expect(j).toBeGreaterThan(-1)
-    const lista = CSS.slice(j, CSS.indexOf("\n}\n", j))
+    const lista = bloco("@utility brand-rainbow-slide {")
     const cores = [...lista.matchAll(/var\((--brand-[a-z]+)\)/g)].map((m) => m[1])
     expect(cores.length).toBe(6)
     expect(cores[0]).toBe(cores.at(-1))
@@ -277,7 +262,7 @@ describe("o primário é a tecla chapada, e o colorido é de marca", () => {
     // coisas moram na `@utility button-colorful` (asserção 1a).
     expect(COLORIDO.filter((c) => /(^|:)before:/.test(c))).toStrictEqual([])
     // A emenda do primário, que não tem divisor: o vão de 1px da borda.
-    const grupo = readFileSync(join(RAIZ, "components/ui/button-group.tsx"), "utf8")
+    const grupo = lerFonte(join(RAIZ, "components/ui/button-group.tsx"))
     expect(grupo).toContain("[&>[data-variant=primary]]:before:hidden")
     // O vão de 1px do primário é a **sobreposição**, e não o `ml-px` do
     // `secondary`: o fundo dele é recortado no `padding-box`, então a borda

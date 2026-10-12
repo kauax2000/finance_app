@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import {
   AvatarGroup,
@@ -14,8 +13,7 @@ import {
 
 /** O AvatarGroup da rodada 246. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/avatar-group.tsx")
+const CODIGO = lerFonte("src/components/ui/avatar-group.tsx")
 
 const NOMES = ["Ana Ribeiro", "Bruno Lima", "Carla Mendes", "Diego Souza", "Elisa Prado", "Fábio Nunes", "Gabriela Torres"]
 
@@ -109,7 +107,7 @@ describe("AvatarGroup, rodada 246", () => {
     expect(CODIGO).toContain("tooltipContentVariants")
     // Fecha no Esc, ao rolar, ao redimensionar e no toque fora.
     for (const evento of ['"keydown"', '"scroll"', '"resize"', '"pointerdown"']) expect(CODIGO).toContain(evento)
-    expect(fonte("src/components/ui/tooltip.tsx")).toMatch(/export \{[^}]*tooltipContentVariants/)
+    expect(lerFonte("src/components/ui/tooltip.tsx")).toMatch(/export \{[^}]*tooltipContentVariants/)
   })
 
   it("proibições: a variável da tela vence a automática, e o +N não é bg-muted", () => {

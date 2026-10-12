@@ -1,6 +1,5 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import { highlightParts } from "./command"
 import { ariaShortcut, matchShortcut } from "@/lib/shortcut"
@@ -8,8 +7,7 @@ import { rememberRecent } from "@/hooks/use-command-recents"
 
 /** A rodada 208: as versões novas do `Command`. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/command.tsx")
+const CODIGO = lerFonte("src/components/ui/command.tsx")
 
 const tecla = (key: string, mods: Partial<Record<"metaKey" | "ctrlKey" | "altKey", boolean>> = {}) => ({
   key,
@@ -43,8 +41,8 @@ describe("as versões do Command", () => {
     expect(matchShortcut("/", tecla("/", { metaKey: true }))).toBe(false)
     expect(matchShortcut("alt+n", tecla("n", { altKey: true }))).toBe(true)
     expect(ariaShortcut("mod+k")).toBe("Meta+K Control+K")
-    expect(fonte("src/components/ui/search-input.tsx")).toContain('from "@/lib/shortcut"')
-    expect(fonte("src/components/ui/search-input.tsx")).not.toMatch(/function casaAtalho/)
+    expect(lerFonte("src/components/ui/search-input.tsx")).toContain('from "@/lib/shortcut"')
+    expect(lerFonte("src/components/ui/search-input.tsx")).not.toMatch(/function casaAtalho/)
   })
 
   it("os recentes guardam destinos, sem duplicata, o último primeiro, no teto", () => {
@@ -53,7 +51,7 @@ describe("as versões do Command", () => {
   })
 
   it("a busca no servidor descarta a resposta de uma consulta cancelada", () => {
-    const codigo = fonte("src/hooks/use-command-search.ts")
+    const codigo = lerFonte("src/hooks/use-command-search.ts")
     expect(codigo).toContain("controle.abort()")
     expect(codigo.match(/if \(controle\.signal\.aborted\) return/g)?.length).toBe(2)
   })
@@ -74,6 +72,6 @@ describe("as versões do Command", () => {
 
   it("nenhum comentário ou doc diz mais que o Combobox monta a pilha", () => {
     expect(CODIGO).not.toMatch(/o `CommandDialog` e o `Combobox` montam/)
-    expect(fonte("src/app/designsystem/docs/command.tsx")).not.toMatch(/o CommandDialog e o Combobox a montam/)
+    expect(lerFonte("src/app/designsystem/docs/command.tsx")).not.toMatch(/o CommandDialog e o Combobox a montam/)
   })
 })

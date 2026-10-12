@@ -31,6 +31,11 @@ import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { ScrollFadeArrows } from "@/lib/scroll-fade-arrows"
 import {
+  MenuTitleContext,
+  MenuTitleHeader,
+  useMenuTitleId,
+} from "@/lib/menu-title"
+import {
   skipFocusAfterScrollClose,
   useCloseOnScroll,
 } from "@/hooks/use-close-on-scroll"
@@ -129,11 +134,6 @@ const DropdownMenuEstadoContext = React.createContext<MenuEstado>({
   busca: "",
   setBusca: () => {},
 })
-
-/** Registra o título do cabeçalho no conteúdo, para nomear o menu. */
-const DropdownMenuTituloContext = React.createContext<
-  ((id: string | null) => void) | null
->(null)
 
 /**
  * O menu com busca mede como o `Combobox` — a mesma placa com a pílula e a
@@ -447,9 +447,9 @@ function DropdownMenuContent({
       "Ações"
     return (
       <DrawerContent data-slot="dropdown-menu-sheet">
-        <DropdownMenuTituloContext.Provider value={setTituloId}>
+        <MenuTitleContext.Provider value={setTituloId}>
           {header}
-        </DropdownMenuTituloContext.Provider>
+        </MenuTitleContext.Provider>
         {/* Sem um título no cabeçalho, a gaveta leva o nome do gatilhoRef —
             "Ações da transação" —, escondido. */}
         {tituloId ? null : (
@@ -512,9 +512,9 @@ function DropdownMenuContent({
             data-slot="dropdown-menu-header-slot"
             className="relative z-10 shrink-0 border-b border-border"
           >
-            <DropdownMenuTituloContext.Provider value={setTituloId}>
+            <MenuTitleContext.Provider value={setTituloId}>
               {header}
-            </DropdownMenuTituloContext.Provider>
+            </MenuTitleContext.Provider>
           </div>
         ) : null}
         {search ? (
@@ -601,14 +601,8 @@ function DropdownMenuHeader({
   description?: React.ReactNode
 }) {
   const { folha } = React.useContext(DropdownMenuEstadoContext)
-  const registrar = React.useContext(DropdownMenuTituloContext)
-  const id = React.useId()
   const temTitulo = title != null
-  React.useEffect(() => {
-    if (!temTitulo) return
-    registrar?.(id)
-    return () => registrar?.(null)
-  }, [registrar, id, temTitulo])
+  const id = useMenuTitleId(temTitulo)
 
   if (folha && temTitulo) {
     return (
@@ -623,20 +617,14 @@ function DropdownMenuHeader({
 
   if (temTitulo) {
     return (
-      <div
-        data-slot="dropdown-menu-header"
-        className={cn("flex min-w-0 flex-col px-3 py-2 text-sm", className)}
+      <MenuTitleHeader
+        slot="dropdown-menu-header"
+        titleId={id}
+        className={className}
+        title={title}
+        description={description}
         {...props}
-      >
-        <span id={id} className="truncate font-medium">
-          {title}
-        </span>
-        {description ? (
-          <span className="truncate text-xs text-muted-foreground nums">
-            {description}
-          </span>
-        ) : null}
-      </div>
+      />
     )
   }
 

@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
+import { esperarDistintos } from "@/test/regras"
 
 import { paginationSteps, paginationVariants } from "./pagination"
 
@@ -17,8 +17,8 @@ import { paginationSteps, paginationVariants } from "./pagination"
  * `size-8` cravado que deixou de existir, e uma varredura ingênua se acusaria.
  */
 
-const FONTE = readFileSync(join(__dirname, "pagination.tsx"), "utf8")
-const CODIGO = FONTE.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "")
+const FONTE = lerFonte("src/components/ui/pagination.tsx")
+const CODIGO = semComentarios(FONTE, "linha-inteira")
 
 const DEGRAUS = ["xs", "sm", "md", "lg"] as const
 
@@ -42,11 +42,8 @@ function corpo(inicio: string, fim: string) {
 
 describe("escada da Pagination", () => {
   it("1. nenhum par de degraus produz a mesma geometria — o defeito do `Item`", () => {
-    const tabelas = DEGRAUS.map((s) => JSON.stringify(paginationSteps[s]))
-    expect(new Set(tabelas).size).toBe(DEGRAUS.length)
-
-    const raizes = DEGRAUS.map((size) => paginationVariants({ size }))
-    expect(new Set(raizes).size).toBe(DEGRAUS.length)
+    esperarDistintos(DEGRAUS.map((s) => JSON.stringify(paginationSteps[s])))
+    esperarDistintos(DEGRAUS.map((size) => paginationVariants({ size })))
   })
 
   it("2. as medidas sobem monotonicamente, e `xs` é o padrão", () => {

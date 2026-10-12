@@ -31,8 +31,9 @@ import {
   useActiveTooltipLabel,
 } from "recharts"
 
-import { animate, useReducedMotion } from "motion/react"
+import { useReducedMotion } from "motion/react"
 
+import { useCountUp } from "@/hooks/use-count-up"
 import { ehCursor } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
 import { menuPanelSurfaceClassName } from "@/lib/menu-classes"
@@ -468,11 +469,6 @@ export function chartSeriesColor(index: number): string {
     ? `var(--chart-${index + 1})`
     : "var(--color-muted-foreground)"
 }
-
-/** A rampa inteira, na ordem. Fixa: cor segue a entidade, nunca o ranking. */
-export const chartRamp = Array.from({ length: CHART_RAMP_LENGTH }, (_, i) =>
-  chartSeriesColor(i)
-)
 
 /* -------------------------------------------------------------------------
  * Container
@@ -2583,41 +2579,24 @@ function ChartNumber({
   className?: string
 }) {
   const fase = React.useContext(ChartMotionContext) ?? "idle"
-  const reduzido = useReducedMotion()
-  const ref = React.useRef<HTMLSpanElement>(null)
-  const mostrado = React.useRef<number | null>(null)
   const passo = step ?? (Number.isInteger(value) ? 1 : undefined)
   const final = formatChartValue(value, format)
-
-  React.useLayoutEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const escrever = (v: number) => {
-      el.textContent = formatChartValue(passo ? Math.round(v / passo) * passo : v, format)
-    }
-    // Em `pending` a caixa está invisível — e na impressão, visível: o número
-    // é o final, e a contagem de 0 só começa quando a entrada começa.
-    if (fase === "pending") {
-      mostrado.current = null
-      escrever(value)
-      return
-    }
-    const de = fase === "entering" && mostrado.current === null ? 0 : (mostrado.current ?? value)
-    if (reduzido || de === value) {
-      mostrado.current = value
-      escrever(value)
-      return
-    }
-    const controles = animate(de, value, {
-      duration: (fase === "entering" ? CHART_ENTER_MS : CHART_UPDATE_MS) / 1000,
+  const entrando = fase === "entering"
+  const ref = useCountUp(
+    value,
+    (v) => formatChartValue(passo ? Math.round(v / passo) * passo : v, format),
+    {
+      chave: `${format}:${passo}`,
+      // Em `pending` a caixa está invisível — e na impressão, visível: o número
+      // é o final, e a contagem de 0 só começa quando a entrada começa.
+      pendente: fase === "pending",
+      inicio: entrando ? 0 : value,
+      entrando,
+      entrada: CHART_ENTER_MS / 1000,
+      troca: CHART_UPDATE_MS / 1000,
       ease: CHART_EASING_POINTS,
-      onUpdate: (v) => {
-        mostrado.current = v
-        escrever(v)
-      },
-    })
-    return () => controles.stop()
-  }, [fase, format, passo, reduzido, value])
+    }
+  )
 
   return (
     <span data-slot="chart-number" className={cn("inline-grid", className)}>

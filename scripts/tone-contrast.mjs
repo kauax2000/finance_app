@@ -22,37 +22,20 @@
 // foi o que fez toda razão marcar 1,0 na primeira versão da página de cores.
 //
 // O piso é 4,5:1 (WCAG AA).
-import { chromium } from "playwright"
+import { abrirNavegador, abrirPagina, concluir, contraste, linha, lum, TEMAS } from "./lib/contrast.mjs"
 
 const PISO = 4.5
 const TONS = ["success", "warning", "info", "destructive", "income", "expense"]
 
-// ds-kit.tsx:812-827, verbatim.
-const lum = ([r, g, b]) => {
-    const f = (u) => {
-        const c = u / 255
-        return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
-    }
-    return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b)
-}
-const contraste = (a, b) => {
-    const [hi, lo] = a > b ? [a, b] : [b, a]
-    return (hi + 0.05) / (lo + 0.05)
-}
-
-const browser = await chromium.launch()
+const browser = await abrirNavegador()
 const linhas = []
-let reprovou = false
 
-for (const tema of ["light", "dark"]) {
-    const ctx = await browser.newContext({ viewport: { width: 900, height: 700 } })
-    await ctx.addInitScript((t) => localStorage.setItem("theme", t), tema)
-    const page = await ctx.newPage()
-    await page.goto("http://localhost:3000/designsystem/badge", {
-        waitUntil: "domcontentloaded",
+for (const tema of TEMAS) {
+    const { ctx, page } = await abrirPagina(browser, tema, "/designsystem/badge", {
+        viewport: { width: 900, height: 700 },
+        seletor: "[data-slot=badge]",
+        espera: 500,
     })
-    await page.waitForSelector("[data-slot=badge]")
-    await page.waitForTimeout(500)
 
     const medidas = await page.evaluate(({ tons }) => {
         const palco = document.createElement("div")
@@ -135,15 +118,7 @@ for (const tema of ["light", "dark"]) {
             ["Badge (tinta cheia)", ink],
             ["Alert (tinta a 85%)", ink85],
         ]) {
-            const razao = +contraste(lSurf, lum(cor)).toFixed(2)
-            if (razao < PISO) reprovou = true
-            linhas.push({
-                tema,
-                tom: t,
-                uso: papel,
-                razao,
-                ok: razao >= PISO ? "sim" : "NÃO",
-            })
+            linhas.push(linha({ tema, tom: t, uso: papel }, +contraste(lSurf, lum(cor)).toFixed(2), PISO))
         }
     }
     // O véu, no alfa **máximo** da máscara (o topo central, fator 1). O texto
@@ -152,24 +127,16 @@ for (const tema of ["light", "dark"]) {
     const { page: pg, text, alfa, paradas } = medidas.veu
     for (const [cor, rgb] of Object.entries(paradas)) {
         const fundo = rgb.map((v, i) => v * alfa + pg[i] * (1 - alfa))
-        const razao = +contraste(lum(fundo), lum(text)).toFixed(2)
-        if (razao < PISO) reprovou = true
-        linhas.push({
-            tema,
-            tom: `brand-${cor}`,
-            uso: `AnnouncementBar véu (alfa ${alfa})`,
-            razao,
-            ok: razao >= PISO ? "sim" : "NÃO",
-        })
+        linhas.push(
+            linha(
+                { tema, tom: `brand-${cor}`, uso: `AnnouncementBar véu (alfa ${alfa})` },
+                +contraste(lum(fundo), lum(text)).toFixed(2),
+                PISO
+            )
+        )
     }
     await ctx.close()
 }
 
 await browser.close()
-console.table(linhas)
-const pior = Math.min(...linhas.map((l) => l.razao))
-console.log(`\npior caso: ${pior.toFixed(2)}:1   piso: ${PISO}:1`)
-if (reprovou) {
-    console.error("\nReprovou: algum par ficou abaixo do piso AA.")
-    process.exit(1)
-}
+concluir(linhas, PISO, "algum par ficou abaixo do piso AA.")

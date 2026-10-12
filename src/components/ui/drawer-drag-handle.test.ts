@@ -1,6 +1,7 @@
-import { readFileSync, readdirSync } from "node:fs"
+import { readdirSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 import { dragHandleClassName } from "./drawer"
 
@@ -27,18 +28,13 @@ import { dragHandleClassName } from "./drawer"
 
 const UI = join(process.cwd(), "src/components/ui")
 
-/** O comentário cita de propósito o que o componente deixou de fazer. */
-function semComentarios(fonte: string): string {
-  return fonte.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/.*$/gm, "$1")
-}
-
 function fontes(dir: string): { nome: string; caminho: string; texto: string }[] {
   const out: { nome: string; caminho: string; texto: string }[] = []
   for (const entrada of readdirSync(dir, { withFileTypes: true })) {
     const caminho = join(dir, entrada.name)
     if (entrada.isDirectory()) out.push(...fontes(caminho))
     else if (/\.tsx?$/.test(entrada.name) && !entrada.name.endsWith(".test.ts"))
-      out.push({ nome: entrada.name, caminho, texto: readFileSync(caminho, "utf8") })
+      out.push({ nome: entrada.name, caminho, texto: lerFonte(caminho) })
   }
   return out
 }
@@ -94,7 +90,7 @@ describe("régua da alça de arraste", () => {
   it("4. nenhuma superfície reimplementa a alça", () => {
     const reimplementam = fontes(UI)
       .filter((f) => f.nome !== "drawer.tsx")
-      .filter((f) => /DrawerPrimitive\.Handle|data-vaul-handle/.test(semComentarios(f.texto)))
+      .filter((f) => /DrawerPrimitive\.Handle|data-vaul-handle/.test(semComentarios(f.texto, "fora-de-url")))
     // `sheet.tsx` e `drawer.tsx` escreviam os dois o mesmo elemento, com
     // `data-slot` **diferentes** — `sheet-drag-handle` contra `drawer-handle`.
     // Duas cópias de três linhas que já tinham divergido.
@@ -105,7 +101,7 @@ describe("régua da alça de arraste", () => {
     const raiz = join(process.cwd(), "src")
     const telas = fontes(raiz)
       .filter((f) => !f.caminho.startsWith(UI))
-      .filter((f) => /<DragHandle[\s/>]/.test(semComentarios(f.texto)))
+      .filter((f) => /<DragHandle[\s/>]/.test(semComentarios(f.texto, "fora-de-url")))
     // Se isto falhar, alguém escreveu a alça numa tela — e no telefone seriam
     // duas, das quais só uma arrastaria.
     expect(telas.map((f) => f.caminho.slice(raiz.length + 1))).toStrictEqual([])
@@ -113,7 +109,7 @@ describe("régua da alça de arraste", () => {
 
   it("6. um `data-slot` só, e ele é o da peça", () => {
     // A peça mora no `drawer.tsx` desde a rodada 159.
-    const peça = readFileSync(join(UI, "drawer.tsx"), "utf8")
+    const peça = lerFonte(join(UI, "drawer.tsx"))
     expect(peça).toContain('data-slot="drag-handle"')
     const antigos = fontes(UI).filter((f) =>
       /data-slot="(?:sheet-drag-handle|drawer-handle)"/.test(f.texto)

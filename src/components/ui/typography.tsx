@@ -49,115 +49,57 @@ type TextProps<T extends keyof React.JSX.IntrinsicElements> =
     asChild?: boolean
   }
 
-function H1({ className, asChild = false, ...props }: TextProps<"h1">) {
-  const Comp = asChild ? Slot.Root : "h1"
-  return (
-    <Comp
-      data-slot="typography-h1"
-      className={cn(
-        "page-title scroll-m-20 text-3xl text-foreground",
-        className
-      )}
-      {...props}
-    />
-  )
+/**
+ * O corpo dos nove: o elemento, o `data-slot` (`typography-` + o nome em
+ * minúsculas) e a classe base. Um corpo só, para nenhum divergir.
+ */
+function texto<T extends keyof React.JSX.IntrinsicElements>(
+  nome: string,
+  tag: T,
+  base: string
+) {
+  function Texto({ className, asChild = false, ...props }: TextProps<T>) {
+    const Comp: React.ElementType = asChild ? Slot.Root : tag
+    return (
+      <Comp
+        data-slot={`typography-${nome.toLowerCase()}`}
+        className={cn(base, className)}
+        {...props}
+      />
+    )
+  }
+  Texto.displayName = nome
+  return Texto
 }
 
-function H2({ className, asChild = false, ...props }: TextProps<"h2">) {
-  const Comp = asChild ? Slot.Root : "h2"
-  return (
-    <Comp
-      data-slot="typography-h2"
-      className={cn(
-        "font-heading scroll-m-20 text-2xl font-semibold tracking-tight text-foreground",
-        className
-      )}
-      {...props}
-    />
-  )
-}
+const H1 = texto("H1", "h1", "page-title scroll-m-20 text-3xl text-foreground")
 
-function H3({ className, asChild = false, ...props }: TextProps<"h3">) {
-  const Comp = asChild ? Slot.Root : "h3"
-  return (
-    <Comp
-      data-slot="typography-h3"
-      className={cn(
-        "font-heading scroll-m-20 text-xl font-semibold tracking-tight text-foreground",
-        className
-      )}
-      {...props}
-    />
-  )
-}
+const H2 = texto(
+  "H2",
+  "h2",
+  "font-heading scroll-m-20 text-2xl font-semibold tracking-tight text-foreground"
+)
 
-function H4({ className, asChild = false, ...props }: TextProps<"h4">) {
-  const Comp = asChild ? Slot.Root : "h4"
-  return (
-    <Comp
-      data-slot="typography-h4"
-      className={cn(
-        "font-heading scroll-m-20 text-lg font-semibold tracking-tight text-foreground",
-        className
-      )}
-      {...props}
-    />
-  )
-}
+const H3 = texto(
+  "H3",
+  "h3",
+  "font-heading scroll-m-20 text-xl font-semibold tracking-tight text-foreground"
+)
 
-function Lead({ className, asChild = false, ...props }: TextProps<"p">) {
-  const Comp = asChild ? Slot.Root : "p"
-  return (
-    <Comp
-      data-slot="typography-lead"
-      className={cn("text-lg text-muted-foreground", className)}
-      {...props}
-    />
-  )
-}
+const H4 = texto(
+  "H4",
+  "h4",
+  "font-heading scroll-m-20 text-lg font-semibold tracking-tight text-foreground"
+)
 
-function P({ className, asChild = false, ...props }: TextProps<"p">) {
-  const Comp = asChild ? Slot.Root : "p"
-  return (
-    <Comp
-      data-slot="typography-p"
-      className={cn("text-sm leading-relaxed text-foreground", className)}
-      {...props}
-    />
-  )
-}
+const Lead = texto("Lead", "p", "text-lg text-muted-foreground")
 
-function Muted({ className, asChild = false, ...props }: TextProps<"p">) {
-  const Comp = asChild ? Slot.Root : "p"
-  return (
-    <Comp
-      data-slot="typography-muted"
-      className={cn("text-sm text-muted-foreground", className)}
-      {...props}
-    />
-  )
-}
+const P = texto("P", "p", "text-sm leading-relaxed text-foreground")
 
-function Small({ className, asChild = false, ...props }: TextProps<"small">) {
-  const Comp = asChild ? Slot.Root : "small"
-  return (
-    <Comp
-      data-slot="typography-small"
-      className={cn("text-xs font-medium leading-none text-foreground", className)}
-      {...props}
-    />
-  )
-}
+const Muted = texto("Muted", "p", "text-sm text-muted-foreground")
 
-function Caption({ className, asChild = false, ...props }: TextProps<"p">) {
-  const Comp = asChild ? Slot.Root : "p"
-  return (
-    <Comp
-      data-slot="typography-caption"
-      className={cn("text-xs leading-snug text-muted-foreground", className)}
-      {...props}
-    />
-  )
-}
+const Small = texto("Small", "small", "text-xs font-medium leading-none text-foreground")
+
+const Caption = texto("Caption", "p", "text-xs leading-snug text-muted-foreground")
 
 export { Caption, H1, H2, H3, H4, Lead, Muted, P, Small }

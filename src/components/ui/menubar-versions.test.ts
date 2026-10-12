@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import {
   Menubar,
@@ -14,9 +13,8 @@ import {
 
 /** A rodada 218: o redesenho do `Menubar`. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/menubar.tsx")
-const CSS = fonte("src/app/globals.css")
+const CODIGO = lerFonte("src/components/ui/menubar.tsx")
+const CSS = lerFonte("src/app/globals.css")
 
 const barra = (props: Record<string, unknown> = {}, gatilho: Record<string, unknown> = {}) =>
   renderToStaticMarkup(
@@ -90,7 +88,7 @@ describe("o redesenho do Menubar", () => {
   })
 
   it("contas a pagar: um Menubar com rádios no lugar dos dois menus soltos", () => {
-    const barraDeContas = fonte("src/components/bills/bills-toolbar.tsx")
+    const barraDeContas = lerFonte("src/components/bills/bills-toolbar.tsx")
     expect(barraDeContas).toContain("<Menubar")
     expect(barraDeContas).toContain("<MenubarRadioGroup")
     expect(barraDeContas).not.toContain("<DropdownMenu>")

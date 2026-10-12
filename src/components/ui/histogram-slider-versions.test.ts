@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import {
   HistogramSlider,
@@ -13,8 +12,7 @@ import {
 
 /** A rodada 216: as versões novas do `HistogramSlider`. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/histogram-slider.tsx")
+const CODIGO = lerFonte("src/components/ui/histogram-slider.tsx")
 const BINS = [4, 6, 10, 5, 3, 2]
 const base = { label: "Faixa", bins: BINS, min: 0, max: 600 }
 
@@ -91,7 +89,7 @@ describe("as versões do HistogramSlider", () => {
   })
 
   it("a página não registra mais a lacuna que fechou", () => {
-    const doc = fonte("src/app/designsystem/docs/histogram-slider.tsx")
+    const doc = lerFonte("src/app/designsystem/docs/histogram-slider.tsx")
     expect(doc).not.toContain("Lacuna conhecida: o leitor de tela anuncia o número cru")
     expect(doc).not.toContain("O rótulo de cada caixa")
   })

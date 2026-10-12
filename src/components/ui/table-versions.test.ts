@@ -1,8 +1,8 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
+import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
 import { toCsv } from "@/lib/data-table/csv"
 import { nextCell, nextRowIndex } from "@/lib/data-table/keyboard"
@@ -25,9 +25,8 @@ import {
 
 /** A rodada 225: o redesenho do `Table` e o motor do `DataTable`. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CSS = fonte("src/app/globals.css")
-const TABLE = fonte("src/components/ui/table.tsx")
+const CSS = lerFonte("src/app/globals.css")
+const TABLE = lerFonte("src/components/ui/table.tsx")
 
 const tabela = (...linhas: ReturnType<typeof h>[]) =>
   h(Table, null, h(TableBody, null, ...linhas))
@@ -137,7 +136,19 @@ describe("as versões do Table", () => {
 
   it("a cascata e o destaque moram em `@utility`, com os números da referência", () => {
     expect(CSS).toMatch(/@utility table-reveal \{\s*& > tr \{\s*animation: menubar-rise 160ms var\(--ease-out\) 40ms both;/)
-    expect(CSS).toContain("& > tr:nth-child(n + 12) { animation-delay: 370ms; }")
+    // 40ms, e 30ms por degrau até a décima segunda linha (370ms).
+    expect(CSS).toMatch(/@utility table-reveal \{\s*& > tr \{[^}]*--stagger-base: 40ms;\s*--stagger-step: 30ms;\s*--stagger-cap: 11;\s*@apply stagger-ladder;/)
+    // A escada das cascatas: o k-ésimo filho atrasa min(k − 1, teto) passos,
+    // até o décimo segundo — o degrau mais fundo que alguma cascata pede.
+    const escada = esperarDepoisDeNoScrollbar(CSS, "@utility stagger-ladder {")
+    for (let k = 2; k <= 12; k++) {
+      expect(escada).toContain(
+        `&:nth-child(${k}) {\n    animation-delay: calc(var(--stagger-base) + var(--stagger-step) * min(${k - 1}, var(--stagger-cap)));`
+      )
+    }
+    expect(escada).toContain(
+      "&:nth-child(n + 13) {\n    animation-delay: calc(var(--stagger-base) + var(--stagger-step) * var(--stagger-cap));"
+    )
     expect(CSS).toMatch(/@utility table-flash \{\s*animation: table-flash 1\.5s/)
   })
 })
@@ -214,7 +225,7 @@ describe("as telas", () => {
       "src/app/(app)/subscriptions/page-client.tsx",
     ]
     for (const tela of telas) {
-      const codigo = fonte(tela)
+      const codigo = lerFonte(tela)
       expect(codigo, tela).toContain("<DataTable")
       expect(codigo, tela).toContain("bulkActions")
       expect(codigo, tela).not.toContain("h-11 px-4")
@@ -223,7 +234,7 @@ describe("as telas", () => {
       expect(codigo, tela).not.toMatch(/function compare\w+|toggleAllPageRowsSelected/)
     }
     // A linha projetada não finge que abre.
-    expect(fonte(telas[0])).toContain("rowClickable={(t) => !isProjectedTransactionRow(t)}")
+    expect(lerFonte(telas[0])).toContain("rowClickable={(t) => !isProjectedTransactionRow(t)}")
   })
 
   it("as folhas e os esqueletos não reescrevem a densidade nem a linha atual", () => {
@@ -231,7 +242,7 @@ describe("as telas", () => {
       "src/components/transactions/installment-purchase-section.tsx",
       "src/components/subscriptions/subscription-detail-sheet.tsx",
     ]) {
-      const codigo = fonte(arquivo)
+      const codigo = lerFonte(arquivo)
       expect(codigo, arquivo).not.toContain("px-2 py-1.5")
       expect(codigo, arquivo).not.toContain("h-9 border-border/40")
       expect(codigo, arquivo).toContain('state={')
@@ -243,7 +254,7 @@ describe("as telas", () => {
       "src/components/categories/detail/category-detail-skeleton.tsx",
       "src/components/credit-cards/credit-card-detail-skeleton.tsx",
     ]) {
-      const codigo = fonte(arquivo)
+      const codigo = lerFonte(arquivo)
       expect(codigo, arquivo).toContain("<TableSkeleton")
       // Dentro do esqueleto da página, sem um segundo `role="status"`.
       expect(codigo, arquivo).toContain("group={false}")
@@ -313,7 +324,7 @@ describe("a falha da tabela (rodada 231)", () => {
 })
 
 describe("o gêmeo do telefone (rodada 231)", () => {
-  const fonte = readFileSync(join(process.cwd(), "src/components/ui/data-table.tsx"), "utf8")
+  const fonte = lerFonte("src/components/ui/data-table.tsx")
   it("é um extrato: o valor e a data à direita, alinhados pela ponta, e a legenda numa linha", () => {
     expect(fonte).toContain('<ItemContent data-slot="data-table-mobile-aside" className="flex-none items-end text-right">')
     expect(fonte).toContain('<ItemDescription className="line-clamp-1 text-xs">')

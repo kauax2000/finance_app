@@ -1,8 +1,7 @@
-import { readFileSync, existsSync, readdirSync, statSync } from "node:fs"
+import { existsSync, readdirSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
-
-const ler = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
+import { blocoCss, lerFonte } from "@/test/fonte"
 
 /** Todo `.ts`/`.tsx` de `src`, menos os testes. */
 function fontes(dir = "src"): string[] {
@@ -15,7 +14,7 @@ function fontes(dir = "src"): string[] {
 
 describe("Tailwind hover policy (touch-safe defaults)", () => {
     it("does not override hover to bare :hover in globals.css", () => {
-        const css = ler("src/app/globals.css")
+        const css = lerFonte("src/app/globals.css")
         expect(css).not.toMatch(/@variant\s+hover\s*\(\s*&?:hover/)
     })
 
@@ -26,7 +25,7 @@ describe("Tailwind hover policy (touch-safe defaults)", () => {
         }
         const cssFiles = readdirSync(chunksDir).filter((f) => f.endsWith(".css"))
         const combined = cssFiles
-            .map((f) => readFileSync(join(chunksDir, f), "utf8"))
+            .map((f) => lerFonte(join(chunksDir, f)))
             .join("\n")
         if (!combined.includes("hover:hover")) {
             return
@@ -41,17 +40,15 @@ describe("Tailwind hover policy (touch-safe defaults)", () => {
  */
 describe("o hover desarmado no toque", () => {
     it("a variante `hover` mantém a mídia e exclui a moldura do iPhone", () => {
-        const css = ler("src/app/globals.css")
-        const bloco = css.slice(css.indexOf("@custom-variant hover {"))
-        const variante = bloco.slice(0, bloco.indexOf("\n}"))
+        const css = lerFonte("src/app/globals.css")
+        const variante = blocoCss(css, "@custom-variant hover {", "\n}")
         expect(variante).toContain("@media (hover: hover)")
         expect(variante).toContain('&:hover:not(:where([data-pointer="coarse"] *))')
     })
 
     it("o `link-sweep` só acende no `:hover` dentro da mídia", () => {
-        const css = ler("src/app/globals.css")
-        const corpo = css.slice(css.indexOf("@utility link-sweep {"))
-        const utility = corpo.slice(0, corpo.indexOf("\n}"))
+        const css = lerFonte("src/app/globals.css")
+        const utility = blocoCss(css, "@utility link-sweep {", "\n}")
         const midia = utility.indexOf("@media (hover: hover)")
         expect(midia).toBeGreaterThan(-1)
         expect(utility.indexOf("&:hover")).toBeGreaterThan(midia)
@@ -59,7 +56,7 @@ describe("o hover desarmado no toque", () => {
 
     it("nenhum `:hover` à mão fora de `@media (hover: hover)` nas classes", () => {
         const soltos = fontes().flatMap((arquivo) =>
-            (ler(arquivo).match(/[^\s"'`]*:hover\][^\s"'`]*/g) ?? [])
+            (lerFonte(arquivo).match(/[^\s"'`]*:hover\][^\s"'`]*/g) ?? [])
                 .filter((t) => !t.includes("[@media(hover:hover)]:"))
                 .map((t) => `${arquivo}: ${t}`)
         )
@@ -70,7 +67,7 @@ describe("o hover desarmado no toque", () => {
         // O `onMouseEnter` da barra lateral só pré-carrega a rota: não desenha nada.
         const semEfeito = new Set(["src/components/layout/app-sidebar.tsx"])
         const sem = fontes().filter((arquivo) => {
-            const codigo = ler(arquivo)
+            const codigo = lerFonte(arquivo)
             return (
                 /on(?:PointerEnter|MouseEnter|MouseMove)=/.test(codigo) &&
                 !/ehCursor\(|pointerType/.test(codigo) &&
@@ -81,11 +78,11 @@ describe("o hover desarmado no toque", () => {
     })
 
     it("as teclas de atalho somem no toque", () => {
-        expect(ler("src/lib/menu-classes.ts")).toMatch(/menuShortcutClassName =\s*"[^"]*pointer-coarse:hidden/)
-        expect(ler("src/lib/search-field-classes.ts")).toMatch(
+        expect(lerFonte("src/lib/menu-classes.ts")).toMatch(/menuShortcutClassName =\s*"[^"]*pointer-coarse:hidden/)
+        expect(lerFonte("src/lib/search-field-classes.ts")).toMatch(
             /searchFieldShortcutClassName =\s*"[^"]*pointer-coarse:hidden/
         )
-        const ui = (nome: string) => ler(`src/components/ui/${nome}.tsx`)
+        const ui = (nome: string) => lerFonte(`src/components/ui/${nome}.tsx`)
         expect(ui("command")).toMatch(/group-data-selected\/command-item:text-accent-foreground pointer-coarse:hidden/)
         expect(ui("dropdown-menu")).toContain('data-slot="dropdown-menu-item-shortcut" className="ms-auto pointer-coarse:hidden"')
         expect(ui("context-menu")).toContain('data-slot="context-menu-shortcut" className="ml-auto pointer-coarse:hidden"')

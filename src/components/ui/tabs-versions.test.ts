@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import {
   Tabs,
@@ -20,9 +19,8 @@ import {
 
 /** A rodada 226: o `floating` sem sombra como padrão e as versões novas. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const TABS = fonte("src/components/ui/tabs.tsx")
-const LIQUIDO = fonte("src/lib/liquid-move.ts")
+const TABS = lerFonte("src/components/ui/tabs.tsx")
+const LIQUIDO = lerFonte("src/lib/liquid-move.ts")
 
 const render = (...filhos: ReturnType<typeof h>[]) =>
   renderToStaticMarkup(h(Tabs, { defaultValue: "a" }, ...filhos))
@@ -52,7 +50,7 @@ describe("o floating, padrão do sistema", () => {
 
   it("o marcador corre com a receita do ThemeToggle, que mora numa lib só", () => {
     expect(TABS).toContain('from "@/lib/liquid-move"')
-    expect(fonte("src/components/ui/theme-toggle.tsx")).toContain('from "@/lib/liquid-move"')
+    expect(lerFonte("src/components/ui/theme-toggle.tsx")).toContain('from "@/lib/liquid-move"')
     expect(LIQUIDO).toContain('export const TRAJETO = { duration: 400, easing: "cubic-bezier(1,0,0.4,1)" }')
     expect(LIQUIDO).toContain('window.matchMedia("(prefers-reduced-motion: reduce)")')
     // Proporcional às abas andadas, um pouco mais macio que o alternador.
@@ -157,10 +155,10 @@ describe("o app", () => {
       "src/components/bills/bills-toolbar.tsx",
       "src/components/categories/detail/category-detail-trends.tsx",
     ]) {
-      const codigo = fonte(arquivo)
+      const codigo = lerFonte(arquivo)
       expect(codigo, arquivo).not.toMatch(/<TabsList[^>]*variant="solid"/)
       expect(codigo, arquivo).not.toMatch(/<TabsTrigger[^>]*className="[^"]*\b(h-\d|rounded-|bg-)/)
     }
-    expect(fonte("src/components/bills/bill-detail-history-list.tsx")).toContain("count={")
+    expect(lerFonte("src/components/bills/bill-detail-history-list.tsx")).toContain("count={")
   })
 })

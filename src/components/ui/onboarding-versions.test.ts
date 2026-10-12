@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import {
   OnboardingCard,
@@ -21,8 +20,7 @@ import {
 
 /** O Onboarding da rodada 247. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/onboarding.tsx")
+const CODIGO = lerFonte("src/components/ui/onboarding.tsx")
 
 const ITENS = [
   { id: "conta", title: "Conectar a conta do Nubank", done: true },
@@ -288,7 +286,7 @@ describe("Onboarding, rodada 247 — o mecanismo, pela fonte", () => {
     expect(CODIGO).toContain('[data-slot="top-bar"]')
     expect(CODIGO.match(/env\(safe-area/g)).toHaveLength(2)
     expect(CODIGO).toContain("[--onboarding-safe-top:env(safe-area-inset-top,0px)]")
-    expect(fonte("src/app/designsystem/ds-frame.tsx")).toContain("--onboarding-safe-bottom")
+    expect(lerFonte("src/app/designsystem/ds-frame.tsx")).toContain("--onboarding-safe-bottom")
   })
 
   it("o gesto do tour é o foco: a íris fecha e abre, a placa espera o pouso, o anel é de marca", () => {
@@ -317,7 +315,7 @@ describe("Onboarding, rodada 247 — o mecanismo, pela fonte", () => {
     // No telefone: o card abre pelo toque (também o da moldura do iPhone, pelo
     // `data-pointer`) e rola até aparecer; a gaveta põe o par numa linha; os
     // alvos sobem a 40–44 no dedo.
-    expect(CODIGO).toContain('return el.ownerDocument.documentElement.dataset.pointer === "coarse"')
+    expect(CODIGO).toContain('import { deDedo } from "@/lib/pointer"')
     expect(CODIGO).toContain('if (e.pointerType === "mouse" && !deDedo(e.currentTarget)) setAberto(true)')
     expect(CODIGO).toContain('el.scrollIntoView({ block: "nearest", behavior: reduzido ? "auto" : "smooth" })')
     expect(CODIGO).toContain('className={gaveta ? "flex-row" : undefined}')
@@ -380,7 +378,7 @@ describe("Onboarding, rodada 247 — o mecanismo, pela fonte", () => {
     expect(CODIGO).toContain("inset(${-12 * t.get()}px)")
     expect(CODIGO).not.toMatch(/aberto \? "overflow-clip/)
     // O brilho escuta o documento do elemento, para acender dentro da moldura.
-    expect(fonte("src/hooks/use-brand-glow.ts")).toContain("const doc = el.ownerDocument")
+    expect(lerFonte("src/hooks/use-brand-glow.ts")).toContain("const doc = el.ownerDocument")
   })
 
   it("o card tem três superfícies: o brilho no ponteiro, o arco que dá a volta e o invertido", () => {

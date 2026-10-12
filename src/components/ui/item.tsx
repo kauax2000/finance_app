@@ -148,7 +148,7 @@ const itemGroupVariants = cva("group/item-group flex w-full flex-col", {
       // O raio das pontas é de quem contém — `Card padding="none"` e a moldura
       // do catálogo já recortam com `overflow-hidden`. Cravar aqui um
       // `first:rounded-t-lg` seria copiar para dentro do componente um número
-      // do contêiner, que é o defeito que a variante `bare` do `Command`
+      // do contêiner, que é o defeito que a variante `plain` (antes `bare`) do `Command`
       // enterrou.
       divided:
         "gap-0 [&>[data-slot=item]]:rounded-none [&>[data-slot=item]:not(:last-child)]:border-b-border",

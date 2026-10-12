@@ -1,22 +1,12 @@
-import { readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { arquivosTsx, lerFonte } from "@/test/fonte"
 
 import { Field, FieldChecklist, FieldControl, FieldCounter } from "./field"
 
 /** As peças da rodada 192. */
-
-const arquivos = (dir: string): string[] =>
-  readdirSync(dir).flatMap((nome) => {
-    const caminho = join(dir, nome)
-    return statSync(caminho).isDirectory()
-      ? arquivos(caminho)
-      : /\.tsx$/.test(nome)
-        ? [caminho]
-        : []
-  })
 
 describe("Field, rodada 192", () => {
   it("o contador só aparece perto do teto", () => {
@@ -48,20 +38,20 @@ describe("Field, rodada 192", () => {
       h(Field, null, h(FieldControl, null, h("input")), h(FieldChecklist, { items: [] }))
     )
     expect(html).toMatch(/data-slot="field-checklist" id="[^"]+-checklist"/)
-    const fonte = readFileSync(join(process.cwd(), "src/components/ui/field.tsx"), "utf8")
+    const fonte = lerFonte("src/components/ui/field.tsx")
     expect(fonte).toContain("field.hasChecklist ? field.checklistId : undefined")
   })
 
   it("nenhuma tela declara a própria lista de requisitos", () => {
-    const culpados = arquivos(join(process.cwd(), "src"))
+    const culpados = arquivosTsx(join(process.cwd(), "src"))
       .filter((c) => !c.includes("components/ui/"))
-      .filter((c) => /function ReqRow\b/.test(readFileSync(c, "utf8")))
+      .filter((c) => /function ReqRow\b/.test(lerFonte(c)))
     expect(culpados).toEqual([])
   })
 
   it("o empilhado não estica controle de medida própria", () => {
     // Um `Switch` num `responsive` empilhado virava um trilho de 406px.
-    const fonte = readFileSync(join(process.cwd(), "src/components/ui/field.tsx"), "utf8")
+    const fonte = lerFonte("src/components/ui/field.tsx")
     expect(fonte).toContain("*:not-data-[slot=switch]:not-data-[slot=checkbox]:not-data-[slot=radio]:w-full")
     expect(fonte).not.toMatch(/"flex-col \*:w-full/)
   })

@@ -1,5 +1,6 @@
-import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
+import { esperarDistintos } from "@/test/regras"
 
 import { fieldTextScale, fieldVariants } from "./field"
 
@@ -15,11 +16,11 @@ import { fieldTextScale, fieldVariants } from "./field"
  * **nenhum par de degraus produz a mesma string**. Foi assim que se descobriu
  * que `Item` tinha `default` e `sm` idênticos.
  */
-const FONTE = readFileSync(new URL("./field.tsx", import.meta.url), "utf8")
+const FONTE = lerFonte("src/components/ui/field.tsx")
 
 /** O arquivo **narra** os defeitos antigos. Sem tirar os comentários, os
  *  testes de ausência proibiriam o componente de explicar a própria história. */
-const CODIGO = FONTE.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "")
+const CODIGO = semComentarios(FONTE, "linha-inteira")
 
 const DEGRAUS = ["sm", "md"] as const
 const PECAS = ["label", "title", "description", "error", "legend"] as const
@@ -56,10 +57,9 @@ describe("escada do Field", () => {
   })
 
   it("4. as três orientações existem e nenhuma repete a outra", () => {
-    const strings = (["vertical", "horizontal", "responsive"] as const).map(
-      (orientation) => fieldVariants({ orientation })
+    esperarDistintos(
+      (["vertical", "horizontal", "responsive"] as const).map((orientation) => fieldVariants({ orientation }))
     )
-    expect(new Set(strings).size).toBe(3)
     expect(fieldVariants()).toBe(fieldVariants({ orientation: "vertical" }))
   })
 

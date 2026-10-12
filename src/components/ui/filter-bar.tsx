@@ -40,7 +40,6 @@ import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useCommandSearch } from "@/hooks/use-command-search"
-import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { useToolbarKeyboard } from "@/hooks/use-toolbar-keyboard"
@@ -137,9 +136,6 @@ export type FilterValue = { field: string; operator: FilterOperator; values: str
 type FilterBarSize = "sm" | "md" | "lg"
 type FilterBarTone = "neutral" | "success"
 type FilterBarMobile = "scroll" | "stack"
-
-/** A escada da casa, medida no token: sm 28 · md 32 · lg 36, e 40 no dedo. */
-export const FILTER_BAR_SIZES = { sm: 28, md: 32, lg: 36 } as const
 
 /** O primeiro é o padrão. */
 const OPERADORES: Record<FilterFieldType, FilterOperator[]> = {
@@ -826,7 +822,7 @@ function FilterBar({
   // do Radix relê o `virtualRef` no efeito dele (passivo, depois deste), e o
   // `contextElement` deixa o `autoUpdate` acompanhar o token enquanto ele cresce.
   const ancoraRef = React.useRef<Ancora>({ getBoundingClientRect: () => new DOMRect() })
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     if (!aberto) return
     const el =
       aberto.tipo === "campos"

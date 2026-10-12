@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
+import { esperarCrescente, esperarDistintos } from "@/test/regras"
 
 import {
   TIMELINE_TONES,
@@ -32,14 +32,10 @@ import {
  * e do `Sheet` repetem.
  */
 
-const FONTE = readFileSync(join(__dirname, "timeline.tsx"), "utf8")
+const FONTE = lerFonte("src/components/ui/timeline.tsx")
 
-/** Remove blocos `/* *\/` e linhas `//`. Comentário não é código. */
-function semComentarios(src: string) {
-  return src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "")
-}
-
-const CODIGO = semComentarios(FONTE)
+/** Sem blocos `/* *\/` e sem linhas `//`. Comentário não é código. */
+const CODIGO = semComentarios(FONTE, "linha-inteira")
 
 const DEGRAUS = ["sm", "md", "lg"] as const
 const MARCADORES = ["dot", "icon", "avatar", "none"] as const
@@ -60,16 +56,14 @@ function passos(valor: string | undefined) {
 
 describe("escada da Timeline", () => {
   it("1. nenhum par de degraus produz a mesma string — o defeito do `Item`", () => {
-    const strings = DEGRAUS.map((size) => timelineVariants({ size }))
-    expect(new Set(strings).size).toBe(DEGRAUS.length)
+    esperarDistintos(DEGRAUS.map((size) => timelineVariants({ size })))
   })
 
   it("2. as medidas sobem monotonicamente, e `md` é o padrão", () => {
     for (const eixo of ["dot", "well-size", "icon", "pad", "rail-gap"]) {
       const seq = DEGRAUS.map((s) => passos(medida(s, eixo)))
       expect(seq.every(Number.isFinite), `${eixo} tem degrau ilegível`).toBe(true)
-      expect(seq).toStrictEqual([...seq].sort((a, b) => a - b))
-      expect(new Set(seq).size, `${eixo} repete degrau`).toBe(seq.length)
+      esperarCrescente(seq, { estrito: true, mensagem: `${eixo} repete degrau` })
     }
 
     // O poço `md` é 32px — 8 passos —, que é a medida que `account/activity`
@@ -299,16 +293,7 @@ describe("escada da Timeline", () => {
     expect(CODIGO).toContain(
       "[margin-inline-start:calc(var(--tl-marker)/2*var(--tl-content-center))]"
     )
-
-    // As duas orientações declaram o mesmo conjunto: uma que faltasse de um
-    // lado só falharia calada, e num eixo só.
-    const vars = (o: "vertical" | "horizontal") =>
-      new Set(
-        [...timelineVariants({ orientation: o }).matchAll(/\[(--tl-[a-z-]+):/g)].map(
-          (m) => m[1]
-        )
-      )
-    expect([...vars("vertical")].sort()).toStrictEqual([...vars("horizontal")].sort())
+    // O mesmo conjunto de variáveis nas duas orientações é a asserção 8.
   })
 
   it("11. o `cva` da raiz vem primeiro — o `ds:catalog` lê só o primeiro", () => {

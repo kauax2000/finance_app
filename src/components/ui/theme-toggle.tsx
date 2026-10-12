@@ -14,19 +14,11 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { flushSync } from "react-dom"
 import { useTheme } from "next-themes"
 import { RadioGroup as RadioGroupPrimitive } from "radix-ui"
-import { composeRefs, useBrandGlow } from "@/hooks/use-brand-glow"
+import { composeRefs } from "radix-ui/internal"
+import { useBrandGlow } from "@/hooks/use-brand-glow"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
-import {
-    ACOPLAMENTO_Y,
-    AMPLITUDE_POR_SALTO,
-    ATRAS,
-    ESTICAO,
-    FRENTE,
-    PERFIL,
-    TRAJETO,
-    type Lado,
-} from "@/lib/liquid-move"
+import { AMPLITUDE_POR_SALTO, viajarLiquido } from "@/lib/liquid-move"
 
 /**
  * As três paradas, na ordem do trilho. A ordem é decisão do dono — a do menu de
@@ -89,11 +81,6 @@ const DEGRAU = {
 
 /** A largura de uma parada com rótulo: "Sistema" no corpo do degrau, e folga. */
 const LARGURA_COM_ROTULO = { sm: 76, md: 88, lg: 100 } as const
-
-/** `useLayoutEffect` no cliente, `useEffect` no servidor — o componente é
- *  renderizado no servidor (devolve o `Skeleton`), e o de layout avisa ali. */
-const useEfeitoDeLayout =
-    typeof window !== "undefined" ? useLayoutEffect : useEffect
 
 /**
  * **A revelação circular** (rodada 181): a troca de tema abre num círculo que
@@ -199,7 +186,7 @@ export function ThemeToggle({
         transicao.finished.finally(() => html.classList.remove("theme-reveal"))
     }
 
-    useEfeitoDeLayout(() => {
+    useLayoutEffect(() => {
         // Antes de montar não há tema conhecido: `indice` é 0 por convenção e o
         // componente nem está na tela (quem está é o `Skeleton`).
         if (!montado) return
@@ -240,47 +227,20 @@ export function ThemeToggle({
         const amplitude = (AMPLITUDE_POR_SALTO[salto] ?? 0.22) * (face / passo)
         const paraDireita = indice > de
 
-        // **As duas origens.** Enquanto corre, a forma estica a partir da borda
-        // de **trás**, ou seja, para a frente — é a direção da viagem. Ao
-        // chegar, ela passa a se acomodar a partir da borda da **frente**, para
-        // dentro do trilho: bateu na parada, o resto do corpo empilha atrás.
-        // Presa num valor fixo, a forma esticaria para trás em metade dos
-        // saltos, e nada quebraria — o movimento só ficaria errado.
-        const origem: Record<Lado, string> = {
-            [ATRAS]: paraDireita ? "0% 50%" : "100% 50%",
-            [FRENTE]: paraDireita ? "100% 50%" : "0% 50%",
-        }
-        // O repouso fica com a de trás; com escala 1 ela não pinta nada, e é a
-        // que vale no próximo salto antes de o quadro 0 assumir.
-        peca.style.transformOrigin = origem[ATRAS]
+        // **As duas origens** (enquanto corre, a borda de trás; no pouso, a da
+        // frente) são do `viajarLiquido`. O repouso fica com a de trás; com
+        // escala 1 ela não pinta nada, e é a que vale no próximo salto antes de
+        // o quadro 0 assumir.
+        peca.style.transformOrigin = paraDireita ? "0% 50%" : "100% 50%"
 
-        const animacoes = [
-            peca.animate(
-                [
-                    { translate: `${de * passo}px` },
-                    { translate: `${indice * passo}px` },
-                ],
-                { ...TRAJETO, fill: "none" },
-            ),
-            // O esticão é a segunda animação na **mesma** peça, noutra
-            // propriedade: em CSS `translate` e `scale` são independentes, então
-            // as duas convivem no mesmo relógio sem uma pisar na outra. O
-            // `linear` do efeito é o que faz cada `offset` do perfil valer
-            // exatamente a fração do tempo que ele diz.
-            peca.animate(
-                PERFIL.map(([offset, k, lado]) => ({
-                    offset,
-                    transformOrigin: origem[lado],
-                    scale: `${(1 + amplitude * k).toFixed(4)} ${(
-                        1 -
-                        amplitude * k * ACOPLAMENTO_Y
-                    ).toFixed(4)}`,
-                })),
-                { ...ESTICAO, fill: "none" },
-            ),
-        ]
-
-        emCurso.current = animacoes.filter((a): a is Animation => Boolean(a))
+        // Sem tamanho nas caixas: a peça não muda de tamanho, e só a posição e
+        // o esticão animam — o trajeto e o perfil de sempre (`TRAJETO`).
+        emCurso.current = viajarLiquido(
+            peca,
+            { x: de * passo, y: 0 },
+            { x: indice * passo, y: 0 },
+            { amplitude },
+        )
     }, [indice, montado, passo, face])
 
     if (!montado) {

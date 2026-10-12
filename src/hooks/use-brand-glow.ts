@@ -34,22 +34,13 @@ const GLOW_PROXIMIDADE = 24
 const GLOW_DURACAO = 2
 const GLOW_EASE = [0.16, 1, 0.3, 1] as const
 
-/** Junta o ref da medição com o que o consumidor passou. */
-export function composeRefs<T>(...refs: Array<React.Ref<T> | undefined>) {
-  return (node: T | null) => {
-    for (const ref of refs) {
-      if (typeof ref === "function") ref(node)
-      else if (ref) (ref as React.RefObject<T | null>).current = node
-    }
-  }
-}
-
 /**
  * O ponteiro do brilho de marca.
  *
- * **Este é o único listener em `document` do design system, e a razão é o
- * `proximity`.** O `Button` segue o ponteiro com handlers no próprio elemento
- * (`onPointerMove`), porque a lava dele só existe sob o cursor. Aqui o aviso
+ * **Este é o único `pointermove` em `document` que fica montado com a peça
+ * em repouso, e a razão é o `proximity`.** (O do `NavigationMenu` só
+ * vive com um painel aberto.) Um realce que só existe sob o cursor — o hover
+ * do `Button` — dispensa ouvinte nenhum. Aqui o aviso
  * tem de acender com o mouse **perto, não em cima** — 24px de folga —, e um
  * handler local nunca vê o que acontece fora da caixa. O custo é contido: o
  * listener só monta com `variant="brand"`, e "uma por tela" o mantém em um.

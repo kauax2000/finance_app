@@ -258,7 +258,7 @@ export function TransactionsToolbar({
                         "flex w-full flex-col gap-0 overflow-hidden p-0",
                         isMobile
                             ? "min-h-0 rounded-t-modal"
-                            : "h-full max-h-[100dvh] border-l sm:max-w-sm"
+                            : "h-full max-h-dvh border-l sm:max-w-sm"
                     )}
                 >
                     <div className="flex h-full flex-col">

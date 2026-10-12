@@ -1,15 +1,13 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import { Popover, PopoverHeader, PopoverTitle, popoverContentVariants } from "./popover"
 
 /** A rodada 220: as versões novas do `Popover`. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/popover.tsx")
+const CODIGO = lerFonte("src/components/ui/popover.tsx")
 
 describe("as versões do Popover", () => {
   it("a largura é uma escada, com md de padrão e a do gatilho", () => {
@@ -66,17 +64,17 @@ describe("as versões do Popover", () => {
   })
 
   it("as telas: sem largura nem rolagem à mão, e os seletores de mês com nome", () => {
-    const filtros = fonte("src/components/transactions/transactions-filters-panel.tsx")
+    const filtros = lerFonte("src/components/transactions/transactions-filters-panel.tsx")
     expect(filtros).toContain('size="trigger"')
     expect(filtros).not.toContain("w-[var(--radix-popover-trigger-width)]")
-    expect(fonte("src/components/categories/categories-toolbar.tsx")).toContain('label="Escolher mês"')
-    const calendario = fonte("src/components/dashboard/dashboard-payments-calendar.tsx")
+    expect(lerFonte("src/components/categories/categories-toolbar.tsx")).toContain('label="Escolher mês"')
+    const calendario = lerFonte("src/components/dashboard/dashboard-payments-calendar.tsx")
     expect(calendario).toContain("<PopoverArrow")
     expect(calendario).not.toContain("w-[min(calc(100vw-2rem),18rem)]")
   })
 
   it("a página não afirma que o surface none tem consumidor", () => {
-    const doc = fonte("src/app/designsystem/docs/popover.tsx")
+    const doc = lerFonte("src/app/designsystem/docs/popover.tsx")
     expect(doc).not.toContain("como a pilha do Command no Combobox.")
   })
 })

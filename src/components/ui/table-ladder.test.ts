@@ -1,7 +1,9 @@
-import { readdirSync, readFileSync } from "node:fs"
+import { readdirSync } from "node:fs"
 import { join } from "node:path"
 
 import { describe, expect, it, vi } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
+import { esperarCrescente, esperarDistintos } from "@/test/regras"
 
 import * as React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
@@ -31,14 +33,10 @@ const UI = "src/components/ui"
  * `role="toolbar"` para explicar o que evita, e um corte que não distingue
  * comentário de código acusa a explicação em vez do defeito.
  */
-function semComentarios(src: string) {
-  return src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "")
-}
-
-const SRC = readFileSync(join(UI, "table.tsx"), "utf8")
+const SRC = lerFonte(join(UI, "table.tsx"))
 const CODE = semComentarios(SRC)
 // O `TablePanel` mora no `data-table.tsx` desde a rodada 231: a fatia é a da moldura.
-const DT_SRC = readFileSync(join(UI, "data-table.tsx"), "utf8")
+const DT_SRC = lerFonte(join(UI, "data-table.tsx"))
 const PANEL_CODE = semComentarios(
   DT_SRC.slice(DT_SRC.indexOf("/* A moldura: o TablePanel"), DT_SRC.indexOf("/**\n * A tabela de dados"))
 )
@@ -70,8 +68,7 @@ describe("escada do Table", () => {
   })
 
   it("2. nenhum par de degraus produz a mesma string", () => {
-    const strings = DEGRAUS.map((size) => tableVariants({ variant: "plain", size }))
-    expect(new Set(strings).size).toBe(DEGRAUS.length)
+    esperarDistintos(DEGRAUS.map((size) => tableVariants({ variant: "plain", size })))
   })
 
   it("3. a linha mede 32 · 36 · 44 · 52 · 64, e o cabeçalho e o recuo nunca descem", () => {
@@ -81,11 +78,9 @@ describe("escada do Table", () => {
     expect(alturas).toStrictEqual([32, 36, 44, 52, 64])
     // O cabeçalho sobe a cada degrau; o recuo não desce — do `md` para cima ele
     // fica em 16, o `--card-strip-px`, que alinha a coluna com a barra do painel.
-    const cabecalho = valores.map((v) => v.headH)
-    expect(cabecalho).toStrictEqual([...cabecalho].sort((a, b) => a - b))
-    expect(new Set(cabecalho).size).toBe(cabecalho.length)
+    esperarCrescente(valores.map((v) => v.headH), { estrito: true })
     const recuo = valores.map((v) => v.px)
-    expect(recuo).toStrictEqual([...recuo].sort((a, b) => a - b))
+    esperarCrescente(recuo)
     expect(recuo.slice(2)).toStrictEqual([4, 4, 4])
   })
 
@@ -424,7 +419,7 @@ describe("escada do Table", () => {
     const achados = readdirSync(UI)
       .filter((f) => f.endsWith(".tsx"))
       .flatMap((f) => {
-        const codigo = semComentarios(readFileSync(join(UI, f), "utf8"))
+        const codigo = semComentarios(lerFonte(join(UI, f)))
         return [...codigo.matchAll(/\.type\s*[!=]==?\s*(?!React\.Fragment\b)([A-Z]\w*)/g)].map(
           (m) => `${f}: ${m[0]}`
         )
@@ -438,7 +433,7 @@ describe("escada do Table", () => {
     // transparente, as linhas seguiam visíveis). Nada nesta tabela se mascara.
     expect(CODE).not.toContain("scrollFadeViewportClassName")
     expect(CODE).not.toMatch(/mask-image/)
-    const css = readFileSync("src/app/globals.css", "utf8")
+    const css = lerFonte("src/app/globals.css")
     expect(css).not.toContain("scroll-fade-y-content")
     const inicio = css.indexOf("@utility scroll-fade-veil-y {")
     expect(inicio).toBeGreaterThan(-1)
@@ -476,7 +471,7 @@ describe("escada do Table", () => {
     // `inherit`: entre a moldura e o véu costuma haver um embrulho sem raio.
     expect(CODE).toContain("[--scroll-fade-veil-r:calc(var(--radius-surface)_-_1px)]")
     expect(PANEL_CODE).toContain('"[--scroll-fade-veil-r:calc(var(--radius-surface)_-_1px)]"')
-    const css = readFileSync("src/app/globals.css", "utf8")
+    const css = lerFonte("src/app/globals.css")
     const inicio = css.indexOf("@utility scroll-fade-veil-y {")
     const util = semComentarios(css.slice(inicio, css.indexOf("\n}\n", inicio) + 2))
     expect(util).toContain("border-bottom-left-radius: var(--scroll-fade-veil-r, 0px)")
@@ -488,7 +483,7 @@ describe("a linha de totais do DataTable", () => {
   it("recebe as colunas à vista, e nenhum colSpan cravado passa da conta", () => {
     // Com 7 + 1 + 1 numa tabela de 8, a nona coluna era um vão na ponta de toda linha.
     expect(DT_SRC).toContain("footer(table.getPrePaginatedRowModel().rows.map((r) => r.original), { columns: nColunas })")
-    const doc = readFileSync(join(process.cwd(), "src/app/designsystem/docs/data-table.tsx"), "utf8")
+    const doc = lerFonte("src/app/designsystem/docs/data-table.tsx")
     expect(doc).not.toMatch(/colSpan=\{\d+\}/)
   })
 })

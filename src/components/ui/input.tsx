@@ -3,12 +3,9 @@ import * as React from "react"
 import { formatMoneyBrlTyping, normalizeMoneyBrlOnBlur, parseMoneyBrl } from "@/lib/money-brl"
 import { cn } from "@/lib/utils"
 import {
+  fieldControlClassName,
   fieldControlHeightClassName,
   fieldControlPaddingClassName,
-  fieldDisabledClassName,
-  fieldFocusRingClassName,
-  fieldInvalidClassName,
-  fieldSurfaceClassName,
   type FieldControlSize,
 } from "@/lib/field-classes"
 
@@ -150,10 +147,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           // A régua compartilhada vem primeiro; o degrau, por último. `cn` é
           // `twMerge`, e o `sm` traz `md:text-control-sm` — que só vence o
           // `md:text-sm` da superfície se vier depois dele.
-          fieldSurfaceClassName,
-          fieldFocusRingClassName,
-          fieldInvalidClassName,
-          fieldDisabledClassName,
+          fieldControlClassName,
           // `disabled:pointer-events-none` fica aqui, e não na régua: o
           // `SelectTrigger` não o tem, e igualá-los seria mudar comportamento
           // dentro de uma extração que promete não mudar nenhum.

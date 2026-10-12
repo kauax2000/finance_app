@@ -1,14 +1,14 @@
-import { readFileSync, readdirSync, statSync } from "node:fs"
+import { readdirSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 /** A rodada 228: a placa flutuante de vidro, os helpers novos e o app. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const LIB = fonte("src/lib/toast.ts")
-const PARTES = fonte("src/lib/toast-parts.tsx")
-const TOASTER = fonte("src/components/ui/sonner.tsx")
-const CSS = fonte("src/app/globals.css")
+const LIB = lerFonte("src/lib/toast.ts")
+const PARTES = lerFonte("src/lib/toast-parts.tsx")
+const TOASTER = lerFonte("src/components/ui/sonner.tsx")
+const CSS = lerFonte("src/app/globals.css")
 const BLOCO = CSS.slice(
   CSS.indexOf("/* ─── O toast (rodada 228)"),
   CSS.indexOf("/* ── A dissolução das bordas de uma região rolável")
@@ -123,7 +123,7 @@ describe("o lugar da pilha", () => {
   it("abaixo da barra do topo, medida — e não por cima dela", () => {
     // A medição mora em `hooks/use-top-bar-bottom` desde a rodada 229.
     expect(TOASTER).toContain("useTopBarBottom(true, pathname)")
-    expect(fonte("src/hooks/use-top-bar-bottom.ts")).toContain('doc.querySelector<HTMLElement>(\'[data-slot="top-bar"]\')')
+    expect(lerFonte("src/hooks/use-top-bar-bottom.ts")).toContain('doc.querySelector<HTMLElement>(\'[data-slot="top-bar"]\')')
     expect(TOASTER).toContain("top: topo != null ? `${topo + 12}px` : \"1rem\"")
   })
 })
@@ -141,7 +141,7 @@ describe("o app", () => {
     const fora = arquivos(join(process.cwd(), "src"))
       .filter((f) => /\.(ts|tsx)$/.test(f) && !f.endsWith(".test.ts"))
       .filter((f) => !/src\/lib\/toast\.ts$|src\/components\/ui\/sonner\.tsx$/.test(f))
-      .filter((f) => /from "sonner"/.test(readFileSync(f, "utf8")))
+      .filter((f) => /from "sonner"/.test(lerFonte(f)))
     expect(fora).toEqual([])
   })
 })

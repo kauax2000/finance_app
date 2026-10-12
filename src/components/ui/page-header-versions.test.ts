@@ -1,16 +1,13 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
+import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
 import { pageHeaderVariants } from "./page-header"
 
 /** A rodada 232: o redesenho, as peças e os comportamentos do `PageHeader`. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/page-header.tsx")
-  .replace(/\/\*[\s\S]*?\*\//g, "")
-  .replace(/^\s*\/\/.*$/gm, "")
-const CSS = fonte("src/app/globals.css")
+const CODIGO = semComentarios(lerFonte("src/components/ui/page-header.tsx"), "linha-inteira")
+const CSS = lerFonte("src/app/globals.css")
 
 describe("o redesenho", () => {
   it("sem régua por padrão, e a cascata ligada", () => {
@@ -52,9 +49,7 @@ describe("o redesenho", () => {
   })
 
   it("a cascata mora numa @utility depois do no-scrollbar, e o movimento reduzido a corta", () => {
-    const i = CSS.indexOf("@utility page-header-reveal")
-    expect(i).toBeGreaterThan(CSS.indexOf("@utility no-scrollbar"))
-    const bloco = CSS.slice(i, CSS.indexOf("\n}\n", i))
+    const bloco = esperarDepoisDeNoScrollbar(CSS, "@utility page-header-reveal")
     expect(bloco).toContain("animation: menubar-rise")
     expect(bloco).toContain("prefers-reduced-motion")
   })
@@ -101,7 +96,7 @@ describe("os comportamentos", () => {
   it("o título sobe para a barra, medido contra o documento dele", () => {
     expect(CODIGO).toContain("publishPageTitle(doc, { text: el.textContent ?? \"\", docked: !e.isIntersecting && acima })")
     expect(CODIGO).toContain("{ root: doc, rootMargin: `-${base}px 0px 0px 0px` }")
-    expect(fonte("src/components/ui/top-bar.tsx")).toContain("usePageTitleDock(doc)")
+    expect(lerFonte("src/components/ui/top-bar.tsx")).toContain("usePageTitleDock(doc)")
   })
 
   it("o ⋯ é o da Toolbar, com a conta do cabeçalho", () => {

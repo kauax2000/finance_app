@@ -16,7 +16,6 @@ import {
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { useStickyBar } from "@/components/ui/toolbar"
 import { H2, Muted } from "@/components/ui/typography"
-import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import { useTopBarBottom } from "@/hooks/use-top-bar-bottom"
 import { barSurfaceClassName } from "@/lib/glass-classes"
 import { cn } from "@/lib/utils"
@@ -346,7 +345,7 @@ function PageSectionTitle({
     asChild && React.isValidElement<{ id?: string }>(children) ? children.props.id : undefined
   const id = idProp ?? idDoFilho ?? secao?.titleId
   const registrar = secao?.registerTitle
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     if (!registrar || !id) return
     registrar(id)
     return () => registrar(null)

@@ -37,7 +37,8 @@
  * uma classe montada em tempo de execução nunca chega ao CSS. A medição está em
  * [`menu-classes`](./menu-classes.ts) — a variável do Radix valia 318,75px, a
  * classe estava no elemento, e o `max-height` computado era `none`. Por isso
- * este arquivo compartilha o **número** e a **lista**, nunca a string.
+ * este arquivo compartilha o **número**, e o teste ao lado a **lista**, nunca a
+ * string.
  */
 
 /**
@@ -48,31 +49,3 @@
  * daqui.
  */
 export const ANCHORED_COLLISION_PADDING = 8
-
-/**
- * As superfícies que a regra alcança: arquivo → nome da primitiva no Radix.
- *
- * Ela é ao mesmo tempo o **alcance declarado** da regra e o que
- * `anchored-surface.test.ts` itera para provar que cada uma escreve os dois
- * tetos por extenso. Uma superfície ancorada nova entra aqui na mesma mudança
- * em que nasce — senão o teste não a vê, e o alcance vira promessa.
- *
- * Fora da lista, com motivo:
- *
- * - **`combobox.tsx`, `date-picker.tsx`** — não têm `Content` próprio; compõem
- *   `PopoverContent` e herdam dele os três.
- * - **`command.tsx`** — não é ancorado. Ele vive dentro de um `Popover` (pelo
- *   `Combobox`) ou de um `Dialog`, e o teto dele é `--command-list-max-h`.
- * - **`navigation-menu.tsx`** — não usa Popper: o Radix não expõe colisão nesta
- *   primitiva, e o trilho é feito à mão em `medir()`. Ele lê a constante, mas
- *   não tem as variáveis `--radix-*-content-available-*` para declarar.
- */
-export const ANCHORED_SURFACES = {
-  "popover.tsx": "popover",
-  "dropdown-menu.tsx": "dropdown-menu",
-  "context-menu.tsx": "context-menu",
-  "menubar.tsx": "menubar",
-  "select.tsx": "select",
-  "tooltip.tsx": "tooltip",
-  "hover-card.tsx": "hover-card",
-} as const

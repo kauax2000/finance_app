@@ -46,9 +46,9 @@ const ui = (name: string) => `@/components/ui/${name}`
  * moléculas também importavam zero, então "grupos de átomos" não descrevia
  * dois terços delas.
  *
- * Agora é um mapa explícito, e ele é **exaustivo por tipo**: um componente novo
- * sem camada não compila. Nascer classificado é a única forma de a lista não
- * voltar a mentir.
+ * Agora cada `entry()` mora dentro do `layer()` da sua camada, e isso é
+ * **exaustivo por tipo**: um componente novo sem camada não compila. Nascer
+ * classificado é a única forma de a lista não voltar a mentir.
  *
  * ## A regra: a hierarquia é de composição, e cresce
  *
@@ -76,253 +76,17 @@ const ui = (name: string) => `@/components/ui/${name}`
  * O `taxonomy.test.ts` tranca a parte mecânica (o grafo de imports) e a ordem
  * alfabética dentro de cada categoria. A parte que o grafo não alcança — a
  * anatomia de um `Select`, a diferença entre especializar e compor — é decisão,
- * e mora nos comentários do mapa abaixo.
+ * e mora nos comentários sobre cada `entry()` do `REGISTRY`.
  */
 type Layer = Exclude<Category, "Foundations">
-
-/**
- * A camada de cada componente. Sem padrão: o tipo obriga a listar todos.
- *
- * Os comentários dizem **por que**, e não o que — a camada já está na chave.
- */
-const LAYER: Record<string, Layer> = {
-  // ── Átomos: indivisíveis — anatomia interna e especialização não contam ──
-  /** Um objeto. Imagem e fallback são estados dele, não partes. */
-  avatar: "Atoms",
-  badge: "Atoms",
-  button: "Atoms",
-  checkbox: "Atoms",
-  code: "Atoms",
-  "color-tile": "Atoms",
-  /** Uma `div` com largura e calha. Indivisível — átomo por decisão do dono. */
-  container: "Atoms",
-  /** **O vidro é modo, e não peça.** Houve cinco entradas aqui —
-   *  `glass-button`, `glass-badge`, `glass-avatar`, `glass-checkbox` e
-   *  `glass-color-tile` —, cada uma importando **um** átomo e renderizando
-   *  **um** elemento. O comentário que morava neste lugar já previa a rodada
-   *  que as absorveria: *"no dia em que virarem só uma classe a mais, a
-   *  pergunta certa é «componente ou modo?»"*. A previsão se cumpriu, e hoje o
-   *  eixo `glass` mora nos próprios átomos.
-   *
-   *  A régua que sobra, e que vale para a próxima especialização: o que decide
-   *  "componente ou modo?" **não é haver tradução** — é a tradução precisar de
-   *  uma peça para existir. Aqui ela cabia num eixo, e coube melhor: como
-   *  eixo, a superfície que o vidro apagaria simplesmente não é emitida. */
-  input: "Atoms",
-  "input-otp": "Atoms",
-  /** Uma tecla, ou o acorde inteiro numa pastilha só. As partes do acorde são
-   *  anatomia dele — a mesma conta pela qual o `Slider` é átomo com quatro
-   *  peças por dentro. A **sequência** junta átomos, e é o `kbd-group`. */
-  kbd: "Atoms",
-  label: "Atoms",
-  "money-display": "Atoms",
-  progress: "Atoms",
-  /** O controle inteiro — o anel e o ponto. **Não é especialização de nada**:
-   *  ele é a unidade, e quem compõe é o `radio-group`, uma camada acima. É o
-   *  par `kbd` / `kbd-group` outra vez. Com uma diferença que fica escrita:
-   *  este é o primeiro átomo que **exige contexto para renderizar** — o Radix
-   *  não exporta rádio independente, e `RadioGroup.Item` lança fora do `Root`.
-   *  Contexto de primitiva não é composição, pela mesma conta que faz o
-   *  `Slider` átomo com quatro peças Radix por dentro. */
-  radio: "Atoms",
-  /** Group, Panel e Separator são a anatomia de **uma** coisa — a mesma conta
-   *  que devolveu o `Select` a Átomos, e que faz o `Slider` átomo com quatro
-   *  peças Radix por dentro. Ele não compõe nenhum átomo: um painel
-   *  redimensionável não é um grupo de peças menores, é um controle de
-   *  proporção com regiões dentro. O `Button` do gatilho de colapso é o único
-   *  import de `ui/`, e a asserção 2 deixa exatamente um. */
-  resizable: "Atoms",
-  /** Uma casca rolável, e uma máscara. */
-  "scroll-area": "Atoms",
-  /** Um controle. Trigger, content e item são a anatomia dele, não composição
-   *  — a mesma conta pela qual o `Slider` é átomo com quatro peças por dentro. */
-  select: "Molecules",
-  separator: "Atoms",
-  skeleton: "Atoms",
-  slider: "Atoms",
-  spinner: "Atoms",
-  switch: "Atoms",
-  textarea: "Atoms",
-  /**
-   * Um controle. Trilho, polegar e as duas faces são anatomia de um `Switch`
-   * do Radix, e o único import de `ui/` é o `Skeleton` do gate de montagem.
-   */
-  "theme-toggle": "Atoms",
-  toggle: "Atoms",
-  /** Um rótulo que aparece. Carrega só texto. */
-  tooltip: "Atoms",
-
-  // ── Moléculas: feitas de átomos, um grupo pequeno que lê como unidade ───
-  /** O aviso e a ação dele. Ele entrou aqui **sem argumento** e por um tempo
-   *  não tinha nenhum: importava zero componentes, e as quatro peças eram
-   *  quatro `<div>` — a posição em que o `Select` estava quando foi devolvido
-   *  a Átomos. O que faltava não era reclassificá-lo, era o `AlertAction`: a
-   *  linha de ação alcançava o `Button` por seletor descendente e *pedia* que
-   *  quem chamasse escrevesse `variant="tertiary"`. Compondo o átomo de fato,
-   *  a camada deixa de ser herdada. */
-  alert: "Molecules",
-  /** A faixa de estado global, e as peças dela. Ela sempre compôs o átomo — o
-   *  × de dispensar é um `Button` —, então esta camada nunca foi herdada; o que
-   *  faltava era a **ação** ser peça também, e não um seletor descendente
-   *  pedindo `variant="tertiary"` a quem chamasse. */
-  "announcement-bar": "Molecules",
-  "button-group": "Molecules",
-  collapsible: "Molecules",
-  "description-list": "Molecules",
-  "empty-state": "Molecules",
-  /** O exemplo canônico do Frost: rótulo + controle + erro. */
-  field: "Molecules",
-  /** Era átomo — só o `<form>` com a política do Enter, sem input e sem botão.
-   *  Virou molécula ao ganhar as peças: `FormInput` sobre `Field`, `FormSubmit`
-   *  sobre `Button` + `Spinner`. Inversão registrada, e a régua é a mesma. */
-  "input-group": "Molecules",
-  item: "Molecules",
-  /** A sequência: um `Kbd` por tecla. É a junção dos átomos, e importa o átomo
-   *  de fato — o `keys` existe justamente para isso ser verdade. */
-  "kbd-group": "Molecules",
-  pagination: "Molecules",
-  /** A junção: `Radio` + `Label`, e o cartão. Ele importa os átomos de fato — o
-   *  `children` da opção existe justamente para isso ser verdade, e não para o
-   *  rótulo continuar do lado de fora, escrito à mão por quem chama, como
-   *  estava. */
-  "radio-group": "Molecules",
-  /** A pílula de busca: `Button` (o ×), `Kbd` (o atalho) e `Spinner`
-   *  (`pending`). Até a rodada 198 especializava o `InputGroup`; a pílula não é
-   *  o grupo de campo, e passou a compor os átomos direto. */
-  "search-input": "Molecules",
-  "toggle-group": "Molecules",
-
-  // ── Organismos: feitos de moléculas — faixas, grupos, submenus, linhas ──
-  /** A unidade é um `Collapsible` — uma molécula. */
-  /** Ele era Molécula, e a rodada do `RadioGroup` mostrou que já não era.
-   *  `form.tsx` compõe `field` **e** `radio-group` — duas moléculas —, e a
-   *  régua acima diz que isso é organismo. Ele já estava na fronteira antes:
-   *  compunha `field` e tinha estado próprio (a política do Enter, o `id` em
-   *  contexto), que é a segunda cláusula do nível. O que mudou foi o limiar
-   *  mecânico da asserção 3 ser cruzado, e com ele a classificação deixar de
-   *  poder mentir. É a mesma inversão que o próprio `form` já registra uma vez
-   *  — de átomo para molécula, quando ganhou as peças. */
-  form: "Organisms",
-  /** Lista cuja **unidade** é uma molécula, que é a segunda forma do nível.
-   *  E não por analogia: `AccordionItem` + `Trigger` + `Content` **é** um
-   *  `Collapsible`, que está em Moléculas — os dois arquivos importam a mesma
-   *  régua, `lib/disclosure-classes`.
-   *
-   *  Não é átomo, e a conta é direta: medido, uma raiz renderiza **3 itens, 3
-   *  gatilhos focáveis e 3 painéis**, cada um com o próprio `aria-expanded`.
-   *  "Um controle, um elemento, uma casca" não descreve isso.
-   *
-   *  E a cláusula de anatomia não o salva. Ela vale para o `Select`, cujo item
-   *  é uma **escolha entre valores** de um controle só; aqui cada item é uma
-   *  divulgação **operável sozinha e com estado próprio**. Item que é dado não
-   *  é item que tem estado. */
-  accordion: "Organisms",
-  "alert-dialog": "Organisms",
-  /** Uma pilha de `Avatar`s seria molécula; a lista do +N é um `Popover` (e,
-   *  no telefone, a gaveta), e quem contém organismo é organismo. */
-  "avatar-group": "Organisms",
-  /** Contém um `DropdownMenu` no miolo dobrado — quem contém organismo é
-   *  organismo. */
-  breadcrumb: "Organisms",
-  calendar: "Organisms",
-  /** Superfície com faixas: barra, cabeçalho, corpo, rodapé, nota. A mesma
-   *  anatomia do `Dialog`. */
-  card: "Organisms",
-  carousel: "Organisms",
-  chart: "Organisms",
-  combobox: "Organisms",
-  command: "Organisms",
-  "context-menu": "Organisms",
-  "date-picker": "Organisms",
-  dialog: "Organisms",
-  drawer: "Organisms",
-  "dropdown-menu": "Organisms",
-  /** Compõe `Popover`, `Command`, `DropdownMenu` e `Calendar` — quem contém
-   *  organismo é organismo. */
-  "filter-bar": "Organisms",
-  /** Compõe o StatCard, e quem contém organismo é organismo. */
-  "histogram-slider": "Organisms",
-  "hover-card": "Organisms",
-  menubar: "Organisms",
-  "navigation-menu": "Organisms",
-  /** Compõe `Dialog`, `Popover`, `Carousel`, `Card` e `Accordion` — quem
-   *  contém organismo é organismo. */
-  onboarding: "Organisms",
-  popover: "Organisms",
-  sheet: "Organisms",
-  /** Especializa o `Card`; especializar mantém o degrau. */
-  "stat-card": "Organisms",
-  stepper: "Organisms",
-  /** A linha (células = átomos) é a molécula; a tabela é feita de linhas. */
-  table: "Organisms",
-  tabs: "Organisms",
-  timeline: "Organisms",
-  /** Uma pilha de toasts, cada um ícone + título + texto + ação. */
-  sonner: "Organisms",
-
-  // ── Templates: o que estrutura a página ─────────────────────────────────
-  /**
-   * A barra de baixo do telefone — a irmã do `top-bar`. Ela não mostra
-   * conteúdo nenhum por si: dispõe onde as abas, o slot de conta e a ação
-   * primária vão, e fica parada sobre a tela que rola por baixo dela.
-   */
-  "bottom-bar": "Templates",
-  /**
-   * O `DataTable` (rodada 225) é o motor da TanStack Table por baixo do
-   * `TablePanel`: ele monta o painel, a barra, o corpo, o rodapé de paginação
-   * e a barra flutuante da seleção — o `TablePanel` com o estado dentro.
-   * Desde a rodada 231 o `TablePanel` mora no mesmo arquivo e na mesma página:
-   * eram duas entradas em Templates para uma tabela só, e ele, sem estado, só
-   * servia aos esqueletos de carregamento.
-   */
-  "data-table": "Templates",
-  "page-header": "Templates",
-  "page-section": "Templates",
-  /**
-   * A casca da página com navegação — a irmã do `top-bar` e do `bottom-bar`.
-   * Ela foi Organismo até a rodada 221 pelo argumento de que contém
-   * organismos (o painel de borda no telefone); isso diz o piso, não a
-   * camada, e Templates também são feitos de organismos. O que decide é o que
-   * `SidebarProvider` e `SidebarInset` fazem: dispõem a página — a barra de um
-   * lado, o conteúdo do outro, o estado que atravessa as duas. Menus, grupos e
-   * submenus são anatomia dela, e nenhum se usa fora.
-   */
-  sidebar: "Templates",
-  /** A página dividida: campo de um lado, coluna de conteúdo do outro.
-   *  Compõe `Container` e a tipografia, e recebe o campo por slot — o que ele
-   *  mostra é conteúdo de produto, e conteúdo de produto não mora em `ui/`. */
-  "split-shell": "Templates",
-  /**
-   * A barra de uma lista: dispõe onde os filtros, as ações e as fichas vão, e
-   * não mostra conteúdo nenhum por si. Foi Organismo até a rodada 229 pelo
-   * argumento de que contém organismos (o ⋯ é um `DropdownMenu`, e na
-   * prática ela carrega um `Tabs`) — o mesmo que a `Sidebar` derrubou na 221:
-   * isso diz o piso, não a camada. Desde a 229 ela age como as barras da
-   * página: prende sob o `TopBar`, mede a base dele e some ao rolar.
-   */
-  toolbar: "Templates",
-  /**
-   * A barra do topo da janela. Ela não mostra conteúdo nenhum por si — dispõe
-   * onde o voltar, o título e as ações vão, e fica parada enquanto a tela rola.
-   */
-  "top-bar": "Templates",
-}
-
-function categoryForSlug(slug: string): Category {
-  const layer = LAYER[slug]
-  if (!layer) {
-    throw new Error(
-      `[registry] "${slug}" não tem camada. Classifique-o em LAYER — ` +
-        `nascer sem camada é como 32 componentes foram parar no lugar errado.`
-    )
-  }
-  return layer
-}
 
 function sourcePath(source: string): string {
   if (source.startsWith("@/")) return source.replace("@/", "src/") + ".tsx"
   return source
 }
+
+/** Uma entrada sem camada: só vira `RegistryEntry` dentro de {@link layer}. */
+type Unlayered = Omit<RegistryEntry, "category">
 
 function entry(
   slug: string,
@@ -330,17 +94,27 @@ function entry(
   description: string,
   source: string,
   imports: string
-): RegistryEntry {
+): Unlayered {
   return {
     slug,
     name,
-    category: categoryForSlug(slug),
     description,
     source: sourcePath(source),
     importLine: imports.startsWith("import ")
       ? imports
       : `import { ${imports} } from "${source}"`,
   }
+}
+
+/**
+ * A camada de um bloco de componentes. Sem padrão: um `entry()` fora de um
+ * `layer()` não tem `category` e não compila dentro do `REGISTRY`.
+ *
+ * Os comentários sobre cada `entry()` dizem **por que** ele está na camada, e
+ * não o que — a camada já está no bloco.
+ */
+function layer(category: Layer, entries: Unlayered[]): RegistryEntry[] {
+  return entries.map(({ slug, name, ...rest }) => ({ slug, name, category, ...rest }))
 }
 
 export const REGISTRY: RegistryEntry[] = [
@@ -413,90 +187,233 @@ export const REGISTRY: RegistryEntry[] = [
   },
 
   // ── Atoms ──────────────────────────────────────────────────────────────
-  entry("avatar", "Avatar", "Imagem ou iniciais, em cinco tamanhos.", ui("avatar"), "Avatar, AvatarImage, AvatarFallback"),
-  entry("badge", "Badge", "Rótulo compacto de status ou contagem.", ui("badge"), "Badge, BadgeDot"),
-  entry("button", "Button", "A ação clicável, em degraus de peso e tamanho.", ui("button"), "Button"),
-  entry("checkbox", "Checkbox", "Escolha booleana em formulários e listas.", ui("checkbox"), "Checkbox"),
-  entry("code", "Code", "Identificador literal dentro do texto.", ui("code"), "Code"),
-  entry("color-tile", "Color Tile", "Ladrilho com a cor escolhida pela pessoa.", ui("color-tile"), "ColorTile"),
-  entry("container", "Container", "Largura, calha e ritmo do conteúdo.", ui("container"), "Container, containerSizes, containerGutters, containerStacks"),
-  entry("input", "Input", "Campo de uma linha, inclusive de dinheiro.", ui("input"), "Input"),
-  entry("input-otp", "Input OTP", "Entrada de código de verificação.", ui("input-otp"), "InputOTP, InputOTPSlot"),
-  entry("kbd", "Kbd", "Uma tecla ou um atalho.", ui("kbd"), "Kbd"),
-  entry("label", "Label", "Rótulo acessível ligado a um controle.", ui("label"), "Label"),
-  entry("money-display", "Money Display", "Todo valor em reais que o app mostra.", ui("money-display"), "MoneyDisplay"),
-  entry("progress", "Progress", "Quanto de um total foi consumido: barra, segmentada ou anel.", ui("progress"), "Progress, ProgressHeader, ProgressLabel, ProgressValue, ProgressFooter, ProgressRing"),
-  entry("radio", "Radio", "Uma opção de escolha única.", ui("radio"), "Radio"),
-  entry("resizable", "Resizable", "Painéis e colunas de tabela redimensionáveis por arraste.", ui("resizable"), "ResizablePanelGroup, ResizablePanel, ResizableHandle, ResizableColumnHandle"),
-  entry("scroll-area", "Scroll Area", "Região rolável: a barra desenhada, e as bordas que dissolvem.", ui("scroll-area"), "ScrollArea, ScrollBar"),
-  entry("separator", "Separator", "Divisor entre conteúdos.", ui("separator"), "Separator"),
-  entry("skeleton", "Skeleton", "Placeholder enquanto o dado carrega.", ui("skeleton"), "Skeleton"),
-  entry("slider", "Slider", "Valor ou intervalo numérico contínuo.", ui("slider"), "Slider"),
-  entry("spinner", "Spinner", "Carregamento sem progresso conhecido.", ui("spinner"), "Spinner"),
-  entry("switch", "Switch", "Liga e desliga com efeito imediato.", ui("switch"), "Switch"),
-  entry("textarea", "Textarea", "Campo de texto multilinha.", ui("textarea"), "Textarea"),
-  entry("theme-toggle", "Theme Toggle", "Escolhe entre sistema, claro e escuro.", ui("theme-toggle"), "ThemeToggle"),
-  entry("toggle", "Toggle", "Botão de dois estados.", ui("toggle"), "Toggle"),
-  entry("tooltip", "Tooltip", "Dica curta ancorada a um gatilho.", ui("tooltip"), "Tooltip, TooltipTrigger, TooltipContent"),
+  ...layer("Atoms", [
+    /** Um objeto. Imagem e fallback são estados dele, não partes. */
+    entry("avatar", "Avatar", "Imagem ou iniciais, em cinco tamanhos.", ui("avatar"), "Avatar, AvatarImage, AvatarFallback"),
+    entry("badge", "Badge", "Rótulo compacto de status ou contagem.", ui("badge"), "Badge, BadgeDot"),
+    entry("button", "Button", "A ação clicável, em degraus de peso e tamanho.", ui("button"), "Button"),
+    entry("checkbox", "Checkbox", "Escolha booleana em formulários e listas.", ui("checkbox"), "Checkbox"),
+    entry("code", "Code", "Identificador literal dentro do texto.", ui("code"), "Code"),
+    entry("color-tile", "Color Tile", "Ladrilho com a cor escolhida pela pessoa.", ui("color-tile"), "ColorTile"),
+    /** Uma `div` com largura e calha. Indivisível — átomo por decisão do dono. */
+    entry("container", "Container", "Largura, calha e ritmo do conteúdo.", ui("container"), "Container, containerSizes, containerGutters, containerStacks"),
+    /** **O vidro é modo, e não peça.** Houve cinco entradas aqui —
+     *  `glass-button`, `glass-badge`, `glass-avatar`, `glass-checkbox` e
+     *  `glass-color-tile` —, cada uma importando **um** átomo e renderizando
+     *  **um** elemento. O comentário que morava neste lugar já previa a rodada
+     *  que as absorveria: *"no dia em que virarem só uma classe a mais, a
+     *  pergunta certa é «componente ou modo?»"*. A previsão se cumpriu, e hoje o
+     *  eixo `glass` mora nos próprios átomos.
+     *
+     *  A régua que sobra, e que vale para a próxima especialização: o que decide
+     *  "componente ou modo?" **não é haver tradução** — é a tradução precisar de
+     *  uma peça para existir. Aqui ela cabia num eixo, e coube melhor: como
+     *  eixo, a superfície que o vidro apagaria simplesmente não é emitida. */
+    entry("input", "Input", "Campo de uma linha, inclusive de dinheiro.", ui("input"), "Input"),
+    entry("input-otp", "Input OTP", "Entrada de código de verificação.", ui("input-otp"), "InputOTP, InputOTPSlot"),
+    /** Uma tecla, ou o acorde inteiro numa pastilha só. As partes do acorde são
+     *  anatomia dele — a mesma conta pela qual o `Slider` é átomo com quatro
+     *  peças por dentro. A **sequência** junta átomos, e é o `kbd-group`. */
+    entry("kbd", "Kbd", "Uma tecla ou um atalho.", ui("kbd"), "Kbd"),
+    entry("label", "Label", "Rótulo acessível ligado a um controle.", ui("label"), "Label"),
+    entry("money-display", "Money Display", "Todo valor em reais que o app mostra.", ui("money-display"), "MoneyDisplay"),
+    entry("progress", "Progress", "Quanto de um total foi consumido: barra, segmentada ou anel.", ui("progress"), "Progress, ProgressHeader, ProgressLabel, ProgressValue, ProgressFooter, ProgressRing"),
+    /** O controle inteiro — o anel e o ponto. **Não é especialização de nada**:
+     *  ele é a unidade, e quem compõe é o `radio-group`, uma camada acima. É o
+     *  par `kbd` / `kbd-group` outra vez. Com uma diferença que fica escrita:
+     *  este é o primeiro átomo que **exige contexto para renderizar** — o Radix
+     *  não exporta rádio independente, e `RadioGroup.Item` lança fora do `Root`.
+     *  Contexto de primitiva não é composição, pela mesma conta que faz o
+     *  `Slider` átomo com quatro peças Radix por dentro. */
+    entry("radio", "Radio", "Uma opção de escolha única.", ui("radio"), "Radio"),
+    /** Group, Panel e Separator são a anatomia de **uma** coisa — a mesma conta
+     *  que devolveu o `Select` a Átomos, e que faz o `Slider` átomo com quatro
+     *  peças Radix por dentro. Ele não compõe nenhum átomo: um painel
+     *  redimensionável não é um grupo de peças menores, é um controle de
+     *  proporção com regiões dentro. O `Button` do gatilho de colapso é o único
+     *  import de `ui/`, e a asserção 2 deixa exatamente um. */
+    entry("resizable", "Resizable", "Painéis e colunas de tabela redimensionáveis por arraste.", ui("resizable"), "ResizablePanelGroup, ResizablePanel, ResizableHandle, ResizableColumnHandle"),
+    /** Uma casca rolável, e uma máscara. */
+    entry("scroll-area", "Scroll Area", "Região rolável: a barra desenhada, e as bordas que dissolvem.", ui("scroll-area"), "ScrollArea, ScrollBar"),
+    entry("separator", "Separator", "Divisor entre conteúdos.", ui("separator"), "Separator"),
+    entry("skeleton", "Skeleton", "Placeholder enquanto o dado carrega.", ui("skeleton"), "Skeleton"),
+    entry("slider", "Slider", "Valor ou intervalo numérico contínuo.", ui("slider"), "Slider"),
+    entry("spinner", "Spinner", "Carregamento sem progresso conhecido.", ui("spinner"), "Spinner"),
+    entry("switch", "Switch", "Liga e desliga com efeito imediato.", ui("switch"), "Switch"),
+    entry("textarea", "Textarea", "Campo de texto multilinha.", ui("textarea"), "Textarea"),
+    /**
+     * Um controle. Trilho, polegar e as duas faces são anatomia de um `Switch`
+     * do Radix, e o único import de `ui/` é o `Skeleton` do gate de montagem.
+     */
+    entry("theme-toggle", "Theme Toggle", "Escolhe entre sistema, claro e escuro.", ui("theme-toggle"), "ThemeToggle"),
+    entry("toggle", "Toggle", "Botão de dois estados.", ui("toggle"), "Toggle"),
+    /** Um rótulo que aparece. Carrega só texto. */
+    entry("tooltip", "Tooltip", "Dica curta ancorada a um gatilho.", ui("tooltip"), "Tooltip, TooltipTrigger, TooltipContent"),
+  ]),
 
   // ── Molecules ───────────────────────────────────────────────────────────
-  entry("alert", "Alert", "Aviso dentro do conteúdo.", ui("alert"), "Alert, AlertTitle, AlertDescription, AlertActions, AlertAction"),
-  entry("announcement-bar", "Announcement Bar", "Aviso de largura total sobre o app.", ui("announcement-bar"), "AnnouncementBar, AnnouncementBarContent, AnnouncementBarActions, AnnouncementBarAction"),
-  entry("button-group", "Button Group", "Botões colados que agem como uma unidade.", ui("button-group"), "ButtonGroup, ButtonGroupText"),
-  entry("collapsible", "Collapsible", "Bloco que expande e recolhe.", ui("collapsible"), "Collapsible, CollapsibleTrigger, CollapsibleRow, CollapsibleMarker, CollapsibleLabel, CollapsibleContent"),
-  entry("description-list", "Description List", "Pares termo e valor em telas de detalhe.", ui("description-list"), "DescriptionList, DescriptionListItem, DescriptionTerm, DescriptionDetails, DescriptionHint"),
-  entry("empty-state", "Empty State", "O que a tela mostra quando está vazia — e a forma diz a situação.", ui("empty-state"), "EmptyState, EmptyStateIcon, EmptyStateGhost, EmptyStateCode, EmptyStateTitle, EmptyStateActions"),
-  entry("field", "Field", "Rótulo, controle, ajuda e erro ligados.", ui("field"), "Field, FieldControl, FieldLabel, FieldHeader, FieldCounter, FieldDescription, FieldChecklist, FieldError, FieldGroup, FieldRow, FieldSet, FieldLegend, FieldSeparator"),
-  entry("input-group", "Input Group", "Campo com ícones, texto ou botões acoplados.", ui("input-group"), "InputGroup, InputGroupInput, InputGroupTextarea, InputGroupAddon, InputGroupText, InputGroupButton, InputGroupPasswordToggle, InputGroupSelect"),
-  entry("item", "Item", "Linha de lista com mídia, conteúdo e ações.", ui("item"), "ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions, ItemChevron, ItemHeader, ItemFooter, ItemSeparator"),
-  entry("kbd-group", "Kbd Group", "Sequência de teclas.", ui("kbd-group"), "KbdGroup"),
-  entry("pagination", "Pagination", "Navegação entre páginas de uma lista.", ui("pagination"), "Pagination, PaginationStatus, PaginationContent, PaginationLink, PaginationPrevious, PaginationNext, PaginationEllipsis, PaginationMore"),
-  entry("radio-group", "Radio Group", "Escolha única entre poucas opções — em linha, em cartão, em ladrilho ou em fichas.", ui("radio-group"), "RadioGroup, RadioGroupItem"),
-  entry("search-input", "Search Input", "O campo de busca — a pílula do cabeçalho e da paleta.", ui("search-input"), "SearchInput"),
-  entry("select", "Select", "Lista suspensa de opções predefinidas, desenhada ou do sistema.", ui("select"), "Select, SelectTrigger, SelectItem, NativeSelect"),
-  entry("toggle-group", "Toggle Group", "Conjunto de toggles: seleção única ou múltipla, em fichas, numa bandeja segmentada ou na pílula das Tabs.", ui("toggle-group"), "ToggleGroup, ToggleGroupItem"),
+  ...layer("Molecules", [
+    /** O aviso e a ação dele. Ele entrou aqui **sem argumento** e por um tempo
+     *  não tinha nenhum: importava zero componentes, e as quatro peças eram
+     *  quatro `<div>` — a posição em que o `Select` estava quando foi devolvido
+     *  a Átomos. O que faltava não era reclassificá-lo, era o `AlertAction`: a
+     *  linha de ação alcançava o `Button` por seletor descendente e *pedia* que
+     *  quem chamasse escrevesse `variant="tertiary"`. Compondo o átomo de fato,
+     *  a camada deixa de ser herdada. */
+    entry("alert", "Alert", "Aviso dentro do conteúdo.", ui("alert"), "Alert, AlertTitle, AlertDescription, AlertActions, AlertAction"),
+    /** A faixa de estado global, e as peças dela. Ela sempre compôs o átomo — o
+     *  × de dispensar é um `Button` —, então esta camada nunca foi herdada; o que
+     *  faltava era a **ação** ser peça também, e não um seletor descendente
+     *  pedindo `variant="tertiary"` a quem chamasse. */
+    entry("announcement-bar", "Announcement Bar", "Aviso de largura total sobre o app.", ui("announcement-bar"), "AnnouncementBar, AnnouncementBarContent, AnnouncementBarActions, AnnouncementBarAction"),
+    entry("button-group", "Button Group", "Botões colados que agem como uma unidade.", ui("button-group"), "ButtonGroup, ButtonGroupText"),
+    entry("collapsible", "Collapsible", "Bloco que expande e recolhe.", ui("collapsible"), "Collapsible, CollapsibleTrigger, CollapsibleRow, CollapsibleMarker, CollapsibleLabel, CollapsibleContent"),
+    entry("description-list", "Description List", "Pares termo e valor em telas de detalhe.", ui("description-list"), "DescriptionList, DescriptionListItem, DescriptionTerm, DescriptionDetails, DescriptionHint"),
+    entry("empty-state", "Empty State", "O que a tela mostra quando está vazia — e a forma diz a situação.", ui("empty-state"), "EmptyState, EmptyStateIcon, EmptyStateGhost, EmptyStateCode, EmptyStateTitle, EmptyStateActions"),
+    /** O exemplo canônico do Frost: rótulo + controle + erro. */
+    entry("field", "Field", "Rótulo, controle, ajuda e erro ligados.", ui("field"), "Field, FieldControl, FieldLabel, FieldHeader, FieldCounter, FieldDescription, FieldChecklist, FieldError, FieldGroup, FieldRow, FieldSet, FieldLegend, FieldSeparator"),
+    entry("input-group", "Input Group", "Campo com ícones, texto ou botões acoplados.", ui("input-group"), "InputGroup, InputGroupInput, InputGroupTextarea, InputGroupAddon, InputGroupText, InputGroupButton, InputGroupPasswordToggle, InputGroupSelect"),
+    entry("item", "Item", "Linha de lista com mídia, conteúdo e ações.", ui("item"), "ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions, ItemChevron, ItemHeader, ItemFooter, ItemSeparator"),
+    /** A sequência: um `Kbd` por tecla. É a junção dos átomos, e importa o átomo
+     *  de fato — o `keys` existe justamente para isso ser verdade. */
+    entry("kbd-group", "Kbd Group", "Sequência de teclas.", ui("kbd-group"), "KbdGroup"),
+    entry("pagination", "Pagination", "Navegação entre páginas de uma lista.", ui("pagination"), "Pagination, PaginationStatus, PaginationContent, PaginationLink, PaginationPrevious, PaginationNext, PaginationEllipsis, PaginationMore"),
+    /** A junção: `Radio` + `Label`, e o cartão. Ele importa os átomos de fato — o
+     *  `children` da opção existe justamente para isso ser verdade, e não para o
+     *  rótulo continuar do lado de fora, escrito à mão por quem chama, como
+     *  estava. */
+    entry("radio-group", "Radio Group", "Escolha única entre poucas opções — em linha, em cartão, em ladrilho ou em fichas.", ui("radio-group"), "RadioGroup, RadioGroupItem"),
+    /** A pílula de busca: `Button` (o ×), `Kbd` (o atalho) e `Spinner`
+     *  (`pending`). Até a rodada 198 especializava o `InputGroup`; a pílula não é
+     *  o grupo de campo, e passou a compor os átomos direto. */
+    entry("search-input", "Search Input", "O campo de busca — a pílula do cabeçalho e da paleta.", ui("search-input"), "SearchInput"),
+    /** Um controle. Trigger, content e item são a anatomia dele, não composição
+     *  — a mesma conta pela qual o `Slider` é átomo com quatro peças por dentro. */
+    entry("select", "Select", "Lista suspensa de opções predefinidas, desenhada ou do sistema.", ui("select"), "Select, SelectTrigger, SelectItem, NativeSelect"),
+    entry("toggle-group", "Toggle Group", "Conjunto de toggles: seleção única ou múltipla, em fichas, numa bandeja segmentada ou na pílula das Tabs.", ui("toggle-group"), "ToggleGroup, ToggleGroupItem"),
+  ]),
 
   // ── Organisms ──────────────────────────────────────────────────────────
-  entry("accordion", "Accordion", "Seções expansíveis.", ui("accordion"), "Accordion, AccordionItem, AccordionTrigger, AccordionContent, AccordionToggleAll"),
-  entry("alert-dialog", "Alert Dialog", "Confirmação de uma ação sem volta.", ui("alert-dialog"), "AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogMedia, AlertDialogList, AlertDialogError, AlertDialogConfirmInput"),
-  entry("avatar-group", "Avatar Group", "Pessoas empilhadas: o rosto sobe, a dica viaja, o +N abre a lista.", ui("avatar-group"), "AvatarGroup, AvatarGroupItem, AvatarGroupAdd, AvatarGroupSkeleton"),
-  entry("breadcrumb", "Breadcrumb", "A trilha até a tela atual.", ui("breadcrumb"), "Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbMenu, BreadcrumbSwitcher, BreadcrumbSwitcherItem"),
-  entry("calendar", "Calendar", "A grade de um mês — escolha, intervalo com atalhos, marcadores e a agenda de fios.", ui("calendar"), "Calendar, CalendarDayButton, CalendarEvent, CalendarEvents, CalendarSkeleton"),
-  entry("card", "Card", "Cartão de conteúdo e painel.", ui("card"), "Card, CardHeader, CardTitle, CardDescription, CardAction, CardToolbar, CardContent, CardBody, CardField, CardLink, CardMedia, CardMessage, CardNote, CardFooter, CardSkeleton"),
-  entry("carousel", "Carousel", "Itens que deslizam na horizontal ou na vertical — uma biblioteca de versões sobre um motor só.", ui("carousel"), "Carousel, CarouselContent, CarouselItem, CarouselMore, CarouselPrevious, CarouselNext, CarouselDots, CarouselProgress, CarouselStatus, CarouselToolbar, CarouselCaption, CarouselPlayPause, CarouselSteps, CarouselStep, CarouselThumbs, CarouselThumb, CarouselFullscreen, CarouselSkeleton"),
-  entry("chart", "Chart", "Gráficos ligados aos tokens do tema.", ui("chart"), "ChartAnnotation, ChartArea, ChartBarList, ChartBars, ChartContainer, ChartDonut, ChartHeatmap, ChartLine, ChartRadar, ChartRadial, ChartSparkline, ChartSplit, ChartWaterfall"),
-  entry("combobox", "Combobox", "Select com busca, uma ou várias escolhas.", ui("combobox"), "Combobox, ComboboxField, ComboboxTrigger, ComboboxTextField, ComboboxValue, ComboboxClear, ComboboxChips, ComboboxContent, ComboboxInput, ComboboxActions, ComboboxList, ComboboxEmpty, ComboboxGroup, ComboboxItem, ComboboxCreate, ComboboxLoading"),
-  entry("command", "Command", "Paleta de comandos com busca.", ui("command"), "Command, CommandDialog, CommandInput, CommandList, CommandGroup, CommandItem, CommandHighlight, CommandPages, CommandPage, CommandSplit, CommandPreview, CommandDock"),
-  entry("context-menu", "Context Menu", "O mesmo menu, aberto pelo botão direito, pelo toque longo e por Shift+F10.", ui("context-menu"), "ContextMenu, ContextMenuContent, ContextMenuHeader, ContextMenuItem, contextMenuTargets"),
-  entry("date-picker", "Date Picker", "Campo de data, intervalo ou mês — popover no desktop, gaveta no telefone.", ui("date-picker"), "DatePicker, MonthGrid"),
-  entry("dialog", "Dialog", "Janela modal — e gaveta no telefone, com surface=\"auto\".", ui("dialog"), "Dialog, DialogContent, DialogHeader, DialogMedia, DialogSteps, DialogBody, DialogFooter"),
-  entry("drawer", "Drawer", "Gaveta arrastável, com física de toque — e a folha de ações.", ui("drawer"), "Drawer, DrawerContent, DrawerTrigger, DrawerActions, DrawerAction, DrawerCancel"),
-  entry("dropdown-menu", "Dropdown Menu", "Menu de ações, com busca, confirmação e a folha de ações no telefone.", ui("dropdown-menu"), "DropdownMenu, DropdownMenuContent, DropdownMenuHeader, DropdownMenuItem"),
-  entry("filter-bar", "Filter Bar", "Os filtros aplicados em tokens campo · operador · valor, editáveis no lugar — com o E/OU, a contagem, a URL e o teclado de toolbar.", ui("filter-bar"), "FilterBar, FilterBarSkeleton, serializeFilters, parseFilters, filterPeriodRange"),
-  entry("form", "Form", "Formulário com as peças, o Enter, a validação em português e o envio que espera sozinho.", ui("form"), "Form, FormInput, FormField, FormSwitch, FormPickerPopover, FormSubmit"),
-  entry("histogram-slider", "Histogram Slider", "Faixa de valor sobre uma distribuição, com atalhos, contagem, eixo e referência.", ui("histogram-slider"), "HistogramSlider"),
-  entry("hover-card", "Hover Card", "Prévia ao pousar o cursor — e no toque longo, com o grupo e o carregando.", ui("hover-card"), "HoverCard, HoverCardGroup, HoverCardTrigger, HoverCardContent, HoverCardHeader, HoverCardLink"),
-  entry("menubar", "Menubar", "Fileira de menus com o realce que viaja, a busca de comandos e a folha no telefone.", ui("menubar"), "Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarRadioGroup"),
-  entry("navigation-menu", "Navigation Menu", "Navegação de um cabeçalho público, com o realce que viaja e o painel que aprofunda.", ui("navigation-menu"), "NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent, NavigationMenuPanel, NavigationMenuGroup, NavigationMenuLink"),
-  entry("onboarding", "Onboarding", "Apresentar o produto: as boas-vindas em passos, os primeiros passos, a novidade na barra, o tour com foco num botão real e o ponto que pulsa.", ui("onboarding"), "OnboardingDialog, OnboardingChecklist, OnboardingCard, OnboardingTour, OnboardingHotspot, OnboardingMedia, OnboardingSkeleton"),
-  entry("popover", "Popover", "Camada flutuante ancorada a um gatilho — com a confirmação curta e a gaveta no telefone.", ui("popover"), "Popover, PopoverContent, PopoverTrigger, PopoverHeader, PopoverConfirm"),
-  entry("sheet", "Sheet", "Painel de borda no desktop, gaveta no telefone.", ui("sheet"), "Sheet, SheetContent, SheetTrigger, SheetClose"),
-  entry("stat-card", "Stat Card", "Um número que importa, com sua variação.", ui("stat-card"), "StatCard, StatCardGroup, StatCardHeader, StatCardLabel, StatCardIcon, StatCardValue, StatCardDelta"),
-  entry("stepper", "Stepper", "Progresso por etapas de um fluxo.", ui("stepper"), "Stepper, StepperItem, StepperContent, StepperActions, StepperPrevious, StepperNext"),
-  entry("table", "Table", "Tabela de dados: cinco densidades, coluna fixa, grupo com total, detalhe, esqueleto e erro.", ui("table"), "Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableGroupRow, TableRowDetail, TableSkeleton, TableCellIdentity, TableCellMoney"),
-  entry("tabs", "Tabs", "Alterna entre painéis do mesmo nível — a pílula flutuante, o marcador que corre, a contagem, o Mais e a navegação.", ui("tabs"), "Tabs, TabsList, TabsTrigger, TabsContent, TabsAdd, TabsNav, TabsNavLink"),
-  entry("timeline", "Timeline", "Feed cronológico de eventos: estado na trilha, coluna de data, linha compacta, faixa de dia presa, recolhidos, detalhe, link, tempo relativo, feed ao vivo e o fio que se desenha.", ui("timeline"), "Timeline, TimelineItem, TimelineHeader, TimelineTitle, TimelineDescription, TimelineTime, TimelineSeparator, TimelineGroup, TimelineActions, TimelineCard, TimelineDetail, TimelineLink, TimelineCollapsed, TimelineSkeleton"),
-  entry("sonner", "Toast", "Confirmação passageira, fora do fluxo: a placa flutuante de vidro com o tom no ícone, o Desfazer com contagem, o Ver, o progresso, a pílula e os repetidos.", ui("sonner"), 'import { toastSuccess, toastError, toastUndo, toastPromise, toastProgress, toastPill } from "@/lib/toast"'),
+  ...layer("Organisms", [
+    /** A unidade é um `Collapsible` — uma molécula. */
+    /** Lista cuja **unidade** é uma molécula, que é a segunda forma do nível.
+     *  E não por analogia: `AccordionItem` + `Trigger` + `Content` **é** um
+     *  `Collapsible`, que está em Moléculas — os dois arquivos importam a mesma
+     *  régua, `lib/disclosure-classes`.
+     *
+     *  Não é átomo, e a conta é direta: medido, uma raiz renderiza **3 itens, 3
+     *  gatilhos focáveis e 3 painéis**, cada um com o próprio `aria-expanded`.
+     *  "Um controle, um elemento, uma casca" não descreve isso.
+     *
+     *  E a cláusula de anatomia não o salva. Ela vale para o `Select`, cujo item
+     *  é uma **escolha entre valores** de um controle só; aqui cada item é uma
+     *  divulgação **operável sozinha e com estado próprio**. Item que é dado não
+     *  é item que tem estado. */
+    entry("accordion", "Accordion", "Seções expansíveis.", ui("accordion"), "Accordion, AccordionItem, AccordionTrigger, AccordionContent, AccordionToggleAll"),
+    entry("alert-dialog", "Alert Dialog", "Confirmação de uma ação sem volta.", ui("alert-dialog"), "AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogMedia, AlertDialogList, AlertDialogError, AlertDialogConfirmInput"),
+    /** Uma pilha de `Avatar`s seria molécula; a lista do +N é um `Popover` (e,
+     *  no telefone, a gaveta), e quem contém organismo é organismo. */
+    entry("avatar-group", "Avatar Group", "Pessoas empilhadas: o rosto sobe, a dica viaja, o +N abre a lista.", ui("avatar-group"), "AvatarGroup, AvatarGroupItem, AvatarGroupAdd, AvatarGroupSkeleton"),
+    /** Contém um `DropdownMenu` no miolo dobrado — quem contém organismo é
+     *  organismo. */
+    entry("breadcrumb", "Breadcrumb", "A trilha até a tela atual.", ui("breadcrumb"), "Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbMenu, BreadcrumbSwitcher, BreadcrumbSwitcherItem"),
+    entry("calendar", "Calendar", "A grade de um mês — escolha, intervalo com atalhos, marcadores e a agenda de fios.", ui("calendar"), "Calendar, CalendarDayButton, CalendarEvent, CalendarEvents, CalendarSkeleton"),
+    /** Superfície com faixas: barra, cabeçalho, corpo, rodapé, nota. A mesma
+     *  anatomia do `Dialog`. */
+    entry("card", "Card", "Cartão de conteúdo e painel.", ui("card"), "Card, CardHeader, CardTitle, CardDescription, CardAction, CardToolbar, CardContent, CardBody, CardField, CardLink, CardMedia, CardMessage, CardNote, CardFooter, CardSkeleton"),
+    entry("carousel", "Carousel", "Itens que deslizam na horizontal ou na vertical — uma biblioteca de versões sobre um motor só.", ui("carousel"), "Carousel, CarouselContent, CarouselItem, CarouselMore, CarouselPrevious, CarouselNext, CarouselDots, CarouselProgress, CarouselStatus, CarouselToolbar, CarouselCaption, CarouselPlayPause, CarouselSteps, CarouselStep, CarouselThumbs, CarouselThumb, CarouselFullscreen, CarouselSkeleton"),
+    entry("chart", "Chart", "Gráficos ligados aos tokens do tema.", ui("chart"), "ChartAnnotation, ChartArea, ChartBarList, ChartBars, ChartContainer, ChartDonut, ChartHeatmap, ChartLine, ChartRadar, ChartRadial, ChartSparkline, ChartSplit, ChartWaterfall"),
+    entry("combobox", "Combobox", "Select com busca, uma ou várias escolhas.", ui("combobox"), "Combobox, ComboboxField, ComboboxTrigger, ComboboxTextField, ComboboxValue, ComboboxClear, ComboboxChips, ComboboxContent, ComboboxInput, ComboboxActions, ComboboxList, ComboboxEmpty, ComboboxGroup, ComboboxItem, ComboboxCreate, ComboboxLoading"),
+    entry("command", "Command", "Paleta de comandos com busca.", ui("command"), "Command, CommandDialog, CommandInput, CommandList, CommandGroup, CommandItem, CommandHighlight, CommandPages, CommandPage, CommandSplit, CommandPreview, CommandDock"),
+    entry("context-menu", "Context Menu", "O mesmo menu, aberto pelo botão direito, pelo toque longo e por Shift+F10.", ui("context-menu"), "ContextMenu, ContextMenuContent, ContextMenuHeader, ContextMenuItem, contextMenuTargets"),
+    entry("date-picker", "Date Picker", "Campo de data, intervalo ou mês — popover no desktop, gaveta no telefone.", ui("date-picker"), "DatePicker, MonthGrid"),
+    entry("dialog", "Dialog", "Janela modal — e gaveta no telefone, com surface=\"auto\".", ui("dialog"), "Dialog, DialogContent, DialogHeader, DialogMedia, DialogSteps, DialogBody, DialogFooter"),
+    entry("drawer", "Drawer", "Gaveta arrastável, com física de toque — e a folha de ações.", ui("drawer"), "Drawer, DrawerContent, DrawerTrigger, DrawerActions, DrawerAction, DrawerCancel"),
+    entry("dropdown-menu", "Dropdown Menu", "Menu de ações, com busca, confirmação e a folha de ações no telefone.", ui("dropdown-menu"), "DropdownMenu, DropdownMenuContent, DropdownMenuHeader, DropdownMenuItem"),
+    /** Compõe `Popover`, `Command`, `DropdownMenu` e `Calendar` — quem contém
+     *  organismo é organismo. */
+    entry("filter-bar", "Filter Bar", "Os filtros aplicados em tokens campo · operador · valor, editáveis no lugar — com o E/OU, a contagem, a URL e o teclado de toolbar.", ui("filter-bar"), "FilterBar, FilterBarSkeleton, serializeFilters, parseFilters, filterPeriodRange"),
+    /** Era átomo — só o `<form>` com a política do Enter, sem input e sem botão.
+     *  Virou molécula ao ganhar as peças: `FormInput` sobre `Field`, `FormSubmit`
+     *  sobre `Button` + `Spinner`. Inversão registrada, e a régua é a mesma. */
+    /** Ele era Molécula, e a rodada do `RadioGroup` mostrou que já não era.
+     *  `form.tsx` compõe `field` **e** `radio-group` — duas moléculas —, e a
+     *  régua acima diz que isso é organismo. Ele já estava na fronteira antes:
+     *  compunha `field` e tinha estado próprio (a política do Enter, o `id` em
+     *  contexto), que é a segunda cláusula do nível. O que mudou foi o limiar
+     *  mecânico da asserção 3 ser cruzado, e com ele a classificação deixar de
+     *  poder mentir. É a mesma inversão que o próprio `form` já registra uma vez
+     *  — de átomo para molécula, quando ganhou as peças. */
+    entry("form", "Form", "Formulário com as peças, o Enter, a validação em português e o envio que espera sozinho.", ui("form"), "Form, FormInput, FormField, FormSwitch, FormPickerPopover, FormSubmit"),
+    /** Compõe o StatCard, e quem contém organismo é organismo. */
+    entry("histogram-slider", "Histogram Slider", "Faixa de valor sobre uma distribuição, com atalhos, contagem, eixo e referência.", ui("histogram-slider"), "HistogramSlider"),
+    entry("hover-card", "Hover Card", "Prévia ao pousar o cursor — e no toque longo, com o grupo e o carregando.", ui("hover-card"), "HoverCard, HoverCardGroup, HoverCardTrigger, HoverCardContent, HoverCardHeader, HoverCardLink"),
+    entry("menubar", "Menubar", "Fileira de menus com o realce que viaja, a busca de comandos e a folha no telefone.", ui("menubar"), "Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarRadioGroup"),
+    entry("navigation-menu", "Navigation Menu", "Navegação de um cabeçalho público, com o realce que viaja e o painel que aprofunda.", ui("navigation-menu"), "NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent, NavigationMenuPanel, NavigationMenuGroup, NavigationMenuLink"),
+    /** Compõe `Dialog`, `Popover`, `Carousel`, `Card` e `Accordion` — quem
+     *  contém organismo é organismo. */
+    entry("onboarding", "Onboarding", "Apresentar o produto: as boas-vindas em passos, os primeiros passos, a novidade na barra, o tour com foco num botão real e o ponto que pulsa.", ui("onboarding"), "OnboardingDialog, OnboardingChecklist, OnboardingCard, OnboardingTour, OnboardingHotspot, OnboardingMedia, OnboardingSkeleton"),
+    entry("popover", "Popover", "Camada flutuante ancorada a um gatilho — com a confirmação curta e a gaveta no telefone.", ui("popover"), "Popover, PopoverContent, PopoverTrigger, PopoverHeader, PopoverConfirm"),
+    entry("sheet", "Sheet", "Painel de borda no desktop, gaveta no telefone.", ui("sheet"), "Sheet, SheetContent, SheetTrigger, SheetClose"),
+    /** Especializa o `Card`; especializar mantém o degrau. */
+    entry("stat-card", "Stat Card", "Um número que importa, com sua variação.", ui("stat-card"), "StatCard, StatCardGroup, StatCardHeader, StatCardLabel, StatCardIcon, StatCardValue, StatCardDelta"),
+    entry("stepper", "Stepper", "Progresso por etapas de um fluxo.", ui("stepper"), "Stepper, StepperItem, StepperContent, StepperActions, StepperPrevious, StepperNext"),
+    /** A linha (células = átomos) é a molécula; a tabela é feita de linhas. */
+    entry("table", "Table", "Tabela de dados: cinco densidades, coluna fixa, grupo com total, detalhe, esqueleto e erro.", ui("table"), "Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableGroupRow, TableRowDetail, TableSkeleton, TableCellIdentity, TableCellMoney"),
+    entry("tabs", "Tabs", "Alterna entre painéis do mesmo nível — a pílula flutuante, o marcador que corre, a contagem, o Mais e a navegação.", ui("tabs"), "Tabs, TabsList, TabsTrigger, TabsContent, TabsAdd, TabsNav, TabsNavLink"),
+    entry("timeline", "Timeline", "Feed cronológico de eventos: estado na trilha, coluna de data, linha compacta, faixa de dia presa, recolhidos, detalhe, link, tempo relativo, feed ao vivo e o fio que se desenha.", ui("timeline"), "Timeline, TimelineItem, TimelineHeader, TimelineTitle, TimelineDescription, TimelineTime, TimelineSeparator, TimelineGroup, TimelineActions, TimelineCard, TimelineDetail, TimelineLink, TimelineCollapsed, TimelineSkeleton"),
+    /** Uma pilha de toasts, cada um ícone + título + texto + ação. */
+    entry("sonner", "Toast", "Confirmação passageira, fora do fluxo: a placa flutuante de vidro com o tom no ícone, o Desfazer com contagem, o Ver, o progresso, a pílula e os repetidos.", ui("sonner"), 'import { toastSuccess, toastError, toastUndo, toastPromise, toastProgress, toastPill } from "@/lib/toast"'),
+  ]),
 
   // ── Templates ───────────────────────────────────────────────────────────
-  entry("bottom-bar", "Bottom Bar", "A barra de abas do telefone — o marcador do Tabs, o arraste, a contagem, o rótulo só na ativa e o some-ao-rolar.", ui("bottom-bar"), "BottomBar, BottomBarTab, BottomBarSlot, BottomBarAction, BottomBarSkeleton, BottomBarRow, BottomBarTabs, bottomBarActionClassName"),
-  entry("data-table", "Data Table", "A tabela com o estado — ordenar, filtrar, marcar, agrupar, expandir, exportar e editar — e a moldura dela.", ui("data-table"), "DataTable, TablePanel, TablePanelToolbar, TablePanelFooter, dataTableColumns, DataTableSelectionBar, DataTableFacetFilter, DataTableViewOptions"),
-  entry("page-header", "Page Header", "O topo de uma tela: título, identidade, ações, números e navegação — compacto no telefone, e o título sobe para a barra.", ui("page-header"), "PageHeader, PageHeaderTitleRow, PageHeaderTitle, PageHeaderDescription, PageHeaderEyebrow, PageHeaderMedia, PageHeaderMeta, PageHeaderStat, PageHeaderNav, PageHeaderActions, PageHeaderBack, PageHeaderBreadcrumb, PageHeaderSkeleton"),
-  entry("page-section", "Page Section", "Bloco de uma tela, com título e ação — uma região nomeada pelo título, que recolhe e prende o cabeçalho sob a barra.", ui("page-section"), "PageSection, PageSectionHeader, PageSectionTitle, PageSectionDescription, PageSectionLink, PageSectionMeta, PageSectionFooter, PageSectionSkeleton"),
-  entry("sidebar", "Sidebar", "A navegação lateral do app — e, sem placa (plain), a do catálogo.", ui("sidebar"), "Sidebar, SidebarProvider, SidebarInset, SidebarTrigger, SidebarRail, SidebarContent, SidebarGroup, SidebarMenu, SidebarMenuButton, useSidebar"),
-  entry("split-shell", "Split Shell", "Campo de um lado, coluna de conteúdo do outro — quebra pelo casco, com o voltar, o pé e os passos.", ui("split-shell"), "SplitShell, SplitShellAside, SplitShellBack, SplitShellFooter, SplitShellSkeleton"),
-  entry("toolbar", "Toolbar", "Filtros e ações acima de uma lista — presa sob a barra do topo, com o botão de filtros, as fichas, a busca, o ⋯ e o teclado de toolbar.", ui("toolbar"), "Toolbar, ToolbarFilters, ToolbarActions, ToolbarRow, ToolbarButton, ToolbarFilterButton, ToolbarSearch, ToolbarCount, ToolbarChips, ToolbarFilterIndicator"),
-  entry("top-bar", "Top Bar", "A barra do topo da janela — barra ou pílula, com a ação, a busca e o fio de progresso, e uma árvore para o telefone.", ui("top-bar"), "TopBar, TopBarStart, TopBarTitle, TopBarContent, TopBarActions, TopBarAction, TopBarSearch, TopBarProgress, TopBarSkeleton"),
+  ...layer("Templates", [
+    /**
+     * A barra de baixo do telefone — a irmã do `top-bar`. Ela não mostra
+     * conteúdo nenhum por si: dispõe onde as abas, o slot de conta e a ação
+     * primária vão, e fica parada sobre a tela que rola por baixo dela.
+     */
+    entry("bottom-bar", "Bottom Bar", "A barra de abas do telefone — o marcador do Tabs, o arraste, a contagem, o rótulo só na ativa e o some-ao-rolar.", ui("bottom-bar"), "BottomBar, BottomBarTab, BottomBarSlot, BottomBarAction, BottomBarSkeleton, BottomBarRow, BottomBarTabs, bottomBarActionClassName"),
+    /**
+     * O `DataTable` (rodada 225) é o motor da TanStack Table por baixo do
+     * `TablePanel`: ele monta o painel, a barra, o corpo, o rodapé de paginação
+     * e a barra flutuante da seleção — o `TablePanel` com o estado dentro.
+     * Desde a rodada 231 o `TablePanel` mora no mesmo arquivo e na mesma página:
+     * eram duas entradas em Templates para uma tabela só, e ele, sem estado, só
+     * servia aos esqueletos de carregamento.
+     */
+    entry("data-table", "Data Table", "A tabela com o estado — ordenar, filtrar, marcar, agrupar, expandir, exportar e editar — e a moldura dela.", ui("data-table"), "DataTable, TablePanel, TablePanelToolbar, TablePanelFooter, dataTableColumns, DataTableSelectionBar, DataTableFacetFilter, DataTableViewOptions"),
+    entry("page-header", "Page Header", "O topo de uma tela: título, identidade, ações, números e navegação — compacto no telefone, e o título sobe para a barra.", ui("page-header"), "PageHeader, PageHeaderTitleRow, PageHeaderTitle, PageHeaderDescription, PageHeaderEyebrow, PageHeaderMedia, PageHeaderMeta, PageHeaderStat, PageHeaderNav, PageHeaderActions, PageHeaderBack, PageHeaderBreadcrumb, PageHeaderSkeleton"),
+    entry("page-section", "Page Section", "Bloco de uma tela, com título e ação — uma região nomeada pelo título, que recolhe e prende o cabeçalho sob a barra.", ui("page-section"), "PageSection, PageSectionHeader, PageSectionTitle, PageSectionDescription, PageSectionLink, PageSectionMeta, PageSectionFooter, PageSectionSkeleton"),
+    /**
+     * A casca da página com navegação — a irmã do `top-bar` e do `bottom-bar`.
+     * Ela foi Organismo até a rodada 221 pelo argumento de que contém
+     * organismos (o painel de borda no telefone); isso diz o piso, não a
+     * camada, e Templates também são feitos de organismos. O que decide é o que
+     * `SidebarProvider` e `SidebarInset` fazem: dispõem a página — a barra de um
+     * lado, o conteúdo do outro, o estado que atravessa as duas. Menus, grupos e
+     * submenus são anatomia dela, e nenhum se usa fora.
+     */
+    entry("sidebar", "Sidebar", "A navegação lateral do app — e, sem placa (plain), a do catálogo.", ui("sidebar"), "Sidebar, SidebarProvider, SidebarInset, SidebarTrigger, SidebarRail, SidebarContent, SidebarGroup, SidebarMenu, SidebarMenuButton, useSidebar"),
+    /** A página dividida: campo de um lado, coluna de conteúdo do outro.
+     *  Compõe `Container` e a tipografia, e recebe o campo por slot — o que ele
+     *  mostra é conteúdo de produto, e conteúdo de produto não mora em `ui/`. */
+    entry("split-shell", "Split Shell", "Campo de um lado, coluna de conteúdo do outro — quebra pelo casco, com o voltar, o pé e os passos.", ui("split-shell"), "SplitShell, SplitShellAside, SplitShellBack, SplitShellFooter, SplitShellSkeleton"),
+    /**
+     * A barra de uma lista: dispõe onde os filtros, as ações e as fichas vão, e
+     * não mostra conteúdo nenhum por si. Foi Organismo até a rodada 229 pelo
+     * argumento de que contém organismos (o ⋯ é um `DropdownMenu`, e na
+     * prática ela carrega um `Tabs`) — o mesmo que a `Sidebar` derrubou na 221:
+     * isso diz o piso, não a camada. Desde a 229 ela age como as barras da
+     * página: prende sob o `TopBar`, mede a base dele e some ao rolar.
+     */
+    entry("toolbar", "Toolbar", "Filtros e ações acima de uma lista — presa sob a barra do topo, com o botão de filtros, as fichas, a busca, o ⋯ e o teclado de toolbar.", ui("toolbar"), "Toolbar, ToolbarFilters, ToolbarActions, ToolbarRow, ToolbarButton, ToolbarFilterButton, ToolbarSearch, ToolbarCount, ToolbarChips, ToolbarFilterIndicator"),
+    /**
+     * A barra do topo da janela. Ela não mostra conteúdo nenhum por si — dispõe
+     * onde o voltar, o título e as ações vão, e fica parada enquanto a tela rola.
+     */
+    entry("top-bar", "Top Bar", "A barra do topo da janela — barra ou pílula, com a ação, a busca e o fio de progresso, e uma árvore para o telefone.", ui("top-bar"), "TopBar, TopBarStart, TopBarTitle, TopBarContent, TopBarActions, TopBarAction, TopBarSearch, TopBarProgress, TopBarSkeleton"),
+  ]),
 ]
 
 export function getEntry(slug: string): RegistryEntry | undefined {

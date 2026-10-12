@@ -1,7 +1,8 @@
 import { execSync } from "node:child_process"
-import { readFileSync, readdirSync } from "node:fs"
+import { readdirSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { blocoCss, lerFonte } from "@/test/fonte"
 
 import { buttonVariants } from "@/components/ui/button"
 import { fieldSurfaceClassName } from "@/lib/field-classes"
@@ -16,15 +17,14 @@ import { cn } from "@/lib/utils"
  * número no arquivo do componente.
  */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CSS = fonte("src/app/globals.css")
-const BLOCO = CSS.slice(CSS.indexOf("@theme static {"), CSS.indexOf("}", CSS.indexOf("@theme static {")))
+const CSS = lerFonte("src/app/globals.css")
+const BLOCO = blocoCss(CSS, "@theme static {", "}")
 const UI = "src/components/ui"
 const COMPONENTES = readdirSync(join(process.cwd(), UI))
   .filter((nome) => nome.endsWith(".tsx"))
-  .map((nome) => [nome, fonte(join(UI, nome))] as const)
+  .map((nome) => [nome, lerFonte(join(UI, nome))] as const)
 const LIB = ["field-classes.ts", "menu-classes.ts", "search-field-classes.ts"].map(
-  (nome) => [nome, fonte(join("src/lib", nome))] as const
+  (nome) => [nome, lerFonte(join("src/lib", nome))] as const
 )
 const semComentarios = (codigo: string) => codigo.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "")
 
@@ -71,7 +71,7 @@ describe("a escala do raio", () => {
         .map((n) => join(DS, "docs", n)),
     ]
     for (const arquivo of arquivos) {
-      expect(semComentarios(fonte(arquivo)).replace(/<code>[\s\S]*?<\/code>/g, ""), arquivo).not.toMatch(/\brounded-(t-|b-)?(xl|2xl|3xl)\b(?!-)/)
+      expect(semComentarios(lerFonte(arquivo)).replace(/<code>[\s\S]*?<\/code>/g, ""), arquivo).not.toMatch(/\brounded-(t-|b-)?(xl|2xl|3xl)\b(?!-)/)
     }
   })
 
@@ -80,8 +80,8 @@ describe("a escala do raio", () => {
     expect(fieldSurfaceClassName.split(/\s+/)).toContain("rounded-full")
     expect(searchFieldShapeClassName.split(/\s+/)).toContain("rounded-full")
     expect(menuPanelSurfaceClassName).toContain("rounded-surface")
-    expect(fonte(join(UI, "card.tsx"))).toContain("rounded-surface text-sm")
-    expect(fonte(join(UI, "dialog.tsx"))).toContain('"rounded-modal text-sm')
+    expect(lerFonte(join(UI, "card.tsx"))).toContain("rounded-surface text-sm")
+    expect(lerFonte(join(UI, "dialog.tsx"))).toContain('"rounded-modal text-sm')
   })
 })
 

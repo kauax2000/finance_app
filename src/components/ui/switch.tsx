@@ -4,7 +4,8 @@ import * as React from "react"
 import { Switch as SwitchPrimitive } from "radix-ui"
 import { CheckIcon, XMarkIcon } from "@heroicons/react/16/solid"
 
-import { composeRefs, useBrandGlow } from "@/hooks/use-brand-glow"
+import { composeRefs } from "radix-ui/internal"
+import { useBrandGlow } from "@/hooks/use-brand-glow"
 import { Spinner } from "@/components/ui/spinner"
 import { cn } from "@/lib/utils"
 

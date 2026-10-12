@@ -1,14 +1,13 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import { Stepper, StepperContent, StepperItem } from "./stepper"
 
 /** A rodada 224: o redesenho do `Stepper` e o fluxo controlado. */
 
-const CODIGO = readFileSync(join(process.cwd(), "src/components/ui/stepper.tsx"), "utf8")
+const CODIGO = lerFonte("src/components/ui/stepper.tsx")
 
 const fila = (props: Record<string, unknown>, ...itens: unknown[]) =>
   renderToStaticMarkup(h(Stepper, props, ...(itens as never[])))

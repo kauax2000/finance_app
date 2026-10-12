@@ -1,14 +1,14 @@
-import { readFileSync, readdirSync, statSync } from "node:fs"
+import { readdirSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 import { TOOLBAR_SIZES, toolbarClassName } from "./toolbar"
 
 /** A rodada 229: a barra presa, a placa, a escada, as peças e o teclado. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const FONTE = fonte("src/components/ui/toolbar.tsx")
-const CODIGO = FONTE.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "")
+const FONTE = lerFonte("src/components/ui/toolbar.tsx")
+const CODIGO = semComentarios(FONTE, "linha-inteira")
 
 function arquivos(dir: string): string[] {
   return readdirSync(dir).flatMap((nome) => {
@@ -79,7 +79,7 @@ describe("as superfícies", () => {
 
 describe("o teclado", () => {
   // Desde a rodada 245 o foco itinerante mora num hook que o `FilterBar` divide.
-  const TECLADO = fonte("src/hooks/use-toolbar-keyboard.ts")
+  const TECLADO = lerFonte("src/hooks/use-toolbar-keyboard.ts")
 
   it("o papel só vem com o comportamento", () => {
     expect(CODIGO).toContain('role={keyboard ? "toolbar" : undefined}')
@@ -132,10 +132,10 @@ describe("o app", () => {
   it("nenhuma barra escreve a altura de um controle à mão com md:", () => {
     const telas = arquivos(join(process.cwd(), "src"))
       .filter((f) => /\.tsx$/.test(f) && !f.includes("/components/ui/") && !f.includes("/designsystem/"))
-      .filter((f) => readFileSync(f, "utf8").includes('from "@/components/ui/toolbar"'))
+      .filter((f) => lerFonte(f).includes('from "@/components/ui/toolbar"'))
     expect(telas.length).toBeGreaterThan(4)
     for (const f of telas) {
-      expect(readFileSync(f, "utf8"), f).not.toMatch(/md:size-auto md:h-\(--toolbar-control\)/)
+      expect(lerFonte(f), f).not.toMatch(/md:size-auto md:h-\(--toolbar-control\)/)
     }
   })
 })

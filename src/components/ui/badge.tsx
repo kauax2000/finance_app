@@ -67,18 +67,6 @@ export const tagChipFilterSelected =
 /** Chip de filtro disponível. */
 export const tagChipFilterIdle = tagChipNeutral
 
-/** Gatilho de menu com período ativo, na paleta de success. */
-export const tagChipSuccessMenuTrigger = cn(
-  tagChipSuccess,
-  "border-0 shadow-none hover:border-0",
-  "aria-expanded:border-0 aria-expanded:bg-success-muted/90 aria-expanded:text-success-muted-foreground",
-  "data-[state=open]:border-0 data-[state=open]:bg-success-muted/90 data-[state=open]:text-success-muted-foreground",
-  "dark:border-0 dark:hover:border-0",
-  // A tinta é a do par -muted: `success-foreground` sobre `success-muted` sumia no escuro.
-  "dark:aria-expanded:bg-success-muted dark:aria-expanded:text-success-muted-foreground",
-  "dark:data-[state=open]:bg-success-muted dark:data-[state=open]:text-success-muted-foreground"
-)
-
 /**
  * A pílula de linha do extrato e da prévia de pagamento. `text-[10px]` não é
  * degrau do `Badge` (o `xs` é 11px), e trocar mudaria pixel em cinco telas —
@@ -95,9 +83,6 @@ export const transactionExpenseTypeRowChip = cn(transactionRowChipShell, tagChip
 
 /** "Parcelada" — a paleta de warning, a mesma do calendário de pagamentos. */
 export const transactionParceladaRowChip = cn(transactionRowChipShell, tagChipWarning)
-
-export const tagChipIncomeIconColor = "text-income-muted-foreground"
-export const tagChipExpenseIconColor = "text-expense-muted-foreground"
 
 const badgeVariants = cva(
   // `gap-1` e o contrato de ícone entraram na rodada 89, e vieram de contagem:

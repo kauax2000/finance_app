@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 import {
     CHART_EASING,
     CHART_ENTER_MS,
@@ -8,7 +8,7 @@ import {
 
 // O Recharts e o `motion` leem número e string, não token: as constantes do
 // gráfico espelham o `globals.css`, e é isto que as impede de divergir dele.
-const CSS = readFileSync("src/app/globals.css", "utf8")
+const CSS = lerFonte("src/app/globals.css")
 const token = (nome: string) =>
     CSS.match(new RegExp(`${nome}:\\s*([^;]+);`))?.[1].trim()
 

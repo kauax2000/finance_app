@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import {
   formatDayHeadingPtBr,
@@ -27,9 +26,8 @@ import {
 
 /** A rodada 227: o relevo, o estado, as peças, os comportamentos e o app. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const TIMELINE = fonte("src/components/ui/timeline.tsx")
-const CSS = fonte("src/app/globals.css")
+const TIMELINE = lerFonte("src/components/ui/timeline.tsx")
+const CSS = lerFonte("src/app/globals.css")
 
 const html = (...filhos: ReturnType<typeof h>[]) =>
   renderToStaticMarkup(h(Timeline, null, ...filhos))
@@ -213,12 +211,12 @@ describe("os comportamentos", () => {
 
 describe("o app", () => {
   it("a atividade da conta e o histórico de cobranças são Timeline, sem o marcador à mão", () => {
-    const atividade = fonte("src/app/(app)/account/activity/page-client.tsx")
+    const atividade = lerFonte("src/app/(app)/account/activity/page-client.tsx")
     expect(atividade).toContain("<Timeline")
     expect(atividade).toContain("groupByLocalDay(")
     expect(atividade).not.toMatch(/h-8 w-8 shrink-0 items-center justify-center rounded-full/)
 
-    const cobrancas = fonte("src/components/bills/bill-detail-history-list.tsx")
+    const cobrancas = lerFonte("src/components/bills/bill-detail-history-list.tsx")
     expect(cobrancas).toContain("<TimelineActions>")
     expect(cobrancas).not.toContain("instanceDotClass")
     expect(cobrancas).not.toMatch(/size-2 shrink-0 rounded-full/)

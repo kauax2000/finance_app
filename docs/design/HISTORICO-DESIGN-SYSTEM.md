@@ -20999,3 +20999,78 @@ o do `AvatarGroup`, o toque longo do `HoverCard`, o arraste da `BottomBar`.
 `tailwind-hover-policy.test.ts` (a variante, o `link-sweep`, nenhum `:hover`
 solto nas classes, todo ouvinte de entrada perguntando pelo cursor, e as
 teclas que somem). O `tabs-size-ladder` passou a cobrar o `:hover` na mídia.
+
+### Rodada 251 — código morto, duplicado, comentários falsos e o auditor zerado
+
+Uma auditoria de excesso no design system inteiro, aplicada só no que era
+erro. **Nenhum componente, peça, variante, prop ou demonstração saiu**, a
+pedido do dono (uma primeira tentativa apagava os componentes sem uso no app,
+e foi desfeita antes de chegar a commit). As variantes listadas pelo
+`ds:catalog` e o `docs-map` saíram idênticos ao commit de partida.
+
+- **O mesmo código escrito duas ou mais vezes** virou um só: o `composeRefs`
+  (cinco cópias, e o `juntarRefs`) vem de `radix-ui/internal`; o pedido de
+  fechar com "Descartar alterações?" do `Dialog` e do `Sheet` é o
+  `usePedidoDeFechar`; o véu do `Dialog` e do `AlertDialog` é
+  `DIALOG_OVERLAY_CLASS`; o contrato `--dialog-*` da folha e da gaveta é
+  `SURFACE_CONTRACT_CLASS`; o ícone de cada tom é o `TONE_ICON` do `Alert`,
+  que a `AnnouncementBar` copiava; o título dos menus é `lib/menu-title.tsx`;
+  a superfície dos gatilhos de campo é `fieldControlClassName` /
+  `fieldTriggerClassName`; a contagem do `Chart` e do `StatCard` é
+  `hooks/use-count-up.ts`; a tipografia sai de uma fábrica; o `ThemeToggle`
+  chama o `viajarLiquido`. Ficaram separados, por mudarem comportamento se
+  juntos: o esconder ao rolar das três barras, o "⋯" das abas, as cascas do
+  `AlertDialog`, o `MEIO_CLASSES` da gaveta e o estado do `Collapsible`.
+- **Código morto** (nada o usava, nem o catálogo): `useUserSettings`, três
+  `tagChip*`, `chartRamp`, o vidro `glass-round`/`glass-material`/`-thin`/
+  `-thick` com os tokens `--glass-material-*`, e constantes que só os testes
+  liam. O `useIsomorphicLayoutEffect` saiu: o React 19.2 não avisa mais sobre
+  `useLayoutEffect` no servidor.
+- **O auditor zerou** (66 achados): valores arbitrários foram para a escala
+  (os de 0,2–0,4px de diferença na face do cartão incluídos), e o que é
+  geometria real ou contexto sem o CSS do sistema virou exceção nomeada em
+  `audit.mjs` (`RAW_PRIMITIVE_EXCEPTIONS`, `ARBITRARY_VALUE_EXCEPTIONS`),
+  cada uma com o motivo.
+- **Comentários que mentiam** foram corrigidos, e um virou verdade no código:
+  o `LAYER` do registry agora é exaustivo por tipo (`entry` recebe
+  `keyof typeof LAYER`).
+- **Testes e scripts**: 99 arquivos de teste leem a fonte por
+  `src/test/fonte.ts` e cobram as regras de escada por `src/test/regras.ts`;
+  os três scripts de contraste dividem `scripts/lib/contrast.mjs`, com saída
+  idêntica. Saiu um teste, cópia exata de outro.
+
+Medido no fim: `tsc` limpo, lint sem erro, 1.300 testes, `ds:audit` sem
+achado. No navegador, o "Descartar alterações?" do `Dialog` e do `Sheet`, o
+`aria-labelledby` dos menus, a viagem do `ThemeToggle` e a contagem do
+`StatCard` se comportam como antes.
+
+**Segunda passada da 251.** As cascatas do `globals.css` passaram a usar uma
+escada só (`@utility stagger-ladder`, com `--stagger-base`, `--stagger-step` e
+`--stagger-cap`) em 14 utilities, com os mesmos atrasos medidos em 412
+comparações no Chromium; o `menubar-reveal` (que usa `:nth-of-type`) e os
+keyframes, que não têm a mesma forma, ficaram. Os `--identity-*` deixaram de
+ser repetidos no `.dark` (o `catalog.mjs` aceita os de valor literal igual
+nos dois temas). O contador de caracteres do `Textarea`, do `FieldCounter` e
+do `InputGroupCount` divide a região viva (`lib/char-count.tsx`). A lista de
+pacotes de ícone proibidos tem uma fonte só
+(`scripts/lib/forbidden-icon-packages.mjs`), lida pelo ESLint e pela regra G.
+O registry não repete mais os slugs: a camada vem do `layer(...)` em volta das
+entradas, e uma entrada fora dele não compila. O ramo gaveta do `Sheet` só
+reusa o portal e o véu do `Drawer`; reusar o `DrawerContent` mudaria o
+`data-slot`, a superfície e o empilhamento.
+
+**Achado e consertado:** com movimento reduzido, a regra
+que zera o atraso perde em especificidade para a escada em sete cascatas
+(`menubar`, `navigation-menu`, `sheet`, `stat-card`, `table`, `timeline`,
+`command`), então os itens seguintes ainda esperam o atraso inteiro (até
+370ms na tabela); e no `sheet-reveal` a regra base vence o `:nth-child`, e
+todo filho entra em 80ms.
+
+O movimento reduzido foi consertado no mesmo dia: a `stagger-ladder` zera o
+atraso com `!important` sob `prefers-reduced-motion: reduce`, e o
+`menubar-reveal` (escada própria) também. Medido com o Playwright emulando a
+preferência: `table`, `sheet`, `stat-card`, `timeline` e `menubar` entram
+todos em 0s; sem a preferência os atrasos não mudaram. O `sheet-reveal`, que
+punha todo filho a 80ms, também foi consertado: a escada passou para o mesmo
+seletor da animação (os dois `:not()` venciam o `& > *` à parte). Medido:
+80, 110, 140, 170, 170ms, o × fora da cascata, e 0s com movimento reduzido.

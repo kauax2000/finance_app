@@ -13,7 +13,8 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { composeRefs, useBrandGlow } from "@/hooks/use-brand-glow"
+import { composeRefs } from "radix-ui/internal"
+import { useBrandGlow } from "@/hooks/use-brand-glow"
 
 /**
  * O aviso que mora dentro do conteúdo.
@@ -456,4 +457,6 @@ export {
   AlertDescription,
   AlertTitle,
   alertVariants,
+  // O ícone por tom, que a `AnnouncementBar` também veste (rodada 187).
+  TONE_ICON,
 }

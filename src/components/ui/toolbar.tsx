@@ -16,7 +16,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SearchInput } from "@/components/ui/search-input"
-import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import { useToolbarKeyboard } from "@/hooks/use-toolbar-keyboard"
 import { useTopBarBottom } from "@/hooks/use-top-bar-bottom"
 import { numberBR } from "@/lib/formatters"
@@ -416,7 +415,7 @@ function useExcessoDeAcoes(
   const raizDaCasa = outraCasa?.raiz
   const espacoDaCasa = outraCasa?.espaco
 
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     const acoes = ref.current
     const barra = acoes?.closest<HTMLElement>(raizDaCasa ?? "[data-slot=toolbar]")
     if (!ativo || !acoes || !barra) return
@@ -460,7 +459,7 @@ function useExcessoDeAcoes(
     const ro = new ResizeObserver(medir)
     ro.observe(barra)
     return () => ro.disconnect()
-  }, [ativo, raizDaCasa, espacoDaCasa])
+  }, [ativo, raizDaCasa, espacoDaCasa, ref])
 
   return ativo ? fora : []
 }

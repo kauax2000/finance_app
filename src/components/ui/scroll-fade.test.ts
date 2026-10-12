@@ -1,5 +1,6 @@
-import { readdirSync, readFileSync } from "node:fs"
+import { readdirSync } from "node:fs"
 import { describe, expect, it } from "vitest"
+import { blocoCss, lerFonte, semComentarios } from "@/test/fonte"
 
 import {
   SCROLL_FADE_BLUR_LAYERS,
@@ -17,10 +18,7 @@ import {
  * texto cru testa o comentário, não o código** — os comentários daqui citam de
  * propósito `mask-composite` e `backdrop-filter` como o que não se faz.
  */
-const CSS = readFileSync("src/app/globals.css", "utf8")
-
-const semComentarios = (t: string) =>
-  t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "")
+const CSS = lerFonte("src/app/globals.css")
 
 const fatia = (de: string, ate: string) => {
   const i = CSS.indexOf(de)
@@ -30,25 +28,13 @@ const fatia = (de: string, ate: string) => {
   return CSS.slice(i, f)
 }
 
-const BLUR_Y = semComentarios(
-  fatia("@utility scroll-fade-blur-y {", "@utility scroll-fade-blur-x")
-)
-const BLUR_X = semComentarios(
-  fatia("@utility scroll-fade-blur-x {", "\n/**")
-)
-const RAMPA_Y = semComentarios(
-  fatia("@utility scroll-fade-y {", "@utility scroll-fade-x")
-)
-const MATERIAL = semComentarios(
-  fatia("@utility scroll-fade-material {", "\n/**")
-)
+const BLUR_Y = semComentarios(fatia("@utility scroll-fade-blur-y {", "@utility scroll-fade-blur-x"), "linha-inteira")
+const BLUR_X = semComentarios(fatia("@utility scroll-fade-blur-x {", "\n/**"), "linha-inteira")
+const RAMPA_Y = semComentarios(fatia("@utility scroll-fade-y {", "@utility scroll-fade-x"), "linha-inteira")
+const MATERIAL = semComentarios(fatia("@utility scroll-fade-material {", "\n/**"), "linha-inteira")
 
-const COMPONENTE = semComentarios(
-  readFileSync("src/components/ui/scroll-area.tsx", "utf8")
-)
-const REGUA = semComentarios(
-  readFileSync("src/lib/scroll-fade-classes.ts", "utf8")
-)
+const COMPONENTE = semComentarios(lerFonte("src/components/ui/scroll-area.tsx"), "linha-inteira")
+const REGUA = semComentarios(lerFonte("src/lib/scroll-fade-classes.ts"), "linha-inteira")
 
 const CAMADAS = [
   ["y", BLUR_Y],
@@ -77,9 +63,9 @@ describe("a dissolução das bordas", () => {
       // nenhum deles monta mais as camadas — a asserção 16 é quem tranca isso,
       // e a 17 tranca o que ficou no lugar (só a máscara).
     ] as const) {
-      const src = readFileSync(caminho, "utf8")
+      const src = lerFonte(caminho)
       const rolavel = src.indexOf(ancoraDoRolavel)
-      // A **chamada**, e não a definição: em `scroll-fade.tsx` a peça é
+      // A **chamada**, e não a definição: em `scroll-area.tsx` a peça é
       // declarada acima do componente que a usa, então procurar o `data-slot`
       // acharia a definição e a ordem sairia invertida.
       const camada = src.indexOf("<ScrollFadeBlurLayers")
@@ -204,7 +190,7 @@ describe("a dissolução das bordas", () => {
 
   it("7. o material substitui a dissolução, e não soma a ela", () => {
     // O que separa um material de um véu: o conteúdo passa por baixo nítido.
-    for (const rampa of [RAMPA_Y, semComentarios(fatia("@utility scroll-fade-x {", "\n/*"))]) {
+    for (const rampa of [RAMPA_Y, semComentarios(fatia("@utility scroll-fade-x {", "\n/*"), "linha-inteira")]) {
       expect(rampa).toContain('&[data-scroll-fade-mode="material"]')
       // A regra vem **depois** da que liga a máscara: as duas empatam em
       // especificidade, e ali quem decide é a ordem de emissão.
@@ -246,9 +232,7 @@ describe("a dissolução das bordas", () => {
     // material de superfície. A versão anterior desta asserção lia o número a
     // partir de `indexOf(".mobile-glass-surface")`, e a primeira ocorrência
     // dessa string é um **comentário**: ela media a coisa certa por acidente.
-    const SUPERFICIE = semComentarios(
-      fatia("@utility glass-surface {", "\n/**")
-    )
+    const SUPERFICIE = semComentarios(fatia("@utility glass-surface {", "\n/**"), "linha-inteira")
     const daCasa = SUPERFICIE.match(/--glass-surface-sat,\s*([\d.]+)/)?.[1]
     const meu = MATERIAL.match(/--scroll-fade-blur-sat:\s*([\d.]+)/)?.[1]
     expect(daCasa, "a utility precisa declarar a vibrância").toBeDefined()
@@ -256,8 +240,7 @@ describe("a dissolução das bordas", () => {
 
     // E a folha do telefone **herda** a receita em vez de repetir os números —
     // duas declarações do mesmo material divergem no dia em que uma mudar.
-    const folha = CSS.slice(CSS.indexOf("  .mobile-glass-surface {"))
-    const bloco = semComentarios(folha.slice(0, folha.indexOf("}")))
+    const bloco = semComentarios(blocoCss(CSS, "  .mobile-glass-surface {", "}"), "linha-inteira")
     expect(bloco).toContain("@apply glass-surface")
     expect(bloco).not.toMatch(/backdrop-filter|saturate\(/)
   })
@@ -332,9 +315,7 @@ describe("a dissolução das bordas", () => {
   })
 
   it("13. o espelho na casca é opt-in, e ele limpa o que escreveu", () => {
-    const HOOK = semComentarios(
-      readFileSync("src/hooks/use-scroll-fade.ts", "utf8")
-    )
+    const HOOK = semComentarios(lerFonte("src/hooks/use-scroll-fade.ts"), "linha-inteira")
     // Sem `shell` não há casca, e nenhum consumidor do Radix ou do cmdk recebe
     // mutação de atributo que não pediu.
     expect(HOOK).toContain("shell = false")
@@ -352,7 +333,7 @@ describe("a dissolução das bordas", () => {
   })
 
   it("14. a paleta é só máscara — as camadas de borrão saíram", () => {
-    const codigo = semComentarios(readFileSync("src/components/ui/command.tsx", "utf8"))
+    const codigo = semComentarios(lerFonte("src/components/ui/command.tsx"), "linha-inteira")
     // Ela foi a última a ter o borrão nas pontas. Dentro de um casco que já
     // borra a 24px, três `backdrop-filter` aninhados por ponta re-borravam a
     // placa e a aresta de cada um saía como uma linha de tom atravessando a
@@ -396,7 +377,7 @@ describe("a dissolução das bordas", () => {
     const montam = readdirSync("src/components/ui")
       .filter((f) => f.endsWith(".tsx") && f !== "scroll-area.tsx")
       .filter((f) =>
-        semComentarios(readFileSync(`src/components/ui/${f}`, "utf8")).includes(
+        semComentarios(lerFonte(`src/components/ui/${f}`), "linha-inteira").includes(
           "ScrollFadeBlurLayers"
         )
       )
@@ -413,7 +394,7 @@ describe("a dissolução das bordas", () => {
       t.replace(/import\s*\{[\s\S]*?\}\s*from\s*"[^"]*"/g, "")
     for (const nome of ["dialog"] as const) {
       const src = semImports(
-        semComentarios(readFileSync(`src/components/ui/${nome}.tsx`, "utf8"))
+        semComentarios(lerFonte(`src/components/ui/${nome}.tsx`), "linha-inteira")
       )
       expect(src, `${nome} sangra`).not.toContain("scrollFadeBleedClassName")
       expect(src, `${nome} mede faixa`).not.toMatch(/bands:\s*true/)
@@ -437,8 +418,8 @@ describe("a dissolução das bordas", () => {
     // então o fundo da tira já é a placa. Sem fio também — regra **J**.
     const semImports = (t: string) =>
       t.replace(/import\s*\{[\s\S]*?\}\s*from\s*"[^"]*"/g, "")
-    const dialog = semImports(semComentarios(readFileSync("src/components/ui/dialog.tsx", "utf8")))
-    const form = semComentarios(readFileSync("src/components/ui/form.tsx", "utf8"))
+    const dialog = semImports(semComentarios(lerFonte("src/components/ui/dialog.tsx"), "linha-inteira"))
+    const form = semComentarios(lerFonte("src/components/ui/form.tsx"), "linha-inteira")
 
     // Cortes ancorados no **fim** do próprio bloco, nunca no vizinho seguinte:
     // `DialogHeaderRow` vem *antes* de `DialogHeader` no arquivo, e o valor de
@@ -467,22 +448,24 @@ describe("a dissolução das bordas", () => {
     // catálogo e cobre a página inteira — a moldura já faz o `useIsMobile` ler
     // a janela de dentro, então é o ramo gaveta que renderiza ali. Fora da
     // moldura o contexto é `null` e o vaul usa o próprio documento.
-    for (const [nome, arquivo] of [
-      ["sheet", "src/components/ui/sheet.tsx"],
-      ["drawer", "src/components/ui/drawer.tsx"],
-    ] as const) {
-      const src = semComentarios(readFileSync(arquivo, "utf8"))
-      expect(src, `${nome} não lê a janela ativa`).toContain("useViewportWindow")
-      expect(src, `${nome} portaliza sem container`).toMatch(
-        /DrawerPrimitive\.Portal\s+container=\{janela\?\.document\.body\}/
-      )
-    }
+    const drawer = semComentarios(lerFonte("src/components/ui/drawer.tsx"), "linha-inteira")
+    expect(drawer, "drawer não lê a janela ativa").toContain("useViewportWindow")
+    expect(drawer, "drawer portaliza sem container").toMatch(
+      /DrawerPrimitive\.Portal\s+container=\{janela\?\.document\.body\}/
+    )
+    // O ramo gaveta da folha usa o portal do `Drawer`, e o painel o dele.
+    const sheet = semComentarios(lerFonte("src/components/ui/sheet.tsx"), "linha-inteira")
+    expect(sheet, "sheet não lê a janela ativa").toContain("useViewportWindow")
+    expect(sheet, "a gaveta da folha portaliza sem container").toMatch(/<DrawerPortal>\s*<DrawerOverlay/)
+    expect(sheet, "o painel portaliza sem container").toMatch(
+      /SheetPrimitive\.Portal\s+container=\{janela\?\.document\.body\}/
+    )
   })
 })
 
 describe("as setas de \"tem mais\" dos dropdowns (rodada 172)", () => {
-  const HOOK = semComentarios(readFileSync("src/hooks/use-scroll-fade.ts", "utf8"))
-  const SETAS = semComentarios(readFileSync("src/lib/scroll-fade-arrows.tsx", "utf8"))
+  const HOOK = semComentarios(lerFonte("src/hooks/use-scroll-fade.ts"), "linha-inteira")
+  const SETAS = semComentarios(lerFonte("src/lib/scroll-fade-arrows.tsx"), "linha-inteira")
 
   it("1. o hook marca os dois lados e a caixa, só quando pedido", () => {
     expect(HOOK).toContain("arrows = false")
@@ -501,7 +484,7 @@ describe("as setas de \"tem mais\" dos dropdowns (rodada 172)", () => {
 
   it("3. todo dropdown põe as setas logo depois do rolável", () => {
     for (const nome of ["select", "dropdown-menu", "context-menu", "menubar", "command", "form", "popover", "scroll-area"]) {
-      const src = semComentarios(readFileSync(`src/components/ui/${nome}.tsx`, "utf8"))
+      const src = semComentarios(lerFonte(`src/components/ui/${nome}.tsx`), "linha-inteira")
       expect(src, nome).toContain("<ScrollFadeArrows />")
       expect(src, nome).toMatch(/arrows: (true|naPilha|setas)/)
     }

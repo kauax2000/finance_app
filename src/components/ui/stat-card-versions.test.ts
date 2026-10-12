@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import {
   StatCard,
@@ -17,8 +16,7 @@ import {
 
 /** A rodada 223: o redesenho do `StatCard` e as versões novas. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CSS = fonte("src/app/globals.css")
+const CSS = lerFonte("src/app/globals.css")
 
 describe("as versões do StatCard", () => {
   it("o tom mora no detalhe: a superfície não é tingida", () => {
@@ -84,18 +82,18 @@ describe("as versões do StatCard", () => {
   })
 
   it("o dashboard não declara mais cartão nem variação à mão", () => {
-    const kpi = fonte("src/components/dashboard/dashboard-kpi-cards.tsx")
+    const kpi = lerFonte("src/components/dashboard/dashboard-kpi-cards.tsx")
     expect(kpi).not.toMatch(/function (DeltaBadge|KpiCard)/)
     expect(kpi).toContain("StatCardGroup")
     expect(kpi).toMatch(/better="down"/)
   })
 
   it("o resumo da categoria e as contas usam as peças", () => {
-    const categoria = fonte("src/components/categories/detail/category-detail-summary-section.tsx")
+    const categoria = lerFonte("src/components/categories/detail/category-detail-summary-section.tsx")
     expect(categoria).not.toContain("function SummaryMetricCard")
     expect(categoria).not.toContain("function buildMomBadgeModel")
     expect(categoria).toContain("StatCardDelta")
-    const analise = fonte("src/components/bills/bill-history-analytics.tsx")
+    const analise = lerFonte("src/components/bills/bill-history-analytics.tsx")
     expect(analise).toContain("<StatCardRange")
     expect(analise).not.toContain('className="flex flex-wrap gap-x-2 text-xs sm:text-sm"')
   })

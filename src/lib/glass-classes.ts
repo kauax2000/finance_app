@@ -30,29 +30,23 @@
  *
  * A utility **não declara `border-radius`**. Ela usa o do consumidor, então
  * `rounded-full` num controle e `rounded-xl` num painel funcionam sem eixo
- * nenhum. É a mesma decisão que a variante `bare` do `Command` registrou: um
+ * nenhum. É a mesma decisão que a variante `plain` (antes `bare`) do `Command` registrou: um
  * número do contêiner copiado para dentro do componente é o defeito, e herdar é
  * o conserto.
  *
- * ## 4. O modo material exige conteúdo atrás
- *
- * Esta é a única das quatro que não é de mecânica. `glass-material` abre a
- * lâmina para o borrão aparecer — e onde não há nada por baixo, o borrão não
- * desenha nada e a abertura só enfraquece a peça. A régua de escolha é a mesma
- * que `globals.css` escreve entre os dois vidros da casa, e ela é por premissa.
+ * (Havia um modo material — `glass-material`, com os degraus `-thin` e
+ * `-thick` — e um preset redondo, `glass-round`. Nenhuma peça os vestia, e
+ * saíram com as constantes que os nomeavam.)
  *
  * ## O que a utility lê
  *
- * Cinco tokens de tema (`--glass-tint`, `--glass-cloud`, `--glass-rim`,
- * `--glass-rim-shade`, `--glass-rim-angle`) e duas variáveis de geometria com
+ * Seis tokens de tema (`--glass-tint`, `--glass-cloud`, `--glass-rim`,
+ * `--glass-rim-shade`, `--glass-rim-far`, `--glass-rim-angle`) e duas variáveis de geometria com
  * fallback (`--glass-cloud-rx`, `--glass-cloud-ry`). O preset de controle
  * sobrescreve **só a variável**, nunca a propriedade — duas utilities
  * escrevendo `background` seriam decididas por ordem de emissão do Tailwind e
  * não pelo que se escreveu.
  */
-
-/** A superfície, na medida de painel. É o padrão. */
-export const glassSurfaceClassName = "glass"
 
 /**
  * A superfície numa caixa pequena.
@@ -63,50 +57,6 @@ export const glassSurfaceClassName = "glass"
  * preset corrige a medida absoluta, e não a proporção.
  */
 export const glassControlSurfaceClassName = "glass glass-control"
-
-/**
- * O modo material — o vidro com **borrão de verdade**, nos três degraus do iOS.
- *
- * **Ele tem premissa, e ela é o oposto da do pintado.** A receita base desenha
- * a luz porque parte de que não há conteúdo atrás; este modo parte de que há.
- * Ligá-lo onde nada passa por baixo — a placa flutuante, que reserva a própria
- * calha — não desenha nada **e** abre a lâmina, deixando a peça pior do que o
- * pintado. É a quarta armadilha, e a única que não é de mecânica: é de
- * julgamento.
- *
- * O que separa os degraus é a opacidade da lâmina, e não o raio: um material
- * mais fino deixa passar mais do que está atrás. É como o iOS os separa.
- *
- * As nuvens **saem** no modo — elas simulam luz atrás de uma placa que não tem
- * nada atrás, e com conteúdo real e borrado ali o simulacro disputa com a
- * coisa. Quem mantém a peça lendo como vidro é o aro.
- */
-export const GLASS_MATERIALS = {
-    thin: "glass-material glass-material-thin",
-    regular: "glass-material",
-    thick: "glass-material glass-material-thick",
-} as const
-
-export type GlassMaterial = keyof typeof GLASS_MATERIALS
-
-/**
- * A superfície numa peça **redonda**.
- *
- * Ela existe por um defeito medido: o aro é um gradiente **linear**, e num
- * círculo as duas pontas dele — o pico e o extremo aceso — caem nos **cantos**
- * da caixa, que ali não existem. Amostrando 720 pontos do perímetro de um
- * avatar de 40px: **0%** via o pico, e **57,5%** via só o vale. O vidro redondo
- * nunca teve brilho.
- *
- * O preset troca o aro por um `conic-gradient`, que acompanha o perímetro, e
- * acende o especular na camada de cima — a única que sobrevive a um tom opaco.
- *
- * **Ela se soma à de controle, não a substitui:** `glass glass-control
- * glass-round`. O `glass-control` corrige a medida absoluta da nuvem; este
- * corrige a forma do aro. São eixos diferentes, e quem é de canto arredondado
- * — o marcador do `Tabs`, o `Glass size="control"` — usa só o primeiro.
- */
-export const glassRoundSurfaceClassName = "glass glass-control glass-round"
 
 /*
  * **Onde morava o vidro da peça cheia.**
@@ -135,9 +85,9 @@ export const glassRoundSurfaceClassName = "glass glass-control glass-round"
  *
  * Ele era um mapa `{ panel, control }` com um comentário dizendo que o catálogo
  * iterava a régua com ele — e o catálogo não iterava. Export morto com um
- * consumidor inventado na documentação é a pior das duas coisas: o eixo mora no
- * `cva` de `glass.tsx`, que é onde `cva` pode morar (a regra A2 do auditor o
- * reprova fora de `components/ui/`), e ele lê as duas constantes acima.
+ * consumidor inventado na documentação é a pior das duas coisas: o eixo morava
+ * num `cva` de `glass.tsx`, que é onde `cva` pode morar (a regra A2 do auditor o
+ * reprova fora de `components/ui/`) — arquivo que também saiu.
  */
 
 /**
@@ -179,8 +129,9 @@ export const glassRoundSurfaceClassName = "glass glass-control glass-round"
  *
  * ## O aro e as nuvens também puxam a cor — mas por outra variável
  *
- * Cada entrada declara `--glass-ink`, a **fonte de matiz** que a
- * `@utility glass` mistura no aro e nas nuvens, mais `--glass-ink-amount: 20%`.
+ * Cada entrada da tabela de tons (que saiu, abaixo) declarava `--glass-ink`, a
+ * **fonte de matiz** que a `@utility glass` mistura no aro e nas nuvens, mais
+ * `--glass-ink-amount: 20%`.
  *
  * **São duas variáveis, e não uma, porque dizem coisas diferentes**: o tom é
  * uma camada com alfa próprio que pinta o **corpo**; a tinta é só um matiz de
@@ -246,19 +197,19 @@ export const glassRoundSurfaceClassName = "glass glass-control glass-round"
  *
  * **A camada continua na `@utility`**, lida como
  * `var(--glass-sheen, transparent)`. Ela é ponto de contrato: hoje quem a
- * produz são os estados de `Tabs`, `ThemeToggle` e `Sidebar`, que publicam o
- * realce por variável.
+ * produz é o marcador de vidro do `Tabs`, que publica o realce da aba ativa
+ * por variável.
  */
 
 /**
- * Os seis tons de identidade, para o avatar de vidro.
+ * Os seis tons de identidade, para o avatar de vidro (que saiu, abaixo).
  *
- * Eles não estão em `GLASS_TONES` porque não são tons **semânticos**: identidade
+ * Eles não estavam em `GLASS_TONES` porque não são tons **semânticos**: identidade
  * distingue uma pessoa de outra e não significa estado. A régua do sistema
  * separa as duas famílias, e o vidro não é razão para juntá-las.
  *
- * A tinta continua sendo `text-identity-N`, exatamente como no avatar normal —
- * o par já é calibrado, e o vidro só troca a superfície opaca por uma lâmina.
+ * A tinta continuava sendo `text-identity-N`, exatamente como no avatar normal —
+ * o par já é calibrado, e o vidro só trocava a superfície opaca por uma lâmina.
  */
 /* `GLASS_IDENTITY_TONES` morou aqui: o avatar de vidro. Saiu quando o avatar
  * passou a ter duas versões só (foto, ou iniciais sobre degradê de marca) —

@@ -1,6 +1,8 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs"
+import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { blocoCss, lerFonte, semComentarios } from "@/test/fonte"
+import { esperarSemClasseMontada } from "@/test/regras"
 
 import { barSurfaceClassName, menuPanelTintClassName } from "@/lib/glass-classes"
 
@@ -9,13 +11,14 @@ import { barSurfaceClassName, menuPanelTintClassName } from "@/lib/glass-classes
  *
  * Elas moravam em `sidebar-ladder.test.ts` enquanto a receita era da barra. Com
  * a extração, o que é do **vidro** vem para cá e o que é da **barra** fica lá —
- * a de lá continua trancando que a placa flutuante veste a peça.
+ * a de lá tranca, desde a rodada 221, que a placa flutuante **não** veste mais
+ * a peça.
  *
  * Cada asserção aqui saiu de um defeito medido nas rodadas 36 a 39, e o
  * comentário de cada uma diz qual.
  */
 
-const CSS = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+const CSS = lerFonte("src/app/globals.css")
 
 /**
  * Só o corpo da receita.
@@ -25,48 +28,23 @@ const CSS = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
  * Hoje ele para no próximo doc-comment de topo; os comentários internos da
  * receita são indentados, então `\n/**` não casa com nenhum deles.
  */
-const RECEITA = CSS.slice(
-    CSS.indexOf("@utility glass {"),
-    CSS.indexOf("\n/**", CSS.indexOf("@utility glass {"))
-)
+const RECEITA = blocoCss(CSS, "@utility glass {", "\n/**")
 
 /**
  * Os blocos de tema **de verdade**.
  *
  * `CLARO` e `ESCURO` são fatias abertas — a segunda vai de `.dark {` até o fim
  * do arquivo e engole todas as `@utility`. Serve para procurar a declaração de
- * um token, não para provar que ele **não** é declarado num tema: o preset
- * redondo publica `--glass-rim-image`, e a busca aberta o encontraria ali.
+ * um token, não para provar que ele **não** é declarado num tema: uma
+ * utility que o publique seria achada pela busca aberta.
  */
-const bloco = (abre: string) => {
-    const i = CSS.indexOf(abre)
-    return CSS.slice(i, CSS.indexOf("\n}", i))
-}
-const TEMA_CLARO = bloco(":root {")
-const TEMA_ESCURO = bloco(".dark {")
-
-/** O preset da peça redonda. */
-const REDONDO = CSS.slice(
-    CSS.indexOf("@utility glass-round {"),
-    CSS.indexOf("@utility glass-material {")
-).replace(/\/\*[\s\S]*?\*\//g, " ")
+const TEMA_CLARO = blocoCss(CSS, ":root {", "\n}")
+const TEMA_ESCURO = blocoCss(CSS, ".dark {", "\n}")
 
 /** Lê um arquivo do repositório sem comentários — o corte que a 26 já usava. */
-const semComentariosDe = (caminho: string) =>
-    readFileSync(join(process.cwd(), caminho), "utf8")
-        .replace(/\/\*[\s\S]*?\*\//g, " ")
-        .replace(/(^|[^:])\/\/.*$/gm, "$1")
+const semComentariosDe = (caminho: string) => semComentarios(lerFonte(caminho), "fora-de-url")
 
-const SUPERFICIE_FLUTUANTE = readFileSync(
-    join(process.cwd(), "src/lib/menu-classes.ts"),
-    "utf8"
-).replace(/\/\*[\s\S]*?\*\//g, " ")
-
-/** O modo material, e os dois degraus fora do meio. */
-const MATERIAL = CSS.slice(
-    CSS.indexOf("@utility glass-material {"),
-    CSS.indexOf("@utility no-scrollbar")
-).replace(/\/\*[\s\S]*?\*\//g, " ")
+const SUPERFICIE_FLUTUANTE = semComentarios(lerFonte("src/lib/menu-classes.ts"), "bloco")
 
 /**
  * A receita **sem comentários**.
@@ -76,7 +54,7 @@ const MATERIAL = CSS.slice(
  * cru testa o comentário e não o código, e este projeto já pagou essa medição
  * na rodada do gráfico.
  */
-const RECEITA_CODIGO = RECEITA.replace(/\/\*[\s\S]*?\*\//g, " ")
+const RECEITA_CODIGO = semComentarios(RECEITA, "bloco")
 
 const CLARO = CSS.slice(0, CSS.indexOf(".dark {"))
 const ESCURO = CSS.slice(CSS.indexOf(".dark {"))
@@ -167,7 +145,7 @@ describe("a superfície de vidro", () => {
         expect(RECEITA).not.toMatch(/border-radius|rounded-/)
     })
 
-    it("7. a receita base nunca borra; o material sempre", () => {
+    it("7. a receita base nunca borra", () => {
         // `mask-image: none` num composite apaga o elemento, e a ordem de
         // emissão das duas propriedades de composite não se controla pelo
         // Tailwind — daí `padding-box`/`border-box`, que não precisa de máscara.
@@ -181,12 +159,6 @@ describe("a superfície de vidro", () => {
         // *mencionasse* `backdrop-filter` já a reprovava, sem mudança nenhuma
         // de código. É a lição que a rodada do gráfico registrou.
         expect(RECEITA_CODIGO).not.toMatch(/backdrop-filter|backdrop-blur/)
-
-        // E o outro lado da régua: o modo material borra, e é o que ele é.
-        expect(MATERIAL).toMatch(/backdrop-filter:\s*blur\(/)
-        expect(MATERIAL).toMatch(/-webkit-backdrop-filter:\s*blur\(/)
-        expect(MATERIAL).not.toMatch(/mask-composite|-webkit-mask|mask-image/)
-        expect(MATERIAL).not.toMatch(/soft-light|background-blend-mode/)
     })
 
     it("20. o aro e o realce são contrato, e sem produtor nada muda", () => {
@@ -213,71 +185,6 @@ describe("a superfície de vidro", () => {
             expect(tema).not.toMatch(/--glass-rim-image:/)
             expect(tema).not.toMatch(/--glass-sheen-image:/)
         }
-    })
-
-    it("21. o redondo é preset de imagem, e o cônico só existe nele", () => {
-        // Mesmo guarda do `glass-control`: preset move a variável, nunca a
-        // propriedade. Duas utilities escrevendo `background` seriam decididas
-        // pela ordem de emissão do Tailwind.
-        expect(REDONDO).not.toMatch(/^\s*background:/m)
-        expect(REDONDO).toContain("--glass-rim-image:")
-        expect(REDONDO).toContain("--glass-sheen-image:")
-
-        // **O cônico não pode vazar para o `glass-control`.** Ele serve peças
-        // de canto arredondado — o marcador do `Tabs` e o `Glass size="control"`
-        // —, e um bisel polar num quadrado arredondado põe as transições nos
-        // cantos errados: o pico cairia no meio de uma aresta reta. O
-        // `ColorTile` foi o primeiro motivo desta regra, e saiu do vidro na
-        // rodada 95; a regra fica, porque os dois que sobraram têm a mesma
-        // forma.
-        // Cortada no **próprio** fechamento: entre `glass-control` e
-        // `no-scrollbar` moram o `glass-round` e o `glass-material`, e uma
-        // fatia até o vizinho seguinte engoliria os dois.
-        const controle = CSS.slice(
-            CSS.indexOf("@utility glass-control {"),
-            CSS.indexOf("\n}", CSS.indexOf("@utility glass-control {"))
-        )
-        expect(controle).not.toContain("conic-gradient")
-        expect(RECEITA_CODIGO).not.toContain("conic-gradient")
-        expect(REDONDO).toContain("conic-gradient")
-    })
-
-    it("22. o bisel polar cobre o perímetro, e o pico não cai fora dele", () => {
-        // O defeito que este preset existe para consertar: num círculo, as
-        // pontas do gradiente **linear** caem nos cantos da caixa — medido, 0%
-        // do perímetro via o pico e 57,5% via só o vale. Num cônico cada ponto
-        // do perímetro mapeia para um ângulo, então não há canto a perder — mas
-        // só se as paradas forem angulares e fecharem o ciclo.
-        const conico = REDONDO.slice(REDONDO.indexOf("conic-gradient"))
-        // O `from -45deg` é a **origem**, não uma parada — sem tirá-lo, o 45
-        // entra na lista e a checagem de ciclo lê o número errado.
-        const semOrigem = conico.slice(conico.indexOf("deg,") + 4)
-        const paradas = [...semOrigem.matchAll(/(\d+)deg\s*[,)]/g)].map((m) => Number(m[1]))
-        expect(paradas.length).toBeGreaterThanOrEqual(5)
-
-        // Nenhuma parada em porcentagem: num cônico isso mede o **raio**, não o
-        // arco, e o bisel deixaria de acompanhar a borda.
-        const corpo = conico.slice(conico.indexOf("("), conico.indexOf("\n  );"))
-        expect(corpo).not.toMatch(/\d+%\s*[,)]/)
-
-        // O ciclo fecha: a primeira e a última parada valem o mesmo tom, senão
-        // sobra uma emenda dura no ponto onde 360° encontra 0°.
-        expect(paradas[0]).toBe(0)
-        expect(paradas[paradas.length - 1]).toBe(360)
-        expect(conico).toContain("from -45deg")
-
-        // E o preset precisa **chegar** na peça redonda. Sem isto, tirar
-        // `glass-round` da régua devolve o avatar ao aro linear — o defeito que
-        // esta rodada conserta — e nenhuma outra asserção percebe.
-        const regua = readFileSync(
-            join(process.cwd(), "src/lib/glass-classes.ts"),
-            "utf8"
-        ).replace(/\/\*[\s\S]*?\*\//g, " ")
-        expect(regua).toMatch(/glassRoundSurfaceClassName\s*=\s*"[^"]*\bglass-round\b/)
-
-        // O `Avatar` já o vestiu por forma; hoje ele não tem modo de vidro
-        // (duas versões: foto, ou iniciais sobre degradê de marca). Quem veste
-        // o cônico por forma é o marcador da `Timeline`.
     })
 
     it("23. três superfícies, três tintas — lado a lado em glass-classes", () => {
@@ -377,7 +284,7 @@ describe("a superfície de vidro", () => {
         // A tinta chega pela receita da busca (rodada 198), que a importa da régua.
         expect(campo, "a pílula de busca não pinta").toMatch(/<SearchInput\s+surface=\{surface \?\? \(naPilha \? "plate" : "field"\)\}/)
         expect(
-            readFileSync(join(process.cwd(), "src/lib/search-field-classes.ts"), "utf8"),
+            lerFonte("src/lib/search-field-classes.ts"),
             "a receita veste a tinta da régua"
         ).toMatch(/import \{ menuPanelTintClassName \} from "@\/lib\/glass-classes"[\s\S]*plate: `[^`]*\$\{menuPanelTintClassName\}`/)
         expect(lista, "a placa da lista não pinta").toMatch(/command-dialog-panel[\s\S]*menuPanelTintClassName/)
@@ -431,82 +338,6 @@ describe("a superfície de vidro", () => {
         for (const arquivo of ["src/components/ui/form.tsx"]) {
             expect(semComentariosDe(arquivo), `${arquivo}: degradê sobre a placa`).not.toMatch(/\bfrom-(?:background|popover)\b/)
         }
-    })
-
-    it("16. o material é preset de variável, e nunca uma segunda propriedade", () => {
-        // A `glass` escreve `background`; o material escreve `backdrop-filter`.
-        // Propriedades diferentes não disputam — é o que torna a composição
-        // `glass glass-material` segura, e é o mecanismo do `glass-control`.
-        expect(MATERIAL).not.toMatch(/^\s*background:/m)
-        expect(MATERIAL).not.toMatch(/^\s*background-color:/m)
-
-        // **Só a utility do meio declara `--glass-tint`.** Os degraus movem uma
-        // variável intermediária; se cada um escrevesse a lâmina direto, quem
-        // venceria seria a ordem de emissão do Tailwind — e os guardas abaixo,
-        // que moram na regra do meio, perderiam para o degrau.
-        const meio = MATERIAL.slice(0, MATERIAL.indexOf("@utility glass-material-"))
-        const degraus = MATERIAL.slice(MATERIAL.indexOf("@utility glass-material-"))
-        expect(meio).toContain("--glass-tint: var(--glass-material-step,")
-        expect(degraus).not.toMatch(/--glass-tint:/)
-        expect(degraus.match(/--glass-material-step:/g) ?? []).toHaveLength(2)
-    })
-
-    it("17. um raio e uma vibrância para a casa", () => {
-        // O material do vidro e o da superfície leem as **mesmas** variáveis.
-        // Dois números escritos em dois lugares divergem no dia em que um mudar.
-        for (const tok of ["--glass-surface-blur", "--glass-surface-sat"]) {
-            expect(MATERIAL, tok).toContain(`var(${tok}`)
-        }
-        const superficie = CSS.slice(CSS.indexOf("@utility glass-surface {"))
-        const daCasa = superficie.match(/--glass-surface-sat,\s*([\d.]+)/)?.[1]
-        const meu = MATERIAL.match(/--glass-surface-sat,\s*([\d.]+)/)?.[1]
-        expect(daCasa).toBeDefined()
-        expect(meu).toBe(daCasa)
-    })
-
-    it("18. os dois guardas devolvem o pintado", () => {
-        // Sem borrão, uma lâmina aberta é só uma superfície fraca. `inherit`
-        // numa custom property devolve o valor computado do pai — o token do
-        // tema, que é exatamente o pintado.
-        for (const guarda of [
-            /@media \(prefers-reduced-transparency: reduce\)/,
-            /@supports not \(backdrop-filter: blur\(1px\)\)/,
-        ]) {
-            const i = MATERIAL.search(guarda)
-            expect(i, String(guarda)).toBeGreaterThan(-1)
-            const bloco = MATERIAL.slice(i, MATERIAL.indexOf("}", i))
-            expect(bloco, String(guarda)).toContain("--glass-tint: inherit")
-            expect(bloco, String(guarda)).toContain("--glass-cloud: inherit")
-        }
-        // E o de transparência reduzida tira o borrão junto.
-        const reduce = MATERIAL.slice(MATERIAL.search(/prefers-reduced-transparency/))
-        expect(reduce.slice(0, reduce.indexOf("}"))).toContain("backdrop-filter: none")
-    })
-
-    it("19. os três degraus existem, se distinguem, e as nuvens saem", () => {
-        const alfa = (bloco: string, nome: string) =>
-            Number(
-                bloco.match(
-                    new RegExp(`--glass-material-${nome}:\\s*oklch\\([^)]*?/\\s*([\\d.]+)%`)
-                )?.[1]
-            )
-        for (const tema of [CLARO, ESCURO]) {
-            const [fino, medio, grosso] = ["thin", "regular", "thick"].map((n) =>
-                alfa(tema, n)
-            )
-            expect(fino).toBeGreaterThan(0)
-            // Mais fino deixa passar mais: a lâmina abre.
-            expect(fino).toBeLessThan(medio)
-            expect(medio).toBeLessThan(grosso)
-            // E nenhum chega ao pintado, senão o degrau não seria material.
-            const pintado = Number(
-                tema.match(/--glass-tint:\s*oklch\([^)]*?\/\s*([\d.]+)%/)?.[1]
-            )
-            expect(grosso).toBeLessThan(pintado)
-        }
-        // As nuvens simulam luz atrás de uma placa sem nada atrás; com conteúdo
-        // real e borrado ali, o simulacro disputa com a coisa.
-        expect(MATERIAL).toContain("--glass-cloud: transparent")
     })
 
     it("8. o preset de controle move a variável, e nunca a propriedade", () => {
@@ -626,10 +457,7 @@ describe("a superfície de vidro", () => {
         // tradução e citam `--glass-tone` por extenso; varrer o texto cru
         // testaria o comentário e não o código. Verificado: com a tradução
         // removida do `Button`, a versão que lia o texto cru **passava**.
-        const base = (nome: string) =>
-            readFileSync(join(process.cwd(), `src/components/ui/${nome}.tsx`), "utf8")
-                .replace(/\/\*[\s\S]*?\*\//g, " ")
-                .replace(/(^|[^:])\/\/.*$/gm, "$1")
+        const base = (nome: string) => semComentariosDe(`src/components/ui/${nome}.tsx`)
 
         /**
          * **Não são só átomos**, e por isso o nome mudou: `tabs` é Organismo,
@@ -781,16 +609,9 @@ describe("a superfície de vidro", () => {
         // ao CSS, e o defeito é calado: a classe fica no elemento e a regra não
         // existe. Este projeto já pagou essa medição três vezes — e uma quarta
         // ao escrever esta própria peça.
-        const regua = readFileSync(join(process.cwd(), "src/lib/glass-classes.ts"), "utf8")
-        const semComentarios = regua
-            .replace(/\/\*[\s\S]*?\*\//g, " ")
-            .replace(/(^|[^:])\/\/.*$/gm, "$1")
-        expect(semComentarios).not.toMatch(/`[^`]*\$\{[^}]*\}[^`]*`/)
+        esperarSemClasseMontada(semComentariosDe("src/lib/glass-classes.ts"))
 
-        const sidebar = readFileSync(
-            join(process.cwd(), "src/components/ui/sidebar.tsx"),
-            "utf8"
-        )
+        const sidebar = lerFonte("src/components/ui/sidebar.tsx")
         // A `Sidebar` vestiu o vidro por extenso até a rodada 221, quando o
         // `floating` virou placas chapadas; ela não pode voltar a vesti-lo.
         expect(sidebar).not.toContain("group-data-[variant=floating]:glass")

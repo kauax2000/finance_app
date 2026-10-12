@@ -6,7 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Accordion as AccordionPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
-import { composeRefs } from "@/hooks/use-brand-glow"
+import { composeRefs } from "radix-ui/internal"
 import { useUntilFound } from "@/hooks/use-until-found"
 import { Button } from "@/components/ui/button"
 import {

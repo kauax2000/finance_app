@@ -503,7 +503,7 @@
      tom forte do mesmo matiz (`--identity-N-ink`, 0,42 e 0,13). Medido: a viva
      vai de 7,4 a 8,9:1, a suave de 6,5 a 7,7:1. (A primeira versão de todas,
      com as pontas em 0,5 e letra branca, também foi recusada — "feio".) Um
-     valor só nos dois temas.
+     valor só nos dois temas: elas moram só aqui, e o `.dark` as herda.
 
      **Agora que são cor e não degradê, elas entram no `@theme inline`** como
      `--color-identity-N`, e a tela escreve `bg-identity-N`. Enquanto foram
@@ -697,18 +697,6 @@
      do corpo. A 0.99 ela dá rgb **252** contra uma página de 250: ainda mais
      clara que ela, que é a regra deste tema, e agora com onde o bisel acender. */
   --glass-tint: oklch(0.99 0 0 / 92%);
-  /* **A lâmina dos três degraus do modo material.** Ela é a mesma cor da de
-     cima, aberta: no material o que preenche a placa é o conteúdo borrado, e a
-     lâmina passa a ser só o véu por cima dele. Quanto mais aberta, mais do que
-     está atrás aparece — é assim que o iOS separa `thin` de `thick`, e é por
-     isso que o **raio é constante** nos três: quem muda é a opacidade.
-
-     Aqui os três são apertados contra o escuro, e o motivo é o teto do tema: a
-     página é rgb 250 de 255, então abrir a lâmina no claro revela pouco antes
-     de a placa deixar de se separar da página. Ver a nota no `.dark`. */
-  --glass-material-thin: oklch(0.99 0 0 / 60%);
-  --glass-material-regular: oklch(0.99 0 0 / 72%);
-  --glass-material-thick: oklch(0.99 0 0 / 84%);
   /* As nuvens, e aqui elas **não têm como registrar**. Não é timidez: a página
      é rgb **250 de 255** e a lâmina já a levou a 255, então não sobra nenhuma
      unidade acima dela. Um realce precisa de espaço *acima* do corpo, e o corpo
@@ -952,27 +940,8 @@
   --chart-5: oklch(0.8 0.16 340);
   --chart-income: var(--income);
   --chart-expense: var(--expense);
-  /* Ver a nota no tema claro: o mesmo chip pastel nos dois temas — a
-     referência era sobre preto. */
-  --identity-1: oklch(0.76 0.17 58); /* ember */
-  --identity-2: oklch(0.76 0.17 100); /* gold */
-  --identity-3: oklch(0.76 0.17 175); /* grove */
-  --identity-4: oklch(0.76 0.17 230); /* ocean */
-  --identity-5: oklch(0.76 0.17 275); /* iris */
-  --identity-6: oklch(0.76 0.17 318); /* bloom */
-  --identity-1-soft: oklch(0.95 0.05 58);
-  --identity-2-soft: oklch(0.95 0.05 100);
-  --identity-3-soft: oklch(0.95 0.05 175);
-  --identity-4-soft: oklch(0.95 0.05 230);
-  --identity-5-soft: oklch(0.95 0.05 275);
-  --identity-6-soft: oklch(0.95 0.05 318);
-  --identity-1-ink: oklch(0.42 0.13 58);
-  --identity-2-ink: oklch(0.42 0.13 100);
-  --identity-3-ink: oklch(0.42 0.13 175);
-  --identity-4-ink: oklch(0.42 0.13 230);
-  --identity-5-ink: oklch(0.42 0.13 275);
-  --identity-6-ink: oklch(0.42 0.13 318);
-  --identity-foreground: oklch(0.22 0 0);
+  /* `--identity-*` não se repete aqui: é um valor só nos dois temas (ver a
+     nota no tema claro), e o escuro herda o do `:root`. */
   --skeleton: oklch(0.3 0 0);
   --shadow-xl-value: 0 24px 48px -12px oklch(0 0 0 / 0.7);
 
@@ -1028,13 +997,6 @@
      é duro: preto puro daria 0, e a razão contra a página vai de 1,03 para
      1,05 num teto absoluto de 1,06. Não há mais para onde ir. */
   --glass-tint: oklch(0 0 0 / 82%);
-  /* Os três degraus, e aqui eles têm curso: a página é rgb 10, então cada
-     ponto de abertura mostra mais do conteúdo borrado sem a placa perder o
-     corpo. `thick` fica perto do pintado (82%) de propósito — ele é o degrau
-     para quando há conteúdo atrás mas ele não deve competir. */
-  --glass-material-thin: oklch(0 0 0 / 40%);
-  --glass-material-regular: oklch(0 0 0 / 55%);
-  --glass-material-thick: oklch(0 0 0 / 70%);
   /* A nuvem de luz **atrás** da lâmina. Ela é lida através de 82% de preto,
      então o alfa é alto e o resultado na tela é baixo: 48% de branco sobre a
      página dá rgb 128, e a lâmina por cima o leva a **23** contra um corpo de
@@ -1828,181 +1790,6 @@
   --glass-cloud-ry: 70%;
 }
 
-/**
- * O vidro com **borrão de verdade** — o material do iOS, e o outro lado da
- * régua que a `@utility glass` escreve.
- *
- * A receita pintada parte de que **não há conteúdo atrás**: ela desenha a luz
- * porque não há o que revelar. Este modo parte do oposto, e por isso **ele tem
- * premissa**: ligá-lo onde nada passa por baixo — a placa flutuante, que
- * reserva a própria calha — não desenha nada e ainda abre a lâmina, deixando a
- * peça pior do que o pintado.
- *
- * ## Ele não acrescenta blur: recalibra a peça
- *
- * A lâmina é quase opaca de propósito — 82% no escuro, que compõe para **rgb
- * 2** sobre a página. Um `backdrop-filter` atrás dela seria invisível, que é o
- * defeito que a rodada 44 mediu quando o tom opaco a tapava. O modo abre a
- * lâmina, e é essa abertura que **é** o material.
- *
- * ## As nuvens saem, e isso é o argumento e não uma economia
- *
- * Elas existem para simular luz atrás de uma placa que não tem nada atrás. Com
- * conteúdo real e borrado ali, o simulacro disputa com a coisa. É a mesma
- * conclusão que a rodada 44 já tinha alcançado por outro caminho — *"numa peça
- * com tom as nuvens já chegavam a 3,6%: elas vivem no vidro sem cor, e quem faz
- * o material é o aro"*.
- *
- * **O aro fica, e ele é o que mantém a peça lendo como vidro.** Ele não
- * descreve a luz do corpo; é a aresta da lâmina pegando luz, e foi por isso que
- * ele já sobreviveu a uma tentativa de removê-lo.
- *
- * ## Um raio, três tintas
- *
- * O raio e a vibrância são lidos das **mesmas** variáveis da
- * `@utility glass-surface`, para a casa ter um material só. O que separa os
- * degraus é a opacidade da lâmina — é como o iOS os separa, e mantém o degrau
- * sendo uma decisão de véu em vez de um segundo eixo de raio.
- *
- * **Só esta utility declara `--glass-tint`.** Os degraus movem
- * `--glass-material-step`, uma variável intermediária, e é isso que faz os
- * guardas abaixo vencerem sempre: eles moram na mesma regra que a declaração.
- * Dois presets escrevendo a mesma variável seriam decididos pela ordem de
- * emissão do Tailwind — a armadilha que o `glass-control` evita.
- *
- * ## Os dois guardas devolvem o pintado
- *
- * Sem borrão, uma lâmina aberta é só uma superfície fraca. Os dois restauram a
- * lâmina e as nuvens com `inherit`, que numa custom property devolve o valor
- * computado do pai — ou seja, o token do tema, que é exatamente o pintado.
- */
-/**
- * O vidro numa peça **redonda** — e ele conserta um defeito que só existia ali.
- *
- * ## O pico do aro caía fora do círculo
- *
- * O aro é um gradiente **linear**, e numa caixa de 40×40 o eixo dele mede
- * **49px**: as duas pontas — onde moram o pico e o extremo aceso — caem nos
- * **cantos** do quadrado. Num círculo os cantos não existem.
- *
- * Medido, amostrando 720 pontos do perímetro de um avatar: **0%** via o pico de
- * 34%, **0%** via o extremo aceso, e **57,5%** via só o vale de 10%. O avatar de
- * vidro nunca teve brilho — ele tinha uma borda cinza quase uniforme.
- *
- * A forma que resolve é a que acompanha o **perímetro**: um `conic-gradient`.
- * Ele acende o arco superior-esquerdo, cai para o vale nos lados e deixa o
- * vestígio na base oposta — o mesmo desenho do bisel linear, dito em coordenada
- * polar. O tingimento é o mesmo, com as mesmas duas doses de `--glass-ink`.
- *
- * ## E um especular, porque as nuvens não sobrevivem ao tom
- *
- * Numa peça com tom **opaco** a lâmina e as duas nuvens ficam por baixo dele e
- * **não pintam nada** — quatro das seis camadas mortas. As nuvens simulam luz
- * atrás de uma placa; num disco de 40px não há atrás, e o que faz ler como vidro
- * é reflexo **na** superfície.
- *
- * O especular entra pela camada `--glass-sheen-image`, que é a **mais de cima**
- * — acima do tom, e por isso ele sobrevive. Ela estava sem produtor desde que
- * `Button` e `Checkbox` perderam o modo de vidro, e é exatamente o encaixe de
- * que ela precisava.
- *
- * ## Ele não entra no `glass-control`, e o motivo é a forma
- *
- * Aquele preset serve as peças pequenas de **canto arredondado** — hoje o
- * marcador do `Tabs` e o `Glass size="control"`. Um bisel cônico num quadrado
- * arredondado desenha as transições nos cantos errados: o pico cairia no meio
- * de uma aresta reta. Este preset é opt-in por **forma**, e quem o veste é o
- * que de fato é redondo.
- *
- * O primeiro motivo escrito aqui era o `ColorTile`, que é `rounded-md`. Ele
- * saiu do vidro na rodada 95 — zero telas do produto o vestiam —, e a regra
- * ficou, porque quem restou tem a mesma forma.
- */
-@utility glass-round {
-  /* O bisel em coordenada polar. `from -45deg` põe o 0° do gradiente no canto
-     superior-esquerdo, que é onde o linear do painel concentra a luz — a
-     direção da peça não muda, só a forma de descrevê-la. */
-  --glass-rim-image: conic-gradient(
-    from -45deg,
-    color-mix(
-        in oklab,
-        oklch(from var(--glass-ink, var(--glass-rim)) l calc(c * var(--glass-ink-boost)) h)
-          var(--glass-ink-amount),
-        var(--glass-rim)
-      )
-      0deg,
-    var(--glass-rim-shade) 100deg,
-    color-mix(
-        in oklab,
-        oklch(from var(--glass-ink, var(--glass-rim-far)) l calc(c * var(--glass-ink-boost)) h)
-          var(--glass-ink-amount),
-        var(--glass-rim-far)
-      )
-      180deg,
-    var(--glass-rim-shade) 260deg,
-    color-mix(
-        in oklab,
-        oklch(from var(--glass-ink, var(--glass-rim)) l calc(c * var(--glass-ink-boost)) h)
-          var(--glass-ink-amount),
-        var(--glass-rim)
-      )
-      360deg
-  );
-
-  /* O reflexo. Fora do centro e pequeno: um especular no meio da peça leria
-     como a peça inteira acesa, que é o defeito que a rampa de altura inteira do
-     painel já custou uma rodada.
-
-     **Os 14% saem do contraste das iniciais, e a conta que importa não é a
-     óbvia.** Medido: no centro da caixa o gradiente já resolveu para
-     `transparent` (o pico está a 16% da altura, e a letra começa a 37%), então
-     no ponto onde a letra de fato está o especular vale **16,7%** do pico —
-     contraste 5,93 no pior dos seis tons. Medir a letra sob o **pico** dá 4,08
-     e é um cenário que não existe: ali não há texto.
-
-     Ele fica em 14 e não em 20 por robustez, não por aquele número: a geometria
-     é estável nos cinco degraus — caixa e corpo do texto escalam juntos, e o
-     topo da letra fica em 37,4% no `md` e 38,4% no `xl` —, mas uma inicial só,
-     ou um `className` que suba a fonte, aproximam o texto do pico. */
-  --glass-sheen-image: radial-gradient(
-    var(--glass-spec-rx, 62%) var(--glass-spec-ry, 46%) at 30% 16%,
-    oklch(1 0 0 / var(--glass-spec, 14%)),
-    transparent 68%
-  );
-}
-
-@utility glass-material {
-  backdrop-filter: blur(var(--glass-surface-blur, 24px))
-    saturate(var(--glass-surface-sat, 1.5));
-  -webkit-backdrop-filter: blur(var(--glass-surface-blur, 24px))
-    saturate(var(--glass-surface-sat, 1.5));
-
-  --glass-tint: var(--glass-material-step, var(--glass-material-regular));
-  --glass-cloud: transparent;
-
-  @media (prefers-reduced-transparency: reduce) {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    --glass-tint: inherit;
-    --glass-cloud: inherit;
-  }
-
-  @supports not (backdrop-filter: blur(1px)) {
-    --glass-tint: inherit;
-    --glass-cloud: inherit;
-  }
-}
-
-/* Os dois degraus fora do meio. Eles movem **só a variável intermediária** —
-   ver a nota acima sobre por que nenhum deles toca `--glass-tint`. */
-@utility glass-material-thin {
-  --glass-material-step: var(--glass-material-thin);
-}
-
-@utility glass-material-thick {
-  --glass-material-step: var(--glass-material-thick);
-}
-
 @utility no-scrollbar {
   scrollbar-width: none;
   &::-webkit-scrollbar {
@@ -2313,8 +2100,8 @@
 /* ── O arco-íris como material ─────────────────────────────────────────────
 
    Três peças, e a posição delas no arquivo é carga estrutural: `glass.test.ts`
-   fatia este CSS de `@utility glass-material` até `@utility no-scrollbar` e
-   prova que o vidro não declara `background` nem `background-blend-mode`.
+   fatia este CSS de `@utility glass-control` até `@utility no-scrollbar` e
+   prova que o vidro não declara `background`.
    Tudo o que é marca mora **depois** de `no-scrollbar` por isso.
 
    **O degradê não gira mais, e o giro não volta.** Da rodada 83 à 99 o ângulo
@@ -2877,21 +2664,72 @@
   }
 }
 
+/* A escada das cascatas. Cada cascata escrevia a sua, um `:nth-child` por
+   degrau — eram setenta linhas que só mudavam três números. Quem a veste
+   declara os três no seletor dos filhos e a aplica ali:
+
+     & > tr { --stagger-base: 40ms; --stagger-step: 30ms; --stagger-cap: 11; @apply stagger-ladder; }
+
+   O k-ésimo filho (k ≥ 2) atrasa `base + step × min(k − 1, cap)`; o
+   primeiro fica com o atraso do atalho `animation` de quem chama. **Ela só
+   troca a escrita, não a cascata**: cada degrau compila para o mesmo
+   `<seletor>:nth-child(k)` que estava escrito à mão — o mesmo conjunto e a
+   mesma seletividade —, então as regras de movimento reduzido de cada
+   cascata continuam ganhando e perdendo onde ganhavam e perdiam. Doze
+   degraus, porque a maior escada (a da `table-reveal`) para no décimo
+   segundo. O `menubar-reveal` fica fora: a escada dele é `:nth-of-type`. */
+@utility stagger-ladder {
+  &:nth-child(2) {
+    animation-delay: calc(var(--stagger-base) + var(--stagger-step) * min(1, var(--stagger-cap)));
+  }
+  &:nth-child(3) {
+    animation-delay: calc(var(--stagger-base) + var(--stagger-step) * min(2, var(--stagger-cap)));
+  }
+  &:nth-child(4) {
+    animation-delay: calc(var(--stagger-base) + var(--stagger-step) * min(3, var(--stagger-cap)));
+  }
+  &:nth-child(5) {
+    animation-delay: calc(var(--stagger-base) + var(--stagger-step) * min(4, var(--stagger-cap)));
+  }
+  &:nth-child(6) {
+    animation-delay: calc(var(--stagger-base) + var(--stagger-step) * min(5, var(--stagger-cap)));
+  }
+  &:nth-child(7) {
+    animation-delay: calc(var(--stagger-base) + var(--stagger-step) * min(6, var(--stagger-cap)));
+  }
+  &:nth-child(8) {
+    animation-delay: calc(var(--stagger-base) + var(--stagger-step) * min(7, var(--stagger-cap)));
+  }
+  &:nth-child(9) {
+    animation-delay: calc(var(--stagger-base) + var(--stagger-step) * min(8, var(--stagger-cap)));
+  }
+  &:nth-child(10) {
+    animation-delay: calc(var(--stagger-base) + var(--stagger-step) * min(9, var(--stagger-cap)));
+  }
+  &:nth-child(11) {
+    animation-delay: calc(var(--stagger-base) + var(--stagger-step) * min(10, var(--stagger-cap)));
+  }
+  &:nth-child(12) {
+    animation-delay: calc(var(--stagger-base) + var(--stagger-step) * min(11, var(--stagger-cap)));
+  }
+  &:nth-child(n + 13) {
+    animation-delay: calc(var(--stagger-base) + var(--stagger-step) * var(--stagger-cap));
+  }
+  /* Movimento reduzido entra junto. `!important` porque a regra que zera
+     perdia em especificidade para os degraus acima (e, no `sheet-reveal`,
+     para a regra base): os itens esperavam o atraso inteiro. */
+  @media (prefers-reduced-motion: reduce) {
+    animation-delay: 0ms !important;
+  }
+}
+
 @utility disclosure-reveal {
   & > * {
     animation: disclosure-rise var(--duration-spring) var(--ease-spring) both;
-  }
-  & > :nth-child(2) {
-    animation-delay: 30ms;
-  }
-  & > :nth-child(3) {
-    animation-delay: 60ms;
-  }
-  & > :nth-child(4) {
-    animation-delay: 90ms;
-  }
-  & > :nth-child(n + 5) {
-    animation-delay: 120ms;
+    --stagger-base: 0ms;
+    --stagger-step: 30ms;
+    --stagger-cap: 4;
+    @apply stagger-ladder;
   }
   &[data-state="closed"] > *,
   [data-state="closed"] > & > * {
@@ -3228,7 +3066,7 @@
   }
   @media (prefers-reduced-motion: reduce) {
     & > [role^="menuitem"] {
-      animation-delay: 0ms;
+      animation-delay: 0ms !important;
     }
   }
 }
@@ -3239,21 +3077,10 @@
 @utility navigation-menu-reveal {
   & > li {
     animation: menubar-rise 160ms var(--ease-out) 40ms both;
-  }
-  & > li:nth-child(2) {
-    animation-delay: 70ms;
-  }
-  & > li:nth-child(3) {
-    animation-delay: 100ms;
-  }
-  & > li:nth-child(4) {
-    animation-delay: 130ms;
-  }
-  & > li:nth-child(5) {
-    animation-delay: 160ms;
-  }
-  & > li:nth-child(n + 6) {
-    animation-delay: 190ms;
+    --stagger-base: 40ms;
+    --stagger-step: 30ms;
+    --stagger-cap: 5;
+    @apply stagger-ladder;
   }
   @media (prefers-reduced-motion: reduce) {
     & > li {
@@ -3267,17 +3094,14 @@
    sobe uma faixa inteira e não uma linha. O × e a costura de largura ficam
    parados: são da superfície, não do conteúdo. */
 @utility sheet-reveal {
+  /* A escada mora no mesmo seletor da animação: num `& > *` à parte ela
+     perdia em especificidade para os dois `:not()` e todo filho entrava a 80ms. */
   & > :not([data-slot="dialog-close-button"]):not([data-slot="sheet-resize-handle"]) {
     animation: menubar-rise 220ms var(--ease-out) 80ms both;
-  }
-  & > :nth-child(2) {
-    animation-delay: 110ms;
-  }
-  & > :nth-child(3) {
-    animation-delay: 140ms;
-  }
-  & > :nth-child(n + 4) {
-    animation-delay: 170ms;
+    --stagger-base: 80ms;
+    --stagger-step: 30ms;
+    --stagger-cap: 3;
+    @apply stagger-ladder;
   }
   @media (prefers-reduced-motion: reduce) {
     & > * {
@@ -3292,15 +3116,10 @@
 @utility stat-card-reveal {
   & > [data-slot="stat-card"] {
     animation: menubar-rise 280ms var(--ease-out) both;
-  }
-  & > [data-slot="stat-card"]:nth-child(2) {
-    animation-delay: 50ms;
-  }
-  & > [data-slot="stat-card"]:nth-child(3) {
-    animation-delay: 100ms;
-  }
-  & > [data-slot="stat-card"]:nth-child(n + 4) {
-    animation-delay: 150ms;
+    --stagger-base: 0ms;
+    --stagger-step: 50ms;
+    --stagger-cap: 3;
+    @apply stagger-ladder;
   }
   @media (prefers-reduced-motion: reduce) {
     & > [data-slot="stat-card"] {
@@ -3431,18 +3250,11 @@
 @utility table-reveal {
   & > tr {
     animation: menubar-rise 160ms var(--ease-out) 40ms both;
+    --stagger-base: 40ms;
+    --stagger-step: 30ms;
+    --stagger-cap: 11;
+    @apply stagger-ladder;
   }
-  & > tr:nth-child(2) { animation-delay: 70ms; }
-  & > tr:nth-child(3) { animation-delay: 100ms; }
-  & > tr:nth-child(4) { animation-delay: 130ms; }
-  & > tr:nth-child(5) { animation-delay: 160ms; }
-  & > tr:nth-child(6) { animation-delay: 190ms; }
-  & > tr:nth-child(7) { animation-delay: 220ms; }
-  & > tr:nth-child(8) { animation-delay: 250ms; }
-  & > tr:nth-child(9) { animation-delay: 280ms; }
-  & > tr:nth-child(10) { animation-delay: 310ms; }
-  & > tr:nth-child(11) { animation-delay: 340ms; }
-  & > tr:nth-child(n + 12) { animation-delay: 370ms; }
   @media (prefers-reduced-motion: reduce) {
     & > tr {
       animation-delay: 0ms;
@@ -3458,15 +3270,12 @@
   & > li:not([data-slot="timeline-progress"]) {
     animation: menubar-rise 160ms var(--ease-out) 40ms both;
   }
-  & > li:nth-child(2) { animation-delay: 70ms; }
-  & > li:nth-child(3) { animation-delay: 100ms; }
-  & > li:nth-child(4) { animation-delay: 130ms; }
-  & > li:nth-child(5) { animation-delay: 160ms; }
-  & > li:nth-child(6) { animation-delay: 190ms; }
-  & > li:nth-child(7) { animation-delay: 220ms; }
-  & > li:nth-child(8) { animation-delay: 250ms; }
-  & > li:nth-child(9) { animation-delay: 280ms; }
-  & > li:nth-child(n + 10) { animation-delay: 310ms; }
+  & > li {
+    --stagger-base: 40ms;
+    --stagger-step: 30ms;
+    --stagger-cap: 9;
+    @apply stagger-ladder;
+  }
   @media (prefers-reduced-motion: reduce) {
     & > li {
       animation-delay: 0ms;
@@ -3497,17 +3306,11 @@
   & [cmdk-group-heading] {
     animation: disclosure-rise var(--command-reveal, 0s) var(--ease-spring) both;
   }
-  & [cmdk-item]:nth-child(2) {
-    animation-delay: 30ms;
-  }
-  & [cmdk-item]:nth-child(3) {
-    animation-delay: 60ms;
-  }
-  & [cmdk-item]:nth-child(4) {
-    animation-delay: 90ms;
-  }
-  & [cmdk-item]:nth-child(n + 5) {
-    animation-delay: 120ms;
+  & [cmdk-item] {
+    --stagger-base: 0ms;
+    --stagger-step: 30ms;
+    --stagger-cap: 4;
+    @apply stagger-ladder;
   }
   /* O bloco global encurta a duração, não o atraso: sem isto a quinta linha
      ficava invisível por 120ms com a preferência ligada — medido. */
@@ -3602,25 +3405,23 @@
   &[data-state="open"] .rdp-week:nth-child(1) {
     animation-delay: 80ms;
   }
-  &[data-state="open"] .rdp-week:nth-child(2) {
-    animation-delay: 105ms;
+  &[data-state="open"] .rdp-week {
+    --stagger-base: 80ms;
+    --stagger-step: 25ms;
+    --stagger-cap: 4;
+    @apply stagger-ladder;
   }
-  &[data-state="open"] .rdp-week:nth-child(3) {
-    animation-delay: 130ms;
+  &[data-state="open"] [data-slot="calendar-presets"] > li {
+    --stagger-base: 40ms;
+    --stagger-step: 30ms;
+    --stagger-cap: 2;
+    @apply stagger-ladder;
   }
-  &[data-state="open"] .rdp-week:nth-child(4) {
-    animation-delay: 155ms;
-  }
-  &[data-state="open"] .rdp-week:nth-child(n + 5) {
-    animation-delay: 180ms;
-  }
-  &[data-state="open"] [data-slot="calendar-presets"] > li:nth-child(2),
-  &[data-state="open"] [data-slot="month-grid"] > :nth-child(2) {
-    animation-delay: 70ms;
-  }
-  &[data-state="open"] [data-slot="calendar-presets"] > li:nth-child(n + 3),
-  &[data-state="open"] [data-slot="month-grid"] > :nth-child(n + 3) {
-    animation-delay: 100ms;
+  &[data-state="open"] [data-slot="month-grid"] > * {
+    --stagger-base: 40ms;
+    --stagger-step: 30ms;
+    --stagger-cap: 2;
+    @apply stagger-ladder;
   }
   &[data-state="open"] [data-slot="calendar-legend"],
   &[data-state="open"] [data-slot="date-picker-footer"] {
@@ -3699,24 +3500,10 @@
 @utility overlay-cascade {
   & > * {
     animation: overlay-rise 220ms var(--ease-out) 40ms both;
-  }
-  & > :nth-child(2) {
-    animation-delay: 65ms;
-  }
-  & > :nth-child(3) {
-    animation-delay: 90ms;
-  }
-  & > :nth-child(4) {
-    animation-delay: 115ms;
-  }
-  & > :nth-child(5) {
-    animation-delay: 140ms;
-  }
-  & > :nth-child(6) {
-    animation-delay: 165ms;
-  }
-  & > :nth-child(n + 7) {
-    animation-delay: 190ms;
+    --stagger-base: 40ms;
+    --stagger-step: 25ms;
+    --stagger-cap: 6;
+    @apply stagger-ladder;
   }
   @media (prefers-reduced-motion: reduce) {
     & > * {
@@ -3797,15 +3584,10 @@
   }
   &[data-state="open"] > :not(:has(> [data-slot="popover-arrow"])) {
     animation: overlay-rise 300ms var(--ease-emphasized) 90ms both;
-  }
-  &[data-state="open"] > :nth-child(2):not(:has(> [data-slot="popover-arrow"])) {
-    animation-delay: 135ms;
-  }
-  &[data-state="open"] > :nth-child(3):not(:has(> [data-slot="popover-arrow"])) {
-    animation-delay: 180ms;
-  }
-  &[data-state="open"] > :nth-child(n + 4):not(:has(> [data-slot="popover-arrow"])) {
-    animation-delay: 225ms;
+    --stagger-base: 90ms;
+    --stagger-step: 45ms;
+    --stagger-cap: 3;
+    @apply stagger-ladder;
   }
   @media (prefers-reduced-motion: reduce) {
     &[data-state="open"] > * {
@@ -3910,12 +3692,10 @@
   }
   &[data-state="open"] > :not(:has(> [data-slot="hover-card-arrow"])) {
     animation: overlay-rise 320ms var(--ease-out) 120ms both;
-  }
-  &[data-state="open"] > :nth-child(2):not(:has(> [data-slot="hover-card-arrow"])) {
-    animation-delay: 170ms;
-  }
-  &[data-state="open"] > :nth-child(n + 3):not(:has(> [data-slot="hover-card-arrow"])) {
-    animation-delay: 220ms;
+    --stagger-base: 120ms;
+    --stagger-step: 50ms;
+    --stagger-cap: 2;
+    @apply stagger-ladder;
   }
   @media (prefers-reduced-motion: reduce) {
     &[data-state="open"] > * {
@@ -3960,15 +3740,10 @@
   }
   &[data-state="open"] > :not([data-slot="dialog-close-button"]) {
     animation: overlay-rise 300ms var(--ease-emphasized) 80ms both;
-  }
-  &[data-state="open"] > :nth-child(2):not([data-slot="dialog-close-button"]) {
-    animation-delay: 120ms;
-  }
-  &[data-state="open"] > :nth-child(3):not([data-slot="dialog-close-button"]) {
-    animation-delay: 160ms;
-  }
-  &[data-state="open"] > :nth-child(n + 4):not([data-slot="dialog-close-button"]) {
-    animation-delay: 200ms;
+    --stagger-base: 80ms;
+    --stagger-step: 40ms;
+    --stagger-cap: 3;
+    @apply stagger-ladder;
   }
   @media (prefers-reduced-motion: reduce) {
     &[data-state="open"] > * {

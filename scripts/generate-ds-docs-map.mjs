@@ -3,8 +3,11 @@
  * Gera `src/app/designsystem/docs-map.ts` a partir dos arquivos em `docs/`.
  *
  * O mapa é estático de propósito. Um `import()` com template literal também
- * funcionaria, mas aí um slug sem documento só falharia em produção, na hora em
- * que alguém abrisse a página. Assim o TypeScript reclama no build.
+ * funcionaria, mas aí um documento removido só falharia em produção, na hora em
+ * que alguém abrisse a página. Com o import estático, um arquivo de `docs/`
+ * apagado sem regenerar o mapa quebra o `tsc` no build. Quem confere que toda
+ * entrada do registry tem página é o `doc-pages.test.ts`; um slug que falte no
+ * mapa cai no `notFound()` da rota `[slug]`.
  */
 import { readdirSync, writeFileSync } from "node:fs"
 import { join, dirname } from "node:path"

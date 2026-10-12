@@ -12,7 +12,7 @@ custou uma rodada de revisão.
 ## O roteiro
 
 1. **Levantamento** (seção 1 do guia): `npm run ds:catalog`, o que as telas
-   escrevem à mão no lugar do componente, a camada pelo `LAYER`, o registry do
+   escrevem à mão no lugar do componente, a camada pelo `layer(...)` do registry, o registry do
    shadcn, a seção dos vizinhos no `AGENTS.md`. Corrija na hora toda afirmação
    falsa que achar no código ou na página.
 2. **As quatro perguntas** (seção 2): uma `AskUserQuestion` com quatro grupos

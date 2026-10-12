@@ -1,13 +1,12 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { blocoCss, lerFonte } from "@/test/fonte"
+import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
 import { popoverContentVariants } from "@/components/ui/popover"
 import { menuSurfaceClassName } from "@/lib/menu-classes"
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CSS = fonte("src/app/globals.css")
-const ui = (nome: string) => fonte(`src/components/ui/${nome}.tsx`)
+const CSS = lerFonte("src/app/globals.css")
+const ui = (nome: string) => lerFonte(`src/components/ui/${nome}.tsx`)
 
 /** O bloco da rodada 248, do título até a troca de mês do calendário. */
 const BLOCO = CSS.slice(
@@ -15,15 +14,14 @@ const BLOCO = CSS.slice(
   CSS.indexOf("/* A troca de mês (rodada 245")
 )
 const utility = (nome: string) => {
-  const ini = BLOCO.indexOf(`@utility ${nome} {`)
-  expect(ini, nome).toBeGreaterThan(-1)
-  return BLOCO.slice(ini, BLOCO.indexOf("\n}\n", ini))
+  expect(BLOCO.indexOf(`@utility ${nome} {`), nome).toBeGreaterThan(-1)
+  return blocoCss(BLOCO, `@utility ${nome} {`)
 }
 
 describe("O movimento do que se sobrepõe à tela, rodada 248", () => {
   it("as utilities moram depois de no-scrollbar, fora da fatia do vidro", () => {
     expect(BLOCO.length).toBeGreaterThan(0)
-    expect(CSS.indexOf("@utility menu-sprout")).toBeGreaterThan(CSS.indexOf("@utility no-scrollbar"))
+    esperarDepoisDeNoScrollbar(CSS, "@utility menu-sprout")
   })
 
   it("os keyframes animam transform, nunca translate e scale soltos", () => {
@@ -80,7 +78,8 @@ describe("O movimento do que se sobrepõe à tela, rodada 248", () => {
     expect(ui("hover-card")).toContain('"hover-card-unveil"')
     expect(ui("dialog")).toContain('"dialog-sprout"')
     expect(ui("alert-dialog")).toContain("const origem = useOrigemDoClique()")
-    expect(ui("dialog")).toContain("ref={juntarRefs(ref, origem)}")
+    expect(ui("dialog")).toContain("useComposedRefs<HTMLDivElement>(ref, origem)")
+    expect(ui("alert-dialog")).toContain("useComposedRefs<HTMLDivElement>(ref, origem)")
     expect(ui("tooltip")).toContain("const fechada = { opacity: 0, scale: reduzido ? 1 : 0.7, ...desvio }")
   })
 

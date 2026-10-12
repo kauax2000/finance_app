@@ -116,7 +116,7 @@ export function DashboardExpenseCategories({
                             className="w-56 md:w-64"
                         />
                     ) : (
-                        <EmptyState variant="plain" className="min-h-[240px]">
+                        <EmptyState variant="plain" className="min-h-60">
                             <EmptyStateIcon variant="stack">
                                 <TagIcon aria-hidden />
                                 <ChartPieIcon aria-hidden />

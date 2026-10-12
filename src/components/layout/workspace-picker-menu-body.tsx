@@ -159,15 +159,15 @@ export function WorkspacePickerMenuBody({
             : "pb-2 pt-1 text-xs font-medium text-muted-foreground",
         insetX
     )
-    const inviteScrollMax = comfortable ? "max-h-[50vh]" : "max-h-[10rem]"
+    const inviteScrollMax = comfortable ? "max-h-[50vh]" : "max-h-40"
     const ownedScrollMax = showSharedSection
         ? comfortable
             ? "max-h-[50vh]"
-            : "max-h-[11rem]"
+            : "max-h-44"
         : comfortable
           ? "max-h-[55vh]"
-          : "max-h-[18rem]"
-    const sharedScrollMax = comfortable ? "max-h-[50vh]" : "max-h-[11rem]"
+          : "max-h-72"
+    const sharedScrollMax = comfortable ? "max-h-[50vh]" : "max-h-44"
     const disabledRowClass = comfortable ? "h-12 min-h-12" : "h-10"
 
     function pickWorkspace(id: string) {

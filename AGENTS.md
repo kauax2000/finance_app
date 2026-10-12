@@ -13,7 +13,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
   `aria-busy` e troca o rótulo), `FormCancel` (`tertiary` + `type="button"`, a
   tabela do rodapé embutida), `FormActions` (`inline` ou `sticky`, o rodapé de
   folha) e `FormError` (o erro que não é de campo). **`CustomForm` é `Form`
-  com `layout="none"`** e continua válido — 26 chamadas em 19 arquivos.
+  com `layout="none"`** e continua válido — 23 chamadas em 16 arquivos.
 - **Desde a rodada 214** há `FormField` (rótulo, ajuda e erro em volta de
   **qualquer** controle de um nó — em `Select` e `Combobox`, que não têm nó na
   raiz, o `FormControl` vai no gatilho), `FormSwitch` (a linha de preferência,
@@ -100,10 +100,10 @@ memória:
 - **Documentação viva** em `/designsystem`, com uma página por componente e por
   padrão. Sempre disponível em desenvolvimento; em produção, atrás de
   `NEXT_PUBLIC_DS_DOCS`.
-- **A taxonomia é atomic design canônico**, e mora no mapa `LAYER` de
-  [`registry.ts`](src/app/designsystem/registry.ts): Fundações → Átomos →
-  Moléculas → Organismos → **Templates**. Ele é **exaustivo**: um
-  componente novo sem camada não compila. A regra de cada nível está escrita no
+- **A taxonomia é atomic design canônico**, e mora nos blocos `layer()` do
+  `REGISTRY` de [`registry.ts`](src/app/designsystem/registry.ts): Fundações →
+  Átomos → Moléculas → Organismos → **Templates**. Ela é **exaustiva**: um
+  `entry()` fora de um `layer()` não compila. A regra de cada nível está escrita no
   topo do arquivo, e [`taxonomy.test.ts`](src/app/designsystem/taxonomy.test.ts)
   a tranca. **A régua é a hierarquia que cresce**: átomo é indivisível (anatomia
   interna e especialização não contam), molécula é feita de átomos, organismo
@@ -277,8 +277,8 @@ navegação. Ele achata os cantos internos e sobrepõe as bordas vizinhas em 1px
 então a emenda é um fio, não uma linha dupla. **Não embrulhe um controle
 segmentado nele**: um `role="group"` entre um `role="tablist"` e suas
 `role="tab"` quebra a posse ARIA, e o leitor de tela deixa de anunciar "aba 1 de
-3". O trilho segmentado do app é `transactionSegmentContainerClassName` +
-`transactionSegmentTabClassName`, e as abas são filhas diretas do `tablist`.
+3". O trilho segmentado do app é o `Tabs` (o `TransactionTypeSegment` é
+`Tabs` sem `TabsContent`), e as abas são filhas diretas do `tablist`.
 
 **Desde a rodada 188 o grupo manda no degrau, na orientação, no texto e no
 campo.** `size` desce a todos os botões pelo `ButtonSizeContext` (o do próprio
@@ -453,7 +453,8 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   #00000000`), e o multiplicador baixa a peça inteira. **O volume se mexe no
   multiplicador, nunca nas paradas**: mexer nas paradas muda a *cor* do arco,
   que é o que ele tem de certo.
-  **O listener do brilho é o único em `document` do design system**, e a razão
+  **O listener do brilho é o único `pointermove` em `document` que fica montado
+  com a peça em repouso** (o do `NavigationMenu` só vive com um painel aberto), e a razão
   é o `proximity`: o aviso acende com o mouse **perto, não em cima**, e handler
   no próprio elemento não vê o que acontece fora da caixa. Ele só monta com
   `variant="brand"` e sob `(hover: hover)`, e sai no unmount.
@@ -626,7 +627,7 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   de `z` negativo, que é por que o `brand` não tem fundo próprio. As `@utility`
   são `brand-rainbow` (só o degradê; o grão é do campo), `brand-field` e
   `brand-lava`; **todas moram depois de `no-scrollbar`**, pela fatia do
-  `glass.test.ts` — a faixa entre `@utility glass` e `no-scrollbar` reprova
+  `glass.test.ts` — a faixa entre `@utility glass-control` e `no-scrollbar` reprova
   utility nova, e a asserção 8 acusa até a palavra `background` num comentário
   ali dentro. Ver `/designsystem/brand`.
   **O degradê não gira, e o giro não volta.** Da rodada 83 à 99 o ângulo somava
@@ -689,7 +690,7 @@ par deixar de ler como uma coisa só. `gap` continua certo entre coisas
   nenhum**, e isso é medido: a versão verde redefinia `--foreground` para os
   filhos, e sobre o arco-íris esse override desceu pelo `Card` hospedado — o
   saldo saiu branco sobre o cartão branco. A posição dela no arquivo é carga
-  estrutural: `glass.test.ts` fatia o CSS de `@utility glass-material` até
+  estrutural: `glass.test.ts` fatia o CSS de `@utility glass-control` até
   `@utility no-scrollbar`, e uma utility nova dentro desse intervalo entra na
   fatia e reprova asserções de outro componente. As medições estão em
   `/designsystem/brand`.
@@ -998,6 +999,21 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   é `background`), e `glass.test.ts` compara os dois.
   **Nada de `cva` nesses arquivos**: a regra A2 do auditor o reprova fora de
   `components/ui/`.
+- **Antes de escrever de novo, reuse** (rodada 251): a superfície de gatilho
+  de campo é `fieldControlClassName` / `fieldTriggerClassName`
+  (`field-classes`); o título que nomeia um menu é
+  [`lib/menu-title.tsx`](src/lib/menu-title.tsx); a contagem animada de um
+  número é [`hooks/use-count-up.ts`](src/hooks/use-count-up.ts); o pedido de
+  fechar com "Descartar alterações?" é o `usePedidoDeFechar` do `dialog.tsx`;
+  o ícone de cada tom é o `TONE_ICON` do `alert.tsx`; juntar refs é
+  `composeRefs` / `useComposedRefs` de `radix-ui/internal` (nenhum arquivo
+  escreve o seu); e o efeito de layout é `React.useLayoutEffect` direto — o
+  React 19 não avisa mais no servidor. Num teste, ler a fonte, tirar
+  comentário e fatiar CSS é [`src/test/fonte.ts`](src/test/fonte.ts), e as
+  regras de escada (distintos, crescente, passo de 4px, classe montada) são
+  [`src/test/regras.ts`](src/test/regras.ts). Exceção legítima do auditor
+  (geometria real, contexto sem o CSS do sistema) entra nomeada, com o motivo,
+  em `RAW_PRIMITIVE_EXCEPTIONS` / `ARBITRARY_VALUE_EXCEPTIONS` do `audit.mjs`.
 - **Cor escolhida pela pessoa**: [`ColorTile`](src/components/ui/color-tile.tsx) para o ladrilho que carrega `categories.color`, `bills.color` ou a marca de um workspace. Se a cor vem do tema e não do banco, é o componente errado — use `bg-muted` ou um `Badge`. **É a construção do `AvatarFallback`**: superfície chapada com a cor, tinta escura por cima, **um valor só nos dois temas**. O que separa os dois é a forma e quem escolhe — o avatar é redondo e o sistema sorteia uma das seis identidades; o ladrilho é de canto arredondado e quem escolhe é a pessoa. **A claridade e o croma são do sistema; o matiz é da pessoa**, em **duas versões desde a rodada 184** — `tint="vivid"` (o padrão, `@utility tile-vivid`: `oklch(from var(--tile-color) 0.76 clamp(0, (c − 0,02) × 10, 0,2) h)` com a tinta escura) e `tint="soft"` (`tile-soft`: `0.95 min(c, 0.05)` com a tinta em `0.42` no mesmo matiz). As utilities **publicam** `--tile-surface` e `--tile-ink`, e o componente pinta com `bg-(--tile-surface)` — é o que deixa a amostra do `Toggle` vencer o `hover:bg-muted` pelo `tailwind-merge`. O croma do vivo é um degrau e não um multiplicador porque os hex gravados vão de 0,079 a 0,12; cinza continua cinza. Preto, branco e cinza chegam neutros. **A cor não entra crua, e isso é medido**: chapando a parada da marca como ela é, índigo dá 3,55, violeta 3,21 e magenta 4,09 com tinta escura, e âmbar 1,94, lima 1,83, teal 2,23 e azul 2,42 com tinta branca — nenhuma tinta única serve as oito. Sem o teto de croma, o magenta cai a 7,70 e oito ladrilhos deixam de ler como uma família. `scripts/tile-contrast.mjs` é a guarda: 192 células (as duas versões), piso 4,5, viva de **6,66 a 9,44**, suave de **6,48 a 7,64**. **A paleta que a pessoa escolhe é a da marca** — `TILE_PALETTE` em [`lib/tile-palette.ts`](src/lib/tile-palette.ts), os oito matizes do arco-íris na banda da identidade, servindo categoria **e** carteira; eram duas listas de hexadecimais crus do Tailwind (dez e doze). `tileColorFor` dobra na leitura os 22 presets legados, sem escrever no banco, no precedente de `identityToneFor`; o que a pessoa digitou no seletor livre atravessa intacto. **Duas versões e nenhum enfeite**: saíram o verniz, o eixo `glass`, o véu de 12%/18%, o fio e o par por tema; ficaram a viva e a suave, as mesmas do `Avatar` e do `Toggle variant="swatch"`. **A escada fala os nomes do sistema**: `xs` 24 · `md` 32 · `lg` 36 · `xl` 40 · `2xl` 44, e só o `2xl` alcança o alvo de toque; o `xs` (rodada 173) é o de dentro de uma linha — a opção de um `Select` e o gatilho `md`, onde a categoria mostra a cor. **E quem manda no corpo do ícone é o degrau**: `[&>svg]:size-4` é seletor de descendente (0,1,1) e vence qualquer classe no próprio `svg` (0,1,0) — medido, um `size-5` no ícone computa 16px.
 - **Alerts / tabs / forms**: [`Alert`](src/components/ui/alert.tsx), [`Tabs`](src/components/ui/tabs.tsx), [`Textarea`](src/components/ui/textarea.tsx), [`ScrollArea`](src/components/ui/scroll-area.tsx), [`Toggle` / `ToggleGroup`](src/components/ui/toggle.tsx), [`Slider`](src/components/ui/slider.tsx), [`Radio` / `RadioGroup`](src/components/ui/radio-group.tsx) (a forma curta é `FormRadioGroup`), [`Pagination`](src/components/ui/pagination.tsx), [`Collapsible`](src/components/ui/collapsible.tsx), [`Breadcrumb`](src/components/ui/breadcrumb.tsx), [`ChartContainer` + chart helpers](src/components/ui/chart.tsx) for Recharts.
 - **Campos**: [`Field`](src/components/ui/field.tsx) para rótulo + descrição + erro **já ligados — e agora ligados de verdade**: quem escreve `htmlFor`, `id`, `aria-describedby`, `aria-invalid` e `data-invalid` é o `FieldControl`, não a memória de quem escreve a tela. Esta linha afirmava o mesmo antes de o mecanismo existir; ver a rodada 11. [`FieldRow`](src/components/ui/field.tsx) para a linha de dois campos; [`InputGroup`](src/components/ui/input-group.tsx) para campo com ícone ou botão acoplado; [`Combobox`](src/components/ui/combobox.tsx) quando a pessoa **procura um nome** (categoria, carteira), e não quando a lista cresce — os 31 dias do cartão são `Select`, que salta pela digitação. O `NativeSelect` mora em `select.tsx` desde a rodada 165, e a página dele é a do `Select`.
@@ -1052,9 +1068,9 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   evento `input` sintético devolve a paleta ao ocioso — trocar o escopo não
   digita nada. **Campo, placa e legenda são três superfícies** (rodadas 140, 141 e
   143): a **pilha** é a variante `panel` do `Command`, e é ela que o
-  `CommandDialog`, o `Combobox` e a paleta solta montam; a raiz é uma coluna
+  `CommandDialog` e a paleta solta montam; a raiz é uma coluna
   que não pinta, com a **pílula de busca** em
-  cima (o `CommandInput` lê o `CommandDialogContext` e pinta a própria
+  cima (o `CommandInput` lê o `CommandStackContext` e pinta a própria
   superfície), a **placa** da lista no meio (um embrulho do `CommandList`,
   porque a lista é o elemento mascarado; a faixa do topo zera nele) e o
   `dock` — as três **sem sombra própria**, no mesmo plano (e a pílula leva o
@@ -1135,7 +1151,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `@media (hover: hover)` e sem ele o degrau ficava inerte no dedo. Uma tela tem um `primary` só. Fora da escada, de propósito:
   `outline` é a exceção para quando o controle precisa de contorno próprio e
   nenhum degrau serve, `destructive` é o que não tem volta, `link` é ação que se
-  comporta como texto — **sublinhada sempre**, e no cursor o traço **troca de
+  comporta como texto — um
   **traço que entra pela esquerda**: não há sublinhado em repouso — ele é um
   `::after` em `scaleX(0)` com origem à direita, e no cursor a origem troca
   para a esquerda e ele vai a `scaleX(1)`, recolhendo para a direita na saída.
@@ -1156,8 +1172,9 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   acompanha o degrau sozinha. Medido no `md`: `underline-offset-4` pintava em
   25,5 e a âncora resolve em 25,5; ≤1px nos cinco degraus. `bg-bottom` punha o
   traço 5,5px abaixo do texto, porque o eixo `size` só declara recuo lateral e
-  a caixa de conteúdo tem a altura inteira. `bg-origin-content` é o que mantém
-  o traço na largura do **texto** e não do botão. Ver as rodadas 91 a 94.
+  a caixa de conteúdo tem a altura inteira. `bg-origin-content` mantinha
+  o traço na largura do **texto** e não do botão; hoje é o `::after` do
+  `button-label` que o faz. Ver as rodadas 91 a 94.
   E `brand` é, desde a rodada 145, o **CTA neutro com o brilho na borda**:
   superfície do `secondary` com o fio do sistema, e o arco-íris acendendo num
   arco da borda conforme o ponteiro se aproxima (`@utility brand-glow` +
@@ -1426,8 +1443,8 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `--dialog-px`, `--dialog-bleed`, `--dialog-close` e `data-layout` —, e é isso
   que faz a cromagem funcionar nos dois. O recuo da folha é **16**, o do diálogo
   é 24: a folha encosta na borda da tela e o dedo já está ali. Um cabeçalho de
-  folha costuma querer `hideSeparator` — ali o fio some, porque a alça e o
-  contorno da gaveta já dizem onde ela começa.
+  folha não tem fio (nenhum tem, desde a dissolução; o `hideSeparator` saiu),
+  e não faz falta: a alça e o contorno da gaveta já dizem onde ela começa.
 - **`Drawer` é a gaveta que não muda com a largura.** `Sheet` **troca de
   superfície** (painel acima de 768px, gaveta abaixo); `Drawer` é gaveta sempre.
   Escolha-o quando o gesto é a afordância, e não uma consequência de a tela ser
@@ -1737,7 +1754,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   flex-col gap-0 overflow-hidden p-0`. `size` é a largura das laterais (`sm`
   384, o padrão · `md` 448 · `lg` 512 · `full`); topo e base recebem `none`.
   Na raiz, **`pending`, `dirty` e `confirmDiscard`** são os do `Dialog`, num
-  `pedir` só (a pergunta de descarte é importada do `dialog.tsx` — ciclo
+  `pedir` só (o `usePedidoDeFechar`, com a pergunta de descarte, é importado do `dialog.tsx` — ciclo
   deliberado, os dois só se usam dentro de funções); `modal={false}` é o
   **painel ao lado** (sem véu, clicar fora não fecha); `snapPoints` são os
   degraus da gaveta no telefone. **Folha sobre folha**: a de baixo recua
@@ -2001,7 +2018,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   da descrição no telefone. Peças: `PageHeaderMedia` (a mídia,
   pelo `media` da linha), `PageHeaderStat` (o par rótulo/valor da faixa, que
   é um `<dl>` de fábrica — nenhuma tela escreve `dt`/`dd` à mão),
-  `PageHeaderNav` (abas de rota sob o título; com `ruled`, a régua é a delas)
+  `PageHeaderNav` (abas de rota sob o título)
   e `PageHeaderSkeleton`. Comportamentos: `collapse` faz o título **subir
   para a barra** ao rolar para baixo dela (`TopBarTitle pageTitle`, por uma
   loja **por documento** em `hooks/use-page-title-dock`, para a prévia num
@@ -2178,13 +2195,14 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   arquivo dele porque o cmdk os escreve diferente — a linha ativa é
   `data-selected` e não `:focus`, e `data-disabled="false"` fica **sempre
   presente** no elemento, então a regra por presença dos menus apagaria toda
-  linha. **`variant` é a moldura, e são duas.** `bare` (o padrão) não desenha
+  linha. **`variant` é a moldura, e são duas.** `plain` (o padrão; nasceu `bare`) não desenha
   borda **nem canto** — ele herda o raio de quem o contém, e é isso que apagou
   uma terceira variante: havia um `dialog` que existia só para cravar
   `rounded-xl` e bater com o casco, ou seja, um número do **contêiner** copiado
   para dentro do componente. Herdando, a paleta acerta o popover (10px), o
-  diálogo (14px) e qualquer superfície futura sem saber de nenhuma. `panel` é o
-  oposto — borda e sombra próprias, para a paleta solta numa página. Antes
+  diálogo (14px) e qualquer superfície futura sem saber de nenhuma. `panel` é a
+  pilha — a paleta solta numa página, em que cada peça pinta a própria
+  superfície (ver "Campo, placa e legenda", acima). Antes
   disso o eixo se chamava `inline | dialog` e decidia só o arredondamento; o
   buraco aparecia na tela, com as quatro demonstrações do catálogo escrevendo
   `border border-border` à mão.
@@ -2228,9 +2246,9 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
 - **O que continua tendo fio, e por quê.** Separador de **itens repetidos** —
   `TableRow`, `AccordionItem`, `SelectSeparator`, `ItemSeparator` —, porque ali
   o fio não divide superfície: é o que torna a lista varrível. **Moldura**
-  (`border` completo). E `PageHeader`, `TableHeader` e `TableFooter`, que
-  ficaram fora do escopo por decisão — o `H2` estava nesta lista, e perdeu a
-  régua na rodada da composição.
+  (`border` completo). E `TableHeader` e `TableFooter`, que
+  ficaram fora do escopo por decisão — o `H2` e o `PageHeader` estavam nesta
+  lista, e perderam a régua (na rodada da composição e na 232).
 - **A regra `J` do auditor é o que impede tudo isso de voltar.** Ela acusa fio
   **mais** tinta na mesma classe de uma tira, ignorando moldura. Ela existe
   porque a lição já custou caro: quando o `border-t` saiu do `DialogFooter`, o
@@ -2313,9 +2331,10 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   torno de `+`, `*` e `/`, mas não pode com `-`, que seria indistinguível de
   `--var`.
 - **Nenhuma das três faixas pinta, e quem marca o limite é o conteúdo sumindo.**
-  O `CommandFooter` **não pinta fade nenhum** — ele é transparente e só reserva
-  altura para a legenda; quem dissolve é uma `mask-image` na própria
-  `CommandList`, um gradiente em preto puro usado como estêncil de alfa. A faixa
+  O `CommandFooter` (que saiu; a legenda hoje é o `CommandDock`, fora da placa)
+  **não pintava fade nenhum** — era transparente e só reservava altura para a
+  legenda; quem dissolve é uma `mask-image` na própria `CommandList` (a
+  `@utility scroll-fade-y`), um gradiente em preto puro usado como estêncil de alfa. A faixa
   de busca passou a ser igual. **Tirar dela só o `border-b` não bastou, e o
   motivo é aritmético**: ela repintava `bg-popover/85` sobre um casco que já é
   `bg-popover/85`, e dois 85% empilhados dão **97,75%**. No escuro `--popover` é
@@ -2326,7 +2345,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   tinta** — por isso o topo da máscara não pode voltar a ser opaco até a borda
   da faixa, que foi a primeira tentativa e o que produziu o divisor.
 - **Cada ponta dá 44px ao conteúdo, com a mesma curva espelhada e o mesmo piso
-  (0,06).** Os 44 têm um nome só, `--command-fade-h`, lido pelos dois lados. A
+  (0,06).** Os 44 têm um nome só, `--scroll-fade-h`, lido pelos dois lados. A
   curva é **sigmoide** de propósito: uma ease-out sai do chapado com inclinação
   máxima, e descontinuidade de derivada contra superfície lisa é o que o olho
   mais detecta — banda de Mach, numa linha que atravessa a paleta inteira. E o
@@ -2338,11 +2357,11 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   da ponta nasce a 4px da faixa e mede 28px, então ele cabe inteiro dentro dela:
   um interruptor o levaria de chapado a um degradê de 15%→80% em 1px de rolagem.
   Nos dois extremos não há zona, e o item da ponta fica nítido.
-- **`--command-footer-h` mede só a legenda, e depende da presença do rodapé —
-  nunca da rolagem.** Ela já embutiu a pista de dissolução (72 = 28 + 44), e era
-  isso que deixava **~44px de branco** entre o último item e a legenda sempre
-  que se rolava até o fim: ali não há conteúdo para dissolver. A pista virou
-  `--command-foot-fade`, que é máscara e não ocupa espaço.
+- **`--scroll-fade-foot-h` mede só a faixa de baixo, e depende da presença
+  dela — nunca da rolagem.** Ela já embutiu a pista de dissolução (72 = 28 + 44),
+  e era isso que deixava **~44px de branco** entre o último item e a legenda
+  sempre que se rolava até o fim: ali não há conteúdo para dissolver. A pista
+  virou zona de máscara (`--scroll-fade-bottom-h`), que não ocupa espaço.
   **A versão condicionada a `data-scrollable` era um laço**, e um dos sorrateiros:
   `pb` é `footer-h + 4`, então declarar "esta lista rola" *acrescentava 36px ao
   próprio conteúdo* e realimentava a condição que produziu a decisão. Uma lista
@@ -2357,7 +2376,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   selecionado a 40px do fundo enquanto a zona de baixo chega a 80 — item ativo a
   0,05 de alfa na navegação por seta. A margem já existia antes (76 contra 72),
   mas por acidente.
-- **`--command-bottom-y` é a guarda de cruzamento.** As duas zonas somam 172, e
+- **`--scroll-fade-bottom-y` é a guarda de cruzamento.** As duas zonas somam 172, e
   numa lista mais curta que isso elas se cruzam: o *color-stop fixup* arrasta as
   paradas de baixo para junto das de cima e sobra um degrau em poucos pixels,
   sobre conteúdo real. É alcançável — dentro do `CommandDialog` a lista é
@@ -2402,10 +2421,10 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   — mas sem o fio deles, porque aqui quem marca o limite é a dissolução. O
   recuo saiu da casca e foi para o `CommandList`, que é onde há linhas — e com
   isso o `-mx-1` do separador volta a sangrar exatamente ele.
-  `CommandFooter` é a terceira faixa, e ela é **legenda de teclado**: uma
+  A terceira faixa era o `CommandFooter`, a **legenda de teclado**: uma
   paleta é interface de teclado, e sem a legenda a pessoa descobre `↑↓` e `↵`
-  por tentativa. `CommandHint` não embute o `Kbd` de propósito — quem chama
-  escolhe entre desenhar a tecla e escrever o nome dela.
+  por tentativa. Ela saiu da placa e hoje é o `CommandDock`, cápsulas soltas
+  embaixo dela (ver acima).
 - **`CommandDialog` monta o `Command` raiz, e não montava.** Ele entregava
   `children` direto ao `DialogContent`, então quem chamava tinha de lembrar de
   embrulhar tudo — e das duas chamadas do projeto, **uma esquecia**. O diálogo
@@ -2518,9 +2537,9 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   `--radix-collapsible-content-height` lendo a caixa da própria `Content`, que em
   `peek` é o nó preso à espiada — ele publicava **100px** como "altura do
   conteúdo" contra um `scrollHeight` de 206, e abrir levava de 100 a 100 com o
-  texto recortado. A saída é a da casa: um `ResizeObserver` num envelope interno
-  livre escreve `--collapsible-full`, como `useScrollFade` e o marcador do `Tabs`
-  já fazem.
+  texto recortado. A saída foi a da casa: um `ResizeObserver` num envelope
+  interno livre escrevia `--collapsible-full`, como `useScrollFade` e o marcador
+  do `Tabs` já fazem; desde a rodada 130 quem mede é o `useEspiada` (abaixo).
 - **A espiada desliza, e ela abriu de uma vez por cinco rodadas.** O recálculo
   síncrono que o Radix força ao trocar de estado acontece **na mesma passagem**
   em que o `data-state` vira `open`, e com a altura no CSS
@@ -2631,8 +2650,8 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   cheia e o que passou vira uma pastilha à direita, **fora** do trilho, que
   continua valendo o total sempre — é o que mantém duas categorias comparáveis
   numa grade. Antes desta rodada 104% e 400% desenhavam igual.
-  **`variant="brand"` é o arco-íris sobre leito preto** (`@utility brand-well`),
-  para progresso **sem limiar**. O degradê é do **trilho** e o preenchimento o
+  **`variant="brand"` é o arco-íris** (nasceu sobre leito preto, a `@utility
+  brand-well`, que saiu — ver abaixo), para progresso **sem limiar**. O degradê é do **trilho** e o preenchimento o
   revela: completar a barra completa a marca. Duas medições o desenharam: o fio
   de 1px do `Button` reprova aqui, porque num trilho de 6px ele é **um terço da
   peça** contra 1/16 num botão de 32; e sobre o trilho claro do sistema **cinco

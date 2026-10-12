@@ -1,15 +1,13 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import { ChartBarList, waterfallSteps } from "./chart"
 
 /** A rodada 206: as versões novas do `Chart`. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/chart.tsx")
+const CODIGO = lerFonte("src/components/ui/chart.tsx")
 
 describe("as versões do Chart", () => {
   it("a cascata flutua cada degrau do acumulado, e o total sem valor fecha nele", () => {
@@ -96,7 +94,7 @@ describe("as versões do Chart", () => {
       "src/components/credit-cards/credit-card-invoice-category-spend-section.tsx",
       "src/components/dashboard/dashboard-expense-categories.tsx",
     ]) {
-      const codigo = fonte(arquivo)
+      const codigo = lerFonte(arquivo)
       expect(codigo, arquivo).not.toContain("ResponsiveContainer")
       expect(codigo, arquivo).not.toMatch(/function \w*Tooltip\(/)
       expect(codigo, arquivo).not.toMatch(/<ChartTooltipContent\s*\/>/)

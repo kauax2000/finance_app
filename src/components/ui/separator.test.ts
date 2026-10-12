@@ -1,21 +1,14 @@
-import { readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { arquivosTsx, lerFonte } from "@/test/fonte"
 
 /**
  * A régua (rodada 175): peso por `tone`, desenho por `variant`, o recuo
  * atravessado por `bleed` e o rótulo do meio por `children`.
  */
-const SRC = readFileSync(join(process.cwd(), "src/components/ui/separator.tsx"), "utf8")
+const SRC = lerFonte("src/components/ui/separator.tsx")
 const RAIZ = join(process.cwd(), "src")
-function arquivos(dir: string): string[] {
-  return readdirSync(dir).flatMap((n) => {
-    const c = join(dir, n)
-    if (statSync(c).isDirectory()) return n === "ui" || n === "designsystem" ? [] : arquivos(c)
-    return c.endsWith(".tsx") ? [c] : []
-  })
-}
-const TELAS = arquivos(RAIZ).map((f) => [f, readFileSync(f, "utf8")] as const)
+const TELAS = arquivosTsx(RAIZ, ["ui", "designsystem"]).map((f) => [f, lerFonte(f)] as const)
 
 describe("Separator", () => {
   it("1. o peso é uma variável, lida pelos três desenhos", () => {

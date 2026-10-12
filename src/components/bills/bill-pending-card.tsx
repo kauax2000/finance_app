@@ -254,7 +254,7 @@ export function BillPendingCard({
                 <Button
                     type="button"
                     size="sm"
-                    className="h-8 min-w-[5.5rem] text-xs"
+                    className="h-8 min-w-22 text-xs"
                     onClick={(e) => {
                         e.stopPropagation()
                         onPay()

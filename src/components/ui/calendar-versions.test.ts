@@ -1,14 +1,12 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import { Calendar } from "./calendar"
 
 /** As versões da rodada 203. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
 const MARCO = new Date(2026, 2, 1)
 const render = (props: Record<string, unknown>) =>
   renderToStaticMarkup(h(Calendar, { month: MARCO, ...props } as never))
@@ -28,7 +26,7 @@ describe("Calendar, rodada 203", () => {
   })
 
   it("os pontos usam os tokens semânticos, nunca a paleta crua", () => {
-    const codigo = fonte("src/components/ui/calendar.tsx")
+    const codigo = lerFonte("src/components/ui/calendar.tsx")
     const tabela = codigo.slice(codigo.indexOf("const MARCADOR_TOM"), codigo.indexOf("} as const", codigo.indexOf("const MARCADOR_TOM")))
     expect(tabela).not.toMatch(/bg-(red|green|blue|amber|sky|emerald|rose)-\d/)
   })
@@ -56,7 +54,7 @@ describe("Calendar, rodada 203", () => {
   })
 
   it("o calendário de pagamentos é o Calendar, e não uma grade à mão", () => {
-    const tela = fonte("src/components/dashboard/dashboard-payments-calendar.tsx")
+    const tela = lerFonte("src/components/dashboard/dashboard-payments-calendar.tsx")
     expect(tela).toContain("<Calendar")
     expect(tela).toContain('variant="agenda"')
     expect(tela).not.toMatch(/grid-cols-7|MOBILE_DAY_MODIFIER_DOT|function buildCells|after:bg-/)

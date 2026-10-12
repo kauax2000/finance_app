@@ -20,7 +20,7 @@ import {
   type DisclosureSize,
 } from "@/lib/disclosure-classes"
 import { MOLA } from "@/lib/spring"
-import { composeRefs } from "@/hooks/use-brand-glow"
+import { composeRefs } from "radix-ui/internal"
 
 /**
  * Um bloco que expande — o `Accordion` de um item só, sem a semântica de lista.

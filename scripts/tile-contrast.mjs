@@ -5,10 +5,11 @@
 //
 // Por que um script e não uma asserção de CSS: a cor não é do sistema, é um
 // hexadecimal que a pessoa gravou no banco, e a superfície o normaliza com
-// `oklch(from var(--tile-color) 0.86 min(c, 0.12) h)`. A conta fecha no papel
-// para uma cor; o que esta grade responde é se ela fecha para as doze que o
-// produto alcança, nos dois temas e nos quatro degraus — inclusive o branco e o
-// preto, que o seletor livre da carteira ainda permite.
+// `oklch(from var(--tile-color) 0.76 clamp(0, (c - 0.02) * 10, 0.2) h)` (a
+// `tile-vivid`). A conta fecha no papel para uma cor; o que esta grade responde
+// é se ela fecha para as doze que o produto alcança, nos dois temas e nos
+// quatro degraus — inclusive o branco e o preto, que o seletor livre da
+// carteira ainda permite.
 //
 // O método é o de `identity-contrast.mjs`: clona um ladrilho real para cada
 // célula, **esconde o glifo** (para todo pixel da caixa central ser superfície),
@@ -26,7 +27,7 @@
 // escura) e `tile-soft` (0,95, a tinta no tom forte do matiz), e as duas são
 // medidas — o clone troca a classe da versão. Quem mexer em claridade, croma
 // ou tinta de qualquer uma delas remede aqui.
-import { chromium } from "playwright"
+import { abrirNavegador, abrirPagina, concluir, linha, piorRazao, TEMAS } from "./lib/contrast.mjs"
 
 const PISO = 4.5
 
@@ -54,23 +55,17 @@ const CORES = [
 
 const TAMANHOS = { md: "size-8", lg: "size-9", xl: "size-10", "2xl": "size-11" }
 
-const browser = await chromium.launch()
+const browser = await abrirNavegador()
 const linhas = []
-let reprovou = false
 
-for (const tema of ["light", "dark"]) {
-    const ctx = await browser.newContext({
+for (const tema of TEMAS) {
+    const { ctx, page } = await abrirPagina(browser, tema, "/designsystem/color-tile", {
         viewport: { width: 1280, height: 900 },
         deviceScaleFactor: 2,
+        seletor: "[data-slot=color-tile] svg",
+        semPortal: true,
+        espera: 600,
     })
-    await ctx.addInitScript((t) => localStorage.setItem("theme", t), tema)
-    const page = await ctx.newPage()
-    await page.goto("http://localhost:3000/designsystem/color-tile", {
-        waitUntil: "domcontentloaded",
-    })
-    await page.waitForSelector("[data-slot=color-tile] svg")
-    await page.addStyleTag({ content: "nextjs-portal{display:none}" })
-    await page.waitForTimeout(600)
 
     // Uma grade de clones do componente real: trocar a `--tile-color` e a
     // classe do tamanho é exatamente o que o prop `color` e o prop `size`
@@ -124,80 +119,30 @@ for (const tema of ["light", "dark"]) {
     for (let i = 0; i < CORES.length; i++) {
         for (const nome of Object.keys(TAMANHOS)) {
             const probe = `${tint}-${i}-${nome}`
-            const png = await page.locator(`[data-probe="${probe}"]`).screenshot()
-            const razao = await page.evaluate(
-                async ([b64, fg]) => {
-                    const img = new Image()
-                    img.src = "data:image/png;base64," + b64
-                    await img.decode()
-                    const c = document.createElement("canvas")
-                    c.width = img.width
-                    c.height = img.height
-                    const g = c.getContext("2d")
-                    g.drawImage(img, 0, 0)
-                    // A caixa onde o glifo pousa, generosa de propósito: ela
-                    // inclui a folga em volta dele e exclui o fio da aresta.
-                    const x0 = Math.floor(c.width * 0.25)
-                    const x1 = Math.ceil(c.width * 0.75)
-                    const y0 = Math.floor(c.height * 0.25)
-                    const y1 = Math.ceil(c.height * 0.75)
-                    const d = g.getImageData(x0, y0, x1 - x0, y1 - y0).data
-
-                    // ds-kit.tsx:812-827, verbatim.
-                    const lum = ([r, gg, b]) => {
-                        const f = (u) => {
-                            const c = u / 255
-                            return c <= 0.04045
-                                ? c / 12.92
-                                : ((c + 0.055) / 1.055) ** 2.4
-                        }
-                        return 0.2126 * f(r) + 0.7152 * f(gg) + 0.0722 * f(b)
-                    }
-                    const razao = (a, b) => {
-                        const [hi, lo] = a > b ? [a, b] : [b, a]
-                        return (hi + 0.05) / (lo + 0.05)
-                    }
-                    const lFg = lum(fg)
-                    let pior = Infinity
-                    for (let k = 0; k < d.length; k += 4) {
-                        if (d[k + 3] < 200) continue
-                        const r = razao(lFg, lum([d[k], d[k + 1], d[k + 2]]))
-                        if (r < pior) pior = r
-                    }
-                    return +pior.toFixed(2)
-                },
-                [png.toString("base64"), tintas[probe]]
-            )
-            if (razao < PISO) reprovou = true
-            linhas.push({
-                tema,
-                tint,
-                cor: CORES[i].nome,
-                degrau: nome,
-                razao,
-                ok: razao >= PISO ? "sim" : "NÃO",
+            // A caixa onde o glifo pousa: 25–75% nos dois eixos.
+            const razao = await piorRazao(page, page.locator(`[data-probe="${probe}"]`), tintas[probe], {
+                x: [0.25, 0.75],
+                y: [0.25, 0.75],
             })
+            linhas.push(linha({ tema, tint, cor: CORES[i].nome, degrau: nome }, razao, PISO))
         }
     }
     await ctx.close()
 }
 
 await browser.close()
-console.table(linhas)
 const piorDe = (ls) => ls.reduce((a, b) => (a.razao <= b.razao ? a : b))
-const pior = piorDe(linhas)
-// Por tema, porque é assim que a régua se lê: as duas receitas são diferentes
-// (véu de 12% contra 18%, tinta de 0,42 contra 0,78) e uma delas pode afundar
-// sozinha.
-for (const tema of ["light", "dark"]) {
-    const p = piorDe(linhas.filter((l) => l.tema === tema))
-    console.log(`${tema.padEnd(5)} pior: ${p.razao.toFixed(2)}:1   (${p.cor}, ${p.degrau}, ${p.tint})`)
-}
-console.log(
-    `\n${linhas.length} células   pior caso: ${pior.razao.toFixed(2)}:1 ` +
-        `(${pior.cor}, ${pior.degrau}, ${pior.tema}, ${pior.tint})   piso: ${PISO}:1`
-)
-if (reprovou) {
-    console.error("\nReprovou: alguma célula ficou abaixo do piso da WCAG 1.4.11.")
-    process.exit(1)
-}
+concluir(linhas, PISO, "alguma célula ficou abaixo do piso da WCAG 1.4.11.", () => {
+    const pior = piorDe(linhas)
+    // Por tema, porque é assim que a régua se lê. Até a rodada 184 cada tema
+    // tinha a sua receita (véu de 12% contra 18%, tinta de 0,42 contra 0,78), e
+    // uma delas podia afundar sozinha.
+    for (const tema of TEMAS) {
+        const p = piorDe(linhas.filter((l) => l.tema === tema))
+        console.log(`${tema.padEnd(5)} pior: ${p.razao.toFixed(2)}:1   (${p.cor}, ${p.degrau}, ${p.tint})`)
+    }
+    console.log(
+        `\n${linhas.length} células   pior caso: ${pior.razao.toFixed(2)}:1 ` +
+            `(${pior.cor}, ${pior.degrau}, ${pior.tema}, ${pior.tint})   piso: ${PISO}:1`
+    )
+})

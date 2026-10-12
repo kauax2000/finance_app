@@ -1,7 +1,7 @@
-import { readFileSync } from "node:fs"
 import { readdirSync } from "node:fs"
 
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 import { PHONE_FRAME_WIDTH } from "./ds-frame"
 
@@ -16,15 +16,15 @@ import { PHONE_FRAME_WIDTH } from "./ds-frame"
  * vez de empilhado. O botão saía `justify-end` **e** `w-full` ao mesmo tempo.
  */
 
-const FONTE = readFileSync(new URL("./ds-frame.tsx", import.meta.url), "utf8")
+const FONTE = lerFonte("src/app/designsystem/ds-frame.tsx")
 
 /** O mesmo fonte sem comentários — eles citam de propósito o que ela conserta. */
-const CODIGO = FONTE.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "")
+const CODIGO = semComentarios(FONTE)
 
-const DOCS = new URL("./docs/", import.meta.url)
+const DOCS = "src/app/designsystem/docs"
 const PAGINAS = readdirSync(DOCS)
   .filter((f) => f.endsWith(".tsx"))
-  .map((f) => ({ nome: f, texto: readFileSync(new URL(f, DOCS), "utf8") }))
+  .map((f) => ({ nome: f, texto: lerFonte(`${DOCS}/${f}`) }))
 
 describe("moldura de telefone do catálogo", () => {
   it("1. mede 375, e o número é a frase inteira do componente", () => {
@@ -136,7 +136,6 @@ describe("moldura de telefone do catálogo", () => {
     // `data-scroll-locked` no `<body>` do catálogo, `overflow` `hidden` e um
     // `wheel` na página saindo `defaultPrevented`; com ela fechada, nada disso.
     // Quem lê a janela ativa é quem portaliza para lá, e são estes três.
-    const UI = new URL("../../components/ui/", import.meta.url)
     // A raiz, e não o arquivo: `{...props}` aparece em toda peça, e um
     // `indexOf` solto acharia o da peça seguinte — a asserção passaria com o
     // padrão escrito **depois** do espalhamento. Verificado sabotando.
@@ -144,10 +143,7 @@ describe("moldura de telefone do catálogo", () => {
       ["sheet.tsx", "Sheet"],
       ["drawer.tsx", "Drawer"],
     ] as const) {
-      const src = readFileSync(new URL(arquivo, UI), "utf8").replace(
-        /\/\/.*$/gm,
-        ""
-      )
+      const src = lerFonte(`src/components/ui/${arquivo}`).replace(/\/\/.*$/gm, "")
       expect(src, `${arquivo}: não lê a modalidade da janela`).toContain(
         "useViewportModal"
       )
@@ -174,10 +170,7 @@ describe("moldura de telefone do catálogo", () => {
       }
     }
     // E ele é `undefined` fora da moldura: o app não muda uma linha.
-    const hook = readFileSync(
-      new URL("../../hooks/use-mobile.tsx", import.meta.url),
-      "utf8"
-    )
+    const hook = lerFonte("src/hooks/use-mobile.tsx")
     expect(hook).toMatch(
       /useViewportModal[\s\S]*?useViewportWindow\(\)\s*\?\s*false\s*:\s*undefined/
     )

@@ -11,11 +11,18 @@ import {
   useViewportModal,
   useViewportWindow,
 } from "@/hooks/use-mobile"
-import { DragHandle, SHEET_OVERLAY_CLASS } from "@/components/ui/drawer"
+import {
+  DragHandle,
+  DrawerOverlay,
+  DrawerPortal,
+  SHEET_OVERLAY_CLASS,
+  SURFACE_CONTRACT_CLASS,
+} from "@/components/ui/drawer"
 // Ciclo deliberado: o `dialog.tsx` importa este arquivo (o `surface="auto"`
-// dele é a gaveta daqui), e este importa de volta a pergunta de descarte. Os
-// dois só se usam dentro de funções, nunca na avaliação do módulo.
-import { ConfirmarDescarte } from "@/components/ui/dialog"
+// dele é a gaveta daqui), e este importa de volta o pedido de fechar, com a
+// pergunta de descarte. Os dois só se usam dentro de funções, nunca na
+// avaliação do módulo.
+import { usePedidoDeFechar } from "@/components/ui/dialog"
 
 /**
  * O painel de borda — o ramo desktop da folha.
@@ -93,15 +100,8 @@ const sheetContentVariants = cva(
     "transition-[translate,scale] duration-(--duration-spring) ease-(--ease-spring)",
     "data-[coberta]:scale-[0.96] data-[coberta]:data-[side=right]:-translate-x-6 data-[coberta]:data-[side=left]:translate-x-6 data-[coberta]:data-[side=top]:translate-y-6 data-[coberta]:data-[side=bottom]:-translate-y-6",
     // O contrato que a cromagem do `Dialog` lê — o mesmo em painel e gaveta, e
-    // o motivo de `DialogHeader` funcionar dentro dos dois.
-    "[--dialog-px:--spacing(4)]",
-    "[--dialog-bleed:0px]",
-    // O raio que o `concentric` de dentro lê — o mesmo do `DialogContent`. Sem
-    // ele, uma peça concêntrica na folha caía no padrão (22 − 0) e saía pílula.
-    "[--radius-parent:var(--radius-modal)] [--radius-inset:var(--dialog-px)]",
-    // A reserva do × vem de **haver** um ×, não de um prop. Dentro de um
-    // `DialogHeaderRow` quem reserva é a coluna do adorno.
-    "[--dialog-close:0px] has-[>[data-slot=dialog-close-button]]:[--dialog-close:--spacing(11)]",
+    // o motivo de `DialogHeader` funcionar dentro dos dois. Ver o `drawer.tsx`.
+    SURFACE_CONTRACT_CLASS,
   ],
   {
     variants: {
@@ -290,26 +290,15 @@ function Sheet({
   const escolhida: SheetSurface = isMobile && modo === "auto" ? "drawer" : "panel"
 
   // O estado mora aqui, controlado ou não, porque todo pedido de fechar passa
-  // por `pedir` — a régua do `Dialog`.
-  const controlado = openProp !== undefined
-  const [interno, setInterno] = React.useState(defaultOpen ?? false)
-  const open = controlado ? openProp : interno
-  const [perguntando, setPerguntando] = React.useState(false)
-  const mudar = (proximo: boolean) => {
-    if (!controlado) setInterno(proximo)
-    onOpenChange?.(proximo)
-  }
-  // Esc, véu, × e o arraste da gaveta passam por aqui. Fechar por fora — o
-  // `open` que a tela controla — não: depois de salvar, ninguém pergunta.
-  const pedir = (proximo: boolean) => {
-    if (proximo) return mudar(true)
-    if (pending) return
-    if (dirty && confirmDiscard) {
-      setPerguntando(true)
-      return
-    }
-    mudar(false)
-  }
+  // por `pedir` — a régua do `Dialog`, a mesma função.
+  const { open, pedir, pergunta } = usePedidoDeFechar({
+    open: openProp,
+    defaultOpen,
+    onOpenChange,
+    pending,
+    dirty,
+    confirmDiscard,
+  })
 
   // A superfície é decidida ao abrir e fica até fechar. Com ela ao vivo, girar
   // um tablet ou estreitar a janela com a folha aberta desmontava uma primitiva
@@ -340,7 +329,6 @@ function Sheet({
     () => ({ pending, aoLado, degraus: Boolean(snapPoints?.length) }),
     [pending, aoLado, snapPoints]
   )
-  const textos = typeof confirmDiscard === "object" ? confirmDiscard : {}
   const Gaveta = pai ? DrawerPrimitive.NestedRoot : DrawerPrimitive.Root
 
   return (
@@ -375,18 +363,7 @@ function Sheet({
             {children}
           </SheetPrimitive.Root>
         )}
-        {confirmDiscard ? (
-          <ConfirmarDescarte
-            open={perguntando}
-            onOpenChange={setPerguntando}
-            title={textos.title}
-            description={textos.description}
-            onDiscard={() => {
-              setPerguntando(false)
-              mudar(false)
-            }}
-          />
-        ) : null}
+        {pergunta}
       </SheetEstadoContext.Provider>
     </SheetSurfaceContext.Provider>
   )
@@ -597,11 +574,12 @@ function SheetContent({
 
   if (surface === "drawer") {
     return (
-      <DrawerPrimitive.Portal container={janela?.document.body}>
-        <DrawerPrimitive.Overlay
-          data-slot="sheet-overlay"
-          className={SHEET_OVERLAY_CLASS}
-        />
+      // O portal e o véu são os do `Drawer` — o portal na janela ativa, o véu
+      // com o nome da folha. A raiz e o conteúdo não: a gaveta da folha é a
+      // raiz do vaul direto (sem o contexto de pilha do `Drawer`), com a
+      // superfície, a cascata e as variáveis `--sheet-drawer-*` dela.
+      <DrawerPortal>
+        <DrawerOverlay data-slot="sheet-overlay" />
         <DrawerPrimitive.Content
           data-slot="sheet-content"
           data-surface="drawer"
@@ -624,10 +602,8 @@ function SheetContent({
             // do `env()`.
             "pb-(--sheet-drawer-safe)",
             "[--sheet-drawer-safe:calc(--spacing(6)+env(safe-area-inset-bottom,0px))]",
-            // O mesmo contrato do painel, escrito lá.
-            "[--dialog-px:--spacing(4)] [--dialog-bleed:0px]",
-            "[--radius-parent:var(--radius-modal)] [--radius-inset:var(--dialog-px)]",
-            "[--dialog-close:0px] has-[>[data-slot=dialog-close-button]]:[--dialog-close:--spacing(11)]",
+            // O mesmo contrato do painel.
+            SURFACE_CONTRACT_CLASS,
             // As duas alturas saem de variáveis, e não de valores crus, para
             // uma gaveta poder ajustar o teto sem reescrever a fórmula: uma
             // lista curta pede menos que 85%, e a folga do topo muda com o
@@ -651,7 +627,7 @@ function SheetContent({
           <DragHandle />
           <SheetPaiContext.Provider value={setCoberta}>{children}</SheetPaiContext.Provider>
         </DrawerPrimitive.Content>
-      </DrawerPrimitive.Portal>
+      </DrawerPortal>
     )
   }
 

@@ -1,15 +1,13 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import { Combobox, ComboboxChips, ComboboxValue } from "./combobox"
 
 /** A rodada 207: as versões novas do `Combobox`. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/combobox.tsx")
+const CODIGO = lerFonte("src/components/ui/combobox.tsx")
 
 describe("as versões do Combobox", () => {
   it("o ladrilho do valor é prop, fora do texto que trunca", () => {
@@ -64,7 +62,7 @@ describe("as versões do Combobox", () => {
   })
 
   it("as telas migradas não montam mais o seletor à mão", () => {
-    const filtros = fonte("src/components/transactions/transactions-filters-panel.tsx")
+    const filtros = lerFonte("src/components/transactions/transactions-filters-panel.tsx")
     expect(filtros).toMatch(/<Combobox\s+multiple/)
     expect(filtros).not.toContain("categoryQuery")
     expect(filtros).not.toContain("cardQuery")
@@ -72,7 +70,7 @@ describe("as versões do Combobox", () => {
       "src/components/bills/pay-bill-dialog.tsx",
       "src/components/bills/bill-form-fields.tsx",
     ]) {
-      const codigo = fonte(arquivo)
+      const codigo = lerFonte(arquivo)
       expect(codigo, arquivo).toMatch(/<Combobox\s/)
       expect(codigo, arquivo).toMatch(/media=\{<ColorTile size="xs"/)
     }

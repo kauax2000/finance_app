@@ -152,6 +152,15 @@ export const TRAJETO_MACIO = { duration: 480, easing: "cubic-bezier(0.65,0,0.25,
 /** Uma caixa na régua do trilho, em px: onde a peça está e o tamanho dela. */
 export type CaixaLiquida = { x: number; y: number; w: number; h: number }
 
+/** Só a posição: a peça do `ThemeToggle` não muda de tamanho, e o tamanho não anima. */
+type PontoLiquido = Pick<CaixaLiquida, "x" | "y"> & Partial<CaixaLiquida>
+
+const quadro = ({ x, y, w, h }: PontoLiquido) => ({
+  translate: `${x}px ${y}px`,
+  ...(w === undefined ? null : { width: `${w}px` }),
+  ...(h === undefined ? null : { height: `${h}px` }),
+})
+
 /**
  * Anima a peça da caixa `de` até a caixa `para` — o trajeto com inércia na
  * posição e no tamanho, e o esticão no mesmo relógio, com a origem atrás
@@ -168,8 +177,8 @@ export type CaixaLiquida = { x: number; y: number; w: number; h: number }
  */
 export function viajarLiquido(
   peca: HTMLElement,
-  de: CaixaLiquida,
-  para: CaixaLiquida,
+  de: PontoLiquido,
+  para: PontoLiquido,
   {
     amplitude,
     eixo = "x",
@@ -198,13 +207,7 @@ export function viajarLiquido(
     return vertical ? `${curto} ${longo}` : `${longo} ${curto}`
   }
   return [
-    peca.animate(
-      [
-        { translate: `${de.x}px ${de.y}px`, width: `${de.w}px`, height: `${de.h}px` },
-        { translate: `${para.x}px ${para.y}px`, width: `${para.w}px`, height: `${para.h}px` },
-      ],
-      { ...trajeto, fill: "none" }
-    ),
+    peca.animate([quadro(de), quadro(para)], { ...trajeto, fill: "none" }),
     peca.animate(
       PERFIL.map(([offset, k, lado]) => ({ offset, transformOrigin: origem[lado], scale: escala(k) })),
       { ...ESTICAO, duration: Math.round(trajeto.duration / VIRADA), fill: "none" }

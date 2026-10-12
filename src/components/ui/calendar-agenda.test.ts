@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import { Calendar, CalendarEvent, CalendarEvents, CalendarSkeleton } from "./calendar"
 
@@ -12,7 +11,6 @@ import { Calendar, CalendarEvent, CalendarEvents, CalendarSkeleton } from "./cal
  * e o esqueleto — e o dashboard sem as fichas escritas à mão.
  */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
 const MARCO = new Date(2026, 2, 1)
 const DIA_12 = new Date(2026, 2, 12)
 
@@ -45,7 +43,7 @@ describe("Calendar agenda, rodada 242", () => {
     expect(celula).toContain("border-b")
     expect(celula).toContain("rounded-none")
     // A caixinha de antes não volta.
-    const codigo = fonte("src/components/ui/calendar.tsx")
+    const codigo = lerFonte("src/components/ui/calendar.tsx")
     const celulaAgenda = codigo.slice(codigo.indexOf("const AGENDA_CELULA"), codigo.indexOf("const AGENDA_SELECIONADO"))
     expect(celulaAgenda).not.toMatch(/rounded-lg|border-border\/60 bg-card/)
   })
@@ -128,7 +126,7 @@ describe("Calendar agenda, rodada 242", () => {
   })
 
   it("o dashboard veste as peças, sem fichas à mão nem troca por isMobile", () => {
-    const tela = fonte("src/components/dashboard/dashboard-payments-calendar.tsx")
+    const tela = lerFonte("src/components/dashboard/dashboard-payments-calendar.tsx")
     expect(tela).toContain("<CalendarEvents")
     expect(tela).toContain("<CalendarEvent")
     expect(tela).not.toMatch(/function EventChips|isMobile \?|mobileGroupedForList/)

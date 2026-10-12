@@ -1,25 +1,15 @@
-import { readFileSync, readdirSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { arquivosTsx, lerFonte } from "@/test/fonte"
 
 /** O alerta (rodada 186) e a faixa (rodada 187). */
 
-const ALERT = readFileSync(join(process.cwd(), "src/components/ui/alert.tsx"), "utf8")
-const BARRA = readFileSync(join(process.cwd(), "src/components/ui/announcement-bar.tsx"), "utf8")
+const ALERT = lerFonte("src/components/ui/alert.tsx")
+const BARRA = lerFonte("src/components/ui/announcement-bar.tsx")
 
-const arquivos = (dir: string): string[] =>
-  readdirSync(dir).flatMap((nome) => {
-    const caminho = join(dir, nome)
-    return statSync(caminho).isDirectory()
-      ? arquivos(caminho)
-      : /\.tsx$/.test(nome)
-        ? [caminho]
-        : []
-  })
-
-const TELAS = arquivos(join(process.cwd(), "src")).map((caminho) => ({
+const TELAS = arquivosTsx(join(process.cwd(), "src")).map((caminho) => ({
   caminho,
-  texto: readFileSync(caminho, "utf8"),
+  texto: lerFonte(caminho),
 }))
 
 describe("o alerta", () => {
@@ -33,7 +23,9 @@ describe("o alerta", () => {
     )
     expect(culpados).toEqual([])
     expect(ALERT).toContain("destructive: <XCircleIcon />")
-    expect(BARRA).toContain("destructive: <XCircleIcon />")
+    // A faixa veste o mesmo mapa, e não uma cópia dele.
+    expect(BARRA).toContain('import { TONE_ICON } from "@/components/ui/alert"')
+    expect(BARRA).not.toContain("const TONE_ICON")
   })
 
   it("a faixa centralizada tira o × do fluxo, e a marca não perde o sticky", () => {

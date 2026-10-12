@@ -13,11 +13,7 @@ import { cn } from "@/lib/utils"
 import {
   fieldControlHeightClassName,
   fieldControlPaddingClassName,
-  fieldDisabledClassName,
-  fieldFocusRingClassName,
-  fieldInvalidClassName,
-  fieldSurfaceClassName,
-  fieldTriggerHoverClassName,
+  fieldTriggerClassName,
   type FieldControlSize,
 } from "@/lib/field-classes"
 import {
@@ -293,11 +289,7 @@ function useSuperficie() {
 
 function gatilhoClassName(size: DatePickerSize) {
   return cn(
-    fieldSurfaceClassName,
-    fieldFocusRingClassName,
-    fieldInvalidClassName,
-    fieldDisabledClassName,
-    fieldTriggerHoverClassName,
+    fieldTriggerClassName,
     "flex w-full min-w-0 items-center gap-2 text-left font-normal",
     fieldControlHeightClassName[size],
     fieldControlPaddingClassName[size],

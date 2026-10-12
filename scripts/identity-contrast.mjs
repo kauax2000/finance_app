@@ -27,29 +27,23 @@
 // família entra pela classe `identity-N`, que publica as variáveis; até a 183
 // o script trocava `bg-identity-N`, e depois da troca de classe ele mediu a
 // família 1 seis vezes sem acusar nada.
-import { chromium } from "playwright"
+import { abrirNavegador, abrirPagina, concluir, linha, piorRazao, TEMAS } from "./lib/contrast.mjs"
 
 const PISO = 4.5
 const FAMILIAS = ["ember", "gold", "grove", "ocean", "iris", "bloom"]
 const TAMANHOS = { 24: "size-6", 40: "size-10", 56: "size-14" }
 
-const browser = await chromium.launch()
+const browser = await abrirNavegador()
 const linhas = []
-let reprovou = false
 
-for (const tema of ["light", "dark"]) {
-    const ctx = await browser.newContext({
+for (const tema of TEMAS) {
+    const { ctx, page } = await abrirPagina(browser, tema, "/designsystem/avatar", {
         viewport: { width: 1280, height: 900 },
         deviceScaleFactor: 2,
+        seletor: "[data-slot=avatar-fallback]",
+        semPortal: true,
+        espera: 600,
     })
-    await ctx.addInitScript((t) => localStorage.setItem("theme", t), tema)
-    const page = await ctx.newPage()
-    await page.goto("http://localhost:3000/designsystem/avatar", {
-        waitUntil: "domcontentloaded",
-    })
-    await page.waitForSelector("[data-slot=avatar-fallback]")
-    await page.addStyleTag({ content: "nextjs-portal{display:none}" })
-    await page.waitForTimeout(600)
 
     // Uma grade de clones do componente real: trocar a classe da superfície e a
     // do tamanho é o que o `identityToneFor` e o prop `size` fazem em produção.
@@ -99,71 +93,17 @@ for (const tema of ["light", "dark"]) {
     for (const tint of ["vivid", "soft"])
     for (let n = 1; n <= 6; n++) {
         for (const px of Object.keys(TAMANHOS)) {
-            const el = page.locator(`[data-probe="${tint}-${n}-${px}"]`)
-            const medir = async () => {
-                const png = await el.screenshot()
-                return page.evaluate(
-                    async ([b64, fg]) => {
-                        const img = new Image()
-                        img.src = "data:image/png;base64," + b64
-                        await img.decode()
-                        const c = document.createElement("canvas")
-                        c.width = img.width
-                        c.height = img.height
-                        const g = c.getContext("2d")
-                        g.drawImage(img, 0, 0)
-                        const x0 = Math.floor(c.width * 0.25)
-                        const x1 = Math.ceil(c.width * 0.75)
-                        const y0 = Math.floor(c.height * 0.35)
-                        const y1 = Math.ceil(c.height * 0.65)
-                        const d = g.getImageData(x0, y0, x1 - x0, y1 - y0).data
-
-                        // ds-kit.tsx:812-827, verbatim.
-                        const lum = ([r, gg, b]) => {
-                            const f = (u) => {
-                                const c = u / 255
-                                return c <= 0.04045
-                                    ? c / 12.92
-                                    : ((c + 0.055) / 1.055) ** 2.4
-                            }
-                            return 0.2126 * f(r) + 0.7152 * f(gg) + 0.0722 * f(b)
-                        }
-                        const razao = (a, b) => {
-                            const [hi, lo] = a > b ? [a, b] : [b, a]
-                            return (hi + 0.05) / (lo + 0.05)
-                        }
-                        const lFg = lum(fg)
-                        let pior = Infinity
-                        for (let k = 0; k < d.length; k += 4) {
-                            if (d[k + 3] < 200) continue
-                            const r = razao(lFg, lum([d[k], d[k + 1], d[k + 2]]))
-                            if (r < pior) pior = r
-                        }
-                        return +pior.toFixed(2)
-                    },
-                    [png.toString("base64"), tinta[`${tint}-${n}-${px}`]]
-                )
-            }
-            const razao = await medir()
-            if (razao < PISO) reprovou = true
-            linhas.push({
-                tema,
-                tint,
-                familia: FAMILIAS[n - 1],
-                px: +px,
-                razao,
-                ok: razao >= PISO ? "sim" : "NÃO",
+            const probe = `${tint}-${n}-${px}`
+            // A caixa onde as letras pousam: 25–75% na horizontal, 35–65% na vertical.
+            const razao = await piorRazao(page, page.locator(`[data-probe="${probe}"]`), tinta[probe], {
+                x: [0.25, 0.75],
+                y: [0.35, 0.65],
             })
+            linhas.push(linha({ tema, tint, familia: FAMILIAS[n - 1], px: +px }, razao, PISO))
         }
     }
     await ctx.close()
 }
 
 await browser.close()
-console.table(linhas)
-const pior = Math.min(...linhas.map((l) => l.razao))
-console.log(`\npior caso: ${pior.toFixed(2)}:1   piso: ${PISO}:1`)
-if (reprovou) {
-    console.error("\nReprovou: alguma célula ficou abaixo do piso AA.")
-    process.exit(1)
-}
+concluir(linhas, PISO, "alguma célula ficou abaixo do piso AA.")

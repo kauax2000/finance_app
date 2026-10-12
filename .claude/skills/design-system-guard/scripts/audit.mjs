@@ -17,6 +17,7 @@
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs"
 import { join, relative, resolve, dirname, sep } from "node:path"
 import { fileURLToPath } from "node:url"
+import { FORBIDDEN_ICON_PACKAGES } from "../../../../scripts/lib/forbidden-icon-packages.mjs"
 
 // ---------------------------------------------------------------------------
 // Tabelas de conhecimento
@@ -92,16 +93,16 @@ const RUNTIME_COLOR_FILES = [
 ]
 
 /**
- * Bibliotecas de ícone que não são a deste projeto.
- *
- * Nenhuma delas está no `package.json` — e é justamente por isso que a regra
- * existe: o custo de instalar uma é um `npm i`, e o de conviver com duas é
- * permanente. Dois conjuntos não empilham: eles têm espessura de traço, grade e
- * cantos diferentes, e uma barra com um ícone de cada lê como um erro de
- * renderização, não como uma escolha.
+ * As bibliotecas de ícone que não são a deste projeto — a mesma lista do
+ * `no-restricted-imports` do ESLint, em `scripts/lib/forbidden-icon-packages`.
+ * O `pacote/*` do ESLint vira `pacote/<subcaminho>`.
  */
-const FOREIGN_ICON_PACKAGES =
-  /from\s+["'](lucide-react|react-icons(?:\/[\w-]+)?|@radix-ui\/react-icons|@tabler\/icons-react|phosphor-react|@phosphor-icons\/react|react-feather|feather-icons|@fortawesome\/[\w-]+|@mui\/icons-material|boxicons|ionicons)["']/g
+const FOREIGN_ICON_PACKAGES = new RegExp(
+  `from\\s+["'](${FORBIDDEN_ICON_PACKAGES.map((pkg) =>
+    pkg.replace(/\/\*$/, "").replace(/[.*+?^$()|[\]\\/]/g, "\\$&") + (pkg.endsWith("/*") ? "\\/[\\w-]+" : "")
+  ).join("|")})["']`,
+  "g"
+)
 
 /**
  * Onde um `<svg>` inline **não** é um ícone, e por isso não tem substituto no
@@ -205,6 +206,47 @@ const HEROICON_SET_EXCEPTIONS = [
  */
 const SECOND_SURFACE_FILES = ["ds-doc"]
 
+/**
+ * Onde um primitivo cru (regra C) é decisão registrada no próprio arquivo, e
+ * não esquecimento. Arquivo **e** tag: o mesmo arquivo continua acusado por
+ * qualquer outro primitivo cru.
+ */
+const RAW_PRIMITIVE_EXCEPTIONS = [
+  // Linhas de menu fora de um menu (servem a folha do telefone): o
+  // `DropdownMenuItem` só existe dentro do `Menu` do Radix, e o `Button`
+  // traria a cápsula e o realce dele.
+  ["workspace-picker-menu-body", "button"],
+  // A área clicável da notificação: a linha não pode ser o botão, porque o ⋯
+  // é irmão dela, e botão dentro de botão é inválido.
+  ["layout/notifications-panel", "button"],
+  // Os chips de fatura e "Parcelada" são o gatilho focável da prévia: o
+  // `Badge` não tem `asChild`, e o `Button` somaria o realce e o afundar.
+  ["transactions/transactions-table", "button"],
+  // O seletor de cor nativo não tem peça; o `Input` lhe daria a moldura de campo.
+  ["workspace-appearance-form-fields", "input"],
+  // Substitui o layout raiz quando o resto quebrou: o CSS do sistema pode não
+  // ter carregado, e o botão é estilo em linha.
+  ["src/app/global-error.tsx", "button"],
+]
+
+/**
+ * Onde um valor arbitrário (regra D2) não tem degrau que o diga, e trocá-lo
+ * mudaria mais de 1px. Arquivo **e** valor exato.
+ */
+const ARBITRARY_VALUE_EXCEPTIONS = [
+  // A face do cartão imita o plástico: a letra gravada de 7 e 8px e o
+  // espaçamento largo do número e do nome; o menor degrau de texto tem 11px.
+  [
+    "credit-cards/registered-credit-card-face",
+    ["text-[7px]", "text-[8px]", "tracking-[0.08em]", "tracking-[0.14em]"],
+  ],
+  // As iniciais no avatar de 16px da linha: com 11px duas letras não cabem.
+  ["dashboard/dashboard-recent-transactions", ["text-[8px]"]],
+  // A pílula de linha do extrato: o `badge.tsx` registra que `text-2xs` (11px)
+  // mudaria pixel em cinco telas.
+  ["components/ui/badge.tsx", ["text-[10px]"]],
+]
+
 // ---------------------------------------------------------------------------
 // Varredura
 // ---------------------------------------------------------------------------
@@ -253,6 +295,11 @@ function semEspecimes(src) {
       // A prosa também é citação: `description="É um <fieldset> de verdade…"`
       // descreve a peça, e o `<fieldset>` dentro da frase não é marcação.
       .replace(/\b(?:description|title)="[^"]*"/g, (m) => m.replace(/[^\n]/g, " "))
+      // E a mesma prosa nas linhas da `PropsTable`, que são objeto e não JSX:
+      // `description: "… fora do <label>."`.
+      .replace(/\b(?:description|title):\s*"(?:[^"\\\n]|\\.)*"/g, (m) =>
+        m.replace(/[^\n]/g, " ")
+      )
   )
 }
 
@@ -309,6 +356,12 @@ function auditFile(absPath, project) {
   const isDrawnSvg = DRAWN_SVG_FILES.some((f) => rel.includes(f))
   const isHeroiconException = HEROICON_SET_EXCEPTIONS.some((f) => rel.includes(f))
   const isSecondSurface = SECOND_SURFACE_FILES.some((f) => rel.includes(f))
+  const rawPrimitiveOk = new Set(
+    RAW_PRIMITIVE_EXCEPTIONS.filter(([f]) => rel.includes(f)).map(([, tag]) => tag)
+  )
+  const arbitraryValueOk = new Set(
+    ARBITRARY_VALUE_EXCEPTIONS.filter(([f]) => rel.includes(f)).flatMap(([, vals]) => vals)
+  )
 
   // ── A. Componente nascendo dentro da tela ─────────────────────────────────
   // O caso central. Um componente definido em `app/` é invisível para todas as
@@ -359,6 +412,7 @@ function auditFile(absPath, project) {
       const antes = src.slice(Math.max(0, m.index - 1200), m.index)
       const pai = antes.match(/<([A-Z][\w.]*)\b[^<>]*\basChild\b[^<>]*>\s*$/)
       if (pai && !/(Trigger|Close|Anchor)$/.test(pai[1])) continue
+      if (rawPrimitiveOk.has(tag)) continue
       if (PRIMITIVE_TO_COMPONENT[tag]) {
         add(
           "C",
@@ -463,6 +517,11 @@ function auditFile(absPath, project) {
     const comparacao = /\[(?:[^\]]*\b)?(?:min|max|clamp)\(/.test(m[0])
     const temEquivalente = /^w-\[min\(100%,\s*[\d.]+(?:rem|px)\)\]$/.test(m[0])
     if ((comparacao || /\[[\d.]+%\]/.test(m[0])) && !temEquivalente) continue
+    // A fração da janela (`max-h-[50vh]`) entra pela mesma razão da
+    // porcentagem: o Tailwind só diz a janela inteira (`max-h-screen`,
+    // `max-h-dvh`). Por isso `[100vh]` e `[100dvh]` continuam acusados.
+    if (/\[(?!100[dsl]?v)[\d.]+[dsl]?v[hw]\]/.test(m[0])) continue
+    if (arbitraryValueOk.has(m[0])) continue
     add("D2", m.index, `valor arbitrário \`${m[0]}\``, m[0])
   }
 

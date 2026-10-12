@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import {
   HoverCard,
@@ -15,9 +14,8 @@ import {
 
 /** A rodada 217: as versões novas do `HoverCard`. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/hover-card.tsx")
-const TABELA = fonte("src/components/transactions/transactions-table.tsx")
+const CODIGO = lerFonte("src/components/ui/hover-card.tsx")
+const TABELA = lerFonte("src/components/transactions/transactions-table.tsx")
 
 describe("as versões do HoverCard", () => {
   it("o cabeçalho põe o avatar antes do par, centrado, e o par continua sem gap", () => {

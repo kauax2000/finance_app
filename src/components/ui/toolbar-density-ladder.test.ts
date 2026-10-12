@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 import {
   TOOLBAR_CONTROL_HEIGHTS,
@@ -24,9 +24,9 @@ const ESCADA = { xs: 24, sm: 28, md: 32, lg: 36, xl: 40 } as const
 /** `\b` casaria dentro de `min-h-11`; `h-full` não é medida da escada. */
 const DECLARA_ALTURA = /(?:^|\s)(?:min-)?h-(?!full\b)/
 
-const FONTE = readFileSync(new URL("./toolbar.tsx", import.meta.url), "utf8")
+const FONTE = lerFonte("src/components/ui/toolbar.tsx")
 /** O arquivo narra o defeito antigo, inclusive as strings que ele proíbe. */
-const CODIGO = FONTE.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "")
+const CODIGO = semComentarios(FONTE, "linha-inteira")
 
 const PECAS = [
   toolbarRowClassName,

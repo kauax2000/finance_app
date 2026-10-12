@@ -113,7 +113,7 @@ function InvoiceRow({
             >
                 <div className="flex min-w-0 flex-col gap-4">
                     <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:gap-4">
-                        <div className="w-full min-w-0 shrink-0 sm:w-[10.75rem] sm:max-w-[10.75rem]">
+                        <div className="w-full min-w-0 shrink-0 sm:w-43 sm:max-w-43">
                             <CreditCardFaceTilt className="w-full">
                                 <RegisteredCreditCardFace
                                     card={card}

@@ -1,6 +1,6 @@
-import { readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { arquivosTsx, lerFonte, semComentarios } from "@/test/fonte"
 
 /**
  * A opção e a lista do `Select` são do componente (rodada 173). Doze opções
@@ -8,15 +8,8 @@ import { describe, expect, it } from "vitest"
  * `p-1` ao respiro do viewport, e oito seletores escreviam a ausência à mão.
  */
 const RAIZ = join(process.cwd(), "src/components")
-function arquivos(dir: string): string[] {
-  return readdirSync(dir).flatMap((n) => {
-    const c = join(dir, n)
-    if (statSync(c).isDirectory()) return n === "ui" ? [] : arquivos(c)
-    return c.endsWith(".tsx") ? [c] : []
-  })
-}
-const TELAS = arquivos(RAIZ).map((f) => [f, readFileSync(f, "utf8")] as const)
-const SELECT = readFileSync(join(RAIZ, "ui/select.tsx"), "utf8")
+const TELAS = arquivosTsx(RAIZ, ["ui"]).map((f) => [f, lerFonte(f)] as const)
+const SELECT = lerFonte(join(RAIZ, "ui/select.tsx"))
 
 describe("as opções do Select", () => {
   it("1. nenhuma tela reescreve a geometria da opção nem o respiro da lista", () => {
@@ -43,7 +36,6 @@ describe("as opções do Select", () => {
     // O `ItemText` do Radix descarta `className`: só atributos chegam.
     expect(SELECT).toContain('<SelectPrimitive.ItemText data-slot="select-item-text">')
     expect(SELECT).toContain("**:data-[slot=select-item-text]:flex")
-    const semComentarios = SELECT.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, " ")
-    expect(semComentarios).not.toMatch(/\*:\[span\]:last:/)
+    expect(semComentarios(SELECT, "numa-passada")).not.toMatch(/\*:\[span\]:last:/)
   })
 })

@@ -1,14 +1,12 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import { SearchInput } from "./search-input"
 
 /** A rodada 198: uma receita de busca, três peças. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
 const trecho = (texto: string, de: string, ate: string) =>
   texto.slice(texto.indexOf(de), texto.indexOf(ate, texto.indexOf(de)))
 
@@ -17,7 +15,7 @@ const render = (props: Record<string, unknown> = {}) =>
 
 describe("o campo de busca é um desenho só", () => {
   it("o CommandInput — a busca do CommandDialog e do Combobox — é o SearchInput", () => {
-    const campo = trecho(fonte("src/components/ui/command.tsx"), "function CommandInput", "function CommandScope")
+    const campo = trecho(lerFonte("src/components/ui/command.tsx"), "function CommandInput", "function CommandScope")
     // O campo do cmdk entra como filho; a pílula, o × e a lupa são do SearchInput.
     expect(campo).toMatch(/<SearchInput[\s\S]*<CommandPrimitive\.Input[\s\S]*<\/SearchInput>/)
     expect(campo).not.toMatch(/MagnifyingGlassIcon|XMarkIcon|searchField\w+ClassName/)
@@ -27,16 +25,16 @@ describe("o campo de busca é um desenho só", () => {
     expect(campo).toContain('focusRing={pilha !== "palette"}')
     expect(campo).toContain("touchFloor = false,")
     expect(campo).toContain("data-touch-floor={touchFloor || undefined}")
-    expect(fonte("src/components/ui/command.tsx")).toContain(
+    expect(lerFonte("src/components/ui/command.tsx")).toContain(
       "pointer-coarse:has-[[data-slot=command-input-wrapper][data-touch-floor][data-size]]:[--scroll-fade-band-h:calc(--spacing(10)+--spacing(4))]"
     )
   })
 
   it("o SearchInput e o gatilho do cabeçalho vestem a receita", () => {
     const pecas = {
-      SearchInput: fonte("src/components/ui/search-input.tsx"),
+      SearchInput: lerFonte("src/components/ui/search-input.tsx"),
       // Desde a rodada 237 o gatilho do cabeçalho é o `TopBarSearch`.
-      gatilho: trecho(fonte("src/components/ui/top-bar.tsx"), "function TopBarSearch", "\n}\n"),
+      gatilho: trecho(lerFonte("src/components/ui/top-bar.tsx"), "function TopBarSearch", "\n}\n"),
     }
     for (const [nome, codigo] of Object.entries(pecas)) {
       expect(codigo, nome).toContain("searchFieldShapeClassName")
@@ -76,7 +74,7 @@ describe("o campo de busca é um desenho só", () => {
     const fn = () => undefined
     expect(render({ shortcut: "/", value: "x", onChange: fn, onClear: fn })).toContain("Limpar busca")
     // Antes da plataforma ser lida o `Kbd` não renderiza; a guarda é no fonte.
-    expect(fonte("src/components/ui/search-input.tsx")).toMatch(/<Kbd keys=\{shortcut\} aria-hidden className=\{searchFieldShortcutClassName\}/)
+    expect(lerFonte("src/components/ui/search-input.tsx")).toMatch(/<Kbd keys=\{shortcut\} aria-hidden className=\{searchFieldShortcutClassName\}/)
   })
 
   it("pending troca a lupa pela roda e marca aria-busy", () => {
@@ -87,7 +85,7 @@ describe("o campo de busca é um desenho só", () => {
 
   it("a marca só acende na superfície de campo", () => {
     expect(render({ variant: "brand" })).toMatch(/data-slot="search-input"[^>]*brand-glow/)
-    const codigo = fonte("src/components/ui/search-input.tsx")
+    const codigo = lerFonte("src/components/ui/search-input.tsx")
     expect(codigo).toMatch(/surface: Extract<SearchFieldSurface, "plate">; variant\?: "default"/)
   })
 })

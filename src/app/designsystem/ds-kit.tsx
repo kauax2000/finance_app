@@ -195,30 +195,6 @@ export function SpecChips({ items, className }: { items: readonly string[]; clas
   )
 }
 
-/** Uma linha rotulada de exemplos. */
-export function Row({
-  label,
-  className,
-  children,
-}: {
-  label?: string
-  className?: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      {label ? (
-        <span className="text-2xs font-medium tracking-wide text-muted-foreground uppercase">
-          {label}
-        </span>
-      ) : null}
-      <div className={cn("flex flex-wrap items-center gap-2", className)}>
-        {children}
-      </div>
-    </div>
-  )
-}
-
 /** Empilha filhos com folga vertical dentro do corpo de um Spec. */
 export function Stack({
   className,

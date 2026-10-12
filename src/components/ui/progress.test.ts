@@ -1,6 +1,6 @@
-import { readFileSync, readdirSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { arquivosTsx, lerFonte } from "@/test/fonte"
 
 import {
   progressIndicatorVariants,
@@ -20,15 +20,7 @@ import { BUDGET_BANDS, CARD_LIMIT_BANDS } from "@/lib/budget-bands"
  */
 
 const RAIZ = join(process.cwd(), "src")
-const FONTE = readFileSync(join(RAIZ, "components/ui/progress.tsx"), "utf8")
-
-function arquivosTsx(dir: string): string[] {
-  return readdirSync(dir).flatMap((nome) => {
-    const caminho = join(dir, nome)
-    if (statSync(caminho).isDirectory()) return arquivosTsx(caminho)
-    return caminho.endsWith(".tsx") ? [caminho] : []
-  })
-}
+const FONTE = lerFonte(join(RAIZ, "components/ui/progress.tsx"))
 
 describe("Progress", () => {
   it("1. a escada de `bands` produz o tom certo em cada faixa", () => {
@@ -132,7 +124,7 @@ describe("Progress", () => {
     // de limiar duplicado. Esta asserção é o que impede que voltem.
     const culpados = arquivosTsx(join(RAIZ, "components"))
       .filter((f) => !f.includes(join("components", "ui")))
-      .filter((f) => readFileSync(f, "utf8").includes('role="progressbar"'))
+      .filter((f) => lerFonte(f).includes('role="progressbar"'))
     expect(culpados).toStrictEqual([])
   })
 })

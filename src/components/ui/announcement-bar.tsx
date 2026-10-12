@@ -1,17 +1,13 @@
 "use client"
 
-import {
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
-  SparklesIcon,
-  XCircleIcon,
-  XMarkIcon,
-} from "@heroicons/react/16/solid"
+import { XMarkIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
+// Os ícones por tom são os do `Alert`, e pela mesma razão: o destrutivo não é
+// o triângulo.
+import { TONE_ICON } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 
 /**
@@ -177,16 +173,6 @@ type BarBase = React.ComponentProps<"div"> &
     onDismiss?: () => void
     dismissLabel?: string
   }
-
-/** Os mesmos do `Alert`, e pela mesma razão: o destrutivo não é o triângulo. */
-const TONE_ICON = {
-  default: null,
-  info: <InformationCircleIcon />,
-  success: <CheckCircleIcon />,
-  warning: <ExclamationTriangleIcon />,
-  destructive: <XCircleIcon />,
-  brand: <SparklesIcon />,
-} as const
 
 /**
  * **`tone` e `variant="brand"` são excludentes**, e o tipo cobra — o

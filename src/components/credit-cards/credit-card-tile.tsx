@@ -87,7 +87,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
 
                 <CardContent className="flex flex-col gap-3 md:flex-row md:items-stretch md:gap-4">
                     <div className="flex shrink-0 flex-col items-center gap-2">
-                        <CreditCardFaceTilt className="mx-auto w-full max-w-[16rem] shrink-0 md:mx-0 md:w-56">
+                        <CreditCardFaceTilt className="mx-auto w-full max-w-64 shrink-0 md:mx-0 md:w-56">
                             <RegisteredCreditCardFace
                                 card={card}
                                 size="sm"
@@ -203,7 +203,7 @@ export function CreditCardTileSkeleton() {
             </CardHeader>
             <CardContent className="flex flex-col gap-3 md:flex-row md:items-stretch md:gap-4">
                 <div className="flex shrink-0 flex-col items-center gap-2">
-                    <Skeleton className="mx-auto aspect-[1.586] w-full max-w-[16rem] rounded-2xl md:mx-0 md:w-56" />
+                    <Skeleton className="mx-auto aspect-[1.586] w-full max-w-64 rounded-2xl md:mx-0 md:w-56" />
                     <Skeleton className="h-3.5 w-28" />
                 </div>
                 <div className="min-w-0 flex-1 space-y-3">

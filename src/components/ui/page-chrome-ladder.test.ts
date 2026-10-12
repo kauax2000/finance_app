@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { esperarCrescente, esperarDistintos } from "@/test/regras"
 
 import {
   containerGutters,
@@ -33,8 +34,7 @@ const SECTION_SIZES = ["sm", "md", "lg"] as const
 
 describe("PageHeader", () => {
   it("tem três degraus, e nenhum par produz a mesma string", () => {
-    const classes = HEADER_SIZES.map((size) => pageHeaderVariants({ size }))
-    expect(new Set(classes).size).toBe(HEADER_SIZES.length)
+    esperarDistintos(HEADER_SIZES.map((size) => pageHeaderVariants({ size })))
   })
 
   it("cada degrau declara --page-title nas duas larguras", () => {
@@ -52,8 +52,7 @@ describe("PageHeader", () => {
       )
       return Number(m?.[1])
     })
-    expect(base).toEqual([...base].sort((a, b) => a - b))
-    expect(new Set(base).size).toBe(base.length)
+    esperarCrescente(base, { estrito: true })
   })
 
   /**
@@ -94,8 +93,7 @@ describe("PageHeader", () => {
 
 describe("PageSection", () => {
   it("tem três degraus, e nenhum par produz a mesma string", () => {
-    const classes = SECTION_SIZES.map((size) => pageSectionVariants({ size }))
-    expect(new Set(classes).size).toBe(SECTION_SIZES.length)
+    esperarDistintos(SECTION_SIZES.map((size) => pageSectionVariants({ size })))
   })
 
   /**
@@ -170,9 +168,7 @@ describe("Container", () => {
   })
 
   it("nenhum par de degraus produz a mesma largura", () => {
-    expect(new Set(Object.values(containerSizes)).size).toBe(
-      Object.keys(containerSizes).length
-    )
+    esperarDistintos(Object.values(containerSizes))
   })
 
   /**

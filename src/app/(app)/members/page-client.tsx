@@ -150,7 +150,7 @@ const membersPageSkeleton = (
                             <Skeleton className="h-4 w-28" />
                         </div>
                         <Skeleton className="h-3 w-full max-w-sm" />
-                        <Skeleton className="mt-3 h-9 w-full max-w-[14rem] rounded-full" />
+                        <Skeleton className="mt-3 h-9 w-full max-w-56 rounded-full" />
                     </div>
                     <CardNote>
                         <Skeleton className="mt-0.5 size-3.5 shrink-0 rounded" />

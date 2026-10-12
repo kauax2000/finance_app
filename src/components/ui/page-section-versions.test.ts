@@ -1,16 +1,13 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
+import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
 import { pageSectionVariants } from "./page-section"
 
 /** A rodada 233: o redesenho, as peças e os comportamentos do `PageSection`. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/page-section.tsx")
-  .replace(/\/\*[\s\S]*?\*\//g, "")
-  .replace(/^\s*\/\/.*$/gm, "")
-const CSS = fonte("src/app/globals.css")
+const CODIGO = semComentarios(lerFonte("src/components/ui/page-section.tsx"), "linha-inteira")
+const CSS = lerFonte("src/app/globals.css")
 
 describe("o redesenho", () => {
   it("a ação desce ao degrau sm sozinha, e sobe a 40 no dedo", () => {
@@ -26,9 +23,7 @@ describe("o redesenho", () => {
   it("a cascata é opt-in e mora numa @utility depois do no-scrollbar", () => {
     expect(pageSectionVariants({})).not.toContain("page-section-reveal")
     expect(pageSectionVariants({ reveal: true })).toContain("page-section-reveal")
-    const i = CSS.indexOf("@utility page-section-reveal")
-    expect(i).toBeGreaterThan(CSS.indexOf("@utility no-scrollbar"))
-    const bloco = CSS.slice(i, CSS.indexOf("\n}\n", i))
+    const bloco = esperarDepoisDeNoScrollbar(CSS, "@utility page-section-reveal")
     expect(bloco).toContain("animation: page-section-rise 520ms")
     expect(CSS).toMatch(/@keyframes page-section-rise \{[^}]*translate: 0 12px/)
     expect(bloco).toContain("prefers-reduced-motion")
@@ -86,6 +81,6 @@ describe("os comportamentos", () => {
   it("preso: o mecanismo e a placa da Toolbar sticky, só presa", () => {
     expect(CODIGO).toContain("useStickyBar(ref, preso, false, topo)")
     expect(CODIGO).toContain("group-data-stuck/page-section-header:opacity-100")
-    expect(fonte("src/components/ui/toolbar.tsx")).toContain("usePresa as useStickyBar")
+    expect(lerFonte("src/components/ui/toolbar.tsx")).toContain("usePresa as useStickyBar")
   })
 })

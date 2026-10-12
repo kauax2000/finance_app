@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
+import { esperarDistintos, esperarSemClasseMontada } from "@/test/regras"
 
 import { bottomBarVariants } from "./bottom-bar"
 
@@ -21,14 +21,9 @@ import { bottomBarVariants } from "./bottom-bar"
  * se acusaria sozinha.
  */
 
-const CODIGO = readFileSync(
-  join(process.cwd(), "src/components/ui/bottom-bar.tsx"),
-  "utf8"
-)
-  .replace(/\/\*[\s\S]*?\*\//g, "")
-  .replace(/\/\/.*$/gm, "")
+const CODIGO = semComentarios(lerFonte("src/components/ui/bottom-bar.tsx"))
 
-const CSS = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+const CSS = lerFonte("src/app/globals.css")
 
 const alturaEm = (classes: string) => {
   const m = classes.match(/\[--bottom-bar-h:([\d.]+)rem\]/)
@@ -40,7 +35,7 @@ const ROTULOS = [false, true] as const
 describe("régua do BottomBar", () => {
   it("1. os degraus são degraus, e nenhum par produz a mesma string", () => {
     const strings = ROTULOS.map((labels) => bottomBarVariants({ labels }))
-    expect(new Set(strings).size).toBe(strings.length)
+    esperarDistintos(strings)
 
     const alturas = strings.map(alturaEm)
     expect(alturas).toEqual([3.5, 4])
@@ -161,7 +156,7 @@ describe("régua do BottomBar", () => {
     // é valor de variável em runtime — o que o `Tabs` e a `Sidebar` fazem.
     // Essas linhas saem antes da varredura; qualquer outra interpolação reprova.
     const semValoresDeVariavel = CODIGO.replace(/^.*\.setProperty\(.*$/gm, "")
-    expect(semValoresDeVariavel).not.toMatch(/`[^`]*\$\{[^}]*\}[^`]*`/)
+    esperarSemClasseMontada(semValoresDeVariavel)
   })
 
   it("13. as colunas derivam da contagem de filhos", () => {

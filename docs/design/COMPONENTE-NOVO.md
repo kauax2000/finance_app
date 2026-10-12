@@ -26,7 +26,7 @@ Nada se presume de memória. Antes da primeira linha:
    que o componente vai substituir. Cada coisa escrita à mão em duas telas é uma
    versão ou uma peça; cada `className` que desmonta o componente para caber é
    uma peça que falta.
-3. **A camada**, pela régua do `LAYER` em `registry.ts`: átomo é indivisível,
+3. **A camada**, pela régua das camadas no topo de `registry.ts`: átomo é indivisível,
    molécula é feita de átomos, organismo de moléculas, template dispõe a tela.
    O `taxonomy.test.ts` tranca a parte mecânica.
 4. **O registry do shadcn antes de código autoral** (invariante 5), com o
@@ -162,7 +162,7 @@ Regras de conteúdo:
 ## 5. Registro, na mesma mudança
 
 - `src/components/ui/<comp>.tsx` (invariante 6: com o ok do dono).
-- `registry.ts`: a camada no `LAYER`, a entrada com a descrição de uma linha
+- `registry.ts`: a entrada dentro do `layer(...)` da camada, com a descrição de uma linha
   e **todas** as peças exportadas.
 - `src/app/designsystem/docs/<comp>.tsx` e `npm run ds:docs-map`.
 - **`src/components/ui/<comp>-versions.test.ts`** novo (confira antes que não

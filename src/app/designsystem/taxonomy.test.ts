@@ -1,7 +1,8 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs"
+import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import { CATEGORY_ORDER, REGISTRY } from "./registry"
 
@@ -20,7 +21,7 @@ import { CATEGORY_ORDER, REGISTRY } from "./registry"
  * asserção mede é só a parte mecânica dela — o grafo de imports dentro de
  * `ui/` —, e a parte que o grafo não alcança (a anatomia interna de um
  * `Select`, a diferença entre especializar e compor) é decisão de quem
- * classifica, escrita no `LAYER`.
+ * classifica, escrita no `layer()` de cada bloco do `REGISTRY`.
  */
 
 const UI = "src/components/ui"
@@ -31,7 +32,7 @@ const UI = "src/components/ui"
  * (medido), e um `./button` futuro escaparia daqui.
  */
 function deps(slug: string): string[] {
-  const src = readFileSync(join(UI, `${slug}.tsx`), "utf8")
+  const src = lerFonte(join(UI, `${slug}.tsx`))
   return [
     ...new Set(
       [...src.matchAll(/from\s+"@\/components\/ui\/([a-z0-9-]+)"/g)].map(
@@ -152,7 +153,7 @@ describe("taxonomia", () => {
    * a rodada 231 mora dentro do `data-table`. A régua continua a mesma: a
    * moldura compõe `Card`, `Table` e (no uso real) `Pagination` — dois ou
    * mais organismos, dispostos num layout —, que é a definição de Frost que o
-   * comentário do `LAYER` já cita: "os templates são feitos de organismos".
+   * comentário do `registry.ts` já cita: "os templates são feitos de organismos".
    */
   it("5. Templates é o nível de página, e não uma terceira gaveta", () => {
     const templates = REGISTRY.filter((e) => e.category === "Templates")

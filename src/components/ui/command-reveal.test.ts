@@ -1,19 +1,16 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
-
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
+import { lerFonte } from "@/test/fonte"
+import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
 describe("as linhas da paleta sobem ao aparecer (rodada 139)", () => {
-  const css = fonte("src/app/globals.css")
-  const paleta = fonte("src/components/ui/command.tsx")
+  const css = lerFonte("src/app/globals.css")
+  const paleta = lerFonte("src/components/ui/command.tsx")
 
   it("a utility mora depois de no-scrollbar e lê --command-reveal, 0s por padrão", () => {
-    const util = css.indexOf("@utility command-reveal {")
-    expect(util).toBeGreaterThan(css.indexOf("@utility no-scrollbar"))
-    const bloco = css.slice(util, css.indexOf("@utility", util + 1))
+    const bloco = esperarDepoisDeNoScrollbar(css, "@utility command-reveal {", { fecha: "@utility" })
     expect(bloco).toMatch(/disclosure-rise var\(--command-reveal, 0s\) var\(--ease-spring\)/)
-    expect(bloco).toMatch(/nth-child\(n \+ 5\)/)
+    // A escada para na quinta linha: 30ms por degrau, teto de quatro (120ms).
+    expect(bloco).toMatch(/& \[cmdk-item\] \{\s*--stagger-base: 0ms;\s*--stagger-step: 30ms;\s*--stagger-cap: 4;\s*@apply stagger-ladder;/)
   })
 
   it("a lista veste a utility e só a pilha liga a duração", () => {

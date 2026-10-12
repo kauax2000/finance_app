@@ -5,7 +5,6 @@ import type { VariantProps } from "class-variance-authority"
 import { ToggleGroup as ToggleGroupPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
-import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import { TRAJETO_MACIO, viajarLiquido, type CaixaLiquida } from "@/lib/liquid-move"
 import {
   ToggleContent,
@@ -143,7 +142,7 @@ function ToggleGroup({
   const [medido, setMedido] = React.useState(false)
   const indicatorReady = viaja && medido
 
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     const trilha = trilhaRef.current
     if (!trilha || !viaja) return
     const medir = () => {

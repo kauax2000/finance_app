@@ -2,13 +2,12 @@
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
-import { animate, useReducedMotion } from "motion/react"
 import { ArrowDownIcon, ArrowUpIcon, MinusIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
+import { useCountUp } from "@/hooks/use-count-up"
 import { currencyBRL, numberBR, percentPointsBR } from "@/lib/formatters"
 import { BUDGET_BANDS } from "@/lib/budget-bands"
-import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import { Card } from "@/components/ui/card"
 import { ChartSparkline, splitPercents } from "@/components/ui/chart"
 import { Progress, type ProgressBands } from "@/components/ui/progress"
@@ -236,34 +235,14 @@ function NumeroQueConta({
   signed?: boolean
   compact?: boolean
 }) {
-  const reduzido = useReducedMotion()
-  const ref = React.useRef<HTMLSpanElement>(null)
-  const mostrado = React.useRef<number | null>(null)
   const inteiro = format === "number" && Number.isInteger(value)
   const final = formatarValor(value, format, { signed, compact, inteiro })
-
-  useIsomorphicLayoutEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const escrever = (v: number) => {
-      el.textContent = formatarValor(v, format, { signed, compact, inteiro })
-    }
-    const de = mostrado.current ?? 0
-    if (reduzido || de === value) {
-      mostrado.current = value
-      escrever(value)
-      return
-    }
-    const controles = animate(de, value, {
-      duration: mostrado.current === null ? CONTAGEM_ENTRADA : CONTAGEM_TROCA,
-      ease: CONTAGEM_CURVA,
-      onUpdate: (v) => {
-        mostrado.current = v
-        escrever(v)
-      },
-    })
-    return () => controles.stop()
-  }, [value, format, signed, compact, inteiro, reduzido])
+  const ref = useCountUp(value, (v) => formatarValor(v, format, { signed, compact, inteiro }), {
+    chave: `${format}:${signed}:${compact}:${inteiro}`,
+    entrada: CONTAGEM_ENTRADA,
+    troca: CONTAGEM_TROCA,
+    ease: CONTAGEM_CURVA,
+  })
 
   return (
     <span data-slot="stat-card-number" className="inline-grid">

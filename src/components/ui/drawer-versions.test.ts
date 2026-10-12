@@ -1,11 +1,9 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 /** A rodada 212: as versões novas do `Drawer`. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/drawer.tsx")
+const CODIGO = lerFonte("src/components/ui/drawer.tsx")
 
 describe("as versões do Drawer", () => {
   it("dentro de outra gaveta, a raiz vira aninhada sozinha", () => {
@@ -21,7 +19,7 @@ describe("as versões do Drawer", () => {
 
   it("o fundo que encolhe tem o invólucro na raiz do app", () => {
     expect(CODIGO).toContain("shouldScaleBackground={scaleBackground}")
-    expect(fonte("src/app/layout.tsx")).toContain('data-vaul-drawer-wrapper=""')
+    expect(lerFonte("src/app/layout.tsx")).toContain('data-vaul-drawer-wrapper=""')
   })
 
   it("a altura acompanha com um observador só: o elemento mora em estado, não numa ref de função", () => {
@@ -46,13 +44,13 @@ describe("as versões do Drawer", () => {
   })
 
   it("os menus do telefone são gavetas, e o vidro escrito à mão saiu", () => {
-    const fab = fonte("src/components/layout/quick-actions.tsx")
+    const fab = lerFonte("src/components/layout/quick-actions.tsx")
     expect(fab).toMatch(/if \(isFab\) \{[\s\S]*?<Drawer[\s\S]*?<DrawerActions>/)
     expect(fab).not.toContain("MOBILE_GLASS")
-    const conta = fonte("src/components/layout/mobile-account-menu.tsx")
+    const conta = lerFonte("src/components/layout/mobile-account-menu.tsx")
     expect(conta).toContain("<Drawer open={open} onOpenChange={setOpen} scaleBackground>")
     expect(conta).not.toMatch(/from "@\/components\/ui\/popover"|MOBILE_GLASS|createCenteredViewportAnchor/)
-    expect(fonte("src/lib/mobile-glass-surface.ts")).not.toContain("MOBILE_GLASS_MENU")
+    expect(lerFonte("src/components/ui/bottom-bar.tsx")).not.toContain("MOBILE_GLASS_MENU")
   })
 
   it("os comentários não contam mais o que deixou de ser verdade", () => {
@@ -73,7 +71,7 @@ describe("toda gaveta do telefone é a flush (rodada 245)", () => {
       "src/components/layout/mobile-account-menu.tsx",
     ]
     for (const caminho of consumidores) {
-      expect(fonte(caminho), caminho).not.toMatch(/<DrawerContent[^>]*variant="inset"/)
+      expect(lerFonte(caminho), caminho).not.toMatch(/<DrawerContent[^>]*variant="inset"/)
     }
     // E o padrão continua sendo a flush.
     expect(CODIGO).toMatch(/defaultVariants: \{\s*fill: false,\s*variant: "flush"/)

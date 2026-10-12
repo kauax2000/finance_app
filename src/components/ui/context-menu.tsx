@@ -12,6 +12,11 @@ import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { ScrollFadeArrows } from "@/lib/scroll-fade-arrows"
 import {
+  MenuTitleContext,
+  MenuTitleHeader,
+  useMenuTitleId,
+} from "@/lib/menu-title"
+import {
   menuSubSurfaceClassName,
   menuSurfaceClassName,
   menuIndicatorItemClassName,
@@ -165,11 +170,6 @@ function ContextMenuRadioGroup({
   )
 }
 
-/** Registra o título do cabeçalho no menu, para nomeá-lo. */
-const ContextMenuTitleContext = React.createContext<
-  ((id: string | null) => void) | null
->(null)
-
 // Abre do cursor e volta para ele (rodada 248, `@utility context-menu-burst`).
 const contextMenuContentVariants = cva([menuSurfaceClassName, CONTEXT_POPPER, "context-menu-burst"], {
   variants: {
@@ -218,9 +218,9 @@ function ContextMenuContent({
             data-slot="context-menu-header-slot"
             className="relative z-10 shrink-0 border-b border-border"
           >
-            <ContextMenuTitleContext.Provider value={setTituloId}>
+            <MenuTitleContext.Provider value={setTituloId}>
               {header}
-            </ContextMenuTitleContext.Provider>
+            </MenuTitleContext.Provider>
           </div>
         ) : null}
         <div
@@ -241,38 +241,14 @@ function ContextMenuContent({
  * "3 lançamentos selecionados"). Título sobre legenda é par de identidade —
  * sem `gap`. O título nomeia o menu.
  */
-function ContextMenuHeader({
-  className,
-  title,
-  description,
-  ...props
-}: Omit<React.ComponentProps<"div">, "title"> & {
-  title: React.ReactNode
-  description?: React.ReactNode
-}) {
-  const id = React.useId()
-  const registrar = React.useContext(ContextMenuTitleContext)
-  React.useEffect(() => {
-    registrar?.(id)
-    return () => registrar?.(null)
-  }, [registrar, id])
-
-  return (
-    <div
-      data-slot="context-menu-header"
-      className={cn("flex min-w-0 flex-col px-3 py-2 text-sm", className)}
-      {...props}
-    >
-      <span id={id} className="truncate font-medium">
-        {title}
-      </span>
-      {description ? (
-        <span className="truncate text-xs text-muted-foreground nums">
-          {description}
-        </span>
-      ) : null}
-    </div>
-  )
+function ContextMenuHeader(
+  props: Omit<React.ComponentProps<"div">, "title"> & {
+    title: React.ReactNode
+    description?: React.ReactNode
+  }
+) {
+  const id = useMenuTitleId()
+  return <MenuTitleHeader slot="context-menu-header" titleId={id} {...props} />
 }
 
 /**

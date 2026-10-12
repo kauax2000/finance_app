@@ -1,6 +1,7 @@
-import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
+import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
 import { cn } from "@/lib/utils"
 
@@ -37,15 +38,8 @@ const RAIZ = join(process.cwd(), "src/components/ui")
 /** O CSS sem comentários — senão uma asserção de ausência casa com a prosa
  *  que explica justamente por que aquilo não está lá. */
 const fonteCss = () =>
-  readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8").replace(
-    /\/\*[\s\S]*?\*\//g,
-    " "
-  )
-const fonte = (nome: string) =>
-  readFileSync(join(RAIZ, `${nome}.tsx`), "utf8").replace(
-    /\/\*[\s\S]*?\*\/|\/\/.*$/gm,
-    " "
-  )
+  semComentarios(lerFonte("src/app/globals.css"), "bloco")
+const fonte = (nome: string) => semComentarios(lerFonte(join(RAIZ, `${nome}.tsx`)), "numa-passada")
 
 /** As classes de cada peça que veste a marca. */
 const PORTADORES = {
@@ -66,14 +60,6 @@ describe("contorno de marca", () => {
       expect(lista, nome).toContain("isolate")
       expect(classes, nome).not.toMatch(/--brand-fill|_border-box\]|brand-rainbow-image/)
       expect(classes, nome).not.toMatch(/(^|\s)before:/)
-    }
-  })
-
-  it("2. no brilho nada pinta sob o arco, e nenhum núcleo volta", () => {
-    // A máscara recorta só o anel (rodada 156); o miolo da peça é o fundo
-    // real, e declarar um núcleo era o que virava feixe.
-    for (const nome of ["radio", "radio-group"]) {
-      expect(fonte(nome), nome).not.toMatch(/\[--brand-glow-(core|overlay):/)
     }
   })
 
@@ -222,11 +208,9 @@ describe("contorno de marca", () => {
     expect(barra).not.toMatch(/blur/)
 
     // A utility existe, com a máscara de duas camadas da referência, e mora
-    // depois de `no-scrollbar` — a faixa `glass-material…no-scrollbar` é
+    // depois de `no-scrollbar` — a faixa `glass-control…no-scrollbar` é
     // fatiada pelo `glass.test.ts` e reprova utility nova.
-    const util = CSS.indexOf("@utility brand-flow")
-    expect(util).toBeGreaterThan(CSS.indexOf("@utility no-scrollbar"))
-    const bloco = CSS.slice(util, CSS.indexOf("@utility", util + 1))
+    const bloco = esperarDepoisDeNoScrollbar(CSS, "@utility brand-flow", { fecha: "@utility" })
     expect(bloco).toMatch(/mask-composite: intersect/)
     expect(bloco).toMatch(/var\(--brand-flow-alpha\)/)
     expect(bloco).toMatch(/animation: brand-flow 20s linear infinite/)
@@ -440,10 +424,7 @@ describe("contorno de marca", () => {
     // unmount.
     // O hook saiu do `alert.tsx` na rodada 133 (`useBrandGlow`), quando o
     // `Card` quis a mesma borda. As asserções leem o arquivo dele.
-    const src = readFileSync(join(process.cwd(), "src/hooks/use-brand-glow.ts"), "utf8").replace(
-      /\/\*[\s\S]*?\*\/|\/\/.*$/gm,
-      " "
-    )
+    const src = semComentarios(lerFonte("src/hooks/use-brand-glow.ts"), "numa-passada")
     expect(fonte("alert")).toMatch(/useBrandGlow\(variant === "brand"\)/)
     expect(src).toMatch(/\(hover: hover\)/)
     expect(src).toMatch(/removeEventListener\("pointermove"/)

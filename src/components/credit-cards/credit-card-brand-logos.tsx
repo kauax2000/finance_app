@@ -7,7 +7,7 @@ import type React from "react"
 import { cn } from "@/lib/utils"
 
 export const brandLogoFrameClass =
-    "relative flex h-7 w-[3.35rem] shrink-0 items-center justify-center overflow-hidden rounded-md border border-border/50 bg-white p-1 shadow-sm ring-1 ring-black/[0.06] dark:border-border/60 dark:bg-zinc-900 dark:ring-white/10"
+    "relative flex h-7 w-13.5 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border/50 bg-white p-1 shadow-sm ring-1 ring-black/[0.06] dark:border-border/60 dark:bg-zinc-900 dark:ring-white/10"
 
 export type BrandLogoVariant = "chip" | "mark"
 
@@ -50,8 +50,8 @@ function makeNetworkLogo(Mark: ComponentType<{ className?: string }>): Component
                 <Mark
                     className={cn(
                         variant === "mark"
-                            ? "h-7 w-[3.9rem] drop-shadow-sm"
-                            : "h-6 w-full max-w-[3.05rem]",
+                            ? "h-7 w-15.5 drop-shadow-sm"
+                            : "h-6 w-full max-w-12.25",
                         "shrink-0"
                     )}
                 />
@@ -189,8 +189,8 @@ export function LogoElo({
         <svg
             className={
                 variant === "mark"
-                    ? "h-7 w-[3.9rem] drop-shadow-sm"
-                    : "h-6 w-full max-w-[3.05rem]"
+                    ? "h-7 w-15.5 drop-shadow-sm"
+                    : "h-6 w-full max-w-12.25"
             }
             viewBox="0 0 64 40"
             preserveAspectRatio="xMidYMid meet"
@@ -237,8 +237,8 @@ export function LogoHipercard({
         <svg
             className={
                 variant === "mark"
-                    ? "h-7 w-[3.9rem] drop-shadow-sm"
-                    : "h-6 w-full max-w-[3.05rem]"
+                    ? "h-7 w-15.5 drop-shadow-sm"
+                    : "h-6 w-full max-w-12.25"
             }
             viewBox="0 0 64 28"
             preserveAspectRatio="xMidYMid meet"

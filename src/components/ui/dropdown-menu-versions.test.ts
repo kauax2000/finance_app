@@ -1,12 +1,10 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 /** A rodada 213: as versões novas do `DropdownMenu`. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const CODIGO = fonte("src/components/ui/dropdown-menu.tsx")
-const DOC = fonte("src/app/designsystem/docs/dropdown-menu.tsx")
+const CODIGO = lerFonte("src/components/ui/dropdown-menu.tsx")
+const DOC = lerFonte("src/app/designsystem/docs/dropdown-menu.tsx")
 
 describe("as versões do DropdownMenu", () => {
   it("no telefone, com mobile=sheet, a raiz é o Drawer e cada peça se desenha como folha", () => {
@@ -60,14 +58,14 @@ describe("as versões do DropdownMenu", () => {
       ["context-menu", "ContextMenuPrimitive"],
       ["menubar", "MenubarPrimitive"],
     ]) {
-      const codigo = readFileSync(join(process.cwd(), `src/components/ui/${arquivo}.tsx`), "utf8")
+      const codigo = lerFonte(`src/components/ui/${arquivo}.tsx`)
       expect(codigo, arquivo).toMatch(new RegExp(`<${prim}\\.Portal>\\s*<${prim}\\.SubContent`))
     }
   })
 
   it("o menu com busca mede como o Combobox: pílula de 32 a 8px, linhas de 32 a 8px", () => {
-    const codigo = readFileSync(join(process.cwd(), "src/components/ui/dropdown-menu.tsx"), "utf8")
-    const combobox = readFileSync(join(process.cwd(), "src/components/ui/combobox.tsx"), "utf8")
+    const codigo = lerFonte("src/components/ui/dropdown-menu.tsx")
+    const combobox = lerFonte("src/components/ui/combobox.tsx")
     expect(codigo).toContain('const LINHA_DA_BUSCA = "gap-2 px-2 py-2"')
     expect(combobox).toContain('"gap-2 px-2 py-2 pr-8"')
     expect(combobox).toContain('"px-2 pt-(--scroll-fade-band-h) pb-2"')

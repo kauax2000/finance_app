@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import Link from "next/link"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
@@ -10,9 +9,11 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TRAJETO_MACIO, viajarLiquido, type CaixaLiquida } from "@/lib/liquid-move"
 import { glassControlSurfaceClassName } from "@/lib/glass-classes"
-import { MOBILE_GLASS_SURFACE_CLASSNAME } from "@/lib/mobile-glass-surface"
 import type { HeroIcon } from "@/types/navigation"
 import { cn } from "@/lib/utils"
+
+/** O vidro da ilha: a receita `.mobile-glass-surface` do `globals.css`, com o anel das `Tabs`. */
+const MOBILE_GLASS_SURFACE_CLASSNAME = "mobile-glass-surface shadow-lg ring-1 ring-foreground/10"
 
 /**
  * A barra de baixo do telefone — a irmã do `TopBar`.
@@ -286,7 +287,7 @@ function BottomBarTabs({
    * sobre elas, e só acontece quando o item **muda** (redimensionar só
    * reposiciona).
    */
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     const trilha = trilhaRef.current
     if (!trilha) return
     // Trocar o eixo `labels` não é trocar de aba: o rótulo começa do zero.

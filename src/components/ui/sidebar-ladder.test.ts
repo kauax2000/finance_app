@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
+import { realcesSemParDeToque } from "@/test/regras"
 
 /**
  * A régua da barra lateral, trancada.
@@ -33,16 +33,10 @@ import { describe, expect, it } from "vitest"
  * Zero render: todas leem o fonte, sem comentários.
  */
 
-const FONTE = readFileSync(
-  join(process.cwd(), "src/components/ui/sidebar.tsx"),
-  "utf8"
-)
+const FONTE = lerFonte("src/components/ui/sidebar.tsx")
 
 /** Os comentários citam de propósito o que o arquivo deixou de fazer. */
-const CODIGO = FONTE.replace(/\/\*[\s\S]*?\*\//g, " ").replace(
-  /(^|[^:])\/\/.*$/gm,
-  "$1"
-)
+const CODIGO = semComentarios(FONTE, "fora-de-url")
 
 /** Os degraus que o `cva` do botão de menu de fato emite. */
 const DEGRAUS = ["sm", "md", "lg"] as const
@@ -179,10 +173,7 @@ describe("régua da Sidebar", () => {
     // "Carteiras", a dica continuava escrita "Início" e o `aria-describedby`
     // continuava no primeiro botão. A asserção mora nesta suíte porque é aqui
     // que o custo aparece.
-    const tooltip = readFileSync(
-      join(process.cwd(), "src/components/ui/tooltip.tsx"),
-      "utf8"
-    )
+    const tooltip = lerFonte("src/components/ui/tooltip.tsx")
     expect(tooltip).toMatch(/disableHoverableContent = true/)
   })
 
@@ -203,10 +194,7 @@ describe("régua da Sidebar", () => {
     expect(CODIGO).toContain("--sidebar-inset-rule:1px")
     expect(CODIGO).toContain("--sidebar-inset-rule:0px")
     // Desde a rodada 80 quem desenha o cabeçalho é o `TopBar`.
-    const header = readFileSync(
-      join(process.cwd(), "src/components/ui/top-bar.tsx"),
-      "utf8"
-    )
+    const header = lerFonte("src/components/ui/top-bar.tsx")
     expect(header).toContain("var(--sidebar-inset-rule,1px)")
   })
 
@@ -215,7 +203,7 @@ describe("régua da Sidebar", () => {
     // calha, então nada passa por baixo dela — o vidro era o aro e as nuvens
     // pintados sobre uma lâmina, e a forma da casa hoje é a placa solta do
     // `CommandDialog`. A `@utility glass` continua: outras peças a vestem.
-    const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+    const css = lerFonte("src/app/globals.css")
     expect(css).toContain("@utility glass")
     expect(CODIGO).not.toContain("group-data-[variant=floating]:glass")
     expect(CODIGO).not.toMatch(/inset-shadow/)
@@ -242,7 +230,7 @@ describe("régua da Sidebar", () => {
     //
     // Mesma mecânica de `--secondary-hover`, que puxa a base na direção do
     // próprio contato em vez de usar um alfa único para os dois.
-    const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+    const css = lerFonte("src/app/globals.css")
     const claro = css.slice(0, css.indexOf(".dark {"))
     const escuro = css.slice(css.indexOf(".dark {"))
 
@@ -313,7 +301,7 @@ describe("régua da Sidebar", () => {
     // E são **três** camadas: houve um brilho diagonal em `soft-light`, e ele
     // saiu. Numa superfície de navegação a faixa cruza a lista de links e
     // compete com ela.
-    const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+    const css = lerFonte("src/app/globals.css")
     const receita = css.slice(
       css.indexOf("@utility glass"),
       css.indexOf("@utility glass-control")
@@ -355,15 +343,7 @@ describe("régua da Sidebar", () => {
     // ela varre `className="…"`, e aqui tudo mora dentro de `cva()` e `cn()`.
     // É o ponto cego que o `AGENTS.md` já registra três vezes, e foi ele que
     // deixou a variante `outline` acendendo a sombra só no cursor.
-    const semPar: string[] = []
-    for (const [, classes] of CODIGO.matchAll(/"([^"]*hover:(?:bg|shadow)-[^"]*)"/g)) {
-      for (const familia of ["bg", "shadow"]) {
-        const acendeNoCursor = new RegExp(`(?:^|\\s|:)hover:${familia}-`).test(classes)
-        const acendeNoDedo = new RegExp(`(?:^|\\s|:)active:${familia}-`).test(classes)
-        if (acendeNoCursor && !acendeNoDedo) semPar.push(`${familia}: ${classes.slice(0, 70)}…`)
-      }
-    }
-    expect(semPar).toEqual([])
+    expect(realcesSemParDeToque(CODIGO)).toEqual([])
   })
 
   it("21. o realce do ativo é o token, nas três variantes, e não alfa de vidro", () => {
@@ -434,10 +414,7 @@ describe("régua da Sidebar", () => {
     // soltas anda na mola** (rodada 221): ele é `fixed` e não reflui nada,
     // então o quique fica nas placas e não sacode o conteúdo. A rente, que
     // encosta no conteúdo, fica na curva.
-    const cabecalho = readFileSync(
-      join(process.cwd(), "src/components/ui/top-bar.tsx"),
-      "utf8"
-    )
+    const cabecalho = lerFonte("src/components/ui/top-bar.tsx")
     expect(cabecalho).toMatch(
       /transition-\[background-color[^\]]*\] duration-\(--duration-slow\) ease-\(--ease-emphasized\)/
     )
@@ -488,10 +465,7 @@ describe("régua da Sidebar", () => {
   it("11. nenhuma tela reescreve o ritmo da lista", () => {
     // Uma tela compensando o `gap` à mão é o sinal de que o componente errou o
     // padrão — foi assim que este defeito foi achado.
-    const app = readFileSync(
-      join(process.cwd(), "src/components/layout/app-sidebar.tsx"),
-      "utf8"
-    )
+    const app = lerFonte("src/components/layout/app-sidebar.tsx")
     expect(app).not.toMatch(/<SidebarMenu[^>]*className="[^"]*gap-/)
   })
 

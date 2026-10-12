@@ -6,6 +6,7 @@ import {
   AlertDialog as AlertDialogPrimitive,
   Dialog as DialogPrimitive,
 } from "radix-ui"
+import { useComposedRefs } from "radix-ui/internal"
 import { XMarkIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
@@ -98,29 +99,16 @@ function Dialog({
 }) {
   const isMobile = useIsMobile()
   const gaveta = surface === "auto" && isMobile
-  const controlado = openProp !== undefined
-  const [interno, setInterno] = React.useState(defaultOpen ?? false)
-  const open = controlado ? openProp : interno
-  const [perguntando, setPerguntando] = React.useState(false)
-
-  const mudar = (proximo: boolean) => {
-    if (!controlado) setInterno(proximo)
-    onOpenChange?.(proximo)
-  }
-  // Todo pedido de fechar passa por aqui: Esc, véu, ×, `DialogClose` e o
-  // arraste da gaveta. Fechar por fora — o `open` que a tela controla — não.
-  const pedir = (proximo: boolean) => {
-    if (proximo) return mudar(true)
-    if (pending) return
-    if (dirty && confirmDiscard) {
-      setPerguntando(true)
-      return
-    }
-    mudar(false)
-  }
+  const { open, pedir, pergunta } = usePedidoDeFechar({
+    open: openProp,
+    defaultOpen,
+    onOpenChange,
+    pending,
+    dirty,
+    confirmDiscard,
+  })
 
   const estado = React.useMemo(() => ({ gaveta, pending }), [gaveta, pending])
-  const textos = typeof confirmDiscard === "object" ? confirmDiscard : {}
 
   return (
     <DialogEstadoContext.Provider value={estado}>
@@ -138,20 +126,67 @@ function Dialog({
           {children}
         </DialogPrimitive.Root>
       )}
-      {confirmDiscard ? (
-        <ConfirmarDescarte
-          open={perguntando}
-          onOpenChange={setPerguntando}
-          title={textos.title}
-          description={textos.description}
-          onDiscard={() => {
-            setPerguntando(false)
-            mudar(false)
-          }}
-        />
-      ) : null}
+      {pergunta}
     </DialogEstadoContext.Provider>
   )
+}
+
+/**
+ * O aberto e o pedido de fechar, do `Dialog` e do `Sheet`. Todo pedido de
+ * fechar passa por `pedir`: Esc, véu, ×, o fechar e o arraste da gaveta.
+ * Fechar por fora — o `open` que a tela controla — não: depois de salvar,
+ * ninguém pergunta. `pergunta` é o "Descartar alterações?", para renderizar
+ * ao lado da raiz.
+ */
+function usePedidoDeFechar({
+  open: openProp,
+  defaultOpen,
+  onOpenChange,
+  pending,
+  dirty,
+  confirmDiscard,
+}: {
+  open?: boolean
+  defaultOpen?: boolean
+  onOpenChange?: (open: boolean) => void
+  pending: boolean
+  dirty: boolean
+  confirmDiscard: ConfirmDiscard
+}) {
+  const controlado = openProp !== undefined
+  const [interno, setInterno] = React.useState(defaultOpen ?? false)
+  const open = controlado ? openProp : interno
+  const [perguntando, setPerguntando] = React.useState(false)
+
+  const mudar = (proximo: boolean) => {
+    if (!controlado) setInterno(proximo)
+    onOpenChange?.(proximo)
+  }
+  const pedir = (proximo: boolean) => {
+    if (proximo) return mudar(true)
+    if (pending) return
+    if (dirty && confirmDiscard) {
+      setPerguntando(true)
+      return
+    }
+    mudar(false)
+  }
+
+  const textos = typeof confirmDiscard === "object" ? confirmDiscard : {}
+  const pergunta = confirmDiscard ? (
+    <ConfirmarDescarte
+      open={perguntando}
+      onOpenChange={setPerguntando}
+      title={textos.title}
+      description={textos.description}
+      onDiscard={() => {
+        setPerguntando(false)
+        mudar(false)
+      }}
+    />
+  ) : null
+
+  return { open, pedir, pergunta }
 }
 
 /**
@@ -242,6 +277,10 @@ function DialogClose({
   )
 }
 
+/** O véu do diálogo — o mesmo do `AlertDialog`, que o importa daqui. */
+const DIALOG_OVERLAY_CLASS =
+  "fixed inset-0 isolate z-(--z-modal) bg-overlay animation-duration-(--duration-slow) ease-(--ease-out) supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0"
+
 function DialogOverlay({
   className,
   ...props
@@ -249,10 +288,7 @@ function DialogOverlay({
   return (
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
-      className={cn(
-        "fixed inset-0 isolate z-(--z-modal) bg-overlay animation-duration-(--duration-slow) ease-(--ease-out) supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
-        className
-      )}
+      className={cn(DIALOG_OVERLAY_CLASS, className)}
       {...props}
     />
   )
@@ -325,7 +361,8 @@ if (typeof window !== "undefined") {
 /**
  * Escreve `--dialog-origin` no casco: o ponto do clique, nas coordenadas da
  * caixa dele. Sem clique recente (o teclado, o código), nada — o centro. Uma
- * vez por casco, porque o Radix recompõe a `ref` a cada render. A escala de
+ * vez por casco, porque uma `ref` de função de quem chama, refeita a cada
+ * render, recompõe a do casco junto. A escala de
  * entrada já vale quando a `ref` chega, mas em volta do centro (a origem ainda
  * não existe): o centro medido é o da caixa, e o canto sai do `offsetWidth`.
  */
@@ -341,16 +378,6 @@ function useOrigemDoClique() {
     const y = clique.y - (caixa.top + caixa.height / 2 - el.offsetHeight / 2)
     el.style.setProperty("--dialog-origin", `${Math.round(x)}px ${Math.round(y)}px`)
   }, [])
-}
-
-/** Junta a `ref` de quem chama com a do casco. */
-function juntarRefs<T>(...refs: (React.Ref<T> | undefined)[]) {
-  return (el: T | null) => {
-    for (const r of refs) {
-      if (typeof r === "function") r(el)
-      else if (r) (r as React.RefObject<T | null>).current = el
-    }
-  }
 }
 
 const dialogContentVariants = cva(
@@ -427,6 +454,7 @@ function DialogContent({
   }) {
   const { gaveta, pending } = React.useContext(DialogEstadoContext)
   const origem = useOrigemDoClique()
+  const cascoRef = useComposedRefs<HTMLDivElement>(ref, origem)
 
   // No telefone, com `surface="auto"`: a gaveta do `Sheet`. A largura não
   // vale ali, e a gaveta alta é a do formulário (`fixed`), a da tela cheia e a
@@ -453,7 +481,7 @@ function DialogContent({
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
-        ref={juntarRefs(ref, origem)}
+        ref={cascoRef}
         data-slot="dialog-content"
         data-layout={layout ?? "auto"}
         aria-busy={pending || undefined}
@@ -852,7 +880,7 @@ function DialogSteps({
 }
 
 export {
-  // A pergunta de descarte, que o `Sheet` também faz (rodada 222).
+  // A pergunta de descarte (rodada 222); o `Sheet` a faz por `usePedidoDeFechar`.
   ConfirmarDescarte,
   Dialog,
   DialogBody,
@@ -869,8 +897,10 @@ export {
   DialogSteps,
   DialogTitle,
   DialogTrigger,
+  DIALOG_OVERLAY_CLASS,
   dialogContentVariants,
   // A origem do clique, que o `AlertDialog` também usa (rodada 248).
-  juntarRefs,
   useOrigemDoClique,
+  // O pedido de fechar, que o `Sheet` também faz.
+  usePedidoDeFechar,
 }

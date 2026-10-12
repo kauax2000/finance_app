@@ -1,6 +1,5 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 /**
  * O alternador de tema, trancado na rodada 116.
@@ -24,15 +23,12 @@ import { describe, expect, it } from "vitest"
 // A receita da viagem mora em `lib/liquid-move.ts` desde a rodada 226, quando
 // o `Tabs` passou a usá-la também: o trilho é lido junto com ela.
 const FONTE =
-    readFileSync(join(process.cwd(), "src/components/ui/theme-toggle.tsx"), "utf8") +
+    lerFonte("src/components/ui/theme-toggle.tsx") +
     "\n" +
-    readFileSync(join(process.cwd(), "src/lib/liquid-move.ts"), "utf8")
+    lerFonte("src/lib/liquid-move.ts")
 /** Sem comentários: o cabeçalho deste componente cita por extenso quase tudo
  *  que se quer proibir, e varrer o texto cru testaria o comentário. */
-const CODIGO = FONTE.replace(/\/\*[\s\S]*?\*\//g, " ").replace(
-    /(^|[^:])\/\/.*$/gm,
-    "$1",
-)
+const CODIGO = semComentarios(FONTE, "fora-de-url")
 
 /** A peça. **Uma** — ver a asserção 4. */
 const PECA = "theme-toggle-thumb"
@@ -81,7 +77,7 @@ describe("o trilho de tema", () => {
         expect(CODIGO).toContain("const larguraTrilho = 4 + passo * PARADAS.length")
         // O repouso da peça e a viagem da WAAPI usam o mesmo passo.
         expect(peca(PECA)).toContain("translate: `${indice * passo}px`")
-        expect(CODIGO).toContain("{ translate: `${indice * passo}px` }")
+        expect(CODIGO).toContain("{ x: indice * passo, y: 0 }")
         // O Skeleton de pré-montagem mede o mesmo, senão a linha do menu salta
         // de largura na hidratação.
         expect(CODIGO).toContain("style={{ width: larguraTrilho, height: degrau.altura }}")
@@ -252,10 +248,7 @@ describe("o trilho de tema", () => {
         expect(FONTE).not.toMatch(/brand-rainbow|brand-contour/)
         expect(CODIGO).toContain('variant === "brand" && "brand-glow isolate')
         // E `glass.test.ts` não pode continuar cobrando um eixo que saiu.
-        const GLASS = readFileSync(
-            join(process.cwd(), "src/components/ui/glass.test.ts"),
-            "utf8",
-        )
+        const GLASS = lerFonte("src/components/ui/glass.test.ts")
         const comModo = GLASS.slice(
             GLASS.indexOf("const COM_MODO = ["),
             GLASS.indexOf("]", GLASS.indexOf("const COM_MODO = [")),

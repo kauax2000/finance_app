@@ -1,14 +1,13 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import { Form, FormInput, proximoCampo } from "./form"
 
 /** A rodada 244: o formulário sem rótulo à vista (244b: só em cima e escondido). */
 
-const CODIGO = readFileSync(join(process.cwd(), "src/components/ui/form.tsx"), "utf8")
+const CODIGO = lerFonte("src/components/ui/form.tsx")
 
 const solto = (labels: "visible" | "hidden", props: Record<string, unknown>) =>
   renderToStaticMarkup(h(Form, { labels }, h(FormInput, props as never)))

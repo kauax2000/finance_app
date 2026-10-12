@@ -1,15 +1,13 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 import { AlertDialogError, AlertDialogList, AlertDialogMedia } from "./alert-dialog"
 
 /** As versões da rodada 201. */
 
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
-const FONTE = fonte("src/components/ui/alert-dialog.tsx")
+const FONTE = lerFonte("src/components/ui/alert-dialog.tsx")
 
 const TELAS = [
   "src/app/(app)/credit-cards/[cardId]/page-client.tsx",
@@ -35,7 +33,7 @@ describe("AlertDialog, rodada 201", () => {
 
   it("nenhuma tela escreve o andamento, a lista ou o erro à mão", () => {
     for (const tela of TELAS) {
-      const codigo = fonte(tela)
+      const codigo = lerFonte(tela)
       const blocos = codigo.match(/<AlertDialog[\s>][\s\S]*?<\/AlertDialog>/g) ?? []
       for (const bloco of blocos) {
         expect(bloco, tela).not.toMatch(/\? "(Excluindo|Removendo|Saindo)…" :/)
@@ -48,7 +46,7 @@ describe("AlertDialog, rodada 201", () => {
   })
 
   it("a exclusão de carteira é um AlertDialog com o digite-para-confirmar", () => {
-    const codigo = fonte("src/components/settings/workspace-delete-dialog.tsx")
+    const codigo = lerFonte("src/components/settings/workspace-delete-dialog.tsx")
     expect(codigo).toContain("<AlertDialogConfirmInput")
     expect(codigo).not.toMatch(/from "@\/components\/ui\/dialog"|from "@\/components\/ui\/sheet"/)
     expect(codigo).not.toContain("confirmName")

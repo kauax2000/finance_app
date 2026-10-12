@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { esperarCrescente, esperarDistintos } from "@/test/regras"
 
 import { itemVariants } from "./item"
 
@@ -43,8 +44,7 @@ describe("escada do Item", () => {
   })
 
   it("2. nenhum par de degraus produz a mesma string — foi o defeito", () => {
-    const strings = DEGRAUS.map((s) => itemVariants({ size: s, variant: "plain" }))
-    expect(new Set(strings).size).toBe(DEGRAUS.length)
+    esperarDistintos(DEGRAUS.map((s) => itemVariants({ size: s, variant: "plain" })))
   })
 
   it("3. as medidas crescem monotonicamente do menor para o maior", () => {
@@ -54,8 +54,7 @@ describe("escada do Item", () => {
     for (const eixo of ["gap", "px", "py"] as const) {
       const seq = valores.map((v) => num(v[eixo]))
       expect(seq.every(Number.isFinite)).toBe(true)
-      expect(seq).toStrictEqual([...seq].sort((a, b) => a - b))
-      expect(new Set(seq).size).toBe(seq.length)
+      esperarCrescente(seq, { estrito: true })
     }
   })
 

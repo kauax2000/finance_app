@@ -1,6 +1,7 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import { FORBIDDEN_ICON_PACKAGES } from "./scripts/lib/forbidden-icon-packages.mjs";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -23,7 +24,8 @@ const eslintConfig = defineConfig([
     // no `package.json` hoje. Ele existe para o dia em que um `npm i` a
     // trouxer — aí o lint reprova antes de o primeiro ícone entrar. O que já
     // está dentro (`<svg>` colado à mão, conjunto errado para o tamanho) é
-    // trabalho do auditor: `npm run ds:audit -- --rule G`.
+    // trabalho do auditor: `npm run ds:audit -- --rule G`, que lê a mesma
+    // lista de `scripts/lib/forbidden-icon-packages.mjs`.
     files: ["src/**/*.{ts,tsx,js,jsx}"],
     rules: {
       "no-restricted-imports": [
@@ -31,23 +33,7 @@ const eslintConfig = defineConfig([
         {
           patterns: [
             {
-              group: [
-                "lucide-react",
-                "react-icons",
-                "react-icons/*",
-                "@radix-ui/react-icons",
-                "@tabler/icons-react",
-                "phosphor-react",
-                "@phosphor-icons/react",
-                "@phosphor-icons/react/*",
-                "react-feather",
-                "feather-icons",
-                "@fortawesome/*",
-                "@mui/icons-material",
-                "@mui/icons-material/*",
-                "boxicons",
-                "ionicons",
-              ],
+              group: FORBIDDEN_ICON_PACKAGES,
               message:
                 "Este projeto usa Heroicons, e só. size-6+ vem de @heroicons/react/24/outline, size-5 do 20/solid, size-4 e abaixo do 16/solid — eles são redesenhos, não escalas. Ver a seção Ícones em AGENTS.md.",
             },

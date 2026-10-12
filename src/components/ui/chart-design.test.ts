@@ -1,6 +1,5 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 /**
  * A rodada 243: o Chart no desenho novo da casa — a ponta da barra de 8px, o
@@ -9,7 +8,7 @@ import { describe, expect, it } from "vitest"
  * degrau linha e o mapa de calor em `rounded-sm`.
  */
 
-const CODIGO = readFileSync(join(process.cwd(), "src/components/ui/chart.tsx"), "utf8")
+const CODIGO = lerFonte("src/components/ui/chart.tsx")
 
 describe("Chart, rodada 243", () => {
   it("a barra não tem retângulo de cursor; quem marca é a própria barra", () => {

@@ -12,11 +12,7 @@ import { ScrollFadeArrows } from "@/lib/scroll-fade-arrows"
 import {
   fieldControlHeightClassName,
   fieldControlPaddingClassName,
-  fieldDisabledClassName,
-  fieldFocusRingClassName,
-  fieldInvalidClassName,
-  fieldSurfaceClassName,
-  fieldTriggerHoverClassName,
+  fieldTriggerClassName,
   type FieldControlSize,
 } from "@/lib/field-classes"
 import { CheckIcon, ChevronDownIcon } from "@heroicons/react/16/solid"
@@ -63,11 +59,7 @@ function SelectTrigger({
         // A superfície de campo mora em `lib/field-classes` — a mesma que o
         // `Input` e o `ComboboxTrigger` vestem. Antes esta linha e a do `Input`
         // eram duas cópias que ninguém garantia iguais.
-        fieldSurfaceClassName,
-        fieldFocusRingClassName,
-        fieldInvalidClassName,
-        fieldDisabledClassName,
-        fieldTriggerHoverClassName,
+        fieldTriggerClassName,
         "flex w-fit items-center justify-between gap-1.5 py-1 whitespace-nowrap select-none data-placeholder:text-muted-foreground",
         // A escada era uma linha literal aqui — uma das cinco grafias. O recuo
         // de início vem do registro; a ponta fica, porque ela é do chevron e
@@ -320,11 +312,7 @@ function NativeSelect({
         // iOS. Os três saíram. O `disabled:pointer-events-none` fica: é o mesmo
         // desvio do `Input`, e está documentado lá.
         className={cn(
-          fieldSurfaceClassName,
-          fieldFocusRingClassName,
-          fieldInvalidClassName,
-          fieldDisabledClassName,
-          fieldTriggerHoverClassName,
+          fieldTriggerClassName,
           // `selection:bg-primary selection:text-primary-foreground` saiu: a
           // regra global de `@layer base` tinge a seleção com o par
           // `--primary-muted`, de propósito, para não trocar a cor do texto que

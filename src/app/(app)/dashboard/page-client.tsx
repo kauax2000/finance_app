@@ -69,8 +69,8 @@ const DashboardExpenseCategories = dynamic(
         ssr: false,
         loading: () => (
             <Card>
-                <CardContent className="min-h-[280px] pt-6">
-                    <Skeleton className="h-[220px] w-full rounded-lg" />
+                <CardContent className="min-h-70 pt-6">
+                    <Skeleton className="h-55 w-full rounded-lg" />
                 </CardContent>
             </Card>
         ),

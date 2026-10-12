@@ -13,7 +13,7 @@
  * porque a rampa tem catorze paradas e precisa existir uma vez só para o sistema.
  * Aqui ficam as combinações que as superfícies compõem.
  *
- * ## As quatro invariantes
+ * ## As seis invariantes
  *
  * 1. **`data-scroll-fade` só pode alimentar o que não é layout.** Já alimentou o
  *    `pb` de uma lista, e o resultado foi histerese: declarar "esta rola"
@@ -48,7 +48,7 @@
  *    | --- | --- | --- |
  *    | `Command` | escrita à mão, conteúdo denso | monta — e funciona |
  *    | `DialogBody` | tiras de altura desconhecida | **não monta**: só a máscara |
- *    | `MobileSheetFormBody` | idem | **não monta**: só a máscara |
+ *    | `MobileSheetFormBody` (saiu com o chrome de folha) | idem | **não montava**: só a máscara |
  *
  *    Onde a tira é transparente e cresce com o conteúdo, a resposta é a máscara
  *    sozinha — o `scroll-fade-y` de 44px na própria borda, como em todo

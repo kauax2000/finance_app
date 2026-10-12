@@ -8,11 +8,7 @@ import { cn } from "@/lib/utils"
 import {
   fieldControlHeightClassName,
   fieldControlPaddingClassName,
-  fieldDisabledClassName,
-  fieldFocusRingClassName,
-  fieldInvalidClassName,
-  fieldSurfaceClassName,
-  fieldTriggerHoverClassName,
+  fieldTriggerClassName,
   type FieldControlSize,
 } from "@/lib/field-classes"
 import {
@@ -1168,14 +1164,11 @@ function FormSubmit({
  */
 
 /**
- * As classes da região rolável, ainda exportadas.
- *
- * `FormPickerPopoverList` é o destino: a string não consegue carregar o
- * `onWheel` que as três telas escrevem ao lado dela toda vez, e uma classe
- * solta é um componente que não foi declarado. Ela sobrevive porque as três
- * telas ainda a importam, e migrá-las é uma mudança à parte.
+ * As classes da região rolável do `FormPickerPopoverList`. Ela foi exportada
+ * enquanto três telas a importavam ao lado de um `onWheel` à mão; as três
+ * migraram para a peça, e a string ficou só dela.
  */
-export const formPickerListScrollClassName =
+const formPickerListScrollClassName =
   "min-h-0 flex-1 touch-pan-y overflow-y-auto overflow-x-hidden overscroll-contain px-2 py-1 [-webkit-overflow-scrolling:touch]"
 
 /**
@@ -1232,11 +1225,7 @@ function FormPickerPopoverTrigger({
       data-size={size}
       type="button"
       className={cn(
-        fieldSurfaceClassName,
-        fieldFocusRingClassName,
-        fieldInvalidClassName,
-        fieldDisabledClassName,
-        fieldTriggerHoverClassName,
+        fieldTriggerClassName,
         "group/picker-trigger flex w-full min-w-0 items-center justify-between gap-2 text-left font-normal",
         fieldControlHeightClassName[size],
         fieldControlPaddingClassName[size],
@@ -1398,10 +1387,10 @@ function FormPickerPopoverList({
           // em vez de parar numa borda — é isso que dá à rampa o que dissolver.
           //
           // A dissolução vai aqui e não na constante `formPickerListScrollClassName`
-          // de propósito: as telas importam a constante, e uma delas com máscara
-          // ligada mas sem a casca publicando `band-h` ganharia meio tratamento —
-          // um fade começando 1px abaixo do fio escrito à mão, que são os dois
-          // sinais que o sistema está tentando não ter juntos.
+          // de propósito: quando as telas importavam a constante, uma delas com
+          // máscara ligada mas sem a casca publicando `band-h` ganharia meio
+          // tratamento — um fade começando 1px abaixo do fio escrito à mão, que
+          // são os dois sinais que o sistema está tentando não ter juntos.
           scrollFadeViewportClassName,
           scrollFadeBleedClassName,
           className

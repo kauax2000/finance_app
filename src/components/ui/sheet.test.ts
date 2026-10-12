@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
+import { realcesSemParDeToque } from "@/test/regras"
 
 /**
  * A régua da folha, trancada.
@@ -16,14 +16,10 @@ import { describe, expect, it } from "vitest"
  * Zero render: tudo lê o fonte.
  */
 
-const ler = (nome: string) =>
-  readFileSync(join(process.cwd(), `src/components/ui/${nome}.tsx`), "utf8")
+const ler = (nome: string) => lerFonte(`src/components/ui/${nome}.tsx`)
 
 /** Os comentários citam de propósito o que o arquivo deixou de fazer. */
-const semComentarios = (src: string) =>
-  src.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/.*$/gm, "$1")
-
-const CODIGO = semComentarios(ler("sheet"))
+const CODIGO = semComentarios(ler("sheet"), "fora-de-url")
 
 /** Só o `cva` — o único do arquivo, então o `ds:catalog` lê este. */
 const CVA = CODIGO.slice(
@@ -136,17 +132,7 @@ describe("régua do Sheet", () => {
     // par `active:` não existe no telefone. Hoje são zero — é guarda, e existe
     // porque a regra **H** do `ds:audit` varre `className="…"` e não enxerga
     // dentro de `cva()` nem de `cn()`.
-    const semPar: string[] = []
-    for (const [, classes] of CODIGO.matchAll(
-      /"([^"]*hover:(?:bg|shadow)-[^"]*)"/g
-    )) {
-      for (const familia of ["bg", "shadow"]) {
-        const cursor = new RegExp(`(?:^|\\s|:)hover:${familia}-`).test(classes)
-        const dedo = new RegExp(`(?:^|\\s|:)active:${familia}-`).test(classes)
-        if (cursor && !dedo) semPar.push(`${familia}: ${classes.slice(0, 70)}…`)
-      }
-    }
-    expect(semPar).toEqual([])
+    expect(realcesSemParDeToque(CODIGO)).toEqual([])
   })
 
   it("7. o eixo vale no ramo painel e não vaza para a gaveta", () => {

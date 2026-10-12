@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
+import { esperarDistintos, esperarSemClasseMontada } from "@/test/regras"
 
 import { barSurfaceClassName } from "@/lib/glass-classes"
 import { topBarVariants } from "./top-bar"
@@ -18,14 +18,9 @@ import { topBarVariants } from "./top-bar"
  * Zero render: tudo lê o `cva` e o fonte sem comentários.
  */
 
-const CODIGO = readFileSync(
-  join(process.cwd(), "src/components/ui/top-bar.tsx"),
-  "utf8"
-)
-  .replace(/\/\*[\s\S]*?\*\//g, "")
-  .replace(/\/\/.*$/gm, "")
+const CODIGO = semComentarios(lerFonte("src/components/ui/top-bar.tsx"))
 
-const CSS = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+const CSS = lerFonte("src/app/globals.css")
 
 const alturaEm = (classes: string, prefixo = "") => {
   const m = classes.match(
@@ -43,8 +38,7 @@ describe("régua do TopBar", () => {
   it("1. os degraus são degraus: 48 e 56, e nenhum par repete a string", () => {
     const alturas = TAMANHOS.map((size) => alturaEm(topBarVariants({ size })))
     expect(alturas).toEqual([3, 3.5])
-    const strings = TAMANHOS.map((size) => topBarVariants({ size }))
-    expect(new Set(strings).size).toBe(strings.length)
+    esperarDistintos(TAMANHOS.map((size) => topBarVariants({ size })))
   })
 
   it("2. o padrão é 48 em qualquer largura, sem acompanhar a barra lateral", () => {
@@ -111,7 +105,7 @@ describe("régua do TopBar", () => {
 
   it("7. `scroll` escolhe entre as duas pinturas inteiras, e nada é montado", () => {
     expect(CODIGO).toMatch(/rolou \? "glass" : "solid"/)
-    expect(CODIGO).not.toMatch(/`[^`]*\$\{[^}]*\}[^`]*`/)
+    esperarSemClasseMontada(CODIGO)
   })
 
   it("8. o fio é o da variante da barra lateral, com 1px fora dela", () => {

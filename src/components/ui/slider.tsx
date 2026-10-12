@@ -5,7 +5,6 @@ import { Slider as SliderPrimitive } from "radix-ui"
 import { cva } from "class-variance-authority"
 
 import { progressToneForBands, type ProgressBands } from "@/components/ui/progress"
-import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import { cn } from "@/lib/utils"
 
 /**
@@ -240,7 +239,7 @@ function Slider({
    *
    * Só em `brand`: um slider comum não ganha observador nenhum.
    */
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     const trilho = trilhoRef.current
     const faixa = faixaRef.current
     if (variant !== "brand" || !trilho || !faixa) return

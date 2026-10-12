@@ -1,5 +1,6 @@
-import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
+import { esperarDistintos, esperarPasso } from "@/test/regras"
 
 import { TABS_TRAY_HEIGHTS } from "@/components/ui/tabs"
 import {
@@ -40,10 +41,7 @@ const CONTROLES = [
 
 /** O arquivo **narra** os defeitos antigos; sem tirar os comentários, um teste
  *  de ausência proibiria o componente de explicar a própria história. */
-const fonte = (nome: string) =>
-  readFileSync(new URL(`../components/ui/${nome}.tsx`, import.meta.url), "utf8")
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/^\s*\/\/.*$/gm, "")
+const fonte = (nome: string) => semComentarios(lerFonte(`src/components/ui/${nome}.tsx`), "linha-inteira")
 
 /** O `h-*` do Tailwind que corresponde a cada altura em px. */
 const CLASSE_DE_ALTURA: Record<number, string> = {
@@ -64,13 +62,9 @@ describe("escada de controle da família de campo", () => {
   })
 
   it("2. os degraus sobem de 4 em 4, e nenhum par repete a mesma string", () => {
-    const alturas = DEGRAUS.map((d) => FIELD_CONTROL_HEIGHTS[d])
-    for (let i = 1; i < alturas.length; i += 1) {
-      expect(alturas[i] - alturas[i - 1], `${DEGRAUS[i - 1]} → ${DEGRAUS[i]}`).toBe(4)
-    }
+    esperarPasso(DEGRAUS.map((d) => FIELD_CONTROL_HEIGHTS[d]), 4, DEGRAUS)
     // O defeito do `Item`: dois degraus com a mesma string.
-    const classes = DEGRAUS.map((d) => fieldControlHeightClassName[d])
-    expect(new Set(classes).size).toBe(DEGRAUS.length)
+    esperarDistintos(DEGRAUS.map((d) => fieldControlHeightClassName[d]))
   })
 
   it("3. cada degrau contém o `h-*` literal do seu número", () => {
@@ -127,7 +121,7 @@ describe("escada de controle da família de campo", () => {
   })
 })
 
-const GLOBALS = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8")
+const GLOBALS = lerFonte("src/app/globals.css")
 
 
 

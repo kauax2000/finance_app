@@ -4,7 +4,8 @@ import * as React from "react"
 import { RadioGroup as RadioGroupPrimitive } from "radix-ui"
 import { cva, type VariantProps } from "class-variance-authority"
 
-import { composeRefs, useBrandGlow } from "@/hooks/use-brand-glow"
+import { composeRefs } from "radix-ui/internal"
+import { useBrandGlow } from "@/hooks/use-brand-glow"
 import { cn } from "@/lib/utils"
 
 /**
@@ -22,7 +23,7 @@ import { cn } from "@/lib/utils"
  * pior.
  *
  * A pergunta que sobra — *isto é componente ou anatomia?* — se responde pela
- * régua do `LAYER`: o anel **é a unidade**, e o grupo é quem compõe. Um rádio
+ * régua das camadas (`registry.ts`): o anel **é a unidade**, e o grupo é quem compõe. Um rádio
  * solto também não existe como ideia: "escolha única" precisa de um conjunto
  * para ser única em relação a quê. O custo aceito é que a página deste átomo
  * demonstra dentro de um `RadioGroup`, e diz por quê.

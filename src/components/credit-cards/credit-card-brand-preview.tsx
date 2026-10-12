@@ -43,12 +43,12 @@ function GenericLogo({ className }: { className?: string }) {
     return (
         <span
             className={cn(
-                "flex h-7 w-[3.35rem] shrink-0 items-center justify-center rounded-md border border-border/40 bg-muted/15 text-muted-foreground dark:bg-input-fill/25",
+                "flex h-7 w-13.5 shrink-0 items-center justify-center rounded-md border border-border/40 bg-muted/15 text-muted-foreground dark:bg-input-fill/25",
                 className
             )}
             aria-hidden
         >
-            <CreditCardIcon className="size-[18px] shrink-0" />
+            <CreditCardIcon className="size-4.5 shrink-0" />
         </span>
     )
 }

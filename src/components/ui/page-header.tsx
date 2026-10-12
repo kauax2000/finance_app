@@ -13,7 +13,6 @@ import { OverflowActionsMenu, useOverflowActions } from "@/components/ui/toolbar
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Caption, H1, Muted } from "@/components/ui/typography"
 import { publishPageTitle } from "@/hooks/use-page-title-dock"
-import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import { useTopBarBottom } from "@/hooks/use-top-bar-bottom"
 import { cn } from "@/lib/utils"
 
@@ -129,7 +128,7 @@ function PageHeader({
  * nem mídia o recuo é zero.
  */
 function useRecuoDoTexto(ref: React.RefObject<HTMLElement | null>) {
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     const raiz = ref.current
     if (!raiz) return
     const medir = () => {

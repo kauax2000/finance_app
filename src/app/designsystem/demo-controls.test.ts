@@ -1,7 +1,8 @@
-import { readFileSync, readdirSync } from "node:fs"
+import { readdirSync } from "node:fs"
 import { join } from "node:path"
 
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 /**
  * A rodada 238: os controles das demonstrações saem do mostrador. Os eixos são
@@ -11,10 +12,10 @@ import { describe, expect, it } from "vitest"
  */
 
 const DOCS = "src/app/designsystem/docs"
-const DS_DOC = readFileSync("src/app/designsystem/ds-doc.tsx", "utf8")
+const DS_DOC = lerFonte("src/app/designsystem/ds-doc.tsx")
 const paginas = readdirSync(DOCS)
   .filter((f) => f.endsWith(".tsx"))
-  .map((f) => [f, readFileSync(join(DOCS, f), "utf8")] as const)
+  .map((f) => [f, lerFonte(join(DOCS, f))] as const)
 
 describe("os controles da demonstração", () => {
   it("o eixo é a pílula floating, e o interruptor é um Toggle fantasma solto", () => {

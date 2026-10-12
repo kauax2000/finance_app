@@ -1,6 +1,5 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
 
 /**
  * A rodada 245: o realce das linhas sobre vidro é uma **tinta** — o
@@ -9,8 +8,6 @@ import { describe, expect, it } from "vitest"
  * linha acesa virava um retângulo chapado. A 9% a tinta lê como o `accent`
  * lia (1,21:1 no claro, 1,25:1 no escuro, contra a placa composta).
  */
-
-const fonte = (caminho: string) => readFileSync(join(process.cwd(), caminho), "utf8")
 
 const SOBRE_VIDRO = [
   "src/lib/menu-classes.ts",
@@ -25,7 +22,7 @@ const SOBRE_VIDRO = [
 describe("o realce das linhas sobre vidro é tinta", () => {
   it("nenhuma linha acende com cor opaca", () => {
     for (const caminho of SOBRE_VIDRO) {
-      const codigo = fonte(caminho)
+      const codigo = lerFonte(caminho)
       expect(codigo, caminho).not.toMatch(/(focus|data-selected|data-open|focus-visible):bg-accent\b/)
       expect(codigo, caminho).not.toContain("hover:bg-muted active:bg-muted")
       expect(codigo, caminho).not.toMatch(/hover:bg-accent\b/)
@@ -34,7 +31,7 @@ describe("o realce das linhas sobre vidro é tinta", () => {
 
   it("a tinta é uma só: o foreground a 9%", () => {
     for (const caminho of SOBRE_VIDRO) {
-      expect(fonte(caminho), caminho).toContain("bg-foreground/9")
+      expect(lerFonte(caminho), caminho).toContain("bg-foreground/9")
     }
   })
 })

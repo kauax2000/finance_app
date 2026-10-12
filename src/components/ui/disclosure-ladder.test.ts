@@ -1,7 +1,6 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
-
 import { describe, expect, it } from "vitest"
+import { lerFonte } from "@/test/fonte"
+import { esperarDepoisDeNoScrollbar, esperarPasso } from "@/test/regras"
 
 import {
   DISCLOSURE_ROW_HEIGHT_CLASS,
@@ -48,10 +47,7 @@ describe("a escada mede a linha", () => {
   })
 
   it("degraus de 4px, estritamente crescentes", () => {
-    const alturas = DEGRAUS.map((d) => DISCLOSURE_ROW_HEIGHTS[d])
-    for (let i = 1; i < alturas.length; i++) {
-      expect(alturas[i] - alturas[i - 1]).toBe(4)
-    }
+    esperarPasso(DEGRAUS.map((d) => DISCLOSURE_ROW_HEIGHTS[d]), 4)
   })
 
   /**
@@ -177,16 +173,15 @@ describe("o realce não troca a cor de fundo", () => {
    * desmontar.
    */
   it("o conteúdo aparece em cascata, nos dois componentes", () => {
-    const ler = (p: string) => readFileSync(join(process.cwd(), p), "utf8")
     for (const nome of ["accordion", "collapsible"]) {
-      expect(ler(`src/components/ui/${nome}.tsx`), nome).toContain(
+      expect(lerFonte(`src/components/ui/${nome}.tsx`), nome).toContain(
         "disclosureRevealClassName"
       )
     }
-    const css = ler("src/app/globals.css")
-    const util = css.indexOf(`@utility ${disclosureRevealClassName} {`)
-    expect(util).toBeGreaterThan(css.indexOf("@utility no-scrollbar"))
-    const bloco = css.slice(util, css.indexOf("@utility", util + 1))
+    const css = lerFonte("src/app/globals.css")
+    const bloco = esperarDepoisDeNoScrollbar(css, `@utility ${disclosureRevealClassName} {`, {
+      fecha: "@utility",
+    })
     expect(bloco).toMatch(/:not\(\[data-slot="collapsible-content"\]\)/)
     // A abertura anda na mola da casa, e o fechamento não: uma mola até zero
     // passaria por baixo de zero, e a altura seria cortada seca.

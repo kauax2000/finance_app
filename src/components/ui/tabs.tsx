@@ -1,9 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect"
 import { cva } from "class-variance-authority"
 import { Slot, Tabs as TabsPrimitive } from "radix-ui"
+import { composeRefs } from "radix-ui/internal"
 import { ChevronDownIcon, PlusIcon, XMarkIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
@@ -213,8 +213,8 @@ export const TABS_SIZES = {
   xl: { tray: 40, trigger: 36 },
 } as const
 
-/**
- * O recuo da trilha, e ele é **um só**.
+/*
+ * O recuo da trilha (`p-0.5`, em `tabsListTrackVariants`), e ele é **um só**.
  *
  * A rodada anterior o transformou em eixo (`default` 4 / `tight` 2), e a
  * migração provou que o eixo não existia: **6 de 6** chamadas pediam `tight` e
@@ -225,15 +225,6 @@ export const TABS_SIZES = {
  * mesmo arquivo já aceita uma troca maior — em `underline` o anel perde **3px**
  * na base, "medido, aceito, e visível nos outros três lados".
  */
-const TABS_TRACK_PADDING = 2
-
-/** Mantido para quem media o gatilho; hoje ele é derivada da bandeja. */
-export const TABS_TRIGGER_HEIGHTS = {
-  sm: TABS_SIZES.sm.trigger,
-  md: TABS_SIZES.md.trigger,
-  lg: TABS_SIZES.lg.trigger,
-  xl: TABS_SIZES.xl.trigger,
-} as const
 
 export const TABS_TRAY_HEIGHTS = {
   sm: TABS_SIZES.sm.tray,
@@ -308,34 +299,6 @@ const TabsListContext = React.createContext<{
   /** O marcador viajante já mediu e assumiu a pintura do realce. */
   indicatorReady: boolean
 }>({ size: "md", variant: "floating", stretch: true, indicatorReady: false })
-
-/**
- * `useLayoutEffect` mede antes da pintura — é o que evita o marcador aparecer
- * em 0,0 e escorregar até o lugar na primeira montagem. No servidor ele não
- * existe, e o React avisa; `useEffect` ali não muda nada, porque não há layout
- * para medir.
- */
-
-/** Junta o ref do hook de dissolução com o ref local da medição. */
-function composeRefs<T>(...refs: Array<React.Ref<T> | undefined>) {
-  return (node: T | null): void | (() => void) => {
-    // No React 19 um ref que devolve limpeza não é chamado com `null`: sem
-    // repassar a do `useScrollFade`, o observador dele vazava a cada troca.
-    const limpezas = refs.map((ref) => {
-      if (typeof ref === "function") return ref(node)
-      if (ref) (ref as React.RefObject<T | null>).current = node
-      return undefined
-    })
-    return () => {
-      refs.forEach((ref, i) => {
-        const limpar = limpezas[i]
-        if (typeof limpar === "function") limpar()
-        else if (typeof ref === "function") ref(null)
-        else if (ref) (ref as React.RefObject<T | null>).current = null
-      })
-    }
-  }
-}
 
 /**
  * O estado mora na raiz (rodada 226). O Radix guarda a aba ativa sozinho, e
@@ -899,7 +862,7 @@ function useMarcador(
   const anterior = React.useRef<{ el: HTMLElement; caixa: CaixaLiquida } | null>(null)
   const emCurso = React.useRef<Animation[]>([])
 
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     const trilha = trilhaRef.current
     // O `plain` não mede nem observa nada: sem marcador, não há caixa a
     // publicar, e os dois observadores seriam custo puro.
@@ -958,6 +921,8 @@ function useMarcador(
       ro.disconnect()
       mo.disconnect()
     }
+    // `deps` é de quem chama; `trilhaRef` é um `useRef`, estável.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viaja, seletor, orientation, recuo, ...deps])
 
   return { medido: viaja && medido, marcadorRef }
@@ -1163,7 +1128,7 @@ function useExcesso(
   ativa: string | undefined
 ) {
   const [escondidas, setEscondidas] = React.useState<{ value: string; label: string }[]>([])
-  useIsomorphicLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     const moldura = molduraRef.current
     const trilha = trilhaRef.current
     if (!ligado || !moldura || !trilha) return
@@ -1212,7 +1177,7 @@ function useExcesso(
     const ro = new ResizeObserver(medir)
     ro.observe(moldura)
     return () => ro.disconnect()
-  }, [ligado, ativa])
+  }, [ligado, ativa, molduraRef, trilhaRef])
   return ligado ? escondidas : []
 }
 

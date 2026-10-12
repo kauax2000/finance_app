@@ -3,13 +3,10 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
-import { pertoDoLimite } from "@/lib/char-count"
+import { CharCountLive, contarCaracteres } from "@/lib/char-count"
 import {
+  fieldControlClassName,
   fieldControlPaddingClassName,
-  fieldDisabledClassName,
-  fieldFocusRingClassName,
-  fieldInvalidClassName,
-  fieldSurfaceClassName,
   type FieldControlSize,
 } from "@/lib/field-classes"
 
@@ -121,10 +118,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         data-slot="textarea"
         data-size={size}
         className={cn(
-          fieldSurfaceClassName,
-          fieldFocusRingClassName,
-          fieldInvalidClassName,
-          fieldDisabledClassName,
+          fieldControlClassName,
           // O bloco alto veste a linha alta (`rounded-row-lg`, 16px; rodada
           // 241p): a superfície (22) pesava num campo de 64px, ao lado do
           // `Input` de 12. É o mesmo raio do campo `xl`.
@@ -152,8 +146,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     const max = props.maxLength
     if (max === undefined || !showCount) return campo
 
-    const restam = max - contagem
-    const perto = pertoDoLimite(restam, max)
+    const { restam, perto } = contarCaracteres(contagem, max)
     return (
       <div data-slot="textarea-root" className="flex w-full flex-col gap-1.5">
         {campo}
@@ -167,9 +160,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         >
           {contagem}/{max}
         </p>
-        <span className="sr-only" aria-live="polite">
-          {perto ? `Restam ${restam} caracteres` : ""}
-        </span>
+        <CharCountLive restam={restam} perto={perto} />
       </div>
     )
   }
