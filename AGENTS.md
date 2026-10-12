@@ -1314,7 +1314,11 @@ declaração de `background-color` no trilho).
   `SplitShellAside` — **nenhuma tela escreve `brand-field rounded-2xl m-4` nem
   o `env(safe-area-inset-top)` do campo**; `SplitShellFooter`,
   `SplitShellBack`, `SplitShellSkeleton`; `asideMobile`, `step`, `media` (o
-  ícone de status acima do título).
+  ícone de status acima do título). **`SplitShellRoot` + `SplitShellMain`**
+  são as duas metades: o Root (contexto, grade, áreas seguras, o campo) mora
+  no layout de rota e segura o campo montado; cada página escreve só a Main (a
+  coluna, dona do foco do `step`, que lê o `asideMobile` do Root). O
+  `SplitShell` é a Main dentro do Root, com a mesma API.
 - **`Stepper`**: com `value` + `onValueChange` o item deriva o estado —
   **nenhuma tela escreve `estadoDe(i, atual)`** —; no modo interativo todo item
   é `button`. `variant="bar"`, `orientation="responsive"`, `StepperContent`,

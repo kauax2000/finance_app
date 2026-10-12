@@ -278,7 +278,7 @@ export const REGISTRY: RegistryEntry[] = [
          */
     entry("sidebar", "Sidebar", "A navegação lateral do app — e, sem placa (plain), a do catálogo.", ui("sidebar"), "Sidebar, SidebarProvider, SidebarInset, SidebarTrigger, SidebarRail, SidebarContent, SidebarGroup, SidebarMenu, SidebarMenuButton, useSidebar"),
     /** A página dividida: campo de um lado, coluna do outro. Recebe o campo por slot, porque conteúdo de produto não mora em `ui/`. */
-    entry("split-shell", "Split Shell", "Campo de um lado, coluna de conteúdo do outro — quebra pelo casco, com o voltar, o pé e os passos.", ui("split-shell"), "SplitShell, SplitShellAside, SplitShellBack, SplitShellFooter, SplitShellSkeleton"),
+    entry("split-shell", "Split Shell", "Campo de um lado, coluna de conteúdo do outro — quebra pelo casco, com o voltar, o pé e os passos.", ui("split-shell"), "SplitShell, SplitShellRoot, SplitShellMain, SplitShellAside, SplitShellBack, SplitShellFooter, SplitShellSkeleton"),
     /**
          * A barra de uma lista: dispõe onde os filtros, as ações e as fichas vão. Conter organismos diz o piso, não a
          * camada; ela prende sob o `TopBar`, como as barras da página.

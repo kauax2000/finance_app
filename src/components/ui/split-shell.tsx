@@ -60,32 +60,23 @@ const COLUNAS: Record<SplitShellSide, Record<SplitShellRatio, string>> = {
 const RECOLHE_COM_O_TECLADO =
   "pointer-coarse:@max-3xl/split-shell:group-has-[[data-slot=split-shell-main]_:is(input:not([type=checkbox]):not([type=radio]),textarea):focus]/split-shell:hidden"
 
-function SplitShell({
+/**
+ * O casco sem a coluna: o contexto, a container query, as áreas seguras, a grade
+ * e o lugar do campo. A coluna entra como filha (`SplitShellMain`). Separado para
+ * um layout de rota segurar o campo montado enquanto as páginas trocam só a
+ * coluna; quem não precisa disso escreve o `SplitShell`.
+ */
+function SplitShellRoot({
   aside,
-  title,
-  description,
-  media,
-  back,
-  footer,
   side = "start",
   ratio = "wide",
   asideMobile = "card",
-  step,
   children,
   className,
   ...props
-}: Omit<React.ComponentProps<"div">, "title"> & {
+}: React.ComponentProps<"div"> & {
   /** O campo. Vista o `SplitShellAside` para ter a geometria do casco. */
   aside: React.ReactNode
-  title: string
-  /** Uma linha. Título sobre descrição é par de identidade — sem `gap`. */
-  description?: React.ReactNode
-  /** O ícone acima do título (status: confira seu e-mail, senha atualizada). */
-  media?: React.ReactNode
-  /** O topo da coluna: o `SplitShellBack`. */
-  back?: React.ReactNode
-  /** O pé da coluna: o `SplitShellFooter`. */
-  footer?: React.ReactNode
   /** De que lado mora o campo. A ordem de leitura não muda. */
   side?: SplitShellSide
   /** Quanto da largura o campo leva: 5:6, 1:1 ou 1:2. */
@@ -95,23 +86,7 @@ function SplitShell({
    * sobre a página (`logo`, sem superfície), ou nada.
    */
   asideMobile?: SplitShellAsideMobile
-  /**
-   * O passo de um fluxo (login → código → nova senha). Ao mudar, título e
-   * conteúdo entram deslizando e o foco vai ao título — quem usa leitor de
-   * tela ouve a tela nova, em vez de ficar num botão que sumiu.
-   */
-  step?: string | number
 }) {
-  const titulo = React.useRef<HTMLHeadingElement>(null)
-  // O passo de antes, e não um "já montou": o `StrictMode` roda o efeito duas
-  // vezes na montagem, e o segundo roubaria o foco para o título ao abrir.
-  const anterior = React.useRef(step)
-  React.useEffect(() => {
-    if (anterior.current === step) return
-    anterior.current = step
-    titulo.current?.focus({ preventScroll: true })
-  }, [step])
-
   const contexto = React.useMemo(() => ({ side, asideMobile }), [side, asideMobile])
 
   return (
@@ -143,57 +118,138 @@ function SplitShell({
           >
             {aside}
           </div>
-          {/*
-             A coluna em três faixas: o voltar em cima, o conteúdo no meio e o pé embaixo.
-             No telefone o conteúdo encosta no topo, logo abaixo do campo (centrado na
-             vertical ele flutuaria longe dele); a sobra embaixo é onde o teclado sobe.
-          */}
-          <main
-            data-slot="split-shell-main"
-            className={cn(
-              "flex flex-1 flex-col px-6 pt-6 pb-[calc(--spacing(6)+var(--split-shell-safe-bottom))] @xl/split-shell:px-10",
-              // Sem campo em cima, a coluna é quem encosta no notch.
-              asideMobile === "hidden" &&
-                "@max-3xl/split-shell:pt-[calc(--spacing(6)+var(--split-shell-safe-top))]",
-              "@3xl/split-shell:min-h-svh @3xl/split-shell:px-12 @3xl/split-shell:py-8"
-            )}
-          >
-            {back ? (
-              <div data-slot="split-shell-back-row" className="mb-4 flex @3xl/split-shell:mb-0">
-                {back}
-              </div>
-            ) : null}
-            {/* No telefone o pé vem logo depois do conteúdo; empurrado para o fim da tela, ficaria a uma tela do formulário. */}
-            <div className="flex flex-col @3xl/split-shell:flex-1 @3xl/split-shell:justify-center @3xl/split-shell:py-10">
-              <Container
-                key={step}
-                size="sm"
-                stack="section"
-                className={cn(step !== undefined && "split-shell-step")}
-              >
-                <header>
-                  {media ? (
-                    <div data-slot="split-shell-media" className="mb-5 flex">
-                      {media}
-                    </div>
-                  ) : null}
-                  <H1 ref={titulo} tabIndex={-1} className="outline-none">
-                    {title}
-                  </H1>
-                  {description ? <Muted>{description}</Muted> : null}
-                </header>
-                {children}
-              </Container>
-            </div>
-            {footer ? (
-              <Container size="sm" className="pt-8">
-                {footer}
-              </Container>
-            ) : null}
-          </main>
+          {children}
         </div>
       </div>
     </SplitShellContext>
+  )
+}
+
+/**
+ * A coluna: o voltar, o cabeçalho (mídia, título e descrição), o conteúdo e o pé.
+ * Mora dentro de um `SplitShellRoot`, de quem lê o `asideMobile`.
+ */
+function SplitShellMain({
+  title,
+  description,
+  media,
+  back,
+  footer,
+  step,
+  children,
+  className,
+  ...props
+}: Omit<React.ComponentProps<"main">, "title"> & {
+  title: string
+  /** Uma linha. Título sobre descrição é par de identidade — sem `gap`. */
+  description?: React.ReactNode
+  /** O ícone acima do título (status: confira seu e-mail, senha atualizada). */
+  media?: React.ReactNode
+  /** O topo da coluna: o `SplitShellBack`. */
+  back?: React.ReactNode
+  /** O pé da coluna: o `SplitShellFooter`. */
+  footer?: React.ReactNode
+  /**
+   * O passo de um fluxo (login → código → nova senha). Ao mudar, título e
+   * conteúdo entram deslizando e o foco vai ao título — quem usa leitor de
+   * tela ouve a tela nova, em vez de ficar num botão que sumiu.
+   */
+  step?: string | number
+}) {
+  const { asideMobile } = React.useContext(SplitShellContext)
+  const titulo = React.useRef<HTMLHeadingElement>(null)
+  // O passo de antes, e não um "já montou": o `StrictMode` roda o efeito duas
+  // vezes na montagem, e o segundo roubaria o foco para o título ao abrir.
+  const anterior = React.useRef(step)
+  React.useEffect(() => {
+    if (anterior.current === step) return
+    anterior.current = step
+    titulo.current?.focus({ preventScroll: true })
+  }, [step])
+
+  return (
+    /*
+       A coluna em três faixas: o voltar em cima, o conteúdo no meio e o pé embaixo.
+       No telefone o conteúdo encosta no topo, logo abaixo do campo (centrado na
+       vertical ele flutuaria longe dele); a sobra embaixo é onde o teclado sobe.
+    */
+    <main
+      data-slot="split-shell-main"
+      className={cn(
+        "flex flex-1 flex-col px-6 pt-6 pb-[calc(--spacing(6)+var(--split-shell-safe-bottom))] @xl/split-shell:px-10",
+        // Sem campo em cima, a coluna é quem encosta no notch.
+        asideMobile === "hidden" &&
+          "@max-3xl/split-shell:pt-[calc(--spacing(6)+var(--split-shell-safe-top))]",
+        "@3xl/split-shell:min-h-svh @3xl/split-shell:px-12 @3xl/split-shell:py-8",
+        className
+      )}
+      {...props}
+    >
+      {back ? (
+        <div data-slot="split-shell-back-row" className="mb-4 flex @3xl/split-shell:mb-0">
+          {back}
+        </div>
+      ) : null}
+      {/* No telefone o pé vem logo depois do conteúdo; empurrado para o fim da tela, ficaria a uma tela do formulário. */}
+      <div className="flex flex-col @3xl/split-shell:flex-1 @3xl/split-shell:justify-center @3xl/split-shell:py-10">
+        <Container
+          key={step}
+          size="sm"
+          stack="section"
+          className={cn(step !== undefined && "split-shell-step")}
+        >
+          <header>
+            {media ? (
+              <div data-slot="split-shell-media" className="mb-5 flex">
+                {media}
+              </div>
+            ) : null}
+            <H1 ref={titulo} tabIndex={-1} className="outline-none">
+              {title}
+            </H1>
+            {description ? <Muted>{description}</Muted> : null}
+          </header>
+          {children}
+        </Container>
+      </div>
+      {footer ? (
+        <Container size="sm" className="pt-8">
+          {footer}
+        </Container>
+      ) : null}
+    </main>
+  )
+}
+
+/** O casco inteiro numa peça: `SplitShellRoot` com a `SplitShellMain` dentro. */
+function SplitShell({
+  aside,
+  title,
+  description,
+  media,
+  back,
+  footer,
+  side,
+  ratio,
+  asideMobile,
+  step,
+  children,
+  ...props
+}: Omit<React.ComponentProps<typeof SplitShellRoot>, "title"> &
+  Pick<React.ComponentProps<typeof SplitShellMain>, "title" | "description" | "media" | "back" | "footer" | "step">) {
+  return (
+    <SplitShellRoot aside={aside} side={side} ratio={ratio} asideMobile={asideMobile} {...props}>
+      <SplitShellMain
+        title={title}
+        description={description}
+        media={media}
+        back={back}
+        footer={footer}
+        step={step}
+      >
+        {children}
+      </SplitShellMain>
+    </SplitShellRoot>
   )
 }
 
@@ -373,4 +429,12 @@ function SplitShellSkeleton({
   )
 }
 
-export { SplitShell, SplitShellAside, SplitShellBack, SplitShellFooter, SplitShellSkeleton }
+export {
+  SplitShell,
+  SplitShellAside,
+  SplitShellBack,
+  SplitShellFooter,
+  SplitShellMain,
+  SplitShellRoot,
+  SplitShellSkeleton,
+}

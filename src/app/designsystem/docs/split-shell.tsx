@@ -18,6 +18,8 @@ import {
   SplitShellAside,
   SplitShellBack,
   SplitShellFooter,
+  SplitShellMain,
+  SplitShellRoot,
   SplitShellSkeleton,
 } from "@/components/ui/split-shell"
 import { IphoneFrame, ViewportFrame } from "../ds-frame"
@@ -174,6 +176,43 @@ function DemoTelefone() {
   )
 }
 
+function DemoPersistente() {
+  const [rota, setRota] = React.useState<"entrar" | "recuperar">("entrar")
+  const entrar = rota === "entrar"
+  return (
+    <div className="p-4">
+      <ViewportFrame title="Campo fixo, coluna trocando" height={560} className="rounded-surface" screenClassName="bg-background">
+        <SplitShellRoot aside={<Campo surface="brand" />}>
+          <SplitShellMain
+            key={rota}
+            title={entrar ? "Entrar" : "Recuperar senha"}
+            description={entrar ? "Acesse sua conta com o seu e-mail." : "Enviamos um código de seis dígitos para o seu e-mail."}
+            back={entrar ? undefined : <SplitShellBack href="#">entrar</SplitShellBack>}
+            footer={
+              <SplitShellFooter>
+                <p>
+                  {entrar ? "Esqueceu a senha? " : "Lembrou a senha? "}
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setRota(entrar ? "recuperar" : "entrar")
+                    }}
+                  >
+                    {entrar ? "Recuperar" : "Entrar"}
+                  </a>
+                </p>
+              </SplitShellFooter>
+            }
+          >
+            <FormInput size="xl" label="E-mail" />
+          </SplitShellMain>
+        </SplitShellRoot>
+      </ViewportFrame>
+    </div>
+  )
+}
+
 export default function SplitShellDoc() {
   return (
     <>
@@ -217,6 +256,23 @@ export default function SplitShellDoc() {
       </DocSection>
 
       <DocSection
+        title="Aside persistente no layout"
+        description="SplitShellRoot é o casco sem a coluna, e SplitShellMain é a coluna. Num layout de rota, o Root segura o campo e cada página troca só a Main. Aqui o link do pé troca a coluna; o campo é o mesmo elemento nas duas."
+        code={`// app/(auth)/layout.tsx
+<SplitShellRoot side="end" asideMobile="logo" aside={<AuthBrandPanel />}>
+  {children}
+</SplitShellRoot>
+
+// cada página
+<SplitShellMain title="Entrar" footer={…}>
+  <LoginForm />
+</SplitShellMain>`}
+        previewClassName="block p-0"
+      >
+        <DemoPersistente />
+      </DocSection>
+
+      <DocSection
         title="Esqueleto"
         description="SplitShellSkeleton: o campo e a coluna com o título, a descrição, os campos e o botão. Dentro de um casco já montado, a espera só do formulário é do produto (o AuthFormSkeleton do app)."
         code={`<SplitShellSkeleton fields={2} />`}
@@ -250,6 +306,14 @@ export default function SplitShellDoc() {
           { prop: "ratio", type: '"wide" | "even" | "narrow"', default: '"wide"', description: "Quanto da largura o campo leva: 5:6, 1:1 ou 1:2." },
           { prop: "asideMobile", type: '"card" | "band" | "logo" | "hidden"', default: '"card"', description: "O campo abaixo da quebra: o cartão, uma faixa só com a marca, a marca sozinha sobre a página, ou nada." },
           { prop: "step", type: "string | number", description: "O passo de um fluxo. Ao mudar, a coluna entra deslizando e o foco vai ao título." },
+        ]}
+      />
+
+      <PropsTable
+        title="SplitShellRoot e SplitShellMain"
+        rows={[
+          { prop: "SplitShellRoot", type: "{ aside, side?, ratio?, asideMobile?, children }", description: "O casco sem a coluna: a container query, as áreas seguras, a grade e o campo. A coluna entra como filha." },
+          { prop: "SplitShellMain", type: "{ title, description?, media?, back?, footer?, step?, children }", description: "A coluna, dentro de um SplitShellRoot. Lê o asideMobile dele e leva o foco ao título quando o passo muda." },
         ]}
       />
 

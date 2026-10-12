@@ -77,3 +77,31 @@ describe("os comportamentos", () => {
     expect(CODIGO).toContain("@3xl/split-shell:sticky @3xl/split-shell:top-0 @3xl/split-shell:h-svh")
   })
 })
+
+describe("a divisão: Root e Main", () => {
+  const corpo = (nome: string) => {
+    const inicio = CODIGO.indexOf(`function ${nome}(`)
+    const fim = CODIGO.indexOf("\nfunction ", inicio + 1)
+    return CODIGO.slice(inicio, fim === -1 ? undefined : fim)
+  }
+
+  it("exporta as duas peças", () => {
+    expect(CODIGO).toMatch(/export \{[^}]*\bSplitShellRoot\b[^}]*\}/)
+    expect(CODIGO).toMatch(/export \{[^}]*\bSplitShellMain\b[^}]*\}/)
+  })
+
+  it("o Root é dono do contexto e do campo; a Main, do foco do passo", () => {
+    expect(corpo("SplitShellRoot")).toContain("<SplitShellContext value={contexto}>")
+    expect(corpo("SplitShellRoot")).toContain('data-slot="split-shell-aside-slot"')
+    expect(corpo("SplitShellMain")).toContain("titulo.current?.focus({ preventScroll: true })")
+    expect(corpo("SplitShellMain")).toContain("React.useContext(SplitShellContext)")
+    expect(corpo("SplitShell")).not.toContain("focus(")
+  })
+
+  it("o SplitShell é a Main dentro do Root", () => {
+    const shell = corpo("SplitShell")
+    expect(shell).toContain("<SplitShellRoot")
+    expect(shell).toContain("<SplitShellMain")
+    expect(shell.indexOf("<SplitShellRoot")).toBeLessThan(shell.indexOf("<SplitShellMain"))
+  })
+})

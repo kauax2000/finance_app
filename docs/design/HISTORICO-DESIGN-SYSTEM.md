@@ -25169,3 +25169,17 @@ e afins) acima do título, num `<div data-slot="split-shell-media">` dentro do
 `<header>`. Nasceu das telas de status da jornada de acesso (confira seu
 e-mail, senha atualizada), que consomem a prop. O foco do `step` segue no
 título. Nenhuma outra prop mudou.
+
+### Rodada 254 — `SplitShellRoot` e `SplitShellMain`
+
+O `SplitShell` foi dividido em duas metades exportadas, aprovado na Fase 0 do
+plano do painel de marca animado
+(`docs/superpowers/plans/2026-10-12-painel-de-marca-animado.md`, seção 8): o
+`SplitShellRoot` (contexto, container query, áreas seguras por variável, grade
+e o lugar do campo) e a `SplitShellMain` (a coluna: voltar, cabeçalho,
+`Container key={step}`, pé, e o foco no título quando o passo muda, que lê o
+`asideMobile` do contexto). O motivo é a continuidade entre rotas: o layout de
+`(auth)` segura o Root, e o campo não remonta quando a página troca. O
+`SplitShell` virou a Main dentro do Root, com a mesma API e as mesmas classes;
+`split-shell-versions.test.ts` ganhou a divisão (os dois exports, a Main dona
+do foco, o casco composto) e a página, a seção "Aside persistente no layout".
