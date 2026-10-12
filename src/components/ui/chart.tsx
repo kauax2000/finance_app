@@ -294,7 +294,9 @@ function axisFormatFor(format: ChartFormat): ChartFormat {
  * caixa rolar para a tela e uma remontagem por `key` para as marcas
  * desenharem do zero. Saiu tudo: o Recharts já anima ao montar e na troca, e o
  * `isAnimationActive` `'auto'` desliga a animação sob movimento reduzido e no
- * SSR. A impressão vê o gráfico pronto, porque nada o esconde.
+ * SSR. A impressão vê o gráfico pronto, porque nada o esconde. Um relógio
+ * (`useChartEntering`) separa a entrada (`CHART_ENTER_MS`, séries escalonadas)
+ * da troca (`CHART_UPDATE_MS`) que vem depois dela.
  *
  * As formas que são HTML (a divisão, o calendário, a lista de barras, as
  * legendas) entram por `@starting-style` (`starting:`): o estilo do primeiro
@@ -325,16 +327,53 @@ const CHART_EASING_MARK = CHART_EASING as unknown as "ease"
 /** A mesma curva, na forma que o `animate` do `motion` lê. */
 const CHART_EASING_POINTS = [0.16, 1, 0.3, 1] as const
 
-/** Os props de animação de toda marca do Recharts: a entrada e a troca. */
-const CHART_MARK_MOTION = {
+/** O atraso entre séries na entrada, e o teto: a quinta não espera mais. */
+const CHART_STAGGER_MS = 60
+const CHART_STAGGER_MAX = 4
+
+/** Os props de animação de uma marca do Recharts depois da entrada: a troca. */
+const CHART_MARK_UPDATE = {
   isAnimationActive: "auto",
   animationBegin: 0,
-  animationDuration: CHART_ENTER_MS,
+  animationDuration: CHART_UPDATE_MS,
   animationEasing: CHART_EASING_MARK,
 } as const
 
+/**
+ * Se a forma ainda está entrando. Não é um observador nem uma fase: é um
+ * relógio que corre do mount até o fim da entrada mais o escalonamento, e
+ * depois disso toda troca de dado anima no tempo de atualização. Trocar a
+ * duração **depois** do fim não reanima nada: o Recharts parte do último
+ * quadro desenhado, que já é o alvo.
+ */
+function useChartEntering() {
+  const [entrando, setEntrando] = React.useState(true)
+  React.useEffect(() => {
+    const t = window.setTimeout(
+      () => setEntrando(false),
+      CHART_ENTER_MS + CHART_STAGGER_MS * (CHART_STAGGER_MAX - 1)
+    )
+    return () => window.clearTimeout(t)
+  }, [])
+  return entrando
+}
+
+/**
+ * Os props de animação de uma marca: a entrada ao montar, escalonada por
+ * série (`i`), e a troca depois dela. A rosca e os anéis passam `i` 0 — o
+ * `begin` deles é zero (ver acima).
+ */
+function chartMarkMotion(entrando: boolean, i = 0) {
+  if (!entrando) return CHART_MARK_UPDATE
+  return {
+    ...CHART_MARK_UPDATE,
+    animationDuration: CHART_ENTER_MS,
+    animationBegin: Math.min(i, CHART_STAGGER_MAX - 1) * CHART_STAGGER_MS,
+  }
+}
+
 /** A faísca no primeiro quadro: pronta, sem entrada. */
-const CHART_MARK_STILL = { ...CHART_MARK_MOTION, isAnimationActive: false } as const
+const CHART_MARK_STILL = { ...CHART_MARK_UPDATE, isAnimationActive: false } as const
 
 /** O tooltip desliza entre pontos no tempo de atualização, na mesma curva. */
 const CHART_TOOLTIP_MOTION = {
@@ -855,8 +894,10 @@ function ChartLegendContent({
         // sem corpo próprio ela saía no tamanho do texto corrido.
         "flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs",
         // A legenda entra inteira, depois das marcas começarem: ela é o que
-        // *aparece*, e sobe na mola.
+        // *aparece*, e sobe na mola. O atraso só pesa na entrada, porque a
+        // caixa não transiciona mais nada.
         chartRiseClassName,
+        "delay-150",
         align === "start" && "justify-start",
         align === "center" && "justify-center",
         align === "end" && "justify-end",
@@ -1346,6 +1387,7 @@ function ChartArea({
   /** O recorte de período: `true` abre nos últimos 12 pontos, um número nos últimos N. */
   brush?: boolean | number
 }) {
+  const entrando = useChartEntering()
   const chaves = useSeries(config, series)
   const gradiente = variant === "gradient"
   // O id do gradiente é global no documento: duas áreas com a mesma chave na
@@ -1417,7 +1459,7 @@ function ChartArea({
           {chaves.map((key, i) => (
             <Area
               key={key}
-              {...CHART_MARK_MOTION}
+              {...chartMarkMotion(entrando, i)}
               dataKey={key}
               type={chartAreaShape[variant]}
               stackId={stacked ? "a" : undefined}
@@ -1491,6 +1533,7 @@ function ChartLine({
   /** O último ponto com valor, marcado e pulsando: o "hoje" da série. */
   marker?: "last"
 }) {
+  const entrando = useChartEntering()
   const chaves = useSeries(config, series)
   const mostrarLegenda = legend ?? chaves.length >= 2
 
@@ -1532,7 +1575,7 @@ function ChartLine({
           {chaves.map((key, i) => (
             <Line
               key={key}
-              {...CHART_MARK_MOTION}
+              {...chartMarkMotion(entrando, i)}
               dataKey={key}
               type={chartLineShape[variant]}
               stroke={serieColor(key, i, config)}
@@ -1681,6 +1724,7 @@ function ChartBars({
    */
   track?: boolean
 }) {
+  const entrando = useChartEntering()
   const chaves = useSeries(config, series)
   const horizontal = layout === "horizontal"
   // O Recharts limita o raio a meia largura/altura do retângulo, então um raio
@@ -1822,7 +1866,7 @@ function ChartBars({
           {chaves.map((key, i) => (
             <Bar
               key={key}
-              {...CHART_MARK_MOTION}
+              {...chartMarkMotion(entrando, i)}
               dataKey={key}
               stackId={stacked ? "a" : undefined}
               fill={serieColor(key, i, config)}
@@ -1990,6 +2034,7 @@ function ChartDonut({
   /** O `ChartDonutCenter`. Ele é irmão do gráfico, nunca filho — ver abaixo. */
   center?: React.ReactNode
 }) {
+  const entrando = useChartEntering()
   const pizza = variant === "pie"
   const medidor = variant === "gauge"
   // O padrão é por variante, como `size` no `Tabs` e `stretch` no `Carousel`:
@@ -2105,7 +2150,7 @@ function ChartDonut({
         o envelope.
       */}
       <div
-                className={cn(
+        className={cn(
           "flex flex-col items-center",
           emLista ? "w-full gap-4 sm:flex-row sm:gap-8" : "w-fit"
         )}
@@ -2153,7 +2198,7 @@ function ChartDonut({
             ) : null}
             <ChartActiveSlice nameKey={nameKey} onChange={setAtivoGrafico} />
             <Pie
-              {...CHART_MARK_MOTION}
+              {...chartMarkMotion(entrando)}
               data={data}
               dataKey={dataKey}
               nameKey={nameKey}
@@ -2662,6 +2707,7 @@ function ChartRadial({
   /** O `ChartDonutCenter`, como na rosca. */
   center?: React.ReactNode
 }) {
+  const entrando = useChartEntering()
   const aneis = React.useMemo(
     () =>
       data.slice(0, CHART_RAMP_LENGTH).map((linha, i) => {
@@ -2696,7 +2742,7 @@ function ChartRadial({
       format={format}
     >
       <div
-                className="flex w-fit flex-col items-center"
+        className="flex w-fit flex-col items-center"
       >
         <ChartContainer
           config={config}
@@ -2718,7 +2764,7 @@ function ChartRadial({
           >
             <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
             <RadialBar
-              {...CHART_MARK_MOTION}
+              {...chartMarkMotion(entrando)}
               dataKey="arco"
               background
               cornerRadius={CHART_PILL_RADIUS}
@@ -2736,6 +2782,9 @@ function ChartRadial({
               <li
                 key={anel.nome || i}
                 className={cn("flex items-center gap-2", chartRiseClassName)}
+                // Um item atrás do outro, na ordem dos anéis de fora para dentro.
+                // A linha só transiciona na entrada, então o atraso não pesa depois.
+                style={{ transitionDelay: `${150 + i * CHART_STAGGER_MS}ms` }}
               >
                 <span
                   aria-hidden
@@ -2827,13 +2876,18 @@ const chartHeatmapVariants = cva(
   }
 )
 
+/** Quanto a onda da entrada leva para cruzar o calendário, qualquer largura. */
+const CHART_HEAT_SWEEP_MS = 400
+
 /**
- * A célula **aparece** ao montar (opacidade e escala, por `@starting-style`),
- * e a troca de filtro só muda a cor do degrau, no ritmo da atualização. As
- * duas dividem a mesma transição: uma só regra, sem fase.
+ * A célula **aparece** ao montar (opacidade e escala, na mola, por
+ * `@starting-style`) — o degrau dela não cresce, então não há valor para a
+ * mola exagerar. A troca de filtro só muda a cor do degrau, no ritmo da
+ * atualização. Cada propriedade tem a própria transição: a onda
+ * (`--heat-delay`, por coluna) atrasa só a entrada, e a cor muda junta.
  */
 const chartHeatCellClassName =
-  "transition-[opacity,scale,background-color] duration-(--duration-slow) ease-(--ease-out) starting:scale-50 starting:opacity-0"
+  "[transition:opacity_var(--duration-spring)_var(--ease-spring)_var(--heat-delay,0ms),scale_var(--duration-spring)_var(--ease-spring)_var(--heat-delay,0ms),background-color_var(--duration-slow)_var(--ease-out)] starting:scale-50 starting:opacity-0"
 
 const CHART_HEAT_WEEKS = { quarter: 13, year: 53 } as const
 /** Domingo primeiro, como o calendário brasileiro; só três rótulos cabem. */
@@ -2952,7 +3006,7 @@ function ChartHeatmap({
       format={format}
     >
       <div
-                className={cn(chartHeatmapVariants({ tone, range }), className)}
+        className={cn(chartHeatmapVariants({ tone, range }), className)}
       >
         <ChartHtmlRoot config={{}} label={`${label}. ${resumo}`} description={description}>
           <ScrollArea orientation="horizontal" variant="fade">
@@ -2996,6 +3050,13 @@ function ChartHeatmap({
                         chartHeatCellClassName,
                         lido?.date === dia.date && "ring-2 ring-foreground/60"
                       )}
+                      // A onda da entrada anda por coluna, e cruza a grade
+                      // inteira em 400ms seja um trimestre ou um ano.
+                      style={
+                        {
+                          "--heat-delay": `${Math.round(Math.floor(i / 7) * (CHART_HEAT_SWEEP_MS / semanas))}ms`,
+                        } as React.CSSProperties
+                      }
                       onPointerEnter={() => setLido(dia)}
                       onPointerDown={() => setLido(dia)}
                     />
@@ -3059,6 +3120,7 @@ function ChartRadar({
   xFormat?: ChartFormat
   grid?: "polygon" | "circle"
 }) {
+  const entrando = useChartEntering()
   const chaves = useSeries(config, series)
   const mostrarLegenda = legend ?? chaves.length >= 2
 
@@ -3095,7 +3157,7 @@ function ChartRadar({
           {chaves.map((key, i) => (
             <Radar
               key={key}
-              {...CHART_MARK_MOTION}
+              {...chartMarkMotion(entrando, i)}
               dataKey={key}
               stroke={serieColor(key, i, config)}
               strokeWidth={1.5}
@@ -3238,6 +3300,7 @@ function ChartWaterfall({
   dataTable?: boolean
   children?: React.ReactNode
 }) {
+  const entrando = useChartEntering()
   const degraus = React.useMemo(() => waterfallSteps(data), [data])
   const [emFoco, setEmFoco] = React.useState<string | null>(null)
   const notarFoco = React.useCallback((v: unknown) => setEmFoco(v == null ? null : String(v)), [])
@@ -3279,7 +3342,7 @@ function ChartWaterfall({
               {/* A ponta arredonda e a base não, como em toda barra da casa:
                   o saldo (`total`) nasce na linha do zero, e um degrau
                   flutuante não ganha nada com a base redonda. */}
-              <Bar {...CHART_MARK_MOTION} dataKey="faixa" radius={[CHART_BAR_TIP, CHART_BAR_TIP, 0, 0]}>
+              <Bar {...chartMarkMotion(entrando)} dataKey="faixa" radius={[CHART_BAR_TIP, CHART_BAR_TIP, 0, 0]}>
                 {degraus.map((d, i) => (
                   <Cell
                     key={`${d.name}-${i}`}
@@ -3354,6 +3417,7 @@ function ChartBarList({
   share?: boolean
   className?: string
 }) {
+  const entrando = useChartEntering()
   const valores = data.map((d) => (typeof d[dataKey] === "number" ? (d[dataKey] as number) : 0))
   const maximo = Math.max(0, ...valores)
   const pcts = splitPercents(valores)
@@ -3389,13 +3453,19 @@ function ChartBarList({
                 </div>
                 <div aria-hidden className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                   <div
-                    // Cresce do zero ao montar (`@starting-style`), e da largura
-                    // anterior na troca, no tempo das marcas do Recharts.
-                    className="h-full w-(--bar-w) rounded-full transition-[width] duration-(--duration-spring) ease-(--ease-out) starting:w-0"
+                    // Cresce do zero ao montar (`@starting-style`), escalonada e
+                    // no tempo de entrada; depois, da largura anterior na troca.
+                    className={cn(
+                      "h-full w-(--bar-w) rounded-full transition-[width] ease-(--ease-out) starting:w-0",
+                      entrando ? "duration-(--duration-spring)" : "duration-(--duration-slow)"
+                    )}
                     style={
                       {
                         "--bar-w": `${maximo > 0 ? (Math.max(0, valores[i]) / maximo) * 100 : 0}%`,
                         backgroundColor: serieColor(nome, 0, config),
+                        transitionDelay: entrando
+                          ? `${Math.min(i, CHART_STAGGER_MAX) * CHART_STAGGER_MS}ms`
+                          : undefined,
                       } as React.CSSProperties
                     }
                   />
@@ -3433,7 +3503,7 @@ function ChartSparkline({
   // quadro desenha parado, e só depois dele a marca passa a animar a troca.
   const [montado, setMontado] = React.useState(false)
   React.useEffect(() => setMontado(true), [])
-  const movimento = montado ? CHART_MARK_MOTION : CHART_MARK_STILL
+  const movimento = montado ? CHART_MARK_UPDATE : CHART_MARK_STILL
 
   const marca =
     variant === "bars" ? (
