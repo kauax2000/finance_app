@@ -240,8 +240,10 @@ function usePresa(
         el.style.setProperty("--toolbar-plate-r", `${Math.max(0, raio - nova.clientTop)}px`)
       }
     }
+    const rolaY = (n: Element) =>
+      n === pagina || /(auto|scroll)/.test(janela.getComputedStyle(n).overflowY)
     let rolavel: Element | null = el.parentElement
-    while (rolavel && rolavel !== doc.body && !/(auto|scroll)/.test(janela.getComputedStyle(rolavel).overflowY)) {
+    while (rolavel && rolavel !== doc.body && !rolaY(rolavel)) {
       rolavel = rolavel.parentElement
     }
     usar(!rolavel || rolavel === doc.body ? pagina : rolavel)
@@ -250,8 +252,15 @@ function usePresa(
       const alvo = e?.target
       if (alvo) {
         const nova = alvo === doc ? pagina : (alvo as Element)
-        if (nova !== pagina && !nova.contains(el)) return
-        if (nova !== caixa) usar(nova)
+        if (nova !== caixa) {
+          // Só troca para quem rola na vertical (o `overflow-x` também computa
+          // `overflow-y: auto`, daí a altura); para a página, só se a caixa
+          // deixou de rolar. Rolar a página, ou um ancestral de lado, não tira
+          // a barra da caixa dela.
+          const troca = nova === pagina ? !rolaY(caixa) : nova.contains(el) && rolaY(nova) && nova.scrollHeight > nova.clientHeight
+          if (!troca) return
+          usar(nova)
+        }
       }
       const y = caixa.scrollTop
       // O `top` do sticky conta da borda de dentro do contêiner (`clientTop`).
