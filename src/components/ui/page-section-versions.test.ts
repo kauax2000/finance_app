@@ -84,3 +84,44 @@ describe("os comportamentos", () => {
     expect(lerFonte("src/components/ui/toolbar.tsx")).toContain("usePresa as useStickyBar")
   })
 })
+
+/** As medidas da seção. Os degraus distintos estão em `escadas.test.ts`. */
+const SECTION_SIZES = ["sm", "md", "lg"] as const
+
+describe("PageSection", () => {
+  /**
+   * O corpo vem em par com a entrelinha porque `text-(length:…)` declara só o
+   * tamanho: sem a segunda variável o título herdaria a entrelinha do
+   * parágrafo em volta.
+   */
+  it("cada degrau declara corpo e entrelinha", () => {
+    for (const size of SECTION_SIZES) {
+      const cls = pageSectionVariants({ size })
+      expect(cls).toMatch(/\[--page-section-title:[\d.]+rem\]/)
+      expect(cls).toMatch(/\[--page-section-title-line:[\d.]+rem\]/)
+    }
+  })
+
+  it("a régua da seção é em cima, e nunca embaixo", () => {
+    const ruled = pageSectionVariants({ variant: "ruled" })
+    expect(ruled).toMatch(/(?:^|\s)border-t(?:\s|$)/)
+    expect(ruled).not.toMatch(/(?:^|\s)border-b(?:\s|$)/)
+  })
+
+  it("o padrão é md, e sem régua", () => {
+    expect(pageSectionVariants({})).toBe(
+      pageSectionVariants({ size: "md", variant: "plain" })
+    )
+  })
+
+  /**
+   * Medido: uma seção usada como item de uma **linha** de flex estoura para o
+   * próprio min-content — 5241px dentro de um pai de 400 —, e leva a rolagem
+   * interna junto. O `min-w-0` é da seção; no conteúdo ele não fazia nada,
+   * porque o tamanho mínimo automático vale no eixo principal, e numa coluna o
+   * eixo principal é o vertical.
+   */
+  it("declara min-w-0, que é o que a impede de estourar numa linha de flex", () => {
+    expect(pageSectionVariants({})).toMatch(/(?:^|\s)min-w-0(?:\s|$)/)
+  })
+})

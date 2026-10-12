@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
-import { esperarDistintos, esperarPasso } from "@/test/regras"
 
-import { TABS_TRAY_HEIGHTS } from "@/components/ui/tabs"
 import {
   FIELD_CONTROL_HEIGHTS,
   fieldControlHeightClassName,
@@ -10,7 +8,8 @@ import {
   fieldFocusRingClassName,
   fieldSurfaceClassName,
   type FieldControlSize,
-} from "./field-classes"
+} from "@/lib/field-classes"
+import { TABS_TRAY_HEIGHTS } from "./tabs"
 
 /**
  * A escada de altura da família de campo, trancada — e a sexta grafia trancada
@@ -59,12 +58,6 @@ describe("escada de controle da família de campo", () => {
     expect(Object.keys(FIELD_CONTROL_HEIGHTS).sort()).toEqual([...DEGRAUS].sort())
     // Duas escadas do mesmo sistema não podem se separar caladas.
     expect(FIELD_CONTROL_HEIGHTS).toEqual(TABS_TRAY_HEIGHTS)
-  })
-
-  it("2. os degraus sobem de 4 em 4, e nenhum par repete a mesma string", () => {
-    esperarPasso(DEGRAUS.map((d) => FIELD_CONTROL_HEIGHTS[d]), 4, DEGRAUS)
-    // O defeito do `Item`: dois degraus com a mesma string.
-    esperarDistintos(DEGRAUS.map((d) => fieldControlHeightClassName[d]))
   })
 
   it("3. cada degrau contém o `h-*` literal do seu número", () => {

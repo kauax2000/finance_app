@@ -114,7 +114,7 @@ describe("contorno de marca", () => {
   })
 
   it("7. os oito controles de campo seguem sem marca", () => {
-    // A régua de `field-control-ladder` não muda com esta rodada: a marca entra
+    // A régua de `input-versions` não muda com esta rodada: a marca entra
     // nos controles de **escolha**, e o campo de texto continua fora — cinco
     // tentativas recusadas na tela, e `fieldFocusRingClassName` é o anel dele.
     for (const nome of [

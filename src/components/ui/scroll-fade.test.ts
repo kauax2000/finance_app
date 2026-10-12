@@ -11,7 +11,7 @@ import {
 
 /**
  * O `scroll-fade` viveu sem teste próprio: as quatro invariantes dele só eram
- * cobradas de raspão por `carousel-ladder.test.ts`, contra **um** consumidor.
+ * cobradas de raspão por `carousel-versions.test.ts`, contra **um** consumidor.
  * A rodada do borrão fechou isso.
  *
  * O corte é o de `glass.test.ts`, e a razão é a mesma: **asserção que varre

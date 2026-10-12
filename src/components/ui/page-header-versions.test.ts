@@ -116,3 +116,55 @@ describe("os comportamentos", () => {
     expect(CODIGO).toContain("if (!cortado) return titulo")
   })
 })
+
+/**
+ * As medidas do cabeçalho. `PageHeaderTitle` oferecia um corpo só
+ * (`text-2xl sm:text-3xl`) enquanto o catálogo renderizava dois; a escada que
+ * nasceu daí tem os degraus distintos e subindo trancados em `escadas.test.ts`.
+ */
+const HEADER_SIZES = ["sm", "md", "lg"] as const
+
+describe("PageHeader", () => {
+  it("cada degrau declara --page-title nas duas larguras", () => {
+    for (const size of HEADER_SIZES) {
+      const cls = pageHeaderVariants({ size })
+      expect(cls).toMatch(/\[--page-title:[\d.]+rem\]/)
+      expect(cls).toMatch(/sm:\[--page-title:[\d.]+rem\]/)
+    }
+  })
+
+  /**
+   * O degrau tem que ser um número, e não uma classe da escala do Tailwind:
+   * `text-2xl` traria a entrelinha pareada junto, e quem manda na entrelinha
+   * do título é `.page-title` (1.25), que está fora de `@layer` e vence.
+   */
+  it("o degrau é medida, e nunca uma classe de corpo do Tailwind", () => {
+    for (const size of HEADER_SIZES) {
+      expect(pageHeaderVariants({ size })).not.toMatch(/(?:^|[: ])text-\w/)
+    }
+  })
+
+  // Rodada 232: o padrão é md, e a régua (`ruled`) saiu — quem separa é o respiro.
+  it("o padrão é md", () => {
+    expect(pageHeaderVariants({})).toBe(pageHeaderVariants({ size: "md" }))
+  })
+
+  it("o cabeçalho não desenha régua nenhuma", () => {
+    // `border-b` é substring de `border-border`: a fronteira de palavra é o
+    // que faz esta asserção medir o que ela diz medir.
+    const BORDA_BAIXO = /(?:^|\s)border-b(?:\s|$)/
+    expect(pageHeaderVariants({})).not.toMatch(BORDA_BAIXO)
+  })
+
+  /**
+   * A trilha e a faixa de fatos atravessam as duas colunas, e isso só é
+   * possível numa grade. Enquanto era `sm:flex-row` sem `flex-wrap`, a trilha
+   * caía **dentro** da linha do título — medido a 1280px, com a coluna do
+   * título saindo com largura zero.
+   */
+  it("é grade, e não uma linha de flex", () => {
+    const cls = pageHeaderVariants({})
+    expect(cls).toMatch(/(?:^|\s)grid(?:\s|$)/)
+    expect(cls).not.toMatch(/flex-row/)
+  })
+})

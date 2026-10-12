@@ -9,7 +9,7 @@ import { barSurfaceClassName, menuPanelTintClassName } from "@/lib/glass-classes
 /**
  * As invariantes do vidro.
  *
- * Elas moravam em `sidebar-ladder.test.ts` enquanto a receita era da barra. Com
+ * Elas moravam na régua da Sidebar enquanto a receita era da barra. Com
  * a extração, o que é do **vidro** vem para cá e o que é da **barra** fica lá —
  * a de lá tranca, desde a rodada 221, que a placa flutuante **não** veste mais
  * a peça.
