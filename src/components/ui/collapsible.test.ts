@@ -1,11 +1,17 @@
 import { describe, expect, it } from "vitest"
-import { lerFonte } from "@/test/fonte"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 /** O bloco que expande, trancado na rodada 189. */
 
 const FONTE = lerFonte("src/components/ui/collapsible.tsx")
 
 describe("o collapsible", () => {
+  it("o estado aberto vem do useControllableState do Radix", () => {
+    const fonte = semComentarios(FONTE, "tudo")
+    expect(fonte).toMatch(/useControllableState/)
+    expect(fonte).toMatch(/from "radix-ui\/internal"/)
+  })
+
   it("a linha é a régua do Accordion", () => {
     for (const c of ["disclosureRowClassName", "disclosureRowFocusClassName", "disclosureLabelClassName"]) {
       expect(FONTE, c).toContain(c)

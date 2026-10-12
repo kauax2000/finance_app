@@ -20,7 +20,7 @@ import {
   type DisclosureSize,
 } from "@/lib/disclosure-classes"
 import { MOLA } from "@/lib/spring"
-import { composeRefs } from "radix-ui/internal"
+import { composeRefs, useControllableState } from "radix-ui/internal"
 
 /**
  * Um bloco que expande — o `Accordion` de um item só, sem a semântica de lista.
@@ -105,7 +105,7 @@ const COLLAPSIBLE_CARD =
 
 function Collapsible({
   open: openProp,
-  defaultOpen = false,
+  defaultOpen,
   onOpenChange,
   variant = "plain",
   className,
@@ -115,8 +115,13 @@ function Collapsible({
   /** `card` veste a superfície do `Card`, com a linha e o conteúdo no recuo. */
   variant?: "plain" | "card"
 }) {
-  const [interno, setInterno] = React.useState(defaultOpen)
-  const open = openProp ?? interno
+  // O Radix guarda o aberto (controlado ou não) e só avisa quando o valor muda.
+  const [open, setAberto] = useControllableState({
+    prop: openProp,
+    defaultProp: defaultOpen ?? false,
+    onChange: onOpenChange,
+    caller: "Collapsible",
+  })
   const raiz = React.useRef<HTMLDivElement>(null)
   const setOpen = React.useCallback(
     (proximo: boolean) => {
@@ -129,10 +134,9 @@ function Collapsible({
           ?.querySelector(":scope > [data-slot=collapsible-content][hidden]")
           ?.removeAttribute("hidden")
       }
-      if (openProp === undefined) setInterno(proximo)
-      onOpenChange?.(proximo)
+      setAberto(proximo)
     },
-    [openProp, onOpenChange]
+    [setAberto]
   )
   const estado = React.useMemo(
     () => ({ open, setOpen, variant }),
