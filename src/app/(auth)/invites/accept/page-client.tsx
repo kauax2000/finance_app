@@ -6,7 +6,8 @@ import Link from "next/link"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
-import { LoginScene } from "@/components/auth/scenes/login-scene"
+import { AuthStatus } from "@/components/auth/auth-status"
+import { InviteScene } from "@/components/auth/scenes/invite-scene"
 import { AuthFormSkeleton, AuthShell } from "@/components/layout/auth-shell"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -106,7 +107,7 @@ export default function AcceptInvitePageClient() {
 
     if (busy) {
         return (
-            <AuthShell scene={<LoginScene />} title="Aceitar convite" step="loading">
+            <AuthShell scene={<InviteScene />} title="Aceitar convite" step="loading">
                 <div role="status" aria-live="polite" aria-busy="true">
                     <span className="sr-only">Processando o convite…</span>
                     <AuthFormSkeleton fields={1} />
@@ -120,49 +121,35 @@ export default function AcceptInvitePageClient() {
     // ainda não está (lacuna 5 de `docs/JORNADAS.md`).
     if (authGate) {
         return (
-            <AuthShell
-                scene={<LoginScene />} // provisório: a cena da tela vem nas Tarefas 5-7
+            <AuthStatus
+                icon="invite"
+                scene={<InviteScene />}
                 title="Você foi convidado"
                 step="gate"
                 description="Entre ou crie uma conta para participar da carteira. Use o mesmo e-mail do convite, se ele foi enviado para um endereço específico."
             >
-                <div className="flex flex-col gap-(--space-block)">
-                    {/* Era uma caixa montada à mão — `rounded-lg border
-                        border-primary/20 bg-primary/5` com um ícone ao lado.
-                        É um `Alert`, e o sistema já tem um. */}
-                    <Alert tone="info">
-                        <AlertTitle>
-                            Depois de entrar, você volta para cá sozinho.
-                        </AlertTitle>
-                        <AlertDescription>
-                            Guarde este link até ver a confirmação. Se fechar a
-                            aba, use o mesmo link do e-mail.
-                        </AlertDescription>
-                    </Alert>
-                    {/* Par de ações: a que a tela veio propor preenche, a que a
-                        acompanha não. `secondary` ao lado de `primary` são dois
-                        sólidos disputando. */}
-                    <div className="flex flex-col gap-2 sm:flex-row">
-                        <Button asChild size="xl" className="sm:flex-1">
-                            <Link href={loginHref}>Entrar</Link>
-                        </Button>
-                        <Button
-                            asChild
-                            variant="tertiary"
-                            size="xl"
-                            className="sm:flex-1"
-                        >
-                            <Link href={signupHref}>Criar conta</Link>
-                        </Button>
-                    </div>
-                </div>
-            </AuthShell>
+                <Alert tone="info">
+                    <AlertTitle>
+                        Depois de entrar, você volta para cá sozinho.
+                    </AlertTitle>
+                    <AlertDescription>
+                        Guarde este link até ver a confirmação. Se fechar a
+                        aba, use o mesmo link do e-mail.
+                    </AlertDescription>
+                </Alert>
+                <Button asChild size="xl" className="w-full">
+                    <Link href={loginHref}>Entrar</Link>
+                </Button>
+                <Button asChild variant="tertiary" size="xl" className="w-full">
+                    <Link href={signupHref}>Criar conta</Link>
+                </Button>
+            </AuthStatus>
         )
     }
 
     if (error) {
         return (
-            <AuthShell scene={<LoginScene />} title="Convite indisponível" step="error">
+            <AuthShell scene={<InviteScene />} title="Convite indisponível" step="error">
                 <div className="flex flex-col gap-(--space-block)">
                     <Alert tone="destructive">
                         <AlertTitle>{error}</AlertTitle>
@@ -177,41 +164,35 @@ export default function AcceptInvitePageClient() {
 
     if (showSuccess) {
         return (
-            <AuthShell
-                scene={<LoginScene />} // provisório: a cena da tela vem nas Tarefas 5-7
+            <AuthStatus
+                icon="done"
+                scene={<InviteScene />}
                 title="Convite aceito"
                 step="accepted"
                 description={
                     acceptedWorkspaceName ? (
                         <>
-                            Você agora faz parte da carteira{" "}
+                            Você entrou em{" "}
                             <strong className="font-medium text-foreground">
                                 {acceptedWorkspaceName}
                             </strong>
-                            .
+                            . Use o seletor de carteiras no topo da lateral para
+                            alternar entre Pessoal e esta carteira.
                         </>
                     ) : (
-                        "A carteira compartilhada já está disponível na sua conta."
+                        "A carteira compartilhada já está disponível na sua conta. Use o seletor de carteiras no topo da lateral para alternar entre Pessoal e ela."
                     )
                 }
             >
-                <div className="flex flex-col gap-(--space-block)">
-                    <Alert tone="success">
-                        <AlertTitle>
-                            Use o seletor de carteiras no topo da lateral para
-                            alternar entre Pessoal e esta carteira.
-                        </AlertTitle>
-                    </Alert>
-                    <Button asChild size="xl" className="w-full">
-                        <Link href={ROUTES.DASHBOARD}>Ir para o Painel</Link>
-                    </Button>
-                </div>
-            </AuthShell>
+                <Button asChild size="xl" className="w-full">
+                    <Link href={ROUTES.DASHBOARD}>Abrir a carteira</Link>
+                </Button>
+            </AuthStatus>
         )
     }
 
     return (
-        <AuthShell scene={<LoginScene />} title="Aceitar convite" step="idle">
+        <AuthShell scene={<InviteScene />} title="Aceitar convite" step="idle">
             <Muted>Nada para fazer aqui. Confira o link do convite.</Muted>
         </AuthShell>
     )
