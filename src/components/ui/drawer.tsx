@@ -482,17 +482,21 @@ function DrawerOverlay({
  * É ele que rola, entre o cabeçalho e o rodapé parados — antes rolava tudo
  * junto, e o título subia com a lista.
  *
+ * **Quem acha o meio é o JS, e o CSS só lê a marca** (`data-drawer-meio`,
+ * escrita pelo efeito do `DrawerContent`): a lista de slots de borda mora uma
+ * vez em `acharMeio`, e não repetida em cinco seletores `:not()`.
+ *
  * **As classes estão escritas por extenso, uma a uma**, e não montadas a
  * partir de uma constante com o seletor: o Tailwind lê o fonte como texto, e
  * a primeira versão (com o seletor num template literal) não gerou regra
  * nenhuma — medido, `overflow-y: visible` e máscara `none`.
  */
 const MEIO_CLASSES = [
-  "[&>:not([data-slot=drag-handle]):not([data-slot=dialog-header]):not([data-slot=dialog-footer]):not([data-slot=dialog-close-button]):not([data-slot=dialog-body]):not([data-slot=drawer-cancel])]:min-h-0",
-  "[&>:not([data-slot=drag-handle]):not([data-slot=dialog-header]):not([data-slot=dialog-footer]):not([data-slot=dialog-close-button]):not([data-slot=dialog-body]):not([data-slot=drawer-cancel])]:overflow-y-auto",
-  "[&>:not([data-slot=drag-handle]):not([data-slot=dialog-header]):not([data-slot=dialog-footer]):not([data-slot=dialog-close-button]):not([data-slot=dialog-body]):not([data-slot=drawer-cancel])]:overscroll-contain",
-  "[&>:not([data-slot=drag-handle]):not([data-slot=dialog-header]):not([data-slot=dialog-footer]):not([data-slot=dialog-close-button]):not([data-slot=dialog-body]):not([data-slot=drawer-cancel])]:scroll-fade-y",
-  "[&>:not([data-slot=drag-handle]):not([data-slot=dialog-header]):not([data-slot=dialog-footer]):not([data-slot=dialog-close-button]):not([data-slot=dialog-body]):not([data-slot=drawer-cancel])]:[--scroll-fade-floor:0]",
+  "[&>[data-drawer-meio]]:min-h-0",
+  "[&>[data-drawer-meio]]:overflow-y-auto",
+  "[&>[data-drawer-meio]]:overscroll-contain",
+  "[&>[data-drawer-meio]]:scroll-fade-y",
+  "[&>[data-drawer-meio]]:[--scroll-fade-floor:0]",
 ].join(" ")
 
 function acharMeio(el: HTMLElement): HTMLElement | null {
@@ -581,9 +585,31 @@ function DrawerContent({
   const conteudo = useComposedRefs<HTMLDivElement>(setEl, ref)
   useAlturaQueAcompanha(el, !alta)
   const dissolver = useScrollFade()
+  // Marca o meio e repete a busca quando filhos entram ou saem (um passo que
+  // troca, uma lista que monta depois), tirando a marca e a dissolução do antigo.
   React.useEffect(() => {
-    const meio = el ? acharMeio(el) : null
-    return meio ? dissolver(meio) : undefined
+    if (!el) return
+    let meio: HTMLElement | null = null
+    let soltar: (() => void) | undefined
+    const largar = () => {
+      soltar?.()
+      meio?.removeAttribute("data-drawer-meio")
+    }
+    const marcar = () => {
+      const achado = acharMeio(el)
+      if (achado === meio) return
+      largar()
+      meio = achado
+      meio?.setAttribute("data-drawer-meio", "")
+      soltar = meio ? dissolver(meio) : undefined
+    }
+    marcar()
+    const ob = new MutationObserver(marcar)
+    ob.observe(el, { childList: true })
+    return () => {
+      ob.disconnect()
+      largar()
+    }
   }, [el, dissolver])
 
   return (

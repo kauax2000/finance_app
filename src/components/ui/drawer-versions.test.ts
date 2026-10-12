@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { lerFonte } from "@/test/fonte"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 /** A rodada 212: as versões novas do `Drawer`. */
 
@@ -30,9 +30,20 @@ describe("as versões do Drawer", () => {
 
   it("o meio que rola está escrito por extenso — classe montada não existe no CSS", () => {
     expect(CODIGO).not.toMatch(/\$\{MEIO\}/)
-    expect(CODIGO).toContain(
-      "[&>:not([data-slot=drag-handle]):not([data-slot=dialog-header]):not([data-slot=dialog-footer]):not([data-slot=dialog-close-button]):not([data-slot=dialog-body]):not([data-slot=drawer-cancel])]:overflow-y-auto"
-    )
+    for (const classe of ["min-h-0", "overflow-y-auto", "overscroll-contain", "scroll-fade-y", "[--scroll-fade-floor:0]"]) {
+      expect(CODIGO).toContain(`"[&>[data-drawer-meio]]:${classe}"`)
+    }
+  })
+
+  it("o meio é achado pela marca, e a cadeia de :not() não se repete", () => {
+    const fonte = semComentarios(lerFonte("src/components/ui/drawer.tsx"), "tudo")
+    expect(fonte).toContain("data-drawer-meio")
+    expect(fonte.match(/:not\(\[data-slot=/g)?.length ?? 0).toBeLessThanOrEqual(6)
+  })
+
+  it("a marca acompanha os filhos: um observador de childList repete a busca", () => {
+    expect(CODIGO).toMatch(/new MutationObserver\(marcar\)/)
+    expect(CODIGO).toMatch(/observe\(el, \{ childList: true \}\)/)
   })
 
   it("a folha de ações: 52px, ícone de 20, e cada ação fecha", () => {
