@@ -3,7 +3,7 @@ import { join } from "node:path"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
-import { lerFonte } from "@/test/fonte"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 import {
   Form,
@@ -102,5 +102,11 @@ describe("as versões do Form", () => {
     expect(lerFonte("src/app/designsystem/docs/form.tsx")).toContain("<PickerDemo />")
     expect(lerFonte("src/app/designsystem/registry.ts")).not.toContain('"form-picker-popover"')
   })
-})
 
+  it("o Enter é do navegador: sem regras de desvio", () => {
+    const fonte = semComentarios(lerFonte("src/components/ui/form.tsx"), "tudo")
+    expect(fonte).not.toContain("ENTER_DEFERRAL_RULES")
+    expect(fonte).not.toContain("shouldDeferEnterToWidget")
+    expect(fonte).toMatch(/requestSubmit\(/)
+  })
+})

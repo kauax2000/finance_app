@@ -270,8 +270,8 @@ describe("o comportamento", () => {
     expect(CODIGO).toContain("isEditableTarget(e.target)")
   })
 
-  it("o Enter de dentro (e dos portais) não chega a um Form em volta", () => {
-    expect(CODIGO).toContain('if (e.key === "Enter") e.stopPropagation()')
+  it("o Enter não é parado na barra: um Form em volta só envia pelo dono do campo no DOM", () => {
+    expect(CODIGO).not.toContain('if (e.key === "Enter") e.stopPropagation()')
   })
 
   it("o editor não sobrescreve o data-slot do popover", () => {

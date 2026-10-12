@@ -6,7 +6,16 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Forms and Enter-to-submit
 
-- Use **`Form`** from `@/components/ui/form` for any user-facing flow where fields are saved or confirmed with a primary action. It normalizes **Enter** to the primary **`Button type="submit"`** (and skips hijacking for textareas, native selects, contenteditable, Radix select triggers, and combobox/listbox roles).
+- Use **`Form`** from `@/components/ui/form` for any user-facing flow where fields are saved or confirmed with a primary action.
+- **O Enter é a submissão implícita do navegador** (rodada 252): ele aciona o
+  primeiro `type="submit"` cujo dono é o formulário. Por isso **todo submit
+  pertence a um formulário** — dentro do `<form>` ou ligado por `form=` (o
+  `FormSubmit` escreve `form={id}` pelo contexto, que atravessa portal; um
+  rodapé em slot irmão, como o `footer=` do assistente de categorias, leva
+  `form="um-id"` explícito). `form-submit-owner.test.ts` reprova o contrário.
+  O `Form` só acrescenta duas coisas: **⌘/Ctrl+Enter envia de um `<textarea>`**
+  (o Enter sozinho quebra a linha) e, com `labels="hidden"`, o Enter avança ao
+  campo seguinte.
 - **As peças são a forma curta**, e cada uma compõe um átomo: `FormInput` /
   `FormTextarea` (sobre `Field` — rótulo, ajuda e erro já ligados),
   `FormSubmit` (sobre `Button` + `Spinner` — `pending` desabilita, marca
@@ -35,18 +44,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
   Nenhuma tela usa ainda.
 - Use **`type="submit"`** only for that primary action. Use **`type="button"`** for cancel, dismiss, toggles, and auxiliary actions.
 - Avoid raw **`<form>`** for submit flows unless there is a documented exception.
-- If you add a control that uses **Enter** for its own behavior (e.g. another Radix primitive), either mark it with a stable **`data-slot`** and extend `shouldDeferEnterToWidget` in `form.tsx`, or document the exception.
-- **Estar fora do `<form>` no DOM não protege ninguém.** Um popover é
-  portalizado para o `body`, mas **eventos de portal do React sobem pela árvore
-  do React** — e a raiz do seletor é filha do formulário. Medido: o `Enter` no
-  campo de busca do `FormPickerPopover` **salvava a transação**, com o conteúdo
-  comprovadamente fora do `<form>` no DOM. A regra de
-  `form-picker-popover-search` em `shouldDeferEnterToWidget` é o conserto, e a
-  lição é geral: todo campo de texto dentro de um portal precisa da regra, mesmo
-  parecendo estar longe do formulário. **A exceção documentada é o
-  `FilterBar`** (rodada 245): a raiz para todo Enter que nasce nela ou nos
-  portais dela (`stopPropagation`), porque ali o Enter nunca é "salvar" — o
-  menu do operador é `menuitemradio`, que a regra não conhece.
+- Um controle com Enter próprio chama `preventDefault` no `keydown` dele (como
+  o cmdk e o `Select` do Radix): com o padrão impedido, nada é enviado.
+- **Um popover portalizado não envia o formulário**: o navegador decide pelo
+  dono do campo **no DOM**, e a busca de um `FormPickerPopover` ou de um
+  `Combobox` mora no `body`, mesmo que o evento suba pela árvore do React até o
+  `Form`.
 
 ## Jornadas do app
 
@@ -1998,9 +2001,8 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
   no meio da saída, porque o `ref` do `Button` é refeito a cada render. **O
   foco não rola a faixa** durante o deslize (`preventScroll`): quem rola é a
   posição final, por `offsetLeft`. O que sai fica `inert`, e o segmento que
-  mudou pisca com a `table-flash` da casa. **O Enter
-  de dentro da barra — e dos portais dela — para nela**: nunca chega a um
-  `Form` em volta. Nenhuma tela usa ainda; o primeiro lugar é Transações, onde
+  mudou pisca com a `table-flash` da casa. Os editores moram num portal, e
+  por isso o Enter neles não envia um `Form` em volta. Nenhuma tela usa ainda; o primeiro lugar é Transações, onde
   ela substitui as `ToolbarChips`. `filter-bar-versions.test.ts` tranca.
 - **O `PageHeader` ganhou o telefone compacto, as peças que faltavam e quatro
   comportamentos** (rodada 232). **Não há régua**: o `variant` (`plain` |

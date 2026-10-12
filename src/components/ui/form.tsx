@@ -77,128 +77,26 @@ import { SearchInput } from "@/components/ui/search-input"
  * ## O `id`, e até onde ele chega
  *
  * `Form` gera um `id` com `useId` e o publica em contexto; `FormSubmit` escreve
- * `form={id}` sempre. Dentro do `<form>` isso é inócuo — o `submitFrom` acha o
- * botão na primeira busca. **Fora dele é o que faz o Enter funcionar**: um
- * `DialogFooter` é portalizado, e contexto do React atravessa portal.
+ * `form={id}` sempre. O Enter é a submissão implícita do navegador, que aciona
+ * o primeiro `type="submit"` cujo dono é o formulário — dentro do `<form>` ou
+ * ligado por `form=`. O contexto atravessa portal, então um `FormSubmit` num
+ * rodapé portalizado continua dono. O que ele **não** atravessa é *slot irmão*:
+ * quando o rodapé é renderizado por outro componente ao lado do formulário — o
+ * `footer=` do assistente de categorias —, `form={UM_ID}` explícito é a
+ * resposta. `form-submit-owner.test.ts` reprova o submit sem dono.
  *
- * O que ele **não** atravessa é *slot irmão*: quando o rodapé é renderizado por
- * outro componente ao lado do formulário — o `footer=` do assistente de
- * categorias —, não há contexto a herdar, e ali `form={UM_ID}` explícito
- * continua sendo a resposta.
+ * O navegador decide pelo dono do campo **no DOM**: o Enter na busca de um
+ * popover portalizado não envia o formulário, mesmo que o evento suba pela
+ * árvore do React até ele.
  */
 
 /**
- * Onde o Enter **não** é sequestrado, e por quê.
- *
- * Esta lista é a fonte: a página `/designsystem/form` a importa em vez
- * de redigitá-la. Ela era uma cópia à mão, e já tinha divergido — a página
- * mostrava 6 regras enquanto o código checava 7, e a que faltava era
- * justamente a do seletor ancorado, que é a lição mais geral do arquivo.
- * Documentação que duplica um dado sempre atrasa; a que o lê, não.
- */
-export const ENTER_DEFERRAL_RULES = [
-  { match: "<textarea>", why: "o Enter quebra linha" },
-  { match: "<select> nativo", why: "o Enter escolhe a opção" },
-  { match: "contenteditable", why: "o Enter quebra linha" },
-  {
-    match: '[data-slot="select-trigger"]',
-    why: "o Enter abre o Select do Radix",
-  },
-  {
-    match: '[data-slot="form-picker-popover-search"]',
-    why: "a lista já filtra a cada tecla — ali o Enter não é nada",
-  },
-  { match: 'role="combobox"', why: "o Enter confirma o item destacado" },
-  { match: 'role="listbox"', why: "o Enter confirma o item destacado" },
-  {
-    match: "<button>, <a href>, radio, checkbox e switch",
-    why: "o Enter já aciona o próprio controle — sem esta regra, Enter num botão focado (o chip «Dinheiro») enviava o formulário",
-  },
-] as const
-
-/**
- * Exportada para poder ser testada. Enquanto era privada, as regras acima
- * eram uma promessa sem asserção — e não existia `form.test.ts`.
- */
-export function shouldDeferEnterToWidget(target: HTMLElement): boolean {
-  if (
-    target.tagName === "TEXTAREA" ||
-    target.tagName === "SELECT" ||
-    target.isContentEditable
-  ) {
-    return true
-  }
-  // Botão, link e controles de escolha têm o próprio Enter. Sequestrá-lo
-  // clicava o "Salvar" quando a pessoa só queria acionar o botão focado —
-  // medido no chip "Dinheiro" da nova transação. O botão de enviar focado
-  // continua enviando: é o Enter nativo dele que faz isso.
-  if (target.tagName === "BUTTON" || target.tagName === "A") {
-    return true
-  }
-  const ownRole = target.getAttribute("role")
-  if (ownRole === "radio" || ownRole === "checkbox" || ownRole === "switch") {
-    return true
-  }
-  if (
-    target.closest(
-      'button, a[href], [role="radio"], [role="checkbox"], [role="switch"]'
-    )
-  ) {
-    return true
-  }
-  if (target.closest('[data-slot="select-trigger"]')) {
-    return true
-  }
-  // A busca de um seletor ancorado num campo. Ela **não** está dentro do
-  // `<form>` no DOM — o popover é portalizado —, mas eventos de portal do React
-  // sobem pela árvore do **React**, e a raiz do seletor é filha deste
-  // formulário. Medido: sem esta regra, o Enter enquanto se busca uma categoria
-  // salvava a transação. Ali o Enter não é "salvar" nem é nada: a lista já
-  // filtra a cada tecla.
-  if (target.closest('[data-slot="form-picker-popover-search"]')) {
-    return true
-  }
-  const role = target.getAttribute("role")
-  if (role === "combobox" || role === "listbox") {
-    return true
-  }
-  if (target.closest('[role="combobox"]') || target.closest('[role="listbox"]')) {
-    return true
-  }
-  return false
-}
-
-/**
- * Enquanto uma tecla morta está compondo um caractere, o Enter **confirma o
- * candidato** — ele pertence ao editor de método de entrada, não ao
- * formulário. Sem esta guarda, digitar `ç` ou `ã` num teclado que compõe
- * enviava o formulário no meio da palavra.
- *
- * `isComposing` não aparecia em lugar nenhum deste repositório. O `keyCode
- * 229` é o mesmo fato pela porta antiga, para os navegadores que não publicam
- * a propriedade.
+ * Enquanto uma tecla morta compõe um caractere, o Enter confirma o candidato:
+ * é do editor de entrada, não do formulário. O `keyCode 229` é o mesmo fato
+ * para os navegadores que não publicam `isComposing`.
  */
 function isComposing(e: React.KeyboardEvent): boolean {
   return e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229
-}
-
-function submitFrom(form: HTMLFormElement) {
-  let submitButton = form.querySelector(
-    'button[type="submit"]:not(:disabled)'
-  ) as HTMLButtonElement | null
-  // O botão pode viver fora do `<form>` — num `DialogFooter` ou num cabeçalho
-  // fixo de folha —, ligado pelo atributo `form`.
-  if (!submitButton && form.id) {
-    submitButton = document.querySelector(
-      `button[type="submit"][form="${CSS.escape(form.id)}"]:not(:disabled)`
-    ) as HTMLButtonElement | null
-  }
-  if (submitButton) {
-    submitButton.click()
-    return
-  }
-  // Sem botão de enviar à vista, o envio ainda passa pela validação nativa.
-  form.requestSubmit()
 }
 
 /**
@@ -235,8 +133,12 @@ const CAMPOS_QUE_AVANCAM =
 function avancaComEnter(form: HTMLFormElement, alvo: HTMLElement): boolean {
   // `tagName`, e não `instanceof`: dentro do iframe do catálogo o elemento é
   // de outra janela, e o `instanceof` falha.
+  // O dono no DOM, como o navegador decide: a busca de um popover portalizado
+  // não é campo deste formulário. Um combobox usa o Enter para escolher.
   return (
     alvo.tagName === "INPUT" &&
+    (alvo as HTMLInputElement).form === form &&
+    alvo.getAttribute("role") !== "combobox" &&
     alvo.matches(CAMPOS_QUE_AVANCAM) &&
     form.dataset.labels === "hidden"
   )
@@ -253,7 +155,7 @@ function camposQueAvancam(form: HTMLFormElement): HTMLElement[] {
   )
 }
 
-/** Exportada para poder ser testada, como `shouldDeferEnterToWidget`. */
+/** Exportada para poder ser testada. */
 export function proximoCampo(form: HTMLFormElement, atual: HTMLElement): HTMLElement | null {
   const campos = camposQueAvancam(form)
   const i = campos.indexOf(atual)
@@ -390,8 +292,8 @@ const Form = React.forwardRef<HTMLFormElement, FormProps>(
     // penúltimo campo, "Ir" no último (rodada 244). Uma tecla escrita por quem
     // chama fica. O que este efeito escreveu sai antes de cada passada — e de
     // vez fora do `hidden`, senão o iOS seguia dizendo "Seguinte" num
-    // formulário em que o Enter envia. O campo que adia o Enter (um combobox)
-    // não ganha tecla: ali ele não avança.
+    // formulário em que o Enter envia. Um combobox não ganha tecla: ali o Enter
+    // não avança.
     React.useEffect(() => {
       const form = formRef.current
       if (!form) return
@@ -402,7 +304,7 @@ const Form = React.forwardRef<HTMLFormElement, FormProps>(
       if (labels !== "hidden") return
       const campos = camposQueAvancam(form)
       campos.forEach((el, i) => {
-        if (!avancaComEnter(form, el) || shouldDeferEnterToWidget(el)) return
+        if (!avancaComEnter(form, el)) return
         if (el.hasAttribute("enterkeyhint")) return
         el.setAttribute("enterkeyhint", i < campos.length - 1 ? "next" : "go")
         el.setAttribute("data-form-enterkeyhint", "")
@@ -493,24 +395,31 @@ const Form = React.forwardRef<HTMLFormElement, FormProps>(
       onInput?.(e)
     }
 
+    // O Enter é a submissão implícita do navegador. Fica aqui o que ele não faz:
+    // ⌘/Ctrl+Enter envia de um textarea (o Enter sozinho quebra a linha), e com
+    // `labels="hidden"` o Enter leva ao campo seguinte. `tagName`, e não
+    // `instanceof`: no iframe do catálogo o elemento é de outra janela.
     const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
-      if (e.key === "Enter" && !e.shiftKey && !isComposing(e)) {
-        // `⌘/Ctrl + Enter` envia **de dentro** do controle que ficaria com a
-        // tecla. É a saída para o textarea, que defere o Enter e por isso não
-        // tinha nenhuma forma de enviar sem tirar a mão do teclado.
-        const forced = e.metaKey || e.ctrlKey
-        const alvo = e.target as HTMLElement
-        if (forced || !shouldDeferEnterToWidget(alvo)) {
-          e.preventDefault()
-          const proximo =
-            !forced && avancaComEnter(e.currentTarget, alvo)
-              ? proximoCampo(e.currentTarget, alvo)
-              : null
-          if (proximo) proximo.focus()
-          else submitFrom(e.currentTarget)
-        }
-      }
       onKeyDown?.(e)
+      if (e.defaultPrevented || e.key !== "Enter" || e.shiftKey || isComposing(e)) return
+      const alvo = e.target as HTMLElement
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        alvo.tagName === "TEXTAREA" &&
+        (alvo as HTMLTextAreaElement).form === e.currentTarget
+      ) {
+        e.preventDefault()
+        e.currentTarget.requestSubmit()
+        return
+      }
+      const proximo =
+        !e.metaKey && !e.ctrlKey && avancaComEnter(e.currentTarget, alvo)
+          ? proximoCampo(e.currentTarget, alvo)
+          : null
+      if (proximo) {
+        e.preventDefault()
+        proximo.focus()
+      }
     }
 
     return (
@@ -1079,7 +988,7 @@ function FormCancel({
  * de `...props`, para uma exclusão poder pedir `variant="destructive"`; e
  * `disabled`/`aria-busy` vêm **depois**, para o estado de envio não ser
  * sobrescrito por engano. Enter durante o envio não duplica: o botão está
- * `disabled`, e o `submitFrom` acima filtra `:not(:disabled)`.
+ * `disabled`, e a submissão implícita não aciona botão desabilitado.
  */
 function FormSubmit({
   children,
@@ -1334,10 +1243,8 @@ function FormPickerPopoverContent({
  * campo preenchido era uma segunda superfície sobre ela.
  *
  * `className` continua indo para o `<input>`, como sempre foi aqui — por isso
- * ele chega como `inputClassName`.
- *
- * O `data-slot` da faixa não é enfeite — é por ele que o `CustomForm` sabe que
- * o Enter aqui não é "salvar". Ver `shouldDeferEnterToWidget` em `form.tsx`.
+ * ele chega como `inputClassName`. O Enter aqui não envia o formulário: o
+ * popover é portalizado, e o dono do campo no DOM não é o `<form>`.
  */
 function FormPickerPopoverSearch({
   className,

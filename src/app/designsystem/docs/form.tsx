@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/dialog"
 import { DatePicker } from "@/components/ui/date-picker"
 import {
-  ENTER_DEFERRAL_RULES,
   Form,
   FormActions,
   FormCancel,
@@ -61,7 +60,6 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { Controles, DocNote, DocSection, Eixo, Interruptor, Interruptores, PropsTable, Usage } from "../ds-doc"
 import { IphoneFrame } from "../ds-frame"
-import { Group, Spec, Stack } from "../ds-kit"
 
 export default function FormDoc() {
   return (
@@ -190,7 +188,7 @@ export default function FormDoc() {
       </DocSection>
 
       <DocNote title="O Enter na busca do seletor não salva">
-          O popover é portalizado para fora do <code>&lt;form&gt;</code> no DOM, mas eventos de portal sobem pela árvore do React: o teclado da busca chega ao formulário. A regra <code>form-picker-popover-search</code> está na lista do Enter, abaixo — experimente: Enter na busca não conta envio.
+          O popover é portalizado para fora do <code>&lt;form&gt;</code> no DOM, e o navegador envia pelo dono do campo no DOM: a busca não pertence ao formulário — experimente: Enter na busca não conta envio.
       </DocNote>
 
       <DocNote title="O gatilho é um campo, e a linha responde ao dedo">
@@ -301,11 +299,11 @@ export default function FormDoc() {
       </DocNote>
 
       <DocNote title="A tecla morta não envia o formulário">
-          Durante a composição de um acento o <Kbd>Enter</Kbd> é do editor de entrada, e a guarda de <code>isComposing</code> não envia.
+          Durante a composição de um acento o <Kbd>Enter</Kbd> é do editor de entrada: o navegador não envia, e a guarda de <code>isComposing</code> não avança nem envia com ⌘.
       </DocNote>
 
       <DocNote title="Um controle novo que use o Enter">
-          Ganha um <code>data-slot</code> e uma linha em <code>shouldDeferEnterToWidget</code>, ou a exceção fica documentada no componente.
+          Chama <code>preventDefault</code> no próprio <code>keydown</code>, como o cmdk e o <code>Select</code> do Radix já fazem: com o padrão impedido, a submissão implícita não acontece.
       </DocNote>
 
       <DocNote title="CustomForm continua válido">
@@ -316,36 +314,16 @@ export default function FormDoc() {
           Cancelar, alternar e todo o resto levam <code>type=&quot;button&quot;</code> — senão o cancelar vira o alvo do <Kbd>Enter</Kbd> e o formulário fecha em vez de salvar. Com dois <code>type=&quot;submit&quot;</code>, o Enter escolhe o primeiro do DOM; a segunda ação vira <code>type=&quot;button&quot;</code> com <code>onClick</code>.
       </DocNote>
 
-      <Group
-        title="Onde o Enter não é sequestrado"
-        description="shouldDeferEnterToWidget, em ui/form.tsx, lida da fonte para não divergir do código."
-      >
-        <Spec title="As regras" meta="ENTER_DEFERRAL_RULES">
-          <Stack className="gap-2">
-            {ENTER_DEFERRAL_RULES.map((rule) => (
-              <div key={rule.match} className="flex flex-col">
-                <code className="font-mono text-2xs text-foreground">
-                  {rule.match}
-                </code>
-                <span className="text-xs text-muted-foreground">
-                  {rule.why}
-                </span>
-              </div>
-            ))}
-          </Stack>
-        </Spec>
-      </Group>
-
       <DocSection
-        title="Os campos deferem o Enter"
+        title="O Enter de cada controle"
         description="Experimente: Enter no campo de texto envia; dentro da observação, quebra linha — e ⌘/Ctrl+Enter envia de lá mesmo; sobre o seletor, abre a lista."
         previewClassName="items-stretch"
       >
         <EnterDeferDemo />
       </DocSection>
 
-      <DocNote title="Todo campo de texto num portal precisa da regra">
-          Eventos de portal sobem pela árvore do React: sem a regra, o <Kbd>Enter</Kbd> na busca de um seletor ancorado salva a transação, mesmo fora do <code>&lt;form&gt;</code> no DOM.
+      <DocNote title="O Enter é a submissão implícita do navegador">
+          Ele aciona o primeiro <code>type=&quot;submit&quot;</code> cujo dono é o formulário — dentro do <code>&lt;form&gt;</code> ou ligado por <code>form=</code> — e decide pelo dono do campo <strong>no DOM</strong>: um campo num portal não envia, mesmo que o evento suba pela árvore do React. <code>form-submit-owner.test.ts</code> reprova o submit sem dono.
       </DocNote>
 
       <PropsTable

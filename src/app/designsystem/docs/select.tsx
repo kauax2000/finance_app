@@ -344,7 +344,7 @@ export default function SelectDoc() {
       </DocNote>
 
       <DocNote title="O Enter não é do formulário aqui">
-        Nos dois, o Enter escolhe em vez de enviar. O <code>shouldDeferEnterToWidget</code> do <code>Form</code> reconhece o gatilho pelo <code>data-slot=&quot;select-trigger&quot;</code> — que o <code>SelectTrigger</code> já escreve, e que o pagamento de conta escrevia de novo à mão — e o <code>&lt;select&gt;</code> nativo pela tag.
+        Nos dois, o Enter escolhe em vez de enviar: o gatilho do Radix toma o Enter para abrir a lista, e o <code>&lt;select&gt;</code> nativo segue o navegador.
       </DocNote>
 
       <DocNote title="Onde o app usa">

@@ -59,10 +59,9 @@ componente só.
 **`asChild`, não `render`.** A composição do Radix neste projeto usa `asChild`
 (104 ocorrências). `render` é a API do Base UI e não funciona aqui.
 
-**`data-slot` em toda raiz.** É o gancho de teste, de CSS de terceiros e do
-`shouldDeferEnterToWidget` do `CustomForm`. Um componente que use o Enter para
-si **precisa** de um `data-slot` estável, senão o Enter dentro dele vai enviar o
-formulário.
+**`data-slot` em toda raiz.** É o gancho de teste e de CSS de terceiros. Um
+componente que use o Enter para si chama `preventDefault` no `keydown`, senão a
+submissão implícita do navegador envia o formulário em volta.
 
 **`cn()` por último.** `cn(variants({…}), className)` — nessa ordem, para o
 consumidor conseguir sobrescrever. Invertido, o `className` da tela perde para a

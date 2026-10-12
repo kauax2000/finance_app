@@ -583,7 +583,6 @@ function FilterBar({
   shortcut = "f",
   disabled = false,
   className,
-  onKeyDown,
   "aria-label": ariaLabel = "Filtros",
   ...props
 }: FilterBarProps) {
@@ -942,14 +941,7 @@ function FilterBar({
       data-tone={tone}
       data-mobile={mobile}
       className={cn("@container/filter-bar min-w-0", className)}
-      // O Enter de dentro da barra — e dos portais dela, que sobem pela
-      // árvore do React — não chega a um `<Form>` em volta: aqui ele nunca é
-      // "salvar".
       {...props}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") e.stopPropagation()
-        onKeyDown?.(e)
-      }}
     >
       <div className="flex items-center gap-3 @max-md/filter-bar:flex-col @max-md/filter-bar:items-stretch @max-md/filter-bar:gap-2">
         <ButtonSizeContext.Provider value={size}>

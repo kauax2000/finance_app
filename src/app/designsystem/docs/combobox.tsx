@@ -373,9 +373,9 @@ export default function ComboboxDoc() {
       </DocNote>
 
       <DocNote title="O Enter já está resolvido">
-        A busca do cmdk é <code>{'role="combobox"'}</code>, e o{" "}
-        <code>shouldDeferEnterToWidget</code> do <code>Form</code> já trata esse
-        papel: o Enter fica com a lista e não envia o formulário.
+        A busca do cmdk toma o Enter para escolher, e mora num popover
+        portalizado, fora do <code>{"<form>"}</code> no DOM: o navegador não a
+        conta como campo do formulário, e o Enter fica com a lista.
       </DocNote>
 
       <DocNote title="Uma placa, com a busca dentro">
