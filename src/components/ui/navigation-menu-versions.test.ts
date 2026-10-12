@@ -41,7 +41,7 @@ describe("o redesenho do NavigationMenu", () => {
   it("o painel entra na mola e os links sobem em cascata", () => {
     expect(CODIGO).toContain("data-open:zoom-in-[0.97] data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring)")
     expect(CODIGO).toContain('"navigation-menu-reveal"')
-    expect(CSS).toMatch(/@utility navigation-menu-reveal \{\s*& > li \{\s*animation: menubar-rise 160ms var\(--ease-out\) 40ms both;/)
+    expect(CSS).toMatch(/@utility navigation-menu-reveal \{\s*& > li \{\s*animation: rise 160ms var\(--ease-out\) 40ms both;\s*--rise-distance: 3px;/)
   })
 
   it("a diagonal segura: o triângulo aceita o caminho até o painel e recusa o resto", () => {

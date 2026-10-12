@@ -263,7 +263,7 @@ describe("o realce não troca a cor de fundo", () => {
     expect(bloco).toMatch(/:not\(\[data-slot="collapsible-content"\]\)/)
     // A abertura anda na mola da casa, e o fechamento não: uma mola até zero
     // passaria por baixo de zero, e a altura seria cortada seca.
-    expect(bloco).toMatch(/disclosure-rise var\(--duration-spring\) var\(--ease-spring\)/)
+    expect(bloco).toMatch(/rise var\(--duration-spring\) var\(--ease-spring\) both;\s*--rise-distance: 6px;/)
     expect(css).toMatch(/--ease-spring: linear\(/)
   })
 })

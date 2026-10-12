@@ -42,7 +42,7 @@ describe("as versões do Sheet", () => {
     expect(c).toContain("data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring)")
     expect(c).toContain("data-closed:animation-duration-[200ms]")
     expect(c).toContain("sheet-reveal")
-    expect(CSS).toMatch(/@utility sheet-reveal \{[\s\S]*?animation: menubar-rise 220ms var\(--ease-out\) 80ms both;/)
+    expect(CSS).toMatch(/@utility sheet-reveal \{[\s\S]*?animation: rise 220ms var\(--ease-out\) 80ms both;\s*--rise-distance: 3px;/)
     // O × e a costura de largura não sobem: são da superfície.
     expect(CSS).toContain('& > :not([data-slot="dialog-close-button"]):not([data-slot="sheet-resize-handle"])')
   })

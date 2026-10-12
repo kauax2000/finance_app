@@ -2,6 +2,7 @@ import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { lerFonte } from "@/test/fonte"
+import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
 import {
   Menubar,
@@ -47,7 +48,12 @@ describe("o redesenho do Menubar", () => {
   it("a entrada é a mola de 97%, as linhas sobem em cascata e o tique estala", () => {
     expect(CODIGO).toContain("data-open:zoom-in-[0.97] data-[side=bottom]:slide-in-from-top-1.5")
     expect(CODIGO).toContain('"menubar-reveal"')
-    expect(CSS).toMatch(/@utility menubar-reveal \{\s*& > \[role\^="menuitem"\] \{\s*animation: menubar-rise 160ms var\(--ease-out\) 40ms both;/)
+    expect(CSS).toMatch(/@utility menubar-reveal \{\s*& > \[role\^="menuitem"\] \{\s*animation: rise 160ms var\(--ease-out\) 40ms both;\s*--rise-distance: 3px;/)
+    // A escada é a compartilhada (rodada 252): 40, 70… até 190ms na sexta
+    // linha. Era `:nth-of-type`, que conta igual porque rótulo e fio são `div`.
+    const cascata = esperarDepoisDeNoScrollbar(CSS, "@utility menubar-reveal {", { fecha: "@utility" })
+    expect(cascata).toMatch(/--stagger-base: 40ms;\s*--stagger-step: 30ms;\s*--stagger-cap: 5;\s*@apply stagger-ladder;/)
+    expect(cascata).not.toContain("nth-of-type")
     expect(CODIGO).toMatch(/<CheckIcon[\s\S]{0,120}zoom-in-50/)
   })
 

@@ -50,7 +50,7 @@ describe("o redesenho", () => {
 
   it("a cascata mora numa @utility depois do no-scrollbar, e o movimento reduzido a corta", () => {
     const bloco = esperarDepoisDeNoScrollbar(CSS, "@utility page-header-reveal")
-    expect(bloco).toContain("animation: menubar-rise")
+    expect(bloco).toMatch(/animation: rise 280ms var\(--ease-out\) both;\s*--rise-distance: 3px;/)
     expect(bloco).toContain("prefers-reduced-motion")
   })
 

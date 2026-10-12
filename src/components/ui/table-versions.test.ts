@@ -139,7 +139,7 @@ describe("as versões do Table", () => {
   })
 
   it("a cascata e o destaque moram em `@utility`, com os números da referência", () => {
-    expect(CSS).toMatch(/@utility table-reveal \{\s*& > tr \{\s*animation: menubar-rise 160ms var\(--ease-out\) 40ms both;/)
+    expect(CSS).toMatch(/@utility table-reveal \{\s*& > tr \{\s*animation: rise 160ms var\(--ease-out\) 40ms both;\s*--rise-distance: 3px;/)
     // 40ms, e 30ms por degrau até a décima segunda linha (370ms).
     expect(CSS).toMatch(/@utility table-reveal \{\s*& > tr \{[^}]*--stagger-base: 40ms;\s*--stagger-step: 30ms;\s*--stagger-cap: 11;\s*@apply stagger-ladder;/)
     // A escada das cascatas: o k-ésimo filho atrasa min(k − 1, teto) passos,

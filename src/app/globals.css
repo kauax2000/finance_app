@@ -2635,6 +2635,21 @@
   animation: brand-flow 20s linear infinite;
 }
 
+/* A subida das cascatas: sobe e aparece, um keyframe só. Eram quatro
+   (`disclosure-rise`, `menubar-rise`, `page-section-rise` e `overlay-rise`)
+   que só mudavam a distância e, na seção, o desfoque; quem usa declara os
+   dois no seletor que anima — a divulgação 6px, as linhas de menu 3px, a
+   seção 12px com 4px de desfoque, as faixas das placas flutuantes 0.25rem
+   (que subiam por `transform: translateY` e passaram a `translate`, a mesma
+   distância). O desfoque de 0px não pinta nada. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    translate: 0 var(--rise-distance, 3px);
+    filter: blur(var(--rise-blur, 0px));
+  }
+}
+
 /* A divulgação (`Accordion` e `Collapsible`) abre numa **mola**: a altura
    anda em `--ease-spring` (a mola da `Tooltip`, em CSS), e cada filho do
    conteúdo sobe 6px e aparece na mesma curva, 30ms depois do anterior, com
@@ -2650,13 +2665,6 @@
 
    `translate`, e não `transform`: propriedade independente, que não atropela
    um `transform` de quem chama. Movimento reduzido fica com o bloco global. */
-@keyframes disclosure-rise {
-  from {
-    opacity: 0;
-    translate: 0 0.375rem;
-  }
-}
-
 @keyframes disclosure-sink {
   to {
     opacity: 0;
@@ -2677,7 +2685,8 @@
    mesma seletividade —, então as regras de movimento reduzido de cada
    cascata continuam ganhando e perdendo onde ganhavam e perdiam. Doze
    degraus, porque a maior escada (a da `table-reveal`) para no décimo
-   segundo. O `menubar-reveal` fica fora: a escada dele é `:nth-of-type`. */
+   segundo. O `menubar-reveal` era `:nth-of-type` e passou a ela: os irmãos
+   das linhas (rótulo, fio, grupo) são todos `div`, então os dois contam igual. */
 @utility stagger-ladder {
   &:nth-child(2) {
     animation-delay: calc(var(--stagger-base) + var(--stagger-step) * min(1, var(--stagger-cap)));
@@ -2725,7 +2734,8 @@
 
 @utility disclosure-reveal {
   & > * {
-    animation: disclosure-rise var(--duration-spring) var(--ease-spring) both;
+    animation: rise var(--duration-spring) var(--ease-spring) both;
+    --rise-distance: 6px;
     --stagger-base: 0ms;
     --stagger-step: 30ms;
     --stagger-cap: 4;
@@ -2741,7 +2751,8 @@
      do `Collapsible`**, que é o nó cuja animação de altura o Radix espera para
      desmontar; o envelope do `Accordion` é filho dela, e pode. */
   &:not(:has(> *)):not([data-slot="collapsible-content"]) {
-    animation: disclosure-rise var(--duration-spring) var(--ease-spring) both;
+    animation: rise var(--duration-spring) var(--ease-spring) both;
+    --rise-distance: 6px;
   }
   [data-state="closed"]
     > &:not(:has(> *)):not([data-slot="collapsible-content"]) {
@@ -3026,7 +3037,7 @@
 
 
 /* As linhas da paleta sobem ao aparecer (rodada 139). É o desenho do
-   `disclosure-reveal` — o mesmo `disclosure-rise`, na mola, escalonado por
+   `disclosure-reveal` — o mesmo `rise` de 6px, na mola, escalonado por
    `nth-child` com teto — aplicado ao que o cmdk **monta**: um item que passa a
    casar a busca, e o miolo inteiro quando a paleta troca de vista.
 
@@ -3038,36 +3049,14 @@
    aos 40ms e cada uma 30ms depois da anterior, com teto na sexta. É o
    `command-reveal` com os números da referência, e só nas linhas — rótulo e
    fio entram com o painel. */
-@keyframes menubar-rise {
-  from {
-    opacity: 0;
-    translate: 0 3px;
-  }
-}
-
 @utility menubar-reveal {
   & > [role^="menuitem"] {
-    animation: menubar-rise 160ms var(--ease-out) 40ms both;
-  }
-  & > [role^="menuitem"]:nth-of-type(2) {
-    animation-delay: 70ms;
-  }
-  & > [role^="menuitem"]:nth-of-type(3) {
-    animation-delay: 100ms;
-  }
-  & > [role^="menuitem"]:nth-of-type(4) {
-    animation-delay: 130ms;
-  }
-  & > [role^="menuitem"]:nth-of-type(5) {
-    animation-delay: 160ms;
-  }
-  & > [role^="menuitem"]:nth-of-type(n + 6) {
-    animation-delay: 190ms;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    & > [role^="menuitem"] {
-      animation-delay: 0ms !important;
-    }
+    animation: rise 160ms var(--ease-out) 40ms both;
+    --rise-distance: 3px;
+    --stagger-base: 40ms;
+    --stagger-step: 30ms;
+    --stagger-cap: 5;
+    @apply stagger-ladder;
   }
 }
 
@@ -3076,7 +3065,8 @@
    mesmos da `menubar-reveal`. */
 @utility navigation-menu-reveal {
   & > li {
-    animation: menubar-rise 160ms var(--ease-out) 40ms both;
+    animation: rise 160ms var(--ease-out) 40ms both;
+    --rise-distance: 3px;
     --stagger-base: 40ms;
     --stagger-step: 30ms;
     --stagger-cap: 5;
@@ -3097,7 +3087,8 @@
   /* A escada mora no mesmo seletor da animação: num `& > *` à parte ela
      perdia em especificidade para os dois `:not()` e todo filho entrava a 80ms. */
   & > :not([data-slot="dialog-close-button"]):not([data-slot="sheet-resize-handle"]) {
-    animation: menubar-rise 220ms var(--ease-out) 80ms both;
+    animation: rise 220ms var(--ease-out) 80ms both;
+    --rise-distance: 3px;
     --stagger-base: 80ms;
     --stagger-step: 30ms;
     --stagger-cap: 3;
@@ -3115,7 +3106,8 @@
    porque aqui sobe um cartão inteiro. */
 @utility stat-card-reveal {
   & > [data-slot="stat-card"] {
-    animation: menubar-rise 280ms var(--ease-out) both;
+    animation: rise 280ms var(--ease-out) both;
+    --rise-distance: 3px;
     --stagger-base: 0ms;
     --stagger-step: 50ms;
     --stagger-cap: 3;
@@ -3139,7 +3131,8 @@
   & > [data-slot="page-header-actions"],
   & > [data-slot="page-header-meta"],
   & > [data-slot="page-header-nav"] {
-    animation: menubar-rise 280ms var(--ease-out) both;
+    animation: rise 280ms var(--ease-out) both;
+    --rise-distance: 3px;
   }
   & [data-slot="page-header-heading"] > :nth-child(2),
   & > [data-slot="page-header-actions"] {
@@ -3164,24 +3157,18 @@
 }
 
 /* A cascata da seção (rodada 233): o título, depois a descrição e a ação,
-   depois o conteúdo. A subida é a dela, e não o `menubar-rise` do PageHeader:
+   depois o conteúdo. A subida é mais funda que a do PageHeader (o `rise` de 3px):
    3px em 280ms passavam despercebidos numa seção inteira (o dono não viu
    diferença). Aqui são 12px, um desfoque que assenta e 520ms, com 70ms entre
    os degraus. Desligada por padrão — uma tela tem várias seções. */
-@keyframes page-section-rise {
-  from {
-    opacity: 0;
-    translate: 0 12px;
-    filter: blur(4px);
-  }
-}
-
 @utility page-section-reveal {
   & [data-slot="page-section-title"],
   & [data-slot="page-section-description"],
   & [data-slot="page-section-actions"],
   & > :not([data-slot="page-section-header"]) {
-    animation: page-section-rise 520ms var(--ease-out) both;
+    animation: rise 520ms var(--ease-out) both;
+    --rise-distance: 12px;
+    --rise-blur: 4px;
   }
   & [data-slot="page-section-description"],
   & [data-slot="page-section-actions"] {
@@ -3249,7 +3236,8 @@
    ordenação (essa desliza, pelo `layout` do `motion`). */
 @utility table-reveal {
   & > tr {
-    animation: menubar-rise 160ms var(--ease-out) 40ms both;
+    animation: rise 160ms var(--ease-out) 40ms both;
+    --rise-distance: 3px;
     --stagger-base: 40ms;
     --stagger-step: 30ms;
     --stagger-cap: 11;
@@ -3268,7 +3256,8 @@
    desenha (`timeline-progress`) não entra. */
 @utility timeline-reveal {
   & > li:not([data-slot="timeline-progress"]) {
-    animation: menubar-rise 160ms var(--ease-out) 40ms both;
+    animation: rise 160ms var(--ease-out) 40ms both;
+    --rise-distance: 3px;
   }
   & > li {
     --stagger-base: 40ms;
@@ -3304,7 +3293,8 @@
 @utility command-reveal {
   & [cmdk-item],
   & [cmdk-group-heading] {
-    animation: disclosure-rise var(--command-reveal, 0s) var(--ease-spring) both;
+    animation: rise var(--command-reveal, 0s) var(--ease-spring) both;
+    --rise-distance: 6px;
   }
   & [cmdk-item] {
     --stagger-base: 0ms;
@@ -3327,7 +3317,7 @@
    popover abriu para cima) com a aresta curva, junto com um passo de 6px, 3% de escala na origem
    do Radix e um desfoque que assenta — tudo na mola da casa. Depois o
    conteúdo chega em ondas: o cabeçalho, os dias da semana e cada semana sobem
-   o `disclosure-rise`, 25ms depois da anterior.
+   o `rise` de 6px, 25ms depois da anterior.
 
    - **O recorte termina em `inset(-1rem)`, e não em `inset(0)`**: `inset(0)`
      cortaria a sombra e o anel da placa, que moram fora da caixa. É pela
@@ -3396,7 +3386,8 @@
   &[data-state="open"] [data-slot="month-grid"] > *,
   &[data-state="open"] [data-slot="calendar-legend"],
   &[data-state="open"] [data-slot="date-picker-footer"] {
-    animation: disclosure-rise var(--duration-spring) var(--ease-spring) both;
+    animation: rise var(--duration-spring) var(--ease-spring) both;
+    --rise-distance: 6px;
     animation-delay: 40ms;
   }
   &[data-state="open"] .rdp-weekdays {
@@ -3487,19 +3478,13 @@
   }
 }
 
-@keyframes overlay-rise {
-  from {
-    opacity: 0;
-    transform: translateY(0.25rem);
-  }
-}
-
 /* As linhas de uma lista flutuante sobem em cascata (os filhos diretos do
    viewport: linhas, rótulos, grupos e separadores), 25ms uma depois da outra
    e com teto em 190ms — a régua da `menubar-reveal`, um pouco mais funda. */
 @utility overlay-cascade {
   & > * {
-    animation: overlay-rise 220ms var(--ease-out) 40ms both;
+    animation: rise 220ms var(--ease-out) 40ms both;
+    --rise-distance: 0.25rem;
     --stagger-base: 40ms;
     --stagger-step: 25ms;
     --stagger-cap: 6;
@@ -3583,7 +3568,8 @@
     animation: overlay-unsprout 170ms var(--ease-in-out) both;
   }
   &[data-state="open"] > :not(:has(> [data-slot="popover-arrow"])) {
-    animation: overlay-rise 300ms var(--ease-emphasized) 90ms both;
+    animation: rise 300ms var(--ease-emphasized) 90ms both;
+    --rise-distance: 0.25rem;
     --stagger-base: 90ms;
     --stagger-step: 45ms;
     --stagger-cap: 3;
@@ -3691,7 +3677,8 @@
     animation: overlay-dissolve var(--duration-fast) var(--ease-out) both;
   }
   &[data-state="open"] > :not(:has(> [data-slot="hover-card-arrow"])) {
-    animation: overlay-rise 320ms var(--ease-out) 120ms both;
+    animation: rise 320ms var(--ease-out) 120ms both;
+    --rise-distance: 0.25rem;
     --stagger-base: 120ms;
     --stagger-step: 50ms;
     --stagger-cap: 2;
@@ -3739,7 +3726,8 @@
     animation: dialog-unsprout 180ms var(--ease-in-out) both;
   }
   &[data-state="open"] > :not([data-slot="dialog-close-button"]) {
-    animation: overlay-rise 300ms var(--ease-emphasized) 80ms both;
+    animation: rise 300ms var(--ease-emphasized) 80ms both;
+    --rise-distance: 0.25rem;
     --stagger-base: 80ms;
     --stagger-step: 40ms;
     --stagger-cap: 3;

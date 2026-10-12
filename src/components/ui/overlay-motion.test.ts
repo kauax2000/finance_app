@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { blocoCss, lerFonte } from "@/test/fonte"
+import { blocoCss, lerFonte, semComentarios } from "@/test/fonte"
 import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
 import { popoverContentVariants } from "@/components/ui/popover"
@@ -61,6 +61,12 @@ describe("O movimento do que se sobrepõe à tela, rodada 248", () => {
     expect(utility("field-bloom")).toContain('&[data-state="open"]:not([data-align-trigger="true"])')
   })
 
+  it("as faixas das placas sobem pelo `rise` das cascatas, 0.25rem", () => {
+    for (const nome of ["overlay-cascade", "popover-sprout", "hover-card-unveil", "dialog-sprout"]) {
+      expect(utility(nome), nome).toMatch(/animation: rise \d+ms var\(--ease-[a-z]+\) \d+ms both;\s*--rise-distance: 0\.25rem;/)
+    }
+  })
+
   it("movimento reduzido zera os atrasos das cascatas com !important", () => {
     const zerados = BLOCO.match(/animation-delay: 0ms[^;]*;/g) ?? []
     expect(zerados.length).toBe(4)
@@ -106,6 +112,18 @@ describe("O movimento do que se sobrepõe à tela, rodada 248", () => {
     expect(folha).not.toMatch(/slide-in-from-(top|right|bottom|left)-12/)
     for (const lado of ["top", "right", "bottom", "left"]) {
       expect(folha).toContain(`data-open:slide-in-from-${lado} data-closed:slide-out-to-${lado}`)
+    }
+  })
+})
+
+describe("Um keyframe de subir, rodada 252", () => {
+  it("o `rise` lê a distância e o desfoque por variável, e os quatro antigos saíram", () => {
+    const rise = esperarDepoisDeNoScrollbar(CSS, "@keyframes rise {")
+    expect(rise).toMatch(/from \{\s*opacity: 0;\s*translate: 0 var\(--rise-distance, 3px\);\s*filter: blur\(var\(--rise-blur, 0px\)\);\s*\}/)
+    expect(CSS.match(/@keyframes rise \{/g)).toHaveLength(1)
+    const regras = semComentarios(CSS, "bloco")
+    for (const antigo of ["disclosure-rise", "menubar-rise", "page-section-rise", "overlay-rise"]) {
+      expect(regras, antigo).not.toContain(antigo)
     }
   })
 })

@@ -8,7 +8,7 @@ describe("as linhas da paleta sobem ao aparecer (rodada 139)", () => {
 
   it("a utility mora depois de no-scrollbar e lê --command-reveal, 0s por padrão", () => {
     const bloco = esperarDepoisDeNoScrollbar(css, "@utility command-reveal {", { fecha: "@utility" })
-    expect(bloco).toMatch(/disclosure-rise var\(--command-reveal, 0s\) var\(--ease-spring\)/)
+    expect(bloco).toMatch(/rise var\(--command-reveal, 0s\) var\(--ease-spring\) both;\s*--rise-distance: 6px;/)
     // A escada para na quinta linha: 30ms por degrau, teto de quatro (120ms).
     expect(bloco).toMatch(/& \[cmdk-item\] \{\s*--stagger-base: 0ms;\s*--stagger-step: 30ms;\s*--stagger-cap: 4;\s*@apply stagger-ladder;/)
   })
