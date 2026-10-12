@@ -33,6 +33,8 @@ import { realcesSemParDeToque } from "@/test/regras"
  * Zero render: todas leem o fonte, sem comentários.
  */
 
+// O vidro da placa é testado em glass.test.ts (#1–#4, #7).
+
 const FONTE = lerFonte("src/components/ui/sidebar.tsx")
 
 /** Os comentários citam de propósito o que o arquivo deixou de fazer. */
@@ -219,37 +221,13 @@ describe("régua da Sidebar", () => {
     expect([...CODIGO.matchAll(/group-data-\[variant=floating\]:ring-1/g)]).toHaveLength(1)
   })
 
-  it("22. a lâmina puxa para o chão do próprio tema, e nunca para o preto no claro", () => {
-    // O pedido foi "puxando mais para o preto", e a leitura ingênua — preto com
-    // alfa nos dois temas — introduziria no claro um cinza que o tema **não tem
-    // em lugar nenhum**: medido, ele é inteiramente acromático (croma 0 em
-    // `--background`, `--card`, `--muted`, `--border`, `--sidebar`) e a página
-    // é `oklch(0.985)`, com o branco de verdade morando no `--card`. A regra é
-    // que a lâmina afunda um passo além da página **na direção do chão daquele
-    // tema**: preto no escuro, a família neutra própria dele no claro.
-    //
-    // Mesma mecânica de `--secondary-hover`, que puxa a base na direção do
-    // próprio contato em vez de usar um alfa único para os dois.
+  it("22. os tokens de desenhos anteriores da barra não voltaram", () => {
+    // A lâmina, as nuvens e o aro são do vidro e moram em `glass.test.ts`
+    // (#1–#4 e #7). Fica aqui o que é da barra: os tokens `--sidebar-*` de
+    // desenhos que saíram — a família "sobreviveu à remoção" que esta base já
+    // pagou cinco vezes. O `glass.test.ts` #9 cobre só os nomes da receita
+    // `sidebar-glass`; estes quatro são de outro desenho.
     const css = lerFonte("src/app/globals.css")
-    const claro = css.slice(0, css.indexOf(".dark {"))
-    const escuro = css.slice(css.indexOf(".dark {"))
-
-    // No escuro o chão é o preto.
-    expect(escuro).toMatch(/--glass-tint:\s*oklch\(0 0 0 \/ \d+%\)/)
-    // No claro ele não é — e o guarda é a claridade, não a ausência do literal.
-    const tintaClara = claro.match(/--glass-tint:\s*oklch\(([\d.]+) /)
-    expect(tintaClara).toBeTruthy()
-    expect(Number(tintaClara![1])).toBeGreaterThan(0.8)
-
-    // As nuvens são brancas nos dois: verde tingiria a navegação num app em que
-    // verde significa "entrou dinheiro" — medido, ΔE 43 do `--income`, e ainda
-    // assim errado (a rodada 37 registrou que ΔE não decide isso).
-    for (const tema of [claro, escuro]) {
-      expect(tema).toMatch(/--glass-cloud:\s*oklch\(1 0 0 \/ \d+%\)/)
-    }
-
-    // E os tokens de desenhos anteriores não voltaram pela porta dos fundos —
-    // é a família "sobreviveu à remoção" que esta base já pagou cinco vezes.
     for (const morto of [
       "--sidebar-surface-top",
       "--sidebar-surface-bottom",
@@ -258,82 +236,6 @@ describe("régua da Sidebar", () => {
     ]) {
       expect(css).not.toContain(morto)
     }
-
-    const receita = css.slice(
-      css.indexOf("@utility glass"),
-      css.indexOf("@utility glass-control")
-    )
-
-    // **A lâmina é pintada por cima das nuvens, e é isso que as põe atrás.**
-    // Filtradas por 55% de preto, 30% de branco viram ~37 na tela contra um
-    // corpo de 5. Pintadas por cima, as mesmas nuvens leriam como manchas *na*
-    // placa. Alfa alto, resultado baixo: a atenuação constrói o "atrás".
-    const lamina = receita.indexOf("var(--glass-tint)")
-    const primeiraNuvem = receita.indexOf("radial-gradient")
-    expect(lamina).toBeGreaterThan(-1)
-    expect(lamina).toBeLessThan(primeiraNuvem)
-
-    // São focos, e não uma rampa. Houve uma versão com uma queda vertical de
-    // altura inteira chegando a rgb 62 no topo, e ela lia como degradê de fundo
-    // dos anos 2000 — forte demais, branca demais, com o eixo à vista. O único
-    // gradiente com ângulo que sobra é o aro, no `border-box`.
-    expect((receita.match(/radial-gradient/g) ?? []).length).toBeGreaterThanOrEqual(1)
-    // Um único gradiente carrega eixo, e ele é o aro — no `border-box`, ou seja
-    // no fio de 1px. Qualquer outro gradiente com direção nas camadas de corpo
-    // é a lavagem de volta.
-    const comEixo = receita.match(/var\(--glass-rim-angle\)/g) ?? []
-    expect(comEixo).toHaveLength(1)
-    expect(receita.slice(receita.indexOf("var(--glass-rim-angle)"))).toContain("border-box")
-
-    // E nenhuma nuvem tem centro no eixo do painel: três focos alinhados em
-    // `50%` voltariam a desenhar a rampa que esta versão existe para não ser.
-    for (const [, cx] of receita.matchAll(/radial-gradient\(\s*[\d.]+% [\d.]+% at ([\d.]+)%/g)) {
-      expect(Number(cx)).not.toBe(50)
-    }
-  })
-
-  it("19. o vidro não precisa de máscara, e não tem faixa diagonal", () => {
-    // `mask-image: none` num composite apaga o elemento, e a ordem de emissão
-    // de `mask-composite` e `-webkit-mask-composite` não se controla. A técnica
-    // escolhida — `padding-box` para a superfície, `border-box` para o aro —
-    // não precisa de máscara, e o raio sobrevive (medido).
-    //
-    // E são **três** camadas: houve um brilho diagonal em `soft-light`, e ele
-    // saiu. Numa superfície de navegação a faixa cruza a lista de links e
-    // compete com ela.
-    const css = lerFonte("src/app/globals.css")
-    const receita = css.slice(
-      css.indexOf("@utility glass"),
-      css.indexOf("@utility glass-control")
-    )
-    expect(receita).toContain("padding-box")
-    expect(receita).toContain("border-box")
-    expect(receita).not.toMatch(/mask-composite|-webkit-mask/)
-    expect(receita).not.toMatch(/soft-light|background-blend-mode/)
-
-    // **O eixo do aro é um token, e não um número na receita**, porque hoje ele
-    // difere por tema: inclinado no escuro para concentrar o brilho no canto
-    // superior-esquerdo, reto no claro, onde não há brilho para concentrar.
-    // Isso reverte a rodada 37, que o tinha posto em 180° — e a reversão é
-    // legítima porque a peça mudou: lá o corpo era uma rampa vertical com que
-    // um aro diagonal brigava; hoje é preto plano.
-    expect(receita).toContain("var(--glass-rim-angle)")
-    expect(receita).not.toMatch(/linear-gradient\(\s*\d+deg/)
-
-    const claro = css.slice(0, css.indexOf(".dark {"))
-    const escuro = css.slice(css.indexOf(".dark {"))
-    const anguloClaro = Number(claro.match(/--glass-rim-angle:\s*(\d+)deg/)?.[1])
-    const anguloEscuro = Number(escuro.match(/--glass-rim-angle:\s*(\d+)deg/)?.[1])
-    // Tomba para a esquerda (o pico sobe do topo para o canto superior-esquerdo)
-    // sem virar diagonal de 45°, que seria outra peça.
-    expect(anguloEscuro).toBeGreaterThan(140)
-    expect(anguloEscuro).toBeLessThan(180)
-    // **É o mesmo eixo nos dois temas, girado 180°** — a geometria é idêntica e
-    // só a polaridade inverte: no escuro o pico é luz e mora no canto superior-
-    // esquerdo; no claro ele é sombra, e sombra de uma placa acesa por cima-à-
-    // esquerda mora no canto oposto. Um valor solto em cada tema deixaria os
-    // dois biséis apontando para direções diferentes sem ninguém perceber.
-    expect(anguloClaro).toBe((anguloEscuro + 180) % 360)
   })
 
   it("20. nenhum realce acende no cursor e fica inerte no dedo", () => {
