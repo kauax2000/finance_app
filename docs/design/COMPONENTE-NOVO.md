@@ -66,7 +66,7 @@ na memória de quem escreve a tela.
   `data-variant`) para as peças vizinhas lerem por seletor.
 - Peça que precisa de **lugar certo** entra por **prop** (`footer`, `back`,
   `actions`), nunca por `child.type === Peca` (o Fast Refresh troca a função;
-  `table-ladder.test.ts` reprova).
+  `table-versions.test.ts` reprova).
 
 **Estados** — os cinco existem desde o nascimento
 - repouso, cursor/toque (`hover:` **com** o par `active:`), foco (`ring-3`

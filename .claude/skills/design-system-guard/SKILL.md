@@ -7,7 +7,7 @@ description: Use SOMENTE para conformidade com o design system do Finance App �
 
 ## Por que esta skill existe
 
-O design system do Finance App tem 73 componentes, uma paleta de tokens em
+O design system do Finance App tem 79 componentes, uma paleta de tokens em
 `src/app/globals.css` e uma documentação viva em `/designsystem`. Nada disso
 impede o modo clássico de um design system morrer: não de uma vez, mas uma tela
 por vez. Alguém precisa de um cartão de métrica, escreve um `StatCard` dentro da
@@ -16,8 +16,8 @@ componente. Na tela seguinte outra pessoa escreve o mesmo cartão, um pouco
 diferente. Em três meses o design system descreve uma minoria do produto e
 ninguém confia nele.
 
-A primeira auditoria achou 1.179 achados em 144 arquivos; hoje `ds:audit` sai sem achado. A skill existe para fazer duas coisas
-simétricas, e ambas importam:
+A primeira auditoria achou 1.179 achados em 144 arquivos; hoje `ds:audit` sai
+sem achado. A skill existe para fazer duas coisas simétricas, e ambas importam:
 
 1. **Puxar da tela para o design system** — nenhum componente nasce em `src/app/`.
 2. **Empurrar o design system para a tela** — toda tela compõe a partir de `src/components/ui/`.
