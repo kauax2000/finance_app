@@ -24,8 +24,9 @@ describe("o redesenho", () => {
     expect(pageSectionVariants({})).not.toContain("page-section-reveal")
     expect(pageSectionVariants({ reveal: true })).toContain("page-section-reveal")
     const bloco = esperarDepoisDeNoScrollbar(CSS, "@utility page-section-reveal")
-    // A subida é o `rise` das cascatas, mais funda: 12px e um desfoque de 4px.
-    expect(bloco).toMatch(/animation: rise 520ms var\(--ease-out\) both;\s*--rise-distance: 12px;\s*--rise-blur: 4px;/)
+    // A subida é a dela, fora do `rise` das cascatas: o desfoque não cabe lá.
+    expect(bloco).toContain("animation: page-section-rise 520ms")
+    expect(CSS).toMatch(/@keyframes page-section-rise \{[^}]*translate: 0 12px;\s*filter: blur\(4px\);/)
     expect(bloco).toContain("prefers-reduced-motion")
   })
 

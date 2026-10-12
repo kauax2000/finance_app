@@ -2635,18 +2635,23 @@
   animation: brand-flow 20s linear infinite;
 }
 
-/* A subida das cascatas: sobe e aparece, um keyframe só. Eram quatro
-   (`disclosure-rise`, `menubar-rise`, `page-section-rise` e `overlay-rise`)
-   que só mudavam a distância e, na seção, o desfoque; quem usa declara os
-   dois no seletor que anima — a divulgação 6px, as linhas de menu 3px, a
-   seção 12px com 4px de desfoque, as faixas das placas flutuantes 0.25rem
-   (que subiam por `transform: translateY` e passaram a `translate`, a mesma
-   distância). O desfoque de 0px não pinta nada. */
+/* A subida das cascatas: sobe e aparece, um keyframe só. Eram quatro, e três
+   (`disclosure-rise`, `menubar-rise` e `overlay-rise`) só mudavam a
+   distância; quem usa declara `--rise-distance` no seletor que anima — a
+   divulgação 6px, as linhas de menu 3px, as faixas das placas flutuantes
+   0.25rem (que subiam por `transform: translateY` e passaram a `translate`,
+   a mesma distância).
+
+   **O `page-section-rise` ficou à parte, por medição.** O desfoque dele não
+   cabe aqui como variável: com padrão (`blur(0px)`) toda linha que sobe
+   ganhava filtro do atraso ao fim; sem padrão (`var()` inválido), o quadro
+   resolve `filter: none` e o Chrome anima `none → none` — ainda é uma
+   animação de filtro em cada linha. Só um keyframe sem `filter` não toca
+   nele. */
 @keyframes rise {
   from {
     opacity: 0;
     translate: 0 var(--rise-distance, 3px);
-    filter: blur(var(--rise-blur, 0px));
   }
 }
 
@@ -3157,18 +3162,24 @@
 }
 
 /* A cascata da seção (rodada 233): o título, depois a descrição e a ação,
-   depois o conteúdo. A subida é mais funda que a do PageHeader (o `rise` de 3px):
+   depois o conteúdo. A subida é a dela, e não o `rise` de 3px do PageHeader:
    3px em 280ms passavam despercebidos numa seção inteira (o dono não viu
    diferença). Aqui são 12px, um desfoque que assenta e 520ms, com 70ms entre
    os degraus. Desligada por padrão — uma tela tem várias seções. */
+@keyframes page-section-rise {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+    filter: blur(4px);
+  }
+}
+
 @utility page-section-reveal {
   & [data-slot="page-section-title"],
   & [data-slot="page-section-description"],
   & [data-slot="page-section-actions"],
   & > :not([data-slot="page-section-header"]) {
-    animation: rise 520ms var(--ease-out) both;
-    --rise-distance: 12px;
-    --rise-blur: 4px;
+    animation: page-section-rise 520ms var(--ease-out) both;
   }
   & [data-slot="page-section-description"],
   & [data-slot="page-section-actions"] {

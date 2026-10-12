@@ -117,12 +117,15 @@ describe("O movimento do que se sobrepõe à tela, rodada 248", () => {
 })
 
 describe("Um keyframe de subir, rodada 252", () => {
-  it("o `rise` lê a distância e o desfoque por variável, e os quatro antigos saíram", () => {
+  it("o `rise` lê a distância por variável, e os três antigos saíram", () => {
     const rise = esperarDepoisDeNoScrollbar(CSS, "@keyframes rise {")
-    expect(rise).toMatch(/from \{\s*opacity: 0;\s*translate: 0 var\(--rise-distance, 3px\);\s*filter: blur\(var\(--rise-blur, 0px\)\);\s*\}/)
+    // Sem `filter`: nem padrão (`blur(0px)`) nem `var()` sem padrão — os dois
+    // animam filtro em toda linha (medido). O desfoque da seção é dela.
+    expect(rise).toMatch(/from \{\s*opacity: 0;\s*translate: 0 var\(--rise-distance, 3px\);\s*\}/)
+    expect(rise).not.toContain("filter")
     expect(CSS.match(/@keyframes rise \{/g)).toHaveLength(1)
     const regras = semComentarios(CSS, "bloco")
-    for (const antigo of ["disclosure-rise", "menubar-rise", "page-section-rise", "overlay-rise"]) {
+    for (const antigo of ["disclosure-rise", "menubar-rise", "overlay-rise"]) {
       expect(regras, antigo).not.toContain(antigo)
     }
   })
