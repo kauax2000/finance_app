@@ -5,10 +5,10 @@ import { AuthShell } from "@/components/layout/auth-shell"
 import { EmptyStateIcon } from "@/components/ui/empty-state"
 
 const ICONE = {
-    mail: <EmptyStateIcon className="[--empty-state-icon:--spacing(12)]"><EnvelopeIcon /></EmptyStateIcon>,
-    done: <EmptyStateIcon variant="done" className="[--empty-state-icon:--spacing(12)]" />,
-    expired: <EmptyStateIcon tone="warning" className="[--empty-state-icon:--spacing(12)]"><ExclamationTriangleIcon /></EmptyStateIcon>,
-    invite: <EmptyStateIcon className="[--empty-state-icon:--spacing(12)]"><UserGroupIcon /></EmptyStateIcon>,
+    mail: <EmptyStateIcon><EnvelopeIcon /></EmptyStateIcon>,
+    done: <EmptyStateIcon variant="done" />,
+    expired: <EmptyStateIcon tone="warning"><ExclamationTriangleIcon /></EmptyStateIcon>,
+    invite: <EmptyStateIcon><UserGroupIcon /></EmptyStateIcon>,
 } as const
 
 /**
@@ -38,7 +38,7 @@ export function AuthStatus({
         <AuthShell
             title={title}
             description={description}
-            media={ICONE[icon]}
+            media={<span className="contents [--empty-state-icon:--spacing(12)]">{ICONE[icon]}</span>}
             scene={scene}
             step={step ?? title}
             footer={footer}

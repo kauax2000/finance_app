@@ -96,9 +96,9 @@ Criar conta e entrar são a mesma jornada: as duas telas se ligam e dividem o
 parâmetro `next`. **O login social saiu** em set/2026; a autenticação é
 e-mail e senha.
 
-As cinco telas dividem uma casca só, o `AuthShell`: painel de marca à esquerda
-a partir de `lg`, faixa de marca no topo no telefone, coluna de formulário à
-direita. Quem monta a casca é o **formulário**, não a página, porque o título
+As cinco telas dividem uma casca só, o `AuthShell`: painel de marca com uma cena
+por tela, a partir de 48rem do próprio casco (container query); no telefone só o
+wordmark (`asideMobile="logo"`); coluna de formulário à direita. Quem monta a casca é o **formulário**, não a página, porque o título
 muda com o estado (o cadastro vira "Confira seu e-mail", a recuperação troca a
 cada passo). No desktop o painel de marca mostra uma cena própria por tela; no
 telefone fica só o wordmark.
@@ -167,7 +167,7 @@ flowchart TD
     reset --> token{"Token no hash ou sessão de recuperação?"}
     token -->|"não"| expired(["Link expirado"])
     expired -->|"Pedir novo código"| forgot
-    expired -->|"Entrar"| loginPlain["/login"]
+    expired -->|"Entrar"| loginPlain["/login?next"]
     token -->|"sim"| newPass
 
     menus(["Menu do usuário, menu da conta no mobile ou /account"]) -->|"Sair"| signout[("Limpa sessão, React Query, IndexedDB, fila offline, push e caches do SW; signOut")]

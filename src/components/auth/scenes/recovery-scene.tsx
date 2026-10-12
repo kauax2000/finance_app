@@ -24,7 +24,7 @@ const ORDEM: Step[] = ["email", "code", "password", "done"]
 export function RecoveryScene({ step }: { step: Step }) {
     const atual = ORDEM.indexOf(step)
     return (
-        <Card variant="elevated" padding="none">
+        <Card variant="elevated">
             <CardToolbar variant="title">Recuperar o acesso</CardToolbar>
             <CardContent>
                 <Timeline aria-label="Passos da recuperação">

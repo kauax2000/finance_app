@@ -41,7 +41,7 @@ export function LoginScene() {
                         <StatCardIcon>
                             <BanknotesIcon />
                         </StatCardIcon>
-                        Saldo de outubro
+                        Saldo do mês
                     </StatCardLabel>
                 </StatCardHeader>
                 <StatCardValue value={SALDO[SALDO.length - 1].saldo} />
