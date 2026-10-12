@@ -964,7 +964,7 @@ function TabsList({
   scrollable?: boolean
   /**
    * `"menu"` (rodada 226): as abas que não cabem saem da fileira para o menu
-   * **Mais ▾**, no fim. A ativa nunca sai — se ela não cabe, sai a última que
+   * **⋯ (Mais abas)**, no fim. A ativa nunca sai — se ela não cabe, sai a última que
    * cabia. É a alternativa ao `scrollable` para quem não quer rolar.
    */
   overflow?: "menu"
@@ -1166,6 +1166,9 @@ function useExcesso(
   return ligado ? escondidas : []
 }
 
+/** O ⋯ tem a altura da aba (`TABS_SIZES[size].trigger`), e não a da bandeja. */
+const MAIS_POR_DEGRAU = { sm: "icon-xs", md: "icon-sm", lg: "icon-md", xl: "icon-lg" } as const
+
 /**
  * O ⋯ (Mais abas): as abas que não couberam, num menu que troca de aba de
  * fora. É o `OverflowMenu` da `Toolbar`; o invólucro guarda o
@@ -1173,11 +1176,13 @@ function useExcesso(
  */
 function TabsMoreMenu({ abas }: { abas: { value: string; label: string }[] }) {
   const raiz = React.useContext(TabsRootContext)
+  const { size } = React.useContext(TabsListContext)
   return (
     <div data-slot="tabs-more" className="ms-0.5 flex shrink-0">
       <OverflowMenu
         label="Mais abas"
         align="end"
+        size={MAIS_POR_DEGRAU[size]}
         items={abas.map((a) => ({ key: a.value, label: a.label, onSelect: () => raiz?.setValue(a.value) }))}
       />
     </div>

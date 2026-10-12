@@ -346,6 +346,9 @@ function ToolbarActions({
   )
 }
 
+/** A maiúscula inicial que o `Button` dá ao rótulo (`::first-letter`) e o item de menu não. */
+const maiuscula = (t: string) => t.charAt(0).toLocaleUpperCase("pt-BR") + t.slice(1)
+
 /** Um item do ⋯ com o botão escondido que ele clica — o que diz se a lista mudou. */
 type AcaoNoExcesso = ItemNoExcesso & { el: HTMLElement }
 
@@ -399,7 +402,7 @@ function useExcessoDeAcoes(
         return {
           key: String(i),
           el: f,
-          label: f.getAttribute("aria-label") ?? f.textContent?.trim() ?? "",
+          label: maiuscula(f.getAttribute("aria-label") ?? f.textContent?.trim() ?? ""),
           icone: f.querySelector("svg"),
           onSelect: () => f.click(),
         }

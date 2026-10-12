@@ -85,6 +85,21 @@ describe("a vertical", () => {
 })
 
 describe("as peças", () => {
+  it("o ⋯ tem a altura da aba de cada degrau, não a da bandeja", () => {
+    // icon-xs 24 · icon-sm 28 · icon-md 32 · icon-lg 36, a escada do Button.
+    const icone = { "icon-xs": 24, "icon-sm": 28, "icon-md": 32, "icon-lg": 36 } as const
+    const mapa = /const MAIS_POR_DEGRAU = \{ sm: "(icon-\w+)", md: "(icon-\w+)", lg: "(icon-\w+)", xl: "(icon-\w+)" \}/.exec(TABS)
+    expect(mapa).not.toBeNull()
+    const [, sm, md, lg, xl] = mapa as unknown as (keyof typeof icone)[]
+    expect([icone[sm], icone[md], icone[lg], icone[xl]]).toEqual([
+      TABS_SIZES.sm.trigger,
+      TABS_SIZES.md.trigger,
+      TABS_SIZES.lg.trigger,
+      TABS_SIZES.xl.trigger,
+    ])
+    expect(TABS).toContain("size={MAIS_POR_DEGRAU[size]}")
+  })
+
   it("a contagem entra no nome com um espaço de verdade", () => {
     const html = render(h(TabsList, null, h(TabsTrigger, { value: "a", count: 8 }, "Ativas")))
     expect(html).toMatch(/Ativas <span data-slot="tabs-count"[^>]*>8<\/span>/)

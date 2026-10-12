@@ -15,7 +15,6 @@ export function quemSai(
     gap?: number
   }
 ): number[] {
-  const n = larguras.length
   const soma = (idx: number[]) =>
     idx.reduce((s, i) => s + larguras[i], 0) + gap * Math.max(0, idx.length - 1)
   const todos = larguras.map((_, i) => i)
@@ -27,7 +26,7 @@ export function quemSai(
     if (fixos.has(i) || !podeSair(i)) continue
     ficam.delete(i)
   }
-  return todos.filter((i) => !ficam.has(i) && i < n)
+  return todos.filter((i) => !ficam.has(i))
 }
 
 /** Tira o `hidden` que o mecanismo pôs — ao desligar o transbordo. */

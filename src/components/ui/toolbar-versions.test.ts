@@ -128,7 +128,7 @@ describe("as peças", () => {
     // O item leva o ícone do botão (uma cópia do svg) e a maiúscula do rótulo.
     const MENU = lerFonte("src/lib/overflow-menu.tsx")
     expect(MENU).toContain("{f.icone ? <IconeCopiado svg={f.icone} /> : null}")
-    expect(MENU).toContain("{maiuscula(f.label)}")
+    expect(CODIGO).toContain("label: maiuscula(")
     expect(CODIGO).toContain('icone: f.querySelector("svg")')
     // Saem do começo; a última fica, e um gatilho de menu não pode sair.
     expect(CODIGO).toContain('ponta: "inicio"')

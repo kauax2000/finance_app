@@ -29,15 +29,18 @@ export function OverflowMenu({
   items,
   label,
   align = "end",
+  size = "icon-md",
 }: {
   items: ItemNoExcesso[]
   label: string
   align?: "start" | "end"
+  /** O degrau do ⋯ na escada de ícone do `Button` — o `Tabs` passa o da aba. */
+  size?: "icon-xs" | "icon-sm" | "icon-md" | "icon-lg"
 }) {
   return (
     <DropdownMenu mobile="sheet">
       <DropdownMenuTrigger asChild>
-        <Button type="button" variant="outline" size="icon-md" data-overflow-more="" aria-label={label}>
+        <Button type="button" variant="outline" size={size} data-overflow-more="" aria-label={label}>
           <EllipsisHorizontalIcon aria-hidden />
         </Button>
       </DropdownMenuTrigger>
@@ -45,7 +48,7 @@ export function OverflowMenu({
         {items.map((f) => (
           <DropdownMenuItem key={f.key} onSelect={f.onSelect}>
             {f.icone ? <IconeCopiado svg={f.icone} /> : null}
-            {maiuscula(f.label)}
+            {f.label}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -69,6 +72,3 @@ function IconeCopiado({ svg }: { svg: SVGElement }) {
     />
   )
 }
-
-/** A maiúscula inicial que o `Button` dá ao rótulo (`::first-letter`) e o item de menu não. */
-const maiuscula = (t: string) => t.charAt(0).toLocaleUpperCase("pt-BR") + t.slice(1)
