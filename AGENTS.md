@@ -1161,9 +1161,13 @@ declaração de `background-color` no trilho).
 - **A busca é uma pílula só** ([`lib/search-field-classes`](src/lib/search-field-classes.ts)):
   o `SearchInput`, o `CommandInput` (que monta o `SearchInput`) e o gatilho do
   cabeçalho do catálogo. Superfícies `field` | `plate`; `shortcut` (sem
-  modificadora, não dispara em campo de texto), `variant="brand"`, `pending`.
+  modificadora, não dispara em campo de texto), `variant="brand"`, `pending`,
+  `caret` (o cursor desenhado `type-caret` no lugar do nativo, aceso sem foco:
+  o reflexo invisível do `value` e o traço numa célula de grade sobre o campo,
+  no mesmo corpo; só para a busca que se digita sozinha numa vitrine).
   **Nenhuma busca é `<Input type="search">` nem pílula escrita à mão.** Uma
-  constante não se prefixa (`lg:`). `search-field.test.ts`.
+  constante não se prefixa (`lg:`). `search-field.test.ts` e
+  `search-input-versions.test.ts`.
 - **`Command`**: a geometria de `menuItemGeometryClassName`, os estados no
   arquivo dele (a linha ativa é `data-selected`). `variant` `plain` (herda o
   raio) | `panel` (a pilha). O tique é de quem sabe o selecionado. **O
@@ -1172,7 +1176,8 @@ declaração de `background-color` no trilho).
   separa por respiro e rótulo, **nunca por fio**. `CommandPages` /
   `useCommandPages`, `CommandHighlight`, `CommandGroup count`, `CommandItem
   shortcut` (só com o foco na paleta; evite `mod+n/t/w`), `CommandSplit` +
-  `CommandPreview`. `command-versions.test.ts`.
+  `CommandPreview`, `CommandInput caret` (repassado ao `SearchInput`; segue o
+  texto controlado ou não). `command-versions.test.ts`.
 - **`Field`**: `FieldHeader` (link ou contador **fora do `<label>`**),
   `FieldCounter`, `FieldChecklist` (somada ao `aria-describedby`; nenhuma tela
   declara `ReqRow`), `FieldRow stack={false}` só para o par curto.

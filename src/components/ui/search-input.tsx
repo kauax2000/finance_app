@@ -43,6 +43,10 @@ import { Spinner } from "@/components/ui/spinner"
  * - `variant="brand"`: o brilho de marca na borda ao aproximar o ponteiro, só na
  *   superfície `field`. Uma por tela.
  * - `pending`: a lupa vira `Spinner` e a pílula ganha `aria-busy`.
+ * - `caret`: o cursor desenhado (`type-caret`) no lugar do nativo, aceso com ou
+ *   sem foco — para a busca que se digita sozinha numa vitrine. Uma grade de uma
+ *   célula sobrepõe ao campo o reflexo invisível do `value` e o traço, no mesmo
+ *   corpo de texto. Segue o `value` controlado; sem ele, o traço fica no começo.
  * O `CommandInput` monta **este** componente com o `Command.Input` do cmdk como
  * filho (o `Slot` funde classes, `type` e `ref`); daí `leading` (o escopo da
  * paleta), `focusRing` (a paleta nasce focada), `touchFloor` e `rootProps`.
@@ -61,6 +65,8 @@ type SearchInputProps = Omit<React.ComponentProps<"input">, "size"> & {
   shortcut?: string
   /** A lupa vira `Spinner`, e a pílula, `aria-busy`. */
   pending?: boolean
+  /** O cursor desenhado no lugar do nativo, piscando com ou sem foco; segue o `value`. */
+  caret?: boolean
   /** O campo de outro — o `Command.Input` do cmdk. Recebe as props daqui. */
   children?: React.ReactElement
   /** Entre a lupa e o texto: o `CommandScope` da paleta. */
@@ -89,6 +95,7 @@ function SearchInput({
   clearLabel = "Limpar busca",
   shortcut,
   pending = false,
+  caret = false,
   children,
   leading,
   focusRing = true,
@@ -102,6 +109,10 @@ function SearchInput({
   const marca = variant === "brand" && surface === "field"
   const glowRef = useBrandGlow<HTMLDivElement>(marca)
   const temTexto = props.value != null && String(props.value).length > 0
+  // A rampa que impede o zoom do iOS ao focar, a do campo de formulário; e o
+  // `sm` desce o corpo, como na escada de campo. O reflexo do cursor desenhado
+  // veste a mesma, para o traço cair no fim do texto.
+  const corpo = cn("text-base md:text-sm", size === "sm" && "md:text-control-sm")
 
   React.useEffect(() => {
     if (!shortcut) return
@@ -117,6 +128,29 @@ function SearchInput({
     document.addEventListener("keydown", aoTeclar)
     return () => document.removeEventListener("keydown", aoTeclar)
   }, [shortcut])
+
+  const controle = (
+    <Campo
+      ref={composeRefs(campo, ref)}
+      data-slot="search-input-control"
+      type={type}
+      autoComplete={autoComplete}
+      placeholder={placeholder}
+      aria-keyshortcuts={shortcut ? ariaShortcut(shortcut) : undefined}
+      className={cn(
+        searchFieldInputClassName,
+        corpo,
+        // Na célula do cursor desenhado, o nativo some e o campo divide a caixa.
+        caret && "col-start-1 row-start-1 caret-transparent",
+        // O × do navegador sai; o nosso entra logo abaixo.
+        "[&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none",
+        inputClassName
+      )}
+      {...props}
+    >
+      {children}
+    </Campo>
+  )
 
   return (
     <div
@@ -151,27 +185,26 @@ function SearchInput({
         <MagnifyingGlassIcon aria-hidden className={searchFieldIconClassName} />
       )}
       {leading}
-      <Campo
-        ref={composeRefs(campo, ref)}
-        data-slot="search-input-control"
-        type={type}
-        autoComplete={autoComplete}
-        placeholder={placeholder}
-        aria-keyshortcuts={shortcut ? ariaShortcut(shortcut) : undefined}
-        className={cn(
-          searchFieldInputClassName,
-          // A rampa que impede o zoom do iOS ao focar, a do campo de
-          // formulário; e o `sm` desce o corpo, como na escada de campo.
-          "text-base md:text-sm",
-          size === "sm" && "md:text-control-sm",
-          // O × do navegador sai; o nosso entra logo abaixo.
-          "[&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none",
-          inputClassName
-        )}
-        {...props}
-      >
-        {children}
-      </Campo>
+      {caret ? (
+        // Uma célula só: o campo e o reflexo ocupam a mesma caixa (o `<input>`
+        // não tem borda nem recuo), e o traço cai depois do texto invisível.
+        <span data-slot="search-input-caret-field" className="grid min-w-0 flex-1 grid-cols-1">
+          {controle}
+          <span
+            aria-hidden
+            data-slot="search-input-caret"
+            className={cn(
+              "pointer-events-none col-start-1 row-start-1 flex min-w-0 items-center overflow-hidden",
+              corpo
+            )}
+          >
+            <span className="invisible whitespace-pre">{props.value ?? ""}</span>
+            <span className="type-caret shrink-0" />
+          </span>
+        </span>
+      ) : (
+        controle
+      )}
       {onClear && temTexto ? (
         <Button
           type="button"

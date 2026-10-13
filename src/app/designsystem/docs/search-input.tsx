@@ -11,7 +11,15 @@ import {
 } from "@/components/ui/popover"
 import { SearchInput } from "@/components/ui/search-input"
 import { Caption } from "@/components/ui/typography"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import {
+  Controles,
+  DocNote,
+  DocSection,
+  Interruptor,
+  Interruptores,
+  PropsTable,
+  Usage,
+} from "../ds-doc"
 
 const CATEGORIAS = ["Mercado", "Moradia", "Transporte", "Saúde", "Lazer", "Educação"]
 
@@ -34,13 +42,14 @@ export default function SearchInputDoc() {
 
       <DocSection
         title="Padrão"
-        description="Com onClear, o × aparece quando há texto e devolve o foco ao campo. Sem onClear, não há botão — um × que não limpa nada é pior que nenhum."
+        description="Com onClear, o × aparece quando há texto e devolve o foco ao campo. Sem onClear, não há botão — um × que não limpa nada é pior que nenhum. O cursor desenhado troca o traço nativo pelo type-caret, aceso mesmo sem foco: é o da busca que se digita sozinha numa vitrine."
         code={`<SearchInput
   value={q}
   onChange={(e) => setQ(e.target.value)}
   onClear={() => setQ("")}
   placeholder="Buscar na descrição…"
-/>`}
+/>
+<SearchInput value={digitado} caret readOnly />   {/* a vitrine */}`}
         previewClassName="flex-col items-stretch"
       >
         <Demo />
@@ -166,6 +175,13 @@ export default function SearchInputDoc() {
             description: "A lupa vira Spinner, e a pílula, aria-busy.",
           },
           {
+            prop: "caret",
+            type: "boolean",
+            default: "false",
+            description:
+              "O cursor desenhado (type-caret) no lugar do nativo, piscando com ou sem foco, para a busca que se digita sozinha. Segue o value controlado; o reflexo do texto é aria-hidden.",
+          },
+          {
             prop: "clearLabel",
             type: "string",
             default: '"Limpar busca"',
@@ -196,10 +212,19 @@ export default function SearchInputDoc() {
 
 function Demo() {
   const [q, setQ] = React.useState("Mercado")
+  const [caret, setCaret] = React.useState(false)
 
   return (
     <div className="flex w-full max-w-sm flex-col gap-2">
+      <Controles
+        fim={
+          <Interruptores>
+            <Interruptor id="search-input-caret" rotulo="cursor desenhado" valor={caret} onChange={setCaret} />
+          </Interruptores>
+        }
+      />
       <SearchInput
+        caret={caret}
         value={q}
         onChange={(e) => setQ(e.target.value)}
         onClear={() => setQ("")}

@@ -52,7 +52,15 @@ import { commandFilter } from "@/lib/command-filter"
 import { Kbd } from "@/components/ui/kbd"
 import { KbdGroup } from "@/components/ui/kbd-group"
 import { Spinner } from "@/components/ui/spinner"
-import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
+import {
+  Controles,
+  DocNote,
+  DocSection,
+  Interruptor,
+  Interruptores,
+  PropsTable,
+  Usage,
+} from "../ds-doc"
 
 export default function CommandDoc() {
   return (
@@ -63,7 +71,7 @@ export default function CommandDoc() {
 
       <DocSection
         title="Paleta solta"
-        description="A pilha sem o diálogo: pílula de busca, placa e legenda, soltas numa página, no mesmo plano."
+        description="A pilha sem o diálogo: pílula de busca, placa e legenda, soltas numa página, no mesmo plano. O cursor desenhado (caret no CommandInput, repassado ao SearchInput) troca o traço nativo pelo type-caret e segue o texto, aceso mesmo sem foco: é a paleta que se digita sozinha numa vitrine."
         code={`<Command variant="panel">
   <CommandInput placeholder="Buscar…" />
   <CommandList>
@@ -79,51 +87,7 @@ export default function CommandDoc() {
 </Command>`}
         previewClassName="items-stretch"
       >
-        <Command variant="panel" autoSelectFirst={false} className="w-full max-w-md">
-          <CommandInput placeholder="Buscar tela, ação ou transação…" />
-          <CommandList>
-            <CommandEmpty>Nada encontrado.</CommandEmpty>
-            <CommandGroup heading="Ir para">
-              {[
-                ["Carteiras", WalletIcon],
-                ["Cartões", CreditCardIcon],
-                ["Configurações", Cog6ToothIcon],
-              ].map(([nome, Icone]) => {
-                const I = Icone as typeof WalletIcon
-                return (
-                  <CommandItem key={nome as string}>
-                    <CommandItemIcon>
-                      <I />
-                    </CommandItemIcon>
-                    {nome as string}
-                    <CommandItemArrow />
-                  </CommandItem>
-                )
-              })}
-            </CommandGroup>
-            <CommandGroup heading="Ações">
-              <CommandItem>
-                <CommandItemIcon>
-                  <PlusIcon />
-                </CommandItemIcon>
-                Nova transação
-                <CommandShortcut>
-                  <Kbd keys="mod+n" />
-                </CommandShortcut>
-              </CommandItem>
-            </CommandGroup>
-          </CommandList>
-          <CommandDock>
-            <CommandDockItem>
-              <KbdGroup mode="either" keys={["up", "down"]} />
-              navegar
-            </CommandDockItem>
-            <CommandDockItem>
-              <Kbd>↵</Kbd>
-              abrir
-            </CommandDockItem>
-          </CommandDock>
-        </Command>
+        <PaletaSoltaDemo />
       </DocSection>
 
       <DocSection
@@ -393,6 +357,13 @@ export default function CommandDoc() {
             default: "false",
             description:
               "O piso de toque: a pílula vai a 40 no dedo e a raiz publica a faixa de busca junto (40 + 16), para a lista não passar por baixo. O FilterBar liga; a paleta e o Combobox ainda não.",
+          },
+          {
+            prop: "CommandInput caret",
+            type: "boolean",
+            default: "false",
+            description:
+              "O cursor desenhado do SearchInput, repassado: o type-caret no lugar do nativo, aceso com ou sem foco, seguindo o texto controlado ou não. Para a paleta que se digita sozinha numa vitrine.",
           },
           {
             prop: "CommandInput leading",
@@ -883,5 +854,66 @@ function ServidorDemo() {
         )}
       </CommandList>
     </Command>
+  )
+}
+
+function PaletaSoltaDemo() {
+  const [caret, setCaret] = React.useState(false)
+
+  return (
+    <>
+      <Controles
+        fim={
+          <Interruptores>
+            <Interruptor id="command-caret" rotulo="cursor desenhado" valor={caret} onChange={setCaret} />
+          </Interruptores>
+        }
+      />
+      <Command variant="panel" autoSelectFirst={false} className="w-full max-w-md">
+        <CommandInput caret={caret} placeholder="Buscar tela, ação ou transação…" />
+        <CommandList>
+          <CommandEmpty>Nada encontrado.</CommandEmpty>
+          <CommandGroup heading="Ir para">
+            {[
+              ["Carteiras", WalletIcon],
+              ["Cartões", CreditCardIcon],
+              ["Configurações", Cog6ToothIcon],
+            ].map(([nome, Icone]) => {
+              const I = Icone as typeof WalletIcon
+              return (
+                <CommandItem key={nome as string}>
+                  <CommandItemIcon>
+                    <I />
+                  </CommandItemIcon>
+                  {nome as string}
+                  <CommandItemArrow />
+                </CommandItem>
+              )
+            })}
+          </CommandGroup>
+          <CommandGroup heading="Ações">
+            <CommandItem>
+              <CommandItemIcon>
+                <PlusIcon />
+              </CommandItemIcon>
+              Nova transação
+              <CommandShortcut>
+                <Kbd keys="mod+n" />
+              </CommandShortcut>
+            </CommandItem>
+          </CommandGroup>
+        </CommandList>
+        <CommandDock>
+          <CommandDockItem>
+            <KbdGroup mode="either" keys={["up", "down"]} />
+            navegar
+          </CommandDockItem>
+          <CommandDockItem>
+            <Kbd>↵</Kbd>
+            abrir
+          </CommandDockItem>
+        </CommandDock>
+      </Command>
+    </>
   )
 }

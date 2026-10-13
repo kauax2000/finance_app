@@ -401,6 +401,7 @@ function CommandInput({
   size: sizeProp,
   surface,
   touchFloor = false,
+  caret = false,
   "aria-label": ariaLabel = "Buscar",
   onKeyDown,
   ...props
@@ -413,6 +414,8 @@ function CommandInput({
   surface?: "field" | "plate"
   /** O piso de toque: 40 no dedo, e a faixa de busca da raiz acompanha. Desligado por padrão (a paleta tem medidas próprias); o `FilterBar` liga. */
   touchFloor?: boolean
+  /** O cursor desenhado do `SearchInput`, que segue o texto (controlado ou não): a paleta que se digita sozinha numa vitrine. */
+  caret?: boolean
 }) {
   const pilha = React.useContext(CommandStackContext)
   const naPilha = pilha !== null
@@ -484,6 +487,7 @@ function CommandInput({
         // (`--scroll-fade-band-h`, 32 + 16), e a pílula crescendo no dedo sem
         // ela ficaria 8px por baixo da lista. `touchFloor` leva a faixa junto.
         touchFloor={touchFloor}
+        caret={caret}
         leading={escopo}
         value={texto}
         onClear={(event) => {

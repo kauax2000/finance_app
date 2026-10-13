@@ -70,6 +70,11 @@ describe("as versões do Command", () => {
     expect(CODIGO).toMatch(/if \(isMobile\) \{[\s\S]*?<Drawer \{\.\.\.props\}>[\s\S]*?<DialogTitle>\{title\}<\/DialogTitle>/)
   })
 
+  it("o CommandInput repassa o cursor desenhado ao SearchInput, desligado por padrão", () => {
+    expect(CODIGO).toContain("caret = false,")
+    expect(CODIGO).toMatch(/<SearchInput[^]*?caret=\{caret\}[^]*?<CommandPrimitive\.Input/)
+  })
+
   it("a página não diz mais que o Combobox monta a pilha", () => {
     expect(lerFonte("src/app/designsystem/docs/command.tsx")).not.toMatch(/o CommandDialog e o Combobox a montam/)
   })

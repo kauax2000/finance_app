@@ -25299,3 +25299,40 @@ fonte do `next dev` e o aviso do `motion` sobre movimento reduzido).
 **Desvios do plano.** Nenhum na API. O plano diz "`layout` em `MOLA`"; é
 `layout="position"`, porque a pílula não muda de tamanho e a projeção de
 tamanho esticaria o nome no voo (lição 4 do spike).
+
+### Rodada 257 — `caret` no `SearchInput` e no `CommandInput`
+
+Mudança em componente existente, aprovada na Fase 0 do plano do painel de marca
+animado (`docs/superpowers/plans/2026-10-12-painel-de-marca-animado.md`, seção 5
+"O cursor" e seção 11, Peças: `caret`). É a peça que deixa a paleta ⌘K do palco
+do login se digitar sozinha: o palco é inerte e o campo nunca tem foco, então o
+traço nativo não aparece.
+
+**O que entrou.** `caret?: boolean` no `SearchInput`, desligado por padrão — as
+buscas de hoje não mudam. Ligado, o campo nativo veste `caret-transparent` e
+divide uma célula de grade (`grid grid-cols-1`, os dois em `col-start-1
+row-start-1`) com o reflexo `aria-hidden` e `pointer-events-none`: um `span
+invisible whitespace-pre` com o `value` e o `span` da `@utility type-caret`
+(Tarefa 3, `type-caret-blink`). O reflexo veste a mesma rampa de corpo do campo
+(`text-base md:text-sm`, e `md:text-control-sm` no `sm`), agora uma constante
+só no componente. O `CommandInput` repassa `caret` ao `SearchInput`; ali o
+texto existe mesmo sem dono (o estado interno), então o traço segue a busca
+controlada ou não.
+
+**Medido no catálogo** (Playwright, deviceScaleFactor 2; `/designsystem/
+search-input` e `/designsystem/command`, pelos Interruptores "cursor
+desenhado"). O fim do texto foi medido por `canvas.measureText` com a fonte
+computada do campo. Em 1280 (`md:text-sm`, 14/20px) e em 700 (`text-base`,
+16/24px), nos dois temas: dx de 0,00 a 0,01px e dy 0,00 no `SearchInput`
+("Mercado" e "Mercado Livre e farmácia") e no `CommandInput` ("cart"). O traço
+mede 2×20 e 2×24 (1lh), pisca por `type-caret-blink` e pinta `--foreground` nos
+dois temas; `caret-color` do campo vai a transparente só com a prop. Console
+sem erro.
+
+**Desvio do plano.** A lição 6 do spike pedia `inset-px` para compensar a borda.
+No `SearchInput` a borda é da pílula, não do `<input>` (sem borda nem recuo pelo
+preflight), e a célula de grade já é a caixa de conteúdo do campo: nenhuma
+compensação, e o erro medido é zero. Sem `value` controlado no `SearchInput` o
+traço fica no começo, como o × (que também lê o `value`). Texto mais largo que o
+campo: o reflexo corta (`overflow-hidden`) e o traço some na ponta, em vez de
+rolar com o campo — a vitrine digita palavras curtas.
