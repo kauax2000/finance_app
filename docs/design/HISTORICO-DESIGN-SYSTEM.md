@@ -25475,3 +25475,36 @@ de verdade (S 562×760, M 635×860, L 853×1040, baixo 445×660): o L antigo
 faixa de cima. A seção "No app" ganhou o Eixo das 17 cenas e o da janela,
 montando o `AuthShowcase` real com o wordmark no canto — a única importação do
 app que a página faz (`showcase-versions.test.ts` tranca).
+
+### Rodada 260 — `Showcase`: o pé respira, só a direita corta
+
+Correção da rodada 259, na revisão da tarefa 8c do painel de marca animado.
+
+**O que a revisão mediu.** Os critérios da 259 passavam, mas a composição não
+respirava: o celular de 76cqh centrado a 52% chegava a ~90% da altura, onde
+mora a legenda (em 1280×800 ela o sobrepunha em 2px; em 1440×900 a folga era
+de 8px). E os cartões das bordas esquerda e de cima eram cortados em ~25–30%:
+o nome do autor e o começo de cada linha sumiam ("io R.", "ei um teto pro
+mercado"), lendo como interface quebrada e não como sangria.
+
+**O que mudou.**
+- **A faixa do herói.** Com a legenda (`--showcase-caption`), o ponto do herói
+  vai de 14% (abaixo da marca) até 5,75rem do pé (a legenda, os 16px dela e 16px
+  de respiro), e o herói centra nessa faixa. O celular passou de 76cqh a
+  **72cqh** para caber nela no palco S.
+- **O celular anda para a esquerda** (`margin-inline-end: 24cqw`, o centro a
+  38%; 10cqw no L, a 45%). Centrado, ele deixa duas faixas laterais mais
+  estreitas que um cartão em todo nível menos o L; deslocado, sobra uma coluna
+  inteira à direita, e a colagem do celular vira essa coluna (s0, s3, s2).
+- **Só a borda direita corta.** No navegador, s1 pousa inteiro sob a marca e s0
+  inteiro em cima; s4, s10 e s11 ficaram sem pouso nesses campos. O tablet
+  guarda só o s0, em cima à direita: os outros cantos são da marca e da
+  legenda, e o s2 espremia o pé no 1024.
+- **`ShowcaseFloat anchor="hero-top"`**, o par do `hero-bottom` (o meio da borda
+  de cima): o chip do tablet pousa sobre a barra de status, onde só há a
+  bateria.
+
+**Medido** nas 8 rotas ao vivo (3 janelas) e nas 17 cenas da seção "No app" (4
+campos), nos dois temas, com os critérios novos — legenda a ≥16px do herói e
+de todo cartão, nome do autor inteiro no palco, nenhum corte à esquerda nem em
+cima, chip sem nenhuma interseção com texto do aparelho: 0 falhas.

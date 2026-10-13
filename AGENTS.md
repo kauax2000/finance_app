@@ -1444,14 +1444,19 @@ declaração de `background-color` no trilho).
   `MotionConfig reducedMotion="user"` e `LayoutGroup`; `useShowcase()` dá
   `active` (`useInView`: falso com o aside `display: none` no telefone),
   `settled` e `anchorRect(id)`. As peças: `ShowcaseHero form` (o
-  `DeviceFrame` a 52% da altura, centrado por layout), `ShowcaseScatter clear`
+  `DeviceFrame` a 52% da altura, centrado por layout; com a legenda, no meio da
+  faixa entre 14% e 5,75rem do pé, e o celular deslocado à esquerda por
+  `margin-inline-end`), `ShowcaseScatter clear`
   + `ShowcaseScatterItem slot itemKey` (os **12 lugares de `SHOWCASE_SLOTS`**,
   com `edge` publicado em `data-edge` e `delay`; **um pouso por forma** (`at`):
   o cartão anda por `left`/`top` até onde a forma deixa espaço, ou sai pela
   borda com `data-away` — a tabela é medida nos campos de 1024×700 a
   1920×1080: nada cobre a legenda nem a zona da marca, cruzamento ≤12%, os de
-  perto ≤8% do herói, selo à vista; a inclinação e o respiro no de dentro),
-  `ShowcaseFloat anchor`,
+  perto ≤8% do herói, selo e nome do autor inteiros, legenda a ≥16px; **só a
+  borda direita corta um cartão** — no celular a colagem é uma coluna à
+  direita; a inclinação e o respiro no de dentro),
+  `ShowcaseFloat anchor` (com `hero-top` e `hero-bottom`; um chip nunca pousa
+  sobre texto da mini UI),
   `ShowcaseFlight layoutId active` (o fantasma opaco e **sem texto**; o
   conteúdo aparece aos 450ms), `ShowcasePiece`, `ShowcaseSwap`,
   `ShowcaseCursor` (mede a âncora pelo lugar de layout, `offsetParent`, depois

@@ -2435,10 +2435,15 @@
      forma    | caixa                       | proporção | exceção
      browser  | largura min(86cqw, 140cqh)  | 16/10     | palco < 28rem: min(92cqw, 140cqh)
      tablet   | altura  min(72cqh, 120cqw)  | 3/4       | —
-     phone    | altura  min(76cqh, 160cqw)  | 9/19.5    | palco baixo (< 44rem): min(70cqh, 160cqw)
+     phone    | altura  min(72cqh, 160cqw)  | 9/19.5    | palco baixo (< 44rem): min(70cqh, 160cqw)
 
    A outra dimensão sai da proporção. O `DeviceFrame` preenche o herói, e a
-   projeção de layout do `motion` anima a troca de tamanho — nunca `scale()`. */
+   projeção de layout do `motion` anima a troca de tamanho — nunca `scale()`.
+   O celular é alto e estreito: centrado, sobram duas faixas laterais mais
+   estreitas que um cartão, e o cartão da esquerda perderia o nome e o começo de
+   cada linha. Por isso ele anda para a esquerda (`margin-inline-end: 24cqw`, o
+   centro a 38% da largura; no palco L, 10cqw, a 45%) e a colagem vira uma
+   coluna inteira à direita, colada nele. */
 @utility showcase-stage {
   container: showcase / size;
   & [data-slot="showcase-hero"][data-form="browser"] {
@@ -2456,10 +2461,14 @@
   }
   & [data-slot="showcase-hero"][data-form="phone"] {
     width: auto;
-    height: min(76cqh, 160cqw);
+    height: min(72cqh, 160cqw);
     aspect-ratio: 9 / 19.5;
+    margin-inline-end: 24cqw;
     @container showcase (height < 44rem) {
       height: min(70cqh, 160cqw);
+    }
+    @container showcase (width >= 48rem) {
+      margin-inline-end: 10cqw;
     }
   }
 }

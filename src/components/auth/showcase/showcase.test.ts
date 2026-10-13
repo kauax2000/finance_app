@@ -242,7 +242,9 @@ describe("a orquestração (8c)", () => {
             expect(html, id).toContain(`data-form="${SCENES[id].form}"`)
             expect(html, id).toContain(SCENES[id].caption.title)
             expect(html, id).toContain('data-slot="showcase-dots"')
-            expect(html.match(/data-slot="auth-testimonial"/g)?.length, id).toBe(12)
+            // O chip do celular e do tablet toma o lugar de um cartão (s3 e s0): a colagem fica com onze.
+            const vaga = SCENES[id].chip !== "none" && SCENES[id].form !== "browser" ? 1 : 0
+            expect(html.match(/data-slot="auth-testimonial"/g)?.length, id).toBe(12 - vaga)
         }
     })
 })

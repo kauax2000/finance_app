@@ -90,23 +90,28 @@ type ShowcaseSlot = {
 /**
  * Os doze lugares da colagem, por extenso, medidos nos campos das telas de acesso (1024×700, 1280×800,
  * 1440×900 e 1920×1080) por `getBoundingClientRect`: nenhum cartão cobre a legenda nem a zona da marca
- * (40cqw × 14cqh no canto de cima), dois cartões se cruzam em no máximo 12% do menor, os de perto cobrem
- * no máximo 8% do herói, e todo selo fica no palco e à vista. Os lugares sem pouso em forma nenhuma
- * (s5, s6, s7, s8, s9) ficam para palcos de outra proporção.
+ * (40cqw × 14cqh no canto de cima) e todos ficam a 16px ou mais dela, dois cartões se cruzam em no máximo 12%
+ * do menor, os de perto cobrem no máximo 8% do herói, e todo selo e todo nome de autor ficam inteiros no
+ * palco. **Só a borda direita corta** (até ~15%): cortado à esquerda ou em cima, o cartão perde o nome e o
+ * começo de cada linha, e lê como interface quebrada. Por forma:
+ * - navegador: s1 sob a marca, s0 em cima à direita, s2 embaixo à direita;
+ * - celular (deslocado para a esquerda pela `@utility showcase-stage`): uma coluna à direita, s0, s3 e s2;
+ * - tablet: só s0, em cima à direita — os outros cantos são da marca e da legenda.
+ * Os lugares sem pouso em forma nenhuma (s4 a s11) ficam para palcos de outra proporção.
  */
 const SHOWCASE_SLOTS = [
-  { at: { browser: [82, 10], tablet: [84, 8], phone: [88, 9] }, rot: 6, depth: "near", edge: "top", level: "XS", short: false, caption: false, delay: 0 },
-  { at: { browser: null, tablet: null, phone: [8, 72] }, rot: -7, depth: "near", edge: "start", level: "XS", short: false, caption: false, delay: 25 },
-  { at: { browser: [87, 81], tablet: [95, 91], phone: [92, 80] }, rot: 4, depth: "near", edge: "end", level: "XS", short: false, caption: false, delay: 50 },
-  { at: { browser: null, tablet: null, phone: [93, 40] }, rot: -5, depth: "far", edge: "end", level: "S", short: false, caption: false, delay: 75 },
-  { at: { browser: [15, 24], tablet: null, phone: [8, 23] }, rot: 5, depth: "near", edge: "start", level: "S", short: false, caption: false, delay: 100 },
+  { at: { browser: [80, 11], tablet: [84, 11], phone: [81, 16] }, rot: 6, depth: "near", edge: "top", level: "XS", short: false, caption: false, delay: 0 },
+  { at: { browser: [21, 25], tablet: null, phone: null }, rot: -7, depth: "near", edge: "start", level: "XS", short: false, caption: false, delay: 25 },
+  { at: { browser: [80, 79], tablet: null, phone: [81, 78] }, rot: 4, depth: "near", edge: "end", level: "XS", short: false, caption: false, delay: 50 },
+  { at: { browser: null, tablet: null, phone: [81, 48] }, rot: -5, depth: "far", edge: "end", level: "S", short: false, caption: false, delay: 75 },
+  { at: { browser: null, tablet: null, phone: null }, rot: 5, depth: "near", edge: "start", level: "S", short: false, caption: false, delay: 100 },
   { at: { browser: null, tablet: null, phone: null }, rot: -2, depth: "far", edge: "bottom", level: "S", short: true, caption: true, delay: 125 },
   { at: { browser: null, tablet: null, phone: null }, rot: -4, depth: "mid", edge: "top", level: "M", short: true, caption: false, delay: 150 },
   { at: { browser: null, tablet: null, phone: null }, rot: -3, depth: "far", edge: "start", level: "M", short: false, caption: false, delay: 175 },
   { at: { browser: null, tablet: null, phone: null }, rot: 7, depth: "mid", edge: "end", level: "M", short: false, caption: false, delay: 200 },
   { at: { browser: null, tablet: null, phone: null }, rot: 3, depth: "mid", edge: "bottom", level: "L", short: true, caption: true, delay: 225 },
-  { at: { browser: [60, 99], tablet: null, phone: null }, rot: -6, depth: "far", edge: "bottom", level: "L", short: false, caption: true, delay: 250 },
-  { at: { browser: [55, 9], tablet: null, phone: [92, 60] }, rot: -8, depth: "far", edge: "top", level: "L", short: false, caption: false, delay: 275 },
+  { at: { browser: null, tablet: null, phone: null }, rot: -6, depth: "far", edge: "bottom", level: "L", short: false, caption: true, delay: 250 },
+  { at: { browser: null, tablet: null, phone: null }, rot: -8, depth: "far", edge: "top", level: "L", short: false, caption: false, delay: 275 },
 ] as const satisfies readonly ShowcaseSlot[]
 
 type ShowcaseSlotIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11
@@ -355,7 +360,8 @@ function ShowcaseStage({ parallax = false, className, children }: ShowcaseStageP
 type ShowcaseHeroProps = Omit<DeviceFrameProps, "className"> & { className?: string }
 
 /**
- * O herói: o `DeviceFrame` no centro do palco (a 52% da altura), no tamanho que a `@utility showcase-stage`
+ * O herói: o `DeviceFrame` no centro do palco (a 52% da altura; com a legenda, no meio da faixa entre a marca e
+ * ela), no tamanho que a `@utility showcase-stage`
  * dá por `data-form`. Trocar `form` põe o palco fora do repouso até a moldura assentar (`onSettled`).
  */
 function ShowcaseHero({ form, onSettled, className, children, ...frame }: ShowcaseHeroProps) {
@@ -367,12 +373,21 @@ function ShowcaseHero({ form, onSettled, className, children, ...frame }: Showca
   }, [form, setSettled])
 
   return (
-    // O centro a 52% da altura é a caixa de 4% até o pé, centrando pelo flex: um lugar de layout, que as
-    // medidas por `offset*` leem (um `-translate-1/2` elas não veriam).
+    // O herói centra pelo flex numa faixa: de 4% até o pé (o centro a 52% da altura); com a legenda, de 14% (abaixo
+    // da marca) até 5,75rem do pé — a legenda, os 16px dela até a borda e 16px de respiro. Um lugar de layout, que
+    // as medidas por `offset*` leem (um `-translate-1/2` elas não veriam).
     <motion.div
       data-slot="showcase-hero-point"
-      className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-center showcase-enter"
-      style={{ top: "4%", x: deriva.hero.x, y: deriva.hero.y, "--slot-delay": "120ms" } as MotionStyle}
+      className="absolute inset-x-0 z-10 flex items-center justify-center showcase-enter"
+      style={
+        {
+          top: "calc(4% + 10% * var(--showcase-caption, 0))",
+          bottom: "calc(5.75rem * var(--showcase-caption, 0))",
+          x: deriva.hero.x,
+          y: deriva.hero.y,
+          "--slot-delay": "120ms",
+        } as MotionStyle
+      }
     >
       <div
         ref={heroRef}
@@ -499,7 +514,16 @@ function ShowcaseScatterItem({
   )
 }
 
-type ShowcaseFloatAnchor = "center" | "top-start" | "top-end" | "start" | "end" | "bottom-start" | "bottom-end" | "hero-bottom"
+type ShowcaseFloatAnchor =
+  | "center"
+  | "top-start"
+  | "top-end"
+  | "start"
+  | "end"
+  | "bottom-start"
+  | "bottom-end"
+  | "hero-top"
+  | "hero-bottom"
 
 /**
  * O ponto do herói onde a peça flutuante pousa, em frações da caixa dele: o centro do chip, ou o topo da paleta
@@ -514,6 +538,7 @@ const PONTO_DO_HEROI: Record<ShowcaseFloatAnchor, readonly [number, number]> = {
   end: [1, 0.5],
   "bottom-start": [0, 0.88],
   "bottom-end": [1, 0.88],
+  "hero-top": [0.5, 0],
   "hero-bottom": [0.5, 1],
 }
 

@@ -20,7 +20,6 @@ import {
     FAMILY_ORDER,
     SCENE_NAV_ICONS,
     SCENES,
-    type SceneChip,
     type SceneCursor,
     type SceneOverlay,
     type SceneSpec,
@@ -43,7 +42,7 @@ import {
     type ShowcaseFloatAnchor,
     type ShowcaseSlotIndex,
 } from "@/components/ui/showcase"
-import { Timeline, TimelineItem, TimelineTitle } from "@/components/ui/timeline"
+import { Progress } from "@/components/ui/progress"
 import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, TILE_PALETTE } from "@/lib/tile-palette"
 import { cn } from "@/lib/utils"
 import type { HeroIcon } from "@/types/navigation"
@@ -245,7 +244,7 @@ function ChipSimples({
     title: string
     /** A segunda linha: a frase, ou um selo. */
     description: React.ReactNode
-    /** Ao lado do celular sobra pouco palco: o título quebra em duas linhas. */
+    /** Na coluna ao lado do celular o chip tem a largura de um cartão: o título quebra em duas linhas. */
     estreito?: boolean
 }) {
     return (
@@ -254,7 +253,7 @@ function ChipSimples({
                 <ColorTile tint="soft" size="lg" color={color}>
                     <Icon />
                 </ColorTile>
-                <div className={cn("flex min-w-0 flex-col items-start", estreito && "max-w-36")}>
+                <div className={cn("flex min-w-0 flex-col items-start", estreito && "max-w-28")}>
                     <p className="text-sm leading-snug font-medium text-balance">{title}</p>
                     {typeof description === "string" ? <p className="text-xs text-muted-foreground">{description}</p> : description}
                 </div>
@@ -263,63 +262,62 @@ function ChipSimples({
     )
 }
 
+/** As três etapas, ditas como a que está em curso: o chip mostra só a atual. */
 const PASSOS_DA_RECUPERACAO = [
-    { icon: EnvelopeIcon, titulo: "Código enviado" },
-    { icon: KeyIcon, titulo: "Código conferido" },
-    { icon: LockClosedIcon, titulo: "Nova senha" },
+    { icon: EnvelopeIcon, titulo: "Código a caminho" },
+    { icon: KeyIcon, titulo: "Conferindo o código" },
+    { icon: LockClosedIcon, titulo: "Criando a senha" },
 ] as const
 
+/**
+ * A linha do tempo da recuperação, compacta: o passo atual (ícone e título) e as três etapas em casas, com a
+ * largura de um cartão — mora na coluna da colagem; a linha vertical ou horizontal não cabia sem cobrir a mini UI.
+ */
 function ChipDaLinhaDoTempo({ timeline }: { timeline: NonNullable<SceneSpec["timeline"]> }) {
-    const estado = (i: number) =>
-        timeline.expired
-            ? i === 0
-                ? "current"
-                : "upcoming"
-            : i < timeline.current
-              ? "done"
-              : i === timeline.current
-                ? "current"
-                : "upcoming"
+    const atual = Math.min(timeline.current, PASSOS_DA_RECUPERACAO.length - 1)
+    const { icon, titulo } = PASSOS_DA_RECUPERACAO[atual]
+    // O link vencido volta ao começo: no lugar das casas (todas apagadas leriam como esqueleto), a frase.
+    if (timeline.expired) {
+        return <ChipSimples icon={ClockIcon} color={TILE_EXPENSE_DEFAULT} title="Link vencido" description="Volte ao começo." estreito />
+    }
     return (
-        <Card variant="elevated" padding="sm" className="w-48 shadow-lg">
-            <CardContent>
-                <Timeline marker="icon" size="sm">
-                    {PASSOS_DA_RECUPERACAO.map(({ icon: Icon, titulo }, i) => (
-                        <TimelineItem key={titulo} state={estado(i)} icon={<Icon />}>
-                            <TimelineTitle>{titulo}</TimelineTitle>
-                        </TimelineItem>
-                    ))}
-                </Timeline>
-            </CardContent>
-        </Card>
+        <ChipSimples
+            icon={icon}
+            color={cor("violeta")}
+            title={titulo}
+            estreito
+            description={
+                <Progress
+                    segments={PASSOS_DA_RECUPERACAO.length}
+                    value={((atual + 1) / PASSOS_DA_RECUPERACAO.length) * 100}
+                    size="sm"
+                    className="mt-1.5 w-24"
+                />
+            }
+        />
     )
 }
 
 /**
- * Onde o chip pousa. No navegador, montado na borda de baixo, um pouco à
- * esquerda do meio: as laterais do navegador caem fora do palco, e o canto de
- * baixo à direita é da colagem. No celular, na beirada esquerda, logo acima do
- * meio — entre os dois cartões da esquerda; a direita é do cursor que pousa no
- * orçamento —, puxado para fora do aparelho (três quintos do chip além da
- * borda) para cobrir só a beirada da tela. No tablet não há borda livre: o chip
- * vira o aviso do próprio aparelho (`AVISO_DO_CHIP`).
+ * Onde o chip pousa — **nunca sobre texto da mini UI** (um rótulo coberto deixa o valor órfão):
+ * - navegador: pendurado abaixo da borda de baixo (o topo do chip 12px abaixo do herói), à esquerda do meio —
+ *   o canto de baixo à direita é da colagem;
+ * - celular: na coluna da colagem, colado à direita do aparelho, à meia altura — no lugar do s3, que cede a
+ *   vaga (`VAGA_DO_CHIP`);
+ * - tablet: sobre a borda de cima, à direita do meio, onde a barra de status só tem a bateria — dois terços
+ *   acima do aparelho, no canto do s0, que cede a vaga.
  */
 function pousoDoChip(form: SceneSpec["form"]): { anchor: ShowcaseFloatAnchor; className: string } {
-    return form === "phone"
-        ? { anchor: "start", className: "-translate-x-3/5 -translate-y-full" }
-        : { anchor: "hero-bottom", className: "-translate-x-2/3" }
+    if (form === "phone") return { anchor: "end", className: "translate-x-5" }
+    if (form === "tablet") return { anchor: "hero-top", className: "translate-x-0 -translate-y-2/3" }
+    return { anchor: "hero-bottom", className: "-translate-x-3/4 translate-y-3" }
 }
 
-/** O chip que, no tablet, vira o aviso no canto da tela. */
-const AVISO_DO_CHIP: Partial<Record<SceneChip, React.ReactNode>> = {
-    "invite-accepted": (
-        <Aviso icon={CheckIcon} color={TILE_INCOME_DEFAULT} title="Você entrou na Casa" description="Agora são três na carteira." />
-    ),
-}
+/** O lugar da colagem que o chip toma, por forma: o cartão sai enquanto o chip está ali. */
+const VAGA_DO_CHIP: Partial<Record<SceneSpec["form"], ShowcaseSlotIndex>> = { phone: 3, tablet: 0 }
 
 function Chip({ spec }: { spec: SceneSpec }) {
     // O chip espera a moldura assentar: na troca de forma ele sai com a cena velha e entra no lugar novo.
-    // O "Você entrou na Casa" não passa por aqui: no tablet ele é o aviso do aparelho.
     const { settled } = useShowcase()
     const { chip } = spec
     const conteudo =
@@ -341,6 +339,8 @@ function Chip({ spec }: { spec: SceneSpec }) {
             />
         ) : chip === "timeline" && spec.timeline ? (
             <ChipDaLinhaDoTempo timeline={spec.timeline} />
+        ) : chip === "invite-accepted" ? (
+            <ChipSimples icon={CheckIcon} color={TILE_INCOME_DEFAULT} title="Você entrou na Casa" description="Agora são três na carteira." />
         ) : null
     return (
         <ShowcaseFloat
@@ -358,9 +358,11 @@ function Chip({ spec }: { spec: SceneSpec }) {
 const NOMES: SceneCursor["name"][] = ["Você", "Ana", "Rafael"]
 
 /**
- * Os cursores de presença da cena. Cada pessoa tem um cursor só, montado o
- * tempo todo: quem sai da cena fecha (`open`) e sai em 150ms, com a última
- * âncora em que estava; quem entra espera o próprio `delay`.
+ * Os cursores de presença da cena. Cada pessoa tem um cursor só: quem sai da cena fecha (`open`) e sai em
+ * 150ms, com a última âncora em que estava; quem entra espera o próprio `delay`. **Cada abertura remonta o
+ * cursor** (a chave leva a época): a medida da abertura anterior pode ser de outro tamanho de palco — numa
+ * cena sem a âncora o observador não acha o alvo e a medida velha ficaria —, e o cursor novo só aparece depois
+ * de medir de novo, com a âncora na tela.
  */
 function Cursores({ cursors }: { cursors: SceneCursor[] }) {
     const [ultimos, setUltimos] = React.useState<Partial<Record<SceneCursor["name"], SceneCursor>>>(() =>
@@ -368,9 +370,24 @@ function Cursores({ cursors }: { cursors: SceneCursor[] }) {
     )
     const mudou = cursors.some((c) => ultimos[c.name] !== c)
     if (mudou) setUltimos((u) => ({ ...u, ...Object.fromEntries(cursors.map((c) => [c.name, c])) }))
+
+    const abertos = NOMES.filter((nome) => cursors.some((c) => c.name === nome))
+    const [epocas, setEpocas] = React.useState<{ abertos: string; de: Partial<Record<SceneCursor["name"], number>> }>({
+        abertos: abertos.join(),
+        de: {},
+    })
+    if (epocas.abertos !== abertos.join()) {
+        const antes = epocas.abertos.split(",")
+        const de = { ...epocas.de }
+        for (const nome of abertos) if (!antes.includes(nome)) de[nome] = (de[nome] ?? 0) + 1
+        setEpocas({ abertos: abertos.join(), de })
+    }
+
     return NOMES.map((nome) => {
         const cursor = cursors.find((c) => c.name === nome) ?? ultimos[nome]
-        return cursor ? <ShowcaseCursor key={nome} {...cursor} open={cursors.some((c) => c.name === nome)} /> : null
+        return cursor ? (
+            <ShowcaseCursor key={`${nome}:${epocas.de[nome] ?? 0}`} {...cursor} open={abertos.includes(nome)} />
+        ) : null
     })
 }
 
@@ -380,21 +397,27 @@ const Palco = React.memo(function Palco({ scene }: { scene: AuthSceneId }) {
     const spec = SCENES[scene]
     const turn = useGiro(spec.family)
     const tela = telaDaMiniApp(spec.screen)
+    const vaga = spec.chip !== "none" ? VAGA_DO_CHIP[spec.form] : undefined
     return (
         <ShowcaseStage parallax className="absolute inset-0 rounded-modal">
             <ShowcaseScatter clear={spec.form} ripple={spec.celebrate}>
-                {testimonialsFor(spec.family).map((t, i) => (
-                    <ShowcaseScatterItem key={i} slot={i as ShowcaseSlotIndex} itemKey={t.id}>
-                        <AuthTestimonialCard testimonial={t} />
-                    </ShowcaseScatterItem>
-                ))}
+                {testimonialsFor(spec.family).map((t, i) =>
+                    // O lugar que o chip toma fica vazio: o cartão sai (a saída da colagem) e volta quando o chip sai.
+                    i === vaga ? (
+                        <ShowcaseScatterItem key={i} slot={i as ShowcaseSlotIndex} itemKey="vaga" />
+                    ) : (
+                        <ShowcaseScatterItem key={i} slot={i as ShowcaseSlotIndex} itemKey={t.id}>
+                            <AuthTestimonialCard testimonial={t} />
+                        </ShowcaseScatterItem>
+                    )
+                )}
             </ShowcaseScatter>
             <ShowcaseHero
                 form={spec.form}
                 turn={turn}
                 url={MINI_APP_URL[tela]}
                 nav={navDa(tela)}
-                notification={AVISOS[spec.overlay] ?? (spec.form === "tablet" ? AVISO_DO_CHIP[spec.chip] : undefined)}
+                notification={AVISOS[spec.overlay]}
             >
                 <Cobertura overlay={spec.overlay}>
                     <AuthMiniApp screen={tela} member={spec.member} />
