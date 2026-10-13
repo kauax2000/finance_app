@@ -388,7 +388,17 @@ function Linhas({
     className?: string
 }) {
     return (
-        <ItemGroup variant="divided" className={className}>
+        // O fio desce para o topo de cada linha que não é a primeira: a linha
+        // escondida por classe (a 3ª conta do celular) leva o próprio fio, e a
+        // última visível termina sem fio solto. O `:not(:last-child)` repete o
+        // seletor do DS para o `cn` trocar o `border-b-border` pelo transparente.
+        <ItemGroup
+            variant="divided"
+            className={cn(
+                "[&>[data-slot=item]:not(:last-child)]:border-b-transparent [&>[data-slot=item]:not(:first-child)]:border-t-border",
+                className
+            )}
+        >
             {linhas.map(({ icon: Icon, cor: tom, titulo, descricao, valor, selo, ancora, className: linha }) => {
                 return (
                     <Item
