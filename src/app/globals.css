@@ -2392,8 +2392,10 @@
    O cursor de texto desenhado: o `caret` do `SearchInput`/`CommandInput` e o campo
    desenhado das cenas. Visível no estilo base (sem animação ele fica aceso), pisca
    em degrau a cada segundo, sem `fill` — fora da animação vale o estilo base, nunca
-   o quadro apagado. No movimento reduzido ele congela aceso. */
-@keyframes caret-blink {
+   o quadro apagado. No movimento reduzido ele congela aceso. O nome não é
+   `caret-blink`: esse é do `tw-animate-css` (o `InputOTP` o usa), e no build só um
+   dos dois sobreviveria. */
+@keyframes type-caret-blink {
   50% {
     opacity: 0;
   }
@@ -2405,7 +2407,7 @@
   width: calc(var(--spacing) * 0.5);
   height: 1lh;
   background-color: var(--color-foreground);
-  animation: caret-blink 1s steps(1) infinite;
+  animation: type-caret-blink 1s steps(1) infinite;
   @media (prefers-reduced-motion: reduce) {
     animation: none;
   }

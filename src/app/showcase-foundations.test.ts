@@ -15,17 +15,23 @@ describe("O cursor de texto desenhado", () => {
     expect(base).toContain("height: 1lh")
     expect(base).not.toMatch(/opacity:\s*0/)
     expect(base).not.toMatch(/visibility:\s*hidden/)
-    expect(base).toMatch(/animation: caret-blink 1s steps\(1\) infinite;/)
+    expect(base).toMatch(/animation: type-caret-blink 1s steps\(1\) infinite;/)
     expect(caret).toMatch(/prefers-reduced-motion: reduce\) \{\s*animation: none;/)
   })
 
-  it("`caret-blink` não segura quadro (sem `forwards`/`both`)", () => {
-    const blink = esperarDepoisDeNoScrollbar(CSS, "@keyframes caret-blink {")
+  it("`type-caret-blink` não segura quadro (sem `forwards`/`both`)", () => {
+    const blink = esperarDepoisDeNoScrollbar(CSS, "@keyframes type-caret-blink {")
     expect(blink).toMatch(/50% \{\s*opacity: 0;\s*\}/)
-    for (const uso of CSS.match(/animation:[^;]*caret-blink[^;]*;/g) ?? []) {
+    for (const uso of CSS.match(/animation:[^;]*type-caret-blink[^;]*;/g) ?? []) {
       expect(uso).not.toMatch(/\b(forwards|both)\b/)
     }
-    expect(CSS).not.toMatch(/animation-fill-mode:\s*(forwards|both)[^}]*caret-blink/)
+    expect(CSS).not.toMatch(/animation-fill-mode:\s*(forwards|both)[^}]*type-caret-blink/)
+  })
+
+  // `caret-blink` é do `tw-animate-css` (o cursor do `InputOTP`): redefinido aqui,
+  // o build guarda um só e o outro cursor troca de ritmo sem aviso.
+  it("não redefine o `caret-blink` do `tw-animate-css`", () => {
+    expect(CSS).not.toMatch(/@keyframes\s+caret-blink\b/)
   })
 })
 
