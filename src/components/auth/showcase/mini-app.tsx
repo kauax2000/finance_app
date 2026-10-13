@@ -36,10 +36,10 @@ import { ShowcasePiece, ShowcaseSwap, useShowcase } from "@/components/ui/showca
 import { Skeleton } from "@/components/ui/skeleton"
 import { TopBar, TopBarActions, TopBarContent, TopBarSearch, TopBarStart, TopBarTitle } from "@/components/ui/top-bar"
 import { Caption } from "@/components/ui/typography"
-import { IDENTITY_TONES } from "@/lib/avatar"
+import { IDENTITY_TONES, identityToneFor } from "@/lib/avatar"
 import { BUDGET_BANDS, CARD_LIMIT_BANDS } from "@/lib/budget-bands"
 import { TILE_PALETTE } from "@/lib/tile-palette"
-import { cn } from "@/lib/utils"
+import { cn, getInitials } from "@/lib/utils"
 import type { HeroIcon } from "@/types/navigation"
 
 /**
@@ -50,7 +50,9 @@ import type { HeroIcon } from "@/types/navigation"
  * viewport): o navegador desenhado para ~480px de largura (o navegador a
  * 1280×800), o tablet e o celular empilhados. Cada peça que existe em mais de
  * uma forma é uma `ShowcasePiece` (só translada na troca, o texto nunca estica);
- * o que existe numa forma ou numa tela só entra e sai por `ShowcaseSwap`.
+ * o que existe numa forma ou numa tela só entra e sai por `ShowcaseSwap`. A
+ * exceção, de propósito: as linhas de uma lista que a altura de uma forma não
+ * comporta somem por classe e voltam esmaecendo (ver `comClasses`).
  *
  * **Dados de exemplo, e só.** "Hoje" é quinta-feira, 9 de outubro, 9:41 — todo
  * rótulo relativo deriva dessa data, escrita por extenso (sem `Date`, sem
@@ -141,18 +143,24 @@ const CONTAS: Linha[] = [
 ]
 
 /**
- * No navegador a janela é baixa, e a lista conta pela altura que sobra: a
- * terceira linha só no navegador largo (a janela de 1440, tela de 512px ou
- * mais), e a segunda some no XS (abaixo de 448px), onde só cabe uma.
+ * Quantas linhas cabem é da altura de cada forma, e a linha que não cabe some
+ * por classe: ela fica na árvore em todas as formas (a troca não a remonta) e,
+ * ao voltar, esmaece (`starting:` no `Linhas`). Um `ShowcaseSwap` em volta de
+ * uma linha não serve aqui: o fio do `ItemGroup divided` é dos filhos diretos.
+ *
+ * No navegador a janela é baixa: a terceira linha só no navegador largo (a
+ * janela de 1440, tela de 512px ou mais), e a segunda some no XS (abaixo de
+ * 448px), onde só cabe uma.
  */
-const noNavegador = (linhas: Linha[]): Linha[] => [
-    linhas[0],
-    { ...linhas[1], className: "@max-md/screen:hidden" },
-    { ...linhas[2], className: "@max-lg/screen:hidden" },
-]
-const CONTAS_NO_NAVEGADOR = noNavegador(CONTAS)
-/** No tablet cabem as três, menos no palco baixo (a janela de 1024×700). */
-const CONTAS_NO_TABLET: Linha[] = [CONTAS[0], CONTAS[1], { ...CONTAS[2], className: "showcase-short:hidden" }]
+const comClasses = (linhas: Linha[], classes: (string | undefined)[]): Linha[] =>
+    linhas.map((linha, i) => ({ ...linha, className: classes[i] }))
+const NO_NAVEGADOR = [undefined, "@max-md/screen:hidden", "@max-lg/screen:hidden"]
+/** O tablet tem as três, menos no palco baixo (a janela de 1024×700); o celular, duas. */
+const CONTAS_POR_FORMA: Record<DeviceFrameForm, Linha[]> = {
+    browser: comClasses(CONTAS, NO_NAVEGADOR),
+    tablet: comClasses(CONTAS, [undefined, undefined, "showcase-short:hidden"]),
+    phone: comClasses(CONTAS, [undefined, undefined, "hidden"]),
+}
 
 /** As compras da fatura de outubro (fechou dia 5), da mais nova para a mais antiga. */
 const COMPRAS: Linha[] = [
@@ -160,9 +168,17 @@ const COMPRAS: Linha[] = [
     { icon: ShoppingCartIcon, cor: cor("lima"), titulo: "Mercado do bairro", descricao: "28/09", valor: 186.32 },
     { icon: TvIcon, cor: cor("magenta"), titulo: "Streaming", descricao: "22/09", valor: 39.9 },
 ]
-const COMPRAS_NO_NAVEGADOR = noNavegador(COMPRAS)
+const COMPRAS_POR_FORMA: Record<DeviceFrameForm, Linha[]> = {
+    browser: comClasses(COMPRAS, NO_NAVEGADOR),
+    tablet: COMPRAS,
+    phone: COMPRAS,
+}
 
-/** As despesas da carteira "Casa". Somam R$ 2.484,80 — R$ 828,27 por pessoa, com você. */
+/**
+ * As despesas da carteira "Casa". Somam R$ 2.484,80 — R$ 828,27 a sua parte (a
+ * divisão já conta com você, na porta do convite e depois de aceitar). O
+ * aluguel o Rafael pagou, a feira a Ana; a internet ainda vai vencer.
+ */
 const DESPESAS_DA_CASA: Linha[] = [
     { icon: HomeIcon, cor: cor("índigo"), titulo: "Aluguel", descricao: "dividido por 3", valor: 2150 },
     {
@@ -240,11 +256,14 @@ const TITULO_DO_CABECALHO: Record<MiniAppScreen, string> = {
 function BarraDoNavegador({ screen }: { screen: MiniAppScreen }) {
     return (
         <TopBar position="static" size="sm" className="gap-3">
-            <TopBarStart className="@max-md/screen:hidden">
+            {/* O logo só a partir de 512px de tela (a janela de 1440): abaixo, logo, título, selo, pílula e avatar
+                não cabem com folga — e o endereço da barra já diz "Finance". */}
+            <TopBarStart className="@max-lg/screen:hidden">
                 <AppLogo size="sm" />
             </TopBarStart>
             <TopBarContent className="gap-2">
-                <TopBarTitle asChild className="relative flex-none">
+                {/* No XS (tela abaixo de 448px) o título sai também: o endereço da barra já diz onde se está. */}
+                <TopBarTitle asChild className="relative flex-none @max-md/screen:hidden">
                     <div>
                         <ShowcaseSwap swapKey={TITULO_DA_BARRA[screen]}>{TITULO_DA_BARRA[screen]}</ShowcaseSwap>
                     </div>
@@ -267,7 +286,7 @@ function BarraDoNavegador({ screen }: { screen: MiniAppScreen }) {
 /** O cabeçalho do tablet e do celular: o mês (ou a tela), o selo e você. */
 function CabecalhoDeBolso({ screen, compacto }: { screen: MiniAppScreen; compacto: boolean }) {
     return (
-        <div className={cn("flex h-11 shrink-0 items-center gap-2 px-4", compacto && "showcase-short:px-3")}>
+        <div className="flex h-11 shrink-0 items-center gap-2 px-3">
             <div className="relative min-w-0 flex-1 truncate text-sm font-medium">
                 <ShowcaseSwap swapKey={TITULO_DO_CABECALHO[screen]}>{TITULO_DO_CABECALHO[screen]}</ShowcaseSwap>
             </div>
@@ -290,9 +309,11 @@ function CartaoDoSaldo({ largo, compacto }: { largo: boolean; compacto: boolean 
         <Card padding="sm" className="h-full">
             <CardContent className="flex flex-col gap-1">
                 <div className="flex items-center justify-between gap-2">
-                    <Caption className={cn("truncate", compacto && "showcase-short:hidden")}>
-                        {largo ? "Saldo de outubro" : "Saldo"}
-                    </Caption>
+                    <div className={cn("relative min-w-0 flex-1", compacto && "showcase-short:hidden")}>
+                        <ShowcaseSwap swapKey={largo ? "saldo-do-mes" : "saldo"}>
+                            <Caption className="truncate">{largo ? "Saldo de outubro" : "Saldo"}</Caption>
+                        </ShowcaseSwap>
+                    </div>
                     <Badge variant="soft" tone="income" size="xs" className="shrink-0">
                         +7,8% vs setembro
                     </Badge>
@@ -351,7 +372,8 @@ function CartaoDaFaisca({ alta }: { alta: boolean }) {
  * As linhas de uma lista. No navegador (`emLinha`) cada uma cabe numa linha só
  * — a janela é larga e baixa —, com o selo antes do valor; no tablet e no
  * celular o título fica sobre a descrição, e o selo desce para baixo do valor
- * (a linha não alarga, e o título não quebra em 200px).
+ * (a linha não alarga, e o título não quebra em 200px). O selo mora num lugar
+ * só da árvore e muda de lado por `order`: trocar de forma não o remonta.
  */
 function Linhas({
     linhas,
@@ -368,18 +390,17 @@ function Linhas({
     return (
         <ItemGroup variant="divided" className={className}>
             {linhas.map(({ icon: Icon, cor: tom, titulo, descricao, valor, selo, ancora, className: linha }) => {
-                const marca = selo ? (
-                    <Badge variant="soft" tone={selo.tom} size="xs">
-                        {selo.texto}
-                    </Badge>
-                ) : null
                 return (
                     <Item
                         key={titulo}
                         size="sm"
                         variant="flush"
                         data-showcase-anchor={ancora}
-                        className={cn("px-0", emLinha && "py-1.5", linha)}
+                        className={cn(
+                            "px-0 transition-opacity duration-(--duration-base) starting:opacity-0",
+                            emLinha && "py-1.5",
+                            linha
+                        )}
                     >
                         <ItemMedia className={cn(emLinha && "translate-y-0 self-center", compacto && "showcase-short:hidden")}>
                             <ColorTile tint="soft" size="xs" color={tom}>
@@ -391,9 +412,12 @@ function Linhas({
                             <ItemDescription className="truncate">{descricao}</ItemDescription>
                         </ItemContent>
                         <ItemActions className={cn(!emLinha && "flex-col items-end gap-0.5")}>
-                            {emLinha ? marca : null}
                             <MoneyDisplay value={valor} size="sm" />
-                            {emLinha ? null : marca}
+                            {selo ? (
+                                <Badge variant="soft" tone={selo.tom} size="xs" className={cn(emLinha && "order-first")}>
+                                    {selo.texto}
+                                </Badge>
+                            ) : null}
                         </ItemActions>
                     </Item>
                 )
@@ -404,11 +428,10 @@ function Linhas({
 
 /** As próximas contas: duas no navegador e no celular, três no tablet e no navegador largo. */
 function ProximasContas({ form }: { form: DeviceFrameForm }) {
-    const linhas = form === "browser" ? CONTAS_NO_NAVEGADOR : form === "tablet" ? CONTAS_NO_TABLET : CONTAS.slice(0, 2)
     return (
         <section className="flex flex-col gap-1">
             <Caption className="font-medium text-foreground">Próximas contas</Caption>
-            <Linhas linhas={linhas} emLinha={form === "browser"} compacto={form === "phone"} />
+            <Linhas linhas={CONTAS_POR_FORMA[form]} emLinha={form === "browser"} compacto={form === "phone"} />
         </section>
     )
 }
@@ -497,62 +520,88 @@ function Painel({ form, budget }: { form: DeviceFrameForm; budget: boolean }) {
     )
 }
 
+const FECHOU_E_VENCE = (
+    <>
+        <DescriptionListItem>
+            <DescriptionTerm>Fechou</DescriptionTerm>
+            <DescriptionDetails>05/10</DescriptionDetails>
+        </DescriptionListItem>
+        <DescriptionListItem>
+            <DescriptionTerm>Vence</DescriptionTerm>
+            <DescriptionDetails>12/10</DescriptionDetails>
+        </DescriptionListItem>
+    </>
+)
+
+/** No navegador: as datas e o limite usado numa linha de três colunas. */
+function DatasEmLinha() {
+    return (
+        <DescriptionList columns={3} size="sm">
+            {FECHOU_E_VENCE}
+            <DescriptionListItem>
+                <DescriptionTerm>Limite usado</DescriptionTerm>
+                <DescriptionDetails className="flex items-center gap-2">
+                    38%
+                    <Progress value={38} size="sm" bands={CARD_LIMIT_BANDS} aria-label="Limite usado" />
+                </DescriptionDetails>
+            </DescriptionListItem>
+        </DescriptionList>
+    )
+}
+
+/** No bolso: as datas em duas colunas, e o limite usado desce para uma barra inteira. */
+function DatasEBarra() {
+    return (
+        <div className="flex flex-col gap-3">
+            <DescriptionList columns={2} size="sm">
+                {FECHOU_E_VENCE}
+            </DescriptionList>
+            <Progress
+                value={38}
+                size="sm"
+                bands={CARD_LIMIT_BANDS}
+                header={
+                    <ProgressHeader>
+                        <ProgressLabel className="font-normal text-muted-foreground">Limite usado</ProgressLabel>
+                        <ProgressValue />
+                    </ProgressHeader>
+                }
+            />
+        </div>
+    )
+}
+
 /**
  * A fatura de outubro: o que o ⌘K do login abre (e o que o celular da ida e
  * volta mostra). O limite usado é a escada do cartão (`CARD_LIMIT_BANDS`): 38%
  * já é âmbar. No navegador ele cabe na linha das datas; no bolso, desce para
- * uma barra inteira.
+ * uma barra inteira. A legenda e o bloco das datas são de uma forma só, e
+ * trocam por `ShowcaseSwap` (a ida e volta navegador → celular da D8).
  */
 function Fatura({ form }: { form: DeviceFrameForm }) {
     const largo = form === "browser"
-    const limite = <Progress value={38} size="sm" bands={CARD_LIMIT_BANDS} aria-label="Limite usado" />
     return (
         <div className={cn("flex flex-col", largo ? "gap-2.5 px-4 pt-2.5" : "gap-3 px-3 pt-1")}>
             <ShowcasePiece className="flex flex-col">
                 <div className="flex items-center justify-between gap-2">
-                    <Caption className="truncate">{largo ? "Fatura de outubro · final 4821" : "Cartão final 4821"}</Caption>
+                    <div className="relative min-w-0 flex-1">
+                        <ShowcaseSwap swapKey={largo ? "fatura-do-mes" : "cartao"}>
+                            <Caption className="truncate">{largo ? "Fatura de outubro · final 4821" : "Cartão final 4821"}</Caption>
+                        </ShowcaseSwap>
+                    </div>
                     <Badge variant="soft" tone="warning" size="xs" className="shrink-0">
                         em 3 dias
                     </Badge>
                 </div>
                 <MoneyDisplay value={1284.6} size="2xl" mono={false} className="leading-tight tracking-tight" />
             </ShowcasePiece>
-            <ShowcasePiece className="flex flex-col gap-3">
-                <DescriptionList columns={largo ? 3 : 2} size="sm">
-                    <DescriptionListItem>
-                        <DescriptionTerm>Fechou</DescriptionTerm>
-                        <DescriptionDetails>05/10</DescriptionDetails>
-                    </DescriptionListItem>
-                    <DescriptionListItem>
-                        <DescriptionTerm>Vence</DescriptionTerm>
-                        <DescriptionDetails>12/10</DescriptionDetails>
-                    </DescriptionListItem>
-                    {largo ? (
-                        <DescriptionListItem>
-                            <DescriptionTerm>Limite usado</DescriptionTerm>
-                            <DescriptionDetails className="flex items-center gap-2">
-                                38%
-                                {limite}
-                            </DescriptionDetails>
-                        </DescriptionListItem>
-                    ) : null}
-                </DescriptionList>
-                {largo ? null : (
-                    <Progress
-                        value={38}
-                        size="sm"
-                        bands={CARD_LIMIT_BANDS}
-                        header={
-                            <ProgressHeader>
-                                <ProgressLabel className="font-normal text-muted-foreground">Limite usado</ProgressLabel>
-                                <ProgressValue />
-                            </ProgressHeader>
-                        }
-                    />
-                )}
+            <ShowcasePiece className="relative">
+                <ShowcaseSwap swapKey={largo ? "datas-em-linha" : "datas-e-barra"}>
+                    {largo ? <DatasEmLinha /> : <DatasEBarra />}
+                </ShowcaseSwap>
             </ShowcasePiece>
             <ShowcasePiece>
-                <Linhas linhas={largo ? COMPRAS_NO_NAVEGADOR : COMPRAS} emLinha={largo} compacto={form === "phone"} />
+                <Linhas linhas={COMPRAS_POR_FORMA[form]} emLinha={largo} compacto={form === "phone"} />
             </ShowcasePiece>
         </div>
     )
@@ -567,8 +616,110 @@ function AncoraDoConvite() {
     return <span aria-hidden data-showcase-anchor="avatar-add" className="pointer-events-none absolute inset-y-0 end-0 w-8" />
 }
 
+/**
+ * O que só o tablet mostra (a tela alta da família convite). Entra e sai por
+ * `ShowcaseSwap`.
+ */
+function SoNoTablet({ form, children }: { form: DeviceFrameForm; children: React.ReactNode }) {
+    const tablet = form === "tablet"
+    return (
+        <div className="relative">
+            <ShowcaseSwap swapKey={tablet ? "tablet" : "outra"}>{tablet ? children : null}</ShowcaseSwap>
+        </div>
+    )
+}
+
+const PAGAMENTOS = [
+    { pessoa: MINI_APP_PEOPLE.rafael, oque: "pagou o aluguel", valor: 2150 },
+    { pessoa: MINI_APP_PEOPLE.ana, oque: "pagou a feira", valor: 214.9 },
+] as const
+
+/**
+ * O bloco do tablet conta pela altura da tela (a do tablet acompanha a
+ * largura): no palco médio (a janela de 1280, tela de 394px) quem pagou; no
+ * grande (1440, 448px) também a barra do que já foi pago; no palco baixo
+ * (1024×700) só a barra. O corte de 26rem cai entre as duas larguras medidas.
+ */
+const SO_NO_GRANDE = "@max-[26rem]/screen:hidden showcase-short:flex"
+const FORA_DO_BAIXO = "showcase-short:hidden"
+
+/**
+ * Quem pagou o quê em outubro: a casa contada pelas pessoas. R$ 2.364,90 dos
+ * R$ 2.484,80 já pagos (95%); falta a internet, que vence dia 15.
+ */
+function QuemPagou() {
+    return (
+        <section className="flex flex-col gap-1">
+            <Caption className={cn("font-medium text-foreground", FORA_DO_BAIXO)}>Quem pagou em outubro</Caption>
+            <ItemGroup variant="divided" className={FORA_DO_BAIXO}>
+                {PAGAMENTOS.map(({ pessoa, oque, valor }) => {
+                    const tom = identityToneFor(pessoa.color, pessoa.name)
+                    return (
+                        <Item key={pessoa.name} size="sm" variant="flush" className="px-0">
+                            <ItemMedia>
+                                <Avatar size="xs">
+                                    <AvatarFallback tint="soft" className={cn(tom.surface, tom.ink)}>
+                                        {getInitials(pessoa.name)}
+                                    </AvatarFallback>
+                                </Avatar>
+                            </ItemMedia>
+                            <ItemContent>
+                                <ItemTitle>{pessoa.name}</ItemTitle>
+                                <ItemDescription className="truncate">{oque}</ItemDescription>
+                            </ItemContent>
+                            <ItemActions>
+                                <MoneyDisplay value={valor} size="sm" />
+                            </ItemActions>
+                        </Item>
+                    )
+                })}
+            </ItemGroup>
+            <Progress
+                value={2364.9}
+                max={2484.8}
+                size="sm"
+                tone="success"
+                className={cn("pt-2 showcase-short:pt-0", SO_NO_GRANDE)}
+                header={
+                    <ProgressHeader>
+                        <ProgressLabel className="font-normal text-muted-foreground">Já pago</ProgressLabel>
+                        <ProgressValue />
+                    </ProgressHeader>
+                }
+                footer={<ProgressFooter className="justify-start">Falta a internet, que vence dia 15</ProgressFooter>}
+            />
+        </section>
+    )
+}
+
+function QuemPagouEsqueleto() {
+    return (
+        <div className="flex flex-col gap-1">
+            <Skeleton shape="text" className={cn("w-36 text-xs", FORA_DO_BAIXO)} />
+            {[0, 1].map((i) => (
+                <div key={i} className={cn("flex items-center gap-2 py-2", FORA_DO_BAIXO)}>
+                    <Skeleton shape="circle" size="xs" />
+                    <div className="flex flex-1 flex-col">
+                        <Skeleton shape="text" className="w-20 text-sm" />
+                        <Skeleton shape="text" className="w-24 text-xs" />
+                    </div>
+                    <Skeleton shape="text" className="w-16 text-xs" />
+                </div>
+            ))}
+            <div className={cn("flex flex-col gap-2 pt-2 showcase-short:pt-0", SO_NO_GRANDE)}>
+                <div className="flex justify-between">
+                    <Skeleton shape="text" className="w-14 text-xs" />
+                    <Skeleton shape="text" className="w-8 text-xs" />
+                </div>
+                <Skeleton className="h-1.5 w-full rounded-full" />
+                <Skeleton shape="text" className="w-44 text-xs" />
+            </div>
+        </div>
+    )
+}
+
 /** A carteira compartilhada "Casa": a porta do convite (`member` falso) e depois de aceitar. */
-function Carteira({ member, compacto }: { member: boolean; compacto: boolean }) {
+function Carteira({ member, form }: { member: boolean; form: DeviceFrameForm }) {
     const { ana, rafael, voce } = MINI_APP_PEOPLE
     return (
         <div className="flex flex-col gap-3">
@@ -581,7 +732,7 @@ function Carteira({ member, compacto }: { member: boolean; compacto: boolean }) 
                         </DescriptionDetails>
                     </DescriptionListItem>
                     <DescriptionListItem>
-                        <DescriptionTerm>Por pessoa</DescriptionTerm>
+                        <DescriptionTerm>Sua parte</DescriptionTerm>
                         <DescriptionDetails size="lg">
                             <MoneyDisplay value={828.27} size="lg" />
                         </DescriptionDetails>
@@ -607,15 +758,18 @@ function Carteira({ member, compacto }: { member: boolean; compacto: boolean }) 
                         </div>
                         <Caption>{member ? "3 pessoas" : "2 pessoas"}</Caption>
                     </div>
-                    <Linhas linhas={DESPESAS_DA_CASA} emLinha={false} compacto={compacto} className="px-4" />
+                    <Linhas linhas={DESPESAS_DA_CASA} emLinha={false} compacto={form === "phone"} className="px-4" />
                 </Card>
             </ShowcasePiece>
+            <SoNoTablet form={form}>
+                <QuemPagou />
+            </SoNoTablet>
         </div>
     )
 }
 
 /** A carteira esperando: a mesma geometria, em ossos. */
-function CarteiraEsqueleto() {
+function CarteiraEsqueleto({ form }: { form: DeviceFrameForm }) {
     return (
         <div className="flex flex-col gap-3">
             <div className="grid grid-cols-2 gap-3">
@@ -647,6 +801,9 @@ function CarteiraEsqueleto() {
                     ))}
                 </div>
             </Card>
+            <SoNoTablet form={form}>
+                <QuemPagouEsqueleto />
+            </SoNoTablet>
         </div>
     )
 }
@@ -655,7 +812,7 @@ function TelaDaCarteira({ form, loading, member }: { form: DeviceFrameForm; load
     return (
         <div className={cn("relative", form === "browser" ? "px-4 pt-3" : "px-3 pt-1")}>
             <ShowcaseSwap swapKey={loading ? "esqueleto" : "carteira"}>
-                {loading ? <CarteiraEsqueleto /> : <Carteira member={member} compacto={form === "phone"} />}
+                {loading ? <CarteiraEsqueleto form={form} /> : <Carteira member={member} form={form} />}
             </ShowcaseSwap>
         </div>
     )

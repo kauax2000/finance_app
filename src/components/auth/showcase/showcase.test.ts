@@ -138,4 +138,19 @@ describe("o mundo comum (8b)", () => {
         expect(tela("browser", "invoice")).toContain("R$ 1.284,60")
         expect(tela("tablet", "wallet-loading")).toContain('data-slot="skeleton"')
     })
+
+    it("a carteira fecha: a sua parte é um terço nos dois lados do convite, e quem pagou só no tablet", () => {
+        for (const member of [false, true]) {
+            const html = tela("tablet", "wallet", member)
+            expect(html).toContain(">Sua parte<")
+            expect(html).not.toContain("Por pessoa")
+            expect(html).toContain("R$ 828,27")
+            expect(html).toContain("Quem pagou em outubro")
+        }
+        expect(tela("phone", "wallet")).not.toContain("Quem pagou em outubro")
+        expect(tela("browser", "wallet")).not.toContain("Quem pagou em outubro")
+        expect(Math.round((2150 + 119.9 + 214.9) / 3 * 100) / 100).toBe(828.27)
+        // Já pago: o aluguel (Rafael) e a feira (Ana); falta a internet.
+        expect(Math.round(((2150 + 214.9) / 2484.8) * 100)).toBe(95)
+    })
 })
