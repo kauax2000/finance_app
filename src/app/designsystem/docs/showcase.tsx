@@ -4,7 +4,6 @@ import * as React from "react"
 
 import { CreditCardIcon as CreditCardMicro } from "@heroicons/react/16/solid"
 import { ChartPieIcon, CreditCardIcon, HomeIcon, UsersIcon } from "@heroicons/react/20/solid"
-import { AnimatePresence } from "motion/react"
 import { AppWordmark } from "@/components/layout/app-wordmark"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -323,11 +322,7 @@ function DemoNaTela() {
           <ShowcaseFloat anchor="center" open={voo}>
             <Paleta />
           </ShowcaseFloat>
-          <AnimatePresence>
-            {cursor && !voo ? (
-              <ShowcaseCursor key="ana" name="Ana" tone={1} anchor="saldo" from="end" delay={300} click />
-            ) : null}
-          </AnimatePresence>
+          <ShowcaseCursor name="Ana" tone={1} anchor="saldo" from="end" delay={300} click open={cursor && !voo} />
           {legenda ? (
             <ShowcaseCaption
               title={legendaDaForma.title}
@@ -388,7 +383,7 @@ export default function ShowcaseDoc() {
   <ShowcaseFloat anchor="center" open={aberta}>
     <Paleta />
   </ShowcaseFloat>
-  <ShowcaseCursor name="Ana" tone={1} anchor="saldo" from="end" click />
+  <ShowcaseCursor name="Ana" tone={1} anchor="saldo" from="end" click open={!aberta} />
   <ShowcaseCaption title="Seu mês num relance" dots={<ShowcaseDots count={3} active={0} />} />
 </ShowcaseStage>`}
         previewClassName="items-stretch"
@@ -417,7 +412,7 @@ export default function ShowcaseDoc() {
       </DocNote>
 
       <DocNote title="O cursor acha o alvo">
-        <code>ShowcaseCursor</code> mede o <code>[data-showcase-anchor]</code> em relação ao palco depois do repouso do herói e a cada mudança de tamanho do palco, e pousa um <code>PresenceCursor</code> no centro dele, andando com o herói na paralaxe. Trocar de forma reorganiza a tela e o cursor anda até o saldo de novo. Para sair em 150ms, quem o tira embrulha num <code>AnimatePresence</code>.
+        <code>ShowcaseCursor</code> mede o <code>[data-showcase-anchor]</code> em relação ao palco depois do repouso do herói e a cada mudança de tamanho do palco, e pousa um <code>PresenceCursor</code> no centro dele, andando com o herói na paralaxe. Trocar de forma reorganiza a tela e o cursor anda até o saldo de novo. <code>open</code> decide a presença: fechado, ou com o palco fora da tela, ele sai em 150ms, e ao reabrir espera o <code>delay</code> de novo — a tela não importa <code>motion</code>.
       </DocNote>
 
       <DocNote title="Decorativo e opaco">
@@ -473,7 +468,7 @@ export default function ShowcaseDoc() {
           { prop: "ShowcaseFlight layoutId active", type: "string, boolean", description: "Um ponto de pouso do voo: o fantasma sem texto anda de um ponto ao outro; o conteúdo do ativo aparece aos 450ms. className dá a forma (rounded-full)." },
           { prop: "ShowcasePiece", type: "motion.div", description: "Uma peça da mini UI que só translada na troca de forma (layout=\"position\")." },
           { prop: "ShowcaseSwap swapKey effect", type: 'Key, "fade" | "rise"', default: 'effect: "fade"', description: "O que existe numa forma ou cena só: o velho sai em 150ms, o novo entra na mola (popLayout; o pai é posicionado)." },
-          { prop: "ShowcaseCursor name tone anchor", type: "string, 1…6, string", description: "O cursor de outra pessoa pousado no centro do [data-showcase-anchor]. from (a borda de onde entra), delay (ms, com o palco na tela), click (aperta ao chegar)." },
+          { prop: "ShowcaseCursor name tone anchor open", type: "string, 1…6, string, boolean", default: "open: true", description: "O cursor de outra pessoa pousado no centro do [data-showcase-anchor]. from (a borda de onde entra), delay (ms, com o palco na tela), click (aperta ao chegar); open fechado sai em 150ms." },
           { prop: "ShowcaseDots count active fill", type: "number, number, 0…1", default: "fill: 1", description: "Os capítulos: a pílula ativa viaja (layoutId) e se preenche até fill." },
           { prop: "ShowcaseCaption title description dots", type: "string, string, ReactNode", description: "A legenda no pé, à esquerda, num Card elevated; o texto troca subindo. Sem descrição no XS. Os lugares do pé (s5, s9, s10) sobem 6cqh." },
           { prop: "ShowcaseSkeleton form group", type: '"browser" | "tablet" | "phone", boolean', default: 'form: "browser", group: true', description: "O palco esperando: o herói em ossos." },

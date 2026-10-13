@@ -25420,6 +25420,13 @@ legenda, paralaxe, cursor e voo.
 **Desvios do plano.** A âncora e a caixa do herói são o lugar de layout, não a
 caixa na tela. A paleta pousa pelo topo a 58%, não pelo centro. A entrada do
 cartão que troca escalona pelo `--slot-delay` do lugar (teto 200ms), não por
-50ms entre os que trocam. `ShowcaseCursor` sai em 150ms quando quem o tira o
-embrulha num `AnimatePresence`. Nasceu também o `ShowcaseSkeleton` (o herói em
+50ms entre os que trocam. Nasceu também o `ShowcaseSkeleton` (o herói em
 ossos), pedido pelo checklist.
+
+**Correção (rodada 1 da revisão).** O `ShowcaseCursor` saía só se quem o tirava
+o embrulhasse num `AnimatePresence` — e a página do catálogo importava `motion`
+para isso, o que a camada do app não pode (seção 8 do plano). Agora ele tem
+`open` (padrão `true`) e é dono da presença, como o `ShowcaseFloat`: um
+`AnimatePresence initial={false}` interno, saída `SAIDA` em 150ms, e fechar ou
+sair da tela zera a espera (reabrir conta o `delay` de novo). O teste tranca que
+a página não importa `motion`.

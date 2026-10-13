@@ -1452,7 +1452,8 @@ declaração de `background-color` no trilho).
   `ShowcaseFlight layoutId active` (o fantasma opaco e **sem texto**; o
   conteúdo aparece aos 450ms), `ShowcasePiece`, `ShowcaseSwap`,
   `ShowcaseCursor` (mede a âncora pelo lugar de layout, `offsetParent`, depois
-  do repouso e a cada `ResizeObserver`), `ShowcaseDots`, `ShowcaseCaption`
+  do repouso e a cada `ResizeObserver`; `open` é a presença, sai em 150ms — quem
+  o usa não importa `motion`), `ShowcaseDots`, `ShowcaseCaption`
   (`Card elevated` no pé, sans) e `ShowcaseSkeleton`. **Os níveis são do
   palco**: XS < 28rem 3 cartões, S 6, M 9, L ≥ 48rem 12; `showcase-short`
   esconde s5, s6 e s9. **Profundidade é sombra e ordem — nunca `blur`,

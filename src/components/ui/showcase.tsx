@@ -692,8 +692,8 @@ function ShowcaseSwap({
  * Um cursor de outra pessoa que acha o alvo: mede o `[data-showcase-anchor]` em relação ao palco depois do
  * repouso e a cada mudança de tamanho do palco, e pousa um `PresenceCursor` no centro dele, na camada que
  * flutua. Entra depois de `delay` (só com o palco na tela), pela borda `from`; `click` aperta ao chegar. Anda
- * com o herói na paralaxe, para nunca errar o alvo. Para sair em 150ms, quem o tira embrulha num
- * `AnimatePresence`.
+ * com o herói na paralaxe, para nunca errar o alvo. `open` decide a presença: fechado (ou com o palco fora da
+ * tela) sai em 150ms, e ao reabrir espera o `delay` de novo — quem o usa não importa `motion`.
  */
 function ShowcaseCursor({
   name,
@@ -702,10 +702,12 @@ function ShowcaseCursor({
   from,
   delay = 0,
   click = false,
+  open = true,
 }: {
   name: string
   tone: PresenceCursorTone
   anchor: string
+  open?: boolean
   from?: PresenceCursorFrom
   delay?: number
   click?: boolean
@@ -733,33 +735,42 @@ function ShowcaseCursor({
   }, [settled, anchor, anchorRect, stageRef])
 
   const medido = at !== null
+  // Fechar ou sair da tela zera a espera: a limpeza devolve `visivel` a falso, e reabrir conta o `delay` de novo.
   React.useEffect(() => {
-    if (!active || !medido) return
+    if (!open || !active || !medido) return
     const t = setTimeout(() => setVisivel(true), reduzido ? 0 : delay)
-    return () => clearTimeout(t)
-  }, [active, medido, delay, reduzido])
+    return () => {
+      clearTimeout(t)
+      setVisivel(false)
+    }
+  }, [open, active, medido, delay, reduzido])
+  const mostrar = open && active && visivel && at !== null
 
   React.useEffect(() => {
-    if (!visivel || !click || reduzido) return
+    if (!mostrar || !click || reduzido) return
     const aperta = setTimeout(() => setPressed(true), CHEGADA_DO_CURSOR_MS)
     const solta = setTimeout(() => setPressed(false), CHEGADA_DO_CURSOR_MS + DURACAO_DO_CLIQUE_MS)
     return () => {
       clearTimeout(aperta)
       clearTimeout(solta)
     }
-  }, [visivel, click, reduzido])
+  }, [mostrar, click, reduzido])
 
-  if (!visivel || !at) return null
   return (
-    <motion.div
-      data-slot="showcase-cursor"
-      data-anchor={anchor}
-      exit={{ opacity: 0, transition: SAIDA }}
-      className="pointer-events-none absolute inset-0 z-30"
-      style={{ x: deriva.hero.x, y: deriva.hero.y }}
-    >
-      <PresenceCursor name={name} tone={tone} at={at} from={from} pressed={pressed} />
-    </motion.div>
+    <AnimatePresence initial={false}>
+      {mostrar ? (
+        <motion.div
+          key="cursor"
+          data-slot="showcase-cursor"
+          data-anchor={anchor}
+          exit={{ opacity: 0, transition: SAIDA }}
+          className="pointer-events-none absolute inset-0 z-30"
+          style={{ x: deriva.hero.x, y: deriva.hero.y }}
+        >
+          <PresenceCursor name={name} tone={tone} at={at} from={from} pressed={pressed} />
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
   )
 }
 

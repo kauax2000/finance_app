@@ -233,6 +233,13 @@ describe("Showcase — o fonte", () => {
     expect(CODIGO).toContain("<PresenceCursor")
   })
 
+  it("o cursor é dono da presença: open (padrão true), sai em 150ms e zera a espera ao fechar", () => {
+    expect(CODIGO).toMatch(/click = false,\n  open = true,/)
+    expect(CODIGO).toMatch(/if \(!open \|\| !active \|\| !medido\) return/)
+    expect(CODIGO).toMatch(/clearTimeout\(t\)\n      setVisivel\(false\)/)
+    expect(CODIGO).toMatch(/<AnimatePresence initial=\{false\}>\n      \{mostrar \?/)
+  })
+
   it("o voo revela o pouso antes da cauda da mola, na mola do palco", () => {
     expect(CODIGO).toMatch(/REVELA_O_POUSO_MS = 450/)
     expect(CODIGO).toContain("transition={{ layout: MOLA_PALCO }}")
@@ -247,5 +254,9 @@ describe("Showcase — o fonte", () => {
 
   it("a página do catálogo é um palco genérico: nada do app de acesso", () => {
     expect(DOC).not.toMatch(/components\/auth/)
+  })
+
+  it("a página só usa o que o componente oferece: nada de motion (camada do app)", () => {
+    expect(DOC).not.toMatch(/from ["']motion/)
   })
 })
