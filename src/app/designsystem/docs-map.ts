@@ -69,6 +69,7 @@ import SelectDoc from "./docs/select"
 import SeparatorDoc from "./docs/separator"
 import ShapeElevationDoc from "./docs/shape-elevation"
 import SheetDoc from "./docs/sheet"
+import ShowcaseDoc from "./docs/showcase"
 import SidebarDoc from "./docs/sidebar"
 import SkeletonDoc from "./docs/skeleton"
 import SliderDoc from "./docs/slider"
@@ -159,6 +160,7 @@ export const DOCS: Record<string, ComponentType> = {
   "separator": SeparatorDoc,
   "shape-elevation": ShapeElevationDoc,
   "sheet": SheetDoc,
+  "showcase": ShowcaseDoc,
   "sidebar": SidebarDoc,
   "skeleton": SkeletonDoc,
   "slider": SliderDoc,

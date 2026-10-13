@@ -25336,3 +25336,90 @@ compensação, e o erro medido é zero. Sem `value` controlado no `SearchInput` 
 traço fica no começo, como o × (que também lê o `value`). Texto mais largo que o
 campo: o reflexo corta (`overflow-hidden`) e o traço some na ponta, em vez de
 rolar com o campo — a vitrine digita palavras curtas.
+
+### Rodada 258 — `Showcase`
+
+Componente novo, **Organismo**, aprovado na Fase 0 do plano do painel de marca
+animado (`docs/superpowers/plans/2026-10-12-painel-de-marca-animado.md`, seções
+2, 4 a 8 e as emendas 11.1, 11.2 e 11.3). Das quatro perguntas, o dono escolheu
+"colagem por tamanho" (Redesenho), as peças do `Showcase` e a **legenda da
+cena** (Peças), "palco decorativo e acessível", "cursores que acham o alvo" e a
+**paralaxe no mouse** (Comportamento), e as cinco telas de acesso (App, que
+entra na Fase 8 — a seção "No app" da página fica vazia até lá).
+
+**Levantamento.** Nada no catálogo dispunha um palco: o `Carousel` é o que a
+pessoa navega, o `SplitShellAside` é só a geometria do campo. O palco compõe o
+`DeviceFrame` (rodada 255), o `PresenceCursor` (rodada 256) e o `Card`
+(organismo) — quem contém organismo é organismo.
+
+**O que entrou.** `ShowcaseStage` (`inert`, `aria-hidden`, `data-opaque`, o
+container `showcase`, `perspective-distant`, `MotionConfig reducedMotion="user"`,
+`LayoutGroup`, `useShowcase()` com `active`, `settled` e `anchorRect`),
+`ShowcaseHero`, `ShowcaseScatter` + `ShowcaseScatterItem` com os 12 lugares de
+`SHOWCASE_SLOTS`, `ShowcaseFloat`, `ShowcaseFlight`, `ShowcasePiece`,
+`ShowcaseSwap`, `ShowcaseCursor`, `ShowcaseDots`, `ShowcaseCaption` e
+`ShowcaseSkeleton`. A página (`/designsystem/showcase`) monta um palco genérico
+sobre o `brand-field`, com o Eixo `form` (três), um Eixo de cenário com as
+larguras que separam os níveis e o palco baixo, e os Interruptores colagem,
+legenda, paralaxe, cursor e voo.
+
+**Medido no catálogo** (Playwright headless, 1920×1200, só navegando):
+- **Níveis**: palco 330 → s0–s2 (cartão 176px, frase 12px, sem descrição na
+  legenda); 480 → s0–s5 (192px); 640 → s0–s8 (224px, 14px); 900 → os 12; 900×660
+  (baixo) → somem s5, s6 e s9. O herói centra a 52% da altura (366 de 704, 343
+  de 660); o navegador ocupa 92cqw no XS (303,6px) e 86cqw acima.
+- **Selos**: em todo nível, todo selo "exemplo" visível fica dentro do palco
+  (0 fora), lendo o `data-edge` do lugar.
+- **Afastamento**: o `translate` computado de cada lugar bate com
+  `(x − 50)·(kx − 1)·1cqw` e `(y − 50)·(ky − 1)·1cqh` com erro 0px nas três
+  formas (navegador 1/1,12, tablet 1,08/1,06, celular 1,14/1); o s1 vai a
+  −55,4px no celular.
+- **Profundidade**: `far` `shadow-sm`, `mid` `shadow-md`, `near` `shadow-lg`
+  medidas no cartão; `near` em `z-20`, o resto em `z-0`.
+- **Cursor**: pousa no centro do `[data-showcase-anchor]` com erro ≤ 0,6px nas
+  três formas, depois de cada troca.
+- **Paralaxe** (mouse a 40px dos cantos): herói 5,47px, longe 1,82, meio 3,64,
+  perto 7,29 — as razões 2/4/6/8 — e o oposto no canto contrário; congela em 0
+  em ~200ms durante a troca de forma e volta depois do repouso; 0 fora do campo,
+  0 com `reducedMotion: "reduce"` e 0 no toque.
+- **Voo**: o fantasma não tem texto (0 nós), anda nas duas pontas com o mesmo
+  progresso em x e em y, o conteúdo aparece aos ~450ms e está inteiro aos
+  ~620ms, e o fantasma fica `visibility: hidden` no pouso. A paleta pousa com o
+  topo a 58% do herói, com 448px (até 28rem); placa e pílula opacas
+  (`oklch(1 0 0)` no claro, `oklch(0.205 0 0)` no escuro, `backdrop-filter:
+  none`).
+- **Troca de forma no palco**: passo máximo de 0,138 da largura por quadro
+  (navegador → celular), repouso (`settled`) em ~690ms.
+- **Inerte**: `element.inert` verdadeiro, `aria-hidden="true"`, container
+  `showcase size`. No telefone (aside `display: none`), `useShowcase().active`
+  fica falso.
+- Console sem erro nos dois temas (só os avisos de pré-carga de fonte do
+  `next dev` e o do `motion` no contexto de movimento reduzido).
+
+**O que deu errado no caminho.**
+- **`*:shadow-*` não vencia a sombra do cartão**: o `*:` compila em `:where()`
+  e perde para o `shadow-sm` do `Card elevated`. Ficou `[&>*]:shadow-*`.
+- **O cursor pousava 46px acima do saldo**: a âncora era medida por
+  `getBoundingClientRect` no meio de uma projeção. A medida passou a ser o lugar
+  de layout pela cadeia de `offsetParent` (`caixaNoPalco`), e por isso o herói
+  deixou de centrar por `-translate-1/2` (que o `offset*` não vê) e passou a
+  centrar por flex numa caixa de 4% até o pé.
+- **A pílula subia no meio do voo**: a paleta centrada (`-translate-1/2`)
+  crescia enquanto as linhas entravam, e o alvo medido na montagem ficava
+  velho. A paleta (`anchor="center"`) passou a pousar pelo topo.
+- **O fantasma ficava por baixo da pílula pousada**: o `motion` às vezes deixa
+  a opacidade em linha depois do voo partilhado. A visibilidade, discreta, some
+  no fim dos 150ms do aparecer.
+- **A moldura voava na hidratação da página do catálogo**: o relato do estado
+  para a legenda da demo re-renderizava o palco no mesmo commit em que os
+  controles do `Preview` entravam por portal, e a projeção lia o deslocamento
+  da página como troca. O relato agora não renderiza quando nada mudou. Um
+  `layoutRoot` no palco foi tentado e recusado: segurava a moldura, mas a tela
+  (outro nó de layout) ainda voava, e o voo partilhado começava fora do lugar.
+
+**Desvios do plano.** A âncora e a caixa do herói são o lugar de layout, não a
+caixa na tela. A paleta pousa pelo topo a 58%, não pelo centro. A entrada do
+cartão que troca escalona pelo `--slot-delay` do lugar (teto 200ms), não por
+50ms entre os que trocam. `ShowcaseCursor` sai em 150ms quando quem o tira o
+embrulha num `AnimatePresence`. Nasceu também o `ShowcaseSkeleton` (o herói em
+ossos), pedido pelo checklist.

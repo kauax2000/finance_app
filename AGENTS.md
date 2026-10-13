@@ -104,7 +104,7 @@ O porquê de cada regra (medições, tentativas recusadas) está em
 O design system deste projeto tem três partes, e nenhuma delas se presume de
 memória:
 
-- **Componentes** em [`src/components/ui/`](src/components/ui) — 81 arquivos
+- **Componentes** em [`src/components/ui/`](src/components/ui) — 82 arquivos
   hoje.
 - **Tokens** em [`src/app/globals.css`](src/app/globals.css).
 - **Documentação viva** em `/designsystem`, com uma página por componente e por
@@ -1437,6 +1437,31 @@ declaração de `background-color` no trilho).
   **Exceção D2: a pílula do `PresenceCursor` pode pousar sobre o
   `brand-field` porque é superfície opaca com tinta medida** (7,44 a 8,95:1,
   `scripts/identity-contrast.mjs`). `presence-cursor-versions.test.ts`.
+- **`Showcase`** (Organismo, rodada 258): o palco decorativo onde o app se
+  apresenta sozinho. `ShowcaseStage` é **`inert` e `aria-hidden`**, declara
+  `data-opaque` (o vidro de dentro vira placa), é o container `showcase`
+  (`size`, pela `@utility showcase-stage`), `perspective-distant`, e embrulha
+  `MotionConfig reducedMotion="user"` e `LayoutGroup`; `useShowcase()` dá
+  `active` (`useInView`: falso com o aside `display: none` no telefone),
+  `settled` e `anchorRect(id)`. As peças: `ShowcaseHero form` (o
+  `DeviceFrame` a 52% da altura, centrado por layout), `ShowcaseScatter clear`
+  + `ShowcaseScatterItem slot itemKey` (os **12 lugares de `SHOWCASE_SLOTS`**,
+  com `edge` publicado em `data-edge` e `delay`; o afastamento por forma —
+  navegador 1,00/1,12, tablet 1,08/1,06, celular 1,14/1,00 — no invólucro de
+  fora, a inclinação e o respiro no de dentro), `ShowcaseFloat anchor`,
+  `ShowcaseFlight layoutId active` (o fantasma opaco e **sem texto**; o
+  conteúdo aparece aos 450ms), `ShowcasePiece`, `ShowcaseSwap`,
+  `ShowcaseCursor` (mede a âncora pelo lugar de layout, `offsetParent`, depois
+  do repouso e a cada `ResizeObserver`), `ShowcaseDots`, `ShowcaseCaption`
+  (`Card elevated` no pé, sans) e `ShowcaseSkeleton`. **Os níveis são do
+  palco**: XS < 28rem 3 cartões, S 6, M 9, L ≥ 48rem 12; `showcase-short`
+  esconde s5, s6 e s9. **Profundidade é sombra e ordem — nunca `blur`,
+  `opacity-` nem `scale-` nos itens.** **A paralaxe (`parallax`) mora só no
+  aside**: o ouvinte é do pai não inerte do palco, só `ehCursor` com
+  `(hover: hover)`, desligado sob `deDedo`, movimento reduzido ou `active`
+  falso, congelado em 0 fora do repouso, sem rAF nem `setState` por evento —
+  **um `pointermove` em `document` continua exclusivo do brilho da marca**.
+  `showcase-versions.test.ts`.
 - **`Toast`**: a placa flutuante; o tipo pinta só o poço do ícone; **sem barra
   de tempo**. **Nenhuma tela importa o `toast` do sonner**: use `@/lib/toast`
   (`description`, `id` como assunto, `action`, `cancel`, `toastPill`,

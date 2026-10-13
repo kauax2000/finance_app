@@ -260,6 +260,8 @@ export const REGISTRY: RegistryEntry[] = [
     entry("onboarding", "Onboarding", "Apresentar o produto: as boas-vindas em passos, os primeiros passos, a novidade na barra, o tour com foco num botão real e o ponto que pulsa.", ui("onboarding"), "OnboardingDialog, OnboardingChecklist, OnboardingCard, OnboardingTour, OnboardingHotspot, OnboardingMedia, OnboardingSkeleton"),
     entry("popover", "Popover", "Camada flutuante ancorada a um gatilho — com a confirmação curta e a gaveta no telefone.", ui("popover"), "Popover, PopoverContent, PopoverTrigger, PopoverHeader, PopoverConfirm"),
     entry("sheet", "Sheet", "Painel de borda no desktop, gaveta no telefone.", ui("sheet"), "Sheet, SheetContent, SheetTrigger, SheetClose"),
+    /** Compõe o `DeviceFrame`, o `PresenceCursor` e o `Card` (organismo) — quem contém organismo é organismo. */
+    entry("showcase", "Showcase", "O palco decorativo onde o app se apresenta: o herói que muda de forma, a colagem nas bordas, a paleta que voa, os cursores e a legenda.", ui("showcase"), "ShowcaseStage, ShowcaseHero, ShowcaseScatter, ShowcaseScatterItem, ShowcaseFloat, ShowcaseFlight, ShowcasePiece, ShowcaseSwap, ShowcaseCursor, ShowcaseDots, ShowcaseCaption, ShowcaseSkeleton, SHOWCASE_SLOTS, useShowcase"),
     /** Especializa o `Card`; especializar mantém o degrau. */
     entry("stat-card", "Stat Card", "Um número que importa, com sua variação.", ui("stat-card"), "StatCard, StatCardGroup, StatCardHeader, StatCardLabel, StatCardIcon, StatCardValue, StatCardDelta"),
     entry("stepper", "Stepper", "Progresso por etapas de um fluxo.", ui("stepper"), "Stepper, StepperItem, StepperContent, StepperActions, StepperPrevious, StepperNext"),
