@@ -4,6 +4,8 @@ import * as React from "react"
 
 import { CreditCardIcon as CreditCardMicro } from "@heroicons/react/16/solid"
 import { ChartPieIcon, CreditCardIcon, HomeIcon, UsersIcon } from "@heroicons/react/20/solid"
+import { AuthShowcase } from "@/components/auth/showcase/auth-showcase"
+import type { AuthSceneId } from "@/components/auth/showcase/scene-context"
 import { AppWordmark } from "@/components/layout/app-wordmark"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -23,7 +25,6 @@ import {
 import { useDeviceFrame, type DeviceFrameNavItem } from "@/components/ui/device-frame"
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { PageSection, PageSectionDescription, PageSectionHeader, PageSectionTitle } from "@/components/ui/page-section"
 import {
   SHOWCASE_SLOTS,
   ShowcaseCaption,
@@ -64,20 +65,23 @@ const ORDEM: Record<ShowcaseForm, number> = { browser: 0, tablet: 1, phone: 2 }
 
 const PALCOS = ["xs", "s", "m", "l", "baixo"] as const
 type Palco = (typeof PALCOS)[number]
-/** O tamanho do palco de demonstração, por extenso: as larguras que separam os níveis e o palco baixo. */
+/**
+ * O tamanho do palco de demonstração, por extenso: um por nível, na proporção de um painel lateral (em pé, como
+ * o campo das telas de acesso — S, M e L são os campos de 1280×800, 1440×900 e 1920×1080; o baixo, o de 1024×700).
+ */
 const PALCO: Record<Palco, string> = {
   xs: "w-82.5 h-176",
-  s: "w-120 h-176",
-  m: "w-160 h-176",
-  l: "w-225 h-176",
-  baixo: "w-225 h-165",
+  s: "w-140.5 h-190",
+  m: "w-158.75 h-215",
+  l: "w-213.25 h-260",
+  baixo: "w-111.25 h-165",
 }
 const ROTULO_DO_PALCO: Record<Palco, string> = {
   xs: "XS · 330",
-  s: "S · 480",
-  m: "M · 640",
-  l: "L · 900",
-  baixo: "baixo · 660",
+  s: "S · 562",
+  m: "M · 635",
+  l: "L · 853",
+  baixo: "baixo · 445×660",
 }
 
 const NAV: DeviceFrameNavItem[] = [
@@ -339,6 +343,71 @@ function DemoNaTela() {
   )
 }
 
+/** As 17 cenas das telas de acesso, na ordem das famílias. */
+const CENAS = [
+  "login",
+  "login.session-expired",
+  "login.password-updated",
+  "invite.loading",
+  "invite.idle",
+  "invite.gate",
+  "invite.accepted",
+  "invite.error",
+  "register",
+  "register.confirm",
+  "register.confirm-invite",
+  "recovery.email",
+  "recovery.code",
+  "recovery.password",
+  "recovery.link-checking",
+  "recovery.link-expired",
+  "recovery.done",
+] as const satisfies readonly AuthSceneId[]
+
+const JANELAS = ["1024", "1280", "1440", "1920"] as const
+type Janela = (typeof JANELAS)[number]
+/** O campo de marca naquela janela (o aside de 5/11 da largura, menos as margens), por extenso. */
+const CAMPO_DA_JANELA: Record<Janela, string> = {
+  "1024": "w-111.25 h-165",
+  "1280": "w-140.5 h-190",
+  "1440": "w-158.75 h-215",
+  "1920": "w-213.25 h-260",
+}
+const ROTULO_DA_JANELA: Record<Janela, string> = {
+  "1024": "1024×700",
+  "1280": "1280×800",
+  "1440": "1440×900",
+  "1920": "1920×1080",
+}
+
+function DemoNoApp() {
+  const [cena, setCena] = React.useState<AuthSceneId>("login")
+  const [janela, setJanela] = React.useState<Janela>("1440")
+  return (
+    <div className="flex w-full flex-col items-center gap-3">
+      <Controles
+        empilhar
+        inicio={
+          <>
+            <Eixo rotulo="cena" valores={CENAS} valor={cena} onChange={setCena} />
+            <Eixo rotulo="janela" valores={JANELAS} valor={janela} onChange={setJanela} rotulos={ROTULO_DA_JANELA} />
+          </>
+        }
+      />
+      <div
+        data-slot="showcase-doc-app"
+        className={cn("brand-field relative isolate max-w-full shrink-0 overflow-clip rounded-modal", CAMPO_DA_JANELA[janela])}
+      >
+        {/* O wordmark onde o SplitShellAside o põe (px-8 py-10), acima do palco. */}
+        <div className="absolute start-8 top-10 z-10 flex">
+          <AppWordmark size="lg" />
+        </div>
+        <AuthShowcase scene={cena} />
+      </div>
+    </div>
+  )
+}
+
 function NoTelefone() {
   const [estado, setEstado] = useEstadoDoPalco({ active: true, settled: true })
   return (
@@ -363,12 +432,12 @@ export default function ShowcaseDoc() {
   return (
     <>
       <Usage>
-        O palco onde o app se apresenta sozinho, num campo: o herói (um <code>DeviceFrame</code> que muda de forma), a colagem de cartões cortados pelas bordas, o que flutua à frente (a paleta, um chip, os cursores de outras pessoas), o voo de uma pílula de um lugar ao outro e a legenda com os capítulos. É decorativo: <code>inert</code> e <code>aria-hidden</code>, e quem não o vê não perde nada. Use-o num painel lateral grande; não é carrossel (o <code>Carousel</code> é o que a pessoa navega) nem prévia de componente. Nenhuma tela do app o usa ainda: o painel das telas de acesso vai montá-lo.
+        O palco onde o app se apresenta sozinho, num campo: o herói (um <code>DeviceFrame</code> que muda de forma), a colagem de cartões cortados pelas bordas, o que flutua à frente (a paleta, um chip, os cursores de outras pessoas), o voo de uma pílula de um lugar ao outro e a legenda com os capítulos. É decorativo: <code>inert</code> e <code>aria-hidden</code>, e quem não o vê não perde nada. Use-o num painel lateral grande; não é carrossel (o <code>Carousel</code> é o que a pessoa navega) nem prévia de componente. No app, é o painel de marca das telas de acesso (a seção No app, abaixo).
       </Usage>
 
       <DocSection
         title="Na tela"
-        description="Troque a forma: o herói anda numa mola só e a colagem se afasta dele, cada lugar no seu atraso. Troque o palco: os níveis contam os cartões pela largura do próprio palco (3, 6, 9, 12) e o palco baixo esconde três. O voo leva a pílula do cabeçalho para a paleta e de volta; o cursor acha o saldo onde quer que ele esteja; a paralaxe responde só ao mouse."
+        description="Troque a forma: o herói anda numa mola só e cada cartão anda até o pouso que a forma deixa livre — ou sai pela borda —, cada lugar no seu atraso. Troque o palco: os níveis liberam os lugares pela largura do próprio palco (3, 6, 9, 12) e o palco baixo esconde três. O voo leva a pílula do cabeçalho para a paleta e de volta; o cursor acha o saldo onde quer que ele esteja; a paralaxe responde só ao mouse."
         code={`<ShowcaseStage parallax>
   <ShowcaseScatter clear={form}>
     {SHOWCASE_SLOTS.map((_, i) => (
@@ -392,15 +461,15 @@ export default function ShowcaseDoc() {
       </DocSection>
 
       <DocNote title="Os níveis são do palco, não da janela">
-        O palco é o container <code>showcase</code> (<code>size</code>), e tudo se mede nele. <strong>XS</strong> abaixo de 28rem mostra 3 cartões (s0–s2) de 176px; <strong>S</strong> de 28 a 36rem, 6 (até s5) de 192px; <strong>M</strong> de 36 a 48rem, 9 de 224px com a frase em <code>text-sm</code>; <strong>L</strong> a partir de 48rem, os 12. Abaixo de 44rem de altura (<code>showcase-short</code>) somem s5, s6 e s9, e o celular cai para 70cqh. No XS o chip some e a legenda perde a descrição.
+        O palco é o container <code>showcase</code> (<code>size</code>), e tudo se mede nele. <strong>XS</strong> abaixo de 28rem libera 3 lugares (s0–s2), de 176px; <strong>S</strong> de 28 a 36rem, 6 (até s5), de 192px; <strong>M</strong> de 36 a 48rem, 9, de 224px com a frase em <code>text-sm</code>; <strong>L</strong> a partir de 48rem, os 12. Quantos aparecem é do pouso da forma: nos campos das telas de acesso, o navegador mostra 2, 3, 3 e 5; o tablet, 2; o celular, 3, 5, 5 e 6. Abaixo de 44rem de altura (<code>showcase-short</code>) somem s5, s6 e s9, e o celular cai para 70cqh. No XS o chip some e a legenda perde a descrição.
       </DocNote>
 
       <DocNote title="Profundidade é sombra e ordem — nunca escala, desfoque ou opacidade">
         Longe e meio (<code>z-0</code>, <code>shadow-sm</code> e <code>shadow-md</code>), o herói (<code>z-10</code>), perto (<code>z-20</code>, <code>shadow-lg</code>), o que flutua (<code>z-30</code>). Sem escala de profundidade o selo &quot;exemplo&quot; fica sempre no corpo dele, e o cartão põe o selo do lado de dentro pelo <code>data-edge</code> que o lugar publica: <code>end</code> à esquerda, <code>start</code> à direita, <code>top</code> embaixo, <code>bottom</code> em cima.
       </DocNote>
 
-      <DocNote title="O afastamento: dois invólucros, um movimento cada">
-        O de fora tem o lugar (<code>x</code>, <code>y</code> em %), o <code>translate</code> do afastamento — navegador <code>kx 1,00 / ky 1,12</code>, tablet <code>1,08 / 1,06</code>, celular <code>1,14 / 1,00</code>, em <code>cqw</code>/<code>cqh</code> — na mola de CSS com o <code>--slot-delay</code> do lugar, e a entrada <code>showcase-enter</code> no mesmo atraso. O de dentro inclina, respira (<code>ripple</code>) e troca o cartão (<code>itemKey</code>): o velho sai em 160ms, o novo entra de 8px para fora, na mola.
+      <DocNote title="O pouso por forma: dois invólucros, um movimento cada">
+        Cada lugar tem um pouso por forma do herói (<code>at</code>, o centro em % do palco): o navegador é largo e baixo e deixa as faixas de cima e de baixo, o celular é alto e estreito e deixa as laterais, o tablet deixa só os cantos — um lugar fixo que serve a uma forma cairia sob o herói na outra. O de fora anda até o pouso por <code>left</code>/<code>top</code>, na mola de CSS com o <code>--slot-delay</code> do lugar; sem pouso (<code>null</code>), sai pela borda que o corta e publica <code>data-away</code>. A entrada <code>showcase-enter</code> é o <code>translate</code>, no mesmo atraso. O de dentro inclina, respira (<code>ripple</code>) e troca o cartão (<code>itemKey</code>): o velho sai em 160ms, o novo entra de 8px para fora, na mola. A tabela foi medida nos campos de 1024×700 a 1920×1080: nenhum cartão cobre a legenda nem a zona da marca, dois cartões se cruzam em até 12% do menor, os de perto cobrem até 8% do herói, e todo selo fica à vista.
       </DocNote>
 
       <DocNote title="O voo da pílula não estica texto">
@@ -440,14 +509,17 @@ export default function ShowcaseDoc() {
         </div>
       </DocSection>
 
-      <PageSection variant="ruled" size="lg">
-        <PageSectionHeader>
-          <PageSectionTitle>No app</PageSectionTitle>
-          <PageSectionDescription>
-            As 17 cenas das telas de acesso — login, cadastro, recuperação e convite — entram aqui na Fase 8 do plano do painel de marca, com um eixo por cena.
-          </PageSectionDescription>
-        </PageSectionHeader>
-      </PageSection>
+      <DocSection
+        title="No app"
+        description="O painel de marca das telas de acesso monta este palco, com a cena que o formulário publica: login no navegador, convite no tablet da casa, cadastro e recuperação no celular. Cada estado é um id em SCENES (components/auth/showcase/scenes.ts); escolha a cena e a janela — o campo tem o tamanho do painel naquela janela, e o wordmark mora no canto, onde a colagem nunca pousa."
+        code={`// src/components/layout/auth-frame.tsx
+<AuthBrandPanel>
+  <AuthShowcase scene={cena} />
+</AuthBrandPanel>`}
+        previewClassName="items-stretch"
+      >
+        <DemoNoApp />
+      </DocSection>
 
       <PropsTable
         title="Props de ShowcaseStage"
@@ -462,8 +534,8 @@ export default function ShowcaseDoc() {
         title="As peças"
         rows={[
           { prop: "ShowcaseHero form", type: '"browser" | "tablet" | "phone"', description: "O DeviceFrame no centro (52% da altura), no tamanho que a @utility showcase-stage dá por data-form. Aceita as props do DeviceFrame." },
-          { prop: "ShowcaseScatter clear", type: '"browser" | "tablet" | "phone"', description: "A forma do herói, que decide o afastamento da colagem. ripple faz a colagem respirar uma vez." },
-          { prop: "ShowcaseScatterItem slot itemKey", type: "0…11, Key", description: "Um dos 12 lugares de SHOWCASE_SLOTS (x, y, rot, depth, edge, level, short, delay); trocar itemKey troca o cartão. Publica data-edge." },
+          { prop: "ShowcaseScatter clear", type: '"browser" | "tablet" | "phone"', description: "A forma do herói, que decide o pouso de cada lugar. ripple faz a colagem respirar uma vez." },
+          { prop: "ShowcaseScatterItem slot itemKey", type: "0…11, Key", description: "Um dos 12 lugares de SHOWCASE_SLOTS (at por forma, rot, depth, edge, level, short, delay); trocar itemKey troca o cartão. Publica data-edge, e data-away quando a forma não lhe dá pouso." },
           { prop: "ShowcaseFloat anchor open", type: '"center" | "top-start" | … | "hero-bottom", boolean', default: "open: true", description: "À frente do herói (z-30): center é a paleta (80% da largura, até 28rem); as outras âncoras, um chip na borda, escondido no XS. Entra na mola, sai em 150ms. layoutId mantém o chip parado entre cenas." },
           { prop: "ShowcaseFlight layoutId active", type: "string, boolean", description: "Um ponto de pouso do voo: o fantasma sem texto anda de um ponto ao outro; o conteúdo do ativo aparece aos 450ms. className dá a forma (rounded-full)." },
           { prop: "ShowcasePiece", type: "motion.div", description: "Uma peça da mini UI que só translada na troca de forma (layout=\"position\")." },

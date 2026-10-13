@@ -9,6 +9,9 @@ import {
     MINI_APP_URL,
     type MiniAppScreen,
 } from "@/components/auth/showcase/mini-app"
+import { AuthShowcase, focoPulaORoteiro } from "@/components/auth/showcase/auth-showcase"
+import { sceneFamily, type AuthSceneId } from "@/components/auth/showcase/scene-context"
+import { FAMILY_CAPTION, FAMILY_ORDER, SCENES } from "@/components/auth/showcase/scenes"
 import { ShowcaseHero, ShowcaseStage } from "@/components/ui/showcase"
 import { IDENTITY_TONES, identityToneFor } from "@/lib/avatar"
 import { getInitials } from "@/lib/utils"
@@ -152,5 +155,94 @@ describe("o mundo comum (8b)", () => {
         expect(Math.round((2150 + 119.9 + 214.9) / 3 * 100) / 100).toBe(828.27)
         // Já pago: o aluguel (Rafael) e a feira (Ana); falta a internet.
         expect(Math.round(((2150 + 214.9) / 2484.8) * 100)).toBe(95)
+    })
+})
+
+describe("a orquestração (8c)", () => {
+    const IDS = Object.keys(SCENES) as AuthSceneId[]
+    const FONTE = semComentarios(lerFonte("src/components/auth/showcase/auth-showcase.tsx"))
+
+    it("as 17 cenas têm uma linha cada, na família do próprio id", () => {
+        expect(IDS).toHaveLength(17)
+        for (const id of IDS) expect(SCENES[id].family, id).toBe(sceneFamily(id))
+    })
+
+    it("a forma é da família: login no navegador, convite no tablet, cadastro e recuperação no celular", () => {
+        const forma = { login: "browser", invite: "tablet", register: "phone", recovery: "phone" } as const
+        for (const id of IDS) {
+            const esperada = id === "recovery.done" ? "browser" : forma[SCENES[id].family]
+            expect(SCENES[id].form, id).toBe(esperada)
+        }
+    })
+
+    it("a legenda é da família, sem dígito nem promessa de número", () => {
+        for (const id of IDS) {
+            const { caption, family } = SCENES[id]
+            expect(caption, id).toBe(FAMILY_CAPTION[family])
+            expect(caption.title + caption.description, id).not.toMatch(/\d/)
+        }
+    })
+
+    it("os roteiros e a celebração moram onde o plano diz", () => {
+        const comRoteiro = IDS.filter((id) => SCENES[id].script).map((id) => [id, SCENES[id].script])
+        expect(comRoteiro).toEqual([
+            ["login", "palette-login"],
+            ["login.session-expired", "palette-session"],
+            ["login.password-updated", "palette-security"],
+            ["recovery.password", "masked-password"],
+        ])
+        expect(IDS.filter((id) => SCENES[id].celebrate)).toEqual(["recovery.done"])
+    })
+
+    it("cada pessoa tem o tom do próprio cursor, uma vez por cena", () => {
+        const tom = { Você: 3, Ana: 1, Rafael: 5 } as const
+        for (const id of IDS) {
+            const nomes = SCENES[id].cursors.map((c) => c.name)
+            expect(new Set(nomes).size, id).toBe(nomes.length)
+            for (const c of SCENES[id].cursors) expect(c.tone, `${id} ${c.name}`).toBe(tom[c.name])
+        }
+    })
+
+    it("o giro segue a ordem das famílias", () => {
+        expect(FAMILY_ORDER).toEqual({ login: 0, invite: 1, register: 2, recovery: 3 })
+    })
+
+    it("o foco que pula o roteiro é o de quem foi trabalhar na coluna, e não o do título", () => {
+        // Sem DOM no vitest: um elemento de mentira com `matches` e `closest`.
+        const el = (seletores: string[], naColuna = true) =>
+            ({
+                matches: (s: string) => s.split(",").some((p) => seletores.includes(p.trim())),
+                closest: (s: string) => (naColuna && s === "[data-slot=split-shell-main]" ? {} : null),
+            }) as unknown as EventTarget
+        expect(focoPulaORoteiro(el(["input"]))).toBe(true)
+        expect(focoPulaORoteiro(el(["a"]))).toBe(true)
+        expect(focoPulaORoteiro(el(["button"]))).toBe(true)
+        expect(focoPulaORoteiro(el(["h1", '[tabindex="-1"]']))).toBe(false)
+        expect(focoPulaORoteiro(el(["a", '[tabindex="-1"]']))).toBe(false)
+        expect(focoPulaORoteiro(el(["input"], false))).toBe(false)
+        expect(focoPulaORoteiro(null)).toBe(false)
+    })
+
+    it("o painel anda 80ms depois da coluna, num commit só dele, e a paleta só vem com o palco à vista", () => {
+        expect(FONTE).toContain("RESPOSTA_DO_PAINEL_MS = 80")
+        expect(FONTE).toMatch(/const Palco = React\.memo\(/)
+        expect(FONTE).toMatch(/export const AuthShowcase = React\.memo\(/)
+        expect(FONTE).toMatch(/dynamic\(\s*\(\) => import\("@\/components\/auth\/showcase\/palette-demo"\)/)
+        expect(FONTE).toContain("{ ssr: false }")
+        expect(FONTE).toContain("<ShowcaseStage parallax")
+        expect(FONTE).not.toMatch(/from ["']motion/)
+        expect(FONTE).not.toContain("requestAnimationFrame")
+        expect(FONTE).not.toMatch(/addEventListener\("pointermove"/)
+    })
+
+    it("cada cena desenha o palco na forma dela, com a legenda e os capítulos", () => {
+        for (const id of IDS) {
+            const html = renderToStaticMarkup(createElement(AuthShowcase, { scene: id }))
+            expect(html, id).toContain('data-slot="showcase-stage"')
+            expect(html, id).toContain(`data-form="${SCENES[id].form}"`)
+            expect(html, id).toContain(SCENES[id].caption.title)
+            expect(html, id).toContain('data-slot="showcase-dots"')
+            expect(html.match(/data-slot="auth-testimonial"/g)?.length, id).toBe(12)
+        }
     })
 })

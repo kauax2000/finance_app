@@ -1446,9 +1446,12 @@ declaração de `background-color` no trilho).
   `settled` e `anchorRect(id)`. As peças: `ShowcaseHero form` (o
   `DeviceFrame` a 52% da altura, centrado por layout), `ShowcaseScatter clear`
   + `ShowcaseScatterItem slot itemKey` (os **12 lugares de `SHOWCASE_SLOTS`**,
-  com `edge` publicado em `data-edge` e `delay`; o afastamento por forma —
-  navegador 1,00/1,12, tablet 1,08/1,06, celular 1,14/1,00 — no invólucro de
-  fora, a inclinação e o respiro no de dentro), `ShowcaseFloat anchor`,
+  com `edge` publicado em `data-edge` e `delay`; **um pouso por forma** (`at`):
+  o cartão anda por `left`/`top` até onde a forma deixa espaço, ou sai pela
+  borda com `data-away` — a tabela é medida nos campos de 1024×700 a
+  1920×1080: nada cobre a legenda nem a zona da marca, cruzamento ≤12%, os de
+  perto ≤8% do herói, selo à vista; a inclinação e o respiro no de dentro),
+  `ShowcaseFloat anchor`,
   `ShowcaseFlight layoutId active` (o fantasma opaco e **sem texto**; o
   conteúdo aparece aos 450ms), `ShowcasePiece`, `ShowcaseSwap`,
   `ShowcaseCursor` (mede a âncora pelo lugar de layout, `offsetParent`, depois

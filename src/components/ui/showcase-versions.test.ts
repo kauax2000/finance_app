@@ -47,28 +47,35 @@ describe("ShowcaseStage", () => {
   })
 })
 
-describe("SHOWCASE_SLOTS — os 12 lugares da seção 6", () => {
+describe("SHOWCASE_SLOTS — os 12 lugares, com o pouso por forma", () => {
+  // pouso [navegador, tablet, celular] (null: a forma não deixa lugar), rot, profundidade, borda, nível, baixo, atraso
   const TABELA = [
-    [84, 9, 6, "near", "top", "XS", false, 0],
-    [6, 88, -7, "near", "start", "XS", false, 25],
-    [92, 86, 4, "mid", "end", "XS", false, 50],
-    [97, 40, -5, "far", "end", "S", false, 75],
-    [2, 30, 5, "mid", "start", "S", false, 100],
-    [50, 97, -2, "far", "bottom", "S", true, 125],
-    [60, 4, -4, "mid", "top", "M", true, 150],
-    [3, 62, -3, "far", "start", "M", false, 175],
-    [98, 66, 7, "mid", "end", "M", false, 200],
-    [30, 96, 3, "mid", "bottom", "L", true, 225],
-    [76, 98, -6, "far", "bottom", "L", false, 250],
-    [99, 14, -8, "far", "end", "L", false, 275],
+    [[[82, 10], [84, 8], [88, 9]], 6, "near", "top", "XS", false, 0],
+    [[null, null, [8, 72]], -7, "near", "start", "XS", false, 25],
+    [[[87, 81], [95, 91], [92, 80]], 4, "near", "end", "XS", false, 50],
+    [[null, null, [93, 40]], -5, "far", "end", "S", false, 75],
+    [[[15, 24], null, [8, 23]], 5, "near", "start", "S", false, 100],
+    [[null, null, null], -2, "far", "bottom", "S", true, 125],
+    [[null, null, null], -4, "mid", "top", "M", true, 150],
+    [[null, null, null], -3, "far", "start", "M", false, 175],
+    [[null, null, null], 7, "mid", "end", "M", false, 200],
+    [[null, null, null], 3, "mid", "bottom", "L", true, 225],
+    [[[60, 99], null, null], -6, "far", "bottom", "L", false, 250],
+    [[[55, 9], null, [92, 60]], -8, "far", "top", "L", false, 275],
   ] as const
 
-  it("x, y, rot, profundidade, borda, nível, baixo e atraso, por extenso", () => {
+  it("pouso por forma, rot, profundidade, borda, nível, baixo e atraso, por extenso", () => {
     expect(SHOWCASE_SLOTS).toHaveLength(12)
     SHOWCASE_SLOTS.forEach((s, i) => {
-      const [x, y, rot, depth, edge, level, short, delay] = TABELA[i]
-      expect({ x: s.x, y: s.y, rot: s.rot, depth: s.depth, edge: s.edge, level: s.level, short: s.short, delay: s.delay }).toEqual({
-        x, y, rot, depth, edge, level, short, delay,
+      const [[browser, tablet, phone], rot, depth, edge, level, short, delay] = TABELA[i]
+      expect({ at: s.at, rot: s.rot, depth: s.depth, edge: s.edge, level: s.level, short: s.short, delay: s.delay }).toEqual({
+        at: { browser, tablet, phone },
+        rot,
+        depth,
+        edge,
+        level,
+        short,
+        delay,
       })
     })
   })
@@ -84,24 +91,34 @@ describe("ShowcaseScatter e ShowcaseScatterItem", () => {
       h(ShowcaseScatter, { clear: "browser" }, h(ShowcaseScatterItem, { slot: slot as 0, itemKey: "a" }, h("p", null, "cartão")))
     )
 
-  it("o afastamento por forma, incluindo o tablet", () => {
-    const k = (clear: "browser" | "tablet" | "phone") =>
-      tagDo(renderToStaticMarkup(h(ShowcaseScatter, { clear })), "showcase-scatter")
-    expect(k("browser")).toMatch(/--clear-kx:1;--clear-ky:1\.12/)
-    expect(k("tablet")).toMatch(/--clear-kx:1\.08;--clear-ky:1\.06/)
-    expect(k("phone")).toMatch(/--clear-kx:1\.14;--clear-ky:1/)
+  it("o pouso por forma: cada lugar anda até onde a forma deixa espaço; sem pouso, sai pela borda que o corta", () => {
+    const em = (clear: "browser" | "tablet" | "phone", slot: number) =>
+      tagDo(
+        palco(h(ShowcaseScatter, { clear }, h(ShowcaseScatterItem, { slot: slot as 0, itemKey: "a" }, h("p", null, "cartão")))),
+        "showcase-scatter-item"
+      )
+    expect(em("phone", 1)).toMatch(/left:8%;top:72%/)
+    expect(em("phone", 1)).not.toContain("data-away")
+    // s1 é da borda esquerda: no navegador ele sai por ela, na altura de onde pousa no celular.
+    expect(em("browser", 1)).toMatch(/left:-35%;top:72%/)
+    expect(em("browser", 1)).toContain('data-away="true"')
+    // s0 é da borda de cima: no tablet tem pouso; s3 (direita) sai pela direita no navegador.
+    expect(em("tablet", 0)).toMatch(/left:84%;top:8%/)
+    expect(em("browser", 3)).toMatch(/left:135%;top:40%/)
+    expect(tagDo(renderToStaticMarkup(h(ShowcaseScatter, { clear: "tablet" })), "showcase-scatter")).toContain('data-clear="tablet"')
   })
 
-  it("o de fora publica a borda e a profundidade, entra no atraso do lugar e anda pelo afastamento", () => {
+  it("o de fora publica a borda e a profundidade, entra no atraso do lugar e anda até o pouso", () => {
     const tag = tagDo(item(3), "showcase-scatter-item")
     expect(tag).toContain('data-edge="end"')
     expect(tag).toContain('data-depth="far"')
     expect(tag).toContain("--slot-delay:75ms")
-    expect(tag).toMatch(/translate:calc\(\(var\(--slot-x\) - 50\) \* \(var\(--clear-kx, 1\) - 1\) \* 1cqw\)/)
     const classe = classeDo(item(3), "showcase-scatter-item")
     expect(classe).toContain("showcase-enter")
-    expect(classe).toContain("transition-[translate]")
+    // o `translate` é da entrada (`rise`): o pouso anda por left/top, na mola de CSS.
+    expect(classe).toContain("transition-[left,top]")
     expect(classe).toContain("delay-(--slot-delay)")
+    expect(tag).not.toMatch(/translate:/)
   })
 
   it("os níveis por container query: XS sempre, S a 28rem, M a 36rem, L a 48rem; o baixo esconde s5, s6 e s9", () => {
@@ -117,7 +134,7 @@ describe("ShowcaseScatter e ShowcaseScatterItem", () => {
     expect(classeDo(item(0), "showcase-scatter-item")).toContain("z-20")
     expect(classeDo(item(3), "showcase-scatter-item")).toContain("z-0")
     expect(classeDo(item(0), "showcase-scatter-card")).toContain("[&>*]:shadow-lg")
-    expect(classeDo(item(2), "showcase-scatter-card")).toContain("[&>*]:shadow-md")
+    expect(classeDo(item(6), "showcase-scatter-card")).toContain("[&>*]:shadow-md")
     expect(classeDo(item(3), "showcase-scatter-card")).toContain("[&>*]:shadow-sm")
   })
 
@@ -252,8 +269,9 @@ describe("Showcase — o fonte", () => {
     expect(CODIGO).not.toMatch(/#[0-9a-f]{3,8}\b|rgb\(|oklch\(|hsl\(|\b(?:bg|text|fill|stroke)-(?:white|black|gray|zinc|neutral|slate|red|green|blue)-?/i)
   })
 
-  it("a página do catálogo é um palco genérico: nada do app de acesso", () => {
-    expect(DOC).not.toMatch(/components\/auth/)
+  it("a página do catálogo é um palco genérico: do app de acesso, só o AuthShowcase da seção No app", () => {
+    const doApp = DOC.match(/from ["']@\/components\/auth\/[^"']+["']/g) ?? []
+    expect(doApp.filter((i) => !i.includes("/scene-context"))).toEqual(['from "@/components/auth/showcase/auth-showcase"'])
   })
 
   it("a página só usa o que o componente oferece: nada de motion (camada do app)", () => {

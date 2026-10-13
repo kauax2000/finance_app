@@ -61,11 +61,17 @@ type ShowcaseDepth = "far" | "mid" | "near"
 type ShowcaseEdge = "top" | "end" | "bottom" | "start"
 type ShowcaseLevel = "XS" | "S" | "M" | "L"
 
+/** Onde um lugar pousa com o herói numa forma: o centro do cartão, em % do palco; `null`, a forma não deixa lugar. */
+type ShowcaseSpot = readonly [x: number, y: number] | null
+
 type ShowcaseSlot = {
-  /** O centro do cartão, em % da largura do palco. */
-  x: number
-  /** O centro do cartão, em % da altura do palco. */
-  y: number
+  /**
+   * O pouso por forma do herói. O herói ocupa o centro de jeitos diferentes — o navegador é largo e baixo (sobram as
+   * faixas de cima e de baixo), o celular é alto e estreito (sobram as laterais), o tablet deixa só os cantos — e
+   * um lugar que serve a uma forma cai sob o herói na outra. Na troca o cartão anda até o pouso novo, no próprio
+   * atraso; sem pouso (`null`), sai pela borda que o corta e fica fora do palco.
+   */
+  at: Record<ShowcaseForm, ShowcaseSpot>
   /** A inclinação, em graus. */
   rot: number
   depth: ShowcaseDepth
@@ -77,33 +83,44 @@ type ShowcaseSlot = {
   short: boolean
   /** Sobe 6cqh quando a legenda existe (os lugares que pousam no pé). */
   caption: boolean
-  /** O `--slot-delay` da entrada e do afastamento, em ms. */
+  /** O `--slot-delay` da entrada e da troca de pouso, em ms. */
   delay: number
 }
 
-/** Os doze lugares da colagem (seção 6 do plano do painel), por extenso. */
+/**
+ * Os doze lugares da colagem, por extenso, medidos nos campos das telas de acesso (1024×700, 1280×800,
+ * 1440×900 e 1920×1080) por `getBoundingClientRect`: nenhum cartão cobre a legenda nem a zona da marca
+ * (40cqw × 14cqh no canto de cima), dois cartões se cruzam em no máximo 12% do menor, os de perto cobrem
+ * no máximo 8% do herói, e todo selo fica no palco e à vista. Os lugares sem pouso em forma nenhuma
+ * (s5, s6, s7, s8, s9) ficam para palcos de outra proporção.
+ */
 const SHOWCASE_SLOTS = [
-  { x: 84, y: 9, rot: 6, depth: "near", edge: "top", level: "XS", short: false, caption: false, delay: 0 },
-  { x: 6, y: 88, rot: -7, depth: "near", edge: "start", level: "XS", short: false, caption: false, delay: 25 },
-  { x: 92, y: 86, rot: 4, depth: "mid", edge: "end", level: "XS", short: false, caption: false, delay: 50 },
-  { x: 97, y: 40, rot: -5, depth: "far", edge: "end", level: "S", short: false, caption: false, delay: 75 },
-  { x: 2, y: 30, rot: 5, depth: "mid", edge: "start", level: "S", short: false, caption: false, delay: 100 },
-  { x: 50, y: 97, rot: -2, depth: "far", edge: "bottom", level: "S", short: true, caption: true, delay: 125 },
-  { x: 60, y: 4, rot: -4, depth: "mid", edge: "top", level: "M", short: true, caption: false, delay: 150 },
-  { x: 3, y: 62, rot: -3, depth: "far", edge: "start", level: "M", short: false, caption: false, delay: 175 },
-  { x: 98, y: 66, rot: 7, depth: "mid", edge: "end", level: "M", short: false, caption: false, delay: 200 },
-  { x: 30, y: 96, rot: 3, depth: "mid", edge: "bottom", level: "L", short: true, caption: true, delay: 225 },
-  { x: 76, y: 98, rot: -6, depth: "far", edge: "bottom", level: "L", short: false, caption: true, delay: 250 },
-  { x: 99, y: 14, rot: -8, depth: "far", edge: "end", level: "L", short: false, caption: false, delay: 275 },
+  { at: { browser: [82, 10], tablet: [84, 8], phone: [88, 9] }, rot: 6, depth: "near", edge: "top", level: "XS", short: false, caption: false, delay: 0 },
+  { at: { browser: null, tablet: null, phone: [8, 72] }, rot: -7, depth: "near", edge: "start", level: "XS", short: false, caption: false, delay: 25 },
+  { at: { browser: [87, 81], tablet: [95, 91], phone: [92, 80] }, rot: 4, depth: "near", edge: "end", level: "XS", short: false, caption: false, delay: 50 },
+  { at: { browser: null, tablet: null, phone: [93, 40] }, rot: -5, depth: "far", edge: "end", level: "S", short: false, caption: false, delay: 75 },
+  { at: { browser: [15, 24], tablet: null, phone: [8, 23] }, rot: 5, depth: "near", edge: "start", level: "S", short: false, caption: false, delay: 100 },
+  { at: { browser: null, tablet: null, phone: null }, rot: -2, depth: "far", edge: "bottom", level: "S", short: true, caption: true, delay: 125 },
+  { at: { browser: null, tablet: null, phone: null }, rot: -4, depth: "mid", edge: "top", level: "M", short: true, caption: false, delay: 150 },
+  { at: { browser: null, tablet: null, phone: null }, rot: -3, depth: "far", edge: "start", level: "M", short: false, caption: false, delay: 175 },
+  { at: { browser: null, tablet: null, phone: null }, rot: 7, depth: "mid", edge: "end", level: "M", short: false, caption: false, delay: 200 },
+  { at: { browser: null, tablet: null, phone: null }, rot: 3, depth: "mid", edge: "bottom", level: "L", short: true, caption: true, delay: 225 },
+  { at: { browser: [60, 99], tablet: null, phone: null }, rot: -6, depth: "far", edge: "bottom", level: "L", short: false, caption: true, delay: 250 },
+  { at: { browser: [55, 9], tablet: null, phone: [92, 60] }, rot: -8, depth: "far", edge: "top", level: "L", short: false, caption: false, delay: 275 },
 ] as const satisfies readonly ShowcaseSlot[]
 
 type ShowcaseSlotIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11
 
-/** O afastamento da colagem por forma do herói: o centro livre é a caixa do herói mais 8%. */
-const AFASTAMENTO: Record<ShowcaseForm, { kx: number; ky: number }> = {
-  browser: { kx: 1, ky: 1.12 },
-  tablet: { kx: 1.08, ky: 1.06 },
-  phone: { kx: 1.14, ky: 1 },
+/** Para onde vai o cartão sem pouso: além da borda que o corta (o palco recorta), na outra coordenada de antes. */
+function pousoDo(s: ShowcaseSlot, form: ShowcaseForm): { x: number; y: number; fora: boolean } {
+  const at = s.at[form]
+  if (at) return { x: at[0], y: at[1], fora: false }
+  const [x, y] = s.at.browser ?? s.at.tablet ?? s.at.phone ?? [50, 50]
+  const FORA = 135
+  if (s.edge === "start") return { x: 100 - FORA, y, fora: true }
+  if (s.edge === "end") return { x: FORA, y, fora: true }
+  if (s.edge === "top") return { x, y: 100 - FORA, fora: true }
+  return { x, y: FORA, fora: true }
 }
 
 /** O nível mínimo de cada lugar, por container query no palco (classe por extenso). */
@@ -379,13 +396,13 @@ function ShowcaseHero({ form, onSettled, className, children, ...frame }: Showca
   )
 }
 
-type ShowcaseScatterContextValue = { ripple: boolean }
-const ShowcaseScatterContext = React.createContext<ShowcaseScatterContextValue>({ ripple: false })
+type ShowcaseScatterContextValue = { clear: ShowcaseForm; ripple: boolean }
+const ShowcaseScatterContext = React.createContext<ShowcaseScatterContextValue>({ clear: "browser", ripple: false })
 
 /**
- * A colagem: o plano dos cartões em volta do herói. `clear` é a forma do herói, e o afastamento acompanha
- * (navegador `kx 1,00 / ky 1,12`, tablet `1,08 / 1,06`, celular `1,14 / 1,00`), na mola de CSS, cada lugar no
- * seu atraso. `ripple` faz a colagem respirar uma vez.
+ * A colagem: o plano dos cartões em volta do herói. `clear` é a forma do herói, e cada lugar pousa onde ela deixa
+ * espaço (`SHOWCASE_SLOTS[i].at`), andando na mola de CSS no seu atraso — ou sai pela borda, quando a forma não
+ * deixa lugar. `ripple` faz a colagem respirar uma vez.
  */
 function ShowcaseScatter({
   clear,
@@ -398,14 +415,12 @@ function ShowcaseScatter({
   className?: string
   children?: React.ReactNode
 }) {
-  const k = AFASTAMENTO[clear]
   return (
-    <ShowcaseScatterContext.Provider value={{ ripple }}>
+    <ShowcaseScatterContext.Provider value={{ clear, ripple }}>
       <div
         data-slot="showcase-scatter"
         data-clear={clear}
         className={cn("pointer-events-none absolute inset-0", className)}
-        style={{ "--clear-kx": k.kx, "--clear-ky": k.ky } as React.CSSProperties}
       >
         {children}
       </div>
@@ -414,8 +429,9 @@ function ShowcaseScatter({
 }
 
 /**
- * Um lugar da colagem. O invólucro **de fora** é o ponto: a posição do lugar, o afastamento (`translate` em
- * `cqw`/`cqh`), a entrada `showcase-enter` no `--slot-delay`, a ordem e a paralaxe. O **de dentro** centra o
+ * Um lugar da colagem. O invólucro **de fora** é o ponto: o pouso da forma (`left`/`top` em %, em transição na
+ * mola de CSS — o `translate` é da entrada `showcase-enter`), o `--slot-delay`, a ordem e a paralaxe. Sem pouso
+ * na forma ele sai pela borda e publica `data-away`. O **de dentro** centra o
  * cartão, inclina e respira; trocar `itemKey` tira o cartão velho e entra o novo de 8px mais para fora.
  * Publica `data-edge` para o cartão pôr o selo do lado de dentro.
  */
@@ -431,8 +447,9 @@ function ShowcaseScatterItem({
   children?: React.ReactNode
 }) {
   const palco = usePalco()
-  const { ripple } = React.useContext(ShowcaseScatterContext)
+  const { clear, ripple } = React.useContext(ShowcaseScatterContext)
   const s: ShowcaseSlot = SHOWCASE_SLOTS[slot]
+  const pouso = pousoDo(s, clear)
   const fora = PARA_FORA[s.edge]
   const deriva = palco.deriva[s.depth]
   return (
@@ -441,9 +458,10 @@ function ShowcaseScatterItem({
       data-showcase-slot={slot}
       data-edge={s.edge}
       data-depth={s.depth}
+      data-away={pouso.fora || undefined}
       className={cn(
         "group/showcase-item absolute showcase-enter",
-        "transition-[translate] duration-(--duration-spring) ease-(--ease-spring) delay-(--slot-delay)",
+        "transition-[left,top] duration-(--duration-spring) ease-(--ease-spring) delay-(--slot-delay)",
         NIVEL[s.level],
         s.short && "showcase-short:hidden",
         PLANO[s.depth],
@@ -451,13 +469,9 @@ function ShowcaseScatterItem({
       )}
       style={
         {
-          left: `${s.x}%`,
-          top: s.caption ? `calc(${s.y}% - 6cqh * var(--showcase-caption, 0))` : `${s.y}%`,
-          "--slot-x": s.x,
-          "--slot-y": s.y,
+          left: `${pouso.x}%`,
+          top: s.caption ? `calc(${pouso.y}% - 6cqh * var(--showcase-caption, 0))` : `${pouso.y}%`,
           "--slot-delay": `${s.delay}ms`,
-          translate:
-            "calc((var(--slot-x) - 50) * (var(--clear-kx, 1) - 1) * 1cqw) calc((var(--slot-y) - 50) * (var(--clear-ky, 1) - 1) * 1cqh)",
           x: deriva.x,
           y: deriva.y,
         } as MotionStyle
@@ -922,5 +936,6 @@ export type {
   ShowcaseLevel,
   ShowcaseSlot,
   ShowcaseSlotIndex,
+  ShowcaseSpot,
   ShowcaseStageProps,
 }

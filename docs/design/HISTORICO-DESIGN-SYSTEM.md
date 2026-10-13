@@ -25430,3 +25430,48 @@ para isso, o que a camada do app não pode (seção 8 do plano). Agora ele tem
 `AnimatePresence initial={false}` interno, saída `SAIDA` em 150ms, e fechar ou
 sair da tela zera a espera (reabrir conta o `delay` de novo). O teste tranca que
 a página não importa `motion`.
+
+### Rodada 259 — `Showcase`: o pouso por forma da colagem
+
+Mudança em componente existente, dentro da Fase 8 (tarefa 8c) do plano do
+painel de marca animado, quando o palco foi ligado nas telas de acesso.
+
+**O defeito, medido.** Com os 12 lugares fixos da seção 6 do plano e o
+afastamento radial (`(x − 50)·(k − 1)`, navegador 1/1,12, tablet 1,08/1,06,
+celular 1,14/1), o pé do palco amontoava: cartões cruzados entre si, cartões
+sobre a legenda (Lúcia F. no s5), e — na medida por `elementFromPoint` da 8a —
+88 de 342 selos "exemplo" escondidos sob o herói, a legenda ou outro cartão. A
+causa é geométrica: o navegador é largo e baixo (86% da largura, ~40% da
+altura) e só deixa as faixas de cima e de baixo; o celular é alto e estreito e
+só deixa as laterais; o tablet deixa os cantos. Um lugar fixo que serve a uma
+forma cai sob o herói na outra, e um fator de afastamento só empurra para fora
+— nunca traz um cartão para a lateral que o celular libera.
+
+**O que mudou.** `ShowcaseSlot` troca `x`/`y` por **`at: Record<forma, [x, y] |
+null>`**: o pouso do centro do cartão em cada forma. Na troca, o invólucro de
+fora anda por `left`/`top` (`transition-[left,top]`, a mola de CSS, o
+`--slot-delay` do lugar) — o `translate` ficou só para a entrada
+`showcase-enter`, que o anima. Sem pouso (`null`), o cartão sai pela borda que o
+corta (135% ou −35%, na outra coordenada de onde pousa) e publica `data-away`.
+`AFASTAMENTO`, `--clear-kx` e `--clear-ky` saíram; `ShowcaseScatter clear`
+continua, e passa a forma aos itens por contexto. s2 e s4 viraram `near` (eles
+encostam na beirada do celular e do tablet, e o selo precisa ficar por cima), e
+s11 virou borda `top`. s5, s6, s7, s8 e s9 não têm pouso nos campos de hoje e
+ficam para palcos de outra proporção.
+
+**A tabela, medida nos campos das telas de acesso** (1024×700 → 445×660 XS
+baixo; 1280×800 → 562×760 S; 1440×900 → 635×860 M; 1920×1080 → 853×1040 L),
+por `getBoundingClientRect` nas 8 rotas ao vivo e nas 17 cenas da seção "No
+app" da página, nos dois temas: **nenhum cartão cobre a legenda nem a zona da
+marca (40cqw × 14cqh), o maior cruzamento entre dois cartões é 3,5% do menor
+(s0 × s11, só no navegador de 1920; 0% nas outras), os de perto cobrem no
+máximo 3,5% do herói, e nenhum selo fica fora do palco ou escondido** (184
+medidas, 0 falhas).
+Aparecem 2/3/3/5 cartões no navegador, 2 no tablet e 3/5/5/6 no celular.
+
+**A página.** Os palcos da demonstração ficaram em pé, na proporção dos campos
+de verdade (S 562×760, M 635×860, L 853×1040, baixo 445×660): o L antigo
+(900×704, deitado) não existe em nenhuma janela e punha o navegador sobre a
+faixa de cima. A seção "No app" ganhou o Eixo das 17 cenas e o da janela,
+montando o `AuthShowcase` real com o wordmark no canto — a única importação do
+app que a página faz (`showcase-versions.test.ts` tranca).
