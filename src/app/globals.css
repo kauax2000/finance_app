@@ -9,8 +9,23 @@
    uma utility que declarasse `background-color` para garanti-la disputaria com
    o `bg-*` do consumidor — duas classes, mesma propriedade, decididas pela
    ordem de emissão do Tailwind. Com a variante, a superfície diz a própria cor
-   sólida no mesmo lugar em que diz a translúcida. */
-@custom-variant reduced-transparency (@media (prefers-reduced-transparency: reduce));
+   sólida no mesmo lugar em que diz a translúcida.
+   O segundo ramo é o escopo opaco: dentro de `[data-opaque]` (o palco do
+   `Showcase`, onde o vidro pousaria sobre o arco-íris) vale a cor sólida também.
+   O atributo repetido sobe a especificidade a (0,3,0), para vencer a tinta
+   translúcida de quem veste por construção, e não pela ordem de emissão. */
+@custom-variant reduced-transparency {
+  @media (prefers-reduced-transparency: reduce) {
+    @slot;
+  }
+  &:is([data-opaque][data-opaque] *) {
+    @slot;
+  }
+}
+
+/* O palco baixo do `Showcase`: o container `showcase` com menos de 44rem de
+   altura (janelas de ~740px ou menos). Some parte da colagem e o celular encolhe. */
+@custom-variant showcase-short (@container showcase (height < 44rem));
 
 /* O dedo, e o dedo emulado. `pointer-coarse:` pergunta ao apontador, nunca à
    largura. O iPhone do catálogo é um iframe no desktop, onde `(pointer: coarse)`
@@ -302,6 +317,10 @@
      o véu dos modais, fraco demais para segurar texto. */
   --scrim: oklch(0 0 0 / 0.62);
   --scrim-foreground: oklch(1 0 0);
+  /* A moldura do aparelho desenhado (`DeviceFrame`): quase preta nos dois temas,
+     porque um aparelho não muda de cor com o tema; o fio clareia a borda dela. */
+  --device-bezel: oklch(0.17 0 0);
+  --device-bezel-edge: oklch(0.3 0 0);
   --shadow-xs-value: 0 1px 1px 0 oklch(0 0 0 / 0.04);
   --shadow-sm-value: 0 1px 2px 0 oklch(0 0 0 / 0.06), 0 1px 1px 0 oklch(0 0 0 / 0.04);
   --shadow-md-value: 0 4px 8px -2px oklch(0 0 0 / 0.08), 0 2px 4px -2px oklch(0 0 0 / 0.04);
@@ -606,6 +625,10 @@
   --overlay: oklch(0 0 0 / 0.4);
   --scrim: oklch(0 0 0 / 0.62);
   --scrim-foreground: oklch(1 0 0);
+  /* Mais funda que a tela escura (`--background` 0.145), para a moldura não se
+     confundir com ela. */
+  --device-bezel: oklch(0.1 0 0);
+  --device-bezel-edge: oklch(0.3 0 0);
   --shadow-xs-value: 0 1px 1px 0 oklch(0 0 0 / 0.35);
   --shadow-sm-value: 0 1px 2px 0 oklch(0 0 0 / 0.45), 0 1px 1px 0 oklch(0 0 0 / 0.35);
   --shadow-md-value: 0 4px 8px -2px oklch(0 0 0 / 0.55), 0 2px 4px -2px oklch(0 0 0 / 0.4);
@@ -2365,6 +2388,96 @@
   }
 }
 
+/* ── O palco do `Showcase` ───────────────────────────────────────────────────
+   O cursor de texto desenhado: o `caret` do `SearchInput`/`CommandInput` e o campo
+   desenhado das cenas. Visível no estilo base (sem animação ele fica aceso), pisca
+   em degrau a cada segundo, sem `fill` — fora da animação vale o estilo base, nunca
+   o quadro apagado. No movimento reduzido ele congela aceso. */
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@utility type-caret {
+  display: inline-block;
+  vertical-align: top;
+  width: calc(var(--spacing) * 0.5);
+  height: 1lh;
+  background-color: var(--color-foreground);
+  animation: caret-blink 1s steps(1) infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* A entrada do palco na primeira carga: o `rise` de sempre (8px), cada peça no
+   próprio `--slot-delay` (a colagem pelo slot, o herói +120ms, os pontos +300ms).
+   `backwards` e não `both`: depois da entrada o `translate` volta a ser de quem
+   veste, e a transição do afastamento da colagem anda sem a animação por cima. No
+   movimento reduzido sobra só o esmaecer, sem atraso. */
+@utility showcase-enter {
+  --rise-distance: 0.5rem;
+  animation: rise var(--duration-spring) var(--ease-spring) backwards;
+  animation-delay: var(--slot-delay, 0s);
+  @media (prefers-reduced-motion: reduce) {
+    --rise-distance: 0px;
+    animation-delay: 0s !important;
+  }
+}
+
+/* O tamanho do herói no palco. Quem veste é o `ShowcaseStage`, que vira o container
+   `showcase` (`size`); o herói é o filho `[data-slot="showcase-hero"]`, e a forma
+   chega por `data-form`. Os números, por extenso:
+
+     forma    | caixa                       | proporção | exceção
+     browser  | largura min(86cqw, 140cqh)  | 16/10     | palco < 28rem: min(92cqw, 140cqh)
+     tablet   | altura  min(72cqh, 120cqw)  | 3/4       | —
+     phone    | altura  min(76cqh, 160cqw)  | 9/19.5    | palco baixo (< 44rem): min(70cqh, 160cqw)
+
+   A outra dimensão sai da proporção. O `DeviceFrame` preenche o herói, e a
+   projeção de layout do `motion` anima a troca de tamanho — nunca `scale()`. */
+@utility showcase-stage {
+  container: showcase / size;
+  & [data-slot="showcase-hero"][data-form="browser"] {
+    width: min(86cqw, 140cqh);
+    height: auto;
+    aspect-ratio: 16 / 10;
+    @container showcase (width < 28rem) {
+      width: min(92cqw, 140cqh);
+    }
+  }
+  & [data-slot="showcase-hero"][data-form="tablet"] {
+    width: auto;
+    height: min(72cqh, 120cqw);
+    aspect-ratio: 3 / 4;
+  }
+  & [data-slot="showcase-hero"][data-form="phone"] {
+    width: auto;
+    height: min(76cqh, 160cqw);
+    aspect-ratio: 9 / 19.5;
+    @container showcase (height < 44rem) {
+      height: min(70cqh, 160cqw);
+    }
+  }
+}
+
+/* O respiro da colagem em `recovery.done`: um pulso de 4%, uma vez, no invólucro de
+   dentro do cartão, no `--slot-delay` dele. Sem movimento, não respira. */
+@keyframes showcase-ripple {
+  50% {
+    scale: 1.04;
+  }
+}
+
+@utility showcase-ripple {
+  animation: showcase-ripple var(--duration-gentle) var(--ease-in-out);
+  animation-delay: var(--slot-delay, 0s);
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
 /* O fio indeterminado do TopBarProgress: um traço de 40% que atravessa a aresta da
    barra e recomeça. Movimento reduzido: o traço para no meio. */
 @keyframes top-bar-progress-run {
@@ -3471,6 +3584,12 @@
     saturate(var(--glass-surface-sat, 1.5));
 
   @media (prefers-reduced-transparency: reduce) {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  /* O escopo opaco (`[data-opaque]`, o palco do `Showcase`): sem borrão, e a cor
+     sólida chega pelo `reduced-transparency:` de quem veste. */
+  &:is([data-opaque][data-opaque] *) {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
