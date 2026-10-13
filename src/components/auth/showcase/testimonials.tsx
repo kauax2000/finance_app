@@ -13,6 +13,11 @@ import { cn, getInitials } from "@/lib/utils"
  * número, dinheiro, nota ou empresa — um número soaria como resultado
  * prometido, e um nome de empresa como cliente de verdade. O nome é só
  * "Primeiro I.".
+ *
+ * O cartão sempre traz o selo; **mantê-lo à vista é da colagem**. Um cartão
+ * cujo selo cai sob o herói, a legenda ou outro cartão parece depoimento de
+ * verdade — esse lugar não pode aparecer naquela forma e tamanho de palco
+ * (conferido por `elementFromPoint` no selo, não só pelo retângulo do palco).
  */
 
 export type TestimonialId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14
