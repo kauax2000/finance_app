@@ -25183,3 +25183,65 @@ e o lugar do campo) e a `SplitShellMain` (a coluna: voltar, cabeçalho,
 `SplitShell` virou a Main dentro do Root, com a mesma API e as mesmas classes;
 `split-shell-versions.test.ts` ganhou a divisão (os dois exports, a Main dona
 do foco, o casco composto) e a página, a seção "Aside persistente no layout".
+
+### Rodada 255 — `DeviceFrame`
+
+Componente novo, aprovado na Fase 0 do plano do painel de marca animado
+(`docs/superpowers/plans/2026-10-12-painel-de-marca-animado.md`, seções 4 e
+11.1). As quatro perguntas foram respondidas com todas as opções recomendadas
+e mais a forma `tablet` (extra): `DeviceFrame` com três formas, as peças
+desenhadas (barra ↔ ilha, trilho ↔ abas, barra de status, ilha → aviso) e a
+troca de forma animada. Nenhuma tela migra agora; o `Showcase` (Fase 5) monta
+a moldura, e as telas de acesso o consomem na Fase 8.
+
+**Levantamento.** Nada no catálogo desenhava um aparelho: o `IphoneFrame` do
+catálogo é um iframe com a foto do iPhone (prévia de viewport, não peça do
+produto), e o `BottomBar` é `fixed … md:hidden`, que não vive dentro de um
+mockup. Por isso trilho, barra de abas e barra de status são anatomia do
+`DeviceFrame`. A camada é Átomo: o único import de `ui/` é o `Skeleton` do
+esqueleto, e o `taxonomy.test.ts` aceita.
+
+**O que entrou.** `DeviceFrame` (`form`, `url`, `notification`, `nav`,
+`turn`, `onSettled`), `DeviceFrameScreen` (a tela, `motion.div layout`,
+`bg-background text-foreground`, `concentric`, `@container/screen`),
+`DeviceFrameSkeleton` e `useDeviceFrame()`. Fora do palco a moldura tem caixa
+própria (navegador até 576px em 16/10, tablet 384px de altura em 3/4, celular
+480px em 9/19,5); dentro de `[data-slot=showcase-hero]` ela preenche o herói
+pelo `in-data-[slot=showcase-hero]:size-full`.
+
+**Medido no catálogo** (Playwright, 1280×1100, as seis trocas entre as três
+formas): passo máximo por quadro de 16ms de 9% a 13,4% do deslocamento total
+(nenhum salto); a elipse do canto no voo fica em no máximo 0,67px; o giro
+chega a 6,0° e o repouso volta a `transform: none`; a caixa assenta em
+~580–645ms e o `onSettled` chega em ~830ms (a cauda da mola). Raio em px pelas
+sondas: navegador 22, tablet e celular 28; tela concêntrica 22 (navegador,
+recuo 0), 20 (tablet, recuo 8) e 22 (celular, recuo 6). O pior contraste de
+texto dentro da moldura é 4,72 no claro (o verde de entrada sobre o cartão) e
+5,86 no escuro; nenhum texto claro sobre claro. Dentro do palco a moldura
+coincide com o herói (deslocamento 0, mesmas medidas) nas três formas. Console
+limpo.
+
+**O que deu errado no caminho.**
+- O raio lido só ao montar saía `0px` no `IphoneFrame`: o iframe recebe a
+  folha de estilo depois do primeiro efeito. A leitura em repouso passou a um
+  `ResizeObserver` na moldura e na ilha (a caixa muda quando a folha chega), e
+  o efeito de layout ficou só para a troca animada.
+- O `StrictMode` roda o efeito de layout duas vezes na montagem, e a segunda
+  passada era tratada como uma troca (o `motion` avisava "`""` is not an
+  animatable value"). O efeito compara com a forma já tratada.
+- No movimento reduzido a moldura piscava um quadro na proporção velha: o
+  bloco global (`transition-duration: 0.01ms` em `all`) transicionava o
+  `aspect-ratio`. As caixas projetadas levam `transition-none`.
+- Com o navegador mais estreito que o conteúdo, o `aspect-ratio` cedia ao
+  mínimo automático e a janela crescia (343×317 em vez de 343×214 no iPhone):
+  `min-h-0` na moldura.
+- O trilho e a barra de abas como nós de layout encolhiam para a largura final
+  no primeiro quadro, e o fio da barra de abas ficava curto no voo. Eles são
+  `div`s comuns, que esticam com a tela; os ícones voam sozinhos por
+  `layoutId`.
+
+**Desvios do plano.** O giro é `animate(rotateY, [0, ∓6, 0], { duration:
+0.65, ease: "easeInOut" })` sobre um `useMotionValue`, e não keyframes na
+mola (lição 1 do spike). A ilha de pílula usa metade da própria altura como
+raio, e não uma sonda, porque `rounded-full` resolve num número enorme que
+congelaria a animação até o fim.

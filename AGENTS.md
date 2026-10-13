@@ -104,7 +104,7 @@ O porquê de cada regra (medições, tentativas recusadas) está em
 O design system deste projeto tem três partes, e nenhuma delas se presume de
 memória:
 
-- **Componentes** em [`src/components/ui/`](src/components/ui) — 79 arquivos
+- **Componentes** em [`src/components/ui/`](src/components/ui) — 80 arquivos
   hoje.
 - **Tokens** em [`src/app/globals.css`](src/app/globals.css).
 - **Documentação viva** em `/designsystem`, com uma página por componente e por
@@ -1402,6 +1402,22 @@ declaração de `background-color` no trilho).
   `advanceOn: "target"` **não se pula**; camada `--z-popover` + 1) e
   `OnboardingHotspot`; `storageKey` guarda o progresso.
   `onboarding-versions.test.ts`.
+- **`DeviceFrame`** (Átomo, rodada 255): navegador, tablet ou celular
+  desenhado só com tokens (`form`), com a mini UI de verdade dentro — sem
+  `<img>`. **Uma moldura só, que muda de forma**: a projeção do `motion` anima
+  a caixa (nunca `scale()`), a barra de endereço (`url`, breadcrumb e nunca
+  domínio) vira a ilha, o trilho (`nav`) vira a barra de abas e a moldura gira
+  0 → ∓6° → 0 numa curva de 0,65s (`turn`; o `motion` 13 recusa mola de três
+  quadros). O raio sai de sondas (`rounded-surface`, `rounded-modal`,
+  `concentric`) lidas por `getComputedStyle` e vai a `style.borderRadius` em
+  px, animado — com o raio só na classe o canto vira elipse no voo. Dentro de
+  `[data-slot=showcase-hero]` preenche o herói (a `@utility showcase-stage`
+  mede); fora, tem caixa própria por forma. `notification` (a ilha vira cartão
+  no celular), `onSettled`, `useDeviceFrame()`, `DeviceFrameSkeleton`.
+  **Bolinhas neutras** (`bg-foreground/15`), tinta declarada em toda superfície
+  (`text-foreground`), `--device-bezel`/`--device-bezel-edge` na moldura,
+  `transition-none` nas caixas projetadas (o bloco global de movimento reduzido
+  transicionaria o `aspect-ratio`). `device-frame-versions.test.ts`.
 - **`Toast`**: a placa flutuante; o tipo pinta só o poço do ícone; **sem barra
   de tempo**. **Nenhuma tela importa o `toast` do sonner**: use `@/lib/toast`
   (`description`, `id` como assunto, `action`, `cancel`, `toastPill`,

@@ -30,6 +30,7 @@ import ContextMenuDoc from "./docs/context-menu"
 import DataTableDoc from "./docs/data-table"
 import DatePickerDoc from "./docs/date-picker"
 import DescriptionListDoc from "./docs/description-list"
+import DeviceFrameDoc from "./docs/device-frame"
 import DialogDoc from "./docs/dialog"
 import DrawerDoc from "./docs/drawer"
 import DropdownMenuDoc from "./docs/dropdown-menu"
@@ -118,6 +119,7 @@ export const DOCS: Record<string, ComponentType> = {
   "data-table": DataTableDoc,
   "date-picker": DatePickerDoc,
   "description-list": DescriptionListDoc,
+  "device-frame": DeviceFrameDoc,
   "dialog": DialogDoc,
   "drawer": DrawerDoc,
   "dropdown-menu": DropdownMenuDoc,

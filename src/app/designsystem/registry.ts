@@ -157,6 +157,11 @@ export const REGISTRY: RegistryEntry[] = [
     entry("color-tile", "Color Tile", "Ladrilho com a cor escolhida pela pessoa.", ui("color-tile"), "ColorTile"),
     /** Uma `div` com largura e calha. Indivisível — átomo por decisão do dono. */
     entry("container", "Container", "Largura, calha e ritmo do conteúdo.", ui("container"), "Container, containerSizes, containerGutters, containerStacks"),
+    /**
+     * Uma casca desenhada: barra, ilha, trilho, abas e barra de status são anatomia da moldura (são partes
+     * dela, não peças do sistema). O único import de `ui/` é o `Skeleton` do esqueleto.
+     */
+    entry("device-frame", "Device Frame", "Navegador, tablet ou celular desenhado com tokens, que muda de forma animando.", ui("device-frame"), "DeviceFrame, DeviceFrameScreen, DeviceFrameSkeleton, useDeviceFrame"),
     /** O vidro é modo, e não peça: a tradução cabe num eixo `glass` dos próprios átomos. O que decide "componente ou modo?" é a tradução precisar de uma peça para existir. */
     entry("input", "Input", "Campo de uma linha, inclusive de dinheiro.", ui("input"), "Input"),
     entry("input-otp", "Input OTP", "Entrada de código de verificação.", ui("input-otp"), "InputOTP, InputOTPSlot"),
