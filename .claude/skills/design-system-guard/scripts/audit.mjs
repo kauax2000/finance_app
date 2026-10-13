@@ -133,6 +133,10 @@ const DRAWN_SVG_FILES = [
   // O anel do `ProgressRing`: a geometria do traço é o valor.
   "components/ui/progress",
   "sidebar-toggle-icon",
+  // A seta do `PresenceCursor` (D9 do plano do painel, decisão do dono): o
+  // ponteiro de outra pessoa é um primitivo desenhado — a ponta é a posição —,
+  // e o `CursorArrowRaysIcon` desenha um clique, não um ponteiro.
+  "components/ui/presence-cursor",
   // O gráfico das curvas de easing: desenha o movimento, lido do globals.css.
   "designsystem/docs/motion",
 ]

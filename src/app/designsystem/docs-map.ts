@@ -58,6 +58,7 @@ import PageHeaderDoc from "./docs/page-header"
 import PageSectionDoc from "./docs/page-section"
 import PaginationDoc from "./docs/pagination"
 import PopoverDoc from "./docs/popover"
+import PresenceCursorDoc from "./docs/presence-cursor"
 import ProgressDoc from "./docs/progress"
 import RadioDoc from "./docs/radio"
 import RadioGroupDoc from "./docs/radio-group"
@@ -147,6 +148,7 @@ export const DOCS: Record<string, ComponentType> = {
   "page-section": PageSectionDoc,
   "pagination": PaginationDoc,
   "popover": PopoverDoc,
+  "presence-cursor": PresenceCursorDoc,
   "progress": ProgressDoc,
   "radio": RadioDoc,
   "radio-group": RadioGroupDoc,

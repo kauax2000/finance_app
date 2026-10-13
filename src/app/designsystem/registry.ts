@@ -169,6 +169,8 @@ export const REGISTRY: RegistryEntry[] = [
     entry("kbd", "Kbd", "Uma tecla ou um atalho.", ui("kbd"), "Kbd"),
     entry("label", "Label", "Rótulo acessível ligado a um controle.", ui("label"), "Label"),
     entry("money-display", "Money Display", "Todo valor em reais que o app mostra.", ui("money-display"), "MoneyDisplay"),
+    /** A seta desenhada e a pílula do nome são anatomia de um ponteiro só; nenhum import de `ui/`. */
+    entry("presence-cursor", "Presence Cursor", "O ponteiro de outra pessoa: a seta e o nome na cor de identidade.", ui("presence-cursor"), "PresenceCursor"),
     entry("progress", "Progress", "Quanto de um total foi consumido: barra, segmentada ou anel.", ui("progress"), "Progress, ProgressHeader, ProgressLabel, ProgressValue, ProgressFooter, ProgressRing"),
     /** O controle inteiro — o anel e o ponto; quem compõe é o `radio-group`. Exige contexto para renderizar, e contexto de primitiva não é composição. */
     entry("radio", "Radio", "Uma opção de escolha única.", ui("radio"), "Radio"),

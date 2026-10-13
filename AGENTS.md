@@ -104,7 +104,7 @@ O porquê de cada regra (medições, tentativas recusadas) está em
 O design system deste projeto tem três partes, e nenhuma delas se presume de
 memória:
 
-- **Componentes** em [`src/components/ui/`](src/components/ui) — 80 arquivos
+- **Componentes** em [`src/components/ui/`](src/components/ui) — 81 arquivos
   hoje.
 - **Tokens** em [`src/app/globals.css`](src/app/globals.css).
 - **Documentação viva** em `/designsystem`, com uma página por componente e por
@@ -455,7 +455,8 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
   **região** (o painel das telas de acesso), com grão e vinheta, e ele é um
   **cartão**: cantos arredondados, fio por dentro, margem dada por quem chama.
   **Nenhum texto corrido mora direto sobre ele** — o que se lê vive num `Card`,
-  que segue o tema; a exceção é o wordmark branco, por `currentColor`. **A
+  que segue o tema; a exceção é o wordmark branco, por `currentColor`, e a
+  pílula do `PresenceCursor` (D2, superfície opaca com tinta medida). **A
   utility não redefine token nenhum** (o override desceria pelo `Card`
   hospedado).
 - **A seleção de texto** é tingida em `@layer base`: `--primary-muted` atrás,
@@ -1418,6 +1419,19 @@ declaração de `background-color` no trilho).
   (`text-foreground`), `--device-bezel`/`--device-bezel-edge` na moldura,
   `transition-none` nas caixas projetadas (o bloco global de movimento reduzido
   transicionaria o `aspect-ratio`). `device-frame-versions.test.ts`.
+- **`PresenceCursor`** (Átomo, rodada 256): o ponteiro de outra pessoa — a
+  seta **desenhada** (exceção em `DRAWN_SVG_FILES`, D9: a ponta é a posição)
+  e a pílula do nome, `rounded-full rounded-tl-xs`. `tone` 1–6 veste a
+  `@utility identity-N` (tabela por extenso): a pílula pinta
+  `--identity-surface` com `text-identity-foreground` e a seta, a mesma
+  superfície contornada na tinta — **nenhuma cor crua**. `at` é a ponta em px
+  no pai posicionado e anda pela projeção (`layout="position"`, `MOLA`);
+  `from` entra da borda do pai ao montar; `pressed` encolhe a 85% e volta na
+  mola. `aria-hidden` e `pointer-events-none`: é decorativo, sem esqueleto.
+  Movimento reduzido: aparece já pousado e troca de ponto sem deslocamento.
+  **Exceção D2: a pílula do `PresenceCursor` pode pousar sobre o
+  `brand-field` porque é superfície opaca com tinta medida** (7,44 a 8,95:1,
+  `scripts/identity-contrast.mjs`). `presence-cursor-versions.test.ts`.
 - **`Toast`**: a placa flutuante; o tipo pinta só o poço do ícone; **sem barra
   de tempo**. **Nenhuma tela importa o `toast` do sonner**: use `@/lib/toast`
   (`description`, `id` como assunto, `action`, `cancel`, `toastPill`,

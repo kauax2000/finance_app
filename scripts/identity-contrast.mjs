@@ -105,5 +105,37 @@ for (const tema of TEMAS) {
     await ctx.close()
 }
 
+// A pílula do `PresenceCursor` veste o mesmo par viva (`--identity-surface` com
+// `--identity-foreground`), e pousa sobre o `brand-field` (a exceção D2): mede
+// as seis pílulas da seção "Sobre o campo de marca", o nome escondido, a caixa
+// central da pílula (sem o raio). Ela é opaca: o arco-íris não entra na conta.
+for (const tema of TEMAS) {
+    const { ctx, page } = await abrirPagina(browser, tema, "/designsystem/presence-cursor", {
+        viewport: { width: 1280, height: 900 },
+        deviceScaleFactor: 2,
+        seletor: ".brand-field [data-slot=presence-cursor-name]",
+        semPortal: true,
+        espera: 1200,
+    })
+    const pilulas = page.locator(".brand-field [data-slot=presence-cursor-name]")
+    const n = await pilulas.count()
+    for (let i = 0; i < n; i++) {
+        const p = pilulas.nth(i)
+        await p.scrollIntoViewIfNeeded()
+        const tinta = await p.evaluate((el) => {
+            const c = document.createElement("canvas")
+            c.width = c.height = 1
+            const g = c.getContext("2d")
+            g.fillStyle = getComputedStyle(el).color
+            g.fillRect(0, 0, 1, 1)
+            el.style.color = "transparent"
+            return [...g.getImageData(0, 0, 1, 1).data].slice(0, 3)
+        })
+        const razao = await piorRazao(page, p, tinta, { x: [0.15, 0.85], y: [0.25, 0.75] })
+        linhas.push(linha({ tema, tint: "cursor", familia: FAMILIAS[i], px: 12 }, razao, PISO))
+    }
+    await ctx.close()
+}
+
 await browser.close()
 concluir(linhas, PISO, "alguma célula ficou abaixo do piso AA.")

@@ -25254,3 +25254,48 @@ limpo.
 mola (lição 1 do spike). A ilha de pílula usa metade da própria altura como
 raio, e não uma sonda, porque `rounded-full` resolve num número enorme que
 congelaria a animação até o fim.
+
+### Rodada 256 — `PresenceCursor`
+
+Componente novo, aprovado na Fase 0 do plano do painel de marca animado
+(`docs/superpowers/plans/2026-10-12-painel-de-marca-animado.md`, seções 2, 8 e
+11; decisões D2 e D9). Das quatro perguntas, o dono escolheu "cursor com seta e
+pílula" (Redesenho) e "cursores que acham o alvo" (Comportamento); o achar o
+alvo é do `ShowcaseCursor` (Fase 5), que mede as âncoras e passa `at`. Nenhuma
+tela migra agora.
+
+**Levantamento.** Nada no catálogo desenhava um ponteiro: o `AvatarGroup`
+mostra pessoas, não onde elas estão, e o Heroicons só tem o
+`CursorArrowRaysIcon` (um clique, com os raios). A cor de pessoa já existia — a
+família `identity-N` do `Avatar`, com o par viva medido —, e o cursor a veste
+em vez de inventar outra. Átomo: nenhum import de `ui/`.
+
+**O que entrou.** `PresenceCursor` (`name`, `tone` 1–6, `at`, `from`,
+`pressed`): a seta desenhada (exceção em `DRAWN_SVG_FILES`, D9) com a ponta
+exatamente em `at`, e a pílula `rounded-full rounded-tl-xs` em
+`--identity-surface` com `text-identity-foreground` e `shadow-lg`. A posição
+anda pela projeção (`layout="position"`, `MOLA`); a entrada `from` parte de
+fora da borda do pai (medida pelo próprio nó, `offsetParent` e
+`offsetLeft/Top`, sem `instanceof`, que falha no iframe do `IphoneFrame`) e
+anda na mesma mola; `pressed` encolhe a 85% e volta. Sem esqueleto: o cursor
+não carrega dado. A exceção D2 entrou no `AGENTS.md`, no bullet e na regra do
+campo de marca.
+
+**Medido no catálogo** (Playwright, 1280×1100). A ponta pousa em `at` com erro
+0,00px, nas seis famílias e dentro do `IphoneFrame`. Entrada pela base: de
+y 318 a 64 num palco de 320, com o passar da mola até 56 (~240ms) e repouso em
+`transform: none`; pelo topo, de −34 a 64. Andar até outro alvo: 637px, maior
+passo 84px por quadro de 16ms (13% do trajeto). `pressed`: 0,844 no fundo da
+mola, assenta em 0,85; ao soltar sobe a 1,006 e assenta em 1. Movimento
+reduzido: a entrada não se desloca (uma posição só em 300ms), a troca de alvo
+salta, o clique encolhe sem mola. Contraste do nome
+(`scripts/identity-contrast.mjs`, estendido com as pílulas da página): de
+7,44:1 (iris) a 8,95:1 (grove), igual nos dois temas. Sobre o ponto mais claro
+e o mais escuro do `brand-field` em cada tema, o texto mantém 7,65 (ember) e
+8,33 (ocean); a borda da pílula contra o campo, que não é texto, vai de 1,0:1
+no ponto claro a 4,2:1 no escuro. Console limpo (só os avisos de pré-carga de
+fonte do `next dev` e o aviso do `motion` sobre movimento reduzido).
+
+**Desvios do plano.** Nenhum na API. O plano diz "`layout` em `MOLA`"; é
+`layout="position"`, porque a pílula não muda de tamanho e a projeção de
+tamanho esticaria o nome no voo (lição 4 do spike).
