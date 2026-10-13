@@ -25213,7 +25213,8 @@ pelo `in-data-[slot=showcase-hero]:size-full`.
 formas): passo máximo por quadro de 16ms de 9% a 13,4% do deslocamento total
 (nenhum salto); a elipse do canto no voo fica em no máximo 0,67px; o giro
 chega a 6,0° e o repouso volta a `transform: none`; a caixa assenta em
-~580–645ms e o `onSettled` chega em ~830ms (a cauda da mola). Raio em px pelas
+~580–645ms e o `onSettled` chega em ~670–690ms, quando o giro de 0,65s
+termina (antes da correção, ~830ms, na cauda da mola). Raio em px pelas
 sondas: navegador 22, tablet e celular 28; tela concêntrica 22 (navegador,
 recuo 0), 20 (tablet, recuo 8) e 22 (celular, recuo 6). O pior contraste de
 texto dentro da moldura é 4,72 no claro (o verde de entrada sobre o cartão) e
@@ -25239,6 +25240,14 @@ limpo.
   no primeiro quadro, e o fio da barra de abas ficava curto no voo. Eles são
   `div`s comuns, que esticam com a tela; os ícones voam sozinhos por
   `layoutId`.
+- O fim da troca dependia só do `onLayoutAnimationComplete`, e o `motion` só
+  o chama quando uma animação de layout começa. Com a caixa igual nas duas
+  formas (um `className` que fixa o tamanho) ou a moldura num ancestral
+  `display: none`, a troca ficava em voo para sempre: `data-turning` e
+  `will-change` presos e o `onSettled` mudo (medido: 3 de 3 trocas presas com
+  a caixa fixada em 320×320, e a troca oculta). Agora o giro, que termina
+  sempre em 0,65s, também encerra a troca; o primeiro sinal vence, uma vez
+  só, e o de uma troca interrompida não encerra a seguinte.
 
 **Desvios do plano.** O giro é `animate(rotateY, [0, ∓6, 0], { duration:
 0.65, ease: "easeInOut" })` sobre um `useMotionValue`, e não keyframes na

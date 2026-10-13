@@ -148,6 +148,14 @@ describe("DeviceFrame — o fonte", () => {
     expect(CODIGO).not.toMatch(/animate\(giro[^)]*type: "spring"/)
   })
 
+  it("a troca acaba pelo giro mesmo quando a caixa não muda, uma vez só", () => {
+    // O motion só chama onLayoutAnimationComplete quando a projeção anima; o giro termina sempre.
+    expect(CODIGO).toMatch(/animate\(giro, [^\n]*\)\.then\(\(\) => encerrarTroca\(id\)\)/)
+    expect(CODIGO).toMatch(/onLayoutAnimationComplete=\{\(\) => encerrarTroca\(voo\.current\)\}/)
+    // Idempotente: o primeiro sinal zera o voo, e o sinal de uma troca velha não encerra a nova.
+    expect(CODIGO).toMatch(/if \(!id \|\| id !== voo\.current\) return\s*voo\.current = 0/)
+  })
+
   it("movimento reduzido: layout e giro pulam", () => {
     expect(CODIGO).toContain("useReducedMotion()")
     expect(CODIGO).toMatch(/reduced \? INSTANTANEO : MOLA_PALCO/)

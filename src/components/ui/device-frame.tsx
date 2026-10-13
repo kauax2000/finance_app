@@ -198,6 +198,22 @@ function DeviceFrame({
   // A forma já tratada: o `StrictMode` roda o efeito duas vezes na montagem, e a segunda não é uma troca.
   const formVisto = React.useRef<DeviceFrameForm | null>(null)
 
+  /**
+   * O fim da troca tem dois sinais, e o primeiro vence: o giro que termina (0,65s, sempre) e a projeção que
+   * assenta. O giro é o garantido: o `motion` só chama `onLayoutAnimationComplete` quando uma animação de
+   * layout começa, e a caixa que não muda (um `className` que fixa o tamanho, a moldura num ancestral
+   * `display: none`) nunca o chamaria. `voo` é a troca em voo (0 em repouso): o sinal de uma troca
+   * interrompida, ou de uma moldura desmontada, não encerra a seguinte.
+   */
+  const voo = React.useRef(0)
+  const trocas = React.useRef(0)
+  const encerrarTroca = React.useEffectEvent((id: number) => {
+    if (!id || id !== voo.current) return
+    voo.current = 0
+    setEmTroca(false)
+    onSettled?.()
+  })
+
   // A troca: o raio anima da forma velha para a nova, na mola da projeção, e a moldura gira.
   React.useLayoutEffect(() => {
     if (formVisto.current === form) return
@@ -209,17 +225,27 @@ function DeviceFrame({
     }
     const alvo = raioDe(form === "browser" ? sondaSurface.current : sondaModal.current)
     const alvoTela = raioDe(sondaTela.current)
-    // Sem leitura anterior (o observador ainda não rodou) não há de onde animar.
-    if (reduced || !raio.get()) {
+    if (reduced) {
       raio.set(alvo)
       raioTela.set(alvoTela)
-      if (reduced) avisarRepouso()
+      avisarRepouso()
       return
     }
-    animate(raio, alvo, MOLA_PALCO)
-    animate(raioTela, alvoTela, MOLA_PALCO)
+    // Sem leitura anterior (o observador ainda não rodou) não há de onde animar o raio; o giro roda igual.
+    if (raio.get()) {
+      animate(raio, alvo, MOLA_PALCO)
+      animate(raioTela, alvoTela, MOLA_PALCO)
+    } else {
+      raio.set(alvo)
+      raioTela.set(alvoTela)
+    }
+    const id = ++trocas.current
+    voo.current = id
     // Três quadros não cabem numa mola no motion 13: o giro é uma curva de 0,65s, a duração da mola do palco.
-    animate(giro, [0, -6 * turn, 0], { duration: 0.65, ease: "easeInOut" })
+    animate(giro, [0, -6 * turn, 0], { duration: 0.65, ease: "easeInOut" }).then(() => encerrarTroca(id))
+    return () => {
+      if (voo.current === id) voo.current = 0
+    }
     // `turn` e `reduced` são lidos no instante da troca; a troca é que dispara.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form])
@@ -289,11 +315,7 @@ function DeviceFrame({
         data-form={form}
         data-turning={emTroca || undefined}
         transition={{ layout: transition }}
-        onLayoutAnimationComplete={() => {
-          if (!emTroca) return
-          setEmTroca(false)
-          onSettled?.()
-        }}
+        onLayoutAnimationComplete={() => encerrarTroca(voo.current)}
         style={{ borderRadius: raio, rotateY: giro }}
         className={cn(FRAME_BASE, FORMA[form], emTroca && "will-change-transform", className)}
       >

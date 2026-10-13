@@ -268,7 +268,7 @@ export default function DeviceFrameDoc() {
           { prop: "notification", type: "ReactNode", description: "O aviso: no celular a ilha se abre num cartão; no navegador e no tablet, um cartão no canto superior direito da tela." },
           { prop: "nav", type: "{ icon: HeroIcon; active?: boolean }[]", description: "Os ícones (20/solid): trilho à esquerda no navegador e no tablet, barra de abas no celular. Cada um voa de um lugar ao outro." },
           { prop: "turn", type: "1 | -1", default: "1", description: "O sentido do giro: 1 vai a −6°, −1 a +6°. Quem decide é o palco, pela ordem das cenas." },
-          { prop: "onSettled", type: "() => void", description: "Ao montar e quando uma troca de forma assenta. O palco mede as âncoras dos cursores aqui." },
+          { prop: "onSettled", type: "() => void", description: "Ao montar e quando uma troca de forma assenta: o primeiro entre o fim do giro (0,65s) e o da projeção, uma vez por troca. Vem mesmo quando a caixa não muda ou a moldura está escondida. O palco mede as âncoras dos cursores aqui." },
           { prop: "children", type: "ReactNode", description: "A tela. Lê a forma por useDeviceFrame()." },
         ]}
       />
