@@ -1,6 +1,17 @@
+import { readdirSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 import { renderToStaticMarkup } from "react-dom/server"
 import { createElement } from "react"
+
+import {
+    AuthMiniApp,
+    MINI_APP_PEOPLE,
+    MINI_APP_URL,
+    type MiniAppScreen,
+} from "@/components/auth/showcase/mini-app"
+import { ShowcaseHero, ShowcaseStage } from "@/components/ui/showcase"
+import { IDENTITY_TONES, identityToneFor } from "@/lib/avatar"
+import { getInitials } from "@/lib/utils"
 
 import {
     AuthTestimonialCard,
@@ -57,5 +68,74 @@ describe("depoimentos ilustrativos (8a)", () => {
         expect(fonte).toContain("line-clamp-3")
         const prosa = lerFonte("src/components/auth/showcase/testimonials.tsx")
         for (const edge of ["end", "start", "bottom", "top"]) expect(prosa).toContain(` * - \`${edge}\``)
+    })
+})
+
+describe("o mundo comum (8b)", () => {
+    const pasta = "src/components/auth/showcase"
+    const fontes = readdirSync(pasta)
+        .filter((f) => f.endsWith(".tsx"))
+        .map((f) => [f, semComentarios(lerFonte(`${pasta}/${f}`))] as const)
+
+    it("o dinheiro grande nunca cai no mono, e a busca nunca escuta o teclado", () => {
+        for (const [f, fonte] of fontes) {
+            for (const tag of fonte.match(/<MoneyDisplay\b[^>]*>/g) ?? []) {
+                if (/size="(xl|2xl)"/.test(tag)) expect(tag, f).toContain("mono={false}")
+            }
+            for (const tag of fonte.match(/<TopBarSearch\b[^>]*>/g) ?? []) expect(tag, f).toContain("listen={false}")
+        }
+    })
+
+    it("o palco não tem nada que colida com o formulário de verdade", () => {
+        for (const [f, fonte] of fontes) {
+            for (const proibido of ["<input", "<form", 'type="password"', " id=", " name=", "<Alert", "InputOTP"]) {
+                expect(fonte, `${f}: ${proibido}`).not.toContain(proibido)
+            }
+        }
+    })
+
+    it("as pessoas da casa caem na identidade do cursor de cada uma", () => {
+        expect(identityToneFor(MINI_APP_PEOPLE.ana.color, MINI_APP_PEOPLE.ana.name)).toBe(IDENTITY_TONES[0])
+        expect(identityToneFor(MINI_APP_PEOPLE.rafael.color, MINI_APP_PEOPLE.rafael.name)).toBe(IDENTITY_TONES[4])
+        expect(identityToneFor(MINI_APP_PEOPLE.voce.color, MINI_APP_PEOPLE.voce.name)).toBe(IDENTITY_TONES[2])
+        expect(getInitials(MINI_APP_PEOPLE.voce.name)).toBe("VC")
+    })
+
+    const tela = (form: "browser" | "tablet" | "phone", screen: MiniAppScreen, member = false) =>
+        renderToStaticMarkup(
+            createElement(
+                ShowcaseStage,
+                null,
+                createElement(
+                    ShowcaseHero,
+                    { form, url: MINI_APP_URL[screen] },
+                    createElement(AuthMiniApp, { screen, member })
+                )
+            )
+        ).replace(/\u00a0/g, " ") // o `currencyBRL` escreve "R$" com espaço que não quebra
+
+    it("o painel diz que é exemplo nas três formas, e as contas fecham", () => {
+        for (const form of ["browser", "tablet", "phone"] as const) {
+            const html = tela(form, "dashboard")
+            expect(html, form).toContain(">dados de exemplo<")
+            expect(html, form).toContain("R$ 4.182,60")
+            expect(html, form).toContain("+7,8% vs setembro")
+        }
+        // Entradas menos saídas é o saldo; o saldo sobre setembro é o +7,8%.
+        expect(7850 - 3667.4).toBeCloseTo(4182.6, 2)
+        expect(Math.round((4182.6 / 3880 - 1) * 1000) / 10).toBe(7.8)
+    })
+
+    it("as âncoras dos cursores existem onde as cenas as procuram", () => {
+        expect(tela("browser", "dashboard")).toContain('data-showcase-anchor="search"')
+        expect(tela("phone", "dashboard")).not.toContain('data-showcase-anchor="search"')
+        expect(tela("phone", "budget")).toContain('data-showcase-anchor="budget"')
+        for (const member of [false, true]) {
+            const html = tela("tablet", "wallet", member)
+            expect(html).toContain('data-showcase-anchor="avatar-add"')
+            expect(html).toContain('data-showcase-anchor="row-internet"')
+        }
+        expect(tela("browser", "invoice")).toContain("R$ 1.284,60")
+        expect(tela("tablet", "wallet-loading")).toContain('data-slot="skeleton"')
     })
 })
