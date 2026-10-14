@@ -25609,3 +25609,90 @@ placa ("R$ 1.284,6").
 `ItemTitle`, `MoneyDisplay` nem texto com reticências cortado, todo selo
 "exemplo" inteiro e descoberto, nenhum cartão sobre a legenda, cruzamento 0%,
 herói coberto ≤6,3%; as janelas de 1024 a 1920 continuaram sem falha.
+
+### Rodada 263 — o painel de marca animado nas telas de acesso
+
+O fechamento do plano `docs/superpowers/plans/2026-10-12-painel-de-marca-animado.md`
+(Fases 2, 8, 9 e 10). As rodadas 254 a 262 registram as peças do design system;
+esta registra o que o app passou a fazer com elas.
+
+**O que mudou no app.**
+- **O casco é persistente.** O layout de `(auth)` monta o `AuthFrame`, que segura
+  o `SplitShellRoot` e o painel de marca: entre `/login`, `/register`,
+  `/forgot-password`, `/reset-password` e `/invites/accept` o painel é o mesmo
+  nó e troca de cena, sem remontar e sem tocar a entrada de novo. Cada
+  formulário devolve só a coluna, o `AuthShell` (`scene` e, nas telas de status,
+  `icon`), e todo estado volta no mesmo lugar da árvore. O `AuthStatus` e as
+  cenas antigas (`components/auth/scenes/*`) foram apagados.
+- **As cenas são uma tabela** (`components/auth/showcase/scenes.ts`, 17 ids), e
+  a família decide o aparelho: login no navegador (a busca ⌘K se digita até a
+  fatura e a janela vai ao celular e volta, em até 5s), convite no tablet da
+  casa, cadastro e recuperação no celular (o fim da recuperação volta ao
+  navegador). Em volta, a colagem de 14 depoimentos ilustrativos (sem dígito,
+  sem `R$`, com selo "exemplo"), os cursores de outras pessoas e a legenda da
+  família no pé. O palco é `inert`, `aria-hidden` e opaco (`[data-opaque]`);
+  focar um campo da coluna pula o roteiro; no telefone só o wordmark, e o
+  pedaço da paleta (`next/dynamic`) nem é pedido.
+
+**Medido (Fase 9, `next dev`, Playwright só navegando).**
+- Matriz de 5 janelas (1024×700, 1280×800, 1440×900, 1920×1080, 800×1000) × 2
+  temas × 7 rotas: 70/70, com 0 truncamento a 1280×800, todo selo "exemplo" dos
+  depoimentos inteiro e descoberto, cruzamento da colagem ≤12% e herói coberto
+  ≤8%.
+- Tablet de toque (768×1024 e 1024×768): linhas da paleta a 44px, `Kbd`,
+  atalhos e dock escondidos. Movimento reduzido: 12/12, o palco nasce no quadro
+  final e as capturas a +1,5s e a +6s são idênticas byte a byte.
+- O login repousa a 4,75s da hidratação com CPU 1× e a 4,94–4,96s com CPU 4×.
+  Cadastro, esqueci e convite repousam entre 0,55s e 1,9s.
+- 14 cliques rápidos entre login, cadastro e esqueci (a 120 e a 350ms, CPU 1× e
+  4×): 12 cartões no DOM, uma moldura, transform `none` e 0 animações vivas no
+  fim. Os 17 estados pelo Eixo do catálogo, em 4 janelas × 2 temas: 136/136.
+
+**Medido (Fase 10, `next build --webpack && next start`, numa cópia isolada).**
+- O HTML do servidor já traz o aside com o palco (`showcase-stage`, `inert`,
+  `data-opaque`), a moldura na forma da rota (`browser` no login, `phone` no
+  cadastro e no esqueci) e a legenda da família.
+- Depois da hidratação o aside, o palco, a moldura e a legenda **são os nós do
+  servidor** (marcados quando o parser os inseriu), nenhum foi removido, e
+  nenhum cartão da colagem entra duas vezes. Só a coluna troca, porque o
+  formulário lê `useSearchParams` atrás de um `<Suspense>`.
+- Seguindo os links da coluna (login → esqueci → login → cadastro), o aside
+  marcado continua o mesmo, e a forma troca: `phone`, `browser`, `phone`.
+- O console fica sem erro nas três rotas e nos dois temas. Sobra um aviso, o
+  `width(-1)` do `ResponsiveContainer` quando o gráfico monta. Ele também
+  aparece no `dev`.
+
+**O que deu errado no caminho.**
+- **O `motion` 13 recusa mola com três quadros.** O giro `[0, ∓6, 0]` virou uma
+  curva de 0,65s. **O raio só na classe vira elipse no voo**: ele saiu de sondas
+  em px e é animado. **`caret-blink` colidia com o `tw-animate-css`** e virou
+  `type-caret-blink`.
+- **O pé amontoado.** Os cartões se cobriam e cobriam a legenda, e isso pediu o
+  pouso por forma (rodadas 259 e 260).
+- **O cartão "Últimos 12 meses" ficava vazio** de 0,8s a 2,2s até o gráfico
+  montar. Hoje o `ChartSkeleton` parado guarda o lugar, e a medição dá 0 quadro
+  vazio.
+- **O palco estreito** (800×1000 e o tablet de pé) reprovou em todas as rotas
+  de aparelho (rodada 262).
+- **O login passava dos 5s com CPU 4×.** Pesavam três coisas:
+  - a cadeia de `setTimeout` acumulava +375ms, e hoje os quadros são agendados
+    juntos;
+  - o relógio do roteiro nascia dentro do pedaço dinâmico, e hoje conta do palco
+    à vista;
+  - a projeção esperava a cauda subpixel da mola (~800ms), e daí nasceu a
+    `MOLA_PALCO_LAYOUT`.
+- **No movimento reduzido a paleta cobria o selo "dados de exemplo".** O
+  primeiro grupo da paleta ganhou o selo dele.
+- **O build de produção com Turbopack** recusa o `node_modules` ligado por
+  symlink fora da raiz. O script do projeto já é `next build --webpack`, e foi
+  com ele que se mediu.
+
+**Fica em aberto.**
+- O aviso `width(-1)` do Recharts na primeira medição.
+- Os lugares s5 e s6 (`showcase-short:hidden`) reiniciam o `rise` duas vezes
+  entre 0,4s e 0,7s. Nas medidas eles estão fora do palco (`data-away`) e não
+  aparecem; acontece também no `dev`.
+- Em produção, o primeiro acesso mostra o toast "Nova versão disponível" sobre o
+  canto do painel. A causa é que o `clientsClaim` do service worker dispara o
+  `controllerchange` já na primeira instalação. É de `sw-register.tsx`, fora do
+  painel.
