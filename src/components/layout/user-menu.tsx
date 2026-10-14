@@ -33,12 +33,13 @@ export function UserMenu({ children }: UserMenuProps) {
             <DropdownMenuTrigger asChild>
                 {children}
             </DropdownMenuTrigger>
+            {/* 8 do recuo da placa flutuante + 8 de calha: o menu abre a 8px dela. */}
             <DropdownMenuContent
                 variant="panel"
                 className="w-60 max-w-[calc(100vw-2rem)]"
                 align="end"
                 side="right"
-                sideOffset={8}
+                sideOffset={16}
                 header={
                     <DropdownMenuLabel className="p-0 font-normal">
                         <AccountMenuUserSummary />

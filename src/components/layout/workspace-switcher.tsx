@@ -109,10 +109,11 @@ export function WorkspaceSwitcher({
     const menu = (
         <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             {trigger}
+            {/* Na barra: 8 do recuo da placa flutuante + 8 de calha. */}
             <DropdownMenuContent
                 side={appearance === "header" ? "bottom" : "right"}
                 align={appearance === "header" ? "start" : "start"}
-                sideOffset={8}
+                sideOffset={appearance === "header" ? 8 : 16}
                 className="w-64 max-w-[calc(100vw-2rem)] p-0"
             >
                 <WorkspacePickerMenuBody
