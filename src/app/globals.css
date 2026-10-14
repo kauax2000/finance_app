@@ -2178,6 +2178,40 @@
   mix-blend-mode: normal;
 }
 
+/* A troca de carteira, numa View Transition (`trocarComTransicao` do
+   `WorkspaceProvider`), escopada por `.workspace-switch` no `<html>`. Só duas
+   peças ganham nome: o conteúdo da página, que sai esmaecendo e entra subindo
+   4px (o `rise`), e a marca da carteira na barra lateral, que entra crescendo
+   na mola — o momento de "entrei na carteira". O resto (a barra, o cabeçalho)
+   fica na troca cruzada padrão da raiz. Movimento reduzido nem abre a transição. */
+.workspace-switch [data-workspace-content] {
+  view-transition-name: workspace-content;
+}
+.workspace-switch [data-sidebar="header"] [data-slot="color-tile"] {
+  view-transition-name: workspace-mark;
+}
+.workspace-switch::view-transition-old(workspace-content),
+.workspace-switch::view-transition-old(workspace-mark) {
+  animation: var(--duration-fast) var(--ease-out) both workspace-switch-out;
+}
+.workspace-switch::view-transition-new(workspace-content) {
+  animation: var(--duration-slow) var(--ease-out) var(--duration-instant) both rise;
+}
+.workspace-switch::view-transition-new(workspace-mark) {
+  animation: var(--duration-spring) var(--ease-spring) both workspace-mark-in;
+}
+@keyframes workspace-switch-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes workspace-mark-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
 /* As cores de identidade e de ladrilho têm duas versões: a viva (uma claridade, o
    croma da marca, tinta escura) e a suave (quase branca, com a letra no tom forte do
    mesmo matiz). As utilities publicam variáveis e o componente pinta com

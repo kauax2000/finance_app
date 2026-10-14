@@ -25821,3 +25821,15 @@ que o `FocusModality` do layout raiz liga no `pointerdown` e desliga no
 `keydown` (captura, antes do Radix). Medido depois: clique fora → foco no
 gatilho, sem anel; Enter e Esc → anel. O CSS cru que pergunta
 `:focus-visible` (o × do toast, o traço do `link`) ficou como estava.
+
+**Criar carteira: sair, depois entrar.** O diálogo de criação não tinha saída: o
+`CreateProjectDialog` trocava o `key` a cada mudança de `open`, e fechar montava
+um diálogo novo, já fechado, no lugar do que animava. Agora o `key` só muda ao
+abrir. E a página trocava de carteira atrás do diálogo ainda aberto (o
+`createWorkspace` trocava antes de devolver): criar passou a só criar e
+recarregar a lista, e o diálogo troca no `onCloseAutoFocus`, que o Radix chama
+depois da animação de saída. A troca de carteira — também a do seletor — passou
+a ser uma View Transition (`trocarComTransicao` no `WorkspaceProvider`,
+`.workspace-switch` no `globals.css`): o conteúdo sai esmaecendo e entra
+subindo 4px (`rise`), e a marca da barra lateral entra crescendo na mola. Sem a
+API, com movimento reduzido ou com a aba escondida, troca na hora.

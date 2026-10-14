@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useWorkspace } from "@/components/workspace-provider"
 import { WorkspaceAppearanceFormFields } from "@/components/workspace/workspace-appearance-form-fields"
 import {
@@ -25,7 +25,9 @@ export function ProjectFormDialog({
     open,
     onOpenChange,
 }: ProjectFormDialogProps) {
-    const { createWorkspace, error: contextError } = useWorkspace()
+    const { createWorkspace, setCurrentWorkspaceId, error: contextError } = useWorkspace()
+    // A carteira criada espera o diálogo terminar de sair para virar a atual.
+    const criada = useRef<string | null>(null)
 
     const [name, setName] = useState("")
     const [icon, setIcon] = useState<WorkspaceIconKey>("home")
@@ -61,6 +63,7 @@ export function ProjectFormDialog({
         })
         setSubmitting(false)
         if (created) {
+            criada.current = created.id
             onOpenChange(false)
         }
     }
@@ -75,7 +78,17 @@ export function ProjectFormDialog({
             open={open}
             onOpenChange={handleOpenChange}
         >
-            <DialogContent layout="fixed">
+            {/* O `onCloseAutoFocus` chega depois da animação de saída (o Radix
+                desmonta o conteúdo só quando ela acaba): só então a carteira
+                nova entra, com a troca animada do provedor. */}
+            <DialogContent
+                layout="fixed"
+                onCloseAutoFocus={() => {
+                    const id = criada.current
+                    criada.current = null
+                    if (id) void setCurrentWorkspaceId(id)
+                }}
+            >
                 <DialogHeader>
                     <DialogTitle>Nova carteira</DialogTitle>
                 </DialogHeader>
@@ -94,7 +107,7 @@ export function ProjectFormDialog({
                             onPreviewColorChange={setPreviewColor}
                             displayError={displayError}
                             idPrefix="project-dialog-create"
-                            previewHint="Esta cor identifica a carteira na barra lateral e nos menus."
+                            previewHint="Assim ela aparece na barra lateral e nos menus."
                         />
                     </DialogBody>
                     <DialogFooter>

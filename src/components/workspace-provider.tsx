@@ -114,6 +114,35 @@ function workspaceQueryErrorMessage(error: unknown): string {
     return "Não foi possível carregar as carteiras."
 }
 
+type DocumentoComTransicao = Document & {
+    startViewTransition?: (cb: () => Promise<void>) => { finished: Promise<void> }
+}
+
+/**
+ * A troca de carteira numa View Transition: a página esmaece, o conteúdo novo
+ * sobe 4px e a marca da barra lateral entra no lugar da velha (`.workspace-switch`
+ * no `globals.css`). O React Query avisa os assinantes num `setTimeout(0)`, então
+ * o retrato novo espera dois giros do relógio, e não um `flushSync`. Sem a API ou
+ * com movimento reduzido, troca na hora.
+ */
+function trocarComTransicao(trocar: () => void) {
+    const doc = document as DocumentoComTransicao
+    if (
+        !doc.startViewTransition ||
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+        trocar()
+        return
+    }
+    const html = document.documentElement
+    html.classList.add("workspace-switch")
+    const transicao = doc.startViewTransition(async () => {
+        trocar()
+        for (let i = 0; i < 2; i++) await new Promise((r) => setTimeout(r, 0))
+    })
+    void transicao.finished.finally(() => html.classList.remove("workspace-switch"))
+}
+
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
     const { user, loading: authLoading } = useAuth()
     const queryClient = useQueryClient()
@@ -163,12 +192,15 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         async (workspaceId: string) => {
             setMutationError(null)
             if (user?.id) {
-                queryClient.setQueryData<WorkspacesBundle>(
-                    workspaceKeys.list(user.id),
-                    (prev) =>
-                        prev
-                            ? { ...prev, currentWorkspaceId: workspaceId }
-                            : prev,
+                const userId = user.id
+                trocarComTransicao(() =>
+                    queryClient.setQueryData<WorkspacesBundle>(
+                        workspaceKeys.list(userId),
+                        (prev) =>
+                            prev
+                                ? { ...prev, currentWorkspaceId: workspaceId }
+                                : prev,
+                    ),
                 )
                 await patchUserSettings(user.id, {
                     current_workspace_id: workspaceId,
@@ -227,17 +259,16 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
                 return null
             }
 
-            await queryClient.invalidateQueries({
-                queryKey: workspaceKeys.list(user.id),
-            })
+            // A lista nova já traz a carteira; **entrar nela é de quem chama**: o
+            // diálogo de criação troca depois de sair, para a página não mudar
+            // atrás dele enquanto ele ainda anima.
             await queryClient.refetchQueries({
                 queryKey: workspaceKeys.list(user.id),
             })
-            await setCurrentWorkspaceId(workspace.id)
 
             return workspace as Workspace
         },
-        [user, queryClient, setCurrentWorkspaceId],
+        [user, queryClient],
     )
 
     const isWorkspaceOwner = useCallback(
