@@ -250,6 +250,59 @@ describe("a orquestração (8c)", () => {
     })
 })
 
+describe("o cadastro (8e)", () => {
+    const FONTE = semComentarios(lerFonte("src/components/auth/showcase/auth-showcase.tsx"))
+    const MINI = semComentarios(lerFonte("src/components/auth/showcase/mini-app.tsx"))
+    const palco = (scene: AuthSceneId) =>
+        renderToStaticMarkup(createElement(AuthShowcase, { scene })).replace(/ /g, " ")
+
+    it("o cadastro: o orçamento, você pousando no Mercado sem clique e o chip do mesmo painel", () => {
+        const { cursors, chip, screen, overlay } = SCENES.register
+        expect(screen).toBe("budget")
+        expect(overlay).toBe("none")
+        expect(chip).toBe("synced")
+        expect(cursors).toEqual([{ name: "Você", tone: 3, anchor: "budget", from: "bottom", delay: 450 }])
+        // A âncora é a barra do Mercado, não a pilha de quem divide.
+        expect(MINI).not.toMatch(/<AvatarGroup[^>]*data-showcase-anchor/)
+        const html = palco("register")
+        expect(html.indexOf('data-showcase-anchor="budget"')).toBeGreaterThan(html.indexOf("Quem divide a casa"))
+        expect(html.indexOf('data-showcase-anchor="budget"')).toBeLessThan(html.indexOf(">Mercado<"))
+        expect(html).toContain("R$ 612,00")
+        // O chip só pousa no navegador (precisa da caixa do herói): a fonte é que o garante.
+        expect(FONTE).toMatch(/title="Mesmo painel no computador"[\s\S]*?sincronizado/)
+    })
+
+    it("o confirme: a ilha vira o aviso com o véu, e o chip e o cursor saem", () => {
+        for (const id of ["register.confirm", "register.confirm-invite"] as const) {
+            expect(SCENES[id].cursors, id).toEqual([])
+            expect(SCENES[id].chip, id).toBe("none")
+            expect(SCENES[id].dots, id).toEqual({ chapter: 1, fill: 1 })
+        }
+        const confirme = palco("register.confirm")
+        expect(confirme).toContain('data-slot="device-frame-notification"')
+        expect(confirme).toContain("Confirme seu e-mail")
+        expect(confirme).not.toContain('aria-label="Quem está na Casa"')
+        // O véu da área de conteúdo e o das abas (o aviso, na ilha, fica aceso).
+        expect(FONTE).toContain("[&_[data-slot=device-frame-nav]]:brightness-60")
+        expect(confirme).toContain("[&amp;_[data-slot=device-frame-nav]]:brightness-60")
+        expect(palco("register")).not.toContain("[&amp;_[data-slot=device-frame-nav]]:brightness-60")
+    })
+
+    it("com convite, o aviso chama para a Casa e mostra quem já está lá", () => {
+        const html = palco("register.confirm-invite")
+        expect(html).toContain("Confirme e entre na Casa")
+        expect(html).toContain("Ana C. convidou você para a carteira.")
+        expect(html).toMatch(/data-slot="avatar-group" data-size="xs"[^>]*aria-label="Quem está na Casa"/)
+    })
+
+    it("o orçamento entra 250ms depois da troca e sai na hora", () => {
+        expect(FONTE).toContain("ENTRADA_DO_ORCAMENTO_MS = 250")
+        expect(FONTE).toMatch(/if \(!ligado && mostrado\) setMostrado\(false\)/)
+        // O cursor abre com o orçamento: aberto antes, mediria um alvo que ainda não existe.
+        expect(FONTE).toContain('spec.screen === "budget" && !orcamento ? SEM_CURSORES : spec.cursors')
+    })
+})
+
 describe("o login e a paleta (8d)", () => {
     const PALETA = semComentarios(lerFonte("src/components/auth/showcase/palette-demo.tsx"))
     const MINI = semComentarios(lerFonte("src/components/auth/showcase/mini-app.tsx"))

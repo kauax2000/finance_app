@@ -459,11 +459,11 @@ function Linhas({
 }
 
 /** As próximas contas: duas no navegador e no celular, três no tablet e no navegador largo. */
-function ProximasContas({ form }: { form: DeviceFrameForm }) {
+function ProximasContas({ form, linhas = CONTAS_POR_FORMA[form] }: { form: DeviceFrameForm; linhas?: Linha[] }) {
     return (
         <section className="flex flex-col gap-1">
             <Caption className="font-medium text-foreground">Próximas contas</Caption>
-            <Linhas linhas={CONTAS_POR_FORMA[form]} emLinha={form === "browser"} compacto={form === "phone"} />
+            <Linhas linhas={linhas} emLinha={form === "browser"} compacto={form === "phone"} />
         </section>
     )
 }
@@ -474,8 +474,23 @@ const TETOS = [
 ] as const
 
 /**
+ * Onde o cursor do cadastro pousa no "Mercado" (a seta aponta para cima e a
+ * pílula do nome cai 12px à direita e 14px abaixo da ponta):
+ * - com o rodapé, na barra, além do fim do preenchimento (76%), a meia altura
+ *   do bloco — que, com o rótulo e o rodapé da mesma altura, é a da barra: a
+ *   pílula cai no rodapé, à direita do "R$ 612,00 de R$ 900,00", sem cobri-lo
+ *   (12px de folga no celular de 241px, a janela de 1280);
+ * - no palco baixo (1024×700) o rodapé some e a linha de baixo fica a 12px da
+ *   barra: a ponta sobe à linha do rótulo (4px abaixo do topo), no vão entre
+ *   "Mercado" e "68%" (40%), e a pílula pousa sobre a barra — à esquerda da
+ *   coluna das porcentagens, sem tocar o "68%" nem o "89%".
+ */
+const PONTA_NO_MERCADO =
+    "start-[76%] inset-y-0 showcase-short:start-[40%] showcase-short:bottom-auto showcase-short:h-2"
+
+/**
  * O orçamento da casa: dois tetos (68% e 89%, a escada `BUDGET_BANDS`) e quem
- * divide. O grupo é a âncora do cursor do cadastro.
+ * divide. O "Mercado" é a âncora do cursor do cadastro.
  */
 function Orcamento({ compacto }: { compacto: boolean }) {
     const { ana, rafael, voce } = MINI_APP_PEOPLE
@@ -486,32 +501,40 @@ function Orcamento({ compacto }: { compacto: boolean }) {
                     <p className="text-sm font-medium">
                         Orçamento<span className={cn(compacto && "showcase-short:hidden")}> · Casa</span>
                     </p>
-                    <AvatarGroup label="Quem divide a casa" size="xs" tint="soft" data-showcase-anchor="budget">
+                    <AvatarGroup label="Quem divide a casa" size="xs" tint="soft">
                         <AvatarGroupItem {...ana} />
                         <AvatarGroupItem {...rafael} />
                         <AvatarGroupItem {...voce} />
                     </AvatarGroup>
                 </div>
                 {TETOS.map(({ nome, gasto, teto }) => (
-                    <Progress
-                        key={nome}
-                        value={gasto}
-                        max={teto}
-                        size="sm"
-                        bands={BUDGET_BANDS}
-                        header={
-                            <ProgressHeader>
-                                <ProgressLabel>{nome}</ProgressLabel>
-                                <ProgressValue />
-                            </ProgressHeader>
-                        }
-                        footer={
-                            <ProgressFooter className={cn("justify-start gap-1", compacto && "showcase-short:hidden")}>
-                                <MoneyDisplay value={gasto} size="sm" tone="muted" /> de{" "}
-                                <MoneyDisplay value={teto} size="sm" tone="muted" />
-                            </ProgressFooter>
-                        }
-                    />
+                    <div key={nome} className="relative">
+                        {nome === "Mercado" ? (
+                            <span
+                                aria-hidden
+                                data-showcase-anchor="budget"
+                                className={cn("pointer-events-none absolute w-0", PONTA_NO_MERCADO)}
+                            />
+                        ) : null}
+                        <Progress
+                            value={gasto}
+                            max={teto}
+                            size="sm"
+                            bands={BUDGET_BANDS}
+                            header={
+                                <ProgressHeader>
+                                    <ProgressLabel>{nome}</ProgressLabel>
+                                    <ProgressValue />
+                                </ProgressHeader>
+                            }
+                            footer={
+                                <ProgressFooter className={cn("justify-start gap-1", compacto && "showcase-short:hidden")}>
+                                    <MoneyDisplay value={gasto} size="sm" tone="muted" /> de{" "}
+                                    <MoneyDisplay value={teto} size="sm" tone="muted" />
+                                </ProgressFooter>
+                            }
+                        />
+                    </div>
                 ))}
             </CardContent>
         </Card>
@@ -533,9 +556,15 @@ function Painel({ form, budget }: { form: DeviceFrameForm; budget: boolean }) {
                 <ShowcasePiece className="min-w-0 flex-1">
                     <CartaoDoSaldo largo={largo} compacto={compacto} />
                 </ShowcasePiece>
-                {/* A faísca some onde não cabe: o navegador XS e o celular do palco baixo (a janela de 1024×700). */}
+                {/* A faísca some onde não cabe: o navegador XS, o celular do palco baixo (a janela de 1024×700) e, com o
+                orçamento, o celular de menos de 16rem (a janela de 1280) — ali saldo, faísca e orçamento passavam da
+                barra de abas, e o orçamento é a cena do cadastro. */}
                 <ShowcasePiece
-                    className={cn(largo && "w-36 shrink-0 @max-md/screen:hidden", compacto && "showcase-short:hidden")}
+                    className={cn(
+                        largo && "w-36 shrink-0 @max-md/screen:hidden",
+                        compacto && "showcase-short:hidden",
+                        compacto && budget && "@max-[16rem]/screen:hidden"
+                    )}
                 >
                     <CartaoDaFaisca alta={!largo} />
                 </ShowcasePiece>
@@ -544,7 +573,22 @@ function Painel({ form, budget }: { form: DeviceFrameForm; budget: boolean }) {
             <div className="relative">
                 <ShowcaseSwap swapKey={budget ? "orcamento" : "contas"} effect="rise">
                     <ShowcasePiece>
-                        {budget ? <Orcamento compacto={compacto} /> : <ProximasContas form={form} />}
+                        {budget ? (
+                            <div className="flex flex-col gap-3">
+                                <Orcamento compacto={compacto} />
+                                {/* No celular sem faísca (abaixo de 16rem) sobra a altura de uma conta sob o orçamento:
+                                    a próxima, o aluguel — a tela não acaba no meio. O palco baixo não tem essa altura. */}
+                                {compacto ? (
+                                    <div className="showcase-short:hidden">
+                                        <div className="hidden @max-[16rem]/screen:block">
+                                            <ProximasContas form={form} linhas={CONTAS.slice(0, 1)} />
+                                        </div>
+                                    </div>
+                                ) : null}
+                            </div>
+                        ) : (
+                            <ProximasContas form={form} />
+                        )}
                     </ShowcasePiece>
                 </ShowcaseSwap>
             </div>

@@ -14,7 +14,13 @@ import {
     UserPlusIcon,
 } from "@heroicons/react/16/solid"
 
-import { AuthMiniApp, MINI_APP_NAV_ACTIVE, MINI_APP_URL, type MiniAppScreen } from "@/components/auth/showcase/mini-app"
+import {
+    AuthMiniApp,
+    MINI_APP_NAV_ACTIVE,
+    MINI_APP_PEOPLE,
+    MINI_APP_URL,
+    type MiniAppScreen,
+} from "@/components/auth/showcase/mini-app"
 import type { AuthSceneId, SceneFamily } from "@/components/auth/showcase/scene-context"
 import {
     FAMILY_ORDER,
@@ -27,6 +33,7 @@ import {
     type ScriptStage,
 } from "@/components/auth/showcase/scenes"
 import { AuthTestimonialCard, testimonialsFor } from "@/components/auth/showcase/testimonials"
+import { AvatarGroup, AvatarGroupItem } from "@/components/ui/avatar-group"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { ColorTile } from "@/components/ui/color-tile"
@@ -94,6 +101,24 @@ function useGiro(family: SceneFamily): 1 | -1 {
         return turn
     }
     return ultimo.turn
+}
+
+/** O orçamento da casa entra 250ms depois da troca de cena (seção 7): o celular já está a caminho, e o bloco sobe nele. */
+const ENTRADA_DO_ORCAMENTO_MS = 250
+
+/**
+ * O orçamento do cadastro: entra atrasado e sai na hora. A primeira cena entra já com ele — é o quadro do
+ * servidor, e o cadastro aberto por link direto nasce pronto.
+ */
+function useOrcamento(ligado: boolean): boolean {
+    const [mostrado, setMostrado] = React.useState(ligado)
+    if (!ligado && mostrado) setMostrado(false)
+    React.useEffect(() => {
+        if (!ligado || mostrado) return
+        const t = setTimeout(() => setMostrado(true), ENTRADA_DO_ORCAMENTO_MS)
+        return () => clearTimeout(t)
+    }, [ligado, mostrado])
+    return ligado && mostrado
 }
 
 /* ── O foco que pula o roteiro ─────────────────────────────────────────── */
@@ -171,11 +196,14 @@ function Aviso({
     color,
     title,
     description,
+    children,
 }: {
     icon: HeroIcon
     color: string
     title: string
     description: string
+    /** Uma linha a mais, abaixo da frase (quem já está na Casa). */
+    children?: React.ReactNode
 }) {
     return (
         <div className="flex items-start gap-2.5">
@@ -188,6 +216,7 @@ function Aviso({
                     <span className="shrink-0 text-2xs text-muted-foreground">agora</span>
                 </div>
                 <p className="text-xs leading-snug text-muted-foreground">{description}</p>
+                {children}
             </div>
         </div>
     )
@@ -198,7 +227,13 @@ const AVISOS: Partial<Record<SceneOverlay, React.ReactNode>> = {
         <Aviso icon={EnvelopeIcon} color={cor("índigo")} title="Confirme seu e-mail" description="Toque no link para ativar sua conta." />
     ),
     "notice-confirm-invite": (
-        <Aviso icon={UserPlusIcon} color={cor("índigo")} title="Confirme e entre na Casa" description="Ana C. convidou você para a carteira." />
+        <Aviso icon={UserPlusIcon} color={cor("índigo")} title="Confirme e entre na Casa" description="Ana C. convidou você para a carteira.">
+            {/* Quem já está lá, na identidade do cursor de cada um: a Casa espera por você. */}
+            <AvatarGroup label="Quem está na Casa" size="xs" tint="soft" className="mt-2">
+                <AvatarGroupItem {...MINI_APP_PEOPLE.ana} />
+                <AvatarGroupItem {...MINI_APP_PEOPLE.rafael} />
+            </AvatarGroup>
+        </Aviso>
     ),
     "notice-code": (
         <Aviso icon={KeyIcon} color={cor("violeta")} title="Seu código de acesso chegou" description="Use os 6 dígitos para continuar." />
@@ -344,7 +379,7 @@ function Chip({ spec }: { spec: SceneSpec }) {
                 title="Mesmo painel no computador"
                 estreito
                 description={
-                    <Badge variant="soft" tone="success" size="xs">
+                    <Badge variant="soft" tone="success" size="xs" className="mt-1">
                         sincronizado
                     </Badge>
                 }
@@ -368,6 +403,7 @@ function Chip({ spec }: { spec: SceneSpec }) {
 /* ── Os cursores ───────────────────────────────────────────────────────── */
 
 const NOMES: SceneCursor["name"][] = ["Você", "Ana", "Rafael"]
+const SEM_CURSORES: SceneCursor[] = []
 
 /**
  * Os cursores de presença da cena. Cada pessoa tem um cursor só: quem sai da cena fecha (`open`) e sai em
@@ -415,6 +451,17 @@ function Cursores({ cursors }: { cursors: SceneCursor[] }) {
 const VEU_DA_JANELA = "transition-[filter] duration-(--duration-base) ease-(--ease-out)"
 
 /**
+ * O véu do aviso do cadastro sobre a barra de abas do celular. A `Cobertura` vela a área de conteúdo com o
+ * `bg-overlay`, mas a barra de abas é do `DeviceFrame`, fora dela: ali o mesmo escuro é o filtro do véu da
+ * paleta (`brightness-60`, os 40% do `--overlay`), e o aviso, na ilha, fica aceso. A barra é transparente
+ * (o fundo é o da tela) e o filtro só escurece o que ela pinta: por isso ela veste o próprio `bg-background`,
+ * igual ao da tela em repouso. A barra de status não precisa: o aviso aberto a cobre.
+ */
+const VEU_NAS_ABAS =
+    "[&_[data-slot=device-frame-nav]]:bg-background [&_[data-slot=device-frame-nav]]:transition-[filter] [&_[data-slot=device-frame-nav]]:duration-(--duration-base) [&_[data-slot=device-frame-nav]]:ease-(--ease-out)"
+const VEU_NAS_ABAS_LIGADO = "[&_[data-slot=device-frame-nav]]:brightness-60"
+
+/**
  * O palco que o roteiro da paleta pede, guardado com o roteiro de quem o calculou: na troca de cena o palco
  * velho não vale nem por um commit (a fatura do login não pisca na recuperação).
  */
@@ -440,7 +487,14 @@ const Palco = React.memo(function Palco({ scene }: { scene: AuthSceneId }) {
     // A ida e volta do login (D8) gira como o login ↔ cadastro: para o celular de um lado, de volta do outro.
     const turn = spec.family === "login" ? (etapa.phone ? 1 : -1) : giro
     const form = etapa.phone ? "phone" : spec.form
-    const tela: MiniAppScreen = etapa.screen === "invoice" ? "invoice" : telaDaMiniApp(spec.screen)
+    const orcamento = useOrcamento(spec.screen === "budget")
+    const tela: MiniAppScreen =
+        etapa.screen === "invoice"
+            ? "invoice"
+            : spec.screen === "budget" && !orcamento
+              ? "dashboard"
+              : telaDaMiniApp(spec.screen)
+    const veuNoAviso = spec.overlay === "notice-confirm" || spec.overlay === "notice-confirm-invite"
     const vaga = spec.chip !== "none" ? VAGA_DO_CHIP[form] : undefined
     return (
         <ShowcaseStage parallax className="absolute inset-0 rounded-modal">
@@ -458,7 +512,12 @@ const Palco = React.memo(function Palco({ scene }: { scene: AuthSceneId }) {
             </ShowcaseScatter>
             <ShowcaseHero
                 form={form}
-                className={cn(VEU_DA_JANELA, etapa.search === "palette" && "brightness-60")}
+                className={cn(
+                    VEU_DA_JANELA,
+                    VEU_NAS_ABAS,
+                    etapa.search === "palette" && "brightness-60",
+                    veuNoAviso && VEU_NAS_ABAS_LIGADO
+                )}
                 turn={turn}
                 url={MINI_APP_URL[tela]}
                 nav={navDa(tela)}
@@ -469,7 +528,9 @@ const Palco = React.memo(function Palco({ scene }: { scene: AuthSceneId }) {
                 </Cobertura>
             </ShowcaseHero>
             <Chip spec={spec} />
-            <Cursores cursors={spec.cursors} />
+            {/* O cursor do cadastro pousa no orçamento: abre com ele, e não antes — aberto antes, mediria um alvo
+                que ainda não está na tela (no movimento reduzido nada o faria medir de novo). */}
+            <Cursores cursors={spec.screen === "budget" && !orcamento ? SEM_CURSORES : spec.cursors} />
             <PaletaDoRoteiro script={spec.script} stage={etapa} onStage={onStage} />
             <ShowcaseCaption
                 title={spec.caption.title}
