@@ -96,11 +96,12 @@ type ShowcaseSlot = {
  * começo de cada linha, e lê como interface quebrada. Por forma:
  * - navegador: s1 sob a marca, s0 em cima à direita, s2 embaixo à direita;
  * - celular (deslocado para a esquerda pela `@utility showcase-stage`): uma coluna à direita, s0, s3 e s2;
- * - tablet: só s0, em cima à direita — os outros cantos são da marca e da legenda.
+ * - tablet: só s0, em cima à direita, sobre o canto da moldura e inteiro no palco (a 84% passava da borda direita
+ *   em 12–23px, um corte tímido que lia como acidente) — os outros cantos são da marca e da legenda.
  * Os lugares sem pouso em forma nenhuma (s4 a s11) ficam para palcos de outra proporção.
  */
 const SHOWCASE_SLOTS = [
-  { at: { browser: [80, 11], tablet: [84, 11], phone: [81, 16] }, rot: 6, depth: "near", edge: "top", level: "XS", short: false, caption: false, delay: 0 },
+  { at: { browser: [80, 11], tablet: [77, 11], phone: [81, 16] }, rot: 6, depth: "near", edge: "top", level: "XS", short: false, caption: false, delay: 0 },
   { at: { browser: [21, 25], tablet: null, phone: null }, rot: -7, depth: "near", edge: "start", level: "XS", short: false, caption: false, delay: 25 },
   { at: { browser: [80, 79], tablet: null, phone: [81, 78] }, rot: 4, depth: "near", edge: "end", level: "XS", short: false, caption: false, delay: 50 },
   { at: { browser: null, tablet: null, phone: [81, 48] }, rot: -5, depth: "far", edge: "end", level: "S", short: false, caption: false, delay: 75 },

@@ -50,7 +50,7 @@ describe("ShowcaseStage", () => {
 describe("SHOWCASE_SLOTS — os 12 lugares, com o pouso por forma", () => {
   // pouso [navegador, tablet, celular] (null: a forma não deixa lugar), rot, profundidade, borda, nível, baixo, atraso
   const TABELA = [
-    [[[80, 11], [84, 11], [81, 16]], 6, "near", "top", "XS", false, 0],
+    [[[80, 11], [77, 11], [81, 16]], 6, "near", "top", "XS", false, 0],
     [[[21, 25], null, null], -7, "near", "start", "XS", false, 25],
     [[[80, 79], null, [81, 78]], 4, "near", "end", "XS", false, 50],
     [[null, null, [81, 48]], -5, "far", "end", "S", false, 75],
@@ -103,7 +103,7 @@ describe("ShowcaseScatter e ShowcaseScatterItem", () => {
     expect(em("phone", 1)).toMatch(/left:-35%;top:25%/)
     expect(em("phone", 1)).toContain('data-away="true"')
     // s0 é da borda de cima: no tablet tem pouso; s3 (direita) sai pela direita no navegador.
-    expect(em("tablet", 0)).toMatch(/left:84%;top:11%/)
+    expect(em("tablet", 0)).toMatch(/left:77%;top:11%/)
     expect(em("browser", 3)).toMatch(/left:135%;top:48%/)
     expect(tagDo(renderToStaticMarkup(h(ShowcaseScatter, { clear: "tablet" })), "showcase-scatter")).toContain('data-clear="tablet"')
   })
