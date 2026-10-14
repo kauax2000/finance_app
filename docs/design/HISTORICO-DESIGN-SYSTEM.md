@@ -25526,3 +25526,47 @@ mercado"), lendo como interface quebrada e não como sangria.
 campos), nos dois temas, com os critérios novos — legenda a ≥16px do herói e
 de todo cartão, nome do autor inteiro no palco, nenhum corte à esquerda nem em
 cima, chip sem nenhuma interseção com texto do aparelho: 0 falhas.
+
+### Rodada 261 — `Sidebar`: o app flutua
+
+**O pedido.** O dono pediu a barra lateral do app no `floating`, principalmente
+no desktop. Desde a rodada 221 o `floating` é o padrão do componente, mas o app
+tinha ficado rente (`variant="sidebar"`) por decisão dele. A decisão se inverte.
+
+**As decisões.**
+- **A barra do topo é a que o DS prevê ao lado do `floating`**: larga, sem
+  fundo em repouso e vidro ao rolar. A `TopBar variant="floating"` foi
+  oferecida e recusada.
+- **Recolhida, em ícones, como antes** (`collapsible="icon"`, sem `peek`): o
+  gatilho entra na placa, sob o seletor de carteira.
+
+**O que mudou.**
+- Um prop no `app-sidebar.tsx`. A calha, a barra do topo transparente, o fio a
+  zero, o gatilho em pílula e a viagem dele para dentro da placa já eram do
+  componente. `sidebar-versions.test.ts` passou a exigir o `floating` no app.
+- **Os menus da placa abrem a 8px dela.** O seletor de carteira e o menu da
+  conta usavam `sideOffset={8}` a partir do botão; na barra rente isso caía na
+  borda dela, e na placa caía colado ao anel (0px). Passaram a 16: o recuo de 8
+  da placa mais a calha de 8. O `WorkspaceSwitcher appearance="header"` do
+  telefone fica com 8.
+- **A dica abre a 6px da placa, e não do botão** (com ok do dono, em `ui/`).
+  Recolhida, a dica do item abria a 6px do botão, que fica 8px para dentro da
+  placa: começava em 54 com a placa terminando em 56, 2px sobre o anel. Nas
+  placas soltas (`floating` e `inset`) o `SidebarMenuButton` soma o recuo
+  (`SidebarSoltaContext`, `SIDEBAR_TOOLTIP_OFFSET` 6 + `SIDEBAR_PLACA_RECUO` 8),
+  e a dica do gatilho na barra também; a rente e a `plain` ficam em 6.
+
+**Medido** em 1440×900. Aberta: calha de 8px em cima, embaixo e à esquerda, a
+placa em 8–248 (240 de largura), raio 28, gatilho a 8px da placa, a barra do
+topo transparente e o fio a 0; no escuro a placa se separa pelo anel e pela
+sombra. Recolhida: trilho de 48 com a calha de 8, a carteira em 16–48 e o
+gatilho em 56–88, sem sobreposição e sem gatilho no topo. A dica, depois da
+correção, a 6px da placa (medida na prévia `floating` do catálogo, mesma
+geometria). O menu da carteira a 8px da placa, aberta e recolhida. Rolada: a
+barra vira vidro (60% de `--background` com desfoque de 24px), o fio continua a
+0 e `--top-bar-bottom` em 48; a `Toolbar` presa de Transações assenta 8px abaixo
+dela. Em 800×900 não há rolagem horizontal. O menu da conta não foi aberto ao
+vivo: a função que cria a sessão respondia 500 e o perfil ficou no esqueleto.
+
+**Fora.** O telefone, que não abre a barra lateral (a navegação é a
+`BottomBar`), a cor da placa e o `peek`.

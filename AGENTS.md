@@ -1287,11 +1287,16 @@ declaração de `background-color` no trilho).
   "stack"` abaixo de 28rem da própria barra. **O Enter de dentro dela e dos
   portais dela para nela** — a exceção documentada do `Form`.
   `filter-bar-versions.test.ts`.
-- **`Sidebar`**: sempre à esquerda; `variant` `floating` (o padrão, **sem
-  vidro**), `sidebar` (a do app), `inset`, `plain` (a do catálogo, com
+- **`Sidebar`**: sempre à esquerda; `variant` `floating` (o padrão e a do
+  app desde a rodada 261, **sem vidro**), `sidebar` (a rente), `inset`,
+  `plain` (a do catálogo, com
   `collapsible="none"`). A pílula do ativo é `layoutId`; `peek`. **Nenhuma tela
   escreve** o `h-12` do cabeçalho recolhido, o `overflow-y-auto` do conteúdo
   recolhido nem a espera do botão `lg` (`SidebarMenuSkeleton size="lg"`).
+  Nas placas soltas a dica do item e a do gatilho na barra abrem a 6px da
+  placa, e não do botão (`SIDEBAR_TOOLTIP_OFFSET` + `SIDEBAR_PLACA_RECUO`); um
+  menu ancorado num botão de dentro da placa usa `sideOffset={16}` (o recuo de
+  8 mais a calha de 8).
 - **`TopBar`**: `variant="floating"`, `titleAlign`, `size` (`lg` 64), área
   segura por `--top-bar-safe-area`. **`TopBarAction`** — **nenhuma tela escreve
   o `span` da contagem nem embrulha um botão da barra num `Tooltip` à mão**;
