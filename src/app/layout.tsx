@@ -7,6 +7,7 @@ import { WorkspaceProvider } from "@/components/workspace-provider"
 import { PushNotificationProvider } from "@/components/push/push-notification-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { SwRegister } from "@/app/sw-register"
+import { FocusModality } from "@/app/focus-modality"
 import { pwaIconSrc } from "@/lib/pwa/icon-url"
 
 const inter = Inter({
@@ -109,6 +110,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <SwRegister />
+        <FocusModality />
         <TooltipProvider>
           <QueryProvider>
             <AuthProvider>

@@ -51,6 +51,14 @@
   }
 }
 
+/* O anel de foco é do teclado. O Radix leva o foco para dentro do menu, do
+   popover ou do diálogo e o devolve ao gatilho ao fechar, e o Chrome herda o
+   `:focus-visible` nesse foco por código: depois de um clique, o gatilho ficava
+   com o anel aceso, como se estivesse ativo. O `FocusModality` marca o `<html>`
+   com `data-modality="pointer"` no `pointerdown` e tira no `keydown`; sob a
+   marca, `focus-visible:` não acende. `:where()` não soma especificidade. */
+@custom-variant focus-visible (&:focus-visible:not(:where([data-modality="pointer"] *)));
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

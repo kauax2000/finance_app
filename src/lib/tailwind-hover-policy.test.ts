@@ -90,3 +90,16 @@ describe("o hover desarmado no toque", () => {
         expect(ui("sidebar")).toContain('className="ml-auto pointer-coarse:hidden"')
     })
 })
+
+/** O anel de foco é do teclado: depois de um clique, o foco devolvido pelo Radix não acende. */
+describe("focus-visible só no teclado", () => {
+    it("a variante ignora o foco sob data-modality=pointer, e o layout monta quem marca", () => {
+        expect(lerFonte("src/app/globals.css")).toContain(
+            '@custom-variant focus-visible (&:focus-visible:not(:where([data-modality="pointer"] *)));'
+        )
+        const marca = lerFonte("src/app/focus-modality.tsx")
+        expect(marca).toMatch(/addEventListener\("pointerdown", ponteiro, true\)/)
+        expect(marca).toMatch(/addEventListener\("keydown", teclado, true\)/)
+        expect(lerFonte("src/app/layout.tsx")).toContain("<FocusModality />")
+    })
+})
