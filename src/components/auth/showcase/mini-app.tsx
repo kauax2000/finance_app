@@ -20,7 +20,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { AvatarGroup, AvatarGroupAdd, AvatarGroupItem, AvatarGroupSkeleton } from "@/components/ui/avatar-group"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardToolbar } from "@/components/ui/card"
-import { ChartSparkline } from "@/components/ui/chart"
+import { ChartSkeleton, ChartSparkline } from "@/components/ui/chart"
 import { ColorTile } from "@/components/ui/color-tile"
 import {
     DescriptionDetails,
@@ -353,8 +353,15 @@ function CartaoDoSaldo({ largo, compacto }: { largo: boolean; compacto: boolean 
 
 /**
  * A faísca do saldo dos 12 meses. Monta só com o palco na tela: escondido (o
- * telefone, `display: none`) o `ResponsiveContainer` nasceria com largura 0. A
- * caixa tem a altura dela antes de o gráfico chegar, para nada saltar. O
+ * telefone, `display: none`) o `ResponsiveContainer` nasceria com largura 0.
+ * Até o desenho chegar, a caixa mostra a espera do DS na mesma altura
+ * (`ChartSkeleton`, doze barras, uma por mês), parada: o palco é uma vitrine,
+ * não uma tela carregando, e nada pulsa sem fim nele. A espera cobre o HTML do
+ * servidor, o quadro antes da hidratação e a primeira medição do
+ * `ResponsiveContainer` quando o cartão remonta (a troca de forma), que
+ * desenha vazio: as duas camadas dividem a célula da grade, e a espera some
+ * por CSS assim que existe a `.recharts-surface` — sem timer e sem salto de
+ * altura. O
  * gráfico é o mesmo elemento entre renders: cada render do palco (a paleta do
  * login abrindo e fechando) chega aqui pelo contexto do `Showcase`, e no
  * navegador XS — o cartão escondido por classe — cada render do
@@ -376,7 +383,12 @@ function Faisca({ alta }: { alta: boolean }) {
         ),
         [altura]
     )
-    return active ? grafico : <div className={altura} />
+    return (
+        <div className="grid *:col-start-1 *:row-start-1 [&:has(.recharts-surface)>[data-slot=chart-skeleton]]:hidden">
+            <ChartSkeleton aspect="auto" bars={12} className={cn(altura, "gap-1 px-0 pb-0 [&>*]:animate-none")} />
+            {active ? grafico : null}
+        </div>
+    )
 }
 
 function CartaoDaFaisca({ alta }: { alta: boolean }) {
