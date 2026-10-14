@@ -33,7 +33,7 @@ export function AppSidebar() {
     const SettingsIcon = SETTINGS_NAV_ITEM.icon
 
     return (
-        <Sidebar collapsible="icon" variant="sidebar">
+        <Sidebar collapsible="icon" variant="floating">
             {/*
               Never gate children with isMobile: <Sidebar> already renders a Sheet on mobile,
               but empty children meant the drawer had no links (Configurações appeared to do nothing).

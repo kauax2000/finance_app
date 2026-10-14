@@ -127,11 +127,12 @@ describe("as versões do Sidebar", () => {
     expect(CODIGO).not.toContain("peer-data-[variant=inset]:shadow-sm")
   })
 
-  it("o que o app escrevia à mão é do componente, e o app fica rente", () => {
+  it("o que o app escrevia à mão é do componente, e o app flutua", () => {
     expect(CODIGO).toContain("[interpolate-size:allow-keywords] group-data-[collapsible=icon]:h-12")
     expect(CODIGO).toContain('"h-12 p-2 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0!"')
     const app = lerFonte("src/components/layout/app-sidebar.tsx")
-    expect(app).toContain('<Sidebar collapsible="icon" variant="sidebar">')
+    expect(app).toContain('<Sidebar collapsible="icon" variant="floating">')
+    expect(app).not.toContain('<Sidebar collapsible="icon" variant="sidebar">')
     expect(app).not.toContain("group-data-[collapsible=icon]:overflow-y-auto")
     expect(lerFonte("src/components/layout/workspace-switcher.tsx")).not.toContain("group-data-[collapsible=icon]:h-12")
     const perfil = lerFonte("src/components/layout/sidebar-user-profile.tsx")
