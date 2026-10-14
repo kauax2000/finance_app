@@ -685,11 +685,14 @@ function Fatura({ form }: { form: DeviceFrameForm }) {
 
 /**
  * A âncora do "+" (e do "VC" que entra no lugar dele): o `AvatarGroupAdd` não
- * repassa atributos, então a âncora é a última vaga da pilha — 32px, o `sm`,
- * no fim do grupo sem resumo.
+ * repassa atributos, então a âncora mora na última vaga da pilha — 32px, o
+ * `sm`, no fim do grupo sem resumo. O cursor pousa no **centro** da âncora, e
+ * a seta desce para a direita a partir da ponta: a âncora é o quarto de baixo
+ * à direita da vaga (16px), para a ponta tocar o círculo perto da borda e o
+ * "+" ficar à vista, em vez de a seta cobri-lo.
  */
 function AncoraDoConvite() {
-    return <span aria-hidden data-showcase-anchor="avatar-add" className="pointer-events-none absolute inset-y-0 end-0 w-8" />
+    return <span aria-hidden data-showcase-anchor="avatar-add" className="pointer-events-none absolute end-0 bottom-0 size-4" />
 }
 
 /**

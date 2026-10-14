@@ -12,7 +12,7 @@ import {
 import { AuthShowcase, focoPulaORoteiro, telaSobOBloqueio } from "@/components/auth/showcase/auth-showcase"
 import { AuthRecoveryTimeline } from "@/components/auth/showcase/phone-screens"
 import { sceneFamily, type AuthSceneId } from "@/components/auth/showcase/scene-context"
-import { FAMILY_CAPTION, FAMILY_ORDER, SCENES, SCRIPT_STAGE_REST, scriptStage } from "@/components/auth/showcase/scenes"
+import { FAMILY_CAPTION, FAMILY_ORDER, INVITE_ACCEPT_STEPS, SCENES, SCRIPT_STAGE_REST, scriptStage } from "@/components/auth/showcase/scenes"
 import { finalFrame, planScript } from "@/lib/scene-script"
 import { ShowcaseHero, ShowcaseStage } from "@/components/ui/showcase"
 import { IDENTITY_TONES, identityToneFor } from "@/lib/avatar"
@@ -245,8 +245,9 @@ describe("a orquestração (8c)", () => {
             expect(html, id).toContain(`data-form="${SCENES[id].form}"`)
             expect(html, id).toContain(SCENES[id].caption.title)
             expect(html, id).toContain('data-slot="showcase-dots"')
-            // O chip do celular e do tablet toma o lugar de um cartão (s3 e s0): a colagem fica com onze.
-            const vaga = SCENES[id].chip !== "none" && SCENES[id].form !== "browser" ? 1 : 0
+            // O chip do celular toma o lugar de um cartão (s3): a colagem fica com onze. No tablet o s0 fica no HTML
+            // e só esmaece a partir do nível S, onde o chip aparece (no XS o chip some e o cartão fica) — 8g.
+            const vaga = SCENES[id].chip !== "none" && SCENES[id].form === "phone" ? 1 : 0
             expect(html.match(/data-slot="auth-testimonial"/g)?.length, id).toBe(12 - vaga)
         }
     })
@@ -491,3 +492,47 @@ describe("a recuperação (8f)", () => {
         expect(FONTE).toContain("useEntradaAtrasada(bloqueio, ASSENTO_DO_BLOQUEIO_MS)")
     })
 })
+
+describe("o convite no tablet (8g)", () => {
+    const FONTE = semComentarios(lerFonte("src/components/auth/showcase/auth-showcase.tsx"))
+    const palco = (scene: AuthSceneId) => renderToStaticMarkup(createElement(AuthShowcase, { scene }))
+
+    it("o aceite vai em três tempos: o seu cursor clica no +, o + vira o VC e o cursor sai, e o chip entra", () => {
+        const { clicking, joined } = INVITE_ACCEPT_STEPS
+        const final = SCENES["invite.accepted"]
+        expect(clicking.member).toBe(false)
+        expect(clicking.chip).toBe("none")
+        expect(clicking.cursors.map((c) => c.name)).toEqual(["Rafael", "Você"])
+        expect(clicking.cursors[1]).toMatchObject({ tone: 3, anchor: "avatar-add", from: "bottom", click: true })
+        expect(joined.member).toBe(true)
+        expect(joined.chip).toBe("none")
+        expect(joined.cursors.map((c) => c.name)).toEqual(["Rafael"])
+        expect(final.member).toBe(true)
+        expect(final.chip).toBe("invite-accepted")
+        expect(final.cursors).toEqual(joined.cursors)
+        // A ordem dos tempos e o movimento reduzido, que vai direto ao quadro final.
+        expect(FONTE).toContain("VIRA_O_AVATAR_MS = 900")
+        expect(FONTE).toContain("ENTRA_O_CHIP_DO_ACEITE_MS = 1300")
+        expect(FONTE).toMatch(/reduzido \? 0 : chegada \+ VIRA_O_AVATAR_MS/)
+        // O primeiro quadro (o do servidor, ou a cena aberta direto) já é o final: o "VC" na Casa (o chip espera a
+        // moldura assentar, que no HTML do servidor não acontece).
+        expect(palco("invite.accepted")).toContain(">3 pessoas<")
+        expect(palco("invite.gate")).toContain(">2 pessoas<")
+    })
+
+    it("o convite indisponível é o diálogo sobre a carteira apagada e velada, sem o agora de notificação", () => {
+        const html = palco("invite.error")
+        expect(html).toContain("Convite indisponível")
+        expect(html).toContain("Peça um link novo a quem convidou.")
+        expect(html.slice(html.indexOf("Convite indisponível") - 600, html.indexOf("Convite indisponível"))).not.toContain(">agora<")
+        expect(html).toContain("opacity-60")
+        expect(FONTE).toContain('overlay === "notice-confirm-invite" || overlay === "invite-error"')
+        expect(FONTE).toContain("showcase-short:items-end")
+    })
+
+    it("o cursor pousa no quarto de baixo do +, sem cobrir o sinal", () => {
+        const MINI = semComentarios(lerFonte("src/components/auth/showcase/mini-app.tsx"))
+        expect(MINI).toMatch(/data-showcase-anchor="avatar-add" className="pointer-events-none absolute end-0 bottom-0 size-4"/)
+    })
+})
+

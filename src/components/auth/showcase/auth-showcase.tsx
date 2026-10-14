@@ -26,6 +26,7 @@ import { sceneFamily, type AuthSceneId, type SceneFamily } from "@/components/au
 import {
     FAMILY_ORDER,
     focoPulaORoteiro,
+    INVITE_ACCEPT_STEPS,
     SCENE_NAV_ICONS,
     SCENES,
     SCRIPT_STAGE_REST,
@@ -56,6 +57,7 @@ import {
     type ShowcaseSlotIndex,
 } from "@/components/ui/showcase"
 import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, TILE_PALETTE } from "@/lib/tile-palette"
+import { useMovimentoReduzido } from "@/hooks/use-scene-script"
 import { cn } from "@/lib/utils"
 import type { SceneScriptId } from "@/lib/scene-script"
 import type { HeroIcon } from "@/types/navigation"
@@ -130,6 +132,28 @@ function useEntradaAtrasada(ligado: boolean, atraso: number): boolean {
         return () => clearTimeout(t)
     }, [ligado, mostrado, atraso])
     return ligado && mostrado
+}
+
+/**
+ * O aceite do convite (`INVITE_ACCEPT_STEPS`): o seu cursor fica visível aos 150ms, chega ao "+" em 450ms e
+ * clica por 160ms — aos 900ms o "+" vira o "VC" e o cursor sai; o chip entra 400ms depois, com o avatar já
+ * pousado. Vindo de outra família, o tablet ainda está chegando (o cursor espera a moldura assentar, ~730ms): os
+ * tempos esperam junto.
+ */
+const VIRA_O_AVATAR_MS = 900
+const ENTRA_O_CHIP_DO_ACEITE_MS = 1300
+const TROCA_DE_FORMA_MS = 730
+
+/** A cena do aceite no tempo em que ela está, ou `null` fora dele (e no quadro final). */
+function useAceiteDoConvite(scene: AuthSceneId, anterior: AuthSceneId): SceneSpec | null {
+    const aceite = scene === "invite.accepted"
+    // Com movimento reduzido os cursores já aparecem pousados: vai direto ao quadro final.
+    const reduzido = useMovimentoReduzido()
+    const chegada = sceneFamily(anterior) === "invite" ? 0 : TROCA_DE_FORMA_MS
+    const virou = useEntradaAtrasada(aceite, reduzido ? 0 : chegada + VIRA_O_AVATAR_MS)
+    const chip = useEntradaAtrasada(aceite, reduzido ? 0 : chegada + ENTRA_O_CHIP_DO_ACEITE_MS)
+    if (!aceite || chip) return null
+    return virou ? INVITE_ACCEPT_STEPS.joined : INVITE_ACCEPT_STEPS.clicking
 }
 
 /** A paleta do ⌘K só é pedida com o palco na tela: no telefone o cmdk nunca é baixado. */
@@ -303,12 +327,48 @@ const AVISOS: Partial<Record<SceneOverlay, React.ReactNode>> = {
 }
 
 /**
+ * O convite que não abre, como o diálogo do app por cima da carteira apagada: o ladrilho em cima, o título e o que
+ * fazer, centrados — sem o "agora" de notificação (não é um aviso que chegou, é o estado da tela). Tem a largura do
+ * cartão da carteira (o mesmo recuo da tela, `px-3`): cobre as linhas de ponta a ponta, sem pedaço de rótulo
+ * apagado aparecendo dos lados. No palco baixo (o tablet de 1024×700) ele vira a folha do pé da tela: o ladrilho
+ * ao lado do texto, cobrindo o "Já pago" inteiro — no centro, a tela curta o poria cortando um rótulo ao meio.
+ * Entra depois de a tela apagar (os 300ms dela), na mola, subindo 8px.
+ */
+function ConviteIndisponivel() {
+    return (
+        <Card
+            variant="elevated"
+            padding="sm"
+            className="w-full shadow-lg transition-[opacity,translate] delay-(--duration-slow) duration-(--duration-spring) ease-(--ease-spring) starting:translate-y-2 starting:opacity-0"
+        >
+            <CardContent className="flex flex-col items-center gap-3 py-2 text-center showcase-short:flex-row showcase-short:py-0 showcase-short:text-start">
+                <ColorTile tint="soft" size="lg" color={TILE_EXPENSE_DEFAULT}>
+                    <LinkSlashIcon />
+                </ColorTile>
+                <div className="min-w-0">
+                    <p className="text-sm font-medium">Convite indisponível</p>
+                    <p className="text-xs text-pretty text-muted-foreground">Peça um link novo a quem convidou.</p>
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
+
+/**
+ * O véu (`bg-overlay`, o dos diálogos) sobre a tela: atrás do aviso do cadastro e atrás do convite indisponível —
+ * ali o cartão é o diálogo, e sem o véu os rótulos apagados que ele corta ao meio ficavam à vista nas bordas dele.
+ */
+function temVeu(overlay: SceneOverlay): boolean {
+    return overlay === "notice-confirm" || overlay === "notice-confirm-invite" || overlay === "invite-error"
+}
+
+/**
  * O que cobre a tela: o véu atrás do aviso do cadastro, a tela apagada e o cartão do convite indisponível. (O
  * véu da paleta cobre a janela inteira: `VEU_DA_JANELA`.)
  */
 function Cobertura({ overlay, children }: { overlay: SceneOverlay; children: React.ReactNode }) {
     const apagada = overlay === "dim" || overlay === "invite-error" || overlay === "notice-expired"
-    const veu = overlay === "notice-confirm" || overlay === "notice-confirm-invite"
+    const veu = temVeu(overlay)
     return (
         <div className="relative size-full">
             <div className={cn("size-full transition-opacity duration-(--duration-slow) ease-(--ease-out)", apagada && "opacity-60")}>
@@ -322,17 +382,8 @@ function Cobertura({ overlay, children }: { overlay: SceneOverlay; children: Rea
                 )}
             />
             {overlay === "invite-error" ? (
-                <div className="absolute inset-0 flex items-center justify-center p-4">
-                    <Card variant="elevated" padding="sm" className="w-full max-w-64 starting:opacity-0 transition-opacity duration-(--duration-slow)">
-                        <CardContent>
-                            <Aviso
-                                icon={LinkSlashIcon}
-                                color={TILE_EXPENSE_DEFAULT}
-                                title="Convite indisponível"
-                                description="Peça um link novo a quem convidou."
-                            />
-                        </CardContent>
-                    </Card>
+                <div className="absolute inset-0 flex items-center justify-center px-3 showcase-short:items-end showcase-short:pb-3">
+                    <ConviteIndisponivel />
                 </div>
             ) : null}
         </div>
@@ -385,6 +436,12 @@ function pousoDoChip(form: SceneSpec["form"]): { anchor: ShowcaseFloatAnchor; cl
     if (form === "tablet") return { anchor: "hero-top", className: "translate-x-0 -translate-y-2/3" }
     return { anchor: "hero-bottom", className: "-translate-x-3/4 translate-y-3" }
 }
+
+/**
+ * O cartão do tablet sob o chip: esmaece a partir do nível S (28rem), o mesmo corte em que o `ShowcaseFloat`
+ * mostra o chip — no XS o chip some e o cartão fica.
+ */
+const CARTAO_SOB_O_CHIP = "transition-opacity duration-(--duration-base) ease-(--ease-out) @md/showcase:opacity-0"
 
 /** O lugar da colagem que o chip toma, por forma: o cartão sai enquanto o chip está ali. */
 const VAGA_DO_CHIP: Partial<Record<SceneSpec["form"], ShowcaseSlotIndex>> = { phone: 3, tablet: 0 }
@@ -549,14 +606,14 @@ function useEtapaDoRoteiro(script: SceneScriptId | null) {
 }
 
 const Palco = React.memo(function Palco({ scene }: { scene: AuthSceneId }) {
-    const spec = SCENES[scene]
+    const anterior = useCenaAnterior(scene)
+    const spec = useAceiteDoConvite(scene, anterior) ?? SCENES[scene]
     const [etapa, onStage] = useEtapaDoRoteiro(spec.script)
     const giro = useGiro(spec.family)
     // A ida e volta do login (D8) gira como o login ↔ cadastro: para o celular de um lado, de volta do outro.
     const turn = spec.family === "login" ? (etapa.phone ? 1 : -1) : giro
     const form = etapa.phone ? "phone" : spec.form
     const orcamento = useEntradaAtrasada(spec.screen === "budget", ENTRADA_DO_ORCAMENTO_MS)
-    const anterior = useCenaAnterior(scene)
     const bloqueio = useEntradaAtrasada(
         spec.screen === "lock",
         sceneFamily(anterior) === "recovery" ? 0 : DESCIDA_DO_BLOQUEIO_MS
@@ -569,14 +626,20 @@ const Palco = React.memo(function Palco({ scene }: { scene: AuthSceneId }) {
             : spec.screen === "budget" && !orcamento
               ? "dashboard"
               : telaDaMiniApp(spec.screen)
-    const veuNoAviso = spec.overlay === "notice-confirm" || spec.overlay === "notice-confirm-invite"
+    const veuNoAviso = temVeu(spec.overlay)
     const vaga = spec.chip !== "none" ? VAGA_DO_CHIP[form] : undefined
     return (
         <ShowcaseStage parallax className="absolute inset-0 rounded-modal">
             <ShowcaseScatter clear={form} ripple={spec.celebrate}>
                 {testimonialsFor(spec.family).map((t, i) =>
                     // O lugar que o chip toma fica vazio: o cartão sai (a saída da colagem) e volta quando o chip sai.
-                    i === vaga ? (
+                    // No tablet o cartão fica no nível XS, onde o chip se esconde (o s0 é a única vaga visível ali):
+                    // ele só esmaece a partir do nível S, sob o chip.
+                    i === vaga && form === "tablet" ? (
+                        <ShowcaseScatterItem key={i} slot={i as ShowcaseSlotIndex} itemKey={t.id}>
+                            <AuthTestimonialCard testimonial={t} className={CARTAO_SOB_O_CHIP} />
+                        </ShowcaseScatterItem>
+                    ) : i === vaga ? (
                         <ShowcaseScatterItem key={i} slot={i as ShowcaseSlotIndex} itemKey="vaga" />
                     ) : (
                         <ShowcaseScatterItem key={i} slot={i as ShowcaseSlotIndex} itemKey={t.id}>

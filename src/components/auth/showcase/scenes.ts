@@ -206,17 +206,35 @@ export const SCENES: Record<AuthSceneId, SceneSpec> = {
         chip: "none",
         cursors: [ANA_NO_CONVITE, RAFAEL_NA_INTERNET],
     },
+    // O quadro final do aceite: o "VC" no lugar do "+", o chip e o Rafael na internet. O caminho até ele (o seu
+    // cursor que sobe e clica no "+") são os tempos de `INVITE_ACCEPT_STEPS`.
     "invite.accepted": {
         ...INVITE,
         screen: "wallet",
         member: true,
         overlay: "none",
         chip: "invite-accepted",
-        // A Ana sai do "+": quem pousa ali agora é você.
-        cursors: [RAFAEL_NA_INTERNET, { name: "Você", tone: 3, anchor: "avatar-add", from: "bottom", delay: 150 }],
+        cursors: [RAFAEL_NA_INTERNET],
     },
     "invite.error": { ...INVITE, screen: "wallet", overlay: "invite-error", chip: "none", cursors: [] },
 }
+
+/**
+ * O aceite do convite em três tempos, até o quadro final de `SCENES["invite.accepted"]`:
+ * 1. `clicking` — a Ana sai do "+" e o **seu** cursor sobe da borda de baixo até ele e clica;
+ * 2. `joined` — o "+" vira o "VC" na mola do `AvatarGroup`, e o seu cursor sai: quem está ali agora é o avatar;
+ * 3. o quadro final — o chip "Você entrou na Casa" entra.
+ * Objetos fixos (o chip e os cursores comparam a cena por identidade).
+ */
+export const INVITE_ACCEPT_STEPS = {
+    clicking: {
+        ...SCENES["invite.accepted"],
+        member: false,
+        chip: "none",
+        cursors: [RAFAEL_NA_INTERNET, { name: "Você", tone: 3, anchor: "avatar-add", from: "bottom", delay: 150, click: true }],
+    },
+    joined: { ...SCENES["invite.accepted"], chip: "none" },
+} as const satisfies Record<string, SceneSpec>
 
 /**
  * O que o roteiro da paleta muda **fora** dela, no palco: a pílula do cabeçalho
