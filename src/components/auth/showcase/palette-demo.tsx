@@ -29,10 +29,10 @@ import {
 } from "@/components/ui/command"
 import { Kbd } from "@/components/ui/kbd"
 import { MoneyDisplay } from "@/components/ui/money-display"
-import { ShowcaseCursor, ShowcaseFlight, ShowcaseFloat, useShowcase } from "@/components/ui/showcase"
-import { useMovimentoReduzido, useSceneScript } from "@/hooks/use-scene-script"
+import { ShowcaseCursor, ShowcaseFlight, ShowcaseFloat } from "@/components/ui/showcase"
+import { useMovimentoReduzido } from "@/hooks/use-scene-script"
 import { cn } from "@/lib/utils"
-import type { SceneScriptId } from "@/lib/scene-script"
+import type { SceneScriptId, ScriptFrame } from "@/lib/scene-script"
 import type { HeroIcon } from "@/types/navigation"
 
 /**
@@ -43,8 +43,8 @@ import type { HeroIcon } from "@/types/navigation"
  * de verdade — a pílula se estica no lugar, na largura da tela, com o véu na
  * janela inteira (`VEU_DA_JANELA`, no `AuthShowcase`); a consulta se
  * digita sozinha, as linhas entram com o trecho casado em negrito, uma é
- * escolhida, e a paleta fecha. O roteiro é o `useSceneScript`; este arquivo só
- * o desenha.
+ * escolhida, e a paleta fecha. O roteiro (`useSceneScript`) corre no
+ * `PaletaDoRoteiro`, fora deste pedaço; este arquivo só desenha o quadro.
  *
  * - **Digitação só aqui.** Os ~14 quadros por segundo re-renderizam esta
  *   subárvore. O que muda fora — a pílula do cabeçalho, a fatura, a ida e volta
@@ -58,6 +58,9 @@ import type { HeroIcon } from "@/types/navigation"
  *   (pílula de 32, a altura da pílula do cabeçalho, e a placa 4px abaixo): a
  *   janela desenhada tem 300px de altura no notebook, e na `palette` a paleta
  *   completa passaria do pé dela.
+ * - **Diz que é exemplo.** A placa pousa sobre o cabeçalho da mini UI e cobre o
+ *   selo "dados de exemplo" dela (no movimento reduzido, de vez): o primeiro
+ *   grupo leva o seu (`RotuloComSelo`).
  * - **Movimento reduzido**: um quadro só — a paleta aberta na consulta, com a
  *   linha escolhida e o cursor de texto aceso, sobre o painel.
  */
@@ -191,6 +194,22 @@ const RESULTADOS: Record<PaletteScript, Grupo[]> = {
 const VOCE = { name: "Você", tone: 3, anchor: "search", from: "bottom" } as const
 
 /**
+ * O rótulo do primeiro grupo, com o selo "exemplo" na ponta: a placa cobre o da mini UI. O `Badge xs` (14px)
+ * cabe na linha do rótulo sem crescê-la — o pé de cada placa, medido contra a tela de trás, não muda —, e sai da
+ * caixa alta e do espaçamento do rótulo, como a contagem do `CommandGroup`.
+ */
+function RotuloComSelo({ children }: { children: React.ReactNode }) {
+    return (
+        <span className="flex items-center justify-between gap-2">
+            {children}
+            <Badge variant="soft" tone="neutral" size="xs" className="shrink-0 tracking-normal normal-case">
+                exemplo
+            </Badge>
+        </span>
+    )
+}
+
+/**
  * Onde a paleta pousa: **a pílula do cabeçalho se estica no lugar**. O campo fica exatamente sobre ela (a 2,75rem
  * do topo do herói: a barra de 2,25rem e os 8px da pílula de 32 na linha de 48) e ocupa a área de conteúdo menos
  * 12px de cada lado — centrado nela, à direita do trilho de 3rem; a placa desce sobre a tela velada. Nenhuma tira
@@ -225,31 +244,18 @@ const NENHUMA = ["\0paleta-a", "\0paleta-b"] as const
 export type PaletteDemoProps = {
     /** O roteiro da cena (`null` nas cenas sem paleta). */
     script: SceneScriptId | null
-    /**
-     * Quantos focos de verdade a coluna já recebeu (`focoPulaORoteiro`): cada
-     * aumento pula o roteiro em execução para o quadro final.
-     */
-    skip: number
+    /** O quadro do roteiro, que corre fora do pedaço (`PaletaDoRoteiro`). */
+    frame: ScriptFrame
     /** O que o palco já mostra (o que `onStage` subiu): abre e fecha a paleta no mesmo commit da pílula. */
     stage: ScriptStage
     /** Sobe o palco do quadro atual, com o roteiro de quem o calculou. */
     onStage: (script: SceneScriptId | null, stage: ScriptStage) => void
 }
 
-export function PaletteDemo({ script, skip, stage, onStage }: PaletteDemoProps) {
-    const { active } = useShowcase()
+export function PaletteDemo({ script, frame, stage, onStage }: PaletteDemoProps) {
     const reduced = useMovimentoReduzido()
     // A senha mascarada da recuperação é de outro desenho (o celular): aqui, só as três paletas.
     const roteiro: PaletteScript | null = script === "masked-password" ? null : script
-    const { frame, skip: pular } = useSceneScript(roteiro, { active, reduced })
-
-    // Cada foco novo na coluna pula o roteiro em execução (o reducer ignora o pulo de quem já acabou).
-    const pulos = React.useRef(skip)
-    React.useEffect(() => {
-        if (skip === pulos.current) return
-        pulos.current = skip
-        pular()
-    }, [skip, pular])
 
     const { search, screen, phone } = scriptStage(roteiro, frame.beat, reduced)
     React.useEffect(() => {
@@ -286,8 +292,12 @@ export function PaletteDemo({ script, skip, stage, onStage }: PaletteDemoProps) 
                         {/* A placa entra com a primeira tecla, e as linhas sobem em cascata (`command-reveal`). */}
                         {texto && grupos ? (
                             <CommandList>
-                                {grupos.map(({ heading, linhas, className }) => (
-                                    <CommandGroup key={heading} heading={heading} className={className}>
+                                {grupos.map(({ heading, linhas, className }, i) => (
+                                    <CommandGroup
+                                        key={heading}
+                                        heading={i === 0 ? <RotuloComSelo>{heading}</RotuloComSelo> : heading}
+                                        className={className}
+                                    >
                                         {linhas.map(({ title, description, descriptionClassName, icon: Icon, meta }) => (
                                             <CommandItem key={title} value={title}>
                                                 <CommandItemIcon>

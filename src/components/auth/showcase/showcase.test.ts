@@ -349,6 +349,15 @@ describe("o login e a paleta (8d)", () => {
         expect(scriptStage(null, "idle", true)).toBe(SCRIPT_STAGE_REST)
     })
 
+    it("a paleta diz que é exemplo, e o relógio do roteiro corre fora do pedaço (t conta do palco à vista)", () => {
+        // A placa cobre o "dados de exemplo" do cabeçalho; no movimento reduzido, de vez.
+        expect(PALETA).toContain("heading={i === 0 ? <RotuloComSelo>{heading}</RotuloComSelo> : heading}")
+        expect(PALETA).toMatch(/<Badge variant="soft" tone="neutral" size="xs"[^>]*>\s*exemplo\s*<\/Badge>/)
+        expect(PALETA).not.toContain("useSceneScript")
+        const ORQUESTRA = semComentarios(lerFonte("src/components/auth/showcase/auth-showcase.tsx"))
+        expect(ORQUESTRA).toContain("useSceneScript(roteiro, { active, reduced: reduzido })")
+    })
+
     it("a paleta é a Command de verdade, digitada por valor, sem ouvir o teclado", () => {
         expect(PALETA).toMatch(/<Command\s+variant="panel"\s+shouldFilter=\{false\}/)
         expect(PALETA).toContain('<CommandInput caret value={texto} placeholder="" />')

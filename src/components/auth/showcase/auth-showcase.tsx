@@ -57,7 +57,7 @@ import {
     type ShowcaseSlotIndex,
 } from "@/components/ui/showcase"
 import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, TILE_PALETTE } from "@/lib/tile-palette"
-import { useMovimentoReduzido } from "@/hooks/use-scene-script"
+import { useMovimentoReduzido, useSceneScript } from "@/hooks/use-scene-script"
 import { cn } from "@/lib/utils"
 import type { SceneScriptId } from "@/lib/scene-script"
 import type { HeroIcon } from "@/types/navigation"
@@ -164,8 +164,14 @@ const PaletteDemo = dynamic(
 
 /**
  * O lugar da paleta: pede o pedaço na primeira vez que o palco fica à vista e
- * conta os focos que pulam o roteiro. O estado mora aqui para que um foco re-
- * renderize só esta subárvore — nunca a moldura. O que o roteiro muda fora da
+ * toca o roteiro (`useSceneScript`). O relógio corre aqui, fora do pedaço: o
+ * `t` do plano conta do palco à vista (a hidratação, na primeira carga), e não
+ * da chegada do cmdk — com CPU 4× no dev ela vinha 240ms depois, e o login
+ * passava dos 5s. O primeiro quadro que a paleta desenha é o de 500ms, e o
+ * pedaço que chega depois só desenha o quadro em que o roteiro está. Um foco
+ * num campo da coluna pula o roteiro em execução (`focoPulaORoteiro`), também
+ * antes de o pedaço chegar. O estado mora aqui para que os quadros re-
+ * renderizem só esta subárvore — nunca a moldura. O que o roteiro muda fora da
  * paleta sobe pelo `onStage` e desce de volta como `stage`.
  */
 function PaletaDoRoteiro({
@@ -178,17 +184,20 @@ function PaletaDoRoteiro({
     onStage: (script: SceneScriptId | null, stage: ScriptStage) => void
 }) {
     const { active } = useShowcase()
+    const reduzido = useMovimentoReduzido()
     const [pedida, setPedida] = React.useState(active)
     if (active && !pedida) setPedida(true)
-    const [pulos, setPulos] = React.useState(0)
+    // A senha mascarada da recuperação é de outro desenho (o celular, com o roteiro dela): aqui, só as três paletas.
+    const roteiro = script === "masked-password" ? null : script
+    const { frame, skip } = useSceneScript(roteiro, { active, reduced: reduzido })
     React.useEffect(() => {
         const ouvir = (e: FocusEvent) => {
-            if (focoPulaORoteiro(e.target)) setPulos((n) => n + 1)
+            if (focoPulaORoteiro(e.target)) skip()
         }
         document.addEventListener("focusin", ouvir)
         return () => document.removeEventListener("focusin", ouvir)
-    }, [])
-    return pedida ? <PaletteDemo script={script} skip={pulos} stage={stage} onStage={onStage} /> : null
+    }, [skip])
+    return pedida ? <PaletteDemo script={script} frame={frame} stage={stage} onStage={onStage} /> : null
 }
 
 /* ── O herói ───────────────────────────────────────────────────────────── */
