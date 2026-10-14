@@ -2434,7 +2434,7 @@
 
      forma    | caixa                       | proporção | exceção
      browser  | largura min(86cqw, 140cqh)  | 16/10     | palco < 28rem: min(92cqw, 140cqh)
-     tablet   | altura  min(72cqh, 120cqw)  | 3/4       | —
+     tablet   | altura  min(72cqh, 120cqw)  | 3/4       | palco baixo (< 44rem): min(66cqh, 120cqw)
      phone    | altura  min(72cqh, 160cqw)  | 9/19.5    | palco baixo (< 44rem): min(70cqh, 160cqw)
 
    A outra dimensão sai da proporção. O `DeviceFrame` preenche o herói, e a
@@ -2459,6 +2459,9 @@
     width: auto;
     height: min(72cqh, 120cqw);
     aspect-ratio: 3 / 4;
+    @container showcase (height < 44rem) {
+      height: min(66cqh, 120cqw);
+    }
   }
   & [data-slot="showcase-hero"][data-form="phone"] {
     width: auto;

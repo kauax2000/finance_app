@@ -717,7 +717,9 @@ const PAGAMENTOS = [
  * O bloco do tablet conta pela altura da tela (a do tablet acompanha a
  * largura): no palco médio (a janela de 1280, tela de 394px) quem pagou; no
  * grande (1440, 448px) também a barra do que já foi pago; no palco baixo
- * (1024×700) só a barra. O corte de 26rem cai entre as duas larguras medidas.
+ * (1024×700) só a barra, sem a nota de baixo (lá o tablet encolhe, na
+ * `@utility showcase-stage`, para o cartão de cima não pousar no cabeçalho).
+ * O corte de 26rem cai entre as duas larguras medidas.
  */
 const SO_NO_GRANDE = "@max-[26rem]/screen:hidden showcase-short:flex"
 const FORA_DO_BAIXO = "showcase-short:hidden"
@@ -765,7 +767,7 @@ function QuemPagou() {
                         <ProgressValue />
                     </ProgressHeader>
                 }
-                footer={<ProgressFooter className="justify-start">Falta a internet, que vence dia 15</ProgressFooter>}
+                footer={<ProgressFooter className={cn("justify-start", FORA_DO_BAIXO)}>Falta a internet, que vence dia 15</ProgressFooter>}
             />
         </section>
     )
@@ -791,7 +793,7 @@ function QuemPagouEsqueleto() {
                     <Skeleton shape="text" className="w-8 text-xs" />
                 </div>
                 <Skeleton className="h-1.5 w-full rounded-full" />
-                <Skeleton shape="text" className="w-44 text-xs" />
+                <Skeleton shape="text" className={cn("w-44 text-xs", FORA_DO_BAIXO)} />
             </div>
         </div>
     )

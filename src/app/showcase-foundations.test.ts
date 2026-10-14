@@ -62,6 +62,7 @@ describe("As utilities do palco", () => {
     expect(palco).toContain("width: min(86cqw, 140cqh)")
     expect(palco).toContain("width: min(92cqw, 140cqh)")
     expect(palco).toContain("height: min(72cqh, 120cqw)")
+    expect(palco).toContain("height: min(66cqh, 120cqw)")
     expect(palco).toContain("height: min(72cqh, 160cqw)")
     expect(palco).toContain("height: min(70cqh, 160cqw)")
   })

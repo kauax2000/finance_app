@@ -97,7 +97,9 @@ type ShowcaseSlot = {
  * - navegador: s1 sob a marca, s0 em cima à direita, s2 embaixo à direita;
  * - celular (deslocado para a esquerda pela `@utility showcase-stage`): uma coluna à direita, s0, s3 e s2;
  * - tablet: só s0, em cima à direita, sobre o canto da moldura e inteiro no palco (a 84% passava da borda direita
- *   em 12–23px, um corte tímido que lia como acidente) — os outros cantos são da marca e da legenda.
+ *   em 12–23px, um corte tímido que lia como acidente) — os outros cantos são da marca e da legenda. No palco
+ *   baixo o tablet encolhe (`@utility showcase-stage`) e o piso de cima (`max(y%, 5rem)`, todo lugar de borda
+ *   `top`) desce o cartão: 8px do topo e do avatar do cabeçalho.
  * Os lugares sem pouso em forma nenhuma (s4 a s11) ficam para palcos de outra proporção.
  */
 const SHOWCASE_SLOTS = [
@@ -468,6 +470,9 @@ function ShowcaseScatterItem({
   const pouso = pousoDo(s, clear)
   const fora = PARA_FORA[s.edge]
   const deriva = palco.deriva[s.depth]
+  // O piso de cima: no palco baixo o `y` em % deixaria o cartão a 1px da borda, e a paralaxe de perto (8px) o
+  // empurraria para fora. 5rem é meia altura do cartão XS inclinado (~72px) mais os 8px dela.
+  const topo = s.edge === "top" && !pouso.fora ? `max(${pouso.y}%, 5rem)` : `${pouso.y}%`
   return (
     <motion.div
       data-slot="showcase-scatter-item"
@@ -486,7 +491,7 @@ function ShowcaseScatterItem({
       style={
         {
           left: `${pouso.x}%`,
-          top: s.caption ? `calc(${pouso.y}% - 6cqh * var(--showcase-caption, 0))` : `${pouso.y}%`,
+          top: s.caption ? `calc(${pouso.y}% - 6cqh * var(--showcase-caption, 0))` : topo,
           "--slot-delay": `${s.delay}ms`,
           x: deriva.x,
           y: deriva.y,

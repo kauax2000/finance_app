@@ -103,7 +103,9 @@ describe("ShowcaseScatter e ShowcaseScatterItem", () => {
     expect(em("phone", 1)).toMatch(/left:-35%;top:25%/)
     expect(em("phone", 1)).toContain('data-away="true"')
     // s0 é da borda de cima: no tablet tem pouso; s3 (direita) sai pela direita no navegador.
-    expect(em("tablet", 0)).toMatch(/left:77%;top:11%/)
+    // o piso de cima (`max(y%, 5rem)`) é só da borda de cima com pouso: quem sai por ela sai no % cru.
+    expect(em("tablet", 0)).toMatch(/left:77%;top:max\(11%, 5rem\)/)
+    expect(em("browser", 6)).toMatch(/left:50%;top:-35%/)
     expect(em("browser", 3)).toMatch(/left:135%;top:48%/)
     expect(tagDo(renderToStaticMarkup(h(ShowcaseScatter, { clear: "tablet" })), "showcase-scatter")).toContain('data-clear="tablet"')
   })
