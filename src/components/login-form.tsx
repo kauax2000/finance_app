@@ -23,7 +23,6 @@ import {
     Field,
     FieldControl,
     FieldError,
-    FieldHeader,
     FieldLabel,
 } from "@/components/ui/field"
 
@@ -174,18 +173,13 @@ export function LoginForm() {
                         }}
                         error={fieldErrors.email}
                     />
-                    {/* O rótulo divide a linha com o link de recuperar senha, então
-                        aqui é `Field` composto em vez de `FormInput` — e o embrulho
+                    {/* O link de recuperar senha mora abaixo do campo, então aqui
+                        é `Field` composto em vez de `FormInput` — e o embrulho
                         vai no `InputGroupInput`, nunca no grupo: o `id` numa `div`
                         deixa o `<label for>` apontando para algo que não é
                         rotulável. */}
                     <Field>
-                        <FieldHeader>
-                            <FieldLabel>Senha</FieldLabel>
-                            <Button asChild variant="link" size="sm">
-                                <Link href={forgotHref}>Esqueceu a senha?</Link>
-                            </Button>
-                        </FieldHeader>
+                        <FieldLabel>Senha</FieldLabel>
                         <InputGroup size="xl">
                             <FieldControl>
                                 <InputGroupInput
@@ -208,6 +202,11 @@ export function LoginForm() {
                         {fieldErrors.password ? (
                             <FieldError>{fieldErrors.password}</FieldError>
                         ) : null}
+                        <div className="flex justify-end">
+                            <Button asChild variant="link" size="sm">
+                                <Link href={forgotHref}>Esqueceu a senha?</Link>
+                            </Button>
+                        </div>
                     </Field>
                     <FormSubmit size="xl" className="w-full">
                         Entrar
