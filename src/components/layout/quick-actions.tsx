@@ -1,12 +1,18 @@
 "use client"
 
-import { ArrowPathRoundedSquareIcon, PlusIcon } from "@heroicons/react/16/solid"
+import {
+    ArrowPathRoundedSquareIcon,
+    ArrowTrendingDownIcon as DespesaMicroIcon,
+    ArrowTrendingUpIcon as ReceitaMicroIcon,
+    PlusIcon,
+    RectangleStackIcon as ParcelaMicroIcon,
+} from "@heroicons/react/16/solid"
 import {
     ArrowPathRoundedSquareIcon as AssinaturaIcon,
     ArrowTrendingDownIcon,
     ArrowTrendingUpIcon,
-    CreditCardIcon,
     PlusIcon as PlusMiniIcon,
+    RectangleStackIcon,
 } from "@heroicons/react/20/solid"
 import * as React from "react"
 import { useRouter } from "next/navigation"
@@ -14,7 +20,6 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
@@ -42,10 +47,12 @@ const FIXED_TRANSACTION_ACTIONS: ReadonlyArray<{
     label: string
     /** O ícone da linha na folha de ações do telefone (20/solid). */
     icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
+    /** O mesmo ícone na linha do menu, que o desenha a 16 (16/solid). */
+    menuIcon: React.ComponentType<React.SVGProps<SVGSVGElement>>
 }> = [
-    { mode: "expense", label: "Despesas", icon: ArrowTrendingDownIcon },
-    { mode: "installment", label: "Parcelas", icon: CreditCardIcon },
-    { mode: "income", label: "Receitas", icon: ArrowTrendingUpIcon },
+    { mode: "expense", label: "Despesa", icon: ArrowTrendingDownIcon, menuIcon: DespesaMicroIcon },
+    { mode: "installment", label: "Compra parcelada", icon: RectangleStackIcon, menuIcon: ParcelaMicroIcon },
+    { mode: "income", label: "Receita", icon: ArrowTrendingUpIcon, menuIcon: ReceitaMicroIcon },
 ]
 
 /**
@@ -117,20 +124,21 @@ function FixedQuickCreateMenuItems({
     onPickTransaction: (mode: NewTransactionMode) => void
     onPickSubscription: () => void
 }) {
+    // Toda linha com ícone, uma lista só.
     return (
         <>
-            {FIXED_TRANSACTION_ACTIONS.map(({ mode, label }) => (
+            {FIXED_TRANSACTION_ACTIONS.map(({ mode, label, menuIcon: Icon }) => (
                 <DropdownMenuItem
                     key={mode}
                     onClick={() => onPickTransaction(mode)}
                 >
+                    <Icon aria-hidden />
                     {label}
                 </DropdownMenuItem>
             ))}
-            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onPickSubscription}>
-                <ArrowPathRoundedSquareIcon />
-                <span>Assinatura</span>
+                <ArrowPathRoundedSquareIcon aria-hidden />
+                Assinatura
             </DropdownMenuItem>
         </>
     )
@@ -224,11 +232,12 @@ export function QuickActionButton({ variant = "sidebar" }: QuickActionButtonProp
                     </Button>
                 )}
             </DropdownMenuTrigger>
+            {/* Na barra: 8 do recuo da placa flutuante + 8 de calha. */}
             <DropdownMenuContent
                 align="start"
                 side="right"
-                className="min-w-56 w-max max-w-[min(100vw-2rem,18rem)]"
-                sideOffset={8}
+                sideOffset={16}
+                size="xl"
             >
                 <FixedQuickCreateMenuItems
                     onPickTransaction={pickTransaction}
