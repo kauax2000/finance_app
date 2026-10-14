@@ -4,6 +4,19 @@ import { isPostgrestTransientNetworkError } from "@/lib/transient-network-retry"
 export const TRANSIENT_NETWORK_MESSAGE_PT =
     "Falha de conexão. Verifique sua internet e tente novamente."
 
+/** Com rede e sem resposta, quem falhou foi o servidor, não a internet da pessoa. */
+export const SERVER_UNAVAILABLE_MESSAGE_PT =
+    "Não foi possível falar com o servidor. Tente de novo em instantes."
+
+/**
+ * Um 504 do gateway chega sem CORS e o navegador o reporta como "Failed to fetch",
+ * igual a estar sem rede: só o `navigator.onLine` separa os dois.
+ */
+function networkFailureMessagePt(): string {
+    const offline = typeof navigator !== "undefined" && navigator.onLine === false
+    return offline ? TRANSIENT_NETWORK_MESSAGE_PT : SERVER_UNAVAILABLE_MESSAGE_PT
+}
+
 /** Erros que o banco e o PostgREST mandam com código estável, em português. */
 const POSTGREST_CODE_PT: Record<string, string> = {
     "23505": "Já existe um registro com esses dados.",
@@ -45,7 +58,7 @@ const RAISE_MESSAGE_PT: Record<string, string> = {
 export function formatSupabasePostgrestError(error: unknown): string | null {
     if (error == null) return null
     if (isPostgrestTransientNetworkError(error)) {
-        return TRANSIENT_NETWORK_MESSAGE_PT
+        return networkFailureMessagePt()
     }
     if (typeof error === "string") return error.trim() || null
     if (typeof error !== "object") return null
@@ -296,7 +309,15 @@ export function formatAuthErrorMessagePt(raw: string): string {
         lower === "networkerror" ||
         lower.includes("load failed")
     ) {
-        return "Falha de conexão. Verifique sua internet e tente novamente."
+        return networkFailureMessagePt()
+    }
+
+    if (
+        lower.includes("gateway timeout") ||
+        lower.includes("bad gateway") ||
+        lower.includes("service unavailable")
+    ) {
+        return SERVER_UNAVAILABLE_MESSAGE_PT
     }
 
     if (lower.includes("invalid refresh token") || lower.includes("session expired")) {

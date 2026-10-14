@@ -1,7 +1,11 @@
 "use client"
 
+import * as React from "react"
+import { ArrowPathIcon } from "@heroicons/react/16/solid"
 import { AppWordmark } from "@/components/layout/app-wordmark"
+import { Button } from "@/components/ui/button"
 import { SpinnerBlock } from "@/components/ui/spinner"
+import { Muted } from "@/components/ui/typography"
 import { cn } from "@/lib/utils"
 
 type AppBootstrapScreenProps = {
@@ -19,6 +23,11 @@ type AppBootstrapScreenProps = {
  * `SpinnerBlock` (`@starting-style`, sem `setTimeout`), e a roda é a de marca,
  * ao lado do wordmark em arco-íris.
  *
+ * **E ela tem teto.** Com o Auth fora do ar, um pedido pendurado prende o
+ * `getSession()` (o auth-js não põe teto por pedido e segura um lock), e a roda
+ * girava para sempre. Passados 15s, a roda dá lugar ao "Tentar novamente", que
+ * recarrega a página.
+ *
  * `Spinner` e não uma barra: a regra da casa é spinner para ação curta sem fim
  * conhecido, e o bloco global de movimento reduzido isenta `animate-spin` —
  * uma barra com keyframe próprio congelaria, que é pior que não ter barra.
@@ -28,8 +37,16 @@ type AppBootstrapScreenProps = {
  * quem vai para o Painel seria prometer a tela errada.
  */
 const SIGNAL_DELAY_MS = 600
+const STALL_MS = 15_000
 
 export function AppBootstrapScreen({ className }: AppBootstrapScreenProps) {
+    const [parado, setParado] = React.useState(false)
+
+    React.useEffect(() => {
+        const id = window.setTimeout(() => setParado(true), STALL_MS)
+        return () => window.clearTimeout(id)
+    }, [])
+
     return (
         <div
             className={cn(
@@ -42,20 +59,35 @@ export function AppBootstrapScreen({ className }: AppBootstrapScreenProps) {
                 "fixed inset-0 z-(--z-modal) h-dvh flex flex-col items-center justify-center gap-8 bg-background",
                 className,
             )}
-            aria-busy="true"
+            aria-busy={!parado}
             suppressHydrationWarning
         >
             <AppWordmark size="xl" rainbow aria-hidden />
-            {/* O bloco ocupa o espaço desde o primeiro quadro, e só a opacidade
-                espera: sem isso a marca saltaria para cima quando o sinal
-                entra. Ele é quem anuncia (`role="status"`). */}
-            <SpinnerBlock
-                label="Carregando o aplicativo"
-                showLabel={false}
-                variant="brand"
-                size="xl"
-                delay={SIGNAL_DELAY_MS}
-            />
+            {parado ? (
+                <div role="alert" className="flex flex-col items-center gap-4 px-4 text-center">
+                    <Muted>O servidor está demorando para responder.</Muted>
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        iconMotion="spin"
+                        onClick={() => window.location.reload()}
+                    >
+                        <ArrowPathIcon aria-hidden />
+                        Tentar novamente
+                    </Button>
+                </div>
+            ) : (
+                /* O bloco ocupa o espaço desde o primeiro quadro, e só a
+                   opacidade espera: sem isso a marca saltaria para cima quando
+                   o sinal entra. Ele é quem anuncia (`role="status"`). */
+                <SpinnerBlock
+                    label="Carregando o aplicativo"
+                    showLabel={false}
+                    variant="brand"
+                    size="xl"
+                    delay={SIGNAL_DELAY_MS}
+                />
+            )}
         </div>
     )
 }

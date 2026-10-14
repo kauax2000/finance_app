@@ -145,6 +145,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 prevSignedInUserIdRef.current = null
                 setLoading(false)
             }
+        }).catch(() => {
+            // Sem isto uma exceção deixava `loading` verdadeiro para sempre, e a
+            // abertura girava sem fim. Sem sessão lida, quem decide é o login.
+            setSession(null)
+            setUser(null)
+            prevSignedInUserIdRef.current = null
+            setLoading(false)
         })
 
         const {

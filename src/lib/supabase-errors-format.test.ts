@@ -1,7 +1,10 @@
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import {
     describeSupabaseErrorForLog,
+    formatAuthErrorMessagePt,
     formatSupabasePostgrestError,
+    SERVER_UNAVAILABLE_MESSAGE_PT,
+    TRANSIENT_NETWORK_MESSAGE_PT,
     userFacingFetchError,
 } from "./supabase-errors"
 
@@ -40,5 +43,23 @@ describe("formatSupabasePostgrestError", () => {
         expect(
             describeSupabaseErrorForLog({ code: "XX000", message: "boom", hint: "h" }),
         ).toBe("boom · h (XX000)")
+    })
+})
+
+describe("falha de rede no login: servidor fora ou sem internet", () => {
+    afterEach(() => {
+        vi.unstubAllGlobals()
+    })
+
+    it("com rede, o servidor que não respondeu leva a culpa", () => {
+        vi.stubGlobal("navigator", { onLine: true })
+        expect(formatAuthErrorMessagePt("Failed to fetch")).toBe(SERVER_UNAVAILABLE_MESSAGE_PT)
+        expect(formatAuthErrorMessagePt("Gateway Timeout")).toBe(SERVER_UNAVAILABLE_MESSAGE_PT)
+        expect(formatAuthErrorMessagePt("Service Unavailable")).toBe(SERVER_UNAVAILABLE_MESSAGE_PT)
+    })
+
+    it("sem rede, a mensagem continua pedindo para conferir a internet", () => {
+        vi.stubGlobal("navigator", { onLine: false })
+        expect(formatAuthErrorMessagePt("Failed to fetch")).toBe(TRANSIENT_NETWORK_MESSAGE_PT)
     })
 })
