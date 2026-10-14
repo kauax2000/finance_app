@@ -725,6 +725,15 @@ const SO_NO_GRANDE = "@max-[26rem]/screen:hidden showcase-short:flex"
 const FORA_DO_BAIXO = "showcase-short:hidden"
 
 /**
+ * No palco baixo a tela do tablet tem 420px, e a barra "Já pago" pousava a 6px
+ * do pé. A carteira aperta dois respiros lá — o vão entre os blocos (12 → 8) e
+ * as linhas do cartão (8 → 6 em cima e embaixo) —, e a barra volta a ~26px do
+ * pé, o mesmo das janelas de 1280 e 1440. O esqueleto aperta igual.
+ */
+const COLUNA_DA_CARTEIRA = "flex flex-col gap-3 showcase-short:gap-2"
+const LINHAS_DA_CARTEIRA = "showcase-short:[&>[data-slot=item]]:py-1.5"
+
+/**
  * Quem pagou o quê em outubro: a casa contada pelas pessoas. R$ 2.364,90 dos
  * R$ 2.484,80 já pagos (95%); falta a internet, que vence dia 15.
  */
@@ -811,7 +820,7 @@ function Carteira({ member, form }: { member: boolean; form: DeviceFrameForm }) 
     const { ana, rafael, voce } = MINI_APP_PEOPLE
     const { settled } = useShowcase()
     return (
-        <div className="flex flex-col gap-3">
+        <div className={COLUNA_DA_CARTEIRA}>
             <ShowcasePiece>
                 <DescriptionList columns={2} size="sm">
                     <DescriptionListItem>
@@ -853,7 +862,7 @@ function Carteira({ member, form }: { member: boolean; form: DeviceFrameForm }) 
                         </div>
                         <Caption>{member ? "3 pessoas" : "2 pessoas"}</Caption>
                     </div>
-                    <Linhas linhas={DESPESAS_DA_CASA} emLinha={false} compacto={form === "phone"} className="px-4" />
+                    <Linhas linhas={DESPESAS_DA_CASA} emLinha={false} compacto={form === "phone"} className={cn("px-4", LINHAS_DA_CARTEIRA)} />
                 </Card>
             </ShowcasePiece>
             <SoNoTablet form={form}>
@@ -866,7 +875,7 @@ function Carteira({ member, form }: { member: boolean; form: DeviceFrameForm }) 
 /** A carteira esperando: a mesma geometria, em ossos. */
 function CarteiraEsqueleto({ form }: { form: DeviceFrameForm }) {
     return (
-        <div className="flex flex-col gap-3">
+        <div className={COLUNA_DA_CARTEIRA}>
             <div className="grid grid-cols-2 gap-3">
                 {[0, 1].map((i) => (
                     <div key={i} className="flex flex-col gap-1">
@@ -885,7 +894,7 @@ function CarteiraEsqueleto({ form }: { form: DeviceFrameForm }) {
                 </div>
                 <div className="flex flex-col px-4">
                     {[0, 1, 2].map((i) => (
-                        <div key={i} className="flex items-center gap-2 py-2">
+                        <div key={i} className="flex items-center gap-2 py-2 showcase-short:py-1.5">
                             <Skeleton shape="tile" size="xs" />
                             <div className="flex flex-1 flex-col">
                                 <Skeleton shape="text" className="w-24 text-sm" />
