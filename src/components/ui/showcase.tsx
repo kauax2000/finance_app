@@ -473,6 +473,9 @@ function ShowcaseScatterItem({
   // O piso de cima: no palco baixo o `y` em % deixaria o cartão a 1px da borda, e a paralaxe de perto (8px) o
   // empurraria para fora. 5rem é meia altura do cartão XS inclinado (~72px) mais os 8px dela.
   const topo = s.edge === "top" && !pouso.fora ? `max(${pouso.y}%, 5rem)` : `${pouso.y}%`
+  // O piso da esquerda: só a borda direita corta (cortado à esquerda, o cartão perde o avatar e o nome). No palco
+  // estreito o `x` em % poria o centro a menos de meia largura da borda; 6,5rem é meio cartão S (6rem) mais o respiro.
+  const esquerda = s.edge === "start" && !pouso.fora ? `max(${pouso.x}%, 6.5rem)` : `${pouso.x}%`
   return (
     <motion.div
       data-slot="showcase-scatter-item"
@@ -490,7 +493,7 @@ function ShowcaseScatterItem({
       )}
       style={
         {
-          left: `${pouso.x}%`,
+          left: esquerda,
           top: s.caption ? `calc(${pouso.y}% - 6cqh * var(--showcase-caption, 0))` : topo,
           "--slot-delay": `${s.delay}ms`,
           x: deriva.x,

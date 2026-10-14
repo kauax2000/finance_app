@@ -203,8 +203,16 @@ const VOCE = { name: "Você", tone: 3, anchor: "search", from: "bottom" } as con
 const POUSO_DA_PALETA = cn(
     "relative left-1/2 translate-x-[calc(-50%_+_1.5rem)]",
     "w-[calc(min(86cqw,140cqh)_-_4.5rem)] translate-y-[calc(2.75rem_-_min(31.175cqw,50.75cqh))]",
-    "@max-md/showcase:w-[calc(min(92cqw,140cqh)_-_4.5rem)] @max-md/showcase:translate-y-[calc(2.75rem_-_min(33.35cqw,50.75cqh))]"
+    "@max-md/showcase:w-[calc(min(92cqw,140cqh)_-_4.5rem)] @max-md/showcase:translate-y-[calc(2.75rem_-_min(33.35cqw,50.75cqh))]",
+    // No palco estreito (abaixo de 24rem) a janela é 6/5: 0,58 × 5/6 = 0,48333.
+    "@max-sm/showcase:translate-y-[calc(2.75rem_-_min(44.47cqw,67.67cqh))]"
 )
+
+/**
+ * No palco estreito a placa tem ~230px: o título e o valor não cabem lado a lado (o valor passava da borda da
+ * placa). Fica o título inteiro; o valor da fatura está na tela logo depois.
+ */
+const META_FORA_DO_ESTREITO = "@max-sm/showcase:hidden"
 
 /**
  * Antes da escolha, nenhuma linha acesa: o cmdk acende a primeira ao registrar
@@ -295,7 +303,7 @@ export function PaletteDemo({ script, skip, stage, onStage }: PaletteDemoProps) 
                                                         </CommandItemDescription>
                                                     ) : null}
                                                 </CommandItemContent>
-                                                {meta ? <CommandItemMeta>{meta}</CommandItemMeta> : null}
+                                                {meta ? <CommandItemMeta className={META_FORA_DO_ESTREITO}>{meta}</CommandItemMeta> : null}
                                             </CommandItem>
                                         ))}
                                     </CommandGroup>

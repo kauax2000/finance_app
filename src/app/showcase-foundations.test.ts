@@ -67,6 +67,17 @@ describe("As utilities do palco", () => {
     expect(palco).toContain("height: min(70cqh, 160cqw)")
   })
 
+  it("o palco estreito (< 24rem): navegador 6/5, tablet 2/3, celular centrado quando alto", () => {
+    const palco = blocoCss(CSS, "@utility showcase-stage {")
+    const estreitos = palco.split("@container showcase (width < 24rem) {").slice(1).map((b) => b.slice(0, b.indexOf("}")))
+    expect(estreitos).toHaveLength(2)
+    expect(estreitos[0]).toContain("aspect-ratio: 6 / 5")
+    expect(estreitos[1]).toContain("height: min(72cqh, 135cqw)")
+    expect(estreitos[1]).toContain("aspect-ratio: 2 / 3")
+    // o celular só centra no estreito **e alto**: mais baixo, os cartões de cima e de baixo cairiam sobre ele
+    expect(palco).toMatch(/@container showcase \(width < 24rem\) and \(height >= 56rem\) \{\s*margin-inline-end: 0;/)
+  })
+
   it("`showcase-ripple` respira uma vez", () => {
     expect(CSS).toMatch(/@keyframes showcase-ripple \{\s*50% \{\s*scale: 1\.04;\s*\}\s*\}/)
     const respiro = blocoCss(CSS, "@utility showcase-ripple {")

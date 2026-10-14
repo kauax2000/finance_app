@@ -25570,3 +25570,42 @@ vivo: a função que cria a sessão respondia 500 e o perfil ficou no esqueleto.
 
 **Fora.** O telefone, que não abre a barra lateral (a navegação é a
 `BottomBar`), a cor da placa e o `peek`.
+
+### Rodada 262 — `Showcase`: o palco estreito
+
+Correção da matriz da Fase 9 do painel de marca animado (tarefa 9b).
+
+**O defeito, medido.** O aside das telas de acesso aparece a partir de 48rem do
+casco, então as janelas de 768 a ~880px de largura têm um palco **estreito e
+alto**: 329×984 no tablet de pé (768×1024) e 344×960 em 800×1000 — abaixo do XS
+pensado para 1024×700 (445×660). Ali o navegador, a 92cqw e 16/10, tinha ~200px
+de altura e cortava a fatura no meio ("Limite usado" pela metade); a pílula de
+busca passava por cima do selo "dados de exemplo" (110 + 12 + 160px numa barra
+de 236, e 223 no tablet); o s1 cortava pela esquerda (o centro a 21% ficava a
+72px da borda, com meio cartão de 88); o celular, deslocado por
+`margin-inline-end: 24cqw`, encostava a 4px da borda esquerda; o convite
+indisponível passava do pé do tablet; e na paleta o valor das linhas saía da
+placa ("R$ 1.284,6").
+
+**O que mudou.**
+- **`@utility showcase-stage`, abaixo de 24rem:** o navegador vai a **6/5** (o
+  cabeçalho, a fatura e a primeira linha inteiros), o tablet a **2/3** com
+  `height: min(72cqh, 135cqw)` (a proporção do tablet pequeno: a carteira e o
+  diálogo cabem) e o celular **centra** (`margin-inline-end: 0`) quando o palco
+  também é alto (≥ 56rem): não há coluna ao lado dele, e os cartões passam
+  acima e abaixo (o de baixo cobre o canto da barra de abas em 6,3% do herói,
+  dentro dos 8%). Mais baixo que 56rem não sobra altura para eles, e o celular
+  fica deslocado: no XS de 330×704 do catálogo, centrado, o cartão de cima
+  cobria 15,8% dele.
+- **`ShowcaseScatterItem`:** o lugar de borda `start` com pouso tem piso de
+  **6,5rem** à esquerda (`max(x%, 6.5rem)`), o par do piso de cima — meio cartão
+  S mais o respiro. No 1024 o s1 anda 10px para a direita.
+- **No app** (mini UI e paleta, sem `ui/`): na tela abaixo de 20rem o selo do
+  navegador diz "exemplo" e a pílula cede 16px (`w-36`); o saldo diz "Saldo", a
+  fatura "Fatura de outubro" e a descrição ao lado do título sai (cortavam em
+  reticências); a paleta sobe pela conta da 6/5 e esconde o valor das linhas.
+
+**Medido** em 800×1000 e 768×1024 (toque) nas 7 rotas, nos dois temas: nenhum
+`ItemTitle`, `MoneyDisplay` nem texto com reticências cortado, todo selo
+"exemplo" inteiro e descoberto, nenhum cartão sobre a legenda, cruzamento 0%,
+herói coberto ≤6,3%; as janelas de 1024 a 1920 continuaram sem falha.

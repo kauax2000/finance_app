@@ -1473,8 +1473,11 @@ declaração de `background-color` no trilho).
   o usa não importa `motion`), `ShowcaseDots`, `ShowcaseCaption`
   (`Card elevated` no pé, sans) e `ShowcaseSkeleton`. **Os níveis são do
   palco**: XS < 28rem 3 cartões, S 6, M 9, L ≥ 48rem 12; `showcase-short`
-  esconde s5, s6 e s9. **Profundidade é sombra e ordem — nunca `blur`,
-  `opacity-` nem `scale-` nos itens.** **A paralaxe (`parallax`) mora só no
+  esconde s5, s6 e s9. **O palco estreito** (< 24rem, as janelas de 768–880px
+  com o aside à vista): o navegador vai a 6/5, o tablet a 2/3 (`135cqw`), o
+  celular centra (só com 56rem de altura ou mais), e o lugar de borda `start`
+  tem piso de 6,5rem à esquerda. **Profundidade é sombra e ordem — nunca
+  `blur`, `opacity-` nem `scale-` nos itens.** **A paralaxe (`parallax`) mora só no
   aside**: o ouvinte é do pai não inerte do palco, só `ehCursor` com
   `(hover: hover)`, desligado sob `deDedo`, movimento reduzido ou `active`
   falso, congelado em 0 fora do repouso, sem rAF nem `setState` por evento —

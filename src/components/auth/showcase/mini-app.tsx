@@ -222,11 +222,32 @@ function AvatarVoce() {
     )
 }
 
-function SeloDeExemplo() {
+/**
+ * O selo do cabeçalho. `curto` é o do navegador: na janela estreita (tela abaixo de 20rem, o palco de 768–880px)
+ * ele diz só "exemplo" — com "dados de exemplo" a pílula de busca passava por cima dele.
+ */
+function SeloDeExemplo({ curto = false }: { curto?: boolean }) {
     return (
         <Badge variant="soft" tone="neutral" size="xs" className="shrink-0">
-            dados de exemplo
+            {curto ? (
+                <>
+                    <span className="@max-xs/screen:hidden">dados de exemplo</span>
+                    <span className="hidden @max-xs/screen:inline">exemplo</span>
+                </>
+            ) : (
+                "dados de exemplo"
+            )}
         </Badge>
+    )
+}
+
+/** O texto do navegador com a versão curta da janela estreita (tela abaixo de 20rem), onde o longo cortaria em reticências. */
+function NaJanelaEstreita({ longo, curto }: { longo: string; curto: string }) {
+    return (
+        <>
+            <span className="@max-xs/screen:hidden">{longo}</span>
+            <span className="hidden @max-xs/screen:inline">{curto}</span>
+        </>
     )
 }
 
@@ -275,10 +296,11 @@ function BarraDoNavegador({ screen, search }: { screen: MiniAppScreen; search: M
                         <ShowcaseSwap swapKey={TITULO_DA_BARRA[screen]}>{TITULO_DA_BARRA[screen]}</ShowcaseSwap>
                     </div>
                 </TopBarTitle>
-                <SeloDeExemplo />
+                <SeloDeExemplo curto />
             </TopBarContent>
             <TopBarActions className="gap-3">
-                <div data-showcase-anchor="search" className="w-40 @lg/screen:w-44">
+                {/* Na janela estreita (tela abaixo de 20rem) a pílula cede 16px: selo, vão e pílula cabem nos 223px. */}
+                <div data-showcase-anchor="search" className="w-40 @max-xs/screen:w-36 @lg/screen:w-44">
                     <ShowcaseFlight
                         layoutId="auth-search"
                         active={search !== "palette"}
@@ -327,7 +349,7 @@ function CartaoDoSaldo({ largo, compacto }: { largo: boolean; compacto: boolean 
                 <div className="flex items-center justify-between gap-2">
                     <div className={cn("relative min-w-0 flex-1", compacto && "showcase-short:hidden")}>
                         <ShowcaseSwap swapKey={largo ? "saldo-do-mes" : "saldo"}>
-                            <Caption className="truncate">{largo ? "Saldo de outubro" : "Saldo"}</Caption>
+                            <Caption className="truncate">{largo ? <NaJanelaEstreita longo="Saldo de outubro" curto="Saldo" /> : "Saldo"}</Caption>
                         </ShowcaseSwap>
                     </div>
                     <Badge variant="soft" tone="income" size="xs" className="shrink-0">
@@ -453,7 +475,8 @@ function Linhas({
                         </ItemMedia>
                         <ItemContent className={cn(emLinha && "flex-row items-baseline gap-2")}>
                             <ItemTitle className={cn("shrink-0", compacto && "showcase-short:text-xs")}>{titulo}</ItemTitle>
-                            <ItemDescription className="truncate">{descricao}</ItemDescription>
+                            {/* Na janela estreita a descrição ao lado do título cortaria em reticências ("vence a…"): sai. */}
+                            <ItemDescription className={cn("truncate", emLinha && "@max-xs/screen:hidden")}>{descricao}</ItemDescription>
                         </ItemContent>
                         <ItemActions className={cn(!emLinha && "flex-col items-end gap-0.5")}>
                             <MoneyDisplay value={valor} size="sm" />
@@ -674,7 +697,9 @@ function Fatura({ form }: { form: DeviceFrameForm }) {
                 <div className="flex items-center justify-between gap-2">
                     <div className="relative min-w-0 flex-1">
                         <ShowcaseSwap swapKey={largo ? "fatura-do-mes" : "cartao"}>
-                            <Caption className="truncate">{largo ? "Fatura de outubro · final 4821" : "Cartão final 4821"}</Caption>
+                            <Caption className="truncate">
+                                {largo ? <NaJanelaEstreita longo="Fatura de outubro · final 4821" curto="Fatura de outubro" /> : "Cartão final 4821"}
+                            </Caption>
                         </ShowcaseSwap>
                     </div>
                     <Badge variant="soft" tone="warning" size="xs" className="shrink-0">

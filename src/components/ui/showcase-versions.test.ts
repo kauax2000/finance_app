@@ -97,7 +97,8 @@ describe("ShowcaseScatter e ShowcaseScatterItem", () => {
         palco(h(ShowcaseScatter, { clear }, h(ShowcaseScatterItem, { slot: slot as 0, itemKey: "a" }, h("p", null, "cartão")))),
         "showcase-scatter-item"
       )
-    expect(em("browser", 1)).toMatch(/left:21%;top:25%/)
+    // o piso da esquerda (`max(x%, 6.5rem)`) é só da borda `start` com pouso: no palco estreito o cartão não corta à esquerda.
+    expect(em("browser", 1)).toMatch(/left:max\(21%, 6\.5rem\);top:25%/)
     expect(em("browser", 1)).not.toContain("data-away")
     // s1 é da borda esquerda: no celular ele sai por ela, na altura de onde pousa no navegador.
     expect(em("phone", 1)).toMatch(/left:-35%;top:25%/)

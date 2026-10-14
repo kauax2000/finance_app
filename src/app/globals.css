@@ -2454,6 +2454,12 @@
     @container showcase (width < 28rem) {
       width: min(92cqw, 140cqh);
     }
+    /* O palco estreito (abaixo de 24rem: a janela de 768–880px, alta): a 16/10 a janela teria
+       ~200px de altura e cortaria a fatura no meio; a 6/5 ela mostra o cabeçalho, a fatura e a
+       primeira linha inteiros. */
+    @container showcase (width < 24rem) {
+      aspect-ratio: 6 / 5;
+    }
   }
   & [data-slot="showcase-hero"][data-form="tablet"] {
     width: auto;
@@ -2461,6 +2467,12 @@
     aspect-ratio: 3 / 4;
     @container showcase (height < 44rem) {
       height: min(66cqh, 120cqw);
+    }
+    /* No palco estreito o tablet é limitado pela largura (90cqw): a 2/3 (a proporção do tablet
+       pequeno) ele ganha a altura que a carteira pede — o convite indisponível cabe na tela. */
+    @container showcase (width < 24rem) {
+      height: min(72cqh, 135cqw);
+      aspect-ratio: 2 / 3;
     }
   }
   & [data-slot="showcase-hero"][data-form="phone"] {
@@ -2476,6 +2488,13 @@
     margin-inline-end: 24cqw;
     @container showcase (width >= 48rem) {
       margin-inline-end: 10cqw;
+    }
+    /* No palco estreito e alto (o tablet de pé, 800×1000) não há coluna ao lado: o celular
+       centra, e os cartões passam acima e abaixo dele (o de baixo cobre o canto, dentro dos 8%).
+       Deslocado, ele encostava na borda. Mais baixo que 56rem não sobra altura para eles: fica
+       deslocado (no XS de 330×704 do catálogo, centrado, o cartão de cima cobria 16% dele). */
+    @container showcase (width < 24rem) and (height >= 56rem) {
+      margin-inline-end: 0;
     }
   }
 }
