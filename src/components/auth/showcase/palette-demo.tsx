@@ -30,7 +30,7 @@ import {
 import { Kbd } from "@/components/ui/kbd"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { ShowcaseCursor, ShowcaseFlight, ShowcaseFloat, useShowcase } from "@/components/ui/showcase"
-import { useSceneScript } from "@/hooks/use-scene-script"
+import { useMovimentoReduzido, useSceneScript } from "@/hooks/use-scene-script"
 import { cn } from "@/lib/utils"
 import type { SceneScriptId } from "@/lib/scene-script"
 import type { HeroIcon } from "@/types/navigation"
@@ -213,21 +213,6 @@ const POUSO_DA_PALETA = cn(
  * `useCommandIdleSelection`; o `\0` não colide com título nenhum).
  */
 const NENHUMA = ["\0paleta-a", "\0paleta-b"] as const
-
-const assinarMovimento = (avisar: () => void) => {
-    const consulta = window.matchMedia("(prefers-reduced-motion: reduce)")
-    consulta.addEventListener("change", avisar)
-    return () => consulta.removeEventListener("change", avisar)
-}
-
-/** O movimento reduzido, sem `motion` (a camada do app não o importa). */
-function useMovimentoReduzido(): boolean {
-    return React.useSyncExternalStore(
-        assinarMovimento,
-        () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-        () => false
-    )
-}
 
 export type PaletteDemoProps = {
     /** O roteiro da cena (`null` nas cenas sem paleta). */

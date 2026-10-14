@@ -10,11 +10,13 @@ import {
     type MiniAppScreen,
 } from "@/components/auth/showcase/mini-app"
 import { AuthShowcase, focoPulaORoteiro } from "@/components/auth/showcase/auth-showcase"
+import { AuthRecoveryTimeline } from "@/components/auth/showcase/phone-screens"
 import { sceneFamily, type AuthSceneId } from "@/components/auth/showcase/scene-context"
 import { FAMILY_CAPTION, FAMILY_ORDER, SCENES, SCRIPT_STAGE_REST, scriptStage } from "@/components/auth/showcase/scenes"
 import { finalFrame, planScript } from "@/lib/scene-script"
 import { ShowcaseHero, ShowcaseStage } from "@/components/ui/showcase"
 import { IDENTITY_TONES, identityToneFor } from "@/lib/avatar"
+import { isPasswordValid } from "@/lib/password-policy"
 import { getInitials } from "@/lib/utils"
 
 import {
@@ -359,5 +361,121 @@ describe("o login e a paleta (8d)", () => {
         // O voo: os dois pontos da pílula dividem o layoutId.
         expect(PALETA).toContain('layoutId="auth-search"')
         expect(MINI).toContain('layoutId="auth-search"')
+    })
+})
+
+describe("a recuperação (8f)", () => {
+    const TELAS = semComentarios(lerFonte("src/components/auth/showcase/phone-screens.tsx"))
+    const FONTE = semComentarios(lerFonte("src/components/auth/showcase/auth-showcase.tsx"))
+    const palco = (scene: AuthSceneId) =>
+        renderToStaticMarkup(createElement(AuthShowcase, { scene })).replace(/ /g, " ")
+    const bloqueio = (html: string) => html.match(/data-slot="auth-lock-screen" data-state="(\w+)"/)?.[1]
+
+    it("cada passo tem a tela, o aviso e o passo da linha do tempo do plano", () => {
+        const passo = (id: AuthSceneId) => {
+            const { screen, overlay, chip, timeline, form, script } = SCENES[id]
+            return { screen, overlay, chip, current: timeline?.current, form, script }
+        }
+        expect(passo("recovery.email")).toEqual({ screen: "lock", overlay: "none", chip: "timeline", current: 0, form: "phone", script: null })
+        expect(passo("recovery.code")).toEqual({ screen: "lock", overlay: "notice-code", chip: "timeline", current: 1, form: "phone", script: null })
+        expect(passo("recovery.password")).toEqual({
+            screen: "new-password",
+            overlay: "none",
+            chip: "timeline",
+            current: 2,
+            form: "phone",
+            script: "masked-password",
+        })
+        expect(passo("recovery.link-checking")).toEqual({ screen: "link-checking", overlay: "none", chip: "timeline", current: 1, form: "phone", script: null })
+        expect(passo("recovery.link-expired")).toEqual({ screen: "lock", overlay: "notice-expired", chip: "timeline", current: 0, form: "phone", script: null })
+        expect(passo("recovery.done")).toEqual({ screen: "dashboard", overlay: "none", chip: "success", current: 3, form: "browser", script: null })
+        expect(SCENES["recovery.done"].celebrate).toBe(true)
+    })
+
+    it("o bloqueio desce sobre o painel com a data e a hora do palco, e sobe na senha", () => {
+        const email = palco("recovery.email")
+        expect(bloqueio(email)).toBe("down")
+        expect(email).toContain("quinta-feira, 9 de outubro")
+        expect(email).toMatch(/text-5xl[^"]*">9:41</)
+        // O painel continua embaixo do bloqueio.
+        expect(email).toContain("R$ 4.182,60")
+        expect(bloqueio(palco("recovery.code"))).toBe("down")
+        expect(bloqueio(palco("recovery.link-expired"))).toBe("down")
+        for (const id of ["recovery.password", "recovery.link-checking", "recovery.done", "login", "register"] as const) {
+            expect(bloqueio(palco(id)), id).toBe("up")
+        }
+        // Sob o bloqueio a barra de status veste o topo dele; as abas esmaecem sob as telas da recuperação.
+        expect(email).toContain("[&amp;_[data-slot=device-frame-status]]:bg-muted ")
+        expect(email).toContain("[&amp;_[data-slot=device-frame-nav]]:opacity-0")
+        expect(palco("recovery.link-expired")).toContain("[&amp;_[data-slot=device-frame-status]]:bg-muted/60")
+        expect(palco("recovery.done")).not.toContain("[&amp;_[data-slot=device-frame-nav]]:opacity-0")
+        expect(palco("login")).not.toContain("[&amp;_[data-slot=device-frame-status]]:bg-muted")
+    })
+
+    it("o aviso do código vem do Mail, sem dígito de código nenhum", () => {
+        const html = palco("recovery.code")
+        expect(html).toContain(">Mail<")
+        expect(html).toContain("Seu código de acesso chegou")
+        expect(html).toContain("Use os 6 dígitos para continuar.")
+        // O texto do aviso: nenhum código (só o "6" da frase, que diz quantos dígitos).
+        const aviso = (html.match(/data-slot="device-frame-notification"[^>]*>([\s\S]*?para continuar\.)/)?.[1] ?? "").replace(/<[^>]+>/g, " ")
+        expect(aviso).toContain("Seu código de acesso chegou")
+        expect(aviso.match(/\d/g)).toEqual(["6"])
+        expect(TELAS + FONTE).not.toContain("InputOTP")
+    })
+
+    it("a nova senha é um campo desenhado, digitado pelo roteiro, e a senha cumpre a política", () => {
+        const html = palco("recovery.password")
+        expect(html).toContain('data-slot="auth-drawn-password"')
+        expect(html).toContain('data-screen="new-password"')
+        expect(html).toContain("Sessões em outros aparelhos serão encerradas")
+        expect(html).not.toContain("<input")
+        // O quadro do servidor é o de antes da primeira tecla: o campo focado, com o cursor de texto, vazio.
+        expect(html).toMatch(/data-slot="auth-drawn-password"[^>]*><span class="type-caret/)
+        expect(TELAS).toContain('useSceneScript("masked-password"')
+        expect(TELAS).toContain("fieldSurfaceClassName")
+        expect(TELAS).toContain("<PasswordRequirements password={senha} />")
+        expect(TELAS).toMatch(/digitando \? <span className="type-caret/)
+        expect(TELAS).toContain("focoPulaORoteiro(e.target)")
+        expect(TELAS).not.toMatch(/from ["']motion/)
+        expect(TELAS).not.toContain("requestAnimationFrame")
+
+        const senha = finalFrame(planScript("masked-password")).text ?? ""
+        expect(senha).toBe("Casa*2026verão")
+        expect(Array.from(senha)).toHaveLength(14)
+        expect(isPasswordValid(senha)).toBe(true)
+        expect(planScript("masked-password")[0].at).toBeGreaterThanOrEqual(300)
+    })
+
+    it("o link conferido: a roda e a linha no lugar do campo, na mesma tela", () => {
+        const html = palco("recovery.link-checking")
+        expect(html).toContain('data-screen="link-checking"')
+        expect(html).toContain("Conferindo seu link…")
+        expect(html).toContain('data-slot="spinner"')
+        expect(html).toContain(">Nova senha<")
+        expect(html).not.toContain('data-slot="auth-drawn-password"')
+    })
+
+    it("a linha do tempo: feito em verde, o atual com o anel, o resto previsto — e sai com os três feitos", () => {
+        const estados = (current: 0 | 1 | 2 | 3) =>
+            [...renderToStaticMarkup(createElement(AuthRecoveryTimeline, { timeline: { current } })).matchAll(/data-state="(\w+)"/g)].map(
+                (m) => m[1]
+            )
+        expect(estados(0)).toEqual(["current", "upcoming", "upcoming"])
+        expect(estados(1)).toEqual(["done", "current", "upcoming"])
+        expect(estados(2)).toEqual(["done", "done", "current"])
+        expect(estados(3)).toEqual(["done", "done", "done"])
+        const html = renderToStaticMarkup(createElement(AuthRecoveryTimeline, { timeline: { current: 1 } }))
+        expect(html).toContain('data-orientation="horizontal"')
+        expect(html).toContain('data-marker="icon"')
+        for (const passo of ["E-mail", "Código", "Senha"]) expect(html).toContain(`>${passo}<`)
+        // A saída leva o quadro em que a recuperação termina, ainda aberto, com o `current` 3 da cena nova.
+        expect(FONTE).toContain('const saiFeita = !mesmaForma && spec.celebrate === true && mostrado.chip === "timeline"')
+        expect(FONTE).toContain('layoutId={mostrado.chip === "success" ? "auth-success-chip" : undefined}')
+    })
+
+    it("o bloqueio desce 350ms depois quando o celular chega de outra família, e na hora dentro da recuperação", () => {
+        expect(FONTE).toContain("DESCIDA_DO_BLOQUEIO_MS = 350")
+        expect(FONTE).toContain('sceneFamily(anterior) === "recovery" ? 0 : DESCIDA_DO_BLOQUEIO_MS')
     })
 })

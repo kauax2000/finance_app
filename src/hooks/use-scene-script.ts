@@ -68,3 +68,21 @@ export function useSceneScript(
     const frame = reduced ? finalFrame(plan) : frameAt(plan, state.index)
     return { frame, skip }
 }
+
+const assinarMovimento = (avisar: () => void) => {
+    const consulta = window.matchMedia("(prefers-reduced-motion: reduce)")
+    consulta.addEventListener("change", avisar)
+    return () => consulta.removeEventListener("change", avisar)
+}
+
+/**
+ * O `reduced` de quem toca um roteiro na camada do app, que não importa `motion` (a paleta do login, a senha
+ * mascarada da recuperação): a preferência do sistema, lida por `matchMedia`; no servidor, falso.
+ */
+export function useMovimentoReduzido(): boolean {
+    return React.useSyncExternalStore(
+        assinarMovimento,
+        () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+        () => false,
+    )
+}

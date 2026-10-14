@@ -250,3 +250,22 @@ export function scriptStage(script: SceneScriptId | null, beat: ScriptBeat, redu
         phone: login && beat === "morph",
     }
 }
+
+/* ── O foco que pula o roteiro ─────────────────────────────────────────── */
+
+const CAMPO_DE_VERDADE = "input, textarea, select, button, a, [role=combobox]"
+
+/**
+ * O foco que pula o roteiro em execução (a paleta do login, a senha mascarada da recuperação): o de quem foi
+ * trabalhar na coluna — um campo, um botão ou um link de `[data-slot=split-shell-main]`. O foco programático no
+ * `H1` (`tabindex="-1"`) não conta: a coluna o faz a cada troca de passo, e o roteiro não pode morrer por isso.
+ */
+export function focoPulaORoteiro(alvo: EventTarget | null): boolean {
+    const el = alvo as Element | null
+    if (!el || typeof el.matches !== "function") return false
+    return (
+        el.closest("[data-slot=split-shell-main]") != null &&
+        el.matches(CAMPO_DE_VERDADE) &&
+        !el.matches('[tabindex="-1"]')
+    )
+}

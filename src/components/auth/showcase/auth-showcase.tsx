@@ -21,9 +21,11 @@ import {
     MINI_APP_URL,
     type MiniAppScreen,
 } from "@/components/auth/showcase/mini-app"
-import type { AuthSceneId, SceneFamily } from "@/components/auth/showcase/scene-context"
+import { AuthPhoneScreens, AuthRecoveryTimeline, type PhoneScreen } from "@/components/auth/showcase/phone-screens"
+import { sceneFamily, type AuthSceneId, type SceneFamily } from "@/components/auth/showcase/scene-context"
 import {
     FAMILY_ORDER,
+    focoPulaORoteiro,
     SCENE_NAV_ICONS,
     SCENES,
     SCRIPT_STAGE_REST,
@@ -32,6 +34,8 @@ import {
     type SceneSpec,
     type ScriptStage,
 } from "@/components/auth/showcase/scenes"
+
+export { focoPulaORoteiro } from "@/components/auth/showcase/scenes"
 import { AuthTestimonialCard, testimonialsFor } from "@/components/auth/showcase/testimonials"
 import { AvatarGroup, AvatarGroupItem } from "@/components/ui/avatar-group"
 import { Badge } from "@/components/ui/badge"
@@ -51,7 +55,6 @@ import {
     type ShowcaseFloatAnchor,
     type ShowcaseSlotIndex,
 } from "@/components/ui/showcase"
-import { Progress } from "@/components/ui/progress"
 import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, TILE_PALETTE } from "@/lib/tile-palette"
 import { cn } from "@/lib/utils"
 import type { SceneScriptId } from "@/lib/scene-script"
@@ -105,40 +108,26 @@ function useGiro(family: SceneFamily): 1 | -1 {
 
 /** O orçamento da casa entra 250ms depois da troca de cena (seção 7): o celular já está a caminho, e o bloco sobe nele. */
 const ENTRADA_DO_ORCAMENTO_MS = 250
+/**
+ * O bloqueio da recuperação desce 350ms depois da troca (seção 7) quando o celular chega de outra família: no meio
+ * da troca de forma, com o celular quase pousado. Dentro da recuperação (o link conferido que venceu) o celular
+ * já está ali, e ele desce na hora.
+ */
+const DESCIDA_DO_BLOQUEIO_MS = 350
 
 /**
- * O orçamento do cadastro: entra atrasado e sai na hora. A primeira cena entra já com ele — é o quadro do
- * servidor, e o cadastro aberto por link direto nasce pronto.
+ * O que entra atrasado e sai na hora (o orçamento do cadastro, o bloqueio da recuperação). A primeira cena entra
+ * já com ele — é o quadro do servidor, e a tela aberta por link direto nasce pronta.
  */
-function useOrcamento(ligado: boolean): boolean {
+function useEntradaAtrasada(ligado: boolean, atraso: number): boolean {
     const [mostrado, setMostrado] = React.useState(ligado)
     if (!ligado && mostrado) setMostrado(false)
     React.useEffect(() => {
         if (!ligado || mostrado) return
-        const t = setTimeout(() => setMostrado(true), ENTRADA_DO_ORCAMENTO_MS)
+        const t = setTimeout(() => setMostrado(true), atraso)
         return () => clearTimeout(t)
-    }, [ligado, mostrado])
+    }, [ligado, mostrado, atraso])
     return ligado && mostrado
-}
-
-/* ── O foco que pula o roteiro ─────────────────────────────────────────── */
-
-const CAMPO_DE_VERDADE = "input, textarea, select, button, a, [role=combobox]"
-
-/**
- * O foco que pula o roteiro em execução: o de quem foi trabalhar na coluna —
- * um campo, um botão ou um link de `[data-slot=split-shell-main]`. O foco
- * programático no `H1` (`tabindex="-1"`) não conta: a coluna o faz a cada
- * troca de passo, e o roteiro não pode morrer por isso.
- */
-export function focoPulaORoteiro(alvo: EventTarget | null): boolean {
-    const el = alvo as Element | null
-    if (!el || typeof el.matches !== "function") return false
-    return (
-        el.closest("[data-slot=split-shell-main]") != null &&
-        el.matches(CAMPO_DE_VERDADE) &&
-        !el.matches('[tabindex="-1"]')
-    )
 }
 
 /** A paleta do ⌘K só é pedida com o palco na tela: no telefone o cmdk nunca é baixado. */
@@ -178,9 +167,38 @@ function PaletaDoRoteiro({
 
 /* ── O herói ───────────────────────────────────────────────────────────── */
 
-/** As telas do celular de recuperação (`lock`, `new-password`, `link-checking`) entram com o `phone-screens` da recuperação; até lá, o painel. */
+/** As telas do celular da recuperação (`lock`, `new-password`, `link-checking`) são camadas sobre o painel (`phone-screens`): embaixo, o painel. */
 function telaDaMiniApp(screen: SceneSpec["screen"]): MiniAppScreen {
     return screen === "lock" || screen === "new-password" || screen === "link-checking" ? "dashboard" : screen
+}
+
+/** A tela do celular da recuperação que cobre o painel; o bloqueio é à parte (desce atrasado). */
+function telaDoCelular(screen: SceneSpec["screen"]): PhoneScreen | null {
+    return screen === "new-password" || screen === "link-checking" ? screen : null
+}
+
+/**
+ * A tela do celular à vista. Sob o bloqueio fica a última da recuperação: do link conferido ao vencido, o
+ * bloqueio desce **sobre a tela da senha**, e não sobre o painel que ela cobria (sem isso o painel e as abas
+ * piscavam entre a tela que sai e o bloqueio que chega). Vindo de outra família não há última, e o bloqueio
+ * desce sobre o painel, como o plano pede.
+ */
+function useTelaDoCelular(spec: SceneSpec): PhoneScreen | null {
+    const atual = telaDoCelular(spec.screen)
+    const [ultima, setUltima] = React.useState(atual)
+    const proxima = spec.family === "recovery" ? (atual ?? ultima) : null
+    if (proxima !== ultima) setUltima(proxima)
+    return spec.screen === "lock" ? proxima : atual
+}
+
+/** A cena de antes da atual (a mesma, na primeira). */
+function useCenaAnterior(scene: AuthSceneId): AuthSceneId {
+    const [par, setPar] = React.useState({ atual: scene, anterior: scene })
+    if (par.atual !== scene) {
+        setPar({ atual: scene, anterior: par.atual })
+        return par.atual
+    }
+    return par.anterior
 }
 
 function navDa(tela: MiniAppScreen): DeviceFrameNavItem[] {
@@ -194,26 +212,39 @@ const cor = (nome: (typeof TILE_PALETTE)[number]["nome"]) => TILE_PALETTE.find((
 function Aviso({
     icon: Icon,
     color,
+    app,
     title,
     description,
     children,
 }: {
     icon: HeroIcon
     color: string
+    /**
+     * O app que avisa ("Mail"): ganha uma linha em cima, com o "agora" na ponta, como a notificação do celular —
+     * e o título fica com a largura toda (ao lado do "Mail · agora" ele quebraria em três linhas na tela de 201px).
+     */
+    app?: string
     title: string
     description: string
     /** O que fecha a linha da frase, à direita (quem já está na Casa): na mesma linha, o aviso não cresce. */
     children?: React.ReactNode
 }) {
+    const agora = <span className="shrink-0 text-2xs text-muted-foreground">agora</span>
     return (
         <div className="flex items-start gap-2.5">
             <ColorTile tint="soft" size="md" color={color}>
                 <Icon />
             </ColorTile>
             <div className="min-w-0 flex-1">
+                {app ? (
+                    <div className="flex items-baseline justify-between gap-2">
+                        <span className="text-2xs font-medium text-muted-foreground">{app}</span>
+                        {agora}
+                    </div>
+                ) : null}
                 <div className="flex items-baseline justify-between gap-2">
                     <p className="text-xs leading-snug font-medium text-pretty">{title}</p>
-                    <span className="shrink-0 text-2xs text-muted-foreground">agora</span>
+                    {app ? null : agora}
                 </div>
                 <div className="flex items-center justify-between gap-2">
                     <p className="min-w-0 text-xs leading-snug text-muted-foreground">{description}</p>
@@ -241,7 +272,13 @@ const AVISOS: Partial<Record<SceneOverlay, React.ReactNode>> = {
         </Aviso>
     ),
     "notice-code": (
-        <Aviso icon={KeyIcon} color={cor("violeta")} title="Seu código de acesso chegou" description="Use os 6 dígitos para continuar." />
+        <Aviso
+            icon={KeyIcon}
+            color={cor("violeta")}
+            app="Mail"
+            title="Seu código de acesso chegou"
+            description="Use os 6 dígitos para continuar."
+        />
     ),
     "notice-expired": (
         <Aviso icon={ClockIcon} color={TILE_EXPENSE_DEFAULT} title="Este link expirou" description="Peça um novo código." />
@@ -317,39 +354,6 @@ function ChipSimples({
     )
 }
 
-/** As três etapas, ditas como a que está em curso: o chip mostra só a atual. */
-const PASSOS_DA_RECUPERACAO = [
-    { icon: EnvelopeIcon, titulo: "Código a caminho" },
-    { icon: KeyIcon, titulo: "Conferindo o código" },
-    { icon: LockClosedIcon, titulo: "Criando a senha" },
-] as const
-
-/**
- * A linha do tempo da recuperação, compacta: o passo atual (ícone e título) e as três etapas em casas, com a
- * largura de um cartão — mora na coluna da colagem; a linha vertical ou horizontal não cabia sem cobrir a mini UI.
- */
-function ChipDaLinhaDoTempo({ timeline }: { timeline: NonNullable<SceneSpec["timeline"]> }) {
-    const atual = Math.min(timeline.current, PASSOS_DA_RECUPERACAO.length - 1)
-    const { icon, titulo } = PASSOS_DA_RECUPERACAO[atual]
-    // O link vencido mostra o passo 1 atual (o plano): quem diz "expirou" é o aviso do aparelho, sozinho.
-    return (
-        <ChipSimples
-            icon={icon}
-            color={cor("violeta")}
-            title={titulo}
-            estreito
-            description={
-                <Progress
-                    segments={PASSOS_DA_RECUPERACAO.length}
-                    value={((atual + 1) / PASSOS_DA_RECUPERACAO.length) * 100}
-                    size="sm"
-                    className="mt-1.5 w-24"
-                />
-            }
-        />
-    )
-}
-
 /**
  * Onde o chip pousa — **nunca sobre texto da mini UI** (um rótulo coberto deixa o valor órfão):
  * - navegador: pendurado abaixo da borda de baixo (o topo do chip 12px abaixo do herói), à esquerda do meio —
@@ -368,16 +372,13 @@ function pousoDoChip(form: SceneSpec["form"]): { anchor: ShowcaseFloatAnchor; cl
 /** O lugar da colagem que o chip toma, por forma: o cartão sai enquanto o chip está ali. */
 const VAGA_DO_CHIP: Partial<Record<SceneSpec["form"], ShowcaseSlotIndex>> = { phone: 3, tablet: 0 }
 
-function Chip({ spec }: { spec: SceneSpec }) {
-    // O chip espera a moldura assentar: na troca de forma ele sai com a cena velha e entra no lugar novo.
-    const { settled } = useShowcase()
-    const { chip } = spec
-    const conteudo =
-        chip === "session-expired" ? (
-            <ChipSimples icon={LockClosedIcon} color={cor("índigo")} title="Sessão encerrada" description="Seus dados continuam aqui." />
-        ) : chip === "success" ? (
-            <ChipSimples icon={CheckIcon} color={TILE_INCOME_DEFAULT} title="Senha atualizada" description="Sessões antigas encerradas." />
-        ) : chip === "synced" ? (
+function conteudoDoChip({ chip, timeline }: SceneSpec): React.ReactNode {
+    if (chip === "session-expired")
+        return <ChipSimples icon={LockClosedIcon} color={cor("índigo")} title="Sessão encerrada" description="Seus dados continuam aqui." />
+    if (chip === "success")
+        return <ChipSimples icon={CheckIcon} color={TILE_INCOME_DEFAULT} title="Senha atualizada" description="Sessões antigas encerradas." />
+    if (chip === "synced")
+        return (
             <ChipSimples
                 icon={ComputerDesktopIcon}
                 color={cor("índigo")}
@@ -389,16 +390,43 @@ function Chip({ spec }: { spec: SceneSpec }) {
                     </Badge>
                 }
             />
-        ) : chip === "timeline" && spec.timeline ? (
-            <ChipDaLinhaDoTempo timeline={spec.timeline} />
-        ) : chip === "invite-accepted" ? (
-            <ChipSimples icon={CheckIcon} color={TILE_INCOME_DEFAULT} title="Você entrou na Casa" description="Agora são três na carteira." />
-        ) : null
+        )
+    if (chip === "timeline" && timeline) return <AuthRecoveryTimeline timeline={timeline} />
+    if (chip === "invite-accepted")
+        return <ChipSimples icon={CheckIcon} color={TILE_INCOME_DEFAULT} title="Você entrou na Casa" description="Agora são três na carteira." />
+    return null
+}
+
+/**
+ * O chip espera a moldura assentar: na troca de forma ele sai com a cena velha **no lugar velho** e entra no
+ * lugar novo. Por isso o chip à vista é o da última cena na forma em que ele está (`mostrado`): numa cena da
+ * mesma forma ele troca no lugar (a linha do tempo anda sozinha do e-mail ao código); numa forma nova o
+ * `mostrado` só muda depois que a moldura assenta — sem isso, o quadro em que a cena muda (ainda "em repouso",
+ * antes de a moldura sair dele) poria o chip novo na âncora da forma nova medida na caixa velha, e é esse quadro
+ * que a saída levaria. Com movimento reduzido a moldura nunca sai do repouso, e o `mostrado` muda no tique
+ * seguinte.
+ *
+ * **A linha do tempo sai com os três passos feitos**: no quadro em que a recuperação termina (`celebrate`, a
+ * forma já mudando), ela ainda está aberta, com o `current` 3 da cena nova, e é esse quadro que a saída leva.
+ */
+function Chip({ spec }: { spec: SceneSpec }) {
+    const { settled } = useShowcase()
+    const [mostrado, setMostrado] = React.useState(spec)
+    const mesmaForma = spec.form === mostrado.form
+    if (mesmaForma && spec !== mostrado) setMostrado(spec)
+    React.useEffect(() => {
+        if (!settled || mesmaForma) return
+        const t = setTimeout(() => setMostrado(spec), 0)
+        return () => clearTimeout(t)
+    }, [settled, mesmaForma, spec])
+
+    const saiFeita = !mesmaForma && spec.celebrate === true && mostrado.chip === "timeline"
+    const conteudo = conteudoDoChip(saiFeita ? { ...mostrado, timeline: spec.timeline } : mostrado)
     return (
         <ShowcaseFloat
-            {...pousoDoChip(spec.form)}
-            open={conteudo != null && settled}
-            layoutId={chip === "success" ? "auth-success-chip" : undefined}
+            {...pousoDoChip(mostrado.form)}
+            open={conteudo != null && settled && (mesmaForma || saiFeita)}
+            layoutId={mostrado.chip === "success" ? "auth-success-chip" : undefined}
         >
             {conteudo}
         </ShowcaseFloat>
@@ -463,8 +491,26 @@ const VEU_DA_JANELA = "transition-[filter] duration-(--duration-base) ease-(--ea
  * igual ao da tela em repouso. A barra de status não precisa: o aviso aberto a cobre.
  */
 const VEU_NAS_ABAS =
-    "[&_[data-slot=device-frame-nav]]:bg-background [&_[data-slot=device-frame-nav]]:transition-[filter] [&_[data-slot=device-frame-nav]]:duration-(--duration-base) [&_[data-slot=device-frame-nav]]:ease-(--ease-out)"
+    "[&_[data-slot=device-frame-nav]]:bg-background [&_[data-slot=device-frame-nav]]:transition-[filter,opacity] [&_[data-slot=device-frame-nav]]:duration-(--duration-base) [&_[data-slot=device-frame-nav]]:ease-(--ease-out)"
 const VEU_NAS_ABAS_LIGADO = "[&_[data-slot=device-frame-nav]]:brightness-60"
+
+/**
+ * As telas do celular da recuperação (o bloqueio, a nova senha, o link conferido) não são o app: a barra de abas
+ * do `DeviceFrame` esmaece por baixo delas, e por trás dela fica a tela, `background` — a cor do pé de cada uma.
+ * A barra inteira, e não os ícones: os ícones voam por `layoutId`, e o `motion` lhes escreve a opacidade em
+ * linha. Ela esmaece quando o bloqueio desce (+350ms): até lá, os ícones voaram do trilho para a barra.
+ */
+const ABAS_COBERTAS = "[&_[data-slot=device-frame-nav]]:opacity-0"
+
+/**
+ * A barra de status sob o bloqueio: o `muted` do topo do bloqueio (o degradê desce dele ao `background`), sem
+ * costura. No link vencido a tela vai a 60%, e o `muted/60` sobre o `background` é a mesma cor que o topo do
+ * bloqueio apagado.
+ */
+const STATUS_DO_BLOQUEIO =
+    "[&_[data-slot=device-frame-status]]:bg-muted [&_[data-slot=device-frame-status]]:transition-colors [&_[data-slot=device-frame-status]]:duration-(--duration-slow)"
+const STATUS_DO_BLOQUEIO_APAGADO =
+    "[&_[data-slot=device-frame-status]]:bg-muted/60 [&_[data-slot=device-frame-status]]:transition-colors [&_[data-slot=device-frame-status]]:duration-(--duration-slow)"
 
 /**
  * O palco que o roteiro da paleta pede, guardado com o roteiro de quem o calculou: na troca de cena o palco
@@ -492,7 +538,13 @@ const Palco = React.memo(function Palco({ scene }: { scene: AuthSceneId }) {
     // A ida e volta do login (D8) gira como o login ↔ cadastro: para o celular de um lado, de volta do outro.
     const turn = spec.family === "login" ? (etapa.phone ? 1 : -1) : giro
     const form = etapa.phone ? "phone" : spec.form
-    const orcamento = useOrcamento(spec.screen === "budget")
+    const orcamento = useEntradaAtrasada(spec.screen === "budget", ENTRADA_DO_ORCAMENTO_MS)
+    const anterior = useCenaAnterior(scene)
+    const bloqueio = useEntradaAtrasada(
+        spec.screen === "lock",
+        sceneFamily(anterior) === "recovery" ? 0 : DESCIDA_DO_BLOQUEIO_MS
+    )
+    const celular = useTelaDoCelular(spec)
     const tela: MiniAppScreen =
         etapa.screen === "invoice"
             ? "invoice"
@@ -521,7 +573,9 @@ const Palco = React.memo(function Palco({ scene }: { scene: AuthSceneId }) {
                     VEU_DA_JANELA,
                     VEU_NAS_ABAS,
                     etapa.search === "palette" && "brightness-60",
-                    veuNoAviso && VEU_NAS_ABAS_LIGADO
+                    veuNoAviso && VEU_NAS_ABAS_LIGADO,
+                    (bloqueio || celular) && ABAS_COBERTAS,
+                    bloqueio && (spec.overlay === "notice-expired" ? STATUS_DO_BLOQUEIO_APAGADO : STATUS_DO_BLOQUEIO)
                 )}
                 turn={turn}
                 url={MINI_APP_URL[tela]}
@@ -530,6 +584,7 @@ const Palco = React.memo(function Palco({ scene }: { scene: AuthSceneId }) {
             >
                 <Cobertura overlay={spec.overlay}>
                     <AuthMiniApp screen={tela} member={spec.member} search={etapa.search} />
+                    <AuthPhoneScreens tela={celular} bloqueio={bloqueio} rapido={spec.family !== "recovery"} />
                 </Cobertura>
             </ShowcaseHero>
             <Chip spec={spec} />
