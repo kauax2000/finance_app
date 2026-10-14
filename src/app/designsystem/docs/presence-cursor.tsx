@@ -183,12 +183,19 @@ export default function PresenceCursorDoc() {
       </DocNote>
 
       <DocNote title="A seta é desenhada">
-        Uma exceção nomeada em <code>DRAWN_SVG_FILES</code> do auditor, como o logo e a roda do <code>Spinner</code>: a ponta da seta é a posição, e o <code>CursorArrowRaysIcon</code> desenha um clique, não um ponteiro. A ponta pousa exatamente em <code>at</code>.
+        Uma exceção nomeada em <code>DRAWN_SVG_FILES</code> do auditor, como o logo e a roda do <code>Spinner</code>: a ponta da seta é a posição, e os dois cursores do Heroicons — o <code>CursorArrowRaysIcon</code> e o <code>CursorArrowRippleIcon</code> — desenham um clique, não um ponteiro. A ponta pousa exatamente em <code>at</code>.
       </DocNote>
 
       <DocNote title="Movimento">
         Mudar <code>at</code> anda pela projeção de layout do <code>motion</code> (<code>layout=&quot;position&quot;</code>) na <code>MOLA</code>; <code>from</code> faz a entrada ao montar, da borda do pai posicionado até o ponto, na mesma mola; <code>pressed</code> encolhe a 85% e volta na mola. Sem laço: ele chega e para. Com <code>prefers-reduced-motion</code>, aparece já pousado e troca de ponto na hora, sem deslocamento; o clique encolhe e volta sem mola.
       </DocNote>
+
+      <DocSection
+        title="No telefone"
+        description="No app o palco não chega ao telefone (o campo vira só o wordmark), e o cursor não tem alvo de toque — não é controle. Dentro de uma moldura estreita ele entra e pousa igual."
+      >
+        <NoTelefone />
+      </DocSection>
 
       <DocSection
         title="Sobre o campo de marca"
@@ -202,15 +209,8 @@ export default function PresenceCursorDoc() {
       </DocSection>
 
       <DocNote title="Contraste medido">
-        O nome sobre a pílula, nos dois temas (o par é um valor só), medido por <code>scripts/identity-contrast.mjs</code> nas seis pílulas desta página: de <strong>7,44:1</strong> (iris) a <strong>8,95:1</strong> (grove), o mesmo par do <code>Avatar</code> vivo, com piso 4,5. Posta sobre o ponto mais claro e o mais escuro do <code>brand-field</code>, em cada tema, a razão do texto não muda (ember 7,65, ocean 8,33): a pílula é opaca. A borda dela contra o campo não é texto — vai de 1,0:1 no ponto claro a 4,2:1 no escuro —, e quem a separa ali é a sombra.
+        O nome sobre a pílula, nos dois temas (o par é um valor só), medido por <code>scripts/identity-contrast.mjs</code> nas seis pílulas desta página: de <strong>7,44:1</strong> (iris) a <strong>8,95:1</strong> (grove), o mesmo par do <code>Avatar</code> vivo, com piso 4,5. Posta sobre o ponto mais claro e o mais escuro do <code>brand-field</code>, em cada tema, a razão do texto não muda (ember 7,65, ocean 8,33): a pílula é opaca. A superfície contra o campo não é texto — vai de 1,0:1 no ponto claro a 4,2:1 no escuro —, e por isso a pílula veste um anel na própria tinta a 15% (<code>ring-1 ring-identity-foreground/15</code>, o traço que contorna a seta): no ponto claro, o anel contra o campo vai de 1,2:1 a 1,45:1 nos dois temas, e é ele, e não só a sombra, que desenha a forma. O <code>ring-foreground/10</code> da placa flutuante não serviria: no escuro ele é claro e some ali (1,0:1). O nome trunca em <code>max-w-40</code>.
       </DocNote>
-
-      <DocSection
-        title="No telefone"
-        description="No app o palco não chega ao telefone (o campo vira só o wordmark), e o cursor não tem alvo de toque — não é controle. Dentro de uma moldura estreita ele entra e pousa igual."
-      >
-        <NoTelefone />
-      </DocSection>
 
       <DocNote title="Sem esqueleto, de propósito">
         O cursor não carrega dado: é a presença de alguém sobre uma tela que já está desenhada. Enquanto a tela espera, quem monta simplesmente não o monta — o esqueleto é o da tela.
@@ -219,10 +219,10 @@ export default function PresenceCursorDoc() {
       <PropsTable
         title="Props de PresenceCursor"
         rows={[
-          { prop: "name", type: "string", description: "O nome na pílula (“Você”, “Ana”)." },
+          { prop: "name", type: "string", description: "O nome na pílula (“Você”, “Ana”). Trunca com reticências a partir de 160px (max-w-40)." },
           { prop: "tone", type: "1 | 2 | 3 | 4 | 5 | 6", description: "A família de identidade: ember, gold, grove, ocean, iris, bloom. Pinta a seta e a pílula com o par do sistema." },
           { prop: "at", type: "{ x: number; y: number }", description: "A ponta da seta, em px a partir do canto superior esquerdo do pai posicionado. Mudar anda na mola." },
-          { prop: "from", type: '"end" | "bottom" | "top" | "start"', description: "A borda do pai de onde o cursor entra ao montar. Sem ela, aparece já pousado." },
+          { prop: "from", type: '"end" | "bottom" | "top" | "start"', description: "A borda do pai de onde o cursor entra ao montar. Sem ela, aparece já pousado. Trocá-la com o cursor montado refaz a entrada, da nova borda. end e start são físicos — direita e esquerda —, não seguem a direção do texto." },
           { prop: "pressed", type: "boolean", default: "false", description: "O clique: encolhe a 85% enquanto verdadeiro e volta na mola." },
           { prop: "className", type: "string", description: "Camada e ordem de quem monta (z-index); nunca cor." },
         ]}

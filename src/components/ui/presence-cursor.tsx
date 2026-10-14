@@ -19,11 +19,20 @@ import { cn } from "@/lib/utils"
  * `scripts/identity-contrast.mjs`. A seta usa a mesma superfície com o contorno na tinta. Nenhuma cor crua.
  *
  * **Sobre o campo de marca** (D2 do plano do painel): a pílula pode pousar no `brand-field` porque é uma
- * superfície opaca com a tinta própria — o contraste do nome não depende do arco-íris embaixo.
+ * superfície opaca com a tinta própria — o contraste do nome não depende do arco-íris embaixo. A borda dela é
+ * um anel na própria tinta a 15% (`ring-identity-foreground/15`, o mesmo traço que contorna a seta): no ponto
+ * claro do campo a superfície viva quase empata com ele (1,0–1,3:1) e sem o anel só a sombra desenharia a
+ * forma. Não é `ring-foreground/10`: no escuro o `--foreground` é claro e o anel some no ponto claro do campo
+ * (1,01–1,05:1, contra 1,38–1,45:1 da tinta); a tinta é a mesma nos dois temas, como a pílula. O nome trunca
+ * em `max-w-40`.
  *
  * **O movimento.** Mudar `at` anda pela projeção de layout do `motion` (`layout="position"`) na `MOLA`; `from`
  * faz o cursor entrar da borda do pai ao montar, na mesma mola; `pressed` é o clique: encolhe e volta, na mola.
  * Com movimento reduzido ele aparece já pousado e anda sem deslocamento.
+ *
+ * **`from` é da montagem.** Trocar `from` com o cursor montado refaz a entrada, da nova borda (o efeito roda
+ * de novo); para só mudar de ponto, mude `at`. `end` e `start` são **físicos** — direita e esquerda —, porque
+ * a posição é `left`/`top`, e não lógicos como o resto do DS.
  */
 
 type PresenceCursorTone = 1 | 2 | 3 | 4 | 5 | 6
@@ -48,7 +57,10 @@ type PresenceCursorProps = {
   tone: PresenceCursorTone
   /** A ponta da seta, em px a partir do canto superior esquerdo do pai posicionado. */
   at: { x: number; y: number }
-  /** A borda do pai de onde o cursor entra ao montar. Sem ela, aparece já pousado. */
+  /**
+   * A borda do pai de onde o cursor entra ao montar. Sem ela, aparece já pousado. Trocá-la com o cursor montado
+   * refaz a entrada; `end`/`start` são físicos (direita/esquerda), não seguem a direção do texto.
+   */
   from?: PresenceCursorFrom
   /** O clique: encolhe enquanto verdadeiro e volta na mola. */
   pressed?: boolean
@@ -110,7 +122,7 @@ function PresenceCursor({ name, tone, at, from, pressed = false, className }: Pr
         </svg>
         <span
           data-slot="presence-cursor-name"
-          className="ms-3 -mt-1 rounded-full rounded-tl-xs bg-(--identity-surface) px-2 py-0.5 text-xs font-medium whitespace-nowrap text-identity-foreground shadow-lg"
+          className="ms-3 -mt-1 max-w-40 truncate rounded-full rounded-tl-xs bg-(--identity-surface) px-2 py-0.5 text-xs font-medium text-identity-foreground shadow-lg ring-1 ring-identity-foreground/15"
         >
           {name}
         </span>

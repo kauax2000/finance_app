@@ -1426,12 +1426,16 @@ declaração de `background-color` no trilho).
   transicionaria o `aspect-ratio`). `device-frame-versions.test.ts`.
 - **`PresenceCursor`** (Átomo, rodada 256): o ponteiro de outra pessoa — a
   seta **desenhada** (exceção em `DRAWN_SVG_FILES`, D9: a ponta é a posição)
-  e a pílula do nome, `rounded-full rounded-tl-xs`. `tone` 1–6 veste a
+  e a pílula do nome, `rounded-full rounded-tl-xs`, com o anel
+  `ring-1 ring-identity-foreground/15` (a forma no ponto claro do campo, a
+  mesma tinta da seta nos dois temas) e o teto
+  `max-w-40 truncate`. `tone` 1–6 veste a
   `@utility identity-N` (tabela por extenso): a pílula pinta
   `--identity-surface` com `text-identity-foreground` e a seta, a mesma
   superfície contornada na tinta — **nenhuma cor crua**. `at` é a ponta em px
   no pai posicionado e anda pela projeção (`layout="position"`, `MOLA`);
-  `from` entra da borda do pai ao montar; `pressed` encolhe a 85% e volta na
+  `from` entra da borda do pai ao montar (trocá-lo refaz a entrada; `end` e
+  `start` são físicos); `pressed` encolhe a 85% e volta na
   mola. `aria-hidden` e `pointer-events-none`: é decorativo, sem esqueleto.
   Movimento reduzido: aparece já pousado e troca de ponto sem deslocamento.
   **Exceção D2: a pílula do `PresenceCursor` pode pousar sobre o

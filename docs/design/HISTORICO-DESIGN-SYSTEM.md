@@ -25265,8 +25265,9 @@ alvo é do `ShowcaseCursor` (Fase 5), que mede as âncoras e passa `at`. Nenhuma
 tela migra agora.
 
 **Levantamento.** Nada no catálogo desenhava um ponteiro: o `AvatarGroup`
-mostra pessoas, não onde elas estão, e o Heroicons só tem o
-`CursorArrowRaysIcon` (um clique, com os raios). A cor de pessoa já existia — a
+mostra pessoas, não onde elas estão, e os dois cursores do Heroicons — o
+`CursorArrowRaysIcon` (com os raios) e o `CursorArrowRippleIcon` (com as
+ondas) — desenham um clique, não um ponteiro. A cor de pessoa já existia — a
 família `identity-N` do `Avatar`, com o par viva medido —, e o cursor a veste
 em vez de inventar outra. Átomo: nenhum import de `ui/`.
 
@@ -25299,6 +25300,19 @@ fonte do `next dev` e o aviso do `motion` sobre movimento reduzido).
 **Desvios do plano.** Nenhum na API. O plano diz "`layout` em `MOLA`"; é
 `layout="position"`, porque a pílula não muda de tamanho e a projeção de
 tamanho esticaria o nome no voo (lição 4 do spike).
+
+**Polimento (Fase 9 do plano do painel).** A borda da pílula contra o ponto
+claro do `brand-field` ficava em 1,0–1,3:1 e só a sombra desenhava a forma. O
+pedido era `ring-1 ring-foreground/10`, e ele foi medido (Playwright, a pílula
+centrada no pixel mais claro do campo): no claro o anel fica 1,14–1,27:1 contra
+o campo, mas no escuro o `--foreground` é claro e o anel some (1,01–1,05:1).
+Entrou `ring-1 ring-identity-foreground/15` — a tinta da própria pílula, a
+mesma que contorna a seta e igual nos dois temas —, que mede 1,22–1,35:1 no
+claro e 1,38–1,45:1 no escuro. E o teto `max-w-40 truncate`, para um nome
+longo não atravessar o palco. O JSDoc e a `PropsTable` passaram a dizer que trocar
+`from` com o cursor montado refaz a entrada e que `end`/`start` são físicos; a
+página voltou à forma fixa ("Sobre o campo de marca" e "Contraste medido"
+depois de "No telefone").
 
 ### Rodada 257 — `caret` no `SearchInput` e no `CommandInput`
 

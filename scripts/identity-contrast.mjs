@@ -1,4 +1,6 @@
-// Mede o contraste das iniciais sobre a cor de identidade do `Avatar`.
+// Mede o contraste das iniciais sobre a cor de identidade do `Avatar` e o do
+// nome sobre a pílula do `PresenceCursor` (o mesmo par viva, medido nas seis
+// pílulas de `/designsystem/presence-cursor` — ver o bloco no fim).
 // Precisa do dev server em :3000.
 //
 //   node scripts/identity-contrast.mjs

@@ -40,6 +40,14 @@ describe("PresenceCursor", () => {
     expect(cursor({ name: "Ana" })).toContain(">Ana</span>")
   })
 
+  it("a pílula tem borda em token e teto de largura: anel da tinta a 15% e max-w-40 truncado", () => {
+    const pilula = classeDo(cursor({}), "presence-cursor-name")
+    expect(pilula).toMatch(/(^|\s)ring-1(\s|$)/)
+    expect(pilula).toMatch(/(^|\s)ring-identity-foreground\/15(\s|$)/)
+    expect(pilula).toMatch(/(^|\s)max-w-40(\s|$)/)
+    expect(pilula).toMatch(/(^|\s)truncate(\s|$)/)
+  })
+
   it("a seta desenhada usa a mesma superfície, contornada na tinta", () => {
     const seta = classeDo(cursor({}), "presence-cursor-arrow")
     expect(seta).toContain("fill-(--identity-surface)")
