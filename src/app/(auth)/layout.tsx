@@ -4,9 +4,13 @@ import { AuthSignedInRedirect } from "@/components/layout/auth-signed-in-redirec
 /**
  * CONTRATO DO CASCO — a casca das telas de acesso vive **aqui**, e não em cada
  * página: o `AuthFrame` monta o `SplitShellRoot` e o painel de marca uma vez,
- * e o painel continua o mesmo nó entre as rotas de `(auth)`. Cada formulário
- * devolve só a coluna (`AuthShell`) e publica o id da cena (`scene`); o
- * painel desenha a publicada, ou a padrão do caminho.
+ * e o painel continua o mesmo nó entre as rotas de `(auth)` — troca de cena,
+ * não remonta, e a entrada toca uma vez só. Cada formulário devolve só a
+ * coluna (`AuthShell`, com `scene` e, nas telas de status, `icon`) e publica o
+ * id da cena; o painel desenha a publicada, ou `defaultSceneFor(pathname)` —
+ * o frame nunca lê a query. A cena é uma linha de
+ * `components/auth/showcase/scenes.ts`, e a família decide o aparelho: login
+ * no navegador, convite no tablet, cadastro e recuperação no celular.
  */
 
 /**
@@ -22,23 +26,27 @@ import { AuthSignedInRedirect } from "@/components/layout/auth-signed-in-redirec
  * OWN-WORLD
  *   Campo de marca ocupando ~45% da largura no desktop: um **cartão** de
  *   cantos arredondados com o arco-íris da marca, grão pesado e vinheta para o
- *   preto (`@utility brand-field`), e na frente uma pilha de cartões do
- *   próprio produto; coluna de formulário sobre `--background`, **sem
- *   cartão**; controles no degrau `xl`; título em `.page-title` (Ledger).
- *   A marca é preta e branca; o arco-íris é o único acento, e mora só nela.
+ *   preto (`@utility brand-field`), e dentro dele o palco do `Showcase`: o
+ *   próprio app num aparelho desenhado só com tokens (`DeviceFrame`), uma
+ *   colagem de depoimentos ilustrativos e a legenda da cena no pé — tudo
+ *   `inert`, `aria-hidden` e marcado "exemplo". Coluna de formulário sobre
+ *   `--background`, **sem cartão**; controles no degrau `xl`; título em
+ *   `.page-title` (Ledger). A marca é preta e branca; o arco-íris é o único
+ *   acento, e mora só nela.
  *
  * STORY
  *   "Este app junta carteira, cartões, contas a pagar e assinaturas" → "entro
  *   com e-mail e senha" → Painel.
  *
  * FIRST VIEWPORT
- *   Esquerda: wordmark branco no topo do campo arco-íris; embaixo, o cartão
- *   da carteira — saldo, três áreas com número, a frase de fecho na nota —
- *   com duas arestas de cartão aparecendo atrás. Nenhum texto corrido sobre o
- *   arco-íris. Direita: título, uma linha de apoio, os campos, botão primário
- *   de largura total, uma linha de rodapé. No telefone o campo vira um cartão
- *   de marca no topo, com a grade 2×2 dos números dentro de um cartão, e o
- *   formulário ocupa o resto.
+ *   Esquerda: título, uma linha de apoio, os campos, botão primário de largura
+ *   total, uma linha de rodapé. Direita (`side="end"`): wordmark branco no
+ *   topo do campo arco-íris e o palco — no login, a janela do navegador com o
+ *   painel do app, a busca ⌘K que se digita sozinha até a fatura e a ida e
+ *   volta ao celular, parada em até 5s. Nenhum texto corrido sobre o
+ *   arco-íris: o que se lê vive em `Card`. No telefone o campo encolhe ao
+ *   wordmark (`asideMobile="logo"`), o palco não roda e o formulário ocupa o
+ *   resto.
  *
  * FORM
  *   Painel dividido. Direção **fixada pelo usuário**, então o sorteio do

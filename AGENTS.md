@@ -459,6 +459,14 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
   pílula do `PresenceCursor` (D2, superfície opaca com tinta medida). **A
   utility não redefine token nenhum** (o override desceria pelo `Card`
   hospedado).
+- **O escopo opaco** (`[data-opaque]`, que o `ShowcaseStage` declara): dentro
+  dele o vidro vira placa. A variante `reduced-transparency:` ganha o ramo
+  `&:is([data-opaque][data-opaque] *)` — a cor sólida de quem veste vale ali,
+  como se a pessoa tivesse pedido menos transparência — e a `glass-surface`
+  perde o `backdrop-filter`. O atributo repetido sobe a especificidade a
+  (0,3,0) e vence a tinta translúcida (`supports-backdrop-filter:dark:bg-popover/60`,
+  0,2,0) por construção, e não pela ordem de emissão. É o que o vidro faz
+  sobre o arco-íris do campo de marca: nada a borrar, e sete matizes vazando.
 - **A seleção de texto** é tingida em `@layer base`: `--primary-muted` atrás,
   `--primary-muted-foreground` na frente, e o par invertido dentro de
   `.brand-field`. É o par **tingido**, nunca `--primary` cheio: a seleção não
@@ -641,8 +649,23 @@ declaração de `background-color` no trilho).
   [`SplitShell`](src/components/ui/split-shell.tsx) — campo de um lado, coluna
   de conteúdo do outro, sem cartão, empilhando abaixo de **48rem do próprio
   casco** (container query). O conteúdo do campo entra por **slot**; a
-  geometria dele é o `SplitShellAside`. Neste app quem amarra os dois é o
-  `AuthShell`, em `components/layout/`, e as cinco telas de acesso o vestem.
+  geometria dele é o `SplitShellAside`. Neste app o casco é **persistente**: o
+  `SplitShellRoot` mora no layout de `(auth)`, montado pelo `AuthFrame`
+  (`components/layout/`) com o painel de marca, e o painel é **o mesmo nó**
+  entre as cinco rotas — troca de cena, não remonta. Cada tela de acesso
+  escreve só a coluna, o `AuthShell` (um `SplitShellMain`).
+  - **`AuthShell`** recebe `scene` (o id que o painel desenha, publicado por
+    `useAuthScene`) e `icon` (`mail` | `done` | `expired` | `invite`: a tela
+    de status, com o ícone acima do título e as ações empilhadas). **Todo
+    estado de todo formulário devolve um `AuthShell` no mesmo lugar da
+    árvore**, e o `step` leva o foco ao título. O `AuthStatus` foi extinto:
+    nenhum arquivo o importa (`auth-shell.test.ts`).
+  - **O frame nunca lê a query**: sem cena publicada, `defaultSceneFor(pathname)`
+    — nada de `useSearchParams` no layout.
+  - **As cenas são uma tabela só**, `components/auth/showcase/scenes.ts`, e a
+    família decide a forma do aparelho: login no navegador, convite no tablet,
+    cadastro e recuperação no celular. O palco é o `Showcase`; nenhum arquivo
+    de `components/auth/` importa `motion`.
 - **Page chrome**: [`PageHeader`](src/components/ui/page-header.tsx) +
   [`PageSection`](src/components/ui/page-section.tsx) +
   [`Container`](src/components/ui/container.tsx). Os três têm `size` (`sm` |
@@ -698,7 +721,11 @@ declaração de `background-color` no trilho).
     as ações do começo; a aba ativa e a última ação ficam;
   - [`hide-on-scroll`](src/lib/hide-on-scroll.ts) (`proximoEscondido`) — o
     "some ao rolar para baixo" da `Toolbar`, da `TopBar` e da `BottomBar`;
-  - [`spring`](src/lib/spring.ts) (`MOLA`), [`pointer`](src/lib/pointer.ts)
+  - [`spring`](src/lib/spring.ts) (`MOLA`; e as do palco do `Showcase`:
+    `MOLA_PALCO`, mais lenta e sem passar do alvo, para a moldura que muda de
+    forma e o raio em px; `MOLA_PALCO_LAYOUT`, a mesma na projeção de layout,
+    com repouso aparado para não esperar a cauda subpixel; `SAIDA`, os 150ms
+    de `--duration-fast` em `--ease-in-out`), [`pointer`](src/lib/pointer.ts)
     (`ehCursor`, `deDedo`), [`shortcut`](src/lib/shortcut.ts) (o casar de
     atalho), [`char-count`](src/lib/char-count.tsx) (o contador de caracteres e
     a região viva dele), [`budget-bands`](src/lib/budget-bands.ts),
@@ -1327,7 +1354,8 @@ declaração de `background-color` no trilho).
   `SplitShellBack`, `SplitShellSkeleton`; `asideMobile`, `step`, `media` (o
   ícone de status acima do título). **`SplitShellRoot` + `SplitShellMain`**
   são as duas metades: o Root (contexto, grade, áreas seguras, o campo) mora
-  no layout de rota e segura o campo montado; cada página escreve só a Main (a
+  no layout de rota e segura o campo montado (no app, o `AuthFrame` do layout
+  de `(auth)`); cada página escreve só a Main (a
   coluna, dona do foco do `step`, que lê o `asideMobile` do Root). O
   `SplitShell` é a Main dentro do Root, com a mesma API.
 - **`Stepper`**: com `value` + `onValueChange` o item deriva o estado —
@@ -1395,6 +1423,10 @@ declaração de `background-color` no trilho).
   (`--duration-spring`), troca em `CHART_UPDATE_MS` (`--duration-slow`), curva
   `--ease-out` no dado. As peças HTML (mapa de calor, listas, divisão) entram
   por `@starting-style`. `chart-motion.test.ts`.
+  - **Exceção nomeada: no `Showcase`, o gráfico monta só com o palco visível**
+    (`useShowcase().active`), para não nascer com largura 0 no telefone, onde o
+    aside é `display: none`; até lá o `ChartSkeleton` parado guarda o lugar. O
+    movimento continua o do Recharts.
 
 #### Carrossel e apresentação
 
@@ -1416,12 +1448,13 @@ declaração de `background-color` no trilho).
 - **`DeviceFrame`** (Átomo, rodada 255): navegador, tablet ou celular
   desenhado só com tokens (`form`), com a mini UI de verdade dentro — sem
   `<img>`. **Uma moldura só, que muda de forma**: a projeção do `motion` anima
-  a caixa (nunca `scale()`), a barra de endereço (`url`, breadcrumb e nunca
+  a caixa na `MOLA_PALCO_LAYOUT` (nunca `scale()`), a barra de endereço (`url`, breadcrumb e nunca
   domínio) vira a ilha, o trilho (`nav`) vira a barra de abas e a moldura gira
   0 → ∓6° → 0 numa curva de 0,65s (`turn`; o `motion` 13 recusa mola de três
   quadros). O raio sai de sondas (`rounded-surface`, `rounded-modal`,
   `concentric`) lidas por `getComputedStyle` e vai a `style.borderRadius` em
-  px, animado — com o raio só na classe o canto vira elipse no voo. Dentro de
+  px, animado na `MOLA_PALCO` — com o raio só na classe o canto vira elipse no
+  voo. Dentro de
   `[data-slot=showcase-hero]` preenche o herói (a `@utility showcase-stage`
   mede); fora, tem caixa própria por forma. `notification` (a ilha vira cartão
   no celular), `onSettled`, `useDeviceFrame()`, `DeviceFrameSkeleton`.
@@ -1467,7 +1500,8 @@ declaração de `background-color` no trilho).
   `ShowcaseFloat anchor` (com `hero-top` e `hero-bottom`; um chip nunca pousa
   sobre texto da mini UI),
   `ShowcaseFlight layoutId active` (o fantasma opaco e **sem texto**; o
-  conteúdo aparece aos 450ms), `ShowcasePiece`, `ShowcaseSwap`,
+  conteúdo aparece aos 450ms; ele e o `ShowcasePiece` andam na
+  `MOLA_PALCO_LAYOUT`, a da moldura), `ShowcasePiece`, `ShowcaseSwap`,
   `ShowcaseCursor` (mede a âncora pelo lugar de layout, `offsetParent`, depois
   do repouso e a cada `ResizeObserver`; `open` é a presença, sai em 150ms — quem
   o usa não importa `motion`), `ShowcaseDots`, `ShowcaseCaption`

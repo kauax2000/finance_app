@@ -7,7 +7,9 @@ branch `finance-app-2.0`, e a navegação global foi revista em 2026-10-01,
 quando entrou a busca (⌘K), junto com o menu do botão direito nas linhas de
 lançamento, nos cartões de categoria e nas contas pendentes, com o seletor
 de período que confirma no próprio popover, com o rascunho protegido do
-formulário de lançamento, e com os menus do telefone em gaveta. Quando uma tela mudar de caminho, atualize o
+formulário de lançamento, e com os menus do telefone em gaveta. As telas de
+acesso foram revistas em 2026-10-12 (a casca no layout) e em 2026-10-14 (o
+painel de marca animado). Quando uma tela mudar de caminho, atualize o
 diagrama dela.
 
 ## Como ler os diagramas
@@ -108,6 +110,19 @@ da cena (`scene`), porque o título e a cena mudam com o estado (o cadastro vira
 cena sai do caminho (`defaultSceneFor`). Todo estado devolve o `AuthShell` no
 mesmo lugar da árvore, e a troca de `step` leva o foco ao título.
 
+**O painel é um palco animado, e a família da cena decide o aparelho.** Desde
+14/out/2026 o painel desenha o próprio app num aparelho (`AuthShowcase`, sobre
+o `Showcase` do design system), com uma colagem de depoimentos ilustrativos em
+volta e uma legenda no pé; os números e os nomes são de exemplo, e a tela diz
+isso. Login no **navegador** (a busca ⌘K se digita sozinha até a fatura, e a
+janela vira celular e volta), convite no **tablet** da casa, cadastro e
+recuperação no **celular** (o fim da recuperação volta ao navegador). Trocar
+de rota troca a cena no mesmo nó: o aparelho muda de forma e gira, sem
+remontar e sem tocar a entrada de novo. O palco é `inert` e `aria-hidden`,
+repousa em até 5 s, nasce no quadro final com movimento reduzido e não roda
+no telefone, onde fica só o wordmark. **Nenhum caminho mudou**: o palco não tem link, campo nem foco, e
+as cenas são uma tabela só (`src/components/auth/showcase/scenes.ts`).
+
 ### 1a. Entrada, login e cadastro
 
 ```mermaid
@@ -192,7 +207,7 @@ flowchart TD
 | Guarda | Toda rota de `(app)` sem usuário vai para `/login?next=` com `replace`. Sem exceções: `/invites/accept` saiu do grupo | `src/components/layout/auth-guard.tsx` |
 | Guarda invertida | Quem já entrou em `(auth)` vai para o `next` ou o Painel. Isentas: `/forgot-password` e `/reset-password` (o `verifyOtp` cria sessão antes da troca de senha) e `/invites/accept` | `src/components/layout/auth-signed-in-redirect.tsx` |
 | `next` | Só caminho interno começando com `/`; o padrão é `/dashboard` | `src/lib/auth-return-path.ts` |
-| Casca | A casca vive no layout de `(auth)` (`AuthFrame`: `SplitShellRoot` e painel de marca, o mesmo nó entre as rotas); o formulário devolve só a coluna (`AuthShell`, um `SplitShellMain`) e publica o id da cena por `useAuthScene`. Sem publicação, `defaultSceneFor(pathname)`; o frame nunca lê a query. O `AuthStatus` saiu: a tela de status é o `AuthShell` com `icon` e `step` próprio | `src/app/(auth)/layout.tsx`, `src/components/layout/auth-frame.tsx`, `src/components/layout/auth-shell.tsx`, `src/components/auth/showcase/scene-context.tsx` |
+| Casca | A casca vive no layout de `(auth)` (`AuthFrame`: `SplitShellRoot` e painel de marca, o mesmo nó entre as rotas); o formulário devolve só a coluna (`AuthShell`, um `SplitShellMain`) e publica o id da cena por `useAuthScene`. Sem publicação, `defaultSceneFor(pathname)`; o frame nunca lê a query. O `AuthStatus` saiu: a tela de status é o `AuthShell` com `icon` e `step` próprio. O painel desenha a cena pela tabela `SCENES`: navegador no login, tablet no convite, celular no cadastro e na recuperação | `src/app/(auth)/layout.tsx`, `src/components/layout/auth-frame.tsx`, `src/components/layout/auth-shell.tsx`, `src/components/auth/showcase/scene-context.tsx`, `src/components/auth/showcase/scenes.ts` |
 | Senha | Uma política só — 8+, minúscula, maiúscula, número e símbolo — aplicada no cadastro e na redefinição | `src/lib/password-policy.ts` |
 | Recuperação | Um formulário, duas portas: `/forgot-password` começa no código de 6 dígitos, `/reset-password` entra no passo da senha lendo o token do hash. O `resetPasswordForEmail` manda `redirectTo` para `/reset-password`, senão o link do e-mail cai na Site URL do projeto, que mora fora deste repositório | `src/components/password-recovery-form.tsx` |
 | `next` na recuperação | `/forgot-password?next` e `/reset-password?next` leem o `next` por `recoveryLinks`, que usa `getSafeInternalNextPath`; o `redirectTo` do e-mail vira `/reset-password?next=…` e "Senha atualizada" leva a `/login?reason=password-updated&next=…`. "Pedir novo código" volta a `/forgot-password?next=…`. Sem `next` a URL não muda. Depende de a allowlist de redirecionamento do Supabase (fora do repositório) aceitar a query string | `src/lib/recovery-links.ts`, `src/components/password-recovery-form.tsx` |
