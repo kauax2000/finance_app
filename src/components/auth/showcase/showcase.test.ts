@@ -9,7 +9,7 @@ import {
     MINI_APP_URL,
     type MiniAppScreen,
 } from "@/components/auth/showcase/mini-app"
-import { AuthShowcase, focoPulaORoteiro } from "@/components/auth/showcase/auth-showcase"
+import { AuthShowcase, focoPulaORoteiro, telaSobOBloqueio } from "@/components/auth/showcase/auth-showcase"
 import { AuthRecoveryTimeline } from "@/components/auth/showcase/phone-screens"
 import { sceneFamily, type AuthSceneId } from "@/components/auth/showcase/scene-context"
 import { FAMILY_CAPTION, FAMILY_ORDER, SCENES, SCRIPT_STAGE_REST, scriptStage } from "@/components/auth/showcase/scenes"
@@ -477,5 +477,17 @@ describe("a recuperação (8f)", () => {
     it("o bloqueio desce 350ms depois quando o celular chega de outra família, e na hora dentro da recuperação", () => {
         expect(FONTE).toContain("DESCIDA_DO_BLOQUEIO_MS = 350")
         expect(FONTE).toContain('sceneFamily(anterior) === "recovery" ? 0 : DESCIDA_DO_BLOQUEIO_MS')
+    })
+
+    it("sob o bloqueio assentado não sobra tela nenhuma: a roda do conferindo não gira escondida", () => {
+        // Descendo, a última tela fica embaixo (o painel não pisca); assentado, ela sai.
+        expect(telaSobOBloqueio(true, null, "link-checking", false)).toBe("link-checking")
+        expect(telaSobOBloqueio(true, null, "link-checking", true)).toBeNull()
+        expect(telaSobOBloqueio(true, null, "new-password", true)).toBeNull()
+        // Sem o bloqueio vale a tela da cena.
+        expect(telaSobOBloqueio(false, "link-checking", "link-checking", false)).toBe("link-checking")
+        expect(telaSobOBloqueio(false, "new-password", "link-checking", true)).toBe("new-password")
+        expect(FONTE).toContain("ASSENTO_DO_BLOQUEIO_MS = 300")
+        expect(FONTE).toContain("useEntradaAtrasada(bloqueio, ASSENTO_DO_BLOQUEIO_MS)")
     })
 })

@@ -114,6 +114,8 @@ const ENTRADA_DO_ORCAMENTO_MS = 250
  * já está ali, e ele desce na hora.
  */
 const DESCIDA_DO_BLOQUEIO_MS = 350
+/** O bloqueio leva `--duration-slow` (300ms) para descer: assentado, a tela de baixo já não aparece e sai. */
+const ASSENTO_DO_BLOQUEIO_MS = 300
 
 /**
  * O que entra atrasado e sai na hora (o orçamento do cadastro, o bloqueio da recuperação). A primeira cena entra
@@ -183,12 +185,27 @@ function telaDoCelular(screen: SceneSpec["screen"]): PhoneScreen | null {
  * piscavam entre a tela que sai e o bloqueio que chega). Vindo de outra família não há última, e o bloqueio
  * desce sobre o painel, como o plano pede.
  */
-function useTelaDoCelular(spec: SceneSpec): PhoneScreen | null {
+function useTelaDoCelular(spec: SceneSpec, assentado: boolean): PhoneScreen | null {
     const atual = telaDoCelular(spec.screen)
     const [ultima, setUltima] = React.useState(atual)
     const proxima = spec.family === "recovery" ? (atual ?? ultima) : null
     if (proxima !== ultima) setUltima(proxima)
-    return spec.screen === "lock" ? proxima : atual
+    return telaSobOBloqueio(spec.screen === "lock", atual, proxima, assentado)
+}
+
+/**
+ * A tela à vista: sem o bloqueio, a atual; com ele, a última **só enquanto ele desce**. Assentado, nada fica
+ * embaixo — senão a roda do "conferindo" giraria escondida no link vencido (e no e-mail e no código que vêm dele,
+ * pelo "Pedir novo código"), um laço que nunca deixa a página ociosa.
+ */
+export function telaSobOBloqueio(
+    travado: boolean,
+    atual: PhoneScreen | null,
+    ultima: PhoneScreen | null,
+    assentado: boolean
+): PhoneScreen | null {
+    if (!travado) return atual
+    return assentado ? null : ultima
 }
 
 /** A cena de antes da atual (a mesma, na primeira). */
@@ -544,7 +561,8 @@ const Palco = React.memo(function Palco({ scene }: { scene: AuthSceneId }) {
         spec.screen === "lock",
         sceneFamily(anterior) === "recovery" ? 0 : DESCIDA_DO_BLOQUEIO_MS
     )
-    const celular = useTelaDoCelular(spec)
+    const assentado = useEntradaAtrasada(bloqueio, ASSENTO_DO_BLOQUEIO_MS)
+    const celular = useTelaDoCelular(spec, assentado)
     const tela: MiniAppScreen =
         etapa.screen === "invoice"
             ? "invoice"
