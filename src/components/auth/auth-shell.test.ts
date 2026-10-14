@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 import { arquivosTsx, lerFonte, semComentarios } from "@/test/fonte"
 
@@ -31,7 +32,9 @@ describe("o casco das telas de acesso", () => {
   })
 
   it("as cenas só compõem o design system: nenhuma cor crua", () => {
-    for (const arq of arquivosTsx("src/components/auth/scenes")) {
+    const cenas = arquivosTsx("src/components/auth/showcase")
+    expect(cenas.length).toBeGreaterThan(0)
+    for (const arq of cenas) {
       expect(fonte(arq)).not.toMatch(/#[0-9a-f]{3,8}\b|rgb\(|oklch\(|(?:text|bg)-(?:gray|zinc|slate|neutral|green|red)-\d/)
     }
   })
@@ -55,6 +58,11 @@ describe("a continuidade entre rotas", () => {
     expect(shell).not.toMatch(/\sfooter=/)
     const corpo = shell.slice(shell.indexOf("<SplitShellMain"))
     expect(corpo.indexOf("{footer}")).toBeGreaterThan(corpo.indexOf("children"))
+  })
+
+  it("as cenas desenhadas de antes não existem mais: o palco é o showcase", () => {
+    expect(existsSync("src/components/auth/scenes")).toBe(false)
+    for (const arq of arquivosTsx("src")) expect(fonte(arq), arq).not.toContain("components/auth/scenes")
   })
 
   it("a tela de status não existe mais como componente à parte", () => {
@@ -81,7 +89,7 @@ describe("a continuidade entre rotas", () => {
     for (const arq of PAGINAS) {
       const s = fonte(arq)
       expect(s, arq).toMatch(/<AuthShell\s+scene="/)
-      expect(s, arq).not.toContain("components/auth/scenes")
+      expect(s, arq).not.toContain("components/auth/")
     }
   })
 

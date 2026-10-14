@@ -542,3 +542,74 @@ describe("o convite no tablet (8g)", () => {
     })
 })
 
+
+describe("as trancas (8h)", () => {
+    // Todo fonte da camada do app (`.ts` e `.tsx`, sem os testes, que citam de propósito o que proíbem).
+    const daPasta = (dir: string): string[] =>
+        readdirSync(dir, { recursive: true, encoding: "utf8" })
+            .filter((f) => /\.tsx?$/.test(f) && !f.endsWith(".test.ts"))
+            .map((f) => `${dir}/${f}`)
+    const ler = (arqs: string[]) => arqs.map((a) => [a, semComentarios(lerFonte(a))] as const)
+    const AUTH = ler(daPasta("src/components/auth"))
+    const PALCO = ler(daPasta("src/components/auth/showcase"))
+    const DS = ler(["src/components/ui/showcase.tsx"])
+
+    it("as cenas desenhadas de antes sumiram, e o palco é o showcase", () => {
+        expect(AUTH.some(([a]) => a.includes("/scenes/"))).toBe(false)
+        expect(PALCO.length).toBeGreaterThan(0)
+    })
+
+    it("o movimento é do design system: nada em components/auth importa motion", () => {
+        for (const [a, s] of AUTH) expect(s, a).not.toMatch(/from ["']motion/)
+    })
+
+    it("nada no palco escuta o teclado: nenhum shortcut=, e a busca da barra sempre com listen={false}", () => {
+        for (const [a, s] of [...PALCO, ...DS]) {
+            expect(s, a).not.toContain("shortcut=")
+            for (const tag of s.match(/<TopBarSearch\b[^>]*>/g) ?? []) expect(tag, a).toContain("listen={false}")
+        }
+    })
+
+    it("o dinheiro grande nunca cai no mono", () => {
+        for (const [a, s] of PALCO) {
+            for (const tag of s.match(/<MoneyDisplay\b[^>]*>/g) ?? []) {
+                if (/size="(xl|2xl)"/.test(tag)) expect(tag, a).toContain("mono={false}")
+            }
+        }
+    })
+
+    it("o palco não tem nada que colida com o formulário de verdade", () => {
+        for (const [a, s] of PALCO) {
+            for (const proibido of ["InputOTP", "<input", "<form", 'type="password"', " id=", " name=", "<Alert"]) {
+                expect(s, `${a}: ${proibido}`).not.toContain(proibido)
+            }
+        }
+        for (const [a, s] of DS) {
+            for (const proibido of ["InputOTP", "<input", "<form", 'type="password"', "<Alert"]) {
+                expect(s, `${a}: ${proibido}`).not.toContain(proibido)
+            }
+        }
+    })
+
+    it("nenhum gráfico com marcador: o único marker= é o da linha do tempo", () => {
+        for (const [a, s] of [...PALCO, ...DS]) {
+            for (const tag of s.match(/<[A-Z]\w*\b[^>]*\bmarker=[^>]*>/g) ?? []) expect(tag, a).toMatch(/^<Timeline\b/)
+        }
+    })
+
+    it("SCENES cobre os 17 ids do tipo, nem um a mais", () => {
+        const tipo = semComentarios(lerFonte("src/components/auth/showcase/scene-context.tsx"))
+            .match(/export type AuthSceneId =([^]*?)\n\n/)?.[1]
+        const ids = [...(tipo ?? "").matchAll(/"([\w.-]+)"/g)].map((m) => m[1])
+        expect(ids).toHaveLength(17)
+        expect(Object.keys(SCENES).sort()).toEqual([...ids].sort())
+    })
+
+    it("cada família tem a sua legenda, com título e descrição", () => {
+        expect(Object.keys(FAMILY_CAPTION).sort()).toEqual(Object.keys(FAMILY_ORDER).sort())
+        for (const [familia, { title, description }] of Object.entries(FAMILY_CAPTION)) {
+            expect(title.trim(), familia).not.toBe("")
+            expect(description.trim(), familia).not.toBe("")
+        }
+    })
+})
