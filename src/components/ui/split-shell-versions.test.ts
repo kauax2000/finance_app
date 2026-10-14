@@ -98,6 +98,13 @@ describe("a divisão: Root e Main", () => {
     expect(corpo("SplitShell")).not.toContain("focus(")
   })
 
+  it("o Root não tem o efeito de foco: trocar de rota com o aside persistente não rouba o foco", () => {
+    const root = corpo("SplitShellRoot")
+    expect(root).not.toContain("focus(")
+    expect(root).not.toMatch(/use(?:Layout)?Effect/)
+    expect(root).not.toContain("titulo")
+  })
+
   it("o SplitShell é a Main dentro do Root", () => {
     const shell = corpo("SplitShell")
     expect(shell).toContain("<SplitShellRoot")

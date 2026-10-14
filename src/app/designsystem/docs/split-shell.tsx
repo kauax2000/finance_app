@@ -306,14 +306,15 @@ export default function SplitShellDoc() {
           { prop: "ratio", type: '"wide" | "even" | "narrow"', default: '"wide"', description: "Quanto da largura o campo leva: 5:6, 1:1 ou 1:2." },
           { prop: "asideMobile", type: '"card" | "band" | "logo" | "hidden"', default: '"card"', description: "O campo abaixo da quebra: o cartão, uma faixa só com a marca, a marca sozinha sobre a página, ou nada." },
           { prop: "step", type: "string | number", description: "O passo de um fluxo. Ao mudar, a coluna entra deslizando e o foco vai ao título." },
+          { prop: "className", type: "string", description: "Vai ao casco (o data-slot=\"split-shell\"), como o resto das props de div; nunca cor nem geometria do campo." },
         ]}
       />
 
       <PropsTable
         title="SplitShellRoot e SplitShellMain"
         rows={[
-          { prop: "SplitShellRoot", type: "{ aside, side?, ratio?, asideMobile?, children }", description: "O casco sem a coluna: a container query, as áreas seguras, a grade e o campo. A coluna entra como filha." },
-          { prop: "SplitShellMain", type: "{ title, description?, media?, back?, footer?, step?, children }", description: "A coluna, dentro de um SplitShellRoot. Lê o asideMobile dele e leva o foco ao título quando o passo muda." },
+          { prop: "SplitShellRoot", type: "{ aside, side?, ratio?, asideMobile?, className?, children }", description: "O casco sem a coluna: a container query, as áreas seguras, a grade e o campo. A coluna entra como filha." },
+          { prop: "SplitShellMain", type: "{ title, description?, media?, back?, footer?, step?, className?, children }", description: "A coluna, dentro de um SplitShellRoot. Lê o asideMobile dele e leva o foco ao título quando o passo muda; o className vai ao <main>. O Root não tem esse efeito: com o campo persistente entre rotas, só a coluna que troca move o foco." },
         ]}
       />
 

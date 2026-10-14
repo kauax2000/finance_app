@@ -2,6 +2,8 @@ import { existsSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 import { arquivosTsx, lerFonte, semComentarios } from "@/test/fonte"
 
+import { defaultSceneFor } from "./showcase/scene-context"
+
 const fonte = (c: string) => semComentarios(lerFonte(c), "linha-inteira")
 
 const FORMULARIOS = [
@@ -49,6 +51,19 @@ describe("a continuidade entre rotas", () => {
     expect(frame).not.toContain("useSearchParams")
   })
 
+  it("a cena padrão de cada rota, lida só do caminho", () => {
+    expect(defaultSceneFor("/login")).toBe("login")
+    expect(defaultSceneFor("/register")).toBe("register")
+    expect(defaultSceneFor("/forgot-password")).toBe("recovery.email")
+    expect(defaultSceneFor("/reset-password")).toBe("recovery.link-checking")
+    expect(defaultSceneFor("/invites/accept")).toBe("invite.loading")
+    // A barra final não muda a cena; um caminho desconhecido cai no login.
+    expect(defaultSceneFor("/register/")).toBe("register")
+    expect(defaultSceneFor("/invites/accept//")).toBe("invite.loading")
+    expect(defaultSceneFor("/qualquer")).toBe("login")
+    expect(defaultSceneFor("/")).toBe("login")
+  })
+
   it("o AuthShell é só a coluna: o pé depois do conteúdo, nunca no slot do Main", () => {
     const shell = fonte("src/components/layout/auth-shell.tsx")
     expect(shell).toContain("<SplitShellMain")
@@ -76,7 +91,8 @@ describe("a continuidade entre rotas", () => {
   it("todo retorno dos formulários é um AuthShell com o id da cena", () => {
     for (const arq of FORMULARIOS) {
       const s = fonte(arq)
-      const raizes = [...s.matchAll(/return \(\s*<([A-Za-z.]+)/g)].map((m) => m[1])
+      // `return (<X` e `return <X` numa linha: a guarda pega as duas formas.
+      const raizes = [...s.matchAll(/return (?:\(\s*)?<([A-Za-z.]+)/g)].map((m) => m[1])
       expect(raizes.length, arq).toBeGreaterThan(0)
       expect(new Set(raizes), arq).toEqual(new Set(["AuthShell"]))
       const shells = s.match(/<AuthShell\b/g)?.length ?? 0

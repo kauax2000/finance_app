@@ -42,14 +42,14 @@ export default function SearchInputDoc() {
 
       <DocSection
         title="Padrão"
-        description="Com onClear, o × aparece quando há texto e devolve o foco ao campo. Sem onClear, não há botão — um × que não limpa nada é pior que nenhum. O cursor desenhado troca o traço nativo pelo type-caret, aceso mesmo sem foco: é o da busca que se digita sozinha numa vitrine."
+        description="Com onClear, o × aparece quando há texto e devolve o foco ao campo. Sem onClear, não há botão — um × que não limpa nada é pior que nenhum. O cursor desenhado troca o traço nativo pelo type-caret, aceso mesmo sem foco: é o da busca que se digita sozinha numa vitrine. Ele segue só o value controlado e mora sempre no fim do texto — sem value fica no começo, e um clique no meio do texto não o leva junto."
         code={`<SearchInput
   value={q}
   onChange={(e) => setQ(e.target.value)}
   onClear={() => setQ("")}
+  caret={vitrine}
   placeholder="Buscar na descrição…"
-/>
-<SearchInput value={digitado} caret readOnly />   {/* a vitrine */}`}
+/>`}
         previewClassName="flex-col items-stretch"
       >
         <Demo />
@@ -179,7 +179,7 @@ export default function SearchInputDoc() {
             type: "boolean",
             default: "false",
             description:
-              "O cursor desenhado (type-caret) no lugar do nativo, piscando com ou sem foco, para a busca que se digita sozinha. Segue o value controlado; o reflexo do texto é aria-hidden.",
+              "O cursor desenhado (type-caret) no lugar do nativo, piscando com ou sem foco, para a busca que se digita sozinha. Segue só o value controlado, sempre no fim do texto (sem value, fica no começo; não acompanha seleção nem clique no meio); o reflexo do texto é aria-hidden.",
           },
           {
             prop: "clearLabel",

@@ -71,9 +71,9 @@ export default function CommandDoc() {
 
       <DocSection
         title="Paleta solta"
-        description="A pilha sem o diálogo: pílula de busca, placa e legenda, soltas numa página, no mesmo plano. O cursor desenhado (caret no CommandInput, repassado ao SearchInput) troca o traço nativo pelo type-caret e segue o texto, aceso mesmo sem foco: é a paleta que se digita sozinha numa vitrine."
+        description="A pilha sem o diálogo: pílula de busca, placa e legenda, soltas numa página, no mesmo plano. O cursor desenhado (caret no CommandInput, repassado ao SearchInput) troca o traço nativo pelo type-caret e segue o texto, aceso mesmo sem foco: é a paleta que se digita sozinha numa vitrine. O CommandInput entrega ao traço o texto dele, controlado ou não; o SearchInput sozinho só o segue com value controlado."
         code={`<Command variant="panel">
-  <CommandInput placeholder="Buscar…" />
+  <CommandInput caret={vitrine} placeholder="Buscar…" />
   <CommandList>
     <CommandGroup heading="Ir para">
       <CommandItem>

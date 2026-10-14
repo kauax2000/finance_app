@@ -24,6 +24,16 @@ import {
  * - trocar `script` volta ao repouso e cancela o timer pendente;
  * - `skip()` vai ao fim — quem decide quando é o palco (o foco num campo da
  *   coluna).
+ *
+ * **Cena nova ⇒ roteiro novo.** `skip` e `hidden` levam ao fim também a partir
+ * do repouso, e do fim nada volta: o roteiro só toca de novo quando `script`
+ * troca (a troca devolve o estado ao repouso). Por isso quem monta passa um
+ * `script` por cena — duas cenas seguidas com o mesmo id não repetem a
+ * animação, e um `skip` dado numa cena não vaza para a próxima.
+ *
+ * O `frame` devolvido é o mesmo objeto enquanto `reduced`, o plano e o índice
+ * não mudam: quem o põe numa dependência não re-renderiza a cada render do
+ * palco.
  */
 export function useSceneScript(
     script: SceneScriptId | null,
@@ -65,7 +75,10 @@ export function useSceneScript(
     }, [reduced, plan, despachar])
 
     const skip = React.useCallback(() => despachar({ type: "skip" }), [despachar])
-    const frame = reduced ? finalFrame(plan) : frameAt(plan, state.index)
+    const frame = React.useMemo(
+        () => (reduced ? finalFrame(plan) : frameAt(plan, state.index)),
+        [reduced, plan, state.index],
+    )
     return { frame, skip }
 }
 

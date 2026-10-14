@@ -149,4 +149,11 @@ describe("o fonte do motor", () => {
         ])
         expect(fonte).toMatch(/clearTimeout/)
     })
+
+    it("o quadro devolvido é memoizado por reduced, plano e índice", () => {
+        const fonte = semComentarios(lerFonte("src/hooks/use-scene-script.ts"))
+        expect(fonte).toMatch(
+            /const frame = React\.useMemo\(\s*\(\) => \(reduced \? finalFrame\(plan\) : frameAt\(plan, state\.index\)\),\s*\[reduced, plan, state\.index\],?\s*\)/,
+        )
+    })
 })
