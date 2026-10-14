@@ -524,10 +524,16 @@ describe("o convite no tablet (8g)", () => {
         const html = palco("invite.error")
         expect(html).toContain("Convite indisponível")
         expect(html).toContain("Peça um link novo a quem convidou.")
-        expect(html.slice(html.indexOf("Convite indisponível") - 600, html.indexOf("Convite indisponível"))).not.toContain(">agora<")
+        // Nada mais nesta cena escreve "agora": a página inteira não o tem.
+        expect(html).not.toContain(">agora<")
         expect(html).toContain("opacity-60")
         expect(FONTE).toContain('overlay === "notice-confirm-invite" || overlay === "invite-error"')
-        expect(FONTE).toContain("showcase-short:items-end")
+        // O diálogo pousa sobre as linhas do cartão: do pé da fileira de pessoas ao pé do cartão, na largura dele.
+        expect(FONTE).toContain('anchorRect("carteira-casa")')
+        expect(FONTE).toContain('anchorRect("carteira-pessoas")')
+        const MINI = semComentarios(lerFonte("src/components/auth/showcase/mini-app.tsx"))
+        expect(MINI).toContain('<Card padding="none" data-showcase-anchor="carteira-casa">')
+        expect(MINI).toContain('data-showcase-anchor="carteira-pessoas"')
     })
 
     it("o cursor pousa no quarto de baixo do +, sem cobrir o sinal", () => {

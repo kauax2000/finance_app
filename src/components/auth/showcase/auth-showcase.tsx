@@ -326,31 +326,70 @@ const AVISOS: Partial<Record<SceneOverlay, React.ReactNode>> = {
     ),
 }
 
+/** O respiro entre a fileira de pessoas e o topo do diálogo: a borda dele cai entre as pessoas e a 1ª linha. */
+const RESPIRO_DO_DIALOGO = 4
+
+type Caixa = { top: number; left: number; width: number; height: number }
+
+/**
+ * A caixa das linhas da carteira na camada da cobertura: do pé da fileira de pessoas ao pé do cartão, na largura
+ * dele. Pelo lugar de layout (`anchorRect`, sem a projeção da moldura que ainda voa), refeita a cada mudança de
+ * tamanho da tela e do cartão.
+ */
+function useCaixaDasLinhas(camada: React.RefObject<HTMLDivElement | null>): Caixa | null {
+    const { anchorRect } = useShowcase()
+    const [caixa, setCaixa] = React.useState<Caixa | null>(null)
+    React.useLayoutEffect(() => {
+        const el = camada.current
+        if (!el) return
+        const medir = () => {
+            const base = anchorRect("tela-coberta")
+            const cartao = anchorRect("carteira-casa")
+            const pessoas = anchorRect("carteira-pessoas")
+            if (!base || !cartao || !pessoas) return
+            const top = pessoas.y + pessoas.height + RESPIRO_DO_DIALOGO - base.y
+            setCaixa({ top, left: cartao.x - base.x, width: cartao.width, height: cartao.y + cartao.height - base.y - top })
+        }
+        const ro = new ResizeObserver(medir)
+        ro.observe(el)
+        const cartao = el.parentElement?.querySelector('[data-showcase-anchor="carteira-casa"]')
+        if (cartao) ro.observe(cartao)
+        return () => ro.disconnect()
+    }, [camada, anchorRect])
+    return caixa
+}
+
 /**
  * O convite que não abre, como o diálogo do app por cima da carteira apagada: o ladrilho em cima, o título e o que
- * fazer, centrados — sem o "agora" de notificação (não é um aviso que chegou, é o estado da tela). Tem a largura do
- * cartão da carteira (o mesmo recuo da tela, `px-3`): cobre as linhas de ponta a ponta, sem pedaço de rótulo
- * apagado aparecendo dos lados. No palco baixo (o tablet de 1024×700) ele vira a folha do pé da tela: o ladrilho
- * ao lado do texto, cobrindo o "Já pago" inteiro — no centro, a tela curta o poria cortando um rótulo ao meio.
- * Entra depois de a tela apagar (os 300ms dela), na mola, subindo 8px.
+ * fazer, centrados — sem o "agora" de notificação (não é um aviso que chegou, é o estado da tela). Ele pousa sobre
+ * as linhas do cartão "Carteira compartilhada": do pé da fileira de pessoas ao pé do cartão, na largura dele — as
+ * bordas caem entre linhas em todo tamanho (no centro da tela ele cortava a "Feira de sábado" ao meio, e no palco
+ * baixo encostava no cartão). Entra depois de a tela apagar (os 300ms dela), na mola, subindo 8px.
  */
 function ConviteIndisponivel() {
+    const camada = React.useRef<HTMLDivElement>(null)
+    const caixa = useCaixaDasLinhas(camada)
     return (
-        <Card
-            variant="elevated"
-            padding="sm"
-            className="w-full shadow-lg transition-[opacity,translate] delay-(--duration-slow) duration-(--duration-spring) ease-(--ease-spring) starting:translate-y-2 starting:opacity-0"
-        >
-            <CardContent className="flex flex-col items-center gap-3 py-2 text-center showcase-short:flex-row showcase-short:py-0 showcase-short:text-start">
-                <ColorTile tint="soft" size="lg" color={TILE_EXPENSE_DEFAULT}>
-                    <LinkSlashIcon />
-                </ColorTile>
-                <div className="min-w-0">
-                    <p className="text-sm font-medium">Convite indisponível</p>
-                    <p className="text-xs text-pretty text-muted-foreground">Peça um link novo a quem convidou.</p>
-                </div>
-            </CardContent>
-        </Card>
+        <div ref={camada} data-showcase-anchor="tela-coberta" className="absolute inset-0">
+            {/* Até medir, montado e invisível: o HTML do servidor já traz o diálogo, e a entrada espera a medida. */}
+            <div className={cn("absolute", !caixa && "invisible")} style={caixa ?? undefined}>
+                <Card
+                    variant="elevated"
+                    padding="sm"
+                    className="size-full justify-center shadow-lg transition-[opacity,translate] delay-(--duration-slow) duration-(--duration-spring) ease-(--ease-spring) starting:translate-y-2 starting:opacity-0"
+                >
+                    <CardContent className="flex flex-col items-center gap-3 text-center">
+                        <ColorTile tint="soft" size="lg" color={TILE_EXPENSE_DEFAULT}>
+                            <LinkSlashIcon />
+                        </ColorTile>
+                        <div className="min-w-0">
+                            <p className="text-sm font-medium">Convite indisponível</p>
+                            <p className="text-xs text-pretty text-muted-foreground">Peça um link novo a quem convidou.</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
     )
 }
 
@@ -381,11 +420,7 @@ function Cobertura({ overlay, children }: { overlay: SceneOverlay; children: Rea
                     veu ? "opacity-100" : "opacity-0"
                 )}
             />
-            {overlay === "invite-error" ? (
-                <div className="absolute inset-0 flex items-center justify-center px-3 showcase-short:items-end showcase-short:pb-3">
-                    <ConviteIndisponivel />
-                </div>
-            ) : null}
+            {overlay === "invite-error" ? <ConviteIndisponivel /> : null}
         </div>
     )
 }

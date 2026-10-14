@@ -797,9 +797,17 @@ function QuemPagouEsqueleto() {
     )
 }
 
-/** A carteira compartilhada "Casa": a porta do convite (`member` falso) e depois de aceitar. */
+/**
+ * A carteira compartilhada "Casa": a porta do convite (`member` falso) e depois de aceitar.
+ *
+ * A fileira de pessoas (os rostos e a contagem) espera a moldura assentar: no meio de uma troca de forma, a saída
+ * de um `ShowcaseSwap` refaz a projeção, e cada vaga do `AvatarGroup` (`layout="position"` na `MOLA`) voa por conta
+ * própria, fora da `MOLA_PALCO` do cartão — os rostos descolavam 25–30px para cima, sobre o título. Escondida no voo,
+ * a fileira acende no repouso.
+ */
 function Carteira({ member, form }: { member: boolean; form: DeviceFrameForm }) {
     const { ana, rafael, voce } = MINI_APP_PEOPLE
+    const { settled } = useShowcase()
     return (
         <div className="flex flex-col gap-3">
             <ShowcasePiece>
@@ -819,9 +827,15 @@ function Carteira({ member, form }: { member: boolean; form: DeviceFrameForm }) 
                 </DescriptionList>
             </ShowcasePiece>
             <ShowcasePiece>
-                <Card padding="none">
+                <Card padding="none" data-showcase-anchor="carteira-casa">
                     <CardToolbar variant="title">Carteira compartilhada · Casa</CardToolbar>
-                    <div className="flex items-center justify-between gap-3 px-4 pb-1">
+                    <div
+                        data-showcase-anchor="carteira-pessoas"
+                        className={cn(
+                            "flex items-center justify-between gap-3 px-4 pb-1",
+                            settled ? "transition-opacity duration-(--duration-base) ease-(--ease-out)" : "opacity-0"
+                        )}
+                    >
                         <div className="relative">
                             <AvatarGroup
                                 label="Quem está na Casa"
