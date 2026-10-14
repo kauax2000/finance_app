@@ -150,6 +150,12 @@ describe("o fonte do motor", () => {
         expect(fonte).toMatch(/clearTimeout/)
     })
 
+    it("os quadros que faltam são agendados juntos, do quadro em que a corrida começou (sem deriva acumulada)", () => {
+        const fonte = semComentarios(lerFonte("src/hooks/use-scene-script.ts"))
+        expect(fonte).toMatch(/plan\.slice\(de \+ 1\)\.map\(\(q\) => setTimeout\(\(\) => despachar\(\{ type: "tick" \}\), q\.at - antes\)\)/)
+        expect(fonte).toMatch(/\[reduced, active, state\.status, plan, despachar\]/)
+    })
+
     it("o quadro devolvido é memoizado por reduced, plano e índice", () => {
         const fonte = semComentarios(lerFonte("src/hooks/use-scene-script.ts"))
         expect(fonte).toMatch(

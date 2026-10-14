@@ -14,8 +14,9 @@ import {
 } from "@/lib/scene-script"
 
 /**
- * O executor do roteiro de `lib/scene-script`: uma cadeia de `setTimeout`,
- * um por quadro, que despacha `tick`. Toda a regra mora na função pura.
+ * O executor do roteiro de `lib/scene-script`: um `setTimeout` por quadro,
+ * agendados juntos no começo da corrida, que despacham `tick`. Toda a regra
+ * mora na função pura.
  *
  * - começa quando `active` fica verdadeiro (o palco à vista) e pausa se ele
  *   cai no meio;
@@ -58,12 +59,18 @@ export function useSceneScript(
         despachar(document.visibilityState === "hidden" ? { type: "hidden" } : { type: "start" })
     }, [reduced, active, state.status, plan, despachar])
 
+    // Os quadros que faltam são agendados **todos de uma vez**, cada um a partir do quadro em que a corrida
+    // (re)começou — e não um `setTimeout` encadeado no disparo do anterior, em que o atraso de cada disparo se
+    // somava (medido com CPU 4×: +375ms em 4,65s, e a janela passava dos 5s). Um disparo atrasado não empurra
+    // os seguintes. Pausar (`active` cai) cancela todos; ao voltar, a conta recomeça do quadro em que parou.
+    const indiceAtual = React.useEffectEvent(() => state.index)
     React.useEffect(() => {
         if (reduced || !active || state.status !== "running") return
-        const antes = state.index < 0 ? 0 : plan[state.index].at
-        const id = setTimeout(() => despachar({ type: "tick" }), plan[state.index + 1].at - antes)
-        return () => clearTimeout(id)
-    }, [reduced, active, state, plan, despachar])
+        const de = indiceAtual()
+        const antes = de < 0 ? 0 : plan[de].at
+        const ids = plan.slice(de + 1).map((q) => setTimeout(() => despachar({ type: "tick" }), q.at - antes))
+        return () => ids.forEach(clearTimeout)
+    }, [reduced, active, state.status, plan, despachar])
 
     React.useEffect(() => {
         if (reduced || plan.length === 0) return
