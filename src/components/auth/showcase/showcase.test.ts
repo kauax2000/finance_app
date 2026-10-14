@@ -11,7 +11,8 @@ import {
 } from "@/components/auth/showcase/mini-app"
 import { AuthShowcase, focoPulaORoteiro } from "@/components/auth/showcase/auth-showcase"
 import { sceneFamily, type AuthSceneId } from "@/components/auth/showcase/scene-context"
-import { FAMILY_CAPTION, FAMILY_ORDER, SCENES } from "@/components/auth/showcase/scenes"
+import { FAMILY_CAPTION, FAMILY_ORDER, SCENES, SCRIPT_STAGE_REST, scriptStage } from "@/components/auth/showcase/scenes"
+import { finalFrame, planScript } from "@/lib/scene-script"
 import { ShowcaseHero, ShowcaseStage } from "@/components/ui/showcase"
 import { IDENTITY_TONES, identityToneFor } from "@/lib/avatar"
 import { getInitials } from "@/lib/utils"
@@ -246,5 +247,62 @@ describe("a orquestração (8c)", () => {
             const vaga = SCENES[id].chip !== "none" && SCENES[id].form !== "browser" ? 1 : 0
             expect(html.match(/data-slot="auth-testimonial"/g)?.length, id).toBe(12 - vaga)
         }
+    })
+})
+
+describe("o login e a paleta (8d)", () => {
+    const PALETA = semComentarios(lerFonte("src/components/auth/showcase/palette-demo.tsx"))
+    const MINI = semComentarios(lerFonte("src/components/auth/showcase/mini-app.tsx"))
+
+    it("o roteiro do login muda o palco na ordem do plano: clique, paleta, fatura, celular e volta", () => {
+        const fases = planScript("palette-login").map(({ beat }) => scriptStage("palette-login", beat, false))
+        const passos = fases.filter((f, i) => i === 0 || JSON.stringify(f) !== JSON.stringify(fases[i - 1]))
+        expect(passos).toEqual([
+            SCRIPT_STAGE_REST,
+            { search: "pressed", screen: "dashboard", phone: false },
+            { search: "palette", screen: "dashboard", phone: false },
+            SCRIPT_STAGE_REST,
+            { search: "rest", screen: "invoice", phone: false },
+            { search: "rest", screen: "invoice", phone: true },
+            { search: "rest", screen: "invoice", phone: false },
+        ])
+        // O repouso é a fatura no navegador; as outras paletas fecham e ficam no painel, sem celular.
+        expect(scriptStage("palette-login", finalFrame(planScript("palette-login")).beat, false)).toEqual({
+            search: "rest",
+            screen: "invoice",
+            phone: false,
+        })
+        for (const script of ["palette-session", "palette-security"] as const) {
+            const fim = planScript(script)
+            expect(fim.some(({ beat }) => scriptStage(script, beat, false).phone), script).toBe(false)
+            expect(scriptStage(script, finalFrame(fim).beat, false), script).toEqual(SCRIPT_STAGE_REST)
+        }
+    })
+
+    it("com movimento reduzido o quadro é um só: a paleta aberta sobre o painel", () => {
+        for (const script of ["palette-login", "palette-session", "palette-security"] as const) {
+            expect(scriptStage(script, finalFrame(planScript(script)).beat, true)).toEqual({
+                search: "palette",
+                screen: "dashboard",
+                phone: false,
+            })
+        }
+        expect(scriptStage("masked-password", "type", false)).toBe(SCRIPT_STAGE_REST)
+        expect(scriptStage(null, "idle", true)).toBe(SCRIPT_STAGE_REST)
+    })
+
+    it("a paleta é a Command de verdade, digitada por valor, sem ouvir o teclado", () => {
+        expect(PALETA).toMatch(/<Command\s+variant="panel"\s+shouldFilter=\{false\}/)
+        expect(PALETA).toContain('<CommandInput caret value={texto} placeholder="" />')
+        expect(PALETA).toContain("<CommandHighlight>")
+        expect(PALETA).toContain("<CommandShortcut>")
+        expect(PALETA).not.toContain("shortcut=")
+        expect(PALETA).not.toContain("autoFocus")
+        expect(PALETA).not.toMatch(/shadow-/)
+        expect(PALETA).not.toMatch(/from ["']motion/)
+        expect(PALETA).not.toContain("requestAnimationFrame")
+        // O voo: os dois pontos da pílula dividem o layoutId.
+        expect(PALETA).toContain('layoutId="auth-search"')
+        expect(MINI).toContain('layoutId="auth-search"')
     })
 })

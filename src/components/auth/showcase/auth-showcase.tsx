@@ -20,9 +20,11 @@ import {
     FAMILY_ORDER,
     SCENE_NAV_ICONS,
     SCENES,
+    SCRIPT_STAGE_REST,
     type SceneCursor,
     type SceneOverlay,
     type SceneSpec,
+    type ScriptStage,
 } from "@/components/auth/showcase/scenes"
 import { AuthTestimonialCard, testimonialsFor } from "@/components/auth/showcase/testimonials"
 import { Badge } from "@/components/ui/badge"
@@ -45,6 +47,7 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { TILE_EXPENSE_DEFAULT, TILE_INCOME_DEFAULT, TILE_PALETTE } from "@/lib/tile-palette"
 import { cn } from "@/lib/utils"
+import type { SceneScriptId } from "@/lib/scene-script"
 import type { HeroIcon } from "@/types/navigation"
 
 /**
@@ -122,9 +125,18 @@ const PaletteDemo = dynamic(
 /**
  * O lugar da paleta: pede o pedaço na primeira vez que o palco fica à vista e
  * conta os focos que pulam o roteiro. O estado mora aqui para que um foco re-
- * renderize só esta subárvore — nunca a moldura.
+ * renderize só esta subárvore — nunca a moldura. O que o roteiro muda fora da
+ * paleta sobe pelo `onStage` e desce de volta como `stage`.
  */
-function PaletaDoRoteiro({ script }: { script: SceneSpec["script"] }) {
+function PaletaDoRoteiro({
+    script,
+    stage,
+    onStage,
+}: {
+    script: SceneSpec["script"]
+    stage: ScriptStage
+    onStage: (script: SceneScriptId | null, stage: ScriptStage) => void
+}) {
     const { active } = useShowcase()
     const [pedida, setPedida] = React.useState(active)
     if (active && !pedida) setPedida(true)
@@ -136,7 +148,7 @@ function PaletaDoRoteiro({ script }: { script: SceneSpec["script"] }) {
         document.addEventListener("focusin", ouvir)
         return () => document.removeEventListener("focusin", ouvir)
     }, [])
-    return pedida ? <PaletteDemo script={script} skip={pulos} /> : null
+    return pedida ? <PaletteDemo script={script} skip={pulos} stage={stage} onStage={onStage} /> : null
 }
 
 /* ── O herói ───────────────────────────────────────────────────────────── */
@@ -196,10 +208,13 @@ const AVISOS: Partial<Record<SceneOverlay, React.ReactNode>> = {
     ),
 }
 
-/** O que cobre a tela: o véu atrás do aviso do cadastro, a tela apagada e o cartão do convite indisponível. */
-function Cobertura({ overlay, children }: { overlay: SceneOverlay; children: React.ReactNode }) {
+/**
+ * O que cobre a tela: o véu atrás do aviso do cadastro e da paleta do login, a tela apagada e o cartão do
+ * convite indisponível.
+ */
+function Cobertura({ overlay, palette, children }: { overlay: SceneOverlay; palette: boolean; children: React.ReactNode }) {
     const apagada = overlay === "dim" || overlay === "invite-error" || overlay === "notice-expired"
-    const veu = overlay === "notice-confirm" || overlay === "notice-confirm-invite"
+    const veu = palette || overlay === "notice-confirm" || overlay === "notice-confirm-invite"
     return (
         <div className="relative size-full">
             <div className={cn("size-full transition-opacity duration-(--duration-slow) ease-(--ease-out)", apagada && "opacity-60")}>
@@ -390,14 +405,37 @@ function Cursores({ cursors }: { cursors: SceneCursor[] }) {
 
 /* ── O palco ───────────────────────────────────────────────────────────── */
 
+/**
+ * O palco que o roteiro da paleta pede, guardado com o roteiro de quem o calculou: na troca de cena o palco
+ * velho não vale nem por um commit (a fatura do login não pisca na recuperação).
+ */
+function useEtapaDoRoteiro(script: SceneScriptId | null) {
+    const [etapa, setEtapa] = React.useState<{ script: SceneScriptId | null; stage: ScriptStage }>({
+        script,
+        stage: SCRIPT_STAGE_REST,
+    })
+    const onStage = React.useCallback((de: SceneScriptId | null, stage: ScriptStage) => {
+        setEtapa((e) =>
+            e.script === de && e.stage.search === stage.search && e.stage.screen === stage.screen && e.stage.phone === stage.phone
+                ? e
+                : { script: de, stage }
+        )
+    }, [])
+    return [etapa.script === script ? etapa.stage : SCRIPT_STAGE_REST, onStage] as const
+}
+
 const Palco = React.memo(function Palco({ scene }: { scene: AuthSceneId }) {
     const spec = SCENES[scene]
-    const turn = useGiro(spec.family)
-    const tela = telaDaMiniApp(spec.screen)
-    const vaga = spec.chip !== "none" ? VAGA_DO_CHIP[spec.form] : undefined
+    const [etapa, onStage] = useEtapaDoRoteiro(spec.script)
+    const giro = useGiro(spec.family)
+    // A ida e volta do login (D8) gira como o login ↔ cadastro: para o celular de um lado, de volta do outro.
+    const turn = spec.family === "login" ? (etapa.phone ? 1 : -1) : giro
+    const form = etapa.phone ? "phone" : spec.form
+    const tela: MiniAppScreen = etapa.screen === "invoice" ? "invoice" : telaDaMiniApp(spec.screen)
+    const vaga = spec.chip !== "none" ? VAGA_DO_CHIP[form] : undefined
     return (
         <ShowcaseStage parallax className="absolute inset-0 rounded-modal">
-            <ShowcaseScatter clear={spec.form} ripple={spec.celebrate}>
+            <ShowcaseScatter clear={form} ripple={spec.celebrate}>
                 {testimonialsFor(spec.family).map((t, i) =>
                     // O lugar que o chip toma fica vazio: o cartão sai (a saída da colagem) e volta quando o chip sai.
                     i === vaga ? (
@@ -410,19 +448,19 @@ const Palco = React.memo(function Palco({ scene }: { scene: AuthSceneId }) {
                 )}
             </ShowcaseScatter>
             <ShowcaseHero
-                form={spec.form}
+                form={form}
                 turn={turn}
                 url={MINI_APP_URL[tela]}
                 nav={navDa(tela)}
                 notification={AVISOS[spec.overlay]}
             >
-                <Cobertura overlay={spec.overlay}>
-                    <AuthMiniApp screen={tela} member={spec.member} />
+                <Cobertura overlay={spec.overlay} palette={etapa.search === "palette"}>
+                    <AuthMiniApp screen={tela} member={spec.member} search={etapa.search} />
                 </Cobertura>
             </ShowcaseHero>
             <Chip spec={spec} />
             <Cursores cursors={spec.cursors} />
-            <PaletaDoRoteiro script={spec.script} />
+            <PaletaDoRoteiro script={spec.script} stage={etapa} onStage={onStage} />
             <ShowcaseCaption
                 title={spec.caption.title}
                 description={spec.caption.description}

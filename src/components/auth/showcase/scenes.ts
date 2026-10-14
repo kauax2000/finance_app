@@ -1,8 +1,9 @@
 import { ChartPieIcon, CreditCardIcon, HomeIcon, UsersIcon } from "@heroicons/react/20/solid"
 
+import type { MiniAppSearch } from "@/components/auth/showcase/mini-app"
 import type { AuthSceneId, SceneFamily } from "@/components/auth/showcase/scene-context"
 import type { DeviceFrameForm } from "@/components/ui/device-frame"
-import type { SceneScriptId } from "@/lib/scene-script"
+import type { SceneScriptId, ScriptBeat } from "@/lib/scene-script"
 import type { HeroIcon } from "@/types/navigation"
 
 /**
@@ -215,4 +216,37 @@ export const SCENES: Record<AuthSceneId, SceneSpec> = {
         cursors: [RAFAEL_NA_INTERNET, { name: "Você", tone: 3, anchor: "avatar-add", from: "bottom", delay: 150 }],
     },
     "invite.error": { ...INVITE, screen: "wallet", overlay: "invite-error", chip: "none", cursors: [] },
+}
+
+/**
+ * O que o roteiro da paleta muda **fora** dela, no palco: a pílula do cabeçalho
+ * (parada, apertada pelo clique ou voando para a paleta), a tela da mini UI
+ * depois do Enter e a ida e volta ao celular (D8). Muda umas seis vezes por
+ * roteiro — a digitação, 14 quadros por segundo, fica só na paleta.
+ */
+export type ScriptStage = {
+    search: MiniAppSearch
+    screen: "dashboard" | "invoice"
+    phone: boolean
+}
+
+export const SCRIPT_STAGE_REST: ScriptStage = { search: "rest", screen: "dashboard", phone: false }
+
+const BATIDAS_DA_PALETA: readonly ScriptBeat[] = ["open", "type", "select"]
+const BATIDAS_DA_FATURA: readonly ScriptBeat[] = ["swap", "morph", "morph-back", "done"]
+
+/**
+ * O palco de um quadro do roteiro. Com movimento reduzido o quadro é um só (o
+ * plano, seção 5): a paleta aberta, com a consulta e a linha escolhida, sobre o
+ * painel — sem fatura e sem ida ao celular.
+ */
+export function scriptStage(script: SceneScriptId | null, beat: ScriptBeat, reduced: boolean): ScriptStage {
+    if (!script || script === "masked-password") return SCRIPT_STAGE_REST
+    if (reduced) return { search: "palette", screen: "dashboard", phone: false }
+    const login = script === "palette-login"
+    return {
+        search: beat === "press" ? "pressed" : BATIDAS_DA_PALETA.includes(beat) ? "palette" : "rest",
+        screen: login && BATIDAS_DA_FATURA.includes(beat) ? "invoice" : "dashboard",
+        phone: login && beat === "morph",
+    }
 }

@@ -32,7 +32,7 @@ import { useDeviceFrame, type DeviceFrameForm } from "@/components/ui/device-fra
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { Progress, ProgressFooter, ProgressHeader, ProgressLabel, ProgressValue } from "@/components/ui/progress"
-import { ShowcasePiece, ShowcaseSwap, useShowcase } from "@/components/ui/showcase"
+import { ShowcaseFlight, ShowcasePiece, ShowcaseSwap, useShowcase } from "@/components/ui/showcase"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TopBar, TopBarActions, TopBarContent, TopBarSearch, TopBarStart, TopBarTitle } from "@/components/ui/top-bar"
 import { Caption } from "@/components/ui/typography"
@@ -247,13 +247,20 @@ const TITULO_DO_CABECALHO: Record<MiniAppScreen, string> = {
 }
 
 /**
- * O cabeçalho do navegador: o `TopBar` do app, estático, com a pílula de busca
- * (a âncora do cursor e o ponto de partida do voo da paleta — o `ShowcaseFlight`
- * em volta dela é da cena do login). O título é um `div`, e não o `<h1>` do
- * `TopBarTitle`: o palco é `aria-hidden`, mas um segundo `<h1>` na página não
- * ajuda ninguém.
+ * O estado da pílula de busca do cabeçalho no roteiro do login: parada,
+ * apertada pelo clique do cursor (encolhe a 97% e volta) ou voando para a
+ * paleta (o lugar fica ocupado, o conteúdo some e o fantasma voa).
  */
-function BarraDoNavegador({ screen }: { screen: MiniAppScreen }) {
+export type MiniAppSearch = "rest" | "pressed" | "palette"
+
+/**
+ * O cabeçalho do navegador: o `TopBar` do app, estático, com a pílula de busca
+ * (a âncora do cursor e o ponto de partida do voo da paleta — o
+ * `ShowcaseFlight` "auth-search", cujo outro ponto é o campo da paleta). O
+ * título é um `div`, e não o `<h1>` do `TopBarTitle`: o palco é `aria-hidden`,
+ * mas um segundo `<h1>` na página não ajuda ninguém.
+ */
+function BarraDoNavegador({ screen, search }: { screen: MiniAppScreen; search: MiniAppSearch }) {
     return (
         <TopBar position="static" size="sm" className="gap-3">
             {/* O logo só a partir de 512px de tela (a janela de 1440): abaixo, logo, título, selo, pílula e avatar
@@ -272,7 +279,16 @@ function BarraDoNavegador({ screen }: { screen: MiniAppScreen }) {
             </TopBarContent>
             <TopBarActions className="gap-3">
                 <div data-showcase-anchor="search" className="w-40 @lg/screen:w-44">
-                    <TopBarSearch listen={false} onOpen={nada} slash={false} />
+                    <ShowcaseFlight
+                        layoutId="auth-search"
+                        active={search !== "palette"}
+                        className={cn(
+                            "rounded-full transition-transform duration-(--duration-fast) ease-(--ease-out)",
+                            search === "pressed" && "scale-97"
+                        )}
+                    >
+                        <TopBarSearch listen={false} onOpen={nada} slash={false} />
+                    </ShowcaseFlight>
                 </div>
                 {/* No XS (tela abaixo de 448px) a pílula precisa do lugar do avatar para dizer "Buscar…" inteira. */}
                 <span className="contents @max-md/screen:hidden">
@@ -338,23 +354,29 @@ function CartaoDoSaldo({ largo, compacto }: { largo: boolean; compacto: boolean 
 /**
  * A faísca do saldo dos 12 meses. Monta só com o palco na tela: escondido (o
  * telefone, `display: none`) o `ResponsiveContainer` nasceria com largura 0. A
- * caixa tem a altura dela antes de o gráfico chegar, para nada saltar.
+ * caixa tem a altura dela antes de o gráfico chegar, para nada saltar. O
+ * gráfico é o mesmo elemento entre renders: cada render do palco (a paleta do
+ * login abrindo e fechando) chega aqui pelo contexto do `Showcase`, e no
+ * navegador XS — o cartão escondido por classe — cada render do
+ * `ResponsiveContainer` avisaria no console a largura -1.
  */
 function Faisca({ alta }: { alta: boolean }) {
     const { active } = useShowcase()
     const altura = alta ? "h-20" : "h-12"
-    return active ? (
-        <ChartSparkline
-            variant="area"
-            y="saldo"
-            data={SALDO_DOS_MESES}
-            config={FAISCA}
-            label="Saldo dos últimos 12 meses"
-            className={altura}
-        />
-    ) : (
-        <div className={altura} />
+    const grafico = React.useMemo(
+        () => (
+            <ChartSparkline
+                variant="area"
+                y="saldo"
+                data={SALDO_DOS_MESES}
+                config={FAISCA}
+                label="Saldo dos últimos 12 meses"
+                className={altura}
+            />
+        ),
+        [altura]
     )
+    return active ? grafico : <div className={altura} />
 }
 
 function CartaoDaFaisca({ alta }: { alta: boolean }) {
@@ -841,20 +863,22 @@ type AuthMiniAppProps = {
     screen: MiniAppScreen
     /** Na carteira: você já entrou (o "+" vira o "VC"). */
     member?: boolean
+    /** A pílula de busca do navegador, no roteiro do login. */
+    search?: MiniAppSearch
 }
 
 /**
  * A tela do aparelho do palco. Em `memo`: quem digita a paleta renderiza 14
  * vezes por segundo, e nada disso chega aqui.
  */
-export const AuthMiniApp = React.memo(function AuthMiniApp({ screen, member = false }: AuthMiniAppProps) {
+export const AuthMiniApp = React.memo(function AuthMiniApp({ screen, member = false, search = "rest" }: AuthMiniAppProps) {
     const { form } = useDeviceFrame()
     const corpo = CORPO[screen]
     return (
         <div data-slot="auth-mini-app" data-screen={screen} className="flex size-full min-h-0 flex-col">
             <div className="relative shrink-0">
                 <ShowcaseSwap swapKey={form === "browser" ? "barra" : "cabecalho"}>
-                    {form === "browser" ? <BarraDoNavegador screen={screen} /> : <CabecalhoDeBolso screen={screen} compacto={form === "phone"} />}
+                    {form === "browser" ? <BarraDoNavegador screen={screen} search={search} /> : <CabecalhoDeBolso screen={screen} compacto={form === "phone"} />}
                 </ShowcaseSwap>
             </div>
             <div className="relative min-h-0 flex-1">
