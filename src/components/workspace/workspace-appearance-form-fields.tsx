@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input"
 import { FormError } from "@/components/ui/form"
 import {
     WORKSPACE_ACCENT_PALETTE,
-    WORKSPACE_ICON_KEYS,
+    WORKSPACE_ICON_PICKER_KEYS,
     WORKSPACE_ICON_MAP,
     type WorkspaceIconKey,
     WORKSPACE_ICON_LABELS,
@@ -171,7 +171,7 @@ export function WorkspaceAppearanceFormFields({
                     aria-label="Ícone"
                     className={GRADE}
                 >
-                    {WORKSPACE_ICON_KEYS.map((key) => (
+                    {WORKSPACE_ICON_PICKER_KEYS.map((key) => (
                         <ToggleGroupItem
                             key={key}
                             value={key}
