@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { MOLA_PALCO, SAIDA } from "@/lib/spring"
+import { MOLA_PALCO, MOLA_PALCO_LAYOUT, SAIDA } from "@/lib/spring"
 import { blocoCss, lerFonte, semComentarios } from "@/test/fonte"
 import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
@@ -117,6 +117,8 @@ describe("Tokens, variante e escopo opaco", () => {
 describe("As molas do palco", () => {
   it("`MOLA_PALCO` e `SAIDA` (espelho de `--ease-in-out`)", () => {
     expect(MOLA_PALCO).toEqual({ type: "spring", stiffness: 220, damping: 30 })
+    // Na projeção (0 a 1000) o repouso não espera a cauda subpixel: a moldura assenta aos ~610ms, e não aos ~800.
+    expect(MOLA_PALCO_LAYOUT).toEqual({ ...MOLA_PALCO, restSpeed: 20, restDelta: 2 })
     expect(SAIDA).toEqual({ duration: 0.15, ease: [0.65, 0, 0.35, 1] })
     expect(CSS).toContain("--ease-in-out: cubic-bezier(0.65, 0, 0.35, 1)")
   })

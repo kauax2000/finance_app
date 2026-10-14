@@ -27,7 +27,7 @@ import {
 import { PresenceCursor, type PresenceCursorFrom, type PresenceCursorTone } from "@/components/ui/presence-cursor"
 import { SkeletonGroup } from "@/components/ui/skeleton"
 import { deDedo, ehCursor } from "@/lib/pointer"
-import { MOLA, MOLA_PALCO, SAIDA } from "@/lib/spring"
+import { MOLA, MOLA_PALCO_LAYOUT, SAIDA } from "@/lib/spring"
 import { cn } from "@/lib/utils"
 
 /**
@@ -614,7 +614,7 @@ const raioDaCaixa = (el: HTMLElement) =>
 
 /**
  * Um ponto de pouso do voo de uma pílula. Os pontos com o mesmo `layoutId` dividem um fantasma opaco, sem
- * texto: só o ponto `active` o desenha, e a projeção o leva do ponto anterior até aqui (`MOLA_PALCO`). O
+ * texto: só o ponto `active` o desenha, e a projeção o leva do ponto anterior até aqui (`MOLA_PALCO_LAYOUT`). O
  * conteúdo real do ponto inativo fica transparente (o lugar continua ocupado); o do ativo aparece aos 450ms,
  * antes da cauda da mola, e o fantasma se apaga junto. O texto nunca estica.
  */
@@ -671,7 +671,7 @@ function ShowcaseFlight({
           layoutId={layoutId}
           aria-hidden
           data-slot="showcase-flight-ghost"
-          transition={{ layout: MOLA_PALCO }}
+          transition={{ layout: MOLA_PALCO_LAYOUT }}
           style={{ borderRadius: raio }}
           className={cn(
             // O `motion` pode deixar a opacidade em linha depois do voo; a visibilidade, discreta, some no fim dos
@@ -696,7 +696,7 @@ function ShowcasePiece({ className, ...props }: React.ComponentProps<typeof moti
   return (
     <motion.div
       layout="position"
-      transition={{ layout: MOLA_PALCO }}
+      transition={{ layout: MOLA_PALCO_LAYOUT }}
       data-slot="showcase-piece"
       className={className}
       {...props}

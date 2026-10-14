@@ -13,7 +13,7 @@ import {
 } from "motion/react"
 
 import { Skeleton, SkeletonGroup, SkeletonText } from "@/components/ui/skeleton"
-import { MOLA, MOLA_PALCO, SAIDA } from "@/lib/spring"
+import { MOLA, MOLA_PALCO, MOLA_PALCO_LAYOUT, SAIDA } from "@/lib/spring"
 import { cn } from "@/lib/utils"
 import type { HeroIcon } from "@/types/navigation"
 
@@ -173,7 +173,7 @@ function DeviceFrame({
   const raioIlha = useMotionValue("")
   const giro = useMotionValue(0)
 
-  const transition: Transition = reduced ? INSTANTANEO : MOLA_PALCO
+  const transition: Transition = reduced ? INSTANTANEO : MOLA_PALCO_LAYOUT
   const ctx = React.useMemo(() => ({ form, transition }), [form, transition])
 
   /**

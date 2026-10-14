@@ -262,7 +262,7 @@ describe("Showcase — o fonte", () => {
 
   it("o voo revela o pouso antes da cauda da mola, na mola do palco", () => {
     expect(CODIGO).toMatch(/REVELA_O_POUSO_MS = 450/)
-    expect(CODIGO).toContain("transition={{ layout: MOLA_PALCO }}")
+    expect(CODIGO).toContain("transition={{ layout: MOLA_PALCO_LAYOUT }}")
   })
 
   it("proíbe rAF, marca, desfoque e cor crua", () => {
