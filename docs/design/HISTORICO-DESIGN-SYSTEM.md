@@ -25495,7 +25495,11 @@ mercado"), lendo como interface quebrada e não como sangria.
 - **O celular anda para a esquerda** (`margin-inline-end: 24cqw`, o centro a
   38%; 10cqw no L, a 45%). Centrado, ele deixa duas faixas laterais mais
   estreitas que um cartão em todo nível menos o L; deslocado, sobra uma coluna
-  inteira à direita, e a colagem do celular vira essa coluna (s0, s3, s2).
+  inteira à direita, e a colagem do celular vira essa coluna (s0, s3, s2). O
+  deslocamento só vale **com colagem no palco** (`&:has([data-slot=
+  "showcase-scatter"])` na `@utility showcase-stage`): sozinho — o
+  `DemoNoPalco` do `DeviceFrame`, o esqueleto do celular — ele fica no centro;
+  na primeira versão ele saía do meio ali também.
 - **Só a borda direita corta.** No navegador, s1 pousa inteiro sob a marca e s0
   inteiro em cima; s4, s10 e s11 ficaram sem pouso nesses campos. O tablet
   guarda só o s0, em cima à direita: os outros cantos são da marca e da

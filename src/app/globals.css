@@ -2441,9 +2441,10 @@
    projeção de layout do `motion` anima a troca de tamanho — nunca `scale()`.
    O celular é alto e estreito: centrado, sobram duas faixas laterais mais
    estreitas que um cartão, e o cartão da esquerda perderia o nome e o começo de
-   cada linha. Por isso ele anda para a esquerda (`margin-inline-end: 24cqw`, o
-   centro a 38% da largura; no palco L, 10cqw, a 45%) e a colagem vira uma
-   coluna inteira à direita, colada nele. */
+   cada linha. Por isso, com a colagem no palco, ele anda para a esquerda
+   (`margin-inline-end: 24cqw`, o centro a 38% da largura; no palco L, 10cqw, a
+   45%) e a colagem vira uma coluna inteira à direita, colada nele. Sem
+   colagem (o catálogo do DeviceFrame, o esqueleto) ele fica no centro. */
 @utility showcase-stage {
   container: showcase / size;
   & [data-slot="showcase-hero"][data-form="browser"] {
@@ -2463,10 +2464,13 @@
     width: auto;
     height: min(72cqh, 160cqw);
     aspect-ratio: 9 / 19.5;
-    margin-inline-end: 24cqw;
     @container showcase (height < 44rem) {
       height: min(70cqh, 160cqw);
     }
+  }
+  /* O deslocamento só existe com a colagem ao lado: sozinho, o celular fica no centro. */
+  &:has([data-slot="showcase-scatter"]) [data-slot="showcase-hero"][data-form="phone"] {
+    margin-inline-end: 24cqw;
     @container showcase (width >= 48rem) {
       margin-inline-end: 10cqw;
     }

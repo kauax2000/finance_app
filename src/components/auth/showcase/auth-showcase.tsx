@@ -276,10 +276,7 @@ const PASSOS_DA_RECUPERACAO = [
 function ChipDaLinhaDoTempo({ timeline }: { timeline: NonNullable<SceneSpec["timeline"]> }) {
     const atual = Math.min(timeline.current, PASSOS_DA_RECUPERACAO.length - 1)
     const { icon, titulo } = PASSOS_DA_RECUPERACAO[atual]
-    // O link vencido volta ao começo: no lugar das casas (todas apagadas leriam como esqueleto), a frase.
-    if (timeline.expired) {
-        return <ChipSimples icon={ClockIcon} color={TILE_EXPENSE_DEFAULT} title="Link vencido" description="Volte ao começo." estreito />
-    }
+    // O link vencido mostra o passo 1 atual (o plano): quem diz "expirou" é o aviso do aparelho, sozinho.
     return (
         <ChipSimples
             icon={icon}
