@@ -286,6 +286,16 @@ const SidebarGatilhoMovelContext = React.createContext(false)
  */
 const SidebarPeekContext = React.createContext(false)
 
+/**
+ * Se a barra é placa solta (`floating` ou `inset`): o botão fica 8px para dentro
+ * dela, e a dica soma esse recuo para abrir a 6px da placa, e não do botão.
+ */
+const SidebarSoltaContext = React.createContext(false)
+
+/** A folga da dica até a borda da barra: 6, mais o recuo interno da placa solta. */
+const SIDEBAR_TOOLTIP_OFFSET = 6
+const SIDEBAR_PLACA_RECUO = 8
+
 function Sidebar({
   variant: variante = "floating",
   collapsible = "offcanvas",
@@ -499,6 +509,7 @@ function Sidebar({
         <SidebarGatilhoMovelContext.Provider
           value={variant === "floating" && collapsible === "icon"}
         >
+        <SidebarSoltaContext.Provider value={solta}>
           {barra}
           {/* Nas soltas a costura é da placa: sem fio em repouso, rente à aresta e da altura dela. */}
           <ResizableHandle
@@ -506,6 +517,7 @@ function Sidebar({
             variant={solta ? "plain" : "line"}
             className={SIDEBAR_COSTURA[variant]}
           />
+        </SidebarSoltaContext.Provider>
         </SidebarGatilhoMovelContext.Provider>
         </SidebarRealceContext.Provider>
     )
@@ -517,6 +529,7 @@ function Sidebar({
         value={variant === "floating" && collapsible === "icon"}
       >
       <SidebarPeekContext.Provider value={peek && collapsible === "icon"}>
+      <SidebarSoltaContext.Provider value={solta}>
         <div
           className="group peer hidden text-sidebar-foreground md:block"
           data-state={state}
@@ -561,6 +574,7 @@ function Sidebar({
             {miolo}
           </div>
         </div>
+      </SidebarSoltaContext.Provider>
       </SidebarPeekContext.Provider>
       </SidebarGatilhoMovelContext.Provider>
       </SidebarRealceContext.Provider>
@@ -672,6 +686,7 @@ function SidebarTriggerButton({
           <TooltipTrigger asChild>{botao}</TooltipTrigger>
           <TooltipContent
             side={naBarra ? "right" : undefined}
+            sideOffset={naBarra ? SIDEBAR_TOOLTIP_OFFSET + SIDEBAR_PLACA_RECUO : undefined}
             shortcut={`mod+${SIDEBAR_KEYBOARD_SHORTCUT}`}
           >
             {rotulo}
@@ -1170,6 +1185,7 @@ function SidebarMenuButton({
   const Comp = asChild ? Slot.Root : "button"
   const { isMobile, state, espiando } = useSidebar()
   const espia = React.useContext(SidebarPeekContext)
+  const solta = React.useContext(SidebarSoltaContext)
 
   const button = (
     <Comp
@@ -1206,7 +1222,7 @@ function SidebarMenuButton({
         {...restTooltipProps}
         side="right"
         align="center"
-        sideOffset={6}
+        sideOffset={SIDEBAR_TOOLTIP_OFFSET + (solta ? SIDEBAR_PLACA_RECUO : 0)}
         className={tooltipClassName}
       />
     </Tooltip>

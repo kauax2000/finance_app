@@ -110,6 +110,14 @@ describe("as versões do Sidebar", () => {
     expect(CODIGO).toContain("md:group-has-[[data-slot=sidebar][data-variant=floating][data-state=expanded]]/sidebar-wrapper:pl-2")
   })
 
+  it("nas placas soltas a dica abre a 6px da placa, e não do botão", () => {
+    expect(CODIGO).toContain("const SidebarSoltaContext = React.createContext(false)")
+    expect(CODIGO).toContain("sideOffset={SIDEBAR_TOOLTIP_OFFSET + (solta ? SIDEBAR_PLACA_RECUO : 0)}")
+    expect(CODIGO).toContain("sideOffset={naBarra ? SIDEBAR_TOOLTIP_OFFSET + SIDEBAR_PLACA_RECUO : undefined}")
+    expect(CODIGO.match(/<SidebarSoltaContext\.Provider value=\{solta\}>/g)?.length).toBe(2)
+    expect(CODIGO).not.toContain("sideOffset={6}")
+  })
+
   it("as ações de grupo e de linha são círculos", () => {
     // A pílula é a forma das peças soltas, e o botão de 20px na ponta da linha a acompanha.
     expect(CODIGO).toContain('"absolute top-3.5 right-3 flex aspect-square w-5 items-center justify-center rounded-full p-0')
