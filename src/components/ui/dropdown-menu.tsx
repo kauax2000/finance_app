@@ -907,9 +907,20 @@ function DropdownMenuRadioItem({
   className,
   children,
   inset,
+  indicator = "dot",
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.RadioItem> & {
   inset?: boolean
+  /**
+   * `dot` (o padrão) marca uma opção de configuração. `media` marca a escolha pela
+   * mídia da linha, quando ela é a identidade da opção (o ladrilho de cor de uma
+   * carteira): a escolhida ganha o halo da amostra do `Toggle variant="swatch"`
+   * (contorno de 2px, afastado 2px) na cor da própria opção puxada para a tinta, a
+   * linha escolhida tem um fundo leve (5% da tinta, abaixo dos 9% da passagem), a
+   * outra em foco mostra a prévia esmaecida do mesmo halo, e as demais esmaecem a
+   * tinta. Sem peso e sem marcador no fim da linha.
+   */
+  indicator?: "dot" | "media"
 }) {
   const estado = React.useContext(DropdownMenuEstadoContext)
   const naBusca = React.useContext(DropdownMenuBuscaContext)
@@ -938,18 +949,43 @@ function DropdownMenuRadioItem({
     <DropdownMenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
       data-inset={inset}
-      className={cn(menuIndicatorItemClassName, naBusca && "gap-2 pl-2 py-1.5", className)}
+      data-indicator={indicator}
+      className={cn(
+        menuIndicatorItemClassName,
+        naBusca && "gap-2 pl-2 py-1.5",
+        indicator === "media" && [
+          // Sem marcador no fim, a linha não reserva o `pr-8` dele.
+          "pr-2 data-[state=unchecked]:not-focus:text-muted-foreground",
+          // A escolhida tem um fundo leve, 5% da tinta — abaixo dos 9% da passagem, que vence no foco.
+          "data-[state=checked]:not-focus:bg-foreground/5",
+          // Entre duas linhas de mídia, 4px — o respiro dos itens da barra lateral: com o fundo
+          // da escolhida e o da passagem, linhas coladas liam como um bloco só.
+          "[[data-indicator=media]+&]:mt-1",
+          // O halo mora no ladrilho: nasce colado e transparente, e cresce na curva do sistema.
+          "[&>[data-slot=color-tile]]:outline-2 [&>[data-slot=color-tile]]:outline-solid [&>[data-slot=color-tile]]:outline-offset-0 [&>[data-slot=color-tile]]:outline-transparent [&>[data-slot=color-tile]]:transition-[outline-offset,outline-color] [&>[data-slot=color-tile]]:duration-(--duration-slow) [&>[data-slot=color-tile]]:ease-(--ease-emphasized)",
+          // Escolhida: a cor da própria carteira, puxada para a tinta — o matiz é da pessoa, e o
+          // contraste contra a placa fica garantido nos dois temas.
+          "data-[state=checked]:[&>[data-slot=color-tile]]:outline-offset-2 data-[state=checked]:[&>[data-slot=color-tile]]:outline-[color-mix(in_oklab,var(--tile-surface)_60%,var(--foreground))]",
+          // No foco (cursor ou teclado) de outra, a prévia do mesmo halo: "escolher esta".
+          "data-[state=unchecked]:focus:[&>[data-slot=color-tile]]:outline-offset-2 data-[state=unchecked]:focus:[&>[data-slot=color-tile]]:outline-[color-mix(in_oklab,var(--tile-surface)_45%,transparent)]",
+        ],
+        className
+      )}
       {...props}
     >
-      <span className={menuIndicatorSlotClassName}>
-        <DropdownMenuPrimitive.ItemIndicator>
-          {/* Um ponto, e não o mesmo tique da caixa: rádio é "escolha uma",
-              caixa é "marque quantas quiser", e usar o mesmo desenho nos dois
-              apaga a diferença. O `RadioGroup` já decidiu isto — um ponto não
-              precisa ser SVG, e o Heroicons não traz círculo puro. */}
-          <span className="size-2 rounded-full bg-current" />
-        </DropdownMenuPrimitive.ItemIndicator>
-      </span>
+      {indicator === "dot" ? (
+        <span className={menuIndicatorSlotClassName}>
+          <DropdownMenuPrimitive.ItemIndicator>
+            {/* Um ponto, e não o mesmo tique da caixa: rádio é "escolha uma",
+                caixa é "marque quantas quiser", e usar o mesmo desenho nos dois
+                apaga a diferença. O `RadioGroup` já decidiu isto — um ponto não
+                precisa ser SVG, e o Heroicons não traz círculo puro. `block`:
+                dentro do indicador o `span` é inline, e inline ignora o `size-2`
+                (o ponto media 0×0, como mede o `Menubar` sem ele). */}
+            <span className="block size-2 rounded-full bg-current" />
+          </DropdownMenuPrimitive.ItemIndicator>
+        </span>
+      ) : null}
       {children}
     </DropdownMenuPrimitive.RadioItem>
   )

@@ -5,8 +5,9 @@ import { AccountMenuUserSummary } from "@/components/layout/account-menu-user-su
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuHeader,
     DropdownMenuItem,
-    DropdownMenuLabel,
+    DropdownMenuSection,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -36,50 +37,40 @@ export function UserMenu({ children }: UserMenuProps) {
             {/* 8 do recuo da placa flutuante + 8 de calha: o menu abre a 8px dela. */}
             <DropdownMenuContent
                 variant="panel"
-                className="w-60 max-w-[calc(100vw-2rem)]"
+                size="xl"
                 align="end"
                 side="right"
                 sideOffset={16}
                 header={
-                    <DropdownMenuLabel className="p-0 font-normal">
+                    <DropdownMenuHeader>
                         <AccountMenuUserSummary />
-                    </DropdownMenuLabel>
+                    </DropdownMenuHeader>
                 }
             >
-                <div className="overflow-hidden rounded-xl py-1">
-
+                <DropdownMenuSection>
+                    {/* O tema é um controle, não um comando: a linha não fecha o menu. */}
                     <div
-                        className="flex items-center justify-between gap-3 px-2.5 py-1.5"
+                        className="flex items-center justify-between gap-3 px-2 py-1"
                         onPointerDown={(e) => e.stopPropagation()}
                     >
-                        <span className="text-sm text-foreground">Tema</span>
-                        <ThemeToggle className="ml-auto shrink-0" />
+                        <span className="text-sm">Tema</span>
+                        <ThemeToggle />
                     </div>
-
-                    <DropdownMenuSeparator className="mx-0 my-0 bg-border/60" />
-
-                    <div className="p-1">
-                        {dropdownLinkItems.map(({ href, label, icon: Icon }) => (
-                            <DropdownMenuItem key={href} asChild>
-                                <Link href={href}>
-                                    <Icon />
-                                    {label}
-                                </Link>
-                            </DropdownMenuItem>
-                        ))}
-                    </div>
-
-                    <DropdownMenuSeparator className="mx-0 my-0 bg-border/60" />
-
-                    <div className="p-1">
-                        <DropdownMenuItem variant="destructive" className="cursor-pointer"
-                            onClick={() => signOut()}
-                        >
-                            <ArrowRightStartOnRectangleIcon />
-                            Sair
+                    <DropdownMenuSeparator />
+                    {dropdownLinkItems.map(({ href, label, icon: Icon }) => (
+                        <DropdownMenuItem key={href} asChild>
+                            <Link href={href}>
+                                <Icon />
+                                {label}
+                            </Link>
                         </DropdownMenuItem>
-                    </div>
-                </div>
+                    ))}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem variant="destructive" onSelect={() => signOut()}>
+                        <ArrowRightStartOnRectangleIcon />
+                        Sair
+                    </DropdownMenuItem>
+                </DropdownMenuSection>
             </DropdownMenuContent>
         </DropdownMenu>
     )

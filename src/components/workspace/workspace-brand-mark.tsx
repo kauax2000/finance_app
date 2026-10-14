@@ -1,7 +1,7 @@
 "use client"
 
 import { createElement } from "react"
-import { UserGroupIcon } from "@heroicons/react/24/outline"
+import { UserGroupIcon } from "@heroicons/react/16/solid"
 import { ColorTile } from "@/components/ui/color-tile"
 import { cn } from "@/lib/utils"
 import { getWorkspaceIconComponent } from "@/lib/workspace-icons"
@@ -9,6 +9,8 @@ import { getWorkspaceIconComponent } from "@/lib/workspace-icons"
 type WorkspaceBrandMarkProps = {
     iconKey: string
     backgroundColor: string
+    /** O degrau do `ColorTile`: `xs` 24 dentro de uma linha de menu, `md` 32 na barra lateral, `lg` 36 no resto. */
+    size?: "xs" | "md" | "lg"
     className?: string
     iconClassName?: string
 }
@@ -28,6 +30,7 @@ type WorkspaceBrandMarkProps = {
 export function WorkspaceBrandMark({
     iconKey,
     backgroundColor,
+    size = "lg",
     className,
     iconClassName,
 }: WorkspaceBrandMarkProps) {
@@ -35,7 +38,7 @@ export function WorkspaceBrandMark({
 
     return (
         <ColorTile
-            size="lg"
+            size={size}
             color={backgroundColor}
             className={cn("shrink-0", className)}
         >

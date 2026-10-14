@@ -77,3 +77,32 @@ describe("as versões do DropdownMenu", () => {
   })
 })
 
+describe("o ponto do rádio", () => {
+  it("é um bloco: inline dentro do indicador, o size-2 media 0×0", () => {
+    for (const arquivo of ["dropdown-menu.tsx", "context-menu.tsx", "menubar.tsx"]) {
+      const fonte = lerFonte(`src/components/ui/${arquivo}`)
+      expect(fonte, arquivo).not.toMatch(/ItemIndicator>\s*(\{\/\*[\s\S]*?\*\/\}\s*)?<span className="size-2/)
+      expect(fonte, arquivo).toMatch(/className="block size-2[^"]*rounded-full bg-current/)
+    }
+  })
+})
+
+describe("o rádio que marca a escolha atual", () => {
+  it("indicator=\"media\": o halo na cor da própria opção, a prévia no foco e a tinta esmaecida", () => {
+    const fonte = lerFonte("src/components/ui/dropdown-menu.tsx")
+    expect(fonte).toContain('indicator?: "dot" | "media"')
+    // O halo nasce colado e transparente, e cresce na curva do sistema.
+    expect(fonte).toContain("[&>[data-slot=color-tile]]:outline-2 [&>[data-slot=color-tile]]:outline-solid [&>[data-slot=color-tile]]:outline-offset-0 [&>[data-slot=color-tile]]:outline-transparent")
+    // Escolhida: a cor do ladrilho puxada para a tinta (contraste nos dois temas).
+    expect(fonte).toContain("data-[state=checked]:[&>[data-slot=color-tile]]:outline-offset-2 data-[state=checked]:[&>[data-slot=color-tile]]:outline-[color-mix(in_oklab,var(--tile-surface)_60%,var(--foreground))]")
+    // No foco de outra, a prévia do mesmo halo, esmaecida.
+    expect(fonte).toContain("data-[state=unchecked]:focus:[&>[data-slot=color-tile]]:outline-offset-2")
+    expect(fonte).toContain("data-[state=unchecked]:not-focus:text-muted-foreground")
+    // A escolhida tem fundo leve (5% da tinta), abaixo do realce de passagem (9%): os dois
+    // estados se distinguem. Não é o `bg-muted`, que pesava como o realce.
+    expect(fonte).toContain("data-[state=checked]:not-focus:bg-foreground/5")
+    // Entre duas linhas de mídia, 4px (o respiro dos itens da barra lateral): os fundos não se colam.
+    expect(fonte).toContain("[[data-indicator=media]+&]:mt-1")
+    expect(fonte).not.toContain("data-[state=checked]:bg-muted")
+  })
+})

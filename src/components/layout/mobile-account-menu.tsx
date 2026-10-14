@@ -99,7 +99,7 @@ export function MobileAccountMenu({ children }: MobileAccountMenuProps) {
                 {/* Um filho só abaixo do cabeçalho: é ele que rola, se a
                     lista passar da altura (o meio da gaveta). */}
                 <div className="flex flex-col pb-2">
-                    <div className="px-2">
+                    <div className="flex items-center gap-3 px-4.5 pb-2.5 pt-2 text-left">
                         <AccountMenuUserSummary />
                     </div>
                     <div className="flex items-center justify-between gap-3 px-5 py-2">

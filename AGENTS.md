@@ -613,6 +613,13 @@ declaração de `background-color` no trilho).
     `(hover: hover)` e exclui `[data-pointer="coarse"] *` (`group-hover:` e
     `peer-hover:` compõem com ela); o `Tooltip` não abre por hover lá dentro e
     o brilho de marca não acende (`deDedo`).
+- **O anel de foco é do teclado**: `@custom-variant focus-visible` não acende
+  sob `[data-modality="pointer"]`, que o `FocusModality` (`app/focus-modality.tsx`,
+  no layout raiz) põe no `<html>` no `pointerdown` e tira no `keydown`. O
+  Radix devolve o foco ao gatilho ao fechar menu, popover e diálogo, e o
+  Chrome herdava o `:focus-visible`: depois de um clique, o gatilho ficava com
+  o anel, parecendo ativo. Não troque `focus-visible:` por `focus:` para
+  contornar — `tailwind-hover-policy.test.ts` tranca a variante.
 - **`pointer-coarse:` também vale sob `[data-pointer="coarse"]`**
   (`@custom-variant` em `globals.css`), para o `IphoneFrame` do catálogo
   mostrar os alvos do aparelho. No app ninguém escreve o atributo. O que
@@ -1127,7 +1134,14 @@ declaração de `background-color` no trilho).
     `Command`, `Select`, `NavigationMenu`, folha de ações e seletor de mês;
     `Item` e `Toggle` seguem `bg-muted` — `lib/row-tint.test.ts`.
   - A linha mede 36 e cresce a 44 no **apontador** grosso
-    (`pointer-coarse:min-h-11`). **Rádio é ponto, caixa é tique.**
+    (`pointer-coarse:min-h-11`). **Rádio é ponto, caixa é tique** — a exceção é
+    `DropdownMenuRadioItem indicator="media"`, quando a mídia da linha é a
+    identidade da opção (o ladrilho da carteira): a escolhida ganha o halo da
+    amostra (`Toggle swatch`: contorno de 2px, afastado 2px) na cor da própria
+    opção puxada para a tinta (`color-mix` com `--foreground`: 11:1 no escuro,
+    5,6:1 no claro) e a linha um fundo leve (`bg-foreground/5`, abaixo dos 9% da
+    passagem); a outra em foco mostra a prévia do halo a 45%, e as demais
+    esmaecem a tinta. Entre duas linhas, 4px. Sem peso nem marcador no fim.
   - Teto vertical
     `max-h-[min(var(--radix-*-content-available-height),var(--menu-max-h))]`
     (288px) e horizontal `max-w-(--radix-*-content-available-width)`, escritos
@@ -1320,6 +1334,12 @@ declaração de `background-color` no trilho).
   `collapsible="none"`). A pílula do ativo é `layoutId`; `peek`. **Nenhuma tela
   escreve** o `h-12` do cabeçalho recolhido, o `overflow-y-auto` do conteúdo
   recolhido nem a espera do botão `lg` (`SidebarMenuSkeleton size="lg"`).
+  Recolhida, o trilho mede 64 (16 + o botão de 32 + 16; o recuo lateral
+  cresce a 16 só no modo ícone, e o topo e a base também: 16 nas quatro bordas), e o degrau `lg` perde o recuo (`p-0!`):
+  a mídia de 32 — a carteira, o avatar da conta — fica inteira, sem encolher.
+  Na placa flutuante o degrau `lg` (carteira, conta) é `concentric`: 20
+  aberta, 12 recolhida (o recuo publicado sobe a 16 no modo ícone).
+  O gatilho do topo não tem dica; dentro da barra recolhida, tem.
   Nas placas soltas a dica do item e a do gatilho na barra abrem a 6px da
   placa, e não do botão (`SIDEBAR_TOOLTIP_OFFSET` + `SIDEBAR_PLACA_RECUO`); um
   menu ancorado num botão de dentro da placa usa `sideOffset={16}` (o recuo de

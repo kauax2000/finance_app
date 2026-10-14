@@ -3,7 +3,6 @@
 import * as React from "react"
 import Link from "next/link"
 import { PlusIcon } from "@heroicons/react/16/solid"
-import { CheckIcon } from "@heroicons/react/20/solid"
 import { useWorkspace } from "@/components/workspace-provider"
 import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
 import {
@@ -13,27 +12,17 @@ import {
     AlertDescription,
     AlertTitle,
 } from "@/components/ui/alert"
-import { Separator } from "@/components/ui/separator"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+import {
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { Workspace } from "@/lib/supabase"
-
-const workspaceRowIconBoxClassDefault =
-    "flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-sidebar text-sidebar-foreground [&_svg]:text-sidebar-foreground"
-
-const workspaceRowIconBoxClassComfortable =
-    "flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/80 text-foreground [&_svg]:text-foreground"
-
-/**
- * Estilo alinhado ao DropdownMenuItem, sem exigir contexto Radix Menu (funciona no sheet móvel).
- *
- * É por isso que as linhas deste arquivo são `<button>` cru, de propósito: elas
- * são itens de menu fora de um menu, e o `DropdownMenuItem` só existe dentro do
- * `Menu` do Radix. `Item` não serve — tem outra geometria e outro realce.
- */
-const pickerRowInteractiveClass =
-    "relative flex w-full cursor-pointer select-none items-center text-left text-sm outline-hidden transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground active:bg-accent/90 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0"
 
 export type WorkspacePickerMenuBodyCallbacks = {
     closePicker: () => void
@@ -41,74 +30,19 @@ export type WorkspacePickerMenuBodyCallbacks = {
     openCreateDialog: () => void
 }
 
-type WorkspacePickerDensity = "default" | "comfortable"
-
 type WorkspacePickerMenuBodyProps = {
     callbacks: WorkspacePickerMenuBodyCallbacks
-    className?: string
-    /** `comfortable`: linhas e ícones maiores para toque (ex.: sheet móvel). */
-    density?: WorkspacePickerDensity
 }
 
-function WorkspacePickerWorkspaceRow({
-    workspace,
-    isActive,
-    comfortable,
-    itemRowClass,
-    markClass,
-    labelClass,
-    onPick,
-}: {
-    workspace: Workspace
-    isActive: boolean
-    comfortable: boolean
-    itemRowClass: string
-    markClass: string
-    labelClass: string
-    onPick: () => void
-}) {
-    return (
-        <button
-            type="button"
-            onClick={onPick}
-            aria-current={isActive ? "true" : undefined}
-            className={cn(
-                pickerRowInteractiveClass,
-                itemRowClass,
-                isActive &&
-                    "bg-primary/10 ring-1 ring-inset ring-primary/20 hover:bg-primary/15 hover:text-accent-foreground dark:bg-primary/15 dark:ring-primary/30 dark:hover:bg-primary/20",
-            )}
-        >
-            <WorkspaceBrandMark
-                iconKey={workspace.icon}
-                backgroundColor={workspace.icon_background_color}
-                className={markClass}
-                iconClassName={comfortable ? "size-5" : undefined}
-            />
-            <span className={labelClass}>{workspace.name}</span>
-            {isActive ? (
-                <span
-                    className={cn(
-                        "flex shrink-0 items-center justify-center",
-                        comfortable ? "size-9" : "size-7",
-                    )}
-                    aria-hidden
-                >
-                    <CheckIcon
-                        className={comfortable ? "size-5 text-primary-accent" : "size-4 text-primary-accent"}
-                        aria-hidden
-                    />
-                </span>
-            ) : null}
-        </button>
-    )
-}
-
-export function WorkspacePickerMenuBody({
-    callbacks,
-    className,
-    density = "default",
-}: WorkspacePickerMenuBodyProps) {
+/**
+ * O miolo do seletor de carteira, feito das peças do `DropdownMenu`: trocar de
+ * carteira é escolher uma entre várias, então cada grupo é um
+ * `DropdownMenuRadioGroup` (o ponto marca a atual), os títulos são
+ * `DropdownMenuLabel` e "Criar carteira" é um `DropdownMenuItem`. Antes eram
+ * `<button>` crus com o realce escrito à mão, porque o miolo também servia uma
+ * gaveta fora do menu do Radix — essa gaveta não existe mais.
+ */
+export function WorkspacePickerMenuBody({ callbacks }: WorkspacePickerMenuBodyProps) {
     const {
         currentWorkspaceId,
         workspaces,
@@ -120,8 +54,6 @@ export function WorkspacePickerMenuBody({
         pendingWorkspaceInvites,
     } = useWorkspace()
 
-    const comfortable = density === "comfortable"
-
     const ownedWorkspaces = React.useMemo(
         () => workspaces.filter((w) => workspaceRoleById[w.id] === "owner"),
         [workspaces, workspaceRoleById]
@@ -131,221 +63,96 @@ export function WorkspacePickerMenuBody({
         [workspaces, workspaceRoleById]
     )
 
-    const showSharedSection =
-        !loading && workspaces.length > 0 && memberWorkspaces.length > 0
-
-    const itemRowClass = cn(
-        "gap-2 rounded-md",
-        comfortable ? "min-h-12 gap-3 rounded-lg px-3 py-3" : "px-2 py-2"
-    )
-    const markClass = comfortable
-        ? "size-9 shrink-0 rounded-lg"
-        : "size-7 shrink-0 rounded-md"
-    const labelClass = comfortable
-        ? "min-w-0 flex-1 truncate text-left text-base font-medium"
-        : "min-w-0 flex-1 truncate text-left text-sm font-medium"
-    const placeholderClass = comfortable
-        ? "flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/80 text-muted-foreground"
-        : "flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-sidebar text-sidebar-foreground"
-    const plusBoxClass = comfortable
-        ? workspaceRowIconBoxClassComfortable
-        : workspaceRowIconBoxClassDefault
-    const plusGlyphClass = comfortable ? "size-5" : "size-4"
-    /** Padding horizontal só no conteúdo; separadores ficam largura total do dropdown. */
-    const insetX = comfortable ? "px-3" : "px-2"
-    const sectionTitleClass = cn(
-        comfortable
-            ? "pb-2 pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-            : "pb-2 pt-1 text-xs font-medium text-muted-foreground",
-        insetX
-    )
-    const inviteScrollMax = comfortable ? "max-h-[50vh]" : "max-h-40"
-    const ownedScrollMax = showSharedSection
-        ? comfortable
-            ? "max-h-[50vh]"
-            : "max-h-44"
-        : comfortable
-          ? "max-h-[55vh]"
-          : "max-h-72"
-    const sharedScrollMax = comfortable ? "max-h-[50vh]" : "max-h-44"
-    const disabledRowClass = comfortable ? "h-12 min-h-12" : "h-10"
-
     function pickWorkspace(id: string) {
         void setCurrentWorkspaceId(id)
         callbacks.closePicker()
         callbacks.afterWorkspaceChosen?.()
     }
 
+    const opcoes = (lista: Workspace[]) => (
+        <DropdownMenuRadioGroup
+            value={currentWorkspaceId ?? ""}
+            onValueChange={pickWorkspace}
+        >
+            {lista.map((workspace) => (
+                <DropdownMenuRadioItem key={workspace.id} value={workspace.id} indicator="media">
+                    <WorkspaceBrandMark
+                        iconKey={workspace.icon}
+                        backgroundColor={workspace.icon_background_color}
+                        size="xs"
+                    />
+                    <span className="min-w-0 flex-1 truncate">{workspace.name}</span>
+                </DropdownMenuRadioItem>
+            ))}
+        </DropdownMenuRadioGroup>
+    )
+
     return (
-        <div className={cn("overflow-hidden rounded-xl py-2", className)}>
-            {loading ? null : pendingWorkspaceInvites.length > 0 ? (
+        <>
+            {!loading && pendingWorkspaceInvites.length > 0 ? (
                 <>
-                    <p className={sectionTitleClass}>Convites</p>
-                    <div
-                        className={cn(
-                            "overflow-y-auto py-1",
-                            insetX,
-                            inviteScrollMax
-                        )}
-                    >
-                        {pendingWorkspaceInvites.map((inv) => {
-                            const w = inv.workspace
-                            return (
+                    <DropdownMenuGroup>
+                        <DropdownMenuLabel>Convites</DropdownMenuLabel>
+                        {pendingWorkspaceInvites.map((inv) => (
+                            <DropdownMenuItem key={inv.id} asChild>
                                 <Link
-                                    key={inv.id}
                                     href={`/invites/accept?invite=${encodeURIComponent(inv.id)}`}
                                     onClick={() => callbacks.closePicker()}
-                                    className={cn(
-                                        pickerRowInteractiveClass,
-                                        itemRowClass,
-                                        "flex items-center"
-                                    )}
                                 >
-                                    {w ? (
+                                    {inv.workspace ? (
                                         <WorkspaceBrandMark
-                                            iconKey={w.icon}
-                                            backgroundColor={w.icon_background_color}
-                                            className={markClass}
-                                            iconClassName={comfortable ? "size-5" : undefined}
+                                            iconKey={inv.workspace.icon}
+                                            backgroundColor={inv.workspace.icon_background_color}
+                                            size="xs"
                                         />
-                                    ) : (
-                                        <div className={placeholderClass}>
-                                            <span className="text-xs font-semibold">?</span>
-                                        </div>
-                                    )}
-                                    <span className={labelClass}>{w?.name ?? "Convite"}</span>
-                                    <Badge
-                                        tone="neutral"
-                                        className="shrink-0 px-1.5 py-0 text-2xs"
-                                    >
+                                    ) : null}
+                                    <span className="min-w-0 flex-1 truncate">
+                                        {inv.workspace?.name ?? "Convite"}
+                                    </span>
+                                    <Badge size="xs" tone="neutral">
                                         Convite
                                     </Badge>
                                 </Link>
-                            )
-                        })}
-                    </div>
-                    <Separator className="my-2" />
+                            </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
                 </>
             ) : null}
 
-            <p className={sectionTitleClass}>Minhas carteiras</p>
+            <DropdownMenuLabel>Minhas carteiras</DropdownMenuLabel>
+            {loading ? (
+                <div className="flex flex-col gap-1 px-2 py-1" aria-busy="true">
+                    {[0, 1, 2].map((i) => (
+                        <div key={i} className="flex h-9 items-center gap-2">
+                            <Skeleton shape="tile" size="xs" />
+                            <Skeleton shape="text" className="flex-1" />
+                        </div>
+                    ))}
+                </div>
+            ) : ownedWorkspaces.length > 0 ? (
+                opcoes(ownedWorkspaces)
+            ) : (
+                <DropdownMenuItem disabled>
+                    {workspaces.length > 0
+                        ? "Nenhuma carteira própria"
+                        : "Nenhuma carteira encontrada"}
+                </DropdownMenuItem>
+            )}
 
-            <div
-                className={cn(
-                    "overflow-y-auto py-1",
-                    insetX,
-                    ownedScrollMax
-                )}
-            >
-                {loading ? (
-                    <div className="space-y-2 py-1" aria-busy="true">
-                        {[0, 1, 2].map((i) => (
-                            <div
-                                key={i}
-                                className={cn(
-                                    "flex items-center gap-2 rounded-md px-2",
-                                    comfortable ? "py-3" : "py-2"
-                                )}
-                            >
-                                <Skeleton
-                                    className={cn(
-                                        "shrink-0 rounded-md",
-                                        comfortable ? "size-9 rounded-lg" : "size-7"
-                                    )}
-                                />
-                                <Skeleton
-                                    className={cn(
-                                        "min-w-0 flex-1",
-                                        comfortable ? "h-5" : "h-4"
-                                    )}
-                                />
-                            </div>
-                        ))}
-                    </div>
-                ) : workspaces.length > 0 ? (
-                    <>
-                        {ownedWorkspaces.length > 0 ? (
-                            ownedWorkspaces.map((workspace) => {
-                                const isActive = workspace.id === currentWorkspaceId
-                                return (
-                                    <WorkspacePickerWorkspaceRow
-                                        key={workspace.id}
-                                        workspace={workspace}
-                                        isActive={isActive}
-                                        comfortable={comfortable}
-                                        itemRowClass={itemRowClass}
-                                        markClass={markClass}
-                                        labelClass={labelClass}
-                                        onPick={() => pickWorkspace(workspace.id)}
-                                    />
-                                )
-                            })
-                        ) : (
-                            <div
-                                className={cn(
-                                    pickerRowInteractiveClass,
-                                    itemRowClass,
-                                    disabledRowClass,
-                                    "pointer-events-none justify-start text-muted-foreground opacity-50"
-                                )}
-                                role="status"
-                            >
-                                Nenhuma carteira própria
-                            </div>
-                        )}
-                    </>
-                ) : (
-                    <div
-                        className={cn(
-                            pickerRowInteractiveClass,
-                            itemRowClass,
-                            disabledRowClass,
-                            "pointer-events-none justify-start text-muted-foreground opacity-50"
-                        )}
-                        role="status"
-                    >
-                        Nenhuma carteira encontrada
-                    </div>
-                )}
-            </div>
-
-            {showSharedSection ? (
+            {!loading && memberWorkspaces.length > 0 ? (
                 <>
-                    <Separator className="my-2" />
-                    <p className={sectionTitleClass}>Compartilhados comigo</p>
-                    <div
-                        className={cn(
-                            "overflow-y-auto py-1",
-                            insetX,
-                            sharedScrollMax
-                        )}
-                    >
-                        {memberWorkspaces.map((workspace) => {
-                            const isActive = workspace.id === currentWorkspaceId
-                            return (
-                                <WorkspacePickerWorkspaceRow
-                                    key={workspace.id}
-                                    workspace={workspace}
-                                    isActive={isActive}
-                                    comfortable={comfortable}
-                                    itemRowClass={itemRowClass}
-                                    markClass={markClass}
-                                    labelClass={labelClass}
-                                    onPick={() => pickWorkspace(workspace.id)}
-                                />
-                            )
-                        })}
-                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>Compartilhadas comigo</DropdownMenuLabel>
+                    {opcoes(memberWorkspaces)}
                 </>
             ) : null}
 
             {error ? (
-                // Não é erro de formulário — é a lista que não carregou —, então
-                // é o `Alert` (o ícone e o `role="alert"` vêm do tom). O
-                // invólucro só dá o recuo das linhas do painel.
-                <div className={cn("mt-1", insetX)}>
+                // A lista que não carregou, não um erro de formulário: o `Alert`.
+                <div className="px-1 py-1">
                     <Alert tone="destructive" size="sm">
-                        <AlertTitle>Não foi possível concluir esta ação</AlertTitle>
+                        <AlertTitle>Não foi possível carregar as carteiras</AlertTitle>
                         <AlertDescription>{error}</AlertDescription>
                         <AlertActions>
                             <AlertAction onClick={() => void refreshWorkspaces()}>
@@ -356,29 +163,11 @@ export function WorkspacePickerMenuBody({
                 </div>
             ) : null}
 
-            <Separator className="my-2" />
-            <div className={cn("py-1", insetX)}>
-                <button
-                    type="button"
-                    onClick={() => {
-                        callbacks.closePicker()
-                        callbacks.openCreateDialog()
-                    }}
-                    className={cn(pickerRowInteractiveClass, itemRowClass)}
-                >
-                    <span className={plusBoxClass}>
-                        <PlusIcon className={plusGlyphClass} />
-                    </span>
-                    <span
-                        className={cn(
-                            "flex-1 text-muted-foreground",
-                            comfortable && "text-base"
-                        )}
-                    >
-                        Criar carteira
-                    </span>
-                </button>
-            </div>
-        </div>
+            {/* Sem o fio, os mesmos 4px que separam as carteiras. */}
+            <DropdownMenuItem className="mt-1" onSelect={() => callbacks.openCreateDialog()}>
+                <PlusIcon />
+                Criar carteira
+            </DropdownMenuItem>
+        </>
     )
 }

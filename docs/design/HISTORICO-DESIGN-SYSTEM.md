@@ -25696,3 +25696,128 @@ esta registra o que o app passou a fazer com elas.
   canto do painel. A causa é que o `clientsClaim` do service worker dispara o
   `controllerchange` já na primeira instalação. É de `sw-register.tsx`, fora do
   painel.
+
+### Rodada 264 — `Sidebar`: o trilho recolhido ganha folga
+
+**O pedido.** Com a barra recolhida, o dono viu o ladrilho da carteira e o
+avatar da conta espremidos e pediu um trilho mais largo.
+
+**O que a medida mostrou.** Não era só largura: era recorte. O degrau `lg` do
+`SidebarMenuButton` recolhe a um botão de 32 com `p-1!`, o que deixa 24 para a
+mídia (a regra 12 do `sidebar-versions.test.ts`). O app punha ali um ladrilho e
+um avatar de 32: transbordavam 8px e o `overflow-hidden` do botão cortava a
+borda direita dos dois, a 4px da borda da placa.
+
+**O que mudou.**
+- `--sidebar-width-icon` passa de 48 a **64** (`4rem`), e o recuo lateral do
+  `SidebarHeader`, do `SidebarGroup` e do `SidebarFooter` cresce de 8 a 16 só no
+  modo ícone: todo botão de 32 fica a 16px de cada borda. O `collapsedSize` do
+  redimensionável acompanha: 72 no `floating`, 80 no `inset`, 64 na rente. (Uma
+  primeira medida foi 56, com 12 de folga; o dono pediu mais.) O topo do
+  `SidebarHeader` e a base do `SidebarFooter` sobem de 8 a 16 no modo ícone
+  (`pt-4`, `pb-4`): a mesma folga de 16 nas quatro bordas da placa.
+- **O degrau `lg` recolhido perde o recuo** (`p-1!` → `p-0!`, como o
+  `SidebarMenuSkeleton size="lg"` já fazia): a mídia passa a ser de 32 e enche
+  o botão. Uma primeira versão encolhia a carteira e o avatar a 24 no app; o
+  dono recusou — eles não encolhem. As três demonstrações `lg` do catálogo
+  sobem do `Avatar size="xs"` ao `sm`, a mesma mídia do app.
+
+**Medido** em 1531×863, recolhida: placa de 64, todo botão a 16px de cada
+borda, ladrilho e avatar de 32 também a 16px, sem recorte. Aberta, nada muda
+(placa de 240, mídia de 32).
+
+**O raio da carteira e da conta.** Os dois botões `lg` moram nos cantos da
+placa, a 8px do canto de 28, e vestiam a linha (12): a curva deles não seguia a
+da placa. Medidos os degraus que servem (linha 12, linha alta 16, concêntrico
+20, cápsula 24), o dono escolheu o concêntrico. No `floating` o degrau `lg`
+veste `concentric` (lê o `--radius-parent` e o `--radius-inset` que a placa já
+publicava): 20 aberta. Recolhida o botão fica a 16 do canto, e a placa publica
+`--radius-inset` de 16 no modo ícone — com `!`, porque as duas variantes de
+grupo empatam e a do `floating` vencia —, o que dá 12, a linha dos outros
+botões do trilho. Na rente e no `inset` fica a linha.
+
+**Os tamanhos voltam ao componente.** O app escrevia à mão sobre as peças da
+barra: `h-5 w-5` nos ícones (inerte: o `[&_svg]:size-4` do botão vence),
+`gap-3` nos links, `group-data-[collapsible=icon]:hidden` nos rótulos (cortava
+o esmaecer do próprio componente), `h-12 w-full` e um ladrilho de 36 reduzido a
+`size-8 rounded-lg` na carteira, `h-9 text-xs` e um `icon-lg` reduzido a
+`size-8 rounded-lg` no "+ Adicionar", `mt-2` e `pb-2` nos grupos. Saíram todos:
+a linha é a do `SidebarMenuButton`, a carteira é `lg` com `ColorTile size="md"`
+(o `WorkspaceBrandMark` ganhou `size`), o "+" é `Button size="lg"` e, recolhida,
+`size="icon-md"` (círculo, a cápsula dos controles). O realce do menu aberto
+(`data-[state=open]`) foi da carteira para o `SidebarMenuButton`: todo gatilho
+de menu da barra acende igual.
+
+**O gatilho do topo perde a dica.** (A linha padrão chegou a subir a 36 e voltou
+a 32 a pedido do dono: a escada da linha segue 28 · 32 · 48.) O `SidebarTrigger` no topo da página deixa de ter dica (o nome
+continua no `aria-label`); dentro da barra recolhida ela fica, com o atalho,
+como a de todo ícone do trilho. Na página ativa da navegação do app o ícone é o
+preenchido (`solidIconFor`, o mesmo par da `BottomBar`).
+
+**Os dois menus da barra viram peças do `DropdownMenu`.** O menu da conta é o
+"Painel" do catálogo: a identidade num `DropdownMenuHeader` (o
+`AccountMenuUserSummary` passou a ser só o conteúdo, e cada chamador dá a
+moldura — a gaveta do telefone guarda o recuo que tinha), o corpo num
+`DropdownMenuSection`, sem o invólucro `rounded-xl py-1`, sem os `p-1` e sem os
+fios `mx-0 my-0 bg-border/60`; a largura é `size="xl"`. O seletor de carteira
+troca os `<button>` crus por um `DropdownMenuRadioGroup` (escolher uma entre
+várias é rádio), os títulos por `DropdownMenuLabel`, "Criar carteira" por
+`DropdownMenuItem`, e o ladrilho desce a `ColorTile xs` (o
+`WorkspaceBrandMark` ganhou `xs`); a densidade `comfortable`, sem uso, saiu.
+
+Dois defeitos do sistema apareceram no caminho:
+- **O ponto do rádio media 0×0** no `DropdownMenu` e no `ContextMenu`: o `span`
+  do ponto é inline dentro do `ItemIndicator`, e inline ignora o `size-2`. Ganhou
+  `block`, como o `Menubar` já tinha; `dropdown-menu-versions.test.ts` tranca os três.
+- **A seta de "tem mais" ficava acesa** no menu da conta, sobre o "Sair". A
+  cascata de abertura (`rise`) desloca o corpo 4px, o transformado conta como
+  transbordo, e ao pousar nada muda de tamanho — o `ResizeObserver` não avisa. O
+  `useScrollFade` passou a medir de novo no `animationend`
+  (`scroll-fade.test.ts`). Vale para todo menu com a cascata.
+
+**A carteira atual se marca pela própria cor.** O ponto de 8px à direita sumia
+numa lista de uma carteira. Uma primeira versão (`indicator="check"`: fundo
+`bg-muted`, peso médio e tique) foi recusada pelo dono — era o realce genérico
+de qualquer lista. O `DropdownMenuRadioItem` ganhou `indicator="media"`: quando
+a mídia da linha é a identidade da opção, como o ladrilho de cor da carteira, a
+escolhida ganha o halo da amostra do `Toggle variant="swatch"` (contorno de
+2px, afastado 2px, na tinta) e as outras esmaecem a tinta. Sem fundo, sem peso e
+sem marcador no fim: a marca mora na cor que a pessoa escolheu. O seletor de
+carteira usa `media`; os outros rádios seguem com o ponto.
+
+Numa segunda volta o halo deixou de ser branco: é a cor do próprio ladrilho
+puxada para a tinta (`color-mix(in oklab, var(--tile-surface) 60%,
+var(--foreground))`) — o azul da carteira fica azul-claro no escuro (11:1 contra
+a placa) e azul-escuro no claro (5,6:1), medidos. O halo nasce colado e
+transparente e cresce a 2px na curva do sistema, e a carteira em foco (cursor ou
+teclado) mostra a prévia dele a 45%, com a tinta acesa: "escolher esta". As
+outras esmaecem só fora do foco (`not-focus:`), senão a linha sob o cursor
+ficava apagada.
+
+**Os ícones da carteira ficam sólidos, como os de categoria.** O
+`WORKSPACE_ICON_MAP` era `24/outline` encolhido no `ColorTile` (14–16px); passa
+ao micro (`16/solid`), e o seletor de ícone, que desenha a 20, ganha o
+`WORKSPACE_ICON_MAP_MINI` (`20/solid`). O reserva do `WorkspaceBrandMark` também
+é micro. A nota "Ícone como valor fica no outline" da página Iconography citava
+os ícones de categoria como contorno — já eram sólidos desde a rodada deles — e
+foi corrigida.
+
+A pedido do dono, a linha escolhida ganhou também um fundo leve, além do halo:
+5% da tinta (`data-[state=checked]:not-focus:bg-foreground/5`), abaixo dos 9% do
+realce de passagem — escolhida e sob o cursor seguem distinguíveis, e no foco
+quem pinta é a passagem.
+Entre duas linhas de mídia entrou um respiro de 4px (`[[data-indicator=media]+&]:mt-1`,
+o dos itens da barra lateral): com o fundo da escolhida e o da passagem, as
+linhas coladas liam como um bloco só.
+
+
+**O anel de foco só no teclado.** Depois de abrir e fechar o seletor de
+carteira com o mouse, o gatilho ficava com o anel de 3px, lido como "ativo".
+Medido: o Radix abre o menu no `pointerdown` e foca a lista por código, que o
+Chrome marca `:focus-visible`; ao fechar, o foco volta ao gatilho e herda a
+marca. Vale para todo menu, popover e diálogo do app. A correção é uma só: a
+variante `focus-visible:` passou a ignorar o foco sob `[data-modality="pointer"]`,
+que o `FocusModality` do layout raiz liga no `pointerdown` e desliga no
+`keydown` (captura, antes do Radix). Medido depois: clique fora → foco no
+gatilho, sem anel; Enter e Esc → anel. O CSS cru que pergunta
+`:focus-visible` (o × do toast, o traço do `link`) ficou como estava.

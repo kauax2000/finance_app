@@ -206,21 +206,21 @@ export function QuickActionButton({ variant = "sidebar" }: QuickActionButtonProp
                 {isSidebarCollapsed ? (
                     <Button
                         variant="primary"
-                        size="icon-lg"
+                        size="icon-md"
                         type="button"
-                        className="size-8 shrink-0 rounded-lg group-data-[collapsible=icon]:flex-none"
                         aria-label="Adicionar"
                     >
-                        <PlusMiniIcon className="size-5 shrink-0" />
+                        <PlusIcon aria-hidden />
                     </Button>
                 ) : (
                     <Button
                         variant="primary"
+                        size="lg"
                         type="button"
-                        className="h-9 w-full justify-center gap-2 text-xs group-data-[collapsible=icon]:hidden"
+                        className="w-full"
                     >
-                        <PlusIcon className="size-4 shrink-0" />
-                        <span className="truncate">Adicionar</span>
+                        <PlusIcon aria-hidden />
+                        Adicionar
                     </Button>
                 )}
             </DropdownMenuTrigger>

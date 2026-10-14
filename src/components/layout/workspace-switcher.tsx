@@ -68,27 +68,23 @@ export function WorkspaceSwitcher({
             </DropdownMenuTrigger>
         ) : (
             <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                    size="lg"
-                    className="h-12 w-full min-w-0 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                >
+                <SidebarMenuButton size="lg">
                     {loading ? (
-                        <Skeleton className="size-8 shrink-0 rounded-lg" />
+                        <Skeleton shape="tile" size="md" />
                     ) : currentWorkspace ? (
                         <WorkspaceBrandMark
                             iconKey={currentWorkspace.icon}
                             backgroundColor={
                                 currentWorkspace.icon_background_color
                             }
-                            className="size-8 rounded-lg"
-                            iconClassName="size-4"
+                            size="md"
                         />
                     ) : (
-                        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                        <div className="flex size-8 shrink-0 items-center justify-center rounded-row bg-muted text-muted-foreground">
                             <span className="text-xs font-semibold">?</span>
                         </div>
                     )}
-                    <div className="min-w-0 flex-1 text-left group-data-[collapsible=icon]:hidden">
+                    <div className="min-w-0 flex-1 text-left">
                         {loading ? (
                             <Skeleton className="h-4 w-full max-w-36" />
                         ) : (
@@ -98,9 +94,9 @@ export function WorkspaceSwitcher({
                         )}
                     </div>
                     {loading ? (
-                        <Skeleton className="size-4 shrink-0 rounded-sm group-data-[collapsible=icon]:hidden" />
+                        <Skeleton className="size-4 shrink-0 rounded-sm" />
                     ) : (
-                        <ChevronUpDownIcon className="size-4 text-muted-foreground group-data-[collapsible=icon]:hidden" />
+                        <ChevronUpDownIcon className="text-muted-foreground" />
                     )}
                 </SidebarMenuButton>
             </DropdownMenuTrigger>
@@ -112,9 +108,9 @@ export function WorkspaceSwitcher({
             {/* Na barra: 8 do recuo da placa flutuante + 8 de calha. */}
             <DropdownMenuContent
                 side={appearance === "header" ? "bottom" : "right"}
-                align={appearance === "header" ? "start" : "start"}
+                align="start"
                 sideOffset={appearance === "header" ? 8 : 16}
-                className="w-64 max-w-[calc(100vw-2rem)] p-0"
+                size="xl"
             >
                 <WorkspacePickerMenuBody
                     callbacks={{

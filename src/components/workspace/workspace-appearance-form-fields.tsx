@@ -29,7 +29,7 @@ import { FormError } from "@/components/ui/form"
 import {
     WORKSPACE_ACCENT_PALETTE,
     WORKSPACE_ICON_KEYS,
-    WORKSPACE_ICON_MAP,
+    WORKSPACE_ICON_MAP_MINI,
     type WorkspaceIconKey,
     WORKSPACE_ICON_LABELS,
 } from "@/lib/workspace-icons"
@@ -167,7 +167,7 @@ export function WorkspaceAppearanceFormFields({
                     className="grid grid-cols-5 gap-2"
                 >
                     {WORKSPACE_ICON_KEYS.map((key) => {
-                        const Cmp = WORKSPACE_ICON_MAP[key]
+                        const Cmp = WORKSPACE_ICON_MAP_MINI[key]
                         return (
                             <ToggleGroupItem
                                 key={key}

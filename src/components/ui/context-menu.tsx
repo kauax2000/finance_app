@@ -368,8 +368,8 @@ function ContextMenuRadioItem({
     >
       <span className={menuIndicatorSlotClassName}>
         <ContextMenuPrimitive.ItemIndicator>
-          {/* Um ponto, e não o tique da caixa — ver `RadioGroup`. */}
-          <span className="size-2 rounded-full bg-current" />
+          {/* Um ponto, e não o tique da caixa — ver `RadioGroup`. `block`: inline, o ponto media 0×0. */}
+          <span className="block size-2 rounded-full bg-current" />
         </ContextMenuPrimitive.ItemIndicator>
       </span>
       {children}

@@ -5,11 +5,12 @@ import { useAuth } from "@/components/providers"
 import { identityToneFor } from "@/lib/avatar"
 import { cn, getInitials } from "@/lib/utils"
 
-type AccountMenuUserSummaryProps = {
-    className?: string
-}
-
-export function AccountMenuUserSummary({ className }: AccountMenuUserSummaryProps) {
+/**
+ * O avatar e o par nome/e-mail da conta, sem moldura: no menu do desktop quem
+ * dá o recuo e o respiro é o `DropdownMenuHeader`; na gaveta do telefone, o
+ * invólucro dela.
+ */
+export function AccountMenuUserSummary() {
     const { user, profile, profileReady } = useAuth()
 
     const userName =
@@ -21,12 +22,7 @@ export function AccountMenuUserSummary({ className }: AccountMenuUserSummaryProp
     )
 
     return (
-        <div
-            className={cn(
-                "flex items-center gap-3 px-2.5 pb-2.5 pt-2 text-left",
-                className
-            )}
-        >
+        <>
             <Avatar size="sm" className="shrink-0">
                 {user?.user_metadata?.avatar_url ? (
                     <AvatarImage
@@ -48,6 +44,6 @@ export function AccountMenuUserSummary({ className }: AccountMenuUserSummaryProp
                     {userEmail}
                 </span>
             </div>
-        </div>
+        </>
     )
 }

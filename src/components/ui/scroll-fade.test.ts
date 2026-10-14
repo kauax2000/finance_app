@@ -460,3 +460,14 @@ describe("as setas de \"tem mais\" dos dropdowns", () => {
     }
   })
 })
+
+describe("a cascada de abertura não deixa a seta acesa", () => {
+  it("o hook mede de novo quando a animação de uma linha termina", () => {
+    // A linha entra 4px abaixo (`rise`); transformada, ela conta como transbordo, e ao
+    // pousar nada muda de tamanho: sem esta escuta a seta de "tem mais" ficava acesa.
+    const hook = lerFonte("src/hooks/use-scroll-fade.ts")
+    expect(hook).toContain('el.addEventListener("animationend", medir)')
+    expect(hook).toContain('el.removeEventListener("animationend", medir)')
+  })
+})
+

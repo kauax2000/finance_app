@@ -203,11 +203,15 @@ export default function IconographyDoc() {
         </Spec>
       </Group>
 
-      <DocNote title="Ícone como valor fica no outline">
-        Mapa de ícone e config de navegação — <code>CATEGORY_ICONS</code>,{" "}
-        <code>WORKSPACE_ICON_MAP</code>, <code>NAVIGATION</code> — não sabem em
-        que tamanho serão desenhados. Ficam em <code>24/outline</code>, o único
-        conjunto que se comporta bem em qualquer corpo. Quando a tabela e o{" "}
+      <DocNote title="Ícone como valor fica no outline, até saber onde mora">
+        Config de navegação — <code>NAVIGATION</code> — não sabe em que tamanho
+        será desenhada, e fica em <code>24/outline</code>, o único conjunto que se
+        comporta bem em qualquer corpo. Os ícones de categoria e de carteira
+        sabem: moram num <code>ColorTile</code>, que os desenha a 14 ou 16, e num
+        seletor que os mostra a 20. Por isso vêm em dois conjuntos sólidos — micro
+        (<code>16/solid</code>) para o ladrilho, mini (<code>20/solid</code>) para
+        o seletor —, como <code>WORKSPACE_ICON_MAP</code> e{" "}
+        <code>WORKSPACE_ICON_MAP_MINI</code>. Quando a tabela e o{" "}
         <code>.map()</code> moram no mesmo arquivo e o corpo está cravado ali,
         quem declara é quem desenha, e vale a escada.
       </DocNote>

@@ -1,5 +1,6 @@
 "use client"
 
+import { createElement } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { useQueryClient } from "@tanstack/react-query"
@@ -23,14 +24,21 @@ import {
     isExactPath,
 } from "@/config/navigation"
 import { useWorkspace } from "@/components/workspace-provider"
+import { solidIconFor } from "@/config/mobile-navigation"
+import type { HeroIcon } from "@/types/navigation"
 import { prefetchNavRouteHref } from "@/components/layout/sidebar-route-prefetch"
+
+/** A página ativa ganha o ícone preenchido, a mesma convenção da barra de baixo do telefone. */
+function NavIcon({ icon, active }: { icon: HeroIcon; active: boolean }) {
+    return createElement(active ? (solidIconFor(icon) ?? icon) : icon)
+}
 
 export function AppSidebar() {
     const pathname = usePathname()
     const queryClient = useQueryClient()
     const { currentWorkspaceId } = useWorkspace()
-    const MembersIcon = MEMBERS_NAV_ITEM.icon
-    const SettingsIcon = SETTINGS_NAV_ITEM.icon
+    const membersActive = isExactPath(pathname, MEMBERS_NAV_ITEM.href)
+    const settingsActive = isExactPath(pathname, SETTINGS_NAV_ITEM.href)
 
     return (
         <Sidebar collapsible="icon" variant="floating">
@@ -43,10 +51,10 @@ export function AppSidebar() {
                 <SidebarGroup>
                     <QuickActionButton variant="sidebar" />
                 </SidebarGroup>
-                <SidebarGroup className="mt-2">
+                <SidebarGroup>
                     <SidebarMenu>
                         {MAIN_NAVIGATION.map((item) => {
-                            const Icon = item.icon
+                            const active = isExactPath(pathname, item.href)
                             const tooltip = item.beta
                                 ? {
                                       children: (
@@ -66,12 +74,11 @@ export function AppSidebar() {
                                 <SidebarMenuItem key={item.name}>
                                     <SidebarMenuButton
                                         asChild
-                                        isActive={isExactPath(pathname, item.href)}
+                                        isActive={active}
                                         tooltip={tooltip}
                                     >
                                         <Link
                                             href={item.href}
-                                            className="gap-3"
                                             onMouseEnter={() =>
                                                 prefetchNavRouteHref(
                                                     queryClient,
@@ -80,8 +87,8 @@ export function AppSidebar() {
                                                 )
                                             }
                                         >
-                                            <Icon className="h-5 w-5 shrink-0" />
-                                            <span className="group-data-[collapsible=icon]:hidden flex min-w-0 flex-1 items-center gap-2">
+                                            <NavIcon icon={item.icon} active={active} />
+                                            <span className="flex min-w-0 flex-1 items-center gap-2">
                                                 <span className="truncate">
                                                     {item.name}
                                                 </span>
@@ -101,36 +108,29 @@ export function AppSidebar() {
                         })}
                     </SidebarMenu>
                 </SidebarGroup>
-                <SidebarGroup className="mt-auto pb-2">
+                <SidebarGroup className="mt-auto">
                     <SidebarMenu>
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 asChild
-                                isActive={isExactPath(pathname, MEMBERS_NAV_ITEM.href)}
+                                isActive={membersActive}
                                 tooltip={MEMBERS_NAV_ITEM.name}
                             >
-                                <Link href={MEMBERS_NAV_ITEM.href} className="gap-3">
-                                    <MembersIcon className="h-5 w-5 shrink-0" />
-                                    <span className="group-data-[collapsible=icon]:hidden">
-                                        {MEMBERS_NAV_ITEM.name}
-                                    </span>
+                                <Link href={MEMBERS_NAV_ITEM.href}>
+                                    <NavIcon icon={MEMBERS_NAV_ITEM.icon} active={membersActive} />
+                                    <span>{MEMBERS_NAV_ITEM.name}</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 asChild
-                                isActive={isExactPath(
-                                    pathname,
-                                    SETTINGS_NAV_ITEM.href
-                                )}
+                                isActive={settingsActive}
                                 tooltip={SETTINGS_NAV_ITEM.name}
                             >
-                                <Link href={SETTINGS_NAV_ITEM.href} className="gap-3">
-                                    <SettingsIcon className="h-5 w-5 shrink-0" />
-                                    <span className="group-data-[collapsible=icon]:hidden">
-                                        {SETTINGS_NAV_ITEM.name}
-                                    </span>
+                                <Link href={SETTINGS_NAV_ITEM.href}>
+                                    <NavIcon icon={SETTINGS_NAV_ITEM.icon} active={settingsActive} />
+                                    <span>{SETTINGS_NAV_ITEM.name}</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>

@@ -75,11 +75,11 @@ export function SidebarUserProfile() {
                                 {getInitials(userName)}
                             </AvatarFallback>
                         </Avatar>
-                        <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+                        <div className="grid flex-1 text-left text-sm leading-tight">
                             <span className="truncate font-medium">{userName}</span>
                             <span className="truncate text-xs text-muted-foreground">{userEmail}</span>
                         </div>
-                        <EllipsisVerticalIcon className="ml-auto size-4 text-muted-foreground group-data-[collapsible=icon]:hidden" />
+                        <EllipsisVerticalIcon className="ml-auto text-muted-foreground" />
                     </SidebarMenuButton>
                 </UserMenu>
             </SidebarMenuItem>

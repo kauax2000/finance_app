@@ -38,7 +38,9 @@ import { SIDEBAR_STATE_COOKIE_NAME } from "@/lib/sidebar-state-cookie"
 
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = "16rem"
-const SIDEBAR_WIDTH_ICON = "3rem"
+// O trilho recolhido: 16 + o botão de 32 + 16. Com 48 o ladrilho da carteira e o
+// avatar encostavam na borda da placa.
+const SIDEBAR_WIDTH_ICON = "4rem"
 /** A largura do painel no telefone. Ali a barra não é trilho nem tela cheia. */
 const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
@@ -442,7 +444,7 @@ function Sidebar({
         // há o que borrar atrás): o `--sidebar`, o anel de 1px e a sombra dos outros
         // flutuantes. Raio `--radius-modal`; elevação `lg` porque placa e página estão a
         // 1,04 uma da outra no tema claro e uma sombra de 6% não define nada.
-        "group-data-[variant=floating]:rounded-modal group-data-[variant=floating]:[--radius-parent:var(--radius-modal)] group-data-[variant=floating]:[--radius-inset:--spacing(2)] group-data-[variant=floating]:shadow-lg group-data-[variant=floating]:ring-1 group-data-[variant=floating]:ring-foreground/10"
+        "group-data-[variant=floating]:rounded-modal group-data-[variant=floating]:[--radius-parent:var(--radius-modal)] group-data-[variant=floating]:[--radius-inset:--spacing(2)] group-data-[collapsible=icon]:[--radius-inset:--spacing(4)]! group-data-[variant=floating]:shadow-lg group-data-[variant=floating]:ring-1 group-data-[variant=floating]:ring-foreground/10"
       )}
     >
       {children}
@@ -461,16 +463,16 @@ function Sidebar({
         // Os dois `collapsible` que sobram viram configuração do átomo: o modo ícone é
         // o tamanho colapsado, e o offcanvas é zero (`none` já saiu acima).
         collapsible
-        // O modo ícone soma a calha: 48 da placa, mais 8 à esquerda no `floating` (a
-        // direita é a costura) e 8 dos dois lados no `inset`. Com 48 a placa ficaria
-        // com 32 e cortaria os ícones.
+        // O modo ícone soma a calha: 64 da placa, mais 8 à esquerda no `floating` (a
+        // direita é a costura) e 8 dos dois lados no `inset`. Sem a calha a placa
+        // ficaria com 48 e cortaria os ícones.
         collapsedSize={
           collapsible === "icon"
             ? variant === "floating"
-              ? 56
+              ? 72
               : variant === "inset"
-                ? 64
-                : 48
+                ? 80
+                : 64
             : 0
         }
         defaultSize={256}
@@ -654,7 +656,8 @@ function SidebarTriggerButton({
     </Button>
   )
 
-  // A dica existe pelo atalho (⌘B / Ctrl+B). No telefone não há cursor e ela não abre.
+  // No topo o gatilho não tem dica (o nome acessível é o `aria-label`). Dentro da barra
+  // recolhida ela fica, como a de todo ícone do trilho, e mostra o atalho (⌘B / Ctrl+B).
   return (
     <motion.span
       layoutId={gatilhoId}
@@ -681,17 +684,19 @@ function SidebarTriggerButton({
             className="ml-auto pointer-coarse:hidden"
           />
         </SidebarMenuButton>
-      ) : (
+      ) : naBarra ? (
         <Tooltip>
           <TooltipTrigger asChild>{botao}</TooltipTrigger>
           <TooltipContent
-            side={naBarra ? "right" : undefined}
-            sideOffset={naBarra ? SIDEBAR_TOOLTIP_OFFSET + SIDEBAR_PLACA_RECUO : undefined}
+            side="right"
+            sideOffset={SIDEBAR_TOOLTIP_OFFSET + SIDEBAR_PLACA_RECUO}
             shortcut={`mod+${SIDEBAR_KEYBOARD_SHORTCUT}`}
           >
             {rotulo}
           </TooltipContent>
         </Tooltip>
+      ) : (
+        botao
       )}
     </motion.span>
   )
@@ -892,7 +897,7 @@ function SidebarHeader({
       // transicionar para `auto` (no Chrome; onde falta, salta). Começa do topo, para o
       // avatar não descer enquanto a altura cresce.
       className={cn(
-        "flex h-16 shrink-0 flex-col justify-center gap-2 px-2 transition-[height,padding] duration-(--duration-slow) ease-(--ease-emphasized) [interpolate-size:allow-keywords] group-data-[collapsible=icon]:h-12",
+        "flex h-16 shrink-0 flex-col justify-center gap-2 px-2 group-data-[collapsible=icon]:px-4 group-data-[collapsible=icon]:pt-4 transition-[height,padding] duration-(--duration-slow) ease-(--ease-emphasized) [interpolate-size:allow-keywords] group-data-[collapsible=icon]:h-12",
         gatilhoNaBarra &&
           "h-auto justify-start py-2 group-data-[collapsible=icon]:h-auto",
         className
@@ -911,7 +916,7 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="sidebar-footer"
       data-sidebar="footer"
       className={cn(
-        "mt-auto flex shrink-0 flex-col gap-2 p-2",
+        "mt-auto flex shrink-0 flex-col gap-2 p-2 group-data-[collapsible=icon]:px-4 group-data-[collapsible=icon]:pb-4",
         className
       )}
       {...props}
@@ -964,7 +969,7 @@ function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="sidebar-group"
       data-sidebar="group"
       className={cn(
-        "relative flex w-full min-w-0 flex-col justify-start p-2",
+        "relative flex w-full min-w-0 flex-col justify-start p-2 group-data-[collapsible=icon]:px-4",
         // No `plain` o grupo se separa do anterior por um fio: com 80 linhas rolando, um
         // vão de 16px lê como item faltando.
         "group-data-[variant=plain]:not-first:border-t group-data-[variant=plain]:border-sidebar-border group-data-[variant=plain]:px-0 group-data-[variant=plain]:pt-2 group-data-[variant=plain]:pb-4",
@@ -1137,7 +1142,7 @@ const sidebarMenuButtonVariants = cva(
     // A linha é retângulo arredondado (`rounded-row`, 12px) e não pílula: o
     // concêntrico dava 20–22px numa linha de 32 e o CSS a desenhava cápsula. O
     // subitem veste o mesmo.
-    "peer/menu-button group/menu-button relative isolate flex w-full items-center gap-2 overflow-hidden rounded-row p-2 text-left text-sm ring-sidebar-ring outline-hidden transition-[width,height,padding,background-color] duration-(--duration-slow) ease-(--ease-emphasized) group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-3 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-open:hover:bg-sidebar-accent data-open:hover:text-sidebar-accent-foreground data-active:font-medium data-active:text-sidebar-accent-foreground [&_svg]:size-4 [&_svg]:shrink-0 [&>span:last-child]:truncate [&>span:nth-last-child(2):has(+[data-slot=sidebar-menu-highlight])]:truncate",
+    "peer/menu-button group/menu-button relative isolate flex w-full items-center gap-2 overflow-hidden rounded-row p-2 text-left text-sm ring-sidebar-ring outline-hidden transition-[width,height,padding,background-color] duration-(--duration-slow) ease-(--ease-emphasized) group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-3 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-open:hover:bg-sidebar-accent data-open:hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground data-active:font-medium data-active:text-sidebar-accent-foreground [&_svg]:size-4 [&_svg]:shrink-0 [&>span:last-child]:truncate [&>span:nth-last-child(2):has(+[data-slot=sidebar-menu-highlight])]:truncate",
     // O `plain`: a linha apagada até o cursor e acesa na página atual (80 linhas na
     // tinta cheia virariam um bloco de texto), com 44px no dedo.
     "group-data-[variant=plain]:text-muted-foreground group-data-[variant=plain]:hover:text-sidebar-accent-foreground group-data-[variant=plain]:active:text-sidebar-accent-foreground group-data-[variant=plain]:data-active:text-sidebar-accent-foreground group-data-[variant=plain]:pointer-coarse:min-h-11",
@@ -1158,7 +1163,9 @@ const sidebarMenuButtonVariants = cva(
       size: {
         md: "h-8 text-sm",
         sm: "h-7 text-xs",
-        lg: "h-12 text-sm group-data-[collapsible=icon]:p-1!",
+        // Na placa flutuante, a carteira e a conta moram nos cantos: o raio segue a
+        // curva dela (28 − 8 = 20; recolhida, 28 − 16 = 12, a linha).
+        lg: "h-12 text-sm group-data-[collapsible=icon]:p-0! group-data-[variant=floating]:concentric",
       },
     },
     defaultVariants: {

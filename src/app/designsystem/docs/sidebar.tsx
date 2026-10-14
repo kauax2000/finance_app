@@ -128,7 +128,7 @@ function NavDemo() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" tooltip="Pessoal">
-              <Avatar size="xs">
+              <Avatar size="sm">
                 <AvatarFallback
                   className={cn(TOM_WORKSPACE.surface, TOM_WORKSPACE.ink)}
                 >
@@ -201,7 +201,7 @@ function NavDemo() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" tooltip="Ana Ribeiro">
-              <Avatar size="xs">
+              <Avatar size="sm">
                 <AvatarFallback className={cn(TOM_CONTA.surface, TOM_CONTA.ink)}>
                   A
                 </AvatarFallback>
@@ -485,7 +485,7 @@ function DemoEscada() {
               ))}
               <SidebarMenuItem>
                 <SidebarMenuButton variant={variant} size="lg">
-                  <Avatar size="xs">
+                  <Avatar size="sm">
                     <AvatarFallback className={cn(TOM_CONTA.surface, TOM_CONTA.ink)}>A</AvatarFallback>
                   </Avatar>
                   <div className="grid min-w-0 flex-1 text-left leading-tight">
@@ -616,7 +616,7 @@ export default function SidebarDoc() {
       </DocSection>
 
       <DocNote title="Quem redimensiona é o Resizable, e é opt-in">
-        Com <code>resizable</code> a barra vira o primeiro painel de um <code>ResizablePanelGroup</code> e herda o teclado na costura, o duplo-clique e o colapso por arraste; o modo ícone é <code>collapsedSize</code> de 48px, mais a calha: 56 no <code>floating</code>, onde a placa encosta na costura, e 64 no <code>inset</code>. Nas soltas a costura tem a altura da placa e acende como a borda dela. O grupo declara layout inline, então o padrão do app continua sendo o trilho <code>fixed</code>.
+        Com <code>resizable</code> a barra vira o primeiro painel de um <code>ResizablePanelGroup</code> e herda o teclado na costura, o duplo-clique e o colapso por arraste; o modo ícone é <code>collapsedSize</code> de 64px (16 + o botão de 32 + 16), mais a calha: 72 no <code>floating</code>, onde a placa encosta na costura, e 80 no <code>inset</code>. Nas soltas a costura tem a altura da placa e acende como a borda dela. O grupo declara layout inline, então o padrão do app continua sendo o trilho <code>fixed</code>.
       </DocNote>
 
       <DocSection

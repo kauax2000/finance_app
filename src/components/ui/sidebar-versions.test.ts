@@ -75,10 +75,35 @@ describe("as versões do Sidebar", () => {
     )
   })
 
+  it("recolhida, o trilho mede 64 e o botão de 32 fica a 16px de cada borda", () => {
+    // Com 48 o ladrilho da carteira e o avatar encostavam na borda da placa.
+    expect(CODIGO).toContain('const SIDEBAR_WIDTH_ICON = "4rem"')
+    // O recuo lateral cresce de 8 a 16 só no modo ícone: 16 + 32 + 16 = 64. O topo do
+    // cabeçalho e a base do rodapé acompanham: a mesma folga de 16 nas quatro bordas.
+    expect(CODIGO).toContain("flex h-16 shrink-0 flex-col justify-center gap-2 px-2 group-data-[collapsible=icon]:px-4 group-data-[collapsible=icon]:pt-4")
+    expect(CODIGO).toContain('"mt-auto flex shrink-0 flex-col gap-2 p-2 group-data-[collapsible=icon]:px-4 group-data-[collapsible=icon]:pb-4"')
+    expect(CODIGO).toContain('"relative flex w-full min-w-0 flex-col justify-start p-2 group-data-[collapsible=icon]:px-4"')
+    // A carteira e a conta mantêm a mídia de 32 recolhidas: quem cede é o recuo do degrau lg.
+    expect(lerFonte("src/components/layout/workspace-switcher.tsx")).not.toContain("group-data-[collapsible=icon]:size-6")
+    expect(lerFonte("src/components/layout/sidebar-user-profile.tsx")).not.toContain("group-data-[collapsible=icon]:size-6")
+  })
+
+  it("na placa flutuante, a carteira e a conta seguem a curva do canto", () => {
+    // O degrau lg mora nos cantos da placa: concêntrico (28 − 8 = 20 aberta). Recolhida o
+    // botão fica a 16 do canto, e o recuo publicado sobe junto (28 − 16 = 12, a linha).
+    expect(CODIGO).toContain('lg: "h-12 text-sm group-data-[collapsible=icon]:p-0! group-data-[variant=floating]:concentric"')
+    expect(CODIGO).toContain("group-data-[variant=floating]:[--radius-inset:--spacing(2)] group-data-[collapsible=icon]:[--radius-inset:--spacing(4)]!")
+  })
+
+  it("o gatilho do topo não tem dica; dentro da barra recolhida, tem", () => {
+    expect(CODIGO).toMatch(/\) : naBarra \? \(\s*<Tooltip>/)
+    expect(CODIGO).toMatch(/\) : \(\s*botao\s*\)\}/)
+  })
+
   it("redimensionável, o modo ícone das soltas soma a calha", () => {
-    // 48 da placa, mais a calha: 8 à esquerda no floating (a direita é a
+    // 64 da placa, mais a calha: 8 à esquerda no floating (a direita é a
     // costura), 8 dos dois lados no inset.
-    expect(CODIGO).toMatch(/variant === "floating"\s*\? 56\s*: variant === "inset"\s*\? 64\s*: 48/)
+    expect(CODIGO).toMatch(/variant === "floating"\s*\? 72\s*: variant === "inset"\s*\? 80\s*: 64/)
     expect(CODIGO).toContain('floating: "py-2 pl-2"')
     // Uma regra de costura para as três: a borda acendendo, a 2px.
     expect(CODIGO).toContain("className={SIDEBAR_COSTURA[variant]}")
@@ -113,7 +138,7 @@ describe("as versões do Sidebar", () => {
   it("nas placas soltas a dica abre a 6px da placa, e não do botão", () => {
     expect(CODIGO).toContain("const SidebarSoltaContext = React.createContext(false)")
     expect(CODIGO).toContain("sideOffset={SIDEBAR_TOOLTIP_OFFSET + (solta ? SIDEBAR_PLACA_RECUO : 0)}")
-    expect(CODIGO).toContain("sideOffset={naBarra ? SIDEBAR_TOOLTIP_OFFSET + SIDEBAR_PLACA_RECUO : undefined}")
+    expect(CODIGO).toContain("sideOffset={SIDEBAR_TOOLTIP_OFFSET + SIDEBAR_PLACA_RECUO}")
     expect(CODIGO.match(/<SidebarSoltaContext\.Provider value=\{solta\}>/g)?.length).toBe(2)
     expect(CODIGO).not.toContain("sideOffset={6}")
   })
@@ -262,16 +287,16 @@ describe("as versões do Sidebar", () => {
     })
 
     it("12. recolhida, o recuo centra o ícone em todo degrau", () => {
-      // A conta é `(32 - filho) / 2`: o degrau padrão (ícone de 16) pede 8 e o `lg` (avatar de
-      // 24) pede 4; `p-0!` descentra o filho.
+      // A conta é `(32 - filho) / 2`: o degrau padrão (ícone de 16) pede 8 e o `lg` (ladrilho
+      // ou avatar de 32, rodada 264) pede 0.
       const cva = CODIGO.slice(
         CODIGO.indexOf("const sidebarMenuButtonVariants"),
         CODIGO.indexOf("function SidebarMenuButton")
       )
       expect(cva).toContain("group-data-[collapsible=icon]:p-2!") // md, ícone 16
-      expect(cva).toContain("group-data-[collapsible=icon]:p-1!") // lg, avatar 24
-      // `p-0!` descentra: recuo zero não centra filho nenhum.
-      expect(cva).not.toContain("group-data-[collapsible=icon]:p-0!")
+      expect(cva).toContain('lg: "h-12 text-sm group-data-[collapsible=icon]:p-0!') // lg, mídia 32
+      // Com `p-1!` sobravam 24 para uma mídia de 32: o `overflow-hidden` cortava a borda.
+      expect(cva).not.toContain("group-data-[collapsible=icon]:p-1!")
       // E não se conserta com `justify-center`: o rótulo continua no fluxo em
       // modo ícone, a linha transborda, e centrar transbordo empurra para fora.
       expect(cva).not.toContain("group-data-[collapsible=icon]:justify-center")
@@ -328,7 +353,7 @@ describe("as versões do Sidebar", () => {
         CODIGO.indexOf("if (resizable) {", CODIGO.indexOf("const miolo = ("))
       )
       expect(miolo).toContain(
-        '"group-data-[variant=floating]:rounded-modal group-data-[variant=floating]:[--radius-parent:var(--radius-modal)] group-data-[variant=floating]:[--radius-inset:--spacing(2)] group-data-[variant=floating]:shadow-lg group-data-[variant=floating]:ring-1 group-data-[variant=floating]:ring-foreground/10"'
+        '"group-data-[variant=floating]:rounded-modal group-data-[variant=floating]:[--radius-parent:var(--radius-modal)] group-data-[variant=floating]:[--radius-inset:--spacing(2)] group-data-[collapsible=icon]:[--radius-inset:--spacing(4)]! group-data-[variant=floating]:shadow-lg group-data-[variant=floating]:ring-1 group-data-[variant=floating]:ring-foreground/10"'
       )
       expect([...CODIGO.matchAll(/group-data-\[variant=floating\]:ring-1/g)]).toHaveLength(1)
     })

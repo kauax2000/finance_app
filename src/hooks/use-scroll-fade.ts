@@ -125,10 +125,15 @@ export function useScrollFade({
 
       // O listener mora aqui e não numa prop `onScroll`: o hook já é dono do elemento e do cleanup, e mantém o `passive`.
       el.addEventListener("scroll", pintar, { passive: true })
+      // A cascata de abertura (`rise`) desloca as linhas 4px, e linha transformada conta como
+      // transbordo; ao pousar nada muda de tamanho e o `ResizeObserver` não avisa. O fim de
+      // cada animação (borbulha das linhas) mede de novo.
+      el.addEventListener("animationend", medir)
       return () => {
         ro.disconnect()
         mo.disconnect()
         el.removeEventListener("scroll", pintar)
+        el.removeEventListener("animationend", medir)
         if (pai) {
           pai.style.removeProperty("--scroll-fade-box-top")
           pai.style.removeProperty("--scroll-fade-box-bottom")
