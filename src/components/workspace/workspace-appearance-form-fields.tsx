@@ -1,23 +1,18 @@
 "use client"
 
 import { createElement } from "react"
-import {
-    Label,
-} from "@/components/ui/label"
+import { CheckIcon, EyeDropperIcon } from "@heroicons/react/16/solid"
+import { Label } from "@/components/ui/label"
+import { toggleStyle, toggleVariants } from "@/components/ui/toggle"
 import {
     ToggleGroup,
     ToggleGroupItem,
 } from "@/components/ui/toggle-group"
 import {
-    Item,
-    ItemContent,
-    ItemDescription,
-    ItemMedia,
-} from "@/components/ui/item"
-import {
     Field,
     FieldControl,
     FieldCounter,
+    FieldDescription,
     FieldHeader,
     FieldLabel,
     FieldLegend,
@@ -29,11 +24,12 @@ import { FormError } from "@/components/ui/form"
 import {
     WORKSPACE_ACCENT_PALETTE,
     WORKSPACE_ICON_KEYS,
-    WORKSPACE_ICON_MAP_MINI,
+    WORKSPACE_ICON_MAP,
     type WorkspaceIconKey,
     WORKSPACE_ICON_LABELS,
 } from "@/lib/workspace-icons"
 import { TILE_PALETTE, TILE_WORKSPACE_DEFAULT } from "@/lib/tile-palette"
+import { cn } from "@/lib/utils"
 
 type WorkspaceAppearanceFormFieldsProps = {
     name: string
@@ -45,12 +41,19 @@ type WorkspaceAppearanceFormFieldsProps = {
     displayError: string | null
     /** Prefix for input ids (avoid duplicate ids on page + dialog) */
     idPrefix: string
-    /** Hint under the preview mark */
+    /** A frase sob o nome, que diz onde a marca aparece. */
     previewHint: string
 }
 
 /** O teto do nome da carteira — o contador acima lê daqui. */
 const NOME_MAX = 120
+
+/**
+ * Cor e ícone dividem a mesma grade de 36px, com o vão distribuído: as nove
+ * amostras (oito da paleta e a livre) cabem numa fileira, e os ícones caem nas
+ * mesmas colunas. No telefone a grade refaz as colunas pela largura.
+ */
+const GRADE = "grid grid-cols-[repeat(auto-fill,--spacing(9))] justify-between gap-2"
 
 export function WorkspaceAppearanceFormFields({
     name,
@@ -64,25 +67,15 @@ export function WorkspaceAppearanceFormFields({
     previewHint,
 }: WorkspaceAppearanceFormFieldsProps) {
     const nameId = `${idPrefix}-name`
+    const daPaleta =
+        WORKSPACE_ACCENT_PALETTE.find(
+            (hex) => hex.toLowerCase() === previewColor.toLowerCase()
+        ) ?? ""
 
     return (
-        <div className="space-y-4">
-            <Item variant="muted" size="md" className="gap-3">
-                <ItemMedia>
-                    <WorkspaceBrandMark
-                        iconKey={icon}
-                        backgroundColor={previewColor}
-                        className="size-10 rounded-lg"
-                        iconClassName="size-5"
-                    />
-                </ItemMedia>
-                <ItemContent>
-                    <ItemDescription className="text-xs leading-snug text-muted-foreground">
-                        {previewHint}
-                    </ItemDescription>
-                </ItemContent>
-            </Item>
-
+        <div className="flex flex-col gap-6">
+            {/* A prévia é a própria marca, ao lado do nome: o que se digita e o
+                que se escolhe abaixo aparecem juntos, como na barra lateral. */}
             <Field>
                 <FieldHeader>
                     <FieldLabel>Nome</FieldLabel>
@@ -90,52 +83,66 @@ export function WorkspaceAppearanceFormFields({
                         de aceitar tecla. O contador só aparece perto do teto. */}
                     <FieldCounter value={name} max={NOME_MAX} />
                 </FieldHeader>
-                <FieldControl>
-                    <Input
-                        id={nameId}
-                        value={name}
-                        onChange={(e) => onNameChange(e.target.value)}
-                        placeholder="Ex.: Casa, Freelance"
-                        autoComplete="off"
-                        maxLength={NOME_MAX}
+                <div className="flex items-center gap-3">
+                    <WorkspaceBrandMark
+                        iconKey={icon}
+                        backgroundColor={previewColor}
+                        size="xl"
                     />
-                </FieldControl>
+                    <FieldControl>
+                        <Input
+                            id={nameId}
+                            size="xl"
+                            className="min-w-0 flex-1"
+                            value={name}
+                            onChange={(e) => onNameChange(e.target.value)}
+                            placeholder="Ex.: Casa, Freelance"
+                            autoComplete="off"
+                            maxLength={NOME_MAX}
+                        />
+                    </FieldControl>
+                </div>
+                <FieldDescription>{previewHint}</FieldDescription>
             </Field>
 
-            <FieldSet className="gap-2">
-                <FieldLegend variant="label">Cor de destaque</FieldLegend>
-                <div className="flex flex-wrap items-center gap-2">
-                    <ToggleGroup
-                        type="single"
-                        value={
-                            WORKSPACE_ACCENT_PALETTE.find(
-                                (hex) => hex.toLowerCase() === previewColor.toLowerCase()
-                            ) ?? ""
-                        }
-                        onValueChange={(next) => {
-                            if (next) onPreviewColorChange(next)
-                        }}
-                        aria-label="Cor de destaque"
-                        variant="swatch"
-                        size="icon-md"
-                        className="flex-wrap gap-2"
+            <FieldSet className="gap-3">
+                <FieldLegend variant="label">Cor</FieldLegend>
+                <ToggleGroup
+                    type="single"
+                    value={daPaleta}
+                    onValueChange={(next) => {
+                        if (next) onPreviewColorChange(next)
+                    }}
+                    aria-label="Cor"
+                    variant="swatch"
+                    size="icon-lg"
+                    className={GRADE}
+                >
+                    {/* A paleta de destaque é a do ladrilho (`TILE_COLORS`),
+                        e com ela vem o nome: a amostra deixa de soletrar
+                        um hexadecimal no leitor de tela, como na categoria. */}
+                    {TILE_PALETTE.map(({ hex, nome }) => (
+                        <ToggleGroupItem
+                            key={hex}
+                            value={hex}
+                            color={hex}
+                            aria-label={`Cor ${nome}`}
+                        />
+                    ))}
+                    {/* A cor livre é a nona amostra. O seletor nativo não tem peça
+                        no sistema: ele mora escondido dentro de um `Label` que
+                        veste a amostra (`toggleVariants` + `toggleStyle`), cinza
+                        com o conta-gotas até a pessoa escolher, e então na cor
+                        dela, com o tique das outras. */}
+                    <Label
+                        data-state={daPaleta ? "off" : "on"}
+                        className={cn(
+                            toggleVariants({ variant: "swatch", size: "icon-lg" }),
+                            "relative cursor-pointer has-focus-visible:ring-3 has-focus-visible:ring-ring/45"
+                        )}
+                        style={toggleStyle(daPaleta ? null : previewColor)}
                     >
-                        {/* A paleta de destaque é a do ladrilho (`TILE_COLORS`),
-                            e com ela vem o nome: a amostra deixa de soletrar
-                            um hexadecimal no leitor de tela, como na categoria. */}
-                        {TILE_PALETTE.map(({ hex, nome }) => (
-                            <ToggleGroupItem
-                                key={hex}
-                                value={hex}
-                                color={hex}
-                                aria-label={`Cor ${nome}`}
-                            />
-                        ))}
-                    </ToggleGroup>
-                    <Label className="cursor-pointer gap-2 text-xs font-normal text-muted-foreground">
-                        <span className="whitespace-nowrap">Outra</span>
-                        {/* Cru de propósito: o seletor de cor nativo não tem peça no
-                            sistema, e o `Input` lhe daria a moldura de um campo. */}
+                        {daPaleta ? <EyeDropperIcon aria-hidden /> : <CheckIcon aria-hidden />}
                         <input
                             type="color"
                             value={
@@ -143,43 +150,36 @@ export function WorkspaceAppearanceFormFields({
                                     ? previewColor
                                     : TILE_WORKSPACE_DEFAULT
                             }
-                            onChange={(e) =>
-                                onPreviewColorChange(e.target.value)
-                            }
-                            className="h-8 w-12 cursor-pointer rounded border border-border bg-background p-0.5"
-                            aria-label="Escolher cor personalizada"
+                            onChange={(e) => onPreviewColorChange(e.target.value)}
+                            className="sr-only"
+                            aria-label="Outra cor"
                         />
                     </Label>
-                </div>
+                </ToggleGroup>
             </FieldSet>
 
-            <FieldSet className="gap-2">
+            <FieldSet className="gap-3">
                 <FieldLegend variant="label">Ícone</FieldLegend>
                 <ToggleGroup
                     type="single"
                     variant="outline"
-                    size="icon-xl"
+                    size="icon-lg"
                     value={icon}
                     onValueChange={(next) => {
                         if (next) onIconChange(next as typeof icon)
                     }}
                     aria-label="Ícone"
-                    className="grid grid-cols-5 gap-2"
+                    className={GRADE}
                 >
-                    {WORKSPACE_ICON_KEYS.map((key) => {
-                        const Cmp = WORKSPACE_ICON_MAP_MINI[key]
-                        return (
-                            <ToggleGroupItem
-                                key={key}
-                                value={key}
-                                aria-label={`Ícone ${WORKSPACE_ICON_LABELS[key]}`}
-                            >
-                                {createElement(Cmp, {
-                                    className: "size-5",
-                                })}
-                            </ToggleGroupItem>
-                        )
-                    })}
+                    {WORKSPACE_ICON_KEYS.map((key) => (
+                        <ToggleGroupItem
+                            key={key}
+                            value={key}
+                            aria-label={`Ícone ${WORKSPACE_ICON_LABELS[key]}`}
+                        >
+                            {createElement(WORKSPACE_ICON_MAP[key])}
+                        </ToggleGroupItem>
+                    ))}
                 </ToggleGroup>
             </FieldSet>
 

@@ -125,7 +125,7 @@ export function WorkspaceAppearanceEditDialog({
                             onPreviewColorChange={setPreviewColor}
                             displayError={displayError}
                             idPrefix="settings-workspace-edit-dialog"
-                            previewHint="Esta cor identifica esta carteira na barra lateral e nos menus."
+                            previewHint="Assim ela aparece na barra lateral e nos menus."
                         />
                     </DialogBody>
                     <DialogFooter>

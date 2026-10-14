@@ -2,15 +2,16 @@
 
 import { createElement } from "react"
 import { UserGroupIcon } from "@heroicons/react/16/solid"
+import { UserGroupIcon as UserGroupMiniIcon } from "@heroicons/react/20/solid"
 import { ColorTile } from "@/components/ui/color-tile"
 import { cn } from "@/lib/utils"
-import { getWorkspaceIconComponent } from "@/lib/workspace-icons"
+import { getWorkspaceIconComponent, isWorkspaceIconKey, WORKSPACE_ICON_MAP_MINI } from "@/lib/workspace-icons"
 
 type WorkspaceBrandMarkProps = {
     iconKey: string
     backgroundColor: string
-    /** O degrau do `ColorTile`: `xs` 24 dentro de uma linha de menu, `md` 32 na barra lateral, `lg` 36 no resto. */
-    size?: "xs" | "md" | "lg"
+    /** O degrau do `ColorTile`: `xs` 24 dentro de uma linha de menu, `md` 32 na barra lateral, `lg` 36 no resto, `xl` 40 ao lado do campo de nome. */
+    size?: "xs" | "md" | "lg" | "xl"
     className?: string
     iconClassName?: string
 }
@@ -34,7 +35,11 @@ export function WorkspaceBrandMark({
     className,
     iconClassName,
 }: WorkspaceBrandMarkProps) {
-    const Cmp = getWorkspaceIconComponent(iconKey) ?? UserGroupIcon
+    // O `xl` desenha o ícone a 20px, e 20px é o mini (`20/solid`).
+    const Cmp =
+        size === "xl"
+            ? (isWorkspaceIconKey(iconKey) ? WORKSPACE_ICON_MAP_MINI[iconKey] : UserGroupMiniIcon)
+            : (getWorkspaceIconComponent(iconKey) ?? UserGroupIcon)
 
     return (
         <ColorTile
