@@ -291,8 +291,10 @@ describe("o cadastro (8e)", () => {
     it("com convite, o aviso chama para a Casa e mostra quem já está lá", () => {
         const html = palco("register.confirm-invite")
         expect(html).toContain("Confirme e entre na Casa")
-        expect(html).toContain("Ana C. convidou você para a carteira.")
+        expect(html).toContain("Convite da Ana C.")
         expect(html).toMatch(/data-slot="avatar-group" data-size="xs"[^>]*aria-label="Quem está na Casa"/)
+        // Na linha da frase, e não numa linha abaixo: o aviso não cresce e não corta o saldo (8e, rodada 1).
+        expect(html).toMatch(/Convite da Ana C\.<\/p><div[^>]*data-slot="avatar-group"/)
     })
 
     it("o orçamento entra 250ms depois da troca e sai na hora", () => {

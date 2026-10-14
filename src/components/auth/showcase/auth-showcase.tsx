@@ -202,7 +202,7 @@ function Aviso({
     color: string
     title: string
     description: string
-    /** Uma linha a mais, abaixo da frase (quem já está na Casa). */
+    /** O que fecha a linha da frase, à direita (quem já está na Casa): na mesma linha, o aviso não cresce. */
     children?: React.ReactNode
 }) {
     return (
@@ -215,8 +215,10 @@ function Aviso({
                     <p className="text-xs leading-snug font-medium text-pretty">{title}</p>
                     <span className="shrink-0 text-2xs text-muted-foreground">agora</span>
                 </div>
-                <p className="text-xs leading-snug text-muted-foreground">{description}</p>
-                {children}
+                <div className="flex items-center justify-between gap-2">
+                    <p className="min-w-0 text-xs leading-snug text-muted-foreground">{description}</p>
+                    {children}
+                </div>
             </div>
         </div>
     )
@@ -227,9 +229,12 @@ const AVISOS: Partial<Record<SceneOverlay, React.ReactNode>> = {
         <Aviso icon={EnvelopeIcon} color={cor("índigo")} title="Confirme seu e-mail" description="Toque no link para ativar sua conta." />
     ),
     "notice-confirm-invite": (
-        <Aviso icon={UserPlusIcon} color={cor("índigo")} title="Confirme e entre na Casa" description="Ana C. convidou você para a carteira.">
-            {/* Quem já está lá, na identidade do cursor de cada um: a Casa espera por você. */}
-            <AvatarGroup label="Quem está na Casa" size="xs" tint="soft" className="mt-2">
+        <Aviso icon={UserPlusIcon} color={cor("índigo")} title="Confirme e entre na Casa" description={"Convite da Ana\u00a0C."}>
+            {/*
+             * Quem já está lá, na identidade do cursor de cada um, na linha da frase: o aviso fica na altura dos
+             * outros e não corta o saldo. A frase é curta para caber ao lado deles na tela de 201px (1024).
+             */}
+            <AvatarGroup label="Quem está na Casa" size="xs" tint="soft" className="shrink-0">
                 <AvatarGroupItem {...MINI_APP_PEOPLE.ana} />
                 <AvatarGroupItem {...MINI_APP_PEOPLE.rafael} />
             </AvatarGroup>
