@@ -15,8 +15,6 @@ import { scriptStage, type ScriptStage } from "@/components/auth/showcase/scenes
 import { Badge } from "@/components/ui/badge"
 import {
     Command,
-    CommandDock,
-    CommandDockItem,
     CommandGroup,
     CommandHighlight,
     CommandInput,
@@ -33,6 +31,7 @@ import { Kbd } from "@/components/ui/kbd"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { ShowcaseCursor, ShowcaseFlight, ShowcaseFloat, useShowcase } from "@/components/ui/showcase"
 import { useSceneScript } from "@/hooks/use-scene-script"
+import { cn } from "@/lib/utils"
 import type { SceneScriptId } from "@/lib/scene-script"
 import type { HeroIcon } from "@/types/navigation"
 
@@ -41,7 +40,8 @@ import type { HeroIcon } from "@/types/navigation"
  *
  * O cursor "Você" chega à pílula de busca do cabeçalho e clica; a pílula voa
  * (`ShowcaseFlight` "auth-search") até o campo de uma `Command variant="panel"`
- * de verdade, que flutua à frente da janela, com o véu na tela; a consulta se
+ * de verdade — a pílula se estica no lugar, na largura da tela, com o véu na
+ * janela inteira (`VEU_DA_JANELA`, no `AuthShowcase`); a consulta se
  * digita sozinha, as linhas entram com o trecho casado em negrito, uma é
  * escolhida, e a paleta fecha. O roteiro é o `useSceneScript`; este arquivo só
  * o desenha.
@@ -54,7 +54,10 @@ import type { HeroIcon } from "@/types/navigation"
  * - **Nada que escute o teclado.** Sem `shortcut=` (ele pendura um `keydown`
  *   no `document`), sem `autoFocus`; a tecla ↵ é desenhada. O palco é `inert`.
  * - **A placa é a do palco**: opaca pelo escopo `data-opaque` do `Showcase`, e
- *   sem sombra (a pilha do `Command` não tem).
+ *   sem sombra (a pilha do `Command` não tem). A densidade é a `menu` da pilha
+ *   (pílula de 32, a altura da pílula do cabeçalho, e a placa 4px abaixo): a
+ *   janela desenhada tem 300px de altura no notebook, e na `palette` a paleta
+ *   completa passaria do pé dela.
  * - **Movimento reduzido**: um quadro só — a paleta aberta na consulta, com a
  *   linha escolhida e o cursor de texto aceso, sobre o painel.
  */
@@ -64,8 +67,10 @@ type PaletteScript = Exclude<SceneScriptId, "masked-password">
 type Linha = {
     /** O `value` do cmdk, igual ao título: é o que o roteiro escolhe. */
     title: string
-    /** A segunda linha; sem ela, a linha tem uma altura só (36). */
+    /** A segunda linha; sem ela, a linha tem uma altura só (40, com o ícone). */
     description?: string
+    /** Classes de quem some por nível do palco (`description`, selo). */
+    descriptionClassName?: string
     icon: HeroIcon
     meta?: React.ReactNode
 }
@@ -73,16 +78,26 @@ type Linha = {
 type Grupo = {
     heading: string
     linhas: Linha[]
-    /** O grupo que só cabe no palco médio para cima (36rem): abaixo, a paleta passaria da janela. */
-    largo?: boolean
+    className?: string
 }
 
-/**
- * O selo da linha só a partir do palco médio (36rem, a janela de 1440): abaixo, a paleta tem ~390px e o selo
- * quebraria em duas linhas ao lado do valor.
+/*
+ * A régua de cada palco é a janela: a placa termina a mais de 16px do pé dela e **entre dois textos da mini UI
+ * de trás** — nunca cortando um ao meio, nem deixando uma lasca à mostra na curva do canto de baixo (o raio de
+ * 22 recua até 22px da borda). Com a pílula de 32 na linha do cabeçalho, a placa começa 44px abaixo do topo da
+ * tela; na mini UI, os cartões terminam aos 155, "Próximas contas" vai de 165 a 181 e as contas têm o ladrilho em
+ * 192–216, 230–254 e 268–292 (no XS, 4px acima). O pé de cada placa é dado pelo respiro do último grupo
+ * (`className`), medido a 1024, 1280 e 1440:
+ * - login: 154 no XS (as duas faturas, sem o selo, que cortaria o título), 230 no S (mais "Ações › Pagar
+ *   fatura"; sem a segunda linha, que passaria do pé), 261 do M para cima (com a segunda linha);
+ * - sessão e segurança: 188 (duas linhas de duas alturas).
  */
-const SELO_DA_LINHA = "shrink-0 @max-xl/showcase:hidden"
-const SO_NO_LARGO = "@max-xl/showcase:hidden"
+const FORA_DO_XS = "@max-md/showcase:hidden"
+const SO_DO_M = "@max-xl/showcase:hidden"
+/** O selo não quebra em duas linhas ao lado do valor: quem cede é o título. */
+const SELO = "shrink-0"
+/** O selo da fatura sai no XS: com ele, "Fatura de outubro" cortaria em reticências. */
+const SELO_DA_FATURA = cn(SELO, FORA_DO_XS)
 
 /** A tecla desenhada: a ação que o Enter faria, sem ouvir tecla nenhuma. */
 const ENTER = (
@@ -100,10 +115,11 @@ const RESULTADOS: Record<PaletteScript, Grupo[]> = {
                 {
                     title: "Fatura de outubro",
                     description: "cartão final 4821 · vence dia 12",
+                    descriptionClassName: SO_DO_M,
                     icon: CreditCardIcon,
                     meta: (
                         <>
-                            <Badge variant="soft" tone="warning" size="xs" className={SELO_DA_LINHA}>
+                            <Badge variant="soft" tone="warning" size="xs" className={SELO_DA_FATURA}>
                                 em 3 dias
                             </Badge>
                             <MoneyDisplay value={1284.6} size="sm" />
@@ -113,10 +129,11 @@ const RESULTADOS: Record<PaletteScript, Grupo[]> = {
                 {
                     title: "Fatura de setembro",
                     description: "cartão final 4821 · fechou 05/09",
+                    descriptionClassName: SO_DO_M,
                     icon: CreditCardIcon,
                     meta: (
                         <>
-                            <Badge variant="soft" tone="success" size="xs" className={SELO_DA_LINHA}>
+                            <Badge variant="soft" tone="success" size="xs" className={SELO_DA_FATURA}>
                                 paga
                             </Badge>
                             <MoneyDisplay value={1102.35} size="sm" tone="muted" />
@@ -128,29 +145,30 @@ const RESULTADOS: Record<PaletteScript, Grupo[]> = {
         {
             heading: "Ações",
             linhas: [{ title: "Pagar fatura", icon: BanknotesIcon, meta: ENTER }],
-            largo: true,
+            className: cn(FORA_DO_XS, "pb-1 @min-xl/showcase:pb-3"),
         },
     ],
     "palette-session": [
         {
-            heading: "Continuar",
-            linhas: [{ title: "Continuar de onde parou", description: "Painel · outubro", icon: ArrowUturnLeftIcon, meta: ENTER }],
-        },
-        {
-            heading: "Telas",
-            linhas: [{ title: "Painel", description: "Saldo, contas e orçamento", icon: HomeIcon }],
+            heading: "Ir para",
+            className: "pb-2.5",
+            linhas: [
+                { title: "Continuar de onde parou", description: "Painel · outubro", icon: ArrowUturnLeftIcon, meta: ENTER },
+                { title: "Painel", description: "Saldo, contas e orçamento", icon: HomeIcon },
+            ],
         },
     ],
     "palette-security": [
         {
             heading: "Segurança",
+            className: "pb-2.5",
             linhas: [
                 {
                     title: "Senha alterada",
-                    description: "Segurança · sessões antigas encerradas",
+                    description: "Segurança · sessões encerradas",
                     icon: KeyIcon,
                     meta: (
-                        <Badge variant="soft" tone="success" size="xs">
+                        <Badge variant="soft" tone="success" size="xs" className={SELO}>
                             agora
                         </Badge>
                     ),
@@ -160,7 +178,7 @@ const RESULTADOS: Record<PaletteScript, Grupo[]> = {
                     description: "Segurança · este computador",
                     icon: ComputerDesktopIcon,
                     meta: (
-                        <Badge variant="soft" tone="neutral" size="xs">
+                        <Badge variant="soft" tone="neutral" size="xs" className={SELO}>
                             1 aparelho
                         </Badge>
                     ),
@@ -173,16 +191,20 @@ const RESULTADOS: Record<PaletteScript, Grupo[]> = {
 const VOCE = { name: "Você", tone: 3, anchor: "search", from: "bottom" } as const
 
 /**
- * Onde a paleta pousa. O `ShowcaseFloat center` prende o topo a 58% do herói e
- * a placa cresce para baixo; aqui o campo sobe para a linha do cabeçalho (15%
- * da altura do navegador, onde estava a pílula), e a pílula se estica no lugar
- * até virar a paleta, com a placa descendo sobre a tela velada, dentro da
- * janela. A 58% a paleta descia ~120px para fora e cobria o chip pendurado e o
- * cartão de baixo à direita. A subida é 0,43 da altura do navegador, que a
- * `@utility showcase-stage` dá por extenso: `min(86cqw, 140cqh)` × 10/16
- * (`min(92cqw, …)` abaixo de 28rem).
+ * Onde a paleta pousa: **a pílula do cabeçalho se estica no lugar**. O campo fica exatamente sobre ela (a 2,75rem
+ * do topo do herói: a barra de 2,25rem e os 8px da pílula de 32 na linha de 48) e ocupa a área de conteúdo menos
+ * 12px de cada lado — centrado nela, à direita do trilho de 3rem; a placa desce sobre a tela velada. Nenhuma tira
+ * estreita sobra ao lado com pedaços da tela de trás.
+ *
+ * O `ShowcaseFloat center` prende o topo a 58% do herói, com 80% da largura dele: aqui a largura e a subida vêm
+ * por extenso da `@utility showcase-stage` — a largura do herói é `min(86cqw, 140cqh)` (`min(92cqw, …)` abaixo
+ * de 28rem), a altura é 10/16 dela, e 0,58 × 10/16 = 0,3625. Se a utility mudar, estes números acompanham.
  */
-const POUSO_DA_PALETA = "-translate-y-[min(22.95cqw,37.4cqh)] @max-md/showcase:-translate-y-[min(24.55cqw,37.4cqh)]"
+const POUSO_DA_PALETA = cn(
+    "relative left-1/2 translate-x-[calc(-50%_+_1.5rem)]",
+    "w-[calc(min(86cqw,140cqh)_-_4.5rem)] translate-y-[calc(2.75rem_-_min(31.175cqw,50.75cqh))]",
+    "@max-md/showcase:w-[calc(min(92cqw,140cqh)_-_4.5rem)] @max-md/showcase:translate-y-[calc(2.75rem_-_min(33.35cqw,50.75cqh))]"
+)
 
 /**
  * Antes da escolha, nenhuma linha acesa: o cmdk acende a primeira ao registrar
@@ -260,6 +282,7 @@ export function PaletteDemo({ script, skip, stage, onStage }: PaletteDemoProps) 
                     <Command
                         variant="panel"
                         shouldFilter={false}
+                        density="menu"
                         value={escolhida ?? NENHUMA[nenhuma]}
                         onValueChange={aoAcender}
                         className="w-full"
@@ -270,9 +293,9 @@ export function PaletteDemo({ script, skip, stage, onStage }: PaletteDemoProps) 
                         {/* A placa entra com a primeira tecla, e as linhas sobem em cascata (`command-reveal`). */}
                         {texto && grupos ? (
                             <CommandList>
-                                {grupos.map(({ heading, linhas, largo }) => (
-                                    <CommandGroup key={heading} heading={heading} className={largo ? SO_NO_LARGO : undefined}>
-                                        {linhas.map(({ title, description, icon: Icon, meta }) => (
+                                {grupos.map(({ heading, linhas, className }) => (
+                                    <CommandGroup key={heading} heading={heading} className={className}>
+                                        {linhas.map(({ title, description, descriptionClassName, icon: Icon, meta }) => (
                                             <CommandItem key={title} value={title}>
                                                 <CommandItemIcon>
                                                     <Icon />
@@ -282,7 +305,7 @@ export function PaletteDemo({ script, skip, stage, onStage }: PaletteDemoProps) 
                                                         <CommandHighlight>{title}</CommandHighlight>
                                                     </CommandItemTitle>
                                                     {description ? (
-                                                        <CommandItemDescription>
+                                                        <CommandItemDescription className={descriptionClassName}>
                                                             <CommandHighlight>{description}</CommandHighlight>
                                                         </CommandItemDescription>
                                                     ) : null}
@@ -293,20 +316,6 @@ export function PaletteDemo({ script, skip, stage, onStage }: PaletteDemoProps) 
                                     </CommandGroup>
                                 ))}
                             </CommandList>
-                        ) : null}
-                        {/* A legenda de teclado da paleta do app, só no palco grande (48rem, a janela de 1920). */}
-                        {texto ? (
-                            <CommandDock className="@max-3xl/showcase:hidden">
-                                <CommandDockItem>
-                                    <Kbd>↑↓</Kbd> navegar
-                                </CommandDockItem>
-                                <CommandDockItem>
-                                    <Kbd>↵</Kbd> abrir
-                                </CommandDockItem>
-                                <CommandDockItem>
-                                    <Kbd>esc</Kbd> fechar
-                                </CommandDockItem>
-                            </CommandDock>
                         ) : null}
                     </Command>
                 </div>

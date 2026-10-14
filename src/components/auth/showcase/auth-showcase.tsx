@@ -209,12 +209,12 @@ const AVISOS: Partial<Record<SceneOverlay, React.ReactNode>> = {
 }
 
 /**
- * O que cobre a tela: o véu atrás do aviso do cadastro e da paleta do login, a tela apagada e o cartão do
- * convite indisponível.
+ * O que cobre a tela: o véu atrás do aviso do cadastro, a tela apagada e o cartão do convite indisponível. (O
+ * véu da paleta cobre a janela inteira: `VEU_DA_JANELA`.)
  */
-function Cobertura({ overlay, palette, children }: { overlay: SceneOverlay; palette: boolean; children: React.ReactNode }) {
+function Cobertura({ overlay, children }: { overlay: SceneOverlay; children: React.ReactNode }) {
     const apagada = overlay === "dim" || overlay === "invite-error" || overlay === "notice-expired"
-    const veu = palette || overlay === "notice-confirm" || overlay === "notice-confirm-invite"
+    const veu = overlay === "notice-confirm" || overlay === "notice-confirm-invite"
     return (
         <div className="relative size-full">
             <div className={cn("size-full transition-opacity duration-(--duration-slow) ease-(--ease-out)", apagada && "opacity-60")}>
@@ -406,6 +406,15 @@ function Cursores({ cursors }: { cursors: SceneCursor[] }) {
 /* ── O palco ───────────────────────────────────────────────────────────── */
 
 /**
+ * O véu da paleta, sobre a **janela inteira** — barra, trilho e conteúdo —, como o véu de um diálogo sobre o app.
+ * O `DeviceFrame` não tem lugar para uma camada por cima da tela toda (a `Cobertura` mora no conteúdo), e um
+ * `::after` esticado na caixa do herói é o padrão do link esticado, que só o `ui/` escreve: o véu é um filtro na
+ * caixa do herói, `brightness-60` — os mesmos 40% de escuro do `--overlay` (preto a 40% no escuro, quase preto
+ * a 40% no claro). Entra e sai na duração do véu dos diálogos.
+ */
+const VEU_DA_JANELA = "transition-[filter] duration-(--duration-base) ease-(--ease-out)"
+
+/**
  * O palco que o roteiro da paleta pede, guardado com o roteiro de quem o calculou: na troca de cena o palco
  * velho não vale nem por um commit (a fatura do login não pisca na recuperação).
  */
@@ -449,12 +458,13 @@ const Palco = React.memo(function Palco({ scene }: { scene: AuthSceneId }) {
             </ShowcaseScatter>
             <ShowcaseHero
                 form={form}
+                className={cn(VEU_DA_JANELA, etapa.search === "palette" && "brightness-60")}
                 turn={turn}
                 url={MINI_APP_URL[tela]}
                 nav={navDa(tela)}
                 notification={AVISOS[spec.overlay]}
             >
-                <Cobertura overlay={spec.overlay} palette={etapa.search === "palette"}>
+                <Cobertura overlay={spec.overlay}>
                     <AuthMiniApp screen={tela} member={spec.member} search={etapa.search} />
                 </Cobertura>
             </ShowcaseHero>
