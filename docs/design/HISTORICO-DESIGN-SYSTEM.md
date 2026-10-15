@@ -25942,3 +25942,81 @@ quando o botão recolhido ficava a 8 da borda. Com o trilho a 16, a dica ficava
 a 14 do botão (medido; e 2px por dentro da placa), e o dono a achou longe.
 Agora é 6 do botão, como qualquer dica, e o `SidebarSoltaContext`, que só
 servia à soma, saiu.
+
+**O realce recolhido de 4px.** A caixa de 48 em volta da mídia de 32 lia como
+moldura larga, e o dono pediu menos. O `lg` recolhido passou a
+`size-10! -m-1 p-1!` com `[--radius-inset:--spacing(3)]`: 4px de realce, a
+caixa a 12 da borda, raio concêntrico 16. Medido: caixa 40×40 a 12 das bordas,
+raio 16, mídia 32 a 16, o "+" no mesmo lugar. O teste 12, que barrava `p-1!`
+(numa caixa de 32 ele cortava a mídia), agora tranca o `p-1!` junto da caixa
+de 40. O esqueleto `lg` seguiu.
+
+**O lugar do botão de recolher, em laboratório.** O dono não gostou de o
+gatilho morar em dois lugares (no `TopBar` aberta, viajando para dentro da
+barra recolhida) e pediu versões para comparar lado a lado antes de migrar. O
+`SidebarProvider` ganhou `toggle` (`SidebarTogglePlacement`): `topbar` (o de
+hoje, padrão), `edge` (alça `Button floating icon-xs` centrada na borda direita
+da placa, a 40 do topo, seta que gira meia volta recolhida), `header` (à direita
+da carteira aberta, abaixo dela recolhida, sem viajar) e `footer` (linha
+"Recolher" com o ⌘B acima da conta; recolhida, o ícone com dica). Nas três
+novas o topo fica sem botão no desktop; no telefone vale o do topo. O
+`/laboratorio/barra` (só em desenvolvimento, a guarda do catálogo) mostra as
+quatro em quadros do app de verdade, e cada quadro escolhe a versão pelo
+`window.name` (`barra:<versão>`, `lib/sidebar-lab.ts`), que sobrevive à
+navegação dentro dele. Medido nos quadros: recolhida, a alça centrada na borda
+(desvio 0) e alinhada ao centro do ladrilho; o do cabeçalho a 56 do topo, abaixo
+da carteira; o do rodapé acima da conta. Aberta, a alça no mesmo ponto da
+borda, o do cabeçalho à direita da carteira, o do rodapé a linha inteira.
+Temporário: a vencedora vira o padrão, e o laboratório e as perdedoras saem.
+
+**A borda venceu.** Comparadas no laboratório, o dono ficou com a `edge` e
+descartou a `header` (o código saiu) e a `topbar` para o app — o modo continua
+no componente, porque o catálogo monta a barra com o gatilho no cabeçalho. O
+app passou a `edge` (`sidebar-app-shell`, e o padrão do `sidebarLabVersion`). O
+laboratório ficou com três: a `edge`, a `footer` e a variante pedida da
+`footer`, a `footerBar` — uma faixa `Button tertiary sm` no pé da placa, abaixo
+da conta, só com a seta da `edge`. Medido: aberta, 224×28 a 8 da base;
+recolhida, 32×28 a 16 da borda e da base, a seta a 180°, "Abrir barra lateral".
+No app, a alça centrada na borda (desvio 0), a 20 do topo da placa.
+
+**A pílula do ativo viaja de verdade.** O dono pediu a transição do item ativo
+ao trocar de tela — e ela já existia (`layoutId` no `SidebarRealce`), mas não
+se via. Medido: a pílula nasce dentro do item de destino e anda desde o de
+origem, e o `SidebarMenuButton` tinha `overflow-hidden`: recortada pela caixa
+do destino, só aparecia no fim. Saíram o `overflow-hidden` e o `isolate` do
+botão (e do `SidebarMenuSubButton`); o `isolate` foi para o `SidebarMenu` e o
+`SidebarMenuSub`, que seguram a pílula (`-z-10`) atrás de todas as linhas. O
+rótulo trunca sozinho. Segundo achado: esperando o `pathname`, a viagem caía nos
+~200ms em que a página nova se desenha, sem quadro nenhum — lia como salto. O
+`AppSidebar` marca o destino no clique (sem ⌘/Ctrl/Shift/Alt, e não na própria
+página) e volta ao `pathname` quando ele muda. Medido: logo depois do clique a
+pílula já está em "Categorias" com a URL ainda em `/dashboard`; depois, uma
+pílula só. A viagem em si não foi filmada: a aba do painel estava escondida.
+
+**A viagem da pílula, refinada.** O dono achou a animação ruim. Três causas no
+código: o cursor e o toque pintavam a linha com o mesmo `bg-sidebar-accent` da
+pílula — no clique o destino já estava cheio e a pílula chegava como uma
+segunda —; a mola do `Menubar` (0,28s, 20% de quique) passava do item numa
+coluna de 400px; e a cor e o peso do rótulo trocavam no clique, antes da
+pílula. Agora o cursor e o toque são `/50`, a linha ativa não soma nada
+(`data-active:hover:bg-transparent`), a mola é 0,36s sem quique e a transição
+do botão inclui `color` e `font-weight`. Conferido no CSS servido; a viagem não
+foi filmada (aba escondida).
+
+**A pílula do ativo sai do motion e vai ao compositor.** Mesmo refinada, ela
+"pulava ou travava" (o dono). A causa: o `layoutId` do motion anda em
+JavaScript, quadro a quadro, e logo depois do clique a página nova ocupa a linha
+principal. A decisão antiga (teste 25: "viaja pelo motion", sem marcador) caiu
+pela medida. Agora a pílula é uma só, no `SidebarContent` (`relative isolate`,
+`data-slot="sidebar-menu-marker"`), movida pelo `useMarcador` — o mesmo do
+`Tabs` e da `BottomBar`, na viagem líquida (`TRAJETO_MACIO`, esticão em Y) —, que
+ganhou `medida` (cada linha mora num `li` posicionado: retângulos mais a
+rolagem). A pílula parada de cada linha (`SidebarRealce`, sem `layoutId`) marca
+antes da medida e fora da lista, e some dentro de uma lista medida
+(`group-data-[marcador]/conteudo:invisible`). Saíram o `MOLA_DO_REALCE` e o
+`SidebarRealceContext`. Achado de passagem: o `useMarcador` animava `width` e
+`height` junto do `translate`, e uma propriedade fora do compositor tira o
+efeito inteiro de lá; do mesmo tamanho, agora só a posição anima (vale também
+para `Tabs` e `BottomBar`). Medido: no clique, uma animação de `translate`
+(480ms) e uma de `scale` (768ms), nenhuma de tamanho; recolhida, a pílula 32×32
+sobre o ativo.

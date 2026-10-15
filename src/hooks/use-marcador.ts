@@ -30,6 +30,16 @@ type UseMarcadorOptions = {
   acompanhar?: () => boolean
   /** O que, além das opções, refaz a medição (degrau, variante…). */
   deps?: React.DependencyList
+  /**
+   * A caixa do ativo na régua da trilha. O padrão lê `offsetLeft/Top`, que valem
+   * quando a trilha é o `offsetParent` dos itens; quem tem item dentro de outro
+   * posicionado (a `Sidebar`, um `li` por linha) mede pela diferença dos
+   * retângulos mais a rolagem.
+   */
+  medida?: (
+    ativa: HTMLElement,
+    trilha: HTMLElement
+  ) => { left: number; top: number; width: number; height: number }
 }
 
 /**
@@ -74,7 +84,12 @@ export function useMarcador(o: UseMarcadorOptions): boolean {
         return
       }
       const caixa = caixaDoAtivo(
-        { left: ativa.offsetLeft, top: ativa.offsetTop, width: ativa.offsetWidth, height: ativa.offsetHeight },
+        opcoes.current.medida?.(ativa, trilha) ?? {
+          left: ativa.offsetLeft,
+          top: ativa.offsetTop,
+          width: ativa.offsetWidth,
+          height: ativa.offsetHeight,
+        },
         insete
       )
       trilha.style.setProperty(`--${prefixo}-x`, `${caixa.x}px`)
@@ -94,7 +109,13 @@ export function useMarcador(o: UseMarcadorOptions): boolean {
         // O mesmo item, só maior (o rótulo abriu): acompanha a largura sem esticar.
         const amplitude =
           antes.el === ativa ? 0 : Math.min(0.18, passo > 0 ? (andado / passo) * 0.09 : 0.09)
-        emCurso.current = viajarLiquido(peca, antes.caixa, caixa, {
+        // Do mesmo tamanho, só a posição anima: `width`/`height` na mesma
+        // animação tiram o efeito inteiro do compositor, e o `translate` voltaria
+        // a depender da linha principal (onde a página nova trava tudo).
+        const mesmoTamanho = antes.caixa.w === caixa.w && antes.caixa.h === caixa.h
+        const de = mesmoTamanho ? { x: antes.caixa.x, y: antes.caixa.y } : antes.caixa
+        const para = mesmoTamanho ? { x: caixa.x, y: caixa.y } : caixa
+        emCurso.current = viajarLiquido(peca, de, para, {
           amplitude,
           eixo,
           trajeto: TRAJETO_MACIO,

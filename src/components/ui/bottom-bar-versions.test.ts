@@ -309,7 +309,7 @@ describe("o catálogo e o app", () => {
       // repouso são as variáveis.
       expect(marcador).not.toContain("transition-")
       expect(CODIGO).toContain('prefixo: "bottom-bar-marker"')
-      expect(MARCADOR).toContain("viajarLiquido(peca, antes.caixa, caixa")
+      expect(MARCADOR).toContain("viajarLiquido(peca, de, para")
       expect(MARCADOR).toContain("trajeto: TRAJETO_MACIO")
       expect(marcador).not.toMatch(/\bduration-\d/)
       expect(marcador).not.toMatch(/\bease-\[/)

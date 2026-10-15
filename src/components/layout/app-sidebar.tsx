@@ -1,6 +1,6 @@
 "use client"
 
-import { createElement } from "react"
+import { createElement, useState } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { useQueryClient } from "@tanstack/react-query"
@@ -41,8 +41,26 @@ export function AppSidebar() {
     const pathname = usePathname()
     const queryClient = useQueryClient()
     const { currentWorkspaceId } = useWorkspace()
-    const membersActive = isExactPath(pathname, MEMBERS_NAV_ITEM.href)
-    const settingsActive = isExactPath(pathname, SETTINGS_NAV_ITEM.href)
+
+    // **A pílula do ativo anda no clique, e não quando a página chega.** Medido:
+    // esperando o `pathname`, a viagem caía nos ~200ms em que a página nova se
+    // desenha, sem quadro nenhum, e lia como salto. O destino marca o ativo na
+    // hora; quando o `pathname` muda, volta a ser ele quem manda.
+    const [destino, setDestino] = useState<string | null>(null)
+    const [pathAnterior, setPathAnterior] = useState(pathname)
+    if (pathname !== pathAnterior) {
+        setPathAnterior(pathname)
+        setDestino(null)
+    }
+    const ativo = (href: string) =>
+        destino ? destino === href : isExactPath(pathname, href)
+    const irPara = (href: string) => (e: React.MouseEvent) => {
+        // Abrir em outra aba (⌘, Ctrl, Shift, botão do meio) não troca a página daqui.
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+        if (!isExactPath(pathname, href)) setDestino(href)
+    }
+    const membersActive = ativo(MEMBERS_NAV_ITEM.href)
+    const settingsActive = ativo(SETTINGS_NAV_ITEM.href)
 
     return (
         <Sidebar collapsible="icon" variant="floating">
@@ -58,7 +76,7 @@ export function AppSidebar() {
                 <SidebarGroup>
                     <SidebarMenu>
                         {MAIN_NAVIGATION.map((item) => {
-                            const active = isExactPath(pathname, item.href)
+                            const active = ativo(item.href)
                             const tooltip = item.beta
                                 ? {
                                       children: (
@@ -83,6 +101,7 @@ export function AppSidebar() {
                                     >
                                         <Link
                                             href={item.href}
+                                            onClick={irPara(item.href)}
                                             onMouseEnter={() =>
                                                 prefetchNavRouteHref(
                                                     queryClient,
@@ -120,7 +139,7 @@ export function AppSidebar() {
                                 isActive={membersActive}
                                 tooltip={MEMBERS_NAV_ITEM.name}
                             >
-                                <Link href={MEMBERS_NAV_ITEM.href}>
+                                <Link href={MEMBERS_NAV_ITEM.href} onClick={irPara(MEMBERS_NAV_ITEM.href)}>
                                     <NavIcon icon={MEMBERS_NAV_ITEM.icon} />
                                     <span>{MEMBERS_NAV_ITEM.name}</span>
                                 </Link>
@@ -132,7 +151,7 @@ export function AppSidebar() {
                                 isActive={settingsActive}
                                 tooltip={SETTINGS_NAV_ITEM.name}
                             >
-                                <Link href={SETTINGS_NAV_ITEM.href}>
+                                <Link href={SETTINGS_NAV_ITEM.href} onClick={irPara(SETTINGS_NAV_ITEM.href)}>
                                     <NavIcon icon={SETTINGS_NAV_ITEM.icon} />
                                     <span>{SETTINGS_NAV_ITEM.name}</span>
                                 </Link>

@@ -1333,17 +1333,27 @@ declaração de `background-color` no trilho).
 - **`Sidebar`**: sempre à esquerda; `variant` `floating` (o padrão e a do
   app desde a rodada 261, **sem vidro**), `sidebar` (a rente), `inset`,
   `plain` (a do catálogo, com
-  `collapsible="none"`). A pílula do ativo é `layoutId`; `peek`. **Nenhuma tela
+  `collapsible="none"`). **A pílula do ativo é uma só, no `SidebarContent`, e
+  anda no compositor** (`useMarcador`, a viagem líquida do `Tabs`, só
+  `translate`/`scale`); a pílula parada de cada linha fica para antes da medida e
+  fora da lista. O botão não recorta (`overflow-hidden` saiu). O app marca o
+  destino no clique. `peek`. **Nenhuma tela
   escreve** o `h-12` do cabeçalho recolhido, o `overflow-y-auto` do conteúdo
   recolhido nem a espera do botão `lg` (`SidebarMenuSkeleton size="lg"`).
   Recolhida, o trilho mede 64 (16 + o botão de 32 + 16; o recuo lateral
   cresce a 16 só no modo ícone, e o topo e a base também: 16 nas quatro bordas), e o degrau `lg` (carteira, conta)
-  continua uma caixa de 48 — `size-12` com `-m-2`, o realce do cursor em volta
-  da mídia de 32, que fica inteira e no mesmo lugar (a 16 das bordas).
-  Na placa flutuante o degrau `lg` é `concentric`: 20 aberta e 20 recolhida
-  (a caixa fica a 8 da borda nos dois; o recuo publicado de 16 no modo ícone
+  vira uma caixa de 40 — `size-10` com `-m-1`, um realce de 4px em volta da
+  mídia de 32, que fica inteira e no mesmo lugar (a 16 das bordas).
+  Na placa flutuante o degrau `lg` é `concentric`: 20 aberta (a 8 da borda) e
+  16 recolhida (a caixa a 12 da borda; o recuo publicado de 16 no modo ícone
   vale para os itens de 32).
-  O gatilho do topo não tem dica; dentro da barra recolhida, tem.
+  **O botão de recolher mora num lugar só** (`SidebarProvider toggle`): o do
+  componente é `topbar` (no `TopBar`, viajando para a barra recolhida — o
+  catálogo o usa); **o app usa `edge`**, a alça `Button floating icon-xs`
+  centrada na borda direita da placa, a 40 do topo, com a seta que gira meia
+  volta recolhida, e o topo fica sem botão no desktop. `footer` e `footerBar`
+  estão em avaliação no `/laboratorio/barra`. O gatilho do topo não tem dica;
+  dentro da barra recolhida, tem.
   A dica do item e a do gatilho na barra abrem a 6px do botão
   (`SIDEBAR_TOOLTIP_OFFSET`), como qualquer dica — somar o recuo da placa as
   afastava do gatilho; um

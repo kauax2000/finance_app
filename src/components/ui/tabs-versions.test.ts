@@ -287,7 +287,7 @@ describe("o marcador viaja com os tokens do sistema", () => {
       expect(classes).not.toMatch(/\bduration-\d/)
     }
     expect(FONTE).toContain('prefixo: "tabs-indicator"')
-    expect(MARCADOR).toContain("viajarLiquido(peca, antes.caixa, caixa")
+    expect(MARCADOR).toContain("viajarLiquido(peca, de, para")
   })
 
   it("a caixa vem das quatro variáveis publicadas pela trilha", () => {

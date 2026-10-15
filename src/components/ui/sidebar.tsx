@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { motion, useReducedMotion } from "motion/react"
 import { Slot } from "radix-ui"
 
+import { ChevronLeftIcon } from "@heroicons/react/16/solid"
 import { SidebarToggleIcon } from "@/components/icons/sidebar-toggle-icon"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
@@ -16,6 +17,8 @@ import {
 import { cn } from "@/lib/utils"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
+import { useMarcador } from "@/hooks/use-marcador"
+import { composeRefs } from "radix-ui/internal"
 import { Button } from "@/components/ui/button"
 import { Input, type InputBaseProps } from "@/components/ui/input"
 import { Kbd } from "@/components/ui/kbd"
@@ -96,7 +99,24 @@ type SidebarContextProps = {
   setGatilhoMovel: (movel: boolean) => void
   /** O `layoutId` do gatilho — é ele que o leva do topo à barra e de volta. */
   gatilhoId: string
+  /** Onde mora o botão de recolher e abrir (`SidebarTogglePlacement`). */
+  toggle: SidebarTogglePlacement
 }
+
+/**
+ * Onde mora o botão de recolher e abrir, no desktop:
+ * - `topbar` — no `TopBar`, e recolhida ele viaja para a barra. O padrão do
+ *   componente (o catálogo o usa nos exemplos com cabeçalho).
+ * - `edge` — uma alça redonda presa na borda direita da placa, na altura do
+ *   cabeçalho, com uma seta que gira; anda junto com a borda. **A do app.**
+ * - `footer` — uma linha "Recolher" (com o ⌘B) acima da conta; recolhida, o
+ *   ícone no mesmo lugar, com dica.
+ * - `footerBar` — uma faixa fina no pé da placa, abaixo da conta, só com a seta
+ *   que gira (a mesma da `edge`).
+ * `footer` e `footerBar` estão em avaliação contra a `edge` no
+ * `/laboratorio/barra`. No telefone a barra é folha, e vale o gatilho do topo.
+ */
+type SidebarTogglePlacement = "topbar" | "edge" | "footer" | "footerBar"
 
 /** Referência estável: um literal aqui trocaria a identidade do contexto a cada render. */
 const EMPTY_PANEL_PROPS: Record<string, unknown> = {}
@@ -120,8 +140,11 @@ function SidebarProvider({
   style,
   children,
   resizable = false,
+  toggle = "topbar",
   ...props
 }: React.ComponentProps<"div"> & {
+  /** Onde mora o botão de recolher e abrir no desktop. */
+  toggle?: SidebarTogglePlacement
   defaultOpen?: boolean
   open?: boolean
   onOpenChange?: (open: boolean) => void
@@ -210,11 +233,15 @@ function SidebarProvider({
       // Abrir ou recolher de verdade encerra a espiada.
       espiando: espiando && state === "collapsed",
       setEspiando,
-      gatilhoNaBarra: gatilhoMovel && state === "collapsed" && !isMobile,
+      // Só o do topo viaja para a barra; nas outras o botão já mora nela.
+      gatilhoNaBarra:
+        toggle === "topbar" && gatilhoMovel && state === "collapsed" && !isMobile,
       setGatilhoMovel,
       gatilhoId,
+      toggle,
     }),
     [
+      toggle,
       espiando,
       gatilhoMovel,
       gatilhoId,
@@ -267,13 +294,6 @@ function SidebarProvider({
   )
 }
 
-/**
- * O id da barra, que prefixa o `layoutId` da pílula do ativo (duas barras na
- * mesma página não trocam pílula). Não é `LayoutGroup id`: ele prefixaria todo
- * `layoutId` de dentro, e o gatilho, que viaja do topo (fora da barra) ao
- * cabeçalho (dentro), viraria dois ids e não animaria.
- */
-const SidebarRealceContext = React.createContext("sidebar")
 
 /**
  * Se o gatilho pode morar na barra: `floating` com `collapsible="icon"`, no
@@ -327,8 +347,8 @@ function Sidebar({
     panelProps,
     espiando,
     setEspiando,
+    toggle,
   } = useSidebar()
-  const realceId = React.useId()
 
   const relogio = React.useRef<ReturnType<typeof setTimeout>>(undefined)
   React.useEffect(() => () => clearTimeout(relogio.current), [])
@@ -371,7 +391,6 @@ function Sidebar({
 
   if (collapsible === "none") {
     return (
-        <SidebarRealceContext.Provider value={realceId}>
           <div
             data-slot="sidebar"
             data-variant={variante}
@@ -386,7 +405,6 @@ function Sidebar({
           >
             {children}
           </div>
-        </SidebarRealceContext.Provider>
     )
   }
 
@@ -446,9 +464,7 @@ function Sidebar({
               )}
             />
           </div>
-            <SidebarRealceContext.Provider value={realceId}>
               <div className="flex min-h-0 w-full flex-1 flex-col">{children}</div>
-            </SidebarRealceContext.Provider>
         </SheetContent>
       </Sheet>
     )
@@ -527,7 +543,6 @@ function Sidebar({
     )
 
     return (
-        <SidebarRealceContext.Provider value={realceId}>
         <SidebarGatilhoMovelContext.Provider
           value={variant === "floating" && collapsible === "icon"}
         >
@@ -541,12 +556,10 @@ function Sidebar({
           />
         </>
         </SidebarGatilhoMovelContext.Provider>
-        </SidebarRealceContext.Provider>
     )
   }
 
   return (
-      <SidebarRealceContext.Provider value={realceId}>
       <SidebarGatilhoMovelContext.Provider
         value={variant === "floating" && collapsible === "icon"}
       >
@@ -595,12 +608,12 @@ function Sidebar({
             {...props}
           >
             {miolo}
+            {toggle === "edge" && solta ? <SidebarEdgeToggle /> : null}
           </div>
         </div>
       </>
       </SidebarPeekContext.Provider>
       </SidebarGatilhoMovelContext.Provider>
-      </SidebarRealceContext.Provider>
   )
 }
 
@@ -728,11 +741,76 @@ function SidebarTriggerButton({
  * a zero, com a margem de quem o encosta na borda) em vez de sumir, e o título
  * ao lado desliza no mesmo passo.
  */
+/**
+ * O botão de recolher das versões que moram na barra (`edge` e `footerBar`): não
+ * viaja — fica no mesmo lugar da barra nos dois estados. A dica abre ao lado,
+ * com o atalho, aberta ou recolhida.
+ */
+function SidebarToggleSimple({
+  variant = "tertiary",
+  size = "icon-md",
+  className,
+  children,
+}: {
+  variant?: "tertiary" | "floating"
+  size?: "icon-md" | "icon-xs" | "sm"
+  className?: string
+  children?: React.ReactNode
+}) {
+  const { toggleSidebar, state } = useSidebar()
+  const rotulo = state === "expanded" ? "Recolher barra lateral" : "Abrir barra lateral"
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          data-sidebar="trigger"
+          data-slot="sidebar-trigger"
+          variant={variant}
+          size={size}
+          aria-label={rotulo}
+          className={className}
+          onClick={toggleSidebar}
+        >
+          {children ?? <SidebarToggleIcon />}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent
+        side="right"
+        sideOffset={SIDEBAR_TOOLTIP_OFFSET}
+        shortcut={`mod+${SIDEBAR_KEYBOARD_SHORTCUT}`}
+      >
+        {rotulo}
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
+/**
+ * A alça da versão `edge`: um círculo de 24 (`Button floating`, a pílula que
+ * paira) centrado na borda direita da placa, na altura da mídia do cabeçalho
+ * (40 do topo do trilho, aberta e recolhida). A seta aponta para onde a barra
+ * vai: para dentro aberta, gira meia volta recolhida, na curva da placa.
+ */
+function SidebarEdgeToggle() {
+  return (
+    <SidebarToggleSimple
+      variant="floating"
+      size="icon-xs"
+      className="absolute top-7 -right-1 z-10"
+    >
+      <ChevronLeftIcon className="transition-transform duration-(--duration-slow) ease-(--ease-emphasized) group-data-[collapsible=icon]:rotate-180" />
+    </SidebarToggleSimple>
+  )
+}
+
 function SidebarTrigger({
   className,
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const { gatilhoNaBarra } = useSidebar()
+  const { gatilhoNaBarra, toggle, isMobile } = useSidebar()
+  // Nas versões em que o botão mora na barra, o topo fica sem ele no desktop.
+  if (toggle !== "topbar" && !isMobile) return null
   return (
     <span
       data-slot="sidebar-trigger-slot"
@@ -931,7 +1009,13 @@ function SidebarHeader({
   )
 }
 
-function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
+function SidebarFooter({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"div">) {
+  const { toggle, isMobile, state, toggleSidebar } = useSidebar()
+  const noRodape = toggle === "footer" && !isMobile
   return (
     <div
       data-slot="sidebar-footer"
@@ -941,7 +1025,40 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
         className
       )}
       {...props}
-    />
+    >
+      {noRodape ? (
+        // `footer`: a linha da régua dos itens, acima da conta. Recolhida, o
+        // rótulo some com os outros e a dica diz o que o ícone faz.
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              data-sidebar="trigger"
+              onClick={toggleSidebar}
+              tooltip={{
+                children: state === "expanded" ? "Recolher barra lateral" : "Abrir barra lateral",
+                shortcut: `mod+${SIDEBAR_KEYBOARD_SHORTCUT}`,
+              }}
+            >
+              <SidebarToggleIcon />
+              <span>Recolher</span>
+              <Kbd
+                aria-hidden
+                keys={`mod+${SIDEBAR_KEYBOARD_SHORTCUT}`}
+                className="ml-auto pointer-coarse:hidden"
+              />
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      ) : null}
+      {children}
+      {toggle === "footerBar" && !isMobile ? (
+        // `footerBar`: a faixa no pé, a largura toda da coluna e só a seta, que
+        // aponta para onde a barra vai (a da `edge`).
+        <SidebarToggleSimple variant="tertiary" size="sm" className="w-full">
+          <ChevronLeftIcon className="transition-transform duration-(--duration-slow) ease-(--ease-emphasized) group-data-[collapsible=icon]:rotate-180" />
+        </SidebarToggleSimple>
+      ) : null}
+    </div>
   )
 }
 
@@ -959,13 +1076,55 @@ function SidebarSeparator({
   )
 }
 
-function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
+/** O item ativo da lista: um botão ou subitem com `data-active="true"`. */
+const ATIVO_DA_LISTA =
+  '[data-sidebar=menu-button][data-active=true], [data-sidebar=menu-sub-button][data-active=true]'
+
+/**
+ * A caixa do ativo na régua do `SidebarContent`: pela diferença dos retângulos,
+ * porque cada linha mora num `li` posicionado (o `offsetTop` seria do `li`), mais
+ * a rolagem, para a pílula rolar com a lista.
+ */
+function caixaNaLista(ativa: HTMLElement, trilha: HTMLElement) {
+  const t = trilha.getBoundingClientRect()
+  const a = ativa.getBoundingClientRect()
+  return {
+    left: a.left - t.left + trilha.scrollLeft,
+    top: a.top - t.top + trilha.scrollTop,
+    width: a.width,
+    height: a.height,
+  }
+}
+
+function SidebarContent({ className, children, ...props }: React.ComponentProps<"div">) {
+  // **A pílula do ativo é uma só e anda no compositor.** Era um `layoutId` do
+  // motion dentro de cada botão: a viagem roda em JavaScript, quadro a quadro, e
+  // logo depois do clique a página nova ocupa a linha principal — a pílula
+  // travava e saltava (o dono viu; medido, ~200ms sem quadro). Agora é o
+  // `useMarcador` do `Tabs` e da `BottomBar`: WAAPI em `translate` e `scale`, que
+  // seguem andando com a página ocupada, na viagem líquida da casa.
+  const trilha = React.useRef<HTMLDivElement>(null)
+  const marcador = React.useRef<HTMLSpanElement>(null)
+  const medido = useMarcador({
+    trilha,
+    marcador,
+    ativo: (t) => t.querySelector<HTMLElement>(ATIVO_DA_LISTA),
+    atributos: ["data-active"],
+    prefixo: "sidebar-ativo",
+    insete: 0,
+    eixo: "y",
+    viajar: true,
+    medida: caixaNaLista,
+  })
   return (
     <div
-      ref={useScrollFade()}
+      ref={composeRefs(useScrollFade(), trilha)}
       data-slot="sidebar-content"
       data-sidebar="content"
+      data-marcador={medido ? "" : undefined}
       className={cn(
+        // `relative isolate`: a pílula mora aqui, atrás de todas as linhas.
+        "group/conteudo relative isolate",
         // Recolhida, ela rola: com muitos itens o modo ícone cortaria os últimos sem
         // caminho até eles. A máscara continua desligada ali.
         "no-scrollbar flex min-h-0 flex-1 flex-col gap-0 overflow-auto group-data-[collapsible=icon]:overflow-x-hidden",
@@ -980,7 +1139,18 @@ function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
         className
       )}
       {...props}
-    />
+    >
+      <span
+        ref={marcador}
+        aria-hidden
+        data-slot="sidebar-menu-marker"
+        className={cn(
+          "pointer-events-none absolute top-0 left-0 -z-10 h-(--sidebar-ativo-h) w-(--sidebar-ativo-w) rounded-row bg-sidebar-accent [translate:var(--sidebar-ativo-x)_var(--sidebar-ativo-y)]",
+          !medido && "hidden"
+        )}
+      />
+      {children}
+    </div>
   )
 }
 
@@ -1066,8 +1236,6 @@ function SidebarGroupContent({
   )
 }
 
-/** A mola do realce: a do `Menubar` e do `NavigationMenu` (0,28s, 20% de quique). */
-const MOLA_DO_REALCE = { type: "spring", duration: 0.28, bounce: 0.2 } as const
 
 /**
  * A pílula do item ativo: um objeto só, que viaja de um item ao outro (`layoutId`
@@ -1075,16 +1243,18 @@ const MOLA_DO_REALCE = { type: "spring", duration: 0.28, bounce: 0.2 } as const
  * nas três variantes e nasce no HTML do servidor. Marca o ativo, e não o cursor:
  * o realce que corre entre as linhas sob o ponteiro é proibido; o hover esmaece.
  */
+/**
+ * A pílula parada de cada linha ativa: o que marca o ativo antes da primeira
+ * medida (no HTML do servidor, sem JavaScript) e fora da lista (a carteira e a
+ * conta no cabeçalho e no rodapé). Dentro de uma lista já medida quem marca é a
+ * pílula que viaja do `SidebarContent`, e esta some.
+ */
 function SidebarRealce() {
-  const id = React.useContext(SidebarRealceContext)
-  const reduzido = useReducedMotion()
   return (
-    <motion.span
-      layoutId={`${id}-ativo`}
+    <span
       aria-hidden
       data-slot="sidebar-menu-highlight"
-      transition={reduzido ? { duration: 0 } : MOLA_DO_REALCE}
-      className="pointer-events-none absolute inset-0 -z-10 rounded-[inherit] bg-sidebar-accent"
+      className="pointer-events-none absolute inset-0 -z-10 rounded-[inherit] bg-sidebar-accent group-data-[marcador]/conteudo:invisible"
     />
   )
 }
@@ -1125,7 +1295,9 @@ function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
     <ul
       data-slot="sidebar-menu"
       data-sidebar="menu"
-      className={cn("relative flex w-full min-w-0 flex-col gap-1", className)}
+      // `isolate`: a pílula do ativo (`-z-10`) mora atrás de todas as linhas da
+      // lista, e não de uma só — é aqui que ela viaja de um item ao outro.
+      className={cn("relative isolate flex w-full min-w-0 flex-col gap-1", className)}
       {...props}
     />
   )
@@ -1160,10 +1332,14 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
  */
 const sidebarMenuButtonVariants = cva(
   [
+    // O cursor e o toque pintam a metade da pílula (`/50`), e a linha ativa não
+    // soma nada por cima: com o mesmo tom, o destino já estava cheio quando a
+    // pílula chegava e a viagem lia como uma segunda pílula. A cor e o peso do
+    // rótulo andam junto dela (`color`, `font-weight` na transição).
     // A linha é retângulo arredondado (`rounded-row`, 12px) e não pílula: o
     // concêntrico dava 20–22px numa linha de 32 e o CSS a desenhava cápsula. O
     // subitem veste o mesmo.
-    "peer/menu-button group/menu-button relative isolate flex w-full items-center gap-2 overflow-hidden rounded-row p-2 text-left text-sm ring-sidebar-ring outline-hidden transition-[width,height,padding,background-color] duration-(--duration-slow) ease-(--ease-emphasized) group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-3 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-open:hover:bg-sidebar-accent data-open:hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground data-active:font-medium data-active:text-sidebar-accent-foreground [&_svg]:size-4 [&_svg]:shrink-0 [&>span:last-child]:truncate [&>span:nth-last-child(2):has(+[data-slot=sidebar-menu-highlight])]:truncate",
+    "peer/menu-button group/menu-button relative flex w-full items-center gap-2 rounded-row p-2 text-left text-sm ring-sidebar-ring outline-hidden transition-[width,height,padding,background-color,color,font-weight] duration-(--duration-slow) ease-(--ease-emphasized) group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground focus-visible:ring-3 active:bg-sidebar-accent/50 active:text-sidebar-accent-foreground data-active:hover:bg-transparent data-active:active:bg-transparent disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-open:hover:bg-sidebar-accent data-open:hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground data-active:font-medium data-active:text-sidebar-accent-foreground [&_svg]:size-4 [&_svg]:shrink-0 [&>span:last-child]:truncate [&>span:nth-last-child(2):has(+[data-slot=sidebar-menu-highlight])]:truncate",
     // O `plain`: a linha apagada até o cursor e acesa na página atual (80 linhas na
     // tinta cheia virariam um bloco de texto), com 44px no dedo.
     "group-data-[variant=plain]:text-muted-foreground group-data-[variant=plain]:hover:text-sidebar-accent-foreground group-data-[variant=plain]:active:text-sidebar-accent-foreground group-data-[variant=plain]:data-active:text-sidebar-accent-foreground group-data-[variant=plain]:pointer-coarse:min-h-11",
@@ -1185,10 +1361,11 @@ const sidebarMenuButtonVariants = cva(
         md: "h-8 text-sm",
         sm: "h-7 text-xs",
         // Na placa flutuante, a carteira e a conta moram nos cantos: o raio segue a
-        // curva dela (28 − 8 = 20). Recolhida, a caixa continua 48 (o realce do
-        // cursor em volta da mídia de 32): `size-12` com `-m-2` cabe no recuo de 16
-        // sem mexer a mídia, e a caixa fica a 8 da borda, então o raio volta a 20.
-        lg: "h-12 text-sm group-data-[collapsible=icon]:size-12! group-data-[collapsible=icon]:-m-2 group-data-[collapsible=icon]:p-2! group-data-[variant=floating]:concentric group-data-[collapsible=icon]:[--radius-inset:--spacing(2)]",
+        // curva dela (28 − 8 = 20). Recolhida, a caixa é 40 — um realce de 4px em
+        // volta da mídia de 32 (o de 8 lia como moldura larga): `size-10` com
+        // `-m-1` cabe no recuo de 16 sem mexer a mídia, e com a caixa a 12 da borda
+        // o raio concêntrico é 16.
+        lg: "h-12 text-sm group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:-m-1 group-data-[collapsible=icon]:p-1! group-data-[variant=floating]:concentric group-data-[collapsible=icon]:[--radius-inset:--spacing(3)]",
       },
     },
     defaultVariants: {
@@ -1331,7 +1508,7 @@ function SidebarMenuSkeleton({
       className={cn(
         "flex items-center gap-2 overflow-hidden rounded-md",
         size === "lg"
-          ? "h-12 p-2 group-data-[collapsible=icon]:size-12! group-data-[collapsible=icon]:-m-2"
+          ? "h-12 p-2 group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:-m-1 group-data-[collapsible=icon]:p-1"
           : "h-8 px-2",
         className
       )}
@@ -1369,7 +1546,7 @@ function SidebarMenuSub({ className, ...props }: React.ComponentProps<"ul">) {
       data-slot="sidebar-menu-sub"
       data-sidebar="menu-sub"
       className={cn(
-        "mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l border-sidebar-border px-2.5 py-0.5 group-data-[collapsible=icon]:hidden",
+        "relative isolate mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l border-sidebar-border px-2.5 py-0.5 group-data-[collapsible=icon]:hidden",
         className
       )}
       {...props}
@@ -1412,7 +1589,7 @@ function SidebarMenuSubButton({
       data-size={size}
       data-active={isActive}
       className={cn(
-        "relative isolate flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-row px-2.5 text-sidebar-foreground ring-sidebar-ring outline-hidden transition-[background-color] duration-(--duration-slow) ease-(--ease-emphasized) group-data-[collapsible=icon]:hidden hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-3 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[size=md]:text-sm data-[size=sm]:text-xs data-active:text-sidebar-accent-foreground [&>span:last-child]:truncate [&>span:nth-last-child(2):has(+[data-slot=sidebar-menu-highlight])]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-sidebar-accent-foreground",
+        "relative flex h-7 min-w-0 -translate-x-px items-center gap-2 rounded-row px-2.5 text-sidebar-foreground ring-sidebar-ring outline-hidden transition-[background-color,color,font-weight] duration-(--duration-slow) ease-(--ease-emphasized) group-data-[collapsible=icon]:hidden hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground focus-visible:ring-3 active:bg-sidebar-accent/50 active:text-sidebar-accent-foreground data-active:hover:bg-transparent data-active:active:bg-transparent disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[size=md]:text-sm data-[size=sm]:text-xs data-active:text-sidebar-accent-foreground [&>span:last-child]:truncate [&>span:nth-last-child(2):has(+[data-slot=sidebar-menu-highlight])]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-sidebar-accent-foreground",
         className
       )}
       {...props}
@@ -1421,6 +1598,8 @@ function SidebarMenuSubButton({
     </Comp>
   )
 }
+
+export type { SidebarTogglePlacement }
 
 export {
   Sidebar,

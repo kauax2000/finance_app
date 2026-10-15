@@ -64,7 +64,7 @@ describe("as versões do Sidebar", () => {
     // Um botão, dois lugares, o mesmo `layoutId`: o motion o leva na mola.
     expect([...CODIGO.matchAll(/layoutId=\{gatilhoId\}/g)]).toHaveLength(1)
     expect(CODIGO).toContain('{ type: "spring", duration: 0.45, bounce: 0.15 }')
-    expect(CODIGO).toContain("gatilhoNaBarra: gatilhoMovel && state === \"collapsed\" && !isMobile")
+    expect(CODIGO).toMatch(/gatilhoNaBarra:\s*toggle === "topbar" && gatilhoMovel && state === "collapsed" && !isMobile/)
     expect(CODIGO).toContain('value={variant === "floating" && collapsible === "icon"}')
     expect(CODIGO).toContain("{gatilhoNaBarra ? <SidebarTriggerButton naBarra /> : null}")
     expect(CODIGO).toContain("{gatilhoNaBarra ? null : <SidebarTriggerButton {...props} />}")
@@ -91,7 +91,7 @@ describe("as versões do Sidebar", () => {
   it("na placa flutuante, a carteira e a conta seguem a curva do canto", () => {
     // O degrau lg mora nos cantos da placa: concêntrico (28 − 8 = 20 aberta). Recolhida o
     // botão fica a 16 do canto, e o recuo publicado sobe junto (28 − 16 = 12, a linha).
-    expect(CODIGO).toContain('lg: "h-12 text-sm group-data-[collapsible=icon]:size-12! group-data-[collapsible=icon]:-m-2 group-data-[collapsible=icon]:p-2! group-data-[variant=floating]:concentric group-data-[collapsible=icon]:[--radius-inset:--spacing(2)]"')
+    expect(CODIGO).toContain('lg: "h-12 text-sm group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:-m-1 group-data-[collapsible=icon]:p-1! group-data-[variant=floating]:concentric group-data-[collapsible=icon]:[--radius-inset:--spacing(3)]"')
     expect(CODIGO).toContain("group-data-[variant=floating]:[--radius-inset:--spacing(2)] group-data-[collapsible=icon]:[--radius-inset:--spacing(4)]!")
   })
 
@@ -137,7 +137,8 @@ describe("as versões do Sidebar", () => {
 
   it("a dica abre a 6px do botão, e não somando o recuo da placa", () => {
     expect(CODIGO).toContain("const SIDEBAR_TOOLTIP_OFFSET = 6")
-    expect(CODIGO.match(/sideOffset=\{SIDEBAR_TOOLTIP_OFFSET\}/g)?.length).toBe(2)
+    // O item, o gatilho na barra e o botão das versões que moram na barra.
+    expect(CODIGO.match(/sideOffset=\{SIDEBAR_TOOLTIP_OFFSET\}/g)?.length).toBe(3)
     expect(CODIGO).not.toContain("SIDEBAR_PLACA_RECUO")
     expect(CODIGO).not.toContain("SidebarSoltaContext")
     expect(CODIGO).not.toContain("sideOffset={6}")
@@ -162,7 +163,7 @@ describe("as versões do Sidebar", () => {
 
   it("o que o app escrevia à mão é do componente, e o app flutua", () => {
     expect(CODIGO).toContain("[interpolate-size:allow-keywords] group-data-[collapsible=icon]:h-12")
-    expect(CODIGO).toContain('"h-12 p-2 group-data-[collapsible=icon]:size-12! group-data-[collapsible=icon]:-m-2"')
+    expect(CODIGO).toContain('"h-12 p-2 group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:-m-1 group-data-[collapsible=icon]:p-1"')
     const app = lerFonte("src/components/layout/app-sidebar.tsx")
     expect(app).toContain('<Sidebar collapsible="icon" variant="floating">')
     expect(app).not.toContain('<Sidebar collapsible="icon" variant="sidebar">')
@@ -288,15 +289,16 @@ describe("as versões do Sidebar", () => {
 
     it("12. recolhida, o recuo centra o ícone em todo degrau", () => {
       // A conta é `(32 - filho) / 2`: o degrau padrão (ícone de 16) pede 8 e o `lg` (ladrilho
-      // ou avatar de 32, rodada 264) pede 0.
+      // ou avatar de 32, rodada 264) mora numa caixa de 40 com 4 de cada lado.
       const cva = CODIGO.slice(
         CODIGO.indexOf("const sidebarMenuButtonVariants"),
         CODIGO.indexOf("function SidebarMenuButton")
       )
       expect(cva).toContain("group-data-[collapsible=icon]:p-2!") // md, ícone 16
-      expect(cva).toContain('lg: "h-12 text-sm group-data-[collapsible=icon]:size-12!') // lg, caixa de 48 em volta da mídia de 32
-      // Com `p-1!` sobravam 24 para uma mídia de 32: o `overflow-hidden` cortava a borda.
-      expect(cva).not.toContain("group-data-[collapsible=icon]:p-1!")
+      expect(cva).toContain('lg: "h-12 text-sm group-data-[collapsible=icon]:size-10!') // lg, caixa de 40 em volta da mídia de 32
+      // Com `p-1!` numa caixa de 32 sobravam 24 para uma mídia de 32 e o `overflow-hidden`
+      // cortava a borda: o `p-1!` só vale junto da caixa de 40 (40 − 2×4 = 32).
+      expect(cva).toContain("group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:-m-1 group-data-[collapsible=icon]:p-1!")
       // E não se conserta com `justify-center`: o rótulo continua no fluxo em
       // modo ícone, a linha transborda, e centrar transbordo empurra para fora.
       expect(cva).not.toContain("group-data-[collapsible=icon]:justify-center")
@@ -464,23 +466,32 @@ describe("as versões do Sidebar", () => {
       )
     })
 
-    it("25. a pílula do ativo é um objeto só, e viaja pelo motion", () => {
-      // Quem anima a pílula é o `layoutId` (a mecânica do `Menubar`): vale nas três variantes e
-      // já nasce no HTML do servidor.
-      expect(CODIGO).not.toMatch(/caixaRelativa|ResizeObserver|sidebar-marker|requestAnimationFrame/)
-      // O outro `layoutId` é o do gatilho, que viaja do topo à barra.
-      expect([...CODIGO.matchAll(/layoutId=/g)]).toHaveLength(2)
-      expect(CODIGO).toContain("layoutId={`${id}-ativo`}")
-      expect(CODIGO).toContain('{ type: "spring", duration: 0.28, bounce: 0.2 }')
-      expect(CODIGO).toContain("reduzido ? { duration: 0 } : MOLA_DO_REALCE")
-      // Os dois botões a desenham pelo mesmo caminho — e o ativo viaja do item
-      // ao subitem.
+    it("25. a pílula do ativo é uma só, e anda no compositor (useMarcador)", () => {
+      // Era um `layoutId` do motion por botão: a viagem em JavaScript travava e
+      // saltava enquanto a página nova se desenhava. Agora é o marcador do `Tabs`
+      // e da `BottomBar` (WAAPI em `translate`/`scale`), um só para a lista.
+      expect([...CODIGO.matchAll(/layoutId=/g)]).toHaveLength(1) // só o do gatilho
+      expect(CODIGO).not.toContain("MOLA_DO_REALCE")
+      expect(CODIGO).toMatch(/useMarcador\(\{[\s\S]*?prefixo: "sidebar-ativo"[\s\S]*?eixo: "y"[\s\S]*?medida: caixaNaLista/)
+      expect(CODIGO).toContain('data-slot="sidebar-menu-marker"')
+      expect(CODIGO).toContain("[translate:var(--sidebar-ativo-x)_var(--sidebar-ativo-y)]")
+      // A pílula parada de cada linha fica para antes da medida e fora da lista.
+      expect(CODIGO).toContain("group-data-[marcador]/conteudo:invisible")
       expect([...CODIGO.matchAll(/comRealce\(children, asChild, isActive\)/g)]).toHaveLength(2)
       const menu = CODIGO.slice(
         CODIGO.indexOf("function SidebarMenu("),
         CODIGO.indexOf("function SidebarMenuItem(")
       )
-      expect(menu).toMatch(/"relative flex w-full min-w-0 flex-col gap-1"/)
+      expect(menu).toMatch(/"relative isolate flex w-full min-w-0 flex-col gap-1"/)
+      // O botão não recorta.
+      const cva = CODIGO.slice(
+        CODIGO.indexOf("const sidebarMenuButtonVariants"),
+        CODIGO.indexOf("function SidebarMenuButton")
+      )
+      expect(cva).not.toContain("overflow-hidden")
+      // Cursor e toque a meia tinta; a linha ativa não soma realce por cima.
+      expect(CODIGO).toContain("hover:bg-sidebar-accent/50")
+      expect(CODIGO).toContain("data-active:hover:bg-transparent")
     })
 
     it("11. nenhuma tela reescreve o ritmo da lista", () => {
@@ -506,5 +517,35 @@ describe("a espiada segura com um menu de dentro aberto", () => {
     expect(CODIGO).toContain("if (!menuAberto()) agendar(false, 200)")
     expect(CODIGO).toMatch(/new MutationObserver\(aoMudar\)/)
     expect(CODIGO).toContain('attributeFilter: ["aria-expanded"]')
+  })
+})
+
+describe("o lugar do botão de recolher (toggle)", () => {
+  it("o componente oferece quatro lugares, e o do topo é o padrão dele", () => {
+    expect(CODIGO).toContain('type SidebarTogglePlacement = "topbar" | "edge" | "footer" | "footerBar"')
+    expect(CODIGO).toContain('toggle = "topbar",')
+    // Só a do topo viaja para a barra.
+    expect(CODIGO).toMatch(/gatilhoNaBarra:\s*toggle === "topbar" && gatilhoMovel/)
+    // Nas outras, o topo fica sem botão no desktop; no telefone continua.
+    expect(CODIGO).toContain('if (toggle !== "topbar" && !isMobile) return null')
+    // A do cabeçalho foi descartada.
+    expect(CODIGO).not.toContain('"header" &&')
+  })
+
+  it("cada versão mora no seu lugar e não viaja", () => {
+    expect(CODIGO).toContain('{toggle === "edge" && solta ? <SidebarEdgeToggle /> : null}')
+    expect(CODIGO).toContain('className="absolute top-7 -right-1 z-10"')
+    expect(CODIGO).toContain('const noRodape = toggle === "footer" && !isMobile')
+    expect(CODIGO).toContain('{toggle === "footerBar" && !isMobile ? (')
+    expect(CODIGO.match(/group-data-\[collapsible=icon\]:rotate-180/g)?.length).toBe(2)
+  })
+
+  it("o app usa a borda, e o laboratório troca pelo nome do quadro", () => {
+    const casca = lerFonte("src/components/layout/sidebar-app-shell.tsx")
+    expect(casca).toContain("sidebarLabVersion(window.name)")
+    expect(casca).toContain('() => "edge" as const')
+    const lab = lerFonte("src/lib/sidebar-lab.ts")
+    expect(lab).toContain('nome.startsWith("barra:")')
+    expect(lab).toContain(': "edge"')
   })
 })
