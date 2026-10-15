@@ -303,6 +303,17 @@ function DropdownMenuRadioGroup({
 }
 
 /**
+ * 4px entre duas linhas, o respiro dos links da barra lateral: com o fundo da
+ * passagem, linhas coladas liam como um bloco só, e o seletor de carteira, que
+ * já os tinha, destoava dos outros menus. Vale entre comandos, entre um comando
+ * e um grupo deles (`role="group"`, o `DropdownMenuRadioGroup`) e para a linha
+ * que não é comando mas mora na lista (`data-menu-row`, como a do tema); rótulo e
+ * separador têm o próprio respiro.
+ */
+const MENU_ROW_GAP =
+  "[&_:is([role^=menuitem],[role=group],[data-menu-row])+:is([role^=menuitem],[role=group],[data-menu-row])]:mt-1"
+
+/**
  * `size` é a largura (`auto` por padrão, e `sm` a `xl` nomeiam as quatro que as
  * telas já repetiam). `variant`: `menu` é a lista de comandos; `panel` é a
  * casca que cede o recuo, para cabeçalho de conta e blocos (o `UserMenu`, o
@@ -316,7 +327,7 @@ const dropdownMenuContentVariants = cva(
       variant: {
         menu: "",
         // O recuo sai do casco e vai para `DropdownMenuSection`, que o devolve
-        // onde há comandos, para o `-mx-2` do separador alcançar a borda.
+        // onde há comandos.
         panel: [
           // A placa é a superfície (22), a mesma do `menu`: era a linha alta (16)
           // e, ao lado do seletor de carteira e do "+ Adicionar" na barra
@@ -358,8 +369,7 @@ function DropdownMenuContent({
     /**
      * A faixa de cima (a identidade do painel, ou o alvo do menu). É prop e
      * não filho porque precisa ser irmã do viewport para o conteúdo dissolver
-     * por baixo dela, e o `UserMenu` passa um `AccountMenuUserSummary`, não um
-     * `DropdownMenuHeader`.
+     * por baixo dela.
      */
     header?: React.ReactNode
     /** A faixa de pé, pelas mesmas razões. */
@@ -499,6 +509,7 @@ function DropdownMenuContent({
             menuViewportClassName,
             scrollFadeViewportClassName,
             "overlay-cascade",
+            MENU_ROW_GAP,
             search && "px-2 pt-0 pb-2",
             "[&:not(:has([role^=menuitem]))>[data-slot=dropdown-menu-empty]]:block"
           )}
@@ -577,8 +588,7 @@ function DropdownMenuHeader({
 
 /**
  * A região de comandos dentro de um painel: devolve o recuo que o
- * `variant="panel"` tirou do casco, para o `-mx-2` do `DropdownMenuSeparator`
- * alcançar a borda do painel.
+ * `variant="panel"` tirou do casco.
  */
 function DropdownMenuSection({
   className,
@@ -834,7 +844,7 @@ function DropdownMenuSubContent({
         <div
           ref={dissolver}
           data-slot="dropdown-menu-sub-viewport"
-          className={cn(menuViewportClassName, scrollFadeViewportClassName, "overlay-cascade")}
+          className={cn(menuViewportClassName, scrollFadeViewportClassName, "overlay-cascade", MENU_ROW_GAP)}
         >
           {/* O submenu não tem busca, e o contexto atravessa o portal. */}
           <DropdownMenuBuscaContext.Provider value={false}>
@@ -963,9 +973,6 @@ function DropdownMenuRadioItem({
           "pr-2 py-1.5 data-[state=unchecked]:not-focus:text-muted-foreground",
           // A escolhida tem um fundo leve, 5% da tinta — abaixo dos 9% da passagem, que vence no foco.
           "data-[state=checked]:not-focus:bg-foreground/5",
-          // Entre duas linhas de mídia, 4px — o respiro dos itens da barra lateral: com o fundo
-          // da escolhida e o da passagem, linhas coladas liam como um bloco só.
-          "[[data-indicator=media]+&]:mt-1",
           // O halo mora no ladrilho: nasce colado e transparente, e cresce na curva do sistema.
           "[&>[data-slot=color-tile]]:outline-2 [&>[data-slot=color-tile]]:outline-solid [&>[data-slot=color-tile]]:outline-offset-0 [&>[data-slot=color-tile]]:outline-transparent [&>[data-slot=color-tile]]:transition-[outline-offset,outline-color] [&>[data-slot=color-tile]]:duration-(--duration-slow) [&>[data-slot=color-tile]]:ease-(--ease-emphasized)",
           // Escolhida: a cor da própria carteira, puxada para a tinta — o matiz é da pessoa, e o
@@ -1030,12 +1037,11 @@ function DropdownMenuSeparator({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Separator>) {
   const { folha } = React.useContext(DropdownMenuEstadoContext)
-  const naBusca = React.useContext(DropdownMenuBuscaContext)
   if (folha) return <Separator tone="soft" className="my-2" />
   return (
     <DropdownMenuPrimitive.Separator
       data-slot="dropdown-menu-separator"
-      className={cn(menuSeparatorClassName, naBusca && "-mx-2", className)}
+      className={cn(menuSeparatorClassName, className)}
       {...props}
     />
   )

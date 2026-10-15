@@ -25864,3 +25864,54 @@ identidade do painel ia a `px-3` e o avatar ficava 4px fora da coluna dos
 ícones (`px-4`); a linha de mídia media 40 com o ladrilho de 24 (`py-1.5`, 36,
 o halo ainda cabe); a amostra do `Toggle swatch` era `rounded-lg` (10) ao lado
 do `ColorTile` de 12 (`rounded-row`); e a linha do tema media 40 (`py-0.5`, 36).
+
+**4px entre as linhas de todo `DropdownMenu`.** O menu da conta parecia menor
+que o seletor de carteira com as mesmas medidas: o seletor tinha 4px entre as
+linhas de mídia (rodada desta mesma série) e os outros menus, linhas coladas.
+Escolha do dono: o respiro vira padrão do componente (`MENU_ROW_GAP` no
+viewport do conteúdo e do submenu), entre comandos, entre um comando e um grupo
+(`role="group"`) e para a linha que mora na lista sem ser comando
+(`data-menu-row`, a do tema). Saíram o `[[data-indicator=media]+&]:mt-1` e o
+`mt-1` escrito no "Criar carteira". Rótulo e separador seguem com o próprio
+respiro. Atinge todos os menus do app, que ganham 4px por linha.
+"Sair" voltou ao `destructive` por escolha do dono, como na gaveta do telefone.
+
+**O separador dos menus recuado, como no iOS.** O `menuSeparatorClassName`
+(DropdownMenu, ContextMenu, Menubar, Command) sangrava `-mx-2` até a borda da
+placa. Agora é `mx-2`: com o recuo de 8 da lista, o fio fica a 16 das duas
+bordas, começando na coluna dos ícones (medido: 16 | 192 | 16 numa placa de
+224). Saiu o `-mx-2` extra da busca do `DropdownMenu`. A gaveta do telefone
+continua com o `Separator tone="soft"`.
+
+**A placa flutuante abre a 60% também no claro.** O `menuPanelTintClassName`
+era `bg-popover/85` e só abria a 60% no escuro
+(`supports-backdrop-filter:dark:`); no claro, 85% de branco com borrão de 24px
+sobre a página clara lia como chapa sem vidro — o dono perguntou se o fundo era
+transparente. Agora abre a 60% onde há borrão, nos dois temas, como a barra
+(medido: `oklab(1 0 0 / 0.6)`, o cartão de baixo aparece borrado). Os espelhos
+manuais (as setas do `Popover` e do `HoverCard`) seguiram, e o `glass.test.ts`
+cobra os dois. O fallback sem borrão continua a 85%; a transparência reduzida,
+opaca. Pior caso do contraste: 60% de branco sobre preto ainda deixa a tinta
+acima de 6:1.
+
+**O gatilho de menu afunda no clique.** O "+ Adicionar" (um `Button` como
+gatilho do `DropdownMenu`) não fazia o `active:translate-y-px`: o Radix abre o
+menu no `pointerdown`, chama `preventDefault`, o menu modal põe
+`pointer-events: none` no `body`, e o React leva ~120ms montando o menu.
+Duas tentativas recusadas: `aria-expanded:translate-y-px` deixava o botão preso
+embaixo com o menu aberto; um `data-pressed` entre o `pointerdown` e o
+`pointerup` ficava pintado 11ms (medido com `MutationObserver` num clique real)
+e não se via. Ficou o `afundar`: no `pointerdown`, uma animação da Web
+Animations API de 260ms (0 → 1px, segura, volta), que anda pelo tempo e não
+pelo aperto. Medido: o primeiro quadro pinta a ~120ms já a 1px, e o botão volta
+a zero com o menu aberto. Segurar um botão comum continua com o `:active`.
+Movimento reduzido: sem animação. Vale para todo `Button`.
+
+**O realce de 48 também na barra recolhida.** Recolhida, o degrau `lg`
+(carteira, conta) ia a `size-8` com `p-0!`: a caixa era a própria mídia de 32,
+e o realce do cursor e do menu aberto sumia atrás dela. O dono pediu o realce
+de 48 também ali. Agora o `lg` recolhido é `size-12! -m-2 p-2!`: a margem
+negativa cabe a caixa no recuo de 16 sem mexer a mídia, e com a caixa a 8 da
+borda o raio concêntrico volta a 20 (`[--radius-inset:--spacing(2)]` no
+próprio botão). Medido: caixa 48×48 a 8 das bordas, raio 20, mídia 32 a 16, o
+"+" e os links no mesmo lugar. O `SidebarMenuSkeleton size="lg"` seguiu.

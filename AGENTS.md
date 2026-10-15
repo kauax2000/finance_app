@@ -464,8 +464,8 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
   `&:is([data-opaque][data-opaque] *)` — a cor sólida de quem veste vale ali,
   como se a pessoa tivesse pedido menos transparência — e a `glass-surface`
   perde o `backdrop-filter`. O atributo repetido sobe a especificidade a
-  (0,3,0) e vence a tinta translúcida (`supports-backdrop-filter:dark:bg-popover/60`,
-  0,2,0) por construção, e não pela ordem de emissão. É o que o vidro faz
+  (0,3,0) e vence a tinta translúcida (`supports-backdrop-filter:bg-popover/60`,
+  0,1,0) por construção, e não pela ordem de emissão. É o que o vidro faz
   sobre o arco-íris do campo de marca: nada a borrar, e sete matizes vazando.
 - **A seleção de texto** é tingida em `@layer base`: `--primary-muted` atrás,
   `--primary-muted-foreground` na frente, e o par invertido dentro de
@@ -498,7 +498,7 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
     `Accordion contained`, toast, `Table`. E **a placa flutuante** (`menuPanelSurfaceClassName`: `Select`, `DropdownMenu`,
     `ContextMenu`, `Menubar`, `Popover`, `Combobox`, `HoverCard`,
     `NavigationMenu`, também o `DropdownMenu variant="panel"`) e a placa da paleta do `Command`: as listas recuam 8
-    (`p-2`, o separador sangra `-mx-2`) e a linha mede 36 (`py-2`).
+    (`p-2`; o separador é recuado como no iOS, `mx-2`, sem encostar nas bordas) e a linha mede 36 (`py-2`).
   - **Modal** (`rounded-modal`, 28px): `Dialog`, `AlertDialog`, `Sheet`,
     `Drawer`, `Sidebar floating`, `SplitShell`.
   - **Linha** (`rounded-row`, 12px): a linha de lista selecionável (a linha e
@@ -1135,14 +1135,15 @@ declaração de `background-color` no trilho).
     `Command`, `Select`, `NavigationMenu`, folha de ações e seletor de mês;
     `Item` e `Toggle` seguem `bg-muted` — `lib/row-tint.test.ts`.
   - A linha mede 36 e cresce a 44 no **apontador** grosso
-    (`pointer-coarse:min-h-11`). **Rádio é ponto, caixa é tique** — a exceção é
+    (`pointer-coarse:min-h-11`), e **duas linhas ficam a 4px** (`MENU_ROW_GAP`, no
+    viewport do `DropdownMenu`: entre comandos, grupos e a linha `data-menu-row`). **Rádio é ponto, caixa é tique** — a exceção é
     `DropdownMenuRadioItem indicator="media"`, quando a mídia da linha é a
     identidade da opção (o ladrilho da carteira): a escolhida ganha o halo da
     amostra (`Toggle swatch`: contorno de 2px, afastado 2px) na cor da própria
     opção puxada para a tinta (`color-mix` com `--foreground`: 11:1 no escuro,
     5,6:1 no claro) e a linha um fundo leve (`bg-foreground/5`, abaixo dos 9% da
     passagem); a outra em foco mostra a prévia do halo a 45%, e as demais
-    esmaecem a tinta. Entre duas linhas, 4px. Sem peso nem marcador no fim.
+    esmaecem a tinta. Sem peso nem marcador no fim.
   - Teto vertical
     `max-h-[min(var(--radix-*-content-available-height),var(--menu-max-h))]`
     (288px) e horizontal `max-w-(--radix-*-content-available-width)`, escritos
@@ -1336,15 +1337,19 @@ declaração de `background-color` no trilho).
   escreve** o `h-12` do cabeçalho recolhido, o `overflow-y-auto` do conteúdo
   recolhido nem a espera do botão `lg` (`SidebarMenuSkeleton size="lg"`).
   Recolhida, o trilho mede 64 (16 + o botão de 32 + 16; o recuo lateral
-  cresce a 16 só no modo ícone, e o topo e a base também: 16 nas quatro bordas), e o degrau `lg` perde o recuo (`p-0!`):
-  a mídia de 32 — a carteira, o avatar da conta — fica inteira, sem encolher.
-  Na placa flutuante o degrau `lg` (carteira, conta) é `concentric`: 20
-  aberta, 12 recolhida (o recuo publicado sobe a 16 no modo ícone).
+  cresce a 16 só no modo ícone, e o topo e a base também: 16 nas quatro bordas), e o degrau `lg` (carteira, conta)
+  continua uma caixa de 48 — `size-12` com `-m-2`, o realce do cursor em volta
+  da mídia de 32, que fica inteira e no mesmo lugar (a 16 das bordas).
+  Na placa flutuante o degrau `lg` é `concentric`: 20 aberta e 20 recolhida
+  (a caixa fica a 8 da borda nos dois; o recuo publicado de 16 no modo ícone
+  vale para os itens de 32).
   O gatilho do topo não tem dica; dentro da barra recolhida, tem.
   Nas placas soltas a dica do item e a do gatilho na barra abrem a 6px da
   placa, e não do botão (`SIDEBAR_TOOLTIP_OFFSET` + `SIDEBAR_PLACA_RECUO`); um
-  menu ancorado num botão de dentro da placa usa `sideOffset={16}` (o recuo de
-  8 mais a calha de 8).
+  menu ancorado num botão de dentro da placa abre a 4px do botão
+  (`sideOffset={4}`) e **sobrepõe a borda da placa** (4px aberta, 12 recolhida,
+  contra o recuo de 8 e de 16): encostado e alinhado à borda dela, lia como
+  parte do fundo.
 - **`TopBar`**: `variant="floating"`, `titleAlign`, `size` (`lg` 64), área
   segura por `--top-bar-safe-area`. **`TopBarAction`** — **nenhuma tela escreve
   o `span` da contagem nem embrulha um botão da barra num `Tooltip` à mão**;

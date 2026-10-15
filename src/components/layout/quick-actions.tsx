@@ -232,11 +232,13 @@ export function QuickActionButton({ variant = "sidebar" }: QuickActionButtonProp
                     </Button>
                 )}
             </DropdownMenuTrigger>
-            {/* Na barra: 8 do recuo da placa flutuante + 8 de calha. */}
+            {/* 4px do botão (sem encostar nele) e por cima da borda da placa — o
+                botão fica 8 para dentro dela aberta e 16 recolhida. Encostado e
+                alinhado à borda, lia como parte do fundo. */}
             <DropdownMenuContent
                 align="start"
                 side="right"
-                sideOffset={16}
+                sideOffset={4}
                 size="xl"
             >
                 <FixedQuickCreateMenuItems

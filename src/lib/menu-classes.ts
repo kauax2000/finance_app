@@ -127,8 +127,13 @@ export const menuIndicatorSlotClassName =
 export const menuLabelClassName =
   "px-2 py-1 text-xs font-medium text-muted-foreground data-inset:pl-7.5"
 
-/** `bg-border`, o fio do projeto — `bg-muted` é preenchimento, não traço. */
-export const menuSeparatorClassName = "-mx-2 my-1 h-px bg-border"
+/**
+ * `bg-border`, o fio do projeto — `bg-muted` é preenchimento, não traço. Recuado
+ * como no iOS: não encosta nas bordas da placa; com o recuo de 8 da lista e os 8
+ * daqui, começa na coluna dos ícones e termina onde termina o conteúdo da linha.
+ * (Sangrava `-mx-2` até a borda.)
+ */
+export const menuSeparatorClassName = "mx-2 my-1 h-px bg-border"
 
 /** O atalho acompanha o realce da linha e some no toque: sem teclado físico, a tecla não diz nada. */
 export const menuShortcutClassName =

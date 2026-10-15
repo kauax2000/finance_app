@@ -2,13 +2,11 @@
 
 import { createElement } from "react"
 import { useAuth } from "@/components/providers"
-import { AccountMenuUserSummary } from "@/components/layout/account-menu-user-summary"
 import {
     DropdownMenu,
     DropdownMenuContent,
-    DropdownMenuHeader,
     DropdownMenuItem,
-    DropdownMenuSection,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ArrowRightStartOnRectangleIcon, SwatchIcon } from "@heroicons/react/16/solid"
@@ -35,50 +33,48 @@ export function UserMenu({ children }: UserMenuProps) {
             <DropdownMenuTrigger asChild>
                 {children}
             </DropdownMenuTrigger>
-            {/* 8 do recuo da placa flutuante + 8 de calha: o menu abre a 8px dela. */}
+            {/* 4px do botão (sem encostar nele) e por cima da borda da placa — o
+                botão fica 8 para dentro dela aberta e 16 recolhida. Encostado e
+                alinhado à borda, lia como parte do fundo. */}
             <DropdownMenuContent
-                variant="panel"
                 size="xl"
                 align="end"
                 side="right"
-                sideOffset={16}
-                header={
-                    <DropdownMenuHeader>
-                        <AccountMenuUserSummary />
-                    </DropdownMenuHeader>
-                }
+                sideOffset={4}
             >
                 {/* Do mais usado ao menos: as páginas da conta, a preferência de
-                    tema e, por último, sair. Sem fio: o do cabeçalho já separa a
-                    identidade dos comandos. "Sair" não é `destructive` — tem
-                    volta, e o vermelho é do que não tem. */}
-                <DropdownMenuSection>
-                    {dropdownLinkItems.map(({ href, label, icon }) => (
-                        <DropdownMenuItem key={href} asChild>
-                            <Link href={href}>
-                                {createElement(microIconFor(icon) ?? icon)}
-                                {label}
-                            </Link>
-                        </DropdownMenuItem>
-                    ))}
-                    {/* O tema é um controle, não um comando: a linha não fecha o menu.
-                        `py-0.5`: o trilho de 32 numa linha de 36, a das outras. */}
-                    <div
-                        className="flex items-center justify-between gap-3 px-2 py-0.5"
-                        onPointerDown={(e) => e.stopPropagation()}
-                    >
-                        {/* Com ícone, o rótulo cai na coluna dos outros (o recuo e o vão da linha do menu). */}
-                        <span className="flex items-center gap-1.5 text-sm">
-                            <SwatchIcon aria-hidden className="size-4 shrink-0" />
-                            Tema
-                        </span>
-                        <ThemeToggle />
-                    </div>
-                    <DropdownMenuItem onSelect={() => signOut()}>
-                        <ArrowRightStartOnRectangleIcon />
-                        Sair
+                    tema e, por último, sair. Sem cabeçalho de identidade: o nome e
+                    o e-mail já estão no botão que abre o menu, logo ao lado. "Sair"
+                    em vermelho, por escolha do dono, como na gaveta do telefone. */}
+                {dropdownLinkItems.map(({ href, label, icon }) => (
+                    <DropdownMenuItem key={href} asChild>
+                        <Link href={href}>
+                            {createElement(microIconFor(icon) ?? icon)}
+                            {label}
+                        </Link>
                     </DropdownMenuItem>
-                </DropdownMenuSection>
+                ))}
+                {/* Os fios isolam o tema: é uma preferência entre os comandos. */}
+                <DropdownMenuSeparator />
+                {/* O tema é um controle, não um comando: a linha não fecha o menu.
+                    `py-0.5`: o trilho de 32 numa linha de 36, a das outras. */}
+                <div
+                    data-menu-row
+                    className="flex items-center justify-between gap-3 px-2 py-0.5"
+                    onPointerDown={(e) => e.stopPropagation()}
+                >
+                    {/* Com ícone, o rótulo cai na coluna dos outros (o recuo e o vão da linha do menu). */}
+                    <span className="flex items-center gap-1.5 text-sm">
+                        <SwatchIcon aria-hidden className="size-4 shrink-0" />
+                        Tema
+                    </span>
+                    <ThemeToggle />
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem variant="destructive" onSelect={() => signOut()}>
+                    <ArrowRightStartOnRectangleIcon />
+                    Sair
+                </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     )

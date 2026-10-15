@@ -101,8 +101,8 @@ describe("o rádio que marca a escolha atual", () => {
     // A escolhida tem fundo leve (5% da tinta), abaixo do realce de passagem (9%): os dois
     // estados se distinguem. Não é o `bg-muted`, que pesava como o realce.
     expect(fonte).toContain("data-[state=checked]:not-focus:bg-foreground/5")
-    // Entre duas linhas de mídia, 4px (o respiro dos itens da barra lateral): os fundos não se colam.
-    expect(fonte).toContain("[[data-indicator=media]+&]:mt-1")
+    // Entre duas linhas, 4px em todo menu (MENU_ROW_GAP), e não mais só nas de mídia.
+    expect(fonte).toContain("MENU_ROW_GAP")
     expect(fonte).not.toContain("data-[state=checked]:bg-muted")
   })
 })
@@ -119,5 +119,13 @@ describe("a geometria do painel e das linhas de mídia", () => {
   it("a identidade começa na coluna dos ícones e a linha de mídia mede 36", () => {
     expect(CODIGO).toContain('"relative z-10 flex shrink-0 items-center gap-2.5 px-4 py-2.5 text-sm"')
     expect(CODIGO).toContain('"pr-2 py-1.5 data-[state=unchecked]:not-focus:text-muted-foreground"')
+  })
+})
+
+describe("o separador dos menus é recuado, como no iOS", () => {
+  it("não sangra até a borda da placa", () => {
+    const classes = lerFonte("src/lib/menu-classes.ts")
+    expect(classes).toContain('export const menuSeparatorClassName = "mx-2 my-1 h-px bg-border"')
+    expect(CODIGO).not.toContain('naBusca && "-mx-2"')
   })
 })

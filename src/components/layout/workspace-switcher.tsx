@@ -105,11 +105,13 @@ export function WorkspaceSwitcher({
     const menu = (
         <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             {trigger}
-            {/* Na barra: 8 do recuo da placa flutuante + 8 de calha. */}
+            {/* 4px do botão (sem encostar nele) e por cima da borda da placa — o
+                botão fica 8 para dentro dela aberta e 16 recolhida. Encostado e
+                alinhado à borda, lia como parte do fundo. */}
             <DropdownMenuContent
                 side={appearance === "header" ? "bottom" : "right"}
                 align="start"
-                sideOffset={appearance === "header" ? 8 : 16}
+                sideOffset={appearance === "header" ? 8 : 4}
                 size="xl"
             >
                 <WorkspacePickerMenuBody

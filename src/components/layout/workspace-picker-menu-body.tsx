@@ -163,8 +163,7 @@ export function WorkspacePickerMenuBody({ callbacks }: WorkspacePickerMenuBodyPr
                 </div>
             ) : null}
 
-            {/* Sem o fio, os mesmos 4px que separam as carteiras. */}
-            <DropdownMenuItem className="mt-1" onSelect={() => callbacks.openCreateDialog()}>
+            <DropdownMenuItem onSelect={() => callbacks.openCreateDialog()}>
                 <PlusIcon />
                 Criar carteira
             </DropdownMenuItem>
