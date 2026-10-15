@@ -1,6 +1,6 @@
 "use client"
 
-import { useSyncExternalStore } from "react"
+import { useEffect, useSyncExternalStore } from "react"
 import { usePathname } from "next/navigation"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { AppHeader } from "@/components/layout/app-header"
@@ -36,12 +36,50 @@ function titleModeFor(pathname: string): "dashboard" | "app" {
         : "app"
 }
 
+/** As rotas que a navegação abre, na ordem em que vale aquecer. */
+const ROTAS_DO_APP = [
+    ROUTES.DASHBOARD,
+    ROUTES.TRANSACTIONS,
+    ROUTES.BILLS,
+    ROUTES.SUBSCRIPTIONS,
+    ROUTES.CREDIT_CARDS,
+    ROUTES.DASHBOARD_CATEGORIES,
+    ROUTES.SETTINGS,
+    ROUTES.MEMBERS,
+    ROUTES.PLANS,
+    ROUTES.ACCOUNT,
+    ROUTES.ACCOUNT_ACTIVITY,
+    ROUTES.ACCOUNT_SESSIONS,
+]
+
+/**
+ * Só em `next dev`: o servidor compila cada rota na primeira visita, e o
+ * clique esperava essa compilação (~1s) antes de trocar de tela. Pedir o
+ * payload de cada rota em segundo plano, uma de cada vez, deixa todas
+ * compiladas antes do clique. Em produção o bloco some (não há compilação).
+ */
+function aquecerRotasEmDesenvolvimento() {
+    if (process.env.NODE_ENV !== "development") return
+    let cancelado = false
+    const id = requestIdleCallback(async () => {
+        for (const rota of ROTAS_DO_APP) {
+            if (cancelado) return
+            await fetch(rota, { headers: { RSC: "1" } }).catch(() => undefined)
+        }
+    })
+    return () => {
+        cancelado = true
+        cancelIdleCallback(id)
+    }
+}
+
 export function SidebarAppShell({
     children,
     defaultSidebarOpen,
 }: SidebarAppShellProps) {
     const pathname = usePathname()
     const titleMode = titleModeFor(pathname)
+    useEffect(aquecerRotasEmDesenvolvimento, [])
     // O botão de recolher mora na borda da barra (`edge`). No laboratório
     // (`/laboratorio/barra`) o nome do quadro troca a versão para comparar.
     const toggle = useSyncExternalStore(

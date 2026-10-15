@@ -1,6 +1,8 @@
 import { Suspense } from "react"
 import BillsPageClient from "./page-client"
 import { BillsPageSkeleton } from "@/components/bills/bills-page-skeleton"
+import { AdiarMontagem } from "@/components/layout/adiar-montagem"
+import Loading from "./loading"
 
 type RouteParams = Record<string, string | string[] | undefined>
 
@@ -10,9 +12,11 @@ export default async function Page(props: {
 }) {
     await Promise.all([props.params, props.searchParams])
     return (
-        <Suspense fallback={<BillsPageSkeleton />}>
-            <BillsPageClient />
-        </Suspense>
+        <AdiarMontagem fallback={<Loading />}>
+            <Suspense fallback={<BillsPageSkeleton />}>
+                <BillsPageClient />
+            </Suspense>
+        </AdiarMontagem>
     )
 }
 

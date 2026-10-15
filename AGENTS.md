@@ -826,6 +826,15 @@ declaração de `background-color` no trilho).
   espera, é o `SpinnerBlock`, que anuncia e só aparece depois de 300ms
   (`@starting-style`, sem timer). `variant="brand"` é o anel em arco-íris da
   tela de abertura — uma por tela.
+- **A troca de tela é no clique, e a página carrega depois.** Toda rota do
+  app tem um `loading.tsx` com o esqueleto dela (o de `(app)/loading.tsx` é
+  vazio, para quem não tem esqueleto), e o `page.tsx` embrulha o cliente em
+  `<AdiarMontagem fallback={<Loading />}>` (`components/layout/adiar-montagem`).
+  Sem o primeiro, o Next espera o servidor antes de trocar; sem o segundo, o
+  React monta a página inteira com os dados do cache antes de trocar (735 ms
+  medidos na de transações). A página de uma pasta com subpáginas mora no
+  grupo `(raiz)`, para o esqueleto dela não envolver as filhas.
+  `adiar-montagem.test.ts` tranca.
 - **Borda de região rolável**: a dissolução é uma **primitiva do sistema**, em
   três camadas — as `@utility` `scroll-fade-y` / `scroll-fade-x` em
   [`globals.css`](src/app/globals.css), a gramática em

@@ -1,4 +1,6 @@
 import AccountActivityPageClient from "./page-client"
+import { AdiarMontagem } from "@/components/layout/adiar-montagem"
+import Loading from "./loading"
 
 type RouteParams = Record<string, string | string[] | undefined>
 
@@ -7,5 +9,9 @@ export default async function Page(props: {
     searchParams: Promise<RouteParams>
 }) {
     await Promise.all([props.params, props.searchParams])
-    return <AccountActivityPageClient />
+    return (
+        <AdiarMontagem fallback={<Loading />}>
+            <AccountActivityPageClient />
+        </AdiarMontagem>
+    )
 }
