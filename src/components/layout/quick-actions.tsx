@@ -151,10 +151,12 @@ type QuickActionButtonProps = {
 export function QuickActionButton({ variant = "sidebar" }: QuickActionButtonProps) {
     const [open, setOpen] = React.useState(false)
     const isFab = variant === "fab"
-    const { state } = useSidebar()
+    const { state, espiando } = useSidebar()
     const quickCreate = useQuickCreateTransaction()
     const createSubscription = useQuickCreateSubscription()
-    const isSidebarCollapsed = state === "collapsed"
+    // Espiando, a barra está aberta por cima com o `state` ainda `collapsed` (a
+    // folga não se mexe): o botão volta ao primário inteiro com ela.
+    const isSidebarCollapsed = state === "collapsed" && !espiando
 
     const pickTransaction = React.useCallback(
         (mode: NewTransactionMode) => {

@@ -289,14 +289,11 @@ const SidebarGatilhoMovelContext = React.createContext(false)
 const SidebarPeekContext = React.createContext(false)
 
 /**
- * Se a barra é placa solta (`floating` ou `inset`): o botão fica 8px para dentro
- * dela, e a dica soma esse recuo para abrir a 6px da placa, e não do botão.
+ * A folga da dica até o botão: 6, como qualquer dica. Somava o recuo da placa
+ * solta para abrir a 6px da borda dela, mas com o trilho recolhido a 16 a soma
+ * (14 do botão) só afastava a dica do gatilho, e o dono a achou longe.
  */
-const SidebarSoltaContext = React.createContext(false)
-
-/** A folga da dica até a borda da barra: 6, mais o recuo interno da placa solta. */
 const SIDEBAR_TOOLTIP_OFFSET = 6
-const SIDEBAR_PLACA_RECUO = 8
 
 function Sidebar({
   variant: variante = "floating",
@@ -340,14 +337,37 @@ function Sidebar({
     clearTimeout(relogio.current)
     relogio.current = setTimeout(() => setEspiando(valor), ms)
   }
+  // **A espiada segura enquanto um menu de dentro está aberto.** Clicar num
+  // gatilho (a carteira, o "+ Adicionar", a conta) abre um menu modal, que põe
+  // `pointer-events: none` no `body`: o navegador dá a barra por deixada, e ela
+  // fechava por baixo do menu aberto. Com um `aria-expanded="true"` dentro, a
+  // saída não agenda o fechamento; quando o menu fecha com o cursor fora da
+  // barra, a espiada fecha como sempre.
+  const conteiner = React.useRef<HTMLDivElement>(null)
+  const menuAberto = () =>
+    Boolean(conteiner.current?.querySelector('[aria-expanded="true"]'))
   const gestoDeEspiar = podeEspiar
     ? {
         onPointerEnter: (e: React.PointerEvent) => {
           if (e.pointerType === "mouse") agendar(true, 300)
         },
-        onPointerLeave: () => agendar(false, 200),
+        onPointerLeave: () => {
+          if (!menuAberto()) agendar(false, 200)
+        },
       }
     : {}
+  React.useEffect(() => {
+    const el = conteiner.current
+    if (!el || !espiando) return
+    const aoMudar = () => {
+      if (el.querySelector('[aria-expanded="true"]') || el.matches(":hover")) return
+      clearTimeout(relogio.current)
+      relogio.current = setTimeout(() => setEspiando(false), 200)
+    }
+    const observador = new MutationObserver(aoMudar)
+    observador.observe(el, { subtree: true, attributes: true, attributeFilter: ["aria-expanded"] })
+    return () => observador.disconnect()
+  }, [espiando, setEspiando])
 
   if (collapsible === "none") {
     return (
@@ -511,7 +531,7 @@ function Sidebar({
         <SidebarGatilhoMovelContext.Provider
           value={variant === "floating" && collapsible === "icon"}
         >
-        <SidebarSoltaContext.Provider value={solta}>
+        <>
           {barra}
           {/* Nas soltas a costura é da placa: sem fio em repouso, rente à aresta e da altura dela. */}
           <ResizableHandle
@@ -519,7 +539,7 @@ function Sidebar({
             variant={solta ? "plain" : "line"}
             className={SIDEBAR_COSTURA[variant]}
           />
-        </SidebarSoltaContext.Provider>
+        </>
         </SidebarGatilhoMovelContext.Provider>
         </SidebarRealceContext.Provider>
     )
@@ -531,7 +551,7 @@ function Sidebar({
         value={variant === "floating" && collapsible === "icon"}
       >
       <SidebarPeekContext.Provider value={peek && collapsible === "icon"}>
-      <SidebarSoltaContext.Provider value={solta}>
+      <>
         <div
           className="group peer hidden text-sidebar-foreground md:block"
           data-state={state}
@@ -570,13 +590,14 @@ function Sidebar({
                   "transition-[left,width] duration-(--duration-slow) ease-(--ease-emphasized) group-data-[collapsible=icon]:w-(--sidebar-width-icon) border-r",
               className
             )}
+            ref={conteiner}
             {...gestoDeEspiar}
             {...props}
           >
             {miolo}
           </div>
         </div>
-      </SidebarSoltaContext.Provider>
+      </>
       </SidebarPeekContext.Provider>
       </SidebarGatilhoMovelContext.Provider>
       </SidebarRealceContext.Provider>
@@ -689,7 +710,7 @@ function SidebarTriggerButton({
           <TooltipTrigger asChild>{botao}</TooltipTrigger>
           <TooltipContent
             side="right"
-            sideOffset={SIDEBAR_TOOLTIP_OFFSET + SIDEBAR_PLACA_RECUO}
+            sideOffset={SIDEBAR_TOOLTIP_OFFSET}
             shortcut={`mod+${SIDEBAR_KEYBOARD_SHORTCUT}`}
           >
             {rotulo}
@@ -1194,7 +1215,6 @@ function SidebarMenuButton({
   const Comp = asChild ? Slot.Root : "button"
   const { isMobile, state, espiando } = useSidebar()
   const espia = React.useContext(SidebarPeekContext)
-  const solta = React.useContext(SidebarSoltaContext)
 
   const button = (
     <Comp
@@ -1231,7 +1251,7 @@ function SidebarMenuButton({
         {...restTooltipProps}
         side="right"
         align="center"
-        sideOffset={SIDEBAR_TOOLTIP_OFFSET + (solta ? SIDEBAR_PLACA_RECUO : 0)}
+        sideOffset={SIDEBAR_TOOLTIP_OFFSET}
         className={tooltipClassName}
       />
     </Tooltip>

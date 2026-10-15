@@ -1344,8 +1344,9 @@ declaração de `background-color` no trilho).
   (a caixa fica a 8 da borda nos dois; o recuo publicado de 16 no modo ícone
   vale para os itens de 32).
   O gatilho do topo não tem dica; dentro da barra recolhida, tem.
-  Nas placas soltas a dica do item e a do gatilho na barra abrem a 6px da
-  placa, e não do botão (`SIDEBAR_TOOLTIP_OFFSET` + `SIDEBAR_PLACA_RECUO`); um
+  A dica do item e a do gatilho na barra abrem a 6px do botão
+  (`SIDEBAR_TOOLTIP_OFFSET`), como qualquer dica — somar o recuo da placa as
+  afastava do gatilho; um
   menu ancorado num botão de dentro da placa abre a 4px do botão
   (`sideOffset={4}`) e **sobrepõe a borda da placa** (4px aberta, 12 recolhida,
   contra o recuo de 8 e de 16): encostado e alinhado à borda dela, lia como

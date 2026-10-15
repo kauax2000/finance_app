@@ -25915,3 +25915,30 @@ negativa cabe a caixa no recuo de 16 sem mexer a mídia, e com a caixa a 8 da
 borda o raio concêntrico volta a 20 (`[--radius-inset:--spacing(2)]` no
 próprio botão). Medido: caixa 48×48 a 8 das bordas, raio 20, mídia 32 a 16, o
 "+" e os links no mesmo lugar. O `SidebarMenuSkeleton size="lg"` seguiu.
+
+**O `peek` ganhou consumidor: a barra do app.** A pedido do dono, o
+`AppSidebar` passou a `<Sidebar collapsible="icon" variant="floating" peek>`:
+recolhida, o cursor parado 300ms abre a barra por cima da página, sem mexer a
+folga, e ela fecha 200ms depois de o cursor sair. Medido: a placa crescendo por
+cima (142px no meio da abertura) com o conteúdo parado em 80.
+
+Na tela o dono achou o furo previsto: clicar num gatilho da barra espiando
+abria o menu modal, o `body` ia a `pointer-events: none`, o navegador dava a
+barra por deixada e ela fechava por baixo do menu. Agora a saída não agenda o
+fechamento enquanto houver um `aria-expanded="true"` dentro da barra, e um
+`MutationObserver` (só durante a espiada) fecha a espiada quando o menu fecha
+com o cursor fora. Medido: espiando, "+ Adicionar" clicado, cursor no menu por
+2s — a barra aberta; Esc com o cursor fora — a espiada fecha. O "+ Adicionar"
+volta ao primário inteiro na espiada (`espiando` do `useSidebar`).
+Depois de usar, o dono pediu a barra sem `peek`: o `AppSidebar` voltou a
+`collapsible="icon"` sem espiada — recolhida fica recolhida até o gatilho. O
+conserto da espiada com menu aberto ficou no `Sidebar` (vale para quem ligar o
+`peek`), e o `peek` volta a não ter consumidor no app.
+
+**A dica da barra recolhida a 6px do botão.** As dicas do item e do gatilho na
+barra somavam o recuo da placa solta (`SIDEBAR_TOOLTIP_OFFSET` +
+`SIDEBAR_PLACA_RECUO`, 6 + 8) para abrir a 6px da borda dela — conta feita
+quando o botão recolhido ficava a 8 da borda. Com o trilho a 16, a dica ficava
+a 14 do botão (medido; e 2px por dentro da placa), e o dono a achou longe.
+Agora é 6 do botão, como qualquer dica, e o `SidebarSoltaContext`, que só
+servia à soma, saiu.

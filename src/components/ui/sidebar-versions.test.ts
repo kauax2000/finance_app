@@ -41,7 +41,7 @@ describe("as versões do Sidebar", () => {
     expect(CODIGO).toContain("group-data-[peek]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]")
     expect(CODIGO).toContain("group-data-[peek]:z-(--z-sheet)")
     expect(CODIGO).toMatch(/if \(e\.pointerType === "mouse"\) agendar\(true, 300\)/)
-    expect(CODIGO).toContain("onPointerLeave: () => agendar(false, 200)")
+    expect(CODIGO).toContain("if (!menuAberto()) agendar(false, 200)")
   })
 
   it("ao lado do floating, o cabeçalho não pinta e o gatilho é pílula", () => {
@@ -135,11 +135,11 @@ describe("as versões do Sidebar", () => {
     expect(CODIGO).toContain("md:group-has-[[data-slot=sidebar][data-variant=floating][data-state=expanded]]/sidebar-wrapper:pl-2")
   })
 
-  it("nas placas soltas a dica abre a 6px da placa, e não do botão", () => {
-    expect(CODIGO).toContain("const SidebarSoltaContext = React.createContext(false)")
-    expect(CODIGO).toContain("sideOffset={SIDEBAR_TOOLTIP_OFFSET + (solta ? SIDEBAR_PLACA_RECUO : 0)}")
-    expect(CODIGO).toContain("sideOffset={SIDEBAR_TOOLTIP_OFFSET + SIDEBAR_PLACA_RECUO}")
-    expect(CODIGO.match(/<SidebarSoltaContext\.Provider value=\{solta\}>/g)?.length).toBe(2)
+  it("a dica abre a 6px do botão, e não somando o recuo da placa", () => {
+    expect(CODIGO).toContain("const SIDEBAR_TOOLTIP_OFFSET = 6")
+    expect(CODIGO.match(/sideOffset=\{SIDEBAR_TOOLTIP_OFFSET\}/g)?.length).toBe(2)
+    expect(CODIGO).not.toContain("SIDEBAR_PLACA_RECUO")
+    expect(CODIGO).not.toContain("SidebarSoltaContext")
     expect(CODIGO).not.toContain("sideOffset={6}")
   })
 
@@ -500,3 +500,11 @@ describe("as versões do Sidebar", () => {
     })
   })
 }
+
+describe("a espiada segura com um menu de dentro aberto", () => {
+  it("a saída não fecha com aria-expanded dentro, e o fechar do menu devolve o gesto", () => {
+    expect(CODIGO).toContain("if (!menuAberto()) agendar(false, 200)")
+    expect(CODIGO).toMatch(/new MutationObserver\(aoMudar\)/)
+    expect(CODIGO).toContain('attributeFilter: ["aria-expanded"]')
+  })
+})
