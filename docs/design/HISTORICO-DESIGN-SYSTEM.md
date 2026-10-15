@@ -26044,3 +26044,113 @@ esquerda; o dono achou estranho. Saíram o ouvinte global de `pointerdown`, o
 gancho e o `transform-origin` da `@utility dialog-sprout`: o `Dialog` e o
 `AlertDialog` crescem e encolhem do próprio centro. Medido com o clique a
 (60, 120): a origem computada é 224×288 numa placa de 448×576, o centro.
+
+### Rodada 267 — `Dialog` e `Sheet`: o link de dentro fecha antes de abrir a tela
+
+"Gerenciar categorias", no seletor de categoria do formulário de lançamento,
+trocava de rota com o diálogo da casca ainda aberto por cima (o formulário
+global mora na casca e não desmonta com a rota). O dono pediu que todo link de
+dentro de um diálogo que abre uma tela feche o seletor e o diálogo com a
+animação e só então abra a tela. O `DialogContent` e o `SheetContent` ganharam
+um `onClickCapture` (`useLinkQueFecha`) que pega o clique simples num `<a>`
+interno — também o de um seletor portalizado, porque o evento do React sobe
+pela árvore — antes do `Link` (que respeita `defaultPrevented`), manda um Esc
+à camada de cima quando o link mora numa placa ancorada, e entrega o destino a
+`usePedidoDeFechar`. O destino fica guardado até o `open` virar falso de fato,
+e a tela abre quando o casco sai do DOM (o fim da saída do Radix e do `vaul`),
+com teto de 800 ms. Com rascunho, o pedido pergunta; "Continuar editando"
+esquece o link. A raiz mais de fora responde (`navegarDeFora ?? navegarFechando`),
+o que cobre o `Dialog` que vira gaveta no telefone. Medido no navegador:
+desktop, seletor e diálogo fecham aos 164 ms, somem aos 330 e 354 ms, a rota
+troca aos 449 ms; telefone, a gaveta some em ~530 ms e a rota troca depois.
+
+### Rodada 268 — a escada de controle: o padrão sobe a `lg` (36)
+
+O dono pediu todos os controles a 36 no desktop. Medido antes: campos e botões
+sem `size` a 32, a moldura do `ToggleGroup` a 36 (item de 32 mais o `p-0.5`),
+a bandeja do `Tabs floating` a 32; no telefone os campos a 40, mas os botões
+soltos a 32. A escada não mudou (`xs` 24 · `sm` 28 · `md` 32 · `lg` 36 · `xl`
+40): mudou o degrau padrão, de `md` para `lg`, no `Button` (o `cva` e o `??`
+do `ButtonSizeContext`), `Input`, `SelectTrigger`, `NativeSelect`,
+`ComboboxTrigger`, `ComboboxTextField`, `InputGroup`, `DatePicker` (e as
+células do calendário dele), `FormPickerPopoverTrigger`, `SearchInput`,
+`Toggle`, `Toolbar` (a raiz publica `--toolbar-control` de 36; o `md` passou a
+declarar o seu), `FilterBar` (que segue o degrau da `Toolbar`) e `Tabs`
+(`DEFAULT_TABS_SIZE`, no lugar de `defaultTabsSize(variant)`: as quatro
+variantes em `lg`). O `ToggleGroup` fica em `md` e passou a declarar isso na
+raiz: sem o padrão, o item cairia no `lg` novo do `Toggle`. A pílula do
+`TopBarSearch` acompanha o `SearchInput` (`lg`).
+
+No dedo o `Button` `md`/`lg` e `icon-md`/`icon-lg` sobem a 40, o piso do
+campo. A altura passa por `--button-h` (`h-(--button-h)` mais o valor por
+apontador), e não por um `pointer-coarse:h-10` solto: o `twMerge` só troca a
+classe com o mesmo modificador, e um `h-auto`, `h-12` ou `size-(--cell-size)`
+de quem chama perdia no toque — a linha do `FormPickerPopover` (que cresce em
+duas linhas), as setas e os dias do `Calendar` (44 no dedo), o "Limpar todas"
+das notificações. Com a variável, a classe de quem chama troca a utilidade
+inteira e vale nos dois apontadores. `xs` e `sm` ficam: moram dentro de outro
+controle. Os alvos por pseudo-elemento que contavam com 32 foram refeitos para
+44 (o `TopBarAction`, o ícone do `TopBarSearch`, o `PageHeaderBack` e o × da
+barra lateral no telefone: `-inset-0.5` no dedo). `Menubar`,
+`NavigationMenu`, `CommandInput` e `InputOTP` ficaram em `md`: não são a
+família do campo. `button-touch-response.test.ts` tranca o padrão e o piso.
+
+### Rodada 269 — `FormPickerPopover`: o realce da linha é translúcido
+
+O dono pediu que o realce das linhas do seletor e a ação do pé deixassem de
+tapar o vidro da placa, como o fundo dos campos. A linha sob o cursor e a
+escolhida passam a `--input-fill` a 50% (no escuro, branco a 7,5%, o mesmo dos
+inputs), no lugar do `--muted` a 60% e do `bg-muted` cheio. A ação do pé foi
+tentada na mesma tinta e **recusada**: a lista passa por baixo do pé para
+dissolver, e o item apagado vazava atrás do rótulo. Ela volta ao `secondary`
+opaco.
+
+### Rodada 270 — `Input`: o texto 1px abaixo do centro no desktop
+
+O dono notou o conteúdo dos campos "um pouquinho para baixo". Medido pixel a
+pixel num campo de 36 (DPR 1): o "0" do `Input` ocupava as linhas 14–23, e o
+"S" do `FormPickerPopoverTrigger` (um `button` com `flex items-center`), as
+13–22. O `<input>` nativo centraliza o editor interno por conta própria: tirar
+o `py-1` não mexe em nada; só o recuo assimétrico move. Com 3 em cima e 5
+embaixo (`md:pt-0.75 md:pb-1.25`), o "0" vai a 13–22. No telefone (16px, 40 de
+altura) o `py-1` já alinhava com o gatilho, e o 3/5 deixava o texto ~0,7px
+alto: o ajuste fica a partir de `md`, junto do `md:text-sm`. Vale para o
+`Input` e o campo de texto do `Combobox`. Não medido no Safari.
+
+### Rodada 271 — `Dialog`: "descartar" esquecia o link (correção da 267)
+
+Com rascunho, o link de dentro ("Cadastrar cartão") perguntava "Descartar
+alterações?", e "descartar" fechava o diálogo sem abrir a tela. O
+`AlertDialogAction` do Radix chama o `onOpenChange(false)` da pergunta depois
+do `onClick`, e esse fechar era lido como "continuar editando", que zera o
+destino antes de o efeito navegar. A 267 só tinha testado o "continuar
+editando". Agora o `onDiscard` marca `descartando` e o `onOpenChange` só
+esquece o link sem a marca. Medido no navegador: descartar abre `/credit-cards`;
+continuar editando e depois descartar fica na tela de antes.
+
+### Rodada 272 — `InputGroupSelect` vira o `Select` do app; `InputGroupInput` aceita `money`
+
+A compra parcelada trocou o trilho Total | Por parcela (um segundo controle
+segmentado empilhado sob o do tipo, recusado pelo dono) por um seletor dentro
+do campo de valor. O `InputGroupSelect` era um `<select>` nativo; o dono pediu
+o seletor do app. Ele passa a montar o `Select` (gatilho sem superfície,
+`order-first`, `border-e`, `data-slot="input-group-control"` para o anel do
+grupo; `SelectContent align="start"` com a placa dos menus) e recebe
+`SelectItem` como filhos — `value`, `defaultValue`, `onValueChange`,
+`aria-label`. A única chamada era a página do catálogo, atualizada. O
+`InputGroupInput` aceita o ramo `money` do `Input` (sem contagem nem troca de
+`type`).
+
+### Rodada 273 — o marcador que viaja não passa das pontas da trilha
+
+O dono viu o marcador do trilho Despesa | Parcelada | Receita sair da trilha
+ao chegar à última opção. A forma estica a partir da borda de trás e, perto do
+fim do trajeto, ainda está esticada quando já quase chegou: a frente passava do
+lugar de repouso da ponta. A animação fica a mesma; `viajarLiquido` ganhou
+`limite` (as bordas de repouso nas pontas, que o `useMarcador` lê do recuo da
+trilha mais o `insete`) e corta o `k` de cada quadro do esticão contra a
+posição do quadro seguinte (`progressoDaCurva` resolve a `cubic-bezier` do
+trajeto). Medido quadro a quadro no formulário de lançamento: a borda vai de 4
+a 396 de 400 nas duas direções, e o esticão segue em 148px num salto duplo
+(127 parado). Vale para `ToggleGroup`, `Tabs` e `BottomBar`; o `ThemeToggle`
+segue com as amplitudes medidas dele. `liquid-move.test.ts` tranca.

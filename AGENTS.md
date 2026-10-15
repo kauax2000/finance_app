@@ -921,12 +921,17 @@ declaração de `background-color` no trilho).
     `Badge` e do `Alert`. `iconMotion="spin"` gira o ícone do "tentar
     novamente" meia-volta, por `rotate`. Ação principal segue `type="submit"`
     dentro de `CustomForm`.
-- **Uma escada de controle, para todos**: `xs` 24, `sm` 28, **`md` 32 (o
-  padrão)**, `lg` 36, `xl` 40, com os mesmos nomes no `Button`, `Input`,
-  `SelectTrigger`, `NativeSelect`, `ComboboxTrigger` e `TabsList` — botão ao
-  lado de campo alinha sem ninguém dizer `size`. Nenhum controle usa um nome
-  para outra altura, e **a escada mede o controle, nunca o contêiner**.
-- **No dedo a escada de campo colapsa no piso de 40** (`pointer-coarse:h-10`);
+- **Uma escada de controle, para todos**: `xs` 24, `sm` 28, `md` 32, **`lg`
+  36 (o padrão no desktop)**, `xl` 40, com os mesmos nomes no `Button`,
+  `Input`, `SelectTrigger`, `NativeSelect`, `ComboboxTrigger`, `DatePicker`,
+  `SearchInput`, `Toggle`, `Toolbar`, `FilterBar` e `TabsList` — botão ao lado
+  de campo alinha sem ninguém dizer `size`. O `ToggleGroup` fica em `md`: o
+  item de 32 mais o recuo da moldura dá os mesmos 36. Nenhum controle usa um
+  nome para outra altura, e **a escada mede o controle, nunca o contêiner**.
+- **No dedo a escada de campo colapsa no piso de 40** (`pointer-coarse:h-10`),
+  e o `Button` `md`/`lg` (e `icon-md`/`icon-lg`) sobe a 40 também, pela
+  variável `--button-h` — um `h-*`/`size-*` de quem chama vence nos dois
+  apontadores; `xs` e `sm` moram dentro de outro controle e ficam.
   **44 é o alvo _solto_** (item de menu, `Pagination`). A pergunta é sobre o
   **apontador**, não a largura. A escada e o recuo moram em
   `fieldControlHeightClassName` e `fieldControlPaddingClassName`;
@@ -1058,6 +1063,14 @@ declaração de `background-color` no trilho).
   - `pending` trava Esc, véu, ×, `DialogClose` e arraste; `dirty` +
     `confirmDiscard` pergunta "Descartar alterações?" (fechar por código não
     pergunta). **Todo pedido de fechar passa por `usePedidoDeFechar`.**
+  - **Um link de dentro que abre uma tela fecha antes**: o `DialogContent` e o
+    `SheetContent` pegam o clique simples num link interno (também de um
+    seletor portalizado dentro deles), fecham o seletor e o diálogo com o
+    próprio gesto, passando pelo pedido de fechar (com rascunho, pergunta;
+    "Continuar editando" esquece o link), e a tela abre quando o casco sai do
+    DOM (`useLinkQueFecha`, `NavegarFechandoContext`; a raiz mais de fora
+    responde). Nova aba, modificadoras, `download` e outro domínio seguem o
+    navegador. Não escreva `onClick` que fecha o diálogo num link.
   - `DialogSteps`, `DialogMedia`, `DialogFooter start`. Os formulários usam
     `FormCancel` e `FormSubmit`.
   - O cabeçalho é alinhado à esquerda e sem `gap`; o × não reserva lugar (o
@@ -1240,7 +1253,9 @@ declaração de `background-color` no trilho).
   declara `ReqRow`), `FieldRow stack={false}` só para o par curto.
 - **`InputGroup`**: `InputGroupPasswordToggle` — **nenhuma tela escreve
   `? "text" : "password"`**; `maxLength` põe a contagem (`lib/char-count`);
-  `pending`; `InputGroupSelect`.
+  `pending`; `InputGroupSelect` (o `Select` do app colado no começo do campo,
+  com `SelectItem`, e não um `<select>` nativo); `InputGroupInput money` (o
+  valor com o modo ao lado, como na compra parcelada).
 - **`Textarea` mede em linhas** (`minRows` / `maxRows`; `rows` é ignorado);
   solto, o teto não dissolve. `maxLength` + `showCount`; `resize` `none` |
   `vertical`.
@@ -1313,7 +1328,8 @@ declaração de `background-color` no trilho).
 - **`Breadcrumb`**: `BreadcrumbSwitcher`, `collapse="back"`, `BreadcrumbLink
   icon`, `separator`, `BreadcrumbPage asChild`. A barra do app é ele.
 - **`Tabs`**: `variant` `floating` (o padrão, sem sombra), `solid`,
-  `underline`, `plain`; **`size` mede o gatilho** e a moldura declara a altura;
+  `underline`, `plain`; **`size` mede o gatilho** e a moldura declara a altura
+  (`lg`, bandeja de 36, é o padrão nas quatro: `DEFAULT_TABS_SIZE`);
   `stretch` (não na vertical), `scrollable` (opt-in, vence `stretch`).
   - **Quem pinta é a moldura por fora da `Tabs.List`**; nada fica entre o
     `tablist` e as `tab`; o `p-1` mora na lista.
@@ -1328,7 +1344,8 @@ declaração de `background-color` no trilho).
   `SelectTrigger`, `ComboboxTrigger` e `SearchInput` **filhos diretos** dela, de
   `ToolbarFilters`/`ToolbarActions`/`ToolbarRow` ou de um `ButtonGroup`
   (`--toolbar-control`); embrulhado num `<div>`, `toolbarControlClassName`.
-  `size` desce pelo `ButtonSizeContext`. `sticky` prende sob `--top-bar-bottom`
+  `size` (`sm` 28 · `md` 32 · **`lg` 36**, o padrão; 40 no dedo) desce pelo
+  `ButtonSizeContext`. `sticky` prende sob `--top-bar-bottom`
   (`"hide"` some ao rolar, nunca com o foco dentro); `keyboard` é o
   `role="toolbar"`. `ToolbarButton collapse` — **nenhuma tela escreve as duas
   árvores** `md:hidden`/`hidden md:flex`; `ToolbarFilterButton`,
