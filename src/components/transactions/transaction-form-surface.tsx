@@ -1,9 +1,10 @@
 "use client"
 
-import { CustomForm, FormSubmit } from "@/components/ui/form"
+import { CustomForm, FormCancel, FormSubmit } from "@/components/ui/form"
 import { cn } from "@/lib/utils"
 import {
   DialogBody,
+  DialogClose,
   DialogCloseButton,
   DialogDescription,
   DialogFooter,
@@ -31,6 +32,8 @@ export type TransactionFormSurfaceProps = {
     showFooter: boolean
     submitDisabled: boolean
     saving: boolean
+    /** No painel de detalhe, Cancelar volta à visualização; sem ele, fecha o diálogo. */
+    onCancel?: () => void
     /** Extra class for the scrollable fields wrapper */
     scrollClassName?: string
 }
@@ -44,20 +47,21 @@ export function TransactionFormSurface({
     showFooter,
     submitDisabled,
     saving,
+    onCancel,
     scrollClassName,
 }: TransactionFormSurfaceProps) {
+    const cancel = onCancel ? (
+        <FormCancel onClick={onCancel}>Cancelar</FormCancel>
+    ) : (
+        <DialogClose asChild>
+            <FormCancel>Cancelar</FormCancel>
+        </DialogClose>
+    )
     const footer = showFooter ? (
-        <FormSubmit
-            size="sm"
-            // A altura no dedo e a largura toda abaixo de `sm` são do
-            // `DialogFooter`. Fica o `w-full` do telefone porque a gaveta vai até
-            // 767px e o rodapé vira fileira a partir de `sm` (640): nessa faixa o
-            // botão encolheria à direita.
-            className={variant === "dialog-mobile" ? "w-full" : undefined}
-            disabled={submitDisabled}
-        >
-            Salvar
-        </FormSubmit>
+        <>
+            {cancel}
+            <FormSubmit disabled={submitDisabled}>Salvar</FormSubmit>
+        </>
     ) : null
 
     const formPickersOpen =
@@ -93,9 +97,7 @@ export function TransactionFormSurface({
                         <TransactionFormFields {...fieldsProps} />
                     </DialogBody>
                     {showFooter ? (
-                        <DialogFooter className="flex-col">
-                            {footer}
-                        </DialogFooter>
+                        <DialogFooter>{footer}</DialogFooter>
                     ) : null}
                 </CustomForm>
             </>
@@ -121,9 +123,7 @@ export function TransactionFormSurface({
                     <TransactionFormFields {...fieldsProps} />
                 </DialogBody>
                 {showFooter ? (
-                    <DialogFooter className="flex-col">
-                        {footer}
-                    </DialogFooter>
+                    <DialogFooter>{footer}</DialogFooter>
                 ) : null}
             </CustomForm>
         )
@@ -145,9 +145,11 @@ export function TransactionFormSurface({
                     }
                 >
                     <DialogTitle>{formTitle}</DialogTitle>
-                    <DialogDescription>{formDescription}</DialogDescription>
                 </DialogHeaderRow>
             </DialogHeader>
+            <DialogDescription className="sr-only">
+                {formDescription}
+            </DialogDescription>
             <DialogBody className={fieldsScrollClass}>
                 <TransactionFormFields {...fieldsProps} />
             </DialogBody>

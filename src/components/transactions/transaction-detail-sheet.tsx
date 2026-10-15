@@ -453,6 +453,7 @@ export function TransactionDetailSheet({
                             showFooter={showFooter}
                             submitDisabled={submitDisabled}
                             saving={saving}
+                            onCancel={() => setDetailMode("view")}
                         />
                     </div>
                 ) : (
