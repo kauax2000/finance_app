@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { AlertDialog as AlertDialogPrimitive } from "radix-ui"
-import { useComposedRefs } from "radix-ui/internal"
 import { type VariantProps } from "class-variance-authority"
 
 import {
@@ -21,7 +20,6 @@ import {
   DialogHeader,
   dialogContentVariants,
   dialogTitleClassName,
-  useOrigemDoClique,
 } from "@/components/ui/dialog"
 import { Field, FieldControl, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -109,14 +107,11 @@ function AlertDialogContent({
 }: React.ComponentProps<typeof AlertDialogPrimitive.Content> &
   Pick<VariantProps<typeof dialogContentVariants>, "size">) {
   const { pending } = React.useContext(AlertDialogContext)
-  // Nasce de onde se clicou, como o `Dialog`.
-  const origem = useOrigemDoClique()
-  const cascoRef = useComposedRefs<HTMLDivElement>(ref, origem)
   return (
     <AlertDialogPortal>
       <AlertDialogOverlay />
       <AlertDialogPrimitive.Content
-        ref={cascoRef}
+        ref={ref}
         data-slot="alert-dialog-content"
         data-layout="auto"
         aria-busy={pending || undefined}

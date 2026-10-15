@@ -1065,7 +1065,8 @@ declaração de `background-color` no trilho).
     `--dialog-bleed` e **empilha ao contrário** (`flex-col-reverse`; quem
     declara `flex-col` o faz de propósito); no dedo os botões dele sobem a 40
     sozinhos. `DialogContent` mantém o `showCloseButton`.
-  - Nasce de onde se clicou (`dialog-sprout`, `useOrigemDoClique`).
+  - Cresce do próprio centro (`dialog-sprout`); nascer do ponto do clique saiu
+    (aberto pela barra lateral, surgia da esquerda de uma placa centralizada).
     `dialog-versions.test.ts`.
 - **`AlertDialog`** mede pela régua do `Dialog` e veste a cromagem dele; não
   oferece `layout="fixed"`. `AlertDialogAction` e `AlertDialogCancel` são

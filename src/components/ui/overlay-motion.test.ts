@@ -56,8 +56,10 @@ describe("O movimento do que se sobrepõe à tela", () => {
     expect(utility("context-menu-burst")).not.toContain("data-side")
   })
 
-  it("o diálogo nasce do ponto do clique, e o Select alinhado ao item não desdobra", () => {
-    expect(utility("dialog-sprout")).toContain("transform-origin: var(--dialog-origin, 50% 50%);")
+  it("o diálogo cresce do próprio centro, e o Select alinhado ao item não desdobra", () => {
+    // Nascia do ponto do clique; aberto pela barra lateral, surgia da esquerda.
+    expect(utility("dialog-sprout")).not.toContain("transform-origin")
+    expect(ui("dialog")).not.toContain("dialog-origin")
     expect(utility("field-bloom")).toContain('&[data-state="open"]:not([data-align-trigger="true"])')
   })
 
@@ -85,9 +87,7 @@ describe("O movimento do que se sobrepõe à tela", () => {
     expect(ui("select")).toContain('"overlay-cascade"')
     expect(ui("hover-card")).toContain('"hover-card-unveil"')
     expect(ui("dialog")).toContain('"dialog-sprout"')
-    expect(ui("alert-dialog")).toContain("const origem = useOrigemDoClique()")
-    expect(ui("dialog")).toContain("useComposedRefs<HTMLDivElement>(ref, origem)")
-    expect(ui("alert-dialog")).toContain("useComposedRefs<HTMLDivElement>(ref, origem)")
+    expect(ui("alert-dialog")).toContain("dialogContentVariants({ size, layout: \"auto\" })")
     expect(ui("tooltip")).toContain("const fechada = { opacity: 0, scale: reduzido ? 1 : 0.7, ...desvio }")
   })
 

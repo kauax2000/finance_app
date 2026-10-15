@@ -6,7 +6,6 @@ import {
   AlertDialog as AlertDialogPrimitive,
   Dialog as DialogPrimitive,
 } from "radix-ui"
-import { useComposedRefs } from "radix-ui/internal"
 import { XMarkIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
@@ -281,43 +280,6 @@ function DialogOverlay({
  * cheia atrás; quem quiser o efeito mais visível mexe no véu, não aqui (ver
  * `lib/glass-classes` e `lib/menu-classes`).
  */
-/**
- * O ponto do último clique, de onde o diálogo nasce e para onde volta. Um
- * ouvinte só, em captura na janela, registrado ao carregar o módulo (o clique
- * que abre acontece antes de o diálogo montar). Numa moldura do catálogo o
- * clique é de outra janela e o diálogo nasce do centro.
- */
-let ultimoClique: { x: number; y: number; t: number } | null = null
-if (typeof window !== "undefined") {
-  window.addEventListener(
-    "pointerdown",
-    (e) => {
-      ultimoClique = { x: e.clientX, y: e.clientY, t: e.timeStamp }
-    },
-    { capture: true, passive: true }
-  )
-}
-
-/**
- * Escreve `--dialog-origin` no casco: o ponto do clique nas coordenadas da
- * caixa; sem clique recente, o centro. Uma vez por casco, porque uma `ref` de
- * função refeita a cada render recompõe a do casco. A escala de entrada já vale
- * quando a `ref` chega, em volta do centro.
- */
-function useOrigemDoClique() {
-  const feito = React.useRef<HTMLElement | null>(null)
-  return React.useCallback((el: HTMLElement | null) => {
-    if (!el || el === feito.current) return
-    feito.current = el
-    const clique = ultimoClique
-    if (!clique || performance.now() - clique.t > 1000) return
-    const caixa = el.getBoundingClientRect()
-    const x = clique.x - (caixa.left + caixa.width / 2 - el.offsetWidth / 2)
-    const y = clique.y - (caixa.top + caixa.height / 2 - el.offsetHeight / 2)
-    el.style.setProperty("--dialog-origin", `${Math.round(x)}px ${Math.round(y)}px`)
-  }, [])
-}
-
 const dialogContentVariants = cva(
   [
     "group/dialog-content fixed top-1/2 left-1/2 z-(--z-modal)",
@@ -325,7 +287,7 @@ const dialogContentVariants = cva(
     "rounded-modal text-sm shadow-lg ring-1 ring-foreground/10 outline-none [--radius-parent:var(--radius-modal)] [--radius-inset:var(--dialog-px)]",
     // A placa é o material da casa, no mesmo par de alfa das superfícies flutuantes.
     modalSurfaceClassName,
-    // Nasce de onde se clicou (`@utility dialog-sprout`, `--dialog-origin`) e volta a ele.
+    // Cresce do próprio centro, onde ele mora (`@utility dialog-sprout`), e volta a ele.
     "dialog-sprout",
     // O recuo do diálogo é um, 24px (o `px-6` que vinte chamadas já escreviam).
     "[--dialog-px:--spacing(6)]",
@@ -379,8 +341,6 @@ function DialogContent({
     showCloseButton?: boolean
   }) {
   const { gaveta, pending } = React.useContext(DialogEstadoContext)
-  const origem = useOrigemDoClique()
-  const cascoRef = useComposedRefs<HTMLDivElement>(ref, origem)
 
   // No telefone, com `surface="auto"`: a gaveta do `Sheet`. A gaveta alta é a
   // do formulário (`fixed`), a da tela cheia e a dos passos (esta por classe,
@@ -407,7 +367,7 @@ function DialogContent({
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
-        ref={cascoRef}
+        ref={ref}
         data-slot="dialog-content"
         data-layout={layout ?? "auto"}
         aria-busy={pending || undefined}
@@ -744,8 +704,6 @@ export {
   overlayClassName,
   dialogContentVariants,
   dialogTitleClassName,
-  // A origem do clique, que o `AlertDialog` também usa.
-  useOrigemDoClique,
   // O pedido de fechar, que o `Sheet` também faz.
   usePedidoDeFechar,
 }

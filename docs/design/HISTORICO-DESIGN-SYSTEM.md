@@ -26034,3 +26034,13 @@ par escuro: branco nos dois temas, 35% no claro (sobre o `--primary-hover` a
 branco cheio aparece). Só `hover:`: no toque não acende. Medido nos dois temas:
 82×32 antes e com o cursor, o anel `oklch(1 0 0 / 0.35)` no claro e
 `oklch(1 0 0)` no escuro.
+
+### Rodada 266 — `Dialog`: cresce do centro
+
+O diálogo nascia do ponto do clique (`useOrigemDoClique` escrevia
+`--dialog-origin` no casco). Com o "+ Adicionar" abrindo direto o formulário,
+o clique vinha da barra lateral e a placa — centralizada na tela — surgia da
+esquerda; o dono achou estranho. Saíram o ouvinte global de `pointerdown`, o
+gancho e o `transform-origin` da `@utility dialog-sprout`: o `Dialog` e o
+`AlertDialog` crescem e encolhem do próprio centro. Medido com o clique a
+(60, 120): a origem computada é 224×288 numa placa de 448×576, o centro.

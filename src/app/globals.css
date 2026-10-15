@@ -3026,9 +3026,10 @@
   }
 }
 
-/* O diálogo nasce de onde se clicou: a origem é o ponto do clique que o abriu
-   (`--dialog-origin`, escrito pelo componente; sem clique, o centro), a 90% e
-   desfocado, na mola; o conteúdo sobe em cascata atrás. Fechar volta ao mesmo ponto.
+/* O diálogo cresce do próprio centro, a 90% e desfocado, na mola; o conteúdo
+   sobe em cascata atrás. Fechar encolhe para o centro. Ele nascia do ponto do
+   clique, e aberto pela barra lateral surgia da esquerda de uma placa
+   centralizada na tela.
    Só `transform`: a centragem é o `translate` do casco. */
 @keyframes dialog-sprout {
   from {
@@ -3052,7 +3053,6 @@
 }
 
 @utility dialog-sprout {
-  transform-origin: var(--dialog-origin, 50% 50%);
   &[data-state="open"] {
     animation: dialog-sprout var(--duration-spring) var(--ease-spring) backwards;
   }
