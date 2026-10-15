@@ -26,6 +26,8 @@ const REALCE_EXPANDIDO = `${REALCE} aria-expanded:[--button-hover:1]`
 const FLORESCER =
   "hover:[--button-bloom:1] active:[--button-bloom:1] aria-expanded:[--button-bloom:1] transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-bloom] duration-(--duration-slow) ease-(--ease-out) hover:duration-(--duration-spring) hover:ease-(--ease-spring) active:duration-(--duration-spring) active:ease-(--ease-spring) aria-expanded:duration-(--duration-spring) aria-expanded:ease-(--ease-spring)"
 
+// O afundar do clique é o `active:translate-y-px` mais o `afundar` (abaixo), que
+// cobre o gatilho de menu do Radix: lá o `:active` não chega a pintar.
 const buttonVariants = cva(
   "group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow,opacity,translate,--button-hover] duration-(--duration-fast) ease-(--ease-out) outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/45 active:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&>[data-slot=button-label]]:first-letter:uppercase [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
@@ -130,6 +132,30 @@ type ButtonSize = NonNullable<VariantProps<typeof buttonVariants>["size"]>
 /** O degrau que um `ButtonGroup size` desce aos filhos; um `size` no botão vence, e sem nenhum é `md`. */
 const ButtonSizeContext = React.createContext<ButtonSize | undefined>(undefined)
 
+/**
+ * O afundar do clique, como animação de duração fixa: desce 1px e volta. O
+ * `:active` sozinho não basta no gatilho de um menu do Radix — ele abre no
+ * `pointerdown`, chama `preventDefault`, o menu modal põe `pointer-events: none`
+ * no `body` e o React leva ~120ms montando o menu: medido, o aperto durava 11ms
+ * pintado. A animação da Web Animations API anda pelo tempo, e não pelo aperto,
+ * então se vê inteira e o botão volta com o menu já aberto. Segurando um botão
+ * comum, o `:active` continua o mantendo embaixo. Movimento reduzido: nada.
+ */
+const AFUNDAR: Keyframe[] = [
+  { translate: "0 0" },
+  { translate: "0 1px", offset: 0.35 },
+  { translate: "0 1px", offset: 0.6 },
+  { translate: "0 0" },
+]
+
+function afundar(e: React.PointerEvent<HTMLElement>) {
+  if (e.button !== 0) return
+  const el = e.currentTarget
+  const janela = el.ownerDocument.defaultView
+  if (!el.animate || janela?.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+  el.animate(AFUNDAR, { duration: 260, easing: "cubic-bezier(0.16, 1, 0.3, 1)" })
+}
+
 function Button({
   className,
   variant = "primary",
@@ -138,6 +164,7 @@ function Button({
   asChild = false,
   children,
   ref,
+  onPointerDown,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
@@ -179,6 +206,10 @@ function Button({
       // primeiro: o botão de ícone antes do "Salvar" a roubaria.
       type={asChild ? undefined : "button"}
       {...props}
+      onPointerDown={(e: React.PointerEvent<HTMLButtonElement>) => {
+        onPointerDown?.(e)
+        afundar(e)
+      }}
     >
       {content}
     </Comp>

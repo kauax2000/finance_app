@@ -147,3 +147,13 @@ describe("resposta ao toque do Button", () => {
     expect(utility).not.toContain("prefers-reduced-motion")
   })
 })
+
+describe("o gatilho de menu também afunda, só no clique", () => {
+  it("o afundar é uma animação de duração fixa no pointerdown, sem estado preso", () => {
+    const fonte = lerFonte("src/components/ui/button.tsx")
+    expect(fonte).toContain("el.animate(AFUNDAR")
+    expect(fonte).toContain("afundar(e)")
+    expect(fonte).not.toContain("aria-expanded:translate-y-px")
+    expect(fonte).not.toContain("data-pressed:translate-y-px")
+  })
+})
