@@ -535,6 +535,9 @@ describe("o lugar do botão de recolher (toggle)", () => {
   it("cada versão mora no seu lugar e não viaja", () => {
     expect(CODIGO).toContain('{toggle === "edge" && solta ? <SidebarEdgeToggle /> : null}')
     expect(CODIGO).toContain('className="absolute top-7 -right-1 z-10"')
+    // A alça da borda não tem dica: a seta já diz o que faz.
+    expect(CODIGO).toMatch(/className="absolute top-7 -right-1 z-10"[\s\S]{0,160}tooltip=\{false\}/)
+    expect(CODIGO).toContain("if (!tooltip) return botao")
     expect(CODIGO).toContain('const noRodape = toggle === "footer" && !isMobile')
     expect(CODIGO).toContain('{toggle === "footerBar" && !isMobile ? (')
     expect(CODIGO.match(/group-data-\[collapsible=icon\]:rotate-180/g)?.length).toBe(2)

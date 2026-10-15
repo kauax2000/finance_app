@@ -1365,7 +1365,7 @@ declaração de `background-color` no trilho).
   componente é `topbar` (no `TopBar`, viajando para a barra recolhida — o
   catálogo o usa); **o app usa `edge`**, a alça `Button floating icon-xs`
   centrada na borda direita da placa, a 40 do topo, com a seta que gira meia
-  volta recolhida, e o topo fica sem botão no desktop. `footer` e `footerBar`
+  volta recolhida e sem dica, e o topo fica sem botão no desktop. `footer` e `footerBar`
   estão em avaliação no `/laboratorio/barra`. O gatilho do topo não tem dica;
   dentro da barra recolhida, tem.
   A dica do item e a do gatilho na barra abrem a 6px do botão

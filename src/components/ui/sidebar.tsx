@@ -751,30 +751,35 @@ function SidebarToggleSimple({
   size = "icon-md",
   className,
   children,
+  tooltip = true,
 }: {
   variant?: "tertiary" | "floating"
   size?: "icon-md" | "icon-xs" | "sm"
   className?: string
   children?: React.ReactNode
+  /** Sem a dica, o nome fica só no `aria-label`. */
+  tooltip?: boolean
 }) {
   const { toggleSidebar, state } = useSidebar()
   const rotulo = state === "expanded" ? "Recolher barra lateral" : "Abrir barra lateral"
+  const botao = (
+    <Button
+      type="button"
+      data-sidebar="trigger"
+      data-slot="sidebar-trigger"
+      variant={variant}
+      size={size}
+      aria-label={rotulo}
+      className={className}
+      onClick={toggleSidebar}
+    >
+      {children ?? <SidebarToggleIcon />}
+    </Button>
+  )
+  if (!tooltip) return botao
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          type="button"
-          data-sidebar="trigger"
-          data-slot="sidebar-trigger"
-          variant={variant}
-          size={size}
-          aria-label={rotulo}
-          className={className}
-          onClick={toggleSidebar}
-        >
-          {children ?? <SidebarToggleIcon />}
-        </Button>
-      </TooltipTrigger>
+      <TooltipTrigger asChild>{botao}</TooltipTrigger>
       <TooltipContent
         side="right"
         sideOffset={SIDEBAR_TOOLTIP_OFFSET}
@@ -798,6 +803,8 @@ function SidebarEdgeToggle() {
       variant="floating"
       size="icon-xs"
       className="absolute top-7 -right-1 z-10"
+      // A seta já diz o que faz, e a dica cobria o conteúdo ao lado da barra.
+      tooltip={false}
     >
       <ChevronLeftIcon className="transition-transform duration-(--duration-slow) ease-(--ease-emphasized) group-data-[collapsible=icon]:rotate-180" />
     </SidebarToggleSimple>
