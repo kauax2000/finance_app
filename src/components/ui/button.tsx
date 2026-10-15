@@ -43,9 +43,12 @@ const buttonVariants = cva(
         // `bg-clip-padding` da base): o vão de 1px da borda transparente
         // desenha a emenda do primário no `ButtonGroup`. Enviando
         // (`aria-busy`) a opacidade fica cheia, para "salvando" não ler como
-        // "desabilitado".
+        // "desabilitado". No cursor acende também um fio interno branco
+        // (`--primary-hover-ring`; `inset-ring`, sombra por dentro do
+        // `padding-box`: não mexe na caixa); em repouso ele já existe,
+        // transparente, para esmaecer. Só no cursor: o toque não tem hover.
         primary:
-          "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-hover aria-expanded:bg-primary-hover aria-busy:disabled:opacity-100",
+          "bg-primary text-primary-foreground inset-ring-1 inset-ring-transparent hover:bg-primary-hover hover:inset-ring-primary-hover-ring active:bg-primary-hover aria-expanded:bg-primary-hover aria-busy:disabled:opacity-100",
         // A tecla do primário em repouso e, no cursor, no toque e com o menu
         // aberto, cinco paradas do arco-íris florescem do centro
         // (`@utility button-colorful`). Um CTA de marca por tela.

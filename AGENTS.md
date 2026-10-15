@@ -890,7 +890,9 @@ declaração de `background-color` no trilho).
   preenche de preto (branco no escuro), `secondary` de cinza, `tertiary` não
   preenche nada. **Uma tela tem um `primary` só.**
   - O `primary` é a tecla chapada: no cursor, no toque e em `aria-expanded` vai
-    a `--primary-hover`, sem cor. O fundo é recortado no `padding-box`
+    a `--primary-hover`, sem cor. **No cursor acende um fio interno branco**
+    (`inset-ring-1` em `--primary-hover-ring`: 35% no claro, cheio no escuro),
+    que não mexe na caixa; em repouso ele existe, transparente. O fundo é recortado no `padding-box`
     (`bg-clip-padding`), e o vão da borda desenha a emenda no `ButtonGroup`.
   - `secondary`, `tertiary`, `outline`, `floating` e `destructive` pintam o
     hover **chapado por cima do fundo** (`@utility button-hover`, uma camada de

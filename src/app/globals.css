@@ -95,6 +95,7 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-hover: var(--primary-hover);
+  --color-primary-hover-ring: var(--primary-hover-ring);
   --color-primary-accent: var(--primary-accent);
   --color-primary-muted: var(--primary-muted);
   --color-primary-muted-foreground: var(--primary-muted-foreground);
@@ -204,6 +205,11 @@
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
   --primary-hover: oklch(0.32 0 0);
+  /* O fio interno branco que acende no cursor sobre `--primary-hover`. Branco
+     nos dois temas, com o volume pelo fundo: no claro a tecla é quase preta e
+     o branco cheio gritaria; no escuro o hover é cinza a 0,87 e só o branco
+     cheio aparece. */
+  --primary-hover-ring: oklch(1 0 0 / 35%);
   /* `--primary` preenche e é medido contra o texto em cima; `--primary-accent` é a
      marca sobre a página (texto, ícone, traço). Os dois coincidem com `--foreground`,
      mas o papel é separado: `text-primary` segue proibido, porque no escuro seria
@@ -559,6 +565,7 @@
   --primary: oklch(0.985 0 0);
   --primary-foreground: oklch(0.145 0 0);
   --primary-hover: oklch(0.87 0 0);
+  --primary-hover-ring: oklch(1 0 0);
   --primary-accent: oklch(0.985 0 0);
   --primary-muted: oklch(0.269 0 0);
   --primary-muted-foreground: oklch(0.985 0 0);

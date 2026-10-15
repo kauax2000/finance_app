@@ -26020,3 +26020,17 @@ efeito inteiro de lá; do mesmo tamanho, agora só a posição anima (vale tamb�
 para `Tabs` e `BottomBar`). Medido: no clique, uma animação de `translate`
 (480ms) e uma de `scale` (768ms), nenhuma de tamanho; recolhida, a pílula 32×32
 sobre o ativo.
+
+### Rodada 265 — `Button primary`: o fio interno no cursor
+
+O dono pediu uma borda branca interna que só aparece com o mouse em cima, sem
+mudar a medida do botão. A borda de 1px da base não serve: o fundo é recortado
+no `padding-box` (`bg-clip-padding`, a emenda do `ButtonGroup`), então a borda
+pinta fora do preto, sobre a página — branca sobre a página clara, some. O fio
+é um `inset-ring-1` (sombra por dentro do `padding-box`), transparente em
+repouso para esmaecer, e no cursor vai a `--primary-hover-ring`, token novo com
+par escuro: branco nos dois temas, 35% no claro (sobre o `--primary-hover` a
+0,32, o branco cheio gritava) e cheio no escuro (o hover é cinza a 0,87, e só o
+branco cheio aparece). Só `hover:`: no toque não acende. Medido nos dois temas:
+82×32 antes e com o cursor, o anel `oklch(1 0 0 / 0.35)` no claro e
+`oklch(1 0 0)` no escuro.

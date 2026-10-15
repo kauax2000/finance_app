@@ -252,4 +252,16 @@ describe("o primário é a tecla chapada, e o colorido é de marca", () => {
     // transparente de cada lado já é vão, e somada à margem a emenda media 3px.
     expect(grupo).not.toContain("[&>[data-variant=primary]:not(:first-child)]:ml-px")
   })
+
+  it("o primário acende um fio interno branco só no cursor, sem mexer na caixa", () => {
+    // `inset-ring` é sombra por dentro do `padding-box`: a medida não muda. Em
+    // repouso o fio já existe, transparente, para esmaecer em vez de pular.
+    expect(PRIMARIO).toContain("inset-ring-1")
+    expect(PRIMARIO).toContain("inset-ring-transparent")
+    expect(PRIMARIO).toContain("hover:inset-ring-primary-hover-ring")
+    expect(PRIMARIO.filter((c) => /^(active|aria-expanded):inset-ring/.test(c))).toStrictEqual([])
+    expect(PRIMARIO.filter((c) => /^(hover:)?(border|ring)-[0-9]/.test(c))).toStrictEqual([])
+    expect(claridade(CLARO, "--primary-hover-ring")).toBe(1)
+    expect(claridade(ESCURO, "--primary-hover-ring")).toBe(1)
+  })
 })
