@@ -15,6 +15,7 @@ import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import { totalPurchaseFromPlan } from "@/lib/transaction-installment"
 import { toastError } from "@/lib/toast"
 import type { TransactionFormKind } from "@/components/transactions/transaction-type-segment"
+import { transactionFormTitle } from "@/components/transactions/transaction-form-title"
 import {
     TRANSACTION_SAVE_TOAST_ID,
     type InstallmentPlanFormSavePayload,
@@ -572,13 +573,13 @@ export function useTransactionForm({
         planIsActive,
     }
 
-    const formTitle = editingTransaction
-        ? installmentEditScope === "plan" && hasInstallmentPlan
-            ? "Plano da compra"
-            : "Editar transação"
-        : formKind === "installment"
-          ? "Compra parcelada"
-          : "Nova transação"
+    const formTitle = transactionFormTitle({
+        editing: Boolean(editingTransaction),
+        formKind,
+        type,
+        hasInstallmentPlan,
+        installmentEditScope,
+    })
 
     const formDescription = editingTransaction
         ? installmentEditScope === "plan" && hasInstallmentPlan
