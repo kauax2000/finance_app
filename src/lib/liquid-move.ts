@@ -82,6 +82,59 @@ export type CaixaLiquida = { x: number; y: number; w: number; h: number }
 /** Só a posição: a peça do `ThemeToggle` não muda de tamanho, e o tamanho não anima. */
 type PontoLiquido = Pick<CaixaLiquida, "x" | "y"> & Partial<CaixaLiquida>
 
+/**
+ * O progresso de uma `cubic-bezier(x1,y1,x2,y2)` no instante `t` (0–1): acha o
+ * parâmetro da curva pelo X (bisseção; a curva de tempo é monótona) e devolve
+ * o Y. Só para limitar o esticão, então 20 passos (precisão de 1e-6) bastam.
+ */
+export function progressoDaCurva(easing: string, t: number): number {
+  const n = easing.match(/-?[\d.]+/g)?.map(Number)
+  if (!n || n.length !== 4) return t
+  const [x1, y1, x2, y2] = n as [number, number, number, number]
+  const bez = (a: number, b: number, s: number) =>
+    3 * a * s * (1 - s) ** 2 + 3 * b * s ** 2 * (1 - s) + s ** 3
+  let lo = 0
+  let hi = 1
+  for (let i = 0; i < 20; i++) {
+    const meio = (lo + hi) / 2
+    if (bez(x1, x2, meio) < t) lo = meio
+    else hi = meio
+  }
+  return bez(y1, y2, (lo + hi) / 2)
+}
+
+/**
+ * O esticão de cada quadro, limitado para a ponta da frente não passar da
+ * trilha (`limite`, em px na régua dela). A forma estica a partir da borda de
+ * trás e, perto do fim, ainda está esticada quando já quase chegou: num salto
+ * até a ponta, a frente saía da trilha. Cada quadro é medido contra a posição
+ * do quadro **seguinte**, que está mais adiante — a escala interpola reta entre
+ * quadros e a posição não, e assim o trecho entre eles também cabe. O pouso
+ * (`k` negativo) compacta para dentro e não é tocado.
+ */
+function perfilLimitado(
+  de: CaixaLiquida,
+  para: CaixaLiquida,
+  amplitude: number,
+  vertical: boolean,
+  avanca: boolean,
+  easing: string,
+  limite: { inicio: number; fim: number }
+): [number, number, Lado][] {
+  const pos = (c: CaixaLiquida) => (vertical ? c.y : c.x)
+  const tam = (c: CaixaLiquida) => (vertical ? c.h : c.w)
+  return PERFIL.map(([offset, k, lado], i) => {
+    if (k <= 0 || amplitude <= 0) return [offset, k, lado]
+    const seguinte = Math.min(PERFIL[i + 1]?.[0] ?? 1, VIRADA)
+    const p = progressoDaCurva(easing, Math.min(1, seguinte / VIRADA))
+    const inicio = pos(de) + (pos(para) - pos(de)) * p
+    const t = Math.max(tam(de), tam(de) + (tam(para) - tam(de)) * p)
+    const folga = avanca ? limite.fim - (inicio + t) : inicio - limite.inicio
+    const teto = Math.max(0, folga / (t * amplitude))
+    return [offset, Math.min(k, teto), lado]
+  })
+}
+
 const quadro = ({ x, y, w, h }: PontoLiquido) => ({
   translate: `${x}px ${y}px`,
   ...(w === undefined ? null : { width: `${w}px` }),
@@ -105,11 +158,14 @@ export function viajarLiquido(
     amplitude,
     eixo = "x",
     trajeto = TRAJETO,
+    limite,
   }: {
     amplitude: number
     eixo?: "x" | "y"
     /** Outro trajeto (o `Tabs` usa um mais macio); o relógio do esticão acompanha, dividido por `VIRADA`. */
     trajeto?: { duration: number; easing: string }
+    /** As bordas da trilha no eixo, em px: o esticão não leva a peça além delas. */
+    limite?: { inicio: number; fim: number }
   }
 ): Animation[] {
   if (typeof window === "undefined") return []
@@ -124,10 +180,21 @@ export function viajarLiquido(
     const curto = (1 - amplitude * k * ACOPLAMENTO_Y).toFixed(4)
     return vertical ? `${curto} ${longo}` : `${longo} ${curto}`
   }
+  const perfil = limite
+    ? perfilLimitado(
+        { w: peca.offsetWidth, h: peca.offsetHeight, ...de },
+        { w: peca.offsetWidth, h: peca.offsetHeight, ...para },
+        amplitude,
+        vertical,
+        avanca,
+        trajeto.easing,
+        limite
+      )
+    : PERFIL
   return [
     peca.animate([quadro(de), quadro(para)], { ...trajeto, fill: "none" }),
     peca.animate(
-      PERFIL.map(([offset, k, lado]) => ({ offset, transformOrigin: origem[lado], scale: escala(k) })),
+      perfil.map(([offset, k, lado]) => ({ offset, transformOrigin: origem[lado], scale: escala(k) })),
       { ...ESTICAO, duration: Math.round(trajeto.duration / VIRADA), fill: "none" }
     ),
   ]
