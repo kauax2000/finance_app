@@ -14,6 +14,7 @@ import {
 import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import { totalPurchaseFromPlan } from "@/lib/transaction-installment"
 import { toastError } from "@/lib/toast"
+import { cartaoPreEscolhido } from "@/lib/ultimo-cartao"
 import type { TransactionFormKind } from "@/components/transactions/transaction-type-segment"
 import { transactionFormTitle } from "@/components/transactions/transaction-form-title"
 import {
@@ -162,7 +163,7 @@ export function useTransactionForm({
 
     // A fotografia do rascunho ao abrir: `isDirty` compara o formulário com
     // ela, para o diálogo perguntar antes de descartar o que foi preenchido.
-    const [snapshot, setSnapshot] = useState<string | null>(null)
+    const [snapshot, setSnapshot] = useState<Rascunho | null>(null)
 
     /* eslint-disable react-hooks/set-state-in-effect -- hydrate form fields when opening for edit or create */
     useEffect(() => {
@@ -208,8 +209,15 @@ export function useTransactionForm({
                   categoryId: "",
                   date: localYmdFromDate(new Date()),
                   recurringMode: "once",
-                  paymentMethod: null,
-                  paymentCreditCardId: "",
+                  // Parcelada aberta direto (a paleta, "Nova parcelada") já vem
+                  // no crédito com o cartão escolhido, como ao trocar de tipo.
+                  ...(defaultLaunchKind === "installment" &&
+                  creditCards.some((c) => c.is_active)
+                      ? {
+                            paymentMethod: "credit_card" as const,
+                            paymentCreditCardId: cartaoPreEscolhido(creditCards),
+                        }
+                      : { paymentMethod: null, paymentCreditCardId: "" }),
                   installmentValueMode: "total",
                   installmentTotal: "",
                   installmentPerAmount: "",
@@ -230,7 +238,10 @@ export function useTransactionForm({
         setInstallmentPerAmount(v.installmentPerAmount)
         setInstallmentCount(v.installmentCount)
         setInstallmentEditScope(v.installmentEditScope)
-        setSnapshot(fotografar(v))
+        setSnapshot(v)
+        // Os cartões são lidos ao abrir: com eles na lista, recarregá-los
+        // reidrataria o formulário e apagaria o rascunho.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [active, editingTransaction, defaultLaunchKind])
     /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -533,10 +544,34 @@ export function useTransactionForm({
 
     const showFooter = true
 
+    // Parcelada é quase sempre no cartão: ao entrar nela, a forma já vem em
+    // Crédito com o cartão escolhido. É o formulário que preenche, não a
+    // pessoa, então o ponto de partida do rascunho anda junto e o fechar não
+    // pergunta "Descartar alterações?" sem nada editado.
+    const escolherTipo = (next: TransactionFormKind) => {
+        setFormKind(next)
+        if (
+            editingTransaction ||
+            next !== "installment" ||
+            paymentMethod !== null ||
+            activeCards.length === 0
+        ) {
+            return
+        }
+        const cartao = paymentCreditCardId || cartaoPreEscolhido(activeCards)
+        setPaymentMethod("credit_card")
+        setPaymentCreditCardId(cartao)
+        setSnapshot((s) =>
+            s && s.paymentMethod === null
+                ? { ...s, paymentMethod: "credit_card", paymentCreditCardId: cartao }
+                : s
+        )
+    }
+
     const fieldsProps = {
         segmentMode,
         formKind,
-        setFormKind,
+        setFormKind: escolherTipo,
         type,
         setType,
         amount,
@@ -618,7 +653,7 @@ export function useTransactionForm({
         installmentEditScope,
     }
     const isDirty =
-        active && snapshot !== null && fotografar(atual) !== snapshot
+        active && snapshot !== null && fotografar(atual) !== fotografar(snapshot)
 
     return {
         handleSubmit,

@@ -35,7 +35,7 @@ const FORM_KIND_TABS: { value: TransactionFormKind; label: string; icon: HeroIco
 
 /**
  * O tipo ao criar: despesa simples, compra parcelada ou receita. Escolha de
- * valor num formulário: `ToggleGroup` segmentado, que o Radix anuncia como
+ * valor num formulário: `ToggleGroup` na pele das abas (`floating`), que o Radix anuncia como
  * rádio (`single`). Eram três cartões de rádio que ocupavam o topo; o título
  * do diálogo já diz o tipo, então o grupo não tem rótulo visível.
  */
@@ -51,7 +51,7 @@ export function TransactionFormKindSegment({
     return (
         <ToggleGroup
             type="single"
-            variant="segmented"
+            variant="floating"
             stretch
             aria-label="Tipo de lançamento"
             value={value}
@@ -84,7 +84,7 @@ export function TransactionFormTypeSegment({
     return (
         <ToggleGroup
             type="single"
-            variant="segmented"
+            variant="floating"
             stretch
             aria-label={ariaLabel}
             disabled={disabled}
@@ -114,7 +114,7 @@ export function TransactionFormScopeSegment({
     return (
         <ToggleGroup
             type="single"
-            variant="segmented"
+            variant="floating"
             stretch
             aria-label="O que editar"
             value={value}

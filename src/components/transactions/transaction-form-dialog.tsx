@@ -98,7 +98,14 @@ export function TransactionFormDialog({
             open={open}
             onOpenChange={onOpenChange}
         >
-            <DialogContent layout="fixed" showCloseButton={false}>
+            {/* O teto de altura sobe a 42rem (o diálogo lê `--dialog-max-h`, que
+                existe para isso): com as fichas da forma de pagamento a despesa
+                passa dos 36rem e rolava numa tela que tem espaço. */}
+            <DialogContent
+                layout="fixed"
+                showCloseButton={false}
+                className="[--dialog-max-h:min(90dvh,42rem)]"
+            >
                 <TransactionFormSurface
                     variant={isMobile ? "dialog-mobile" : "dialog-desktop"}
                     handleSubmit={handleSubmit}

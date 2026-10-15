@@ -81,6 +81,9 @@ const RUNTIME_COLOR_FILES = [
   "workspace-appearance-edit-dialog",
   "credit-card-brand-logos",
   "registered-credit-card-face",
+  // A ficha compacta da bandeira: a placa branca é da marca (o azul da Visa
+  // some no fundo escuro), como a moldura dos logos.
+  "credit-card-brand-chip",
   "color-tile",
   "src/lib/avatar.ts",
   // A cor da barra do navegador: `meta[name=theme-color]` não lê `var()`, e os

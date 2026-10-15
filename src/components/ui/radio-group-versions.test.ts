@@ -74,10 +74,10 @@ describe("RadioGroup", () => {
     expect(empe).not.toMatch(/data-slot="radio-group-item"[^>]*class="[^"]*flex-col/)
   })
 
-  it("a forma de pagamento é uma escolha única com ausência, e não botões de alternar", () => {
+  it("a forma de pagamento é rádio em fichas, e não botões de alternar nem lista", () => {
     const tela = lerFonte("src/components/transactions/transaction-form-fields.tsx")
     expect(tela).not.toContain("PaymentMethodChips")
     expect(tela).not.toMatch(/aria-pressed/)
-    expect(tela).toMatch(/<SelectItem value=\{PAYMENT_NONE\} variant="none">/)
+    expect(tela).toMatch(/label="Forma de pagamento"\s+optional\s+variant="chip"\s+deselectable/)
   })
 })

@@ -31,3 +31,22 @@ export function paymentMethodOptions(): { value: PaymentMethod; label: string }[
         label: LABELS[value],
     }))
 }
+
+/**
+ * As fichas do formulário de lançamento: rótulo curto e a ordem do uso, para as
+ * seis caberem numa grade de 3 × 2 e escolher ser um toque só. Fora do
+ * formulário vale o rótulo longo (`paymentMethodLabel`).
+ */
+const CHIP_ORDER: readonly PaymentMethod[] = ["pix", "credit_card", "debit_card", "cash", "ted", "other"]
+const CHIP_LABELS: Record<PaymentMethod, string> = {
+    pix: "Pix",
+    credit_card: "Crédito",
+    debit_card: "Débito",
+    cash: "Dinheiro",
+    ted: "Transferência",
+    other: "Outro",
+}
+
+export function paymentMethodChipOptions(): { value: PaymentMethod; label: string }[] {
+    return CHIP_ORDER.map((value) => ({ value, label: CHIP_LABELS[value] }))
+}
