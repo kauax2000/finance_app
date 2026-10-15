@@ -57,11 +57,11 @@ describe("as versões do Sheet", () => {
 
   it("pending, dirty e confirmDiscard passam por um pedido só", () => {
     // A régua é a do `Dialog`, a mesma função: `dialog-versions.test.ts` tranca o `pedir`.
-    expect(CODIGO).toContain("const { open, pedir, pergunta } = usePedidoDeFechar({")
+    expect(CODIGO).toContain("const { open, pedir, pergunta, navegarFechando } = usePedidoDeFechar({")
     // No telefone a trava é a do `Drawer`, que respeita o `dismissible` de quem chama.
     expect(CODIGO).toContain("pending={pending}")
     expect(CODIGO).toContain("aria-busy={pending || undefined}")
-    expect(CODIGO).toContain('import { usePedidoDeFechar } from "@/components/ui/dialog"')
+    expect(CODIGO).toMatch(/import \{[^}]*\busePedidoDeFechar,?[^}]*\} from "@\/components\/ui\/dialog"/)
   })
 
   it("folha sobre folha: o painel de baixo recua, e na gaveta empilha o Drawer", () => {

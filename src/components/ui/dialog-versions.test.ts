@@ -11,7 +11,7 @@ const CODIGO = lerFonte("src/components/ui/dialog.tsx")
 
 describe("as versões do Dialog", () => {
   it("todo pedido de fechar passa pela trava: salvando não fecha, alterado pergunta", () => {
-    expect(CODIGO).toMatch(/const pedir = \(proximo: boolean\) => \{\s*if \(proximo\) return mudar\(true\)\s*if \(pending\) return\s*if \(dirty && confirmDiscard\) \{/)
+    expect(CODIGO).toMatch(/const pedir = \(proximo: boolean\) => \{\s*if \(proximo\) return mudar\(true\)\s*if \(pending\) \{\s*destino\.current = null\s*return\s*\}\s*if \(dirty && confirmDiscard\) \{/)
     // A raiz entrega `pedir`, e não o `onOpenChange` cru, aos dois ramos.
     expect(CODIGO.match(/onOpenChange=\{pedir\}/g)?.length).toBe(2)
     // Fechar, o × e o Cancelar do rodapé ficam desabilitados enquanto salva.
@@ -21,7 +21,7 @@ describe("as versões do Dialog", () => {
 
   it("no telefone, com surface auto, o conteúdo é a gaveta do Sheet", () => {
     expect(CODIGO).toContain('const gaveta = surface === "auto" && isMobile')
-    expect(CODIGO).toMatch(/if \(gaveta\) \{\s*return \(\s*<SheetContent\s*ref=\{ref\}\s*fillMobileViewport=\{layout === "fixed" \|\| size === "full"\}/)
+    expect(CODIGO).toMatch(/if \(gaveta\) \{\s*return \(\s*<SheetContent\s*ref=\{ref\}\s*onClickCapture=\{onClickCapture\}\s*fillMobileViewport=\{layout === "fixed" \|\| size === "full"\}/)
   })
 
   it("a pergunta de descartar não importa o AlertDialog da casa — ele importa este arquivo", () => {
@@ -89,5 +89,36 @@ describe("as versões do Dialog", () => {
     const foto = uso.slice(uso.indexOf("function fotografar("), uso.indexOf("function fotografar(") + 400)
     expect(foto).not.toMatch(/formKind|r\.type|installmentEditScope|installmentValueMode/)
     expect(lerFonte("src/components/transactions/transaction-form-dialog.tsx")).toMatch(/dirty=\{isDirty\}\s*confirmDiscard/)
+  })
+})
+
+describe("um link de dentro do diálogo fecha antes de abrir a tela", () => {
+  const SHEET = lerFonte("src/components/ui/sheet.tsx")
+
+  it("o casco pega o clique simples num link interno e entrega ao pedido de fechar", () => {
+    expect(CODIGO).toContain("function useLinkQueFecha(")
+    expect(CODIGO).toMatch(/if \(e\.metaKey \|\| e\.ctrlKey \|\| e\.shiftKey \|\| e\.altKey\) return/)
+    expect(CODIGO).toContain('link.getAttribute("target") === "_blank" || link.hasAttribute("download")')
+    expect(CODIGO).toContain("if (url.origin !== window.location.origin) return")
+    // O seletor ancorado de onde veio o link fecha também (o Esc chega só à camada de cima).
+    expect(CODIGO).toContain('link.closest("[data-radix-popper-content-wrapper]")')
+    // Diálogo, gaveta e painel vestem o mesmo `onClickCapture`.
+    expect(CODIGO).toContain("onClickCapture={aoClicarLink}")
+    expect(SHEET.match(/onClickCapture=\{aoClicarLink\}/g)?.length).toBe(2)
+  })
+
+  it("a tela abre só depois que o diálogo fechou de fato e saiu do DOM", () => {
+    expect(CODIGO).toMatch(/if \(open \|\| !destino\.current\) return/)
+    expect(CODIGO).toContain("abrirDepoisDeSair(() => router.push(href), casco)")
+    expect(CODIGO).toContain("if (!casco.isConnected || performance.now() - inicio > 800) abrir()")
+    // "Continuar editando" esquece o link; "descartar" não (o `Action` também
+    // fecha a pergunta, e sem a marca o link se perdia antes de a tela abrir).
+    expect(CODIGO).toMatch(/if \(!aberta && !descartando\.current\) destino\.current = null/)
+    expect(CODIGO).toMatch(/onDiscard=\{\(\) => \{\s*descartando\.current = true/)
+  })
+
+  it("a raiz mais de fora responde", () => {
+    expect(CODIGO).toContain("value={navegarDeFora ?? navegarFechando}")
+    expect(SHEET).toContain("value={navegarDeFora ?? navegarFechando}")
   })
 })

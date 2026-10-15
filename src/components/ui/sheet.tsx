@@ -23,7 +23,11 @@ import {
 // dele é a gaveta daqui), e este importa de volta o pedido de fechar, com a
 // pergunta de descarte. Os dois só se usam dentro de funções, nunca na
 // avaliação do módulo.
-import { usePedidoDeFechar } from "@/components/ui/dialog"
+import {
+  NavegarFechandoContext,
+  useLinkQueFecha,
+  usePedidoDeFechar,
+} from "@/components/ui/dialog"
 
 /**
  * O painel de borda: o ramo desktop da folha.
@@ -192,7 +196,7 @@ function Sheet({
 
   // O estado mora aqui, controlado ou não, porque todo pedido de fechar passa
   // por `pedir` — a régua do `Dialog`, a mesma função.
-  const { open, pedir, pergunta } = usePedidoDeFechar({
+  const { open, pedir, pergunta, navegarFechando } = usePedidoDeFechar({
     open: openProp,
     defaultOpen,
     onOpenChange,
@@ -227,8 +231,12 @@ function Sheet({
   const modal = surface === "drawer" ? modalProp : (modalProp ?? modalDaMoldura)
 
   const estado = React.useMemo(() => ({ pending, aoLado }), [pending, aoLado])
+  // A raiz mais de fora responde ao link (o `Dialog` que virou gaveta, ou um
+  // painel dentro de outro): fechá-la fecha as de dentro.
+  const navegarDeFora = React.useContext(NavegarFechandoContext)
 
   return (
+    <NavegarFechandoContext.Provider value={navegarDeFora ?? navegarFechando}>
     <SheetSurfaceContext.Provider value={surface}>
       <SheetEstadoContext.Provider value={estado}>
         {surface === "drawer" ? (
@@ -260,6 +268,7 @@ function Sheet({
         {pergunta}
       </SheetEstadoContext.Provider>
     </SheetSurfaceContext.Provider>
+    </NavegarFechandoContext.Provider>
   )
 }
 
@@ -428,6 +437,7 @@ function SheetContent({
   fillMobileViewport = false,
   style,
   onInteractOutside,
+  onClickCapture,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> &
   VariantProps<typeof sheetContentVariants> & {
@@ -444,6 +454,7 @@ function SheetContent({
   }) {
   const surface = useSheetSurface()
   const { pending, aoLado } = React.useContext(SheetEstadoContext)
+  const aoClicarLink = useLinkQueFecha(onClickCapture)
   // O portal do painel vai para o `body` da janela ativa (o da gaveta é o do
   // `Drawer`). Fora da moldura do catálogo o contexto é `null` e o app não muda;
   // dentro dela impede a folha de escapar do `<iframe>`.
@@ -473,6 +484,7 @@ function SheetContent({
         className={className}
         style={style}
         onInteractOutside={onInteractOutside}
+        onClickCapture={aoClicarLink}
         {...props}
       >
         {children}
@@ -488,6 +500,7 @@ function SheetContent({
       <SheetOverlay />
       <SheetPrimitive.Content
         ref={conteudo}
+        onClickCapture={aoClicarLink}
         data-slot="sheet-content"
         data-surface="panel"
         data-side={side}

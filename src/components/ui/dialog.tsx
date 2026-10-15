@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { cva, type VariantProps } from "class-variance-authority"
 import {
   AlertDialog as AlertDialogPrimitive,
@@ -53,6 +54,55 @@ const DialogEstadoContext = React.createContext<DialogEstado>({
   pending: false,
 })
 
+/**
+ * Um link de dentro do diálogo que abre uma tela: o diálogo fecha com o próprio
+ * gesto (passando pelo pedido de fechar, com o "Descartar alterações?" quando há
+ * rascunho) e só depois a tela abre. Sem isto o `Link` trocava de rota com o
+ * diálogo da casca ainda aberto por cima. Vale para o `Dialog` e o `Sheet`; a
+ * raiz mais de fora é quem responde, porque fechá-la fecha as de dentro.
+ */
+type NavegarFechando = (href: string, casco: HTMLElement) => void
+
+const NavegarFechandoContext = React.createContext<NavegarFechando | null>(null)
+
+/**
+ * O `onClickCapture` do casco: pega o clique simples num link interno (também de
+ * um seletor portalizado, porque o evento do React sobe pela árvore) antes do
+ * `Link`, e entrega ao diálogo. Nova aba, modificadoras, `download` e outro
+ * domínio seguem o navegador.
+ */
+function useLinkQueFecha(
+  proprio?: React.MouseEventHandler<HTMLDivElement>
+): React.MouseEventHandler<HTMLDivElement> {
+  const navegar = React.useContext(NavegarFechandoContext)
+  return (e) => {
+    proprio?.(e)
+    if (!navegar || e.defaultPrevented || e.button !== 0) return
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+    const link = (e.target as Element | null)?.closest?.("a[href]")
+    if (!link || link.getAttribute("target") === "_blank" || link.hasAttribute("download")) return
+    const url = new URL(link.getAttribute("href") ?? "", window.location.href)
+    if (url.origin !== window.location.origin) return
+    e.preventDefault()
+    // O link mora numa placa ancorada (o seletor de categoria, de cartão): ela
+    // fecha com o próprio gesto. O Esc chega só à camada de cima.
+    if (link.closest("[data-radix-popper-content-wrapper]")) {
+      link.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
+    }
+    navegar(`${url.pathname}${url.search}${url.hash}`, e.currentTarget)
+  }
+}
+
+/** Abre a tela quando o casco sai do DOM (o fim da animação de fechar), com teto. */
+function abrirDepoisDeSair(abrir: () => void, casco: HTMLElement) {
+  const inicio = performance.now()
+  const passo = () => {
+    if (!casco.isConnected || performance.now() - inicio > 800) abrir()
+    else requestAnimationFrame(passo)
+  }
+  requestAnimationFrame(passo)
+}
+
 type ConfirmDiscard = boolean | { title?: string; description?: string }
 
 function Dialog({
@@ -77,7 +127,7 @@ function Dialog({
 }) {
   const isMobile = useIsMobile()
   const gaveta = surface === "auto" && isMobile
-  const { open, pedir, pergunta } = usePedidoDeFechar({
+  const { open, pedir, pergunta, navegarFechando } = usePedidoDeFechar({
     open: openProp,
     defaultOpen,
     onOpenChange,
@@ -85,10 +135,12 @@ function Dialog({
     dirty,
     confirmDiscard,
   })
+  const navegarDeFora = React.useContext(NavegarFechandoContext)
 
   const estado = React.useMemo(() => ({ gaveta, pending }), [gaveta, pending])
 
   return (
+    <NavegarFechandoContext.Provider value={navegarDeFora ?? navegarFechando}>
     <DialogEstadoContext.Provider value={estado}>
       {gaveta ? (
         <Sheet open={open} onOpenChange={pedir} {...props}>
@@ -106,6 +158,7 @@ function Dialog({
       )}
       {pergunta}
     </DialogEstadoContext.Provider>
+    </NavegarFechandoContext.Provider>
   )
 }
 
@@ -134,6 +187,19 @@ function usePedidoDeFechar({
   const [interno, setInterno] = React.useState(defaultOpen ?? false)
   const open = controlado ? openProp : interno
   const [perguntando, setPerguntando] = React.useState(false)
+  const router = useRouter()
+  // O link que pediu para fechar: a tela abre quando o diálogo fechar de fato.
+  const destino = React.useRef<{ href: string; casco: HTMLElement } | null>(null)
+  // O "descartar" também fecha a pergunta (o `Action` do Radix chama o
+  // `onOpenChange` depois do `onClick`): sem esta marca, o fechar dela lia como
+  // "continuar editando" e esquecia o link antes de a tela abrir.
+  const descartando = React.useRef(false)
+  React.useEffect(() => {
+    if (open || !destino.current) return
+    const { href, casco } = destino.current
+    destino.current = null
+    abrirDepoisDeSair(() => router.push(href), casco)
+  }, [open, router])
 
   const mudar = (proximo: boolean) => {
     if (!controlado) setInterno(proximo)
@@ -141,7 +207,10 @@ function usePedidoDeFechar({
   }
   const pedir = (proximo: boolean) => {
     if (proximo) return mudar(true)
-    if (pending) return
+    if (pending) {
+      destino.current = null
+      return
+    }
     if (dirty && confirmDiscard) {
       setPerguntando(true)
       return
@@ -153,17 +222,28 @@ function usePedidoDeFechar({
   const pergunta = confirmDiscard ? (
     <ConfirmarDescarte
       open={perguntando}
-      onOpenChange={setPerguntando}
+      onOpenChange={(aberta) => {
+        setPerguntando(aberta)
+        // "Continuar editando": o link que pediu para fechar não abre mais.
+        if (!aberta && !descartando.current) destino.current = null
+        descartando.current = false
+      }}
       title={textos.title}
       description={textos.description}
       onDiscard={() => {
+        descartando.current = true
         setPerguntando(false)
         mudar(false)
       }}
     />
   ) : null
 
-  return { open, pedir, pergunta }
+  const navegarFechando: NavegarFechando = (href, casco) => {
+    destino.current = { href, casco }
+    pedir(false)
+  }
+
+  return { open, pedir, pergunta, navegarFechando }
 }
 
 /**
@@ -335,12 +415,14 @@ function DialogContent({
   layout,
   showCloseButton = true,
   ref,
+  onClickCapture,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> &
   VariantProps<typeof dialogContentVariants> & {
     showCloseButton?: boolean
   }) {
   const { gaveta, pending } = React.useContext(DialogEstadoContext)
+  const aoClicarLink = useLinkQueFecha(onClickCapture)
 
   // No telefone, com `surface="auto"`: a gaveta do `Sheet`. A gaveta alta é a
   // do formulário (`fixed`), a da tela cheia e a dos passos (esta por classe,
@@ -349,6 +431,7 @@ function DialogContent({
     return (
       <SheetContent
         ref={ref}
+        onClickCapture={onClickCapture}
         fillMobileViewport={layout === "fixed" || size === "full"}
         aria-busy={pending || undefined}
         className={cn(
@@ -368,6 +451,7 @@ function DialogContent({
       <DialogOverlay />
       <DialogPrimitive.Content
         ref={ref}
+        onClickCapture={aoClicarLink}
         data-slot="dialog-content"
         data-layout={layout ?? "auto"}
         aria-busy={pending || undefined}
@@ -706,4 +790,7 @@ export {
   dialogTitleClassName,
   // O pedido de fechar, que o `Sheet` também faz.
   usePedidoDeFechar,
+  // O link que fecha antes de abrir a tela, que o `Sheet` também faz.
+  NavegarFechandoContext,
+  useLinkQueFecha,
 }
