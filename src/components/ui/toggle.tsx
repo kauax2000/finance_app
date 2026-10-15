@@ -69,7 +69,9 @@ const toggleVariants = cva(
         // contorno de `--foreground` afastado 2px mais o tique. O realce de cinza não
         // vale (a cor é o conteúdo), e o `outline` não disputa com o anel de foco, que é `box-shadow`.
         swatch: [
-          "rounded-lg p-0 bg-(--tile-surface) text-(--tile-ink)",
+          // O canto do `ColorTile` do `md` ao `2xl` (a linha, 12): a amostra é o
+          // ladrilho que ela escolhe, e ao lado da prévia o `rounded-lg` (10) destoava.
+          "rounded-row p-0 bg-(--tile-surface) text-(--tile-ink)",
           "hover:bg-(--tile-surface) active:bg-(--tile-surface)",
           "data-[state=on]:bg-(--tile-surface) data-[state=on]:text-(--tile-ink)",
           "data-[state=on]:hover:bg-(--tile-surface) data-[state=on]:active:bg-(--tile-surface)",

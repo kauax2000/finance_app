@@ -497,18 +497,19 @@ entre coisas **diferentes**: um bloco e o seguinte, um campo e o próximo.
   - **Superfície** (`rounded-surface`, 22px): o que contém — `Card`,
     `Accordion contained`, toast, `Table`. E **a placa flutuante** (`menuPanelSurfaceClassName`: `Select`, `DropdownMenu`,
     `ContextMenu`, `Menubar`, `Popover`, `Combobox`, `HoverCard`,
-    `NavigationMenu`) e a placa da paleta do `Command`: as listas recuam 8
+    `NavigationMenu`, também o `DropdownMenu variant="panel"`) e a placa da paleta do `Command`: as listas recuam 8
     (`p-2`, o separador sangra `-mx-2`) e a linha mede 36 (`py-2`).
   - **Modal** (`rounded-modal`, 28px): `Dialog`, `AlertDialog`, `Sheet`,
     `Drawer`, `Sidebar floating`, `SplitShell`.
   - **Linha** (`rounded-row`, 12px): a linha de lista selecionável (a linha e
-    o subitem da `Sidebar`), o `ColorTile` do `md` ao `2xl`, o `Item sm`, o
+    o subitem da `Sidebar`), o `ColorTile` do `md` ao `2xl` e a amostra do
+    `Toggle swatch`, o `Item sm`, o
     item do `Accordion separated`, o `Alert sm`, o `Tooltip md`, o seletor de
     mês e de ano do `Calendar`, e as caixas do app que eram `rounded-lg`.
   - **Linha alta** (`rounded-row-lg`, 16px): a linha selecionável de 44, o
     `Textarea` e o `InputGroup` com bloco ou textarea, o `Item md`/`lg`, o
     cartão do `RadioGroup`, o cartão de escolha do `FieldLabel`, a linha do
-    `FormPickerPopover`, o painel do `DropdownMenu`, o `Collapsible card`, o
+    `FormPickerPopover`, o `Collapsible card`, o
     `CardField`, o `Alert md`, e as caixas do app que eram `rounded-xl`.
   - **Concêntrico** (`@utility concentric`): o que está dentro — o raio do pai
     menos o recuo, com mínimo de 6px. Quem contém publica `--radius-parent` e

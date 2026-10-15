@@ -106,3 +106,18 @@ describe("o rádio que marca a escolha atual", () => {
     expect(fonte).not.toContain("data-[state=checked]:bg-muted")
   })
 })
+
+describe("o painel veste a superfície das outras placas", () => {
+  it("variant panel não troca o raio para a linha alta", () => {
+    const painel = CODIGO.slice(CODIGO.indexOf("panel: ["), CODIGO.indexOf("].join(\" \"),", CODIGO.indexOf("panel: [")))
+    expect(painel).not.toContain("rounded-row-lg")
+    expect(painel).not.toContain("--radius-parent")
+  })
+})
+
+describe("a geometria do painel e das linhas de mídia", () => {
+  it("a identidade começa na coluna dos ícones e a linha de mídia mede 36", () => {
+    expect(CODIGO).toContain('"relative z-10 flex shrink-0 items-center gap-2.5 px-4 py-2.5 text-sm"')
+    expect(CODIGO).toContain('"pr-2 py-1.5 data-[state=unchecked]:not-focus:text-muted-foreground"')
+  })
+})

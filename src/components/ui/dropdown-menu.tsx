@@ -318,9 +318,10 @@ const dropdownMenuContentVariants = cva(
         // O recuo sai do casco e vai para `DropdownMenuSection`, que o devolve
         // onde há comandos, para o `-mx-2` do separador alcançar a borda.
         panel: [
-          // A placa é a linha alta e publica o próprio raio: herdando o 22 as
-          // linhas de dentro sairiam com 14.
-          "rounded-row-lg [--radius-parent:var(--radius-row-lg)]",
+          // A placa é a superfície (22), a mesma do `menu`: era a linha alta (16)
+          // e, ao lado do seletor de carteira e do "+ Adicionar" na barra
+          // lateral, lia como outra peça. As linhas de dentro seguem
+          // concêntricas (22 − 8 = 14), como nas outras listas.
           // O painel não é lista: o teto das listas suspensas não vale.
           "[--menu-max-h:100dvh]",
           // O painel cede de novo o recuo para o `DropdownMenuSection`.
@@ -562,7 +563,9 @@ function DropdownMenuHeader({
     <div
       data-slot="dropdown-menu-header"
       className={cn(
-        "relative z-10 flex shrink-0 items-center gap-2.5 px-3 py-2.5 text-sm",
+        // `px-4`: 8 do recuo da seção + 8 da linha — a mídia da identidade
+        // começa na coluna dos ícones dos comandos abaixo (era 12, 4px fora).
+        "relative z-10 flex shrink-0 items-center gap-2.5 px-4 py-2.5 text-sm",
         className
       )}
       {...props}
@@ -954,8 +957,10 @@ function DropdownMenuRadioItem({
         menuIndicatorItemClassName,
         naBusca && "gap-2 pl-2 py-1.5",
         indicator === "media" && [
-          // Sem marcador no fim, a linha não reserva o `pr-8` dele.
-          "pr-2 data-[state=unchecked]:not-focus:text-muted-foreground",
+          // Sem marcador no fim, a linha não reserva o `pr-8` dele. `py-1.5`: o
+          // ladrilho de 24 mais 6 de cada lado dá os 36 das outras linhas (com
+          // `py-2` a linha ia a 40), e o halo de 4px ainda cabe.
+          "pr-2 py-1.5 data-[state=unchecked]:not-focus:text-muted-foreground",
           // A escolhida tem um fundo leve, 5% da tinta — abaixo dos 9% da passagem, que vence no foco.
           "data-[state=checked]:not-focus:bg-foreground/5",
           // Entre duas linhas de mídia, 4px — o respiro dos itens da barra lateral: com o fundo

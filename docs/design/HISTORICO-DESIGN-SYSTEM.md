@@ -25833,3 +25833,34 @@ a ser uma View Transition (`trocarComTransicao` no `WorkspaceProvider`,
 `.workspace-switch` no `globals.css`): o conteúdo sai esmaecendo e entra
 subindo 4px (`rise`), e a marca da barra lateral entra crescendo na mola. Sem a
 API, com movimento reduzido ou com a aba escondida, troca na hora.
+
+**A barra lateral no micro.** Os ícones da navegação eram o contorno de 24
+desenhado a 16px, e o traço afinava a 1px ao lado dos menus, que já usam o
+micro. A barra passou ao `16/solid` (`microIconFor`, em `config/mobile-navigation`,
+keyed pelo componente como o `solidIconFor`); a config segue no de 24, que a
+barra de baixo do telefone desenha a 24. O micro só existe sólido: o "ícone
+preenchido na ativa" registrado acima saiu da barra lateral, e quem marca a
+página é a pílula e o peso do rótulo. Junto: "Dashboard" virou "Painel", a
+categoria ganhou a etiqueta (`TagIcon`) no lugar da pizza, e os rótulos
+"Cartões" e "Membros" encurtaram (os títulos das páginas ficaram por extenso).
+
+**O menu da conta reorganizado, e o painel na superfície.** O `UserMenu` passou
+a ir do mais usado ao menos (Minha conta, Planos e pagamentos, Tema, Sair), sem
+fios além do do cabeçalho; "Sair" deixou o `destructive` (tem volta); os ícones
+foram ao micro (`microIconFor`), com a pessoa (`UserCircle`) em "Minha conta" e
+o brilho (`Sparkles`) em "Planos" — o cartão repetia o de "Cartões". E o
+`DropdownMenu variant="panel"` deixou a linha alta (16) pela superfície (22):
+medido, o painel ficava a 16 ao lado do seletor de carteira e do "+ Adicionar",
+que estão a 22; as linhas de dentro foram de 8 a 14, concêntricas como nas
+outras listas. Quem veste o painel: o `UserMenu` e a página do catálogo.
+
+**Revisão de geometria contra os vizinhos.** Depois do raio do painel, tudo o
+que esta rodada mexeu foi medido ao lado das peças vizinhas. Conferiu: a placa
+(28, recuo 8), as linhas `lg` concêntricas (20; 12 recolhida), os links (32,
+raio 12, 4 entre eles), o trilho recolhido (64, tudo a 16 das bordas), as três
+placas da barra (22, recuo 8, a 8 da placa), o diálogo de carteira (bordas de
+24, colunas de cor e ícone alinhadas). Corrigiu quatro: o cabeçalho de
+identidade do painel ia a `px-3` e o avatar ficava 4px fora da coluna dos
+ícones (`px-4`); a linha de mídia media 40 com o ladrilho de 24 (`py-1.5`, 36,
+o halo ainda cabe); a amostra do `Toggle swatch` era `rounded-lg` (10) ao lado
+do `ColorTile` de 12 (`rounded-row`); e a linha do tema media 40 (`py-0.5`, 36).
