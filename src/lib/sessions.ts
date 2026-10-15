@@ -29,6 +29,9 @@ export interface Session {
 }
 
 const SESSION_ID_KEY = 'finance_app_session_id'
+const SESSION_TOUCHED_KEY = 'finance_app_session_touched_at'
+/** Registrar de novo (e atualizar `last_active_at`) só depois disto. */
+const SESSION_TOUCH_MS = 6 * 60 * 60 * 1000
 
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -94,6 +97,20 @@ export function getCurrentSessionId(): string | null {
 export function setCurrentSessionId(sessionId: string): void {
     if (typeof window === 'undefined') return
     localStorage.setItem(SESSION_ID_KEY, sessionId)
+    localStorage.setItem(SESSION_TOUCHED_KEY, String(Date.now()))
+}
+
+/**
+ * Este navegador já registrou a sessão há pouco? Registrar grava em
+ * `user_sessions` pela Edge `sessions` (1–2 s); a cada carregamento, era a
+ * consulta que mais pesava no banco. A revogação continua conferida a cada
+ * carregamento por `validateCurrentSession`.
+ */
+export function sessionRegisteredRecently(): boolean {
+    if (typeof window === 'undefined') return false
+    if (!getCurrentSessionId()) return false
+    const touched = Number(localStorage.getItem(SESSION_TOUCHED_KEY))
+    return Number.isFinite(touched) && Date.now() - touched < SESSION_TOUCH_MS
 }
 
 export async function getSessions(): Promise<Session[]> {
@@ -235,6 +252,7 @@ export async function updateSessionActivity(): Promise<void> {
 export function clearCurrentSession(): void {
     if (typeof window === 'undefined') return
     localStorage.removeItem(SESSION_ID_KEY)
+    localStorage.removeItem(SESSION_TOUCHED_KEY)
 }
 
 /**

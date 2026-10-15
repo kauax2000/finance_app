@@ -9,6 +9,13 @@ import { fetchBillsPageBundle } from "@/lib/queries/fetch-bills-page-bundle"
 import { fetchSubscriptionsPageBundle } from "@/lib/queries/fetch-subscriptions-page-bundle"
 import { fetchCreditCardsPageBundle } from "@/lib/queries/fetch-credit-cards-page-bundle"
 
+/**
+ * Passar o mouse de novo só busca de novo depois disto. Com 30–60s, quem
+ * passeava pela barra refazia o pacote de contas (~600 ms de banco) a cada
+ * passada; a página, ao abrir, ainda segue o próprio `staleTime`.
+ */
+const PREFETCH_STALE_MS = 5 * 60_000
+
 /** Prefetch heavy app-route bundles when the user hovers main nav links. */
 export function prefetchNavRouteHref(
     queryClient: QueryClient,
@@ -21,7 +28,7 @@ export function prefetchNavRouteHref(
         void queryClient.prefetchQuery({
             queryKey: billsPageBundleKeys.bundle(workspaceId),
             queryFn: () => fetchBillsPageBundle(workspaceId),
-            staleTime: 30_000,
+            staleTime: PREFETCH_STALE_MS,
         })
         return
     }
@@ -30,7 +37,7 @@ export function prefetchNavRouteHref(
         void queryClient.prefetchQuery({
             queryKey: subscriptionsPageBundleKeys.bundle(workspaceId),
             queryFn: () => fetchSubscriptionsPageBundle(workspaceId),
-            staleTime: 60_000,
+            staleTime: PREFETCH_STALE_MS,
         })
         return
     }
@@ -39,7 +46,7 @@ export function prefetchNavRouteHref(
         void queryClient.prefetchQuery({
             queryKey: creditCardsPageBundleKeys.bundle(workspaceId),
             queryFn: () => fetchCreditCardsPageBundle(workspaceId),
-            staleTime: 60_000,
+            staleTime: PREFETCH_STALE_MS,
         })
     }
 }

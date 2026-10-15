@@ -13,7 +13,12 @@ import {
 import { User, Session } from "@supabase/supabase-js"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase, type Profile } from "@/lib/supabase"
-import { clearCurrentSession, createSession, validateCurrentSession } from "@/lib/sessions"
+import {
+    clearCurrentSession,
+    createSession,
+    sessionRegisteredRecently,
+    validateCurrentSession,
+} from "@/lib/sessions"
 import { callDeleteUserAccount } from "@/lib/delete-account"
 import { formatAuthErrorMessagePt } from "@/lib/supabase-errors"
 import { setAuthSignOutReason } from "@/lib/auth-signout-reason"
@@ -22,7 +27,6 @@ import { PwaShellProvider } from "@/components/pwa/pwa-shell-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { clearAllOutbox } from "@/lib/offline/outbox"
 import { unsubscribeFromPush } from "@/lib/push/subscribe"
-import { ensureUserSettingsRow } from "@/lib/settings"
 import { clearFinanceQueryIdb } from "@/lib/queries/idb-persister"
 import { profileKeys } from "@/lib/queries/keys"
 import { useProfileQuery } from "@/lib/queries/use-profile"
@@ -35,7 +39,6 @@ interface AuthContextType {
     /** True once the profiles row fetch finished for the signed-in user (avoids email fallback flash before `avatar_color` loads). */
     profileReady: boolean
     signOut: () => Promise<void>
-    initializeUserData: () => Promise<void>
     updateProfile: (data: {
         full_name?: string
         avatar_url?: string
@@ -50,6 +53,22 @@ interface AuthContextType {
     deleteAccount: (password: string) => Promise<{ error: string | null }>
 }
 
+/**
+ * O mesmo usuário, sem mudança, mantém o mesmo objeto. A sessão é lida pelo
+ * `getSession()` e chega de novo pelo `onAuthStateChange` (e a cada foco na
+ * aba): com um objeto novo a cada vez, todo efeito que depende de `user`
+ * rodava de novo, e o carregamento repetia as consultas ao Supabase.
+ */
+function mesmoUsuario(prev: User | null, next: User | null): User | null {
+    return prev && next && prev.id === next.id && prev.updated_at === next.updated_at
+        ? prev
+        : next
+}
+
+function mesmaSessao(prev: Session | null, next: Session | null): Session | null {
+    return prev && next && prev.access_token === next.access_token ? prev : next
+}
+
 const AuthContext = createContext<AuthContextType>({
     user: null,
     profile: null,
@@ -57,7 +76,6 @@ const AuthContext = createContext<AuthContextType>({
     loading: true,
     profileReady: false,
     signOut: async () => {},
-    initializeUserData: async () => {},
     updateProfile: async () => ({ error: "Not initialized" }),
     updateEmail: async () => ({
         error: "Not initialized",
@@ -75,6 +93,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [session, setSession] = useState<Session | null>(null)
     const [loading, setLoading] = useState(true)
     const prevSignedInUserIdRef = useRef<string | null>(null)
+    // Quem já teve a sessão registrada neste carregamento da página.
+    const sessaoRegistradaRef = useRef<string | null>(null)
 
     const profileQuery = useProfileQuery(user?.id)
     const profile = profileQuery.data ?? null
@@ -103,27 +123,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, [queryClient])
 
-    const initializeUserData = useCallback(async () => {
-        if (!user) return
-
-        try {
-            await ensureUserSettingsRow(user.id)
-        } catch {
-            /* non-blocking; settings page will retry */
-        }
-    }, [user])
-
-    useEffect(() => {
-        if (user) {
-            initializeUserData()
-        }
-    }, [user, initializeUserData])
-
     useEffect(() => {
         void supabase.auth.getSession().then(async ({ data: { session } }) => {
             if (session?.user) {
-                setSession(session)
-                setUser(session.user)
+                setSession((prev) => mesmaSessao(prev, session))
+                setUser((prev) => mesmoUsuario(prev, session.user))
                 prevSignedInUserIdRef.current = session.user.id
                 setLoading(false)
 
@@ -184,6 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             if (event === "SIGNED_OUT") {
                 prevSignedInUserIdRef.current = null
+                sessaoRegistradaRef.current = null
                 setSession(null)
                 setUser(null)
                 setLoading(false)
@@ -203,11 +208,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             prevSignedInUserIdRef.current = nextUser?.id ?? null
 
-            setSession(session)
-            setUser(nextUser)
+            setSession((prev) => mesmaSessao(prev, session))
+            setUser((prev) => mesmoUsuario(prev, nextUser))
             setLoading(false)
 
-            if (event === "SIGNED_IN" && session) {
+            // O auth-js emite SIGNED_IN também a cada vez que a aba volta a ficar
+            // visível (`_recoverAndRefresh`), não só no login: registrar a sessão a
+            // cada foco eram duas chamadas à Edge `sessions` (1–2 s cada) e um
+            // UPDATE em `user_sessions` — metade do tempo do banco. Uma vez por
+            // carregamento basta, e nem isso se este navegador registrou há menos
+            // de 6 h (a revogação já foi conferida no `getSession`, acima).
+            if (event === "SIGNED_IN" && session && sessaoRegistradaRef.current !== session.user.id) {
+                sessaoRegistradaRef.current = session.user.id
+                if (sessionRegisteredRecently()) return
                 void (async () => {
                     try {
                         await createSession()
@@ -357,7 +370,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             loading,
             profileReady,
             signOut,
-            initializeUserData,
             updateProfile,
             updateEmail,
             uploadAvatar,
@@ -370,7 +382,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             loading,
             profileReady,
             signOut,
-            initializeUserData,
             updateProfile,
             updateEmail,
             uploadAvatar,
