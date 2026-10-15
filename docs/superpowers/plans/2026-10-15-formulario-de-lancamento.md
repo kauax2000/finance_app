@@ -390,11 +390,12 @@ describe("os campos do formulário", () => {
             expect(i, marca).toBeGreaterThan(-1)
             return i
         }
+        // As posições são as do JSX devolvido: a Data é o `{dataField}`, montado antes.
         const valor = pos('label="Valor"')
         const categoria = pos('htmlFor="tx-category"')
         const descricao = pos('label="Descrição"')
         const detalhes = pos("<Separator>Detalhes</Separator>")
-        const data = pos('id="tx-date"')
+        const data = pos("{dataField}")
         const forma = pos('id="tx-payment-method"')
         const cartao = pos('id="tx-credit-card"')
         expect([valor, categoria, descricao, detalhes, data, forma, cartao]).toEqual(
@@ -408,7 +409,8 @@ describe("os campos do formulário", () => {
     })
 
     it("data e forma dividem a fileira; a forma é uma lista com Sem forma", () => {
-        expect(CAMPOS).toMatch(/<FieldRow>[\s\S]*?id="tx-date"[\s\S]*?id="tx-payment-method"[\s\S]*?<\/FieldRow>/)
+        expect(CAMPOS).toContain("const dataField = (")
+        expect(CAMPOS).toMatch(/<FieldRow>\s*\{dataField\}[\s\S]*?id="tx-payment-method"[\s\S]*?<\/FieldRow>/)
         expect(CAMPOS).toMatch(/<SelectItem value=\{PAYMENT_NONE\} variant="none">\s*Sem forma/)
     })
 
