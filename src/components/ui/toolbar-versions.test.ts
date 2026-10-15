@@ -29,7 +29,9 @@ describe("a escada", () => {
   it("sm 28 · md 32 · lg 36, e o piso do dedo continua 40 nos três", () => {
     expect(TOOLBAR_SIZES).toEqual({ sm: 28, md: 32, lg: 36 })
     expect(CODIGO).toContain('sm: "[--toolbar-control:--spacing(7)]"')
-    expect(CODIGO).toContain('lg: "[--toolbar-control:--spacing(9)]"')
+    expect(CODIGO).toContain('md: "[--toolbar-control:--spacing(8)]"')
+    // `lg` é o padrão: a raiz já publica 36, e o degrau não acrescenta nada.
+    expect(toolbarClassName).toContain("[--toolbar-control:--spacing(9)]")
     expect(toolbarClassName).toContain("pointer-coarse:[--toolbar-control:--spacing(10)]")
   })
 
@@ -107,7 +109,7 @@ describe("o teclado", () => {
 describe("as peças", () => {
   it("o botão que encolhe guarda o rótulo como nome, e a maiúscula do CTA", () => {
     expect(CODIGO).toContain('<span data-slot="button-label" className={cn(collapse && "max-md:sr-only")}>')
-    expect(CODIGO).toContain('collapse && "max-md:w-(--toolbar-control,--spacing(8)) max-md:px-0"')
+    expect(CODIGO).toContain('collapse && "max-md:w-(--toolbar-control,--spacing(9)) max-md:px-0"')
     // O que vem depois do rótulo some com ele; a marca fica no botão quadrado.
     expect(CODIGO).toContain('<span className="contents max-md:hidden">{children}</span>')
   })
@@ -175,7 +177,7 @@ describe("densidade do Toolbar", () => {
     expect(degraus).toContain(TOOLBAR_CONTROL_HEIGHTS.fine)
     expect(degraus).toContain(TOOLBAR_CONTROL_HEIGHTS.coarse)
     expect([TOOLBAR_CONTROL_HEIGHTS.fine, TOOLBAR_CONTROL_HEIGHTS.coarse]).toEqual([
-      ESCADA.md,
+      ESCADA.lg,
       ESCADA.xl,
     ])
   })

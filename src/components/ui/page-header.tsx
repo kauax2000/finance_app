@@ -556,12 +556,12 @@ function PageHeaderBack({
   return (
     <Button
       variant="tertiary"
-      size="icon-md"
+      size="icon-lg"
       className={cn(
         "relative -ms-2 shrink-0",
-        // O alvo cresce por pseudo-elemento porque crescer de verdade mudaria a caixa
-        // que `--page-title-line` centraliza. 30 + 16 = 46.
-        "pointer-coarse:after:absolute pointer-coarse:after:-inset-2 pointer-coarse:after:content-['']",
+        // No dedo o `icon-md` já mede 40 (o piso do `Button`); o pseudo-elemento
+        // leva o alvo a 44 sem crescer a caixa. 40 + 4 = 44.
+        "pointer-coarse:after:absolute pointer-coarse:after:-inset-0.5 pointer-coarse:after:content-['']",
         className
       )}
       asChild

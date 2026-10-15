@@ -11,7 +11,7 @@ import {
   TabsNav,
   TabsNavLink,
   TabsTrigger,
-  defaultTabsSize,
+  DEFAULT_TABS_SIZE,
   tabsIndicatorVariants,
   tabsListFrameVariants,
   tabsTriggerVariants,
@@ -48,8 +48,8 @@ describe("o floating, padrão do sistema", () => {
     expect(tabsTriggerVariants({})).toContain("rounded-full")
   })
 
-  it("é controle segmentado: mede 32 e estica, como o solid", () => {
-    expect(defaultTabsSize("floating")).toBe("md")
+  it("é controle segmentado: mede 36 e estica, como o solid", () => {
+    expect(DEFAULT_TABS_SIZE).toBe("lg")
     const html = render(h(TabsList, null, h(TabsTrigger, { value: "a" }, "A")))
     expect(html).toContain("flex-1")
   })
@@ -368,16 +368,11 @@ describe("a escada do Tabs — `size` nomeia a bandeja", () => {
     }
   })
 
-  it("8. cada variante tem o seu degrau padrão — as três não são a mesma coisa", () => {
-    // Sem `size` declarado, `solid`, `underline` e `plain` saíam idênticos.
-    expect(defaultTabsSize("solid")).toBe("md")
-    expect(defaultTabsSize("underline")).toBe("lg")
-    expect(defaultTabsSize("plain")).toBe("lg")
-
-    // `solid` é controle segmentado: a bandeja fica rente a um `Button md`.
-    expect(TABS_SIZES[defaultTabsSize("solid")].tray).toBe(32)
-    // As abas de página ficam um degrau acima.
-    expect(TABS_SIZES[defaultTabsSize("underline")].tray).toBe(36)
+  it("8. o degrau padrão é `lg`: a bandeja fica rente ao `Button` e ao campo de 36", () => {
+    expect(DEFAULT_TABS_SIZE).toBe("lg")
+    expect(TABS_SIZES[DEFAULT_TABS_SIZE].tray).toBe(36)
+    // Sem `size`, a moldura e a trilha caem no mesmo degrau.
+    expect(tabsListFrameVariants({})).toContain("data-[orientation=horizontal]:h-9")
   })
 
   it("9. `lg` e `xl` não carregam o texto miúdo — é a razão do padrão", () => {

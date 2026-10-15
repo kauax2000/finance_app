@@ -411,7 +411,7 @@ export default function ToolbarDoc() {
       <PropsTable
         title="Toolbar"
         rows={[
-          { prop: "size", type: '"sm" | "md" | "lg"', default: '"md"', description: "A altura dos controles: 28, 32, 36 — e 40 com o ponteiro grosso, nos três. Desce também aos botões sem size, pelo ButtonSizeContext." },
+          { prop: "size", type: '"sm" | "md" | "lg"', default: '"lg"', description: "A altura dos controles: 28, 32, 36 — e 40 com o ponteiro grosso, nos três. Desce também aos botões sem size, pelo ButtonSizeContext." },
           { prop: "sticky", type: 'boolean | "hide"', default: "false", description: "Prende abaixo da barra do topo e ganha a placa só presa; \"hide\" também some ao rolar para baixo, no telefone." },
           { prop: "keyboard", type: "boolean", default: "false", description: "role=\"toolbar\", uma parada de Tab e setas entre os controles." },
         ]}

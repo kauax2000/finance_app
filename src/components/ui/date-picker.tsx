@@ -69,7 +69,7 @@ type DatePickerBaseProps = {
   disabled?: boolean
   className?: string
   placeholder?: string
-  /** A altura, na escada do sistema (`md` 32 é o padrão da família). */
+  /** A altura, na escada do sistema (`lg` 36 é o padrão da família). */
   size?: DatePickerSize
   /**
    * `numeric` é dd/mm/aaaa, para linha apertada; `relative` põe "Hoje",
@@ -273,7 +273,7 @@ export function DatePicker(props: DatePickerProps) {
     disabled,
     className,
     placeholder,
-    size = "md",
+    size = "lg",
     displayStyle = "default",
     clearable = false,
     min,
@@ -337,11 +337,11 @@ export function DatePicker(props: DatePickerProps) {
           ? ATALHOS_DIA
           : props.presets
 
-  // Na gaveta as células sobem ao degrau `lg` e esticam; no dedo a de 32 é pequena.
+  // As células ficam no degrau `lg` (36), o do campo; na gaveta elas esticam.
   const naGaveta = isMobile
   const calendarioComum = {
     captionLayout: "dropdown" as const,
-    size: naGaveta ? ("lg" as const) : ("md" as const),
+    size: "lg" as const,
     stretch: naGaveta,
     showToday,
     presets: presetsDoModo,

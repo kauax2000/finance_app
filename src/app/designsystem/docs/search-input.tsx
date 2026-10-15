@@ -147,7 +147,7 @@ export default function SearchInputDoc() {
           {
             prop: "size",
             type: '"sm" | "md" | "lg" | "xl"',
-            default: '"md"',
+            default: '"lg"',
             description: "28 / 32 / 36 / 40; 40 no dedo.",
           },
           {

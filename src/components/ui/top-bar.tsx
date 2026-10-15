@@ -438,8 +438,8 @@ function TopBarActions({
 /**
  * A ação da barra: o botão de ícone com o nome, a dica (com a tecla, se houver
  * atalho) e a contagem. A contagem é `aria-hidden` e entra no nome (`countLabel`,
- * ou o número): "Notificações, 3 não lidas". Acima de 99, "99+". No dedo o alvo vai
- * a 44 por pseudo-elemento, para a fileira não crescer.
+ * ou o número): "Notificações, 3 não lidas". Acima de 99, "99+". No dedo o botão
+ * mede 40 (o `icon-md` do `Button`) e o alvo vai a 44 por pseudo-elemento.
  */
 function TopBarAction({
   label,
@@ -465,12 +465,12 @@ function TopBarAction({
   const botao = (
     <Button
       variant="tertiary"
-      size="icon-md"
+      size="icon-lg"
       aria-label={nome}
       aria-keyshortcuts={shortcut ? ariaShortcut(shortcut) : undefined}
       data-slot="top-bar-action"
       className={cn(
-        "relative pointer-coarse:after:absolute pointer-coarse:after:-inset-1.5 pointer-coarse:after:content-['']",
+        "relative pointer-coarse:after:absolute pointer-coarse:after:-inset-0.5 pointer-coarse:after:content-['']",
         className
       )}
       {...props}
@@ -570,12 +570,12 @@ function TopBarSearch({
       <Button
         {...comum}
         variant="tertiary"
-        size="icon-md"
+        size="icon-lg"
         data-slot="top-bar-search"
         // `relative` ancora o alvo de toque no botão; sem ele o `::after` se estenderia
         // pela barra inteira e engoliria o toque no ☰ do telefone.
         className={cn(
-          "relative rounded-full text-muted-foreground pointer-coarse:after:absolute pointer-coarse:after:-inset-1.5 pointer-coarse:after:content-['']",
+          "relative rounded-full text-muted-foreground pointer-coarse:after:absolute pointer-coarse:after:-inset-0.5 pointer-coarse:after:content-['']",
           BUSCA_QUEBRA[collapse].icone
         )}
       >
@@ -596,7 +596,7 @@ function TopBarSearch({
           data-slot="top-bar-search"
           className={cn(
             searchFieldShapeClassName,
-            searchFieldSizeClassName.md,
+            searchFieldSizeClassName.lg,
             searchFieldSurfaceClassName.field,
             "w-full justify-start font-normal text-muted-foreground",
             // A pílula não realça nem acende o texto: é um campo, e campo não muda de cor no cursor.

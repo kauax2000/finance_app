@@ -25,20 +25,20 @@ import { cn } from "@/lib/utils"
  * as duas árvores (`md:hidden` + `hidden md:flex`) num nó só (o rótulo vira
  * `sr-only` abaixo de `md` e o botão fica quadrado). `ToolbarRow` é a linha do
  * telefone que se dissolve.
- * A altura é a da barra: a raiz publica `--toolbar-control` (`size`: sm 28 · **md
- * 32** · lg 36, e 40 com o ponteiro grosso) e os controles filhos diretos de uma
+ * A altura é a da barra: a raiz publica `--toolbar-control` (`size`: sm 28 · md
+ * 32 · **lg 36**, e 40 com o ponteiro grosso) e os controles filhos diretos de uma
  * peça da barra a leem sozinhos (`Button` de ícone em `size`, `SelectTrigger`,
  * `ComboboxTrigger`, `SearchInput`). O seletor é de filho direto porque o × de um
  * `SearchInput` e o de uma ficha também são `Button`, e um descendente os
- * esticaria a 32. Especificidade (0,4,0): vence a altura do controle sem `!`.
+ * esticaria a 36. Especificidade (0,4,0): vence a altura do controle sem `!`.
  * `toolbarControlClassName` é para o controle embrulhado num `<div>`.
  */
 
 /**
  * Os degraus, com os nomes da escada do sistema (xs 24 … xl 40). `fine`/`coarse`
- * são o `md` e o piso do dedo.
+ * são o `lg` e o piso do dedo.
  */
-export const TOOLBAR_CONTROL_HEIGHTS = { fine: 32, coarse: 40 } as const
+export const TOOLBAR_CONTROL_HEIGHTS = { fine: 36, coarse: 40 } as const
 export const TOOLBAR_SIZES = { sm: 28, md: 32, lg: 36 } as const
 type ToolbarSize = keyof typeof TOOLBAR_SIZES
 
@@ -48,13 +48,13 @@ type ToolbarSize = keyof typeof TOOLBAR_SIZES
  */
 const toolbarClassName = [
   "flex min-w-0 flex-wrap items-center gap-2 md:gap-3",
-  "[--toolbar-control:--spacing(8)] pointer-coarse:[--toolbar-control:--spacing(10)]",
+  "[--toolbar-control:--spacing(9)] pointer-coarse:[--toolbar-control:--spacing(10)]",
 ].join(" ")
 
 const TOOLBAR_SIZE_CLASS: Record<ToolbarSize, string> = {
   sm: "[--toolbar-control:--spacing(7)]",
-  md: "",
-  lg: "[--toolbar-control:--spacing(9)]",
+  md: "[--toolbar-control:--spacing(8)]",
+  lg: "",
 }
 
 /**
@@ -133,7 +133,7 @@ type ToolbarProps = React.ComponentProps<"div"> & {
 
 function Toolbar({
   className,
-  size = "md",
+  size = "lg",
   sticky = false,
   keyboard = false,
   children,
@@ -174,7 +174,7 @@ function Toolbar({
   )
 
   // O degrau desce aos botões (recuo e corpo de texto); a altura vem da variável.
-  return size === "md" ? barra : (
+  return size === "lg" ? barra : (
     <ButtonSizeContext.Provider value={size}>{barra}</ButtonSizeContext.Provider>
   )
 }
@@ -387,7 +387,7 @@ function useExcessoDeAcoes(
       const larguras = filhos.map((f) => f.offsetWidth)
       const cabe = espacoDaCasa ? espacoDaCasa(barra) : espacoNaBarra(barra, acoes)
       // O ⋯ é quadrado: a largura dele é a altura de um controle.
-      const mais = filhos.at(-1)?.offsetHeight ?? 32
+      const mais = filhos.at(-1)?.offsetHeight ?? 36
       // Saem do começo; a última ação e um gatilho de menu nunca saem.
       const saem = quemSai(larguras, cabe, {
         ponta: "inicio",
@@ -450,7 +450,7 @@ function espacoNaBarra(barra: HTMLElement, acoes: HTMLElement) {
  * Um comando da barra com ícone e rótulo. Com `collapse`, abaixo de `md` fica só
  * com o ícone, quadrado (o rótulo vira `sr-only` e segue sendo o nome). O rótulo
  * leva o `data-slot="button-label"`, para a maiúscula do CTA valer. Fora de um
- * `Toolbar` a largura quadrada cai na reserva de 32 (`md`).
+ * `Toolbar` a largura quadrada cai na reserva de 36 (`lg`).
  */
 function ToolbarButton({
   icon,
@@ -475,7 +475,7 @@ function ToolbarButton({
       variant={variant}
       data-collapse={collapse ? "" : undefined}
       className={cn(
-        collapse && "max-md:w-(--toolbar-control,--spacing(8)) max-md:px-0",
+        collapse && "max-md:w-(--toolbar-control,--spacing(9)) max-md:px-0",
         className
       )}
       {...props}

@@ -35,11 +35,11 @@ export function WorkspaceSwitcher({
                 <Button
                     type="button"
                     variant="tertiary"
-                    size="icon-md"
+                    size="icon-lg"
                     aria-haspopup="menu"
                     aria-label="Trocar carteira"
                     className={cn(
-                        "w-auto min-w-8 shrink-0 gap-1.5 px-1 font-normal",
+                        "w-auto min-w-9 shrink-0 gap-1.5 px-1 font-normal",
                         "[--button-hover-fill:color-mix(in_oklab,var(--accent)_80%,transparent)] dark:[--button-hover-fill:color-mix(in_oklab,var(--accent)_80%,transparent)] group-active:[--button-hover:1]",
                     )}
                 >

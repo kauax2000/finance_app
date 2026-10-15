@@ -29,7 +29,7 @@ export function OverflowMenu({
   items,
   label,
   align = "end",
-  size = "icon-md",
+  size = "icon-lg",
 }: {
   items: ItemNoExcesso[]
   label: string

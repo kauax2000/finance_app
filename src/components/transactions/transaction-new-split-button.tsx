@@ -45,7 +45,7 @@ export function TransactionNewSplitButton({
                     <Button
                         type="button"
                         variant="primary"
-                        size="icon-md"
+                        size="icon-lg"
                         className="shrink-0"
                         aria-label="Mais tipos de lançamento"
                     >

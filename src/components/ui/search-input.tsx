@@ -85,7 +85,7 @@ type SearchInputProps = Omit<React.ComponentProps<"input">, "size"> & {
 function SearchInput({
   className,
   inputClassName,
-  size = "md",
+  size = "lg",
   surface = "field",
   variant = "default",
   type = "search",

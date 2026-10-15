@@ -58,7 +58,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     {
       className,
       type,
-      size = "md",
+      size = "lg",
       money,
       mono,
       value,
@@ -112,7 +112,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           fieldControlClassName,
           // `disabled:pointer-events-none` fica aqui, e não na régua: o
           // `SelectTrigger` não o tem.
-          "w-full min-w-0 py-1 placeholder:text-muted-foreground disabled:pointer-events-none",
+          // A partir de `md` (texto de 14px), 3 em cima e 5 embaixo: o `<input>`
+          // nativo assentava o texto 1px abaixo do gatilho de mesma altura (o "0"
+          // nas linhas 14–23 de 36, contra 13–22 no `FormPickerPopoverTrigger`).
+          // Com os 16px do telefone ele já fica no centro, e o 3/5 passava do ponto.
+          "w-full min-w-0 py-1 md:pt-0.75 md:pb-1.25 placeholder:text-muted-foreground disabled:pointer-events-none",
           "file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground",
           // Altura e recuo saem do mesmo registro dos outros campos.
           fieldControlHeightClassName[size],

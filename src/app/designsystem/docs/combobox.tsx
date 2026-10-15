@@ -271,7 +271,7 @@ export default function ComboboxDoc() {
           {
             prop: "size",
             type: '"sm" | "md" | "lg" | "xl"',
-            default: '"md"',
+            default: '"lg"',
             description: "No ComboboxTrigger e no ComboboxTextField. A escada do sistema.",
           },
           {

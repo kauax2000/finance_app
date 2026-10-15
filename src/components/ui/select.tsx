@@ -45,7 +45,7 @@ function SelectValue({
 
 function SelectTrigger({
   className,
-  size = "md",
+  size = "lg",
   children,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
@@ -248,7 +248,7 @@ type NativeSelectProps = Omit<React.ComponentProps<"select">, "size"> & {
 
 function NativeSelect({
   className,
-  size = "md",
+  size = "lg",
   ...props
 }: NativeSelectProps) {
   return (

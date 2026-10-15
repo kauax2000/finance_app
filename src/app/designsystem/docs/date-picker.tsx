@@ -41,7 +41,7 @@ export default function DatePickerDoc() {
 
       <DocSection
         title="Ele é um campo"
-        description="Mesma altura, borda e preenchimento do Input ao lado: os dois no degrau md (32), sem ninguém dizer size."
+        description="Mesma altura, borda e preenchimento do Input ao lado: os dois no degrau lg (36), sem ninguém dizer size."
         code={`<DatePicker value={data} onChange={setData} />`}
         previewClassName="items-stretch"
       >
@@ -135,7 +135,7 @@ export default function DatePickerDoc() {
 
       <DocSection
         title="Escada e limpeza"
-        description="size é o mesmo da escada do sistema, e md (32) é o padrão — o mesmo do Input e do resto da família. No dedo, os três degraus de baixo sobem ao piso de 40. clearable põe um × quando há valor."
+        description="size é o mesmo da escada do sistema, e lg (36) é o padrão — o mesmo do Input e do resto da família. No dedo, os três degraus de baixo sobem ao piso de 40. clearable põe um × quando há valor."
         code={`<DatePicker size="sm" clearable value={data} onChange={setData} />`}
         previewClassName="items-stretch"
       >
@@ -234,9 +234,9 @@ export default function DatePickerDoc() {
           {
             prop: "size",
             type: '"sm" | "md" | "lg" | "xl"',
-            default: '"md"',
+            default: '"lg"',
             description:
-              "A escada do sistema. md (32) é o padrão da família inteira; no dedo, 40.",
+              "A escada do sistema. lg (36) é o padrão da família inteira; no dedo, 40.",
           },
           {
             prop: "clearable",

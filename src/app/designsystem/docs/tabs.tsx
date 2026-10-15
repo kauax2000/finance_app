@@ -377,7 +377,7 @@ export default function TabsDoc() {
         title="Props de TabsList"
         rows={[
           { prop: "variant", type: '"floating" | "solid" | "underline" | "plain"', default: '"floating"', description: "A pílula sem sombra, a bandeja, o fio, ou nada." },
-          { prop: "size", type: '"sm" | "md" | "lg" | "xl"', default: '"md" (lg no underline e no plain)', description: "A bandeja: 28 · 32 · 36 · 40." },
+          { prop: "size", type: '"sm" | "md" | "lg" | "xl"', default: '"lg"', description: "A bandeja: 28 · 32 · 36 · 40." },
           { prop: "stretch", type: "boolean", default: "true no floating e no solid", description: "Abas de largura igual." },
           { prop: "glass", type: "boolean", default: "false", description: "O marcador de vidro, no floating e no solid." },
           { prop: "scrollable / overflow", type: 'boolean / "menu"', description: "Rolar dissolvendo, ou mandar o excesso para o Mais." },

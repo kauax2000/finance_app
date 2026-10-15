@@ -99,19 +99,24 @@ const buttonVariants = cva(
         link: "brand-rainbow-image link-sweep text-primary-accent",
       },
       // Uma escada só, de 24 a 40 em degraus de 4, e a coluna `icon-*` espelha
-      // a de texto. O padrão é `md` (32); `lg` (36) é a altura de `Input` e
-      // `SelectTrigger`. Todo botão é cápsula (círculo nos `icon-*`), com meio
-      // degrau a mais de recuo lateral para a curva não espremer o rótulo.
+      // a de texto. O padrão é `lg` (36), a altura do `Input` e do
+      // `SelectTrigger` no desktop. No dedo `md` e `lg` sobem a 40, o piso do
+      // campo; `xs` e `sm` moram dentro de outro controle e ficam. A altura dos
+      // dois passa por `--button-h`: um `h-*`/`size-*` de quem chama troca a
+      // utilidade inteira no `twMerge`, e um `pointer-coarse:h-10` solto
+      // sobreviveria a ele (a célula do calendário, a linha do seletor). Todo botão é
+      // cápsula (círculo nos `icon-*`), com meio degrau a mais de recuo lateral
+      // para a curva não espremer o rótulo.
       size: {
         xs: "h-6 gap-1 px-2.5 text-xs has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-3",
         sm: "h-7 gap-1 px-3 text-control-sm has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-3.5",
-        md: "h-8 gap-1.5 px-3.5 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
-        lg: "h-9 gap-1.5 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
+        md: "h-(--button-h) [--button-h:--spacing(8)] pointer-coarse:[--button-h:--spacing(10)] gap-1.5 px-3.5 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
+        lg: "h-(--button-h) [--button-h:--spacing(9)] pointer-coarse:[--button-h:--spacing(10)] gap-1.5 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
         xl: "h-10 gap-1.5 px-4.5 has-data-[icon=inline-end]:pr-3.5 has-data-[icon=inline-start]:pl-3.5",
         "icon-xs": "size-6 [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-7",
-        "icon-md": "size-8",
-        "icon-lg": "size-9",
+        "icon-md": "size-(--button-h) [--button-h:--spacing(8)] pointer-coarse:[--button-h:--spacing(10)]",
+        "icon-lg": "size-(--button-h) [--button-h:--spacing(9)] pointer-coarse:[--button-h:--spacing(10)]",
         "icon-xl": "size-10",
       },
       // `spin` é a meia-volta do "tentar novamente": no cursor e no toque o
@@ -124,7 +129,7 @@ const buttonVariants = cva(
     },
     defaultVariants: {
       variant: "primary",
-      size: "md",
+      size: "lg",
       iconMotion: "none",
     },
   }
@@ -132,7 +137,7 @@ const buttonVariants = cva(
 
 type ButtonSize = NonNullable<VariantProps<typeof buttonVariants>["size"]>
 
-/** O degrau que um `ButtonGroup size` desce aos filhos; um `size` no botão vence, e sem nenhum é `md`. */
+/** O degrau que um `ButtonGroup size` desce aos filhos; um `size` no botão vence, e sem nenhum é `lg`. */
 const ButtonSizeContext = React.createContext<ButtonSize | undefined>(undefined)
 
 /**
@@ -175,7 +180,7 @@ function Button({
   }) {
   const Comp = asChild ? Slot.Root : "button"
   const groupSize = React.useContext(ButtonSizeContext)
-  const size = sizeProp ?? groupSize ?? "md"
+  const size = sizeProp ?? groupSize ?? "lg"
   const glowRef = useBrandGlow<HTMLButtonElement>(variant === "brand")
 
   // `::first-letter` não vale em `inline-flex`, e o botão precisa ser flex para

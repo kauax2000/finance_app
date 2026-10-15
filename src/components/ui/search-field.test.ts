@@ -48,7 +48,7 @@ describe("o campo de busca é um desenho só", () => {
 
   it("a pílula de campo é a do cabeçalho, e não o grupo de campo", () => {
     const html = render()
-    expect(html).toMatch(/data-slot="search-input"[^>]*class="[^"]*rounded-full[^"]*h-8[^"]*border-border[^"]*bg-input-fill\/30/)
+    expect(html).toMatch(/data-slot="search-input"[^>]*class="[^"]*rounded-full[^"]*h-9[^"]*border-border[^"]*bg-input-fill\/30/)
     expect(html).not.toContain('data-slot="input-group"')
     expect(html).toContain('type="search"')
     expect(html).toContain("[&amp;::-webkit-search-cancel-button]:appearance-none")

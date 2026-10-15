@@ -99,7 +99,7 @@ export default function ButtonDoc() {
 
       <DocSection
         title="Tamanhos"
-        description="De 24 a 40 em degraus de 4, a escada de controle do sistema. O padrão é md (32), o corpo da ação comum; xs é para dentro de outro controle."
+        description="De 24 a 40 em degraus de 4, a escada de controle do sistema. O padrão é lg (36), a altura do campo ao lado; no dedo md e lg sobem a 40. xs é para dentro de outro controle."
         code={TAMANHOS.map((t) => `<Button size="${t.size}">${t.size}</Button>`).join("\n")}
         previewClassName="flex-wrap items-end gap-4"
       >
@@ -217,8 +217,8 @@ export default function ButtonDoc() {
           {
             prop: "size",
             type: '"xs" | "sm" | "md" | "lg" | "xl" | "icon-xs" | "icon-sm" | "icon-md" | "icon-lg" | "icon-xl"',
-            default: '"md"',
-            description: "Altura de 24 a 40; icon-* é quadrado.",
+            default: '"lg"',
+            description: "Altura de 24 a 40; icon-* é quadrado. No dedo md, lg, icon-md e icon-lg medem 40.",
           },
           {
             prop: "iconMotion",

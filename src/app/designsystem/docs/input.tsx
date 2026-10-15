@@ -33,7 +33,7 @@ export default function InputDoc() {
 
       <DocSection
         title="Tamanhos"
-        description="A escada do Button: sm 28, md 32, lg 36, xl 40. O padrão é md, então Input e Button alinham sem declarar size. Num apontador grosso os três degraus de baixo sobem ao piso de 40 — abra esta página no telefone e os quatro medem o mesmo."
+        description="A escada do Button: sm 28, md 32, lg 36, xl 40. O padrão é lg, então Input e Button alinham sem declarar size. Num apontador grosso os três degraus de baixo sobem ao piso de 40 — abra esta página no telefone e os quatro medem o mesmo."
         code={`<Input size="sm" placeholder="sm · 28" />
 <Input placeholder="md · 32" />
 <Input size="lg" placeholder="lg · 36" />
@@ -190,7 +190,7 @@ normalizeMoneyBrlOnBlur("250") // "250,00"`}
           {
             prop: "size",
             type: '"sm" | "md" | "lg" | "xl"',
-            default: '"md"',
+            default: '"lg"',
             description:
               "Altura: sm 28, md 32, lg 36, xl 40 — a mesma escada do Button. Em apontador grosso, 40 nos quatro.",
           },

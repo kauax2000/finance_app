@@ -78,7 +78,7 @@ function ToggleGroup({
   className,
   variant,
   tint,
-  size,
+  size = "md",
   stretch = false,
   children,
   onValueChange,

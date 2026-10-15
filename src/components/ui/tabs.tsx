@@ -59,34 +59,30 @@ type TabsOrientation = "horizontal" | "vertical"
  * teste pergunta o que interessa (nenhum degrau abaixo de 28, passos de 4,
  * nenhuma altura na lista).
  * `size` nomeia a bandeja, a caixa que um layout posiciona (como `Button`,
- * `Toggle`, `Select`), para `md` alinhar com a linha de controles de 32 sem
+ * `Toggle`, `Select`), para `lg` alinhar com a linha de controles de 36 sem
  * ninguém dizer `size`.
  * | `size` | bandeja | gatilho |
  * | --- | --- | --- |
  * | `sm` | 28 | 24 |
- * | `md` | **32** | 28 |
- * | `lg` | 36 | 32 |
+ * | `md` | 32 | 28 |
+ * | `lg` | **36** | 32 |
  * | `xl` | 40 | 36 |
  * `xl` é o que o app renderiza no telefone (`transaction-type-segment.tsx`).
- * O degrau padrão de cada variante: `solid` é controle segmentado numa linha de
- * controles (bandeja de 32, rente ao `Button` e ao `Input`); `underline` e
- * `plain` são abas de página, que dividem a página com título e texto corrido.
- * `lg` é o degrau em que o rótulo volta ao corpo de texto da página: só `sm` e
- * `md` carregam `text-control-sm` (12,8px); `lg` e `xl` herdam o `text-sm`. A
- * forma é a de `stretch` (`stretch ?? variant === "solid"`).
+ * O degrau padrão é `lg` nas quatro variantes: `floating` e `solid` são
+ * controle segmentado numa linha de controles (bandeja de 36, rente ao `Button`
+ * e ao `Input`); `underline` e `plain` são abas de página, que dividem a página
+ * com título e texto corrido. `lg` é o degrau em que o rótulo volta ao corpo de
+ * texto da página: só `sm` e `md` carregam `text-control-sm` (12,8px); `lg` e
+ * `xl` herdam o `text-sm`.
  */
-export function defaultTabsSize(variant: TabsVariant): TabsSize {
-  // O `floating` é controle segmentado, como o `solid`: vive numa linha de
-  // controles e fica rente ao `Button md`.
-  return variant === "solid" || variant === "floating" ? "md" : "lg"
-}
+export const DEFAULT_TABS_SIZE: TabsSize = "lg"
 
 /**
  * O vão entre o marcador e a borda da bandeja, além do recuo da trilha. No
  * `floating` o marcador é desenhado 2px para dentro da aba (mais ar em volta da
- * ativa), e o vão vai de 2 para 4px sem mexer na escada: a bandeja continua 32 e
- * a aba 28, e o alvo de clique é a aba inteira (recuar a trilha derrubaria a aba
- * a 24). O marcador sai com 24 de altura no `md`.
+ * ativa), e o vão vai de 2 para 4px sem mexer na escada: a bandeja continua 36 e
+ * a aba 32, e o alvo de clique é a aba inteira (recuar a trilha derrubaria a aba
+ * a 28). O marcador sai com 28 de altura no `lg`.
  */
 const RECUO_DO_MARCADOR: Record<TabsVariant, number> = {
   floating: 2,
@@ -95,7 +91,7 @@ const RECUO_DO_MARCADOR: Record<TabsVariant, number> = {
   plain: 0,
 }
 
-/** As variantes que são controle segmentado: esticam e medem 32 de fábrica. */
+/** As variantes que são controle segmentado: esticam e medem 36 de fábrica. */
 const SEGMENTADA: Record<TabsVariant, boolean> = {
   floating: true,
   solid: true,
@@ -174,7 +170,7 @@ const TabsListContext = React.createContext<{
   stretch: boolean
   /** O marcador viajante já mediu e assumiu a pintura do realce. */
   indicatorReady: boolean
-}>({ size: "md", variant: "floating", stretch: true, indicatorReady: false })
+}>({ size: "lg", variant: "floating", stretch: true, indicatorReady: false })
 
 /**
  * O estado mora na raiz. O Radix guarda a aba ativa sozinho, e nada fora dele
@@ -390,7 +386,7 @@ const tabsListFrameVariants = cva("flex", {
       xl: "data-[orientation=horizontal]:h-10",
     },
   },
-  defaultVariants: { variant: "floating", size: "md", fill: false },
+  defaultVariants: { variant: "floating", size: "lg", fill: false },
 })
 
 /** A trilha: não desenha nada (invariante 2) e carrega o recuo, a rolagem e a máscara. */
@@ -509,7 +505,7 @@ const tabsTriggerVariants = cva(
         false: "",
       },
     },
-    defaultVariants: { variant: "floating", size: "md", stretch: true },
+    defaultVariants: { variant: "floating", size: "lg", stretch: true },
   }
 )
 
@@ -658,7 +654,7 @@ function TabsList({
    * `scrollable` e `overflow` vencem `stretch`, explicitamente: com filhos `flex-1`
    * a trilha nunca transborda e as duas props não fariam nada, sem erro nem aviso.
    */
-  const resolvedSize = size ?? defaultTabsSize(variant)
+  const resolvedSize = size ?? DEFAULT_TABS_SIZE
   // Na vertical não há o que esticar: `stretch` divide a largura da linha, e na
   // coluna levaria a moldura a `w-full` e espremeria o painel numa fresta, com o
   // `flex-1` repartindo a altura. As abas já ocupam a largura pelo `items-stretch` da trilha.
@@ -1075,7 +1071,7 @@ function TabsNav({
   stretch?: boolean
   glass?: boolean
 }) {
-  const resolvedSize = size ?? defaultTabsSize(variant)
+  const resolvedSize = size ?? DEFAULT_TABS_SIZE
   const doesStretch = stretch ?? SEGMENTADA[variant]
   const vidro = glass && SEGMENTADA[variant]
   const trilhaRef = React.useRef<HTMLDivElement | null>(null)

@@ -310,7 +310,7 @@ function ComboboxTrigger({
   className,
   placeholder = "Selecionar…",
   children,
-  size = "md",
+  size = "lg",
   ...props
 }: Omit<React.ComponentProps<"button">, "children"> & {
   /** A escada do sistema (sm 28, md 32, lg 36, xl 40), com o piso de 40 no dedo. */
@@ -721,7 +721,7 @@ function ComboboxItem({
  */
 function ComboboxTextField({
   className,
-  size = "md",
+  size = "lg",
   placeholder = "Buscar…",
   onKeyDown,
   ...props
@@ -748,7 +748,8 @@ function ComboboxTextField({
       placeholder={placeholder}
       className={cn(
         fieldControlClassName,
-        "w-full min-w-0 py-1 text-base outline-none placeholder:text-muted-foreground md:text-sm",
+        // O mesmo 3/5 do `Input` a partir de `md`: o `<input>` nativo assenta o texto 1px abaixo.
+        "w-full min-w-0 py-1 md:pt-0.75 md:pb-1.25 text-base outline-none placeholder:text-muted-foreground md:text-sm",
         fieldControlHeightClassName[size],
         fieldControlPaddingClassName[size],
         // O recuo do × do `ComboboxField`, como no gatilho.

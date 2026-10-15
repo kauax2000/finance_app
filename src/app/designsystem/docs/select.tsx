@@ -90,7 +90,7 @@ export default function SelectDoc() {
 
       <DocSection
         title="Tamanhos e estados"
-        description="A escada de campo — sm 28, md 32 (o padrão), lg 36, xl 40, os nomes e os números do Input e do Button; no toque, sm, md e lg sobem ao piso de 40. Embaixo, os três estados do gatilho: vazio mostra o placeholder, aria-invalid pinta borda e anel de destructive (num Field quem o escreve é o FieldControl), e desabilitado ganha o preenchimento do Input desabilitado."
+        description="A escada de campo — sm 28, md 32, lg 36 (o padrão), xl 40, os nomes e os números do Input e do Button; no toque, sm, md e lg sobem ao piso de 40. Embaixo, os três estados do gatilho: vazio mostra o placeholder, aria-invalid pinta borda e anel de destructive (num Field quem o escreve é o FieldControl), e desabilitado ganha o preenchimento do Input desabilitado."
         code={`<SelectTrigger size="sm">…</SelectTrigger>
 <SelectTrigger aria-invalid>…</SelectTrigger>
 <Select disabled>…</Select>`}
@@ -356,7 +356,7 @@ export default function SelectDoc() {
           {
             prop: "SelectTrigger size",
             type: '"sm" | "md" | "lg" | "xl"',
-            default: '"md"',
+            default: '"lg"',
             description: "O degrau da escada de campo: 28, 32, 36, 40.",
           },
           {
@@ -385,7 +385,7 @@ export default function SelectDoc() {
           {
             prop: "NativeSelect size",
             type: '"sm" | "md" | "lg" | "xl"',
-            default: '"md"',
+            default: '"lg"',
             description: "A mesma escada do SelectTrigger.",
           },
           {

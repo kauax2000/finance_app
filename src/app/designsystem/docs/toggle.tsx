@@ -171,7 +171,7 @@ import { StarIcon as StarSolidIcon } from "@heroicons/react/16/solid"
         rows={[
           { prop: "pressed · defaultPressed", type: "boolean", description: "Controlado ou não." },
           { prop: "variant", type: '"plain" | "outline" | "swatch" | "chip"', default: '"plain"', description: "Sem cromo em repouso, com contorno desde o repouso, a amostra de cor, ou a ficha de filtro." },
-          { prop: "size", type: '"sm" | "md" | "lg" | "icon-sm" | "icon-md" | "icon-lg" | "icon-xl"', default: '"md"', description: "28, 32, 36; os de ícone são quadrados de 28 a 40." },
+          { prop: "size", type: '"sm" | "md" | "lg" | "icon-sm" | "icon-md" | "icon-lg" | "icon-xl"', default: '"lg"', description: "28, 32, 36; os de ícone são quadrados de 28 a 40." },
           { prop: "icon · iconOn", type: "HeroIcon", description: "O ícone, e o par sólido que o substitui quando liga." },
           { prop: "color", type: "string", description: "Com swatch, a cor gravada — a mesma que o ColorTile recebe." },
           { prop: "tint", type: '"vivid" | "soft"', default: '"vivid"', description: "Com swatch, a versão da cor: a do ColorTile." },

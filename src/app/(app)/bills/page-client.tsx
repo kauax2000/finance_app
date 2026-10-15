@@ -197,7 +197,7 @@ export default function BillsPageClient() {
             <Button
                 type="button"
                 variant="outline"
-                size="icon-md"
+                size="icon-lg"
                 className="relative shrink-0"
                 disabled={!billsHasTableEarly}
                 onClick={() => setMobileFiltersSheetOpen(true)}

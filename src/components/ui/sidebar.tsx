@@ -452,14 +452,14 @@ function Sidebar({
              O × mora numa linha própria, acima do espaço de trabalho (no canto se
              sobreporia à linha de cima da barra). No `floating` é a pílula do gatilho do
              desktop (`SIDEBAR_TRIGGER_FLOATING`), sem sombra por já estar dentro da placa;
-             32px à vista e 44 de alvo, pelo `::after`.
+             32px à vista (40 no dedo) e 44 de alvo, pelo `::after`.
           */}
           <div data-slot="sidebar-close-row" className="flex shrink-0 justify-end px-2 pt-2">
             <DialogCloseButton
               placement="inline"
               size="icon-md"
               className={cn(
-                "relative me-0 after:absolute after:-inset-1.5",
+                "relative me-0 after:absolute after:-inset-1.5 pointer-coarse:after:-inset-0.5",
                 variant === "floating" && "rounded-full bg-sidebar bg-clip-border ring-1 ring-foreground/10"
               )}
             />

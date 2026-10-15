@@ -578,7 +578,7 @@ export default function FilterBarDoc() {
           { prop: "value · defaultValue · onValueChange", type: "FilterValue[]", description: "Os filtros completos. O rascunho nunca sai do componente." },
           { prop: "match · defaultMatch · onMatchChange", type: '"all" | "any"', default: '"all"', description: "E ou OU. A pílula só aparece com onMatchChange e dois filtros." },
           { prop: "count · total · noun", type: "number · number · [string, string]", description: "A contagem viva: \"8 de 42 lançamentos\", em role=status." },
-          { prop: "size", type: '"sm" | "md" | "lg"', default: '"md"', description: "28, 32 ou 36 (40 no dedo). Dentro de uma Toolbar, o degrau dela." },
+          { prop: "size", type: '"sm" | "md" | "lg"', default: '"lg"', description: "28, 32 ou 36 (40 no dedo). Dentro de uma Toolbar, o degrau dela." },
           { prop: "tone", type: '"neutral" | "success"', default: '"neutral"', description: "A superfície de campo, ou o verde das fichas de filtro." },
           { prop: "mobile", type: '"scroll" | "stack"', default: '"scroll"', description: "Abaixo de 28rem da própria barra: a faixa que rola, ou um token por linha." },
           { prop: "urlParam", type: "string", description: "Grava na URL e desfaz no voltar." },

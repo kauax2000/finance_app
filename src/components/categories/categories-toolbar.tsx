@@ -33,13 +33,13 @@ const monthNavDenseMonthPickerClassName = cn(DENSO_H, "flex-1 gap-1.5 px-2 text-
 const monthNavDenseCalendarIconClassName = "size-4 md:size-3.5"
 
 /**
- * Inside the TopBar: the system default step (`md`, 32) at every width. The
+ * Inside the TopBar: the system default step (`lg`, 36) at every width. The
  * dense sizing above is 40 on mobile to match the toolbar segment controls;
- * the bar is 48 tall and every button in it is `md`.
+ * the bar is 48 tall and every button in it is `lg`.
  */
-const monthNavBarButtonClassName = "h-8 px-2 text-xs"
-const monthNavBarIconButtonClassName = "size-8"
-const monthNavBarMonthPickerClassName = "h-8 flex-1 gap-1.5 px-2 text-xs"
+const monthNavBarButtonClassName = "h-9 px-2 text-xs"
+const monthNavBarIconButtonClassName = "size-9"
+const monthNavBarMonthPickerClassName = "h-9 flex-1 gap-1.5 px-2 text-xs"
 const monthNavBarCalendarIconClassName = "size-3.5"
 
 /** "2026-04" → o primeiro dia de abril, o valor do `MonthGrid`. */
@@ -100,7 +100,7 @@ function MonthNavArrowControls({
             <Button
                 type="button"
                 variant="outline"
-                size={inBar ? "icon-md" : "icon-lg"}
+                size="icon-lg"
                 className={cn(
                     "shrink-0",
                     inBar
@@ -188,7 +188,7 @@ function MonthNavArrowControls({
             <Button
                 type="button"
                 variant="outline"
-                size={inBar ? "icon-md" : "icon-lg"}
+                size="icon-lg"
                 className={cn(
                     "shrink-0",
                     inBar

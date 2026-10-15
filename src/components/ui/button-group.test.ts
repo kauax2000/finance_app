@@ -11,7 +11,7 @@ describe("o grupo de botões", () => {
     expect(GRUPO).toContain("<ButtonSizeContext value={size}>")
     // O `useContext` fica fora do `??`: hook não pode ser condicional.
     expect(BOTAO).toContain("const groupSize = React.useContext(ButtonSizeContext)")
-    expect(BOTAO).toContain('const size = sizeProp ?? groupSize ?? "md"')
+    expect(BOTAO).toContain('const size = sizeProp ?? groupSize ?? "lg"')
   })
 
   it("o texto e o contorno desenham a própria emenda", () => {

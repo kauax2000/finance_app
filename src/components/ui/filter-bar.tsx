@@ -534,7 +534,7 @@ function FilterBar({
   ...props
 }: FilterBarProps) {
   const doGrupo = React.useContext(ButtonSizeContext)
-  const size: FilterBarSize = sizeProp ?? (doGrupo === "sm" || doGrupo === "lg" ? doGrupo : "md")
+  const size: FilterBarSize = sizeProp ?? (doGrupo === "sm" || doGrupo === "md" ? doGrupo : "lg")
 
   const [interno, setInterno] = React.useState<FilterValue[]>(defaultValue ?? [])
   const valores = valueProp ?? interno
@@ -1640,7 +1640,7 @@ function EditorDeLista({ campo, operador, valores, opcoes, remoto, onGravar, onC
 /* ── O esqueleto ──────────────────────────────────────────────────────── */
 
 function FilterBarSkeleton({
-  size = "md",
+  size = "lg",
   tokens = 2,
   count = true,
   label = "Carregando filtros",

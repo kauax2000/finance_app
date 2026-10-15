@@ -115,7 +115,7 @@ const toggleVariants = cva(
     defaultVariants: {
       variant: "plain",
       tint: "vivid",
-      size: "md",
+      size: "lg",
     },
   }
 )
