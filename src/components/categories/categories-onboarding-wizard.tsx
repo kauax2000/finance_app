@@ -589,9 +589,10 @@ export function CategoriesOnboardingWizard({
                                     required
                                     disabled={crudBusy}
                                 />
-                                <Field role="group">
+                                <Field>
                                     <FieldTitle>Tipo</FieldTitle>
                                     <TransactionFormTypeSegment
+                                        aria-label="Tipo"
                                         value={addType}
                                         onChange={setAddType}
                                         disabled={crudBusy}
@@ -645,9 +646,10 @@ export function CategoriesOnboardingWizard({
                                         required
                                         disabled={crudBusy}
                                     />
-                                    <Field role="group">
+                                    <Field>
                                         <FieldTitle>Tipo</FieldTitle>
                                         <TransactionFormTypeSegment
+                                            aria-label="Tipo"
                                             value={editType}
                                             onChange={setEditType}
                                             disabled={crudBusy}

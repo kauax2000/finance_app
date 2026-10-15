@@ -10,6 +10,11 @@ describe("o seletor de tipo do formulário", () => {
         expect(SEGMENTO).toContain('aria-label="O que editar"')
         expect(SEGMENTO).not.toMatch(/FormRadioGroup[\s\S]*?variant="card"/)
     })
+
+    it("o seletor de tipo da edição aceita outro nome acessível (as categorias dizem Tipo)", () => {
+        expect(SEGMENTO).toContain('"aria-label": ariaLabel = "Tipo de lançamento"')
+        expect(SEGMENTO).toContain("aria-label={ariaLabel}")
+    })
 })
 
 const SUPERFICIE = semComentarios(lerFonte("src/components/transactions/transaction-form-surface.tsx"))
@@ -53,7 +58,31 @@ describe("os campos do formulário", () => {
 
     it("o valor é o campo alto, com foco só ao criar fora do telefone", () => {
         expect(CAMPOS).toMatch(/label="Valor"[\s\S]{0,200}size="xl"/)
-        expect(CAMPOS).toContain('autoFocus={segmentMode === "create" && !isMobile}')
+        // Uma vez por montagem: trocar Despesa e Parcelada remonta o campo e não rouba o foco do trilho.
+        expect(CAMPOS).toContain('useRef(segmentMode === "create" && !isMobile)')
+        expect(CAMPOS).toContain("focoInicial.current = false")
+        expect(CAMPOS.match(/autoFocus=\{focoInicial\.current\}/g)?.length).toBe(2)
+        expect(CAMPOS).not.toMatch(/autoFocus=\{segmentMode/)
+    })
+
+    it("a Data usa o estilo numérico só na fileira apertada", () => {
+        expect(CAMPOS).toContain('displayStyle={mostraForma && !isMobile ? "numeric" : "relative"}')
+    })
+
+    it("a prévia da parcelada é a descrição dos dois campos, sem região viva", () => {
+        expect(CAMPOS).toContain('id="tx-inst-preview"')
+        expect(CAMPOS.match(/aria-describedby="tx-inst-preview"/g)?.length).toBe(2)
+        expect(CAMPOS).not.toContain("aria-live")
+    })
+
+    it("o rótulo da data do plano ativo é Próxima cobrança", () => {
+        expect(CAMPOS).toContain('"Próxima cobrança"')
+        expect(CAMPOS).not.toContain("Próxima data de cobrança")
+    })
+
+    it("o trilho Total / Por parcela não repete a guarda do ToggleGroup", () => {
+        expect(CAMPOS).toContain("onValueChange={(next) => setInstallmentValueMode(next as InstallmentValueMode)}")
+        expect(CAMPOS).not.toMatch(/if \(next\)/)
     })
 
     it("data e forma dividem a fileira; a forma é uma lista com Sem forma", () => {

@@ -79,8 +79,9 @@ describe("as versões do DatePicker", () => {
     expect(existsSync(join(process.cwd(), "src/components/categories/budget-month-selects.tsx"))).toBe(false)
     expect(lerFonte("src/components/transactions/transactions-filters-panel.tsx")).toMatch(/mode="range"\s*confirm/)
     expect(lerFonte("src/components/categories/categories-toolbar.tsx")).toContain("<MonthGrid")
+    // O lançamento fica no relativo, menos na fileira apertada (Data ao lado da forma), que é numérica.
+    expect(lerFonte("src/components/transactions/transaction-form-fields.tsx")).toContain('"numeric" : "relative"')
     for (const arquivo of [
-      "src/components/transactions/transaction-form-fields.tsx",
       "src/components/bills/pay-bill-dialog.tsx",
       "src/components/subscriptions/subscription-form-fields.tsx",
     ]) {

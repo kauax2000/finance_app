@@ -83,8 +83,8 @@ export function TransactionFormDialog({
     })
 
     // Uma casca só: diálogo no desktop, gaveta alta no telefone. O
-    // `isMobile` sobra só para o miolo, que no telefone esconde a descrição
-    // (`sr-only`) e trava a rolagem com um seletor aberto.
+    // `isMobile` sobra só para escolher a variante do miolo, que no telefone
+    // trava a rolagem com um seletor aberto. A descrição é `sr-only` nas três.
     //
     // Salvar com sucesso fecha pelo `onClose` do hook, que chama o
     // `onOpenChange` da tela direto — fora do `Dialog` —, e por isso não

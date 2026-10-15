@@ -110,9 +110,10 @@ export function CategoryDetailDialogs({
                 placeholder="Ex: Alimentação"
                 required
             />
-            <Field role="group">
+            <Field>
                 <FieldTitle>Tipo</FieldTitle>
                 <TransactionFormTypeSegment
+                    aria-label="Tipo"
                     value={editType}
                     onChange={onEditTypeChange}
                 />

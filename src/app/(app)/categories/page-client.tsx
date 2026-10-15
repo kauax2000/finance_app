@@ -600,9 +600,10 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 required
             />
 
-            <Field role="group">
+            <Field>
                 <FieldTitle>Tipo</FieldTitle>
                 <TransactionFormTypeSegment
+                    aria-label="Tipo"
                     value={type}
                     onChange={setType}
                 />

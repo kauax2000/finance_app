@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { CreditCardIcon } from "@heroicons/react/16/solid"
 import {
     EmptyState,
@@ -270,6 +270,13 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
     const isMobile = useIsMobile()
     const [categorySearch, setCategorySearch] = useState("")
 
+    // O foco no valor vale uma vez por montagem do formulário: trocar Despesa e
+    // Parcelada remonta o campo, e o foco não volta do trilho do tipo.
+    const focoInicial = useRef(segmentMode === "create" && !isMobile)
+    useEffect(() => {
+        focoInicial.current = false
+    }, [])
+
     const filteredCategories = useMemo(
         () => categories.filter((c) => c.type === type),
         [categories, type]
@@ -386,7 +393,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                     {showInstallmentFields
                         ? segmentMode === "edit"
                             ? planIsActive
-                                ? "Próxima data de cobrança"
+                                ? "Próxima cobrança"
                                 : "Data de cobrança"
                             : "Primeira cobrança"
                         : "Data"}
@@ -416,7 +423,9 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                             )
                         }
                         placeholder="Selecione a data"
-                        displayStyle="relative"
+                        // "numeric" é o estilo da linha apertada: a Data divide a fileira com a forma
+                        // (3fr/2fr) e "Hoje · …" não cabe ali. Receita (largura toda) e telefone ficam no relativo.
+                        displayStyle={mostraForma && !isMobile ? "numeric" : "relative"}
                         presets
                     />
                 </FieldControl>
@@ -456,10 +465,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                         size="sm"
                         aria-label="Como informar o valor"
                         value={installmentValueMode}
-                        onValueChange={(next) => {
-                            // O Radix devolve "" ao tocar no ativo: a escolha não se desfaz.
-                            if (next) setInstallmentValueMode(next as InstallmentValueMode)
-                        }}
+                        onValueChange={(next) => setInstallmentValueMode(next as InstallmentValueMode)}
                     >
                         <ToggleGroupItem value="total">Total</ToggleGroupItem>
                         <ToggleGroupItem value="per_installment">Por parcela</ToggleGroupItem>
@@ -478,7 +484,8 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                             }
                             placeholder={installmentValueMode === "total" ? "1.200,00" : "100,00"}
                             className="text-base"
-                            autoFocus={segmentMode === "create" && !isMobile}
+                            autoFocus={focoInicial.current}
+                            aria-describedby="tx-inst-preview"
                         />
                         <FormInput
                             id="tx-inst-n"
@@ -492,13 +499,12 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                             onChange={(e) => setInstallmentCount(e.target.value)}
                             placeholder="12"
                             className="text-base tabular-nums"
+                            aria-describedby="tx-inst-preview"
                         />
                     </FieldRow>
-                    {installmentPreview ? (
-                        <p className="text-sm text-muted-foreground tabular-nums" aria-live="polite">
-                            {installmentPreview}
-                        </p>
-                    ) : null}
+                    <p id="tx-inst-preview" className="text-sm text-muted-foreground tabular-nums">
+                        {installmentPreview}
+                    </p>
                 </div>
             ) : (
                 <FormInput
@@ -510,7 +516,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                     onValueChange={setAmount}
                     placeholder="0,00"
                     className="text-base"
-                    autoFocus={segmentMode === "create" && !isMobile}
+                    autoFocus={focoInicial.current}
                     required={segmentMode === "edit" || formKind !== "installment"}
                 />
             )}

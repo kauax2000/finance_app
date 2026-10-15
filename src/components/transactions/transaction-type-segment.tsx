@@ -73,18 +73,20 @@ export function TransactionFormTypeSegment({
     onChange,
     className,
     disabled = false,
+    "aria-label": ariaLabel = "Tipo de lançamento",
 }: {
     value: "income" | "expense"
     onChange: (next: "income" | "expense") => void
     className?: string
     disabled?: boolean
+    "aria-label"?: string
 }) {
     return (
         <ToggleGroup
             type="single"
             variant="segmented"
             stretch
-            aria-label="Tipo de lançamento"
+            aria-label={ariaLabel}
             disabled={disabled}
             value={value}
             onValueChange={(next) => onChange(next as "income" | "expense")}

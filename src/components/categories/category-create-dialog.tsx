@@ -204,9 +204,10 @@ export function CategoryCreateDialog({
                 required
             />
 
-            <Field role="group">
+            <Field>
                 <FieldTitle>Tipo</FieldTitle>
                 <TransactionFormTypeSegment
+                    aria-label="Tipo"
                     value={type}
                     onChange={setType}
                 />
