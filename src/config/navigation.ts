@@ -1,4 +1,4 @@
-import { ArrowPathRoundedSquareIcon, ArrowsRightLeftIcon, ChartPieIcon, ClipboardDocumentCheckIcon, Cog6ToothIcon, CreditCardIcon, Squares2X2Icon, UserGroupIcon } from "@heroicons/react/24/outline"
+import { ArrowPathRoundedSquareIcon, ArrowsRightLeftIcon, ClipboardDocumentCheckIcon, Cog6ToothIcon, CreditCardIcon, Squares2X2Icon, TagIcon, UserGroupIcon } from "@heroicons/react/24/outline"
 import type { NavigationItem, SubPageMeta } from "@/types/navigation"
 
 /** Canonical path constants for links and active-state checks */
@@ -86,8 +86,9 @@ export function transactionsHrefForCreditCard(cardId: string): string {
 }
 
 export const MAIN_NAVIGATION: NavigationItem[] = [
-    { name: "Dashboard", href: ROUTES.DASHBOARD, icon: Squares2X2Icon },
-    { name: "Categorias", href: ROUTES.DASHBOARD_CATEGORIES, icon: ChartPieIcon },
+    { name: "Painel", href: ROUTES.DASHBOARD, icon: Squares2X2Icon },
+    // A etiqueta e não a pizza: a pizza lia como relatório, e categoria é o rótulo que se põe no lançamento.
+    { name: "Categorias", href: ROUTES.DASHBOARD_CATEGORIES, icon: TagIcon },
     { name: "Transações", href: ROUTES.TRANSACTIONS, icon: ArrowsRightLeftIcon },
     { name: "Assinaturas", href: ROUTES.SUBSCRIPTIONS, icon: ArrowPathRoundedSquareIcon },
     {
@@ -97,14 +98,16 @@ export const MAIN_NAVIGATION: NavigationItem[] = [
         beta: true,
     },
     {
-        name: "Cartões de crédito",
+        // O rótulo da barra é curto; o título da página continua "Cartões de crédito".
+        name: "Cartões",
         href: ROUTES.CREDIT_CARDS,
         icon: CreditCardIcon,
     },
 ]
 
 export const MEMBERS_NAV_ITEM: NavigationItem = {
-    name: "Membros e convidados",
+    // Curto na barra; o título da página continua "Membros e convidados".
+    name: "Membros",
     href: ROUTES.MEMBERS,
     icon: UserGroupIcon,
 }
@@ -117,7 +120,7 @@ export const SETTINGS_NAV_ITEM: NavigationItem = {
 
 /** Header title for dashboard route group */
 export const DASHBOARD_PAGE_TITLES: Record<string, string> = {
-    [ROUTES.DASHBOARD]: "Dashboard",
+    [ROUTES.DASHBOARD]: "Painel",
     [ROUTES.DASHBOARD_CATEGORIES]: "Categorias",
 }
 

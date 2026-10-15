@@ -1,4 +1,4 @@
-import { CheckBadgeIcon, CreditCardIcon, Cog6ToothIcon, UserGroupIcon } from "@heroicons/react/24/outline"
+import { Cog6ToothIcon, SparklesIcon, UserCircleIcon, UserGroupIcon } from "@heroicons/react/24/outline"
 import type { HeroIcon } from "@/types/navigation"
 import { ROUTES } from "@/config/navigation"
 
@@ -10,8 +10,10 @@ export type AccountMenuLinkItem = {
 
 /** Profile / billing links (UserMenu dropdown + mobile scroll section) */
 export const ACCOUNT_MENU_PROFILE_LINK_ITEMS: AccountMenuLinkItem[] = [
-    { href: ROUTES.ACCOUNT, label: "Minha conta", icon: CheckBadgeIcon },
-    { href: ROUTES.PLANS, label: "Planos e pagamentos", icon: CreditCardIcon },
+    // A pessoa, e não o selo de verificado; o plano com o brilho, e não o cartão,
+    // que é o ícone de "Cartões" na barra.
+    { href: ROUTES.ACCOUNT, label: "Minha conta", icon: UserCircleIcon },
+    { href: ROUTES.PLANS, label: "Planos e pagamentos", icon: SparklesIcon },
 ]
 
 /** Workspace links (sidebar + mobile pinned top section) */

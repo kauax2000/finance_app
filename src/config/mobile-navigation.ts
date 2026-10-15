@@ -1,25 +1,39 @@
 import {
     ArrowPathRoundedSquareIcon,
     ArrowsRightLeftIcon,
-    ChartPieIcon,
-    CheckBadgeIcon,
     ClipboardDocumentCheckIcon,
     Cog6ToothIcon,
     CreditCardIcon,
+    SparklesIcon,
     Squares2X2Icon,
+    TagIcon,
+    UserCircleIcon,
     UserGroupIcon,
 } from "@heroicons/react/24/outline"
 import {
     ArrowPathRoundedSquareIcon as ArrowPathRoundedSquareSolid,
     ArrowsRightLeftIcon as ArrowsRightLeftSolid,
-    ChartPieIcon as ChartPieSolid,
-    CheckBadgeIcon as CheckBadgeSolid,
     ClipboardDocumentCheckIcon as ClipboardDocumentCheckSolid,
     Cog6ToothIcon as Cog6ToothSolid,
     CreditCardIcon as CreditCardSolid,
+    SparklesIcon as SparklesSolid,
     Squares2X2Icon as Squares2X2Solid,
+    TagIcon as TagSolid,
+    UserCircleIcon as UserCircleSolid,
     UserGroupIcon as UserGroupSolid,
 } from "@heroicons/react/24/solid"
+import {
+    ArrowPathRoundedSquareIcon as ArrowPathRoundedSquareMicro,
+    ArrowsRightLeftIcon as ArrowsRightLeftMicro,
+    ClipboardDocumentCheckIcon as ClipboardDocumentCheckMicro,
+    Cog6ToothIcon as Cog6ToothMicro,
+    CreditCardIcon as CreditCardMicro,
+    SparklesIcon as SparklesMicro,
+    Squares2X2Icon as Squares2X2Micro,
+    TagIcon as TagMicro,
+    UserCircleIcon as UserCircleMicro,
+    UserGroupIcon as UserGroupMicro,
+} from "@heroicons/react/16/solid"
 import {
     ACCOUNT_MENU_PROFILE_LINK_ITEMS,
     ACCOUNT_MENU_WORKSPACE_LINK_ITEMS,
@@ -51,19 +65,42 @@ import type { HeroIcon, NavigationItem } from "@/types/navigation"
  */
 const ICONE_SOLIDO = new Map<HeroIcon, HeroIcon>([
     [Squares2X2Icon, Squares2X2Solid],
-    [ChartPieIcon, ChartPieSolid],
+    [TagIcon, TagSolid],
     [ArrowsRightLeftIcon, ArrowsRightLeftSolid],
     [ArrowPathRoundedSquareIcon, ArrowPathRoundedSquareSolid],
     [ClipboardDocumentCheckIcon, ClipboardDocumentCheckSolid],
     [CreditCardIcon, CreditCardSolid],
     [UserGroupIcon, UserGroupSolid],
     [Cog6ToothIcon, Cog6ToothSolid],
-    [CheckBadgeIcon, CheckBadgeSolid],
+    [UserCircleIcon, UserCircleSolid],
+    [SparklesIcon, SparklesSolid],
 ])
 
 /** O par sólido, ou `undefined` — quem não tem par continua de contorno. */
 export function solidIconFor(icon: HeroIcon): HeroIcon | undefined {
     return ICONE_SOLIDO.get(icon)
+}
+
+/**
+ * O par micro (`16/solid`) de cada ícone da navegação, para quem o desenha a
+ * 16px — a barra lateral e o menu da conta. Keyed pelo componente, como o sólido.
+ */
+const ICONE_MICRO = new Map<HeroIcon, HeroIcon>([
+    [Squares2X2Icon, Squares2X2Micro],
+    [TagIcon, TagMicro],
+    [ArrowsRightLeftIcon, ArrowsRightLeftMicro],
+    [ArrowPathRoundedSquareIcon, ArrowPathRoundedSquareMicro],
+    [ClipboardDocumentCheckIcon, ClipboardDocumentCheckMicro],
+    [CreditCardIcon, CreditCardMicro],
+    [UserGroupIcon, UserGroupMicro],
+    [Cog6ToothIcon, Cog6ToothMicro],
+    [UserCircleIcon, UserCircleMicro],
+    [SparklesIcon, SparklesMicro],
+])
+
+/** O par micro, ou `undefined` — quem não tem par continua no de 24. */
+export function microIconFor(icon: HeroIcon): HeroIcon | undefined {
+    return ICONE_MICRO.get(icon)
 }
 
 /** Primary tabs shown inside the floating island. */

@@ -45,8 +45,8 @@ export default function manifest(): MetadataRoute.Manifest {
                 icons: [{ src: pwaIconSrc("icon-192.png"), sizes: "192x192", type: "image/png" }],
             },
             {
-                name: "Dashboard",
-                short_name: "Início",
+                name: "Painel",
+                short_name: "Painel",
                 url: "/dashboard",
                 icons: [{ src: pwaIconSrc("icon-192.png"), sizes: "192x192", type: "image/png" }],
             },

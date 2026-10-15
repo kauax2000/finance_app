@@ -1,5 +1,6 @@
 "use client"
 
+import { createElement } from "react"
 import { useAuth } from "@/components/providers"
 import { AccountMenuUserSummary } from "@/components/layout/account-menu-user-summary"
 import {
@@ -8,13 +9,13 @@ import {
     DropdownMenuHeader,
     DropdownMenuItem,
     DropdownMenuSection,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/16/solid"
+import { ArrowRightStartOnRectangleIcon, SwatchIcon } from "@heroicons/react/16/solid"
 import Link from "next/link"
 import { ACCOUNT_MENU_LINK_ITEMS } from "@/components/layout/account-menu-links"
 import { ROUTES } from "@/config/navigation"
+import { microIconFor } from "@/config/mobile-navigation"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 interface UserMenuProps {
@@ -47,26 +48,33 @@ export function UserMenu({ children }: UserMenuProps) {
                     </DropdownMenuHeader>
                 }
             >
+                {/* Do mais usado ao menos: as páginas da conta, a preferência de
+                    tema e, por último, sair. Sem fio: o do cabeçalho já separa a
+                    identidade dos comandos. "Sair" não é `destructive` — tem
+                    volta, e o vermelho é do que não tem. */}
                 <DropdownMenuSection>
-                    {/* O tema é um controle, não um comando: a linha não fecha o menu. */}
-                    <div
-                        className="flex items-center justify-between gap-3 px-2 py-1"
-                        onPointerDown={(e) => e.stopPropagation()}
-                    >
-                        <span className="text-sm">Tema</span>
-                        <ThemeToggle />
-                    </div>
-                    <DropdownMenuSeparator />
-                    {dropdownLinkItems.map(({ href, label, icon: Icon }) => (
+                    {dropdownLinkItems.map(({ href, label, icon }) => (
                         <DropdownMenuItem key={href} asChild>
                             <Link href={href}>
-                                <Icon />
+                                {createElement(microIconFor(icon) ?? icon)}
                                 {label}
                             </Link>
                         </DropdownMenuItem>
                     ))}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive" onSelect={() => signOut()}>
+                    {/* O tema é um controle, não um comando: a linha não fecha o menu.
+                        `py-0.5`: o trilho de 32 numa linha de 36, a das outras. */}
+                    <div
+                        className="flex items-center justify-between gap-3 px-2 py-0.5"
+                        onPointerDown={(e) => e.stopPropagation()}
+                    >
+                        {/* Com ícone, o rótulo cai na coluna dos outros (o recuo e o vão da linha do menu). */}
+                        <span className="flex items-center gap-1.5 text-sm">
+                            <SwatchIcon aria-hidden className="size-4 shrink-0" />
+                            Tema
+                        </span>
+                        <ThemeToggle />
+                    </div>
+                    <DropdownMenuItem onSelect={() => signOut()}>
                         <ArrowRightStartOnRectangleIcon />
                         Sair
                     </DropdownMenuItem>

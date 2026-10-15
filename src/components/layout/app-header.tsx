@@ -42,7 +42,7 @@ function defaultMobileTitle(
         return "Detalhes da categoria"
     }
     if (titleMode === "dashboard") {
-        return DASHBOARD_PAGE_TITLES[pathname] ?? "Dashboard"
+        return DASHBOARD_PAGE_TITLES[pathname] ?? "Painel"
     }
     return APP_PAGE_TITLES[pathname] ?? "Finance App"
 }

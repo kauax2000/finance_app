@@ -310,7 +310,7 @@ O que está disponível em qualquer tela: a casca, o "+" de adicionar, a busca
 flowchart TD
     shell(["Casca do app"]) --> desktop{"Largura"}
     desktop -->|"desktop"| sidebar(["Lateral recolhível"])
-    desktop -->|"mobile"| bottom(["Barra inferior: Dashboard, Transações, Categorias, +, conta"])
+    desktop -->|"mobile"| bottom(["Barra inferior: Painel, Transações, Categorias, +, conta"])
 
     sidebar --> nav1["/dashboard"]
     sidebar --> nav2["/categories"]

@@ -24,13 +24,17 @@ import {
     isExactPath,
 } from "@/config/navigation"
 import { useWorkspace } from "@/components/workspace-provider"
-import { solidIconFor } from "@/config/mobile-navigation"
+import { microIconFor } from "@/config/mobile-navigation"
 import type { HeroIcon } from "@/types/navigation"
 import { prefetchNavRouteHref } from "@/components/layout/sidebar-route-prefetch"
 
-/** A página ativa ganha o ícone preenchido, a mesma convenção da barra de baixo do telefone. */
-function NavIcon({ icon, active }: { icon: HeroIcon; active: boolean }) {
-    return createElement(active ? (solidIconFor(icon) ?? icon) : icon)
+/**
+ * A barra desenha o ícone a 16px, e 16px é o micro (`16/solid`): o contorno de
+ * 24 encolhido afinava o traço a 1px. O micro só existe sólido, então a página
+ * ativa não "preenche" mais: quem a marca é a pílula e o peso do rótulo.
+ */
+function NavIcon({ icon }: { icon: HeroIcon }) {
+    return createElement(microIconFor(icon) ?? icon)
 }
 
 export function AppSidebar() {
@@ -87,7 +91,7 @@ export function AppSidebar() {
                                                 )
                                             }
                                         >
-                                            <NavIcon icon={item.icon} active={active} />
+                                            <NavIcon icon={item.icon} />
                                             <span className="flex min-w-0 flex-1 items-center gap-2">
                                                 <span className="truncate">
                                                     {item.name}
@@ -117,7 +121,7 @@ export function AppSidebar() {
                                 tooltip={MEMBERS_NAV_ITEM.name}
                             >
                                 <Link href={MEMBERS_NAV_ITEM.href}>
-                                    <NavIcon icon={MEMBERS_NAV_ITEM.icon} active={membersActive} />
+                                    <NavIcon icon={MEMBERS_NAV_ITEM.icon} />
                                     <span>{MEMBERS_NAV_ITEM.name}</span>
                                 </Link>
                             </SidebarMenuButton>
@@ -129,7 +133,7 @@ export function AppSidebar() {
                                 tooltip={SETTINGS_NAV_ITEM.name}
                             >
                                 <Link href={SETTINGS_NAV_ITEM.href}>
-                                    <NavIcon icon={SETTINGS_NAV_ITEM.icon} active={settingsActive} />
+                                    <NavIcon icon={SETTINGS_NAV_ITEM.icon} />
                                     <span>{SETTINGS_NAV_ITEM.name}</span>
                                 </Link>
                             </SidebarMenuButton>
