@@ -39,6 +39,7 @@ import { CategoriesToolbar, MonthNav } from "@/components/categories/categories-
 import { useDashboardCategoriesSubrouteLabels } from "@/components/layout/dashboard-category-subroute-title"
 import { usePageChromeSlot } from "@/components/layout/page-chrome-provider"
 import { ExpenseCategoryCard } from "@/components/categories/expense-category-card"
+import { Field, FieldTitle } from "@/components/ui/field"
 import { IncomeCategoryCard } from "@/components/categories/income-category-card"
 import {
     TransactionFormTypeSegment,
@@ -599,10 +600,13 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 required
             />
 
-            <TransactionFormTypeSegment
-                value={type}
-                onChange={setType}
-            />
+            <Field role="group">
+                <FieldTitle>Tipo</FieldTitle>
+                <TransactionFormTypeSegment
+                    value={type}
+                    onChange={setType}
+                />
+            </Field>
 
             <CategoryAppearanceFields
                 color={color}

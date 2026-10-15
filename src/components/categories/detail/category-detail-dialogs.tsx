@@ -30,6 +30,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Field, FieldTitle } from "@/components/ui/field"
 import { TransactionFormTypeSegment } from "@/components/transactions/transaction-type-segment"
 import {
     CategoryAppearanceFields,
@@ -109,10 +110,13 @@ export function CategoryDetailDialogs({
                 placeholder="Ex: Alimentação"
                 required
             />
-            <TransactionFormTypeSegment
-                value={editType}
-                onChange={onEditTypeChange}
-            />
+            <Field role="group">
+                <FieldTitle>Tipo</FieldTitle>
+                <TransactionFormTypeSegment
+                    value={editType}
+                    onChange={onEditTypeChange}
+                />
+            </Field>
             <CategoryAppearanceFields
                 color={editColor}
                 onColorChange={onEditColorChange}

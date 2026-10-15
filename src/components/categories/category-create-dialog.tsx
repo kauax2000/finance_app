@@ -4,6 +4,7 @@ import * as React from "react"
 import {
     Card,
 } from "@/components/ui/card"
+import { Field, FieldTitle } from "@/components/ui/field"
 import { useRouter } from "next/navigation"
 import type { User } from "@supabase/supabase-js"
 import {
@@ -203,10 +204,13 @@ export function CategoryCreateDialog({
                 required
             />
 
-            <TransactionFormTypeSegment
-                value={type}
-                onChange={setType}
-            />
+            <Field role="group">
+                <FieldTitle>Tipo</FieldTitle>
+                <TransactionFormTypeSegment
+                    value={type}
+                    onChange={setType}
+                />
+            </Field>
 
             <CategoryAppearanceFields
                 color={color}

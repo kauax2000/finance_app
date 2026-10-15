@@ -9,6 +9,7 @@ import {
     Field,
     FieldControl,
     FieldLabel,
+    FieldTitle,
 } from "@/components/ui/field"
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/16/solid"
@@ -588,11 +589,14 @@ export function CategoriesOnboardingWizard({
                                     required
                                     disabled={crudBusy}
                                 />
-                                <TransactionFormTypeSegment
-                                    value={addType}
-                                    onChange={setAddType}
-                                    disabled={crudBusy}
-                                />
+                                <Field role="group">
+                                    <FieldTitle>Tipo</FieldTitle>
+                                    <TransactionFormTypeSegment
+                                        value={addType}
+                                        onChange={setAddType}
+                                        disabled={crudBusy}
+                                    />
+                                </Field>
                                 <CategoryAppearanceFields
                                     color={addColor}
                                     onColorChange={setAddColor}
@@ -641,11 +645,14 @@ export function CategoriesOnboardingWizard({
                                         required
                                         disabled={crudBusy}
                                     />
-                                    <TransactionFormTypeSegment
-                                        value={editType}
-                                        onChange={setEditType}
-                                        disabled={crudBusy}
-                                    />
+                                    <Field role="group">
+                                        <FieldTitle>Tipo</FieldTitle>
+                                        <TransactionFormTypeSegment
+                                            value={editType}
+                                            onChange={setEditType}
+                                            disabled={crudBusy}
+                                        />
+                                    </Field>
                                     <CategoryAppearanceFields
                                         color={editColor}
                                         onColorChange={setEditColor}

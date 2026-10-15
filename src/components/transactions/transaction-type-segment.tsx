@@ -1,15 +1,15 @@
 "use client"
 
-import * as React from "react"
 import {
     ArrowTrendingDownIcon,
     ArrowTrendingUpIcon,
     RectangleStackIcon,
 } from "@heroicons/react/16/solid"
 
-import { FormRadioGroup } from "@/components/ui/form"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { cn } from "@/lib/utils"
+import type { HeroIcon } from "@/types/navigation"
 
 export type TransactionFilterType = "all" | "income" | "expense"
 
@@ -19,85 +19,109 @@ const FILTER_TABS: { value: TransactionFilterType; label: string }[] = [
     { value: "income", label: "Receitas" },
 ]
 
-// O `RadioGroupItem` desenha o ícone em 16px, então `16/solid`.
-const FORM_TYPE_TABS: { value: "expense" | "income"; label: string; icon: React.ReactNode }[] = [
-    { value: "expense", label: "Despesas", icon: <ArrowTrendingDownIcon /> },
-    { value: "income", label: "Receitas", icon: <ArrowTrendingUpIcon /> },
+// O `ToggleGroupItem` desenha o ícone em 16px, então `16/solid`.
+const FORM_TYPE_TABS: { value: "expense" | "income"; label: string; icon: HeroIcon }[] = [
+    { value: "expense", label: "Despesa", icon: ArrowTrendingDownIcon },
+    { value: "income", label: "Receita", icon: ArrowTrendingUpIcon },
 ]
 
 export type TransactionFormKind = "expense" | "installment" | "income"
 
-const FORM_KIND_TABS: { value: TransactionFormKind; label: string; icon: React.ReactNode }[] = [
-    { value: "expense", label: "Despesa", icon: <ArrowTrendingDownIcon /> },
-    { value: "installment", label: "Parcelada", icon: <RectangleStackIcon /> },
-    { value: "income", label: "Receita", icon: <ArrowTrendingUpIcon /> },
+const FORM_KIND_TABS: { value: TransactionFormKind; label: string; icon: HeroIcon }[] = [
+    { value: "expense", label: "Despesa", icon: ArrowTrendingDownIcon },
+    { value: "installment", label: "Parcelada", icon: RectangleStackIcon },
+    { value: "income", label: "Receita", icon: ArrowTrendingUpIcon },
 ]
 
 /**
- * Create flow: despesa simples, compra parcelada, receita.
- *
- * **Ele era um `role="tablist"` dentro de um formulário**, com três `Button
- * role="tab"` — o padrão ARIA de abas anunciado sem `tabpanel`, sem
- * `aria-controls` e sem foco itinerante, para escolher o valor que vai ser
- * gravado. Escolha única num formulário é rádio, e agora é.
+ * O tipo ao criar: despesa simples, compra parcelada ou receita. Escolha de
+ * valor num formulário: `ToggleGroup` segmentado, que o Radix anuncia como
+ * rádio (`single`). Eram três cartões de rádio que ocupavam o topo; o título
+ * do diálogo já diz o tipo, então o grupo não tem rótulo visível.
  */
 export function TransactionFormKindSegment({
     value,
     onChange,
     className,
-    label = "Tipo de lançamento",
 }: {
     value: TransactionFormKind
     onChange: (next: TransactionFormKind) => void
     className?: string
-    label?: React.ReactNode
 }) {
     return (
-        <FormRadioGroup
-            label={label}
-            fieldClassName={className}
-            variant="card"
-            orientation="horizontal"
+        <ToggleGroup
+            type="single"
+            variant="segmented"
+            stretch
+            aria-label="Tipo de lançamento"
             value={value}
             onValueChange={(next) => onChange(next as TransactionFormKind)}
-            options={FORM_KIND_TABS}
-        />
+            className={className}
+        >
+            {FORM_KIND_TABS.map((t) => (
+                <ToggleGroupItem key={t.value} value={t.value} icon={t.icon}>
+                    {t.label}
+                </ToggleGroupItem>
+            ))}
+        </ToggleGroup>
     )
 }
 
-/**
- * O tipo — receita ou despesa — como **campo de formulário**.
- *
- * `fullWidth` saiu: dentro de um `Field` o `fieldVariants` já dá `*:w-full`, e
- * o prop virava no-op. Prop que não faz nada é a classe morta desta base em
- * forma de API — e removê-lo fez o compilador apontar os sete sítios que
- * embrulhavam este componente num `<div className="space-y-2"><Label>Tipo</Label>`,
- * com o rótulo solto que agora é o do próprio campo.
- */
+/** O tipo ao editar: despesa ou receita. */
 export function TransactionFormTypeSegment({
     value,
     onChange,
     className,
     disabled = false,
-    label = "Tipo",
 }: {
     value: "income" | "expense"
     onChange: (next: "income" | "expense") => void
     className?: string
     disabled?: boolean
-    label?: React.ReactNode
 }) {
     return (
-        <FormRadioGroup
-            label={label}
-            fieldClassName={className}
+        <ToggleGroup
+            type="single"
+            variant="segmented"
+            stretch
+            aria-label="Tipo de lançamento"
             disabled={disabled}
-            variant="card"
-            orientation="horizontal"
             value={value}
             onValueChange={(next) => onChange(next as "income" | "expense")}
-            options={FORM_TYPE_TABS}
-        />
+            className={className}
+        >
+            {FORM_TYPE_TABS.map((t) => (
+                <ToggleGroupItem key={t.value} value={t.value} icon={t.icon}>
+                    {t.label}
+                </ToggleGroupItem>
+            ))}
+        </ToggleGroup>
+    )
+}
+
+/** Na edição de uma parcela: só ela ou o plano inteiro. */
+export function TransactionFormScopeSegment({
+    value,
+    onChange,
+    className,
+}: {
+    value: "slice" | "plan"
+    onChange: (next: "slice" | "plan") => void
+    className?: string
+}) {
+    return (
+        <ToggleGroup
+            type="single"
+            variant="segmented"
+            stretch
+            aria-label="O que editar"
+            value={value}
+            onValueChange={(next) => onChange(next as "slice" | "plan")}
+            className={className}
+        >
+            <ToggleGroupItem value="slice">Esta parcela</ToggleGroupItem>
+            <ToggleGroupItem value="plan">Plano da compra</ToggleGroupItem>
+        </ToggleGroup>
     )
 }
 
