@@ -59,8 +59,11 @@ describe("as versões do Drawer", () => {
   })
 
   it("os menus do telefone são gavetas, e o vidro escrito à mão saiu", () => {
+    // O "+" abre direto o formulário de lançamento (a gaveta dele, no
+    // telefone); a folha de ações antes dele saiu.
     const fab = lerFonte("src/components/layout/quick-actions.tsx")
-    expect(fab).toMatch(/if \(isFab\) \{[\s\S]*?<Drawer[\s\S]*?<DrawerActions>/)
+    expect(fab).toMatch(/<BottomBarAction label="Adicionar" onClick=\{abrir\}>/)
+    expect(fab).not.toMatch(/<DrawerActions>|<DropdownMenuContent/)
     expect(fab).not.toContain("MOBILE_GLASS")
     const conta = lerFonte("src/components/layout/mobile-account-menu.tsx")
     expect(conta).toContain("<Drawer open={open} onOpenChange={setOpen} scaleBackground>")

@@ -119,7 +119,7 @@ describe("o catálogo e o app", () => {
   })
 
   it("o + do app é o BottomBarAction", () => {
-    expect(lerFonte("src/components/layout/quick-actions.tsx")).toContain('<BottomBarAction label="Adicionar">')
+    expect(lerFonte("src/components/layout/quick-actions.tsx")).toContain('<BottomBarAction label="Adicionar"')
   })
 })
 

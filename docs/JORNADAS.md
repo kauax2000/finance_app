@@ -325,17 +325,16 @@ flowchart TD
     userMenu --> G10(("G10 Conta"))
     accountMenu --> G10
 
-    sidebar -->|"+ Adicionar"| add(["Menu: Despesa, Parcelada, Receita, Assinatura"])
-    bottom -->|"+, folha de ações"| add
-    add -->|"Despesa, Parcelada, Receita"| txForm(("G5b Formulário de transação"))
-    add -->|"Assinatura"| subForm(("G8 Formulário de assinatura"))
-    add -.->|"formulário global indisponível"| fallback["/transactions?new= ou /subscriptions?new=1"]
+    sidebar -->|"+ Adicionar, direto, com Despesa"| txForm(("G5b Formulário de transação"))
+    bottom -->|"+, a gaveta do formulário"| txForm
+    txForm -.->|"formulário global indisponível"| fallback["/transactions?new= ou /subscriptions?new=1"]
 
     topbar(["Barra do topo: lupa"]) -->|"clicar"| palette(["Paleta de busca: Recentes, Ir para, Procurar, Ações"])
     shell -->|"⌘K ou Ctrl+K"| palette
     palette -->|"Ir para ou Recentes"| nav1
     palette -->|"Ir para: as mesmas telas da lateral, Minha conta, Planos"| nav8
-    palette -->|"Ações: Nova despesa, parcelada, receita, assinatura"| add
+    palette -->|"Ações: Nova despesa, parcelada, receita"| txForm
+    palette -->|"Ações: Nova assinatura"| subForm(("G8 Formulário de assinatura"))
     palette -->|"Categorias…"| catPage(["Lista de categorias da carteira"]) --> catDetail["/categories/id"]
     palette -->|"Cartões…"| cardPage(["Lista de cartões"]) --> cardDetail["/credit-cards/id"]
     catPage -->|"Backspace duas vezes"| palette
@@ -363,7 +362,7 @@ flowchart TD
 |---|---|---|
 | Itens de navegação | Lateral e mobile vêm de configuração, não de JSX solto | `src/config/navigation.ts`, `src/config/mobile-navigation.ts` |
 | Formulários globais | Transação e assinatura montados uma vez na casca; salvar invalida as listas abertas | `src/components/layout/global-shell-dialogs-provider.tsx` |
-| Menus do telefone | O "+" abre uma folha de ações (`Drawer` com `DrawerActions`) e o avatar abre o menu da conta numa gaveta com o fundo que encolhe; cada ação fecha a gaveta e entra pela mesma porta de antes (os ganchos do "+ Adicionar", os links da conta). Eram um `DropdownMenu` e um `Popover` de vidro escritos à mão | `src/components/layout/quick-actions.tsx`, `src/components/layout/mobile-account-menu.tsx` |
+| Menus do telefone | O "+" abre direto a gaveta do formulário de lançamento, com Despesa marcada (o seletor do formulário troca para Parcelada e Receita; assinatura fica na tela dela e na paleta). Era uma folha de ações (`Drawer` com `DrawerActions`) antes do formulário, e no desktop um menu: um passo a mais na jornada mais comum. O avatar abre o menu da conta numa gaveta com o fundo que encolhe; cada link fecha a gaveta e leva à tela. O menu da conta era um `Popover` de vidro escrito à mão | `src/components/layout/quick-actions.tsx`, `src/components/layout/mobile-account-menu.tsx` |
 | Busca global (⌘K) | Montada uma vez no `AppHeader`, com a lupa nas duas árvores da barra; no telefone abre como gaveta. As telas vêm de `navigation.ts` e `account-menu-links.ts`; as ações chamam os mesmos ganchos do "+ Adicionar" (`useQuickCreateTransaction`, `useQuickCreateSubscription`); categorias e cartões leem o cache de `useCategoriesQuery` e `useCreditCardsQuery`, as mesmas consultas da casca. Os recentes ficam no `localStorage` (`app:busca`) | `src/components/layout/app-command-palette.tsx`, `src/components/layout/app-header.tsx` |
 | Destino da notificação | `metadata.href` seguro vence; senão, o tipo decide. Espelha o servidor para o push | `src/lib/notification-href.ts`, `supabase/functions/_shared/notification-types.ts` |
 | Notificações no servidor | Edges `dispatch-notifications`, `evaluate-budgets`, `evaluate-credit-card-alerts`, `evaluate-bills-reminders`, `credit-card-calendar-alerts`, `notify-transaction-created` | `supabase/functions/` |

@@ -1108,8 +1108,10 @@ declaração de `background-color` no trilho).
     `DrawerDescription` nem `DrawerFooter`.
   - `DrawerContent` `variant` (`flush`, o padrão e **toda gaveta do telefone**;
     `inset`), `size` (`full` | `md` | `lg`) e `fill`.
-  - `DrawerActions` + `DrawerAction` + `DrawerCancel` é o action sheet — **o "+
-    Adicionar" e o menu da conta do telefone são ele**.
+  - `DrawerActions` + `DrawerAction` + `DrawerCancel` é o action sheet — **o
+    menu da conta do telefone é ele**. O "+ Adicionar" não tem menu: abre
+    direto o formulário de lançamento (com Despesa), que no telefone é a
+    gaveta.
   - **`pending` desliga o `dismissible` e barra o pedido de fechar.** Sem
     `DialogBody`, o filho do meio rola (`data-drawer-meio`). Gaveta dentro de
     gaveta vira `NestedRoot` sozinha. `drawer-versions.test.ts`.
