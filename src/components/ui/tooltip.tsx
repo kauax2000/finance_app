@@ -189,7 +189,7 @@ const tooltipContentVariants = cva("font-medium", {
      */
     variant: {
       plate: "",
-      // Não veste a placa por baixo: a placa traz `supports-backdrop-filter:dark:bg-popover/60`,
+      // Não veste a placa por baixo: a placa traz `supports-backdrop-filter:bg-popover/60`,
       // o `glass-surface` e a variante de transparência reduzida, e cada um venceria o
       // `bg-primary` num tema ou ambiente. Anular um por um é compensar por seletor.
       contrast: [

@@ -35,7 +35,7 @@ describe("as versões do Popover", () => {
   })
 
   it("a seta espelha a tinta da placa", () => {
-    expect(CODIGO).toMatch(/function PopoverArrow[\s\S]*?fill-popover\/85 supports-backdrop-filter:dark:fill-popover\/60 reduced-transparency:fill-popover/)
+    expect(CODIGO).toMatch(/function PopoverArrow[\s\S]*?fill-popover\/85 supports-backdrop-filter:fill-popover\/60 reduced-transparency:fill-popover/)
   })
 
   it("a confirmação curta é alertdialog, trava com a Promise e fecha ao assentar", () => {

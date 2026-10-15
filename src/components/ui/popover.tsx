@@ -342,7 +342,7 @@ function PopoverArrow({
       width={width}
       height={height}
       className={cn(
-        "fill-popover/85 supports-backdrop-filter:dark:fill-popover/60 reduced-transparency:fill-popover",
+        "fill-popover/85 supports-backdrop-filter:fill-popover/60 reduced-transparency:fill-popover",
         className,
       )}
       {...props}

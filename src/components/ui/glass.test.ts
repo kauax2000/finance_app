@@ -182,7 +182,7 @@ describe("a superfície de vidro", () => {
         const reguas = semComentariosDe("src/lib/glass-classes.ts")
         for (const [nome, ancora, token, aberto] of [
             ["barra", "barSurfaceClassName", "background", /supports-backdrop-filter:bg-background\/(\d+)/],
-            ["flutuante", "menuPanelTintClassName", "popover", /supports-backdrop-filter:dark:bg-popover\/(\d+)/],
+            ["flutuante", "menuPanelTintClassName", "popover", /supports-backdrop-filter:bg-popover\/(\d+)/],
             ["modal", "modalSurfaceClassName", "background", /supports-backdrop-filter:dark:bg-background\/(\d+)/],
         ] as const) {
             const i = reguas.indexOf(`${ancora} = [`)
@@ -211,13 +211,13 @@ describe("a superfície de vidro", () => {
         const seta = semComentariosDe("src/components/ui/hover-card.tsx")
         for (const classe of [
             "fill-popover/85",
-            "supports-backdrop-filter:dark:fill-popover/60",
+            "supports-backdrop-filter:fill-popover/60",
             "reduced-transparency:fill-popover",
         ]) {
             expect(seta, classe).toContain(classe)
         }
         // E os alfas são os mesmos da placa que ela termina.
-        for (const classe of ["bg-popover/85", "supports-backdrop-filter:dark:bg-popover/60"]) {
+        for (const classe of ["bg-popover/85", "supports-backdrop-filter:bg-popover/60"]) {
             expect(menuPanelTintClassName, classe).toContain(classe)
         }
     })

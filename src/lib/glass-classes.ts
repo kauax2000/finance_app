@@ -68,14 +68,16 @@ export const barSurfaceClassName = [
  * `Tooltip`, `Command`, calendário do `DatePicker`): só tinta e material, sem
  * raio, sombra nem fio — a casa inteira é `menuPanelSurfaceClassName`.
  *
- * `--popover` a 85%, abrindo a 60% no escuro. Custo assumido: `--popover` e
+ * `--popover` a 85%, abrindo a 60% onde há borrão — nos dois temas, como a
+ * barra: no claro ela ficava a 85% e, sobre a página clara, lia como chapa sem
+ * vidro. Custo assumido: `--popover` e
  * `--card` são a mesma cor, então sobre um cartão a placa se confunde com ele e
  * quem a separa é o anel e a sombra. A tinta da barra (`--background`) virava
  * uma chapa escura sem vidro.
  */
 export const menuPanelTintClassName = [
   "bg-popover/85 glass-surface",
-  "supports-backdrop-filter:dark:bg-popover/60",
+  "supports-backdrop-filter:bg-popover/60",
   /** A cor sólida é de quem veste — a utility é dona de uma propriedade só. */
   "reduced-transparency:bg-popover",
 ].join(" ")

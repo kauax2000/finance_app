@@ -317,7 +317,7 @@ function HoverCardArrow({
       className={cn(
         // Os alfas espelham `menuPanelSurfaceClassName` à mão (`fill` não é
         // `background`); o `glass.test.ts` compara os dois.
-        "fill-popover/85 supports-backdrop-filter:dark:fill-popover/60 reduced-transparency:fill-popover",
+        "fill-popover/85 supports-backdrop-filter:fill-popover/60 reduced-transparency:fill-popover",
         className,
       )}
       {...props}
