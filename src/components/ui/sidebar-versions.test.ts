@@ -91,7 +91,7 @@ describe("as versões do Sidebar", () => {
   it("na placa flutuante, a carteira e a conta seguem a curva do canto", () => {
     // O degrau lg mora nos cantos da placa: concêntrico (28 − 8 = 20 aberta). Recolhida o
     // botão fica a 16 do canto, e o recuo publicado sobe junto (28 − 16 = 12, a linha).
-    expect(CODIGO).toContain('lg: "h-12 text-sm group-data-[collapsible=icon]:p-0! group-data-[variant=floating]:concentric"')
+    expect(CODIGO).toContain('lg: "h-12 text-sm group-data-[collapsible=icon]:size-12! group-data-[collapsible=icon]:-m-2 group-data-[collapsible=icon]:p-2! group-data-[variant=floating]:concentric group-data-[collapsible=icon]:[--radius-inset:--spacing(2)]"')
     expect(CODIGO).toContain("group-data-[variant=floating]:[--radius-inset:--spacing(2)] group-data-[collapsible=icon]:[--radius-inset:--spacing(4)]!")
   })
 
@@ -162,7 +162,7 @@ describe("as versões do Sidebar", () => {
 
   it("o que o app escrevia à mão é do componente, e o app flutua", () => {
     expect(CODIGO).toContain("[interpolate-size:allow-keywords] group-data-[collapsible=icon]:h-12")
-    expect(CODIGO).toContain('"h-12 p-2 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0!"')
+    expect(CODIGO).toContain('"h-12 p-2 group-data-[collapsible=icon]:size-12! group-data-[collapsible=icon]:-m-2"')
     const app = lerFonte("src/components/layout/app-sidebar.tsx")
     expect(app).toContain('<Sidebar collapsible="icon" variant="floating">')
     expect(app).not.toContain('<Sidebar collapsible="icon" variant="sidebar">')
@@ -294,7 +294,7 @@ describe("as versões do Sidebar", () => {
         CODIGO.indexOf("function SidebarMenuButton")
       )
       expect(cva).toContain("group-data-[collapsible=icon]:p-2!") // md, ícone 16
-      expect(cva).toContain('lg: "h-12 text-sm group-data-[collapsible=icon]:p-0!') // lg, mídia 32
+      expect(cva).toContain('lg: "h-12 text-sm group-data-[collapsible=icon]:size-12!') // lg, caixa de 48 em volta da mídia de 32
       // Com `p-1!` sobravam 24 para uma mídia de 32: o `overflow-hidden` cortava a borda.
       expect(cva).not.toContain("group-data-[collapsible=icon]:p-1!")
       // E não se conserta com `justify-center`: o rótulo continua no fluxo em
