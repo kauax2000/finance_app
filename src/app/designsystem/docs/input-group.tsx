@@ -13,6 +13,7 @@ import {
   InputGroupText,
   InputGroupTextarea,
 } from "@/components/ui/input-group"
+import { SelectItem } from "@/components/ui/select"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 function DemoVerificando() {
@@ -106,11 +107,11 @@ export default function InputGroupDoc() {
 
       <DocSection
         title="Seletor no começo"
-        description="InputGroupSelect é um select nativo colado no começo do campo — o DDI de um telefone, a moeda de um valor —, com a emenda na borda de campo e o foco acendendo o grupo inteiro. Nativo porque no telefone ele abre a roda do sistema. Precisa de aria-label."
+        description="InputGroupSelect é o Select do app colado no começo do campo — o DDI de um telefone, a moeda de um valor, o modo (total ou parcela) de uma compra parcelada —, com a emenda na borda de campo, a placa flutuante dos menus e o foco acendendo o grupo inteiro. Precisa de aria-label."
         code={`<InputGroup>
   <InputGroupSelect aria-label="DDI" defaultValue="55">
-    <option value="55">+55</option>
-    <option value="351">+351</option>
+    <SelectItem value="55">+55</SelectItem>
+    <SelectItem value="351">+351</SelectItem>
   </InputGroupSelect>
   <InputGroupInput type="tel" placeholder="(11) 98765-4321" />
 </InputGroup>`}
@@ -118,9 +119,9 @@ export default function InputGroupDoc() {
       >
         <InputGroup className="w-full max-w-sm">
           <InputGroupSelect aria-label="DDI" defaultValue="55">
-            <option value="55">+55</option>
-            <option value="351">+351</option>
-            <option value="1">+1</option>
+            <SelectItem value="55">+55</SelectItem>
+            <SelectItem value="351">+351</SelectItem>
+            <SelectItem value="1">+1</SelectItem>
           </InputGroupSelect>
           <InputGroupInput type="tel" placeholder="(11) 98765-4321" aria-label="Telefone" />
         </InputGroup>
@@ -231,7 +232,7 @@ export default function InputGroupDoc() {
 
       <PropsTable
         rows={[
-          { prop: "InputGroup · size", type: '"sm" | "md" | "lg" | "xl"', default: '"md"', description: "A altura, na escada dos campos; o botão acoplado desce um degrau." },
+          { prop: "InputGroup · size", type: '"sm" | "md" | "lg" | "xl"', default: '"lg"', description: "A altura, na escada dos campos; o botão acoplado desce um degrau." },
           { prop: "InputGroup · pending", type: "boolean", default: "false", description: "O Spinner na ponta, no lugar do addon, e aria-busy." },
           { prop: "InputGroupInput · maxLength", type: "number", description: "Põe a contagem na ponta, perto do teto." },
           { prop: "InputGroupTextarea · maxLength", type: "number", description: "Põe a contagem embaixo, sempre." },

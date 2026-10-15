@@ -947,13 +947,13 @@ function FormPickerPopover({
 /**
  * O gatilho é o campo e veste a superfície de campo (`border-input` +
  * `bg-input-fill/30` translúcida; o `Button outline` antigo só parecia campo
- * sob `dark:`). O padrão é `md`, alinhando com o campo ao lado no desktop; no
+ * sob `dark:`). O padrão é `lg`, alinhando com o campo ao lado no desktop; no
  * telefone mede 40 de qualquer jeito.
  */
 function FormPickerPopoverTrigger({
   className,
   children,
-  size = "md",
+  size = "lg",
   ...props
 }: Omit<React.ComponentProps<"button">, "size"> & {
   size?: FieldControlSize
@@ -1095,6 +1095,9 @@ function FormPickerPopoverList({
           // publicar `band-h`.
           scrollFadeViewportClassName,
           scrollFadeBleedClassName,
+          // Sem a busca em cima, a lista abre a placa: o topo recua 8, como as
+          // laterais e o pé. Os 4 do `py-1` são o vão para a busca.
+          "first:pt-[calc(var(--scroll-fade-band-h)+--spacing(2))]",
           className
         )}
         onWheel={(e) => {
@@ -1147,10 +1150,12 @@ function FormPickerPopoverItem({
       className={cn(
         "h-auto min-h-11 w-full justify-start px-3 py-2 text-left font-normal whitespace-normal",
         // A linha alta, e não a cápsula da base: uma linha de 44 com 22 de
-        // raio é pílula. E o realce é a camada do `Button`, na cor que ele
-        // sempre teve — `hover:bg-*` pintaria por baixo dela, em duas camadas.
-        "rounded-row-lg [--button-hover-fill:color-mix(in_oklab,var(--muted)_60%,transparent)]",
-        selected && "bg-muted font-medium text-foreground",
+        // raio é pílula. O realce é a camada do `Button` (`hover:bg-*` pintaria
+        // por baixo dela) na tinta do campo, `--input-fill` a 50%: translúcido
+        // sobre o vidro da placa, como o fundo dos inputs. O `--muted` cheio
+        // tapava a transparência.
+        "rounded-row-lg [--button-hover-fill:color-mix(in_oklab,var(--input-fill)_50%,transparent)]",
+        selected && "bg-input-fill/50 font-medium text-foreground",
         className
       )}
       {...props}
@@ -1189,7 +1194,9 @@ function FormPickerPopoverFooter({
  * preenche (`secondary`): o rodapé perdeu a moldura que o degrau quieto
  * pressupõe, e um `tertiary` ficaria indistinguível de uma linha da lista até o
  * cursor chegar (a dissolução separa por gradiente, não por peso). Não disputa
- * com o `primary`, que mora no rodapé do formulário.
+ * com o `primary`, que mora no rodapé do formulário. Fica opaco de propósito:
+ * a lista passa por baixo do pé, e translúcido o item apagado vazava atrás do
+ * rótulo (rodada 269, recusado pelo dono).
  */
 function FormPickerPopoverFooterAction({
   className,

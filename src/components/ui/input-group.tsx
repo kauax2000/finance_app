@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
-import { ChevronDownIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid"
 
 import { cn } from "@/lib/utils"
 import { CharCountLive, contarCaracteres } from "@/lib/char-count"
@@ -17,7 +17,8 @@ import {
   fieldSurfaceClassName,
   type FieldControlSize,
 } from "@/lib/field-classes"
-import { Input, type InputBaseProps } from "@/components/ui/input"
+import { Input, type InputBaseProps, type InputMoneyProps } from "@/components/ui/input"
+import { Select, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea, type TextareaProps } from "@/components/ui/textarea"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 
@@ -42,7 +43,7 @@ type InputGroupContextValue = {
 }
 
 const InputGroupContext = React.createContext<InputGroupContextValue>({
-  size: "md",
+  size: "lg",
   controlId: "",
   revealed: false,
   setRevealed: () => {},
@@ -50,7 +51,7 @@ const InputGroupContext = React.createContext<InputGroupContextValue>({
 
 function InputGroup({
   className,
-  size = "md",
+  size = "lg",
   pending = false,
   children,
   ...props
@@ -239,17 +240,36 @@ function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
   )
 }
 
-function InputGroupInput({
-  className,
-  type,
-  maxLength,
-  onChange,
-  ...props
-}: InputBaseProps & React.RefAttributes<HTMLInputElement>) {
+/** O campo de dentro: o mesmo do `Input`, de texto ou de dinheiro (`money`). */
+function InputGroupInput(
+  todas: (InputBaseProps | InputMoneyProps) & React.RefAttributes<HTMLInputElement>
+) {
   const { size, controlId, revealed } = React.useContext(InputGroupContext)
   const [digitados, setDigitados] = React.useState(
-    String(props.defaultValue ?? "").length
+    String(todas.defaultValue ?? "").length
   )
+  // `h-auto` mais `self-stretch`: a altura é da moldura e o campo a preenche,
+  // senão sobra uma faixa de 1px fora da área de clique.
+  const casca = cn(
+    "h-auto flex-1 self-stretch rounded-none border-0 bg-transparent shadow-none ring-0 focus-visible:ring-0 disabled:bg-transparent aria-invalid:ring-0 dark:bg-transparent dark:disabled:bg-transparent",
+    todas.className
+  )
+
+  // O dinheiro (o valor de uma parcela com o modo ao lado) não conta caracteres
+  // nem troca de `type`: a máscara é do `Input`.
+  if (todas.money) {
+    return (
+      <Input
+        {...todas}
+        id={todas.id ?? controlId}
+        data-slot="input-group-control"
+        size={size}
+        className={casca}
+      />
+    )
+  }
+
+  const { type, maxLength, onChange, ...props } = todas
   const contagem = props.value !== undefined ? String(props.value).length : digitados
 
   const campo = (
@@ -266,13 +286,9 @@ function InputGroupInput({
       data-slot="input-group-control"
       // O degrau chega ao campo para o corpo do texto acompanhar a altura.
       size={size}
-      className={cn(
-        // `h-auto` mais `self-stretch`: a altura é da moldura e o campo a
-        // preenche, senão sobra uma faixa de 1px fora da área de clique.
-        "h-auto flex-1 self-stretch rounded-none border-0 bg-transparent shadow-none ring-0 focus-visible:ring-0 disabled:bg-transparent aria-invalid:ring-0 dark:bg-transparent dark:disabled:bg-transparent",
-        className
-      )}
       {...props}
+      // Depois do espalhamento: o `className` de quem chama já está na casca.
+      className={casca}
     />
   )
 
@@ -348,36 +364,49 @@ function InputGroupPasswordToggle({
 }
 
 /**
- * O seletor colado no começo do campo (o DDI, a moeda): um `<select>` nativo,
- * que no telefone abre a roda do sistema. É `input-group-control`, então o foco
- * acende o anel do grupo. Texto de 16px no telefone (senão o iOS dá zoom).
- * Precisa de `aria-label`: não tem rótulo visível.
+ * O seletor colado no começo do campo (o DDI, a moeda, o modo de um valor): o
+ * `Select` do app, com a placa flutuante e os `SelectItem` dele, e o gatilho
+ * sem superfície própria — a moldura é do grupo. É `input-group-control`, então
+ * o foco acende o anel do grupo. Precisa de `aria-label`: não tem rótulo visível.
  */
 function InputGroupSelect({
   className,
   children,
-  ...props
-}: React.ComponentProps<"select"> & { "aria-label": string }) {
+  value,
+  defaultValue,
+  onValueChange,
+  disabled,
+  "aria-label": ariaLabel,
+}: {
+  className?: string
+  children: React.ReactNode
+  value?: string
+  defaultValue?: string
+  onValueChange?: (value: string) => void
+  disabled?: boolean
+  "aria-label": string
+}) {
+  const { size } = React.useContext(InputGroupContext)
   return (
-    <div
-      data-slot="input-group-select"
-      className="relative order-first flex items-center self-stretch border-e border-input"
+    <Select
+      value={value}
+      defaultValue={defaultValue}
+      onValueChange={onValueChange}
+      disabled={disabled}
     >
-      <select
+      <SelectTrigger
         data-slot="input-group-control"
+        aria-label={ariaLabel}
+        size={size}
         className={cn(
-          "h-full cursor-pointer appearance-none bg-transparent ps-3 pe-7 text-base text-foreground outline-none md:text-sm",
+          "order-first h-auto self-stretch rounded-none border-0 border-e border-input bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent",
           className
         )}
-        {...props}
       >
-        {children}
-      </select>
-      <ChevronDownIcon
-        aria-hidden
-        className="pointer-events-none absolute end-2 size-4 text-muted-foreground"
-      />
-    </div>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent align="start">{children}</SelectContent>
+    </Select>
   )
 }
 
