@@ -26796,3 +26796,17 @@ zoom-out-95` em `--duration-fast` e `--ease-out`. A `@utility dialog-sprout`
 virou `dialog-rise`, só a subida em cascata do conteúdo, sem `--morph-radius`.
 Medido na prévia no formulário de lançamento: abrir é `enter` em 0,5s na mola,
 fechar é `exit` em 0,15s. `overlay-motion.test.ts` tranca.
+
+Depois, o dono achou a entrada do diálogo pobre perto da paleta, onde as linhas
+chegam aos poucos. O filho direto da placa é quase sempre o `<form>`, e a cascata
+de antes animava o formulário inteiro de uma vez. A `@utility dialog-rise` virou
+`dialog-reveal`: as peças são achadas pelo `data-slot` (com ou sem o `<form>` no
+meio) e cada uma surge do desfoque no lugar (`menu-content-in`, como as linhas da
+paleta, sem deslocamento: o corpo rola e tem dissolução), em três ondas a 30ms
+entre irmãs — o cabeçalho a partir de 40ms, as linhas do corpo a partir de 90ms
+(o corpo com um embrulho só anima os filhos do embrulho), o rodapé a partir de
+200ms. Medido no formulário de lançamento: título 40, abas 70, campos 90 a 240,
+Cancelar 200, Salvar 230. O `Turbopack` serviu por um tempo o CSS compilado de
+uma versão velha do `globals.css` (o cache da transformação do PostCSS, que nem
+o reinício limpou); apagar `.next/dev` resolveu.
+

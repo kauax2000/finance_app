@@ -3007,20 +3007,47 @@
   }
 }
 
-/* O conteúdo do diálogo sobe em cascata atrás da placa. A placa entra pelo
-   `tw-animate` do `dialogContentVariants` (a entrada da paleta), e não pelo
-   gesto do menu (rodada 293). */
-@utility dialog-rise {
-  &[data-state="open"] > :not([data-slot="dialog-close-button"]) {
-    animation: rise 300ms var(--ease-emphasized) 80ms both;
-    --rise-distance: 0.25rem;
-    --stagger-base: 80ms;
-    --stagger-step: 40ms;
+/* O conteúdo do diálogo chega aos poucos atrás da placa, como as linhas da paleta:
+   cada peça surge do desfoque no lugar (`menu-content-in`, nunca deslocada — o corpo
+   rola e tem dissolução), em três ondas — o cabeçalho, as linhas do corpo, o rodapé —,
+   30ms entre irmãs. As peças são achadas pelo `data-slot`, com ou sem o `<form>` no
+   meio (o filho direto da placa costuma ser ele, e animá-lo inteiro lia como um bloco
+   só); o corpo com um embrulho só anima os filhos do embrulho. A placa entra pelo
+   `tw-animate` do `dialogContentVariants` (a entrada da paleta, rodada 293). */
+@utility dialog-reveal {
+  &[data-state="open"] :is([data-slot="dialog-header"], [data-slot="alert-dialog-header"]) > * {
+    animation: menu-content-in var(--duration-spring) var(--ease-out) backwards;
+    /* A escada escreve do segundo irmão em diante; a primeira peça da onda sai na base. */
+    animation-delay: var(--stagger-base);
+    --stagger-base: 40ms;
+    --stagger-step: 30ms;
     --stagger-cap: 3;
     @apply stagger-ladder;
   }
+  &[data-state="open"] [data-slot="dialog-body"] > :not(:only-child),
+  &[data-state="open"] [data-slot="dialog-body"] > :only-child > *,
+  &[data-state="open"] > :is([data-slot="alert-dialog-list"], [data-slot="alert-dialog-confirm-input"], [data-slot="alert-dialog-error"]) {
+    animation: menu-content-in var(--duration-spring) var(--ease-out) backwards;
+    /* A escada escreve do segundo irmão em diante; a primeira peça da onda sai na base. */
+    animation-delay: var(--stagger-base);
+    --stagger-base: 90ms;
+    --stagger-step: 30ms;
+    --stagger-cap: 6;
+    @apply stagger-ladder;
+  }
+  &[data-state="open"] :is([data-slot="dialog-footer"], [data-slot="alert-dialog-footer"]) > * {
+    animation: menu-content-in var(--duration-spring) var(--ease-out) backwards;
+    /* A escada escreve do segundo irmão em diante; a primeira peça da onda sai na base. */
+    animation-delay: var(--stagger-base);
+    --stagger-base: 200ms;
+    --stagger-step: 30ms;
+    --stagger-cap: 2;
+    @apply stagger-ladder;
+  }
+  /* O bloco global encurta a duração, não o atraso: sem isto a última peça ficava
+     invisível pelo atraso inteiro com a preferência ligada. */
   @media (prefers-reduced-motion: reduce) {
-    &[data-state="open"] > * {
+    &[data-state="open"] * {
       animation-delay: 0ms !important;
     }
   }

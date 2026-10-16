@@ -1087,7 +1087,9 @@ declaração de `background-color` no trilho).
     declara `flex-col` o faz de propósito); no dedo os botões dele sobem a 40
     sozinhos. `DialogContent` mantém o `showCloseButton`.
   - Abre como a paleta: fade e `zoom-in-95` na mola, fecha curto em
-    `--ease-out` (rodada 293); o conteúdo sobe em cascata (`dialog-rise`).
+    `--ease-out` (rodada 293); o conteúdo chega aos poucos, peça a peça, do
+    desfoque como as linhas da paleta (`dialog-reveal`: cabeçalho, linhas do
+    corpo, rodapé).
     Nascer do ponto do clique saiu (aberto pela barra lateral, surgia da
     esquerda de uma placa centralizada).
     `dialog-versions.test.ts`.

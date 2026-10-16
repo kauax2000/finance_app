@@ -42,7 +42,7 @@ describe("O movimento do que se sobrepõe à tela", () => {
     }
     // O diálogo (e o `AlertDialog`, que veste a moldura dele) é a exceção, como a
     // paleta: abre na mola e fecha curto (rodada 293).
-    expect(utility("dialog-rise")).not.toMatch(/menu-morph|menu-unmorph/)
+    expect(utility("dialog-reveal")).not.toMatch(/menu-morph|menu-unmorph/)
     expect(ui("dialog")).toContain("data-open:zoom-in-95 data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring)")
     expect(ui("dialog")).toContain("data-closed:zoom-out-95 data-closed:animation-duration-(--duration-fast) data-closed:ease-(--ease-out)")
     // A dica também: o Radix escreve `delayed-open`/`instant-open`.
@@ -82,7 +82,7 @@ describe("O movimento do que se sobrepõe à tela", () => {
 
   it("o diálogo cresce do próprio centro, e o Select alinhado ao item não desdobra", () => {
     // Nascia do ponto do clique; aberto pela barra lateral, surgia da esquerda.
-    expect(utility("dialog-rise")).not.toContain("transform-origin")
+    expect(utility("dialog-reveal")).not.toContain("transform-origin")
     expect(ui("dialog")).not.toContain("dialog-origin")
     expect(utility("field-bloom")).toContain('&[data-state="open"]:not([data-align-trigger="true"])')
   })
@@ -108,7 +108,11 @@ describe("O movimento do que se sobrepõe à tela", () => {
       expect(u, nome).toMatch(/animation: menu-content-in \d+ms var\(--ease-out\) \d+ms backwards;\s*--stagger-base/)
       expect(u, nome).not.toMatch(/\brise\b|--rise-distance/)
     }
-    expect(utility("dialog-rise")).toMatch(/animation: rise \d+ms var\(--ease-[a-z]+\) \d+ms both;\s*--rise-distance: 0\.25rem;/)
+    // O conteúdo do diálogo chega como as linhas da paleta: do desfoque, no lugar, peça a peça.
+    const revela = utility("dialog-reveal")
+    expect(revela).not.toMatch(/\brise\b|--rise-distance/)
+    expect(revela.match(/animation: menu-content-in var\(--duration-spring\) var\(--ease-out\) backwards;/g)).toHaveLength(3)
+    expect(revela).toContain('[data-slot="dialog-body"] > :only-child > *')
   })
 
   it("nenhum filho de rolável com dissolução se desloca ao abrir", () => {
@@ -147,7 +151,7 @@ describe("O movimento do que se sobrepõe à tela", () => {
     expect(ui("select")).toContain('"field-bloom"')
     expect(ui("select")).toContain('"overlay-cascade"')
     expect(ui("hover-card")).toContain('"hover-card-unveil"')
-    expect(ui("dialog")).toContain('"dialog-rise"')
+    expect(ui("dialog")).toContain('"dialog-reveal"')
     expect(ui("alert-dialog")).toContain("dialogContentVariants({ size, layout: \"auto\" })")
     expect(ui("tooltip")).toContain('"menu-sprout"')
   })

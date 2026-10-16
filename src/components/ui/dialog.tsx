@@ -369,11 +369,11 @@ const dialogContentVariants = cva(
     modalSurfaceClassName,
     // A entrada da paleta (`CommandDialog`): abre na mola e fecha curto em
     // `--ease-out` (uma mola até zero passa por baixo de zero). O gesto do menu
-    // fica para o que se ancora num gatilho (rodada 293). O conteúdo sobe em
-    // cascata atrás (`@utility dialog-rise`).
+    // fica para o que se ancora num gatilho (rodada 293). O conteúdo chega aos
+    // poucos atrás, peça a peça, do desfoque (`@utility dialog-reveal`).
     "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring) data-open:slide-in-from-top-1",
     "data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-closed:animation-duration-(--duration-fast) data-closed:ease-(--ease-out)",
-    "dialog-rise",
+    "dialog-reveal",
     // O recuo do diálogo é um, 24px (o `px-6` que vinte chamadas já escreviam).
     "[--dialog-px:--spacing(6)]",
     // O teto de altura do `fixed` vai em variável, para uma tela alta subi-lo.
