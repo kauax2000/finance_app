@@ -26760,3 +26760,17 @@ abre com `fade-in-0 zoom-in-95 slide-in-from-top-1` na mola (`--duration-spring`
 `--ease-out`. É a exceção nomeada ao gesto único das sobreposições; as linhas de
 dentro seguem no `command-reveal`. Medido na prévia: abrir é `enter` em 0,5s na
 mola, fechar é `exit` em 0,15s. `overlay-motion.test.ts` tranca a exceção.
+
+### Rodada 292 — a pílula do ativo não viaja quando a barra recolhe
+
+O dono viu a pílula do item ativo da `Sidebar` aos saltos ao recolher e abrir a
+barra. A causa: o botão ativo é remontado na troca (recolhida, ele ganha o
+embrulho da dica), o `useMarcador` via um elemento novo e tratava como troca de
+ativo — viajava da caixa velha (224 de largura) com esticão enquanto a barra ainda
+andava, e saltava no fim (medido: pílula a 32–48 com o botão a 224, até 530ms).
+Agora troca de ativo é o anterior ainda no DOM e outro aceso; o anterior fora do
+DOM é o mesmo item remontado, a viagem em curso é cancelada e a pílula acompanha
+a caixa pelas variáveis. Medido na prévia: ao recolher, pílula e botão iguais em
+todos os quadros e nenhuma animação; ao abrir, iguais no quadro pintado; clicar
+em outro item segue viajando. Vale para `Tabs`, `BottomBar` e `ToggleGroup`, que
+dividem o hook.

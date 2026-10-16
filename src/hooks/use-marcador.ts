@@ -101,14 +101,24 @@ export function useMarcador(o: UseMarcadorOptions): boolean {
       anterior.current = { el: ativa, caixa }
       const peca = marcador.current
       const acompanha = opcoes.current.acompanhar?.() ?? false
-      if (antes && peca && (antes.el !== ativa || acompanha)) {
+      // Troca de ativo é o anterior ainda na página e outro aceso. Se o anterior saiu
+      // do DOM, o item foi remontado (a `Sidebar` embrulha o botão numa dica ao
+      // recolher): é o mesmo ativo, e viajar partiria da caixa velha com esticão
+      // enquanto a barra ainda anda — a pílula ficava larga e saltava no fim.
+      const remontou = antes !== null && antes.el !== ativa && !antes.el.isConnected
+      const trocou = antes !== null && antes.el !== ativa && !remontou
+      if (remontou) {
+        for (const a of emCurso.current) a.cancel()
+        emCurso.current = []
+      }
+      if (antes && peca && (trocou || acompanha)) {
         for (const a of emCurso.current) a.cancel()
         const vertical = eixo === "y"
         const passo = vertical ? caixa.h : caixa.w
         const andado = Math.abs(vertical ? caixa.y - antes.caixa.y : caixa.x - antes.caixa.x)
         // O mesmo item, só maior (o rótulo abriu): acompanha a largura sem esticar.
         const amplitude =
-          antes.el === ativa ? 0 : Math.min(0.18, passo > 0 ? (andado / passo) * 0.09 : 0.09)
+          !trocou ? 0 : Math.min(0.18, passo > 0 ? (andado / passo) * 0.09 : 0.09)
         // Do mesmo tamanho, só a posição anima: `width`/`height` na mesma
         // animação tiram o efeito inteiro do compositor, e o `translate` voltaria
         // a depender da linha principal (onde a página nova trava tudo).
