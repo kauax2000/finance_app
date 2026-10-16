@@ -503,7 +503,10 @@ function BottomBarLabel({ children, ativo }: { children: React.ReactNode; ativo?
     // Piso de 40, e não 44: num telefone de 320 a trilha útil tem 212, e Painel
     // e Conta a 44 mais Transações (64) e Categorias (60) inteiras passavam dela;
     // a aba tem 64 de altura, o toque segue folgado.
-    <span className="w-full min-w-10 truncate px-0.5 text-center text-2xs leading-none" aria-hidden>
+    // O `truncate` recorta na caixa, e com `leading-none` a caixa acaba na linha de
+    // base mais pouco: a perna do "g" de Categorias saía cortada. `pb-0.5 -mb-0.5`
+    // estende o recorte 2px para baixo sem mexer na altura da aba.
+    <span className="-mb-0.5 w-full min-w-10 truncate px-0.5 pb-0.5 text-center text-2xs leading-none" aria-hidden>
       {children}
     </span>
   )

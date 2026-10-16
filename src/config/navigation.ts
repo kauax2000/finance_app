@@ -1,4 +1,4 @@
-import { ArrowPathRoundedSquareIcon, QueueListIcon, ClipboardDocumentCheckIcon, Cog6ToothIcon, CreditCardIcon, Squares2X2Icon, TagIcon, UserGroupIcon } from "@heroicons/react/24/outline"
+import { ArrowPathRoundedSquareIcon, RectangleStackIcon, ClipboardDocumentCheckIcon, Cog6ToothIcon, CreditCardIcon, Squares2X2Icon, TagIcon, UserGroupIcon } from "@heroicons/react/24/outline"
 import type { NavigationItem, SubPageMeta } from "@/types/navigation"
 
 /** Canonical path constants for links and active-state checks */
@@ -87,9 +87,10 @@ export function transactionsHrefForCreditCard(cardId: string): string {
 
 export const MAIN_NAVIGATION: NavigationItem[] = [
     { name: "Painel", href: ROUTES.DASHBOARD, icon: Squares2X2Icon },
+    // Transações em segundo, como na barra de baixo do telefone: é o que mais se usa.
+    { name: "Transações", href: ROUTES.TRANSACTIONS, icon: RectangleStackIcon },
     // A etiqueta e não a pizza: a pizza lia como relatório, e categoria é o rótulo que se põe no lançamento.
     { name: "Categorias", href: ROUTES.DASHBOARD_CATEGORIES, icon: TagIcon },
-    { name: "Transações", href: ROUTES.TRANSACTIONS, icon: QueueListIcon },
     { name: "Assinaturas", href: ROUTES.SUBSCRIPTIONS, icon: ArrowPathRoundedSquareIcon },
     {
         name: "Contas a pagar",

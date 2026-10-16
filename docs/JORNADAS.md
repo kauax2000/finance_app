@@ -313,8 +313,8 @@ flowchart TD
     desktop -->|"mobile"| bottom(["Barra inferior: Painel, Transações, Categorias, +, conta"])
 
     sidebar --> nav1["/dashboard"]
-    sidebar --> nav2["/categories"]
-    sidebar --> nav3["/transactions"]
+    sidebar --> nav2["/transactions"]
+    sidebar --> nav3["/categories"]
     sidebar --> nav4["/subscriptions"]
     sidebar --> nav5["/bills (Beta)"]
     sidebar --> nav6["/credit-cards"]

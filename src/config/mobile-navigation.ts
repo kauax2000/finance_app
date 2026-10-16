@@ -1,6 +1,6 @@
 import {
     ArrowPathRoundedSquareIcon,
-    QueueListIcon,
+    RectangleStackIcon,
     ClipboardDocumentCheckIcon,
     Cog6ToothIcon,
     CreditCardIcon,
@@ -12,7 +12,7 @@ import {
 } from "@heroicons/react/24/outline"
 import {
     ArrowPathRoundedSquareIcon as ArrowPathRoundedSquareSolid,
-    QueueListIcon as QueueListSolid,
+    RectangleStackIcon as RectangleStackSolid,
     ClipboardDocumentCheckIcon as ClipboardDocumentCheckSolid,
     Cog6ToothIcon as Cog6ToothSolid,
     CreditCardIcon as CreditCardSolid,
@@ -24,7 +24,7 @@ import {
 } from "@heroicons/react/24/solid"
 import {
     ArrowPathRoundedSquareIcon as ArrowPathRoundedSquareMicro,
-    QueueListIcon as QueueListMicro,
+    RectangleStackIcon as RectangleStackMicro,
     ClipboardDocumentCheckIcon as ClipboardDocumentCheckMicro,
     Cog6ToothIcon as Cog6ToothMicro,
     CreditCardIcon as CreditCardMicro,
@@ -66,7 +66,7 @@ import type { HeroIcon, NavigationItem } from "@/types/navigation"
 const ICONE_SOLIDO = new Map<HeroIcon, HeroIcon>([
     [Squares2X2Icon, Squares2X2Solid],
     [TagIcon, TagSolid],
-    [QueueListIcon, QueueListSolid],
+    [RectangleStackIcon, RectangleStackSolid],
     [ArrowPathRoundedSquareIcon, ArrowPathRoundedSquareSolid],
     [ClipboardDocumentCheckIcon, ClipboardDocumentCheckSolid],
     [CreditCardIcon, CreditCardSolid],
@@ -88,7 +88,7 @@ export function solidIconFor(icon: HeroIcon): HeroIcon | undefined {
 const ICONE_MICRO = new Map<HeroIcon, HeroIcon>([
     [Squares2X2Icon, Squares2X2Micro],
     [TagIcon, TagMicro],
-    [QueueListIcon, QueueListMicro],
+    [RectangleStackIcon, RectangleStackMicro],
     [ArrowPathRoundedSquareIcon, ArrowPathRoundedSquareMicro],
     [ClipboardDocumentCheckIcon, ClipboardDocumentCheckMicro],
     [CreditCardIcon, CreditCardMicro],

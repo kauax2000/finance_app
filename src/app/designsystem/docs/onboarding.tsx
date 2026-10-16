@@ -15,12 +15,12 @@ import {
 } from "@heroicons/react/16/solid"
 import {
   ChartPieIcon as ChartPieOutline,
-  QueueListIcon as QueueListOutline,
+  RectangleStackIcon as RectangleStackOutline,
   Squares2X2Icon,
 } from "@heroicons/react/24/outline"
 import {
   ChartPieIcon as ChartPieSolid,
-  QueueListIcon as QueueListSolid,
+  RectangleStackIcon as RectangleStackSolid,
   Squares2X2Icon as Squares2X2Solid,
 } from "@heroicons/react/24/solid"
 import { Battery100Icon, PlusIcon as PlusIconMini } from "@heroicons/react/20/solid"
@@ -483,7 +483,7 @@ function DemoDialogo() {
 
 const ABAS = [
   { href: "/dashboard", label: "Início", icon: Squares2X2Icon, iconActive: Squares2X2Solid },
-  { href: "/transactions", label: "Transações", icon: QueueListOutline, iconActive: QueueListSolid },
+  { href: "/transactions", label: "Transações", icon: RectangleStackOutline, iconActive: RectangleStackSolid },
   { href: "/categories", label: "Categorias", icon: ChartPieOutline, iconActive: ChartPieSolid },
 ] as const
 
