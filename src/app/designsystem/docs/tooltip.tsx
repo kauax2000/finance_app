@@ -180,7 +180,7 @@ export default function TooltipDoc() {
       </DocSection>
 
       <DocNote title="Ela brota do gatilho">
-        No gesto de toda sobreposição, o do menu da barra de baixo (rodada 287, <code>@utility menu-sprout</code>): nasce em elipse na origem do Radix (<code>--radix-tooltip-content-transform-origin</code>), cresce primeiro na altura e volta ao botão em 210ms. O gesto é CSS, pelo <code>data-state</code> do Radix; o <code>motion</code> só segura a dica montada durante a volta, e com movimento reduzido ela desmonta na hora. Até a rodada 286 era o estalo de 0,7 numa mola de JavaScript.
+        No gesto de toda sobreposição, o do menu da barra de baixo (rodada 287, <code>@utility menu-sprout</code>): nasce em elipse na origem do Radix (<code>--radix-tooltip-content-transform-origin</code>), cresce primeiro na altura e volta ao botão em 210ms. O gesto é CSS, pelo <code>data-state</code> do Radix; o <code>motion</code> só segura a dica montada durante a volta, e com movimento reduzido ela desmonta na hora. Até a rodada 286b era o estalo de 0,7 numa mola de JavaScript.
       </DocNote>
 
       <DocNote title="Tooltip não substitui aria-label">

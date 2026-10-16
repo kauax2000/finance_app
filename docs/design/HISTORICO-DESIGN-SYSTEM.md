@@ -26416,7 +26416,7 @@ transbordo **parado** — a seta mora 6px abaixo da caixa, dentro de um
 `overflow-y-auto`, e por isso sai recortada e a placa rola 6px. Não é movimento,
 e fica para outra rodada.
 
-### Rodada 283 — o formulário de lançamento: abas no cabeçalho e o borrão no corpo
+### Rodada 283b — o formulário de lançamento: abas no cabeçalho e o borrão no corpo
 
 As abas do tipo (Despesa, Parcelada, Receita) saíram do corpo que rola para o
 cabeçalho fixo, 12px sob o título (`TransactionFormSegment`). O cabeçalho perde
@@ -26472,7 +26472,7 @@ não esmaece.
 
 ### Rodada 285 — o vidro das modais numa camada, e a borda de 24px com borrão e dissolução juntos
 
-O borrão por bloco (`scroll-edge-blur`, rodada 283) não cobria a faixa: um bloco
+O borrão por bloco (`scroll-edge-blur`, rodada 283b) não cobria a faixa: um bloco
 alto nunca borrava, e o rótulo que encostava nas abas cortava nítido. O borrão de
 faixa do iOS precisa da camada de `backdrop-filter`, que lia chapada porque o
 vidro (`glass-surface`) estava no casco do `Dialog` e da gaveta: com
@@ -26578,9 +26578,9 @@ em degraus de menos de 1,5px, a transição lê contínua. Visto na prévia rola
 cartão some embaixo do mesmo jeito, sem linha nem faixa escura. O `DialogHeader`
 e o `DialogFooter` passaram a `relative z-10`.
 
-### Rodada 286 — o borrão de borda sai; fica a dissolução
+### Rodada 286b — o borrão de borda sai; fica a dissolução
 
-O dono desistiu do borrão junto da dissolução (rodadas 283 a 285): nenhuma das
+O dono desistiu do borrão junto da dissolução (rodadas 283b a 285): nenhuma das
 versões ficou bonita — o borrão por campo não pegava blocos altos, e as camadas
 de `backdrop-filter` (com máscara ou em fatias) brigavam com o vidro da gaveta.
 Tudo voltou ao estado de antes: o `DialogBody`, o `Dialog`, o `AlertDialog` e os

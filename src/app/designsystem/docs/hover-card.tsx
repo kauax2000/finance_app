@@ -237,7 +237,7 @@ export default function HoverCardDoc() {
       </DocNote>
 
       <DocNote title="A prévia brota do gatilho">
-        No gesto de toda sobreposição, o do menu da barra de baixo (rodada 287): nasce em elipse na origem do Radix, cresce primeiro na altura, e as faixas surgem do desfoque atrás; ao sair, volta ao gatilho. Até a rodada 286 ela se desvelava, subindo 8px de um desfoque, e dissolvia no lugar.
+        No gesto de toda sobreposição, o do menu da barra de baixo (rodada 287): nasce em elipse na origem do Radix, cresce primeiro na altura, e as faixas surgem do desfoque atrás; ao sair, volta ao gatilho. Até a rodada 286b ela se desvelava, subindo 8px de um desfoque, e dissolvia no lugar.
       </DocNote>
 
       <PropsTable
