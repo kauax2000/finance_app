@@ -63,9 +63,12 @@ describe("Breadcrumb", () => {
     expect(codigo).toMatch(/aria-current="page"[\s\S]{0,400}"-mx-1 h-auto min-w-0 gap-1 rounded-sm border-0 px-1 py-0/)
   })
 
-  it("a barra do app usa a trilha do sistema", () => {
-    const barra = lerFonte("src/components/layout/breadcrumb.tsx")
-    expect(barra).toContain("<BreadcrumbPage asChild>")
-    expect(barra).not.toMatch(/ChevronRightIcon|max-w-\[45%\]|SubPageBackButton/)
+  it("a barra do app não mostra a trilha: o nome da tela é só do leitor de tela", () => {
+    // 2026-10-16: o dono tirou o nome da tela da barra do desktop; a lateral é o
+    // caminho de volta. A trilha não volta escrita à mão no lugar dela.
+    const barra = lerFonte("src/components/layout/app-header.tsx")
+    expect(barra).toContain('<h1 className="sr-only">{pageTitle}</h1>')
+    expect(barra).not.toMatch(/<Breadcrumb|ChevronRightIcon|max-w-\[45%\]|SubPageBackButton/)
+    expect(lerFonte("src/components/layout/breadcrumb.tsx")).not.toContain("<Breadcrumb")
   })
 })
