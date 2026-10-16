@@ -26967,3 +26967,10 @@ placa. Os keyframes viraram um empurrão horizontal na direção dela — ao rec
 avançado à mão: aos 175ms ±4px, aos 350ms ∓1,5px, aos 500ms 0, giro 0 em todos;
 nada ao carregar. (O Turbopack serviu de novo o CSS antigo até apagar `.next/dev`.)
 
+E o dono achou o vaivém de dois tempos artificial. Ficou um movimento só: 3px na
+direção da placa, a ida numa curva de saída macia (`cubic-bezier(0.33,1,0.68,1)`)
+e a volta numa mola amortecida (`cubic-bezier(0.34,1.25,0.64,1)`), cada curva no
+seu trecho do keyframe, em 600ms. Medido a cada 50ms ao recolher: 0, −1,6, −2,5,
+−2,9, −3,0, −2,4, −1,3, −0,6, −0,2, +0,03, +0,06, +0,03, 0 — sobe macio, volta
+devagar e o passar do lugar fica abaixo de 0,1px.
+
