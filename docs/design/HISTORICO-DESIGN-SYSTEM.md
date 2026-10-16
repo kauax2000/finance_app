@@ -26901,9 +26901,10 @@ Medido a 1280: o Painel em 132 aberta, no meio da transição e recolhida; o bot
 224×36 aberto e 32×32 recolhido, centrado na faixa (82), com o ícone no centro do
 trilho (40).
 
-Na sequência, o ritmo: da carteira ao "+ Adicionar" eram 24px (o ladrilho termina
-a 56, a caixa da carteira traz 8 de folga embaixo e o grupo mais 8 em cima), e do
-botão ao Painel, 16. Nivelado pela menor: o grupo do botão perdeu o recuo de cima
-(`pt-0`, no `app-sidebar`). Medido: 16 e 16 aberta, 18 e 18 recolhida (o botão de
-32 centrado na faixa de 36); o Painel em 124 nos dois estados.
-
+Na sequência, o ritmo, medido como o dono pediu: caixa a caixa, da linha da
+carteira (48 aberta, 40 recolhida) ao "+ Adicionar" e dele à linha do Painel. Aberta
+já dava 16 e 16 (carteira 16–64, botão 80–116, Painel 132). Recolhida dava 22 e
+18; o grupo do botão ganhou, só recolhido, 6 de recuo em cima e 10 embaixo
+(`group-data-[collapsible=icon]:pt-1.5 pb-2.5`, no `app-sidebar`): 20 e 20, e o
+Painel segue em 132 nos dois estados. (Uma tentativa intermediária mediu do
+ladrilho de 32 e tirou o recuo de cima, e o botão ficou colado na carteira.)
