@@ -69,7 +69,10 @@ type AppHeaderProps = {
  * A barra do app é o `TopBar` na forma da casca: fixa no telefone com a área
  * segura, grudada no desktop, 48 no telefone e no desktop — aberta ou
  * recolhida a barra lateral —, e
- * vidro depois que a tela rola.
+ * vidro depois que a tela rola. No desktop ela corre por trás da placa
+ * flutuante da barra lateral, e a trilha segue começando na coluna do
+ * conteúdo. Do `lg` para cima são três colunas de peso igual — trilha, busca
+ * do catálogo no meio, sino à direita.
  *
  * Uma árvore só: cada ponta diz o que mostra no telefone pelo `phone`, e os
  * `children` valem de `md` para cima — no telefone o voltar (ou a carteira) e
@@ -114,9 +117,14 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                     <AppBreadcrumbNav pathname={pathname} />
                 )}
             </TopBarContent>
-            <TopBarActions>
-                {/* O recorte de tempo só sobe à barra no telefone. Fica fora do
-                    `phone`: lá o sino e a busca montariam duas vezes. */}
+            {/* A busca é a do catálogo e mora no meio: o título (`flex-1`, base
+                0) e as ações (`lg:flex-1 lg:basis-0`) têm peso igual, e a
+                pílula, de largura própria, fica no centro da barra. Abaixo de
+                `lg` é a lupa. O recorte de tempo do telefone mora aqui, antes
+                da lupa, para a ordem ficar recorte, lupa, sino; o `-me-1`
+                devolve os 4px que a lupa tinha do sino. Fica fora do `phone`:
+                lá o sino e a busca montariam duas vezes. */}
+            <div className="flex shrink-0 items-center gap-1 max-lg:-me-1 lg:w-full lg:max-w-sm lg:justify-center">
                 <span className="contents md:hidden">{chromeSlot?.dateFilter}</span>
                 {/* A paleta já escuta ⌘K; o `/` ela não escuta, então a
                     pílula não o anuncia. */}
@@ -124,8 +132,12 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                     onOpen={openSearch}
                     listen={false}
                     slash={false}
-                    className="w-56"
+                    collapse="lg"
+                    glow
+                    placeholder="Buscar telas e ações…"
                 />
+            </div>
+            <TopBarActions className="lg:flex-1 lg:basis-0 lg:justify-end">
                 <NotificationBellLink />
             </TopBarActions>
 
