@@ -1035,12 +1035,14 @@ function SidebarHeader({
       data-sidebar="header"
       // Sem `sticky`: as faixas são irmãs do rolável, não descendentes, e não há
       // ancestral rolante contra o qual grudar; quem marca o limite é a dissolução.
-      // Recolhida, a faixa desce a 48 (o botão `lg` com o recuo). Com o gatilho dentro
+      // Recolhida, a faixa mantém os 64 e a carteira sobe ao topo com o recuo de 16
+      // (`justify-start`): a mídia fica no mesmo y das duas formas e nada abaixo sobe
+      // ao recolher (pedido do dono, rodada 298). Com o gatilho dentro
       // ela cresce até o conteúdo e anima até ele: `interpolate-size` deixa a altura
       // transicionar para `auto` (no Chrome; onde falta, salta). Começa do topo, para o
       // avatar não descer enquanto a altura cresce.
       className={cn(
-        "flex h-16 shrink-0 flex-col justify-center gap-2 px-2 group-data-[collapsible=icon]:px-4 group-data-[collapsible=icon]:pt-4 transition-[height,padding] duration-(--duration-slow) ease-(--ease-emphasized) [interpolate-size:allow-keywords] group-data-[collapsible=icon]:h-12",
+        "flex h-16 shrink-0 flex-col justify-center gap-2 px-2 group-data-[collapsible=icon]:px-4 group-data-[collapsible=icon]:pt-4 group-data-[collapsible=icon]:justify-start transition-[height,padding] duration-(--duration-slow) ease-(--ease-emphasized) [interpolate-size:allow-keywords]",
         gatilhoNaBarra &&
           "h-auto justify-start py-2 group-data-[collapsible=icon]:h-auto",
         className

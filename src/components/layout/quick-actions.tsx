@@ -6,7 +6,6 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { useSidebar } from "@/components/ui/sidebar"
 import { ROUTES } from "@/config/navigation"
 import { BottomBarAction } from "@/components/ui/bottom-bar"
 import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
@@ -85,12 +84,8 @@ type QuickActionButtonProps = {
  * formulário vira a gaveta. A assinatura mora na tela dela e na paleta (⌘K).
  */
 export function QuickActionButton({ variant = "sidebar" }: QuickActionButtonProps) {
-    const { state, espiando } = useSidebar()
     const quickCreate = useQuickCreateTransaction()
     const abrir = React.useCallback(() => quickCreate("expense"), [quickCreate])
-    // Espiando, a barra está aberta por cima com o `state` ainda `collapsed` (a
-    // folga não se mexe): o botão volta ao primário inteiro com ela.
-    const isSidebarCollapsed = state === "collapsed" && !espiando
 
     if (variant === "fab") {
         return (
@@ -100,26 +95,24 @@ export function QuickActionButton({ variant = "sidebar" }: QuickActionButtonProp
         )
     }
 
-    return isSidebarCollapsed ? (
-        <Button
-            variant="primary"
-            size="icon-md"
-            type="button"
-            aria-label="Adicionar"
-            onClick={abrir}
-        >
-            <PlusIcon aria-hidden />
-        </Button>
-    ) : (
-        <Button
-            variant="primary"
-            size="lg"
-            type="button"
-            className="w-full"
-            onClick={abrir}
-        >
-            <PlusIcon aria-hidden />
-            Adicionar
-        </Button>
+    // Um botão só nos dois estados, que encolhe junto com a barra: recolhida (também
+    // espiando, quando o `data-collapsible` fica vazio e ele volta inteiro), a largura vai
+    // a 32, o rótulo some encolhendo e o ícone desliza até o centro, na curva das linhas
+    // da barra. A faixa de 36 não muda de altura: o que vem abaixo não sobe.
+    return (
+        <div className="flex h-9 items-center">
+            <Button
+                variant="primary"
+                size="lg"
+                type="button"
+                onClick={abrir}
+                className="w-full overflow-hidden transition-[width,height,padding,gap,color,background-color,border-color,box-shadow,opacity,translate] duration-(--duration-slow) ease-(--ease-emphasized) group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:[--button-h:--spacing(8)]"
+            >
+                <PlusIcon aria-hidden />
+                <span className="max-w-24 overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-(--duration-slow) ease-(--ease-emphasized) group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
+                    Adicionar
+                </span>
+            </Button>
+        </div>
     )
 }

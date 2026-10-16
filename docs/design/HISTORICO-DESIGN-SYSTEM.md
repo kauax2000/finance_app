@@ -26884,3 +26884,20 @@ no token da sua superfície. O realce no claro fica mais leve que o de antes
 (os 12% do texto escureciam mais). `secondary` e `destructive` mantêm os seus.
 Medido: com o realce aceso, o sino, as setas, o mês e o "Este mês" pintam
 `oklab(0.269 / 0.5)`, a mesma camada da carteira.
+
+### Rodada 298 — recolher a barra não mexe nada na vertical
+
+O dono viu o "+ Adicionar" subir ao recolher a barra, e trocar de forma sem
+acompanhar o resto. Medido antes: o cabeçalho descia de 64 a 48 recolhido, e o
+botão trocava de 36 para 32, então o Painel subia de 132 para 112. Agora:
+- O `SidebarHeader` mantém os 64 recolhido e leva a carteira ao topo
+  (`justify-start` com o `pt-4` de antes): a mídia dela fica em 24 nos dois estados.
+- O `QuickActionButton` é um botão só, numa faixa de 36 (`flex h-9`): recolhido,
+  a largura vai a 32, a altura a 32 (`--button-h`), o recuo e o espaço a zero, e o
+  rótulo some encolhendo (`max-w-0`) e esmaecendo, na curva das linhas
+  (`--duration-slow`, `--ease-emphasized`). O ícone desliza até o centro. Era um
+  par de botões trocados por estado, sem animação.
+Medido a 1280: o Painel em 132 aberta, no meio da transição e recolhida; o botão
+224×36 aberto e 32×32 recolhido, centrado na faixa (82), com o ícone no centro do
+trilho (40).
+

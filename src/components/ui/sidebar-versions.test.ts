@@ -115,7 +115,7 @@ describe("as versões do Sidebar", () => {
     expect(CODIGO).toContain('const SIDEBAR_WIDTH_ICON = "4rem"')
     // O recuo lateral cresce de 8 a 16 só no modo ícone: 16 + 32 + 16 = 64. O topo do
     // cabeçalho e a base do rodapé acompanham: a mesma folga de 16 nas quatro bordas.
-    expect(CODIGO).toContain("flex h-16 shrink-0 flex-col justify-center gap-2 px-2 group-data-[collapsible=icon]:px-4 group-data-[collapsible=icon]:pt-4")
+    expect(CODIGO).toContain("flex h-16 shrink-0 flex-col justify-center gap-2 px-2 group-data-[collapsible=icon]:px-4 group-data-[collapsible=icon]:pt-4 group-data-[collapsible=icon]:justify-start")
     expect(CODIGO).toContain('"mt-auto flex shrink-0 flex-col gap-2 p-2 group-data-[collapsible=icon]:px-4 group-data-[collapsible=icon]:pb-4"')
     expect(CODIGO).toContain('"relative flex w-full min-w-0 flex-col justify-start p-2 group-data-[collapsible=icon]:px-4"')
     // A carteira e a conta mantêm a mídia de 32 recolhidas: quem cede é o recuo do degrau lg.
@@ -199,7 +199,13 @@ describe("as versões do Sidebar", () => {
   })
 
   it("o que o app escrevia à mão é do componente, e o app flutua", () => {
-    expect(CODIGO).toContain("[interpolate-size:allow-keywords] group-data-[collapsible=icon]:h-12")
+    // Recolhido, o cabeçalho mantém os 64 (rodada 298): nada abaixo sobe ao recolher.
+    expect(CODIGO).not.toContain("[interpolate-size:allow-keywords] group-data-[collapsible=icon]:h-12")
+    // O "+ Adicionar" é um botão só que encolhe com a barra, numa faixa de 36 que não muda.
+    const adicionar = lerFonte("src/components/layout/quick-actions.tsx")
+    expect(adicionar).toContain('<div className="flex h-9 items-center">')
+    expect(adicionar).toContain("group-data-[collapsible=icon]:w-8")
+    expect(adicionar).toContain("group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0")
     expect(CODIGO).toContain('"h-12 p-2 group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:-m-1 group-data-[collapsible=icon]:p-1"')
     const app = lerFonte("src/components/layout/app-sidebar.tsx")
     expect(app).toContain('<Sidebar collapsible="icon" variant="floating">')
