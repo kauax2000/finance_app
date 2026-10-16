@@ -1412,11 +1412,13 @@ const sidebarMenuButtonVariants = cva(
         md: "h-8 text-sm",
         sm: "h-7 text-xs",
         // Na placa flutuante, a carteira e a conta moram nos cantos: o raio segue a
-        // curva dela (28 − 8 = 20). Recolhida, a caixa é 40 — um realce de 4px em
-        // volta da mídia de 32 (o de 8 lia como moldura larga): `size-10` com
-        // `-m-1` cabe no recuo de 16 sem mexer a mídia, e com a caixa a 12 da borda
-        // o raio concêntrico é 16.
-        lg: "h-12 text-sm group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:-m-1 group-data-[collapsible=icon]:p-1! group-data-[variant=floating]:concentric group-data-[collapsible=icon]:[--radius-inset:--spacing(3)]",
+        // curva dela (28 − 8 = 20). Recolhida, a caixa é 48, a altura da linha aberta —
+        // um realce de 8px em volta da mídia de 32 (o de 4 virava uma fita fina, difícil
+        // de ver; o dono pediu de volta o de 8, rodada 299): `size-12` com `-m-2` cabe no
+        // recuo de 16 sem mexer a mídia, e com a caixa a 8 da borda o raio concêntrico é
+        // 20, o mesmo da aberta (o recuo de 8 é dela: a placa recolhida publica o de 16,
+        // o dos itens de 32).
+        lg: "h-12 text-sm group-data-[collapsible=icon]:size-12! group-data-[collapsible=icon]:-m-2 group-data-[collapsible=icon]:p-2! group-data-[variant=floating]:concentric group-data-[collapsible=icon]:[--radius-inset:--spacing(2)]",
       },
     },
     defaultVariants: {
@@ -1565,7 +1567,7 @@ function SidebarMenuSkeleton({
       className={cn(
         "flex items-center gap-2 overflow-hidden rounded-md",
         size === "lg"
-          ? "h-12 p-2 group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:-m-1 group-data-[collapsible=icon]:p-1"
+          ? "h-12 p-2 group-data-[collapsible=icon]:size-12! group-data-[collapsible=icon]:-m-2 group-data-[collapsible=icon]:p-2"
           : "h-8 px-2",
         className
       )}

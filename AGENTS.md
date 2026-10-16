@@ -1408,11 +1408,12 @@ declaração de `background-color` no trilho).
   recolhido nem a espera do botão `lg` (`SidebarMenuSkeleton size="lg"`, com `media="avatar"` quando a peça é o `Avatar`: o osso tem a forma da peça).
   Recolhida, o trilho mede 64 (16 + o botão de 32 + 16; o recuo lateral
   cresce a 16 só no modo ícone, e o topo e a base também: 16 nas quatro bordas), e o degrau `lg` (carteira, conta)
-  vira uma caixa de 40 — `size-10` com `-m-1`, um realce de 4px em volta da
-  mídia de 32, que fica inteira e no mesmo lugar (a 16 das bordas).
-  Na placa flutuante o degrau `lg` é `concentric`: 20 aberta (a 8 da borda) e
-  16 recolhida (a caixa a 12 da borda; o recuo publicado de 16 no modo ícone
-  vale para os itens de 32).
+  vira uma caixa de 48 — `size-12` com `-m-2`, um realce de 8px em volta da
+  mídia de 32, que fica inteira e no mesmo lugar (a 16 das bordas); o de 4px
+  (caixa de 40) virava uma fita fina, difícil de ver (rodada 299).
+  Na placa flutuante o degrau `lg` é `concentric`: 20 aberta e recolhida (a
+  caixa a 8 da borda nos dois; recolhida ela declara o recuo de 8, porque o
+  publicado de 16 no modo ícone vale para os itens de 32).
   **O botão de recolher mora num lugar só** (`SidebarProvider toggle`): o do
   componente é `topbar` (no `TopBar`, viajando para a barra recolhida — o
   catálogo o usa); **o app usa `header`** (desde 2026-10-16; antes era `edge`, a

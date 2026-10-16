@@ -71,10 +71,9 @@ export function AppSidebar() {
             <WorkspaceSwitcher />
             <SidebarContent>
                 {/* Caixa a caixa, o vão da linha da carteira ao botão é o mesmo do botão à
-                    linha do Painel: 16 aberta (carteira de 48, botão de 36). Recolhida, a
-                    carteira vira a caixa de 40 e o botão 32, e os dois vãos ficam em 20: 6 de
-                    recuo em cima e 10 embaixo, para o Painel não sair do lugar. */}
-                <SidebarGroup className="group-data-[collapsible=icon]:pt-1.5 group-data-[collapsible=icon]:pb-2.5">
+                    linha do Painel: 16 aberta (carteira de 48, botão de 36) e 18 recolhida
+                    (a mesma caixa de 48, o botão de 32 centrado na faixa de 36). */}
+                <SidebarGroup>
                     <QuickActionButton variant="sidebar" />
                 </SidebarGroup>
                 <SidebarGroup>

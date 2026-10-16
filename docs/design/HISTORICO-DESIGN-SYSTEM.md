@@ -26908,3 +26908,18 @@ já dava 16 e 16 (carteira 16–64, botão 80–116, Painel 132). Recolhida dava
 (`group-data-[collapsible=icon]:pt-1.5 pb-2.5`, no `app-sidebar`): 20 e 20, e o
 Painel segue em 132 nos dois estados. (Uma tentativa intermediária mediu do
 ladrilho de 32 e tirou o recuo de cima, e o botão ficou colado na carteira.)
+
+### Rodada 299 — a caixa recolhida da carteira e da conta volta a 48
+
+O dono viu o realce da carteira recolhida como uma fita fina, difícil de ver: a
+caixa de 40 deixava 4px em volta da mídia de 32. O degrau `lg` recolhido volta a
+48 (`size-12!` com `-m-2` e `p-2!`), 8px de realce — a altura da linha aberta. A
+nota antiga dizia que o de 8 "lia como moldura larga"; a decisão se inverte a
+pedido do dono. A caixa fica a 8 da borda da placa e declara o recuo de 8
+(`[--radius-inset:--spacing(2)]`) para o concêntrico dar 20, o mesmo da aberta
+(sem a declaração ela herdava o recuo de 16 dos itens de 32 e dava 12). O
+esqueleto `lg` acompanha. No `app-sidebar`, o grupo do "+ Adicionar" volta ao
+recuo padrão: com a caixa de 48 recolhida, os vãos caixa a caixa dão 18 e 18.
+Medido a 1280: recolhida, carteira e conta 48×48 a 8 da borda, raio 20, mídia em
+24 (como aberta), vãos 18 e 18; aberta, 16 e 16; o Painel em 132 nos dois.
+

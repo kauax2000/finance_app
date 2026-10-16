@@ -126,7 +126,7 @@ describe("as versões do Sidebar", () => {
   it("na placa flutuante, a carteira e a conta seguem a curva do canto", () => {
     // O degrau lg mora nos cantos da placa: concêntrico (28 − 8 = 20 aberta). Recolhida o
     // botão fica a 16 do canto, e o recuo publicado sobe junto (28 − 16 = 12, a linha).
-    expect(CODIGO).toContain('lg: "h-12 text-sm group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:-m-1 group-data-[collapsible=icon]:p-1! group-data-[variant=floating]:concentric group-data-[collapsible=icon]:[--radius-inset:--spacing(3)]"')
+    expect(CODIGO).toContain('lg: "h-12 text-sm group-data-[collapsible=icon]:size-12! group-data-[collapsible=icon]:-m-2 group-data-[collapsible=icon]:p-2! group-data-[variant=floating]:concentric group-data-[collapsible=icon]:[--radius-inset:--spacing(2)]"')
     expect(CODIGO).toContain("group-data-[variant=floating]:[--radius-inset:--spacing(2)] group-data-[collapsible=icon]:[--radius-inset:--spacing(4)]!")
   })
 
@@ -206,7 +206,7 @@ describe("as versões do Sidebar", () => {
     expect(adicionar).toContain('<div className="flex h-9 items-center">')
     expect(adicionar).toContain("group-data-[collapsible=icon]:w-8")
     expect(adicionar).toContain("group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0")
-    expect(CODIGO).toContain('"h-12 p-2 group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:-m-1 group-data-[collapsible=icon]:p-1"')
+    expect(CODIGO).toContain('"h-12 p-2 group-data-[collapsible=icon]:size-12! group-data-[collapsible=icon]:-m-2 group-data-[collapsible=icon]:p-2"')
     const app = lerFonte("src/components/layout/app-sidebar.tsx")
     expect(app).toContain('<Sidebar collapsible="icon" variant="floating">')
     expect(app).not.toContain('<Sidebar collapsible="icon" variant="sidebar">')
@@ -338,10 +338,10 @@ describe("as versões do Sidebar", () => {
         CODIGO.indexOf("function SidebarMenuButton")
       )
       expect(cva).toContain("group-data-[collapsible=icon]:p-2!") // md, ícone 16
-      expect(cva).toContain('lg: "h-12 text-sm group-data-[collapsible=icon]:size-10!') // lg, caixa de 40 em volta da mídia de 32
-      // Com `p-1!` numa caixa de 32 sobravam 24 para uma mídia de 32 e o `overflow-hidden`
-      // cortava a borda: o `p-1!` só vale junto da caixa de 40 (40 − 2×4 = 32).
-      expect(cva).toContain("group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:-m-1 group-data-[collapsible=icon]:p-1!")
+      expect(cva).toContain('lg: "h-12 text-sm group-data-[collapsible=icon]:size-12!') // lg, caixa de 48 em volta da mídia de 32
+      // O recuo vai junto com a caixa: 48 − 2×8 = 32, a mídia inteira (com um recuo
+      // maior que a caixa permite, o `overflow-hidden` cortava a borda dela).
+      expect(cva).toContain("group-data-[collapsible=icon]:size-12! group-data-[collapsible=icon]:-m-2 group-data-[collapsible=icon]:p-2!")
       // E não se conserta com `justify-center`: o rótulo continua no fluxo em
       // modo ícone, a linha transborda, e centrar transbordo empurra para fora.
       expect(cva).not.toContain("group-data-[collapsible=icon]:justify-center")
