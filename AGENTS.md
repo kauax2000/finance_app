@@ -1231,9 +1231,11 @@ declaração de `background-color` no trilho).
   nasce a 20% em elipse na origem do Radix, cresce primeiro na altura e passa 8%
   dela — e `menu-unmorph` de volta em 210ms. Vestem `DropdownMenu`, `ContextMenu`,
   `Menubar`, `NavigationMenu`, `Select`, `Combobox`, o seletor do `Form`,
-  `Popover`, `HoverCard`, `Tooltip`, `DatePicker`, `Dialog`, `AlertDialog` e a
-  paleta do `Command`; muda só a origem (o botão, o campo, o cursor; o diálogo, o
-  próprio centro). As utilities (`menu-sprout`, `context-menu-burst`,
+  `Popover`, `HoverCard`, `Tooltip`, `DatePicker`, `Dialog` e `AlertDialog`; muda
+  só a origem (o botão, o campo, o cursor; o diálogo, o
+  próprio centro). **A paleta do `CommandDialog` é a exceção**: abre na mola
+  (`zoom-in-95`, `--duration-spring`) e fecha curto (`--duration-fast`,
+  `--ease-out`), como antes da rodada 287, a pedido do dono. As utilities (`menu-sprout`, `context-menu-burst`,
   `field-bloom`, `popover-sprout`, `hover-card-unveil`, `date-picker-bloom`,
   `dialog-sprout`) ficam pelas faixas de dentro de cada peça; o raio de chegada é
   `--morph-radius` (o diálogo declara o modal). Os keyframes animam `transform`

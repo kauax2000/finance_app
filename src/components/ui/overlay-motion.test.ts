@@ -44,9 +44,14 @@ describe("O movimento do que se sobrepõe à tela", () => {
     expect(utility("dialog-sprout")).toContain("--morph-radius: var(--radius-modal);")
     // A dica também: o Radix escreve `delayed-open`/`instant-open`.
     expect(utility("menu-sprout")).toContain('&[data-state="delayed-open"]')
-    for (const peça of ["menubar", "navigation-menu", "command", "tooltip"]) {
+    for (const peça of ["menubar", "navigation-menu", "tooltip"]) {
       expect(ui(peça), peça).toContain("menu-sprout")
     }
+    // A paleta do `CommandDialog` é a exceção: abre na mola e fecha curto, como antes
+    // da rodada 287 (pedido do dono).
+    expect(ui("command")).not.toContain('"menu-sprout"')
+    expect(ui("command")).toContain("data-open:zoom-in-95 data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring)")
+    expect(ui("command")).toContain("data-closed:zoom-out-95 data-closed:animation-duration-(--duration-fast) data-closed:ease-(--ease-out)")
   })
 
   it("o menu brota do botão nos quadros do menu do iOS 26", () => {

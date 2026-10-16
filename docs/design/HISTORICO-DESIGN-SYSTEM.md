@@ -26750,3 +26750,13 @@ sem aresta. No telefone a barra segue `fixed`, sem margem, e a ordem é título,
 recorte, lupa, sino. A busca a 1440 com a barra recolhida: 384px, centro em
 760, o da coluna do conteúdo.
 
+
+### Rodada 291 — a paleta volta à entrada de antes
+
+O dono pediu de volta a animação de abrir e fechar do `CommandDialog` anterior à
+rodada 287. A paleta sai do gesto do menu (`menu-sprout`) e volta ao `tw-animate`:
+abre com `fade-in-0 zoom-in-95 slide-in-from-top-1` na mola (`--duration-spring`,
+`--ease-spring`) e fecha com `fade-out-0 zoom-out-95` em `--duration-fast` e
+`--ease-out`. É a exceção nomeada ao gesto único das sobreposições; as linhas de
+dentro seguem no `command-reveal`. Medido na prévia: abrir é `enter` em 0,5s na
+mola, fechar é `exit` em 0,15s. `overlay-motion.test.ts` tranca a exceção.

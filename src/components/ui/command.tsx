@@ -264,8 +264,11 @@ function CommandDialog({
             "pointer-coarse:[--command-dialog-stack:calc(var(--command-dialog-h)+--spacing(1))]",
             "[--command-dialog-top:calc(50%-var(--command-dialog-stack)/2)]",
             "top-(--command-dialog-top)",
-            // A paleta brota do centro no gesto do menu (`@utility menu-sprout`).
-            "menu-sprout"
+            // A paleta abre na mola e fecha curto em `--ease-out` (uma mola até
+            // zero passa por baixo de zero). É a exceção ao gesto do menu
+            // (rodada 287): o dono preferiu a entrada dela de antes.
+            "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring) data-open:slide-in-from-top-1",
+            "data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-closed:animation-duration-(--duration-fast) data-closed:ease-(--ease-out)"
           )}
         >
           {/* O nome acessível mora dentro do `Content`: fora dele o `DialogHeader`
