@@ -120,9 +120,11 @@ export function useBrandGlow<T extends HTMLElement = HTMLDivElement>(ativo: bool
     }
 
     // Agenda no máximo um quadro por rajada de eventos; não é o `rAF` em laço que esta casa proíbe.
+    // O quadro pendente fica (ele lê a última posição quando roda): cancelar e reagendar a
+    // cada evento adiava a conta enquanto o mouse andava — o Chrome entrega um
+    // `pointermove` por quadro — e o arco ficava aceso, preso no último "perto".
     const agendar = () => {
-      if (quadro) cancelAnimationFrame(quadro)
-      quadro = requestAnimationFrame(calcular)
+      if (!quadro) quadro = requestAnimationFrame(calcular)
     }
 
     const aoMover = (e: PointerEvent) => {

@@ -351,6 +351,9 @@ describe("contorno de marca", () => {
     // O `rAF` coalesce uma rajada de `pointermove` num quadro (um ponto de agendamento, e um cancelamento); não é o laço de polling.
     expect(src.match(/requestAnimationFrame\(/g)?.length).toBe(1)
     expect(src).toMatch(/cancelAnimationFrame/)
+    // O quadro pendente não é cancelado a cada evento: com um `pointermove` por quadro, a
+    // conta nunca rodava enquanto o mouse andava, e o arco ficava aceso longe da peça.
+    expect(src).toMatch(/if \(!quadro\) quadro = requestAnimationFrame\(calcular\)/)
     // O tween e o quadro pendentes morrem no unmount, junto dos listeners.
     expect(src).toMatch(
       /return \(\) => \{\s*tween\?\.stop\(\)\s*if \(quadro\) cancelAnimationFrame/
