@@ -553,7 +553,6 @@ function TopBarSearch({
   listen = true,
   collapse = "md",
   glow = false,
-  size = "lg",
   className,
 }: {
   onOpen: () => void
@@ -570,8 +569,6 @@ function TopBarSearch({
   collapse?: "md" | "lg"
   /** O brilho de marca na borda da pílula (uma por tela). */
   glow?: boolean
-  /** O degrau da escada de controle: `lg` 36 (o padrão) ou `md` 32. O ícone acompanha. */
-  size?: "md" | "lg"
   className?: string
 }) {
   const abrir = React.useRef(onOpen)
@@ -604,7 +601,7 @@ function TopBarSearch({
       <Button
         {...comum}
         variant="tertiary"
-        size={size === "md" ? "icon-md" : "icon-lg"}
+        size="icon-lg"
         data-slot="top-bar-search"
         // `relative` ancora o alvo de toque no botão; sem ele o `::after` se estenderia
         // pela barra inteira e engoliria o toque no ☰ do telefone.
@@ -627,11 +624,10 @@ function TopBarSearch({
         <Button
           {...comum}
           variant="tertiary"
-          size={size}
           data-slot="top-bar-search"
           className={cn(
             searchFieldShapeClassName,
-            searchFieldSizeClassName[size],
+            searchFieldSizeClassName.lg,
             searchFieldSurfaceClassName.field,
             "w-full justify-start font-normal text-muted-foreground",
             // A pílula não realça nem acende o texto: é um campo, e campo não muda de cor no cursor.
