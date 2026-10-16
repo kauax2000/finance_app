@@ -13,11 +13,7 @@ import {
     TopBarStart,
     TopBarTitle,
 } from "@/components/ui/top-bar"
-import {
-    AppBreadcrumbNav,
-    resolveAppSubPageMeta,
-} from "@/components/layout/breadcrumb"
-import { DashboardPageTitle } from "@/components/layout/page-title"
+import { resolveAppSubPageMeta } from "@/components/layout/breadcrumb"
 import { WorkspaceSwitcher } from "@/components/layout/workspace-switcher"
 import { usePageChromeState } from "@/components/layout/page-chrome-provider"
 import {
@@ -69,14 +65,14 @@ type AppHeaderProps = {
  * A barra do app é o `TopBar` na forma da casca: fixa no telefone com a área
  * segura, grudada no desktop, 48 no telefone e no desktop — aberta ou
  * recolhida a barra lateral —, e sem tinta nem fio: o conteúdo que passa por
- * baixo some no borrão progressivo (`surface="edge"`), mais forte junto à borda. No desktop ela corre por trás da placa
- * flutuante da barra lateral, e a trilha segue começando na coluna do
- * conteúdo. Do `lg` para cima são três colunas de peso igual — trilha, busca
- * do catálogo no meio, sino à direita.
+ * baixo some no borrão progressivo (`surface="edge"`), mais forte junto à
+ * borda. No desktop ela corre por trás da placa flutuante da barra lateral e
+ * não diz o nome da tela: do `lg` para cima são três colunas de peso igual —
+ * vazio, busca do catálogo no meio, sino à direita.
  *
  * Uma árvore só: cada ponta diz o que mostra no telefone pelo `phone`, e os
  * `children` valem de `md` para cima — no telefone o voltar (ou a carteira) e
- * o título; no desktop o gatilho da barra lateral e a trilha.
+ * o título; no desktop só o gatilho da barra lateral.
  */
 export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     const chromeSlot = usePageChromeState()
@@ -86,7 +82,7 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     const [searchOpen, setSearchOpen] = React.useState(false)
     const openSearch = () => setSearchOpen(true)
 
-    const mobileTitle =
+    const pageTitle =
         chromeSlot?.title ?? defaultMobileTitle(pathname, titleMode)
     const mobileBackHref =
         chromeSlot?.backHref ?? defaultMobileBackHref(pathname)
@@ -113,13 +109,12 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
             </TopBarStart>
             {/* O título do telefone mora no meio, e não numa ponta própria:
                 uma segunda peça `flex-1` vazia dividiria a linha e o título
-                truncaria antes. */}
-            <TopBarContent phone={<TopBarTitle>{mobileTitle}</TopBarTitle>}>
-                {titleMode === "dashboard" ? (
-                    <DashboardPageTitle pathname={pathname} />
-                ) : (
-                    <AppBreadcrumbNav pathname={pathname} />
-                )}
+                truncaria antes. No desktop a barra não mostra o nome da tela (a
+                lateral marca onde se está): ele fica só para o leitor de tela, o
+                `<h1>` da página. O meio segue como o par elástico da esquerda
+                para a busca cair no centro. */}
+            <TopBarContent phone={<TopBarTitle>{pageTitle}</TopBarTitle>}>
+                <h1 className="sr-only">{pageTitle}</h1>
             </TopBarContent>
             {/* A busca é a do catálogo e mora no meio: o título (`flex-1`, base
                 0) e as ações (`lg:flex-1 lg:basis-0`) têm peso igual, e a

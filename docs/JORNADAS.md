@@ -364,6 +364,7 @@ flowchart TD
 | Formulários globais | Transação e assinatura montados uma vez na casca; salvar invalida as listas abertas | `src/components/layout/global-shell-dialogs-provider.tsx` |
 | Menus do telefone | O "+" abre direto a gaveta do formulário de lançamento, com Despesa marcada (o seletor do formulário troca para Parcelada e Receita; assinatura fica na tela dela e na paleta). Era uma folha de ações (`Drawer` com `DrawerActions`) antes do formulário, e no desktop um menu: um passo a mais na jornada mais comum. A aba "Mais" (fixa: não troca de ícone nem de rótulo e não fica ativa nas páginas do menu; era o avatar) abre o menu da conta num painel (`DropdownMenu variant="panel"`) que brota dela para cima, só com as telas que não cabem na barra; cada link fecha o painel e leva à tela. Em cima as telas da carteira, embaixo Minha conta e Configurações. O tema mora em Configurações (seção Aparência); o sair (o menu ⋯ do perfil) e Planos e pagamentos (a seção Plano, só no telefone) moram em Minha conta. Antes foi uma gaveta de 625px com identidade, tema e sair, e antes dela um `Popover` de vidro escrito à mão | `src/components/layout/quick-actions.tsx`, `src/components/layout/mobile-account-menu.tsx` |
 | Busca global (⌘K) | Montada uma vez no `AppHeader`, com a lupa nas duas árvores da barra; no telefone abre como gaveta. As telas vêm de `navigation.ts` e `account-menu-links.ts`; as ações chamam os mesmos ganchos do "+ Adicionar" (`useQuickCreateTransaction`, `useQuickCreateSubscription`); categorias e cartões leem o cache de `useCategoriesQuery` e `useCreditCardsQuery`, as mesmas consultas da casca. Os recentes ficam no `localStorage` (`app:busca`) | `src/components/layout/app-command-palette.tsx`, `src/components/layout/app-header.tsx` |
+| Nome da tela e voltar | No telefone a barra do topo mostra o título e o voltar das subpáginas (`/categories/id`, `/categories/new`, `/credit-cards/id`, as de `/account`), pelo `usePageChromeSlot`. No desktop ela não mostra o nome da tela (o `<h1>` fica só para o leitor de tela) nem a trilha: a lateral marca onde se está e é o caminho de volta. A trilha com o link para a tela de cima ("Categorias", "Cartões de crédito") saiu em 2026-10-16 | `src/components/layout/app-header.tsx` |
 | Destino da notificação | `metadata.href` seguro vence; senão, o tipo decide. Espelha o servidor para o push | `src/lib/notification-href.ts`, `supabase/functions/_shared/notification-types.ts` |
 | Notificações no servidor | Edges `dispatch-notifications`, `evaluate-budgets`, `evaluate-credit-card-alerts`, `evaluate-bills-reminders`, `credit-card-calendar-alerts`, `notify-transaction-created` | `supabase/functions/` |
 | Push | Edges `push-subscribe` e `push-unsubscribe` | `supabase/functions/` |
@@ -767,7 +768,7 @@ flowchart TD
     listView -->|"cartão de receita"| detailIn["/categories/id?type=income"]
     detailIn --> detail
 
-    detail -->|"voltar"| cats
+    detail -->|"voltar, no telefone; no desktop, a lateral"| cats
     detail --> summary(["Orçamento, restante, estouro, lançado x projetado, média, maior e menor, % do total"])
     detail --> trend(["Tendências"])
     detail -->|"⋯ Editar"| catForm
