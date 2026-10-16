@@ -341,6 +341,12 @@ describe("contorno de marca", () => {
     expect(src).toMatch(/const aoRolar = \(\) => agendar\(\)/)
     // `capture: true`: `scroll` não borbulha mas captura, e sem isso a rolagem dentro de um container passa despercebida.
     expect(src).toMatch(/addEventListener\("scroll", aoRolar, \{ capture: true/)
+    // Sair da janela não manda `pointermove`: o arco da peça no topo (a busca da barra)
+    // ficava aceso na última posição. Sair sem destino, ou perder o foco, apaga.
+    expect(src).toMatch(/addEventListener\("pointerout", aoSair/)
+    expect(src).toMatch(/if \(!e\.relatedTarget\) esquecer\(\)/)
+    expect(src).toMatch(/addEventListener\("blur", esquecer\)/)
+    expect(src).toMatch(/removeEventListener\("pointerout", aoSair\)/)
 
     // O `rAF` coalesce uma rajada de `pointermove` num quadro (um ponto de agendamento, e um cancelamento); não é o laço de polling.
     expect(src.match(/requestAnimationFrame\(/g)?.length).toBe(1)

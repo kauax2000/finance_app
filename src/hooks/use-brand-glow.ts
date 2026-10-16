@@ -137,15 +137,33 @@ export function useBrandGlow<T extends HTMLElement = HTMLDivElement>(ativo: bool
     // `capture: true` pega a rolagem dentro de container (`scroll` não borbulha, mas captura).
     const aoRolar = () => agendar()
 
+    // O ponteiro que sai da janela não manda mais `pointermove`, e a última posição
+    // ficaria valendo: com a peça no topo (a busca da barra), sair pela barra de
+    // endereço deixava o arco aceso. Sair (`pointerout` sem destino) ou perder o foco
+    // esquece a posição e apaga; o próximo movimento dentro da página recalcula.
+    const esquecer = () => {
+      temPosicao = false
+      if (quadro) cancelAnimationFrame(quadro)
+      quadro = 0
+      el.style.setProperty("--brand-glow-active", "0")
+    }
+    const aoSair = (e: PointerEvent) => {
+      if (!e.relatedTarget) esquecer()
+    }
+
     doc.addEventListener("pointermove", aoMover, { passive: true })
     win.addEventListener("scroll", aoRolar, { capture: true, passive: true })
     win.addEventListener("resize", aoRolar)
+    doc.addEventListener("pointerout", aoSair, { passive: true })
+    win.addEventListener("blur", esquecer)
     return () => {
       tween?.stop()
       if (quadro) cancelAnimationFrame(quadro)
       doc.removeEventListener("pointermove", aoMover)
       win.removeEventListener("scroll", aoRolar, { capture: true })
       win.removeEventListener("resize", aoRolar)
+      doc.removeEventListener("pointerout", aoSair)
+      win.removeEventListener("blur", esquecer)
     }
   }, [ativo])
 
