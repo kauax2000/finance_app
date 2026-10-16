@@ -109,7 +109,7 @@ describe("Tokens, variante e escopo opaco", () => {
     expect(variante).toContain("prefers-reduced-transparency: reduce")
     const vidro = blocoCss(CSS, "@utility glass-surface {")
     expect(vidro).toMatch(
-      /&:is\(\[data-opaque\]\[data-opaque\] \*\) \{\s*backdrop-filter: none;\s*-webkit-backdrop-filter: none;/
+      /&:is\(\[data-opaque\]\[data-opaque\] \*\) \{\s*-webkit-backdrop-filter: none;\s*backdrop-filter: none;/
     )
   })
 })
