@@ -26974,3 +26974,10 @@ seu trecho do keyframe, em 600ms. Medido a cada 50ms ao recolher: 0, −1,6, −
 −2,9, −3,0, −2,4, −1,3, −0,6, −0,2, +0,03, +0,06, +0,03, 0 — sobe macio, volta
 devagar e o passar do lugar fica abaixo de 0,1px.
 
+O botão de recolher do `header` ganhou o mesmo balanço (`@utility
+sidebar-trigger-sway`, aplicada pelo `SidebarTrigger` só com `toggle="header"`; o
+do `topbar` viaja, e a viagem já é o movimento). Ele mora fora da placa, então a
+regra pergunta ao invólucro (`[data-toggled]:has([data-slot="sidebar"][data-
+collapsible="icon"]) &`). Medido a cada 100ms ao recolher: 0, −2,5, −3, −1,3,
+−0,2, +0,1, 0; ao abrir, o espelho; nada ao carregar.
+

@@ -848,7 +848,14 @@ function SidebarTrigger({
         gatilhoNaBarra && "ms-0 ml-0"
       )}
     >
-      {gatilhoNaBarra ? null : <SidebarTriggerButton {...props} />}
+      {gatilhoNaBarra ? null : (
+        // No `header` ele balança com a barra (`@utility sidebar-trigger-sway`), como a
+        // carteira e a conta; o do `topbar` viaja, e o movimento já é a viagem.
+        <SidebarTriggerButton
+          {...props}
+          className={toggle === "header" ? "sidebar-trigger-sway" : undefined}
+        />
+      )}
     </span>
   )
 }

@@ -102,7 +102,7 @@ describe("as versões do Sidebar", () => {
     expect(CODIGO).toMatch(/gatilhoNaBarra:\s*toggle === "topbar" && gatilhoMovel && state === "collapsed" && !isMobile/)
     expect(CODIGO).toContain('value={variant === "floating" && collapsible === "icon"}')
     expect(CODIGO).toContain("{gatilhoNaBarra ? <SidebarTriggerButton naBarra /> : null}")
-    expect(CODIGO).toContain("{gatilhoNaBarra ? null : <SidebarTriggerButton {...props} />}")
+    expect(CODIGO).toMatch(/\{gatilhoNaBarra \? null : \([\s\S]*?<SidebarTriggerButton\s+\{\.\.\.props\}/)
     // A vaga encolhe em vez de sumir, e a ponta do topo devolve o `gap`.
     expect(CODIGO).toContain("inline-flex w-8 shrink-0 transition-[width,margin] duration-(--duration-slow) ease-(--ease-emphasized) data-vazio:w-0")
     expect(lerFonte("src/components/ui/top-bar.tsx")).toContain(
@@ -131,6 +131,9 @@ describe("as versões do Sidebar", () => {
     expect(CODIGO).toContain('lg: "h-12 text-sm group-data-[collapsible=icon]:size-12! group-data-[collapsible=icon]:-m-2 group-data-[collapsible=icon]:p-2! group-data-[variant=floating]:concentric group-data-[collapsible=icon]:[--radius-inset:--spacing(2)] sidebar-media-sway"')
     // O balanço da mídia ao recolher e abrir, só depois da primeira troca.
     expect(CODIGO).toContain('"data-toggled": alternou || undefined,')
+    // O botão de recolher do `header` balança junto, perguntando ao invólucro se a placa recolheu.
+    expect(CODIGO).toContain('className={toggle === "header" ? "sidebar-trigger-sway" : undefined}')
+    expect(lerFonte("src/app/globals.css")).toContain('[data-toggled]:has([data-slot="sidebar"][data-collapsible="icon"]) & {')
     expect(lerFonte("src/app/globals.css")).toMatch(/\[data-toggled\] \[data-collapsible="icon"\] & > :first-child \{\s*animation-name: sidebar-media-sway-close;/)
     expect(CODIGO).toContain("group-data-[variant=floating]:[--radius-inset:--spacing(2)] group-data-[collapsible=icon]:[--radius-inset:--spacing(4)]!")
   })

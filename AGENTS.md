@@ -1413,7 +1413,9 @@ declaração de `background-color` no trilho).
   (caixa de 40) virava uma fita fina, difícil de ver (rodada 299). A mídia do
   degrau `lg` balança ao recolher e abrir (`@utility sidebar-media-sway`: 3px na
   direção da placa — esquerda ao recolher, direita ao abrir —, ida em curva de
-  saída e volta em mola amortecida, 600ms; sem rotação nem vaivém), só
+  saída e volta em mola amortecida, 600ms; sem rotação nem vaivém) — e o botão
+  de recolher do `header` balança junto (`@utility sidebar-trigger-sway`, que
+  pergunta ao invólucro por `:has` se a placa recolheu) —, só
   depois da primeira troca (`data-toggled` no invólucro) e nunca com movimento
   reduzido.
   Na placa flutuante o degrau `lg` é `concentric`: 20 aberta e recolhida (a

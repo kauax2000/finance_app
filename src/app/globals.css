@@ -3065,6 +3065,21 @@
   }
 }
 
+/* O mesmo balanço no botão de recolher do `header` (`SidebarTrigger` com
+   `toggle="header"`), que mora fora da placa: quem diz se ela recolheu é o
+   invólucro, por `:has`, e não um ancestral. */
+@utility sidebar-trigger-sway {
+  [data-toggled] & {
+    animation: sidebar-media-sway-open 600ms linear;
+  }
+  [data-toggled]:has([data-slot="sidebar"][data-collapsible="icon"]) & {
+    animation-name: sidebar-media-sway-close;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    animation: none !important;
+  }
+}
+
 /* O conteúdo do diálogo chega aos poucos atrás da placa, como as linhas da paleta:
    cada peça surge do desfoque no lugar (`menu-content-in`, nunca deslocada — o corpo
    rola e tem dissolução), em três ondas — o cabeçalho, as linhas do corpo, o rodapé —,
