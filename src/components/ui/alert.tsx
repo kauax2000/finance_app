@@ -55,7 +55,7 @@ const alertVariants = cva(
     variants: {
       /** A cor chega ao texto, não só ao ícone: título e descrição herdam a tinta do tom. */
       tone: {
-        default: "border-border bg-card text-card-foreground",
+        default: "border-border bg-card bg-clip-padding text-card-foreground",
         info: "border-info/30 bg-info-muted text-info-muted-foreground",
         success:
           "border-success/30 bg-success-muted text-success-muted-foreground",
@@ -80,7 +80,7 @@ const alertVariants = cva(
          */
         brand: [
           "brand-rainbow-image brand-glow isolate",
-          "border border-border bg-card text-card-foreground",
+          "border border-border bg-card bg-clip-padding text-card-foreground",
         ].join(" "),
       },
       size: {

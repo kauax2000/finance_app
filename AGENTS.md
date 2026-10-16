@@ -955,6 +955,13 @@ declaração de `background-color` no trilho).
   `size-*` no ícone; sempre `16/solid`). `BadgeDot` é o ponto de estado (`pulse`
   para o que acontece agora, cor em `--badge-dot`), `animate-ping` e **não**
   `animate-pulse`.
+- **O fio de uma caixa compõe sobre o que está fora, como a barra lateral**
+  (rodada 288): toda caixa com `border` e fundo de cartão leva
+  `bg-clip-padding`. No escuro o `--border` é branco a 10%, e com o fundo
+  pintando por baixo dele o fio somava ao `--card` (~0,28, claro demais); a
+  lateral desenha o anel por fora, sobre a página (~0,23). No claro o fio é
+  chapado e nada muda. `card-versions.test.ts` reprova `border` + `bg-card` sem
+  o recorte em `src/components`.
 - **`Card`**: `variant` é a superfície (`outline` — o padrão —, `elevated`,
   `muted`, `plain`, `dashed` — o vazio ou o "adicionar" —, `brand`, uma por
   tela); `padding` é o ritmo (`none` | `sm` | **`md`** | `lg`). **`padding="none"`

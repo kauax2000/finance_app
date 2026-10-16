@@ -26619,3 +26619,25 @@ e pediu primeiro esses iguais, depois **todas as sobreposições** iguais.
 - Medido na prévia: o seletor de categoria e o `Select` do valor em `menu-morph`
   com origem `0 0` (a aresta do campo); o diálogo em `menu-morph` do centro,
   pousando em 28px.
+
+### Rodada 288 — o fio dos cartões no contraste da barra lateral
+
+O dono preferiu o contraste da borda da barra lateral ao dos cartões do painel.
+O token é o mesmo nos dois (branco a 10% no escuro); o que mudava era o que
+ficava atrás do fio. A lateral desenha um anel por fora (`ring-1
+ring-foreground/10`), que soma à página (0,145) e sai perto de 0,23; o cartão
+desenha uma borda por dentro, com o próprio fundo (0,205) pintando embaixo
+dela, e saía perto de 0,28.
+
+- `bg-clip-padding` em toda caixa com `border` e fundo de cartão: `Card`
+  (`outline`, `elevated`, `muted`, `brand`, `CardField`), `Accordion`
+  (`contained`, `separated`), `Alert` (`default`, `brand`), `Carousel card`,
+  `Collapsible card`, as três caixas do `Calendar`, o `EmptyState card` e os
+  ladrilhos fantasmas, o `StatCardGroup joined`; no app, o resumo de
+  `dashboard-recent-transactions`, o cartão do detalhe da conta a pagar e o
+  painel do onboarding de categorias.
+- Os controles (`Tabs solid`, `ToggleGroup`, `Menubar outline`,
+  `NavigationMenu outline`) e os tons do `Alert` ficam como estão: não são
+  cartões, e o tom tem fio e fundo da mesma família.
+- `card-versions.test.ts` passa a varrer `src/components` atrás de `border` +
+  `bg-card` sem o recorte.

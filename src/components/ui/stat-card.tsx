@@ -591,7 +591,7 @@ const statCardGroupVariants = cva("stat-card-reveal grid min-w-0", {
     variant: {
       separate: "gap-2",
       joined: [
-        "gap-px overflow-hidden rounded-surface border border-border bg-border",
+        "gap-px overflow-hidden rounded-surface border border-border bg-border bg-clip-padding",
         "[&>[data-slot=stat-card]]:rounded-none [&>[data-slot=stat-card]]:border-0 [&>[data-slot=stat-card]]:shadow-none",
       ].join(" "),
     },

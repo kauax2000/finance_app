@@ -62,3 +62,26 @@ describe("as versões do Card", () => {
     }
   })
 })
+
+describe("o fio das superfícies", () => {
+  it("toda caixa com borda e fundo de cartão recorta o fundo no padding, como a lateral", () => {
+    // O fio é translúcido no escuro (`--border` a 10%): com o fundo pintando por baixo
+    // dele, ele soma ao `--card` e sai claro (~0,28); recortado, soma ao que está
+    // fora, como o anel da barra lateral (~0,23). No claro o fio é chapado e nada muda.
+    const fontes = [
+      ...arquivosTsx(join(process.cwd(), "src/components")),
+      join(process.cwd(), "src/components/categories/categories-onboarding-panel-styles.ts"),
+    ]
+    const faltando: string[] = []
+    for (const arquivo of fontes) {
+      for (const [, classes] of lerFonte(arquivo).matchAll(/"([^"\n]*)"/g)) {
+        const t = classes.split(/\s+/)
+        if (t.includes("border") && t.some((c) => /^bg-card(\/\d+)?$/.test(c)) && !t.includes("bg-clip-padding")) {
+          faltando.push(`${arquivo.replace(process.cwd() + "/", "")}: ${classes}`)
+        }
+      }
+    }
+    expect(faltando).toEqual([])
+  })
+})
+

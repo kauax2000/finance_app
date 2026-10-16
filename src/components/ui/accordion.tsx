@@ -82,7 +82,7 @@ const accordionVariants = cva("flex w-full flex-col", {
     variant: {
       plain: "[--accordion-px:0px]",
       contained:
-        "overflow-hidden rounded-surface border border-border bg-card [--accordion-px:--spacing(4)]",
+        "overflow-hidden rounded-surface border border-border bg-card bg-clip-padding [--accordion-px:--spacing(4)]",
       separated: "gap-2 [--accordion-px:--spacing(4)]",
     },
   },
@@ -189,7 +189,7 @@ function AccordionItem({
         // Item solto fechado é uma linha de 34 a 42px: a linha (12), não a
         // superfície, que o desenharia cápsula.
         variant === "separated" &&
-          "overflow-hidden rounded-row border border-border bg-card",
+          "overflow-hidden rounded-row border border-border bg-card bg-clip-padding",
         "min-w-0",
         // O ícone do gatilho empurra o conteúdo para baixo do rótulo.
         "has-[[data-slot=accordion-trigger-icon]]:[--accordion-icon-ps:--spacing(7)]",

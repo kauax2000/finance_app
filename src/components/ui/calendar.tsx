@@ -444,7 +444,7 @@ function Calendar({
         // da própria agenda ela some e a lista do `CalendarShell` aparece.
         month_grid: cn(
           agenda &&
-            "flex w-full flex-col overflow-hidden rounded-surface border border-border bg-card @max-[40rem]/calendar:hidden",
+            "flex w-full flex-col overflow-hidden rounded-surface border border-border bg-card bg-clip-padding @max-[40rem]/calendar:hidden",
           defaultClassNames.month_grid
         ),
         weekdays: cn("flex", agenda && "border-b border-border", defaultClassNames.weekdays),
@@ -697,7 +697,7 @@ function CalendarAgendaList() {
   return (
     <div
       data-slot="calendar-agenda-list"
-      className="hidden flex-col gap-1 rounded-surface border border-border bg-card p-1.5 @max-[40rem]/calendar:flex [--radius-inset:calc(--spacing(1.5)+1px)] [--radius-parent:var(--radius-surface)]"
+      className="hidden flex-col gap-1 rounded-surface border border-border bg-card bg-clip-padding p-1.5 @max-[40rem]/calendar:flex [--radius-inset:calc(--spacing(1.5)+1px)] [--radius-parent:var(--radius-surface)]"
     >
       {dias.length === 0 ? (
         <p className="py-6 text-center text-sm text-muted-foreground">
@@ -1112,7 +1112,7 @@ function CalendarSkeleton({
             <Skeleton className="size-8 rounded-full" />
           </div>
         </div>
-        <div className="overflow-hidden rounded-surface border border-border bg-card">
+        <div className="overflow-hidden rounded-surface border border-border bg-card bg-clip-padding">
           <div className="flex border-b border-border py-2">
             {Array.from({ length: 7 }, (_, c) => (
               <div key={c} className="flex w-0 min-w-0 flex-1 justify-center">

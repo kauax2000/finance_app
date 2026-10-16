@@ -55,7 +55,7 @@ const CollapsibleContext = React.createContext<CollapsibleState | null>(null)
  * desenharia cápsula.
  */
 const COLLAPSIBLE_CARD =
-  "overflow-hidden rounded-row-lg border border-border bg-card text-card-foreground [--collapsible-px:--spacing(4)]"
+  "overflow-hidden rounded-row-lg border border-border bg-card bg-clip-padding text-card-foreground [--collapsible-px:--spacing(4)]"
 
 function Collapsible({
   open: openProp,

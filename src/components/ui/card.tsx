@@ -46,14 +46,14 @@ const cardVariants = cva(
     variants: {
       variant: {
         /** Chapado sobre a página. O cartão do app. */
-        outline: "border border-border bg-card text-card-foreground",
+        outline: "border border-border bg-card bg-clip-padding text-card-foreground",
         /** O mesmo, levantado. Para o que flutua sobre uma lista atrás. */
-        elevated: "border border-border bg-card text-card-foreground shadow-sm",
+        elevated: "border border-border bg-card bg-clip-padding text-card-foreground shadow-sm",
         /**
          * Contêiner de segunda ordem, para o bloco de apoio. `bg-muted` inteiro
          * e não um alfa: um alfa não atravessa os dois temas (invisível nos dois).
          */
-        muted: "border border-border/60 bg-muted text-foreground",
+        muted: "border border-border/60 bg-muted bg-clip-padding text-foreground",
         /** Sem borda e sem preenchimento: só agrupa, onde a superfície já existe. */
         plain: "border border-transparent bg-transparent text-foreground",
         /**
@@ -68,7 +68,7 @@ const cardVariants = cva(
          */
         brand: [
           "brand-rainbow-image brand-glow isolate overflow-clip [overflow-clip-margin:var(--spacing)]",
-          "border border-border bg-card text-card-foreground",
+          "border border-border bg-card bg-clip-padding text-card-foreground",
         ].join(" "),
         /** O tracejado: o lugar de um cartão que ainda não existe (o "adicionar", a lista vazia). */
         dashed: "border border-dashed border-border bg-transparent text-muted-foreground",
@@ -477,7 +477,7 @@ function CardField({
       className={cn(
         // Veste a linha alta (16), não o concêntrico: a 16px da borda 22 − 16
         // cairia no mínimo de 6, e em `padding="none"` sairia 22.
-        "rounded-row-lg flex min-w-0 flex-col gap-1 border border-border/60 bg-background/80 p-3 text-sm",
+        "rounded-row-lg flex min-w-0 flex-col gap-1 border border-border/60 bg-background/80 bg-clip-padding p-3 text-sm",
         className
       )}
       {...props}

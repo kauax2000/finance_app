@@ -33,7 +33,7 @@ const emptyStateVariants = cva(
     variants: {
       variant: {
         dashed: "rounded-surface border border-dashed border-border bg-muted/20",
-        card: "rounded-surface border border-border bg-card/40",
+        card: "rounded-surface border border-border bg-card/40 bg-clip-padding",
         // Sem moldura, para dentro de um `Card` ou de uma célula de tabela que já tem a sua.
         plain: "",
       },
@@ -196,7 +196,7 @@ function EmptyStateIcon({
                 data-slot="empty-state-icon-tile"
                 className={cn(
                   // O canto é o degrau da escada (8 · 10 · 12) pelo degrau do vazio.
-                  "flex size-(--empty-state-icon) items-center justify-center rounded-(--empty-state-tile-r) border border-border bg-card shadow-sm",
+                  "flex size-(--empty-state-icon) items-center justify-center rounded-(--empty-state-tile-r) border border-border bg-card bg-clip-padding shadow-sm",
                   "transition-[rotate,translate] duration-(--duration-spring) ease-(--ease-spring)",
                   TILE_POSICAO[i]
                 )}
@@ -338,7 +338,7 @@ function EmptyStateGhost({
         {linhas.map((largura, i) => (
           <div
             key={i}
-            className="mb-2 flex h-11 items-center gap-3 rounded-lg border border-border bg-card/70 px-3"
+            className="mb-2 flex h-11 items-center gap-3 rounded-lg border border-border bg-card/70 bg-clip-padding px-3"
           >
             <span className={cn("shrink-0 bg-muted", GHOST_LEADING[leading])} />
             <span className="flex min-w-0 flex-1 flex-col items-start gap-1.5">

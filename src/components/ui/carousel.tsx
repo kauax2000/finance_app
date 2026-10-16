@@ -171,7 +171,7 @@ const carouselVariants = cva("group/carousel relative [--carousel-control-x:50%]
   variants: {
     variant: {
       plain: "",
-      card: "rounded-surface border border-border bg-card p-3",
+      card: "rounded-surface border border-border bg-card bg-clip-padding p-3",
       inset: "rounded-surface bg-muted p-3",
     },
     controls: { inside: "", outside: "", none: "" },

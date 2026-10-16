@@ -307,7 +307,7 @@ export function BillDetailSheet({
                     ) : (
                         <div className="space-y-6">
                             {nextInst ? (
-                                <div className="rounded-surface border border-border bg-card p-4 shadow-xs">
+                                <div className="rounded-surface border border-border bg-card bg-clip-padding p-4 shadow-xs">
                                     <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
                                         Próxima parcela
                                     </p>
