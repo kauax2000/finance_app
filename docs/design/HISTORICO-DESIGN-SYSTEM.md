@@ -26923,3 +26923,10 @@ recuo padrão: com a caixa de 48 recolhida, os vãos caixa a caixa dão 18 e 18.
 Medido a 1280: recolhida, carteira e conta 48×48 a 8 da borda, raio 20, mídia em
 24 (como aberta), vãos 18 e 18; aberta, 16 e 16; o Painel em 132 nos dois.
 
+Depois, o dono viu a entrada aos poucos só na primeira abertura do formulário de
+lançamento. O `useRevelacao` mora no `DialogContent`, e quem o chama fica montado
+entre uma abertura e outra (o formulário é da casca; só a placa desmonta), então o
+`data-revealed` sobrava ligado. A marca agora zera quando a placa termina de sair
+(`animationend` de `exit` nela mesma). Medido: três aberturas seguidas, 10 peças
+surgindo em cada uma.
+

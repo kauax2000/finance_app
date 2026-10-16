@@ -116,6 +116,8 @@ describe("O movimento do que se sobrepõe à tela", () => {
     // Só na abertura: o que entra depois (os campos de outra aba) não passa pelo desfoque.
     expect(revela.match(/&\[data-state="open"\]:not\(\[data-revealed\]\)/g)).toHaveLength(5)
     expect(ui("dialog")).toContain('return { "data-revealed": revelado || undefined, onAnimationEnd: aoTerminar }')
+    // E zera ao terminar de sair: quem chama fica montado entre aberturas, e só a primeira chegava aos poucos.
+    expect(ui("dialog")).toMatch(/e\.target === e\.currentTarget && e\.animationName === "exit"\) \{\s*setRevelado\(false\)/)
     expect(ui("alert-dialog")).toContain("const revelacao = useRevelacao(onAnimationEnd)")
   })
 
