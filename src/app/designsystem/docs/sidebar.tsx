@@ -580,7 +580,7 @@ export default function SidebarDoc() {
       </DocNote>
 
       <DocNote title="Ao lado do floating, o cabeçalho não pinta e o gatilho flutua">
-        O <code>SidebarInset</code> tira o fundo do <code>TopBar</code> em repouso — o <code>glass</code>, e o <code>scroll</code> depois de rolar, mantêm o vidro, porque aí há conteúdo por baixo —, e o <code>SidebarTrigger</code> vira uma pílula da mesma placa: o <code>--sidebar</code>, o anel e a sombra. Os dois decidem pelo seletor de irmão da raiz da barra, sem prop.
+        O <code>SidebarInset</code> tira o fundo do <code>TopBar</code> em repouso — o <code>glass</code>, e o <code>scroll</code> depois de rolar, mantêm o vidro, porque aí há conteúdo por baixo —, e o <code>SidebarTrigger</code> vira uma pílula da mesma placa: o <code>--sidebar</code>, o anel e a sombra. Os dois decidem pelo seletor de irmão da raiz da barra, sem prop. E a barra, filha do <code>SidebarInset</code>, passa por trás da placa: o invólucro publica <code>--sidebar-gap</code> e o <code>SidebarInset</code> é <code>isolate</code>, então em repouso ela é transparente e, rolada, o vidro e o fio correm de ponta a ponta.
       </DocNote>
 
       <DocNote title="Recolhida em ícone, o gatilho entra na barra">

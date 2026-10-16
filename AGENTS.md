@@ -1421,10 +1421,14 @@ declaração de `background-color` no trilho).
   (`sideOffset={4}`) e **sobrepõe a borda da placa** (4px aberta, 12 recolhida,
   contra o recuo de 8 e de 16): encostado e alinhado à borda dela, lia como
   parte do fundo.
+  **Ao lado do `floating`, o `TopBar` filho do `SidebarInset` passa por trás
+  da placa**: o invólucro publica `--sidebar-gap` (aberta, trilho, espiando,
+  offcanvas) e o `SidebarInset` é `isolate`; nenhuma tela escreve a margem nem
+  o recuo. No redimensionável não passa (o painel recorta) e o fio fica a 0.
 - **`TopBar`**: `variant="floating"`, `titleAlign`, `size` (`lg` 64), área
   segura por `--top-bar-safe-area`. **`TopBarAction`** — **nenhuma tela escreve
   o `span` da contagem nem embrulha um botão da barra num `Tooltip` à mão**;
-  `TopBarSearch` (⌘K e `/`), `TopBarProgress`, `TopBarSkeleton`. **Uma árvore
+  `TopBarSearch` (⌘K e `/`; no app, com `glow` e `collapse="lg"`, centrada numa coluna `max-w-sm` entre pontas de peso igual), `TopBarProgress`, `TopBarSkeleton`. **Uma árvore
   só**: as pontas aceitam `phone` — **nenhuma barra escreve duas árvores com
   `md:hidden` e `hidden md:contents`**. `hideOnScroll`.
 - **`BottomBar`**: a pele do `Tabs floating` (pílula `--popover` com o anel,

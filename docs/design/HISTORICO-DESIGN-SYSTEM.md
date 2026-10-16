@@ -26645,3 +26645,60 @@ dela, e saía perto de 0,28.
   (0,31 chapado), mais claro que o anel da lateral. Saiu o `dark:border-input`;
   com o `bg-clip-padding` da base, o `--border` soma à página como na lateral.
   Vale para as setas e o mês da barra do painel e para todo botão `outline`.
+
+### Rodada 289 — a barra do topo passa por trás da placa, e a busca vai ao centro
+
+**O pedido.** O dono pediu que o header passe por trás da barra lateral, que a
+busca seja o mesmo componente do design system e fique no centro dele, e que o
+resto converse com o que foi feito nos diálogos e na barra lateral.
+
+**As decisões** (do Claude, a pedido do dono).
+- **A barra corre a tela inteira, por baixo da placa.** Ao lado de uma `Sidebar
+  floating` não redimensionável, o `TopBar` filho do `SidebarInset` recua pela
+  folga (`--sidebar-gap`) e devolve o recuo como `padding`: o conteúdo fica
+  onde está e a superfície vai à borda da janela. A placa (`--z-sticky`) fica
+  por cima porque o `SidebarInset` é `isolate`.
+- **O fio volta** (estava a 0 por ficar pendurado na borda da placa). No
+  redimensionável a barra não passa por trás e o fio segue a 0.
+- **A folga é variável do invólucro**, sem `100vw` (nas prévias do catálogo
+  `vw` é a janela inteira). Margem e `padding` transicionam na curva da folga.
+- **A busca é o `TopBarSearch`** com `glow` e `collapse="lg"`, na coluna
+  `max-w-sm` centrada, entre pontas de peso igual (`flex-1 basis-0`).
+
+**O que mudou.**
+- `sidebar.tsx`: o invólucro publica `--sidebar-gap` (aberta
+  `--sidebar-width`; trilho e espiando `--sidebar-width-icon` + 16px;
+  offcanvas 0); o `SidebarInset` não redimensionável é `isolate` e
+  reposiciona o `TopBar` filho direto (`-ms`, `w-auto`, `ps`, transição de
+  `margin` e `padding`). O redimensionável mantém `--sidebar-inset-rule` a 0.
+- `app-header.tsx`: coluna central com o `TopBarSearch`; o sino, sozinho, nas
+  ações da direita; no telefone o recorte de tempo passa a ficar junto da
+  lupa (`max-lg:-me-1` guarda 4px até o sino).
+- Docs: o fio e a nota do `floating` no catálogo, os bullets `Sidebar` e
+  `TopBar` do `AGENTS.md`.
+
+**Medido** na prévia "eixos" de `/designsystem/sidebar` (`SidebarProvider` +
+`Sidebar floating` + `SidebarInset` + `TopBar`, iframe de 926px, `md` ativo).
+Aberta: margem -256px, `padding` 272px, `left` 0 e largura 926 (a do iframe);
+`elementFromPoint(100,24)` cai na placa. Recolhida em ícone: `--sidebar-gap` =
+64 + 16 = 80px, margem -80px, `padding` 96px (o trilho mede 64 e a calha 16).
+Espiando: margem continua -80px. Offcanvas: gap 0, margem 0, `padding` 16px.
+Na transição de 300ms (cinco pontos, 0 a 100%), `titleX` menos a largura da
+folga ficou em 40 em todos: o título não salta. `transition-property`
+computado: `background-color, border-color, translate, margin, padding`. Rolada
+(forçando `data-surface="scroll"` e `data-scrolled`): fio de 1px e fundo sólido
+pintado de 0 a 926. Redimensionável: margem 0, `padding` 16, fio 0, barra
+começando em 264,7. Telefone (iframe de 375px): margem 0, `padding` 16px,
+`isolation: auto`, sem mudança. Testes: `sidebar-versions` e `top-bar-versions`
+passam; `tsc`, `lint` e `test:unit` verdes.
+
+**Não foi medido.** O app (`/dashboard`, Transações e o telefone) não foi
+medido ao vivo: o `next dev` do dono em :3000 respondia 500 em
+todas as rotas (cache `.next/dev` corrompido após `ENOSPC`) e o espelho de
+teste não tinha sessão. A ordem do telefone (recorte, lupa, sino) e o
+centro real da busca no app seguem por conferir. A barra de seleção do
+`DataTable` é portalizada no `body`, fora do `isolate`, e não ganhou
+centralização pelo conteúdo.
+
+**Ficou fora.** O telefone, a `TopBar variant="floating"`, a frase rolante, a
+altura, a placa da barra lateral e o redimensionável.
