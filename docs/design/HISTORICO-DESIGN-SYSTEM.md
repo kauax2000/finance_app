@@ -26835,3 +26835,19 @@ o mesmo que a do sino do `lg` para cima (`flex-1 basis-0`; o meio vazio
 versão, com o botão no cabeçalho da placa. Medido a 1280, aberta e recolhida: o
 botão 36×36, a 16px da placa e no topo 6 como o sino (16 da borda direita); a
 busca em 768 e 680, o centro da área visível nos dois.
+
+### Rodada 295 — o brilho de marca apaga de vez
+
+O dono viu, no navegador dele, um arco fraco preso sob a busca com o mouse longe
+(gravado em vídeo: o arco parado por mais de 1,6s). Na prévia não reproduziu
+depois das duas correções do agendamento (o `pointerout` sem destino e o quadro
+que não se cancela a cada evento). A terceira é defensiva, para as causas que a
+prévia não mostra: o `useBrandGlow` acende e apaga num lugar só (`acender`),
+apagado ele para o giro onde está (o arco esmaece parado, sem varrer a borda
+atrás do ponteiro) e escreve `data-brand-glow="off"`; o CSS tira o pseudo
+(`visibility: hidden`) quando o esmaecimento acaba, então nenhuma camada com
+filtro e máscara fica pintada com opacidade zero. Só onde o hook escreve o
+atributo: o `beam` do onboarding acende por CSS e não o tem. Medido: perto, `on`
+e 0,47; saindo, `off`, 0,14 e o giro parado; depois, `hidden`. O Turbopack
+servia CSS e código velhos naquela hora (o cache da transformação), e o vídeo
+pode ter vindo de uma aba com o código antigo.

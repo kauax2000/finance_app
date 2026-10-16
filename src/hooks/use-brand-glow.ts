@@ -65,6 +65,20 @@ export function useBrandGlow<T extends HTMLElement = HTMLDivElement>(ativo: bool
     let quadro = 0
     let tween: { stop: () => void } | null = null
 
+    // Acende ou apaga num lugar só. Apagado, o giro para onde está (o arco esmaece
+    // parado, sem varrer a borda atrás do ponteiro que saiu) e o `data-brand-glow`
+    // deixa o CSS tirar o pseudo de vez quando o esmaecimento acaba (`visibility`):
+    // nenhuma camada fica pintada com opacidade zero.
+    const acender = (aceso: boolean) => {
+      el.style.setProperty("--brand-glow-active", aceso ? "1" : "0")
+      el.dataset.brandGlow = aceso ? "on" : "off"
+      if (!aceso) {
+        tween?.stop()
+        tween = null
+      }
+    }
+    acender(false)
+
     const calcular = () => {
       quadro = 0
       if (!temPosicao) return
@@ -80,7 +94,7 @@ export function useBrandGlow<T extends HTMLElement = HTMLDivElement>(ativo: bool
         Math.hypot(ultimaX - cx, ultimaY - cy) <
         0.5 * Math.min(width, height) * GLOW_ZONA_MORTA
       ) {
-        el.style.setProperty("--brand-glow-active", "0")
+        acender(false)
         return
       }
 
@@ -90,7 +104,7 @@ export function useBrandGlow<T extends HTMLElement = HTMLDivElement>(ativo: bool
         ultimaY > top - GLOW_PROXIMIDADE &&
         ultimaY < top + height + GLOW_PROXIMIDADE
 
-      el.style.setProperty("--brand-glow-active", perto ? "1" : "0")
+      acender(perto)
       if (!perto) return
 
       // O ângulo atual sai do DOM (o que o tween escreveu no último quadro), não
@@ -147,7 +161,7 @@ export function useBrandGlow<T extends HTMLElement = HTMLDivElement>(ativo: bool
       temPosicao = false
       if (quadro) cancelAnimationFrame(quadro)
       quadro = 0
-      el.style.setProperty("--brand-glow-active", "0")
+      acender(false)
     }
     const aoSair = (e: PointerEvent) => {
       if (!e.relatedTarget) esquecer()
@@ -161,6 +175,7 @@ export function useBrandGlow<T extends HTMLElement = HTMLDivElement>(ativo: bool
     return () => {
       tween?.stop()
       if (quadro) cancelAnimationFrame(quadro)
+      delete el.dataset.brandGlow
       doc.removeEventListener("pointermove", aoMover)
       win.removeEventListener("scroll", aoRolar, { capture: true })
       win.removeEventListener("resize", aoRolar)

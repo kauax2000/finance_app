@@ -1642,6 +1642,15 @@
      `transition` sobre `@property` seria equivalente só por dedução, e o dono não a
      aceitou como a animação da referência. */
 
+  /* Apagado pelo `useBrandGlow`, o pseudo sai de vez depois do esmaecimento: com
+     opacidade zero ele ainda era uma camada pintada (filtro e máscara), e um arco
+     fraco ficou preso num navegador. Só onde o hook escreve o atributo — quem acende
+     por CSS (`[--brand-glow-active:1]`, o `beam` do onboarding) não o tem. */
+  &[data-brand-glow="off"]::before {
+    visibility: hidden;
+    transition: opacity var(--duration-slow) var(--ease-out), visibility 0s var(--duration-slow);
+  }
+
   &::before {
     content: "";
     position: absolute;
@@ -1679,7 +1688,7 @@
         border-box;
     filter: blur(2px);
     opacity: calc(var(--brand-glow-active, 0) * var(--brand-glow-opacity));
-    transition: opacity var(--duration-slow) var(--ease-out);
+    transition: opacity var(--duration-slow) var(--ease-out), visibility 0s;
     pointer-events: none;
     /* A máscara recorta o anel: duas camadas, a janela (`border-box`), um triângulo puro
        de três paradas com o opaco no meio (`transparent, #fff, transparent 80deg`),

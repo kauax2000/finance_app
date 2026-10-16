@@ -1,6 +1,6 @@
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
-import { lerFonte, semComentarios } from "@/test/fonte"
+import { blocoCss, lerFonte, semComentarios } from "@/test/fonte"
 import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
 import { cn } from "@/lib/utils"
@@ -333,8 +333,13 @@ describe("contorno de marca", () => {
     expect(src).toMatch(/prefers-reduced-motion: reduce/)
     expect(src).toMatch(/if \(semMovimento\)/)
     expect(src).not.toMatch(/let angulo/)
-    // O tween anterior para antes do novo, e no unmount.
-    expect(src.match(/tween\?\.stop\(\)/g)?.length).toBe(2)
+    // O tween anterior para antes do novo, ao apagar (o arco esmaece parado) e no unmount.
+    expect(src.match(/tween\?\.stop\(\)/g)?.length).toBe(3)
+    // Apagado, o pseudo sai de vez depois do esmaecimento, só onde o hook escreve o atributo.
+    expect(src).toContain('el.dataset.brandGlow = aceso ? "on" : "off"')
+    expect(blocoCss(lerFonte("src/app/globals.css"), "@utility brand-glow {")).toMatch(
+      /&\[data-brand-glow="off"\]::before \{\s*visibility: hidden;\s*transition: opacity var\(--duration-slow\) var\(--ease-out\), visibility 0s var\(--duration-slow\);/
+    )
 
     // A rolagem recalcula o estado, não só a geometria: guarda a última posição do ponteiro e refaz a conta.
     expect(src).toMatch(/ultimaX/)
