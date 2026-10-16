@@ -55,11 +55,11 @@ describe("o desenho do Tabs", () => {
     // Só o rótulo mudou (depois do arraste): o marcador acompanha sem esticar.
     expect(CODIGO).toContain('acompanhar: labels === "active" ? abrirRotulo : undefined')
     const marcador = lerFonte("src/hooks/use-marcador.ts")
-    expect(marcador).toContain("!trocou ? 0 :")
-    // O ativo remontado (a `Sidebar` o embrulha numa dica ao recolher) é o mesmo item:
-    // não viaja da caixa velha, e a viagem em curso é cancelada.
-    expect(marcador).toContain("const remontou = antes !== null && antes.el !== ativa && !antes.el.isConnected")
-    expect(marcador).toMatch(/if \(remontou\) \{\s*for \(const a of emCurso\.current\) a\.cancel\(\)/)
+    expect(marcador).toContain("antes.el === ativa ? 0 :")
+    // A caixa do mesmo ativo que muda com a viagem em curso (a `Sidebar` recolhendo)
+    // redireciona o destino, no mesmo relógio: a pílula não pousa na caixa velha.
+    expect(marcador).toContain("redirecionarViagem(efeito, caixa)")
+    expect(lerFonte("src/lib/liquid-move.ts")).toContain("trajeto.setKeyframes([partida, quadro(para)])")
   })
 })
 

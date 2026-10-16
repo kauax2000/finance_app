@@ -26761,16 +26761,18 @@ abre com `fade-in-0 zoom-in-95 slide-in-from-top-1` na mola (`--duration-spring`
 dentro seguem no `command-reveal`. Medido na prévia: abrir é `enter` em 0,5s na
 mola, fechar é `exit` em 0,15s. `overlay-motion.test.ts` tranca a exceção.
 
-### Rodada 292 — a pílula do ativo não viaja quando a barra recolhe
+### Rodada 292 — a pílula do ativo viaja junto com a barra que recolhe
 
-O dono viu a pílula do item ativo da `Sidebar` aos saltos ao recolher e abrir a
-barra. A causa: o botão ativo é remontado na troca (recolhida, ele ganha o
-embrulho da dica), o `useMarcador` via um elemento novo e tratava como troca de
-ativo — viajava da caixa velha (224 de largura) com esticão enquanto a barra ainda
-andava, e saltava no fim (medido: pílula a 32–48 com o botão a 224, até 530ms).
-Agora troca de ativo é o anterior ainda no DOM e outro aceso; o anterior fora do
-DOM é o mesmo item remontado, a viagem em curso é cancelada e a pílula acompanha
-a caixa pelas variáveis. Medido na prévia: ao recolher, pílula e botão iguais em
-todos os quadros e nenhuma animação; ao abrir, iguais no quadro pintado; clicar
-em outro item segue viajando. Vale para `Tabs`, `BottomBar` e `ToggleGroup`, que
-dividem o hook.
+O dono viu a pílula do item ativo da `Sidebar` atrasada ao recolher e abrir a
+barra. O botão ativo é remontado na troca (recolhida, ele ganha o embrulho da
+dica), e o `useMarcador` dispara a viagem líquida no primeiro quadro, mirando a
+caixa daquele quadro, com a barra mal começando a andar: a pílula pousava ali e
+saltava para a caixa certa quando a animação acabava (medido: 32–48 de largura
+com o botão a 224, até 530ms).
+
+A primeira correção tirou a viagem na remontagem (a pílula seguia as variáveis,
+colada ao botão), e o dono achou simples: a viagem era boa, só chegava tarde.
+Ficou a viagem, e o destino passou a ser redirecionado: enquanto ela corre, cada
+medida nova do mesmo ativo troca o quadro final do trajeto pela caixa de agora
+(`redirecionarViagem`, `setKeyframes` no efeito em curso), no mesmo relógio e na
+mesma curva. Vale para `Tabs`, `BottomBar` e `ToggleGroup`, que dividem o hook.

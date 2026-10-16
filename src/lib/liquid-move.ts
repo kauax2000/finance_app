@@ -132,3 +132,16 @@ export function viajarLiquido(
     ),
   ]
 }
+
+/**
+ * Troca o destino de uma viagem em curso, sem recomeçar: o quadro final do
+ * trajeto vira a caixa nova e o relógio e a curva seguem. Serve quando o lugar do
+ * mesmo ativo continua andando depois que a viagem saiu (a barra lateral
+ * recolhendo). O quadro de partida fica; o tamanho entra no destino mesmo que a
+ * viagem tenha saído só com a posição.
+ */
+export function redirecionarViagem(trajeto: KeyframeEffect, para: CaixaLiquida) {
+  const [partida] = trajeto.getKeyframes()
+  if (!partida) return
+  trajeto.setKeyframes([partida, quadro(para)])
+}

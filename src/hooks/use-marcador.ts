@@ -2,7 +2,7 @@
 
 import * as React from "react"
 
-import { TRAJETO_MACIO, viajarLiquido, type CaixaLiquida } from "@/lib/liquid-move"
+import { TRAJETO_MACIO, redirecionarViagem, viajarLiquido, type CaixaLiquida } from "@/lib/liquid-move"
 import { caixaDoAtivo } from "@/lib/marcador"
 
 type UseMarcadorOptions = {
@@ -101,24 +101,26 @@ export function useMarcador(o: UseMarcadorOptions): boolean {
       anterior.current = { el: ativa, caixa }
       const peca = marcador.current
       const acompanha = opcoes.current.acompanhar?.() ?? false
-      // Troca de ativo é o anterior ainda na página e outro aceso. Se o anterior saiu
-      // do DOM, o item foi remontado (a `Sidebar` embrulha o botão numa dica ao
-      // recolher): é o mesmo ativo, e viajar partiria da caixa velha com esticão
-      // enquanto a barra ainda anda — a pílula ficava larga e saltava no fim.
-      const remontou = antes !== null && antes.el !== ativa && !antes.el.isConnected
-      const trocou = antes !== null && antes.el !== ativa && !remontou
-      if (remontou) {
-        for (const a of emCurso.current) a.cancel()
-        emCurso.current = []
+      if (antes && peca && antes.el === ativa && !acompanha) {
+        // A caixa do mesmo ativo mudou com uma viagem em curso (a `Sidebar` recolhendo
+        // ou abrindo remonta o botão e dispara a viagem no primeiro quadro, com a barra
+        // mal começando a andar): o destino é redirecionado para a caixa de agora, no
+        // mesmo relógio e na mesma curva. Sem isso a pílula pousava na caixa do
+        // primeiro quadro e saltava para a certa quando a animação acabava.
+        // Duck typing e não `instanceof KeyframeEffect`: no `IphoneFrame` a classe é de outra janela.
+        const efeito = emCurso.current[0]?.effect as KeyframeEffect | null | undefined
+        if (emCurso.current[0]?.playState === "running" && efeito && "setKeyframes" in efeito) {
+          redirecionarViagem(efeito, caixa)
+        }
       }
-      if (antes && peca && (trocou || acompanha)) {
+      if (antes && peca && (antes.el !== ativa || acompanha)) {
         for (const a of emCurso.current) a.cancel()
         const vertical = eixo === "y"
         const passo = vertical ? caixa.h : caixa.w
         const andado = Math.abs(vertical ? caixa.y - antes.caixa.y : caixa.x - antes.caixa.x)
         // O mesmo item, só maior (o rótulo abriu): acompanha a largura sem esticar.
         const amplitude =
-          !trocou ? 0 : Math.min(0.18, passo > 0 ? (andado / passo) * 0.09 : 0.09)
+          antes.el === ativa ? 0 : Math.min(0.18, passo > 0 ? (andado / passo) * 0.09 : 0.09)
         // Do mesmo tamanho, só a posição anima: `width`/`height` na mesma
         // animação tiram o efeito inteiro do compositor, e o `translate` voltaria
         // a depender da linha principal (onde a página nova trava tudo).
