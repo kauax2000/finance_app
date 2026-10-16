@@ -13,7 +13,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useBrandGlow } from "@/hooks/use-brand-glow"
 import { useViewportWindow } from "@/hooks/use-mobile"
 import { usePageTitleDock } from "@/hooks/use-page-title-dock"
-import { barSurfaceClassName } from "@/lib/glass-classes"
+import {
+  barEdgeLayerBaseClassName,
+  barEdgeLayerClassNames,
+  barSurfaceClassName,
+} from "@/lib/glass-classes"
 import { alvoDaRolagem, proximoEscondido } from "@/lib/hide-on-scroll"
 import {
   searchFieldIconClassName,
@@ -86,6 +90,19 @@ const topBarVariants = cva(
       surface: {
         solid: "bg-background",
         glass: barSurfaceClassName,
+        /**
+         * A borda do iOS (a barra do WhatsApp): sem tinta chapada e sem fio. Quem esconde o
+         * conteúdo que passa por baixo são as três camadas de `barEdgeLayerClassNames`, mais
+         * fortes junto à borda e sumindo 24px abaixo da barra, com a tinta de
+         * `--background` acumulando na mesma rampa — a barra não tem aresta.
+         * A própria barra não pode ter `backdrop-filter` nem fundo translúcido: viraria a
+         * raiz do borrão das camadas, que só veriam ela. O fundo cheio é o caminho de volta
+         * de quem não tem o borrão (sem `backdrop-filter`, ou com transparência reduzida).
+         */
+        edge: [
+          "border-b-0 bg-background supports-backdrop-filter:bg-transparent reduced-transparency:bg-background",
+          "[--top-bar-edge-tint:color-mix(in_oklab,var(--background)_30%,transparent)]",
+        ].join(" "),
       },
       /**
        * A flutuante: a pílula solta da casa (a placa, o anel de 1px e a sombra, a 8px
@@ -127,7 +144,7 @@ const topBarVariants = cva(
   }
 )
 
-type TopBarSurface = "solid" | "glass" | "scroll"
+type TopBarSurface = "solid" | "glass" | "scroll" | "edge"
 
 /**
  * O que acontece na rolagem: se o conteúdo saiu do topo (o vidro e o fio do
@@ -193,10 +210,14 @@ function TopBar({
   gutter,
   titleAlign = "start",
   hideOnScroll = false,
+  children,
   ...props
 }: React.ComponentProps<"header"> &
   Omit<VariantProps<typeof topBarVariants>, "surface"> & {
-    /** `scroll` é `solid` até o conteúdo rolar por baixo, e `glass` depois. */
+    /**
+     * `scroll` é `solid` até o conteúdo rolar por baixo, e `glass` depois; `edge` é o
+     * borrão progressivo, sem tinta chapada nem fio.
+     */
     surface?: TopBarSurface
     /** No telefone, o título à esquerda (o padrão) ou no meio, como no iOS. */
     titleAlign?: "start" | "center"
@@ -225,7 +246,17 @@ function TopBar({
           className
         )}
         {...props}
-      />
+      >
+        {/* Em ordem crescente: a camada mais longa por baixo, e cada uma borra o que a de
+            baixo compôs. `-z-10` dentro da barra, que é contexto de empilhamento (sticky
+            ou fixed com camada): atrás do conteúdo dela, sobre a página. */}
+        {surface === "edge"
+          ? barEdgeLayerClassNames.map((camada, i) => (
+              <span key={i} aria-hidden data-slot="top-bar-edge" className={cn(barEdgeLayerBaseClassName, camada)} />
+            ))
+          : null}
+        {children}
+      </header>
     </TopBarContext>
   )
 }

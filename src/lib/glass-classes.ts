@@ -64,6 +64,26 @@ export const barSurfaceClassName = [
 ].join(" ")
 
 /**
+ * As camadas da borda da barra (`TopBar surface="edge"`), da mais longa e fraca à mais curta e forte; cada
+ * uma borra o que a de baixo já compôs, e o raio efetivo cresce em direção à borda (uma
+ * camada só daria raio constante com opacidade variável). Cobrem a barra e 24px abaixo
+ * dela: a de 4px fica cheia até a base da barra, e as de 12 e 24px se apagam antes — no
+ * topo somam ~27px, no meio da barra ~13, e o conteúdo chega nítido 24px abaixo dela.
+ * Sem o borrão (transparência reduzida, alto contraste, sem `backdrop-filter`) as camadas
+ * saem e a barra fica com o fundo cheio da superfície.
+ */
+export const barEdgeLayerBaseClassName = [
+  "pointer-events-none absolute inset-x-0 top-0 -z-10 h-[calc(100%+--spacing(6))] bg-(--top-bar-edge-tint) backdrop-saturate-150",
+  "reduced-transparency:hidden forced-colors:hidden not-supports-[backdrop-filter:blur(1px)]:hidden",
+].join(" ")
+
+export const barEdgeLayerClassNames = [
+  "backdrop-blur-[4px] [mask-image:linear-gradient(to_bottom,#000_66%,transparent)]",
+  "backdrop-blur-[12px] [mask-image:linear-gradient(to_bottom,#000_45%,transparent_80%)]",
+  "backdrop-blur-[24px] [mask-image:linear-gradient(to_bottom,#000_20%,transparent_60%)]",
+] as const
+
+/**
  * A tinta da placa flutuante (`Popover`, `Select`, menus, `HoverCard`,
  * `Tooltip`, `Command`, calendário do `DatePicker`): só tinta e material, sem
  * raio, sombra nem fio — a casa inteira é `menuPanelSurfaceClassName`.

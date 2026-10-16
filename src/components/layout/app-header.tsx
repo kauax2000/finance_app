@@ -68,8 +68,8 @@ type AppHeaderProps = {
 /**
  * A barra do app é o `TopBar` na forma da casca: fixa no telefone com a área
  * segura, grudada no desktop, 48 no telefone e no desktop — aberta ou
- * recolhida a barra lateral —, e
- * vidro depois que a tela rola. No desktop ela corre por trás da placa
+ * recolhida a barra lateral —, e sem tinta nem fio: o conteúdo que passa por
+ * baixo some no borrão progressivo (`surface="edge"`), mais forte junto à borda. No desktop ela corre por trás da placa
  * flutuante da barra lateral, e a trilha segue começando na coluna do
  * conteúdo. Do `lg` para cima são três colunas de peso igual — trilha, busca
  * do catálogo no meio, sino à direita.
@@ -92,7 +92,7 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
         chromeSlot?.backHref ?? defaultMobileBackHref(pathname)
 
     return (
-        <TopBar position="auto" surface="scroll">
+        <TopBar position="auto" surface="edge">
             {/* No app o gatilho só existe no telefone (`toggle="edge"`): no desktop
                 a ponta fica vazia e ainda custaria o `gap-2` da barra, deslocando
                 a pílula 4px do centro. */}

@@ -3,7 +3,7 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
 import { topBarVariants } from "./top-bar"
-import { barSurfaceClassName } from "@/lib/glass-classes"
+import { barEdgeLayerBaseClassName, barEdgeLayerClassNames, barSurfaceClassName } from "@/lib/glass-classes"
 
 /** O redesenho, as peças e os comportamentos do `TopBar`. */
 
@@ -205,6 +205,20 @@ describe("os comportamentos", () => {
       expect(topBarVariants({ surface: "solid" })).toContain("bg-background")
       expect(topBarVariants({ surface: "solid" })).not.toContain("glass-surface")
       expect(CODIGO).not.toMatch(/\bbackdrop-blur/)
+    })
+
+    it("6b. `edge` é a borda do iOS: sem tinta chapada, sem fio, camadas da régua de vidro", () => {
+      const borda = topBarVariants({ surface: "edge" })
+      expect(borda).toContain("border-b-0")
+      expect(borda).toContain("supports-backdrop-filter:bg-transparent")
+      expect(borda).toContain("reduced-transparency:bg-background")
+      // A barra não veste borrão: seria a raiz do borrão das camadas, que só veriam ela.
+      expect(borda).not.toContain("glass-surface")
+      expect(CODIGO).toContain("barEdgeLayerClassNames.map(")
+      expect(barEdgeLayerClassNames).toHaveLength(3)
+      expect(barEdgeLayerBaseClassName).toContain("h-[calc(100%+--spacing(6))]")
+      expect(barEdgeLayerBaseClassName).toContain("reduced-transparency:hidden")
+      expect(fonte("src/components/layout/app-header.tsx")).toContain('surface="edge"')
     })
 
     it("7. `scroll` escolhe entre as duas pinturas inteiras, e nada é montado", () => {

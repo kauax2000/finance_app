@@ -197,7 +197,7 @@ function Barra({
 function DemoNaTela() {
   const [size, setSize] = React.useState<"sm" | "md" | "lg">("sm")
   const [variant, setVariant] = React.useState<"bar" | "floating">("bar")
-  const [surface, setSurface] = React.useState<"solid" | "glass" | "scroll">("scroll")
+  const [surface, setSurface] = React.useState<"solid" | "glass" | "scroll" | "edge">("edge")
   const [arranjo, setArranjo] = React.useState<Arranjo>("app")
   const [busca, setBusca] = React.useState(true)
   const [contagem, setContagem] = React.useState(true)
@@ -211,7 +211,7 @@ function DemoNaTela() {
           <>
             <Eixo rotulo="size" valores={["sm", "md", "lg"] as const} valor={size} onChange={setSize} />
             <Eixo rotulo="variant" valores={["bar", "floating"] as const} valor={variant} onChange={setVariant} />
-            <Eixo rotulo="surface" valores={["solid", "glass", "scroll"] as const} valor={surface} onChange={setSurface} />
+            <Eixo rotulo="surface" valores={["solid", "glass", "scroll", "edge"] as const} valor={surface} onChange={setSurface} />
             <Eixo rotulo="arranjo" valores={ARRANJOS} valor={arranjo} onChange={setArranjo} />
           </>
         }
@@ -423,7 +423,7 @@ export default function TopBarDoc() {
         rows={[
           { prop: "size", type: '"sm" | "md" | "lg"', default: '"sm"', description: "Altura: 48, 56 ou 64. O padrão é sm, no telefone e no desktop; lg é a barra das páginas de marca." },
           { prop: "position", type: '"static" | "sticky" | "fixed" | "auto"', default: '"sticky"', description: "sticky gruda na região que rola; fixed prende na janela e soma a área segura; auto é fixed no telefone e sticky acima." },
-          { prop: "surface", type: '"solid" | "glass" | "scroll"', default: '"solid"', description: "solid é --background; glass é a régua de barra; scroll troca de um para o outro ao rolar, e o fio vem junto." },
+          { prop: "surface", type: '"solid" | "glass" | "scroll" | "edge"', default: '"solid"', description: "solid é --background; glass é a régua de barra; scroll troca de um para o outro ao rolar, e o fio vem junto; edge é a borda do iOS — sem tinta chapada nem fio, o conteúdo some num borrão que cresce em direção à borda e acaba 24px abaixo da barra (a do app)." },
           { prop: "variant", type: '"bar" | "floating"', default: '"bar"', description: "bar encosta nas bordas, com o fio; floating é a pílula solta, a 8px, com o anel e a sombra." },
           { prop: "titleAlign", type: '"start" | "center"', default: '"start"', description: "No telefone, o título à esquerda ou no meio, com as pontas iguais." },
           { prop: "hideOnScroll", type: "boolean", default: "false", description: "No telefone, a barra sobe ao rolar para baixo e volta ao subir; nunca com o foco dentro." },

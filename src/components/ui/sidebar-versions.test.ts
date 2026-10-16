@@ -73,7 +73,7 @@ describe("as versões do Sidebar", () => {
 
   it("ao lado do floating, o cabeçalho não pinta e o gatilho é pílula", () => {
     expect(CODIGO).toContain(
-      "md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:[&_[data-slot=top-bar]:not([data-surface=glass]):not([data-scrolled=true])]:bg-transparent"
+      "md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:[&_[data-slot=top-bar]:not([data-surface=glass]):not([data-surface=edge]):not([data-scrolled=true])]:bg-transparent"
     )
     expect([...CODIGO.matchAll(/SIDEBAR_INSET_BAR,/g)]).toHaveLength(2)
     // E o conteúdo também, para a sombra da placa passar por cima dele.

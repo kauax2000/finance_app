@@ -26714,3 +26714,39 @@ centro exato. A coluna da busca é `max-w-xs` até 1279px e `xl:max-w-sm` daí.
 
 **Ficou fora.** O telefone, a `TopBar variant="floating"`, a frase rolante, a
 altura, a placa da barra lateral e o redimensionável.
+
+### Rodada 290 — a barra do app vira a borda do iOS, e o vidro volta ao Chrome
+
+**O pedido.** O dono mostrou a barra do WhatsApp no iPhone: no lugar de uma barra
+com tinta de fundo, um borrão que cresce em direção à borda, sem divisão clara de
+onde a barra começa. Antes, pediu a barra sem o fio de baixo (a primeira versão
+da rodada 289 o devolvia).
+
+**O que mudou.**
+- `TopBar surface="edge"`: sem tinta chapada e sem fio. Três camadas
+  (`barEdgeLayerClassNames`, em `lib/glass-classes`) de 4, 12 e 24px de
+  `backdrop-blur`, com `saturate(1.5)` e a tinta de `--background` a 30% em cada
+  uma, cobrem a barra e 24px abaixo dela; a de 4px fica cheia até a base da
+  barra, as outras se apagam antes. A barra não veste borrão nem fundo
+  translúcido (viraria a raiz do borrão das camadas); o fundo cheio é o caminho
+  de volta sem `backdrop-filter` ou com transparência reduzida, quando as
+  camadas saem. A rampa do `scroll-fade-blur-y` foi tentada primeiro e ficou
+  fraca no meio da barra: ela só borra forte no terço de cima.
+- O `AppHeader` usa `edge`; ao lado do `floating`, o `SidebarInset` não zera o
+  fundo dela (é o de volta).
+- **O vidro de todo menu tinha sumido no Chrome.** O `npm run dev` passou ao
+  Turbopack (0ff731a), e o lightningcss junta `backdrop-filter` e
+  `-webkit-backdrop-filter` numa declaração só, ficando com a última; o prefixo
+  vinha por último e o Chrome não o lê. O prefixo passou para antes em
+  `glass-surface` e no `scroll-fade-blur-*`, e `glass.test.ts` tranca a ordem.
+- O `AGENTS.md` e um trecho do histórico citavam `--radix-*-content-…`; o
+  Tailwind lê os docs e gerava uma classe com `*`, que o Turbopack recusava
+  (500 em toda rota). Os nomes viraram os reais.
+
+**Medido** na prévia a 1440×900 e a 375×812, rolando o painel: as camadas em 72px
+(48 da barra + 24), `blur(4px|12px|24px) saturate(1.5)`, fundo da barra
+transparente e fio 0; os cartões passam borrados sob o título e o borrão some
+sem aresta. No telefone a barra segue `fixed`, sem margem, e a ordem é título,
+recorte, lupa, sino. A busca a 1440 com a barra recolhida: 384px, centro em
+760, o da coluna do conteúdo.
+

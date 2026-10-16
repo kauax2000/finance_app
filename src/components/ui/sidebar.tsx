@@ -897,12 +897,13 @@ const SIDEBAR_INSET_RULE =
  * Ao lado do `floating`, a barra do topo não pinta: a placa flutua sobre a
  * página e uma faixa de fundo no topo leria como um segundo chrome. Só o repouso;
  * a barra `glass`, e a `scroll` depois de rolar, mantêm o vidro (que corre por
- * baixo da placa até a borda da janela). O próprio
+ * baixo da placa até a borda da janela); a `edge` mantém o fundo cheio que só
+ * aparece sem o borrão (transparência reduzida). O próprio
  * conteúdo também não pinta ao lado do `floating`: no redimensionável cobriria a
  * sombra da placa.
  */
 const SIDEBAR_INSET_BAR =
-  "md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:[&_[data-slot=top-bar]:not([data-surface=glass]):not([data-scrolled=true])]:bg-transparent md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:bg-transparent"
+  "md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:[&_[data-slot=top-bar]:not([data-surface=glass]):not([data-surface=edge]):not([data-scrolled=true])]:bg-transparent md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:bg-transparent"
 
 /**
  * Ao lado do `floating` (não redimensionável), a barra do topo passa por trás da
