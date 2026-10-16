@@ -89,11 +89,14 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
 
     return (
         <TopBar position="auto" surface="edge">
-            {/* No app o gatilho só existe no telefone (`toggle="edge"`): no desktop
-                a ponta fica vazia e ainda custaria o `gap-2` da barra, deslocando
-                a pílula 4px do centro. */}
+            {/* O botão de recolher mora aqui, à esquerda, nos dois estados
+                (`toggle="header"`): a pílula da placa, 36 como o sino, e a 16px da
+                placa como o sino está da borda direita (o recuo de 16 da barra
+                menos os 8 da calha que a folga inclui). Do `lg` para
+                cima a ponta pesa o mesmo que a do sino (`flex-1`, base 0), para a
+                busca seguir no centro. */}
             <TopBarStart
-                className="md:has-[>[data-slot=top-bar-wide]:empty]:-me-2"
+                className="lg:flex-1 lg:basis-0"
                 phone={
                     mobileBackHref ? (
                         // O voltar pelo histórico (rodada 232) fica desligado aqui:
@@ -105,7 +108,7 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                     )
                 }
             >
-                <SidebarTrigger className="-ml-2" />
+                <SidebarTrigger size="icon-lg" className="-ml-2 w-9" />
             </TopBarStart>
             {/* O título do telefone mora no meio, e não numa ponta própria:
                 uma segunda peça `flex-1` vazia dividiria a linha e o título
@@ -113,7 +116,7 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                 lateral marca onde se está): ele fica só para o leitor de tela, o
                 `<h1>` da página. O meio segue como o par elástico da esquerda
                 para a busca cair no centro. */}
-            <TopBarContent phone={<TopBarTitle>{pageTitle}</TopBarTitle>}>
+            <TopBarContent phone={<TopBarTitle>{pageTitle}</TopBarTitle>} className="lg:flex-none lg:-me-2">
                 <h1 className="sr-only">{pageTitle}</h1>
             </TopBarContent>
             {/* A busca é a do catálogo e mora no meio: o título (`flex-1`, base

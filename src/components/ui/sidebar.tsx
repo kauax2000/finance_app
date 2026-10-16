@@ -107,16 +107,18 @@ type SidebarContextProps = {
  * Onde mora o botão de recolher e abrir, no desktop:
  * - `topbar` — no `TopBar`, e recolhida ele viaja para a barra. O padrão do
  *   componente (o catálogo o usa nos exemplos com cabeçalho).
+ * - `header` — no `TopBar` nos dois estados: não viaja nem encosta na placa;
+ *   o recuo é de quem o chama. **A do app.**
  * - `edge` — uma alça redonda presa na borda direita da placa, na altura do
- *   cabeçalho, com uma seta que gira; anda junto com a borda. **A do app.**
+ *   cabeçalho, com uma seta que gira; anda junto com a borda.
  * - `footer` — uma linha "Recolher" (com o ⌘B) acima da conta; recolhida, o
  *   ícone no mesmo lugar, com dica.
  * - `footerBar` — uma faixa fina no pé da placa, abaixo da conta, só com a seta
  *   que gira (a mesma da `edge`).
- * `footer` e `footerBar` estão em avaliação contra a `edge` no
- * `/laboratorio/barra`. No telefone a barra é folha, e vale o gatilho do topo.
+ * `edge`, `footer` e `footerBar` ficam no `/laboratorio/barra`. No telefone a
+ * barra é folha, e vale o gatilho do topo.
  */
-type SidebarTogglePlacement = "topbar" | "edge" | "footer" | "footerBar"
+type SidebarTogglePlacement = "topbar" | "header" | "edge" | "footer" | "footerBar"
 
 /** Referência estável: um literal aqui trocaria a identidade do contexto a cada render. */
 const EMPTY_PANEL_PROPS: Record<string, unknown> = {}
@@ -642,9 +644,11 @@ const SIDEBAR_COSTURA = {
 } as const
 
 /**
- * O gatilho do topo, ao lado de uma barra `floating` aberta, fica a 8px da placa
- * (a calha dela): lado a lado, as peças soltas leem como um conjunto. Recolhida
- * em offcanvas a placa sai da tela e ele volta ao recuo de quem o chama.
+ * O gatilho do `topbar`, ao lado de uma barra `floating` aberta, fica a 8px da
+ * placa (a calha dela): lado a lado, as peças soltas leem como um conjunto.
+ * Recolhida em offcanvas a placa sai da tela e ele volta ao recuo de quem o chama.
+ * O `header` não encosta: fica no recuo de quem o chama (no app, a 16px da placa
+ * nos dois estados, a distância do sino até a borda direita).
  * No redimensionável a calha mora no conteúdo (`pl-2` no `SidebarInset`): o
  * painel de conteúdo rola, e o gatilho puxado até a borda perderia a sombra e o
  * anel.
@@ -824,7 +828,7 @@ function SidebarTrigger({
 }: React.ComponentProps<typeof Button>) {
   const { gatilhoNaBarra, toggle, isMobile } = useSidebar()
   // Nas versões em que o botão mora na barra, o topo fica sem ele no desktop.
-  if (toggle !== "topbar" && !isMobile) return null
+  if (toggle !== "topbar" && toggle !== "header" && !isMobile) return null
   return (
     <span
       data-slot="sidebar-trigger-slot"
@@ -832,7 +836,7 @@ function SidebarTrigger({
       className={cn(
         "inline-flex w-8 shrink-0 transition-[width,margin] duration-(--duration-slow) ease-(--ease-emphasized) data-vazio:w-0",
         className,
-        SIDEBAR_TRIGGER_GAP,
+        toggle === "topbar" && SIDEBAR_TRIGGER_GAP,
         // Depois do `className`: a margem que encostava o botão na borda
         // (`-ml-2` no app e no catálogo) sai junto com ele.
         gatilhoNaBarra && "ms-0 ml-0"

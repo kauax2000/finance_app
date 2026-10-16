@@ -10,7 +10,8 @@ import { H1, Muted, Small } from "@/components/ui/typography"
 import { SIDEBAR_LAB_VERSIONS } from "@/lib/sidebar-lab"
 
 const NOMES: Record<(typeof SIDEBAR_LAB_VERSIONS)[number], string> = {
-    edge: "2 · Na borda da barra (a do app)",
+    header: "1 · No topo, nos dois estados (a do app)",
+    edge: "2 · Na borda da barra",
     footer: "4 · No rodapé, a linha \"Recolher\"",
     footerBar: "4b · No rodapé, a faixa no pé",
 }

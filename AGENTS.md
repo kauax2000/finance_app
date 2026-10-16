@@ -1415,10 +1415,13 @@ declaração de `background-color` no trilho).
   vale para os itens de 32).
   **O botão de recolher mora num lugar só** (`SidebarProvider toggle`): o do
   componente é `topbar` (no `TopBar`, viajando para a barra recolhida — o
-  catálogo o usa); **o app usa `edge`**, a alça `Button floating icon-xs`
-  centrada na borda direita da placa, a 40 do topo, com a seta que gira meia
-  volta recolhida e sem dica, e o topo fica sem botão no desktop. `footer` e `footerBar`
-  estão em avaliação no `/laboratorio/barra`. O gatilho do topo não tem dica;
+  catálogo o usa); **o app usa `header`** (desde 2026-10-16; antes era `edge`, a
+  alça `Button floating icon-xs` na borda direita da placa): a pílula redonda da
+  placa à esquerda do `TopBar`, que **não viaja** nem encosta: no app, 36 como o
+  sino e a 16px da placa nos dois estados (a distância do sino até a borda
+  direita). O encosto de 8px (`SIDEBAR_TRIGGER_GAP`) é só do `topbar`. No `AppHeader`, do `lg` para cima, a ponta do botão pesa o mesmo
+  que a do sino, para a busca seguir no centro. `edge`, `footer` e `footerBar`
+  ficam no `/laboratorio/barra`. O gatilho do topo não tem dica;
   dentro da barra recolhida, tem.
   A dica do item e a do gatilho na barra abrem a 6px do botão
   (`SIDEBAR_TOOLTIP_OFFSET`), como qualquer dica — somar o recuo da placa as

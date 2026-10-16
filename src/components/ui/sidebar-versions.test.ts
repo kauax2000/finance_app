@@ -156,11 +156,13 @@ describe("as versões do Sidebar", () => {
     expect(CODIGO).toMatch(/<Kbd\s+aria-hidden\s+keys=\{`mod\+\$\{SIDEBAR_KEYBOARD_SHORTCUT\}`\}/)
   })
 
-  it("ao lado da placa aberta, o gatilho fica a 8px dela", () => {
+  it("ao lado da placa aberta, o gatilho do topbar fica a 8px dela; o do header, no recuo de quem chama", () => {
     expect(CODIGO).toContain(
       "md:group-has-[[data-slot=sidebar][data-variant=floating][data-state=expanded]]/sidebar-wrapper:-ml-4"
     )
-    expect(CODIGO).toMatch(/className,\s*SIDEBAR_TRIGGER_GAP,/)
+    expect(CODIGO).toMatch(/className,\s*toggle === "topbar" && SIDEBAR_TRIGGER_GAP,/)
+    // No app: 36 como o sino, e a 16px da placa como o sino da borda direita.
+    expect(lerFonte("src/components/layout/app-header.tsx")).toContain('<SidebarTrigger size="icon-lg" className="-ml-2 w-9" />')
     // No redimensionável a calha mora no conteúdo, e o gatilho não encosta na
     // borda do painel que rola.
     expect(CODIGO).toContain("md:group-has-[[data-slot=sidebar][data-variant=floating][data-state=expanded]]/sidebar-wrapper:pl-2")
@@ -554,15 +556,14 @@ describe("a espiada segura com um menu de dentro aberto", () => {
 })
 
 describe("o lugar do botão de recolher (toggle)", () => {
-  it("o componente oferece quatro lugares, e o do topo é o padrão dele", () => {
-    expect(CODIGO).toContain('type SidebarTogglePlacement = "topbar" | "edge" | "footer" | "footerBar"')
+  it("o componente oferece cinco lugares, e o do topo é o padrão dele", () => {
+    expect(CODIGO).toContain('type SidebarTogglePlacement = "topbar" | "header" | "edge" | "footer" | "footerBar"')
     expect(CODIGO).toContain('toggle = "topbar",')
     // Só a do topo viaja para a barra.
     expect(CODIGO).toMatch(/gatilhoNaBarra:\s*toggle === "topbar" && gatilhoMovel/)
-    // Nas outras, o topo fica sem botão no desktop; no telefone continua.
-    expect(CODIGO).toContain('if (toggle !== "topbar" && !isMobile) return null')
-    // A do cabeçalho foi descartada.
-    expect(CODIGO).not.toContain('"header" &&')
+    // O `header` também mora no topo, sem viajar; nas outras o topo fica sem botão no
+    // desktop, e no telefone continua.
+    expect(CODIGO).toContain('if (toggle !== "topbar" && toggle !== "header" && !isMobile) return null')
   })
 
   it("cada versão mora no seu lugar e não viaja", () => {
@@ -576,12 +577,16 @@ describe("o lugar do botão de recolher (toggle)", () => {
     expect(CODIGO.match(/group-data-\[collapsible=icon\]:rotate-180/g)?.length).toBe(2)
   })
 
-  it("o app usa a borda, e o laboratório troca pelo nome do quadro", () => {
+  it("o app usa o topo, e o laboratório troca pelo nome do quadro", () => {
     const casca = lerFonte("src/components/layout/sidebar-app-shell.tsx")
     expect(casca).toContain("sidebarLabVersion(window.name)")
-    expect(casca).toContain('() => "edge" as const')
+    expect(casca).toContain('() => "header" as const')
     const lab = lerFonte("src/lib/sidebar-lab.ts")
     expect(lab).toContain('nome.startsWith("barra:")')
-    expect(lab).toContain(': "edge"')
+    expect(lab).toContain(': "header"')
+    // O `header` não viaja: só o `topbar` leva o botão para a barra recolhida.
+    const fonteBarra = lerFonte("src/components/ui/sidebar.tsx")
+    expect(fonteBarra).toContain('toggle === "topbar" && gatilhoMovel && state === "collapsed" && !isMobile')
+    expect(fonteBarra).toContain('if (toggle !== "topbar" && toggle !== "header" && !isMobile) return null')
   })
 })

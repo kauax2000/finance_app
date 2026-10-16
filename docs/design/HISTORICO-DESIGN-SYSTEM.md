@@ -26818,3 +26818,20 @@ correndo na placa), o `useRevelacao` marca `data-revealed` no `Dialog` e no
 `AlertDialog`, e a regra é `[data-state="open"]:not([data-revealed])`. Medido:
 abrir anima 10 peças; trocar para Parcelada e voltar, nenhuma.
 
+### Rodada 294 — o botão de recolher mora no header
+
+O dono pediu o botão de recolher no header, à esquerda, redondo; que ao recolher
+ele não entre na barra; e que fique a 16px da placa, a distância do sino até a
+borda direita, com os 36×36 do sino. O app troca `toggle="edge"` (a alça na
+borda da placa) por um lugar novo, `header`: o `SidebarTrigger` do `topbar` (a
+pílula da placa, `SIDEBAR_TRIGGER_FLOATING`: `--sidebar` chapado, anel e
+sombra), sem a viagem para o trilho (`gatilhoNaBarra` segue só do `topbar`) e
+sem o encosto de 8px (`SIDEBAR_TRIGGER_GAP` passou a valer só no `topbar`): o
+recuo é de quem chama. No `AppHeader`, `size="icon-lg"` e `-ml-2 w-9` (o recuo
+de 16 da barra menos os 8 da calha que a folga inclui), e a ponta do botão pesa
+o mesmo que a do sino do `lg` para cima (`flex-1 basis-0`; o meio vazio
+`flex-none -me-2`), para a busca seguir no centro. O padrão do laboratório vira
+`header`; o teste que dizia "a do cabeçalho foi descartada" falava de outra
+versão, com o botão no cabeçalho da placa. Medido a 1280, aberta e recolhida: o
+botão 36×36, a 16px da placa e no topo 6 como o sino (16 da borda direita); a
+busca em 768 e 680, o centro da área visível nos dois.

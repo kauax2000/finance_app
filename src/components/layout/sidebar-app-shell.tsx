@@ -89,12 +89,12 @@ export function SidebarAppShell({
     const pathname = usePathname()
     const titleMode = titleModeFor(pathname)
     useEffect(aquecerRotasEmDesenvolvimento, [])
-    // O botão de recolher mora na borda da barra (`edge`). No laboratório
+    // O botão de recolher mora no topo nos dois estados (`header`). No laboratório
     // (`/laboratorio/barra`) o nome do quadro troca a versão para comparar.
     const toggle = useSyncExternalStore(
         semAssinatura,
         () => sidebarLabVersion(window.name),
-        () => "edge" as const,
+        () => "header" as const,
     )
 
     return (
