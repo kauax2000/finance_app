@@ -547,6 +547,10 @@
 }
 :root:has([data-slot="top-bar"][data-size="sm"]) {
   --top-bar-bottom: calc(3rem + var(--top-bar-safe-area, env(safe-area-inset-top, 0px)));
+  /* O `sm` cresce a 52 do `md` para cima (`md:[--top-bar-h:3.25rem]`). */
+  @media (width >= 48rem) {
+    --top-bar-bottom: calc(3.25rem + var(--top-bar-safe-area, env(safe-area-inset-top, 0px)));
+  }
 }
 :root:has([data-slot="top-bar"][data-size="md"]) {
   --top-bar-bottom: calc(3.5rem + var(--top-bar-safe-area, env(safe-area-inset-top, 0px)));

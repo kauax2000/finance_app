@@ -1435,7 +1435,9 @@ declaração de `background-color` no trilho).
   offcanvas) e o `SidebarInset` é `isolate`; nenhuma tela escreve a margem nem
   o recuo. Sem fio nos dois modos: rolada, ela se separa do conteúdo só pelo
   vidro. No redimensionável não passa (o painel recorta).
-- **`TopBar`**: `variant="floating"`, `titleAlign`, `size` (`lg` 64), área
+- **`TopBar`**: `variant="floating"`, `titleAlign`, `size` (**`sm`** 48 no telefone e
+  52 do `md` para cima — 8px em volta dos controles de 36, no ritmo da placa da
+  barra lateral —, `md` 56, `lg` 64), área
   segura por `--top-bar-safe-area`. **`surface="edge"`** (a do app) é a borda
   do iOS: sem tinta chapada nem fio, três camadas de borrão (4, 12 e 24px)
   que crescem em direção à borda e acabam 24px abaixo da barra; a barra em si

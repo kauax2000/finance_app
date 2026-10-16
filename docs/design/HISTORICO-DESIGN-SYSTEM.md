@@ -26851,3 +26851,16 @@ atributo: o `beam` do onboarding acende por CSS e não o tem. Medido: perto, `on
 e 0,47; saindo, `off`, 0,14 e o giro parado; depois, `hidden`. O Turbopack
 servia CSS e código velhos naquela hora (o cache da transformação), e o vídeo
 pode ter vindo de uma aba com o código antigo.
+
+### Rodada 296 — a barra do topo a 52 no desktop
+
+O dono pediu 8px em cima e embaixo dos controles do header, como a placa da barra
+lateral, que começa a 8 do topo. Com os controles de 36 (o botão de recolher, a
+busca e o sino), a barra vai a 52: o degrau `sm` passou a `[--top-bar-h:3rem]
+md:[--top-bar-h:3.25rem]`, e a regra do `--top-bar-bottom` do mesmo degrau ganhou
+o par do `md` (a `Toolbar` presa, a pilha de toasts e os cabeçalhos presos
+assentam abaixo dela sem ninguém medir). O telefone segue em 48, com o
+`--mobile-header-offset`. A decisão anterior (48 em qualquer largura) saiu do
+teste 2 da régua. Medido a 1280: barra 52, os três controles a 8 do topo e 8 da
+base, `--top-bar-bottom` 52px; a 375, barra 48 e base 48.
+

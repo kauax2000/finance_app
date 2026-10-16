@@ -421,7 +421,7 @@ export default function TopBarDoc() {
       <PropsTable
         title="Eixos de TopBar"
         rows={[
-          { prop: "size", type: '"sm" | "md" | "lg"', default: '"sm"', description: "Altura: 48, 56 ou 64. O padrão é sm, no telefone e no desktop; lg é a barra das páginas de marca." },
+          { prop: "size", type: '"sm" | "md" | "lg"', default: '"sm"', description: "Altura: 48 (52 do md para cima), 56 ou 64. O padrão é sm, a do app: no desktop, 8px em cima e embaixo dos controles de 36; lg é a barra das páginas de marca." },
           { prop: "position", type: '"static" | "sticky" | "fixed" | "auto"', default: '"sticky"', description: "sticky gruda na região que rola; fixed prende na janela e soma a área segura; auto é fixed no telefone e sticky acima." },
           { prop: "surface", type: '"solid" | "glass" | "scroll" | "edge"', default: '"solid"', description: "solid é --background; glass é a régua de barra; scroll troca de um para o outro ao rolar, e o fio vem junto; edge é a borda do iOS — sem tinta chapada nem fio, o conteúdo some num borrão que cresce em direção à borda e acaba 24px abaixo da barra (a do app)." },
           { prop: "variant", type: '"bar" | "floating"', default: '"bar"', description: "bar encosta nas bordas, com o fio; floating é a pílula solta, a 8px, com o anel e a sombra." },

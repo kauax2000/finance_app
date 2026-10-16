@@ -33,6 +33,11 @@ describe("o redesenho", () => {
     )
   })
 
+  it("o sm mede 48 no telefone e 52 do md para cima, e a base acompanha", () => {
+    expect(topBarVariants({ size: "sm" })).toContain("[--top-bar-h:3rem] md:[--top-bar-h:3.25rem]")
+    expect(CSS).toMatch(/data-size="sm"\]\) \{[\s\S]*?@media \(width >= 48rem\) \{\s*--top-bar-bottom: calc\(3\.25rem/)
+  })
+
   it("o degrau lg mede 64", () => {
     expect(topBarVariants({ size: "lg" })).toContain("[--top-bar-h:4rem]")
   })
@@ -145,10 +150,11 @@ describe("os comportamentos", () => {
       expect(alturas).toEqual([3, 3.5])
     })
 
-    it("2. o padrão é 48 em qualquer largura, sem acompanhar a barra lateral", () => {
+    it("2. o padrão é 48 no telefone e 52 do md para cima, sem acompanhar a barra lateral", () => {
       const padrao = topBarVariants({})
       expect(alturaEm(padrao)).toBe(3)
-      expect(padrao).not.toMatch(/md:\[--top-bar-h/)
+      // 52 no desktop (decisão do dono, 2026-10-16): 8px em cima e embaixo dos controles de 36.
+      expect(padrao).toContain("md:[--top-bar-h:3.25rem]")
       expect(padrao).not.toContain("group-has")
       expect(padrao).not.toContain("transition-[height")
     })

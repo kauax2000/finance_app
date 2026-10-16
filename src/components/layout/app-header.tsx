@@ -63,7 +63,7 @@ type AppHeaderProps = {
 
 /**
  * A barra do app é o `TopBar` na forma da casca: fixa no telefone com a área
- * segura, grudada no desktop, 48 no telefone e no desktop — aberta ou
+ * segura, grudada no desktop, 48 no telefone e 52 no desktop — aberta ou
  * recolhida a barra lateral —, e sem tinta nem fio: o conteúdo que passa por
  * baixo some no borrão progressivo (`surface="edge"`), mais forte junto à
  * borda. No desktop ela corre por trás da placa flutuante da barra lateral e

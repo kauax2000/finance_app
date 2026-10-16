@@ -44,8 +44,9 @@ import { cn } from "@/lib/utils"
  * O fio lê `--sidebar-inset-rule`, que o `SidebarInset` publica: numa `Sidebar`
  * `floating` a placa não tem `border-r` para ele encostar. Fora de um
  * `SidebarInset`, 1px.
- * O padrão é `sm`: 48 no telefone e no desktop, com a barra lateral aberta ou
- * recolhida (decisão do dono). No telefone a área segura soma por dentro. O que
+ * O padrão é `sm`: 48 no telefone e 52 do `md` para cima, com a barra lateral
+ * aberta ou recolhida — no desktop, 8px em cima e embaixo dos controles de 36,
+ * no ritmo da placa da barra lateral, que começa a 8 do topo (decisão do dono). No telefone a área segura soma por dentro. O que
  * anima é o fundo, quando o vidro acende.
  */
 const topBarVariants = cva(
@@ -73,7 +74,7 @@ const topBarVariants = cva(
   {
     variants: {
       size: {
-        sm: "[--top-bar-h:3rem]",
+        sm: "[--top-bar-h:3rem] md:[--top-bar-h:3.25rem]",
         md: "[--top-bar-h:3.5rem]",
         // O degrau `lg` (64): a barra das páginas públicas e de marca. O título fica no
         // corpo da barra; a marca é que cresce.
