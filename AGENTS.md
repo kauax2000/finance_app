@@ -1411,8 +1411,9 @@ declaração de `background-color` no trilho).
   vira uma caixa de 48 — `size-12` com `-m-2`, um realce de 8px em volta da
   mídia de 32, que fica inteira e no mesmo lugar (a 16 das bordas); o de 4px
   (caixa de 40) virava uma fita fina, difícil de ver (rodada 299). A mídia do
-  degrau `lg` balança ao recolher e abrir (`@utility sidebar-media-sway`:
-  −7°, +4°, −1,5° e assenta, com um leve encolher, em `--duration-spring`), só
+  degrau `lg` balança ao recolher e abrir (`@utility sidebar-media-sway`: 4px na
+  direção da placa — esquerda ao recolher, direita ao abrir —, 1,5px de volta e
+  assenta, em `--duration-spring`; sem rotação), só
   depois da primeira troca (`data-toggled` no invólucro) e nunca com movimento
   reduzido.
   Na placa flutuante o degrau `lg` é `concentric`: 20 aberta e recolhida (a

@@ -26960,3 +26960,10 @@ relógio da animação avançado à mão (a prévia estava oculta, e o relógio 
 −7° e 0,94 aos 150ms, +4° e 1,02 aos 300ms, −1,5° aos 410ms, 0° aos 500ms; nada
 ao carregar.
 
+Depois, o dono recusou o giro: quer um leve balanço que acompanhe o movimento da
+placa. Os keyframes viraram um empurrão horizontal na direção dela — ao recolher,
+4px para a esquerda, 1,5px de volta e assenta; ao abrir, o espelho para a direita
+—, em `transform: translateX`, sem rotação nem escala. Medido com o relógio
+avançado à mão: aos 175ms ±4px, aos 350ms ∓1,5px, aos 500ms 0, giro 0 em todos;
+nada ao carregar. (O Turbopack serviu de novo o CSS antigo até apagar `.next/dev`.)
+
