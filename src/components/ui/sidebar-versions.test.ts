@@ -115,9 +115,11 @@ describe("as versões do Sidebar", () => {
     expect(CODIGO).toContain('const SIDEBAR_WIDTH_ICON = "4rem"')
     // O recuo lateral cresce de 8 a 16 só no modo ícone: 16 + 32 + 16 = 64. O topo do
     // cabeçalho e a base do rodapé acompanham: a mesma folga de 16 nas quatro bordas.
-    expect(CODIGO).toContain("flex h-16 shrink-0 flex-col justify-center gap-2 px-2 group-data-[collapsible=icon]:px-4 group-data-[collapsible=icon]:pt-4 group-data-[collapsible=icon]:justify-start")
-    expect(CODIGO).toContain('"mt-auto flex shrink-0 flex-col gap-2 p-2 group-data-[collapsible=icon]:px-4 group-data-[collapsible=icon]:pb-4"')
-    expect(CODIGO).toContain('"relative flex w-full min-w-0 flex-col justify-start p-2 group-data-[collapsible=icon]:px-4"')
+    expect(CODIGO).toContain("flex h-16 shrink-0 flex-col justify-start gap-2 px-2 pt-2 group-data-[collapsible=icon]:px-4 group-data-[collapsible=icon]:pt-4")
+    // O recuo e a margem negativa da caixa de 48 andam juntos: a mídia não salta ao recolher.
+    expect(CODIGO).toContain("transition-[width,height,padding,margin,background-color,color,font-weight]")
+    expect(CODIGO).toContain('"mt-auto flex shrink-0 flex-col gap-2 p-2 group-data-[collapsible=icon]:px-4 group-data-[collapsible=icon]:pb-4 transition-[padding] duration-(--duration-slow) ease-(--ease-emphasized)"')
+    expect(CODIGO).toContain('"relative flex w-full min-w-0 flex-col justify-start p-2 group-data-[collapsible=icon]:px-4 transition-[padding] duration-(--duration-slow) ease-(--ease-emphasized)"')
     // A carteira e a conta mantêm a mídia de 32 recolhidas: quem cede é o recuo do degrau lg.
     expect(lerFonte("src/components/layout/workspace-switcher.tsx")).not.toContain("group-data-[collapsible=icon]:size-6")
     expect(lerFonte("src/components/layout/sidebar-user-profile.tsx")).not.toContain("group-data-[collapsible=icon]:size-6")

@@ -26930,3 +26930,18 @@ entre uma abertura e outra (o formulário é da casca; só a placa desmonta), en
 (`animationend` de `exit` nela mesma). Medido: três aberturas seguidas, 10 peças
 surgindo em cada uma.
 
+
+### Rodada 300 — o ladrilho da carteira não salta ao recolher
+
+O dono viu o ladrilho da carteira fazer um movimento estranho ao recolher. Medido
+quadro a quadro: no primeiro quadro ele ia de (24, 24) a (16, 8) e voltava
+deslizando, porque a margem negativa da caixa de 48 (`-m-2`) não estava na lista
+de transições do `SidebarMenuButton` e o cabeçalho trocava de `justify-center`
+para `justify-start` na hora, enquanto o recuo animava. Agora a margem anima com a
+largura e o recuo (`transition-[width,height,padding,margin,…]`), o cabeçalho mora
+no topo nos dois estados (`justify-start`, `pt-2` aberto e `pt-4` recolhido, a
+mesma posição de antes), e o recuo do `SidebarFooter` e do `SidebarGroup` anima na
+mesma curva (`--duration-slow`, `--ease-emphasized`) — sem isso a conta passaria a
+saltar, e os ícones do menu já pulavam 8px na troca. Medido: o ladrilho e a conta
+parados em todos os quadros, nos dois sentidos; o ícone do Painel deslizando de 24
+a 32 e de volta.

@@ -1035,14 +1035,17 @@ function SidebarHeader({
       data-sidebar="header"
       // Sem `sticky`: as faixas são irmãs do rolável, não descendentes, e não há
       // ancestral rolante contra o qual grudar; quem marca o limite é a dissolução.
-      // Recolhida, a faixa mantém os 64 e a carteira sobe ao topo com o recuo de 16
-      // (`justify-start`): a mídia fica no mesmo y das duas formas e nada abaixo sobe
-      // ao recolher (pedido do dono, rodada 298). Com o gatilho dentro
+      // A faixa mede 64 nos dois estados e a carteira mora no topo (`justify-start`):
+      // 8 de recuo aberta, 16 recolhida com a caixa de 48 recuada 8 (`-m-2`). Recuo e
+      // margem andam juntos, na mesma curva, e a mídia fica parada em 24 durante a
+      // troca — com o `justify` trocando e a margem sem transição, o ladrilho saltava
+      // 8 para a esquerda e 16 para cima e voltava deslizando (rodadas 298 e 300).
+      // Com o gatilho dentro
       // ela cresce até o conteúdo e anima até ele: `interpolate-size` deixa a altura
       // transicionar para `auto` (no Chrome; onde falta, salta). Começa do topo, para o
       // avatar não descer enquanto a altura cresce.
       className={cn(
-        "flex h-16 shrink-0 flex-col justify-center gap-2 px-2 group-data-[collapsible=icon]:px-4 group-data-[collapsible=icon]:pt-4 group-data-[collapsible=icon]:justify-start transition-[height,padding] duration-(--duration-slow) ease-(--ease-emphasized) [interpolate-size:allow-keywords]",
+        "flex h-16 shrink-0 flex-col justify-start gap-2 px-2 pt-2 group-data-[collapsible=icon]:px-4 group-data-[collapsible=icon]:pt-4 transition-[height,padding] duration-(--duration-slow) ease-(--ease-emphasized) [interpolate-size:allow-keywords]",
         gatilhoNaBarra &&
           "h-auto justify-start py-2 group-data-[collapsible=icon]:h-auto",
         className
@@ -1067,7 +1070,7 @@ function SidebarFooter({
       data-slot="sidebar-footer"
       data-sidebar="footer"
       className={cn(
-        "mt-auto flex shrink-0 flex-col gap-2 p-2 group-data-[collapsible=icon]:px-4 group-data-[collapsible=icon]:pb-4",
+        "mt-auto flex shrink-0 flex-col gap-2 p-2 group-data-[collapsible=icon]:px-4 group-data-[collapsible=icon]:pb-4 transition-[padding] duration-(--duration-slow) ease-(--ease-emphasized)",
         className
       )}
       {...props}
@@ -1211,7 +1214,7 @@ function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="sidebar-group"
       data-sidebar="group"
       className={cn(
-        "relative flex w-full min-w-0 flex-col justify-start p-2 group-data-[collapsible=icon]:px-4",
+        "relative flex w-full min-w-0 flex-col justify-start p-2 group-data-[collapsible=icon]:px-4 transition-[padding] duration-(--duration-slow) ease-(--ease-emphasized)",
         // No `plain` o grupo se separa do anterior por um fio: com 80 linhas rolando, um
         // vão de 16px lê como item faltando.
         "group-data-[variant=plain]:not-first:border-t group-data-[variant=plain]:border-sidebar-border group-data-[variant=plain]:px-0 group-data-[variant=plain]:pt-2 group-data-[variant=plain]:pb-4",
@@ -1390,7 +1393,7 @@ const sidebarMenuButtonVariants = cva(
     // A linha é retângulo arredondado (`rounded-row`, 12px) e não pílula: o
     // concêntrico dava 20–22px numa linha de 32 e o CSS a desenhava cápsula. O
     // subitem veste o mesmo.
-    "peer/menu-button group/menu-button relative flex w-full items-center gap-2 rounded-row p-2 text-left text-sm ring-sidebar-ring outline-hidden transition-[width,height,padding,background-color,color,font-weight] duration-(--duration-slow) ease-(--ease-emphasized) group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground focus-visible:ring-3 active:bg-sidebar-accent/50 active:text-sidebar-accent-foreground data-active:hover:bg-transparent data-active:active:bg-transparent disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-open:hover:bg-sidebar-accent data-open:hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground data-active:font-medium data-active:text-sidebar-accent-foreground [&_svg]:size-4 [&_svg]:shrink-0 [&>span:last-child]:truncate [&>span:nth-last-child(2):has(+[data-slot=sidebar-menu-highlight])]:truncate",
+    "peer/menu-button group/menu-button relative flex w-full items-center gap-2 rounded-row p-2 text-left text-sm ring-sidebar-ring outline-hidden transition-[width,height,padding,margin,background-color,color,font-weight] duration-(--duration-slow) ease-(--ease-emphasized) group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground focus-visible:ring-3 active:bg-sidebar-accent/50 active:text-sidebar-accent-foreground data-active:hover:bg-transparent data-active:active:bg-transparent disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-open:hover:bg-sidebar-accent data-open:hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground data-active:font-medium data-active:text-sidebar-accent-foreground [&_svg]:size-4 [&_svg]:shrink-0 [&>span:last-child]:truncate [&>span:nth-last-child(2):has(+[data-slot=sidebar-menu-highlight])]:truncate",
     // O `plain`: a linha apagada até o cursor e acesa na página atual (80 linhas na
     // tinta cheia virariam um bloco de texto), com 44px no dedo.
     "group-data-[variant=plain]:text-muted-foreground group-data-[variant=plain]:hover:text-sidebar-accent-foreground group-data-[variant=plain]:active:text-sidebar-accent-foreground group-data-[variant=plain]:data-active:text-sidebar-accent-foreground group-data-[variant=plain]:pointer-coarse:min-h-11",
