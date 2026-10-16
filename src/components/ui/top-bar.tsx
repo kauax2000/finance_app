@@ -544,8 +544,12 @@ function TopBarAction({
 const TOP_BAR_PLATE =
   "md:rounded-full md:bg-clip-border md:bg-sidebar md:shadow-lg md:ring-1 md:ring-foreground/10 md:[--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]"
 
-/** A mesma pílula na busca, que só aparece da quebra para cima; o realce fica de fora (campo não acende no cursor). */
-const TOP_BAR_PLATE_PILL = "bg-clip-border bg-sidebar shadow-lg ring-1 ring-foreground/10"
+/**
+ * A lupa com o vidro do campo da paleta (`searchFieldSurfaceClassName.plate`),
+ * do `md` para cima, por extenso: classe montada não chega ao CSS.
+ */
+const TOP_BAR_SEARCH_PLATE =
+  "md:ring-1 md:ring-foreground/10 md:bg-popover/85 md:glass-surface md:supports-backdrop-filter:bg-popover/60 md:reduced-transparency:bg-popover"
 
 /** As classes por extenso: classe montada em tempo de execução não chega ao CSS. */
 const BUSCA_QUEBRA = {
@@ -587,7 +591,7 @@ function TopBarSearch({
   collapse?: "md" | "lg"
   /** O brilho de marca na borda da pílula (uma por tela). */
   glow?: boolean
-  /** A pílula da placa da barra lateral no lugar do campo, como o botão de recolher. */
+  /** O vidro do campo do `CommandDialog` (a superfície `plate` da busca) no lugar do campo. */
   plate?: boolean
   className?: string
 }) {
@@ -628,7 +632,7 @@ function TopBarSearch({
         className={cn(
           "relative rounded-full text-muted-foreground pointer-coarse:after:absolute pointer-coarse:after:-inset-0.5 pointer-coarse:after:content-['']",
           BUSCA_QUEBRA[collapse].icone,
-          plate && TOP_BAR_PLATE
+          plate && TOP_BAR_SEARCH_PLATE
         )}
       >
         <MagnifyingGlassIcon className="opacity-70" aria-hidden />
@@ -649,7 +653,9 @@ function TopBarSearch({
           className={cn(
             searchFieldShapeClassName,
             searchFieldSizeClassName.lg,
-            plate ? TOP_BAR_PLATE_PILL : searchFieldSurfaceClassName.field,
+            searchFieldSurfaceClassName[plate ? "plate" : "field"],
+            // O vidro vai até o anel: a borda transparente do botão deixaria 1px vazado entre os dois.
+            plate && "bg-clip-border",
             "w-full justify-start font-normal text-muted-foreground",
             // A pílula não realça nem acende o texto: é um campo, e campo não muda de cor no cursor.
             "[--button-hover-fill:transparent] dark:[--button-hover-fill:transparent]",

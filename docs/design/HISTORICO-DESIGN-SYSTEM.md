@@ -26992,3 +26992,10 @@ ao lado da placa. Na pílula de busca o realce fica de fora (é um campo) e o fi
 do campo sai: o anel de 1px faz o papel dele. Medido: os três a 36 de altura,
 mesma tinta e mesma sombra. `top-bar-versions.test.ts` confere que a receita é
 a mesma do gatilho, parte a parte.
+
+Na mesma rodada, o dono trocou a busca: em vez da placa da barra lateral, o
+fundo do campo do `CommandDialog`. O `plate` do `TopBarSearch` passa a ser a
+superfície `plate` da busca (`searchFieldSurfaceClassName.plate`: anel de 1px
+sobre a tinta flutuante de vidro, sem sombra), a mesma pílula que a paleta
+abre; a lupa abaixo do `lg` veste o mesmo vidro do `md` para cima. O sino
+segue com a pílula da placa.

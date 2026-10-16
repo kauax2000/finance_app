@@ -94,8 +94,12 @@ describe("as peças", () => {
     expect(fonte("src/components/layout/notification-bell-link.tsx")).toContain("<TopBarAction")
   })
 
-  it("a busca e o sino do app vestem a pílula da placa, como o botão de recolher", () => {
+  it("a busca do app veste o vidro do campo da paleta", () => {
     expect(fonte("src/components/layout/app-header.tsx")).toMatch(/<TopBarSearch[\s\S]*?\bplate\b[\s\S]*?\/>/)
+    expect(CODIGO).toContain('searchFieldSurfaceClassName[plate ? "plate" : "field"]')
+  })
+
+  it("o sino do app veste a pílula da placa, como o botão de recolher", () => {
     expect(fonte("src/components/layout/notification-bell-link.tsx")).toMatch(/<TopBarAction[\s\S]*?\bplate\b/)
     // A mesma receita do gatilho da barra lateral: tinta, anel, sombra e realce.
     const gatilho = fonte("src/components/ui/sidebar.tsx")

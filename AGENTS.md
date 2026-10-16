@@ -1452,9 +1452,9 @@ declaração de `background-color` no trilho).
   não pode ter `backdrop-filter` nem fundo translúcido (viraria a raiz do
   borrão das camadas). **`TopBarAction`** (`plate`: a pílula da placa do botão de recolher —
   tinta `--sidebar`, anel, `shadow-lg`, realce em `--sidebar-accent` —, do
-  `md` para cima; o sino e a busca do app a vestem) — **nenhuma tela escreve
+  `md` para cima; o sino do app a veste) — **nenhuma tela escreve
   o `span` da contagem nem embrulha um botão da barra num `Tooltip` à mão**;
-  `TopBarSearch` (⌘K e `/`; no app, com `glow`, `plate` e `collapse="lg"`, centrada numa coluna `max-w-xs` (320 até 1279px; `xl:max-w-sm`, 384 a partir de 1280) entre pontas de peso igual), `TopBarProgress`, `TopBarSkeleton`. **Uma árvore
+  `TopBarSearch` (⌘K e `/`; no app, com `glow`, `plate` — o vidro do campo do `CommandDialog`, a superfície `plate` da busca — e `collapse="lg"`, centrada numa coluna `max-w-xs` (320 até 1279px; `xl:max-w-sm`, 384 a partir de 1280) entre pontas de peso igual), `TopBarProgress`, `TopBarSkeleton`. **Uma árvore
   só**: as pontas aceitam `phone` — **nenhuma barra escreve duas árvores com
   `md:hidden` e `hidden md:contents`**. `hideOnScroll`.
 - **`BottomBar`**: a pele do `Tabs floating` (pílula `--popover` com o anel,
