@@ -29,7 +29,7 @@ export function SidebarUserProfile() {
         return (
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <SidebarMenuSkeleton size="lg" showIcon aria-busy="true" />
+                    <SidebarMenuSkeleton size="lg" showIcon media="avatar" aria-busy="true" />
                 </SidebarMenuItem>
             </SidebarMenu>
         )

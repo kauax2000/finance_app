@@ -60,14 +60,12 @@ describe("as versões do DatePicker", () => {
     expect(lerFonte("src/components/ui/calendar.tsx")).toContain('if ("date" in p) {')
   })
 
-  it("o calendário brota do campo, e o recorte não fica valendo depois", () => {
+  it("o calendário brota do campo no gesto do menu", () => {
     expect(CODIGO).toContain('className={cn("date-picker-bloom w-auto", popoverClassName)}')
     const css = lerFonte("src/app/globals.css")
-    // `inset(-1rem)` e `backwards`: `inset(0)` cortaria o anel e a sombra, e
-    // `both` deixaria o recorte valendo para sempre.
-    expect(css).toMatch(/@keyframes date-picker-bloom \{[\s\S]*?clip-path: inset\(-1rem round 0\);/)
-    expect(css).toMatch(/animation: date-picker-bloom var\(--duration-spring\) var\(--ease-spring\)\s*backwards;/)
-    expect(css).toMatch(/&\[data-side="top"\] \{\s*--date-picker-bloom-clip: inset\(100%/)
+    const bloco = css.slice(css.indexOf("@utility date-picker-bloom {"))
+    expect(bloco).toMatch(/&\[data-state="open"\] \{\s*animation: menu-morph 380ms linear backwards;/)
+    expect(bloco).toMatch(/&\[data-state="closed"\] \{\s*animation: menu-unmorph 210ms linear both;/)
   })
 
   it("no telefone a grade abre numa gaveta, com título", () => {

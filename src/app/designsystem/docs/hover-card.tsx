@@ -236,8 +236,8 @@ export default function HoverCardDoc() {
         O Radix ignora o toque, e a prévia não existia no telefone. Agora segurar o gatilho por meio segundo a abre; o toque simples continua sendo do gatilho, e o clique que o soltar dispara é engolido — senão o link levaria embora a prévia no mesmo gesto. Numa linha com <code>ContextMenu</code>, o toque longo no gatilho é da prévia. <code>touch=&#123;false&#125;</code> desliga.
       </DocNote>
 
-      <DocNote title="A prévia se desvela">
-        Sem pulo: ela chega porque o cursor parou, e não por um clique. Sobe 8px saindo de um desfoque de 8px, numa curva longa (420ms), e as faixas vêm atrás; ao sair, dissolve no lugar — o cursor que vai embora não quer ver a placa correr atrás dele. Até a rodada 248 ela crescia de 90% na mola, o mesmo pulo dos menus.
+      <DocNote title="A prévia brota do gatilho">
+        No gesto de toda sobreposição, o do menu da barra de baixo (rodada 287): nasce em elipse na origem do Radix, cresce primeiro na altura, e as faixas surgem do desfoque atrás; ao sair, volta ao gatilho. Até a rodada 286 ela se desvelava, subindo 8px de um desfoque, e dissolvia no lugar.
       </DocNote>
 
       <PropsTable

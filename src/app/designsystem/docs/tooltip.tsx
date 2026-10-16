@@ -179,8 +179,8 @@ export default function TooltipDoc() {
         </Tooltip>
       </DocSection>
 
-      <DocNote title="Ela cresce a partir do gatilho, com mola">
-        O estalo: a entrada é <code>scale 0,7 → 1</code> com <code>opacity 0 → 1</code> e 4px do lado do botão, numa mola de <code>stiffness 300</code> e <code>damping 25</code> — subamortecida de propósito, então ela passa de 1 e volta. A origem é <code>--radix-tooltip-content-transform-origin</code>, então a caixa nasce do botão. A saída é 100ms, sem mola e sem recuar. Era <code>0,5</code> sem lado, e lia como um balão inflando; sem desfoque, que num texto de 12px só borra a leitura. Como é movimento de JavaScript, o bloco global de movimento reduzido não a alcança: quem a desliga é <code>useReducedMotion</code>.
+      <DocNote title="Ela brota do gatilho">
+        No gesto de toda sobreposição, o do menu da barra de baixo (rodada 287, <code>@utility menu-sprout</code>): nasce em elipse na origem do Radix (<code>--radix-tooltip-content-transform-origin</code>), cresce primeiro na altura e volta ao botão em 210ms. O gesto é CSS, pelo <code>data-state</code> do Radix; o <code>motion</code> só segura a dica montada durante a volta, e com movimento reduzido ela desmonta na hora. Até a rodada 286 era o estalo de 0,7 numa mola de JavaScript.
       </DocNote>
 
       <DocNote title="Tooltip não substitui aria-label">

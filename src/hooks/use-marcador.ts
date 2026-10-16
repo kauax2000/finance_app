@@ -115,22 +115,10 @@ export function useMarcador(o: UseMarcadorOptions): boolean {
         const mesmoTamanho = antes.caixa.w === caixa.w && antes.caixa.h === caixa.h
         const de = mesmoTamanho ? { x: antes.caixa.x, y: antes.caixa.y } : antes.caixa
         const para = mesmoTamanho ? { x: caixa.x, y: caixa.y } : caixa
-        // As bordas onde a peça repousa nas pontas: esticando, ela não passa delas.
-        const estilo = getComputedStyle(trilha)
-        const limite = vertical
-          ? {
-              inicio: parseFloat(estilo.paddingTop) + insete,
-              fim: trilha.scrollHeight - parseFloat(estilo.paddingBottom) - insete,
-            }
-          : {
-              inicio: parseFloat(estilo.paddingLeft) + insete,
-              fim: trilha.scrollWidth - parseFloat(estilo.paddingRight) - insete,
-            }
         emCurso.current = viajarLiquido(peca, de, para, {
           amplitude,
           eixo,
           trajeto: TRAJETO_MACIO,
-          limite,
         })
       }
       setMedido(true)

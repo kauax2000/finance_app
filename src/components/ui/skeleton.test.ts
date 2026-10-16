@@ -23,3 +23,14 @@ describe("Skeleton", () => {
     expect(CSS).not.toMatch(/skeleton-shimmer|--skeleton-highlight/)
   })
 })
+
+describe("o osso do avatar é o círculo do Avatar", () => {
+  it("na conta, nos membros e na conta da barra lateral, no mesmo degrau da peça", () => {
+    // Eram quadrados (`rounded-lg`) esperando um avatar redondo, e o dos membros media 36
+    // contra o `Avatar size="sm"` de 32.
+    expect(lerFonte("src/components/account/account-page-skeleton.tsx")).toContain('<Skeleton shape="circle" size="lg" />')
+    expect(lerFonte("src/components/members/members-section-skeleton.tsx")).toContain('<Skeleton shape="circle" size="sm" />')
+    expect(lerFonte("src/components/layout/sidebar-user-profile.tsx")).toContain('<SidebarMenuSkeleton size="lg" showIcon media="avatar"')
+    expect(lerFonte("src/components/ui/sidebar.tsx")).toContain('{ shape: "circle" as const, size: "sm" as const }')
+  })
+})

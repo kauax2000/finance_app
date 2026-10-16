@@ -43,7 +43,7 @@ export default function PopoverDoc() {
 
       <DocSection
         title="Padrão"
-        description="O cabeçalho com o × no canto, para o popover que se lê e se dispensa, e a seta. Ele brota do gatilho — a placa do tour: nasce a 92%, desfocado, 10px do lado do botão, e as faixas sobem atrás —, e ao fechar volta para dentro dele."
+        description="O cabeçalho com o × no canto, para o popover que se lê e se dispensa, e a seta. Ele brota do gatilho no gesto do menu da barra de baixo, as faixas surgem do desfoque atrás, e ao fechar volta para dentro dele."
         code={`<Popover>
   <PopoverTrigger asChild><Button variant="outline">Como calculamos</Button></PopoverTrigger>
   <PopoverContent>
@@ -153,19 +153,21 @@ export default function PopoverDoc() {
           <PopoverTrigger asChild>
             <Button variant="outline">Escolher período</Button>
           </PopoverTrigger>
-          <PopoverContent padding="none" size="sm" label="Período" className="p-1">
-            {["Este mês", "Trimestre", "Ano"].map((r) => (
-              <PopoverClose asChild key={r}>
-                <Button
-                  type="button"
-                  variant="tertiary"
-                  size="lg"
-                  className="w-full justify-start font-normal"
-                >
-                  {r}
-                </Button>
-              </PopoverClose>
-            ))}
+          <PopoverContent padding="none" size="sm" label="Período">
+            <div className="flex flex-col p-1">
+              {["Este mês", "Trimestre", "Ano"].map((r) => (
+                <PopoverClose asChild key={r}>
+                  <Button
+                    type="button"
+                    variant="tertiary"
+                    size="lg"
+                    className="w-full justify-start font-normal"
+                  >
+                    {r}
+                  </Button>
+                </PopoverClose>
+              ))}
+            </div>
           </PopoverContent>
         </Popover>
       </DocSection>

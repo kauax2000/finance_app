@@ -468,7 +468,7 @@ function ComboboxContent({
         onInteractOutside={(e) => {
           if (campoRef.current?.contains(e.target as Node)) e.preventDefault()
         }}
-        // Desdobra do campo, e as linhas sobem em cascata.
+        // Desdobra do campo, e as linhas surgem do desfoque em cascata.
         motion="field"
         className={cn(
           "w-(--radix-popover-trigger-width) min-w-48 [--command-reveal:var(--duration-spring)]",
@@ -492,7 +492,7 @@ function ComboboxContent({
       data-slot="combobox-content"
       align={align}
       padding="none"
-      // Desdobra do campo; as linhas sobem em cascata (a `command-reveal` da lista).
+      // Desdobra do campo; as linhas surgem do desfoque em cascata (a `command-reveal` da lista).
       motion="field"
       className={cn(
         "w-(--radix-popover-trigger-width) min-w-48 [--command-reveal:var(--duration-spring)]",

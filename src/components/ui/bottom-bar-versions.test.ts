@@ -9,21 +9,21 @@ const CODIGO = semComentarios(lerFonte("src/components/ui/bottom-bar.tsx"), "lin
 const FRAME = lerFonte("src/app/designsystem/ds-frame.tsx")
 
 describe("o desenho do Tabs", () => {
-  it("a pílula tem um anel só, o das Tabs, e nenhuma borda", () => {
-    expect(CODIGO).toContain('"mobile-glass-surface shadow-lg ring-1 ring-foreground/10"')
-    expect(CODIGO).not.toMatch(/mobile-glass-surface border/)
+  it("a pílula tem a tinta dos menus suspensos, o anel e nenhuma sombra", () => {
+    expect(CODIGO).toContain('const PILULA_CLASSNAME = cn(menuPanelTintClassName, "ring-1 ring-foreground/10")')
+    expect(CODIGO).not.toContain("mobile-glass-surface")
   })
 
-  it("o marcador é a tecla em relevo, 2px para dentro, num tom que o conteúdo não usa", () => {
-    expect(CODIGO).toContain('"bg-(--bottom-bar-key) ring-1 ring-foreground/10 shadow-sm"')
+  it("o marcador é a tecla do Tabs floating, 2px para dentro: --muted, o anel e shadow-xs", () => {
+    expect(CODIGO).toContain('"bg-(--bottom-bar-key) ring-1 ring-foreground/10 shadow-xs"')
     expect(CODIGO).toContain("const RECUO_DO_MARCADOR = 2")
-    // Não é `--muted`: o fundo das linhas que passam por trás dá ~1,09:1 sobre uma linha.
-    expect(CODIGO).toContain('"[--bottom-bar-key:color-mix(in_oklab,var(--foreground)_12%,var(--popover))]"')
-    expect(CODIGO).toContain('"dark:[--bottom-bar-key:color-mix(in_oklab,var(--foreground)_18%,var(--popover))]"')
-    // A pílula mais densa, redeclarada só aqui: a gaveta e o menu ficam no token.
-    expect(CODIGO).toContain('"[--mobile-glass-bg:color-mix(in_oklab,var(--popover)_82%,transparent)]"')
-    const marcador = CODIGO.slice(CODIGO.indexOf('data-slot="bottom-bar-marker"'))
-    expect(marcador.slice(0, 600)).not.toContain("bg-muted")
+    // Com a pílula opaca nada passa por trás, e a tecla volta ao `--muted` das abas.
+    expect(CODIGO).toContain('const pilulaTomClassName = "[--bottom-bar-key:var(--muted)]"')
+  })
+
+  it("o toque responde como as abas: a tinta, sem afundar", () => {
+    const raiz = CODIGO.slice(CODIGO.indexOf("const itemRootClassName"))
+    expect(raiz.slice(0, raiz.indexOf("].join"))).not.toContain("translate-y-px")
   })
 
   it("glass é o vidro do TabsList, sobre o mesmo tom da tecla", () => {
@@ -38,8 +38,8 @@ describe("o desenho do Tabs", () => {
     expect(lerFonte("src/hooks/use-marcador.ts")).toContain("antes.el !== ativa")
   })
 
-  it("a ação é da mesma família: o anel e a sombra da pílula", () => {
-    expect(CODIGO).toContain('"size-(--bottom-bar-h) shrink-0 rounded-full p-0 ring-1 ring-foreground/10 shadow-lg"')
+  it("a ação tem a sombra e nenhum anel por fora da tecla", () => {
+    expect(CODIGO).toContain('"size-(--bottom-bar-h) shrink-0 rounded-full p-0 shadow-lg"')
   })
 
   it("rótulo só na ativa: 56 de altura, e as outras nunca abaixo de 44", () => {
@@ -90,7 +90,7 @@ describe("os comportamentos", () => {
   })
 
   it("some ao rolar: a pílula e a ação afundam juntas, e nunca com o foco dentro", () => {
-    expect(CODIGO).toContain("group-data-hidden/bottom-bar:translate-y-[calc(100%+var(--bottom-bar-margin)+var(--bottom-bar-safe,0px))]")
+    expect(CODIGO).toContain("group-data-hidden/bottom-bar:translate-y-[calc(100%+var(--bottom-bar-offset))]")
     expect(CODIGO).toContain("nav.contains(doc.activeElement)")
     // Sai devagar (ease-in-out) e volta na mola, as duas em 700ms.
     expect(CODIGO).toContain('"origin-bottom transition-[translate,scale,opacity] duration-(--duration-gentle) ease-(--ease-spring)"')
@@ -104,9 +104,10 @@ describe("os comportamentos", () => {
     expect(css).toContain("--ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);")
   })
 
-  it("o toque com mola, e o estalo só quando a aba passa a ativa", () => {
-    expect(CODIGO).toContain("group-active/bottom-bar-item:scale-88")
-    expect(CODIGO).toContain("if (!ativo || era || !el) return")
+  it("o glifo fica parado: sem encolher no toque nem estalar ao ativar, como as abas", () => {
+    expect(CODIGO).toContain('const glifoClassName = "relative flex shrink-0"')
+    expect(CODIGO).not.toContain("scale-88")
+    expect(CODIGO).not.toContain("useEstalo")
   })
 })
 
@@ -150,8 +151,9 @@ describe("o catálogo e o app", () => {
     it("1. os degraus são degraus, e nenhum par produz a mesma string", () => {
       const strings = ROTULOS.map((labels) => bottomBarVariants({ labels }))
 
+      // A régua da tab bar do iOS 26: 56 com e sem rótulo (com rótulo já foi 64).
       const alturas = strings.map(alturaEm)
-      expect(alturas).toEqual([3.5, 4])
+      expect(alturas).toEqual([3.5, 3.5])
     })
 
     it("2. o padrão é declarado uma vez", () => {
@@ -160,15 +162,16 @@ describe("o catálogo e o app", () => {
       )
     })
 
-    it("3. a reserva conta a margem duas vezes, e inclui a área segura", () => {
+    it("3. a reserva é o pé, a altura e a folga em cima, sem a área segura (a barra assenta sobre ela, como no iOS)", () => {
       const bloco = CSS.match(/--bottom-bar-pad:\s*calc\(([^;]+)\);/)
       expect(bloco, "--bottom-bar-pad não foi declarado").not.toBeNull()
       const conta = bloco![1].replace(/\s+/g, " ")
 
       // A barra tem folga **em cima e embaixo**: a conta antiga
       // (`altura + margem + safe`) reservava a margem uma vez só.
-      expect(conta).toMatch(/var\(--bottom-bar-margin\)\s*\*\s*2/)
-      expect(conta).toContain("env(safe-area-inset-bottom, 0px)")
+      expect(conta).toContain("var(--bottom-bar-offset)")
+      expect(conta).toContain("var(--bottom-bar-margin)")
+      expect(conta).not.toContain("safe-area")
       expect(conta).toContain("3.5rem")
 
       // E a altura não volta a ser token: ela é o degrau do eixo.
@@ -184,8 +187,8 @@ describe("o catálogo e o app", () => {
       expect(base).not.toMatch(/\bz-(?:\d|\[)/)
     })
 
-    it("5. o vidro é o da folha, e a peça não escreve o próprio borrão", () => {
-      expect(CODIGO).toContain("MOBILE_GLASS_SURFACE_CLASSNAME")
+    it("5. a pílula é uma constante só, e a peça não escreve borrão", () => {
+      expect(CODIGO).toContain("PILULA_CLASSNAME")
       expect(CODIGO).not.toMatch(/\bbackdrop-blur/)
       expect(CODIGO).not.toMatch(/\bbackdrop-filter/)
 
@@ -197,7 +200,7 @@ describe("o catálogo e o app", () => {
 
     it("6. a margem vem do token nos três lados, sem literal", () => {
       expect(bottomBarVariants({})).toMatch(
-        /pb-\[calc\(var\(--bottom-bar-margin\)\+var\(--bottom-bar-safe,0px\)\)\]/
+        /pb-\(--bottom-bar-offset\)/
       )
       expect(CODIGO).toContain("mx-(--bottom-bar-margin)")
       expect(CODIGO).not.toMatch(/\bmx-4\b/)
@@ -349,7 +352,7 @@ describe("o catálogo e o app", () => {
       // A mesma tecla do marcador: o tom próprio, o anel e a sombra.
       expect(fallback).toContain("bg-(--bottom-bar-key)")
       expect(fallback).toContain("ring-foreground/10")
-      expect(fallback).toContain("shadow-sm")
+      expect(fallback).toContain("shadow-xs")
       // O miolo não pinta mais o fundo do ativo: quem pinta é o marcador.
       // Cortado no fim do próprio array, e não por contagem de caracteres: 600
       // passava do `].join` e entrava no fallback, que carrega a classe de

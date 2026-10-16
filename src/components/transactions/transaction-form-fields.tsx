@@ -58,7 +58,6 @@ import {
     TransactionFormTypeSegment,
     type TransactionFormKind,
 } from "@/components/transactions/transaction-type-segment"
-import { splitTotalAcrossInstallments } from "@/lib/installment-amounts"
 import { parseMoneyBrl } from "@/lib/money-brl"
 import { Button } from "@/components/ui/button"
 import { FormInput, FormRadioGroup } from "@/components/ui/form"
@@ -254,13 +253,35 @@ export type TransactionFormFieldsProps = {
     planIsActive?: boolean
 }
 
+/**
+ * O trilho do tipo (Despesa, Parcelada, Receita; na edição, Despesa e Receita).
+ * Mora no cabeçalho fixo do formulário, sob o título, e não no corpo que rola:
+ * é o modo do formulário, a decisão antes dos campos.
+ */
+export function TransactionFormSegment({
+    segmentMode,
+    hasInstallmentPlan = false,
+    type,
+    setType,
+    formKind,
+    setFormKind,
+}: Pick<
+    TransactionFormFieldsProps,
+    "segmentMode" | "hasInstallmentPlan" | "type" | "setType" | "formKind" | "setFormKind"
+>) {
+    if (segmentMode === "edit" && hasInstallmentPlan) return null
+    return segmentMode === "edit" ? (
+        <TransactionFormTypeSegment value={type} onChange={setType} />
+    ) : (
+        <TransactionFormKindSegment value={formKind} onChange={setFormKind} />
+    )
+}
+
 export function TransactionFormFields(props: TransactionFormFieldsProps) {
     const {
         segmentMode,
         formKind,
-        setFormKind,
         type,
-        setType,
         amount,
         setAmount,
         description,
@@ -317,6 +338,8 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
             installmentEditScope === "plan")
 
     const parcelas = Math.floor(Number.parseInt(installmentCount, 10)) || 0
+    // No dedo o − e o + do contador sobem de 24 a 32px (o campo tem 40); no mouse ficam em 24.
+    const alvoDoContador = "pointer-coarse:size-8 pointer-coarse:[&_svg:not([class*='size-'])]:size-4"
 
     // O resumo do plano: as parcelas, a conta que falta (o total ou a parcela) e
     // o mês da última cobrança, contado da primeira.
@@ -334,16 +357,11 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
         if (installmentValueMode === "total") {
             const total = parseMoneyBrl(installmentTotal)
             if (total === null || total <= 0) return null
-            const { installmentAmount, finalInstallmentAmount } =
-                splitTotalAcrossInstallments(total, n)
-            if (installmentAmount <= 0) return null
-            const same = installmentAmount === finalInstallmentAmount
-            return (
-                (same
-                    ? `${n} × ${currencyBRL(installmentAmount)}`
-                    : `${n - 1} × ${currencyBRL(installmentAmount)} + 1 × ${currencyBRL(finalInstallmentAmount)}`) +
-                fim
-            )
+            // O resumo mostra a parcela arredondada, sempre no número escolhido
+            // (12 × R$ 8,33), sem separar a sobra de centavos numa parcela à parte.
+            const parcela = Math.round((total * 100) / n) / 100
+            if (parcela <= 0) return null
+            return `${n} × ${currencyBRL(parcela)}${fim}`
         }
         const per = parseMoneyBrl(installmentPerAmount)
         if (per === null || per <= 0) return null
@@ -495,12 +513,6 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                 />
             ) : null}
 
-            {segmentMode === "edit" && hasInstallmentPlan ? null : segmentMode === "edit" ? (
-                <TransactionFormTypeSegment value={type} onChange={setType} />
-            ) : (
-                <TransactionFormKindSegment value={formKind} onChange={setFormKind} />
-            )}
-
             {showInstallmentFields && segmentMode === "edit" ? (
                 <Alert tone="warning" size="sm">
                     <AlertDescription>
@@ -512,7 +524,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
 
             {showInstallmentFields ? (
                 <div className="space-y-2">
-                    <FieldRow stack={false} className="grid-cols-[minmax(0,1fr)_8rem]">
+                    <FieldRow stack={false} className="grid-cols-1 md:grid-cols-[minmax(0,1fr)_8rem]">
                         <Field size="sm">
                             <FieldLabel>
                                 Valor
@@ -562,6 +574,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                                 <InputGroupAddon>
                                     <InputGroupButton
                                         size="icon-xs"
+                                        className={alvoDoContador}
                                         aria-label="Uma parcela a menos"
                                         disabled={parcelas <= 2}
                                         onClick={() => setInstallmentCount(String(Math.max(2, parcelas - 1)))}
@@ -586,6 +599,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                                 <InputGroupAddon align="inline-end">
                                     <InputGroupButton
                                         size="icon-xs"
+                                        className={alvoDoContador}
                                         aria-label="Uma parcela a mais"
                                         onClick={() => setInstallmentCount(String(Math.max(2, parcelas + 1)))}
                                     >

@@ -38,8 +38,9 @@ describe("o redesenho do NavigationMenu", () => {
     expect(CODIGO.match(/layoutId=/g)).toHaveLength(1)
   })
 
-  it("o painel entra na mola e os links sobem em cascata", () => {
-    expect(CODIGO).toContain("data-open:zoom-in-[0.97] data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring)")
+  it("o painel brota no gesto do menu e os links sobem em cascata", () => {
+    expect(CODIGO.match(/menu-sprout/g)?.length).toBeGreaterThanOrEqual(2)
+    expect(CODIGO).not.toContain("zoom-in-[0.97]")
     expect(CODIGO).toContain('"navigation-menu-reveal"')
     expect(CSS).toMatch(/@utility navigation-menu-reveal \{\s*& > li \{\s*animation: rise 160ms var\(--ease-out\) 40ms both;\s*--rise-distance: 3px;/)
   })

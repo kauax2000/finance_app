@@ -302,7 +302,10 @@ describe("Onboarding — o mecanismo, pela fonte", () => {
     expect(CODIGO).toContain("key={placaPasso ?? undefined}")
     expect(CODIGO).toContain("void surgirDoAlvo(placa)")
     expect(CODIGO).toContain("sumirNoAlvo(placa)")
-    expect(CODIGO).toContain('className={cn(CAMADA_PLACA, "overflow-visible")}')
+    // A seta mora fora do recorte porque quem rola é o viewport do popover, e
+    // não a casca: a placa não precisa mais do `overflow-visible` (que perdia o teto).
+    expect(CODIGO).toContain("className={CAMADA_PLACA}")
+    expect(CODIGO).not.toContain('"overflow-visible"')
     // O rodapé com a mesma forma em todos os passos: o × pula, o voltar some
     // sem sair do lugar.
     expect(CODIGO).toContain('data-slot="onboarding-tour-close"')

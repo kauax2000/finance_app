@@ -295,7 +295,7 @@ export default function CommandDoc() {
       </DocNote>
 
       <DocNote title="Movimento">
-        O <code>CommandDialog</code> abre em <code>--ease-spring</code> e fecha curto em <code>--ease-out</code>, e a legenda entra 80ms depois. Na pilha toda, cada linha que o cmdk <em>monta</em> — as que passam a casar a busca, e o miolo inteiro numa troca de vista com <code>key</code> — sobe 6px na mola, escalonada (<code>command-reveal</code>). A altura da lista só anima no diálogo: num popover ela faria o painel perseguir o gatilho.
+        O <code>CommandDialog</code> abre em <code>--ease-spring</code> e fecha curto em <code>--ease-out</code>, e a legenda entra 80ms depois. Na pilha toda, cada linha que o cmdk <em>monta</em> — as que passam a casar a busca, e o miolo inteiro numa troca de vista com <code>key</code> — surge do desfoque no lugar, escalonada (<code>command-reveal</code>): a lista rola, e linha que se desloca conta como transbordo. A altura da lista só anima no diálogo: num popover ela faria o painel perseguir o gatilho.
       </DocNote>
 
       <DocNote title="A dissolução cresce com a rolagem">

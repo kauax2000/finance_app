@@ -13,7 +13,7 @@ export function AccountPageSkeleton() {
                     <CardContent className="flex flex-col">
                         <div className="flex items-center justify-between gap-3 px-4 py-3 sm:py-3.5">
                             <div className="flex min-w-0 flex-1 items-center gap-3">
-                                <Skeleton className="size-12 shrink-0 rounded-lg" />
+                                <Skeleton shape="circle" size="lg" />
                                 <div className="min-w-0 flex-1 space-y-2">
                                     <Skeleton className="h-4 w-36 max-w-full" />
                                     <Skeleton className="h-3 w-48 max-w-full" />

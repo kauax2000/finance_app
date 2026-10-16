@@ -58,7 +58,7 @@ describe("as versões do Drawer", () => {
     expect(CODIGO).toContain("[&_svg]:size-5")
   })
 
-  it("os menus do telefone são gavetas, e o vidro escrito à mão saiu", () => {
+  it("o + abre o formulário, o menu da conta brota da aba, e o vidro escrito à mão saiu", () => {
     // O "+" abre direto o formulário de lançamento (a gaveta dele, no
     // telefone); a folha de ações antes dele saiu.
     const fab = lerFonte("src/components/layout/quick-actions.tsx")
@@ -66,7 +66,10 @@ describe("as versões do Drawer", () => {
     expect(fab).not.toMatch(/<DrawerActions>|<DropdownMenuContent/)
     expect(fab).not.toContain("MOBILE_GLASS")
     const conta = lerFonte("src/components/layout/mobile-account-menu.tsx")
-    expect(conta).toContain("<Drawer open={open} onOpenChange={setOpen} scaleBackground>")
+    // Rodada 278: o painel do `DropdownMenu` que brota da aba "Conta", e não
+    // mais a gaveta de 625px.
+    expect(conta).toMatch(/<DropdownMenuContent\s+variant="panel"[\s\S]*?side="top"/)
+    expect(conta).not.toMatch(/<Drawer\b/)
     expect(conta).not.toMatch(/from "@\/components\/ui\/popover"|MOBILE_GLASS|createCenteredViewportAnchor/)
     expect(lerFonte("src/components/ui/bottom-bar.tsx")).not.toContain("MOBILE_GLASS_MENU")
   })

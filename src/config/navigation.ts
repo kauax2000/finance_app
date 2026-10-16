@@ -1,4 +1,4 @@
-import { ArrowPathRoundedSquareIcon, ArrowsRightLeftIcon, ClipboardDocumentCheckIcon, Cog6ToothIcon, CreditCardIcon, Squares2X2Icon, TagIcon, UserGroupIcon } from "@heroicons/react/24/outline"
+import { ArrowPathRoundedSquareIcon, QueueListIcon, ClipboardDocumentCheckIcon, Cog6ToothIcon, CreditCardIcon, Squares2X2Icon, TagIcon, UserGroupIcon } from "@heroicons/react/24/outline"
 import type { NavigationItem, SubPageMeta } from "@/types/navigation"
 
 /** Canonical path constants for links and active-state checks */
@@ -89,7 +89,7 @@ export const MAIN_NAVIGATION: NavigationItem[] = [
     { name: "Painel", href: ROUTES.DASHBOARD, icon: Squares2X2Icon },
     // A etiqueta e não a pizza: a pizza lia como relatório, e categoria é o rótulo que se põe no lançamento.
     { name: "Categorias", href: ROUTES.DASHBOARD_CATEGORIES, icon: TagIcon },
-    { name: "Transações", href: ROUTES.TRANSACTIONS, icon: ArrowsRightLeftIcon },
+    { name: "Transações", href: ROUTES.TRANSACTIONS, icon: QueueListIcon },
     { name: "Assinaturas", href: ROUTES.SUBSCRIPTIONS, icon: ArrowPathRoundedSquareIcon },
     {
         name: "Contas a pagar",

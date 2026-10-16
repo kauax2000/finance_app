@@ -289,7 +289,7 @@ export function PaletteDemo({ script, frame, stage, onStage }: PaletteDemoProps)
                         <ShowcaseFlight layoutId="auth-search" active={aberta} className="rounded-full">
                             <CommandInput caret value={texto} placeholder="" />
                         </ShowcaseFlight>
-                        {/* A placa entra com a primeira tecla, e as linhas sobem em cascata (`command-reveal`). */}
+                        {/* A placa entra com a primeira tecla, e as linhas surgem do desfoque em cascata (`command-reveal`). */}
                         {texto && grupos ? (
                             <CommandList>
                                 {grupos.map(({ heading, linhas, className }, i) => (

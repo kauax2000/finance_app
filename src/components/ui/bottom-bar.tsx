@@ -9,20 +9,26 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TRAJETO_MACIO } from "@/lib/liquid-move"
 import { useMarcador } from "@/hooks/use-marcador"
-import { glassControlSurfaceClassName } from "@/lib/glass-classes"
+import { glassControlSurfaceClassName, menuPanelTintClassName } from "@/lib/glass-classes"
 import { proximoEscondido } from "@/lib/hide-on-scroll"
 import type { HeroIcon } from "@/types/navigation"
 import { cn } from "@/lib/utils"
 
-/** O vidro da ilha: a receita `.mobile-glass-surface` do `globals.css`, com o anel das `Tabs`. */
-const MOBILE_GLASS_SURFACE_CLASSNAME = "mobile-glass-surface shadow-lg ring-1 ring-foreground/10"
+/**
+ * A pílula: a tinta flutuante dos menus suspensos (`menuPanelTintClassName`, o
+ * `--popover` translúcido com o borrão por trás), o anel de 1px do `Tabs
+ * floating` e nenhuma sombra.
+ */
+const PILULA_CLASSNAME = cn(menuPanelTintClassName, "ring-1 ring-foreground/10")
 
 /**
  * A barra de baixo do telefone, irmã do `TopBar`. A pílula e o marcador são os
- * do `Tabs floating` (anel em `--foreground` a 10%, tecla em relevo, viagem
- * líquida); o vidro fica porque a ilha flutua sobre a lista. A altura é do
- * degrau (`--bottom-bar-h`, publicada pelo eixo `labels`) e a área segura entra
- * dentro da caixa. O `<nav>` não recebe eventos (cobre a largura toda e engoliria
+ * do `Tabs floating`, a mesma pele (o `--popover`, o anel em `--foreground` a
+ * 10%, a tecla em `--muted` com `shadow-xs`, a viagem líquida); só a altura é
+ * da barra. A altura é do
+ * degrau (`--bottom-bar-h`, publicada pelo eixo `labels`), e a barra assenta a
+ * `--bottom-bar-offset` (20) do pé, sobre a área segura, como a do iOS 26; a
+ * lateral é `--bottom-bar-margin` (16). O `<nav>` não recebe eventos (cobre a largura toda e engoliria
  * o toque fora da pílula); quem recebe é a linha. A camada é `--z-modal`:
  * empata com o `Dialog` e perde por ordem de DOM.
  */
@@ -30,24 +36,26 @@ const bottomBarVariants = cva(
   [
     "group/bottom-bar pointer-events-none fixed inset-x-0 bottom-0 md:hidden",
     "z-(--z-modal)",
-    "[--bottom-bar-safe:env(safe-area-inset-bottom,0px)]",
-    "pb-[calc(var(--bottom-bar-margin)+var(--bottom-bar-safe,0px))]",
+    // A 20 do pé da tela, sobre a faixa do indicador de início, como a tab bar
+    // do iOS 26: a área segura não soma (somada, a barra flutuava a 54 do pé).
+    "pb-(--bottom-bar-offset)",
   ].join(" "),
   {
     variants: {
       /**
-       * Sem rótulo a barra é uma fileira de ícones numa caixa de 56; com rótulo
-       * o par ícone+texto pede 64. `active` põe o nome só na aba ativa, ao lado
-       * do ícone, e cabe nos 56.
+       * A barra mede 56 nos três, a régua da tab bar do iOS 26: sem rótulo, uma
+       * fileira de ícones; com rótulo, o ícone de 24 e o nome de 11 empilhados
+       * (37 de conteúdo numa aba de 52); `active` põe o nome só na ativa, ao lado.
+       * Com rótulo ela já teve 64.
        */
       labels: {
         false: "[--bottom-bar-h:3.5rem]",
-        true: "[--bottom-bar-h:4rem]",
+        true: "[--bottom-bar-h:3.5rem]",
         active: "[--bottom-bar-h:3.5rem]",
       },
       /** `island` flutua, com margem nos quatro lados; é ele que dá dono ao `--bottom-bar-margin`. */
       shape: {
-        island: "[--bottom-bar-margin:1rem]",
+        island: "[--bottom-bar-margin:1rem] [--bottom-bar-offset:1.25rem]",
       },
     },
     defaultVariants: { labels: false, shape: "island" },
@@ -187,18 +195,11 @@ function BottomBarRow({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 /**
- * O tom da pílula e o da tecla. A pílula vai à tinta dos flutuantes (`--popover`
- * a 82%, o vidro fica); a tecla ganha tom próprio, `--bottom-bar-key` (a tinta
- * do texto misturada ao `--popover`), porque `--muted` empatava com o fundo das
- * linhas que passam por trás (~1,09:1). Não é texto, é forma; a ativa também se
- * identifica pelo ícone sólido e pela tinta cheia. A variável do vidro é
- * redeclarada só aqui.
+ * O tom da tecla: o `--muted` do `Tabs floating`. Ele já teve tom próprio
+ * (`--muted` empatava com as linhas que passavam por trás do vidro, ~1,09:1);
+ * com a pílula opaca nada passa por trás, e a tecla volta à das abas.
  */
-const pilulaTomClassName = [
-  "[--mobile-glass-bg:color-mix(in_oklab,var(--popover)_82%,transparent)]",
-  "[--bottom-bar-key:color-mix(in_oklab,var(--foreground)_12%,var(--popover))]",
-  "dark:[--bottom-bar-key:color-mix(in_oklab,var(--foreground)_18%,var(--popover))]",
-].join(" ")
+const pilulaTomClassName = "[--bottom-bar-key:var(--muted)]"
 
 /** O marcador do `Tabs floating` mora 2px para dentro do item: a tecla dentro do trilho. */
 const RECUO_DO_MARCADOR = 2
@@ -303,10 +304,12 @@ function BottomBarTabs({
         data-slot="bottom-bar-tabs"
         style={{ "--bottom-bar-cols": colunas } as React.CSSProperties}
         className={cn(
-          MOBILE_GLASS_SURFACE_CLASSNAME,
+          PILULA_CLASSNAME,
           pilulaTomClassName,
           "relative h-(--bottom-bar-h) min-w-0 flex-1 touch-pan-y rounded-full p-0.5",
-          labels === "active"
+          // Com rótulo, cada aba parte da largura do próprio nome e o marcador
+          // acompanha; sem rótulo, colunas iguais.
+          labels
             ? "flex items-stretch gap-0.5"
             : "grid grid-cols-[repeat(var(--bottom-bar-cols),minmax(0,1fr))] items-stretch gap-0.5",
           someAoRolarClassName,
@@ -329,7 +332,7 @@ function BottomBarTabs({
               "pointer-events-none absolute top-0 left-0 rounded-full",
               glass
                 ? [glassControlSurfaceClassName, "shadow-sm [--glass-tone:var(--bottom-bar-key)]"]
-                : "bg-(--bottom-bar-key) ring-1 ring-foreground/10 shadow-sm",
+                : "bg-(--bottom-bar-key) ring-1 ring-foreground/10 shadow-xs",
               "translate-x-(--bottom-bar-marker-x) translate-y-(--bottom-bar-marker-y)",
               "w-(--bottom-bar-marker-w) h-(--bottom-bar-marker-h)"
             )}
@@ -350,7 +353,7 @@ function BottomBarTabs({
  */
 const someAoRolarClassName = [
   "origin-bottom transition-[translate,scale,opacity] duration-(--duration-gentle) ease-(--ease-spring)",
-  "group-data-hidden/bottom-bar:translate-y-[calc(100%+var(--bottom-bar-margin)+var(--bottom-bar-safe,0px))] group-data-hidden/bottom-bar:scale-95 group-data-hidden/bottom-bar:opacity-0",
+  "group-data-hidden/bottom-bar:translate-y-[calc(100%+var(--bottom-bar-offset))] group-data-hidden/bottom-bar:scale-95 group-data-hidden/bottom-bar:opacity-0",
   "group-data-hidden/bottom-bar:ease-(--ease-in-out)",
 ].join(" ")
 
@@ -424,21 +427,32 @@ function useArraste(trilhaRef: React.RefObject<HTMLDivElement | null>) {
 /**
  * A caixa de um item, dividida pela aba e pelo slot. O alvo é a caixa e não um
  * pseudo-elemento (um `::after` de 44px engoliria o vizinho); o anel de foco é
- * externo, há `p-0.5` de folga até a borda da pílula.
+ * externo, há `p-0.5` de folga até a borda da pílula. Sem o afundar de 1px no
+ * toque: as abas do `Tabs` não afundam, e a barra responde como elas (a tinta).
  */
 const itemRootClassName = [
   "group/bottom-bar-item relative flex h-full w-full min-w-0 items-stretch rounded-full",
   "outline-none focus-visible:ring-3 focus-visible:ring-ring/45",
-  "transition-[translate] duration-(--duration-fast) ease-(--ease-out)",
-  "active:translate-y-px",
 ].join(" ")
 
 /**
- * Com `labels="active"`: cada aba parte do próprio conteúdo (`flex: auto`) e a
- * sobra se divide igual. Nunca abaixo dos 44 do alvo de toque; sem espaço o
+ * Com rótulo (`labels` ligado ou `"active"`): cada aba parte do próprio conteúdo
+ * (`flex: auto`) e a sobra se divide igual, e o fundo da ativa tem a largura do
+ * nome dela. Nunca abaixo dos 44 do alvo de toque; sem espaço o
  * rótulo trunca. `w-auto`: com o `w-full` da caixa, `basis: auto` seria 100%.
  */
 const itemFlexClassName = "w-auto min-w-11 flex-auto"
+
+/**
+ * Com todos os rótulos (`labels`), cada aba parte da coluna igual de antes (a
+ * trilha menos os vãos de 2px, dividida pelas colunas; o `%` da base é da
+ * trilha) e nunca fica menor que o próprio nome (`min-w-fit`; o rótulo tem piso
+ * de 40). Cabendo, são todas iguais; quando um nome passa da coluna (um
+ * telefone de 320), só as abas curtas cedem o espaço — os curtos não encolhem
+ * abaixo da coluna sem um longo precisar.
+ */
+const itemColunaClassName =
+  "w-auto min-w-fit flex-[1_1_calc((100%_-_(var(--bottom-bar-cols)_-_1)*--spacing(0.5))/var(--bottom-bar-cols))]"
 
 /**
  * O miolo e as tintas. `active` escreve `aria-current="page"` na aba de link e
@@ -457,12 +471,14 @@ const itemInnerClassName = [
 const itemFallbackClassName = [
   "group-data-[active]/bottom-bar-item:bg-(--bottom-bar-key)",
   "group-data-[active]/bottom-bar-item:ring-1 group-data-[active]/bottom-bar-item:ring-foreground/10",
-  "group-data-[active]/bottom-bar-item:shadow-sm",
+  "group-data-[active]/bottom-bar-item:shadow-xs",
 ].join(" ")
 
-/** O glifo, que afunda a 88% no toque e volta na mola; `scale` para não disputar com o `translate` do afundamento da caixa. */
-const glifoClassName =
-  "relative flex shrink-0 transition-[scale] duration-(--duration-spring) ease-(--ease-spring) group-active/bottom-bar-item:scale-88"
+/**
+ * O glifo, parado: as abas do `Tabs` não encolhem no toque nem estalam ao
+ * ativar, e a barra responde como elas (a tinta e o marcador que viaja).
+ */
+const glifoClassName = "relative flex shrink-0"
 
 function BottomBarLabel({ children, ativo }: { children: React.ReactNode; ativo?: boolean }) {
   const { labels } = React.useContext(BottomBarContext)
@@ -481,7 +497,13 @@ function BottomBarLabel({ children, ativo }: { children: React.ReactNode; ativo?
     )
   }
   return (
-    <span className="w-full truncate px-2 text-center text-2xs leading-none" aria-hidden>
+    // O recuo é o respiro do nome dentro do fundo da ativa. Com 2px,
+    // "Transações" (≈58px) cabe na coluna de 65 de um telefone de 375; com 4
+    // já cortava.
+    // Piso de 40, e não 44: num telefone de 320 a trilha útil tem 212, e Painel
+    // e Conta a 44 mais Transações (64) e Categorias (60) inteiras passavam dela;
+    // a aba tem 64 de altura, o toque segue folgado.
+    <span className="w-full min-w-10 truncate px-0.5 text-center text-2xs leading-none" aria-hidden>
       {children}
     </span>
   )
@@ -517,30 +539,6 @@ function nomeComContagem(label: string | undefined, count?: number | boolean, co
   return [label + ",", count, countLabel].filter((p) => p != null).join(" ")
 }
 
-/**
- * O estalo do sólido: quando o item passa a ativo (não na montagem), o glifo
- * nasce a 75% e assenta na mola. WAAPI, porque uma classe adicionada na
- * hidratação tocaria na primeira pintura.
- */
-function useEstalo(ativo: boolean | undefined) {
-  const ref = React.useRef<HTMLSpanElement>(null)
-  const antes = React.useRef(ativo)
-  React.useEffect(() => {
-    const era = antes.current
-    antes.current = ativo
-    const el = ref.current
-    if (!ativo || era || !el) return
-    const janela = el.ownerDocument.defaultView ?? window
-    if (janela.matchMedia("(prefers-reduced-motion: reduce)").matches) return
-    const estilo = janela.getComputedStyle(el)
-    el.animate([{ scale: "0.75" }, { scale: "1" }], {
-      duration: parseFloat(estilo.getPropertyValue("--duration-spring")) || 500,
-      easing: estilo.getPropertyValue("--ease-spring").trim() || "ease",
-    })
-  }, [ativo])
-  return ref
-}
-
 type BottomBarTabProps = Omit<React.ComponentProps<typeof Link>, "href"> & {
   /** Sem `href` a aba é um `<button>`, para a tela que troca de vista sem rota. */
   href?: string
@@ -570,8 +568,6 @@ function BottomBarTab({
   const Glifo = active && IconActive ? IconActive : Icon
   const temMarcador = React.useContext(BottomBarMarkerContext)
   const { labels, subirAoTopo } = React.useContext(BottomBarContext)
-  const estalo = useEstalo(active)
-
   const miolo = (
     <span
       className={cn(
@@ -581,7 +577,7 @@ function BottomBarTab({
         !temMarcador && itemFallbackClassName
       )}
     >
-      <span ref={estalo} className={glifoClassName}>
+      <span className={glifoClassName}>
         <Glifo className="size-6 shrink-0" aria-hidden />
         {count != null ? <BottomBarCount count={count} /> : null}
       </span>
@@ -593,7 +589,7 @@ function BottomBarTab({
     "data-slot": "bottom-bar-tab",
     "data-active": active ? "" : undefined,
     "aria-label": nomeComContagem(label, count, countLabel),
-    className: cn(itemRootClassName, labels === "active" && itemFlexClassName, className),
+    className: cn(itemRootClassName, labels === "active" && itemFlexClassName, labels === true && itemColunaClassName, className),
     // Tocar na aba da tela atual a leva ao topo, como no iOS.
     onClick: (e: React.MouseEvent<HTMLAnchorElement & HTMLButtonElement>) => {
       onClick?.(e as React.MouseEvent<HTMLAnchorElement>)
@@ -662,7 +658,7 @@ function BottomBarSlot({
       data-active={active ? "" : undefined}
       type={asChild ? undefined : "button"}
       aria-label={nomeComContagem(ariaLabel ?? label, count, countLabel)}
-      className={cn(itemRootClassName, labels === "active" && itemFlexClassName, className)}
+      className={cn(itemRootClassName, labels === "active" && itemFlexClassName, labels === true && itemColunaClassName, className)}
       {...props}
     >
       <span
@@ -685,11 +681,12 @@ function BottomBarSlot({
 
 /**
  * A ação primária, à direita da pílula: redonda, na altura da barra
- * (`--bottom-bar-h`; 56 não é degrau do `Button`), com o anel e a sombra da
- * pílula. Não declara cor: quem pinta é o `variant` do `Button`.
+ * (`--bottom-bar-h`; 56 não é degrau do `Button`), com a sombra e sem anel: o
+ * anel da pílula, em volta da tecla cheia, lia como uma borda solta fora dela.
+ * Não declara cor: quem pinta é o `variant` do `Button`.
  */
 const bottomBarActionClassName = [
-  "size-(--bottom-bar-h) shrink-0 rounded-full p-0 ring-1 ring-foreground/10 shadow-lg",
+  "size-(--bottom-bar-h) shrink-0 rounded-full p-0 shadow-lg",
   "[&_svg:not([class*='size-'])]:size-5",
 ].join(" ")
 
@@ -729,7 +726,7 @@ function BottomBarSkeleton({
       <BottomBarRow>
         <div
           className={cn(
-            MOBILE_GLASS_SURFACE_CLASSNAME,
+            PILULA_CLASSNAME,
             pilulaTomClassName,
             "grid h-(--bottom-bar-h) min-w-0 flex-1 items-center gap-0.5 rounded-full p-0.5",
             "grid-cols-[repeat(var(--bottom-bar-cols),minmax(0,1fr))]"

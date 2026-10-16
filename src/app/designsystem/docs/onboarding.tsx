@@ -14,13 +14,13 @@ import {
   WifiIcon,
 } from "@heroicons/react/16/solid"
 import {
-  ArrowsRightLeftIcon as ArrowsRightLeftOutline,
   ChartPieIcon as ChartPieOutline,
+  QueueListIcon as QueueListOutline,
   Squares2X2Icon,
 } from "@heroicons/react/24/outline"
 import {
-  ArrowsRightLeftIcon as ArrowsRightLeftSolid,
   ChartPieIcon as ChartPieSolid,
+  QueueListIcon as QueueListSolid,
   Squares2X2Icon as Squares2X2Solid,
 } from "@heroicons/react/24/solid"
 import { Battery100Icon, PlusIcon as PlusIconMini } from "@heroicons/react/20/solid"
@@ -398,19 +398,21 @@ function DemoNaTela() {
                       adicionar
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent size="sm" align="start" label="Adicionar" className="gap-1 p-2">
-                    <Button variant="tertiary" className="justify-start" data-tour="despesa" onClick={() => escolher("Despesa")}>
-                      <ReceiptPercentIcon />
-                      Despesa
-                    </Button>
-                    <Button variant="tertiary" className="justify-start" data-tour="receita" onClick={() => escolher("Receita")}>
-                      <WalletIcon />
-                      Receita
-                    </Button>
-                    <Button variant="tertiary" className="justify-start" onClick={() => escolher("Transferência")}>
-                      <ArrowsRightLeftIcon />
-                      Transferência
-                    </Button>
+                  <PopoverContent size="sm" align="start" label="Adicionar" padding="none">
+                    <div className="flex flex-col gap-1 p-2">
+                      <Button variant="tertiary" className="justify-start" data-tour="despesa" onClick={() => escolher("Despesa")}>
+                        <ReceiptPercentIcon />
+                        Despesa
+                      </Button>
+                      <Button variant="tertiary" className="justify-start" data-tour="receita" onClick={() => escolher("Receita")}>
+                        <WalletIcon />
+                        Receita
+                      </Button>
+                      <Button variant="tertiary" className="justify-start" onClick={() => escolher("Transferência")}>
+                        <ArrowsRightLeftIcon />
+                        Transferência
+                      </Button>
+                    </div>
                   </PopoverContent>
                 </Popover>
                 <Button variant="tertiary" onClick={() => setTour(true)}>
@@ -481,7 +483,7 @@ function DemoDialogo() {
 
 const ABAS = [
   { href: "/dashboard", label: "Início", icon: Squares2X2Icon, iconActive: Squares2X2Solid },
-  { href: "/transactions", label: "Transações", icon: ArrowsRightLeftOutline, iconActive: ArrowsRightLeftSolid },
+  { href: "/transactions", label: "Transações", icon: QueueListOutline, iconActive: QueueListSolid },
   { href: "/categories", label: "Categorias", icon: ChartPieOutline, iconActive: ChartPieSolid },
 ] as const
 

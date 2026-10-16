@@ -45,10 +45,11 @@ describe("o redesenho do Menubar", () => {
     expect(CODIGO).toContain("data-[trocando]:data-closed:animate-none")
   })
 
-  it("a entrada é a mola de 97%, as linhas sobem em cascata e o tique estala", () => {
-    expect(CODIGO).toContain("data-open:zoom-in-[0.97] data-[side=bottom]:slide-in-from-top-1.5")
+  it("o painel brota no gesto do menu, as linhas surgem do desfoque em cascata e o tique estala", () => {
+    expect(CODIGO).toContain('"menu-sprout data-[trocando]:data-closed:animate-none"')
+    expect(CODIGO).not.toMatch(/zoom-in-\[0\.9[78]\]/)
     expect(CODIGO).toContain('"menubar-reveal"')
-    expect(CSS).toMatch(/@utility menubar-reveal \{\s*& > \[role\^="menuitem"\] \{\s*animation: rise 160ms var\(--ease-out\) 40ms both;\s*--rise-distance: 3px;/)
+    expect(CSS).toMatch(/@utility menubar-reveal \{\s*& > \[role\^="menuitem"\] \{\s*animation: menu-content-in 160ms var\(--ease-out\) 40ms backwards;/)
     // A escada é a compartilhada: 40, 70… até 190ms na sexta linha. `:nth-of-type` contava
     // igual porque rótulo e fio são `div`.
     const cascata = esperarDepoisDeNoScrollbar(CSS, "@utility menubar-reveal {", { fecha: "@utility" })

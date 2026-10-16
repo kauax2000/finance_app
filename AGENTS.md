@@ -1121,13 +1121,19 @@ declaração de `background-color` no trilho).
     `DrawerDescription` nem `DrawerFooter`.
   - `DrawerContent` `variant` (`flush`, o padrão e **toda gaveta do telefone**;
     `inset`), `size` (`full` | `md` | `lg`) e `fill`.
-  - `DrawerActions` + `DrawerAction` + `DrawerCancel` é o action sheet — **o
-    menu da conta do telefone é ele**. O "+ Adicionar" não tem menu: abre
+  - `DrawerActions` + `DrawerAction` + `DrawerCancel` é o action sheet. O
+    menu da conta do telefone **não** é gaveta: é o `DropdownMenu
+    variant="panel"` que brota da aba "Mais" (`side="top"`, fixa e nunca ativa), só com as telas
+    que não cabem na barra; o tema mora em Configurações e o sair em Minha
+    conta. O "+ Adicionar" não tem menu: abre
     direto o formulário de lançamento (com Despesa), que no telefone é a
     gaveta.
   - **`pending` desliga o `dismissible` e barra o pedido de fechar.** Sem
     `DialogBody`, o filho do meio rola (`data-drawer-meio`). Gaveta dentro de
     gaveta vira `NestedRoot` sozinha. `drawer-versions.test.ts`.
+  - **Gaveta no app sem `scaleBackground`**: ele encolhe a página com uma
+    transformação, e a `BottomBar` (`fixed` dentro dela) sai da tela e
+    reaparece com atraso quando a gaveta desce.
 - **Overlays**: `Dialog` / `Sheet` / `AlertDialog` / `Drawer` use `bg-overlay`
   pelo `overlayClassName` (not hardcoded `bg-black/10`).
 
@@ -1141,11 +1147,21 @@ declaração de `background-color` no trilho).
   `default` | `none`. `PopoverArrow`, `PopoverHeader closeButton` (sem `gap`),
   `PopoverConfirm` (o que não tem volta é `AlertDialog`), `mobile="sheet"` (no
   lugar de `modal={isMobile}` à mão). O teto e o `collisionPadding` vêm de
-  fábrica; quem rola sozinho declara `overflow-hidden`.
+  fábrica.
+- **A casca não rola; quem rola é o viewport** (`popover-viewport`,
+  `hover-card-viewport`). A seta do Radix é um `<span>` absoluto fora da caixa,
+  contido pela casca (`relative`, e o `backdrop-filter` da placa a faz bloco de
+  contenção mesmo estática): com a casca rolando, a seta caía no próprio recorte
+  — invisível, e 6px de rolagem em repouso. O viewport **não pode** ganhar
+  `relative`, `transform` nem `filter`, senão volta a conter a seta. O recuo é
+  dele (`--popover-pad`) e o `gap` ele herda: um `gap-*` no `className`
+  continua valendo, mas um `p-*` vai para a casca, fora do rolável — **recuo
+  fora da escada se escreve num filho**. Ninguém mais precisa de
+  `overflow-visible` para mostrar a seta (o tour escrevia, e perdia o teto).
 - **O seletor devolve o foco ao fechar e não rouba ao abrir**; `modal={isMobile}`
   vem de fábrica na raiz dele. Toda busca é o `SearchInput` (o × do WebKit é
   suprimido).
-- **`HoverCard`**: teto, rolagem e `collisionPadding` de fábrica; `size` `sm` |
+- **`HoverCard`**: teto, rolagem (no viewport, como o `Popover`) e `collisionPadding` de fábrica; `size` `sm` |
   **`md`** | `lg`, `padding`; faixas `HoverCardHeader` (`media`,
   `endAdornment`), `HoverCardTitle`, `HoverCardDescription`, `HoverCardBody`
   (não rola), `HoverCardFooter`, `HoverCardLink`, `HoverCardArrow`. As tiras
@@ -1202,15 +1218,20 @@ declaração de `background-color` no trilho).
   lugar** (o `Esc` sobe um nível); o ponto no gatilho da página atual; a
   diagonal segura; `NavigationMenuPreview`, `badge`, `mobile="sheet"`. Não é
   portalizado.
-- **O movimento do que se sobrepõe**: cada superfície tem um gesto em
-  `@utility`, nunca o zoom genérico do shadcn. **Entrar é mola, sair é curva e
-  volta ao gatilho**; os keyframes animam `transform` (nunca `translate`/`scale`
-  soltos); o estado entra por `&[data-state=…]`; as cascatas zeram o atraso com
-  `!important` no movimento reduzido. `menu-sprout` (`DropdownMenu` e
-  submenus, linhas em `overlay-cascade`), `context-menu-burst`, `field-bloom`
-  (`Select`, `Combobox`, seletor do `Form`), `popover-sprout` (eixo `motion`:
-  `sprout` | `field` | `none`), `hover-card-unveil`, o estalo do `Tooltip`,
-  `dialog-sprout`, e o `Sheet` deslizando da borda. `overlay-motion.test.ts`.
+- **O movimento do que se sobrepõe é um gesto só**, o do menu da barra de baixo
+  (rodada 287): `menu-morph` em 380ms — o menu do iOS 26 medido quadro a quadro,
+  nasce a 20% em elipse na origem do Radix, cresce primeiro na altura e passa 8%
+  dela — e `menu-unmorph` de volta em 210ms. Vestem `DropdownMenu`, `ContextMenu`,
+  `Menubar`, `NavigationMenu`, `Select`, `Combobox`, o seletor do `Form`,
+  `Popover`, `HoverCard`, `Tooltip`, `DatePicker`, `Dialog`, `AlertDialog` e a
+  paleta do `Command`; muda só a origem (o botão, o campo, o cursor; o diálogo, o
+  próprio centro). As utilities (`menu-sprout`, `context-menu-burst`,
+  `field-bloom`, `popover-sprout`, `hover-card-unveil`, `date-picker-bloom`,
+  `dialog-sprout`) ficam pelas faixas de dentro de cada peça; o raio de chegada é
+  `--morph-radius` (o diálogo declara o modal). Os keyframes animam `transform`
+  (nunca `translate`/`scale` soltos); o estado entra por `&[data-state=…]`; as
+  cascatas zeram o atraso com `!important` no movimento reduzido. O `Sheet` e a
+  gaveta deslizam da borda. `overlay-motion.test.ts`.
 
 #### Campos e escolha
 
@@ -1370,7 +1391,7 @@ declaração de `background-color` no trilho).
   fora da lista. O botão não recorta (`overflow-hidden` saiu). O app marca o
   destino no clique. `peek`. **Nenhuma tela
   escreve** o `h-12` do cabeçalho recolhido, o `overflow-y-auto` do conteúdo
-  recolhido nem a espera do botão `lg` (`SidebarMenuSkeleton size="lg"`).
+  recolhido nem a espera do botão `lg` (`SidebarMenuSkeleton size="lg"`, com `media="avatar"` quando a peça é o `Avatar`: o osso tem a forma da peça).
   Recolhida, o trilho mede 64 (16 + o botão de 32 + 16; o recuo lateral
   cresce a 16 só no modo ícone, e o topo e a base também: 16 nas quatro bordas), e o degrau `lg` (carteira, conta)
   vira uma caixa de 40 — `size-10` com `-m-1`, um realce de 4px em volta da
@@ -1398,7 +1419,10 @@ declaração de `background-color` no trilho).
   `TopBarSearch` (⌘K e `/`), `TopBarProgress`, `TopBarSkeleton`. **Uma árvore
   só**: as pontas aceitam `phone` — **nenhuma barra escreve duas árvores com
   `md:hidden` e `hidden md:contents`**. `hideOnScroll`.
-- **`BottomBar`**: o marcador viaja (`useMarcador`); `labels="active"`;
+- **`BottomBar`**: a pele do `Tabs floating` (pílula `--popover` com o anel,
+  tecla `--muted` com `shadow-xs`, sem vidro); 56 de altura com ou sem
+  rótulo; com `labels` cada aba parte da coluna igual e nunca fica menor que o
+  nome; o marcador viaja (`useMarcador`); `labels="active"`;
   `BottomBarAction` (nome obrigatório), `BottomBarSkeleton`,
   `count`/`countLabel`; aba sem `href` é `<button aria-pressed>`; arraste pela
   pílula; tocar na ativa sobe ao topo; `hideOnScroll`.
@@ -1470,7 +1494,15 @@ declaração de `background-color` no trilho).
   `--scroll-fade-h` (44px) por ponta, curva sigmoide, piso 0,06, zona que cresce
   com a rolagem; `--scroll-fade-foot-h` depende da presença da faixa, **nunca da
   rolagem**; o `scroll-pb` conta a zona inteira; `--scroll-fade-bottom-y` guarda
-  o cruzamento; **a rampa é um gradiente só, nunca duas máscaras compostas**.
+  o cruzamento; **a rampa é um gradiente só, nunca duas máscaras compostas**;
+  **um filho de rolável com dissolução não se desloca ao abrir** — transformado,
+  ele conta como transbordo (o `rise` de 4px acendia a seta e a dissolução no
+  painel da conta, que não rola). Toda faixa que nasce dentro de um rolável
+  surge do desfoque no lugar (`menu-content-in`, preenchimento `backwards`): a
+  `overlay-cascade`, a `command-reveal`, a `menubar-reveal`, as faixas do
+  `popover-sprout` e do `hover-card-unveil` e o rodapé do `DatePicker`. Recuo
+  do fim maior que a subida não é garantia: some quando alguém troca o recuo.
+  `overlay-motion.test.ts`.
 
 #### Gráficos
 

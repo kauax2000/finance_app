@@ -21,7 +21,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ArrowRightIcon, ArrowRightStartOnRectangleIcon, CalendarIcon, ChartBarIcon, CheckBadgeIcon, EllipsisVerticalIcon, LockClosedIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
+import { ArrowRightIcon, ArrowRightStartOnRectangleIcon, CalendarIcon, SparklesIcon, ChartBarIcon, CheckBadgeIcon, EllipsisVerticalIcon, LockClosedIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid"
 import { cn, getInitials } from "@/lib/utils"
 import { ChangePasswordDialog, DeleteAccountDialog } from "@/components/security"
 import { AccountPageSkeleton } from "@/components/account/account-page-skeleton"
@@ -177,6 +177,35 @@ export default function AccountPage() {
                                     <p className="text-sm font-medium">Histórico de atividades</p>
                                     <p className="text-xs text-muted-foreground">
                                         Veja ações recentes na sua conta
+                                    </p>
+                                </div>
+                            </div>
+                            <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
+                        </Link>
+                    </CardContent>
+                </Card>
+            </PageSection>
+
+            {/* No telefone o plano mora aqui, e não no menu da conta da barra de baixo;
+                no desktop ele segue no menu do usuário. */}
+            <PageSection className="md:hidden">
+                <PageSectionHeader>
+                    <PageSectionTitle>Plano</PageSectionTitle>
+                </PageSectionHeader>
+                <Card padding="none">
+                    <CardContent className="flex flex-col">
+                        <Link
+                            href={ROUTES.PLANS}
+                            className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/30 active:bg-muted/30 sm:py-3.5"
+                        >
+                            <div className="flex min-w-0 flex-1 items-center gap-3">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
+                                    <SparklesIcon className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-sm font-medium">Planos e pagamentos</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        Seu plano e as cobranças
                                     </p>
                                 </div>
                             </div>

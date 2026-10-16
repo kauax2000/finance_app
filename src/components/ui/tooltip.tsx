@@ -10,7 +10,6 @@ import { deDedo } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
 import { useViewportWindow } from "@/hooks/use-mobile"
 import { ANCHORED_COLLISION_PADDING } from "@/lib/anchored-surface"
-import { MOLA } from "@/lib/spring"
 import { menuPanelSurfaceClassName } from "@/lib/menu-classes"
 
 /**
@@ -239,24 +238,10 @@ function TooltipContent({
   // contexto é `null` e o Radix usa o próprio documento — o app não muda.
   const janela = useViewportWindow()
   const { aberto, confirmacao } = React.useContext(TooltipAbertoContext)
-  // A mola é de JavaScript, e o bloco de `prefers-reduced-motion` do `globals.css`
-  // só alcança animação de CSS; sem isto, esta seria a única peça a ignorar a preferência.
+  // Com movimento reduzido a dica desmonta na hora (o CSS da volta já encurta pelo
+  // bloco global; a espera do `motion` não).
   const reduzido = useReducedMotion()
 
-  // O estalo: a dica nasce a 70%, 4px para o lado do gatilho, e cresce na mola;
-  // sai em 100ms, sem mola e sem recuar (uma dica que some não recua). Sem
-  // desfoque: num texto de 12px ele só borra a leitura.
-  const lado = props.side ?? "top"
-  const desvio = reduzido
-    ? {}
-    : lado === "top"
-      ? { y: 4 }
-      : lado === "bottom"
-        ? { y: -4 }
-        : lado === "left"
-          ? { x: 4 }
-          : { x: -4 }
-  const fechada = { opacity: 0, scale: reduzido ? 1 : 0.7, ...desvio }
 
   return (
     <AnimatePresence>
@@ -274,15 +259,13 @@ function TooltipContent({
           >
             <motion.div
               key="tooltip-content"
-              initial={fechada}
-              animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-              exit={{
-                opacity: 0,
-                scale: reduzido ? 1 : 0.92,
-                transition: { duration: reduzido ? 0 : 0.1, ease: "easeOut" },
-              }}
-              transition={reduzido ? { duration: 0 } : MOLA}
+              // O gesto é o do menu, em CSS (`@utility menu-sprout`, pelo `data-state` do
+              // Radix: `delayed-open`/`instant-open` e `closed`). O `motion` só segura a
+              // dica montada durante os 210ms da volta.
+              initial={false}
+              exit={{ opacity: 1, transition: { duration: reduzido ? 0 : 0.21 } }}
               className={cn(
+                "menu-sprout",
                 // 20rem é o teto de leitura; o `available-width` é o teto da janela, e o menor
                 // dos dois vence numa classe só (com duas, `max-w-xs` e `max-w-(--radix-…)`, o
                 // `twMerge` apagaria a primeira).

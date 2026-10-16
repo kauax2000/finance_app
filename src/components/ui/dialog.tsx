@@ -587,6 +587,10 @@ function DialogCloseButton({
  * (sem ele o diálogo cresce até sair da tela, calado) e `overflow-y-auto` rola.
  * `overscroll-contain` impede a página atrás de rolar junto.
  */
+/** A rampa quadrática da dissolução do corpo (ver `DialogBody`). */
+const dialogBodyRampClassName =
+  "[--scroll-fade-ramp:linear-gradient(to_bottom,rgb(0_0_0/0)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*1),rgb(0_0_0/0.016)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.875),rgb(0_0_0/0.06)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.75),rgb(0_0_0/0.14)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.625),rgb(0_0_0/0.25)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.5),rgb(0_0_0/0.39)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.375),rgb(0_0_0/0.56)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.25),rgb(0_0_0/0.77)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.125),#000_var(--scroll-fade-top-h),#000_var(--scroll-fade-bottom-y),rgb(0_0_0/0.77)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-h)*0.125),rgb(0_0_0/0.56)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-h)*0.25),rgb(0_0_0/0.39)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-h)*0.375),rgb(0_0_0/0.25)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-h)*0.5),rgb(0_0_0/0.14)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-h)*0.625),rgb(0_0_0/0.06)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-h)*0.75),rgb(0_0_0/0.016)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-h)*0.875),rgb(0_0_0/0)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-h)*1))]!"
+
 function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -602,7 +606,12 @@ function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
         // `lib/scroll-fade-classes`). Traz também a folga de rolagem de 48px
         // para o campo focado perto da borda.
         scrollFadeViewportClassName,
-        "[--scroll-fade-floor:0]",
+        // A faixa da dissolução do corpo é de 24px (a da casa é 44), numa curva
+        // quadrática (opacidade = distância da borda ao quadrado): bem fraca perto
+        // da borda e cheia no fim da faixa. Com a sigmoide da casa, o fio de um
+        // campo a 10px da borda ainda aparecia a ~30% e lia como uma divisória.
+        "[--scroll-fade-floor:0] [--scroll-fade-h:--spacing(6)]",
+        dialogBodyRampClassName,
         className
       )}
       {...props}

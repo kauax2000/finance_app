@@ -48,7 +48,7 @@ export default function MenubarDoc() {
         title="Completo"
         description={
           <>
-            O realce viaja de gatilho em gatilho na mola; com um menu aberto, passar ao vizinho faz o painel deslizar até ele. As linhas sobem em cascata, a tecla de cada uma funciona com a barra na tela (experimente <code>⌘⇧E</code>), <strong>F10</strong> foca a barra e <strong>Alt</strong> mostra as letras de acesso — Alt+A abre Arquivo. A busca procura entre as linhas de todos os menus.
+            O realce viaja de gatilho em gatilho na mola; com um menu aberto, passar ao vizinho faz o painel deslizar até ele. As linhas surgem do desfoque em cascata, a tecla de cada uma funciona com a barra na tela (experimente <code>⌘⇧E</code>), <strong>F10</strong> foca a barra e <strong>Alt</strong> mostra as letras de acesso — Alt+A abre Arquivo. A busca procura entre as linhas de todos os menus.
           </>
         }
         code={`<Menubar search>
@@ -132,7 +132,7 @@ export default function MenubarDoc() {
       </DocSection>
 
       <DocNote title="O realce que viaja é da fileira, não das linhas">
-        O movimento veio de uma referência do dono: a mola do realce (0,28s), a entrada do painel descendo 6px de 97%, as linhas em cascata, o tique que estala e o submenu que entra de lado. O que <strong>não</strong> veio é o realce correndo entre as linhas do painel — ele foi recusado na rodada 137, e as linhas continuam acendendo no esmaecer de 300ms dos menus irmãos.
+        O movimento veio de uma referência do dono: a mola do realce (0,28s), as linhas em cascata e o tique que estala. O painel e o submenu brotam no gesto de toda sobreposição, o do menu da barra de baixo (rodada 287). O que <strong>não</strong> veio é o realce correndo entre as linhas do painel — ele foi recusado na rodada 137, e as linhas continuam acendendo no esmaecer de 300ms dos menus irmãos.
       </DocNote>
 
       <DocNote title="A barra sabe o que tem dentro sem abrir">

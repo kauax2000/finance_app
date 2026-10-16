@@ -221,7 +221,7 @@ const DrawerRaizContext = React.createContext<DrawerRaiz | null>(null)
  */
 function Drawer({
   direction = "bottom",
-  repositionInputs = true,
+  repositionInputs = false,
   scaleBackground = false,
   pending = false,
   dismissible = true,

@@ -165,7 +165,7 @@ export default function DatePickerDoc() {
       </DocSection>
 
       <DocNote title="O calendário brota do campo">
-        A placa não aparece do nada: ela se desdobra a partir da aresta que encosta no campo, com a aresta que avança curva como uma gota, um passo de 6px e um desfoque que assenta, na mola da casa — e o cabeçalho, os dias da semana e cada semana chegam em ondas de 25ms. Ao fechar, some em 150ms encolhendo para o campo, sem mola. É a <code>@utility date-picker-bloom</code>, só no popover; a gaveta do telefone tem o movimento dela. Com movimento reduzido, tudo chega de uma vez.
+        A placa brota do campo no gesto de toda sobreposição, o do menu da barra de baixo (380ms, e 210ms de volta ao campo) — e o cabeçalho, os dias da semana e cada semana chegam em ondas de 25ms. É a <code>@utility date-picker-bloom</code>, só no popover; a gaveta do telefone tem o movimento dela. Com movimento reduzido, tudo chega de uma vez.
       </DocNote>
 
       <DocNote title="No telefone, uma gaveta">

@@ -3,13 +3,13 @@
 import * as React from "react"
 import Link from "next/link"
 import {
-  ArrowsRightLeftIcon,
+  QueueListIcon,
   ChartPieIcon,
   EllipsisHorizontalIcon,
   Squares2X2Icon,
 } from "@heroicons/react/24/outline"
 import {
-  ArrowsRightLeftIcon as ArrowsRightLeftSolid,
+  QueueListIcon as QueueListSolid,
   ChartPieIcon as ChartPieSolid,
   Squares2X2Icon as Squares2X2Solid,
 } from "@heroicons/react/24/solid"
@@ -29,7 +29,7 @@ import { IphoneFrame } from "../ds-frame"
 /** As três abas do app, para o espécime não inventar uma navegação própria. */
 const ABAS = [
   { href: "/dashboard", label: "Início", icon: Squares2X2Icon, iconActive: Squares2X2Solid },
-  { href: "/transactions", label: "Transações", icon: ArrowsRightLeftIcon, iconActive: ArrowsRightLeftSolid },
+  { href: "/transactions", label: "Transações", icon: QueueListIcon, iconActive: QueueListSolid },
   { href: "/categories", label: "Categorias", icon: ChartPieIcon, iconActive: ChartPieSolid },
 ] as const
 

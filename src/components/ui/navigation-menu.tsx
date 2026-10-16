@@ -264,8 +264,7 @@ const navigationMenuContentVariants = cva(
         false: [
           "absolute top-full z-10 mt-2 overflow-hidden md:w-auto",
           menuPanelSurfaceClassName,
-          "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-[0.97] data-open:slide-in-from-top-1.5 data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring)",
-          "data-closed:animate-out data-closed:fade-out-0 data-closed:animation-duration-[130ms]",
+          "origin-top menu-sprout",
         ].join(" "),
       },
       orientation: {
@@ -884,14 +883,14 @@ function NavigationMenuViewport({
         className={cn(
           "relative h-(--radix-navigation-menu-viewport-height) w-full overflow-hidden",
           vertical
-            ? "ms-2 origin-left data-open:slide-in-from-left-1.5"
-            : "mt-2 origin-top data-open:slide-in-from-top-1.5",
+            ? "ms-2 origin-left"
+            : "mt-2 origin-top",
           menuPanelSurfaceClassName,
           // O morph: o Radix escreve a caixa do conteúdo ativo nas duas
           // variáveis, e a transição de largura e altura é o trajeto.
           "transition-[width,height] duration-(--duration-base) ease-(--ease-out) md:w-(--radix-navigation-menu-viewport-width)",
-          "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-[0.97] data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring)",
-          "data-closed:animate-out data-closed:fade-out-0 data-closed:animation-duration-[130ms]",
+          // Brota do gatilho no gesto do menu (`@utility menu-sprout`).
+          "menu-sprout",
           className
         )}
         {...props}

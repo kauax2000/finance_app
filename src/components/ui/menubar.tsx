@@ -27,7 +27,6 @@ import {
   menuIndicatorSlotClassName,
   menuItemClassName,
   menuLabelClassName,
-  menuMotionClassName,
   menuSeparatorClassName,
   menuShortcutClassName,
   menuSubSurfaceClassName,
@@ -621,12 +620,10 @@ function MenubarContent({
           data-trocando={saindoNaTroca ? "" : undefined}
           className={cn(
             menuSurfaceClassName,
-            menuMotionClassName,
             MENUBAR_POPPER,
-            // Entrada em CSS (desce 6px de 97%, na mola); ao trocar de menu o que sai some
-            // na hora e o que chega desliza de lado (o `style` abaixo).
-            "data-open:zoom-in-[0.97] data-[side=bottom]:slide-in-from-top-1.5 data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring)",
-            "data-closed:zoom-out-[0.98] data-closed:animation-duration-[130ms] data-[trocando]:data-closed:animate-none",
+            // Brota do gatilho no gesto do menu (`@utility menu-sprout`); ao trocar de menu
+            // o que sai some na hora e o que chega desliza de lado (o `style` abaixo).
+            "menu-sprout data-[trocando]:data-closed:animate-none",
             className
           )}
           style={
@@ -1054,10 +1051,9 @@ function MenubarSubContent({
         collisionPadding={collisionPadding}
         className={cn(
           menuSubSurfaceClassName,
-          menuMotionClassName,
           MENUBAR_POPPER,
-          // O submenu entra de lado, de 98%, em 140ms.
-          "data-open:zoom-in-[0.98] data-[side=right]:slide-in-from-left-1.5 data-[side=left]:slide-in-from-right-1.5 data-open:animation-duration-[140ms]",
+          // O submenu brota do item, no gesto do menu.
+          "menu-sprout",
           className
         )}
         {...props}

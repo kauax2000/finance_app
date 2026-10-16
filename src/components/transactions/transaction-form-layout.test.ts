@@ -140,6 +140,8 @@ describe("os campos do formulário", () => {
         expect(CAMPOS).toContain('aria-label="Uma parcela a menos"')
         expect(CAMPOS).toContain('aria-label="Uma parcela a mais"')
         expect(CAMPOS).toContain('?? "Informe o valor e o número de parcelas."')
+        // No telefone cada campo ocupa a sua linha; no desktop as parcelas ficam em 8rem ao lado do valor.
+        expect(CAMPOS).toContain('className="grid-cols-1 md:grid-cols-[minmax(0,1fr)_8rem]"')
         expect(CAMPOS).toContain("última em ${formatYearMonthShortPtBr(")
         const USO = semComentarios(lerFonte("src/components/transactions/transaction-form-use.tsx"))
         // Ao entrar na Parcelada o crédito vem preenchido, e o ponto de partida do

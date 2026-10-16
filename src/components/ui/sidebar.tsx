@@ -1489,10 +1489,16 @@ function SidebarMenuBadge({
 function SidebarMenuSkeleton({
   className,
   showIcon = false,
+  media = "tile",
   size = "md",
   ...props
 }: React.ComponentProps<"div"> & {
   showIcon?: boolean
+  /**
+   * A forma da mídia que o osso guarda no `lg`: `tile` é a marca da carteira,
+   * `avatar` é o círculo do `Avatar` da conta — o osso tem a forma da peça.
+   */
+  media?: "tile" | "avatar"
   /**
    * `lg` é a espera do botão `lg` (seletor de workspace e conta): avatar de 32 e
    * duas linhas, e recolhido só o avatar, sem recuo, na caixa de 32.
@@ -1523,7 +1529,9 @@ function SidebarMenuSkeleton({
     >
       {showIcon && (
         <Skeleton
-          className={size === "lg" ? "size-8 shrink-0 rounded-lg" : "size-4 rounded-md"}
+          {...(size === "lg" && media === "avatar"
+            ? { shape: "circle" as const, size: "sm" as const }
+            : { className: size === "lg" ? "size-8 shrink-0 rounded-lg" : "size-4 rounded-md" })}
           data-sidebar="menu-skeleton-icon"
         />
       )}

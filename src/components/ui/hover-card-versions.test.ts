@@ -71,4 +71,15 @@ describe("as versões do HoverCard", () => {
     const chip = TABELA.slice(TABELA.indexOf("function CreditInvoiceChip"), TABELA.indexOf("<HoverCardContent", TABELA.indexOf("function CreditInvoiceChip")))
     expect(chip).not.toContain("onClick=")
   })
+
+  it("a casca não rola: quem rola é o viewport, e a seta fica fora do recorte", () => {
+    const casca = CODIGO.match(/const hoverCardContentVariants = cva\(([\s\S]*?)\n\)/)?.[1] ?? ""
+    expect(casca).not.toMatch(/overflow-y-auto|(^|[ "])p-2\.5/)
+    expect(casca).toContain("[--hover-card-pad:--spacing(2.5)]")
+    const viewport = CODIGO.match(/const hoverCardViewportClassName =\s*"([^"]*)"/)?.[1] ?? ""
+    expect(viewport).toContain("overflow-y-auto")
+    expect(viewport).toContain("[gap:inherit] p-(--hover-card-pad)")
+    expect(viewport).not.toMatch(/\b(relative|absolute|transform|translate|filter|backdrop)/)
+    expect(CODIGO).toMatch(/data-slot="hover-card-viewport" className=\{hoverCardViewportClassName\}>\s*\{pending \? <HoverCardSkeleton \/> : children\}/)
+  })
 })

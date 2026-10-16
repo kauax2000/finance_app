@@ -2593,10 +2593,9 @@ function OnboardingTour({
           // A placa acompanha o recorte quadro a quadro e fica parada enquanto ele
           // viaja, porque a âncora congela.
           updatePositionStrategy="always"
-          // A entrada e a saída são as do tour (`surgirDoAlvo`, `sumirNoAlvo`); a seta
-          // mora fora da caixa porque o `overflow` da placa a recortaria.
+          // A entrada e a saída são as do tour (`surgirDoAlvo`, `sumirNoAlvo`).
           motion="none"
-          className={cn(CAMADA_PLACA, "overflow-visible")}
+          className={CAMADA_PLACA}
           onOpenAutoFocus={(e) => e.preventDefault()}
           onCloseAutoFocus={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}

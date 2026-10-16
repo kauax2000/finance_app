@@ -141,10 +141,9 @@ const popoverContentVariants = cva(
   [
     /** Above Sheet overlay/content (`z-(--z-sheet)`); below Toaster (`z-(--z-toast)`). */
     "relative z-(--z-popover) flex origin-(--radix-popover-content-transform-origin) flex-col text-sm outline-hidden",
-    "max-h-(--radix-popover-content-available-height) max-w-(--radix-popover-content-available-width) overflow-y-auto overscroll-contain",
-    // Quem declara um corpo rolável cede a rolagem da casca; senão o popover e o
-    // `PopoverBody` rolariam os dois.
-    "has-[[data-slot=popover-body]]:overflow-hidden",
+    // A casca tem o teto e não rola: quem rola é o `popover-viewport` de dentro
+    // (ver `popoverViewportClassName`).
+    "max-h-(--radix-popover-content-available-height) max-w-(--radix-popover-content-available-width)",
     // O movimento é o eixo `motion`: `sprout` é a placa do tour, `field` o
     // desdobrar dos campos, `none` para quem anima por conta própria.
   ],
@@ -169,7 +168,7 @@ const popoverContentVariants = cva(
        */
       surface: {
         plate: menuPanelSurfaceClassName,
-        none: "overflow-visible",
+        none: "",
       },
       /**
        * Como a placa entra e sai, sempre voltando ao gatilho. `sprout` (padrão) brota
@@ -184,14 +183,42 @@ const popoverContentVariants = cva(
       },
       padding: {
         // O recuo das tiras acompanha o do casco: onde o casco já recua, a tira não recua
-        // duas vezes. Em `none` ela é dona do próprio (12/8).
+        // duas vezes. Em `none` ela é dona do próprio (12/8). O recuo é publicado
+        // em `--popover-pad` e quem o aplica é o viewport; o `gap` fica na casca e
+        // o viewport o herda, então um `gap-*` de quem chama continua valendo.
         default:
-          "gap-2.5 p-2.5 [--popover-strip-px:0px] [--popover-strip-py:0px]",
-        none: "gap-0 p-0 [--popover-strip-px:--spacing(3)] [--popover-strip-py:--spacing(2)]",
+          "gap-2.5 [--popover-pad:--spacing(2.5)] [--popover-strip-px:0px] [--popover-strip-py:0px]",
+        none: "gap-0 [--popover-pad:0px] [--popover-strip-px:--spacing(3)] [--popover-strip-py:--spacing(2)]",
       },
     },
     defaultVariants: { surface: "plate", padding: "default", size: "md", motion: "sprout" },
   },
+);
+
+/**
+ * O viewport: quem rola dentro da casca. A seta do Radix é um `<span>` absoluto
+ * filho do conteúdo, posto **fora** da caixa (`translateY(100%)` ou a rotação
+ * de 180°), e o bloco que contém o span é a casca — ela é `relative` e o
+ * `backdrop-filter` da placa faria dela um bloco de contenção mesmo estática.
+ * Quando a casca rolava, a seta caía dentro do próprio recorte: sumia, e do
+ * lado de baixo ainda somava 6px de rolagem com o popover em repouso. Medido
+ * no "Como calculamos": `scrollHeight − clientHeight` = 6 e o ponto da seta
+ * acertava o cartão de trás.
+ *
+ * Com a rolagem num nó **não posicionado** dentro da casca, o bloco que contém
+ * a seta fica fora do rolável, e o rolável não a recorta nem a conta. Por isso
+ * este nó não pode ganhar `relative`, `transform` nem `filter`. O
+ * `rounded-[inherit]` recorta o conteúdo rolado no canto da placa, como a casca
+ * fazia. O recuo é dele (`--popover-pad`), para o anel de foco de um filho rente
+ * à borda caber dentro do recorte; um `p-*` no `className` vai para a casca, fora
+ * do rolável — recuo fora da escada se escreve num filho.
+ */
+const popoverViewportClassName = cn(
+  "flex min-h-0 flex-1 flex-col rounded-[inherit] [gap:inherit] p-(--popover-pad)",
+  "overflow-y-auto overscroll-contain",
+  // Quem declara um corpo rolável cede a rolagem do viewport; senão o viewport e
+  // o `PopoverBody` rolariam os dois.
+  "has-[[data-slot=popover-body]]:overflow-hidden",
 );
 
 function PopoverContent({
@@ -276,10 +303,12 @@ function PopoverContent({
           className={cn(popoverContentVariants({ size, surface, padding, motion }), className)}
           {...props}
         >
-          {label != null ? (
-            <PopoverTitle className="sr-only">{label}</PopoverTitle>
-          ) : null}
-          {children}
+          <div data-slot="popover-viewport" className={popoverViewportClassName}>
+            {label != null ? (
+              <PopoverTitle className="sr-only">{label}</PopoverTitle>
+            ) : null}
+            {children}
+          </div>
           {process.env.NODE_ENV !== "production" &&
           props["aria-label"] == null &&
           props["aria-labelledby"] == null ? (

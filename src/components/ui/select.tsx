@@ -121,7 +121,7 @@ function SelectContent({
             // lista sem grupo ficaria colada nas bordas). `w-full` porque em `item-aligned`
             // o viewport encolhia para o conteúdo e deixava vazio à direita.
             "w-full p-2",
-            // As opções chegam em cascata atrás do desdobrar.
+            // As opções surgem do desfoque atrás do desdobrar, sem se deslocar no rolável.
             "overlay-cascade",
             // Sem a classe de altura sobre a altura do gatilho (não citada por extenso: o
             // Tailwind varre comentários e a emitiria): ela fixaria o viewport na altura do

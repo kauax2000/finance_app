@@ -59,7 +59,7 @@ describe("as versões do Popover", () => {
     expect(CODIGO).toContain('<PopoverTitle className="sr-only">{label}</PopoverTitle>')
     expect(CODIGO).toContain("PopoverContent sem nome")
     // Filho do Content (fechado não monta) e o título pelo DOM, não pelo estado.
-    expect(CODIGO).toMatch(/\{children\}\s*\{process\.env\.NODE_ENV !== "production" &&[\s\S]*?<PopoverNameWarning/)
+    expect(CODIGO).toMatch(/\{children\}\s*<\/div>\s*\{process\.env\.NODE_ENV !== "production" &&[\s\S]*?<PopoverNameWarning/)
     expect(CODIGO).toContain(".getElementById(titleId)")
   })
 
@@ -76,5 +76,23 @@ describe("as versões do Popover", () => {
   it("a página não afirma que o surface none tem consumidor", () => {
     const doc = lerFonte("src/app/designsystem/docs/popover.tsx")
     expect(doc).not.toContain("como a pilha do Command no Combobox.")
+  })
+
+  it("a casca não rola: quem rola é o viewport, e a seta fica fora do recorte", () => {
+    // A seta é um span absoluto fora da caixa, contido pela casca; se a casca
+    // rola, ela cai no próprio recorte (6px de rolagem em repouso, seta sumida).
+    for (const padding of ["default", "none"] as const) {
+      expect(popoverContentVariants({ padding })).not.toMatch(/overflow-(y-)?(auto|scroll|visible)/)
+      expect(popoverContentVariants({ padding })).not.toMatch(/(^| )p-/)
+    }
+    expect(popoverContentVariants({})).toContain("[--popover-pad:--spacing(2.5)]")
+    expect(popoverContentVariants({ padding: "none" })).toContain("[--popover-pad:0px]")
+    const viewport = CODIGO.match(/const popoverViewportClassName = cn\(([\s\S]*?)\);/)?.[1] ?? ""
+    expect(viewport).toContain("overflow-y-auto")
+    expect(viewport).toContain("[gap:inherit] p-(--popover-pad)")
+    expect(viewport).toContain("has-[[data-slot=popover-body]]:overflow-hidden")
+    // Posicionado ou transformado, ele viraria o bloco que contém a seta.
+    expect(viewport).not.toMatch(/\b(relative|absolute|transform|translate|filter|backdrop)/)
+    expect(CODIGO).toMatch(/data-slot="popover-viewport" className=\{popoverViewportClassName\}>[\s\S]*?\{children\}\s*<\/div>/)
   })
 })

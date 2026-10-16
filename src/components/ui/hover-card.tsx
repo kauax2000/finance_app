@@ -30,7 +30,8 @@ const hoverCardContentVariants = cva(
     "z-(--z-popover) flex flex-col origin-(--radix-hover-card-content-transform-origin)",
     menuPanelSurfaceClassName,
     "text-sm outline-hidden",
-    "max-h-(--radix-hover-card-content-available-height) max-w-(--radix-hover-card-content-available-width) overflow-y-auto overscroll-contain",
+    // A casca tem o teto e não rola; quem rola é o `hover-card-viewport`.
+    "max-h-(--radix-hover-card-content-available-height) max-w-(--radix-hover-card-content-available-width)",
     // `hover-card-unveil`: sobe 8px saindo de um desfoque, sem pulo — ela chega
     // porque o cursor parou, não por um clique.
     "hover-card-unveil",
@@ -39,11 +40,14 @@ const hoverCardContentVariants = cva(
     variants: {
       /** A largura: `sm` um dado só, `md` o par identidade + meta, `lg` um parágrafo (teto; acima disso é página). */
       size: { sm: "w-56", md: "w-64", lg: "w-80" },
-      /** O mesmo eixo do `PopoverContent`; `none` zera o `gap` junto. */
+      /**
+       * O mesmo eixo do `PopoverContent`; `none` zera o `gap` junto. O recuo sai
+       * em `--hover-card-pad` e quem o aplica é o viewport, que herda o `gap`.
+       */
       padding: {
         default:
-          "gap-2.5 p-2.5 [--hover-card-strip-px:0px] [--hover-card-strip-py:0px]",
-        none: "gap-0 p-0 [--hover-card-strip-px:--spacing(3)] [--hover-card-strip-py:--spacing(2)]",
+          "gap-2.5 [--hover-card-pad:--spacing(2.5)] [--hover-card-strip-px:0px] [--hover-card-strip-py:0px]",
+        none: "gap-0 [--hover-card-pad:0px] [--hover-card-strip-px:--spacing(3)] [--hover-card-strip-py:--spacing(2)]",
       },
     },
     defaultVariants: { size: "md", padding: "default" },
@@ -264,6 +268,17 @@ function HoverCardTrigger({
   )
 }
 
+/**
+ * Quem rola dentro da casca, pela razão do `popoverViewportClassName`: a seta é
+ * um `<span>` absoluto fora da caixa, e o bloco que o contém é a casca (o
+ * `backdrop-filter` da placa a faz bloco de contenção mesmo estática). Com a
+ * casca rolando, a seta caía no próprio recorte — medido na prévia "Ana Ribeiro"
+ * do texto corrido: 6px de rolagem em repouso e a seta invisível. Este nó não
+ * pode ganhar `relative`, `transform` nem `filter`.
+ */
+const hoverCardViewportClassName =
+  "flex min-h-0 flex-1 flex-col rounded-[inherit] [gap:inherit] p-(--hover-card-pad) overflow-y-auto overscroll-contain"
+
 function HoverCardContent({
   className,
   align = "center",
@@ -291,7 +306,9 @@ function HoverCardContent({
         className={cn(hoverCardContentVariants({ size, padding }), className)}
         {...props}
       >
-        {pending ? <HoverCardSkeleton /> : children}
+        <div data-slot="hover-card-viewport" className={hoverCardViewportClassName}>
+          {pending ? <HoverCardSkeleton /> : children}
+        </div>
       </HoverCardPrimitive.Content>
     </HoverCardPrimitive.Portal>
   )

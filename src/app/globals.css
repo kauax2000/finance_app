@@ -526,11 +526,13 @@
 
   /* A barra de baixo (ver `BottomBar`). A altura não mora aqui: é o degrau do eixo
      `labels`, publicado em `--bottom-bar-h`. Aqui fica só o que a casca precisa para
-     reservar o espaço; a margem conta duas vezes (folga em cima e embaixo). */
+     reservar o espaço: a distância do pé (`--bottom-bar-offset`), a altura e a
+     folga em cima (`--bottom-bar-margin`, que também é a lateral). O pé é o da
+     tab bar do iOS 26 (medido no iPhone 17 Pro Max: ~20pt), e a área segura não
+     soma: como no iPhone, a barra assenta sobre a faixa do indicador de início. */
   --bottom-bar-margin: 1rem;
-  --bottom-bar-pad: calc(
-    3.5rem + var(--bottom-bar-margin) * 2 + env(safe-area-inset-bottom, 0px)
-  );
+  --bottom-bar-offset: 1.25rem;
+  --bottom-bar-pad: calc(3.5rem + var(--bottom-bar-offset) + var(--bottom-bar-margin));
 }
 
 /* A base da barra do topo, no documento dela: o `Toaster`, a `Toolbar sticky`
@@ -2270,18 +2272,15 @@
 }
 
 
-/* As linhas da paleta sobem ao aparecer: o `rise` de 6px do `disclosure-reveal`, na
-   mola, escalonado por `nth-child` com teto, aplicado ao que o cmdk monta (um item
-   que passa a casar a busca, e o miolo inteiro quando a paleta troca de vista). Quem
-   liga é a casca: a duração é `--command-reveal`, `0s` por padrão; o `CommandDialog` a
-   declara em `--duration-spring`, e o `Combobox` e a paleta solta ficam parados. */
-/* As linhas do painel do `Menubar` sobem 3px em cascata ao abrir: 160ms de
-   `--ease-out`, a primeira aos 40ms e cada uma 30ms depois, com teto na sexta. Só as
-   linhas; rótulo e fio entram com o painel. */
+/* As linhas do painel do `Menubar` surgem do desfoque em cascata ao abrir
+   (`menu-content-in`, o da `overlay-cascade`): 160ms de `--ease-out`, a primeira aos
+   40ms e cada uma 30ms depois, com teto na sexta. Só as linhas; rótulo e fio entram
+   com o painel. Elas subiam 3px, e linha transladada conta como transbordo do
+   viewport, que tem dissolução: só não acendia porque o recuo do fim passava da
+   subida. */
 @utility menubar-reveal {
   & > [role^="menuitem"] {
-    animation: rise 160ms var(--ease-out) 40ms both;
-    --rise-distance: 3px;
+    animation: menu-content-in 160ms var(--ease-out) 40ms backwards;
     --stagger-base: 40ms;
     --stagger-step: 30ms;
     --stagger-cap: 5;
@@ -2642,11 +2641,18 @@
   animation: table-flash 1.5s var(--ease-out) both;
 }
 
+/* As linhas da paleta surgem do desfoque ao aparecer (`menu-content-in`, o da
+   `overlay-cascade`), escalonadas por `nth-child` com teto, no que o cmdk monta (um
+   item que passa a casar a busca, e o miolo inteiro quando a paleta troca de vista).
+   Quem liga é a casca: a duração é `--command-reveal`, `0s` por padrão; o
+   `Combobox` e o `variant="panel"` a declaram em `--duration-spring`. Elas subiam 6px na mola, e linha transladada conta como
+   transbordo da `CommandList`, que tem dissolução: só não acendia porque o recuo do
+   fim passava da subida. A curva é `--ease-out`: mola sobre desfoque não passa de
+   nada. */
 @utility command-reveal {
   & [cmdk-item],
   & [cmdk-group-heading] {
-    animation: rise var(--command-reveal, 0s) var(--ease-spring) both;
-    --rise-distance: 6px;
+    animation: menu-content-in var(--command-reveal, 0s) var(--ease-out) backwards;
   }
   & [cmdk-item] {
     --stagger-base: 0ms;
@@ -2663,65 +2669,16 @@
   }
 }
 
-/* O calendário brota do campo. A entrada genérica do popover esmaece e cresce 5% a
-   partir do nada; aqui a placa se desdobra a partir da aresta que encosta no campo
-   (um `clip-path` que desce, ou sobe se o popover abriu para cima, com a aresta
-   curva), com um passo de 6px, 3% de escala na origem do Radix e um desfoque que
-   assenta, na mola. Depois o conteúdo chega em ondas: o cabeçalho, os dias da semana e
-   cada semana sobem o `rise` de 6px, 25ms depois da anterior.
-   - O recorte termina em `inset(-1rem)` e não em `inset(0)`, que cortaria a sombra e
-     o anel (que moram fora da caixa); uma máscara em degradê também não sai da caixa.
-     O preenchimento é `backwards`, não `both`: acabada a entrada, o recorte sai de cena.
-   - A seletividade é a do estado (`&[data-state=open]`, 0,2,0), porque a entrada
-     genérica do popover (`data-open:animate-in`) mora sob `:where()` e precisa perder
-     sem depender da ordem de emissão.
-   - A saída não é mola: some em `--duration-fast`, encolhendo 2% para o campo. É
-     animação e não transição, porque o `Presence` do Radix só espera animação.
-   - Movimento reduzido: o bloco global encurta a duração; o atraso das ondas sai
-     aqui, senão a última semana ficava invisível por 150ms. */
-@keyframes date-picker-bloom {
-  from {
-    opacity: 0;
-    clip-path: var(--date-picker-bloom-clip);
-    translate: 0 var(--date-picker-bloom-y);
-    scale: 0.97;
-    filter: blur(3px);
-  }
-  to {
-    opacity: 1;
-    clip-path: inset(-1rem round 0);
-    translate: 0 0;
-    scale: 1;
-    filter: blur(0);
-  }
-}
-
-@keyframes date-picker-wilt {
-  to {
-    opacity: 0;
-    translate: 0 calc(var(--date-picker-bloom-y) / 2);
-    scale: 0.98;
-    filter: blur(2px);
-  }
-}
-
+/* O calendário brota do campo, e o conteúdo chega em ondas: o cabeçalho, os dias da
+   semana e cada semana sobem o `rise` de 6px, 25ms depois da anterior. O atraso das
+   ondas sai no movimento reduzido, senão a última semana ficava invisível. */
 @utility date-picker-bloom {
-  /* A aresta que avança é uma elipse rasa (2rem de flecha), e não uma régua: a placa
-     escorre como uma gota e se achata ao assentar. */
-  --date-picker-bloom-clip: inset(-1rem -1rem 100% -1rem round 0 0 50% 50% / 0 0 2rem 2rem);
-  --date-picker-bloom-y: -0.375rem;
   transform-origin: var(--radix-popover-content-transform-origin);
-
-  &[data-side="top"] {
-    --date-picker-bloom-clip: inset(100% -1rem -1rem -1rem round 50% 50% 0 0 / 2rem 2rem 0 0);
-    --date-picker-bloom-y: 0.375rem;
-  }
   &[data-state="open"] {
-    animation: date-picker-bloom var(--duration-spring) var(--ease-spring)
-      backwards;
+    animation: menu-morph 380ms linear backwards;
   }
   &[data-state="closed"] {
-    animation: date-picker-wilt var(--duration-fast) var(--ease-out) both;
+    animation: menu-unmorph 210ms linear both;
   }
 
   /* O mês que sai numa troca de mês é um clone com `aria-hidden`: sem a exceção, as
@@ -2729,11 +2686,15 @@
   &[data-state="open"] :is(.rdp-nav, .rdp-month_caption, .rdp-weekdays, .rdp-week):not([aria-hidden="true"] *),
   &[data-state="open"] [data-slot="calendar-presets"] > li,
   &[data-state="open"] [data-slot="month-grid"] > *,
-  &[data-state="open"] [data-slot="calendar-legend"],
-  &[data-state="open"] [data-slot="date-picker-footer"] {
+  &[data-state="open"] [data-slot="calendar-legend"] {
     animation: rise var(--duration-spring) var(--ease-spring) both;
     --rise-distance: 6px;
     animation-delay: 40ms;
+  }
+  /* O rodapé encosta no fim do popover, que rola e não tem recuo: os 6px da subida
+     eram 6px de transbordo até ele pousar. Ele surge do desfoque, no lugar. */
+  &[data-state="open"] [data-slot="date-picker-footer"] {
+    animation: menu-content-in var(--duration-spring) var(--ease-out) 200ms backwards;
   }
   &[data-state="open"] .rdp-weekdays {
     animation-delay: 60ms;
@@ -2759,8 +2720,7 @@
     --stagger-cap: 2;
     @apply stagger-ladder;
   }
-  &[data-state="open"] [data-slot="calendar-legend"],
-  &[data-state="open"] [data-slot="date-picker-footer"] {
+  &[data-state="open"] [data-slot="calendar-legend"] {
     animation-delay: 200ms;
   }
 
@@ -2773,61 +2733,36 @@
 }
 
 /* ── O movimento do que se sobrepõe à tela ───────────────────────────────────
-   Cada superfície tem um gesto que diz o que ela é, e não o zoom genérico de 95% do
-   shadcn. Três regras valem para todas:
-   - Entrar é mola, sair é curva. A entrada na mola da casa (`--ease-spring`,
-     `--duration-spring`); a saída curta e sem mola (uma mola até zero passaria de
-     zero), e como animação, porque o `Presence` do Radix só espera animação para
-     desmontar.
-   - Sair volta ao gatilho: o avesso da entrada, encolhendo para a origem que o Radix
-     aponta (o botão, o campo, o cursor, o item).
+   Toda sobreposição brota no mesmo gesto, o do menu do iOS 26 (`menu-morph`, abaixo,
+   medido quadro a quadro), e volta a ele ao fechar (`menu-unmorph`); o dono pediu
+   todas iguais ao menu da barra de baixo (rodada 287). O que muda entre elas é só a
+   origem, que o Radix aponta: o botão, o campo, o cursor, o item; o diálogo, sem
+   gatilho na tela, cresce do próprio centro. O raio de chegada é `--morph-radius`
+   (a superfície por padrão; o diálogo declara o modal).
    - `transform`, e não `translate` e `scale` soltos: o `Select` desloca o popper com
      `translate-y-1` e o `Dialog` se centra com `translate`, e a propriedade solta
      brigaria com elas e daria um salto no fim.
+   - A saída é animação, e não transição, porque o `Presence` do Radix só espera
+     animação para desmontar.
    O estado entra pela seletividade (`&[data-state=open]`, 0,2,0), que vence as
-   variantes do tw-animate sem depender da ordem de emissão. O lado do gatilho
-   (`data-side`) vira o deslocamento. O movimento reduzido encurta as durações (o
-   bloco global) e zera os atrasos das cascatas aqui, com `!important`, porque os
-   atrasos por `:nth-child` são mais seletivos que a regra que os zera (as linhas
-   ficavam invisíveis por até 190ms). Menubar, NavigationMenu e DatePicker guardam os
-   gestos deles. */
+   variantes do tw-animate sem depender da ordem de emissão. O movimento reduzido
+   encurta as durações (o bloco global) e zera os atrasos das cascatas aqui, com
+   `!important`, porque os atrasos por `:nth-child` são mais seletivos que a regra que
+   os zera. O `Sheet` e a gaveta deslizam da borda: não são placas soltas. */
 
-@keyframes overlay-sprout {
-  from {
-    opacity: 0;
-    transform: translate(var(--overlay-shift-x, 0px), var(--overlay-shift-y, 0px))
-      scale(var(--overlay-scale, 0.9));
-    filter: blur(var(--overlay-blur, 4px));
-  }
-  to {
-    opacity: 1;
-    transform: none;
-    filter: blur(0);
-  }
-}
-
-@keyframes overlay-unsprout {
-  to {
-    opacity: 0;
-    transform: translate(
-        calc(var(--overlay-shift-x, 0px) / 2),
-        calc(var(--overlay-shift-y, 0px) / 2)
-      )
-      scale(var(--overlay-scale-out, 0.95));
-    filter: blur(calc(var(--overlay-blur, 4px) / 2));
-  }
-}
-
-/* As linhas de uma lista flutuante sobem em cascata (os filhos diretos do viewport:
-   linhas, rótulos, grupos e separadores), 25ms uma depois da outra e com teto em 190ms. */
+/* As linhas de uma lista flutuante (os filhos diretos do viewport: linhas, rótulos,
+   grupos, seções e separadores) surgem do desfoque enquanto a placa cresce, e somem
+   nele ao fechar: nada se desloca dentro do rolável. Uma linha transladada conta como
+   transbordo, e os 4px da subida antiga acendiam a dissolução, a seta e a barra no
+   painel da conta, que não rola (o viewport do `panel` não tem recuo); o desfoque é
+   transbordo de tinta, que não rola. Os tempos são os do menu do iOS 26: o texto
+   aparece borrado perto dos 50ms e fica nítido perto dos 190ms. */
 @utility overlay-cascade {
   & > * {
-    animation: rise 220ms var(--ease-out) 40ms both;
-    --rise-distance: 0.25rem;
-    --stagger-base: 40ms;
-    --stagger-step: 25ms;
-    --stagger-cap: 6;
-    @apply stagger-ladder;
+    animation: menu-content-in 170ms var(--ease-out) 30ms backwards;
+  }
+  [data-state="closed"] & > * {
+    animation: menu-content-out 90ms var(--ease-in-out) both;
   }
   @media (prefers-reduced-motion: reduce) {
     & > * {
@@ -2836,77 +2771,191 @@
   }
 }
 
-/* O menu de ações (`DropdownMenu`) e todo submenu brotam do gatilho: nascem a 90%,
-   6px para o lado do botão (ou do item, no submenu), desfocados, e crescem na mola; ao
-   fechar, voltam para ele em 140ms. */
+@keyframes menu-content-in {
+  from {
+    opacity: 0;
+    filter: blur(10px);
+  }
+  45% {
+    opacity: 1;
+  }
+  to {
+    filter: blur(0);
+  }
+}
+
+@keyframes menu-content-out {
+  to {
+    opacity: 0;
+    filter: blur(8px);
+  }
+}
+
+/* A placa do menu brota do botão como a do iOS 26 (o "⋯" do WhatsApp, gravado no
+   iPhone e medido quadro a quadro a 60fps). Nasce a 20%, presa no canto do gatilho
+   (a origem do Radix), em elipse (`border-radius: 50%` escalado), e cresce primeiro
+   na altura: 95% da altura aos 68ms, enquanto a largura está em 68%. A altura passa
+   8% do tamanho aos ~118ms e a largura 2,2% aos ~219ms, e as duas assentam aos
+   380ms. Os quadros são a curva: `linear` entre eles, e nenhuma mola por cima. A
+   placa acende nos primeiros 60ms (no iPhone ela é o próprio botão; aqui o botão
+   fica onde está), sem desfoque no vidro. */
+@keyframes menu-morph {
+  0% {
+    opacity: 0;
+    border-radius: 50%;
+    transform: scale(0.2, 0.2);
+  }
+  4.5% {
+    transform: scale(0.316, 0.47);
+  }
+  9% {
+    transform: scale(0.435, 0.65);
+  }
+  13.4% {
+    transform: scale(0.574, 0.807);
+  }
+  16% {
+    opacity: 1;
+  }
+  17.9% {
+    transform: scale(0.682, 0.94);
+  }
+  22.1% {
+    transform: scale(0.802, 1.04);
+  }
+  26.6% {
+    transform: scale(0.881, 1.075);
+  }
+  31.1% {
+    border-radius: var(--morph-radius, var(--radius-surface));
+    transform: scale(0.93, 1.08);
+  }
+  35.5% {
+    transform: scale(0.96, 1.075);
+  }
+  40% {
+    transform: scale(0.985, 1.065);
+  }
+  44.5% {
+    transform: scale(1, 1.052);
+  }
+  48.9% {
+    transform: scale(1.014, 1.04);
+  }
+  53.4% {
+    transform: scale(1.02, 1.03);
+  }
+  57.6% {
+    transform: scale(1.022, 1.02);
+  }
+  62.1% {
+    transform: scale(1.02, 1.013);
+  }
+  66.6% {
+    transform: scale(1.016, 1.008);
+  }
+  71.1% {
+    transform: scale(1.012, 1.005);
+  }
+  80% {
+    transform: scale(1.006, 1.002);
+  }
+  88.9% {
+    transform: scale(1.003, 1);
+  }
+  100% {
+    opacity: 1;
+    border-radius: var(--morph-radius, var(--radius-surface));
+    transform: none;
+  }
+}
+
+/* A volta, do mesmo vídeo: a placa estica 11% na altura no primeiro quadro, como se
+   tomasse impulso, e encolhe para o canto do gatilho em 210ms, de novo em elipse; some
+   na segunda metade. Uma animação só: o `Presence` do Radix desmonta no primeiro
+   `animationend` da própria placa. */
+@keyframes menu-unmorph {
+  0% {
+    opacity: 1;
+    border-radius: var(--morph-radius, var(--radius-surface));
+    transform: none;
+  }
+  8% {
+    transform: scale(0.888, 1.11);
+  }
+  16% {
+    transform: scale(0.824, 1.1);
+  }
+  32% {
+    transform: scale(0.744, 1.06);
+  }
+  40% {
+    transform: scale(0.672, 0.976);
+  }
+  48% {
+    transform: scale(0.592, 0.864);
+  }
+  56% {
+    opacity: 1;
+    transform: scale(0.512, 0.744);
+  }
+  64% {
+    transform: scale(0.448, 0.64);
+  }
+  72% {
+    transform: scale(0.384, 0.544);
+  }
+  80% {
+    transform: scale(0.336, 0.448);
+  }
+  88.6% {
+    transform: scale(0.288, 0.36);
+  }
+  100% {
+    opacity: 0;
+    border-radius: 50%;
+    transform: scale(0.24, 0.26);
+  }
+}
+
+/* O menu de ações (`DropdownMenu`) e todo submenu brotam do gatilho no gesto do menu
+   do iOS 26 (`menu-morph`, acima): sem deslocamento, porque a origem do Radix já é o
+   canto do botão. Ao fechar, voltam para ele (`menu-unmorph`). */
 @utility menu-sprout {
-  --overlay-shift: 0.375rem;
-  --overlay-scale: 0.9;
-  --overlay-blur: 4px;
-  &[data-side="bottom"] {
-    --overlay-shift-y: calc(var(--overlay-shift) * -1);
-  }
-  &[data-side="top"] {
-    --overlay-shift-y: var(--overlay-shift);
-  }
-  &[data-side="right"] {
-    --overlay-shift-x: calc(var(--overlay-shift) * -1);
-  }
-  &[data-side="left"] {
-    --overlay-shift-x: var(--overlay-shift);
-  }
-  &[data-state="open"] {
-    animation: overlay-sprout var(--duration-spring) var(--ease-spring) backwards;
+  &[data-state="open"],
+  &[data-state="delayed-open"],
+  &[data-state="instant-open"] {
+    animation: menu-morph 380ms linear backwards;
   }
   &[data-state="closed"] {
-    animation: overlay-unsprout 140ms var(--ease-in-out) both;
+    animation: menu-unmorph 210ms linear both;
   }
 }
 
-/* O menu de contexto abre do cursor: a origem do Radix é o canto que encosta no
-   ponteiro, e a placa sai de lá a 82%, sem deslocamento (o gatilho é um ponto). Fecha
-   encolhendo de volta ao cursor, mais rápido. */
+/* O menu de contexto brota do cursor: a origem do Radix é o canto que encosta no
+   ponteiro. */
 @utility context-menu-burst {
-  --overlay-scale: 0.82;
-  --overlay-scale-out: 0.9;
-  --overlay-blur: 3px;
   &[data-state="open"] {
-    animation: overlay-sprout var(--duration-spring) var(--ease-spring) backwards;
+    animation: menu-morph 380ms linear backwards;
   }
   &[data-state="closed"] {
-    animation: overlay-unsprout 110ms var(--ease-in-out) both;
+    animation: menu-unmorph 210ms linear both;
   }
 }
 
-/* O popover é a placa do tour: brota do gatilho a 92%, 10px para o lado dele e
-   desfocada em 6px, e as faixas (cabeçalho, corpo, rodapé) sobem logo atrás, 45ms uma
-   da outra; ao fechar, volta para dentro do gatilho. A seta fica parada: é da caixa. */
+/* O popover brota do gatilho, e as faixas (cabeçalho, corpo, rodapé) surgem do
+   desfoque logo atrás, 45ms uma da outra. A seta fica parada: é da caixa. As faixas
+   não se deslocam: a placa rola, e com `padding="none"` a subida de 4px virava 4px de
+   transbordo até pousar. */
 @utility popover-sprout {
-  --overlay-shift: 0.625rem;
-  --overlay-scale: 0.92;
-  --overlay-scale-out: 0.94;
-  --overlay-blur: 6px;
-  &[data-side="bottom"] {
-    --overlay-shift-y: calc(var(--overlay-shift) * -1);
-  }
-  &[data-side="top"] {
-    --overlay-shift-y: var(--overlay-shift);
-  }
-  &[data-side="right"] {
-    --overlay-shift-x: calc(var(--overlay-shift) * -1);
-  }
-  &[data-side="left"] {
-    --overlay-shift-x: var(--overlay-shift);
-  }
   &[data-state="open"] {
-    animation: overlay-sprout var(--duration-spring) var(--ease-spring) backwards;
+    animation: menu-morph 380ms linear backwards;
   }
   &[data-state="closed"] {
-    animation: overlay-unsprout 170ms var(--ease-in-out) both;
+    animation: menu-unmorph 210ms linear both;
   }
   &[data-state="open"] > :not(:has(> [data-slot="popover-arrow"])) {
-    animation: rise 300ms var(--ease-emphasized) 90ms both;
-    --rise-distance: 0.25rem;
+    animation: menu-content-in 300ms var(--ease-out) 90ms backwards;
     --stagger-base: 90ms;
     --stagger-step: 45ms;
     --stagger-cap: 3;
@@ -2919,101 +2968,33 @@
   }
 }
 
-/* O que se escolhe num campo (`Select`, `Combobox`, o seletor do `Form`) desdobra do
-   campo, o gesto do calendário do `DatePicker`: a placa se abre da aresta que encosta
-   no campo, com a aresta que avança curva (uma elipse de 2rem que se achata), 6px, 3%
-   de escala e um desfoque que assenta, na mola. Fechar dobra de volta para a mesma
-   aresta. O recorte termina em `inset(-1rem)` para não cortar o anel e a sombra. */
-@keyframes field-unfold {
-  from {
-    opacity: 0;
-    clip-path: var(--field-bloom-clip);
-    transform: translateY(var(--field-bloom-y)) scale(0.97);
-    filter: blur(3px);
-  }
-  to {
-    opacity: 1;
-    clip-path: inset(-1rem round 0);
-    transform: none;
-    filter: blur(0);
-  }
-}
-
-@keyframes field-fold {
-  from {
-    clip-path: inset(-1rem round 0);
-  }
-  to {
-    opacity: 0;
-    clip-path: var(--field-bloom-clip);
-    transform: translateY(calc(var(--field-bloom-y) / 2)) scale(0.98);
-    filter: blur(2px);
-  }
-}
-
+/* O que se escolhe num campo (`Select`, `Combobox`, o seletor do `Form`) brota do
+   campo no mesmo gesto do menu (`menu-morph` / `menu-unmorph`, acima): a origem do
+   Radix é a aresta do gatilho, e a placa cresce dali e volta para lá. Era um
+   desdobrar próprio (recorte curvo, 6px e desfoque na mola); o dono pediu os dois
+   iguais (rodada 287). */
 @utility field-bloom {
-  --field-bloom-clip: inset(-1rem -1rem 100% -1rem round 0 0 50% 50% / 0 0 2rem 2rem);
-  --field-bloom-y: -0.375rem;
-  &[data-side="top"] {
-    --field-bloom-clip: inset(100% -1rem -1rem -1rem round 50% 50% 0 0 / 2rem 2rem 0 0);
-    --field-bloom-y: 0.375rem;
-  }
   /* O `Select` alinhado ao item (`item-aligned`) abre sobre o campo, e ali não há
-     aresta de onde desdobrar. */
+     aresta de onde brotar. */
   &[data-state="open"]:not([data-align-trigger="true"]) {
-    animation: field-unfold var(--duration-spring) var(--ease-spring) backwards;
+    animation: menu-morph 380ms linear backwards;
   }
   &[data-state="closed"]:not([data-align-trigger="true"]) {
-    animation: field-fold 160ms var(--ease-in-out) both;
+    animation: menu-unmorph 210ms linear both;
   }
 }
 
-/* A prévia (`HoverCard`) se desvela: sem pulo (chega porque o cursor parou), sobe 8px
-   saindo de um desfoque de 8px numa curva longa e assentada, e as faixas vêm atrás.
-   Sai dissolvendo no lugar: o cursor que vai embora não quer ver a placa correr atrás. */
-@keyframes overlay-unveil {
-  from {
-    opacity: 0;
-    transform: translate(var(--overlay-shift-x, 0px), var(--overlay-shift-y, 0px));
-    filter: blur(8px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-    filter: blur(0);
-  }
-}
-
-@keyframes overlay-dissolve {
-  to {
-    opacity: 0;
-    filter: blur(4px);
-  }
-}
-
+/* A prévia (`HoverCard`) brota do gatilho; as faixas surgem do desfoque atrás, no
+   lugar (a prévia rola). */
 @utility hover-card-unveil {
-  --overlay-shift: 0.5rem;
-  &[data-side="bottom"] {
-    --overlay-shift-y: calc(var(--overlay-shift) * -1);
-  }
-  &[data-side="top"] {
-    --overlay-shift-y: var(--overlay-shift);
-  }
-  &[data-side="right"] {
-    --overlay-shift-x: calc(var(--overlay-shift) * -1);
-  }
-  &[data-side="left"] {
-    --overlay-shift-x: var(--overlay-shift);
-  }
   &[data-state="open"] {
-    animation: overlay-unveil 420ms var(--ease-out) backwards;
+    animation: menu-morph 380ms linear backwards;
   }
   &[data-state="closed"] {
-    animation: overlay-dissolve var(--duration-fast) var(--ease-out) both;
+    animation: menu-unmorph 210ms linear both;
   }
   &[data-state="open"] > :not(:has(> [data-slot="hover-card-arrow"])) {
-    animation: rise 320ms var(--ease-out) 120ms both;
-    --rise-distance: 0.25rem;
+    animation: menu-content-in 320ms var(--ease-out) 120ms backwards;
     --stagger-base: 120ms;
     --stagger-step: 50ms;
     --stagger-cap: 2;
@@ -3026,38 +3007,16 @@
   }
 }
 
-/* O diálogo cresce do próprio centro, a 90% e desfocado, na mola; o conteúdo
-   sobe em cascata atrás. Fechar encolhe para o centro. Ele nascia do ponto do
-   clique, e aberto pela barra lateral surgia da esquerda de uma placa
-   centralizada na tela.
-   Só `transform`: a centragem é o `translate` do casco. */
-@keyframes dialog-sprout {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-    filter: blur(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-    filter: blur(0);
-  }
-}
-
-@keyframes dialog-unsprout {
-  to {
-    opacity: 0;
-    transform: scale(0.94);
-    filter: blur(4px);
-  }
-}
-
+/* O diálogo brota do próprio centro, onde mora (nascer do ponto do clique saiu:
+   aberto pela barra lateral, surgia da esquerda de uma placa centralizada); o
+   conteúdo sobe em cascata atrás. */
 @utility dialog-sprout {
+  --morph-radius: var(--radius-modal);
   &[data-state="open"] {
-    animation: dialog-sprout var(--duration-spring) var(--ease-spring) backwards;
+    animation: menu-morph 380ms linear backwards;
   }
   &[data-state="closed"] {
-    animation: dialog-unsprout 180ms var(--ease-in-out) both;
+    animation: menu-unmorph 210ms linear both;
   }
   &[data-state="open"] > :not([data-slot="dialog-close-button"]) {
     animation: rise 300ms var(--ease-emphasized) 80ms both;
@@ -3700,6 +3659,7 @@
   --scroll-fade-blur-r: 7px;
   --scroll-fade-blur-sat: 1.5;
 }
+
 
 /**
  * Bottom sheets (`SheetContent` side=bottom + `fillMobileViewport`): altura fixa de

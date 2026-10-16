@@ -61,12 +61,21 @@ const ROTAS_DO_APP = [
 function aquecerRotasEmDesenvolvimento() {
     if (process.env.NODE_ENV !== "development") return
     let cancelado = false
-    const id = requestIdleCallback(async () => {
+    const aquecer = async () => {
         for (const rota of ROTAS_DO_APP) {
             if (cancelado) return
             await fetch(rota, { headers: { RSC: "1" } }).catch(() => undefined)
         }
-    })
+    }
+    // O Safari (iPhone e Mac) não tem `requestIdleCallback`: lá, um segundo depois.
+    if (typeof requestIdleCallback !== "function") {
+        const id = setTimeout(aquecer, 1000)
+        return () => {
+            cancelado = true
+            clearTimeout(id)
+        }
+    }
+    const id = requestIdleCallback(aquecer)
     return () => {
         cancelado = true
         cancelIdleCallback(id)

@@ -99,8 +99,11 @@ export function useScrollFade({
           // Lido no `ResizeObserver`, depois do layout; as variáveis só posicionam as setas absolutas.
           const a = el.getBoundingClientRect()
           const b = pai.getBoundingClientRect()
-          pai.style.setProperty("--scroll-fade-box-top", `${a.top - b.top - pai.clientTop}px`)
-          pai.style.setProperty("--scroll-fade-box-bottom", `${b.bottom - a.bottom - pai.clientTop}px`)
+          // O menu abre escalado a 20%, e o retângulo na tela sai escalado junto: a altura de
+          // layout do pai sobre a da tela desfaz a escala vertical.
+          const k = b.height > 0 ? pai.offsetHeight / b.height : 1
+          pai.style.setProperty("--scroll-fade-box-top", `${(a.top - b.top) * k - pai.clientTop}px`)
+          pai.style.setProperty("--scroll-fade-box-bottom", `${(b.bottom - a.bottom) * k - pai.clientTop}px`)
         }
         pintar()
       }
@@ -125,9 +128,8 @@ export function useScrollFade({
 
       // O listener mora aqui e não numa prop `onScroll`: o hook já é dono do elemento e do cleanup, e mantém o `passive`.
       el.addEventListener("scroll", pintar, { passive: true })
-      // A cascata de abertura (`rise`) desloca as linhas 4px, e linha transformada conta como
-      // transbordo; ao pousar nada muda de tamanho e o `ResizeObserver` não avisa. O fim de
-      // cada animação (borbulha das linhas) mede de novo.
+      // O fim da animação de um filho mede de novo: o acender das linhas da lista flutuante
+      // (as setas `--scroll-fade-box-*` foram lidas com a placa ainda em escala).
       el.addEventListener("animationend", medir)
       return () => {
         ro.disconnect()

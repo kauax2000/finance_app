@@ -1,14 +1,16 @@
 import { describe, expect, it } from "vitest"
-import { lerFonte } from "@/test/fonte"
+import { blocoCss, lerFonte } from "@/test/fonte"
 import { esperarDepoisDeNoScrollbar } from "@/test/regras"
 
-describe("as linhas da paleta sobem ao aparecer", () => {
+describe("as linhas da paleta surgem do desfoque ao aparecer", () => {
   const css = lerFonte("src/app/globals.css")
   const paleta = lerFonte("src/components/ui/command.tsx")
 
   it("a utility mora depois de no-scrollbar e lê --command-reveal, 0s por padrão", () => {
     const bloco = esperarDepoisDeNoScrollbar(css, "@utility command-reveal {", { fecha: "@utility" })
-    expect(bloco).toMatch(/rise var\(--command-reveal, 0s\) var\(--ease-spring\) both;\s*--rise-distance: 6px;/)
+    // Sem subida: linha transladada conta como transbordo da lista, que tem dissolução.
+    expect(bloco).toContain("animation: menu-content-in var(--command-reveal, 0s) var(--ease-out) backwards;")
+    expect(blocoCss(bloco, "@utility command-reveal {")).not.toMatch(/\brise\b|translate/)
     // A escada para na quinta linha: 30ms por degrau, teto de quatro (120ms).
     expect(bloco).toMatch(/& \[cmdk-item\] \{\s*--stagger-base: 0ms;\s*--stagger-step: 30ms;\s*--stagger-cap: 4;\s*@apply stagger-ladder;/)
   })

@@ -264,10 +264,8 @@ function CommandDialog({
             "pointer-coarse:[--command-dialog-stack:calc(var(--command-dialog-h)+--spacing(1))]",
             "[--command-dialog-top:calc(50%-var(--command-dialog-stack)/2)]",
             "top-(--command-dialog-top)",
-            // A paleta abre na mola e fecha curto em `--ease-out` (uma mola até
-            // zero passa por baixo de zero).
-            "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring) data-open:slide-in-from-top-1",
-            "data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-closed:animation-duration-(--duration-fast) data-closed:ease-(--ease-out)"
+            // A paleta brota do centro no gesto do menu (`@utility menu-sprout`).
+            "menu-sprout"
           )}
         >
           {/* O nome acessível mora dentro do `Content`: fora dele o `DialogHeader`
@@ -629,7 +627,7 @@ function CommandList({
       data-medido={medido || undefined}
       className={cn(
         "no-scrollbar overflow-x-hidden overflow-y-auto p-1 outline-none",
-        // As linhas sobem ao aparecer, só onde a casca declara `--command-reveal` (`0s` por padrão).
+        // As linhas surgem do desfoque ao aparecer, só onde a casca declara `--command-reveal` (`0s` por padrão).
         "command-reveal",
         // A dissolução das duas pontas (âncoras, rampa, máscara, folga de
         // rolagem) mora aqui, no elemento que rola; a casca só publica as alturas.

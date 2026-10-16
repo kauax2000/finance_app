@@ -28,32 +28,48 @@ describe("O movimento do que se sobrepõe à tela", () => {
 
   it("os keyframes animam transform, nunca translate e scale soltos", () => {
     const keyframes = BLOCO.match(/@keyframes [\s\S]*?\n\}\n/g) ?? []
-    expect(keyframes.length).toBeGreaterThanOrEqual(8)
+    expect(keyframes.length).toBeGreaterThanOrEqual(4)
     for (const k of keyframes) {
       expect(k, k.slice(0, 40)).not.toMatch(/^\s*(translate|scale):/m)
     }
   })
 
-  it("entrar é mola, sair é curva — e a mola sempre com a duração dela", () => {
-    for (const nome of ["menu-sprout", "context-menu-burst", "popover-sprout", "field-bloom", "dialog-sprout"]) {
+  it("toda sobreposição brota no gesto do menu da barra de baixo, e volta a ele", () => {
+    for (const nome of ["menu-sprout", "context-menu-burst", "popover-sprout", "field-bloom", "hover-card-unveil", "dialog-sprout"]) {
       const u = utility(nome)
-      expect(u, nome).toMatch(/\[data-state="open"\][^{]*\{\s*animation: [a-z-]+ var\(--duration-spring\) var\(--ease-spring\) backwards;/)
-      expect(u, nome).toMatch(/\[data-state="closed"\][^{]*\{\s*animation: [a-z-]+ \d+ms var\(--ease-in-out\) both;/)
+      expect(u, nome).toMatch(/\[data-state="open"\][^{]*\{\s*animation: menu-morph 380ms linear backwards;/)
+      expect(u, nome).toMatch(/\[data-state="closed"\][^{]*\{\s*animation: menu-unmorph 210ms linear both;/)
     }
-    // A prévia não pula: curva longa na entrada, dissolver no lugar na saída.
-    const prévia = utility("hover-card-unveil")
-    expect(prévia).toContain("animation: overlay-unveil 420ms var(--ease-out) backwards;")
-    expect(prévia).toContain("animation: overlay-dissolve var(--duration-fast) var(--ease-out) both;")
+    // O diálogo chega no raio dele, não no da superfície.
+    expect(utility("dialog-sprout")).toContain("--morph-radius: var(--radius-modal);")
+    // A dica também: o Radix escreve `delayed-open`/`instant-open`.
+    expect(utility("menu-sprout")).toContain('&[data-state="delayed-open"]')
+    for (const peça of ["menubar", "navigation-menu", "command", "tooltip"]) {
+      expect(ui(peça), peça).toContain("menu-sprout")
+    }
   })
 
-  it("o lado do gatilho vira o deslocamento: a placa sai de perto dele", () => {
-    for (const nome of ["menu-sprout", "popover-sprout", "hover-card-unveil"]) {
-      const u = utility(nome)
-      expect(u, nome).toMatch(/&\[data-side="bottom"\] \{\s*--overlay-shift-y: calc\(var\(--overlay-shift\) \* -1\);/)
-      expect(u, nome).toMatch(/&\[data-side="right"\] \{\s*--overlay-shift-x: calc\(var\(--overlay-shift\) \* -1\);/)
-    }
-    // O menu de contexto não se desloca: o gatilho é um ponto.
-    expect(utility("context-menu-burst")).not.toContain("data-side")
+  it("o menu brota do botão nos quadros do menu do iOS 26", () => {
+    // A mola dele amostrada a 60fps: os quadros são a curva, `linear` entre eles.
+    const menu = utility("menu-sprout")
+    expect(menu).toContain("animation: menu-morph 380ms linear backwards;")
+    expect(menu).toContain("animation: menu-unmorph 210ms linear both;")
+    // Sem deslocamento: a origem do Radix já é o canto do botão.
+    expect(menu).not.toContain("data-side")
+    // O que se escolhe num campo brota no mesmo gesto (rodada 287).
+    const campo = utility("field-bloom")
+    expect(campo).toContain("animation: menu-morph 380ms linear backwards;")
+    expect(campo).toContain("animation: menu-unmorph 210ms linear both;")
+    const abre = blocoCss(BLOCO, "@keyframes menu-morph {")
+    // Nasce em elipse a 20% e cresce primeiro na altura, que passa 8% do tamanho.
+    expect(abre).toMatch(/0% \{\s*opacity: 0;\s*border-radius: 50%;\s*transform: scale\(0\.2, 0\.2\);/)
+    expect(abre).toContain("transform: scale(0.93, 1.08);")
+    expect(abre).toMatch(/100% \{\s*opacity: 1;\s*border-radius: var\(--morph-radius, var\(--radius-surface\)\);\s*transform: none;/)
+    // Sem filtro sobre o vidro: o desfoque é das linhas.
+    expect(abre).not.toContain("filter")
+    const fecha = blocoCss(BLOCO, "@keyframes menu-unmorph {")
+    expect(fecha).toMatch(/100% \{\s*opacity: 0;\s*border-radius: 50%;/)
+    expect(fecha).not.toContain("filter")
   })
 
   it("o diálogo cresce do próprio centro, e o Select alinhado ao item não desdobra", () => {
@@ -63,10 +79,47 @@ describe("O movimento do que se sobrepõe à tela", () => {
     expect(utility("field-bloom")).toContain('&[data-state="open"]:not([data-align-trigger="true"])')
   })
 
-  it("as faixas das placas sobem pelo `rise` das cascatas, 0.25rem", () => {
-    for (const nome of ["overlay-cascade", "popover-sprout", "hover-card-unveil", "dialog-sprout"]) {
-      expect(utility(nome), nome).toMatch(/animation: rise \d+ms var\(--ease-[a-z]+\) \d+ms both;\s*--rise-distance: 0\.25rem;/)
+  it("as linhas da lista flutuante surgem do desfoque: nada se desloca dentro do rolável", () => {
+    // Linha transladada conta como transbordo: os 4px do `rise` acendiam a dissolução,
+    // a seta e a barra no painel da conta, que não rola (o viewport do `panel` não tem
+    // recuo). O desfoque é transbordo de tinta, que não rola.
+    const c = utility("overlay-cascade")
+    expect(c).toContain("animation: menu-content-in 170ms var(--ease-out) 30ms backwards;")
+    expect(c).toContain("animation: menu-content-out 90ms var(--ease-in-out) both;")
+    expect(c).not.toMatch(/rise|translate|transform|scale|stagger-ladder/)
+    for (const k of ["@keyframes menu-content-in {", "@keyframes menu-content-out {"]) {
+      expect(blocoCss(BLOCO, k), k).not.toMatch(/translate|transform|scale/)
     }
+  })
+
+  it("as faixas do popover e da prévia surgem do desfoque; as do diálogo sobem 0.25rem", () => {
+    // O popover e a prévia rolam, e com `padding="none"` os 4px da subida eram 4px de
+    // transbordo até a faixa pousar. O casco do diálogo é `overflow-hidden`, sem dissolução.
+    for (const nome of ["popover-sprout", "hover-card-unveil"]) {
+      const u = utility(nome)
+      expect(u, nome).toMatch(/animation: menu-content-in \d+ms var\(--ease-out\) \d+ms backwards;\s*--stagger-base/)
+      expect(u, nome).not.toMatch(/\brise\b|--rise-distance/)
+    }
+    expect(utility("dialog-sprout")).toMatch(/animation: rise \d+ms var\(--ease-[a-z]+\) \d+ms both;\s*--rise-distance: 0\.25rem;/)
+  })
+
+  it("nenhum filho de rolável com dissolução se desloca ao abrir", () => {
+    // Filho transladado conta como transbordo do rolável: onde o recuo do fim é menor que a
+    // subida, a dissolução, a seta e a barra acendiam até ele pousar. A paleta e o `Menubar`
+    // estavam seguros só pelo recuo; o rodapé do `DatePicker` encosta no fim, sem recuo.
+    const regras = semComentarios(CSS, "bloco")
+    const cascatas = {
+      "command-reveal": blocoCss(regras, "@utility command-reveal {"),
+      "menubar-reveal": blocoCss(regras, "@utility menubar-reveal {"),
+    }
+    for (const [nome, bloco] of Object.entries(cascatas)) {
+      expect(bloco, nome).toContain("animation: menu-content-in ")
+      expect(bloco, nome).not.toMatch(/\brise\b|translate|--rise-distance/)
+    }
+    const calendario = blocoCss(regras, "@utility date-picker-bloom {")
+    expect(calendario).toMatch(/&\[data-state="open"\] \[data-slot="date-picker-footer"\] \{\s*animation: menu-content-in var\(--duration-spring\) var\(--ease-out\) 200ms backwards;\s*\}/)
+    // O rodapé não está em nenhuma outra regra do calendário (a da subida, a do atraso).
+    expect(calendario.match(/date-picker-footer/g)).toHaveLength(1)
   })
 
   it("movimento reduzido zera os atrasos das cascatas com !important", () => {
@@ -88,7 +141,7 @@ describe("O movimento do que se sobrepõe à tela", () => {
     expect(ui("hover-card")).toContain('"hover-card-unveil"')
     expect(ui("dialog")).toContain('"dialog-sprout"')
     expect(ui("alert-dialog")).toContain("dialogContentVariants({ size, layout: \"auto\" })")
-    expect(ui("tooltip")).toContain("const fechada = { opacity: 0, scale: reduzido ? 1 : 0.7, ...desvio }")
+    expect(ui("tooltip")).toContain('"menu-sprout"')
   })
 
   it("o popover tem o eixo motion, e quem anima sozinho pede none", () => {
@@ -102,9 +155,9 @@ describe("O movimento do que se sobrepõe à tela", () => {
     expect(ui("onboarding").match(/motion="none"/g)).toHaveLength(2)
   })
 
-  it("a superfície dos menus não anima; o Menubar guarda o gesto da referência", () => {
+  it("a superfície dos menus não anima: quem anima é o gesto de cada peça", () => {
     expect(menuSurfaceClassName).not.toMatch(/animate-in|zoom-in|slide-in/)
-    expect(ui("menubar").match(/menuMotionClassName,/g)?.length).toBeGreaterThanOrEqual(2)
+    expect(ui("menubar")).not.toContain("menuMotionClassName")
   })
 
   it("a folha desliza da borda inteira, e não 48px", () => {

@@ -26154,3 +26154,468 @@ trajeto). Medido quadro a quadro no formulário de lançamento: a borda vai de 4
 a 396 de 400 nas duas direções, e o esticão segue em 148px num salto duplo
 (127 parado). Vale para `ToggleGroup`, `Tabs` e `BottomBar`; o `ThemeToggle`
 segue com as amplitudes medidas dele. `liquid-move.test.ts` tranca.
+
+### Rodada 274 — `BottomBar` com a pele do `Tabs floating`
+
+O dono pediu a barra de baixo igual às abas no desenho, nas cores e nas
+animações, mantendo a altura. A pílula deixa o vidro (`mobile-glass-surface`,
+`--popover` a 82%) e a sombra grande, e veste o trilho do `Tabs floating`:
+`--popover` opaco e o anel de 1px. A tecla volta ao `--muted` com `shadow-xs`;
+o tom próprio (`--bottom-bar-key` misturando a tinta ao `--popover`) existia
+porque o `--muted` empatava com as linhas que passavam por trás do vidro
+(~1,09:1), e com a pílula opaca nada passa por trás. O movimento do marcador
+já era o mesmo (`useMarcador`); saiu o afundar de 1px do item no toque, que as
+abas não têm. Medido no telefone: o marcador da barra e o das abas da tela de
+transações têm o mesmo fundo, anel e sombra. A ação (+) segue com a sombra dela.
+
+Na mesma rodada: o app liga `labels` (64 de altura) e o slot da conta ganha o
+rótulo "Conta" (ou o nome da tela do menu que ele mostra). O rótulo recuava 8
+de cada lado, e "Transações" (≈57px a 11px) não cabia na aba de 67 de um
+telefone de 375: o recuo desceu a 2. Saíram também os dois movimentos do glifo
+que as abas não têm: encolher a 88% no toque e o estalo de 75% ao ativar.
+
+Depois, a pedido do dono, as abas com rótulo deixam as colunas iguais: com
+`labels` ligado a fileira é flex, como no `"active"`, e cada aba parte da
+largura do próprio nome (`flex: auto`, piso de 44), com 10px de respiro no
+rótulo. O fundo da ativa acompanha. Medido num telefone de 375: Painel 52,
+Transações 81, Categorias 77, Conta 51, nenhum rótulo cortado, e o marcador
+em Categorias com 73 (a aba menos 2px de cada lado).
+
+Corrigido logo depois: partindo da largura do nome, Painel e Conta encolhiam a
+52, abaixo da coluna igual de antes, e o dono pediu que só os nomes longos se
+ajustassem. Com `labels` ligado cada aba parte da coluna igual (`flex-basis`
+pela trilha e por `--bottom-bar-cols`) e nunca fica menor que o próprio nome
+(`min-w-fit`, rótulo com piso de 40). Cabendo, são iguais: 65 em 375, 79 em
+430. Em 320 (trilha útil de 212) só os curtos cedem: Painel 41, Transações
+64, Categorias 60, Conta 41, sem corte nem vazamento. O respiro do rótulo
+voltou a 2px (com 4, "Transações" cortava na coluna de 65).
+
+### Rodada 275 — `BottomBar` de 56 e a gaveta da conta acima dela
+
+O dono pediu a barra menor, perto da tab bar do iOS 26, e que ela não sumisse
+com a gaveta da conta. Com rótulo a barra desce de 64 a 56 (o ícone de 24 e o
+nome de 11 somam 37 numa aba de 52), e o eixo `labels` deixa de ser escada de
+altura (saiu de `escadas.test.ts`). A barra sumia por dois motivos: a gaveta
+(z 70) cobria a barra (z 50) até o pé da tela, e o `scaleBackground` do menu
+transformava a página, levando a barra `fixed` de dentro dela a 2290px.
+`DrawerContent aboveBottomBar` para a gaveta 8px acima da barra
+(`--bottom-bar-pad` menos a margem), alinhada às margens e com os cantos do
+modal, e marca `data-above-bottom-bar`; com ela montada, a barra sobe a
+`--z-sheet` + 1, a exceção nomeada no teste. O menu da conta liga a opção,
+perde o `scaleBackground` e não conta o toque em "Conta" como fora (o gatilho
+fecha; antes fechava e reabria). Medido num telefone de 375: vão de 8px,
+barra por cima do véu, "Conta" fecha, tocar em Painel fecha e navega.
+
+Na mesma rodada, medido num print do WhatsApp no iPhone 17 Pro Max (921px
+para 440pt, 2,09px por ponto): a tab bar do iOS 26 tem ~64pt de altura, fica a
+~20pt das laterais e a ~20pt do pé, sobre a faixa do indicador de início. O
+dono manteve 56 de altura e 16 nas laterais, e pediu o pé do iPhone: a barra
+somava a margem à área segura e flutuava a 50 do pé (16 + 34). A distância do
+pé virou token próprio, `--bottom-bar-offset` (20), separada de
+`--bottom-bar-margin` (16, a lateral e a folga em cima); `--bottom-bar-pad`
+passa a ser altura + pé + folga, sem a área segura, e `--bottom-bar-safe`
+saiu. Medido em 375: lateral 16, pé 20, gaveta da conta a 8 da barra.
+
+Depois, a pedido do dono ("transparente como os dropdowns e o diálogo"), a
+pílula veste a tinta flutuante dos menus (`menuPanelTintClassName`: `--popover`
+a 60% com `blur(24px) saturate(1.5)`, 85% sem `backdrop-filter`, sólida com
+transparência reduzida) e segue sem sombra. A tinta modal do diálogo ficou de
+fora: é mais aberta porque pousa sobre um véu, e a barra pousa direto na lista.
+A tecla continua `--muted` opaco.
+
+Desfeito em seguida: o dono não queria a gaveta flutuando acima da barra, só
+que a barra não sumisse e reaparecesse com atraso — e isso era o
+`scaleBackground`, que transformava a página e levava a barra `fixed` para
+fora da tela. A gaveta da conta volta à `flush` até o pé, cobrindo a barra; a
+opção `aboveBottomBar` e a exceção de camada saíram. Medido em 375: o topo da
+barra fica em 736 antes, com a gaveta aberta, a cada quadro do fechamento e
+depois.
+
+### Rodada 276 — a rodada 273 desfeita: o esticão volta a passar das pontas
+
+O dono preferiu a viagem de antes, mesmo com a frente do marcador saindo da
+trilha ao chegar à ponta, e a mesma na `BottomBar`. `liquid-move.ts` e
+`use-marcador.ts` voltaram ao estado anterior ao `limite` (sem
+`progressoDaCurva` nem `perfilLimitado`), e `liquid-move.test.ts` saiu. Como
+`Tabs`, `ToggleGroup` e `BottomBar` dividem o `useMarcador`, as três voltam
+juntas. Medido no trilho do formulário: a borda do marcador chega a 362 numa
+trilha de 359.
+
+### Rodada 277 — a ação da `BottomBar` sem o anel
+
+O `BottomBarAction` herdava o `ring-1 ring-foreground/10` da pílula. Em volta
+da tecla cheia (branca no escuro), o anel e o 1px transparente da borda do
+`Button` liam como um contorno solto fora do botão. O anel saiu e a sombra
+(`shadow-lg`) ficou; o fio interno do primário segue só no cursor.
+
+### Rodada 278 — o menu da conta do telefone vira painel que brota da aba
+
+A gaveta media 625 dos 812px: identidade, tema, sete links e sair numa lista
+só. O dono escolheu o `DropdownMenu` ancorado na aba "Conta" (`side="top"`,
+`align="end"`, 12px acima da pílula), a lista em dois grupos (os destinos da
+carteira; Minha conta e Planos), sem a linha da identidade, o tema em
+Configurações (seção Aparência, `ThemeSettings`) e o sair em Minha conta (já
+estava no menu ⋯ do perfil). É `variant="panel"` porque as sete linhas de 44 no
+dedo somam 369px, acima do teto de 288 das listas. Medido a 375px: o painel de
+224 × 369 abre sem rolagem, de 361 a 730, com a barra em 736.
+
+### Rodada 279 — o menu brota do botão, mais longe e inteiro
+
+O `menu-sprout` nascia a 90% com 4px de desfoque e a opacidade junto da escala:
+um estalo curto, e a primeira metade passava quase invisível. Agora a placa nasce
+a 60% colada no canto do gatilho (a origem do Radix) com 8px de desfoque, cresce
+na mesma mola (`menu-unfold`, `--duration-spring`) e acende numa curva à parte
+(`menu-fade-in`, 180ms `--ease-out`). Fecha em 160ms, a 85%. A cascata das linhas
+(`overlay-cascade`, também do `Select` e do `ContextMenu`) passou a 320ms, de 60ms
+em passos de 30ms até 270ms, para acompanhar a placa. Medido no menu da conta do
+telefone (origem no canto de baixo à direita, 224 × 369): opacidade 0,80 aos 35ms
+de animação com a escala em 0,67; escala 1 aos ~195ms, pico de 1,015 aos ~250ms,
+assentada aos ~510ms.
+
+### Rodada 280 — o menu brota do botão como no iOS 26, e a lista que não rola não ganha seta
+
+O dono não gostou da rodada 279 e mandou a referência: o menu do botão "⋯" do
+WhatsApp no iPhone (iOS 26), gravado em vídeo. Eram dois problemas.
+
+- **A seta e a dissolução durante a abertura.** A cascata (`overlay-cascade`)
+  descia cada filho do viewport 4px (`rise`, com `both`, do mount até pousar), e
+  filho transformado conta como transbordo do rolável; o recuo do fim só absorve
+  a translação quando é maior que ela. Nas listas de `p-2` (8px) ela cabia. No
+  `variant="panel"` o viewport tem `p-0` (o recuo mora na `DropdownMenuSection`),
+  e a última seção virava transbordo até pousar. Medido no menu da conta a
+  375px: 4px de `scrollHeight - clientHeight` aos 141ms, `data-scroll-fade=on` e
+  `data-scroll-more-end` até os 535ms, com os três filhos (seção, separador,
+  seção) a 4px. O `useScrollFade` lia esse transbordo no mount e acendia a
+  dissolução, a seta do `ScrollFadeArrows` e, onde a barra é clássica, a barra
+  nativa, até o `animationend` medir de novo.
+- **A animação.** A placa nascia a 60%, com 8px de desfoque sobre o vidro, na
+  mola da casa (passa 3,8%), e as linhas subiam numa escada de até 270ms.
+
+**A referência, medida.** O vídeo (60fps, 1320 × 2868) foi decomposto em
+quadros e a caixa do menu medida em cada um, pela diferença contra o quadro de
+repouso. Na abertura a placa nasce do tamanho do botão, presa no canto dele, em
+elipse, e cresce primeiro na altura: 63% da altura no primeiro quadro, 95% aos
+68ms (a largura em 68%), 108% aos ~100ms; a largura chega a 100% aos ~169ms,
+passa a 102,4% aos ~219ms, e as duas assentam aos ~370ms. O texto aparece
+borrado perto dos 85ms e fica nítido perto dos 190ms. No fechamento a placa
+estica a 112% na altura no primeiro quadro e encolhe para o botão em ~210ms,
+de novo em elipse, com o texto borrando logo no começo.
+
+O que mudou:
+
+- **`menu-morph`** (abertura do `DropdownMenu` e dos submenus): os quadros
+  medidos viram os keyframes, `linear` entre eles, em 380ms. Começa a 20% nos
+  dois eixos (o gatilho do app não vira o menu, e 20% é a proporção botão/menu
+  no desktop), com `border-radius: 50%` que vira `--radius-surface` aos ~118ms
+  (a elipse do vídeo é o raio escalado), e acende nos primeiros 60ms. As
+  sobras acima de 100% são as do vídeo, relativas ao tamanho final (altura 8%,
+  largura 2,2%). Sem deslocamento: a origem do Radix já é o canto do botão.
+  Sem filtro no vidro.
+- **`menu-unmorph`** (fechamento): o espelho medido, em 210ms, uma animação só
+  (o `Presence` do Radix desmonta no `animationend` da própria placa); some na
+  segunda metade.
+- **`overlay-cascade`** (`DropdownMenu`, `ContextMenu`, `Select`): as linhas
+  surgem do desfoque (`menu-content-in`, 10px → 0 e opacidade em 45%, 170ms,
+  30ms atrás da placa) e somem nele ao fechar (`menu-content-out`, 90ms).
+  **Nada se desloca dentro do rolável**: o desfoque é transbordo de tinta, que
+  não rola. A lista que não rola nunca acende dissolução, seta nem barra; a que
+  rola as acende na primeira medida.
+- **`useScrollFade`**: a posição das setas (`--scroll-fade-box-*`) desfaz a
+  escala vertical da placa (a altura de layout do pai sobre a da tela): no mount
+  o retângulo na tela sai escalado a 20%.
+- A mola firme que a primeira versão desta rodada criou
+  (`--ease-spring-firm`) saiu com ela; `--ease-spring` não muda.
+
+Medido no menu da conta (375 × 812, a Web Animations API parando as animações
+em cada instante, porque o painel do navegador estrangulava os quadros): a placa
+passa por 0,315 × 0,468 aos 17ms, 0,682 × 0,940 aos 68ms, 0,929 × 1,080 aos
+118ms (raio já em 22px), 1,020 × 1,030 aos 203ms e 1 × 1 aos 380ms, com a
+origem em 224px 369px (o canto da aba "Conta"); o transbordo do viewport ficou
+em 0 em todos os 19 instantes, com `data-scroll-fade=off`, as duas setas em
+opacidade 0 e `--scroll-fade-box-*` em 0px. O fechamento passou por 0,887 ×
+1,110 aos 17ms e 0,242 × 0,264 aos 209ms, e a placa desmontou no fim.
+`overlay-motion.test.ts` tranca os keyframes, a cascata sem deslocamento e o
+menu sem filtro.
+
+Fica de fora: o `PopoverContent` e o `HoverCardContent` com `padding="none"` e
+o rodapé do `DatePicker` têm o mesmo transbordo passageiro do `rise`, sem o
+hook (só a barra nativa pode piscar); a `command-reveal` e a `menubar-reveal`
+ainda deslocam linhas dentro de roláveis com dissolução, seguras só porque o
+recuo do fim é maior que a subida.
+
+### Rodada 281 — a última aba do telefone vira "Mais", fixa
+
+A aba do menu da conta era o avatar da pessoa, num esqueleto quadrado enquanto o
+perfil carregava (o avatar é redondo), e virava o ícone e o nome da página
+aberta pelo menu, ativa. O dono pediu um gatilho genérico que não muda: agora é
+"Mais", com o `EllipsisHorizontalIcon` (as reticências soltas, como o "Mais" do iOS), sem esqueleto (não espera dado) e
+nunca ativa — numa página do menu nenhuma aba fica marcada. Saíram o
+`MobileAccountMenuSlotContent` e o `getActiveMobileAccountMenuNavItem`, que só
+ele usava. Medido em /credit-cards a 375px: as três abas sem `data-active`, sem
+marcador, e "Mais" no lugar.
+
+### Rodada 282 — o osso do avatar é redondo em todo lugar
+
+Depois do esqueleto quadrado da aba da conta (rodada 281), a varredura dos
+esqueletos que guardam um `Avatar` achou mais três na forma errada: o perfil de
+Minha conta (`size-12 rounded-lg` contra o `Avatar size="lg"`), a linha de
+membro (`size-9 rounded-lg`, 36 contra o `Avatar size="sm"` de 32) e a conta na
+barra lateral (`SidebarMenuSkeleton size="lg"` desenhava o ladrilho de 32 da
+carteira). Os dois primeiros viraram `Skeleton shape="circle"` no degrau da peça;
+o `SidebarMenuSkeleton` ganhou `media="avatar"` (o padrão segue `tile`, a marca
+da carteira). O envelope dos convites pendentes é um círculo de 36 de verdade e
+ficou. O `account-menu-user-summary.tsx`, órfão desde que o menu da conta virou
+painel (rodada 278), saiu. `skeleton.test.ts` tranca as três formas.
+
+### Rodada 283 — as faixas que nascem num rolável surgem do desfoque, no lugar
+
+A rodada 280 deixou anotado o resto do defeito: além das listas dos menus,
+outras cinco cascatas ainda desciam as faixas com o `rise` dentro de um
+rolável, e faixa transladada conta como transbordo até pousar. Medido antes da
+mudança (Web Animations API pausando as animações a cada instante e lendo
+`scrollHeight - clientHeight`, a 1280 × 900):
+
+- o `PopoverContent` com `padding="none"` (o "Categorias" do catálogo):
+  **4px** de 0 a ~250ms, voltando a 0 aos 350ms;
+- o `HoverCardContent` com `padding="none"` (a prévia de fatura e a do
+  Nubank): **4px** até os ~200ms;
+- o `DatePicker` de intervalo com confirmação: **6px** até os ~300ms, todos
+  vindos do rodapé, que encosta no fim de um popover sem recuo. As semanas, a
+  legenda e a grade de meses mediram 0: estão longe do fim, ou dentro do recuo
+  do calendário;
+- a `command-reveal` (6px na mola) e a `menubar-reveal` (3px) mediam 0, só
+  porque o recuo do fim da `CommandList` e do viewport do `Menubar` (8px) passa
+  da subida.
+
+O que mudou: as cinco trocaram o `rise` pelo `menu-content-in` da
+`overlay-cascade` (opacidade e 10px de desfoque, que é transbordo de tinta e
+não rola), com preenchimento `backwards` (o filtro não fica no elemento depois
+da entrada) e as mesmas durações e escadas. A `command-reveal` saiu da mola para
+`--ease-out`: mola sobre desfoque não passa de nada. No `DatePicker` só o
+rodapé mudou; as ondas do calendário continuam subindo. As placas continuam com
+o gesto delas (o deslocamento e a escala são da caixa, não das faixas). O
+`dialog-sprout` e o `sheet-reveal` também continuam subindo: o casco deles é
+`overflow-hidden`, sem dissolução nem barra.
+
+Medido depois, nos mesmos 14 instantes (0 a 600ms): o "Categorias", as duas
+prévias, o `DatePicker` com rodapé e o menu "Arquivo" e "Editar" do `Menubar`
+ficaram em 0 em todos. A paleta, no `Combobox`, filtrada de nenhum resultado
+para três ("ra"), ficou em 0 e com `data-scroll-fade=off` a cada 30ms da
+entrada; as listas que rolam de verdade mantiveram o mesmo transbordo em todos
+os instantes, sem acréscimo da animação.
+
+`overlay-motion.test.ts` tranca a regra ("nenhum filho de rolável com
+dissolução se desloca ao abrir"): a paleta e o `Menubar` sem `rise` nem
+`translate`, o rodapé do calendário só no `menu-content-in`, e as faixas do
+popover e da prévia no desfoque; as do diálogo seguem no `rise` de 0.25rem.
+`command-reveal.test.ts` e `menubar-versions.test.ts` acompanharam. O
+`AGENTS.md` deixou de listar as duas exceções.
+
+Fica de fora: o `PopoverContent` com seta (`PopoverArrow`) tem 6px de
+transbordo **parado** — a seta mora 6px abaixo da caixa, dentro de um
+`overflow-y-auto`, e por isso sai recortada e a placa rola 6px. Não é movimento,
+e fica para outra rodada.
+
+### Rodada 283 — o formulário de lançamento: abas no cabeçalho e o borrão no corpo
+
+As abas do tipo (Despesa, Parcelada, Receita) saíram do corpo que rola para o
+cabeçalho fixo, 12px sob o título (`TransactionFormSegment`). O cabeçalho perde
+o respiro de baixo, e o corpo sobe por trás do trilho (a casca com
+`-mt-(--scroll-fade-band-h)`; a faixa é o trilho, 36 no mouse e 40 no dedo), com
+o respiro de cima somado: o primeiro campo fica a 20px das abas e o que rola
+passa sob elas. A dissolução de cima segue a regra do rodapé — a rampa desliza
+nos primeiros 44px, presa à faixa —, depois de duas tentativas recusadas (zona
+presa e interruptor no primeiro passo).
+
+O borrão foi pedido nas duas pontas. A primeira versão montou no `DialogBody` as
+três camadas de `backdrop-filter` do `ScrollArea`, com a máscara seguindo a
+rampa: no Safari do simulador passou, mas na gaveta de vidro lia como um
+retângulo chapado — dentro de um casco que já borra, a camada não enxerga a
+página e repinta o fundo translúcido por cima (a tinta dobra), o mesmo motivo
+das linhas de tom da paleta. Saiu, e o `DialogBody` voltou ao que era.
+
+No lugar, `@utility scroll-edge-blur`: cada filho direto se desfoca sozinho
+(`filter: blur`, até 6px) ao atravessar a borda do rolável, por duas animações
+presas à posição (`animation-timeline: view()`), uma por ponta, cada uma nos
+primeiros 44px (`--scroll-fade-h`) da travessia do topo do filho — com a
+travessia inteira, o bloco alto do cartão borrava todo ainda à vista. A linha
+fica 16px para dentro da faixa: em repouso o primeiro campo, a 20px, não borra.
+Desfoque é transbordo de tinta, que não rola. Conferido no Safari do iPhone 18
+Pro Max (simulador) com a parcelada rolada: o bloco do valor entra sob as abas
+desfocado e esmaecido, sem retângulo nem tom, e o do cartão chega nítido.
+
+### Rodada 284 — dissolução e borrão viram uma peça só, numa faixa de 16px
+
+O dono pediu os dois sempre juntos, a faixa menor e a borda sem corte. O
+`DialogBody` passa a vestir `scroll-edge-blur` com a dissolução, e a faixa cai
+de 44 para 16px (`--scroll-fade-h` no próprio corpo, o `py-4` dele). O corte
+vinha da rampa maior que o recuo: com a faixa de 44 e o primeiro conteúdo a 16
+(20 sob as abas), o conteúdo encostava na borda com a zona ainda deslizando,
+parcialmente opaco; com a faixa igual ao recuo, ele só encosta com a zona
+inteira — transparente na borda, sólido 16px depois.
+
+O borrão de cada filho passou a existir só enquanto o que resta dele à vista cabe
+na faixa (em cima, `exit` de `100% − h` a `100%`; embaixo, `entry` de `0` a
+`h`). Preso ao topo do filho, o bloco do valor com a legenda borrava inteiro e
+sólido com quase tudo à vista. Sai o seletor dos filhos diretos e entra
+`:where(& > :not(:only-child), & > :only-child > *)`: com um invólucro único (o
+do formulário), quem borra são os campos; e um filho com animação própria fica
+com a dela. Conferido no Safari do iPhone 18 Pro Max (simulador): o rótulo que
+encosta nas abas some na faixa, os blocos à vista ficam nítidos.
+
+Na mesma rodada, 16px leu curto demais e o dono pediu o dobro: a faixa vai a 32px.
+Maior que o recuo do corpo, a zona deslizando voltaria a deixar o conteúdo
+encostar na borda ainda opaco; por isso cada ponta liga inteira no primeiro passo
+de 4px de rolagem daquele lado (`min(h, distância × 100)` em `--scroll-fade-top-h`
+e `-bottom-h` do `DialogBody`) — em repouso, sem zona em cima, e o primeiro campo
+não esmaece.
+
+### Rodada 285 — o vidro das modais numa camada, e a borda de 24px com borrão e dissolução juntos
+
+O borrão por bloco (`scroll-edge-blur`, rodada 283) não cobria a faixa: um bloco
+alto nunca borrava, e o rótulo que encostava nas abas cortava nítido. O borrão de
+faixa do iOS precisa da camada de `backdrop-filter`, que lia chapada porque o
+vidro (`glass-surface`) estava no casco do `Dialog` e da gaveta: com
+`backdrop-filter`, o casco é raiz de fundo, e a camada de dentro não vê a página
+— repinta a tinta translúcida por cima e a cor dobra. O vidro passou a uma camada
+filha (`ModalGlass`, `absolute inset-0 -z-10`, raio herdado, a mesma régua
+`modalSurfaceClassName`); o casco não isola mais. O `AlertDialog` ficou com o
+vidro no casco (sem borrão de dentro, e uma camada `absolute` rolaria com o
+`overflow-y-auto` dele); o `CommandDialog` já não pintava o `Content` pelo mesmo
+motivo. A gaveta que acha o "filho do meio" passou a ignorar a casca do corpo.
+
+O `DialogBody` virou casca + rolável: a máscara da dissolução no rolável e as três
+camadas de borrão progressivas (2, 4 e 6px) irmãs dele, na mesma faixa de 24px
+pedida pelo dono, de 0% no fim da faixa a 100% na borda. As camadas começam na
+borda visível (o fim das abas, `--scroll-fade-band-h`), e uma camada a mais
+borra a faixa inteira atrás das abas (os cantos da pílula). Cada ponta liga
+inteira no primeiro passo de 4px de rolagem daquele lado. A `scroll-edge-blur`
+saiu. Medido na prévia a 375px: zona de cima 40px em repouso (só a faixa) e 64
+rolando; camadas de cima 0 e 24; embaixo 24 nas duas.
+
+Na mesma rodada, a camada de borrão constante atrás das abas saiu: parava seco no
+fim da faixa e desenhava a linha dura e um retângulo ao lado da pílula. A máscara
+já é transparente ali (zero no fim das abas, cheia 24px abaixo), e o borrão fica
+nas três camadas progressivas.
+
+**Desfeito na mesma rodada.** Com o vidro na camada filha, as camadas de borrão
+ainda pintavam, no Chrome, uma faixa escura de borda dura sob as abas e sobre o
+campo do cartão (visto ao vivo na prévia): o conteúdo era cortado reto no fim
+dela. O vidro voltou ao casco (`ModalGlass` saiu, o `AlertDialog` e os testes
+voltaram), as camadas saíram e o `DialogBody` voltou a ser um nó só: a máscara da
+dissolução (24px, interruptor por ponta) e o borrão de cada campo
+(`scroll-edge-blur` de volta, preso ao que resta do campo à vista). Na prévia, o
+rótulo que encosta nas abas sai esmaecido e desfocado, e rolado até o fim o vão
+sob as abas fica limpo, sem faixa nem linha.
+
+### Rodada 286 — a seta sai do recorte: a casca do popover não rola, o viewport rola
+
+A seta do `Popover` e a do `HoverCard` não apareciam. O Radix põe a seta num
+`<span>` absoluto filho do conteúdo, fora da caixa (`translateY(100%)` em
+`side="top"`, a rotação de 180° em `bottom`), e o bloco que contém o span é a
+casca — `relative` no `Popover`, e no `HoverCard`, estático, o `backdrop-filter`
+da placa basta para fazer dela bloco de contenção. A casca era também o rolável
+(`overflow-y-auto`, para o teto `--radix-*-content-available-height`), então a
+seta caía no próprio recorte. Medido a 1280×900: no "Como calculamos"
+(`side="bottom"`) a seta ia de 472 a 478 com a caixa começando em 478, e o ponto
+dela acertava o cartão de trás; na prévia "Ana Ribeiro" do texto corrido
+(`side="top"`), `scrollHeight − clientHeight` = 6 em repouso — a placa rolava
+6px, com barra nativa nos sistemas de barra clássica — e a seta, recortada. O
+tour já contornava com `overflow-visible` na placa e perdia o teto; a dica do
+onboarding e a lista do dia no calendário de pagamentos tinham a seta sumida.
+
+A rolagem desceu para um nó **não posicionado** dentro da casca
+(`popover-viewport`, `hover-card-viewport`): `flex min-h-0 flex-1 flex-col`,
+`overflow-y-auto`, `rounded-[inherit]` para recortar no canto da placa como a
+casca fazia, `[gap:inherit]` e o recuo por `--popover-pad` /
+`--hover-card-pad`. Com o bloco de contenção da seta fora do rolável, o rolável
+não a recorta nem a conta. A casca guarda o teto, a largura, a superfície, o
+movimento e o `className`; o `has-[popover-body]:overflow-hidden` foi para o
+viewport. O `surface="none"` perdeu o `overflow-visible`, que virou redundante,
+e o tour perdeu o dele e ganhou o teto de volta.
+
+O recuo é do viewport, e não da casca, por causa do anel de foco: um filho rente
+à borda de um rolável tem o anel de 3px recortado, e com o recuo do lado de fora
+os botões do "Período" sairiam com o anel cortado. O `gap` mora na casca e o
+viewport o herda, então `className="gap-1"` continua valendo; um `p-*` no
+`className` vai para a casca, fora do rolável. As duas demonstrações que
+escreviam recuo no `className` (o "Período" do `Popover`, `p-1`, e o "Adicionar"
+do onboarding, `gap-1 p-2`, que somaria 8 + 10) passaram o recuo a um filho. O
+`pb-1.5` das opções da `DataTable` ficou: fora do rolável ele é o mesmo respiro.
+
+As setas de "tem mais" do `PopoverBody` e do `FormPickerPopover` continuam no
+lugar: o `useScrollFade` mede contra o pai do rolável, que agora é o viewport,
+e o viewport ocupa a casca inteira. Medido depois, a 1280×900: no "Como
+calculamos" o viewport transborda **0** nos dois lados (`side="bottom"` e, a
+1280×640, `side="top"`), e os três pontos ao longo da seta acertam o `polygon`
+dela; na "Ana Ribeiro" (`side="top"`, 256×60 como antes) também 0 e a seta
+acertável; com a casca presa a 60px, o viewport rola (100 em 60) e a seta
+continua à vista. O `Combobox` rola só a lista (344 em 288, o viewport 0); no
+seletor do `Form` a lista rola, o viewport não, e a seta de "tem mais" pousa a
+314–330, logo acima do rodapé em 332.
+
+
+**Refeito com a medida certa.** O borrão por campo não aparecia no bloco alto do
+valor (rótulo, campo e legenda): ele cruzava a faixa só esmaecendo. Um teste ao
+vivo na prévia, com uma camada de `backdrop-filter` injetada, mostrou a causa da
+faixa escura: com o vidro no casco, a cópia desfocada sai translúcida (halo sobre
+o nítido) e, onde a máscara já apagou o conteúdo, só dobra a tinta; com o vidro
+numa camada filha, sai opaca e desfoca de verdade. A captura com a faixa escura
+depois da primeira mudança era de antes do recompilar ("Compiling…" na tela).
+Volta o `ModalGlass`, voltam as camadas (sem a da faixa atrás das abas), a
+`scroll-edge-blur` sai de vez, a rampa da máscara do corpo passa a oito passos
+iguais (a sigmoide da casa, na faixa curta, lia como corte) e o borrão sobe para
+3, 6 e 9px.
+
+**As fatias.** Medido ao vivo na prévia (Chrome): a máscara não recorta o
+`backdrop-filter` — trocar a máscara de uma camada por meia largura não mudava a
+imagem —, então cada camada borrava com força cheia até a própria aresta, e as
+"duas linhas" eram as arestas de cima e de baixo dela. O borrão passou a 12
+fatias de 2px por ponta, sem máscara, com o raio caindo de 8px rente à borda
+(as abas em cima, o rodapé embaixo) a 0,05px no fim da faixa (`DIALOG_BODY_BLUR_STEPS`):
+em degraus de menos de 1,5px, a transição lê contínua. Visto na prévia rolada
+50px: a linha do valor entra sob as abas desfocando e esmaecendo, e o campo do
+cartão some embaixo do mesmo jeito, sem linha nem faixa escura. O `DialogHeader`
+e o `DialogFooter` passaram a `relative z-10`.
+
+### Rodada 286 — o borrão de borda sai; fica a dissolução
+
+O dono desistiu do borrão junto da dissolução (rodadas 283 a 285): nenhuma das
+versões ficou bonita — o borrão por campo não pegava blocos altos, e as camadas
+de `backdrop-filter` (com máscara ou em fatias) brigavam com o vidro da gaveta.
+Tudo voltou ao estado de antes: o `DialogBody`, o `Dialog`, o `AlertDialog` e os
+testes como estavam, o vidro de volta no casco da gaveta (`ModalGlass` saiu), sem
+`scroll-edge-blur`. Ficam do formulário de lançamento as abas no cabeçalho fixo e
+o corpo subindo por trás delas, com a dissolução padrão presa à faixa do trilho
+(`--scroll-fade-band-h`, agora 36 no mouse e 40 no dedo), na mesma regra do
+rodapé. Para quem tentar de novo: no Chrome a máscara não recorta o
+`backdrop-filter` (medido nesta série), e dentro de um casco de vidro a camada
+dobra a tinta.
+
+### Rodada 287 — toda sobreposição brota no gesto do menu da barra de baixo
+
+O dono viu os seletores do formulário (categoria, cartão, Total/Parcela)
+desdobrando do campo enquanto o menu "Mais" da barra de baixo brotava do botão,
+e pediu primeiro esses iguais, depois **todas as sobreposições** iguais.
+
+- `menu-morph`/`menu-unmorph` passam a ser o gesto de `field-bloom`,
+  `popover-sprout`, `context-menu-burst`, `hover-card-unveil`,
+  `date-picker-bloom` e `dialog-sprout`; o `Menubar` (painel e submenu), o
+  `NavigationMenu`, a paleta do `CommandDialog` e o `Tooltip` trocam o
+  tw-animate (e a mola do `motion`, na dica) por `menu-sprout`. O `menu-sprout`
+  aceita os estados `delayed-open`/`instant-open` da dica; no `Tooltip` o
+  `motion` só segura a dica montada nos 210ms da volta.
+- O raio de chegada virou `--morph-radius` (padrão `--radius-surface`): sem
+  ele o diálogo pousava nos 22px da superfície e saltava para os 28 do modal no
+  fim. O `dialog-sprout` declara `var(--radius-modal)`.
+- Saíram os keyframes `overlay-sprout`, `overlay-unsprout`, `overlay-unveil`,
+  `overlay-dissolve`, `dialog-sprout`, `dialog-unsprout`, `date-picker-bloom`,
+  `date-picker-wilt`, `field-unfold`, `field-fold`, o deslocamento por
+  `data-side` e o `menuMotionClassName`. As faixas de dentro (a cascata das
+  linhas, as faixas do popover e da prévia, as ondas do calendário, a subida do
+  conteúdo do diálogo) ficam.
+- Fora: o `Sheet` e a gaveta, que deslizam da borda (não são placas soltas), e
+  o `OnboardingTour`, que anima a própria placa (`motion="none"`).
+- Medido na prévia: o seletor de categoria e o `Select` do valor em `menu-morph`
+  com origem `0 0` (a aresta do campo); o diálogo em `menu-morph` do centro,
+  pousando em 28px.

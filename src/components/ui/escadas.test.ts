@@ -10,7 +10,6 @@ import {
 
 import { DISCLOSURE_ROW_HEIGHTS } from "@/lib/disclosure-classes"
 import { FIELD_CONTROL_HEIGHTS, fieldControlHeightClassName } from "@/lib/field-classes"
-import { bottomBarVariants } from "./bottom-bar"
 import { carouselGapClasses } from "./carousel"
 import { chartContainerVariants } from "./chart"
 import { containerSizes } from "./container"
@@ -88,22 +87,10 @@ const TABS = ["sm", "md", "lg", "xl"] as const
 const PAGINAS = ["xs", "sm", "md", "lg"] as const
 const CAMPO = ["sm", "md", "lg", "xl"] as const
 const CABECALHO = ["sm", "md", "lg"] as const
-const BARRA_DE_BAIXO = () => [false, true].map((labels) => bottomBarVariants({ labels }))
 
 const ESCADAS: Escada[] = [
-  {
-    nome: "BottomBar",
-    classes: BARRA_DE_BAIXO,
-    medidas: () =>
-      BARRA_DE_BAIXO().map((classes) => {
-        const m = classes.match(/\[--bottom-bar-h:([\d.]+)rem\]/)
-        return m ? Number(m[1]) : NaN
-      }),
-    // O marcador escreve a própria caixa em `setProperty(…, `${…}px`)`: valor
-    // de variável em runtime, e não classe. Essas linhas saem da varredura.
-    codigo: () =>
-      semComentarios(lerFonte("src/components/ui/bottom-bar.tsx")).replace(/^.*\.setProperty\(.*$/gm, ""),
-  },
+  // O `BottomBar` saiu daqui: com e sem rótulo mede 56 (a régua da tab bar do
+  // iOS 26), e o eixo `labels` deixou de ser escada de altura.
   calha("horizontal"),
   calha("vertical"),
   {
