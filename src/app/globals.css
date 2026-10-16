@@ -3020,6 +3020,40 @@
   }
 }
 
+/* O balanço da mídia do degrau `lg` da barra lateral (o ladrilho da carteira, o
+   avatar da conta) ao recolher e abrir: inclina para um lado, para o outro e
+   assenta, com um leve encolher, no tempo da mola da placa. Os dois estados usam
+   keyframes de nome diferente para a animação recomeçar a cada troca, e só depois
+   da primeira troca (`data-toggled` no invólucro), para não balançar ao carregar.
+   Anima `transform`, inteiro. Sem movimento reduzido. */
+@keyframes sidebar-media-sway-open {
+  0% { transform: rotate(0) scale(1); }
+  30% { transform: rotate(-7deg) scale(0.94); }
+  60% { transform: rotate(4deg) scale(1.02); }
+  82% { transform: rotate(-1.5deg) scale(1); }
+  100% { transform: rotate(0) scale(1); }
+}
+@keyframes sidebar-media-sway-close {
+  0% { transform: rotate(0) scale(1); }
+  30% { transform: rotate(-7deg) scale(0.94); }
+  60% { transform: rotate(4deg) scale(1.02); }
+  82% { transform: rotate(-1.5deg) scale(1); }
+  100% { transform: rotate(0) scale(1); }
+}
+@utility sidebar-media-sway {
+  [data-toggled] & > :first-child {
+    animation: sidebar-media-sway-open var(--duration-spring) var(--ease-out);
+  }
+  [data-toggled] [data-collapsible="icon"] & > :first-child {
+    animation-name: sidebar-media-sway-close;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    & > :first-child {
+      animation: none !important;
+    }
+  }
+}
+
 /* O conteúdo do diálogo chega aos poucos atrás da placa, como as linhas da paleta:
    cada peça surge do desfoque no lugar (`menu-content-in`, nunca deslocada — o corpo
    rola e tem dissolução), em três ondas — o cabeçalho, as linhas do corpo, o rodapé —,

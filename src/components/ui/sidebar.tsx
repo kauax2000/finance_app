@@ -169,9 +169,14 @@ function SidebarProvider({
   // O estado interno. `open`/`onOpenChange` controlam de fora.
   const [_open, _setOpen] = React.useState(defaultOpen)
   const open = openProp ?? _open
+  // Se a barra já foi recolhida ou aberta nesta página: o balanço da mídia do degrau
+  // `lg` (`@utility sidebar-media-sway`) só toca depois disso, e não ao carregar.
+  const [alternou, setAlternou] = React.useState(false)
+
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(open) : value
+      setAlternou(true)
       if (setOpenProp) {
         setOpenProp(openState)
       } else {
@@ -261,6 +266,7 @@ function SidebarProvider({
 
   const casca = {
     "data-slot": "sidebar-wrapper",
+    "data-toggled": alternou || undefined,
     style: {
       "--sidebar-width": SIDEBAR_WIDTH,
       "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
@@ -1421,7 +1427,7 @@ const sidebarMenuButtonVariants = cva(
         // recuo de 16 sem mexer a mídia, e com a caixa a 8 da borda o raio concêntrico é
         // 20, o mesmo da aberta (o recuo de 8 é dela: a placa recolhida publica o de 16,
         // o dos itens de 32).
-        lg: "h-12 text-sm group-data-[collapsible=icon]:size-12! group-data-[collapsible=icon]:-m-2 group-data-[collapsible=icon]:p-2! group-data-[variant=floating]:concentric group-data-[collapsible=icon]:[--radius-inset:--spacing(2)]",
+        lg: "h-12 text-sm group-data-[collapsible=icon]:size-12! group-data-[collapsible=icon]:-m-2 group-data-[collapsible=icon]:p-2! group-data-[variant=floating]:concentric group-data-[collapsible=icon]:[--radius-inset:--spacing(2)] sidebar-media-sway",
       },
     },
     defaultVariants: {

@@ -128,7 +128,10 @@ describe("as versões do Sidebar", () => {
   it("na placa flutuante, a carteira e a conta seguem a curva do canto", () => {
     // O degrau lg mora nos cantos da placa: concêntrico (28 − 8 = 20 aberta). Recolhida o
     // botão fica a 16 do canto, e o recuo publicado sobe junto (28 − 16 = 12, a linha).
-    expect(CODIGO).toContain('lg: "h-12 text-sm group-data-[collapsible=icon]:size-12! group-data-[collapsible=icon]:-m-2 group-data-[collapsible=icon]:p-2! group-data-[variant=floating]:concentric group-data-[collapsible=icon]:[--radius-inset:--spacing(2)]"')
+    expect(CODIGO).toContain('lg: "h-12 text-sm group-data-[collapsible=icon]:size-12! group-data-[collapsible=icon]:-m-2 group-data-[collapsible=icon]:p-2! group-data-[variant=floating]:concentric group-data-[collapsible=icon]:[--radius-inset:--spacing(2)] sidebar-media-sway"')
+    // O balanço da mídia ao recolher e abrir, só depois da primeira troca.
+    expect(CODIGO).toContain('"data-toggled": alternou || undefined,')
+    expect(lerFonte("src/app/globals.css")).toMatch(/\[data-toggled\] \[data-collapsible="icon"\] & > :first-child \{\s*animation-name: sidebar-media-sway-close;/)
     expect(CODIGO).toContain("group-data-[variant=floating]:[--radius-inset:--spacing(2)] group-data-[collapsible=icon]:[--radius-inset:--spacing(4)]!")
   })
 

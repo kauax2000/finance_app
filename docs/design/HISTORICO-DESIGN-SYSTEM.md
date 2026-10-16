@@ -26945,3 +26945,18 @@ mesma curva (`--duration-slow`, `--ease-emphasized`) — sem isso a conta passar
 saltar, e os ícones do menu já pulavam 8px na troca. Medido: o ladrilho e a conta
 parados em todos os quadros, nos dois sentidos; o ícone do Painel deslizando de 24
 a 32 e de volta.
+
+### Rodada 301 — a carteira e a conta balançam ao recolher
+
+O dono pediu um leve balanço no avatar e no ladrilho, acompanhando a barra que
+recolhe. A mídia do degrau `lg` (o primeiro filho do `SidebarMenuButton size="lg"`)
+ganhou a `@utility sidebar-media-sway`: inclina −7° e encolhe a 0,94, volta a +4°
+e 1,02, passa por −1,5° e assenta, em `--duration-spring` e `--ease-out`, em
+`transform` inteiro. Aberta e recolhida usam keyframes de nome diferente
+(`-open`, `-close`) para recomeçar a cada troca; o `SidebarProvider` marca
+`data-toggled` no invólucro na primeira troca, e sem ele a regra não vale — a
+página não balança ao carregar. Movimento reduzido: sem animação. Medido com o
+relógio da animação avançado à mão (a prévia estava oculta, e o relógio parado):
+−7° e 0,94 aos 150ms, +4° e 1,02 aos 300ms, −1,5° aos 410ms, 0° aos 500ms; nada
+ao carregar.
+
