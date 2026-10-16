@@ -97,6 +97,8 @@ describe("as peças", () => {
   it("a busca do app veste o vidro do campo da paleta", () => {
     expect(fonte("src/components/layout/app-header.tsx")).toMatch(/<TopBarSearch[\s\S]*?\bplate\b[\s\S]*?\/>/)
     expect(CODIGO).toContain('searchFieldSurfaceClassName[plate ? "plate" : "field"]')
+    // O fio fica dentro da caixa: o `ring-1` pintava por fora, sobre o arco de 2px do brilho.
+    expect(CODIGO).toContain('plate && "bg-clip-border ring-0 border-foreground/10"')
   })
 
   it("o sino do app veste a pílula da placa, como o botão de recolher", () => {

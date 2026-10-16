@@ -654,8 +654,10 @@ function TopBarSearch({
             searchFieldShapeClassName,
             searchFieldSizeClassName.lg,
             searchFieldSurfaceClassName[plate ? "plate" : "field"],
-            // O vidro vai até o anel: a borda transparente do botão deixaria 1px vazado entre os dois.
-            plate && "bg-clip-border",
+            // O fio do vidro mora dentro da caixa, na borda do botão, e não no `ring-1` (que
+            // pinta 1px por fora e cobria metade do arco de 2px do brilho de marca). O vidro
+            // vai até a borda: com o fundo no `padding-box`, sobrava 1px vazado.
+            plate && "bg-clip-border ring-0 border-foreground/10",
             "w-full justify-start font-normal text-muted-foreground",
             // A pílula não realça nem acende o texto: é um campo, e campo não muda de cor no cursor.
             "[--button-hover-fill:transparent] dark:[--button-hover-fill:transparent]",

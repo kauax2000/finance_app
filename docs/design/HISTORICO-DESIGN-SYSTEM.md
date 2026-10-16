@@ -27006,3 +27006,10 @@ sombra no meio, as pontas pareciam mais altas que ela, e num botão de 36 a
 sombra grande vira mancha. Ela vinha da alça solta na borda da placa; dentro
 da barra, o anel e a tinta separam do que rola por baixo. A alça `edge` do
 laboratório é outro botão e fica como está.
+
+O arco do brilho de marca da busca encolheu com o vidro: ele mora de 2px por
+fora da pílula até a aresta, e o `ring-1` da superfície `plate` pinta 1px por
+fora — cobria metade do arco (no campo, o fio era a borda, por dentro). Na
+pílula do `TopBarSearch plate` o fio volta para a borda do botão
+(`ring-0 border-foreground/10`, a mesma tinta e espessura), com o vidro até ela
+(`bg-clip-border`).
