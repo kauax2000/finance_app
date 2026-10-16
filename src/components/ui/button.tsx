@@ -76,18 +76,19 @@ const buttonVariants = cva(
         secondary: `bg-clip-border bg-secondary text-secondary-foreground [--button-hover-fill:var(--secondary-hover)] ${REALCE} aria-expanded:bg-secondary aria-expanded:text-secondary-foreground`,
         // O realce é chapado: a cor do peso (`--button-hover-fill`) pinta por
         // cima do repouso e esmaece em `--duration-fast`. `tertiary`, `outline`
-        // e `floating` usam a tinta do texto a 12% (escurece no claro e clareia
-        // no escuro com um valor só); `destructive` 22% (25% no escuro). O par
+        // e `floating` usam `--accent` a 50%, o realce das linhas da barra lateral
+        // (`bg-sidebar-accent/50`; no escuro os dois tokens são o mesmo 0,269),
+        // pedido do dono; `destructive` 22% (25% no escuro). O par
         // `active:` é necessário: `hover:` compila dentro de `@media (hover:
         // hover)`, e sem ele o terciário não responde ao toque.
-        tertiary: `[--button-hover-fill:color-mix(in_oklab,var(--foreground)_12%,transparent)] hover:text-foreground active:text-foreground aria-expanded:text-foreground ${REALCE_EXPANDIDO}`,
+        tertiary: `[--button-hover-fill:color-mix(in_oklab,var(--accent)_50%,transparent)] hover:text-foreground active:text-foreground aria-expanded:text-foreground ${REALCE_EXPANDIDO}`,
         // O fio é o `--border` também no escuro (era o `--input`, 0,31 chapado): com o
         // `bg-clip-padding` da base ele soma à página, no contraste da barra lateral.
-        outline: `border-border bg-background [--button-hover-fill:color-mix(in_oklab,var(--foreground)_12%,transparent)] hover:text-foreground active:text-foreground aria-expanded:text-foreground dark:bg-input-fill/30 ${REALCE_EXPANDIDO}`,
+        outline: `border-border bg-background [--button-hover-fill:color-mix(in_oklab,var(--accent)_50%,transparent)] hover:text-foreground active:text-foreground aria-expanded:text-foreground dark:bg-input-fill/30 ${REALCE_EXPANDIDO}`,
         // A pílula flutuante: a receita das placas soltas (`--popover` chapado,
         // anel de 1px, sombra) num botão, com a tinta do `tertiary` e o realce
         // chapado. `bg-clip-border` evita 1px da página entre a placa e o anel.
-        floating: `bg-clip-border bg-popover text-muted-foreground shadow-sm ring-1 ring-foreground/10 [--button-hover-fill:color-mix(in_oklab,var(--foreground)_12%,transparent)] hover:text-foreground active:text-foreground aria-expanded:text-foreground ${REALCE_EXPANDIDO}`,
+        floating: `bg-clip-border bg-popover text-muted-foreground shadow-sm ring-1 ring-foreground/10 [--button-hover-fill:color-mix(in_oklab,var(--accent)_50%,transparent)] hover:text-foreground active:text-foreground aria-expanded:text-foreground ${REALCE_EXPANDIDO}`,
         destructive: `bg-destructive/10 text-destructive-muted-foreground [--button-hover-fill:color-mix(in_oklab,var(--destructive)_22%,transparent)] dark:[--button-hover-fill:color-mix(in_oklab,var(--destructive)_25%,transparent)] focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 ${REALCE}`,
         // O link é sublinhado por um `::after` que vive em `scaleX(0)` com a
         // origem à direita e, no cursor, troca a origem para a esquerda e vai a

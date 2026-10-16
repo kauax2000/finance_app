@@ -87,11 +87,11 @@ describe("resposta ao toque do Button", () => {
       const resolvido = cn(cru)
       expect(resolvido, variant).toMatch(/transition-\[[^\]]*\btranslate\b[^\]]*--button-hover\]/)
     }
-    // Os pesos sem cor realçam com a tinta do texto a 12%: um valor só, que escurece no claro e
-    // clareia no escuro. O `destructive` tem par `dark:`.
+    // Os pesos sem cor realçam com `--accent` a 50%, o realce das linhas da barra lateral
+    // (`bg-sidebar-accent/50`). O `destructive` tem par `dark:`.
     for (const variant of ["tertiary", "outline", "floating"] as const) {
       expect(buttonVariants({ variant }), variant).toContain(
-        "[--button-hover-fill:color-mix(in_oklab,var(--foreground)_12%,transparent)]"
+        "[--button-hover-fill:color-mix(in_oklab,var(--accent)_50%,transparent)]"
       )
     }
     expect(buttonVariants({ variant: "destructive" })).toMatch(/dark:\[--button-hover-fill:color-mix\(/)

@@ -26872,3 +26872,15 @@ variável e não pelo fundo, que a camada do realce cobre. Medido: a camada aces
 é `oklab(0.269 / 0.5)` sobre o `--sidebar` da pílula, a mesma cor do realce da
 carteira sobre a placa.
 
+
+### Rodada 297 — o realce dos botões é o das linhas da barra
+
+Depois do botão de recolher, o dono pediu o mesmo realce em todo botão: o sino, as
+setas e o mês do painel, o "Este mês". `tertiary`, `outline` e `floating` trocam a
+tinta do texto a 12% por `--accent` a 50% (`--button-hover-fill`), o
+`bg-sidebar-accent/50` das carteiras. No escuro `--accent` e `--sidebar-accent`
+são o mesmo 0,269, e o realce fica idêntico; no claro, 0,93 contra 0,915, cada um
+no token da sua superfície. O realce no claro fica mais leve que o de antes
+(os 12% do texto escureciam mais). `secondary` e `destructive` mantêm os seus.
+Medido: com o realce aceso, o sino, as setas, o mês e o "Este mês" pintam
+`oklab(0.269 / 0.5)`, a mesma camada da carteira.
