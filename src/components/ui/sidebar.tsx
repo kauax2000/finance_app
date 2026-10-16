@@ -1184,6 +1184,11 @@ function SidebarContent({ className, children, ...props }: React.ComponentProps<
         data-slot="sidebar-menu-marker"
         className={cn(
           "pointer-events-none absolute top-0 left-0 -z-10 h-(--sidebar-ativo-h) w-(--sidebar-ativo-w) rounded-row bg-sidebar-accent [translate:var(--sidebar-ativo-x)_var(--sidebar-ativo-y)]",
+          // Nunca mais larga que a lista menos o recuo dos dois lados, também durante a
+          // viagem (o `max-width` vence a largura animada): ao recolher, o botão vai a 32
+          // de uma vez e a viagem encolhe a pílula em ~480ms, mas a placa fecha antes —
+          // sem o teto ela ficava larga sobrando da barra que já fechava.
+          "max-w-[calc(100%_-_var(--sidebar-ativo-x)*2)]",
           !medido && "hidden"
         )}
       />

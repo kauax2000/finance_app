@@ -44,6 +44,10 @@ describe("as versões do Sidebar", () => {
     expect(CODIGO).toContain("if (!menuAberto()) agendar(false, 200)")
   })
 
+  it("a pílula do ativo nunca passa da lista, nem durante a viagem de recolher", () => {
+    expect(CODIGO).toContain("max-w-[calc(100%_-_var(--sidebar-ativo-x)*2)]")
+  })
+
   it("ao lado do floating, a barra do topo passa por trás da placa", () => {
     // A folga é variável do invólucro, nos três estados e espiando.
     expect(CODIGO).toContain("md:[--sidebar-gap:var(--sidebar-width)]")

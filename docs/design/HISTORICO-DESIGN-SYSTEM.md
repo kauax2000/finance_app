@@ -26776,3 +26776,11 @@ Ficou a viagem, e o destino passou a ser redirecionado: enquanto ela corre, cada
 medida nova do mesmo ativo troca o quadro final do trajeto pela caixa de agora
 (`redirecionarViagem`, `setKeyframes` no efeito em curso), no mesmo relógio e na
 mesma curva. Vale para `Tabs`, `BottomBar` e `ToggleGroup`, que dividem o hook.
+
+Depois, o dono viu a pílula ainda larga ao recolher, com a placa já fechando: o
+botão vai a 32 de uma vez e a viagem (480ms, partida lenta) encolhe a pílula
+depois da placa. A pílula ganhou teto, `max-width` de 100% da lista menos o
+recuo dos dois lados, que vence a largura animada. Medido a 1280: aos 121ms a
+placa em 200 e a pílula em 176; aos 278ms a placa em 67 e a pílula em 47;
+assentadas, 32 dentro de 64.
+
