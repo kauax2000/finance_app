@@ -113,6 +113,10 @@ describe("O movimento do que se sobrepõe à tela", () => {
     expect(revela).not.toMatch(/\brise\b|--rise-distance/)
     expect(revela.match(/animation: menu-content-in var\(--duration-spring\) var\(--ease-out\) backwards;/g)).toHaveLength(3)
     expect(revela).toContain('[data-slot="dialog-body"] > :only-child > *')
+    // Só na abertura: o que entra depois (os campos de outra aba) não passa pelo desfoque.
+    expect(revela.match(/&\[data-state="open"\]:not\(\[data-revealed\]\)/g)).toHaveLength(5)
+    expect(ui("dialog")).toContain('return { "data-revealed": revelado || undefined, onAnimationEnd: aoTerminar }')
+    expect(ui("alert-dialog")).toContain("const revelacao = useRevelacao(onAnimationEnd)")
   })
 
   it("nenhum filho de rolável com dissolução se desloca ao abrir", () => {

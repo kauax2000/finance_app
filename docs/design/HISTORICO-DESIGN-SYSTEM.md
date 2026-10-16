@@ -26810,3 +26810,11 @@ Cancelar 200, Salvar 230. O `Turbopack` serviu por um tempo o CSS compilado de
 uma versão velha do `globals.css` (o cache da transformação do PostCSS, que nem
 o reinício limpou); apagar `.next/dev` resolveu.
 
+Na sequência, a troca de aba do formulário de lançamento: os campos que entravam
+com a aba nova passavam pelo mesmo desfoque, porque a regra valia para qualquer
+peça montada com o diálogo aberto. A entrada passou a valer só na abertura: quando
+a última peça termina (`animationend` de `menu-content-in` sem nenhuma outra
+correndo na placa), o `useRevelacao` marca `data-revealed` no `Dialog` e no
+`AlertDialog`, e a regra é `[data-state="open"]:not([data-revealed])`. Medido:
+abrir anima 10 peças; trocar para Parcelada e voltar, nenhuma.
+

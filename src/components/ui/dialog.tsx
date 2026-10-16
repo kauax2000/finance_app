@@ -413,6 +413,25 @@ const dialogContentVariants = cva(
   }
 )
 
+/**
+ * A entrada do conteúdo (`@utility dialog-reveal`) vale só na abertura: quando a
+ * última peça termina de surgir, a placa ganha `data-revealed` e a regra sai. Sem
+ * isso, o que entra depois — os campos de outra aba do formulário — surgia do
+ * desfoque de novo a cada troca.
+ */
+function useRevelacao(onAnimationEnd?: React.AnimationEventHandler<HTMLDivElement>) {
+  const [revelado, setRevelado] = React.useState(false)
+  const aoTerminar = (e: React.AnimationEvent<HTMLDivElement>) => {
+    onAnimationEnd?.(e)
+    if (revelado || e.animationName !== "menu-content-in") return
+    const ainda = e.currentTarget
+      .getAnimations({ subtree: true })
+      .some((a) => "animationName" in a && a.animationName === "menu-content-in" && a.playState === "running")
+    if (!ainda) setRevelado(true)
+  }
+  return { "data-revealed": revelado || undefined, onAnimationEnd: aoTerminar }
+}
+
 function DialogContent({
   className,
   children,
@@ -421,6 +440,7 @@ function DialogContent({
   showCloseButton = true,
   ref,
   onClickCapture,
+  onAnimationEnd,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> &
   VariantProps<typeof dialogContentVariants> & {
@@ -428,6 +448,7 @@ function DialogContent({
   }) {
   const { gaveta, pending } = React.useContext(DialogEstadoContext)
   const aoClicarLink = useLinkQueFecha(onClickCapture)
+  const revelacao = useRevelacao(onAnimationEnd)
 
   // No telefone, com `surface="auto"`: a gaveta do `Sheet`. A gaveta alta é a
   // do formulário (`fixed`), a da tela cheia e a dos passos (esta por classe,
@@ -438,6 +459,7 @@ function DialogContent({
         ref={ref}
         onClickCapture={onClickCapture}
         fillMobileViewport={layout === "fixed" || size === "full"}
+        onAnimationEnd={onAnimationEnd}
         aria-busy={pending || undefined}
         className={cn(
           "has-[[data-slot=dialog-steps]]:h-(--drawer-h)",
@@ -460,6 +482,7 @@ function DialogContent({
         data-slot="dialog-content"
         data-layout={layout ?? "auto"}
         aria-busy={pending || undefined}
+        {...revelacao}
         className={cn(
           dialogContentVariants({ size, layout }),
           showCloseButton && "[--dialog-close:--spacing(11)]",
@@ -781,6 +804,7 @@ function DialogSteps({
 }
 
 export {
+  useRevelacao,
   // A pergunta de descarte; o `Sheet` a faz por `usePedidoDeFechar`.
   ConfirmarDescarte,
   Dialog,

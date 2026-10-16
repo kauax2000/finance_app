@@ -3013,9 +3013,11 @@
    30ms entre irmãs. As peças são achadas pelo `data-slot`, com ou sem o `<form>` no
    meio (o filho direto da placa costuma ser ele, e animá-lo inteiro lia como um bloco
    só); o corpo com um embrulho só anima os filhos do embrulho. A placa entra pelo
-   `tw-animate` do `dialogContentVariants` (a entrada da paleta, rodada 293). */
+   `tw-animate` do `dialogContentVariants` (a entrada da paleta, rodada 293). Só na
+   abertura: terminada a última peça, a placa ganha `data-revealed` (`useRevelacao`)
+   e o que entra depois — os campos de outra aba — aparece sem o desfoque. */
 @utility dialog-reveal {
-  &[data-state="open"] :is([data-slot="dialog-header"], [data-slot="alert-dialog-header"]) > * {
+  &[data-state="open"]:not([data-revealed]) :is([data-slot="dialog-header"], [data-slot="alert-dialog-header"]) > * {
     animation: menu-content-in var(--duration-spring) var(--ease-out) backwards;
     /* A escada escreve do segundo irmão em diante; a primeira peça da onda sai na base. */
     animation-delay: var(--stagger-base);
@@ -3024,9 +3026,9 @@
     --stagger-cap: 3;
     @apply stagger-ladder;
   }
-  &[data-state="open"] [data-slot="dialog-body"] > :not(:only-child),
-  &[data-state="open"] [data-slot="dialog-body"] > :only-child > *,
-  &[data-state="open"] > :is([data-slot="alert-dialog-list"], [data-slot="alert-dialog-confirm-input"], [data-slot="alert-dialog-error"]) {
+  &[data-state="open"]:not([data-revealed]) [data-slot="dialog-body"] > :not(:only-child),
+  &[data-state="open"]:not([data-revealed]) [data-slot="dialog-body"] > :only-child > *,
+  &[data-state="open"]:not([data-revealed]) > :is([data-slot="alert-dialog-list"], [data-slot="alert-dialog-confirm-input"], [data-slot="alert-dialog-error"]) {
     animation: menu-content-in var(--duration-spring) var(--ease-out) backwards;
     /* A escada escreve do segundo irmão em diante; a primeira peça da onda sai na base. */
     animation-delay: var(--stagger-base);
@@ -3035,7 +3037,7 @@
     --stagger-cap: 6;
     @apply stagger-ladder;
   }
-  &[data-state="open"] :is([data-slot="dialog-footer"], [data-slot="alert-dialog-footer"]) > * {
+  &[data-state="open"]:not([data-revealed]) :is([data-slot="dialog-footer"], [data-slot="alert-dialog-footer"]) > * {
     animation: menu-content-in var(--duration-spring) var(--ease-out) backwards;
     /* A escada escreve do segundo irmão em diante; a primeira peça da onda sai na base. */
     animation-delay: var(--stagger-base);

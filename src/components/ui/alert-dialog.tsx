@@ -20,6 +20,7 @@ import {
   DialogHeader,
   dialogContentVariants,
   dialogTitleClassName,
+  useRevelacao,
 } from "@/components/ui/dialog"
 import { Field, FieldControl, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -102,11 +103,13 @@ function AlertDialogContent({
   className,
   size,
   onEscapeKeyDown,
+  onAnimationEnd,
   ref,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Content> &
   Pick<VariantProps<typeof dialogContentVariants>, "size">) {
   const { pending } = React.useContext(AlertDialogContext)
+  const revelacao = useRevelacao(onAnimationEnd)
   return (
     <AlertDialogPortal>
       <AlertDialogOverlay />
@@ -115,6 +118,7 @@ function AlertDialogContent({
         data-slot="alert-dialog-content"
         data-layout="auto"
         aria-busy={pending || undefined}
+        {...revelacao}
         className={cn(
           dialogContentVariants({ size, layout: "auto" }),
           // O teto que o `auto` do `Dialog` não tem: a confirmação com campo
