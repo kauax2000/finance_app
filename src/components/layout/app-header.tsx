@@ -132,6 +132,7 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                     listen={false}
                     slash={false}
                     collapse="lg"
+                    size="md"
                     glow
                     placeholder="Buscar telas e ações…"
                 />

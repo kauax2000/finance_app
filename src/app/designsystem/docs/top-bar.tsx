@@ -437,7 +437,7 @@ export default function TopBarDoc() {
           { prop: "TopBarStart · TopBarContent · TopBarActions", type: "ComponentProps<'div'> & { phone? }", description: "As pontas e o meio. phone é o que mostram abaixo de md; null esconde no telefone." },
           { prop: "TopBarTitle", type: "ComponentProps<'h1'> & { phone?, pageTitle?, scrollToTop?, asChild? }", description: "O nome da tela. pageTitle recebe o título que sobe do PageHeader; tocar nele no telefone sobe ao topo." },
           { prop: "TopBarAction", type: "Button & { label, count?, countLabel?, shortcut?, tooltip? }", description: "O botão de ícone da barra, com a dica e a contagem no nome." },
-          { prop: "TopBarSearch", type: "{ onOpen, label?, placeholder?, shortcut?, slash?, listen?, collapse?, glow? }", description: "A pílula de busca com a tecla, que vira ícone abaixo da quebra, e os atalhos ⌘K e /." },
+          { prop: "TopBarSearch", type: "{ onOpen, label?, placeholder?, shortcut?, slash?, listen?, collapse?, glow?, size? }", description: "A pílula de busca com a tecla, que vira ícone abaixo da quebra, e os atalhos ⌘K e /. size é o degrau da escada: lg 36 (o padrão) ou md 32 (a do app); o ícone acompanha." },
           { prop: "TopBarProgress", type: "{ value?, label? }", description: "O fio de carregamento na aresta de baixo; sem value, indeterminado." },
           { prop: "TopBarSkeleton", type: "{ size?, actions?, start? }", description: "A barra esperando, no SkeletonGroup." },
         ]}
