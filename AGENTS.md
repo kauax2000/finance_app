@@ -1196,8 +1196,8 @@ declaração de `background-color` no trilho).
     passagem); a outra em foco mostra a prévia do halo a 45%, e as demais
     esmaecem a tinta. Sem peso nem marcador no fim.
   - Teto vertical
-    `max-h-[min(var(--radix-*-content-available-height),var(--menu-max-h))]`
-    (288px) e horizontal `max-w-(--radix-*-content-available-width)`, escritos
+    `max-h-[min(var(--radix-dropdown-menu-content-available-height),var(--menu-max-h))]`
+    (288px) e horizontal `max-w-(--radix-dropdown-menu-content-available-width)`, escritos
     por extenso em cada menu. `FormPickerPopoverContent` para em 384px; o
     `panel` devolve o teto (`[--menu-max-h:100dvh]`).
 - **`DropdownMenu`**: `size` é largura (`auto`, `sm` 176 … `xl` 224) — não

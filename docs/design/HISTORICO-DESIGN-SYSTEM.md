@@ -22874,7 +22874,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
 
 #### Component rules — Os três menus ganharam teto horizontal
 
-- **Os três menus ganharam teto horizontal.** `max-w-(--radix-*-content-available-width)`
+- **Os três menus ganharam teto horizontal.** `max-w-(--radix-dropdown-menu-content-available-width)`
   entrou junto do teto vertical, que já existia. Sem ele um menu largo perto da
   borda transbordava na horizontal — o Radix já publicava a variável e ninguém
   a lia.
@@ -23628,7 +23628,7 @@ o fill). `--input-fill` não se mexe: serve `Switch`, `Slider`, `Progress` e
 - **Um dropdown não passa de 288px de altura** (rodada 174, a pedido do dono):
   `--menu-max-h` (`--spacing(72)`, o mesmo teto da lista do `Command`) é
   declarado na superfície flutuante (`menuPanelSurfaceClassName`) e lido no
-  `max-h-[min(var(--radix-*-content-available-height),var(--menu-max-h))]`
+  `max-h-[min(var(--radix-dropdown-menu-content-available-height),var(--menu-max-h))]`
   do `Select` e dos três menus — o espaço disponível continua valendo quando
   é menor. O `FormPickerPopoverContent`, com busca e rodapé, para em 384px,
   para a lista ficar nos mesmos ~288. O `DropdownMenu variant="panel"` não é
@@ -26515,7 +26515,7 @@ A seta do `Popover` e a do `HoverCard` não apareciam. O Radix põe a seta num
 `side="top"`, a rotação de 180° em `bottom`), e o bloco que contém o span é a
 casca — `relative` no `Popover`, e no `HoverCard`, estático, o `backdrop-filter`
 da placa basta para fazer dela bloco de contenção. A casca era também o rolável
-(`overflow-y-auto`, para o teto `--radix-*-content-available-height`), então a
+(`overflow-y-auto`, para o teto `--radix-dropdown-menu-content-available-height`), então a
 seta caía no próprio recorte. Medido a 1280×900: no "Como calculamos"
 (`side="bottom"`) a seta ia de 472 a 478 com a caixa começando em 478, e o ponto
 dela acertava o cartão de trás; na prévia "Ana Ribeiro" do texto corrido
