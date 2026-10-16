@@ -5,7 +5,7 @@ import * as React from "react"
 import { CreditCardIcon as CreditCardMicro } from "@heroicons/react/16/solid"
 import { ChartPieIcon, CreditCardIcon, HomeIcon, UsersIcon } from "@heroicons/react/20/solid"
 import { AuthShowcase } from "@/components/auth/showcase/auth-showcase"
-import type { AuthSceneId } from "@/components/auth/showcase/scene-context"
+import { sceneFamily, type AuthSceneId, type SceneFamily } from "@/components/auth/showcase/scene-context"
 import { AppWordmark } from "@/components/layout/app-wordmark"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -364,6 +364,18 @@ const CENAS = [
   "recovery.done",
 ] as const satisfies readonly AuthSceneId[]
 
+/** A cena se escolhe em dois eixos — a família e o passo dela —, porque 17 pílulas numa fileira passam da página. */
+const FAMILIAS = ["login", "invite", "register", "recovery"] as const satisfies readonly SceneFamily[]
+const ROTULO_DA_FAMILIA: Record<SceneFamily, string> = {
+  login: "login",
+  register: "cadastro",
+  recovery: "recuperação",
+  invite: "convite",
+}
+/** O passo é o id sem a família; a cena que é só a família ("login", "register") é o passo "início". */
+const passoDa = (cena: AuthSceneId) => cena.slice(sceneFamily(cena).length + 1) || "início"
+const cenasDa = (familia: SceneFamily) => CENAS.filter((c) => sceneFamily(c) === familia)
+
 const JANELAS = ["1024", "1280", "1440", "1920"] as const
 type Janela = (typeof JANELAS)[number]
 /** O campo de marca naquela janela (o aside de 5/11 da largura, menos as margens), por extenso. */
@@ -383,13 +395,26 @@ const ROTULO_DA_JANELA: Record<Janela, string> = {
 function DemoNoApp() {
   const [cena, setCena] = React.useState<AuthSceneId>("login")
   const [janela, setJanela] = React.useState<Janela>("1440")
+  const familia = sceneFamily(cena)
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <Controles
         empilhar
         inicio={
           <>
-            <Eixo rotulo="cena" valores={CENAS} valor={cena} onChange={setCena} />
+            <Eixo
+              rotulo="família"
+              valores={FAMILIAS}
+              valor={familia}
+              onChange={(f) => setCena(cenasDa(f)[0])}
+              rotulos={ROTULO_DA_FAMILIA}
+            />
+            <Eixo
+              rotulo="passo"
+              valores={cenasDa(familia).map(passoDa)}
+              valor={passoDa(cena)}
+              onChange={(p) => setCena(cenasDa(familia).find((c) => passoDa(c) === p) ?? cena)}
+            />
             <Eixo rotulo="janela" valores={JANELAS} valor={janela} onChange={setJanela} rotulos={ROTULO_DA_JANELA} />
           </>
         }
