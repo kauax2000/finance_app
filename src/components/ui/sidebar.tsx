@@ -948,9 +948,11 @@ const SIDEBAR_MOBILE_TOQUE = [
  * O fundo pinta sob a borda (`bg-clip-border`): o `Button` traz borda
  * transparente de 1px com o fundo no `padding-box`, e sobrava 1px da página
  * entre o preenchimento e o anel.
+ * O realce é o das linhas da barra (`bg-sidebar-accent/50`), pela variável do
+ * `Button` (`--button-hover-fill`), e não pelo fundo, que a camada do realce cobre.
  */
 const SIDEBAR_TRIGGER_FLOATING =
-  "md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:rounded-full md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:bg-clip-border md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:bg-sidebar md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:shadow-lg md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:ring-1 md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:ring-foreground/10"
+  "md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:[--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)] md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:rounded-full md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:bg-clip-border md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:bg-sidebar md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:shadow-lg md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:ring-1 md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:ring-foreground/10"
 
 function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
   const { resizable } = useSidebar()

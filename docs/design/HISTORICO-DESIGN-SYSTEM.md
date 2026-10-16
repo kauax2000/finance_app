@@ -26864,3 +26864,11 @@ assentam abaixo dela sem ninguém medir). O telefone segue em 48, com o
 teste 2 da régua. Medido a 1280: barra 52, os três controles a 8 do topo e 8 da
 base, `--top-bar-bottom` 52px; a 375, barra 48 e base 48.
 
+Depois, o realce: a pílula do botão de recolher acendia com o realce do
+`tertiary` (12% do texto), mais claro que o das linhas da barra. O
+`SIDEBAR_TRIGGER_FLOATING` passou a declarar `--button-hover-fill` com
+`--sidebar-accent` a 50% — o `bg-sidebar-accent/50` das carteiras —, pela
+variável e não pelo fundo, que a camada do realce cobre. Medido: a camada acesa
+é `oklab(0.269 / 0.5)` sobre o `--sidebar` da pílula, a mesma cor do realce da
+carteira sobre a placa.
+

@@ -85,6 +85,10 @@ describe("as versões do Sidebar", () => {
     // O painel da barra deixa a placa pintar por fora da costura.
     expect(CODIGO).toContain('className="overflow-visible!"')
     expect(CODIGO).toContain("md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:rounded-full")
+    // O realce da pílula é o das linhas da barra (`bg-sidebar-accent/50`), pela variável do `Button`.
+    expect(CODIGO).toContain(
+      "md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:[--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]"
+    )
     // Pelo invólucro e não pelo irmão: no redimensionável barra e conteúdo
     // moram em painéis diferentes, e o `peer` não os alcançava.
     expect(CODIGO).not.toMatch(/peer-data-\[variant|\.peer\[data-variant/)
