@@ -83,7 +83,7 @@ describe("as peças", () => {
     expect(app).toContain('collapse="lg"')
     expect(app).toMatch(/<TopBarSearch[\s\S]*?\bglow\b[\s\S]*?\/>/)
     expect(app).toContain('placeholder="Buscar telas e ações…"')
-    expect(app).toContain("lg:w-full lg:max-w-sm lg:justify-center")
+    expect(app).toContain("lg:w-full lg:max-w-xs xl:max-w-sm lg:justify-center")
     expect(app).toContain("lg:flex-1 lg:basis-0 lg:justify-end")
     expect(app).not.toContain('className="w-56"')
     expect(fonte("src/components/layout/notification-bell-link.tsx")).toContain("<TopBarAction")

@@ -48,6 +48,8 @@ describe("as versões do Sidebar", () => {
     // A folga é variável do invólucro, nos três estados e espiando.
     expect(CODIGO).toContain("md:[--sidebar-gap:var(--sidebar-width)]")
     expect(CODIGO).toContain("md:has-[[data-slot=sidebar][data-collapsible=offcanvas]]:[--sidebar-gap:0px]")
+    // `none` é coluna em fluxo, sem `data-collapsible`: sem folga.
+    expect(CODIGO).toContain("md:has-[[data-slot=sidebar]:not([data-collapsible])]:[--sidebar-gap:0px]")
     expect(CODIGO).toContain(
       "md:has-[[data-slot=sidebar][data-collapsible=icon]]:[--sidebar-gap:calc(var(--sidebar-width-icon)+(--spacing(4)))]"
     )

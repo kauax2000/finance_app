@@ -268,7 +268,10 @@ function SidebarProvider({
       "group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar",
       // A folga que a barra do topo reserva, para quem passa por trás dela (ver
       // `SIDEBAR_INSET_BEHIND`). Espiando vale a do trilho, porque a placa abre por cima.
-      "md:[--sidebar-gap:var(--sidebar-width)] md:has-[[data-slot=sidebar][data-collapsible=offcanvas]]:[--sidebar-gap:0px]",
+      // `collapsible="none"` é uma coluna em fluxo, sem `data-collapsible` (os outros
+      // ramos sempre o escrevem, vazio quando aberta): sem a folga, a barra deslizaria
+      // por cima da coluna e roubaria o clique.
+      "md:[--sidebar-gap:var(--sidebar-width)] md:has-[[data-slot=sidebar][data-collapsible=offcanvas]]:[--sidebar-gap:0px] md:has-[[data-slot=sidebar]:not([data-collapsible])]:[--sidebar-gap:0px]",
       "md:has-[[data-slot=sidebar][data-collapsible=icon]]:[--sidebar-gap:calc(var(--sidebar-width-icon)+(--spacing(4)))] md:has-[[data-slot=sidebar][data-peek]]:[--sidebar-gap:calc(var(--sidebar-width-icon)+(--spacing(4)))]",
       className
     ),

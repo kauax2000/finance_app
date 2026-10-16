@@ -26663,7 +26663,7 @@ resto converse com o que foi feito nos diálogos e na barra lateral.
 - **A folga é variável do invólucro**, sem `100vw` (nas prévias do catálogo
   `vw` é a janela inteira). Margem e `padding` transicionam na curva da folga.
 - **A busca é o `TopBarSearch`** com `glow` e `collapse="lg"`, na coluna
-  `max-w-sm` centrada, entre pontas de peso igual (`flex-1 basis-0`).
+  `max-w-xs` (320 até 1279px) e `xl:max-w-sm` (384 a partir de 1280) centrada, entre pontas de peso igual (`flex-1 basis-0`).
 
 **O que mudou.**
 - `sidebar.tsx`: o invólucro publica `--sidebar-gap` (aberta
@@ -26673,7 +26673,7 @@ resto converse com o que foi feito nos diálogos e na barra lateral.
   `margin` e `padding`). O redimensionável mantém `--sidebar-inset-rule` a 0.
 - `app-header.tsx`: coluna central com o `TopBarSearch`; o sino, sozinho, nas
   ações da direita; no telefone o recorte de tempo passa a ficar junto da
-  lupa (`max-lg:-me-1` guarda 4px até o sino).
+  lupa (`max-lg:-me-1` devolve os 4px que a lupa tinha do sino).
 - Docs: o fio e a nota do `floating` no catálogo, os bullets `Sidebar` e
   `TopBar` do `AGENTS.md`.
 
@@ -26699,6 +26699,17 @@ teste não tinha sessão. A ordem do telefone (recorte, lupa, sino) e o
 centro real da busca no app seguem por conferir. A barra de seleção do
 `DataTable` é portalizada no `body`, fora do `isolate`, e não ganhou
 centralização pelo conteúdo.
+
+**Exceção consciente.** A busca acesa não é a única peça de marca de toda tela
+do app: `(app)/error.tsx` (`RouteErrorFallback`) e o 404 do cartão
+(`credit-cards/[cardId]/page-client.tsx`) mostram o numeral em arco-íris do
+`EmptyStateCode` sob ela. Fica: o brilho da busca é neutro em repouso, e o
+numeral é a única peça de marca acesa nessas telas de erro.
+
+**Revisão final.** `collapsible="none"` é coluna em fluxo, sem
+`data-collapsible`: ganhou folga 0 (`:not([data-collapsible])`). No app
+(`toggle="edge"`) a ponta vazia devolve o `gap-2` (`-me-2`) e a pílula cai no
+centro exato. A coluna da busca é `max-w-xs` até 1279px e `xl:max-w-sm` daí.
 
 **Ficou fora.** O telefone, a `TopBar variant="floating"`, a frase rolante, a
 altura, a placa da barra lateral e o redimensionável.

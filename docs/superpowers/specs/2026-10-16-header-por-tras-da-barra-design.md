@@ -37,8 +37,9 @@ sino, e ao rolar o vidro para na borda da coluna. O pedido do dono:
   Não se usa `100vw`: dentro das prévias do catálogo `vw` é a janela inteira.
 - **A busca é o `TopBarSearch` do catálogo**: `collapse="lg"` (ícone abaixo de
   1024px, pílula a partir dele), `glow` (o brilho de marca — a única peça de
-  marca das telas do app; nenhuma tela tem outra), numa coluna de até 384px
-  (`max-w-sm`) **centrada na área visível** — título à esquerda e ações à
+  marca do cromo do app; só as telas de erro, com o numeral do `EmptyStateCode`,
+  acendem outra), numa coluna de até 320px (`max-w-xs`) até 1279px e 384px
+  (`max-w-sm`) a partir de 1280 **centrada na área visível** — título à esquerda e ações à
   direita com o mesmo peso (`flex-1 basis-0`), como no `DsTopBar`. O texto é
   "Buscar telas e ações…" (a paleta do app busca telas, ações do "+ Adicionar"
   e sub-páginas). A frase que rola do catálogo fica no catálogo.

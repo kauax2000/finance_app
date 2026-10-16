@@ -1428,7 +1428,7 @@ declaração de `background-color` no trilho).
 - **`TopBar`**: `variant="floating"`, `titleAlign`, `size` (`lg` 64), área
   segura por `--top-bar-safe-area`. **`TopBarAction`** — **nenhuma tela escreve
   o `span` da contagem nem embrulha um botão da barra num `Tooltip` à mão**;
-  `TopBarSearch` (⌘K e `/`; no app, com `glow` e `collapse="lg"`, centrada numa coluna `max-w-sm` entre pontas de peso igual), `TopBarProgress`, `TopBarSkeleton`. **Uma árvore
+  `TopBarSearch` (⌘K e `/`; no app, com `glow` e `collapse="lg"`, centrada numa coluna `max-w-xs` (320 até 1279px; `xl:max-w-sm`, 384 a partir de 1280) entre pontas de peso igual), `TopBarProgress`, `TopBarSkeleton`. **Uma árvore
   só**: as pontas aceitam `phone` — **nenhuma barra escreve duas árvores com
   `md:hidden` e `hidden md:contents`**. `hideOnScroll`.
 - **`BottomBar`**: a pele do `Tabs floating` (pílula `--popover` com o anel,

@@ -93,7 +93,11 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
 
     return (
         <TopBar position="auto" surface="scroll">
+            {/* No app o gatilho só existe no telefone (`toggle="edge"`): no desktop
+                a ponta fica vazia e ainda custaria o `gap-2` da barra, deslocando
+                a pílula 4px do centro. */}
             <TopBarStart
+                className="md:has-[>[data-slot=top-bar-wide]:empty]:-me-2"
                 phone={
                     mobileBackHref ? (
                         // O voltar pelo histórico (rodada 232) fica desligado aqui:
@@ -124,7 +128,7 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                 da lupa, para a ordem ficar recorte, lupa, sino; o `-me-1`
                 devolve os 4px que a lupa tinha do sino. Fica fora do `phone`:
                 lá o sino e a busca montariam duas vezes. */}
-            <div className="flex shrink-0 items-center gap-1 max-lg:-me-1 lg:w-full lg:max-w-sm lg:justify-center">
+            <div className="flex shrink-0 items-center gap-1 max-lg:-me-1 lg:w-full lg:max-w-xs xl:max-w-sm lg:justify-center">
                 <span className="contents md:hidden">{chromeSlot?.dateFilter}</span>
                 {/* A paleta já escuta ⌘K; o `/` ela não escuta, então a
                     pílula não o anuncia. */}
