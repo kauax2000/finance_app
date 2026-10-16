@@ -26901,3 +26901,9 @@ Medido a 1280: o Painel em 132 aberta, no meio da transição e recolhida; o bot
 224×36 aberto e 32×32 recolhido, centrado na faixa (82), com o ícone no centro do
 trilho (40).
 
+Na sequência, o ritmo: da carteira ao "+ Adicionar" eram 24px (o ladrilho termina
+a 56, a caixa da carteira traz 8 de folga embaixo e o grupo mais 8 em cima), e do
+botão ao Painel, 16. Nivelado pela menor: o grupo do botão perdeu o recuo de cima
+(`pt-0`, no `app-sidebar`). Medido: 16 e 16 aberta, 18 e 18 recolhida (o botão de
+32 centrado na faixa de 36); o Painel em 124 nos dois estados.
+

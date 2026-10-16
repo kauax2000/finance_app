@@ -70,7 +70,9 @@ export function AppSidebar() {
             */}
             <WorkspaceSwitcher />
             <SidebarContent>
-                <SidebarGroup>
+                {/* Sem o recuo de cima: da carteira ao botão fica o mesmo 16 do botão à
+                    primeira linha do menu (a carteira já traz 8 de folga embaixo). */}
+                <SidebarGroup className="pt-0">
                     <QuickActionButton variant="sidebar" />
                 </SidebarGroup>
                 <SidebarGroup>
