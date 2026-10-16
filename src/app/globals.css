@@ -3478,11 +3478,11 @@
      `scroll-fade-material` ser um preset de variáveis e não uma segunda utility escrevendo
      as mesmas propriedades. O precedente é o `glass-control`. */
   background-color: var(--scroll-fade-blur-tint, transparent);
-  backdrop-filter: blur(
+  -webkit-backdrop-filter: blur(
       calc(var(--scroll-fade-blur-r) * var(--scroll-fade-blur-i, 1))
     )
     saturate(var(--scroll-fade-blur-sat, 1));
-  -webkit-backdrop-filter: blur(
+  backdrop-filter: blur(
       calc(var(--scroll-fade-blur-r) * var(--scroll-fade-blur-i, 1))
     )
     saturate(var(--scroll-fade-blur-sat, 1));
@@ -3558,11 +3558,11 @@
      `scroll-fade-material` ser um preset de variáveis e não uma segunda utility escrevendo
      as mesmas propriedades. O precedente é o `glass-control`. */
   background-color: var(--scroll-fade-blur-tint, transparent);
-  backdrop-filter: blur(
+  -webkit-backdrop-filter: blur(
       calc(var(--scroll-fade-blur-r) * var(--scroll-fade-blur-i, 1))
     )
     saturate(var(--scroll-fade-blur-sat, 1));
-  -webkit-backdrop-filter: blur(
+  backdrop-filter: blur(
       calc(var(--scroll-fade-blur-r) * var(--scroll-fade-blur-i, 1))
     )
     saturate(var(--scroll-fade-blur-sat, 1));
@@ -3623,20 +3623,22 @@
  * de uma propriedade só, `backdrop-filter`.
  */
 @utility glass-surface {
-  backdrop-filter: blur(var(--glass-surface-blur, 24px))
-    saturate(var(--glass-surface-sat, 1.5));
+  /* O prefixo antes: o Turbopack (lightningcss) junta as duas numa declaração só e
+     fica com a última; com o `-webkit-` por último o Chrome ficava sem borrão. */
   -webkit-backdrop-filter: blur(var(--glass-surface-blur, 24px))
+    saturate(var(--glass-surface-sat, 1.5));
+  backdrop-filter: blur(var(--glass-surface-blur, 24px))
     saturate(var(--glass-surface-sat, 1.5));
 
   @media (prefers-reduced-transparency: reduce) {
-    backdrop-filter: none;
     -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
   /* O escopo opaco (`[data-opaque]`, o palco do `Showcase`): sem borrão, e a cor
      sólida chega pelo `reduced-transparency:` de quem veste. */
   &:is([data-opaque][data-opaque] *) {
-    backdrop-filter: none;
     -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 }
 

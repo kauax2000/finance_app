@@ -595,3 +595,11 @@ describe("a superfície de vidro", () => {
         ).toEqual([])
     })
 })
+describe("o borrão chega ao Chrome", () => {
+    it("o -webkit-backdrop-filter vem antes do backdrop-filter", () => {
+        // O Turbopack (lightningcss) junta as duas declarações numa só e fica com a última:
+        // com o prefixo por último, o Chrome (que não lê o prefixo) ficava sem vidro.
+        const codigo = semComentarios(CSS)
+        expect(codigo).not.toMatch(/(^|[\s;{])backdrop-filter\s*:[^;]*;\s*-webkit-backdrop-filter\s*:/)
+    })
+})
