@@ -479,6 +479,7 @@ function TopBarAction({
   countLabel,
   shortcut,
   tooltip = true,
+  plate = false,
   className,
   children,
   ...props
@@ -491,6 +492,8 @@ function TopBarAction({
   /** A tecla (`"mod+k"`), na dica e no `aria-keyshortcuts`. Só mostra — quem escuta é a tela. */
   shortcut?: string
   tooltip?: boolean
+  /** A pílula da placa da barra lateral, como o botão de recolher (do `md` para cima). */
+  plate?: boolean
 }) {
   const temContagem = typeof count === "number" && count > 0
   const nome = temContagem ? label + ", " + (countLabel ?? count) : label
@@ -503,6 +506,7 @@ function TopBarAction({
       data-slot="top-bar-action"
       className={cn(
         "relative pointer-coarse:after:absolute pointer-coarse:after:-inset-0.5 pointer-coarse:after:content-['']",
+        plate && TOP_BAR_PLATE,
         className
       )}
       {...props}
@@ -531,6 +535,18 @@ function TopBarAction({
   )
 }
 
+/**
+ * A pílula da placa, a do botão de recolher da barra lateral
+ * (`SIDEBAR_TRIGGER_FLOATING`): a tinta da placa, o anel de 1px, a sombra e o
+ * realce em `--sidebar-accent` a 50%. Do `md` para cima, onde a barra corre ao
+ * lado da placa; no telefone o botão segue `tertiary`.
+ */
+const TOP_BAR_PLATE =
+  "md:rounded-full md:bg-clip-border md:bg-sidebar md:shadow-lg md:ring-1 md:ring-foreground/10 md:[--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]"
+
+/** A mesma pílula na busca, que só aparece da quebra para cima; o realce fica de fora (campo não acende no cursor). */
+const TOP_BAR_PLATE_PILL = "bg-clip-border bg-sidebar shadow-lg ring-1 ring-foreground/10"
+
 /** As classes por extenso: classe montada em tempo de execução não chega ao CSS. */
 const BUSCA_QUEBRA = {
   md: { icone: "md:hidden", pilula: "hidden md:flex" },
@@ -554,6 +570,7 @@ function TopBarSearch({
   listen = true,
   collapse = "md",
   glow = false,
+  plate = false,
   className,
 }: {
   onOpen: () => void
@@ -570,6 +587,8 @@ function TopBarSearch({
   collapse?: "md" | "lg"
   /** O brilho de marca na borda da pílula (uma por tela). */
   glow?: boolean
+  /** A pílula da placa da barra lateral no lugar do campo, como o botão de recolher. */
+  plate?: boolean
   className?: string
 }) {
   const abrir = React.useRef(onOpen)
@@ -608,7 +627,8 @@ function TopBarSearch({
         // pela barra inteira e engoliria o toque no ☰ do telefone.
         className={cn(
           "relative rounded-full text-muted-foreground pointer-coarse:after:absolute pointer-coarse:after:-inset-0.5 pointer-coarse:after:content-['']",
-          BUSCA_QUEBRA[collapse].icone
+          BUSCA_QUEBRA[collapse].icone,
+          plate && TOP_BAR_PLATE
         )}
       >
         <MagnifyingGlassIcon className="opacity-70" aria-hidden />
@@ -629,7 +649,7 @@ function TopBarSearch({
           className={cn(
             searchFieldShapeClassName,
             searchFieldSizeClassName.lg,
-            searchFieldSurfaceClassName.field,
+            plate ? TOP_BAR_PLATE_PILL : searchFieldSurfaceClassName.field,
             "w-full justify-start font-normal text-muted-foreground",
             // A pílula não realça nem acende o texto: é um campo, e campo não muda de cor no cursor.
             "[--button-hover-fill:transparent] dark:[--button-hover-fill:transparent]",

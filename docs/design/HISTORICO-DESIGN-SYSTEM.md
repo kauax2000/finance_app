@@ -26981,3 +26981,14 @@ regra pergunta ao invólucro (`[data-toggled]:has([data-slot="sidebar"][data-
 collapsible="icon"]) &`). Medido a cada 100ms ao recolher: 0, −2,5, −3, −1,3,
 −0,2, +0,1, 0; ao abrir, o espelho; nada ao carregar.
 
+### Rodada 302 — a busca e o sino vestem a pílula da placa
+
+O dono pediu o fundo do botão de recolher na busca do cabeçalho e o sino igual
+a ele. `TopBarAction` e `TopBarSearch` ganham `plate`: a receita do
+`SIDEBAR_TRIGGER_FLOATING` (`bg-sidebar`, `ring-1 ring-foreground/10`,
+`shadow-lg`, realce em `--sidebar-accent` a 50%), do `md` para cima — no
+telefone o sino e a lupa seguem `tertiary`, como o gatilho, que só vira pílula
+ao lado da placa. Na pílula de busca o realce fica de fora (é um campo) e o fio
+do campo sai: o anel de 1px faz o papel dele. Medido: os três a 36 de altura,
+mesma tinta e mesma sombra. `top-bar-versions.test.ts` confere que a receita é
+a mesma do gatilho, parte a parte.

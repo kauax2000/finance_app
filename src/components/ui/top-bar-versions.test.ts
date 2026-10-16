@@ -93,6 +93,17 @@ describe("as peças", () => {
     expect(app).not.toContain('className="w-56"')
     expect(fonte("src/components/layout/notification-bell-link.tsx")).toContain("<TopBarAction")
   })
+
+  it("a busca e o sino do app vestem a pílula da placa, como o botão de recolher", () => {
+    expect(fonte("src/components/layout/app-header.tsx")).toMatch(/<TopBarSearch[\s\S]*?\bplate\b[\s\S]*?\/>/)
+    expect(fonte("src/components/layout/notification-bell-link.tsx")).toMatch(/<TopBarAction[\s\S]*?\bplate\b/)
+    // A mesma receita do gatilho da barra lateral: tinta, anel, sombra e realce.
+    const gatilho = fonte("src/components/ui/sidebar.tsx")
+    for (const parte of ["bg-sidebar", "shadow-lg", "ring-1", "ring-foreground/10", "[--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]"]) {
+      expect(gatilho).toContain(`wrapper:${parte}`)
+      expect(CODIGO).toContain(`md:${parte}`)
+    }
+  })
 })
 
 describe("os comportamentos", () => {

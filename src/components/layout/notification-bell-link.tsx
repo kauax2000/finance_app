@@ -43,6 +43,7 @@ export function NotificationBellLink() {
         <TopBarAction
             type="button"
             label="Notificações"
+            plate
             count={unreadCount}
             countLabel={`${unreadCount} não ${unreadCount === 1 ? "lida" : "lidas"}`}
             aria-expanded={isOpen}
