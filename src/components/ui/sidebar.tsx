@@ -908,9 +908,10 @@ const SIDEBAR_INSET_BAR =
  * `margin` e `padding` na lista de propriedades.
  * `isolate` porque a placa (`--z-sticky`) tem de ficar acima da barra, que vem
  * depois no DOM com a mesma camada; dentro do `main` a barra segue acima do
- * conteúdo da página. O fio volta (`--sidebar-inset-rule` fica em 1px): ele corre
- * por baixo da placa até a borda, e não fica pendurado. Sem `vw` na largura (a
- * barra é `w-auto`): nas prévias do catálogo `vw` é a janela, e não a caixa.
+ * conteúdo da página. O fio volta (nada zera `--sidebar-inset-rule` aqui, então
+ * vale o 1px de reserva do `TopBar`): ele corre por baixo da placa até a borda,
+ * e não fica pendurado. Sem `vw` na largura (a barra é `w-auto`): nas prévias do
+ * catálogo `vw` é a janela, e não a caixa.
  * No redimensionável o painel recorta, e a barra não passa por trás.
  */
 const SIDEBAR_INSET_BEHIND = [
