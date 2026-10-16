@@ -266,6 +266,10 @@ function SidebarProvider({
     } as React.CSSProperties,
     className: cn(
       "group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar",
+      // A folga que a barra do topo reserva, para quem passa por trás dela (ver
+      // `SIDEBAR_INSET_BEHIND`). Espiando vale a do trilho, porque a placa abre por cima.
+      "md:[--sidebar-gap:var(--sidebar-width)] md:has-[[data-slot=sidebar][data-collapsible=offcanvas]]:[--sidebar-gap:0px]",
+      "md:has-[[data-slot=sidebar][data-collapsible=icon]]:[--sidebar-gap:calc(var(--sidebar-width-icon)+(--spacing(4)))] md:has-[[data-slot=sidebar][data-peek]]:[--sidebar-gap:calc(var(--sidebar-width-icon)+(--spacing(4)))]",
       className
     ),
     ...props,
@@ -873,7 +877,8 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
  * O fio da tira de topo do conteúdo, publicado como variável. Em
  * `variant="sidebar"` o cabeçalho encosta no `border-r` da barra; no `floating`
  * esse `border-r` não existe e o fio ficaria pendurado. As tiras de superfície
- * não têm fio (quem marca o limite é o respiro).
+ * não têm fio (quem marca o limite é o respiro). Só o redimensionável zera o
+ * fio: no outro a barra corre por trás da placa (`SIDEBAR_INSET_BEHIND`).
  * É variável, e não seletor de grupo: `in-*` e `group-*` compilam com `:where()`
  * e perdem para a classe base. Nasce no `SidebarInset`.
  * Quem pergunta pela variante é o invólucro, e não o irmão: no modo
@@ -887,12 +892,33 @@ const SIDEBAR_INSET_RULE =
 /**
  * Ao lado do `floating`, a barra do topo não pinta: a placa flutua sobre a
  * página e uma faixa de fundo no topo leria como um segundo chrome. Só o repouso;
- * a barra `glass`, e a `scroll` depois de rolar, mantêm o vidro. O próprio
+ * a barra `glass`, e a `scroll` depois de rolar, mantêm o vidro (que corre por
+ * baixo da placa até a borda da janela). O próprio
  * conteúdo também não pinta ao lado do `floating`: no redimensionável cobriria a
  * sombra da placa.
  */
 const SIDEBAR_INSET_BAR =
   "md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:[&_[data-slot=top-bar]:not([data-surface=glass]):not([data-scrolled=true])]:bg-transparent md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:bg-transparent"
+
+/**
+ * Ao lado do `floating` (não redimensionável), a barra do topo passa por trás da
+ * placa: recua pela folga (`--sidebar-gap`) e a devolve como `padding`, então o
+ * conteúdo dela fica onde está e a superfície vai à borda esquerda da janela. A
+ * duração e a curva já são as da folga no próprio `TopBar`; aqui só entram
+ * `margin` e `padding` na lista de propriedades.
+ * `isolate` porque a placa (`--z-sticky`) tem de ficar acima da barra, que vem
+ * depois no DOM com a mesma camada; dentro do `main` a barra segue acima do
+ * conteúdo da página. O fio volta (`--sidebar-inset-rule` fica em 1px): ele corre
+ * por baixo da placa até a borda, e não fica pendurado. Sem `vw` na largura (a
+ * barra é `w-auto`): nas prévias do catálogo `vw` é a janela, e não a caixa.
+ * No redimensionável o painel recorta, e a barra não passa por trás.
+ */
+const SIDEBAR_INSET_BEHIND = [
+  "md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:isolate",
+  "md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:[&>[data-slot=top-bar]]:-ms-(--sidebar-gap) md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:[&>[data-slot=top-bar]]:w-auto",
+  "md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:[&>[data-slot=top-bar]]:ps-[calc(var(--sidebar-gap)+--spacing(4))]",
+  "md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:[&>[data-slot=top-bar]]:transition-[background-color,border-color,translate,margin,padding]",
+].join(" ")
 
 /**
  * O toque no painel do telefone: as linhas de 28 e 32 sobem a 40 e 44 (o alvo do
@@ -956,7 +982,7 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
         // `--radius-modal` e anel, sem sombra); a margem anima.
         "relative flex min-w-0 w-full flex-1 flex-col bg-background transition-[margin] duration-(--duration-slow) ease-(--ease-emphasized) md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:m-2 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:rounded-modal md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ring-1 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ring-foreground/10",
         "md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ml-0 md:group-has-[[data-slot=sidebar][data-variant=inset][data-state=collapsed]]/sidebar-wrapper:ml-2",
-        SIDEBAR_INSET_RULE,
+        SIDEBAR_INSET_BEHIND,
         SIDEBAR_INSET_BAR,
         className
       )}

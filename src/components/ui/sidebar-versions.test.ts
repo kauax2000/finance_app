@@ -44,6 +44,31 @@ describe("as versões do Sidebar", () => {
     expect(CODIGO).toContain("if (!menuAberto()) agendar(false, 200)")
   })
 
+  it("ao lado do floating, a barra do topo passa por trás da placa", () => {
+    // A folga é variável do invólucro, nos três estados e espiando.
+    expect(CODIGO).toContain("md:[--sidebar-gap:var(--sidebar-width)]")
+    expect(CODIGO).toContain("md:has-[[data-slot=sidebar][data-collapsible=offcanvas]]:[--sidebar-gap:0px]")
+    expect(CODIGO).toContain(
+      "md:has-[[data-slot=sidebar][data-collapsible=icon]]:[--sidebar-gap:calc(var(--sidebar-width-icon)+(--spacing(4)))]"
+    )
+    expect(CODIGO).toContain(
+      "md:has-[[data-slot=sidebar][data-peek]]:[--sidebar-gap:calc(var(--sidebar-width-icon)+(--spacing(4)))]"
+    )
+    // A barra recua pela folga e a devolve como padding, na curva da folga.
+    const F = "md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:"
+    expect(CODIGO).toContain(F + "isolate")
+    expect(CODIGO).toContain(F + "[&>[data-slot=top-bar]]:-ms-(--sidebar-gap)")
+    expect(CODIGO).toContain(F + "[&>[data-slot=top-bar]]:w-auto")
+    expect(CODIGO).toContain(F + "[&>[data-slot=top-bar]]:ps-[calc(var(--sidebar-gap)+--spacing(4))]")
+    expect(CODIGO).toContain(
+      F + "[&>[data-slot=top-bar]]:transition-[background-color,border-color,translate,margin,padding]"
+    )
+    // Uma vez só (o ramo não redimensionável): no redimensionável o painel recorta.
+    expect([...CODIGO.matchAll(/SIDEBAR_INSET_BEHIND,/g)]).toHaveLength(1)
+    // Sem `100vw`: nas prévias do catálogo `vw` é a janela, não a caixa.
+    expect(CODIGO).not.toContain("100vw")
+  })
+
   it("ao lado do floating, o cabeçalho não pinta e o gatilho é pílula", () => {
     expect(CODIGO).toContain(
       "md:group-has-[[data-slot=sidebar][data-variant=floating]]/sidebar-wrapper:[&_[data-slot=top-bar]:not([data-surface=glass]):not([data-scrolled=true])]:bg-transparent"
@@ -336,6 +361,8 @@ describe("as versões do Sidebar", () => {
       // que o `SidebarInset` publica, e a tela só a lê.
       expect(CODIGO).toContain("--sidebar-inset-rule:1px")
       expect(CODIGO).toContain("--sidebar-inset-rule:0px")
+      // Só o redimensionável zera o fio: no outro a barra corre por trás da placa.
+      expect([...CODIGO.matchAll(/SIDEBAR_INSET_RULE,/g)]).toHaveLength(1)
       // Quem desenha o cabeçalho é o `TopBar`.
       const header = lerFonte("src/components/ui/top-bar.tsx")
       expect(header).toContain("var(--sidebar-inset-rule,1px)")
