@@ -26641,3 +26641,7 @@ dela, e saía perto de 0,28.
   cartões, e o tom tem fio e fundo da mesma família.
 - `card-versions.test.ts` passa a varrer `src/components` atrás de `border` +
   `bg-card` sem o recorte.
+- Depois, o `Button outline`: no escuro ele trocava o fio pelo `--input`
+  (0,31 chapado), mais claro que o anel da lateral. Saiu o `dark:border-input`;
+  com o `bg-clip-padding` da base, o `--border` soma à página como na lateral.
+  Vale para as setas e o mês da barra do painel e para todo botão `outline`.

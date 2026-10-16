@@ -81,7 +81,9 @@ const buttonVariants = cva(
         // `active:` é necessário: `hover:` compila dentro de `@media (hover:
         // hover)`, e sem ele o terciário não responde ao toque.
         tertiary: `[--button-hover-fill:color-mix(in_oklab,var(--foreground)_12%,transparent)] hover:text-foreground active:text-foreground aria-expanded:text-foreground ${REALCE_EXPANDIDO}`,
-        outline: `border-border bg-background [--button-hover-fill:color-mix(in_oklab,var(--foreground)_12%,transparent)] hover:text-foreground active:text-foreground aria-expanded:text-foreground dark:border-input dark:bg-input-fill/30 ${REALCE_EXPANDIDO}`,
+        // O fio é o `--border` também no escuro (era o `--input`, 0,31 chapado): com o
+        // `bg-clip-padding` da base ele soma à página, no contraste da barra lateral.
+        outline: `border-border bg-background [--button-hover-fill:color-mix(in_oklab,var(--foreground)_12%,transparent)] hover:text-foreground active:text-foreground aria-expanded:text-foreground dark:bg-input-fill/30 ${REALCE_EXPANDIDO}`,
         // A pílula flutuante: a receita das placas soltas (`--popover` chapado,
         // anel de 1px, sombra) num botão, com a tinta do `tertiary` e o realce
         // chapado. `bg-clip-border` evita 1px da página entre a placa e o anel.

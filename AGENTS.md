@@ -961,7 +961,8 @@ declaração de `background-color` no trilho).
   pintando por baixo dele o fio somava ao `--card` (~0,28, claro demais); a
   lateral desenha o anel por fora, sobre a página (~0,23). No claro o fio é
   chapado e nada muda. `card-versions.test.ts` reprova `border` + `bg-card` sem
-  o recorte em `src/components`.
+  o recorte em `src/components`. O `Button outline` segue a mesma régua: o fio é o
+  `--border` também no escuro (era o `--input`).
 - **`Card`**: `variant` é a superfície (`outline` — o padrão —, `elevated`,
   `muted`, `plain`, `dashed` — o vazio ou o "adicionar" —, `brand`, uma por
   tela); `padding` é o ritmo (`none` | `sm` | **`md`** | `lg`). **`padding="none"`
