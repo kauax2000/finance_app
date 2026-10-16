@@ -1424,7 +1424,8 @@ declaração de `background-color` no trilho).
   **Ao lado do `floating`, o `TopBar` filho do `SidebarInset` passa por trás
   da placa**: o invólucro publica `--sidebar-gap` (aberta, trilho, espiando,
   offcanvas) e o `SidebarInset` é `isolate`; nenhuma tela escreve a margem nem
-  o recuo. No redimensionável não passa (o painel recorta) e o fio fica a 0.
+  o recuo. Sem fio nos dois modos: rolada, ela se separa do conteúdo só pelo
+  vidro. No redimensionável não passa (o painel recorta).
 - **`TopBar`**: `variant="floating"`, `titleAlign`, `size` (`lg` 64), área
   segura por `--top-bar-safe-area`. **`TopBarAction`** — **nenhuma tela escreve
   o `span` da contagem nem embrulha um botão da barra num `Tooltip` à mão**;

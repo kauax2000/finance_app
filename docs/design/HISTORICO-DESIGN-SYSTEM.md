@@ -26658,8 +26658,9 @@ resto converse com o que foi feito nos diálogos e na barra lateral.
   folga (`--sidebar-gap`) e devolve o recuo como `padding`: o conteúdo fica
   onde está e a superfície vai à borda da janela. A placa (`--z-sticky`) fica
   por cima porque o `SidebarInset` é `isolate`.
-- **O fio volta** (estava a 0 por ficar pendurado na borda da placa). No
-  redimensionável a barra não passa por trás e o fio segue a 0.
+- **O fio continua a 0** ao lado do `floating`, nos dois modos. A primeira
+  versão o devolvia (correndo por baixo da placa até a borda); o dono viu ao
+  vivo e pediu sem fio: rolada, a barra se separa do conteúdo só pelo vidro.
 - **A folga é variável do invólucro**, sem `100vw` (nas prévias do catálogo
   `vw` é a janela inteira). Margem e `padding` transicionam na curva da folga.
 - **A busca é o `TopBarSearch`** com `glow` e `collapse="lg"`, na coluna

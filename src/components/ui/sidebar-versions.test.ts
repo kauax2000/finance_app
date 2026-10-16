@@ -364,7 +364,7 @@ describe("as versões do Sidebar", () => {
       expect(CODIGO).toContain("--sidebar-inset-rule:1px")
       expect(CODIGO).toContain("--sidebar-inset-rule:0px")
       // Só o redimensionável zera o fio: no outro a barra corre por trás da placa.
-      expect([...CODIGO.matchAll(/SIDEBAR_INSET_RULE,/g)]).toHaveLength(1)
+      expect([...CODIGO.matchAll(/SIDEBAR_INSET_RULE,/g)]).toHaveLength(2)
       // Quem desenha o cabeçalho é o `TopBar`.
       const header = lerFonte("src/components/ui/top-bar.tsx")
       expect(header).toContain("var(--sidebar-inset-rule,1px)")

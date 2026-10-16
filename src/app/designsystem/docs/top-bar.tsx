@@ -362,7 +362,7 @@ export default function TopBarDoc() {
       </DocNote>
 
       <DocNote title="O fio só aparece ao rolar">
-        No <code>scroll</code>, em repouso a barra é a página, e um fio sobre nada é ruído; ele acende junto com o vidro, quando o conteúdo passa por baixo. Em <code>solid</code> e <code>glass</code> ele fica. E ele lê <code>--sidebar-inset-rule</code>, que só a lateral <code>floating</code> <em>redimensionável</em> zera: ao lado da <code>floating</code> comum a barra corre por baixo da placa até a borda da tela, e o fio vai junto.
+        No <code>scroll</code>, em repouso a barra é a página, e um fio sobre nada é ruído; ele acende junto com o vidro, quando o conteúdo passa por baixo. Em <code>solid</code> e <code>glass</code> ele fica. E ele lê <code>--sidebar-inset-rule</code>: ao lado de uma lateral <code>floating</code>, some — rolada, a barra que corre por baixo da placa se separa do conteúdo só pelo vidro.
       </DocNote>
 
       <DocNote title="A ação da barra traz o nome, a dica e a contagem">

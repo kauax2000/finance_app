@@ -880,8 +880,9 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
  * O fio da tira de topo do conteúdo, publicado como variável. Em
  * `variant="sidebar"` o cabeçalho encosta no `border-r` da barra; no `floating`
  * esse `border-r` não existe e o fio ficaria pendurado. As tiras de superfície
- * não têm fio (quem marca o limite é o respiro). Só o redimensionável zera o
- * fio: no outro a barra corre por trás da placa (`SIDEBAR_INSET_BEHIND`).
+ * não têm fio (quem marca o limite é o respiro). Vale nos dois modos: rolada,
+ * a barra que corre por trás da placa (`SIDEBAR_INSET_BEHIND`) se separa do
+ * conteúdo só pelo vidro (decisão do dono, rodada 289).
  * É variável, e não seletor de grupo: `in-*` e `group-*` compilam com `:where()`
  * e perdem para a classe base. Nasce no `SidebarInset`.
  * Quem pergunta pela variante é o invólucro, e não o irmão: no modo
@@ -911,9 +912,7 @@ const SIDEBAR_INSET_BAR =
  * `margin` e `padding` na lista de propriedades.
  * `isolate` porque a placa (`--z-sticky`) tem de ficar acima da barra, que vem
  * depois no DOM com a mesma camada; dentro do `main` a barra segue acima do
- * conteúdo da página. O fio volta (nada zera `--sidebar-inset-rule` aqui, então
- * vale o 1px de reserva do `TopBar`): ele corre por baixo da placa até a borda,
- * e não fica pendurado. Sem `vw` na largura (a barra é `w-auto`): nas prévias do
+ * conteúdo da página. O fio segue a 0 (`SIDEBAR_INSET_RULE`). Sem `vw` na largura (a barra é `w-auto`): nas prévias do
  * catálogo `vw` é a janela, e não a caixa.
  * No redimensionável o painel recorta, e a barra não passa por trás.
  */
@@ -986,6 +985,7 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
         // `--radius-modal` e anel, sem sombra); a margem anima.
         "relative flex min-w-0 w-full flex-1 flex-col bg-background transition-[margin] duration-(--duration-slow) ease-(--ease-emphasized) md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:m-2 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:rounded-modal md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ring-1 md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ring-foreground/10",
         "md:group-has-[[data-slot=sidebar][data-variant=inset]]/sidebar-wrapper:ml-0 md:group-has-[[data-slot=sidebar][data-variant=inset][data-state=collapsed]]/sidebar-wrapper:ml-2",
+        SIDEBAR_INSET_RULE,
         SIDEBAR_INSET_BEHIND,
         SIDEBAR_INSET_BAR,
         className
