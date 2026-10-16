@@ -1451,7 +1451,7 @@ declaração de `background-color` no trilho).
   que crescem em direção à borda e acabam 24px abaixo da barra; a barra em si
   não pode ter `backdrop-filter` nem fundo translúcido (viraria a raiz do
   borrão das camadas). **`TopBarAction`** (`plate`: a pílula da placa do botão de recolher —
-  tinta `--sidebar`, anel, `shadow-lg`, realce em `--sidebar-accent` —, do
+  tinta `--sidebar`, anel, realce em `--sidebar-accent`, sem sombra —, do
   `md` para cima; o sino do app a veste) — **nenhuma tela escreve
   o `span` da contagem nem embrulha um botão da barra num `Tooltip` à mão**;
   `TopBarSearch` (⌘K e `/`; no app, com `glow`, `plate` — o vidro do campo do `CommandDialog`, a superfície `plate` da busca — e `collapse="lg"`, centrada numa coluna `max-w-xs` (320 até 1279px; `xl:max-w-sm`, 384 a partir de 1280) entre pontas de peso igual), `TopBarProgress`, `TopBarSkeleton`. **Uma árvore

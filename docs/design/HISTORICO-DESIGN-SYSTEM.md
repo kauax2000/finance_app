@@ -26999,3 +26999,10 @@ superfície `plate` da busca (`searchFieldSurfaceClassName.plate`: anel de 1px
 sobre a tinta flutuante de vidro, sem sombra), a mesma pílula que a paleta
 abre; a lupa abaixo do `lg` veste o mesmo vidro do `md` para cima. O sino
 segue com a pílula da placa.
+
+Por fim a sombra saiu do sino e do botão de recolher (o `shadow-lg` do
+`SIDEBAR_TRIGGER_FLOATING` e do `TOP_BAR_PLATE`): com a busca de vidro sem
+sombra no meio, as pontas pareciam mais altas que ela, e num botão de 36 a
+sombra grande vira mancha. Ela vinha da alça solta na borda da placa; dentro
+da barra, o anel e a tinta separam do que rola por baixo. A alça `edge` do
+laboratório é outro botão e fica como está.

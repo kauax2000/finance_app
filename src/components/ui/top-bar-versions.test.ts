@@ -103,7 +103,7 @@ describe("as peças", () => {
     expect(fonte("src/components/layout/notification-bell-link.tsx")).toMatch(/<TopBarAction[\s\S]*?\bplate\b/)
     // A mesma receita do gatilho da barra lateral: tinta, anel, sombra e realce.
     const gatilho = fonte("src/components/ui/sidebar.tsx")
-    for (const parte of ["bg-sidebar", "shadow-lg", "ring-1", "ring-foreground/10", "[--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]"]) {
+    for (const parte of ["bg-sidebar", "ring-1", "ring-foreground/10", "[--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]"]) {
       expect(gatilho).toContain(`wrapper:${parte}`)
       expect(CODIGO).toContain(`md:${parte}`)
     }

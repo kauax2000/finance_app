@@ -537,12 +537,12 @@ function TopBarAction({
 
 /**
  * A pílula da placa, a do botão de recolher da barra lateral
- * (`SIDEBAR_TRIGGER_FLOATING`): a tinta da placa, o anel de 1px, a sombra e o
- * realce em `--sidebar-accent` a 50%. Do `md` para cima, onde a barra corre ao
+ * (`SIDEBAR_TRIGGER_FLOATING`): a tinta da placa, o anel de 1px e o
+ * realce em `--sidebar-accent` a 50%, sem sombra. Do `md` para cima, onde a barra corre ao
  * lado da placa; no telefone o botão segue `tertiary`.
  */
 const TOP_BAR_PLATE =
-  "md:rounded-full md:bg-clip-border md:bg-sidebar md:shadow-lg md:ring-1 md:ring-foreground/10 md:[--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]"
+  "md:rounded-full md:bg-clip-border md:bg-sidebar md:ring-1 md:ring-foreground/10 md:[--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]"
 
 /**
  * A lupa com o vidro do campo da paleta (`searchFieldSurfaceClassName.plate`),
