@@ -26784,3 +26784,15 @@ recuo dos dois lados, que vence a largura animada. Medido a 1280: aos 121ms a
 placa em 200 e a pílula em 176; aos 278ms a placa em 67 e a pílula em 47;
 assentadas, 32 dentro de 64.
 
+
+### Rodada 293 — o diálogo abre como a paleta
+
+O dono pediu o `Dialog` e o `AlertDialog` com a entrada da paleta (rodada 291),
+e o gesto do menu só no que se ancora num gatilho (menus, seletores, popover,
+dica). A placa sai do `menu-morph`/`menu-unmorph` e veste as classes do
+`CommandDialog` no `dialogContentVariants` (o `AlertDialog` herda): abre com
+`fade-in-0 zoom-in-95 slide-in-from-top-1` na mola e fecha com `fade-out-0
+zoom-out-95` em `--duration-fast` e `--ease-out`. A `@utility dialog-sprout`
+virou `dialog-rise`, só a subida em cascata do conteúdo, sem `--morph-radius`.
+Medido na prévia no formulário de lançamento: abrir é `enter` em 0,5s na mola,
+fechar é `exit` em 0,15s. `overlay-motion.test.ts` tranca.

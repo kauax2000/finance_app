@@ -3007,17 +3007,10 @@
   }
 }
 
-/* O diálogo brota do próprio centro, onde mora (nascer do ponto do clique saiu:
-   aberto pela barra lateral, surgia da esquerda de uma placa centralizada); o
-   conteúdo sobe em cascata atrás. */
-@utility dialog-sprout {
-  --morph-radius: var(--radius-modal);
-  &[data-state="open"] {
-    animation: menu-morph 380ms linear backwards;
-  }
-  &[data-state="closed"] {
-    animation: menu-unmorph 210ms linear both;
-  }
+/* O conteúdo do diálogo sobe em cascata atrás da placa. A placa entra pelo
+   `tw-animate` do `dialogContentVariants` (a entrada da paleta), e não pelo
+   gesto do menu (rodada 293). */
+@utility dialog-rise {
   &[data-state="open"] > :not([data-slot="dialog-close-button"]) {
     animation: rise 300ms var(--ease-emphasized) 80ms both;
     --rise-distance: 0.25rem;

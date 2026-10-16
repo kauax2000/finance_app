@@ -35,13 +35,16 @@ describe("O movimento do que se sobrepõe à tela", () => {
   })
 
   it("toda sobreposição brota no gesto do menu da barra de baixo, e volta a ele", () => {
-    for (const nome of ["menu-sprout", "context-menu-burst", "popover-sprout", "field-bloom", "hover-card-unveil", "dialog-sprout"]) {
+    for (const nome of ["menu-sprout", "context-menu-burst", "popover-sprout", "field-bloom", "hover-card-unveil"]) {
       const u = utility(nome)
       expect(u, nome).toMatch(/\[data-state="open"\][^{]*\{\s*animation: menu-morph 380ms linear backwards;/)
       expect(u, nome).toMatch(/\[data-state="closed"\][^{]*\{\s*animation: menu-unmorph 210ms linear both;/)
     }
-    // O diálogo chega no raio dele, não no da superfície.
-    expect(utility("dialog-sprout")).toContain("--morph-radius: var(--radius-modal);")
+    // O diálogo (e o `AlertDialog`, que veste a moldura dele) é a exceção, como a
+    // paleta: abre na mola e fecha curto (rodada 293).
+    expect(utility("dialog-rise")).not.toMatch(/menu-morph|menu-unmorph/)
+    expect(ui("dialog")).toContain("data-open:zoom-in-95 data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring)")
+    expect(ui("dialog")).toContain("data-closed:zoom-out-95 data-closed:animation-duration-(--duration-fast) data-closed:ease-(--ease-out)")
     // A dica também: o Radix escreve `delayed-open`/`instant-open`.
     expect(utility("menu-sprout")).toContain('&[data-state="delayed-open"]')
     for (const peça of ["menubar", "navigation-menu", "tooltip"]) {
@@ -79,7 +82,7 @@ describe("O movimento do que se sobrepõe à tela", () => {
 
   it("o diálogo cresce do próprio centro, e o Select alinhado ao item não desdobra", () => {
     // Nascia do ponto do clique; aberto pela barra lateral, surgia da esquerda.
-    expect(utility("dialog-sprout")).not.toContain("transform-origin")
+    expect(utility("dialog-rise")).not.toContain("transform-origin")
     expect(ui("dialog")).not.toContain("dialog-origin")
     expect(utility("field-bloom")).toContain('&[data-state="open"]:not([data-align-trigger="true"])')
   })
@@ -105,7 +108,7 @@ describe("O movimento do que se sobrepõe à tela", () => {
       expect(u, nome).toMatch(/animation: menu-content-in \d+ms var\(--ease-out\) \d+ms backwards;\s*--stagger-base/)
       expect(u, nome).not.toMatch(/\brise\b|--rise-distance/)
     }
-    expect(utility("dialog-sprout")).toMatch(/animation: rise \d+ms var\(--ease-[a-z]+\) \d+ms both;\s*--rise-distance: 0\.25rem;/)
+    expect(utility("dialog-rise")).toMatch(/animation: rise \d+ms var\(--ease-[a-z]+\) \d+ms both;\s*--rise-distance: 0\.25rem;/)
   })
 
   it("nenhum filho de rolável com dissolução se desloca ao abrir", () => {
@@ -144,7 +147,7 @@ describe("O movimento do que se sobrepõe à tela", () => {
     expect(ui("select")).toContain('"field-bloom"')
     expect(ui("select")).toContain('"overlay-cascade"')
     expect(ui("hover-card")).toContain('"hover-card-unveil"')
-    expect(ui("dialog")).toContain('"dialog-sprout"')
+    expect(ui("dialog")).toContain('"dialog-rise"')
     expect(ui("alert-dialog")).toContain("dialogContentVariants({ size, layout: \"auto\" })")
     expect(ui("tooltip")).toContain('"menu-sprout"')
   })
