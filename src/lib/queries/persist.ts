@@ -11,6 +11,8 @@ const NON_PERSISTED_ROOTS = new Set<string>([
     queryRoot.activity,
     // PII de outros membros (emails/nomes/avatars) fora do IndexedDB
     queryRoot.memberDirectory,
+    // resultado de busca digitada: efêmero, não vale gravar
+    queryRoot.transactionsSearch,
 ])
 
 export function shouldPersistQuery(query: Query): boolean {

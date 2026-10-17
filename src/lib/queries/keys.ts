@@ -1,3 +1,5 @@
+import type { BuscaTransacoes } from "@/lib/transaction-search"
+
 /** Bump `PERSIST_BUSTER` in persist.ts when persisted query shapes change. */
 
 export const queryRoot = {
@@ -18,6 +20,10 @@ export const queryRoot = {
     memberDirectory: "memberDirectory",
     transactions: "transactions",
     transactionsSummary: "transactionsSummary",
+    /** Busca da paleta ⌘K: transações achadas pelo termo partido. */
+    transactionsSearch: "transactionsSearch",
+    /** Contas (bills) listadas para a paleta ⌘K. */
+    billsList: "billsList",
     creditCardExpenseRows: "creditCardExpenseRows",
     profile: "profile",
     sessions: "sessions",
@@ -61,6 +67,27 @@ export const subscriptionsPageBundleKeys = {
 export const billsPageBundleKeys = {
     bundle: (workspaceId: string) =>
         [queryRoot.billsPageBundle, workspaceId] as const,
+}
+
+export const transactionsSearchKeys = {
+    list: (
+        workspaceId: string,
+        busca: BuscaTransacoes,
+        categoriaIds: string[],
+        cartaoIds: string[],
+    ) =>
+        [
+            queryRoot.transactionsSearch,
+            workspaceId,
+            busca,
+            categoriaIds,
+            cartaoIds,
+        ] as const,
+}
+
+export const billsListKeys = {
+    list: (workspaceId: string) =>
+        [queryRoot.billsList, "list", workspaceId] as const,
 }
 
 export const categoryDetailBundleKeys = {
