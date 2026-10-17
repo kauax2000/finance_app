@@ -279,7 +279,7 @@
   <dl class="meta">
     <div><dt>Base</dt><dd>Leitura do código</dd></div>
     <div><dt>Branch</dt><dd>finance-app-2.0</dd></div>
-    <div><dt>Data</dt><dd>15 out 2026 · o menu da conta do telefone vira um painel que brota da aba, com o tema em Configurações e o sair e os planos em Minha conta; o "+" abre direto o formulário de lançamento; 14 out: o painel de marca animado nas telas de acesso; 12 out: telas de acesso com cena e a casca no layout de <code>(auth)</code>, reenviar e <code>next</code> na recuperação, convite aceito; antes: busca global, botão direito, período, rascunho, menus do telefone, prévias da lista, as tabelas na URL, o "Ver" dos avisos de criação e a agenda do Painel</dd></div>
+    <div><dt>Data</dt><dd>16 out 2026 · a busca global (⌘K) acha transações, cartões, categorias, parcelas, assinaturas, contas, membros e carteiras da raiz; 15 out: o menu da conta do telefone vira um painel que brota da aba, com o tema em Configurações e o sair e os planos em Minha conta; o "+" abre direto o formulário de lançamento; 14 out: o painel de marca animado nas telas de acesso; 12 out: telas de acesso com cena e a casca no layout de <code>(auth)</code>, reenviar e <code>next</code> na recuperação, convite aceito; antes: busca global, botão direito, período, rascunho, menus do telefone, prévias da lista, as tabelas na URL, o "Ver" dos avisos de criação e a agenda do Painel</dd></div>
     <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 7 lacunas (3 fechadas em 12 out)</dd></div>
     <div><dt>Fonte versionada</dt><dd><code>docs/JORNADAS.md</code></dd></div>
   </dl>
@@ -513,7 +513,7 @@
       <ol class="steps">
         <li><div><strong>Casca.</strong> No desktop, uma lateral recolhível lista todas as áreas. No telefone, a barra inferior traz Painel, Transações, Categorias, o botão "+" e o menu da conta com o resto — o "+" abre o formulário de lançamento e a aba "Mais" um painel que brota dela com as outras telas (ela não muda nem fica ativa nessas telas). No telefone, o tema fica em Configurações, e o "Sair" e os planos ficam em Minha conta.</div></li>
         <li><div><strong>Adicionar.</strong> O "+" abre direto o formulário de lançamento por cima da tela atual (gaveta no telefone), com Despesa marcada; o seletor dele troca para Parcelada e Receita. Assinatura se registra na tela de Assinaturas ou pela busca. Ao salvar, as listas abertas recarregam e a pessoa continua onde estava.</div></li>
-        <li><div><strong>Busca.</strong> A lupa da barra do topo, ou ⌘K (Ctrl+K) em qualquer tela, abre uma paleta — no telefone, uma gaveta. Ela leva às mesmas telas da lateral e do menu da conta, oferece os registros (despesa, parcelada, receita e assinatura) e, em "Categorias…" e "Cartões…", lista os da carteira para abrir o detalhe; Backspace duas vezes volta. Os últimos destinos aparecem como recentes. Não há caminho novo: cada linha entra pela porta que já existia.</div></li>
+        <li><div><strong>Busca.</strong> A lupa da barra do topo, ou ⌘K (Ctrl+K) em qualquer tela, abre uma paleta — no telefone, uma gaveta. Ela busca tudo de uma vez, sem sub-páginas: telas (incluindo Sessões ativas, Atividade e Notificações, que abre o painel), ações (despesa, parcelada, receita, assinatura, categoria e cartão), transações, cartões, categorias, compras parceladas, assinaturas, contas a pagar, membros e carteiras, cada tipo no seu grupo. Quem não lembra o nome acha por sinônimo: "gastos" leva a Transações, "fatura" a Cartões, "boletos" a Contas a pagar. As transações são procuradas no banco, pela descrição, pelo valor, pela data e pelo nome da categoria ou do cartão; aparecem as 8 mais recentes, depois de uma pausa curta na digitação, e abrem o detalhe (<code>?txn=id</code>). "Ver todas em Transações" leva o termo, o período e a faixa de valor para a lista — que filtra o texto só pela descrição. Parcelas e assinaturas abrem a lista já filtrada (<code>?plan=id</code>, <code>?sub=id</code>), uma conta abre o detalhe em Contas (<code>?detail=id</code>), um membro leva a Membros, e escolher uma carteira troca a carteira atual. Os últimos destinos aparecem como recentes (transações não entram). Não há caminho novo: cada linha entra pela porta que já existia.</div></li>
         <li><div><strong>Nome da tela e voltar.</strong> No telefone a barra do topo mostra o título da tela e, nas subpáginas (detalhe de categoria e de cartão, as de Minha conta), o voltar para a tela de cima. No desktop ela não mostra o nome nem a trilha: a lateral marca onde se está e é por ela que se volta.</div></li>
         <li><div><strong>Notificações.</strong> Clicar marca como lida e navega para o lugar do assunto: o cartão, a categoria, a conta, o lançamento de outro membro.</div></li>
         <li><div><strong>Endereços antigos.</strong> Rotas de versões anteriores redirecionam no servidor, e um endereço desconhecido cai na página 404.</div></li>
@@ -526,7 +526,7 @@
       @@T3@@
       <div class="callout gap">
         <p class="label">Ponto de atenção</p>
-        <ul><li>A casca expõe abrir convite, nova categoria e novo cartão, mas nenhum botão chama essas ações.</li></ul>
+        <ul><li>A casca expõe abrir convite, mas nenhum botão chama essa ação. Nova categoria e novo cartão agora saem da busca (⌘K).</li></ul>
       </div>
     </section>
 
@@ -748,7 +748,7 @@
           <thead><tr><th>#</th><th>Jornada</th><th>Tipo</th><th>O que acontece</th><th>Efeito para a pessoa</th></tr></thead>
           <tbody>
             <tr><td>1</td><td>02 Carteiras</td><td>Validação</td><td>A carteira pessoal mostra o formulário de convite.</td><td>O erro só aparece depois de enviar.</td></tr>
-            <tr><td>2</td><td>03 Navegação</td><td>Código sem uso</td><td>A casca expõe abrir convite, nova categoria e novo cartão, e nada chama essas ações.</td><td>Nenhum; é manutenção sem retorno.</td></tr>
+            <tr><td>2</td><td>03 Navegação</td><td>Código sem uso</td><td>A casca expõe abrir convite, e nada chama essa ação (nova categoria e novo cartão passaram a sair da busca).</td><td>Nenhum; é manutenção sem retorno.</td></tr>
             <tr><td>3</td><td>10 Conta</td><td>Guarda</td><td>Sessões e Atividade redirecionam para <code>/login</code> sem <code>next</code>.</td><td>Depois de entrar, cai no Painel e não na página.</td></tr>
             <tr><td>4</td><td>01 Acesso</td><td>Validação</td><td>A política de senha não alcança a troca de senha de dentro do app.</td><td>Dá para trocar por uma senha que o cadastro recusaria.</td></tr>
             <tr><td>5</td><td>08 Assinaturas</td><td>Endereço</td><td>O painel de uma assinatura só abre pelo estado da tela; nenhum parâmetro de URL o abre.</td><td>O aviso de assinatura criada não tem "Ver", e um link não leva a uma assinatura.</td></tr>
@@ -865,7 +865,7 @@
 </div>
 
 <footer>
-  Atlas de Jornadas do Finance App · escrito a partir do código da branch <code>finance-app-2.0</code> em 17 de setembro de 2026, navegação global revista em 1 de outubro de 2026, prévias da lista e tabelas na URL em 2 de outubro, o "Ver" dos avisos em 4 de outubro, a agenda do Painel em 8 de outubro, as telas de acesso em 12 de outubro, o painel de marca animado em 14 de outubro, o "+" direto ao formulário em 15 de outubro, a barra do topo sem o nome da tela no desktop em 16 de outubro · fonte dos fluxogramas em <code>docs/JORNADAS.md</code>
+  Atlas de Jornadas do Finance App · escrito a partir do código da branch <code>finance-app-2.0</code> em 17 de setembro de 2026, navegação global revista em 1 de outubro de 2026, prévias da lista e tabelas na URL em 2 de outubro, o "Ver" dos avisos em 4 de outubro, a agenda do Painel em 8 de outubro, as telas de acesso em 12 de outubro, o painel de marca animado em 14 de outubro, o "+" direto ao formulário em 15 de outubro, a barra do topo sem o nome da tela no desktop e a busca global do app em 16 de outubro · fonte dos fluxogramas em <code>docs/JORNADAS.md</code>
 </footer>
 
 <dialog class="viewer" id="viewer" aria-labelledby="viewer-title">

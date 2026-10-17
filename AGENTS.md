@@ -850,9 +850,11 @@ declaração de `background-color` no trilho).
   pelo gatilho no meio do cabeçalho, por `⌘K` e por `/`, com `filter` próprio
   (o padrão do cmdk é difuso e erra em português). A do **app**
   ([`app-command-palette.tsx`](src/components/layout/app-command-palette.tsx))
-  abre pela lupa da barra do topo e por ⌘K em qualquer tela, com as telas da
-  navegação, as ações do "+ Adicionar" (os mesmos ganchos) e as sub-páginas de
-  categorias e cartões — mudar o que ela abre é mudança de jornada.
+  abre pela lupa da barra do topo e por ⌘K em qualquer tela, que acha na raiz
+  telas, ações, transações (no banco: descrição, valor, data, categoria e
+  cartão), cartões, categorias, parcelas, assinaturas, contas, membros e
+  carteiras, com `shouldFilter: false` — cada grupo chega ranqueado por
+  `ranquear` (`lib/app-search`) — mudar o que ela abre é mudança de jornada.
   - **A paleta do catálogo abre por camadas**: vazia, mostra as cinco camadas
     com ícone (`category-meta.ts`) e, abaixo, as últimas páginas abertas
     (`useCommandRecents("ds:recentes")`). Enter numa camada pinta o nome dela

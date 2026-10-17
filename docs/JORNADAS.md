@@ -329,16 +329,23 @@ flowchart TD
     bottom -->|"+, a gaveta do formulário"| txForm
     txForm -.->|"formulário global indisponível"| fallback["/transactions?new= ou /subscriptions?new=1"]
 
-    topbar(["Barra do topo: lupa"]) -->|"clicar"| palette(["Paleta de busca: Recentes, Ir para, Procurar, Ações"])
+    topbar(["Barra do topo: lupa"]) -->|"clicar"| palette(["Paleta de busca: Recentes, Telas, Ações, Transações, Cartões, Categorias, Parcelas, Assinaturas, Contas, Membros, Carteiras"])
     shell -->|"⌘K ou Ctrl+K"| palette
-    palette -->|"Ir para ou Recentes"| nav1
-    palette -->|"Ir para: as mesmas telas da lateral, Minha conta, Planos"| nav8
+    palette -->|"Telas ou Recentes"| nav1
+    palette -->|"Telas: as mesmas da lateral, Minha conta, Planos, Sessões ativas, Atividade"| nav8
+    palette -->|"Telas: Notificações"| notifPanel(["Painel de notificações"])
     palette -->|"Ações: Nova despesa, parcelada, receita"| txForm
     palette -->|"Ações: Nova assinatura"| subForm(("G8 Formulário de assinatura"))
-    palette -->|"Categorias…"| catPage(["Lista de categorias da carteira"]) --> catDetail["/categories/id"]
-    palette -->|"Cartões…"| cardPage(["Lista de cartões"]) --> cardDetail["/credit-cards/id"]
-    catPage -->|"Backspace duas vezes"| palette
-    cardPage -->|"Backspace duas vezes"| palette
+    palette -->|"Ações: Nova categoria, Novo cartão"| createDialogs(["Diálogos de criar categoria e cartão"])
+    palette -->|"Transações, consulta no banco"| txnDetail["/transactions?txn=id"]
+    palette -->|"Ver todas em Transações"| txnList["/transactions?q, from, to, min, max"]
+    palette -->|"Cartões"| cardDetail["/credit-cards/id"]
+    palette -->|"Categorias"| catDetail["/categories/id"]
+    palette -->|"Compras parceladas"| planPage["/transactions?plan=id"]
+    palette -->|"Assinaturas"| subPage["/transactions?sub=id"]
+    palette -->|"Contas a pagar"| billPage["/bills?detail=id"]
+    palette -->|"Membros"| nav7
+    palette -->|"Carteiras"| walletSwitch[("Troca a carteira atual")]
 
     bell(["Sino de notificações"]) -->|"clicar"| read[("Marca como lida")] --> dest{"Tipo da notificação"}
     dest -->|"href explícito"| explicit["Rota do metadata.href"]
@@ -363,7 +370,7 @@ flowchart TD
 | Itens de navegação | Lateral e mobile vêm de configuração, não de JSX solto | `src/config/navigation.ts`, `src/config/mobile-navigation.ts` |
 | Formulários globais | Transação e assinatura montados uma vez na casca; salvar invalida as listas abertas | `src/components/layout/global-shell-dialogs-provider.tsx` |
 | Menus do telefone | O "+" abre direto a gaveta do formulário de lançamento, com Despesa marcada (o seletor do formulário troca para Parcelada e Receita; assinatura fica na tela dela e na paleta). Era uma folha de ações (`Drawer` com `DrawerActions`) antes do formulário, e no desktop um menu: um passo a mais na jornada mais comum. A aba "Mais" (fixa: não troca de ícone nem de rótulo e não fica ativa nas páginas do menu; era o avatar) abre o menu da conta num painel (`DropdownMenu variant="panel"`) que brota dela para cima, só com as telas que não cabem na barra; cada link fecha o painel e leva à tela. Em cima as telas da carteira, embaixo Minha conta e Configurações. O tema mora em Configurações (seção Aparência); o sair (o menu ⋯ do perfil) e Planos e pagamentos (a seção Plano, só no telefone) moram em Minha conta. Antes foi uma gaveta de 625px com identidade, tema e sair, e antes dela um `Popover` de vidro escrito à mão | `src/components/layout/quick-actions.tsx`, `src/components/layout/mobile-account-menu.tsx` |
-| Busca global (⌘K) | Montada uma vez no `AppHeader`, com a lupa nas duas árvores da barra; no telefone abre como gaveta. As telas vêm de `navigation.ts` e `account-menu-links.ts`; as ações chamam os mesmos ganchos do "+ Adicionar" (`useQuickCreateTransaction`, `useQuickCreateSubscription`); categorias e cartões leem o cache de `useCategoriesQuery` e `useCreditCardsQuery`, as mesmas consultas da casca. Os recentes ficam no `localStorage` (`app:busca`) | `src/components/layout/app-command-palette.tsx`, `src/components/layout/app-header.tsx` |
+| Busca global (⌘K) | Montada uma vez no `AppHeader`, com a lupa nas duas árvores da barra; no telefone abre como gaveta. A raiz busca tudo, sem sub-página: o filtro é da paleta (`shouldFilter: false`) e cada grupo vem ranqueado por `ranquear` (`lib/app-search`), até 5 linhas. **Telas** (com sinônimos: "gastos" acha Transações, "fatura" Cartões, "boletos" Contas a pagar) vêm de `navigation.ts`, `account-menu-links.ts` e das sub-páginas Sessões ativas e Atividade; Notificações não é rota: abre o painel e não vira recente. **Ações** chamam os mesmos ganchos do "+ Adicionar" (`useQuickCreateTransaction`, `useQuickCreateSubscription`) e os diálogos da casca (Nova categoria, Novo cartão). **Transações** são uma consulta de leitura ao banco (descrição, valor, data, nome da categoria e do cartão; as 8 mais recentes; espera de 250ms depois da digitação) e abrem `/transactions?txn=id`; "Ver todas em Transações" leva `q`, `from`, `to`, `min` e `max` na URL, e a lista filtra o texto só pela descrição. Transação nunca vira recente. **Cartões** e **categorias** leem o cache da casca (`useCategoriesQuery`, `useCreditCardsQuery`); **parcelas** (`?plan=id`), **assinaturas** (`?sub=id`) e **membros** (`/members`) saem das listas do espaço; **contas a pagar** vêm de uma consulta leve (`useBillsListQuery`) e abrem `/bills?detail=id`; escolher uma **carteira** troca a carteira atual. Os recentes ficam no `localStorage` (`app:busca`) | `src/components/layout/app-command-palette.tsx`, `src/components/layout/app-search-sources.ts`, `src/lib/app-search.ts`, `src/lib/transaction-search.ts`, `src/lib/queries/use-transactions-search.ts`, `src/lib/queries/use-bills-list.ts` |
 | Nome da tela e voltar | No telefone a barra do topo mostra o título e o voltar das subpáginas (`/categories/id`, `/categories/new`, `/credit-cards/id`, as de `/account`), pelo `usePageChromeSlot`. No desktop ela não mostra o nome da tela (o `<h1>` fica só para o leitor de tela) nem a trilha: a lateral marca onde se está e é o caminho de volta. A trilha com o link para a tela de cima ("Categorias", "Cartões de crédito") saiu em 2026-10-16 | `src/components/layout/app-header.tsx` |
 | Destino da notificação | `metadata.href` seguro vence; senão, o tipo decide. Espelha o servidor para o push | `src/lib/notification-href.ts`, `supabase/functions/_shared/notification-types.ts` |
 | Notificações no servidor | Edges `dispatch-notifications`, `evaluate-budgets`, `evaluate-credit-card-alerts`, `evaluate-bills-reminders`, `credit-card-calendar-alerts`, `notify-transaction-created` | `supabase/functions/` |
@@ -855,7 +862,7 @@ continuam aqui para registro.
 | # | Jornada | Lacuna |
 |---|---|---|
 | 1 | G2 | `/members` mostra o formulário de convite numa carteira pessoal, e o servidor recusa só depois do envio. |
-| 2 | G3 | O provider global expõe abrir convite, nova categoria e novo cartão, mas nada chama essas funções. |
+| 2 | G3 | O provider global expõe abrir convite, mas nada chama essa função. (Nova categoria e novo cartão saem da paleta ⌘K desde 16/out/2026.) |
 | 3 | G10 | `/account/sessions` e `/account/activity` redirecionam para `/login` sem `next`, então a pessoa não volta para a página depois de entrar. |
 | 4 | G1 | A política de senha não vale para a troca de senha de dentro do app (`ChangePasswordDialog`), que ainda confere só o comprimento. |
 | 5 | G8 | O detalhe de uma assinatura só abre pelo estado da tela; nenhum parâmetro de URL o abre (só existe `?new=1`). Por isso o toast de assinatura criada não tem "Ver", ao contrário de transação, cartão, conta e categoria (rodada 228). |
