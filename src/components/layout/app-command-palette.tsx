@@ -174,6 +174,8 @@ type Acao = {
     executar: () => void
 }
 
+const MAX_IDS_NA_BUSCA = 50
+
 function PaletteBody({ close }: { close: () => void }) {
     const router = useRouter()
     const [query, setQuery] = React.useState("")
@@ -202,17 +204,20 @@ function PaletteBody({ close }: { close: () => void }) {
         () => parseBuscaTransacoes(termo, new Date()),
         [termo],
     )
-    const casaTexto = (nome: string) =>
-        busca.texto !== "" && commandFilter(nome, busca.texto) > 0
+    // No máximo 50 ids de cada: um termo curto num espaço com centenas de
+    // categorias estouraria a URL do `or=`. Os melhor casados ficam.
+    const idsQueCasam = (lista: { id: string; name: string }[] | undefined) =>
+        (lista ?? [])
+            .map((item) => ({ id: item.id, nota: busca.texto === "" ? 0 : commandFilter(item.name, busca.texto) }))
+            .filter((item) => item.nota > 0)
+            .sort((a, b) => b.nota - a.nota)
+            .slice(0, MAX_IDS_NA_BUSCA)
+            .map((item) => item.id)
     const transacoes = useTransactionsSearchQuery({
         workspaceId,
         busca,
-        categoriaIds: (categorias.data ?? [])
-            .filter((c) => casaTexto(c.name))
-            .map((c) => c.id),
-        cartaoIds: (cartoes.data ?? [])
-            .filter((c) => casaTexto(c.name))
-            .map((c) => c.id),
+        categoriaIds: idsQueCasam(categorias.data),
+        cartaoIds: idsQueCasam(cartoes.data),
     })
     // Pelo termo de agora, não pelo atrasado: enquanto a espera corre, o grupo
     // já diz "Buscando…" em vez de mostrar o resultado do termo anterior.
@@ -220,7 +225,13 @@ function PaletteBody({ close }: { close: () => void }) {
         q !== "" && buscaPronta(parseBuscaTransacoes(query, new Date()))
     const buscando =
         procuraTransacoes && (query !== termo || transacoes.isLoading)
-    const erroTransacoes = procuraTransacoes && !buscando && transacoes.isError
+    // Offline a consulta fica pausada, sem erro e sem dado: conta como erro,
+    // senão o grupo some e a paleta diz "Nada encontrado".
+    const erroTransacoes =
+        procuraTransacoes &&
+        !buscando &&
+        (transacoes.isError ||
+            (transacoes.fetchStatus === "paused" && transacoes.data === undefined))
     const linhasTransacoes =
         procuraTransacoes && !buscando ? (transacoes.data ?? []) : []
 
@@ -425,9 +436,13 @@ function PaletteBody({ close }: { close: () => void }) {
                             </CommandLoading>
                         ) : erroTransacoes ? (
                             // Uma linha que não se escolhe: o resto da paleta segue.
-                            <CommandLoading label="Não deu para buscar transações agora.">
+                            // `status`, não a barra de progresso do `CommandLoading`.
+                            <div
+                                role="status"
+                                className="flex justify-center py-6 text-sm text-muted-foreground"
+                            >
                                 Não deu para buscar transações agora.
-                            </CommandLoading>
+                            </div>
                         ) : (
                             <>
                                 {linhasTransacoes.map((t) => (

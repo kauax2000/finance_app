@@ -100,5 +100,9 @@ export function useTransactionsSearchQuery({
         },
         enabled: Boolean(workspaceId) && buscaPronta(busca),
         staleTime: 30_000,
+        // A paleta mostra o erro na própria linha: sem toast e sem esperar as
+        // três tentativas do padrão.
+        retry: 1,
+        meta: { errorToast: false },
     })
 }

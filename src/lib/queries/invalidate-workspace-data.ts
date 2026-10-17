@@ -1,5 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query"
 import {
+    billsListKeys,
     billsPageBundleKeys,
     categoriesKeys,
     creditCardExpenseRowsKeys,
@@ -37,6 +38,12 @@ export async function invalidateWorkspaceData(
     const tasks: Promise<unknown>[] = []
 
     if (all || domains.includes("transactions")) {
+        // a busca da paleta (⌘K) lê transações
+        tasks.push(
+            queryClient.invalidateQueries({
+                queryKey: [queryRoot.transactionsSearch, workspaceId],
+            }),
+        )
         tasks.push(
             queryClient.invalidateQueries({
                 queryKey: [queryRoot.transactionsSummary, workspaceId],
@@ -158,6 +165,11 @@ export async function invalidateWorkspaceData(
         )
     }
     if (all || domains.includes("bills")) {
+        tasks.push(
+            queryClient.invalidateQueries({
+                queryKey: billsListKeys.list(workspaceId),
+            }),
+        )
         tasks.push(
             queryClient.invalidateQueries({
                 queryKey: billsPageBundleKeys.bundle(workspaceId),

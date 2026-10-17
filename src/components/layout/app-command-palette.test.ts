@@ -17,6 +17,13 @@ describe("a paleta do app", () => {
         // carregando não é "nada encontrado"
         expect(fonte).toContain("Buscando…")
         expect(fonte).toContain("Não deu para buscar transações agora.")
+        // o erro é `status`, não a barra de progresso do CommandLoading
+        expect(fonte).toContain('role="status"')
+        expect(fonte).not.toContain('<CommandLoading label="Não deu')
+        // offline a consulta pausa: conta como erro, não como "Nada encontrado"
+        expect(fonte).toContain('fetchStatus === "paused"')
+        // a URL do `or=` não cresce com o nome curto
+        expect(fonte).toContain(".slice(0, MAX_IDS_NA_BUSCA)")
         // telas novas e sinônimos
         const fontes = lerFonte("src/components/layout/app-search-sources.ts")
         for (const t of ["ACCOUNT_SESSIONS", "ACCOUNT_ACTIVITY", "fatura", "boletos", "gastos"]) expect(fontes).toContain(t)

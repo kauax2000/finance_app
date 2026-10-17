@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest"
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 import { filtroOuTransacoes } from "@/lib/queries/use-transactions-search"
 import { transactionsSearchKeys } from "@/lib/queries/keys"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 describe("filtroOuTransacoes", () => {
     it("descrição, categoria e cartão viram um or= só", () => {
@@ -44,5 +45,20 @@ describe("transactionsSearchKeys", () => {
         expect(transactionsSearchKeys.list("w1", busca, [], [])).not.toEqual(
             transactionsSearchKeys.list("w1", { ...busca, texto: "b" }, [], []),
         )
+    })
+})
+
+describe("as consultas da paleta mostram o erro na própria linha", () => {
+    it.each([
+        "src/lib/queries/use-transactions-search.ts",
+        "src/lib/queries/use-bills-list.ts",
+    ])("%s não avisa por toast", (arquivo) => {
+        expect(semComentarios(lerFonte(arquivo))).toContain("errorToast: false")
+    })
+
+    it("a de transações tenta uma vez só", () => {
+        expect(
+            semComentarios(lerFonte("src/lib/queries/use-transactions-search.ts")),
+        ).toContain("retry: 1")
     })
 })

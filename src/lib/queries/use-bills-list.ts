@@ -30,5 +30,7 @@ export function useBillsListQuery(workspaceId: string | null, enabled: boolean) 
         },
         enabled: Boolean(workspaceId) && enabled,
         staleTime: 60_000,
+        // Falha calada: a paleta só deixa de listar contas, sem toast.
+        meta: { errorToast: false },
     })
 }

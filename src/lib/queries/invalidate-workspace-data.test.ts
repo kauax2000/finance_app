@@ -29,6 +29,8 @@ const SEEDED_KEYS: ReadonlyArray<readonly unknown[]> = [
     [queryRoot.subscriptionsPageBundle, WS],
     [queryRoot.installmentPlans, "list", WS],
     [queryRoot.billsPageBundle, WS],
+    [queryRoot.transactionsSearch, WS, { texto: "a" }, [], []],
+    [queryRoot.billsList, "list", WS],
 ]
 
 type Case = {
@@ -51,7 +53,13 @@ const CASES: Case[] = [
             queryRoot.creditCardExpenseRows,
             queryRoot.creditCardsPageBundle,
             queryRoot.billsPageBundle,
+            // a busca da paleta (⌘K)
+            queryRoot.transactionsSearch,
         ],
+    },
+    {
+        domain: "bills",
+        expectInvalidated: [queryRoot.billsPageBundle, queryRoot.billsList],
     },
     {
         domain: "credit_cards",
