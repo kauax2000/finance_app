@@ -79,7 +79,6 @@ describe("Item · ladrilho, link esticado e rótulo de grupo", () => {
     expect(botao).toContain('data-slot="item-link"')
     expect(botao).toContain('type="button"')
     expect(botao).toContain("after:inset-0")
-    expect(botao).toContain("after:rounded-[inherit]")
     const link = renderToStaticMarkup(h(ItemLink, { asChild: true }, h("a", { href: "/x" }, "Ver")))
     expect(link).toContain("<a")
     expect(link).not.toContain("type=")

@@ -301,7 +301,7 @@ function ItemLink({
       type={asChild ? type : (type ?? "button")}
       className={cn(
         "min-w-0 text-start text-inherit no-underline outline-none",
-        "after:absolute after:inset-0 after:rounded-[inherit] after:content-['']",
+        "after:absolute after:inset-0 after:content-['']",
         className
       )}
       {...props}
