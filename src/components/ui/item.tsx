@@ -20,6 +20,11 @@ const itemVariants = cva(
     // toda e descem de linha; sem eles, conteúdo e ações ficam lado a lado e o
     // título trunca. `text-start` de fábrica, porque o `<button>` centraliza.
     "flex-nowrap has-[>[data-slot=item-header]]:flex-wrap has-[>[data-slot=item-footer]]:flex-wrap",
+    // O link esticado (`ItemLink`, como o `CardLink`): a película dele cobre a
+    // linha, o foco dele acende o anel da linha, e as ações sobem acima dela.
+    "has-[[data-slot=item-link]]:relative",
+    "has-[[data-slot=item-link]:focus-visible]:border-ring has-[[data-slot=item-link]:focus-visible]:ring-3 has-[[data-slot=item-link]:focus-visible]:ring-ring/45",
+    "has-[[data-slot=item-link]]:[&_[data-slot=item-actions]]:relative has-[[data-slot=item-link]]:[&_[data-slot=item-actions]]:z-10",
   ].join(" "),
   {
     variants: {
@@ -176,10 +181,28 @@ const itemMediaVariants = cva(
         // O raio acompanha a medida (`rounded-sm` cravado deixaria 2px de canto).
         image:
           "size-10 overflow-hidden rounded-lg group-data-[size=sm]/item:size-8 group-data-[size=sm]/item:rounded-md group-data-[size=lg]/item:size-12 [&_img]:size-full [&_img]:object-cover",
+        // O ladrilho de tom: o círculo na superfície `-muted` do tom, com o
+        // ícone de 16 na tinta dele. A cor vem do `tone`, nunca do ícone.
+        tile:
+          "size-8 rounded-full group-data-[size=sm]/item:size-7 group-data-[size=lg]/item:size-10 [&_svg]:size-4",
+      },
+      // Só o `tile` pinta o tom (as combinações abaixo); nas outras mídias ele não faz nada.
+      tone: {
+        neutral: "",
+        info: "",
+        warning: "",
+        destructive: "",
       },
     },
+    compoundVariants: [
+      { variant: "tile", tone: "neutral", className: "bg-muted text-muted-foreground" },
+      { variant: "tile", tone: "info", className: "bg-info-muted text-info-muted-foreground" },
+      { variant: "tile", tone: "warning", className: "bg-warning-muted text-warning-muted-foreground" },
+      { variant: "tile", tone: "destructive", className: "bg-destructive-muted text-destructive-muted-foreground" },
+    ],
     defaultVariants: {
       variant: "plain",
+      tone: "neutral",
     },
   }
 )
@@ -187,13 +210,15 @@ const itemMediaVariants = cva(
 function ItemMedia({
   className,
   variant = "plain",
+  tone = "neutral",
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof itemMediaVariants>) {
   return (
     <div
       data-slot="item-media"
       data-variant={variant}
-      className={cn(itemMediaVariants({ variant, className }))}
+      data-tone={variant === "tile" ? tone : undefined}
+      className={cn(itemMediaVariants({ variant, tone, className }))}
       {...props}
     />
   )
@@ -255,6 +280,57 @@ function ItemActions({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/**
+ * O alvo da linha com ações dentro: um `<button>` (ou, com `asChild`, o `<a>`)
+ * cuja película (`::after`) cobre o `Item` inteiro, sem botão dentro de botão.
+ * Quem dá o realce é o `interactive` do `Item`; o anel do foco é da linha.
+ */
+function ItemLink({
+  asChild = false,
+  className,
+  type,
+  ...props
+}: React.ComponentProps<"button"> & { asChild?: boolean }) {
+  const Comp = asChild ? Slot.Root : "button"
+  return (
+    <Comp
+      data-slot="item-link"
+      // `type="button"` de fábrica: dentro de um formulário, roubaria o Enter.
+      type={asChild ? type : (type ?? "button")}
+      className={cn(
+        "min-w-0 text-start text-inherit no-underline outline-none",
+        "after:absolute after:inset-0 after:content-['']",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/**
+ * O rótulo de um grupo de linhas, em sobrancelha. Com `sticky` ele gruda no
+ * topo do rolável, com o fundo da superfície que o contém
+ * (`--item-group-label-surface`, a placa flutuante por padrão).
+ */
+function ItemGroupLabel({
+  sticky = false,
+  className,
+  ...props
+}: React.ComponentProps<"div"> & { sticky?: boolean }) {
+  return (
+    <div
+      data-slot="item-group-label"
+      data-sticky={sticky || undefined}
+      className={cn(
+        "px-3 py-1.5 text-xs font-medium text-muted-foreground",
+        sticky && "sticky top-0 z-10 bg-(--item-group-label-surface,var(--color-popover))",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
 function ItemHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -308,6 +384,8 @@ export {
   ItemContent,
   ItemActions,
   ItemGroup,
+  ItemGroupLabel,
+  ItemLink,
   ItemSeparator,
   ItemTitle,
   ItemDescription,

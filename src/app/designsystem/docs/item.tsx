@@ -1,6 +1,15 @@
 "use client"
 
-import { ChevronRightIcon, ComputerDesktopIcon, DevicePhoneMobileIcon, ShoppingCartIcon } from "@heroicons/react/16/solid"
+import {
+  CheckIcon,
+  ChevronRightIcon,
+  ComputerDesktopIcon,
+  CreditCardIcon,
+  DevicePhoneMobileIcon,
+  ExclamationTriangleIcon,
+  ShoppingCartIcon,
+  UserPlusIcon,
+} from "@heroicons/react/16/solid"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardToolbar } from "@/components/ui/card"
@@ -11,10 +20,13 @@ import {
   ItemContent,
   ItemDescription,
   ItemGroup,
+  ItemGroupLabel,
+  ItemLink,
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item"
 import { MoneyDisplay } from "@/components/ui/money-display"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { DocNote, DocSection, PropsTable, Usage } from "../ds-doc"
 
 const LINHAS = [
@@ -22,6 +34,23 @@ const LINHAS = [
   { titulo: "Padaria", legenda: "Ontem · Pix", valor: -18.9 },
   { titulo: "Salário", legenda: "1 de março · Conta corrente", valor: 7400 },
 ]
+
+const AVISOS = [
+  {
+    dia: "Hoje",
+    linhas: [
+      { titulo: "A fatura do Nubank fecha amanhã", legenda: "R$ 1.482,30 até agora · há 2 h", tone: "warning", Icone: CreditCardIcon },
+      { titulo: "O orçamento de Mercado passou do limite", legenda: "R$ 912,40 de R$ 800,00 · há 5 h", tone: "destructive", Icone: ExclamationTriangleIcon },
+    ],
+  },
+  {
+    dia: "Ontem",
+    linhas: [
+      { titulo: "Ana entrou na carteira Casa", legenda: "Pelo convite de 12 de março · ontem", tone: "info", Icone: UserPlusIcon },
+      { titulo: "A compra parcelada da geladeira terminou", legenda: "12 de 12 parcelas pagas · ontem", tone: "neutral", Icone: CheckIcon },
+    ],
+  },
+] as const
 
 export default function ItemDoc() {
   return (
@@ -95,6 +124,53 @@ export default function ItemDoc() {
               </Item>
             ))}
           </ItemGroup>
+        </Card>
+      </DocSection>
+
+      <DocSection
+        title="Lista de avisos"
+        description="As três peças do painel de notificações. ItemMedia variant=&quot;tile&quot; é o círculo na superfície -muted do tom (neutral, info, warning, destructive), com o ícone de 16 na tinta dele: 32 no md, 28 no sm, 40 no lg. ItemLink é o alvo da linha: um botão (ou, com asChild, o link) cuja película cobre o Item, e as ItemActions sobem acima dela — a linha inteira abre, e o botão de dentro continua sendo outro alvo, sem botão dentro de botão. ItemGroupLabel é o rótulo do grupo em sobrancelha; com sticky ele gruda no topo do rolável, no fundo de --item-group-label-surface (a placa flutuante por padrão; aqui, o cartão)."
+        code={`<ItemGroupLabel sticky>Hoje</ItemGroupLabel>
+<Item variant="flush" interactive>
+  <ItemMedia variant="tile" tone="warning"><CreditCardIcon /></ItemMedia>
+  <ItemContent>
+    <ItemTitle><ItemLink onClick={abrir}>A fatura do Nubank fecha amanhã</ItemLink></ItemTitle>
+    <ItemDescription>R$ 1.482,30 até agora · há 2 h</ItemDescription>
+  </ItemContent>
+  <ItemActions>
+    <Button variant="tertiary" size="icon-sm" aria-label="Marcar como lida"><CheckIcon /></Button>
+  </ItemActions>
+</Item>`}
+        previewClassName="items-stretch"
+      >
+        <Card padding="none" className="w-full [--item-group-label-surface:var(--color-card)]">
+          <ScrollArea className="h-56">
+            {AVISOS.map((grupo) => (
+              <div key={grupo.dia}>
+                <ItemGroupLabel sticky>{grupo.dia}</ItemGroupLabel>
+                <ItemGroup variant="divided">
+                  {grupo.linhas.map((l) => (
+                    <Item key={l.titulo} variant="flush" interactive>
+                      <ItemMedia variant="tile" tone={l.tone}>
+                        <l.Icone aria-hidden />
+                      </ItemMedia>
+                      <ItemContent>
+                        <ItemTitle>
+                          <ItemLink>{l.titulo}</ItemLink>
+                        </ItemTitle>
+                        <ItemDescription>{l.legenda}</ItemDescription>
+                      </ItemContent>
+                      <ItemActions>
+                        <Button variant="tertiary" size="icon-sm" aria-label="Marcar como lida">
+                          <CheckIcon aria-hidden />
+                        </Button>
+                      </ItemActions>
+                    </Item>
+                  ))}
+                </ItemGroup>
+              </div>
+            ))}
+          </ScrollArea>
         </Card>
       </DocSection>
 
@@ -241,8 +317,8 @@ export default function ItemDoc() {
           Use <code>interactive</code> em vez de depender do elemento ser um <code>&lt;a&gt;</code>: ele traz o par <code>active:</code>, sem o qual o realce, que compila dentro de <code>@media (hover: hover)</code>, não existe no telefone.
       </DocNote>
 
-      <DocNote title="Linha inteira clicável, ou o botão">
-          As duas coisas juntas não: um botão dentro de uma linha clicável cria dois alvos sobrepostos, e no toque a pessoa acerta o errado. Ou a linha navega e a ação vai para um menu, ou a linha não navega.
+      <DocNote title="Linha inteira clicável com um botão dentro: o ItemLink">
+          Com <code>interactive asChild</code> a linha é o botão, e outro botão dentro dela seria botão dentro de botão. Quando a linha abre e também tem uma ação, a linha fica <code>div</code> e o alvo é o <code>ItemLink</code>: a película dele cobre a linha, e as <code>ItemActions</code> sobem acima dela (<code>z-10</code>), como no <code>CardLink</code>. O foco do link acende o anel da linha inteira.
       </DocNote>
 
       <DocNote title="Não existe size='default' nem 'xs'">
@@ -298,9 +374,28 @@ export default function ItemDoc() {
           },
           {
             prop: "ItemMedia",
-            type: 'variant: "plain" | "icon" | "image"',
+            type: 'variant: "plain" | "icon" | "image" | "tile"',
             default: '"plain"',
-            description: "image acompanha a escada em medida e em raio.",
+            description: "image acompanha a escada em medida e em raio; tile é o círculo de tom (28 · 32 · 40).",
+          },
+          {
+            prop: "ItemMedia tone",
+            type: '"neutral" | "info" | "warning" | "destructive"',
+            default: '"neutral"',
+            description: "A superfície -muted do tom e a tinta do ícone. Só o tile o pinta.",
+          },
+          {
+            prop: "ItemLink",
+            type: "ComponentProps<'button'> & { asChild?: boolean }",
+            description:
+              "O alvo da linha: a película cobre o Item, o foco acende o anel dele e as ItemActions sobem acima. type=\"button\" de fábrica; com asChild, o <a> ou o <Link>.",
+          },
+          {
+            prop: "ItemGroupLabel",
+            type: "ComponentProps<'div'> & { sticky?: boolean }",
+            default: "sticky: false",
+            description:
+              "O rótulo do grupo, em sobrancelha. sticky gruda no topo do rolável, no fundo de --item-group-label-surface (padrão --popover).",
           },
           {
             prop: "ItemContent",

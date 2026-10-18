@@ -27070,3 +27070,26 @@ O teste 15 da `Sidebar` ("a placa não declara borrão") passa a ignorar o
 conteúdo que rola. Medido: os três com a mesma tinta (0,205 a 60%) e o mesmo
 borrão de 24px. A busca desenha o fio por dentro (a borda, pelo arco do
 brilho); o sino e o gatilho, pelo anel.
+
+### Rodada 307 — o ladrilho de tom, o link esticado e o rótulo de grupo do `Item`
+
+O redesenho do painel de notificações precisava de três coisas que o `Item`
+não tinha, e o dono aprovou as três (2026-10-17). `ItemMedia variant="tile"`
+com `tone` (`neutral` | `info` | `warning` | `destructive`): o círculo de 32
+(28 no `sm`, 40 no `lg`, pelo degrau da linha, como a `image`) na superfície
+`-muted` do tom, com o ícone de 16 na tinta `-muted-foreground`; as quatro
+combinações moram por extenso nas `compoundVariants`, e nas outras mídias o
+`tone` não pinta nada. `ItemLink` é o link esticado do `CardLink` trazido para
+a linha: um `<button type="button">` (ou, com `asChild`, o `<a>`) cuja película
+`::after` cobre o `Item`, que ganha `relative` e o anel de foco do
+`interactive` por `has-[[data-slot=item-link]…]`; as `ItemActions` sobem a
+`z-10`. Era o que faltava para a notificação abrir pela linha inteira e ainda
+ter o "marcar como lida" sem botão dentro de botão. `ItemGroupLabel` é o
+rótulo do grupo ("Hoje", "Ontem") em sobrancelha (`text-xs`, `px-3 py-1.5`), e
+com `sticky` gruda no topo do rolável no fundo de
+`--item-group-label-surface`, a placa flutuante (`--popover`) por padrão — a
+página do catálogo o põe sobre o cartão declarando a variável. Nada mudou em
+`globals.css`: os pares `-muted` já existiam. Medido em
+`item-versions.test.ts`: o ladrilho `warning` renderiza `bg-warning-muted` e
+`rounded-full`, o neutro `bg-muted`, o `ItemLink` sai `type="button"` e sem
+`type` no `<a>`, e nenhuma classe é montada.

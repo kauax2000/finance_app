@@ -1342,8 +1342,11 @@ declaração de `background-color` no trilho).
 #### Listas, tabelas e navegação
 
 - **`Item`**: `variant="flush"`, `selected` (`aria-current`; **destaque de
-  passagem não é seleção**), `ItemChevron`. **Nenhuma tela escreve
-  `flex-nowrap` nem `text-left` num `Item`.**
+  passagem não é seleção**), `ItemChevron`, `ItemMedia variant="tile" tone`
+  (o círculo na superfície `-muted` do tom), `ItemLink` (a linha clicável com
+  ações dentro, como o `CardLink`) e `ItemGroupLabel sticky` (o fundo é
+  `--item-group-label-surface`, `--popover` por padrão). **Nenhuma tela
+  escreve `flex-nowrap` nem `text-left` num `Item`.**
 - **`DescriptionList`**: `term="eyebrow"` (**nenhum `DescriptionTerm` escreve
   `uppercase` à mão**), `DescriptionDetails size="xl"`, `DescriptionHint`,
   `columns` (nenhuma lista sobrescreve `grid-cols-*`), `align="end"` —
