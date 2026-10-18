@@ -1098,6 +1098,8 @@ declaração de `background-color` no trilho).
     Nascer do ponto do clique saiu (aberto pela barra lateral, surgia da
     esquerda de uma placa centralizada).
     `dialog-versions.test.ts`.
+- **`AlertDialog`** mora na camada da folha (`--z-sheet`, véu e placa), para a
+  confirmação aberta de dentro de uma folha ficar por cima dela.
 - **`AlertDialog`** mede pela régua do `Dialog` e veste a cromagem dele; não
   oferece `layout="fixed"`. `AlertDialogAction` e `AlertDialogCancel` são
   `Button` de verdade: **nunca `className={buttonVariants(...)}` nem botão
