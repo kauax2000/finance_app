@@ -9,7 +9,7 @@ lançamento, nos cartões de categoria e nas contas pendentes, com o seletor
 de período que confirma no próprio popover, com o rascunho protegido do
 formulário de lançamento, e com os menus do telefone em gaveta. As telas de
 acesso foram revistas em 2026-10-12 (a casca no layout) e em 2026-10-14 (o
-painel de marca animado). Quando uma tela mudar de caminho, atualize o
+painel de marca animado) e as notificações em 2026-10-17 (o painel flutuante, o sino exato e a revisão do servidor, ainda não publicada). Quando uma tela mudar de caminho, atualize o
 diagrama dela.
 
 ## Como ler os diagramas
@@ -303,7 +303,8 @@ flowchart TD
 ## 3. Navegação e ações globais
 
 O que está disponível em qualquer tela: a casca, o "+" de adicionar, a busca
-(⌘K) e as notificações.
+(⌘K) e as notificações. O painel de notificações abre do sino da barra do topo; o
+sino conta as não lidas direto no servidor.
 
 ```mermaid
 %%{init: {"theme": "dark"}}%%
@@ -345,17 +346,22 @@ flowchart TD
     palette -->|"Membros"| nav7
     palette -->|"Carteiras"| walletSwitch[("Troca a carteira atual")]
 
-    bell(["Sino de notificações"]) -->|"clicar"| read[("Marca como lida")] --> dest{"Tipo da notificação"}
-    dest -->|"href explícito"| explicit["Rota do metadata.href"]
-    dest -->|"category_created"| n1["/categories"]
+    bell(["Sino de notificações, com a contagem exata"]) -->|"clicar"| panel(["Painel flutuante: agrupado por dia, Todas ou Não lidas"])
+    panel -->|"linha com destino: fecha, navega e marca como lida em segundo plano"| dest{"Destino da linha"}
+    dest -->|"href explícito (orçamento, parcela, conta…)"| explicit["Rota do metadata.href"]
+    dest -->|"category_created, só linhas antigas"| n1["/categories"]
     dest -->|"invite_accepted"| n2["/members"]
-    dest -->|"cc_*"| n3["/credit-cards/id"]
-    dest -->|"budget_threshold"| n4["/categories/id"]
-    dest -->|"bill_reminder"| n5["/bills"]
+    dest -->|"cc_* com cartão"| n3["/credit-cards/id"]
+    dest -->|"tipo bill"| n5["/bills"]
     dest -->|"member_expense_created"| n6["/transactions?txn=id"]
-    dest -->|"outros"| n7["/dashboard"]
-    bell -->|"engrenagem"| nav8
-    bell -->|"marcar lida, excluir, limpar tudo"| bell
+    panel -->|"linha sem destino"| stay(["Só marca como lida; o painel fica aberto"])
+    panel -->|"⋯ da linha"| rowMenu(["Marcar como lida ou não lida; Excluir, sem desfazer"])
+    panel -->|"⋯ do cabeçalho"| headMenu(["Marcar todas como lidas; Preferências de notificação; Limpar todas"])
+    headMenu -->|"Preferências de notificação"| prefs["/settings#notificacoes"]
+    headMenu -->|"Limpar todas"| clearAsk(["Limpar todas as notificações?"])
+    clearAsk -->|"Limpar ou Cancelar"| panel
+    panel -->|"erro ao carregar"| retry(["Alerta: Tentar de novo"])
+    retry -->|"Tentar de novo"| panel
 
     old["Rotas antigas"] -->|"next.config.ts"| redirects["/dashboard/settings → /settings; /wallets → /dashboard; /assets → /credit-cards; /notifications → /dashboard?notifications=1"]
     unknown["Rota desconhecida"] --> notFound(["404: Ir para o painel ou Página inicial"])
@@ -370,8 +376,13 @@ flowchart TD
 | Menus do telefone | O "+" abre direto a gaveta do formulário de lançamento, com Despesa marcada (o seletor do formulário troca para Parcelada e Receita; assinatura fica na tela dela e na paleta). Era uma folha de ações (`Drawer` com `DrawerActions`) antes do formulário, e no desktop um menu: um passo a mais na jornada mais comum. A aba "Mais" (fixa: não troca de ícone nem de rótulo e não fica ativa nas páginas do menu; era o avatar) abre o menu da conta num painel (`DropdownMenu variant="panel"`) que brota dela para cima, só com as telas que não cabem na barra; cada link fecha o painel e leva à tela. Em cima as telas da carteira, embaixo Minha conta e Configurações. O tema mora em Configurações (seção Aparência); o sair (o menu ⋯ do perfil) e Planos e pagamentos (a seção Plano, só no telefone) moram em Minha conta. Antes foi uma gaveta de 625px com identidade, tema e sair, e antes dela um `Popover` de vidro escrito à mão | `src/components/layout/quick-actions.tsx`, `src/components/layout/mobile-account-menu.tsx` |
 | Busca global (⌘K) | Montada uma vez no `AppHeader`, com a lupa nas duas árvores da barra; no telefone abre como gaveta. A raiz busca tudo, sem as sub-páginas de categorias e cartões: o filtro é da paleta (`shouldFilter: false`) e cada grupo vem ranqueado por `ranquear` (`lib/app-search`), até 5 linhas. Telas (com sinônimos: "gastos" acha Transações, "fatura" Cartões, "boletos" Contas a pagar) são as da barra lateral menos o Painel, mais Membros (`navigation.ts`); Painel, Configurações, Minha conta, Planos e pagamentos, Sessões ativas, Atividade e Notificações ficam fora da busca, por decisão do dono. Ações chamam os mesmos ganchos do "+ Adicionar" (`useQuickCreateTransaction`, `useQuickCreateSubscription`) e os diálogos da casca (Nova categoria, Novo cartão). Transações são uma consulta de leitura ao banco (descrição, valor, data, nome da categoria e do cartão; as 8 mais recentes; espera de 250ms depois da digitação) e abrem `/transactions?txn=id`; "Ver todas em Transações" leva `q`, `from`, `to`, `min` e `max` na URL, e a lista filtra o texto só pela descrição. Transação nunca vira recente. Cartões e categorias leem o cache da casca (`useCategoriesQuery`, `useCreditCardsQuery`); parcelas (`?plan=id`), assinaturas (`?sub=id`) e membros (`/members`) saem das listas do espaço; contas a pagar vêm de uma consulta leve (`useBillsListQuery`) e abrem `/bills?detail=id`; escolher uma carteira troca a carteira atual. Os recentes ficam no `localStorage` (`app:busca`). Digitar `/` escolhe onde buscar (`/transacoes`, `/membros`…, `lib/app-search-scopes`): o nome entra no campo como escopo, só aquele grupo aparece (até 50 linhas; 20 transações), e dois Backspaces com o campo vazio voltam à busca em tudo; num escopo de lista do espaço, enquanto ela carrega o grupo diz "Buscando…" e, sem dado e com erro, "Não deu para carregar … agora." (o "Nada em …" só vale depois da resposta) | `src/components/layout/app-command-palette.tsx`, `src/lib/app-search-scopes.ts`, `src/components/layout/app-search-sources.ts`, `src/lib/app-search.ts`, `src/lib/transaction-search.ts`, `src/lib/queries/use-transactions-search.ts`, `src/lib/queries/use-bills-list.ts` |
 | Nome da tela e voltar | No telefone a barra do topo mostra o título e o voltar das subpáginas (`/categories/id`, `/categories/new`, `/credit-cards/id`, as de `/account`), pelo `usePageChromeSlot`. No desktop ela não mostra o nome da tela (o `<h1>` fica só para o leitor de tela) nem a trilha: a lateral marca onde se está e é o caminho de volta. A trilha com o link para a tela de cima ("Categorias", "Cartões de crédito") saiu em 2026-10-16 | `src/components/layout/app-header.tsx` |
-| Destino da notificação | `metadata.href` seguro vence; senão, o tipo decide. Espelha o servidor para o push | `src/lib/notification-href.ts`, `supabase/functions/_shared/notification-types.ts` |
-| Notificações no servidor | Edges `dispatch-notifications`, `evaluate-budgets`, `evaluate-credit-card-alerts`, `evaluate-bills-reminders`, `credit-card-calendar-alerts`, `notify-transaction-created` | `supabase/functions/` |
+| Painel de notificações | O sino abre a folha flutuante (448px, recuo de 8px) no desktop e a gaveta no telefone (`NotificationsSheet`). As linhas se agrupam por dia local ("Hoje", "Ontem", a data), com o rótulo do dia preso ao rolar; cada uma tem o ladrilho de tom (âmbar, vermelho, azul ou cinza, por `notificationTone`), o título em negrito e o ponto enquanto não lida, a hora local e a seta quando leva a algum lugar. O filtro Todas / Não lidas aparece com ao menos uma notificação; sem nenhuma não lida, o filtro mostra "Tudo lido" com "Ver todas". A lista traz as 100 mais recentes e, cheia, avisa "Mostrando as 100 mais recentes". A falha de carga é um `Alert` com "Tentar de novo", nunca a caixa de entrada vazia (o "Limpar todas" otimista que falha não pode virar "Nenhuma notificação"). Trocar de carteira volta ao esqueleto | `src/components/layout/notifications-sheet.tsx`, `src/components/layout/notifications-panel.tsx`, `src/components/layout/notification-row.tsx`, `src/lib/notification-visuals.tsx` |
+| Menu ⋯ do cabeçalho | "Marcar todas como lidas"; "Preferências de notificação" leva a `/settings#notificacoes` (a seção tem esse `id`) e, por ser link de dentro da folha, a fecha antes de abrir a tela; "Limpar todas…" pede confirmação ("Limpar todas as notificações?") e apaga as da carteira. Não há mais a engrenagem avulsa | `src/components/layout/notifications-panel.tsx`, `src/components/settings/notification-preferences.tsx` |
+| Ações da linha | Clicar numa linha com destino fecha o painel e navega na hora; marcar como lida corre em segundo plano. Linha sem destino só marca como lida e o painel fica aberto (o app não tem mais o destino `/dashboard` de reserva; ele ficou só no espelho do push). O botão do cursor e o ⋯ trazem "Marcar como lida" ou "Marcar como não lida" e "Excluir" (sem desfazer). Cada escrita é otimista, e o sino é refeito quando ela volta; uma que falha mostra o toast e o refazer corrige a lista | `src/components/layout/notification-row.tsx`, `src/lib/notification-actions.ts`, `src/lib/notifications.ts` |
+| Sino | O número é o do servidor (`countUnreadNotifications`), exato: o painel nunca o sobrescreve com o tamanho da lista, que para em 100. Sondado a cada 60s com a aba visível e refeito ao voltar a ela; o painel o refaz depois de cada escrita (`invalidateUnreadBadge`); a falha de rede mantém o último número bom; trocar de carteira o zera até a contagem nova chegar. Sem Realtime: o teto é um minuto de atraso | `src/components/layout/notification-bell-link.tsx`, `src/lib/unread-count.ts`, `src/components/layout/notifications-ui-provider.tsx` |
+| Destino da notificação | `metadata.href` seguro vence (começa em `/`, sem `//`, `\` nem caractere de controle); senão, o tipo decide. A função do app (`getNotificationAction`) devolve `null` quando nada casa; o espelho do servidor, que serve ao push, ainda cai em `/dashboard` | `src/lib/notification-actions.ts`, `src/lib/notification-href.ts`, `supabase/functions/_shared/notification-types.ts` |
+| Quem notifica no app | Nova categoria **não** notifica mais (as linhas antigas `category_created` continuam abrindo `/categories`). Editar uma despesa roda a conferência de orçamento (`evaluate-budgets`); a compra parcelada no cartão roda a de cartão; mudar o valor de um orçamento rearma os avisos de 80%, 100% e estouro (`threshold_*_sent_at` volta a nulo). Ninguém avisa a si mesmo | `src/lib/transaction-detail-sheet-mutations.ts`, `src/components/transactions/transaction-form-persistence.ts`, `src/lib/category-budget-ops.ts` |
+| Notificações no servidor | Edges `dispatch-notifications`, `evaluate-budgets`, `evaluate-credit-card-alerts`, `evaluate-bills-reminders`, `credit-card-calendar-alerts`, `notify-transaction-created`. **Revisadas no repositório em 2026-10-17 e ainda não publicadas** (o app em produção segue com o comportamento antigo até lá): o link do orçamento leva `?month=AAAA-MM`; textos com categoria, mês e valores; o "limite usado" do cartão soma a fatura aberta e a última fechada se não paga; os lembretes de calendário só dependem do interruptor do calendário, pulam fatura zerada ou paga, toleram um dia de cron perdido, e "fechou" sai no dia seguinte ao fechamento; conta atrasada avisa no 1º dia e a cada 7; `dispatch-notifications` recusa todo pedido; o interruptor "Promoções" saiu da tela de preferências. Passo a passo em `supabase/NOTIFICATION_DEPLOYMENT.md` | `supabase/functions/`, `supabase/NOTIFICATION_DEPLOYMENT.md` |
 | Push | Edges `push-subscribe` e `push-unsubscribe` | `supabase/functions/` |
 | Redirecionamentos | Os únicos que acontecem no servidor | `next.config.ts` |
 
@@ -605,7 +616,7 @@ flowchart TD
 | Selo na tabela de transações | `Aberta`, `Fechada`, `Anterior`, `Paga`; Aberta é verde, Fechada âmbar, Anterior vermelha | `src/lib/credit-card-display.ts` |
 | Pagamento de fatura | Linha em `credit_card_invoice_payments`, sem criar despesa | `src/lib/bills/pay-bill-flow.ts` |
 | "Ver" do toast | Cadastrar um cartão (pela página ou pelo diálogo do "+ Adicionar") mostra "Ver", que leva a `/credit-cards/id`; na fila offline, sem "Ver" | `src/app/(app)/credit-cards/page-client.tsx`, `src/components/credit-cards/credit-card-create-dialog.tsx` |
-| Alertas | Limite, fechamento e vencimento geram notificações `cc_*` | edges `evaluate-credit-card-alerts`, `credit-card-calendar-alerts` |
+| Alertas | Limite, fechamento e vencimento geram notificações `cc_*`. A compra parcelada no cartão roda a conferência de limite, como a despesa avulsa | edges `evaluate-credit-card-alerts`, `credit-card-calendar-alerts`; `src/components/transactions/transaction-form-persistence.ts` |
 
 ---
 
@@ -665,7 +676,7 @@ flowchart TD
     del -->|"Excluir"| removed(["Conta removida com todas as parcelas"])
     del -->|"Cancelar"| bills
 
-    reminders[("Edge evaluate-bills-reminders")] -.->|"3 dias antes ou no dia"| notif(("G3 Notificação bill_reminder"))
+    reminders[("Edge evaluate-bills-reminders")] -.->|"3 dias antes, no dia e atraso"| notif(("G3 Notificação bill_reminder"))
 ```
 
 ### Regras técnicas
@@ -757,7 +768,7 @@ flowchart TD
 
     newRoute["/categories/new"] --> catForm
     listView -->|"Nova categoria"| catForm(["Formulário: tipo, nome, cor, ícone; limite do mês se despesa"])
-    catForm -->|"Salvar"| savedCat[("Categoria e orçamento do mês")] --> notifCat(("G3 Notificação category_created"))
+    catForm -->|"Salvar"| savedCat[("Categoria e orçamento do mês")]
     savedCat -->|"toast Ver, ao criar e online"| detail
     savedCat --> listView
     catForm -->|"valor inválido"| catForm
@@ -794,7 +805,7 @@ flowchart TD
 | Detalhe | `rpc_fetch_category_detail_bundle` | `src/lib/queries/fetch-category-detail-bundle.ts` |
 | "Ver" do toast | Criar uma categoria (pela tela ou pelo diálogo do "+ Adicionar") mostra "Categoria criada" com "Ver", que leva a `/categories/id?type=`; se o orçamento falhar, o aviso "Categoria criada, mas o orçamento não foi salvo" leva ao mesmo detalhe. Na fila offline, sem "Ver". A tela de categorias não mostrava toast nenhum ao criar | `src/components/categories/category-create-dialog.tsx`, `src/app/(app)/categories/page-client.tsx` |
 | Entradas no detalhe | Lista de categorias, gasto por categoria do cartão, notificação de orçamento | `src/components/categories/detail/` |
-| Orçamento | Avaliado depois de cada despesa e de cada conta paga | edge `evaluate-budgets` |
+| Orçamento | Avaliado depois de cada despesa criada ou editada e de cada conta paga; mudar o valor do orçamento rearma os avisos de 80%, 100% e estouro. Criar a categoria não notifica mais | edge `evaluate-budgets`, `src/lib/category-budget-ops.ts` |
 | Botão direito | No cartão de categoria, o menu toma o lugar do menu do navegador sobre o link, por isso traz "Abrir em nova aba"; o ⋯ continua | `src/components/categories/category-card-context-menu.tsx` |
 
 ---
@@ -866,6 +877,7 @@ continuam aqui para registro.
 | 5 | G8 | O detalhe de uma assinatura só abre pelo estado da tela; nenhum parâmetro de URL o abre (só existe `?new=1`). Por isso o toast de assinatura criada não tem "Ver", ao contrário de transação, cartão, conta e categoria (rodada 228). |
 | 6 | G5 | Excluir uma transação é físico e sem volta: não há `deleted_at` nem RPC de restaurar, então o "Desfazer" do toast não substitui a confirmação. Ter o desfazer exige exclusão lógica no banco. |
 | 7 | G2 | Os erros de carga do diretório de membros mostram ao usuário o arquivo SQL e a RPC a aplicar — texto de desenvolvedor (`members/page-client.tsx`). |
+| 8 | G3 | O servidor das notificações foi revisado (textos, `?month=` no link do orçamento, regras de disparo) e **não foi publicado**: até lá, produção manda o texto e as regras antigas, e `dispatch-notifications` ainda aceita pedidos. A ordem e os crons estão em `supabase/NOTIFICATION_DEPLOYMENT.md`. |
 
 ### Fechadas na rodada de acesso (set/2026)
 
