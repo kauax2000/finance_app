@@ -6,7 +6,6 @@ import {
     ArrowPathRoundedSquareIcon,
     ArrowTrendingDownIcon,
     ArrowTrendingUpIcon,
-    BellIcon,
     CalendarDaysIcon,
     ClipboardDocumentCheckIcon,
     ClockIcon,
@@ -43,15 +42,11 @@ import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
 import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
-import { useNotificationsUi } from "@/components/layout/notifications-ui-provider"
 import {
     useQuickCreateSubscription,
     useQuickCreateTransaction,
 } from "@/components/layout/quick-actions"
-import {
-    TELAS_BUSCAVEIS,
-    type TelaBuscavel,
-} from "@/components/layout/app-search-sources"
+import { TELAS_BUSCAVEIS } from "@/components/layout/app-search-sources"
 import type { HeroIcon } from "@/types/navigation"
 import {
     ROUTES,
@@ -101,17 +96,6 @@ const RECENTES = "app:busca"
 
 /** Quantas linhas cada grupo local mostra com texto. */
 const POR_GRUPO = 5
-
-/**
- * Notificações não é rota: é o painel do `NotificationsUiProvider`. Entra no
- * fim de "Telas", abre o painel e não vira recente.
- */
-const NOTIFICACOES: TelaBuscavel = {
-    href: ROUTES.NOTIFICATIONS,
-    name: "Notificações",
-    icon: BellIcon,
-    palavras: [],
-}
 
 const parcelaHref = (id: string) => `${ROUTES.TRANSACTIONS}?plan=${id}`
 const assinaturaHref = (id: string) => `${ROUTES.TRANSACTIONS}?sub=${id}`
@@ -236,7 +220,6 @@ function PaletteBody({ close }: { close: () => void }) {
         procuraTransacoes && !buscando ? (transacoes.data ?? []) : []
 
     const shell = useGlobalShellDialogsOptional()
-    const notificacoes = useNotificationsUi()
     const criarTransacao = useQuickCreateTransaction()
     const criarAssinatura = useQuickCreateSubscription()
 
@@ -290,20 +273,14 @@ function PaletteBody({ close }: { close: () => void }) {
         return label ? [{ href, label }] : []
     })
 
-    // Com o campo vazio: as telas que não estão nos recentes, e Notificações
-    // no fim. Com texto: as 5 melhores de cada grupo, e só os que acharam algo.
+    // Com o campo vazio: as telas que não estão nos recentes. Com texto: as 5 melhores de cada grupo, e só os que acharam algo.
     const achar = <T,>(
         itens: readonly T[] | undefined,
         chave: (item: T) => { valor: string; palavras?: string[] },
     ) => (q ? ranquear(itens ?? [], q, chave, POR_GRUPO) : [])
     const telas = q
-        ? ranquear([...TELAS_BUSCAVEIS, NOTIFICACOES], q, (t) => ({ valor: t.name, palavras: t.palavras }), POR_GRUPO)
-        : [
-              ...TELAS_BUSCAVEIS.filter(
-                  (t) => !recentes.some((r) => r.href === t.href),
-              ),
-              NOTIFICACOES,
-          ]
+        ? ranquear(TELAS_BUSCAVEIS, q, (t) => ({ valor: t.name, palavras: t.palavras }), POR_GRUPO)
+        : TELAS_BUSCAVEIS.filter((t) => !recentes.some((r) => r.href === t.href))
     const acoesVistas = q
         ? ranquear(acoes, q, (a) => ({ valor: a.label, palavras: a.palavras }), POR_GRUPO)
         : acoes
@@ -331,11 +308,7 @@ function PaletteBody({ close }: { close: () => void }) {
                     <CommandItem
                         key={tela.href}
                         value={`tela:${tela.href}`}
-                        onSelect={() =>
-                            tela === NOTIFICACOES
-                                ? agir(notificacoes.open)
-                                : ir(tela.href)
-                        }
+                        onSelect={() => ir(tela.href)}
                     >
                         <CommandItemIcon>
                             <tela.icon />
@@ -343,7 +316,7 @@ function PaletteBody({ close }: { close: () => void }) {
                         <CommandItemTitle>
                             <CommandHighlight>{tela.name}</CommandHighlight>
                         </CommandItemTitle>
-                        {tela === NOTIFICACOES ? null : <CommandItemArrow />}
+                        <CommandItemArrow />
                     </CommandItem>
                 ))}
             </CommandGroup>

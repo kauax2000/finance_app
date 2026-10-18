@@ -26,6 +26,10 @@ describe("a paleta do app", () => {
         expect(fonte).toContain(".slice(0, MAX_IDS_NA_BUSCA)")
         // telas novas e sinônimos
         const fontes = lerFonte("src/components/layout/app-search-sources.ts")
-        for (const t of ["ACCOUNT_SESSIONS", "ACCOUNT_ACTIVITY", "fatura", "boletos", "gastos"]) expect(fontes).toContain(t)
+        for (const t of ["fatura", "boletos", "gastos"]) expect(fontes).toContain(t)
+        // fora da busca, por decisão do dono: Painel, Configurações, a conta e as notificações
+        for (const t of ["ACCOUNT_SESSIONS", "ACCOUNT_ACTIVITY", "SETTINGS_NAV_ITEM", "ACCOUNT_MENU_PROFILE_LINK_ITEMS"]) expect(fontes).not.toContain(t)
+        expect(fontes).toContain("item.href !== ROUTES.DASHBOARD")
+        expect(fonte).not.toContain("Notificações")
     })
 })
