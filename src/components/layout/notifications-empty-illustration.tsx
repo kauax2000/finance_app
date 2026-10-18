@@ -1,14 +1,19 @@
 "use client"
 
 import { motion, useReducedMotion } from "motion/react"
+import * as React from "react"
 import {
     ArrowTrendingUpIcon,
     CheckIcon,
     CreditCardIcon,
     ExclamationCircleIcon,
+    LockClosedIcon,
+    WalletIcon,
 } from "@heroicons/react/16/solid"
 
+import { ColorTile } from "@/components/ui/color-tile"
 import { MOLA } from "@/lib/spring"
+import { TILE_PALETTE } from "@/lib/tile-palette"
 import { cn } from "@/lib/utils"
 import type { HeroIcon } from "@/types/navigation"
 
@@ -45,50 +50,189 @@ const CARTOES: Cartao[] = [
     { tom: "bg-destructive text-destructive-foreground", Icone: ExclamationCircleIcon, x: 10, y: 32, giro: 3, escala: 1, veu: "", titulo: "w-2/3", descricao: "w-1/2" },
 ]
 
+/** O cartão em miniatura: chapado, no raio da linha alta, com a sombra das placas. */
+const CASCA =
+    "relative flex h-12 items-center gap-2.5 overflow-hidden rounded-row-lg border border-border bg-card bg-clip-padding px-2.5 shadow-md"
+
+/** Quando o leque assenta: a da frente chega aos ~0,6s, e os detalhes vêm depois. */
+const LEQUE_ASSENTA_S = 0.6
+
+/**
+ * A luz atrás da cena, num degradê radial e não num círculo com `blur`: o borrão
+ * de 64px passava da caixa e o Chrome o recortava numa linha reta que
+ * atravessava a folha.
+ */
+function Luz({ tom, className }: { tom: string; className?: string }) {
+    return (
+        <div
+            className={cn(
+                "pointer-events-none absolute top-1/2 left-1/2 size-80 -translate-1/2 bg-radial to-transparent to-60%",
+                tom,
+                className
+            )}
+        />
+    )
+}
+
+/**
+ * Um cartão do leque: entra do monte na mola, um depois do outro, até o lugar
+ * dele no zigue-zague, e depois flutua poucos pixels (num nó próprio, para não
+ * brigar com a entrada). O véu das de trás escurece o conteúdo, e o cartão
+ * continua chapado.
+ */
+function CartaoNoLeque({
+    cartao,
+    indice,
+    parado,
+    className,
+    children,
+}: {
+    cartao: Cartao
+    indice: number
+    parado: boolean
+    className?: string
+    children: React.ReactNode
+}) {
+    return (
+        <motion.div
+            className="absolute top-1/2 left-1/2 -mt-6 -ml-24 w-48"
+            initial={parado ? false : { opacity: 0, x: 0, y: 24, rotate: 0, scale: 0.9 }}
+            animate={{ opacity: 1, x: cartao.x, y: cartao.y, rotate: cartao.giro, scale: cartao.escala }}
+            transition={{ ...MOLA, delay: 0.08 * indice }}
+        >
+            <motion.div
+                animate={parado ? undefined : { y: [0, -3, 0] }}
+                transition={{ duration: 4 + indice, repeat: Infinity, ease: "easeInOut", delay: 0.6 + 0.3 * indice }}
+                className={cn(CASCA, className)}
+            >
+                {children}
+                {cartao.veu ? <span className={cn("absolute inset-0", cartao.veu)} /> : null}
+            </motion.div>
+        </motion.div>
+    )
+}
+
+/** O título e a descrição em traço; `apagado` é o texto que ainda não se lê. */
+function Linhas({ cartao, apagado = false }: { cartao: Cartao; apagado?: boolean }) {
+    return (
+        <span className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <span className={cn("h-1.5 rounded-full", apagado ? "bg-foreground/12" : "bg-foreground/25", cartao.titulo)} />
+            <span className={cn("h-1.5 rounded-full", apagado ? "bg-muted-foreground/12" : "bg-muted-foreground/25", cartao.descricao)} />
+        </span>
+    )
+}
+
 export function NotificationsEmptyIllustration({ className }: { className?: string }) {
     const parado = useReducedMotion() ?? false
 
     return (
         <div aria-hidden className={cn("relative h-36 w-full max-w-64", className)}>
-            {/* A luz atrás da pilha, no azul da não lida. Degradê radial, e não um círculo
-                com `blur`: o borrão de 64px passava da caixa e o Chrome o recortava numa
-                linha reta que atravessava a folha. */}
-            <div className="pointer-events-none absolute top-1/2 left-1/2 size-80 -translate-1/2 bg-radial from-info/15 to-transparent to-60%" />
+            <Luz tom="from-info/15" />
+            {CARTOES.map((c, i) => (
+                <CartaoNoLeque key={i} cartao={c} indice={i} parado={parado}>
+                    <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-full [&_svg]:size-3.5", c.tom)}>
+                        <c.Icone />
+                    </span>
+                    <Linhas cartao={c} />
+                    <span className="flex shrink-0 items-center gap-1 self-start pt-2">
+                        <span className="h-1.5 w-5 rounded-full bg-muted-foreground/25" />
+                        {i === CARTOES.length - 1 ? <span className="size-1.5 rounded-full bg-info" /> : null}
+                    </span>
+                </CartaoNoLeque>
+            ))}
+        </div>
+    )
+}
 
+/**
+ * Sem conta: os avisos estão ali, trancados. Os mesmos três cartões, com o círculo
+ * neutro e o texto apagado (ainda não se lê); quando o leque assenta, o círculo da
+ * frente vira o cadeado chapado, num estalo de mola. Decorativa (`aria-hidden`).
+ */
+export function NotificationsLockedIllustration({ className }: { className?: string }) {
+    const parado = useReducedMotion() ?? false
+
+    return (
+        <div aria-hidden className={cn("relative h-36 w-full max-w-64", className)}>
+            <Luz tom="from-foreground/8" />
             {CARTOES.map((c, i) => {
                 const frente = i === CARTOES.length - 1
                 return (
-                    <motion.div
-                        key={i}
-                        className="absolute top-1/2 left-1/2 -mt-6 -ml-24 w-48"
-                        initial={parado ? false : { opacity: 0, x: 0, y: 24, rotate: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, x: c.x, y: c.y, rotate: c.giro, scale: c.escala }}
-                        transition={{ ...MOLA, delay: 0.08 * i }}
-                    >
-                        {/* A flutuação mora num nó próprio, para não brigar com a entrada. */}
-                        <motion.div
-                            animate={parado ? undefined : { y: [0, -3, 0] }}
-                            transition={{ duration: 4 + i, repeat: Infinity, ease: "easeInOut", delay: 0.6 + 0.3 * i }}
-                            className="relative flex h-12 items-center gap-2.5 overflow-hidden rounded-row-lg border border-border bg-card bg-clip-padding px-2.5 shadow-md"
-                        >
-                            <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-full [&_svg]:size-3.5", c.tom)}>
+                    <CartaoNoLeque key={i} cartao={c} indice={i} parado={parado}>
+                        <span className="relative size-7 shrink-0">
+                            <span className="absolute inset-0 flex items-center justify-center rounded-full bg-muted text-muted-foreground [&_svg]:size-3.5">
                                 <c.Icone />
                             </span>
-                            <span className="flex min-w-0 flex-1 flex-col gap-1.5">
-                                <span className={cn("h-1.5 rounded-full bg-foreground/25", c.titulo)} />
-                                <span className={cn("h-1.5 rounded-full bg-muted-foreground/25", c.descricao)} />
-                            </span>
-                            <span className="flex shrink-0 items-center gap-1 self-start pt-2">
-                                <span className="h-1.5 w-5 rounded-full bg-muted-foreground/25" />
-                                {frente ? <span className="size-1.5 rounded-full bg-info" /> : null}
-                            </span>
-                            {/* O véu das de trás: escurece o conteúdo, e o cartão continua chapado. */}
-                            {c.veu ? <span className={cn("absolute inset-0", c.veu)} /> : null}
-                        </motion.div>
-                    </motion.div>
+                            {frente ? (
+                                <motion.span
+                                    className="absolute inset-0 flex items-center justify-center rounded-full bg-foreground text-background [&_svg]:size-3.5"
+                                    initial={parado ? false : { opacity: 0, scale: 0.5 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{
+                                        opacity: { duration: 0.2, delay: LEQUE_ASSENTA_S },
+                                        scale: { ...MOLA, delay: LEQUE_ASSENTA_S },
+                                    }}
+                                >
+                                    <LockClosedIcon />
+                                </motion.span>
+                            ) : null}
+                        </span>
+                        <Linhas cartao={c} apagado />
+                        <span className="h-1.5 w-5 shrink-0 self-start rounded-full bg-muted-foreground/12 mt-2" />
+                    </CartaoNoLeque>
                 )
             })}
+        </div>
+    )
+}
 
+/** As carteiras da cena: três cores da paleta que a pessoa escolhe para elas. */
+const CORES_DAS_CARTEIRAS = [TILE_PALETTE[0].hex, TILE_PALETTE[3].hex, TILE_PALETTE[6].hex] as const
+
+/**
+ * Sem carteira: os cartões viram linhas do seletor de carteira — o ladrilho de
+ * cor (a paleta da carteira) e o nome. Quando o leque assenta, a da frente é a
+ * escolhida: o contorno acende e o ✓ se desenha na ponta. Decorativa (`aria-hidden`).
+ */
+export function NotificationsWalletsIllustration({ className }: { className?: string }) {
+    const parado = useReducedMotion() ?? false
+
+    return (
+        <div aria-hidden className={cn("relative h-36 w-full max-w-64", className)}>
+            <Luz tom="from-foreground/8" />
+            {CARTOES.map((c, i) => {
+                const frente = i === CARTOES.length - 1
+                return (
+                    <CartaoNoLeque key={i} cartao={c} indice={i} parado={parado}>
+                        <ColorTile size="xs" color={CORES_DAS_CARTEIRAS[i]}>
+                            <WalletIcon />
+                        </ColorTile>
+                        <span className="flex min-w-0 flex-1 flex-col gap-1.5">
+                            <span className={cn("h-1.5 rounded-full bg-foreground/25", c.titulo)} />
+                            <span className="h-1.5 w-1/4 rounded-full bg-muted-foreground/25" />
+                        </span>
+                        {frente ? (
+                            <>
+                                <motion.span
+                                    className="flex shrink-0 text-foreground [&_svg]:size-4"
+                                    initial={parado ? false : { clipPath: "inset(0 100% 0 0)" }}
+                                    animate={{ clipPath: "inset(0 0% 0 0)" }}
+                                    transition={{ duration: 0.3, ease: "easeOut", delay: LEQUE_ASSENTA_S + 0.15 }}
+                                >
+                                    <CheckIcon />
+                                </motion.span>
+                                {/* O contorno da escolhida, por dentro da casca. */}
+                                <motion.span
+                                    className="pointer-events-none absolute inset-0 rounded-[inherit] ring-2 ring-foreground/50 ring-inset"
+                                    initial={parado ? false : { opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ duration: 0.25, delay: LEQUE_ASSENTA_S }}
+                                />
+                            </>
+                        ) : null}
+                    </CartaoNoLeque>
+                )
+            })}
         </div>
     )
 }
