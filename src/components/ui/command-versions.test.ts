@@ -18,6 +18,11 @@ const tecla = (key: string, mods: Partial<Record<"metaKey" | "ctrlKey" | "altKey
 })
 
 describe("as versões do Command", () => {
+  it("o ícone da linha não passa dos 36 da pilha: caixa de 24 de largura e 20 de altura", () => {
+    expect(CODIGO).toContain('"flex h-5 w-6 shrink-0 items-center justify-center')
+    expect(CODIGO).not.toContain('"flex size-6 shrink-0 items-center justify-center text-muted-foreground')
+  })
+
   it("o destaque acha o trecho sem acento dos dois lados, e não inventa", () => {
     expect(highlightParts("Saúde", "saude")).toEqual([{ text: "Saúde", match: true }])
     expect(highlightParts("Mercado", "erc")).toEqual([

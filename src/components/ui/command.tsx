@@ -1071,8 +1071,9 @@ function CommandItemDescription({
 }
 
 /**
- * O ícone da linha, numa caixa de 24 que alinha o nome na mesma coluna em
- * qualquer grupo. Fica cinza e acende com a linha selecionada; quem o tinge é o
+ * O ícone da linha, numa caixa de 24 de largura que alinha o nome na mesma
+ * coluna em qualquer grupo, e 20 de altura: com os 8 de recuo da linha, ela
+ * mede os 36 da pilha (24 de altura levava a linha a 40). Fica cinza e acende com a linha selecionada; quem o tinge é o
  * `group`, não a regra de filho direto do `CommandItem`.
  */
 function CommandItemIcon({ className, ...props }: React.ComponentProps<"span">) {
@@ -1081,7 +1082,7 @@ function CommandItemIcon({ className, ...props }: React.ComponentProps<"span">) 
       data-slot="command-item-icon"
       aria-hidden
       className={cn(
-        "flex size-6 shrink-0 items-center justify-center text-muted-foreground transition-colors duration-(--duration-base) ease-(--ease-out) group-data-selected/command-item:text-accent-foreground",
+        "flex h-5 w-6 shrink-0 items-center justify-center text-muted-foreground transition-colors duration-(--duration-base) ease-(--ease-out) group-data-selected/command-item:text-accent-foreground",
         "[&_svg:not([class*='size-'])]:size-4",
         className
       )}

@@ -27013,3 +27013,14 @@ fora — cobria metade do arco (no campo, o fio era a borda, por dentro). Na
 pílula do `TopBarSearch plate` o fio volta para a borda do botão
 (`ring-0 border-foreground/10`, a mesma tinta e espessura), com o vidro até ela
 (`bg-clip-border`).
+
+### Rodada 303 — a linha da paleta volta aos 36
+
+O dono mediu a linha da paleta do app a 40, e a regra da pilha é 36. Quem
+sobrava era o `CommandItemIcon`: caixa de 24 nos dois eixos, com os 8 de recuo
+da linha, dava 40 (o `min-h-9` é piso, não teto). A caixa fica com 24 de
+largura, que alinha o nome na mesma coluna em todo grupo, e 20 de altura
+(`h-5 w-6`); o ícone de 16 cabe com folga. Medido: toda linha a 36, com e sem
+meta (a data e o valor das transações), e o ícone a 24×20. Vale também para a
+paleta do catálogo e a demonstração do login, que usam a mesma peça.
+`command-versions.test.ts` tranca a caixa.
