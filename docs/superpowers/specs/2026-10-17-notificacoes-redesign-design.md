@@ -147,10 +147,18 @@ certa, com as ações à mão.
 - **C, o servidor**, fica para depois da decisão do dono sobre publicar no
   Supabase de produção (ver abaixo).
 - Página de notificações própria, Realtime, push e e-mail: sem mudança.
-- Nada muda em `src/components/ui/` nem em `globals.css`: o painel é composto
-  só com as peças que existem. **Se faltar uma peça** (por exemplo, o
-  círculo tingido do `ItemMedia` não existir), a tarefa para e pergunta, pela
-  invariante 6 do `AGENTS.md`.
+- **Três peças novas no design system, aprovadas pelo dono** (2026-10-17), em
+  `src/components/ui/item.tsx`, com a página do `Item` no catálogo, o teste
+  em `item` e o bullet no `AGENTS.md`: (1) `ItemMedia variant="tile"` com
+  `tone` (`neutral` | `info` | `warning` | `destructive`) — o círculo de 32
+  (28 no `sm`, 40 no `lg`) na superfície `-muted` do tom com o ícone na tinta
+  `-muted-foreground`; (2) o link esticado do `Item` (`ItemLink`, como o
+  `CardLink`: um `<button>` ou `<a>` cujo `::after` cobre a linha, e as ações
+  da linha sobem a `z-10`), para a linha inteira ser clicável com botões
+  dentro sem botão dentro de botão; (3) `ItemGroupLabel sticky` — o rótulo de
+  um grupo de linhas em sobrancelha, que gruda no topo do rolável com o fundo
+  da superfície (`--item-group-label-surface`, padrão `--popover`). Nada muda
+  em `globals.css`. Fora isso, nada em `ui/`.
 
 ## Anti-metas
 
@@ -177,28 +185,59 @@ certa, com as ações à mão.
 - A forma exata do teste de cada função pura (`notificationTone`, a
   sequência do sino, o desfazer da exclusão).
 
-## C — O servidor (proposto; precisa de publicar no Supabase)
+## C — O servidor (no código; o dono publica)
 
-O que a auditoria achou nas funções e no banco, para um plano à parte:
+O dono decidiu: planejar e codar a parte do servidor, deixar pronta e testada
+no repositório, e **ele** publica as funções e a migração no Supabase quando
+quiser. Ninguém roda `supabase functions deploy`, `supabase db push` nem nada
+contra o projeto remoto. O `NOTIFICATION_DEPLOYMENT.md` ganha a lista do que
+publicar, na ordem.
 
-1. O interruptor "Cartões: limite e categorias" desliga também os lembretes de
-   fatura (fecha/vence): a função do calendário passa pelo filtro de cartões
-   além do dela.
-2. Textos vagos e incoerentes: "Orçamento chegando ao limite (80%)" com "99%"
-   no corpo; nenhum diz a categoria, o mês ou os valores. O texto da captura do
-   dono nem está no repositório: a função publicada parece mais velha que o
-   código.
-3. Conta atrasada avisa todo dia por até 60 dias, a cada membro.
-4. Lembretes de fatura saem com fatura zerada ou paga, sem valor, e um dia de
-   cron perdido perde o lembrete (a data precisa bater exatamente).
-5. O "limite usado" do cartão olha só a fatura aberta.
-6. Os crons do calendário de cartão e das contas não estão agendados nas
-   migrações.
-7. Qualquer membro pode chamar `dispatch-notifications` com título e corpo
-   livres e mandar e-mail para si; e o `href` no servidor não recusa `\`.
-8. Tipos com ícone e sem quem os produza (convites, papel, saída da carteira,
-   promoções): o interruptor de promoções não faz nada.
-
-A auditoria propôs um catálogo de textos (por exemplo, "{Categoria}: 85% do
-orçamento de outubro" / "R$ 850 de R$ 1.000 — restam R$ 150"), que entra no
-plano de C.
+1. **O interruptor de cartões não desliga o calendário (Claude)**: os lembretes
+   de fatura (`cc_invoice_*`, `cc_payment_due_*`) passam só pelo
+   `notify_credit_card_calendar`; o `deliverNotification` aceita uma opção para
+   não reaplicar o filtro do tipo `credit_card`.
+2. **Textos com contexto (Claude)**: os títulos e corpos saem de funções puras
+   em `supabase/functions/_shared/notification-copy.ts` (testadas com `deno
+   test`), no catálogo:
+   - orçamento a 80%: "{Categoria}: {p}% do orçamento de {mês}" / "{gasto} de
+     {limite} — restam {saldo}."
+   - orçamento a 100%: "{Categoria}: orçamento de {mês} esgotado" / "{gasto} de
+     {limite}."
+   - orçamento estourado: "{Categoria}: orçamento de {mês} estourado" / "{gasto}
+     de {limite} ({p}%) — {excesso} acima."
+   - limite do cartão: "{Cartão}: {p}% do limite" / "{usado} de {limite};
+     disponível {livre}."
+   - fatura fechou: "Fatura do {Cartão} fechou" / "Total {valor}, vence em
+     {dd/mm}." — e não sai com total zero.
+   - fatura fecha em breve: "Fatura do {Cartão} fecha em {n} dias" / "Parcial
+     {valor}, fecha em {dd/mm}."
+   - fatura vence: "Fatura do {Cartão} vence {em n dias|hoje}" / "{valor} —
+     vencimento {dd/mm}." — e não sai com a fatura paga ou zerada.
+   - conta: "{Conta} vence {em n dias|hoje}" / "{valor estimado} em {dd/mm}.";
+     atrasada: "{Conta} está atrasada" / "Vencia em {dd/mm} ({valor}). Registre
+     o pagamento."
+   O link do orçamento leva o mês (`/categories/{id}?month=AAAA-MM`, se a tela
+   ler o parâmetro; senão, sem ele).
+3. **Conta atrasada avisa uma vez e depois a cada 7 dias (Claude)**, não todo
+   dia; a chave de deduplicação muda de acordo.
+4. **Lembrete de fatura tolera um dia perdido (Claude)**: "fecha/vence em 3
+   dias" vale para 3 ou 2 dias, deduplicado pelo ciclo, para um cron que falhou
+   num dia não perder o aviso.
+5. **O limite usado do cartão (Claude)**: soma as faturas em aberto (a atual e
+   as anteriores não pagas), não só a aberta; as parcelas futuras ficam de fora
+   (o banco não as reserva como gasto).
+6. **Os crons (Claude)**: o calendário do cartão e as contas não estão
+   agendados nas migrações porque o agendamento chama a função por HTTP com a
+   chave de serviço, que é segredo do projeto. Fica documentado no
+   `NOTIFICATION_DEPLOYMENT.md` (o SQL do `cron.schedule` com o lugar da chave),
+   não numa migração.
+7. **Endurecimento (Claude)**: `dispatch-notifications` aceita só `type:
+   'system'` e uma lista fechada de `kind` (hoje, nenhuma além das que o
+   cliente ainda chama; o `category_created` sai em B6); o `href` no servidor
+   recusa `\`, tabulação e quebra de linha, como o cliente.
+8. **Os tipos sem produtor (Claude)**: os ícones de `invite_*` (menos
+   `invite_accepted`), `member_*`, `removed_from_workspace`,
+   `workspace_role_changed`, `workspace_deleted`, `transaction_digest` e
+   `promo_feature` ficam (as linhas antigas e futuras os usam); o interruptor
+   "Promoções" some da tela de preferências até alguém mandar promoção.
