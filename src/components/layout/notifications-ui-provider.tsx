@@ -10,6 +10,7 @@ import {
     useState,
     type ReactNode,
 } from "react"
+import { unreadAfterDelta } from "@/lib/unread-count"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
 export type NotificationsUiContextValue = {
@@ -54,7 +55,7 @@ export function NotificationsUiProvider({ children }: { children: ReactNode }) {
     const close = useCallback(() => setIsOpen(false), [])
     const toggle = useCallback(() => setIsOpen((o) => !o), [])
     const adjustUnreadCount = useCallback((delta: number) => {
-        setUnreadCount((cur) => Math.max(0, cur + delta))
+        setUnreadCount((cur) => unreadAfterDelta(cur, delta))
     }, [])
     const invalidateUnreadBadge = useCallback(() => setBadgeNonce((n) => n + 1), [])
 

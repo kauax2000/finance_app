@@ -1,43 +1,59 @@
 "use client"
 
-import { useCallback, useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { BellIcon } from "@heroicons/react/16/solid"
 import { TopBarAction } from "@/components/ui/top-bar"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { useNotificationsUi } from "@/components/layout/notifications-ui-provider"
 import { countUnreadNotifications } from "@/lib/notifications"
+import { BELL_POLL_MS } from "@/lib/unread-count"
 
 export function NotificationBellLink() {
     const { user, loading: authLoading } = useAuth()
     const { currentWorkspaceId, loading: workspaceLoading } = useWorkspace()
-    const { toggle, isOpen, unreadCount, setUnreadCount } = useNotificationsUi()
-
-    const refresh = useCallback(async () => {
-        if (!user?.id || !currentWorkspaceId) {
-            setUnreadCount(0)
-            return
-        }
-        try {
-            const n = await countUnreadNotifications(user.id, currentWorkspaceId)
-            setUnreadCount(n)
-        } catch {
-            setUnreadCount(0)
-        }
-    }, [user, currentWorkspaceId, setUnreadCount])
+    const { toggle, isOpen, unreadCount, setUnreadCount, badgeNonce } = useNotificationsUi()
+    const userId = user?.id
+    // Sequência da contagem: só a resposta mais recente escreve no sino.
+    const seqRef = useRef(0)
 
     useEffect(() => {
         if (authLoading || workspaceLoading) return
-        void refresh()
-    }, [authLoading, workspaceLoading, refresh])
+        if (!userId || !currentWorkspaceId) {
+            setUnreadCount(0)
+            return
+        }
 
-    useEffect(() => {
+        const refresh = async () => {
+            const seq = ++seqRef.current
+            try {
+                const n = await countUnreadNotifications(userId, currentWorkspaceId)
+                if (seq !== seqRef.current) return
+                setUnreadCount(n)
+            } catch {
+                // Falha de rede não zera o sino: fica o último número bom até a próxima sondagem.
+            }
+        }
+
+        void refresh()
+        // ponytail: sondagem de 60s, e só com a aba visível (teto: até 1 min de atraso para uma
+        // notificação nova). O caminho de volta é o Supabase Realtime em `notifications`, que exige
+        // a tabela na publicação `supabase_realtime` (mudança de banco).
+        const id = window.setInterval(() => {
+            if (document.visibilityState === "visible") void refresh()
+        }, BELL_POLL_MS)
         const onVis = () => {
             if (document.visibilityState === "visible") void refresh()
         }
         document.addEventListener("visibilitychange", onVis)
-        return () => document.removeEventListener("visibilitychange", onVis)
-    }, [refresh])
+        return () => {
+            window.clearInterval(id)
+            document.removeEventListener("visibilitychange", onVis)
+            // Invalida a resposta em voo (outra carteira, ou desmonte).
+            seqRef.current++
+        }
+        // `badgeNonce` refaz a contagem quando alguém invalida o sino.
+    }, [authLoading, workspaceLoading, userId, currentWorkspaceId, badgeNonce, setUnreadCount])
 
     return (
         <TopBarAction
