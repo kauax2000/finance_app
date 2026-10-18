@@ -257,10 +257,10 @@ function CommandDialog({
             // topo é fixado onde a placa cheia começaria (`50% - altura-máxima/2`)
             // e só a borda de baixo encolhe. 24rem de teto.
             "[--command-dialog-h:min(60dvh,24rem)]",
-            // O topo centraliza a pilha cheia (a placa mais 48: pílula de 36,
-            // respiro de 12 e a legenda), não só a placa. No toque a legenda
+            // O topo centraliza a pilha cheia (a placa mais 52: a pílula, os
+            // respiros e a legenda de 36), não só a placa. No toque a legenda
             // some (`pointer-coarse:hidden`).
-            "[--command-dialog-stack:calc(var(--command-dialog-h)+--spacing(12))]",
+            "[--command-dialog-stack:calc(var(--command-dialog-h)+--spacing(13))]",
             "pointer-coarse:[--command-dialog-stack:calc(var(--command-dialog-h)+--spacing(1))]",
             "[--command-dialog-top:calc(50%-var(--command-dialog-stack)/2)]",
             "top-(--command-dialog-top)",
@@ -1147,7 +1147,7 @@ function CommandDockItem({ className, ...props }: React.ComponentProps<"span">) 
     <span
       data-slot="command-dock-item"
       className={cn(
-        "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs text-muted-foreground ring-1 ring-foreground/10",
+        "inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs text-muted-foreground ring-1 ring-foreground/10",
         menuPanelTintClassName,
         // As teclas sem a pastilha (caixa dentro de caixa); o seletor de
         // descendente (0,2,0) vence o `bg-*` do `Kbd` sem `!important`.

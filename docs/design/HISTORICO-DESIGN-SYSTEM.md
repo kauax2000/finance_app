@@ -27024,3 +27024,9 @@ largura, que alinha o nome na mesma coluna em todo grupo, e 20 de altura
 meta (a data e o valor das transações), e o ícone a 24×20. Vale também para a
 paleta do catálogo e a demonstração do login, que usam a mesma peça.
 `command-versions.test.ts` tranca a caixa.
+
+Na mesma rodada, a cápsula da legenda (`CommandDockItem`) subiu de 32 para 36,
+a pedido do dono, na altura da linha e da pílula. A pilha da paleta ficou 4px
+mais alta, e o topo, que centraliza a pilha cheia, passou de "a placa mais 48"
+para "a placa mais 52" (`--spacing(13)`). Medido: legenda a 36 e o conjunto
+centrado na janela a 0px.
