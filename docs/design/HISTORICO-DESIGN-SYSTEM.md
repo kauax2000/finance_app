@@ -27156,3 +27156,14 @@ nada com movimento reduzido). A `Sidebar` responde que só viajam dois itens do
 mesmo `SidebarMenu`. Medido no app: Painel → Membros e Membros → Transações só
 animam `opacity`; Membros → Configurações anima `translate` e `scale`, como
 antes. `Tabs`, `ToggleGroup` e `BottomBar` não passam a opção e viajam sempre.
+
+### Rodada 312 — a confirmação abre acima de tudo
+
+O "Limpar todas" do painel de notificações abria a confirmação por baixo da
+folha: o `AlertDialog` vivia em `--z-modal` (50) e a folha em `--z-sheet` (70).
+O `AlertDialog` passa à camada da folha (o véu `overlayClassName("sheet")` e a
+placa `z-(--z-sheet)`): na mesma camada, quem abre depois pinta por cima — o
+mesmo que o "Descartar alterações?" do `Dialog` já fazia. Medido: a confirmação
+a z 70 sobre a folha a z 70, com o centro do topo dela no topo da pilha, e o
+véu por cima da folha. `alert-dialog-versions.test.ts` tranca. No mesmo pedido,
+o "Limpar todas" do menu perdeu as reticências.

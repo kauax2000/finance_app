@@ -171,9 +171,9 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
     const { confirm: confirmAction, dialog: confirmDialog } = useConfirmDialog()
     const onClearAll = async () => {
         const ok = await confirmAction({
-            title: "Excluir todas as notificações?",
-            description: "Todas as notificações desta carteira serão apagadas. Não dá para desfazer.",
-            actionLabel: "Excluir todas",
+            title: "Limpar todas as notificações?",
+            description: "As notificações desta carteira são apagadas.",
+            actionLabel: "Limpar",
         })
         if (!ok || !userId || !currentWorkspaceId) return
         setUnreadCount(0)
@@ -209,13 +209,13 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                     onSelect={onMarkAllRead}
                                 >
                                     <CheckIcon />
-                                    Marcar tudo como lido
+                                    Marcar todas como lidas
                                 </DropdownMenuItem>
                                 {/* Link de dentro da folha: ela fecha e só então a tela abre. */}
                                 <DropdownMenuItem asChild>
                                     <Link href={NOTIFICATION_PREFERENCES_HREF}>
                                         <Cog6ToothIcon />
-                                        Configurar notificações
+                                        Preferências de notificação
                                     </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
@@ -225,7 +225,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                     onSelect={() => void onClearAll()}
                                 >
                                     <TrashIcon />
-                                    Excluir todas…
+                                    Limpar todas
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -274,7 +274,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                         ))}
                     </SkeletonGroup>
                 ) : error && lista.length === 0 ? (
-                    // Erro com a lista vazia é erro, nunca o vazio: o "Excluir todas"
+                    // Erro com a lista vazia é erro, nunca o vazio: o "Limpar todas"
                     // otimista que falhou deixaria "Nenhuma notificação" com as linhas no banco.
                     <Alert tone="destructive" size="sm" className="mx-3">
                         <AlertTitle>Não deu para carregar as notificações.</AlertTitle>

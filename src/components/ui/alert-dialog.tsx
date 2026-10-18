@@ -88,7 +88,10 @@ function AlertDialogOverlay({
   return (
     <AlertDialogPrimitive.Overlay
       data-slot="alert-dialog-overlay"
-      className={cn(overlayClassName("modal"), className)}
+      // A camada da folha, e não a do modal: uma confirmação aberta de dentro de uma
+      // folha (o "Excluir todas" das notificações) abria por baixo dela. Na mesma
+      // camada, quem abre depois pinta por cima — o mesmo do "Descartar alterações?".
+      className={cn(overlayClassName("sheet"), className)}
       {...props}
     />
   )
@@ -121,6 +124,7 @@ function AlertDialogContent({
         {...revelacao}
         className={cn(
           dialogContentVariants({ size, layout: "auto" }),
+          "z-(--z-sheet)",
           // O teto que o `auto` do `Dialog` não tem: a confirmação com campo
           // rola em vez de sair da tela quando o teclado do telefone sobe.
           "max-h-[calc(100dvh-2rem)] overflow-y-auto",

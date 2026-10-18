@@ -32,6 +32,15 @@ const TELAS = [
 ]
 
 describe("AlertDialog", () => {
+  it("a confirmação abre acima de tudo, inclusive de uma folha aberta", () => {
+    // Na camada do modal (50) ela abria por baixo da folha (70). Na da folha, quem
+    // abre depois pinta por cima — o mesmo do "Descartar alterações?".
+    const codigo = semComentarios(FONTE)
+    expect(codigo).toContain('overlayClassName("sheet")')
+    expect(codigo).not.toContain('overlayClassName("modal")')
+    expect(codigo).toMatch(/dialogContentVariants\(\{ size, layout: "auto" \}\),\s*"z-\(--z-sheet\)"/)
+  })
+
   it("pending trava os dois botões e segura o Esc", () => {
     expect(FONTE).toMatch(/disabled=\{disabled \|\| pending \|\| bloqueado\}/)
     expect(FONTE).toMatch(/AlertDialogCancel[\s\S]*disabled=\{disabled \|\| pending\}/)
