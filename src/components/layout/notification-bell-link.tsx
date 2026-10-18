@@ -17,6 +17,12 @@ export function NotificationBellLink() {
     // Sequência da contagem: só a resposta mais recente escreve no sino.
     const seqRef = useRef(0)
 
+    // Outra carteira, outro número: o da anterior não fica no sino até a contagem nova chegar.
+    // Efeito à parte, antes da contagem: o `badgeNonce` não pode zerar o sino a cada invalidação.
+    useEffect(() => {
+        setUnreadCount(0)
+    }, [currentWorkspaceId, setUnreadCount])
+
     useEffect(() => {
         if (authLoading || workspaceLoading) return
         if (!userId || !currentWorkspaceId) {

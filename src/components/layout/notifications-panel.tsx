@@ -1,143 +1,147 @@
 "use client"
 
-import { ROUTES } from "@/config/navigation"
-import { useConfirmDialog } from "@/components/use-confirm-dialog"
-import { useRouter } from "next/navigation"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { CheckIcon, EllipsisHorizontalIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid"
+import Link from "next/link"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { CheckIcon, Cog6ToothIcon, EllipsisHorizontalIcon, TrashIcon } from "@heroicons/react/16/solid"
 
+import { useConfirmDialog } from "@/components/use-confirm-dialog"
+import { Alert, AlertAction, AlertActions, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { DialogBody, DialogHeader, DialogHeaderRow, DialogTitle } from "@/components/ui/dialog"
 import {
     DropdownMenu,
     DropdownMenuContent,
-    DropdownMenuHeader,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Skeleton } from "@/components/ui/skeleton"
+import {
+    EmptyState,
+    EmptyStateActions,
+    EmptyStateIcon,
+    EmptyStateTitle,
+} from "@/components/ui/empty-state"
+import { ItemGroup, ItemGroupLabel } from "@/components/ui/item"
+import { Skeleton, SkeletonGroup, SkeletonText } from "@/components/ui/skeleton"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Caption } from "@/components/ui/typography"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
-import { NotificationsPanelEmpty } from "@/components/layout/notifications-panel-empty"
+import { NotificationRow } from "@/components/layout/notification-row"
+import {
+    NOTIFICATION_PREFERENCES_HREF,
+    NotificationsPanelEmpty,
+} from "@/components/layout/notifications-panel-empty"
 import { useNotificationsUi } from "@/components/layout/notifications-ui-provider"
-import { getNotificationAction } from "@/lib/notification-actions"
 import {
     clearAllNotifications,
     deleteNotification,
     listNotifications,
+    markAllRead,
     markRead,
+    markUnread,
     type AppNotification,
 } from "@/lib/notifications"
-import { getNotificationIcon } from "@/lib/notification-visuals"
-import {
-    dismissPageFetchError,
-    toastError,
-    toastPageFetchError,
-} from "@/lib/toast"
-import { cn } from "@/lib/utils"
-import { formatDatePtBr } from "@/lib/transaction-date"
+import { toastError } from "@/lib/toast"
+import { formatDayHeadingPtBr, groupByLocalDay } from "@/lib/transaction-date"
 
-function formatRelativeTime(iso: string): string {
-    const t = new Date(iso).getTime()
-    if (Number.isNaN(t)) return ""
-    const diff = Date.now() - t
-    const sec = Math.floor(diff / 1000)
-    if (sec < 60) return "agora"
-    const min = Math.floor(sec / 60)
-    if (min < 60) return `há ${min} min`
-    const h = Math.floor(min / 60)
-    if (h < 24) return `há ${h} h`
-    const d = Math.floor(h / 24)
-    if (d < 7) return `há ${d} d`
-    return formatDatePtBr(iso)
-}
+/** O teto de `listNotifications`: com ele cheio, há mais no banco do que na lista. */
+const LIMITE_DA_LISTA = 100
+
+type Filtro = "todas" | "nao-lidas"
 
 type NotificationsPanelProps = {
     isActive: boolean
 }
 
 export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
-    const router = useRouter()
     const { user, loading: authLoading } = useAuth()
     const { currentWorkspaceId, loading: workspaceLoading } = useWorkspace()
-    const { close, adjustUnreadCount, setUnreadCount } = useNotificationsUi()
-    const [loading, setLoading] = useState(true)
-    const [notifications, setNotifications] = useState<AppNotification[]>([])
+    const { unreadCount, adjustUnreadCount, setUnreadCount, invalidateUnreadBadge, badgeNonce } =
+        useNotificationsUi()
+    // `null` é "ainda não chegou": o esqueleto só aparece na primeira carga, e
+    // a recarga (o sino mudou) troca a lista no lugar.
+    const [notifications, setNotifications] = useState<AppNotification[] | null>(null)
+    const [error, setError] = useState(false)
+    const [filtro, setFiltro] = useState<Filtro>("todas")
+    const userId = user?.id
 
     // Trocar de carteira no meio de uma busca, ou marcar/limpar enquanto ela
     // corre, não pode deixar a resposta velha sobrescrever a nova.
     const fetchSeq = useRef(0)
     const fetchNotifications = useCallback(async () => {
-        if (!user?.id || !currentWorkspaceId) return
+        if (!userId || !currentWorkspaceId) return
         const seq = ++fetchSeq.current
-        setLoading(true)
         try {
-            const rows = await listNotifications(user.id, currentWorkspaceId)
+            // O sino não é tocado aqui: a lista para em 100, e o número dele é o do servidor.
+            const rows = await listNotifications(userId, currentWorkspaceId)
             if (seq !== fetchSeq.current) return
             setNotifications(rows)
-            setUnreadCount(rows.filter((n) => !n.read_at).length)
-            dismissPageFetchError("notifications")
-        } catch (e) {
+            setError(false)
+        } catch {
             if (seq !== fetchSeq.current) return
-            toastPageFetchError(
-                "notifications",
-                e instanceof Error ? e.message : "Não foi possível carregar as notificações"
-            )
-        } finally {
-            if (seq === fetchSeq.current) setLoading(false)
+            setError(true)
         }
-    }, [user?.id, currentWorkspaceId, setUnreadCount])
+    }, [userId, currentWorkspaceId])
+
+    // Outra carteira é outra lista: volta ao esqueleto em vez de mostrar a anterior.
+    useEffect(() => {
+        setNotifications(null)
+        setError(false)
+    }, [userId, currentWorkspaceId])
 
     useEffect(() => {
-        if (!isActive) return
-        if (authLoading || workspaceLoading) return
-        if (!user?.id || !currentWorkspaceId) {
-            setLoading(false)
-            return
-        }
+        if (!isActive || authLoading || workspaceLoading) return
         void fetchNotifications()
-    }, [
-        isActive,
-        authLoading,
-        workspaceLoading,
-        user?.id,
-        currentWorkspaceId,
-        fetchNotifications,
-    ])
+        // `badgeNonce`: o sino foi invalidado (inclusive pelas ações daqui), e a lista acompanha.
+    }, [isActive, authLoading, workspaceLoading, fetchNotifications, badgeNonce])
 
-    const unreadCount = useMemo(
-        () => notifications.filter((n) => !n.read_at).length,
-        [notifications]
-    )
-
-    const onMarkAsRead = async (id: string) => {
-        if (!user?.id || !currentWorkspaceId) return
+    // Cada escrita é otimista, e o sino é refeito quando ela volta: uma contagem
+    // que estava em voo não devolve o número de antes. Falhou, o refazer corrige
+    // o sino e a lista (o `badgeNonce` recarrega o painel aberto).
+    const escrever = async (acao: () => Promise<void>, falha: string) => {
         fetchSeq.current++
-        const wasUnread = notifications.some((n) => n.id === id && !n.read_at)
-        if (wasUnread) adjustUnreadCount(-1)
-        setNotifications((cur) =>
-            cur.map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n))
-        )
         try {
-            await markRead(user.id, currentWorkspaceId, id)
+            await acao()
         } catch (e) {
-            toastError(e instanceof Error ? e.message : "Não foi possível marcar como lida")
-            void fetchNotifications()
+            toastError(e instanceof Error ? e.message : falha)
+        } finally {
+            invalidateUnreadBadge()
         }
     }
 
-    const onDelete = async (id: string) => {
-        if (!user?.id || !currentWorkspaceId) return
-        fetchSeq.current++
-        const wasUnread = notifications.some((n) => n.id === id && !n.read_at)
-        if (wasUnread) adjustUnreadCount(-1)
-        setNotifications((cur) => cur.filter((n) => n.id !== id))
-        try {
-            await deleteNotification(user.id, currentWorkspaceId, id)
-        } catch (e) {
-            toastError(e instanceof Error ? e.message : "Não foi possível excluir a notificação")
-            void fetchNotifications()
-        }
+    const onToggleRead = (n: AppNotification) => {
+        if (!userId || !currentWorkspaceId) return
+        const unread = !n.read_at
+        adjustUnreadCount(unread ? -1 : 1)
+        const readAt = unread ? new Date().toISOString() : null
+        setNotifications((cur) => cur?.map((x) => (x.id === n.id ? { ...x, read_at: readAt } : x)) ?? cur)
+        void escrever(
+            () => (unread ? markRead : markUnread)(userId, currentWorkspaceId, n.id),
+            unread ? "Não foi possível marcar como lida." : "Não foi possível marcar como não lida."
+        )
+    }
+
+    const onDelete = (n: AppNotification) => {
+        if (!userId || !currentWorkspaceId) return
+        if (!n.read_at) adjustUnreadCount(-1)
+        setNotifications((cur) => cur?.filter((x) => x.id !== n.id) ?? cur)
+        void escrever(
+            () => deleteNotification(userId, currentWorkspaceId, n.id),
+            "Não foi possível excluir a notificação."
+        )
+    }
+
+    const onMarkAllRead = () => {
+        if (!userId || !currentWorkspaceId) return
+        setUnreadCount(0)
+        const agora = new Date().toISOString()
+        setNotifications((cur) => cur?.map((x) => (x.read_at ? x : { ...x, read_at: agora })) ?? cur)
+        void escrever(
+            () => markAllRead(userId, currentWorkspaceId),
+            "Não foi possível marcar todas como lidas."
+        )
     }
 
     const { confirm: confirmAction, dialog: confirmDialog } = useConfirmDialog()
@@ -147,200 +151,148 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
             description: "As notificações desta carteira são apagadas.",
             actionLabel: "Limpar",
         })
-        if (!ok) return
-        if (!user?.id || !currentWorkspaceId) return
-        fetchSeq.current++
+        if (!ok || !userId || !currentWorkspaceId) return
         setUnreadCount(0)
         setNotifications([])
-        try {
-            await clearAllNotifications(user.id, currentWorkspaceId)
-        } catch (e) {
-            toastError(e instanceof Error ? e.message : "Não foi possível limpar as notificações")
-            void fetchNotifications()
-        }
+        void escrever(
+            () => clearAllNotifications(userId, currentWorkspaceId),
+            "Não foi possível limpar as notificações."
+        )
     }
 
-    const onRowActivate = async (notification: AppNotification) => {
-        const action = getNotificationAction(notification)
-        if (!notification.read_at) {
-            await onMarkAsRead(notification.id)
-        }
-        if (action) {
-            close()
-            router.push(action.href)
-        }
-    }
-
-    const skeleton = (
-        <div className="divide-y divide-border">
-            {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex gap-3 p-3">
-                    <Skeleton className="h-4 w-4 shrink-0 rounded" />
-                    <div className="min-w-0 flex-1 space-y-2">
-                        <Skeleton className="h-3.5 w-40" />
-                        <Skeleton className="h-3 w-full" />
-                    </div>
-                </div>
-            ))}
-        </div>
-    )
+    const lista = notifications ?? []
+    const naoLidas = lista.filter((n) => !n.read_at).length
+    const visiveis = filtro === "nao-lidas" ? lista.filter((n) => !n.read_at) : lista
+    const semConta = !authLoading && !workspaceLoading && (!user || !currentWorkspaceId)
+    const carregando = !semConta && !error && notifications === null
 
     return (
-        <div className="flex min-h-0 flex-1 flex-col">
+        <>
             {confirmDialog}
-            <div className="shrink-0 border-b border-border">
-                <div className="flex items-center gap-3 px-4 pb-4 pt-4 md:pt-5">
-                    <div className="flex min-w-0 flex-1 items-center gap-3">
-                        <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                                <h2 className="font-heading text-base font-medium leading-tight">
-                                    Notificações
-                                </h2>
-                                {unreadCount > 0 ? (
-                                    <Badge
-                                        tone="success"
-                                        className="shrink-0 px-2 py-0.5 text-2xs font-semibold leading-none"
-                                    >
-                                        {unreadCount} nova{unreadCount > 1 ? "s" : ""}
-                                    </Badge>
-                                ) : null}
-                            </div>
-                        </div>
+            <DialogHeader>
+                <DialogHeaderRow
+                    endAdornment={
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button type="button" variant="tertiary" size="icon-sm" aria-label="Mais ações">
+                                    <EllipsisHorizontalIcon />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                    disabled={semConta || (unreadCount === 0 && naoLidas === 0)}
+                                    onSelect={onMarkAllRead}
+                                >
+                                    <CheckIcon />
+                                    Marcar todas como lidas
+                                </DropdownMenuItem>
+                                {/* Link de dentro da folha: ela fecha e só então a tela abre. */}
+                                <DropdownMenuItem asChild>
+                                    <Link href={NOTIFICATION_PREFERENCES_HREF}>
+                                        <Cog6ToothIcon />
+                                        Preferências de notificação
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    variant="destructive"
+                                    disabled={lista.length === 0}
+                                    onSelect={() => void onClearAll()}
+                                >
+                                    <TrashIcon />
+                                    Limpar todas…
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    }
+                >
+                    <div className="flex flex-wrap items-center gap-2">
+                        <DialogTitle>Notificações</DialogTitle>
+                        {unreadCount > 0 ? (
+                            <Badge variant="soft" size="xs">
+                                {unreadCount} {unreadCount === 1 ? "nova" : "novas"}
+                            </Badge>
+                        ) : null}
                     </div>
-                    <Button
-                        type="button"
-                        variant="tertiary"
-                        size="icon-sm"
-                        className="shrink-0 -mr-1"
-                        onClick={() => close()}
-                        aria-label="Fechar notificações"
+                </DialogHeaderRow>
+                {lista.length > 0 ? (
+                    <ToggleGroup
+                        type="single"
+                        variant="segmented"
+                        size="sm"
+                        aria-label="Filtrar notificações"
+                        className="mt-3"
+                        value={filtro}
+                        onValueChange={(v) => setFiltro(v as Filtro)}
                     >
-                        <XMarkIcon />
-                    </Button>
-                </div>
-            </div>
+                        <ToggleGroupItem value="todas">Todas</ToggleGroupItem>
+                        <ToggleGroupItem value="nao-lidas" count={naoLidas}>
+                            Não lidas
+                        </ToggleGroupItem>
+                    </ToggleGroup>
+                ) : null}
+            </DialogHeader>
 
-            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
-                {authLoading || workspaceLoading || (loading && isActive) ? (
-                    skeleton
-                ) : !user ? (
-                    <NotificationsPanelEmpty variant="no-auth" />
-                ) : !currentWorkspaceId ? (
-                    <NotificationsPanelEmpty variant="no-workspace" />
-                ) : notifications.length === 0 ? (
-                    <NotificationsPanelEmpty
-                        variant="inbox-empty"
-                        onOpenPreferences={() => {
-                            close()
-                            router.push(ROUTES.SETTINGS)
-                        }}
-                    />
+            {/* `px-1`: o recuo de 12 da linha mais este dá os 16 do cabeçalho, e o
+                título da linha alinha com o do painel. */}
+            <DialogBody className="px-1 pt-0">
+                {semConta ? (
+                    <NotificationsPanelEmpty variant={!user ? "no-auth" : "no-workspace"} />
+                ) : carregando ? (
+                    <SkeletonGroup label="Carregando notificações…">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                            <div key={i} className="flex items-start gap-2.5 px-3 py-2.5">
+                                <Skeleton shape="circle" size="sm" />
+                                <SkeletonText lines={2} className="text-sm" />
+                            </div>
+                        ))}
+                    </SkeletonGroup>
+                ) : error && notifications === null ? (
+                    <Alert tone="destructive" size="sm" className="mx-3">
+                        <AlertTitle>Não deu para carregar as notificações.</AlertTitle>
+                        <AlertActions>
+                            <AlertAction onClick={() => void fetchNotifications()}>Tentar de novo</AlertAction>
+                        </AlertActions>
+                    </Alert>
+                ) : lista.length === 0 ? (
+                    <NotificationsPanelEmpty variant="inbox-empty" />
+                ) : visiveis.length === 0 ? (
+                    <EmptyState variant="plain" size="sm" role="status">
+                        <EmptyStateIcon variant="done" />
+                        <EmptyStateTitle>Tudo lido</EmptyStateTitle>
+                        <EmptyStateActions>
+                            <Button type="button" variant="tertiary" onClick={() => setFiltro("todas")}>
+                                Ver todas
+                            </Button>
+                        </EmptyStateActions>
+                    </EmptyState>
                 ) : (
-                    <ul className="divide-y divide-border">
-                        {notifications.map((notification) => {
-                            const unread = !notification.read_at
-                            return (
-                                <li key={notification.id}>
-                                    <div
-                                        className={cn(
-                                            "flex gap-2 p-3 transition-colors duration-150",
-                                            unread
-                                                ? "bg-muted/40 hover:bg-muted/65 dark:hover:bg-muted/50"
-                                                : "hover:bg-muted/30"
-                                        )}
-                                    >
-                                        {/* Cru de propósito: é a área clicável da linha, e a linha
-                                            não pode ser o botão — o menu de "Mais opções" é irmão
-                                            dela, e botão dentro de botão é inválido. O realce mora
-                                            na linha, que responde ao cursor e ao toque. */}
-                                        <button
-                                            type="button"
-                                            className="flex min-w-0 flex-1 gap-3 text-left"
-                                            onClick={() => void onRowActivate(notification)}
-                                        >
-                                            <span className="mt-0.5">{getNotificationIcon(notification)}</span>
-                                            <span className="min-w-0 flex-1 space-y-1">
-                                                <span className="flex items-center gap-2">
-                                                    <span className="text-sm font-medium leading-snug">
-                                                        {notification.title}
-                                                    </span>
-                                                    {unread ? (
-                                                        <span
-                                                            className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary"
-                                                            aria-hidden
-                                                        />
-                                                    ) : null}
-                                                </span>
-                                                <span className="block text-xs text-muted-foreground leading-relaxed">
-                                                    {notification.body}
-                                                </span>
-                                            </span>
-                                        </button>
-                                        <div className="flex shrink-0 self-start items-center gap-2 pt-1">
-                                            <span className="text-2xs leading-none text-muted-foreground/80">
-                                                {formatRelativeTime(notification.created_at)}
-                                            </span>
-                                            {/* No telefone o ⋯ é a folha de ações, com o aviso em cima. */}
-                                            <DropdownMenu mobile="sheet">
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button
-                                                        type="button"
-                                                        variant="tertiary"
-                                                        size="icon-sm"
-                                                        className="shrink-0"
-                                                        aria-label="Mais opções"
-                                                    >
-                                                        <EllipsisHorizontalIcon />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent
-                                                    align="end"
-                                                    size="sm"
-                                                    header={
-                                                        <DropdownMenuHeader
-                                                            title={notification.title}
-                                                            description={formatRelativeTime(notification.created_at)}
-                                                        />
-                                                    }
-                                                >
-                                                    {unread ? (
-                                                        <DropdownMenuItem
-                                                            onClick={() => void onMarkAsRead(notification.id)}
-                                                        >
-                                                            <CheckIcon />
-                                                            Marcar como lida
-                                                        </DropdownMenuItem>
-                                                    ) : null}
-                                                    <DropdownMenuItem variant="destructive"
-                                                        onClick={() => void onDelete(notification.id)}
-                                                    >
-                                                        <TrashIcon />
-                                                        Excluir
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </div>
-                                    </div>
-                                </li>
-                            )
-                        })}
-                    </ul>
+                    <>
+                        {groupByLocalDay(visiveis, (n) => n.created_at).map((grupo) => (
+                            <div key={grupo.chave}>
+                                <ItemGroupLabel sticky>
+                                    {formatDayHeadingPtBr(grupo.data)}
+                                </ItemGroupLabel>
+                                <ItemGroup variant="divided">
+                                    {grupo.itens.map((n) => (
+                                        <NotificationRow
+                                            key={n.id}
+                                            notification={n}
+                                            onToggleRead={onToggleRead}
+                                            onDelete={onDelete}
+                                        />
+                                    ))}
+                                </ItemGroup>
+                            </div>
+                        ))}
+                        {lista.length >= LIMITE_DA_LISTA ? (
+                            <Caption className="px-3 pt-3 text-center">
+                                Mostrando as 100 mais recentes.
+                            </Caption>
+                        ) : null}
+                    </>
                 )}
-            </div>
-
-            {notifications.length > 0 && !loading && currentWorkspaceId ? (
-                <div className="shrink-0 border-t border-border">
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        className="h-12 w-full rounded-none"
-                        onClick={() => void onClearAll()}
-                    >
-                        <TrashIcon className="mr-2 h-4 w-4" />
-                        Limpar todas
-                    </Button>
-                </div>
-            ) : null}
-        </div>
+            </DialogBody>
+        </>
     )
 }

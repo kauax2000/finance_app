@@ -102,8 +102,8 @@ describe("as versões do Sheet", () => {
   })
 
   it("as folhas do app ficam encostadas por enquanto", () => {
+    // As notificações saíram da lista: o painel é a placa flutuante (2026-10-17, pedido do dono).
     for (const arquivo of [
-      "src/components/layout/notifications-sheet.tsx",
       "src/components/transactions/transaction-detail-sheet.tsx",
       "src/components/transactions/transactions-toolbar.tsx",
       "src/components/bills/bill-detail-sheet.tsx",

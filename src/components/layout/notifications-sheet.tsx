@@ -1,17 +1,10 @@
 "use client"
 
-import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet"
-import {
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { DialogCloseButton } from "@/components/ui/dialog"
 import { useNotificationsUi } from "@/components/layout/notifications-ui-provider"
 import { NotificationsPanel } from "@/components/layout/notifications-panel"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { cn } from "@/lib/utils"
 
 export function NotificationsSheet() {
     const { isOpen, close, open } = useNotificationsUi()
@@ -25,22 +18,16 @@ export function NotificationsSheet() {
                 else close()
             }}
         >
+            {/* O nome é o título do cabeçalho; não há descrição além dele. */}
             <SheetContent
                 side="right"
-                variant="flush"
+                variant="floating"
+                size="md"
                 fillMobileViewport={isMobile}
-                className={cn(
-                    "flex w-full flex-col gap-0 p-0",
-                    isMobile
-                        ? "rounded-t-modal pb-[calc(1rem+env(safe-area-inset-bottom,0px))]"
-                        : "h-full max-h-dvh border-l sm:max-w-md"
-                )}
+                aria-describedby={undefined}
             >
-                <DialogTitle className="sr-only">Notificações</DialogTitle>
-                <DialogDescription className="sr-only">
-                    Alertas e avisos da carteira atual. Marque como lidas ou exclua.
-                </DialogDescription>
                 <NotificationsPanel isActive={isOpen} />
+                <DialogCloseButton label="Fechar notificações" />
             </SheetContent>
         </Sheet>
     )

@@ -144,7 +144,7 @@ export function NotificationPreferences() {
         !authLoading && !workspaceLoading && !currentWorkspaceId
 
     return (
-        <PageSection>
+        <PageSection id="notificacoes">
             <PageSectionHeader
                 actions={
                     <Button

@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import type { HeroIcon } from "@/types/navigation"
 import {
     Bars3BottomLeftIcon,
@@ -11,6 +12,7 @@ import {
     UserPlusIcon,
     WalletIcon,
 } from "@heroicons/react/24/outline"
+import { ROUTES } from "@/config/navigation"
 import { Button } from "@/components/ui/button"
 import {
     EmptyState,
@@ -20,17 +22,13 @@ import {
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 
-const INBOX_HINTS = [
-    "Alertas de orçamento ao se aproximar do limite",
-    "Convites e mudanças na equipe da carteira",
-    "Avisos do sistema relevantes para este espaço",
-] as const
+/** A seção "Notificações desta carteira" das Configurações (o `id` dela). */
+export const NOTIFICATION_PREFERENCES_HREF = `${ROUTES.SETTINGS}#notificacoes`
 
 export type NotificationsPanelEmptyVariant = "no-auth" | "no-workspace" | "inbox-empty"
 
 type NotificationsPanelEmptyProps = {
     variant: NotificationsPanelEmptyVariant
-    onOpenPreferences?: () => void
 }
 
 const VARIANT_META: Record<
@@ -53,14 +51,11 @@ const VARIANT_META: Record<
         icons: [ChartPieIcon, BellSlashIcon, UserPlusIcon],
         title: "Nenhuma notificação",
         description:
-            "Quando algo importante acontecer nesta carteira, avisamos por aqui. Exemplos do que pode aparecer:",
+            "Alertas de orçamento, cartões, contas e convites desta carteira aparecem aqui.",
     },
 }
 
-export function NotificationsPanelEmpty({
-    variant,
-    onOpenPreferences,
-}: NotificationsPanelEmptyProps) {
+export function NotificationsPanelEmpty({ variant }: NotificationsPanelEmptyProps) {
     const meta = VARIANT_META[variant]
 
     return (
@@ -79,25 +74,10 @@ export function NotificationsPanelEmpty({
                 {meta.description}
             </EmptyStateDescription>
             {variant === "inbox-empty" ? (
-                <ul
-                    className="max-w-xs list-outside list-disc pl-4 text-left text-xs leading-relaxed text-muted-foreground"
-                    aria-label="Tipos de notificação que podem aparecer"
-                >
-                    {INBOX_HINTS.map((line) => (
-                        <li key={line} className="pl-1 marker:text-muted-foreground/80">
-                            {line}
-                        </li>
-                    ))}
-                </ul>
-            ) : null}
-            {variant === "inbox-empty" && onOpenPreferences ? (
                 <EmptyStateActions>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={onOpenPreferences}
-                    >
-                        Preferências de notificação
+                    {/* Link de dentro da folha: ela fecha e só então a tela abre. */}
+                    <Button asChild variant="tertiary">
+                        <Link href={NOTIFICATION_PREFERENCES_HREF}>Preferências de notificação</Link>
                     </Button>
                 </EmptyStateActions>
             ) : null}
