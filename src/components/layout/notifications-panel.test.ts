@@ -45,6 +45,13 @@ describe("painel de notificações (fonte)", () => {
         expect(painel).toContain("Mostrando as 100 mais recentes")
     })
 
+    it("o erro nunca vira o vazio, e só a linha com destino tem a seta", () => {
+        expect(painel).toMatch(/error && lista\.length === 0 \?/)
+        expect(painel).toMatch(/!error && lista\.length === 0 \?/)
+        expect(painel).not.toMatch(/error && notifications === null \?/)
+        expect(painel).toMatch(/action \? <ItemChevron \/> : null/)
+    })
+
     it("não volta ao que saiu", () => {
         expect(painel).not.toContain("formatRelativeTime")
         expect(painel).not.toMatch(/setUnreadCount\(\s*rows/)

@@ -15,6 +15,7 @@ import {
 import {
     Item,
     ItemActions,
+    ItemChevron,
     ItemContent,
     ItemDescription,
     ItemLink,
@@ -122,6 +123,8 @@ export function NotificationRow({ notification: n, onToggleRead, onDelete }: Not
                     </DropdownMenuContent>
                 </DropdownMenu>
             </ItemActions>
+            {/* Só a linha que leva a algum lugar tem a seta. */}
+            {action ? <ItemChevron /> : null}
         </Item>
     )
 }

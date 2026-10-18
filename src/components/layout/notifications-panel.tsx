@@ -247,14 +247,16 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                             </div>
                         ))}
                     </SkeletonGroup>
-                ) : error && notifications === null ? (
+                ) : error && lista.length === 0 ? (
+                    // Erro com a lista vazia é erro, nunca o vazio: o "Limpar todas"
+                    // otimista que falhou deixaria "Nenhuma notificação" com as linhas no banco.
                     <Alert tone="destructive" size="sm" className="mx-3">
                         <AlertTitle>Não deu para carregar as notificações.</AlertTitle>
                         <AlertActions>
                             <AlertAction onClick={() => void fetchNotifications()}>Tentar de novo</AlertAction>
                         </AlertActions>
                     </Alert>
-                ) : lista.length === 0 ? (
+                ) : !error && lista.length === 0 ? (
                     <NotificationsPanelEmpty variant="inbox-empty" />
                 ) : visiveis.length === 0 ? (
                     <EmptyState variant="plain" size="sm" role="status">
