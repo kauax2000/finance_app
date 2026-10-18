@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { Fragment, useCallback, useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "motion/react"
 import { CheckIcon, Cog6ToothIcon, EllipsisHorizontalIcon, TrashIcon } from "@heroicons/react/16/solid"
 
@@ -31,8 +31,8 @@ import {
     EmptyStateIcon,
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
-import { ItemGroup, ItemGroupLabel } from "@/components/ui/item"
-import { Skeleton, SkeletonGroup, SkeletonText } from "@/components/ui/skeleton"
+import { ItemGroup, ItemGroupLabel, ItemSeparator } from "@/components/ui/item"
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Caption } from "@/components/ui/typography"
@@ -53,13 +53,23 @@ import {
     markUnread,
     type AppNotification,
 } from "@/lib/notifications"
-import { toastError } from "@/lib/toast"
+import { TOAST_UNDO_MS, toastError, toastUndo } from "@/lib/toast"
 import { formatDayHeadingPtBr, groupByLocalDay } from "@/lib/transaction-date"
 
 /** O teto de `listNotifications`: com ele cheio, há mais no banco do que na lista. */
 const LIMITE_DA_LISTA = 100
 
 type Filtro = "todas" | "nao-lidas"
+
+/** As larguras do título e da descrição de cada osso: variadas, como texto de verdade. */
+const ESQUELETO_DAS_LINHAS = [
+    ["w-3/5", "w-4/5"],
+    ["w-1/2", "w-11/12"],
+    ["w-2/3", "w-3/4"],
+    ["w-2/5", "w-5/6"],
+    ["w-3/5", "w-2/3"],
+    ["w-1/2", "w-4/5"],
+] as const
 
 /** A altura do `ItemGroupLabel` (12px de recuo + a linha de 16): o lugar do dia preso. */
 const ROTULO_DO_DIA_PX = 28
@@ -177,14 +187,31 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
         )
     }
 
+    // Excluir é um clique só (no cursor, sem menu), então tem 8s para desfazer: a
+    // linha sai na hora e a exclusão só vai ao banco quando o prazo acaba. Fechar a
+    // folha não cancela o prazo; recarregar a página antes dele, sim (a linha volta).
     const onDelete = (n: AppNotification) => {
         if (!userId || !currentWorkspaceId) return
         if (!n.read_at) adjustUnreadCount(-1)
         setNotifications((cur) => cur?.filter((x) => x.id !== n.id) ?? cur)
-        void escrever(
-            () => deleteNotification(userId, currentWorkspaceId, n.id),
-            "Não foi possível excluir a notificação."
-        )
+        const prazo = setTimeout(() => {
+            void escrever(
+                () => deleteNotification(userId, currentWorkspaceId, n.id),
+                "Não foi possível excluir a notificação."
+            )
+        }, TOAST_UNDO_MS)
+        toastUndo("Notificação excluída", {
+            undone: "Notificação restaurada",
+            onUndo: () => {
+                clearTimeout(prazo)
+                if (!n.read_at) adjustUnreadCount(1)
+                setNotifications((cur) =>
+                    cur && !cur.some((x) => x.id === n.id)
+                        ? [...cur, n].sort((a, b) => b.created_at.localeCompare(a.created_at))
+                        : cur
+                )
+            },
+        })
     }
 
     const onMarkAllRead = () => {
@@ -287,7 +314,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                             </DropdownMenuContent>
                         </DropdownMenu>
                         {/* O × mora na linha do título, ao lado do ⋯, e não no canto da folha. */}
-                        <DialogCloseButton placement="inline" size="icon-md" className="-my-0.5" label="Fechar notificações" />
+                        <DialogCloseButton placement="inline" label="Fechar notificações" />
                         </>
                     }
                 >
@@ -308,7 +335,9 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                         <Badge
                                             size="xs"
                                             className={cn(
-                                                "relative isolate h-4 min-w-4 border-0 bg-transparent px-1 font-semibold",
+                                                // Algarismos proporcionais: o "1" tabular tem folga à esquerda e o "13"
+                                                // saía 2,5px para a direita do centro da bolha.
+                                                "relative isolate h-4 min-w-4 border-0 bg-transparent px-1 font-semibold proportional-nums",
                                                 // A bolha é um `::before` com a tinta do `tagChipUnreadCount`, e
                                                 // anda com o marcador líquido da aba: ao entrar, espera ele chegar
                                                 // (220ms do trajeto de 400) e enche na mola; ao sair, toma impulso
@@ -332,6 +361,17 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                             <TabsTrigger value="todas">Todas</TabsTrigger>
                         </TabsList>
                     </Tabs>
+                ) : carregando ? (
+                    // O esqueleto guarda o lugar das abas e do dia preso: quando a lista
+                    // chega, o cabeçalho não cresce e a primeira linha não se move.
+                    <>
+                        <Skeleton className="mt-3 h-9 w-full rounded-full" />
+                        <div aria-hidden className="h-9 pt-2">
+                            <div className="py-1.5">
+                                <Skeleton shape="text" className="w-12 text-xs" />
+                            </div>
+                        </div>
+                    </>
                 ) : null}
                 {comDia ? (
                     // Altura fixa (8 + 28): o que sai vira absoluto, e o cabeçalho não muda.
@@ -358,18 +398,27 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                 {semConta ? (
                     <NotificationsPanelEmpty variant={!user ? "no-auth" : "no-workspace"} />
                 ) : carregando ? (
-                    <SkeletonGroup label="Carregando notificações…">
-                        {[1, 2, 3, 4, 5].map((i) => (
-                            <div key={i} className="flex items-start gap-2.5 px-3 py-2.5">
-                                <Skeleton shape="circle" size="sm" />
-                                <SkeletonText lines={2} className="text-sm" />
+                    // Cada osso é uma linha de verdade: o círculo de 32 alinhado ao título, o
+                    // título com a hora na ponta e a descrição embaixo, a 4px uma da outra.
+                    // `delay`: numa carga rápida o esqueleto não pisca.
+                    <SkeletonGroup label="Carregando notificações…" delay className="flex flex-col gap-1">
+                        {ESQUELETO_DAS_LINHAS.map(([titulo, descricao], i) => (
+                            <div key={i} className="flex items-start gap-2.5 border border-transparent px-2 py-2.5">
+                                <Skeleton shape="circle" size="sm" className="translate-y-0.5" />
+                                <div className="flex min-w-0 flex-1 flex-col">
+                                    <div className="flex min-h-6 items-center gap-2">
+                                        <Skeleton shape="text" className={cn("text-sm", titulo)} />
+                                        <Skeleton shape="text" className="ms-auto w-8 text-xs" />
+                                    </div>
+                                    <Skeleton shape="text" className={cn("text-sm leading-normal", descricao)} />
+                                </div>
                             </div>
                         ))}
                     </SkeletonGroup>
                 ) : error && lista.length === 0 ? (
                     // Erro com a lista vazia é erro, nunca o vazio: o "Limpar notificações"
                     // otimista que falhou deixaria "Nenhuma notificação" com as linhas no banco.
-                    <Alert tone="destructive" size="sm" className="mx-3">
+                    <Alert tone="destructive" size="sm" className="mx-2">
                         <AlertTitle>Não deu para carregar as notificações.</AlertTitle>
                         <AlertActions>
                             <AlertAction disabled={tentando} aria-busy={tentando} onClick={() => void tentarDeNovo()}>
@@ -398,26 +447,34 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                 {/* Entregue ao preso, o rótulo some da lista; volta quando o grupo desce. */}
                                 <ItemGroupLabel
                                     className={cn(
-                                        "transition-opacity duration-(--duration-fast) ease-(--ease-out)",
+                                        "px-2 transition-opacity duration-(--duration-fast) ease-(--ease-out)",
                                         i === 0 ? "sr-only" : i <= indiceDoDia && "opacity-0"
                                     )}
                                 >
                                     {formatDayHeadingPtBr(grupo.data)}
                                 </ItemGroupLabel>
-                                <ItemGroup variant="divided">
-                                    {grupo.itens.map((n) => (
-                                        <NotificationRow
-                                            key={n.id}
-                                            notification={n}
-                                            onToggleRead={onToggleRead}
-                                            onDelete={onDelete}
-                                        />
+                                {/* As linhas se separam por 4px e um fio recuado; o realce de cada uma é arredondado. */}
+                                <ItemGroup className="gap-1">
+                                    {grupo.itens.map((n, i) => (
+                                        <Fragment key={n.id}>
+                                            {/* O fio entre as linhas do mesmo dia, recuado como no iOS —
+                                                começa no título (8 + 1 + 32 + 10 = 51) e acaba onde o
+                                                conteúdo da linha acaba (8 + 1). */}
+                                            {i > 0 ? (
+                                                <ItemSeparator className="my-0 ms-12.75 me-2.25 w-auto" />
+                                            ) : null}
+                                            <NotificationRow
+                                                notification={n}
+                                                onToggleRead={onToggleRead}
+                                                onDelete={onDelete}
+                                            />
+                                        </Fragment>
                                     ))}
                                 </ItemGroup>
                             </div>
                         ))}
                         {lista.length >= LIMITE_DA_LISTA ? (
-                            <Caption className="px-3 pt-3 text-center">
+                            <Caption className="px-2 pt-3 text-center">
                                 Mostrando as 100 mais recentes.
                             </Caption>
                         ) : null}
@@ -433,17 +490,20 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                 dela: a entrada em cascata o faz contexto de empilhamento, e o `z-10` só das
                 abas não saía dele — o clique em "Todas" caía no link da linha embaixo. */}
             <DialogHeader
-                className={cn(comTrilho && "relative z-10 group-data-[layout=fixed]/dialog-content:pb-0")}
+                className={cn(
+                    (comTrilho || carregando) && "relative z-10 group-data-[layout=fixed]/dialog-content:pb-0"
+                )}
             >
                 {cabecalho}
             </DialogHeader>
-            {/* `px-1`: o recuo de 12 da linha mais este dá os 16 do cabeçalho, e o
-                título da linha alinha com o do painel. */}
+            {/* O recuo da lista é o da placa dos menus (8 nas laterais e na base, o `p-2`);
+                a linha e o rótulo do dia recuam 8 por dentro, e o texto continua nos 16 do
+                cabeçalho. */}
             <DialogBody
                 onScroll={comDia ? acompanharDia : undefined}
                 className={cn(
-                    "px-1",
-                    comDia
+                    "px-2 pb-2",
+                    comDia || carregando
                         ? // A dissolução nasce na base das abas, não do dia: a faixa é só o
                           // trilho, e a rampa (80px) atravessa o dia preso (8 + 28) antes de
                           // abrir; o corpo sobe por trás das abas e do dia, e o respiro devolve os

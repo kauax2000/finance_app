@@ -53,20 +53,29 @@ describe("painel de notificações (fonte)", () => {
         expect(painel).toContain("Mostrando as 100 mais recentes")
     })
 
-    it("o erro nunca vira o vazio, e só a linha com destino tem a seta", () => {
+    it("o erro nunca vira o vazio, e a linha não reserva coluna para as ações", () => {
         expect(painel).toMatch(/error && lista\.length === 0 \?/)
         expect(painel).toMatch(/!error && lista\.length === 0 \?/)
         expect(painel).not.toMatch(/error && notifications === null \?/)
-        expect(painel).toMatch(/action \? <ItemChevron \/> : null/)
+        // A hora e o ponto azul moram na linha do título; o ✓ e o ⋯ tomam o lugar
+        // deles no cursor, e a seta saiu (a linha inteira é o alvo).
+        expect(painel).not.toContain("ItemChevron")
+        expect(painel).toContain("[--badge-dot:var(--info)]")
+        expect(painel).toMatch(/ACOES_NO_LUGAR[\s\S]*absolute end-0/)
     })
 
     it("o foco não cai no body, o ⋯ nomeia a linha e o painel pede a folha", () => {
         const linha = semComentarios(lerFonte("src/components/layout/notification-row.tsx"))
-        expect(linha).toMatch(/maisRef\.current\?\.focus\(\)\s*onToggleRead\(n\)/)
+        // O foco vai ao botão à vista: o ✓ no cursor, o ⋯ no toque.
+        expect(linha).toMatch(/focarAcao\(\)\s*onToggleRead\(n\)/)
+        expect(linha).toContain("ref={lerRef}")
         expect(linha).toContain("ref={maisRef}")
         expect(linha).toContain("aria-label={`Mais opções: ${n.title}`}")
         const lista = semComentarios(lerFonte("src/components/layout/notifications-panel.tsx"))
         expect(lista).toContain('<DropdownMenu mobile="sheet">')
+        // O menu não repete a linha (nem título nem hora), e excluir tem desfazer.
+        expect(linha).not.toContain("DropdownMenuHeader")
+        expect(lista).toMatch(/toastUndo\("Notificação excluída"/)
     })
 
     it("o \"Tentar de novo\" espera enquanto recarrega", () => {
