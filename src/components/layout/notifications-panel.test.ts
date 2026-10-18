@@ -39,9 +39,9 @@ describe("painel de notificações (fonte)", () => {
         expect(painel).toContain("Marcar todas como lidas")
         expect(painel).toContain("Configurar notificações")
         expect(painel).toContain("#notificacoes")
-        expect(painel).toContain("Limpar todas")
+        expect(painel).toContain("Limpar notificações")
         // Sem reticências: a confirmação vem logo depois (pedido do dono).
-        expect(painel).not.toContain("Limpar todas…")
+        expect(painel).not.toContain("Limpar notificações…")
         expect(painel).toContain("Marcar como não lida")
         expect(painel).toContain("Não deu para carregar as notificações.")
         expect(painel).toContain("Tentar de novo")

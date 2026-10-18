@@ -225,7 +225,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                     onSelect={() => void onClearAll()}
                                 >
                                     <TrashIcon />
-                                    Limpar todas
+                                    Limpar notificações
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -274,7 +274,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                         ))}
                     </SkeletonGroup>
                 ) : error && lista.length === 0 ? (
-                    // Erro com a lista vazia é erro, nunca o vazio: o "Limpar todas"
+                    // Erro com a lista vazia é erro, nunca o vazio: o "Limpar notificações"
                     // otimista que falhou deixaria "Nenhuma notificação" com as linhas no banco.
                     <Alert tone="destructive" size="sm" className="mx-3">
                         <AlertTitle>Não deu para carregar as notificações.</AlertTitle>
