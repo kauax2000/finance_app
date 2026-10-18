@@ -42,7 +42,6 @@ import {
 import { parseMoneyBrl } from "@/lib/money-brl"
 import { toastError, toastErrorWithDescription, toastSuccess } from "@/lib/toast"
 import { categoryDetailPath } from "@/config/navigation"
-import { invokeEdgeJson } from "@/lib/edge-invoke"
 import {
     dispatchFinanceCategoriesMutated,
 } from "@/lib/workspace-data-events"
@@ -161,21 +160,6 @@ export function CategoryCreateDialog({
                 action: verCategoria,
             })
         }
-
-        void invokeEdgeJson("dispatch-notifications", {
-            body: {
-                workspace_id: workspaceId,
-                type: "system",
-                title: "Categoria criada",
-                body: `Você criou a categoria “${trimmedName}”.`,
-                metadata: {
-                    kind: "category_created",
-                    critical: false,
-                },
-            },
-        }).catch(() => {
-            /* non-blocking */
-        })
 
         setSaving(false)
         onOpenChange(false)

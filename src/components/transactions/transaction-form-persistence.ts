@@ -2,6 +2,7 @@ import {
     TRANSACTION_SAVE_TOAST_ID,
     type InstallmentPlanFormSavePayload,
 } from "@/components/transactions/transaction-form-types"
+import { scheduleEvaluateCreditCardAlerts } from "@/lib/credit-card-notifications"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { toastError, toastSuccess } from "@/lib/toast"
@@ -57,6 +58,14 @@ export async function persistInstallmentPlanCreate(options: {
         },
     }).catch(() => {
         /* non-blocking */
+    })
+    scheduleEvaluateCreditCardAlerts({
+        workspaceId,
+        type: "expense",
+        paymentMethod: payload.paymentMethod,
+        paymentCreditCardId: payload.paymentCreditCardId,
+        categoryId: payload.categoryId,
+        dateIso: `${payload.firstBillingYmd}T12:00:00.000Z`,
     })
 
     // A RPC devolve o id do plano; o "Ver" abre a lista filtrada nas parcelas dele.

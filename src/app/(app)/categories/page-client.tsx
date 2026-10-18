@@ -55,7 +55,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { PlusIcon } from "@heroicons/react/16/solid"
-import { invokeEdgeJson } from "@/lib/edge-invoke"
 import { upsertCategoryBudget, deleteCategoryBudgetById } from "@/lib/category-budget-ops"
 import { deleteCategoryById, saveCategory } from "@/lib/categories/mutations"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
@@ -424,12 +423,14 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 toastError("Informe um valor válido em reais, maior que zero", { id: "salvar-categoria" })
                 return false
             }
+            const savedBudget = budgets.find((b) => b.category_id === categoryId)
             const { error: budErr } = await upsertCategoryBudget({
                 userId: user.id,
                 workspaceId: currentWorkspaceId,
                 categoryId,
                 yearMonth: budgetMonthYm,
                 amount: amt,
+                previousAmount: savedBudget ? Number(savedBudget.amount) : null,
             })
             if (budErr) {
                 toastError(
@@ -479,23 +480,6 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                     ? undefined
                     : { label: "Ver", href: categoryDetailPath(saveResult.categoryId, { type }) },
             })
-
-            if (!saveResult.queued) {
-            void invokeEdgeJson("dispatch-notifications", {
-                body: {
-                    workspace_id: currentWorkspaceId,
-                    type: "system",
-                    title: "Categoria criada",
-                    body: `Você criou a categoria “${name}”.`,
-                    metadata: {
-                        kind: "category_created",
-                        critical: false,
-                    },
-                },
-            }).catch(() => {
-                /* non-blocking */
-            })
-            }
         }
 
         setSaving(false)

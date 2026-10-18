@@ -47,7 +47,6 @@ import {
 } from "@/lib/supabase-errors"
 import { toastError, toastSuccess, toastWarning } from "@/lib/toast"
 import { TransactionFormTypeSegment } from "@/components/transactions/transaction-type-segment"
-import { invokeEdgeJson } from "@/lib/edge-invoke"
 import {
     CATEGORIES_ONBOARDING_OUTER_CLASS,
     CATEGORIES_ONBOARDING_PANEL_CARD_CLASS,
@@ -366,20 +365,6 @@ export function CategoriesOnboardingWizard({
 
             if (row) {
                 setLocalCategories((prev) => [...prev, row].sort(sortCategories))
-                void invokeEdgeJson("dispatch-notifications", {
-                    body: {
-                        workspace_id: workspaceId,
-                        type: "system",
-                        title: "Categoria criada",
-                        body: `Você criou a categoria “${trimmed}”.`,
-                        metadata: {
-                            kind: "category_created",
-                            critical: false,
-                        },
-                    },
-                }).catch(() => {
-                    /* non-blocking */
-                })
             }
 
             setAddOpen(false)

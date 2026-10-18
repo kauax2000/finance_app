@@ -79,6 +79,14 @@ export async function persistTransactionSave(options: {
             }
         )
         if (payload.type === "expense" && isOnline()) {
+            void invokeEdgeJson("evaluate-budgets", {
+                body: {
+                    category_id: payload.categoryId,
+                    occurred_at: payload.dateIso,
+                },
+            }).catch(() => {
+                /* non-blocking */
+            })
             scheduleEvaluateCreditCardAlerts({
                 workspaceId,
                 type: payload.type,

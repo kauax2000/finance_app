@@ -268,6 +268,7 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
                         categoryId,
                         yearMonth,
                         amount: amt,
+                        previousAmount: budget ? Number(budget.amount) : null,
                     })
                     if (budErr) {
                         setEditSaving(false)

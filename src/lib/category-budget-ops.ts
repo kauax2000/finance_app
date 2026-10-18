@@ -11,9 +11,11 @@ export type CategoryBudgetUpsertInput = {
     yearMonth: string
     amount: number
     budgetId?: string | null
+    /** Valor salvo antes desta edição; se mudou, os avisos de limite rearmam. */
+    previousAmount?: number | null
 }
 
-function buildBudgetRow(input: CategoryBudgetUpsertInput, clientId?: string) {
+export function buildBudgetRow(input: CategoryBudgetUpsertInput, clientId?: string) {
     const { period_start, period_end } = periodBoundsFromYearMonth(input.yearMonth)
     const yearInt = Number(input.yearMonth.slice(0, 4))
     const monthOfYearInt = Number(input.yearMonth.slice(5, 7))
@@ -27,6 +29,14 @@ function buildBudgetRow(input: CategoryBudgetUpsertInput, clientId?: string) {
         period_start,
         period_end,
         amount: input.amount,
+        // Valor novo, limite novo: os avisos de 80%, 100% e estouro podem soar de novo.
+        ...(input.previousAmount != null && input.previousAmount !== input.amount
+            ? {
+                  threshold_80_sent_at: null,
+                  threshold_100_sent_at: null,
+                  threshold_over_sent_at: null,
+              }
+            : {}),
         ...(clientId ? { client_id: clientId } : {}),
     }
 }
