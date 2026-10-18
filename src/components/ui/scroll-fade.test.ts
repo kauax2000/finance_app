@@ -169,6 +169,16 @@ describe("a dissolução das bordas", () => {
     }
   })
 
+  it("a cabeça que gruda dentro do rolável recolhe só a dissolução de cima", () => {
+    // O teto da zona de cima tem fallback na distância de sempre, e só uma cabeça
+    // declarada (o rótulo de grupo grudado) o zera; a zona de baixo não lê o teto.
+    expect(RAMPA_Y).toContain("var(--scroll-fade-top-max, var(--scroll-fade-h))")
+    expect(RAMPA_Y).toContain("&:has([data-scroll-fade-head])")
+    expect(RAMPA_Y).toMatch(/&:has\(\[data-scroll-fade-head\]\)\s*\{\s*--scroll-fade-top-max:\s*0px;\s*\}/)
+    const baixo = RAMPA_Y.slice(RAMPA_Y.indexOf("--scroll-fade-bottom-h:"), RAMPA_Y.indexOf("--scroll-fade-bottom-y:"))
+    expect(baixo).not.toContain("--scroll-fade-top-max")
+  })
+
   it("7. o material substitui a dissolução, e não soma a ela", () => {
     // O que separa um material de um véu: o conteúdo passa por baixo nítido.
     for (const rampa of [RAMPA_Y, semComentarios(fatia("@utility scroll-fade-x {", "\n/*"), "linha-inteira")]) {

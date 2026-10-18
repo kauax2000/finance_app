@@ -99,6 +99,9 @@ describe("Item · ladrilho, link esticado e rótulo de grupo", () => {
     const preso = renderToStaticMarkup(h(ItemGroupLabel, { sticky: true }, "Hoje"))
     expect(preso).toContain("sticky")
     expect(preso).toContain("bg-(--item-group-label-surface,var(--color-popover))")
+    // Grudado, ele é a borda do rolável: a dissolução de cima se recolhe por ele.
+    expect(preso).toContain("data-scroll-fade-head")
+    expect(solto).not.toContain("data-scroll-fade-head")
   })
 })
 

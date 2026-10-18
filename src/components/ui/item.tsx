@@ -323,6 +323,9 @@ function ItemGroupLabel({
     <div
       data-slot="item-group-label"
       data-sticky={sticky || undefined}
+      // Grudado, ele é a borda de cima do rolável: a dissolução de cima se recolhe
+      // (`scroll-fade-y` em `globals.css`) para não apagá-lo.
+      data-scroll-fade-head={sticky || undefined}
       className={cn(
         "px-3 py-1.5 text-xs font-medium text-muted-foreground",
         sticky && "sticky top-0 z-10 bg-(--item-group-label-surface,var(--color-popover))",

@@ -1535,6 +1535,11 @@ declaração de `background-color` no trilho).
 - Nos dropdowns, **a seta de "tem mais"** (`ScrollFadeArrows` com
   `useScrollFade({ arrows: true })`): indicação, sem altura nem clique,
   `aria-hidden`.
+- **Uma cabeça que gruda dentro do rolável** (`data-scroll-fade-head`; o
+  `ItemGroupLabel sticky` a declara) recolhe só a dissolução de cima
+  (`--scroll-fade-top-max: 0px`, por `:has`): ela já é a borda, e a máscara a
+  apagaria. A de baixo continua. Não é a faixa (`--scroll-fade-band-h`), que mora
+  fora do rolável.
 - **Invariantes da primitiva**: `data-scroll-fade` não alimenta layout; **o
   elemento mascarado não desenha nada**; **todo `-` binário num `calc()`
   arbitrário se escreve `_-_`**; nenhuma faixa pinta (quem esconde é a rampa);

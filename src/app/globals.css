@@ -3350,8 +3350,20 @@
 @utility scroll-fade-y {
   --scroll-fade-top-h: calc(
     var(--scroll-fade-band-h, 0px) +
-      clamp(0px, var(--scroll-fade-start, 0px), var(--scroll-fade-h))
+      clamp(
+        0px,
+        var(--scroll-fade-start, 0px),
+        var(--scroll-fade-top-max, var(--scroll-fade-h))
+      )
   );
+  /* Uma cabeça que gruda no topo de dentro da rolagem (o rótulo de grupo `sticky`,
+     que declara `data-scroll-fade-head`) já é a borda: o conteúdo passa por baixo do
+     fundo dela. A dissolução de cima se recolhe (o teto da zona vai a zero) para não
+     apagar a própria cabeça; a de baixo fica. Não é a faixa (`--scroll-fade-band-h`),
+     que mora fora do rolável e esconde o que está sob ela. */
+  &:has([data-scroll-fade-head]) {
+    --scroll-fade-top-max: 0px;
+  }
   --scroll-fade-bottom-h: calc(
     var(--scroll-fade-foot-h, 0px) +
       clamp(0px, var(--scroll-fade-end, 0px), var(--scroll-fade-h))

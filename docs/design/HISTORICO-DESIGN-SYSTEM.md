@@ -27093,3 +27093,19 @@ página do catálogo o põe sobre o cartão declarando a variável. Nada mudou e
 `item-versions.test.ts`: o ladrilho `warning` renderiza `bg-warning-muted` e
 `rounded-full`, o neutro `bg-muted`, o `ItemLink` sai `type="button"` e sem
 `type` no `<a>`, e nenhuma classe é montada.
+
+### Rodada 308 — o rótulo que gruda não dissolve
+
+No painel de notificações, o rótulo do dia (`ItemGroupLabel sticky`) gruda no
+topo do `DialogBody`, e a dissolução de cima, que é máscara do rolável inteiro,
+o apagava enquanto a lista rolava. O dono autorizou a mudança na primitiva. A
+zona de cima ganhou um teto (`--scroll-fade-top-max`, com fallback na distância
+de sempre), e um rolável que contém uma cabeça declarada
+(`data-scroll-fade-head`) o zera por `:has`: a cabeça vira a borda, como numa
+lista do iOS, e a zona de baixo não muda. Descartado: reescrever a rampa com um
+trecho opaco no topo — o `DialogBody` tem rampa própria, e as paradas negativas
+seriam grampeadas em zero, mudando a curva de todo rolável. Medido a 1280×520,
+rolado 150px: a rampa de cima fica de −24 a 0px (fora da vista), o rótulo
+nítido, e a de baixo ativa (`--scroll-fade-end` 124px). O `scroll-fade-blur-y`
+(o modo de borrão, em camada irmã) não lê o teto; nenhuma cabeça grudada o usa
+hoje. `scroll-fade.test.ts` e `item-versions.test.ts` trancam.
