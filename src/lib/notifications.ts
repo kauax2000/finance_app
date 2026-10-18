@@ -23,6 +23,12 @@ export type AppNotification = {
     created_at: string
 }
 
+/** Chaves do `lib/guardado`: a lista e a contagem da última abertura, por carteira. */
+export const chaveListaGuardada = (userId: string, workspaceId: string) =>
+    `notificacoes:${userId}:${workspaceId}`
+export const chaveNaoLidasGuardada = (userId: string, workspaceId: string) =>
+    `nao-lidas:${userId}:${workspaceId}`
+
 /** O `message` do PostgREST vem em inglês e chegava ao toast do painel. */
 function fail(error: unknown, fallback: string): never {
     console.error(fallback, error)

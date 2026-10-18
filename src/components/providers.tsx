@@ -30,13 +30,14 @@ import { unsubscribeFromPush } from "@/lib/push/subscribe"
 import { clearFinanceQueryIdb } from "@/lib/queries/idb-persister"
 import { profileKeys } from "@/lib/queries/keys"
 import { useProfileQuery } from "@/lib/queries/use-profile"
+import { esquecerGuardados } from "@/lib/guardado"
 
 interface AuthContextType {
     user: User | null
     profile: Profile | null
     session: Session | null
     loading: boolean
-    /** True once the profiles row fetch finished for the signed-in user (avoids email fallback flash before `avatar_color` loads). */
+    /** True once the profiles row is known (fetched, or kept from the last visit) — avoids the email fallback flash before `avatar_color` loads. */
     profileReady: boolean
     signOut: () => Promise<void>
     updateProfile: (data: {
@@ -98,11 +99,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const profileQuery = useProfileQuery(user?.id)
     const profile = profileQuery.data ?? null
-    const profileReady = user?.id == null || profileQuery.isFetched
+    // O perfil guardado da última abertura já serve: esperar a busca deixava
+    // o avatar em esqueleto por segundos (`use-profile`).
+    const profileReady =
+        user?.id == null || profileQuery.isFetched || profileQuery.data !== undefined
 
     const clearClientCaches = useCallback(async () => {
         await queryClient.cancelQueries()
         queryClient.clear()
+        esquecerGuardados()
         await clearFinanceQueryIdb()
         await clearAllOutbox()
         try {

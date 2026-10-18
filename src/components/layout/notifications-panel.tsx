@@ -52,8 +52,10 @@ import {
     markAllRead,
     markRead,
     markUnread,
+    chaveListaGuardada,
     type AppNotification,
 } from "@/lib/notifications"
+import { guardar, lerGuardado } from "@/lib/guardado"
 import { TOAST_UNDO_MS, toastError, toastUndo } from "@/lib/toast"
 import { formatDayHeadingPtBr, groupByLocalDay } from "@/lib/transaction-date"
 
@@ -105,6 +107,16 @@ const TROCA_DO_DIA: Variants = {
     }),
 }
 
+/** A lista guardada da última abertura, sem as exclusões que ainda podem ser desfeitas. */
+function guardadaDe(userId: string | undefined, workspaceId: string | null | undefined) {
+    if (!userId || !workspaceId) return null
+    return (
+        lerGuardado<AppNotification[]>(chaveListaGuardada(userId, workspaceId))?.filter(
+            (n) => !exclusoesPendentes.has(n.id)
+        ) ?? null
+    )
+}
+
 type NotificationsPanelProps = {
     isActive: boolean
 }
@@ -122,7 +134,10 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
     }
     // `null` é "ainda não chegou": o esqueleto só aparece na primeira carga, e
     // a recarga (o sino mudou) troca a lista no lugar.
-    const [notifications, setNotifications] = useState<AppNotification[] | null>(null)
+    // A lista da última abertura pinta na hora (a folha monta a cada abertura), e a busca corrige.
+    const [notifications, setNotifications] = useState<AppNotification[] | null>(() =>
+        guardadaDe(user?.id, currentWorkspaceId)
+    )
     const [error, setError] = useState(false)
     const [filtro, setFiltro] = useState<Filtro>("nao-lidas")
     const [diaAtual, setDiaAtual] = useState<string | null>(null)
@@ -148,6 +163,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
             // Com escrita em voo a resposta pode ser de antes dela; a última escrita a voltar recarrega.
             if (seq !== fetchSeq.current || escritasEmVoo.current > 0) return
             setNotifications(rows)
+            guardar(chaveListaGuardada(userId, currentWorkspaceId), rows)
             setError(false)
         } catch {
             if (seq !== fetchSeq.current || escritasEmVoo.current > 0) return
@@ -164,9 +180,9 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
         }
     }
 
-    // Outra carteira é outra lista: volta ao esqueleto em vez de mostrar a anterior.
+    // Outra carteira é outra lista: a guardada dela, ou o esqueleto — nunca a anterior.
     useEffect(() => {
-        setNotifications(null)
+        setNotifications(guardadaDe(userId, currentWorkspaceId))
         setError(false)
     }, [userId, currentWorkspaceId])
 

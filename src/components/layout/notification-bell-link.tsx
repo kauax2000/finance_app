@@ -6,7 +6,8 @@ import { TopBarAction } from "@/components/ui/top-bar"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { useNotificationsUi } from "@/components/layout/notifications-ui-provider"
-import { countUnreadNotifications } from "@/lib/notifications"
+import { chaveNaoLidasGuardada, countUnreadNotifications } from "@/lib/notifications"
+import { guardar, lerGuardado } from "@/lib/guardado"
 import { BELL_POLL_MS } from "@/lib/unread-count"
 
 export function NotificationBellLink() {
@@ -20,12 +21,17 @@ export function NotificationBellLink() {
     // O último número que veio do servidor (não o otimista do painel): `null` antes da primeira carga.
     const ultimoDoServidorRef = useRef<number | null>(null)
 
-    // Outra carteira, outro número: o da anterior não fica no sino até a contagem nova chegar.
+    // Outra carteira, outro número: o da anterior não fica no sino até a contagem nova chegar —
+    // fica o guardado da última abertura desta carteira, e a contagem corrige.
     // Efeito à parte, antes da contagem: o `badgeNonce` não pode zerar o sino a cada invalidação.
     useEffect(() => {
-        setUnreadCount(0)
+        setUnreadCount(
+            userId && currentWorkspaceId
+                ? (lerGuardado<number>(chaveNaoLidasGuardada(userId, currentWorkspaceId)) ?? 0)
+                : 0
+        )
         ultimoDoServidorRef.current = null
-    }, [currentWorkspaceId, setUnreadCount])
+    }, [userId, currentWorkspaceId, setUnreadCount])
 
     useEffect(() => {
         if (authLoading || workspaceLoading) return
@@ -43,6 +49,7 @@ export function NotificationBellLink() {
                 const anterior = ultimoDoServidorRef.current
                 ultimoDoServidorRef.current = n
                 setUnreadCount(n)
+                guardar(chaveNaoLidasGuardada(userId, currentWorkspaceId), n)
                 // O número do servidor mudou: o painel aberto recarrega a lista. A contagem
                 // que essa invalidação refaz devolve o mesmo número, e para aí.
                 if (anterior !== null && anterior !== n) invalidateUnreadBadge()
