@@ -70,17 +70,20 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
     // Trocar de carteira no meio de uma busca, ou marcar/limpar enquanto ela
     // corre, não pode deixar a resposta velha sobrescrever a nova.
     const fetchSeq = useRef(0)
+    // Escritas em voo: o sino (e com ele a lista) só é refeito quando a última volta.
+    const escritasEmVoo = useRef(0)
     const fetchNotifications = useCallback(async () => {
         if (!userId || !currentWorkspaceId) return
         const seq = ++fetchSeq.current
         try {
             // O sino não é tocado aqui: a lista para em 100, e o número dele é o do servidor.
             const rows = await listNotifications(userId, currentWorkspaceId)
-            if (seq !== fetchSeq.current) return
+            // Com escrita em voo a resposta pode ser de antes dela; a última escrita a voltar recarrega.
+            if (seq !== fetchSeq.current || escritasEmVoo.current > 0) return
             setNotifications(rows)
             setError(false)
         } catch {
-            if (seq !== fetchSeq.current) return
+            if (seq !== fetchSeq.current || escritasEmVoo.current > 0) return
             setError(true)
         }
     }, [userId, currentWorkspaceId])
@@ -97,17 +100,20 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
         // `badgeNonce`: o sino foi invalidado (inclusive pelas ações daqui), e a lista acompanha.
     }, [isActive, authLoading, workspaceLoading, fetchNotifications, badgeNonce])
 
-    // Cada escrita é otimista, e o sino é refeito quando ela volta: uma contagem
-    // que estava em voo não devolve o número de antes. Falhou, o refazer corrige
-    // o sino e a lista (o `badgeNonce` recarrega o painel aberto).
+    // Cada escrita é otimista, e o sino é refeito quando a última em voo volta:
+    // refazer depois da primeira de duas escritas rápidas mostraria a segunda
+    // ainda não lida, e o sino com +1. Falhou, o refazer corrige o sino e a
+    // lista (o `badgeNonce` recarrega o painel aberto).
     const escrever = async (acao: () => Promise<void>, falha: string) => {
         fetchSeq.current++
+        escritasEmVoo.current++
         try {
             await acao()
         } catch (e) {
             toastError(e instanceof Error ? e.message : falha)
         } finally {
-            invalidateUnreadBadge()
+            escritasEmVoo.current--
+            if (escritasEmVoo.current === 0) invalidateUnreadBadge()
         }
     }
 

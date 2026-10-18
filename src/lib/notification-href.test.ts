@@ -88,6 +88,12 @@ describe("buildPushPayloadPreview", () => {
     })
 })
 
+describe("resolveNotificationHref — espaço em volta", () => {
+    it("apara antes de checar, como getNotificationAction", () => {
+        expect(resolveNotificationHref({ href: " /categories/x" })).toBe("/categories/x")
+    })
+})
+
 describe("resolveNotificationHref — links que saem do app", () => {
     it("barra invertida não passa como caminho interno", () => {
         expect(resolveNotificationHref({ href: "/\\evil.com" })).not.toBe("/\\evil.com")

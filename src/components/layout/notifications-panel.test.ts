@@ -58,6 +58,13 @@ describe("painel de notificações (fonte)", () => {
         expect(painel).not.toContain("toastPageFetchError")
     })
 
+    it("o sino só é refeito quando a última escrita em voo volta", () => {
+        const lista = semComentarios(lerFonte("src/components/layout/notifications-panel.tsx"))
+        expect(lista).toMatch(/escritasEmVoo\.current--\s*if \(escritasEmVoo\.current === 0\) invalidateUnreadBadge\(\)/)
+        expect(lista).toMatch(/finally \{\s*escritasEmVoo\.current--/)
+        expect(lista).toMatch(/seq !== fetchSeq\.current \|\| escritasEmVoo\.current > 0/)
+    })
+
     it("a seção de preferências é a âncora do menu", () => {
         expect(lerFonte("src/components/settings/notification-preferences.tsx")).toContain('id="notificacoes"')
     })

@@ -18,4 +18,9 @@ describe("sino de notificações (fonte)", () => {
         expect(fonte).toMatch(/seq/)
         expect(fonte).toMatch(/seq !== seqRef\.current|seqRef\.current !== seq/)
     })
+
+    it("invalida o painel só quando o número do servidor muda (não na primeira carga)", () => {
+        expect(fonte).toMatch(/useRef<number \| null>\(null\)/)
+        expect(fonte).toMatch(/if \(anterior !== null && anterior !== n\) invalidateUnreadBadge\(\)/)
+    })
 })

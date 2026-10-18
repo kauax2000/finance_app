@@ -12,15 +12,19 @@ import { BELL_POLL_MS } from "@/lib/unread-count"
 export function NotificationBellLink() {
     const { user, loading: authLoading } = useAuth()
     const { currentWorkspaceId, loading: workspaceLoading } = useWorkspace()
-    const { toggle, isOpen, unreadCount, setUnreadCount, badgeNonce } = useNotificationsUi()
+    const { toggle, isOpen, unreadCount, setUnreadCount, invalidateUnreadBadge, badgeNonce } =
+        useNotificationsUi()
     const userId = user?.id
     // Sequência da contagem: só a resposta mais recente escreve no sino.
     const seqRef = useRef(0)
+    // O último número que veio do servidor (não o otimista do painel): `null` antes da primeira carga.
+    const ultimoDoServidorRef = useRef<number | null>(null)
 
     // Outra carteira, outro número: o da anterior não fica no sino até a contagem nova chegar.
     // Efeito à parte, antes da contagem: o `badgeNonce` não pode zerar o sino a cada invalidação.
     useEffect(() => {
         setUnreadCount(0)
+        ultimoDoServidorRef.current = null
     }, [currentWorkspaceId, setUnreadCount])
 
     useEffect(() => {
@@ -36,7 +40,12 @@ export function NotificationBellLink() {
             try {
                 const n = await countUnreadNotifications(userId, currentWorkspaceId)
                 if (!ativo || seq !== seqRef.current) return
+                const anterior = ultimoDoServidorRef.current
+                ultimoDoServidorRef.current = n
                 setUnreadCount(n)
+                // O número do servidor mudou: o painel aberto recarrega a lista. A contagem
+                // que essa invalidação refaz devolve o mesmo número, e para aí.
+                if (anterior !== null && anterior !== n) invalidateUnreadBadge()
             } catch {
                 // Falha de rede não zera o sino: fica o último número bom até a próxima sondagem.
             }
@@ -60,7 +69,7 @@ export function NotificationBellLink() {
             ativo = false
         }
         // `badgeNonce` refaz a contagem quando alguém invalida o sino.
-    }, [authLoading, workspaceLoading, userId, currentWorkspaceId, badgeNonce, setUnreadCount])
+    }, [authLoading, workspaceLoading, userId, currentWorkspaceId, badgeNonce, setUnreadCount, invalidateUnreadBadge])
 
     return (
         <TopBarAction

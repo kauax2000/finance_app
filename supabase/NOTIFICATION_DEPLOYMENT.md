@@ -124,7 +124,7 @@ O que muda em cada uma:
 | `evaluate-budgets` | Texto com categoria, mês e valores; o link abre a categoria no mês do orçamento (`?month=AAAA-MM`). |
 | `evaluate-credit-card-alerts` | O limite usado soma a fatura aberta e a última fechada ainda não paga (`credit_card_invoice_payments`); texto com valores e disponível. |
 | `credit-card-calendar-alerts` | Texto com o valor da fatura; não avisa fatura zerada nem vencimento já pago; "fechou" sai no dia seguinte ao fechamento; "fecha/vence em 3 dias" vale também com 2 (tolera um dia de cron perdido); só o interruptor "Cartões: fatura e vencimento" o desliga. |
-| `evaluate-bills-reminders` | Texto com valor; a conta atrasada avisa no 1º dia de atraso e depois a cada 7 dias, e não todo dia. |
+| `evaluate-bills-reminders` | Texto com valor; a conta atrasada avisa no 1º dia de atraso e depois a cada 7 dias, e não todo dia (tolera um dia de cron perdido: o aviso da janela sai no 1º ou no 2º dia dela, uma vez só). |
 | `notify-transaction-created` | O valor da despesa sai no formato novo ("R$ 1.234,56" escrito à mão, sem o `Intl` do runtime) e o link passa pela checagem nova. |
 | `workspace-invites-accept` | O link do aviso de convite aceito passa pela checagem nova (recusa `\`, caractere de controle e `//`). |
 | `dispatch-notifications` | Só aceita `type: "system"` com um `kind` da lista fechada (vazia hoje): o resto recebe 400. O cliente já não chama esta função. |

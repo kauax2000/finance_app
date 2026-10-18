@@ -12,10 +12,9 @@ export function isSafeInternalPath(href: string): boolean {
  * for client tests and push deep-link parity.
  */
 export function resolveNotificationHref(metadata: Record<string, unknown>): string {
-    const raw = metadata.href
-    if (typeof raw === "string" && isSafeInternalPath(raw)) {
-        return raw.trim()
-    }
+    // Apara antes de checar, como `getNotificationAction`.
+    const raw = typeof metadata.href === "string" ? metadata.href.trim() : ""
+    if (isSafeInternalPath(raw)) return raw
     const kind = metadata.kind
     if (kind === "category_created") return "/categories"
     if (kind === "invite_accepted") return "/members"

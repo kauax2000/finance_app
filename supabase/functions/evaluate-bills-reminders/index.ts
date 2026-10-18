@@ -152,8 +152,9 @@ Deno.serve(async (req: Request) => {
         ? billMini.reminder_days_before
         : [3, 0]
 
-      // A atrasada avisa no 1º dia e a cada 7 dias; cada janela de 7 dias é um
-      // `reminder_offset_days` próprio (-1, -2, …), com o `sent_on` fixo.
+      // A atrasada avisa no 1º dia e a cada 7 dias (tolerando um dia perdido);
+      // cada janela de 7 dias é um `reminder_offset_days` próprio (-1, -2, …),
+      // com o `sent_on` fixo, então os dois dias da janela dão um aviso só.
       const overdueDays = -daysUntil
       const hitOffsets = isPast
         ? shouldSendOverdue(overdueDays)

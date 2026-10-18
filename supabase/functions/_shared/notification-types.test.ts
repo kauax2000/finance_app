@@ -5,6 +5,10 @@ Deno.test('resolveNotificationHref aceita caminho interno', () => {
   assertEquals(resolveNotificationHref({ href: '/bills' }), '/bills')
 })
 
+Deno.test('resolveNotificationHref apara antes de checar, como o cliente', () => {
+  assertEquals(resolveNotificationHref({ href: ' /categories/x' }), '/categories/x')
+})
+
 Deno.test('resolveNotificationHref recusa o que sai do app, como o cliente', () => {
   for (const href of ['/\\evil.com', '/\t/evil.com', '/\n/evil.com', '//evil.com', 'https://evil.com']) {
     assertEquals(resolveNotificationHref({ href }), '/dashboard', JSON.stringify(href))
