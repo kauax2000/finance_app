@@ -328,7 +328,13 @@ function ItemGroupLabel({
       data-scroll-fade-head={sticky || undefined}
       className={cn(
         "px-3 py-1.5 text-xs font-medium text-muted-foreground",
-        sticky && "sticky top-0 z-10 bg-(--item-group-label-surface,var(--color-popover))",
+        // Grudado, ele é vidro: transparente e com o borrão da casa. Parado, some na
+        // superfície (a folha de vidro, o cartão); grudado, borra a lista que passa
+        // por baixo. Um fundo chapado (`--popover`) virava faixa sobre a folha
+        // translúcida. `--item-group-label-surface` tinge quando quem chama precisa;
+        // sem transparência, o sólido é o fundo da página.
+        sticky &&
+          "sticky top-0 z-10 bg-(--item-group-label-surface,transparent) glass-surface reduced-transparency:bg-background",
         className
       )}
       {...props}

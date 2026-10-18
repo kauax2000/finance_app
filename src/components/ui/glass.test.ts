@@ -279,12 +279,12 @@ describe("a superfície de vidro", () => {
 
     it("26. as quatro superfícies modais vestem a régua, e nada repinta por dentro", () => {
         // O `Sheet` traz os dois ramos no mesmo arquivo (a placa do painel no `cva`, a da
-        // gaveta no ramo do `vaul`). A folha é a placa chapada (`--popover`), e não pode voltar
-        // a vestir o vidro por cópia.
+        // gaveta no ramo do `vaul`). A folha veste o vidro modal do `Dialog` pela régua
+        // (2026-10-18, pedido do dono), e nunca por cópia.
         const folha = semComentariosDe("src/components/ui/sheet.tsx")
-        expect(folha).not.toContain("modalSurfaceClassName")
-        expect(folha).toContain("bg-clip-padding bg-popover text-sm text-popover-foreground shadow-lg")
-        for (const nome of ["dialog", "drawer"] as const) {
+        expect(folha).toContain("modalSurfaceClassName")
+        expect(folha).not.toContain("bg-clip-padding bg-popover")
+        for (const nome of ["dialog", "drawer", "sheet"] as const) {
             const src = semComentariosDe(`src/components/ui/${nome}.tsx`)
             expect(src, `${nome} precisa vestir a régua`).toContain("modalSurfaceClassName")
             // A marca da cópia, nos dois tokens que a placa já teve.

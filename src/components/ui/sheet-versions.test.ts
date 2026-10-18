@@ -9,13 +9,13 @@ const CODIGO = lerFonte("src/components/ui/sheet.tsx")
 const CSS = lerFonte("src/app/globals.css")
 
 describe("as versões do Sheet", () => {
-  it("floating é o padrão, numa placa chapada com o anel das placas", () => {
+  it("floating é o padrão, no vidro modal do Dialog com o anel das placas", () => {
     const c = sheetContentVariants({})
     expect(c).toContain("rounded-modal ring-1 ring-foreground/10")
-    expect(c).toContain("bg-popover")
-    expect(c).not.toContain("glass-surface")
-    // O comentário conta a história do vidro; o código não o veste.
-    expect(semComentarios(CODIGO, "fora-de-url")).not.toContain("modalSurfaceClassName")
+    // O mesmo material do `Dialog`, pela régua (2026-10-18, pedido do dono).
+    expect(c).toContain("bg-background/85 glass-surface")
+    expect(c).not.toContain("bg-popover")
+    expect(semComentarios(CODIGO, "fora-de-url")).toContain("modalSurfaceClassName")
   })
 
   it("o × de canto da folha flutuante é círculo preenchido, sem anel nem sombra", () => {

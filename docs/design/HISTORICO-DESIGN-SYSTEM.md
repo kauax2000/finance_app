@@ -27109,3 +27109,24 @@ rolado 150px: a rampa de cima fica de −24 a 0px (fora da vista), o rótulo
 nítido, e a de baixo ativa (`--scroll-fade-end` 124px). O `scroll-fade-blur-y`
 (o modo de borrão, em camada irmã) não lê o teto; nenhuma cabeça grudada o usa
 hoje. `scroll-fade.test.ts` e `item-versions.test.ts` trancam.
+
+### Rodada 309 — a folha veste o vidro do diálogo
+
+O dono pediu o fundo da `Sheet` igual ao do `Dialog`, com a transparência. O
+painel lateral deixa a placa chapada (`bg-popover`) e veste o
+`modalSurfaceClassName` (`--background` a 85%, 40% no escuro, com o
+`glass-surface`), pela régua de `lib/glass-classes` — nunca por cópia; o
+`glass.test.ts` passa a exigir a régua também na folha, e o
+`sheet-versions.test.ts` deixa de exigir o chapado. A gaveta do telefone já era
+esse vidro. A aba do `flush` (a cópia da placa 4rem para fora, que cobre o
+quique) segue em `--color-popover`: fica fora da tela, salvo no quique.
+
+Com a folha translúcida, o `ItemGroupLabel sticky` (fundo `--popover`) virou
+faixa cinza sólida sobre ela. O rótulo grudado passa a ser vidro: transparente
+com o `glass-surface` — parado some na superfície, grudado borra a lista que
+passa por baixo, como os cabeçalhos do iOS; sem transparência, `--background`.
+Medido no painel de notificações: a folha `oklab(0.145 … / 0.4)` com borrão de
+24px, o rótulo transparente com o mesmo borrão.
+
+O dono pediu também a folha um pouco mais estreita: o painel de notificações
+passou ao `SheetContent` padrão (direita, flutuante, `sm` 384, sem eixo escrito).

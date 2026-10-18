@@ -1108,7 +1108,9 @@ declaração de `background-color` no trilho).
   `AlertDialogConfirmInput`.
 - **Superfície ancorada é uma só, e é o `Sheet`**: `side`, `variant`
   (`floating` — o padrão — ou `flush`, que as folhas do app pedem) e `size`
-  (`sm` 384 · `md` 448 · `lg` 512 · `full`; topo e base, `none`).
+  (`sm` 384 · `md` 448 · `lg` 512 · `full`; topo e base, `none`). O material é
+  o vidro modal do `Dialog` (`modalSurfaceClassName`), pela régua — era a placa
+  chapada `--popover` até 2026-10-18.
   - **No telefone a folha é o `Drawer`** (a raiz e o `DrawerContent` dele, com
     o `data-slot` `sheet-content`); lá `side`, `variant` e `size` não valem, a
     gaveta alta é `fillMobileViewport` e `snapPoints` são os degraus. A
@@ -1344,8 +1346,9 @@ declaração de `background-color` no trilho).
 - **`Item`**: `variant="flush"`, `selected` (`aria-current`; **destaque de
   passagem não é seleção**), `ItemChevron`, `ItemMedia variant="tile" tone`
   (o círculo na superfície `-muted` do tom), `ItemLink` (a linha clicável com
-  ações dentro, como o `CardLink`) e `ItemGroupLabel sticky` (o fundo é
-  `--item-group-label-surface`, `--popover` por padrão). **Nenhuma tela
+  ações dentro, como o `CardLink`) e `ItemGroupLabel sticky` (grudado é vidro:
+  transparente com o `glass-surface`, tingido por `--item-group-label-surface`
+  quando quem chama precisa; sem transparência, `--background`). **Nenhuma tela
   escreve `flex-nowrap` nem `text-left` num `Item`.**
 - **`DescriptionList`**: `term="eyebrow"` (**nenhum `DescriptionTerm` escreve
   `uppercase` à mão**), `DescriptionDetails size="xl"`, `DescriptionHint`,

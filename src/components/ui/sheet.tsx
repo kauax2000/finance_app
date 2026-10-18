@@ -6,6 +6,7 @@ import { Dialog as SheetPrimitive } from "radix-ui"
 import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "@/lib/utils"
+import { modalSurfaceClassName } from "@/lib/glass-classes"
 import {
   useIsMobile,
   useViewportModal,
@@ -41,8 +42,9 @@ import {
  * O gume do encostado é composto: `floating` desenha as quatro bordas e `flush`
  * uma, que muda com o lado; empilhar `border` e `border-l` dependeria da ordem
  * de emissão do `cva`.
- * O material é chapado (`--popover`, a placa solta da casa): o véu já separa a
- * folha da página. `floating` é o padrão (raio `--radius-modal`, anel de 1px e
+ * O material é o vidro modal do `Dialog` (`modalSurfaceClassName`: `--background`
+ * a 85%, 40% no escuro, com borrão), a pedido do dono — antes era a placa chapada
+ * (`--popover`). `floating` é o padrão (raio `--radius-modal`, anel de 1px e
  * sombra); `flush` é o que as folhas do app pedem por enquanto.
  * As duas verticais somam a área segura (uma calha a partir do viewport põe o
  * canto atrás do indicador de home); a horizontal não, pois
@@ -53,7 +55,8 @@ const sheetContentVariants = cva(
     // O casco de formulário é o de fábrica: sem `gap`, sem recuo e recortando, como
     // o `layout="fixed"` do `Dialog` (cabeçalho e rodapé parados, `DialogBody` rolando).
     "group/dialog-content fixed z-(--z-sheet) flex flex-col gap-0 overflow-hidden",
-    "bg-clip-padding bg-popover text-sm text-popover-foreground shadow-lg",
+    "bg-clip-padding text-sm text-foreground shadow-lg",
+    modalSurfaceClassName,
     // Entra na mola e sai curta: desliza da borda inteira (de fora da tela, a
     // própria largura) e assenta com o quique de 3,8%; fechar volta à mesma borda,
     // sem quique. Com movimento reduzido o bloco global corta a animação.

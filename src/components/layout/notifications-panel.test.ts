@@ -15,10 +15,9 @@ const painel = [
     .join("\n")
 
 describe("painel de notificações (fonte)", () => {
-    it("é a placa flutuante md, com o título do cabeçalho", () => {
-        expect(folha).toContain('variant="floating"')
-        expect(folha).toContain('size="md"')
-        expect(folha).not.toContain('variant="flush"')
+    it("é a folha padrão (flutuante, sm), com o título do cabeçalho", () => {
+        // A versão padrão do `SheetContent`: nenhum eixo escrito (pedido do dono).
+        expect(folha).not.toMatch(/<SheetContent[^>]*\b(side|variant|size)=/)
         expect(folha).not.toMatch(/sr-only/)
     })
 

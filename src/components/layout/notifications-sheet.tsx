@@ -19,10 +19,8 @@ export function NotificationsSheet() {
             }}
         >
             {/* O nome é o título do cabeçalho; não há descrição além dele. */}
+            {/* A folha padrão: à direita, flutuante e `sm` (384), sem eixo escrito. */}
             <SheetContent
-                side="right"
-                variant="floating"
-                size="md"
                 fillMobileViewport={isMobile}
                 aria-describedby={undefined}
             >
