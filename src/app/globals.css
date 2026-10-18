@@ -860,6 +860,25 @@
     opacity 200ms var(--ease-out),
     height 200ms var(--ease-out);
 }
+/* No desktop o toast chega pelo lado, como a folha das notificações: nasce fora da
+   borda direita e entra na mola dela (`--duration-spring`), e o da frente sai de
+   volta pelo lado em 200ms de `--ease-in-out` — não os 380 do fechar da folha: o
+   sonner desmonta o toast 200ms depois de fechar (`TIME_BEFORE_UNMOUNT`), e com 380
+   ele sumia a 44px da borda, no meio do caminho. Só a chegada e a
+   saída do da frente mudam: a pilha (`--y` com `translateY`) continua a do sonner,
+   que vence por não ter o `:not` daqui. No telefone ele segue vindo do topo. */
+@media (min-width: 48rem) {
+  [data-sonner-toaster] [data-sonner-toast][data-styled="true"][data-x-position="right"]:not([data-mounted="true"]) {
+    --y: translateX(calc(100% + 1rem));
+  }
+  [data-sonner-toaster] [data-sonner-toast][data-styled="true"][data-x-position="right"][data-removed="true"][data-front="true"][data-swipe-out="false"] {
+    --y: translateX(calc(100% + 1rem));
+    transition:
+      transform 200ms var(--ease-in-out),
+      opacity 200ms var(--ease-in-out),
+      height 200ms var(--ease-in-out);
+  }
+}
 
 [data-sonner-toaster] [data-sonner-toast][data-styled="true"][data-type="success"] {
   --toast-well: var(--success-muted);
@@ -1075,50 +1094,39 @@
 /* `[data-sonner-theme]` sobe um degrau: o sonner pinta o × no escuro em
    `… [data-close-button]` (0,4,0), que empatava e vencia pela ordem. */
 [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"] [data-close-button] {
-  /* Fora do corpo do toast: um círculo flutuante de 24px à esquerda da placa,
-     alinhado ao topo, a 8px de vão (o canto do sonner cobria o ícone; acima, sairia
-     da tela, porque o toast nasce 16px abaixo do topo). Chapado e um degrau acima da
-     placa: no vidro da placa e com a tinta secundária ele sumia sobre a página. É a
-     superfície do `secondary`, a tinta cheia do texto, o glifo de 14 numa caixa de 28
-     e o anel a 15% com a sombra dos flutuantes. */
+  /* Dentro do toast, na ponta direita, a pedido do dono (era um círculo flutuante
+     8px à esquerda da placa). Alinhado à primeira fileira: o recuo de cima do toast
+     é 12 e a fileira (o poço do ícone) mede 28, então o × de 28 a 12 do topo fica no
+     meio dela, e num toast de duas linhas ele não desce para o meio. Sem placa
+     própria: dentro do vidro um círculo cheio leria como segundo botão, então é o
+     glifo apagado com a tinta de vidro no cursor, como os botões da linha de
+     notificação. O toast reserva o lugar dele no recuo da direita. */
   left: auto;
-  right: calc(100% + 8px);
-  /* −1px: a referência do `absolute` é a caixa de recuo, e a placa tem a borda
-     transparente de 1px do sonner. */
-  top: -1px;
+  right: 10px;
+  top: 12px;
   transform: none;
   width: 28px;
   height: 28px;
-  background: var(--secondary);
-  color: var(--secondary-foreground);
+  background: transparent;
+  color: var(--muted-foreground);
   border: 0;
-  box-shadow:
-    0 0 0 1px color-mix(in oklab, var(--foreground) 15%, transparent),
-    var(--shadow-md);
+  box-shadow: none;
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"]:has([data-close-button]) {
+  /* 10 + 28 + 6 de vão: o texto e os botões param antes do ×. */
+  padding-right: 44px;
 }
 [data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button] svg {
   width: 14px;
   height: 14px;
-}
-/* No telefone o toast ocupa a largura menos 16px de cada lado e à esquerda não
-   cabem 32px: o × volta ao canto, meio dentro e meio fora. */
-@media (max-width: 600px) {
-  [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"] [data-close-button] {
-    left: 0;
-    right: auto;
-    top: 0;
-    transform: translate(-35%, -35%);
-    width: 24px;
-    height: 24px;
-  }
 }
 /* `:hover` do toast também, para empatar o seletor do sonner (0,5,0) e vencê-lo
    pela ordem: ele pinta o × de `--gray2` no hover. */
 [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"]:hover [data-close-button]:hover,
 [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"] [data-close-button]:hover,
 [data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="true"] [data-close-button]:active {
-  background: var(--secondary-hover);
-  color: var(--secondary-foreground);
+  background: color-mix(in oklab, var(--foreground) 9%, transparent);
+  color: var(--foreground);
 }
 @media (pointer: coarse) {
   [data-sonner-toast] [data-close-button]::after {

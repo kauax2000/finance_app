@@ -1021,7 +1021,7 @@ declaração de `background-color` no trilho).
   ali**), e o erro é o mesmo com "Ops!". No `page` o título nasce `<h1>` (não o
   passe por `asChild` num server component). `layout="inline"` é o vazio de
   formulário. **`EmptyStateActions` passa o degrau aos botões**: nenhum declara
-  `size`. Animação em `@utility`, nunca em `animate-[…]`.
+  `size` (`sm` e `md` passam 32, `lg` e `page` passam 40). Animação em `@utility`, nunca em `animate-[…]`.
 - **`Skeleton`**: `shape` (`block`, `text`, `circle`, `tile`, `pill`) e `size`;
   `SkeletonText lines`. **Um movimento só, o pulso** (a `wave` do
   `ChartSkeleton` é a exceção). **O bloco que espera é o `SkeletonGroup`**

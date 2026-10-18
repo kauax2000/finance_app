@@ -27340,3 +27340,31 @@ padrão (nada muda nas outras telas), e `vivid`, a cor cheia do tom com a tinta
 `-foreground` dela (o neutro: `--muted-foreground` cheio sob a tinta da
 página). O painel de notificações veste `vivid`. Medido no escuro: aviso, info,
 perigo e neutro com o ícone a `lab(2.75)` sobre o tom cheio (L 63 a 79).
+
+### Rodada 321 — o toast chega pelo lado, e o × mora dentro dele
+
+O dono pediu o toast entrando como a folha das notificações e o × dentro dele, à
+direita. No desktop (de 48rem, o limiar em que a folha deixa de ser gaveta) o
+toast nasce fora da borda direita (`translateX(calc(100% + 1rem))`) e entra na
+mola da casa; o da frente sai pelo mesmo lado. A saída é de 200ms de
+`--ease-in-out`, e não os 380 do fechar da folha: o sonner desmonta o toast 200ms
+depois de fechar (`TIME_BEFORE_UNMOUNT`), e com 380 ele sumia a 44px da borda,
+cortado. Só a chegada e a saída do da frente mudam (por `:not([data-mounted])` e
+pelo seletor do removido da frente), e a pilha continua a do sonner. No telefone
+ele segue vindo do topo. O × sai do círculo flutuante à esquerda da placa (e do
+canto, no telefone) e vira o glifo apagado de 28, a 10px da direita e na primeira
+fileira, com a tinta de vidro no cursor; o toast reserva 44px à direita. Medido:
+a entrada vai de 372px a −14 (a mola) e assenta em ~500ms; a saída chega a 371px
+e opacidade 0 aos 190ms; o × a 13px do topo num toast de 54 e a 6px do
+"Desfazer". A folha de notificações passa a fechar antes dos toasts dela
+(exclusão e erro), e o toast chega 420ms depois.
+
+### Rodada 322 — os botões do vazio pequeno e médio sobem a 32
+
+O dono pediu o "Ver todas" do vazio das notificações em `outline` de 32. O
+`EmptyStateActions` passa o degrau aos botões e nenhuma tela o reescreve
+(`empty-state.test.ts`), então a mudança é do bloco, e o dono escolheu valer para
+todos: `sm` e `md` passam `md` (32; eram `sm`, 28), `lg` e `page` seguem em
+`xl`. Crescem junto os vazios das categorias, dos cartões do painel e os vazios
+de formulário (despesa e assinatura). O botão das notificações chegou a ser
+`outline` e ficou `tertiary` (o "ghost" de antes), a pedido do dono.

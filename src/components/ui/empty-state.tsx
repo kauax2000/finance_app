@@ -259,11 +259,12 @@ function EmptyStateDescription({
  */
 /**
  * O degrau dos botões sai do bloco pelo `ButtonSizeContext`: `sm` e `md` ficam
- * em `sm`, `lg` e `page` em `xl`. Um `size` no botão vence.
+ * em `md` (32; eram 28 até a rodada 322), `lg` e `page` em `xl`. Um `size` no
+ * botão vence.
  */
 const ACOES_DEGRAU: Record<EmptyStateSize, ButtonSize> = {
-  sm: "sm",
-  md: "sm",
+  sm: "md",
+  md: "md",
   lg: "xl",
   page: "xl",
 }

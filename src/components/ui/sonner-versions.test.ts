@@ -47,6 +47,10 @@ describe("a placa flutuante", () => {
   it("entra e anda na mola, e sai sem ela", () => {
     expect(BLOCO).toContain("transform var(--duration-spring) var(--ease-spring)")
     expect(BLOCO).toMatch(/\[data-removed="true"\] \{\n  transition:\n    transform 200ms var\(--ease-out\)/)
+    // No desktop chega e sai pelo lado, como a folha das notificações.
+    expect(BLOCO).toMatch(/@media \(min-width: 48rem\) \{[\s\S]*?:not\(\[data-mounted="true"\]\) \{\n    --y: translateX\(calc\(100% \+ 1rem\)\);/)
+    // E sai em 200ms: o sonner desmonta o toast 200ms depois de fechar.
+    expect(BLOCO).toContain("transform 200ms var(--ease-in-out)")
   })
 })
 
@@ -110,12 +114,13 @@ describe("as duas ações", () => {
 })
 
 describe("o ×", () => {
-  it("flutua fora do corpo, à esquerda e alinhado ao topo; no telefone volta ao canto", () => {
-    expect(BLOCO).toContain("right: calc(100% + 8px);")
-    expect(BLOCO).toContain("top: -1px;\n  transform: none;")
-    expect(BLOCO).toMatch(/@media \(max-width: 600px\) \{[\s\S]*?transform: translate\(-35%, -35%\);/)
-    // Visível sobre qualquer conteúdo: chapado, um degrau acima da placa.
-    expect(BLOCO).toContain("width: 28px;\n  height: 28px;\n  background: var(--secondary);\n  color: var(--secondary-foreground);")
+  it("mora dentro do toast, na ponta direita e na primeira fileira, e o toast reserva o lugar", () => {
+    expect(BLOCO).toContain("right: 10px;\n  top: 12px;\n  transform: none;")
+    expect(BLOCO).toContain("width: 28px;\n  height: 28px;\n  background: transparent;\n  color: var(--muted-foreground);")
+    expect(BLOCO).toMatch(/:has\(\[data-close-button\]\) \{[\s\S]*?padding-right: 44px;/)
+    // Fora do corpo e no canto do telefone foram as versões anteriores.
+    expect(BLOCO).not.toContain("right: calc(100% + 8px);")
+    expect(BLOCO).not.toMatch(/translate\(-35%, -35%\)/)
   })
 })
 
