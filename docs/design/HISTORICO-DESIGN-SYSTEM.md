@@ -27055,3 +27055,18 @@ pedido do dono: `KbdGroup joined` (só com `mode="either"` e `keys`) desenha as
 opções juntas, acende quando qualquer uma desce e mantém o "ou" para o leitor
 de tela. Vestem o `joined` a paleta do app, a do catálogo e os exemplos da
 página do Command. Medido: as quatro cápsulas numa linha, 394 de 448px.
+
+### Rodada 306 — o sino e o botão de recolher no vidro da busca
+
+O dono pediu o sino e o botão de recolher com o mesmo fundo da busca do
+cabeçalho. Os dois deixam a tinta chapada da placa (`--sidebar`) e vestem o
+vidro do campo da paleta (`searchFieldSurfaceClassName.plate`: `bg-popover`
+a 85%, 60% com borrão, o `glass-surface` e o anel de 1px), com o vidro até o
+anel (`bg-clip-border`) e o realce das carteiras. No `TopBar`, o `TOP_BAR_PLATE`
+passa a compor o `TOP_BAR_SEARCH_PLATE` (a lupa); na barra lateral, o
+`SIDEBAR_TRIGGER_FLOATING` escreve a mesma receita sob o prefixo do invólucro.
+O teste 15 da `Sidebar` ("a placa não declara borrão") passa a ignorar o
+`supports-backdrop-filter:` do gatilho, que mora na barra do topo, sobre o
+conteúdo que rola. Medido: os três com a mesma tinta (0,205 a 60%) e o mesmo
+borrão de 24px. A busca desenha o fio por dentro (a borda, pelo arco do
+brilho); o sino e o gatilho, pelo anel.

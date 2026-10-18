@@ -101,11 +101,11 @@ describe("as peças", () => {
     expect(CODIGO).toContain('plate && "bg-clip-border ring-0 border-foreground/10"')
   })
 
-  it("o sino do app veste a pílula da placa, como o botão de recolher", () => {
+  it("o sino do app veste o vidro da busca, como o botão de recolher", () => {
     expect(fonte("src/components/layout/notification-bell-link.tsx")).toMatch(/<TopBarAction[\s\S]*?\bplate\b/)
     // A mesma receita do gatilho da barra lateral: tinta, anel, sombra e realce.
     const gatilho = fonte("src/components/ui/sidebar.tsx")
-    for (const parte of ["bg-sidebar", "ring-1", "ring-foreground/10", "[--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]"]) {
+    for (const parte of ["bg-popover/85", "glass-surface", "supports-backdrop-filter:bg-popover/60", "reduced-transparency:bg-popover", "ring-1", "ring-foreground/10", "[--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]"]) {
       expect(gatilho).toContain(`wrapper:${parte}`)
       expect(CODIGO).toContain(`md:${parte}`)
     }

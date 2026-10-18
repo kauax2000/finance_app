@@ -378,8 +378,10 @@ describe("as versões do Sidebar", () => {
     it("15. a placa flutuante não declara borrão", () => {
       // Sob o painel flutuante só há `sidebar`, `sidebar-wrapper` e o `body`, e o `floating`
       // reserva a folga no fluxo: um `backdrop-filter` ali borraria cor chapada e não
-      // desenharia nada.
-      expect(CODIGO).not.toMatch(/backdrop-blur|backdrop-filter/)
+      // desenharia nada. O gatilho do topo é outra peça: mora na barra, sobre o
+      // conteúdo que rola, e veste o vidro da busca (`supports-backdrop-filter:`).
+      expect(CODIGO).not.toMatch(/backdrop-blur|(?<!supports-)backdrop-filter/)
+      expect(CODIGO).toContain("sidebar-wrapper:glass-surface")
     })
 
     it("17. o fio do cabeçalho é da variante, e não da tela", () => {

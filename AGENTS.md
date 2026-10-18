@@ -1430,8 +1430,8 @@ declaração de `background-color` no trilho).
   **O botão de recolher mora num lugar só** (`SidebarProvider toggle`): o do
   componente é `topbar` (no `TopBar`, viajando para a barra recolhida — o
   catálogo o usa); **o app usa `header`** (desde 2026-10-16; antes era `edge`, a
-  alça `Button floating icon-xs` na borda direita da placa): a pílula redonda da
-  placa à esquerda do `TopBar`, que **não viaja** nem encosta: no app, 36 como o
+  alça `Button floating icon-xs` na borda direita da placa): a pílula redonda, no
+  vidro da busca do cabeçalho, à esquerda do `TopBar`, que **não viaja** nem encosta: no app, 36 como o
   sino e a 16px da placa nos dois estados (a distância do sino até a borda
   direita). O encosto de 8px (`SIDEBAR_TRIGGER_GAP`) é só do `topbar`. No `AppHeader`, do `lg` para cima, a ponta do botão pesa o mesmo
   que a do sino, para a busca seguir no centro. `edge`, `footer` e `footerBar`
@@ -1456,9 +1456,9 @@ declaração de `background-color` no trilho).
   do iOS: sem tinta chapada nem fio, três camadas de borrão (4, 12 e 24px)
   que crescem em direção à borda e acabam 24px abaixo da barra; a barra em si
   não pode ter `backdrop-filter` nem fundo translúcido (viraria a raiz do
-  borrão das camadas). **`TopBarAction`** (`plate`: a pílula da placa do botão de recolher —
-  tinta `--sidebar`, anel, realce em `--sidebar-accent`, sem sombra —, do
-  `md` para cima; o sino do app a veste) — **nenhuma tela escreve
+  borrão das camadas). **`TopBarAction`** (`plate`: o vidro da busca do cabeçalho — a tinta
+  flutuante e o anel, como o botão de recolher —, com o realce em
+  `--sidebar-accent`, sem sombra, do `md` para cima; o sino do app a veste) — **nenhuma tela escreve
   o `span` da contagem nem embrulha um botão da barra num `Tooltip` à mão**;
   `TopBarSearch` (⌘K e `/`; no app, com `glow`, `plate` — o vidro do campo do `CommandDialog`, a superfície `plate` da busca — e `collapse="lg"`, centrada numa coluna `max-w-xs` (320 até 1279px; `xl:max-w-sm`, 384 a partir de 1280) entre pontas de peso igual), `TopBarProgress`, `TopBarSkeleton`. **Uma árvore
   só**: as pontas aceitam `phone` — **nenhuma barra escreve duas árvores com

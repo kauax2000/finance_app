@@ -492,7 +492,7 @@ function TopBarAction({
   /** A tecla (`"mod+k"`), na dica e no `aria-keyshortcuts`. Só mostra — quem escuta é a tela. */
   shortcut?: string
   tooltip?: boolean
-  /** A pílula da placa da barra lateral, como o botão de recolher (do `md` para cima). */
+  /** O vidro da busca do cabeçalho, como o botão de recolher (do `md` para cima). */
   plate?: boolean
 }) {
   const temContagem = typeof count === "number" && count > 0
@@ -536,20 +536,19 @@ function TopBarAction({
 }
 
 /**
- * A pílula da placa, a do botão de recolher da barra lateral
- * (`SIDEBAR_TRIGGER_FLOATING`): a tinta da placa, o anel de 1px e o
- * realce em `--sidebar-accent` a 50%, sem sombra. Do `md` para cima, onde a barra corre ao
- * lado da placa; no telefone o botão segue `tertiary`.
- */
-const TOP_BAR_PLATE =
-  "md:rounded-full md:bg-clip-border md:bg-sidebar md:ring-1 md:ring-foreground/10 md:[--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]"
-
-/**
- * A lupa com o vidro do campo da paleta (`searchFieldSurfaceClassName.plate`),
- * do `md` para cima, por extenso: classe montada não chega ao CSS.
+ * O vidro do campo da paleta (`searchFieldSurfaceClassName.plate`): o anel de
+ * 1px sobre a tinta flutuante, do `md` para cima, por extenso (classe montada
+ * não chega ao CSS). A lupa o veste; no telefone o botão segue `tertiary`.
  */
 const TOP_BAR_SEARCH_PLATE =
   "md:ring-1 md:ring-foreground/10 md:bg-popover/85 md:glass-surface md:supports-backdrop-filter:bg-popover/60 md:reduced-transparency:bg-popover"
+
+/**
+ * O botão de ação no mesmo vidro da busca, como o de recolher da barra lateral
+ * (`SIDEBAR_TRIGGER_FLOATING`): o vidro vai até o anel (`bg-clip-border`) e o
+ * realce é o das carteiras, `--sidebar-accent` a 50%.
+ */
+const TOP_BAR_PLATE = `${TOP_BAR_SEARCH_PLATE} md:rounded-full md:bg-clip-border md:[--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]`
 
 /** As classes por extenso: classe montada em tempo de execução não chega ao CSS. */
 const BUSCA_QUEBRA = {
