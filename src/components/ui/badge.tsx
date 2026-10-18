@@ -51,9 +51,11 @@ export const tagChipViolet =
 /** Apelido de `info`, idêntico a ele. Não use em código novo. */
 export const tagChipSky = tagChipInfo
 
-/** Contagem sobre um ícone. Sem hover, porque não é clicável. */
-export const tagChipUnreadCount =
-  "bg-success-muted text-success-muted-foreground dark:bg-success-muted/70"
+/**
+ * A contagem de não lidas: o azul cheio de `info`, a mesma no número do sino e
+ * na aba "Não lidas" do painel. Sem hover, porque não é clicável.
+ */
+export const tagChipUnreadCount = "bg-info text-info-foreground"
 
 /** Chip de filtro selecionado — tonal, não preenchido. */
 export const tagChipFilterSelected =

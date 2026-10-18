@@ -7,6 +7,7 @@ import { CheckIcon, Cog6ToothIcon, EllipsisHorizontalIcon, TrashIcon } from "@he
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { Alert, AlertAction, AlertActions, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
     DialogBody,
@@ -71,7 +72,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
     // a recarga (o sino mudou) troca a lista no lugar.
     const [notifications, setNotifications] = useState<AppNotification[] | null>(null)
     const [error, setError] = useState(false)
-    const [filtro, setFiltro] = useState<Filtro>("todas")
+    const [filtro, setFiltro] = useState<Filtro>("nao-lidas")
     // O "Tentar de novo" em voo: o botão espera (a falha nova volta ao Alert).
     const [tentando, setTentando] = useState(false)
     const userId = user?.id
@@ -199,7 +200,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                         <>
                         <DropdownMenu mobile="sheet">
                             <DropdownMenuTrigger asChild>
-                                <Button type="button" variant="tertiary" size="icon-sm" aria-label="Mais ações">
+                                <Button type="button" variant="tertiary" size="icon-md" className="-my-0.5" aria-label="Mais ações">
                                     <EllipsisHorizontalIcon />
                                 </Button>
                             </DropdownMenuTrigger>
@@ -230,18 +231,11 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                             </DropdownMenuContent>
                         </DropdownMenu>
                         {/* O × mora na linha do título, ao lado do ⋯, e não no canto da folha. */}
-                        <DialogCloseButton placement="inline" label="Fechar notificações" />
+                        <DialogCloseButton placement="inline" size="icon-md" className="-my-0.5" label="Fechar notificações" />
                         </>
                     }
                 >
-                    <div className="flex flex-wrap items-center gap-2">
-                        <DialogTitle>Notificações</DialogTitle>
-                        {unreadCount > 0 ? (
-                            <Badge variant="soft" size="xs">
-                                {unreadCount} {unreadCount === 1 ? "nova" : "novas"}
-                            </Badge>
-                        ) : null}
-                    </div>
+                    <DialogTitle>Notificações</DialogTitle>
                 </DialogHeaderRow>
                 {lista.length > 0 ? (
                     <Tabs
@@ -250,10 +244,36 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                         className="mt-3"
                     >
                         <TabsList aria-label="Filtrar notificações">
-                            <TabsTrigger value="todas">Todas</TabsTrigger>
-                            <TabsTrigger value="nao-lidas" count={naoLidas}>
+                            {/* A contagem é a pastilha da aba, na forma e na cor do número do sino (o círculo de 16), e some no zero. */}
+                            <TabsTrigger
+                                value="nao-lidas"
+                                count={
+                                    naoLidas > 0 ? (
+                                        <Badge
+                                            size="xs"
+                                            className={cn(
+                                                "relative isolate h-4 min-w-4 border-0 bg-transparent px-1 font-semibold",
+                                                // A bolha é um `::before` com a tinta do `tagChipUnreadCount`, e
+                                                // anda com o marcador líquido da aba: ao entrar, espera ele chegar
+                                                // (220ms do trajeto de 400) e enche na mola; ao sair, toma impulso
+                                                // (a curva recua antes) e esvazia enquanto ele parte, e o azul
+                                                // some por último, deixando só o número em azul.
+                                                "text-info-foreground delay-220 duration-(--duration-spring) ease-(--ease-spring)",
+                                                "before:absolute before:inset-0 before:-z-10 before:rounded-full before:bg-info",
+                                                "before:transition-[scale,opacity] before:delay-220 before:duration-(--duration-spring) before:ease-(--ease-spring)",
+                                                "group-data-[state=inactive]/tab:text-info group-data-[state=inactive]/tab:delay-100 group-data-[state=inactive]/tab:duration-(--duration-base) group-data-[state=inactive]/tab:ease-(--ease-in-out)",
+                                                "group-data-[state=inactive]/tab:before:scale-30 group-data-[state=inactive]/tab:before:opacity-0",
+                                                "group-data-[state=inactive]/tab:before:[transition:scale_320ms_cubic-bezier(0.5,-0.45,0.75,0.2),opacity_160ms_var(--ease-in-out)_160ms]"
+                                            )}
+                                        >
+                                            {naoLidas}
+                                        </Badge>
+                                    ) : undefined
+                                }
+                            >
                                 Não lidas
                             </TabsTrigger>
+                            <TabsTrigger value="todas">Todas</TabsTrigger>
                         </TabsList>
                     </Tabs>
                 ) : null}

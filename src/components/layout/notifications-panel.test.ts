@@ -29,6 +29,10 @@ describe("painel de notificações (fonte)", () => {
         expect(painel).toContain('<TabsList aria-label="Filtrar notificações">')
         expect(painel).not.toContain("ToggleGroup")
         expect(painel).not.toMatch(/<Tabs[^>]*\b(variant|size)=/)
+        // "Não lidas" abre primeiro e vem antes de "Todas"; a contagem some no zero.
+        expect(painel).toContain('useState<Filtro>("nao-lidas")')
+        expect(painel.indexOf('value="nao-lidas"')).toBeLessThan(painel.indexOf('value="todas"'))
+        expect(painel).toMatch(/naoLidas > 0 \? \(\s*<Badge/)
         expect(painel).toContain("groupByLocalDay(")
         expect(painel).toContain("ItemGroupLabel")
         expect(painel).toContain('variant="tile"')

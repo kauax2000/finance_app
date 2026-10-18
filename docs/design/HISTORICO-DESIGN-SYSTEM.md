@@ -27167,3 +27167,25 @@ mesmo que o "Descartar alterações?" do `Dialog` já fazia. Medido: a confirma�
 a z 70 sobre a folha a z 70, com o centro do topo dela no topo da pilha, e o
 véu por cima da folha. `alert-dialog-versions.test.ts` tranca. No mesmo pedido,
 o "Limpar todas" do menu perdeu as reticências.
+
+### Rodada 313 — a contagem de não lidas é azul, no sino e na aba
+
+O painel de notificações abre em "Não lidas", a primeira aba, e o "6 novas" do
+título saiu (repetia a aba). A contagem virou a pastilha do `Badge xs` dentro
+da aba, e some no zero. A tinta `soft` padrão sumia sobre a aba ativa (fundo a
+L 15 sobre o `--muted`), e o dono pediu que o sino combinasse e que a cor fosse
+azul: `tagChipUnreadCount` deixa o verde `success-muted` e passa ao `info`
+cheio (`bg-info text-info-foreground`), o mesmo no número do `TopBarAction` e
+na pastilha da aba, que o lê pelo `className`. Medido no escuro: os dois a
+`lab(67 -15 -41)` com o número a `lab(3)`.
+
+Na mesma rodada a pastilha da aba virou o círculo de 16 do número do sino
+(`h-4 min-w-4 px-1`, sem a borda de 1px do `Badge`, medido 16×16 nos dois) e
+ganhou movimento ligado ao marcador líquido do `Tabs`. Fora da aba, só o número
+em azul. Ao entrar, a bolha (um `::before`) espera 220ms do trajeto de 400 e
+enche na mola (`--ease-spring`). Ao sair, toma impulso (`cubic-bezier(0.5,
+-0.45, 0.75, 0.2)`, até 1,10 enquanto o marcador está parado) e esvazia quando
+ele acelera, com o azul apagando na segunda metade. O `menu-morph` foi tentado e
+recusado pelo dono: numa bolha de 16 o esticão na altura lê estranho. O ⋯ e o ×
+do cabeçalho do painel subiram a 32 (`icon-md`), com `-my-0.5` para seguir no
+centro do título.
