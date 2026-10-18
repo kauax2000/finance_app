@@ -47,6 +47,14 @@ describe("a paleta do app", () => {
         expect(fonte).toMatch(/escopo\s*\?\s*null\s*:\s*lerComando\(/)
         // "/xyz" sem lugar: o vazio diz o comando, e nenhuma consulta sai com ele
         expect(fonte).toContain('Nenhum lugar com "/')
+        // numa lista do espaço, carregando não é "Nada em…" e erro diz que não deu
+        expect(fonte).toContain("estadoDaFonte")
+        expect(fonte).toContain('estadoDaFonte === "carregando"')
+        expect(fonte).toContain("dicaTransacoes || estadoDaFonte ? null")
+        expect(fonte).toContain("`Buscando ${rotulo.toLowerCase()}`")
+        expect(fonte).toContain("`Não deu para carregar ${rotulo.toLowerCase()} agora.`")
+        // a tecla do dock vem do nome, não do símbolo colado
+        expect(fonte).toContain('<Kbd keys="backspace" />')
         // trocar de escopo devolve a paleta ao ocioso
         expect(fonte).toContain('dispatchEvent(new Event("input", { bubbles: true }))')
     })

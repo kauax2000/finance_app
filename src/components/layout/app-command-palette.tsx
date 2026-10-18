@@ -91,7 +91,7 @@ import { useDebouncedValue } from "@/hooks/use-debounced-value"
  * da barra do topo.
  *
  * Ela não abre caminho novo nenhum — é um atalho para os que já existem. Na
- * raiz, sem sub-página, ela acha: as telas (`app-search-sources`, com
+ * raiz, sem as sub-páginas de categorias e cartões, ela acha: as telas (`app-search-sources`, com
  * sinônimos), as ações do "+ Adicionar" e da casca (pelos mesmos ganchos), as
  * transações (a única consulta que depende do termo, com espera de 250ms), e
  * cartões, categorias, compras parceladas, assinaturas, contas a pagar,
@@ -299,6 +299,23 @@ function PaletteBody({ close }: { close: () => void }) {
     // No escopo, sem termo que busque, a linha diz o que digitar (sem consulta).
     const dicaTransacoes = escopo === "transacoes" && !procuraTransacoes
 
+    // No escopo de uma lista do espaço, o vazio só vale depois de a lista
+    // responder: carregando, o grupo diz "Buscando…"; sem dado e com erro (ou
+    // offline, a consulta pausada), diz que não deu. Com dado em cache, segue.
+    const fonteDoEscopo = escopo
+        ? { cartoes, categorias, parcelas, assinaturas, contas, membros }[
+              escopo as "cartoes"
+          ]
+        : undefined
+    const estadoDaFonte = !fonteDoEscopo
+        ? null
+        : fonteDoEscopo.isLoading
+          ? "carregando"
+          : fonteDoEscopo.data === undefined &&
+              (fonteDoEscopo.isError || fonteDoEscopo.fetchStatus === "paused")
+            ? "erro"
+            : null
+
     const shell = useGlobalShellDialogsOptional()
     const criarTransacao = useQuickCreateTransaction()
     const criarAssinatura = useQuickCreateSubscription()
@@ -433,7 +450,7 @@ function PaletteBody({ close }: { close: () => void }) {
                 {/* O vazio só depois de a consulta responder: enquanto ela
                     corre, o "Buscando…" do grupo de transações ocupa o lugar, e
                     com erro a linha do erro diz o que houve. */}
-                {buscando || erroTransacoes || dicaTransacoes ? null : (
+                {buscando || erroTransacoes || dicaTransacoes || estadoDaFonte ? null : (
                     <CommandEmpty>
                         <CommandEmptyTitle>
                             {comando
@@ -532,6 +549,24 @@ function PaletteBody({ close }: { close: () => void }) {
                 ) : null}
 
                 {q ? null : grupoTelas}
+
+                {estadoDaFonte && rotulo ? (
+                    <CommandGroup heading={rotulo}>
+                        {estadoDaFonte === "carregando" ? (
+                            <CommandLoading label={`Buscando ${rotulo.toLowerCase()}`}>
+                                <Spinner />
+                                Buscando…
+                            </CommandLoading>
+                        ) : (
+                            <div
+                                role="status"
+                                className="flex justify-center py-6 text-sm text-muted-foreground"
+                            >
+                                {`Não deu para carregar ${rotulo.toLowerCase()} agora.`}
+                            </div>
+                        )}
+                    </CommandGroup>
+                ) : null}
 
                 {buscando || erroTransacoes || dicaTransacoes || linhasTransacoes.length > 0 ? (
                     <CommandGroup heading="Transações">
@@ -801,7 +836,7 @@ function PaletteBody({ close }: { close: () => void }) {
                     </CommandDockItem>
                     {escopo ? (
                         <CommandDockItem>
-                            <Kbd>⌫</Kbd>
+                            <Kbd keys="backspace" />
                             sair do escopo
                         </CommandDockItem>
                     ) : (
