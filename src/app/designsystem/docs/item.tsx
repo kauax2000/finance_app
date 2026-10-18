@@ -131,7 +131,7 @@ export default function ItemDoc() {
         title="Lista de avisos"
         description="As três peças do painel de notificações. ItemMedia variant=&quot;tile&quot; é o círculo na superfície -muted do tom (neutral, info, warning, destructive), com o ícone de 16 na tinta dele: 32 no md, 28 no sm, 40 no lg. ItemLink é o alvo da linha: um botão (ou, com asChild, o link) cuja película cobre o Item, e as ItemActions sobem acima dela — a linha inteira abre, e o botão de dentro continua sendo outro alvo, sem botão dentro de botão. ItemGroupLabel é o rótulo do grupo em sobrancelha; com sticky ele gruda no topo do rolável, no fundo de --item-group-label-surface (a placa flutuante por padrão; aqui, o cartão)."
         code={`<ItemGroupLabel sticky>Hoje</ItemGroupLabel>
-<Item variant="flush" interactive>
+<Item interactive>
   <ItemMedia variant="tile" tone="warning"><CreditCardIcon /></ItemMedia>
   <ItemContent>
     <ItemTitle><ItemLink onClick={abrir}>A fatura do Nubank fecha amanhã</ItemLink></ItemTitle>
@@ -150,7 +150,7 @@ export default function ItemDoc() {
                 <ItemGroupLabel sticky>{grupo.dia}</ItemGroupLabel>
                 <ItemGroup variant="divided">
                   {grupo.linhas.map((l) => (
-                    <Item key={l.titulo} variant="flush" interactive>
+                    <Item key={l.titulo} interactive>
                       <ItemMedia variant="tile" tone={l.tone}>
                         <l.Icone aria-hidden />
                       </ItemMedia>

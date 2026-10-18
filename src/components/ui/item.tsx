@@ -22,7 +22,9 @@ const itemVariants = cva(
     "flex-nowrap has-[>[data-slot=item-header]]:flex-wrap has-[>[data-slot=item-footer]]:flex-wrap",
     // O link esticado (`ItemLink`, como o `CardLink`): a película dele cobre a
     // linha, o foco dele acende o anel da linha, e as ações sobem acima dela.
-    "has-[[data-slot=item-link]]:relative",
+    // `isolate`: o `z-10` das ações fica dentro da linha, e não passa por cima
+    // do `ItemGroupLabel sticky` (também `z-10`) ao rolar.
+    "has-[[data-slot=item-link]]:relative has-[[data-slot=item-link]]:isolate",
     "has-[[data-slot=item-link]:focus-visible]:border-ring has-[[data-slot=item-link]:focus-visible]:ring-3 has-[[data-slot=item-link]:focus-visible]:ring-ring/45",
     "has-[[data-slot=item-link]]:[&_[data-slot=item-actions]]:relative has-[[data-slot=item-link]]:[&_[data-slot=item-actions]]:z-10",
   ].join(" "),
@@ -299,7 +301,7 @@ function ItemLink({
       type={asChild ? type : (type ?? "button")}
       className={cn(
         "min-w-0 text-start text-inherit no-underline outline-none",
-        "after:absolute after:inset-0 after:content-['']",
+        "after:absolute after:inset-0 after:rounded-[inherit] after:content-['']",
         className
       )}
       {...props}

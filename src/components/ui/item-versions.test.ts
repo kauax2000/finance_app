@@ -79,11 +79,15 @@ describe("Item · ladrilho, link esticado e rótulo de grupo", () => {
     expect(botao).toContain('data-slot="item-link"')
     expect(botao).toContain('type="button"')
     expect(botao).toContain("after:inset-0")
+    expect(botao).toContain("after:rounded-[inherit]")
     const link = renderToStaticMarkup(h(ItemLink, { asChild: true }, h("a", { href: "/x" }, "Ver")))
     expect(link).toContain("<a")
     expect(link).not.toContain("type=")
     const linha = itemVariants({})
     expect(linha).toContain("has-[[data-slot=item-link]]:relative")
+    // As ações sobem só dentro da linha: sem `isolate`, o `z-10` delas empatava
+    // com o do rótulo preso e passava por cima dele ao rolar.
+    expect(linha).toContain("has-[[data-slot=item-link]]:isolate")
     expect(linha).toContain("has-[[data-slot=item-link]:focus-visible]:ring-3")
     expect(linha).toContain("has-[[data-slot=item-link]]:[&_[data-slot=item-actions]]:z-10")
   })

@@ -207,7 +207,7 @@ export const REGISTRY: RegistryEntry[] = [
     /** O exemplo canônico do Frost: rótulo + controle + erro. */
     entry("field", "Field", "Rótulo, controle, ajuda e erro ligados.", ui("field"), "Field, FieldControl, FieldLabel, FieldHeader, FieldCounter, FieldDescription, FieldChecklist, FieldError, FieldGroup, FieldRow, FieldSet, FieldLegend, FieldSeparator"),
     entry("input-group", "Input Group", "Campo com ícones, texto ou botões acoplados.", ui("input-group"), "InputGroup, InputGroupInput, InputGroupTextarea, InputGroupAddon, InputGroupText, InputGroupButton, InputGroupPasswordToggle, InputGroupSelect"),
-    entry("item", "Item", "Linha de lista com mídia, conteúdo e ações.", ui("item"), "ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions, ItemChevron, ItemHeader, ItemFooter, ItemSeparator"),
+    entry("item", "Item", "Linha de lista com mídia, conteúdo e ações.", ui("item"), "ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions, ItemChevron, ItemLink, ItemHeader, ItemFooter, ItemSeparator, ItemGroupLabel"),
     /** A sequência: um `Kbd` por tecla. Importa o átomo de fato (`keys`). */
     entry("kbd-group", "Kbd Group", "Sequência de teclas.", ui("kbd-group"), "KbdGroup"),
     entry("pagination", "Pagination", "Navegação entre páginas de uma lista.", ui("pagination"), "Pagination, PaginationStatus, PaginationContent, PaginationLink, PaginationPrevious, PaginationNext, PaginationEllipsis, PaginationMore"),
