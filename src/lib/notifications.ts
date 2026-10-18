@@ -75,6 +75,26 @@ export async function markRead(
     if (error) fail(error, "Não foi possível marcar como lida.")
 }
 
+export async function markUnread(
+    userId: string,
+    workspaceId: string,
+    id: string
+): Promise<void> {
+    const { error } = await supabase
+        .from("notifications")
+        .update({ read_at: null })
+        .eq("user_id", userId)
+        .eq("workspace_id", workspaceId)
+        .eq("id", id)
+
+    if (error) fail(error, "Não foi possível marcar como não lida.")
+}
+
+/** A hora local "HH:mm" de um ISO. */
+export function horaLocal(iso: string): string {
+    return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+}
+
 export async function markAllRead(userId: string, workspaceId: string): Promise<void> {
     const { error } = await supabase
         .from("notifications")

@@ -1,10 +1,19 @@
 /**
+ * Caminho interno seguro: começa em "/" e não sai do app. Recusa "//", a barra invertida
+ * (o navegador a lê como barra) e qualquer caractere de controle (o navegador tira TAB e
+ * quebra de linha de uma URL, então "/\t/evil.com" vira "//evil.com").
+ */
+export function isSafeInternalPath(href: string): boolean {
+    return href.startsWith("/") && !href.startsWith("//") && !href.includes("\\") && !/[\u0000-\u001f\u007f]/.test(href)
+}
+
+/**
  * Mirrors supabase/functions/_shared/notification-types.ts `resolveNotificationHref`
  * for client tests and push deep-link parity.
  */
 export function resolveNotificationHref(metadata: Record<string, unknown>): string {
     const raw = metadata.href
-    if (typeof raw === "string" && raw.startsWith("/") && !raw.startsWith("//") && !raw.includes("\\")) {
+    if (typeof raw === "string" && isSafeInternalPath(raw)) {
         return raw.trim()
     }
     const kind = metadata.kind

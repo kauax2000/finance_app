@@ -88,7 +88,7 @@ export function resolveAppNotificationKind(n: AppNotification): {
 }
 
 function iconClass(): string {
-    return "h-4 w-4 shrink-0 text-muted-foreground"
+    return "h-4 w-4 shrink-0"
 }
 
 function fallbackIconByType(type: AppNotificationType): ReactNode {
@@ -109,8 +109,39 @@ function fallbackIconByType(type: AppNotificationType): ReactNode {
     }
 }
 
+export type NotificationTone = "neutral" | "info" | "warning" | "destructive"
+
+/** O tom do ladrilho: o que a notificação pede da pessoa, pelo `kind` (e o limiar ou o prazo). */
+export function notificationTone(n: AppNotification): NotificationTone {
+    const { kind, budgetThreshold } = resolveAppNotificationKind(n)
+    switch (kind) {
+        case "budget_threshold":
+            return budgetThreshold === "threshold_100_sent_at" || budgetThreshold === "threshold_over_sent_at"
+                ? "destructive"
+                : "warning"
+        case "cc_limit_reached":
+        case "cc_limit_exceeded":
+            return "destructive"
+        case "cc_limit_warning":
+        case "cc_category_limit_crossed":
+        case "cc_payment_due_today":
+            return "warning"
+        case "cc_invoice_closed":
+        case "cc_invoice_closing_soon":
+        case "cc_payment_due_soon":
+            return "info"
+        case "bill_reminder": {
+            const dias = n.metadata?.offset_days
+            if (typeof dias !== "number") return "warning"
+            return dias < 0 ? "destructive" : dias === 0 ? "warning" : "info"
+        }
+        default:
+            return "neutral"
+    }
+}
+
 /**
- * Icon and tint tied to semantic `metadata.kind` (and budget threshold), not the coarse DB `type`.
+ * Icon tied to semantic `metadata.kind` (and budget threshold), not the coarse DB `type`. Sem cor: a tinta vem do `ItemMedia` tile.
  */
 export function getNotificationIcon(n: AppNotification): ReactNode {
     const { kind, budgetThreshold } = resolveAppNotificationKind(n)

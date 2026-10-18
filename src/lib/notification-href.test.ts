@@ -93,4 +93,8 @@ describe("resolveNotificationHref — links que saem do app", () => {
         expect(resolveNotificationHref({ href: "/\\evil.com" })).not.toBe("/\\evil.com")
         expect(resolveNotificationHref({ href: "//evil.com" })).not.toBe("//evil.com")
     })
+
+    it.each(["/\t/evil.com", "/\n/evil.com", "/\\evil.com", "//evil.com"])("%j cai no fallback", (href) => {
+        expect(resolveNotificationHref({ href })).toBe("/dashboard")
+    })
 })

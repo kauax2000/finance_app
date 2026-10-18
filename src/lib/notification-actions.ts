@@ -1,15 +1,10 @@
 import { creditCardDetailPath, ROUTES } from "@/config/navigation"
+import { isSafeInternalPath } from "@/lib/notification-href"
 import type { AppNotification } from "@/lib/notifications"
 
 export type NotificationAction = {
     label: string
     href: string
-}
-
-function isSafeInternalPath(href: string): boolean {
-    // "/\\evil.com" também sai do app: o navegador lê a barra invertida como barra.
-    if (!href.startsWith("/") || href.startsWith("//") || href.includes("\\")) return false
-    return true
 }
 
 /**
