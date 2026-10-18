@@ -27130,3 +27130,7 @@ Medido no painel de notificações: a folha `oklab(0.145 … / 0.4)` com borrão
 
 O dono pediu também a folha um pouco mais estreita: o painel de notificações
 passou ao `SheetContent` padrão (direita, flutuante, `sm` 384, sem eixo escrito).
+
+O dono comparou as duas num laboratório temporário (`/laboratorio/notificacoes`,
+o vidro contra o sólido de antes, lado a lado) e decidiu manter o vidro. O
+laboratório saiu na mesma rodada.
