@@ -56,11 +56,14 @@ export function useTransactionsSearchQuery({
     busca,
     categoriaIds,
     cartaoIds,
+    limite = 8,
 }: {
     workspaceId: string | null
     busca: BuscaTransacoes
     categoriaIds: string[]
     cartaoIds: string[]
+    /** Quantas linhas: 8 na raiz da paleta, 20 no escopo Transações. */
+    limite?: number
 }) {
     return useQuery({
         queryKey: transactionsSearchKeys.list(
@@ -68,6 +71,7 @@ export function useTransactionsSearchQuery({
             busca,
             categoriaIds,
             cartaoIds,
+            limite,
         ),
         queryFn: async ({ signal }): Promise<TransacaoEncontrada[]> => {
             if (!workspaceId) return []
@@ -93,7 +97,7 @@ export function useTransactionsSearchQuery({
 
             const { data, error } = await qb
                 .order("date", { ascending: false })
-                .limit(8)
+                .limit(limite)
                 .abortSignal(signal)
             if (error) throw new Error(error.message)
             return (data as TransacaoEncontrada[]) ?? []

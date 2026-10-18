@@ -39,11 +39,22 @@ describe("filtroOuTransacoes", () => {
 describe("transactionsSearchKeys", () => {
     const busca = { texto: "a", valor: null, periodo: null }
     it("a chave muda com a carteira e com o termo partido", () => {
-        expect(transactionsSearchKeys.list("w1", busca, [], [])).not.toEqual(
-            transactionsSearchKeys.list("w2", busca, [], []),
+        expect(transactionsSearchKeys.list("w1", busca, [], [], 8)).not.toEqual(
+            transactionsSearchKeys.list("w2", busca, [], [], 8),
         )
-        expect(transactionsSearchKeys.list("w1", busca, [], [])).not.toEqual(
-            transactionsSearchKeys.list("w1", { ...busca, texto: "b" }, [], []),
+        expect(transactionsSearchKeys.list("w1", busca, [], [], 8)).not.toEqual(
+            transactionsSearchKeys.list("w1", { ...busca, texto: "b" }, [], [], 8),
+        )
+    })
+
+    // o escopo Transações traz 20: a lista de 8 da raiz não serve de cache para ela
+    it("a chave muda com o limite, e o limite vem no fim", () => {
+        const com20 = transactionsSearchKeys.list("w1", busca, [], [], 20)
+        expect(com20).not.toEqual(transactionsSearchKeys.list("w1", busca, [], [], 8))
+        expect(com20.at(-1)).toBe(20)
+        // a invalidação por prefixo [transactionsSearch, workspaceId] continua casando
+        expect(com20.slice(0, 2)).toEqual(
+            transactionsSearchKeys.list("w1", busca, [], [], 8).slice(0, 2),
         )
     })
 })

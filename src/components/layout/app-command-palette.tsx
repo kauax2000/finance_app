@@ -10,9 +10,12 @@ import {
     ClipboardDocumentCheckIcon,
     ClockIcon,
     CreditCardIcon,
+    PlusIcon,
     RectangleStackIcon,
+    Squares2X2Icon,
     TagIcon,
     UserIcon,
+    WalletIcon,
 } from "@heroicons/react/16/solid"
 import { Button } from "@/components/ui/button"
 import { ColorTile } from "@/components/ui/color-tile"
@@ -34,6 +37,8 @@ import {
     CommandItemTitle,
     CommandList,
     CommandLoading,
+    CommandPages,
+    useCommandPages,
 } from "@/components/ui/command"
 import { Kbd } from "@/components/ui/kbd"
 import { KbdGroup } from "@/components/ui/kbd-group"
@@ -54,6 +59,14 @@ import {
     creditCardDetailPath,
 } from "@/config/navigation"
 import { ranquear } from "@/lib/app-search"
+import {
+    ESCOPOS,
+    casarEscopos,
+    escopoExato,
+    lerComando,
+    type Escopo,
+    type EscopoId,
+} from "@/lib/app-search-scopes"
 import { commandFilter } from "@/lib/command-filter"
 import { creditCardIdentitySubtitle } from "@/lib/credit-card-display"
 import { currencyBRL, signedCurrencyBRL } from "@/lib/formatters"
@@ -89,6 +102,13 @@ import { useDebouncedValue } from "@/hooks/use-debounced-value"
  * linhas pela nota do `commandFilter` (`ranquear`), e o cmdk desenha o que
  * recebeu, na ordem recebida. Assim uma transação achada pelo valor ("150") não
  * some por não ter "150" no nome, e não sobe acima das telas.
+ *
+ * **O "/" escolhe onde buscar** (`app-search-scopes`): na raiz, um "/" no
+ * começo troca a lista pelo grupo "Buscar em"; escolher um lugar (ou digitar o
+ * comando inteiro e um espaço) o põe no campo como escopo, de uma sub-página do
+ * `CommandPages`. No escopo só o grupo dele aparece, com até 50 linhas (20
+ * transações), e o Backspace duas vezes com o campo vazio volta à raiz — o
+ * gesto do componente.
  */
 
 /** A chave dos recentes no `localStorage`: guarda o `href` do destino. */
@@ -96,6 +116,23 @@ const RECENTES = "app:busca"
 
 /** Quantas linhas cada grupo local mostra com texto. */
 const POR_GRUPO = 5
+
+/** Quantas linhas o grupo mostra dentro do escopo dele. */
+const POR_ESCOPO = 50
+
+/** O ícone de cada escopo: o do grupo dele na lista. */
+const ICONE_DO_ESCOPO: Record<EscopoId, HeroIcon> = {
+    telas: Squares2X2Icon,
+    acoes: PlusIcon,
+    transacoes: RectangleStackIcon,
+    cartoes: CreditCardIcon,
+    categorias: TagIcon,
+    parcelas: CalendarDaysIcon,
+    assinaturas: ArrowPathRoundedSquareIcon,
+    contas: ClipboardDocumentCheckIcon,
+    membros: UserIcon,
+    carteiras: WalletIcon,
+}
 
 const parcelaHref = (id: string) => `${ROUTES.TRANSACTIONS}?plan=${id}`
 const assinaturaHref = (id: string) => `${ROUTES.TRANSACTIONS}?sub=${id}`
@@ -143,9 +180,11 @@ export function AppCommandPalette({ open, onOpenChange }: AppCommandPaletteProps
             description="Vá para uma tela, adicione algo ou encontre uma transação, um cartão, uma categoria, uma parcela, uma assinatura, uma conta, um membro ou uma carteira."
             commandProps={{ filter: commandFilter, shouldFilter: false }}
         >
-            {/* O conteúdo desmonta ao fechar, e com ele a busca e as consultas
-                que só a paleta liga: reabrir começa do campo vazio. */}
-            <PaletteBody close={() => onOpenChange(false)} />
+            {/* O conteúdo desmonta ao fechar, e com ele a busca, o escopo e as
+                consultas que só a paleta liga: reabrir começa na raiz, vazia. */}
+            <CommandPages>
+                <PaletteBody close={() => onOpenChange(false)} />
+            </CommandPages>
         </CommandDialog>
     )
 }
@@ -166,6 +205,39 @@ function PaletteBody({ close }: { close: () => void }) {
     const q = query.trim()
     const { recents, add } = useCommandRecents(RECENTES)
 
+    const pages = useCommandPages()
+    const escopo = pages.current as EscopoId | undefined
+    const rotulo = ESCOPOS.find((e) => e.id === escopo)?.rotulo
+    // Dentro do escopo, "/" é texto: o comando só é lido na raiz.
+    const comando = escopo ? null : lerComando(query)
+    const lugares = comando ? casarEscopos(comando.parcial) : []
+
+    const inputRef = React.useRef<HTMLInputElement>(null)
+    const restoRef = React.useRef("")
+    const entrar = (e: Escopo, resto = "") => {
+        restoRef.current = resto
+        const Icone = ICONE_DO_ESCOPO[e.id]
+        pages.push({ id: e.id, label: e.rotulo, icon: <Icone aria-hidden /> })
+    }
+    // O campo esvazia num efeito dele quando a página muda, e o efeito do
+    // filho roda antes deste: o que veio depois do comando ("/membros ana")
+    // entra por último. O `input` sintético devolve a seleção ao ocioso, como
+    // na busca do catálogo.
+    React.useEffect(() => {
+        if (restoRef.current) {
+            setQuery(restoRef.current)
+            restoRef.current = ""
+        }
+        inputRef.current?.dispatchEvent(new Event("input", { bubbles: true }))
+    }, [escopo])
+    /** O atalho de quem digita: o comando inteiro e um espaço entram direto. */
+    const digitar = (valor: string) => {
+        const lido = escopo ? null : lerComando(valor)
+        const exato = lido?.fechado ? escopoExato(lido.parcial) : null
+        if (exato && lido) entrar(exato, lido.resto)
+        else setQuery(valor)
+    }
+
     const { user } = useAuth()
     const { currentWorkspaceId, workspaces, setCurrentWorkspaceId } = useWorkspace()
     const workspaceId = user && currentWorkspaceId ? currentWorkspaceId : null
@@ -183,7 +255,11 @@ function PaletteBody({ close }: { close: () => void }) {
     // A consulta de transações espera a pessoa parar de digitar. O texto que
     // sobra do termo também casa a categoria e o cartão pelo nome, e os ids
     // deles vão junto ("mercado" acha as transações da categoria Mercado).
-    const termo = useDebouncedValue(query, 250)
+    // Com o "/" aberto, ou num escopo que não é o delas, o termo é vazio, e a
+    // espera é sobre ele: o "/transacoes" de antes de entrar não vira busca.
+    const termoAgora =
+        (escopo ? escopo === "transacoes" : !comando) ? query : ""
+    const termo = useDebouncedValue(termoAgora, 250)
     const busca = React.useMemo(
         () => parseBuscaTransacoes(termo, new Date()),
         [termo],
@@ -202,13 +278,15 @@ function PaletteBody({ close }: { close: () => void }) {
         busca,
         categoriaIds: idsQueCasam(categorias.data),
         cartaoIds: idsQueCasam(cartoes.data),
+        limite: escopo === "transacoes" ? 20 : 8,
     })
     // Pelo termo de agora, não pelo atrasado: enquanto a espera corre, o grupo
     // já diz "Buscando…" em vez de mostrar o resultado do termo anterior.
     const procuraTransacoes =
-        q !== "" && buscaPronta(parseBuscaTransacoes(query, new Date()))
+        termoAgora.trim() !== "" &&
+        buscaPronta(parseBuscaTransacoes(termoAgora, new Date()))
     const buscando =
-        procuraTransacoes && (query !== termo || transacoes.isLoading)
+        procuraTransacoes && (termoAgora !== termo || transacoes.isLoading)
     // Offline a consulta fica pausada, sem erro e sem dado: conta como erro,
     // senão o grupo some e a paleta diz "Nada encontrado".
     const erroTransacoes =
@@ -218,6 +296,8 @@ function PaletteBody({ close }: { close: () => void }) {
             (transacoes.fetchStatus === "paused" && transacoes.data === undefined))
     const linhasTransacoes =
         procuraTransacoes && !buscando ? (transacoes.data ?? []) : []
+    // No escopo, sem termo que busque, a linha diz o que digitar (sem consulta).
+    const dicaTransacoes = escopo === "transacoes" && !procuraTransacoes
 
     const shell = useGlobalShellDialogsOptional()
     const criarTransacao = useQuickCreateTransaction()
@@ -273,30 +353,42 @@ function PaletteBody({ close }: { close: () => void }) {
         return label ? [{ href, label }] : []
     })
 
-    // Com o campo vazio: as telas que não estão nos recentes. Com texto: as 5 melhores de cada grupo, e só os que acharam algo.
+    // O que cada grupo mostra. Com o "/" aberto, ou fora do escopo dele, nada.
+    // No escopo: até 50, na ordem da fonte com o campo vazio. Na raiz: com
+    // texto, as 5 melhores, e só os que acharam algo; vazio, `semTexto` (as
+    // telas que não estão nos recentes, as ações).
     const achar = <T,>(
+        id: EscopoId,
         itens: readonly T[] | undefined,
         chave: (item: T) => { valor: string; palavras?: string[] },
-    ) => (q ? ranquear(itens ?? [], q, chave, POR_GRUPO) : [])
-    const telas = q
-        ? ranquear(TELAS_BUSCAVEIS, q, (t) => ({ valor: t.name, palavras: t.palavras }), POR_GRUPO)
-        : TELAS_BUSCAVEIS.filter((t) => !recentes.some((r) => r.href === t.href))
-    const acoesVistas = q
-        ? ranquear(acoes, q, (a) => ({ valor: a.label, palavras: a.palavras }), POR_GRUPO)
-        : acoes
-    const cartoesVistos = achar(cartoes.data, (c) => ({ valor: c.name, palavras: [c.last_four] }))
-    const categoriasVistas = achar(categorias.data, (c) => ({
+        semTexto: readonly T[] = [],
+    ): readonly T[] => {
+        if (comando || (escopo && escopo !== id)) return []
+        const lista = itens ?? []
+        if (q) return ranquear(lista, q, chave, escopo ? POR_ESCOPO : POR_GRUPO)
+        return escopo ? lista.slice(0, POR_ESCOPO) : semTexto
+    }
+    const telas = achar(
+        "telas",
+        TELAS_BUSCAVEIS,
+        (t) => ({ valor: t.name, palavras: t.palavras }),
+        TELAS_BUSCAVEIS.filter((t) => !recentes.some((r) => r.href === t.href)),
+    )
+    const acoesVistas = achar("acoes", acoes, (a) => ({ valor: a.label, palavras: a.palavras }), acoes)
+    const cartoesVistos = achar("cartoes", cartoes.data, (c) => ({ valor: c.name, palavras: [c.last_four] }))
+    const categoriasVistas = achar("categorias", categorias.data, (c) => ({
         valor: c.name,
         palavras: [c.type === "income" ? "receita" : "despesa"],
     }))
-    const parcelasVistas = achar(parcelas.data, (p) => ({
+    const parcelasVistas = achar("parcelas", parcelas.data, (p) => ({
         valor: p.description ?? "",
         palavras: valores(p.installment_amount),
     }))
-    const assinaturasVistas = achar(assinaturas.data, (a) => ({ valor: a.name, palavras: valores(a.amount) }))
-    const contasVistas = achar(contas.data, (c) => ({ valor: c.name, palavras: valores(c.amount_estimated) }))
-    const membrosVistos = achar(membros.data, (m) => ({ valor: m.full_name || m.email, palavras: [m.email] }))
+    const assinaturasVistas = achar("assinaturas", assinaturas.data, (a) => ({ valor: a.name, palavras: valores(a.amount) }))
+    const contasVistas = achar("contas", contas.data, (c) => ({ valor: c.name, palavras: valores(c.amount_estimated) }))
+    const membrosVistos = achar("membros", membros.data, (m) => ({ valor: m.full_name || m.email, palavras: [m.email] }))
     const carteirasVistas = achar(
+        "carteiras",
         workspaces.filter((w) => w.id !== currentWorkspaceId),
         (w) => ({ valor: w.name }),
     )
@@ -324,42 +416,83 @@ function PaletteBody({ close }: { close: () => void }) {
 
     return (
         <>
+            {/* O escopo no campo, o esvaziar a cada página e os dois
+                Backspaces são do `CommandInput`, pela pilha do `CommandPages`. */}
             <CommandInput
+                ref={inputRef}
                 autoFocus
                 value={query}
-                onValueChange={setQuery}
-                placeholder="Buscar uma tela, uma transação, um cartão…"
-                aria-label="Buscar no app"
+                onValueChange={digitar}
+                placeholder={
+                    rotulo ? `Buscar em ${rotulo}…` : "Buscar, ou / para escolher onde…"
+                }
+                aria-label={rotulo ? `Buscar em ${rotulo}` : "Buscar no app"}
             />
 
             <CommandList>
                 {/* O vazio só depois de a consulta responder: enquanto ela
                     corre, o "Buscando…" do grupo de transações ocupa o lugar, e
                     com erro a linha do erro diz o que houve. */}
-                {buscando || erroTransacoes ? null : (
+                {buscando || erroTransacoes || dicaTransacoes ? null : (
                     <CommandEmpty>
                         <CommandEmptyTitle>
-                            {`Nada encontrado para "${query}".`}
+                            {comando
+                                ? `Nenhum lugar com "/${comando.parcial}".`
+                                : rotulo
+                                  ? q
+                                      ? `Nada em ${rotulo} para "${query}".`
+                                      : `Nada em ${rotulo}.`
+                                  : `Nada encontrado para "${query}".`}
                         </CommandEmptyTitle>
                         <CommandEmptyDescription>
-                            A busca cobre telas, ações, transações, cartões,
-                            categorias, parcelas, assinaturas, contas, membros e
-                            carteiras.
+                            {comando
+                                ? "Digite só / para ver todos os lugares."
+                                : rotulo
+                                  ? "Apague o escopo com Backspace para buscar em tudo."
+                                  : "A busca cobre telas, ações, transações, cartões, categorias, parcelas, assinaturas, contas, membros e carteiras."}
                         </CommandEmptyDescription>
-                        <Button
-                            type="button"
-                            variant="tertiary"
-                            size="sm"
-                            onClick={() => setQuery("")}
-                        >
-                            Limpar busca
-                        </Button>
+                        {query ? (
+                            <Button
+                                type="button"
+                                variant="tertiary"
+                                size="sm"
+                                onClick={() => setQuery("")}
+                            >
+                                Limpar busca
+                            </Button>
+                        ) : null}
                     </CommandEmpty>
                 )}
 
-                {/* Os recentes só com o campo vazio: com texto, o mesmo
+                {lugares.length > 0 ? (
+                    <CommandGroup heading="Buscar em">
+                        {lugares.map((e) => {
+                            const Icone = ICONE_DO_ESCOPO[e.id]
+                            return (
+                                <CommandItem
+                                    key={e.id}
+                                    value={`escopo:${e.id}`}
+                                    onSelect={() => entrar(e)}
+                                >
+                                    <CommandItemIcon>
+                                        <Icone />
+                                    </CommandItemIcon>
+                                    <CommandItemTitle>{e.rotulo}</CommandItemTitle>
+                                    <CommandItemMeta>
+                                        <CommandItemDescription>
+                                            {e.comando}
+                                        </CommandItemDescription>
+                                        <CommandItemArrow />
+                                    </CommandItemMeta>
+                                </CommandItem>
+                            )
+                        })}
+                    </CommandGroup>
+                ) : null}
+
+                {/* Os recentes só na raiz com o campo vazio: com texto, o mesmo
                     destino já aparece no grupo dele. */}
-                {!q && recentes.length > 0 ? (
+                {!q && !escopo && recentes.length > 0 ? (
                     <CommandGroup heading="Recentes">
                         {recentes.map((item) => (
                             <CommandItem
@@ -400,9 +533,16 @@ function PaletteBody({ close }: { close: () => void }) {
 
                 {q ? null : grupoTelas}
 
-                {buscando || erroTransacoes || linhasTransacoes.length > 0 ? (
+                {buscando || erroTransacoes || dicaTransacoes || linhasTransacoes.length > 0 ? (
                     <CommandGroup heading="Transações">
-                        {buscando ? (
+                        {dicaTransacoes ? (
+                            <div
+                                role="status"
+                                className="flex justify-center py-6 text-sm text-muted-foreground"
+                            >
+                                Digite uma descrição, um valor ou uma data.
+                            </div>
+                        ) : buscando ? (
                             <CommandLoading label="Buscando transações">
                                 <Spinner />
                                 Buscando…
@@ -659,6 +799,17 @@ function PaletteBody({ close }: { close: () => void }) {
                         <KbdGroup mode="either" keys={["up", "down"]} />
                         navegar
                     </CommandDockItem>
+                    {escopo ? (
+                        <CommandDockItem>
+                            <Kbd>⌫</Kbd>
+                            sair do escopo
+                        </CommandDockItem>
+                    ) : (
+                        <CommandDockItem>
+                            <Kbd>/</Kbd>
+                            escolher onde
+                        </CommandDockItem>
+                    )}
                 </div>
                 <div className="flex items-center gap-2">
                     <CommandDockItem>

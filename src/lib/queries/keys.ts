@@ -75,6 +75,8 @@ export const transactionsSearchKeys = {
         busca: BuscaTransacoes,
         categoriaIds: string[],
         cartaoIds: string[],
+        /** No fim: a invalidação por prefixo `[transactionsSearch, workspaceId]` segue casando. */
+        limite: number,
     ) =>
         [
             queryRoot.transactionsSearch,
@@ -82,6 +84,7 @@ export const transactionsSearchKeys = {
             busca,
             categoriaIds,
             cartaoIds,
+            limite,
         ] as const,
 }
 

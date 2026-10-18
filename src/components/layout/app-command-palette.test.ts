@@ -7,8 +7,7 @@ describe("a paleta do app", () => {
     it("acha tudo na raiz", () => {
         // a raiz acha tudo: os grupos, na ordem do desenho
         for (const g of ["Telas", "Ações", "Transações", "Cartões", "Categorias", "Compras parceladas", "Assinaturas", "Contas a pagar", "Membros", "Carteiras"]) expect(fonte).toContain(`heading="${g}"`)
-        // as sub-páginas saíram
-        expect(fonte).not.toContain("CommandPages")
+        // as sub-páginas de categorias e cartões saíram (o escopo do "/" é outra coisa)
         expect(fonte).not.toContain('label="Categorias…"')
         // quem filtra é a paleta
         expect(fonte).toContain("shouldFilter: false")
@@ -31,5 +30,24 @@ describe("a paleta do app", () => {
         for (const t of ["ACCOUNT_SESSIONS", "ACCOUNT_ACTIVITY", "SETTINGS_NAV_ITEM", "ACCOUNT_MENU_PROFILE_LINK_ITEMS"]) expect(fontes).not.toContain(t)
         expect(fontes).toContain("item.href !== ROUTES.DASHBOARD")
         expect(fonte).not.toContain("Notificações")
+    })
+
+    it("o / escolhe onde buscar", () => {
+        expect(fonte).toContain("<CommandPages>")
+        expect(fonte).toContain("lerComando(")
+        expect(fonte).toContain("casarEscopos(")
+        expect(fonte).toContain("escopoExato(")
+        expect(fonte).toContain('heading="Buscar em"')
+        expect(fonte).toContain('"Buscar, ou / para escolher onde…"')
+        expect(fonte).toContain("Apague o escopo com Backspace para buscar em tudo.")
+        expect(fonte).toContain("Digite uma descrição, um valor ou uma data.")
+        expect(fonte).toContain("sair do escopo")
+        expect(fonte).toContain("escolher onde")
+        // dentro do escopo, "/" é texto: o comando só é lido na raiz
+        expect(fonte).toMatch(/escopo\s*\?\s*null\s*:\s*lerComando\(/)
+        // "/xyz" sem lugar: o vazio diz o comando, e nenhuma consulta sai com ele
+        expect(fonte).toContain('Nenhum lugar com "/')
+        // trocar de escopo devolve a paleta ao ocioso
+        expect(fonte).toContain('dispatchEvent(new Event("input", { bubbles: true }))')
     })
 })

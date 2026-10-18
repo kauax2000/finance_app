@@ -855,6 +855,9 @@ declaração de `background-color` no trilho).
   cartão), cartões, categorias, parcelas, assinaturas, contas, membros e
   carteiras, com `shouldFilter: false` — cada grupo chega ranqueado por
   `ranquear` (`lib/app-search`) — mudar o que ela abre é mudança de jornada.
+  Digitar `/` escolhe onde buscar (`/transacoes`, `/membros`…): o nome entra
+  no campo como escopo, só aquele grupo aparece (até 50 linhas; 20
+  transações), e dois Backspaces com o campo vazio voltam à busca em tudo.
   - **A paleta do catálogo abre por camadas**: vazia, mostra as cinco camadas
     com ícone (`category-meta.ts`) e, abaixo, as últimas páginas abertas
     (`useCommandRecents("ds:recentes")`). Enter numa camada pinta o nome dela
