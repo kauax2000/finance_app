@@ -94,18 +94,28 @@ Não há migração nova: só funções e os dois crons.
 
 ### 1. As funções, nesta ordem
 
-O `supabase/functions/_shared` não se publica sozinho: vai embutido em cada
-função. Como todas as cinco o usam (`notification-copy.ts`,
+O `_shared` vai embutido em cada função no deploy: **toda função que importa
+um módulo mudado do `_shared` precisa ser publicada de novo**, ou continua com a
+cópia antiga. Os módulos mudados são `notification-copy.ts`,
 `notification-schedule.ts`, `deliver-notification.ts`, `notification-types.ts`,
-`credit-card-cycle.ts`, `formatters.ts`), publique as cinco juntas.
+`credit-card-cycle.ts` e `formatters.ts`; quem os importa, direto ou por outro
+módulo, são estas sete funções:
 
 ```bash
 supabase functions deploy evaluate-budgets
 supabase functions deploy evaluate-credit-card-alerts
 supabase functions deploy credit-card-calendar-alerts
 supabase functions deploy evaluate-bills-reminders
+supabase functions deploy notify-transaction-created
+supabase functions deploy workspace-invites-accept
 supabase functions deploy dispatch-notifications
 ```
+
+A ordem não quebra nada (nenhuma função chama outra e o banco não muda); o
+`dispatch-notifications` fica por último porque é o que passa a recusar
+pedidos. As outras (`activity-logs`, `delete-user`, `push-*`,
+`run-recurring-billing`, `sessions`, `workspace-invites-create`,
+`workspace-invites-resend`) não importam nada que mudou.
 
 O que muda em cada uma:
 
@@ -115,12 +125,16 @@ O que muda em cada uma:
 | `evaluate-credit-card-alerts` | O limite usado soma a fatura aberta e a última fechada ainda não paga (`credit_card_invoice_payments`); texto com valores e disponível. |
 | `credit-card-calendar-alerts` | Texto com o valor da fatura; não avisa fatura zerada nem vencimento já pago; "fechou" sai no dia seguinte ao fechamento; "fecha/vence em 3 dias" vale também com 2 (tolera um dia de cron perdido); só o interruptor "Cartões: fatura e vencimento" o desliga. |
 | `evaluate-bills-reminders` | Texto com valor; a conta atrasada avisa no 1º dia de atraso e depois a cada 7 dias, e não todo dia. |
+| `notify-transaction-created` | O valor da despesa sai no formato novo ("R$ 1.234,56" escrito à mão, sem o `Intl` do runtime) e o link passa pela checagem nova. |
+| `workspace-invites-accept` | O link do aviso de convite aceito passa pela checagem nova (recusa `\`, caractere de controle e `//`). |
 | `dispatch-notifications` | Só aceita `type: "system"` com um `kind` da lista fechada (vazia hoje): o resto recebe 400. O cliente já não chama esta função. |
 
 Logo depois da publicação, uma conta já atrasada pode receber o aviso de
 atraso mais uma vez (a chave de deduplicação mudou de formato).
 
 ### 2. Os crons (SQL Editor do projeto)
+
+Precisa das extensões `pg_cron` e `pg_net` ligadas (Database → Extensions).
 
 O calendário do cartão e as contas não estão agendados nas migrações: o
 agendamento chama a função por HTTP com segredos do projeto, que não entram no
