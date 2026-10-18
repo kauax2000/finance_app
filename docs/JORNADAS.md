@@ -1,6 +1,6 @@
 # Jornadas do app
 
-O mapa de tudo o que uma pessoa faz no app, dividido em onze jornadas. Cada
+O mapa de tudo o que uma pessoa faz no app, dividido em dez jornadas. Cada
 jornada tem um fluxograma, as regras técnicas que decidem os caminhos e as
 lacunas encontradas no código. Foi escrito lendo o código em 2026-09-17, na
 branch `finance-app-2.0`, e a navegação global foi revista em 2026-10-01,

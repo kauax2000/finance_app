@@ -296,7 +296,14 @@ Deno.serve(async (req: Request) => {
     try {
       const events: ReadyEvent[] = []
       for (const c of cards) {
-        events.push(...(await resolveCardEvents(admin, workspaceId, c.label, c.events)))
+        // A consulta de um cartão que falha não derruba os outros do dia.
+        try {
+          events.push(...(await resolveCardEvents(admin, workspaceId, c.label, c.events)))
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : 'card_failed'
+          console.error('credit-card-calendar-alerts: card', c.events[0].cardId, msg)
+          errors.push({ workspace_id: workspaceId, credit_card_id: c.events[0].cardId, error: msg })
+        }
       }
       if (events.length === 0) return
 

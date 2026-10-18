@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRef } from "react"
 import { CheckIcon, EllipsisHorizontalIcon, EnvelopeIcon, TrashIcon } from "@heroicons/react/16/solid"
 
 import { BadgeDot } from "@/components/ui/badge"
@@ -39,6 +40,8 @@ const AO_PASSAR = "opacity-0 group-hover/item:opacity-100 group-focus-within/ite
 
 export function NotificationRow({ notification: n, onToggleRead, onDelete }: NotificationRowProps) {
     const unread = !n.read_at
+    // Sem destino, marcar como lida desmonta o link: o foco vai ao ⋯ da linha, e não ao <body>.
+    const maisRef = useRef<HTMLButtonElement>(null)
     const action = getNotificationAction(n)
     const hora = horaLocal(n.created_at)
     const rotuloLer = unread ? "Marcar como lida" : "Marcar como não lida"
@@ -68,7 +71,14 @@ export function NotificationRow({ notification: n, onToggleRead, onDelete }: Not
                             </Link>
                         </ItemLink>
                     ) : unread ? (
-                        <ItemLink onClick={() => onToggleRead(n)}>{titulo}</ItemLink>
+                        <ItemLink
+                            onClick={() => {
+                                maisRef.current?.focus()
+                                onToggleRead(n)
+                            }}
+                        >
+                            {titulo}
+                        </ItemLink>
                     ) : (
                         titulo
                     )}
@@ -101,7 +111,8 @@ export function NotificationRow({ notification: n, onToggleRead, onDelete }: Not
                             type="button"
                             variant="tertiary"
                             size="icon-sm"
-                            aria-label="Mais opções"
+                            ref={maisRef}
+                            aria-label={`Mais opções: ${n.title}`}
                             className={`${AO_PASSAR} data-[state=open]:opacity-100 pointer-coarse:opacity-100`}
                         >
                             <EllipsisHorizontalIcon />

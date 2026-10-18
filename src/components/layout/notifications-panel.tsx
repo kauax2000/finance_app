@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/empty-state"
 import { ItemGroup, ItemGroupLabel } from "@/components/ui/item"
 import { Skeleton, SkeletonGroup, SkeletonText } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Caption } from "@/components/ui/typography"
 import { useAuth } from "@/components/providers"
@@ -65,6 +66,8 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
     const [notifications, setNotifications] = useState<AppNotification[] | null>(null)
     const [error, setError] = useState(false)
     const [filtro, setFiltro] = useState<Filtro>("todas")
+    // O "Tentar de novo" em voo: o botão espera (a falha nova volta ao Alert).
+    const [tentando, setTentando] = useState(false)
     const userId = user?.id
 
     // Trocar de carteira no meio de uma busca, ou marcar/limpar enquanto ela
@@ -87,6 +90,15 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
             setError(true)
         }
     }, [userId, currentWorkspaceId])
+
+    const tentarDeNovo = async () => {
+        setTentando(true)
+        try {
+            await fetchNotifications()
+        } finally {
+            setTentando(false)
+        }
+    }
 
     // Outra carteira é outra lista: volta ao esqueleto em vez de mostrar a anterior.
     useEffect(() => {
@@ -178,7 +190,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
             <DialogHeader>
                 <DialogHeaderRow
                     endAdornment={
-                        <DropdownMenu>
+                        <DropdownMenu mobile="sheet">
                             <DropdownMenuTrigger asChild>
                                 <Button type="button" variant="tertiary" size="icon-sm" aria-label="Mais ações">
                                     <EllipsisHorizontalIcon />
@@ -259,7 +271,10 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                     <Alert tone="destructive" size="sm" className="mx-3">
                         <AlertTitle>Não deu para carregar as notificações.</AlertTitle>
                         <AlertActions>
-                            <AlertAction onClick={() => void fetchNotifications()}>Tentar de novo</AlertAction>
+                            <AlertAction disabled={tentando} aria-busy={tentando} onClick={() => void tentarDeNovo()}>
+                                {tentando ? <Spinner /> : null}
+                                Tentar de novo
+                            </AlertAction>
                         </AlertActions>
                     </Alert>
                 ) : !error && lista.length === 0 ? (

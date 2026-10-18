@@ -85,6 +85,8 @@ type ReminderEvent = {
   billName: string
   dueStr: string
   offset: number
+  /** Só na atrasada: os dias de atraso reais (o `offset` é o balde da dedupe). */
+  daysOverdue?: number
   /** A atrasada fixa o `sent_on` no vencimento (ver `DedupeRow`). */
   sentOn?: string
   title: string
@@ -174,6 +176,7 @@ Deno.serve(async (req: Request) => {
           billName: billMini.name,
           dueStr,
           offset,
+          daysOverdue: isPast ? overdueDays : undefined,
           sentOn: isPast ? dueStr : undefined,
           title,
           body,
@@ -244,7 +247,10 @@ Deno.serve(async (req: Request) => {
                 bill_id: ev.billId,
                 bill_instance_id: ev.instanceId,
                 due_date: ev.dueStr,
+                // `offset_days` é o balde da dedupe (`-1 - balde` na atrasada): o app só lê o
+                // sinal (`< 0`, o tom). Os dias de atraso de verdade são `days_overdue`.
                 offset_days: ev.offset,
+                ...(ev.daysOverdue != null ? { days_overdue: ev.daysOverdue } : {}),
                 href: '/bills',
               },
               prefs,

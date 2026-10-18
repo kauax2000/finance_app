@@ -6,13 +6,13 @@
 
 export type Copy = { title: string; body: string }
 
-/** "R$ 1.234,56"; negativo com U+2212, como `src/lib/formatters.ts`. */
+/** "R$ 1.234,56"; negativo com U+2212, como `src/lib/formatters.ts`. O espaço depois do "R$" é o inseparável (U+00A0): o push não quebra a linha entre o símbolo e o número. */
 export function moneyBRL(value: number): string {
   if (!Number.isFinite(value)) return '—'
   const cents = Math.round(Math.abs(value) * 100)
   const int = String(Math.floor(cents / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
   const frac = String(cents % 100).padStart(2, '0')
-  return `${value < 0 && cents > 0 ? '−' : ''}R$ ${int},${frac}`
+  return `${value < 0 && cents > 0 ? '−' : ''}R$\u00a0${int},${frac}`
 }
 
 /** "2026-11-10" → "10/11". */
