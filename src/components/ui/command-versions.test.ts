@@ -18,9 +18,9 @@ const tecla = (key: string, mods: Partial<Record<"metaKey" | "ctrlKey" | "altKey
 })
 
 describe("as versões do Command", () => {
-  it("a legenda mede 36, e o topo centraliza a pilha com ela (a placa mais 52)", () => {
-    expect(CODIGO).toContain('"inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs')
-    expect(CODIGO).toContain("[--command-dialog-stack:calc(var(--command-dialog-h)+--spacing(13))]")
+  it("a legenda mede 32, e o topo centraliza a pilha com ela (a placa mais 48)", () => {
+    expect(CODIGO).toContain('"inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs')
+    expect(CODIGO).toContain("[--command-dialog-stack:calc(var(--command-dialog-h)+--spacing(12))]")
   })
 
   it("o ícone da linha não passa dos 36 da pilha: caixa de 24 de largura e 20 de altura", () => {

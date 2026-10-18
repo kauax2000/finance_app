@@ -27030,3 +27030,6 @@ a pedido do dono, na altura da linha e da pílula. A pilha da paleta ficou 4px
 mais alta, e o topo, que centraliza a pilha cheia, passou de "a placa mais 48"
 para "a placa mais 52" (`--spacing(13)`). Medido: legenda a 36 e o conjunto
 centrado na janela a 0px.
+
+Depois, o dono pediu a legenda de volta a 32 (`h-8`), e o topo voltou a "a
+placa mais 48" (`--spacing(12)`). O teste passa a trancar os 32.
