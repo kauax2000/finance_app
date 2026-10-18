@@ -26,8 +26,10 @@ describe("painel de notificações (fonte)", () => {
         expect(painel).toContain("DialogHeaderRow")
         expect(painel).toContain("DialogBody")
         expect(painel).toContain("DialogCloseButton")
-        // O filtro é o ToggleGroup na versão padrão, sem variant nem size (pedido do dono).
-        expect(painel).toMatch(/<ToggleGroup\s+type="single"\s+aria-label="Filtrar notificações"/)
+        // O filtro é o Tabs na versão padrão, sem variant nem size (pedido do dono).
+        expect(painel).toContain('<TabsList aria-label="Filtrar notificações">')
+        expect(painel).not.toContain("ToggleGroup")
+        expect(painel).not.toMatch(/<Tabs[^>]*\b(variant|size)=/)
         expect(painel).toContain("groupByLocalDay(")
         expect(painel).toContain("ItemGroupLabel")
         expect(painel).toContain('variant="tile"')

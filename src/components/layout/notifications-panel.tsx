@@ -25,7 +25,7 @@ import {
 import { ItemGroup, ItemGroupLabel } from "@/components/ui/item"
 import { Skeleton, SkeletonGroup, SkeletonText } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Caption } from "@/components/ui/typography"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
@@ -234,18 +234,18 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                     </div>
                 </DialogHeaderRow>
                 {lista.length > 0 ? (
-                    <ToggleGroup
-                        type="single"
-                        aria-label="Filtrar notificações"
-                        className="mt-3"
+                    <Tabs
                         value={filtro}
                         onValueChange={(v) => setFiltro(v as Filtro)}
+                        className="mt-3"
                     >
-                        <ToggleGroupItem value="todas">Todas</ToggleGroupItem>
-                        <ToggleGroupItem value="nao-lidas" count={naoLidas}>
-                            Não lidas
-                        </ToggleGroupItem>
-                    </ToggleGroup>
+                        <TabsList aria-label="Filtrar notificações">
+                            <TabsTrigger value="todas">Todas</TabsTrigger>
+                            <TabsTrigger value="nao-lidas" count={naoLidas}>
+                                Não lidas
+                            </TabsTrigger>
+                        </TabsList>
+                    </Tabs>
                 ) : null}
             </DialogHeader>
 
