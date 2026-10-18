@@ -24,7 +24,7 @@ describe("as versões do Command", () => {
   })
 
   it("a legenda mede 32, e o topo centraliza a pilha com ela (a placa mais 48)", () => {
-    expect(CODIGO).toContain('"inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs')
+    expect(CODIGO).toContain('"inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs whitespace-nowrap')
     expect(CODIGO).toContain("[--command-dialog-stack:calc(var(--command-dialog-h)+--spacing(12))]")
   })
 

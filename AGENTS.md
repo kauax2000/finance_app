@@ -1336,7 +1336,8 @@ declaração de `background-color` no trilho).
   fica `muted`, nunca a tecla `primary`. **Nenhuma tela escreve as fichas do dia
   à mão nem troca a agenda por `isMobile`** — `calendar-agenda.test.ts`.
 - **`KbdGroup` diz o gesto**: `mode="sequence"` | `"either"`. **Duas pastilhas
-  lado a lado sem grupo leem como sequência.** `live`.
+  lado a lado sem grupo leem como sequência.** `live`. `joined` põe as opções
+  numa pastilha só (↑↓, a legenda das paletas), e o leitor ainda ouve "ou".
 
 #### Listas, tabelas e navegação
 

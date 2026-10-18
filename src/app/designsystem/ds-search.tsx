@@ -316,7 +316,7 @@ function DsPaleta({ onNavigate }: { onNavigate: (slug: string) => void }) {
       <CommandDock>
         <div className="flex items-center gap-2">
           <CommandDockItem>
-            <KbdGroup mode="either" keys={["up", "down"]} />
+            <KbdGroup mode="either" joined keys={["up", "down"]} />
             navegar
           </CommandDockItem>
           {scope ? (

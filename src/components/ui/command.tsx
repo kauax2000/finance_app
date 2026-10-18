@@ -1157,11 +1157,11 @@ function CommandDockItem({ className, ...props }: React.ComponentProps<"span">) 
     <span
       data-slot="command-dock-item"
       className={cn(
-        "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs text-muted-foreground ring-1 ring-foreground/10",
+        // Uma linha só: com a pastilha das teclas, a legenda quebrava em duas
+        // na paleta de 448; o recuo de 10 dá folga às quatro.
+        "inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs whitespace-nowrap text-muted-foreground ring-1 ring-foreground/10",
+        // As teclas com a pastilha do `Kbd` (o fundo dele), a pedido do dono.
         menuPanelTintClassName,
-        // As teclas sem a pastilha (caixa dentro de caixa); o seletor de
-        // descendente (0,2,0) vence o `bg-*` do `Kbd` sem `!important`.
-        "[&_[data-slot=kbd]]:min-w-0 [&_[data-slot=kbd]]:bg-transparent [&_[data-slot=kbd]]:px-0",
         className
       )}
       {...props}

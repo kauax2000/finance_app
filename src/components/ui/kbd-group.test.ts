@@ -17,6 +17,15 @@ describe("KbdGroup", () => {
     expect(alt).toContain("↑")
   })
 
+  it("joined põe as opções numa pastilha só, e o leitor ainda ouve “ou”", () => {
+    const junto = renderToStaticMarkup(h(KbdGroup, { mode: "either", joined: true, keys: ["up", "down"] }))
+    expect(junto.match(/data-slot="kbd"/g)).toHaveLength(1)
+    expect(junto).toContain(" ou ")
+    expect(junto).not.toContain(">/<")
+    expect(junto).toContain("↑")
+    expect(junto).toContain("↓")
+  })
+
   it("o separador é opcional e só da sequência", () => {
     const html = renderToStaticMarkup(h(KbdGroup, { keys: ["g", "h"], separator: true }))
     expect(html).toContain("›")

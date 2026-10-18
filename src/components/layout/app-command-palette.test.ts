@@ -42,7 +42,7 @@ describe("a paleta do app", () => {
         expect(fonte).toContain("Apague o escopo com Backspace para buscar em tudo.")
         expect(fonte).toContain("Digite uma descrição, um valor ou uma data.")
         expect(fonte).toContain("sair do escopo")
-        expect(fonte).toContain("escolher onde")
+        expect(fonte).toContain("filtrar")
         // dentro do escopo, "/" é texto: o comando só é lido na raiz
         expect(fonte).toMatch(/escopo\s*\?\s*null\s*:\s*lerComando\(/)
         // "/xyz" sem lugar: o vazio diz o comando, e nenhuma consulta sai com ele

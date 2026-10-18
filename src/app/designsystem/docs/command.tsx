@@ -558,7 +558,7 @@ function CommandDialogDemo() {
         </CommandList>
         <CommandDock>
           <CommandDockItem>
-            <KbdGroup mode="either" keys={["up", "down"]} />
+            <KbdGroup mode="either" joined keys={["up", "down"]} />
             navegar
           </CommandDockItem>
           <CommandDockItem>
@@ -905,7 +905,7 @@ function PaletaSoltaDemo() {
         </CommandList>
         <CommandDock>
           <CommandDockItem>
-            <KbdGroup mode="either" keys={["up", "down"]} />
+            <KbdGroup mode="either" joined keys={["up", "down"]} />
             navegar
           </CommandDockItem>
           <CommandDockItem>

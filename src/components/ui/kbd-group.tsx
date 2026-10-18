@@ -10,7 +10,8 @@ import { Kbd, formatKey } from "@/components/ui/kbd"
  * pastilha (o `g h` do GitHub). O acorde (`⌘K`) é uma pastilha só e mora no
  * `Kbd keys`.
  *
- * `mode="either"` são opções (↑ ou ↓), não passos; `separator` desenha o "›";
+ * `mode="either"` são opções (↑ ou ↓), não passos — com `joined`, numa
+ * pastilha só (↑↓, a legenda da paleta); `separator` desenha o "›";
  * `live` acende as pastilhas com o teclado. O leitor de tela ouve "depois"
  * entre passos e "ou" entre opções. Um passo pode ser acorde (`["mod+k", "s"]`).
  *
@@ -25,6 +26,8 @@ type KbdGroupProps = Omit<React.ComponentProps<"kbd">, "children"> & {
   mode?: KbdGroupMode
   /** Só na sequência: o "›" à vista entre os passos. */
   separator?: boolean
+  /** Só nas opções: as teclas numa pastilha só (↑↓), sem o "/". */
+  joined?: boolean
 } & (
     | {
         keys: string[]
@@ -123,12 +126,41 @@ function KbdGroup({
   keys,
   mode = "sequence",
   separator = false,
+  joined = false,
   live = false,
   className,
   children,
   ...props
 }: KbdGroupProps) {
   const acesas = useTeclasAcesas(keys, mode, live)
+
+  // As opções numa pastilha só: acende quando qualquer uma desce, e o leitor
+  // de tela ouve "ou" entre elas.
+  if (joined && mode === "either" && keys) {
+    return (
+      <kbd
+        data-slot="kbd-group"
+        data-mode={mode}
+        data-joined=""
+        className={cn(
+          "inline-flex items-center",
+          "[&>[data-slot=kbd]]:transition-colors [&>[data-slot=kbd]]:duration-(--duration-fast)",
+          "[&>[data-slot=kbd][data-lit]]:bg-primary [&>[data-slot=kbd][data-lit]]:text-primary-foreground",
+          className
+        )}
+        {...props}
+      >
+        <Kbd data-lit={acesas.some(Boolean) || undefined}>
+          {keys.map((tecla, i) => (
+            <React.Fragment key={i}>
+              {i > 0 ? <span className="sr-only"> ou </span> : null}
+              {formatKey(tecla)}
+            </React.Fragment>
+          ))}
+        </Kbd>
+      </kbd>
+    )
+  }
 
   const pastilhas = keys
     ? keys.map((passo, i) =>

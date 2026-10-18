@@ -832,7 +832,7 @@ function PaletteBody({ close }: { close: () => void }) {
             <CommandDock>
                 <div className="flex items-center gap-2">
                     <CommandDockItem>
-                        <KbdGroup mode="either" keys={["up", "down"]} />
+                        <KbdGroup mode="either" joined keys={["up", "down"]} />
                         navegar
                     </CommandDockItem>
                     {escopo ? (
@@ -843,7 +843,7 @@ function PaletteBody({ close }: { close: () => void }) {
                     ) : (
                         <CommandDockItem>
                             <Kbd>/</Kbd>
-                            escolher onde
+                            filtrar
                         </CommandDockItem>
                     )}
                 </div>

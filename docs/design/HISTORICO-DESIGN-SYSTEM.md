@@ -27043,3 +27043,15 @@ lugar onde as outras linhas mostram a seta de ir. O `CommandItemArrow` ganhou
 para lugar nenhum). Os dois só aparecem na linha selecionada, na mesma duração.
 Medido: na ação selecionada o + fica a opacidade 1 e escala 1, e nas outras
 linhas a 0.
+
+### Rodada 305 — as teclas da legenda com pastilha, e o ↑↓ numa só
+
+O dono pediu o fundo nas teclas da legenda da paleta: o `CommandDockItem`
+tirava a pastilha do `Kbd` ("caixa dentro de caixa") e deixou de tirar. Com a
+pastilha, a legenda do app passou da largura da paleta e "escolher onde"
+quebrava em duas linhas: a cápsula ganhou `whitespace-nowrap` e recuo de 10
+(era 12), e o rótulo virou "filtrar". O ↑ e o ↓ viraram uma pastilha só, a
+pedido do dono: `KbdGroup joined` (só com `mode="either"` e `keys`) desenha as
+opções juntas, acende quando qualquer uma desce e mantém o "ou" para o leitor
+de tela. Vestem o `joined` a paleta do app, a do catálogo e os exemplos da
+página do Command. Medido: as quatro cápsulas numa linha, 394 de 448px.
