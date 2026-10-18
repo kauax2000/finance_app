@@ -27033,3 +27033,13 @@ centrado na janela a 0px.
 
 Depois, o dono pediu a legenda de volta a 32 (`h-8`), e o topo voltou a "a
 placa mais 48" (`--spacing(12)`). O teste passa a trancar os 32.
+
+### Rodada 304 — o + das ações de criar
+
+O dono pediu, nas ações da paleta ("Nova despesa", "Novo cartão"…), um + no
+lugar onde as outras linhas mostram a seta de ir. O `CommandItemArrow` ganhou
+`variant`: `go` (o padrão, a `ArrowUpRightIcon` que entra na diagonal) e `add`
+(a `PlusIcon` de 16, que cresce de 75% a 100% no lugar, porque um + não aponta
+para lugar nenhum). Os dois só aparecem na linha selecionada, na mesma duração.
+Medido: na ação selecionada o + fica a opacidade 1 e escala 1, e nas outras
+linhas a 0.

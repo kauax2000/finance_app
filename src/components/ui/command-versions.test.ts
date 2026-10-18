@@ -18,6 +18,11 @@ const tecla = (key: string, mods: Partial<Record<"metaKey" | "ctrlKey" | "altKey
 })
 
 describe("as versões do Command", () => {
+  it("o sinal da linha é a seta de ir ou, nas ações de criar, o +", () => {
+    expect(CODIGO).toContain('variant === "add" ? PlusIcon : ArrowUpRightIcon')
+    expect(lerFonte("src/components/layout/app-command-palette.tsx")).toContain('<CommandItemArrow variant="add" />')
+  })
+
   it("a legenda mede 32, e o topo centraliza a pilha com ela (a placa mais 48)", () => {
     expect(CODIGO).toContain('"inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs')
     expect(CODIGO).toContain("[--command-dialog-stack:calc(var(--command-dialog-h)+--spacing(12))]")

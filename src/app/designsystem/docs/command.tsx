@@ -287,7 +287,7 @@ export default function CommandDoc() {
       </DocNote>
 
       <DocNote title="A linha tem 36 na pilha">
-        Na paleta a linha tem 36, como nos menus desde a rodada 243d: ela é um destino de busca, lido uma linha por vez. <code>CommandItemIcon</code> põe o ícone numa caixa de 24 e alinha o nome na mesma coluna em qualquer grupo; <code>CommandItemMeta</code> empurra a contagem ou a descrição para a ponta; <code>CommandItemArrow</code> é a seta de ir, que só aparece na linha selecionada. A geometria continua a de <code>menuItemGeometryClassName</code>, e os estados ficam aqui porque o cmdk os escreve diferente: a linha ativa é <code>data-selected</code>, e <code>data-disabled=&quot;false&quot;</code> está sempre presente.
+        Na paleta a linha tem 36, como nos menus desde a rodada 243d: ela é um destino de busca, lido uma linha por vez. <code>CommandItemIcon</code> põe o ícone numa caixa de 24 e alinha o nome na mesma coluna em qualquer grupo; <code>CommandItemMeta</code> empurra a contagem ou a descrição para a ponta; <code>CommandItemArrow</code> é o sinal do Enter, que só aparece na linha selecionada: a seta de ir, ou o + de criar com <code>variant=&quot;add&quot;</code> (as ações de &quot;Nova…&quot;). A geometria continua a de <code>menuItemGeometryClassName</code>, e os estados ficam aqui porque o cmdk os escreve diferente: a linha ativa é <code>data-selected</code>, e <code>data-disabled=&quot;false&quot;</code> está sempre presente.
       </DocNote>
 
       <DocNote title="O feixe espera a primeira tecla">
@@ -379,9 +379,9 @@ export default function CommandDoc() {
           },
           {
             prop: "CommandItemIcon / Meta / Arrow",
-            type: 'ComponentProps<"span"> × 2 / props do ícone',
+            type: 'ComponentProps<"span"> × 2 / props do ícone & { variant?: "go" | "add" }',
             description:
-              "As peças da linha: o ícone numa caixa de 24 que acende com a seleção, o lado direito empurrado para a ponta, e a seta de ir que só aparece na linha selecionada.",
+              "As peças da linha: o ícone numa caixa de 24 que acende com a seleção, o lado direito empurrado para a ponta, e o sinal do Enter, que só aparece na linha selecionada — a seta de ir (go, o padrão) ou o + de criar (add), para as ações de \"Nova…\".",
           },
           {
             prop: "CommandItemContent",

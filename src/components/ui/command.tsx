@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ArrowUpRightIcon } from "@heroicons/react/16/solid"
+import { ArrowUpRightIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Command as CommandPrimitive, useCommandState } from "cmdk"
 
@@ -1102,17 +1102,27 @@ function CommandItemMeta({ className, ...props }: React.ComponentProps<"span">) 
   )
 }
 
-/** A seta de "ir": só na linha selecionada, entrando na diagonal em que aponta; diz que Enter leva a algum lugar. */
+/**
+ * O sinal da ação, só na linha selecionada: diz o que o Enter faz. `go` (o
+ * padrão) é a seta de "ir", que entra na diagonal em que aponta; `add` é o +
+ * de criar (as ações de "Nova despesa", "Novo cartão"…), que cresce no lugar.
+ */
 function CommandItemArrow({
+  variant = "go",
   className,
   ...props
-}: React.ComponentProps<typeof ArrowUpRightIcon>) {
+}: React.ComponentProps<typeof ArrowUpRightIcon> & { variant?: "go" | "add" }) {
+  const Icone = variant === "add" ? PlusIcon : ArrowUpRightIcon
   return (
-    <ArrowUpRightIcon
+    <Icone
       data-slot="command-item-arrow"
+      data-variant={variant}
       aria-hidden
       className={cn(
-        "ml-auto size-4 shrink-0 -translate-x-0.5 translate-y-0.5 opacity-0 transition-[opacity,translate] duration-(--duration-base) ease-(--ease-out) group-data-selected/command-item:translate-x-0 group-data-selected/command-item:translate-y-0 group-data-selected/command-item:opacity-100",
+        "ml-auto size-4 shrink-0 opacity-0 duration-(--duration-base) ease-(--ease-out) group-data-selected/command-item:opacity-100",
+        variant === "add"
+          ? "scale-75 transition-[opacity,scale] group-data-selected/command-item:scale-100"
+          : "-translate-x-0.5 translate-y-0.5 transition-[opacity,translate] group-data-selected/command-item:translate-x-0 group-data-selected/command-item:translate-y-0",
         className
       )}
       {...props}

@@ -543,6 +543,7 @@ function PaletteBody({ close }: { close: () => void }) {
                                 <CommandItemTitle>
                                     <CommandHighlight>{acao.label}</CommandHighlight>
                                 </CommandItemTitle>
+                                <CommandItemArrow variant="add" />
                             </CommandItem>
                         ))}
                     </CommandGroup>
