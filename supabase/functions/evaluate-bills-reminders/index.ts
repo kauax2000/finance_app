@@ -15,6 +15,8 @@ import {
   isoPrefixYmd,
   appTodayYmd,
 } from '../_shared/credit-card-cycle.ts'
+import { billCopy, ddmm } from '../_shared/notification-copy.ts'
+import { overdueDedupeBucket, shouldSendOverdue } from '../_shared/notification-schedule.ts'
 
 // Server-to-server only (cron/scheduler): no CORS — browsers have no business
 // probing this endpoint with the shared secret.
@@ -32,6 +34,7 @@ function json(status: number, payload: unknown): Response {
 type BillRowMini = {
   id: string
   name: string
+  amount_estimated: number | string | null
   reminder_days_before: number[] | null
   is_active: boolean
 }
@@ -41,6 +44,7 @@ type InstanceRow = {
   workspace_id: string
   bill_id: string
   due_date: string
+  amount: number | string | null
   bills: BillRowMini | BillRowMini[] | null
 }
 
@@ -49,6 +53,8 @@ type DedupeRow = {
   bill_instance_id: string
   reminder_offset_days: number
   user_id: string
+  /** Só na atrasada: fixo no vencimento, para a chave valer pela janela e não pelo dia. */
+  sent_on?: string
 }
 
 async function claimDedupe(admin: SupabaseAdminClient, row: DedupeRow): Promise<boolean> {
@@ -79,6 +85,8 @@ type ReminderEvent = {
   billName: string
   dueStr: string
   offset: number
+  /** A atrasada fixa o `sent_on` no vencimento (ver `DedupeRow`). */
+  sentOn?: string
   title: string
   body: string
 }
@@ -113,8 +121,9 @@ Deno.serve(async (req: Request) => {
         workspace_id,
         bill_id,
         due_date,
+        amount,
         status,
-        bills(id, name, reminder_days_before, is_active)
+        bills(id, name, amount_estimated, reminder_days_before, is_active)
       `)
       .eq('status', 'pending')
       .lte('due_date', reminderHorizon)
@@ -133,7 +142,7 @@ Deno.serve(async (req: Request) => {
 
       const daysUntil = diffCalendarDays(today, dueY)
       const isPast = compareYmd(dueY, today) < 0
-      // Conta esquecida há mais de 60 dias não gera aviso diário para sempre.
+      // Conta esquecida há mais de 60 dias deixa de gerar aviso.
       if (isPast && daysUntil < -60) continue
       const bEmbed = raw.bills
       const billMini = Array.isArray(bEmbed) ? (bEmbed[0] ?? null) : bEmbed
@@ -143,39 +152,33 @@ Deno.serve(async (req: Request) => {
         ? billMini.reminder_days_before
         : [3, 0]
 
-      /** Pre-due/day-of offsets; overdue uses fixed -1 dedupe/day */
+      // A atrasada avisa no 1º dia e a cada 7 dias; cada janela de 7 dias é um
+      // `reminder_offset_days` próprio (-1, -2, …), com o `sent_on` fixo.
+      const overdueDays = -daysUntil
       const hitOffsets = isPast
-        ? [-1]
+        ? shouldSendOverdue(overdueDays)
+          ? [-1 - overdueDedupeBucket(overdueDays)]
+          : []
         : [...new Set(configured)].filter((o) => o === daysUntil)
       if (hitOffsets.length === 0) continue
 
-      const prettyDue = dueStr.split('-').reverse().join('/')
+      const rawAmount = raw.amount ?? billMini.amount_estimated
+      const valor = rawAmount != null && rawAmount !== '' ? Number(rawAmount) : null
+      const { title, body } = billCopy({ conta: billMini.name, valor, data: ddmm(dueStr), dias: daysUntil })
+      const list = eventsByWorkspace.get(raw.workspace_id) ?? []
       for (const offset of hitOffsets) {
-        let title: string
-        let body: string
-        if (offset === -1) {
-          title = `Conta atrasada · ${billMini.name}`
-          body = `“${billMini.name}” estava prevista para ${prettyDue}. Registre o pagamento com o valor real.`
-        } else if (offset === 0) {
-          title = `Conta vence hoje · ${billMini.name}`
-          body = `“${billMini.name}” vence hoje (${prettyDue}).`
-        } else {
-          title = `Conta a pagar · ${billMini.name}`
-          body = `“${billMini.name}” vence em ${prettyDue}. Faltam ${offset} dia(s).`
-        }
-
-        const list = eventsByWorkspace.get(raw.workspace_id) ?? []
         list.push({
           instanceId: raw.id,
           billId: billMini.id,
           billName: billMini.name,
           dueStr,
           offset,
+          sentOn: isPast ? dueStr : undefined,
           title,
           body,
         })
-        eventsByWorkspace.set(raw.workspace_id, list)
       }
+      eventsByWorkspace.set(raw.workspace_id, list)
     }
 
     if (batch.length < INSTANCE_PAGE_SIZE) break
@@ -220,6 +223,7 @@ Deno.serve(async (req: Request) => {
             bill_instance_id: ev.instanceId,
             reminder_offset_days: ev.offset,
             user_id: userId,
+            ...(ev.sentOn ? { sent_on: ev.sentOn } : {}),
           }
 
           try {

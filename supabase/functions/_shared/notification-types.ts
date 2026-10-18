@@ -30,17 +30,6 @@ export const DEFAULT_NOTIFICATION_PREFS: WorkspaceNotificationPrefs = {
   notify_bills: true,
 }
 
-export function isNotificationEventType(x: unknown): x is NotificationEventType {
-  return (
-    x === 'transaction' ||
-    x === 'budget' ||
-    x === 'system' ||
-    x === 'promotion' ||
-    x === 'credit_card' ||
-    x === 'bill'
-  )
-}
-
 export function isTypeAllowedForPrefs(
   type: NotificationEventType,
   prefs: WorkspaceNotificationPrefs
@@ -53,9 +42,25 @@ export function isTypeAllowedForPrefs(
   return true
 }
 
+/**
+ * Caminho interno seguro, como `isSafeInternalPath` do cliente
+ * (src/lib/notification-href.ts): começa em "/" e não sai do app. Recusa "//",
+ * a barra invertida (o navegador a lê como barra) e caractere de controle (o
+ * navegador tira TAB e quebra de linha, e "/\t/evil.com" vira "//evil.com").
+ */
+export function isSafeInternalPath(href: string): boolean {
+  return (
+    href.startsWith('/') &&
+    !href.startsWith('//') &&
+    !href.includes('\\') &&
+    // deno-lint-ignore no-control-regex -- o controle é justamente o que se recusa
+    !/[\u0000-\u001f\u007f]/.test(href)
+  )
+}
+
 export function resolveNotificationHref(metadata: Record<string, unknown>): string {
   const raw = metadata.href
-  if (typeof raw === 'string' && raw.startsWith('/') && !raw.startsWith('//')) {
+  if (typeof raw === 'string' && isSafeInternalPath(raw)) {
     return raw.trim()
   }
   const kind = metadata.kind

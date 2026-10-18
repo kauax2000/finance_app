@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { deliverNotification } from '../_shared/deliver-notification.ts'
+import { budgetCopy, monthNamePt } from '../_shared/notification-copy.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -140,25 +141,16 @@ Deno.serve(async (req: Request) => {
   const hit100 = spend >= budgetAmount && !hitOver
   const hit80 = spend >= budgetAmount * 0.8 && spend < budgetAmount
 
+  // O mês do orçamento, e não o de hoje: um lançamento retroativo fala do mês dele.
+  const yearMonth = b.period_start.slice(0, 7)
+  const mes = monthNamePt(Number(yearMonth.slice(5, 7)))
+  const copy = (nivel: '80' | '100' | 'over') =>
+    budgetCopy({ categoria: categoryName, mes, gasto: spend, limite: budgetAmount, nivel })
+
   const thresholds: Array<{ key: ThresholdKey; hit: boolean; title: string; body: string }> = [
-    {
-      key: 'threshold_80_sent_at',
-      hit: hit80,
-      title: 'Orçamento chegando ao limite (80%)',
-      body: `Já foram usados ${percent.toFixed(0)}% do orçamento de ${categoryName}.`,
-    },
-    {
-      key: 'threshold_100_sent_at',
-      hit: hit100,
-      title: 'Orçamento atingiu 100%',
-      body: `O orçamento de ${categoryName} chegou a 100%.`,
-    },
-    {
-      key: 'threshold_over_sent_at',
-      hit: hitOver,
-      title: 'Orçamento excedido',
-      body: `O orçamento de ${categoryName} foi excedido (${percent.toFixed(0)}%).`,
-    },
+    { key: 'threshold_80_sent_at', hit: hit80, ...copy('80') },
+    { key: 'threshold_100_sent_at', hit: hit100, ...copy('100') },
+    { key: 'threshold_over_sent_at', hit: hitOver, ...copy('over') },
   ]
 
   // O limiar mais severo atingido e ainda não enviado.
@@ -219,7 +211,8 @@ Deno.serve(async (req: Request) => {
     budget_id: b.id,
     category_id: categoryId,
     threshold: chosen.key,
-    href: `/categories/${categoryId}`,
+    // A tela da categoria lê `month` (parseYearMonthParam) e abre no mês do orçamento.
+    href: `/categories/${categoryId}?month=${yearMonth}`,
   }
 
   let anyDelivered = false

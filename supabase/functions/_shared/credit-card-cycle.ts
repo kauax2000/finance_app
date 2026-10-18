@@ -102,6 +102,42 @@ export function addCalendarDays(ymd: Ymd, delta: number): Ymd {
 
 export type OpenWindow = { start: Ymd; end: Ymd }
 
+export type CardTxRow = {
+  amount: string | number
+  type: string
+  date: string
+  payment_method: string | null
+  payment_credit_card_id: string | null
+  category_id: string | null
+}
+
+/**
+ * Despesas no cartão com data em [start, end] (inclusivo), somadas em centavos.
+ * `categoryId` undefined soma todas; null, só as sem categoria.
+ */
+export function sumCardExpensesInWindow(
+  rows: CardTxRow[],
+  cardId: string,
+  win: OpenWindow,
+  categoryId?: string | null
+): number {
+  const startK = formatYmd(win.start)
+  const endK = formatYmd(win.end)
+  let cents = 0
+  for (const t of rows) {
+    if (t.type !== 'expense') continue
+    if (t.payment_method !== 'credit_card') continue
+    if (t.payment_credit_card_id !== cardId) continue
+    const ymd = isoPrefixYmd(t.date)
+    if (!ymd) continue
+    const k = formatYmd(ymd)
+    if (k < startK || k > endK) continue
+    if (categoryId !== undefined && (t.category_id ?? null) !== categoryId) continue
+    cents += Math.round(Number(t.amount || 0) * 100)
+  }
+  return cents / 100
+}
+
 /** Open cycle for `today`: day after lastClose through nextClose (inclusive), same as app `buildCardCycleSnapshot`. */
 export function openInvoiceWindow(today: Ymd, closingDay: number): OpenWindow {
   const lastClose = statementCloseOnOrBefore(today, closingDay)
@@ -150,17 +186,23 @@ export function appTodayYmd(now: Date = new Date()): Ymd {
   return { y: get('year'), m: get('month'), d: get('day') }
 }
 
-/** Next payment due date on or after `today` (estimated from closing schedule). */
-export function nextPaymentDueOnOrAfter(
+/**
+ * Próximo vencimento em ou depois de `today`, com o fechamento da fatura que ele
+ * paga. Começa um ciclo antes do último fechamento: o vencimento é no mês
+ * seguinte ao fechamento, e entre o fechamento novo e esse vencimento a fatura
+ * que vence ainda é a anterior (fecha 3, vence 10: em 05/11 vence 10/11, da
+ * fatura de 03/10). Começar no último fechamento pulava esse vencimento.
+ */
+export function nextPaymentDueCycleOnOrAfter(
   today: Ymd,
   closingDay: number,
   dueDay: number
-): Ymd {
-  let close = statementCloseOnOrBefore(today, closingDay)
+): { close: Ymd; due: Ymd } {
+  let close = previousStatementCloseBefore(statementCloseOnOrBefore(today, closingDay), closingDay)
   for (let i = 0; i < 36; i++) {
     const due = estimatedDueYmdForClose(close, dueDay)
-    if (compareYmd(due, today) >= 0) return due
+    if (compareYmd(due, today) >= 0) return { close, due }
     close = nextCloseAfter(close, closingDay)
   }
-  throw new Error('nextPaymentDueOnOrAfter: range exceeded')
+  throw new Error('nextPaymentDueCycleOnOrAfter: range exceeded')
 }

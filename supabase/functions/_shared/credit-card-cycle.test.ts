@@ -11,6 +11,8 @@ import {
   formatYmd,
   isoPrefixYmd,
   nextCloseAfter,
+  nextPaymentDueCycleOnOrAfter,
+  sumCardExpensesInWindow,
   type Ymd,
 } from './credit-card-cycle.ts'
 
@@ -59,4 +61,36 @@ Deno.test('appTodayYmd uses the America/Sao_Paulo calendar day', () => {
   assertEquals(formatYmd(appTodayYmd(midday)), '2026-08-25')
 
   assertMatch(formatYmd(appTodayYmd()), /^\d{4}-\d{2}-\d{2}$/)
+})
+
+Deno.test('nextPaymentDueCycleOnOrAfter devolve o vencimento e a fatura que ele paga', () => {
+  // Fecha dia 3, vence dia 10: em 05/11 o próximo vencimento é 10/11, da fatura de 03/10.
+  const r = nextPaymentDueCycleOnOrAfter(ymd('2026-11-05'), 3, 10)
+  assertEquals([formatYmd(r.close), formatYmd(r.due)], ['2026-10-03', '2026-11-10'])
+  // Passado o vencimento, a próxima é a fatura de 03/11.
+  const s = nextPaymentDueCycleOnOrAfter(ymd('2026-11-11'), 3, 10)
+  assertEquals([formatYmd(s.close), formatYmd(s.due)], ['2026-11-03', '2026-12-10'])
+  // Fecha 25, vence 5: em 26/10 vence 05/11, da fatura de 25/10.
+  const t = nextPaymentDueCycleOnOrAfter(ymd('2026-10-26'), 25, 5)
+  assertEquals([formatYmd(t.close), formatYmd(t.due)], ['2026-10-25', '2026-11-05'])
+})
+
+Deno.test('sumCardExpensesInWindow soma em centavos só as despesas do cartão na janela', () => {
+  const row = (date: string, amount: number, extra: Record<string, unknown> = {}) => ({
+    amount, type: 'expense', date: `${date}T12:00:00.000Z`, payment_method: 'credit_card',
+    payment_credit_card_id: 'c1', category_id: null, ...extra,
+  })
+  const rows = [
+    row('2026-10-04', 0.1),
+    row('2026-10-20', 0.2),
+    row('2026-11-03', 10),
+    row('2026-11-04', 99), // fora: já é a fatura seguinte
+    row('2026-10-10', 50, { payment_credit_card_id: 'c2' }),
+    row('2026-10-10', 50, { type: 'income' }),
+    row('2026-10-10', 7, { category_id: 'cat' }),
+  ]
+  const win = { start: ymd('2026-10-04'), end: ymd('2026-11-03') }
+  assertEquals(sumCardExpensesInWindow(rows, 'c1', win), 17.3)
+  assertEquals(sumCardExpensesInWindow(rows, 'c1', win, 'cat'), 7)
+  assertEquals(sumCardExpensesInWindow(rows, 'c1', win, null), 10.3)
 })

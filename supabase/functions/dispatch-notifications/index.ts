@@ -2,13 +2,19 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
 import { internalError } from '../_shared/http.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { deliverNotification } from '../_shared/deliver-notification.ts'
-import { isNotificationEventType } from '../_shared/notification-types.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
     'authorization, x-client-info, apikey, content-type, x-app-session-id',
 }
+
+/**
+ * Os `kind` que o cliente ainda pode pedir. Vazia: o último produtor do
+ * cliente (`category_created`) saiu, e os avisos de produto nascem nas funções
+ * do servidor. Um produtor novo do cliente entra aqui, com nome.
+ */
+const ALLOWED_KINDS = new Set<string>([])
 
 type DispatchBody = {
   type: string
@@ -56,8 +62,14 @@ Deno.serve(async (req: Request) => {
     return json(400, { error: 'Invalid JSON body' })
   }
 
-  if (!isNotificationEventType(body.type)) {
+  // Só `system`: os outros tipos furariam as regras de quem os produz
+  // (orçamento, cartão, contas) e o filtro de preferências delas.
+  if (body.type !== 'system') {
     return json(400, { error: 'Invalid type' })
+  }
+  const kind = typeof body.metadata?.kind === 'string' ? body.metadata.kind.trim() : ''
+  if (!ALLOWED_KINDS.has(kind)) {
+    return json(400, { error: 'Invalid kind' })
   }
 
   const workspaceId = typeof body.workspace_id === 'string' ? body.workspace_id.trim() : ''
@@ -86,16 +98,14 @@ Deno.serve(async (req: Request) => {
   const msg = (body.body ?? '').trim().slice(0, 500) || 'Você tem uma nova notificação.'
   // Vindo do cliente, só o `kind` passa: `critical` furava as preferências de
   // notificação e `href` decide para onde o clique leva.
-  const rawKind = body.metadata?.kind
-  const metadata: Record<string, unknown> =
-    typeof rawKind === 'string' && rawKind.trim() ? { kind: rawKind.trim().slice(0, 40) } : {}
+  const metadata: Record<string, unknown> = { kind }
 
   const delivered = await deliverNotification({
     supabaseAdmin,
     userId,
     userEmail: user.email,
     workspaceId,
-    type: body.type,
+    type: 'system',
     title,
     body: msg,
     metadata,

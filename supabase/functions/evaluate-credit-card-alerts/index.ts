@@ -1,18 +1,22 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
 import { internalError } from '../_shared/http.ts'
 import { currencyBRL } from '../_shared/formatters.ts'
+import { cardLabel, cardLimitCopy } from '../_shared/notification-copy.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { deliverNotification } from '../_shared/deliver-notification.ts'
 import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
 import {
+  addCalendarDays,
   filterRangeEndIso,
   filterRangeStartIso,
   formatYmd,
   isoPrefixYmd,
   openInvoiceWindow,
-  type Ymd,
+  previousStatementCloseBefore,
   appTodayYmd,
   compareYmd,
+  sumCardExpensesInWindow,
+  type CardTxRow,
 } from '../_shared/credit-card-cycle.ts'
 
 const corsHeaders = {
@@ -38,42 +42,6 @@ type Body = {
 function pct(spend: number, limit: number): number {
   if (!limit) return 0
   return (spend / limit) * 100
-}
-
-type TxRow = {
-  amount: string | number
-  type: string
-  date: string
-  payment_method: string | null
-  payment_credit_card_id: string | null
-  category_id: string | null
-}
-
-function sumInOpenWindow(
-  rows: TxRow[],
-  cardId: string,
-  win: { start: Ymd; end: Ymd },
-  categoryId: string | null | undefined
-): number {
-  const startK = formatYmd(win.start)
-  const endK = formatYmd(win.end)
-  let sum = 0
-  for (const t of rows) {
-    if (t.type !== 'expense') continue
-    if (t.payment_method !== 'credit_card') continue
-    if (t.payment_credit_card_id !== cardId) continue
-    const ymd = isoPrefixYmd(t.date)
-    if (!ymd) continue
-    const k = formatYmd(ymd)
-    if (k < startK || k > endK) continue
-    if (categoryId !== undefined) {
-      const tid = t.category_id ?? null
-      const want = categoryId ?? null
-      if (tid !== want) continue
-    }
-    sum += Number(t.amount || 0)
-  }
-  return sum
 }
 
 async function tryClaimDedupe(
@@ -183,6 +151,23 @@ Deno.serve(async (req: Request) => {
   }
   const periodKey = formatYmd(openWin.end)
 
+  // A fatura que fechou e ainda não foi paga também ocupa o limite. Só a última:
+  // é a única que o app oferece para marcar como paga (a conta a pagar das
+  // Contas), e contar as mais antigas acusaria limite de quem nunca as marcou.
+  const lastClose = addCalendarDays(openWin.start, -1)
+  const lastClosedWin = {
+    start: addCalendarDays(previousStatementCloseBefore(lastClose, closingDay), 1),
+    end: lastClose,
+  }
+  const { data: paidRow, error: paidErr } = await supabaseAdmin
+    .from('credit_card_invoice_payments')
+    .select('id')
+    .eq('workspace_id', workspaceId)
+    .eq('credit_card_id', cardId)
+    .eq('statement_close_date', formatYmd(lastClose))
+    .maybeSingle()
+  if (paidErr) return json(500, { error: internalError('evaluate-credit-card-alerts', paidErr) })
+
   const { data: txRows, error: txErr } = await supabaseAdmin
     .from('transactions')
     .select('amount,type,date,payment_method,payment_credit_card_id,category_id')
@@ -190,13 +175,13 @@ Deno.serve(async (req: Request) => {
     .eq('payment_credit_card_id', cardId)
     .eq('type', 'expense')
     .eq('payment_method', 'credit_card')
-    .gte('date', filterRangeStartIso(openWin.start))
+    .gte('date', filterRangeStartIso(lastClosedWin.start))
     .lte('date', filterRangeEndIso(openWin.end))
 
   if (txErr) return json(500, { error: internalError('evaluate-credit-card-alerts', txErr) })
 
-  const rows = (txRows ?? []) as TxRow[]
-  const cardLabel = `${card.name} · ${card.last_four}`
+  const rows = (txRows ?? []) as CardTxRow[]
+  const label = cardLabel(card.name, card.last_four)
   const href = `/credit-cards/${encodeURIComponent(cardId)}`
 
   const results: Record<string, unknown> = {}
@@ -286,40 +271,19 @@ Deno.serve(async (req: Request) => {
   // —— Overall limit ——
   const limitNum = card.credit_limit != null ? Number(card.credit_limit) : 0
   if (limitNum > 0) {
-    const spendTotal = sumInOpenWindow(rows, cardId, openWin, undefined)
+    // As parcelas futuras ficam de fora: o banco não as reserva como gasto.
+    const spendTotal =
+      sumCardExpensesInWindow(rows, cardId, openWin, undefined) +
+      (paidRow ? 0 : sumCardExpensesInWindow(rows, cardId, lastClosedWin, undefined))
     const p = pct(spendTotal, limitNum)
     const hitOver = spendTotal > limitNum
     const hit100 = spendTotal >= limitNum && !hitOver
     const hit80 = spendTotal >= limitNum * 0.8 && spendTotal < limitNum
 
-    const tiers: Array<{
-      key: '80' | '100' | 'over'
-      hit: boolean
-      kind: string
-      title: string
-      body: string
-    }> = [
-      {
-        key: '80',
-        hit: hit80,
-        kind: 'cc_limit_warning',
-        title: 'Cartão: perto do limite',
-        body: `O cartão ${cardLabel} está com cerca de ${p.toFixed(0)}% do limite usado nesta fatura aberta (${currencyBRL(spendTotal)} de ${currencyBRL(limitNum)}).`,
-      },
-      {
-        key: '100',
-        hit: hit100,
-        kind: 'cc_limit_reached',
-        title: 'Cartão: limite atingido',
-        body: `O cartão ${cardLabel} atingiu o limite nesta fatura aberta (${currencyBRL(spendTotal)} de ${currencyBRL(limitNum)}).`,
-      },
-      {
-        key: 'over',
-        hit: hitOver,
-        kind: 'cc_limit_exceeded',
-        title: 'Cartão: limite ultrapassado',
-        body: `O cartão ${cardLabel} ultrapassou o limite nesta fatura aberta (${currencyBRL(spendTotal)} de ${currencyBRL(limitNum)}).`,
-      },
+    const tiers: Array<{ key: '80' | '100' | 'over'; hit: boolean; kind: string }> = [
+      { key: '80', hit: hit80, kind: 'cc_limit_warning' },
+      { key: '100', hit: hit100, kind: 'cc_limit_reached' },
+      { key: 'over', hit: hitOver, kind: 'cc_limit_exceeded' },
     ]
 
     let chosen = null as (typeof tiers)[number] | null
@@ -331,10 +295,11 @@ Deno.serve(async (req: Request) => {
     }
 
     if (chosen) {
+      const copy = cardLimitCopy({ cartao: label, usado: spendTotal, limite: limitNum })
       results.limit = await notifyMembers(
         `limit:${chosen.key}:${periodKey}`,
-        chosen.title,
-        chosen.body,
+        copy.title,
+        copy.body,
         {
           kind: chosen.kind,
           credit_card_id: cardId,
@@ -377,12 +342,12 @@ Deno.serve(async (req: Request) => {
     if (!threshold || threshold <= 0) continue
 
     const catKey = alert.category_id ?? null
-    const spendCat = sumInOpenWindow(rows, cardId, openWin, catKey)
+    const spendCat = sumCardExpensesInWindow(rows, cardId, openWin, catKey)
     if (spendCat < threshold) continue
 
     const catName = catKey ? (categoryNames.get(catKey) ?? 'Categoria') : 'Sem categoria'
     const title = 'Cartão: alerta por categoria'
-    const body = `No cartão ${cardLabel}, a categoria "${catName}" passou do valor definido (${currencyBRL(spendCat)} ≥ ${currencyBRL(threshold)}) na fatura aberta.`
+    const body = `No cartão ${label}, a categoria "${catName}" passou do valor definido (${currencyBRL(spendCat)} ≥ ${currencyBRL(threshold)}) na fatura aberta.`
 
     const delivered = await notifyMembers(`cat:${alert.id}:${periodKey}`, title, body, {
       kind: 'cc_category_limit_crossed',

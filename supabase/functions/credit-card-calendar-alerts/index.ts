@@ -7,14 +7,25 @@ import {
   loadWorkspacePrefsMap,
 } from '../_shared/deliver-notification.ts'
 import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
+import { cardLabel, ddmm, invoiceCopy } from '../_shared/notification-copy.ts'
+import { withinReminderWindow } from '../_shared/notification-schedule.ts'
 import {
+  addCalendarDays,
   compareYmd,
   diffCalendarDays,
+  estimatedDueYmdForClose,
+  filterRangeEndIso,
+  filterRangeStartIso,
   formatYmd,
   nextCloseAfter,
-  nextPaymentDueOnOrAfter,
+  nextPaymentDueCycleOnOrAfter,
+  previousStatementCloseBefore,
   statementCloseOnOrBefore,
+  sumCardExpensesInWindow,
   appTodayYmd,
+  type CardTxRow,
+  type OpenWindow,
+  type Ymd,
 } from '../_shared/credit-card-cycle.ts'
 
 // Server-to-server only (cron/scheduler): no CORS — browsers have no business
@@ -74,20 +85,31 @@ type CardRow = {
   is_active: boolean
 }
 
+type InvoiceEvent = 'closed' | 'closing_soon' | 'due_soon' | 'due_today'
+
 type CalEvent = {
   cardId: string
   href: string
   dedupeKey: string
   kind: string
-  title: string
-  body: string
+  evento: InvoiceEvent
+  /** A fatura de que o aviso fala: o valor é a soma dela. */
+  win: OpenWindow
+  /** Data mostrada no corpo, em dd/mm. */
+  data: string
+  dias?: number
+  /** Só nos de vencimento: a fatura paga não avisa. */
+  checkPaid: boolean
 }
 
-function ddmm(ymd: string): string {
-  return ymd.split('-').reverse().join('/')
+type ReadyEvent = CalEvent & { title: string; body: string }
+
+/** A fatura que fecha em `close`: do dia seguinte ao fechamento anterior até ele. */
+function invoiceWindowEndingAt(close: Ymd, closingDay: number): OpenWindow {
+  return { start: addCalendarDays(previousStatementCloseBefore(close, closingDay), 1), end: close }
 }
 
-function buildCardEvents(card: CardRow, today: ReturnType<typeof appTodayYmd>): CalEvent[] {
+function buildCardEvents(card: CardRow, today: Ymd): CalEvent[] {
   const closingDay = Number(card.closing_day)
   const dueDay = Number(card.due_day)
   if (!closingDay || closingDay < 1 || closingDay > 31 || !dueDay || dueDay < 1 || dueDay > 31) {
@@ -96,63 +118,126 @@ function buildCardEvents(card: CardRow, today: ReturnType<typeof appTodayYmd>): 
 
   const lastClose = statementCloseOnOrBefore(today, closingDay)
   const nextClose = nextCloseAfter(lastClose, closingDay)
-  const cardLabel = `${card.name} · ${card.last_four}`
   const href = `/credit-cards/${encodeURIComponent(card.id)}`
+  const base = { cardId: card.id, href }
   const events: CalEvent[] = []
 
-  if (compareYmd(today, lastClose) === 0) {
+  // "Fechou" sai no dia seguinte ao fechamento, com o total final: no próprio
+  // dia a fatura ainda recebe compras. Tolera um dia perdido, deduplicado pelo ciclo.
+  const daysSinceClose = diffCalendarDays(lastClose, today)
+  if (daysSinceClose === 1 || daysSinceClose === 2) {
     events.push({
-      cardId: card.id,
-      href,
-      dedupeKey: `cal:closed:${formatYmd(today)}:c:${card.id}`,
+      ...base,
+      dedupeKey: `cal:closed:${formatYmd(lastClose)}:c:${card.id}`,
       kind: 'cc_invoice_closed',
-      title: 'Fatura fechou',
-      body: `A fatura do cartão ${cardLabel} fecha hoje (${ddmm(formatYmd(today))}).`,
+      evento: 'closed',
+      win: invoiceWindowEndingAt(lastClose, closingDay),
+      data: ddmm(formatYmd(estimatedDueYmdForClose(lastClose, dueDay))),
+      checkPaid: false,
     })
   }
 
   const daysToClose = diffCalendarDays(today, nextClose)
-  if (daysToClose === 3) {
+  if (withinReminderWindow(daysToClose, 3)) {
     events.push({
-      cardId: card.id,
-      href,
+      ...base,
       dedupeKey: `cal:closing_soon:${formatYmd(nextClose)}:c:${card.id}`,
       kind: 'cc_invoice_closing_soon',
-      title: 'Fatura fecha em breve',
-      body: `Faltam 3 dias para o fechamento da fatura do cartão ${cardLabel} (fechamento em ${ddmm(formatYmd(nextClose))}).`,
+      evento: 'closing_soon',
+      win: { start: addCalendarDays(lastClose, 1), end: nextClose },
+      data: ddmm(formatYmd(nextClose)),
+      dias: daysToClose,
+      checkPaid: false,
     })
   }
 
-  let dueNext: ReturnType<typeof nextPaymentDueOnOrAfter>
+  let dueCycle: { close: Ymd; due: Ymd }
   try {
-    dueNext = nextPaymentDueOnOrAfter(today, closingDay, dueDay)
+    dueCycle = nextPaymentDueCycleOnOrAfter(today, closingDay, dueDay)
   } catch {
     return events
   }
 
-  if (diffCalendarDays(today, dueNext) === 3) {
+  const daysToDue = diffCalendarDays(today, dueCycle.due)
+  const due = {
+    ...base,
+    win: invoiceWindowEndingAt(dueCycle.close, closingDay),
+    data: ddmm(formatYmd(dueCycle.due)),
+    checkPaid: true,
+  }
+  if (withinReminderWindow(daysToDue, 3)) {
     events.push({
-      cardId: card.id,
-      href,
-      dedupeKey: `cal:due_soon:${formatYmd(dueNext)}:c:${card.id}`,
+      ...due,
+      dedupeKey: `cal:due_soon:${formatYmd(dueCycle.due)}:c:${card.id}`,
       kind: 'cc_payment_due_soon',
-      title: 'Vencimento da fatura se aproxima',
-      body: `Faltam 3 dias para o vencimento estimado da fatura do cartão ${cardLabel} (${ddmm(formatYmd(dueNext))}).`,
+      evento: 'due_soon',
+      dias: daysToDue,
     })
   }
-
-  if (compareYmd(today, dueNext) === 0) {
+  if (daysToDue === 0) {
     events.push({
-      cardId: card.id,
-      href,
-      dedupeKey: `cal:due_today:${formatYmd(dueNext)}:c:${card.id}`,
+      ...due,
+      dedupeKey: `cal:due_today:${formatYmd(dueCycle.due)}:c:${card.id}`,
       kind: 'cc_payment_due_today',
-      title: 'Vencimento da fatura hoje',
-      body: `Hoje é o vencimento estimado da fatura do cartão ${cardLabel}.`,
+      evento: 'due_today',
     })
   }
 
   return events
+}
+
+/**
+ * Põe valor e texto nos eventos de um cartão: soma as faturas, descarta a
+ * zerada (`invoiceCopy` devolve null) e a de vencimento já paga.
+ */
+async function resolveCardEvents(
+  admin: SupabaseAdminClient,
+  workspaceId: string,
+  label: string,
+  events: CalEvent[]
+): Promise<ReadyEvent[]> {
+  const cardId = events[0].cardId
+  const from = events.reduce((m, e) => (compareYmd(e.win.start, m) < 0 ? e.win.start : m), events[0].win.start)
+  const to = events.reduce((m, e) => (compareYmd(e.win.end, m) > 0 ? e.win.end : m), events[0].win.end)
+
+  const { data: txRows, error: txErr } = await admin
+    .from('transactions')
+    .select('amount,type,date,payment_method,payment_credit_card_id,category_id')
+    .eq('workspace_id', workspaceId)
+    .eq('payment_credit_card_id', cardId)
+    .eq('type', 'expense')
+    .eq('payment_method', 'credit_card')
+    .gte('date', filterRangeStartIso(from))
+    .lte('date', filterRangeEndIso(to))
+  if (txErr) throw new Error(txErr.message)
+  const rows = (txRows ?? []) as CardTxRow[]
+
+  const closes = [...new Set(events.filter((e) => e.checkPaid).map((e) => formatYmd(e.win.end)))]
+  const paid = new Set<string>()
+  if (closes.length > 0) {
+    const { data: paidRows, error: pErr } = await admin
+      .from('credit_card_invoice_payments')
+      .select('statement_close_date')
+      .eq('workspace_id', workspaceId)
+      .eq('credit_card_id', cardId)
+      .in('statement_close_date', closes)
+    if (pErr) throw new Error(pErr.message)
+    for (const r of paidRows ?? []) paid.add(String(r.statement_close_date).slice(0, 10))
+  }
+
+  const ready: ReadyEvent[] = []
+  for (const ev of events) {
+    if (ev.checkPaid && paid.has(formatYmd(ev.win.end))) continue
+    const copy = invoiceCopy({
+      cartao: label,
+      evento: ev.evento,
+      valor: sumCardExpensesInWindow(rows, cardId, ev.win),
+      data: ev.data,
+      dias: ev.dias,
+    })
+    if (copy) ready.push({ ...ev, ...copy })
+  }
+  return ready
 }
 
 Deno.serve(async (req: Request) => {
@@ -171,8 +256,9 @@ Deno.serve(async (req: Request) => {
 
   const today = appTodayYmd()
 
-  // 1. Paginate the global active-card scan and compute events per workspace.
-  const eventsByWorkspace = new Map<string, CalEvent[]>()
+  // 1. Paginate the global active-card scan and compute events per workspace
+  //    (só as datas; o valor de cada fatura sai no passo 2, por cartão).
+  const eventsByWorkspace = new Map<string, Array<{ label: string; events: CalEvent[] }>>()
   let cardsScanned = 0
 
   for (let page = 0; ; page++) {
@@ -193,7 +279,7 @@ Deno.serve(async (req: Request) => {
       const events = buildCardEvents(card, today)
       if (events.length === 0) continue
       const list = eventsByWorkspace.get(card.workspace_id) ?? []
-      list.push(...events)
+      list.push({ label: cardLabel(card.name, card.last_four), events })
       eventsByWorkspace.set(card.workspace_id, list)
     }
 
@@ -206,8 +292,14 @@ Deno.serve(async (req: Request) => {
   let notified = 0
   const errors: Array<Record<string, unknown>> = []
 
-  await forEachLimit(eventsByWorkspace, FAN_OUT_CONCURRENCY, async ([workspaceId, events]) => {
+  await forEachLimit(eventsByWorkspace, FAN_OUT_CONCURRENCY, async ([workspaceId, cards]) => {
     try {
+      const events: ReadyEvent[] = []
+      for (const c of cards) {
+        events.push(...(await resolveCardEvents(admin, workspaceId, c.label, c.events)))
+      }
+      if (events.length === 0) return
+
       const { data: memberRows, error: mErr } = await admin
         .from('workspace_members')
         .select('user_id')
@@ -250,6 +342,9 @@ Deno.serve(async (req: Request) => {
               body: ev.body,
               metadata: { kind: ev.kind, credit_card_id: ev.cardId, href: ev.href },
               prefs,
+              // Só o `notify_credit_card_calendar` (conferido acima) vale aqui: o
+              // interruptor de limite e categorias não desliga o calendário.
+              skipTypePref: true,
             })
 
             if (!delivered.ok) {

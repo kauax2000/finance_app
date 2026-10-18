@@ -328,19 +328,9 @@ export function NotificationPreferences() {
                                         disabled={disabled}
                                     />
                                 </li>
-                                <li>
-                                    <FormSwitch
-                                        variant="card"
-                                        id="pref-promo"
-                                        label="Promoções e ofertas"
-                                        description="Novidades e conteúdo comercial"
-                                        checked={!!prefs?.notify_promotions}
-                                        onCheckedChange={(checked) =>
-                                            void patch({ notify_promotions: checked })
-                                        }
-                                        disabled={disabled}
-                                    />
-                                </li>
+                                {/* "Promoções e ofertas" saiu: nada envia promoção. O
+                                    `notify_promotions` continua no banco e volta aqui
+                                    junto com o primeiro produtor. */}
                             </ul>
                         </>
                     ) : null}

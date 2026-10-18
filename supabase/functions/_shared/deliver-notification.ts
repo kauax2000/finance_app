@@ -21,6 +21,12 @@ export type DeliverNotificationInput = {
   allowTransactionType?: boolean
   /** Pre-loaded prefs (batch fan-out) — skips the per-recipient prefs query. */
   prefs?: WorkspaceNotificationPrefs
+  /**
+   * Não reaplica o interruptor do tipo: o calendário do cartão já conferiu o
+   * `notify_credit_card_calendar`, e o `notify_credit_cards` (limite e
+   * categorias) não pode desligá-lo.
+   */
+  skipTypePref?: boolean
 }
 
 export type DeliverNotificationResult = {
@@ -109,6 +115,7 @@ export async function deliverNotification(
     body,
     metadata = {},
     allowTransactionType = true,
+    skipTypePref = false,
   } = input
 
   if (type === 'transaction' && !allowTransactionType) {
@@ -118,7 +125,7 @@ export async function deliverNotification(
   const prefs =
     input.prefs ?? (await loadNotificationPrefs(supabaseAdmin, userId, workspaceId))
 
-  if (!isTypeAllowedForPrefs(type, prefs)) {
+  if (!skipTypePref && !isTypeAllowedForPrefs(type, prefs)) {
     return { ok: true, skipped: 'type_disabled', in_app: false, push: { sent: 0, failed: 0 }, email: false }
   }
 
