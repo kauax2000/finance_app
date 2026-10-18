@@ -57,12 +57,15 @@ const sheetContentVariants = cva(
     "group/dialog-content fixed z-(--z-sheet) flex flex-col gap-0 overflow-hidden",
     "bg-clip-padding text-sm text-foreground shadow-lg",
     modalSurfaceClassName,
-    // Entra na mola e sai curta: desliza da borda inteira (de fora da tela, a
+    // Entra na mola e sai macia: desliza da borda inteira (de fora da tela, a
     // própria largura) e assenta com o quique de 3,8%; fechar volta à mesma borda,
-    // sem quique. Com movimento reduzido o bloco global corta a animação.
+    // sem quique, em 380ms de `--ease-in-out` — parte devagar, acelera e pousa fora
+    // da tela, junto com o véu. Os 200ms de `--ease-out` andavam 263px e apagavam
+    // 69% nos primeiros 30ms: lia como um corte. Com movimento reduzido o bloco
+    // global corta a animação.
     "will-change-transform motion-reduce:will-change-auto",
     "data-open:animate-in data-open:fade-in-0 data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring)",
-    "data-closed:animate-out data-closed:fade-out-0 data-closed:animation-duration-[200ms] data-closed:ease-(--ease-out)",
+    "data-closed:animate-out data-closed:fade-out-0 data-closed:animation-duration-380 data-closed:ease-(--ease-in-out)",
     // O conteúdo sobe em cascata, logo atrás do deslize.
     "sheet-reveal",
     // Folha sobre folha: coberta por outra, ela recua para o fundo e volta quando a de cima fecha.
@@ -316,7 +319,8 @@ function SheetOverlay({
       className={cn(
         // Só o painel anima o véu por keyframe; na gaveta o vaul já anima o próprio véu e o acompanha no arraste.
         overlayClassName("sheet", surface === "panel"),
-        surface === "panel" && "ease-in-out",
+        // O véu fecha no mesmo tempo da folha, e os dois somem juntos.
+        surface === "panel" && "ease-in-out data-closed:animation-duration-380",
         className
       )}
       {...props}

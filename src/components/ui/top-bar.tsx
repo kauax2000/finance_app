@@ -497,6 +497,10 @@ function TopBarAction({
 }) {
   const temContagem = typeof count === "number" && count > 0
   const nome = temContagem ? label + ", " + (countLabel ?? count) : label
+  // O último número fica desenhado enquanto a bolha esvazia: ao zerar, ela sai
+  // com o mesmo número que tinha.
+  const [mostrado, setMostrado] = React.useState(temContagem ? count : 0)
+  if (temContagem && count !== mostrado) setMostrado(count)
   const botao = (
     <Button
       variant="tertiary"
@@ -512,16 +516,23 @@ function TopBarAction({
       {...props}
     >
       {children}
-      {temContagem ? (
+      {mostrado > 0 ? (
         <span
           aria-hidden
           data-slot="top-bar-action-count"
+          data-state={temContagem ? "open" : "closed"}
           className={cn(
-            "nums absolute top-0 right-0 z-10 flex h-4 min-w-4 translate-x-1/3 -translate-y-1/3 items-center justify-center rounded-full px-1 text-2xs leading-none font-semibold ring-2 ring-background",
-            tagChipUnreadCount
+            "nums pointer-events-none absolute top-0 right-0 z-10 flex h-4 min-w-4 translate-x-1/3 -translate-y-1/3 items-center justify-center rounded-full px-1 text-2xs leading-none font-semibold ring-2 ring-background",
+            tagChipUnreadCount,
+            // O gesto da bolha da aba "Não lidas": enche na mola ao chegar (também
+            // ao montar, por `@starting-style`) e, ao zerar, toma impulso e
+            // esvazia, com o azul apagando na segunda metade.
+            "transition-[scale,opacity] duration-(--duration-spring) ease-(--ease-spring) starting:scale-30 starting:opacity-0",
+            "data-[state=closed]:scale-30 data-[state=closed]:opacity-0",
+            "data-[state=closed]:[transition:scale_320ms_cubic-bezier(0.5,-0.45,0.75,0.2),opacity_160ms_var(--ease-in-out)_160ms]"
           )}
         >
-          {count > 99 ? "99+" : count}
+          {mostrado > 99 ? "99+" : mostrado}
         </span>
       ) : null}
     </Button>

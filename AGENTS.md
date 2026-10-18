@@ -1070,7 +1070,8 @@ declaração de `background-color` no trilho).
 
 - **`Dialog`**: `size` (`sm` 384 | **`md` 448** | `lg` 512 | `xl` 576 |
   `full`) e `layout` (`auto` | `fixed`, com o corpo em `DialogBody`). **Não
-  escreva `min-h-0 flex-1 overflow-y-auto` à mão.**
+  escreva `min-h-0 flex-1 overflow-y-auto` à mão.** A rampa do `DialogBody`
+  é `--dialog-body-fade-h` (24px; o painel de notificações declara 48).
   - **`<Dialog surface="auto">`** é diálogo no desktop e gaveta abaixo de
     768px. **Não escreva `if (isMobile)` trocando `Dialog` por `Sheet`.**
   - `pending` trava Esc, véu, ×, `DialogClose` e arraste; `dirty` +

@@ -37,10 +37,10 @@ describe("as versões do Sheet", () => {
     expect(c).not.toContain("gap-4")
   })
 
-  it("entra na mola, sai curta, e o conteúdo sobe em cascata", () => {
+  it("entra na mola, sai macia, e o conteúdo sobe em cascata", () => {
     const c = sheetContentVariants({})
     expect(c).toContain("data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring)")
-    expect(c).toContain("data-closed:animation-duration-[200ms]")
+    expect(c).toContain("data-closed:animation-duration-380 data-closed:ease-(--ease-in-out)")
     expect(c).toContain("sheet-reveal")
     expect(CSS).toMatch(/@utility sheet-reveal \{[\s\S]*?animation: rise 220ms var\(--ease-out\) 80ms both;\s*--rise-distance: 3px;/)
     // O × e a costura de largura não sobem: são da superfície.

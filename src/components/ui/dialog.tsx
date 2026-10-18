@@ -650,7 +650,10 @@ function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
         // quadrática (opacidade = distância da borda ao quadrado): bem fraca perto
         // da borda e cheia no fim da faixa. Com a sigmoide da casa, o fio de um
         // campo a 10px da borda ainda aparecia a ~30% e lia como uma divisória.
-        "[--scroll-fade-floor:0] [--scroll-fade-h:--spacing(6)]",
+        // A faixa é `--dialog-body-fade-h` (24px por padrão): quem precisa de rampa
+        // maior (o painel de notificações, com o corpo sob as abas) a declara num
+        // ancestral.
+        "[--scroll-fade-floor:0] [--scroll-fade-h:var(--dialog-body-fade-h,--spacing(6))]",
         dialogBodyRampClassName,
         className
       )}

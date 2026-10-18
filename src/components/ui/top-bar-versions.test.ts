@@ -58,7 +58,7 @@ describe("as peças", () => {
 
   it("a contagem da ação entra no nome, e o número fica escondido do leitor", () => {
     expect(CODIGO).toContain('const nome = temContagem ? label + ", " + (countLabel ?? count) : label')
-    expect(CODIGO).toContain('{count > 99 ? "99+" : count}')
+    expect(CODIGO).toContain('{mostrado > 99 ? "99+" : mostrado}')
   })
 
   it("a busca é ícone e pílula, com as quebras por extenso", () => {

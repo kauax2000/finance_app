@@ -27189,3 +27189,81 @@ ele acelera, com o azul apagando na segunda metade. O `menu-morph` foi tentado e
 recusado pelo dono: numa bolha de 16 o esticão na altura lê estranho. O ⋯ e o ×
 do cabeçalho do painel subiram a 32 (`icon-md`), com `-my-0.5` para seguir no
 centro do título.
+
+Depois, a pedido do dono, o número do `TopBarAction` ganhou o mesmo gesto: a
+bolha fica montada com `data-state` (`open` | `closed`) e o último número
+desenhado enquanto esvazia, enche na mola ao chegar (ao montar, por
+`starting:`) e, ao zerar, toma o mesmo impulso. Medido na página da `TopBar`:
+1,10 aos 112ms e some aos 335ms; volta com 1,025 aos 306ms e assenta aos 550ms.
+
+### Rodada 314 — a folha sai macia, junto com o véu
+
+O dono achou a saída do `Sheet` dura perto da entrada na mola. Medido no painel
+de notificações: os 200ms de `--ease-out` andavam 263px e apagavam 69% nos
+primeiros 30ms, e a folha sumia aos ~100ms enquanto o véu (300ms) ficava até os
+265. A saída passa a 380ms de `--ease-in-out`, e o véu do painel fecha no mesmo
+tempo: parte devagar (5px aos 76ms), acelera no meio e pousa fora da tela, com
+folha e véu apagando juntos até os 388ms. `sheet-versions.test.ts` tranca.
+
+### Rodada 315 — o corpo do diálogo pode borrar junto da dissolução
+
+O painel de notificações ganhou a dissolução do formulário de despesa: com as
+abas, o corpo sobe por trás do trilho (`--scroll-fade-band-h` 36, 40 no dedo,
+o mesmo sangramento do `transaction-form-surface`), e os rótulos de dia voltam a
+rolar com o grupo — presos, a faixa os apagaria. Depois o dono pediu um borrão
+junto da dissolução. As camadas do `ScrollArea blur` não podem morar no
+elemento mascarado, e `scroll-fade.test.ts` (16 e 17) proibia montá-las fora do
+`scroll-area.tsx` e dar casca ao corpo do diálogo, pelo risco da aresta virar
+uma linha de tom dentro de um casco que já borra. `DialogBody blur` é a
+exceção nomeada e opt-in: uma casca `relative` com as camadas
+(`ScrollFadeBlurLayers`, agora exportada) e o `useScrollFade({ shell: blur })`
+escrevendo as variáveis da rolagem nela. A faixa fica acima da casca, onde a
+máscara já esconde tudo, e o borrão mora só na rampa de 24px. Medido no
+painel: as três camadas (2, 4 e 6px) com 0px parado e 24px rolado, começando
+na base do trilho, sem linha de tom visível.
+
+Na mesma rodada a rampa do corpo virou variável: `--dialog-body-fade-h` (24px
+por padrão), lida pelo corpo e pela casca do borrão. Com 24 o fio entre duas
+linhas e o texto ainda cruzavam a base das abas nítidos, como uma quebra do
+cabeçalho; o painel de notificações a declara em 48 no `SheetContent`, e as
+três camadas de borrão crescem até 48 junto.
+
+### Rodada 316 — todo corpo de diálogo borra junto da dissolução
+
+O teste A/B do cabeçalho (B: a borda de borrão do `TopBar edge`, com o
+cabeçalho grudado dentro do rolável) foi decidido pela A, e o B saiu sem deixar
+rastro. Em seguida o dono pediu o mesmo borrão em todos os diálogos: o `blur`
+do `DialogBody` passa a ligado por padrão (`blur={false}` desliga), com a rampa
+de 24px; as notificações seguem com 48. Medido no formulário de despesa numa
+janela de 460px de altura: as camadas de cima e de baixo a 24px rolando, 0 em
+cima parado, e o primeiro campo no mesmo lugar (114px). Sem rolagem as camadas
+somem (`data-scroll-fade="off"`). Junto, um conserto: a gaveta do telefone
+procura o filho do meio entre os que não são cromagem, e a casca
+`dialog-body-shell` entrava como meio (ganharia rolagem e máscara por cima do
+corpo); ela agora é cromagem. Medido a 375px no painel de notificações.
+
+O dono voltou atrás no mesmo dia: os diálogos ficam como eram, só com a
+dissolução, e o `blur` volta a opt-in (só o painel de notificações o liga). O
+conserto da gaveta (a casca é cromagem) fica, porque as notificações no
+telefone usam a casca.
+
+Por fim o dono tirou o borrão também do painel de notificações. Sem ninguém o
+usar, o `DialogBody blur` saiu inteiro: a casca, a exportação de
+`ScrollFadeBlurLayers`, a exceção em `scroll-fade.test.ts` e a entrada da casca
+na gaveta. Fica a rampa variável (`--dialog-body-fade-h`, 48 nas notificações)
+e o corpo das notificações por trás das abas.
+
+Depois o dono pediu os dias fixos no topo. Preso dentro da lista, o rótulo
+seria apagado pela dissolução, então o dia preso mora no cabeçalho, logo
+abaixo das abas (8px + o rótulo de 28), e a lista sobe por trás das abas e do
+dia; a dissolução nasce na base das abas, com 80px, e atravessa o dia. A troca
+é um empurrão: quando o rótulo do próximo dia chega à base do lugar, o preso o
+assume — o novo sobe dos 28px onde estava o da lista, na `MOLA`, saindo de 2px
+de desfoque, e o velho sai 8px para cima em `SAIDA` — e o rótulo entregue some
+da lista. Duas tentativas recusadas: trocar quando o rótulo chegava à base
+deixava o mesmo dia duas vezes à vista; esvaziar o lugar até o rótulo da lista
+subir deixava só um rótulo meio apagado. Medido de 7 em 7px nos dois sentidos:
+sempre um dia legível no lugar e nunca dois iguais. No mesmo pedido, o
+cabeçalho com as abas ganhou `relative z-10`: a entrada em cascata o faz
+contexto de empilhamento, e o clique em "Todas" caía no link da linha que
+passava por baixo.
