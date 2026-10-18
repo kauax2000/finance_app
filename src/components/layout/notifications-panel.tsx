@@ -2,12 +2,14 @@
 
 import Link from "next/link"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { AnimatePresence, motion, useReducedMotion, type Variants } from "motion/react"
 import { CheckIcon, Cog6ToothIcon, EllipsisHorizontalIcon, TrashIcon } from "@heroicons/react/16/solid"
 
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { Alert, AlertAction, AlertActions, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { MOLA, SAIDA } from "@/lib/spring"
 import { Button } from "@/components/ui/button"
 import {
     DialogBody,
@@ -59,6 +61,30 @@ const LIMITE_DA_LISTA = 100
 
 type Filtro = "todas" | "nao-lidas"
 
+/** A altura do `ItemGroupLabel` (12px de recuo + a linha de 16): o lugar do dia preso. */
+const ROTULO_DO_DIA_PX = 28
+
+// A troca do dia preso é um empurrão: o rótulo da lista chega à base do lugar
+// e o preso o assume. Descendo (`sentido` 1), o novo sobe dos 28px onde estava o
+// rótulo da lista, na mola, e o velho sai 8px para cima, curto; voltando (-1), o
+// novo desce 8px e o velho volta 28px para a lista. Desfoque de 2px na troca,
+// como a legenda do calendário ao trocar de mês.
+const TROCA_DO_DIA: Variants = {
+    entra: (sentido: number) => ({ opacity: 0, y: sentido > 0 ? ROTULO_DO_DIA_PX : -8, filter: "blur(2px)" }),
+    parado: {
+        opacity: 1,
+        y: 0,
+        filter: "blur(0px)",
+        transition: { y: MOLA, opacity: { duration: 0.2, ease: "easeOut" }, filter: { duration: 0.2, ease: "easeOut" } },
+    },
+    sai: (sentido: number) => ({
+        opacity: 0,
+        y: sentido > 0 ? -8 : ROTULO_DO_DIA_PX,
+        filter: "blur(2px)",
+        transition: SAIDA,
+    }),
+}
+
 type NotificationsPanelProps = {
     isActive: boolean
 }
@@ -73,6 +99,9 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
     const [notifications, setNotifications] = useState<AppNotification[] | null>(null)
     const [error, setError] = useState(false)
     const [filtro, setFiltro] = useState<Filtro>("nao-lidas")
+    const [diaAtual, setDiaAtual] = useState<string | null>(null)
+    const [sentido, setSentido] = useState(1)
+    const movimentoReduzido = useReducedMotion()
     // O "Tentar de novo" em voo: o botão espera (a falha nova volta ao Alert).
     const [tentando, setTentando] = useState(false)
     const userId = user?.id
@@ -190,11 +219,38 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
     const visiveis = filtro === "nao-lidas" ? lista.filter((n) => !n.read_at) : lista
     const semConta = !authLoading && !workspaceLoading && (!user || !currentWorkspaceId)
     const carregando = !semConta && !error && notifications === null
+    // Com as abas, a lista sobe por trás do trilho e se dissolve ali, como o
+    // formulário de despesa: o trilho é a faixa da dissolução (36 no mouse, 40
+    // no dedo), e o respiro de cima cresce na mesma medida.
+    const comTrilho = lista.length > 0
+    // O dia fica preso logo abaixo das abas, fora da lista: preso dentro dela, a
+    // dissolução o apagaria. O rótulo do dia na lista sobe e se dissolve por trás
+    // dele, e o de cima troca para o dia que acabou de passar. A dissolução
+    // começa nas abas e atravessa o dia (ver o corpo, abaixo).
+    const grupos = groupByLocalDay(visiveis, (n) => n.created_at)
+    const comDia = comTrilho && grupos.length > 0
+    const indiceDoDia = Math.max(0, grupos.findIndex((g) => g.chave === diaAtual))
+    const diaPreso = grupos[indiceDoDia]
+    // O dia preso é o do último grupo cujo rótulo já chegou à base do lugar dele;
+    // o rótulo desse grupo na lista some (foi entregue ao preso), e nunca há dois
+    // dias iguais à vista nem um lugar vazio.
+    const acompanharDia = (e: React.UIEvent<HTMLDivElement>) => {
+        const corpo = e.currentTarget
+        const base = corpo.getBoundingClientRect().top + parseFloat(getComputedStyle(corpo).paddingTop) + 1
+        let atual: string | null = null
+        for (const g of corpo.querySelectorAll<HTMLElement>("[data-dia]")) {
+            if (g.getBoundingClientRect().top > base) break
+            atual = g.dataset.dia ?? null
+        }
+        if (atual === diaAtual) return
+        const de = grupos.findIndex((g) => g.chave === (diaAtual ?? grupos[0]?.chave))
+        const para = grupos.findIndex((g) => g.chave === atual)
+        setSentido(para >= de ? 1 : -1)
+        setDiaAtual(atual)
+    }
 
-    return (
+    const cabecalho = (
         <>
-            {confirmDialog}
-            <DialogHeader>
                 <DialogHeaderRow
                     endAdornment={
                         <>
@@ -241,7 +297,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                     <Tabs
                         value={filtro}
                         onValueChange={(v) => setFiltro(v as Filtro)}
-                        className="mt-3"
+                        className="relative z-10 mt-3"
                     >
                         <TabsList aria-label="Filtrar notificações">
                             {/* A contagem é a pastilha da aba, na forma e na cor do número do sino (o círculo de 16), e some no zero. */}
@@ -277,11 +333,28 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                         </TabsList>
                     </Tabs>
                 ) : null}
-            </DialogHeader>
-
-            {/* `px-1`: o recuo de 12 da linha mais este dá os 16 do cabeçalho, e o
-                título da linha alinha com o do painel. */}
-            <DialogBody className="px-1 pt-0">
+                {comDia ? (
+                    // Altura fixa (8 + 28): o que sai vira absoluto, e o cabeçalho não muda.
+                    <div aria-hidden className="relative h-9 pt-2">
+                        {/* `popLayout`: o que sai vira absoluto e os dois se cruzam no mesmo lugar. */}
+                        <AnimatePresence initial={false} mode="popLayout" custom={sentido}>
+                            <motion.div
+                                key={diaPreso.chave}
+                                custom={sentido}
+                                variants={movimentoReduzido ? undefined : TROCA_DO_DIA}
+                                initial="entra"
+                                animate="parado"
+                                exit="sai"
+                            >
+                                <ItemGroupLabel className="px-0">{formatDayHeadingPtBr(diaPreso.data)}</ItemGroupLabel>
+                            </motion.div>
+                        </AnimatePresence>
+                    </div>
+                ) : null}
+        </>
+    )
+    const conteudo = (
+        <>
                 {semConta ? (
                     <NotificationsPanelEmpty variant={!user ? "no-auth" : "no-workspace"} />
                 ) : carregando ? (
@@ -319,9 +392,16 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                     </EmptyState>
                 ) : (
                     <>
-                        {groupByLocalDay(visiveis, (n) => n.created_at).map((grupo) => (
-                            <div key={grupo.chave}>
-                                <ItemGroupLabel sticky>
+                        {grupos.map((grupo, i) => (
+                            <div key={grupo.chave} data-dia={grupo.chave}>
+                                {/* O primeiro dia já está preso no cabeçalho; aqui fica para o leitor de tela. */}
+                                {/* Entregue ao preso, o rótulo some da lista; volta quando o grupo desce. */}
+                                <ItemGroupLabel
+                                    className={cn(
+                                        "transition-opacity duration-(--duration-fast) ease-(--ease-out)",
+                                        i === 0 ? "sr-only" : i <= indiceDoDia && "opacity-0"
+                                    )}
+                                >
                                     {formatDayHeadingPtBr(grupo.data)}
                                 </ItemGroupLabel>
                                 <ItemGroup variant="divided">
@@ -343,6 +423,38 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                         ) : null}
                     </>
                 )}
+        </>
+    )
+
+    return (
+        <>
+            {confirmDialog}
+            {/* Com a lista subindo por trás das abas, o cabeçalho inteiro fica por cima
+                dela: a entrada em cascata o faz contexto de empilhamento, e o `z-10` só das
+                abas não saía dele — o clique em "Todas" caía no link da linha embaixo. */}
+            <DialogHeader
+                className={cn(comTrilho && "relative z-10 group-data-[layout=fixed]/dialog-content:pb-0")}
+            >
+                {cabecalho}
+            </DialogHeader>
+            {/* `px-1`: o recuo de 12 da linha mais este dá os 16 do cabeçalho, e o
+                título da linha alinha com o do painel. */}
+            <DialogBody
+                onScroll={comDia ? acompanharDia : undefined}
+                className={cn(
+                    "px-1",
+                    comDia
+                        ? // A dissolução nasce na base das abas, não do dia: a faixa é só o
+                          // trilho, e a rampa (80px) atravessa o dia preso (8 + 28) antes de
+                          // abrir; o corpo sobe por trás das abas e do dia, e o respiro devolve os
+                          // dois: a primeira linha não se move.
+                          "-mt-[calc(var(--scroll-fade-band-h)+--spacing(9))] pt-[calc(var(--scroll-fade-band-h)+--spacing(9))] [--scroll-fade-band-h:--spacing(9)] pointer-coarse:[--scroll-fade-band-h:--spacing(10)] [--dialog-body-fade-h:--spacing(20)]"
+                        : comTrilho
+                          ? "-mt-(--scroll-fade-band-h) pt-[calc(var(--scroll-fade-band-h)+--spacing(4))] [--scroll-fade-band-h:--spacing(9)] pointer-coarse:[--scroll-fade-band-h:--spacing(10)]"
+                          : "pt-0"
+                )}
+            >
+                {conteudo}
             </DialogBody>
         </>
     )

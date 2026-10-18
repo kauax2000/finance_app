@@ -22,6 +22,9 @@ export function NotificationsSheet() {
             <SheetContent
                 fillMobileViewport={isMobile}
                 aria-describedby={undefined}
+                // A rampa do corpo dobra (48px): com 24 o fio entre duas linhas e o texto
+                // ainda cruzavam a base das abas nítidos, como uma quebra.
+                className="[--dialog-body-fade-h:--spacing(12)]"
             >
                 <NotificationsPanel isActive={isOpen} />
             </SheetContent>
