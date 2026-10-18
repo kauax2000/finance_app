@@ -521,6 +521,16 @@ describe("as versões do Sidebar", () => {
       )
     })
 
+    it("25b. a pílula só viaja dentro de um menu; entre menus ela aparece no lugar", () => {
+      // Da navegação a Membros/Configurações ela cruzava a lista inteira (pedido do dono).
+      expect(CODIGO).toMatch(/mesmaViagem: \(de, para\) =>\s*de\.closest\('\[data-slot="sidebar-menu"\]'\) === para\.closest\('\[data-slot="sidebar-menu"\]'\)/)
+      const marcador = lerFonte("src/hooks/use-marcador.ts")
+      expect(marcador).toContain("opcoes.current.mesmaViagem?.(antes.el, ativa) === false")
+      // O salto esmaece, e não corre; com movimento reduzido nem isso.
+      expect(marcador).toMatch(/peca\.animate\(\[\{ opacity: 0 \}, \{ opacity: 1 \}\]/)
+      expect(marcador).toContain('matchMedia("(prefers-reduced-motion: reduce)")')
+    })
+
     it("25. a pílula do ativo é uma só, e anda no compositor (useMarcador)", () => {
       // Era um `layoutId` do motion por botão: a viagem em JavaScript travava e
       // saltava enquanto a página nova se desenhava. Agora é o marcador do `Tabs`

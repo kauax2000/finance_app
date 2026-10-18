@@ -27145,3 +27145,14 @@ canto da folha, por outra régua. O `DialogHeaderRow` passa a pôr os controles 
 para a linha (`DialogCloseButton placement="inline"`) e a folha não injeta mais o
 de canto. Medido: título, ⋯ e × com o centro a 27px do topo da folha, e o
 cabeçalho 6px mais baixo. Vale para todo `DialogHeaderRow` com controles.
+
+### Rodada 311 — a pílula da barra lateral não cruza a lista
+
+Com o ativo saindo da navegação para Membros ou Configurações (menus separados,
+no pé da placa), a pílula corria a lista inteira. O `useMarcador` ganhou a
+opção `mesmaViagem(de, para)`: devolvendo `false`, o marcador não viaja — já
+está no lugar novo pelas variáveis — e só esmaece ali em `--duration-fast` (sem
+nada com movimento reduzido). A `Sidebar` responde que só viajam dois itens do
+mesmo `SidebarMenu`. Medido no app: Painel → Membros e Membros → Transações só
+animam `opacity`; Membros → Configurações anima `translate` e `scale`, como
+antes. `Tabs`, `ToggleGroup` e `BottomBar` não passam a opção e viajam sempre.

@@ -1178,6 +1178,10 @@ function SidebarContent({ className, children, ...props }: React.ComponentProps<
     eixo: "y",
     viajar: true,
     medida: caixaNaLista,
+    // A pílula só corre dentro de um menu (os itens da navegação, ou Membros e
+    // Configurações): de um menu ao outro ela aparece no lugar, sem cruzar a lista.
+    mesmaViagem: (de, para) =>
+      de.closest('[data-slot="sidebar-menu"]') === para.closest('[data-slot="sidebar-menu"]'),
   })
   return (
     <div

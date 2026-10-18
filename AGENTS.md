@@ -1413,7 +1413,9 @@ declaração de `background-color` no trilho).
   `plain` (a do catálogo, com
   `collapsible="none"`). **A pílula do ativo é uma só, no `SidebarContent`, e
   anda no compositor** (`useMarcador`, a viagem líquida do `Tabs`, só
-  `translate`/`scale`); a pílula parada de cada linha fica para antes da medida e
+  `translate`/`scale`), **e só dentro de um menu**: de um `SidebarMenu` a outro
+  (a navegação e Membros/Configurações) ela aparece no lugar, esmaecendo em
+  `--duration-fast` (`mesmaViagem` do `useMarcador`); a pílula parada de cada linha fica para antes da medida e
   fora da lista. O botão não recorta (`overflow-hidden` saiu). O app marca o
   destino no clique. `peek`. **Nenhuma tela
   escreve** o `h-12` do cabeçalho recolhido, o `overflow-y-auto` do conteúdo

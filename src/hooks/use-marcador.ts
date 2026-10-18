@@ -28,6 +28,13 @@ type UseMarcadorOptions = {
    * `BottomBar` que abre); sem isso o mesmo item só reposiciona.
    */
   acompanhar?: () => boolean
+  /**
+   * Se o marcador viaja do ativo anterior ao novo. Devolver `false` (a `Sidebar`
+   * entre dois menus, longe um do outro) faz ele só aparecer no lugar novo,
+   * esmaecendo em `--duration-fast`, em vez de correr a lista inteira. Sem a
+   * opção, viaja sempre.
+   */
+  mesmaViagem?: (de: HTMLElement, para: HTMLElement) => boolean
   /** O que, além das opções, refaz a medição (degrau, variante…). */
   deps?: React.DependencyList
   /**
@@ -113,7 +120,18 @@ export function useMarcador(o: UseMarcadorOptions): boolean {
           redirecionarViagem(efeito, caixa)
         }
       }
-      if (antes && peca && (antes.el !== ativa || acompanha)) {
+      const salta =
+        antes && peca && antes.el !== ativa && opcoes.current.mesmaViagem?.(antes.el, ativa) === false
+      if (salta) {
+        // Longe demais para viajar: o marcador já está no lugar novo pelas variáveis, e
+        // só esmaece ali. O movimento reduzido é perguntado aqui, como no `viajarLiquido`.
+        for (const a of emCurso.current) a.cancel()
+        const reduzido = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        const duracao = parseFloat(getComputedStyle(peca).getPropertyValue("--duration-fast")) || 150
+        emCurso.current = reduzido
+          ? []
+          : [peca.animate([{ opacity: 0 }, { opacity: 1 }], { duration: duracao, easing: "ease-out" })]
+      } else if (antes && peca && (antes.el !== ativa || acompanha)) {
         for (const a of emCurso.current) a.cancel()
         const vertical = eixo === "y"
         const passo = vertical ? caixa.h : caixa.w
