@@ -1,7 +1,6 @@
 "use client"
 
 import { Sheet, SheetContent } from "@/components/ui/sheet"
-import { DialogCloseButton } from "@/components/ui/dialog"
 import { useNotificationsUi } from "@/components/layout/notifications-ui-provider"
 import { NotificationsPanel } from "@/components/layout/notifications-panel"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -25,7 +24,6 @@ export function NotificationsSheet() {
                 aria-describedby={undefined}
             >
                 <NotificationsPanel isActive={isOpen} />
-                <DialogCloseButton label="Fechar notificações" />
             </SheetContent>
         </Sheet>
     )

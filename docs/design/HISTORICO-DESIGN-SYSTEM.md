@@ -27134,3 +27134,14 @@ passou ao `SheetContent` padrão (direita, flutuante, `sm` 384, sem eixo escrito
 O dono comparou as duas num laboratório temporário (`/laboratorio/notificacoes`,
 o vidro contra o sólido de antes, lado a lado) e decidiu manter o vidro. O
 laboratório saiu na mesma rodada.
+
+### Rodada 310 — o cabeçalho com ações alinha na primeira linha
+
+No painel de notificações o ⋯ do `DialogHeaderRow` ficava 4px abaixo do título
+(o botão de 28 no topo de uma linha de 22, `items-start`), e o × morava solto no
+canto da folha, por outra régua. O `DialogHeaderRow` passa a pôr os controles do
+`endAdornment` lado a lado (`flex gap-1`) e centrados na primeira linha do título
+(`-my-0.75`: 3px para cima e para baixo, sem crescer a linha); o painel leva o ×
+para a linha (`DialogCloseButton placement="inline"`) e a folha não injeta mais o
+de canto. Medido: título, ⋯ e × com o centro a 27px do topo da folha, e o
+cabeçalho 6px mais baixo. Vale para todo `DialogHeaderRow` com controles.

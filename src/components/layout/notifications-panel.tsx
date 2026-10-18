@@ -8,7 +8,13 @@ import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { Alert, AlertAction, AlertActions, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { DialogBody, DialogHeader, DialogHeaderRow, DialogTitle } from "@/components/ui/dialog"
+import {
+    DialogBody,
+    DialogCloseButton,
+    DialogHeader,
+    DialogHeaderRow,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -190,6 +196,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
             <DialogHeader>
                 <DialogHeaderRow
                     endAdornment={
+                        <>
                         <DropdownMenu mobile="sheet">
                             <DropdownMenuTrigger asChild>
                                 <Button type="button" variant="tertiary" size="icon-sm" aria-label="Mais ações">
@@ -222,6 +229,9 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
+                        {/* O × mora na linha do título, ao lado do ⋯, e não no canto da folha. */}
+                        <DialogCloseButton placement="inline" label="Fechar notificações" />
+                        </>
                     }
                 >
                     <div className="flex flex-wrap items-center gap-2">

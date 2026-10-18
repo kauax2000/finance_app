@@ -506,7 +506,12 @@ function DialogContent({
   )
 }
 
-/** Title + description row with optional trailing control (e.g. close). Use inside `DialogHeader`. */
+/**
+ * Title + description row with optional trailing controls (e.g. a menu and the
+ * inline close). Use inside `DialogHeader`. Os controles ficam lado a lado (4px)
+ * e centrados na primeira linha do título: o botão de 28 sobre a linha de 22 do
+ * título sobe e desce 3px (`-my-0.75`), sem empurrar a altura da linha.
+ */
 function DialogHeaderRow({
   className,
   children,
@@ -524,7 +529,7 @@ function DialogHeaderRow({
     >
       <div className="min-w-0">{children}</div>
       {endAdornment != null ? (
-        <div className={cn("shrink-0", DIALOG_CLOSE_RESERVE)}>
+        <div className={cn("-my-0.75 flex shrink-0 items-center gap-1", DIALOG_CLOSE_RESERVE)}>
           {endAdornment}
         </div>
       ) : null}
