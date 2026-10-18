@@ -77,7 +77,7 @@ export function NotificationsPanelEmpty({ variant }: NotificationsPanelEmptyProp
                 <EmptyStateActions>
                     {/* Link de dentro da folha: ela fecha e só então a tela abre. */}
                     <Button asChild variant="tertiary">
-                        <Link href={NOTIFICATION_PREFERENCES_HREF}>Configurar notificações</Link>
+                        <Link href={NOTIFICATION_PREFERENCES_HREF}>Preferências de notificações</Link>
                     </Button>
                 </EmptyStateActions>
             ) : null}

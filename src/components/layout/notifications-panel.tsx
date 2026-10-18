@@ -215,7 +215,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                                 <DropdownMenuItem asChild>
                                     <Link href={NOTIFICATION_PREFERENCES_HREF}>
                                         <Cog6ToothIcon />
-                                        Configurar notificações
+                                        Preferências de notificações
                                     </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
