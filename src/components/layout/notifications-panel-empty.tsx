@@ -5,11 +5,8 @@ import type { HeroIcon } from "@/types/navigation"
 import {
     Bars3BottomLeftIcon,
     BellIcon,
-    BellSlashIcon,
-    ChartPieIcon,
     LockClosedIcon,
     UserCircleIcon,
-    UserPlusIcon,
     WalletIcon,
 } from "@heroicons/react/24/outline"
 import { ROUTES } from "@/config/navigation"
@@ -21,6 +18,7 @@ import {
     EmptyStateIcon,
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
+import { NotificationsEmptyIllustration } from "@/components/layout/notifications-empty-illustration"
 
 /** A seção "Notificações desta carteira" das Configurações (o `id` dela). */
 export const NOTIFICATION_PREFERENCES_HREF = `${ROUTES.SETTINGS}#notificacoes`
@@ -33,7 +31,8 @@ type NotificationsPanelEmptyProps = {
 
 const VARIANT_META: Record<
     NotificationsPanelEmptyVariant,
-    { icons: readonly [HeroIcon, HeroIcon, HeroIcon]; title: string; description: string }
+    // Sem `icons`, o vazio é de primeiro uso e desenha a ilustração.
+    { icons?: readonly [HeroIcon, HeroIcon, HeroIcon]; title: string; description: string }
 > = {
     "no-auth": {
         icons: [UserCircleIcon, BellIcon, LockClosedIcon],
@@ -48,7 +47,6 @@ const VARIANT_META: Record<
             "Escolha uma carteira na barra lateral para ver as notificações deste espaço.",
     },
     "inbox-empty": {
-        icons: [ChartPieIcon, BellSlashIcon, UserPlusIcon],
         title: "Nenhuma notificação",
         description:
             "Alertas de orçamento, cartões, contas e convites desta carteira aparecem aqui.",
@@ -59,16 +57,19 @@ export function NotificationsPanelEmpty({ variant }: NotificationsPanelEmptyProp
     const meta = VARIANT_META[variant]
 
     return (
-        <EmptyState
-            variant="plain"
-            role="status"
-            className="min-h-[min(320px,50dvh)] flex-1"
-        >
-            <EmptyStateIcon variant="stack">
-                {meta.icons.map((Icon, i) => (
-                    <Icon key={i} aria-hidden />
-                ))}
-            </EmptyStateIcon>
+        // No alto do painel, 64px abaixo do cabeçalho, como o "Tudo lido".
+        <EmptyState variant="plain" role="status" className="pt-16">
+            {!meta.icons ? (
+                // Primeiro uso é convite, e não ausência: as notificações que vão chegar,
+                // em miniatura (`notifications-empty-illustration`).
+                <NotificationsEmptyIllustration />
+            ) : (
+                <EmptyStateIcon variant="stack">
+                    {meta.icons.map((Icon, i) => (
+                        <Icon key={i} aria-hidden />
+                    ))}
+                </EmptyStateIcon>
+            )}
             <EmptyStateTitle>{meta.title}</EmptyStateTitle>
             <EmptyStateDescription className="max-w-xs text-xs leading-relaxed">
                 {meta.description}

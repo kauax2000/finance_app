@@ -9,6 +9,7 @@ import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { Alert, AlertAction, AlertActions, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { NotificationsReadIllustration } from "@/components/layout/notifications-empty-illustration"
 import { MOLA, SAIDA } from "@/lib/spring"
 import { Button } from "@/components/ui/button"
 import {
@@ -28,7 +29,7 @@ import {
 import {
     EmptyState,
     EmptyStateActions,
-    EmptyStateIcon,
+    EmptyStateDescription,
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { ItemGroup, ItemGroupLabel, ItemSeparator } from "@/components/ui/item"
@@ -71,6 +72,15 @@ const ESQUELETO_DAS_LINHAS = [
     ["w-1/2", "w-4/5"],
 ] as const
 
+/**
+ * As exclusões dentro do prazo de desfazer: a folha fecha antes do toast, e se a
+ * pessoa reabrir nesses 8s a busca não pode devolver a linha que ainda vai sair.
+ */
+const exclusoesPendentes = new Set<string>()
+
+/** O fechar da folha (380ms, `sheet.tsx`) e uma folga: o toast só chega depois. */
+const DEPOIS_DE_FECHAR_MS = 420
+
 /** A altura do `ItemGroupLabel` (12px de recuo + a linha de 16): o lugar do dia preso. */
 const ROTULO_DO_DIA_PX = 28
 
@@ -102,8 +112,14 @@ type NotificationsPanelProps = {
 export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
     const { user, loading: authLoading } = useAuth()
     const { currentWorkspaceId, loading: workspaceLoading } = useWorkspace()
-    const { unreadCount, adjustUnreadCount, setUnreadCount, invalidateUnreadBadge, badgeNonce } =
+    const { unreadCount, adjustUnreadCount, setUnreadCount, invalidateUnreadBadge, badgeNonce, close } =
         useNotificationsUi()
+    // Toast com a folha aberta: a folha fecha primeiro, e o toast só chega depois que
+    // ela saiu — os dois disputavam o mesmo canto da tela.
+    const toastDepoisDeFechar = (mostrar: () => void) => {
+        close()
+        setTimeout(mostrar, DEPOIS_DE_FECHAR_MS)
+    }
     // `null` é "ainda não chegou": o esqueleto só aparece na primeira carga, e
     // a recarga (o sino mudou) troca a lista no lugar.
     const [notifications, setNotifications] = useState<AppNotification[] | null>(null)
@@ -126,7 +142,9 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
         const seq = ++fetchSeq.current
         try {
             // O sino não é tocado aqui: a lista para em 100, e o número dele é o do servidor.
-            const rows = await listNotifications(userId, currentWorkspaceId)
+            const rows = (await listNotifications(userId, currentWorkspaceId)).filter(
+                (n) => !exclusoesPendentes.has(n.id)
+            )
             // Com escrita em voo a resposta pode ser de antes dela; a última escrita a voltar recarrega.
             if (seq !== fetchSeq.current || escritasEmVoo.current > 0) return
             setNotifications(rows)
@@ -168,7 +186,8 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
         try {
             await acao()
         } catch (e) {
-            toastError(e instanceof Error ? e.message : falha)
+            const mensagem = e instanceof Error ? e.message : falha
+            toastDepoisDeFechar(() => toastError(mensagem))
         } finally {
             escritasEmVoo.current--
             if (escritasEmVoo.current === 0) invalidateUnreadBadge()
@@ -188,29 +207,35 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
     }
 
     // Excluir é um clique só (no cursor, sem menu), então tem 8s para desfazer: a
-    // linha sai na hora e a exclusão só vai ao banco quando o prazo acaba. Fechar a
-    // folha não cancela o prazo; recarregar a página antes dele, sim (a linha volta).
+    // linha sai na hora, a folha fecha, o toast chega e a exclusão só vai ao banco
+    // quando o prazo dele acaba. Recarregar a página antes do prazo cancela (a linha volta).
     const onDelete = (n: AppNotification) => {
         if (!userId || !currentWorkspaceId) return
         if (!n.read_at) adjustUnreadCount(-1)
+        exclusoesPendentes.add(n.id)
         setNotifications((cur) => cur?.filter((x) => x.id !== n.id) ?? cur)
-        const prazo = setTimeout(() => {
-            void escrever(
-                () => deleteNotification(userId, currentWorkspaceId, n.id),
-                "Não foi possível excluir a notificação."
-            )
-        }, TOAST_UNDO_MS)
-        toastUndo("Notificação excluída", {
-            undone: "Notificação restaurada",
-            onUndo: () => {
-                clearTimeout(prazo)
-                if (!n.read_at) adjustUnreadCount(1)
-                setNotifications((cur) =>
-                    cur && !cur.some((x) => x.id === n.id)
-                        ? [...cur, n].sort((a, b) => b.created_at.localeCompare(a.created_at))
-                        : cur
-                )
-            },
+        toastDepoisDeFechar(() => {
+            const prazo = setTimeout(() => {
+                void escrever(
+                    () => deleteNotification(userId, currentWorkspaceId, n.id),
+                    "Não foi possível excluir a notificação."
+                ).finally(() => exclusoesPendentes.delete(n.id))
+            }, TOAST_UNDO_MS)
+            toastUndo("Notificação excluída", {
+                undone: "Notificação restaurada",
+                onUndo: () => {
+                    clearTimeout(prazo)
+                    exclusoesPendentes.delete(n.id)
+                    if (!n.read_at) adjustUnreadCount(1)
+                    // Com a folha fechada a lista não está montada: ela volta pela busca
+                    // ao reabrir. Aberta de novo, a linha volta no lugar.
+                    setNotifications((cur) =>
+                        cur && !cur.some((x) => x.id === n.id)
+                            ? [...cur, n].sort((a, b) => b.created_at.localeCompare(a.created_at))
+                            : cur
+                    )
+                },
+            })
         })
     }
 
@@ -430,9 +455,15 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                 ) : !error && lista.length === 0 ? (
                     <NotificationsPanelEmpty variant="inbox-empty" />
                 ) : visiveis.length === 0 ? (
-                    <EmptyState variant="plain" size="sm" role="status">
-                        <EmptyStateIcon variant="done" />
+                    // No alto do painel, 64px abaixo das abas como os outros vazios dele (48 daqui
+                    // mais os 16 que o corpo já põe sob o trilho), no degrau padrão e com a frase
+                    // que diz para onde as lidas foram.
+                    <EmptyState variant="plain" role="status" className="pt-12">
+                        <NotificationsReadIllustration />
                         <EmptyStateTitle>Tudo lido</EmptyStateTitle>
+                        <EmptyStateDescription className="max-w-xs text-xs leading-relaxed">
+                            Nenhuma notificação nova. As que você já leu continuam em Todas.
+                        </EmptyStateDescription>
                         <EmptyStateActions>
                             <Button type="button" variant="tertiary" onClick={() => setFiltro("todas")}>
                                 Ver todas
