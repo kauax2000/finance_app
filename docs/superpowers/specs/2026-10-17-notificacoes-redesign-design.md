@@ -34,28 +34,35 @@ certa, com as ações à mão.
    `DialogHeaderRow` (título "Notificações" e, ao lado, a contagem de não
    lidas num `Badge` `soft` `size="xs"` — "3 novas"), `DialogBody` com a lista
    (a rolagem e a dissolução são dele), e o × é o `DialogCloseButton` (último
-   filho do `SheetContent`). Sem `DialogFooter`: o "Limpar todas" sai do
+   filho do `SheetContent`). O `DialogTitle`/`DialogDescription` em `sr-only` de
+   hoje sai: o título passa a ser o do cabeçalho. Sem `DialogFooter`: o "Limpar todas" sai do
    rodapé.
 3. **O menu do cabeçalho (Claude)**: um ⋯ (`Button tertiary icon-sm`, nome
    "Mais ações") no `endAdornment` do `DialogHeaderRow`, abrindo um
    `DropdownMenu` com: **Marcar todas como lidas** (desabilitado sem não
    lidas; usa `markAllRead`, que já existe e não tinha botão), **Preferências
-   de notificação** (fecha o painel e vai a `ROUTES.SETTINGS`), separador, e
+   de notificação** (fecha o painel e vai a `${ROUTES.SETTINGS}#notificacoes`;
+   a seção "Notificações desta carteira" em `notification-preferences.tsx` ganha
+   `id="notificacoes"`), separador, e
    **Limpar todas…** (`variant="destructive"`, pergunta antes pelo
    `useConfirmDialog` que já existe).
 4. **O filtro (Claude)**: abaixo do cabeçalho, um `ToggleGroup
    variant="segmented"` `size="sm"` com **Todas** e **Não lidas** (com a
-   contagem). Escolha de valor sobre a mesma lista, por isso não é `Tabs`.
+   contagem das não lidas **carregadas** — a lista traz as 100 mais recentes;
+   com 100, uma nota no fim diz "Mostrando as 100 mais recentes"). Escolha de valor sobre a mesma lista, por isso não é `Tabs`.
    Some quando não há notificação nenhuma.
 5. **A lista agrupada por dia (Claude)**: `groupByLocalDay` +
    `formatDayHeadingPtBr` ("Hoje", "Ontem", "segunda, 13 de out."), cada dia
    com um rótulo pequeno em sobrancelha que gruda no topo da rolagem
    (`sticky top-0`, no fundo da placa). Cada notificação é um `Item`
    `interactive` `size="md"` dentro de um `ItemGroup`:
-   - `ItemMedia`: o ícone de 16 (`getNotificationIcon`) num círculo de 32 com
+   - `ItemMedia`: o ícone de 16 (`getNotificationIcon`, que passa a receber
+     o tom para a tinta do ícone) num círculo de 32 com
      a tinta do **tom** da notificação: orçamento a 80% e conta para vencer →
      `warning-muted`; orçamento estourado, limite de cartão excedido e conta
-     atrasada → `destructive-muted`; cartão e fatura → `info-muted`; lançamento
+     atrasada → `destructive-muted`; orçamento a 100% (esgotado) →
+     `destructive-muted`; a conta atrasada é a de `metadata.offset_days === -1`,
+     e sem o campo ela fica `warning-muted`; cartão e fatura → `info-muted`; lançamento
      de outro membro e convite → `muted`. O tom sai de uma função pura nova,
      `notificationTone(n)`, em `src/lib/notification-visuals.tsx`, ao lado
      do ícone.
@@ -72,10 +79,10 @@ certa, com as ações à mão.
      como lida em segundo plano; hoje ela espera o banco antes de navegar.
    - Uma linha sem destino (`getNotificationAction` nulo) só marca como lida,
      sem fechar, e não tem a aparência de link (sem `ItemChevron`).
-6. **Excluir desfaz (Claude)**: excluir tira a linha na hora e mostra
-   `toastUndo("Notificação excluída", { onUndo })`; o `delete` no banco só
-   corre depois que o toast some sem desfazer. Limpar todas continua com a
-   pergunta, sem desfazer.
+6. **Excluir é na hora, sem desfazer (Claude)**: o banco não tem política de
+   INSERT para devolver a linha, e adiar o `delete` brigaria com a sondagem de
+   B3 (a linha voltaria) e se perderia ao fechar a aba. Excluir uma tira a linha
+   na hora, como hoje; limpar todas continua com a pergunta.
 7. **Estados (Claude)**:
    - **Carregando**: o esqueleto com a forma da linha (círculo de 32, duas
      linhas de texto), num `SkeletonGroup`.
@@ -96,8 +103,8 @@ certa, com as ações à mão.
 1. **A contagem do sino é a exata (Claude)**: o painel deixa de sobrescrever
    o número do sino com o tamanho da lista (que vem cortada em 100). Ele
    ajusta por delta (`adjustUnreadCount`) ao marcar, desmarcar e excluir, e
-   zera ao "Marcar todas como lidas" e ao limpar. O "Não lidas · N" do filtro
-   mostra o número do sino.
+   zera ao "Marcar todas como lidas" e ao limpar. O sino ouve o
+   `badgeNonce` (hoje ninguém lê) e descarta resposta velha por sequência.
 2. **Marcar como não lida (Claude)**: `markUnread(userId, workspaceId, id)`
    em `src/lib/notifications.ts` (o `update` de `read_at` para `null`, com os
    mesmos filtros de `markRead`; a política de UPDATE já permite).
@@ -122,12 +129,14 @@ certa, com as ações à mão.
    pessoa limpar.
 7. **Os alertas que faltavam no cliente (Claude)**: editar uma despesa também
    chama `evaluate-budgets` (hoje só a checagem de cartão corre), e a compra
-   parcelada também chama a checagem de cartão — os mesmos ganchos que a
-   criação já usa, sem função nova no servidor.
-8. **O orçamento volta a avisar (Claude)**: ao mudar o `amount` de um
-   orçamento, o `upsert` em `category-budget-ops.ts` zera os
-   `threshold_*_sent_at`, para os alertas de 80% e 100% valerem para o novo
-   valor.
+   parcelada no cartão também chama a checagem de cartão, com a data e o valor
+   da primeira parcela — os mesmos ganchos que a criação já usa, sem função
+   nova no servidor.
+8. **O orçamento volta a avisar (Claude)**: quando o `amount` de um orçamento
+   muda (quem salva compara com o valor anterior), a linha gravada zera os três
+   `threshold_80_sent_at`, `threshold_100_sent_at` e `threshold_over_sent_at`.
+   Os nulos entram em `buildBudgetRow`, para valer também na fila offline.
+   Salvar sem mudar o valor não rearma.
 9. **O destino desconhecido não navega**: `getNotificationAction` continua
    devolvendo nulo para o que não reconhece; o `JORNADAS.md`, que dizia
    `/dashboard`, passa a dizer isso. O `href` vindo do `metadata` também recusa
