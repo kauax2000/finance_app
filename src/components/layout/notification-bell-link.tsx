@@ -24,11 +24,12 @@ export function NotificationBellLink() {
             return
         }
 
+        let ativo = true
         const refresh = async () => {
             const seq = ++seqRef.current
             try {
                 const n = await countUnreadNotifications(userId, currentWorkspaceId)
-                if (seq !== seqRef.current) return
+                if (!ativo || seq !== seqRef.current) return
                 setUnreadCount(n)
             } catch {
                 // Falha de rede não zera o sino: fica o último número bom até a próxima sondagem.
@@ -49,8 +50,8 @@ export function NotificationBellLink() {
         return () => {
             window.clearInterval(id)
             document.removeEventListener("visibilitychange", onVis)
-            // Invalida a resposta em voo (outra carteira, ou desmonte).
-            seqRef.current++
+            // Descarta a resposta em voo (outra carteira, ou desmonte).
+            ativo = false
         }
         // `badgeNonce` refaz a contagem quando alguém invalida o sino.
     }, [authLoading, workspaceLoading, userId, currentWorkspaceId, badgeNonce, setUnreadCount])
