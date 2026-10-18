@@ -111,9 +111,10 @@ export const menuPanelTintClassName = [
  */
 export const modalSurfaceClassName = [
   "bg-background/85 glass-surface",
-  // 40% no escuro (não os 60% da flutuante): a placa cobre página quase
-  // uniforme e a 60% lia como fosca. No claro, 85% já é o teto de contraste (4,38).
-  "supports-backdrop-filter:dark:bg-background/40",
+  // 50% no escuro (era 40; rodada 319, um pouco mais escura a pedido do dono): a
+  // placa cobre página quase uniforme e a 60% lia como fosca. No claro, 85% já é
+  // o teto de contraste (4,38).
+  "supports-backdrop-filter:dark:bg-background/50",
   /** A cor sólida é de quem veste — a utility é dona de uma propriedade só. */
   "reduced-transparency:bg-background",
 ].join(" ")

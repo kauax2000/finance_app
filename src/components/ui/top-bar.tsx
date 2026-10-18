@@ -522,7 +522,9 @@ function TopBarAction({
           data-slot="top-bar-action-count"
           data-state={temContagem ? "open" : "closed"}
           className={cn(
-            "nums pointer-events-none absolute top-0 right-0 z-10 flex h-4 min-w-4 translate-x-1/3 -translate-y-1/3 items-center justify-center rounded-full px-1 text-2xs leading-none font-semibold ring-2 ring-background",
+            // Algarismos proporcionais: na bolha o número fica sozinho, e o "1" tabular
+            // (folga à esquerda) tirava o "13" do centro.
+            "proportional-nums pointer-events-none absolute top-0 right-0 z-10 flex h-4 min-w-4 translate-x-1/3 -translate-y-1/3 items-center justify-center rounded-full px-1 text-2xs leading-3 font-semibold ring-2 ring-background",
             tagChipUnreadCount,
             // O gesto da bolha da aba "Não lidas": enche na mola ao chegar (também
             // ao montar, por `@starting-style`) e, ao zerar, toma impulso e

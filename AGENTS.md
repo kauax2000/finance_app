@@ -1071,7 +1071,8 @@ declaração de `background-color` no trilho).
 - **`Dialog`**: `size` (`sm` 384 | **`md` 448** | `lg` 512 | `xl` 576 |
   `full`) e `layout` (`auto` | `fixed`, com o corpo em `DialogBody`). **Não
   escreva `min-h-0 flex-1 overflow-y-auto` à mão.** A rampa do `DialogBody`
-  é `--dialog-body-fade-h` (24px; o painel de notificações declara 48).
+  é `--dialog-body-fade-h` (24px; o painel de notificações declara 48), e a de
+  baixo pode ser outra, `--dialog-body-fade-end-h` (por padrão, a mesma).
   - **`<Dialog surface="auto">`** é diálogo no desktop e gaveta abaixo de
     768px. **Não escreva `if (isMobile)` trocando `Dialog` por `Sheet`.**
   - `pending` trava Esc, véu, ×, `DialogClose` e arraste; `dirty` +
@@ -1347,8 +1348,10 @@ declaração de `background-color` no trilho).
 #### Listas, tabelas e navegação
 
 - **`Item`**: `variant="flush"`, `selected` (`aria-current`; **destaque de
-  passagem não é seleção**), `ItemChevron`, `ItemMedia variant="tile" tone`
-  (o círculo na superfície `-muted` do tom), `ItemLink` (a linha clicável com
+  passagem não é seleção**), `ItemChevron`, `ItemMedia variant="tile" tone tint`
+  (o círculo do tom: `soft`, o padrão, na superfície `-muted`; `vivid`, a cor
+  cheia com a tinta `-foreground`, como o `ColorTile` e o `Avatar` — as
+  notificações), `ItemLink` (a linha clicável com
   ações dentro, como o `CardLink`) e `ItemGroupLabel sticky` (grudado é vidro:
   transparente com o `glass-surface`, tingido por `--item-group-label-surface`
   quando quem chama precisa; sem transparência, `--background`). **Nenhuma tela

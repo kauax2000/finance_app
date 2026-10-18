@@ -43,7 +43,7 @@ import {
  * uma, que muda com o lado; empilhar `border` e `border-l` dependeria da ordem
  * de emissão do `cva`.
  * O material é o vidro modal do `Dialog` (`modalSurfaceClassName`: `--background`
- * a 85%, 40% no escuro, com borrão), a pedido do dono — antes era a placa chapada
+ * a 85%, 50% no escuro, com borrão), a pedido do dono — antes era a placa chapada
  * (`--popover`). `floating` é o padrão (raio `--radius-modal`, anel de 1px e
  * sombra); `flush` é o que as folhas do app pedem por enquanto.
  * As duas verticais somam a área segura (uma calha a partir do viewport põe o

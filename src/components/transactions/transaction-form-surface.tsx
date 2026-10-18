@@ -163,10 +163,7 @@ export function TransactionFormSurface({
             <DialogHeader className={headerClassName}>
                 <DialogHeaderRow
                     endAdornment={
-                        <DialogCloseButton
-                            placement="inline"
-                            className="-mt-0.5"
-                        />
+                        <DialogCloseButton placement="inline" />
                     }
                 >
                     <DialogTitle>{formTitle}</DialogTitle>

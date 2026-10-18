@@ -183,8 +183,8 @@ const itemMediaVariants = cva(
         // O raio acompanha a medida (`rounded-sm` cravado deixaria 2px de canto).
         image:
           "size-10 overflow-hidden rounded-lg group-data-[size=sm]/item:size-8 group-data-[size=sm]/item:rounded-md group-data-[size=lg]/item:size-12 [&_img]:size-full [&_img]:object-cover",
-        // O ladrilho de tom: o círculo na superfície `-muted` do tom, com o
-        // ícone de 16 na tinta dele. A cor vem do `tone`, nunca do ícone.
+        // O ladrilho de tom: o círculo na cor do tom, com o ícone de 16 na tinta
+        // dele. A cor vem do `tone` e a força do `tint`, nunca do ícone.
         tile:
           "size-8 rounded-full group-data-[size=sm]/item:size-7 group-data-[size=lg]/item:size-10 [&_svg]:size-4",
       },
@@ -195,16 +195,31 @@ const itemMediaVariants = cva(
         warning: "",
         destructive: "",
       },
+      /**
+       * A força do ladrilho, os nomes do `ColorTile` e do `AvatarFallback`:
+       * `soft` (o padrão) é a superfície `-muted` com a tinta do tom; `vivid`
+       * é a cor cheia do tom com a tinta `-foreground` dela (o neutro, a tinta
+       * apagada cheia sob a cor da página).
+       */
+      tint: {
+        soft: "",
+        vivid: "",
+      },
     },
     compoundVariants: [
-      { variant: "tile", tone: "neutral", className: "bg-muted text-muted-foreground" },
-      { variant: "tile", tone: "info", className: "bg-info-muted text-info-muted-foreground" },
-      { variant: "tile", tone: "warning", className: "bg-warning-muted text-warning-muted-foreground" },
-      { variant: "tile", tone: "destructive", className: "bg-destructive-muted text-destructive-muted-foreground" },
+      { variant: "tile", tint: "soft", tone: "neutral", className: "bg-muted text-muted-foreground" },
+      { variant: "tile", tint: "soft", tone: "info", className: "bg-info-muted text-info-muted-foreground" },
+      { variant: "tile", tint: "soft", tone: "warning", className: "bg-warning-muted text-warning-muted-foreground" },
+      { variant: "tile", tint: "soft", tone: "destructive", className: "bg-destructive-muted text-destructive-muted-foreground" },
+      { variant: "tile", tint: "vivid", tone: "neutral", className: "bg-muted-foreground text-background" },
+      { variant: "tile", tint: "vivid", tone: "info", className: "bg-info text-info-foreground" },
+      { variant: "tile", tint: "vivid", tone: "warning", className: "bg-warning text-warning-foreground" },
+      { variant: "tile", tint: "vivid", tone: "destructive", className: "bg-destructive text-destructive-foreground" },
     ],
     defaultVariants: {
       variant: "plain",
       tone: "neutral",
+      tint: "soft",
     },
   }
 )
@@ -213,6 +228,7 @@ function ItemMedia({
   className,
   variant = "plain",
   tone = "neutral",
+  tint = "soft",
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof itemMediaVariants>) {
   return (
@@ -220,7 +236,8 @@ function ItemMedia({
       data-slot="item-media"
       data-variant={variant}
       data-tone={variant === "tile" ? tone : undefined}
-      className={cn(itemMediaVariants({ variant, tone, className }))}
+      data-tint={variant === "tile" ? tint : undefined}
+      className={cn(itemMediaVariants({ variant, tone, tint, className }))}
       {...props}
     />
   )

@@ -382,7 +382,14 @@ export default function ItemDoc() {
             prop: "ItemMedia tone",
             type: '"neutral" | "info" | "warning" | "destructive"',
             default: '"neutral"',
-            description: "A superfície -muted do tom e a tinta do ícone. Só o tile o pinta.",
+            description: "A cor do tom e a tinta do ícone. Só o tile o pinta.",
+          },
+          {
+            prop: "ItemMedia tint",
+            type: '"soft" | "vivid"',
+            default: '"soft"',
+            description:
+              "A força do ladrilho, os nomes do ColorTile e do AvatarFallback: soft é a superfície -muted do tom; vivid, a cor cheia com a tinta -foreground dela (o painel de notificações).",
           },
           {
             prop: "ItemLink",

@@ -354,7 +354,7 @@ function DialogOverlay({
  * (a altura é teto, e o corpo rola entre cabeçalho e rodapé parados, a forma do
  * formulário em diálogo). `size` é a largura, `md` por padrão.
  *
- * A placa veste `modalSurfaceClassName` (`--background` a 85%, 40% no escuro),
+ * A placa veste `modalSurfaceClassName` (`--background` a 85%, 50% no escuro),
  * mais aberta que a flutuante: a 60% sobre a página velada o `--popover` compõe
  * acima de tudo e a placa lê como opaca. O `backdrop-filter` só aparece com cor
  * cheia atrás; quem quiser o efeito mais visível mexe no véu, não aqui (ver
@@ -582,14 +582,16 @@ function DialogHeader({
  * diálogo é curto e o conteúdo não rola por baixo); na folha o cabeçalho é fixo
  * e o × flutuante some atrás dele, então o `SheetContent` não injeta.
  * `placement`: `floating` (canto da superfície, padrão) ou `inline` (no
- * `endAdornment` de um `DialogHeaderRow`). O `-me-1` de `inline` compensa a
- * caixa do botão, mais larga que o glifo.
+ * `endAdornment` de um `DialogHeaderRow`). O botão mede 32 (`icon-md`, rodada
+ * 318; era 28): o `-me-1.5` de `inline` compensa a caixa, mais larga que o
+ * glifo, e o `-my-0.5` a centra no título (a linha do cabeçalho recua 3px, a
+ * conta de 28); no canto, `top-2.5 right-2.5` deixa o glifo onde estava.
  */
 const dialogCloseButtonVariants = cva("", {
   variants: {
     placement: {
-      floating: "absolute top-3 right-3",
-      inline: "-me-1",
+      floating: "absolute top-2.5 right-2.5",
+      inline: "-me-1.5 -my-0.5",
     },
   },
   defaultVariants: { placement: "floating" },
@@ -609,7 +611,7 @@ function DialogCloseButton({
         data-slot="dialog-close-button"
         type="button"
         variant="tertiary"
-        size="icon-sm"
+        size="icon-md"
         disabled={pending || props.disabled}
         className={cn(dialogCloseButtonVariants({ placement }), className)}
         {...props}
@@ -629,7 +631,7 @@ function DialogCloseButton({
  */
 /** A rampa quadrática da dissolução do corpo (ver `DialogBody`). */
 const dialogBodyRampClassName =
-  "[--scroll-fade-ramp:linear-gradient(to_bottom,rgb(0_0_0/0)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*1),rgb(0_0_0/0.016)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.875),rgb(0_0_0/0.06)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.75),rgb(0_0_0/0.14)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.625),rgb(0_0_0/0.25)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.5),rgb(0_0_0/0.39)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.375),rgb(0_0_0/0.56)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.25),rgb(0_0_0/0.77)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.125),#000_var(--scroll-fade-top-h),#000_var(--scroll-fade-bottom-y),rgb(0_0_0/0.77)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-h)*0.125),rgb(0_0_0/0.56)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-h)*0.25),rgb(0_0_0/0.39)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-h)*0.375),rgb(0_0_0/0.25)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-h)*0.5),rgb(0_0_0/0.14)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-h)*0.625),rgb(0_0_0/0.06)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-h)*0.75),rgb(0_0_0/0.016)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-h)*0.875),rgb(0_0_0/0)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-h)*1))]!"
+  "[--scroll-fade-ramp:linear-gradient(to_bottom,rgb(0_0_0/0)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*1),rgb(0_0_0/0.016)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.875),rgb(0_0_0/0.06)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.75),rgb(0_0_0/0.14)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.625),rgb(0_0_0/0.25)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.5),rgb(0_0_0/0.39)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.375),rgb(0_0_0/0.56)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.25),rgb(0_0_0/0.77)_calc(var(--scroll-fade-top-h)_-_var(--scroll-fade-h)*0.125),#000_var(--scroll-fade-top-h),#000_var(--scroll-fade-bottom-y),rgb(0_0_0/0.77)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-end-h)*0.125),rgb(0_0_0/0.56)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-end-h)*0.25),rgb(0_0_0/0.39)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-end-h)*0.375),rgb(0_0_0/0.25)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-end-h)*0.5),rgb(0_0_0/0.14)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-end-h)*0.625),rgb(0_0_0/0.06)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-end-h)*0.75),rgb(0_0_0/0.016)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-end-h)*0.875),rgb(0_0_0/0)_calc(var(--scroll-fade-bottom-y)_+_var(--scroll-fade-end-h)*1))]!"
 
 function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -652,8 +654,12 @@ function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
         // campo a 10px da borda ainda aparecia a ~30% e lia como uma divisória.
         // A faixa é `--dialog-body-fade-h` (24px por padrão): quem precisa de rampa
         // maior (o painel de notificações, com o corpo sob as abas) a declara num
-        // ancestral.
+        // ancestral. A de baixo pode ser outra, `--dialog-body-fade-end-h` (por
+        // padrão a mesma): a rampa de cima do painel atravessa as abas e o dia, e a
+        // de baixo, com a mesma altura, apagava 80px de lista.
         "[--scroll-fade-floor:0] [--scroll-fade-h:var(--dialog-body-fade-h,--spacing(6))]",
+        "[--scroll-fade-end-h:var(--dialog-body-fade-end-h,var(--scroll-fade-h))]",
+        "[--scroll-fade-bottom-h:calc(var(--scroll-fade-foot-h,0px)+clamp(0px,var(--scroll-fade-end,0px),var(--scroll-fade-end-h)))]!",
         dialogBodyRampClassName,
         className
       )}

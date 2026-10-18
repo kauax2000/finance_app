@@ -27267,3 +27267,76 @@ sempre um dia legível no lugar e nunca dois iguais. No mesmo pedido, o
 cabeçalho com as abas ganhou `relative z-10`: a entrada em cascata o faz
 contexto de empilhamento, e o clique em "Todas" caía no link da linha que
 passava por baixo.
+
+A rampa de baixo do `DialogBody` ganhou altura própria,
+`--dialog-body-fade-end-h` (por padrão a mesma de cima, e nenhum outro diálogo
+muda): a de cima das notificações vai a 80px para atravessar as abas e o dia, e
+a de baixo, com a mesma altura, apagava 80px de lista no meio da rolagem. O
+painel a declara em 24. O corpo reescreve `--scroll-fade-bottom-h` com
+`!` (a mesma conta da utility, com a altura de baixo), e as paradas de baixo da
+rampa quadrática leem `--scroll-fade-end-h`. Medido: 24px embaixo e 80 em cima
+no painel; 24 e 24 no formulário de despesa.
+
+### Rodada 317 — todo vidro é o cinza das placas
+
+O dono comparou o painel de notificações com o menu ⋯ aberto dentro dele: o
+painel era `--background` a 40% no escuro (a modal), o menu `--popover` a 60%
+(a flutuante) — um preto e um cinza. Pediu o painel igual ao menu, depois o
+diálogo, e por fim "todos". As três réguas de `glass-classes` passam ao
+`--popover`: a modal fica 85/60 (igual à flutuante, régua própria pelo papel)
+e veste `Dialog`, `AlertDialog`, `Sheet` e `Drawer`; a barra fica 95/60 nos
+dois temas e veste o `TopBar` `glass`/`scroll`, a `Toolbar` e a `PageSection`
+presas, o cabeçalho da `Table` e o `Menubar outline`; a borda do `TopBar edge`
+(a barra do app) tinge com `--popover` a 30%. Custos assumidos e escritos na
+régua: a modal deixa de afundar no véu (a 60% ela leu como fosca numa tentativa
+antiga), e a barra parada sobre um cartão não se separa dele no escuro
+(`--popover` e `--card` são a mesma cor). Fica fora o × de canto da folha
+(`--background` a 40% no escuro): é contraste, e um círculo cinza sumiria na
+placa cinza. Medido: folha, diálogo e menu a `oklab(0.205 … / 0.6)`; a borda do
+topo a `/ 0.3`.
+
+### Rodada 318 — o × de diálogo e folha mede 32
+
+O dono pediu o × em 32 "em todos os lugares": o `DialogCloseButton` passa de
+`icon-sm` (28) a `icon-md` (32), e veste `Dialog`, `AlertDialog`, `Sheet`,
+`Drawer`, a paleta e o onboarding. As compensações eram a conta de 28 e foram
+refeitas no próprio botão, e não no invólucro do `DialogHeaderRow` (que também
+hospeda um `Badge`): `inline` vira `-me-1.5 -my-0.5`, `floating` vira `top-2.5
+right-2.5`. Saíram os ajustes à mão (o `-mt-0.5` do formulário de despesa, o
+`size` e o `-my-0.5` das notificações). Medido: 32×32, centro no do título no
+formulário de despesa e nas notificações, o glifo a 2px da borda do conteúdo
+como antes, e no canto a 18px do topo e da direita, como antes. Os outros ×
+(busca, chips, toasts, a aba que fecha) são de outra família e ficam.
+
+**A rodada 317 foi desfeita** no mesmo dia, a pedido do dono: as três réguas,
+a borda do `TopBar edge` e o painel de notificações voltam ao preto
+(`--background`; a modal a 40% no escuro, a barra a 60%), e os testes de vidro
+voltam a cobrar isso. O menu continua `--popover`, mais claro que a placa onde
+abre.
+
+**O número da bolha não estava no centro.** As duas bolhas de contagem (o
+número do `TopBarAction` e a da aba "Não lidas") usavam algarismos tabulares
+(`nums`), e o "1" tabular tem folga à esquerda: o "13" e o "12" saíam ~2,5px
+para a direita do centro. Numa bolha o número fica sozinho, sem coluna para
+alinhar, e as duas passam a `proportional-nums`. O número do sino também subia
+0,5px (entrelinha de 11 contra o 12 da aba) e passa a `leading-3`. Medido pela
+tinta (o desenho do algarismo, e não a caixa da linha): "1", "5", "12" e "13"
+a menos de 0,3px do centro na horizontal e na vertical, nas duas bolhas.
+
+### Rodada 319 — a placa modal um pouco mais escura
+
+A pedido do dono, só a modal (`Dialog`, `AlertDialog`, `Sheet`, `Drawer`)
+escurece um degrau no escuro: de 40 a 50% de `--background` onde há borrão. A
+base sem borrão (85) e o claro não mudam; a barra e a borda do `TopBar edge`
+ficam como estavam (uma primeira leitura escureceu as três e foi desfeita).
+Medido: a folha de notificações a `oklab(0.145 … / 0.5)`.
+
+### Rodada 320 — o ladrilho do `ItemMedia` ganha `tint`
+
+O dono pediu os ícones das notificações em cores cheias, como o `ColorTile` e
+o `Avatar`. O `ItemMedia variant="tile"` só tinha a versão suave (a superfície
+`-muted` do tom), e ganha o eixo `tint` com os nomes daqueles dois: `soft`, o
+padrão (nada muda nas outras telas), e `vivid`, a cor cheia do tom com a tinta
+`-foreground` dela (o neutro: `--muted-foreground` cheio sob a tinta da
+página). O painel de notificações veste `vivid`. Medido no escuro: aviso, info,
+perigo e neutro com o ícone a `lab(2.75)` sobre o tom cheio (L 63 a 79).
