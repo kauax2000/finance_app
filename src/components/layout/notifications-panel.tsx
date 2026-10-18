@@ -236,8 +236,6 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                 {lista.length > 0 ? (
                     <ToggleGroup
                         type="single"
-                        variant="segmented"
-                        size="sm"
                         aria-label="Filtrar notificações"
                         className="mt-3"
                         value={filtro}
