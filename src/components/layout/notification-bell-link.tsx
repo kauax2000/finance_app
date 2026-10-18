@@ -44,6 +44,7 @@ export function NotificationBellLink() {
             type="button"
             label="Notificações"
             plate
+            tooltip={false}
             count={unreadCount}
             countLabel={`${unreadCount} não ${unreadCount === 1 ? "lida" : "lidas"}`}
             aria-expanded={isOpen}

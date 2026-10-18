@@ -548,7 +548,8 @@ const TOP_BAR_SEARCH_PLATE =
  * (`SIDEBAR_TRIGGER_FLOATING`): o vidro vai até o anel (`bg-clip-border`) e o
  * realce é o das carteiras, `--sidebar-accent` a 50%.
  */
-const TOP_BAR_PLATE = `${TOP_BAR_SEARCH_PLATE} md:rounded-full md:bg-clip-border md:[--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]`
+const TOP_BAR_PLATE =
+  "md:ring-1 md:ring-foreground/10 md:bg-popover/85 md:glass-surface md:supports-backdrop-filter:bg-popover/60 md:reduced-transparency:bg-popover md:rounded-full md:bg-clip-border md:[--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]"
 
 /** As classes por extenso: classe montada em tempo de execução não chega ao CSS. */
 const BUSCA_QUEBRA = {

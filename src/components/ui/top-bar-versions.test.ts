@@ -103,6 +103,8 @@ describe("as peças", () => {
 
   it("o sino do app veste o vidro da busca, como o botão de recolher", () => {
     expect(fonte("src/components/layout/notification-bell-link.tsx")).toMatch(/<TopBarAction[\s\S]*?\bplate\b/)
+    // Sem dica, a pedido do dono: o nome acessível continua no `aria-label`.
+    expect(fonte("src/components/layout/notification-bell-link.tsx")).toContain("tooltip={false}")
     // A mesma receita do gatilho da barra lateral: tinta, anel, sombra e realce.
     const gatilho = fonte("src/components/ui/sidebar.tsx")
     for (const parte of ["bg-popover/85", "glass-surface", "supports-backdrop-filter:bg-popover/60", "reduced-transparency:bg-popover", "ring-1", "ring-foreground/10", "[--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]"]) {
