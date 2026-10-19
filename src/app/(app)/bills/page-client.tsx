@@ -9,7 +9,7 @@ import {
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { addDaysYmd, compareYmd } from "@/lib/transaction-date"
-import { AdjustmentsHorizontalIcon, PlusIcon } from "@heroicons/react/16/solid"
+import { PlusIcon } from "@heroicons/react/16/solid"
 import { FunnelIcon, MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
 import { useCallback, useMemo, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
@@ -18,7 +18,6 @@ import type { User } from "@supabase/supabase-js"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
 import { Button } from "@/components/ui/button"
-import { usePageChromeSlot } from "@/components/layout/page-chrome-provider"
 import { Card, CardContent } from "@/components/ui/card"
 import {
     AlertDialog,
@@ -186,35 +185,6 @@ export default function BillsPageClient() {
     const [paySaving, setPaySaving] = useState(false)
     const [confirmDeleteBill, setConfirmDeleteBill] = useState<Bill | null>(null)
     const [deletingBill, setDeletingBill] = useState(false)
-    const [mobileFiltersSheetOpen, setMobileFiltersSheetOpen] = useState(false)
-
-    const billsHasTableEarly = Boolean(bundleQ.data && !bundleQ.data.tableMissing)
-    const billsFilterActiveEarly =
-        mode === "pending" ? pendingFilter !== "all" : modelFilter !== "all"
-
-    const billsChromeDateFilter = useMemo(
-        () => (
-            <Button
-                type="button"
-                variant="outline"
-                size="icon-lg"
-                className="relative shrink-0"
-                disabled={!billsHasTableEarly}
-                onClick={() => setMobileFiltersSheetOpen(true)}
-                aria-label="Filtros e ordenação"
-            >
-                <AdjustmentsHorizontalIcon className="size-4 opacity-80" />
-                {billsFilterActiveEarly ? (
-                    <span
-                        className="pointer-events-none absolute top-1.5 right-1.5 size-2 rounded-full bg-primary"
-                        aria-hidden
-                    />
-                ) : null}
-            </Button>
-        ),
-        [billsHasTableEarly, billsFilterActiveEarly],
-    )
-    usePageChromeSlot({ dateFilter: billsChromeDateFilter })
 
     const detailBillId = searchParams.get(DETAIL_QUERY)
 
@@ -624,9 +594,6 @@ export default function BillsPageClient() {
                     setFormOpen(true)
                 }}
                 hasTable={hasTable}
-                filtersSheetOpen={mobileFiltersSheetOpen}
-                onFiltersSheetOpenChange={setMobileFiltersSheetOpen}
-                mobileFiltersTrigger="external"
             />
 
             {globalEmpty ? (

@@ -309,7 +309,7 @@ describe("Onboarding — o mecanismo, pela fonte", () => {
     // O rodapé com a mesma forma em todos os passos: o × pula, o voltar some
     // sem sair do lugar.
     expect(CODIGO).toContain('data-slot="onboarding-tour-close"')
-    expect(CODIGO).toContain('className={cn("pointer-coarse:size-10", passo === 0 && "invisible")}')
+    expect(CODIGO).toContain('className={cn("pointer-coarse:size-11", passo === 0 && "invisible")}')
     // O "próximo" leva a seta que anda, nos dois rodapés; o "concluir", não.
     expect(
       CODIGO.match(/\{ultimo \? null : <ChevronRightIcon aria-hidden data-icon="inline-end" className=\{SETA_QUE_ANDA\} \/>\}/g)
@@ -321,7 +321,7 @@ describe("Onboarding — o mecanismo, pela fonte", () => {
     expect(CODIGO).toContain('if (e.pointerType === "mouse" && !deDedo(e.currentTarget)) setAberto(true)')
     expect(CODIGO).toContain('el.scrollIntoView({ block: "nearest", behavior: reduzido ? "auto" : "smooth" })')
     expect(CODIGO).toContain('className={gaveta ? "flex-row" : undefined}')
-    expect(CODIGO.match(/pointer-coarse:h-10/g)?.length).toBeGreaterThanOrEqual(7)
+    expect(CODIGO.match(/pointer-coarse:h-11/g)?.length).toBeGreaterThanOrEqual(7)
     expect(CODIGO.match(/pointer-coarse:after:-inset-2/g)?.length).toBeGreaterThanOrEqual(3)
     // No telefone o card tem o cabeçalho do checklist (o mesmo ×, o mesmo
     // título); na barra lateral do desktop, o compacto.
@@ -372,8 +372,8 @@ describe("Onboarding — o mecanismo, pela fonte", () => {
 
   it("o card veste o brilho de marca, e o par de ações divide a linha", () => {
     expect(CODIGO).toContain('variant={variant === "beam" ? "outline" : "brand"}')
-    expect(CODIGO).toMatch(/variant="tertiary" size="sm" className="flex-1 pointer-coarse:h-10"[^>]*onClick=\{dispensar\}/)
-    expect(CODIGO).toContain('<Button asChild variant="primary" size="sm" className="flex-1 pointer-coarse:h-10">')
+    expect(CODIGO).toMatch(/variant="tertiary" size="sm" className="flex-1 pointer-coarse:h-11"[^>]*onClick=\{dispensar\}/)
+    expect(CODIGO).toContain('<Button asChild variant="primary" size="sm" className="flex-1 pointer-coarse:h-11">')
     // O leque aberto para na borda de dentro do cartão, e não 4px além dela: um
     // recorte quadrado que anima junto (de inset(0) a inset(-12px)), e não uma
     // troca de `overflow` por classe, que saltava ao abrir e ao fechar.

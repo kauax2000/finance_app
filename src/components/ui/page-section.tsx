@@ -199,7 +199,7 @@ function PageSection({
  * `PageHeader`). Um `size` no botão vence.
  */
 const pageSectionButtonsClassName = [
-  "pointer-coarse:[&>[data-slot=button]]:min-h-10",
+  "pointer-coarse:[&>[data-slot=button]]:min-h-11",
   "max-sm:[&>[data-slot=button]:has(>svg)]:aspect-square max-sm:[&>[data-slot=button]:has(>svg)]:px-0",
   "max-sm:[&>[data-slot=button]:has(>svg)>[data-slot=button-label]]:sr-only",
 ].join(" ")

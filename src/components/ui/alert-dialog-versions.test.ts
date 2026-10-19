@@ -108,7 +108,7 @@ describe("AlertDialog", () => {
       html.match(new RegExp(`class="([^"]*)"[^>]*data-slot="${slot}"`))?.[1] ?? ""
     expect(classe("alert-dialog-header")).not.toMatch(/\bgap-2\b/)
     expect(classe("alert-dialog-title")).toContain("leading-snug")
-    expect(classe("alert-dialog-footer")).toContain("pointer-coarse:[&amp;_button]:min-h-10")
+    expect(classe("alert-dialog-footer")).toContain("pointer-coarse:[&amp;_button]:min-h-11")
     // Compõem as peças do Dialog em vez de repetir a receita.
     const codigo = semComentarios(FONTE, "tudo")
     expect(codigo).toMatch(/<DialogHeader/)

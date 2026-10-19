@@ -47,7 +47,7 @@ const CLASSE_DE_ALTURA: Record<number, string> = {
 }
 
 /** O piso de toque: o degrau que a `Toolbar` publica e o `Tabs` aplica. */
-const PISO_DE_TOQUE = "pointer-coarse:h-10"
+const PISO_DE_TOQUE = "pointer-coarse:h-11"
 
 describe("escada de controle da família de campo", () => {
   it("1. tem os quatro degraus, e eles são os mesmos números do Tabs", () => {
@@ -66,13 +66,11 @@ describe("escada de controle da família de campo", () => {
     }
   })
 
-  it("4. sm, md e lg carregam o piso de toque; xl não, porque já é 40", () => {
-    for (const d of ["sm", "md", "lg"] as const) {
+  it("4. todos os degraus carregam o piso de toque de 44, o xl também (rodada 332)", () => {
+    for (const d of ["sm", "md", "lg", "xl"] as const) {
       expect(fieldControlHeightClassName[d], d).toContain(PISO_DE_TOQUE)
     }
-    // Um piso redundante é uma segunda grafia esperando para divergir.
-    expect(fieldControlHeightClassName.xl).not.toContain("pointer-coarse")
-    expect(fieldControlHeightClassName.xl).toBe("h-10")
+    expect(fieldControlHeightClassName.xl).toBe("h-10 pointer-coarse:h-11")
   })
 
   it("4b. o campo é cápsula, e o degrau não carrega raio", () => {

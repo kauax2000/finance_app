@@ -84,7 +84,7 @@ export function TransactionFormSurface({
     // A faixa é a altura do trilho: 36 no mouse, 40 no dedo.
     const corpoSobAbas =
         temSegmento &&
-        "-mt-(--scroll-fade-band-h) pt-[calc(var(--scroll-fade-band-h)+--spacing(4))] [--scroll-fade-band-h:--spacing(9)] pointer-coarse:[--scroll-fade-band-h:--spacing(10)]"
+        "-mt-(--scroll-fade-band-h) pt-[calc(var(--scroll-fade-band-h)+--spacing(4))] [--scroll-fade-band-h:--spacing(9)] pointer-coarse:[--scroll-fade-band-h:--spacing(11)]"
 
     const formPickersOpen =
         fieldsProps.categoryPopoverOpen || fieldsProps.creditCardPopoverOpen

@@ -562,6 +562,8 @@ function PageHeaderBack({
         // No dedo o `icon-md` já mede 40 (o piso do `Button`); o pseudo-elemento
         // leva o alvo a 44 sem crescer a caixa. 40 + 4 = 44.
         "pointer-coarse:after:absolute pointer-coarse:after:-inset-0.5 pointer-coarse:after:content-['']",
+        // No telefone, a régua das ações da barra do topo: 44, com o ícone a 20.
+        "max-md:size-11 max-md:[&_svg]:size-5",
         className
       )}
       asChild

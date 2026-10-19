@@ -367,7 +367,7 @@ function SplitShellBack({
       asChild
       variant="tertiary"
       size="sm"
-      className={cn("-ms-2.5 pointer-coarse:min-h-10", className)}
+      className={cn("-ms-2.5 pointer-coarse:min-h-11", className)}
     >
       <Link data-slot="split-shell-back" href={href}>
         <ChevronLeftIcon data-icon="inline-start" aria-hidden />

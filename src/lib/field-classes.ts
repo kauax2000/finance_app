@@ -108,18 +108,18 @@ export const FIELD_CONTROL_HEIGHTS = {
 } as const satisfies Record<FieldControlSize, number>
 
 /**
- * A altura do controle, com o piso de toque embutido: 40 no dedo (o degrau da
- * `Toolbar`), perguntado ao ponteiro e não à largura. `xl` já é 40 e não leva
- * o piso. Literais, nunca template (o Tailwind varre texto). `h-8` e
- * `pointer-coarse:h-10` não colapsam no `twMerge`, e a ordem de emissão decide.
+ * A altura do controle, com o piso de toque embutido: 44 no dedo (o alvo do
+ * iOS e o degrau da `Toolbar`; era 40 até a rodada 332), perguntado ao ponteiro
+ * e não à largura. `xl` também sobe. Literais, nunca template (o Tailwind varre texto). `h-8` e
+ * `pointer-coarse:h-11` não colapsam no `twMerge`, e a ordem de emissão decide.
  * Sem prefixo `data-size`: os escapes `has-[>textarea]:h-auto` do `InputGroup`
  * (0,2,0) precisam vencer a altura, e `data-[size=…]:h-8` empataria com eles.
  */
 export const fieldControlHeightClassName = {
-  sm: "h-7 pointer-coarse:h-10",
-  md: "h-8 pointer-coarse:h-10",
-  lg: "h-9 pointer-coarse:h-10",
-  xl: "h-10",
+  sm: "h-7 pointer-coarse:h-11",
+  md: "h-8 pointer-coarse:h-11",
+  lg: "h-9 pointer-coarse:h-11",
+  xl: "h-10 pointer-coarse:h-11",
 } as const satisfies Record<FieldControlSize, string>
 
 /**

@@ -33,8 +33,9 @@ describe("o redesenho", () => {
     )
   })
 
-  it("o sm mede 48 no telefone e 52 do md para cima, e a base acompanha", () => {
-    expect(topBarVariants({ size: "sm" })).toContain("[--top-bar-h:3rem] md:[--top-bar-h:3.25rem]")
+  it("o sm mede 56 no telefone e 52 do md para cima, e a base acompanha", () => {
+    expect(topBarVariants({ size: "sm" })).toContain("[--top-bar-h:3.5rem] md:[--top-bar-h:3.25rem]")
+    expect(CSS).toMatch(/data-size="sm"\]\) \{\s*--top-bar-bottom: calc\(3\.5rem/)
     expect(CSS).toMatch(/data-size="sm"\]\) \{[\s\S]*?@media \(width >= 48rem\) \{\s*--top-bar-bottom: calc\(3\.25rem/)
   })
 
@@ -43,7 +44,7 @@ describe("o redesenho", () => {
   })
 
   it("a área segura passa por variável, para o iPhone do catálogo a emular", () => {
-    expect(topBarVariants({})).toContain("[--top-bar-safe-area:env(safe-area-inset-top,0px)]")
+    expect(topBarVariants({})).toContain("[--top-bar-safe-area:calc(env(safe-area-inset-top,0px)+var(--top-bar-edge-gap,0px))]")
     expect(topBarVariants({ position: "fixed" })).toContain("[--top-bar-safe:var(--top-bar-safe-area)]")
     expect(fonte("src/app/designsystem/ds-frame.tsx")).toContain("--top-bar-safe-area:${IPHONE_SEGURA_TOPO}px")
   })
@@ -109,8 +110,10 @@ describe("as peças", () => {
     const gatilho = fonte("src/components/ui/sidebar.tsx")
     for (const parte of ["bg-popover/85", "glass-surface", "supports-backdrop-filter:bg-popover/60", "reduced-transparency:bg-popover", "ring-1", "ring-foreground/10", "[--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]"]) {
       expect(gatilho).toContain(`wrapper:${parte}`)
-      expect(CODIGO).toContain(`md:${parte}`)
+      // Em todo tamanho: no telefone os botões da barra são os mesmos círculos de vidro.
+      expect(CODIGO).toMatch(new RegExp(`const TOP_BAR_PLATE =\\s*"[^"]*(?<![:\\w])${parte.replace(/[[\]().*+?^$|/]/g, "\\$&")}`))
     }
+    expect(CODIGO).toContain("TOP_BAR_PLATE as topBarPlateClassName")
   })
 })
 
@@ -164,14 +167,17 @@ describe("os comportamentos", () => {
   const POSICOES = ["static", "sticky", "fixed", "auto"] as const
 
   describe("régua do TopBar", () => {
-    it("1. os degraus são degraus: 48 e 56, e nenhum par repete a string", () => {
-      const alturas = TAMANHOS.map((size) => alturaEm(topBarVariants({ size })))
-      expect(alturas).toEqual([3, 3.5])
+    it("1. os degraus são degraus do md para cima (52 e 56); no telefone o sm sobe aos 56 do md", () => {
+      // No telefone a barra do app segue a régua nativa (rodada 328): botões de 44
+      // com 6 de folga. Do `md` para cima os degraus continuam distintos.
+      const telefone = TAMANHOS.map((size) => alturaEm(topBarVariants({ size })))
+      expect(telefone).toEqual([3.5, 3.5])
+      expect(alturaEm(topBarVariants({ size: "sm" }), "md:")).toBe(3.25)
     })
 
-    it("2. o padrão é 48 no telefone e 52 do md para cima, sem acompanhar a barra lateral", () => {
+    it("2. o padrão é 56 no telefone e 52 do md para cima, sem acompanhar a barra lateral", () => {
       const padrao = topBarVariants({})
-      expect(alturaEm(padrao)).toBe(3)
+      expect(alturaEm(padrao)).toBe(3.5)
       // 52 no desktop (decisão do dono, 2026-10-16): 8px em cima e embaixo dos controles de 36.
       expect(padrao).toContain("md:[--top-bar-h:3.25rem]")
       expect(padrao).not.toContain("group-has")
@@ -198,7 +204,7 @@ describe("os comportamentos", () => {
       expect(base).not.toMatch(/\bbox-content\b/)
 
       // A área segura passa por `--top-bar-safe-area`.
-      expect(base).toContain("[--top-bar-safe-area:env(safe-area-inset-top,0px)]")
+      expect(base).toContain("[--top-bar-safe-area:calc(env(safe-area-inset-top,0px)+var(--top-bar-edge-gap,0px))]")
       const safe = "[--top-bar-safe:var(--top-bar-safe-area)]"
       expect(topBarVariants({ position: "fixed" })).toContain(safe)
       expect(topBarVariants({ position: "auto" })).toContain(`max-md:${safe}`)
@@ -207,7 +213,7 @@ describe("os comportamentos", () => {
       // O token que a casca do app usa para empurrar o conteúdo é o degrau
       // padrão mais a mesma área segura — sem o 1px do fio por fora.
       const token = CSS.match(
-        /--mobile-header-offset:\s*calc\(([\d.]+)rem \+ env\(safe-area-inset-top, 0px\)\)/
+        /--mobile-header-offset:\s*calc\(([\d.]+)rem \+ env\(safe-area-inset-top, 0px\) \+ var\(--top-bar-edge-gap, 0px\)\)/
       )
       expect(token, "o token mudou de forma").not.toBeNull()
       expect(Number(token![1])).toBe(alturaEm(topBarVariants({})))
@@ -293,21 +299,33 @@ describe("a base da barra", () => {
 })
 
 describe("as ações numa cápsula", () => {
-  it("TopBarActionGroup é o ButtonGroup com um anel só e sem divisor", () => {
-    const peca = CODIGO.slice(CODIGO.indexOf("function TopBarActionGroup"), CODIGO.indexOf("const TOP_BAR_SEARCH_PLATE"))
+  it("TopBarActionGroup é o ButtonGroup com um anel só e sem divisor, e join diz de que lado cola", () => {
+    const peca = CODIGO.slice(CODIGO.indexOf("const CAPSULA_COLA"), CODIGO.indexOf("const TOP_BAR_SEARCH_PLATE"))
     expect(peca).toContain("<ButtonGroup")
     expect(peca).toContain('data-slot="top-bar-action-group"')
-    // O anel é do grupo; o de cada botão desenhava uma linha na emenda.
-    expect(peca).toContain("md:rounded-full md:ring-1 md:ring-foreground/10 *:before:hidden *:ml-0! *:ring-0!")
-    // No telefone, círculos soltos.
-    expect(peca).toContain("max-md:gap-1 max-md:*:rounded-full!")
+    expect(peca).toContain('join = "always"')
+    expect(peca).toContain('"*:before:hidden *:ml-0!"')
+    // O anel é do grupo onde cola; o de cada botão desenhava uma linha na emenda.
+    expect(peca).toContain('always: "rounded-full ring-1 ring-foreground/10 *:ring-0!"')
+    // Do outro lado da quebra, o botão que sobra é um círculo solto com o próprio anel.
+    expect(peca).toContain("md:*:ring-0! max-md:gap-1 max-md:*:rounded-full!")
+    expect(peca).toContain("max-md:*:ring-0! md:gap-1 md:*:rounded-full!")
   })
 
   it("o cabeçalho do app escolhe a busca pela preferência do aparelho", () => {
     const cabecalho = fonte("src/components/layout/app-header.tsx")
     expect(cabecalho).toContain("useBuscaDoCabecalho()")
-    expect(cabecalho).toMatch(/busca === "botao" \? \(\s*<TopBarActionGroup>/)
+    expect(cabecalho).toMatch(/busca === "botao" \? \(\s*<TopBarActionGroup join=/)
+    // No telefone, lupa e sino lado a lado (subpáginas) também colam.
+    expect(cabecalho).toContain('<TopBarActionGroup join="phone">')
     expect(cabecalho).not.toContain("teste-ab")
+  })
+})
+
+describe("o vão do app instalado no iPhone", () => {
+  it("só no standalone e só com área segura: o conteúdo da barra escapa do borrão de borda do iOS", () => {
+    // Desde o iOS 26 o sistema borra o topo da página por cima de tudo (rodada 331).
+    expect(CSS).toMatch(/@media \(display-mode: standalone\) \{\s*:root \{\s*--top-bar-edge-gap: min\(30px, env\(safe-area-inset-top, 0px\) \* 100\);/)
   })
 })
 

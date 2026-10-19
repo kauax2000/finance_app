@@ -7,8 +7,6 @@ export type PageChromeSlotPatch = {
     title?: string
     /** When set, shows back button to this href. */
     backHref?: string
-    /** Right-side control (e.g. MonthNav icon-only). */
-    dateFilter?: React.ReactNode
 }
 
 type PageChromeContextValue = {
@@ -43,7 +41,6 @@ export function usePageChromeState(): PageChromeSlotPatch | null {
 
 /**
  * Publishes mobile header chrome for the current page. Clears on unmount.
- * Prefer memoizing `dateFilter` to avoid unnecessary header updates.
  */
 export function usePageChromeSlot(patch: PageChromeSlotPatch) {
     const ctx = React.useContext(PageChromeContext)
@@ -57,5 +54,5 @@ export function usePageChromeSlot(patch: PageChromeSlotPatch) {
     React.useLayoutEffect(() => {
         setSlot({ ...patchRef.current })
         return () => setSlot(null)
-    }, [setSlot, patch.title, patch.backHref, patch.dateFilter])
+    }, [setSlot, patch.title, patch.backHref])
 }

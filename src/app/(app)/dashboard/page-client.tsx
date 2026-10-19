@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useState } from "react"
 import dynamic from "next/dynamic"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
@@ -17,7 +17,6 @@ import { DashboardPageSkeleton } from "@/components/dashboard/dashboard-page-ske
 import { useDashboardData } from "@/components/dashboard/use-dashboard-data"
 import { DashboardToolbar } from "@/components/dashboard/dashboard-toolbar"
 import { MonthNav } from "@/components/categories/categories-toolbar"
-import { usePageChromeSlot } from "@/components/layout/page-chrome-provider"
 import { DashboardKpiCards } from "@/components/dashboard/dashboard-kpi-cards"
 import { DashboardPaymentsCalendar } from "@/components/dashboard/dashboard-payments-calendar"
 import { DashboardOpenInvoices } from "@/components/dashboard/dashboard-open-invoices"
@@ -113,17 +112,6 @@ export default function DashboardPageClient() {
     )
     const [previewOpen, setPreviewOpen] = useState(false)
 
-    const dashboardDateFilter = useMemo(
-        () => (
-            <MonthNav
-                budgetMonthYm={d.calendarYm}
-                onBudgetMonthYmChange={d.setCalendarYm}
-                inBar
-            />
-        ),
-        [d.calendarYm, d.setCalendarYm],
-    )
-    usePageChromeSlot({ dateFilter: dashboardDateFilter })
 
     const openEventPreview = useCallback((model: DashboardPaymentPreviewModel) => {
         setDetailOpen(false)
@@ -303,6 +291,13 @@ export default function DashboardPageClient() {
 
     return (
         <div className="min-w-0 max-w-full space-y-5">
+            {/* No telefone o mês mora no topo do conteúdo, numa faixa de largura inteira; no desktop ele fica na barra da tela. */}
+            <MonthNav
+                budgetMonthYm={d.calendarYm}
+                onBudgetMonthYmChange={d.setCalendarYm}
+                mobileTriggerFullWidth
+                className="md:hidden"
+            />
             <DashboardToolbar
                 calendarYm={d.calendarYm}
                 onCalendarYmChange={d.setCalendarYm}

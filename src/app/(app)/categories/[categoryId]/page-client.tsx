@@ -103,22 +103,11 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
         [refreshing],
     )
 
-    const categoryDetailDateFilter = React.useMemo(
-        () => (
-            <MonthNav
-                budgetMonthYm={yearMonth}
-                onBudgetMonthYmChange={handleMonthChange}
-                inBar
-            />
-        ),
-        [yearMonth, handleMonthChange],
-    )
     usePageChromeSlot({
         title: "Detalhes da categoria",
         backHref: category
             ? `${ROUTES.DASHBOARD_CATEGORIES}?month=${encodeURIComponent(yearMonth)}`
             : undefined,
-        dateFilter: category ? categoryDetailDateFilter : undefined,
     })
 
     const invalidateDetail = React.useCallback(() => {
@@ -456,6 +445,13 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     return (
         <div className="min-w-0 max-w-full space-y-5">
             {confirmDialog}
+            {/* No telefone o mês mora no topo do conteúdo, numa faixa de largura inteira; no desktop ele fica na barra da tela. */}
+            <MonthNav
+                budgetMonthYm={yearMonth}
+                onBudgetMonthYmChange={handleMonthChange}
+                mobileTriggerFullWidth
+                className="md:hidden"
+            />
             <CategoryDetailHero
                 category={category}
                 accentColor={accentColor}

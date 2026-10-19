@@ -48,7 +48,7 @@ type ToolbarSize = keyof typeof TOOLBAR_SIZES
  */
 const toolbarClassName = [
   "flex min-w-0 flex-wrap items-center gap-2 md:gap-3",
-  "[--toolbar-control:--spacing(9)] pointer-coarse:[--toolbar-control:--spacing(10)]",
+  "[--toolbar-control:--spacing(9)] pointer-coarse:[--toolbar-control:--spacing(11)]",
 ].join(" ")
 
 const TOOLBAR_SIZE_CLASS: Record<ToolbarSize, string> = {

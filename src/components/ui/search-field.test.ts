@@ -26,7 +26,7 @@ describe("o campo de busca é um desenho só", () => {
     expect(campo).toContain("touchFloor = false,")
     expect(campo).toContain("data-touch-floor={touchFloor || undefined}")
     expect(lerFonte("src/components/ui/command.tsx")).toContain(
-      "pointer-coarse:has-[[data-slot=command-input-wrapper][data-touch-floor][data-size]]:[--scroll-fade-band-h:calc(--spacing(10)+--spacing(4))]"
+      "pointer-coarse:has-[[data-slot=command-input-wrapper][data-touch-floor][data-size]]:[--scroll-fade-band-h:calc(--spacing(11)+--spacing(4))]"
     )
   })
 

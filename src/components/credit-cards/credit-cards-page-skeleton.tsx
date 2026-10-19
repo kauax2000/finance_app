@@ -34,7 +34,7 @@ export function CreditCardsPageSkeleton({
             <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-3">
                 <div
                     className={cn(
-                        "inline-flex h-8 w-full items-stretch gap-0.5 rounded-full bg-muted p-0.5 pointer-coarse:h-10 md:w-auto",
+                        "inline-flex h-8 w-full items-stretch gap-0.5 rounded-full bg-muted p-0.5 pointer-coarse:h-11 md:w-auto",
                         "max-w-full shrink-0",
                     )}
                     aria-hidden

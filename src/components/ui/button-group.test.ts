@@ -21,7 +21,7 @@ describe("o grupo de botões", () => {
 
   it("o campo ocupa a sobra e, no dedo, leva os botões aos 40", () => {
     expect(GRUPO).toContain("[&>[data-slot=input]]:flex-1")
-    expect(GRUPO).toContain("pointer-coarse:has-[>[data-slot=input]]:*:h-10")
+    expect(GRUPO).toContain("pointer-coarse:has-[>[data-slot=input]]:*:h-11")
   })
 
   it("em pé, a emenda deita", () => {

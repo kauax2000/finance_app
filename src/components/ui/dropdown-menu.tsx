@@ -971,6 +971,9 @@ function DropdownMenuRadioItem({
           // ladrilho de 24 mais 6 de cada lado dá os 36 das outras linhas (com
           // `py-2` a linha ia a 40), e o halo de 4px ainda cabe.
           "pr-2 py-1.5 data-[state=unchecked]:not-focus:text-muted-foreground",
+          // No toque o ladrilho é o `ColorTile md` (32, ícone de 16): 32 + 6 de cada lado
+          // dá os 44 da linha (rodada 330).
+          "pointer-coarse:[&>[data-slot=color-tile]]:size-8 pointer-coarse:[&>[data-slot=color-tile]]:rounded-row pointer-coarse:[&>[data-slot=color-tile]>svg]:size-4",
           // A escolhida acende cheia nos tons da barra lateral (a passagem é a 50%), como a
           // página ativa nela.
           "data-[state=checked]:bg-sidebar-accent data-[state=checked]:text-sidebar-accent-foreground",

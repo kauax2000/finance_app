@@ -702,7 +702,7 @@ function DialogFooter({
         "px-(--dialog-px) py-4 sm:flex-row sm:justify-end",
         // No dedo os botões do rodapé sobem a 40, o piso de toque da casa (a
         // pergunta é sobre o apontador).
-        "pointer-coarse:[&_button]:min-h-10",
+        "pointer-coarse:[&_button]:min-h-11",
         className
       )}
       {...props}

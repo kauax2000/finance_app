@@ -60,7 +60,7 @@ function CategoriesToolbarSkeleton({ variant }: { variant: CategoriesPageSkeleto
             )}
         >
             <div
-                className={cn("inline-flex h-8 w-full items-stretch gap-0.5 rounded-full bg-muted p-0.5 pointer-coarse:h-10 md:w-auto", "max-w-full shrink-0")}
+                className={cn("inline-flex h-8 w-full items-stretch gap-0.5 rounded-full bg-muted p-0.5 pointer-coarse:h-11 md:w-auto", "max-w-full shrink-0")}
                 aria-hidden
             >
                 <div className="flex h-full min-h-0 w-full gap-0.5 md:w-auto">

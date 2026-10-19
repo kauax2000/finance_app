@@ -43,7 +43,7 @@ describe("a escada e as superfícies", () => {
   it("sm 28 · md 32 · lg 36, e o piso de 40 no dedo vem da régua de campo", () => {
     expect(CODIGO).toContain("fieldControlHeightClassName[size]")
     expect(barra({ defaultValue: [{ field: "parcelado", operator: "is", values: [] }] })).toContain(
-      "pointer-coarse:h-10"
+      "pointer-coarse:h-11"
     )
   })
 
@@ -53,15 +53,15 @@ describe("a escada e as superfícies", () => {
     // A busca dos editores liga o piso de toque do CommandInput (40, e a faixa junto).
     expect(CODIGO.match(/<CommandInput\s+surface="plate"\s+touchFloor/g)).toHaveLength(2)
     // O E/OU também.
-    expect(CODIGO).toContain("pointer-coarse:h-10 pointer-coarse:min-w-10")
+    expect(CODIGO).toContain("pointer-coarse:h-11 pointer-coarse:min-w-10")
     // "Remover" cresce à vista no dedo, a 40 — e não por um alvo invisível.
-    expect(CODIGO).toContain("pointer-coarse:h-10 pointer-coarse:px-3 pointer-coarse:text-sm")
+    expect(CODIGO).toContain("pointer-coarse:h-11 pointer-coarse:px-3 pointer-coarse:text-sm")
     expect(CODIGO).not.toContain("pointer-coarse:after:-inset-2.5")
     // O calendário na gaveta é o do DatePicker: células lg, esticadas.
     expect(CODIGO).toContain('size={naGaveta ? "lg" : "md"}')
     // Os atalhos de período sobem a 40 no Calendar.
     const calendario = lerFonte("src/components/ui/calendar.tsx")
-    expect(calendario).toContain("w-full justify-center font-normal pointer-coarse:h-10")
+    expect(calendario).toContain("w-full justify-center font-normal pointer-coarse:h-11")
     // No telefone os atalhos são 2 × 2, e na gaveta o calendário não pinta fundo.
     expect(calendario).toContain('className="grid grid-cols-2 gap-1 md:flex')
     // A coluna do desktop tem o desenho da grade do telefone; o corte é md, o da gaveta.

@@ -929,7 +929,7 @@ function FilterBar({
                         ? "Combinar filtros: todos (E). Trocar para qualquer um (OU)."
                         : "Combinar filtros: qualquer um (OU). Trocar para todos (E)."
                     }
-                    className="px-2.5 text-2xs font-semibold tracking-wider uppercase pointer-coarse:h-10 pointer-coarse:min-w-10"
+                    className="px-2.5 text-2xs font-semibold tracking-wider uppercase pointer-coarse:h-11 pointer-coarse:min-w-10"
                     onClick={() => emitirMatch(match === "all" ? "any" : "all")}
                   >
                     {match === "all" ? "e" : "ou"}
@@ -983,7 +983,7 @@ function FilterBar({
                 aria-haspopup="dialog"
                 aria-expanded={aberto?.tipo === "campos"}
                 aria-controls={conteudoId}
-                className="border-dashed pointer-coarse:h-10"
+                className="border-dashed pointer-coarse:h-11"
                 onClick={abrirCampos}
               >
                 <PlusIcon aria-hidden />
@@ -998,7 +998,7 @@ function FilterBar({
                       data-slot="filter-bar-clear"
                       disabled={disabled}
                       aria-label="Limpar filtros"
-                      className="pointer-coarse:h-10"
+                      className="pointer-coarse:h-11"
                       onClick={limpar}
                     >
                       limpar
@@ -1398,7 +1398,7 @@ function EditorDeValor(props: EditorProps) {
           variant="tertiary"
           size="xs"
           // No dedo o botão cresce de verdade, a 40 (a régua do "+ Filtro", do "Limpar" e do rodapé dos diálogos).
-          className="-me-1.5 pointer-coarse:-me-3 pointer-coarse:h-10 pointer-coarse:px-3 pointer-coarse:text-sm"
+          className="-me-1.5 pointer-coarse:-me-3 pointer-coarse:h-11 pointer-coarse:px-3 pointer-coarse:text-sm"
           onClick={onRemover}
         >
           remover

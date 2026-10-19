@@ -64,7 +64,7 @@ describe("as versões do Dialog", () => {
   })
 
   it("no dedo, os botões do rodapé sobem ao piso de 40", () => {
-    expect(CODIGO).toContain('"pointer-coarse:[&_button]:min-h-10"')
+    expect(CODIGO).toContain('"pointer-coarse:[&_button]:min-h-11"')
   })
 
   it("as telas não trocam mais Dialog por Sheet à mão", () => {

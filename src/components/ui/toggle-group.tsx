@@ -217,10 +217,17 @@ function ToggleGroupItem({
         }),
         segmentado && [
           SEGMENTO,
+          // No dedo o item alcança os 44 do alvo do iOS (rodada 332): o `::after` de
+          // 44, centrado, cobre o recuo da bandeja sem mexer no desenho (o mesmo das
+          // abas do `Tabs`; altura fixa, porque ele mede por dentro da borda).
+          "relative pointer-coarse:after:absolute pointer-coarse:after:inset-x-0 pointer-coarse:after:top-1/2 pointer-coarse:after:h-11 pointer-coarse:after:-translate-y-1/2 pointer-coarse:after:content-['']",
+          // A bandeja é o item mais 4: com o item em 40 no dedo ela chega aos 44 das
+          // abas do `Tabs` (era 36, e a bandeja ficava em 40).
+          "pointer-coarse:h-10",
           flutuante
             ? // O gatilho do `Tabs floating`, classe a classe: a pílula, o ar
               // nas pontas, o corpo dos controles e o esmaecer no tempo de lá.
-              "gap-1.5 rounded-full px-3 text-control-sm pointer-coarse:h-9 duration-(--duration-base)"
+              "gap-1.5 rounded-full px-3 text-control-sm duration-(--duration-base)"
             : null,
         ],
         segmentado && !context.indicatorReady && (flutuante ? PILULA_SEM_MARCADOR : SEGMENTO_SEM_MARCADOR),

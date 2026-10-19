@@ -445,7 +445,7 @@ export default function TopBarDoc() {
       <PropsTable
         title="Eixos de TopBar"
         rows={[
-          { prop: "size", type: '"sm" | "md" | "lg"', default: '"sm"', description: "Altura: 48 (52 do md para cima), 56 ou 64. O padrão é sm, a do app: no desktop, 8px em cima e embaixo dos controles de 36; lg é a barra das páginas de marca." },
+          { prop: "size", type: '"sm" | "md" | "lg"', default: '"sm"', description: "Altura: 56 no telefone (52 do md para cima), 56 ou 64. O padrão é sm, a do app: no telefone, botões de 44 com ícone de 20; no desktop, 8px em cima e embaixo dos controles de 36; lg é a barra das páginas de marca." },
           { prop: "position", type: '"static" | "sticky" | "fixed" | "auto"', default: '"sticky"', description: "sticky gruda na região que rola; fixed prende na janela e soma a área segura; auto é fixed no telefone e sticky acima." },
           { prop: "surface", type: '"solid" | "glass" | "scroll" | "edge"', default: '"solid"', description: "solid é --background; glass é a régua de barra; scroll troca de um para o outro ao rolar, e o fio vem junto; edge é a borda do iOS — sem tinta chapada nem fio, o conteúdo some num borrão que cresce em direção à borda e acaba 24px abaixo da barra (a do app)." },
           { prop: "variant", type: '"bar" | "floating"', default: '"bar"', description: "bar encosta nas bordas, com o fio; floating é a pílula solta, a 8px, com o anel e a sombra." },
@@ -460,8 +460,8 @@ export default function TopBarDoc() {
         rows={[
           { prop: "TopBarStart · TopBarContent · TopBarActions", type: "ComponentProps<'div'> & { phone? }", description: "As pontas e o meio. phone é o que mostram abaixo de md; null esconde no telefone." },
           { prop: "TopBarTitle", type: "ComponentProps<'h1'> & { phone?, pageTitle?, scrollToTop?, asChild? }", description: "O nome da tela. pageTitle recebe o título que sobe do PageHeader; tocar nele no telefone sobe ao topo." },
-          { prop: "TopBarAction", type: "Button & { label, count?, countLabel?, shortcut?, tooltip?, plate? }", description: "O botão de ícone da barra, com a dica e a contagem no nome; `plate` veste a pílula da placa do botão de recolher (do md para cima)." },
-          { prop: "TopBarActionGroup", type: "ComponentProps<typeof ButtonGroup>", description: "Ações com plate numa cápsula: o ButtonGroup sem divisor, com o anel no grupo (do md para cima); no telefone, círculos soltos a 4px." },
+          { prop: "TopBarAction", type: "Button & { label, count?, countLabel?, shortcut?, tooltip?, plate? }", description: "O botão de ícone da barra, com a dica e a contagem no nome; `plate` veste o círculo de vidro do botão de recolher, em todo tamanho." },
+          { prop: "TopBarActionGroup", type: "ComponentProps<typeof ButtonGroup> & { join? }", description: "Ações com plate numa cápsula: o ButtonGroup sem divisor, com o anel no grupo. join (always, o padrão; desktop; phone) diz de que lado da quebra cola, quando um dos botões só existe num lado; do outro, o que sobra é um círculo solto." },
           { prop: "TopBarSearch", type: "{ onOpen, label?, placeholder?, shortcut?, slash?, listen?, collapse?, glow?, plate? }", description: "A pílula de busca com a tecla, que vira ícone abaixo da quebra, e os atalhos ⌘K e /; `plate` troca o campo pelo vidro do campo do CommandDialog." },
           { prop: "TopBarProgress", type: "{ value?, label? }", description: "O fio de carregamento na aresta de baixo; sem value, indeterminado." },
           { prop: "TopBarSkeleton", type: "{ size?, actions?, start? }", description: "A barra esperando, no SkeletonGroup." },

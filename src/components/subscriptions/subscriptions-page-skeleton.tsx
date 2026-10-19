@@ -9,7 +9,7 @@ function ToolbarSkeleton() {
             <div className="flex min-w-0 flex-row items-center gap-2 md:contents">
                 <div
                     className={cn(
-                        "inline-flex h-8 w-full items-stretch gap-0.5 rounded-full bg-muted p-0.5 pointer-coarse:h-10 md:w-auto",
+                        "inline-flex h-8 w-full items-stretch gap-0.5 rounded-full bg-muted p-0.5 pointer-coarse:h-11 md:w-auto",
                         "min-w-0 flex-1 md:flex-initial md:shrink-0"
                     )}
                     aria-hidden

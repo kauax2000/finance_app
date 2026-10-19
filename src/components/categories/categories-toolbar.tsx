@@ -90,7 +90,7 @@ function MonthNavArrowControls({
                         ? monthNavBarButtonClassName
                         : dense
                           ? monthNavDenseButtonClassName
-                          : "h-10 px-2 text-sm",
+                          : "h-10 pointer-coarse:h-11 px-2 text-sm",
                     esteMesInsidePopoverOnNarrow && "hidden md:inline-flex",
                 )}
                 onClick={() => onJump()}
@@ -107,7 +107,7 @@ function MonthNavArrowControls({
                         ? monthNavBarIconButtonClassName
                         : dense
                           ? monthNavDenseIconButtonClassName
-                          : "size-10",
+                          : "size-10 pointer-coarse:size-11",
                 )}
                 aria-label="Mês anterior"
                 onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, -1))}
@@ -133,7 +133,7 @@ function MonthNavArrowControls({
                                     ? monthNavBarMonthPickerClassName
                                     : dense
                                     ? monthNavDenseMonthPickerClassName
-                                    : "h-10 flex-1 gap-2 px-3 text-sm",
+                                    : "h-10 pointer-coarse:h-11 flex-1 gap-2 px-3 text-sm",
                             )}
                         >
                             <CalendarIcon
@@ -195,7 +195,7 @@ function MonthNavArrowControls({
                         ? monthNavBarIconButtonClassName
                         : dense
                           ? monthNavDenseIconButtonClassName
-                          : "size-10",
+                          : "size-10 pointer-coarse:size-11",
                 )}
                 aria-label="Próximo mês"
                 onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, 1))}

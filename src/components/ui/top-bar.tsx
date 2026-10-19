@@ -55,7 +55,8 @@ const topBarVariants = cva(
     "flex w-full min-w-0 shrink-0 items-center gap-2",
     // A área segura por variável (`--top-bar-safe-area`), e não `env()` cru: a prévia
     // num iPhone do catálogo é um iframe, onde `env()` vale zero.
-    "[--top-bar-safe-area:env(safe-area-inset-top,0px)]",
+    // Mais o vão do app instalado no iPhone (`--top-bar-edge-gap`, no `globals.css`).
+    "[--top-bar-safe-area:calc(env(safe-area-inset-top,0px)+var(--top-bar-edge-gap,0px))]",
     "h-[calc(var(--top-bar-h)+var(--top-bar-safe,0px))] pt-[var(--top-bar-safe,0px)]",
     "border-b border-b-[length:var(--sidebar-inset-rule,1px)] border-border",
     // O fio só ao rolar: no `scroll`, aparece junto com o vidro (em repouso a barra é a página).
@@ -75,7 +76,9 @@ const topBarVariants = cva(
   {
     variants: {
       size: {
-        sm: "[--top-bar-h:3rem] md:[--top-bar-h:3.25rem]",
+        // 56 no telefone (a régua dos apps nativos: botões de 44 com 6 de folga) e
+        // 52 do `md` para cima, 8 em volta dos controles de 36 (rodada 328).
+        sm: "[--top-bar-h:3.5rem] md:[--top-bar-h:3.25rem]",
         md: "[--top-bar-h:3.5rem]",
         // O degrau `lg` (64): a barra das páginas públicas e de marca. O título fica no
         // corpo da barra; a marca é que cresce.
@@ -493,7 +496,7 @@ function TopBarAction({
   /** A tecla (`"mod+k"`), na dica e no `aria-keyshortcuts`. Só mostra — quem escuta é a tela. */
   shortcut?: string
   tooltip?: boolean
-  /** O vidro da busca do cabeçalho, como o botão de recolher (do `md` para cima). */
+  /** O vidro da busca do cabeçalho, como o botão de recolher (em todo tamanho). */
   plate?: boolean
 }) {
   const temContagem = typeof count === "number" && count > 0
@@ -511,6 +514,8 @@ function TopBarAction({
       data-slot="top-bar-action"
       className={cn(
         "relative pointer-coarse:after:absolute pointer-coarse:after:-inset-0.5 pointer-coarse:after:content-['']",
+        // No telefone o botão é o alvo inteiro, 44, com o ícone a 20.
+        "max-md:size-11 max-md:[&_svg]:size-5",
         plate && TOP_BAR_PLATE,
         className
       )}
@@ -549,23 +554,35 @@ function TopBarAction({
   )
 }
 
+/** Onde a cápsula cola, por extenso (classe montada não chega ao CSS). */
+const CAPSULA_COLA = {
+  always: "rounded-full ring-1 ring-foreground/10 *:ring-0!",
+  desktop: "md:rounded-full md:ring-1 md:ring-foreground/10 md:*:ring-0! max-md:gap-1 max-md:*:rounded-full!",
+  phone: "max-md:rounded-full max-md:ring-1 max-md:ring-foreground/10 max-md:*:ring-0! md:gap-1 md:*:rounded-full!",
+} as const
+
 /**
  * Ações da barra numa cápsula só: `TopBarAction plate` lado a lado, colados pelo
  * `ButtonGroup` (os cantos de dentro achatados), sem o divisor dele e sem a
  * sobreposição de 1px. O anel é um só, o do grupo: o de cada botão desenhava uma
- * linha na emenda. Do `md` para cima, como o vidro dos botões; no telefone eles
- * seguem soltos e `tertiary`. A busca compacta do app (lupa e sino) a veste.
+ * linha na emenda. `join` diz onde cola, para quando um dos botões só existe num
+ * lado da quebra (`md:hidden`, `max-md:hidden`): do outro lado o que sobra fica
+ * um círculo solto, com o próprio anel. A busca compacta do app (lupa e sino) a
+ * veste.
  */
-function TopBarActionGroup({ className, ...props }: React.ComponentProps<typeof ButtonGroup>) {
+function TopBarActionGroup({
+  join = "always",
+  className,
+  ...props
+}: React.ComponentProps<typeof ButtonGroup> & {
+  /** Onde os botões colam: sempre, só do `md` para cima ou só no telefone. */
+  join?: keyof typeof CAPSULA_COLA
+}) {
   return (
     <ButtonGroup
       data-slot="top-bar-action-group"
-      className={cn(
-        "md:rounded-full md:ring-1 md:ring-foreground/10 *:before:hidden *:ml-0! *:ring-0!",
-        // No telefone o vidro não existe: os botões voltam a ser círculos soltos, a 4px.
-        "max-md:gap-1 max-md:*:rounded-full!",
-        className
-      )}
+      data-join={join}
+      className={cn("*:before:hidden *:ml-0!", CAPSULA_COLA[join], className)}
       {...props}
     />
   )
@@ -573,19 +590,22 @@ function TopBarActionGroup({ className, ...props }: React.ComponentProps<typeof 
 
 /**
  * O vidro do campo da paleta (`searchFieldSurfaceClassName.plate`): o anel de
- * 1px sobre a tinta flutuante, do `md` para cima, por extenso (classe montada
- * não chega ao CSS). A lupa o veste; no telefone o botão segue `tertiary`.
+ * 1px sobre a tinta flutuante, por extenso (classe montada não chega ao CSS).
+ * A lupa o veste, no telefone também (rodada 329).
  */
 const TOP_BAR_SEARCH_PLATE =
-  "md:ring-1 md:ring-foreground/10 md:bg-popover/85 md:glass-surface md:supports-backdrop-filter:bg-popover/60 md:reduced-transparency:bg-popover"
+  "ring-1 ring-foreground/10 bg-popover/85 glass-surface supports-backdrop-filter:bg-popover/60 reduced-transparency:bg-popover"
 
 /**
  * O botão de ação no mesmo vidro da busca, como o de recolher da barra lateral
  * (`SIDEBAR_TRIGGER_FLOATING`): o vidro vai até o anel (`bg-clip-border`) e o
- * realce é o das carteiras, `--sidebar-accent` a 50%.
+ * realce é o das carteiras, `--sidebar-accent` a 50%. Vale em todo tamanho: no
+ * telefone os botões da barra são os mesmos círculos de vidro do desktop
+ * (rodada 329). Exportado como `topBarPlateClassName` para o voltar do telefone
+ * (`PageHeaderBack`) vestir o mesmo vidro sem copiar a receita.
  */
 const TOP_BAR_PLATE =
-  "md:ring-1 md:ring-foreground/10 md:bg-popover/85 md:glass-surface md:supports-backdrop-filter:bg-popover/60 md:reduced-transparency:bg-popover md:rounded-full md:bg-clip-border md:[--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]"
+  "ring-1 ring-foreground/10 bg-popover/85 glass-surface supports-backdrop-filter:bg-popover/60 reduced-transparency:bg-popover rounded-full bg-clip-border [--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]"
 
 /** As classes por extenso: classe montada em tempo de execução não chega ao CSS. */
 const BUSCA_QUEBRA = {
@@ -667,11 +687,15 @@ function TopBarSearch({
         // pela barra inteira e engoliria o toque no ☰ do telefone.
         className={cn(
           "relative rounded-full text-muted-foreground pointer-coarse:after:absolute pointer-coarse:after:-inset-0.5 pointer-coarse:after:content-['']",
+          // No telefone, a régua do `TopBarAction`: 44, com o ícone a 20.
+          "max-md:size-11 max-md:[&_svg]:size-5",
           BUSCA_QUEBRA[collapse].icone,
           plate && TOP_BAR_SEARCH_PLATE
         )}
       >
-        <MagnifyingGlassIcon className="opacity-70" aria-hidden />
+        {/* `size-4` explícito: sem ele a regra do `Button` para ícone sem tamanho
+            (mais específica) vencia o `max-md:[&_svg]:size-5`. */}
+        <MagnifyingGlassIcon className="size-4 opacity-70" aria-hidden />
       </Button>
       <div
         ref={brilho}
@@ -793,5 +817,6 @@ export {
   TopBarSkeleton,
   TopBarStart,
   TopBarTitle,
+  TOP_BAR_PLATE as topBarPlateClassName,
   topBarVariants,
 }

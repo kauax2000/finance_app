@@ -12,7 +12,7 @@ const CSS = lerFonte("src/app/globals.css")
 describe("o redesenho", () => {
   it("a ação desce ao degrau sm sozinha, e sobe a 40 no dedo", () => {
     expect(CODIGO).toContain('<ButtonSizeContext value="sm">{actions}</ButtonSizeContext>')
-    expect(CODIGO).toContain("pointer-coarse:[&>[data-slot=button]]:min-h-10")
+    expect(CODIGO).toContain("pointer-coarse:[&>[data-slot=button]]:min-h-11")
   })
 
   it("no telefone a ação de ícone fica quadrada, com o rótulo como nome", () => {

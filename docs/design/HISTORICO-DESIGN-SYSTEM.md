@@ -27465,3 +27465,132 @@ de 638 a 666 em ~500 ms, passando a 667 e assentando. Movimento reduzido troca
 na hora. Só no desktop: no telefone o diálogo é a gaveta do `vaul`, que mede a
 própria altura.
 
+### Rodada 328 — o header do telefone na régua nativa
+
+Depois de o header do telefone perder o nome da página e o filtro de mês (que
+foi para o topo do conteúdo das telas), o dono achou o que sobrou pequeno: a
+barra de 48, a lupa e o sino de 40 com ícone de 16 e o ladrilho da carteira de
+24 eram a escala do desktop encolhida. Escolhida a régua nativa (entre ela e
+uma intermediária de 52): no telefone o `TopBar sm` mede 56; o `TopBarAction`,
+a lupa do `TopBarSearch` e o `PageHeaderBack` medem 44, o próprio alvo de
+toque, com o ícone a 20 (`max-md:size-11 max-md:[&_svg]:size-5`); e o gatilho
+da carteira veste o ladrilho `md` (32), o da barra lateral. A lupa ganhou
+`size-4` explícito: sem classe de tamanho, a regra do `Button` para ícone sem
+tamanho era mais específica que a do telefone. A `--top-bar-bottom` do `sm` e a
+`--mobile-header-offset` (o recuo do conteúdo sob a barra fixa) foram a 3,5rem.
+No telefone o `sm` passa a medir o mesmo que o `md`; do `md` para cima os degraus
+seguem distintos (52 e 56), e o desktop não mudou (medido a 1280: barra 52,
+botões 36, ícones 16).
+
+### Rodada 329 — os botões do header do telefone vestem o vidro do desktop
+
+Com o header do telefone redesenhado à moda do "Instagram ⌄" (a carteira no
+centro, a lupa e o sino nas pontas), o dono comparou com a referência medida
+num 17 Pro Max (440pt): botões de ~44, ícones de ~20 e 16 de margem, os mesmos
+números de cá. O que diferia era o fundo: lá cada botão é um círculo de vidro,
+cá o `TopBarAction` era `tertiary` solto abaixo do `md`. O pedido foi o estilo
+dos botões do header do desktop. O `plate` do `TopBarAction` (e o da lupa do
+`TopBarSearch`) perdeu o prefixo `md:` e vale em todo tamanho; a receita sai
+exportada como `topBarPlateClassName` para o voltar do telefone
+(`PageHeaderBack`) vestir o mesmo círculo sem copiá-la, com `ms-0` no lugar do
+recuo `-ms-2` (com o círculo visível, a borda dele fica a 16, como a das outras
+pontas). No `TopBarActionGroup` o `ring-0` dos botões passou a `md:`: no
+telefone eles são círculos soltos, cada um com o próprio anel. No telefone a
+lupa é sempre o `TopBarAction` branco (a do `TopBarSearch`, cinza de
+propósito, fica para o tablet e o desktop). Medido a 375px: voltar, lupa e sino
+com 44, anel de 1px, tinta `--popover` a 60% e borrão; o desktop não mudou.
+
+Na mesma rodada, o dono pediu que dois botões lado a lado no telefone (a lupa e
+o sino das subpáginas) colassem na cápsula, como no desktop. Só que colar
+depende da quebra: na busca "Barra" a lupa ao lado do sino só existe no
+telefone; na "Botão", nas telas raiz, só no desktop (no telefone ela vai à ponta
+esquerda). O `TopBarActionGroup` ganhou `join` (`always`, o padrão; `desktop`;
+`phone`), com as classes por extenso: do lado que cola, o anel é do grupo; do
+outro, o botão que sobra é um círculo solto com o próprio anel (um
+`display: none` não deixa o irmão virar `:first-child`, então os cantos não se
+consertam sozinhos). Medidos os quatro casos (Barra e Botão, raiz e subpágina,
+375 e 1280).
+
+
+
+### Rodada 330 — os menus no toque na escala nativa
+
+O seletor de carteira do telefone abria com a escala do desktop dentro de linhas
+de toque: linhas de 44 com texto de 14 e ladrilho de 24, o rótulo de seção a 12,
+e o teto de 288 escondia o "Criar carteira" (cinco carteiras e a ação passavam
+da altura e a lista rolava). O dono pediu os tamanhos ajustados e escolheu que
+valesse para todo menu no toque. Na régua dos menus (`menu-classes`), no
+`pointer-coarse`: a linha vai a texto 16 e ícone 20 (a altura já era 44), o
+rótulo de seção a 14 e o teto a 384; no `DropdownMenuRadioItem
+indicator="media"` o ladrilho vai ao degrau `md` (32, ícone de 16), que com o
+`py-1.5` fecha os 44. Vale para o `DropdownMenu`, o `ContextMenu`, o `Menubar` e
+o `Command` (a paleta do telefone, que divide a geometria da linha); o `Select`
+tem a linha própria e ficou. Medido a 375px: o menu de carteiras cabe inteiro
+(328 de altura), sem rolar. O cursor não muda nada.
+
+### Rodada 331 — a página passa sob a barra de status, e o header escapa do borrão do iOS
+
+O dono pediu que o app instalado no iPhone perdesse a "testa" preta sobre o
+header e que o borrão continuasse até a borda. A faixa vinha do
+`statusBarStyle: "default"`; com `black-translucent` a página passa por baixo do
+relógio (o `viewportFit: "cover"` e a área segura no `TopBar` já contavam com
+isso; o iOS só lê o estilo ao adicionar o app à tela inicial). Mas, no
+simulador (iPhone 18 Pro Max), os botões e o nome da carteira saíram borrados e
+apagados. Primeira hipótese, errada: as camadas de borrão `-z-10` do `TopBar`
+pintadas acima do conteúdo no WebKit; um `z-index: 10` nos filhos da barra não
+mudou nada e saiu. A causa é do sistema: desde o iOS 26, num app instalado com a
+barra translúcida, o iOS desenha o efeito de borda do Liquid Glass por cima do
+topo da página (relatos de outros projetos: ~110pt, sem CSS nem meta que o
+desligue; a faixa fixa opaca que o contornava parou de funcionar no iOS 27). Os
+apps nativos não sofrem porque o UIKit desenha os botões da barra acima do
+efeito. A saída escolhida pelo dono foi descer o conteúdo da barra: o vão
+`--top-bar-edge-gap` entra na área segura do `TopBar`, na `--top-bar-bottom` e
+na `--mobile-header-offset`, só em `display-mode: standalone` e só com área
+segura (`min(1rem, env(safe-area-inset-top) * 100)` zera sem ela). 48px
+ficou nítido mas baixo demais ("horrível"); 24px ainda pareceu muito ("desça
+menos"); 16px parecia bom, mas o dono pediu o vão exato, do último pixel
+borrado ao começo dos botões. Medido no simulador, com a barra e o borrão dela
+escondidos e a página rolada: a borda vertical de um cartão que atravessa a
+faixa vai de degrau ~1 (até ~65pt) a 10 (90pt), 16 (95pt) e 24, nítida, a partir
+de ~97pt. Com 16px os botões começavam a 84pt, 13pt dentro da cauda do efeito;
+o vão exato é 30px (área segura de 62, mais o recuo de 6 da linha de 56: os
+botões de 44 começam a ~97pt). O tema claro
+fica com o relógio branco sobre o borrão claro (o iOS não deixa escolher por
+tema neste modo).
+
+### Rodada 332 — o piso do dedo sobe de 40 a 44, o alvo do iOS
+
+O dono perguntou se os controles do telefone não deviam ter 44, como o header
+(que já media 44 desde a rodada 328), e qual é o padrão do iOS: a Apple
+recomenda 44×44pt de alvo de toque (o Material, 48dp; a WCAG 2.5.8, 24; a
+2.5.5, 44). O piso de 40 (rodada da escada de campo) deixava botões, campos,
+abas e a barra de filtros 4pt abaixo, sem área de toque extra. Pedido: subir
+tudo, só no telefone. Toda regra `pointer-coarse:` de 40 virou 44 (`h-10` →
+`h-11`, `min-h-10` → `min-h-11`, `size-10` → `size-11`, `--spacing(10)` →
+`--spacing(11)` no `--button-h` e no `--toolbar-control`): `Button`, a régua de
+campo e a de busca, `Tabs`, `Toolbar`, `FilterBar`, `NavigationMenu`,
+`Calendar`, `RadioGroup`, `Onboarding`, `SplitShell`, `PageSection`, o rodapé do
+`Dialog` e o `ButtonGroup` com campo. Os degraus `xl` (40 em qualquer
+apontador) ganharam o piso também. No app, os esqueletos que imitam a altura
+dos controles, as faixas (`--scroll-fade-band-h`) que acompanham as abas no toque
+e a faixa do mês do telefone (`MonthNav`) acompanharam. O que mora numa bandeja
+(a aba do `Tabs`, o item segmentado do `ToggleGroup`: 36 dentro de 44) alcança os
+44 por um `::after` de altura fixa (`h-11`), centrado, sem mudar o desenho. A
+primeira versão era "aba + 4px de cada lado" e dava 42: o `::after` mede por
+dentro da borda de 1px da aba, e o recuo da bandeja muda de variante para
+variante (2px na lista das transações). Medido: o toque cobre a bandeja inteira,
+do mesmo topo, em Transações e Cartões. Medido a 375 com
+toque: setas e seletor do mês, abas (44 de toque), "Nova categoria", "Filtros",
+paginação, campos e botões do formulário de lançamento, todos em 44. O mouse não
+muda nada.
+
+Ainda na rodada, o dono viu as abas "quebradas": a bandeja tinha ido a 44, mas a
+aba seguia com 36 no dedo (`pointer-coarse:h-9`, feita para a bandeja de 40), e
+na lista de recuo 2 a pílula ativa ficava a 6px da borda em cima e embaixo e a 4
+dos lados. A aba do `Tabs` vai a 40 no dedo (44 − 2×2), em todos os degraus (o
+`xl` não tinha piso); o marcador volta a 36, a 4px nos quatro lados. O
+`ToggleGroup` segmentado, cuja bandeja é o item mais 4, tinha o item a 36 (o
+flutuante) ou sem piso (o segmentado) e a bandeja em 40: o item vai a 40 no dedo
+e a bandeja a 44. Medidos as abas de Transações e Cartões, o segmentado do
+catálogo e o Despesa/Parcelada/Receita do formulário.
+

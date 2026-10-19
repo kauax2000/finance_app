@@ -18,7 +18,7 @@ export function SessionsPageSkeleton() {
                     <div className="flex h-6 min-w-0 items-center">
                         <Skeleton className="h-4 w-28" />
                     </div>
-                    <Skeleton className="h-8 w-32 shrink-0 rounded-full pointer-coarse:h-10" />
+                    <Skeleton className="h-8 w-32 shrink-0 rounded-full pointer-coarse:h-11" />
                 </div>
                 <Card padding="none">
                     <CardToolbar className="justify-end">

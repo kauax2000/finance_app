@@ -114,9 +114,6 @@ type BillsToolbarProps = {
     onSortChange: (key: BillsSortKey, dir: BillsSortDir) => void
     onNewBill: () => void
     hasTable: boolean
-    filtersSheetOpen?: boolean
-    onFiltersSheetOpenChange?: (open: boolean) => void
-    mobileFiltersTrigger?: "toolbar" | "external"
 }
 
 export function BillsToolbar({
@@ -131,16 +128,8 @@ export function BillsToolbar({
     onSortChange,
     onNewBill,
     hasTable,
-    filtersSheetOpen,
-    onFiltersSheetOpenChange,
-    mobileFiltersTrigger = "toolbar",
 }: BillsToolbarProps) {
-    const [internalSheetOpen, setInternalSheetOpen] = React.useState(false)
-    const sheetControlled =
-        typeof filtersSheetOpen === "boolean" &&
-        typeof onFiltersSheetOpenChange === "function"
-    const sheetOpen = sheetControlled ? filtersSheetOpen : internalSheetOpen
-    const setSheetOpen = sheetControlled ? onFiltersSheetOpenChange! : setInternalSheetOpen
+    const [sheetOpen, setSheetOpen] = React.useState(false)
 
     const active = filtersActive(mode, pendingFilter, modelFilter)
     const sortOpts = sortOptionsForMode(mode)
@@ -190,21 +179,18 @@ export function BillsToolbar({
                 </ToolbarFilters>
 
                 {/* Uma árvore só. No telefone, o botão de filtros abre a folha
-                    (filtrar e ordenar juntos) — quando a tela não o põe na
-                    barra do topo (`external`); a partir de `md`, a barra de
+                    (filtrar e ordenar juntos); a partir de `md`, a barra de
                     menus filtra e ordena: o rádio marca a opção valendo e o
                     cabeçalho do painel a repete. */}
                 <ToolbarActions className="min-w-0">
-                    {mobileFiltersTrigger === "toolbar" ? (
-                        <ToolbarFilterButton
-                            type="button"
-                            label="Filtros e ordenação"
-                            count={active ? 1 : 0}
-                            className="md:hidden"
-                            onClick={() => setSheetOpen(true)}
-                            disabled={!hasTable}
-                        />
-                    ) : null}
+                    <ToolbarFilterButton
+                        type="button"
+                        label="Filtros e ordenação"
+                        count={active ? 1 : 0}
+                        className="md:hidden"
+                        onClick={() => setSheetOpen(true)}
+                        disabled={!hasTable}
+                    />
                     <Menubar
                         size="sm"
                         aria-label="Filtrar e ordenar"

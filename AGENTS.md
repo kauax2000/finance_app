@@ -684,8 +684,13 @@ declaração de `background-color` no trilho).
   quem é dono dela neste app é a casca. `PageHeaderTitleRow` recebe `back`,
   `media` e `endAdornment`; `PageSectionHeader` recebe `actions`. Não existe
   `PageSectionContent`. Dentro do app nenhuma tela usa o `PageHeader` hoje: o
-  título mora na barra do topo, as listas abrem na `Toolbar` e as telas de
-  conta num `PageSection`; só o `PageHeaderBack` serve o voltar do telefone.
+  título é só o `<h1>` escondido da barra do topo (ela não mostra o nome da tela;
+  no telefone o título visível é a carteira, no centro, com a lupa e o sino nas
+  pontas, e o voltar no lugar da lupa nas subpáginas), as listas abrem na `Toolbar` e as telas de conta num
+  `PageSection`; só o `PageHeaderBack` serve o voltar do telefone. O mês das
+  telas que o têm (Painel, Categorias, detalhe da categoria) abre o conteúdo no
+  telefone, como a faixa `MonthNav mobileTriggerFullWidth`; no desktop fica na
+  barra da tela.
 - **Cartão e painel**: [`Card`](src/components/ui/card.tsx) e suas peças —
   `CardToolbar`, `CardHeader`, `CardContent`, `CardFooter`, `CardNote`. O
   painel do app é `<Card padding="none">`; nada de `border-b bg-muted/30`
@@ -933,11 +938,15 @@ declaração de `background-color` no trilho).
   de campo alinha sem ninguém dizer `size`. O `ToggleGroup` fica em `md`: o
   item de 32 mais o recuo da moldura dá os mesmos 36. Nenhum controle usa um
   nome para outra altura, e **a escada mede o controle, nunca o contêiner**.
-- **No dedo a escada de campo colapsa no piso de 40** (`pointer-coarse:h-10`),
-  e o `Button` `md`/`lg` (e `icon-md`/`icon-lg`) sobe a 40 também, pela
-  variável `--button-h` — um `h-*`/`size-*` de quem chama vence nos dois
-  apontadores; `xs` e `sm` moram dentro de outro controle e ficam.
-  **44 é o alvo _solto_** (item de menu, `Pagination`). A pergunta é sobre o
+- **No dedo a escada de campo colapsa no piso de 44** (`pointer-coarse:h-11`),
+  o alvo de toque do iOS (rodada 332; era 40), e o `Button` `md`/`lg`/`xl` (e
+  `icon-md`/`icon-lg`/`icon-xl`) sobe a 44 também, pela variável `--button-h` —
+  um `h-*`/`size-*` de quem chama vence nos dois apontadores; `xs` e `sm` moram
+  dentro de outro controle e ficam. O `xl` dos campos e da busca também leva o
+  piso. **O que mora numa bandeja** (as abas do `Tabs`, os itens segmentados do
+  `ToggleGroup`: 36 dentro de uma moldura de 44) alcança os 44 por um `::after`
+  de altura fixa (`h-11`), centrado, que cobre o recuo sem mudar o desenho —
+  "aba + recuo" dava 42, porque o `::after` mede por dentro da borda. No mouse nada muda. A pergunta é sobre o
   **apontador**, não a largura. A escada e o recuo moram em
   `fieldControlHeightClassName` e `fieldControlPaddingClassName`;
   `input-versions.test.ts` **proíbe os oito controles de reescrever a altura à
@@ -1091,7 +1100,7 @@ declaração de `background-color` no trilho).
   - O cabeçalho é alinhado à esquerda e sem `gap`; o × não reserva lugar (o
     título desvia dele só quando ele existe). O rodapé sangra por
     `--dialog-bleed` e **empilha ao contrário** (`flex-col-reverse`; quem
-    declara `flex-col` o faz de propósito); no dedo os botões dele sobem a 40
+    declara `flex-col` o faz de propósito); no dedo os botões dele sobem a 44
     sozinhos. `DialogContent` mantém o `showCloseButton`.
   - Abre como a paleta: fade e `zoom-in-95` na mola, fecha curto em
     `--ease-out` (rodada 293); o conteúdo chega aos poucos, peça a peça, do
@@ -1209,7 +1218,9 @@ declaração de `background-color` no trilho).
     (rodada 325; era a tinta `bg-foreground/9`). `Item` e `Toggle` seguem
     `bg-muted` — `lib/row-tint.test.ts`.
   - A linha mede 36 e cresce a 44 no **apontador** grosso
-    (`pointer-coarse:min-h-11`), e **duas linhas ficam a 4px** (`MENU_ROW_GAP`, no
+    (`pointer-coarse:min-h-11`) — e no toque o texto vai a 16, o ícone a 20, o
+    rótulo de seção a 14, o ladrilho da opção com mídia a 32 e o teto a 384
+    (a escala nativa do header, rodada 330), e **duas linhas ficam a 4px** (`MENU_ROW_GAP`, no
     viewport do `DropdownMenu`: entre comandos, grupos e a linha `data-menu-row`). **Rádio é ponto, caixa é tique** — a exceção é
     `DropdownMenuRadioItem indicator="media"`, quando a mídia da linha é a
     identidade da opção (o ladrilho da carteira): a escolhida ganha o halo da
@@ -1415,7 +1426,7 @@ declaração de `background-color` no trilho).
   `SelectTrigger`, `ComboboxTrigger` e `SearchInput` **filhos diretos** dela, de
   `ToolbarFilters`/`ToolbarActions`/`ToolbarRow` ou de um `ButtonGroup`
   (`--toolbar-control`); embrulhado num `<div>`, `toolbarControlClassName`.
-  `size` (`sm` 28 · `md` 32 · **`lg` 36**, o padrão; 40 no dedo) desce pelo
+  `size` (`sm` 28 · `md` 32 · **`lg` 36**, o padrão; 44 no dedo) desce pelo
   `ButtonSizeContext`. `sticky` prende sob `--top-bar-bottom`
   (`"hide"` some ao rolar, nunca com o foco dentro); `keyboard` é o
   `role="toolbar"`. `ToolbarButton collapse` — **nenhuma tela escreve as duas
@@ -1481,18 +1492,28 @@ declaração de `background-color` no trilho).
   offcanvas) e o `SidebarInset` é `isolate`; nenhuma tela escreve a margem nem
   o recuo. Sem fio nos dois modos: rolada, ela se separa do conteúdo só pelo
   vidro. No redimensionável não passa (o painel recorta).
-- **`TopBar`**: `variant="floating"`, `titleAlign`, `size` (**`sm`** 48 no telefone e
-  52 do `md` para cima — 8px em volta dos controles de 36, no ritmo da placa da
-  barra lateral —, `md` 56, `lg` 64), área
-  segura por `--top-bar-safe-area`. **`surface="edge"`** (a do app) é a borda
+- **`TopBar`**: `variant="floating"`, `titleAlign`, `size` (**`sm`** 56 no telefone —
+  a régua nativa: `TopBarAction`, a lupa do `TopBarSearch` e o `PageHeaderBack`
+  medem 44 com ícone de 20 abaixo do `md`, e a `--mobile-header-offset` acompanha
+  (rodada 328) — e 52 do `md` para cima — 8px em volta dos controles de 36, no
+  ritmo da placa da barra lateral —, `md` 56, `lg` 64), área
+  segura por `--top-bar-safe-area` — no app instalado no iPhone ela soma
+  `--top-bar-edge-gap` (30px, medidos: o efeito do iOS acaba a ~97pt e os botões começam ali; só em `display-mode: standalone` e com área segura):
+  com a barra de status translúcida (`statusBarStyle: "black-translucent"`), o
+  iOS 26+ borra o topo da página por cima de tudo, e o conteúdo da barra desce
+  para escapar (rodada 331). **`surface="edge"`** (a do app) é a borda
   do iOS: sem tinta chapada nem fio, três camadas de borrão (4, 12 e 24px)
   que crescem em direção à borda e acabam 24px abaixo da barra; a barra em si
   não pode ter `backdrop-filter` nem fundo translúcido (viraria a raiz do
   borrão das camadas). **`TopBarAction`** (`plate`: o vidro da busca do cabeçalho — a tinta
   flutuante e o anel, como o botão de recolher —, com o realce em
-  `--sidebar-accent`, sem sombra, do `md` para cima; o sino do app a veste);
+  `--sidebar-accent`, sem sombra, em todo tamanho — no telefone a lupa, o sino e
+  o voltar (`topBarPlateClassName` no `PageHeaderBack`) são os mesmos círculos de
+  vidro do desktop, rodada 329; o sino do app a veste);
   **`TopBarActionGroup`** (ações `plate` numa cápsula: o `ButtonGroup` sem
-  divisor, com o anel no grupo; no telefone, círculos soltos) — a busca compacta
+  divisor, com o anel no grupo; `join` — `always`, `desktop`, `phone` — diz de
+  que lado da quebra cola, quando um botão só existe num lado; no telefone a
+  lupa e o sino das subpáginas colam, rodada 329) — a busca compacta
   do app, quando a pessoa escolhe "Botão" em Configurações › Aparência
   (`useBuscaDoCabecalho`, neste aparelho, como o tema; "Barra", a pílula do
   centro, é o padrão) — **nenhuma tela escreve

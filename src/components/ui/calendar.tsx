@@ -540,7 +540,7 @@ function useIrParaHoje() {
 }
 
 /** O atalho: a pílula contornada, na grade do telefone e na coluna do desktop (40 no dedo). */
-const ATALHO_CLASSES = "w-full justify-center font-normal pointer-coarse:h-10"
+const ATALHO_CLASSES = "w-full justify-center font-normal pointer-coarse:h-11"
 
 function CalendarShell({ children }: { children: React.ReactNode }) {
   const { presets, showToday, markers, agenda, semNavegacao, irPara, escolher, modo, selecionado } =

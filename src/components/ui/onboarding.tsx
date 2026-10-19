@@ -765,13 +765,13 @@ function AcaoDoItem({
   size: "sm" | "md"
 }) {
   return action.href ? (
-    <Button asChild size={size} className="pointer-coarse:h-10">
+    <Button asChild size={size} className="pointer-coarse:h-11">
       <Link href={action.href} onClick={action.onClick}>
         {action.label}
       </Link>
     </Button>
   ) : (
-    <Button type="button" size={size} onClick={action.onClick} className="pointer-coarse:h-10">
+    <Button type="button" size={size} onClick={action.onClick} className="pointer-coarse:h-11">
       {action.label}
     </Button>
   )
@@ -934,7 +934,7 @@ function OnboardingChecklist({
             <EmptyStateDescription>{doneDescription}</EmptyStateDescription>
           ) : null}
           <EmptyStateActions>
-            <Button type="button" variant="secondary" onClick={dispensar} className="pointer-coarse:h-10">
+            <Button type="button" variant="secondary" onClick={dispensar} className="pointer-coarse:h-11">
               {dismissLabel}
             </Button>
           </EmptyStateActions>
@@ -1647,11 +1647,11 @@ function OnboardingCard({
               className="-mx-1 overflow-hidden px-1"
             >
               <div className="flex items-center gap-2 pt-3 pb-1">
-                <Button type="button" variant="tertiary" size="sm" className="flex-1 pointer-coarse:h-10" onClick={dispensar}>
+                <Button type="button" variant="tertiary" size="sm" className="flex-1 pointer-coarse:h-11" onClick={dispensar}>
                   {dismissLabel}
                 </Button>
                 {action ? (
-                  <Button asChild variant="primary" size="sm" className="flex-1 pointer-coarse:h-10">
+                  <Button asChild variant="primary" size="sm" className="flex-1 pointer-coarse:h-11">
                     <Link href={action.href}>{action.label}</Link>
                   </Button>
                 ) : null}
@@ -1815,7 +1815,7 @@ function OnboardingHotspot({
           ) : null}
         </div>
         <div data-onboarding-collapse className="flex">
-          <Button type="button" variant="secondary" size="sm" onClick={entendi} className="pointer-coarse:h-10">
+          <Button type="button" variant="secondary" size="sm" onClick={entendi} className="pointer-coarse:h-11">
             {dismissLabel}
           </Button>
         </div>
@@ -2706,12 +2706,12 @@ function CorpoDoTour({
             size="icon-sm"
             aria-label={rotulos.backLabel}
             onClick={onVoltar}
-            className={cn("pointer-coarse:size-10", passo === 0 && "invisible")}
+            className={cn("pointer-coarse:size-11", passo === 0 && "invisible")}
           >
             <ChevronLeftIcon className={SETA_QUE_VOLTA} />
           </Button>
           {!pelaPeca ? (
-            <Button type="button" size="sm" data-onboarding-primary onClick={onAvancar} className="pointer-coarse:h-10">
+            <Button type="button" size="sm" data-onboarding-primary onClick={onAvancar} className="pointer-coarse:h-11">
               {ultimo ? rotulos.finishLabel : rotulos.nextLabel}
               {ultimo ? null : <ChevronRightIcon aria-hidden data-icon="inline-end" className={SETA_QUE_ANDA} />}
             </Button>

@@ -360,8 +360,9 @@ describe("a escada do Tabs — `size` nomeia a bandeja", () => {
         ALTURA_CLASS[TABS_SIZES[size].trigger]
       )
     }
-    const piso = ALTURA_CLASS[TABS_SIZES.xl.tray]
-    for (const size of ["sm", "md", "lg"] as const) {
+    // O piso do dedo é 44 (rodada 332), um degrau acima da bandeja xl, que também o leva.
+    const piso = "h-11"
+    for (const size of ["sm", "md", "lg", "xl"] as const) {
       expect(tabsListFrameVariants({ size })).toContain(
         `pointer-coarse:data-[orientation=horizontal]:${piso}`
       )

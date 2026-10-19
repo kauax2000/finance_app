@@ -371,7 +371,7 @@ const tabsListFrameVariants = cva("flex", {
     fill: { true: "w-full min-w-0", false: "w-fit shrink-0" },
     /**
      * A altura do componente: é esta caixa que um layout posiciona, e por isso
-     * `size` a nomeia. O piso de toque é `pointer-coarse:h-10` (40), o degrau da
+     * `size` a nomeia. O piso de toque é `pointer-coarse:h-11` (44, o alvo do iOS; 40 até a rodada 332), o degrau da
      * `Toolbar` (`--toolbar-control`) e o que o app renderiza no telefone; a
      * pergunta é o apontador, não a largura.
      * A altura só existe na horizontal: na vertical `size` não significa nada (o
@@ -380,10 +380,10 @@ const tabsListFrameVariants = cva("flex", {
      * só os 36 primeiros pixels como um traço parado que não acompanhava o marcador.
      */
     size: {
-      sm: "data-[orientation=horizontal]:h-7 pointer-coarse:data-[orientation=horizontal]:h-10",
-      md: "data-[orientation=horizontal]:h-8 pointer-coarse:data-[orientation=horizontal]:h-10",
-      lg: "data-[orientation=horizontal]:h-9 pointer-coarse:data-[orientation=horizontal]:h-10",
-      xl: "data-[orientation=horizontal]:h-10",
+      sm: "data-[orientation=horizontal]:h-7 pointer-coarse:data-[orientation=horizontal]:h-11",
+      md: "data-[orientation=horizontal]:h-8 pointer-coarse:data-[orientation=horizontal]:h-11",
+      lg: "data-[orientation=horizontal]:h-9 pointer-coarse:data-[orientation=horizontal]:h-11",
+      xl: "data-[orientation=horizontal]:h-10 pointer-coarse:data-[orientation=horizontal]:h-11",
     },
   },
   defaultVariants: { variant: "floating", size: "lg", fill: false },
@@ -451,6 +451,11 @@ const tabsTriggerVariants = cva(
     // `ring-3`, o valor do sistema: a diferença de 1px aparece quando uma aba e um
     // botão ficam na mesma linha.
     "focus-visible:ring-3 focus-visible:ring-ring/45",
+    // No dedo a aba alcança os 44 do alvo do iOS (rodada 332): a bandeja mede 44 e
+    // a aba menos, por dentro do recuo; o `::after` de altura fixa, centrado, cobre
+    // o recuo sem mexer no desenho. Altura fixa e não "aba + recuo": o `::after`
+    // mede por dentro da borda de 1px, e o recuo muda de variante para variante.
+    "pointer-coarse:data-[orientation=horizontal]:after:absolute pointer-coarse:data-[orientation=horizontal]:after:inset-x-0 pointer-coarse:data-[orientation=horizontal]:after:top-1/2 pointer-coarse:data-[orientation=horizontal]:after:h-11 pointer-coarse:data-[orientation=horizontal]:after:-translate-y-1/2 pointer-coarse:data-[orientation=horizontal]:after:content-['']",
     "disabled:pointer-events-none disabled:opacity-50",
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   ],
@@ -482,12 +487,16 @@ const tabsTriggerVariants = cva(
           "data-[state=active]:text-foreground",
         ].join(" "),
       },
-      /** A altura do gatilho deriva da bandeja (`bandeja − 2×recuo`): 24 · 28 · 32 · 36. */
+      /**
+       * A altura do gatilho deriva da bandeja (`bandeja − 2×recuo`): 24 · 28 · 32 · 36.
+       * No dedo a bandeja mede 44 e o gatilho 40 (rodada 332; eram 40 e 36): com 36
+       * numa bandeja de 44, a pílula ficava a 6px da borda em cima e a 4px dos lados.
+       */
       size: {
-        sm: "h-6 pointer-coarse:h-9 text-control-sm",
-        md: "h-7 pointer-coarse:h-9 text-control-sm",
-        lg: "h-8 pointer-coarse:h-9",
-        xl: "h-9",
+        sm: "h-6 pointer-coarse:h-10 text-control-sm",
+        md: "h-7 pointer-coarse:h-10 text-control-sm",
+        lg: "h-8 pointer-coarse:h-10",
+        xl: "h-9 pointer-coarse:h-10",
       },
       /**
        * O alvo de toque cresce só quando a aba não estica. Com `stretch`, uma aba

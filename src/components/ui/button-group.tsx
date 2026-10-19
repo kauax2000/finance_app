@@ -35,7 +35,7 @@ const HORIZONTAL = [
     // O campo ocupa a sobra e o grupo ganha a largura de quem o contém; no dedo
     // o campo sobe a 40 e o grupo iguala os botões.
     "has-[>[data-slot=input]]:flex has-[>[data-slot=input]]:w-full has-[>[data-slot=input]]:gap-2 [&>[data-slot=input]]:flex-1",
-    "pointer-coarse:has-[>[data-slot=input]]:*:h-10",
+    "pointer-coarse:has-[>[data-slot=input]]:*:h-11",
 ]
 
 /** A mesma emenda, em pé: cantos de cima e de baixo, fio na horizontal. */

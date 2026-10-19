@@ -56,7 +56,12 @@ export const metadata: Metadata = {
     appleWebApp: {
         capable: true,
         title: "Finance",
-        statusBarStyle: "default",
+        // A página passa por baixo da barra de status (o app instalado): sem a
+        // faixa opaca, o borrão da barra do topo vai até a borda da tela. O
+        // `viewportFit: "cover"` e a área segura no `TopBar` já contavam com isso.
+        // ponytail: o iOS desenha a barra de status sempre branca neste modo e lê
+        // a escolha só ao abrir o app; no tema claro o relógio perde contraste.
+        statusBarStyle: "black-translucent",
     },
     formatDetection: {
         telephone: false,

@@ -131,7 +131,7 @@ export default function SessionsPage() {
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                className="h-8 gap-1.5 border-dashed text-xs pointer-coarse:h-10"
+                                className="h-8 gap-1.5 border-dashed text-xs pointer-coarse:h-11"
                                 onClick={() => void handleRevokeAll()}
                                 disabled={revoking === "all"}
                             >

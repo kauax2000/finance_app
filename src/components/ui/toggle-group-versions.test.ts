@@ -99,6 +99,8 @@ describe("ToggleGroup floating", () => {
     const fonte = lerFonte("src/components/ui/toggle-group.tsx")
     expect(fonte).toContain("useMarcador({")
     expect(fonte).toContain("insete: flutuante ? 2 : 0")
-    expect(fonte).toContain('"gap-1.5 rounded-full px-3 text-control-sm pointer-coarse:h-9 duration-(--duration-base)"')
+    expect(fonte).toContain('"gap-1.5 rounded-full px-3 text-control-sm duration-(--duration-base)"')
+    // No dedo o item segmentado mede 40 e a bandeja (item + 4) os 44 das abas (rodada 332).
+    expect(fonte).toContain('"pointer-coarse:h-10",')
   })
 })

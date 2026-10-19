@@ -555,9 +555,9 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                           // trilho, e a rampa (80px) atravessa o dia preso (8 + 28) antes de
                           // abrir; o corpo sobe por trás das abas e do dia, e o respiro devolve os
                           // dois: a primeira linha não se move.
-                          "-mt-[calc(var(--scroll-fade-band-h)+--spacing(9))] pt-[calc(var(--scroll-fade-band-h)+--spacing(9))] [--scroll-fade-band-h:--spacing(9)] pointer-coarse:[--scroll-fade-band-h:--spacing(10)] [--dialog-body-fade-h:--spacing(20)]"
+                          "-mt-[calc(var(--scroll-fade-band-h)+--spacing(9))] pt-[calc(var(--scroll-fade-band-h)+--spacing(9))] [--scroll-fade-band-h:--spacing(9)] pointer-coarse:[--scroll-fade-band-h:--spacing(11)] [--dialog-body-fade-h:--spacing(20)]"
                         : comTrilho
-                          ? "-mt-(--scroll-fade-band-h) pt-[calc(var(--scroll-fade-band-h)+--spacing(4))] [--scroll-fade-band-h:--spacing(9)] pointer-coarse:[--scroll-fade-band-h:--spacing(10)]"
+                          ? "-mt-(--scroll-fade-band-h) pt-[calc(var(--scroll-fade-band-h)+--spacing(4))] [--scroll-fade-band-h:--spacing(9)] pointer-coarse:[--scroll-fade-band-h:--spacing(11)]"
                           : "pt-0"
                 )}
             >

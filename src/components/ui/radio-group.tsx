@@ -63,7 +63,7 @@ const SELECAO =
  * cobra a igualdade). O foco é `outline`: o anel de 1px da escolha é `ring`.
  */
 const FICHA = [
-  "h-8 gap-1.5 rounded-full px-3 text-xs leading-none font-semibold transition-colors pointer-coarse:min-h-10",
+  "h-8 gap-1.5 rounded-full px-3 text-xs leading-none font-semibold transition-colors pointer-coarse:min-h-11",
   "bg-muted text-muted-foreground",
   "not-has-[:disabled]:hover:text-foreground not-has-[:disabled]:active:text-foreground",
   "has-data-checked:bg-primary-muted has-data-checked:text-primary-muted-foreground has-data-checked:ring-1 has-data-checked:ring-primary-accent/25 dark:has-data-checked:ring-primary-accent/40",

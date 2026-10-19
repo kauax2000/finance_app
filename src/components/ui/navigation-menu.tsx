@@ -145,7 +145,7 @@ function useVisivel() {
 /**
  * Nota de ordem: `npm run ds:catalog` lê o **primeiro** bloco `variants:` de
  * cada fonte, por isso o do gatilho vem antes do da fileira.
- * O gatilho fala a escada do sistema (28 · 32 · 36); `pointer-coarse:h-10`
+ * O gatilho fala a escada do sistema (28 · 32 · 36); `pointer-coarse:h-11`
  * pergunta pelo apontador, não pela largura.
  */
 const navigationMenuTriggerVariants = cva(
@@ -170,9 +170,9 @@ const navigationMenuTriggerVariants = cva(
       },
       /** O piso é 28: `xs` (24) é para dentro de outro controle, não para uma fileira. */
       size: {
-        sm: "h-7 pointer-coarse:h-10",
-        md: "h-8 pointer-coarse:h-10",
-        lg: "h-9 pointer-coarse:h-10",
+        sm: "h-7 pointer-coarse:h-11",
+        md: "h-8 pointer-coarse:h-11",
+        lg: "h-9 pointer-coarse:h-11",
       },
     },
     defaultVariants: { variant: "floating", size: "md" },

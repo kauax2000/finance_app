@@ -162,7 +162,7 @@ describe("o degrau padrão e o piso do dedo", () => {
   it("sem `size` o botão é `lg` (36); no dedo `md` e `lg` sobem a 40, `xs` e `sm` ficam", () => {
     expect(buttonVariants({})).toContain("[--button-h:--spacing(9)]")
     for (const size of ["md", "lg", "icon-md", "icon-lg"] as const) {
-      expect(buttonVariants({ size }), size).toContain("pointer-coarse:[--button-h:--spacing(10)]")
+      expect(buttonVariants({ size }), size).toContain("pointer-coarse:[--button-h:--spacing(11)]")
     }
     for (const size of ["xs", "sm", "icon-xs", "icon-sm"] as const) {
       expect(buttonVariants({ size }), size).not.toContain("pointer-coarse:")
@@ -171,7 +171,7 @@ describe("o degrau padrão e o piso do dedo", () => {
 
   it("um `h-*` ou `size-*` de quem chama vence também no dedo", () => {
     // O piso mora numa variável: o `twMerge` troca a altura inteira, e um
-    // `pointer-coarse:h-10` solto sobreviveria ao `h-auto` da linha do seletor.
+    // `pointer-coarse:h-11` solto sobreviveria ao `h-auto` da linha do seletor.
     const classes = cn(buttonVariants({ size: "md" }), "h-auto").split(/\s+/)
     expect(classes).toContain("h-auto")
     expect(classes).not.toContain("h-(--button-h)")

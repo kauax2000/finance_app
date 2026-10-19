@@ -22,11 +22,11 @@ export const searchFieldSizeClassName = {
   sm: "h-7 gap-1.5 px-2.5",
   md: "h-8 gap-2 px-3",
   lg: "h-9 gap-2.5 px-3.5",
-  xl: "h-10 gap-2.5 px-4",
+  xl: "h-10 gap-2.5 px-4 pointer-coarse:h-11",
 } as const satisfies Record<SearchFieldSize, string>
 
-/** O piso de toque (`pointer-coarse:h-10`, a régua de `fieldControlHeightClassName`); só o campo na página o veste, não a pílula da pilha do `Command`. */
-export const searchFieldCoarseClassName = "pointer-coarse:h-10"
+/** O piso de toque (`pointer-coarse:h-11`, a régua de `fieldControlHeightClassName`); só o campo na página o veste, não a pílula da pilha do `Command`. */
+export const searchFieldCoarseClassName = "pointer-coarse:h-11"
 
 /**
  * As duas superfícies. `field` é a busca na página: o fio de separar

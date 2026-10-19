@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { ChevronUpDownIcon } from "@heroicons/react/16/solid"
+import { ChevronDownIcon, ChevronUpDownIcon } from "@heroicons/react/16/solid"
+import { UserGroupIcon as UserGroupMiniIcon } from "@heroicons/react/20/solid"
 import { useWorkspace } from "@/components/workspace-provider"
 import { CreateProjectDialog } from "@/components/workspace/create-project-dialog"
 import { WorkspaceBrandMark } from "@/components/workspace/workspace-brand-mark"
@@ -18,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
+import { isWorkspaceIconKey, WORKSPACE_ICON_MAP_MINI } from "@/lib/workspace-icons"
 
 export function WorkspaceSwitcher({
     appearance = "sidebar",
@@ -29,40 +31,40 @@ export function WorkspaceSwitcher({
     const [menuOpen, setMenuOpen] = React.useState(false)
     const [createOpen, setCreateOpen] = React.useState(false)
 
+    // No header (só no telefone) a carteira é o título da barra, como o
+    // "Instagram ⌄": o ícone e o nome em branco, sem o ladrilho de cor, e o
+    // chevron que diz que abre. O ícone é o mini (20), o do degrau `xl`.
+    const IconeDaCarteira =
+        currentWorkspace && isWorkspaceIconKey(currentWorkspace.icon)
+            ? WORKSPACE_ICON_MAP_MINI[currentWorkspace.icon]
+            : UserGroupMiniIcon
+
     const trigger =
         appearance === "header" ? (
             <DropdownMenuTrigger asChild>
                 <Button
                     type="button"
                     variant="tertiary"
-                    size="icon-lg"
                     aria-haspopup="menu"
-                    aria-label="Trocar carteira"
+                    aria-label={`Trocar carteira: ${currentWorkspace?.name ?? "Carteiras"}`}
                     className={cn(
-                        "w-auto min-w-9 shrink-0 gap-1.5 px-1 font-normal",
-                        "[--button-hover-fill:color-mix(in_oklab,var(--accent)_80%,transparent)] dark:[--button-hover-fill:color-mix(in_oklab,var(--accent)_80%,transparent)] group-active:[--button-hover:1]",
+                        "h-11 max-w-full min-w-0 gap-1.5 px-3 text-base font-semibold text-foreground",
+                        "[--button-hover-fill:color-mix(in_oklab,var(--accent)_80%,transparent)] dark:[--button-hover-fill:color-mix(in_oklab,var(--accent)_80%,transparent)]",
                     )}
                 >
                     {loading ? (
-                        <Skeleton className="size-6 shrink-0 rounded-md" />
-                    ) : currentWorkspace ? (
-                        <WorkspaceBrandMark
-                            iconKey={currentWorkspace.icon}
-                            backgroundColor={
-                                currentWorkspace.icon_background_color
-                            }
-                            className="size-6 shrink-0 rounded-md"
-                            iconClassName="size-3"
-                        />
+                        <Skeleton className="h-5 w-32" />
                     ) : (
-                        <div className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                            <span className="text-2xs font-semibold">?</span>
-                        </div>
-                    )}
-                    {loading ? (
-                        <Skeleton className="size-3 shrink-0 rounded-sm" />
-                    ) : (
-                        <ChevronUpDownIcon className="size-3 shrink-0 text-muted-foreground" />
+                        <>
+                            <IconeDaCarteira className="size-5 shrink-0" aria-hidden />
+                            <span className="min-w-0 truncate">
+                                {currentWorkspace?.name ?? "Carteiras"}
+                            </span>
+                            <ChevronDownIcon
+                                className="size-4 shrink-0 opacity-70 transition-transform duration-(--duration-base) ease-(--ease-out) group-aria-expanded/button:rotate-180"
+                                aria-hidden
+                            />
+                        </>
                     )}
                 </Button>
             </DropdownMenuTrigger>
@@ -110,7 +112,8 @@ export function WorkspaceSwitcher({
                 alinhado à borda, lia como parte do fundo. */}
             <DropdownMenuContent
                 side={appearance === "header" ? "bottom" : "right"}
-                align="start"
+                // No header o menu brota do centro, sob o título.
+                align={appearance === "header" ? "center" : "start"}
                 sideOffset={appearance === "header" ? 8 : 4}
                 size="xl"
             >
@@ -128,7 +131,9 @@ export function WorkspaceSwitcher({
         <>
             <CreateProjectDialog open={createOpen} onOpenChange={setCreateOpen} />
             {appearance === "header" ? (
-                <div className="flex shrink-0">{menu}</div>
+                // Encolhe com a caixa do centro da barra: o nome trunca em vez de
+                // passar por cima das ações.
+                <div className="flex min-w-0 max-w-full">{menu}</div>
             ) : (
                 <SidebarHeader className="min-w-0">
                     {menu}

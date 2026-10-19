@@ -29,6 +29,9 @@ export const menuPanelSurfaceClassName = [
   // `min()` com a altura disponível do Radix. Quem não é lista (o
   // `DropdownMenu variant="panel"`) o devolve à altura disponível.
   "[--menu-max-h:--spacing(72)]",
+  // No toque as linhas medem 44 e o texto 16: o teto sobe a 384 para uma lista
+  // curta (as carteiras, o "Criar") caber sem rolar (rodada 330).
+  "pointer-coarse:[--menu-max-h:--spacing(96)]",
   menuPanelTintClassName,
 ].join(" ")
 
@@ -66,6 +69,9 @@ export const menuItemGeometryClassName = [
   "concentric relative flex cursor-default items-center gap-1.5 px-2 py-2 text-sm outline-hidden select-none",
   MENU_TOUCH_TARGET,
   "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  // No toque, a escala nativa do header (rodada 330): numa linha de 44, texto
+  // de 16 e ícone de 20, como um menu do iOS — com 14 e 16 a linha alta lia vazia.
+  "pointer-coarse:text-base pointer-coarse:[&_svg:not([class*='size-'])]:size-5",
 ].join(" ")
 
 /**
@@ -119,7 +125,7 @@ export const menuIndicatorSlotClassName =
 
 /** O rótulo de grupo é sinalização, não conteúdo: `text-xs` esmaecido para não competir com as linhas. */
 export const menuLabelClassName =
-  "px-2 py-1 text-xs font-medium text-muted-foreground data-inset:pl-7.5"
+  "px-2 py-1 text-xs font-medium text-muted-foreground data-inset:pl-7.5 pointer-coarse:text-sm"
 
 /**
  * `bg-border`, o fio do projeto — `bg-muted` é preenchimento, não traço. Recuado

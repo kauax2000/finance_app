@@ -73,7 +73,7 @@ const commandVariants = cva(
     "has-[[data-slot=command-input-wrapper][data-size=lg]]:[--scroll-fade-band-h:calc(--spacing(9)+--spacing(4))]",
     // O campo com piso de toque sobe a 40 no dedo e a faixa acompanha (40 + 16);
     // três atributos no `:has()` vencem os dois do `lg`.
-    "pointer-coarse:has-[[data-slot=command-input-wrapper][data-touch-floor][data-size]]:[--scroll-fade-band-h:calc(--spacing(10)+--spacing(4))]",
+    "pointer-coarse:has-[[data-slot=command-input-wrapper][data-touch-floor][data-size]]:[--scroll-fade-band-h:calc(--spacing(11)+--spacing(4))]",
   ],
   {
     variants: {

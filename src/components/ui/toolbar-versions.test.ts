@@ -32,7 +32,7 @@ describe("a escada", () => {
     expect(CODIGO).toContain('md: "[--toolbar-control:--spacing(8)]"')
     // `lg` é o padrão: a raiz já publica 36, e o degrau não acrescenta nada.
     expect(toolbarClassName).toContain("[--toolbar-control:--spacing(9)]")
-    expect(toolbarClassName).toContain("pointer-coarse:[--toolbar-control:--spacing(10)]")
+    expect(toolbarClassName).toContain("pointer-coarse:[--toolbar-control:--spacing(11)]")
   })
 
   it("o controle filho direto de uma peça lê a altura — escrito por extenso, sem template literal", () => {

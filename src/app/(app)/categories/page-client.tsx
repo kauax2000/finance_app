@@ -146,22 +146,8 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         () => ({
             title: subrouteLabels?.titleLabel,
             backHref: subrouteLabels ? ROUTES.DASHBOARD_CATEGORIES : undefined,
-            dateFilter:
-                filterType === "expense" ? (
-                    <MonthNav
-                        budgetMonthYm={budgetMonthYm}
-                        onBudgetMonthYmChange={handleBudgetMonthYmChange}
-                        inBar
-                    />
-                ) : undefined,
         }),
-        [
-            subrouteLabels?.titleLabel,
-            subrouteLabels?.kind,
-            filterType,
-            budgetMonthYm,
-            handleBudgetMonthYmChange,
-        ],
+        [subrouteLabels?.titleLabel, subrouteLabels?.kind],
     )
     usePageChromeSlot(categoriesChrome)
     const resetForm = useCallback(() => {
@@ -641,6 +627,15 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     return (
         <div className="min-w-0 max-w-full space-y-3">
             {confirmDialog}
+            {/* No telefone o mês mora no topo do conteúdo, numa faixa de largura inteira; no desktop ele fica na barra da tela. */}
+            {filterType === "expense" ? (
+                <MonthNav
+                    budgetMonthYm={budgetMonthYm}
+                    onBudgetMonthYmChange={handleBudgetMonthYmChange}
+                    mobileTriggerFullWidth
+                    className="md:hidden"
+                />
+            ) : null}
             <CategoriesToolbar
                 filterType={filterType}
                 onFilterTypeChange={setFilterType}
