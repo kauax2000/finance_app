@@ -183,12 +183,33 @@ function origemValida(r: DOMRect | null | undefined): r is DOMRect {
   return !!r && r.width > 0 && r.height > 0
 }
 
-/** A pílula inteira, no raio da cápsula de 44. */
-const PILULA_INTEIRA = "inset(0px 0px 0px 0px round 22px)"
+/**
+ * Um quadro do gesto da pílula, no progresso `p` (0 é a lupa, 1 é a barra).
+ * A pílula anda para a direita até a ponta direita dela encostar na da lupa
+ * (`translateX`), e o recorte esconde tudo à esquerda do círculo. O conteúdo
+ * (a lupa da pílula, o campo, o ×) anda com a borda visível: no primeiro
+ * quadro o círculo mostra a lupa, e não um pedaço do placeholder. Tudo no próprio vidro: num ancestral, o
+ * `transform` e o `clip-path` desligariam o `backdrop-filter` dele.
+ */
+function quadroDaPilula(
+  pilula: HTMLElement,
+  conteudo: HTMLCollection,
+  lupa: DOMRect,
+  final: DOMRect,
+  p: number
+) {
+  const resto = 1 - p
+  const esquerda = (final.width - lupa.width) * resto
+  pilula.style.transform = `translateX(${(lupa.right - final.right) * resto}px)`
+  pilula.style.clipPath = `inset(${(lupa.top - final.top) * resto}px 0px ${(final.bottom - lupa.bottom) * resto}px ${esquerda}px round 22px)`
+  for (const filho of conteudo) (filho as HTMLElement).style.transform = `translateX(${esquerda}px)`
+}
 
-/** O recorte que reduz a pílula (`final`) ao retângulo da lupa. */
-function recorteDaLupa(lupa: DOMRect, final: DOMRect) {
-  return `inset(${lupa.top - final.top}px ${final.right - lupa.right}px ${final.bottom - lupa.bottom}px ${lupa.left - final.left}px round 22px)`
+/** A barra pronta: sem `transform`, sem recorte, o conteúdo no lugar. */
+function pilulaEmRepouso(pilula: HTMLElement) {
+  pilula.style.transform = ""
+  pilula.style.clipPath = ""
+  for (const filho of pilula.children) (filho as HTMLElement).style.transform = ""
 }
 
 /**
@@ -227,13 +248,13 @@ function CommandDialog({
   // A camada do telefone num estado, e não num ref: o `Portal` do Radix só
   // monta o conteúdo num segundo commit, e o efeito precisa rodar quando ele chega.
   const [camada, setCamada] = React.useState<HTMLDivElement | null>(null)
+  // Onde o gesto está (0 lupa, 1 barra), para fechar de onde a abertura parou.
+  const progresso = React.useRef(1)
 
-  // O gesto do telefone: a pílula nasce da lupa e se estica até a calha, e
-  // volta a ela ao fechar (a casca segue montada pelo `presence-hold`). O
-  // recorte mora na própria pílula, que é o vidro: num ancestral, o
-  // `clip-path` vira raiz de fundo e desliga o `backdrop-filter` dela
-  // (rodada 323). Ele não mexe no layout do cmdk, e sai no fim. O ícone fica
-  // preso à esquerda da pílula e viaja com a borda: o "estica para a esquerda".
+  // O gesto do telefone: a pílula nasce no círculo da lupa e se estica para a
+  // esquerda até a calha, e volta a ela ao fechar (a casca segue montada pelo
+  // `presence-hold`). Um progresso só, na `MOLA`, escreve cada quadro
+  // (`quadroDaPilula`); nada mexe no layout do cmdk, e tudo sai no fim.
   React.useLayoutEffect(() => {
     const pilula = camada?.querySelector<HTMLElement>("[data-slot=search-input]")
     if (!pilula) return
@@ -241,17 +262,31 @@ function CommandDialog({
     const viaja = origemValida(lupa) && !reduzido
     let ativa = true
     let controle: AnimationPlaybackControls
-    if (aberto && viaja) {
-      const de = recorteDaLupa(lupa, pilula.getBoundingClientRect())
-      // O primeiro quadro já é a lupa: a pílula não pisca inteira antes da mola.
-      pilula.style.clipPath = de
-      const abrindo = animate(pilula, { clipPath: [de, PILULA_INTEIRA] }, MOLA)
-      // O fim passa pelo motion: escrito à mão, o valor dele reescrevia o
-      // último quadro no render seguinte, e o recorte ficava.
-      abrindo.then(() => {
-        if (ativa) animate(pilula, { clipPath: "none" }, { duration: 0 })
-      })
-      controle = abrindo
+    if (viaja) {
+      // A caixa final sem o `transform` de um gesto interrompido.
+      const emCurso = pilula.style.transform
+      pilula.style.transform = ""
+      const final = pilula.getBoundingClientRect()
+      pilula.style.transform = emCurso
+      const quadro = (p: number) => {
+        progresso.current = p
+        quadroDaPilula(pilula, pilula.children, lupa, final, p)
+      }
+      if (aberto) {
+        // O primeiro quadro já é a lupa: a pílula não pisca inteira antes da mola.
+        quadro(0)
+        const abrindo = animate(0, 1, { ...MOLA, onUpdate: quadro })
+        // Um número animado não escreve no elemento: o repouso escrito à mão
+        // é a última palavra (animando o `clip-path` do elemento, o valor do
+        // motion o reescrevia no render seguinte).
+        abrindo.then(() => {
+          if (ativa) pilulaEmRepouso(pilula)
+        })
+        controle = abrindo
+      } else {
+        // Fechar no meio da abertura volta de onde ela estava.
+        controle = animate(progresso.current, 0, { ...SAIDA, onUpdate: quadro })
+      }
     } else if (aberto) {
       // Sem lupa à vista, a pílula entra no lugar; com movimento reduzido, só esmaece.
       pilula.style.opacity = "0"
@@ -259,11 +294,7 @@ function CommandDialog({
         ? animate(pilula, { opacity: [0, 1] }, SAIDA)
         : animate(pilula, { opacity: [0, 1], scale: [0.95, 1] }, MOLA)
     } else {
-      // ponytail: fechar no meio da abertura salta para a pílula inteira antes
-      // de voltar (150ms); partir do recorte do meio pede ler o computado.
-      controle = viaja
-        ? animate(pilula, { clipPath: [PILULA_INTEIRA, recorteDaLupa(lupa, pilula.getBoundingClientRect())] }, SAIDA)
-        : animate(pilula, { opacity: 0 }, SAIDA)
+      controle = animate(pilula, { opacity: 0 }, SAIDA)
     }
     return () => {
       ativa = false

@@ -27731,9 +27731,18 @@ delegados (spec `docs/superpowers/specs/2026-10-19-busca-do-telefone-design.md`)
   tela cheia com o véu do `Dialog`, a pílula de 44 na linha do header (6px
   abaixo da área segura, calha de 16), "Cancelar" (`tertiary`) à direita e a
   placa 12px abaixo, até o pé da tela;
-- `CommandDialog origin`: a pílula nasce do retângulo da origem por `clip-path`
-  na própria pílula (num ancestral ele desligaria o vidro), na `MOLA`, e volta
-  na `SAIDA`; sem origem, entra no lugar; com movimento reduzido, só esmaece;
+- `CommandDialog origin`: a pílula nasce no círculo da origem. Um progresso só,
+  `animate(0, 1)` na `MOLA` (fechar: do ponto atual a 0 na `SAIDA`), escreve a
+  cada quadro, no próprio vidro (num ancestral, `transform` e `clip-path`
+  desligariam o `backdrop-filter` dele):
+  - `translateX`, que leva a ponta direita da pílula à da lupa;
+  - `clip-path`, com o recuo esquerdo igual à largura da pílula menos a da
+    lupa — em `p = 0` o que se vê é só o círculo, no lugar da lupa;
+  - o mesmo recuo como `translateX` no conteúdo (a lupa da pílula, o campo, o
+    ×), que anda com a borda visível: o círculo mostra a lupa, e não um
+    pedaço do placeholder.
+  No fim os três saem do `style`. Sem origem, a pílula entra no lugar; com
+  movimento reduzido, só esmaece;
 - o foco vai ao campo no `onOpenAutoFocus`, no mesmo toque, para o iOS abrir o
   teclado; fechar devolve o foco à origem (sem `DialogTrigger`, o Radix o
   largava no `body`);
@@ -27741,27 +27750,37 @@ delegados (spec `docs/superpowers/specs/2026-10-19-busca-do-telefone-design.md`)
   filtro) levam o `lupaRef`, que a `AppCommandPalette` repassa como `origin`.
   O header não ganha um "modo busca": o véu o cobre.
 
-**O que a verificação achou.** O `motion` anima o `clip-path` pelo WAAPI e,
-no fim, o valor dele reescreve o último quadro no render seguinte: o `"none"`
-escrito à mão no `then` era sobrescrito por `inset(0px round 22px)`, e o
-recorte ficava. O `"none"` agora passa pelo próprio `motion`
-(`animate(…, { duration: 0 })`).
+**O que a verificação achou, e mudou:**
+
+- o primeiro desenho animava só o `clip-path` da pílula na posição final. A
+  lupa fica fora da caixa dela (onde mora o "Cancelar"), e um recorte não pinta
+  fora do elemento: a pílula surgia como um fio na ponta direita, ao lado da
+  lupa, e nunca como o círculo. O `translateX` resolveu;
+- animando o `clip-path` do elemento, o `motion` usa o WAAPI e, no fim, o
+  valor dele reescrevia o último quadro no render seguinte (`inset(0px round
+  22px)` depois do `none` escrito à mão). Com um número animado (`onUpdate`),
+  nada do `motion` escreve no elemento, e o repouso escrito à mão é o último.
 
 **Medido na prévia a 375px:**
 
-- o primeiro quadro com a pílula já está recortado no retângulo da lupa
-  (`inset(0px -44px 0px 255px round 22px)` com a lupa na cápsula,
-  `inset(0px -88px 0px 299px …)` sozinha), sem piscar inteira; a mola passa do
-  alvo uns 10px e assenta em ~600ms, e o `clip-path` termina `none` (inline e
-  computado);
-- o `focus()` do campo roda na mesma tarefa do clique, e o `activeElement` é o
-  `input` da pílula logo depois;
-- a pílula mede 44 e começa a 16px da borda, em Transações, no Painel, em
-  Membros (a lupa sozinha) e no detalhe de categoria;
-- "Cancelar", Esc e o toque no véu fecham — o véu também no primeiro toque
-  depois de carregar a página, nas três telas testadas —, e o foco volta à lupa;
-- escolher "Categorias" navega; a 1280px o `CommandDialog` do desktop abre como
-  antes.
+- o primeiro quadro visível é o retângulo da lupa, ao pixel: em Transações e
+  no Painel (lupa na cápsula com o filtro) `[271, 315] × [6, 50]`, igual à
+  lupa; em Membros (lupa sozinha) `[315, 359] × [6, 50]`. O centro do ícone da
+  pílula cai no centro da lupa (293 e 337);
+- a mola passa do alvo uns 8px na borda esquerda (~370ms) e assenta em ~620ms;
+  depois, `transform` e `clip-path` são `none` (computado) e nada fica no
+  `style` da pílula nem dos filhos. A pílula fica em 16, com 255 de largura e
+  44 de altura;
+- fechar volta ao retângulo da lupa (o último quadro, `[315, 359] × [6, 50]`
+  em Membros), em ~200ms;
+- o `backdrop-filter` computado da pílula é `blur(24px) saturate(1.5)` em todo
+  quadro; num quadro do meio do gesto, a lupa do header aparece borrada
+  através da pílula;
+- o `focus()` do campo roda na mesma tarefa do clique; "Cancelar", Esc e o
+  toque no véu fecham — o véu também no primeiro toque depois de carregar —, e
+  o foco volta à lupa; escolher "Categorias" navega; a 1280px o
+  `CommandDialog` do desktop abre como antes.
 
-No simulador (iPhone 18 Pro Max, app instalado), um toque na lupa abre a barra
-com o teclado na tela, e "Cancelar" e o véu fecham.
+No simulador (iPhone 18 Pro Max, app instalado), antes do `translateX`: um
+toque na lupa abriu a barra com o teclado na tela, e "Cancelar" fechou. O gesto
+em si não aparece nas capturas (chegam com 1–2s de atraso).

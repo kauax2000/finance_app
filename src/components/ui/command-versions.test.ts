@@ -94,12 +94,24 @@ describe("as versões do Command", () => {
     // O teclado: o foco vai ao campo no próprio commit, sem esperar a mola.
     expect(CODIGO).toMatch(/onOpenAutoFocus=\{[\s\S]*?preventDefault\(\)[\s\S]*?\.focus\(/)
     expect(CODIGO).toMatch(/if \(isMobile\)[\s\S]*?safe-area-inset-top/)
-    // O recorte vai no próprio vidro (a pílula), nunca num ancestral, e sai no fim.
-    expect(CODIGO).toMatch(/clipPath[\s\S]*?"none"/)
-    // O "none" passa pelo motion: escrito à mão, o valor do motion o
-    // reescrevia com o último quadro no render seguinte (medido na prévia).
-    expect(CODIGO).toContain('animate(pilula, { clipPath: "none" }, { duration: 0 })')
-    expect(CODIGO).not.toContain('pilula.style.clipPath = "none"')
+    // A pílula nasce no círculo da lupa: um progresso só, na MOLA, escreve o
+    // translateX e o recorte no próprio vidro, e o conteúdo (a lupa da
+    // pílula primeiro) anda com a borda.
+    expect(CODIGO.match(/animate\(0, 1, \{ \.\.\.MOLA, onUpdate: quadro \}\)/g)).toHaveLength(1)
+    expect(CODIGO).toMatch(/animate\(progresso\.current, 0, \{ \.\.\.SAIDA, onUpdate: quadro \}\)/)
+    const quadro = CODIGO.slice(CODIGO.indexOf("function quadroDaPilula"), CODIGO.indexOf("function pilulaEmRepouso"))
+    expect(quadro).toContain("pilula.style.transform = `translateX(${(lupa.right - final.right) * resto}px)`")
+    expect(quadro).toContain("const esquerda = (final.width - lupa.width) * resto")
+    expect(quadro).toMatch(/pilula\.style\.clipPath = `inset\([^`]*\$\{esquerda\}px round 22px\)`/)
+    expect(quadro).toContain("for (const filho of conteudo) (filho as HTMLElement).style.transform = `translateX(${esquerda}px)`")
+    // O elemento não é animado pelo motion (o valor dele reescrevia o fim), e o
+    // repouso tira transform, recorte e o deslocamento do conteúdo.
+    expect(CODIGO).not.toMatch(/animate\(pilula, \{ clipPath/)
+    const repouso = CODIGO.slice(CODIGO.indexOf("function pilulaEmRepouso"), CODIGO.indexOf("/**\n * A paleta em diálogo"))
+    expect(repouso).toContain('pilula.style.transform = ""')
+    expect(repouso).toContain('pilula.style.clipPath = ""')
+    expect(repouso).toContain('for (const filho of pilula.children) (filho as HTMLElement).style.transform = ""')
+    expect(CODIGO).toMatch(/abrindo\.then\(\(\) => \{\s*if \(ativa\) pilulaEmRepouso\(pilula\)/)
     // Sem gatilho do Radix, fechar devolve o foco à origem, e não ao body.
     expect(CODIGO).toMatch(/onCloseAutoFocus=\{[\s\S]*?origin\?\.current[\s\S]*?preventDefault\(\)[\s\S]*?\.focus\(/)
   })

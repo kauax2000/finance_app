@@ -1332,9 +1332,12 @@ declaração de `background-color` no trilho).
   `CommandDialog` monta o `Command` raiz** (`commandProps`), fixa o topo e
   declara o teto (`--command-list-max-h`); no telefone é a barra: o véu do
   `Dialog`, a pílula de 44 na linha do header com "Cancelar" à direita e a
-  placa embaixo; a pílula nasce do `origin` (a lupa do header) por `clip-path`
-  na `MOLA` e volta na `SAIDA`; o foco vai ao campo no `onOpenAutoFocus`, para
-  o teclado abrir no mesmo toque (rodada 337). O grupo se
+  placa embaixo. A pílula nasce no círculo do `origin` (a lupa do header): um
+  progresso só (`animate(0, 1)` na `MOLA`; volta na `SAIDA`) escreve no
+  próprio vidro o `translateX` que encosta a ponta direita dela na da lupa e
+  o `clip-path` que esconde o resto, e o conteúdo anda com a borda visível;
+  no fim, nada inline. O foco vai ao campo no `onOpenAutoFocus` (o teclado
+  abre no mesmo toque) e volta à origem ao fechar (rodada 337). O grupo se
   separa por respiro e rótulo, **nunca por fio**. `CommandPages` /
   `useCommandPages`, `CommandHighlight`, `CommandGroup count`, `CommandItem
   shortcut` (só com o foco na paleta; evite `mod+n/t/w`), `CommandSplit` +
