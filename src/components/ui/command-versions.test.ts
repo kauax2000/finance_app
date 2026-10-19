@@ -81,8 +81,29 @@ describe("as versões do Command", () => {
     expect(CODIGO).toContain("raiz.contains(document.activeElement)")
   })
 
-  it("no telefone o diálogo é gaveta, e o título continua ligado", () => {
-    expect(CODIGO).toMatch(/if \(isMobile\) \{[\s\S]*?<Drawer \{\.\.\.props\}>[\s\S]*?<DialogTitle>\{title\}<\/DialogTitle>/)
+  it("no telefone a lupa vira a barra: camada própria, sem gaveta, com o título ligado", () => {
+    expect(CODIGO).not.toMatch(/from "@\/components\/ui\/drawer"/)
+    expect(CODIGO).toMatch(/if \(isMobile\) \{[\s\S]*?data-slot="command-search"[\s\S]*?<DialogTitle>\{title\}<\/DialogTitle>/)
+    expect(CODIGO).toContain('data-slot="command-search-bar"')
+    expect(CODIGO).toContain('data-slot="command-search-cancel"')
+    expect(CODIGO).toMatch(/>\s*Cancelar\s*</)
+    expect(CODIGO).toContain("origin?: React.RefObject<HTMLElement | null>")
+    // A pílula nasce do retângulo da origem e anda na mola; fecha na SAIDA.
+    expect(CODIGO).toMatch(/import \{[^}]*\bMOLA\b[^}]*\bSAIDA\b[^}]*\} from "@\/lib\/spring"|import \{[^}]*\bSAIDA\b[^}]*\bMOLA\b[^}]*\} from "@\/lib\/spring"/)
+    expect(CODIGO).toContain("getBoundingClientRect()")
+    // O teclado: o foco vai ao campo no próprio commit, sem esperar a mola.
+    expect(CODIGO).toMatch(/onOpenAutoFocus=\{[\s\S]*?preventDefault\(\)[\s\S]*?\.focus\(/)
+    expect(CODIGO).toMatch(/if \(isMobile\)[\s\S]*?safe-area-inset-top/)
+    // O recorte vai no próprio vidro (a pílula), nunca num ancestral, e sai no fim.
+    expect(CODIGO).toMatch(/clipPath[\s\S]*?"none"/)
+  })
+
+  it("a origem só vale com caixa: lupa escondida não faz a pílula nascer em 0,0", async () => {
+    const { origemValida } = await import("@/components/ui/command")
+    expect(origemValida(null)).toBe(false)
+    expect(origemValida(undefined)).toBe(false)
+    expect(origemValida({ width: 0, height: 44 } as DOMRect)).toBe(false)
+    expect(origemValida({ width: 44, height: 44 } as DOMRect)).toBe(true)
   })
 
   it("o CommandInput repassa o cursor desenhado ao SearchInput, desligado por padrão", () => {

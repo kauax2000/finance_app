@@ -28,11 +28,11 @@ describe("o feixe da pílula de busca espera a primeira tecla", () => {
     // O `data-waiting` vai à pílula, que é o `SearchInput`.
     expect(campo).toContain('rootProps={{ "data-waiting": (comFeixe && esperando) || undefined }')
     expect(campo).toContain("useCommandState")
-    // Só o `CommandDialog` provê o contexto do feixe: a paleta solta e o `Combobox` são a
-    // pilha, mas sem a luz.
+    // Só o `CommandDialog` provê o contexto do feixe (nos dois ramos, telefone e
+    // desktop): a paleta solta e o `Combobox` são a pilha, mas sem a luz.
     const dialogo = paleta.slice(paleta.indexOf("function CommandDialog"), paleta.indexOf("function CommandInput"))
     expect(dialogo).toContain("<CommandBeamContext.Provider value>")
-    expect(paleta.match(/<CommandBeamContext\.Provider/g)?.length).toBe(1)
+    expect(paleta.replace(dialogo, "")).not.toContain("<CommandBeamContext.Provider")
     expect(lerFonte("src/components/ui/combobox.tsx")).not.toContain("CommandBeam")
   })
 })

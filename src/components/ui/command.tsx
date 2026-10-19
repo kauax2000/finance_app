@@ -4,10 +4,12 @@ import * as React from "react"
 import { ArrowUpRightIcon, PlusIcon } from "@heroicons/react/16/solid"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Command as CommandPrimitive, useCommandState } from "cmdk"
+import { animate, useReducedMotion, type AnimationPlaybackControls } from "motion/react"
 
 import { SearchInput } from "@/components/ui/search-input"
 import { Kbd } from "@/components/ui/kbd"
-import { Drawer, DrawerContent } from "@/components/ui/drawer"
+import { Button } from "@/components/ui/button"
+import { MOLA, SAIDA } from "@/lib/spring"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { ehCursor } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
@@ -47,7 +49,8 @@ import {
  * toques); `CommandHighlight` negrita o trecho que casou; `CommandSplit` +
  * `CommandPreview` é a coluna da linha selecionada (some abaixo de `md`);
  * `CommandGroup count`; `CommandItem shortcut` dispara a ação com o foco na
- * paleta. No telefone o `CommandDialog` é gaveta (`Drawer`). Os ganchos
+ * paleta. No telefone o `CommandDialog` é a barra: a pílula nasce da lupa
+ * (`origin`) e se estica até a largura, com o teclado aberto. Os ganchos
  * `useCommandRecents` e `useCommandSearch` moram em `hooks/`.
  */
 const commandVariants = cva(
@@ -175,6 +178,19 @@ function Command({
   )
 }
 
+/** A origem só vale com caixa: a lupa escondida (`display: none`) mede 0 e faria a pílula nascer em 0,0. */
+function origemValida(r: DOMRect | null | undefined): r is DOMRect {
+  return !!r && r.width > 0 && r.height > 0
+}
+
+/** A pílula inteira, no raio da cápsula de 44. */
+const PILULA_INTEIRA = "inset(0px 0px 0px 0px round 22px)"
+
+/** O recorte que reduz a pílula (`final`) ao retângulo da lupa. */
+function recorteDaLupa(lupa: DOMRect, final: DOMRect) {
+  return `inset(${lupa.top - final.top}px ${final.right - lupa.right}px ${final.bottom - lupa.bottom}px ${lupa.left - final.left}px round 22px)`
+}
+
 /**
  * A paleta em diálogo, dona do próprio `Command` (`CommandInput` e
  * `CommandList` exigem o contexto da raiz; sem ela o cmdk estoura com `Cannot
@@ -190,6 +206,7 @@ function CommandDialog({
   showCloseButton = false,
   commandProps,
   size = "md",
+  origin,
   ...props
 }: React.ComponentProps<typeof Dialog> & {
   title?: string
@@ -199,39 +216,147 @@ function CommandDialog({
   showCloseButton?: boolean
   /** O que a raiz `Command` precisa receber: `filter`, `shouldFilter`, `loop`. */
   commandProps?: Omit<React.ComponentProps<typeof Command>, "children">
-  /** `lg` é a paleta larga, para a pré-visualização ao lado (`CommandSplit` + `CommandPreview`); no telefone é gaveta. */
+  /** `lg` é a paleta larga, para a pré-visualização ao lado (`CommandSplit` + `CommandPreview`); no telefone é a barra. */
   size?: "md" | "lg"
+  /** No telefone, o elemento de onde a pílula nasce (a lupa do header); sem ele, ela entra no lugar. */
+  origin?: React.RefObject<HTMLElement | null>
 }) {
   const isMobile = useIsMobile()
+  const reduzido = useReducedMotion()
+  const aberto = props.open
+  // A camada do telefone num estado, e não num ref: o `Portal` do Radix só
+  // monta o conteúdo num segundo commit, e o efeito precisa rodar quando ele chega.
+  const [camada, setCamada] = React.useState<HTMLDivElement | null>(null)
 
-  // No telefone a paleta é gaveta (o diálogo centrado ficava atrás do teclado):
-  // a busca fica em cima, a legenda (`dock`) some no toque. O `vaul` é o mesmo
-  // `Dialog` do Radix, então o `DialogTitle` continua valendo.
+  // O gesto do telefone: a pílula nasce da lupa e se estica até a calha, e
+  // volta a ela ao fechar (a casca segue montada pelo `presence-hold`). O
+  // recorte mora na própria pílula, que é o vidro: num ancestral, o
+  // `clip-path` vira raiz de fundo e desliga o `backdrop-filter` dela
+  // (rodada 323). Ele não mexe no layout do cmdk, e sai no fim. O ícone fica
+  // preso à esquerda da pílula e viaja com a borda: o "estica para a esquerda".
+  React.useLayoutEffect(() => {
+    const pilula = camada?.querySelector<HTMLElement>("[data-slot=search-input]")
+    if (!pilula) return
+    const lupa = origin?.current?.getBoundingClientRect()
+    const viaja = origemValida(lupa) && !reduzido
+    let ativa = true
+    let controle: AnimationPlaybackControls
+    if (aberto && viaja) {
+      const de = recorteDaLupa(lupa, pilula.getBoundingClientRect())
+      // O primeiro quadro já é a lupa: a pílula não pisca inteira antes da mola.
+      pilula.style.clipPath = de
+      const abrindo = animate(pilula, { clipPath: [de, PILULA_INTEIRA] }, MOLA)
+      abrindo.then(() => {
+        if (ativa) pilula.style.clipPath = "none"
+      })
+      controle = abrindo
+    } else if (aberto) {
+      // Sem lupa à vista, a pílula entra no lugar; com movimento reduzido, só esmaece.
+      pilula.style.opacity = "0"
+      controle = reduzido
+        ? animate(pilula, { opacity: [0, 1] }, SAIDA)
+        : animate(pilula, { opacity: [0, 1], scale: [0.95, 1] }, MOLA)
+    } else {
+      // ponytail: fechar no meio da abertura salta para a pílula inteira antes
+      // de voltar (150ms); partir do recorte do meio pede ler o computado.
+      controle = viaja
+        ? animate(pilula, { clipPath: [PILULA_INTEIRA, recorteDaLupa(lupa, pilula.getBoundingClientRect())] }, SAIDA)
+        : animate(pilula, { opacity: 0 }, SAIDA)
+    }
+    return () => {
+      ativa = false
+      controle.stop()
+    }
+  }, [aberto, camada, origin, reduzido])
+
+  // No telefone a lupa vira a barra: uma camada de tela cheia sobre o véu, com
+  // a pílula e o "Cancelar" na linha do header e a placa 12px abaixo. Era uma
+  // gaveta de baixo, longe da lupa que a abria.
   if (isMobile) {
     return (
-      <Drawer {...props}>
-        <DrawerContent
-          data-slot="command-drawer"
-          className="px-3 pb-[max(--spacing(3),env(safe-area-inset-bottom))]"
-        >
-          <DialogHeader className="sr-only">
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
-          </DialogHeader>
-          <Command
-            variant="panel"
-            autoSelectFirst={false}
+      <Dialog {...props}>
+        <DialogPortal>
+          {/* O véu cobre header, página e barra de baixo; tocar nele fecha. */}
+          <DialogOverlay />
+          <DialogPrimitive.Content
+            ref={setCamada}
+            data-slot="command-search"
+            // A casca não recebe toque, para o vão entre a linha e a placa
+            // chegar ao véu. Vai no `style` porque o Radix escreve
+            // `pointer-events: auto` inline e o espalha antes do nosso.
+            style={{ pointerEvents: "none" }}
+            // O foco vai ao campo no próprio commit do toque, sem esperar a
+            // mola: fora do gesto, o iOS não abre o teclado.
+            onOpenAutoFocus={(e) => {
+              e.preventDefault()
+              ;(e.currentTarget as HTMLElement | null)
+                ?.querySelector<HTMLInputElement>("[data-slot=command-input]")
+                ?.focus()
+            }}
             className={cn(
-              "gap-2 pt-1",
-              "[--command-list-ceiling:min(60dvh,24rem)]",
-              className
+              "fixed inset-x-0 top-0 z-(--z-modal) flex h-dvh flex-col px-4 text-sm outline-none",
+              // A linha da busca na altura da do header: a barra `sm` mede 56 e
+              // a pílula 44, então 6px abaixo da área segura.
+              "[--command-search-top:calc(env(safe-area-inset-top,0px)+6px)] pt-(--command-search-top)",
+              "pb-[max(--spacing(3),env(safe-area-inset-bottom))]",
+              "data-closed:[animation:presence-hold_var(--duration-fast)]",
+              // O "Cancelar" e a placa entram esmaecendo 80ms depois da pílula e
+              // saem curtos; o blur do `tw-animate` vira `none` (um `blur(0)`
+              // desligava o vidro da placa).
+              "[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:[--tw-enter-blur:none] [&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:[--tw-exit-blur:none]",
+              "data-open:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:animate-in data-open:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:fade-in-0 data-open:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:animation-duration-(--duration-spring) data-open:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:[animation-delay:80ms] data-open:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:fill-mode-both",
+              "data-closed:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:animate-out data-closed:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:fade-out-0 data-closed:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:animation-duration-(--duration-fast) data-closed:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:ease-(--ease-out) data-closed:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:fill-mode-forwards"
             )}
-            {...commandProps}
           >
-            {children}
-          </Command>
-        </DrawerContent>
-      </Drawer>
+            <DialogHeader className="sr-only">
+              <DialogTitle>{title}</DialogTitle>
+              <DialogDescription>{description}</DialogDescription>
+            </DialogHeader>
+            <CommandBeamContext.Provider value>
+              <Command
+                // O `CommandInput` é o primeiro filho que o consumidor passa:
+                // ninguém reordena filhos, a pílula só deixa 88px à direita
+                // para o "Cancelar".
+                variant="panel"
+                autoSelectFirst={false}
+                className={cn(
+                  "[&_[data-slot=command-input-wrapper]]:me-22",
+                  // A pílula mede 44, a altura da linha e do "Cancelar", com
+                  // ou sem dedo (uma janela estreita de mouse também cai aqui).
+                  "[&_[data-slot=search-input]]:h-11",
+                  "[&_:is([data-slot=command-input-wrapper],[data-slot=command-dialog-panel])]:pointer-events-auto",
+                  "[&_[data-slot=command-list]]:max-h-none [&_[data-slot=command-list]]:min-h-0",
+                  // A placa vai até o pé da tela: tudo menos o topo, a linha
+                  // de 44, o respiro de 12 e a área segura de baixo.
+                  "[--command-list-ceiling:calc(100dvh_-_var(--command-search-top)_-_--spacing(11)_-_--spacing(3)_-_max(--spacing(3),env(safe-area-inset-bottom)))]",
+                  "[--command-list-transition:var(--duration-base)]",
+                  className
+                )}
+                {...commandProps}
+              >
+                {children}
+              </Command>
+            </CommandBeamContext.Provider>
+            {/* A linha, para os testes e a medida do topo. */}
+            <div
+              aria-hidden
+              data-slot="command-search-bar"
+              className="pointer-events-none absolute inset-x-4 top-(--command-search-top) h-11"
+            />
+            {/* Fora da raiz do cmdk: lá dentro o Enter seleciona a linha e
+                nunca chegaria ao botão. */}
+            <Button
+              type="button"
+              variant="tertiary"
+              data-slot="command-search-cancel"
+              onClick={() => props.onOpenChange?.(false)}
+              className="pointer-events-auto absolute top-(--command-search-top) right-4 h-11 w-22 px-3 text-base"
+            >
+              Cancelar
+            </Button>
+          </DialogPrimitive.Content>
+        </DialogPortal>
+      </Dialog>
     )
   }
 
@@ -1208,6 +1333,7 @@ export {
   Command,
   commandVariants,
   CommandDialog,
+  origemValida,
   CommandHighlight,
   CommandPage,
   CommandPages,
