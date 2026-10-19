@@ -102,7 +102,7 @@ describe("as versões do Command", () => {
     const quadro = CODIGO.slice(CODIGO.indexOf("function quadroDaPilula"), CODIGO.indexOf("function pilulaEmRepouso"))
     expect(quadro).toContain("pilula.style.transform = `translateX(${(lupa.right - final.right) * resto}px)`")
     expect(quadro).toContain("const esquerda = (final.width - lupa.width) * resto")
-    expect(quadro).toMatch(/pilula\.style\.clipPath = `inset\([^`]*\$\{esquerda\}px round 22px\)`/)
+    expect(quadro).toMatch(/pilula\.style\.clipPath = `inset\([^`]*\$\{esquerda\}px round \$\{final\.height \/ 2\}px\)`/)
     expect(quadro).toContain("for (const filho of conteudo) (filho as HTMLElement).style.transform = `translateX(${esquerda}px)`")
     // O elemento não é animado pelo motion (o valor dele reescrevia o fim), e o
     // repouso tira transform, recorte e o deslocamento do conteúdo.
@@ -112,6 +112,23 @@ describe("as versões do Command", () => {
     expect(repouso).toContain('pilula.style.clipPath = ""')
     expect(repouso).toContain('for (const filho of pilula.children) (filho as HTMLElement).style.transform = ""')
     expect(CODIGO).toMatch(/abrindo\.then\(\(\) => \{\s*if \(ativa\) pilulaEmRepouso\(pilula\)/)
+    // O raio do recorte é o da própria pílula, e a viagem zera a opacidade
+    // que uma entrada sem origem tenha deixado no meio.
+    expect(quadro).toContain("round ${final.height / 2}px)")
+    expect(CODIGO).toMatch(/if \(viaja\) \{\s*pilula\.style\.opacity = ""/)
+    // O teclado do iOS só encolhe o viewport visual: a camada e o teto da
+    // placa leem a altura dele, publicada numa variável, com 100dvh de reserva.
+    expect(CODIGO).toContain("const vv = window.visualViewport")
+    expect(CODIGO).toContain('camada.style.setProperty("--command-search-vh", `${vv.height}px`)')
+    expect(CODIGO).toContain('vv.addEventListener("resize", medir)')
+    expect(CODIGO).toContain('vv.removeEventListener("resize", medir)')
+    expect(CODIGO).toContain("h-[var(--command-search-vh,100dvh)]")
+    expect(CODIGO).toContain("[--command-list-ceiling:calc(var(--command-search-vh,100dvh)_-_")
+    expect(CODIGO).not.toMatch(/if \(isMobile\)[\s\S]*?\bh-dvh\b/)
+    // Fechar só mexe no foco que ficou no body ou na camada, e o leva ao
+    // diálogo que a paleta abriu, se houver; senão, à lupa.
+    expect(CODIGO).toMatch(/onCloseAutoFocus=\{[\s\S]*?const ativo = doc\.activeElement\s*if \(ativo !== doc\.body && !camada\?\.contains\(ativo\)\) return/)
+    expect(CODIGO).toMatch(/\[role=dialog\],\[role=alertdialog\][\s\S]*?\.filter\(\(d\) => d !== camada\)[\s\S]*?\(outro \?\? origin\.current\)\.focus\(\)/)
     // Sem gatilho do Radix, fechar devolve o foco à origem, e não ao body.
     expect(CODIGO).toMatch(/onCloseAutoFocus=\{[\s\S]*?origin\?\.current[\s\S]*?preventDefault\(\)[\s\S]*?\.focus\(/)
   })

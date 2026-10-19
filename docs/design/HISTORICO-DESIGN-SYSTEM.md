@@ -27781,6 +27781,34 @@ delegados (spec `docs/superpowers/specs/2026-10-19-busca-do-telefone-design.md`)
   o foco volta à lupa; escolher "Categorias" navega; a 1280px o
   `CommandDialog` do desktop abre como antes.
 
-No simulador (iPhone 18 Pro Max, app instalado), antes do `translateX`: um
-toque na lupa abriu a barra com o teclado na tela, e "Cancelar" fechou. O gesto
-em si não aparece nas capturas (chegam com 1–2s de atraso).
+**A revisão final.**
+
+- **O teclado escondia o fim da placa.** A camada era `h-dvh` e o teto da
+  placa `100dvh`, mas o teclado do iOS só encolhe o viewport visual: os ~300px
+  de baixo da placa, com o "Ver todas em Transações" e o fim de um escopo
+  `/transacoes`, ficavam atrás dele. Agora a camada publica
+  `--command-search-vh`, a altura de `visualViewport`, refeita no `resize` e
+  no `scroll` dele enquanto a camada existe. A altura da camada e o teto da
+  placa a leem, com `100dvh` de reserva. Na prévia, com a janela em 375×500,
+  a variável vai a `500px`, a camada a 500 e a placa termina em 488.
+- **O foco ao fechar.** Escolher "Nova despesa" na paleta abre a folha do
+  formulário enquanto a camada sai. A armadilha de foco da camada segurava o
+  foco nela até o fim, e ele ia para a lupa, atrás da folha. Agora só o foco
+  sem dono (no `body` ou na camada que sai) se move: vai ao último diálogo
+  aberto, se houver, e à lupa se não houver. Na prévia, o foco termina na
+  própria folha (`sheet-content`), e Esc sem diálogo novo devolve à lupa.
+- O raio do recorte é a metade da altura da pílula (`final.height / 2`). A
+  viagem zera a opacidade que uma entrada sem origem tenha deixado no meio.
+
+**No simulador** (iPhone 18 Pro Max, app instalado, teclado de software
+ligado):
+
+- um toque na lupa abriu a barra com o campo focado e o teclado na tela, sem
+  segundo toque;
+- com "mer" digitado, a placa terminou em ~534pt e a barra de acessórios do
+  teclado começa em ~579pt;
+- arrastando a lista, apareceram "Ver todas em Transações" e o último grupo
+  (Categorias › Mercado), acima do teclado;
+- "Cancelar" fechou.
+
+O gesto em si não aparece nas capturas, que chegam com 1–2s de atraso.

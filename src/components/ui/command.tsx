@@ -201,7 +201,7 @@ function quadroDaPilula(
   const resto = 1 - p
   const esquerda = (final.width - lupa.width) * resto
   pilula.style.transform = `translateX(${(lupa.right - final.right) * resto}px)`
-  pilula.style.clipPath = `inset(${(lupa.top - final.top) * resto}px 0px ${(final.bottom - lupa.bottom) * resto}px ${esquerda}px round 22px)`
+  pilula.style.clipPath = `inset(${(lupa.top - final.top) * resto}px 0px ${(final.bottom - lupa.bottom) * resto}px ${esquerda}px round ${final.height / 2}px)`
   for (const filho of conteudo) (filho as HTMLElement).style.transform = `translateX(${esquerda}px)`
 }
 
@@ -251,6 +251,21 @@ function CommandDialog({
   // Onde o gesto está (0 lupa, 1 barra), para fechar de onde a abertura parou.
   const progresso = React.useRef(1)
 
+  // A altura que sobra acima do teclado do iOS (o viewport visual), na camada
+  // enquanto ela existe. Sem `visualViewport`, vale o `100dvh` de reserva.
+  React.useLayoutEffect(() => {
+    const vv = window.visualViewport
+    if (!camada || !vv) return
+    const medir = () => camada.style.setProperty("--command-search-vh", `${vv.height}px`)
+    medir()
+    vv.addEventListener("resize", medir)
+    vv.addEventListener("scroll", medir)
+    return () => {
+      vv.removeEventListener("resize", medir)
+      vv.removeEventListener("scroll", medir)
+    }
+  }, [camada])
+
   // O gesto do telefone: a pílula nasce no círculo da lupa e se estica para a
   // esquerda até a calha, e volta a ela ao fechar (a casca segue montada pelo
   // `presence-hold`). Um progresso só, na `MOLA`, escreve cada quadro
@@ -263,6 +278,7 @@ function CommandDialog({
     let ativa = true
     let controle: AnimationPlaybackControls
     if (viaja) {
+      pilula.style.opacity = ""
       // A caixa final sem o `transform` de um gesto interrompido.
       const emCurso = pilula.style.transform
       pilula.style.transform = ""
@@ -320,11 +336,20 @@ function CommandDialog({
             style={{ pointerEvents: "none" }}
             // O foco vai ao campo no próprio commit do toque, sem esperar a
             // mola: fora do gesto, o iOS não abre o teclado.
-            // Sem `DialogTrigger`, o Radix devolvia o foco ao body.
+            // Sem `DialogTrigger`, o Radix devolvia o foco ao body. Só se mexe
+            // no foco que ficou sem dono (no body ou na camada que sai), e ele
+            // vai ao diálogo que a paleta abriu, se houver: a armadilha da
+            // camada o segurava até aqui, e a lupa ficaria atrás da folha.
             onCloseAutoFocus={(e) => {
               if (!origin?.current) return
               e.preventDefault()
-              origin.current.focus()
+              const doc = origin.current.ownerDocument
+              const ativo = doc.activeElement
+              if (ativo !== doc.body && !camada?.contains(ativo)) return
+              const outro = [...doc.querySelectorAll<HTMLElement>("[role=dialog],[role=alertdialog]")]
+                .filter((d) => d !== camada)
+                .at(-1)
+              ;(outro ?? origin.current).focus()
             }}
             onOpenAutoFocus={(e) => {
               e.preventDefault()
@@ -333,7 +358,9 @@ function CommandDialog({
                 ?.focus()
             }}
             className={cn(
-              "fixed inset-x-0 top-0 z-(--z-modal) flex h-dvh flex-col px-4 text-sm outline-none",
+              // A altura é a do viewport visual: o teclado do iOS só encolhe ele, e com
+              // `100dvh` o fim da placa ficava atrás do teclado.
+              "fixed inset-x-0 top-0 z-(--z-modal) flex h-[var(--command-search-vh,100dvh)] flex-col px-4 text-sm outline-none",
               // A linha da busca na altura da do header: a barra `sm` mede 56 e
               // a pílula 44, então 6px abaixo da área segura.
               "[--command-search-top:calc(env(safe-area-inset-top,0px)+6px)] pt-(--command-search-top)",
@@ -367,7 +394,7 @@ function CommandDialog({
                   "[&_[data-slot=command-list]]:max-h-none [&_[data-slot=command-list]]:min-h-0",
                   // A placa vai até o pé da tela: tudo menos o topo, a linha
                   // de 44, o respiro de 12 e a área segura de baixo.
-                  "[--command-list-ceiling:calc(100dvh_-_var(--command-search-top)_-_--spacing(11)_-_--spacing(3)_-_max(--spacing(3),env(safe-area-inset-bottom)))]",
+                  "[--command-list-ceiling:calc(var(--command-search-vh,100dvh)_-_var(--command-search-top)_-_--spacing(11)_-_--spacing(3)_-_max(--spacing(3),env(safe-area-inset-bottom)))]",
                   "[--command-list-transition:var(--duration-base)]",
                   className
                 )}

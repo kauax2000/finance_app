@@ -1336,8 +1336,12 @@ declaração de `background-color` no trilho).
   progresso só (`animate(0, 1)` na `MOLA`; volta na `SAIDA`) escreve no
   próprio vidro o `translateX` que encosta a ponta direita dela na da lupa e
   o `clip-path` que esconde o resto, e o conteúdo anda com a borda visível;
-  no fim, nada inline. O foco vai ao campo no `onOpenAutoFocus` (o teclado
-  abre no mesmo toque) e volta à origem ao fechar (rodada 337). O grupo se
+  no fim, nada inline. A camada e o teto da placa medem o viewport visual
+  (`--command-search-vh`, de `visualViewport`; `100dvh` de reserva): o teclado
+  do iOS só encolhe ele, e a placa termina acima do teclado. O foco vai ao
+  campo no `onOpenAutoFocus` (o teclado abre no mesmo toque); ao fechar, o foco
+  que ficou sem dono vai ao diálogo que a paleta abriu, ou à origem (rodada
+  337). O grupo se
   separa por respiro e rótulo, **nunca por fio**. `CommandPages` /
   `useCommandPages`, `CommandHighlight`, `CommandGroup count`, `CommandItem
   shortcut` (só com o foco na paleta; evite `mod+n/t/w`), `CommandSplit` +
