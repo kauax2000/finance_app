@@ -492,7 +492,16 @@ function PaletteBody({ close }: { close: () => void }) {
                                 <CommandItem
                                     key={e.id}
                                     value={`escopo:${e.id}`}
-                                    onSelect={() => entrar(e)}
+                                    // Entrar no escopo não fecha a paleta: o campo segue
+                                    // com o foco e, no telefone, o teclado aberto. O toque
+                                    // não tira o foco do campo (`mousedown`, que o iOS
+                                    // dispara depois do toque), e o foco volta a ele no
+                                    // próprio gesto, onde o iOS ainda deixa o teclado.
+                                    onMouseDown={(ev) => ev.preventDefault()}
+                                    onSelect={() => {
+                                        entrar(e)
+                                        inputRef.current?.focus()
+                                    }}
                                 >
                                     <CommandItemIcon>
                                         <Icone />

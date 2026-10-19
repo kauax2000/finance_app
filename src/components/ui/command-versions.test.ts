@@ -86,7 +86,10 @@ describe("as versões do Command", () => {
     expect(CODIGO).toMatch(/if \(isMobile\) \{[\s\S]*?data-slot="command-search"[\s\S]*?<DialogTitle>\{title\}<\/DialogTitle>/)
     expect(CODIGO).toContain('data-slot="command-search-bar"')
     expect(CODIGO).toContain('data-slot="command-search-cancel"')
-    expect(CODIGO).toMatch(/>\s*Cancelar\s*</)
+    // O × no vidro da pílula, não o "Cancelar" sem fundo (pedido do dono).
+    expect(CODIGO).toMatch(/data-slot="command-search-cancel"[\s\S]*?searchFieldSurfaceClassName\.modal[\s\S]*?<XMarkIcon/)
+    expect(CODIGO).toContain('aria-label="Fechar busca"')
+    expect(CODIGO).not.toMatch(/>\s*Cancelar\s*</)
     expect(CODIGO).toContain("origin?: React.RefObject<HTMLElement | null>")
     // A pílula nasce do retângulo da origem e anda na mola; fecha na SAIDA.
     expect(CODIGO).toMatch(/import \{[^}]*\bMOLA\b[^}]*\bSAIDA\b[^}]*\} from "@\/lib\/spring"|import \{[^}]*\bSAIDA\b[^}]*\bMOLA\b[^}]*\} from "@\/lib\/spring"/)
@@ -98,7 +101,15 @@ describe("as versões do Command", () => {
     // translateX e o recorte no próprio vidro, e o conteúdo (a lupa da
     // pílula primeiro) anda com a borda.
     expect(CODIGO.match(/animate\(0, 1, \{ \.\.\.MOLA, onUpdate: quadro \}\)/g)).toHaveLength(1)
-    expect(CODIGO).toMatch(/animate\(progresso\.current, 0, \{ \.\.\.SAIDA, onUpdate: quadro \}\)/)
+    expect(CODIGO).toMatch(/animate\(progresso\.current, 0, \{ \.\.\.VOLTA_DA_PILULA, onUpdate: quadro \}\)/)
+    // A volta pousa na lupa em 280ms na curva enfática, e a casca a segura por --duration-slow.
+    expect(CODIGO).toContain("const VOLTA_DA_PILULA = { duration: 0.28, ease: [0.32, 0.72, 0, 1] } as const")
+    expect(CODIGO).toContain("data-closed:[animation:presence-hold_var(--duration-slow)]")
+    // A placa e o × brotam com o gesto dos menus do app, e voltam com o menu-unmorph.
+    expect(CODIGO).toContain("data-open:[&_[data-slot=command-dialog-panel]]:[animation:menu-morph_380ms_linear_60ms_backwards]")
+    expect(CODIGO).toContain("data-open:[&_[data-slot=command-search-cancel]]:[animation:menu-morph_380ms_linear_120ms_backwards]")
+    expect(CODIGO).toContain("[animation:menu-unmorph_210ms_linear_both]")
+    expect(CODIGO).toContain("[&_[data-slot=command-dialog-panel]]:origin-top")
     const quadro = CODIGO.slice(CODIGO.indexOf("function quadroDaPilula"), CODIGO.indexOf("function pilulaEmRepouso"))
     expect(quadro).toContain("pilula.style.transform = `translateX(${(lupa.right - final.right) * resto}px)`")
     expect(quadro).toContain("const esquerda = (final.width - lupa.width) * resto")

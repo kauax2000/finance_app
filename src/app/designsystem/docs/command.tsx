@@ -92,7 +92,7 @@ export default function CommandDoc() {
 
       <DocSection
         title="Como diálogo (⌘K ou Ctrl+K)"
-        description="A mesma pilha num diálogo: topo fixo, a lista que cresce e encolhe, e nenhuma sombra atrás do conjunto: o véu com borrão é que a separa da página. No telefone ela é a barra: a pílula nasce no círculo da lupa que a abriu e se estica para a esquerda até a calha, com “Cancelar” à direita e o teclado aberto — estreite a janela e abra de novo."
+        description="A mesma pilha num diálogo: topo fixo, a lista que cresce e encolhe, e nenhuma sombra atrás do conjunto: o véu com borrão é que a separa da página. No telefone ela é a barra: a pílula nasce no círculo da lupa que a abriu e se estica para a esquerda até a calha, com o × no mesmo vidro à direita e o teclado aberto — estreite a janela e abra de novo."
         code={`<CommandDialog open={open} onOpenChange={setOpen}>
   <CommandInput placeholder="Buscar…" />
   <CommandList>…</CommandList>

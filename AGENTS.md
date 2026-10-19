@@ -1331,12 +1331,15 @@ declaração de `background-color` no trilho).
   raio) | `panel` (a pilha). O tique é de quem sabe o selecionado. **O
   `CommandDialog` monta o `Command` raiz** (`commandProps`), fixa o topo e
   declara o teto (`--command-list-max-h`); no telefone é a barra: o véu do
-  `Dialog`, a pílula de 44 na linha do header com "Cancelar" à direita e a
+  `Dialog`, a pílula de 44 na linha do header com o × à direita (o círculo de 44 no mesmo vidro da pílula) e a
   placa embaixo. A pílula nasce no círculo do `origin` (a lupa do header): um
-  progresso só (`animate(0, 1)` na `MOLA`; volta na `SAIDA`) escreve no
+  progresso só (`animate(0, 1)` na `MOLA`; volta à lupa em 280ms na curva
+  enfática, `VOLTA_DA_PILULA`, sem passar dela) escreve no
   próprio vidro o `translateX` que encosta a ponta direita dela na da lupa e
   o `clip-path` que esconde o resto, e o conteúdo anda com a borda visível;
-  no fim, nada inline. A camada e o teto da placa medem o viewport visual
+  no fim, nada inline. A placa e o × brotam com o gesto dos menus
+  (`menu-morph`, a placa do alto, 60ms atrás; o × do centro, 120ms atrás) e
+  voltam com o `menu-unmorph`; a casca segura a saída por `--duration-slow`. A camada e o teto da placa medem o viewport visual
   (`--command-search-vh`, de `visualViewport`; `100dvh` de reserva): o teclado
   do iOS só encolhe ele, e a placa termina acima do teclado. O foco vai ao
   campo no `onOpenAutoFocus` (o teclado abre no mesmo toque); ao fechar, o foco

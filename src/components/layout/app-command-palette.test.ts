@@ -58,4 +58,9 @@ describe("a paleta do app", () => {
         // trocar de escopo devolve a paleta ao ocioso
         expect(fonte).toContain('dispatchEvent(new Event("input", { bubbles: true }))')
     })
+
+    it("entrar num escopo pelo toque mantém o campo focado (e o teclado do telefone aberto)", () => {
+        expect(fonte).toMatch(/value=\{`escopo:\$\{e\.id\}`\}\s*onMouseDown=\{\(ev\) => ev\.preventDefault\(\)\}/)
+        expect(fonte).toMatch(/onSelect=\{\(\) => \{\s*entrar\(e\)\s*inputRef\.current\?\.focus\(\)/)
+    })
 })

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ArrowUpRightIcon, PlusIcon } from "@heroicons/react/16/solid"
+import { ArrowUpRightIcon, PlusIcon, XMarkIcon } from "@heroicons/react/16/solid"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Command as CommandPrimitive, useCommandState } from "cmdk"
 import { animate, useReducedMotion, type AnimationPlaybackControls } from "motion/react"
@@ -20,6 +20,7 @@ import {
   menuSeparatorClassName,
   menuItemFadeClassName, menuPanelTintClassName } from "@/lib/menu-classes"
 import { modalSurfaceClassName } from "@/lib/glass-classes"
+import { searchFieldSurfaceClassName } from "@/lib/search-field-classes"
 import {
   scrollFadeBandsClassName,
   scrollFadeBleedClassName,
@@ -205,6 +206,13 @@ function quadroDaPilula(
   for (const filho of conteudo) (filho as HTMLElement).style.transform = `translateX(${esquerda}px)`
 }
 
+/**
+ * A volta da pílula à lupa: 280ms na curva enfática do sistema
+ * (`--ease-emphasized`, a do iOS), que desacelera longa até pousar. A `SAIDA`
+ * (150ms) era um corte. A casca segura a desmontagem por `--duration-slow`.
+ */
+const VOLTA_DA_PILULA = { duration: 0.28, ease: [0.32, 0.72, 0, 1] } as const
+
 /** A barra pronta: sem `transform`, sem recorte, o conteúdo no lugar. */
 function pilulaEmRepouso(pilula: HTMLElement) {
   pilula.style.transform = ""
@@ -300,8 +308,9 @@ function CommandDialog({
         })
         controle = abrindo
       } else {
-        // Fechar no meio da abertura volta de onde ela estava.
-        controle = animate(progresso.current, 0, { ...SAIDA, onUpdate: quadro })
+        // Fechar no meio da abertura volta de onde ela estava, e pousa na lupa
+        // sem passar dela: uma mola até zero cruzaria o círculo.
+        controle = animate(progresso.current, 0, { ...VOLTA_DA_PILULA, onUpdate: quadro })
       }
     } else if (aberto) {
       // Sem lupa à vista, a pílula entra no lugar; com movimento reduzido, só esmaece.
@@ -319,7 +328,7 @@ function CommandDialog({
   }, [aberto, camada, origin, reduzido])
 
   // No telefone a lupa vira a barra: uma camada de tela cheia sobre o véu, com
-  // a pílula e o "Cancelar" na linha do header e a placa 12px abaixo. Era uma
+  // a pílula e o × na linha do header e a placa 12px abaixo. Era uma
   // gaveta de baixo, longe da lupa que a abria.
   if (isMobile) {
     return (
@@ -365,13 +374,19 @@ function CommandDialog({
               // a pílula 44, então 6px abaixo da área segura.
               "[--command-search-top:calc(env(safe-area-inset-top,0px)+6px)] pt-(--command-search-top)",
               "pb-[max(--spacing(3),env(safe-area-inset-bottom))]",
-              "data-closed:[animation:presence-hold_var(--duration-fast)]",
-              // O "Cancelar" e a placa entram esmaecendo 80ms depois da pílula e
-              // saem curtos; o blur do `tw-animate` vira `none` (um `blur(0)`
-              // desligava o vidro da placa).
-              "[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:[--tw-enter-blur:none] [&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:[--tw-exit-blur:none]",
-              "data-open:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:animate-in data-open:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:fade-in-0 data-open:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:animation-duration-(--duration-spring) data-open:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:[animation-delay:80ms] data-open:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:fill-mode-both",
-              "data-closed:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:animate-out data-closed:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:fade-out-0 data-closed:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:animation-duration-(--duration-fast) data-closed:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:ease-(--ease-out) data-closed:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:fill-mode-forwards"
+              // A casca segura a saída até a pílula pousar na lupa (`VOLTA_DA_PILULA`, 280ms).
+              "data-closed:[animation:presence-hold_var(--duration-slow)]",
+              // A placa e o × brotam como os menus do app (`menu-morph`, o gesto do
+              // iOS 26 medido quadro a quadro): a placa do alto da pílula, o × do
+              // próprio centro, logo atrás da pílula que se estica; as linhas
+              // surgem do desfoque em cascata (`command-reveal`). Na volta, o
+              // `menu-unmorph` os recolhe ao mesmo ponto em 210ms. A animação é de
+              // cada vidro, nunca da casca: no ancestral, o `transform` desligaria
+              // o borrão deles.
+              "[&_[data-slot=command-dialog-panel]]:origin-top [&_[data-slot=command-search-cancel]]:origin-center",
+              "data-open:[&_[data-slot=command-dialog-panel]]:[animation:menu-morph_380ms_linear_60ms_backwards]",
+              "data-open:[&_[data-slot=command-search-cancel]]:[animation:menu-morph_380ms_linear_120ms_backwards]",
+              "data-closed:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:[animation:menu-unmorph_210ms_linear_both]",
             )}
           >
             <DialogHeader className="sr-only">
@@ -381,13 +396,13 @@ function CommandDialog({
             <CommandBeamContext.Provider value>
               <Command
                 // O `CommandInput` é o primeiro filho que o consumidor passa:
-                // ninguém reordena filhos, a pílula só deixa 88px à direita
-                // para o "Cancelar".
+                // ninguém reordena filhos, a pílula só deixa 52px à direita
+                // para o × (44 e o respiro de 8).
                 variant="panel"
                 autoSelectFirst={false}
                 className={cn(
-                  "[&_[data-slot=command-input-wrapper]]:me-22",
-                  // A pílula mede 44, a altura da linha e do "Cancelar", com
+                  "[&_[data-slot=command-input-wrapper]]:me-13",
+                  // A pílula mede 44, a altura da linha e do ×, com
                   // ou sem dedo (uma janela estreita de mouse também cai aqui).
                   "[&_[data-slot=search-input]]:h-11",
                   "[&_:is([data-slot=command-input-wrapper],[data-slot=command-dialog-panel])]:pointer-events-auto",
@@ -409,16 +424,23 @@ function CommandDialog({
               data-slot="command-search-bar"
               className="pointer-events-none absolute inset-x-4 top-(--command-search-top) h-11"
             />
-            {/* Fora da raiz do cmdk: lá dentro o Enter seleciona a linha e
-                nunca chegaria ao botão. */}
+            {/* O × que fecha: o círculo de 44 no mesmo vidro da pílula (a
+                superfície `modal` da busca), e não o botão sem fundo. Fora
+                da raiz do cmdk: lá dentro o Enter seleciona a linha e nunca
+                chegaria ao botão. */}
             <Button
               type="button"
               variant="tertiary"
+              size="icon-lg"
+              aria-label="Fechar busca"
               data-slot="command-search-cancel"
               onClick={() => props.onOpenChange?.(false)}
-              className="pointer-events-auto absolute top-(--command-search-top) right-4 h-11 w-22 px-3 text-base"
+              className={cn(
+                "pointer-events-auto absolute top-(--command-search-top) right-4 size-11",
+                searchFieldSurfaceClassName.modal
+              )}
             >
-              Cancelar
+              <XMarkIcon aria-hidden />
             </Button>
           </DialogPrimitive.Content>
         </DialogPortal>

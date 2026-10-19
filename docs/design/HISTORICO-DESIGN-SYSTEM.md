@@ -27812,3 +27812,48 @@ ligado):
 - "Cancelar" fechou.
 
 O gesto em si não aparece nas capturas, que chegam com 1–2s de atraso.
+
+Depois da rodada, o dono trocou o "Cancelar" (texto num `tertiary` sem fundo) por
+um ×. O × é o círculo de 44 no mesmo vidro da pílula
+(`searchFieldSurfaceClassName.modal`: tinta modal, anel e borrão), com o ícone de
+20 e o nome "Fechar busca". A pílula deixa 52px à direita, os 44 do × e 8 de
+respiro (`me-13`; antes `me-22` para o texto). Medido a 375px: pílula de 16 a
+307 e × de 315 a 359, os dois a 6 do topo.
+
+Depois, o dono pediu as animações de abrir e fechar mais orgânicas, como no
+resto do app.
+
+**Antes:** só a pílula se movia. O × e a placa esmaeciam (um `fade-in` de 500ms
+com 80ms de atraso), e o fechamento cortava tudo em 150ms (`SAIDA` e
+`presence-hold` em `--duration-fast`).
+
+**Agora**, com os gestos que o app já tem:
+- A placa e o × brotam com o `menu-morph`, o gesto do iOS 26 dos menus: nascem a
+  20%, em elipse, e crescem primeiro na altura. A placa cresce do alto da pílula
+  (`origin-top`, 60ms de atraso) e o × do próprio centro (120ms de atraso),
+  enquanto a pílula se estica. As linhas continuam surgindo do desfoque em
+  cascata (`command-reveal`).
+- Na volta, os dois se recolhem com o `menu-unmorph` (210ms).
+- A pílula volta à lupa em 280ms na curva enfática (`VOLTA_DA_PILULA`,
+  `--ease-emphasized`) e pousa sem passar dela. Uma mola até zero cruzaria o
+  círculo.
+- A casca segura a desmontagem por `--duration-slow` (300ms), e a pílula some
+  exatamente sobre a lupa.
+
+Cada animação é do próprio vidro, nunca da casca: no ancestral, o `transform`
+desligaria o borrão.
+
+**Medido** pelas animações da página na prévia:
+- ao abrir: `menu-morph` 380ms/60ms na placa, 380ms/120ms no ×, e as linhas com
+  o `menu-content-in` em escada de 30ms;
+- ao fechar: `presence-hold` 300ms e `menu-unmorph` 210ms na placa e no ×.
+
+No simulador, abrir e fechar pela × terminam limpos.
+
+Escolher um escopo do "/" pelo toque (por exemplo "Transações") fechava o
+teclado, porque o toque na linha tirava o foco do campo. Hoje a linha do escopo
+impede o `mousedown` de roubar o foco (o iOS o dispara depois do toque) e devolve
+o foco ao campo no próprio gesto, onde o iOS ainda mantém o teclado
+(`app-command-palette.tsx`). Visto no simulador: depois de "/" e do toque em
+"Transações", o escopo entra no campo e o teclado continua aberto, com o cursor
+no campo.
