@@ -144,10 +144,10 @@ describe("os campos do formulário", () => {
         expect(CAMPOS).toContain('className="grid-cols-1 md:grid-cols-[minmax(0,1fr)_8rem]"')
         expect(CAMPOS).toContain("última em ${formatYearMonthShortPtBr(")
         const USO = semComentarios(lerFonte("src/components/transactions/transaction-form-use.tsx"))
-        // Ao entrar na Parcelada o crédito vem preenchido, e o ponto de partida do
-        // rascunho anda junto: sem nada editado, fechar não pergunta.
-        expect(USO).toMatch(/next !== "installment"[\s\S]{0,400}setPaymentMethod\("credit_card"\)[\s\S]{0,200}setSnapshot\(/)
-        expect(USO).toContain("setFormKind: escolherTipo")
-        expect(USO).toMatch(/defaultLaunchKind === "installment"[\s\S]{0,400}paymentCreditCardId: cartaoPreEscolhido\(creditCards\)/)
+        // A parcelada não pré-escolhe a forma: começa vazia como a despesa, e o
+        // cartão só vem escolhido ao tocar em Crédito (o teste do cartão, acima).
+        expect(USO).not.toContain("escolherTipo")
+        expect(USO).not.toMatch(/defaultLaunchKind === "installment"[\s\S]{0,400}paymentMethod: "credit_card"/)
+        expect(USO).toContain("setFormKind,")
     })
 })
