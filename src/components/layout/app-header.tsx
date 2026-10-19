@@ -98,14 +98,18 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     // Do `lg` para cima a busca é a pílula no centro ou a lupa colada ao sino,
     // pela escolha em Configurações › Aparência (neste aparelho).
     const [busca] = useBuscaDoCabecalho()
+    // A lupa do telefone é a origem da busca: a pílula nasce dela e volta a ela.
+    const lupaRef = React.useRef<HTMLButtonElement>(null)
 
     const pageTitle =
         chromeSlot?.title ?? defaultMobileTitle(pathname, titleMode)
     const mobileBackHref =
         chromeSlot?.backHref ?? defaultMobileBackHref(pathname)
     // A lupa de ação (o círculo de vidro branco), a mesma no telefone e no desktop.
-    const lupa = (className?: string) => (
+    // `origem`: é a do telefone, de onde a busca nasce.
+    const lupa = (origem = false) => (
         <TopBarAction
+            ref={origem ? lupaRef : undefined}
             type="button"
             label="Buscar"
             plate
@@ -114,7 +118,6 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
             aria-haspopup="dialog"
             aria-expanded={searchOpen}
             onClick={openSearch}
-            className={className}
         >
             <MagnifyingGlassIcon className="size-4" />
         </TopBarAction>
@@ -241,11 +244,11 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                     // dois colam numa cápsula, a lupa primeiro.
                     filtroNoCabecalho ? (
                         <TopBarActionGroup>
-                            {lupa()}
+                            {lupa(true)}
                             {filtroNoCabecalho}
                         </TopBarActionGroup>
                     ) : (
-                        lupa()
+                        lupa(true)
                     )
                 }
             >
@@ -262,7 +265,7 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
             </TopBarActions>
 
             {/* Portalizada: não ocupa lugar na linha do `TopBar`. */}
-            <AppCommandPalette open={searchOpen} onOpenChange={setSearchOpen} />
+            <AppCommandPalette open={searchOpen} onOpenChange={setSearchOpen} origin={lupaRef} />
         </TopBar>
     )
 }

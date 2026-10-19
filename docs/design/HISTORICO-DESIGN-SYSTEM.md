@@ -27716,3 +27716,52 @@ Medido a 375px:
 - o ⋯ da linha de Transações tem 44 com ícone de 20, e a linha passou de ~65 a
   74 de altura;
 - o ⋯ do cartão de categoria tem 44.
+
+### Rodada 337 — no telefone a lupa vira a barra de pesquisa
+
+**O pedido.** No telefone a paleta (`CommandDialog`) abria numa gaveta de
+baixo, e o dono achou que "ficou nada a ver": a lupa fica no topo e a busca
+aparecia embaixo. Ele quer o gesto do iOS: tocar na lupa do header e ela virar
+a barra de pesquisa, no lugar, com o teclado aberto. Os detalhes foram
+delegados (spec `docs/superpowers/specs/2026-10-19-busca-do-telefone-design.md`).
+
+**As decisões:**
+
+- abaixo de `md` o `CommandDialog` não monta mais o `Drawer`: é uma camada de
+  tela cheia com o véu do `Dialog`, a pílula de 44 na linha do header (6px
+  abaixo da área segura, calha de 16), "Cancelar" (`tertiary`) à direita e a
+  placa 12px abaixo, até o pé da tela;
+- `CommandDialog origin`: a pílula nasce do retângulo da origem por `clip-path`
+  na própria pílula (num ancestral ele desligaria o vidro), na `MOLA`, e volta
+  na `SAIDA`; sem origem, entra no lugar; com movimento reduzido, só esmaece;
+- o foco vai ao campo no `onOpenAutoFocus`, no mesmo toque, para o iOS abrir o
+  teclado; fechar devolve o foco à origem (sem `DialogTrigger`, o Radix o
+  largava no `body`);
+- no `AppHeader` as duas lupas do telefone (a sozinha e a da cápsula com o
+  filtro) levam o `lupaRef`, que a `AppCommandPalette` repassa como `origin`.
+  O header não ganha um "modo busca": o véu o cobre.
+
+**O que a verificação achou.** O `motion` anima o `clip-path` pelo WAAPI e,
+no fim, o valor dele reescreve o último quadro no render seguinte: o `"none"`
+escrito à mão no `then` era sobrescrito por `inset(0px round 22px)`, e o
+recorte ficava. O `"none"` agora passa pelo próprio `motion`
+(`animate(…, { duration: 0 })`).
+
+**Medido na prévia a 375px:**
+
+- o primeiro quadro com a pílula já está recortado no retângulo da lupa
+  (`inset(0px -44px 0px 255px round 22px)` com a lupa na cápsula,
+  `inset(0px -88px 0px 299px …)` sozinha), sem piscar inteira; a mola passa do
+  alvo uns 10px e assenta em ~600ms, e o `clip-path` termina `none` (inline e
+  computado);
+- o `focus()` do campo roda na mesma tarefa do clique, e o `activeElement` é o
+  `input` da pílula logo depois;
+- a pílula mede 44 e começa a 16px da borda, em Transações, no Painel, em
+  Membros (a lupa sozinha) e no detalhe de categoria;
+- "Cancelar", Esc e o toque no véu fecham — o véu também no primeiro toque
+  depois de carregar a página, nas três telas testadas —, e o foco volta à lupa;
+- escolher "Categorias" navega; a 1280px o `CommandDialog` do desktop abre como
+  antes.
+
+No simulador (iPhone 18 Pro Max, app instalado), um toque na lupa abre a barra
+com o teclado na tela, e "Cancelar" e o véu fecham.

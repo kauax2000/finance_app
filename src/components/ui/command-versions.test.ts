@@ -96,6 +96,12 @@ describe("as versões do Command", () => {
     expect(CODIGO).toMatch(/if \(isMobile\)[\s\S]*?safe-area-inset-top/)
     // O recorte vai no próprio vidro (a pílula), nunca num ancestral, e sai no fim.
     expect(CODIGO).toMatch(/clipPath[\s\S]*?"none"/)
+    // O "none" passa pelo motion: escrito à mão, o valor do motion o
+    // reescrevia com o último quadro no render seguinte (medido na prévia).
+    expect(CODIGO).toContain('animate(pilula, { clipPath: "none" }, { duration: 0 })')
+    expect(CODIGO).not.toContain('pilula.style.clipPath = "none"')
+    // Sem gatilho do Radix, fechar devolve o foco à origem, e não ao body.
+    expect(CODIGO).toMatch(/onCloseAutoFocus=\{[\s\S]*?origin\?\.current[\s\S]*?preventDefault\(\)[\s\S]*?\.focus\(/)
   })
 
   it("a origem só vale com caixa: lupa escondida não faz a pílula nascer em 0,0", async () => {

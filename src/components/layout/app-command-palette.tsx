@@ -144,13 +144,15 @@ const valores = (n: number | null) => (n == null ? [] : [currencyBRL(n), String(
 type AppCommandPaletteProps = {
     open: boolean
     onOpenChange: (open: boolean) => void
+    /** No telefone, de onde a pílula da busca nasce: a lupa do header. */
+    origin?: React.RefObject<HTMLElement | null>
 }
 
 /**
  * A paleta. Quem guarda o `open` é a barra do topo, porque o gatilho mora nela
  * (o `TopBarSearch`: ícone no telefone, pílula no desktop) e a paleta, uma vez só.
  */
-export function AppCommandPalette({ open, onOpenChange }: AppCommandPaletteProps) {
+export function AppCommandPalette({ open, onOpenChange, origin }: AppCommandPaletteProps) {
     // ⌘K vale até dentro de um campo: é o gesto de sair de onde se está, como
     // na busca do catálogo.
     const alternar = React.useRef(() => onOpenChange(!open))
@@ -176,6 +178,7 @@ export function AppCommandPalette({ open, onOpenChange }: AppCommandPaletteProps
         <CommandDialog
             open={open}
             onOpenChange={onOpenChange}
+            origin={origin}
             title="Buscar no app"
             description="Vá para uma tela, adicione algo ou encontre uma transação, um cartão, uma categoria, uma parcela, uma assinatura, uma conta, um membro ou uma carteira."
             commandProps={{ filter: commandFilter, shouldFilter: false }}

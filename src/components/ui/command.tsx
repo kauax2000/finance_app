@@ -246,8 +246,10 @@ function CommandDialog({
       // O primeiro quadro já é a lupa: a pílula não pisca inteira antes da mola.
       pilula.style.clipPath = de
       const abrindo = animate(pilula, { clipPath: [de, PILULA_INTEIRA] }, MOLA)
+      // O fim passa pelo motion: escrito à mão, o valor dele reescrevia o
+      // último quadro no render seguinte, e o recorte ficava.
       abrindo.then(() => {
-        if (ativa) pilula.style.clipPath = "none"
+        if (ativa) animate(pilula, { clipPath: "none" }, { duration: 0 })
       })
       controle = abrindo
     } else if (aberto) {
@@ -287,6 +289,12 @@ function CommandDialog({
             style={{ pointerEvents: "none" }}
             // O foco vai ao campo no próprio commit do toque, sem esperar a
             // mola: fora do gesto, o iOS não abre o teclado.
+            // Sem `DialogTrigger`, o Radix devolvia o foco ao body.
+            onCloseAutoFocus={(e) => {
+              if (!origin?.current) return
+              e.preventDefault()
+              origin.current.focus()
+            }}
             onOpenAutoFocus={(e) => {
               e.preventDefault()
               ;(e.currentTarget as HTMLElement | null)

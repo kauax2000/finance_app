@@ -1330,7 +1330,11 @@ declaração de `background-color` no trilho).
   arquivo dele (a linha ativa é `data-selected`). `variant` `plain` (herda o
   raio) | `panel` (a pilha). O tique é de quem sabe o selecionado. **O
   `CommandDialog` monta o `Command` raiz** (`commandProps`), fixa o topo e
-  declara o teto (`--command-list-max-h`); no telefone é gaveta. O grupo se
+  declara o teto (`--command-list-max-h`); no telefone é a barra: o véu do
+  `Dialog`, a pílula de 44 na linha do header com "Cancelar" à direita e a
+  placa embaixo; a pílula nasce do `origin` (a lupa do header) por `clip-path`
+  na `MOLA` e volta na `SAIDA`; o foco vai ao campo no `onOpenAutoFocus`, para
+  o teclado abrir no mesmo toque (rodada 337). O grupo se
   separa por respiro e rótulo, **nunca por fio**. `CommandPages` /
   `useCommandPages`, `CommandHighlight`, `CommandGroup count`, `CommandItem
   shortcut` (só com o foco na paleta; evite `mod+n/t/w`), `CommandSplit` +

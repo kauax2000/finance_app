@@ -322,7 +322,7 @@ describe("as ações numa cápsula", () => {
   it("no telefone o sino fica à esquerda (o voltar o substitui) e a lupa cola no filtro da tela, à direita", () => {
     const cabecalho = fonte("src/components/layout/app-header.tsx")
     expect(cabecalho).toMatch(/<PageHeaderBack[\s\S]*?\) : \(\s*<NotificationBellButton \/>/)
-    expect(cabecalho).toMatch(/filtroNoCabecalho \? \(\s*<TopBarActionGroup>\s*\{lupa\(\)\}\s*\{filtroNoCabecalho\}/)
+    expect(cabecalho).toMatch(/filtroNoCabecalho \? \(\s*<TopBarActionGroup>\s*\{lupa\(true\)\}\s*\{filtroNoCabecalho\}/)
     // Uma sondagem só, embora o sino desenhe nas duas pontas.
     expect(cabecalho).toContain("useUnreadBellCount()")
     expect(cabecalho).not.toContain("<NotificationBellLink")
@@ -347,6 +347,15 @@ describe("as ações numa cápsula", () => {
     expect(fonte("src/components/categories/detail/category-embedded-transactions.tsx")).toContain("headerFilter={false}")
     // O filtro sai do cabeçalho quando a tela sai.
     expect(fonte("src/components/layout/page-chrome-provider.tsx")).toContain("return () => setFilter(null)")
+  })
+
+  it("no telefone a busca nasce da lupa do header", () => {
+    const cabecalho = fonte("src/components/layout/app-header.tsx")
+    expect(cabecalho).toContain("const lupaRef = React.useRef<HTMLButtonElement>(null)")
+    expect(cabecalho).toMatch(/<AppCommandPalette[^>]*origin=\{lupaRef\}/)
+    const paleta = fonte("src/components/layout/app-command-palette.tsx")
+    expect(paleta).toContain("origin?: React.RefObject<HTMLElement | null>")
+    expect(paleta).toMatch(/<CommandDialog[\s\S]*?origin=\{origin\}/)
   })
 })
 
