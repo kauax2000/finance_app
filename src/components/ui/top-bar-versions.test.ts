@@ -44,7 +44,7 @@ describe("o redesenho", () => {
   })
 
   it("a área segura passa por variável, para o iPhone do catálogo a emular", () => {
-    expect(topBarVariants({})).toContain("[--top-bar-safe-area:calc(env(safe-area-inset-top,0px)+var(--top-bar-edge-gap,0px))]")
+    expect(topBarVariants({})).toContain("[--top-bar-safe-area:env(safe-area-inset-top,0px)]")
     expect(topBarVariants({ position: "fixed" })).toContain("[--top-bar-safe:var(--top-bar-safe-area)]")
     expect(fonte("src/app/designsystem/ds-frame.tsx")).toContain("--top-bar-safe-area:${IPHONE_SEGURA_TOPO}px")
   })
@@ -204,7 +204,7 @@ describe("os comportamentos", () => {
       expect(base).not.toMatch(/\bbox-content\b/)
 
       // A área segura passa por `--top-bar-safe-area`.
-      expect(base).toContain("[--top-bar-safe-area:calc(env(safe-area-inset-top,0px)+var(--top-bar-edge-gap,0px))]")
+      expect(base).toContain("[--top-bar-safe-area:env(safe-area-inset-top,0px)]")
       const safe = "[--top-bar-safe:var(--top-bar-safe-area)]"
       expect(topBarVariants({ position: "fixed" })).toContain(safe)
       expect(topBarVariants({ position: "auto" })).toContain(`max-md:${safe}`)
@@ -213,7 +213,7 @@ describe("os comportamentos", () => {
       // O token que a casca do app usa para empurrar o conteúdo é o degrau
       // padrão mais a mesma área segura — sem o 1px do fio por fora.
       const token = CSS.match(
-        /--mobile-header-offset:\s*calc\(([\d.]+)rem \+ env\(safe-area-inset-top, 0px\) \+ var\(--top-bar-edge-gap, 0px\)\)/
+        /--mobile-header-offset:\s*calc\(([\d.]+)rem \+ env\(safe-area-inset-top, 0px\)\)/
       )
       expect(token, "o token mudou de forma").not.toBeNull()
       expect(Number(token![1])).toBe(alturaEm(topBarVariants({})))
@@ -315,17 +315,38 @@ describe("as ações numa cápsula", () => {
   it("o cabeçalho do app escolhe a busca pela preferência do aparelho", () => {
     const cabecalho = fonte("src/components/layout/app-header.tsx")
     expect(cabecalho).toContain("useBuscaDoCabecalho()")
-    expect(cabecalho).toMatch(/busca === "botao" \? \(\s*<TopBarActionGroup join=/)
-    // No telefone, lupa e sino lado a lado (subpáginas) também colam.
-    expect(cabecalho).toContain('<TopBarActionGroup join="phone">')
+    expect(cabecalho).toMatch(/busca === "botao" \? \(\s*<TopBarActionGroup>\s*\{lupa\(\)\}\s*<NotificationBellButton \/>/)
     expect(cabecalho).not.toContain("teste-ab")
   })
-})
 
-describe("o vão do app instalado no iPhone", () => {
-  it("só no standalone e só com área segura: o conteúdo da barra escapa do borrão de borda do iOS", () => {
-    // Desde o iOS 26 o sistema borra o topo da página por cima de tudo (rodada 331).
-    expect(CSS).toMatch(/@media \(display-mode: standalone\) \{\s*:root \{\s*--top-bar-edge-gap: min\(30px, env\(safe-area-inset-top, 0px\) \* 100\);/)
+  it("no telefone o sino fica à esquerda (o voltar o substitui) e a lupa cola no filtro da tela, à direita", () => {
+    const cabecalho = fonte("src/components/layout/app-header.tsx")
+    expect(cabecalho).toMatch(/<PageHeaderBack[\s\S]*?\) : \(\s*<NotificationBellButton \/>/)
+    expect(cabecalho).toMatch(/filtroNoCabecalho \? \(\s*<TopBarActionGroup>\s*\{lupa\(\)\}\s*\{filtroNoCabecalho\}/)
+    // Uma sondagem só, embora o sino desenhe nas duas pontas.
+    expect(cabecalho).toContain("useUnreadBellCount()")
+    expect(cabecalho).not.toContain("<NotificationBellLink")
+    // As barras com filtro o publicam, e não desenham o próprio no telefone.
+    const transacoes = fonte("src/components/transactions/transactions-toolbar.tsx")
+    expect(transacoes).toContain("usePageChromeFilter(")
+    expect(transacoes).toMatch(/<ToolbarFilterButton[\s\S]*?className=\{cn\(headerFilter && "max-md:hidden"\)\}/)
+    const contas = fonte("src/components/bills/bills-toolbar.tsx")
+    expect(contas).toContain("usePageChromeFilter(")
+    expect(contas).not.toContain("<ToolbarFilterButton")
+    // O mês das telas que o têm também vai ao cabeçalho, como calendário; a faixa do telefone saiu.
+    for (const tela of [
+      "src/app/(app)/dashboard/page-client.tsx",
+      "src/app/(app)/categories/page-client.tsx",
+      "src/app/(app)/categories/[categoryId]/page-client.tsx",
+    ]) {
+      const fonteDaTela = fonte(tela)
+      expect(fonteDaTela, tela).toContain("useMonthInHeader(")
+      expect(fonteDaTela, tela).not.toContain("mobileTriggerFullWidth")
+    }
+    // No detalhe da categoria o mês leva o cabeçalho, e o filtro dos lançamentos fica na barra.
+    expect(fonte("src/components/categories/detail/category-embedded-transactions.tsx")).toContain("headerFilter={false}")
+    // O filtro sai do cabeçalho quando a tela sai.
+    expect(fonte("src/components/layout/page-chrome-provider.tsx")).toContain("return () => setFilter(null)")
   })
 })
 

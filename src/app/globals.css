@@ -27,12 +27,18 @@
    altura (janelas de ~740px ou menos). Some parte da colagem e o celular encolhe. */
 @custom-variant showcase-short (@container showcase (height < 44rem));
 
-/* O dedo, e o dedo emulado. `pointer-coarse:` pergunta ao apontador, nunca à
-   largura. O iPhone do catálogo é um iframe no desktop, onde `(pointer: coarse)`
-   responde pelo mouse: o `IphoneFrame` marca o `<html>` com `data-pointer="coarse"`
-   (no app ninguém escreve o atributo). `:where()` não soma especificidade. */
+/* O dedo, o dedo emulado e a largura do telefone. `pointer-coarse:` pergunta ao
+   apontador e, abaixo de 48rem (o `md`), também à largura: a tela do tamanho de
+   um telefone tem os alvos do telefone, com mouse ou sem (pedido do dono, rodada
+   335; antes só o apontador contava). O iPhone do catálogo é um iframe no
+   desktop, onde `(pointer: coarse)` responde pelo mouse: o `IphoneFrame` marca o
+   `<html>` com `data-pointer="coarse"` (no app ninguém escreve o atributo).
+   `:where()` não soma especificidade. */
 @custom-variant pointer-coarse {
   @media (pointer: coarse) {
+    @slot;
+  }
+  @media (width < 48rem) {
     @slot;
   }
   &:where([data-pointer="coarse"] *) {
@@ -517,7 +523,7 @@
 
   /* Mobile shell: o TopBar fixo (56 = 3.5rem, o `sm` no telefone) + área segura.
      Tem de ser a altura do degrau padrão do TopBar no telefone. */
-  --mobile-header-offset: calc(3.5rem + env(safe-area-inset-top, 0px) + var(--top-bar-edge-gap, 0px));
+  --mobile-header-offset: calc(3.5rem + env(safe-area-inset-top, 0px));
   /* A tinta do vidro flutuante (ilha da `BottomBar`, popover da conta, dropdown do
      FAB): calibrada para uma folha sobre a página, não para uma faixa rente à
      borda (ver `scroll-fade-material`). */
@@ -540,35 +546,23 @@
    área segura conta como na barra (o iPhone do catálogo a emula no `:root` do
    iframe). Registrada como `<length>` para o JS ler px já resolvidos; sem
    barra, 0. A `floating` (8px abaixo) não tem regra: nenhuma tela a usa. */
-/* O app instalado no iPhone (barra de status translúcida): desde o iOS 26 o
-   sistema desenha o borrão de borda do Liquid Glass por cima do topo da página,
-   e nada da página passa acima dele. O conteúdo da barra do topo desce além da
-   faixa borrada, e o borrão da própria barra preenche o vão. 30px é medido: o
-   efeito do iOS acaba a ~97pt do topo, e com a área segura de 62 e o recuo de 6
-   da linha de 56 os botões de 44 começam ali. O `min` zera o vão sem área
-   segura (Android, iPhone sem notch, o Safari em aba). Rodada 331. */
-@media (display-mode: standalone) {
-  :root {
-    --top-bar-edge-gap: min(30px, env(safe-area-inset-top, 0px) * 100);
-  }
-}
 @property --top-bar-bottom {
   syntax: "<length>";
   inherits: true;
   initial-value: 0px;
 }
 :root:has([data-slot="top-bar"][data-size="sm"]) {
-  --top-bar-bottom: calc(3.5rem + var(--top-bar-safe-area, calc(env(safe-area-inset-top, 0px) + var(--top-bar-edge-gap, 0px))));
+  --top-bar-bottom: calc(3.5rem + var(--top-bar-safe-area, env(safe-area-inset-top, 0px)));
   /* O `sm` mede 56 no telefone e 52 do `md` para cima (`md:[--top-bar-h:3.25rem]`). */
   @media (width >= 48rem) {
-    --top-bar-bottom: calc(3.25rem + var(--top-bar-safe-area, calc(env(safe-area-inset-top, 0px) + var(--top-bar-edge-gap, 0px))));
+    --top-bar-bottom: calc(3.25rem + var(--top-bar-safe-area, env(safe-area-inset-top, 0px)));
   }
 }
 :root:has([data-slot="top-bar"][data-size="md"]) {
-  --top-bar-bottom: calc(3.5rem + var(--top-bar-safe-area, calc(env(safe-area-inset-top, 0px) + var(--top-bar-edge-gap, 0px))));
+  --top-bar-bottom: calc(3.5rem + var(--top-bar-safe-area, env(safe-area-inset-top, 0px)));
 }
 :root:has([data-slot="top-bar"][data-size="lg"]) {
-  --top-bar-bottom: calc(4rem + var(--top-bar-safe-area, calc(env(safe-area-inset-top, 0px) + var(--top-bar-edge-gap, 0px))));
+  --top-bar-bottom: calc(4rem + var(--top-bar-safe-area, env(safe-area-inset-top, 0px)));
 }
 
 .dark {

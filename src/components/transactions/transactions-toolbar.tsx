@@ -33,6 +33,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { usePageChromeFilter } from "@/components/layout/page-chrome-provider"
 import { cn } from "@/lib/utils"
 
 export type NewTransactionMode = "expense" | "income" | "installment"
@@ -104,6 +105,7 @@ export function TransactionsToolbar({
     toolbarAfterFilters,
     toolbarTrailing,
     sticky = false,
+    headerFilter = true,
 }: {
     filterType: TransactionFilterType
     onFilterTypeChange: (next: TransactionFilterType) => void
@@ -138,6 +140,8 @@ export function TransactionsToolbar({
     toolbarTrailing?: () => React.ReactNode
     /** Prende a barra sob a barra do topo. Só a lista de `/transactions`: dentro da página de categoria ela rola junto. */
     sticky?: boolean
+    /** No telefone o botão de filtros mora no cabeçalho. `false` o deixa na barra (a tela já leva outro filtro no cabeçalho). */
+    headerFilter?: boolean
 }) {
     const isMobile = useIsMobile()
     const [filtersSheetOpen, setFiltersSheetOpenLocal] = React.useState(false)
@@ -171,6 +175,16 @@ export function TransactionsToolbar({
         treatPeriodAsAlwaysDefault,
     })
 
+    const filtersLabel = active
+        ? `Filtros: ${summary}${advancedFiltersActive ? " e mais filtros ativos" : ""}`
+        : "Filtros"
+    // No telefone o botão de filtros mora no cabeçalho, colado à lupa.
+    usePageChromeFilter({
+        label: filtersLabel,
+        active,
+        onOpen: () => setFiltersSheetOpen(true),
+    }, headerFilter)
+
     const closeMobileSheet = React.useCallback(() => {
         setFiltersSheetOpen(false)
     }, [setFiltersSheetOpen])
@@ -200,9 +214,9 @@ export function TransactionsToolbar({
 
     return (
         <>
-            {/* Uma árvore só: o `ToolbarFilterButton` é o ícone com o ponto no
-                telefone e "Filtros" rotulado a partir de `md`, e as fichas são
-                a linha própria embaixo (`ToolbarChips`, `basis-full`). */}
+            {/* Uma árvore só: "Filtros" rotulado a partir de `md` (no telefone
+                o botão mora no cabeçalho), e as fichas são a linha própria
+                embaixo (`ToolbarChips`, `basis-full`). */}
             <Toolbar
                 sticky={sticky}
                 className={cn(
@@ -226,17 +240,13 @@ export function TransactionsToolbar({
                 {/* Sem o trilho de tipo, a linha das ações é só dela no telefone, e
                     o que vem depois de Filtros pode esticar. */}
                 <ToolbarActions className={cn(!showTransactionTypeSegment && "max-md:flex-1")}>
+                    {/* No telefone ele está no cabeçalho (`usePageChromeFilter`). */}
                     <ToolbarFilterButton
                         type="button"
                         active={active}
                         onClick={() => setFiltersSheetOpen(true)}
-                        aria-label={
-                            active
-                                ? `Filtros: ${summary}${
-                                      advancedFiltersActive ? " e mais filtros ativos" : ""
-                                  }`
-                                : "Filtros"
-                        }
+                        aria-label={filtersLabel}
+                        className={cn(headerFilter && "max-md:hidden")}
                     />
                     {toolbarAfterFilters?.()}
                     {toolbarTrailing ? (

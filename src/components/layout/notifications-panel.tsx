@@ -322,7 +322,7 @@ export function NotificationsPanel({ isActive }: NotificationsPanelProps) {
                 <DialogHeaderRow
                     endAdornment={
                         <>
-                        <DropdownMenu mobile="sheet">
+                        <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button type="button" variant="tertiary" size="icon-md" className="-my-0.5" aria-label="Mais ações">
                                     <EllipsisHorizontalIcon />

@@ -79,7 +79,7 @@ describe("a escada e as superfícies", () => {
 
   it("o iPhone do catálogo é dedo: a variante vale sob [data-pointer=coarse], e a moldura marca o documento", () => {
     const css = lerFonte("src/app/globals.css")
-    expect(css).toMatch(/@custom-variant pointer-coarse \{\s*@media \(pointer: coarse\) \{\s*@slot;\s*\}\s*&:where\(\[data-pointer="coarse"\] \*\) \{\s*@slot;/)
+    expect(css).toMatch(/@custom-variant pointer-coarse \{\s*@media \(pointer: coarse\) \{\s*@slot;\s*\}\s*@media \(width < 48rem\) \{\s*@slot;\s*\}\s*&:where\(\[data-pointer="coarse"\] \*\) \{\s*@slot;/)
     const moldura = lerFonte("src/app/designsystem/ds-frame.tsx")
     expect(moldura).toContain('raiz.dataset.pointer = "coarse"')
     expect(moldura).toContain("<ToqueEmulado />")

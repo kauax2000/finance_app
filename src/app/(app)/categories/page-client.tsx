@@ -35,7 +35,7 @@ import { Card, CardContent, CardMessage } from "@/components/ui/card"
 import { CustomForm, FormInput, FormSubmit } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { CategoryDeleteAlertBody } from "@/components/categories/category-delete-alert-body"
-import { CategoriesToolbar, MonthNav } from "@/components/categories/categories-toolbar"
+import { CategoriesToolbar, useMonthInHeader } from "@/components/categories/categories-toolbar"
 import { useDashboardCategoriesSubrouteLabels } from "@/components/layout/dashboard-category-subroute-title"
 import { usePageChromeSlot } from "@/components/layout/page-chrome-provider"
 import { ExpenseCategoryCard } from "@/components/categories/expense-category-card"
@@ -150,6 +150,12 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         [subrouteLabels?.titleLabel, subrouteLabels?.kind],
     )
     usePageChromeSlot(categoriesChrome)
+    // No telefone o mês (só das despesas) mora no cabeçalho, colado à lupa.
+    useMonthInHeader({
+        budgetMonthYm,
+        onBudgetMonthYmChange: handleBudgetMonthYmChange,
+        enabled: filterType === "expense",
+    })
     const resetForm = useCallback(() => {
         setName("")
         setType("expense")
@@ -627,15 +633,6 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     return (
         <div className="min-w-0 max-w-full space-y-3">
             {confirmDialog}
-            {/* No telefone o mês mora no topo do conteúdo, numa faixa de largura inteira; no desktop ele fica na barra da tela. */}
-            {filterType === "expense" ? (
-                <MonthNav
-                    budgetMonthYm={budgetMonthYm}
-                    onBudgetMonthYmChange={handleBudgetMonthYmChange}
-                    mobileTriggerFullWidth
-                    className="md:hidden"
-                />
-            ) : null}
             <CategoriesToolbar
                 filterType={filterType}
                 onFilterTypeChange={setFilterType}

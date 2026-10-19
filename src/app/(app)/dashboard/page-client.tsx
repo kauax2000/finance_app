@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { DashboardPageSkeleton } from "@/components/dashboard/dashboard-page-skeleton"
 import { useDashboardData } from "@/components/dashboard/use-dashboard-data"
 import { DashboardToolbar } from "@/components/dashboard/dashboard-toolbar"
-import { MonthNav } from "@/components/categories/categories-toolbar"
+import { useMonthInHeader } from "@/components/categories/categories-toolbar"
 import { DashboardKpiCards } from "@/components/dashboard/dashboard-kpi-cards"
 import { DashboardPaymentsCalendar } from "@/components/dashboard/dashboard-payments-calendar"
 import { DashboardOpenInvoices } from "@/components/dashboard/dashboard-open-invoices"
@@ -98,6 +98,8 @@ export default function DashboardPageClient() {
     } = useWorkspace()
 
     const d = useDashboardData()
+    // No telefone o mês mora no cabeçalho, colado à lupa; no desktop, na barra da tela.
+    useMonthInHeader({ budgetMonthYm: d.calendarYm, onBudgetMonthYmChange: d.setCalendarYm })
 
     const [detailTransaction, setDetailTransaction] = useState<Transaction | null>(
         null,
@@ -291,13 +293,6 @@ export default function DashboardPageClient() {
 
     return (
         <div className="min-w-0 max-w-full space-y-5">
-            {/* No telefone o mês mora no topo do conteúdo, numa faixa de largura inteira; no desktop ele fica na barra da tela. */}
-            <MonthNav
-                budgetMonthYm={d.calendarYm}
-                onBudgetMonthYmChange={d.setCalendarYm}
-                mobileTriggerFullWidth
-                className="md:hidden"
-            />
             <DashboardToolbar
                 calendarYm={d.calendarYm}
                 onCalendarYmChange={d.setCalendarYm}

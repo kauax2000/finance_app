@@ -55,8 +55,7 @@ const topBarVariants = cva(
     "flex w-full min-w-0 shrink-0 items-center gap-2",
     // A área segura por variável (`--top-bar-safe-area`), e não `env()` cru: a prévia
     // num iPhone do catálogo é um iframe, onde `env()` vale zero.
-    // Mais o vão do app instalado no iPhone (`--top-bar-edge-gap`, no `globals.css`).
-    "[--top-bar-safe-area:calc(env(safe-area-inset-top,0px)+var(--top-bar-edge-gap,0px))]",
+    "[--top-bar-safe-area:env(safe-area-inset-top,0px)]",
     "h-[calc(var(--top-bar-h)+var(--top-bar-safe,0px))] pt-[var(--top-bar-safe,0px)]",
     "border-b border-b-[length:var(--sidebar-inset-rule,1px)] border-border",
     // O fio só ao rolar: no `scroll`, aparece junto com o vidro (em repouso a barra é a página).

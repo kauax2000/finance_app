@@ -118,9 +118,9 @@ const buttonVariants = cva(
         xl: "h-(--button-h) [--button-h:--spacing(10)] pointer-coarse:[--button-h:--spacing(11)] gap-1.5 px-4.5 has-data-[icon=inline-end]:pr-3.5 has-data-[icon=inline-start]:pl-3.5",
         "icon-xs": "size-6 [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-7",
-        "icon-md": "size-(--button-h) [--button-h:--spacing(8)] pointer-coarse:[--button-h:--spacing(11)]",
-        "icon-lg": "size-(--button-h) [--button-h:--spacing(9)] pointer-coarse:[--button-h:--spacing(11)]",
-        "icon-xl": "size-(--button-h) [--button-h:--spacing(10)] pointer-coarse:[--button-h:--spacing(11)]",
+        "icon-md": "size-(--button-h) [--button-h:--spacing(8)] pointer-coarse:[--button-h:--spacing(11)] pointer-coarse:[&_svg:not([class*='size-'])]:size-5",
+        "icon-lg": "size-(--button-h) [--button-h:--spacing(9)] pointer-coarse:[--button-h:--spacing(11)] pointer-coarse:[&_svg:not([class*='size-'])]:size-5",
+        "icon-xl": "size-(--button-h) [--button-h:--spacing(10)] pointer-coarse:[--button-h:--spacing(11)] pointer-coarse:[&_svg:not([class*='size-'])]:size-5",
       },
       // `spin` é a meia-volta do "tentar novamente": no cursor e no toque o
       // ícone gira 180° na mola da casa. É `rotate` (propriedade independente

@@ -10,11 +10,21 @@ import { chaveNaoLidasGuardada, countUnreadNotifications } from "@/lib/notificat
 import { guardar, lerGuardado } from "@/lib/guardado"
 import { BELL_POLL_MS } from "@/lib/unread-count"
 
+/** O sino com a contagem: a sondagem e o botão. */
 export function NotificationBellLink() {
+    useUnreadBellCount()
+    return <NotificationBellButton />
+}
+
+/**
+ * A contagem do sino: sonda o servidor e escreve no `NotificationsUi`. Uma por
+ * página — o cabeçalho a chama uma vez e desenha o botão no telefone (à
+ * esquerda) e no desktop (à direita) sem dobrar a sondagem.
+ */
+export function useUnreadBellCount() {
     const { user, loading: authLoading } = useAuth()
     const { currentWorkspaceId, loading: workspaceLoading } = useWorkspace()
-    const { toggle, isOpen, unreadCount, setUnreadCount, invalidateUnreadBadge, badgeNonce } =
-        useNotificationsUi()
+    const { setUnreadCount, invalidateUnreadBadge, badgeNonce } = useNotificationsUi()
     const userId = user?.id
     // Sequência da contagem: só a resposta mais recente escreve no sino.
     const seqRef = useRef(0)
@@ -77,6 +87,11 @@ export function NotificationBellLink() {
         }
         // `badgeNonce` refaz a contagem quando alguém invalida o sino.
     }, [authLoading, workspaceLoading, userId, currentWorkspaceId, badgeNonce, setUnreadCount, invalidateUnreadBadge])
+}
+
+/** O botão do sino, sem a sondagem: lê a contagem do `NotificationsUi`. */
+export function NotificationBellButton() {
+    const { toggle, isOpen, unreadCount } = useNotificationsUi()
 
     return (
         <TopBarAction

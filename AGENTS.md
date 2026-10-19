@@ -621,7 +621,8 @@ declaração de `background-color` no trilho).
   Chrome herdava o `:focus-visible`: depois de um clique, o gatilho ficava com
   o anel, parecendo ativo. Não troque `focus-visible:` por `focus:` para
   contornar — `tailwind-hover-policy.test.ts` tranca a variante.
-- **`pointer-coarse:` também vale sob `[data-pointer="coarse"]`**
+- **`pointer-coarse:` também vale abaixo de 48rem de largura** (rodada 335) e
+  **sob `[data-pointer="coarse"]`**
   (`@custom-variant` em `globals.css`), para o `IphoneFrame` do catálogo
   mostrar os alvos do aparelho. No app ninguém escreve o atributo. O que
   pergunta ao toque por JavaScript (`matchMedia`) continua lendo o mouse na
@@ -685,12 +686,16 @@ declaração de `background-color` no trilho).
   `media` e `endAdornment`; `PageSectionHeader` recebe `actions`. Não existe
   `PageSectionContent`. Dentro do app nenhuma tela usa o `PageHeader` hoje: o
   título é só o `<h1>` escondido da barra do topo (ela não mostra o nome da tela;
-  no telefone o título visível é a carteira, no centro, com a lupa e o sino nas
-  pontas, e o voltar no lugar da lupa nas subpáginas), as listas abrem na `Toolbar` e as telas de conta num
+  no telefone o título visível é a carteira, no centro, com o sino à esquerda e
+  a lupa à direita, e o voltar no lugar do sino nas subpáginas; a tela com filtro
+  o publica por `usePageChromeFilter` e ele cola na lupa, numa cápsula — rodada
+  334), as listas abrem na `Toolbar` e as telas de conta num
   `PageSection`; só o `PageHeaderBack` serve o voltar do telefone. O mês das
-  telas que o têm (Painel, Categorias, detalhe da categoria) abre o conteúdo no
-  telefone, como a faixa `MonthNav mobileTriggerFullWidth`; no desktop fica na
-  barra da tela.
+  telas que o têm (Painel, Categorias, detalhe da categoria) mora no cabeçalho do
+  telefone, o calendário colado à lupa que abre a grade de meses
+  (`useMonthInHeader`, rodada 334); no desktop fica na barra da tela. No detalhe
+  da categoria o mês leva o cabeçalho, e o filtro dos lançamentos fica na barra
+  (`TransactionsToolbar headerFilter={false}`).
 - **Cartão e painel**: [`Card`](src/components/ui/card.tsx) e suas peças —
   `CardToolbar`, `CardHeader`, `CardContent`, `CardFooter`, `CardNote`. O
   painel do app é `<Card padding="none">`; nada de `border-b bg-muted/30`
@@ -946,8 +951,12 @@ declaração de `background-color` no trilho).
   piso. **O que mora numa bandeja** (as abas do `Tabs`, os itens segmentados do
   `ToggleGroup`: 36 dentro de uma moldura de 44) alcança os 44 por um `::after`
   de altura fixa (`h-11`), centrado, que cobre o recuo sem mudar o desenho —
-  "aba + recuo" dava 42, porque o `::after` mede por dentro da borda. No mouse nada muda. A pergunta é sobre o
-  **apontador**, não a largura. A escada e o recuo moram em
+  "aba + recuo" dava 42, porque o `::after` mede por dentro da borda. A pergunta é sobre o
+  **apontador e a largura**: `pointer-coarse:` vale com o dedo **e abaixo de 48rem**
+  (o `md`), com mouse ou sem — a janela do tamanho de um telefone tem os alvos do
+  telefone (rodada 335). Acima de 48rem, no mouse, nada muda. Nos botões
+  `icon-md`/`icon-lg`/`icon-xl` o ícone sem tamanho vai a 20 no toque (o círculo
+  de 44 com o ícone de 20, como o `TopBarAction`). A escada e o recuo moram em
   `fieldControlHeightClassName` e `fieldControlPaddingClassName`;
   `input-versions.test.ts` **proíbe os oito controles de reescrever a altura à
   mão**, e `escadas.test.ts` tranca a escada.
@@ -1497,11 +1506,11 @@ declaração de `background-color` no trilho).
   medem 44 com ícone de 20 abaixo do `md`, e a `--mobile-header-offset` acompanha
   (rodada 328) — e 52 do `md` para cima — 8px em volta dos controles de 36, no
   ritmo da placa da barra lateral —, `md` 56, `lg` 64), área
-  segura por `--top-bar-safe-area` — no app instalado no iPhone ela soma
-  `--top-bar-edge-gap` (30px, medidos: o efeito do iOS acaba a ~97pt e os botões começam ali; só em `display-mode: standalone` e com área segura):
-  com a barra de status translúcida (`statusBarStyle: "black-translucent"`), o
-  iOS 26+ borra o topo da página por cima de tudo, e o conteúdo da barra desce
-  para escapar (rodada 331). **`surface="edge"`** (a do app) é a borda
+  segura por `--top-bar-safe-area` — no app instalado no iPhone a barra de
+  status é translúcida (`statusBarStyle: "black-translucent"`) e o iOS 26+
+  borra o topo da página por cima de tudo, botões inclusive; a barra fica na
+  área segura mesmo assim, como a nativa (o vão de 30px da rodada 331 saiu na
+  333). **`surface="edge"`** (a do app) é a borda
   do iOS: sem tinta chapada nem fio, três camadas de borrão (4, 12 e 24px)
   que crescem em direção à borda e acabam 24px abaixo da barra; a barra em si
   não pode ter `backdrop-filter` nem fundo translúcido (viraria a raiz do
@@ -1513,7 +1522,7 @@ declaração de `background-color` no trilho).
   **`TopBarActionGroup`** (ações `plate` numa cápsula: o `ButtonGroup` sem
   divisor, com o anel no grupo; `join` — `always`, `desktop`, `phone` — diz de
   que lado da quebra cola, quando um botão só existe num lado; no telefone a
-  lupa e o sino das subpáginas colam, rodada 329) — a busca compacta
+  lupa e o filtro da tela colam, rodada 334) — a busca compacta
   do app, quando a pessoa escolhe "Botão" em Configurações › Aparência
   (`useBuscaDoCabecalho`, neste aparelho, como o tema; "Barra", a pílula do
   centro, é o padrão) — **nenhuma tela escreve

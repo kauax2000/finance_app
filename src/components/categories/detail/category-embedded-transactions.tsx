@@ -278,6 +278,8 @@ export function CategoryEmbeddedTransactions({
                         filterType={filterType}
                         onFilterTypeChange={setFilterType}
                         showTransactionTypeSegment={false}
+                        // O cabeçalho desta tela leva o mês; o filtro dos lançamentos fica aqui.
+                        headerFilter={false}
                         baselineTransactionFilterType={categoryType}
                         hidePeriodInFilters={lockPeriodToDefault}
                         treatPeriodAsAlwaysDefault={lockPeriodToDefault}

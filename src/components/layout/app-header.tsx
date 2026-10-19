@@ -2,9 +2,11 @@
 
 import * as React from "react"
 import { AppCommandPalette } from "@/components/layout/app-command-palette"
-import { NotificationBellLink } from "@/components/layout/notification-bell-link"
-import { MagnifyingGlassIcon } from "@heroicons/react/16/solid"
+import { NotificationBellButton, useUnreadBellCount } from "@/components/layout/notification-bell-link"
+import { AdjustmentsHorizontalIcon, CalendarIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { PageHeaderBack } from "@/components/ui/page-header"
+import { ToolbarFilterIndicator } from "@/components/ui/toolbar"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 import {
@@ -19,7 +21,7 @@ import {
 } from "@/components/ui/top-bar"
 import { resolveAppSubPageMeta } from "@/components/layout/breadcrumb"
 import { WorkspaceSwitcher } from "@/components/layout/workspace-switcher"
-import { usePageChromeState } from "@/components/layout/page-chrome-provider"
+import { usePageChromeFilterState, usePageChromeState } from "@/components/layout/page-chrome-provider"
 import { useBuscaDoCabecalho } from "@/hooks/use-busca-do-cabecalho"
 import {
     APP_PAGE_TITLES,
@@ -77,13 +79,17 @@ type AppHeaderProps = {
  *
  * Uma árvore só: cada ponta diz o que mostra no telefone pelo `phone`, e os
  * `children` valem de `md` para cima. No telefone a carteira é o título, no
- * centro da barra (ícone, nome e chevron, como o "Instagram ⌄"), com a lupa
- * numa ponta e o sino na outra; nas subpáginas o voltar ocupa a esquerda e a
- * lupa volta para perto do sino. O mês das telas que o têm mora no topo do
- * conteúdo. No desktop, só o gatilho da barra lateral.
+ * centro da barra (ícone, nome e chevron, como o "Instagram ⌄"), com o sino à
+ * esquerda e a lupa à direita; nas subpáginas o voltar toma o lugar do sino. A
+ * tela que tem filtro o publica (`usePageChromeFilter`), e ele cola na lupa,
+ * numa cápsula. O mês das telas que o têm mora no topo do conteúdo. No
+ * desktop, só o gatilho da barra lateral.
  */
 export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     const chromeSlot = usePageChromeState()
+    const filtro = usePageChromeFilterState()
+    // Uma sondagem só: o sino aparece no telefone (esquerda) e no desktop (direita).
+    useUnreadBellCount()
     // A busca tem um gatilho (lupa no telefone, pílula no desktop) e uma
     // paleta só, que também abre por ⌘K. Ela mora aqui porque a barra existe
     // em toda tela da casca.
@@ -97,12 +103,7 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
         chromeSlot?.title ?? defaultMobileTitle(pathname, titleMode)
     const mobileBackHref =
         chromeSlot?.backHref ?? defaultMobileBackHref(pathname)
-    // No telefone, nas telas raiz, a lupa vai à ponta esquerda e o sino fica só
-    // na direita (como o "+" e o ♡ do Instagram): pontas iguais deixam o centro
-    // largo para o nome da carteira. Nas subpáginas o voltar ocupa a esquerda,
-    // e a lupa volta para perto do sino.
-    const lupaNaEsquerda = !mobileBackHref
-    // A lupa de ação (o círculo de vidro branco), a mesma nas três posições.
+    // A lupa de ação (o círculo de vidro branco), a mesma no telefone e no desktop.
     const lupa = (className?: string) => (
         <TopBarAction
             type="button"
@@ -118,6 +119,40 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
             <MagnifyingGlassIcon className="size-4" />
         </TopBarAction>
     )
+    // O filtro da tela no telefone: abre a folha da tela, ou o popover que ela
+    // entrega (o calendário do mês), ancorado no próprio botão. O ponto no
+    // canto diz que há filtro fora do padrão.
+    const [filtroAberto, setFiltroAberto] = React.useState(false)
+    const botaoDoFiltro = filtro ? (
+        <TopBarAction
+            type="button"
+            label={filtro.label}
+            plate
+            tooltip={false}
+            aria-haspopup="dialog"
+            aria-expanded={filtro.popover ? filtroAberto : undefined}
+            disabled={filtro.disabled}
+            onClick={filtro.popover ? undefined : filtro.onOpen}
+        >
+            {filtro.icon === "month" ? (
+                <CalendarIcon className="size-4" />
+            ) : (
+                <AdjustmentsHorizontalIcon className="size-4" />
+            )}
+            {filtro.active ? <ToolbarFilterIndicator className="top-2 right-2" /> : null}
+        </TopBarAction>
+    ) : null
+    const filtroNoCabecalho =
+        filtro?.popover && botaoDoFiltro ? (
+            <Popover open={filtroAberto} onOpenChange={setFiltroAberto}>
+                <PopoverTrigger asChild>{botaoDoFiltro}</PopoverTrigger>
+                <PopoverContent align="end" size="auto" padding="none" label={filtro.label}>
+                    {filtro.popover(() => setFiltroAberto(false))}
+                </PopoverContent>
+            </Popover>
+        ) : (
+            botaoDoFiltro
+        )
 
     return (
         <TopBar position="auto" surface="edge">
@@ -141,7 +176,7 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                             className={cn("ms-0", topBarPlateClassName)}
                         />
                     ) : (
-                        lupa()
+                        <NotificationBellButton />
                     )
                 }
             >
@@ -157,12 +192,12 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                         <h1 className="sr-only">{pageTitle}</h1>
                         {/* A carteira é o título visível do telefone, no centro da
                             barra. A largura deixa as pontas livres: 4rem de cada
-                            lado com uma ação em cada ponta; 7rem nas subpáginas,
-                            onde a direita tem a lupa e o sino. */}
+                            lado com uma ação em cada ponta; 7rem quando a direita
+                            tem a lupa e o filtro. */}
                         <div
                             className={cn(
                                 "absolute flex justify-center",
-                                lupaNaEsquerda ? "inset-x-16" : "inset-x-28"
+                                filtro ? "inset-x-28" : "inset-x-16"
                             )}
                         >
                             <WorkspaceSwitcher appearance="header" />
@@ -183,8 +218,8 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                 {/* A paleta já escuta ⌘K; o `/` ela não escuta, então a
                     pílula não o anuncia. */}
                 {busca === "barra" ? (
-                    // No telefone a lupa é o `TopBarAction` branco (na ponta
-                    // esquerda, ou ao lado do sino nas subpáginas): esta, cinza,
+                    // No telefone a lupa é o `TopBarAction` branco, na ponta
+                    // direita: esta, cinza,
                     // fica para o tablet e o desktop. O `contents` não mexe no layout.
                     <span className="contents max-md:hidden">
                         <TopBarSearch
@@ -199,21 +234,30 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                     </span>
                 ) : null}
             </div>
-            <TopBarActions className="lg:flex-1 lg:basis-0 lg:justify-end">
-                {/* Lupa e sino lado a lado colam numa cápsula, como no desktop;
-                    `join` diz de que lado da quebra os dois existem juntos. */}
+            <TopBarActions
+                className="lg:flex-1 lg:basis-0 lg:justify-end"
+                phone={
+                    // No telefone, a lupa à direita; com o filtro da tela, os
+                    // dois colam numa cápsula, a lupa primeiro.
+                    filtroNoCabecalho ? (
+                        <TopBarActionGroup>
+                            {lupa()}
+                            {filtroNoCabecalho}
+                        </TopBarActionGroup>
+                    ) : (
+                        lupa()
+                    )
+                }
+            >
+                {/* Do `md` para cima, o sino; com a busca em "Botão", a lupa
+                    cola nele numa cápsula. */}
                 {busca === "botao" ? (
-                    <TopBarActionGroup join={lupaNaEsquerda ? "desktop" : "always"}>
-                        {lupa(cn(lupaNaEsquerda && "max-md:hidden"))}
-                        <NotificationBellLink />
+                    <TopBarActionGroup>
+                        {lupa()}
+                        <NotificationBellButton />
                     </TopBarActionGroup>
-                ) : lupaNaEsquerda ? (
-                    <NotificationBellLink />
                 ) : (
-                    <TopBarActionGroup join="phone">
-                        {lupa("md:hidden")}
-                        <NotificationBellLink />
-                    </TopBarActionGroup>
+                    <NotificationBellButton />
                 )}
             </TopBarActions>
 

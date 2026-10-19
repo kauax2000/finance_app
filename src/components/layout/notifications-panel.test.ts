@@ -72,7 +72,9 @@ describe("painel de notificações (fonte)", () => {
         expect(linha).toContain("ref={maisRef}")
         expect(linha).toContain("aria-label={`Mais opções: ${n.title}`}")
         const lista = semComentarios(lerFonte("src/components/layout/notifications-panel.tsx"))
-        expect(lista).toContain('<DropdownMenu mobile="sheet">')
+        // O ⋯ do cabeçalho abre como menu também no telefone, na escala do toque (rodada 335).
+        expect(lista).toContain("<DropdownMenu>")
+        expect(lista).not.toContain('<DropdownMenu mobile="sheet">')
         // O menu não repete a linha (nem título nem hora), e excluir tem desfazer.
         expect(linha).not.toContain("DropdownMenuHeader")
         expect(lista).toMatch(/toastUndo\("Notificação excluída"/)

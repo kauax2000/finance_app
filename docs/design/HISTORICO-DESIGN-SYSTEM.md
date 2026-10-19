@@ -27594,3 +27594,80 @@ flutuante) ou sem piso (o segmentado) e a bandeja em 40: o item vai a 40 no dedo
 e a bandeja a 44. Medidos as abas de Transações e Cartões, o segmentado do
 catálogo e o Despesa/Parcelada/Receita do formulário.
 
+### Rodada 333 — o header volta para a área segura
+
+O dono pediu o header do app instalado no iPhone no lugar dele, mesmo com o
+borrão do iOS por cima. Saiu o `--top-bar-edge-gap` (os 30px da rodada 331, no
+`globals.css`, na `TopBar` e no `--top-bar-bottom`): a barra assenta logo abaixo
+da área segura, como a barra nativa. A barra de status continua translúcida, e o
+borrão de borda do sistema cobre o topo da barra; não há como passar por cima
+dele.
+
+### Rodada 334 — no telefone, o sino à esquerda e o filtro colado à lupa
+
+A pedido do dono, o header do telefone trocou as pontas:
+
+- **Telas raiz:** o sino fica à esquerda e a lupa à direita.
+- **Subpáginas:** o voltar toma o lugar do sino, e o sino some.
+- **Telas com filtro** (Transações, Contas e o detalhe da categoria): o filtro
+  sai da barra da lista e entra no header, colado à lupa numa cápsula, com a
+  lupa primeiro.
+
+Como funciona:
+
+- **O filtro chega pelo slot de cromo.** A barra da lista o publica com
+  `usePageChromeFilter` (`page-chrome-provider`), à parte do `slot` de título e
+  voltar, porque o detalhe da categoria publica os dois. O `onOpen` vai por ref,
+  e o filtro sai do header quando a tela sai.
+- **O botão é o `TopBarAction plate`** com o mesmo ícone do `ToolbarFilterButton`
+  e o `ToolbarFilterIndicator` no canto quando há filtro fora do padrão. Ele abre
+  a mesma folha da barra.
+- **O sino desenha nas duas pontas e sonda uma vez.** A sondagem saiu do botão
+  (`useUnreadBellCount`, chamado uma vez pelo `AppHeader`), e o
+  `NotificationBellButton` só lê a contagem. Desenhar o `NotificationBellLink`
+  nas duas pontas dobraria a sondagem de 60s.
+- **O desktop não mudou.**
+
+Com a cápsula à direita, a carteira centrada fica com 151px a 375px e trunca
+("Carteir…"), como já truncava nas subpáginas.
+
+Na mesma rodada, o mês também foi para o cabeçalho, a pedido do dono:
+
+- **Onde:** no Painel, em Categorias (só nas despesas) e no detalhe da
+  categoria, a faixa `MonthNav mobileTriggerFullWidth` saiu do topo do conteúdo
+  no telefone.
+- **O botão:** um calendário colado à lupa (`useMonthInHeader`, em
+  `categories-toolbar`). Ele abre num popover ancorado a mesma grade de meses
+  com anterior, "Este mês" e próximo (`MonthNavPanel`, agora também o miolo do
+  popover do `MonthNav`).
+- **O slot de filtro ganhou** `icon` (`filter` | `month`), `popover` e o
+  `enabled` do hook. O ponto acende fora do mês atual.
+- **Detalhe da categoria:** tem mês e lançamentos, e o cabeçalho leva só um. O
+  mês ganha, e a barra dos lançamentos fica com o próprio filtro
+  (`headerFilter={false}`).
+
+### Rodada 335 — a largura do telefone também ganha os alvos do telefone
+
+O dono via o app na prévia em largura de telefone, com o mouse, e pediu duas
+vezes os tamanhos e os alvos do celular ali. Na prévia, o menu de carteiras
+tinha linha de 36, texto de 14 e ladrilho de 24, e o ⋯, o × e o "Configurar
+notificações" do painel tinham 32. Enquanto isso, o header já media 44, porque
+ele cresce pela largura (`max-md:`).
+
+Desde a rodada 332 as alturas de toque moram todas em `pointer-coarse:`, que
+perguntava só ao apontador. A `@custom-variant pointer-coarse` do `globals.css`
+ganhou um terceiro ramo, `@media (width < 48rem)`. Com ele, todas as regras de
+toque passam a valer na largura do telefone, com mouse ou sem. Acima de 48rem,
+no mouse, nada muda: a escolha da rodada anterior (o iPad com trackpad fica com
+os tamanhos de mouse) segue para as larguras de tablet e desktop.
+
+Medido a 375px no mouse:
+
+- menu de carteiras: linha de 44, texto de 16 e ladrilho de 32;
+- painel de notificações: ⋯ e × com 44, e "Configurar notificações" com 44 de
+  altura;
+- a 1280px, o × continua com 32 e o sino com 36.
+
+Os botões `icon-md`/`icon-lg`/`icon-xl` cresciam a 44 com o ícone parado em
+16, que ficava pequeno no círculo. No toque, o ícone sem tamanho próprio vai a
+20, a proporção do `TopBarAction`.

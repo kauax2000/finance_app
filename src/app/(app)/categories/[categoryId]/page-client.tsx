@@ -26,7 +26,7 @@ import { CategoryDetailSummarySection } from "@/components/categories/detail/cat
 import { CategoryDetailTrends } from "@/components/categories/detail/category-detail-trends"
 import { CategoryEmbeddedTransactions } from "@/components/categories/detail/category-embedded-transactions"
 import { CategoryDetailDialogs } from "@/components/categories/detail/category-detail-dialogs"
-import { MonthNav } from "@/components/categories/categories-toolbar"
+import { MonthNav, useMonthInHeader } from "@/components/categories/categories-toolbar"
 import { usePageChromeSlot } from "@/components/layout/page-chrome-provider"
 import { ROUTES } from "@/config/navigation"
 import { computeAmountStats } from "@/components/categories/detail/category-detail-utils"
@@ -109,6 +109,8 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             ? `${ROUTES.DASHBOARD_CATEGORIES}?month=${encodeURIComponent(yearMonth)}`
             : undefined,
     })
+    // No telefone o mês mora no cabeçalho, colado à lupa; no desktop, no herói.
+    useMonthInHeader({ budgetMonthYm: yearMonth, onBudgetMonthYmChange: handleMonthChange })
 
     const invalidateDetail = React.useCallback(() => {
         if (!currentWorkspaceId) return
@@ -445,13 +447,6 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     return (
         <div className="min-w-0 max-w-full space-y-5">
             {confirmDialog}
-            {/* No telefone o mês mora no topo do conteúdo, numa faixa de largura inteira; no desktop ele fica na barra da tela. */}
-            <MonthNav
-                budgetMonthYm={yearMonth}
-                onBudgetMonthYmChange={handleMonthChange}
-                mobileTriggerFullWidth
-                className="md:hidden"
-            />
             <CategoryDetailHero
                 category={category}
                 accentColor={accentColor}

@@ -4,7 +4,6 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
     Toolbar,
     ToolbarActions,
-    ToolbarFilterButton,
     ToolbarFilters,
 } from "@/components/ui/toolbar"
 import {
@@ -36,6 +35,7 @@ import {
 } from "@/components/ui/dialog"
 
 import { cn } from "@/lib/utils"
+import { usePageChromeFilter } from "@/components/layout/page-chrome-provider"
 
 export type BillsPageMode = "pending" | "bills"
 
@@ -133,6 +133,13 @@ export function BillsToolbar({
 
     const active = filtersActive(mode, pendingFilter, modelFilter)
     const sortOpts = sortOptionsForMode(mode)
+    // No telefone o botão de filtros mora no cabeçalho, colado à lupa.
+    usePageChromeFilter({
+        label: active ? "Filtros e ordenação — ativos" : "Filtros e ordenação",
+        active,
+        disabled: !hasTable,
+        onOpen: () => setSheetOpen(true),
+    })
 
     return (
         <>
@@ -178,19 +185,11 @@ export function BillsToolbar({
                     </Badge>
                 </ToolbarFilters>
 
-                {/* Uma árvore só. No telefone, o botão de filtros abre a folha
-                    (filtrar e ordenar juntos); a partir de `md`, a barra de
+                {/* Uma árvore só. No telefone, o botão de filtros do cabeçalho
+                    abre a folha (filtrar e ordenar juntos); a partir de `md`, a barra de
                     menus filtra e ordena: o rádio marca a opção valendo e o
                     cabeçalho do painel a repete. */}
                 <ToolbarActions className="min-w-0">
-                    <ToolbarFilterButton
-                        type="button"
-                        label="Filtros e ordenação"
-                        count={active ? 1 : 0}
-                        className="md:hidden"
-                        onClick={() => setSheetOpen(true)}
-                        disabled={!hasTable}
-                    />
                     <Menubar
                         size="sm"
                         aria-label="Filtrar e ordenar"

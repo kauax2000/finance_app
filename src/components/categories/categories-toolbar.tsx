@@ -3,6 +3,7 @@
 import { Toolbar, ToolbarActions, ToolbarButton } from "@/components/ui/toolbar"
 import { CalendarIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "@heroicons/react/16/solid"
 import * as React from "react"
+import { usePageChromeFilter } from "@/components/layout/page-chrome-provider"
 import { Button } from "@/components/ui/button"
 import { MonthGrid } from "@/components/ui/date-picker"
 import {
@@ -206,6 +207,101 @@ function MonthNavArrowControls({
     )
 }
 
+/** A grade de meses com o rodapé (anterior, "Este mês", próximo): o miolo do popover do mês. */
+function MonthNavPanel({
+    budgetMonthYm,
+    onBudgetMonthYmChange,
+    onJump,
+    fechar,
+}: {
+    budgetMonthYm: string
+    onBudgetMonthYmChange: (ym: string) => void
+    onJump: () => void
+    fechar: () => void
+}) {
+    return (
+        <>
+            <MonthGrid
+                value={mesDoAnoMes(budgetMonthYm)}
+                onChange={(d) => {
+                    onBudgetMonthYmChange(formatYearMonth(d))
+                    fechar()
+                }}
+            />
+            <PopoverFooter className="justify-between">
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-lg"
+                    className="size-8"
+                    aria-label="Mês anterior"
+                    onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, -1))}
+                >
+                    <ChevronLeftIcon />
+                </Button>
+                <Button
+                    type="button"
+                    variant="tertiary"
+                    size="sm"
+                    className="h-8 px-2 text-xs text-muted-foreground"
+                    onClick={() => {
+                        onJump()
+                        fechar()
+                    }}
+                >
+                    Este mês
+                </Button>
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-lg"
+                    className="size-8"
+                    aria-label="Próximo mês"
+                    onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, 1))}
+                >
+                    <ChevronRightIcon />
+                </Button>
+            </PopoverFooter>
+        </>
+    )
+}
+
+/**
+ * O mês da tela no cabeçalho do telefone: o calendário colado à lupa, que abre
+ * a grade de meses (`usePageChromeFilter`). O ponto acende fora do mês atual.
+ * No desktop o mês segue na barra da tela.
+ */
+export function useMonthInHeader({
+    budgetMonthYm,
+    onBudgetMonthYmChange,
+    onJumpToCurrentMonth,
+    enabled = true,
+}: {
+    budgetMonthYm: string
+    onBudgetMonthYmChange: (ym: string) => void
+    onJumpToCurrentMonth?: () => void
+    enabled?: boolean
+}) {
+    const jump =
+        onJumpToCurrentMonth ?? (() => onBudgetMonthYmChange(formatYearMonth(new Date())))
+    usePageChromeFilter(
+        {
+            label: `Mês: ${labelYearMonthPt(budgetMonthYm)}`,
+            active: budgetMonthYm !== formatYearMonth(new Date()),
+            icon: "month",
+            popover: (fechar) => (
+                <MonthNavPanel
+                    budgetMonthYm={budgetMonthYm}
+                    onBudgetMonthYmChange={onBudgetMonthYmChange}
+                    onJump={jump}
+                    fechar={fechar}
+                />
+            ),
+        },
+        enabled
+    )
+}
+
 export function MonthNav({
     budgetMonthYm,
     onBudgetMonthYmChange,
@@ -323,55 +419,12 @@ export function MonthNav({
                             padding="none"
                             label="Escolher mês"
                         >
-                            <MonthGrid
-                                value={mesDoAnoMes(budgetMonthYm)}
-                                onChange={(d) => {
-                                    onBudgetMonthYmChange(formatYearMonth(d))
-                                    setOpen(false)
-                                }}
+                            <MonthNavPanel
+                                budgetMonthYm={budgetMonthYm}
+                                onBudgetMonthYmChange={onBudgetMonthYmChange}
+                                onJump={jump}
+                                fechar={() => setOpen(false)}
                             />
-                            <PopoverFooter className="justify-between">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="icon-lg"
-                                    className="size-8"
-                                    aria-label="Mês anterior"
-                                    onClick={() =>
-                                        onBudgetMonthYmChange(
-                                            shiftYearMonth(budgetMonthYm, -1),
-                                        )
-                                    }
-                                >
-                                    <ChevronLeftIcon />
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="tertiary"
-                                    size="sm"
-                                    className="h-8 px-2 text-xs text-muted-foreground"
-                                    onClick={() => {
-                                        jump()
-                                        setOpen(false)
-                                    }}
-                                >
-                                    Este mês
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="icon-lg"
-                                    className="size-8"
-                                    aria-label="Próximo mês"
-                                    onClick={() =>
-                                        onBudgetMonthYmChange(
-                                            shiftYearMonth(budgetMonthYm, 1),
-                                        )
-                                    }
-                                >
-                                    <ChevronRightIcon />
-                                </Button>
-                            </PopoverFooter>
                         </PopoverContent>
                     </Popover>
                     </div>
