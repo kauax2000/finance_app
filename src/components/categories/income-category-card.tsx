@@ -59,7 +59,7 @@ export function IncomeCategoryCard({
                         </CardLink>
                     </CardTitle>
                     <CardAction>
-                        <DropdownMenu mobile="sheet">
+                        <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     type="button"
@@ -70,7 +70,7 @@ export function IncomeCategoryCard({
                                     onClick={(e) => stopLinkNavigation(e)}
                                     onPointerDown={(e) => e.stopPropagation()}
                                 >
-                                    <EllipsisVerticalIcon className="size-4" aria-hidden />
+                                    <EllipsisVerticalIcon aria-hidden />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent

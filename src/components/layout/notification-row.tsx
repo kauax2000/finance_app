@@ -173,7 +173,7 @@ export function NotificationRow({ notification: n, onToggleRead, onDelete }: Not
                                 </TooltipTrigger>
                                 <TooltipContent>Excluir</TooltipContent>
                             </Tooltip>
-                            <DropdownMenu mobile="sheet">
+                            <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button
                                         type="button"

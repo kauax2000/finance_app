@@ -27671,3 +27671,48 @@ Medido a 375px no mouse:
 Os botões `icon-md`/`icon-lg`/`icon-xl` cresciam a 44 com o ícone parado em
 16, que ficava pequeno no círculo. No toque, o ícone sem tamanho próprio vai a
 20, a proporção do `TopBarAction`.
+
+### Rodada 336 — todo ⋯ abre como menu no telefone
+
+A pedido do dono, depois do ⋯ do painel de notificações (rodada 335), todo ⋯
+do app deixou de virar a folha de ações (`mobile="sheet"`) no telefone e abre
+como menu suspenso.
+
+**Onde mudou:**
+
+- o ⋯ da linha de notificação;
+- os detalhes de transação, assinatura, conta a pagar e cartão;
+- o cartão de conta pendente;
+- os cartões e o herói de categoria;
+- as opções da conta e da carteira em Configurações;
+- o `OverflowMenu` (`lib/`), o ⋯ das abas e ações que não cabem;
+- o ⋯ das ações da linha no `DataTable` (`ui/`).
+
+Desde a rodada 335 o menu tem a escala do toque abaixo de 48rem: linha de 44,
+texto de 16 e ícone de 20.
+
+**Ficaram como folha**, porque não são ⋯:
+
+- o menu da fatura, aberto pelo chip de status;
+- o dia do calendário de pagamentos (`Popover`);
+- os seletores que já eram gaveta (`FilterBar`, `AvatarGroup`, filtros do
+  `DataTable`).
+
+Na mesma rodada, todo gatilho ⋯ passou a `icon-md`, o degrau que o dono escolheu
+no mapeamento de inconsistências: 32 no mouse e 44 com ícone de 20 no toque.
+
+Os ⋯ eram de três tamanhos, e nenhum chegava a 44 no telefone:
+
+- `icon-sm` (28), nos detalhes de transação, assinatura, conta e cartão e nas
+  ações da linha do `DataTable`: esse degrau não cresce no toque;
+- `icon-lg` com um `size-9` por cima (36), no herói de categoria, na conta e nas
+  carteiras: o `size-*` de quem chama vence o `--button-h` do toque;
+- `size-8`, no cartão de conta pendente.
+
+Os ícones com `size-4` fixo perderam a classe, para crescer a 20 no toque.
+
+Medido a 375px:
+
+- o ⋯ da linha de Transações tem 44 com ícone de 20, e a linha passou de ~65 a
+  74 de altura;
+- o ⋯ do cartão de categoria tem 44.

@@ -1247,7 +1247,11 @@ declaração de `background-color` no trilho).
   escreva `w-44`…`w-56`; `variant="panel"` é o painel de conta.
   `DropdownMenuHeader` sangra e `DropdownMenuSection` devolve o recuo (não
   compense geometria por seletor); o fio entre identidade e comandos é do slot
-  `header`. **`mobile="sheet"`** vira a folha do `Drawer`; **o `onClick` da tela
+  `header`. **`mobile="sheet"`** vira a folha do `Drawer`, mas **nenhum ⋯ a usa**: o ⋯
+  abre como menu também no telefone, na escala do toque (rodada 336; o chip de status
+  da fatura segue como folha), e o **gatilho ⋯ é `icon-md` sem `size-*` nem ícone com
+  tamanho** (32 no mouse, 44 com ícone de 20 no toque; as ações da linha do `DataTable`
+  também); **o `onClick` da tela
   roda antes do da linha**. Item com `shortcut`, `description`, `confirm` e
   `onSelect` que devolve `Promise`; **a caixa não fecha o menu**; `search`;
   `shortcut` na raiz. Ícone de linha sem `h-4 w-4` nem `mr-2`.

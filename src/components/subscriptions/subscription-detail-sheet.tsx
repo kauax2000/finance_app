@@ -305,12 +305,12 @@ export function SubscriptionDetailSheet({
                     </div>
                     <div className="flex shrink-0 items-center gap-0.5">
                         {/* No telefone o ⋯ é a folha de ações, com a assinatura em cima. */}
-                        <DropdownMenu mobile="sheet">
+                        <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     type="button"
                                     variant="tertiary"
-                                    size="icon-sm"
+                                    size="icon-md"
                                     className="shrink-0"
                                     aria-label="Mais opções"
                                 >

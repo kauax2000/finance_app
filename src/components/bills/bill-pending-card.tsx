@@ -263,17 +263,17 @@ export function BillPendingCard({
                     Pagar
                 </Button>
                 {row.kind === "regular" ? (
-                    <DropdownMenu mobile="sheet">
+                    <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
                                 type="button"
-                                size="icon-sm"
+                                size="icon-md"
                                 variant="outline"
                                 aria-label="Mais ações"
-                                className="size-8 shrink-0"
+                                className="shrink-0"
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                <EllipsisHorizontalIcon className="size-4" />
+                                <EllipsisHorizontalIcon />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent

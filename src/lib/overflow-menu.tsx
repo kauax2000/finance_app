@@ -38,7 +38,7 @@ export function OverflowMenu({
   size?: "icon-xs" | "icon-sm" | "icon-md" | "icon-lg"
 }) {
   return (
-    <DropdownMenu mobile="sheet">
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button type="button" variant="outline" size={size} data-overflow-more="" aria-label={label}>
           <EllipsisHorizontalIcon aria-hidden />

@@ -76,16 +76,16 @@ export function CategoryDetailHero({
                 </div>
 
                 <div className="flex shrink-0 items-center gap-1">
-                    <DropdownMenu mobile="sheet">
+                    <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
                                 type="button"
                                 variant="tertiary"
-                                size="icon-lg"
-                                className="size-9 shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
+                                size="icon-md"
+                                className="shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
                                 aria-label={`Opções da categoria ${category.name}`}
                             >
-                                <EllipsisVerticalIcon className="size-4" aria-hidden />
+                                <EllipsisVerticalIcon aria-hidden />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent
@@ -158,11 +158,11 @@ export function CategoryDetailHero({
                             <Button
                                 type="button"
                                 variant="tertiary"
-                                size="icon-lg"
-                                className="size-9 shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
+                                size="icon-md"
+                                className="shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
                                 aria-label={`Opções da categoria ${category.name}`}
                             >
-                                <EllipsisVerticalIcon className="size-4" aria-hidden />
+                                <EllipsisVerticalIcon aria-hidden />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent

@@ -241,12 +241,12 @@ export function BillDetailSheet({
                             ) : null}
                             <div className="flex items-center gap-0.5">
                                 {bill ? (
-                                    <DropdownMenu mobile="sheet">
+                                    <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button
                                                 type="button"
                                                 variant="tertiary"
-                                                size="icon-sm"
+                                                size="icon-md"
                                                 className="shrink-0"
                                                 aria-label="Mais opções"
                                             >

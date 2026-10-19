@@ -210,7 +210,7 @@ export function ExpenseCategoryCard({
 
                     <CardAction className="flex items-center gap-1.5">
                         <MomComparisonBadge now={spent} prev={previousSpent} />
-                        <DropdownMenu mobile="sheet">
+                        <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     type="button"
@@ -221,7 +221,7 @@ export function ExpenseCategoryCard({
                                     onClick={(e) => stopLinkNavigation(e)}
                                     onPointerDown={(e) => e.stopPropagation()}
                                 >
-                                    <EllipsisVerticalIcon className="size-4" aria-hidden />
+                                    <EllipsisVerticalIcon aria-hidden />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent

@@ -83,16 +83,16 @@ export default function AccountPage() {
                                 </div>
                             </div>
                             <div className="shrink-0">
-                                <DropdownMenu mobile="sheet">
+                                <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button
                                             type="button"
                                             variant="tertiary"
-                                            size="icon-lg"
-                                            className="size-9 shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
+                                            size="icon-md"
+                                            className="shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
                                             aria-label="Mais opções da conta"
                                         >
-                                            <EllipsisVerticalIcon className="size-4" aria-hidden />
+                                            <EllipsisVerticalIcon aria-hidden />
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent

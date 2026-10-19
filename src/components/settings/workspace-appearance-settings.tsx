@@ -58,16 +58,16 @@ function InvitedCarteiraOverflowMenu({
     return (
         <div className="shrink-0">
             {/* No telefone o ⋯ é a folha de ações, com a carteira em cima. */}
-            <DropdownMenu mobile="sheet">
+            <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button
                         type="button"
                         variant="tertiary"
-                        size="icon-lg"
-                        className="size-9 shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
+                        size="icon-md"
+                        className="shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
                         aria-label={`Mais opções da carteira ${workspaceName}`}
                     >
-                        <EllipsisVerticalIcon className="size-4" aria-hidden />
+                        <EllipsisVerticalIcon aria-hidden />
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
@@ -101,16 +101,16 @@ function OwnerCarteiraOverflowMenu({
     return (
         <div className="shrink-0">
             {/* No telefone o ⋯ é a folha de ações, com a carteira em cima. */}
-            <DropdownMenu mobile="sheet">
+            <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button
                         type="button"
                         variant="tertiary"
-                        size="icon-lg"
-                        className="size-9 shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
+                        size="icon-md"
+                        className="shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
                         aria-label={`Mais opções da carteira ${workspaceName}`}
                     >
-                        <EllipsisVerticalIcon className="size-4" aria-hidden />
+                        <EllipsisVerticalIcon aria-hidden />
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent

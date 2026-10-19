@@ -1439,7 +1439,7 @@ function CaixaDaLinha<T extends RowData>({ row, label }: { row: DataTableRow<T>;
   )
 }
 
-/** As ações da linha: as `primary` à vista (botões de ícone com tooltip) e o resto no ⋯, um `DropdownMenu` que vira folha de ações no telefone e sabe confirmar e esperar a `Promise`. */
+/** As ações da linha: as `primary` à vista (botões de ícone com tooltip) e o resto no ⋯, um `DropdownMenu` (menu também no telefone, na escala do toque) que sabe confirmar e esperar a `Promise`. */
 function AcoesDaLinha<T>({ row, actions, label }: { row: T; actions: DataTableAction<T>[]; label: string }) {
   const visiveis = actions.filter((a) => !a.hidden?.(row))
   const avista = visiveis.filter((a) => a.primary)
@@ -1451,7 +1451,7 @@ function AcoesDaLinha<T>({ row, actions, label }: { row: T; actions: DataTableAc
           key={a.label}
           type="button"
           variant={a.variant === "destructive" ? "destructive" : "tertiary"}
-          size="icon-sm"
+          size="icon-md"
           aria-label={`${a.label} ${label}`}
           onClick={(e) => {
             e.stopPropagation()
@@ -1462,12 +1462,12 @@ function AcoesDaLinha<T>({ row, actions, label }: { row: T; actions: DataTableAc
         </Button>
       ))}
       {resto.length ? (
-        <DropdownMenu mobile="sheet">
+        <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               type="button"
               variant="tertiary"
-              size="icon-sm"
+              size="icon-md"
               aria-label={`Mais ações para ${label}`}
               onClick={(e) => e.stopPropagation()}
             >
@@ -1477,7 +1477,7 @@ function AcoesDaLinha<T>({ row, actions, label }: { row: T; actions: DataTableAc
           <DropdownMenuContent
             align="end"
             size="md"
-            // O alvo do menu: na folha do telefone dizia só "Ações", sem a linha de origem.
+            // O alvo do menu: o cabeçalho diz de que linha são as ações.
             header={<DropdownMenuHeader title={label} />}
             onClick={(e) => e.stopPropagation()}
           >

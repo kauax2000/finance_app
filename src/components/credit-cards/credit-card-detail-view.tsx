@@ -166,12 +166,12 @@ export function CreditCardDetailView({
                             >
                                 {card.is_active ? "Ativo" : "Inativo"}
                             </Badge>
-                            <DropdownMenu mobile="sheet">
+                            <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button
                                         type="button"
                                         variant="tertiary"
-                                        size="icon-sm"
+                                        size="icon-md"
                                         className="shrink-0"
                                         aria-label="Mais opções"
                                     >
