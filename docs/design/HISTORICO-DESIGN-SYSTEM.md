@@ -27857,3 +27857,266 @@ o foco ao campo no próprio gesto, onde o iOS ainda mantém o teclado
 (`app-command-palette.tsx`). Visto no simulador: depois de "/" e do toque em
 "Transações", o escopo entra no campo e o teclado continua aberto, com o cursor
 no campo.
+
+### Rodada 338 — a cápsula da lupa se divide em duas bolhas
+
+**O pedido.** No telefone a pílula da busca já nascia da lupa (rodada 337), mas
+o × e a placa brotavam à parte, com o `menu-morph`, e o filtro colado à lupa
+(`[lupa | filtro]`, rodada 334) ficava de fora do gesto. O desenho escolhido
+por um painel de três propostas e um juiz (spec
+`docs/superpowers/specs/2026-10-19-busca-duas-bolhas-design.md`, "One-p
+mitosis"): a cápsula do header é uma gota só que se divide em duas bolhas de
+vidro no mesmo progresso.
+
+**O gesto**, num progresso `p` só (`MOLA` para abrir, `VOLTA_DA_PILULA` para
+fechar), em três fases:
+- **esticão fundido**: a metade da lupa corre para a esquerda até a calha,
+  ainda colada à do filtro por uma emenda reta;
+- **pinça** (`PINCA` 0,08–0,48): os cantos de dentro arredondam com as metades
+  ainda encostadas, a cintura afina até um ponto, e o × se inclina ~2px para a
+  pílula (`PUXAO_DO_X` 0,05, com o `ACOPLAMENTO_Y` da viagem líquida);
+- **parte** (`PARTE` 0,4–1): o vão de 8 se abre e o × volta a ser redondo.
+
+A bolha da esquerda vira o campo, com a lupa na borda que anda; a da direita
+fica onde o filtro estava e vira o ×: o ícone do filtro (calendário ou
+controles, com o ponto do filtro ativo) encolhe e some no desfoque enquanto o
+X chega dele (`ICONE` 0,1–0,7). Sem filtro, o círculo da lupa vira o × e a
+pílula brota do flanco dele (`broto`, que achata a emenda conforme o broto
+cresce). Fechar é o mesmo filme ao contrário.
+
+**O que mudou no código:**
+- `command.tsx`: `quadroDaPilula`/`pilulaEmRepouso` deram lugar a
+  `quadroDasBolhas` (puro, exportado para o teste), `desenharBolhas` (escreve
+  só nos dois vidros e nos filhos deles: a pílula, o ×, o X e o fantasma) e
+  `bolhasEmRepouso`. O × é recortado por `clip-path` (e não arredondado: o
+  recorte tira o anel durante o voo, como na pílula), se inclina pela origem
+  da direita (`origin-right`) e ganhou `bg-clip-border` (o vão da borda
+  transparente desenhava um fio na emenda). O fantasma
+  (`command-search-cancel-origin`) é um `span` vazio dentro do ×, preenchido a
+  cada gesto com `replaceChildren` dos filhos da origem;
+- o progresso começa em 0, e abrir segue de onde o gesto estiver
+  (`const de = pilula.style.clipPath ? progresso.current : 0`): reabrir no
+  meio do fechamento não volta à lupa;
+- o × não brota mais com o `menu-morph` nem se recolhe com o `menu-unmorph`;
+  só a placa;
+- sem lupa à vista ou com movimento reduzido, a pílula e o × esmaecem juntos
+  (`animate([pilula, x], …)`), depois de voltar ao repouso;
+- `CommandDialog closeOrigin` (novo): de onde o × nasce. O filtro só vale
+  colado à lupa (a menos de 1px na borda e no topo); senão, a lupa se divide.
+  A `AppCommandPalette` o repassa, e o `AppHeader` liga o `filtroRef` no botão
+  do filtro do telefone (solto ou sob o `PopoverTrigger asChild`);
+- **o recorte é a forma, e o raio próprio zera no voo.** O `clip-path` só
+  tira pixels: com o `rounded-full` da pílula e do × valendo, a emenda reta
+  nunca aparecia — dois círculos se tocando num ponto desde o primeiro quadro,
+  com o fundo vazando nos cantos da costura (medido: com uma faixa escura
+  atrás da costura, ela aparecia ±3px em volta de x=315, de y 7 a 49). O
+  `desenharBolhas` escreve `borderRadius: 0px` nos dois vidros, e o
+  `bolhasEmRepouso` o tira no mesmo quadro do recorte;
+- **o broto estreito não vira lâmina.** Com o broto mais estreito que os dois
+  cantos (`largura < R + emenda`: os primeiros 16ms da abertura sem filtro e os
+  últimos ~170ms do fechamento, de p 0,1 a 0), o CSS encolhia os quatro raios
+  juntos e o broto saía uma lâmina de 44 com cantos de 5px. O recorte agora
+  tem raios elípticos: o vertical fica (`R` e `emenda`, que casam com o ×) e só
+  o horizontal cabe na largura (`Rh`, `emendaH`). Sai uma lente da altura toda,
+  colada ao flanco do círculo.
+
+Não é mudança de jornada: nenhuma rota, destino ou passo muda.
+
+**Medidas.**
+- **Quadro a quadro no Chromium** (prévia `dev-attach`, 375×812, claro, sobre
+  o `next dev`; amostrador em `requestAnimationFrame`, quadros de 13,3ms),
+  Transações, cápsula `[lupa | filtro]`:
+  - abrir: quadro 0 com a pílula em [271, 315] e o × em [315, 359], emenda 0;
+    depois um vazio de 173ms sem quadro (montagem da paleta no modo dev), e a
+    mola segue de p ≈ 0,07: emenda 0,06 → 6,8 → 9,2 → 17,7 → 22,0 com vão
+    0,34, 67ms depois do primeiro quadro em movimento; o × se inclina até
+    2,1px (borda esquerda em 312,9); o vão chega a 7,55, 7,85, 7,97 e 8,0 aos
+    147, 160, 173 e 187ms de movimento; a borda passa até 6,4 (o derrame) e volta a 16; a
+    direita da pílula nunca passa da esquerda do × (vão ≥ 0 em todo quadro);
+  - repouso: nenhum estilo inline na pílula, nos filhos, no ×, no X e no
+    fantasma; o × em [315, 359]; o anel de 1px (`box-shadow`) de volta nos
+    dois, escritos pela mesma chamada;
+  - fechar pelo ×: o vão fecha aos 77ms do toque (o toque inclui ~30ms até o
+    clique), a emenda chega a 0 aos 144ms, e aos 304ms a cápsula está em
+    [271, 315] + [315, 359] com o fantasma a 1 e o X a 0; o foco volta à
+    lupa;
+  - o vidro fica aceso: `backdrop-filter` `blur(24px) saturate(1.5)` nos dois
+    em todos os 66 quadros amostrados, e nenhum ancestral até o `<body>` com
+    `transform`, `filter`, `clip-path` ou `opacity`;
+  - sem filtro (Configurações): quadro 0 com o × inteiro (emenda 22), a pílula
+    de largura 0 em 315 e a lupa clonada no fantasma;
+  - Painel: o fantasma é o calendário; com o filtro "Despesas" em Transações, o
+    ponto do filtro entra no fantasma no mesmo retângulo do header
+    ([342, 15, 8, 8]). Com o popover do mês aberto, um clique de **mouse** na
+    lupa fechou o popover e abriu a busca no mesmo clique (o Radix fecha no
+    `pointerdown` do mouse e solta o `pointer-events` antes do clique); o "só
+    fecha o popover" do spec é a regra do toque, que espera o `click`, e não
+    foi medido no toque.
+- **Quadros parados** (Playwright, Chromium, 3x, claro e escuro, o CSS do app
+  e a função do `quadroDasBolhas`): a emenda reta aparece aos 0 e 16ms e a
+  pinça é visível em três quadros (50, 67 e 83ms: emenda 8,1, 18,3 e 22). Sem
+  fio na costura: a passagem de um vidro ao outro é um degrau só, exatamente em
+  x = 315,0, e some com o fundo uniforme (753/753); com uma faixa escura
+  atravessando a costura, cada vidro borra o próprio fundo e o degrau aparece
+  (642 → 693 no claro), o que é dos dois vidros, não da emenda.
+- **iOS** (Simulador, iPhone 18 Pro Max, iOS 27, escuro, app sem a barra do
+  Safari, sobre o `next dev`; vídeo do `simctl io recordVideo` lido quadro a
+  quadro):
+  - o teclado sobe no mesmo toque, com o cursor no campo;
+  - a linha da busca fica na altura da cápsula do header;
+  - o borrão fica nos dois vidros no voo (com `clip-path`, `transform` e
+    `scale` juntos): o texto do header sob a pílula some na tinta de 50% do
+    escuro, que sem borrão o deixaria nítido;
+  - sem fio na costura no escuro: o degrau entre os vidros é de ~2/255 por
+    canal;
+  - os anéis voltam no mesmo quadro;
+  - **a pinça não chega à tela no modo dev**: na abertura o WebKit ficou
+    parado depois do toque e pintou um quadro só no meio do gesto (p ≈ 0,6)
+    antes do repouso; no fechamento, o primeiro quadro pintado já é a cápsula
+    fundida (p ≈ 0,1). A mola conta o tempo desde o `animate()`, e a montagem
+    do modo dev segura a thread além disso. Falta medir num build de
+    produção antes de mexer no começo da mola.
+- **Não medido**: reabrir no meio do fechamento (a prévia do app estrangula o
+  `requestAnimationFrame` quando não está à vista, e o ⌘K sintético não teve
+  quadro; a regra fica no teste de fonte) e o Reduzir Movimento do iOS.
+
+**Polimento** (gravação quadro a quadro no Simulador do iOS). Quatro defeitos:
+- **a ponta reta no passe da mola**: com o raio próprio zerado inteiro, no
+  passe (p > 1) o recorte da esquerda saía da caixa, só a caixa pinta, e a
+  ponta esquerda ficava reta por ~150ms. O raio zera só do lado da emenda: a
+  pílula guarda os cantos de fora (`R 0 0 R`) e o × os dele (`0 R R 0`); o
+  recorte elíptico do broto segue;
+- **o pouso da volta**: na cápsula, a metade da lupa pousava com a lupa cinza
+  de 16 da pílula e uma fatia do placeholder na costura, e pulava para a lupa
+  branca de 20 do header ao desmontar; sem filtro, uma fatia de ~4pt do
+  placeholder aparecia ao lado do círculo. O conteúdo da pílula (os filhos:
+  lupa, campo, ×) acende com o progresso (`conteudo`, `CONTEUDO` 0,03–0,25,
+  devolvido pelo `quadroDasBolhas`), e na cápsula um fantasma da lupa
+  (`command-search-origin`, fora da raiz do cmdk, como o ×) segura os filhos
+  clonados da lupa do header no retângulo dela, escrito uma vez por gesto, e
+  esmaece no desfoque no sentido contrário. Sem filtro ele fica apagado: o
+  fantasma do × já é a lupa;
+- **o × 1px abaixo**: fechar pelo × media a caixa dele no meio do aperto do
+  toque (o `translate` do `AFUNDAR` e do `active:translate-y-px`), e ele pousava
+  1px abaixo e pulava. A medida agora é o lugar de layout na camada
+  (`offsetLeft/Top/Width/Height` mais a caixa da camada), que ignora
+  transformações; o aperto da pessoa segue inteiro;
+- **a página do catálogo**: a demonstração não passa `origin` nem
+  `closeOrigin`, então na janela estreita a pílula entra no lugar. A descrição
+  diz isso, e a linha `origin` da tabela descreve o quadro 0 (a metade da lupa
+  na cápsula, ou a lupa inteira como ×).
+
+Não medido de novo no Simulador depois do polimento.
+
+### Rodada 338 — segunda passada
+
+**O que a gravação mostrou.** Uma gravação quadro a quadro no Simulador do iOS,
+sobre um build de produção, e uma crítica independente (3/10): o gesto não lia
+como duas bolhas se separando. As causas, uma a uma, e o que mudou:
+
+- **A divisão acontecia durante o engasgo da montagem.** Entre o toque e o
+  primeiro quadro pintado o WebKit ficava parado 128–240ms (uma vez 930ms),
+  montando a paleta e subindo o teclado. O `animate` do `motion` conta tempo,
+  então quando os quadros voltavam p já estava em 0,6–1 e a separação nunca
+  aparecia. **Agora** o quadro 0 (a cápsula do header, que parada lê como o
+  aperto) continua saindo no `useLayoutEffect`, mas o relógio só começa quando
+  a pintura volta: rAF → rAF, e enquanto o intervalo entre eles passar de 34ms
+  (ainda engasgando), mais um, até seis. A limpeza cancela o rAF pendente. O
+  foco segue síncrono no `onOpenAutoFocus` (o teclado no mesmo toque).
+- **A pinça cabia em três quadros.** Na `MOLA` a janela da pinça ia dos 26 aos
+  81ms. **Agora** a abertura anda numa mola própria, a `SEPARACAO` de
+  `lib/spring` (rigidez 180, amortecimento 22), e as janelas foram
+  reposicionadas: `PINCA` 0,1–0,7, `PARTE` 0,6–1. Os números saem do gerador
+  do próprio `motion` em passos de 1ms (calculados, não medidos na tela): p
+  cruza 0,1 aos 39ms, 0,6 aos 134ms, 0,7 aos 158ms e 1 aos 330ms, passa a
+  1,011 aos 409ms e repousa aos 690ms. A cintura (emenda entre 0 e R com o vão
+  ainda 0) dura 95ms e a pinça inteira 119ms, sete quadros a 60Hz. Mola
+  procurada numa grade, e não chutada: mais amortecida a cintura cresce, mas o
+  passe some (160/22 dá 105ms e 1,004 de pico); a 190/22 dava 91ms, no limite.
+  `command-versions.test.ts` roda o gerador e tranca cintura ≥ 90ms, pinça
+  ≥ 100ms e repouso ≤ 700ms.
+- **A placa terminava antes de as bolhas se separarem.** O `menu-morph` da
+  placa (60ms atrás) roda no relógio do CSS, que corre durante o engasgo.
+  Um atraso maior no CSS não resolveria: o relógio da mola agora começa depois
+  do engasgo, e a diferença entre os dois é o próprio engasgo (de 128 a
+  930ms). **Agora** o efeito pausa a animação da placa
+  (`animation-play-state: paused`, inline, na própria placa, que não é
+  ancestral de nenhum vidro) no quadro 0, com o `backwards` segurando o
+  primeiro quadro do `menu-morph`, e a solta no quadro em que o vão abre
+  (`f.vao > 0`, p 0,6, ~134ms de mola); os 60ms de atraso da classe seguem
+  valendo a partir dali. A limpeza a solta sempre, e sem viagem nada muda.
+- **As bolhas não tinham silhueta no voo.** O recorte tira o anel, e no escuro
+  o vidro sobre o header velado é o próprio fundo (o broto sozinho media
+  10/255). Um anel por `box-shadow inset` foi descartado: ele segue a caixa, e
+  não o recorte — a borda esquerda da pílula é do recorte, ali ele não
+  passaria — e, fundidas, as duas metades desenhariam um fio na costura.
+  **Agora** a tinta dos dois vidros sobe 8% para o `--foreground` no voo
+  (`color-mix(in oklab, var(--foreground) 8%, transparent)` numa camada de
+  `background-image`, `TINTA_DO_VOO`): o `clip-path` a recorta junto, então ela
+  desenha exatamente a forma visível, com a borda que anda e a cintura, e
+  fundidas as duas tintas são uma só. Ela fica cheia até p 0,85 e some até
+  p 1 (`TINTA`, dos 205 aos 330ms de mola), antes de os anéis voltarem no
+  repouso. No × ela cobre a camada do `button-hover` durante o voo. Os 8% não
+  foram medidos na tela.
+- **O texto saía cortado na costura fundida** ("Buscar, o|"): o `CONTEUDO`
+  (0,03–0,25) acendia o campo ainda colado. **Agora** `CONTEUDO` vai de
+  `PARTE[0]` a 0,85 (dos 134 aos 205ms de mola), e até lá o fantasma da lupa
+  carrega a bolha da esquerda. O cursor nativo do iOS ignora o `filter` dos
+  filhos: no voo o campo leva `caret-color: transparent` inline, tirado no
+  repouso.
+- **Um fio claro na costura fundida**: duas bordas translúcidas meio cobertas
+  numa fração de pixel somam menos que um, e o fundo vaza. **Agora**, com o vão
+  em 0, o `quadroDasBolhas` arredonda a costura a `1/devicePixelRatio`
+  (o `dpr` entra na medida), e a borda direita da pílula e a esquerda do × saem
+  do mesmo valor: a largura do × é `escalaX`, calculada da costura com a origem
+  na direita (com o vão aberto, é o `1 + puxao` de antes). Teste: em todo
+  quadro fundido, a 2x e a 3x, as duas bordas caem no mesmo pixel inteiro do
+  aparelho, e sem o arredondamento havia quadros fracionários.
+- **Fechar: o véu saía primeiro.** Ele esmaecia desde o primeiro quadro, e a
+  cápsula real do header, com o anel, aparecia no vão e em volta da pílula que
+  encolhia (contorno duplo). **Agora**, só no telefone, o `DialogOverlay` fica
+  parado `--duration-fast` e esmaece em `--duration-fast` ao fechar
+  (`data-closed:delay-(--duration-fast)
+  data-closed:animation-duration-(--duration-fast)`): 300ms, o mesmo
+  `presence-hold` da casca. Aos 150ms as bolhas já estão fundidas (p 0,081).
+- **Fechar: a cauda.** Na curva enfática a volta passava ~100ms abaixo de
+  p 0,02 sem diferença pintada e pousava junto com a desmontagem, que vinha
+  como um salto. **Agora** a `VOLTA_DA_PILULA` dura 260ms em
+  `[0.2, 0, 0, 1]` (fora da escala de tokens; a enfática espelhava
+  `--ease-emphasized`): a tinta sobe aos 26ms (p 0,85), o vão fecha aos 43ms
+  (p 0,6), a emenda fica reta aos 141ms (p 0,1), a cauda abaixo de 0,02
+  começa aos 201ms, e o pouso fica parado dos 260 aos 300ms, quando a casca
+  desmonta. Em p 0 o conteúdo está em 0, os dois fantasmas cheios e nítidos e
+  o X em 0; o que difere da cápsula do header é a tinta do voo e o anel (o
+  recorte o tira), além do degrau já conhecido entre o vidro modal e a placa.
+- **O feixe pintava a cápsula que encolhia**: com o campo vazio, o arco-íris
+  do `command-beam` (`::before`/`::after` da pílula) virava uma mancha âmbar.
+  **Agora** as duas opacidades do `command-beam` multiplicam
+  `var(--command-beam-flight, 1)`, que o `desenharBolhas` escreve com o
+  conteúdo (0 até o vão abrir) e o `bolhasEmRepouso` tira.
+- **Sem filtro, o conteúdo saía ~165pt fora do lugar** ("olher onde…", a lupa
+  cortada). O `overflow: hidden` do `command-beam` faz da pílula um contêiner
+  que rola, os filhos estão transladados no voo (até a largura da pílula), e o
+  `focus()` do `onOpenAutoFocus` a rolava até o campo. **Agora** o foco é
+  `focus({ preventScroll: true })`, e `rolarAoInicio` zera o `scrollLeft` da
+  pílula e do campo no começo de cada voo e no repouso.
+
+**Falta medir** (nada disto foi visto na tela nesta passada): a gravação de
+novo no Simulador sobre um build de produção, para ver se o relógio esperando
+os rAF de fato pega a divisão depois do engasgo e quantos rAF ele espera; a
+pinça e a cintura em quadros reais; se 8% de tinta dá silhueta no escuro sem
+acinzentar o claro; o fio da costura no escuro com o arredondamento; o véu
+saindo depois do pouso; e a abertura sem filtro com o conteúdo no lugar.
+Também não medido: fechar antes de o vão abrir (a placa ainda pausada no
+primeiro quadro do `menu-morph` passa direto ao `menu-unmorph`, que parte dela
+inteira) e um engasgo no fechamento (a volta não espera rAF).
+
+Verificação da segunda passada no simulador (build de produção, Painel):
+- **Abertura:** lê como pedido. A cápsula fica parada uns quadros (o aperto), estica fundida, a emenda afina, as bolhas se separam e o calendário vira o ×. O texto só acende depois da separação. A gravação teve mudança a cada quadro de 0,39s a 0,73s, sem saltos: o `quandoPintar` segura o relógio até a pintura voltar.
+- **Fechar:** a volta também espera a pintura (`quandoPintar`), e a casca segura 400ms (`presence-hold` em `--duration-slow` + `--duration-instant`).
+  - O véu do telefone sai pelo `veil-out` (o raio do borrão e a tinta a zero), e não pela opacidade.
+  - Mesmo assim, no WebKit o borrão some de uma vez no começo da volta.
+  - Uma segunda parada do WebKit, de ~70ms, ao tirar o teclado e a lista, ainda leva o gesto de aberto direto à cápsula meio fundida. Daí o pouso é contínuo e cai exato na cápsula do header.
+- Os dois pontos que sobram são do motor (as paradas do WebKit e o borrão de fundo com animação), e não da curva.
+
+O dono aprovou a abertura e pediu um só ponto de origem. A placa dos resultados nascia e voltava do alto ao centro (`origin-top`), longe da cápsula que se divide à direita. Agora ela brota e se recolhe do canto de cima à direita (`origin-top-right`), sob a lupa e o ×, e as duas bolhas e a placa saem do mesmo lugar e voltam a ele. Visto no simulador: a borda direita da placa fica parada, e ela cresce para a esquerda e para baixo.

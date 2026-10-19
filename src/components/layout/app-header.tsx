@@ -100,6 +100,9 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     const [busca] = useBuscaDoCabecalho()
     // A lupa do telefone é a origem da busca: a pílula nasce dela e volta a ela.
     const lupaRef = React.useRef<HTMLButtonElement>(null)
+    // O filtro colado à lupa é a origem do ×: a cápsula se divide em duas
+    // bolhas. Nas telas sem filtro o React zera o ref, e a lupa se divide.
+    const filtroRef = React.useRef<HTMLButtonElement>(null)
 
     const pageTitle =
         chromeSlot?.title ?? defaultMobileTitle(pathname, titleMode)
@@ -128,6 +131,7 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     const [filtroAberto, setFiltroAberto] = React.useState(false)
     const botaoDoFiltro = filtro ? (
         <TopBarAction
+            ref={filtroRef}
             type="button"
             label={filtro.label}
             plate
@@ -265,7 +269,12 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
             </TopBarActions>
 
             {/* Portalizada: não ocupa lugar na linha do `TopBar`. */}
-            <AppCommandPalette open={searchOpen} onOpenChange={setSearchOpen} origin={lupaRef} />
+            <AppCommandPalette
+                open={searchOpen}
+                onOpenChange={setSearchOpen}
+                origin={lupaRef}
+                closeOrigin={filtroRef}
+            />
         </TopBar>
     )
 }

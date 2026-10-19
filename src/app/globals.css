@@ -2815,6 +2815,18 @@
    é ancestral dos vidros, e qualquer transform, opacidade ou filter animado nela
    desligava o borrão deles até a animação acabar. O Radix só espera o fechamento
    pelo `animationend` do próprio nó. */
+/* O véu do telefone saindo (a busca do `CommandDialog`): o raio do borrão e a
+   tinta descem a zero, sem opacidade. No WebKit o `backdrop-filter` de um nó
+   com a opacidade animada some de uma vez, e o header nítido aparecia sob as
+   bolhas no primeiro quadro da volta. */
+@keyframes veil-out {
+  to {
+    -webkit-backdrop-filter: blur(0);
+    backdrop-filter: blur(0);
+    background-color: transparent;
+  }
+}
+
 @keyframes presence-hold {
   to {
     --presence-hold: 1;
@@ -3239,7 +3251,10 @@
    Quem liga é `[data-waiting]` (o campo vazio); a animação fica pausada no lugar em
    vez de sair, senão o feixe saltaria para o começo enquanto esmaece. Com movimento
    reduzido o `edge` termina em 0 e o feixe não aparece. As propriedades são
-   `inherits: true` porque quem as lê são os pseudo-elementos. */
+   `inherits: true` porque quem as lê são os pseudo-elementos.
+   `--command-beam-flight` (1 sem ninguém escrever) é o multiplicador do voo: no
+   telefone o gesto das duas bolhas o escreve com o conteúdo da pílula, e o feixe
+   não pinta a cápsula que encolhe (rodada 338). */
 @property --command-beam-x {
   syntax: "<number>";
   initial-value: 0;
@@ -3353,7 +3368,7 @@
     );
     opacity: calc(
       var(--command-beam-on) * var(--command-beam-edge) *
-        var(--command-beam-stroke)
+        var(--command-beam-stroke) * var(--command-beam-flight, 1)
     );
   }
 
@@ -3370,7 +3385,7 @@
     );
     opacity: calc(
       var(--command-beam-on) * var(--command-beam-edge) *
-        var(--command-beam-glow)
+        var(--command-beam-glow) * var(--command-beam-flight, 1)
     );
   }
 }

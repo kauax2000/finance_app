@@ -92,7 +92,7 @@ export default function CommandDoc() {
 
       <DocSection
         title="Como diálogo (⌘K ou Ctrl+K)"
-        description="A mesma pilha num diálogo: topo fixo, a lista que cresce e encolhe, e nenhuma sombra atrás do conjunto: o véu com borrão é que a separa da página. No telefone ela é a barra: a pílula nasce no círculo da lupa que a abriu e se estica para a esquerda até a calha, com o × no mesmo vidro à direita e o teclado aberto — estreite a janela e abra de novo."
+        description="A mesma pilha num diálogo: topo fixo, a lista que cresce e encolhe, e nenhuma sombra atrás do conjunto: o véu com borrão é que a separa da página. No telefone ela é a barra, com o teclado aberto. Na paleta do app, que passa origin e closeOrigin (a lupa do header e o filtro colado a ela), a cápsula se divide em duas bolhas: a metade da lupa corre para a esquerda até a calha e vira a pílula, e o filtro fica no lugar e vira o × (sem filtro, a lupa se divide: vira o × e a pílula brota do flanco dela). Esta demonstração não passa origem nenhuma: estreite a janela e abra de novo, e a pílula e o × entram no lugar."
         code={`<CommandDialog open={open} onOpenChange={setOpen}>
   <CommandInput placeholder="Buscar…" />
   <CommandList>…</CommandList>
@@ -442,7 +442,12 @@ export default function CommandDoc() {
           {
             prop: "CommandDialog origin",
             type: "RefObject<HTMLElement | null>",
-            description: "No telefone, de onde a pílula nasce: o primeiro quadro é o círculo dela (a lupa do header), e fechar volta a ele. Sem ela, a pílula entra no lugar.",
+            description: "No telefone, de onde a pílula nasce (a lupa do header). O primeiro quadro é a metade da lupa na cápsula [lupa | filtro], com o desenho da lupa por cima até o campo acender; sem filtro colado (closeOrigin), a lupa inteira é o × e a pílula brota do flanco dele. Fechar volta ao mesmo quadro. Sem ela, a pílula e o × entram no lugar.",
+          },
+          {
+            prop: "CommandDialog closeOrigin",
+            type: "RefObject<HTMLElement | null>",
+            description: "No telefone, de onde o × nasce: o filtro colado à lupa (origin). A cápsula se divide em duas bolhas, e o ícone do filtro some no desfoque enquanto o X chega. Sem ele, ou sem caixa, ou longe da lupa, a lupa se divide: vira o × e a pílula brota do flanco dela.",
           },
           {
             prop: "useCommandRecents / useCommandSearch",

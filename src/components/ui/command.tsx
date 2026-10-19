@@ -9,7 +9,8 @@ import { animate, useReducedMotion, type AnimationPlaybackControls } from "motio
 import { SearchInput } from "@/components/ui/search-input"
 import { Kbd } from "@/components/ui/kbd"
 import { Button } from "@/components/ui/button"
-import { MOLA, SAIDA } from "@/lib/spring"
+import { MOLA, SAIDA, SEPARACAO } from "@/lib/spring"
+import { ACOPLAMENTO_Y } from "@/lib/liquid-move"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { ehCursor } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
@@ -38,6 +39,7 @@ import {
   DialogOverlay,
   DialogPortal,
   DialogTitle,
+  overlayClassName,
 } from "@/components/ui/dialog"
 /**
  * O eixo é a moldura (quem desenha a borda), não só o raio. `plain` (padrão) é
@@ -184,40 +186,212 @@ function origemValida(r: DOMRect | null | undefined): r is DOMRect {
   return !!r && r.width > 0 && r.height > 0
 }
 
+type Caixa = Pick<DOMRect, "left" | "right" | "top" | "bottom" | "width" | "height">
 /**
- * Um quadro do gesto da pílula, no progresso `p` (0 é a lupa, 1 é a barra).
- * A pílula anda para a direita até a ponta direita dela encostar na da lupa
- * (`translateX`), e o recorte esconde tudo à esquerda do círculo. O conteúdo
- * (a lupa da pílula, o campo, o ×) anda com a borda visível: no primeiro
- * quadro o círculo mostra a lupa, e não um pedaço do placeholder. Tudo no próprio vidro: num ancestral, o
- * `transform` e o `clip-path` desligariam o `backdrop-filter` dele.
+ * As fases no mesmo progresso: a emenda arredonda (pinça) antes de o vão abrir
+ * (parte). Na `SEPARACAO`, a cintura (de 0,1 a 0,6) dura 95ms e a pinça 119ms.
  */
-function quadroDaPilula(
-  pilula: HTMLElement,
-  conteudo: HTMLCollection,
-  lupa: DOMRect,
-  final: DOMRect,
-  p: number
-) {
-  const resto = 1 - p
-  const esquerda = (final.width - lupa.width) * resto
-  pilula.style.transform = `translateX(${(lupa.right - final.right) * resto}px)`
-  pilula.style.clipPath = `inset(${(lupa.top - final.top) * resto}px 0px ${(final.bottom - lupa.bottom) * resto}px ${esquerda}px round ${final.height / 2}px)`
-  for (const filho of conteudo) (filho as HTMLElement).style.transform = `translateX(${esquerda}px)`
+const PINCA = [0.1, 0.7] as const
+const PARTE = [0.6, 1] as const
+const ICONE = [0.1, 0.7] as const
+/**
+ * O conteúdo da pílula (a lupa, o campo, o ×) acende depois que o vão abre: em
+ * p 0 a borda é só vidro, e fundido a costura cortava o texto ("Buscar, o|").
+ * Até lá, na cápsula, o fantasma da lupa segura a bolha da esquerda.
+ */
+const CONTEUDO = [PARTE[0], 0.85] as const
+/** A tinta do voo (ver `desenharBolhas`) some no fim da chegada, antes de os anéis voltarem. */
+const TINTA = [0.85, 1] as const
+/** O quanto a tinta do voo puxa os vidros para o `--foreground`, em %. */
+const TINTA_DO_VOO = 8
+/** O × puxado para a pílula enquanto a emenda afina (fração da largura): 2,2px a 44. 0 desliga. */
+const PUXAO_DO_X = 0.05
+const suave = (x: number, [de, ate]: readonly [number, number]) => {
+  const t = Math.min(Math.max((x - de) / (ate - de), 0), 1)
+  return t * t * (3 - 2 * t)
 }
 
 /**
- * A volta da pílula à lupa: 280ms na curva enfática do sistema
- * (`--ease-emphasized`, a do iOS), que desacelera longa até pousar. A `SAIDA`
- * (150ms) era um corte. A casca segura a desmontagem por `--duration-slow`.
+ * Um quadro das duas bolhas, no progresso `p` (0 é a cápsula do header, 1 a
+ * barra e o ×). A cápsula `[lupa | filtro]` é uma gota só: a metade da
+ * esquerda corre até a calha ainda colada à da direita por uma emenda reta,
+ * a emenda arredonda até a cintura virar um ponto (o × se inclina para a
+ * pílula, preso pela tensão), e o vão de 8 se abre. Sem filtro, o círculo da
+ * lupa vira o × e a pílula brota do flanco dele (`broto`). Puro, para o teste:
+ * quem escreve é o `desenharBolhas`.
  */
-const VOLTA_DA_PILULA = { duration: 0.28, ease: [0.32, 0.72, 0, 1] } as const
+function quadroDasBolhas(
+  m: { lupa: Caixa; deX: Caixa; pilula: Caixa; x: Caixa; emenda0: number; dpr: number },
+  p: number
+) {
+  const q = Math.min(Math.max(p, 0), 1), resto = 1 - p, R = m.pilula.height / 2
+  const pinca = suave(q, PINCA), parte = suave(q, PARTE)
+  const puxao = PUXAO_DO_X * pinca * (1 - parte)
+  const vao = (m.x.left - m.pilula.right) * parte
+  const xdx = (m.deX.left - m.x.left) * resto, xdy = (m.deX.top - m.x.top) * resto
+  const livre = m.x.left + xdx - m.x.width * puxao - vao       // a pílula nunca passa do ×
+  // Fundidas, a costura cai num pixel do aparelho, a mesma para os dois vidros:
+  // numa fração, as duas bordas meio cobertas somavam menos que um e o fundo
+  // vazava num fio claro. A largura do × sai da mesma costura (`escalaX`, com a
+  // origem na direita); com o vão aberto, é o `1 + puxao` de antes.
+  const direita = vao === 0 ? Math.round(livre * m.dpr) / m.dpr : livre
+  const escalaX = (m.x.right + xdx - direita - vao) / m.x.width
+  const visivel = m.lupa.left + (m.pilula.left - m.lupa.left) * p
+  const largura = Math.max(0, direita - visivel)
+  const broto = m.emenda0 * Math.max(0, 1 - largura / (2 * R))   // sem filtro, o círculo brota
+  const emenda = broto + (R - broto) * pinca
+  // O broto mais estreito que os dois cantos: o CSS encolheria os quatro raios
+  // juntos (uma lâmina de 44 com cantos de 5px). Só o raio horizontal cabe na
+  // largura; o vertical fica, e a emenda segue casando com a do ×.
+  const cabe = Math.min(1, largura / (R + emenda))
+  // O fantasma da lupa anda com a borda visível (`visivel - lupa.left`): o
+  // centro dele e o da lupa da pílula (o recuo de 14 e meia lupa de 16) caem
+  // juntos, e as duas se trocam no lugar.
+  return { R, Rh: R * cabe, dx: direita - m.pilula.right, esquerda: m.pilula.width - largura,
+    lupaDx: (m.pilula.left - m.lupa.left) * p,
+    topo: (m.lupa.top - m.pilula.top) * resto, base: (m.pilula.bottom - m.lupa.bottom) * resto,
+    emenda, emendaH: emenda * cabe, puxao, escalaX, vao, xdx, xdy,
+    icone: suave(q, ICONE), conteudo: suave(q, CONTEUDO), tinta: 1 - suave(q, TINTA) }
+}
 
-/** A barra pronta: sem `transform`, sem recorte, o conteúdo no lugar. */
-function pilulaEmRepouso(pilula: HTMLElement) {
+/**
+ * A volta à cápsula: 260ms, e a casca segura a desmontagem até os 300
+ * (`--duration-slow`): o pouso fica parado dois quadros antes de sumir. Na
+ * curva enfática (`--ease-emphasized`) a cauda passava ~100ms abaixo de p 0,02
+ * sem pintar diferença, e a desmontagem vinha como um salto; esta começa macia
+ * (o vão fecha aos 43ms), a cintura se refaz até os 141ms e a cauda cai a 59ms.
+ */
+const VOLTA_DA_PILULA = { duration: 0.26, ease: [0.2, 0, 0, 1] } as const
+
+/**
+ * Chama `comecar` quando a pintura volta a correr. Entre o toque e o primeiro
+ * quadro pintado o WebKit para 100–240ms (montando a paleta ou subindo e
+ * descendo o teclado); o `animate` conta o tempo, e o gesto voltava já no fim.
+ * Dois rAF seguidos a até 34ms dizem que a pintura voltou (até seis, se ela
+ * seguir engasgando). Devolve o cancelamento.
+ */
+function quandoPintar(comecar: () => void) {
+  let quadros = 0
+  let antes = 0
+  let id = 0
+  const esperar = (agora: number) => {
+    quadros++
+    if (quadros < 2 || (agora - antes > 34 && quadros < 6)) {
+      antes = agora
+      id = requestAnimationFrame(esperar)
+      return
+    }
+    comecar()
+  }
+  id = requestAnimationFrame(esperar)
+  return () => cancelAnimationFrame(id)
+}
+
+/**
+ * A pílula volta ao começo da rolagem: o `overflow: hidden` do feixe faz dela
+ * um contêiner que rola, e com os filhos transladados no voo um `focus()` a
+ * rolava (o conteúdo ~165pt fora do lugar). O campo junto.
+ */
+function rolarAoInicio(pilula: HTMLElement) {
+  pilula.scrollLeft = 0
+  const campo = pilula.querySelector("input")
+  if (campo) campo.scrollLeft = 0
+}
+
+/**
+ * Escreve um quadro nos dois vidros e nos filhos deles, nunca num ancestral:
+ * lá, o `transform` e o `clip-path` desligariam o `backdrop-filter`. A pílula
+ * anda (`translateX`) e o recorte esconde o que passa da borda visível, com a
+ * emenda nos cantos da direita; o conteúdo anda com a borda e acende com o
+ * progresso (em p 0 a borda é só vidro: nem a lupa cinza da pílula nem uma
+ * fatia do placeholder na costura). O × é recortado (e não arredondado: o
+ * recorte tira o anel durante o voo, como na pílula) com a emenda nos cantos
+ * da esquerda, e se inclina pela origem da direita (`origin-right`). Os dois
+ * fantasmas (o que a lupa e a origem do × mostravam) esmaecem no desfoque
+ * enquanto o conteúdo e o X chegam deles; o da lupa corre com a borda, por
+ * cima da lupa da pílula. O desfoque nos filhos não toca o
+ * borrão do vidro.
+ *
+ * A silhueta no voo: o recorte tira o anel, e no escuro o vidro sobre o header
+ * velado é o próprio fundo (o broto sozinho media 10/255). A tinta dos dois
+ * sobe para o `--foreground` (`TINTA_DO_VOO`), numa camada de `background-image`
+ * que o `clip-path` recorta junto: ela desenha exatamente a forma visível, com
+ * a borda que anda e a cintura, e fundidas as duas tintas são uma só. Um anel
+ * por `box-shadow inset` seguiria a caixa, e não o recorte: a borda esquerda da
+ * pílula é do recorte (o anel não passaria ali), e fundidas as duas metades
+ * desenhariam um fio na costura.
+ */
+function desenharBolhas(
+  pilula: HTMLElement,
+  x: HTMLElement,
+  iconeX: SVGElement | null,
+  fantasma: HTMLElement | null,
+  origemLupa: HTMLElement | null,
+  f: ReturnType<typeof quadroDasBolhas>
+) {
+  // O recorte só tira pixels: com o `rounded-full` dos dois, a emenda reta não
+  // aparecia (dois círculos se tocando num ponto desde o primeiro quadro). O
+  // raio próprio zera só do lado da emenda: os cantos de fora ficam no R,
+  // porque no passe da mola o recorte da esquerda sai da caixa, e só a caixa
+  // pinta (a ponta saía reta por ~150ms).
+  pilula.style.borderRadius = `${f.R}px 0px 0px ${f.R}px`
+  x.style.borderRadius = `0px ${f.R}px ${f.R}px 0px`
+  pilula.style.transform = `translateX(${f.dx}px)`
+  pilula.style.clipPath = `inset(${f.topo}px 0px ${f.base}px ${f.esquerda}px round ${f.Rh}px ${f.emendaH}px ${f.emendaH}px ${f.Rh}px / ${f.R}px ${f.emenda}px ${f.emenda}px ${f.R}px)`
+  for (const filho of pilula.children as HTMLCollectionOf<HTMLElement>) {
+    // No passe da mola o recorte sai da caixa, mas só a caixa pinta: a borda
+    // para na calha, e o conteúdo para com ela.
+    filho.style.transform = `translateX(${Math.max(0, f.esquerda)}px)`
+    // `filter`, e não `opacity`: o filtro multiplica a opacidade da classe (a
+    // lupa da pílula é `opacity-70`), e o inline a trocaria, com um salto ao pousar.
+    filho.style.filter = `opacity(${f.conteudo})`
+    // O cursor nativo do iOS não obedece ao `filter` dos filhos: some no voo.
+    filho.style.caretColor = "transparent"
+  }
+  // O feixe do campo vazio acende com o conteúdo: sobre a cápsula que encolhe
+  // ele era uma mancha âmbar (o multiplicador mora no `command-beam`).
+  pilula.style.setProperty("--command-beam-flight", `${f.conteudo}`)
+  const tinta = `color-mix(in oklab, var(--foreground) ${TINTA_DO_VOO * f.tinta}%, transparent)`
+  pilula.style.backgroundImage = x.style.backgroundImage = `linear-gradient(${tinta}, ${tinta})`
+  x.style.transform = `translate(${f.xdx}px, ${f.xdy}px) scale(${f.escalaX}, ${1 - f.puxao * ACOPLAMENTO_Y})`
+  x.style.clipPath = `inset(0px round ${f.emenda}px ${f.R}px ${f.R}px ${f.emenda}px)`
+  if (fantasma) {
+    fantasma.style.opacity = `${1 - f.icone}`
+    fantasma.style.filter = `blur(${6 * f.icone}px)`
+    fantasma.style.transform = `scale(${1 - 0.3 * f.icone})`
+  }
+  if (origemLupa) {
+    origemLupa.style.opacity = `${1 - f.conteudo}`
+    origemLupa.style.filter = `blur(${6 * f.conteudo}px)`
+    origemLupa.style.transform = `translateX(${f.lupaDx}px) scale(${1 - 0.3 * f.conteudo})`
+  }
+  if (iconeX) {
+    iconeX.style.opacity = `${f.icone}`
+    iconeX.style.filter = `blur(${6 * (1 - f.icone)}px)`
+    iconeX.style.transform = `scale(${0.7 + 0.3 * f.icone})`
+  }
+}
+
+/** A barra e o × prontos: nada inline, o raio e o recorte no mesmo quadro (o `opacity-0` da classe esconde os fantasmas). */
+function bolhasEmRepouso(
+  pilula: HTMLElement,
+  x: HTMLElement,
+  iconeX: SVGElement | null,
+  fantasma: HTMLElement | null,
+  origemLupa: HTMLElement | null
+) {
+  pilula.style.borderRadius = x.style.borderRadius = ""
   pilula.style.transform = ""
   pilula.style.clipPath = ""
-  for (const filho of pilula.children) (filho as HTMLElement).style.transform = ""
+  for (const filho of pilula.children as HTMLCollectionOf<HTMLElement>)
+    filho.style.transform = filho.style.filter = filho.style.caretColor = ""
+  pilula.style.removeProperty("--command-beam-flight")
+  pilula.style.backgroundImage = x.style.backgroundImage = ""
+  rolarAoInicio(pilula)
+  x.style.transform = ""
+  x.style.clipPath = ""
+  for (const el of [iconeX, fantasma]) if (el) el.style.opacity = el.style.filter = el.style.transform = ""
+  if (origemLupa) origemLupa.style.cssText = ""
 }
 
 /**
@@ -236,6 +410,7 @@ function CommandDialog({
   commandProps,
   size = "md",
   origin,
+  closeOrigin,
   ...props
 }: React.ComponentProps<typeof Dialog> & {
   title?: string
@@ -249,6 +424,12 @@ function CommandDialog({
   size?: "md" | "lg"
   /** No telefone, o elemento de onde a pílula nasce (a lupa do header); sem ele, ela entra no lugar. */
   origin?: React.RefObject<HTMLElement | null>
+  /**
+   * No telefone, de onde o × nasce: o filtro colado à lupa (`origin`). Sem
+   * ele, ou sem caixa, ou longe da lupa, a lupa se divide: vira o × e a
+   * pílula brota do flanco dela.
+   */
+  closeOrigin?: React.RefObject<HTMLElement | null>
 }) {
   const isMobile = useIsMobile()
   const reduzido = useReducedMotion()
@@ -256,8 +437,9 @@ function CommandDialog({
   // A camada do telefone num estado, e não num ref: o `Portal` do Radix só
   // monta o conteúdo num segundo commit, e o efeito precisa rodar quando ele chega.
   const [camada, setCamada] = React.useState<HTMLDivElement | null>(null)
-  // Onde o gesto está (0 lupa, 1 barra), para fechar de onde a abertura parou.
-  const progresso = React.useRef(1)
+  // Onde o gesto está (0 a cápsula do header, 1 a barra e o ×), para fechar de
+  // onde a abertura parou e reabrir de onde o fechamento parou.
+  const progresso = React.useRef(0)
 
   // A altura que sobra acima do teclado do iOS (o viewport visual), na camada
   // enquanto ela existe. Sem `visualViewport`, vale o `100dvh` de reserva.
@@ -274,58 +456,141 @@ function CommandDialog({
     }
   }, [camada])
 
-  // O gesto do telefone: a pílula nasce no círculo da lupa e se estica para a
-  // esquerda até a calha, e volta a ela ao fechar (a casca segue montada pelo
-  // `presence-hold`). Um progresso só, na `MOLA`, escreve cada quadro
-  // (`quadroDaPilula`); nada mexe no layout do cmdk, e tudo sai no fim.
+  // O gesto do telefone: a cápsula do header `[lupa | filtro]` se divide em
+  // duas bolhas. A metade da lupa corre até a calha e vira a pílula; a do
+  // filtro fica no lugar e vira o × (sem filtro, o círculo da lupa vira o × e
+  // a pílula brota do flanco dele). Fechar é o mesmo filme ao contrário, e a
+  // casca segue montada pelo `presence-hold`. Um progresso só escreve cada
+  // quadro (`quadroDasBolhas`) nos dois vidros; nada mexe no layout do cmdk,
+  // e tudo sai no fim.
   React.useLayoutEffect(() => {
     const pilula = camada?.querySelector<HTMLElement>("[data-slot=search-input]")
-    if (!pilula) return
-    const lupa = origin?.current?.getBoundingClientRect()
-    const viaja = origemValida(lupa) && !reduzido
+    const x = camada?.querySelector<HTMLElement>("[data-slot=command-search-cancel]")
+    if (!camada || !pilula || !x) return
+    const iconeX = x.querySelector<SVGElement>(":scope > svg")
+    const fantasma = x.querySelector<HTMLElement>("[data-slot=command-search-cancel-origin]")
+    const origemLupaEl = camada.querySelector<HTMLElement>("[data-slot=command-search-origin]")
+    const placa = camada.querySelector<HTMLElement>("[data-slot=command-dialog-panel]")
+    const lupaEl = origin?.current
+    const lupa = lupaEl?.getBoundingClientRect()
+    const viaja = !!lupaEl && origemValida(lupa) && !reduzido
     let ativa = true
-    let controle: AnimationPlaybackControls
+    let controle: AnimationPlaybackControls | undefined
+    let cancelar = () => {}
     if (viaja) {
-      pilula.style.opacity = ""
-      // A caixa final sem o `transform` de um gesto interrompido.
+      pilula.style.opacity = x.style.opacity = ""
+      // O × nasce do filtro só quando ele está colado à lupa, na mesma linha.
+      const filtroEl = closeOrigin?.current
+      const filtro = filtroEl?.getBoundingClientRect()
+      const colado =
+        !!filtroEl &&
+        origemValida(filtro) &&
+        Math.abs(filtro.left - lupa.right) <= 1 &&
+        Math.abs(filtro.top - lupa.top) <= 1
+      const deXEl = colado ? filtroEl : lupaEl
+      const deX = colado ? filtro : lupa
+      // A caixa final da pílula sem o `transform` de um gesto interrompido.
       const emCurso = pilula.style.transform
       pilula.style.transform = ""
       const final = pilula.getBoundingClientRect()
       pilula.style.transform = emCurso
+      // O × pelo lugar de layout na camada (ele é `absolute` nela), e não pela
+      // caixa pintada: fechar pelo × mede no meio do aperto do toque (o
+      // `translate` do AFUNDAR e do `active:translate-y-px`), e ele pousava 1px
+      // abaixo e pulava. O `offset*` ignora transformações; o aperto segue.
+      const c = camada.getBoundingClientRect()
+      const xFinal = {
+        left: c.left + x.offsetLeft,
+        top: c.top + x.offsetTop,
+        width: x.offsetWidth,
+        height: x.offsetHeight,
+        right: c.left + x.offsetLeft + x.offsetWidth,
+        bottom: c.top + x.offsetTop + x.offsetHeight,
+      }
+      // A emenda de partida é o canto de dentro da origem do × (0 no filtro
+      // colado, o `rounded-l-none` do grupo; o raio inteiro na lupa sozinha).
+      const emenda0 = Math.min(parseFloat(getComputedStyle(deXEl).borderTopLeftRadius) || 0, final.height / 2)
+      // O fantasma mostra o que a origem mostrava, clonado de novo a cada
+      // gesto para nunca empilhar.
+      fantasma?.replaceChildren(...[...deXEl.children].map((n) => n.cloneNode(true)))
+      // Na cápsula, o fantasma da lupa segura o desenho do header na metade
+      // dela (o branco de 20, e não a lupa cinza de 16 da pílula) até o
+      // conteúdo acender, e é nele que a volta pousa. Sem filtro, o fantasma
+      // do × já é a lupa, e este fica apagado.
+      const origemLupa = colado ? origemLupaEl : null
+      if (origemLupa) {
+        origemLupa.replaceChildren(...[...lupaEl.children].map((n) => n.cloneNode(true)))
+        Object.assign(origemLupa.style, {
+          left: `${lupa.left - c.left}px`,
+          top: `${lupa.top - c.top}px`,
+          width: `${lupa.width}px`,
+          height: `${lupa.height}px`,
+        })
+      } else if (origemLupaEl) origemLupaEl.style.cssText = ""
+      rolarAoInicio(pilula)
+      const m = { lupa, deX, pilula: final, x: xFinal, emenda0, dpr: window.devicePixelRatio || 1 }
       const quadro = (p: number) => {
         progresso.current = p
-        quadroDaPilula(pilula, pilula.children, lupa, final, p)
+        const f = quadroDasBolhas(m, p)
+        desenharBolhas(pilula, x, iconeX, fantasma, origemLupa, f)
+        // A placa brota quando o vão abre, no progresso, e não no relógio do
+        // CSS: ele corre durante a montagem, e a placa terminava de brotar
+        // antes de as bolhas se separarem.
+        if (f.vao > 0 && placa) placa.style.animationPlayState = ""
       }
       if (aberto) {
-        // O primeiro quadro já é a lupa: a pílula não pisca inteira antes da mola.
-        quadro(0)
-        const abrindo = animate(0, 1, { ...MOLA, onUpdate: quadro })
-        // Um número animado não escreve no elemento: o repouso escrito à mão
-        // é a última palavra (animando o `clip-path` do elemento, o valor do
-        // motion o reescrevia no render seguinte).
-        abrindo.then(() => {
-          if (ativa) pilulaEmRepouso(pilula)
+        // Com um gesto no ar (a camada ainda fechando), a abertura segue de
+        // onde ele está, sem voltar à lupa; em repouso ou numa camada nova,
+        // da cápsula. O primeiro quadro já sai daqui, antes da pintura: a
+        // cápsula do header, que parada lê como o aperto.
+        const de = pilula.style.clipPath ? progresso.current : 0
+        if (placa) placa.style.animationPlayState = "paused"
+        quadro(de)
+        // O relógio só começa quando a pintura volta (`quandoPintar`): a
+        // mola contaria o tempo da montagem e voltaria já sem a divisão. O
+        // foco não espera: ele vai ao campo no `onOpenAutoFocus`, no toque.
+        cancelar = quandoPintar(() => {
+          const abrindo = animate(de, 1, { ...SEPARACAO, onUpdate: quadro })
+          // Um número animado não escreve no elemento: o repouso escrito à mão
+          // é a última palavra (animando o `clip-path` do elemento, o valor do
+          // motion o reescrevia no render seguinte).
+          abrindo.then(() => {
+            if (ativa) bolhasEmRepouso(pilula, x, iconeX, fantasma, origemLupa)
+          })
+          controle = abrindo
         })
-        controle = abrindo
       } else {
-        // Fechar no meio da abertura volta de onde ela estava, e pousa na lupa
-        // sem passar dela: uma mola até zero cruzaria o círculo.
-        controle = animate(progresso.current, 0, { ...VOLTA_DA_PILULA, onUpdate: quadro })
+        // Fechar no meio da abertura volta de onde ela estava, e pousa na
+        // cápsula sem passar dela: uma mola até zero cruzaria o círculo. O
+        // teclado descendo para a pintura como a montagem ao abrir: a volta
+        // também espera a pintura, e a casca segura 400ms para caber.
+        const de = progresso.current
+        quadro(de)
+        cancelar = quandoPintar(() => {
+          controle = animate(de, 0, { ...VOLTA_DA_PILULA, onUpdate: quadro })
+        })
       }
-    } else if (aberto) {
-      // Sem lupa à vista, a pílula entra no lugar; com movimento reduzido, só esmaece.
-      pilula.style.opacity = "0"
-      controle = reduzido
-        ? animate(pilula, { opacity: [0, 1] }, SAIDA)
-        : animate(pilula, { opacity: [0, 1], scale: [0.95, 1] }, MOLA)
     } else {
-      controle = animate(pilula, { opacity: 0 }, SAIDA)
+      bolhasEmRepouso(pilula, x, iconeX, fantasma, origemLupaEl)
+      progresso.current = aberto ? 1 : 0
+      if (aberto) {
+        // Sem lupa à vista, a pílula e o × entram no lugar; com movimento
+        // reduzido, só esmaecem.
+        pilula.style.opacity = x.style.opacity = "0"
+        controle = reduzido
+          ? animate([pilula, x], { opacity: [0, 1] }, SAIDA)
+          : animate([pilula, x], { opacity: [0, 1], scale: [0.95, 1] }, MOLA)
+      } else {
+        controle = animate([pilula, x], { opacity: 0 }, SAIDA)
+      }
     }
     return () => {
       ativa = false
-      controle.stop()
+      cancelar()
+      controle?.stop()
+      if (placa) placa.style.animationPlayState = ""
     }
-  }, [aberto, camada, origin, reduzido])
+  }, [aberto, camada, origin, closeOrigin, reduzido])
 
   // No telefone a lupa vira a barra: uma camada de tela cheia sobre o véu, com
   // a pílula e o × na linha do header e a placa 12px abaixo. Era uma
@@ -334,8 +599,21 @@ function CommandDialog({
     return (
       <Dialog {...props}>
         <DialogPortal>
-          {/* O véu cobre header, página e barra de baixo; tocar nele fecha. */}
-          <DialogOverlay />
+          {/* O véu cobre header, página e barra de baixo; tocar nele fecha. Ao
+              fechar ele não esmaece pela opacidade: no WebKit o borrão de
+              fundo some de uma vez quando a opacidade anima, e o header nítido
+              aparecia sob as bolhas no primeiro quadro (contorno duplo). O
+              `veil-out` desce o raio do borrão e a tinta até zero, depois de
+              100ms, dentro dos 400 da casca. */}
+          <DialogPrimitive.Overlay
+            data-slot="dialog-overlay"
+            className={cn(
+              // A entrada é a do véu do `Dialog`; só a saída troca (com `!`,
+              // por cima do `animate-out` dele).
+              overlayClassName("modal"),
+              "data-closed:[animation:veil-out_var(--duration-slow)_var(--ease-out)_var(--duration-instant)_both]!"
+            )}
+          />
           <DialogPrimitive.Content
             ref={setCamada}
             data-slot="command-search"
@@ -362,9 +640,11 @@ function CommandDialog({
             }}
             onOpenAutoFocus={(e) => {
               e.preventDefault()
+              // Sem rolar: no voo os filhos da pílula estão transladados, e o
+              // `focus()` rolava o `overflow: hidden` dela até o campo.
               ;(e.currentTarget as HTMLElement | null)
                 ?.querySelector<HTMLInputElement>("[data-slot=command-input]")
-                ?.focus()
+                ?.focus({ preventScroll: true })
             }}
             className={cn(
               // A altura é a do viewport visual: o teclado do iOS só encolhe ele, e com
@@ -374,19 +654,23 @@ function CommandDialog({
               // a pílula 44, então 6px abaixo da área segura.
               "[--command-search-top:calc(env(safe-area-inset-top,0px)+6px)] pt-(--command-search-top)",
               "pb-[max(--spacing(3),env(safe-area-inset-bottom))]",
-              // A casca segura a saída até a pílula pousar na lupa (`VOLTA_DA_PILULA`, 280ms).
-              "data-closed:[animation:presence-hold_var(--duration-slow)]",
-              // A placa e o × brotam como os menus do app (`menu-morph`, o gesto do
-              // iOS 26 medido quadro a quadro): a placa do alto da pílula, o × do
-              // próprio centro, logo atrás da pílula que se estica; as linhas
-              // surgem do desfoque em cascata (`command-reveal`). Na volta, o
-              // `menu-unmorph` os recolhe ao mesmo ponto em 210ms. A animação é de
-              // cada vidro, nunca da casca: no ancestral, o `transform` desligaria
-              // o borrão deles.
-              "[&_[data-slot=command-dialog-panel]]:origin-top [&_[data-slot=command-search-cancel]]:origin-center",
+              // A casca segura a saída até a pílula pousar na lupa: a espera da
+              // pintura (até ~100ms com o teclado descendo), a `VOLTA_DA_PILULA`
+              // (260ms) e o pouso parado; 400ms ao todo.
+              "data-closed:[animation:presence-hold_calc(var(--duration-slow)+var(--duration-instant))]",
+              // A placa brota como os menus do app (`menu-morph`, o gesto do iOS
+              // 26 medido quadro a quadro), do canto de cima à direita, sob a
+              // lupa e o ×: tudo nasce e volta ao mesmo lugar (pedido do dono;
+              // era do alto ao centro, longe da cápsula que se divide), 60ms
+              // depois de o vão abrir (no gesto, o efeito a segura pausada até
+              // lá); as linhas surgem do desfoque em cascata (`command-reveal`). Na
+              // volta, o `menu-unmorph` a recolhe ao mesmo ponto em 210ms. O ×
+              // não brota: é a segunda bolha do gesto. A animação é de cada
+              // vidro, nunca da casca: no ancestral, o `transform` desligaria o
+              // borrão deles.
+              "[&_[data-slot=command-dialog-panel]]:origin-top-right",
               "data-open:[&_[data-slot=command-dialog-panel]]:[animation:menu-morph_380ms_linear_60ms_backwards]",
-              "data-open:[&_[data-slot=command-search-cancel]]:[animation:menu-morph_380ms_linear_120ms_backwards]",
-              "data-closed:[&_:is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])]:[animation:menu-unmorph_210ms_linear_both]",
+              "data-closed:[&_[data-slot=command-dialog-panel]]:[animation:menu-unmorph_210ms_linear_both]",
             )}
           >
             <DialogHeader className="sr-only">
@@ -418,6 +702,12 @@ function CommandDialog({
                 {children}
               </Command>
             </CommandBeamContext.Provider>
+            {/* O fantasma da lupa (só na cápsula `[lupa | filtro]`): o desenho
+                da lupa do header sobre a metade dela, posto e preenchido pelo
+                gesto. Fora da raiz do cmdk, como o ×. `z-20`: a faixa da pílula
+                é `relative z-10`, e sem ele o fantasma pintava por baixo do
+                vidro (borrado, quase invisível). */}
+            <span aria-hidden data-slot="command-search-origin" className="pointer-events-none absolute z-20 grid place-items-center opacity-0 [&_svg]:size-5" />
             {/* A linha, para os testes e a medida do topo. */}
             <div
               aria-hidden
@@ -437,9 +727,20 @@ function CommandDialog({
               onClick={() => props.onOpenChange?.(false)}
               className={cn(
                 "pointer-events-auto absolute top-(--command-search-top) right-4 size-11",
-                searchFieldSurfaceClassName.modal
+                searchFieldSurfaceClassName.modal,
+                // Inclina-se pela borda de fora, e o vidro chega à aresta: com o
+                // `bg-clip-padding` do botão, a emenda com a pílula mostrava um fio.
+                "origin-right bg-clip-border"
               )}
             >
+              {/* O fantasma: o que a origem do × mostrava (o filtro, com o ponto,
+                  ou a lupa), clonado pelo gesto e apagado em repouso. O React
+                  não escreve filhos aqui, então não toca nos clones. */}
+              <span
+                aria-hidden
+                data-slot="command-search-cancel-origin"
+                className="pointer-events-none absolute inset-0 grid place-items-center opacity-0 [&_svg]:size-5"
+              />
               <XMarkIcon aria-hidden />
             </Button>
           </DialogPrimitive.Content>
@@ -1422,6 +1723,7 @@ export {
   commandVariants,
   CommandDialog,
   origemValida,
+  quadroDasBolhas,
   CommandHighlight,
   CommandPage,
   CommandPages,

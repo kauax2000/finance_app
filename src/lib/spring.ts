@@ -24,5 +24,14 @@ export const MOLA_PALCO = { type: "spring", stiffness: 220, damping: 30 } as con
  */
 export const MOLA_PALCO_LAYOUT = { ...MOLA_PALCO, restSpeed: 20, restDelta: 2 } as const
 
+/**
+ * A mola da divisão da busca do telefone (a cápsula do header que se parte em duas bolhas, `CommandDialog`).
+ * Mais lenta que a `MOLA`, e ainda com um passe de ~1%: na `MOLA` a pinça ia dos 26 aos 81ms (três quadros) e a
+ * divisão não se lia. Medida no gerador do próprio `motion` (passos de 1ms): p cruza 0,1 aos 39ms, 0,6 aos
+ * 134ms, 0,7 aos 158ms e 1 aos 330ms, com pico de 1,011 aos 409ms e repouso aos 690ms. A cintura (a emenda
+ * arredondando com as bolhas ainda encostadas) dura 95ms, e a pinça inteira 119ms (`command-versions.test.ts`).
+ */
+export const SEPARACAO = { type: "spring", stiffness: 180, damping: 22 } as const
+
 /** A saída do palco: 150ms (`--duration-fast`) em `--ease-in-out`, espelhado aqui para o `motion`. */
 export const SAIDA = { duration: 0.15, ease: [0.65, 0, 0.35, 1] } as const
