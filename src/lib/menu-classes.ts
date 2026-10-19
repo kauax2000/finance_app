@@ -69,8 +69,9 @@ export const menuItemGeometryClassName = [
 ].join(" ")
 
 /**
- * O realce é uma tinta, não uma cor: `--foreground` a 9% por cima do que
- * estiver atrás, para a linha acesa não matar a transparência da placa. A cor
+ * O realce é o da barra lateral (rodada 325): `--sidebar-accent` a 50% na
+ * passagem, ainda translúcido sobre o vidro, e cheio ao pressionar ou com o
+ * submenu aberto, como a página ativa nela. Era a tinta `--foreground` a 9%. A cor
  * esmaece em 300ms na entrada e na saída; nada segue o ponteiro (o realce que
  * viaja entre as linhas está recusado).
  */
@@ -82,7 +83,7 @@ export const menuItemClassName = [
   "group/menu-item",
   menuItemGeometryClassName,
   menuItemFadeClassName,
-  "focus:bg-foreground/9 focus:text-accent-foreground",
+  "focus:bg-sidebar-accent/50 active:bg-sidebar-accent focus:text-accent-foreground",
   "data-inset:pl-7.5",
   "data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20",
   "data-disabled:pointer-events-none data-disabled:opacity-50",
@@ -94,8 +95,8 @@ export const menuSubTriggerClassName = [
   "group/menu-item",
   menuItemGeometryClassName,
   menuItemFadeClassName,
-  "focus:bg-foreground/9 focus:text-accent-foreground",
-  "data-inset:pl-7.5 data-open:bg-foreground/9 data-open:text-accent-foreground",
+  "focus:bg-sidebar-accent/50 active:bg-sidebar-accent focus:text-accent-foreground",
+  "data-inset:pl-7.5 data-open:bg-sidebar-accent data-open:text-accent-foreground",
   // Sem o desabilitado um submenu desabilitado sai igual ao ativo.
   "data-disabled:pointer-events-none data-disabled:opacity-50",
 ].join(" ")
@@ -107,7 +108,7 @@ export const menuIndicatorItemClassName = [
   // O recuo do lado do indicador cresce; o `twMerge` guarda o `px-2` com o `pr-8` por cima.
   "pr-8",
   menuItemFadeClassName,
-  "focus:bg-foreground/9 focus:text-accent-foreground",
+  "focus:bg-sidebar-accent/50 active:bg-sidebar-accent focus:text-accent-foreground",
   "data-inset:pl-7.5",
   "data-disabled:pointer-events-none data-disabled:opacity-50",
 ].join(" ")

@@ -527,7 +527,7 @@ const drawerActionClassName = cn(
   "flex min-h-13 w-full items-center gap-3 rounded-surface px-4 text-left text-base text-foreground outline-none select-none",
   "transition-colors duration-(--duration-fast) ease-(--ease-out)",
   // Tinta sobre o vidro da gaveta, e não `bg-muted` opaco.
-  "hover:bg-foreground/9 active:bg-foreground/9 focus-visible:bg-foreground/9",
+  "hover:bg-sidebar-accent/50 active:bg-sidebar-accent focus-visible:bg-sidebar-accent/50",
   "disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
   "[&_svg]:size-5 [&_svg]:shrink-0 [&_svg]:text-muted-foreground",
   "data-[variant=destructive]:text-destructive data-[variant=destructive]:[&_svg]:text-destructive"

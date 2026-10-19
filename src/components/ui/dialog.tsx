@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { cva, type VariantProps } from "class-variance-authority"
+import { useComposedRefs } from "radix-ui/internal"
 import {
   AlertDialog as AlertDialogPrimitive,
   Dialog as DialogPrimitive,
@@ -15,6 +16,7 @@ import { Muted } from "@/components/ui/typography"
 import { scrollFadeViewportClassName } from "@/lib/scroll-fade-classes"
 import { useScrollFade } from "@/hooks/use-scroll-fade"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useAlturaAnimada } from "@/hooks/use-altura-animada"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import {
@@ -456,6 +458,10 @@ function DialogContent({
   const { gaveta, pending } = React.useContext(DialogEstadoContext)
   const aoClicarLink = useLinkQueFecha(onClickCapture)
   const revelacao = useRevelacao(onAnimationEnd)
+  // O conteúdo que muda de altura (trocar de aba num formulário) anda na mola,
+  // em vez de saltar: a placa cresce e encolhe pelos dois lados, centrada.
+  const alturaAnimada = useAlturaAnimada<HTMLDivElement>()
+  const placaRef = useComposedRefs(ref, alturaAnimada)
 
   // No telefone, com `surface="auto"`: a gaveta do `Sheet`. A gaveta alta é a
   // do formulário (`fixed`), a da tela cheia e a dos passos (esta por classe,
@@ -484,7 +490,7 @@ function DialogContent({
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
-        ref={ref}
+        ref={placaRef}
         onClickCapture={aoClicarLink}
         data-slot="dialog-content"
         data-layout={layout ?? "auto"}

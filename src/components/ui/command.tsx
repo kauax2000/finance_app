@@ -17,6 +17,7 @@ import {
   menuItemGeometryClassName,
   menuSeparatorClassName,
   menuItemFadeClassName, menuPanelTintClassName } from "@/lib/menu-classes"
+import { modalSurfaceClassName } from "@/lib/glass-classes"
 import {
   scrollFadeBandsClassName,
   scrollFadeBleedClassName,
@@ -103,7 +104,7 @@ const commandVariants = cva(
 /** Se a peça está na pilha (`Command variant="panel"`, a do `CommandDialog` e da paleta solta); na pilha campo, lista, grupo e linha vestem as três superfícies. */
 const CommandStackContext = React.createContext<"palette" | "menu" | null>(null)
 
-/** Se a pilha está num `CommandDialog`, o único lugar que acende o feixe da pílula. */
+/** Se a pilha está num `CommandDialog`: o único lugar que acende o feixe da pílula, e onde as três peças vestem o fundo do `Dialog` (`modalSurfaceClassName`). */
 const CommandBeamContext = React.createContext(false)
 
 /**
@@ -267,8 +268,19 @@ function CommandDialog({
             // A paleta abre na mola e fecha curto em `--ease-out` (uma mola até
             // zero passa por baixo de zero). É a exceção ao gesto do menu
             // (rodada 287): o dono preferiu a entrada dela de antes.
-            "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring) data-open:slide-in-from-top-1",
-            "data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-closed:animation-duration-(--duration-fast) data-closed:ease-(--ease-out)"
+            // Quem se move é cada vidro (a pílula, a placa e as cápsulas da
+            // legenda), nunca a coluna: transform, opacidade ou filter animado
+            // num ancestral desliga o `backdrop-filter` dos filhos até a
+            // animação acabar, e o fundo deles acendia atrasado. A coluna só
+            // segura o fechamento (`presence-hold`), e o blur do `tw-animate`
+            // vira `none` (um `blur(0)` também desligava).
+            "data-closed:[animation:presence-hold_var(--duration-fast)]",
+            "[&_:is([data-slot=search-input],[data-slot=command-dialog-panel],[data-slot=command-dock-item])]:[--tw-enter-blur:none] [&_:is([data-slot=search-input],[data-slot=command-dialog-panel],[data-slot=command-dock-item])]:[--tw-exit-blur:none]",
+            // A pílula entra pela primeira animação da lista do feixe (`command-beam`).
+            "data-open:**:data-[slot=search-input]:[--command-beam-intro:enter_var(--duration-spring)_var(--ease-spring)] data-open:**:data-[slot=search-input]:fade-in-0 data-open:**:data-[slot=search-input]:zoom-in-95 data-open:**:data-[slot=search-input]:slide-in-from-top-1",
+            "data-open:**:data-[slot=command-dialog-panel]:animate-in data-open:**:data-[slot=command-dialog-panel]:fade-in-0 data-open:**:data-[slot=command-dialog-panel]:zoom-in-95 data-open:**:data-[slot=command-dialog-panel]:slide-in-from-top-1 data-open:**:data-[slot=command-dialog-panel]:animation-duration-(--duration-spring) data-open:**:data-[slot=command-dialog-panel]:ease-(--ease-spring)",
+            "data-closed:[&_:is([data-slot=command-dialog-panel],[data-slot=command-dock-item])]:animate-out data-closed:[&_:is([data-slot=command-dialog-panel],[data-slot=command-dock-item])]:fade-out-0 data-closed:[&_:is([data-slot=command-dialog-panel],[data-slot=command-dock-item])]:zoom-out-95 data-closed:[&_:is([data-slot=command-dialog-panel],[data-slot=command-dock-item])]:animation-duration-(--duration-fast) data-closed:[&_:is([data-slot=command-dialog-panel],[data-slot=command-dock-item])]:ease-(--ease-out) data-closed:[&_:is([data-slot=command-dialog-panel],[data-slot=command-dock-item])]:fill-mode-forwards",
+            "data-closed:**:data-[slot=search-input]:[--command-beam-intro:exit_var(--duration-fast)_var(--ease-out)_forwards] data-closed:**:data-[slot=search-input]:fade-out-0 data-closed:**:data-[slot=search-input]:zoom-out-95"
           )}
         >
           {/* O nome acessível mora dentro do `Content`: fora dele o `DialogHeader`
@@ -411,8 +423,8 @@ function CommandInput({
   leading?: React.ReactNode
   /** `md` (32) é o gatilho do cabeçalho do catálogo; `lg` (36) é a pílula da pilha, e o padrão dentro dela. A faixa de dissolução acompanha (`data-size` no wrapper). */
   size?: "md" | "lg"
-  /** A superfície da pílula: `plate` na pilha; fora dela `field`, menos num popover (o `Combobox`), que pede `plate`. */
-  surface?: "field" | "plate"
+  /** A superfície da pílula: `plate` na pilha (`modal` no `CommandDialog`); fora dela `field`, menos num popover (o `Combobox`), que pede `plate`. */
+  surface?: "field" | "plate" | "modal"
   /** O piso de toque: 40 no dedo, e a faixa de busca da raiz acompanha. Desligado por padrão (a paleta tem medidas próprias); o `FilterBar` liga. */
   touchFloor?: boolean
   /** O cursor desenhado do `SearchInput`, que segue o texto (controlado ou não): a paleta que se digita sozinha numa vitrine. */
@@ -481,7 +493,7 @@ function CommandInput({
           a pilha tem medidas próprias. No `Combobox` e solto, quem chega por
           teclado vê o anel do campo. */}
       <SearchInput
-        surface={surface ?? (naPilha ? "plate" : "field")}
+        surface={surface ?? (naPilha ? (noDialogo ? "modal" : "plate") : "field")}
         size={size}
         focusRing={pilha !== "palette"}
         // Sem piso de toque por padrão: a faixa de busca é publicada pela raiz
@@ -618,6 +630,7 @@ function CommandList({
   }, [])
 
   const pilha = React.useContext(CommandStackContext)
+  const noDialogo = React.useContext(CommandBeamContext)
   const naPilha = pilha !== null
   const naPaleta = pilha === "palette"
   // As setas só na pilha pousam na placa (o pai `relative); o `Combobox` as pede por `arrows`.
@@ -687,7 +700,7 @@ function CommandList({
       data-slot="command-dialog-panel"
       className={cn(
         "relative flex min-h-0 flex-col overflow-hidden rounded-surface ring-1 ring-foreground/10 [--scroll-fade-band-h:0px] [--radius-parent:var(--radius-surface)] [--radius-inset:--spacing(2)]",
-        menuPanelTintClassName
+        noDialogo ? modalSurfaceClassName : menuPanelTintClassName
       )}
     >
       {lista}
@@ -906,8 +919,8 @@ function CommandItem({
         menuItemGeometryClassName,
         // O acender dos menus (`menuItemFadeClassName`).
         menuItemFadeClassName,
-        // Tinta, não cor: o `--foreground` a 9% sobre o vidro (ver `menu-classes`).
-        "data-selected:bg-foreground/9 data-selected:text-accent-foreground data-selected:*:[svg]:text-accent-foreground",
+        // Os tons da barra lateral, como todo menu (ver `menu-classes`).
+        "data-selected:bg-sidebar-accent/50 active:bg-sidebar-accent data-selected:text-accent-foreground data-selected:*:[svg]:text-accent-foreground",
         // `=true` e não por presença: ver o comentário acima.
         "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50",
         // Na pilha a linha tem 36; isto garante o piso se a geometria dos menus mudar.
@@ -1007,6 +1020,7 @@ function CommandPreview({
 }) {
   const valor = useCommandState((estado) => estado.value)
   const naPilha = React.useContext(CommandStackContext) !== null
+  const noDialogo = React.useContext(CommandBeamContext)
   return (
     <div
       data-slot="command-preview"
@@ -1014,7 +1028,7 @@ function CommandPreview({
       aria-label="Pré-visualização"
       className={cn(
         "hidden w-72 shrink-0 flex-col gap-3 overflow-y-auto p-4 text-sm md:flex",
-        naPilha && cn("rounded-surface ring-1 ring-foreground/10", menuPanelTintClassName),
+        naPilha && cn("rounded-surface ring-1 ring-foreground/10", noDialogo ? modalSurfaceClassName : menuPanelTintClassName),
         className
       )}
     >
@@ -1143,7 +1157,6 @@ function CommandDock({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="command-dock"
       className={cn(
         "flex items-center justify-between gap-2 pointer-coarse:hidden",
-        "animate-in fade-in-0 slide-in-from-top-2 animation-duration-(--duration-spring) ease-(--ease-spring) [animation-delay:80ms] fill-mode-both",
         className
       )}
       {...props}
@@ -1153,6 +1166,7 @@ function CommandDock({ className, ...props }: React.ComponentProps<"div">) {
 
 /** Uma cápsula da legenda: a tecla e o que ela faz, no vidro dos menus. */
 function CommandDockItem({ className, ...props }: React.ComponentProps<"span">) {
+  const noDialogo = React.useContext(CommandBeamContext)
   return (
     <span
       data-slot="command-dock-item"
@@ -1160,8 +1174,12 @@ function CommandDockItem({ className, ...props }: React.ComponentProps<"span">) 
         // Uma linha só: com a pastilha das teclas, a legenda quebrava em duas
         // na paleta de 448; o recuo de 10 dá folga às quatro.
         "inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs whitespace-nowrap text-muted-foreground ring-1 ring-foreground/10",
+        // A cápsula entra sozinha, e não a fileira: um ancestral que se move ou
+        // esmaece desliga o borrão dela até a animação acabar.
+        "animate-in fade-in-0 slide-in-from-top-2 animation-duration-(--duration-spring) ease-(--ease-spring) [animation-delay:80ms] fill-mode-both [--tw-enter-blur:none]",
         // As teclas com a pastilha do `Kbd` (o fundo dele), a pedido do dono.
-        menuPanelTintClassName,
+        // No `CommandDialog` as três peças vestem o fundo do `Dialog`.
+        noDialogo ? modalSurfaceClassName : menuPanelTintClassName,
         className
       )}
       {...props}

@@ -3,10 +3,13 @@
 import * as React from "react"
 import { AppCommandPalette } from "@/components/layout/app-command-palette"
 import { NotificationBellLink } from "@/components/layout/notification-bell-link"
+import { MagnifyingGlassIcon } from "@heroicons/react/16/solid"
 import { PageHeaderBack } from "@/components/ui/page-header"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import {
     TopBar,
+    TopBarAction,
+    TopBarActionGroup,
     TopBarActions,
     TopBarContent,
     TopBarSearch,
@@ -16,6 +19,7 @@ import {
 import { resolveAppSubPageMeta } from "@/components/layout/breadcrumb"
 import { WorkspaceSwitcher } from "@/components/layout/workspace-switcher"
 import { usePageChromeState } from "@/components/layout/page-chrome-provider"
+import { useBuscaDoCabecalho } from "@/hooks/use-busca-do-cabecalho"
 import {
     APP_PAGE_TITLES,
     DASHBOARD_PAGE_TITLES,
@@ -81,6 +85,9 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     // em toda tela da casca.
     const [searchOpen, setSearchOpen] = React.useState(false)
     const openSearch = () => setSearchOpen(true)
+    // Do `lg` para cima a busca é a pílula no centro ou a lupa colada ao sino,
+    // pela escolha em Configurações › Aparência (neste aparelho).
+    const [busca] = useBuscaDoCabecalho()
 
     const pageTitle =
         chromeSlot?.title ?? defaultMobileTitle(pathname, titleMode)
@@ -130,18 +137,38 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                 <span className="contents md:hidden">{chromeSlot?.dateFilter}</span>
                 {/* A paleta já escuta ⌘K; o `/` ela não escuta, então a
                     pílula não o anuncia. */}
-                <TopBarSearch
-                    onOpen={openSearch}
-                    listen={false}
-                    slash={false}
-                    collapse="lg"
-                    glow
-                    plate
-                    placeholder="Buscar telas e ações…"
-                />
+                {busca === "barra" ? (
+                    <TopBarSearch
+                        onOpen={openSearch}
+                        listen={false}
+                        slash={false}
+                        collapse="lg"
+                        glow
+                        plate
+                        placeholder="Buscar telas e ações…"
+                    />
+                ) : null}
             </div>
             <TopBarActions className="lg:flex-1 lg:basis-0 lg:justify-end">
-                <NotificationBellLink />
+                {busca === "botao" ? (
+                    <TopBarActionGroup>
+                        <TopBarAction
+                            type="button"
+                            label="Buscar"
+                            plate
+                            tooltip={false}
+                            shortcut="mod+k"
+                            aria-haspopup="dialog"
+                            aria-expanded={searchOpen}
+                            onClick={openSearch}
+                        >
+                            <MagnifyingGlassIcon className="size-4" />
+                        </TopBarAction>
+                        <NotificationBellLink />
+                    </TopBarActionGroup>
+                ) : (
+                    <NotificationBellLink />
+                )}
             </TopBarActions>
 
             {/* Portalizada: não ocupa lugar na linha do `TopBar`. */}

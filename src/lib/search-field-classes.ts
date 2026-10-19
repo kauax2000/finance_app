@@ -1,4 +1,4 @@
-import { menuPanelTintClassName } from "@/lib/glass-classes"
+import { menuPanelTintClassName, modalSurfaceClassName } from "@/lib/glass-classes"
 
 /**
  * O campo de busca do sistema: uma receita, três peças (o gatilho do cabeçalho
@@ -33,10 +33,13 @@ export const searchFieldCoarseClassName = "pointer-coarse:h-10"
  * (`border-border`, não o `border-input` de formulário) sobre o preenchimento a
  * 30%. `plate` é a busca dentro de um painel flutuante: a tinta da placa e um
  * anel de 1px, sem borda, para não pôr um campo preenchido sobre a placa.
+ * `modal` é a mesma pílula na tinta das peças modais: a do `CommandDialog`, que
+ * veste o fundo do `Dialog` e da `Sheet`.
  */
 export const searchFieldSurfaceClassName = {
   field: "border border-border bg-input-fill/30",
   plate: `ring-1 ring-foreground/10 ${menuPanelTintClassName}`,
+  modal: `ring-1 ring-foreground/10 ${modalSurfaceClassName}`,
 } as const
 
 export type SearchFieldSurface = keyof typeof searchFieldSurfaceClassName

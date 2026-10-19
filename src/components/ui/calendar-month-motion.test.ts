@@ -46,7 +46,7 @@ describe("a troca de mês", () => {
 
   it("o seletor de mês e de ano veste a linha, e não a cápsula, com o realce das linhas", () => {
     expect(CALENDARIO).toContain(
-      'className="w-fit gap-1 rounded-row border-transparent bg-transparent px-2 font-medium hover:bg-foreground/9 active:bg-foreground/9"'
+      'className="w-fit gap-1 rounded-row border-transparent bg-transparent px-2 font-medium hover:bg-sidebar-accent/50 active:bg-sidebar-accent"'
     )
   })
 

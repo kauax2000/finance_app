@@ -2805,6 +2805,16 @@
   }
 }
 
+/* Segura montado quem não pode animar nada visível: a coluna do `CommandDialog`
+   é ancestral dos vidros, e qualquer transform, opacidade ou filter animado nela
+   desligava o borrão deles até a animação acabar. O Radix só espera o fechamento
+   pelo `animationend` do próprio nó. */
+@keyframes presence-hold {
+  to {
+    --presence-hold: 1;
+  }
+}
+
 @keyframes menu-content-out {
   to {
     opacity: 0;
@@ -3294,11 +3304,15 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
+  /* A primeira é a entrada e a saída da pílula (o `CommandDialog` a escreve em
+     `--command-beam-intro`): uma `animate-in` na pílula trocaria a lista
+     inteira e apagaria o feixe, e animar um invólucro desligaria o vidro dela. */
   animation:
+    var(--command-beam-intro, none),
     command-beam-travel 3.1s linear infinite,
     command-beam-edge 3.1s linear infinite,
     command-beam-breathe 4s ease-in-out infinite;
-  animation-play-state: paused;
+  animation-play-state: running, paused, paused, paused;
   transition: --command-beam-on var(--duration-slow) var(--ease-out);
 
   &[data-waiting] {

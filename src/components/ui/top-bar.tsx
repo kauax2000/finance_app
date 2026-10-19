@@ -7,6 +7,7 @@ import { Slot } from "radix-ui"
 
 import { tagChipUnreadCount } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { ButtonGroup } from "@/components/ui/button-group"
 import { Kbd } from "@/components/ui/kbd"
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -549,6 +550,28 @@ function TopBarAction({
 }
 
 /**
+ * Ações da barra numa cápsula só: `TopBarAction plate` lado a lado, colados pelo
+ * `ButtonGroup` (os cantos de dentro achatados), sem o divisor dele e sem a
+ * sobreposição de 1px. O anel é um só, o do grupo: o de cada botão desenhava uma
+ * linha na emenda. Do `md` para cima, como o vidro dos botões; no telefone eles
+ * seguem soltos e `tertiary`. A busca compacta do app (lupa e sino) a veste.
+ */
+function TopBarActionGroup({ className, ...props }: React.ComponentProps<typeof ButtonGroup>) {
+  return (
+    <ButtonGroup
+      data-slot="top-bar-action-group"
+      className={cn(
+        "md:rounded-full md:ring-1 md:ring-foreground/10 *:before:hidden *:ml-0! *:ring-0!",
+        // No telefone o vidro não existe: os botões voltam a ser círculos soltos, a 4px.
+        "max-md:gap-1 max-md:*:rounded-full!",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/**
  * O vidro do campo da paleta (`searchFieldSurfaceClassName.plate`): o anel de
  * 1px sobre a tinta flutuante, do `md` para cima, por extenso (classe montada
  * não chega ao CSS). A lupa o veste; no telefone o botão segue `tertiary`.
@@ -762,6 +785,7 @@ function TopBarProgress({
 export {
   TopBar,
   TopBarAction,
+  TopBarActionGroup,
   TopBarActions,
   TopBarContent,
   TopBarProgress,

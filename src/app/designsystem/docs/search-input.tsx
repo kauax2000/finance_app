@@ -152,9 +152,9 @@ export default function SearchInputDoc() {
           },
           {
             prop: "surface",
-            type: '"field" | "plate"',
+            type: '"field" | "plate" | "modal"',
             default: '"field"',
-            description: "plate é a pílula de vidro, para dentro de painel flutuante.",
+            description: "plate é a pílula de vidro, para dentro de painel flutuante; modal é a mesma pílula no fundo do Dialog (a do CommandDialog).",
           },
           {
             prop: "shortcut",

@@ -86,6 +86,6 @@ describe("o campo de busca é um desenho só", () => {
   it("a marca só acende na superfície de campo", () => {
     expect(render({ variant: "brand" })).toMatch(/data-slot="search-input"[^>]*brand-glow/)
     const codigo = lerFonte("src/components/ui/search-input.tsx")
-    expect(codigo).toMatch(/surface: Extract<SearchFieldSurface, "plate">; variant\?: "default"/)
+    expect(codigo).toMatch(/surface: Exclude<SearchFieldSurface, "field">; variant\?: "default"/)
   })
 })

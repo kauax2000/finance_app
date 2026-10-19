@@ -767,7 +767,7 @@ function CalendarDropdown({
         size="sm"
         aria-label={rotulo}
         // A linha, e não a cápsula: o degrau `row` da escala, com o realce aceso.
-        className="w-fit gap-1 rounded-row border-transparent bg-transparent px-2 font-medium hover:bg-foreground/9 active:bg-foreground/9"
+        className="w-fit gap-1 rounded-row border-transparent bg-transparent px-2 font-medium hover:bg-sidebar-accent/50 active:bg-sidebar-accent"
       >
         <SelectValue />
       </SelectTrigger>

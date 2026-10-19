@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest"
 import { lerFonte } from "@/test/fonte"
 
 /**
- * O realce das linhas sobre vidro é uma **tinta** — o
- * `--foreground` a 9% por cima do que estiver atrás —, e não uma cor opaca.
- * `bg-accent` e `bg-muted` matavam a transparência da placa e da gaveta: a
- * linha acesa virava um retângulo chapado. A 9% a tinta lê como o `accent`
- * lia (1,21:1 no claro, 1,25:1 no escuro, contra a placa composta).
+ * O realce das linhas sobre vidro é o da barra lateral (rodada 325, a pedido do
+ * dono: um realce só no app): `--sidebar-accent` a 50% na passagem, ainda
+ * translúcido sobre a placa, e cheio ao pressionar ou com o item aberto. Foi a
+ * tinta `--foreground` a 9%. `bg-accent` e `bg-muted` continuam fora: matavam a
+ * transparência da placa e da gaveta.
  */
 
 const SOBRE_VIDRO = [
@@ -19,7 +19,7 @@ const SOBRE_VIDRO = [
   "src/components/ui/calendar.tsx",
 ]
 
-describe("o realce das linhas sobre vidro é tinta", () => {
+describe("o realce das linhas sobre vidro é o da barra lateral", () => {
   it("nenhuma linha acende com cor opaca", () => {
     for (const caminho of SOBRE_VIDRO) {
       const codigo = lerFonte(caminho)
@@ -29,9 +29,12 @@ describe("o realce das linhas sobre vidro é tinta", () => {
     }
   })
 
-  it("a tinta é uma só: o foreground a 9%", () => {
+  it("o realce é um só: o sidebar-accent a 50%, cheio ao pressionar", () => {
     for (const caminho of SOBRE_VIDRO) {
-      expect(lerFonte(caminho), caminho).toContain("bg-foreground/9")
+      const codigo = lerFonte(caminho)
+      expect(codigo, caminho).toContain("bg-sidebar-accent/50")
+      expect(codigo, caminho).toContain("active:bg-sidebar-accent")
+      expect(codigo, caminho).not.toMatch(/bg-foreground\/9\b/)
     }
   })
 })

@@ -246,12 +246,12 @@ describe("a superfície de vidro", () => {
         const campo = paleta.slice(paleta.indexOf("function CommandInput"), paleta.indexOf("function CommandScope"))
         const lista = paleta.slice(paleta.indexOf("function CommandList"), paleta.indexOf("function CommandEmpty"))
         // A tinta chega pela receita da busca, que a importa da régua.
-        expect(campo, "a pílula de busca não pinta").toMatch(/<SearchInput\s+surface=\{surface \?\? \(naPilha \? "plate" : "field"\)\}/)
+        expect(campo, "a pílula de busca não pinta").toMatch(/<SearchInput\s+surface=\{surface \?\? \(naPilha \? \(noDialogo \? "modal" : "plate"\) : "field"\)\}/)
         expect(
             lerFonte("src/lib/search-field-classes.ts"),
             "a receita veste a tinta da régua"
-        ).toMatch(/import \{ menuPanelTintClassName \} from "@\/lib\/glass-classes"[\s\S]*plate: `[^`]*\$\{menuPanelTintClassName\}`/)
-        expect(lista, "a placa da lista não pinta").toMatch(/command-dialog-panel[\s\S]*menuPanelTintClassName/)
+        ).toMatch(/import \{ menuPanelTintClassName, modalSurfaceClassName \} from "@\/lib\/glass-classes"[\s\S]*plate: `[^`]*\$\{menuPanelTintClassName\}`/)
+        expect(lista, "a placa da lista não pinta").toMatch(/command-dialog-panel[\s\S]*noDialogo \? modalSurfaceClassName : menuPanelTintClassName/)
         expect(paleta).not.toContain("supports-backdrop-filter:dark:bg-transparent")
         expect(paleta).not.toContain("reduced-transparency:bg-transparent")
     })

@@ -53,8 +53,17 @@ describe("O movimento do que se sobrepõe à tela", () => {
     // A paleta do `CommandDialog` é a exceção: abre na mola e fecha curto, como antes
     // da rodada 287 (pedido do dono).
     expect(ui("command")).not.toContain('"menu-sprout"')
-    expect(ui("command")).toContain("data-open:zoom-in-95 data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring)")
-    expect(ui("command")).toContain("data-closed:zoom-out-95 data-closed:animation-duration-(--duration-fast) data-closed:ease-(--ease-out)")
+    // Quem se move são os vidros, não a coluna: transform, opacidade ou filter
+    // animado num ancestral desligava o borrão deles até a animação acabar.
+    // A pílula entra pela lista do feixe: uma `animate-in` nela apagava o arco-íris.
+    const placa = "**:data-[slot=command-dialog-panel]"
+    expect(ui("command")).toContain(`data-open:${placa}:zoom-in-95`)
+    expect(ui("command")).toContain(`data-open:${placa}:animation-duration-(--duration-spring) data-open:${placa}:ease-(--ease-spring)`)
+    expect(ui("command")).toContain("data-open:**:data-[slot=search-input]:[--command-beam-intro:enter_var(--duration-spring)_var(--ease-spring)]")
+    expect(ui("command")).toContain("data-closed:**:data-[slot=search-input]:[--command-beam-intro:exit_var(--duration-fast)_var(--ease-out)_forwards]")
+    expect(ui("command")).not.toMatch(/data-\[slot=search-input\][^"]*\]:animate-(in|out)/)
+    expect(ui("command")).toContain("data-closed:[animation:presence-hold_var(--duration-fast)]")
+    expect(ui("command")).not.toContain('"data-open:animate-in data-open:')
   })
 
   it("o menu brota do botão nos quadros do menu do iOS 26", () => {

@@ -929,7 +929,7 @@ function DropdownMenuRadioItem({
    * mídia da linha, quando ela é a identidade da opção (o ladrilho de cor de uma
    * carteira): a escolhida ganha o halo da amostra do `Toggle variant="swatch"`
    * (contorno de 2px, afastado 2px) na cor da própria opção puxada para a tinta, a
-   * linha escolhida tem um fundo leve (5% da tinta, abaixo dos 9% da passagem), a
+   * linha escolhida acende cheia nos tons da barra lateral (a passagem é a 50%), a
    * outra em foco mostra a prévia esmaecida do mesmo halo, e as demais esmaecem a
    * tinta. Sem peso e sem marcador no fim da linha.
    */
@@ -971,8 +971,9 @@ function DropdownMenuRadioItem({
           // ladrilho de 24 mais 6 de cada lado dá os 36 das outras linhas (com
           // `py-2` a linha ia a 40), e o halo de 4px ainda cabe.
           "pr-2 py-1.5 data-[state=unchecked]:not-focus:text-muted-foreground",
-          // A escolhida tem um fundo leve, 5% da tinta — abaixo dos 9% da passagem, que vence no foco.
-          "data-[state=checked]:not-focus:bg-foreground/5",
+          // A escolhida acende cheia nos tons da barra lateral (a passagem é a 50%), como a
+          // página ativa nela.
+          "data-[state=checked]:bg-sidebar-accent data-[state=checked]:text-sidebar-accent-foreground",
           // O halo mora no ladrilho: nasce colado e transparente, e cresce na curva do sistema.
           "[&>[data-slot=color-tile]]:outline-2 [&>[data-slot=color-tile]]:outline-solid [&>[data-slot=color-tile]]:outline-offset-0 [&>[data-slot=color-tile]]:outline-transparent [&>[data-slot=color-tile]]:transition-[outline-offset,outline-color] [&>[data-slot=color-tile]]:duration-(--duration-slow) [&>[data-slot=color-tile]]:ease-(--ease-emphasized)",
           // Escolhida: a cor da própria carteira, puxada para a tinta — o matiz é da pessoa, e o

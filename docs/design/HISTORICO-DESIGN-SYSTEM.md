@@ -27368,3 +27368,100 @@ todos: `sm` e `md` passam `md` (32; eram `sm`, 28), `lg` e `page` seguem em
 `xl`. Crescem junto os vazios das categorias, dos cartões do painel e os vazios
 de formulário (despesa e assinatura). O botão das notificações chegou a ser
 `outline` e ficou `tertiary` (o "ghost" de antes), a pedido do dono.
+
+### Rodada 323 — o vidro da paleta acende junto com a entrada
+
+O dono notou que o fundo do `CommandDialog` aparecia atrasado e quebrava a
+animação. Congelada a 110 ms, a pílula e a placa estavam sem o vidro: a página
+aparecia nítida por trás e o borrão só acendia quando a entrada terminava. A
+causa é o `backdrop-filter` do Chrome: um ancestral com opacidade abaixo de 1,
+com `filter` (o `enter` do `tw-animate` escreve `blur(0px)`) ou com transform
+animado vira a fronteira do fundo, e o vidro dos filhos não vê a página. A
+coluna do `Content` esmaecia, crescia e deslizava; a fileira do `CommandDock`
+também. Testado peça a peça: tirar só o fade não bastava, o zoom da coluna
+sozinho já apagava o vidro.
+
+Agora a coluna não anima nada visível: a pílula e a placa fazem a mesma entrada
+(fade, `zoom-in-95`, `slide-in-from-top-1`, mola) cada uma, as cápsulas da
+legenda entram sozinhas com o atraso de 80 ms que a fileira tinha, e o blur do
+`tw-animate` vira `none` nelas. O Radix só espera o fechamento pelo
+`animationend` do próprio nó, então a coluna roda o `@keyframes presence-hold`
+(só uma variável, em `--duration-fast`) enquanto as peças saem. Medido: a 110 ms
+as três peças já têm o vidro; ao fechar, a placa some em ~130 ms e a coluna
+desmonta aos ~200 ms. `overlay-motion.test.ts` passou a cobrar as peças, e não
+a coluna.
+
+A primeira versão desta rodada pôs `animate-in` na própria pílula, e o feixe
+(`command-beam`) sumiu: as três animações dele moram no mesmo nó, e o
+`animation` da entrada, mais específico, trocava a lista inteira. A lista do
+feixe ganhou uma primeira entrada, `var(--command-beam-intro, none)`, com o
+estado de reprodução `running, paused, paused, paused`; o `CommandDialog`
+escreve nela o `enter` e o `exit` do `tw-animate`, e a placa e as cápsulas
+seguem com o `animate-in`.
+
+### Rodada 324 — a paleta veste o fundo dos diálogos
+
+O dono pediu o `CommandDialog` com o mesmo fundo do `Dialog` e da `Sheet`. As
+três peças da paleta (a pílula, a placa da lista e as cápsulas da legenda, mais
+a pré-visualização do `size="lg"`) vestiam a tinta flutuante dos menus
+(`--popover` a 60%, um cinza no escuro); agora, dentro do `CommandDialog`,
+vestem a modal (`--background` a 85%, 50% no escuro). A busca ganhou a terceira
+superfície, `modal`, ao lado de `field` e `plate`, e quem decide é o contexto do
+diálogo (`CommandBeamContext`), o mesmo que acende o feixe. A paleta solta e o
+`Combobox` seguem na tinta dos menus. Medido nos dois temas: as três peças e um
+diálogo computam a mesma cor.
+
+### Rodada 325 — um realce só: o da barra lateral
+
+O dono pediu o hover da paleta igual ao da barra lateral, e depois que fossem
+todos iguais, como no seletor de carteira e nas linhas das notificações. Os
+menus acendiam a linha com a tinta `--foreground` a 9% (branco translúcido no
+escuro); a barra lateral, com `--sidebar-accent`. Agora todo menu veste os
+tons da barra: `bg-sidebar-accent/50` na passagem (o foco do Radix, o cursor, a
+linha selecionada do `Command`) e `bg-sidebar-accent` cheio ao pressionar e com
+o item aberto (submenu, gatilho expandido do `NavigationMenu`). Vale no
+`menu-classes` (`DropdownMenu`, `ContextMenu`, `Menubar`), no `Command`, no
+`Select`, no `NavigationMenu`, na folha de ações do `Drawer` e no seletor de mês
+do `Calendar`. A escolhida do `DropdownMenuRadioItem indicator="media"` acende
+cheia (era `bg-foreground/5`), e o seletor de carteira perdeu os tons que
+escrevia à mão (`CARTEIRA_TONS`): agora são do sistema. O destrutivo segue
+vermelho. A 50% a linha ainda é translúcida sobre o vidro; o cheio é opaco, como
+a página ativa na barra. Medido: a linha da paleta e o hover da barra computam
+a mesma cor. `row-tint.test.ts` passou a cobrar o `sidebar-accent`.
+
+### Rodada 326 — a busca do cabeçalho vira escolha, e a cápsula vira peça
+
+Um teste A/B/C no cabeçalho (a pílula no centro; a lupa colada ao sino num
+`ButtonGroup`; os dois separados, com o ⌘K na busca) terminou com o dono
+mantendo a pílula como padrão e pedindo a escolha nas Configurações, entre a
+pílula e a cápsula. A escolha é deste aparelho, como o tema (localStorage, por
+`useBuscaDoCabecalho`, com `useSyncExternalStore`: a mesma aba ouve por um
+evento próprio, as outras pelo `storage`, e o servidor lê "barra"); ela não sai
+com a conta e não precisou de coluna no banco. A linha mora no cartão de
+Aparência e só aparece do `lg` para cima, onde as duas formas diferem: abaixo,
+as duas são a mesma lupa (medido a 375px: uma lupa só, no mesmo lugar, a 4px do
+sino). O trilho é o `Tabs` padrão.
+
+A cápsula saiu da tela para o `TopBar`: `TopBarActionGroup` é o `ButtonGroup`
+sem o divisor e sem a sobreposição de 1px, com o anel no grupo — o anel de cada
+`TopBarAction plate` desenhava uma linha na emenda mesmo sem o divisor. No
+telefone, onde o vidro não existe, os botões voltam a círculos soltos a 4px.
+Recusados no caminho: o ⌘K dentro do botão de busca da cápsula (ficou na versão
+C, que perdeu) e o divisor do grupo.
+
+### Rodada 327 — a altura do diálogo anda na mola
+
+O dono pediu o diálogo animado ao mudar de tamanho, "orgânico como as outras
+animações" — o exemplo é o formulário de lançamento trocando entre Despesa,
+Parcelada e Receita, que saltava de altura. CSS não transiciona de `auto` para
+`auto`, então o `DialogContent` ganhou `useAlturaAnimada`: um
+`ResizeObserver` no próprio nó vê a altura nova antes da pintura, a placa volta
+à antiga em px e transiciona até a nova na mola do sistema (`--duration-spring`,
+`--ease-spring`, a do zoom de abertura), com `overflow: clip` durante a viagem.
+No fim a altura volta a ser do conteúdo; o que mudou no meio o observador pega
+ali, e a placa segue do alvo, sem salto. Como o diálogo é centrado por
+`-translate-y-1/2`, ele cresce pelos dois lados. Medido: Despesa → Parcelada vai
+de 638 a 666 em ~500 ms, passando a 667 e assentando. Movimento reduzido troca
+na hora. Só no desktop: no telefone o diálogo é a gaveta do `vaul`, que mede a
+própria altura.
+

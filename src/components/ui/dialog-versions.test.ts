@@ -10,6 +10,17 @@ import { DialogFooter, DialogHeader, DialogMedia, DialogSteps } from "./dialog"
 const CODIGO = lerFonte("src/components/ui/dialog.tsx")
 
 describe("as versões do Dialog", () => {
+  it("a altura anda na mola quando o conteúdo muda, e o ref de quem chama continua valendo", () => {
+    expect(CODIGO).toContain("const alturaAnimada = useAlturaAnimada<HTMLDivElement>()")
+    expect(CODIGO).toContain("const placaRef = useComposedRefs(ref, alturaAnimada)")
+    expect(CODIGO).toMatch(/<DialogPrimitive\.Content\s+ref=\{placaRef\}/)
+    const gancho = lerFonte("src/hooks/use-altura-animada.ts")
+    expect(gancho).toContain('"height var(--duration-spring) var(--ease-spring)"')
+    expect(gancho).toContain('"(prefers-reduced-motion: reduce)"')
+    // A altura volta a ser do conteúdo no fim da viagem.
+    expect(gancho).toMatch(/transitionend[\s\S]*transitioncancel/)
+  })
+
   it("todo pedido de fechar passa pela trava: salvando não fecha, alterado pergunta", () => {
     expect(CODIGO).toMatch(/const pedir = \(proximo: boolean\) => \{\s*if \(proximo\) return mudar\(true\)\s*if \(pending\) \{\s*destino\.current = null\s*return\s*\}\s*if \(dirty && confirmDiscard\) \{/)
     // A raiz entrega `pedir`, e não o `onOpenChange` cru, aos dois ramos.

@@ -6,6 +6,7 @@ import {
   CalendarIcon,
   EllipsisHorizontalIcon,
   HomeIcon,
+  MagnifyingGlassIcon,
   ReceiptPercentIcon,
   ShoppingCartIcon,
   WalletIcon,
@@ -33,6 +34,7 @@ import {
 import {
   TopBar,
   TopBarAction,
+  TopBarActionGroup,
   TopBarActions,
   TopBarContent,
   TopBarProgress,
@@ -401,6 +403,28 @@ export default function TopBarDoc() {
       </DocSection>
 
       <DocSection
+        title="Ações numa cápsula"
+        description="TopBarActionGroup cola ações com plate numa pílula só: os cantos de dentro achatados, sem divisor e com um anel só, o do grupo. É a busca compacta do app (Configurações › Aparência › Busca no cabeçalho: Botão). No telefone os botões voltam a ser círculos soltos."
+        code={`<TopBarActionGroup>
+  <TopBarAction label="Buscar" plate shortcut="mod+k" onClick={abrirBusca}>
+    <MagnifyingGlassIcon className="size-4" />
+  </TopBarAction>
+  <TopBarAction label="Notificações" plate count={3} countLabel="3 não lidas">
+    <BellIcon />
+  </TopBarAction>
+</TopBarActionGroup>`}
+      >
+        <TopBarActionGroup>
+          <TopBarAction label="Buscar" plate shortcut="mod+k">
+            <MagnifyingGlassIcon className="size-4" />
+          </TopBarAction>
+          <TopBarAction label="Notificações" plate count={3} countLabel="3 não lidas">
+            <BellIcon />
+          </TopBarAction>
+        </TopBarActionGroup>
+      </DocSection>
+
+      <DocSection
         title="Esqueleto"
         description="TopBarSkeleton: a ponta, o título e as ações, na altura do degrau."
         code={`<TopBarSkeleton actions={2} />`}
@@ -437,6 +461,7 @@ export default function TopBarDoc() {
           { prop: "TopBarStart · TopBarContent · TopBarActions", type: "ComponentProps<'div'> & { phone? }", description: "As pontas e o meio. phone é o que mostram abaixo de md; null esconde no telefone." },
           { prop: "TopBarTitle", type: "ComponentProps<'h1'> & { phone?, pageTitle?, scrollToTop?, asChild? }", description: "O nome da tela. pageTitle recebe o título que sobe do PageHeader; tocar nele no telefone sobe ao topo." },
           { prop: "TopBarAction", type: "Button & { label, count?, countLabel?, shortcut?, tooltip?, plate? }", description: "O botão de ícone da barra, com a dica e a contagem no nome; `plate` veste a pílula da placa do botão de recolher (do md para cima)." },
+          { prop: "TopBarActionGroup", type: "ComponentProps<typeof ButtonGroup>", description: "Ações com plate numa cápsula: o ButtonGroup sem divisor, com o anel no grupo (do md para cima); no telefone, círculos soltos a 4px." },
           { prop: "TopBarSearch", type: "{ onOpen, label?, placeholder?, shortcut?, slash?, listen?, collapse?, glow?, plate? }", description: "A pílula de busca com a tecla, que vira ícone abaixo da quebra, e os atalhos ⌘K e /; `plate` troca o campo pelo vidro do campo do CommandDialog." },
           { prop: "TopBarProgress", type: "{ value?, label? }", description: "O fio de carregamento na aresta de baixo; sem value, indeterminado." },
           { prop: "TopBarSkeleton", type: "{ size?, actions?, start? }", description: "A barra esperando, no SkeletonGroup." },

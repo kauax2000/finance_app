@@ -291,3 +291,23 @@ describe("a base da barra", () => {
     }
   })
 })
+
+describe("as ações numa cápsula", () => {
+  it("TopBarActionGroup é o ButtonGroup com um anel só e sem divisor", () => {
+    const peca = CODIGO.slice(CODIGO.indexOf("function TopBarActionGroup"), CODIGO.indexOf("const TOP_BAR_SEARCH_PLATE"))
+    expect(peca).toContain("<ButtonGroup")
+    expect(peca).toContain('data-slot="top-bar-action-group"')
+    // O anel é do grupo; o de cada botão desenhava uma linha na emenda.
+    expect(peca).toContain("md:rounded-full md:ring-1 md:ring-foreground/10 *:before:hidden *:ml-0! *:ring-0!")
+    // No telefone, círculos soltos.
+    expect(peca).toContain("max-md:gap-1 max-md:*:rounded-full!")
+  })
+
+  it("o cabeçalho do app escolhe a busca pela preferência do aparelho", () => {
+    const cabecalho = fonte("src/components/layout/app-header.tsx")
+    expect(cabecalho).toContain("useBuscaDoCabecalho()")
+    expect(cabecalho).toMatch(/busca === "botao" \? \(\s*<TopBarActionGroup>/)
+    expect(cabecalho).not.toContain("teste-ab")
+  })
+})
+

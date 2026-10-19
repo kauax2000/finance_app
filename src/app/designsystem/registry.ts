@@ -294,7 +294,7 @@ export const REGISTRY: RegistryEntry[] = [
          */
     entry("toolbar", "Toolbar", "Filtros e ações acima de uma lista — presa sob a barra do topo, com o botão de filtros, as fichas, a busca, o ⋯ e o teclado de toolbar.", ui("toolbar"), "Toolbar, ToolbarFilters, ToolbarActions, ToolbarRow, ToolbarButton, ToolbarFilterButton, ToolbarSearch, ToolbarCount, ToolbarChips, ToolbarFilterIndicator"),
     /** A barra do topo da janela: dispõe onde o voltar, o título e as ações vão. */
-    entry("top-bar", "Top Bar", "A barra do topo da janela — barra ou pílula, com a ação, a busca e o fio de progresso, e uma árvore para o telefone.", ui("top-bar"), "TopBar, TopBarStart, TopBarTitle, TopBarContent, TopBarActions, TopBarAction, TopBarSearch, TopBarProgress, TopBarSkeleton"),
+    entry("top-bar", "Top Bar", "A barra do topo da janela — barra ou pílula, com a ação, a busca e o fio de progresso, e uma árvore para o telefone.", ui("top-bar"), "TopBar, TopBarStart, TopBarTitle, TopBarContent, TopBarActions, TopBarAction, TopBarActionGroup, TopBarSearch, TopBarProgress, TopBarSkeleton"),
   ]),
 ]
 

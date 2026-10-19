@@ -79,7 +79,7 @@ type SearchInputProps = Omit<React.ComponentProps<"input">, "size"> & {
   rootProps?: Omit<React.ComponentProps<"div">, "className" | "children" | "ref">
 } & (
     | { surface?: "field"; variant?: "default" | "brand" }
-    | { surface: Extract<SearchFieldSurface, "plate">; variant?: "default" }
+    | { surface: Exclude<SearchFieldSurface, "field">; variant?: "default" }
   )
 
 function SearchInput({

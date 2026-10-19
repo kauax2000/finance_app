@@ -1099,6 +1099,11 @@ declaração de `background-color` no trilho).
     corpo, rodapé).
     Nascer do ponto do clique saiu (aberto pela barra lateral, surgia da
     esquerda de uma placa centralizada).
+    **A altura anda na mola**: quando o conteúdo muda (trocar Despesa,
+    Parcelada e Receita), a placa vai da altura antiga à nova em
+    `--duration-spring`/`--ease-spring`, centrada, recortando o que transborda
+    (`useAlturaAnimada`, `hooks/use-altura-animada.ts`; rodada 327). Só no
+    desktop; a gaveta é do `vaul`.
     `dialog-versions.test.ts`.
 - **`AlertDialog`** mora na camada da folha (`--z-sheet`, véu e placa), para a
   confirmação aberta de dentro de uma folha ficar por cima dela.
@@ -1197,9 +1202,12 @@ declaração de `background-color` no trilho).
   ([`lib/menu-classes`](src/lib/menu-classes.ts)).
   - A linha **acende esmaecendo** (`menuItemFadeClassName`); **o realce que
     viaja entre linhas e o disco do `button-fill` não voltam** —
-    `menu-fade.test.ts`. O realce é **tinta** (`bg-foreground/9`) nos menus,
-    `Command`, `Select`, `NavigationMenu`, folha de ações e seletor de mês;
-    `Item` e `Toggle` seguem `bg-muted` — `lib/row-tint.test.ts`.
+    `menu-fade.test.ts`. O realce é **o da barra lateral** nos menus,
+    `Command`, `Select`, `NavigationMenu`, folha de ações e seletor de mês:
+    `bg-sidebar-accent/50` na passagem (foco, cursor, a linha selecionada do
+    `Command`) e `bg-sidebar-accent` cheio ao pressionar e com o item aberto
+    (rodada 325; era a tinta `bg-foreground/9`). `Item` e `Toggle` seguem
+    `bg-muted` — `lib/row-tint.test.ts`.
   - A linha mede 36 e cresce a 44 no **apontador** grosso
     (`pointer-coarse:min-h-11`), e **duas linhas ficam a 4px** (`MENU_ROW_GAP`, no
     viewport do `DropdownMenu`: entre comandos, grupos e a linha `data-menu-row`). **Rádio é ponto, caixa é tique** — a exceção é
@@ -1207,8 +1215,8 @@ declaração de `background-color` no trilho).
     identidade da opção (o ladrilho da carteira): a escolhida ganha o halo da
     amostra (`Toggle swatch`: contorno de 2px, afastado 2px) na cor da própria
     opção puxada para a tinta (`color-mix` com `--foreground`: 11:1 no escuro,
-    5,6:1 no claro) e a linha um fundo leve (`bg-foreground/5`, abaixo dos 9% da
-    passagem); a outra em foco mostra a prévia do halo a 45%, e as demais
+    5,6:1 no claro) e a linha acende cheia (`bg-sidebar-accent`, como a página
+    ativa na barra); a outra em foco mostra a prévia do halo a 45%, e as demais
     esmaecem a tinta. Sem peso nem marcador no fim.
   - Teto vertical
     `max-h-[min(var(--radix-dropdown-menu-content-available-height),var(--menu-max-h))]`
@@ -1250,7 +1258,16 @@ declaração de `background-color` no trilho).
   o campo, o cursor). **O que é modal e centrado não brota**: a paleta do
   `CommandDialog`, o `Dialog` e o `AlertDialog` abrem na mola (`fade-in-0
   zoom-in-95`, `--duration-spring`) e fecham curto (`--duration-fast`,
-  `--ease-out`), a pedido do dono (rodadas 291 e 293). As utilities
+  `--ease-out`), a pedido do dono (rodadas 291 e 293). **Na paleta quem se
+  move são os vidros** (pílula, placa, cápsulas da legenda), nunca a coluna nem
+  a fileira da legenda: transform, opacidade ou `filter` animado num ancestral
+  (até o `blur(0)` do `tw-animate`, zerado com `--tw-enter-blur: none`)
+  desliga o `backdrop-filter` dos filhos até a animação acabar. A coluna só
+  segura o fechamento com `@keyframes presence-hold`, e a pílula entra pela
+  primeira animação da lista do feixe (`--command-beam-intro`), porque um
+  `animate-in` nela apagava o arco-íris (rodada 323). A pílula, a placa e as
+  cápsulas da paleta vestem o fundo do `Dialog` (`modalSurfaceClassName`); a
+  paleta solta segue a tinta dos menus (rodada 324). As utilities
   (`menu-sprout`, `context-menu-burst`, `field-bloom`, `popover-sprout`,
   `hover-card-unveil`, `date-picker-bloom`) ficam pelas faixas de dentro de cada
   peça; o raio de chegada é `--morph-radius`. Os keyframes animam `transform`
@@ -1276,7 +1293,8 @@ declaração de `background-color` no trilho).
   `variant="input"` + `ComboboxTextField`. `combobox-versions.test.ts`.
 - **A busca é uma pílula só** ([`lib/search-field-classes`](src/lib/search-field-classes.ts)):
   o `SearchInput`, o `CommandInput` (que monta o `SearchInput`) e o gatilho do
-  cabeçalho do catálogo. Superfícies `field` | `plate`; `shortcut` (sem
+  cabeçalho do catálogo. Superfícies `field` | `plate` | `modal` (a do
+  `CommandDialog`); `shortcut` (sem
   modificadora, não dispara em campo de texto), `variant="brand"`, `pending`,
   `caret` (o cursor desenhado `type-caret` no lugar do nativo, aceso sem foco:
   o reflexo invisível do `value` e o traço numa célula de grade sobre o campo,
@@ -1472,7 +1490,12 @@ declaração de `background-color` no trilho).
   não pode ter `backdrop-filter` nem fundo translúcido (viraria a raiz do
   borrão das camadas). **`TopBarAction`** (`plate`: o vidro da busca do cabeçalho — a tinta
   flutuante e o anel, como o botão de recolher —, com o realce em
-  `--sidebar-accent`, sem sombra, do `md` para cima; o sino do app a veste) — **nenhuma tela escreve
+  `--sidebar-accent`, sem sombra, do `md` para cima; o sino do app a veste);
+  **`TopBarActionGroup`** (ações `plate` numa cápsula: o `ButtonGroup` sem
+  divisor, com o anel no grupo; no telefone, círculos soltos) — a busca compacta
+  do app, quando a pessoa escolhe "Botão" em Configurações › Aparência
+  (`useBuscaDoCabecalho`, neste aparelho, como o tema; "Barra", a pílula do
+  centro, é o padrão) — **nenhuma tela escreve
   o `span` da contagem nem embrulha um botão da barra num `Tooltip` à mão**;
   `TopBarSearch` (⌘K e `/`; no app, com `glow`, `plate` — o vidro do campo do `CommandDialog`, a superfície `plate` da busca — e `collapse="lg"`, centrada numa coluna `max-w-xs` (320 até 1279px; `xl:max-w-sm`, 384 a partir de 1280) entre pontas de peso igual), `TopBarProgress`, `TopBarSkeleton`. **Uma árvore
   só**: as pontas aceitam `phone` — **nenhuma barra escreve duas árvores com

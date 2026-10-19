@@ -100,7 +100,7 @@ describe("o rádio que marca a escolha atual", () => {
     expect(fonte).toContain("data-[state=unchecked]:not-focus:text-muted-foreground")
     // A escolhida tem fundo leve (5% da tinta), abaixo do realce de passagem (9%): os dois
     // estados se distinguem. Não é o `bg-muted`, que pesava como o realce.
-    expect(fonte).toContain("data-[state=checked]:not-focus:bg-foreground/5")
+    expect(fonte).toContain("data-[state=checked]:bg-sidebar-accent data-[state=checked]:text-sidebar-accent-foreground")
     // Entre duas linhas, 4px em todo menu (MENU_ROW_GAP), e não mais só nas de mídia.
     expect(fonte).toContain("MENU_ROW_GAP")
     expect(fonte).not.toContain("data-[state=checked]:bg-muted")

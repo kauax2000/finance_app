@@ -30,11 +30,13 @@ describe("a pilha: pílula, placa e legenda", () => {
     const campo = paleta.slice(paleta.indexOf("function CommandInput"), paleta.indexOf("function CommandScope"))
     // A pílula é o `SearchInput`, na superfície `plate` dentro da pilha; a receita é que é
     // pílula e vidro.
-    expect(campo).toMatch(/<SearchInput\s+surface=\{surface \?\? \(naPilha \? "plate" : "field"\)\}/)
+    expect(campo).toMatch(/<SearchInput\s+surface=\{surface \?\? \(naPilha \? \(noDialogo \? "modal" : "plate"\) : "field"\)\}/)
     expect(lerFonte("src/components/ui/search-input.tsx")).toContain("searchFieldSurfaceClassName[surface]")
     const receita = lerFonte("src/lib/search-field-classes.ts")
     expect(receita).toMatch(/searchFieldShapeClassName = "[^"]*rounded-full/)
     expect(receita).toMatch(/plate: `[^`]*\$\{menuPanelTintClassName\}`/)
+    // No `CommandDialog` a pílula veste o fundo do `Dialog` (rodada 324).
+    expect(receita).toMatch(/modal: `[^`]*\$\{modalSurfaceClassName\}`/)
     // O popover do Combobox pinta a placa da régua, e o `Command` de dentro não.
     const popover = lerFonte("src/components/ui/popover.tsx")
     expect(popover).toMatch(/plate: menuPanelSurfaceClassName/)

@@ -42,12 +42,6 @@ type WorkspacePickerMenuBodyProps = {
  * `<button>` crus com o realce escrito à mão, porque o miolo também servia uma
  * gaveta fora do menu do Radix — essa gaveta não existe mais.
  */
-const CARTEIRA_TONS = [
-    "focus:bg-sidebar-accent/50 focus:text-sidebar-accent-foreground",
-    "data-[state=checked]:not-focus:bg-sidebar-accent data-[state=checked]:focus:bg-sidebar-accent",
-    "data-[state=checked]:text-sidebar-accent-foreground",
-].join(" ")
-
 export function WorkspacePickerMenuBody({ callbacks }: WorkspacePickerMenuBodyProps) {
     const {
         currentWorkspaceId,
@@ -89,7 +83,6 @@ export function WorkspacePickerMenuBody({ callbacks }: WorkspacePickerMenuBodyPr
                     // de uma linha dela (`--sidebar-accent` a 50%), e a carteira atual é a
                     // pílula do ativo (`--sidebar-accent` cheio) — mais forte que a passagem,
                     // inclusive com o foco nela.
-                    className={CARTEIRA_TONS}
                 >
                     <WorkspaceBrandMark
                         iconKey={workspace.icon}

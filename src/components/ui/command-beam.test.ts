@@ -8,7 +8,7 @@ describe("o feixe da pílula de busca espera a primeira tecla", () => {
 
   it("a utility mora depois de no-scrollbar, pausa sem data-waiting e pinta a marca", () => {
     const bloco = esperarDepoisDeNoScrollbar(css, "@utility command-beam {")
-    expect(bloco).toContain("animation-play-state: paused")
+    expect(bloco).toContain("animation-play-state: running, paused, paused, paused")
     expect(bloco).toMatch(/&\[data-waiting\] \{[^}]*running/)
     expect(bloco).toMatch(/var\(--brand-teal\)[\s\S]*var\(--brand-green\)/)
     // A cor fica parada e a janela anda; e uma máscara só por pseudo.
