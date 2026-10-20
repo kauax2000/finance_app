@@ -13,11 +13,11 @@ import {
     TopBar,
     TopBarAction,
     TopBarActionGroup,
+    TopBarActionSwap,
     TopBarActions,
     TopBarContent,
     TopBarSearch,
     TopBarStart,
-    topBarPlateClassName,
 } from "@/components/ui/top-bar"
 import { resolveAppSubPageMeta } from "@/components/layout/breadcrumb"
 import { WorkspaceSwitcher } from "@/components/layout/workspace-switcher"
@@ -91,6 +91,10 @@ type AppHeaderProps = {
  * publica (`usePageChromeFilter`), e ele cola na lupa, numa cápsula. O mês
  * das telas que o têm mora no topo do conteúdo. No desktop, só o gatilho da
  * barra lateral.
+ *
+ * Trocar de tela no telefone é líquido: o sino e o voltar dividem um vidro só
+ * (`TopBarActionSwap`), que afunda e volta enquanto o ícone troca, e o filtro
+ * pinga da lupa e volta a ela (`TopBarActionGroup morph`). Montar não anima.
  */
 export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     const chromeSlot = usePageChromeState()
@@ -108,7 +112,8 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     // A lupa do telefone é a origem da busca: a pílula nasce dela e volta a ela.
     const lupaRef = React.useRef<HTMLButtonElement>(null)
     // O filtro colado à lupa é a origem do ×: a cápsula se divide em duas
-    // bolhas. Nas telas sem filtro o React zera o ref, e a lupa se divide.
+    // bolhas. Fica no botão, dentro da gota da cápsula. Nas telas sem filtro o
+    // React zera o ref quando a gota volta à lupa, e a lupa se divide.
     const filtroRef = React.useRef<HTMLButtonElement>(null)
 
     const pageTitle =
@@ -179,19 +184,19 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
             <TopBarStart
                 className="lg:flex-1 lg:basis-0"
                 phone={
-                    mobileBackHref ? (
-                        // O voltar pelo histórico (rodada 232) fica desligado aqui:
-                        // ligá-lo muda o destino do voltar do telefone, e isso é
-                        // mudança de jornada (docs/JORNADAS.md e o Atlas).
-                        <PageHeaderBack
-                            href={mobileBackHref}
-                            history={false}
-                            // O mesmo círculo de vidro da lupa e do sino.
-                            className={cn("ms-0", topBarPlateClassName)}
-                        />
-                    ) : (
-                        <NotificationBellButton />
-                    )
+                    // Um vidro só para o sino e o voltar: trocar de um para o
+                    // outro afunda o círculo e troca o ícone dentro dele. O vidro
+                    // é do swap, e nenhum dos dois desenha o próprio.
+                    <TopBarActionSwap swapKey={mobileBackHref ? "voltar" : "sino"}>
+                        {mobileBackHref ? (
+                            // O voltar pelo histórico (rodada 232) fica desligado aqui:
+                            // ligá-lo muda o destino do voltar do telefone, e isso é
+                            // mudança de jornada (docs/JORNADAS.md e o Atlas).
+                            <PageHeaderBack href={mobileBackHref} history={false} className="ms-0" />
+                        ) : (
+                            <NotificationBellButton />
+                        )}
+                    </TopBarActionSwap>
                 }
             >
                 <SidebarTrigger size="icon-lg" className="-ml-2 w-9" />
@@ -252,15 +257,14 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                 className="lg:flex-1 lg:basis-0 lg:justify-end"
                 phone={
                     // No telefone, a lupa à direita; com o filtro da tela, os
-                    // dois colam numa cápsula, a lupa primeiro.
-                    filtroNoCabecalho ? (
-                        <TopBarActionGroup>
-                            {lupa(true)}
-                            {filtroNoCabecalho}
-                        </TopBarActionGroup>
-                    ) : (
-                        lupa(true)
-                    )
+                    // dois colam numa cápsula, a lupa primeiro. O grupo é o
+                    // mesmo com ou sem filtro: ele pinga da lupa ao chegar e
+                    // volta a ela ao sair, e a identidade (`month`, `filter`)
+                    // troca o ícone no lugar.
+                    <TopBarActionGroup morph trailingKey={filtro?.icon ?? undefined}>
+                        {lupa(true)}
+                        {filtroNoCabecalho}
+                    </TopBarActionGroup>
                 }
             >
                 {/* Do `md` para cima, o sino; com a busca em "Botão", a lupa

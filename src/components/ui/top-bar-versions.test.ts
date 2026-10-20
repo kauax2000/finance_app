@@ -322,7 +322,8 @@ describe("as ações numa cápsula", () => {
   it("no telefone o sino fica à esquerda (o voltar o substitui) e a lupa cola no filtro da tela, à direita", () => {
     const cabecalho = fonte("src/components/layout/app-header.tsx")
     expect(cabecalho).toMatch(/<PageHeaderBack[\s\S]*?\) : \(\s*<NotificationBellButton \/>/)
-    expect(cabecalho).toMatch(/filtroNoCabecalho \? \(\s*<TopBarActionGroup>\s*\{lupa\(true\)\}\s*\{filtroNoCabecalho\}/)
+    // A cápsula é a mesma com ou sem filtro: ele pinga da lupa (`morph`).
+    expect(cabecalho).toMatch(/<TopBarActionGroup\s+morph[^>]*>\s*\{lupa\(true\)\}\s*\{filtroNoCabecalho\}/)
     // Uma sondagem só, embora o sino desenhe nas duas pontas.
     expect(cabecalho).toContain("useUnreadBellCount()")
     expect(cabecalho).not.toContain("<NotificationBellLink")
