@@ -11,6 +11,7 @@ import { Kbd } from "@/components/ui/kbd"
 import { Button } from "@/components/ui/button"
 import { MOLA, SAIDA, SEPARACAO } from "@/lib/spring"
 import { ACOPLAMENTO_Y } from "@/lib/liquid-move"
+import { suave } from "@/lib/header-morph"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { ehCursor } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
@@ -206,10 +207,6 @@ const TINTA = [0.85, 1] as const
 const TINTA_DO_VOO = 8
 /** O × puxado para a pílula enquanto a emenda afina (fração da largura): 2,2px a 44. 0 desliga. */
 const PUXAO_DO_X = 0.05
-const suave = (x: number, [de, ate]: readonly [number, number]) => {
-  const t = Math.min(Math.max((x - de) / (ate - de), 0), 1)
-  return t * t * (3 - 2 * t)
-}
 
 /**
  * Um quadro das duas bolhas, no progresso `p` (0 é a cápsula do header, 1 a
