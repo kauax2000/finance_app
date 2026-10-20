@@ -1,0 +1,155 @@
+<h2>Abrir e fechar: Dialog e busca (desktop)</h2>
+<p class="subtitle">Tema escuro do app. "Abrir" e "Fechar" em cada quadro; "Câmera lenta" e "Repetir" valem para todos. A abertura anda na mola de cada versão; o fechamento é o mesmo filme ao contrário, mais curto.</p>
+
+<style>
+  .bar { display:flex; gap:8px; flex-wrap:wrap; margin: 8px 0 16px; }
+  .bar button, .ctl button { font: inherit; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border, #d0d0d5); background: var(--bg-secondary); color: inherit; cursor: pointer; }
+  .bar button[aria-pressed="true"] { background:#fff; color:#111; }
+  h3.sec { margin: 24px 0 8px; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 16px; }
+  .cell { padding: 12px; display:flex; flex-direction:column; align-items:stretch; gap:8px; }
+  .tag { font-size: 12px; color: var(--text-secondary, #8e8e93); }
+  .ctl { display:flex; gap:8px; flex-wrap:wrap; }
+  .stage { position:relative; width:100%; align-self:stretch; height: 300px; border-radius: 18px; overflow:hidden; background:#0b0b0c; }
+  .stage .app { position:absolute; inset:0; padding:16px; display:grid; grid-template-columns: 1fr 1fr; gap:10px; align-content:start; }
+  .stage .app i { display:block; height:64px; border-radius:16px; background:#161618; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+  .veu { position:absolute; inset:0; background: rgba(0,0,0,.45); opacity:0; }
+  /* Dialog */
+  .card { position:absolute; left:50%; top:50%; width: 280px; margin-left:-140px; margin-top:-92px; height: 184px; border-radius: 28px; background:#1d1d1f; box-shadow: 0 0 0 1px rgba(255,255,255,.1), 0 20px 40px -12px rgba(0,0,0,.6); padding: 20px; box-sizing:border-box; display:flex; flex-direction:column; gap:10px; opacity:0; color:#f5f5f7; transform-origin: 50% 50%; }
+  .card .t { font-weight:600; font-size:16px; }
+  .card .p { font-size:13px; color:#a1a1a6; line-height:1.35; }
+  .card .acoes { margin-top:auto; display:flex; gap:8px; justify-content:flex-end; }
+  .card .acoes b { font-weight:500; font-size:13px; padding:8px 14px; border-radius:999px; }
+  .card .acoes b:first-child { color:#f5f5f7; }
+  .card .acoes b:last-child { background:#f5f5f7; color:#111; }
+  /* Busca */
+  .pilula { position:absolute; left:50%; top:28px; width: 340px; margin-left:-170px; height:44px; border-radius:999px; background:#1d1d1f; box-shadow: 0 0 0 1px rgba(255,255,255,.1); display:flex; align-items:center; gap:10px; padding: 0 14px; box-sizing:border-box; color:#8e8e93; font-size:14px; opacity:0; overflow:hidden; white-space:nowrap; transform-origin: 50% 50%; }
+  .pilula svg { flex:none; }
+  .placa { position:absolute; left:50%; top:84px; width:340px; margin-left:-170px; height:150px; border-radius:22px; background:#1d1d1f; box-shadow: 0 0 0 1px rgba(255,255,255,.1); padding:8px; box-sizing:border-box; display:flex; flex-direction:column; gap:4px; opacity:0; transform-origin: 50% 0; }
+  .placa i { display:block; height:30px; border-radius:12px; background:#2a2a2d; }
+  .dock { position:absolute; left:50%; top:246px; transform: translateX(-50%); display:flex; gap:8px; }
+  .dock b { display:block; height:28px; width:70px; border-radius:999px; background:#1d1d1f; box-shadow: 0 0 0 1px rgba(255,255,255,.1); opacity:0; }
+</style>
+
+<div class="bar">
+  <button type="button" id="lento" aria-pressed="false" onclick="toggleLento()">Câmera lenta (4×)</button>
+  <button type="button" onclick="todos(1)">Abrir todos</button>
+  <button type="button" onclick="todos(0)">Fechar todos</button>
+  <button type="button" id="rep" aria-pressed="false" onclick="toggleRep()">Repetir sozinho</button>
+</div>
+
+<h3 class="sec">Dialog</h3>
+<div class="grid options" id="dialogs"></div>
+<h3 class="sec">Busca (CommandDialog no desktop)</h3>
+<div class="grid options" id="buscas"></div>
+
+<script>
+(() => {
+  let lento = 1, rep = null
+  window.toggleLento = () => { lento = lento === 1 ? 0.25 : 1; document.getElementById('lento').setAttribute('aria-pressed', lento !== 1) }
+  const suave = (x, a, b) => { const t = Math.min(Math.max((x - a) / (b - a), 0), 1); return t * t * (3 - 2 * t) }
+  const lerp = (a, b, t) => a + (b - a) * t
+  const clamp01 = (x) => Math.min(Math.max(x, 0), 1)
+  const MOLA = { k: 300, c: 25 }, BALANCO = { k: 300, c: 19 }, LENTA = { k: 180, c: 22 }
+  const lupa = '<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="6.5" cy="6.5" r="4.8" stroke="#f5f5f7" stroke-width="1.6" fill="none"/><line x1="10" y1="10" x2="14" y2="14" stroke="#f5f5f7" stroke-width="1.6" stroke-linecap="round"/></svg>'
+  const cascata = (els, p, de, passo) => els.forEach((el, i) => {
+    const o = suave(p, de + passo * i, de + passo * i + 0.4)
+    el.style.opacity = o; el.style.filter = `blur(${(1 - o) * 6}px)`
+  })
+  const sem = (els) => els.forEach((el) => { el.style.opacity = 1; el.style.filter = '' })
+
+  const DIALOGS = [
+    { id: 'd-hoje', nome: 'Hoje', desc: 'Esmaece e cresce de 95% a 100% na mola, subindo 4px; o conteúdo chega do desfoque, peça a peça.', mola: MOLA,
+      f(p, e) { e.card.style.opacity = clamp01(p * 1.6); e.card.style.transform = `translateY(${-4 * (1 - p)}px) scale(${0.95 + 0.05 * p})`; cascata(e.pecas, p, 0.15, 0.08) } },
+    { id: 'd-a', nome: 'A · Alerta do iOS', desc: 'Como o alerta do iPhone: chega maior (112%) e assenta encolhendo, já inteiro, com um leve passe da mola; o véu escurece junto.', mola: MOLA,
+      f(p, e) { e.card.style.opacity = clamp01(p * 2.2); e.card.style.transform = `scale(${lerp(1.12, 1, p)})`; sem(e.pecas) } },
+    { id: 'd-b', nome: 'B · Brota como os menus', desc: 'O gesto dos menus do app (menu-morph): nasce pequeno, cresce primeiro na altura, passa do tamanho e volta; o conteúdo acende quando a forma chega.', mola: LENTA,
+      f(p, e) {
+        const sy = lerp(0.2, 1, suave(p, 0, 0.55)) + (p > 1 ? (p - 1) * 0.6 : 0)
+        const sx = lerp(0.2, 1, suave(p, 0.12, 0.8)) + (p > 1 ? (p - 1) * 0.4 : 0)
+        e.card.style.opacity = clamp01(p * 3); e.card.style.transform = `scale(${sx}, ${sy})`; e.card.style.borderRadius = `${lerp(90, 28, suave(p, 0.1, 0.8))}px`
+        cascata(e.pecas, p, 0.5, 0.07)
+      } },
+    { id: 'd-c', nome: 'C · Geleia', desc: 'Cresce de 88% com o balanço da cápsula do cabeçalho: passa do tamanho, achata um pouco e assenta; o conteúdo vem do desfoque.', mola: BALANCO,
+      f(p, e) { const v = Math.sin(Math.PI * clamp01(p)); e.card.style.opacity = clamp01(p * 2); e.card.style.transform = `scale(${lerp(0.88, 1, p) * (1 + 0.025 * v)}, ${lerp(0.88, 1, p) * (1 - 0.03 * v)})`; cascata(e.pecas, p, 0.15, 0.08) } },
+    { id: 'd-d', nome: 'D · Sobe do desfoque', desc: 'Como uma folha do iOS que chega ao centro: sobe 28px saindo do desfoque, com o balanço da mola no fim.', mola: BALANCO,
+      f(p, e) { e.card.style.opacity = clamp01(p * 1.8); e.card.style.transform = `translateY(${28 * (1 - p)}px) scale(${lerp(0.97, 1, p)})`; e.card.style.filter = `blur(${10 * (1 - clamp01(p))}px)`; cascata(e.pecas, p, 0.2, 0.07) } },
+  ]
+
+  const BUSCAS = [
+    { id: 'b-hoje', nome: 'Hoje', desc: 'A pílula, a placa e as legendas esmaecem e crescem de 95% a 100% juntas, na mola.', mola: MOLA,
+      f(p, e) {
+        for (const el of [e.pilula, e.placa]) { el.style.opacity = clamp01(p * 1.6); el.style.transform = `translateY(${-4 * (1 - p)}px) scale(${0.95 + 0.05 * p})` }
+        e.dock.forEach((d) => { d.style.opacity = clamp01(p * 1.6); d.style.transform = `scale(${0.95 + 0.05 * p})` })
+        e.texto.style.opacity = 1
+      } },
+    { id: 'b-a', nome: 'A · A lupa estica', desc: 'Como a cápsula do cabeçalho: a pílula nasce como o círculo da lupa e estica até a largura toda, com balanço; a placa brota dela para baixo; as legendas chegam por último.', mola: BALANCO,
+      f(p, e) {
+        const w = lerp(44, 340, p)
+        e.pilula.style.opacity = clamp01(p * 4); e.pilula.style.width = `${Math.max(44, w)}px`; e.pilula.style.marginLeft = `${-Math.max(44, w) / 2}px`; e.pilula.style.paddingLeft = `${lerp(14, 14, p)}px`
+        e.texto.style.opacity = suave(p, 0.45, 0.8)
+        const q = suave(p, 0.3, 1) + (p > 1 ? (p - 1) * 0.8 : 0)
+        e.placa.style.opacity = clamp01(q * 3); e.placa.style.transform = `scale(${lerp(0.4, 1, Math.min(q, 1.05))}, ${lerp(0.05, 1, q)})`
+        e.dock.forEach((d, i) => { const o = suave(p, 0.55 + 0.08 * i, 0.9 + 0.08 * i); d.style.opacity = o; d.style.transform = `scale(${0.6 + 0.4 * o})` })
+      } },
+    { id: 'b-b', nome: 'B · A placa pinga da pílula', desc: 'A pílula surge no lugar com um leve balanço; a placa sai dela como uma gota que se alarga para baixo; as legendas brotam uma a uma.', mola: BALANCO,
+      f(p, e) {
+        e.pilula.style.opacity = clamp01(p * 3); e.pilula.style.transform = `scale(${lerp(0.9, 1, p)})`; e.texto.style.opacity = 1
+        const q = suave(p, 0.2, 0.95) + (p > 1 ? (p - 1) : 0)
+        e.placa.style.opacity = clamp01(q * 4)
+        e.placa.style.transform = `scale(${lerp(0.15, 1, suave(q, 0.15, 1))}, ${lerp(0.15, 1, q)})`
+        e.placa.style.borderRadius = `${lerp(60, 22, suave(q, 0.2, 0.9))}px`
+        e.dock.forEach((d, i) => { const o = suave(p, 0.5 + 0.1 * i, 0.85 + 0.1 * i); d.style.opacity = o; d.style.transform = `scale(${0.5 + 0.5 * o})` })
+      } },
+    { id: 'b-c', nome: 'C · Spotlight', desc: 'Como o Spotlight do iPad e do Mac: tudo desce 16px saindo do desfoque, a placa um passo atrás da pílula, com o balanço da mola.', mola: BALANCO,
+      f(p, e) {
+        const par = (el, atraso) => { const q = clamp01((p - atraso) / (1 - atraso)) + (p > 1 ? p - 1 : 0); el.style.opacity = clamp01(q * 1.8); el.style.transform = `translateY(${-16 * (1 - q)}px)`; el.style.filter = `blur(${8 * (1 - clamp01(q))}px)` }
+        par(e.pilula, 0); par(e.placa, 0.12); e.dock.forEach((d, i) => par(d, 0.24 + 0.05 * i)); e.texto.style.opacity = 1
+      } },
+  ]
+
+  const montar = (host, lista, tipo) => lista.map((v) => {
+    const el = document.createElement('div')
+    el.className = 'cell option'; el.dataset.choice = v.id
+    el.innerHTML = `<div><strong>${v.nome}</strong><div class="tag">${v.desc}</div></div>
+      <div class="stage"><div class="app">${'<i></i>'.repeat(6)}</div><div class="veu"></div>
+      ${tipo === 'dialog'
+        ? `<div class="card"><div class="t">Excluir lançamento?</div><div class="p">Mercado · R$ 182,40 em 14 de outubro. Isso não pode ser desfeito.</div><div class="acoes"><b>Cancelar</b><b>Excluir</b></div></div>`
+        : `<div class="pilula">${lupa}<span class="texto">Buscar telas, transações…</span></div><div class="placa">${'<i></i>'.repeat(4)}</div><div class="dock"><b></b><b></b><b></b></div>`}
+      </div>
+      <div class="ctl"><button type="button" data-a="1">Abrir</button><button type="button" data-a="0">Fechar</button><button type="button" onclick="toggleSelect(this.closest('.option'))">Gostei deste</button></div>`
+    host.appendChild(el)
+    const $ = (s) => el.querySelector(s)
+    const e = tipo === 'dialog'
+      ? { card: $('.card'), pecas: [$('.t'), $('.p'), $('.acoes')] }
+      : { pilula: $('.pilula'), texto: $('.texto'), placa: $('.placa'), dock: [...el.querySelectorAll('.dock b')] }
+    const veu = $('.veu')
+    const st = { p: 0, v: 0, alvo: 0, raf: 0, last: 0, t: 0, de: 0 }
+    const desenhar = () => { veu.style.opacity = clamp01(st.p); v.f(st.p, e) }
+    const passo = (agora) => {
+      const dt = Math.min(0.032, (agora - st.last) / 1000) * lento
+      st.last = agora
+      if (st.alvo === 1) {
+        for (let i = 0; i < 8; i++) { const h = dt / 8; const a = -v.mola.k * (st.p - 1) - v.mola.c * st.v; st.v += a * h; st.p += st.v * h }
+        if (Math.abs(st.p - 1) < 0.0005 && Math.abs(st.v) < 0.01) { st.p = 1; st.v = 0; desenhar(); return }
+      } else {
+        st.t += dt / 0.24
+        st.p = st.de * (1 - (1 - Math.pow(1 - Math.min(st.t, 1), 3)))
+        if (st.t >= 1) { st.p = 0; desenhar(); return }
+      }
+      desenhar(); st.raf = requestAnimationFrame(passo)
+    }
+    const ir = (alvo) => { cancelAnimationFrame(st.raf); st.alvo = alvo; st.de = st.p; st.t = 0; if (alvo === 0) st.v = 0; st.last = performance.now(); st.raf = requestAnimationFrame(passo) }
+    el.querySelectorAll('[data-a]').forEach((b) => b.addEventListener('click', () => ir(+b.dataset.a)))
+    desenhar()
+    return ir
+  })
+  const todosIr = [...montar(document.getElementById('dialogs'), DIALOGS, 'dialog'), ...montar(document.getElementById('buscas'), BUSCAS, 'busca')]
+  window.todos = (a) => todosIr.forEach((ir) => ir(a))
+  window.toggleRep = () => {
+    const b = document.getElementById('rep')
+    if (rep) { clearInterval(rep); rep = null; b.setAttribute('aria-pressed', 'false'); return }
+    let a = 1; todos(a); rep = setInterval(() => { a = 1 - a; todos(a) }, 1800 / lento); b.setAttribute('aria-pressed', 'true')
+  }
+})()
+</script>
