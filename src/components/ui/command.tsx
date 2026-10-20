@@ -318,8 +318,8 @@ function quadroDaGota(m: { lupa: Caixa; pilula: Caixa; x: Caixa; dpr: number }, 
  * desmontagem até os 460 (a espera da pintura, os 320 e o pouso). Na curva
  * enfática (`--ease-emphasized`) a cauda passava ~100ms abaixo de p 0,02 sem
  * pintar diferença, e a desmontagem vinha como um salto; esta começa macia (o
- * vão fecha aos 53ms), a cintura se refaz até os 174ms e a cauda cai a 73ms
- * (a mesma curva dos 260ms esticada por 320/260).
+ * vão fecha aos 53ms), a cintura se refaz até os 172ms e a cauda cai a 73ms
+ * (a curva re-amostrada a 320ms).
  */
 const VOLTA_DA_PILULA = { duration: 0.32, ease: [0.2, 0, 0, 1] } as const
 
