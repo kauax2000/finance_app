@@ -21,14 +21,14 @@ import {
 } from "@/components/ui/top-bar"
 import { resolveAppSubPageMeta } from "@/components/layout/breadcrumb"
 import { WorkspaceSwitcher } from "@/components/layout/workspace-switcher"
-import { usePageChromeFilterState, usePageChromeState } from "@/components/layout/page-chrome-provider"
+import { filtroDoCabecalho, usePageChromeFilterFor, usePageChromeState } from "@/components/layout/page-chrome-provider"
 import { useBuscaDoCabecalho } from "@/hooks/use-busca-do-cabecalho"
 import {
     APP_PAGE_TITLES,
     DASHBOARD_PAGE_TITLES,
     ROUTES,
 } from "@/config/navigation"
-import { voceBackHref } from "@/config/mobile-navigation"
+import { mobileHeaderFilterFor, voceBackHref } from "@/config/mobile-navigation"
 
 function defaultMobileTitle(
     pathname: string,
@@ -94,7 +94,7 @@ type AppHeaderProps = {
  */
 export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     const chromeSlot = usePageChromeState()
-    const filtro = usePageChromeFilterState()
+    const filtro = filtroDoCabecalho(mobileHeaderFilterFor(pathname), usePageChromeFilterFor(pathname))
     // Uma sondagem só: o sino aparece no telefone (esquerda) e no desktop (direita).
     useUnreadBellCount()
     // A busca tem um gatilho (lupa no telefone, pílula no desktop) e uma

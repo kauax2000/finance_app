@@ -288,3 +288,26 @@ export function voceBackHref(pathname: string): string | undefined {
     )
     return listada ? ROUTES.ME : undefined
 }
+
+/** O botão do filtro à direita do cabeçalho: o ajuste da folha ou o calendário do mês. */
+export type MobileHeaderFilterIcon = "month" | "filter"
+
+/**
+ * Qual filtro o cabeçalho do telefone desenha em cada rota. A tela só publica o
+ * dela (`usePageChromeFilter`) depois de montar, e atrás do `AdiarMontagem` isso
+ * chega até ~700ms depois do clique: se o cabeçalho esperasse a publicação, a
+ * cápsula da lupa mudaria de forma tarde, em cima de uma tela já trocada. A rota
+ * declara o que a tela vai publicar, e o cabeçalho já nasce na forma final.
+ * `mobile-navigation.test.ts` cobra a tabela contra as telas.
+ */
+export function mobileHeaderFilterFor(pathname: string): MobileHeaderFilterIcon | null {
+    if (pathname === ROUTES.DASHBOARD || pathname === ROUTES.DASHBOARD_CATEGORIES) return "month"
+    if (
+        pathname.startsWith(`${ROUTES.DASHBOARD_CATEGORIES}/`) &&
+        pathname !== `${ROUTES.DASHBOARD_CATEGORIES}/new`
+    ) {
+        return "month"
+    }
+    if (pathname === ROUTES.TRANSACTIONS || pathname === ROUTES.BILLS) return "filter"
+    return null
+}

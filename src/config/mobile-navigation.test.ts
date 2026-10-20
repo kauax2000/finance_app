@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { ROUTES } from "@/config/navigation"
-import { getVoceGroups, isVoceTabActive, voceBackHref } from "@/config/mobile-navigation"
+import { getVoceGroups, isVoceTabActive, mobileHeaderFilterFor, voceBackHref } from "@/config/mobile-navigation"
+import { arquivosTsx, lerFonte } from "@/test/fonte"
 
 const hrefs = (g: ReturnType<typeof getVoceGroups>[number]) => g.items.map((i) => i.href)
 
@@ -38,5 +39,43 @@ describe("a página Você", () => {
         expect(voceBackHref(`${ROUTES.SETTINGS}/aparencia`)).toBeUndefined()
         expect(voceBackHref(ROUTES.ACCOUNT_SESSIONS)).toBeUndefined()
         expect(voceBackHref(ROUTES.DASHBOARD_CATEGORIES)).toBeUndefined()
+    })
+})
+
+describe("o filtro do cabeçalho pela rota", () => {
+    it("diz o ícone de cada tela, ou nenhum", () => {
+        expect(mobileHeaderFilterFor(ROUTES.DASHBOARD)).toBe("month")
+        expect(mobileHeaderFilterFor(ROUTES.DASHBOARD_CATEGORIES)).toBe("month")
+        expect(mobileHeaderFilterFor(`${ROUTES.DASHBOARD_CATEGORIES}/abc`)).toBe("month")
+        expect(mobileHeaderFilterFor(`${ROUTES.DASHBOARD_CATEGORIES}/new`)).toBeNull()
+        expect(mobileHeaderFilterFor(ROUTES.TRANSACTIONS)).toBe("filter")
+        expect(mobileHeaderFilterFor(ROUTES.BILLS)).toBe("filter")
+        expect(mobileHeaderFilterFor(ROUTES.ACCOUNT)).toBeNull()
+    })
+
+    it("a tabela concorda com as telas que publicam filtro", () => {
+        const raiz = "src/app/(app)"
+        const telas = arquivosTsx(raiz).filter((f) => f.endsWith("/page-client.tsx"))
+        const achados: [string, "month" | "filter"][] = []
+        for (const arquivo of telas) {
+            const fonte = lerFonte(arquivo)
+            const mes = fonte.includes("useMonthInHeader(")
+            const lista =
+                fonte.includes("<BillsToolbar") ||
+                (fonte.includes("<TransactionsToolbar") && !fonte.includes("headerFilter={false}"))
+            // Dois filtros numa tela só: o cabeçalho tem um botão.
+            expect(mes && lista, `${arquivo} publica mês e lista`).toBe(false)
+            if (!mes && !lista) continue
+            const rota = arquivo
+                .slice(arquivo.indexOf(raiz) + raiz.length)
+                .replace("/page-client.tsx", "")
+                .replace(/\/\([^/]+\)/g, "")
+                .replace(/\[[^\]]+\]/g, "abc")
+            achados.push([rota, mes ? "month" : "filter"])
+        }
+        expect(achados.length).toBeGreaterThanOrEqual(5)
+        for (const [rota, icone] of achados) {
+            expect(mobileHeaderFilterFor(rota), rota).toBe(icone)
+        }
     })
 })
