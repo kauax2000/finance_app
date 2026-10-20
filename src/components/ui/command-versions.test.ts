@@ -119,10 +119,10 @@ describe("as versões do Command", () => {
     expect(CODIGO.match(/= quandoPintar\(/g)).toHaveLength(2)
     expect(CODIGO).toMatch(/return \(\) => \{\s*ativa = false\s*cancelar\(\)\s*controle\?\.stop\(\)/)
     // A volta também espera a pintura (o teclado descendo para o WebKit), de
-    // onde o gesto estava, e a casca segura 400ms para caber.
+    // onde o gesto estava, e a casca segura 460ms para caber.
     expect(CODIGO).toMatch(/const de = progresso\.current\s*quadro\(de\)\s*cancelar = quandoPintar\(\(\) => \{\s*controle = animate\(de, 0, \{ \.\.\.VOLTA_DA_PILULA, onUpdate: quadro \}\)/)
-    expect(CODIGO).toContain("const VOLTA_DA_PILULA = { duration: 0.26, ease: [0.2, 0, 0, 1] } as const")
-    expect(CODIGO).toContain("data-closed:[animation:presence-hold_calc(var(--duration-slow)+var(--duration-instant))]")
+    expect(CODIGO).toContain("const VOLTA_DA_PILULA = { duration: 0.32, ease: [0.2, 0, 0, 1] } as const")
+    expect(CODIGO).toContain("data-closed:[animation:presence-hold_calc(var(--duration-slow)+var(--duration-instant)+60ms)]")
     // O véu do telefone sai sem opacidade (no WebKit o borrão sumia de uma vez
     // com a opacidade animando): o raio e a tinta descem a zero no `veil-out`.
     expect(CODIGO).toContain('overlayClassName("modal"),')
@@ -140,8 +140,8 @@ describe("as versões do Command", () => {
     expect(CODIGO.match(/rolarAoInicio\(pilula\)/g)?.length).toBeGreaterThanOrEqual(2)
     // Só a placa brota com o gesto dos menus e volta com o menu-unmorph; o × é
     // a segunda bolha, desenhada pelo mesmo progresso.
-    expect(CODIGO).toContain("data-open:[&_[data-slot=command-dialog-panel]]:[animation:menu-morph_380ms_linear_60ms_backwards]")
-    expect(CODIGO).toContain("data-closed:[&_[data-slot=command-dialog-panel]]:[animation:menu-unmorph_210ms_linear_both]")
+    expect(CODIGO).toContain("data-open:[&_[data-slot=command-dialog-panel]]:[animation:menu-morph_460ms_linear_60ms_backwards]")
+    expect(CODIGO).toContain("data-closed:[&_[data-slot=command-dialog-panel]]:[animation:menu-unmorph_260ms_linear_both]")
     expect(CODIGO).not.toContain("command-search-cancel]]:[animation:menu-morph")
     expect(CODIGO).not.toContain(":is([data-slot=command-dialog-panel],[data-slot=command-search-cancel])")
     expect(CODIGO).not.toContain("[&_[data-slot=command-search-cancel]]:origin-center")
@@ -375,7 +375,25 @@ describe("as versões do Command", () => {
       }
     })
 
-    it("na SEPARACAO a divisão se lê: cintura ≥ 90ms, pinça ≥ 6 quadros, repouso ≤ 700ms", async () => {
+    it("a mola da busca é 140/20: p chega a 1 entre 380 e 440ms e passa do alvo menos que 1%", async () => {
+      const { SEPARACAO } = await import("@/lib/spring")
+      const { spring } = await import("motion")
+      expect(SEPARACAO).toEqual({ type: "spring", stiffness: 140, damping: 20 })
+      const mola = spring({ keyframes: [0, 1], ...SEPARACAO })
+      let chegada = Infinity
+      let pico = 0
+      for (let t = 0; t <= 2000; t++) {
+        const { value, done } = mola.next(t)
+        if (chegada === Infinity && value >= 1) chegada = t
+        pico = Math.max(pico, value)
+        if (done) break
+      }
+      expect(chegada).toBeGreaterThanOrEqual(380)
+      expect(chegada).toBeLessThanOrEqual(440)
+      expect(pico).toBeLessThan(1.01)
+    })
+
+    it("na SEPARACAO a divisão se lê: cintura ≥ 90ms, pinça ≥ 6 quadros, repouso ≤ 800ms", async () => {
       const { quadroDasBolhas } = await import("@/components/ui/command")
       const { SEPARACAO } = await import("@/lib/spring")
       const { spring } = await import("motion")
@@ -397,7 +415,7 @@ describe("as versões do Command", () => {
       }
       expect(cintura).toBeGreaterThanOrEqual(90)
       expect(pinca).toBeGreaterThanOrEqual(100)
-      expect(repouso).toBeLessThanOrEqual(700)
+      expect(repouso).toBeLessThanOrEqual(800)
     })
 
     it("o fantasma da lupa anda com a borda do conteúdo, e no passe da mola o conteúdo para na calha", async () => {
@@ -469,7 +487,7 @@ describe("as versões do Command", () => {
       }
     })
 
-    it("na SEPARACAO repousa em até 700ms", async () => {
+    it("na SEPARACAO repousa em até 800ms", async () => {
       const { quadroDaGota } = await import("@/components/ui/command")
       const { SEPARACAO } = await import("@/lib/spring")
       const { spring } = await import("motion")
@@ -483,7 +501,7 @@ describe("as versões do Command", () => {
           break
         }
       }
-      expect(repouso).toBeLessThanOrEqual(700)
+      expect(repouso).toBeLessThanOrEqual(800)
     })
 
     it("o escritor da gota mexe só nos dois vidros e nos filhos deles, e o repouso é o das bolhas", () => {

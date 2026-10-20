@@ -208,7 +208,7 @@ function caixaDeLayout(el: HTMLElement): DOMRect {
 type Caixa = Pick<DOMRect, "left" | "right" | "top" | "bottom" | "width" | "height">
 /**
  * As fases no mesmo progresso: a emenda arredonda (pinça) antes de o vão abrir
- * (parte). Na `SEPARACAO`, a cintura (de 0,1 a 0,6) dura 95ms e a pinça 119ms.
+ * (parte). Na `SEPARACAO`, a cintura (de 0,1 a 0,6) dura 111ms e a pinça 138ms.
  */
 const PINCA = [0.1, 0.7] as const
 const PARTE = [0.6, 1] as const
@@ -314,13 +314,14 @@ function quadroDaGota(m: { lupa: Caixa; pilula: Caixa; x: Caixa; dpr: number }, 
 }
 
 /**
- * A volta à cápsula: 260ms, e a casca segura a desmontagem até os 300
- * (`--duration-slow`): o pouso fica parado dois quadros antes de sumir. Na
- * curva enfática (`--ease-emphasized`) a cauda passava ~100ms abaixo de p 0,02
- * sem pintar diferença, e a desmontagem vinha como um salto; esta começa macia
- * (o vão fecha aos 43ms), a cintura se refaz até os 141ms e a cauda cai a 59ms.
+ * A volta à cápsula: 320ms (era 260; rodada 350), e a casca segura a
+ * desmontagem até os 460 (a espera da pintura, os 320 e o pouso). Na curva
+ * enfática (`--ease-emphasized`) a cauda passava ~100ms abaixo de p 0,02 sem
+ * pintar diferença, e a desmontagem vinha como um salto; esta começa macia (o
+ * vão fecha aos 53ms), a cintura se refaz até os 174ms e a cauda cai a 73ms
+ * (a mesma curva dos 260ms esticada por 320/260).
  */
-const VOLTA_DA_PILULA = { duration: 0.26, ease: [0.2, 0, 0, 1] } as const
+const VOLTA_DA_PILULA = { duration: 0.32, ease: [0.2, 0, 0, 1] } as const
 
 /**
  * Chama `comecar` quando a pintura volta a correr. Entre o toque e o primeiro
@@ -696,7 +697,7 @@ function CommandDialog({
         // Fechar no meio da abertura volta de onde ela estava, e pousa na
         // cápsula sem passar dela: uma mola até zero cruzaria o círculo. O
         // teclado descendo para a pintura como a montagem ao abrir: a volta
-        // também espera a pintura, e a casca segura 400ms para caber.
+        // também espera a pintura, e a casca segura 460ms para caber.
         const de = progresso.current
         quadro(de)
         cancelar = quandoPintar(() => {
@@ -789,21 +790,21 @@ function CommandDialog({
               "pb-[max(--spacing(3),env(safe-area-inset-bottom))]",
               // A casca segura a saída até a pílula pousar na lupa: a espera da
               // pintura (até ~100ms com o teclado descendo), a `VOLTA_DA_PILULA`
-              // (260ms) e o pouso parado; 400ms ao todo.
-              "data-closed:[animation:presence-hold_calc(var(--duration-slow)+var(--duration-instant))]",
+              // (320ms) e o pouso parado; 460ms ao todo.
+              "data-closed:[animation:presence-hold_calc(var(--duration-slow)+var(--duration-instant)+60ms)]",
               // A placa brota como os menus do app (`menu-morph`, o gesto do iOS
               // 26 medido quadro a quadro), do canto de cima à direita, sob a
               // lupa e o ×: tudo nasce e volta ao mesmo lugar (pedido do dono;
               // era do alto ao centro, longe da cápsula que se divide), 60ms
               // depois de o vão abrir (no gesto, o efeito a segura pausada até
               // lá); as linhas surgem do desfoque em cascata (`command-reveal`). Na
-              // volta, o `menu-unmorph` a recolhe ao mesmo ponto em 210ms. O ×
+              // volta, o `menu-unmorph` a recolhe ao mesmo ponto em 260ms. O ×
               // não brota: é a segunda bolha do gesto. A animação é de cada
               // vidro, nunca da casca: no ancestral, o `transform` desligaria o
               // borrão deles.
               "[&_[data-slot=command-dialog-panel]]:origin-top-right",
-              "data-open:[&_[data-slot=command-dialog-panel]]:[animation:menu-morph_380ms_linear_60ms_backwards]",
-              "data-closed:[&_[data-slot=command-dialog-panel]]:[animation:menu-unmorph_210ms_linear_both]",
+              "data-open:[&_[data-slot=command-dialog-panel]]:[animation:menu-morph_460ms_linear_60ms_backwards]",
+              "data-closed:[&_[data-slot=command-dialog-panel]]:[animation:menu-unmorph_260ms_linear_both]",
             )}
           >
             <DialogHeader className="sr-only">

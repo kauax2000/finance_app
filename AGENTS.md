@@ -1354,13 +1354,15 @@ declaração de `background-color` no trilho).
   (`quadroDaGota`)). Um progresso só
   (`quadroDasBolhas`, puro; abre na `SEPARACAO` de `lib/spring` de onde o
   gesto estiver, com o relógio esperando os quadros voltarem depois da
-  montagem; volta em 260ms na `VOLTA_DA_PILULA`) escreve `transform` e
+  montagem; volta em 320ms na `VOLTA_DA_PILULA`) escreve `transform` e
   `clip-path` nos dois vidros e nos filhos deles, nunca na casca, e zera o raio
   próprio dos dois no voo (o recorte só tira pixels: com o `rounded-full`, a
   emenda reta não aparecia); no fim, nada inline (rodada 338). A placa brota
   com o `menu-morph` (do alto, 60ms atrás), pausada até o vão abrir, e volta
-  com o `menu-unmorph`; o véu do telefone sai depois das bolhas se fundirem, e
-  a casca segura a saída por `--duration-slow`. A camada e o teto da placa medem o viewport visual
+  com o `menu-unmorph` — só ali em 460ms e 260ms (rodada 350), os outros
+  menus seguem em 380 e 210; o véu do telefone sai depois das bolhas se
+  fundirem, e a casca segura a saída 460ms (`--duration-slow` +
+  `--duration-instant` + 60ms). A camada e o teto da placa medem o viewport visual
   (`--command-search-vh`, de `visualViewport`; `100dvh` de reserva): o teclado
   do iOS só encolhe ele, e a placa termina acima do teclado. O foco vai ao
   campo no `onOpenAutoFocus` (o teclado abre no mesmo toque); ao fechar, o foco

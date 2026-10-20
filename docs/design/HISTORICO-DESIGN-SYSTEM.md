@@ -28467,3 +28467,55 @@ que só zera o próprio nó. E o filtro declarado pela rota era `disabled`, que
 esmaece a 50% e acendia a cada navegação quando a página publicava; agora ele é
 `inerte` (sem ação, sem esmaecer), e só o `disabled` publicado (Contas sem
 tabela) esmaece.
+
+### Rodada 350 — a busca abre mais devagar
+
+**Pedido:** o dono pediu a abertura e o fechamento da busca do telefone
+"levemente mais lentos, para apreciar", nos dois caminhos (com filtro, a
+cápsula se divide; sem filtro, a lupa vira o campo), sem mudar o gesto.
+Aprovou ~20–25% sobre a medida de hoje.
+
+**Feito só em números** (nenhuma fase, fórmula ou ordem de `quadroDasBolhas`,
+`quadroDaGota`, `desenharBolhas`, `desenharGota`: as fases são frações do
+progresso e andam junto com a mola):
+
+- `SEPARACAO` de 180/22 para **140/20** (`lib/spring`, só a busca usa);
+- `VOLTA_DA_PILULA` de 260ms para **320ms**;
+- a placa da busca (só a classe do `CommandDialog`): `menu-morph` de 380ms para
+  **460ms** (o atraso de 60ms fica: ela segue pausada pelo efeito até o vão
+  abrir) e `menu-unmorph` de 210ms para **260ms**. `menu-morph`/`menu-unmorph`
+  dos outros menus ficam em 380/210 (`overlay-motion.test.ts`, sem edição);
+- a casca segura a saída por `--duration-slow` + `--duration-instant` + 60ms =
+  **460ms** (era 400): a espera da pintura (até ~100ms), os 320 e o pouso.
+  Fechar logo depois de abrir continua cabendo;
+- movimento reduzido intocado (o ramo sem viagem não usa `SEPARACAO`).
+
+**Medido** no gerador do `motion`, passos de 1ms (`command-versions.test.ts`
+trava a chegada, o pico e o repouso):
+
+| | 180/22 (antes) | 140/20 (depois) |
+| --- | --- | --- |
+| p cruza 0,1 | 39ms | 44ms |
+| p cruza 0,6 (o vão abre) | 134ms | 155ms |
+| p cruza 0,7 (fim da pinça) | 158ms | 182ms |
+| p chega a 1 | 330ms | 408ms |
+| pico | 1,011 aos 409ms | 1,007 aos 497ms |
+| repouso | 690ms | 770ms |
+| cintura (p de 0,1 a 0,6) | 95ms | 111ms |
+| pinça (p de 0,1 a 0,7) | 119ms | 138ms |
+| volta à cápsula | 260ms | 320ms |
+| placa brota / recolhe | 380 / 210ms | 460 / 260ms |
+| casca segura a saída | 400ms | 460ms |
+
+O teste de repouso foi de ≤ 700ms a ≤ 800ms; os mínimos de leitura da divisão
+(cintura ≥ 90ms, pinça ≥ 100 quadros) ficam e passam com folga.
+
+**O meio do gesto difere entre os caminhos por desenho, e fica.** Com filtro o
+vão abre aos 134ms e o × acende aos 155ms (p 0,60 e 0,69); sem filtro, aos
+211ms e 317ms (p 0,86 e 0,995). Na mola nova os mesmos pontos caem aos 155 e
+180ms, e aos 247 e 387ms. Cada caminho ganhou o mesmo ~20% porque as fases
+andam no progresso, não no relógio.
+
+**Ficou sem medir, para o aparelho:** a sensação ao vivo (o dono aprecia no
+iPhone) e o fechar no meio do voo com o teclado descendo; o teste de fonte só
+trava que a espera da casca cobre a soma.
