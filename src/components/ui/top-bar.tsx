@@ -3,6 +3,7 @@
 import * as React from "react"
 import { MagnifyingGlassIcon } from "@heroicons/react/16/solid"
 import { cva, type VariantProps } from "class-variance-authority"
+import { animate, useReducedMotion } from "motion/react"
 import { Slot } from "radix-ui"
 
 import { tagChipUnreadCount } from "@/components/ui/badge"
@@ -19,6 +20,7 @@ import {
   barEdgeLayerClassNames,
   barSurfaceClassName,
 } from "@/lib/glass-classes"
+import { quadroDaTroca, type IconeEmVoo } from "@/lib/header-morph"
 import { alvoDaRolagem, proximoEscondido } from "@/lib/hide-on-scroll"
 import {
   searchFieldIconClassName,
@@ -28,6 +30,7 @@ import {
   searchFieldSurfaceClassName,
 } from "@/lib/search-field-classes"
 import { ariaShortcut, isEditableTarget, matchShortcut } from "@/lib/shortcut"
+import { MOLA } from "@/lib/spring"
 import { cn } from "@/lib/utils"
 
 /**
@@ -498,6 +501,8 @@ function TopBarAction({
   /** O vidro da busca do cabeçalho, como o botão de recolher (em todo tamanho). */
   plate?: boolean
 }) {
+  // Dentro de um `TopBarActionSwap` o vidro é dele: o botão não desenha o próprio.
+  const emTroca = React.useContext(TopBarSwapContext)
   const temContagem = typeof count === "number" && count > 0
   const nome = temContagem ? label + ", " + (countLabel ?? count) : label
   // O último número fica desenhado enquanto a bolha esvazia: ao zerar, ela sai
@@ -515,7 +520,7 @@ function TopBarAction({
         "relative pointer-coarse:after:absolute pointer-coarse:after:-inset-0.5 pointer-coarse:after:content-['']",
         // No telefone o botão é o alvo inteiro, 44, com o ícone a 20.
         "max-md:size-11 max-md:[&_svg]:size-5",
-        plate && TOP_BAR_PLATE,
+        plate && !emTroca && TOP_BAR_PLATE,
         className
       )}
       {...props}
@@ -550,6 +555,130 @@ function TopBarAction({
       <TooltipTrigger asChild>{botao}</TooltipTrigger>
       <TooltipContent shortcut={shortcut}>{label}</TooltipContent>
     </Tooltip>
+  )
+}
+
+/** Verdadeiro dentro de um `TopBarActionSwap`: quem desenha o vidro é ele. */
+const TopBarSwapContext = React.createContext(false)
+
+/** Escreve um quadro de ícone no miolo; `null` apaga, e nada inline sobra. */
+function pintarMiolo(el: HTMLElement, i: IconeEmVoo | null) {
+  el.style.opacity = i ? String(i.opacidade) : ""
+  el.style.scale = i ? String(i.escala) : ""
+  el.style.filter = i ? "blur(" + i.desfoque + "px)" : ""
+}
+
+type Miolo = { chave: string; filho: React.ReactNode }
+
+/**
+ * O vidro que fica e o miolo que troca: um círculo só (o vidro da barra, 44)
+ * que segura uma ação — o sino, o voltar — e, quando `swapKey` muda, afunda e
+ * volta na `MOLA` enquanto o miolo de antes sai no desfoque e o novo chega
+ * dele (`quadroDaTroca`). O de antes fica montado por cima, inerte e escondido
+ * do leitor, até o gesto acabar; o novo já é o interativo, e herda o foco se o
+ * de antes o tinha. A escala é do próprio vidro; opacidade, escala e desfoque
+ * são dos miolos, filhos dele — nunca de um ancestral, que desligaria o
+ * `backdrop-filter`. No fim, nada inline.
+ * Montar não anima: a troca nasce de uma chave diferente da que já montou.
+ * Uma troca no meio de outra segue do progresso guardado, com o que entrava
+ * passando a sair. Sem caixa (a árvore do telefone escondida) ou com movimento
+ * reduzido, troca na hora.
+ */
+function TopBarActionSwap({
+  swapKey,
+  className,
+  children,
+}: {
+  /** Quem está no vidro; trocar a chave troca o miolo com o gesto. */
+  swapKey: string
+  className?: string
+  children: React.ReactNode
+}) {
+  const reduzido = useReducedMotion()
+  const vidro = React.useRef<HTMLSpanElement>(null)
+  // Onde o gesto está: 0 em repouso; no meio, o ponto de partida da troca seguinte.
+  const progresso = React.useRef(0)
+  // O miolo que montou por último, sempre com o filho em dia (o de saída leva a contagem de agora).
+  const [montou, setMontou] = React.useState<Miolo>({ chave: swapKey, filho: children })
+  const [saindo, setSaindo] = React.useState<Miolo | null>(null)
+  if (montou.chave !== swapKey) {
+    setSaindo(montou)
+    setMontou({ chave: swapKey, filho: children })
+  } else if (montou.filho !== children) {
+    setMontou({ chave: swapKey, filho: children })
+  }
+
+  React.useLayoutEffect(() => {
+    const el = vidro.current
+    const sai = el?.querySelector<HTMLElement>(":scope > [data-swap=sai]")
+    const entra = el?.querySelector<HTMLElement>(":scope > [data-swap=entra]")
+    if (!saindo || !el || !sai || !entra) return
+    // Antes de medir: o foco ainda está no miolo que virou inerte.
+    if (sai.contains(el.ownerDocument.activeElement)) {
+      entra.querySelector<HTMLElement>("a[href], button:not([disabled]), [tabindex]:not([tabindex=\"-1\"])")?.focus()
+    }
+    const repouso = () => {
+      progresso.current = 0
+      el.style.transform = ""
+      pintarMiolo(sai, null)
+      pintarMiolo(entra, null)
+    }
+    if (reduzido || el.offsetWidth === 0) {
+      repouso()
+      setSaindo(null)
+      return
+    }
+    const quadro = (p: number) => {
+      progresso.current = p
+      const f = quadroDaTroca(p, true)
+      el.style.transform = "scale(" + f.escala + ")"
+      pintarMiolo(sai, f.sai)
+      pintarMiolo(entra, f.entra)
+    }
+    // Interrompida depois do meio, a troca nova parte do espelho (`1 − p`): o
+    // vidro está no mesmo afundar, e o que entrava, quase inteiro, começa a
+    // sair quase inteiro, em vez de sumir de uma vez.
+    progresso.current = Math.max(0, Math.min(progresso.current, 1 - progresso.current))
+    quadro(progresso.current)
+    let ativa = true
+    const controle = animate(progresso.current, 1, { ...MOLA, onUpdate: quadro })
+    controle.then(() => {
+      if (!ativa) return
+      repouso()
+      setSaindo(null)
+    })
+    return () => {
+      ativa = false
+      controle.stop()
+    }
+  }, [saindo, reduzido])
+
+  return (
+    <span
+      ref={vidro}
+      data-slot="top-bar-action-swap"
+      className={cn("relative grid size-11 shrink-0 place-items-center", TOP_BAR_PLATE, className)}
+    >
+      <TopBarSwapContext value>
+        {/* As duas camadas na mesma célula da grade, e na ordem fixa (a que sai
+            primeiro): a reconciliação por chave nunca move o miolo que entra, e
+            o foco dele não cai. A que sai pinta por cima (`z-10`). */}
+        {saindo ? (
+          <span
+            key={saindo.chave}
+            data-swap="sai"
+            aria-hidden
+            inert
+            className="pointer-events-none z-10 grid place-items-center [grid-area:1/1]"
+          >
+            {saindo.filho}
+          </span>
+        ) : null}
+        <span key={swapKey} data-swap="entra" className="grid place-items-center [grid-area:1/1]">
+          {children}
+        </span>
+      </TopBarSwapContext>
+    </span>
   )
 }
 
@@ -809,6 +938,7 @@ export {
   TopBar,
   TopBarAction,
   TopBarActionGroup,
+  TopBarActionSwap,
   TopBarActions,
   TopBarContent,
   TopBarProgress,

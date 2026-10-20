@@ -359,3 +359,37 @@ describe("as ações numa cápsula", () => {
   })
 })
 
+
+describe("TopBarActionSwap", () => {
+  const peca = CODIGO.slice(CODIGO.indexOf("function TopBarActionSwap("), CODIGO.indexOf("const CAPSULA_COLA"))
+
+  it("existe, é exportada e é o próprio vidro", () => {
+    expect(CODIGO).toContain("function TopBarActionSwap(")
+    expect(CODIGO).toMatch(/export \{[\s\S]*\bTopBarActionSwap,[\s\S]*\}/)
+    expect(peca).toContain('data-slot="top-bar-action-swap"')
+    expect(peca).toContain("TOP_BAR_PLATE")
+    expect(peca).toContain("size-11")
+  })
+
+  it("o quadro da troca na MOLA, do progresso guardado, e o que sai fica inerte por cima", () => {
+    for (const parte of ["quadroDaTroca(", "MOLA", "useReducedMotion", "inert", "aria-hidden", "pointer-events-none"]) {
+      expect(peca).toContain(parte)
+    }
+    // A interrupção segue do progresso atual, e não do zero.
+    expect(peca).toMatch(/animate\(\s*\w+\.current/)
+  })
+
+  it("sem caixa (a árvore do telefone escondida) troca na hora", () => {
+    expect(peca).toContain("offsetWidth === 0")
+  })
+
+  it("montar não anima: a troca nasce da chave que já montou, e nenhum efeito anima pela swapKey", () => {
+    expect(peca).toMatch(/montou|primeiro/)
+    expect(peca).not.toMatch(/use(Layout)?Effect\([\s\S]*?\[[^\]]*\bswapKey\b[^\]]*\]\)/)
+  })
+
+  it("a ação dentro da troca não desenha o próprio vidro", () => {
+    const acao = CODIGO.slice(CODIGO.indexOf("function TopBarAction("), CODIGO.indexOf("function TopBarActionSwap("))
+    expect(acao).toContain("TopBarSwapContext")
+  })
+})

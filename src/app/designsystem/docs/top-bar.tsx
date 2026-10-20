@@ -35,6 +35,7 @@ import {
   TopBar,
   TopBarAction,
   TopBarActionGroup,
+  TopBarActionSwap,
   TopBarActions,
   TopBarContent,
   TopBarProgress,
@@ -286,6 +287,25 @@ function DemoTelefone() {
   )
 }
 
+/** O sino da tela de entrada e o voltar do detalhe, no mesmo vidro: o interruptor troca a tela. */
+function DemoTroca() {
+  const [voltar, setVoltar] = React.useState(false)
+  return (
+    <div className="flex w-full flex-col items-center gap-6 p-4">
+      <Controles
+        fim={
+          <Interruptores>
+            <Interruptor id="tb-troca-voltar" rotulo="voltar" valor={voltar} onChange={setVoltar} />
+          </Interruptores>
+        }
+      />
+      <TopBarActionSwap swapKey={voltar ? "voltar" : "sino"}>
+        {voltar ? <PageHeaderBack href="#" history={false} className="ms-0" /> : <Sino count={3} />}
+      </TopBarActionSwap>
+    </div>
+  )
+}
+
 const SECOES = [
   { rotulo: "Início", icone: HomeIcon },
   { rotulo: "Transações", icone: ReceiptPercentIcon },
@@ -425,6 +445,25 @@ export default function TopBarDoc() {
       </DocSection>
 
       <DocSection
+        title="Troca no mesmo vidro"
+        description="TopBarActionSwap segura o círculo de vidro e troca o miolo pela swapKey: o vidro afunda e volta na mola, o ícone de antes sai no desfoque e o novo chega dele. Ligue o voltar."
+        code={`<TopBarActionSwap swapKey={detalhe ? "voltar" : "sino"}>
+  {detalhe ? (
+    <PageHeaderBack href="/credit-cards" className="ms-0" />
+  ) : (
+    <TopBarAction label="Notificações" count={3} countLabel="3 não lidas"><BellIcon /></TopBarAction>
+  )}
+</TopBarActionSwap>`}
+        previewClassName="block p-0"
+      >
+        <DemoTroca />
+      </DocSection>
+
+      <DocNote title="O vidro é da troca, e só a troca anima">
+        Dentro dela o <code>TopBarAction</code> não desenha o próprio vidro (o <code>plate</code> é ignorado), e o voltar entra sem <code>topBarPlateClassName</code>. Montar não anima: o primeiro quadro já é o estado final. O miolo que sai fica por cima, inerte e escondido do leitor, até o gesto acabar; o que entra já é o interativo e herda o foco. Uma troca no meio de outra segue do quadro atual. Com movimento reduzido, ou com a árvore do telefone escondida, troca na hora.
+      </DocNote>
+
+      <DocSection
         title="Esqueleto"
         description="TopBarSkeleton: a ponta, o título e as ações, na altura do degrau."
         code={`<TopBarSkeleton actions={2} />`}
@@ -461,6 +500,7 @@ export default function TopBarDoc() {
           { prop: "TopBarStart · TopBarContent · TopBarActions", type: "ComponentProps<'div'> & { phone? }", description: "As pontas e o meio. phone é o que mostram abaixo de md; null esconde no telefone." },
           { prop: "TopBarTitle", type: "ComponentProps<'h1'> & { phone?, pageTitle?, scrollToTop?, asChild? }", description: "O nome da tela. pageTitle recebe o título que sobe do PageHeader; tocar nele no telefone sobe ao topo." },
           { prop: "TopBarAction", type: "Button & { label, count?, countLabel?, shortcut?, tooltip?, plate? }", description: "O botão de ícone da barra, com a dica e a contagem no nome; `plate` veste o círculo de vidro do botão de recolher, em todo tamanho." },
+          { prop: "TopBarActionSwap", type: "{ swapKey, className?, children }", description: "O círculo de vidro que fica enquanto o miolo troca: mudar swapKey afunda o vidro na mola e cruza os ícones no desfoque. O filho não desenha o próprio vidro." },
           { prop: "TopBarActionGroup", type: "ComponentProps<typeof ButtonGroup> & { join? }", description: "Ações com plate numa cápsula: o ButtonGroup sem divisor, com o anel no grupo. join (always, o padrão; desktop; phone) diz de que lado da quebra cola, quando um dos botões só existe num lado; do outro, o que sobra é um círculo solto." },
           { prop: "TopBarSearch", type: "{ onOpen, label?, placeholder?, shortcut?, slash?, listen?, collapse?, glow?, plate? }", description: "A pílula de busca com a tecla, que vira ícone abaixo da quebra, e os atalhos ⌘K e /; `plate` troca o campo pelo vidro do campo do CommandDialog." },
           { prop: "TopBarProgress", type: "{ value?, label? }", description: "O fio de carregamento na aresta de baixo; sem value, indeterminado." },
