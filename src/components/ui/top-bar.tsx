@@ -3,7 +3,7 @@
 import * as React from "react"
 import { MagnifyingGlassIcon } from "@heroicons/react/16/solid"
 import { cva, type VariantProps } from "class-variance-authority"
-import { animate, useReducedMotion } from "motion/react"
+import { animate, useReducedMotion, type AnimationPlaybackControls } from "motion/react"
 import { flushSync } from "react-dom"
 import { Slot } from "radix-ui"
 
@@ -21,7 +21,7 @@ import {
   barEdgeLayerClassNames,
   barSurfaceClassName,
 } from "@/lib/glass-classes"
-import { GOTA_H, GOTA_R, quadroDaGotaDoFiltro, quadroDaTroca, suave, type IconeEmVoo } from "@/lib/header-morph"
+import { quadroDaTroca, quadroDoVidroQueEstica, quandoPintar, suave, VIDRO_H, VIDRO_R, type IconeEmVoo } from "@/lib/header-morph"
 import { alvoDaRolagem, proximoEscondido } from "@/lib/hide-on-scroll"
 import {
   searchFieldIconClassName,
@@ -639,9 +639,9 @@ function TopBarActionSwap({
 /**
  * O miolo que troca, sem o vidro: a caixa que segura o de agora e, durante o
  * gesto, o de antes por cima. É o de dentro do `TopBarActionSwap` (onde a
- * caixa é o próprio vidro, que afunda) e o da gota da `TopBarActionGroup
+ * caixa é o próprio vidro, que afunda) e o do filtro da `TopBarActionGroup
  * morph` (onde a caixa mora dentro do vidro e não afunda, `afundar` falso:
- * o vidro é da gota, e o `transform` dele é dela). Fora disso, o mesmo gesto.
+ * o vidro é do filtro, e o recorte dele é da cápsula). Fora disso, o mesmo gesto.
  */
 function MioloQueTroca({
   swapKey,
@@ -732,21 +732,28 @@ function MioloQueTroca({
     }
     quadro(p0)
     let ativa = true
-    const controle = animate(progresso.current, 1, { ...MOLA, onUpdate: quadro })
-    controle.then(() => {
-      if (!ativa) return
-      // O desmonte antes do repouso, no mesmo quadro (`flushSync`): limpar
-      // primeiro devolvia o miolo que saía inteiro por um quadro, até o
-      // React desmontá-lo numa tarefa seguinte, depois da pintura.
-      flushSync(() => {
-        setSaindo(null)
-        setPassouDoMeio(false)
+    let controle: AnimationPlaybackControls | undefined
+    // O relógio só começa quando a pintura volta (`quandoPintar`): a troca vem
+    // com a tela nova montando, e a mola contava esse tempo e chegava já no fim.
+    const cancelar = quandoPintar(() => {
+      const trocando = animate(progresso.current, 1, { ...MOLA, onUpdate: quadro })
+      controle = trocando
+      trocando.then(() => {
+        if (!ativa) return
+        // O desmonte antes do repouso, no mesmo quadro (`flushSync`): limpar
+        // primeiro devolvia o miolo que saía inteiro por um quadro, até o
+        // React desmontá-lo numa tarefa seguinte, depois da pintura.
+        flushSync(() => {
+          setSaindo(null)
+          setPassouDoMeio(false)
+        })
+        repouso()
       })
-      repouso()
     })
     return () => {
       ativa = false
-      controle.stop()
+      cancelar()
+      controle?.stop()
     }
   }, [saindo, reduzido, afundar])
 
@@ -793,7 +800,7 @@ const CAPSULA_COLA = {
  * veste.
  * `morph` é a cápsula do telefone, `[lupa | filtro]`, que aceita um ou dois
  * filhos: com um, o círculo do primeiro; com dois, a cápsula. O segundo entra
- * e sai pingando da lupa (`CapsulaQuePinga`), e `trailingKey` é a identidade
+ * e sai com o vidro esticando da lupa (`CapsulaQueEstica`), e `trailingKey` é a identidade
  * dele (`"month"`, `"filter"`): mudá-la com os dois presentes troca o miolo
  * no lugar, sem mexer na forma. Na troca o segundo filho de antes e o de agora
  * ficam montados juntos: um ref passado a ele precisa tolerar duas instâncias.
@@ -807,117 +814,85 @@ function TopBarActionGroup({
 }: ButtonGroupProps & {
   /** Onde os botões colam: sempre, só do `md` para cima ou só no telefone. */
   join?: keyof typeof CAPSULA_COLA
-  /** A cápsula que pinga: o segundo filho entra e sai como uma gota da lupa. */
+  /** A cápsula que estica: o segundo filho entra e sai com o vidro se alargando a partir da lupa. */
   morph?: boolean
   /** Com `morph`, a identidade do segundo filho; trocá-la troca o miolo dele no lugar. */
   trailingKey?: string
 }) {
   const classe = cn("*:before:hidden *:ml-0!", CAPSULA_COLA[join], className)
-  if (morph) return <CapsulaQuePinga data-join={join} trailingKey={trailingKey} className={classe} {...props} />
+  if (morph) return <CapsulaQueEstica data-join={join} trailingKey={trailingKey} className={classe} {...props} />
   return <ButtonGroup data-slot="top-bar-action-group" data-join={join} className={classe} {...props} />
 }
 
-/** O anel dos vidros do cabeçalho (`ring-1 ring-foreground/10`), por extenso para o voo. */
-const ANEL_DO_VIDRO = "color-mix(in oklab, var(--foreground) 10%, transparent)"
-
 /**
- * Escreve um quadro da gota nos dois vidros e no miolo do filtro — nunca no
- * grupo, que é ancestral dos dois (um `transform` ali desligaria o
- * `backdrop-filter`); dele só sai o anel, que contornaria a cápsula inteira
- * em volta de uma gota que ainda não chegou. `k` leva os 44 do quadro ao
- * vidro de verdade (36 no desktop do catálogo).
- * A lupa anda (`translateX`) e o recorte arredonda os cantos da direita dela
- * com a emenda. A gota é o próprio vidro do filtro, levado ao centro e ao raio
- * do quadro por `translate`/`scale`, recortado onde cairia dentro da lupa
- * (vidro sobre vidro pintaria duas vezes) e com a emenda nos cantos da
- * esquerda — R com a gota solta (dois círculos que se tocam), 0 com a cintura
- * cheia (a costura reta da cápsula); a emenda da gota é dividida pela escala
- * dela, e só o raio horizontal encolhe quando a fatia visível é mais estreita
- * que ele (como em `quadroDasBolhas`). A costura cai num pixel do aparelho, a
- * mesma para os dois. No passe da mola a gota acompanha a lupa, para a costura
- * não abrir. Sem a tinta do voo da busca, que no primeiro quadro acendia a
- * lupa (8% de `--foreground` de uma vez) e no último apagava num salto.
+ * Escreve um quadro do vidro que estica (`quadroDoVidroQueEstica`) nos dois
+ * vidros e no miolo do filtro — nunca `transform`, recorte ou filtro no grupo,
+ * que é ancestral dos dois (desligaria o `backdrop-filter`). `k` leva os 44 do
+ * quadro ao vidro de verdade (36 no desktop do catálogo).
  *
- * O anel não some no voo: o do grupo contornaria a cápsula final, então cada
- * vidro desenha o seu (`ANEL_DO_VIDRO`, o `ring-1` de repouso), com o raio da
- * forma do quadro, e o recorte se abre 1px para fora para deixá-lo à vista —
- * menos do lado da emenda, onde ele seria um fio no meio da cápsula; ali o
- * recorte só abre com as duas bolhas soltas (a emenda no raio inteiro). Na
- * gota, que está em `scale`, o px do anel é dividido pela escala.
+ * Para o olho é um vidro só, de `lupaDx` até a ponta. A lupa anda
+ * (`translateX`) e o recorte a corta na costura; com ela passando do centro do
+ * filtro (o filtro apagado, a lupa é o vidro inteiro), o recorte se estende até
+ * a ponta e arredonda ali, com o centro no do filtro. O filtro aparece só da
+ * costura em diante, e o canto de dentro dos dois já é reto (o `ButtonGroup`):
+ * cada pixel da cápsula é de um vidro só. A costura cai num pixel do aparelho.
+ *
+ * O anel não some no voo: o do grupo contornaria a cápsula final, então o
+ * pseudo-elemento do grupo (`data-voo`) desenha o da cápsula que estica, na
+ * largura do quadro (`--vidro-largura`), encostado à direita.
  */
-function desenharGota(
+function desenharVidro(
   grupo: HTMLElement,
   lupa: HTMLElement,
-  gota: HTMLElement,
+  filtro: HTMLElement,
   miolo: HTMLElement,
   g: number,
   k: number,
   dpr: number
 ) {
-  const f = quadroDaGotaDoFiltro(g)
-  const R = GOTA_R * k
-  const H = GOTA_H * k
-  const lupaDx = Math.round(f.lupaDx * k * dpr) / dpr
-  const costura = lupaDx + H
-  const s = f.gota.r / GOTA_R
-  const cx = f.gota.cx * k + Math.min(0, lupaDx)
-  const emenda = R * (1 - f.cintura)
-  const emendaDaGota = Math.min(R, emenda / s)
-  // Onde a lupa acaba, nas coordenadas da gota antes do `transform`; passada a caixa, não sobra nada.
-  const corte = Math.min(H, Math.max(0, R + (costura - cx) / s))
-  const cabe = Math.min(1, (H - corte) / (R + emendaDaGota))
-  // O lado da emenda só mostra o anel com as bolhas soltas (a emenda é o raio
-  // inteiro e o lado é só curva): com a cintura enchendo, o trecho reto do anel
-  // na costura aparecia como um fio no meio da cápsula.
-  const solta = emenda >= R - 0.01 ? 1 : 0
+  const f = quadroDoVidroQueEstica(g)
+  const R = VIDRO_R * k
+  const H = VIDRO_H * k
+  const px = (v: number) => Math.round(v * k * dpr) / dpr
+  const lupaDx = px(f.lupaDx)
+  const costura = px(f.costura)
+  grupo.dataset.voo = ""
   grupo.style.boxShadow = "none"
+  grupo.style.setProperty("--vidro-largura", f.largura * k + "px")
   lupa.style.transform = "translateX(" + lupaDx + "px)"
-  lupa.style.borderRadius = R + "px " + emenda + "px " + emenda + "px " + R + "px"
-  lupa.style.setProperty("box-shadow", "0 0 0 1px " + ANEL_DO_VIDRO, "important")
-  const e = solta
+  // Nas coordenadas da lupa (a caixa dela é `[0, H]`), de onde ela anda.
   lupa.style.clipPath =
-    "inset(-1px " + -e + "px -1px -1px round " +
-    (R + 1) + "px " + (emenda + e) + "px " + (emenda + e) + "px " + (R + 1) + "px)"
-  // Na gota, 1px da tela são `u` nas coordenadas dela (antes do `scale`).
-  const u = 1 / s
-  // Onde a lupa acaba sem o teto da caixa: com a gota inteira dentro dela, o
-  // recorte passa também do anel (senão sobrava um fio dele dentro da lupa).
-  const dentro = R + (costura - cx) / s
-  const esquerda = dentro > 0 ? Math.min(dentro, H + u) : -u * solta
-  gota.style.transform = "translateX(" + (cx - H - R) + "px) scale(" + s + ")"
-  gota.style.borderRadius = emendaDaGota + "px " + R + "px " + R + "px " + emendaDaGota + "px"
-  gota.style.setProperty("box-shadow", "0 0 0 " + u + "px " + ANEL_DO_VIDRO, "important")
-  gota.style.clipPath =
-    "inset(" + -u + "px " + -u + "px " + -u + "px " + esquerda + "px round " +
-    emendaDaGota * cabe + "px " + (R * cabe + u) + "px " + (R * cabe + u) + "px " + emendaDaGota * cabe + "px / " +
-    emendaDaGota + "px " + (R + u) + "px " + (R + u) + "px " + emendaDaGota + "px)"
+    costura > H + R
+      ? "inset(0px " + -(2 * H - lupaDx - H) + "px 0px " + -H + "px round 0px " + R + "px " + R + "px 0px)"
+      : "inset(0px " + (H - (costura - lupaDx)) + "px 0px " + -H + "px)"
+  filtro.style.clipPath = "inset(0px 0px 0px " + (costura - H) + "px)"
   pintarMiolo(miolo, f.icone)
 }
 
 /** A cápsula pronta: nada inline nos dois vidros, no miolo nem no grupo. */
-function gotaEmRepouso(grupo: HTMLElement, lupa: HTMLElement, gota: HTMLElement, miolo: HTMLElement) {
+function vidroEmRepouso(grupo: HTMLElement, lupa: HTMLElement, filtro: HTMLElement, miolo: HTMLElement) {
+  delete grupo.dataset.voo
   grupo.style.boxShadow = ""
-  lupa.style.transform = lupa.style.clipPath = lupa.style.borderRadius = ""
-  gota.style.transform = gota.style.clipPath = gota.style.borderRadius = ""
-  lupa.style.removeProperty("box-shadow")
-  gota.style.removeProperty("box-shadow")
+  grupo.style.removeProperty("--vidro-largura")
+  lupa.style.transform = lupa.style.clipPath = ""
+  filtro.style.clipPath = ""
   pintarMiolo(miolo, null)
 }
 
 /**
- * A cápsula que pinga, o `TopBarActionGroup morph`: a lupa (o primeiro filho,
- * o próprio vidro dele) e a gota do filtro (o segundo, dentro de um vidro do
- * grupo, com o miolo que troca). A ordem é `[lupa | filtro]`, e a ponta
+ * A cápsula que estica, o `TopBarActionGroup morph`: a lupa (o primeiro filho,
+ * num vidro do grupo) e o filtro (o segundo, noutro vidro, com o miolo que
+ * troca). A ordem é `[lupa | filtro]`, e a ponta
  * direita fica parada: o pixel da lupa sozinha é o da ponta da cápsula.
  * Quando o segundo aparece, `g` vai de 0 a 1 na `MOLA`, e cada quadro
- * (`quadroDaGotaDoFiltro`) é escrito pelo `desenharGota`; quando some, o
+ * (`quadroDoVidroQueEstica`) é escrito pelo `desenharVidro`; quando some, o
  * grupo o segura montado, inerte e escondido do leitor, roda `g` de 1 a 0 e
  * só então o desmonta. Montar não anima (`g` nasce no destino). Interromper
  * parte do `g` guardado: tudo é função dele, e a mola segue de onde está.
  * Sem caixa (a árvore do telefone escondida) ou com movimento reduzido, na
  * hora; no fim, nada inline.
  */
-function CapsulaQuePinga({
+function CapsulaQueEstica({
   trailingKey,
   children,
   ...props
@@ -928,7 +903,7 @@ function CapsulaQuePinga({
   const [lupa, filtro] = Array.isArray(children) ? children : [children]
   const temFiltro = filtro != null && filtro !== false
   const chave = trailingKey ?? "filtro"
-  // Onde a gota está: 0 a lupa sozinha, 1 a cápsula; no meio, de onde a próxima mola parte.
+  // Onde o vidro está: 0 a lupa sozinha, 1 a cápsula; no meio, de onde a próxima mola parte.
   const g = React.useRef(temFiltro ? 1 : 0)
   // O segundo que está no DOM: o de agora, ou o que saiu, segurado até a lupa o reabsorver.
   const [segundo, setSegundo] = React.useState<Miolo | null>(temFiltro ? { chave, filho: filtro } : null)
@@ -944,45 +919,61 @@ function CapsulaQuePinga({
     const miolo = gota?.firstElementChild as HTMLElement | null
     if (!el || !lupaEl || !gota || !miolo || g.current === alvo) return
     // O segundo que sai com o foco dentro (a folha dele fechou e devolveu o
-    // foco ao gatilho) o passa à lupa antes de a gota ficar inerte — inerte,
+    // foco ao gatilho) o passa à lupa antes de o filtro ficar inerte — inerte,
     // o foco cairia no `body`.
     if (alvo === 0 && gota.contains(el.ownerDocument.activeElement)) lupaEl.querySelector<HTMLElement>("button, a")?.focus()
     const repouso = () => {
       g.current = alvo
-      gotaEmRepouso(el, lupaEl, gota, miolo)
+      vidroEmRepouso(el, lupaEl, gota, miolo)
     }
     if (reduzido || lupaEl.offsetWidth === 0) {
       repouso()
       if (alvo === 0) setSegundo(null)
       return
     }
-    const k = lupaEl.offsetWidth / GOTA_H
+    const k = lupaEl.offsetWidth / VIDRO_H
     const dpr = el.ownerDocument.defaultView?.devicePixelRatio || 1
     const quadro = (x: number) => {
       g.current = x
-      desenharGota(el, lupaEl, gota, miolo, x, k, dpr)
+      desenharVidro(el, lupaEl, gota, miolo, x, k, dpr)
     }
     quadro(g.current)
     let ativa = true
-    const controle = animate(g.current, alvo, { ...MOLA, onUpdate: quadro })
-    controle.then(() => {
-      if (!ativa) return
-      // Ao sair, o desmonte antes do repouso, no mesmo quadro (`flushSync`):
-      // limpar primeiro pintava a cápsula inteira por um quadro, com a lupa
-      // 44px à esquerda, até o React desmontar a gota depois da pintura. Sem
-      // a gota, a lupa sem `translate` é o mesmo pixel.
-      if (alvo === 0) flushSync(() => setSegundo(null))
-      repouso()
+    let controle: AnimationPlaybackControls | undefined
+    // O relógio só começa quando a pintura volta (`quandoPintar`): montar o
+    // filtro para a pintura ~300ms, e a mola chegava já no fim, num salto.
+    const cancelar = quandoPintar(() => {
+      const esticando = animate(g.current, alvo, { ...MOLA, onUpdate: quadro })
+      controle = esticando
+      esticando.then(() => {
+        if (!ativa) return
+        // Ao sair, o desmonte antes do repouso, no mesmo quadro (`flushSync`):
+        // limpar primeiro pintava a cápsula inteira por um quadro, com a lupa
+        // 44px à esquerda, até o React desmontar o filtro depois da pintura. Sem
+        // ele, a lupa sem `translate` é o mesmo pixel.
+        if (alvo === 0) flushSync(() => setSegundo(null))
+        repouso()
+      })
     })
     return () => {
       ativa = false
-      controle.stop()
+      cancelar()
+      controle?.stop()
     }
   }, [alvo, reduzido])
 
   return (
-    <ButtonGroup ref={grupo} data-slot="top-bar-action-group" {...props}>
-      {/* A lupa mora num vidro próprio, como a gota: o grupo achata o canto de
+    <ButtonGroup
+      ref={grupo}
+      data-slot="top-bar-action-group"
+      {...props}
+      className={cn(
+        // O anel da cápsula que estica, só no voo (o do grupo seguiria a caixa final).
+        "relative after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:hidden after:w-(--vidro-largura) after:rounded-full after:shadow-[0_0_0_1px_color-mix(in_oklab,var(--foreground)_10%,transparent)] data-voo:after:block",
+        props.className
+      )}
+    >
+      {/* A lupa mora num vidro próprio, como o filtro: o grupo achata o canto de
           dentro do vidro (a emenda da cápsula), e o botão de dentro segue
           redondo, com o realce em círculo como o do filtro. */}
       <span
@@ -1021,7 +1012,7 @@ const TOP_BAR_SEARCH_PLATE =
  * (`SIDEBAR_TRIGGER_FLOATING`): o vidro vai até o anel (`bg-clip-border`) e o
  * realce é o das carteiras, `--sidebar-accent` a 50%. Vale em todo tamanho: no
  * telefone os botões da barra são os mesmos círculos de vidro do desktop
- * (rodada 329). O `TopBarActionSwap` e a gota da `TopBarActionGroup morph`
+ * (rodada 329). O `TopBarActionSwap` e os vidros da `TopBarActionGroup morph`
  * vestem a mesma receita.
  */
 const TOP_BAR_PLATE =

@@ -48,8 +48,8 @@ function relogioLento(fator: number) {
 
 /**
  * O laboratório da cápsula do cabeçalho do telefone: a `TopBarActionGroup
- * morph` sozinha, para ver o filtro pingar da lupa, trocar de ícone e ser
- * reabsorvido. Só em desenvolvimento (a mesma guarda do catálogo).
+ * morph` sozinha, para ver o vidro esticar da lupa, o filtro trocar de ícone
+ * e o vidro voltar a ser a lupa. Só em desenvolvimento (a mesma guarda do catálogo).
  * Temporário: sai quando o gesto estiver aprovado no aparelho.
  *
  * "Ampliar" desenha a faixa a 3× por `zoom` (e não `scale`: um `transform`
@@ -76,7 +76,7 @@ export default function Page() {
         <div className="flex min-h-dvh flex-col gap-6 bg-background p-4">
             <div>
                 <H1>Laboratório do cabeçalho</H1>
-                <Muted>A cápsula da direita: o filtro pinga da lupa, troca de ícone e volta para dentro dela.</Muted>
+                <Muted>A cápsula da direita: o vidro estica da lupa, o filtro troca de ícone e o vidro volta a ser a lupa.</Muted>
             </div>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
                 <Tabs value={estado} onValueChange={(v) => setEstado(v as Estado)}>

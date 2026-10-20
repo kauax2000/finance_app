@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { lerFonte, semComentarios } from "@/test/fonte"
-import { quadroDaGotaDoFiltro, quadroDaTroca } from "./header-morph"
+import { quadroDaTroca, quadroDoVidroQueEstica } from "./header-morph"
 
 describe("quadroDaTroca", () => {
   it("parte do ícone que sai inteiro e fecha no que entra inteiro", () => {
@@ -26,27 +26,30 @@ describe("quadroDaTroca", () => {
   })
 })
 
-describe("quadroDaGotaDoFiltro", () => {
+describe("quadroDoVidroQueEstica", () => {
   it("abre na lupa sozinha e fecha na cápsula inteira", () => {
-    const g0 = quadroDaGotaDoFiltro(0)
-    expect(g0.lupaDx).toBe(44)
-    expect(g0.gota.r).toBeCloseTo(6.6, 6)
-    expect(g0.gota.cx).toBe(68)
-    expect(g0.cintura).toBe(0)
+    const g0 = quadroDoVidroQueEstica(0)
+    expect(g0).toMatchObject({ lupaDx: 44, costura: 88, largura: 44 })
     expect(g0.icone.opacidade).toBe(0)
-    const g1 = quadroDaGotaDoFiltro(1)
-    expect(g1.lupaDx).toBe(0)
-    expect(g1.gota).toEqual({ cx: 66, r: 22 })
-    expect(g1.cintura).toBe(1)
-    expect(g1.icone.opacidade).toBe(1)
+    const g1 = quadroDoVidroQueEstica(1)
+    expect(g1).toMatchObject({ lupaDx: 0, costura: 44, largura: 88 })
+    expect(g1.icone).toEqual({ opacidade: 1, escala: 1, desfoque: 0 })
   })
 
-  it("a gota nunca passa da borda direita da cápsula, e a lupa só anda para a esquerda", () => {
+  it("em todo quadro (até o passe da mola) cada ícone fica inteiro no seu vidro, e a borda só anda para a esquerda", () => {
     let antes = Infinity
     for (let i = 0; i <= 105; i++) {
-      const q = quadroDaGotaDoFiltro(i / 100)
-      expect(q.gota.cx + q.gota.r).toBeLessThanOrEqual(88 + 1e-9)
+      const q = quadroDoVidroQueEstica(i / 100)
+      // A lupa (16 de largura, centrada em lupaDx + 22) cabe à esquerda da costura.
+      expect(q.costura).toBeGreaterThanOrEqual(q.lupaDx + 30)
+      // A costura fica dentro dos dois vidros: depois do começo do filtro, até o fim da lupa.
+      expect(q.costura).toBeGreaterThanOrEqual(44)
+      expect(q.costura).toBeLessThanOrEqual(q.lupaDx + 44)
+      // O calendário aceso (centrado em 66) cabe à direita dela.
+      if (q.icone.opacidade > 0.02) expect(q.costura).toBeLessThanOrEqual(58)
+      expect(q.largura).toBe(88 - q.lupaDx)
       expect(q.lupaDx).toBeLessThanOrEqual(antes)
+      expect(q.lupaDx).toBeGreaterThanOrEqual(0)
       antes = q.lupaDx
     }
   })

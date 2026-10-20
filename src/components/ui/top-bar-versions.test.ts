@@ -421,7 +421,7 @@ describe("TopBarActionGroup morph", () => {
   const grupo = CODIGO.slice(CODIGO.indexOf("function TopBarActionGroup("), CODIGO.indexOf("const TOP_BAR_SEARCH_PLATE"))
 
   it("aceita um ou dois filhos, com a identidade do segundo", () => {
-    for (const parte of ["morph", "trailingKey", "quadroDaGotaDoFiltro(", "MOLA"]) {
+    for (const parte of ["morph", "trailingKey", "quadroDoVidroQueEstica(", "MOLA"]) {
       expect(grupo).toContain(parte)
     }
   })
@@ -450,6 +450,14 @@ describe("TopBarActionGroup morph", () => {
   it("escreve só nos vidros e nos filhos deles: nada de transform, recorte ou filtro no grupo", () => {
     expect(grupo).toContain("const grupo = React.useRef")
     expect(grupo).not.toMatch(/grupo\w*\.style\.(transform|clipPath|filter)/)
+  })
+
+  it("o vidro estica sem perder o anel: o do voo é o pseudo-elemento do grupo, na largura do quadro", () => {
+    expect(grupo).toContain('grupo.dataset.voo = ""')
+    expect(grupo).toContain('grupo.style.setProperty("--vidro-largura"')
+    expect(grupo).toContain("after:w-(--vidro-largura)")
+    expect(grupo).toContain("data-voo:after:block")
+    expect(grupo).toContain("delete grupo.dataset.voo")
   })
 
   it("a tinta do voo é uma só, a do header-morph", () => {

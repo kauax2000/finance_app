@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { lerFonte } from "@/test/fonte"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 import { highlightParts } from "./command"
 import { ariaShortcut, matchShortcut } from "@/lib/shortcut"
@@ -113,7 +113,8 @@ describe("as versões do Command", () => {
     expect(abertura.indexOf("quadro(de)")).toBeLessThan(abertura.indexOf("quandoPintar(() => {"))
     expect(abertura.indexOf("quandoPintar(() => {")).toBeLessThan(abertura.indexOf("animate(de, 1,"))
     // A espera mora num lugar só, e vale para abrir e para fechar.
-    const espera = CODIGO.slice(CODIGO.indexOf("function quandoPintar("), CODIGO.indexOf("function quandoPintar(") + 600)
+    const morph = semComentarios(lerFonte("src/lib/header-morph.ts"))
+    const espera = morph.slice(morph.indexOf("export function quandoPintar("), morph.indexOf("export function quandoPintar(") + 600)
     expect(espera).toContain("if (quadros < 2 || (agora - antes > 34 && quadros < 6)) {")
     expect(espera).toContain("return () => cancelAnimationFrame(id)")
     expect(CODIGO.match(/= quandoPintar\(/g)).toHaveLength(2)

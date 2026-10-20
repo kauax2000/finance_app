@@ -11,7 +11,7 @@ import { Kbd } from "@/components/ui/kbd"
 import { Button } from "@/components/ui/button"
 import { MOLA, SAIDA, SEPARACAO } from "@/lib/spring"
 import { ACOPLAMENTO_Y } from "@/lib/liquid-move"
-import { lerp, preso, suave, TINTA_DO_VOO } from "@/lib/header-morph"
+import { lerp, preso, quandoPintar, suave, TINTA_DO_VOO } from "@/lib/header-morph"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { ehCursor } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
@@ -329,30 +329,6 @@ function quadroDaGota(m: { lupa: Caixa; pilula: Caixa; x: Caixa; dpr: number }, 
  * (a curva re-amostrada a 320ms).
  */
 const VOLTA_DA_PILULA = { duration: 0.32, ease: [0.2, 0, 0, 1] } as const
-
-/**
- * Chama `comecar` quando a pintura volta a correr. Entre o toque e o primeiro
- * quadro pintado o WebKit para 100–240ms (montando a paleta ou subindo e
- * descendo o teclado); o `animate` conta o tempo, e o gesto voltava já no fim.
- * Dois rAF seguidos a até 34ms dizem que a pintura voltou (até seis, se ela
- * seguir engasgando). Devolve o cancelamento.
- */
-function quandoPintar(comecar: () => void) {
-  let quadros = 0
-  let antes = 0
-  let id = 0
-  const esperar = (agora: number) => {
-    quadros++
-    if (quadros < 2 || (agora - antes > 34 && quadros < 6)) {
-      antes = agora
-      id = requestAnimationFrame(esperar)
-      return
-    }
-    comecar()
-  }
-  id = requestAnimationFrame(esperar)
-  return () => cancelAnimationFrame(id)
-}
 
 /**
  * A pílula volta ao começo da rolagem: o `overflow: hidden` do feixe faz dela

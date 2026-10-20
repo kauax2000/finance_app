@@ -28528,3 +28528,33 @@ agora o mesmo `esticao(p)`: o recorte da cápsula chega à calha aos 0,7. A
 caixa da pílula fica até 8px à direita enquanto a emenda está fundida, e só a
 caixa pinta: a borda pintada assenta na calha conforme o vão abre, e o
 fantasma da lupa segue a borda pintada (`lupaDx`), não o recorte.
+
+### Rodada 351 — a cápsula do cabeçalho estica, em vez de pingar
+
+**O pedido.** "Melhore a animação de um para dois", com o iOS de inspiração.
+Na gota da rodada 349 o filtro nascia como um segundo círculo solto ao lado da
+lupa e só depois se fundia. Num protótipo com cinco versões (hoje; A, o vidro
+se estica; B, geleia; C, o filtro entra deslizando; D, divisão), o dono
+escolheu **A**: como os itens da barra do iOS 26, um vidro só que se alarga da
+lupa para a esquerda, a lupa indo junto, e o calendário acendendo do desfoque
+no lugar dele. A volta é o mesmo filme ao contrário.
+
+**Como.** `quadroDoVidroQueEstica(g)` (`lib/header-morph`) no lugar de
+`quadroDaGotaDoFiltro`: a borda anda de 44 a 0 (sem passar dele — além, a lupa
+sairia da costura e abriria um vão), e a `costura` é onde um vidro passa ao
+outro: com o filtro apagado a lupa é o vidro inteiro (o recorte se estende até
+a ponta e arredonda com o centro no do filtro); aceso, a costura fica antes do
+ícone dele (58) e depois do fim do ícone da lupa (`lupaDx + 30`). Cada pixel da
+cápsula é de um vidro só. O anel não some: o `::after` do grupo, sob
+`data-voo`, desenha o da cápsula que estica na largura do quadro
+(`--vidro-largura`).
+
+**O salto.** Montar o filtro parava a pintura ~300ms, e a mola contava esse
+tempo: o primeiro quadro pintado já era o fim. O `quandoPintar` da busca foi
+para `lib/header-morph` e serve agora a cápsula e a troca sino ↔ voltar
+(que chega com a tela nova montando).
+
+**Medido** no laboratório (`/laboratorio/cabecalho`), por amostragem do
+inline: a entrada anda em ~230ms até a borda chegar, sem salto, e no repouso
+nada inline sobra. As fotos da prévia não acompanham o movimento; a sensação
+fica para o aparelho.

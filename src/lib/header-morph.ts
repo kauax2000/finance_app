@@ -45,34 +45,60 @@ export function quadroDaTroca(p: number, afundar: boolean): { escala: number; sa
  */
 export const TINTA_DO_VOO = 8
 
-/** O raio da gota na cápsula cheia, e a altura dela: a lupa ocupa `[0, 44]` e o filtro `[44, 88]`. */
-export const GOTA_R = 22
-export const GOTA_H = 44
+/** O raio do vidro da cápsula, e a altura dele: a lupa ocupa `[0, 44]` e o filtro `[44, 88]`. */
+export const VIDRO_R = 22
+export const VIDRO_H = 44
+/** Onde o calendário (16 de largura, centrado em 66) começa: a costura não passa daqui com ele aceso. */
+const ANTES_DO_FILTRO = 66 - 8
 
 /**
- * Um quadro da gota do filtro, no progresso `g` (0 a lupa sozinha, 1 a cápsula
- * inteira), nas coordenadas da caixa final da cápsula. A lupa anda do filtro
- * para a esquerda (`lupaDx`), a gota cresce de 30% a 100% do raio e corre da
- * sombra da lupa até o centro do filtro, a cintura da emenda fecha no fim e o
- * ícone do filtro acende por último. No passe da mola (`g` até 1,05) a lupa
- * passa um pouco do zero (−2,2px no pico, como o `desenharGota` espera) e a
- * gota fica dentro da borda direita.
+ * Um quadro do vidro que estica (a cápsula do cabeçalho, como os itens da
+ * barra do iOS 26), no progresso `g` (0 a lupa sozinha, 1 a cápsula inteira),
+ * nas coordenadas da caixa final. Um vidro só para o olho: a borda esquerda
+ * anda da lupa até a ponta da cápsula levando a lupa (`lupaDx`), a direita
+ * fica, e o ícone do filtro acende do desfoque no lugar dele. São dois vidros
+ * de verdade, e a `costura` é onde um passa ao outro: com o filtro apagado a
+ * lupa é o vidro inteiro; aceso, a costura fica antes do ícone dele, e nunca
+ * antes do fim do ícone da lupa (`lupaDx + 30`). A borda para em 0 no passe
+ * da mola: além dela a lupa sairia da costura e abriria um vão.
  */
-export function quadroDaGotaDoFiltro(g: number): {
+export function quadroDoVidroQueEstica(g: number): {
   lupaDx: number
-  gota: { cx: number; r: number }
-  cintura: number
+  costura: number
+  largura: number
   icone: IconeEmVoo
 } {
-  const o = suave(g, [0.4, 0.95])
-  const lupaDx = GOTA_H * (1 - preso(g, 0, 1.05))
+  const lupaDx = VIDRO_H * (1 - preso(g, 0, 1))
+  const o = suave(g, [0.35, 0.9])
+  const fim = lupaDx + VIDRO_H
   return {
     lupaDx,
-    gota: {
-      cx: lerp(lupaDx + 24, 66, suave(g, [0, 0.8])),
-      r: GOTA_R * (0.3 + 0.7 * suave(g, [0, 0.7])),
-    },
-    cintura: suave(g, [0.55, 1]),
+    costura: o > 0 ? Math.max(Math.min(fim, ANTES_DO_FILTRO), lupaDx + 30) : fim,
+    largura: 2 * VIDRO_H - lupaDx,
     icone: { opacidade: o, escala: 0.7 + 0.3 * o, desfoque: 4 * (1 - o) },
   }
+}
+
+/**
+ * Chama `comecar` quando a pintura volta a correr. Entre o toque e o primeiro
+ * quadro pintado o WebKit para 100–300ms (montando a paleta ou a cápsula, ou
+ * subindo e descendo o teclado); o `animate` conta o tempo, e o gesto voltava já no fim.
+ * Dois rAF seguidos a até 34ms dizem que a pintura voltou (até seis, se ela
+ * seguir engasgando). Devolve o cancelamento.
+ */
+export function quandoPintar(comecar: () => void) {
+  let quadros = 0
+  let antes = 0
+  let id = 0
+  const esperar = (agora: number) => {
+    quadros++
+    if (quadros < 2 || (agora - antes > 34 && quadros < 6)) {
+      antes = agora
+      id = requestAnimationFrame(esperar)
+      return
+    }
+    comecar()
+  }
+  id = requestAnimationFrame(esperar)
+  return () => cancelAnimationFrame(id)
 }

@@ -309,8 +309,8 @@ function DemoTroca() {
 
 const SEGUNDOS = ["nenhum", "mês", "ajustes"] as const
 
-/** A cápsula do telefone: a lupa sozinha, ou com o mês ou os ajustes da tela pingando dela. O eixo troca a tela. */
-function DemoGota() {
+/** A cápsula do telefone: a lupa sozinha, ou com o mês ou os ajustes da tela, o vidro esticando dela. O eixo troca a tela. */
+function DemoVidroQueEstica() {
   const [segundo, setSegundo] = React.useState<(typeof SEGUNDOS)[number]>("nenhum")
   return (
     <div className="flex w-full flex-col items-center gap-6 p-4">
@@ -477,8 +477,8 @@ export default function TopBarDoc() {
       </DocSection>
 
       <DocSection
-        title="O filtro pinga da lupa"
-        description="Com morph, a cápsula aceita um ou dois filhos: a lupa sozinha, ou a lupa com o filtro da tela. O segundo entra como uma gota do flanco da lupa e sai reabsorvido por ela; com os dois presentes, trocar o trailingKey troca só o ícone. Troque a tela no eixo."
+        title="O vidro estica da lupa"
+        description="Com morph, a cápsula aceita um ou dois filhos: a lupa sozinha, ou a lupa com o filtro da tela. O vidro se alarga da lupa até a cápsula ao entrar o segundo, e encolhe de volta ao sair; com os dois presentes, trocar o trailingKey troca só o ícone. Troque a tela no eixo."
         code={`<TopBarActionGroup morph trailingKey={filtro?.icon}>
   <TopBarAction label="Buscar" plate onClick={abrirBusca}>
     <MagnifyingGlassIcon className="size-4" />
@@ -491,11 +491,11 @@ export default function TopBarDoc() {
 </TopBarActionGroup>`}
         previewClassName="block p-0"
       >
-        <DemoGota />
+        <DemoVidroQueEstica />
       </DocSection>
 
-      <DocNote title="A gota é o próprio vidro do filtro">
-        O filtro pinga do flanco da lupa e a cintura se enche; ao sair, afina e é reabsorvido. A lupa corre 44px para a esquerda enquanto a gota nasce dentro dela com 30% do raio, cresce e corre até o lugar do filtro, com a cintura entre os dois enchendo no fim; o ícone acende do desfoque por último. A ponta direita fica parada: o pixel da lupa sozinha é o da ponta da cápsula. São o <code>clip-path</code> e o <code>transform</code> dos próprios vidros, na mola da casa, e o anel do grupo some no voo (a silhueta é a tinta do voo da busca). O segundo que sai fica montado, inerte, até a lupa o reabsorver; montar não anima, interromper segue de onde está, e com movimento reduzido troca na hora.
+      <DocNote title="Um vidro só para o olho">
+        Como os itens da barra do iOS 26: a borda esquerda anda 44px levando a lupa, a direita fica parada (o pixel da lupa sozinha é o da ponta da cápsula), e o ícone do filtro acende do desfoque no lugar dele. São os dois vidros de verdade, cada um cortado na costura entre eles (<code>clip-path</code> e <code>transform</code> só nos vidros), e o anel da cápsula que estica é o <code>::after</code> do grupo, na largura do quadro. O relógio da mola só começa quando a pintura volta (montar o filtro para a pintura). O segundo que sai fica montado, inerte, até o vidro voltar à lupa; montar não anima, interromper segue de onde está, e com movimento reduzido troca na hora.
       </DocNote>
 
       <DocSection
@@ -555,7 +555,7 @@ export default function TopBarDoc() {
           { prop: "TopBarTitle", type: "ComponentProps<'h1'> & { phone?, pageTitle?, scrollToTop?, asChild? }", description: "O nome da tela. pageTitle recebe o título que sobe do PageHeader; tocar nele no telefone sobe ao topo." },
           { prop: "TopBarAction", type: "Button & { label, count?, countLabel?, shortcut?, tooltip?, plate? }", description: "O botão de ícone da barra, com a dica e a contagem no nome; `plate` veste o círculo de vidro do botão de recolher, em todo tamanho." },
           { prop: "TopBarActionSwap", type: "{ swapKey, className?, children }", description: "O círculo de vidro que fica enquanto o miolo troca: mudar swapKey afunda o vidro na mola e cruza os ícones no desfoque. O filho não desenha o próprio vidro." },
-          { prop: "TopBarActionGroup", type: "ComponentProps<typeof ButtonGroup> & { join?, morph?, trailingKey? }", description: "Ações com plate numa cápsula: o ButtonGroup sem divisor, com o anel no grupo. join (always, o padrão; desktop; phone) diz de que lado da quebra cola, quando um dos botões só existe num lado; do outro, o que sobra é um círculo solto. morph é a cápsula do telefone, com um ou dois filhos: o segundo pinga da lupa ao entrar e é reabsorvido ao sair, e trailingKey (a identidade dele) troca só o miolo quando muda." },
+          { prop: "TopBarActionGroup", type: "ComponentProps<typeof ButtonGroup> & { join?, morph?, trailingKey? }", description: "Ações com plate numa cápsula: o ButtonGroup sem divisor, com o anel no grupo. join (always, o padrão; desktop; phone) diz de que lado da quebra cola, quando um dos botões só existe num lado; do outro, o que sobra é um círculo solto. morph é a cápsula do telefone, com um ou dois filhos: o vidro estica da lupa ao entrar o segundo e encolhe ao sair, e trailingKey (a identidade dele) troca só o miolo quando muda." },
           { prop: "TopBarSearch", type: "{ onOpen, label?, placeholder?, shortcut?, slash?, listen?, collapse?, glow?, plate? }", description: "A pílula de busca com a tecla, que vira ícone abaixo da quebra, e os atalhos ⌘K e /; `plate` troca o campo pelo vidro do campo do CommandDialog." },
           { prop: "TopBarProgress", type: "{ value?, label? }", description: "O fio de carregamento na aresta de baixo; sem value, indeterminado." },
           { prop: "TopBarSkeleton", type: "{ size?, actions?, start? }", description: "A barra esperando, no SkeletonGroup." },
