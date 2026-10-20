@@ -52,10 +52,11 @@ export const GOTA_H = 44
 /**
  * Um quadro da gota do filtro, no progresso `g` (0 a lupa sozinha, 1 a cápsula
  * inteira), nas coordenadas da caixa final da cápsula. A lupa anda do filtro
- * para a esquerda (`lupaDx`, sem passar do zero), a gota cresce de 30% a 100%
- * do raio e corre da sombra da lupa até o centro do filtro, a cintura da
- * emenda fecha no fim e o ícone do filtro acende por último. O passe da mola
- * (`g` até 1,05) deixa a lupa parada e a gota dentro da borda direita.
+ * para a esquerda (`lupaDx`), a gota cresce de 30% a 100% do raio e corre da
+ * sombra da lupa até o centro do filtro, a cintura da emenda fecha no fim e o
+ * ícone do filtro acende por último. No passe da mola (`g` até 1,05) a lupa
+ * passa um pouco do zero (−2,2px no pico, como o `desenharGota` espera) e a
+ * gota fica dentro da borda direita.
  */
 export function quadroDaGotaDoFiltro(g: number): {
   lupaDx: number

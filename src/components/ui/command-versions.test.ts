@@ -239,7 +239,7 @@ describe("as versões do Command", () => {
     expect(lerFonte("src/components/layout/app-command-palette.tsx")).toContain("closeOrigin?: React.RefObject<HTMLElement | null>")
     expect(lerFonte("src/components/layout/app-command-palette.tsx")).toContain("closeOrigin={closeOrigin}")
     const header = lerFonte("src/components/layout/app-header.tsx")
-    expect(header).toContain("ref={filtroRef}")
+    expect(header).toContain("ref={guardarFiltro}")
     expect(header).toContain("closeOrigin={filtroRef}")
     // O teclado do iOS só encolhe o viewport visual: a camada e o teto da
     // placa leem a altura dele, publicada numa variável, com 100dvh de reserva.

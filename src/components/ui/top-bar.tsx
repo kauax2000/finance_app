@@ -610,6 +610,9 @@ type Miolo = { chave: string; filho: React.ReactNode }
  * primeiro quarto dela. Antes do meio, o que sai continua saindo e o que mal
  * tinha entrado vai embora; depois, o que entrava passa a sair. Sem caixa (a árvore do telefone escondida) ou com movimento
  * reduzido, troca na hora.
+ * Durante o gesto o filho de antes e o de agora estão montados juntos: um ref
+ * passado ao filho precisa tolerar duas instâncias (o que sai, ao desmontar,
+ * não pode zerar o do que entrou).
  */
 function TopBarActionSwap({
   swapKey,
@@ -792,7 +795,8 @@ const CAPSULA_COLA = {
  * filhos: com um, o círculo do primeiro; com dois, a cápsula. O segundo entra
  * e sai pingando da lupa (`CapsulaQuePinga`), e `trailingKey` é a identidade
  * dele (`"month"`, `"filter"`): mudá-la com os dois presentes troca o miolo
- * no lugar, sem mexer na forma.
+ * no lugar, sem mexer na forma. Na troca o segundo filho de antes e o de agora
+ * ficam montados juntos: um ref passado a ele precisa tolerar duas instâncias.
  */
 function TopBarActionGroup({
   join = "always",
@@ -982,8 +986,8 @@ const TOP_BAR_SEARCH_PLATE =
  * (`SIDEBAR_TRIGGER_FLOATING`): o vidro vai até o anel (`bg-clip-border`) e o
  * realce é o das carteiras, `--sidebar-accent` a 50%. Vale em todo tamanho: no
  * telefone os botões da barra são os mesmos círculos de vidro do desktop
- * (rodada 329). Exportado como `topBarPlateClassName` para o voltar do telefone
- * (`PageHeaderBack`) vestir o mesmo vidro sem copiar a receita.
+ * (rodada 329). O `TopBarActionSwap` e a gota da `TopBarActionGroup morph`
+ * vestem a mesma receita.
  */
 const TOP_BAR_PLATE =
   "ring-1 ring-foreground/10 bg-popover/85 glass-surface supports-backdrop-filter:bg-popover/60 reduced-transparency:bg-popover rounded-full bg-clip-border [--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]"
@@ -1199,6 +1203,5 @@ export {
   TopBarSkeleton,
   TopBarStart,
   TopBarTitle,
-  TOP_BAR_PLATE as topBarPlateClassName,
   topBarVariants,
 }

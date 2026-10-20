@@ -113,7 +113,8 @@ describe("as peças", () => {
       // Em todo tamanho: no telefone os botões da barra são os mesmos círculos de vidro.
       expect(CODIGO).toMatch(new RegExp(`const TOP_BAR_PLATE =\\s*"[^"]*(?<![:\\w])${parte.replace(/[[\]().*+?^$|/]/g, "\\$&")}`))
     }
-    expect(CODIGO).toContain("TOP_BAR_PLATE as topBarPlateClassName")
+    // Ninguém fora do arquivo veste o vidro à mão: o voltar entra no `TopBarActionSwap`.
+    expect(CODIGO).not.toContain("topBarPlateClassName")
   })
 })
 

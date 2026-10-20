@@ -9,13 +9,13 @@ describe("filtroDoCabecalho", () => {
         expect(filtroDoCabecalho("month", undefined)).toEqual({
             label: "Mês",
             active: false,
-            disabled: true,
+            inerte: true,
             icon: "month",
         })
         expect(filtroDoCabecalho("filter", undefined)).toEqual({
             label: "Filtros",
             active: false,
-            disabled: true,
+            inerte: true,
             icon: "filter",
         })
     })
@@ -24,6 +24,8 @@ describe("filtroDoCabecalho", () => {
         const inerte = filtroDoCabecalho("filter", undefined)
         expect(inerte).not.toHaveProperty("onOpen")
         expect(inerte).not.toHaveProperty("popover")
+        // Não esmaece: o `disabled` do botão pintaria 50% até a página publicar.
+        expect(inerte).not.toHaveProperty("disabled")
     })
 
     it("a publicação vence, inclusive o null (a aba Receitas desliga)", () => {

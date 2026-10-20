@@ -89,8 +89,8 @@ type AppHeaderProps = {
  * esquerda e a lupa à direita; nas subpáginas o voltar toma o lugar do sino, e
  * as telas abertas pela página Você voltam a ela. A tela que tem filtro o
  * publica (`usePageChromeFilter`), e ele cola na lupa, numa cápsula. O mês
- * das telas que o têm mora no topo do conteúdo. No desktop, só o gatilho da
- * barra lateral.
+ * das telas que o têm é esse filtro: o calendário na cápsula, que abre a grade
+ * de meses. No desktop, só o gatilho da barra lateral.
  *
  * Trocar de tela no telefone é líquido: o sino e o voltar dividem um vidro só
  * (`TopBarActionSwap`), que afunda e volta enquanto o ícone troca, e o filtro
@@ -110,11 +110,23 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     // pela escolha em Configurações › Aparência (neste aparelho).
     const [busca] = useBuscaDoCabecalho()
     // A lupa do telefone é a origem da busca: a pílula nasce dela e volta a ela.
+    // O ref de objeto basta: a lupa nunca troca (é o primeiro filho fixo da
+    // cápsula), então nunca há duas montadas com o mesmo ref.
     const lupaRef = React.useRef<HTMLButtonElement>(null)
     // O filtro colado à lupa é a origem do ×: a cápsula se divide em duas
     // bolhas. Fica no botão, dentro da gota da cápsula. Nas telas sem filtro o
     // React zera o ref quando a gota volta à lupa, e a lupa se divide.
     const filtroRef = React.useRef<HTMLButtonElement>(null)
+    // Na troca de ícone (Painel → Transações) o filtro de antes e o de agora
+    // ficam montados juntos (`MioloQueTroca`): com um ref de objeto, o que sai
+    // zeraria o ref ao desmontar, e a paleta faria o gesto sem filtro sobre a
+    // cápsula. A limpeza só zera se o ref ainda for dela.
+    const guardarFiltro = React.useCallback((no: HTMLButtonElement | null) => {
+        filtroRef.current = no
+        return () => {
+            if (filtroRef.current === no) filtroRef.current = null
+        }
+    }, [])
 
     const pageTitle =
         chromeSlot?.title ?? defaultMobileTitle(pathname, titleMode)
@@ -139,11 +151,12 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     )
     // O filtro da tela no telefone: abre a folha da tela, ou o popover que ela
     // entrega (o calendário do mês), ancorado no próprio botão. O ponto no
-    // canto diz que há filtro fora do padrão.
+    // canto diz que há filtro fora do padrão. O declarado pela rota (`inerte`)
+    // não abre nada e não esmaece: só o `disabled` publicado pela tela esmaece.
     const [filtroAberto, setFiltroAberto] = React.useState(false)
     const botaoDoFiltro = filtro ? (
         <TopBarAction
-            ref={filtroRef}
+            ref={guardarFiltro}
             type="button"
             label={filtro.label}
             plate
@@ -151,6 +164,7 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
             aria-haspopup="dialog"
             aria-expanded={filtro.popover ? filtroAberto : undefined}
             disabled={filtro.disabled}
+            aria-disabled={filtro.inerte || undefined}
             onClick={filtro.popover ? undefined : filtro.onOpen}
         >
             {filtro.icon === "month" ? (
@@ -261,7 +275,7 @@ export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
                     // mesmo com ou sem filtro: ele pinga da lupa ao chegar e
                     // volta a ela ao sair, e a identidade (`month`, `filter`)
                     // troca o ícone no lugar.
-                    <TopBarActionGroup morph trailingKey={filtro?.icon ?? undefined}>
+                    <TopBarActionGroup morph trailingKey={filtro?.icon}>
                         {lupa(true)}
                         {filtroNoCabecalho}
                     </TopBarActionGroup>

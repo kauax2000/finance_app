@@ -392,7 +392,9 @@ function desenharBolhas(
   // aparecia (dois círculos se tocando num ponto desde o primeiro quadro). O
   // raio próprio zera só do lado da emenda: os cantos de fora ficam no R,
   // porque no passe da mola o recorte da esquerda sai da caixa, e só a caixa
-  // pinta (a ponta saía reta por ~150ms).
+  // pinta (a ponta saía reta por ~150ms). Os dois raios se escrevem aqui, e
+  // não só o da pílula: um fechar que começa no meio do abrir pode trocar de
+  // gesto (`colado` mudou), e cada desenho escreve tudo o que é dele.
   pilula.style.borderRadius = `${f.R}px 0px 0px ${f.R}px`
   x.style.borderRadius = `0px ${f.R}px ${f.R}px 0px`
   pilula.style.transform = `translateX(${f.dx}px)`
@@ -475,6 +477,9 @@ function desenharGota(
   pilula.style.backgroundImage = x.style.backgroundImage = `linear-gradient(${tinta}, ${tinta})`
   // A gota: a borda direita dela em `cx + r`, e a escala pela origem da direita.
   const W = m.x.width
+  // A pílula volta ao `rounded-full` da classe: o `desenharBolhas` a deixa com
+  // os cantos da direita retos, e o gesto pode trocar no meio.
+  pilula.style.borderRadius = ""
   x.style.borderRadius = `0px ${R}px ${R}px 0px`
   x.style.transform = `translateX(${f.gota.cx + f.gota.r - m.x.right}px) scale(${s})`
   // Onde a ponta da pílula acaba, nas coordenadas da gota antes do `transform`; toda dentro, não sobra nada.

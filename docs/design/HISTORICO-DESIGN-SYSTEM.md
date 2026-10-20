@@ -28456,5 +28456,14 @@ a gota (a pinça da emenda, não o filtro "goo" dos protótipos, que não serve
 porque o vidro tem `backdrop-filter`); abrir e fechar a busca no meio do voo;
 a terceira chave da troca (a demo tem duas); o desktop (a árvore do `md` para
 cima não mudou). Em aberto: o pico do console "Too many re-renders" em
-`CapsulaQuePinga` visto uma vez antes de os marcadores serem postos e não
+`CapsulaQuePinga`, visto num pico, antes dos marcadores da Tarefa 5, e não
 reproduzido depois.
+
+**A revisão do ramo inteiro pegou mais dois:** na troca de ícone (Painel →
+Transações) o filtro de antes e o de agora ficam montados juntos, e o ref de
+objeto zerava quando o que saía desmontava — a busca abria com o gesto sem
+filtro sobre a cápsula; agora o `filtroRef` é preenchido por um ref de função
+que só zera o próprio nó. E o filtro declarado pela rota era `disabled`, que
+esmaece a 50% e acendia a cada navegação quando a página publicava; agora ele é
+`inerte` (sem ação, sem esmaecer), e só o `disabled` publicado (Contas sem
+tabela) esmaece.

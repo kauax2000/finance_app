@@ -695,7 +695,8 @@ declaração de `background-color` no trilho).
   não ganha o voltar (`defaultMobileBackHref`, rodada 346); a tela com filtro
   o publica por `usePageChromeFilter` e ele cola na lupa, numa cápsula — rodada
   334; a **rota declara** o filtro (`mobileHeaderFilterFor`, em
-  `config/mobile-navigation.ts`) para o cabeçalho ter a forma certa no clique,
+  `config/mobile-navigation.ts`; `inerte`, que não abre nada e não esmaece —
+  só o `disabled` publicado pela tela esmaece) para o cabeçalho ter a forma certa no clique,
   antes dos ~700ms do `AdiarMontagem`, e **a publicação da página vence**
   (`filtroDoCabecalho`, `usePageChromeFilterFor`), rodada 349), as listas abrem na `Toolbar` e as telas de conta num
   `PageSection`; só o `PageHeaderBack` serve o voltar do telefone. O mês das
@@ -1561,7 +1562,9 @@ declaração de `background-color` no trilho).
   desfoque enquanto o novo entra (`quadroDaTroca`); o vidro é dele (a
   `TopBarAction` de dentro não pinta o seu, e o realce é o do vidro), montar
   não anima, o miolo que saiu fica inerte e entrega o foco, interromper segue
-  sem pular, e movimento reduzido troca na hora (rodada 349);
+  sem pular, e movimento reduzido troca na hora (rodada 349); no gesto os dois
+  miolos estão montados, e um ref passado ao filho tolera duas instâncias (o
+  `filtroRef` do cabeçalho é um ref de função que só zera o próprio nó);
   **`TopBarActionGroup`** (ações `plate` numa cápsula: o `ButtonGroup` sem
   divisor, com o anel no grupo; `join` — `always`, `desktop`, `phone` — diz de
   que lado da quebra cola, quando um botão só existe num lado; no telefone a

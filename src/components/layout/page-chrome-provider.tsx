@@ -21,7 +21,14 @@ export type PageChromeFilter = {
     label: string
     /** Há filtro fora do padrão: o ponto no canto. */
     active: boolean
+    /** Desligado de verdade: esmaece (a tela publica, como Contas sem tabela). */
     disabled?: boolean
+    /**
+     * O botão que a rota declara antes de a página falar: sem `onOpen` nem
+     * `popover`, um toque não faz nada, mas ele não esmaece — senão o ícone
+     * acenderia de 50% a 100% a cada navegação, quando a página publica.
+     */
+    inerte?: boolean
     /** `filter` (o ajuste da folha de filtros) ou `month` (o calendário do mês). */
     icon?: "filter" | "month"
     /** Abre a folha da tela. */
@@ -105,6 +112,7 @@ export function usePageChromeFilterFor(pathname: string): PageChromeFilter | nul
  * O que o cabeçalho desenha: a publicação da página vence (inclusive o `null`,
  * que desliga o filtro na aba Receitas); sem ela, a rota declara um botão inerte
  * na forma final, sem `onOpen` nem `popover`, que não abre nada até a página falar.
+ * Ele não é `disabled`: o esmaecer piscaria a cada troca de tela.
  */
 export function filtroDoCabecalho(
     declarado: MobileHeaderFilterIcon | null,
@@ -115,7 +123,7 @@ export function filtroDoCabecalho(
     return {
         label: declarado === "month" ? "Mês" : "Filtros",
         active: false,
-        disabled: true,
+        inerte: true,
         icon: declarado,
     }
 }
