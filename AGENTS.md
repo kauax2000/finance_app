@@ -1573,8 +1573,9 @@ declaração de `background-color` no trilho).
   que lado da quebra cola, quando um botão só existe num lado; no telefone a
   lupa e o filtro da tela colam, rodada 334; **`morph`** + `trailingKey` (um ou
   dois filhos, `[lupa | filtro]`, com o `join="always"` padrão) faz o vidro
-  esticar da lupa até a cápsula, como os itens da barra do iOS 26 — dois
-  vidros cortados numa costura, o anel no `::after` do grupo, o calendário
+  esticar da lupa até a cápsula, como os itens da barra do iOS 26 — um vidro
+  só, o do grupo (dois vidros lado a lado mostravam a emenda dos borrões), com
+  a lupa e o filtro transparentes por dentro, o anel no `::after`, o calendário
   acendendo do desfoque, na mola `BALANCO` com o balanço à vista nos dois
   sentidos — e `trailingKey` troca o miolo com os dois presentes — rodadas
   349 e 351) — a busca compacta

@@ -48,42 +48,28 @@ export const TINTA_DO_VOO = 8
 /** O raio do vidro da cápsula, e a altura dele: a lupa ocupa `[0, 44]` e o filtro `[44, 88]`. */
 export const VIDRO_R = 22
 export const VIDRO_H = 44
-/** Onde o calendário (16 de largura, centrado em 66) começa: a costura não passa daqui com ele aceso. */
-const ANTES_DO_FILTRO = 66 - 8
-
 /**
  * Um quadro do vidro que estica (a cápsula do cabeçalho, como os itens da
  * barra do iOS 26), no progresso `g` (0 a lupa sozinha, 1 a cápsula inteira),
- * nas coordenadas da caixa final (`[0, 88]`). Um vidro só para o olho: a borda
- * esquerda anda da lupa até a ponta da cápsula levando a lupa (`lupaDx`) e o
- * ícone do filtro acende do desfoque no lugar dele. Os dois sentidos são o
- * mesmo filme, e o balanço da mola aparece nos dois: além de 1, a cápsula
- * alarga além da ponta (o filtro estica, `esticaFiltro`, ancorado à direita,
- * para a costura não abrir); abaixo de 0, o círculo passa da lupa para a
- * direita. `esquerda` e `largura` são a caixa da cápsula visível (o anel).
- * São dois vidros de verdade, e a `costura` é onde um passa ao outro: com o
- * filtro apagado a lupa é o vidro inteiro; aceso, a costura fica antes do
- * ícone dele, e nunca antes do fim do ícone da lupa (`lupaDx + 30`).
+ * nas coordenadas da caixa final (`[0, 88]`). Um vidro só: a borda esquerda
+ * anda da lupa até a ponta da cápsula levando a lupa (`lupaDx`), e o ícone do
+ * filtro acende do desfoque no lugar dele. Os dois sentidos são o mesmo filme,
+ * e o balanço da mola aparece nos dois: além de 1 a cápsula alarga além da
+ * ponta; abaixo de 0 o círculo passa da lupa para a direita. `esquerda` e
+ * `largura` são a caixa visível da cápsula.
  */
 export function quadroDoVidroQueEstica(g: number): {
   lupaDx: number
-  costura: number
   esquerda: number
   largura: number
-  esticaFiltro: number
   icone: IconeEmVoo
 } {
   const lupaDx = VIDRO_H * (1 - g)
   const o = suave(g, [0.35, 0.9])
-  const fim = lupaDx + VIDRO_H
-  const costura = Math.max(VIDRO_H, o > 0 ? Math.max(Math.min(fim, ANTES_DO_FILTRO), lupaDx + 30) : fim)
-  const direita = Math.max(2 * VIDRO_H, fim)
   return {
     lupaDx,
-    costura,
     esquerda: lupaDx,
-    largura: direita - lupaDx,
-    esticaFiltro: Math.max(1, (2 * VIDRO_H - fim) / VIDRO_H),
+    largura: Math.max(2 * VIDRO_H, lupaDx + VIDRO_H) - lupaDx,
     icone: { opacidade: o, escala: 0.7 + 0.3 * o, desfoque: 4 * (1 - o) },
   }
 }

@@ -28585,3 +28585,15 @@ transparência) e o anel para 15% — o mesmo no anel da cápsula
 sobre o borrão da borda. No desktop nada muda (o sino e a busca seguem o vidro
 da pílula de busca). Medido a 375px no escuro: lupa, sino e barra pintam os três
 `oklab(0,26 / 0,6)` com o anel a 15%.
+
+**Depois: um vidro só.** O dono viu o "divisor" no meio da cápsula, em repouso
+e no voo. Não era fio nem anel: eram dois vidros lado a lado (a lupa e o
+filtro), cada um com o próprio `backdrop-filter`, e na emenda os dois borrões
+não casavam. O vidro passou para o grupo, e a lupa e o filtro ficaram
+transparentes por dentro; sem borrão nos filhos, o recorte e o `transform`
+podem morar no grupo. No voo o recorte do grupo é a cápsula visível; o balanço
+além dela alarga o grupo para a esquerda (`width`, filhos encostados à
+direita), e aquém da lupa o grupo anda para a direita (`translateX`). Medido no
+laboratório: a entrada leva a borda de 43 a 0 e a largura a 93,5 antes de
+assentar em 88; a saída leva a borda a 43 e o círculo 5,5px para a direita
+antes de voltar. A costura e o estica do filtro saíram do quadro.

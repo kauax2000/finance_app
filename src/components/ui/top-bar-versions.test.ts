@@ -444,12 +444,18 @@ describe("TopBarActionGroup morph", () => {
   })
 
   it("o segundo que sai com o foco dentro o passa à lupa antes de ficar inerte", () => {
-    expect(grupo).toContain("if (alvo === 0 && gota.contains(el.ownerDocument.activeElement)) lupaEl.querySelector<HTMLElement>(\"button, a\")?.focus()")
+    expect(grupo).toContain("if (alvo === 0 && filtroEl.contains(el.ownerDocument.activeElement)) lupaEl.querySelector<HTMLElement>(\"button, a\")?.focus()")
   })
 
-  it("escreve só nos vidros e nos filhos deles: nada de transform, recorte ou filtro no grupo", () => {
+  it("a cápsula é um vidro só, o do grupo: a lupa e o filtro não pintam vidro (a emenda de dois borrões era um fio)", () => {
     expect(grupo).toContain("const grupo = React.useRef")
-    expect(grupo).not.toMatch(/grupo\w*\.style\.(transform|clipPath|filter)/)
+    expect(grupo).toMatch(/TOP_BAR_PLATE,\s*"relative after:/)
+    const lupa = grupo.slice(grupo.indexOf('data-slot="top-bar-action-lupa"'), grupo.indexOf('data-slot="top-bar-action-lupa"') + 200)
+    const filtro = grupo.slice(grupo.indexOf('data-slot="top-bar-action-drop"'), grupo.indexOf('data-slot="top-bar-action-drop"') + 400)
+    expect(lupa).not.toContain("TOP_BAR_PLATE")
+    expect(filtro).not.toContain("TOP_BAR_PLATE")
+    // Por dentro nada tem borrão: o recorte e o `transform` moram no próprio vidro.
+    expect(grupo).toContain('grupo.style.clipPath = "inset(')
   })
 
   it("o vidro estica sem perder o anel: o do voo é o pseudo-elemento do grupo, na largura do quadro", () => {

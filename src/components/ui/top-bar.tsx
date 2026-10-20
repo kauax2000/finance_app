@@ -825,68 +825,52 @@ function TopBarActionGroup({
 }
 
 /**
- * Escreve um quadro do vidro que estica (`quadroDoVidroQueEstica`) nos dois
- * vidros e no miolo do filtro — nunca `transform`, recorte ou filtro no grupo,
- * que é ancestral dos dois (desligaria o `backdrop-filter`). `k` leva os 44 do
+ * Escreve um quadro do vidro que estica (`quadroDoVidroQueEstica`). A cápsula
+ * é um vidro só, o do grupo: os vidros da lupa e do filtro, lado a lado,
+ * borravam cada um o próprio fundo, e na emenda o borrão não casava (um fio no
+ * meio da cápsula, em repouso e no voo). Por dentro tudo é transparente, então
+ * `transform` e recorte no grupo não desligam borrão nenhum. `k` leva os 44 do
  * quadro ao vidro de verdade (36 no desktop do catálogo).
  *
- * Para o olho é um vidro só, de `lupaDx` até a ponta. A lupa anda
- * (`translateX`) e o recorte a corta na costura; com ela passando do centro do
- * filtro (o filtro apagado, a lupa é o vidro inteiro), o recorte se estende até
- * a ponta e arredonda ali, com o centro no do filtro. O filtro aparece só da
- * costura em diante, e o canto de dentro dos dois já é reto (o `ButtonGroup`):
- * cada pixel da cápsula é de um vidro só. A costura cai num pixel do aparelho.
- *
- * O anel não some no voo: o do grupo contornaria a cápsula final, então o
- * pseudo-elemento do grupo (`data-voo`) desenha o da cápsula que estica, na
- * caixa do quadro (`--vidro-esquerda`, `--vidro-largura`), balanço incluído.
+ * O recorte do grupo é a cápsula visível; a lupa anda (`translateX`) e o ícone
+ * do filtro acende no lugar dele. O balanço sai da caixa nos dois sentidos:
+ * além da cápsula o grupo alarga para a esquerda (`width`, com os filhos
+ * encostados à direita); aquém da lupa ele anda para a direita (`translateX`).
+ * O anel é o `::after` do grupo, na caixa visível (`--vidro-esquerda`,
+ * `--vidro-largura`): o do grupo seguiria a caixa inteira. O recorte se abre
+ * 1px para fora para deixá-lo à vista.
  */
-function desenharVidro(
-  grupo: HTMLElement,
-  lupa: HTMLElement,
-  filtro: HTMLElement,
-  miolo: HTMLElement,
-  g: number,
-  k: number,
-  dpr: number
-) {
+function desenharVidro(grupo: HTMLElement, lupa: HTMLElement, miolo: HTMLElement, g: number, k: number, dpr: number) {
   const f = quadroDoVidroQueEstica(g)
   const R = VIDRO_R * k
   const H = VIDRO_H * k
   const px = (v: number) => Math.round(v * k * dpr) / dpr
   const lupaDx = px(f.lupaDx)
-  const costura = px(f.costura)
+  const alem = Math.max(0, -lupaDx)
+  const aquem = Math.max(0, lupaDx - H)
+  // A origem das contas é a caixa de repouso da cápsula (`[0, 2H]`); no
+  // balanço além dela o grupo cresce `alem` para a esquerda.
+  const esquerda = lupaDx + alem - aquem
   grupo.dataset.voo = ""
   grupo.style.boxShadow = "none"
-  grupo.style.setProperty("--vidro-esquerda", lupaDx + "px")
+  grupo.style.width = alem > 0 ? 2 * H + alem + "px" : ""
+  grupo.style.justifyContent = alem > 0 ? "flex-end" : ""
+  grupo.style.transform = aquem > 0 ? "translateX(" + aquem + "px)" : ""
+  grupo.style.clipPath = "inset(-1px -1px -1px " + (esquerda - 1) + "px round " + (R + 1) + "px)"
+  grupo.style.setProperty("--vidro-esquerda", esquerda + "px")
   grupo.style.setProperty("--vidro-largura", f.largura * k + "px")
-  lupa.style.transform = "translateX(" + lupaDx + "px)"
-  // Nas coordenadas da lupa (a caixa dela é `[0, H]`), de onde ela anda. Com
-  // ela passando do centro do filtro, o recorte vai até a ponta (ou até ela
-  // mesma, no balanço para a direita) e arredonda ali.
-  lupa.style.clipPath =
-    costura > H + R
-      ? "inset(0px " + (H - (Math.max(2 * H, lupaDx + H) - lupaDx)) + "px 0px " + -H + "px round 0px " + R + "px " + R + "px 0px)"
-      : "inset(0px " + (H - (costura - lupaDx)) + "px 0px " + -H + "px)"
-  filtro.style.clipPath = "inset(0px 0px 0px " + (costura - H) + "px)"
-  // No balanço além da cápsula o filtro estica da ponta para a esquerda (o
-  // próprio vidro, ancorado à direita) e o miolo desfaz o estica.
-  const estica = f.esticaFiltro
-  filtro.style.transformOrigin = estica > 1 ? "right" : ""
-  filtro.style.transform = estica > 1 ? "scaleX(" + estica + ")" : ""
-  miolo.style.transform = estica > 1 ? "scaleX(" + 1 / estica + ")" : ""
+  lupa.style.transform = "translateX(" + (lupaDx - aquem) + "px)"
   pintarMiolo(miolo, f.icone)
 }
 
-/** A cápsula pronta: nada inline nos dois vidros, no miolo nem no grupo. */
-function vidroEmRepouso(grupo: HTMLElement, lupa: HTMLElement, filtro: HTMLElement, miolo: HTMLElement) {
+/** A cápsula pronta: nada inline no grupo, na lupa nem no miolo. */
+function vidroEmRepouso(grupo: HTMLElement, lupa: HTMLElement, miolo: HTMLElement) {
   delete grupo.dataset.voo
-  grupo.style.boxShadow = ""
+  grupo.style.boxShadow = grupo.style.width = grupo.style.justifyContent = ""
+  grupo.style.transform = grupo.style.clipPath = ""
   grupo.style.removeProperty("--vidro-esquerda")
   grupo.style.removeProperty("--vidro-largura")
-  lupa.style.transform = lupa.style.clipPath = ""
-  filtro.style.clipPath = filtro.style.transform = filtro.style.transformOrigin = ""
-  miolo.style.transform = ""
+  lupa.style.transform = ""
   pintarMiolo(miolo, null)
 }
 
@@ -926,16 +910,16 @@ function CapsulaQueEstica({
   React.useLayoutEffect(() => {
     const el = grupo.current
     const lupaEl = el?.firstElementChild as HTMLElement | null
-    const gota = el?.querySelector<HTMLElement>(":scope > [data-slot=top-bar-action-drop]")
-    const miolo = gota?.firstElementChild as HTMLElement | null
-    if (!el || !lupaEl || !gota || !miolo || g.current === alvo) return
+    const filtroEl = el?.querySelector<HTMLElement>(":scope > [data-slot=top-bar-action-drop]")
+    const miolo = filtroEl?.firstElementChild as HTMLElement | null
+    if (!el || !lupaEl || !filtroEl || !miolo || g.current === alvo) return
     // O segundo que sai com o foco dentro (a folha dele fechou e devolveu o
     // foco ao gatilho) o passa à lupa antes de o filtro ficar inerte — inerte,
     // o foco cairia no `body`.
-    if (alvo === 0 && gota.contains(el.ownerDocument.activeElement)) lupaEl.querySelector<HTMLElement>("button, a")?.focus()
+    if (alvo === 0 && filtroEl.contains(el.ownerDocument.activeElement)) lupaEl.querySelector<HTMLElement>("button, a")?.focus()
     const repouso = () => {
       g.current = alvo
-      vidroEmRepouso(el, lupaEl, gota, miolo)
+      vidroEmRepouso(el, lupaEl, miolo)
     }
     if (reduzido || lupaEl.offsetWidth === 0) {
       repouso()
@@ -946,7 +930,7 @@ function CapsulaQueEstica({
     const dpr = el.ownerDocument.defaultView?.devicePixelRatio || 1
     const quadro = (x: number) => {
       g.current = x
-      desenharVidro(el, lupaEl, gota, miolo, x, k, dpr)
+      desenharVidro(el, lupaEl, miolo, x, k, dpr)
     }
     quadro(g.current)
     let ativa = true
@@ -979,17 +963,19 @@ function CapsulaQueEstica({
       data-slot="top-bar-action-group"
       {...props}
       className={cn(
+        // O vidro é o grupo, um só: a lupa e o filtro são transparentes por dentro.
+        TOP_BAR_PLATE,
         // O anel da cápsula que estica, só no voo (o do grupo seguiria a caixa final).
         "relative after:pointer-events-none after:absolute after:inset-y-0 after:left-(--vidro-esquerda) after:hidden after:w-(--vidro-largura) after:rounded-full after:shadow-[0_0_0_1px_color-mix(in_oklab,var(--foreground)_10%,transparent)] max-md:after:shadow-[0_0_0_1px_color-mix(in_oklab,var(--foreground)_15%,transparent)] data-voo:after:block",
         props.className
       )}
     >
-      {/* A lupa mora num vidro próprio, como o filtro: o grupo achata o canto de
-          dentro do vidro (a emenda da cápsula), e o botão de dentro segue
-          redondo, com o realce em círculo como o do filtro. */}
+      {/* A lupa mora numa caixa própria, como o filtro, sem vidro (o vidro é o
+          grupo): o botão de dentro segue redondo, com o realce em círculo como
+          o do filtro. */}
       <span
         data-slot="top-bar-action-lupa"
-        className={cn("relative grid shrink-0 place-items-center", TOP_BAR_PLATE, REALCE_DO_VIDRO_NO_MIOLO)}
+        className={cn("relative grid shrink-0 place-items-center rounded-full", REALCE_DO_VIDRO_NO_MIOLO)}
       >
         <TopBarSwapContext value>{lupa}</TopBarSwapContext>
       </span>
@@ -999,7 +985,7 @@ function CapsulaQueEstica({
           inert={!temFiltro || undefined}
           aria-hidden={!temFiltro || undefined}
           // A caixa é a do botão de dentro (44 no telefone, 36 no desktop do catálogo), como a lupa.
-          className={cn("relative grid shrink-0 place-items-center", !temFiltro && "pointer-events-none", TOP_BAR_PLATE, REALCE_DO_VIDRO_NO_MIOLO)}
+          className={cn("relative grid shrink-0 place-items-center rounded-full", !temFiltro && "pointer-events-none", REALCE_DO_VIDRO_NO_MIOLO)}
         >
           <MioloQueTroca swapKey={segundo.chave} afundar={false} className="grid place-items-center">
             {segundo.filho}
