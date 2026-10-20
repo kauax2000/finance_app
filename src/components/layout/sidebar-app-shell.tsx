@@ -104,7 +104,8 @@ export function SidebarAppShell({
                     <SidebarProvider defaultOpen={defaultSidebarOpen} toggle={toggle}>
                         <GlobalShellDialogsProvider>
                                 <AppSidebar />
-                                <SidebarInset>
+                                {/* A casca do app é quem recua atrás de um modal (`lib/recuo`); as prévias do catálogo, não. */}
+                                <SidebarInset data-recuo-regiao="">
                                     <AppHeader pathname={pathname} titleMode={titleMode} />
                                     <div data-workspace-content className="flex min-w-0 flex-1 flex-col gap-4 px-4 pb-(--bottom-bar-pad) pt-[calc(var(--mobile-header-offset)+1rem)] md:p-6 md:pb-6">
                                         {children}

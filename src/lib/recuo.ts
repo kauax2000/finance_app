@@ -13,10 +13,18 @@
  * do conteúdo está mais abaixo, e nada pula de lugar.
  */
 
-const REGIOES = "[data-slot=sidebar-container], [data-slot=sidebar-inset]"
+// Só a casca do app marca as regiões: as prévias do catálogo também montam a
+// `Sidebar`, e uma origem no centro da janela as escalaria fora do lugar.
+const REGIOES =
+  "[data-slot=sidebar-container][data-recuo-regiao], [data-slot=sidebar-inset][data-recuo-regiao]"
 
-/** A volta dura 200ms; sem transição (telefone, movimento reduzido) o `transitionend` não chega. */
-const RESERVA_MS = 200
+/**
+ * A volta dura 200ms e começa no recálculo de estilo seguinte; o caminho normal
+ * é o `transitionend` (medido a ~222ms). A reserva é para quando ele não chega
+ * (telefone, movimento reduzido) e fica além da volta: limpar a origem com a
+ * escala ainda a meio caminho faria a região saltar.
+ */
+const RESERVA_MS = 300
 
 let abertos = 0
 let geracao = 0

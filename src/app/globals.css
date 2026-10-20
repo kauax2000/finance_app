@@ -3131,23 +3131,25 @@
    aberto não deixa nada recuado no telefone. A lista de `transition-property`
    substitui a da `Sidebar` (`transition-[left,width]` na placa,
    `transition-[margin]` no conteúdo), então ela é repetida aqui com a duração e
-   a curva que o Tailwind publica (`--tw-duration`, `--tw-ease`). */
+   a curva que o Tailwind publica (`--tw-duration`, `--tw-ease`). Só a casca do
+   app veste `data-recuo-regiao`: as prévias do catálogo que montam a `Sidebar`
+   não recuam. */
 @media (width >= 48rem) and (prefers-reduced-motion: no-preference) {
-  [data-slot="sidebar-container"] {
+  [data-slot="sidebar-container"][data-recuo-regiao] {
     transition-property: left, width, transform;
     transition-duration: var(--tw-duration, 0s), var(--tw-duration, 0s), 200ms;
     transition-timing-function: var(--tw-ease, ease), var(--tw-ease, ease), var(--ease-out);
   }
-  [data-slot="sidebar-inset"] {
+  [data-slot="sidebar-inset"][data-recuo-regiao] {
     transition-property: margin, transform;
     transition-duration: var(--tw-duration, 0s), 200ms;
     transition-timing-function: var(--tw-ease, ease), var(--ease-out);
   }
-  :root[data-recuo] [data-slot="sidebar-container"] {
+  :root[data-recuo] [data-slot="sidebar-container"][data-recuo-regiao] {
     transform: scale(0.985);
     transition-duration: var(--tw-duration, 0s), var(--tw-duration, 0s), 300ms;
   }
-  :root[data-recuo] [data-slot="sidebar-inset"] {
+  :root[data-recuo] [data-slot="sidebar-inset"][data-recuo-regiao] {
     transform: scale(0.985);
     transition-duration: var(--tw-duration, 0s), 300ms;
   }
