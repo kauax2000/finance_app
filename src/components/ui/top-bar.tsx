@@ -785,9 +785,9 @@ function MioloQueTroca({
 
 /** Onde a cápsula cola, por extenso (classe montada não chega ao CSS). */
 const CAPSULA_COLA = {
-  always: "rounded-full ring-1 ring-foreground/10 *:ring-0!",
+  always: "rounded-full ring-1 ring-foreground/10 max-md:ring-foreground/15 *:ring-0!",
   desktop: "md:rounded-full md:ring-1 md:ring-foreground/10 md:*:ring-0! max-md:gap-1 max-md:*:rounded-full!",
-  phone: "max-md:rounded-full max-md:ring-1 max-md:ring-foreground/10 max-md:*:ring-0! md:gap-1 md:*:rounded-full!",
+  phone: "max-md:rounded-full max-md:ring-1 max-md:ring-foreground/15 max-md:*:ring-0! md:gap-1 md:*:rounded-full!",
 } as const
 
 /**
@@ -980,7 +980,7 @@ function CapsulaQueEstica({
       {...props}
       className={cn(
         // O anel da cápsula que estica, só no voo (o do grupo seguiria a caixa final).
-        "relative after:pointer-events-none after:absolute after:inset-y-0 after:left-(--vidro-esquerda) after:hidden after:w-(--vidro-largura) after:rounded-full after:shadow-[0_0_0_1px_color-mix(in_oklab,var(--foreground)_10%,transparent)] data-voo:after:block",
+        "relative after:pointer-events-none after:absolute after:inset-y-0 after:left-(--vidro-esquerda) after:hidden after:w-(--vidro-largura) after:rounded-full after:shadow-[0_0_0_1px_color-mix(in_oklab,var(--foreground)_10%,transparent)] max-md:after:shadow-[0_0_0_1px_color-mix(in_oklab,var(--foreground)_15%,transparent)] data-voo:after:block",
         props.className
       )}
     >
@@ -1024,10 +1024,14 @@ const TOP_BAR_SEARCH_PLATE =
  * realce é o das carteiras, `--sidebar-accent` a 50%. Vale em todo tamanho: no
  * telefone os botões da barra são os mesmos círculos de vidro do desktop
  * (rodada 329). O `TopBarActionSwap` e os vidros da `TopBarActionGroup morph`
- * vestem a mesma receita.
+ * vestem a mesma receita. No telefone a tinta é a da barra de baixo
+ * (`--bottom-bar-surface`, um degrau fora do `--card`) e o anel a 15%, como o
+ * dela: os vidros de cima e o de baixo pairam sobre o mesmo conteúdo, e no
+ * escuro o `--popover` ficava um degrau mais escuro que a barra. Sem a sombra
+ * dela: o topo fica sobre o borrão da borda (rodada 352).
  */
 const TOP_BAR_PLATE =
-  "ring-1 ring-foreground/10 bg-popover/85 glass-surface supports-backdrop-filter:bg-popover/60 reduced-transparency:bg-popover rounded-full bg-clip-border [--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]"
+  "ring-1 ring-foreground/10 bg-popover/85 glass-surface supports-backdrop-filter:bg-popover/60 reduced-transparency:bg-popover rounded-full bg-clip-border [--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)] max-md:ring-foreground/15 max-md:bg-bottom-bar-surface/85 max-md:supports-backdrop-filter:bg-bottom-bar-surface/60 max-md:reduced-transparency:bg-bottom-bar-surface"
 
 /** As classes por extenso: classe montada em tempo de execução não chega ao CSS. */
 const BUSCA_QUEBRA = {

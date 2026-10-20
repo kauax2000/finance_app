@@ -1558,8 +1558,9 @@ declaração de `background-color` no trilho).
   borrão das camadas). **`TopBarAction`** (`plate`: o vidro da busca do cabeçalho — a tinta
   flutuante e o anel, como o botão de recolher —, com o realce em
   `--sidebar-accent`, sem sombra, em todo tamanho — no telefone a lupa, o sino e
-  o voltar são os mesmos círculos de vidro do desktop, rodada 329; o sino do app a
-  veste). **`TopBarActionSwap`** (`swapKey`) é o vidro que fica e o miolo que
+  o voltar são os mesmos círculos de vidro do desktop, rodada 329, mas na tinta e
+  no anel da `BottomBar` (`--bottom-bar-surface`, anel a 15%; rodada 352); o
+  sino do app a veste). **`TopBarActionSwap`** (`swapKey`) é o vidro que fica e o miolo que
   troca: o sino ↔ voltar do telefone afunda na mola e o ícone de antes sai no
   desfoque enquanto o novo entra (`quadroDaTroca`); o vidro é dele (a
   `TopBarAction` de dentro não pinta o seu, e o realce é o do vidro), montar

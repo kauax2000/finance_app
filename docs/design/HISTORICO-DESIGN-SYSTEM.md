@@ -28568,3 +28568,20 @@ da cápsula, o filtro estica da ponta para a esquerda (`scaleX` no próprio
 vidro, ancorado à direita, com o miolo desfazendo o estica) para a costura não
 abrir; aquém da lupa, o círculo passa um pouco para a direita, inteiro. O
 anel lê `--vidro-esquerda` e `--vidro-largura`, balanço incluído.
+
+### Rodada 352 — os vidros do topo do telefone na tinta da barra de baixo
+
+**O pedido.** "Os botões no topo do mobile não deveriam ter a mesma cor do
+bottom bar?" Não tinham: o `TOP_BAR_PLATE` pintava `--popover` (0,205 no
+escuro) com anel a 10%, e a `BottomBar` pinta `--bottom-bar-surface` (0,26 no
+escuro, 0,95 no claro) com anel a 15% desde a rodada 340, quando o `--popover`
+empatava com o `--card`. No escuro os círculos de cima ficavam um degrau mais
+escuros que a pílula de baixo.
+
+**Como.** No telefone (`max-md:`), o `TOP_BAR_PLATE` troca a tinta para a da
+barra de baixo (`bg-bottom-bar-surface/85`, `/60` com borrão, cheia com menos
+transparência) e o anel para 15% — o mesmo no anel da cápsula
+(`CAPSULA_COLA`) e no anel do voo dela. Sem a `shadow-lg` da barra: o topo fica
+sobre o borrão da borda. No desktop nada muda (o sino e a busca seguem o vidro
+da pílula de busca). Medido a 375px no escuro: lupa, sino e barra pintam os três
+`oklab(0,26 / 0,6)` com o anel a 15%.

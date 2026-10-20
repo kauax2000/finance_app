@@ -307,7 +307,7 @@ describe("as ações numa cápsula", () => {
     expect(peca).toContain('join = "always"')
     expect(peca).toContain('"*:before:hidden *:ml-0!"')
     // O anel é do grupo onde cola; o de cada botão desenhava uma linha na emenda.
-    expect(peca).toContain('always: "rounded-full ring-1 ring-foreground/10 *:ring-0!"')
+    expect(peca).toContain('always: "rounded-full ring-1 ring-foreground/10 max-md:ring-foreground/15 *:ring-0!"')
     // Do outro lado da quebra, o botão que sobra é um círculo solto com o próprio anel.
     expect(peca).toContain("md:*:ring-0! max-md:gap-1 max-md:*:rounded-full!")
     expect(peca).toContain("max-md:*:ring-0! md:gap-1 md:*:rounded-full!")
