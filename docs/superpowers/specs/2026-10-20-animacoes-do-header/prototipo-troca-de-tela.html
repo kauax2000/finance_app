@@ -1,0 +1,190 @@
+<h2>Botões do cabeçalho ao trocar de tela</h2>
+<p class="subtitle">Toque nas telas embaixo de cada telefone. Painel e Transações têm o sino e o filtro (calendário ou ajustes); Minha conta e Categoria são subpáginas (voltar). A mola é a MOLA da casa.</p>
+
+<style>
+  .proto-bar { display:flex; gap:8px; align-items:center; margin: 8px 0 16px; flex-wrap: wrap; }
+  .proto-bar button, .phone-ctl button { font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border, #d0d0d5); background: var(--bg-secondary); color: inherit; cursor: pointer; }
+  .proto-bar button[aria-pressed="true"], .phone-ctl button[aria-pressed="true"] { background: #fff; color: #111; }
+  .phones { display:flex; gap:20px; flex-wrap: wrap; }
+  .phone-wrap { display:flex; flex-direction:column; gap:8px; width: 375px; box-sizing: content-box; flex: none; padding: 10px; }
+  .phone { position: relative; width: 375px; height: 150px; border-radius: 28px; overflow: hidden; background: #f2f2f4; box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
+  .phone .content { position:absolute; inset: 64px 16px 0; display:flex; flex-direction:column; gap:10px; }
+  .phone .card { background:#fff; border-radius: 22px; height: 70px; box-shadow: 0 0 0 1px rgba(0,0,0,.05); }
+  .phone .title { position:absolute; left:0; right:0; top:6px; height:44px; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:16px; color:#111; }
+  .phone svg.layer { position:absolute; inset:0; overflow: visible; pointer-events:none; }
+  .tag { font-size: 12px; color: var(--text-secondary, #6e6e73); }
+  .phone-ctl { display:flex; gap:6px; flex-wrap: wrap; }
+</style>
+
+<div class="proto-bar">
+  <button type="button" id="lento" aria-pressed="false" onclick="toggleLento()">Câmera lenta (4×)</button>
+  <span class="tag">Todos juntos:</span>
+  <button type="button" onclick="todos('painel')">Painel</button>
+  <button type="button" onclick="todos('transacoes')">Transações</button>
+  <button type="button" onclick="todos('conta')">Minha conta</button>
+  <button type="button" onclick="todos('categoria')">Categoria</button>
+</div>
+
+<div class="phones options" id="phones"></div>
+
+<script>
+(() => {
+  const W = 375, TOP = 6, H = 44, R = 22
+  const LUPA_SO = W - 16 - H      // 315: a lupa sozinha
+  const LUPA_COM = LUPA_SO - H    // 271: a lupa na cápsula
+  const TELAS = {
+    painel: { esq: 'sino', filtro: 'cal', nome: 'Painel' },
+    transacoes: { esq: 'sino', filtro: 'adj', nome: 'Transações' },
+    conta: { esq: 'voltar', filtro: null, nome: 'Minha conta' },
+    categoria: { esq: 'voltar', filtro: 'cal', nome: 'Categoria' },
+  }
+  let lento = 1
+  window.toggleLento = () => { lento = lento === 1 ? 0.25 : 1; document.getElementById('lento').setAttribute('aria-pressed', lento !== 1) }
+  const suave = (x, a, b) => { const t = Math.min(Math.max((x - a) / (b - a), 0), 1); return t * t * (3 - 2 * t) }
+  const lerp = (a, b, t) => a + (b - a) * t
+  const S = 'stroke="#111" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"'
+  const ICONES = {
+    sino: `<path d="M0 -7.5a5 5 0 0 0-5 5v3l-1.5 2.5h13L5 0.5v-3a5 5 0 0 0-5-5Zm-2 11a2 2 0 0 0 4 0" ${S}/>`,
+    voltar: `<path d="M2.5 -6.5L-4 0l6.5 6.5" ${S} stroke-width="2"/>`,
+    lupa: `<circle cx="-1.5" cy="-1.5" r="5.5" ${S}/><line x1="2.6" y1="2.6" x2="6" y2="6" ${S}/>`,
+    cal: `<rect x="-6.5" y="-5.5" width="13" height="12" rx="2.5" ${S}/><line x1="-6.5" y1="-1.5" x2="6.5" y2="-1.5" ${S}/><line x1="-3" y1="-7.5" x2="-3" y2="-4" ${S}/><line x1="3" y1="-7.5" x2="3" y2="-4" ${S}/>`,
+    adj: `<line x1="-7" y1="-3.5" x2="7" y2="-3.5" ${S}/><line x1="-7" y1="3.5" x2="7" y2="3.5" ${S}/><circle cx="2.5" cy="-3.5" r="2" fill="#fff" ${S}/><circle cx="-2.5" cy="3.5" r="2" fill="#fff" ${S}/>`,
+  }
+  // Um ícone desenhado em (x, y) com opacidade, escala, desfoque e deslocamento.
+  const ic = (nome, x, o, { s = 1, dx = 0, blur = 0 } = {}) => o <= 0.01 || !nome ? '' :
+    `<g transform="translate(${x + dx},${TOP + R}) scale(${s})" opacity="${o}" style="filter:blur(${blur}px)">${ICONES[nome]}</g>`
+  // A troca de um ícone por outro no mesmo lugar: sai no desfoque, entra do desfoque.
+  const troca = (de, para, x, p, dir = 0) => {
+    if (de === para) return ic(para, x, 1)
+    const sai = suave(p, 0, 0.55), entra = suave(p, 0.2, 0.8)
+    return ic(de, x, 1 - sai, { s: 1 - 0.3 * sai, blur: 4 * sai, dx: -dir * 14 * sai }) +
+      ic(para, x, entra, { s: 0.7 + 0.3 * entra, blur: 4 * (1 - entra), dx: dir * 14 * (1 - entra) })
+  }
+
+  const VARIANTES = [
+    {
+      id: 'a', nome: 'A · Troca no lugar',
+      desc: 'O vidro fica parado; o ícone sai no desfoque e o outro entra dele. A cápsula da lupa cresce ou encolhe pela borda esquerda, e o filtro acende do desfoque.',
+      formas(de, para, p) {
+        const comDe = !!de.filtro, comPara = !!para.filtro
+        const lupaX = lerp(comDe ? LUPA_COM : LUPA_SO, comPara ? LUPA_COM : LUPA_SO, p)
+        const f = comDe === comPara ? (comPara ? 1 : 0) : comPara ? suave(p, 0.25, 0.85) : 1 - suave(p, 0, 0.5)
+        return {
+          esq: { s: 1 }, cap: { l: lupaX, r: W - 16 }, filtroC: null,
+          icones: troca(de.esq, para.esq, 16 + R, p) + ic('lupa', lupaX + R, 1) +
+            (comDe && comPara ? troca(de.filtro, para.filtro, LUPA_SO + R, p) : ic(para.filtro || de.filtro, LUPA_SO + R, f, { s: 0.7 + 0.3 * f, blur: 4 * (1 - f) })),
+        }
+      },
+    },
+    {
+      id: 'b', nome: 'B · Líquido (iOS 26)',
+      desc: 'O vidro é gota: o círculo da esquerda afunda e volta na mola enquanto o ícone troca. O filtro pinga do flanco da lupa, e a cintura entre os dois se enche até virar cápsula; ao sair, afina e é reabsorvido.',
+      liquido: true,
+      formas(de, para, p) {
+        const comDe = !!de.filtro, comPara = !!para.filtro
+        const mudaEsq = de.esq !== para.esq
+        const q = Math.min(Math.max(p, 0), 1.2)
+        let g // 0 sem filtro, 1 cápsula cheia
+        if (comDe === comPara) g = comPara ? 1 : 0
+        else g = comPara ? p : 1 - p
+        const lupaX = lerp(LUPA_SO, LUPA_COM, Math.min(g, 1.05))
+        const gota = Math.max(0, Math.min(g, 1.05))
+        const fr = R * (0.3 + 0.7 * suave(gota, 0, 0.7))
+        const fcx = lerp(lupaX + R + 2, LUPA_SO + R, suave(gota, 0, 0.8))
+        const fo = suave(gota, 0.4, 0.95)
+        return {
+          esq: { s: mudaEsq ? 1 - 0.14 * Math.sin(Math.PI * Math.min(q, 1)) : 1 },
+          cap: { l: lupaX, r: lupaX + H, cintura: suave(gota, 0.55, 1) }, filtroC: gota > 0.01 ? { cx: fcx, r: fr } : null,
+          icones: troca(de.esq, para.esq, 16 + R, p) + ic('lupa', lupaX + R, 1) +
+            (comDe && comPara ? troca(de.filtro, para.filtro, LUPA_SO + R, p) : ic(para.filtro || de.filtro, fcx, fo, { s: 0.7 + 0.3 * fo, blur: 4 * (1 - fo) })),
+        }
+      },
+    },
+    {
+      id: 'c', nome: 'C · Direcional (empurrar e voltar)',
+      desc: 'Como a navegação do iOS: entrar numa subpágina empurra o voltar da direita e leva o sino para a esquerda; voltar faz o contrário. O filtro desliza para dentro da cápsula pela direita.',
+      formas(de, para, p, dir) {
+        const comDe = !!de.filtro, comPara = !!para.filtro
+        const lupaX = lerp(comDe ? LUPA_COM : LUPA_SO, comPara ? LUPA_COM : LUPA_SO, p)
+        const f = comDe === comPara ? (comPara ? 1 : 0) : comPara ? suave(p, 0.15, 0.8) : 1 - suave(p, 0, 0.55)
+        return {
+          esq: { s: 1 }, cap: { l: lupaX, r: W - 16 }, filtroC: null,
+          icones: troca(de.esq, para.esq, 16 + R, p, dir) + ic('lupa', lupaX + R, 1) +
+            (comDe && comPara ? troca(de.filtro, para.filtro, LUPA_SO + R, p, dir) : ic(para.filtro || de.filtro, LUPA_SO + R, f, { dx: 18 * (1 - f), blur: 3 * (1 - f) })),
+        }
+      },
+    },
+  ]
+
+  const host = document.getElementById('phones')
+  const fones = VARIANTES.map((v) => {
+    const wrap = document.createElement('div')
+    wrap.className = 'phone-wrap option'
+    wrap.dataset.choice = v.id
+    wrap.innerHTML = `
+      <div><strong>${v.nome}</strong><div class="tag">${v.desc}</div></div>
+      <div class="phone">
+        <div class="content"><div class="card"></div></div>
+        <div class="title">Casa ⌄</div>
+        <svg class="layer" viewBox="0 0 ${W} 150" width="${W}" height="150">
+          <defs>
+            <filter id="goo-${v.id}" x="-20%" y="-50%" width="140%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/>
+              <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10" result="g"/>
+              <feComposite in="SourceGraphic" in2="g" operator="atop"/>
+            </filter>
+            <filter id="sh-${v.id}" x="-20%" y="-50%" width="140%" height="200%"><feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity=".14"/></filter>
+          </defs>
+          <g filter="url(#sh-${v.id})" fill="#fff">
+            <circle class="esq" cx="${16 + R}" cy="${TOP + R}" r="${R}"/>
+            <g ${v.liquido ? `filter="url(#goo-${v.id})"` : ''}>
+              <rect class="cap" y="${TOP}" height="${H}" rx="${R}"/>
+              <rect class="cintura" y="${TOP + R}" height="0"/>
+              <circle class="fc" cy="${TOP + R}" r="0"/>
+            </g>
+          </g>
+          <g class="icones"></g>
+        </svg>
+      </div>
+      <div class="phone-ctl">${Object.entries(TELAS).map(([k, t]) => `<button type="button" data-t="${k}">${t.nome}</button>`).join('')}
+        <button type="button" onclick="toggleSelect(this.closest('.option'))">Gostei deste</button></div>`
+    host.appendChild(wrap)
+    const el = (s) => wrap.querySelector(s)
+    const st = { de: TELAS.painel, para: TELAS.painel, p: 1, v: 0, raf: 0, last: 0, dir: 0 }
+    const desenhar = () => {
+      const f = v.formas(st.de, st.para, st.p, st.dir)
+      el('.esq').setAttribute('r', R * f.esq.s)
+      const cap = el('.cap'); cap.setAttribute('x', f.cap.l); cap.setAttribute('width', f.cap.r - f.cap.l)
+      const cin = el('.cintura'), fc = el('.fc')
+      if (f.filtroC) {
+        fc.setAttribute('cx', f.filtroC.cx); fc.setAttribute('r', f.filtroC.r)
+        const h = H * f.cap.cintura
+        cin.setAttribute('x', f.cap.l + R); cin.setAttribute('width', Math.max(0, f.filtroC.cx - f.cap.l - R)); cin.setAttribute('y', TOP + R - h / 2); cin.setAttribute('height', h)
+      } else { fc.setAttribute('r', 0); cin.setAttribute('height', 0) }
+      el('.icones').innerHTML = f.icones
+      wrap.querySelectorAll('[data-t]').forEach((b) => b.setAttribute('aria-pressed', TELAS[b.dataset.t] === st.para))
+    }
+    const passo = (agora) => {
+      const dt = Math.min(0.032, (agora - st.last) / 1000) * lento
+      st.last = agora
+      // A MOLA da casa: rigidez 300, amortecimento 25, massa 1.
+      for (let i = 0; i < 8; i++) { const h = dt / 8; const a = -300 * (st.p - 1) - 25 * st.v; st.v += a * h; st.p += st.v * h }
+      if (Math.abs(st.p - 1) < 0.0005 && Math.abs(st.v) < 0.01) { st.p = 1; st.v = 0; desenhar(); return }
+      desenhar(); st.raf = requestAnimationFrame(passo)
+    }
+    const ir = (k) => {
+      const para = TELAS[k]
+      if (para === st.para) return
+      cancelAnimationFrame(st.raf)
+      // ponytail: interromper no meio recomeça da tela atual, sem herdar o quadro.
+      st.de = st.para; st.para = para; st.p = 0; st.v = 0
+      st.dir = st.de.esq === para.esq ? 0 : para.esq === 'voltar' ? 1 : -1
+      st.last = performance.now(); st.raf = requestAnimationFrame(passo)
+    }
+    wrap.querySelectorAll('[data-t]').forEach((b) => b.addEventListener('click', () => ir(b.dataset.t)))
+    desenhar()
+    return ir
+  })
+  window.todos = (k) => fones.forEach((ir) => ir(k))
+})()
+</script>
