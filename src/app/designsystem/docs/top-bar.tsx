@@ -3,6 +3,7 @@
 import * as React from "react"
 import { BellIcon } from "@heroicons/react/24/outline"
 import {
+  AdjustmentsHorizontalIcon,
   CalendarIcon,
   EllipsisHorizontalIcon,
   HomeIcon,
@@ -306,6 +307,37 @@ function DemoTroca() {
   )
 }
 
+const SEGUNDOS = ["nenhum", "mês", "ajustes"] as const
+
+/** A cápsula do telefone: a lupa sozinha, ou com o mês ou os ajustes da tela pingando dela. O eixo troca a tela. */
+function DemoGota() {
+  const [segundo, setSegundo] = React.useState<(typeof SEGUNDOS)[number]>("nenhum")
+  return (
+    <div className="flex w-full flex-col items-center gap-6 p-4">
+      <Controles
+        inicio={<Eixo rotulo="segundo" valores={SEGUNDOS} valor={segundo} onChange={setSegundo} />}
+      />
+      {/* A ponta direita fica parada, como na barra do app: o grupo encosta à direita. */}
+      <div className="flex w-56 justify-end">
+        <TopBarActionGroup morph trailingKey={segundo === "nenhum" ? undefined : segundo}>
+          <TopBarAction label="Buscar" plate tooltip={false}>
+            <MagnifyingGlassIcon className="size-4" />
+          </TopBarAction>
+          {segundo === "mês" ? (
+            <TopBarAction label="Mês" plate tooltip={false}>
+              <CalendarIcon className="size-4" />
+            </TopBarAction>
+          ) : segundo === "ajustes" ? (
+            <TopBarAction label="Filtros" plate tooltip={false}>
+              <AdjustmentsHorizontalIcon className="size-4" />
+            </TopBarAction>
+          ) : null}
+        </TopBarActionGroup>
+      </div>
+    </div>
+  )
+}
+
 const SECOES = [
   { rotulo: "Início", icone: HomeIcon },
   { rotulo: "Transações", icone: ReceiptPercentIcon },
@@ -445,6 +477,28 @@ export default function TopBarDoc() {
       </DocSection>
 
       <DocSection
+        title="O filtro pinga da lupa"
+        description="Com morph, a cápsula aceita um ou dois filhos: a lupa sozinha, ou a lupa com o filtro da tela. O segundo entra como uma gota do flanco da lupa e sai reabsorvido por ela; com os dois presentes, trocar o trailingKey troca só o ícone. Troque a tela no eixo."
+        code={`<TopBarActionGroup morph trailingKey={filtro?.icon}>
+  <TopBarAction label="Buscar" plate onClick={abrirBusca}>
+    <MagnifyingGlassIcon className="size-4" />
+  </TopBarAction>
+  {filtro ? (
+    <TopBarAction label={filtro.label} plate onClick={filtro.onOpen}>
+      {filtro.icon === "month" ? <CalendarIcon className="size-4" /> : <AdjustmentsHorizontalIcon className="size-4" />}
+    </TopBarAction>
+  ) : null}
+</TopBarActionGroup>`}
+        previewClassName="block p-0"
+      >
+        <DemoGota />
+      </DocSection>
+
+      <DocNote title="A gota é o próprio vidro do filtro">
+        O filtro pinga do flanco da lupa e a cintura se enche; ao sair, afina e é reabsorvido. A lupa corre 44px para a esquerda enquanto a gota nasce dentro dela com 30% do raio, cresce e corre até o lugar do filtro, com a cintura entre os dois enchendo no fim; o ícone acende do desfoque por último. A ponta direita fica parada: o pixel da lupa sozinha é o da ponta da cápsula. São o <code>clip-path</code> e o <code>transform</code> dos próprios vidros, na mola da casa, e o anel do grupo some no voo (a silhueta é a tinta do voo da busca). O segundo que sai fica montado, inerte, até a lupa o reabsorver; montar não anima, interromper segue de onde está, e com movimento reduzido troca na hora.
+      </DocNote>
+
+      <DocSection
         title="Troca no mesmo vidro"
         description="TopBarActionSwap segura o círculo de vidro e troca o miolo pela swapKey: o vidro afunda e volta na mola, o ícone de antes sai no desfoque e o novo chega dele. Ligue o voltar."
         code={`<TopBarActionSwap swapKey={detalhe ? "voltar" : "sino"}>
@@ -501,7 +555,7 @@ export default function TopBarDoc() {
           { prop: "TopBarTitle", type: "ComponentProps<'h1'> & { phone?, pageTitle?, scrollToTop?, asChild? }", description: "O nome da tela. pageTitle recebe o título que sobe do PageHeader; tocar nele no telefone sobe ao topo." },
           { prop: "TopBarAction", type: "Button & { label, count?, countLabel?, shortcut?, tooltip?, plate? }", description: "O botão de ícone da barra, com a dica e a contagem no nome; `plate` veste o círculo de vidro do botão de recolher, em todo tamanho." },
           { prop: "TopBarActionSwap", type: "{ swapKey, className?, children }", description: "O círculo de vidro que fica enquanto o miolo troca: mudar swapKey afunda o vidro na mola e cruza os ícones no desfoque. O filho não desenha o próprio vidro." },
-          { prop: "TopBarActionGroup", type: "ComponentProps<typeof ButtonGroup> & { join? }", description: "Ações com plate numa cápsula: o ButtonGroup sem divisor, com o anel no grupo. join (always, o padrão; desktop; phone) diz de que lado da quebra cola, quando um dos botões só existe num lado; do outro, o que sobra é um círculo solto." },
+          { prop: "TopBarActionGroup", type: "ComponentProps<typeof ButtonGroup> & { join?, morph?, trailingKey? }", description: "Ações com plate numa cápsula: o ButtonGroup sem divisor, com o anel no grupo. join (always, o padrão; desktop; phone) diz de que lado da quebra cola, quando um dos botões só existe num lado; do outro, o que sobra é um círculo solto. morph é a cápsula do telefone, com um ou dois filhos: o segundo pinga da lupa ao entrar e é reabsorvido ao sair, e trailingKey (a identidade dele) troca só o miolo quando muda." },
           { prop: "TopBarSearch", type: "{ onOpen, label?, placeholder?, shortcut?, slash?, listen?, collapse?, glow?, plate? }", description: "A pílula de busca com a tecla, que vira ícone abaixo da quebra, e os atalhos ⌘K e /; `plate` troca o campo pelo vidro do campo do CommandDialog." },
           { prop: "TopBarProgress", type: "{ value?, label? }", description: "O fio de carregamento na aresta de baixo; sem value, indeterminado." },
           { prop: "TopBarSkeleton", type: "{ size?, actions?, start? }", description: "A barra esperando, no SkeletonGroup." },

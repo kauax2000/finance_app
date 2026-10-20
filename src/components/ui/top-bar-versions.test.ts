@@ -410,3 +410,43 @@ describe("TopBarActionSwap", () => {
     expect(acao).toContain("TopBarSwapContext")
   })
 })
+
+describe("TopBarActionGroup morph", () => {
+  const grupo = CODIGO.slice(CODIGO.indexOf("function TopBarActionGroup("), CODIGO.indexOf("const TOP_BAR_SEARCH_PLATE"))
+
+  it("aceita um ou dois filhos, com a identidade do segundo", () => {
+    for (const parte of ["morph", "trailingKey", "quadroDaGotaDoFiltro(", "MOLA"]) {
+      expect(grupo).toContain(parte)
+    }
+  })
+
+  it("o segundo que sai fica montado, inerte e escondido do leitor, até o gesto acabar", () => {
+    expect(grupo).toContain("inert")
+    expect(grupo).toContain("aria-hidden")
+  })
+
+  it("parte do g guardado, troca na hora sem caixa ou com movimento reduzido, e montar não anima", () => {
+    expect(grupo).toMatch(/animate\(\s*\w+\.current/)
+    expect(grupo).toContain("offsetWidth === 0")
+    expect(grupo).toContain("useReducedMotion")
+  })
+
+  it("escreve só nos vidros e nos filhos deles: nada de transform, recorte ou filtro no grupo", () => {
+    expect(grupo).toContain("const grupo = React.useRef")
+    expect(grupo).not.toMatch(/grupo\w*\.style\.(transform|clipPath|filter)/)
+  })
+
+  it("a tinta do voo é uma só, a do header-morph", () => {
+    expect(CODIGO).not.toContain("TINTA_DO_VOO =")
+    expect(fonte("src/components/ui/command.tsx")).not.toContain("TINTA_DO_VOO =")
+    expect(fonte("src/lib/header-morph.ts")).toContain("export const TINTA_DO_VOO =")
+    expect(CODIGO).toMatch(/import \{[^}]*\bTINTA_DO_VOO\b[^}]*\} from "@\/lib\/header-morph"/)
+    expect(fonte("src/components/ui/command.tsx")).toMatch(/import \{[^}]*\bTINTA_DO_VOO\b[^}]*\} from "@\/lib\/header-morph"/)
+  })
+
+  it("o catálogo mostra os três estados: só a lupa, lupa + mês, lupa + ajustes", () => {
+    const pagina = fonte("src/app/designsystem/docs/top-bar.tsx")
+    expect(pagina).toMatch(/<TopBarActionGroup[^>]*\bmorph\b/)
+    expect(pagina).toContain("trailingKey=")
+  })
+})

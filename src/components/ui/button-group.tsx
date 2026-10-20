@@ -4,7 +4,7 @@ import * as React from "react"
 import { ButtonSizeContext, type ButtonSize } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-export interface ButtonGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface ButtonGroupProps extends React.ComponentProps<"div"> {
     children: React.ReactNode
     /** O degrau de todos os botões do grupo (pelo `ButtonSizeContext`); um `size` no próprio botão vence. */
     size?: ButtonSize

@@ -11,7 +11,7 @@ import { Kbd } from "@/components/ui/kbd"
 import { Button } from "@/components/ui/button"
 import { MOLA, SAIDA, SEPARACAO } from "@/lib/spring"
 import { ACOPLAMENTO_Y } from "@/lib/liquid-move"
-import { suave } from "@/lib/header-morph"
+import { suave, TINTA_DO_VOO } from "@/lib/header-morph"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { ehCursor } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
@@ -203,8 +203,6 @@ const ICONE = [0.1, 0.7] as const
 const CONTEUDO = [PARTE[0], 0.85] as const
 /** A tinta do voo (ver `desenharBolhas`) some no fim da chegada, antes de os anéis voltarem. */
 const TINTA = [0.85, 1] as const
-/** O quanto a tinta do voo puxa os vidros para o `--foreground`, em %. */
-const TINTA_DO_VOO = 8
 /** O × puxado para a pílula enquanto a emenda afina (fração da largura): 2,2px a 44. 0 desliga. */
 const PUXAO_DO_X = 0.05
 

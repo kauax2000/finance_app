@@ -35,6 +35,14 @@ export function quadroDaTroca(p: number, afundar: boolean): { escala: number; sa
   }
 }
 
+/**
+ * O quanto a tinta do voo puxa os vidros para o `--foreground`, em %: a
+ * silhueta de um vidro em voo, que o recorte tira o anel (a busca que se
+ * divide, a gota do filtro). Numa camada de `background-image` que o
+ * `clip-path` recorta junto; fundidos, dois vidros são uma tinta só.
+ */
+export const TINTA_DO_VOO = 8
+
 /** O raio da gota na cápsula cheia, e a altura dela: a lupa ocupa `[0, 44]` e o filtro `[44, 88]`. */
 export const GOTA_R = 22
 export const GOTA_H = 44
