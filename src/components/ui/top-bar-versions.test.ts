@@ -421,7 +421,7 @@ describe("TopBarActionGroup morph", () => {
   const grupo = CODIGO.slice(CODIGO.indexOf("function TopBarActionGroup("), CODIGO.indexOf("const TOP_BAR_SEARCH_PLATE"))
 
   it("aceita um ou dois filhos, com a identidade do segundo", () => {
-    for (const parte of ["morph", "trailingKey", "quadroDoVidroQueEstica(", "MOLA"]) {
+    for (const parte of ["morph", "trailingKey", "quadroDoVidroQueEstica(", "BALANCO"]) {
       expect(grupo).toContain(parte)
     }
   })
@@ -455,6 +455,8 @@ describe("TopBarActionGroup morph", () => {
   it("o vidro estica sem perder o anel: o do voo é o pseudo-elemento do grupo, na largura do quadro", () => {
     expect(grupo).toContain('grupo.dataset.voo = ""')
     expect(grupo).toContain('grupo.style.setProperty("--vidro-largura"')
+    expect(grupo).toContain('grupo.style.setProperty("--vidro-esquerda"')
+    expect(grupo).toContain("after:left-(--vidro-esquerda)")
     expect(grupo).toContain("after:w-(--vidro-largura)")
     expect(grupo).toContain("data-voo:after:block")
     expect(grupo).toContain("delete grupo.dataset.voo")

@@ -495,7 +495,7 @@ export default function TopBarDoc() {
       </DocSection>
 
       <DocNote title="Um vidro só para o olho">
-        Como os itens da barra do iOS 26: a borda esquerda anda 44px levando a lupa, a direita fica parada (o pixel da lupa sozinha é o da ponta da cápsula), e o ícone do filtro acende do desfoque no lugar dele. São os dois vidros de verdade, cada um cortado na costura entre eles (<code>clip-path</code> e <code>transform</code> só nos vidros), e o anel da cápsula que estica é o <code>::after</code> do grupo, na largura do quadro. O relógio da mola só começa quando a pintura volta (montar o filtro para a pintura). O segundo que sai fica montado, inerte, até o vidro voltar à lupa; montar não anima, interromper segue de onde está, e com movimento reduzido troca na hora.
+        Como os itens da barra do iOS 26: a borda esquerda anda 44px levando a lupa, a direita fica parada (o pixel da lupa sozinha é o da ponta da cápsula), e o ícone do filtro acende do desfoque no lugar dele. São os dois vidros de verdade, cada um cortado na costura entre eles (<code>clip-path</code> e <code>transform</code> só nos vidros), e o anel da cápsula que estica é o <code>::after</code> do grupo, na largura do quadro. A mola é o <code>BALANCO</code> (passa 12,7% e volta), e o balanço aparece nos dois sentidos: entrando, a cápsula alarga além da ponta (o filtro estica ancorado à direita); saindo, o círculo passa um pouco para a direita. Os dois sentidos são o mesmo filme. O relógio da mola só começa quando a pintura volta (montar o filtro para a pintura). O segundo que sai fica montado, inerte, até o vidro voltar à lupa; montar não anima, interromper segue de onde está, e com movimento reduzido troca na hora.
       </DocNote>
 
       <DocSection

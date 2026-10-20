@@ -37,3 +37,11 @@ export const SEPARACAO = { type: "spring", stiffness: 140, damping: 20 } as cons
 
 /** A saída do palco: 150ms (`--duration-fast`) em `--ease-in-out`, espelhado aqui para o `motion`. */
 export const SAIDA = { duration: 0.15, ease: [0.65, 0, 0.35, 1] } as const
+
+/**
+ * A mola da cápsula do cabeçalho (`TopBarActionGroup morph`), com balanço à
+ * vista: a borda passa 12,7% do caminho (~5,6px dos 44) aos 217ms e volta.
+ * Medida no gerador do `motion` (passos de 1ms): chega ao alvo aos 149ms e
+ * repousa aos 637ms; a `MOLA` passava 3,8%, e o balanço não se via.
+ */
+export const BALANCO = { type: "spring", stiffness: 300, damping: 19 } as const

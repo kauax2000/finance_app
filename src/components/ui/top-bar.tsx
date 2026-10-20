@@ -31,7 +31,7 @@ import {
   searchFieldSurfaceClassName,
 } from "@/lib/search-field-classes"
 import { ariaShortcut, isEditableTarget, matchShortcut } from "@/lib/shortcut"
-import { MOLA } from "@/lib/spring"
+import { BALANCO, MOLA } from "@/lib/spring"
 import { cn } from "@/lib/utils"
 
 /**
@@ -839,7 +839,7 @@ function TopBarActionGroup({
  *
  * O anel não some no voo: o do grupo contornaria a cápsula final, então o
  * pseudo-elemento do grupo (`data-voo`) desenha o da cápsula que estica, na
- * largura do quadro (`--vidro-largura`), encostado à direita.
+ * caixa do quadro (`--vidro-esquerda`, `--vidro-largura`), balanço incluído.
  */
 function desenharVidro(
   grupo: HTMLElement,
@@ -858,14 +858,23 @@ function desenharVidro(
   const costura = px(f.costura)
   grupo.dataset.voo = ""
   grupo.style.boxShadow = "none"
+  grupo.style.setProperty("--vidro-esquerda", lupaDx + "px")
   grupo.style.setProperty("--vidro-largura", f.largura * k + "px")
   lupa.style.transform = "translateX(" + lupaDx + "px)"
-  // Nas coordenadas da lupa (a caixa dela é `[0, H]`), de onde ela anda.
+  // Nas coordenadas da lupa (a caixa dela é `[0, H]`), de onde ela anda. Com
+  // ela passando do centro do filtro, o recorte vai até a ponta (ou até ela
+  // mesma, no balanço para a direita) e arredonda ali.
   lupa.style.clipPath =
     costura > H + R
-      ? "inset(0px " + -(2 * H - lupaDx - H) + "px 0px " + -H + "px round 0px " + R + "px " + R + "px 0px)"
+      ? "inset(0px " + (H - (Math.max(2 * H, lupaDx + H) - lupaDx)) + "px 0px " + -H + "px round 0px " + R + "px " + R + "px 0px)"
       : "inset(0px " + (H - (costura - lupaDx)) + "px 0px " + -H + "px)"
   filtro.style.clipPath = "inset(0px 0px 0px " + (costura - H) + "px)"
+  // No balanço além da cápsula o filtro estica da ponta para a esquerda (o
+  // próprio vidro, ancorado à direita) e o miolo desfaz o estica.
+  const estica = f.esticaFiltro
+  filtro.style.transformOrigin = estica > 1 ? "right" : ""
+  filtro.style.transform = estica > 1 ? "scaleX(" + estica + ")" : ""
+  miolo.style.transform = estica > 1 ? "scaleX(" + 1 / estica + ")" : ""
   pintarMiolo(miolo, f.icone)
 }
 
@@ -873,9 +882,11 @@ function desenharVidro(
 function vidroEmRepouso(grupo: HTMLElement, lupa: HTMLElement, filtro: HTMLElement, miolo: HTMLElement) {
   delete grupo.dataset.voo
   grupo.style.boxShadow = ""
+  grupo.style.removeProperty("--vidro-esquerda")
   grupo.style.removeProperty("--vidro-largura")
   lupa.style.transform = lupa.style.clipPath = ""
-  filtro.style.clipPath = ""
+  filtro.style.clipPath = filtro.style.transform = filtro.style.transformOrigin = ""
+  miolo.style.transform = ""
   pintarMiolo(miolo, null)
 }
 
@@ -884,7 +895,7 @@ function vidroEmRepouso(grupo: HTMLElement, lupa: HTMLElement, filtro: HTMLEleme
  * num vidro do grupo) e o filtro (o segundo, noutro vidro, com o miolo que
  * troca). A ordem é `[lupa | filtro]`, e a ponta
  * direita fica parada: o pixel da lupa sozinha é o da ponta da cápsula.
- * Quando o segundo aparece, `g` vai de 0 a 1 na `MOLA`, e cada quadro
+ * Quando o segundo aparece, `g` vai de 0 a 1 no `BALANCO`, e cada quadro
  * (`quadroDoVidroQueEstica`) é escrito pelo `desenharVidro`; quando some, o
  * grupo o segura montado, inerte e escondido do leitor, roda `g` de 1 a 0 e
  * só então o desmonta. Montar não anima (`g` nasce no destino). Interromper
@@ -943,7 +954,7 @@ function CapsulaQueEstica({
     // O relógio só começa quando a pintura volta (`quandoPintar`): montar o
     // filtro para a pintura ~300ms, e a mola chegava já no fim, num salto.
     const cancelar = quandoPintar(() => {
-      const esticando = animate(g.current, alvo, { ...MOLA, onUpdate: quadro })
+      const esticando = animate(g.current, alvo, { ...BALANCO, onUpdate: quadro })
       controle = esticando
       esticando.then(() => {
         if (!ativa) return
@@ -969,7 +980,7 @@ function CapsulaQueEstica({
       {...props}
       className={cn(
         // O anel da cápsula que estica, só no voo (o do grupo seguiria a caixa final).
-        "relative after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:hidden after:w-(--vidro-largura) after:rounded-full after:shadow-[0_0_0_1px_color-mix(in_oklab,var(--foreground)_10%,transparent)] data-voo:after:block",
+        "relative after:pointer-events-none after:absolute after:inset-y-0 after:left-(--vidro-esquerda) after:hidden after:w-(--vidro-largura) after:rounded-full after:shadow-[0_0_0_1px_color-mix(in_oklab,var(--foreground)_10%,transparent)] data-voo:after:block",
         props.className
       )}
     >

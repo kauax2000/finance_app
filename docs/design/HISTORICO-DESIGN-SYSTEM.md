@@ -28558,3 +28558,13 @@ para `lib/header-morph` e serve agora a cápsula e a troca sino ↔ voltar
 inline: a entrada anda em ~230ms até a borda chegar, sem salto, e no repouso
 nada inline sobra. As fotos da prévia não acompanham o movimento; a sensação
 fica para o aparelho.
+
+**Depois: o mesmo filme nos dois sentidos, com o balanço à vista.** O dono
+pediu que um → dois e dois → um fossem a mesma animação, com mais balanço.
+A borda estava presa entre 0 e 44, e na `MOLA` (3,8% de passe) o balanço não
+aparecia. A cápsula anda agora no `BALANCO` (300/19: passa 12,7%, ~5,6px, aos
+217ms; repousa aos 637ms), nos dois sentidos, e a borda passa do alvo: além
+da cápsula, o filtro estica da ponta para a esquerda (`scaleX` no próprio
+vidro, ancorado à direita, com o miolo desfazendo o estica) para a costura não
+abrir; aquém da lupa, o círculo passa um pouco para a direita, inteiro. O
+anel lê `--vidro-esquerda` e `--vidro-largura`, balanço incluído.

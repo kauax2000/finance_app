@@ -1574,8 +1574,9 @@ declaração de `background-color` no trilho).
   dois filhos, `[lupa | filtro]`, com o `join="always"` padrão) faz o vidro
   esticar da lupa até a cápsula, como os itens da barra do iOS 26 — dois
   vidros cortados numa costura, o anel no `::after` do grupo, o calendário
-  acendendo do desfoque — e `trailingKey` troca o miolo com os dois presentes —
-  rodadas 349 e 351) — a busca compacta
+  acendendo do desfoque, na mola `BALANCO` com o balanço à vista nos dois
+  sentidos — e `trailingKey` troca o miolo com os dois presentes — rodadas
+  349 e 351) — a busca compacta
   do app, quando a pessoa escolhe "Botão" em Configurações › Aparência
   (`useBuscaDoCabecalho`, neste aparelho, como o tema; "Barra", a pílula do
   centro, é o padrão) — **nenhuma tela escreve
