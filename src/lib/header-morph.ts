@@ -12,8 +12,10 @@ export const suave = (x: number, [de, ate]: readonly [number, number]) => {
   return t * t * (3 - 2 * t)
 }
 
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t
-const preso = (x: number, de: number, ate: number) => Math.min(Math.max(x, de), ate)
+/** `a` em `t` 0, `b` em `t` 1, reta no meio (e fora). */
+export const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+/** `x` preso em `[de, ate]`. */
+export const preso = (x: number, de: number, ate: number) => Math.min(Math.max(x, de), ate)
 
 /** Um ícone no voo: opacidade, escala e desfoque (px) a escrever nele. */
 export type IconeEmVoo = { opacidade: number; escala: number; desfoque: number }

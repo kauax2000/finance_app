@@ -11,7 +11,7 @@ import { Kbd } from "@/components/ui/kbd"
 import { Button } from "@/components/ui/button"
 import { MOLA, SAIDA, SEPARACAO } from "@/lib/spring"
 import { ACOPLAMENTO_Y } from "@/lib/liquid-move"
-import { suave, TINTA_DO_VOO } from "@/lib/header-morph"
+import { lerp, preso, suave, TINTA_DO_VOO } from "@/lib/header-morph"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { ehCursor } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
@@ -187,6 +187,24 @@ function origemValida(r: DOMRect | null | undefined): r is DOMRect {
   return !!r && r.width > 0 && r.height > 0
 }
 
+/**
+ * A caixa de layout de `el`: a pintada, sem o `transform` em voo dele e dos
+ * ancestrais. O gesto do header escreve inline na lupa e na gota do filtro, e
+ * a busca que abre no meio dele parte de onde cada um pousa, não de onde está
+ * pintado. Zera, mede e devolve no mesmo passo: nada pinta no meio.
+ */
+function caixaDeLayout(el: HTMLElement): DOMRect {
+  const emVoo: [HTMLElement, string][] = []
+  for (let n: HTMLElement | null = el; n; n = n.parentElement) {
+    if (!n.style.transform) continue
+    emVoo.push([n, n.style.transform])
+    n.style.transform = ""
+  }
+  const caixa = el.getBoundingClientRect()
+  for (const [n, t] of emVoo) n.style.transform = t
+  return caixa
+}
+
 type Caixa = Pick<DOMRect, "left" | "right" | "top" | "bottom" | "width" | "height">
 /**
  * As fases no mesmo progresso: a emenda arredonda (pinça) antes de o vão abrir
@@ -211,12 +229,11 @@ const PUXAO_DO_X = 0.05
  * barra e o ×). A cápsula `[lupa | filtro]` é uma gota só: a metade da
  * esquerda corre até a calha ainda colada à da direita por uma emenda reta,
  * a emenda arredonda até a cintura virar um ponto (o × se inclina para a
- * pílula, preso pela tensão), e o vão de 8 se abre. Sem filtro, o círculo da
- * lupa vira o × e a pílula brota do flanco dele (`broto`). Puro, para o teste:
- * quem escreve é o `desenharBolhas`.
+ * pílula, preso pela tensão), e o vão de 8 se abre. Sem filtro é outro gesto
+ * (`quadroDaGota`). Puro, para o teste: quem escreve é o `desenharBolhas`.
  */
 function quadroDasBolhas(
-  m: { lupa: Caixa; deX: Caixa; pilula: Caixa; x: Caixa; emenda0: number; dpr: number },
+  m: { lupa: Caixa; deX: Caixa; pilula: Caixa; x: Caixa; dpr: number },
   p: number
 ) {
   const q = Math.min(Math.max(p, 0), 1), resto = 1 - p, R = m.pilula.height / 2
@@ -233,11 +250,10 @@ function quadroDasBolhas(
   const escalaX = (m.x.right + xdx - direita - vao) / m.x.width
   const visivel = m.lupa.left + (m.pilula.left - m.lupa.left) * p
   const largura = Math.max(0, direita - visivel)
-  const broto = m.emenda0 * Math.max(0, 1 - largura / (2 * R))   // sem filtro, o círculo brota
-  const emenda = broto + (R - broto) * pinca
-  // O broto mais estreito que os dois cantos: o CSS encolheria os quatro raios
-  // juntos (uma lâmina de 44 com cantos de 5px). Só o raio horizontal cabe na
-  // largura; o vertical fica, e a emenda segue casando com a do ×.
+  const emenda = R * pinca
+  // Mais estreita que os dois cantos, a fatia visível encolheria os quatro
+  // raios juntos no CSS. Só o raio horizontal cabe na largura; o vertical
+  // fica, e a emenda segue casando com a do ×.
   const cabe = Math.min(1, largura / (R + emenda))
   // O fantasma da lupa anda com a borda visível (`visivel - lupa.left`): o
   // centro dele e o da lupa da pílula (o recuo de 14 e meia lupa de 16) caem
@@ -247,6 +263,54 @@ function quadroDasBolhas(
     topo: (m.lupa.top - m.pilula.top) * resto, base: (m.pilula.bottom - m.lupa.bottom) * resto,
     emenda, emendaH: emenda * cabe, puxao, escalaX, vao, xdx, xdy,
     icone: suave(q, ICONE), conteudo: suave(q, CONTEUDO), tinta: 1 - suave(q, TINTA) }
+}
+
+/**
+ * As fases da busca sem filtro, no mesmo progresso: a borda esquerda do campo
+ * repousa na calha aos 0,7 (o passe vem só da mola), a direita anda de 0,15 a
+ * 0,75, a gota nasce e corre de 0,45 a 1, a lupa do header se troca pela da
+ * pílula de 0,5 a 0,8, o conteúdo acende de 0,55 a 0,85 e o X de 0,7 a 1.
+ */
+const ESTICA = 0.7
+const PONTA = [0.15, 0.75] as const
+const GOTA = [0.45, 1] as const
+const LUPA_TROCA = [0.5, 0.8] as const
+const CONTEUDO_DA_GOTA = [0.55, 0.85] as const
+const X_ACENDE = [0.7, 1] as const
+/** A gota nasce com 35% do raio, escondida dentro da ponta. */
+const GOTA_NASCE = 0.35
+
+/**
+ * Um quadro da busca sem filtro, no progresso `p` (0 a lupa sozinha, 1 a barra
+ * e o ×), em coordenadas de tela, R meia pílula. O círculo inteiro da lupa se
+ * estica e vira o campo: a borda esquerda corre até a calha levando o ícone
+ * (`lupaX`, o centro dele), a direita recua até a ponta da barra. O × nasce
+ * como uma gota da ponta direita: colada por dentro dela (centro em `direita −
+ * R`) com 35% do raio, cresce até o raio inteiro e desliza até o lugar do ×,
+ * e o vão é o que sobra entre a ponta e ela (0 enquanto presa). Presa, a ponta
+ * cai num pixel do aparelho: é a costura dos dois vidros, e numa fração duas
+ * bordas meio cobertas somavam menos que um e o fundo vazava num fio claro.
+ * Puro, para o teste: quem escreve é o `desenharGota`.
+ */
+function quadroDaGota(m: { lupa: Caixa; pilula: Caixa; x: Caixa; dpr: number }, p: number) {
+  const R = m.pilula.height / 2
+  const esquerda = lerp(m.lupa.left, m.pilula.left, Math.min(p / ESTICA, 1) + Math.max(0, p - 1))
+  const livre = lerp(m.lupa.right, m.pilula.right, suave(p, PONTA))
+  const g = suave(p, GOTA)
+  const r = R * Math.min(1, GOTA_NASCE + g)
+  const presa = lerp(livre - R, m.x.left + R, g) - r <= livre
+  const direita = presa ? Math.round(livre * m.dpr) / m.dpr : livre
+  const cx = lerp(direita - R, m.x.left + R, g)
+  return {
+    esquerda,
+    direita,
+    gota: { cx, r },
+    vao: presa ? 0 : cx - r - direita,
+    lupaX: esquerda + R,
+    lupaTroca: suave(p, LUPA_TROCA),
+    icone: suave(p, X_ACENDE),
+    conteudo: suave(p, CONTEUDO_DA_GOTA),
+  }
 }
 
 /**
@@ -308,7 +372,7 @@ function rolarAoInicio(pilula: HTMLElement) {
  * borrão do vidro.
  *
  * A silhueta no voo: o recorte tira o anel, e no escuro o vidro sobre o header
- * velado é o próprio fundo (o broto sozinho media 10/255). A tinta dos dois
+ * velado é o próprio fundo (sozinho, o vidro media 10/255). A tinta dos dois
  * sobe para o `--foreground` (`TINTA_DO_VOO`), numa camada de `background-image`
  * que o `clip-path` recorta junto: ela desenha exatamente a forma visível, com
  * a borda que anda e a cintura, e fundidas as duas tintas são uma só. Um anel
@@ -359,6 +423,71 @@ function desenharBolhas(
     origemLupa.style.opacity = `${1 - f.conteudo}`
     origemLupa.style.filter = `blur(${6 * f.conteudo}px)`
     origemLupa.style.transform = `translateX(${f.lupaDx}px) scale(${1 - 0.3 * f.conteudo})`
+  }
+  if (iconeX) {
+    iconeX.style.opacity = `${f.icone}`
+    iconeX.style.filter = `blur(${6 * (1 - f.icone)}px)`
+    iconeX.style.transform = `scale(${0.7 + 0.3 * f.icone})`
+  }
+}
+
+/**
+ * Escreve um quadro da busca sem filtro (`quadroDaGota`) nos dois vidros e nos
+ * filhos deles, nunca num ancestral. A pílula anda com a ponta (`translateX`)
+ * e o recorte esconde o que fica à esquerda da borda (no passe da mola ele sai
+ * da caixa, e só a caixa pinta); o conteúdo anda com a borda e acende por
+ * `conteudo`, menos a lupa da pílula, que acende por `lupaTroca` no lugar em
+ * que o fantasma da lupa do header se apaga (os dois centrados em `lupaX`). O
+ * × é a gota: o próprio vidro dele, levado ao centro e ao raio do quadro por
+ * `translate`/`scale` pela origem da direita, recortado onde cairia dentro da
+ * pílula (vidro sobre vidro pintaria duas vezes) e com a cintura nos cantos da
+ * esquerda, pela técnica da emenda: assomando da ponta eles são retos (a
+ * junção é a fatia inteira) e arredondam até o raio conforme a gota sai, e a
+ * junção afina até o ponto em que o vão abre. A emenda é dividida pela escala
+ * da gota, e só o raio horizontal encolhe quando a fatia visível é mais
+ * estreita que ele (como em `quadroDasBolhas`). O X acende do desfoque por
+ * `icone`; o fantasma do × fica vazio. O recorte tira o anel dos dois, e a
+ * silhueta é a tinta do voo (`TINTA_DO_VOO`), que some no fim (`TINTA`).
+ */
+function desenharGota(
+  pilula: HTMLElement,
+  x: HTMLElement,
+  iconeX: SVGElement | null,
+  origemLupa: HTMLElement | null,
+  m: { lupa: Caixa; pilula: Caixa; x: Caixa },
+  f: ReturnType<typeof quadroDaGota>,
+  p: number
+) {
+  const R = m.pilula.height / 2
+  const s = f.gota.r / R
+  const dx = f.direita - m.pilula.right
+  const esquerda = f.esquerda - m.pilula.left - dx
+  const lupaDaPilula = pilula.querySelector(":scope > svg")
+  pilula.style.transform = `translateX(${dx}px)`
+  pilula.style.clipPath = `inset(0px 0px 0px ${esquerda}px round ${R}px)`
+  for (const filho of pilula.children as HTMLCollectionOf<HTMLElement>) {
+    filho.style.transform = `translateX(${Math.max(0, esquerda)}px)`
+    filho.style.filter = `opacity(${filho === lupaDaPilula ? f.lupaTroca : f.conteudo})`
+    filho.style.caretColor = "transparent"
+  }
+  pilula.style.setProperty("--command-beam-flight", `${f.conteudo}`)
+  const tinta = `color-mix(in oklab, var(--foreground) ${TINTA_DO_VOO * (1 - suave(p, TINTA))}%, transparent)`
+  pilula.style.backgroundImage = x.style.backgroundImage = `linear-gradient(${tinta}, ${tinta})`
+  // A gota: a borda direita dela em `cx + r`, e a escala pela origem da direita.
+  const W = m.x.width
+  x.style.borderRadius = `0px ${R}px ${R}px 0px`
+  x.style.transform = `translateX(${f.gota.cx + f.gota.r - m.x.right}px) scale(${s})`
+  // Onde a ponta da pílula acaba, nas coordenadas da gota antes do `transform`; toda dentro, não sobra nada.
+  const corte = preso(W + (f.direita - f.gota.cx - f.gota.r) / s, 0, W)
+  const fora = preso((f.gota.cx + f.gota.r - f.direita) / (2 * f.gota.r), 0, 1)
+  const emenda = Math.min(R, (R * fora) / s)
+  const cabe = Math.min(1, (W - corte) / (R + emenda))
+  x.style.clipPath =
+    `inset(0px 0px 0px ${corte}px round ${emenda * cabe}px ${R * cabe}px ${R * cabe}px ${emenda * cabe}px / ${emenda}px ${R}px ${R}px ${emenda}px)`
+  if (origemLupa) {
+    origemLupa.style.opacity = `${1 - f.lupaTroca}`
+    origemLupa.style.filter = `blur(${6 * f.lupaTroca}px)`
+    origemLupa.style.transform = `translateX(${f.lupaX - R - m.lupa.left}px) scale(${1 - 0.3 * f.lupaTroca})`
   }
   if (iconeX) {
     iconeX.style.opacity = `${f.icone}`
@@ -420,9 +549,10 @@ function CommandDialog({
   /** No telefone, o elemento de onde a pílula nasce (a lupa do header); sem ele, ela entra no lugar. */
   origin?: React.RefObject<HTMLElement | null>
   /**
-   * No telefone, de onde o × nasce: o filtro colado à lupa (`origin`). Sem
-   * ele, ou sem caixa, ou longe da lupa, a lupa se divide: vira o × e a
-   * pílula brota do flanco dela.
+   * No telefone, de onde o × nasce: o filtro colado à lupa (`origin`), pelas
+   * caixas de layout. Sem ele, sem caixa, longe da lupa ou inerte (a gota do
+   * header voltando à lupa), o círculo da lupa vira o campo e o × pinga da
+   * ponta dele.
    */
   closeOrigin?: React.RefObject<HTMLElement | null>
 }) {
@@ -451,13 +581,13 @@ function CommandDialog({
     }
   }, [camada])
 
-  // O gesto do telefone: a cápsula do header `[lupa | filtro]` se divide em
-  // duas bolhas. A metade da lupa corre até a calha e vira a pílula; a do
-  // filtro fica no lugar e vira o × (sem filtro, o círculo da lupa vira o × e
-  // a pílula brota do flanco dele). Fechar é o mesmo filme ao contrário, e a
-  // casca segue montada pelo `presence-hold`. Um progresso só escreve cada
-  // quadro (`quadroDasBolhas`) nos dois vidros; nada mexe no layout do cmdk,
-  // e tudo sai no fim.
+  // O gesto do telefone: com o filtro colado, a cápsula do header `[lupa |
+  // filtro]` se divide em duas bolhas (a metade da lupa corre até a calha e
+  // vira a pílula; a do filtro fica no lugar e vira o ×); sem filtro, o
+  // círculo da lupa vira o campo e o × pinga da ponta dele. Fechar é o mesmo
+  // filme ao contrário, e a casca segue montada pelo `presence-hold`. Um
+  // progresso só escreve cada quadro (`quadroDasBolhas` ou `quadroDaGota`)
+  // nos dois vidros; nada mexe no layout do cmdk, e tudo sai no fim.
   React.useLayoutEffect(() => {
     const pilula = camada?.querySelector<HTMLElement>("[data-slot=search-input]")
     const x = camada?.querySelector<HTMLElement>("[data-slot=command-search-cancel]")
@@ -467,28 +597,23 @@ function CommandDialog({
     const origemLupaEl = camada.querySelector<HTMLElement>("[data-slot=command-search-origin]")
     const placa = camada.querySelector<HTMLElement>("[data-slot=command-dialog-panel]")
     const lupaEl = origin?.current
-    const lupa = lupaEl?.getBoundingClientRect()
+    // As origens pelas caixas de layout, sem o voo do header: a busca aberta
+    // com o filtro ainda pingando parte de onde a lupa e ele pousam.
+    const lupa = lupaEl ? caixaDeLayout(lupaEl) : null
     const viaja = !!lupaEl && origemValida(lupa) && !reduzido
     let ativa = true
     let controle: AnimationPlaybackControls | undefined
     let cancelar = () => {}
     if (viaja) {
       pilula.style.opacity = x.style.opacity = ""
-      // O × nasce do filtro só quando ele está colado à lupa, na mesma linha.
+      // O × nasce do filtro só quando ele está colado à lupa, na mesma linha;
+      // inerte, ele está saindo (a gota voltando à lupa) e não conta.
       const filtroEl = closeOrigin?.current
-      const filtro = filtroEl?.getBoundingClientRect()
+      const filtro = filtroEl && !filtroEl.closest("[inert]") ? caixaDeLayout(filtroEl) : null
       const colado =
-        !!filtroEl &&
-        origemValida(filtro) &&
-        Math.abs(filtro.left - lupa.right) <= 1 &&
-        Math.abs(filtro.top - lupa.top) <= 1
-      const deXEl = colado ? filtroEl : lupaEl
-      const deX = colado ? filtro : lupa
+        origemValida(filtro) && Math.abs(filtro.left - lupa.right) <= 1 && Math.abs(filtro.top - lupa.top) <= 1
       // A caixa final da pílula sem o `transform` de um gesto interrompido.
-      const emCurso = pilula.style.transform
-      pilula.style.transform = ""
-      const final = pilula.getBoundingClientRect()
-      pilula.style.transform = emCurso
+      const final = caixaDeLayout(pilula)
       // O × pelo lugar de layout na camada (ele é `absolute` nela), e não pela
       // caixa pintada: fechar pelo × mede no meio do aperto do toque (o
       // `translate` do AFUNDAR e do `active:translate-y-px`), e ele pousava 1px
@@ -502,32 +627,40 @@ function CommandDialog({
         right: c.left + x.offsetLeft + x.offsetWidth,
         bottom: c.top + x.offsetTop + x.offsetHeight,
       }
-      // A emenda de partida é o canto de dentro da origem do × (0 no filtro
-      // colado, o `rounded-l-none` do grupo; o raio inteiro na lupa sozinha).
-      const emenda0 = Math.min(parseFloat(getComputedStyle(deXEl).borderTopLeftRadius) || 0, final.height / 2)
-      // O fantasma mostra o que a origem mostrava, clonado de novo a cada
-      // gesto para nunca empilhar.
-      fantasma?.replaceChildren(...[...deXEl.children].map((n) => n.cloneNode(true)))
-      // Na cápsula, o fantasma da lupa segura o desenho do header na metade
-      // dela (o branco de 20, e não a lupa cinza de 16 da pílula) até o
-      // conteúdo acender, e é nele que a volta pousa. Sem filtro, o fantasma
-      // do × já é a lupa, e este fica apagado.
-      const origemLupa = colado ? origemLupaEl : null
-      if (origemLupa) {
-        origemLupa.replaceChildren(...[...lupaEl.children].map((n) => n.cloneNode(true)))
-        Object.assign(origemLupa.style, {
+      // O fantasma do × mostra o que o filtro mostrava, clonado de novo a cada
+      // gesto para nunca empilhar; sem filtro fica vazio (o × é a gota).
+      if (colado && filtroEl) fantasma?.replaceChildren(...[...filtroEl.children].map((n) => n.cloneNode(true)))
+      else fantasma?.replaceChildren()
+      // O fantasma da lupa segura o desenho do header (o branco de 20, e não
+      // a lupa cinza de 16 da pílula) até a da pílula acender, e é nele que a
+      // volta pousa: na cápsula, parado na metade dela; sem filtro, andando
+      // com a borda esquerda do campo.
+      if (origemLupaEl) {
+        origemLupaEl.replaceChildren(...[...lupaEl.children].map((n) => n.cloneNode(true)))
+        Object.assign(origemLupaEl.style, {
           left: `${lupa.left - c.left}px`,
           top: `${lupa.top - c.top}px`,
           width: `${lupa.width}px`,
           height: `${lupa.height}px`,
         })
-      } else if (origemLupaEl) origemLupaEl.style.cssText = ""
+      }
       rolarAoInicio(pilula)
-      const m = { lupa, deX, pilula: final, x: xFinal, emenda0, dpr: window.devicePixelRatio || 1 }
+      const dpr = window.devicePixelRatio || 1
+      const desenhar = colado && filtro
+        ? (p: number) => {
+            const f = quadroDasBolhas({ lupa, deX: filtro, pilula: final, x: xFinal, dpr }, p)
+            desenharBolhas(pilula, x, iconeX, fantasma, origemLupaEl, f)
+            return f
+          }
+        : (p: number) => {
+            const m = { lupa, pilula: final, x: xFinal, dpr }
+            const f = quadroDaGota(m, p)
+            desenharGota(pilula, x, iconeX, origemLupaEl, m, f, p)
+            return f
+          }
       const quadro = (p: number) => {
         progresso.current = p
-        const f = quadroDasBolhas(m, p)
-        desenharBolhas(pilula, x, iconeX, fantasma, origemLupa, f)
+        const f = desenhar(p)
         // A placa brota quando o vão abre, no progresso, e não no relógio do
         // CSS: ele corre durante a montagem, e a placa terminava de brotar
         // antes de as bolhas se separarem.
@@ -550,7 +683,7 @@ function CommandDialog({
           // é a última palavra (animando o `clip-path` do elemento, o valor do
           // motion o reescrevia no render seguinte).
           abrindo.then(() => {
-            if (ativa) bolhasEmRepouso(pilula, x, iconeX, fantasma, origemLupa)
+            if (ativa) bolhasEmRepouso(pilula, x, iconeX, fantasma, origemLupaEl)
           })
           controle = abrindo
         })
@@ -697,9 +830,9 @@ function CommandDialog({
                 {children}
               </Command>
             </CommandBeamContext.Provider>
-            {/* O fantasma da lupa (só na cápsula `[lupa | filtro]`): o desenho
-                da lupa do header sobre a metade dela, posto e preenchido pelo
-                gesto. Fora da raiz do cmdk, como o ×. `z-20`: a faixa da pílula
+            {/* O fantasma da lupa: o desenho da lupa do header sobre a metade
+                dela na cápsula, ou andando com a borda do campo sem filtro,
+                posto e preenchido pelo gesto. Fora da raiz do cmdk, como o ×. `z-20`: a faixa da pílula
                 é `relative z-10`, e sem ele o fantasma pintava por baixo do
                 vidro (borrado, quase invisível). */}
             <span aria-hidden data-slot="command-search-origin" className="pointer-events-none absolute z-20 grid place-items-center opacity-0 [&_svg]:size-5" />
@@ -1719,6 +1852,7 @@ export {
   CommandDialog,
   origemValida,
   quadroDasBolhas,
+  quadroDaGota,
   CommandHighlight,
   CommandPage,
   CommandPages,

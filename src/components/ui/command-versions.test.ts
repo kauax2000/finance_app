@@ -204,15 +204,27 @@ describe("as versões do Command", () => {
     expect(CODIGO).not.toContain("x.getBoundingClientRect()")
     expect(CODIGO).not.toMatch(/getAnimations\(\)[\s\S]{0,80}\.(cancel|finish)\(/)
     // O fantasma da lupa: fora da raiz do cmdk, como o ×, posto no retângulo da
-    // lupa uma vez por gesto e preenchido com os filhos dela; sem filtro fica
-    // apagado (o fantasma do × já é a lupa).
+    // lupa uma vez por gesto e preenchido com os filhos dela, com ou sem filtro
+    // (sem filtro, é ele que anda com a borda esquerda do campo).
     expect(CODIGO).toContain(
       '<span aria-hidden data-slot="command-search-origin" className="pointer-events-none absolute z-20 grid place-items-center opacity-0 [&_svg]:size-5" />'
     )
     const telefone = CODIGO.slice(CODIGO.indexOf("if (isMobile) {"))
     expect(telefone.indexOf('data-slot="command-search-origin"')).toBeGreaterThan(telefone.indexOf("</Command>"))
-    expect(CODIGO).toContain("origemLupa.replaceChildren(...[...lupaEl.children].map((n) => n.cloneNode(true)))")
-    expect(CODIGO).toContain("const origemLupa = colado ? origemLupaEl : null")
+    expect(CODIGO).not.toContain("const origemLupa = colado ? origemLupaEl : null")
+    expect(CODIGO).toMatch(/origemLupaEl\.replaceChildren\(\.\.\.\[\.\.\.lupaEl\.children\]\.map\(\(n\) => n\.cloneNode\(true\)\)\)/)
+    // "Colado" se decide pelas caixas de layout (sem o `transform` em voo da
+    // lupa e da gota do header), nunca pelo retângulo pintado; um filtro
+    // inerte (a gota voltando à lupa) não conta.
+    expect(CODIGO).toContain("function caixaDeLayout(el: HTMLElement): DOMRect")
+    expect(CODIGO).toContain("const lupa = lupaEl ? caixaDeLayout(lupaEl) : null")
+    expect(CODIGO).toContain('const filtro = filtroEl && !filtroEl.closest("[inert]") ? caixaDeLayout(filtroEl) : null')
+    expect(CODIGO).not.toMatch(/(lupaEl|filtroEl)\??\.getBoundingClientRect\(\)/)
+    expect(CODIGO).not.toContain("borderTopLeftRadius")
+    // Sem filtro, o fantasma do × fica vazio, e o × é a gota que pinga da pílula.
+    expect(CODIGO).toContain("fantasma?.replaceChildren()")
+    expect(CODIGO).toMatch(/const desenhar = colado && filtro\s*\? \(p: number\) => \{\s*const f = quadroDasBolhas\(/)
+    expect(CODIGO).toMatch(/: \(p: number\) => \{\s*const m = \{ lupa, pilula: final, x: xFinal, dpr \}\s*const f = quadroDaGota\(m, p\)/)
     expect(CODIGO).toContain("animate([pilula, x], { opacity: [0, 1] }, SAIDA)")
     expect(CODIGO).toContain("animate([pilula, x], { opacity: 0 }, SAIDA)")
     // O fantasma é o que a origem do × mostrava (o filtro ou a lupa), clonado
@@ -263,8 +275,7 @@ describe("as versões do Command", () => {
     const caixa = (left: number, right: number) => ({ left, right, top: 6, bottom: 50, width: right - left, height: 44 })
     const pilula = caixa(16, 307)
     const x = caixa(315, 359)
-    const capsula = { lupa: caixa(271, 315), deX: caixa(315, 359), pilula, x, emenda0: 0, dpr: 3 }
-    const sozinha = { lupa: caixa(315, 359), deX: caixa(315, 359), pilula, x, emenda0: 22, dpr: 3 }
+    const capsula = { lupa: caixa(271, 315), deX: caixa(315, 359), pilula, x, dpr: 3 }
     type Quadro = { dx: number; esquerda: number }
     const esquerdaVisivel = (f: Quadro) => pilula.left + f.dx + f.esquerda
     const direitaDaPilula = (f: Quadro) => pilula.right + f.dx
@@ -299,7 +310,7 @@ describe("as versões do Command", () => {
 
     it("em todo quadro (até o passe da mola), a pílula não invade o ×, a emenda cabe no raio e a borda só anda para a esquerda", async () => {
       const { quadroDasBolhas } = await import("@/components/ui/command")
-      for (const m of [capsula, sozinha]) {
+      for (const m of [capsula]) {
         let antes = Infinity
         for (let i = 0; i <= 105; i++) {
           const f = quadroDasBolhas(m, i / 100)
@@ -319,7 +330,7 @@ describe("as versões do Command", () => {
       for (const dpr of [2, 3]) {
         // O puxão do × deixa a costura fracionária no meio da pinça.
         let fracionarias = 0
-        for (const m of [capsula, sozinha]) {
+        for (const m of [capsula]) {
           for (let i = 0; i <= 105; i++) {
             const f = quadroDasBolhas({ ...m, dpr }, i / 100)
             if (f.vao !== 0) continue
@@ -336,7 +347,7 @@ describe("as versões do Command", () => {
 
     it("o conteúdo só acende depois que o vão abre, e não volta (fundido, a costura cortava o texto)", async () => {
       const { quadroDasBolhas } = await import("@/components/ui/command")
-      for (const m of [capsula, sozinha]) {
+      for (const m of [capsula]) {
         expect(quadroDasBolhas(m, 0).conteudo).toBe(0)
         expect(quadroDasBolhas(m, 0.85).conteudo).toBe(1)
         expect(quadroDasBolhas(m, 1.05).conteudo).toBe(1)
@@ -400,7 +411,7 @@ describe("as versões do Command", () => {
         expect(capsula.lupa.left + f.lupaDx).toBeCloseTo(bordaDoConteudo(f), 6)
       }
       // Passe da mola: o recorte sai da caixa (esquerda < 0), e o conteúdo fica na calha.
-      for (const m of [capsula, sozinha]) {
+      for (const m of [capsula]) {
         for (let i = 101; i <= 105; i++) {
           const f = quadroDasBolhas(m, i / 100)
           expect(f.esquerda).toBeLessThan(0)
@@ -408,19 +419,83 @@ describe("as versões do Command", () => {
         }
       }
     })
+  })
 
-    it("sem filtro, a lupa é o × inteiro e a pílula brota do flanco dela", async () => {
-      const { quadroDasBolhas } = await import("@/components/ui/command")
-      const f0 = quadroDasBolhas(sozinha, 0)
-      expect(f0.esquerda).toBeCloseTo(pilula.width, 6)
-      expect(f0.emenda).toBe(22)
-      // O broto de 10px: o raio vertical inteiro, o horizontal na largura.
-      const broto = quadroDasBolhas(sozinha, 0.035)
-      expect(broto.R).toBe(22)
-      expect(broto.Rh + broto.emendaH).toBeCloseTo(pilula.width - broto.esquerda, 6)
-      expect(quadroDasBolhas(sozinha, 0.15).emenda).toBeLessThan(4)
-      // O mesmo pouso; só o fantasma da lupa (que sem filtro fica apagado) parte de outro lugar.
-      expect({ ...quadroDasBolhas(sozinha, 1), lupaDx: 0 }).toEqual({ ...quadroDasBolhas(capsula, 1), lupaDx: 0 })
+  describe("sem filtro: a lupa vira o campo e o × pinga dela", () => {
+    const caixa = (left: number, right: number) => ({ left, right, top: 6, bottom: 50, width: right - left, height: 44 })
+    const pilula = caixa(16, 307)
+    const x = caixa(315, 359)
+    const m = { lupa: caixa(315, 359), pilula, x, dpr: 3 }
+
+    it("parte do círculo da lupa com a gota escondida na ponta, e pousa na barra com o × e o vão de 8", async () => {
+      const { quadroDaGota } = await import("@/components/ui/command")
+      const f0 = quadroDaGota(m, 0)
+      expect(f0.esquerda).toBe(315)
+      expect(f0.direita).toBe(359)
+      expect(f0.gota.r).toBeCloseTo(7.7, 6)
+      expect(f0.gota.cx).toBe(337)
+      expect(f0.vao).toBe(0)
+      expect(f0.icone).toBe(0)
+      expect(f0.conteudo).toBe(0)
+      expect(f0.lupaX).toBe(337)
+      expect(f0.lupaTroca).toBe(0)
+      const f1 = quadroDaGota(m, 1)
+      expect(f1.esquerda).toBe(16)
+      expect(f1.direita).toBe(307)
+      expect(f1.gota).toEqual({ cx: 337, r: 22 })
+      expect(f1.vao).toBe(8)
+      expect(f1.icone).toBe(1)
+      expect(f1.conteudo).toBe(1)
+      expect(f1.lupaX).toBe(38)
+      expect(f1.lupaTroca).toBe(1)
+      // A borda esquerda repousa na calha aos 0,7; o passe vem só da mola.
+      expect(quadroDaGota(m, 0.7).esquerda).toBe(16)
+      expect(quadroDaGota(m, 1.02).esquerda).toBeLessThan(16)
+    })
+
+    it("a gota nunca passa do lugar do ×, o vão só abre e a borda esquerda só anda para a calha", async () => {
+      const { quadroDaGota } = await import("@/components/ui/command")
+      let vao = -Infinity
+      let esquerda = Infinity
+      for (let i = 0; i <= 105; i++) {
+        const f = quadroDaGota(m, i / 100)
+        expect(f.gota.cx + f.gota.r).toBeLessThanOrEqual(x.right + 0.5)
+        expect(f.vao).toBeGreaterThanOrEqual(vao)
+        expect(f.esquerda).toBeLessThanOrEqual(esquerda + 1e-9)
+        // A gota presa à ponta cai num pixel do aparelho (sem o fio de duas bordas meio cobertas).
+        if (f.vao === 0) expect(Math.abs(f.direita * m.dpr - Math.round(f.direita * m.dpr))).toBeLessThan(1e-6)
+        vao = f.vao
+        esquerda = f.esquerda
+      }
+    })
+
+    it("na SEPARACAO repousa em até 700ms", async () => {
+      const { quadroDaGota } = await import("@/components/ui/command")
+      const { SEPARACAO } = await import("@/lib/spring")
+      const { spring } = await import("motion")
+      const mola = spring({ keyframes: [0, 1], ...SEPARACAO })
+      let repouso = Infinity
+      for (let t = 0; t <= 2000; t++) {
+        const { value, done } = mola.next(t)
+        quadroDaGota(m, value)
+        if (done) {
+          repouso = t
+          break
+        }
+      }
+      expect(repouso).toBeLessThanOrEqual(700)
+    })
+
+    it("o escritor da gota mexe só nos dois vidros e nos filhos deles, e o repouso é o das bolhas", () => {
+      const escritor = CODIGO.slice(CODIGO.indexOf("function desenharGota("), CODIGO.indexOf("function bolhasEmRepouso"))
+      expect(escritor).toContain("pilula.style.transform = `translateX(${dx}px)`")
+      expect(escritor).toContain("x.style.borderRadius = `0px ${R}px ${R}px 0px`")
+      expect(escritor).toMatch(/x\.style\.transform = `translateX\(\$\{[^}]+\}px\) scale\(\$\{s\}\)`/)
+      expect(escritor).toContain("filho.style.filter = `opacity(${filho === lupaDaPilula ? f.lupaTroca : f.conteudo})`")
+      expect(escritor).toContain("origemLupa.style.opacity = `${1 - f.lupaTroca}`")
+      expect(escritor).toContain("iconeX.style.opacity = `${f.icone}`")
+      expect(escritor).not.toMatch(/camada|parentElement/)
+      expect(CODIGO).toMatch(/if \(ativa\) bolhasEmRepouso\(pilula, x, iconeX, fantasma, origemLupaEl\)/)
     })
   })
 
@@ -429,7 +504,9 @@ describe("as versões do Command", () => {
     expect(CODIGO).toMatch(/<SearchInput[^]*?caret=\{caret\}[^]*?<CommandPrimitive\.Input/)
   })
 
-  it("a página não diz mais que o Combobox monta a pilha", () => {
+  it("a página não diz mais que o Combobox monta a pilha, nem que a pílula brota do flanco da lupa", () => {
     expect(lerFonte("src/app/designsystem/docs/command.tsx")).not.toMatch(/o CommandDialog e o Combobox a montam/)
+    expect(lerFonte("src/app/designsystem/docs/command.tsx")).not.toMatch(/brota do flanco/)
+    expect(lerFonte("src/app/designsystem/docs/command.tsx")).toMatch(/pinga/)
   })
 })
