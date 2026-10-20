@@ -20,7 +20,7 @@ import {
   barEdgeLayerClassNames,
   barSurfaceClassName,
 } from "@/lib/glass-classes"
-import { quadroDaTroca, type IconeEmVoo } from "@/lib/header-morph"
+import { quadroDaTroca, suave, type IconeEmVoo } from "@/lib/header-morph"
 import { alvoDaRolagem, proximoEscondido } from "@/lib/hide-on-scroll"
 import {
   searchFieldIconClassName,
@@ -568,6 +568,30 @@ function pintarMiolo(el: HTMLElement, i: IconeEmVoo | null) {
   el.style.filter = i ? "blur(" + i.desfoque + "px)" : ""
 }
 
+/** O quadro em que um miolo está, lido do inline; sem nada escrito, `reserva` (o repouso do papel dele). */
+function lerMiolo(el: HTMLElement, reserva: IconeEmVoo): IconeEmVoo {
+  if (!el.style.opacity) return reserva
+  return {
+    opacidade: parseFloat(el.style.opacity),
+    escala: parseFloat(el.style.scale) || 1,
+    desfoque: parseFloat(el.style.filter.slice("blur(".length)) || 0,
+  }
+}
+
+const misturar = (a: IconeEmVoo, b: IconeEmVoo, t: number): IconeEmVoo => ({
+  opacidade: a.opacidade + (b.opacidade - a.opacidade) * t,
+  escala: a.escala + (b.escala - a.escala) * t,
+  desfoque: a.desfoque + (b.desfoque - a.desfoque) * t,
+})
+
+/**
+ * O realce do vidro no botão de dentro, o mesmo `--button-hover-fill` do
+ * `TOP_BAR_PLATE`: a variante do `Button` reescreve a variável no próprio
+ * botão (0,1,0) e venceria a herdada; o descendente por atributo (0,2,0) vence.
+ */
+const REALCE_DO_VIDRO_NO_MIOLO =
+  "[&_[data-variant]]:[--button-hover-fill:color-mix(in_oklab,var(--sidebar-accent)_50%,transparent)]"
+
 type Miolo = { chave: string; filho: React.ReactNode }
 
 /**
@@ -580,8 +604,10 @@ type Miolo = { chave: string; filho: React.ReactNode }
  * são dos miolos, filhos dele — nunca de um ancestral, que desligaria o
  * `backdrop-filter`. No fim, nada inline.
  * Montar não anima: a troca nasce de uma chave diferente da que já montou.
- * Uma troca no meio de outra segue do progresso guardado, com o que entrava
- * passando a sair. Sem caixa (a árvore do telefone escondida) ou com movimento
+ * Uma troca no meio de outra não pula: o vidro segue no mesmo afundar, e cada
+ * miolo parte do quadro em que estava, misturando-se ao da troca nova no
+ * primeiro quarto dela. Antes do meio, o que sai continua saindo e o que mal
+ * tinha entrado vai embora; depois, o que entrava passa a sair. Sem caixa (a árvore do telefone escondida) ou com movimento
  * reduzido, troca na hora.
  */
 function TopBarActionSwap({
@@ -601,9 +627,25 @@ function TopBarActionSwap({
   // O miolo que montou por último, sempre com o filho em dia (o de saída leva a contagem de agora).
   const [montou, setMontou] = React.useState<Miolo>({ chave: swapKey, filho: children })
   const [saindo, setSaindo] = React.useState<Miolo | null>(null)
+  // Se o gesto em curso já passou do meio: decide quem sai numa troca no meio de outra.
+  const [passouDoMeio, setPassouDoMeio] = React.useState(false)
+  // O miolo que entrava saiu da árvore (ou virou o que sai) com o foco dentro.
+  const focoNoQueSaiu = React.useRef(false)
+  const guardarFoco = React.useCallback((no: HTMLSpanElement | null) => {
+    if (!no) return
+    return () => {
+      if (no.contains(no.ownerDocument.activeElement)) focoNoQueSaiu.current = true
+    }
+  }, [])
   if (montou.chave !== swapKey) {
-    setSaindo(montou)
+    // Voltar à chave que saía, ou trocar depois do meio: o que entrava passa a
+    // sair. Antes do meio, o que saía segue saindo, e o que mal tinha entrado
+    // desmonta. Sempre um objeto novo: o efeito recomeça mesmo quando quem sai
+    // é o mesmo.
+    const fica = saindo && !passouDoMeio && swapKey !== saindo.chave ? saindo : montou
+    setSaindo({ ...fica })
     setMontou({ chave: swapKey, filho: children })
+    setPassouDoMeio(false)
   } else if (montou.filho !== children) {
     setMontou({ chave: swapKey, filho: children })
   }
@@ -613,8 +655,10 @@ function TopBarActionSwap({
     const sai = el?.querySelector<HTMLElement>(":scope > [data-swap=sai]")
     const entra = el?.querySelector<HTMLElement>(":scope > [data-swap=entra]")
     if (!saindo || !el || !sai || !entra) return
-    // Antes de medir: o foco ainda está no miolo que virou inerte.
-    if (sai.contains(el.ownerDocument.activeElement)) {
+    const herdaFoco = focoNoQueSaiu.current
+    focoNoQueSaiu.current = false
+    // Antes de medir: o foco ainda está no miolo que virou inerte, ou estava no que desmontou.
+    if (herdaFoco || sai.contains(el.ownerDocument.activeElement)) {
       entra.querySelector<HTMLElement>("a[href], button:not([disabled]), [tabindex]:not([tabindex=\"-1\"])")?.focus()
     }
     const repouso = () => {
@@ -628,24 +672,38 @@ function TopBarActionSwap({
       setSaindo(null)
       return
     }
+    // Interrompida depois do meio, a troca nova parte do espelho (`1 − p`): o
+    // vidro está no mesmo afundar (`sen(πp) = sen(π(1 − p))`).
+    progresso.current = Math.max(0, Math.min(progresso.current, 1 - progresso.current))
+    const p0 = progresso.current
+    // Cada miolo parte de onde estava (o repouso do papel, se nada estava
+    // escrito: o que sai inteiro, o que entra apagado) e se mistura ao quadro
+    // da troca no primeiro quarto dela: os papéis não são simétricos, e partir
+    // do quadro de `p0` pularia.
+    const repousoDosPapeis = quadroDaTroca(0, true)
+    const deSai = lerMiolo(sai, repousoDosPapeis.sai)
+    const deEntra = lerMiolo(entra, repousoDosPapeis.entra)
+    let passou = false
     const quadro = (p: number) => {
       progresso.current = p
       const f = quadroDaTroca(p, true)
+      const t = suave(p, [p0, p0 + 0.25])
       el.style.transform = "scale(" + f.escala + ")"
-      pintarMiolo(sai, f.sai)
-      pintarMiolo(entra, f.entra)
+      pintarMiolo(sai, misturar(deSai, f.sai, t))
+      pintarMiolo(entra, misturar(deEntra, f.entra, t))
+      if (!passou && p >= 0.5) {
+        passou = true
+        setPassouDoMeio(true)
+      }
     }
-    // Interrompida depois do meio, a troca nova parte do espelho (`1 − p`): o
-    // vidro está no mesmo afundar, e o que entrava, quase inteiro, começa a
-    // sair quase inteiro, em vez de sumir de uma vez.
-    progresso.current = Math.max(0, Math.min(progresso.current, 1 - progresso.current))
-    quadro(progresso.current)
+    quadro(p0)
     let ativa = true
     const controle = animate(progresso.current, 1, { ...MOLA, onUpdate: quadro })
     controle.then(() => {
       if (!ativa) return
       repouso()
       setSaindo(null)
+      setPassouDoMeio(false)
     })
     return () => {
       ativa = false
@@ -657,12 +715,13 @@ function TopBarActionSwap({
     <span
       ref={vidro}
       data-slot="top-bar-action-swap"
-      className={cn("relative grid size-11 shrink-0 place-items-center", TOP_BAR_PLATE, className)}
+      className={cn("relative grid size-11 shrink-0 place-items-center", TOP_BAR_PLATE, REALCE_DO_VIDRO_NO_MIOLO, className)}
     >
       <TopBarSwapContext value>
         {/* As duas camadas na mesma célula da grade, e na ordem fixa (a que sai
-            primeiro): a reconciliação por chave nunca move o miolo que entra, e
-            o foco dele não cai. A que sai pinta por cima (`z-10`). */}
+            primeiro): a reconciliação por chave não move o miolo que entra, e
+            o foco dele não cai (quem desmonta com o foco o passa adiante pelo
+            `guardarFoco`). A que sai pinta por cima (`z-10`). */}
         {saindo ? (
           <span
             key={saindo.chave}
@@ -674,7 +733,7 @@ function TopBarActionSwap({
             {saindo.filho}
           </span>
         ) : null}
-        <span key={swapKey} data-swap="entra" className="grid place-items-center [grid-area:1/1]">
+        <span key={swapKey} ref={guardarFoco} data-swap="entra" className="grid place-items-center [grid-area:1/1]">
           {children}
         </span>
       </TopBarSwapContext>

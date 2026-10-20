@@ -388,6 +388,23 @@ describe("TopBarActionSwap", () => {
     expect(peca).not.toMatch(/use(Layout)?Effect\([\s\S]*?\[[^\]]*\bswapKey\b[^\]]*\]\)/)
   })
 
+  it("interrompida, não pula: cada miolo parte do quadro em que estava, e antes do meio o que sai segue saindo", () => {
+    expect(peca).toContain("lerMiolo(sai,")
+    expect(peca).toContain("lerMiolo(entra,")
+    expect(peca).toMatch(/misturar\(deSai, f\.sai, t\)/)
+    expect(peca).toContain("suave(p, [p0, p0 + 0.25])")
+    expect(peca).toContain("saindo && !passouDoMeio && swapKey !== saindo.chave ? saindo : montou")
+    // Quem desmonta com o foco o passa ao que entra.
+    expect(peca).toContain("ref={guardarFoco}")
+  })
+
+  it("o botão de dentro acende com o realce do vidro, e não o da variante", () => {
+    const realce = CODIGO.match(/const TOP_BAR_PLATE =\s*"[^"]*(\[--button-hover-fill:[^\]\s]+\])/)?.[1]
+    expect(realce).toBeTruthy()
+    expect(CODIGO).toContain(`const REALCE_DO_VIDRO_NO_MIOLO =\n  "[&_[data-variant]]:${realce}"`)
+    expect(peca).toContain("TOP_BAR_PLATE, REALCE_DO_VIDRO_NO_MIOLO")
+  })
+
   it("a ação dentro da troca não desenha o próprio vidro", () => {
     const acao = CODIGO.slice(CODIGO.indexOf("function TopBarAction("), CODIGO.indexOf("function TopBarActionSwap("))
     expect(acao).toContain("TopBarSwapContext")
