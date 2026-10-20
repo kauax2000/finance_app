@@ -1,0 +1,192 @@
+<h2>Abrir e fechar no desktop: Dialog e busca</h2>
+<p class="subtitle">Cada versão tem o diálogo e a paleta de busca sobre uma tela do app. "Abrir" e "Fechar" em cada quadro; "Câmera lenta" e "Repetir" valem para todos.</p>
+
+<style>
+  .bar { display:flex; gap:8px; flex-wrap:wrap; margin: 8px 0 16px; }
+  .bar button, .ctl button { font: inherit; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border, #3a3a3c); background: var(--bg-secondary); color: inherit; cursor: pointer; }
+  .bar button[aria-pressed="true"] { background:#fff; color:#111; }
+  .lista { display:flex; flex-direction:column; gap: 18px; }
+  .versao { padding: 14px; display:flex; flex-direction:column; align-items:stretch; gap:10px; }
+  .tag { font-size: 12px; color: var(--text-secondary, #8e8e93); max-width: 900px; }
+  .par { display:flex; gap: 14px; flex-wrap: wrap; }
+  .ctl { display:flex; gap:8px; flex-wrap:wrap; }
+  .stage { position:relative; width: 520px; height: 340px; border-radius: 16px; overflow:hidden; background:#0a0a0b; flex: none; font-family: Inter, system-ui, sans-serif; color:#f5f5f7; }
+  .pagina { position:absolute; inset:0; transform-origin: 50% 40%; }
+  .pagina .topo { height: 44px; display:flex; align-items:center; justify-content:space-between; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,.06); font-size: 13px; color:#a1a1a6; }
+  .pagina .busca-fake { width: 200px; height: 28px; border-radius: 999px; background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+  .pagina .stats { display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; padding: 14px 16px 0; }
+  .pagina .stat { border-radius: 16px; background:#141416; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); padding: 10px 12px; }
+  .pagina .stat small { display:block; font-size: 10px; letter-spacing:.04em; text-transform: uppercase; color:#8e8e93; }
+  .pagina .stat b { display:block; font-size: 18px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .pagina .stat b.neg { color:#ff7b72; } .pagina .stat b.pos { color:#5fd38d; }
+  .pagina .linhas { margin: 12px 16px; border-radius: 16px; background:#141416; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); padding: 4px 12px; }
+  .pagina .linha { display:flex; justify-content:space-between; font-size: 12.5px; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+  .pagina .linha:last-child { border-bottom: 0; }
+  .pagina .linha span:last-child { font-variant-numeric: tabular-nums; color:#d1d1d6; }
+  .veu { position:absolute; inset:0; background: rgba(0,0,0,.5); opacity: 0; }
+  .vidro { background: rgba(38,38,40,.72); -webkit-backdrop-filter: blur(24px) saturate(1.5); backdrop-filter: blur(24px) saturate(1.5); box-shadow: 0 0 0 1px rgba(255,255,255,.1); }
+  .card { position:absolute; left:50%; top:50%; width: 320px; transform: translate(-50%, -50%); border-radius: 28px; padding: 22px; box-sizing:border-box; opacity:0; }
+  .card .t { font-size: 16px; font-weight: 600; }
+  .card .p { font-size: 13px; line-height: 1.4; color:#a1a1a6; margin-top: 6px; }
+  .card .acoes { display:flex; gap: 8px; justify-content:flex-end; margin-top: 20px; }
+  .card .acoes b { font-size: 13px; font-weight: 500; padding: 8px 14px; border-radius: 999px; }
+  .card .acoes b.sec { color:#f5f5f7; }
+  .card .acoes b.dest { background:#e5484d; color:#fff; }
+  .pilula { position:absolute; left:50%; top: 30px; width: 380px; height: 44px; margin-left:-190px; border-radius: 999px; display:flex; align-items:center; gap: 10px; padding: 0 16px; box-sizing:border-box; font-size: 14px; color:#8e8e93; opacity:0; }
+  .pilula .kbd { margin-left:auto; font-size: 11px; color:#8e8e93; padding: 2px 6px; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
+  .placa { position:absolute; left:50%; top: 86px; width: 380px; margin-left:-190px; border-radius: 22px; padding: 8px; box-sizing:border-box; opacity:0; }
+  .placa .grupo { font-size: 11px; color:#8e8e93; padding: 6px 10px 4px; }
+  .placa .item { display:flex; align-items:center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 12px; font-size: 13px; }
+  .placa .item.ativo { background: rgba(255,255,255,.07); }
+  .placa .item i { width: 20px; height: 20px; border-radius: 6px; background: rgba(255,255,255,.1); flex:none; }
+  .placa .item span:last-child { margin-left:auto; color:#8e8e93; font-size: 12px; }
+  .dock { position:absolute; left:50%; top: 296px; transform: translateX(-50%); display:flex; gap: 8px; }
+  .dock b { font-weight: 400; font-size: 11px; color:#a1a1a6; padding: 6px 10px; border-radius: 999px; opacity:0; white-space: nowrap; }
+</style>
+
+<div class="bar">
+  <button type="button" id="lento" aria-pressed="false" onclick="toggleLento()">Câmera lenta (4×)</button>
+  <button type="button" onclick="todos(1)">Abrir todos</button>
+  <button type="button" onclick="todos(0)">Fechar todos</button>
+  <button type="button" id="rep" aria-pressed="false" onclick="toggleRep()">Repetir sozinho</button>
+</div>
+
+<div class="lista options" id="lista"></div>
+
+<script>
+(() => {
+  let lento = 1, rep = null
+  window.toggleLento = () => { lento = lento === 1 ? 4 : 1; document.getElementById('lento').setAttribute('aria-pressed', lento !== 1) }
+  const D = (ms) => ms * lento
+  const SAI = 'cubic-bezier(0.16, 1, 0.3, 1)'
+  const RAPIDA = 'cubic-bezier(0.25, 1, 0.5, 1)'
+  const MACIA = 'cubic-bezier(0.2, 0.9, 0.25, 1)'
+  const anima = (el, quadros, ms, ease, atraso = 0) => el.animate(quadros, { duration: D(ms), easing: ease, delay: D(atraso), fill: 'both' })
+  const VIDRO_ON = { backdropFilter: 'blur(24px) saturate(1.5)', backgroundColor: 'rgba(38,38,40,.72)', boxShadow: '0 0 0 1px rgba(255,255,255,.1)' }
+  const VIDRO_OFF = { backdropFilter: 'blur(0px) saturate(1)', backgroundColor: 'rgba(38,38,40,0)', boxShadow: '0 0 0 1px rgba(255,255,255,0)' }
+  const T = 'translate(-50%, -50%)'
+  const tudo = (e) => [e.pilula, e.placa, ...e.dock]
+
+  const V = [
+    {
+      id: 'raycast', nome: '1 · Instantâneo (Raycast)',
+      desc: 'Chega quase sem caminho: 120ms, de 98,5% a 100%, sem mola e sem cascata; o conteúdo vem junto com o vidro. Fecha em 80ms. Quem manda é a velocidade.',
+      dialog: {
+        abrir: (e) => [anima(e.veu, [{ opacity: 0 }, { opacity: 1 }], 120, SAI), anima(e.card, [{ opacity: 0, transform: `${T} scale(.985)` }, { opacity: 1, transform: `${T} scale(1)` }], 120, SAI)],
+        fechar: (e) => [anima(e.veu, [{ opacity: 1 }, { opacity: 0 }], 90, SAI), anima(e.card, [{ opacity: 1, transform: `${T} scale(1)` }, { opacity: 0, transform: `${T} scale(.99)` }], 80, SAI)],
+      },
+      busca: {
+        abrir: (e) => [anima(e.veu, [{ opacity: 0 }, { opacity: 1 }], 120, SAI), ...tudo(e).map((x) => anima(x, [{ opacity: 0, transform: 'scale(.985)' }, { opacity: 1, transform: 'scale(1)' }], 120, SAI))],
+        fechar: (e) => [anima(e.veu, [{ opacity: 1 }, { opacity: 0 }], 90, SAI), ...tudo(e).map((x) => anima(x, [{ opacity: 1 }, { opacity: 0 }], 80, SAI))],
+      },
+    },
+    {
+      id: 'spotlight', nome: '2 · A barra, depois a lista (Spotlight)',
+      desc: 'A busca chega primeiro como a barra; a lista se desenrola para baixo dela (a altura abre do topo) e as linhas acendem rápido, uma atrás da outra. No diálogo, o vidro chega e o conteúdo se acomoda logo depois, subindo 4px. Fecha recolhendo a lista e apagando a barra.',
+      dialog: {
+        abrir: (e) => [anima(e.veu, [{ opacity: 0 }, { opacity: 1 }], 160, SAI), anima(e.card, [{ opacity: 0, transform: `${T} scale(.97)` }, { opacity: 1, transform: `${T} scale(1)` }], 180, SAI),
+          ...e.pecas.map((p, i) => anima(p, [{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], 160, SAI, 60 + 30 * i))],
+        fechar: (e) => [anima(e.veu, [{ opacity: 1 }, { opacity: 0 }], 140, SAI), anima(e.card, [{ opacity: 1, transform: `${T} scale(1)` }, { opacity: 0, transform: `${T} scale(.98)` }], 120, SAI)],
+      },
+      busca: {
+        abrir: (e) => [anima(e.veu, [{ opacity: 0 }, { opacity: 1 }], 160, SAI), anima(e.pilula, [{ opacity: 0, transform: 'scale(.97)' }, { opacity: 1, transform: 'scale(1)' }], 160, SAI),
+          anima(e.placa, [{ opacity: 1, clipPath: 'inset(0 0 100% 0 round 22px)' }, { opacity: 1, clipPath: 'inset(0 0 0 0 round 22px)' }], 260, SAI, 50),
+          ...e.linhas.map((l, i) => anima(l, [{ opacity: 0 }, { opacity: 1 }], 120, SAI, 90 + 18 * i)),
+          ...e.dock.map((d, i) => anima(d, [{ opacity: 0 }, { opacity: 1 }], 140, SAI, 200 + 30 * i))],
+        fechar: (e) => [anima(e.veu, [{ opacity: 1 }, { opacity: 0 }], 160, SAI, 40), anima(e.placa, [{ opacity: 1, clipPath: 'inset(0 0 0 0 round 22px)' }, { opacity: 1, clipPath: 'inset(0 0 100% 0 round 22px)' }], 150, SAI),
+          anima(e.pilula, [{ opacity: 1 }, { opacity: 0 }], 120, SAI, 60), ...e.dock.map((d) => anima(d, [{ opacity: 1 }, { opacity: 0 }], 80, SAI))],
+      },
+    },
+    {
+      id: 'arc', nome: '3 · Desce macio (Arc)',
+      desc: 'Tudo desce 12px do alto e assenta numa curva longa e macia, sem passar do lugar; a placa e as legendas um passo atrás da barra. Fecha subindo 6px e apagando.',
+      dialog: {
+        abrir: (e) => [anima(e.veu, [{ opacity: 0 }, { opacity: 1 }], 200, SAI), anima(e.card, [{ opacity: 0, transform: `${T} translateY(-12px)` }, { opacity: 1, transform: `${T} translateY(0)` }], 300, MACIA)],
+        fechar: (e) => [anima(e.veu, [{ opacity: 1 }, { opacity: 0 }], 150, SAI), anima(e.card, [{ opacity: 1, transform: `${T} translateY(0)` }, { opacity: 0, transform: `${T} translateY(-6px)` }], 140, SAI)],
+      },
+      busca: {
+        abrir: (e) => [anima(e.veu, [{ opacity: 0 }, { opacity: 1 }], 200, SAI),
+          ...[[e.pilula, 0], [e.placa, 35], ...e.dock.map((d, i) => [d, 70 + 20 * i])].map(([x, a]) => anima(x, [{ opacity: 0, transform: 'translateY(-12px)' }, { opacity: 1, transform: 'none' }], 300, MACIA, a))],
+        fechar: (e) => [anima(e.veu, [{ opacity: 1 }, { opacity: 0 }], 150, SAI), ...tudo(e).map((x) => anima(x, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-6px)' }], 140, SAI))],
+      },
+    },
+    {
+      id: 'linear', nome: '4 · O véu foca (Linear)',
+      desc: 'O que anda é o fundo: a página borra e escurece por trás (0 a 8px) enquanto o diálogo cresce de 96% numa curva firme de 150ms. O olho vai para o centro porque o resto sai de foco.',
+      dialog: {
+        abrir: (e) => [anima(e.veu, [{ opacity: 0, backdropFilter: 'blur(0px)' }, { opacity: 1, backdropFilter: 'blur(8px)' }], 220, SAI), anima(e.card, [{ opacity: 0, transform: `${T} scale(.96)` }, { opacity: 1, transform: `${T} scale(1)` }], 150, RAPIDA)],
+        fechar: (e) => [anima(e.veu, [{ opacity: 1, backdropFilter: 'blur(8px)' }, { opacity: 0, backdropFilter: 'blur(0px)' }], 160, SAI), anima(e.card, [{ opacity: 1, transform: `${T} scale(1)` }, { opacity: 0, transform: `${T} scale(.98)` }], 100, SAI)],
+      },
+      busca: {
+        abrir: (e) => [anima(e.veu, [{ opacity: 0, backdropFilter: 'blur(0px)' }, { opacity: 1, backdropFilter: 'blur(8px)' }], 220, SAI), ...tudo(e).map((x) => anima(x, [{ opacity: 0, transform: 'scale(.96)' }, { opacity: 1, transform: 'scale(1)' }], 150, RAPIDA))],
+        fechar: (e) => [anima(e.veu, [{ opacity: 1, backdropFilter: 'blur(8px)' }, { opacity: 0, backdropFilter: 'blur(0px)' }], 160, SAI), ...tudo(e).map((x) => anima(x, [{ opacity: 1 }, { opacity: 0 }], 100, SAI))],
+      },
+    },
+    {
+      id: 'vidro', nome: '5 · O vidro se materializa (iOS 26, visionOS)',
+      desc: 'Nada cresce nem anda: o vidro aparece pelo próprio material — o borrão do fundo sobe de 0 a 24px, a tinta e o fio chegam junto — e o conteúdo sai de um desfoque curto logo depois. Fecha desfazendo o vidro.',
+      dialog: {
+        abrir: (e) => [anima(e.veu, [{ opacity: 0 }, { opacity: 1 }], 220, SAI), anima(e.card, [{ opacity: 1, ...VIDRO_OFF }, { opacity: 1, ...VIDRO_ON }], 260, SAI),
+          ...e.pecas.map((p) => anima(p, [{ opacity: 0, filter: 'blur(3px)' }, { opacity: 1, filter: 'blur(0px)' }], 200, SAI, 70))],
+        fechar: (e) => [anima(e.veu, [{ opacity: 1 }, { opacity: 0 }], 180, SAI), ...e.pecas.map((p) => anima(p, [{ opacity: 1 }, { opacity: 0 }], 90, SAI)), anima(e.card, [{ opacity: 1, ...VIDRO_ON }, { opacity: 1, ...VIDRO_OFF }], 180, SAI, 40)],
+      },
+      busca: {
+        abrir: (e) => [anima(e.veu, [{ opacity: 0 }, { opacity: 1 }], 220, SAI),
+          ...[[e.pilula, 0], [e.placa, 40], ...e.dock.map((d, i) => [d, 80 + 20 * i])].map(([x, a]) => anima(x, [{ opacity: 1, ...VIDRO_OFF }, { opacity: 1, ...VIDRO_ON }], 260, SAI, a)),
+          ...e.miolos.map((m, i) => anima(m, [{ opacity: 0, filter: 'blur(3px)' }, { opacity: 1, filter: 'blur(0px)' }], 200, SAI, 70 + 12 * i))],
+        fechar: (e) => [anima(e.veu, [{ opacity: 1 }, { opacity: 0 }], 180, SAI), ...e.miolos.map((m) => anima(m, [{ opacity: 1 }, { opacity: 0 }], 90, SAI)),
+          ...tudo(e).map((x) => anima(x, [{ opacity: 1, ...VIDRO_ON }, { opacity: 1, ...VIDRO_OFF }], 180, SAI, 40))],
+      },
+    },
+    {
+      id: 'fundo', nome: '6 · O app recua (profundidade do macOS)',
+      desc: 'A tela de trás afasta: encolhe de leve (98,5%) e escurece, como se desse um passo para trás, e o diálogo chega na frente quase parado (sobe 6px). Fecha com a tela voltando ao lugar.',
+      dialog: {
+        abrir: (e) => [anima(e.pagina, [{ transform: 'scale(1)', filter: 'brightness(1)' }, { transform: 'scale(.985)', filter: 'brightness(.55)' }], 300, SAI),
+          anima(e.card, [{ opacity: 0, transform: `${T} translateY(6px) scale(.99)` }, { opacity: 1, transform: `${T} translateY(0) scale(1)` }], 220, SAI, 30)],
+        fechar: (e) => [anima(e.pagina, [{ transform: 'scale(.985)', filter: 'brightness(.55)' }, { transform: 'scale(1)', filter: 'brightness(1)' }], 200, SAI), anima(e.card, [{ opacity: 1 }, { opacity: 0 }], 120, SAI)],
+      },
+      busca: {
+        abrir: (e) => [anima(e.pagina, [{ transform: 'scale(1)', filter: 'brightness(1)' }, { transform: 'scale(.985)', filter: 'brightness(.55)' }], 300, SAI),
+          ...[[e.pilula, 30], [e.placa, 60], ...e.dock.map((d, i) => [d, 90 + 20 * i])].map(([x, a]) => anima(x, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], 220, SAI, a))],
+        fechar: (e) => [anima(e.pagina, [{ transform: 'scale(.985)', filter: 'brightness(.55)' }, { transform: 'scale(1)', filter: 'brightness(1)' }], 200, SAI), ...tudo(e).map((x) => anima(x, [{ opacity: 1 }, { opacity: 0 }], 120, SAI))],
+      },
+    },
+  ]
+
+  const PAGINA = `<div class="pagina"><div class="topo"><span>Painel</span><span class="busca-fake"></span><span>Outubro</span></div>
+    <div class="stats"><div class="stat"><small>Despesas</small><b class="neg">R$ 10.838,90</b></div><div class="stat"><small>Receitas</small><b class="pos">R$ 13.979,00</b></div><div class="stat"><small>Resultado</small><b>R$ 3.140,10</b></div></div>
+    <div class="linhas"><div class="linha"><span>Mercado</span><span>R$ 182,40</span></div><div class="linha"><span>Blz na web</span><span>R$ 203,85</span></div><div class="linha"><span>Capinhas iPhone</span><span>R$ 102,00</span></div><div class="linha"><span>Botox</span><span>R$ 279,00</span></div></div></div><div class="veu"></div>`
+  const DIALOG = `<div class="card vidro"><div class="t">Excluir lançamento?</div><div class="p">Mercado · R$ 182,40 em 14 de outubro. Isso não pode ser desfeito.</div><div class="acoes"><b class="sec">Cancelar</b><b class="dest">Excluir</b></div></div>`
+  const lupa = '<svg width="16" height="16" viewBox="0 0 16 16" style="flex:none"><circle cx="6.5" cy="6.5" r="4.8" stroke="#f5f5f7" stroke-width="1.6" fill="none"/><line x1="10" y1="10" x2="14" y2="14" stroke="#f5f5f7" stroke-width="1.6" stroke-linecap="round"/></svg>'
+  const BUSCA = `<div class="pilula vidro"><span class="m">${lupa}</span><span class="m">Buscar telas, ações, transações…</span><span class="kbd m">⌘K</span></div>
+    <div class="placa vidro"><div class="grupo m">Telas</div><div class="item ativo m"><i></i><span>Transações</span><span>↵</span></div><div class="item m"><i></i><span>Categorias</span><span></span></div><div class="item m"><i></i><span>Contas a pagar</span><span></span></div><div class="grupo m">Ações</div><div class="item m"><i></i><span>Novo lançamento</span><span>⌘N</span></div></div>
+    <div class="dock"><b class="vidro"><span class="m">↑↓ navegar</span></b><b class="vidro"><span class="m">↵ abrir</span></b><b class="vidro"><span class="m">/ escopo</span></b></div>`
+
+  const lista = document.getElementById('lista')
+  const ctrls = V.map((v) => {
+    const el = document.createElement('div')
+    el.className = 'versao option'; el.dataset.choice = v.id
+    el.innerHTML = `<div><strong>${v.nome}</strong><div class="tag">${v.desc}</div></div>
+      <div class="par"><div class="stage" data-q="dialog">${PAGINA}${DIALOG}</div><div class="stage" data-q="busca">${PAGINA}${BUSCA}</div></div>
+      <div class="ctl"><button type="button" data-a="1">Abrir</button><button type="button" data-a="0">Fechar</button><button type="button" onclick="toggleSelect(this.closest('.option'))">Gostei deste</button></div>`
+    lista.appendChild(el)
+    const sd = el.querySelector('[data-q=dialog]'), sb = el.querySelector('[data-q=busca]')
+    const ed = { pagina: sd.querySelector('.pagina'), veu: sd.querySelector('.veu'), card: sd.querySelector('.card'), pecas: [...sd.querySelectorAll('.card > *')] }
+    const eb = { pagina: sb.querySelector('.pagina'), veu: sb.querySelector('.veu'), pilula: sb.querySelector('.pilula'), placa: sb.querySelector('.placa'), dock: [...sb.querySelectorAll('.dock b')], linhas: [...sb.querySelectorAll('.placa > *')], miolos: [...sb.querySelectorAll('.m')] }
+    let vivas = []
+    const ir = (abrir) => {
+      vivas.forEach((a) => a.cancel())
+      vivas = [...v.dialog[abrir ? 'abrir' : 'fechar'](ed), ...v.busca[abrir ? 'abrir' : 'fechar'](eb)]
+    }
+    el.querySelectorAll('[data-a]').forEach((b) => b.addEventListener('click', () => ir(b.dataset.a === '1')))
+    return ir
+  })
+  window.todos = (a) => ctrls.forEach((ir) => ir(!!a))
+  window.toggleRep = () => {
+    const b = document.getElementById('rep')
+    if (rep) { clearInterval(rep); rep = null; b.setAttribute('aria-pressed', 'false'); return }
+    let a = 1; todos(a); rep = setInterval(() => { a = 1 - a; todos(a) }, 1400 * lento); b.setAttribute('aria-pressed', 'true')
+  }
+})()
+</script>
