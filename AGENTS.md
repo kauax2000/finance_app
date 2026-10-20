@@ -694,7 +694,10 @@ declaração de `background-color` no trilho).
   Membros, Minha conta e Configurações voltam a ela, e uma aba que saiu da barra
   não ganha o voltar (`defaultMobileBackHref`, rodada 346); a tela com filtro
   o publica por `usePageChromeFilter` e ele cola na lupa, numa cápsula — rodada
-  334), as listas abrem na `Toolbar` e as telas de conta num
+  334; a **rota declara** o filtro (`mobileHeaderFilterFor`, em
+  `config/mobile-navigation.ts`) para o cabeçalho ter a forma certa no clique,
+  antes dos ~700ms do `AdiarMontagem`, e **a publicação da página vence**
+  (`filtroDoCabecalho`, `usePageChromeFilterFor`), rodada 349), as listas abrem na `Toolbar` e as telas de conta num
   `PageSection`; só o `PageHeaderBack` serve o voltar do telefone. O mês das
   telas que o têm (Painel, Categorias, detalhe da categoria) mora no cabeçalho do
   telefone, o calendário colado à lupa que abre a grade de meses
@@ -1345,8 +1348,9 @@ declaração de `background-color` no trilho).
   placa embaixo. **A barra nasce do `origin` e o × se separa do
   `closeOrigin`**: a cápsula `[lupa | filtro]` do header se divide em duas
   bolhas (a da lupa corre até a calha e vira a pílula; a do filtro fica e vira
-  o ×, com o ícone dele saindo no desfoque e o X chegando; sem filtro colado, a
-  lupa vira o × e a pílula brota do flanco dela). Um progresso só
+  o ×, com o ícone dele saindo no desfoque e o X chegando; sem filtro colado, o
+  círculo da lupa vira o campo e o × pinga da ponta dele, na mesma mola
+  (`quadroDaGota`)). Um progresso só
   (`quadroDasBolhas`, puro; abre na `SEPARACAO` de `lib/spring` de onde o
   gesto estiver, com o relógio esperando os quadros voltarem depois da
   montagem; volta em 260ms na `VOLTA_DA_PILULA`) escreve `transform` e
@@ -1551,12 +1555,20 @@ declaração de `background-color` no trilho).
   borrão das camadas). **`TopBarAction`** (`plate`: o vidro da busca do cabeçalho — a tinta
   flutuante e o anel, como o botão de recolher —, com o realce em
   `--sidebar-accent`, sem sombra, em todo tamanho — no telefone a lupa, o sino e
-  o voltar (`topBarPlateClassName` no `PageHeaderBack`) são os mesmos círculos de
-  vidro do desktop, rodada 329; o sino do app a veste);
+  o voltar são os mesmos círculos de vidro do desktop, rodada 329; o sino do app a
+  veste). **`TopBarActionSwap`** (`swapKey`) é o vidro que fica e o miolo que
+  troca: o sino ↔ voltar do telefone afunda na mola e o ícone de antes sai no
+  desfoque enquanto o novo entra (`quadroDaTroca`); o vidro é dele (a
+  `TopBarAction` de dentro não pinta o seu, e o realce é o do vidro), montar
+  não anima, o miolo que saiu fica inerte e entrega o foco, interromper segue
+  sem pular, e movimento reduzido troca na hora (rodada 349);
   **`TopBarActionGroup`** (ações `plate` numa cápsula: o `ButtonGroup` sem
   divisor, com o anel no grupo; `join` — `always`, `desktop`, `phone` — diz de
   que lado da quebra cola, quando um botão só existe num lado; no telefone a
-  lupa e o filtro da tela colam, rodada 334) — a busca compacta
+  lupa e o filtro da tela colam, rodada 334; **`morph`** + `trailingKey` (um ou
+  dois filhos, `[lupa | filtro]`, com o `join="always"` padrão) faz o filtro
+  pingar da lupa — a gota é o próprio vidro dele, e `trailingKey` troca o
+  miolo com os dois presentes — rodada 349) — a busca compacta
   do app, quando a pessoa escolhe "Botão" em Configurações › Aparência
   (`useBuscaDoCabecalho`, neste aparelho, como o tema; "Barra", a pílula do
   centro, é o padrão) — **nenhuma tela escreve

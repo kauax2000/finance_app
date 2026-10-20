@@ -28369,3 +28369,92 @@ anel na própria tinta a 20% e a `shadow-lg` da barra.
 **Conferido:** a 375px na prévia (CSS novo): pílula de 160×36, 8px acima da
 barra; no simulador, o app instalado com a pílula forçada à vista, 8pt acima
 da barra.
+
+### Rodada 349 — o cabeçalho do telefone troca de tela como líquido
+
+**Pedido:** o cabeçalho do telefone trocava de botões seco: o sino sumia e o
+voltar aparecia no mesmo quadro, e a lupa ganhava ou perdia o filtro colado de
+uma vez. A busca com filtro já abria num gesto orgânico (a cápsula `[lupa |
+filtro]` se divide em duas bolhas), a busca sem filtro não. O dono queria as
+duas coisas com o movimento da abertura do `Command`, inspirado no vidro do
+iOS 26 como gota.
+
+**Variantes comparadas** em dois protótipos HTML lado a lado (na pasta do
+spec), cada gesto com três:
+
+- *Troca de tela:* **A** troca no lugar (o vidro parado, o ícone sai no
+  desfoque, a cápsula cresce pela borda esquerda); **B** líquido (o círculo do
+  sino ↔ voltar afunda e volta na mola, e o filtro pinga do flanco da lupa);
+  **C** direcional (empurra e volta, como a navegação do iOS).
+- *Busca sem filtro:* **hoje** (a lupa vira o × no lugar e a pílula brota do
+  flanco); **B** (a lupa corre e vira a pílula, o que sobra do círculo se solta
+  como o ×); **C** (o círculo inteiro se estica e vira o campo, o × pinga da
+  ponta direita).
+
+**Escolhido pelo dono:** **B** na troca de tela e **C** na busca sem filtro,
+com as curvas e as fases dos protótipos.
+
+**Feito:**
+
+- `TopBarActionSwap` (`swapKey`): o vidro do sino ↔ voltar fica e afunda na
+  mola (`1 − 0,14·sen(π·p)`), o miolo troca (`quadroDaTroca`, o de antes sai
+  no desfoque, o novo entra dele). A `TopBarAction` de dentro não pinta o
+  próprio vidro, e o realce é o do vidro. O `PageHeaderBack` deixa de vestir
+  `topBarPlateClassName`.
+- `TopBarActionGroup morph` + `trailingKey`: o filtro pinga da lupa e é
+  reabsorvido por ela; a gota é o próprio vidro do filtro, e `trailingKey`
+  troca o miolo com os dois presentes (calendário ↔ ajustes), sem o afundar.
+- `CommandDialog`, busca sem filtro: `quadroDaGota` (puro) e `desenharGota`; o
+  círculo da lupa vira o campo e o × pinga da ponta dele, na `SEPARACAO` de
+  abrir e na `VOLTA_DA_PILULA` de fechar. O caso com filtro colado não mudou
+  um valor.
+- As fórmulas e os quadros puros moram em `lib/header-morph.ts`
+  (`TINTA_DO_VOO` foi para lá, para o `top-bar` não importar o `command`).
+
+**A rota declara o filtro.** O filtro só chegava com a página montada
+(`usePageChromeFilter`, num efeito de layout), e o `AdiarMontagem` monta a
+página uns ~700ms depois do clique: o sino trocaria no toque e a lupa ficaria
+sem filtro quase um segundo, os dois lados fora de compasso. Agora
+`mobileHeaderFilterFor` (em `config/mobile-navigation.ts`) declara, por rota, o
+botão de filtro como inerte; `filtroDoCabecalho` o combina com a publicação da
+página, que vence, e `usePageChromeFilterFor` só devolve a publicação da rota
+atual. Sair da tela devolve a publicação a "não falou" (a limpeza grava
+`null`; só `enabled === false` publica `{ pathname, filter: null }`), senão
+voltar à mesma rota por uma tela que não publica escondia o botão declarado.
+
+**O que as revisões pegaram:**
+
+- A semântica da limpeza acima.
+- A troca interrompida pulava: o ícone que entrava quase todo sumia de uma vez
+  e o outro aparecia. Agora cada camada guarda o inline atual e se mistura ao
+  quadro novo no primeiro quarto; o vidro é contínuo pela dobra
+  `p0 = max(0, min(p, 1 − p))`; uma terceira chave antes do meio mantém a que
+  saía e descarta a que mal tinha entrado.
+- O realce do vidro: o `Button` define `--button-hover-fill` nele mesmo e
+  ignorava o do vidro; o vidro da troca o sobrepõe por seletor de descendente,
+  e um teste amarra o valor ao do `TOP_BAR_PLATE`.
+- Piscada no fim da saída (gota e miolo): o desmonte vem primeiro, com
+  `flushSync`, e só então o repouso limpa o inline.
+- Foco: o foco que estava no miolo ou na gota que sai passa ao que fica antes
+  de ele ficar inerte (a lupa, o novo ícone); o sino não abre dica.
+- No `CommandDialog`, uma gota do `closeOrigin` inerte (o filtro saindo na
+  reabsorção) não conta como colado, e a caixa vem de `caixaDeLayout`, que
+  ignora o `transform` em voo.
+
+**Conferido (a 375px, no `dev-attach`):** o painel do Browser deixa a página
+`hidden` e o `rAF` roda a ~1Hz, então nenhuma mola andou ao vivo. Por isso:
+os quadros intermediários da gota do filtro (g 0,25 a 1,03) e da busca sem
+filtro (p 0 a 1,03) foram calculados em Node pelas próprias funções e
+aplicados estaticamente à página; os primeiros quadros síncronos, o repouso
+(nada inline) e a interrupção foram lidos do DOM ao vivo. No app logado:
+Painel → Transações, Transações → Você → Minha conta, Categorias → detalhe e
+as abas Receitas/Despesas trocam sem sobrar estilo inline nem miolo saindo,
+inclusive em 24 navegações de 30–200ms. Nada foi gravado.
+
+**Ficou sem medir, para o aparelho:** a mola ao vivo; o pescoço entre a lupa e
+a gota (a pinça da emenda, não o filtro "goo" dos protótipos, que não serve
+porque o vidro tem `backdrop-filter`); abrir e fechar a busca no meio do voo;
+a terceira chave da troca (a demo tem duas); o desktop (a árvore do `md` para
+cima não mudou). Em aberto: o pico do console "Too many re-renders" em
+`CapsulaQuePinga` visto uma vez antes de os marcadores serem postos e não
+reproduzido depois.
