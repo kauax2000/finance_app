@@ -44,7 +44,7 @@ a busca numa tela só com a lupa e ver o círculo virar o campo e o × pingar de
 2. **Busca sem filtro (C, "A lupa vira o campo, o × pinga dela").** Ao abrir a
    paleta numa tela em que a lupa está sozinha (sem `closeOrigin` colado):
    - O círculo inteiro da lupa se estica e vira o campo: a borda esquerda vai de
-     x 315 a 16 (em p 0–0,7, com um passe de até 1,02), a direita de 359 a 307
+     x 315 a 16 (em p 0–0,7; o passe vem só da mola), a direita de 359 a 307
      (em p 0,15–0,75). O ícone da lupa anda com a borda esquerda (centro em
      `esquerda + 22`) e se troca pela lupa da pílula em p 0,5–0,8.
    - O × nasce como uma gota da ponta direita do campo: começa com 35% do raio,
