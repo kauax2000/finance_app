@@ -44,6 +44,13 @@ describe("o desenho do Tabs", () => {
     expect(CODIGO).toContain("[@media(display-mode:standalone)]:h-lvh")
   })
 
+  it("o acessório mora acima da barra, a 8px, some vazio e afunda junto", () => {
+    // Rodada 348: o `bottomAccessory` do iOS 26 (o aviso de offline do app).
+    expect(CODIGO).toContain("accessory?: React.ReactNode")
+    expect(CODIGO).toContain('data-slot="bottom-bar-accessory"')
+    expect(CODIGO).toContain("pb-2 empty:hidden")
+  })
+
   it("a ação tem a sombra e nenhum anel por fora da tecla", () => {
     expect(CODIGO).toContain('"size-(--bottom-bar-h) shrink-0 rounded-full p-0 shadow-lg"')
   })

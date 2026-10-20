@@ -1031,7 +1031,10 @@ declaração de `background-color` no trilho).
     escreva `border-destructive/40 hover:bg-destructive/10`. `AlertActions
     placement="inline"` põe a ação à direita com o alerta a partir de 28rem (os
     filhos leem `--alert-text-col`). `onDismiss` é o ×. Entra esmaecendo.
-- **`AnnouncementBar`**: `variant` `soft` | `brand` (o véu), `tone` (`never` com
+- **`AnnouncementBar`**: no telefone do app ela não aparece — o aviso de offline
+  (`OfflinePill`) é uma pílula de vidro no tom de aviso, no `accessory` da
+  `BottomBar` (rodadas 347–348), porque uma faixa presa sob o cabeçalho de borrão
+  corta a tela em duas; a faixa (`OfflineBanner`) fica no desktop. `variant` `soft` | `brand` (o véu), `tone` (`never` com
   `brand`), o ícone com a API do `Alert` (sem `svg` filho), `position`
   (`static` | `sticky` | `fixed` — o `fixed` traz camada e fio; o `relative` do
   véu mora no `static`) e `align="center"`. Os botões tiram o realce de
@@ -1573,7 +1576,8 @@ declaração de `background-color` no trilho).
   nome; o marcador viaja (`useMarcador`); `labels="active"`;
   `BottomBarAction` (nome obrigatório), `BottomBarSkeleton`,
   `count`/`countLabel`; aba sem `href` é `<button aria-pressed>`; arraste pela
-  pílula; tocar na ativa sobe ao topo **só na própria rota** (o `aria-current`
+  pílula; `accessory` é o `bottomAccessory` do iOS 26 — centrado a 8px acima da
+  barra, some vazio (`empty:hidden`) e afunda junto (rodada 348); tocar na ativa sobe ao topo **só na própria rota** (o `aria-current`
   também é só dela) — ativa numa tela da pilha, o link volta à raiz da aba;
   `hideOnScroll`. **No app instalado do iOS a
   barra se ancora no topo com `100lvh`** (rodada 344): lá o `bottom: 0` de um `fixed`

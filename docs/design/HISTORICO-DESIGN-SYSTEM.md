@@ -28323,3 +28323,49 @@ das linhas da página.
 `build.py`, a nota do `ThemeToggle` no catálogo, que ainda citava o menu do
 telefone) atualizada na mesma mudança. Conferência no navegador e no simulador:
 a cargo do controlador.
+
+### Rodada 347 — o aviso de offline vira pílula no telefone
+
+**Pedido:** a faixa de offline (`AnnouncementBar` fixa sob o cabeçalho) ficava
+"voando": o cabeçalho do telefone é só borrão, o conteúdo passa por baixo dele,
+e a faixa cortava a tela em duas.
+
+**Escolhido pelo dono** entre quatro (legenda no título, faixa dentro do
+cabeçalho, pílula acima da barra, alerta na página): a pílula, como o "Sem
+conexão à Internet" do iOS. O `OfflineBanner` desenha, só abaixo do `md`, uma
+cápsula de 36 no vidro da `BottomBar` (`bottomBarTintClassName`, anel a 15%,
+`shadow-lg`), centrada a 8px acima da barra, com o sinal cortado em
+`--warning-muted-foreground` e "Você está offline" (a frase inteira para o
+leitor de tela, `role="status"`). Brota no `menu-morph` com `--morph-radius`
+infinito — sem ele o quadro final era o raio da superfície (22). No app
+instalado do iOS ancora como a barra (topo + `100lvh`, rodada 344). No desktop
+continua a faixa no topo.
+
+**Conferido a 375px** (offline simulado por `navigator.onLine` e o evento): a
+pílula de 162×36, cápsula, centrada, sem quebrar linha; a faixa some no
+telefone e aparece no desktop. O servidor de desenvolvimento ainda servia o
+`--bottom-bar-pad` antigo (cache do Turbopack); a conferência injetou o valor
+atual.
+
+### Rodada 348 — a pílula de offline no acessório da barra, no tom de aviso
+
+**Relato:** no app instalado a pílula encostava na barra. Ela fazia a conta da
+altura da barra por fora (`--bottom-bar-pad` − margem + 8), e o servidor de
+desenvolvimento servia o CSS velho (56 de altura, margem de 16): a conta dava
+exatamente o topo da barra. O cache foi limpo com o ok do dono, mas a conta por
+fora era o defeito.
+
+**Feito (o dono escolheu o slot):** a `BottomBar` ganha `accessory`, o
+`bottomAccessory` da tab bar do iOS 26 — uma área centrada acima da barra, a 8px
+dela, dentro do próprio `<nav>` (some vazia por `empty:hidden`, afunda junto com
+o `hideOnScroll`). O aviso vira `OfflinePill`, passado pelo `MobileBottomNav`; a
+faixa do desktop fica no `OfflineBanner`.
+
+**O fundo:** vidro no tom de aviso — `--warning-muted` a 75% com o borrão (90%
+sem `backdrop-filter`, chapado com transparência reduzida), a tinta
+`--warning-muted-foreground` (o par medido em `scripts/tone-contrast.mjs`), o
+anel na própria tinta a 20% e a `shadow-lg` da barra.
+
+**Conferido:** a 375px na prévia (CSS novo): pílula de 160×36, 8px acima da
+barra; no simulador, o app instalado com a pílula forçada à vista, 8pt acima
+da barra.

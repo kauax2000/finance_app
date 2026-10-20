@@ -11,6 +11,7 @@ import * as React from "react"
 import { usePathname } from "next/navigation"
 import { publicarAbasFora } from "@/components/layout/abas-fora"
 import { QuickActionButton } from "@/components/layout/quick-actions"
+import { OfflinePill } from "@/components/pwa/offline-banner"
 import { VoceAvatar } from "@/components/layout/voce-avatar"
 import { BottomBar, BottomBarTab } from "@/components/ui/bottom-bar"
 import { getMobileNavTabs, isVoceTabActive, solidIconFor } from "@/config/mobile-navigation"
@@ -106,7 +107,7 @@ export function MobileBottomNav() {
 
     return (
         <div ref={raiz} className="contents">
-            <BottomBar labels action={<QuickActionButton variant="fab" />}>
+            <BottomBar labels action={<QuickActionButton variant="fab" />} accessory={<OfflinePill />}>
                 {naBarra.map((item) => (
                     <BottomBarTab
                         key={item.href}

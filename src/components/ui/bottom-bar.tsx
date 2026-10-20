@@ -92,6 +92,7 @@ function BottomBar({
   labels,
   shape,
   action,
+  accessory,
   hideOnScroll = false,
   glass = false,
   children,
@@ -100,6 +101,13 @@ function BottomBar({
   VariantProps<typeof bottomBarVariants> & {
     /** A ação primária, à direita da pílula (de preferência um `BottomBarAction`). */
     action?: React.ReactNode
+    /**
+     * O acessório acima da barra, centrado a 8px dela — o `bottomAccessory` da tab
+     * bar do iOS 26 (o aviso de offline do app, rodada 348). Mora dentro da barra
+     * para nunca encostar nela nem depender de conta de fora, e afunda junto ao
+     * rolar.
+     */
+    accessory?: React.ReactNode
     /** Rolando para baixo a pílula e a ação afundam juntas; rolando para cima, voltam. */
     hideOnScroll?: boolean
     /** O marcador de vidro — o `glass` do `TabsList`, sobre o mesmo tom. */
@@ -123,6 +131,16 @@ function BottomBar({
       {...props}
     >
       <BottomBarContext.Provider value={contexto}>
+        {accessory ? (
+          // `empty:hidden`: um acessório que não desenha nada (o aviso, online)
+          // não deixa os 8px de vão.
+          <div
+            data-slot="bottom-bar-accessory"
+            className={cn("pointer-events-none flex justify-center pb-2 empty:hidden *:pointer-events-auto", someAoRolarClassName)}
+          >
+            {accessory}
+          </div>
+        ) : null}
         <BottomBarRow>
           <BottomBarTabs>{children}</BottomBarTabs>
           {action ? (

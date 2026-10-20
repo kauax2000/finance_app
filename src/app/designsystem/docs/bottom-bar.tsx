@@ -216,6 +216,7 @@ export default function BottomBarDoc() {
           { prop: "glass", type: "boolean", default: "false", description: "O marcador de vidro, como o glass do TabsList — o aro e o reflexo sobre o mesmo tom da tecla." },
           { prop: "hideOnScroll", type: "boolean", default: "false", description: "Rolando para baixo a pílula e a ação afundam juntas; rolando para cima, voltam." },
           { prop: "action", type: "ReactNode", description: "A ação primária, à direita da pílula — um BottomBarAction." },
+          { prop: "accessory", type: "ReactNode", description: "O acessório acima da barra, centrado a 8px dela — o bottomAccessory do iOS 26 (no app, o aviso de offline). Some quando não desenha nada e afunda junto ao rolar." },
           { prop: "shape", type: '"island"', default: '"island"', description: "Flutua com margem nos quatro lados." },
         ]}
       />

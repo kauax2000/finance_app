@@ -190,7 +190,7 @@ export default function AnnouncementBarDoc() {
       </DocNote>
 
       <DocNote title="Onde o app usa">
-        Uma: o <code>OfflineBanner</code>, com <code>tone=&quot;warning&quot;</code>, o sinal cortado e <code>position=&quot;fixed&quot;</code> — ele escrevia as quatro classes do <code>fixed</code> à mão, e fica só com o <code>top</code>, porque no telefone passa por baixo do cabeçalho. Offline é um quinto estado neste app, com a fila de mutações local: &ldquo;salvo aqui, ainda não sincronizado&rdquo;, que não é erro nem sucesso. Quem o diz é esta barra e o <code>sync-status-chip</code>.
+        Uma: o <code>OfflineBanner</code>, com <code>tone=&quot;warning&quot;</code>, o sinal cortado e <code>position=&quot;fixed&quot;</code> — só do <code>md</code> para cima. No telefone a faixa presa sob o cabeçalho cortava a tela em duas (o cabeçalho é só borrão), e o aviso virou uma pílula de vidro acima da barra de baixo, como o &ldquo;Sem conexão&rdquo; do iOS (rodada 347). Offline é um quinto estado neste app, com a fila de mutações local: &ldquo;salvo aqui, ainda não sincronizado&rdquo;, que não é erro nem sucesso. Quem o diz é esta barra e o <code>sync-status-chip</code>.
       </DocNote>
 
       <PropsTable

@@ -4,28 +4,15 @@ import { SignalSlashIcon } from "@heroicons/react/16/solid"
 
 import { AnnouncementBar } from "@/components/ui/announcement-bar"
 import { usePwaShellOptional } from "@/components/pwa/pwa-shell-context"
+import { cn } from "@/lib/utils"
 
 /**
- * O aviso de modo offline.
+ * O aviso de modo offline no desktop: a faixa fixa no topo, tom `warning` — o
+ * app funciona pela metade, e o cinza diria que está tudo normal.
  *
- * Ele era um `Alert` desfazendo a própria forma em cinco classes — `rounded-none
- * border-x-0 border-t-0` mais o posicionamento — com `AlertDescription` sem
- * `AlertTitle`, o que a documentação do `Alert` proíbe. O `AGENTS.md` já o
- * registrava como "um Alert fingindo de AnnouncementBar", e é o componente
- * certo que estava faltando: faixa de largura total sobre estado global.
- *
- * **O tom deixa de ser `default`.** Cinza neutro para um estado que é, por
- * definição, degradado — o app está funcionando pela metade, e a cor dizia que
- * estava tudo normal. `warning` é o que o estado é.
- *
- * **O posicionamento continua `fixed`, e não `sticky`** — desde a rodada 187
- * pelo `position="fixed"` do componente, que traz a camada e o fio; só o `top`
- * é daqui. O `sticky` seria melhor aqui — em fluxo, a barra empurra o conteúdo
- * em vez de cobrir a primeira linha dele. Mas esta faixa é irmã do shell e
- * passa por baixo de um cabeçalho fixo no telefone (daí o
- * `--mobile-header-offset`), e trocar o modo de posicionamento é uma mudança de
- * layout que **não deu para verificar**: a tela exige sessão autenticada. Fica
- * como está, e a troca vira item de backlog para quem puder abrir o app.
+ * No telefone ela não aparece (rodada 347): o cabeçalho de lá é só borrão, o
+ * conteúdo passa por baixo dele, e uma faixa presa ali cortava a tela em duas.
+ * Lá o aviso é a `OfflinePill`, no acessório da barra de baixo.
  */
 export function OfflineBanner() {
   const shell = usePwaShellOptional()
@@ -36,9 +23,41 @@ export function OfflineBanner() {
       tone="warning"
       position="fixed"
       icon={<SignalSlashIcon />}
-      className="top-(--mobile-header-offset) md:top-0"
+      className="hidden md:flex"
     >
       Você está offline. Alterações serão sincronizadas quando a conexão voltar.
     </AnnouncementBar>
+  )
+}
+
+/**
+ * O aviso de offline do telefone: a pílula acima da barra de baixo, como o "Sem
+ * conexão" do iOS (rodadas 347 e 348). Mora no `accessory` da `BottomBar`, que a
+ * centra a 8px da barra — antes ela fazia a conta da altura da barra por fora e,
+ * com o CSS velho do servidor de desenvolvimento, encostava nela.
+ *
+ * O fundo é o vidro no tom de aviso (`--warning-muted` translúcido com o borrão,
+ * a tinta `--warning-muted-foreground` medida contra ele em
+ * `scripts/tone-contrast.mjs`), o anel na própria tinta e a sombra da barra.
+ * Brota de baixo no gesto dos menus (`menu-morph`), terminando cápsula.
+ */
+export function OfflinePill() {
+  const shell = usePwaShellOptional()
+  if (!shell || shell.isOnline) return null
+
+  return (
+    <div
+      role="status"
+      className={cn(
+        "glass-surface bg-warning-muted/90 supports-backdrop-filter:bg-warning-muted/75 reduced-transparency:bg-warning-muted",
+        "text-warning-muted-foreground ring-1 ring-warning-muted-foreground/20 shadow-lg",
+        "flex h-9 items-center gap-1.5 rounded-full ps-3 pe-3.5 text-sm font-medium whitespace-nowrap",
+        "origin-bottom [--morph-radius:calc(infinity*1px)] [animation:menu-morph_380ms_linear_backwards]"
+      )}
+    >
+      <SignalSlashIcon aria-hidden className="size-4 shrink-0" />
+      Você está offline
+      <span className="sr-only">. Alterações serão sincronizadas quando a conexão voltar.</span>
+    </div>
   )
 }
