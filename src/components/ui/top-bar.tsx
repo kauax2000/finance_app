@@ -842,7 +842,7 @@ const ANEL_DO_VIDRO = "color-mix(in oklab, var(--foreground) 10%, transparent)"
  * vidro desenha o seu (`ANEL_DO_VIDRO`, o `ring-1` de repouso), com o raio da
  * forma do quadro, e o recorte se abre 1px para fora para deixá-lo à vista —
  * menos do lado da emenda, onde ele seria um fio no meio da cápsula; ali o
- * recorte abre conforme a emenda arredonda (as duas bolhas se separando). Na
+ * recorte só abre com as duas bolhas soltas (a emenda no raio inteiro). Na
  * gota, que está em `scale`, o px do anel é dividido pela escala.
  */
 function desenharGota(
@@ -866,8 +866,10 @@ function desenharGota(
   // Onde a lupa acaba, nas coordenadas da gota antes do `transform`; passada a caixa, não sobra nada.
   const corte = Math.min(H, Math.max(0, R + (costura - cx) / s))
   const cabe = Math.min(1, (H - corte) / (R + emendaDaGota))
-  // O lado da emenda mostra o anel conforme ela arredonda: 0 fundidas, 1 soltas.
-  const solta = emenda / R
+  // O lado da emenda só mostra o anel com as bolhas soltas (a emenda é o raio
+  // inteiro e o lado é só curva): com a cintura enchendo, o trecho reto do anel
+  // na costura aparecia como um fio no meio da cápsula.
+  const solta = emenda >= R - 0.01 ? 1 : 0
   grupo.style.boxShadow = "none"
   lupa.style.transform = "translateX(" + lupaDx + "px)"
   lupa.style.borderRadius = R + "px " + emenda + "px " + emenda + "px " + R + "px"
