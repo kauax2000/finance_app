@@ -38,7 +38,9 @@ describe("as versões do ContextMenu", () => {
 
   it("o cabeçalho nomeia o menu, e a largura fala a escada do DropdownMenu", () => {
     expect(CODIGO).toContain("aria-labelledby={ariaLabelledBy ?? tituloId ?? undefined}")
-    expect(CODIGO).toMatch(/sm: "w-44",\s*md: "w-48",\s*lg: "w-52",\s*xl: "w-56"/)
+    expect(CODIGO).toMatch(
+      /sm: "w-44 pointer-coarse:w-52",\s*md: "w-48 pointer-coarse:w-56",\s*lg: "w-52 pointer-coarse:w-60",\s*xl: "w-56 pointer-coarse:w-64"/
+    )
     expect(lerFonte("src/app/designsystem/docs/context-menu.tsx")).not.toContain('className="w-52"')
   })
 

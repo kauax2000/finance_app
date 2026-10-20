@@ -228,12 +228,14 @@ function MonthNavPanel({
                     fechar()
                 }}
             />
-            <PopoverFooter className="justify-between">
+            {/* 12 embaixo, como dos lados e no topo da grade: as setas dos cantos
+                de baixo ficam à mesma distância da borda que as do ano em cima
+                (com 8, o círculo de 44 do toque ficava espremido no canto). */}
+            <PopoverFooter className="justify-between pb-3">
                 <Button
                     type="button"
                     variant="outline"
-                    size="icon-lg"
-                    className="size-8"
+                    size="icon-md"
                     aria-label="Mês anterior"
                     onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, -1))}
                 >
@@ -243,7 +245,7 @@ function MonthNavPanel({
                     type="button"
                     variant="tertiary"
                     size="sm"
-                    className="h-8 px-2 text-xs text-muted-foreground"
+                    className="h-8 px-2 text-xs text-muted-foreground pointer-coarse:h-11 pointer-coarse:px-4 pointer-coarse:text-base"
                     onClick={() => {
                         onJump()
                         fechar()
@@ -254,8 +256,7 @@ function MonthNavPanel({
                 <Button
                     type="button"
                     variant="outline"
-                    size="icon-lg"
-                    className="size-8"
+                    size="icon-md"
                     aria-label="Próximo mês"
                     onClick={() => onBudgetMonthYmChange(shiftYearMonth(budgetMonthYm, 1))}
                 >

@@ -28120,3 +28120,206 @@ Verificação da segunda passada no simulador (build de produção, Painel):
 - Os dois pontos que sobram são do motor (as paradas do WebKit e o borrão de fundo com animação), e não da curva.
 
 O dono aprovou a abertura e pediu um só ponto de origem. A placa dos resultados nascia e voltava do alto ao centro (`origin-top`), longe da cápsula que se divide à direita. Agora ela brota e se recolhe do canto de cima à direita (`origin-top-right`), sob a lupa e o ×, e as duas bolhas e a placa saem do mesmo lugar e voltam a ele. Visto no simulador: a borda direita da placa fica parada, e ela cresce para a esquerda e para baixo.
+
+### Rodada 339 — a grade de meses na escala do toque
+
+O calendário do mês (o `MonthGrid` e o rodapé do popover do header, `MonthNavPanel`) ficava na escala do mouse no telefone. Havia três peças pequenas:
+- as setas do ano, em `icon-sm` (28), um degrau que não cresce;
+- os meses, em `sm` (28) com texto de 14;
+- o rodapé, com anterior e próximo em `size-8`, um tamanho fixo que travava o toque, e o "Este mês" com 32 de altura e texto de 12.
+
+No toque, todas passam a 44, com texto de 16 e ícone de 20:
+- os meses ficam em `pointer-coarse:h-11 text-base`;
+- as setas do ano levam `pointer-coarse:size-11`;
+- o rodapé passa a `icon-md`;
+- a grade vai a 320 de largura.
+
+No mouse nada muda. Visto no simulador, no calendário do header do Painel.
+
+O dono perguntou se as bordas arredondadas estavam certas, e medi contra a escala de raio.
+
+**Na escala estava certo:**
+- o popover usa o degrau superfície, de 22px;
+- todo controle é cápsula ou círculo.
+
+**O que não fechava era o recuo dos cantos de baixo.** As setas do ano ficavam a 12 da lateral e a 12 do topo. As do rodapé ficavam a 12 da lateral, mas a 8 da base: o `PopoverFooter` tem `py-2`. Com o círculo de 44 do toque, elas pareciam espremidas no canto e fora do alinhamento com as de cima.
+
+O rodapé do `MonthNavPanel` ganhou `pb-3`. Medido a 375px, os quatro botões de canto ficam a 12 das duas bordas.
+
+### Rodada 340 — a barra de baixo sai do tom do cartão
+
+**Pedido:** a `BottomBar` ficava da mesma cor quando passava sobre um cartão.
+
+**Medido:** a pílula vestia a tinta flutuante (`bg-popover/60` com borrão), e o
+`--popover` é o `--card` nos dois temas (0,205 no escuro, branco no claro).
+Sobre um cartão, 60% de 0,205 por cima de 0,205 dá 0,205: só o anel de 10%
+separava. Sobre a página (0,145) a diferença era 0,036, e por isso lá se via.
+
+**Feito (o dono escolheu "as duas", e as mesmas regras no claro):**
+
+- Tokens novos com par escuro: `--bottom-bar-surface` (claro 0,95 · escuro
+  0,26) e `--bottom-bar-marker` (claro 0,89 · escuro 0,33). A pílula sai um
+  degrau do cartão (composta a 60%: 0,97 sobre o cartão claro, 0,238 sobre o
+  escuro), e a tecla fica um degrau além, na direção do `--muted`, para não
+  empatar com a pílula nova.
+- A tinta mora em `lib/glass-classes` (`bottomBarTintClassName`): a peça não
+  escreve borrão (`bottom-bar-versions.test.ts`, teste 5).
+- Anel a 15% e `shadow-lg`, a mesma do botão de ação ao lado.
+
+Conferido a 375px nos dois temas, rolando a lista do Painel por baixo.
+
+### Rodada 341 — a barra de baixo no tamanho da tab bar do iOS
+
+O dono perguntou se a `BottomBar` tinha o tamanho da nativa. Não tinha: a
+medida da rodada 275 (WhatsApp no iPhone 17 Pro Max) dava ~64pt de altura,
+~20pt de lateral e ~20pt de pé, e a barra ficara em 56 · 16 · 20 por escolha
+dele. Pedido agora: igual ao iOS. `--bottom-bar-h` vai a 4rem nos três modos de
+`labels` (a aba a 60, o marcador a 56), `--bottom-bar-margin` a 1,25rem (a
+lateral e a folga em cima), e `--bottom-bar-pad` soma 4rem. O botão de ação
+acompanha a altura e mede 64.
+
+### Rodada 342 — a aba que não cabe vai para o "Mais"
+
+**Pedido:** numa tela muito pequena, em vez de apertar as abas, uma página sai
+da barra para o menu do "Mais".
+
+**Medido antes:** a 320px a pílula tinha 208 de largura e as abas pediam 213:
+os nomes encostavam e a pílula transbordava.
+
+**Regra:** cada aba pede o nome + 16 (8 de cada lado), nunca menos de 44. Se a
+soma não cabe na pílula, sai a aba do fim, depois a anterior — o `quemSai` de
+`lib/overflow`, o mesmo das abas e das barras de ferramentas. Painel e "Mais"
+ficam sempre. Quem sai entra no topo do menu da conta (`MobileAccountMenu
+extra`), e o link acende (`aria-current`) quando a tela dele está aberta;
+Categorias acende também nas subpáginas. A barra fica sem marcador nessa tela,
+porque nenhuma aba dela está ativa, e o "Mais" continua fixo.
+
+O nome de cada aba é medido no canvas (`measureText`), com a fonte do rótulo do
+Painel, que nunca sai; remede quando a pílula ou esse rótulo mudam de tamanho e
+quando a fonte chega. A etiqueta do rótulo com `labels` ganhou
+`data-slot="bottom-bar-label"`, como a de `labels="active"`.
+
+**Quebrou no iOS e foi corrigido na mesma rodada:** a primeira versão media o
+texto no DOM e guardava a largura pelo `href`, porque a aba que saiu não está
+mais lá. No app instalado, a primeira medida vinha antes do CSS (nomes enormes),
+Transações e Categorias saíam, e a largura guardada as mantinha fora para sempre
+— a barra ficava com Painel e "Mais" num iPhone de 440. Com o canvas não há
+cache: a próxima medida, já com o CSS, as devolve. Conferido no simulador
+abrindo o app instalado do zero.
+
+**Conferido:** a 320 saem Categorias (Painel e Transações ficam, a 67 cada) e o
+menu abre com Categorias no topo, acesa em `/categories`; a 375 as três voltam,
+com o marcador.
+
+### Rodada 343 — abas inativas na tinta cheia
+
+Pedido do dono: os nomes e os ícones das abas inativas da `BottomBar` em branco
+(a tinta cheia, `--foreground`), e a ativa distinguida só pelo fundo (a tecla
+do marcador) e pelo ícone sólido. O miolo do item perde o
+`text-muted-foreground` e o par `hover:`/`active:` que acendia a tinta: não há
+mais tinta para acender. `bottom-bar-versions.test.ts` tranca o
+`text-foreground` e a ausência do `muted`.
+
+### Rodada 344 — a barra de baixo não sobe enquanto a página carrega
+
+**Relato:** no app instalado do iPhone, trocando de página, a `BottomBar` subia
+enquanto a página carregava e descia de volta.
+
+**Medido** (vídeo do simulador, iPhone 18 Pro Max instalado na tela de início):
+no esqueleto vazio a barra ficava 62pt acima. Lá o `innerHeight` é 956 e o
+`clientHeight` do `<html>` é 894. Com a página rolável, o `bottom: 0` de um
+`fixed` assenta no pé da tela (956); com a página do tamanho exato da tela (a
+carregando: `scrollHeight` 894), assenta no pé do `<html>`. No Chrome os dois
+valem 812 e nada acontece; no Safari com a barra de endereço também não.
+
+**Feito:** sob `@media (display-mode: standalone)` a barra se ancora no topo
+(`top-0`), mede `h-lvh` (956 nos dois casos) e empurra a pílula para baixo
+(`flex flex-col justify-end`). No Safari fica o `bottom: 0`: com a barra de
+endereço à vista, o `lvh` passa da área visível.
+
+**De passagem:** o `useAbasQueSaem` (rodada 342) prendia o `ResizeObserver` à
+pílula. Um HMR do `bottom-bar.tsx` remontou a barra, o observador ficou num nó
+solto (largura 0) e a barra caiu para Painel e "Mais". A pílula e o rótulo
+passam a ser procurados a cada medida, a medida roda a cada render, e quem é
+observado é o `<html>`.
+
+**Conferido em vídeo:** o quadro do esqueleto vazio mostra a barra no mesmo
+lugar dos outros; abertura a frio com as quatro abas; HMR do `bottom-bar.tsx`
+mantém as quatro.
+
+### Rodada 345 — o menu "Mais" na escala do toque
+
+Pedido: rever tamanhos e alvos do painel que brota da aba "Mais".
+
+**Medido a 375px:** linhas de 44, texto 16, recuo 8, placa 22 com a linha
+concêntrica a 14 — tudo certo. Dois problemas:
+
+- **Largura.** A escada de `size` do `DropdownMenuContent` (e do
+  `ContextMenu`, que a repete) não mudava no toque: o painel `xl` media 224 com
+  o texto já a 16, e "Membros e convidados" cortava. Agora cada degrau cresce 32
+  no toque (`sm` 208, `md` 224, `lg` 240, `xl` 256), a mesma proporção do texto
+  (14 → 16). No mouse nada muda.
+- **Ícone.** O menu desenhava o conjunto micro (`16/solid`) esticado a 20 — a
+  linha do menu leva o ícone a 20 no toque. Como esse menu só existe no
+  telefone, ele passa ao mini (`20/solid`), por `miniIconFor` em
+  `config/mobile-navigation.ts` (o par do `microIconFor`).
+
+**De passagem:** três asserções do `bottom-bar-versions.test.ts` ainda
+descreviam a tinta da rodada 343 (o `hover:` que acendia, o
+`group-data-[active]:text-foreground`); passaram a cobrar a tinta cheia.
+
+Conferido a 375px: painel de 256, nenhum rótulo cortado, ícones `20/solid` a
+20.
+
+### Rodada 346 — a aba Você
+
+Pedido: a barra de baixo do telefone o mais perto possível do iOS. Como no
+WhatsApp, a aba "Mais" vira **"Você"**, com o avatar, e em vez de abrir um menu
+suspenso ela abre **uma página** que leva às telas do antigo menu, em grupos de
+linhas num cartão. O dono deixou os detalhes comigo; o spec está em
+`docs/superpowers/specs/2026-10-19-aba-voce-design.md`.
+
+**Decisões (minhas):**
+
+- **O avatar é o glifo, sem esqueleto.** A rodada 278 tirou o avatar da aba
+  justamente pelo esqueleto que piscava; agora, com o perfil a caminho, vale o
+  círculo neutro vazio (`bg-muted`), sem trocar de ícone. A prop nova
+  `BottomBarTab media` ocupa o lugar do glifo e não tem versão sólida: a aba
+  ativa já é a tecla do marcador. É a única mudança em `ui/`.
+- **A aba fica ativa em `/me` e em toda tela que a página lista**, subrotas
+  incluídas (`/account/sessions`, `/credit-cards/<id>`, `/settings/*`): no iOS o
+  que foi empurrado de uma aba continua debaixo dela.
+- **Página `/me`** (`ROUTES.ME`, título "Você"): identidade centrada (avatar 56,
+  nome em `H2`, e-mail em `Muted`) e dois grupos, cada um um
+  `Card padding="none"` com `ItemGroup variant="divided"` e `Item` de link de
+  verdade. **Carteira**: as abas que saíram da barra, Assinaturas, Contas a pagar
+  (Beta), Cartões, Membros e convidados. **Conta**: Minha conta, Configurações.
+  Planos e o sair continuam dentro de Minha conta. Sem componente novo, sem
+  redirecionamento no desktop (onde `/me` renderiza e nada leva a ela).
+- **O voltar**: as telas das linhas da página passam a ser subpáginas dela no
+  telefone, e o voltar toma o lugar do sino e leva a `/me`
+  (`defaultMobileBackHref`). As que já têm pai (sessões e atividade, detalhe do
+  cartão) mantêm o pai; a aba que saiu da barra a 320px não ganha o voltar.
+  `/plans`, que no telefone só se abre de Minha conta, acende Você e volta a
+  `/account` (só no `defaultMobileBackHref`; a migalha do desktop não muda).
+- **Tocar na aba ativa sobe ao topo só na própria rota** (`BottomBarTab`, por
+  `usePathname`): ativa numa tela da pilha (Você em `/subscriptions`), o link
+  navega e a pilha volta à raiz, como no iOS. Sem isso, a 320px em
+  `/categories` (fora da barra, sem voltar) não havia caminho até `/me`. O
+  `aria-current="page"` também é só da rota exata; `data-active` (o marcador)
+  segue `active`. A aba sem `href`, e a que quem chama já impediu de navegar
+  (o espécime do catálogo), sobem ao topo como antes.
+- **As abas que saem (rodada 342)** agora entram no topo do grupo Carteira. A
+  barra mede e publica os `href` num armazém de módulo (`layout/abas-fora.ts`,
+  `useSyncExternalStore`), a página lê; no desktop a barra tem largura 0 e nada
+  é publicado, e ao desmontar ela publica `[]`. Sem contexto novo na casca.
+
+**O que saiu:** o `MobileAccountMenu` (o `DropdownMenu variant="panel"` da
+rodada 278, com o `extra` da 342 e a escala de toque da 345) e o arquivo
+`mobile-account-menu.tsx`. O `miniIconFor` da 345 ficou: agora serve os ícones
+das linhas da página.
+
+**Conferido:** documentação (`AGENTS.md`, `JORNADAS.md`, Atlas gerado pelo
+`build.py`, a nota do `ThemeToggle` no catálogo, que ainda citava o menu do
+telefone) atualizada na mesma mudança. Conferência no navegador e no simulador:
+a cargo do controlador.

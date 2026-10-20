@@ -650,7 +650,9 @@ declaração de `background-color` no trilho).
   (`lib/top-bar-bottom.ts`). Não meça a barra à mão.
 - **A barra de baixo do telefone**: [`BottomBar`](src/components/ui/bottom-bar.tsx)
   — a do app é ela. Não escreva `fixed bottom-0` nem uma grade de abas à mão:
-  as abas são `BottomBarTab` (com `iconActive` para o par sólido), o gatilho de
+  as abas são `BottomBarTab` (com `iconActive` para o par sólido, ou `media`, um
+  nó que ocupa o lugar do glifo e não tem versão sólida: a aba ativa é a tecla
+  do marcador — `icon` ou `media` é obrigatório, rodada 346), o gatilho de
   popover é `BottomBarSlot`, e a ação primária é o `BottomBarAction` (ou
   `bottomBarActionClassName` num `Button`), que lê a altura da barra e **não
   declara cor**. O realce viaja sozinho, e a área segura mora dentro da caixa.
@@ -687,7 +689,10 @@ declaração de `background-color` no trilho).
   `PageSectionContent`. Dentro do app nenhuma tela usa o `PageHeader` hoje: o
   título é só o `<h1>` escondido da barra do topo (ela não mostra o nome da tela;
   no telefone o título visível é a carteira, no centro, com o sino à esquerda e
-  a lupa à direita, e o voltar no lugar do sino nas subpáginas; a tela com filtro
+  a lupa à direita, e o voltar no lugar do sino nas subpáginas — inclusive as
+  telas que a página `/me` ("Você") lista: Assinaturas, Contas a pagar, Cartões,
+  Membros, Minha conta e Configurações voltam a ela, e uma aba que saiu da barra
+  não ganha o voltar (`defaultMobileBackHref`, rodada 346); a tela com filtro
   o publica por `usePageChromeFilter` e ele cola na lupa, numa cápsula — rodada
   334), as listas abrem na `Toolbar` e as telas de conta num
   `PageSection`; só o `PageHeaderBack` serve o voltar do telefone. O mês das
@@ -1167,10 +1172,11 @@ declaração de `background-color` no trilho).
     `DrawerDescription` nem `DrawerFooter`.
   - `DrawerContent` `variant` (`flush`, o padrão e **toda gaveta do telefone**;
     `inset`), `size` (`full` | `md` | `lg`) e `fill`.
-  - `DrawerActions` + `DrawerAction` + `DrawerCancel` é o action sheet. O
-    menu da conta do telefone **não** é gaveta: é o `DropdownMenu
-    variant="panel"` que brota da aba "Mais" (`side="top"`, fixa e nunca ativa), só com as telas
-    que não cabem na barra; o tema mora em Configurações e o sair em Minha
+  - `DrawerActions` + `DrawerAction` + `DrawerCancel` é o action sheet. A conta
+    do telefone **não** é gaveta nem menu: a aba "Você" (o avatar no lugar do
+    glifo) abre a página `/me`, com as telas da carteira e da conta em dois
+    grupos de linhas (o `MobileAccountMenu` e o painel que brotava da aba "Mais"
+    saíram na rodada 346); o tema mora em Configurações e o sair em Minha
     conta. O "+ Adicionar" não tem menu: abre
     direto o formulário de lançamento (com Despesa), que no telefone é a
     gaveta.
@@ -1243,7 +1249,8 @@ declaração de `background-color` no trilho).
     (288px) e horizontal `max-w-(--radix-dropdown-menu-content-available-width)`, escritos
     por extenso em cada menu. `FormPickerPopoverContent` para em 384px; o
     `panel` devolve o teto (`[--menu-max-h:100dvh]`).
-- **`DropdownMenu`**: `size` é largura (`auto`, `sm` 176 … `xl` 224) — não
+- **`DropdownMenu`**: `size` é largura (`auto`, `sm` 176 … `xl` 224; no toque
+  32 a mais em cada degrau, 208 … 256, como o texto que vai a 16 — rodada 345) — não
   escreva `w-44`…`w-56`; `variant="panel"` é o painel de conta.
   `DropdownMenuHeader` sangra e `DropdownMenuSection` devolve o recuo (não
   compense geometria por seletor); o fio entre identidade e comandos é do slot
@@ -1554,13 +1561,44 @@ declaração de `background-color` no trilho).
   `TopBarSearch` (⌘K e `/`; no app, com `glow`, `plate` — o vidro do campo do `CommandDialog`, a superfície `plate` da busca — e `collapse="lg"`, centrada numa coluna `max-w-xs` (320 até 1279px; `xl:max-w-sm`, 384 a partir de 1280) entre pontas de peso igual), `TopBarProgress`, `TopBarSkeleton`. **Uma árvore
   só**: as pontas aceitam `phone` — **nenhuma barra escreve duas árvores com
   `md:hidden` e `hidden md:contents`**. `hideOnScroll`.
-- **`BottomBar`**: a pele do `Tabs floating` (pílula `--popover` com o anel,
-  tecla `--muted` com `shadow-xs`, sem vidro); 56 de altura com ou sem
-  rótulo; com `labels` cada aba parte da coluna igual e nunca fica menor que o
+- **`BottomBar`**: a forma do `Tabs floating`, no tom próprio (rodada 340): a
+  pílula em `--bottom-bar-surface` (a receita translúcida dos menus,
+  `bottomBarTintClassName`), um degrau fora do `--card` — o `--popover` empata
+  com ele nos dois temas e a barra sumia sobre um cartão —, com o anel a 15% e a
+  `shadow-lg` do botão de ação; a tecla em `--bottom-bar-marker`, um degrau além
+  na direção do `--muted`, com `shadow-xs`; nome e ícone na tinta cheia
+  (`text-foreground`) em todas as abas — a ativa muda só a tecla por trás e o
+  ícone sólido (rodada 343); 64 de altura com ou sem
+  rótulo e 20 de lateral e de pé, a tab bar do iOS 26 (rodada 341); com `labels` cada aba parte da coluna igual e nunca fica menor que o
   nome; o marcador viaja (`useMarcador`); `labels="active"`;
   `BottomBarAction` (nome obrigatório), `BottomBarSkeleton`,
   `count`/`countLabel`; aba sem `href` é `<button aria-pressed>`; arraste pela
-  pílula; tocar na ativa sobe ao topo; `hideOnScroll`.
+  pílula; tocar na ativa sobe ao topo **só na própria rota** (o `aria-current`
+  também é só dela) — ativa numa tela da pilha, o link volta à raiz da aba;
+  `hideOnScroll`. **No app instalado do iOS a
+  barra se ancora no topo com `100lvh`** (rodada 344): lá o `bottom: 0` de um `fixed`
+  segue o documento, e com a página sem rolagem (carregando) caía no pé do `<html>`,
+  62pt acima do pé da tela. **A aba que não cabe com
+  folga sai para a página Você** (rodada 342, no `MobileBottomNav`): cada aba pede o
+  nome + 16 (medido no canvas, nunca guardado do DOM: no app instalado do iOS
+  a primeira medida vem antes do CSS), nunca menos de 44; sai do fim pelo `quemSai`, a primeira e a "Você"
+  ficam, e quem saiu entra no topo do grupo "Carteira" da página `/me`: a barra
+  publica os `href` num armazém de módulo (`layout/abas-fora.ts`,
+  `publicarAbasFora` / `useAbasFora` sobre `useSyncExternalStore`; no desktop, com a
+  barra em `md:hidden` e largura 0, nada é publicado, e ao desmontar ela publica
+  `[]`) e a página os lê. **A quarta aba é `BottomBarTab href="/me"
+  label="Você"`** com `media={<VoceAvatar size="xs" />}` (`layout/voce-avatar.tsx`:
+  a foto ou as iniciais no tom de `identityToneFor`; com o perfil a caminho, o
+  círculo neutro `bg-muted`, **nunca esqueleto**). Ela fica ativa em `/me` e em
+  toda tela que a página lista, subrotas incluídas (`isVoceTabActive`, em
+  `config/mobile-navigation.ts`, onde também moram `getVoceGroups` e
+  `voceBackHref`). **A página `/me`** é a identidade centrada (avatar 56, nome,
+  e-mail) e dois `Card padding="none"` de `ItemGroup variant="divided"`, com
+  linhas `Item variant="flush" interactive asChild` + `Link` (ícone mini, texto
+  16 no toque, `Badge` Beta, `ItemChevron`): **Carteira** (as abas que saíram,
+  Assinaturas, Contas a pagar, Cartões, Membros e convidados) e **Conta** (Minha
+  conta, Configurações); Planos e o sair ficam dentro de Minha conta. No desktop
+  nada muda: `/me` renderiza, mas nada leva a ela.
 - **`PageHeader`** (cliente, **sem régua**): no telefone as ações com ícone
   viram quadradas; a linha do título é o eixo. `PageHeaderMedia`,
   `PageHeaderStat` (**nenhuma tela escreve `dt`/`dd` à mão**), `PageHeaderNav`,

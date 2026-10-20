@@ -145,10 +145,10 @@ const contextMenuContentVariants = cva([menuSurfaceClassName, CONTEXT_POPPER, "c
     // A escada de largura do `DropdownMenuContent`, com os mesmos nomes.
     size: {
       auto: "",
-      sm: "w-44",
-      md: "w-48",
-      lg: "w-52",
-      xl: "w-56",
+      sm: "w-44 pointer-coarse:w-52",
+      md: "w-48 pointer-coarse:w-56",
+      lg: "w-52 pointer-coarse:w-60",
+      xl: "w-56 pointer-coarse:w-64",
     },
   },
   defaultVariants: { size: "auto" },

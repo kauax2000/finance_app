@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs"
+import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
@@ -58,19 +60,15 @@ describe("as versões do Drawer", () => {
     expect(CODIGO).toContain("[&_svg]:size-5")
   })
 
-  it("o + abre o formulário, o menu da conta brota da aba, e o vidro escrito à mão saiu", () => {
+  it("o + abre o formulário, o menu da conta saiu, e o vidro escrito à mão também", () => {
     // O "+" abre direto o formulário de lançamento (a gaveta dele, no
     // telefone); a folha de ações antes dele saiu.
     const fab = lerFonte("src/components/layout/quick-actions.tsx")
     expect(fab).toMatch(/<BottomBarAction label="Adicionar" onClick=\{abrir\}>/)
     expect(fab).not.toMatch(/<DrawerActions>|<DropdownMenuContent/)
     expect(fab).not.toContain("MOBILE_GLASS")
-    const conta = lerFonte("src/components/layout/mobile-account-menu.tsx")
-    // Rodada 278: o painel do `DropdownMenu` que brota da aba "Conta", e não
-    // mais a gaveta de 625px.
-    expect(conta).toMatch(/<DropdownMenuContent\s+variant="panel"[\s\S]*?side="top"/)
-    expect(conta).not.toMatch(/<Drawer\b/)
-    expect(conta).not.toMatch(/from "@\/components\/ui\/popover"|MOBILE_GLASS|createCenteredViewportAnchor/)
+    // Rodada 346: o menu da conta do telefone saiu; a aba Você leva à página /me.
+    expect(existsSync(join(process.cwd(), "src/components/layout/mobile-account-menu.tsx"))).toBe(false)
     expect(lerFonte("src/components/ui/bottom-bar.tsx")).not.toContain("MOBILE_GLASS_MENU")
   })
 })
@@ -83,7 +81,6 @@ describe("toda gaveta do telefone é a flush", () => {
       "src/components/ui/menubar.tsx",
       "src/components/ui/navigation-menu.tsx",
       "src/components/layout/quick-actions.tsx",
-      "src/components/layout/mobile-account-menu.tsx",
     ]
     for (const caminho of consumidores) {
       expect(lerFonte(caminho), caminho).not.toMatch(/<DrawerContent[^>]*variant="inset"/)

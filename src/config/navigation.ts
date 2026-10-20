@@ -12,6 +12,8 @@ export const ROUTES = {
     SUBSCRIPTIONS: "/subscriptions",
     BILLS: "/bills",
     NOTIFICATIONS: "/notifications",
+    /** A aba "Você" do telefone: a página que lista as telas fora da barra. */
+    ME: "/me",
     ACCOUNT: "/account",
     ACCOUNT_SESSIONS: "/account/sessions",
     ACCOUNT_ACTIVITY: "/account/activity",
@@ -127,6 +129,7 @@ export const DASHBOARD_PAGE_TITLES: Record<string, string> = {
 
 /** Header title for (app) route group (top-level pages) */
 export const APP_PAGE_TITLES: Record<string, string> = {
+    [ROUTES.ME]: "Você",
     [ROUTES.ACCOUNT]: "Minha conta",
     [ROUTES.PLANS]: "Planos e pagamentos",
     [ROUTES.MEMBERS]: "Membros e convidados",

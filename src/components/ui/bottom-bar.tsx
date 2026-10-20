@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
@@ -9,17 +10,17 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TRAJETO_MACIO } from "@/lib/liquid-move"
 import { useMarcador } from "@/hooks/use-marcador"
-import { glassControlSurfaceClassName, menuPanelTintClassName } from "@/lib/glass-classes"
+import { bottomBarTintClassName, glassControlSurfaceClassName } from "@/lib/glass-classes"
 import { proximoEscondido } from "@/lib/hide-on-scroll"
 import type { HeroIcon } from "@/types/navigation"
 import { cn } from "@/lib/utils"
 
 /**
- * A pílula: a tinta flutuante dos menus suspensos (`menuPanelTintClassName`, o
- * `--popover` translúcido com o borrão por trás), o anel de 1px do `Tabs
- * floating` e nenhuma sombra.
+ * A pílula: a tinta própria da barra (`bottomBarTintClassName`, a receita dos
+ * menus no `--bottom-bar-surface`, um degrau fora do `--card`), o anel a 15% e a
+ * `shadow-lg` do botão de ação — sobre um cartão, a pílula no `--popover` sumia.
  */
-const PILULA_CLASSNAME = cn(menuPanelTintClassName, "ring-1 ring-foreground/10")
+const PILULA_CLASSNAME = cn(bottomBarTintClassName, "ring-1 ring-foreground/15 shadow-lg")
 
 /**
  * A barra de baixo do telefone, irmã do `TopBar`. A pílula e o marcador são os
@@ -28,7 +29,7 @@ const PILULA_CLASSNAME = cn(menuPanelTintClassName, "ring-1 ring-foreground/10")
  * da barra. A altura é do
  * degrau (`--bottom-bar-h`, publicada pelo eixo `labels`), e a barra assenta a
  * `--bottom-bar-offset` (20) do pé, sobre a área segura, como a do iOS 26; a
- * lateral é `--bottom-bar-margin` (16). O `<nav>` não recebe eventos (cobre a largura toda e engoliria
+ * lateral é `--bottom-bar-margin` (20). O `<nav>` não recebe eventos (cobre a largura toda e engoliria
  * o toque fora da pílula); quem recebe é a linha. A camada é `--z-modal`:
  * empata com o `Dialog` e perde por ordem de DOM.
  */
@@ -39,23 +40,31 @@ const bottomBarVariants = cva(
     // A 20 do pé da tela, sobre a faixa do indicador de início, como a tab bar
     // do iOS 26: a área segura não soma (somada, a barra flutuava a 54 do pé).
     "pb-(--bottom-bar-offset)",
+    // No app instalado do iOS, o `bottom: 0` de um `fixed` segue o documento:
+    // rolável, ele assenta no pé da tela (956 num 440×956); sem rolagem (a
+    // página carregando), no pé do `<html>` (894), e a barra subia 62pt e
+    // descia de volta. Lá a barra se ancora no topo e mede `100lvh`, que é a
+    // tela inteira nos dois casos (rodada 344). No Safari não: com a barra de
+    // endereço à vista, o `lvh` passa da área visível.
+    "[@media(display-mode:standalone)]:top-0 [@media(display-mode:standalone)]:flex",
+    "[@media(display-mode:standalone)]:h-lvh [@media(display-mode:standalone)]:flex-col [@media(display-mode:standalone)]:justify-end",
   ].join(" "),
   {
     variants: {
       /**
-       * A barra mede 56 nos três, a régua da tab bar do iOS 26: sem rótulo, uma
-       * fileira de ícones; com rótulo, o ícone de 24 e o nome de 11 empilhados
-       * (37 de conteúdo numa aba de 52); `active` põe o nome só na ativa, ao lado.
-       * Com rótulo ela já teve 64.
+       * A barra mede 64 nos três, a tab bar do iOS 26 medida no iPhone (~64pt):
+       * sem rótulo, uma fileira de ícones; com rótulo, o ícone de 24 e o nome de 11
+       * empilhados (37 de conteúdo numa aba de 60); `active` põe o nome só na
+       * ativa, ao lado. Foi 56 das rodadas 275 a 340.
        */
       labels: {
-        false: "[--bottom-bar-h:3.5rem]",
-        true: "[--bottom-bar-h:3.5rem]",
-        active: "[--bottom-bar-h:3.5rem]",
+        false: "[--bottom-bar-h:4rem]",
+        true: "[--bottom-bar-h:4rem]",
+        active: "[--bottom-bar-h:4rem]",
       },
       /** `island` flutua, com margem nos quatro lados; é ele que dá dono ao `--bottom-bar-margin`. */
       shape: {
-        island: "[--bottom-bar-margin:1rem] [--bottom-bar-offset:1.25rem]",
+        island: "[--bottom-bar-margin:1.25rem] [--bottom-bar-offset:1.25rem]",
       },
     },
     defaultVariants: { labels: false, shape: "island" },
@@ -195,11 +204,11 @@ function BottomBarRow({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 /**
- * O tom da tecla: o `--muted` do `Tabs floating`. Ele já teve tom próprio
- * (`--muted` empatava com as linhas que passavam por trás do vidro, ~1,09:1);
- * com a pílula opaca nada passa por trás, e a tecla volta à das abas.
+ * O tom da tecla: `--bottom-bar-marker`, um degrau além da pílula na direção do
+ * `--muted` (mais escuro no claro, mais claro no escuro). Com a pílula no tom
+ * próprio, o `--muted` das abas ficava perto demais dela.
  */
-const pilulaTomClassName = "[--bottom-bar-key:var(--muted)]"
+const pilulaTomClassName = "[--bottom-bar-key:var(--bottom-bar-marker)]"
 
 /** O marcador do `Tabs floating` mora 2px para dentro do item: a tecla dentro do trilho. */
 const RECUO_DO_MARCADOR = 2
@@ -455,16 +464,14 @@ const itemColunaClassName =
   "w-auto min-w-fit flex-[1_1_calc((100%_-_(var(--bottom-bar-cols)_-_1)*--spacing(0.5))/var(--bottom-bar-cols))]"
 
 /**
- * O miolo e as tintas. `active` escreve `aria-current="page"` na aba de link e
- * `data-active` em todos. O par `hover:`/`active:` é obrigatório: `hover:` não
- * existe no dedo, `active:` não existe no trackpad do iPad.
+ * O miolo. `active` escreve `data-active` (o marcador) em todos; o
+ * `aria-current="page"` só vai na aba de link cujo `href` é a rota aberta. Nome e ícone ficam na tinta cheia em todas as abas
+ * (rodada 343, como a tab bar do iOS 26): o que distingue a ativa é a tecla do
+ * marcador por trás e o ícone sólido (`iconActive`), não a cor.
  */
 const itemInnerClassName = [
   "flex h-full w-full items-center justify-center gap-0.5 rounded-full",
-  "text-muted-foreground",
-  "transition-[background-color,color] duration-(--duration-base) ease-(--ease-out)",
-  "hover:text-foreground active:text-foreground",
-  "group-data-[active]/bottom-bar-item:text-foreground group-data-[scrub]/bottom-bar-item:text-foreground",
+  "text-foreground",
 ].join(" ")
 
 /** O realce enquanto não há medida: a tecla do marcador pintada no item, para a primeira pintura e para quem roda sem JavaScript. */
@@ -506,7 +513,7 @@ function BottomBarLabel({ children, ativo }: { children: React.ReactNode; ativo?
     // O `truncate` recorta na caixa, e com `leading-none` a caixa acaba na linha de
     // base mais pouco: a perna do "g" de Categorias saía cortada. `pb-0.5 -mb-0.5`
     // estende o recorte 2px para baixo sem mexer na altura da aba.
-    <span className="-mb-0.5 w-full min-w-10 truncate px-0.5 pb-0.5 text-center text-2xs leading-none" aria-hidden>
+    <span data-slot="bottom-bar-label" className="-mb-0.5 w-full min-w-10 truncate px-0.5 pb-0.5 text-center text-2xs leading-none" aria-hidden>
       {children}
     </span>
   )
@@ -542,19 +549,25 @@ function nomeComContagem(label: string | undefined, count?: number | boolean, co
   return [label + ",", count, countLabel].filter((p) => p != null).join(" ")
 }
 
-type BottomBarTabProps = Omit<React.ComponentProps<typeof Link>, "href"> & {
+// `media` sai do `<a>`: lá é o atributo de mídia do link, uma string.
+type BottomBarTabProps = Omit<React.ComponentProps<typeof Link>, "href" | "media"> & {
   /** Sem `href` a aba é um `<button>`, para a tela que troca de vista sem rota. */
   href?: string
   label: string
-  icon: HeroIcon
+  icon?: HeroIcon
   /** O par preenchido para a aba ativa; é prop porque adivinhar por nome quebraria no build de produção. */
   iconActive?: HeroIcon
+  /**
+   * O que ocupa o lugar do glifo — o avatar da aba Você. Não tem versão
+   * sólida: o que marca a ativa é a tecla do marcador por trás.
+   */
+  media?: React.ReactNode
   active?: boolean
   /** O número no canto do ícone, ou `true` para o ponto. Entra no nome. */
   count?: number | boolean
   /** O que o número conta, para o nome: "a vencer" → "Contas, 3 a vencer". */
   countLabel?: string
-}
+} & ({ icon: HeroIcon } | { media: React.ReactNode }) // uma aba sem glifo nenhum não compila
 
 function BottomBarTab({
   className,
@@ -562,6 +575,7 @@ function BottomBarTab({
   label,
   icon: Icon,
   iconActive: IconActive,
+  media,
   active,
   count,
   countLabel,
@@ -571,6 +585,9 @@ function BottomBarTab({
   const Glifo = active && IconActive ? IconActive : Icon
   const temMarcador = React.useContext(BottomBarMarkerContext)
   const { labels, subirAoTopo } = React.useContext(BottomBarContext)
+  const pathname = usePathname()
+  // A aba está na própria rota: o `href` é a página aberta, não só a pilha dela.
+  const naPropriaRota = href != null && href === pathname
   const miolo = (
     <span
       className={cn(
@@ -581,7 +598,7 @@ function BottomBarTab({
       )}
     >
       <span className={glifoClassName}>
-        <Glifo className="size-6 shrink-0" aria-hidden />
+        {media ?? (Glifo ? <Glifo className="size-6 shrink-0" aria-hidden /> : null)}
         {count != null ? <BottomBarCount count={count} /> : null}
       </span>
       <BottomBarLabel ativo={active}>{label}</BottomBarLabel>
@@ -593,10 +610,13 @@ function BottomBarTab({
     "data-active": active ? "" : undefined,
     "aria-label": nomeComContagem(label, count, countLabel),
     className: cn(itemRootClassName, labels === "active" && itemFlexClassName, labels === true && itemColunaClassName, className),
-    // Tocar na aba da tela atual a leva ao topo, como no iOS.
+    // Como no iOS: tocar na ativa **na própria rota** a leva ao topo; ativa numa
+    // tela empurrada da pilha dela (Você em /subscriptions), o link navega e a
+    // pilha volta à raiz. A aba sem `href`, e a que quem chama já impediu de
+    // navegar (o espécime do catálogo), sobem ao topo quando ativas.
     onClick: (e: React.MouseEvent<HTMLAnchorElement & HTMLButtonElement>) => {
       onClick?.(e as React.MouseEvent<HTMLAnchorElement>)
-      if (active) {
+      if (active && (href == null || naPropriaRota || e.defaultPrevented)) {
         e.preventDefault()
         subirAoTopo()
       }
@@ -619,7 +639,7 @@ function BottomBarTab({
   return (
     <Link
       href={href}
-      aria-current={active ? "page" : undefined}
+      aria-current={naPropriaRota ? "page" : undefined}
       draggable={false}
       {...comum}
       {...props}
@@ -684,7 +704,7 @@ function BottomBarSlot({
 
 /**
  * A ação primária, à direita da pílula: redonda, na altura da barra
- * (`--bottom-bar-h`; 56 não é degrau do `Button`), com a sombra e sem anel: o
+ * (`--bottom-bar-h`; 64 não é degrau do `Button`), com a sombra e sem anel: o
  * anel da pílula, em volta da tecla cheia, lia como uma borda solta fora dela.
  * Não declara cor: quem pinta é o `variant` do `Button`.
  */

@@ -713,7 +713,7 @@ export function MonthGrid({
   return (
     <div
       data-slot="month-grid"
-      className={cn("flex w-64 flex-col gap-2 p-3", className)}
+      className={cn("flex w-64 flex-col gap-2 p-3 pointer-coarse:w-80 pointer-coarse:gap-3", className)}
     >
       <div className="flex items-center justify-between">
         <Button
@@ -721,12 +721,14 @@ export function MonthGrid({
           variant="tertiary"
           size="icon-sm"
           aria-label="Ano anterior"
+          // No toque as setas sobem a 44 (o `icon-sm` não cresce), com o ícone de 20.
+          className="pointer-coarse:size-11 pointer-coarse:[&_svg]:size-5"
           disabled={ano <= anoMin}
           onClick={() => setAno((a) => a - 1)}
         >
           <ChevronLeftIcon aria-hidden />
         </Button>
-        <span className="text-sm font-medium nums" aria-live="polite">
+        <span className="text-sm font-medium nums pointer-coarse:text-base" aria-live="polite">
           {ano}
         </span>
         <Button
@@ -734,6 +736,7 @@ export function MonthGrid({
           variant="tertiary"
           size="icon-sm"
           aria-label="Próximo ano"
+          className="pointer-coarse:size-11 pointer-coarse:[&_svg]:size-5"
           disabled={ano >= anoMax}
           onClick={() => setAno((a) => a + 1)}
         >
@@ -755,7 +758,8 @@ export function MonthGrid({
               aria-current={atual ? "date" : undefined}
               aria-label={nome}
               disabled={foraDoLimite(ano, m)}
-              className="font-normal"
+              // No toque o mês é o alvo de 44 e o texto vai a 16 (o `sm` mora em 28).
+              className="font-normal pointer-coarse:h-11 pointer-coarse:text-base"
               onClick={() => onChange(new Date(ano, m, 1))}
             >
               <span className="capitalize">{formatMonthShortPtBr(new Date(ano, m, 1))}</span>
@@ -768,7 +772,7 @@ export function MonthGrid({
           type="button"
           variant="tertiary"
           size="xs"
-          className="self-center"
+          className="self-center pointer-coarse:h-11 pointer-coarse:text-base"
           onClick={() => {
             setAno(agora.getFullYear())
             onChange(new Date(agora.getFullYear(), agora.getMonth(), 1))

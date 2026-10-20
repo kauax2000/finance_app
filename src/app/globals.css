@@ -135,6 +135,7 @@
   --color-scrim-foreground: var(--scrim-foreground);
   --color-skeleton: var(--skeleton);
   --color-input-fill: var(--input-fill);
+  --color-bottom-bar-surface: var(--bottom-bar-surface);
   --color-chart-income: var(--chart-income);
   --color-chart-expense: var(--chart-expense);
   --color-identity-1: var(--identity-1);
@@ -297,6 +298,11 @@
      veste (`bg-input-fill/50`, em `field-classes`). */
   --input: oklch(0.9 0 0);
   --input-fill: oklch(0.9 0 0);
+  /* A pílula da `BottomBar` e a tecla dela: um degrau fora do `--card` (que no claro e no
+     escuro empata com o `--popover`), para a barra não sumir sobre um cartão. A tecla
+     fica um degrau além, na direção do `--muted`. */
+  --bottom-bar-surface: oklch(0.95 0 0);
+  --bottom-bar-marker: oklch(0.89 0 0);
   --ring: oklch(0.145 0 0);
   /* A superfície `-muted` é a tinta de chip. O croma das quatro de estado (0,06 a
      0,07) acompanha as de dinheiro e as de identidade. Só a superfície mudou: a
@@ -536,9 +542,9 @@
      folga em cima (`--bottom-bar-margin`, que também é a lateral). O pé é o da
      tab bar do iOS 26 (medido no iPhone 17 Pro Max: ~20pt), e a área segura não
      soma: como no iPhone, a barra assenta sobre a faixa do indicador de início. */
-  --bottom-bar-margin: 1rem;
+  --bottom-bar-margin: 1.25rem;
   --bottom-bar-offset: 1.25rem;
-  --bottom-bar-pad: calc(3.5rem + var(--bottom-bar-offset) + var(--bottom-bar-margin));
+  --bottom-bar-pad: calc(4rem + var(--bottom-bar-offset) + var(--bottom-bar-margin));
 }
 
 /* A base da barra do topo, no documento dela: o `Toaster`, a `Toolbar sticky`
@@ -624,6 +630,8 @@
      0,31 mede 1,12 contra o fill a 50% em qualquer superfície. */
   --input: oklch(0.31 0 0);
   --input-fill: oklch(1 0 0 / 15%);
+  --bottom-bar-surface: oklch(0.26 0 0);
+  --bottom-bar-marker: oklch(0.33 0 0);
   --ring: oklch(0.985 0 0);
   --success: oklch(0.7 0.15 152);
   --success-foreground: oklch(0.145 0 0);

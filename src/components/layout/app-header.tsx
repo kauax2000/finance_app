@@ -28,6 +28,7 @@ import {
     DASHBOARD_PAGE_TITLES,
     ROUTES,
 } from "@/config/navigation"
+import { voceBackHref } from "@/config/mobile-navigation"
 
 function defaultMobileTitle(
     pathname: string,
@@ -60,7 +61,12 @@ function defaultMobileBackHref(pathname: string): string | undefined {
     ) {
         return ROUTES.DASHBOARD_CATEGORIES
     }
-    return undefined
+    // Planos e pagamentos só se abre de Minha conta no telefone; no desktop a
+    // migalha não o põe debaixo dela (por isso não está em APP_SUB_PAGE_TITLES).
+    if (pathname === ROUTES.PLANS) return ROUTES.ACCOUNT
+    // Por último: as telas listadas na página Você voltam a ela (não são
+    // subpáginas de ninguém, então nada acima as reconhece).
+    return voceBackHref(pathname)
 }
 
 type AppHeaderProps = {
@@ -80,10 +86,11 @@ type AppHeaderProps = {
  * Uma árvore só: cada ponta diz o que mostra no telefone pelo `phone`, e os
  * `children` valem de `md` para cima. No telefone a carteira é o título, no
  * centro da barra (ícone, nome e chevron, como o "Instagram ⌄"), com o sino à
- * esquerda e a lupa à direita; nas subpáginas o voltar toma o lugar do sino. A
- * tela que tem filtro o publica (`usePageChromeFilter`), e ele cola na lupa,
- * numa cápsula. O mês das telas que o têm mora no topo do conteúdo. No
- * desktop, só o gatilho da barra lateral.
+ * esquerda e a lupa à direita; nas subpáginas o voltar toma o lugar do sino, e
+ * as telas abertas pela página Você voltam a ela. A tela que tem filtro o
+ * publica (`usePageChromeFilter`), e ele cola na lupa, numa cápsula. O mês
+ * das telas que o têm mora no topo do conteúdo. No desktop, só o gatilho da
+ * barra lateral.
  */
 export function AppHeader({ pathname, titleMode }: AppHeaderProps) {
     const chromeSlot = usePageChromeState()

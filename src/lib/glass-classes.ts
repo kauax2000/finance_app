@@ -103,6 +103,17 @@ export const menuPanelTintClassName = [
 ].join(" ")
 
 /**
+ * A tinta da pílula da `BottomBar`: a receita flutuante no tom próprio
+ * `--bottom-bar-surface`. O `--popover` empata com o `--card` nos dois temas, e
+ * sobre um cartão a barra sumia.
+ */
+export const bottomBarTintClassName = [
+  "bg-bottom-bar-surface/85 glass-surface",
+  "supports-backdrop-filter:bg-bottom-bar-surface/60",
+  "reduced-transparency:bg-bottom-bar-surface",
+].join(" ")
+
+/**
  * A superfície das peças modais (`Dialog`, `AlertDialog`, `Sheet`, `Drawer`).
  * `--background` e não `--popover`: sobre a página velada, `--popover` a 60%
  * compõe bem acima do que está atrás e a placa lê como opaca; `--background`

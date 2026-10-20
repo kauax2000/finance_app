@@ -9,16 +9,16 @@ const CODIGO = semComentarios(lerFonte("src/components/ui/bottom-bar.tsx"), "lin
 const FRAME = lerFonte("src/app/designsystem/ds-frame.tsx")
 
 describe("o desenho do Tabs", () => {
-  it("a pílula tem a tinta dos menus suspensos, o anel e nenhuma sombra", () => {
-    expect(CODIGO).toContain('const PILULA_CLASSNAME = cn(menuPanelTintClassName, "ring-1 ring-foreground/10")')
+  it("a pílula tem tom próprio, fora do --card, com anel a 15% e shadow-lg", () => {
+    expect(CODIGO).toContain('const PILULA_CLASSNAME = cn(bottomBarTintClassName, "ring-1 ring-foreground/15 shadow-lg")')
+    expect(lerFonte("src/lib/glass-classes.ts")).toContain('"supports-backdrop-filter:bg-bottom-bar-surface/60"')
     expect(CODIGO).not.toContain("mobile-glass-surface")
   })
 
-  it("o marcador é a tecla do Tabs floating, 2px para dentro: --muted, o anel e shadow-xs", () => {
+  it("o marcador é a tecla do Tabs floating, 2px para dentro: o tom da barra, o anel e shadow-xs", () => {
     expect(CODIGO).toContain('"bg-(--bottom-bar-key) ring-1 ring-foreground/10 shadow-xs"')
     expect(CODIGO).toContain("const RECUO_DO_MARCADOR = 2")
-    // Com a pílula opaca nada passa por trás, e a tecla volta ao `--muted` das abas.
-    expect(CODIGO).toContain('const pilulaTomClassName = "[--bottom-bar-key:var(--muted)]"')
+    expect(CODIGO).toContain('const pilulaTomClassName = "[--bottom-bar-key:var(--bottom-bar-marker)]"')
   })
 
   it("o toque responde como as abas: a tinta, sem afundar", () => {
@@ -38,12 +38,18 @@ describe("o desenho do Tabs", () => {
     expect(lerFonte("src/hooks/use-marcador.ts")).toContain("antes.el !== ativa")
   })
 
+  it("no app instalado a barra se ancora no topo com 100lvh, e não no pé do documento", () => {
+    // Rodada 344: sem rolagem, o `bottom: 0` do iOS standalone caía 62pt acima do pé.
+    expect(CODIGO).toContain("[@media(display-mode:standalone)]:top-0")
+    expect(CODIGO).toContain("[@media(display-mode:standalone)]:h-lvh")
+  })
+
   it("a ação tem a sombra e nenhum anel por fora da tecla", () => {
     expect(CODIGO).toContain('"size-(--bottom-bar-h) shrink-0 rounded-full p-0 shadow-lg"')
   })
 
   it("rótulo só na ativa: 56 de altura, e as outras nunca abaixo de 44", () => {
-    expect(bottomBarVariants({ labels: "active" })).toContain("[--bottom-bar-h:3.5rem]")
+    expect(bottomBarVariants({ labels: "active" })).toContain("[--bottom-bar-h:4rem]")
     expect(CODIGO).toContain('"w-auto min-w-11 flex-auto"')
   })
 
@@ -74,6 +80,11 @@ describe("as peças", () => {
     expect(CODIGO).toContain("aria-pressed={active ?? false}")
   })
 
+  it("a aba aceita mídia no lugar do glifo (o avatar da aba Você)", () => {
+    expect(CODIGO).toMatch(/media\?: React\.ReactNode/)
+    expect(CODIGO).toMatch(/icon\?: HeroIcon/)
+  })
+
   it("a ação tem o nome obrigatório, e o esqueleto ocupa o mesmo lugar", () => {
     expect(CODIGO).toMatch(/function BottomBarAction\([\s\S]*?label: string/)
     expect(CODIGO).toContain('data-slot="bottom-bar-skeleton" className={cn(bottomBarVariants({ labels }), className)}')
@@ -92,6 +103,15 @@ describe("os comportamentos", () => {
   it("tocar na ativa sobe ao topo de quem rolou por último", () => {
     expect(CODIGO).toContain("subirAoTopo()")
     expect(CODIGO).toContain("ultimo.current = alvo")
+  })
+
+  it("só na própria rota a ativa sobe ao topo; numa tela da pilha, o link volta à raiz", () => {
+    expect(CODIGO).toContain('import { usePathname } from "next/navigation"')
+    expect(CODIGO).toContain("const naPropriaRota = href != null && href === pathname")
+    expect(CODIGO).toMatch(/if \(active && \(href == null \|\| naPropriaRota \|\| e\.defaultPrevented\)\) \{\s*e\.preventDefault\(\)\s*subirAoTopo\(\)/)
+    expect(CODIGO).toContain('aria-current={naPropriaRota ? "page" : undefined}')
+    expect(CODIGO).not.toContain('aria-current={active ? "page" : undefined}')
+    expect(CODIGO).toContain('"data-active": active ? "" : undefined')
   })
 
   it("some ao rolar: a pílula e a ação afundam juntas, e nunca com o foco dentro", () => {
@@ -156,9 +176,9 @@ describe("o catálogo e o app", () => {
     it("1. os degraus são degraus, e nenhum par produz a mesma string", () => {
       const strings = ROTULOS.map((labels) => bottomBarVariants({ labels }))
 
-      // A régua da tab bar do iOS 26: 56 com e sem rótulo (com rótulo já foi 64).
+      // A régua da tab bar do iOS 26: 64 com e sem rótulo, como a nativa (rodada 341; foi 56).
       const alturas = strings.map(alturaEm)
-      expect(alturas).toEqual([3.5, 3.5])
+      expect(alturas).toEqual([4, 4])
     })
 
     it("2. o padrão é declarado uma vez", () => {
@@ -177,7 +197,7 @@ describe("o catálogo e o app", () => {
       expect(conta).toContain("var(--bottom-bar-offset)")
       expect(conta).toContain("var(--bottom-bar-margin)")
       expect(conta).not.toContain("safe-area")
-      expect(conta).toContain("3.5rem")
+      expect(conta).toContain("4rem")
 
       // E a altura não volta a ser token: ela é o degrau do eixo.
       expect(CSS).not.toMatch(/--bottom-bar-h\s*:/)
@@ -216,7 +236,8 @@ describe("o catálogo e o app", () => {
       const hovers = [...CODIGO.matchAll(/(?<!dark:)\bhover:([a-z-]+)/g)].map(
         (m) => m[1]
       )
-      expect(hovers.length).toBeGreaterThan(0)
+      // Desde a rodada 343 a aba não acende no cursor (a tinta já é a cheia);
+      // a regra continua para quem voltar a escrever um `hover:`.
       for (const propriedade of new Set(hovers)) {
         expect(
           CODIGO,
@@ -231,8 +252,8 @@ describe("o catálogo e o app", () => {
     })
 
     it("9. o movimento sai da escala", () => {
-      expect(CODIGO).toMatch(/duration-\(--duration-(?:instant|fast|base|slow)\)/)
-      expect(CODIGO).toMatch(/ease-\(--ease-(?:out|emphasized)\)/)
+      expect(CODIGO).toMatch(/duration-\(--duration-(?:instant|fast|base|slow|gentle)\)/)
+      expect(CODIGO).toMatch(/ease-\(--ease-(?:out|emphasized|spring|in-out)\)/)
       expect(CODIGO).not.toMatch(/\bduration-\d/)
       // O `(?<![-(])` é o que separa a forma crua (`ease-out`) do token
       // (`ease-(--ease-out)`): sem ele a asserção acusa o próprio conserto.
@@ -253,9 +274,8 @@ describe("o catálogo e o app", () => {
     it("11. a tinta do ativo é o foreground, nos dois temas", () => {
       // O fundo do ativo é a tecla, num tom próprio.
       expect(CODIGO).toMatch(/group-data-\[active\]\/bottom-bar-item:bg-\(--bottom-bar-key\)/)
-      expect(CODIGO).toMatch(
-        /group-data-\[active\]\/bottom-bar-item:text-foreground/
-      )
+      // Rodada 343: a tinta é a cheia em todas as abas, ativa ou não.
+      expect(CODIGO).toContain('"text-foreground"')
       // `--primary-foreground` é a tinta de **sobre o preenchimento primário** —
       // e é só ali que ela aparece: no número da contagem, sobre `bg-primary`.
       const usos = CODIGO.match(/[\w:-]*primary-foreground/g) ?? []
@@ -368,6 +388,9 @@ describe("o catálogo e o app", () => {
         CODIGO.indexOf('].join(" ")', inicioMiolo)
       )
       expect(miolo).not.toMatch(/group-data-\[active\]\/bottom-bar-item:bg-/)
+      // Rodada 343: inativas na tinta cheia; a ativa muda o fundo e o ícone, não a cor.
+      expect(miolo).toContain('"text-foreground"')
+      expect(miolo).not.toContain("text-muted-foreground")
     })
 
     it("14. o rótulo desce por contexto, e nunca por in-*", () => {

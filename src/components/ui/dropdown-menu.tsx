@@ -339,12 +339,15 @@ const dropdownMenuContentVariants = cva(
           "[&>[data-slot=dropdown-menu-viewport]]:p-0",
         ].join(" "),
       },
+      // No toque o texto vai de 14 a 16 e a linha a 44; a largura cresce 32 em
+      // cada degrau, na mesma proporção (rodada 345): com 224 o "Membros e
+      // convidados" do menu "Mais" cortava.
       size: {
         auto: "",
-        sm: "w-44",
-        md: "w-48",
-        lg: "w-52",
-        xl: "w-56",
+        sm: "w-44 pointer-coarse:w-52",
+        md: "w-48 pointer-coarse:w-56",
+        lg: "w-52 pointer-coarse:w-60",
+        xl: "w-56 pointer-coarse:w-64",
       },
     },
     defaultVariants: { variant: "menu", size: "auto" },

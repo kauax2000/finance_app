@@ -109,7 +109,7 @@ export default function ThemeToggleDoc() {
       </DocNote>
 
       <DocNote title="Onde o app usa">
-        Dois: o menu da conta no desktop (<code>UserMenu</code>) e o do telefone (<code>MobileAccountMenu</code>), os dois na forma de linha de menu, no degrau <code>md</code> e com a revelação circular. O catálogo usa mais dois no cabeçalho. A versão anterior desta página dizia que existia um só no app.
+        Dois: o menu da conta no desktop (<code>UserMenu</code>), na forma de linha de menu, e a seção Aparência de Configurações (<code>ThemeSettings</code>), onde o tema mora no telefone — o telefone não tem menu da conta, a aba Você abre uma página. Os dois no degrau <code>md</code> e com a revelação circular. O catálogo usa mais dois no cabeçalho. A versão anterior desta página dizia que existia um só no app.
       </DocNote>
 
       <PropsTable

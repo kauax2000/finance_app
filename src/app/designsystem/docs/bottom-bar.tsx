@@ -182,7 +182,7 @@ export default function BottomBarDoc() {
       </DocNote>
 
       <DocNote title="Rótulo só na ativa">
-        <code>labels=&quot;active&quot;</code> abre o nome ao lado do ícone na aba ativa, como uma aba de <code>Tabs</code>, e as outras dividem o resto. A barra continua com 56 — o rótulo embaixo (<code>labels</code>) a leva a 64.
+        <code>labels=&quot;active&quot;</code> abre o nome ao lado do ícone na aba ativa, como uma aba de <code>Tabs</code>, e as outras dividem o resto. A barra mede 64 nos três modos, a altura da tab bar do iOS 26.
       </DocNote>
 
       <DocNote title="O arraste e o toque">
@@ -212,7 +212,7 @@ export default function BottomBarDoc() {
       <PropsTable
         title="Eixos de BottomBar"
         rows={[
-          { prop: "labels", type: 'boolean | "active"', default: "false", description: "O nome sob o ícone (64), ou só na ativa, ao lado do ícone (56)." },
+          { prop: "labels", type: 'boolean | "active"', default: "false", description: "O nome sob o ícone, ou só na ativa, ao lado do ícone. A altura é 64 nos três." },
           { prop: "glass", type: "boolean", default: "false", description: "O marcador de vidro, como o glass do TabsList — o aro e o reflexo sobre o mesmo tom da tecla." },
           { prop: "hideOnScroll", type: "boolean", default: "false", description: "Rolando para baixo a pílula e a ação afundam juntas; rolando para cima, voltam." },
           { prop: "action", type: "ReactNode", description: "A ação primária, à direita da pílula — um BottomBarAction." },
@@ -223,7 +223,7 @@ export default function BottomBarDoc() {
       <PropsTable
         title="Peças"
         rows={[
-          { prop: "BottomBarTab", type: "label, icon, iconActive?, active?, href?, count?, countLabel?", description: "Uma aba. Com href é link (aria-current=\"page\"); sem, é botão (aria-pressed). Tocar na ativa sobe ao topo." },
+          { prop: "BottomBarTab", type: "label, icon | media, iconActive?, active?, href?, count?, countLabel?", description: "Uma aba. Com href é link (aria-current=\"page\" só na própria rota); sem, é botão (aria-pressed). media ocupa o lugar do ícone — o avatar da aba Você —, sem versão sólida: a ativa é a tecla. Tocar na ativa sobe ao topo na própria rota; numa tela da pilha dela, volta à raiz." },
           { prop: "BottomBarSlot", type: 'ComponentProps<"button"> & { label?, active?, count?, asChild? }', description: "A mesma caixa para o gatilho de um menu ou gaveta; não recebe aria-current." },
           { prop: "BottomBarAction", type: "Button & { label }", default: 'variant="primary"', description: "A ação redonda na altura da barra, com o anel e a sombra da pílula; o nome é obrigatório." },
           { prop: "BottomBarSkeleton", type: "tabs?, action?, labels?", description: "A barra enquanto a casca carrega, no mesmo lugar e na mesma altura." },
