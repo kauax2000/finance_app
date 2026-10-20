@@ -346,7 +346,7 @@ describe("as ações numa cápsula", () => {
     // No detalhe da categoria o mês leva o cabeçalho, e o filtro dos lançamentos fica na barra.
     expect(fonte("src/components/categories/detail/category-embedded-transactions.tsx")).toContain("headerFilter={false}")
     // O filtro sai do cabeçalho quando a tela sai.
-    expect(fonte("src/components/layout/page-chrome-provider.tsx")).toContain("return () => setFilter({ pathname, filter: null })")
+    expect(fonte("src/components/layout/page-chrome-provider.tsx")).toContain("return () => setFilter(null)")
   })
 
   it("no telefone a busca nasce da lupa do header", () => {

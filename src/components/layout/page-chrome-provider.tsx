@@ -37,7 +37,11 @@ type PageChromeContextValue = {
     setFilter: (next: PageChromeFilterEntry | null) => void
 }
 
-/** O filtro publicado e a rota de quem o publicou: a de outra tela não vale. */
+/**
+ * O filtro publicado e a rota de quem o publicou: a de outra tela não vale. O
+ * estado `null` é "nenhuma página falou" (ao sair, a tela devolve o estado a
+ * ele); `{ pathname, filter: null }` é a página que falou e não quer filtro.
+ */
 type PageChromeFilterEntry = { pathname: string; filter: PageChromeFilter | null }
 
 const PageChromeContext = React.createContext<PageChromeContextValue | null>(
@@ -117,12 +121,13 @@ export function filtroDoCabecalho(
 }
 
 /**
- * Publica o filtro da tela no cabeçalho do telefone; sai ao desmontar. O
+ * Publica o filtro da tela no cabeçalho do telefone; ao desmontar, devolve o
+ * estado a "não falou" (`null`), para a rota voltar a declarar o botão inerte
+ * em vez de herdar um "sem filtro" velho. O
  * `onOpen` e o `popover` vão por ref: o cabeçalho só renderiza de novo quando o
- * nome ou o estado mudam. Fora do provider (o catálogo) ou com `enabled`
- * falso, não faz nada — ou melhor, publica `null` para a rota, que vence a
- * declaração dela e desliga o botão. Cada publicação leva o `pathname` da
- * montagem, e a limpeza também.
+ * nome ou o estado mudam. Fora do provider (o catálogo), não faz nada; com
+ * `enabled` falso, publica `{ pathname, filter: null }`, que vence a declaração
+ * da rota e desliga o botão. Cada publicação leva o `pathname` da montagem.
  */
 export function usePageChromeFilter(filter: PageChromeFilter, enabled = true) {
     const setFilter = React.useContext(PageChromeContext)?.setFilter
@@ -136,7 +141,7 @@ export function usePageChromeFilter(filter: PageChromeFilter, enabled = true) {
         if (!setFilter) return
         if (!enabled) {
             setFilter({ pathname, filter: null })
-            return () => setFilter({ pathname, filter: null })
+            return () => setFilter(null)
         }
         setFilter({
             pathname,
@@ -149,6 +154,6 @@ export function usePageChromeFilter(filter: PageChromeFilter, enabled = true) {
                 popover: temPopover ? (fechar) => ref.current.popover?.(fechar) : undefined,
             },
         })
-        return () => setFilter({ pathname, filter: null })
+        return () => setFilter(null)
     }, [setFilter, pathname, enabled, label, active, disabled, icon, temPopover])
 }

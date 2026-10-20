@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { filtroDoCabecalho } from "@/components/layout/page-chrome-provider"
+import { lerFonte, semComentarios } from "@/test/fonte"
 
 const pub = { label: "Filtros", active: true, icon: "filter" as const }
 
@@ -33,5 +34,18 @@ describe("filtroDoCabecalho", () => {
 
     it("sem declaração nem publicação, nada", () => {
         expect(filtroDoCabecalho(null, undefined)).toBeNull()
+    })
+})
+
+describe("usePageChromeFilter", () => {
+    const fonte = semComentarios(lerFonte("src/components/layout/page-chrome-provider.tsx"))
+
+    it("ao sair, devolve o estado a \"não falou\" (null), nunca um null com a rota", () => {
+        expect(fonte).toContain("return () => setFilter(null)")
+        expect(fonte).not.toContain("return () => setFilter({")
+    })
+
+    it("com enabled falso, publica o null com o pathname", () => {
+        expect(fonte).toContain("if (!enabled) {\n            setFilter({ pathname, filter: null })")
     })
 })
