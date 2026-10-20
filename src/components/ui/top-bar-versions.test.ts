@@ -456,7 +456,9 @@ describe("TopBarActionGroup morph", () => {
     expect(CODIGO).not.toContain("TINTA_DO_VOO =")
     expect(fonte("src/components/ui/command.tsx")).not.toContain("TINTA_DO_VOO =")
     expect(fonte("src/lib/header-morph.ts")).toContain("export const TINTA_DO_VOO =")
-    expect(CODIGO).toMatch(/import \{[^}]*\bTINTA_DO_VOO\b[^}]*\} from "@\/lib\/header-morph"/)
+    // A gota do cabeçalho voa sem tinta: ela acendia a lupa no primeiro quadro.
+    expect(CODIGO).not.toContain("TINTA_DO_VOO")
+    expect(CODIGO).not.toContain("backgroundImage")
     expect(fonte("src/components/ui/command.tsx")).toMatch(/import \{[^}]*\bTINTA_DO_VOO\b[^}]*\} from "@\/lib\/header-morph"/)
   })
 

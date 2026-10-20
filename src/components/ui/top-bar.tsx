@@ -21,7 +21,7 @@ import {
   barEdgeLayerClassNames,
   barSurfaceClassName,
 } from "@/lib/glass-classes"
-import { GOTA_H, GOTA_R, quadroDaGotaDoFiltro, quadroDaTroca, suave, TINTA_DO_VOO, type IconeEmVoo } from "@/lib/header-morph"
+import { GOTA_H, GOTA_R, quadroDaGotaDoFiltro, quadroDaTroca, suave, type IconeEmVoo } from "@/lib/header-morph"
 import { alvoDaRolagem, proximoEscondido } from "@/lib/hide-on-scroll"
 import {
   searchFieldIconClassName,
@@ -817,6 +817,9 @@ function TopBarActionGroup({
   return <ButtonGroup data-slot="top-bar-action-group" data-join={join} className={classe} {...props} />
 }
 
+/** O anel dos vidros do cabeçalho (`ring-1 ring-foreground/10`), por extenso para o voo. */
+const ANEL_DO_VIDRO = "color-mix(in oklab, var(--foreground) 10%, transparent)"
+
 /**
  * Escreve um quadro da gota nos dois vidros e no miolo do filtro — nunca no
  * grupo, que é ancestral dos dois (um `transform` ali desligaria o
@@ -832,8 +835,15 @@ function TopBarActionGroup({
  * dela, e só o raio horizontal encolhe quando a fatia visível é mais estreita
  * que ele (como em `quadroDasBolhas`). A costura cai num pixel do aparelho, a
  * mesma para os dois. No passe da mola a gota acompanha a lupa, para a costura
- * não abrir. O recorte tira o anel, e a silhueta vem da tinta do voo, que some
- * na chegada à cápsula, antes de o anel do grupo voltar.
+ * não abrir. Sem a tinta do voo da busca, que no primeiro quadro acendia a
+ * lupa (8% de `--foreground` de uma vez) e no último apagava num salto.
+ *
+ * O anel não some no voo: o do grupo contornaria a cápsula final, então cada
+ * vidro desenha o seu (`ANEL_DO_VIDRO`, o `ring-1` de repouso), com o raio da
+ * forma do quadro, e o recorte se abre 1px para fora para deixá-lo à vista —
+ * menos do lado da emenda, onde ele seria um fio no meio da cápsula; ali o
+ * recorte abre conforme a emenda arredonda (as duas bolhas se separando). Na
+ * gota, que está em `scale`, o px do anel é dividido pela escala.
  */
 function desenharGota(
   grupo: HTMLElement,
@@ -856,24 +866,39 @@ function desenharGota(
   // Onde a lupa acaba, nas coordenadas da gota antes do `transform`; passada a caixa, não sobra nada.
   const corte = Math.min(H, Math.max(0, R + (costura - cx) / s))
   const cabe = Math.min(1, (H - corte) / (R + emendaDaGota))
+  // O lado da emenda mostra o anel conforme ela arredonda: 0 fundidas, 1 soltas.
+  const solta = emenda / R
   grupo.style.boxShadow = "none"
   lupa.style.transform = "translateX(" + lupaDx + "px)"
-  lupa.style.clipPath = "inset(0px round " + R + "px " + emenda + "px " + emenda + "px " + R + "px)"
+  lupa.style.borderRadius = R + "px " + emenda + "px " + emenda + "px " + R + "px"
+  lupa.style.setProperty("box-shadow", "0 0 0 1px " + ANEL_DO_VIDRO, "important")
+  const e = solta
+  lupa.style.clipPath =
+    "inset(-1px " + -e + "px -1px -1px round " +
+    (R + 1) + "px " + (emenda + e) + "px " + (emenda + e) + "px " + (R + 1) + "px)"
+  // Na gota, 1px da tela são `u` nas coordenadas dela (antes do `scale`).
+  const u = 1 / s
+  // Onde a lupa acaba sem o teto da caixa: com a gota inteira dentro dela, o
+  // recorte passa também do anel (senão sobrava um fio dele dentro da lupa).
+  const dentro = R + (costura - cx) / s
+  const esquerda = dentro > 0 ? Math.min(dentro, H + u) : -u * solta
   gota.style.transform = "translateX(" + (cx - H - R) + "px) scale(" + s + ")"
+  gota.style.borderRadius = emendaDaGota + "px " + R + "px " + R + "px " + emendaDaGota + "px"
+  gota.style.setProperty("box-shadow", "0 0 0 " + u + "px " + ANEL_DO_VIDRO, "important")
   gota.style.clipPath =
-    "inset(0px 0px 0px " + corte + "px round " +
-    emendaDaGota * cabe + "px " + R * cabe + "px " + R * cabe + "px " + emendaDaGota * cabe + "px / " +
-    emendaDaGota + "px " + R + "px " + R + "px " + emendaDaGota + "px)"
-  const tinta = "color-mix(in oklab, var(--foreground) " + TINTA_DO_VOO * (1 - suave(g, [0.85, 1])) + "%, transparent)"
-  lupa.style.backgroundImage = gota.style.backgroundImage = "linear-gradient(" + tinta + ", " + tinta + ")"
+    "inset(" + -u + "px " + -u + "px " + -u + "px " + esquerda + "px round " +
+    emendaDaGota * cabe + "px " + (R * cabe + u) + "px " + (R * cabe + u) + "px " + emendaDaGota * cabe + "px / " +
+    emendaDaGota + "px " + (R + u) + "px " + (R + u) + "px " + emendaDaGota + "px)"
   pintarMiolo(miolo, f.icone)
 }
 
 /** A cápsula pronta: nada inline nos dois vidros, no miolo nem no grupo. */
 function gotaEmRepouso(grupo: HTMLElement, lupa: HTMLElement, gota: HTMLElement, miolo: HTMLElement) {
   grupo.style.boxShadow = ""
-  lupa.style.transform = lupa.style.clipPath = lupa.style.backgroundImage = ""
-  gota.style.transform = gota.style.clipPath = gota.style.backgroundImage = ""
+  lupa.style.transform = lupa.style.clipPath = lupa.style.borderRadius = ""
+  gota.style.transform = gota.style.clipPath = gota.style.borderRadius = ""
+  lupa.style.removeProperty("box-shadow")
+  gota.style.removeProperty("box-shadow")
   pintarMiolo(miolo, null)
 }
 

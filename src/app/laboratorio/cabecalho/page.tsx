@@ -2,6 +2,7 @@
 
 import { notFound } from "next/navigation"
 import { useEffect, useState } from "react"
+import { frameData, MotionGlobalConfig } from "motion/react"
 import { isDesignSystemEnabled } from "@/app/designsystem/enabled"
 import { AdjustmentsHorizontalIcon, CalendarIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid"
 import { Card } from "@/components/ui/card"
@@ -18,6 +19,32 @@ const NOMES: Record<Estado, string> = { lupa: "Só a lupa", mes: "Lupa + mês", 
 const VOLTA: Record<Estado, Estado> = { lupa: "mes", mes: "ajustes", ajustes: "lupa" }
 /** O tempo de cada parada no "Repetir": a mola assenta e o olho descansa. */
 const PARADA_MS = 1400
+/** A câmera lenta: o relógio do `motion` anda a ¼ do real. */
+const LENTIDAO = 0.25
+
+/**
+ * Liga o relógio manual do `motion` e o faz andar a `fator` do tempo real,
+ * para toda animação dele na página. Devolve o desligamento.
+ * ponytail: mexe na configuração global do `motion` (só esta página monta);
+ * se a câmera lenta servir a outras telas, vira um controle do catálogo.
+ */
+function relogioLento(fator: number) {
+    MotionGlobalConfig.useManualTiming = true
+    let antes = performance.now()
+    let id = 0
+    const andar = (agora: number) => {
+        const passo = (agora - antes) * fator
+        antes = agora
+        frameData.timestamp += passo
+        frameData.delta = passo
+        id = requestAnimationFrame(andar)
+    }
+    id = requestAnimationFrame(andar)
+    return () => {
+        cancelAnimationFrame(id)
+        MotionGlobalConfig.useManualTiming = false
+    }
+}
 
 /**
  * O laboratório da cápsula do cabeçalho do telefone: a `TopBarActionGroup
@@ -35,12 +62,15 @@ export default function Page() {
     const [estado, setEstado] = useState<Estado>("lupa")
     const [repetir, setRepetir] = useState(false)
     const [ampliar, setAmpliar] = useState(true)
+    const [lento, setLento] = useState(false)
+
+    useEffect(() => (lento ? relogioLento(LENTIDAO) : undefined), [lento])
 
     useEffect(() => {
         if (!repetir) return
-        const id = window.setInterval(() => setEstado((e) => VOLTA[e]), PARADA_MS)
+        const id = window.setInterval(() => setEstado((e) => VOLTA[e]), lento ? PARADA_MS / LENTIDAO : PARADA_MS)
         return () => window.clearInterval(id)
-    }, [repetir])
+    }, [repetir, lento])
 
     return (
         <div className="flex min-h-dvh flex-col gap-6 bg-background p-4">
@@ -61,6 +91,10 @@ export default function Page() {
                 <Label className="flex items-center gap-2">
                     <Switch checked={repetir} onCheckedChange={setRepetir} />
                     Repetir sozinho
+                </Label>
+                <Label className="flex items-center gap-2">
+                    <Switch checked={lento} onCheckedChange={setLento} />
+                    Câmera lenta (4×)
                 </Label>
                 <Label className="flex items-center gap-2">
                     <Switch checked={ampliar} onCheckedChange={setAmpliar} />
