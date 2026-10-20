@@ -398,6 +398,10 @@ describe("TopBarActionSwap", () => {
     expect(peca).toContain("ref={guardarFoco}")
   })
 
+  it("o miolo que saiu desmonta antes de o repouso o limpar, no mesmo quadro", () => {
+    expect(peca).toMatch(/flushSync\(\(\) => \{\s*setSaindo\(null\)\s*setPassouDoMeio\(false\)\s*\}\)\s*repouso\(\)/)
+  })
+
   it("o botão de dentro acende com o realce do vidro, e não o da variante", () => {
     const realce = CODIGO.match(/const TOP_BAR_PLATE =\s*"[^"]*(\[--button-hover-fill:[^\]\s]+\])/)?.[1]
     expect(realce).toBeTruthy()
@@ -429,6 +433,16 @@ describe("TopBarActionGroup morph", () => {
     expect(grupo).toMatch(/animate\(\s*\w+\.current/)
     expect(grupo).toContain("offsetWidth === 0")
     expect(grupo).toContain("useReducedMotion")
+  })
+
+  it("ao sair, a gota desmonta antes de o repouso limpar os vidros, no mesmo quadro", () => {
+    expect(grupo).toMatch(/if \(alvo === 0\) flushSync\(\(\) => setSegundo\(null\)\)\s*repouso\(\)/)
+    // No caminho sem mola o estado já esvazia no próprio efeito, antes da pintura.
+    expect(grupo).toMatch(/repouso\(\)\s*if \(alvo === 0\) setSegundo\(null\)\s*return/)
+  })
+
+  it("o segundo que sai com o foco dentro o passa à lupa antes de ficar inerte", () => {
+    expect(grupo).toContain("if (alvo === 0 && gota.contains(el.ownerDocument.activeElement)) lupaEl.focus()")
   })
 
   it("escreve só nos vidros e nos filhos deles: nada de transform, recorte ou filtro no grupo", () => {

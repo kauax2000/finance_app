@@ -4,6 +4,7 @@ import * as React from "react"
 import { MagnifyingGlassIcon } from "@heroicons/react/16/solid"
 import { cva, type VariantProps } from "class-variance-authority"
 import { animate, useReducedMotion } from "motion/react"
+import { flushSync } from "react-dom"
 import { Slot } from "radix-ui"
 
 import { tagChipUnreadCount } from "@/components/ui/badge"
@@ -731,9 +732,14 @@ function MioloQueTroca({
     const controle = animate(progresso.current, 1, { ...MOLA, onUpdate: quadro })
     controle.then(() => {
       if (!ativa) return
+      // O desmonte antes do repouso, no mesmo quadro (`flushSync`): limpar
+      // primeiro devolvia o miolo que saía inteiro por um quadro, até o
+      // React desmontá-lo numa tarefa seguinte, depois da pintura.
+      flushSync(() => {
+        setSaindo(null)
+        setPassouDoMeio(false)
+      })
       repouso()
-      setSaindo(null)
-      setPassouDoMeio(false)
     })
     return () => {
       ativa = false
@@ -906,13 +912,17 @@ function CapsulaQuePinga({
     const gota = el?.querySelector<HTMLElement>(":scope > [data-slot=top-bar-action-drop]")
     const miolo = gota?.firstElementChild as HTMLElement | null
     if (!el || !lupaEl || !gota || !miolo || g.current === alvo) return
+    // O segundo que sai com o foco dentro (a folha dele fechou e devolveu o
+    // foco ao gatilho) o passa à lupa antes de a gota ficar inerte — inerte,
+    // o foco cairia no `body`.
+    if (alvo === 0 && gota.contains(el.ownerDocument.activeElement)) lupaEl.focus()
     const repouso = () => {
       g.current = alvo
       gotaEmRepouso(el, lupaEl, gota, miolo)
-      if (alvo === 0) setSegundo(null)
     }
     if (reduzido || lupaEl.offsetWidth === 0) {
       repouso()
+      if (alvo === 0) setSegundo(null)
       return
     }
     const k = lupaEl.offsetWidth / GOTA_H
@@ -925,7 +935,13 @@ function CapsulaQuePinga({
     let ativa = true
     const controle = animate(g.current, alvo, { ...MOLA, onUpdate: quadro })
     controle.then(() => {
-      if (ativa) repouso()
+      if (!ativa) return
+      // Ao sair, o desmonte antes do repouso, no mesmo quadro (`flushSync`):
+      // limpar primeiro pintava a cápsula inteira por um quadro, com a lupa
+      // 44px à esquerda, até o React desmontar a gota depois da pintura. Sem
+      // a gota, a lupa sem `translate` é o mesmo pixel.
+      if (alvo === 0) flushSync(() => setSegundo(null))
+      repouso()
     })
     return () => {
       ativa = false
