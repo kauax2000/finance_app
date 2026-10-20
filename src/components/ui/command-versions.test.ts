@@ -282,6 +282,21 @@ describe("as versões do Command", () => {
     /** A borda esquerda do ×: a origem é a direita (`origin-right`), e só a largura escala. */
     const esquerdaDoX = (f: { xdx: number; escalaX: number }) => x.right + f.xdx - x.width * f.escalaX
 
+    it("na cápsula, a borda chega à calha aos 0,7, no mesmo esticão da busca sem filtro", async () => {
+      const { quadroDasBolhas, quadroDaGota } = await import("@/components/ui/command")
+      expect(esquerdaVisivel(quadroDasBolhas(capsula, 0.35))).toBeCloseTo((271 + 16) / 2, 6)
+      expect(esquerdaVisivel(quadroDasBolhas(capsula, 0.7))).toBeCloseTo(16, 6)
+      expect(esquerdaVisivel(quadroDasBolhas(capsula, 0.9))).toBeCloseTo(16, 6)
+      // A mesma fração do caminho nos dois gestos, em todo quadro.
+      const sozinha = { lupa: caixa(315, 359), pilula, x, dpr: 3 }
+      for (let i = 0; i <= 105; i++) {
+        const p = i / 100
+        const fracaoCapsula = (271 - esquerdaVisivel(quadroDasBolhas(capsula, p))) / (271 - 16)
+        const fracaoGota = (315 - quadroDaGota(sozinha, p).esquerda) / (315 - 16)
+        expect(fracaoCapsula).toBeCloseTo(fracaoGota, 6)
+      }
+    })
+
     it("na cápsula, sai da lupa colada ao filtro, pinça antes de partir e pousa com o vão de 8", async () => {
       const { quadroDasBolhas } = await import("@/components/ui/command")
       const f0 = quadroDasBolhas(capsula, 0)

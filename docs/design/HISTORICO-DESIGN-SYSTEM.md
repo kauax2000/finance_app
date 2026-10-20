@@ -28519,3 +28519,12 @@ andam no progresso, não no relógio.
 **Ficou sem medir, para o aparelho:** a sensação ao vivo (o dono aprecia no
 iPhone) e o fechar no meio do voo com o teclado descendo; o teste de fonte só
 trava que a espera da casca cobre a soma.
+
+**Depois: a cápsula parecia mais lenta que a lupa sozinha.** A mola era a
+mesma, mas a borda esquerda da pílula andava em linha reta com o progresso na
+cápsula (chegava à calha só aos 408ms, 90% do caminho aos ~268ms), e no
+esticão da busca sem filtro (`min(p / 0,7, 1)`) aos 182ms. As duas dividem
+agora o mesmo `esticao(p)`: o recorte da cápsula chega à calha aos 0,7. A
+caixa da pílula fica até 8px à direita enquanto a emenda está fundida, e só a
+caixa pinta: a borda pintada assenta na calha conforme o vão abre, e o
+fantasma da lupa segue a borda pintada (`lupaDx`), não o recorte.

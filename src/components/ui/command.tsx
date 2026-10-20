@@ -248,18 +248,23 @@ function quadroDasBolhas(
   // origem na direita); com o vão aberto, é o `1 + puxao` de antes.
   const direita = vao === 0 ? Math.round(livre * m.dpr) / m.dpr : livre
   const escalaX = (m.x.right + xdx - direita - vao) / m.x.width
-  const visivel = m.lupa.left + (m.pilula.left - m.lupa.left) * p
+  // A borda corre no esticão da busca sem filtro (calha aos 0,7): em linha
+  // reta com a mola ela só chegava aos 408ms, e a cápsula parecia arrastada.
+  const visivel = lerp(m.lupa.left, m.pilula.left, esticao(p))
   const largura = Math.max(0, direita - visivel)
   const emenda = R * pinca
   // Mais estreita que os dois cantos, a fatia visível encolheria os quatro
   // raios juntos no CSS. Só o raio horizontal cabe na largura; o vertical
   // fica, e a emenda segue casando com a do ×.
   const cabe = Math.min(1, largura / (R + emenda))
-  // O fantasma da lupa anda com a borda visível (`visivel - lupa.left`): o
-  // centro dele e o da lupa da pílula (o recuo de 14 e meia lupa de 16) caem
-  // juntos, e as duas se trocam no lugar.
-  return { R, Rh: R * cabe, dx: direita - m.pilula.right, esquerda: m.pilula.width - largura,
-    lupaDx: (m.pilula.left - m.lupa.left) * p,
+  const dx = direita - m.pilula.right, esquerda = m.pilula.width - largura
+  // O fantasma da lupa anda com a borda pintada: o centro dele e o da lupa da
+  // pílula (o recuo de 14 e meia lupa de 16) caem juntos, e as duas se trocam
+  // no lugar. Fundida, a caixa da pílula fica até 8px à direita (`dx`) e só
+  // ela pinta: o recorte chega à calha aos 0,7, a borda pintada assenta nela
+  // conforme o vão abre.
+  return { R, Rh: R * cabe, dx, esquerda,
+    lupaDx: m.pilula.left + dx + Math.max(0, esquerda) - m.lupa.left,
     topo: (m.lupa.top - m.pilula.top) * resto, base: (m.pilula.bottom - m.lupa.bottom) * resto,
     emenda, emendaH: emenda * cabe, puxao, escalaX, vao, xdx, xdy,
     icone: suave(q, ICONE), conteudo: suave(q, CONTEUDO), tinta: 1 - suave(q, TINTA) }
@@ -272,6 +277,8 @@ function quadroDasBolhas(
  * pílula de 0,5 a 0,8, o conteúdo acende de 0,55 a 0,85 e o X de 0,7 a 1.
  */
 const ESTICA = 0.7
+/** O quanto a borda esquerda do campo andou da lupa à calha: inteira aos 0,7; o passe vem só da mola. Os dois gestos o dividem. */
+const esticao = (p: number) => Math.min(p / ESTICA, 1) + Math.max(0, p - 1)
 const PONTA = [0.15, 0.75] as const
 const GOTA = [0.45, 1] as const
 const LUPA_TROCA = [0.5, 0.8] as const
@@ -294,7 +301,7 @@ const GOTA_NASCE = 0.35
  */
 function quadroDaGota(m: { lupa: Caixa; pilula: Caixa; x: Caixa; dpr: number }, p: number) {
   const R = m.pilula.height / 2
-  const esquerda = lerp(m.lupa.left, m.pilula.left, Math.min(p / ESTICA, 1) + Math.max(0, p - 1))
+  const esquerda = lerp(m.lupa.left, m.pilula.left, esticao(p))
   const livre = lerp(m.lupa.right, m.pilula.right, suave(p, PONTA))
   const g = suave(p, GOTA)
   const r = R * Math.min(1, GOTA_NASCE + g)
