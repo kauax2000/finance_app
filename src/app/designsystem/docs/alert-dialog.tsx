@@ -228,7 +228,7 @@ export default function AlertDialogDoc() {
       </DocNote>
 
       <DocNote title="A superfície é a do Dialog">
-        Veste <code>dialogContentVariants</code>, com o mesmo <code>size</code> (padrão <code>md</code>), e um teto de altura com rolagem que uma confirmação curta nunca alcança — é para a que leva o campo de digitar, quando o teclado do telefone sobe. Não há <code>layout=&quot;fixed&quot;</code>: confirmação com corpo rolável não é confirmação. O movimento também é o dele: do <code>md</code> para cima brota do centro no gesto dos menus e recolhe nele; abaixo, abre na mola.
+        Veste <code>dialogContentVariants</code>, com o mesmo <code>size</code> (padrão <code>md</code>), e um teto de altura com rolagem que uma confirmação curta nunca alcança — é para a que leva o campo de digitar, quando o teclado do telefone sobe. Não há <code>layout=&quot;fixed&quot;</code>: confirmação com corpo rolável não é confirmação.
       </DocNote>
 
       <DocNote title="AlertDialog interrompe">

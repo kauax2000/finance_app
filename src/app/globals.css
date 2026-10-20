@@ -3130,9 +3130,7 @@
    30ms entre irmãs. As peças são achadas pelo `data-slot`, com ou sem o `<form>` no
    meio (o filho direto da placa costuma ser ele, e animá-lo inteiro lia como um bloco
    só); o corpo com um embrulho só anima os filhos do embrulho. A placa entra pelo
-   `dialogContentVariants`: do `md` para cima brota no `menu-morph`, e a cascata soma
-   `--dialog-reveal-atraso` (150ms ali, 0 no telefone) para começar depois da forma;
-   abaixo, a mola do `tw-animate` (a entrada da paleta) (rodada 353). Só na
+   `tw-animate` do `dialogContentVariants` (a entrada da paleta, rodada 293). Só na
    abertura: terminada a última peça, a placa ganha `data-revealed` (`useRevelacao`)
    e o que entra depois — os campos de outra aba — aparece sem o desfoque. */
 @utility dialog-reveal {
@@ -3140,7 +3138,7 @@
     animation: menu-content-in var(--duration-spring) var(--ease-out) backwards;
     /* A escada escreve do segundo irmão em diante; a primeira peça da onda sai na base. */
     animation-delay: var(--stagger-base);
-    --stagger-base: calc(var(--dialog-reveal-atraso, 0ms) + 40ms);
+    --stagger-base: 40ms;
     --stagger-step: 30ms;
     --stagger-cap: 3;
     @apply stagger-ladder;
@@ -3151,7 +3149,7 @@
     animation: menu-content-in var(--duration-spring) var(--ease-out) backwards;
     /* A escada escreve do segundo irmão em diante; a primeira peça da onda sai na base. */
     animation-delay: var(--stagger-base);
-    --stagger-base: calc(var(--dialog-reveal-atraso, 0ms) + 90ms);
+    --stagger-base: 90ms;
     --stagger-step: 30ms;
     --stagger-cap: 6;
     @apply stagger-ladder;
@@ -3160,7 +3158,7 @@
     animation: menu-content-in var(--duration-spring) var(--ease-out) backwards;
     /* A escada escreve do segundo irmão em diante; a primeira peça da onda sai na base. */
     animation-delay: var(--stagger-base);
-    --stagger-base: calc(var(--dialog-reveal-atraso, 0ms) + 200ms);
+    --stagger-base: 200ms;
     --stagger-step: 30ms;
     --stagger-cap: 2;
     @apply stagger-ladder;

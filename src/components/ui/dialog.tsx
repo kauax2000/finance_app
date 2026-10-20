@@ -369,20 +369,13 @@ const dialogContentVariants = cva(
     "rounded-modal text-sm shadow-lg ring-1 ring-foreground/10 outline-none [--radius-parent:var(--radius-modal)] [--radius-inset:var(--dialog-px)]",
     // A placa é o material da casa, no mesmo par de alfa das superfícies flutuantes.
     modalSurfaceClassName,
-    // Do `md` para cima a placa brota do próprio centro no gesto dos menus
-    // (`menu-morph`, e recolhe no `menu-unmorph`), chegando ao raio do modal; o
-    // dono escolheu o gesto dos menus no desktop (rodada 353). Os keyframes animam
-    // `transform`, e o centramento é a propriedade `translate`: não brigam.
-    "md:origin-center [--morph-radius:var(--radius-modal)]",
-    "md:data-open:[animation:menu-morph_380ms_linear_backwards] md:data-closed:[animation:menu-unmorph_210ms_linear_both]",
-    // Abaixo do `md` fica a entrada da paleta (`CommandDialog`): abre na mola e
-    // fecha curto em `--ease-out` (uma mola até zero passa por baixo de zero).
-    "max-md:data-open:animate-in max-md:data-open:fade-in-0 max-md:data-open:zoom-in-95 max-md:data-open:animation-duration-(--duration-spring) max-md:data-open:ease-(--ease-spring) max-md:data-open:slide-in-from-top-1",
-    "max-md:data-closed:animate-out max-md:data-closed:fade-out-0 max-md:data-closed:zoom-out-95 max-md:data-closed:animation-duration-(--duration-fast) max-md:data-closed:ease-(--ease-out)",
-    // O conteúdo chega aos poucos atrás, peça a peça, do desfoque (`@utility
-    // dialog-reveal`); no desktop a cascata espera a forma crescer.
+    // A entrada da paleta (`CommandDialog`): abre na mola e fecha curto em
+    // `--ease-out` (uma mola até zero passa por baixo de zero). O gesto do menu
+    // fica para o que se ancora num gatilho (rodada 293). O conteúdo chega aos
+    // poucos atrás, peça a peça, do desfoque (`@utility dialog-reveal`).
+    "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring) data-open:slide-in-from-top-1",
+    "data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-closed:animation-duration-(--duration-fast) data-closed:ease-(--ease-out)",
     "dialog-reveal",
-    "md:[--dialog-reveal-atraso:150ms]",
     // O recuo do diálogo é um, 24px (o `px-6` que vinte chamadas já escreviam).
     "[--dialog-px:--spacing(6)]",
     // O teto de altura do `fixed` vai em variável, para uma tela alta subi-lo.
@@ -427,7 +420,7 @@ const dialogContentVariants = cva(
  * última peça termina de surgir, a placa ganha `data-revealed` e a regra sai. Sem
  * isso, o que entra depois — os campos de outra aba do formulário — surgia do
  * desfoque de novo a cada troca. A marca zera quando a placa termina de sair
- * (`exit` no telefone, `menu-unmorph` no desktop): quem chama o diálogo costuma ficar montado entre uma abertura e outra
+ * (`exit`): quem chama o diálogo costuma ficar montado entre uma abertura e outra
  * (o formulário de lançamento é da casca), e sem zerar só a primeira abertura
  * chegava aos poucos.
  */
@@ -435,7 +428,7 @@ function useRevelacao(onAnimationEnd?: React.AnimationEventHandler<HTMLDivElemen
   const [revelado, setRevelado] = React.useState(false)
   const aoTerminar = (e: React.AnimationEvent<HTMLDivElement>) => {
     onAnimationEnd?.(e)
-    if (e.target === e.currentTarget && (e.animationName === "exit" || e.animationName === "menu-unmorph")) {
+    if (e.target === e.currentTarget && e.animationName === "exit") {
       setRevelado(false)
       return
     }

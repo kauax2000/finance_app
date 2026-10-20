@@ -377,10 +377,6 @@ export default function DialogDoc() {
           Ela veste <code>modalSurfaceClassName</code>: <code>--background</code> a 85%, e 50% no escuro onde há borrão — mais aberta que a flutuante (<code>--popover</code> 85/60) justamente porque pousa sobre um véu. <code>--popover</code> leria como opaco sobre a página velada. O borrão vê o véu mais a página, então para um efeito mais visível mexa no véu, não na placa.
       </DocNote>
 
-      <DocNote title="Brota do centro, como os menus">
-          Do <code>md</code> para cima a placa nasce no centro com o gesto dos menus (<code>menu-morph</code>, 380ms) até o raio do modal, e recolhe nele ao fechar (<code>menu-unmorph</code>, 210ms). O conteúdo chega peça a peça, do desfoque, depois da forma: <code>--dialog-reveal-atraso</code> soma 150ms à cascata. Abaixo do <code>md</code> continua a mola de antes (<code>zoom-in-95</code>), e a gaveta é do <code>vaul</code>.
-      </DocNote>
-
       <DocNote title="O cabeçalho reserva o lugar do ×">
           O × é <code>absolute</code>; o título e a coluna do adorno desviam do território dele sozinhos, e só quando ele existe (<code>showCloseButton={"{false}"}</code> devolve a largura). Sem isso, um título longo passa por baixo do botão.
       </DocNote>

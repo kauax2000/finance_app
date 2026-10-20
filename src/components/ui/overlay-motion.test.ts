@@ -40,21 +40,11 @@ describe("O movimento do que se sobrepõe à tela", () => {
       expect(u, nome).toMatch(/\[data-state="open"\][^{]*\{\s*animation: menu-morph 380ms linear backwards;/)
       expect(u, nome).toMatch(/\[data-state="closed"\][^{]*\{\s*animation: menu-unmorph 210ms linear both;/)
     }
-    // O diálogo (e o `AlertDialog`, que veste a moldura dele) brota do centro no
-    // desktop, com o raio do modal; a cascata do conteúdo espera a forma (rodada 353).
-    // A cascata não anima a forma.
+    // O diálogo (e o `AlertDialog`, que veste a moldura dele) é a exceção, como a
+    // paleta: abre na mola e fecha curto (rodada 293).
     expect(utility("dialog-reveal")).not.toMatch(/menu-morph|menu-unmorph/)
-    expect(ui("dialog")).toContain("md:data-open:[animation:menu-morph_380ms_linear_backwards]")
-    expect(ui("dialog")).toContain("md:data-closed:[animation:menu-unmorph_210ms_linear_both]")
-    expect(ui("dialog")).toContain("md:origin-center")
-    expect(ui("dialog")).toContain("[--morph-radius:var(--radius-modal)]")
-    // Abaixo do `md` fica a entrada de hoje.
-    expect(ui("dialog")).toContain("max-md:data-open:zoom-in-95")
-    expect(ui("dialog")).toContain("max-md:data-closed:zoom-out-95")
-    expect(ui("dialog")).toContain("md:[--dialog-reveal-atraso:150ms]")
-    expect(utility("dialog-reveal")).toContain("calc(var(--dialog-reveal-atraso, 0ms) + 40ms)")
-    expect(utility("dialog-reveal")).toContain("calc(var(--dialog-reveal-atraso, 0ms) + 90ms)")
-    expect(utility("dialog-reveal")).toContain("calc(var(--dialog-reveal-atraso, 0ms) + 200ms)")
+    expect(ui("dialog")).toContain("data-open:zoom-in-95 data-open:animation-duration-(--duration-spring) data-open:ease-(--ease-spring)")
+    expect(ui("dialog")).toContain("data-closed:zoom-out-95 data-closed:animation-duration-(--duration-fast) data-closed:ease-(--ease-out)")
     // A dica também: o Radix escreve `delayed-open`/`instant-open`.
     expect(utility("menu-sprout")).toContain('&[data-state="delayed-open"]')
     for (const peça of ["menubar", "navigation-menu", "tooltip"]) {
@@ -136,7 +126,7 @@ describe("O movimento do que se sobrepõe à tela", () => {
     expect(revela.match(/&\[data-state="open"\]:not\(\[data-revealed\]\)/g)).toHaveLength(5)
     expect(ui("dialog")).toContain('return { "data-revealed": revelado || undefined, onAnimationEnd: aoTerminar }')
     // E zera ao terminar de sair: quem chama fica montado entre aberturas, e só a primeira chegava aos poucos.
-    expect(ui("dialog")).toMatch(/e\.target === e\.currentTarget && \(e\.animationName === "exit" \|\| e\.animationName === "menu-unmorph"\)\) \{\s*setRevelado\(false\)/)
+    expect(ui("dialog")).toMatch(/e\.target === e\.currentTarget && e\.animationName === "exit"\) \{\s*setRevelado\(false\)/)
     expect(ui("alert-dialog")).toContain("const revelacao = useRevelacao(onAnimationEnd)")
   })
 

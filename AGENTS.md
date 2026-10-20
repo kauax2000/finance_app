@@ -1123,13 +1123,10 @@ declaração de `background-color` no trilho).
     `--dialog-bleed` e **empilha ao contrário** (`flex-col-reverse`; quem
     declara `flex-col` o faz de propósito); no dedo os botões dele sobem a 44
     sozinhos. `DialogContent` mantém o `showCloseButton`.
-  - Do `md` para cima brota do centro como os menus: `menu-morph` até o raio
-    do modal (`--morph-radius`), e recolhe no `menu-unmorph` (rodada 353);
-    abaixo do `md` fica a mola de antes, fade e `zoom-in-95`, fechando curto em
-    `--ease-out` (rodada 293). O conteúdo chega aos poucos, peça a peça, do
+  - Abre como a paleta: fade e `zoom-in-95` na mola, fecha curto em
+    `--ease-out` (rodada 293); o conteúdo chega aos poucos, peça a peça, do
     desfoque como as linhas da paleta (`dialog-reveal`: cabeçalho, linhas do
-    corpo, rodapé), e no desktop começa depois da forma
-    (`--dialog-reveal-atraso`, 150ms; 0 no telefone).
+    corpo, rodapé).
     Nascer do ponto do clique saiu (aberto pela barra lateral, surgia da
     esquerda de uma placa centralizada).
     **A altura anda na mola**: quando o conteúdo muda (trocar Despesa,
@@ -1296,12 +1293,9 @@ declaração de `background-color` no trilho).
   dela — e `menu-unmorph` de volta em 210ms. Vestem `DropdownMenu`, `ContextMenu`,
   `Menubar`, `NavigationMenu`, `Select`, `Combobox`, o seletor do `Form`,
   `Popover`, `HoverCard`, `Tooltip` e `DatePicker`; muda só a origem (o botão,
-  o campo, o cursor). **Do `md` para cima o `Dialog` e o `AlertDialog`
-  também brotam**, do centro, com o `menu-morph` (e recolhem com o
-  `menu-unmorph`), e a cascata do conteúdo começa depois da forma
-  (`--dialog-reveal-atraso`); abaixo do `md` eles ficam na mola de antes
-  (rodada 353). A paleta do `CommandDialog` abre na mola (`fade-in-0
-  zoom-in-95`, `--duration-spring`) e fecha curto (`--duration-fast`,
+  o campo, o cursor). **O que é modal e centrado não brota**: a paleta do
+  `CommandDialog`, o `Dialog` e o `AlertDialog` abrem na mola (`fade-in-0
+  zoom-in-95`, `--duration-spring`) e fecham curto (`--duration-fast`,
   `--ease-out`), a pedido do dono (rodadas 291 e 293). **Na paleta quem se
   move são os vidros** (pílula, placa, cápsulas da legenda), nunca a coluna nem
   a fileira da legenda: transform, opacidade ou `filter` animado num ancestral
