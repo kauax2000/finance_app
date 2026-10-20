@@ -919,7 +919,7 @@ function CapsulaQuePinga({
     // O segundo que sai com o foco dentro (a folha dele fechou e devolveu o
     // foco ao gatilho) o passa à lupa antes de a gota ficar inerte — inerte,
     // o foco cairia no `body`.
-    if (alvo === 0 && gota.contains(el.ownerDocument.activeElement)) lupaEl.focus()
+    if (alvo === 0 && gota.contains(el.ownerDocument.activeElement)) lupaEl.querySelector<HTMLElement>("button, a")?.focus()
     const repouso = () => {
       g.current = alvo
       gotaEmRepouso(el, lupaEl, gota, miolo)
@@ -955,7 +955,15 @@ function CapsulaQuePinga({
 
   return (
     <ButtonGroup ref={grupo} data-slot="top-bar-action-group" {...props}>
-      {lupa}
+      {/* A lupa mora num vidro próprio, como a gota: o grupo achata o canto de
+          dentro do vidro (a emenda da cápsula), e o botão de dentro segue
+          redondo, com o realce em círculo como o do filtro. */}
+      <span
+        data-slot="top-bar-action-lupa"
+        className={cn("relative grid shrink-0 place-items-center", TOP_BAR_PLATE, REALCE_DO_VIDRO_NO_MIOLO)}
+      >
+        <TopBarSwapContext value>{lupa}</TopBarSwapContext>
+      </span>
       {segundo ? (
         <span
           data-slot="top-bar-action-drop"

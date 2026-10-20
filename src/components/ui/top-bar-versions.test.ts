@@ -444,7 +444,7 @@ describe("TopBarActionGroup morph", () => {
   })
 
   it("o segundo que sai com o foco dentro o passa à lupa antes de ficar inerte", () => {
-    expect(grupo).toContain("if (alvo === 0 && gota.contains(el.ownerDocument.activeElement)) lupaEl.focus()")
+    expect(grupo).toContain("if (alvo === 0 && gota.contains(el.ownerDocument.activeElement)) lupaEl.querySelector<HTMLElement>(\"button, a\")?.focus()")
   })
 
   it("escreve só nos vidros e nos filhos deles: nada de transform, recorte ou filtro no grupo", () => {
