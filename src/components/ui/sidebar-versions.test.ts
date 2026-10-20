@@ -216,7 +216,7 @@ describe("as versões do Sidebar", () => {
     expect(adicionar).toContain("group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0")
     expect(CODIGO).toContain('"h-12 p-2 group-data-[collapsible=icon]:size-12! group-data-[collapsible=icon]:-m-2 group-data-[collapsible=icon]:p-2"')
     const app = lerFonte("src/components/layout/app-sidebar.tsx")
-    expect(app).toContain('<Sidebar collapsible="icon" variant="floating"')
+    expect(app).toContain('<Sidebar collapsible="icon" variant="floating">')
     expect(app).not.toContain('<Sidebar collapsible="icon" variant="sidebar">')
     expect(app).not.toContain("group-data-[collapsible=icon]:overflow-y-auto")
     expect(lerFonte("src/components/layout/workspace-switcher.tsx")).not.toContain("group-data-[collapsible=icon]:h-12")

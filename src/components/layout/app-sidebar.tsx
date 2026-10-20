@@ -63,7 +63,7 @@ export function AppSidebar() {
     const settingsActive = ativo(SETTINGS_NAV_ITEM.href)
 
     return (
-        <Sidebar collapsible="icon" variant="floating" data-recuo-regiao="">
+        <Sidebar collapsible="icon" variant="floating">
             {/*
               Never gate children with isMobile: <Sidebar> already renders a Sheet on mobile,
               but empty children meant the drawer had no links (Configurações appeared to do nothing).
