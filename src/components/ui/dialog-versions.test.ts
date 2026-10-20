@@ -21,6 +21,11 @@ describe("as versões do Dialog", () => {
     expect(gancho).toMatch(/transitionend[\s\S]*transitioncancel/)
   })
 
+  it("o fechamento pelo menu-unmorph também zera a revelação", () => {
+    const bloco = CODIGO.slice(CODIGO.indexOf("function useRevelacao"), CODIGO.indexOf("function DialogContent"))
+    expect(bloco).toContain('e.animationName === "exit" || e.animationName === "menu-unmorph"')
+  })
+
   it("todo pedido de fechar passa pela trava: salvando não fecha, alterado pergunta", () => {
     expect(CODIGO).toMatch(/const pedir = \(proximo: boolean\) => \{\s*if \(proximo\) return mudar\(true\)\s*if \(pending\) \{\s*destino\.current = null\s*return\s*\}\s*if \(dirty && confirmDiscard\) \{/)
     // A raiz entrega `pedir`, e não o `onOpenChange` cru, aos dois ramos.
