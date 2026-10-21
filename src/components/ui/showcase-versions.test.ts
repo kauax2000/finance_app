@@ -277,6 +277,16 @@ describe("Showcase — o fonte", () => {
     expect(doApp.filter((i) => !i.includes("/scene-context"))).toEqual(['from "@/components/auth/showcase/auth-showcase"'])
   })
 
+  it("a seção No app escolhe a cena por família e passo: nenhum eixo com as 17, nenhum com mais de 6", () => {
+    // Um ToggleGroup não quebra linha: as 17 pílulas numa fileira passavam de 2800px e a página rolava de lado.
+    expect(DOC).not.toMatch(/valores=\{CENAS\}/)
+    const cenas = [...(DOC.match(/const CENAS = \[([^]*?)\]/)?.[1] ?? "").matchAll(/"([\w.-]+)"/g)].map((m) => m[1])
+    expect(cenas).toHaveLength(17)
+    const porFamilia = Object.groupBy(cenas, (c) => c.split(".")[0])
+    expect(Object.keys(porFamilia).sort()).toEqual(["invite", "login", "recovery", "register"])
+    for (const [familia, passos] of Object.entries(porFamilia)) expect(passos?.length, familia).toBeLessThanOrEqual(6)
+  })
+
   it("a página só usa o que o componente oferece: nada de motion (camada do app)", () => {
     expect(DOC).not.toMatch(/from ["']motion/)
   })
