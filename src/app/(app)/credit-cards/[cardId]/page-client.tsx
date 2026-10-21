@@ -817,6 +817,8 @@ export default function CreditCardDetailPageClient() {
                 onInvoicePaymentChanged={refreshInvoicePayments}
                 transactionsHref={transactionsHrefForCreditCard(card.id)}
                 invoiceTransactions={invoicePostedTransactions}
+                cardTransactions={ccAnalyticsRows}
+                onCardTransactionsChanged={load}
                 invoicePostedTotalInPeriod={invoicePostedTotalInPeriod}
                 invoicePostedDisplayCap={INVOICE_POSTED_TX_DISPLAY_CAP}
                 invoicePeriodYm={invoicePeriodYm}

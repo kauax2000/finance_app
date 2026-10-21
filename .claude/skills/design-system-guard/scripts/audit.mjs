@@ -263,6 +263,9 @@ function walk(target, acc = []) {
   const st = statSync(target)
   if (st.isFile()) {
     if (!/\.(tsx|ts)$/.test(target) || /\.test\.tsx?$/.test(target)) return acc
+    // O wireframe é de propósito fora do design system (AGENTS.md, "Funcionalidade
+    // nova entra em wireframe"): exceção nomeada, e a revisão da tela o apaga.
+    if (target.replaceAll("\\", "/").includes("components/wireframe/")) return acc
     // Arquivo gerado não tem autor a quem cobrar: o achado pertence à fonte, e
     // consertá-lo aqui é apagado no próximo `npm run ds:docs-map`.
     if (/^\/\/ GERADO POR/.test(readFileSync(target, "utf8").slice(0, 40))) return acc

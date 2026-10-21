@@ -9,6 +9,7 @@ import type { CardCycleSnapshot } from "@/lib/credit-card-billing"
 import { formatDatePtBr } from "@/lib/credit-card-billing"
 import {
     CC_DETAIL_INVOICE_POSTED_EMPTY_MESSAGE,
+    type CcTxAnalyticsRow,
     formatCcDetailInvoicePostedShowingFooter,
 } from "@/lib/credit-cards-workspace-transactions"
 import type { Transaction } from "@/lib/supabase"
@@ -17,6 +18,7 @@ import { DashboardRecentTransactions } from "@/components/dashboard/dashboard-re
 import { CreditCardInvoiceAnalyticsPanel } from "@/components/credit-cards/credit-card-invoice-analytics-panel"
 import { CreditCardFaceTilt } from "@/components/credit-cards/credit-card-face-tilt"
 import { RegisteredCreditCardFace } from "@/components/credit-cards/registered-credit-card-face"
+import { ConferirFaturaWireframe } from "@/components/wireframe/conferir-fatura-wireframe"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -61,6 +63,10 @@ export type CreditCardDetailViewProps = {
     invoiceAnalytics: CreditCardInvoiceAnalytics | null
     transactionsHref: string
     invoiceTransactions: Transaction[]
+    /** Todos os lançamentos do cartão carregados (despesas e estornos), para conferir a fatura. */
+    cardTransactions?: CcTxAnalyticsRow[]
+    /** Recarrega os lançamentos do cartão depois de uma importação. */
+    onCardTransactionsChanged?: () => void | Promise<void>
     /** Total de despesas postadas na janela da fatura (antes do limite de exibição). */
     invoicePostedTotalInPeriod: number
     invoicePostedDisplayCap: number
@@ -89,6 +95,8 @@ export function CreditCardDetailView({
     invoiceAnalytics,
     transactionsHref,
     invoiceTransactions,
+    cardTransactions = [],
+    onCardTransactionsChanged,
     invoicePostedTotalInPeriod,
     invoicePostedDisplayCap,
     invoicePeriodYm,
@@ -341,6 +349,16 @@ export function CreditCardDetailView({
                         cycleOffsetBounds={cycleOffsetBounds}
                         onCycleOffsetChange={onCycleOffsetChange}
                         onInstallmentPlanPress={onInstallmentPlanPress}
+                    />
+                ) : null}
+
+                {workspaceId && userId ? (
+                    <ConferirFaturaWireframe
+                        card={card}
+                        transactions={cardTransactions}
+                        workspaceId={workspaceId}
+                        userId={userId}
+                        onMudou={onCardTransactionsChanged}
                     />
                 ) : null}
 
