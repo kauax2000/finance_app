@@ -15,8 +15,7 @@ Includes:
 | Function | Purpose |
 |----------|---------|
 | `push-subscribe` / `push-unsubscribe` | Device Web Push registration |
-| `dispatch-notifications` | Client-triggered system notifications |
-| `notify-transaction-created` | **Database webhook** — alerts other members on manual expense in shared workspace |
+| `notify-transaction-created` | Alerts other members on a manual expense in a shared workspace; called by the `transactions_notify_created` trigger (`pg_net`), not by the app |
 | `evaluate-budgets`, `evaluate-credit-card-alerts`, `credit-card-calendar-alerts`, `evaluate-bills-reminders` | Scheduled / invoked producers |
 
 ## Secrets (Supabase Edge Functions → Secrets)
@@ -26,8 +25,8 @@ Includes:
 | `VAPID_PUBLIC_KEY` | Same value as client `NEXT_PUBLIC_VAPID_PUBLIC_KEY` |
 | `VAPID_PRIVATE_KEY` | Web Push signing (never in repo / Vercel) |
 | `VAPID_SUBJECT` | e.g. `mailto:support@yourdomain.com` |
-| `SUPABASE_SERVICE_ROLE_KEY` | Used by `notify-transaction-created` auth |
-| `NOTIFY_INTERNAL_SECRET` | Optional; send as `x-notify-internal-secret` from Database Webhook |
+| `SUPABASE_SERVICE_ROLE_KEY` | Used by `notify-transaction-created` auth (Bearer, until the old Database Webhook is removed) |
+| `CRON_SECRET` | Sent as `x-cron-secret` by the crons and by the expense trigger; same value as the `cron_secret` Vault secret |
 | `APP_BASE_URL` | Production app origin for email links |
 
 Client (Vercel + `.env.local`):
@@ -52,18 +51,17 @@ supabase db push
 
 The notification tables (`push_subscriptions`, `notify_push`, the dedupe tables) live in the baseline: [`supabase/migrations/00000000000000_baseline.sql`](migrations/00000000000000_baseline.sql).
 
-## Database Webhook (required for member expense alerts)
+The migration `20261021120000_internal_edge_dispatch.sql` holds the calls to the Edge Functions: `public.invoke_edge_function` (reads the Vault secrets `edge_functions_url` and `cron_secret`; with either missing it does nothing), the two daily crons and the trigger `transactions_notify_created`. It needs `pg_cron`, `pg_net` and Vault (Database → Extensions).
 
-After deploying `notify-transaction-created`:
+## Aviso de despesa: trigger, não Webhook
 
-1. **Supabase Dashboard → Database → Webhooks → Create**
-2. **Table:** `public.transactions`
-3. **Events:** `INSERT`
-4. **Target:** Edge Function `notify-transaction-created`  
-   — or HTTP POST to `/functions/v1/notify-transaction-created` with body `{ "transaction_id": "{{ record.id }}" }`
-5. **Auth:** `Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>`
-
-The webhook is Dashboard configuration, invisible to migrations (see the note at the end of [`00000000000000_baseline.sql`](migrations/00000000000000_baseline.sql)).
+A despesa manual avisa os outros membros pelo trigger `transactions_notify_created`
+(`AFTER INSERT` em `public.transactions`, só despesa sem assinatura nem parcela),
+que chama `notify-transaction-created` por `pg_net` com o cabeçalho
+`x-cron-secret`. Depois da publicação não há Database Webhook no Dashboard, e o app não
+chama mais a função: uma despesa lançada offline avisa quando a fila a insere. O trigger
+nunca derruba o `insert`: sem segredo no Vault ou com falha de rede, a despesa
+é salva e o aviso se perde.
 
 ## iPhone PWA push checklist
 
@@ -85,36 +83,72 @@ The webhook is Dashboard configuration, invisible to migrations (see the note at
 
 Automated unit tests: `npm run test:unit` (`transaction-notify-rules`, `notification-href`).
 
-## Publicar a revisão de 2026-10-17
+## Publicar o Bloco 1 (alertas confiáveis)
 
-Revisão dos textos e das regras de disparo (desenho em
-`docs/superpowers/specs/2026-10-17-notificacoes-redesign-design.md`, seção C).
-Está no repositório, testada (`npm run test:edge`), e **não foi publicada**.
-Não há migração nova: só funções e os dois crons.
+Reúne a revisão dos textos e das regras de disparo (2026-10-17, desenho em
+`docs/superpowers/specs/2026-10-17-notificacoes-redesign-design.md`, seção C),
+os crons e o aviso de despesa no banco, e o backup semanal. Está no
+repositório, testado, e **não foi publicado**. Faça na ordem. Todo SQL abaixo
+leva marcadores: troque-os no SQL Editor e **nunca** salve o SQL preenchido no
+repositório (ele é público).
 
-### 1. As funções, nesta ordem
+### 1. Secrets das Edge Functions
 
-O `_shared` vai embutido em cada função no deploy: **toda função que importa
-um módulo mudado do `_shared` precisa ser publicada de novo**, ou continua com a
-cópia antiga. Os módulos mudados são `notification-copy.ts`,
-`notification-schedule.ts`, `deliver-notification.ts`, `notification-types.ts`,
-`credit-card-cycle.ts` e `formatters.ts`; quem os importa, direto ou por outro
-módulo, são estas sete funções:
+`CRON_SECRET` já existe (Edge Functions → Secrets): é o valor que o passo 2
+repete no Vault. `NOTIFY_INTERNAL_SECRET` fica sem uso e pode ser **apagado
+depois do passo 6**.
 
-```bash
-supabase functions deploy evaluate-budgets
-supabase functions deploy evaluate-credit-card-alerts
-supabase functions deploy credit-card-calendar-alerts
-supabase functions deploy evaluate-bills-reminders
-supabase functions deploy notify-transaction-created
-supabase functions deploy workspace-invites-accept
-supabase functions deploy dispatch-notifications
+### 2. Vault (SQL Editor)
+
+Precisa das extensões `pg_cron` e `pg_net` ligadas (Database → Extensions).
+
+- `<PROJECT_REF>`: o ref do projeto;
+- `<CRON_SECRET>`: o mesmo valor do secret `CRON_SECRET` do passo 1.
+
+```sql
+select vault.create_secret('https://<PROJECT_REF>.supabase.co/functions/v1', 'edge_functions_url');
+select vault.create_secret('<CRON_SECRET>', 'cron_secret');
 ```
 
-A ordem não quebra nada (nenhuma função chama outra e o banco não muda); o
-`dispatch-notifications` fica por último porque é o que passa a recusar
-pedidos. As outras (`activity-logs`, `delete-user`, `push-*`,
-`run-recurring-billing`, `sessions`, `workspace-invites-create`,
+A URL não leva barra final. Para trocar um valor depois, use
+`vault.update_secret` (o `id` sai de `select id, name from vault.secrets;`).
+
+### 3. Migração
+
+```bash
+supabase db push
+```
+
+A migração `20261021120000_internal_edge_dispatch.sql` agenda os dois crons
+(`credit-card-calendar-alerts-daily` e `bills-reminders-daily`, às `0 12 * * *`:
+12:00 UTC, 09:00 em Brasília; o dia das funções é o de `America/Sao_Paulo`) e
+**substitui** os de mesmo nome que existirem, inclusive os criados à mão pelo
+SQL antigo deste documento. Também cria o trigger. Conferir:
+
+```sql
+select jobname, schedule from cron.job;
+select tgname from pg_trigger where tgname = 'transactions_notify_created';
+```
+
+O primeiro mostra os dois jobs; o segundo devolve uma linha.
+
+### 4. Funções
+
+O `_shared` vai embutido em cada função no deploy: **toda função que importa
+um módulo mudado do `_shared` precisa ser publicada de novo**, ou continua com
+a cópia antiga. Os módulos mudados são `notification-copy.ts`,
+`notification-schedule.ts`, `deliver-notification.ts`, `notification-types.ts`,
+`credit-card-cycle.ts` e `formatters.ts`, e a `notify-transaction-created`
+também mudou a autenticação (aceita `x-cron-secret`).
+
+```bash
+supabase functions deploy evaluate-budgets evaluate-credit-card-alerts credit-card-calendar-alerts evaluate-bills-reminders notify-transaction-created workspace-invites-accept
+supabase functions delete dispatch-notifications
+```
+
+A `dispatch-notifications` saiu do repositório (ninguém a chama): o `delete`
+tira a cópia publicada. As outras funções (`activity-logs`, `delete-user`,
+`push-*`, `run-recurring-billing`, `sessions`, `workspace-invites-create`,
 `workspace-invites-resend`) não importam nada que mudou.
 
 O que muda em cada uma:
@@ -125,66 +159,63 @@ O que muda em cada uma:
 | `evaluate-credit-card-alerts` | O limite usado soma a fatura aberta e a última fechada ainda não paga (`credit_card_invoice_payments`); texto com valores e disponível. |
 | `credit-card-calendar-alerts` | Texto com o valor da fatura; não avisa fatura zerada nem vencimento já pago; "fechou" sai no dia seguinte ao fechamento; "fecha/vence em 3 dias" vale também com 2 (tolera um dia de cron perdido); só o interruptor "Cartões: fatura e vencimento" o desliga. |
 | `evaluate-bills-reminders` | Texto com valor; a conta atrasada avisa no 1º dia de atraso e depois a cada 7 dias, e não todo dia (tolera um dia de cron perdido: o aviso da janela sai no 1º ou no 2º dia dela, uma vez só). |
-| `notify-transaction-created` | O valor da despesa sai no formato novo ("R$ 1.234,56" escrito à mão, sem o `Intl` do runtime) e o link passa pela checagem nova. |
+| `notify-transaction-created` | O valor da despesa sai no formato novo ("R$ 1.234,56" escrito à mão, sem o `Intl` do runtime), o link passa pela checagem nova, e a autenticação passa a ser o `x-cron-secret` do trigger (o Bearer da chave de serviço segue aceito até o passo 5). |
 | `workspace-invites-accept` | O link do aviso de convite aceito passa pela checagem nova (recusa `\`, caractere de controle e `//`). |
-| `dispatch-notifications` | Só aceita `type: "system"` com um `kind` da lista fechada (vazia hoje): o resto recebe 400. O cliente já não chama esta função. |
 
 Logo depois da publicação, uma conta já atrasada pode receber o aviso de
 atraso mais uma vez (a chave de deduplicação mudou de formato).
 
-### 2. Os crons (SQL Editor do projeto)
+### 5. Remover o Database Webhook
 
-Precisa das extensões `pg_cron` e `pg_net` ligadas (Database → Extensions).
+Em Dashboard → Database → Webhooks, apague o webhook de `transactions`. Senão
+cada despesa avisa duas vezes (a deduplicação segura, mas a função roda à toa).
 
-O calendário do cartão e as contas não estão agendados nas migrações: o
-agendamento chama a função por HTTP com segredos do projeto, que não entram no
-repositório. Rode no SQL Editor, trocando os marcadores — e **nunca** salve o
-SQL preenchido no repositório:
+### 6. Teste de fumaça
 
-- `<PROJECT_REF>`: o ref do projeto;
-- `<CRON_SECRET>`: o secret `CRON_SECRET` das Edge Functions — é o que as duas
-  funções conferem (`x-cron-secret`);
-- `<SERVICE_ROLE_KEY>`: a chave de serviço do projeto (o `verify_jwt` dessas
-  funções está desligado em `config.toml`; o cabeçalho cobre quem religá-lo no
-  Dashboard).
+1. A outra pessoa lança uma despesa numa carteira compartilhada e o aviso chega.
+2. No SQL Editor, `select * from net._http_response order by created desc limit 5;`
+   mostra status 200 para a chamada.
+3. No dia seguinte, `select * from cron.job_run_details order by start_time desc limit 10;`
+   mostra as duas execuções das 12:00 UTC com `succeeded`.
 
-`0 12 * * *` é 12:00 UTC, 09:00 em Brasília (o dia das funções é o de
-`America/Sao_Paulo`).
+Passou? Apague o secret `NOTIFY_INTERNAL_SECRET` das Edge Functions.
 
-```sql
-select cron.unschedule(jobid) from cron.job
-where jobname in ('credit-card-calendar-alerts-daily', 'bills-reminders-daily');
+### 7. Backup semanal
 
-select cron.schedule(
-  'credit-card-calendar-alerts-daily', '0 12 * * *',
-  $cmd$
-  select net.http_post(
-    url := 'https://<PROJECT_REF>.supabase.co/functions/v1/credit-card-calendar-alerts',
-    headers := jsonb_build_object(
-      'Content-Type', 'application/json',
-      'Authorization', 'Bearer <SERVICE_ROLE_KEY>',
-      'x-cron-secret', '<CRON_SECRET>'
-    ),
-    body := '{}'::jsonb
-  )
-  $cmd$
-);
+O workflow `.github/workflows/backup-db.yml` roda aos domingos, 06:00 UTC, e
+sob demanda. Guarda o `pg_dump` cifrado como artefato por 90 dias.
 
-select cron.schedule(
-  'bills-reminders-daily', '0 12 * * *',
-  $cmd$
-  select net.http_post(
-    url := 'https://<PROJECT_REF>.supabase.co/functions/v1/evaluate-bills-reminders',
-    headers := jsonb_build_object(
-      'Content-Type', 'application/json',
-      'Authorization', 'Bearer <SERVICE_ROLE_KEY>',
-      'x-cron-secret', '<CRON_SECRET>'
-    ),
-    body := '{}'::jsonb
-  )
-  $cmd$
-);
-```
+1. Em GitHub → Settings → Secrets and variables → Actions, cadastre:
+   - `SUPABASE_DB_URL`: a connection string do **pooler em modo sessão**
+     (Dashboard → Connect). Use o pooler, e não o host direto
+     `db.<PROJECT_REF>.supabase.co`: o runner do GitHub não tem IPv6 e o host
+     direto falha;
+   - `BACKUP_PASSPHRASE`: longa e aleatória (40 caracteres ou mais), guardada
+     **também fora do GitHub** (gerenciador de senhas). Sem ela o backup não
+     abre, e o repositório é **público**: os artefatos de um repositório
+     público podem ser baixados por qualquer conta logada no GitHub, e só a
+     cifra os protege.
+2. Em Actions → "Backup semanal do banco" → **Run workflow**, rode uma vez.
+3. **Verifique o backup uma vez**: baixe o artefato `backup-db`, decifre e liste.
 
-Conferir: `select jobname, schedule from cron.job;` e, no dia seguinte,
-`select * from cron.job_run_details order by start_time desc limit 10;`.
+   ```bash
+   gpg -d backup-AAAA-MM-DD.dump.gpg > backup.dump
+   pg_restore --list backup.dump
+   ```
+
+   A lista de tabelas tem de sair completa.
+4. Para restaurar:
+
+   ```bash
+   gpg -d backup-AAAA-MM-DD.dump.gpg | pg_restore --no-owner -d "<DB_URL_DESTINO>"
+   ```
+
+O GitHub **desliga os workflows agendados** de um repositório sem atividade por
+60 dias. De vez em quando abra a aba Actions: se o agendamento estiver
+desligado, religue-o ("Enable workflow") ou rode o workflow à mão.
+
+### 8. Ordem com o front
+
+Publique o front (o que tirou a chamada do cliente a `notify-transaction-created`)
+**depois** do passo 3. Antes disso, quem avisa as despesas é o Webhook; o
+passo 5 só vem depois do 3, para nunca haver um intervalo em que nada avisa.

@@ -194,7 +194,7 @@ npm run supabase:deploy:functions
 
 Quando outro membro adiciona uma **despesa manual** em uma carteira compartilhada, os demais membros recebem notificação in-app e push (se habilitados).
 
-**Deploy:** configure o Database Webhook em `public.transactions` (INSERT) → Edge Function `notify-transaction-created`. Detalhes em [`supabase/NOTIFICATION_DEPLOYMENT.md`](supabase/NOTIFICATION_DEPLOYMENT.md).
+**Deploy:** o aviso sai do trigger `transactions_notify_created` (migração `20261021120000_internal_edge_dispatch.sql`, com a URL e o segredo no Vault); não há Webhook no Dashboard. Passo a passo em [`supabase/NOTIFICATION_DEPLOYMENT.md`](supabase/NOTIFICATION_DEPLOYMENT.md).
 
 **Smoke test:** User B adiciona despesa na carteira compartilhada → User A vê central + push no iPhone (PWA instalada).
 

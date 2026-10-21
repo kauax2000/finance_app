@@ -56,9 +56,10 @@ Logo depois das migrações:
 - Front: lê `pay_bill_instance` (140000) e `create_shared_workspace` (150000), e não seleciona mais `token_raw`.
 - Edge Functions alteradas: `_shared` (todas que o importam), `activity-logs`,
   `credit-card-calendar-alerts`, `delete-user` (depende de 130000),
-  `dispatch-notifications`, `evaluate-bills-reminders`, `evaluate-budgets`,
+  `evaluate-bills-reminders`, `evaluate-budgets`,
   `evaluate-credit-card-alerts`, `notify-transaction-created`,
   `push-subscribe`, `push-unsubscribe`, `run-recurring-billing`, `sessions`.
+- `dispatch-notifications` saiu do repositório (ninguém a chama): se ainda estiver publicada, apague-a. O aviso de despesa e os crons são do banco desde a migração `20261021120000`; a ordem está em `supabase/NOTIFICATION_DEPLOYMENT.md`.
 
 ## 4. Conferir
 

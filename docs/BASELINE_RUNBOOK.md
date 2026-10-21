@@ -118,7 +118,7 @@ objeto que o baseline não tem, ou vice-versa). Corrija o arquivo
 ### 6. Deploy das Edge Functions alteradas nas Fases 1–2
 
 ```bash
-npx supabase functions deploy sessions activity-logs delete-user workspace-invites-accept run-recurring-billing credit-card-calendar-alerts evaluate-bills-reminders evaluate-credit-card-alerts notify-transaction-created dispatch-notifications evaluate-budgets workspace-invites-create workspace-invites-resend
+npx supabase functions deploy sessions activity-logs delete-user workspace-invites-accept run-recurring-billing credit-card-calendar-alerts evaluate-bills-reminders evaluate-credit-card-alerts notify-transaction-created evaluate-budgets workspace-invites-create workspace-invites-resend
 ```
 
 ### 7. Smoke tests pós-deploy
