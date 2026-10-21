@@ -7,7 +7,7 @@ import { processTransactionNotification } from '../_shared/process-transaction-n
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type, x-app-session-id, x-notify-internal-secret',
+    'authorization, x-client-info, apikey, content-type, x-app-session-id',
 }
 
 function json(status: number, payload: unknown): Response {
@@ -26,8 +26,7 @@ function bearerToken(authHeader: string | null): string | null {
 function isServiceAuthorized(req: Request): boolean {
   const bearer = bearerToken(req.headers.get('Authorization'))
   if (secretMatches(Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'), bearer)) return true
-  const headerSecret = req.headers.get('x-notify-internal-secret')
-  if (secretMatches(Deno.env.get('NOTIFY_INTERNAL_SECRET'), headerSecret)) return true
+  if (secretMatches(Deno.env.get('CRON_SECRET'), req.headers.get('x-cron-secret'))) return true
   return false
 }
 
