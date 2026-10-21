@@ -3,4 +3,4 @@ Os gastos entram sozinhos: Apple Pay lança na hora, no Android você compartilh
 Envie o PDF da fatura: o app confere com o que foi lançado, inclusive parcelas e estornos, e aponta o que faltou. Se no primeiro mês pago não bater, devolvemos o mês.
 No 1º dia você importa sua planilha e a última fatura, e já começa com seu histórico. O cônjuge vê tudo ou só o total do que é pessoal de cada um; os filhos só lançam e veem o próprio.
 Avisa antes da fatura alta e da conta vencendo, e todo dia 1 mostra o que fez por você no mês.
-Família (até 6 pessoas): R$ 239/ano em até 12x de R$ 19,92; fundadores pagam R$ 199/ano (12x de R$ 16,58), congelado, se assinarem até 31/01/2027. 14 dias grátis sem cartão; se não assinar, sua conta fica em só leitura e você exporta tudo quando quiser; cancela em 1 toque e avisamos 7 dias antes de renovar.
+Família (até 6 pessoas): 12x de R$ 29,90 no cartão (anual); fundadores pagam 12x de R$ 19,90, congelado, se assinarem até 31/01/2027. 14 dias grátis sem cartão; se não assinar, sua conta fica em só leitura e você exporta tudo quando quiser; cancela em 1 toque e avisamos 7 dias antes de renovar.

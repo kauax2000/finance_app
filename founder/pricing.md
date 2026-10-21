@@ -1,50 +1,58 @@
-# Preço (revisão 2 de 21/10: só anual)
+# Preço (versão final de 21/10, aprovada pelo dono)
 
-O dono decidiu três coisas:
-- **não há plano grátis**: o teste é de 14 dias e depois vem a assinatura;
-- **o preço fica entre R$ 19,90 e R$ 29**, porque R$ 14,90 era barato demais;
-- **IA, WhatsApp e infraestrutura usam só planos gratuitos** até a primeira receita.
+## 1. O preço
+**Família: 12x de R$ 29,90 no cartão (R$ 358,80/ano). Cobre a casa inteira, até 6 pessoas.**
+- **Só anual:** o mensal tem churn alto.
+- **Só cartão no lançamento.** A renovação é automática, porque o cartão fica guardado.
+- O Pix avulso ficou fora: não renova sozinho, e cada renovação viraria uma nova venda.
+- O **Pix Automático anual** entra quando o CNPJ completar 6 meses. Também renova sozinho, com desconto pequeno ou nenhum.
 
-## 1. O preço (proposta)
-**Família: R$ 239/ano, em até 12x de R$ 19,92 no cartão, ou à vista no Pix. Cobre a casa inteira, até 6 pessoas. Não há plano mensal** (decisão do dono, por causa do churn).
+| Concorrente | Por ano | Para quem |
+|---|---|---|
+| Organizze Manual | R$ 358,80 | 1 pessoa, só manual |
+| ZapGastos | R$ 358,80 | até 5 pessoas |
+| Optio Pro | R$ 399,90 | 1 pessoa |
+| Organizze Conectado | R$ 478,80 | 1 pessoa |
+| Optio Casal | R$ 599,90 | 2 pessoas |
+| **Família no Controle** | **R$ 358,80** | **até 6 pessoas** |
 
-O 12x mantém a parcela no piso de R$ 19,90 que o dono pediu, que é como a Optio vende o anual dela. A taxa do parcelamento fica com a casa, já no CFO.
+**Risco:** o painel simulado começou a achar caro entre R$ 20 e 25 por mês. Ele avaliou com um plano grátis ao lado, que puxava a âncora para baixo. O preço depende de o teste de 14 dias provar valor (`offer.md` §7). Testar com gente real (§4).
 
-**Por que R$ 239 no anual:**
-- dá R$ 19,92/mês, o piso pedido;
-- custa ~40% do Casal anual da Optio (R$ 599,90);
-- fica abaixo do Organizze Manual (R$ 359/ano) e do ZapGastos para 5 pessoas (R$ 358/ano).
+**Margem (CFO, IA e WhatsApp nos planos gratuitos):**
 
-**O painel simulado (`pricing-curve.md`)** pôs o teto aceitável em ~R$ 25/mês. Ele avaliou a oferta com um plano grátis ao lado, que puxava a âncora para baixo. Sem o grátis, e com a Optio cobrando R$ 39,90–59,90, a âncora sobe. Isso é hipótese e precisa de teste real (§4).
+| Preço por família-mês | Contribuição | Equilíbrio | Lucro no ano 1 | Retorno |
+|---|---|---|---|---|
+| R$ 29,90 | R$ 28,41 | 9 pagantes | R$ 18.898 | mês 6 |
+| R$ 19,90 (Fundadores) | R$ 18,41 | 14 pagantes | R$ 11.148 | mês 8 |
 
-**Margem pelo CFO** (`cfo.md`, custos de serviço zerados no plano gratuito):
-| Preço por família | Contribuição | Equilíbrio | Retorno |
-|---|---|---|---|
-| R$ 19,92 (anual) | R$ 18,62 | 14 pagantes | mês 8 |
+**Caixa:** o Asaas antecipa o parcelado, com custo. Por isso o à vista não faz falta.
 
 ## 2. A escada
-Sem degrau grátis, sem degrau "Individual" e sem mensal. **Um plano só: o Família anual.**
+**Um plano só: o Família anual.** Sem degrau grátis, sem degrau "Individual", sem mensal.
 
-Quem não assina depois do teste fica em **"só leitura"**:
+Sem assinatura, a conta fica em **"só leitura"**:
 - vê tudo;
-- exporta e apaga a conta quando quiser;
-- não lança, não captura e não importa.
+- exporta e apaga quando quiser.
 
 Nada se apaga.
 
+**Perda involuntária** (cartão vencido ou recusado):
+- novas tentativas de cobrança;
+- aviso "atualize seu cartão";
+- 7 dias de tolerância.
+
 ## 3. Oferta de abertura
-- **Fundadores**, até 31/01/2027: **R$ 199/ano (12x de R$ 16,58), congelado enquanto ativo.** Cancelou, perde o preço.
-  - O prazo é real e casa com o início de ano.
-  - Não há preço "de" falso.
-  - O anual de Fundadores (R$ 16,58/mês) fica abaixo do piso de R$ 19,90. É o desconto de quem chega primeiro. Se o dono não quiser, a alternativa é congelar R$ 239/ano para sempre.
+- **Fundadores**, até 31/01/2027: **12x de R$ 19,90 (R$ 238,80/ano), congelado enquanto ativo.** Cancelou, perde o preço.
+  - É 33% sobre um preço real, sem âncora falsa.
+  - Respeita o piso de R$ 19,90.
 - **Teste:** 14 dias, sem cartão. No dia 12, o relatório do teste.
 
 ## 4. O que testar com gente real
-- **Anual:** R$ 199 contra R$ 239, em duas páginas de espera com pré-venda anual reembolsável.
+12x de R$ 29,90 contra 12x de R$ 24,90, em duas páginas de espera com pré-venda reembolsável (7 dias de arrependimento).
 
 ## 5. Objeções de preço do painel (simuladas, não são depoimentos)
 - "Pagar R$ 19,90 por mês para fazer o que a planilha já faz não entra na minha conta." (P002)
 - "Assinatura me dá desconfiança, mesmo com 14 dias sem cartão." (P006)
 - "Até testava o grátis, mas pagar R$ 19,90 por mês não. Não conheço essa empresa." (P018)
 
-A resposta não é preço: é o teste mostrar o valor na própria vida da pessoa (ver `offer.md` §7).
+A resposta não é preço: é o teste mostrar o valor na vida da própria pessoa.

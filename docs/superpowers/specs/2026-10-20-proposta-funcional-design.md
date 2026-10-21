@@ -299,8 +299,14 @@ Detalhe comercial na estratégia §3–§4 e em `founder/pricing.md` e `founder/
 ### Cobrança: Asaas
 - **Checkout** pela Edge `billing-checkout`, criado no servidor. O CPF da pessoa é pedido no checkout, porque o Asaas exige.
 - **Só anual** (decisão do dono, 21/10). O mensal tem churn alto.
-  - **Cartão:** em até 12x sem juros para a pessoa; a taxa do parcelamento fica com a casa.
-  - **Pix:** à vista.
+  - **No lançamento, só cartão**, em 12x sem juros para a pessoa (a taxa do parcelamento fica com a casa).
+    - A **renovação é automática**: o cartão fica guardado no Asaas.
+    - Sem Pix avulso e sem desconto à vista. O Pix avulso não renova sozinho, e cada renovação viraria uma nova venda (decisão do dono, 21/10).
+  - **Perda involuntária** (cartão vencido ou recusado):
+    - novas tentativas automáticas de cobrança;
+    - aviso "atualize seu cartão" por push e e-mail;
+    - 7 dias de tolerância antes de a conta ir para "só leitura".
+  - **Pix Automático anual** entra quando o CNPJ completar 6 meses. Ele também renova sozinho. Desconto pequeno, ou nenhum.
   - A renovação é anual, com o aviso 7 dias antes.
 - **Webhook** `asaas-webhook`, validado pelo `asaas-access-token`, faz upsert do status.
 - **NFS-e automática** em toda cobrança.
@@ -327,8 +333,10 @@ Detalhe comercial na estratégia §3–§4 e em `founder/pricing.md` e `founder/
   - Exportar continua liberado.
 - **Preço na porta.** `/plans` mostra o preço também a quem não entrou.
 - **Preço** (proposta minha dentro da faixa do dono, de R$ 19,90 a R$ 29):
-  - **Família: R$ 239/ano, em até 12x de R$ 19,92** (só anual);
-  - **Fundadores**, até 31/01/2027: **R$ 199/ano (12x de R$ 16,58), congelado enquanto ativo** (`founder = true`). Cancelou, perde o preço.
+  - **Família: 12x de R$ 29,90 no cartão (R$ 358,80/ano)**, só anual;
+  - **Fundadores**, até 31/01/2027: **12x de R$ 19,90 (R$ 238,80/ano), congelado enquanto ativo** (`founder = true`). Cancelou, perde o preço.
+    - É 33% sobre um preço que existe de verdade, sem âncora falsa.
+    - Respeita o piso de R$ 19,90 do dono.
   - O detalhe está em `founder/pricing.md`.
 
 ### Jornada depois da compra ou do início do teste (P14)
@@ -575,8 +583,8 @@ Cada bloco é um projeto com plano próprio. A ordem segue o valor e a dependên
 10. A IA é grátis e sem treino: primeiro o parser, depois a Groq (com ZDR) e, na reserva, a Cloudflare. Sem cota, cai no determinístico.
 11. O plano é do assinante e cobre todas as carteiras dele e as pessoas convidadas, até 5, com a carteira pessoal de cada uma.
 12. Gasto privado só fora do cartão compartilhado. PDF e conferência de cartão ficam só com o titular e o dono.
-13. Preço proposto: R$ 239/ano em até 12x de R$ 19,92.
-14. Fundadores: R$ 199/ano (12x de R$ 16,58), congelado enquanto ativo, até 31/01/2027.
+13. Preço: 12x de R$ 29,90 no cartão (R$ 358,80/ano), aprovado pelo dono em 21/10.
+14. Fundadores: 12x de R$ 19,90, congelado enquanto ativo, até 31/01/2027 (aprovado). Só cartão no lançamento; Pix Automático quando o CNPJ completar 6 meses (decisão do dono).
 15. Anexos: 25 MB por assinante enquanto o Supabase for Free.
 
 **Decidido pelo dono (21/10):**

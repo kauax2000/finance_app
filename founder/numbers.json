@@ -1,7 +1,7 @@
 {
   "business": "App de controle financeiro da família (PWA; plano Família)",
   "unit": "família pagante por mês",
-  "price": 19.92,
+  "price": 29.9,
   "variable": [
     {
       "label": "IA: Cloudflare Workers AI no free tier (não treina)",
@@ -13,7 +13,7 @@
     },
     {
       "label": "Asaas: cartão parcelado 12x ~3,99% + R$0,49 por cobrança, rateado por mês [estimativa]",
-      "cost": 0.84
+      "cost": 1.24
     },
     {
       "label": "NFS-e Asaas R$0,49 por cobrança, mix [estimativa]",

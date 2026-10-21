@@ -43,9 +43,13 @@ O desenho funcional que implementa esta estratégia está em
 - O paywall depois do teste converte ~5× mais que o freemium (RevenueCat 2026: 10,7% contra 2,1%), com retenção parecida.
 - Teste sem cartão não gera cobrança surpresa.
 
-**Família (até 6 pessoas): R$ 239/ano, em até 12x de R$ 19,92 no cartão, ou à vista no Pix. Só anual** (decisão do dono: o mensal tem churn alto).
+**Família (até 6 pessoas): 12x de R$ 29,90 no cartão (R$ 358,80/ano). Só anual e só cartão no lançamento**, com renovação automática (decisões do dono, 21/10).
+- O mensal tem churn alto.
+- O Pix avulso não renova sozinho.
+- O **Pix Automático anual** entra quando o CNPJ completar 6 meses.
+- **Posicionamento do preço:** o mesmo do Organizze Manual (1 pessoa, só lançamento manual), para a casa toda, e cerca de metade do Casal da Optio (R$ 599,90).
 - Inclui tudo: captura, conferência de fatura, previsão, inteligência, papéis, privacidade, divisão e anexos.
-- **Fundadores, até 31/01/2027:** R$ 199/ano (12x de R$ 16,58), congelado enquanto ativo.
+- **Fundadores, até 31/01/2027:** 12x de R$ 19,90 (R$ 238,80/ano), congelado enquanto ativo.
 
 **Sem assinatura, a conta fica em "só leitura".**
 - Vê tudo, **exporta e apaga quando quiser**. Nada se apaga.
@@ -68,7 +72,7 @@ Dois limites pedem atenção:
 - **a Vercel Hobby proíbe uso comercial.** Ao ligar a cobrança, ou Vercel Pro (US$ 20) ou migrar para Cloudflare;
 - **o Supabase Free pausa após 7 dias sem uso e não guarda backup para baixar.** Até o Pro, um `pg_dump` semanal.
 
-Pelo CFO ([`founder/cfo.md`](../../founder/cfo.md)), o equilíbrio fica entre 9 e 14 famílias pagantes, conforme o mix.
+Pelo CFO ([`founder/cfo.md`](../../founder/cfo.md)), o equilíbrio fica em 9 famílias pagantes a R$ 29,90 e em 14 a R$ 19,90 (Fundadores).
 
 ## 4. A oferta e a jornada pós-compra (pontos 14 e 15) — detalhe em [`founder/offer.md`](../../founder/offer.md)
 
