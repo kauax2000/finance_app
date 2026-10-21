@@ -99,4 +99,44 @@ describe("conferirNoCiclo", () => {
         expect(segunda.bate).toHaveLength(2)
         expect(segunda.bate.map((p) => p.banco)).toEqual(expect.arrayContaining(banco))
     })
+
+    describe("parcela do plano, com a data da cobrança no ciclo", () => {
+        const parcela = (k: number) => item("2026-03-05", "LOJA X", 100, { parcela: { k, n: 10 } })
+        const doPlano = (id: string, seq: number | null, date = "2026-09-16"): LancamentoParaConferir => ({
+            ...app(id, date, "LOJA X", 100),
+            installment_sequence: seq,
+        })
+
+        it("casa pela sequência e valor, longe da janela de 3 dias (a)", () => {
+            const r = conferirNoCiclo([parcela(3)], [doPlano("p3", 3)], ciclo)
+            expect(r.bate.map((p) => p.app.id)).toEqual(["p3"])
+            expect(r.faltaNoApp).toEqual([])
+            expect(r.soNoApp).toEqual([])
+        })
+
+        it("sequência diferente vai a 'parcela fora de sequência' (b)", () => {
+            const r = conferirNoCiclo([parcela(3)], [doPlano("p2", 2)], ciclo)
+            expect(r.parcelaForaDeSequencia.map((p) => p.app.id)).toEqual(["p2"])
+            expect(r.bate).toEqual([])
+            expect(r.faltaNoApp).toEqual([])
+        })
+
+        it("entre duas linhas do mesmo valor, escolhe a da sequência certa (c)", () => {
+            const r = conferirNoCiclo([parcela(3)], [doPlano("outra", null, "2026-09-12"), doPlano("p3", 3)], ciclo)
+            expect(r.bate.map((p) => p.app.id)).toEqual(["p3"])
+            expect(r.soNoApp.map((a) => a.id)).toEqual(["outra"])
+        })
+
+        it("item sem parcela nunca usa esta passada (d)", () => {
+            const r = conferirNoCiclo([item("2026-03-05", "LOJA X", 100)], [doPlano("p3", 3)], ciclo)
+            expect(r.bate).toEqual([])
+            expect(r.faltaNoApp).toHaveLength(1)
+            expect(r.soNoApp.map((a) => a.id)).toEqual(["p3"])
+        })
+
+        it("a linha do plano fora do ciclo não é usada", () => {
+            const r = conferirNoCiclo([parcela(3)], [doPlano("antiga", 3, "2026-08-16")], ciclo)
+            expect(r.faltaNoApp).toHaveLength(1)
+        })
+    })
 })
