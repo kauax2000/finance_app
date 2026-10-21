@@ -1,0 +1,182 @@
+import type { SupabaseClient } from "@supabase/supabase-js"
+import { describe, expect, it } from "vitest"
+import { sugerirCategoria } from "./categoria-pelo-historico"
+import {
+    desfazerImportacao,
+    importarLancamentos,
+    linhasDeImportacao,
+    prepararItens,
+    type ItemImportavel,
+} from "./importar"
+import type { ItemBanco } from "./tipos"
+
+const ctx = { userId: "u1", workspaceId: "w1", batchId: "lote1" }
+
+function item(p: Partial<ItemImportavel> = {}): ItemImportavel {
+    return {
+        data: "2026-10-10",
+        descricao: "PADARIA SOL",
+        valor: 30,
+        estorno: false,
+        parcela: null,
+        clientId: "c1",
+        categoryId: "cat1",
+        ...p,
+    }
+}
+
+describe("sugerirCategoria", () => {
+    const historico = [
+        { description: "Padaria Sol", category_id: "antiga", date: "2026-01-01T12:00:00.000Z" },
+        { description: "padaria sol", category_id: "recente", date: "2026-09-01T12:00:00.000Z" },
+        { description: "Padaria Sol", category_id: null, date: "2026-10-01T12:00:00.000Z" },
+        { description: "Uber Eats", category_id: "comida", date: "2026-03-01T12:00:00.000Z" },
+        { description: "Uber Trip", category_id: "transporte", date: "2026-08-01T12:00:00.000Z" },
+    ]
+
+    it("a descrição normalizada igual, a mais recente com categoria", () => {
+        expect(sugerirCategoria("PADARIA SOL", historico)).toBe("recente")
+    })
+
+    it("senão, a mais recente com a mesma palavra significativa", () => {
+        expect(sugerirCategoria("UBER *PENDING", historico)).toBe("transporte")
+    })
+
+    it("senão, null", () => {
+        expect(sugerirCategoria("FARMACIA", historico)).toBeNull()
+        expect(sugerirCategoria("12 34", historico)).toBeNull()
+    })
+})
+
+describe("prepararItens", () => {
+    it("gera um clientId por item e sugere a categoria", () => {
+        const itens: ItemBanco[] = [
+            { data: "2026-10-10", descricao: "Padaria Sol", valor: 10, estorno: false, parcela: null },
+            { data: "2026-10-11", descricao: "Outro", valor: 5, estorno: false, parcela: null },
+        ]
+        const r = prepararItens(itens, [{ description: "padaria sol", category_id: "cat", date: "2026-01-01" }])
+        expect(r[0].categoryId).toBe("cat")
+        expect(r[1].categoryId).toBeNull()
+        expect(r[0].clientId).toMatch(/^[0-9a-f-]{36}$/)
+        expect(r[0].clientId).not.toBe(r[1].clientId)
+    })
+})
+
+describe("linhasDeImportacao", () => {
+    it("estorno num cartão vira income com credit_card e o cartão", () => {
+        const [l] = linhasDeImportacao(ctx, [item({ estorno: true })], { tipo: "cartao", cardId: "card1" }, "import_pdf")
+        expect(l.type).toBe("income")
+        expect(l.payment_method).toBe("credit_card")
+        expect(l.payment_credit_card_id).toBe("card1")
+    })
+
+    it("destino conta com despesa", () => {
+        const [l] = linhasDeImportacao(ctx, [item()], { tipo: "conta", paymentMethod: "pix" }, "import_statement")
+        expect(l.type).toBe("expense")
+        expect(l.payment_method).toBe("pix")
+        expect(l.payment_credit_card_id).toBeNull()
+        expect(l.amount).toBe(30)
+        expect(l.category_id).toBe("cat1")
+        expect(l.date).toBe("2026-10-10T12:00:00.000Z")
+        expect(l.user_id).toBe("u1")
+        expect(l.workspace_id).toBe("w1")
+    })
+
+    it("parcela vai na descrição, e as marcas de importação", () => {
+        const [l] = linhasDeImportacao(
+            ctx,
+            [item({ descricao: "LOJA AZUL", parcela: { k: 3, n: 10 } })],
+            { tipo: "cartao", cardId: "card1" },
+            "import_sheet",
+        )
+        expect(l.description).toBe("LOJA AZUL (3/10)")
+        expect(l.needs_review).toBe(true)
+        expect(l.import_batch_id).toBe("lote1")
+        expect(l.source).toBe("import_sheet")
+        expect(l.client_id).toBe("c1")
+    })
+
+    it("o mesmo ItemImportavel gera sempre o mesmo client_id (Foco 3)", () => {
+        const i = item({ clientId: "fixo" })
+        const destino = { tipo: "cartao", cardId: "card1" } as const
+        const a = linhasDeImportacao(ctx, [i], destino, "import_pdf")
+        const b = linhasDeImportacao(ctx, [i], destino, "import_pdf")
+        expect(a[0].client_id).toBe("fixo")
+        expect(b[0].client_id).toBe(a[0].client_id)
+    })
+})
+
+function clienteFalso(erro: { message: string } | null = null) {
+    const chamadas: Array<{ op: string; tabela: string; args: unknown[] }> = []
+    const cliente = {
+        from(tabela: string) {
+            return {
+                upsert(...args: unknown[]) {
+                    chamadas.push({ op: "upsert", tabela, args })
+                    return Promise.resolve({ error: erro })
+                },
+                delete() {
+                    const eqs: unknown[] = []
+                    const encadeado = {
+                        eq(...args: unknown[]) {
+                            eqs.push(args)
+                            if (eqs.length === 2) {
+                                chamadas.push({ op: "delete", tabela, args: eqs })
+                                return Promise.resolve({ error: erro })
+                            }
+                            return encadeado
+                        },
+                    }
+                    return encadeado
+                },
+            }
+        },
+    }
+    return { cliente: cliente as unknown as SupabaseClient, chamadas }
+}
+
+describe("importarLancamentos", () => {
+    it("upsert em fatias de 500 com onConflict workspace_id,client_id", async () => {
+        const { cliente, chamadas } = clienteFalso()
+        const itens = Array.from({ length: 1001 }, (_, n) => item({ clientId: `c${n}` }))
+        const r = await importarLancamentos(
+            cliente,
+            { userId: "u1", workspaceId: "w1" },
+            itens,
+            { tipo: "cartao", cardId: "card1" },
+            "import_pdf",
+            "lote1",
+        )
+        expect(r).toEqual({ ok: true, inseridos: 1001 })
+        expect(chamadas.map((c) => (c.args[0] as unknown[]).length)).toEqual([500, 500, 1])
+        for (const c of chamadas) {
+            expect(c.tabela).toBe("transactions")
+            expect(c.args[1]).toEqual({ onConflict: "workspace_id,client_id" })
+        }
+    })
+
+    it("devolve o erro sem seguir", async () => {
+        const { cliente, chamadas } = clienteFalso({ message: "falhou" })
+        const r = await importarLancamentos(
+            cliente,
+            { userId: "u1", workspaceId: "w1" },
+            Array.from({ length: 600 }, (_, n) => item({ clientId: `c${n}` })),
+            { tipo: "cartao", cardId: "card1" },
+            "import_pdf",
+            "lote1",
+        )
+        expect(r.ok).toBe(false)
+        expect(chamadas).toHaveLength(1)
+    })
+})
+
+describe("desfazerImportacao", () => {
+    it("apaga pelo workspace e pelo lote", async () => {
+        const { cliente, chamadas } = clienteFalso()
+        expect(await desfazerImportacao(cliente, "w1", "lote1")).toEqual({ ok: true })
+        expect(chamadas[0].args).toEqual([
+            ["workspace_id", "w1"],
+            ["import_batch_id", "lote1"],
+        ])
+    })
+})
