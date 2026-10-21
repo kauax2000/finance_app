@@ -251,7 +251,13 @@ Detalhe comercial na estratégia §3–§4 e em `founder/pricing.md` e `founder/
 ### Direito de uso
 - **Tabela** `billing_subscriptions(user_id, provider: asaas|apple|google, provider_ref, plan: familia, interval: month|year, status: trialing|active|past_due|canceled|expired, trial_ends_at, current_period_end, cancel_at_period_end, price_cents, founder bool)`.
   - O nome evita confusão com `workspace_subscriptions`, as assinaturas do usuário.
+- **A unidade do plano é o assinante (uma pessoa)** *[decisão minha]*:
+  - cobre **todas as carteiras de que ele é dono**;
+  - "até 6 pessoas" conta as pessoas distintas, fora o assinante, em todas essas carteiras;
+  - o teto de IA (300 chamadas/mês) é por assinante.
+  - Quem cria conta, inclusive o cônjuge convidado, ganha o próprio teste reverso, que vale para as carteiras dele.
 - **`workspace_plan(workspace_id)`:** o plano é Família se o **dono** da carteira tiver plano ativo ou em teste.
+- **Captura paga:** o plano é conferido na **carteira padrão** do token ou do vínculo do WhatsApp, **antes** de qualquer chamada de IA. Se o destino final, depois de interpretar, não tiver plano, o lançamento entra sem IA e vai para "a conferir".
   - Os membros herdam o plano dentro daquela carteira.
   - A função nasce no Bloco 2 devolvendo `familia` para todos e passa a valer neste bloco.
 - **Quem garante é o servidor.** As Edge Functions de captura automática, IA, PDF e anexos checam o plano. A tela só reflete.
@@ -274,7 +280,7 @@ Detalhe comercial na estratégia §3–§4 e em `founder/pricing.md` e `founder/
 - **"Bateu ou devolvemos."** No 1º mês pago, pelo suporte, é processo manual documentado; não se automatiza.
 - **Voltar ao Grátis nunca apaga dado.** Os membros continuam, com lançamento manual e leitura. Os canais automáticos, a IA e os anexos novos param, e convites novos ficam bloqueados acima de 1. *[decisão minha]*
 - **Preço na porta.** `/plans` mostra o preço também a quem não entrou.
-- **Fundadores:** R$ 119 no 1º ano até 31/01/2027, com o preço mantido enquanto ativo.
+- **Fundadores:** só no anual. São **R$ 119 por ano enquanto a assinatura estiver ativa**, para quem assinar até 31/01/2027 (`founder = true`). Cancelou, perde o preço. *[decisão minha]*
 
 ### Jornada depois da compra ou do início do teste (P14)
 Um assistente de 4 passos. Cada passo mostra o que o app fará sozinho e deixa ligar e testar ali mesmo:
@@ -305,18 +311,24 @@ Um assistente de 4 passos. Cada passo mostra o que o app fará sozinho e deixa l
 
 ### "Seguro para gastar"
 `seguroParaGastar(carteira, hoje)` é uma função pura e a única fonte do número.
-- **Regime de caixa**, no ciclo da carteira: de `workspaces.cycle_start_day` (padrão 1) até a véspera do mesmo dia no mês seguinte. *[decisão minha]*
-- **Sem saldo de partida.** É o orçamento do ciclo. *[decisão minha]*
+- **Regime de caixa, no mês do calendário.** *[decisão minha, revista: o `cycle_start_day` saiu]*
+  - O app inteiro fala do mesmo mês: Painel, orçamento, relatório.
+  - O salário do dia 5 cai dentro do mês dele.
+  - Os dois números têm nomes e regimes diferentes, e cada tela diz qual mostra:
+    - **"seguro para gastar"** é **caixa**: o dinheiro que sai no mês, e a fatura conta no mês do vencimento;
+    - o **orçamento e o limite por pessoa** são **competência**: a compra no crédito conta no mês do fechamento.
+  - **"Número que não bate"** quer dizer dois lugares mostrando o **mesmo** número com valores diferentes. Caixa e competência são números diferentes e não se misturam no mesmo rótulo.
+- **Sem saldo de partida.** É o orçamento do mês. *[decisão minha]*
 - **A conta:**
   - receitas do ciclo, recebidas e previstas,
   - − despesas fora do crédito, pagas e previstas,
   - − faturas que vencem no ciclo (com parcelas projetadas, estornos e o total do banco quando houver),
   - − reserva opcional (`workspaces.monthly_savings_target`),
-  - = **seguro para gastar**, também dividido por dia.
+  - = **seguro para gastar**, também dividido pelos dias que faltam no mês.
 - A compra de hoje no crédito aparece como "já comprometido na próxima fatura".
 - **Tabela de casos:**
   - com e sem renda recorrente;
-  - `cycle_start_day` 1, 5 e 31;
+  - meses de 28, 30 e 31 dias;
   - fatura que vence no último dia;
   - estorno;
   - total do banco.
@@ -414,6 +426,15 @@ São dois jeitos de separar dinheiro, para dois casos diferentes.
   - **Evento** (projeto).
 - **O primeiro uso** cria a Casa a partir do modelo.
 
+### O que é pago, e o que acontece ao voltar ao Grátis *[decisão minha]*
+- **No Família:** papéis de convidado, gasto privado, carteira dividida, limite por pessoa e projetos.
+- **No Grátis:** o dono e **1 pessoa a mais**, em qualquer papel.
+- **Ao voltar ao Grátis, nada que protege alguém se desliga:**
+  - o mascarado continua mascarado;
+  - o convidado continua restrito;
+  - os limites e o saldo da carteira dividida continuam calculando.
+- **O que para:** criar coisas novas que são do Família (convites acima de 1, projeto novo, marcar algo novo como privado).
+
 ### Papéis
 `workspace_members.role` ganha `guest`.
 
@@ -431,6 +452,12 @@ A RLS e as RPCs de pacote são a garantia. O convite escolhe o papel, e o dono p
 
 ### Gasto privado entre adultos (painel: objeção nº 2)
 - `transactions.is_private`. Os outros adultos veem só "Gasto pessoal de Fulana — R$ 120", sem descrição, categoria, estabelecimento nem anexo.
+- **Onde o privado vale** *[decisão minha]*:
+  - num cartão da casa, o titular lê a fatura no banco e o privado seria uma promessa falsa;
+  - por isso só pode ser privada a compra paga por Pix, débito ou dinheiro, ou num cartão cujo **titular é o autor** (`credit_cards.holder_user_id`, coluna nova).
+- **Fatura e conferência de um cartão:**
+  - o PDF e o resultado da conferência são visíveis só ao **titular do cartão** e ao **dono da carteira**;
+  - uma linha do banco que casa com um gasto privado aparece mascarada para quem não é o autor.
 - **O valor entra em todos os totais**: o número da casa continua batendo.
 - **O mascaramento mora no banco**, em view ou RPC com `security definer` que mascara para quem não é o autor, e nunca só na tela.
 - **Fica para quem constrói:** o mecanismo exato. Não pode ser possível ler as colunas originais por `select` direto.
@@ -485,7 +512,7 @@ Cada bloco é um projeto com plano próprio. A ordem segue o valor e a dependên
 
 ## 15. Decisões tomadas por mim (para o dono conferir)
 
-1. O "seguro para gastar" é o orçamento do ciclo, sem saldo bancário, e o ciclo começa no dia escolhido.
+1. O "seguro para gastar" é caixa no mês do calendário, sem saldo bancário. O orçamento é competência. Cada número diz o regime dele.
 2. O orçamento se repete por cópia no dia 1, e só a partir do mês corrente.
 3. A compra no crédito conta pelo mês do fechamento em todo lugar, alertas inclusive.
 4. A captura vai para a carteira do cartão reconhecido; sem ele, para a carteira padrão do token.
@@ -494,7 +521,13 @@ Cada bloco é um projeto com plano próprio. A ordem segue o valor e a dependên
 7. O dono e a família dele recebem plano vitalício manual.
 8. Teto de 3 push por semana para insights.
 9. Ao WhatsApp o app só responde em erro ou ambiguidade; os avisos vão por push.
-10. Teto de 300 chamadas de IA por casa por mês.
+10. Teto de 300 chamadas de IA por assinante por mês.
+11. O plano é do assinante e cobre todas as carteiras de que ele é dono. "Até 6 pessoas" conta pessoas distintas.
+12. Gasto privado só fora do cartão compartilhado. PDF e conferência de cartão ficam só com o titular e o dono.
+13. No Grátis cabem o dono e mais 1 pessoa. Voltar ao Grátis não desliga nenhuma proteção.
+14. Fundadores pagam R$ 119/ano enquanto ativos, só no anual.
+
+**A conferir antes de prometer:** a região do projeto Supabase. "Dados no Brasil" só entra no Cofre aberto se for `sa-east-1`. A IA (Gemini e Cloudflare) é transferência internacional, e o Cofre aberto diz isso com todas as letras.
 
 ## 16. O que fica para quem constrói
 

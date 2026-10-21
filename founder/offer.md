@@ -38,7 +38,7 @@ Método: a lente de Ofertas (`founder-board/lenses.md`). As objeções saem do p
 |---|---|---:|---:|---|
 | 1, 8 | Importar a planilha (CSV/Google Sheets) e a última fatura em PDF no 1º dia | 5 | 2 | sim |
 | 2, 9, 18 | Captura sem abrir o app: WhatsApp, Siri, Apple Pay, compartilhar no Android | 5 | 2 | sim |
-| 3, 4, 5 | "Cofre aberto": sem senha de banco, dados no Brasil, criptografia, e por que cada dado é pedido | 5 | 1 | sim |
+| 3, 4, 5 | "Cofre aberto": sem senha de banco, região dos dados dita como é, criptografia, e por que cada dado é pedido | 5 | 1 | sim |
 | 6, 7 | Teste reverso de 14 dias sem cartão, linha do tempo do teste, cancelar em 1 toque, aviso 7 dias antes de renovar, 7 dias de arrependimento | 5 | 1 | sim |
 | 10 | Caixa "a conferir" e categoria que aprende com cada correção | 4 | 2 | sim |
 | 11 | **Painel do Piloto Automático**: o que o app fez sozinho, por quê, com desfazer | 5 | 2 | sim |
@@ -67,7 +67,7 @@ Método: a lente de Ofertas (`founder-board/lenses.md`). As objeções saem do p
 
 Custo da garantia: com 10% das casas acionando, ~R$ 1,99 por pagante no 1º mês, uma vez só. Cabe na contribuição de R$ 13,30 (o CFO roda de novo em `--price 14.70` com a mesma margem prática).
 
-**Urgência verdadeira:** o Plano Fundadores custa R$ 119 no 1º ano até 31/01/2027, com o preço mantido enquanto ativo. O prazo é real e casa com o início de ano.
+**Urgência verdadeira:** o Plano Fundadores custa R$ 119 por ano (só anual) até 31/01/2027, enquanto ativo. O prazo é real e casa com o início de ano.
 
 **Nome:** Família no Controle.
 

@@ -22,7 +22,7 @@
 - Sem degrau "Individual" agora: o diferencial é a família. Ele fica para quando os dados mostrarem muitos solteiros.
 
 ## 3. Oferta de abertura
-**Plano Fundadores:** R$ 119 no 1º ano para quem assinar até 31/01/2027, preço mantido enquanto a assinatura estiver ativa. O prazo casa com o gatilho de início de ano (IPVA, IPTU, escola). Não há preço "de" falso.
+**Plano Fundadores:** R$ 119 por ano (só anual) para quem assinar até 31/01/2027, enquanto a assinatura estiver ativa. O prazo casa com o gatilho de início de ano (IPVA, IPTU, escola). Não há preço "de" falso.
 **Teste reverso:** toda casa nova entra no Família por 14 dias, sem cartão, e volta ao Grátis sem perder nada.
 
 ## 4. O que testar com gente real

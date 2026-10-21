@@ -34,7 +34,7 @@ O desenho funcional que implementa esta estratégia está em
 | 3 | **Saber quanto ainda dá para gastar.** "Seguro para gastar" no ciclo, previsão de 6 meses, impacto da parcela no momento do lançamento. | "O salário some antes do dia 20"; a parcela esquecida. | "Quero previsibilidade, não planilha." | 48% do valor no cartão é parcelado (BCB). |
 | 4 | **Avisar antes do problema e explicar depois.** Fatura alta antes de fechar, conta vencendo, resumo da fatura ao fechar, relatório do mês, sugestões. | "A fatura chegou e eu só descobri no dia." | "Me ajude a decidir, sem sermão." | Ponto 8 do dono; painel P009. |
 | 5 | **A família no mesmo número, com privacidade.** Cônjuge vê tudo ou só o total do pessoal; filhos só lançam; quem pagou; carteira dividida com acerto; carteiras com propósito (casa e viagem). | Briga por gasto que um não sabia; "não quero que veja cada compra". | Autonomia entre adultos; proteção dos filhos. | ICP §2.6; 40% omitem gastos; painel P002/P011/P015/P017. |
-| 6 | **Seus dados são seus.** Sem senha de banco; dados no Brasil; exportar e apagar em 1 toque; anexos privados; "Cofre aberto". | "E se o app fechar e eu perder tudo?"; medo de golpe. | Segurança e controle. | Guiabolso e Olivia fechados; painel P001/P007/P009/P013/P018. |
+| 6 | **Seus dados são seus.** Sem senha de banco; região dos dados dita como é; exportar e apagar em 1 toque; anexos privados; "Cofre aberto". | "E se o app fechar e eu perder tudo?"; medo de golpe. | Segurança e controle. | Guiabolso e Olivia fechados; painel P001/P007/P009/P013/P018. |
 | 7 | **Premium que se prova.** Piloto Automático visível, relatório de valor do mês, cobrança honesta, visual de primeira, apps nativos depois do PWA. | "Pago e não sinto diferença"; cobrança surpresa. | "Quero sentir que vale." | ICP §2.5; ponto 15 do dono. |
 
 ## 3. Planos (ponto 4) — detalhe em [`founder/pricing.md`](../../founder/pricing.md)
@@ -56,7 +56,7 @@ O desenho funcional que implementa esta estratégia está em
 - Carteira dividida.
 - Anexos até 5 GB.
 
-**Oferta de lançamento: Fundadores** — R$ 119 no 1º ano até 31/01/2027, preço mantido enquanto a assinatura estiver ativa.
+**Oferta de lançamento: Fundadores** — R$ 119 por ano (só anual) para quem assinar até 31/01/2027, enquanto a assinatura estiver ativa.
 
 **Teste reverso:** toda casa nova entra no Família por 14 dias, sem cartão, e volta ao Grátis sem perder nada.
 
