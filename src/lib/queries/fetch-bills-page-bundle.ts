@@ -154,7 +154,8 @@ async function fetchBillsPageBundleLegacy(
             .from("transactions")
             .select(CREDIT_CARD_EXPENSE_SELECT)
             .eq("workspace_id", workspaceId)
-            .eq("type", "expense")
+            // Receita no cartão é estorno: abate a fatura.
+            .in("type", ["expense", "income"])
             .eq("payment_method", "credit_card")
             .order("date", { ascending: false }),
         supabase
