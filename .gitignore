@@ -80,3 +80,7 @@ supabase/.branches/
 # 100 MB do GitHub, e a licença proíbe redistribuir os arquivos sozinhos.
 # Ficam no disco para extrair peças; o que a página usa mora em assets/.
 docs/design/mockups/
+
+# graphify: só o grafo é versionado (o resto é cache e estado local)
+graphify-out/*
+!graphify-out/graph.json
