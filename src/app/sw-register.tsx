@@ -42,6 +42,11 @@ export function SwRegister() {
         let registration: ServiceWorkerRegistration | null = null
 
         let updateReady = false
+        // Lido antes do registro. O `sw.ts` usa `clientsClaim`: no primeiro
+        // acesso o SW recém-instalado reivindica a página e dispara
+        // `controllerchange` com o controller já preenchido — dentro do evento
+        // ele nunca é nulo, e a primeira visita via "Nova versão disponível".
+        let hadController = !!navigator.serviceWorker.controller
 
         const reload = () => {
             if (refreshing) return
@@ -50,8 +55,14 @@ export function SwRegister() {
         }
 
         const onControllerChange = () => {
-            // Só quando um SW existente é substituído (deploy), não na primeira instalação.
-            if (!navigator.serviceWorker.controller || refreshing) return
+            // Só quando um SW existente é substituído (deploy), não na primeira
+            // instalação. Depois dela a página passa a ter controller, e uma
+            // troca de versão na mesma sessão volta a avisar.
+            if (!hadController) {
+                hadController = true
+                return
+            }
+            if (refreshing) return
             // Recarregar com a página à vista apagava o que a pessoa estava digitando.
             // Escondida, recarrega; à vista, avisa e recarrega quando ela sair da aba.
             if (document.visibilityState === "hidden") {

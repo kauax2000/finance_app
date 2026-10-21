@@ -28,6 +28,21 @@ describe("o registro do service worker", () => {
         expect(ramo).toContain("unregister")
     })
 
+    it("a primeira instalação não avisa 'Nova versão disponível'", () => {
+        // O `sw.ts` usa `clientsClaim`: no primeiro acesso o SW recém-instalado
+        // reivindica a página e dispara `controllerchange` com o controller já
+        // preenchido. Ler `navigator.serviceWorker.controller` dentro do evento
+        // nunca é nulo — o que distingue troca de versão de primeira instalação
+        // é se havia controller ANTES, lido no carregamento.
+        const antesDoRegistro = CODIGO.slice(0, CODIGO.indexOf('register("/sw.js"'))
+        expect(antesDoRegistro).toMatch(/let \w+ = !!navigator\.serviceWorker\.controller/)
+        const handler = CODIGO.slice(
+            CODIGO.indexOf("const onControllerChange"),
+            CODIGO.indexOf("toastPersistentAction(")
+        )
+        expect(handler).not.toContain("!navigator.serviceWorker.controller")
+    })
+
     it("o caminho de produção não mudou", () => {
         // O conserto é só do ramo negativo. Em produção `shouldRegisterSw()`
         // devolve `true` e o registro segue idêntico — inclusive o
