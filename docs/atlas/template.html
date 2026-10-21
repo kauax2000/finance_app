@@ -280,7 +280,7 @@
     <div><dt>Base</dt><dd>Leitura do código</dd></div>
     <div><dt>Branch</dt><dd>finance-app-2.0</dd></div>
     <div><dt>Data</dt><dd>21 out 2026 · o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura pelo PDF, CSV ou OFX, a importação de extrato e de planilha e os anexos, com as telas em wireframe e ainda sem publicar; no mesmo dia, o aviso de despesa e os crons diários passam ao banco (trigger e <code>pg_cron</code> com o Vault, por migração, no lugar do Webhook e do SQL manual) e entra o backup semanal do banco, ainda sem publicar; 19 out: a aba Você: a quarta aba do telefone, com o avatar, leva à página <code>/me</code> no lugar do menu "Mais", e as telas dela ganham o voltar; 17 out: as notificações: o painel flutuante agrupado por dia, o sino exato, a categoria que não notifica mais e a revisão do servidor, ainda sem publicar; 16 out: a busca global (⌘K) acha transações, cartões, categorias, parcelas, assinaturas, contas, membros e carteiras da raiz; 15 out: o menu da conta do telefone vira um painel que brota da aba, com o tema em Configurações e o sair e os planos em Minha conta; o "+" abre direto o formulário de lançamento; 14 out: o painel de marca animado nas telas de acesso; 12 out: telas de acesso com cena e a casca no layout de <code>(auth)</code>, reenviar e <code>next</code> na recuperação, convite aceito; antes: busca global, botão direito, período, rascunho, menus do telefone, prévias da lista, as tabelas na URL, o "Ver" dos avisos de criação e a agenda do Painel</dd></div>
-    <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 13 lacunas (3 fechadas em 12 out)</dd></div>
+    <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 10 lacunas abertas (3 fechadas em 12 out, 3 em 21 out)</dd></div>
     <div><dt>Fonte versionada</dt><dd><code>docs/JORNADAS.md</code></dd></div>
   </dl>
 </header>
@@ -588,7 +588,7 @@
         <li><div><strong>Importar extrato ou planilha.</strong> Desde o Bloco 2, um wireframe acima da lista, aberto pelo link "Importar extrato ou planilha" ou por <code>?importar=1</code> (o parâmetro sai da URL logo depois, como o <code>new</code>). A pessoa escolhe o que é (extrato do banco em CSV ou OFX, ou a própria planilha em CSV) e o destino (uma conta, por Pix, débito ou outro, ou um cartão), e o CSV passa por um mapeamento de colunas. A categoria vem do histórico, e as categorias da planilha que ainda não existem são criadas antes. Tudo entra marcado para revisar e com o mesmo lote; repetir "Importar" depois de uma falha não duplica, e "Desfazer importação" apaga o lote inteiro. A importação não avisa os outros membros nem dispara alerta.</div></li>
         <li><div><strong>Estorno no cartão.</strong> No formulário de receita, a caixa "Estorno no cartão" escolhe o cartão: a receita vai ao crédito e abate a fatura do ciclo em que cai — que pode ficar negativa —, e não conta como receita no Painel.</div></li>
         <li><div><strong>A conferir.</strong> No detalhe, um lançamento importado mostra "Importado · a conferir". "Confirmar" tira a marca; "Desfazer importação do lote" pergunta antes, apaga o lote inteiro e fecha o detalhe.</div></li>
-        <li><div><strong>Anexos.</strong> O detalhe ganha a seção de anexos: foto ou PDF de até 10 MB, com 25 MB por carteira, e a foto vira WebP antes de subir. O arquivo fica num bucket privado e abre por uma URL assinada que vale uma hora, numa aba nova; com o popup bloqueado, abre na mesma janela. Excluir a transação avulsa apaga os arquivos dela; as outras exclusões deixam o arquivo para a limpeza semanal.</div></li>
+        <li><div><strong>Anexos.</strong> O detalhe ganha a seção de anexos: foto ou PDF de até 10 MB, com 25 MB por carteira, e a foto vira WebP antes de subir. O arquivo fica num bucket privado e abre por uma URL assinada que vale uma hora, numa aba nova; com o popup bloqueado, aparece o link "Abrir anexo", e a pessoa não sai do app. Excluir a transação avulsa apaga os arquivos dela; as outras exclusões deixam o arquivo para a limpeza semanal.</div></li>
         <li><div><strong>Prévias nos chips.</strong> Pousar o cursor, focar ou segurar o dedo no chip de fatura mostra o cartão, o estado da fatura e as datas de fechamento e vencimento, com "Ver cartão"; no chip "Parcelada", a parcela, o total e quando termina. O clique no chip continua abrindo a linha.</div></li>
       </ol>
       <figure>
@@ -621,7 +621,7 @@
         <li><div><strong>Estorno.</strong> Desde o Bloco 2, a fatura é despesas menos estornos e pode ficar negativa (saldo credor). Os avisos de limite, fechamento e vencimento já descontam o estorno.</div></li>
         <li><div><strong>Conferir fatura.</strong> Um wireframe na página do cartão, sobre um ciclo já fechado. A pessoa digita o total que o banco cobrou ou manda o arquivo: PDF (lido no aparelho, sem IA; com senha, o app pede a senha e diz "Senha incorreta" quando erra), CSV (com o mapeamento de colunas) ou OFX. Uma leitura cuja soma não fecha com o total fica incompleta e mostra a diferença. O resultado sai em grupos — Bate, Falta no app, Só no app, Valor diferente e Parcela fora de sequência —, e o que já foi importado cai em Bate.</div></li>
         <li><div><strong>Importar o que falta.</strong> Os itens de "Falta no app" escolhidos entram como lançamentos do cartão, marcados para revisar. A data de cada um é levada para dentro do ciclo, com "compra em dd/mm" na descrição, porque a fatura imprime a parcela com a data da compra, e importada assim ela cairia numa fatura velha.</div></li>
-        <li><div><strong>Total do banco.</strong> Gravado, ele vale sobre o calculado na fatura fechada: o painel da fatura mostra o total do banco e a diferença, e o Painel e Contas a pagar usam esse total. Quando veio de um PDF, o PDF fica anexado ao total. Os avisos de fatura, que rodam na Edge, ainda usam o calculado (lacuna 13).</div></li>
+        <li><div><strong>Total do banco.</strong> Gravado, ele vale sobre o calculado na fatura fechada: o painel da fatura mostra o total do banco e a diferença, e o Painel e Contas a pagar usam esse total. Quando veio de um PDF, o PDF fica anexado ao total. Os avisos de fatura, que rodam na Edge, também: o "fechou", o "vence" e o limite usado da última fechada valem o total do banco quando ele existe; a fatura que ainda fecha segue no calculado.</div></li>
       </ol>
       <figure>
         <div class="diagram">@@D9@@</div>
@@ -652,7 +652,7 @@
         <li><div><strong>Pagar uma conta cria uma despesa.</strong> O pagamento vira lançamento, avança a recorrência e passa pelo orçamento. Exige conexão.</div></li>
         <li><div><strong>Pagar uma fatura não cria despesa.</strong> As compras já foram lançadas no cartão; a fatura só fica marcada como paga.</div></li>
         <li><div><strong>Valor da fatura.</strong> Desde o Bloco 2, a fatura pendente vale o total do banco quando a pessoa o informou na conferência da fatura; senão, o calculado, já com os estornos. Uma fatura zerada ou com saldo credor não aparece como pendência.</div></li>
-        <li><div><strong>Anexos da conta.</strong> O painel da conta (<code>?detail=id</code>) mostra os anexos da parcela pendente que ele exibe — o boleto, uma foto ou um PDF —, com as regras dos anexos do lançamento.</div></li>
+        <li><div><strong>Anexos da conta.</strong> O painel da conta (<code>?detail=id</code>) mostra os anexos da parcela pendente que ele exibe — o boleto, uma foto ou um PDF —, com as regras dos anexos do lançamento, e abaixo os da última parcela paga, só para abrir (sem anexar nem apagar).</div></li>
         <li><div><strong>Lembretes.</strong> Cada conta pode avisar três dias antes e no dia do vencimento. Ao criar uma conta, o aviso traz "Ver", que abre o painel dela (<code>/bills?detail=id</code>).</div></li>
         <li><div><strong>Botão direito.</strong> No cartão de pendência, o botão direito (ou o toque longo) repete Abrir, Pagar e o menu de três pontos.</div></li>
       </ol>
@@ -755,7 +755,7 @@
     <section class="block" id="lacunas">
       <p class="eyebrow">Fechamento</p>
       <h2>Lacunas encontradas</h2>
-      <p class="lead">Restam treze pontos em que o código não faz o que a jornada promete — três deles achados na rodada dos avisos, em outubro de 2026, a publicação do servidor das notificações e, do Bloco 2, três dos anexos, a publicação do bloco e os avisos de fatura, que ainda não leem o total do banco. Os cinco de acesso saíram na rodada de setembro de 2026 e estão listados logo abaixo.</p>
+      <p class="lead">Restam dez pontos em que o código não faz o que a jornada promete — três deles achados na rodada dos avisos, em outubro de 2026, a publicação do servidor das notificações e, do Bloco 2, a limpeza dos anexos e a publicação do bloco. Três do Bloco 2 (o boleto da parcela paga, o "Abrir" com o popup bloqueado e os avisos de fatura sem o total do banco) fecharam em 21 de outubro de 2026, e os cinco de acesso na rodada de setembro de 2026; estão listados logo abaixo.</p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>#</th><th>Jornada</th><th>Tipo</th><th>O que acontece</th><th>Efeito para a pessoa</th></tr></thead>
@@ -769,10 +769,19 @@
             <tr><td>7</td><td>02 Carteiras</td><td>Texto</td><td>Os erros de carga do diretório de membros citam o arquivo SQL e a RPC a aplicar.</td><td>A pessoa lê uma instrução de desenvolvedor.</td></tr>
             <tr><td>8</td><td>03 Navegação</td><td>Publicação</td><td>O servidor das notificações foi revisado no repositório, e o aviso de despesa e os crons passaram a uma migração (trigger e <code>pg_cron</code> com Vault); nada disso foi publicado. Segue aberta até o dono publicar, na ordem de <code>supabase/NOTIFICATION_DEPLOYMENT.md</code>.</td><td>Até lá, textos e regras antigos (sem o mês no link do orçamento, lembretes de calendário com as regras velhas), aviso de despesa pelo Webhook e crons criados à mão.</td></tr>
             <tr><td>9</td><td>05 Lançamentos</td><td>Limpeza</td><td>Só a exclusão avulsa online apaga o arquivo do anexo na hora. A exclusão em lote, a de compra parcelada, a feita offline e o desfazer de um lote importado apagam as linhas e deixam o arquivo no bucket até o cron semanal <code>attachments-cleanup-weekly</code>.</td><td>Nenhum visível; o arquivo ocupa o armazenamento do projeto por até uma semana, fora da cota da carteira.</td></tr>
-            <tr><td>10</td><td>07 Contas</td><td>Tela</td><td>O painel da conta (<code>?detail=</code>) mostra só os anexos da parcela pendente.</td><td>O boleto de uma parcela já paga continua guardado, mas nenhuma tela o mostra.</td></tr>
-            <tr><td>11</td><td>05 Lançamentos</td><td>Navegador</td><td>"Abrir" um anexo abre a aba no clique; com o popup bloqueado, a URL assinada abre na mesma janela.</td><td>A pessoa sai do app para ver o arquivo.</td></tr>
             <tr><td>12</td><td>05, 06, 07</td><td>Publicação</td><td>O Bloco 2 (estorno, total do banco, conferência da fatura, importação e anexos) está no repositório, com as telas em wireframe, e não foi publicado. Segue aberta até o dono publicar, na ordem de <code>supabase/BLOCO_2_DEPLOYMENT.md</code>.</td><td>Até lá, nada do Bloco 2 existe em produção. O front novo publicado antes das migrações derruba o Painel.</td></tr>
-            <tr><td>13</td><td>06 Cartões</td><td>Edge</td><td>Os avaliadores da Edge (avisos de fatura: <code>credit-card-calendar-alerts</code> e <code>evaluate-credit-card-alerts</code>) ainda usam o total calculado, não o total do banco.</td><td>Depois de gravar o total do banco, o aviso "fatura fecha/vence: R$ Y" pode discordar do valor que o Painel e Contas a pagar mostram.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Fechadas em 21 de outubro de 2026</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Era</th><th>Lacuna</th><th>O que fechou</th></tr></thead>
+          <tbody>
+            <tr><td>10</td><td>O painel da conta mostrava só os anexos da parcela pendente; o boleto da parcela paga sumia</td><td>O painel mostra também os anexos da última parcela paga, só para abrir</td></tr>
+            <tr><td>11</td><td>Com o popup bloqueado, "Abrir" um anexo levava a URL assinada à mesma janela, e a pessoa saía do app</td><td>A seção mostra o link "Abrir anexo", que abre numa aba nova</td></tr>
+            <tr><td>13</td><td>Os avisos de fatura da Edge usavam o total calculado e podiam discordar do total do banco</td><td><code>credit-card-calendar-alerts</code> e <code>evaluate-credit-card-alerts</code> usam o total do banco na fatura fechada, lido numa consulta só por execução</td></tr>
           </tbody>
         </table>
       </div>
@@ -826,7 +835,7 @@
             <tr><td><code>/transactions</code></td><td>Lançamentos; filtros, <code>sort</code> e <code>page</code> na URL; <code>importar=1</code> abre a importação de extrato e planilha</td><td>Com sessão</td><td>05</td></tr>
             <tr><td><code>/credit-cards</code></td><td>Cartões</td><td>Com sessão</td><td>06</td></tr>
             <tr><td><code>/credit-cards/[cardId]</code></td><td>Detalhe do cartão e fatura, com a conferência da fatura e o total do banco</td><td>Com sessão</td><td>06</td></tr>
-            <tr><td><code>/bills</code></td><td>Contas a pagar; <code>detail=id</code> abre o painel da conta, com os anexos da parcela pendente</td><td>Com sessão</td><td>07</td></tr>
+            <tr><td><code>/bills</code></td><td>Contas a pagar; <code>detail=id</code> abre o painel da conta, com os anexos da parcela pendente e, só para abrir, os da última paga</td><td>Com sessão</td><td>07</td></tr>
             <tr><td><code>/subscriptions</code></td><td>Assinaturas; <code>sort</code>, <code>page</code>, <code>q</code> e <code>status</code> na URL</td><td>Com sessão</td><td>08</td></tr>
             <tr><td><code>/categories</code></td><td>Categorias e assistente</td><td>Com sessão</td><td>09</td></tr>
             <tr><td><code>/categories/new</code></td><td>Categorias com o formulário aberto</td><td>Com sessão</td><td>09</td></tr>
@@ -867,9 +876,9 @@
             <tr><td><code>invoke_edge_function</code></td><td>Função SQL</td><td>Chama uma Edge por <code>pg_net</code> com a URL e o segredo do Vault; sem eles, não faz nada; só o <code>service_role</code> a executa</td><td>05, 06, 07</td></tr>
             <tr><td><code>notify-transaction-created</code></td><td>Edge, via trigger</td><td>Avisa os membros de uma nova despesa manual. Repete o <code>WHEN</code> do trigger: o lançamento importado, a receita, a assinatura e a parcela voltam 200 com <code>skipped</code>, mesmo chamados por um Database Webhook antigo</td><td>05</td></tr>
             <tr><td><code>evaluate-budgets</code></td><td>Edge</td><td>Confere o limite da categoria depois de uma despesa</td><td>05, 07, 09</td></tr>
-            <tr><td><code>evaluate-credit-card-alerts</code></td><td>Edge</td><td>Confere limite e categoria do cartão, com os estornos descontados</td><td>05, 06</td></tr>
-            <tr><td><code>credit-card-calendar-alerts</code></td><td>Edge, via cron</td><td>Avisa fechamento e vencimento de fatura, com os estornos descontados</td><td>06</td></tr>
-            <tr><td><code>credit_card_statement_totals</code></td><td>Tabela</td><td>O total que o banco cobrou, um por cartão e fechamento, com a origem (digitado, PDF, CSV ou OFX); numa fatura fechada, vale sobre o calculado</td><td>04, 06, 07</td></tr>
+            <tr><td><code>evaluate-credit-card-alerts</code></td><td>Edge</td><td>Confere limite e categoria do cartão, com os estornos descontados; a última fatura fechada não paga vale o total do banco, se gravado</td><td>05, 06</td></tr>
+            <tr><td><code>credit-card-calendar-alerts</code></td><td>Edge, via cron</td><td>Avisa fechamento e vencimento de fatura, com os estornos descontados; na fatura fechada, o valor é o total do banco, se gravado (uma consulta a <code>credit_card_statement_totals</code> por execução)</td><td>06</td></tr>
+            <tr><td><code>credit_card_statement_totals</code></td><td>Tabela</td><td>O total que o banco cobrou, um por cartão e fechamento, com a origem (digitado, PDF, CSV ou OFX); numa fatura fechada, vale sobre o calculado, também nos avisos da Edge</td><td>04, 06, 07</td></tr>
             <tr><td><code>attachments</code></td><td>Tabela</td><td>Um anexo por linha, ligado a uma transação, a uma parcela de conta ou a um total do banco; RLS por carteira</td><td>05, 06, 07</td></tr>
             <tr><td><code>attachments_enforce_quota</code></td><td>Trigger</td><td>Antes de inserir um anexo, lê o tamanho real do objeto no bucket e recusa o que passa de 25 MB por carteira</td><td>05, 06, 07</td></tr>
             <tr><td><code>attachments</code></td><td>Bucket</td><td>Privado, só URL assinada (uma hora); 10 MB por arquivo, WebP, JPEG, PNG e PDF; a pasta é a carteira, e as políticas de <code>storage.objects</code> a conferem</td><td>05, 06, 07</td></tr>

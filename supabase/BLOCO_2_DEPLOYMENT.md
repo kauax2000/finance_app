@@ -117,7 +117,7 @@ A definição contém `import_batch_id IS NULL` no `WHEN`.
 
 O `_shared` vai embutido em cada função no deploy: toda função que importa um
 módulo mudado precisa ser publicada de novo. Os módulos mudados são
-`_shared/credit-card-cycle.ts` (o estorno abate a fatura) e
+`_shared/credit-card-cycle.ts` (o estorno abate a fatura; `escolherTotal` põe o total do banco na fatura fechada) e
 `_shared/transaction-notify-rules.ts` (o aviso de despesa ignora o que o
 `WHEN` do trigger ignora), e a `attachments-cleanup` é nova.
 
@@ -127,8 +127,8 @@ supabase functions deploy evaluate-credit-card-alerts credit-card-calendar-alert
 
 | Função | Mudança |
 |--------|---------|
-| `evaluate-credit-card-alerts` | O limite usado desconta os estornos do cartão |
-| `credit-card-calendar-alerts` | O valor da fatura nos avisos de fechamento e vencimento desconta os estornos |
+| `evaluate-credit-card-alerts` | O limite usado desconta os estornos do cartão, e a última fatura fechada não paga vale o total do banco quando gravado |
+| `credit-card-calendar-alerts` | O valor da fatura nos avisos de fechamento e vencimento desconta os estornos; na fatura fechada (fechou, vence), vale o total do banco quando gravado, lido de `credit_card_statement_totals` numa consulta só por execução |
 | `evaluate-bills-reminders` | Importa o `credit-card-cycle.ts` mudado; publicada para não ficar com a cópia antiga |
 | `notify-transaction-created` | Responde 200 com `skipped` (`imported`, `not_expense`, `subscription` ou `installment`) para a linha que o `WHEN` do trigger pula: o importado não avisa nem por um Webhook antigo que tenha ficado |
 | `attachments-cleanup` | Nova. Chamada pelo cron semanal com o `x-cron-secret`; apaga do bucket o objeto sem linha em `attachments` e com mais de 24 h |
@@ -163,7 +163,7 @@ Use uma carteira e um cartão de teste.
    escolha o último ciclo fechado (ainda não pago), digite um total diferente
    do calculado e grave. O painel dessa fatura mostra "Total do banco ·
    diferença", e a fatura em Contas a pagar (pendentes) passa a valer o total
-   do banco. A UI só grava esse total, não o apaga: no fim do teste, ache a
+   do banco, e os avisos "fechou" e "vence" dessa fatura também. A UI só grava esse total, não o apaga: no fim do teste, ache a
    linha e apague-a no SQL Editor.
 
    ```sql
@@ -177,7 +177,10 @@ Use uma carteira e um cartão de teste.
    "Importado · a conferir" no detalhe, e nenhum aviso de despesa chega aos
    outros membros. "Desfazer importação" apaga o lote inteiro.
 3. **Anexo.** No detalhe de uma transação de teste, anexe uma foto. "Abrir"
-   abre a URL assinada (vale 1 h) numa aba nova.
+   abre a URL assinada (vale 1 h) numa aba nova; com o popup bloqueado, aparece
+   o link "Abrir anexo", e o app não sai da tela. Num boleto de conta, pague a
+   parcela: o painel da conta (`?detail=`) continua mostrando o boleto em
+   "Anexos da última parcela paga", só com Abrir.
 4. **Anexo some com a transação.** Antes de excluir, guarde o caminho:
 
    ```sql
