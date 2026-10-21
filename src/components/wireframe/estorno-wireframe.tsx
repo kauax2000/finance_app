@@ -18,22 +18,25 @@ export function EstornoWireframe({
     value: string | null
     onChange: (cardId: string | null) => void
 }) {
+    // O cartão gravado que saiu da lista (inativo) continua escolhido, e o select diz isso.
+    const foraDaLista = value != null && !cards.some((c) => c.id === value)
     return (
         <WireframeBox bloco={2} titulo="Estorno no cartão">
             <label className="flex items-center gap-2">
                 <input
                     type="checkbox"
                     checked={value != null}
-                    disabled={cards.length === 0}
+                    disabled={cards.length === 0 && value == null}
                     onChange={(e) => onChange(e.target.checked ? cards[0].id : null)}
                 />
                 É estorno no cartão
             </label>
-            {cards.length === 0 ? <p>Nenhum cartão cadastrado.</p> : null}
+            {cards.length === 0 && value == null ? <p>Nenhum cartão ativo.</p> : null}
             {value != null ? (
                 <label className="flex flex-wrap items-center gap-2">
                     Cartão
                     <select className={campo} value={value} onChange={(e) => onChange(e.target.value)}>
+                        {foraDaLista ? <option value={value}>Cartão inativo</option> : null}
                         {cards.map((c) => (
                             <option key={c.id} value={c.id}>
                                 {c.name} · •••• {c.last_four}

@@ -18,17 +18,20 @@ type Coluna = "data" | "descricao" | "valor" | "categoria"
 export function MapeamentoCsv({
     linhas,
     extrato = false,
+    negativoEhDespesaInicial = true,
     disabled = false,
     onLer,
 }: {
     linhas: string[][]
     extrato?: boolean
+    /** O padrão do "valor negativo é despesa" (`negativoEhDespesaPadrao` do destino). */
+    negativoEhDespesaInicial?: boolean
     disabled?: boolean
     onLer: (r: { itens: ItemBanco[]; ignoradas: number }) => void
 }) {
     const [mapa, setMapa] = useState<Record<Coluna, string>>({ data: "0", descricao: "1", valor: "2", categoria: "" })
     const [temCabecalho, setTemCabecalho] = useState(true)
-    const [negativoEhDespesa, setNegativoEhDespesa] = useState(true)
+    const [negativoEhDespesa, setNegativoEhDespesa] = useState(negativoEhDespesaInicial)
     const largura = Math.max(0, ...linhas.slice(0, 5).map((l) => l.length))
 
     function ler() {

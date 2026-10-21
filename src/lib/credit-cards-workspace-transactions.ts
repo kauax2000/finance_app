@@ -174,8 +174,7 @@ export function ccAnalyticsRowsToListTransactions(
         subscription_id: row.subscription_id ?? null,
         installment_plan_id: row.installment_plan_id ?? null,
         installment_sequence: row.installment_sequence ?? null,
-        // ponytail: a linha do cartão não lê estas colunas; o selo "a conferir" não aparece
-        // pelo detalhe do cartão. Pôr no select quando a migração do Bloco 2 estiver aplicada.
+        // A linha sintética só alimenta a lista; o detalhe relê a transação com "*".
         source: "app",
         needs_review: false,
         import_batch_id: null,

@@ -232,8 +232,8 @@ export type TransactionFormFieldsProps = {
     paymentCreditCardId: string
     setPaymentCreditCardId: (id: string) => void
     /** Receita que é estorno no cartão (o wireframe do Bloco 2). */
-    estornoCartaoId?: string | null
-    setEstornoCartaoId?: (id: string | null) => void
+    estornoCartaoId: string | null
+    setEstornoCartaoId: (id: string | null) => void
     categories: Category[]
     creditCards: CreditCard[]
     categoriesHref: string
@@ -298,7 +298,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
         setPaymentMethod,
         paymentCreditCardId,
         setPaymentCreditCardId,
-        estornoCartaoId = null,
+        estornoCartaoId,
         setEstornoCartaoId,
         categories,
         creditCards,
@@ -727,9 +727,9 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                 />
             ) : null}
 
-            {type === "income" && !showInstallmentFields && setEstornoCartaoId ? (
+            {type === "income" && !showInstallmentFields ? (
                 <EstornoWireframe
-                    cards={creditCards}
+                    cards={activeCards}
                     value={estornoCartaoId}
                     onChange={setEstornoCartaoId}
                 />

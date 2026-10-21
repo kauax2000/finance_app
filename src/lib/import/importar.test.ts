@@ -7,6 +7,7 @@ import {
     desfazerImportacao,
     importarLancamentos,
     linhasDeImportacao,
+    negativoEhDespesaPadrao,
     prepararItens,
     type ItemImportavel,
 } from "./importar"
@@ -215,5 +216,16 @@ describe("categoria da planilha, pelo nome", () => {
             { nome: "Pet", tipo: "expense" },
             { nome: "Alimentação", tipo: "income" },
         ])
+    })
+
+    it("um nome que normaliza para vazio não vira categoria", () => {
+        expect(categoriasQueFaltam([item({ categoria: "--" }), item({ categoria: " ! " })], categorias)).toEqual([])
+    })
+})
+
+describe("negativoEhDespesaPadrao", () => {
+    it("conta: negativo é despesa; cartão: compra positiva", () => {
+        expect(negativoEhDespesaPadrao({ tipo: "conta", paymentMethod: "pix" })).toBe(true)
+        expect(negativoEhDespesaPadrao({ tipo: "cartao", cardId: "c1" })).toBe(false)
     })
 })

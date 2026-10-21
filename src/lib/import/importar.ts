@@ -57,13 +57,21 @@ export function categoriasQueFaltam(
     const faltam: Array<{ nome: string; tipo: "income" | "expense" }> = []
     for (const i of itens) {
         const nome = i.categoria?.trim()
-        if (!nome) continue
+        if (!nome || !normalizarDescricao(nome)) continue
         const k = chave(nome, tipoDoItem(i))
         if (vistas.has(k)) continue
         vistas.add(k)
         faltam.push({ nome, tipo: tipoDoItem(i) })
     }
     return faltam
+}
+
+/**
+ * O sinal do CSV pelo destino: no extrato da conta a saída é negativa; na
+ * fatura do cartão a compra é positiva e o crédito é negativo.
+ */
+export function negativoEhDespesaPadrao(destino: DestinoImportacao): boolean {
+    return destino.tipo === "conta"
 }
 
 /** Parcela importada é despesa simples com "(k/n)" na descrição (Decisão 4). */

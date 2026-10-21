@@ -51,7 +51,11 @@ export function AConferirWireframe({
     }
 
     async function desfazerLote() {
-        if (!workspaceId || !transaction.import_batch_id) return
+        if (!transaction.import_batch_id) return
+        if (!workspaceId) {
+            setErro("Não foi possível desfazer: o lançamento não tem carteira.")
+            return
+        }
         if (!window.confirm("Desfazer a importação inteira deste lote?")) return
         setPendente(true)
         setErro(null)

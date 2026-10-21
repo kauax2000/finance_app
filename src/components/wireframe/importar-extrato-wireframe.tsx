@@ -15,6 +15,7 @@ import {
     type DestinoImportacao,
     importarLancamentos,
     type ItemImportavel,
+    negativoEhDespesaPadrao,
     prepararItens,
 } from "@/lib/import/importar"
 import { lerOfx } from "@/lib/import/ofx"
@@ -273,6 +274,8 @@ export function ImportarExtratoWireframe({
                 <MapeamentoCsv
                     linhas={csv}
                     extrato
+                    // Trocar o destino limpa o CSV: o mapeamento remonta com o padrão novo.
+                    negativoEhDespesaInicial={destino ? negativoEhDespesaPadrao(destino) : true}
                     disabled={pendente != null}
                     onLer={(r) => void aplicar(r.itens, r.ignoradas)}
                 />
