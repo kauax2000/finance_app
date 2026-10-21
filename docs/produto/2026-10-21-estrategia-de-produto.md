@@ -108,7 +108,21 @@ São 20 compradores simulados. Servem para achar objeções, não para prever co
 
 **Antes de gastar com marketing, confirmar com gente real:** lista de espera com preço e pré-venda anual reembolsável (`founder/pricing.md` §4).
 
-## 6. Roteiro (alto nível)
+## 6. Concorrente mais próximo: Optio
+Ficha em [`concorrentes/2026-10-21-optio.md`](concorrentes/2026-10-21-optio.md).
+
+**Quem é:** um app novo (mai/2026), que conecta o banco pela Pluggy e tem IA. Não tem plano grátis; o teste pede cartão. O Pro custa R$ 39,90/mês e o Casal R$ 59,90/mês, e atende só casal.
+
+**O nosso contraponto**, já no desenho:
+- preço ~4× menor para a casa;
+- Grátis para sempre e teste sem cartão;
+- família de até 6 pessoas, com papéis e gasto privado;
+- sem conectar o banco;
+- "bateu ou devolvemos".
+
+**O que copiar** (changelog público, páginas de respostas com SEO, onboarding por missões e suporte com nome) entra no lançamento, não nos blocos funcionais.
+
+## 7. Roteiro (alto nível)
 
 1. **PWA completo**, nos blocos do desenho funcional.
 2. **Apps nativos iOS e Android logo depois do PWA** (decisão do dono).
