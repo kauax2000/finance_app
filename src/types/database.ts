@@ -515,6 +515,57 @@ export type Database = {
           },
         ]
       }
+      credit_card_statement_totals: {
+        Row: {
+          bank_total: number
+          created_at: string
+          created_by: string
+          credit_card_id: string
+          id: string
+          source: string
+          statement_close_date: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          bank_total: number
+          created_at?: string
+          created_by?: string
+          credit_card_id: string
+          id?: string
+          source: string
+          statement_close_date: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          bank_total?: number
+          created_at?: string
+          created_by?: string
+          credit_card_id?: string
+          id?: string
+          source?: string
+          statement_close_date?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_card_statement_totals_credit_card_id_fkey"
+            columns: ["credit_card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_card_statement_totals_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_cards: {
         Row: {
           brand: string | null
@@ -735,12 +786,15 @@ export type Database = {
           date: string
           description: string | null
           id: string
+          import_batch_id: string | null
           installment_plan_id: string | null
           installment_sequence: number | null
           is_recurring: boolean | null
+          needs_review: boolean
           payment_credit_card_id: string | null
           payment_method: string | null
           recurring_interval: string | null
+          source: string
           subscription_id: string | null
           type: string
           updated_at: string | null
@@ -755,12 +809,15 @@ export type Database = {
           date?: string
           description?: string | null
           id?: string
+          import_batch_id?: string | null
           installment_plan_id?: string | null
           installment_sequence?: number | null
           is_recurring?: boolean | null
+          needs_review?: boolean
           payment_credit_card_id?: string | null
           payment_method?: string | null
           recurring_interval?: string | null
+          source?: string
           subscription_id?: string | null
           type: string
           updated_at?: string | null
@@ -775,12 +832,15 @@ export type Database = {
           date?: string
           description?: string | null
           id?: string
+          import_batch_id?: string | null
           installment_plan_id?: string | null
           installment_sequence?: number | null
           is_recurring?: boolean | null
+          needs_review?: boolean
           payment_credit_card_id?: string | null
           payment_method?: string | null
           recurring_interval?: string | null
+          source?: string
           subscription_id?: string | null
           type?: string
           updated_at?: string | null
