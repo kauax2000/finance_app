@@ -79,7 +79,7 @@ A justificativa de cada uma está na estratégia, §2.
 - **Contas de terceiros que o dono abre** (pré-requisitos; ninguém cria conta por ele):
   - Asaas;
   - Meta Business com o WhatsApp Cloud API e um número dedicado;
-  - Cloudflare (Workers AI, no plano grátis).
+  - Groq (com ZDR ligado) e Cloudflare (Workers AI), nos planos grátis.
   - O CNPJ é exigido pelo Asaas, e pelo Pix Automático só depois de 6 meses.
 - **Tudo no plano gratuito até a primeira receita** (decisão do dono, 21/10). Nada pago entra antes das assinaturas pagarem por ele.
 
@@ -88,7 +88,7 @@ A justificativa de cada uma está na estratégia, §2.
   | Supabase Free | banco 500 MB, storage 1 GB, egress 5 GB, 500 mil chamadas de Edge/mês | o projeto **pausa após 7 dias sem uso**; **sem backup diário para baixar** | ~2 assinaturas pagam o Pro (US$ 25). Até lá, `pg_dump` semanal guardado fora (a montar no Bloco 1) |
   | Hospedagem do Next | Vercel Hobby | **a Vercel Hobby proíbe uso comercial** | ao ligar a cobrança (Bloco 4): Vercel Pro (US$ 20) ou Cloudflare com OpenNext. Decidir no plano do Bloco 4 |
   | Resend Free | 3.000 e-mails/mês, 100/dia | o teto diário | push primeiro; e-mail só no essencial (conta, cobrança, aviso de renovação) |
-  | Cloudflare Workers AI | 10 mil neurons/dia, **não treina com o dado** | a cota diária | sem cota, o app cai para o parser determinístico e "a conferir" |
+  | Groq (principal) e Cloudflare Workers AI (reserva) | ~1.000 req/dia por modelo + 10 mil neurons/dia; **nenhum dos dois treina com o dado** | as cotas diárias | sem cota, o app cai para o parser e "a conferir"; a Groq paga custa centavos |
   | WhatsApp Cloud API | receber é grátis; 1.000 respostas/mês grátis | as respostas | o app só responde em erro e corta as respostas em 900/mês |
   | Asaas | sem mensalidade | taxa por cobrança, paga pela própria receita | — |
 - **Anexos com 1 GB total:** cota de **25 MB por assinante** (~100 fotos comprimidas) enquanto o Supabase for Free. A cota sobe no Pro.
@@ -147,6 +147,11 @@ A pessoa envia o PDF pelo app, pelo WhatsApp, pelo "compartilhar" do Android ou 
    - **valor diferente**;
    - **parcela fora de sequência**.
 5. **O PDF fica guardado** como anexo daquele fechamento.
+
+### Importar extrato do banco (CSV/OFX)
+- O caminho mais exato para a fatura e o extrato, sem IA: o arquivo que o banco exporta (o Nubank exporta CSV e OFX).
+- Mapeia data, descrição e valor, mais a parcela quando vem na descrição.
+- Usa a mesma conferência (`conferirFatura`) e a mesma importação em lote desfazível.
 
 ### Começar com histórico (bônus "Mudança sem esforço")
 - **A última fatura em PDF** entra pelo mesmo leitor e vira lançamentos, todos marcados "a conferir".
@@ -232,29 +237,46 @@ Um guia opcional mostra o Tasker/MacroDroid para ler a notificação do banco no
 
 ## 8. IA no app (P3): só grátis até a primeira receita
 
-**Decisão do dono:** nesta versão a IA só entra se for grátis. Ela tem também de **não treinar com o dado**, por ser dado financeiro.
-- **Ficam fora:**
-  - o free tier do Gemini e o do Mistral, e os modelos `:free` do OpenRouter, porque podem treinar ou ter revisão humana;
-  - o Groq, até a documentação dizer com todas as letras que não treina.
-- **O único que cumpre as duas coisas hoje** é o **Cloudflare Workers AI**: 10 mil neurons/dia grátis, sem treino.
+**Decisão do dono:** nesta versão a IA só entra se for grátis. Ela tem também de **não treinar com o dado**, por ser dado financeiro. Pesquisa de 21/10, com fontes oficiais:
 
-| Tarefa | Como, nesta versão |
+| Provedor | Grátis | Treina? | Uso | Papel |
+|---|---|---|---|---|
+| **Groq** | ~1.000 req/dia por modelo de texto; Whisper com ~8 h de áudio/dia | **Não**: o contrato proíbe (§4.2). Com o **ZDR ligado**, não guarda nada | produção permitida | **principal** |
+| **Cloudflare Workers AI** | 10 mil neurons/dia (~214 min de áudio, ou ~1.400 frases, ou ~160 recibos) | **Não** | produção permitida; proíbe processar número completo de cartão | **reserva** |
+| No aparelho | ditado do teclado; "Extrair texto da imagem" e "Usar Modelo" no Atalhos do iOS (iPhone 15 Pro em diante) | o dado não sai do aparelho por nossa conta | — | **opcional** |
+
+**Ficam fora**, pelos motivos abaixo:
+- **Gemini free, Mistral free e os `:free` do OpenRouter:** treinam com o dado.
+- **SambaNova, NVIDIA e Cohere trial:** só servem para avaliação ou não declaram o que fazem com o dado.
+- **GitHub Models:** encerrado em 30/07/2026.
+- **Cerebras, Hugging Face e Together:** sem tier grátis útil.
+- **Chrome Prompt API:** não roda no celular e não aceita português.
+- **Oracle hospedada por nós:** último recurso.
+
+| Tarefa | Caminho, em ordem |
 |---|---|
-| Entender a frase | **Parser determinístico** (`interpretarFrase`) e histórico. A IA só entra se o parser falhar. |
-| Áudio do WhatsApp | Whisper turbo no Cloudflare. A cota grátis cobre ~1.900 usuários. |
-| Foto de nota ou comprovante | Modelo de visão no Cloudflare (Llama 3.2 Vision ou o equivalente disponível). |
-| Fatura PDF | **Leitor determinístico de linhas** primeiro (§6). A IA do Cloudflare só quando a soma não fecha. |
-| Resumos e dicas (§11) | **Modelos de frase em pt-BR**, sem IA. |
+| Frase ("42 mercado nubank em 3x") | **parser** e histórico → Groq `gpt-oss-20b` em JSON mode → Cloudflare `qwen3-30b-a3b` → formulário pré-preenchido com "Não entendi, confira" |
+| Áudio no app | o **ditado do teclado** (o app só recebe o texto) |
+| Áudio no WhatsApp | Groq Whisper turbo → Cloudflare Whisper → fila até a cota virar |
+| Foto de recibo ou comprovante | **OCR no aparelho** quando der (o Atalho do iOS manda o texto) → caminho da frase. Senão, imagem → Groq `qwen3.8-27b` (visão) → Cloudflare `llama-4-scout` |
+| Fatura | **CSV ou OFX exportado pelo banco** (o Nubank exporta; sem IA, exato) → leitor determinístico do texto do PDF → Groq `gpt-oss-120b` por página → Cloudflare |
+| Resumos e dicas (§11) | modelos de frase em pt-BR, sem IA |
 
+**Regras:**
 - **Um módulo só:** `supabase/functions/_shared/ia.ts`, com `transcrever`, `interpretar`, `lerImagem` e `lerFatura`.
-  - Toda saída vem em JSON com schema e é validada.
-  - Saída inválida vira "a conferir", nunca um lançamento errado em silêncio.
-- **Sem cota, o app não para.** Quando a cota diária acaba, ele cai no caminho determinístico e marca "a conferir". O registro de uso diz quando a cota começou a apertar.
-- **Com receita:** o Gemini Flash-Lite pago (~US$ 0,01 por usuário/mês, sem treino) entra pela mesma interface, sem mexer em quem chama. Os resumos escritos por IA entram nessa hora.
-- **Privacidade:**
-  - nome, CPF e endereço saem antes do envio;
-  - a política de privacidade cita a transferência internacional;
-  - os segredos ficam só nas Edge Functions.
+  - A cadeia de provedores é configuração.
+  - As APIs da Groq e da Cloudflare são compatíveis com a da OpenAI.
+  - Toda saída vem em JSON com schema e é validada. A saída inválida vira "a conferir", nunca um lançamento errado em silêncio.
+- **Antes de enviar,** saem nome, CPF, endereço e **qualquer número de cartão completo** (a Cloudflare proíbe processá-lo no plano grátis).
+- **Sem cota, o app não para.** O app passa ao próximo da cadeia, depois ao parser e por fim a "a conferir".
+  - Há teto diário por pessoa, e as frases repetidas ficam em cache.
+  - Os 429 são registrados. Quando chegarem perto do teto todo dia, é a hora de pagar: a Groq paga custa centavos.
+- **Com receita, ou com créditos de startup** (AWS Activate US$ 1.000, Google Start, Microsoft; exigem empresa e site): Gemini no Vertex ou Claude no Bedrock entram pela mesma interface.
+- **A confirmar no Bloco 3:**
+  - se o ZDR aparece na conta grátis da Groq;
+  - os limites reais em `console.groq.com/settings/limits`;
+  - o DPA e a retenção da Cloudflare.
+- **Privacidade:** a política de privacidade cita a transferência internacional. Os segredos ficam só nas Edge Functions.
 
 ## 9. Bloco 4 — Planos e confiança (P4, P14, P15)
 
@@ -550,7 +572,7 @@ Cada bloco é um projeto com plano próprio. A ordem segue o valor e a dependên
 7. O dono e a família dele recebem plano vitalício manual.
 8. Teto de 3 push por semana para insights.
 9. Ao WhatsApp o app só responde em erro ou ambiguidade; os avisos vão por push.
-10. A IA é só a do Cloudflare Workers AI, grátis e sem treino. Sem cota, cai no determinístico.
+10. A IA é grátis e sem treino: primeiro o parser, depois a Groq (com ZDR) e, na reserva, a Cloudflare. Sem cota, cai no determinístico.
 11. O plano é do assinante e cobre todas as carteiras dele e as pessoas convidadas, até 5, com a carteira pessoal de cada uma.
 12. Gasto privado só fora do cartão compartilhado. PDF e conferência de cartão ficam só com o titular e o dono.
 13. Preço proposto: R$ 239/ano em até 12x de R$ 19,92.
@@ -566,7 +588,7 @@ Cada bloco é um projeto com plano próprio. A ordem segue o valor e a dependên
 
 **Em aberto, só trava o Bloco 4:** o CNPJ. Asaas e AbacatePay exigem CNPJ, e a escolha do gateway fica para o plano do Bloco 4.
 
-**A conferir antes de prometer:** a região do projeto Supabase. "Dados no Brasil" só entra no Cofre aberto se for `sa-east-1`. A IA (Cloudflare) é transferência internacional, e o Cofre aberto diz isso com todas as letras.
+**A conferir antes de prometer:** a região do projeto Supabase. "Dados no Brasil" só entra no Cofre aberto se for `sa-east-1`. A IA (Groq e Cloudflare) é transferência internacional, e o Cofre aberto diz isso com todas as letras.
 
 ## 16. O que fica para quem constrói
 

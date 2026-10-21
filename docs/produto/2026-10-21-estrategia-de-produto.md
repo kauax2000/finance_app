@@ -61,7 +61,7 @@ O desenho funcional que implementa esta estratégia está em
 
 **Custos: tudo no plano gratuito até a primeira receita** (decisão do dono):
 - Supabase Free, Resend Free;
-- Cloudflare Workers AI grátis, a única IA grátis que não treina com o dado;
+- IA grátis que não treina com o dado: a Groq (com ZDR) como principal e o Cloudflare Workers AI como reserva, sempre depois do parser;
 - WhatsApp com as 1.000 respostas/mês grátis.
 
 Dois limites pedem atenção:
