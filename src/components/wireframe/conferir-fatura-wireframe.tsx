@@ -10,7 +10,8 @@ import {
     statementCloseOnOrBefore,
 } from "@/lib/credit-card-billing"
 import type { CcTxAnalyticsRow } from "@/lib/credit-cards-workspace-transactions"
-import { conferirFatura, type LancamentoParaConferir } from "@/lib/fatura/conferir"
+import { ajustarAoCiclo, conferirNoCiclo } from "@/lib/fatura/ciclo"
+import type { LancamentoParaConferir } from "@/lib/fatura/conferir"
 import { bancoTotalDoCiclo } from "@/lib/fatura/total-com-banco"
 import { currencyBRL } from "@/lib/formatters"
 import { lerCsv, mapearCsv } from "@/lib/import/csv"
@@ -121,7 +122,8 @@ export function ConferirFaturaWireframe({
                 // Estorno entra (receita no cartão); a âncora duplicada de parcelamento não.
                 if (t.type === "expense" && !shouldCountCreditCardExpenseForInvoiceSum(t, card.id, transactions)) return []
                 const date = transactionLocalYmd(t.date)
-                if (!date || date < ciclo.inicio || date > ciclo.fechamento) return []
+                // Sem corte de data: `conferirNoCiclo` casa também o que veio antes do ciclo.
+                if (!date) return []
                 return [
                     {
                         id: t.id,
@@ -133,11 +135,14 @@ export function ConferirFaturaWireframe({
                     },
                 ]
             }),
-        [transactions, card.id, ciclo.inicio, ciclo.fechamento],
+        [transactions, card.id],
     )
 
-    const conferencia = useMemo(() => (leitura ? conferirFatura(itens, doApp) : null), [leitura, itens, doApp])
-    const faltam = (conferencia?.faltaNoApp ?? []) as ItemImportavel[]
+    const conferencia = useMemo(
+        () => (leitura ? conferirNoCiclo(itens, doApp, ciclo) : null),
+        [leitura, itens, doApp, ciclo],
+    )
+    const faltam = conferencia?.faltaNoApp ?? []
     const selecionados = faltam.filter((i) => !desmarcados.has(i.clientId))
 
     function limparLeitura() {
@@ -252,7 +257,8 @@ export function ConferirFaturaWireframe({
             const r = await importarLancamentos(
                 supabase,
                 { userId, workspaceId },
-                selecionados,
+                // A parcela com a data da compra entra nesta fatura, e não numa velha.
+                ajustarAoCiclo(selecionados, ciclo),
                 { tipo: "cartao", cardId: card.id },
                 leitura.origem === "pdf" ? "import_pdf" : "import_statement",
                 batchId,

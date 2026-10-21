@@ -282,6 +282,24 @@ export default function CreditCardDetailPageClient() {
         setInvoicePayments(pack.payments)
     }, [user, currentWorkspaceId, cardId])
 
+    /**
+     * Recarrega só os lançamentos do cartão, sem o esqueleto da página: o `load`
+     * desmontaria a conferência de fatura no meio dela (a leitura, o PDF aberto).
+     */
+    const refreshCardTransactions = useCallback(async () => {
+        if (!user || !currentWorkspaceId || !cardId) return
+        const pack = await fetchCreditCardExpenseRowsForCard(supabase, currentWorkspaceId, cardId)
+        if (pack.error) {
+            toastError(
+                formatSupabasePostgrestError(pack.error) ??
+                    "Não foi possível atualizar as transações do cartão",
+                { id: "carregar-cartao-transacoes" }
+            )
+            return
+        }
+        setCcAnalyticsRows(pack.rows)
+    }, [user, currentWorkspaceId, cardId])
+
     useEffect(() => {
         if (!user || !currentWorkspaceId) return
         let cancelled = false
@@ -818,7 +836,7 @@ export default function CreditCardDetailPageClient() {
                 transactionsHref={transactionsHrefForCreditCard(card.id)}
                 invoiceTransactions={invoicePostedTransactions}
                 cardTransactions={ccAnalyticsRows}
-                onCardTransactionsChanged={load}
+                onCardTransactionsChanged={refreshCardTransactions}
                 invoicePostedTotalInPeriod={invoicePostedTotalInPeriod}
                 invoicePostedDisplayCap={INVOICE_POSTED_TX_DISPLAY_CAP}
                 invoicePeriodYm={invoicePeriodYm}
