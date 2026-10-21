@@ -1,0 +1,13 @@
+{
+  "id": "P001",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Minha planilha do Google funciona há anos e eu atualizo no domingo sem pagar nada. Até testaria o grátis por curiosidade, mas pagar R$ 19,90 por mês para trocar o que já funciona eu não pago.",
+  "objection": "E se o app fechar e eu perder meu histórico? Anos de planilha eu tenho no meu Drive, o app eu não controlo.",
+  "would_change_my_mind": "Exportar tudo para planilha (CSV ou Google Sheets) a qualquer momento, e ver as minhas 3 compras em 10x calculadas certo no grátis, sem pagar nada, antes de decidir.",
+  "price_too_cheap": 3,
+  "price_cheap": 8,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

@@ -1,0 +1,98 @@
+{
+ "n": 20,
+ "seed": 875176,
+ "customer": {
+  "business": "App brasileiro de controle financeiro da família (PWA no celular; apps nativos depois)",
+  "target": "Quem cuida do dinheiro da casa no Brasil, 28 a 45 anos, casado(a) ou morando junto, muitas vezes com filhos, renda familiar de R$ 6 mil a R$ 25 mil, quase tudo no cartão com parcelas e Pix, já tentou planilha ou app e largou",
+  "where": "Capitais e cidades médias do Brasil",
+  "age": [
+   28,
+   45
+  ],
+  "segments": [
+   {
+    "name": "Provedor(a) único(a) com cônjuge e filhos",
+    "share": 0.3,
+    "income": [
+     6000,
+     18000
+    ]
+   },
+   {
+    "name": "Casal de renda dupla com filhos",
+    "share": 0.35,
+    "income": [
+     9000,
+     25000
+    ]
+   },
+   {
+    "name": "Casal de renda dupla sem filhos",
+    "share": 0.2,
+    "income": [
+     8000,
+     22000
+    ]
+   },
+   {
+    "name": "Família estendida ou irmãos cuidando dos pais",
+    "share": 0.15,
+    "income": [
+     6000,
+     15000
+    ]
+   }
+  ],
+  "behaviours": [
+   {
+    "name": "Fiel à planilha",
+    "share": 0.2,
+    "how": "Mantém uma planilha do Google há anos, atualiza no domingo e acha que app não faz melhor."
+   },
+   {
+    "name": "Largou apps",
+    "share": 0.2,
+    "how": "Já instalou Mobills ou Organizze, lançou por três semanas e abandonou por preguiça."
+   },
+   {
+    "name": "Só olha a fatura",
+    "share": 0.2,
+    "how": "Controla pelo app do banco e pela fatura do cartão; se assusta quando ela chega."
+   },
+   {
+    "name": "Caçador de grátis",
+    "share": 0.15,
+    "how": "Só usa app gratuito; desconfia de assinatura e de cobrança automática."
+   },
+   {
+    "name": "Organizado(a) que quer automação",
+    "share": 0.1,
+    "how": "Já controla tudo e pagaria para gastar menos tempo lançando."
+   },
+   {
+    "name": "Desconfiado(a) com segurança",
+    "share": 0.15,
+    "how": "Tem medo de vazamento e de golpe; nunca conectaria o banco num app."
+   }
+  ],
+  "objections": [
+   "Já tentei app e larguei, vai ser igual",
+   "Por que pagar se a planilha é grátis?",
+   "Meu cônjuge não vai usar",
+   "Não quero que meu parceiro veja cada compra minha",
+   "E se o app fechar e eu perder meu histórico?",
+   "Assinatura que cobra escondido e é difícil cancelar",
+   "Não é app da loja, é confiável?",
+   "O total nunca bate com a fatura do banco"
+  ],
+  "habits": [
+   "a fatura do cartão chegou mais alta que o esperado no mês passado",
+   "você paga a escola dos filhos por boleto todo dia 10",
+   "você usa o WhatsApp o dia inteiro, inclusive para mandar comprovante de Pix",
+   "seu salário cai no 5º dia útil e some antes do dia 20",
+   "você tem três compras parceladas em 10x rodando no cartão",
+   "você e seu parceiro já discutiram por causa de um gasto que um não sabia"
+  ]
+ },
+ "pitch": "Família no Controle: o app que diz quanto ainda dá para gastar este mês, sem você lançar tudo à mão e sem conectar o banco (não pedimos senha nem acesso ao banco; seus dados ficam no Brasil e você exporta ou apaga tudo em 1 toque).\nOs gastos entram sozinhos: Apple Pay lança na hora, no Android você compartilha o comprovante, e qualquer pessoa da casa manda \"42 mercado\" no WhatsApp sem instalar nada. Na dúvida, o lançamento vai para \"a conferir\" e nada some. Um painel mostra tudo que o app fez sozinho, com desfazer.\nEnvie o PDF da fatura: o app confere com o que foi lançado, inclusive parcelas e estornos, e aponta o que faltou. Se no primeiro mês pago não bater, devolvemos o mês.\nNo 1º dia você importa sua planilha e a última fatura, e já começa com seu histórico. O cônjuge vê tudo ou só o total do que é pessoal de cada um; os filhos só lançam e veem o próprio.\nAvisa antes da fatura alta e da conta vencendo, e todo dia 1 mostra o que fez por você no mês.\nGrátis para sempre: lançar à mão sem limite e exportar. Família (até 6 pessoas): R$ 19,90/mês ou R$ 149/ano; fundadores pagam R$ 119 no 1º ano até 31/01/2027. 14 dias do Família grátis sem cartão; depois volta ao Grátis sem perder nada; cancela em 1 toque e avisamos 7 dias antes de renovar."
+}

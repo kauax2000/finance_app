@@ -1,0 +1,13 @@
+{
+  "id": "P014",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Já instalei Mobills e Organizze e larguei em três semanas por preguiça, então o problema não é o app, sou eu. Posso até testar de graça pelo WhatsApp, mas pagar por mês antes de provar que eu vou continuar lançando, não.",
+  "objection": "Vou usar por duas semanas e esquecer, igual das outras vezes, e aí estou pagando R$ 19,90 por algo parado. Por que pagar se a planilha é grátis?",
+  "would_change_my_mind": "Ver que o lançamento vira hábito sozinho (Apple Pay lançando sem eu fazer nada) e que a parte grátis já me mostra o 'quanto ainda dá para gastar' por uns dois meses, para eu ter prova de que eu uso antes de pagar.",
+  "price_too_cheap": 5,
+  "price_cheap": 9,
+  "price_expensive": 20,
+  "price_too_expensive": 35
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P017",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Minha planilha do Google já funciona há anos e eu atualizo no domingo, então não vou pagar por app. Até testaria o plano grátis, mas pagar R$ 19,90 por mês eu não pago.",
+  "objection": "Não quero que minha esposa veja cada compra minha. Mesmo com a opção de ver só o total, eu desconfio de pôr tudo num app, e a planilha eu controlo.",
+  "would_change_my_mind": "Ver, no teste grátis, o app apontar um erro da fatura que a minha planilha deixou passar. Eu também precisaria ter certeza de que o que é pessoal fica privado e que importar a planilha não bagunça meu histórico.",
+  "price_too_cheap": 5,
+  "price_cheap": 9,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

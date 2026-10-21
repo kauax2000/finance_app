@@ -1,0 +1,13 @@
+{
+  "id": "P004",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Já baixei app de controle, usei duas semanas e larguei, então não vou pagar por mais um. Até testo o grátis pelo WhatsApp porque é fácil, mas pagar R$ 19,90 todo mês com a renda apertada eu só faço se eu vir que eu mesmo uso.",
+  "objection": "Vou esquecer de lançar depois de umas semanas, como sempre, e aí estou pagando por um app parado. A fatura já me mostra o que gastei.",
+  "would_change_my_mind": "Ver funcionando de graça por uns dois meses, com o lançamento pelo WhatsApp sem dar trabalho, e o app me avisando da fatura antes dela chegar.",
+  "price_too_cheap": 4,
+  "price_cheap": 9,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

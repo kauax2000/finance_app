@@ -1,0 +1,13 @@
+{
+  "id": "P007",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Não conecta o banco, isso eu gostei, mas pedem PDF da fatura e mando comprovante pelo WhatsApp, e eu nem conheço o app. Com a renda apertada eu não pago R$ 19,90 por mês num app que não conheço; no máximo baixo o grátis pra olhar.",
+  "objection": "Não é app da loja, é confiável? Se vazar meus dados da fatura ou alguém me der um golpe, quem responde por mim?",
+  "would_change_my_mind": "Ver o app numa loja oficial com muita gente real avaliando, e usar o grátis uns meses sem nenhum problema antes de pensar em pagar.",
+  "price_too_cheap": 4,
+  "price_cheap": 9,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

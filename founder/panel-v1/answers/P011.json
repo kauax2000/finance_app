@@ -1,0 +1,13 @@
+{
+  "id": "P011",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Já larguei Mobills e Organizze depois de três semanas, então pagar por mais um app que eu vou abandonar não faz sentido. Se eu testar, é na parte grátis, e não vou tirar cartão por isso.",
+  "objection": "Não quero que meu parceiro veja cada compra minha, e eu mesmo vou enjoar de lançar gasto em duas semanas, como sempre.",
+  "would_change_my_mind": "Ver que o lançamento por WhatsApp ou Apple Pay realmente me poupa de digitar, e poder escolher o que o cônjuge enxerga em vez de ver tudo.",
+  "price_too_cheap": 4,
+  "price_cheap": 9,
+  "price_expensive": 20,
+  "price_too_expensive": 35
+}

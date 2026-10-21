@@ -1,0 +1,13 @@
+{
+  "id": "P020",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "Eu só uso app grátis e já larguei outros antes. Pagar R$ 19,90 por mês pra mais um app que eu posso abandonar não entra no meu orçamento, o boleto da escola vem antes. Talvez eu até teste o Grátis, mas pagar eu não pago.",
+  "objection": "Já tentei app e larguei, vai ser igual. E assinatura que renova sozinha me deixa com o pé atrás, mesmo com o aviso de 7 dias.",
+  "would_change_my_mind": "Os lançamentos automáticos e a conferência da fatura virem no plano Grátis, sem custo nenhum.",
+  "price_too_cheap": 3,
+  "price_cheap": 6,
+  "price_expensive": 12,
+  "price_too_expensive": 20
+}

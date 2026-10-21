@@ -1,0 +1,13 @@
+{
+  "id": "P018",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Não conecta o banco, ok, mas eu mando comprovante e valor por WhatsApp e PDF de fatura para um app que não conheço, e isso me assusta. Já larguei planilha e app antes, não vou pagar R$ 19,90 por mês por algo que talvez eu abandone.",
+  "objection": "Medo de vazamento e golpe: quem garante que meus dados e o PDF da fatura estão seguros? E se o total não bater com a fatura do banco de novo, eu perco a confiança.",
+  "would_change_my_mind": "Ver que gente que eu conheço usa há meses sem problema e que o total bateu com a fatura no mês grátis, sem eu precisar mandar nada sensível.",
+  "price_too_cheap": 4,
+  "price_cheap": 9,
+  "price_expensive": 19,
+  "price_too_expensive": 30
+}

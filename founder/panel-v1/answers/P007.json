@@ -1,0 +1,13 @@
+{
+  "id": "P007",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Não conheço esse app, não vi em loja nenhuma e já tentei planilha e app e larguei. Mandar meus gastos por WhatsApp e mandar PDF da fatura para uma empresa que eu não conheço me dá medo de golpe, mesmo sem conectar o banco.",
+  "objection": "Quem é essa empresa e o que fazem com a minha fatura e com os dados dos meus filhos? Não é app da loja, é confiável?",
+  "would_change_my_mind": "Ver o app numa loja oficial com muitas avaliações, ou alguém da família que já usa há meses e me mostrar que nunca teve problema. Depois disso eu testaria os 14 dias grátis.",
+  "price_too_cheap": 4,
+  "price_cheap": 8,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

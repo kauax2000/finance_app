@@ -1,0 +1,13 @@
+{
+  "id": "P006",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Eu só uso app grátis e não pago assinatura de coisa que não conheço. Testar os 14 dias sem cartão e ficar no grátis eu até topo, mas pagar R$ 19,90 todo mês, não.",
+  "objection": "Não é app da loja, é confiável? E mais um débito automático no cartão que já tá cheio de parcela em 10x. Já larguei planilha e app antes, não quero pagar para largar de novo.",
+  "would_change_my_mind": "Ver o app gratuito me ajudando de verdade por uns dois meses, com gente que eu conheço usando e dando bom resultado. Aí talvez eu pagasse o anual, se fosse bem mais barato.",
+  "price_too_cheap": 3,
+  "price_cheap": 6,
+  "price_expensive": 12,
+  "price_too_expensive": 20
+}

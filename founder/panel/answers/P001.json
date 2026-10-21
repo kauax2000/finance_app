@@ -1,0 +1,13 @@
+{
+  "id": "P001",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Minha planilha do Google funciona há anos e eu atualizo no domingo sem pagar nada. Até posso testar os 14 dias de graça, mas pagar R$ 19,90 por mês por algo que a planilha já faz eu não vou.",
+  "objection": "E se o app fechar e eu perder meu histórico? Anos de dados na mão de uma empresa nova que eu não conheço.",
+  "would_change_my_mind": "Ver que ele lê a minha planilha de verdade sem eu refazer nada e que mostra as minhas 3 parcelas de 10x batendo certinho com a fatura, de graça, antes de eu pagar.",
+  "price_too_cheap": 4,
+  "price_cheap": 9,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

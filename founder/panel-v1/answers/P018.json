@@ -1,0 +1,13 @@
+{
+  "id": "P018",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Até testava o grátis, mas pagar R$ 19,90 por mês não. Não conheço essa empresa, e mandar gasto pelo WhatsApp e PDF da fatura para um app que não conheço me deixa com um pé atrás.",
+  "objection": "Fatura em PDF tem meu nome, meu CPF e tudo que eu gasto. Quem garante que não vaza? Já vi muito golpe de WhatsApp, e o total nunca bate com a fatura do banco mesmo.",
+  "would_change_my_mind": "Ver gente que eu conheço usando há meses, saber onde os dados ficam guardados e poder apagar tudo, e o grátis já me mostrar um mês fechando certo com a minha fatura.",
+  "price_too_cheap": 4,
+  "price_cheap": 9,
+  "price_expensive": 20,
+  "price_too_expensive": 30
+}

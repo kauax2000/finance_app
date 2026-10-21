@@ -1,0 +1,13 @@
+{
+  "id": "P012",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Eu só olho a fatura e já larguei planilha e app antes, então não pago por mais um. Testava os 14 dias sem cartão, mas vou ficar no Grátis se não virar hábito, e dinheiro sobrando antes do dia 20 eu não tenho.",
+  "objection": "O total nunca bate com a fatura do banco. Já ouvi isso de app e de planilha: promete e depois eu perco tempo conferindo à mão. Mandar 42 mercado no WhatsApp eu não vou lembrar de fazer todo dia, e se o cônjuge não lança, o número fica furado.",
+  "would_change_my_mind": "Mandar o PDF da fatura no primeiro mês e ele apontar o que não bate sem eu fazer nada, e a minha esposa usar sem reclamar. Se isso funcionar nos 14 dias, o plano anual de R$ 119 eu pagaria.",
+  "price_too_cheap": 4,
+  "price_cheap": 9,
+  "price_expensive": 20,
+  "price_too_expensive": 35
+}

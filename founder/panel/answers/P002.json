@@ -1,0 +1,13 @@
+{
+  "id": "P002",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Minha planilha do Google funciona há anos e eu atualizo no domingo, não vejo app fazendo melhor. O grátis eu até testaria, mas pagar todo mês pra trocar o que já funciona, não.",
+  "objection": "Não quero que meu parceiro veja cada compra minha, e já larguei app antes. Dar WhatsApp e Apple Pay lançando tudo sozinho me parece mais gente vendo meu gasto, e se errar eu perco tempo conferindo.",
+  "would_change_my_mind": "Ver, no grátis, que importa minha planilha inteira sem quebrar e que o parceiro só vê o total do que é pessoal, sem detalhe de compra. Aí eu testaria os 14 dias.",
+  "price_too_cheap": 4,
+  "price_cheap": 9,
+  "price_expensive": 19.9,
+  "price_too_expensive": 30
+}

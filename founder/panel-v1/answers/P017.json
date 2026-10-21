@@ -1,0 +1,13 @@
+{
+  "id": "P017",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Minha planilha do Google funciona há anos e eu atualizo no domingo, não vou trocar por app que provavelmente largo em um mês, como os outros. Mesmo grátis eu pagaria R$ 19,90 só se a planilha falhasse, e ela não falha.",
+  "objection": "O cônjuge vê tudo. Não quero que meu parceiro veja cada compra minha, e além disso já larguei app antes e a planilha eu controlo do meu jeito.",
+  "would_change_my_mind": "Poder escolher quais gastos são só meus (privados) e importar minha planilha atual sem refazer nada à mão.",
+  "price_too_cheap": 5,
+  "price_cheap": 9,
+  "price_expensive": 20,
+  "price_too_expensive": 30
+}

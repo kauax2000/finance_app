@@ -1,0 +1,13 @@
+{
+  "id": "P003",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Já larguei Mobills e Organizze depois de três semanas, então pagar por mais um app me parece dinheiro jogado fora. Até testaria o grátis, mas assinar eu não assino antes de ver que eu mesmo uso.",
+  "objection": "Não é app da loja, é confiável? E eu sei que daqui a três semanas vou parar de mandar mensagem no WhatsApp e o app vira mais um ícone esquecido.",
+  "would_change_my_mind": "Usar o grátis por um mês e ver que ele realmente lançou as minhas parcelas em 10x sem eu fazer nada, com a fatura batendo.",
+  "price_too_cheap": 5,
+  "price_cheap": 10,
+  "price_expensive": 20,
+  "price_too_expensive": 35
+}

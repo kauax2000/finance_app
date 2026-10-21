@@ -1,0 +1,98 @@
+{
+ "n": 20,
+ "seed": 875176,
+ "customer": {
+  "business": "App brasileiro de controle financeiro da família (PWA no celular; apps nativos depois)",
+  "target": "Quem cuida do dinheiro da casa no Brasil, 28 a 45 anos, casado(a) ou morando junto, muitas vezes com filhos, renda familiar de R$ 6 mil a R$ 25 mil, quase tudo no cartão com parcelas e Pix, já tentou planilha ou app e largou",
+  "where": "Capitais e cidades médias do Brasil",
+  "age": [
+   28,
+   45
+  ],
+  "segments": [
+   {
+    "name": "Provedor(a) único(a) com cônjuge e filhos",
+    "share": 0.3,
+    "income": [
+     6000,
+     18000
+    ]
+   },
+   {
+    "name": "Casal de renda dupla com filhos",
+    "share": 0.35,
+    "income": [
+     9000,
+     25000
+    ]
+   },
+   {
+    "name": "Casal de renda dupla sem filhos",
+    "share": 0.2,
+    "income": [
+     8000,
+     22000
+    ]
+   },
+   {
+    "name": "Família estendida ou irmãos cuidando dos pais",
+    "share": 0.15,
+    "income": [
+     6000,
+     15000
+    ]
+   }
+  ],
+  "behaviours": [
+   {
+    "name": "Fiel à planilha",
+    "share": 0.2,
+    "how": "Mantém uma planilha do Google há anos, atualiza no domingo e acha que app não faz melhor."
+   },
+   {
+    "name": "Largou apps",
+    "share": 0.2,
+    "how": "Já instalou Mobills ou Organizze, lançou por três semanas e abandonou por preguiça."
+   },
+   {
+    "name": "Só olha a fatura",
+    "share": 0.2,
+    "how": "Controla pelo app do banco e pela fatura do cartão; se assusta quando ela chega."
+   },
+   {
+    "name": "Caçador de grátis",
+    "share": 0.15,
+    "how": "Só usa app gratuito; desconfia de assinatura e de cobrança automática."
+   },
+   {
+    "name": "Organizado(a) que quer automação",
+    "share": 0.1,
+    "how": "Já controla tudo e pagaria para gastar menos tempo lançando."
+   },
+   {
+    "name": "Desconfiado(a) com segurança",
+    "share": 0.15,
+    "how": "Tem medo de vazamento e de golpe; nunca conectaria o banco num app."
+   }
+  ],
+  "objections": [
+   "Já tentei app e larguei, vai ser igual",
+   "Por que pagar se a planilha é grátis?",
+   "Meu cônjuge não vai usar",
+   "Não quero que meu parceiro veja cada compra minha",
+   "E se o app fechar e eu perder meu histórico?",
+   "Assinatura que cobra escondido e é difícil cancelar",
+   "Não é app da loja, é confiável?",
+   "O total nunca bate com a fatura do banco"
+  ],
+  "habits": [
+   "a fatura do cartão chegou mais alta que o esperado no mês passado",
+   "você paga a escola dos filhos por boleto todo dia 10",
+   "você usa o WhatsApp o dia inteiro, inclusive para mandar comprovante de Pix",
+   "seu salário cai no 5º dia útil e some antes do dia 20",
+   "você tem três compras parceladas em 10x rodando no cartão",
+   "você e seu parceiro já discutiram por causa de um gasto que um não sabia"
+  ]
+ },
+ "pitch": "Um app para controlar o dinheiro da família sem planilha e sem conectar o banco (não pedimos senha nem acesso ao banco).\nVocê lança um gasto em 3 segundos: mandando \"42 mercado\" no WhatsApp, falando com a Siri, ou sozinho quando paga com Apple Pay. O app escolhe a categoria e você confere depois.\nEle mostra quanto ainda dá para gastar até o fim do mês, já descontando faturas, parcelas e contas, e avisa quando a fatura do cartão vem alta ou uma conta vai vencer.\nVocê envia o PDF da fatura e o app confere se bate com o que foi lançado e aponta o que faltou.\nO cônjuge vê tudo; os filhos só lançam e veem os próprios gastos.\nGrátis para lançar e ver o mês. Plano Família (a casa toda, até 6 pessoas): R$ 19,90/mês ou R$ 179/ano, 14 dias grátis sem cartão, cancela em 2 toques no app."
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P006",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "Eu só uso app grátis e a parte grátis já me deixa lançar e ver o mês, então não vejo por que pagar R$ 19,90 todo mês com três parcelas de 10x já pesando no cartão. Assinatura me dá desconfiança, mesmo com 14 dias sem cartão.",
+  "objection": "Não é app da loja, é confiável? E vou pagar mensalidade por algo que posso usar de graça, ainda mais com a minha renda apertada.",
+  "would_change_my_mind": "Se a parte grátis fosse limitada de um jeito que me fizesse perder dinheiro e eu visse, no teste de 14 dias, a fatura do cartão me avisando de uma parcela que eu tinha esquecido, aí eu pensaria em um plano bem mais barato.",
+  "price_too_cheap": 3,
+  "price_cheap": 7,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

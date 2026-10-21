@@ -1,0 +1,13 @@
+{
+  "id": "P012",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Eu só olho a fatura do cartão e o app do banco, e já larguei planilha e app antes. Baixar eu até baixo porque é grátis, mas pagar R$ 19,90 sem ter visto funcionar na minha casa, não pago.",
+  "objection": "Lançar gasto na mão toda hora eu não mantenho, minha esposa muito menos. Se o total não bater com a fatura do banco, vira mais um app abandonado.",
+  "would_change_my_mind": "Ver o PDF da minha fatura real conferir certinho com o que a gente lançou e apontar o que faltou, e o grátis cobrir isso por 1 mês inteiro.",
+  "price_too_cheap": 5,
+  "price_cheap": 10,
+  "price_expensive": 25,
+  "price_too_expensive": 40
+}

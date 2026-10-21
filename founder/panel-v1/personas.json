@@ -1,0 +1,222 @@
+[
+ {
+  "id": "P001",
+  "name": "Declan",
+  "age": 34,
+  "segment": "Casal de renda dupla sem filhos",
+  "income": 15000,
+  "behaviour": "Fiel à planilha",
+  "behaviour_how": "Mantém uma planilha do Google há anos, atualiza no domingo e acha que app não faz melhor.",
+  "objection": "E se o app fechar e eu perder meu histórico?",
+  "habit": "você tem três compras parceladas em 10x rodando no cartão"
+ },
+ {
+  "id": "P002",
+  "name": "Lucia",
+  "age": 34,
+  "segment": "Família estendida ou irmãos cuidando dos pais",
+  "income": 9000,
+  "behaviour": "Fiel à planilha",
+  "behaviour_how": "Mantém uma planilha do Google há anos, atualiza no domingo e acha que app não faz melhor.",
+  "objection": "Não quero que meu parceiro veja cada compra minha",
+  "habit": "você e seu parceiro já discutiram por causa de um gasto que um não sabia"
+ },
+ {
+  "id": "P003",
+  "name": "Rafael",
+  "age": 31,
+  "segment": "Casal de renda dupla sem filhos",
+  "income": 22000,
+  "behaviour": "Largou apps",
+  "behaviour_how": "Já instalou Mobills ou Organizze, lançou por três semanas e abandonou por preguiça.",
+  "objection": "Não é app da loja, é confiável?",
+  "habit": "você tem três compras parceladas em 10x rodando no cartão"
+ },
+ {
+  "id": "P004",
+  "name": "Levi",
+  "age": 29,
+  "segment": "Provedor(a) único(a) com cônjuge e filhos",
+  "income": 10000,
+  "behaviour": "Só olha a fatura",
+  "behaviour_how": "Controla pelo app do banco e pela fatura do cartão; se assusta quando ela chega.",
+  "objection": "Já tentei app e larguei, vai ser igual",
+  "habit": "você usa o WhatsApp o dia inteiro, inclusive para mandar comprovante de Pix"
+ },
+ {
+  "id": "P005",
+  "name": "Nora",
+  "age": 36,
+  "segment": "Casal de renda dupla com filhos",
+  "income": 16000,
+  "behaviour": "Organizado(a) que quer automação",
+  "behaviour_how": "Já controla tudo e pagaria para gastar menos tempo lançando.",
+  "objection": "Não quero que meu parceiro veja cada compra minha",
+  "habit": "você e seu parceiro já discutiram por causa de um gasto que um não sabia"
+ },
+ {
+  "id": "P006",
+  "name": "Talia",
+  "age": 30,
+  "segment": "Casal de renda dupla com filhos",
+  "income": 13000,
+  "behaviour": "Caçador de grátis",
+  "behaviour_how": "Só usa app gratuito; desconfia de assinatura e de cobrança automática.",
+  "objection": "Não é app da loja, é confiável?",
+  "habit": "você tem três compras parceladas em 10x rodando no cartão"
+ },
+ {
+  "id": "P007",
+  "name": "Celine",
+  "age": 34,
+  "segment": "Provedor(a) único(a) com cônjuge e filhos",
+  "income": 8000,
+  "behaviour": "Desconfiado(a) com segurança",
+  "behaviour_how": "Tem medo de vazamento e de golpe; nunca conectaria o banco num app.",
+  "objection": "Não é app da loja, é confiável?",
+  "habit": "você paga a escola dos filhos por boleto todo dia 10"
+ },
+ {
+  "id": "P008",
+  "name": "Isla",
+  "age": 45,
+  "segment": "Família estendida ou irmãos cuidando dos pais",
+  "income": 12000,
+  "behaviour": "Organizado(a) que quer automação",
+  "behaviour_how": "Já controla tudo e pagaria para gastar menos tempo lançando.",
+  "objection": "Por que pagar se a planilha é grátis?",
+  "habit": "você paga a escola dos filhos por boleto todo dia 10"
+ },
+ {
+  "id": "P009",
+  "name": "Clara",
+  "age": 38,
+  "segment": "Casal de renda dupla com filhos",
+  "income": 24000,
+  "behaviour": "Só olha a fatura",
+  "behaviour_how": "Controla pelo app do banco e pela fatura do cartão; se assusta quando ela chega.",
+  "objection": "E se o app fechar e eu perder meu histórico?",
+  "habit": "a fatura do cartão chegou mais alta que o esperado no mês passado"
+ },
+ {
+  "id": "P010",
+  "name": "Malik",
+  "age": 42,
+  "segment": "Casal de renda dupla sem filhos",
+  "income": 14000,
+  "behaviour": "Fiel à planilha",
+  "behaviour_how": "Mantém uma planilha do Google há anos, atualiza no domingo e acha que app não faz melhor.",
+  "objection": "Meu cônjuge não vai usar",
+  "habit": "seu salário cai no 5º dia útil e some antes do dia 20"
+ },
+ {
+  "id": "P011",
+  "name": "Diego",
+  "age": 37,
+  "segment": "Provedor(a) único(a) com cônjuge e filhos",
+  "income": 17000,
+  "behaviour": "Largou apps",
+  "behaviour_how": "Já instalou Mobills ou Organizze, lançou por três semanas e abandonou por preguiça.",
+  "objection": "Não quero que meu parceiro veja cada compra minha",
+  "habit": "você e seu parceiro já discutiram por causa de um gasto que um não sabia"
+ },
+ {
+  "id": "P012",
+  "name": "Mateo",
+  "age": 39,
+  "segment": "Casal de renda dupla com filhos",
+  "income": 11000,
+  "behaviour": "Só olha a fatura",
+  "behaviour_how": "Controla pelo app do banco e pela fatura do cartão; se assusta quando ela chega.",
+  "objection": "O total nunca bate com a fatura do banco",
+  "habit": "seu salário cai no 5º dia útil e some antes do dia 20"
+ },
+ {
+  "id": "P013",
+  "name": "Kofi",
+  "age": 44,
+  "segment": "Casal de renda dupla com filhos",
+  "income": 24000,
+  "behaviour": "Desconfiado(a) com segurança",
+  "behaviour_how": "Tem medo de vazamento e de golpe; nunca conectaria o banco num app.",
+  "objection": "Já tentei app e larguei, vai ser igual",
+  "habit": "você tem três compras parceladas em 10x rodando no cartão"
+ },
+ {
+  "id": "P014",
+  "name": "Farah",
+  "age": 35,
+  "segment": "Casal de renda dupla sem filhos",
+  "income": 18000,
+  "behaviour": "Largou apps",
+  "behaviour_how": "Já instalou Mobills ou Organizze, lançou por três semanas e abandonou por preguiça.",
+  "objection": "Por que pagar se a planilha é grátis?",
+  "habit": "seu salário cai no 5º dia útil e some antes do dia 20"
+ },
+ {
+  "id": "P015",
+  "name": "Ben",
+  "age": 29,
+  "segment": "Provedor(a) único(a) com cônjuge e filhos",
+  "income": 10000,
+  "behaviour": "Só olha a fatura",
+  "behaviour_how": "Controla pelo app do banco e pela fatura do cartão; se assusta quando ela chega.",
+  "objection": "Não quero que meu parceiro veja cada compra minha",
+  "habit": "você paga a escola dos filhos por boleto todo dia 10"
+ },
+ {
+  "id": "P016",
+  "name": "Bilal",
+  "age": 37,
+  "segment": "Provedor(a) único(a) com cônjuge e filhos",
+  "income": 10000,
+  "behaviour": "Caçador de grátis",
+  "behaviour_how": "Só usa app gratuito; desconfia de assinatura e de cobrança automática.",
+  "objection": "O total nunca bate com a fatura do banco",
+  "habit": "a fatura do cartão chegou mais alta que o esperado no mês passado"
+ },
+ {
+  "id": "P017",
+  "name": "Gabriel",
+  "age": 32,
+  "segment": "Casal de renda dupla com filhos",
+  "income": 22000,
+  "behaviour": "Fiel à planilha",
+  "behaviour_how": "Mantém uma planilha do Google há anos, atualiza no domingo e acha que app não faz melhor.",
+  "objection": "Não quero que meu parceiro veja cada compra minha",
+  "habit": "a fatura do cartão chegou mais alta que o esperado no mês passado"
+ },
+ {
+  "id": "P018",
+  "name": "Selin",
+  "age": 36,
+  "segment": "Família estendida ou irmãos cuidando dos pais",
+  "income": 13000,
+  "behaviour": "Desconfiado(a) com segurança",
+  "behaviour_how": "Tem medo de vazamento e de golpe; nunca conectaria o banco num app.",
+  "objection": "O total nunca bate com a fatura do banco",
+  "habit": "você usa o WhatsApp o dia inteiro, inclusive para mandar comprovante de Pix"
+ },
+ {
+  "id": "P019",
+  "name": "Daniel",
+  "age": 37,
+  "segment": "Casal de renda dupla com filhos",
+  "income": 12000,
+  "behaviour": "Largou apps",
+  "behaviour_how": "Já instalou Mobills ou Organizze, lançou por três semanas e abandonou por preguiça.",
+  "objection": "Meu cônjuge não vai usar",
+  "habit": "você paga a escola dos filhos por boleto todo dia 10"
+ },
+ {
+  "id": "P020",
+  "name": "Ines",
+  "age": 39,
+  "segment": "Provedor(a) único(a) com cônjuge e filhos",
+  "income": 10000,
+  "behaviour": "Caçador de grátis",
+  "behaviour_how": "Só usa app gratuito; desconfia de assinatura e de cobrança automática.",
+  "objection": "Já tentei app e larguei, vai ser igual",
+  "habit": "você paga a escola dos filhos por boleto todo dia 10"
+ }
+]

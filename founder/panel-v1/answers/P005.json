@@ -1,0 +1,13 @@
+{
+  "id": "P005",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "convenience",
+  "reason": "Eu já controlo tudo, o que me custa é o tempo lançando. Mandar '42 mercado' no WhatsApp e conferir a fatura em PDF me poupa trabalho, e R$ 19,90 é menos que uma ida ao mercado. Testo os 14 dias sem cartão e só pago se meu marido realmente lançar também.",
+  "objection": "Não quero que meu parceiro veja cada compra minha. Ele ver tudo me incomoda, mesmo a gente já tendo brigado por gasto escondido. E se ele não usar, o app vira mais uma planilha abandonada.",
+  "would_change_my_mind": "Poder marcar alguns gastos como pessoais, só com o valor total à vista, ou ver que a categorização automática acerta quase tudo nos primeiros dias.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 50
+}

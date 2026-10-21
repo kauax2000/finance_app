@@ -1,0 +1,13 @@
+{
+  "id": "P008",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "convenience",
+  "reason": "Eu já controlo tudo, o que me custa é o tempo de lançar. Mandar '42 mercado' no WhatsApp me poupa isso, e R$ 19,90 é pouco perto do que eu gasto em escola e cartão. Eu testo os 14 dias sem cartão e só pago se o lançamento automático funcionar de verdade.",
+  "objection": "Por que pagar se a planilha é grátis? E o que vale mesmo o plano pago, já que lançar e ver o mês é grátis? Também tenho receio de mandar meus gastos pelo WhatsApp e de a categoria automática errar e eu perder tempo corrigindo.",
+  "would_change_my_mind": "Ver, na prova de 14 dias, que o app acerta a categoria quase sempre e que o aviso de conta a vencer cobre o boleto da escola do dia 10. Se eu tiver que corrigir tudo, volto para a planilha.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 50
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P002",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Minha planilha do Google funciona há anos e eu atualizo no domingo, de graça. Pagar R$ 19,90 por mês para fazer o que a planilha já faz não entra na minha conta.",
+  "objection": "O cônjuge vê tudo. Não quero meu parceiro vendo cada compra minha, e já brigamos por gasto escondido, então isso podia piorar. Também não confio que um app escolhe a categoria certa sozinho.",
+  "would_change_my_mind": "Poder escolher o que o parceiro vê (compras pessoais ficam privadas) e importar minha planilha atual sem refazer nada.",
+  "price_too_cheap": 4,
+  "price_cheap": 9,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

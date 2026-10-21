@@ -1,0 +1,13 @@
+{
+  "id": "P015",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Eu já controlo pelo app do banco e olho a fatura quando chega, e já larguei app e planilha antes. Pagar mensalidade por mais um app que eu provavelmente vou parar de abrir não faz sentido, e o dinheiro aqui é curto.",
+  "objection": "Não quero que minha esposa veja cada compra minha, e não confio que 'entra sozinho' funcione de verdade no meu dia a dia. Vou acabar tendo que lançar à mão igual das outras vezes.",
+  "would_change_my_mind": "Ver funcionando de graça por um mês, sem eu precisar fazer nada, e ter certeza de que só aparece pro cônjuge o total, nunca compra por compra.",
+  "price_too_cheap": 5,
+  "price_cheap": 9,
+  "price_expensive": 19.9,
+  "price_too_expensive": 35
+}
