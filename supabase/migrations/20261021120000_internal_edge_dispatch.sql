@@ -48,7 +48,6 @@ end;
 $$;
 
 revoke all on function public.invoke_edge_function(text, jsonb) from public, anon, authenticated;
-grant execute on function public.invoke_edge_function(text, jsonb) to service_role;
 
 -- 2. crons (hosted: extensão presente; local: no-op) --------------------------
 do $cron$

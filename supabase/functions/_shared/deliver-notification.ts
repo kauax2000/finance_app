@@ -17,8 +17,6 @@ export type DeliverNotificationInput = {
   title: string
   body: string
   metadata?: Record<string, unknown>
-  /** When false, skips transaction type entirely (product rule). Default true. */
-  allowTransactionType?: boolean
   /** Pre-loaded prefs (batch fan-out) — skips the per-recipient prefs query. */
   prefs?: WorkspaceNotificationPrefs
   /**
@@ -114,13 +112,8 @@ export async function deliverNotification(
     title,
     body,
     metadata = {},
-    allowTransactionType = true,
     skipTypePref = false,
   } = input
-
-  if (type === 'transaction' && !allowTransactionType) {
-    return { ok: true, skipped: 'transaction_notifications_disabled', in_app: false, push: { sent: 0, failed: 0 }, email: false }
-  }
 
   const prefs =
     input.prefs ?? (await loadNotificationPrefs(supabaseAdmin, userId, workspaceId))

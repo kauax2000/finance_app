@@ -134,7 +134,6 @@ export async function processTransactionNotification(
         actor_user_id: tx.user_id,
         href,
       },
-      allowTransactionType: true,
       prefs: prefsMap.get(memberId),
     })
 
