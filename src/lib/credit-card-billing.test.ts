@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import type { WorkspaceInstallmentPlan } from "@/lib/supabase"
 import {
     buildCardCycleSnapshot,
+    buildCardMonthlyInvoiceSnapshot,
     classifyPurchaseVsToday,
     compareCalendarDates,
     creditCardInvoiceSlotLabelPt,
@@ -17,6 +18,7 @@ import {
     statementCloseOnOrBefore,
     statementCloseYmdForPurchaseDate,
     sumCreditCardExpensesInWindow,
+    sumCreditCardRefundsInWindow,
 } from "./credit-card-billing"
 
 describe("statementCloseInMonth", () => {
@@ -539,5 +541,76 @@ describe("previousStatementCloseBefore", () => {
         const p = previousStatementCloseBefore(mar10, 10)
         expect(p.getMonth()).toBe(1)
         expect(p.getDate()).toBe(10)
+    })
+})
+
+describe("estorno no cartão abate a fatura", () => {
+    // today = 20/03/2026, fecha dia 10 → fatura aberta 11/03 a 10/04.
+    const today = localNoonDate(2026, 2, 20)
+    const card = { id: "c1", closing_day: 10, due_day: 15 }
+    const tx = (
+        type: "expense" | "income",
+        amount: number,
+        ymd: string,
+        cardId = "c1"
+    ) => ({
+        type,
+        amount,
+        date: `${ymd}T12:00:00.000Z`,
+        payment_method: "credit_card" as const,
+        payment_credit_card_id: cardId,
+    })
+
+    it("despesas de 300 e 50 com estorno de 80 → openTotal 270", () => {
+        const rows = [
+            tx("expense", 300, "2026-03-15"),
+            tx("expense", 50, "2026-03-25"),
+            tx("income", 80, "2026-03-18"),
+            tx("income", 40, "2026-03-19", "c2"), // estorno de outro cartão
+            tx("income", 60, "2026-02-05"), // estorno fora das duas janelas
+        ]
+        const snap = buildCardCycleSnapshot(card, rows, today)
+        expect(snap.openTotal).toBe(270)
+        expect(snap.committedOpenTotal).toBe(270)
+        expect(snap.lastClosedTotal).toBe(0)
+        expect(
+            sumCreditCardRefundsInWindow(
+                rows,
+                "c1",
+                snap.openWindow.start,
+                snap.openWindow.end
+            )
+        ).toBe(80)
+        // A soma de despesas não muda de significado.
+        expect(
+            sumCreditCardExpensesInWindow(
+                rows,
+                "c1",
+                snap.openWindow.start,
+                snap.openWindow.end
+            )
+        ).toBe(350)
+    })
+
+    it("estorno maior que as compras deixa a fatura negativa, nunca zerada", () => {
+        const rows = [tx("expense", 200, "2026-03-15"), tx("income", 500, "2026-03-16")]
+        const snap = buildCardCycleSnapshot(card, rows, today)
+        expect(snap.openTotal).toBe(-300)
+        const monthly = buildCardMonthlyInvoiceSnapshot(card, rows, "2026-04", today)
+        expect(monthly.postedTotal).toBe(-300)
+        expect(monthly.committedTotal).toBe(-300)
+    })
+
+    it("estorno de outro cartão ou fora da janela não entra", () => {
+        const start = localNoonDate(2026, 2, 11)
+        const end = localNoonDate(2026, 3, 10)
+        const rows = [
+            tx("income", 40, "2026-03-19", "c2"),
+            tx("income", 60, "2026-03-10"),
+            tx("income", 70, "2026-04-11"),
+            { ...tx("income", 90, "2026-03-20"), payment_method: "pix" as const },
+            tx("income", 15, "2026-04-10"),
+        ]
+        expect(sumCreditCardRefundsInWindow(rows, "c1", start, end)).toBe(15)
     })
 })

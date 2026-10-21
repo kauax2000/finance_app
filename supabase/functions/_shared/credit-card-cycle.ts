@@ -138,6 +138,35 @@ export function sumCardExpensesInWindow(
   return cents / 100
 }
 
+/**
+ * Estornos no cartão (receita com `payment_method = 'credit_card'`) com data em
+ * [start, end] (inclusivo), somados em centavos. A fatura é despesas − estornos.
+ */
+export function sumCardRefundsInWindow(rows: CardTxRow[], cardId: string, win: OpenWindow): number {
+  const startK = formatYmd(win.start)
+  const endK = formatYmd(win.end)
+  let cents = 0
+  for (const t of rows) {
+    if (t.type !== 'income') continue
+    if (t.payment_method !== 'credit_card') continue
+    if (t.payment_credit_card_id !== cardId) continue
+    const ymd = isoPrefixYmd(t.date)
+    if (!ymd) continue
+    const k = formatYmd(ymd)
+    if (k < startK || k > endK) continue
+    cents += Math.round(Number(t.amount || 0) * 100)
+  }
+  return cents / 100
+}
+
+/** Fatura na janela: despesas − estornos, em centavos. Pode ser negativa (saldo credor). */
+export function cardInvoiceNetInWindow(rows: CardTxRow[], cardId: string, win: OpenWindow): number {
+  const cents =
+    Math.round(sumCardExpensesInWindow(rows, cardId, win) * 100) -
+    Math.round(sumCardRefundsInWindow(rows, cardId, win) * 100)
+  return cents / 100
+}
+
 /** Open cycle for `today`: day after lastClose through nextClose (inclusive), same as app `buildCardCycleSnapshot`. */
 export function openInvoiceWindow(today: Ymd, closingDay: number): OpenWindow {
   const lastClose = statementCloseOnOrBefore(today, closingDay)

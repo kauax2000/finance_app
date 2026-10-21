@@ -128,6 +128,46 @@ describe("aggregateIncomeExpenseForMonth", () => {
     })
 })
 
+describe("aggregateIncomeExpenseForMonth com estorno no cartão", () => {
+    const rows = [
+        {
+            type: "income" as const,
+            amount: 5000,
+            date: "2026-06-05T12:00:00.000Z",
+            payment_method: "pix" as const,
+            payment_credit_card_id: null,
+        },
+        {
+            type: "expense" as const,
+            amount: 300,
+            date: "2026-06-10T12:00:00.000Z",
+            payment_method: "credit_card" as const,
+            payment_credit_card_id: "card1",
+        },
+        // Estorno em 29/05: o cartão fecha dia 28, então cai na fatura de junho.
+        {
+            type: "income" as const,
+            amount: 80,
+            date: "2026-05-29T12:00:00.000Z",
+            payment_method: "credit_card" as const,
+            payment_credit_card_id: "card1",
+        },
+    ]
+
+    it("o estorno sai da receita e reduz a despesa do mês de fechamento", () => {
+        const june = aggregateIncomeExpenseForMonth(rows, "2026-06", lookup)
+        expect(june.income).toBe(5000)
+        expect(june.expense).toBe(220)
+        expect(june.net).toBe(4780)
+    })
+
+    it("o estorno não conta como receita no mês do calendário", () => {
+        const may = aggregateIncomeExpenseForMonth(rows, "2026-05", lookup)
+        expect(may.income).toBe(0)
+        expect(may.expense).toBe(0)
+    })
+})
+
 describe("projectedChargeCountsInExpenseMonth", () => {
     it("uses billing month for credit card installment charges", () => {
         const chargeDate = new Date(2026, 4, 29, 12, 0, 0, 0)

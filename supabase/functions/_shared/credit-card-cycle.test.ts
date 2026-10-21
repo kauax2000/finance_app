@@ -7,12 +7,14 @@ import { assertEquals, assertMatch } from 'jsr:@std/assert@1.0.19'
 import {
   addCalendarDays,
   appTodayYmd,
+  cardInvoiceNetInWindow,
   estimatedDueYmdForClose,
   formatYmd,
   isoPrefixYmd,
   nextCloseAfter,
   nextPaymentDueCycleOnOrAfter,
   sumCardExpensesInWindow,
+  sumCardRefundsInWindow,
   type Ymd,
 } from './credit-card-cycle.ts'
 
@@ -93,4 +95,29 @@ Deno.test('sumCardExpensesInWindow soma em centavos só as despesas do cartão n
   assertEquals(sumCardExpensesInWindow(rows, 'c1', win), 17.3)
   assertEquals(sumCardExpensesInWindow(rows, 'c1', win, 'cat'), 7)
   assertEquals(sumCardExpensesInWindow(rows, 'c1', win, null), 10.3)
+})
+
+Deno.test('sumCardRefundsInWindow soma só os estornos do cartão na janela', () => {
+  const row = (type: string, date: string, amount: number, extra: Record<string, unknown> = {}) => ({
+    amount, type, date: `${date}T12:00:00.000Z`, payment_method: 'credit_card',
+    payment_credit_card_id: 'c1', category_id: null, ...extra,
+  })
+  const rows = [
+    row('expense', '2026-10-05', 300),
+    row('expense', '2026-10-25', 50),
+    row('income', '2026-10-08', 80),
+    row('income', '2026-10-09', 40, { payment_credit_card_id: 'c2' }), // outro cartão
+    row('income', '2026-11-04', 60), // fora da janela
+    row('income', '2026-10-10', 90, { payment_method: 'pix' }),
+  ]
+  const win = { start: ymd('2026-10-04'), end: ymd('2026-11-03') }
+  assertEquals(sumCardRefundsInWindow(rows, 'c1', win), 80)
+  // A soma de despesas não muda.
+  assertEquals(sumCardExpensesInWindow(rows, 'c1', win), 350)
+  assertEquals(cardInvoiceNetInWindow(rows, 'c1', win), 270)
+  // Estorno maior que as compras: negativo, nunca zerado.
+  const big = [row('expense', '2026-10-05', 200), row('income', '2026-10-06', 500)]
+  assertEquals(cardInvoiceNetInWindow(big, 'c1', win), -300)
+  // Centavos: 0,30 − 0,10 dá 0,2 exato, sem resto de ponto flutuante.
+  assertEquals(cardInvoiceNetInWindow([row('expense', '2026-10-05', 0.3), row('income', '2026-10-06', 0.1)], 'c1', win), 0.2)
 })

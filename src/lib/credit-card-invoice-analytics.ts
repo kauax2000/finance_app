@@ -50,17 +50,18 @@ function transactionLocalNoon(isoOrString: string): Date | null {
     return localNoonDate(p.y, p.mo - 1, p.d)
 }
 
-function isExpenseInWindow(
+/** Despesa que conta na fatura, ou estorno (receita no cartão), com data na janela. */
+function isInvoiceRowInWindow(
     tx: CcTxAnalyticsRow,
     cardId: string,
     start: Date,
     end: Date,
     allRows: CcTxAnalyticsRow[]
 ): boolean {
-    if (tx.type !== "expense") return false
     if (tx.payment_method !== "credit_card") return false
     if (tx.payment_credit_card_id !== cardId) return false
-    if (!shouldCountCreditCardExpenseForInvoiceSum(tx, cardId, allRows)) {
+    const isRefund = tx.type === "income"
+    if (!isRefund && !shouldCountCreditCardExpenseForInvoiceSum(tx, cardId, allRows)) {
         return false
     }
     const td = transactionLocalNoon(tx.date)
@@ -70,13 +71,14 @@ function isExpenseInWindow(
     )
 }
 
+/** Linhas da fatura na janela: as despesas que contam e os estornos do cartão. */
 export function filterCardExpensesInWindow(
     rows: CcTxAnalyticsRow[],
     cardId: string,
     start: Date,
     end: Date
 ): CcTxAnalyticsRow[] {
-    return rows.filter((t) => isExpenseInWindow(t, cardId, start, end, rows))
+    return rows.filter((t) => isInvoiceRowInWindow(t, cardId, start, end, rows))
 }
 
 function categoryEmbedByIdFromRows(
@@ -677,13 +679,16 @@ export function buildCreditCardInvoiceAnalytics(
     const openRows = [...openRowsPosted, ...openProjected]
     const lastClosedRows = [...lastClosedRowsPosted, ...lastClosedProjected]
 
+    // Despesas menos estornos; pode ficar negativo (saldo credor).
     let openTotal = 0
     for (const tx of openRows) {
         if (tx.type === "expense") openTotal += Number(tx.amount)
+        else if (tx.type === "income") openTotal -= Number(tx.amount)
     }
     let lastClosedTotal = 0
     for (const tx of lastClosedRows) {
         if (tx.type === "expense") lastClosedTotal += Number(tx.amount)
+        else if (tx.type === "income") lastClosedTotal -= Number(tx.amount)
     }
     openTotal = roundCents(openTotal)
     lastClosedTotal = roundCents(lastClosedTotal)

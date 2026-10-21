@@ -15,6 +15,7 @@ import {
   previousStatementCloseBefore,
   appTodayYmd,
   compareYmd,
+  cardInvoiceNetInWindow,
   sumCardExpensesInWindow,
   type CardTxRow,
 } from '../_shared/credit-card-cycle.ts'
@@ -173,7 +174,8 @@ Deno.serve(async (req: Request) => {
     .select('amount,type,date,payment_method,payment_credit_card_id,category_id')
     .eq('workspace_id', workspaceId)
     .eq('payment_credit_card_id', cardId)
-    .eq('type', 'expense')
+    // Receita no cartão é estorno: abate a fatura.
+    .in('type', ['expense', 'income'])
     .eq('payment_method', 'credit_card')
     .gte('date', filterRangeStartIso(lastClosedWin.start))
     .lte('date', filterRangeEndIso(openWin.end))
@@ -272,9 +274,10 @@ Deno.serve(async (req: Request) => {
   const limitNum = card.credit_limit != null ? Number(card.credit_limit) : 0
   if (limitNum > 0) {
     // As parcelas futuras ficam de fora: o banco não as reserva como gasto.
+    // Cada fatura é despesas − estornos.
     const spendTotal =
-      sumCardExpensesInWindow(rows, cardId, openWin, undefined) +
-      (paidRow ? 0 : sumCardExpensesInWindow(rows, cardId, lastClosedWin, undefined))
+      cardInvoiceNetInWindow(rows, cardId, openWin) +
+      (paidRow ? 0 : cardInvoiceNetInWindow(rows, cardId, lastClosedWin))
     const p = pct(spendTotal, limitNum)
     const hitOver = spendTotal > limitNum
     const hit100 = spendTotal >= limitNum && !hitOver

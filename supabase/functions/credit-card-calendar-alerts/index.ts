@@ -21,7 +21,7 @@ import {
   nextPaymentDueCycleOnOrAfter,
   previousStatementCloseBefore,
   statementCloseOnOrBefore,
-  sumCardExpensesInWindow,
+  cardInvoiceNetInWindow,
   appTodayYmd,
   type CardTxRow,
   type OpenWindow,
@@ -205,7 +205,8 @@ async function resolveCardEvents(
     .select('amount,type,date,payment_method,payment_credit_card_id,category_id')
     .eq('workspace_id', workspaceId)
     .eq('payment_credit_card_id', cardId)
-    .eq('type', 'expense')
+    // Receita no cartão é estorno: abate a fatura.
+    .in('type', ['expense', 'income'])
     .eq('payment_method', 'credit_card')
     .gte('date', filterRangeStartIso(from))
     .lte('date', filterRangeEndIso(to))
@@ -231,7 +232,7 @@ async function resolveCardEvents(
     const copy = invoiceCopy({
       cartao: label,
       evento: ev.evento,
-      valor: sumCardExpensesInWindow(rows, cardId, ev.win),
+      valor: cardInvoiceNetInWindow(rows, cardId, ev.win),
       data: ev.data,
       dias: ev.dias,
     })

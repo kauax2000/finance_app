@@ -341,13 +341,49 @@ export function sumCreditCardExpensesInWindow(
     return roundCents(sum)
 }
 
+/**
+ * Estornos no cartão (receita com `payment_method = 'credit_card'`) com data em [start, end]
+ * (calendário, inclusivo). Abatem a fatura do ciclo em que caem.
+ */
+export function sumCreditCardRefundsInWindow(
+    transactions: CreditCardInvoiceSumTx[],
+    cardId: string,
+    start: Date,
+    end: Date
+): number {
+    let sum = 0
+    for (const t of transactions) {
+        if (t.type !== "income") continue
+        if (t.payment_method !== "credit_card") continue
+        if (t.payment_credit_card_id !== cardId) continue
+        const td = transactionLocalNoon(t.date)
+        if (!td) continue
+        if (!isDateInInclusiveRange(td, start, end)) continue
+        sum += Number(t.amount)
+    }
+    return roundCents(sum)
+}
+
+/** Despesas menos estornos: pode ser negativo (saldo credor), e assim é exibido. */
+function netCreditCardInvoiceInWindow(
+    transactions: CreditCardInvoiceSumTx[],
+    cardId: string,
+    start: Date,
+    end: Date
+): number {
+    return roundCents(
+        sumCreditCardExpensesInWindow(transactions, cardId, start, end) -
+            sumCreditCardRefundsInWindow(transactions, cardId, start, end)
+    )
+}
+
 export type CardCycleSnapshot = {
     lastClose: Date
     nextClose: Date
     prevClose: Date
     openWindow: { start: Date; end: Date }
     lastClosedWindow: { start: Date; end: Date }
-    /** Sum of posted credit-card expenses in the open invoice window. */
+    /** Posted credit-card expenses minus estornos in the open invoice window (may be negative). */
     openTotal: number
     /**
      * Remaining parcelas from `workspace_installment_plans` whose charge date falls in the open
@@ -376,7 +412,7 @@ export type CardMonthlyInvoiceSnapshot = {
     window: { start: Date; end: Date }
     /** Estimated due date for this statement. */
     dueEstimate: Date
-    /** Sum of posted credit-card expenses in the selected invoice window. */
+    /** Posted credit-card expenses minus estornos in the selected window (may be negative). */
     postedTotal: number
     /**
      * Remaining parcelas from `workspace_installment_plans` whose charge date falls in the selected
@@ -423,7 +459,7 @@ export function buildCardMonthlyInvoiceSnapshot(
     const start = new Date(prevClose.getTime() + MS_DAY)
     const end = close
 
-    const postedTotal = sumCreditCardExpensesInWindow(transactions, card.id, start, end)
+    const postedTotal = netCreditCardInvoiceInWindow(transactions, card.id, start, end)
     const projectedInstallmentsTotal =
         opts?.installmentPlans != null && opts.installmentPlans.length > 0
             ? sumProjectedCreditCardInstallmentsInWindow(
@@ -632,7 +668,7 @@ export function buildCardCycleSnapshot(
     const openEnd = nextClose
     const lastClosedStart = new Date(prevClose.getTime() + MS_DAY)
     const lastClosedEnd = lastClose
-    const openTotal = sumCreditCardExpensesInWindow(
+    const openTotal = netCreditCardInvoiceInWindow(
         transactions,
         card.id,
         openStart,
@@ -649,7 +685,7 @@ export function buildCardCycleSnapshot(
               )
             : 0
     const committedOpenTotal = openTotal + projectedOpenInstallmentsTotal
-    const lastClosedTotal = sumCreditCardExpensesInWindow(
+    const lastClosedTotal = netCreditCardInvoiceInWindow(
         transactions,
         card.id,
         lastClosedStart,

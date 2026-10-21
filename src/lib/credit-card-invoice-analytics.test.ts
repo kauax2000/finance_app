@@ -59,3 +59,31 @@ describe("buildCreditCardInvoiceAnalytics (projected installments)", () => {
         expect(cat?.total).toBe(60)
     })
 })
+
+describe("buildCreditCardInvoiceAnalytics (estorno)", () => {
+    it("a lista traz o estorno, o total o abate e a categoria segue só com despesas", () => {
+        const today = localNoonDate(2026, 2, 20) // Mar 20 → aberta 11/03 a 10/04
+        const card = { id: "c1", closing_day: 10, due_day: 15 }
+        const base = {
+            description: null as string | null,
+            payment_method: "credit_card" as const,
+            payment_credit_card_id: "c1",
+            installment_sequence: null as number | null,
+            subscription_id: null as string | null,
+            installment_plan_id: null as string | null,
+            category_id: "cat-1" as string | null,
+            category: { id: "cat-1", name: "Casa", color: null, icon: null },
+        }
+        const rows = [
+            { ...base, id: "tx-1", type: "expense" as const, amount: 300, date: "2026-03-15T12:00:00.000Z" },
+            { ...base, id: "tx-2", type: "income" as const, amount: 80, date: "2026-03-18T12:00:00.000Z" },
+        ]
+        const snap = buildCardCycleSnapshot(card, rows, today)
+        const analytics = buildCreditCardInvoiceAnalytics(snap, "c1", rows, [])
+        expect(analytics.openRows.map((r) => r.id).sort()).toEqual(["tx-1", "tx-2"])
+        expect(analytics.openTotal).toBe(220)
+        expect(analytics.categoryOpen).toEqual([
+            expect.objectContaining({ categoryId: "cat-1", total: 300 }),
+        ])
+    })
+})

@@ -64,6 +64,11 @@ export function transactionCountsInExpenseMonth(
     return expenseYearMonthKey(tx, lookup) === yearMonth
 }
 
+/**
+ * Receita pelo mês do calendário; despesa pelo mês de despesa. O estorno no cartão
+ * (receita com `payment_method = 'credit_card'`) não é receita: abate a despesa do
+ * mês de fechamento da fatura em que cai.
+ */
 export function aggregateIncomeExpenseForMonth(
     transactions: ExpenseMonthAmountTx[],
     yearMonth: string,
@@ -72,9 +77,15 @@ export function aggregateIncomeExpenseForMonth(
     let income = 0
     let expense = 0
     for (const t of transactions) {
-        if (!transactionCountsInExpenseMonth(t, yearMonth, lookup)) continue
         const n = Number(t.amount)
         if (!Number.isFinite(n)) continue
+        if (t.type === "income" && t.payment_method === "credit_card") {
+            if (expenseYearMonthKey({ ...t, type: "expense" }, lookup) === yearMonth) {
+                expense -= n
+            }
+            continue
+        }
+        if (!transactionCountsInExpenseMonth(t, yearMonth, lookup)) continue
         if (t.type === "income") income += n
         else expense += n
     }
