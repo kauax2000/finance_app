@@ -279,8 +279,8 @@
   <dl class="meta">
     <div><dt>Base</dt><dd>Leitura do código</dd></div>
     <div><dt>Branch</dt><dd>finance-app-2.0</dd></div>
-    <div><dt>Data</dt><dd>21 out 2026 · o aviso de despesa e os crons diários passam ao banco (trigger e <code>pg_cron</code> com o Vault, por migração, no lugar do Webhook e do SQL manual) e entra o backup semanal do banco, ainda sem publicar; 19 out: a aba Você: a quarta aba do telefone, com o avatar, leva à página <code>/me</code> no lugar do menu "Mais", e as telas dela ganham o voltar; 17 out: as notificações: o painel flutuante agrupado por dia, o sino exato, a categoria que não notifica mais e a revisão do servidor, ainda sem publicar; 16 out: a busca global (⌘K) acha transações, cartões, categorias, parcelas, assinaturas, contas, membros e carteiras da raiz; 15 out: o menu da conta do telefone vira um painel que brota da aba, com o tema em Configurações e o sair e os planos em Minha conta; o "+" abre direto o formulário de lançamento; 14 out: o painel de marca animado nas telas de acesso; 12 out: telas de acesso com cena e a casca no layout de <code>(auth)</code>, reenviar e <code>next</code> na recuperação, convite aceito; antes: busca global, botão direito, período, rascunho, menus do telefone, prévias da lista, as tabelas na URL, o "Ver" dos avisos de criação e a agenda do Painel</dd></div>
-    <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 8 lacunas (3 fechadas em 12 out)</dd></div>
+    <div><dt>Data</dt><dd>21 out 2026 · o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura pelo PDF, CSV ou OFX, a importação de extrato e de planilha e os anexos, com as telas em wireframe e ainda sem publicar; no mesmo dia, o aviso de despesa e os crons diários passam ao banco (trigger e <code>pg_cron</code> com o Vault, por migração, no lugar do Webhook e do SQL manual) e entra o backup semanal do banco, ainda sem publicar; 19 out: a aba Você: a quarta aba do telefone, com o avatar, leva à página <code>/me</code> no lugar do menu "Mais", e as telas dela ganham o voltar; 17 out: as notificações: o painel flutuante agrupado por dia, o sino exato, a categoria que não notifica mais e a revisão do servidor, ainda sem publicar; 16 out: a busca global (⌘K) acha transações, cartões, categorias, parcelas, assinaturas, contas, membros e carteiras da raiz; 15 out: o menu da conta do telefone vira um painel que brota da aba, com o tema em Configurações e o sair e os planos em Minha conta; o "+" abre direto o formulário de lançamento; 14 out: o painel de marca animado nas telas de acesso; 12 out: telas de acesso com cena e a casca no layout de <code>(auth)</code>, reenviar e <code>next</code> na recuperação, convite aceito; antes: busca global, botão direito, período, rascunho, menus do telefone, prévias da lista, as tabelas na URL, o "Ver" dos avisos de criação e a agenda do Painel</dd></div>
+    <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 12 lacunas (3 fechadas em 12 out)</dd></div>
     <div><dt>Fonte versionada</dt><dd><code>docs/JORNADAS.md</code></dd></div>
   </dl>
 </header>
@@ -418,13 +418,14 @@ flowchart LR
     G4 --&gt;|"despesas por categoria"| G9
 
     G6 --&gt;|"ver transações do cartão"| G5
+    G6 --&gt;|"conferir fatura importa o que falta"| G5
     G6 --&gt;|"gasto por categoria"| G9
-    G6 &lt;--&gt;|"fatura fechada em aberto"| G7
+    G6 &lt;--&gt;|"fatura fechada em aberto, pelo total do banco"| G7
     G7 --&gt;|"pagar conta cria despesa"| G5
     G8 --&gt;|"cobrança vira lançamento"| G5
     G9 --&gt;|"ver em transações"| G5
     G5 --&gt;|"gerenciar categorias"| G9
-    G5 --&gt;|"cadastrar cartão, prévia da fatura"| G6
+    G5 --&gt;|"cadastrar cartão, prévia da fatura, estorno abate a fatura"| G6
 
     G10 --&gt;|"sair ou excluir conta"| G1
 
@@ -814,6 +815,7 @@ flowchart TD
         <li><div><strong>Indicadores.</strong> Despesas, receitas, resultado e faturas abertas do mês escolhido, comparados ao mês anterior.</div></li>
         <li><div><strong>Calendário.</strong> Cada dia mostra o que venceu ou vai vencer. Na grade, tocar num dia abre o popover dele (uma gaveta, com a janela estreita), e o dia fica marcado. Quando a própria agenda fica estreita — no telefone, e também num laptop com a barra lateral aberta — ela vira a lista do mês: os últimos 5 dias passados e todos os que vêm, cada evento com o tipo, e tocar num evento abre direto o detalhe ou a prévia, sem o popover. Um evento já lançado abre o detalhe; um previsto abre uma prévia com "Ver origem", que leva à assinatura, à parcela, ao cartão ou à conta.</div></li>
         <li><div><strong>Blocos de atalho.</strong> Despesas por categoria, faturas do mês e compras parceladas, cada um com o caminho para a área completa.</div></li>
+        <li><div><strong>Fatura e estorno.</strong> Desde o Bloco 2, uma fatura já fechada vale o total que o banco cobrou, quando a pessoa o informou na conferência da fatura; a aberta segue o calculado. O estorno no cartão abate a despesa do mês de fechamento e não conta como receita. A consulta do Painel lê as colunas novas de importação: sem a migração do Bloco 2, ele não carrega.</div></li>
       </ol>
       <figure>
         <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
@@ -864,7 +866,7 @@ flowchart TD
         <figcaption><strong>Figura 4 · Painel</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
-      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Dados</td><td>Um hook agrega os blocos por mês e carteira</td><td><code>src/components/dashboard/use-dashboard-data.ts</code></td></tr><tr><td>Cobranças atrasadas</td><td><code>catch_up_recurring_billing</code> roda uma vez por carteira ao montar; é idempotente com o cron</td><td><code>src/lib/queries/use-recurring-billing-catchup.ts</code></td></tr><tr><td>Calendário</td><td>Eventos: assinatura, parcela, fechamento, vencimento de cartão, vencimento de conta, receita e despesa lançadas. É a agenda do <code>Calendar</code> (rodada 242): na grade, o dia abre o popover e fica marcado (com a janela abaixo de 768px o popover abre como gaveta); abaixo de 40rem da largura da própria agenda ela vira a lista do mês — no telefone, e também num laptop estreito com a barra lateral aberta e o painel de próximos ao lado —, e o evento abre direto o detalhe ou a prévia, sem o popover. A lista mostra os últimos 5 dias passados com evento e todos os que vêm, com o selo do tipo. A grade de pontos do telefone saiu</td><td><code>src/components/dashboard/dashboard-payments-calendar.tsx</code></td></tr><tr><td>Prévia</td><td>"Ver origem" monta a rota pelo tipo do evento</td><td><code>src/components/dashboard/dashboard-payment-event-preview-sheet.tsx</code></td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Dados</td><td>Um hook agrega os blocos por mês e carteira</td><td><code>src/components/dashboard/use-dashboard-data.ts</code></td></tr><tr><td>Cobranças atrasadas</td><td><code>catch_up_recurring_billing</code> roda uma vez por carteira ao montar; é idempotente com o cron</td><td><code>src/lib/queries/use-recurring-billing-catchup.ts</code></td></tr><tr><td>Calendário</td><td>Eventos: assinatura, parcela, fechamento, vencimento de cartão, vencimento de conta, receita e despesa lançadas. É a agenda do <code>Calendar</code> (rodada 242): na grade, o dia abre o popover e fica marcado (com a janela abaixo de 768px o popover abre como gaveta); abaixo de 40rem da largura da própria agenda ela vira a lista do mês — no telefone, e também num laptop estreito com a barra lateral aberta e o painel de próximos ao lado —, e o evento abre direto o detalhe ou a prévia, sem o popover. A lista mostra os últimos 5 dias passados com evento e todos os que vêm, com o selo do tipo. A grade de pontos do telefone saiu</td><td><code>src/components/dashboard/dashboard-payments-calendar.tsx</code></td></tr><tr><td>Prévia</td><td>"Ver origem" monta a rota pelo tipo do evento</td><td><code>src/components/dashboard/dashboard-payment-event-preview-sheet.tsx</code></td></tr><tr><td>Fatura e estorno (Bloco 2)</td><td>Nas faturas do mês, uma fatura fechada vale o total do banco quando a pessoa o informou (<code>credit_card_statement_totals</code>); a aberta segue o calculado. O estorno no cartão (receita com <code>payment_method = 'credit_card'</code>) abate a despesa do mês de fechamento e não conta como receita. A consulta do período pede <code>source</code>, <code>needs_review</code> e <code>import_batch_id</code>: sem a migração do Bloco 2, o Painel não carrega</td><td><code>src/components/dashboard/use-dashboard-data.ts</code>, <code>src/lib/fatura/total-com-banco.ts</code>, <code>src/lib/expense-month-attribution.ts</code>, <code>src/lib/queries/use-transactions-range.ts</code></td></tr></tbody></table></div>
     </section>
 
     <!-- ============ PARTE III ============ -->
@@ -880,7 +882,7 @@ flowchart TD
       <p class="lead">Registrar, encontrar, corrigir e apagar despesas e receitas.</p>
       <dl class="summary">
         <div><dt>Objetivo</dt><dd>Ter cada movimento de dinheiro registrado e fácil de achar.</dd></div>
-        <div><dt>Começa em</dt><dd><code>/transactions</code>, o "+" global ou um atalho de outra área</dd></div>
+        <div><dt>Começa em</dt><dd><code>/transactions</code>, o "+" global, <code>?importar=1</code> ou um atalho de outra área</dd></div>
         <div><dt>Termina em</dt><dd>Lançamento salvo, editado ou excluído</dd></div>
         <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j6">06 Cartões</a><a class="chip" href="#j8">08 Assinaturas</a><a class="chip" href="#j9">09 Categorias</a></dd></div>
       </dl>
@@ -894,6 +896,10 @@ flowchart TD
         <li><div><strong>Editar e excluir.</strong> Numa parcela, a pessoa escolhe entre editar só ela ou o plano todo. Excluir uma parcela cancela a compra parcelada inteira. A exclusão continua pedindo confirmação: ela apaga de verdade, e não há como restaurar — o "Desfazer" do aviso exigiria exclusão lógica no banco.</div></li>
         <li><div><strong>Rascunho protegido.</strong> Fechar o formulário com algo preenchido pergunta "Descartar alterações?" antes; salvar fecha direto, e enquanto salva nada fecha. Trocar só a aba ou o tipo não conta como alteração.</div></li>
         <li><div><strong>Botão direito.</strong> Na linha, o botão direito (ou o toque longo) abre Abrir, Editar, Selecionar e Excluir — as mesmas ações dos botões da linha, que continuam. Sobre uma linha selecionada, o menu age na seleção inteira: "Excluir 3 lançamentos".</div></li>
+        <li><div><strong>Importar extrato ou planilha.</strong> Desde o Bloco 2, um wireframe acima da lista, aberto pelo link "Importar extrato ou planilha" ou por <code>?importar=1</code> (o parâmetro sai da URL logo depois, como o <code>new</code>). A pessoa escolhe o que é (extrato do banco em CSV ou OFX, ou a própria planilha em CSV) e o destino (uma conta, por Pix, débito ou outro, ou um cartão), e o CSV passa por um mapeamento de colunas. A categoria vem do histórico, e as categorias da planilha que ainda não existem são criadas antes. Tudo entra marcado para revisar e com o mesmo lote; repetir "Importar" depois de uma falha não duplica, e "Desfazer importação" apaga o lote inteiro. A importação não avisa os outros membros nem dispara alerta.</div></li>
+        <li><div><strong>Estorno no cartão.</strong> No formulário de receita, a caixa "Estorno no cartão" escolhe o cartão: a receita vai ao crédito e abate a fatura do ciclo em que cai — que pode ficar negativa —, e não conta como receita no Painel.</div></li>
+        <li><div><strong>A conferir.</strong> No detalhe, um lançamento importado mostra "Importado · a conferir". "Confirmar" tira a marca; "Desfazer importação do lote" pergunta antes, apaga o lote inteiro e fecha o detalhe.</div></li>
+        <li><div><strong>Anexos.</strong> O detalhe ganha a seção de anexos: foto ou PDF de até 10 MB, com 25 MB por carteira, e a foto vira WebP antes de subir. O arquivo fica num bucket privado e abre por uma URL assinada que vale uma hora, numa aba nova; com o popup bloqueado, abre na mesma janela. Excluir a transação avulsa apaga os arquivos dela; as outras exclusões deixam o arquivo para a limpeza semanal.</div></li>
         <li><div><strong>Prévias nos chips.</strong> Pousar o cursor, focar ou segurar o dedo no chip de fatura mostra o cartão, o estado da fatura e as datas de fechamento e vencimento, com "Ver cartão"; no chip "Parcelada", a parcela, o total e quando termina. O clique no chip continua abrindo a linha.</div></li>
       </ol>
       <figure>
@@ -904,6 +910,7 @@ flowchart TD
     parse --&gt;|"sort, page"| order(["Ordenação e página"]) --&gt; list
     parse --&gt;|"new=1, parcelada, receita"| form(("G5b Formulário"))
     parse --&gt;|"txn=id"| detail(("G5b Detalhe"))
+    parse --&gt;|"importar=1, tirado por router.replace"| importWf(["WIREFRAME Importar extrato: o que é, destino, arquivo"])
 
     filters --&gt; list(["Tabela paginada de 100 em 100; no telefone, a lista com o mês"])
     list --&gt;|"cabeçalho Data ou Valor; página"| order
@@ -939,14 +946,30 @@ flowchart TD
     invoicePeek --&gt;|"Ver cartão"| cardPage(("G6 /credit-cards/id"))
     list -.-&gt;|"pousar, focar ou segurar o chip Parcelada"| planPeek(["Prévia do parcelamento: parcela N de M, total, última"])
 
+    list --&gt;|"Importar extrato ou planilha"| importWf
+    importWf --&gt;|"Fechar"| list
+    importWf --&gt; importKind{"O que é"}
+    importKind --&gt;|"extrato do banco: CSV ou OFX"| importDest{"Destino"}
+    importKind --&gt;|"planilha: CSV"| importDest
+    importDest --&gt;|"conta: Pix, Débito, Outro"| importFile(["Arquivo; o CSV passa pelo mapeamento de colunas"])
+    importDest --&gt;|"cartão"| importFile
+    importFile --&gt; importPreview(["Prévia: categoria pelo histórico, categorias da planilha que faltam"])
+    importPreview --&gt;|"Importar"| importCats[("Cria as categorias que faltam, por client_id")]
+    importCats --&gt; importSave[("Insere o lote: source import_statement ou import_sheet, needs_review, import_batch_id; o trigger não avisa")]
+    importSave --&gt;|"erro: tentar de novo não duplica"| importPreview
+    importSave --&gt;|"sucesso"| importDone(["N importados; listas recarregam"])
+    importDone --&gt;|"Desfazer importação"| importUndo[("Apaga o lote por import_batch_id")] --&gt; importWf
+    importDone -.-&gt;|"linha importada"| detail
+
     classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
     classDef dialog fill:#1a2220,stroke:#5b6a65,color:#dfe7e4
     classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
     classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
     classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
     class entry,url route
-    class filters,order,list,panel,rangePick,newTx,clear,selection,bulk,rowMenu,selMenu,invoicePeek,planPeek dialog
-    class parse,empty decision
+    class filters,order,importWf,list,panel,rangePick,newTx,clear,selection,bulk,rowMenu,selMenu,invoicePeek,planPeek,importFile,importPreview,importDone dialog
+    class parse,empty,importKind,importDest decision
+    class importCats,importSave,importUndo backend
     class form,detail,detailEdit,delConfirm,cardPage journey</pre></div>
         <figcaption><strong>Figura 5a · Lista e filtros</strong></figcaption>
       </figure>
@@ -967,6 +990,9 @@ flowchart TD
 
     expense --&gt;|"Salvar"| saveTx[("Insere transação")]
     income --&gt;|"Salvar"| saveTx
+    income --&gt;|"Estorno no cartão: escolher o cartão"| refund(["WIREFRAME Estorno: receita no crédito, com o cartão"])
+    refund --&gt;|"Salvar"| saveTx
+    refund -.-&gt;|"abate a fatura do ciclo em que cai; fora da receita do Painel"| G6
     inst --&gt;|"Salvar"| savePlan[("RPC create_workspace_installment_plan")]
     saveTx --&gt;|"offline"| queued(["Salva na fila offline"])
     saveTx --&gt;|"erro"| keep(["Aviso; formulário continua aberto"])
@@ -985,6 +1011,16 @@ flowchart TD
     detail(["Detalhe da transação"]) --&gt; view(["Valor, data, categoria, forma, dica da fatura"])
     view --&gt;|"é parcela"| planInfo(["Parcela k de n, total, lançado, restante"])
     view --&gt;|"tem assinatura"| G8(("G8 /subscriptions"))
+    view --&gt;|"importado ou a revisar"| review(["WIREFRAME A conferir: Importado · a conferir"])
+    review --&gt;|"Confirmar"| reviewOk[("needs_review = false")] --&gt; view
+    review --&gt;|"Desfazer importação do lote, confirmado"| reviewUndo[("Apaga o lote por import_batch_id")] --&gt; sheetShut(["O detalhe fecha"])
+    view --&gt; attach(["WIREFRAME Anexos: lista, anexar foto ou PDF, abrir, apagar"])
+    attach --&gt;|"Anexar"| attachCheck{"Tipo aceito, até 10 MB e dentro da cota de 25 MB?"}
+    attachCheck --&gt;|"não"| attachErr(["Mensagem antes do envio"])
+    attachCheck --&gt;|"sim"| attachSave[("Foto vira WebP; objeto no bucket attachments e linha em attachments; a linha falhou, o objeto sai")]
+    attachSave --&gt; attach
+    attach --&gt;|"Abrir"| attachUrl(["URL assinada de 1 h em aba nova; popup bloqueado: na mesma janela"])
+    attach --&gt;|"Apagar, confirmado"| attachDel[("Apaga a linha e o objeto")] --&gt; attach
     view --&gt;|"⋯ Editar"| editWhat{"É parcela?"}
     editWhat --&gt;|"não"| editForm(["Editar campos"])
     editWhat --&gt;|"sim"| scope(["O que editar: esta parcela ou plano da compra"]) --&gt; editForm
@@ -993,8 +1029,8 @@ flowchart TD
     view --&gt;|"⋯ Excluir"| confirm(["Excluir transação?"])
     confirm --&gt;|"Cancelar"| view
     confirm --&gt;|"Excluir"| isInst{"É parcela?"}
-    isInst --&gt;|"não"| delTx[("Remove transação")] --&gt; deleted(["Transação excluída"])
-    isInst --&gt;|"sim"| cascade[("RPC delete_workspace_installment_plan_cascade")] --&gt; cancelled(["Compra parcelada cancelada"])
+    isInst --&gt;|"não"| delTx[("Remove transação e os objetos dos anexos")] --&gt; deleted(["Transação excluída"])
+    isInst --&gt;|"sim"| cascade[("RPC delete_workspace_installment_plan_cascade; objetos dos anexos ficam para o cron")] --&gt; cancelled(["Compra parcelada cancelada"])
     confirm -.-&gt;|"offline"| queuedDel(["Exclusão enfileirada"])
 
     classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
@@ -1002,14 +1038,14 @@ flowchart TD
     classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
     classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
     classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
-    class open,expense,income,inst,catPick,cardPick,disabled,queued,keep,toast,toastPlan,closed,discard,detail,view,planInfo,editForm,scope,updated,confirm,deleted,cancelled,queuedDel dialog
-    class type,editWhat,isInst decision
-    class saveTx,savePlan,after,notifyTrg,delTx,cascade backend
+    class open,expense,income,inst,catPick,cardPick,disabled,refund,queued,keep,toast,toastPlan,closed,discard,detail,view,planInfo,review,sheetShut,attach,attachErr,attachUrl,editForm,scope,updated,confirm,deleted,cancelled,queuedDel dialog
+    class type,attachCheck,editWhat,isInst decision
+    class saveTx,savePlan,after,notifyTrg,reviewOk,reviewUndo,attachSave,attachDel,delTx,cascade backend
     class G9,G6,txOpen,planList,G8 journey</pre></div>
         <figcaption><strong>Figura 5b · Criar, editar e excluir</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
-      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Parâmetros</td><td>Lidos e gravados na URL; <code>new</code> e <code>txn</code> são consumidos e removidos</td><td><code>src/lib/transactions-list-search-params.ts</code></td></tr><tr><td>Ordenação e página</td><td><code>sort=date.desc</code> · <code>date.asc</code> · <code>amount.desc</code> · <code>amount.asc</code> e <code>page=N</code> (a partir de 1) vão para a URL e voltam dela, também no voltar e avançar; o padrão (<code>date.desc</code>, página 1) não é escrito. Trocar um filtro volta à página 1. Só na página, não no modo embutido</td><td><code>src/components/transactions/use-transactions-list-controller.ts</code>, <code>src/lib/transactions-list-search-params.ts</code></td></tr><tr><td>Tabela</td><td><code>DataTable</code> em modo <code>manual</code> (o banco ordena e pagina): a seleção não alcança as projetadas, que também não abrem nem têm menu; o mês só agrupa ordenado por data; a barra de seleção é flutuante e cancelar a exclusão mantém a seleção; no telefone, a lista gerada das colunas</td><td><code>src/components/transactions/transactions-table.tsx</code>, <code>src/components/ui/data-table.tsx</code></td></tr><tr><td>Formulário</td><td>Um componente para criar, e o mesmo campo a campo na edição</td><td><code>src/components/transactions/transaction-form-dialog.tsx</code>, <code>transaction-form-use.tsx</code></td></tr><tr><td>Parcelada</td><td>RPC <code>create_workspace_installment_plan</code>; editar o plano não muda parcelas já lançadas</td><td><code>src/components/transactions/transaction-form-persistence.ts</code></td></tr><tr><td>Detalhe</td><td>Mesmo painel no Painel, em Cartões e em Categorias</td><td><code>src/components/transactions/transaction-detail-sheet.tsx</code></td></tr><tr><td>Exclusão</td><td>Parcela cancela o plano inteiro por <code>delete_workspace_installment_plan_cascade</code>. Continua com confirmação, e não com o Desfazer do toast: a exclusão é física (<code>delete</code>), sem <code>deleted_at</code> nem RPC de restaurar, e recriar mudaria o id e quebraria parcelas, recorrência e faturas (verificado na rodada 228)</td><td><code>src/lib/transactions/mutations.ts</code></td></tr><tr><td>"Ver" do toast</td><td>Criar uma transação (não editar) mostra "Ver", que leva a <code>/transactions?txn=id</code> e abre o detalhe; a compra parcelada leva a <code>?plan=id</code>. Offline não há id, e o toast sai sem "Ver". A trava que abre o <code>txn</code> uma vez só volta a soltar quando a URL perde o parâmetro — antes, com <code>/transactions</code> aberta, o segundo <code>?txn=</code> não abria nada</td><td><code>persistTransactionSave</code> em <code>src/lib/transaction-detail-sheet-mutations.ts</code>, <code>transaction-form-persistence.ts</code>, <code>use-transactions-list-controller.ts</code></td></tr><tr><td>Offline</td><td>Criar e excluir entram na fila; pagar conta exige conexão</td><td><code>src/lib/offline/</code></td></tr><tr><td>Aviso aos membros</td><td>O trigger <code>transactions_notify_created</code> (<code>AFTER INSERT</code> em <code>transactions</code>, só <code>expense</code> sem <code>subscription_id</code> nem <code>installment_plan_id</code>) chama <code>notify-transaction-created</code> por <code>invoke_edge_function</code> (<code>pg_net</code>, <code>x-cron-secret</code>). O cliente não chama a função: a despesa offline avisa quando a fila a insere. Parcela e assinatura lançadas pelo cron não avisam. Sem segredo no Vault ou com falha de rede, a despesa é salva e o aviso se perde</td><td><code>supabase/migrations/20261021120000_internal_edge_dispatch.sql</code>, <code>supabase/functions/notify-transaction-created/</code></td></tr><tr><td>Rascunho</td><td>Fechar o formulário alterado (Cancelar, Esc, toque fora, ×, arrastar a gaveta) pergunta "Descartar alterações?"; salvar fecha sem perguntar. Trocar só a aba ou o tipo não conta como alteração. Enquanto salva, nada fecha (<code>Dialog pending</code>)</td><td><code>isDirty</code> em <code>src/components/transactions/transaction-form-use.tsx</code>, <code>src/components/transactions/transaction-form-dialog.tsx</code></td></tr><tr><td>Enter</td><td>O <code>Enter</code> na busca do seletor não salva a transação: o popover é portalizado, e a submissão implícita do navegador só conta os campos cujo dono no DOM é o <code>&lt;form&gt;</code></td><td><code>Form</code> em <code>src/components/ui/form.tsx</code></td></tr><tr><td>Período personalizado</td><td>Um <code>DatePicker</code> de intervalo com <code>confirm</code>: as pontas ficam em rascunho até Aplicar, Limpar tira o filtro, Cancelar e Esc descartam. Era um formulário à parte (<code>transactions-date-range-form.tsx</code>, removido)</td><td><code>src/components/transactions/transactions-filters-panel.tsx</code></td></tr><tr><td>Prévias dos chips</td><td>O chip de fatura e o "Parcelada" abrem uma prévia ao pousar, no foco e no toque longo (<code>HoverCard</code>); o clique no chip continua abrindo o detalhe da linha. A da fatura leva a "Ver cartão" (o ciclo atual: a página do cartão não abre uma fatura passada por parâmetro). O chip de fatura só existe a partir de <code>md</code></td><td><code>CreditInvoiceChip</code> e <code>InstallmentChip</code> em <code>src/components/transactions/transactions-table.tsx</code></td></tr><tr><td>Botão direito na linha</td><td>Atalho das ações da linha (os botões da coluna Ações continuam); sobre uma linha selecionada age na seleção inteira (<code>contextMenuTargets</code>); linhas projetadas não têm menu</td><td><code>TransactionRowContextMenu</code> em <code>src/components/transactions/transactions-table.tsx</code></td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Parâmetros</td><td>Lidos e gravados na URL; <code>new</code>, <code>txn</code> e <code>importar</code> são consumidos e removidos (<code>importar=1</code> abre o wireframe de importar e sai por <code>router.replace</code>, como o <code>new</code>)</td><td><code>src/lib/transactions-list-search-params.ts</code>, <code>src/app/(app)/transactions/page-client.tsx</code></td></tr><tr><td>Ordenação e página</td><td><code>sort=date.desc</code> · <code>date.asc</code> · <code>amount.desc</code> · <code>amount.asc</code> e <code>page=N</code> (a partir de 1) vão para a URL e voltam dela, também no voltar e avançar; o padrão (<code>date.desc</code>, página 1) não é escrito. Trocar um filtro volta à página 1. Só na página, não no modo embutido</td><td><code>src/components/transactions/use-transactions-list-controller.ts</code>, <code>src/lib/transactions-list-search-params.ts</code></td></tr><tr><td>Tabela</td><td><code>DataTable</code> em modo <code>manual</code> (o banco ordena e pagina): a seleção não alcança as projetadas, que também não abrem nem têm menu; o mês só agrupa ordenado por data; a barra de seleção é flutuante e cancelar a exclusão mantém a seleção; no telefone, a lista gerada das colunas</td><td><code>src/components/transactions/transactions-table.tsx</code>, <code>src/components/ui/data-table.tsx</code></td></tr><tr><td>Formulário</td><td>Um componente para criar, e o mesmo campo a campo na edição</td><td><code>src/components/transactions/transaction-form-dialog.tsx</code>, <code>transaction-form-use.tsx</code></td></tr><tr><td>Parcelada</td><td>RPC <code>create_workspace_installment_plan</code>; editar o plano não muda parcelas já lançadas</td><td><code>src/components/transactions/transaction-form-persistence.ts</code></td></tr><tr><td>Detalhe</td><td>Mesmo painel no Painel, em Cartões e em Categorias</td><td><code>src/components/transactions/transaction-detail-sheet.tsx</code></td></tr><tr><td>Exclusão</td><td>Parcela cancela o plano inteiro por <code>delete_workspace_installment_plan_cascade</code>. Continua com confirmação, e não com o Desfazer do toast: a exclusão é física (<code>delete</code>), sem <code>deleted_at</code> nem RPC de restaurar, e recriar mudaria o id e quebraria parcelas, recorrência e faturas (verificado na rodada 228)</td><td><code>src/lib/transactions/mutations.ts</code></td></tr><tr><td>"Ver" do toast</td><td>Criar uma transação (não editar) mostra "Ver", que leva a <code>/transactions?txn=id</code> e abre o detalhe; a compra parcelada leva a <code>?plan=id</code>. Offline não há id, e o toast sai sem "Ver". A trava que abre o <code>txn</code> uma vez só volta a soltar quando a URL perde o parâmetro — antes, com <code>/transactions</code> aberta, o segundo <code>?txn=</code> não abria nada</td><td><code>persistTransactionSave</code> em <code>src/lib/transaction-detail-sheet-mutations.ts</code>, <code>transaction-form-persistence.ts</code>, <code>use-transactions-list-controller.ts</code></td></tr><tr><td>Offline</td><td>Criar e excluir entram na fila; pagar conta exige conexão</td><td><code>src/lib/offline/</code></td></tr><tr><td>Aviso aos membros</td><td>O trigger <code>transactions_notify_created</code> (<code>AFTER INSERT</code> em <code>transactions</code>, só <code>expense</code> sem <code>subscription_id</code>, <code>installment_plan_id</code> nem <code>import_batch_id</code>: desde o Bloco 2 a importação não avisa) chama <code>notify-transaction-created</code> por <code>invoke_edge_function</code> (<code>pg_net</code>, <code>x-cron-secret</code>). O cliente não chama a função: a despesa offline avisa quando a fila a insere. Parcela e assinatura lançadas pelo cron não avisam. Sem segredo no Vault ou com falha de rede, a despesa é salva e o aviso se perde</td><td><code>supabase/migrations/20261021120000_internal_edge_dispatch.sql</code>, <code>supabase/functions/notify-transaction-created/</code></td></tr><tr><td>Rascunho</td><td>Fechar o formulário alterado (Cancelar, Esc, toque fora, ×, arrastar a gaveta) pergunta "Descartar alterações?"; salvar fecha sem perguntar. Trocar só a aba ou o tipo não conta como alteração. Enquanto salva, nada fecha (<code>Dialog pending</code>)</td><td><code>isDirty</code> em <code>src/components/transactions/transaction-form-use.tsx</code>, <code>src/components/transactions/transaction-form-dialog.tsx</code></td></tr><tr><td>Enter</td><td>O <code>Enter</code> na busca do seletor não salva a transação: o popover é portalizado, e a submissão implícita do navegador só conta os campos cujo dono no DOM é o <code>&lt;form&gt;</code></td><td><code>Form</code> em <code>src/components/ui/form.tsx</code></td></tr><tr><td>Período personalizado</td><td>Um <code>DatePicker</code> de intervalo com <code>confirm</code>: as pontas ficam em rascunho até Aplicar, Limpar tira o filtro, Cancelar e Esc descartam. Era um formulário à parte (<code>transactions-date-range-form.tsx</code>, removido)</td><td><code>src/components/transactions/transactions-filters-panel.tsx</code></td></tr><tr><td>Prévias dos chips</td><td>O chip de fatura e o "Parcelada" abrem uma prévia ao pousar, no foco e no toque longo (<code>HoverCard</code>); o clique no chip continua abrindo o detalhe da linha. A da fatura leva a "Ver cartão" (o ciclo atual: a página do cartão não abre uma fatura passada por parâmetro). O chip de fatura só existe a partir de <code>md</code></td><td><code>CreditInvoiceChip</code> e <code>InstallmentChip</code> em <code>src/components/transactions/transactions-table.tsx</code></td></tr><tr><td>Importar extrato ou planilha (Bloco 2)</td><td>Wireframe acima da barra, pelo link "Importar extrato ou planilha" ou <code>?importar=1</code>. Extrato do banco (CSV ou OFX, <code>source = 'import_statement'</code>) ou planilha da pessoa (CSV, <code>import_sheet</code>), numa conta (Pix, Débito, Outro) ou num cartão. A categoria vem do histórico (a descrição normalizada igual; senão, a transação mais recente com a mesma primeira palavra significativa); as categorias da planilha que faltam são criadas antes. Todo item importado nasce com <code>needs_review</code> e o <code>client_id</code> gerado uma vez: repetir "Importar" não duplica. Parcela vira despesa simples com "(k/n)" na descrição. "Desfazer importação" apaga o lote (<code>import_batch_id</code>). Não avisa os membros nem dispara alerta de orçamento ou de cartão</td><td><code>src/components/wireframe/importar-extrato-wireframe.tsx</code>, <code>src/components/wireframe/mapeamento-csv.tsx</code>, <code>src/lib/import/</code></td></tr><tr><td>Estorno no cartão (Bloco 2)</td><td>No formulário de receita, a caixa "Estorno no cartão" grava <code>payment_method = 'credit_card'</code> com o cartão. O estorno abate a fatura do ciclo em que cai (que pode ficar negativa, saldo credor), reduz a despesa do mês de fechamento e não conta como receita no Painel</td><td><code>src/components/wireframe/estorno-wireframe.tsx</code>, <code>formaDoPayload</code> em <code>src/components/transactions/transaction-form-use.tsx</code>, <code>src/lib/expense-month-attribution.ts</code></td></tr><tr><td>A conferir (Bloco 2)</td><td>No detalhe, o lançamento importado ou com <code>needs_review</code> mostra "Importado · a conferir". "Confirmar" tira o <code>needs_review</code>; "Desfazer importação do lote", depois do <code>confirm</code>, apaga o lote inteiro e fecha o detalhe. A lista "A conferir" fica para o Bloco 3</td><td><code>src/components/wireframe/a-conferir-wireframe.tsx</code>, <code>src/components/transactions/transaction-detail-sheet.tsx</code></td></tr><tr><td>Anexos (Bloco 2)</td><td>No detalhe, a seção de anexos: WebP, JPEG, PNG ou PDF, até 10 MB, e 25 MB por carteira; a foto vira WebP de lado maior 1600 px. O objeto mora em <code>&lt;workspace_id&gt;/&lt;uuid&gt;.&lt;ext&gt;</code> no bucket privado <code>attachments</code>, e a cota conta o tamanho real do objeto (<code>attachments_enforce_quota</code>). Se a linha falha depois do envio, o objeto é apagado. "Abrir" pede uma URL assinada de 3600 s numa aba aberta no clique; com o popup bloqueado, a URL abre na mesma janela. Excluir a transação avulsa apaga os objetos; em lote, parcelada ou offline, quem apaga é o cron semanal</td><td><code>src/components/wireframe/anexos-wireframe.tsx</code>, <code>src/lib/anexos.ts</code>, <code>src/lib/transactions/mutations.ts</code>, <code>supabase/migrations/20261022130000_anexos.sql</code></td></tr><tr><td>Botão direito na linha</td><td>Atalho das ações da linha (os botões da coluna Ações continuam); sobre uma linha selecionada age na seleção inteira (<code>contextMenuTargets</code>); linhas projetadas não têm menu</td><td><code>TransactionRowContextMenu</code> em <code>src/components/transactions/transactions-table.tsx</code></td></tr></tbody></table></div>
     </section>
 
     <section class="block" id="j6">
@@ -1027,6 +1063,10 @@ flowchart TD
         <li><div><strong>Cadastro.</strong> Apelido, número, validade, limite, dia de fechamento, dia de vencimento e bandeira. Dias fora de 1 a 31 ou validade inválida não salvam. O aviso de "Cartão cadastrado" traz "Ver", que abre a página do cartão (fora da fila offline).</div></li>
         <li><div><strong>Detalhe.</strong> Cada cartão mostra a fatura do ciclo escolhido, o gasto por categoria, as parcelas em andamento e os últimos lançamentos. Dá para editar, desativar e excluir.</div></li>
         <li><div><strong>Ciclo da fatura.</strong> Um ciclo futuro é <em>Futura</em>, o atual é <em>Aberta</em>, e um passado fica <em>Não paga</em> até alguém marcar como <em>Paga</em>. Desmarcar devolve a fatura a Contas a pagar.</div></li>
+        <li><div><strong>Estorno.</strong> Desde o Bloco 2, a fatura é despesas menos estornos e pode ficar negativa (saldo credor). Os avisos de limite, fechamento e vencimento já descontam o estorno.</div></li>
+        <li><div><strong>Conferir fatura.</strong> Um wireframe na página do cartão, sobre um ciclo já fechado. A pessoa digita o total que o banco cobrou ou manda o arquivo: PDF (lido no aparelho, sem IA; com senha, o app pede a senha e diz "Senha incorreta" quando erra), CSV (com o mapeamento de colunas) ou OFX. Uma leitura cuja soma não fecha com o total fica incompleta e mostra a diferença. O resultado sai em grupos — Bate, Falta no app, Só no app, Valor diferente e Parcela fora de sequência —, e o que já foi importado cai em Bate.</div></li>
+        <li><div><strong>Importar o que falta.</strong> Os itens de "Falta no app" escolhidos entram como lançamentos do cartão, marcados para revisar. A data de cada um é levada para dentro do ciclo, com "compra em dd/mm" na descrição, porque a fatura imprime a parcela com a data da compra, e importada assim ela cairia numa fatura velha.</div></li>
+        <li><div><strong>Total do banco.</strong> Gravado, ele vale sobre o calculado na fatura fechada: o painel da fatura mostra o total do banco e a diferença, e o Painel e Contas a pagar usam esse total. Quando veio de um PDF, o PDF fica anexado ao total.</div></li>
       </ol>
       <figure>
         <div class="diagram"><pre class="mermaid">%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#121917","primaryColor":"#18211f","primaryTextColor":"#e8efec","primaryBorderColor":"#3b4a45","lineColor":"#6c7a75","textColor":"#c9d4d0","edgeLabelBackground":"#121917","fontFamily":"Inter, system-ui, sans-serif","fontSize":"14px"},"flowchart":{"useMaxWidth":true,"curve":"basis","padding":12}}}%%
@@ -1067,20 +1107,35 @@ flowchart TD
     recent --&gt;|"linha"| txDetail
     recent --&gt;|"Ver todas"| G5
 
+    top --&gt; check(["WIREFRAME Conferir fatura: ciclo fechado, total do banco, arquivo"])
+    check --&gt;|"digitar o total e Gravar"| bankTotal[("Grava credit_card_statement_totals, um por cartão e fechamento")]
+    check --&gt;|"arquivo .pdf"| pdfRead{"PDF com senha?"}
+    pdfRead --&gt;|"sim"| pdfPass(["Pede a senha; errada: Senha incorreta"]) --&gt;|"Abrir"| pdfRead
+    pdfRead --&gt;|"não ou senha certa"| reading(["Leitura: total, completa ou incompleta com a diferença"])
+    check --&gt;|"arquivo .csv: mapeamento; .ofx"| reading
+    reading --&gt; groups(["Grupos: Bate, Falta no app, Só no app, Valor diferente, Parcela fora de sequência"])
+    groups --&gt;|"Importar selecionados de Falta no app"| importMissing[("Insere com a data levada para dentro do ciclo e compra em dd/mm na descrição")]
+    importMissing --&gt;|"lançamentos recarregam sem esqueleto"| groups
+    importMissing -.-&gt; G5
+    reading --&gt;|"Gravar o total lido"| bankTotal
+    bankTotal --&gt;|"veio de PDF"| pdfAttach[("PDF anexado ao total, bucket attachments")]
+    bankTotal --&gt; openInv
+    bankTotal -.-&gt;|"fatura fechada vale o total do banco"| G7
+
     classDef route fill:#14231f,stroke:#52c49c,color:#e8efec
     classDef dialog fill:#1a2220,stroke:#5b6a65,color:#dfe7e4
     classDef decision fill:#2a2415,stroke:#e2b85e,color:#f3e6c6
     classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
     classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
     class list,detail route
-    class tiles,chart,newCard,created,missing,top,editCard,toggle,delCard,cycle,future,openInv,unpaid,paid,undo,byCat,installments,recent dialog
-    class valid,found,status decision
-    class payRow backend
+    class tiles,chart,newCard,created,missing,top,editCard,toggle,delCard,cycle,future,openInv,unpaid,paid,undo,byCat,installments,recent,check,pdfPass,reading,groups dialog
+    class valid,found,status,pdfRead decision
+    class payRow,bankTotal,importMissing,pdfAttach backend
     class G5,G7,G9,txDetail journey</pre></div>
         <figcaption><strong>Figura 6 · Cartões e ciclo da fatura</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
-      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Status no detalhe</td><td><code>Futura</code>, <code>Aberta</code>, <code>Não paga</code>, <code>Paga</code>, pelo ciclo selecionado</td><td><code>src/app/(app)/credit-cards/[cardId]/page-client.tsx</code></td></tr><tr><td>Selo na tabela de transações</td><td><code>Aberta</code>, <code>Fechada</code>, <code>Anterior</code>, <code>Paga</code>; Aberta é verde, Fechada âmbar, Anterior vermelha</td><td><code>src/lib/credit-card-display.ts</code></td></tr><tr><td>Pagamento de fatura</td><td>Linha em <code>credit_card_invoice_payments</code>, sem criar despesa</td><td><code>src/lib/bills/pay-bill-flow.ts</code></td></tr><tr><td>"Ver" do toast</td><td>Cadastrar um cartão (pela página ou pelo diálogo do "+ Adicionar") mostra "Ver", que leva a <code>/credit-cards/id</code>; na fila offline, sem "Ver"</td><td><code>src/app/(app)/credit-cards/page-client.tsx</code>, <code>src/components/credit-cards/credit-card-create-dialog.tsx</code></td></tr><tr><td>Alertas</td><td>Limite, fechamento e vencimento geram notificações <code>cc_*</code>. A compra parcelada no cartão roda a conferência de limite, como a despesa avulsa</td><td>edges <code>evaluate-credit-card-alerts</code>, <code>credit-card-calendar-alerts</code>; <code>src/components/transactions/transaction-form-persistence.ts</code></td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Status no detalhe</td><td><code>Futura</code>, <code>Aberta</code>, <code>Não paga</code>, <code>Paga</code>, pelo ciclo selecionado</td><td><code>src/app/(app)/credit-cards/[cardId]/page-client.tsx</code></td></tr><tr><td>Selo na tabela de transações</td><td><code>Aberta</code>, <code>Fechada</code>, <code>Anterior</code>, <code>Paga</code>; Aberta é verde, Fechada âmbar, Anterior vermelha</td><td><code>src/lib/credit-card-display.ts</code></td></tr><tr><td>Pagamento de fatura</td><td>Linha em <code>credit_card_invoice_payments</code>, sem criar despesa</td><td><code>src/lib/bills/pay-bill-flow.ts</code></td></tr><tr><td>"Ver" do toast</td><td>Cadastrar um cartão (pela página ou pelo diálogo do "+ Adicionar") mostra "Ver", que leva a <code>/credit-cards/id</code>; na fila offline, sem "Ver"</td><td><code>src/app/(app)/credit-cards/page-client.tsx</code>, <code>src/components/credit-cards/credit-card-create-dialog.tsx</code></td></tr><tr><td>Conferir fatura (Bloco 2)</td><td>Wireframe na página do cartão, sobre os ciclos já fechados. O arquivo do banco é <code>.pdf</code> (lido no aparelho por <code>pdfjs-dist</code>, sem IA; com senha, pede e tenta de novo, e a errada mostra "Senha incorreta"), <code>.csv</code> (com o mapeamento de colunas) ou <code>.ofx</code>. A leitura cuja soma não fecha com o total fica incompleta e mostra a diferença, e ainda deixa importar o que achou. Os grupos são Bate, Falta no app, Só no app, Valor diferente e Parcela fora de sequência; o que já foi importado cai em Bate. "Importar selecionados" grava os itens de Falta no app como despesas do cartão (estorno como receita), com a data levada para dentro do ciclo (<code>ajustarAoCiclo</code>, que acrescenta "compra em dd/mm" à descrição), <code>source</code> <code>import_pdf</code> (PDF) ou <code>import_statement</code> (CSV, OFX), <code>needs_review</code> e o lote em <code>import_batch_id</code>, e recarrega só os lançamentos do cartão</td><td><code>src/components/wireframe/conferir-fatura-wireframe.tsx</code>, <code>src/lib/fatura/ciclo.ts</code>, <code>src/lib/fatura/conferir.ts</code>, <code>src/lib/import/pdf-texto.ts</code>, <code>src/lib/import/fatura-texto.ts</code></td></tr><tr><td>Total do banco (Bloco 2)</td><td>Gravar o total (digitado ou lido) faz um <code>upsert</code> em <code>credit_card_statement_totals</code> (<code>workspace_id</code>, <code>credit_card_id</code>, <code>statement_close_date</code>), com <code>source</code> <code>manual</code>, <code>pdf</code>, <code>csv</code> ou <code>ofx</code>. Lido de PDF, o PDF vira anexo do total (o mesmo PDF não sobe duas vezes; falhar aqui não desfaz o total). Numa fatura fechada, o painel mostra "Total do banco · diferença", e o Painel e Contas a pagar usam o total do banco no lugar do calculado</td><td><code>src/components/wireframe/conferir-fatura-wireframe.tsx</code>, <code>src/lib/fatura/total-com-banco.ts</code>, <code>src/components/credit-cards/credit-card-invoice-analytics-panel.tsx</code></td></tr><tr><td>Estorno (Bloco 2)</td><td>A fatura é despesas menos estornos (receita no cartão), e pode ficar negativa; os percentuais por categoria seguem sobre o gasto bruto. Os alertas de limite, fechamento e vencimento descontam o estorno</td><td><code>src/lib/credit-card-billing.ts</code>, <code>src/lib/credit-card-invoice-analytics.ts</code>, <code>supabase/functions/_shared/credit-card-cycle.ts</code></td></tr><tr><td>Alertas</td><td>Limite, fechamento e vencimento geram notificações <code>cc_*</code>. A compra parcelada no cartão roda a conferência de limite, como a despesa avulsa</td><td>edges <code>evaluate-credit-card-alerts</code>, <code>credit-card-calendar-alerts</code>; <code>src/components/transactions/transaction-form-persistence.ts</code></td></tr></tbody></table></div>
       <div class="callout note">
         <p class="label">Dois vocabulários de status</p>
         <p>O detalhe do cartão fala do ciclo (Futura, Aberta, Não paga, Paga). A tabela de lançamentos fala da compra (Aberta, Fechada, Anterior, Paga). As duas escalas existem de propósito e não se misturam.</p>
@@ -1103,6 +1158,8 @@ flowchart TD
         <li><div><strong>Dois tipos de pendência.</strong> A parcela de uma conta cadastrada e a fatura de cartão que fechou sem ser paga, que aparece aqui sozinha.</div></li>
         <li><div><strong>Pagar uma conta cria uma despesa.</strong> O pagamento vira lançamento, avança a recorrência e passa pelo orçamento. Exige conexão.</div></li>
         <li><div><strong>Pagar uma fatura não cria despesa.</strong> As compras já foram lançadas no cartão; a fatura só fica marcada como paga.</div></li>
+        <li><div><strong>Valor da fatura.</strong> Desde o Bloco 2, a fatura pendente vale o total do banco quando a pessoa o informou na conferência da fatura; senão, o calculado, já com os estornos. Uma fatura zerada ou com saldo credor não aparece como pendência.</div></li>
+        <li><div><strong>Anexos da conta.</strong> O painel da conta (<code>?detail=id</code>) mostra os anexos da parcela pendente que ele exibe — o boleto, uma foto ou um PDF —, com as regras dos anexos do lançamento.</div></li>
         <li><div><strong>Lembretes.</strong> Cada conta pode avisar três dias antes e no dia do vencimento. Ao criar uma conta, o aviso traz "Ver", que abre o painel dela (<code>/bills?detail=id</code>).</div></li>
         <li><div><strong>Botão direito.</strong> No cartão de pendência, o botão direito (ou o toque longo) repete Abrir, Pagar e o menu de três pontos.</div></li>
       </ol>
@@ -1126,7 +1183,7 @@ flowchart TD
     summary --&gt;|"clique"| sheet
     pending --&gt; kind{"Tipo do item"}
     kind --&gt;|"parcela de conta"| regular(["Parcela"])
-    kind --&gt;|"fatura de cartão fechada"| virtual(["Fatura"])
+    kind --&gt;|"fatura de cartão fechada"| virtual(["Fatura: o total do banco, se informado; senão, o calculado com os estornos"])
 
     regular --&gt;|"clique"| sheet
     regular --&gt;|"Pagar"| payRegular(["Pagar: valor, data, categoria, forma, cartão, descrição"])
@@ -1148,6 +1205,8 @@ flowchart TD
     sheet --&gt;|"Excluir"| del
     sheet --&gt;|"Ignorar parcela"| skip
     sheet --&gt; stats(["Total pago 90d, média, atrasos, pendentes, histórico"])
+    sheet --&gt;|"com parcela pendente"| billAttach(["WIREFRAME Anexos da parcela pendente: boleto, foto ou PDF"])
+    billAttach --&gt;|"Anexar ou Abrir"| billFiles[("Bucket attachments, linha com bill_instance_id; URL assinada de 1 h")]
 
     payRegular --&gt;|"Registrar pagamento"| online{"Online?"}
     online --&gt;|"não"| needNet(["Requer conexão"])
@@ -1165,14 +1224,14 @@ flowchart TD
     classDef backend fill:#142130,stroke:#7ab3e6,color:#d7e7f6
     classDef journey fill:#52c49c,stroke:#52c49c,color:#0c1110,font-weight:bold
     class bills route
-    class sheet,summary,pending,form,saved,clear,goContas,regular,virtual,payRegular,skip,del,payVirtual,billMenu,stats,needNet,removed dialog
+    class sheet,summary,pending,form,saved,clear,goContas,regular,virtual,payRegular,skip,del,payVirtual,billMenu,stats,billAttach,needNet,removed dialog
     class tabs,empty,kind,online decision
-    class payRpc,alerts,invPay,reminders backend
+    class billFiles,payRpc,alerts,invPay,reminders backend
     class G6,G5,notif journey</pre></div>
         <figcaption><strong>Figura 7 · Contas a pagar</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
-      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Dados</td><td>Um RPC traz a página inteira</td><td><code>rpc_fetch_bills_page_bundle</code> em <code>src/lib/queries/fetch-bills-page-bundle.ts</code></td></tr><tr><td>Fatura como pendência</td><td>Projetada no cliente a partir dos ciclos fechados com valor em aberto</td><td><code>src/lib/bills/credit-card-bill-projector.ts</code></td></tr><tr><td>Pagar conta</td><td><code>pay_bill_instance</code> cria a despesa e avança a recorrência; bloqueado offline</td><td><code>src/lib/bills/pay-bill-flow.ts</code></td></tr><tr><td>Pagar fatura</td><td>Só marca como paga: as compras já estão lançadas no cartão</td><td><code>src/lib/bills/pay-bill-flow.ts</code></td></tr><tr><td>Recorrência</td><td>Mensal, Bimestral, Trimestral, Anual, Única</td><td><code>src/lib/bills/recurrence.ts</code></td></tr><tr><td>Botão direito</td><td>No cartão de pendência, repete o "Pagar" e o menu de três pontos, que continuam à vista</td><td><code>src/components/bills/bill-pending-card.tsx</code></td></tr><tr><td>"Ver" do toast</td><td>Criar uma conta mostra "Ver", que leva a <code>/bills?detail=id</code> e abre o painel dela (sem levar os outros filtros da URL); na fila offline, sem "Ver"</td><td><code>src/app/(app)/bills/page-client.tsx</code></td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Ponto</th><th>Regra</th><th>Onde</th></tr></thead><tbody><tr><td>Dados</td><td>Um RPC traz a página inteira; desde o Bloco 2 ele traz também as receitas no cartão (os estornos), e o total do banco das faturas vem à parte (<code>credit_card_statement_totals</code>)</td><td><code>rpc_fetch_bills_page_bundle</code> em <code>src/lib/queries/fetch-bills-page-bundle.ts</code>, <code>supabase/migrations/20261022121000_bills_bundle_estornos.sql</code>, <code>src/lib/queries/use-statement-totals.ts</code></td></tr><tr><td>Fatura como pendência</td><td>Projetada no cliente a partir dos ciclos fechados com valor em aberto. O valor é o total do banco quando a pessoa o informou na conferência da fatura; senão, o calculado (despesas menos estornos). Total zero ou negativo (saldo credor) não vira pendência</td><td><code>src/lib/bills/credit-card-bill-projector.ts</code>, <code>src/lib/fatura/total-com-banco.ts</code></td></tr><tr><td>Anexos (Bloco 2)</td><td>O painel da conta (<code>?detail=</code>) mostra os anexos da parcela pendente que ele exibe (<code>bill_instance_id</code>), com as mesmas regras dos anexos do lançamento; as parcelas pagas não mostram os seus</td><td><code>src/components/bills/bill-detail-sheet.tsx</code>, <code>src/components/wireframe/anexos-wireframe.tsx</code></td></tr><tr><td>Pagar conta</td><td><code>pay_bill_instance</code> cria a despesa e avança a recorrência; bloqueado offline</td><td><code>src/lib/bills/pay-bill-flow.ts</code></td></tr><tr><td>Pagar fatura</td><td>Só marca como paga: as compras já estão lançadas no cartão</td><td><code>src/lib/bills/pay-bill-flow.ts</code></td></tr><tr><td>Recorrência</td><td>Mensal, Bimestral, Trimestral, Anual, Única</td><td><code>src/lib/bills/recurrence.ts</code></td></tr><tr><td>Botão direito</td><td>No cartão de pendência, repete o "Pagar" e o menu de três pontos, que continuam à vista</td><td><code>src/components/bills/bill-pending-card.tsx</code></td></tr><tr><td>"Ver" do toast</td><td>Criar uma conta mostra "Ver", que leva a <code>/bills?detail=id</code> e abre o painel dela (sem levar os outros filtros da URL); na fila offline, sem "Ver"</td><td><code>src/app/(app)/bills/page-client.tsx</code></td></tr></tbody></table></div>
     </section>
 
     <section class="block" id="j8">
@@ -1404,7 +1463,7 @@ flowchart TD
     <section class="block" id="lacunas">
       <p class="eyebrow">Fechamento</p>
       <h2>Lacunas encontradas</h2>
-      <p class="lead">Restam oito pontos em que o código não faz o que a jornada promete — três deles achados na rodada dos avisos, em outubro de 2026, e o último a publicação do servidor das notificações. Os cinco de acesso saíram na rodada de setembro de 2026 e estão listados logo abaixo.</p>
+      <p class="lead">Restam doze pontos em que o código não faz o que a jornada promete — três deles achados na rodada dos avisos, em outubro de 2026, a publicação do servidor das notificações e, do Bloco 2, três dos anexos e a publicação do bloco. Os cinco de acesso saíram na rodada de setembro de 2026 e estão listados logo abaixo.</p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>#</th><th>Jornada</th><th>Tipo</th><th>O que acontece</th><th>Efeito para a pessoa</th></tr></thead>
@@ -1417,6 +1476,10 @@ flowchart TD
             <tr><td>6</td><td>05 Lançamentos</td><td>Banco</td><td>Excluir uma transação apaga de verdade; não há exclusão lógica nem RPC de restaurar.</td><td>Não há "Desfazer" — a exclusão continua pedindo confirmação.</td></tr>
             <tr><td>7</td><td>02 Carteiras</td><td>Texto</td><td>Os erros de carga do diretório de membros citam o arquivo SQL e a RPC a aplicar.</td><td>A pessoa lê uma instrução de desenvolvedor.</td></tr>
             <tr><td>8</td><td>03 Navegação</td><td>Publicação</td><td>O servidor das notificações foi revisado no repositório, e o aviso de despesa e os crons passaram a uma migração (trigger e <code>pg_cron</code> com Vault); nada disso foi publicado. Segue aberta até o dono publicar, na ordem de <code>supabase/NOTIFICATION_DEPLOYMENT.md</code>.</td><td>Até lá, textos e regras antigos (sem o mês no link do orçamento, lembretes de calendário com as regras velhas), aviso de despesa pelo Webhook e crons criados à mão.</td></tr>
+            <tr><td>9</td><td>05 Lançamentos</td><td>Limpeza</td><td>Só a exclusão avulsa online apaga o arquivo do anexo na hora. A exclusão em lote, a de compra parcelada, a feita offline e o desfazer de um lote importado apagam as linhas e deixam o arquivo no bucket até o cron semanal <code>attachments-cleanup-weekly</code>.</td><td>Nenhum visível; o arquivo ocupa o armazenamento do projeto por até uma semana, fora da cota da carteira.</td></tr>
+            <tr><td>10</td><td>07 Contas</td><td>Tela</td><td>O painel da conta (<code>?detail=</code>) mostra só os anexos da parcela pendente.</td><td>O boleto de uma parcela já paga continua guardado, mas nenhuma tela o mostra.</td></tr>
+            <tr><td>11</td><td>05 Lançamentos</td><td>Navegador</td><td>"Abrir" um anexo abre a aba no clique; com o popup bloqueado, a URL assinada abre na mesma janela.</td><td>A pessoa sai do app para ver o arquivo.</td></tr>
+            <tr><td>12</td><td>05, 06, 07</td><td>Publicação</td><td>O Bloco 2 (estorno, total do banco, conferência da fatura, importação e anexos) está no repositório, com as telas em wireframe, e não foi publicado. Segue aberta até o dono publicar, na ordem de <code>supabase/BLOCO_2_DEPLOYMENT.md</code>.</td><td>Até lá, nada do Bloco 2 existe em produção. O front novo publicado antes das migrações derruba o Painel.</td></tr>
           </tbody>
         </table>
       </div>
@@ -1467,10 +1530,10 @@ flowchart TD
             <tr><td><code>/settings</code></td><td>Carteira, app e notificações</td><td>Com sessão</td><td>02</td></tr>
             <tr><td><code>/me</code></td><td>Você: identidade e as telas da carteira e da conta, aba do telefone</td><td>Com sessão</td><td>03</td></tr>
             <tr><td><code>/dashboard</code></td><td>Painel</td><td>Com sessão</td><td>04</td></tr>
-            <tr><td><code>/transactions</code></td><td>Lançamentos; filtros, <code>sort</code> e <code>page</code> na URL</td><td>Com sessão</td><td>05</td></tr>
+            <tr><td><code>/transactions</code></td><td>Lançamentos; filtros, <code>sort</code> e <code>page</code> na URL; <code>importar=1</code> abre a importação de extrato e planilha</td><td>Com sessão</td><td>05</td></tr>
             <tr><td><code>/credit-cards</code></td><td>Cartões</td><td>Com sessão</td><td>06</td></tr>
-            <tr><td><code>/credit-cards/[cardId]</code></td><td>Detalhe do cartão e fatura</td><td>Com sessão</td><td>06</td></tr>
-            <tr><td><code>/bills</code></td><td>Contas a pagar</td><td>Com sessão</td><td>07</td></tr>
+            <tr><td><code>/credit-cards/[cardId]</code></td><td>Detalhe do cartão e fatura, com a conferência da fatura e o total do banco</td><td>Com sessão</td><td>06</td></tr>
+            <tr><td><code>/bills</code></td><td>Contas a pagar; <code>detail=id</code> abre o painel da conta, com os anexos da parcela pendente</td><td>Com sessão</td><td>07</td></tr>
             <tr><td><code>/subscriptions</code></td><td>Assinaturas; <code>sort</code>, <code>page</code>, <code>q</code> e <code>status</code> na URL</td><td>Com sessão</td><td>08</td></tr>
             <tr><td><code>/categories</code></td><td>Categorias e assistente</td><td>Com sessão</td><td>09</td></tr>
             <tr><td><code>/categories/new</code></td><td>Categorias com o formulário aberto</td><td>Com sessão</td><td>09</td></tr>
@@ -1507,14 +1570,20 @@ flowchart TD
             <tr><td><code>catch_up_recurring_billing</code></td><td>RPC</td><td>Gera cobranças atrasadas ao abrir o Painel</td><td>04, 08</td></tr>
             <tr><td><code>create_workspace_installment_plan</code></td><td>RPC</td><td>Cria a compra parcelada</td><td>05</td></tr>
             <tr><td><code>delete_workspace_installment_plan_cascade</code></td><td>RPC</td><td>Cancela o plano e as parcelas</td><td>05</td></tr>
-            <tr><td><code>transactions_notify_created</code></td><td>Trigger</td><td>Depois de inserir uma despesa manual (sem assinatura nem parcela), chama a Edge que avisa os membros; nunca derruba o <em>insert</em></td><td>05</td></tr>
+            <tr><td><code>transactions_notify_created</code></td><td>Trigger</td><td>Depois de inserir uma despesa manual (sem assinatura, parcela nem lote de importação: desde o Bloco 2 a importação não avisa), chama a Edge que avisa os membros; nunca derruba o <em>insert</em></td><td>05</td></tr>
             <tr><td><code>invoke_edge_function</code></td><td>Função SQL</td><td>Chama uma Edge por <code>pg_net</code> com a URL e o segredo do Vault; sem eles, não faz nada; só o <code>service_role</code> a executa</td><td>05, 06, 07</td></tr>
             <tr><td><code>notify-transaction-created</code></td><td>Edge, via trigger</td><td>Avisa os membros de uma nova despesa manual</td><td>05</td></tr>
             <tr><td><code>evaluate-budgets</code></td><td>Edge</td><td>Confere o limite da categoria depois de uma despesa</td><td>05, 07, 09</td></tr>
-            <tr><td><code>evaluate-credit-card-alerts</code></td><td>Edge</td><td>Confere limite e categoria do cartão</td><td>05, 06</td></tr>
-            <tr><td><code>credit-card-calendar-alerts</code></td><td>Edge, via cron</td><td>Avisa fechamento e vencimento de fatura</td><td>06</td></tr>
+            <tr><td><code>evaluate-credit-card-alerts</code></td><td>Edge</td><td>Confere limite e categoria do cartão, com os estornos descontados</td><td>05, 06</td></tr>
+            <tr><td><code>credit-card-calendar-alerts</code></td><td>Edge, via cron</td><td>Avisa fechamento e vencimento de fatura, com os estornos descontados</td><td>06</td></tr>
+            <tr><td><code>credit_card_statement_totals</code></td><td>Tabela</td><td>O total que o banco cobrou, um por cartão e fechamento, com a origem (digitado, PDF, CSV ou OFX); numa fatura fechada, vale sobre o calculado</td><td>04, 06, 07</td></tr>
+            <tr><td><code>attachments</code></td><td>Tabela</td><td>Um anexo por linha, ligado a uma transação, a uma parcela de conta ou a um total do banco; RLS por carteira</td><td>05, 06, 07</td></tr>
+            <tr><td><code>attachments_enforce_quota</code></td><td>Trigger</td><td>Antes de inserir um anexo, lê o tamanho real do objeto no bucket e recusa o que passa de 25 MB por carteira</td><td>05, 06, 07</td></tr>
+            <tr><td><code>attachments</code></td><td>Bucket</td><td>Privado, só URL assinada (uma hora); 10 MB por arquivo, WebP, JPEG, PNG e PDF; a pasta é a carteira, e as políticas de <code>storage.objects</code> a conferem</td><td>05, 06, 07</td></tr>
+            <tr><td><code>attachments-cleanup</code></td><td>Edge, via cron</td><td>Apaga do bucket o objeto sem linha em <code>attachments</code> e com mais de 24 h; só aceita o <code>x-cron-secret</code></td><td>05, 06, 07</td></tr>
+            <tr><td><code>attachments-cleanup-weekly</code></td><td>Cron</td><td>Domingo, 07:00 UTC: chama <code>attachments-cleanup</code> por <code>invoke_edge_function</code></td><td>05, 06, 07</td></tr>
             <tr><td><code>pay_bill_instance</code></td><td>RPC</td><td>Paga a parcela de uma conta e cria a despesa</td><td>07</td></tr>
-            <tr><td><code>rpc_fetch_bills_page_bundle</code></td><td>RPC</td><td>Carrega a página de contas a pagar</td><td>07</td></tr>
+            <tr><td><code>rpc_fetch_bills_page_bundle</code></td><td>RPC</td><td>Carrega a página de contas a pagar, com os estornos no cartão desde o Bloco 2</td><td>07</td></tr>
             <tr><td><code>evaluate-bills-reminders</code></td><td>Edge, via cron</td><td>Envia lembretes de vencimento</td><td>07</td></tr>
             <tr><td><code>run-recurring-billing</code></td><td>Edge, via cron</td><td>Gera cobranças de assinaturas e parcelas</td><td>08</td></tr>
             <tr><td><code>rpc_fetch_subscriptions_page_bundle</code></td><td>RPC</td><td>Carrega a página de assinaturas</td><td>08</td></tr>
@@ -1530,7 +1599,7 @@ flowchart TD
 </div>
 
 <footer>
-  Atlas de Jornadas do Finance App · escrito a partir do código da branch <code>finance-app-2.0</code> em 17 de setembro de 2026, navegação global revista em 1 de outubro de 2026, prévias da lista e tabelas na URL em 2 de outubro, o "Ver" dos avisos em 4 de outubro, a agenda do Painel em 8 de outubro, as telas de acesso em 12 de outubro, o painel de marca animado em 14 de outubro, o "+" direto ao formulário em 15 de outubro, a barra do topo sem o nome da tela no desktop e a busca global do app em 16 de outubro, as notificações em 17 de outubro, a busca do telefone, as abas que não cabem e a aba Você no lugar do "Mais" em 19 de outubro, o aviso de despesa e os crons no banco em 21 de outubro · fonte dos fluxogramas em <code>docs/JORNADAS.md</code>
+  Atlas de Jornadas do Finance App · escrito a partir do código da branch <code>finance-app-2.0</code> em 17 de setembro de 2026, navegação global revista em 1 de outubro de 2026, prévias da lista e tabelas na URL em 2 de outubro, o "Ver" dos avisos em 4 de outubro, a agenda do Painel em 8 de outubro, as telas de acesso em 12 de outubro, o painel de marca animado em 14 de outubro, o "+" direto ao formulário em 15 de outubro, a barra do topo sem o nome da tela no desktop e a busca global do app em 16 de outubro, as notificações em 17 de outubro, a busca do telefone, as abas que não cabem e a aba Você no lugar do "Mais" em 19 de outubro, o aviso de despesa e os crons no banco e o Bloco 2 (fatura que bate e anexos) em 21 de outubro · fonte dos fluxogramas em <code>docs/JORNADAS.md</code>
 </footer>
 
 <dialog class="viewer" id="viewer" aria-labelledby="viewer-title">
