@@ -10,7 +10,6 @@ import type {
 import { executeMutation } from "@/lib/offline/mutation-gateway"
 import { retryStableClientId } from "@/lib/offline/retry-client-id"
 import { dispatchFinanceTransactionsMutated } from "@/lib/workspace-data-events"
-import { scheduleNotifyTransactionCreated } from "@/lib/transaction-notifications"
 
 export type SaveTransactionContext = {
     userId: string
@@ -99,10 +98,6 @@ async function saveTransactionOnline(
                 formatSupabasePostgrestError(error) ??
                 "Não foi possível criar a transação.",
         }
-    }
-
-    if (payload.type === "expense" && inserted?.id) {
-        scheduleNotifyTransactionCreated(String(inserted.id))
     }
 
     return { ok: true, insertedId: inserted?.id ? String(inserted.id) : undefined }

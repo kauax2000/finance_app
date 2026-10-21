@@ -8,7 +8,6 @@ import {
 import type { OfflineMutation } from "@/lib/offline/types"
 import { deleteById, updateById } from "@/lib/offline/handlers/by-id"
 import type { TransactionPaymentMethod } from "@/lib/supabase"
-import { scheduleNotifyTransactionCreated } from "@/lib/transaction-notifications"
 
 function stripPaymentColumns<T extends Record<string, unknown>>(row: T) {
     const next = { ...row } as Record<string, unknown>
@@ -71,15 +70,6 @@ export async function syncTransactionMutation(
             ok: false,
             error: formatSupabasePostgrestError(error) ?? error.message,
         }
-    }
-
-    if (
-        inserted?.id &&
-        inserted.type === "expense" &&
-        !inserted.subscription_id &&
-        !inserted.installment_plan_id
-    ) {
-        scheduleNotifyTransactionCreated(String(inserted.id))
     }
 
     // O lançamento feito offline também passa pelos alertas, como o online:

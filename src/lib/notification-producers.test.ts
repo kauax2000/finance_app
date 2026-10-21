@@ -1,3 +1,4 @@
+import { existsSync, readdirSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
@@ -21,5 +22,15 @@ describe("quem dispara notificação no cliente", () => {
         expect(fonte("src/components/transactions/transaction-form-persistence.ts")).toContain(
             "scheduleEvaluateCreditCardAlerts(",
         )
+    })
+
+    it("o aviso de despesa nova é do banco, não do cliente", () => {
+        const arquivos = (readdirSync("src", { recursive: true }) as string[])
+            .filter((c) => /\.tsx?$/.test(c) && !c.includes(".test."))
+            .map((c) => `src/${c}`)
+        for (const caminho of arquivos) {
+            expect(fonte(caminho), caminho).not.toContain("notify-transaction-created")
+        }
+        expect(existsSync("src/lib/transaction-notifications.ts")).toBe(false)
     })
 })
