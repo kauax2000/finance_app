@@ -28,9 +28,8 @@ describe("quem dispara notificação no cliente", () => {
         const arquivos = (readdirSync("src", { recursive: true }) as string[])
             .filter((c) => /\.tsx?$/.test(c) && !c.includes(".test."))
             .map((c) => `src/${c}`)
-        for (const caminho of arquivos) {
-            expect(fonte(caminho), caminho).not.toContain("notify-transaction-created")
-        }
+        const infratores = arquivos.filter((c) => fonte(c).includes("notify-transaction-created"))
+        expect(infratores).toEqual([])
         expect(existsSync("src/lib/transaction-notifications.ts")).toBe(false)
     })
 

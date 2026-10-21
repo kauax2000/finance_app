@@ -4,6 +4,15 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 const fonte = (caminho: string) => semComentarios(lerFonte(caminho))
 const MIGRACAO = "supabase/migrations/20261021120000_internal_edge_dispatch.sql"
 
+// Do `create or replace function public.<nome>` até o `$$;` que fecha o corpo.
+function funcao(f: string, nome: string) {
+    const ini = f.indexOf(`create or replace function public.${nome}(`)
+    expect(ini, `função ${nome} existe`).toBeGreaterThan(-1)
+    const fim = f.indexOf("$$;", f.indexOf("$$", ini) + 2)
+    expect(fim, `função ${nome} fecha com $$;`).toBeGreaterThan(ini)
+    return f.slice(ini, fim)
+}
+
 describe("chamada interna às Edge Functions (pg_net + Vault)", () => {
     it("a migração lê URL e segredo do Vault, sem literal", () => {
         const f = fonte(MIGRACAO)
@@ -16,9 +25,12 @@ describe("chamada interna às Edge Functions (pg_net + Vault)", () => {
     })
 
     it("invoke_edge_function não derruba quem chama", () => {
-        const f = fonte(MIGRACAO)
-        expect(f).toContain("exception when others")
-        expect(f).toContain("return null")
+        const invoke = funcao(fonte(MIGRACAO), "invoke_edge_function")
+        const ini = invoke.indexOf("if v_url is null")
+        expect(ini).toBeGreaterThan(-1)
+        const semSegredo = invoke.slice(ini, invoke.indexOf("end if;", ini))
+        expect(semSegredo).toContain("return null")
+        expect(invoke).toContain("exception when others")
     })
 
     it("invoke_edge_function não é do app", () => {
@@ -26,8 +38,21 @@ describe("chamada interna às Edge Functions (pg_net + Vault)", () => {
         expect(f).toMatch(
             /revoke all on function public\.invoke_edge_function\(text, jsonb\) from public, anon, authenticated/i,
         )
-        expect(f).toContain("security definer")
-        expect(f).toContain("set search_path = ''")
+    })
+
+    it("invoke_edge_function e o trigger são security definer com search_path vazio", () => {
+        const f = fonte(MIGRACAO)
+        for (const nome of ["invoke_edge_function", "transactions_notify_created"]) {
+            const corpo = funcao(f, nome)
+            expect(corpo, nome).toContain("security definer")
+            expect(corpo, nome).toContain("set search_path = ''")
+        }
+    })
+
+    it("o trigger chama a invoke com o schema qualificado", () => {
+        const trigger = funcao(fonte(MIGRACAO), "transactions_notify_created")
+        expect(trigger).toContain("public.invoke_edge_function(")
+        expect(trigger).toContain("'notify-transaction-created'")
     })
 
     it("os dois crons substituem os manuais", () => {
