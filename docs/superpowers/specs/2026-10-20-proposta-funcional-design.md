@@ -450,6 +450,11 @@ São dois jeitos de separar dinheiro, para dois casos diferentes.
 
 A RLS e as RPCs de pacote são a garantia. O convite escolhe o papel, e o dono pode trocá-lo depois.
 
+**Conta do filho (decisão do dono):** todo membro, filho inclusive, tem conta própria com e-mail.
+- O filho entra como `guest` pelo convite de e-mail que já existe.
+- O convite feito pelo responsável é o consentimento dos pais (LGPD art. 14), e o texto do convite diz isso.
+- Depois de vincular, o filho pode lançar pelo app ou pelo WhatsApp.
+
 ### Gasto privado entre adultos (painel: objeção nº 2)
 - `transactions.is_private`. Os outros adultos veem só "Gasto pessoal de Fulana — R$ 120", sem descrição, categoria, estabelecimento nem anexo.
 - **Onde o privado vale** *[decisão minha]*:
@@ -526,6 +531,10 @@ Cada bloco é um projeto com plano próprio. A ordem segue o valor e a dependên
 12. Gasto privado só fora do cartão compartilhado. PDF e conferência de cartão ficam só com o titular e o dono.
 13. No Grátis cabem o dono e mais 1 pessoa. Voltar ao Grátis não desliga nenhuma proteção.
 14. Fundadores pagam R$ 119/ano enquanto ativos, só no anual.
+
+**Decidido pelo dono (21/10):** todo membro tem conta com e-mail, filhos inclusive.
+
+**Em aberto, só trava o Bloco 4:** o CNPJ. Asaas e AbacatePay exigem CNPJ, e a escolha do gateway fica para o plano do Bloco 4.
 
 **A conferir antes de prometer:** a região do projeto Supabase. "Dados no Brasil" só entra no Cofre aberto se for `sa-east-1`. A IA (Gemini e Cloudflare) é transferência internacional, e o Cofre aberto diz isso com todas as letras.
 
