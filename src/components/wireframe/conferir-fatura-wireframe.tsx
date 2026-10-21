@@ -205,8 +205,8 @@ export function ConferirFaturaWireframe({
             if (ja.some((a) => a.size_bytes === arquivo.size)) return null
             const r = await enviarAnexo(supabase, { workspaceId }, arquivo, { statementTotalId })
             return r.ok ? null : r.erro
-        } catch {
-            return "falha de rede."
+        } catch (e) {
+            return e instanceof Error && e.message ? e.message : "erro inesperado."
         }
     }
 

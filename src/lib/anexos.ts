@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 
+import { fetchAllRows } from "@/lib/queries/fetch-all-rows"
 import type { Attachment } from "@/lib/supabase"
 
 /**
@@ -78,9 +79,20 @@ function colunasDoVinculo(v: VinculoAnexo) {
 }
 
 async function bytesUsados(supabase: SupabaseClient, workspaceId: string): Promise<number> {
-    const { data } = await supabase.from("attachments").select("size_bytes").eq("workspace_id", workspaceId)
-    // Sem a soma, segue com 0: o trigger da cota recusa do mesmo jeito.
-    return (data ?? []).reduce((s: number, r: { size_bytes: number }) => s + r.size_bytes, 0)
+    try {
+        const linhas = await fetchAllRows<{ size_bytes: number }>((from, to) =>
+            supabase
+                .from("attachments")
+                .select("size_bytes")
+                .eq("workspace_id", workspaceId)
+                .order("id")
+                .range(from, to),
+        )
+        return linhas.reduce((s, r) => s + r.size_bytes, 0)
+    } catch {
+        // Sem a soma, segue com 0: o trigger da cota recusa do mesmo jeito.
+        return 0
+    }
 }
 
 export async function enviarAnexo(
@@ -121,12 +133,9 @@ export async function enviarAnexo(
     if (error) {
         // Sem linha, o objeto não fica: nada órfão (Foco 5).
         await storage.remove([path])
-        return {
-            ok: false,
-            erro: error.message.includes("cota_anexos_excedida")
-                ? ERRO_COTA
-                : `Não foi possível guardar o anexo: ${error.message}`,
-        }
+        if (error.message.includes("cota_anexos_excedida")) return { ok: false, erro: ERRO_COTA }
+        if (error.message.includes("anexo_sem_objeto")) return { ok: false, erro: "Não foi possível salvar o anexo." }
+        return { ok: false, erro: `Não foi possível guardar o anexo: ${error.message}` }
     }
     return { ok: true, id: (data as { id: string }).id }
 }
@@ -148,24 +157,29 @@ export async function urlAssinada(supabase: SupabaseClient, path: string): Promi
     return data?.signedUrl ?? null
 }
 
-/** O objeto sai primeiro; se ele falhar, a linha fica para tentar de novo. */
+/** A linha sai primeiro; o objeto que não sair fica para a limpeza semanal. */
 export async function apagarAnexo(supabase: SupabaseClient, anexo: Pick<Attachment, "id" | "path">): Promise<Resultado> {
-    const { error: erroObjeto } = await supabase.storage.from(BUCKET_ANEXOS).remove([anexo.path])
-    if (erroObjeto) return { ok: false, erro: `Não foi possível apagar: ${erroObjeto.message}` }
     const { error } = await supabase.from("attachments").delete().eq("id", anexo.id)
     if (error) return { ok: false, erro: `Não foi possível apagar: ${error.message}` }
+    await removerObjetos(supabase, [anexo.path])
     return { ok: true }
 }
 
-/**
- * Antes de excluir o lançamento, remove os objetos dele (a linha sai pelo
- * cascade). Não barra a exclusão: o que falhar aqui a limpeza semanal pega.
- */
-export async function removerObjetosDaTransacao(supabase: SupabaseClient, transactionId: string): Promise<void> {
+/** Os caminhos dos anexos do lançamento, lidos antes de excluí-lo (a linha sai pelo cascade). */
+export async function caminhosDaTransacao(supabase: SupabaseClient, transactionId: string): Promise<string[]> {
     try {
-        const anexos = await listarAnexos(supabase, { transactionId })
-        if (anexos.length > 0) await supabase.storage.from(BUCKET_ANEXOS).remove(anexos.map((a) => a.path))
+        return (await listarAnexos(supabase, { transactionId })).map((a) => a.path)
     } catch {
-        // ponytail: o órfão fica para o cron `attachments-cleanup-weekly`.
+        return []
+    }
+}
+
+/** Nunca falha: o objeto que não sair o cron `attachments-cleanup-weekly` pega. */
+export async function removerObjetos(supabase: SupabaseClient, paths: string[]): Promise<void> {
+    if (paths.length === 0) return
+    try {
+        await supabase.storage.from(BUCKET_ANEXOS).remove(paths)
+    } catch {
+        // ponytail: o órfão fica para o cron semanal.
     }
 }

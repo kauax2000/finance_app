@@ -68,6 +68,32 @@ describe("fonte", () => {
         expect(sql).toContain("when insufficient_privilege")
     })
 
+    it("a cota usa o tamanho real do objeto, não o que o cliente manda", () => {
+        const sql = semComentarios(lerFonte("supabase/migrations/20261022130000_anexos.sql"), "tudo")
+        expect(sql).toMatch(/\(o\.metadata->>'size'\)::bigint[\s\S]*?from storage\.objects o/)
+        expect(sql).toContain("raise exception 'anexo_sem_objeto'")
+        expect(sql).toMatch(/new\.size_bytes := v_tamanho;[\s\S]*?sum\(size_bytes\)/)
+        // A pasta que não é UUID não derruba a política com erro de cast.
+        expect(sql.match(/case when \(storage\.foldername\(name\)\)\[1\] ~ /g)).toHaveLength(3)
+    })
+
+    it("a limpeza não lê os caminhos de attachments sem limite (o PostgREST corta em 1000)", () => {
+        const fonte = semComentarios(lerFonte("supabase/functions/attachments-cleanup/index.ts"), "tudo")
+        const consulta = fonte.slice(fonte.indexOf(".from('attachments')"))
+        expect(consulta.slice(0, 200)).toMatch(/\.(in|range)\(/)
+    })
+
+    it("a linha sai antes do objeto: no lançamento e no anexo", () => {
+        const mut = semComentarios(lerFonte("src/lib/transactions/mutations.ts"), "tudo")
+        expect(mut).toMatch(
+            /caminhosDaTransacao\([\s\S]*?from\("transactions"\)\.delete\(\)[\s\S]*?removerObjetos\(/,
+        )
+        const fonte = semComentarios(lerFonte("src/lib/anexos.ts"), "tudo")
+        const apagar = fonte.slice(fonte.indexOf("export async function apagarAnexo"))
+        expect(apagar.indexOf(".delete()")).toBeGreaterThan(-1)
+        expect(apagar.indexOf(".delete()")).toBeLessThan(apagar.indexOf("removerObjetos("))
+    })
+
     it("o detalhe do lançamento, o da conta e a conferência usam o wireframe de anexos", () => {
         expect(lerFonte("src/components/transactions/transaction-detail-sheet.tsx")).toContain("<AnexosWireframe")
         expect(lerFonte("src/components/bills/bill-detail-sheet.tsx")).toMatch(/billInstanceId:\s*nextInst\.id/)

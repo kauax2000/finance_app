@@ -67,7 +67,19 @@ set search_path = ''
 as $$
 declare
   v_usado bigint;
+  v_tamanho bigint;
 begin
+  -- O tamanho que conta é o do objeto no bucket, nunca o que o cliente mandou.
+  -- O check de `size_bytes` roda depois deste trigger, já sobre o valor real.
+  select (o.metadata->>'size')::bigint into v_tamanho
+  from storage.objects o
+  where o.bucket_id = 'attachments' and o.name = new.path;
+
+  if v_tamanho is null then
+    raise exception 'anexo_sem_objeto';
+  end if;
+  new.size_bytes := v_tamanho;
+
   -- Dois envios ao mesmo tempo não passam juntos da cota.
   perform pg_advisory_xact_lock(hashtext('attachments_quota:' || new.workspace_id::text));
 
@@ -110,6 +122,7 @@ create policy "Workspace members can delete attachments"
   using (is_workspace_member(workspace_id));
 
 -- 5. storage.objects: a pasta é a carteira -----------------------------------
+-- O `case` evita o erro do `::uuid` numa pasta que não é UUID.
 -- Guardado como em 20260824123000: gerenciar políticas de storage.objects exige
 -- ser dono da tabela, o que alguns ambientes negam ao papel da migração.
 do $$
@@ -120,15 +133,18 @@ begin
 
   create policy "Workspace members can view attachments" on storage.objects
     for select to authenticated
-    using (bucket_id = 'attachments' and public.is_workspace_member(((storage.foldername(name))[1])::uuid));
+    using (bucket_id = 'attachments' and case when (storage.foldername(name))[1] ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+      then public.is_workspace_member(((storage.foldername(name))[1])::uuid) else false end);
 
   create policy "Workspace members can upload attachments" on storage.objects
     for insert to authenticated
-    with check (bucket_id = 'attachments' and public.is_workspace_member(((storage.foldername(name))[1])::uuid));
+    with check (bucket_id = 'attachments' and case when (storage.foldername(name))[1] ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+      then public.is_workspace_member(((storage.foldername(name))[1])::uuid) else false end);
 
   create policy "Workspace members can delete attachments" on storage.objects
     for delete to authenticated
-    using (bucket_id = 'attachments' and public.is_workspace_member(((storage.foldername(name))[1])::uuid));
+    using (bucket_id = 'attachments' and case when (storage.foldername(name))[1] ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+      then public.is_workspace_member(((storage.foldername(name))[1])::uuid) else false end);
 exception
   when insufficient_privilege then
     raise notice 'anexos: sem privilégio para as políticas de storage.objects; aplique pelo SQL editor do Dashboard.';

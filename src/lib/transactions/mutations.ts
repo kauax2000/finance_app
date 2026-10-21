@@ -1,4 +1,4 @@
-import { removerObjetosDaTransacao } from "@/lib/anexos"
+import { caminhosDaTransacao, removerObjetos } from "@/lib/anexos"
 import { supabase } from "@/lib/supabase"
 import {
     formatSupabasePostgrestError,
@@ -240,8 +240,8 @@ export async function deletePlainTransactionById(
         offlinePayload: { serverId: id, id },
         onQueued: () => dispatchFinanceTransactionsMutated(),
         onlineFn: async () => {
-            // Os anexos saem antes: a linha some no cascade, e o objeto ficaria órfão.
-            await removerObjetosDaTransacao(supabase, id)
+            // Os caminhos são lidos antes: as linhas dos anexos saem no cascade.
+            const anexos = await caminhosDaTransacao(supabase, id)
             const { error } = await supabase.from("transactions").delete().eq("id", id)
             if (error) {
                 throw new Error(
@@ -249,6 +249,7 @@ export async function deletePlainTransactionById(
                         "Não foi possível excluir a transação."
                 )
             }
+            await removerObjetos(supabase, anexos)
             dispatchFinanceTransactionsMutated()
             return { ok: true as const }
         },

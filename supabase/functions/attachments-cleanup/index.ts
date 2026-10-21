@@ -6,6 +6,7 @@ import { secretMatches } from '../_shared/timing-safe-equal.ts'
 // Só servidor a servidor (cron semanal): sem CORS.
 const BUCKET = 'attachments'
 const PAGINA = 1000
+const LOTE_CONSULTA = 100
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 function json(status: number, payload: unknown): Response {
@@ -46,13 +47,20 @@ Deno.serve(async (req: Request) => {
       const arquivos = (await listar(pasta))
         .filter((o) => o.id != null && o.created_at)
         .map((o) => ({ name: `${pasta}/${o.name}`, created_at: o.created_at! }))
-      if (arquivos.length === 0) continue
+      // Só os candidatos (sem linha conhecida e com mais de 24 h) vão ao banco, em lotes:
+      // uma consulta sem limite pararia em 1000 linhas e apagaria anexo válido.
+      const candidatos = orfaos(arquivos, new Set(), agora)
+      const comLinha = new Set<string>()
+      for (let i = 0; i < candidatos.length; i += LOTE_CONSULTA) {
+        const { data: linhas, error } = await admin
+          .from('attachments')
+          .select('path')
+          .in('path', candidatos.slice(i, i + LOTE_CONSULTA))
+        if (error) throw error
+        for (const l of (linhas ?? []) as Array<{ path: string }>) comLinha.add(l.path)
+      }
 
-      const { data: linhas, error } = await admin.from('attachments').select('path').eq('workspace_id', pasta)
-      if (error) throw error
-      const comLinha = new Set((linhas ?? []).map((l: { path: string }) => l.path))
-
-      const sair = orfaos(arquivos, comLinha, agora)
+      const sair = candidatos.filter((c) => !comLinha.has(c))
       for (let i = 0; i < sair.length; i += PAGINA) {
         const { error: erroRemover } = await storage.remove(sair.slice(i, i + PAGINA))
         if (erroRemover) throw erroRemover
