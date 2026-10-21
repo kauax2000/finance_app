@@ -134,6 +134,32 @@ describe("conferirNoCiclo", () => {
             expect(r.soNoApp.map((a) => a.id)).toEqual(["p3"])
         })
 
+        it("a linha da parcela 1, na data da compra, não rouba a parcela 7 do ciclo (1)", () => {
+            const r = conferirNoCiclo([parcela(7)], [doPlano("p1", 1, "2026-03-05"), doPlano("p7", 7)], ciclo)
+            expect(r.bate.map((p) => p.app.id)).toEqual(["p7"])
+            expect(r.parcelaForaDeSequencia).toEqual([])
+            expect(r.soNoApp).toEqual([])
+        })
+
+        it("a parcela 1 importada num ciclo antigo não esconde a 7 deste (2)", () => {
+            const importadaEmMarco = { ...app("m", "2026-03-05", "LOJA X (1/10)", 100) }
+            const r = conferirNoCiclo([parcela(7)], [importadaEmMarco], ciclo)
+            expect(r.bate).toEqual([])
+            expect(r.faltaNoApp).toHaveLength(1)
+        })
+
+        it("valor igual sem sequência nem descrição parecida não casa (3)", () => {
+            const r = conferirNoCiclo([parcela(7)], [app("mercado", "2026-09-16", "MERCADO", 100)], ciclo)
+            expect(r.bate).toEqual([])
+            expect(r.faltaNoApp).toHaveLength(1)
+            expect(r.soNoApp.map((a) => a.id)).toEqual(["mercado"])
+        })
+
+        it("a soma do banco conta também as parcelas", () => {
+            const r = conferirNoCiclo([parcela(7), item("2026-09-20", "PADARIA", 10)], [], ciclo)
+            expect(r.somaBanco).toBe(110)
+        })
+
         it("a linha do plano fora do ciclo não é usada", () => {
             const r = conferirNoCiclo([parcela(3)], [doPlano("antiga", 3, "2026-08-16")], ciclo)
             expect(r.faltaNoApp).toHaveLength(1)

@@ -28,15 +28,18 @@ export function ajustarAoCiclo<T extends ItemBanco>(itens: T[], ciclo: CicloFatu
 }
 
 /**
- * A conferência de um ciclo. Três passadas:
- * 1. a data original do banco contra o app desde a data mais antiga do arquivo
- *    (−3 dias) até o fechamento — o extrato que atravessa ciclos casa com o que
- *    já está lançado na data certa;
- * 2. o que sobrou do banco, ajustado ao ciclo, contra o que sobrou do app — a
- *    parcela que a importação trouxe para dentro do ciclo volta a casar (Foco 3);
- * 3. a parcela que sobrou do banco contra o que sobrou do app no ciclo, pelo
- *    valor, sem janela de dias — a linha do plano de parcelamento tem a data da
- *    cobrança, e a fatura imprime a da compra (`casarParcelas`).
+ * A conferência de um ciclo. O item sem parcela:
+ * 1. pela data original contra o app desde a data mais antiga do arquivo (−3
+ *    dias) até o fechamento — o extrato que atravessa ciclos casa com o que já
+ *    está lançado na data certa;
+ * 2. o que sobrou, ajustado ao ciclo, contra o que sobrou do app.
+ * A parcela só casa **dentro do ciclo**: a fatura a imprime com a data da compra,
+ * e antes do ciclo moram a parcela 1 do plano e as parcelas importadas em
+ * faturas velhas, que a roubariam. Ela vai:
+ * 2. ajustada ao ciclo, contra o que sobrou do app no ciclo — a parcela que a
+ *    importação trouxe para dentro do ciclo volta a casar (Foco 3);
+ * 3. pelo valor, sem janela de dias, contra o que ainda sobrou no ciclo — a
+ *    linha do plano tem a data da cobrança (`casarParcelas`).
  * "Só no app" e a soma do app ficam no ciclo; os itens do banco voltam originais.
  */
 export function conferirNoCiclo<T extends ItemBanco>(
@@ -44,45 +47,55 @@ export function conferirNoCiclo<T extends ItemBanco>(
     app: LancamentoParaConferir[],
     ciclo: CicloFatura,
 ): Omit<ResultadoConferencia, "faltaNoApp"> & { faltaNoApp: T[] } {
-    const maisAntiga = banco.reduce((min, b) => (b.data < min ? b.data : min), ciclo.inicio)
-    const desde = addDaysYmd(maisAntiga, -JANELA_DIAS)
-    const naJanela = app.filter((a) => a.date >= desde && a.date <= ciclo.fechamento)
+    const dentro = (a: LancamentoParaConferir) => a.date >= ciclo.inicio && a.date <= ciclo.fechamento
+    const semParcela = banco.filter((b) => !b.parcela)
+    const comParcela = banco.filter((b) => b.parcela)
 
-    const r1 = conferirFatura(banco, naJanela)
-    const sobra = r1.faltaNoApp as T[]
-    const ajustados = ajustarAoCiclo(sobra, ciclo)
-    const original = new Map<ItemBanco, T>(ajustados.map((a, i) => [a, sobra[i]]))
-    const r2 = conferirFatura(ajustados, r1.soNoApp)
+    const maisAntiga = semParcela.reduce((min, b) => (b.data < min ? b.data : min), ciclo.inicio)
+    const desde = addDaysYmd(maisAntiga, -JANELA_DIAS)
+    const r1 = conferirFatura(semParcela, app.filter((a) => a.date >= desde && a.date <= ciclo.fechamento))
+
+    const original = new Map<ItemBanco, T>()
+    const ajustar = (itens: T[]) => {
+        const ajustados = ajustarAoCiclo(itens, ciclo)
+        ajustados.forEach((a, i) => original.set(a, itens[i]))
+        return ajustados
+    }
     const volta = (p: { banco: ItemBanco; app: LancamentoParaConferir }) => ({ banco: original.get(p.banco)!, app: p.app })
 
-    const dentro = (a: LancamentoParaConferir) => a.date >= ciclo.inicio && a.date <= ciclo.fechamento
+    const r2 = conferirFatura(ajustar(r1.faltaNoApp as T[]), r1.soNoApp)
+    const r2p = conferirFatura(ajustar(comParcela), r2.soNoApp.filter(dentro))
     const r3 = casarParcelas(
-        r2.faltaNoApp.map((b) => ({ ajustado: b, original: original.get(b)! })),
-        r2.soNoApp.filter(dentro),
+        r2p.faltaNoApp.map((b) => ({ ajustado: b, original: original.get(b)! })),
+        r2p.soNoApp,
     )
 
-    const noCiclo = app.filter(dentro)
-    const somaApp = roundCents(noCiclo.reduce((s, a) => s + (a.type === "income" ? -a.amount : a.amount), 0))
+    const faltam = new Set<T>([...r2.faltaNoApp.map((b) => original.get(b)!), ...r3.faltaNoApp])
+    const somaBanco = roundCents(banco.reduce((s, b) => s + (b.estorno ? -b.valor : b.valor), 0))
+    const somaApp = roundCents(app.filter(dentro).reduce((s, a) => s + (a.type === "income" ? -a.amount : a.amount), 0))
     return {
-        bate: [...r1.bate, ...r2.bate.map(volta), ...r3.bate],
-        faltaNoApp: r3.faltaNoApp,
+        bate: [...r1.bate, ...r2.bate.map(volta), ...r2p.bate.map(volta), ...r3.bate],
+        // Na ordem do arquivo.
+        faltaNoApp: banco.filter((b) => faltam.has(b)),
         soNoApp: r3.soNoApp,
-        valorDiferente: [...r1.valorDiferente, ...r2.valorDiferente.map(volta)],
+        valorDiferente: [...r1.valorDiferente, ...r2.valorDiferente.map(volta), ...r2p.valorDiferente.map(volta)],
         parcelaForaDeSequencia: [
             ...r1.parcelaForaDeSequencia,
             ...r2.parcelaForaDeSequencia.map(volta),
+            ...r2p.parcelaForaDeSequencia.map(volta),
             ...r3.parcelaForaDeSequencia,
         ],
-        somaBanco: r1.somaBanco,
+        somaBanco,
         somaApp,
-        diferenca: roundCents(r1.somaBanco - somaApp),
+        diferenca: roundCents(somaBanco - somaApp),
     }
 }
 
 type Par<T> = { banco: T; app: LancamentoParaConferir }
 
 /**
- * Só item com `parcela`: mesmo tipo e mesmo valor, sem janela de dias. Prefere a
+ * Só item com `parcela`: mesmo tipo e mesmo valor, sem janela de dias, e a sequência
+ * igual ou alguma palavra em comum na descrição. Prefere a
  * linha cuja sequência é a da parcela, depois a descrição mais parecida, depois a
  * data mais perto (a ajustada ao ciclo). Nenhuma linha é usada duas vezes; sequência
  * diferente (as duas conhecidas) vai a "parcela fora de sequência".
@@ -98,13 +111,11 @@ function casarParcelas<T extends ItemBanco>(
         app.forEach((a, j) => {
             if ((original.estorno ? "income" : "expense") !== a.type) return
             if (Math.abs(original.valor - a.amount) >= 0.005) return
-            candidatos.push({
-                i,
-                j,
-                seq: a.installment_sequence === k ? 1 : 0,
-                sim: similaridade(original.descricao, a.description ?? ""),
-                dias: Math.abs(daysBetweenYmd(ajustado.data, a.date) ?? Infinity),
-            })
+            const seq = a.installment_sequence === k ? 1 : 0
+            const sim = similaridade(original.descricao, a.description ?? "")
+            // Só o valor esconderia a parcela que falta atrás de outra despesa qualquer.
+            if (!seq && sim === 0) return
+            candidatos.push({ i, j, seq, sim, dias: Math.abs(daysBetweenYmd(ajustado.data, a.date) ?? Infinity) })
         })
     })
     candidatos.sort((x, y) => y.seq - x.seq || y.sim - x.sim || x.dias - y.dias)
