@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest"
 import { buildCardCycleSnapshot, localNoonDate } from "./credit-card-billing"
-import { buildCreditCardInvoiceAnalytics } from "./credit-card-invoice-analytics"
+import {
+    buildCategoryComparisonRows,
+    buildCreditCardInvoiceAnalytics,
+} from "./credit-card-invoice-analytics"
 
 describe("buildCreditCardInvoiceAnalytics (projected installments)", () => {
     it("includes projected parcelas in totals, slices and categories", () => {
@@ -85,5 +88,52 @@ describe("buildCreditCardInvoiceAnalytics (estorno)", () => {
         expect(analytics.categoryOpen).toEqual([
             expect.objectContaining({ categoryId: "cat-1", total: 300 }),
         ])
+    })
+})
+
+describe("buildCreditCardInvoiceAnalytics (percentuais com estorno)", () => {
+    const today = localNoonDate(2026, 2, 20) // Mar 20 → aberta 11/03 a 10/04
+    const card = { id: "c1", closing_day: 10, due_day: 15 }
+    const base = {
+        description: null as string | null,
+        payment_method: "credit_card" as const,
+        payment_credit_card_id: "c1",
+        installment_sequence: null as number | null,
+        subscription_id: null as string | null,
+        installment_plan_id: null as string | null,
+        category_id: "cat-1" as string | null,
+        category: { id: "cat-1", name: "Casa", color: null, icon: null },
+    }
+
+    it("a parte da categoria divide pelo gasto bruto: 100%, não 136%", () => {
+        const rows = [
+            { ...base, id: "tx-1", type: "expense" as const, amount: 300, date: "2026-03-15T12:00:00.000Z" },
+            { ...base, id: "tx-2", type: "income" as const, amount: 80, date: "2026-03-18T12:00:00.000Z" },
+        ]
+        const snap = buildCardCycleSnapshot(card, rows, today)
+        const a = buildCreditCardInvoiceAnalytics(snap, "c1", rows, [])
+        expect(a.openTotal).toBe(220)
+        expect(a.openExpenseTotal).toBe(300)
+        const [row] = buildCategoryComparisonRows(
+            a.categoryOpen,
+            a.categoryLastClosed,
+            a.openExpenseTotal,
+            a.lastClosedExpenseTotal
+        )
+        expect(row?.shareOpenPct).toBe(100)
+        expect(a.summaryText).toContain("(100% da fatura)")
+    })
+
+    it("com o estorno maior que as compras, o resumo não diz que não houve gasto", () => {
+        const rows = [
+            { ...base, id: "tx-1", type: "expense" as const, amount: 200, date: "2026-03-15T12:00:00.000Z" },
+            { ...base, id: "tx-2", type: "income" as const, amount: 500, date: "2026-03-18T12:00:00.000Z" },
+        ]
+        const snap = buildCardCycleSnapshot(card, rows, today)
+        const a = buildCreditCardInvoiceAnalytics(snap, "c1", rows, [])
+        expect(a.openTotal).toBe(-300)
+        expect(a.openExpenseTotal).toBe(200)
+        expect(a.summaryText).not.toContain("Nenhum gasto")
+        expect(a.summaryText).toContain("Casa")
     })
 })

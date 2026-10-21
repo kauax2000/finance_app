@@ -664,8 +664,8 @@ export function CreditCardInvoiceAnalyticsPanel({
             buildCategoryComparisonRows(
                 analytics.categoryOpen,
                 analytics.categoryLastClosed,
-                analytics.openTotal,
-                analytics.lastClosedTotal
+                analytics.openExpenseTotal,
+                analytics.lastClosedExpenseTotal
             ),
         [analytics]
     )
@@ -687,7 +687,7 @@ export function CreditCardInvoiceAnalyticsPanel({
     const committedDetailLine = useMemo(() => {
         const segs: string[] = []
         const minC = analytics.minimumCommittedOpen
-        const openTot = analytics.openTotal
+        const openTot = analytics.openExpenseTotal
         const nPlans = analytics.installmentRows.length
         if (openTot > 0) {
             segs.push(
@@ -706,7 +706,7 @@ export function CreditCardInvoiceAnalyticsPanel({
         return segs.length ? segs.join(" · ") : null
     }, [
         analytics.minimumCommittedOpen,
-        analytics.openTotal,
+        analytics.openExpenseTotal,
         analytics.installmentRows.length,
     ])
 
@@ -860,7 +860,7 @@ export function CreditCardInvoiceAnalyticsPanel({
                                 {invoicePeriodLabel}
                             </p>
                         </div>
-                        {analytics.openTotal === 0 ? (
+                        {analytics.openExpenseTotal === 0 ? (
                                 <p className="text-xs text-muted-foreground">
                                     Sem despesas nesta fatura ainda.
                                 </p>

@@ -568,8 +568,12 @@ function estimatePlanEndDate(plan: WorkspaceInstallmentPlan): Date | null {
 export type CreditCardInvoiceAnalytics = {
     openRows: CcTxAnalyticsRow[]
     lastClosedRows: CcTxAnalyticsRow[]
+    /** Despesas − estornos (pode ser negativo): o valor da fatura. */
     openTotal: number
     lastClosedTotal: number
+    /** Só despesas (bruto): base dos percentuais por categoria e por fatia. */
+    openExpenseTotal: number
+    lastClosedExpenseTotal: number
     sliceOpen: SliceTotals
     sliceLastClosed: SliceTotals
     minimumCommittedOpen: number
@@ -695,6 +699,11 @@ export function buildCreditCardInvoiceAnalytics(
 
     const sliceOpen = sumByInvoiceSlice(openRows)
     const sliceLastClosed = sumByInvoiceSlice(lastClosedRows)
+    // As categorias só somam despesas; o percentual divide pelo mesmo bruto.
+    const openExpenseTotal = roundCents(sliceOpen.installments_recurring + sliceOpen.one_off)
+    const lastClosedExpenseTotal = roundCents(
+        sliceLastClosed.installments_recurring + sliceLastClosed.one_off
+    )
 
     let minimumCommittedOpen = 0
     for (const tx of openRows) {
@@ -723,7 +732,7 @@ export function buildCreditCardInvoiceAnalytics(
 
     const topAggregate = categoryOpen[0]
     const summaryText = buildInvoiceSummaryText(
-        openTotal,
+        openExpenseTotal,
         topAggregate
             ? { name: topAggregate.name, total: topAggregate.total }
             : null
@@ -732,8 +741,8 @@ export function buildCreditCardInvoiceAnalytics(
     const savingsOpportunities = savingsOpportunitiesFromCategories(
         openRows,
         lastClosedRows,
-        openTotal,
-        lastClosedTotal
+        openExpenseTotal,
+        lastClosedExpenseTotal
     )
 
     const installmentRows = analyzeInstallmentPlans(plans)
@@ -745,6 +754,8 @@ export function buildCreditCardInvoiceAnalytics(
         lastClosedRows,
         openTotal,
         lastClosedTotal,
+        openExpenseTotal,
+        lastClosedExpenseTotal,
         sliceOpen,
         sliceLastClosed,
         minimumCommittedOpen,
