@@ -37,45 +37,38 @@ O desenho funcional que implementa esta estratégia está em
 | 6 | **Seus dados são seus.** Sem senha de banco; região dos dados dita como é; exportar e apagar em 1 toque; anexos privados; "Cofre aberto". | "E se o app fechar e eu perder tudo?"; medo de golpe. | Segurança e controle. | Guiabolso e Olivia fechados; painel P001/P007/P009/P013/P018. |
 | 7 | **Premium que se prova.** Piloto Automático visível, relatório de valor do mês, cobrança honesta, visual de primeira, apps nativos depois do PWA. | "Pago e não sinto diferença"; cobrança surpresa. | "Quero sentir que vale." | ICP §2.5; ponto 15 do dono. |
 
-## 3. Planos (ponto 4) — detalhe em [`founder/pricing.md`](../../founder/pricing.md)
+## 3. Planos (ponto 4, revisto pelo dono em 21/10) — detalhe em [`founder/pricing.md`](../../founder/pricing.md)
 
-**Grátis, para sempre:**
-- lançamento manual sem limite;
-- frase livre no app;
-- cartões e faturas;
-- exportar CSV;
-- 1 pessoa convidada;
-- até 50 anexos.
+**Sem plano grátis: teste de 14 dias, sem cartão, e depois a assinatura.**
+- O paywall depois do teste converte ~5× mais que o freemium (RevenueCat 2026: 10,7% contra 2,1%), com retenção parecida.
+- Teste sem cartão não gera cobrança surpresa.
 
-**Família (até 6 pessoas): R$ 19,90/mês ou R$ 149/ano.**
-- Tudo do Grátis.
-- Captura automática (WhatsApp, Siri, Apple Pay, compartilhar).
-- Conferência da fatura por PDF.
-- Previsão e inteligência.
-- Papéis e privacidade.
-- Carteira dividida.
-- Anexos até 5 GB.
+**Família (até 6 pessoas): R$ 29,90/mês ou R$ 239/ano (R$ 19,92/mês).** Proposta dentro da faixa do dono, de R$ 19,90 a R$ 29.
+- Inclui tudo: captura, conferência de fatura, previsão, inteligência, papéis, privacidade, divisão e anexos.
+- **Fundadores, até 31/01/2027:** R$ 24,90/mês ou R$ 199/ano, congelados enquanto ativos.
 
-**Oferta de lançamento: Fundadores** — R$ 119 por ano (só anual) para quem assinar até 31/01/2027, enquanto a assinatura estiver ativa.
-
-**Teste reverso:** toda casa nova entra no Família por 14 dias, sem cartão, e volta ao Grátis sem perder nada.
+**Sem assinatura, a conta fica em "só leitura".**
+- Vê tudo, **exporta e apaga quando quiser**. Nada se apaga.
+- É o antídoto para "e se eu perder meu histórico?".
 
 **Garantias:**
-- "Bateu ou devolvemos" no 1º mês pago;
+- "bateu ou devolvemos" no 1º mês pago;
 - 7 dias de arrependimento (CDC art. 49);
 - aviso 7 dias antes de renovar;
 - cancelar em 1 toque.
 
-**Princípio:** nunca cobrar pelo ato de lançar. Cobra-se pela automação e pela família, que é o que a planilha não faz.
+**Cobrança:** Asaas ou AbacatePay; os dois exigem CNPJ. A escolha fica para o plano do Bloco 4.
 
-**Cobrança:** Asaas, que faz cartão recorrente, Pix, boleto e NFS-e automática.
-- O Pix Automático só entra quando o CNPJ tiver 6 meses.
-- A Stripe não faz Pix Automático para empresa brasileira.
+**Custos: tudo no plano gratuito até a primeira receita** (decisão do dono):
+- Supabase Free, Resend Free;
+- Cloudflare Workers AI grátis, a única IA grátis que não treina com o dado;
+- WhatsApp com as 1.000 respostas/mês grátis.
 
-**Economia, pelo CFO** ([`founder/cfo.md`](../../founder/cfo.md)):
-- O custo variável é de ~R$ 1,60 por família pagante, contando IA, WhatsApp, armazenamento, gateway e nota, e incluindo a IA dos usuários grátis.
-- O ponto de equilíbrio fica entre 32 e 53 famílias pagantes, conforme o mix mensal/anual.
-- A linha a vigiar é a rampa de pagantes, não o custo da IA.
+Dois limites pedem atenção:
+- **a Vercel Hobby proíbe uso comercial.** Ao ligar a cobrança, ou Vercel Pro (US$ 20) ou migrar para Cloudflare;
+- **o Supabase Free pausa após 7 dias sem uso e não guarda backup para baixar.** Até o Pro, um `pg_dump` semanal.
+
+Pelo CFO ([`founder/cfo.md`](../../founder/cfo.md)), o equilíbrio fica entre 9 e 14 famílias pagantes, conforme o mix.
 
 ## 4. A oferta e a jornada pós-compra (pontos 14 e 15) — detalhe em [`founder/offer.md`](../../founder/offer.md)
 

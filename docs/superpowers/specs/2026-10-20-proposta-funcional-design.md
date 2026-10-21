@@ -59,8 +59,8 @@ A justificativa de cada uma está na estratégia, §2.
 - **Captura que perde dado ou duplica.**
 - **Lançar exigir decisão.** Na dúvida, o app salva e marca "a conferir".
 - **Convidado vendo o que não deve.** É falha de segurança, e a garantia está no banco (RLS e RPCs), nunca só na tela.
-- **Cobrar pelo ato de lançar.** Paywall depois que a pessoa inseriu dados, cobrança surpresa, cancelamento difícil.
-- **IA que treina com o dado da pessoa.** Nenhum free tier que use os dados para treino, em produção.
+- **Prender o dado da pessoa.** Sem plano, nada se apaga e exportar continua sempre liberado. Também é anti-objetivo a cobrança surpresa (o teste não pede cartão) e o cancelamento difícil.
+- **IA que treina com o dado da pessoa.** Nenhum free tier que treine com os dados, em produção. O Cloudflare Workers AI não treina.
 - **Insight que vira ruído ou sermão.** Todo aviso tem ação, e há teto de push.
 
 ## 3. Restrições
@@ -79,9 +79,19 @@ A justificativa de cada uma está na estratégia, §2.
 - **Contas de terceiros que o dono abre** (pré-requisitos; ninguém cria conta por ele):
   - Asaas;
   - Meta Business com o WhatsApp Cloud API e um número dedicado;
-  - Google AI (Gemini) com billing ligado;
-  - Cloudflare (Workers AI).
+  - Cloudflare (Workers AI, no plano grátis).
   - O CNPJ é exigido pelo Asaas, e pelo Pix Automático só depois de 6 meses.
+- **Tudo no plano gratuito até a primeira receita** (decisão do dono, 21/10). Nada pago entra antes das assinaturas pagarem por ele.
+
+  | Serviço | Grátis | O limite que pesa | Gatilho para pagar |
+  |---|---|---|---|
+  | Supabase Free | banco 500 MB, storage 1 GB, egress 5 GB, 500 mil chamadas de Edge/mês | o projeto **pausa após 7 dias sem uso**; **sem backup diário para baixar** | ~2 assinaturas pagam o Pro (US$ 25). Até lá, `pg_dump` semanal guardado fora (a montar no Bloco 1) |
+  | Hospedagem do Next | Vercel Hobby | **a Vercel Hobby proíbe uso comercial** | ao ligar a cobrança (Bloco 4): Vercel Pro (US$ 20) ou Cloudflare com OpenNext. Decidir no plano do Bloco 4 |
+  | Resend Free | 3.000 e-mails/mês, 100/dia | o teto diário | push primeiro; e-mail só no essencial (conta, cobrança, aviso de renovação) |
+  | Cloudflare Workers AI | 10 mil neurons/dia, **não treina com o dado** | a cota diária | sem cota, o app cai para o parser determinístico e "a conferir" |
+  | WhatsApp Cloud API | receber é grátis; 1.000 respostas/mês grátis | as respostas | o app só responde em erro e corta as respostas em 900/mês |
+  | Asaas | sem mensalidade | taxa por cobrança, paga pela própria receita | — |
+- **Anexos com 1 GB total:** cota de **25 MB por assinante** (~100 fotos comprimidas) enquanto o Supabase for Free. A cota sobe no Pro.
 
 ## 4. O que já existe e se reaproveita
 
@@ -126,7 +136,7 @@ A dor nº 1: "a fatura não bate". O número do app tem de bater com o do banco.
 A pessoa envia o PDF pelo app, pelo WhatsApp, pelo "compartilhar" do Android ou pelo Atalho do iOS.
 
 1. **Texto.** A camada de texto é extraída no **cliente**, com pdf.js. Se o PDF tiver senha, o app pede. Antes de qualquer envio, as linhas de identificação (nome, CPF, endereço) saem por regex.
-2. **Estrutura.** Só o texto vai à IA paga, que não treina com o dado (Gemini 2.5 Flash, ver §8). A resposta é um JSON:
+2. **Estrutura, determinística primeiro.** Um leitor de linhas por regex (data dd/mm, descrição, valor, "k/n" de parcela, sinal de estorno) cobre o formato comum das faturas brasileiras. Ele tem tabela de testes com amostras anonimizadas de Nubank, Itaú, Inter, C6, Bradesco e Santander. Só quando a soma não fecha o texto vai à IA gratuita, que não treina com o dado (§8). Em qualquer caminho, a saída é um JSON:
    - os itens: `data`, `descrição`, `valor`, `parcela k/n`, `é estorno`;
    - os totais: total, fechamento, vencimento.
 3. **Validação.** A soma dos itens tem de dar o total declarado. Se não der, a leitura fica **"incompleta"** e a diferença aparece. Nunca se esconde.
@@ -153,7 +163,7 @@ A pessoa envia o PDF pelo app, pelo WhatsApp, pelo "compartilhar" do Android ou 
 - **Imagem.** Comprimida no cliente para WebP de 1600 px, qualidade 0,8, com `canvas.toBlob`. Recodificar assim também tira o EXIF e o GPS.
 - **Usos.** Nota fiscal ou recibo junto de uma cobrança, para ver depois; o boleto numa conta a pagar; o PDF da fatura.
 - **Apagar.** Apagar o lançamento apaga o objeto pela API de Storage. Um job semanal limpa os órfãos.
-- **Cota.** Grátis: 50 anexos. Família: 5 GB.
+- **Cota.** 25 MB por assinante enquanto o Supabase for Free (§3). Sobe com o Pro.
 
 ## 7. Bloco 3 — Captura sem abrir o app (P2, P3)
 
@@ -185,11 +195,11 @@ Um guia opcional mostra o Tasker/MacroDroid para ler a notificação do banco no
 - **Webhook:** a Edge `whatsapp-webhook` valida `X-Hub-Signature-256`. Por tipo de conteúdo:
   - **texto:** vai ao parser;
   - **áudio:** transcrição (Whisper no Cloudflare), depois o parser;
-  - **imagem:** leitura de nota ou comprovante (Gemini Flash-Lite), depois o parser, e a imagem vira anexo;
+  - **imagem:** leitura de nota ou comprovante (visão no Cloudflare Workers AI, grátis), depois o parser, e a imagem vira anexo;
   - **PDF:** vai à conferência de fatura (§6).
-- **Confirmação:** marcar como lida é o "anotei". **Responder só em erro, em ambiguidade e na primeira vez** (custo: 1.000 respostas de serviço grátis por mês; acima disso, pago).
+- **Confirmação:** marcar como lida é o "anotei". **Responder só em erro, em ambiguidade e na primeira vez.** O teto é de 900 respostas por mês: dentro das 1.000 grátis, e depois disso só o "lido".
 - **Avisos:** vão por **Web Push**, nunca por template do WhatsApp.
-- **Plano:** o WhatsApp é do plano Família. No Grátis, só durante o teste.
+- **Plano:** o WhatsApp vale no teste e no plano Família.
 
 ### Da frase ao lançamento
 - **Parser `interpretarFrase`:** função pura, compartilhada entre a Edge e o cliente, com tabela de testes. Entende:
@@ -200,7 +210,7 @@ Um guia opcional mostra o Tasker/MacroDroid para ler a notificação do banco no
   - cartão ou forma ("nubank", "pix", "débito");
   - o resto vira descrição.
 - **Preenchimento pelo histórico, sem tabela nova.** A transação mais recente da carteira com a mesma descrição normalizada dá a categoria, a forma e o cartão. Corrigir ensina.
-- **IA só no que o parser não resolve, e só no plano Família:** frase confusa, áudio, foto. Ver §8.
+- **IA só no que o parser não resolve:** frase confusa, áudio, foto. Ver §8.
 - **Apple Pay:**
   - o estabelecimento vira a descrição;
   - o nome do cartão na Wallet casa com `credit_cards.wallet_alias`, gravado na primeira conferência;
@@ -217,32 +227,34 @@ Um guia opcional mostra o Tasker/MacroDroid para ler a notificação do banco no
 
 ### Regras
 - A captura respeita a RLS como se a pessoa tivesse lançado.
-- **Lançar à mão e a frase livre no app são grátis para sempre.** Os canais automáticos e a IA são do Família, liberados no teste reverso.
+- **Tudo vale no teste de 14 dias e no plano Família.** Depois do teste, sem plano, o lançamento para (ver §9).
 - **No `JORNADAS.md`:** a jornada de vincular WhatsApp, a de instalar o Atalho, a de compartilhar no Android e a da lista "a conferir".
 
-## 8. IA no app (P3)
+## 8. IA no app (P3): só grátis até a primeira receita
 
-**Não existe IA grátis que sirva para dado financeiro real.**
-- Os free tiers do Gemini, do Mistral e os `:free` do OpenRouter podem treinar com o dado ou ter revisão humana.
-- A IA paga e barata custa centavos.
+**Decisão do dono:** nesta versão a IA só entra se for grátis. Ela tem também de **não treinar com o dado**, por ser dado financeiro.
+- **Ficam fora:**
+  - o free tier do Gemini e o do Mistral, e os modelos `:free` do OpenRouter, porque podem treinar ou ter revisão humana;
+  - o Groq, até a documentação dizer com todas as letras que não treina.
+- **O único que cumpre as duas coisas hoje** é o **Cloudflare Workers AI**: 10 mil neurons/dia grátis, sem treino.
 
-| Tarefa | Provedor | Custo |
-|---|---|---|
-| Transcrever áudio pt-BR | Cloudflare Workers AI, Whisper turbo (não treina) | cota grátis cobre ~1.900 usuários |
-| Frase confusa e foto de nota/comprovante | Gemini 2.5 Flash-Lite pago (não treina) | ~US$ 0,01 por usuário/mês |
-| Fatura PDF (a partir do texto) | Gemini 2.5 Flash pago | centavos por fatura |
-| Resumos e dicas (§11) | Gemini 2.5 Flash-Lite pago | centavos |
-| Reserva | Claude Haiku 5.5 | US$ 0,10 / 0,50 por MTok |
+| Tarefa | Como, nesta versão |
+|---|---|
+| Entender a frase | **Parser determinístico** (`interpretarFrase`) e histórico. A IA só entra se o parser falhar. |
+| Áudio do WhatsApp | Whisper turbo no Cloudflare. A cota grátis cobre ~1.900 usuários. |
+| Foto de nota ou comprovante | Modelo de visão no Cloudflare (Llama 3.2 Vision ou o equivalente disponível). |
+| Fatura PDF | **Leitor determinístico de linhas** primeiro (§6). A IA do Cloudflare só quando a soma não fecha. |
+| Resumos e dicas (§11) | **Modelos de frase em pt-BR**, sem IA. |
 
-- **Um módulo só**, `supabase/functions/_shared/ia.ts`, com `transcrever`, `interpretar`, `lerImagem`, `lerFatura` e `resumir`.
+- **Um módulo só:** `supabase/functions/_shared/ia.ts`, com `transcrever`, `interpretar`, `lerImagem` e `lerFatura`.
   - Toda saída vem em JSON com schema e é validada.
-  - Saída inválida vira "a conferir", nunca um lançamento errado silencioso.
-- **Teto de custo por casa:** 300 chamadas por mês, com registro de uso.
+  - Saída inválida vira "a conferir", nunca um lançamento errado em silêncio.
+- **Sem cota, o app não para.** Quando a cota diária acaba, ele cai no caminho determinístico e marca "a conferir". O registro de uso diz quando a cota começou a apertar.
+- **Com receita:** o Gemini Flash-Lite pago (~US$ 0,01 por usuário/mês, sem treino) entra pela mesma interface, sem mexer em quem chama. Os resumos escritos por IA entram nessa hora.
 - **Privacidade:**
   - nome, CPF e endereço saem antes do envio;
-  - a política de privacidade cita a transferência internacional e o DPA do provedor;
+  - a política de privacidade cita a transferência internacional;
   - os segredos ficam só nas Edge Functions.
-- **Desenvolvimento:** free tier só com dado sintético.
 
 ## 9. Bloco 4 — Planos e confiança (P4, P14, P15)
 
@@ -254,13 +266,13 @@ Detalhe comercial na estratégia §3–§4 e em `founder/pricing.md` e `founder/
 - **A unidade do plano é o assinante (uma pessoa)** *[decisão minha]*:
   - cobre **todas as carteiras de que ele é dono**;
   - "até 6 pessoas" conta as pessoas distintas, fora o assinante, em todas essas carteiras;
-  - o teto de IA (300 chamadas/mês) é por assinante.
-  - Quem cria conta, inclusive o cônjuge convidado, ganha o próprio teste reverso, que vale para as carteiras dele.
+  - **cobre também as pessoas convidadas para essas carteiras** (até 5 além do assinante), inclusive a carteira pessoal de cada uma. O cônjuge e os filhos não pagam à parte.
+  - Quem cria conta sem convite ganha o próprio teste.
 - **`workspace_plan(workspace_id)`:** o plano é Família se o **dono** da carteira tiver plano ativo ou em teste.
-- **Captura paga:** o plano é conferido na **carteira padrão** do token ou do vínculo do WhatsApp, **antes** de qualquer chamada de IA. Se o destino final, depois de interpretar, não tiver plano, o lançamento entra sem IA e vai para "a conferir".
+- **Captura:** o plano é conferido na **carteira padrão** do token ou do vínculo do WhatsApp, **antes** de qualquer chamada de IA.
   - Os membros herdam o plano dentro daquela carteira.
   - A função nasce no Bloco 2 devolvendo `familia` para todos e passa a valer neste bloco.
-- **Quem garante é o servidor.** As Edge Functions de captura automática, IA, PDF e anexos checam o plano. A tela só reflete.
+- **Quem garante é o servidor.** As Edge Functions e a RLS de escrita checam o plano. A tela só reflete.
 
 ### Cobrança: Asaas
 - **Checkout** pela Edge `billing-checkout`, criado no servidor. O CPF da pessoa é pedido no checkout, porque o Asaas exige.
@@ -269,18 +281,30 @@ Detalhe comercial na estratégia §3–§4 e em `founder/pricing.md` e `founder/
 - **NFS-e automática** em toda cobrança.
 
 ### Regras de cobrança honesta
-- **Teste reverso.** Toda conta nova entra no Família por 14 dias, sem cartão.
-  - No dia 12, aviso e o **relatório do teste** (o que o app lançou e achou).
-  - No dia 14, a conta volta ao Grátis.
-  - No lançamento do plano, quem já usa o app também ganha 14 dias.
+- **Sem plano grátis: teste de 14 dias, sem cartão** (decisão do dono, 21/10).
+  - **Por quê:** o paywall depois do teste converte ~5× mais que o freemium (RevenueCat 2026: 10,7% contra 2,1%), com retenção parecida.
+  - **O que mantém a confiança:** o teste não pede cartão, então não existe cobrança surpresa.
+  - No dia 12, aviso e o **relatório do teste**: o que o app lançou, achou e avisou.
+  - **No dia 14, sem assinatura, a conta fica em "só leitura":**
+    - tudo continua visível;
+    - **exportar tudo** e apagar a conta continuam sempre liberados;
+    - lançar, capturar e importar param.
+    - Nada se apaga. Assinar devolve tudo na hora.
+  - No lançamento do plano, quem já usa o app ganha 14 dias.
   - O dono e a família dele recebem um plano vitalício manual. *[decisão minha]*
 - **Cancelar em 1 toque.** A Edge `billing-cancel` marca `cancel_at_period_end`.
 - **Aviso 7 dias antes de renovar** (anual), por push e e-mail, via cron.
 - **Arrependimento de 7 dias (CDC art. 49).** Um botão de reembolso visível nesses 7 dias; o estorno sai pela API do Asaas.
 - **"Bateu ou devolvemos."** No 1º mês pago, pelo suporte, é processo manual documentado; não se automatiza.
-- **Voltar ao Grátis nunca apaga dado.** Os membros continuam, com lançamento manual e leitura. Os canais automáticos, a IA e os anexos novos param, e convites novos ficam bloqueados acima de 1. *[decisão minha]*
+- **Plano que acaba (teste ou assinatura) nunca apaga dado nem desliga proteção.**
+  - A conta e os membros vão para "só leitura".
+  - O mascarado continua mascarado e o convidado continua restrito.
+  - Exportar continua liberado.
 - **Preço na porta.** `/plans` mostra o preço também a quem não entrou.
-- **Fundadores:** só no anual. São **R$ 119 por ano enquanto a assinatura estiver ativa**, para quem assinar até 31/01/2027 (`founder = true`). Cancelou, perde o preço. *[decisão minha]*
+- **Preço** (proposta minha dentro da faixa do dono, de R$ 19,90 a R$ 29):
+  - **Família: R$ 29,90/mês ou R$ 239/ano** (o anual sai a R$ 19,92/mês, o piso do dono);
+  - **Fundadores**, até 31/01/2027: **R$ 24,90/mês ou R$ 199/ano, congelados enquanto ativos** (`founder = true`). Cancelou, perde o preço.
+  - O detalhe está em `founder/pricing.md`.
 
 ### Jornada depois da compra ou do início do teste (P14)
 Um assistente de 4 passos. Cada passo mostra o que o app fará sozinho e deixa ligar e testar ali mesmo:
@@ -300,7 +324,7 @@ Um assistente de 4 passos. Cada passo mostra o que o app fará sozinho e deixa l
   - Não precisa de tabela nova, só de `source`. Os crons de assinatura e de parcela passam a gravá-lo.
 - **Cofre aberto.** Explica o que guardamos, onde, quem vê e por que pedimos cada dado. Também tem:
   - "não pedimos senha de banco";
-  - **exportar tudo** (CSV por tabela das carteiras da pessoa, num ZIP), no Grátis também;
+  - **exportar tudo** (CSV por tabela das carteiras da pessoa, num ZIP), sempre liberado, com ou sem plano;
   - **apagar a conta** (o `delete-user`, que já existe).
 - **Premium que se prova.** O relatório de valor do mês (§11) é o recibo do que a assinatura entregou.
 
@@ -369,7 +393,7 @@ A conta do "sobra" roda no servidor. **Fica para quem constrói:** um módulo pu
 ### Motor de insights
 - **Tabela** `insights(workspace_id, user_id?, kind, dedupe_key, payload jsonb, status: new|seen|dismissed|acted, created_at)`.
 - **Quem produz:** o cron diário e os eventos (fatura fechou, mês virou, lançamento novo).
-- **A regra decide; a IA só redige.** Os textos de resumo e relatório vêm da IA no plano Família. No Grátis, um modelo de frase em pt-BR.
+- **A regra decide, e o texto sai de modelos de frase em pt-BR.** A IA não entra nesta versão (§8).
 - **Regras:**
   - todo insight tem **uma ação** ou um "entendi";
   - "não mostrar mais este tipo";
@@ -426,14 +450,11 @@ São dois jeitos de separar dinheiro, para dois casos diferentes.
   - **Evento** (projeto).
 - **O primeiro uso** cria a Casa a partir do modelo.
 
-### O que é pago, e o que acontece ao voltar ao Grátis *[decisão minha]*
-- **No Família:** papéis de convidado, gasto privado, carteira dividida, limite por pessoa e projetos.
-- **No Grátis:** o dono e **1 pessoa a mais**, em qualquer papel.
-- **Ao voltar ao Grátis, nada que protege alguém se desliga:**
-  - o mascarado continua mascarado;
-  - o convidado continua restrito;
-  - os limites e o saldo da carteira dividida continuam calculando.
-- **O que para:** criar coisas novas que são do Família (convites acima de 1, projeto novo, marcar algo novo como privado).
+### Plano
+**Tudo é do Família**, e não há plano grátis. Sem plano, a carteira fica em "só leitura" (§9). Nada que protege alguém se desliga:
+- o mascarado continua mascarado;
+- o convidado continua restrito;
+- os limites e o saldo da carteira dividida continuam visíveis.
 
 ### Papéis
 `workspace_members.role` ganha `guest`.
@@ -522,21 +543,26 @@ Cada bloco é um projeto com plano próprio. A ordem segue o valor e a dependên
 3. A compra no crédito conta pelo mês do fechamento em todo lugar, alertas inclusive.
 4. A captura vai para a carteira do cartão reconhecido; sem ele, para a carteira padrão do token.
 5. O convidado na carteira dividida tem um responsável que paga por ele.
-6. Voltar ao Grátis não remove ninguém: os canais automáticos e a IA param.
+6. Sem plano, a conta vai para "só leitura" e não remove ninguém; exportar e apagar continuam sempre liberados.
 7. O dono e a família dele recebem plano vitalício manual.
 8. Teto de 3 push por semana para insights.
 9. Ao WhatsApp o app só responde em erro ou ambiguidade; os avisos vão por push.
-10. Teto de 300 chamadas de IA por assinante por mês.
-11. O plano é do assinante e cobre todas as carteiras de que ele é dono. "Até 6 pessoas" conta pessoas distintas.
+10. A IA é só a do Cloudflare Workers AI, grátis e sem treino. Sem cota, cai no determinístico.
+11. O plano é do assinante e cobre todas as carteiras dele e as pessoas convidadas, até 5, com a carteira pessoal de cada uma.
 12. Gasto privado só fora do cartão compartilhado. PDF e conferência de cartão ficam só com o titular e o dono.
-13. No Grátis cabem o dono e mais 1 pessoa. Voltar ao Grátis não desliga nenhuma proteção.
-14. Fundadores pagam R$ 119/ano enquanto ativos, só no anual.
+13. Preço proposto: R$ 29,90/mês ou R$ 239/ano.
+14. Fundadores: R$ 24,90/mês ou R$ 199/ano, congelados enquanto ativos, até 31/01/2027.
+15. Anexos: 25 MB por assinante enquanto o Supabase for Free.
 
-**Decidido pelo dono (21/10):** todo membro tem conta com e-mail, filhos inclusive.
+**Decidido pelo dono (21/10):**
+- todo membro tem conta com e-mail, filhos inclusive;
+- **não existe plano grátis**: teste de 14 dias e depois a assinatura;
+- preço entre R$ 19,90 e R$ 29;
+- **IA, WhatsApp e infraestrutura só no plano gratuito** até a primeira receita.
 
 **Em aberto, só trava o Bloco 4:** o CNPJ. Asaas e AbacatePay exigem CNPJ, e a escolha do gateway fica para o plano do Bloco 4.
 
-**A conferir antes de prometer:** a região do projeto Supabase. "Dados no Brasil" só entra no Cofre aberto se for `sa-east-1`. A IA (Gemini e Cloudflare) é transferência internacional, e o Cofre aberto diz isso com todas as letras.
+**A conferir antes de prometer:** a região do projeto Supabase. "Dados no Brasil" só entra no Cofre aberto se for `sa-east-1`. A IA (Cloudflare) é transferência internacional, e o Cofre aberto diz isso com todas as letras.
 
 ## 16. O que fica para quem constrói
 

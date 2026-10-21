@@ -1,3 +1,5 @@
+> **Revisão de 21/10:** o dono tirou o plano grátis. O teste é de 14 dias sem cartão, e depois disso, sem assinatura, a conta fica em "só leitura". O preço foi para R$ 29,90/mês ou R$ 239/ano. Onde este texto fala em "Grátis", vale "só leitura com exportação". O pitch atual está em `pitch.md`.
+
 # Oferta: "Família no Controle"
 
 Método: a lente de Ofertas (`founder-board/lenses.md`). As objeções saem do painel simulado (`founder/panel/results.md`) e do dossiê de ICP.
