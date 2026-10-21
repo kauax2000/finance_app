@@ -14,9 +14,6 @@ verify_jwt = false
 [functions.delete-user]
 verify_jwt = false
 
-[functions.dispatch-notifications]
-verify_jwt = false
-
 [functions.evaluate-budgets]
 verify_jwt = false
 

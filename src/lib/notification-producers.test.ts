@@ -33,4 +33,10 @@ describe("quem dispara notificação no cliente", () => {
         }
         expect(existsSync("src/lib/transaction-notifications.ts")).toBe(false)
     })
+
+    it("dispatch-notifications não existe mais", () => {
+        expect(existsSync("supabase/functions/dispatch-notifications")).toBe(false)
+        expect(lerFonte("supabase/config.toml")).not.toContain("dispatch-notifications")
+        expect(lerFonte("package.json")).not.toContain("dispatch-notifications")
+    })
 })
