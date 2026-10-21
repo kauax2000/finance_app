@@ -101,6 +101,8 @@ depois do passo 6**.
 ### 2. Vault (SQL Editor)
 
 Precisa das extensões `pg_cron` e `pg_net` ligadas (Database → Extensions).
+**Não salve este SQL como snippet** no SQL Editor: o histórico guarda o valor
+do segredo. Rode e descarte.
 
 - `<PROJECT_REF>`: o ref do projeto;
 - `<CRON_SECRET>`: o mesmo valor do secret `CRON_SECRET` do passo 1.
@@ -131,6 +133,27 @@ select tgname from pg_trigger where tgname = 'transactions_notify_created';
 ```
 
 O primeiro mostra os dois jobs; o segundo devolve uma linha.
+
+**Depende do passo 2.** A migração só agenda os crons se as extensões `pg_cron`
+e `pg_net` existirem: com o bloco `if exists`, se o `pg_cron` ainda estava
+desligado no `db push`, os jobs foram pulados e o primeiro `select` vem vazio.
+Ligue o `pg_cron` e rode de novo, no SQL Editor, o bloco `do $cron$ ... $cron$`
+da migração `20261021120000_internal_edge_dispatch.sql` (copie do arquivo).
+
+**Jobs antigos criados à mão com outro nome.** A migração só substitui jobs de
+mesmo nome. Procure os que sobraram:
+
+```sql
+select jobid, jobname, command from cron.job
+where command ilike '%credit-card-calendar-alerts%' or command ilike '%evaluate-bills-reminders%';
+```
+
+Para cada linha cujo `jobname` **não** seja `credit-card-calendar-alerts-daily`
+nem `bills-reminders-daily`, rode `select cron.unschedule(<jobid>);`. Senão a
+função roda duas vezes por dia. Se o `command` de algum trazia a chave
+`service_role` em texto, **rotacione a chave** (Dashboard → Settings → API) e
+atualize onde ela é usada (secrets das Edge Functions, variáveis do front e dos
+servidores).
 
 ### 4. Funções
 
@@ -173,8 +196,10 @@ cada despesa avisa duas vezes (a deduplicação segura, mas a função roda à t
 ### 6. Teste de fumaça
 
 1. A outra pessoa lança uma despesa numa carteira compartilhada e o aviso chega.
-2. No SQL Editor, `select * from net._http_response order by created desc limit 5;`
-   mostra status 200 para a chamada.
+2. **Logo depois da despesa de teste**, no SQL Editor,
+   `select * from net._http_response order by created desc limit 5;`
+   mostra status 200 para a chamada. O `pg_net` guarda a resposta só por cerca
+   de 6 horas; passado isso a tabela já está vazia.
 3. No dia seguinte, `select * from cron.job_run_details order by start_time desc limit 10;`
    mostra as duas execuções das 12:00 UTC com `succeeded`.
 
@@ -184,6 +209,10 @@ Passou? Apague o secret `NOTIFY_INTERNAL_SECRET` das Edge Functions.
 
 O workflow `.github/workflows/backup-db.yml` roda aos domingos, 06:00 UTC, e
 sob demanda. Guarda o `pg_dump` cifrado como artefato por 90 dias.
+
+O agendamento e o botão "Run workflow" **só existem quando o arquivo chega à
+branch padrão (`main`)**: enquanto o workflow estiver só nesta branch, a aba
+Actions não o mostra. Faça o merge antes do passo 2 abaixo.
 
 1. Em GitHub → Settings → Secrets and variables → Actions, cadastre:
    - `SUPABASE_DB_URL`: a connection string do **pooler em modo sessão**
@@ -203,12 +232,20 @@ sob demanda. Guarda o `pg_dump` cifrado como artefato por 90 dias.
    pg_restore --list backup.dump
    ```
 
-   A lista de tabelas tem de sair completa.
-4. Para restaurar:
+   A lista de tabelas tem de sair completa. O `pg_restore` local precisa ser
+   da versão **17 ou mais** (o dump é do cliente 17; um `pg_restore` mais antigo
+   recusa o arquivo).
+4. Para restaurar, em um **projeto novo**:
 
    ```bash
    gpg -d backup-AAAA-MM-DD.dump.gpg | pg_restore --no-owner -d "<DB_URL_DESTINO>"
    ```
+
+   O projeto novo já traz os esquemas gerenciados (`auth`, `storage`,
+   `realtime`…), e o restore pode colidir com eles. Confira com `--list` o que
+   o dump contém e restrinja o que entra: `-n public` restaura só o esquema
+   `public`; `--clean --if-exists` apaga e recria os objetos que já existem.
+   Teste o restore uma vez, num projeto descartável, antes de precisar dele.
 
 O GitHub **desliga os workflows agendados** de um repositório sem atividade por
 60 dias. De vez em quando abra a aba Actions: se o agendamento estiver

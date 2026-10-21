@@ -1,6 +1,4 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
-import { internalError } from '../_shared/http.ts'
-import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { secretMatches } from '../_shared/timing-safe-equal.ts'
 import { processTransactionNotification } from '../_shared/process-transaction-notification.ts'
 
@@ -53,6 +51,10 @@ Deno.serve(async (req: Request) => {
     return json(405, { error: 'Method not allowed' })
   }
 
+  if (!isServiceAuthorized(req)) {
+    return json(401, { error: 'Unauthorized' })
+  }
+
   let body: WebhookBody
   try {
     body = await req.json()
@@ -67,32 +69,7 @@ Deno.serve(async (req: Request) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
-
-  if (!isServiceAuthorized(req)) {
-    const jwt = bearerJwt(req.headers.get('Authorization'))
-    if (!jwt) {
-      return json(401, { error: 'Unauthorized' })
-    }
-
-    const authResult = await getAuthUserFromJwt(supabaseUrl, anonKey, jwt)
-    if (authResult.error || !authResult.user) {
-      return json(401, { error: 'Invalid or expired token' })
-    }
-
-    const { data: txOwner, error: ownerErr } = await supabaseAdmin
-      .from('transactions')
-      .select('user_id')
-      .eq('id', transactionId)
-      .maybeSingle()
-
-    if (ownerErr) return json(500, { error: internalError('notify-transaction-created', ownerErr) })
-    if (!txOwner) return json(404, { error: 'Transaction not found' })
-    if (txOwner.user_id !== authResult.user.id) {
-      return json(403, { error: 'Forbidden' })
-    }
-  }
 
   const result = await processTransactionNotification(supabaseAdmin, transactionId)
   if (!result.ok) {

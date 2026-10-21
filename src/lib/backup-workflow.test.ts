@@ -25,6 +25,10 @@ describe("backup-db.yml", () => {
     expect(yml).toContain("PASS: ${{ secrets.BACKUP_PASSPHRASE }}")
   })
 
+  it("o job tem timeout de 30 minutos", () => {
+    expect(yml).toContain("timeout-minutes: 30")
+  })
+
   it("só sobe o artefato depois de cifrar", () => {
     const gpg = yml.indexOf("gpg")
     const upload = yml.indexOf("upload-artifact")

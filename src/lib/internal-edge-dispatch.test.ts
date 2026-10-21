@@ -53,4 +53,11 @@ describe("chamada interna às Edge Functions (pg_net + Vault)", () => {
         expect(f).toContain("CRON_SECRET")
         expect(f).not.toContain("NOTIFY_INTERNAL_SECRET")
     })
+
+    it("a função só aceita segredo de serviço, sem JWT de usuário", () => {
+        const f = fonte("supabase/functions/notify-transaction-created/index.ts")
+        expect(f).not.toContain("getAuthUserFromJwt")
+        expect(f).not.toContain("bearerJwt")
+        expect(f).toContain("!isServiceAuthorized(req)")
+    })
 })
