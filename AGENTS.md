@@ -54,6 +54,30 @@ This version has breaking changes — APIs, conventions, and file structure may 
   `Combobox` ou dos editores do `FilterBar` mora no `body`, mesmo que o evento
   suba pela árvore do React até o `Form`.
 
+## Funcionalidade nova entra em wireframe
+
+Decisão do dono (21/10/2026), para os blocos da
+[proposta funcional](docs/superpowers/specs/2026-10-20-proposta-funcional-design.md):
+toda tela que uma funcionalidade nova pede entra como **wireframe indicativo**,
+de propósito **diferente do design system e do app**. A revisão de tela por
+tela acha o que é novo e o repagina no design system depois.
+
+- O wireframe mora **só** em `src/components/wireframe/`, um arquivo por
+  funcionalidade, e a tela apenas o importa. Ele nunca vai para
+  `src/components/ui/`, nunca entra no `registry.ts` e não ganha página no
+  `/designsystem`.
+- A cara é fixa e inconfundível: borda tracejada, `font-mono`, cinza
+  (`border-dashed border-muted-foreground/60`, `bg-muted/40`,
+  `text-muted-foreground`) e uma etiqueta no topo, `WIREFRAME · Bloco N ·
+  <funcionalidade>`. São tokens, para não sumir no tema escuro, mas nenhuma
+  peça do design system (`Button`, `Card`, `Dialog`…).
+- **Funciona de verdade.** Ele salva, lista e confirma, com controles
+  nativos (`<button type="button">`, `<input>`, `<select>`, `<form>` com um
+  submit só). Quem é provisório é o visual, não o comportamento.
+- `npm run ds:audit` e os testes do design system ignoram
+  `src/components/wireframe/` (exceção nomeada no auditor). Na revisão da tela, o
+  wireframe vira componentes do design system, e o arquivo dele é apagado.
+
 ## Jornadas do app
 
 [`docs/JORNADAS.md`](docs/JORNADAS.md) é o mapa das jornadas: um fluxograma
