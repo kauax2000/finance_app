@@ -23,3 +23,7 @@ Deno.test('triggerSkipReason: receita é ignorada', () => {
 Deno.test('triggerSkipReason: parcela é ignorada', () => {
   assertEquals(triggerSkipReason({ ...despesa, installment_plan_id: 'plan-1' }), 'installment')
 })
+
+Deno.test('triggerSkipReason: assinatura é ignorada', () => {
+  assertEquals(triggerSkipReason({ ...despesa, subscription_id: 'sub-1' }), 'subscription')
+})

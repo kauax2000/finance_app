@@ -8,12 +8,14 @@ import {
   addCalendarDays,
   appTodayYmd,
   cardInvoiceNetInWindow,
+  escolherTotal,
   estimatedDueYmdForClose,
   formatYmd,
   isoPrefixYmd,
   nextCloseAfter,
   nextPaymentDueCycleOnOrAfter,
   sumCardExpensesInWindow,
+  statementTotalKey,
   sumCardRefundsInWindow,
   type Ymd,
 } from './credit-card-cycle.ts'
@@ -120,4 +122,20 @@ Deno.test('sumCardRefundsInWindow soma só os estornos do cartão na janela', ()
   assertEquals(cardInvoiceNetInWindow(big, 'c1', win), -300)
   // Centavos: 0,30 − 0,10 dá 0,2 exato, sem resto de ponto flutuante.
   assertEquals(cardInvoiceNetInWindow([row('expense', '2026-10-05', 0.3), row('income', '2026-10-06', 0.1)], 'c1', win), 0.2)
+})
+
+Deno.test('escolherTotal: sem total do banco, vale o calculado', () => {
+  assertEquals(escolherTotal(312.4, null), 312.4)
+  assertEquals(escolherTotal(312.4, undefined), 312.4)
+})
+
+Deno.test('escolherTotal: com total do banco, vale o do banco (até zero)', () => {
+  assertEquals(escolherTotal(312.4, 330), 330)
+  assertEquals(escolherTotal(312.4, 0), 0)
+  // numeric chega como texto do PostgREST
+  assertEquals(escolherTotal(312.4, '330.10' as unknown as number), 330.1)
+})
+
+Deno.test('statementTotalKey: cartão:fechamento, como o front', () => {
+  assertEquals(statementTotalKey('card-1', '2026-10-03'), 'card-1:2026-10-03')
 })

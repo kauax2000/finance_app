@@ -2,7 +2,7 @@ import { lerData, lerValorBr } from "./normalizar"
 import type { ItemBanco } from "./tipos"
 
 /** Pagamento da fatura, no OFX e no texto da fatura: não é compra nem estorno. */
-export const PAGAMENTO = /pagamento|pgto|pagto/i
+export const PAGAMENTO = /\b(pagamento|pgto|pagto)\b/i
 
 function campo(bloco: string, tag: string): string {
     const m = new RegExp(`<${tag}>([^<\\r\\n]*)`, "i").exec(bloco)

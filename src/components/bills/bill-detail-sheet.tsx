@@ -66,6 +66,14 @@ function nextPendingHero(instances: BillInstance[]): BillInstance | null {
     return pend[0] ?? null
 }
 
+/** A última parcela paga: o boleto dela continua à vista, só para abrir. */
+function lastPaidInstance(instances: BillInstance[]): BillInstance | null {
+    const pagas = instances
+        .filter((i) => i.status === "paid")
+        .sort((a, b) => b.due_date.slice(0, 10).localeCompare(a.due_date.slice(0, 10)))
+    return pagas[0] ?? null
+}
+
 export type BillDetailSheetProps = {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -101,6 +109,7 @@ export function BillDetailSheet({
     )
 
     const nextInst = useMemo(() => nextPendingHero(instances), [instances])
+    const lastPaid = useMemo(() => lastPaidInstance(instances), [instances])
 
     const limit90 = useMemo(() => addDaysYmd(todayYmd, -90), [todayYmd])
     const limit60 = useMemo(() => addDaysYmd(todayYmd, 60), [todayYmd])
@@ -378,12 +387,21 @@ export function BillDetailSheet({
                                 </div>
                             ) : null}
 
-                            {/* O boleto mora na instância pendente mostrada acima. */}
+                            {/* O boleto mora na instância: o da pendente acima se anexa; o da última paga só se abre. */}
                             {nextInst && workspaceId ? (
                                 <AnexosWireframe
                                     key={nextInst.id}
                                     workspaceId={workspaceId}
                                     vinculo={{ billInstanceId: nextInst.id }}
+                                />
+                            ) : null}
+                            {lastPaid && workspaceId ? (
+                                <AnexosWireframe
+                                    key={lastPaid.id}
+                                    workspaceId={workspaceId}
+                                    vinculo={{ billInstanceId: lastPaid.id }}
+                                    titulo="Anexos da última parcela paga"
+                                    somenteLeitura
                                 />
                             ) : null}
 

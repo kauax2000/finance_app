@@ -198,6 +198,13 @@ describe("extrairItensDaFatura", () => {
         expect(leitura).toMatchObject({ completa: true, diferenca: 0 })
     })
 
+    it("loja com 'PAGAMENTOS' no nome fica: só a palavra inteira é pagamento", () => {
+        const texto = `${faturaDdMm}04/01 XYZ PAGAMENTOS LTDA 50,00\n`
+        const leitura = extrairItensDaFatura(texto, { fechamento: "2027-01-05" })
+        expect(leitura.itens).toHaveLength(6)
+        expect(leitura.itens[5]).toMatchObject({ descricao: "XYZ PAGAMENTOS LTDA", valor: 50, estorno: false })
+    })
+
     it("o total da fatura anterior não é o total", () => {
         const texto = `Total da fatura anterior R$ 999,00\n${faturaDdMm}`
         expect(extrairItensDaFatura(texto, { fechamento: "2027-01-05" }).total).toBe(384.95)

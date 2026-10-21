@@ -16,6 +16,7 @@ import {
   appTodayYmd,
   compareYmd,
   cardInvoiceNetInWindow,
+  escolherTotal,
   sumCardExpensesInWindow,
   type CardTxRow,
 } from '../_shared/credit-card-cycle.ts'
@@ -169,6 +170,16 @@ Deno.serve(async (req: Request) => {
     .maybeSingle()
   if (paidErr) return json(500, { error: internalError('evaluate-credit-card-alerts', paidErr) })
 
+  // Fechada, ela vale o total do banco quando gravado (a aberta não tem).
+  const { data: bankRow, error: bankErr } = await supabaseAdmin
+    .from('credit_card_statement_totals')
+    .select('bank_total')
+    .eq('workspace_id', workspaceId)
+    .eq('credit_card_id', cardId)
+    .eq('statement_close_date', formatYmd(lastClose))
+    .maybeSingle()
+  if (bankErr) return json(500, { error: internalError('evaluate-credit-card-alerts', bankErr) })
+
   const { data: txRows, error: txErr } = await supabaseAdmin
     .from('transactions')
     .select('amount,type,date,payment_method,payment_credit_card_id,category_id')
@@ -277,7 +288,9 @@ Deno.serve(async (req: Request) => {
     // Cada fatura é despesas − estornos.
     const spendTotal =
       cardInvoiceNetInWindow(rows, cardId, openWin) +
-      (paidRow ? 0 : cardInvoiceNetInWindow(rows, cardId, lastClosedWin))
+      (paidRow
+        ? 0
+        : escolherTotal(cardInvoiceNetInWindow(rows, cardId, lastClosedWin), bankRow?.bank_total ?? null))
     const p = pct(spendTotal, limitNum)
     const hitOver = spendTotal > limitNum
     const hit100 = spendTotal >= limitNum && !hitOver

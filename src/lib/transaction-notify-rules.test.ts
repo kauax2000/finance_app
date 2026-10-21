@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
     shouldNotifyMembersForTransaction,
+    triggerSkipReason,
     type TransactionNotifyRow,
 } from "@/lib/transaction-notify-rules"
 
@@ -75,5 +76,34 @@ describe("shouldNotifyMembersForTransaction", () => {
                 { type: "shared", member_count: 2 }
             )
         ).toBe(false)
+    })
+})
+
+describe("triggerSkipReason", () => {
+    const despesa = {
+        type: "expense",
+        subscription_id: null,
+        installment_plan_id: null,
+        import_batch_id: null,
+    }
+
+    it("passes a manual expense", () => {
+        expect(triggerSkipReason(despesa)).toBeNull()
+    })
+
+    it("skips imported rows first", () => {
+        expect(triggerSkipReason({ ...despesa, type: "income", import_batch_id: "batch-1" })).toBe("imported")
+    })
+
+    it("skips income", () => {
+        expect(triggerSkipReason({ ...despesa, type: "income" })).toBe("not_expense")
+    })
+
+    it("skips subscription-generated expenses", () => {
+        expect(triggerSkipReason({ ...despesa, subscription_id: "sub-1" })).toBe("subscription")
+    })
+
+    it("skips installment-generated expenses", () => {
+        expect(triggerSkipReason({ ...despesa, installment_plan_id: "plan-1" })).toBe("installment")
     })
 })

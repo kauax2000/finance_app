@@ -167,6 +167,19 @@ export function cardInvoiceNetInWindow(rows: CardTxRow[], cardId: string, win: O
   return cents / 100
 }
 
+/**
+ * Numa fatura fechada, o total que o banco cobrou (`credit_card_statement_totals`)
+ * vale sobre o calculado: a regra de `totalComBanco` (src/lib/fatura/total-com-banco.ts).
+ */
+export function escolherTotal(calculado: number, bancoTotal: number | null | undefined): number {
+  return bancoTotal == null ? calculado : Number(bancoTotal)
+}
+
+/** A chave do total do banco, a mesma do front (`statementTotalKey`): `cartão:fechamento`. */
+export function statementTotalKey(cardId: string, closeYmd: string): string {
+  return `${cardId}:${closeYmd}`
+}
+
 /** Open cycle for `today`: day after lastClose through nextClose (inclusive), same as app `buildCardCycleSnapshot`. */
 export function openInvoiceWindow(today: Ymd, closingDay: number): OpenWindow {
   const lastClose = statementCloseOnOrBefore(today, closingDay)

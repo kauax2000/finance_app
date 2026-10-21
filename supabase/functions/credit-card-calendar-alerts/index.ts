@@ -22,6 +22,8 @@ import {
   previousStatementCloseBefore,
   statementCloseOnOrBefore,
   cardInvoiceNetInWindow,
+  escolherTotal,
+  statementTotalKey,
   appTodayYmd,
   type CardTxRow,
   type OpenWindow,
@@ -103,6 +105,14 @@ type CalEvent = {
 }
 
 type ReadyEvent = CalEvent & { title: string; body: string }
+
+/**
+ * O aviso fala de uma fatura fechada (fechou, vence em breve, vence hoje): o
+ * total do banco, se gravado, vale sobre o calculado. A que ainda fecha não tem.
+ */
+function isClosedCycle(ev: CalEvent): boolean {
+  return ev.evento !== 'closing_soon'
+}
 
 /** A fatura que fecha em `close`: do dia seguinte ao fechamento anterior até ele. */
 function invoiceWindowEndingAt(close: Ymd, closingDay: number): OpenWindow {
@@ -194,7 +204,8 @@ async function resolveCardEvents(
   admin: SupabaseAdminClient,
   workspaceId: string,
   label: string,
-  events: CalEvent[]
+  events: CalEvent[],
+  bankTotals: Map<string, number>
 ): Promise<ReadyEvent[]> {
   const cardId = events[0].cardId
   const from = events.reduce((m, e) => (compareYmd(e.win.start, m) < 0 ? e.win.start : m), events[0].win.start)
@@ -229,10 +240,13 @@ async function resolveCardEvents(
   const ready: ReadyEvent[] = []
   for (const ev of events) {
     if (ev.checkPaid && paid.has(formatYmd(ev.win.end))) continue
+    const calculado = cardInvoiceNetInWindow(rows, cardId, ev.win)
     const copy = invoiceCopy({
       cartao: label,
       evento: ev.evento,
-      valor: cardInvoiceNetInWindow(rows, cardId, ev.win),
+      valor: isClosedCycle(ev)
+        ? escolherTotal(calculado, bankTotals.get(statementTotalKey(cardId, formatYmd(ev.win.end))))
+        : calculado,
       data: ev.data,
       dias: ev.dias,
     })
@@ -287,11 +301,38 @@ Deno.serve(async (req: Request) => {
     if (batch.length < CARD_PAGE_SIZE) break
   }
 
+  let notified = 0
+  const errors: Array<Record<string, unknown>> = []
+
+  // 1b. O total do banco das faturas fechadas em jogo, numa consulta só (o
+  //     cruzamento cartões × fechamentos traz a mais; a chave filtra). Se ela
+  //     falhar, os avisos saem com o total calculado, como antes.
+  // ponytail: um `.in()` com todos os cartões do dia; em lotes se a URL crescer demais.
+  const bankTotals = new Map<string, number>()
+  const closedEvents = [...eventsByWorkspace.values()]
+    .flatMap((list) => list.flatMap((c) => c.events))
+    .filter(isClosedCycle)
+  if (closedEvents.length > 0) {
+    const { data: totalRows, error: tErr } = await admin
+      .from('credit_card_statement_totals')
+      .select('credit_card_id,statement_close_date,bank_total')
+      .in('credit_card_id', [...new Set(closedEvents.map((e) => e.cardId))])
+      .in('statement_close_date', [...new Set(closedEvents.map((e) => formatYmd(e.win.end)))])
+    if (tErr) {
+      console.error('credit-card-calendar-alerts: statement totals', tErr.message)
+      errors.push({ error: `statement_totals: ${tErr.message}` })
+    }
+    for (const r of totalRows ?? []) {
+      bankTotals.set(
+        statementTotalKey(String(r.credit_card_id), String(r.statement_close_date).slice(0, 10)),
+        Number(r.bank_total)
+      )
+    }
+  }
+
   // 2. Per workspace: load members + prefs + emails ONCE, then fan out.
   //    Per-item failures are accumulated — one bad workspace never aborts the
   //    daily run for the rest.
-  let notified = 0
-  const errors: Array<Record<string, unknown>> = []
 
   await forEachLimit(eventsByWorkspace, FAN_OUT_CONCURRENCY, async ([workspaceId, cards]) => {
     try {
@@ -299,7 +340,7 @@ Deno.serve(async (req: Request) => {
       for (const c of cards) {
         // A consulta de um cartão que falha não derruba os outros do dia.
         try {
-          events.push(...(await resolveCardEvents(admin, workspaceId, c.label, c.events)))
+          events.push(...(await resolveCardEvents(admin, workspaceId, c.label, c.events, bankTotals)))
         } catch (e) {
           const msg = e instanceof Error ? e.message : 'card_failed'
           console.error('credit-card-calendar-alerts: card', c.events[0].cardId, msg)

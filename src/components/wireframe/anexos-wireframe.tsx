@@ -12,14 +12,29 @@ const botao = "border border-muted-foreground/60 px-2 py-1 font-mono text-foregr
 const tamanho = (bytes: number) =>
     bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`
 
-/** Nota, recibo, boleto ou fatura: privados, abertos por URL assinada (Bloco 2). */
-export function AnexosWireframe({ workspaceId, vinculo }: { workspaceId: string; vinculo: VinculoAnexo }) {
+/**
+ * Nota, recibo, boleto ou fatura: privados, abertos por URL assinada (Bloco 2).
+ * `somenteLeitura` só lista e abre (o boleto da parcela já paga), e some sem anexo.
+ */
+export function AnexosWireframe({
+    workspaceId,
+    vinculo,
+    titulo = "Anexos",
+    somenteLeitura = false,
+}: {
+    workspaceId: string
+    vinculo: VinculoAnexo
+    titulo?: string
+    somenteLeitura?: boolean
+}) {
     const lista = useQuery({
         queryKey: ["attachments", workspaceId, vinculo],
         queryFn: () => listarAnexos(supabase, vinculo),
     })
     const [pendente, setPendente] = useState<string | null>(null)
     const [erro, setErro] = useState<string | null>(null)
+    /** A URL assinada que o popup bloqueado não abriu: vira um link para tocar. */
+    const [link, setLink] = useState<string | null>(null)
 
     async function enviar(arquivo: File | undefined) {
         if (!arquivo) return
@@ -36,6 +51,7 @@ export function AnexosWireframe({ workspaceId, vinculo }: { workspaceId: string;
 
     async function abrir(path: string) {
         setErro(null)
+        setLink(null)
         // A aba nasce no clique: depois do `await`, o Safari a bloquearia.
         const aba = window.open("about:blank", "_blank")
         const url = await urlAssinada(supabase, path)
@@ -48,7 +64,8 @@ export function AnexosWireframe({ workspaceId, vinculo }: { workspaceId: string;
             aba.opener = null
             aba.location.href = url
         } else {
-            window.location.assign(url)
+            // Popup bloqueado: abrir na mesma janela tiraria a pessoa do app.
+            setLink(url)
         }
     }
 
@@ -66,9 +83,10 @@ export function AnexosWireframe({ workspaceId, vinculo }: { workspaceId: string;
     }
 
     const anexos = lista.data ?? []
+    if (somenteLeitura && lista.isSuccess && anexos.length === 0) return null
 
     return (
-        <WireframeBox bloco={2} titulo="Anexos">
+        <WireframeBox bloco={2} titulo={titulo}>
             {lista.isPending ? <p role="status">Carregando anexos…</p> : null}
             {lista.isError ? <p role="alert">Não foi possível listar os anexos.</p> : null}
             {lista.isSuccess && anexos.length === 0 ? <p>Nenhum anexo.</p> : null}
@@ -83,31 +101,40 @@ export function AnexosWireframe({ workspaceId, vinculo }: { workspaceId: string;
                             <button type="button" className={botao} onClick={() => void abrir(a.path)}>
                                 Abrir
                             </button>
-                            <button
-                                type="button"
-                                className={botao}
-                                disabled={pendente != null}
-                                onClick={() => void apagar(a.id, a.path)}
-                            >
-                                {pendente === a.id ? "Apagando…" : "Apagar"}
-                            </button>
+                            {somenteLeitura ? null : (
+                                <button
+                                    type="button"
+                                    className={botao}
+                                    disabled={pendente != null}
+                                    onClick={() => void apagar(a.id, a.path)}
+                                >
+                                    {pendente === a.id ? "Apagando…" : "Apagar"}
+                                </button>
+                            )}
                         </li>
                     ))}
                 </ul>
             ) : null}
-            <label className="flex flex-wrap items-center gap-2">
-                Anexar foto ou PDF (até 10 MB)
-                <input
-                    type="file"
-                    accept="image/*,application/pdf"
-                    disabled={pendente != null}
-                    onChange={(e) => {
-                        const arquivo = e.target.files?.[0]
-                        e.target.value = ""
-                        void enviar(arquivo)
-                    }}
-                />
-            </label>
+            {link ? (
+                <a href={link} target="_blank" rel="noopener" className={botao} onClick={() => setLink(null)}>
+                    Abrir anexo
+                </a>
+            ) : null}
+            {somenteLeitura ? null : (
+                <label className="flex flex-wrap items-center gap-2">
+                    Anexar foto ou PDF (até 10 MB)
+                    <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        disabled={pendente != null}
+                        onChange={(e) => {
+                            const arquivo = e.target.files?.[0]
+                            e.target.value = ""
+                            void enviar(arquivo)
+                        }}
+                    />
+                </label>
+            )}
             {pendente === "enviar" ? <p role="status">Enviando…</p> : null}
             {erro ? (
                 <p role="alert" className="text-destructive">
