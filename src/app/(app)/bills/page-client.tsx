@@ -46,6 +46,7 @@ import { BillDetailSheet } from "@/components/bills/bill-detail-sheet"
 import type { BillFormPayloadForSave } from "@/components/bills/bill-form-shared"
 import type { BillPendingRow } from "@/components/bills/bill-list-types"
 import { useBillsPageBundleQuery } from "@/lib/queries/use-bills-page-bundle"
+import { useStatementTotalsQuery } from "@/lib/queries/use-statement-totals"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
 import { creditCardDetailPath, ROUTES } from "@/config/navigation"
 import { projectVirtualCreditCardBills } from "@/lib/bills/credit-card-bill-projector"
@@ -169,6 +170,7 @@ export default function BillsPageClient() {
     const { user } = useAuth()
     const { currentWorkspaceId } = useWorkspace()
     const bundleQ = useBillsPageBundleQuery(currentWorkspaceId)
+    const statementTotalsQ = useStatementTotalsQuery(currentWorkspaceId)
 
     const [mode, setMode] = useState<BillsPageMode>("bills")
     const [pendingFilter, setPendingFilter] =
@@ -225,8 +227,9 @@ export default function BillsPageClient() {
             ccRows: bundleQ.data.ccRows ?? [],
             installmentPlans: bundleQ.data.installmentPlans ?? [],
             invoicePayments: bundleQ.data.invoicePayments ?? [],
+            statementTotals: statementTotalsQ.data,
         })
-    }, [bundleQ.data, currentWorkspaceId])
+    }, [bundleQ.data, statementTotalsQ.data, currentWorkspaceId])
 
     const pendingRegular = useMemo(
         () => bundleQ.data?.pendingInstances ?? [],

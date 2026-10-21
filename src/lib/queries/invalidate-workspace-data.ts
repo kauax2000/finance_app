@@ -8,6 +8,7 @@ import {
     installmentPlansKeys,
     memberDirectoryKeys,
     queryRoot,
+    statementTotalsKeys,
     subscriptionsKeys,
     walletsKeys,
 } from "@/lib/queries/keys"
@@ -104,6 +105,11 @@ export async function invalidateWorkspaceData(
         tasks.push(
             queryClient.invalidateQueries({
                 queryKey: [queryRoot.creditCardsPageBundle, workspaceId],
+            }),
+        )
+        tasks.push(
+            queryClient.invalidateQueries({
+                queryKey: statementTotalsKeys.list(workspaceId),
             }),
         )
         // Estes bundles embutem a lista de cartões (rename/delete ficava stale)

@@ -49,6 +49,8 @@ import {
     shiftYearMonth,
 } from "@/lib/budget-month"
 import { localYmdFromDate } from "@/lib/transaction-date"
+import { bancoTotalDoCiclo, totalComBanco } from "@/lib/fatura/total-com-banco"
+import { useStatementTotalsQuery } from "@/lib/queries/use-statement-totals"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -561,6 +563,16 @@ export function CreditCardInvoiceAnalyticsPanel({
         [snapshot]
     )
 
+    // Só a fatura que já fechou tem total do banco.
+    const statementTotalsQuery = useStatementTotalsQuery(workspaceId, cycleOffset < 0)
+    const bancoCiclo = cardId
+        ? bancoTotalDoCiclo(statementTotalsQuery.data, cardId, closeYmd)
+        : null
+    const { diferenca: diferencaDoBanco } = totalComBanco(
+        snapshot.committedOpenTotal,
+        bancoCiclo,
+    )
+
     const hero = useMemo(
         () => deriveInvoiceHeroStatus(cycleOffset, closeYmd, invoicePayments),
         [cycleOffset, closeYmd, invoicePayments]
@@ -811,6 +823,12 @@ export function CreditCardInvoiceAnalyticsPanel({
                                             {formatDatePtBr(snapshot.nextClose)}
                                         </span>
                                     </span>
+                                </p>
+                            ) : null}
+                            {cycleOffset < 0 && bancoCiclo != null ? (
+                                <p className="text-xs tabular-nums text-muted-foreground">
+                                    Total do banco {currencyBRL(bancoCiclo)} · diferença{" "}
+                                    {currencyBRL(diferencaDoBanco ?? 0)}
                                 </p>
                             ) : null}
                         </div>

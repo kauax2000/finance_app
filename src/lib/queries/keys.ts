@@ -176,3 +176,8 @@ export const userSettingsKeys = {
     detail: (userId: string) =>
         [queryRoot.userSettings, "detail", userId] as const,
 }
+
+/** Total do banco por fatura (`credit_card_statement_totals`), da carteira inteira. */
+export const statementTotalsKeys = {
+    list: (workspaceId: string) => ["credit-card-statement-totals", workspaceId] as const,
+}

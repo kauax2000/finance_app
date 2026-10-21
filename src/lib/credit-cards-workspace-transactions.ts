@@ -4,10 +4,14 @@ import {
     type Category,
     type CreditCard,
     type CreditCardInvoicePayment,
+    type CreditCardStatementTotal,
     type Transaction,
     type WorkspaceInstallmentPlan,
 } from "@/lib/supabase"
-import { isTransactionsSubscriptionBillingColumnsMissingError } from "@/lib/supabase-errors"
+import {
+    isPostgrestRelationMissingError,
+    isTransactionsSubscriptionBillingColumnsMissingError,
+} from "@/lib/supabase-errors"
 import { attachPaymentCards } from "@/lib/transactions-detail-sheet-query"
 import { localYmdFromDate } from "@/lib/transaction-date"
 
@@ -261,6 +265,22 @@ export async function fetchCreditCardInvoicePaymentsForCard(
         return { payments: [], error }
     }
     return { payments: (data ?? []) as CreditCardInvoicePayment[], error: null }
+}
+
+/** O total do banco de cada fatura da carteira (todos os cartões, todos os fechamentos). */
+export async function fetchStatementTotals(
+    workspaceId: string
+): Promise<CreditCardStatementTotal[]> {
+    const { data, error } = await supabase
+        .from("credit_card_statement_totals")
+        .select(
+            "id,workspace_id,credit_card_id,statement_close_date,bank_total,source,created_by,created_at,updated_at"
+        )
+        .eq("workspace_id", workspaceId)
+    // Antes da migração aplicada, a tabela não existe: vale o calculado.
+    if (error && isPostgrestRelationMissingError(error)) return []
+    if (error) throw new Error(error.message)
+    return (data ?? []) as CreditCardStatementTotal[]
 }
 
 export async function fetchWorkspaceInstallmentPlansForCard(

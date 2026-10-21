@@ -1,7 +1,9 @@
 import { buildCardCycleSnapshot } from "@/lib/credit-card-billing"
+import { bancoTotalDoCiclo, totalComBanco } from "@/lib/fatura/total-com-banco"
 import type {
     CreditCard,
     CreditCardInvoicePayment,
+    CreditCardStatementTotal,
     Transaction,
     WorkspaceInstallmentPlan,
 } from "@/lib/supabase"
@@ -48,6 +50,8 @@ export function projectVirtualCreditCardBills(args: {
     ccRows: CcTxRow[]
     installmentPlans: WorkspaceInstallmentPlan[]
     invoicePayments: CreditCardInvoicePayment[]
+    /** Total do banco por fatura: numa fatura fechada, vale sobre o calculado. */
+    statementTotals?: CreditCardStatementTotal[]
     today?: Date
 }): VirtualCreditCardBill[] {
     const today = args.today ?? new Date()
@@ -82,9 +86,14 @@ export function projectVirtualCreditCardBills(args: {
         )
 
         // A conta a pagar é a fatura que já fechou: é ela que vence. A aberta
-        // ainda recebe compras e não tem valor final.
-        if (snap.committedLastClosedTotal <= 0) continue
+        // ainda recebe compras e não tem valor final. Saldo credor (estorno
+        // maior que as compras) não é conta a pagar.
         const closeYmd = localYmdFromDate(snap.lastClose)
+        const { total } = totalComBanco(
+            snap.committedLastClosedTotal,
+            bancoTotalDoCiclo(args.statementTotals, card.id, closeYmd),
+        )
+        if (total <= 0) continue
         const cardPayments = byCard.get(card.id) ?? []
         const alreadyPaid = cardPayments.some(
             (p) => p.statement_close_date === closeYmd,
@@ -102,7 +111,7 @@ export function projectVirtualCreditCardBills(args: {
             last_four: card.last_four,
             due_date_ymd: dueYmd,
             statement_close_date_ymd: closeYmd,
-            amount_estimated: snap.committedLastClosedTotal,
+            amount_estimated: total,
             alreadyPaid: false,
         })
     }

@@ -44,6 +44,8 @@ import { useCategoriesQuery } from "@/lib/queries/use-categories"
 import { useCreditCardExpenseRowsQuery } from "@/lib/queries/use-credit-card-expense-rows"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 import { useInstallmentPlansQuery } from "@/lib/queries/use-installment-plans"
+import { useStatementTotalsQuery } from "@/lib/queries/use-statement-totals"
+import { bancoTotalDoCiclo, statementTotalKey, totalComBanco } from "@/lib/fatura/total-com-banco"
 import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
 import { useSubscriptionsQuery } from "@/lib/queries/use-subscriptions"
 import {
@@ -275,6 +277,10 @@ export function useDashboardData() {
     const memberDirQuery = useMemberDirectoryQuery(
         queriesEnabled ? currentWorkspaceId : null,
     )
+    const statementTotalsQuery = useStatementTotalsQuery(
+        currentWorkspaceId,
+        queriesEnabled,
+    )
     const workspaceAuxQuery = useTransactionsWorkspaceAuxQuery(
         queriesEnabled ? currentWorkspaceId : null,
         queriesEnabled,
@@ -326,7 +332,7 @@ export function useDashboardData() {
         const next = new Set<string>()
         for (const p of invoicePaymentsFromQuery) {
             if (p.status === "paid") {
-                next.add(`${p.credit_card_id}:${p.statement_close_date}`)
+                next.add(statementTotalKey(p.credit_card_id, p.statement_close_date))
             }
         }
         return next
@@ -440,12 +446,18 @@ export function useDashboardData() {
             if (!c.is_active) continue
             const snap = snapshots.get(c.id)
             if (!snap) continue
+            const closeYmd = localYmdFromDate(snap.close)
             // Fatura já paga não é valor em aberto.
-            if (invoicePaidByCardClose.has(`${c.id}:${localYmdFromDate(snap.close)}`)) continue
-            t += Number(snap.committedTotal)
+            if (invoicePaidByCardClose.has(statementTotalKey(c.id, closeYmd))) continue
+            // Fechada, vale o total do banco quando a pessoa o informou.
+            const banco =
+                snap.status === "closed"
+                    ? bancoTotalDoCiclo(statementTotalsQuery.data, c.id, closeYmd)
+                    : null
+            t += totalComBanco(Number(snap.committedTotal), banco).total
         }
         return t
-    }, [creditCards, snapshots, invoicePaidByCardClose])
+    }, [creditCards, snapshots, invoicePaidByCardClose, statementTotalsQuery.data])
 
     const kpiCurrent = useMemo(
         () =>
