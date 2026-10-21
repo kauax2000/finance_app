@@ -133,7 +133,7 @@ Deno.test('escolherTotal: com total do banco, vale o do banco (até zero)', () =
   assertEquals(escolherTotal(312.4, 330), 330)
   assertEquals(escolherTotal(312.4, 0), 0)
   // numeric chega como texto do PostgREST
-  assertEquals(escolherTotal(312.4, '330.10' as unknown as number), 330.1)
+  assertEquals(escolherTotal(312.4, '330.10'), 330.1)
 })
 
 Deno.test('statementTotalKey: cartão:fechamento, como o front', () => {

@@ -171,7 +171,7 @@ export function cardInvoiceNetInWindow(rows: CardTxRow[], cardId: string, win: O
  * Numa fatura fechada, o total que o banco cobrou (`credit_card_statement_totals`)
  * vale sobre o calculado: a regra de `totalComBanco` (src/lib/fatura/total-com-banco.ts).
  */
-export function escolherTotal(calculado: number, bancoTotal: number | null | undefined): number {
+export function escolherTotal(calculado: number, bancoTotal: number | string | null | undefined): number {
   return bancoTotal == null ? calculado : Number(bancoTotal)
 }
 

@@ -1,8 +1,13 @@
 import { lerData, lerValorBr } from "./normalizar"
 import type { ItemBanco } from "./tipos"
 
-/** Pagamento da fatura, no OFX e no texto da fatura: não é compra nem estorno. */
-export const PAGAMENTO = /\b(pagamento|pgto|pagto)\b/i
+/**
+ * Pagamento da fatura, no OFX e no texto da fatura: não é compra nem estorno.
+ * A palavra não encosta em letra (`\p{L}`, e não `\b`, que é só ASCII e deixava
+ * passar `PGTO123` e `PAGTO_FATURA`); a exceção é `FATURA` colada (`PAGTOFATURA`).
+ * "XYZ PAGAMENTOS LTDA" é loja e fica.
+ */
+export const PAGAMENTO = /(?<!\p{L})(pagamento|pgto|pagto)(?=fatura|(?!\p{L}))/iu
 
 function campo(bloco: string, tag: string): string {
     const m = new RegExp(`<${tag}>([^<\\r\\n]*)`, "i").exec(bloco)

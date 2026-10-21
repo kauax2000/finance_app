@@ -170,15 +170,23 @@ Deno.serve(async (req: Request) => {
     .maybeSingle()
   if (paidErr) return json(500, { error: internalError('evaluate-credit-card-alerts', paidErr) })
 
-  // Fechada, ela vale o total do banco quando gravado (a aberta não tem).
-  const { data: bankRow, error: bankErr } = await supabaseAdmin
-    .from('credit_card_statement_totals')
-    .select('bank_total')
-    .eq('workspace_id', workspaceId)
-    .eq('credit_card_id', cardId)
-    .eq('statement_close_date', formatYmd(lastClose))
-    .maybeSingle()
-  if (bankErr) return json(500, { error: internalError('evaluate-credit-card-alerts', bankErr) })
+  const limitNum = card.credit_limit != null ? Number(card.credit_limit) : 0
+
+  // Fechada e não paga, ela vale o total do banco quando gravado (a aberta não
+  // tem). Só o limite a usa; se a leitura falhar, fica o calculado, como no
+  // calendário.
+  let bankTotal: number | string | null = null
+  if (!paidRow && limitNum > 0) {
+    const { data: bankRow, error: bankErr } = await supabaseAdmin
+      .from('credit_card_statement_totals')
+      .select('bank_total')
+      .eq('workspace_id', workspaceId)
+      .eq('credit_card_id', cardId)
+      .eq('statement_close_date', formatYmd(lastClose))
+      .maybeSingle()
+    if (bankErr) console.error('evaluate-credit-card-alerts: statement total', bankErr.message)
+    else bankTotal = bankRow?.bank_total ?? null
+  }
 
   const { data: txRows, error: txErr } = await supabaseAdmin
     .from('transactions')
@@ -282,7 +290,6 @@ Deno.serve(async (req: Request) => {
   }
 
   // —— Overall limit ——
-  const limitNum = card.credit_limit != null ? Number(card.credit_limit) : 0
   if (limitNum > 0) {
     // As parcelas futuras ficam de fora: o banco não as reserva como gasto.
     // Cada fatura é despesas − estornos.
@@ -290,7 +297,7 @@ Deno.serve(async (req: Request) => {
       cardInvoiceNetInWindow(rows, cardId, openWin) +
       (paidRow
         ? 0
-        : escolherTotal(cardInvoiceNetInWindow(rows, cardId, lastClosedWin), bankRow?.bank_total ?? null))
+        : escolherTotal(cardInvoiceNetInWindow(rows, cardId, lastClosedWin), bankTotal))
     const p = pct(spendTotal, limitNum)
     const hitOver = spendTotal > limitNum
     const hit100 = spendTotal >= limitNum && !hitOver

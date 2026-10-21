@@ -5,12 +5,16 @@ import { useState } from "react"
 
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
 import { apagarAnexo, enviarAnexo, listarAnexos, urlAssinada, type VinculoAnexo } from "@/lib/anexos"
-import { supabase } from "@/lib/supabase"
+import { supabase, type Attachment } from "@/lib/supabase"
 
 const botao = "border border-muted-foreground/60 px-2 py-1 font-mono text-foreground disabled:opacity-50"
 
 const tamanho = (bytes: number) =>
     bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`
+
+/** O anexo não guarda nome: o tipo, o tamanho e o dia o distinguem na lista e no link. */
+const descricao = (a: Pick<Attachment, "mime" | "size_bytes" | "created_at">) =>
+    `${a.mime === "application/pdf" ? "PDF" : "Foto"} · ${tamanho(a.size_bytes)} · ${new Date(a.created_at).toLocaleDateString("pt-BR")}`
 
 /**
  * Nota, recibo, boleto ou fatura: privados, abertos por URL assinada (Bloco 2).
@@ -34,7 +38,7 @@ export function AnexosWireframe({
     const [pendente, setPendente] = useState<string | null>(null)
     const [erro, setErro] = useState<string | null>(null)
     /** A URL assinada que o popup bloqueado não abriu: vira um link para tocar. */
-    const [link, setLink] = useState<string | null>(null)
+    const [link, setLink] = useState<{ url: string; rotulo: string } | null>(null)
 
     async function enviar(arquivo: File | undefined) {
         if (!arquivo) return
@@ -49,12 +53,12 @@ export function AnexosWireframe({
         await lista.refetch()
     }
 
-    async function abrir(path: string) {
+    async function abrir(anexo: Attachment) {
         setErro(null)
         setLink(null)
         // A aba nasce no clique: depois do `await`, o Safari a bloquearia.
         const aba = window.open("about:blank", "_blank")
-        const url = await urlAssinada(supabase, path)
+        const url = await urlAssinada(supabase, anexo.path)
         if (!url) {
             aba?.close()
             setErro("Não foi possível abrir o anexo.")
@@ -65,7 +69,7 @@ export function AnexosWireframe({
             aba.location.href = url
         } else {
             // Popup bloqueado: abrir na mesma janela tiraria a pessoa do app.
-            setLink(url)
+            setLink({ url, rotulo: descricao(anexo) })
         }
     }
 
@@ -83,7 +87,7 @@ export function AnexosWireframe({
     }
 
     const anexos = lista.data ?? []
-    if (somenteLeitura && lista.isSuccess && anexos.length === 0) return null
+    if (somenteLeitura && (lista.isPending || (lista.isSuccess && anexos.length === 0))) return null
 
     return (
         <WireframeBox bloco={2} titulo={titulo}>
@@ -94,11 +98,8 @@ export function AnexosWireframe({
                 <ul className="space-y-1">
                     {anexos.map((a) => (
                         <li key={a.id} className="flex flex-wrap items-center gap-2">
-                            <span className="text-foreground">
-                                {a.mime === "application/pdf" ? "PDF" : "Foto"} · {tamanho(a.size_bytes)} ·{" "}
-                                {new Date(a.created_at).toLocaleDateString("pt-BR")}
-                            </span>
-                            <button type="button" className={botao} onClick={() => void abrir(a.path)}>
+                            <span className="text-foreground">{descricao(a)}</span>
+                            <button type="button" className={botao} onClick={() => void abrir(a)}>
                                 Abrir
                             </button>
                             {somenteLeitura ? null : (
@@ -115,11 +116,14 @@ export function AnexosWireframe({
                     ))}
                 </ul>
             ) : null}
-            {link ? (
-                <a href={link} target="_blank" rel="noopener" className={botao} onClick={() => setLink(null)}>
-                    Abrir anexo
-                </a>
-            ) : null}
+            {/* A região existe antes do link, para o leitor de tela anunciar quando ele chega. */}
+            <p aria-live="polite">
+                {link ? (
+                    <a href={link.url} target="_blank" rel="noopener" className={botao} onClick={() => setLink(null)}>
+                        Abrir anexo ({link.rotulo})
+                    </a>
+                ) : null}
+            </p>
             {somenteLeitura ? null : (
                 <label className="flex flex-wrap items-center gap-2">
                     Anexar foto ou PDF (até 10 MB)

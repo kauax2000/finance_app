@@ -99,6 +99,17 @@ const ofx = (corpo: string) =>
     `OFXHEADER:100\nDATA:OFXSGML\n\n<OFX>\n<BANKTRANLIST>\n${corpo}</BANKTRANLIST>\n</OFX>\n`
 
 describe("lerOfx", () => {
+    it("cartão: 'PAGTO_FATURA' é pagamento, não estorno; 'XYZ PAGAMENTOS LTDA' é estorno", () => {
+        const texto = ofx(
+            transacao("20261008", "500.00", "PAGTO_FATURA") + transacao("20261009", "50.00", "XYZ PAGAMENTOS LTDA"),
+        )
+        const { itens, ignoradas } = lerOfx(texto, "cartao")
+        expect(ignoradas).toBe(1)
+        expect(itens).toEqual([
+            { data: "2026-10-09", descricao: "XYZ PAGAMENTOS LTDA", valor: 50, estorno: true, parcela: null },
+        ])
+    })
+
     it("cartão: compras, estorno e pagamento ignorado", () => {
         const texto = ofx(
             transacao("20261003", "-89.90", "AUTO PECAS RODA VIVA") +
@@ -197,6 +208,16 @@ describe("extrairItensDaFatura", () => {
         expect(leitura.itens).toHaveLength(5)
         expect(leitura).toMatchObject({ completa: true, diferenca: 0 })
     })
+
+    it.each(["PGTO123", "PAGTO_FATURA", "PAGTOFATURA", "PGTO-FATURA"])(
+        "pagamento colado a número, '_' ou 'FATURA' fica fora: %s",
+        (descricao) => {
+            const texto = `${faturaDdMm}04/01 ${descricao} 1.234,56\n`
+            const leitura = extrairItensDaFatura(texto, { fechamento: "2027-01-05" })
+            expect(leitura.itens).toHaveLength(5)
+            expect(leitura).toMatchObject({ completa: true, diferenca: 0 })
+        },
+    )
 
     it("loja com 'PAGAMENTOS' no nome fica: só a palavra inteira é pagamento", () => {
         const texto = `${faturaDdMm}04/01 XYZ PAGAMENTOS LTDA 50,00\n`
