@@ -191,6 +191,13 @@ describe("extrairItensDaFatura", () => {
         expect(leitura.itens).toHaveLength(5)
     })
 
+    it("pagamento da fatura escrito 'PAGTO' ou 'PAGAMENTO FATURA' fica fora", () => {
+        const texto = `${faturaDdMm}04/01 PAGTO FATURA 1.234,56\n04/01 PAGAMENTO FATURA -1.234,56\n`
+        const leitura = extrairItensDaFatura(texto, { fechamento: "2027-01-05" })
+        expect(leitura.itens).toHaveLength(5)
+        expect(leitura).toMatchObject({ completa: true, diferenca: 0 })
+    })
+
     it("o total da fatura anterior não é o total", () => {
         const texto = `Total da fatura anterior R$ 999,00\n${faturaDdMm}`
         expect(extrairItensDaFatura(texto, { fechamento: "2027-01-05" }).total).toBe(384.95)

@@ -49,11 +49,13 @@ const botao = "border border-muted-foreground/60 px-2 py-1 font-mono text-foregr
 const somaComEstorno = (itens: ItemBanco[]) =>
     Math.round(itens.reduce((s, i) => s + (i.estorno ? -i.valor : i.valor), 0) * 100) / 100
 
-/** Os ciclos já fechados (fechamento antes de hoje), do mais recente para trás. */
-function ciclosFechados(closingDay: number): Array<{ inicio: string; fechamento: string }> {
-    const ontem = new Date()
-    ontem.setDate(ontem.getDate() - 1)
-    let fechamento = statementCloseOnOrBefore(ontem, closingDay)
+/**
+ * Os ciclos já fechados, do mais recente para trás. Fechado é o que fecha até
+ * hoje, inclusive: a mesma régua do `buildCardCycleSnapshot`, que no dia do
+ * fechamento já mostra a fatura fechada.
+ */
+export function ciclosFechados(closingDay: number, hoje = new Date()): Array<{ inicio: string; fechamento: string }> {
+    let fechamento = statementCloseOnOrBefore(hoje, closingDay)
     const lista: Array<{ inicio: string; fechamento: string }> = []
     for (let i = 0; i < CICLOS; i++) {
         const anterior = previousStatementCloseBefore(fechamento, closingDay)

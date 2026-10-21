@@ -6,6 +6,7 @@ import {
 import { currencyBRL, displayActorName } from '../_shared/formatters.ts'
 import {
   shouldNotifyMembersForTransaction,
+  triggerSkipReason,
   type TransactionNotifyRow,
 } from '../_shared/transaction-notify-rules.ts'
 
@@ -47,7 +48,7 @@ export async function processTransactionNotification(
   const { data: txRow, error: txErr } = await supabaseAdmin
     .from('transactions')
     .select(
-      'id, user_id, workspace_id, type, amount, description, subscription_id, installment_plan_id'
+      'id, user_id, workspace_id, type, amount, description, subscription_id, installment_plan_id, import_batch_id'
     )
     .eq('id', transactionId)
     .maybeSingle()
@@ -56,6 +57,9 @@ export async function processTransactionNotification(
   if (!txRow) return { ok: false, error: 'Transaction not found', status: 404 }
 
   const tx = txRow as TransactionNotifyRow
+  const skip = triggerSkipReason(tx)
+  if (skip) return { ok: true, skipped: skip, notified: 0 }
+
   const workspaceId = tx.workspace_id
   if (!workspaceId) {
     return { ok: true, skipped: 'no_workspace', notified: 0 }

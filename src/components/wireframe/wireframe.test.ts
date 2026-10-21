@@ -1,9 +1,12 @@
 import { renderToStaticMarkup } from "react-dom/server"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import { arquivosTsx, lerFonte, semComentarios } from "@/test/fonte"
 
 import { WireframeBox } from "./wireframe-box"
+
+// O `ciclosFechados` mora no arquivo do wireframe, que importa o cliente.
+vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 
 describe("WireframeBox", () => {
   it("a cara fixa do wireframe: etiqueta, borda tracejada e mono", () => {
@@ -12,6 +15,14 @@ describe("WireframeBox", () => {
     expect(html).toContain('aria-label="WIREFRAME · Bloco 2 · Conferir fatura"')
     expect(html).toContain("border-dashed")
     expect(html).toContain("font-mono")
+  })
+})
+
+describe("ciclosFechados", () => {
+  it("no dia do fechamento o ciclo já está fechado, como no snapshot do cartão", async () => {
+    const { ciclosFechados } = await import("./conferir-fatura-wireframe")
+    expect(ciclosFechados(10, new Date(2026, 9, 10))[0]).toEqual({ inicio: "2026-09-11", fechamento: "2026-10-10" })
+    expect(ciclosFechados(10, new Date(2026, 9, 9))[0]).toEqual({ inicio: "2026-08-11", fechamento: "2026-09-10" })
   })
 })
 

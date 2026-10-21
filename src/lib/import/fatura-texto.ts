@@ -1,5 +1,6 @@
 import { roundCents } from "@/lib/money-brl"
 import { lerData, lerValorBr } from "./normalizar"
+import { PAGAMENTO } from "./ofx"
 import type { ItemBanco, LeituraFatura } from "./tipos"
 
 /**
@@ -22,7 +23,6 @@ const ITEM = new RegExp(
     "i",
 )
 const ESTORNO = /estorno|credito|crédito|reembolso/i
-const PAGAMENTO = /pagamento recebido|pagamento efetuado/i
 // "anterior" de fora: "Total da fatura anterior" é o ciclo passado.
 const TOTAL = /(total (da fatura|a pagar)|valor total)(?!\s+anterior)\D*([\d.]+,\d{2})/i
 const VENCIMENTO = /vencimento\D*(\d{2}\/\d{2}\/\d{4})/i

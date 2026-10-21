@@ -14,9 +14,12 @@ export async function pdfParaTexto(arquivo: File, senha?: string): Promise<Resul
     const pdfjs = await import("pdfjs-dist")
     pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString()
 
+    // O `task` destrói o documento e o worker no `finally`, também na senha
+    // errada: cada tentativa criava um worker que ficava vivo até a navegação.
+    let task: ReturnType<typeof pdfjs.getDocument> | undefined
     try {
-        const data = new Uint8Array(await arquivo.arrayBuffer())
-        const doc = await pdfjs.getDocument({ data, password: senha }).promise
+        task = pdfjs.getDocument({ data: new Uint8Array(await arquivo.arrayBuffer()), password: senha })
+        const doc = await task.promise
         const linhas: string[] = []
         for (let n = 1; n <= doc.numPages; n++) {
             const pagina = await doc.getPage(n)
@@ -43,5 +46,7 @@ export async function pdfParaTexto(arquivo: File, senha?: string): Promise<Resul
             }
         }
         return { ok: false, erro: `Não foi possível ler o PDF${err?.message ? `: ${err.message}` : "."}` }
+    } finally {
+        await task?.destroy()
     }
 }
