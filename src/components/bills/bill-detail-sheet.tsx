@@ -53,6 +53,7 @@ import {
 } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
 import { ColorTile } from "@/components/ui/color-tile"
+import { AnexosWireframe } from "@/components/wireframe/anexos-wireframe"
 
 const EXPENSE_CATEGORY_FALLBACK_COLOR = "var(--expense)"
 
@@ -375,6 +376,15 @@ export function BillDetailSheet({
                                         Pagar
                                     </Button>
                                 </div>
+                            ) : null}
+
+                            {/* O boleto mora na instância pendente mostrada acima. */}
+                            {nextInst && workspaceId ? (
+                                <AnexosWireframe
+                                    key={nextInst.id}
+                                    workspaceId={workspaceId}
+                                    vinculo={{ billInstanceId: nextInst.id }}
+                                />
                             ) : null}
 
                             <StatCardGroup columns={2}>

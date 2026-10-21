@@ -1,5 +1,6 @@
 import type { Tables } from "@/types/database"
 import type {
+    Attachment,
     Bill,
     BillInstance,
     Budget,
@@ -49,6 +50,7 @@ export type DatabaseDriftChecks = [
     Expect<SameColumns<Tables<"credit_cards">, CreditCard, "client_id">>,
     Expect<SameColumns<Tables<"credit_card_invoice_payments">, CreditCardInvoicePayment>>,
     Expect<SameColumns<Tables<"credit_card_statement_totals">, CreditCardStatementTotal>>,
+    Expect<SameColumns<Tables<"attachments">, Attachment>>,
     Expect<SameColumns<Tables<"workspace_subscriptions">, WorkspaceSubscription, "client_id">>,
     Expect<SameColumns<Tables<"bills">, Bill, "client_id", "category">>,
     Expect<SameColumns<Tables<"bill_instances">, BillInstance, "client_id", "bill">>,

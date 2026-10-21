@@ -5,6 +5,7 @@ import { type FormEvent, type ReactNode, useMemo, useState } from "react"
 
 import { MapeamentoCsv } from "@/components/wireframe/mapeamento-csv"
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
+import { enviarAnexo, listarAnexos } from "@/lib/anexos"
 import {
     previousStatementCloseBefore,
     shouldCountCreditCardExpenseForInvoiceSum,
@@ -165,24 +166,48 @@ export function ConferirFaturaWireframe({
     async function gravarTotal(valor: number, source: "manual" | Origem) {
         setPendente("total")
         setAviso(null)
-        const { error } = await supabase.from("credit_card_statement_totals").upsert(
-            {
-                workspace_id: workspaceId,
-                credit_card_id: card.id,
-                statement_close_date: ciclo.fechamento,
-                bank_total: valor,
-                source,
-                created_by: userId,
-            },
-            { onConflict: "workspace_id,credit_card_id,statement_close_date" },
-        )
-        setPendente(null)
+        const { data, error } = await supabase
+            .from("credit_card_statement_totals")
+            .upsert(
+                {
+                    workspace_id: workspaceId,
+                    credit_card_id: card.id,
+                    statement_close_date: ciclo.fechamento,
+                    bank_total: valor,
+                    source,
+                    created_by: userId,
+                },
+                { onConflict: "workspace_id,credit_card_id,statement_close_date" },
+            )
+            .select("id")
+            .single()
         if (error) {
+            setPendente(null)
             setAviso({ erro: true, texto: `Não foi possível gravar o total: ${error.message}` })
             return
         }
         await queryClient.invalidateQueries({ queryKey: statementTotalsKeys.list(workspaceId) })
-        setAviso({ erro: false, texto: `Total do banco gravado: ${currencyBRL(valor)}.` })
+        const gravado = `Total do banco gravado: ${currencyBRL(valor)}.`
+        // O PDF lido vira anexo do total, digitado ou lido. Falhar aqui não desfaz o total.
+        const erroPdf = arquivoPdf && leitura?.origem === "pdf" ? await anexarPdf(arquivoPdf, data.id) : null
+        setPendente(null)
+        setAviso(
+            erroPdf
+                ? { erro: true, texto: `${gravado} O PDF não foi anexado: ${erroPdf}` }
+                : { erro: false, texto: gravado },
+        )
+    }
+
+    /** Devolve o erro, ou null. O mesmo PDF já anexado a este total não sobe de novo. */
+    async function anexarPdf(arquivo: File, statementTotalId: string): Promise<string | null> {
+        try {
+            const ja = await listarAnexos(supabase, { statementTotalId })
+            if (ja.some((a) => a.size_bytes === arquivo.size)) return null
+            const r = await enviarAnexo(supabase, { workspaceId }, arquivo, { statementTotalId })
+            return r.ok ? null : r.erro
+        } catch {
+            return "falha de rede."
+        }
     }
 
     function onGravarTotal(e: FormEvent<HTMLFormElement>) {

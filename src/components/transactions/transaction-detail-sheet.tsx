@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { TransactionFormSurface } from "@/components/transactions/transaction-form-surface"
 import { AConferirWireframe } from "@/components/wireframe/a-conferir-wireframe"
+import { AnexosWireframe } from "@/components/wireframe/anexos-wireframe"
 import { useTransactionForm } from "@/components/transactions/transaction-form-use"
 import type {
     InstallmentPlanUpdatePayload,
@@ -426,6 +427,10 @@ export function TransactionDetailSheet({
                             if (o === "desfeito") onOpenChange(false)
                         }}
                     />
+                ) : null}
+
+                {t.workspace_id ? (
+                    <AnexosWireframe key={t.id} workspaceId={t.workspace_id} vinculo={{ transactionId: t.id }} />
                 ) : null}
 
                 {installmentBlock ? (

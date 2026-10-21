@@ -111,6 +111,21 @@ export interface CreditCardStatementTotal {
     updated_at: string
 }
 
+/** Anexo privado (bucket `attachments`): do lançamento, do boleto ou da fatura do banco. */
+export interface Attachment {
+    id: string
+    workspace_id: string
+    transaction_id: string | null
+    bill_instance_id: string | null
+    statement_total_id: string | null
+    /** `<workspace_id>/<uuid>.<ext>` no bucket. */
+    path: string
+    mime: string
+    size_bytes: number
+    created_by: string
+    created_at: string
+}
+
 export type SubscriptionBillingInterval =
     | 'weekly'
     | 'monthly'

@@ -35,6 +35,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      attachments: {
+        Row: {
+          bill_instance_id: string | null
+          created_at: string
+          created_by: string
+          id: string
+          mime: string
+          path: string
+          size_bytes: number
+          statement_total_id: string | null
+          transaction_id: string | null
+          workspace_id: string
+        }
+        Insert: {
+          bill_instance_id?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          mime: string
+          path: string
+          size_bytes: number
+          statement_total_id?: string | null
+          transaction_id?: string | null
+          workspace_id: string
+        }
+        Update: {
+          bill_instance_id?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          mime?: string
+          path?: string
+          size_bytes?: number
+          statement_total_id?: string | null
+          transaction_id?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attachments_bill_instance_id_fkey"
+            columns: ["bill_instance_id"]
+            isOneToOne: false
+            referencedRelation: "bill_instances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attachments_statement_total_id_fkey"
+            columns: ["statement_total_id"]
+            isOneToOne: false
+            referencedRelation: "credit_card_statement_totals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attachments_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attachments_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bill_instances: {
         Row: {
           amount: number | null
