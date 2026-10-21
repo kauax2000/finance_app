@@ -60,6 +60,7 @@
         "npm:motion@^13.4.1",
         "npm:next-themes@~0.4.6",
         "npm:next@^16.2.6",
+        "npm:pdfjs-dist@^6.4.299",
         "npm:radix-ui@^1.4.3",
         "npm:react-day-picker@^9.14.0",
         "npm:react-dom@19.2.4",
