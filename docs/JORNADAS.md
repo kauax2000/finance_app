@@ -589,7 +589,7 @@ flowchart TD
 | Exclusão | Parcela cancela o plano inteiro por `delete_workspace_installment_plan_cascade`. Continua com confirmação, e não com o Desfazer do toast: a exclusão é física (`delete`), sem `deleted_at` nem RPC de restaurar, e recriar mudaria o id e quebraria parcelas, recorrência e faturas (verificado na rodada 228) | `src/lib/transactions/mutations.ts` |
 | "Ver" do toast | Criar uma transação (não editar) mostra "Ver", que leva a `/transactions?txn=id` e abre o detalhe; a compra parcelada leva a `?plan=id`. Offline não há id, e o toast sai sem "Ver". A trava que abre o `txn` uma vez só volta a soltar quando a URL perde o parâmetro — antes, com `/transactions` aberta, o segundo `?txn=` não abria nada | `persistTransactionSave` em `src/lib/transaction-detail-sheet-mutations.ts`, `transaction-form-persistence.ts`, `use-transactions-list-controller.ts` |
 | Offline | Criar e excluir entram na fila; pagar conta exige conexão | `src/lib/offline/` |
-| Aviso aos membros | O trigger `transactions_notify_created` (`AFTER INSERT` em `transactions`, só `expense` sem `subscription_id`, `installment_plan_id` nem `import_batch_id`: desde o Bloco 2 a importação não avisa) chama `notify-transaction-created` por `invoke_edge_function` (`pg_net`, `x-cron-secret`). O cliente não chama a função: a despesa offline avisa quando a fila a insere. Parcela e assinatura lançadas pelo cron não avisam. Sem segredo no Vault ou com falha de rede, a despesa é salva e o aviso se perde | `supabase/migrations/20261021120000_internal_edge_dispatch.sql`, `supabase/functions/notify-transaction-created/` |
+| Aviso aos membros | O trigger `transactions_notify_created` (`AFTER INSERT` em `transactions`, só `expense` sem `subscription_id`, `installment_plan_id` nem `import_batch_id`: desde o Bloco 2 a importação não avisa) chama `notify-transaction-created` por `invoke_edge_function` (`pg_net`, `x-cron-secret`). A função repete o `WHEN` (`triggerSkipReason`, em `_shared/transaction-notify-rules.ts`) e responde 200 com `skipped` ao que ele pula, mesmo chamada por um Database Webhook antigo. O cliente não chama a função: a despesa offline avisa quando a fila a insere. Parcela e assinatura lançadas pelo cron não avisam. Sem segredo no Vault ou com falha de rede, a despesa é salva e o aviso se perde | `supabase/migrations/20261021120000_internal_edge_dispatch.sql`, `supabase/functions/notify-transaction-created/`, `supabase/functions/_shared/transaction-notify-rules.ts` |
 | Rascunho | Fechar o formulário alterado (Cancelar, Esc, toque fora, ×, arrastar a gaveta) pergunta "Descartar alterações?"; salvar fecha sem perguntar. Trocar só a aba ou o tipo não conta como alteração. Enquanto salva, nada fecha (`Dialog pending`) | `isDirty` em `src/components/transactions/transaction-form-use.tsx`, `src/components/transactions/transaction-form-dialog.tsx` |
 | Enter | O `Enter` na busca do seletor não salva a transação: o popover é portalizado, e a submissão implícita do navegador só conta os campos cujo dono no DOM é o `<form>` | `Form` em `src/components/ui/form.tsx` |
 | Período personalizado | Um `DatePicker` de intervalo com `confirm`: as pontas ficam em rascunho até Aplicar, Limpar tira o filtro, Cancelar e Esc descartam. Era um formulário à parte (`transactions-date-range-form.tsx`, removido) | `src/components/transactions/transactions-filters-panel.tsx` |
@@ -658,7 +658,7 @@ flowchart TD
     importMissing -.-> G5
     reading -->|"Gravar o total lido"| bankTotal
     bankTotal -->|"veio de PDF"| pdfAttach[("PDF anexado ao total, bucket attachments")]
-    bankTotal --> openInv
+    bankTotal -->|"fatura fechada: Total do banco · diferença"| unpaid
     bankTotal -.->|"fatura fechada vale o total do banco"| G7
 ```
 
@@ -942,6 +942,7 @@ continuam aqui para registro.
 | 10 | G7 | O painel da conta (`?detail=`) mostra só os anexos da parcela pendente. O boleto anexado a uma parcela que já foi paga continua no banco, mas nenhuma tela o mostra. |
 | 11 | G5 | "Abrir" um anexo abre a aba no clique e só depois pede a URL assinada. Com o popup bloqueado, a URL assinada abre na mesma janela, e a pessoa sai do app. |
 | 12 | G5, G6, G7 | O Bloco 2 (estorno, total do banco, conferência da fatura, importação e anexos) está no repositório, com as telas em wireframe, e não foi publicado. Aberta até o dono publicar: a ordem (Bloco 1 antes, migrações, conferências no banco, funções, front, teste de fumaça) está em `supabase/BLOCO_2_DEPLOYMENT.md`. |
+| 13 | G6 | Os avaliadores da Edge (avisos de fatura: `credit-card-calendar-alerts` e `evaluate-credit-card-alerts`) ainda usam o total calculado, não o total do banco (`credit_card_statement_totals`). Depois de gravar o total do banco, o aviso "fatura fecha/vence: R$ Y" pode discordar do valor que o Painel e Contas a pagar mostram. |
 
 ### Fechadas na rodada de acesso (set/2026)
 

@@ -12,9 +12,18 @@ no SQL Editor e **nunca** salve o SQL preenchido no repositório (ele é públic
 O cron semanal dos anexos chama a Edge pela `public.invoke_edge_function`, que
 nasce no Bloco 1 e lê do Vault os segredos `edge_functions_url` e `cron_secret`.
 Sem eles a função não faz nada e a limpeza nunca roda. Antes deste roteiro,
-faça pelo menos os passos **2 (Vault)** e **3 (Migração)** de
-"Publicar o Bloco 1" em [`NOTIFICATION_DEPLOYMENT.md`](NOTIFICATION_DEPLOYMENT.md).
-O `db push` abaixo aplica também a migração do Bloco 1, se ela ainda faltar.
+faça os passos **2 (Vault)** e **3 (Migração)** de "Publicar o Bloco 1" em
+[`NOTIFICATION_DEPLOYMENT.md`](NOTIFICATION_DEPLOYMENT.md). O `db push` abaixo
+aplica também a migração do Bloco 1, se ela ainda faltar.
+
+**Antes do passo 4 (front) deste roteiro, faça também os passos 4 (Funções) e
+5 (Remover o Database Webhook) do Bloco 1.** O Webhook antigo chama
+`notify-transaction-created` em todo INSERT de `transactions`, sem o `WHEN` do
+trigger: vivo, ele avisaria os outros membros de **cada lançamento importado**
+(500 linhas, 500 avisos). Desde esta mudança a própria
+`notify-transaction-created` ignora o importado (e a receita, a assinatura e a
+parcela, como o `WHEN`), mas só a versão publicada no passo 3 abaixo. Confira:
+Dashboard → Database → Webhooks não tem nenhuma entrada para `transactions`.
 
 Confira que o Vault tem os dois nomes (só os nomes, nunca o valor):
 
@@ -102,17 +111,18 @@ confira de novo.
 select pg_get_triggerdef(oid) from pg_trigger where tgname = 'transactions_notify_created';
 ```
 
-A definição termina com `import_batch_id IS NULL` no `WHEN`.
+A definição contém `import_batch_id IS NULL` no `WHEN`.
 
 ## 3. Funções
 
 O `_shared` vai embutido em cada função no deploy: toda função que importa um
-módulo mudado precisa ser publicada de novo. O módulo mudado é
-`_shared/credit-card-cycle.ts` (o estorno abate a fatura), e a
-`attachments-cleanup` é nova.
+módulo mudado precisa ser publicada de novo. Os módulos mudados são
+`_shared/credit-card-cycle.ts` (o estorno abate a fatura) e
+`_shared/transaction-notify-rules.ts` (o aviso de despesa ignora o que o
+`WHEN` do trigger ignora), e a `attachments-cleanup` é nova.
 
 ```bash
-supabase functions deploy evaluate-credit-card-alerts credit-card-calendar-alerts evaluate-bills-reminders attachments-cleanup
+supabase functions deploy evaluate-credit-card-alerts credit-card-calendar-alerts evaluate-bills-reminders notify-transaction-created attachments-cleanup
 ```
 
 | Função | Mudança |
@@ -120,6 +130,7 @@ supabase functions deploy evaluate-credit-card-alerts credit-card-calendar-alert
 | `evaluate-credit-card-alerts` | O limite usado desconta os estornos do cartão |
 | `credit-card-calendar-alerts` | O valor da fatura nos avisos de fechamento e vencimento desconta os estornos |
 | `evaluate-bills-reminders` | Importa o `credit-card-cycle.ts` mudado; publicada para não ficar com a cópia antiga |
+| `notify-transaction-created` | Responde 200 com `skipped` (`imported`, `not_expense`, `subscription` ou `installment`) para a linha que o `WHEN` do trigger pula: o importado não avisa nem por um Webhook antigo que tenha ficado |
 | `attachments-cleanup` | Nova. Chamada pelo cron semanal com o `x-cron-secret`; apaga do bucket o objeto sem linha em `attachments` e com mais de 24 h |
 
 A `attachments-cleanup` usa os secrets `CRON_SECRET` (o mesmo do Bloco 1),
@@ -133,9 +144,11 @@ Confira que o cron alcança a função (não apaga nada recente: a folga é de 2
 select public.invoke_edge_function('attachments-cleanup');
 ```
 
-Logo depois, `select status_code, content from net._http_response order by created desc limit 1;`
-mostra 200 e `{"ok":true,...}`. Um 401 é `CRON_SECRET` diferente do `cron_secret`
-do Vault; nenhuma linha é o Vault incompleto (passo 0).
+A resposta do `pg_net` é assíncrona: espere alguns segundos e só então rode
+`select status_code, content from net._http_response order by created desc limit 1;`.
+Ela mostra 200 e `{"ok":true,...}`. Um 401 é `CRON_SECRET` diferente do
+`cron_secret` do Vault; nenhuma linha, depois da espera, é o Vault incompleto
+(passo 0).
 
 ## 4. Front
 
@@ -150,7 +163,14 @@ Use uma carteira e um cartão de teste.
    escolha o último ciclo fechado (ainda não pago), digite um total diferente
    do calculado e grave. O painel dessa fatura mostra "Total do banco ·
    diferença", e a fatura em Contas a pagar (pendentes) passa a valer o total
-   do banco.
+   do banco. A UI só grava esse total, não o apaga: no fim do teste, ache a
+   linha e apague-a no SQL Editor.
+
+   ```sql
+   select id, statement_close_date, bank_total from public.credit_card_statement_totals
+   where credit_card_id = '<CARD_ID>';
+   delete from public.credit_card_statement_totals where id = '<ID>';
+   ```
 2. **Importação.** Em Lançamentos, "Importar extrato ou planilha" (abre com
    `?importar=1`, que some da URL). Importe um CSV pequeno, **com valores
    inventados**, numa conta de teste. Os lançamentos aparecem com
