@@ -36,10 +36,17 @@ jobs:
         run: |
           set -euo pipefail
           umask 077
-          docker run --rm -e DB_URL postgres:17 sh -c 'pg_dump "$DB_URL" -Fc --no-owner' \
-            | gpg --batch --yes --pinentry-mode loopback --symmetric --cipher-algo AES256 \
-                --passphrase-fd 3 --output "backup-$(date +%F).dump.gpg" \
-                3< <(printf %s "$PASS")
+          err="$(mktemp)"
+          # o stderr do pg_dump pode trazer host e usuário: nunca vai ao log público
+          if ! {
+            docker run --rm -e DB_URL postgres:17 sh -c 'pg_dump "$DB_URL" -Fc --no-owner' \
+              | gpg --batch --yes --pinentry-mode loopback --symmetric --cipher-algo AES256 \
+                  --passphrase-fd 3 --output "backup-$(date +%F).dump.gpg" \
+                  3< <(printf %s "$PASS")
+          } 2>"$err"; then
+            echo "::error::pg_dump falhou (veja a conexão/segredo SUPABASE_DB_URL)"
+            exit 1
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
