@@ -39,6 +39,9 @@ describe("buildPaymentEventsForMonth installments", () => {
             payment_credit_card_id: "card-1",
             installment_plan_id: "plan-1",
             installment_sequence: 1,
+            source: "app",
+            needs_review: false,
+            import_batch_id: null,
             created_at: "",
             updated_at: "",
         }

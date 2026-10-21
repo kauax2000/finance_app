@@ -3,6 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { type FormEvent, type ReactNode, useMemo, useState } from "react"
 
+import { MapeamentoCsv } from "@/components/wireframe/mapeamento-csv"
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
 import {
     previousStatementCloseBefore,
@@ -14,7 +15,7 @@ import { ajustarAoCiclo, conferirNoCiclo } from "@/lib/fatura/ciclo"
 import type { LancamentoParaConferir } from "@/lib/fatura/conferir"
 import { bancoTotalDoCiclo } from "@/lib/fatura/total-com-banco"
 import { currencyBRL } from "@/lib/formatters"
-import { lerCsv, mapearCsv } from "@/lib/import/csv"
+import { lerCsv } from "@/lib/import/csv"
 import { extrairItensDaFatura, removerIdentificacao } from "@/lib/import/fatura-texto"
 import { importarLancamentos, type ItemImportavel, prepararItens } from "@/lib/import/importar"
 import { lerValorBr } from "@/lib/import/normalizar"
@@ -104,7 +105,6 @@ export function ConferirFaturaWireframe({
     const [senhaPedida, setSenhaPedida] = useState<{ incorreta: boolean } | null>(null)
     const [senha, setSenha] = useState("")
     const [csv, setCsv] = useState<string[][] | null>(null)
-    const [mapa, setMapa] = useState({ data: 0, descricao: 1, valor: 2, temCabecalho: true })
 
     const [leitura, setLeitura] = useState<Leitura | null>(null)
     // O clientId nasce uma vez por leitura e fica aqui: repetir o envio não duplica (Foco 3).
@@ -239,13 +239,7 @@ export function ConferirFaturaWireframe({
         if (arquivoPdf) void lerPdf(arquivoPdf, senha)
     }
 
-    function onLerCsv() {
-        if (!csv) return
-        const { itens: lidos, ignoradas } = mapearCsv(
-            csv,
-            { data: mapa.data, descricao: mapa.descricao, valor: mapa.valor },
-            { temCabecalho: mapa.temCabecalho, negativoEhDespesa: false },
-        )
+    function onLerCsv({ itens: lidos, ignoradas }: { itens: ItemBanco[]; ignoradas: number }) {
         aplicar(lidos, { origem: "csv", total: somaComEstorno(lidos), completa: true, diferenca: 0, ignoradas })
     }
 
@@ -277,19 +271,6 @@ export function ConferirFaturaWireframe({
             setPendente(null)
         }
     }
-
-    const coluna = (nome: "data" | "descricao" | "valor", rotulo: string) => (
-        <label className="flex items-center gap-1">
-            {rotulo}
-            <input
-                type="number"
-                min={0}
-                className={`${campo} w-16`}
-                value={mapa[nome]}
-                onChange={(e) => setMapa((m) => ({ ...m, [nome]: Number(e.target.value) }))}
-            />
-        </label>
-    )
 
     return (
         <WireframeBox bloco={2} titulo="Conferir fatura">
@@ -368,27 +349,7 @@ export function ConferirFaturaWireframe({
                 </form>
             ) : null}
 
-            {csv ? (
-                <div className="space-y-2">
-                    <p>Primeira linha: {(csv[0] ?? []).map((c, i) => `[${i}] ${c}`).join(" | ")}</p>
-                    <div className="flex flex-wrap items-center gap-3">
-                        {coluna("data", "Data na coluna")}
-                        {coluna("descricao", "Descrição na coluna")}
-                        {coluna("valor", "Valor na coluna")}
-                        <label className="flex items-center gap-1">
-                            <input
-                                type="checkbox"
-                                checked={mapa.temCabecalho}
-                                onChange={(e) => setMapa((m) => ({ ...m, temCabecalho: e.target.checked }))}
-                            />
-                            1ª linha é cabeçalho
-                        </label>
-                        <button type="button" className={botao} onClick={onLerCsv}>
-                            Ler colunas
-                        </button>
-                    </div>
-                </div>
-            ) : null}
+            {csv ? <MapeamentoCsv linhas={csv} onLer={onLerCsv} /> : null}
 
             {leitura && conferencia ? (
                 <div className="space-y-2">

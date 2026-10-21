@@ -75,6 +75,7 @@ import { Popover } from "@/components/ui/popover"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { currencyBRL } from "@/lib/formatters"
+import { EstornoWireframe } from "@/components/wireframe/estorno-wireframe"
 
 
 function CategoryRows({
@@ -230,6 +231,9 @@ export type TransactionFormFieldsProps = {
     setPaymentMethod: (m: PaymentMethod | null) => void
     paymentCreditCardId: string
     setPaymentCreditCardId: (id: string) => void
+    /** Receita que é estorno no cartão (o wireframe do Bloco 2). */
+    estornoCartaoId?: string | null
+    setEstornoCartaoId?: (id: string | null) => void
     categories: Category[]
     creditCards: CreditCard[]
     categoriesHref: string
@@ -294,6 +298,8 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
         setPaymentMethod,
         paymentCreditCardId,
         setPaymentCreditCardId,
+        estornoCartaoId = null,
+        setEstornoCartaoId,
         categories,
         creditCards,
         categoriesHref,
@@ -718,6 +724,14 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                     // (`bg-input-fill/50`, o de `fieldSurfaceClassName`), para ler
                     // como parte do formulário; a escolhida segue com a cor de seleção.
                     className="data-[variant=chip]:grid data-[variant=chip]:grid-cols-3 [&>[data-slot=radio-group-item]]:justify-center [&>[data-slot=radio-group-item]:not(:has([data-state=checked]))]:bg-input-fill/50"
+                />
+            ) : null}
+
+            {type === "income" && !showInstallmentFields && setEstornoCartaoId ? (
+                <EstornoWireframe
+                    cards={creditCards}
+                    value={estornoCartaoId}
+                    onChange={setEstornoCartaoId}
                 />
             ) : null}
 

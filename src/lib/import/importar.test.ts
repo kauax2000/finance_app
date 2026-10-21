@@ -2,6 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { describe, expect, it } from "vitest"
 import { sugerirCategoria } from "./categoria-pelo-historico"
 import {
+    categoriasQueFaltam,
+    comCategoriaDaPlanilha,
     desfazerImportacao,
     importarLancamentos,
     linhasDeImportacao,
@@ -177,6 +179,41 @@ describe("desfazerImportacao", () => {
         expect(chamadas[0].args).toEqual([
             ["workspace_id", "w1"],
             ["import_batch_id", "lote1"],
+        ])
+    })
+})
+
+describe("categoria da planilha, pelo nome", () => {
+    const categorias = [
+        { id: "alim", name: "Alimentação", type: "expense" as const },
+        { id: "sal", name: "Salário", type: "income" as const },
+    ]
+
+    it("casa sem acento nem caixa, no tipo do sinal, e mantém o clientId", () => {
+        const itens = [
+            item({ clientId: "a", categoria: "ALIMENTACAO", categoryId: "historico" }),
+            item({ clientId: "b", categoria: "salario", estorno: true, categoryId: null }),
+            item({ clientId: "c", categoryId: "historico" }),
+        ]
+        const r = comCategoriaDaPlanilha(itens, categorias)
+        expect(r.map((i) => [i.clientId, i.categoryId])).toEqual([
+            ["a", "alim"],
+            ["b", "sal"],
+            ["c", "historico"],
+        ])
+    })
+
+    it("o que não existe no tipo do sinal falta, uma vez por nome", () => {
+        const itens = [
+            item({ categoria: "Pet" }),
+            item({ categoria: " pet " }),
+            item({ categoria: "Alimentação", estorno: true }),
+            item({ categoria: "Alimentacao" }),
+            item({}),
+        ]
+        expect(categoriasQueFaltam(itens, categorias)).toEqual([
+            { nome: "Pet", tipo: "expense" },
+            { nome: "Alimentação", tipo: "income" },
         ])
     })
 })

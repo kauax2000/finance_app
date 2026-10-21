@@ -46,6 +46,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { TransactionFormSurface } from "@/components/transactions/transaction-form-surface"
+import { AConferirWireframe } from "@/components/wireframe/a-conferir-wireframe"
 import { useTransactionForm } from "@/components/transactions/transaction-form-use"
 import type {
     InstallmentPlanUpdatePayload,
@@ -416,6 +417,16 @@ export function TransactionDetailSheet({
                         </div>
                     </div>
                 </section>
+
+                {t.needs_review || t.import_batch_id ? (
+                    <AConferirWireframe
+                        key={t.id}
+                        transaction={t}
+                        onChanged={(o) => {
+                            if (o === "desfeito") onOpenChange(false)
+                        }}
+                    />
+                ) : null}
 
                 {installmentBlock ? (
                     <InstallmentPurchaseSection

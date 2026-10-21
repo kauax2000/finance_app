@@ -3,6 +3,7 @@ import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { calendarYmdToStorageIso } from "@/lib/transaction-date"
 import type { TablesInsert } from "@/types/database"
 import { sugerirCategoria } from "./categoria-pelo-historico"
+import { normalizarDescricao } from "./normalizar"
 import type { ItemBanco } from "./tipos"
 
 export type DestinoImportacao =
@@ -28,6 +29,41 @@ export function prepararItens(
         clientId: crypto.randomUUID(),
         categoryId: sugerirCategoria(i.descricao, historico),
     }))
+}
+
+type CategoriaPorNome = { id: string; name: string; type: "income" | "expense" }
+
+const tipoDoItem = (i: ItemBanco): "income" | "expense" => (i.estorno ? "income" : "expense")
+const chave = (nome: string, tipo: "income" | "expense") => `${tipo}:${normalizarDescricao(nome)}`
+
+/**
+ * A planilha traz a categoria por nome: ela vale sobre a do histórico quando casa
+ * com uma categoria do tipo do sinal, sem acento nem caixa. O `clientId` fica.
+ */
+export function comCategoriaDaPlanilha(itens: ItemImportavel[], categorias: CategoriaPorNome[]): ItemImportavel[] {
+    const porChave = new Map(categorias.map((c) => [chave(c.name, c.type), c.id]))
+    return itens.map((i) => {
+        const id = i.categoria ? porChave.get(chave(i.categoria, tipoDoItem(i))) : undefined
+        return id ? { ...i, categoryId: id } : i
+    })
+}
+
+/** Os nomes da planilha sem categoria do tipo do sinal: a importação os cria. */
+export function categoriasQueFaltam(
+    itens: ItemBanco[],
+    categorias: CategoriaPorNome[],
+): Array<{ nome: string; tipo: "income" | "expense" }> {
+    const vistas = new Set(categorias.map((c) => chave(c.name, c.type)))
+    const faltam: Array<{ nome: string; tipo: "income" | "expense" }> = []
+    for (const i of itens) {
+        const nome = i.categoria?.trim()
+        if (!nome) continue
+        const k = chave(nome, tipoDoItem(i))
+        if (vistas.has(k)) continue
+        vistas.add(k)
+        faltam.push({ nome, tipo: tipoDoItem(i) })
+    }
+    return faltam
 }
 
 /** Parcela importada é despesa simples com "(k/n)" na descrição (Decisão 4). */

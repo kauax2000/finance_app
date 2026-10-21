@@ -174,6 +174,11 @@ export function ccAnalyticsRowsToListTransactions(
         subscription_id: row.subscription_id ?? null,
         installment_plan_id: row.installment_plan_id ?? null,
         installment_sequence: row.installment_sequence ?? null,
+        // ponytail: a linha do cartão não lê estas colunas; o selo "a conferir" não aparece
+        // pelo detalhe do cartão. Pôr no select quando a migração do Bloco 2 estiver aplicada.
+        source: "app",
+        needs_review: false,
+        import_batch_id: null,
         created_at: row.date,
         updated_at: row.date,
         category: ccCategoryEmbedToCategory(row.category, row.category_id),

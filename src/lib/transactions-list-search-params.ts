@@ -122,3 +122,16 @@ export function transactionsFiltersSignature(p: URLSearchParams): string {
 }
 
 export { PAYMENT_METHOD_VALUES }
+
+/**
+ * `?importar=1` abre o wireframe de importar extrato. Como o `new`, a tela o
+ * consome e o tira da URL: devolve a query sem ele, ou `null` quando não há.
+ */
+export function consumirParametroImportar(
+    params: { get(chave: string): string | null; toString(): string } | null
+): string | null {
+    if (params?.get("importar") !== "1") return null
+    const resto = new URLSearchParams(params.toString())
+    resto.delete("importar")
+    return resto.toString()
+}

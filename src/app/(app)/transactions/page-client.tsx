@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import {
     EmptyState,
     EmptyStateActions,
@@ -41,6 +42,11 @@ import {
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { numberBR } from "@/lib/formatters"
+import { consumirParametroImportar } from "@/lib/transactions-list-search-params"
+import {
+    ImportarExtratoLink,
+    ImportarExtratoWireframe,
+} from "@/components/wireframe/importar-extrato-wireframe"
 import {
     hasInstallmentDeleteImpact,
     INSTALLMENT_DELETE_WARNING,
@@ -164,6 +170,16 @@ export default function TransactionsPage() {
     } = c
     /* eslint-enable @typescript-eslint/no-unused-vars */
 
+    // `?importar=1` abre o wireframe de importar e sai da URL, como o `new`.
+    const [importarAberto, setImportarAberto] = useState(false)
+    useEffect(() => {
+        const resto = consumirParametroImportar(searchParams)
+        if (resto == null) return
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- consome o parâmetro da URL uma vez
+        setImportarAberto(true)
+        router.replace(resto ? `${pathname}?${resto}` : pathname)
+    }, [searchParams, pathname, router])
+
     if (workspaceError) {
         return (
             <Card>
@@ -191,6 +207,18 @@ export default function TransactionsPage() {
 
     return (
         <div className="min-w-0 max-w-full space-y-3">
+            {importarAberto && user && currentWorkspaceId ? (
+                <ImportarExtratoWireframe
+                    workspaceId={currentWorkspaceId}
+                    userId={user.id}
+                    cards={creditCards}
+                    onClose={() => setImportarAberto(false)}
+                />
+            ) : (
+                <ImportarExtratoLink
+                    href={`${pathname}?${new URLSearchParams([...(searchParams?.entries() ?? []), ["importar", "1"]])}`}
+                />
+            )}
             <TransactionsToolbar
                 sticky
                 filterType={filterType}

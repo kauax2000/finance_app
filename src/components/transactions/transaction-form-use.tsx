@@ -64,6 +64,7 @@ function fotografar(r: Rascunho): string {
         r.recurringMode,
         r.paymentMethod,
         r.paymentCreditCardId,
+        r.estornoCartaoId,
         r.installmentTotal,
         r.installmentPerAmount,
         r.installmentCount,
@@ -81,11 +82,35 @@ type Rascunho = {
     recurringMode: RecurringMode
     paymentMethod: PaymentMethod | null
     paymentCreditCardId: string
+    /** Receita que é estorno no cartão: o cartão que ela abate. */
+    estornoCartaoId: string | null
     installmentValueMode: "total" | "per_installment"
     installmentTotal: string
     installmentPerAmount: string
     installmentCount: string
     installmentEditScope: "slice" | "plan"
+}
+
+/**
+ * A forma de pagamento que vai ao banco. A receita só tem forma no estorno:
+ * `credit_card` com o cartão, que abate a fatura (Decisão 6 do Bloco 2).
+ */
+export function formaDoPayload(a: {
+    type: "income" | "expense"
+    paymentMethod: PaymentMethod | null
+    paymentCreditCardId: string
+    estornoCartaoId: string | null
+}): { paymentMethod: PaymentMethod | null; paymentCreditCardId: string | null } {
+    if (a.type === "income") {
+        return a.estornoCartaoId
+            ? { paymentMethod: "credit_card", paymentCreditCardId: a.estornoCartaoId }
+            : { paymentMethod: null, paymentCreditCardId: null }
+    }
+    return {
+        paymentMethod: a.paymentMethod,
+        paymentCreditCardId:
+            a.paymentMethod === "credit_card" ? a.paymentCreditCardId || null : null,
+    }
 }
 
 export type UseTransactionFormArgs = {
@@ -142,6 +167,7 @@ export function useTransactionForm({
         null
     )
     const [paymentCreditCardId, setPaymentCreditCardId] = useState("")
+    const [estornoCartaoId, setEstornoCartaoId] = useState<string | null>(null)
     const [installmentValueMode, setInstallmentValueMode] = useState<
         "total" | "per_installment"
     >("total")
@@ -190,6 +216,11 @@ export function useTransactionForm({
                           : null,
                   paymentCreditCardId:
                       editingTransaction.payment_credit_card_id || "",
+                  estornoCartaoId:
+                      editingTransaction.type === "income" &&
+                      editingTransaction.payment_method === "credit_card"
+                          ? (editingTransaction.payment_credit_card_id ?? null)
+                          : null,
                   installmentValueMode: "total",
                   installmentTotal: p
                       ? formatMoneyBrlInput(totalPurchaseFromPlan(p))
@@ -213,6 +244,7 @@ export function useTransactionForm({
                   // (`preEscolherCartao`, nos campos).
                   paymentMethod: null,
                   paymentCreditCardId: "",
+                  estornoCartaoId: null,
                   installmentValueMode: "total",
                   installmentTotal: "",
                   installmentPerAmount: "",
@@ -228,6 +260,7 @@ export function useTransactionForm({
         setRecurringMode(v.recurringMode)
         setPaymentMethod(v.paymentMethod)
         setPaymentCreditCardId(v.paymentCreditCardId)
+        setEstornoCartaoId(v.estornoCartaoId)
         setInstallmentValueMode(v.installmentValueMode)
         setInstallmentTotal(v.installmentTotal)
         setInstallmentPerAmount(v.installmentPerAmount)
@@ -509,11 +542,12 @@ export function useTransactionForm({
             return
         }
 
-        const pm = type === "expense" ? paymentMethod : null
-        const pcc =
-            type === "expense" && paymentMethod === "credit_card"
-                ? paymentCreditCardId || null
-                : null
+        const { paymentMethod: pm, paymentCreditCardId: pcc } = formaDoPayload({
+            type,
+            paymentMethod,
+            paymentCreditCardId,
+            estornoCartaoId,
+        })
 
         const ok = await onSave({
             editingId: editingTransaction?.id ?? null,
@@ -554,6 +588,8 @@ export function useTransactionForm({
         setPaymentMethod,
         paymentCreditCardId,
         setPaymentCreditCardId,
+        estornoCartaoId,
+        setEstornoCartaoId,
         categories,
         creditCards,
         categoriesHref,
@@ -614,6 +650,7 @@ export function useTransactionForm({
         recurringMode,
         paymentMethod,
         paymentCreditCardId,
+        estornoCartaoId,
         installmentValueMode,
         installmentTotal,
         installmentPerAmount,
