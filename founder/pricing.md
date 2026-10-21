@@ -1,4 +1,4 @@
-# Preço (revisão de 21/10, depois das decisões do dono)
+# Preço (revisão 2 de 21/10: só anual)
 
 O dono decidiu três coisas:
 - **não há plano grátis**: o teste é de 14 dias e depois vem a assinatura;
@@ -6,12 +6,9 @@ O dono decidiu três coisas:
 - **IA, WhatsApp e infraestrutura usam só planos gratuitos** até a primeira receita.
 
 ## 1. O preço (proposta)
-**Família: R$ 29,90/mês ou R$ 239/ano (R$ 19,92/mês). Cobre a casa inteira, até 6 pessoas.**
+**Família: R$ 239/ano, em até 12x de R$ 19,92 no cartão, ou à vista no Pix. Cobre a casa inteira, até 6 pessoas. Não há plano mensal** (decisão do dono, por causa do churn).
 
-**Por que R$ 29,90 no mensal:**
-- fica no teto pedido;
-- é metade dos R$ 59,90/mês do Casal da Optio, e cobre 6 pessoas contra 2;
-- empurra para o anual, que é o que retém.
+O 12x mantém a parcela no piso de R$ 19,90 que o dono pediu, que é como a Optio vende o anual dela. A taxa do parcelamento fica com a casa, já no CFO.
 
 **Por que R$ 239 no anual:**
 - dá R$ 19,92/mês, o piso pedido;
@@ -23,11 +20,10 @@ O dono decidiu três coisas:
 **Margem pelo CFO** (`cfo.md`, custos de serviço zerados no plano gratuito):
 | Preço por família | Contribuição | Equilíbrio | Retorno |
 |---|---|---|---|
-| R$ 29,90 (mensal) | R$ 28,60 | 9 pagantes | mês 6 |
 | R$ 19,92 (anual) | R$ 18,62 | 14 pagantes | mês 8 |
 
 ## 2. A escada
-Sem degrau grátis e sem degrau "Individual". **Um plano só, o Família, mensal ou anual.**
+Sem degrau grátis, sem degrau "Individual" e sem mensal. **Um plano só: o Família anual.**
 
 Quem não assina depois do teste fica em **"só leitura"**:
 - vê tudo;
@@ -37,14 +33,13 @@ Quem não assina depois do teste fica em **"só leitura"**:
 Nada se apaga.
 
 ## 3. Oferta de abertura
-- **Fundadores**, até 31/01/2027: **R$ 24,90/mês ou R$ 199/ano, congelados enquanto ativos.** Cancelou, perde o preço.
+- **Fundadores**, até 31/01/2027: **R$ 199/ano (12x de R$ 16,58), congelado enquanto ativo.** Cancelou, perde o preço.
   - O prazo é real e casa com o início de ano.
   - Não há preço "de" falso.
   - O anual de Fundadores (R$ 16,58/mês) fica abaixo do piso de R$ 19,90. É o desconto de quem chega primeiro. Se o dono não quiser, a alternativa é congelar R$ 239/ano para sempre.
 - **Teste:** 14 dias, sem cartão. No dia 12, o relatório do teste.
 
 ## 4. O que testar com gente real
-- **Mensal:** R$ 24,90 contra R$ 29,90, por sorteio no dia 12 do teste.
 - **Anual:** R$ 199 contra R$ 239, em duas páginas de espera com pré-venda anual reembolsável.
 
 ## 5. Objeções de preço do painel (simuladas, não são depoimentos)

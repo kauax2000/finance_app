@@ -261,7 +261,7 @@ Um guia opcional mostra o Tasker/MacroDroid para ler a notificação do banco no
 Detalhe comercial na estratégia §3–§4 e em `founder/pricing.md` e `founder/offer.md`.
 
 ### Direito de uso
-- **Tabela** `billing_subscriptions(user_id, provider: asaas|apple|google, provider_ref, plan: familia, interval: month|year, status: trialing|active|past_due|canceled|expired, trial_ends_at, current_period_end, cancel_at_period_end, price_cents, founder bool)`.
+- **Tabela** `billing_subscriptions(user_id, provider: asaas|apple|google, provider_ref, plan: familia, interval: year, status: trialing|active|past_due|canceled|expired, trial_ends_at, current_period_end, cancel_at_period_end, price_cents, founder bool)`.
   - O nome evita confusão com `workspace_subscriptions`, as assinaturas do usuário.
 - **A unidade do plano é o assinante (uma pessoa)** *[decisão minha]*:
   - cobre **todas as carteiras de que ele é dono**;
@@ -276,7 +276,10 @@ Detalhe comercial na estratégia §3–§4 e em `founder/pricing.md` e `founder/
 
 ### Cobrança: Asaas
 - **Checkout** pela Edge `billing-checkout`, criado no servidor. O CPF da pessoa é pedido no checkout, porque o Asaas exige.
-- **Formas:** cartão recorrente e Pix. O Pix Automático entra quando o CNPJ tiver 6 meses.
+- **Só anual** (decisão do dono, 21/10). O mensal tem churn alto.
+  - **Cartão:** em até 12x sem juros para a pessoa; a taxa do parcelamento fica com a casa.
+  - **Pix:** à vista.
+  - A renovação é anual, com o aviso 7 dias antes.
 - **Webhook** `asaas-webhook`, validado pelo `asaas-access-token`, faz upsert do status.
 - **NFS-e automática** em toda cobrança.
 
@@ -293,7 +296,7 @@ Detalhe comercial na estratégia §3–§4 e em `founder/pricing.md` e `founder/
   - No lançamento do plano, quem já usa o app ganha 14 dias.
   - O dono e a família dele recebem um plano vitalício manual. *[decisão minha]*
 - **Cancelar em 1 toque.** A Edge `billing-cancel` marca `cancel_at_period_end`.
-- **Aviso 7 dias antes de renovar** (anual), por push e e-mail, via cron.
+- **Aviso 7 dias antes de renovar**, por push e e-mail, via cron.
 - **Arrependimento de 7 dias (CDC art. 49).** Um botão de reembolso visível nesses 7 dias; o estorno sai pela API do Asaas.
 - **"Bateu ou devolvemos."** No 1º mês pago, pelo suporte, é processo manual documentado; não se automatiza.
 - **Plano que acaba (teste ou assinatura) nunca apaga dado nem desliga proteção.**
@@ -302,8 +305,8 @@ Detalhe comercial na estratégia §3–§4 e em `founder/pricing.md` e `founder/
   - Exportar continua liberado.
 - **Preço na porta.** `/plans` mostra o preço também a quem não entrou.
 - **Preço** (proposta minha dentro da faixa do dono, de R$ 19,90 a R$ 29):
-  - **Família: R$ 29,90/mês ou R$ 239/ano** (o anual sai a R$ 19,92/mês, o piso do dono);
-  - **Fundadores**, até 31/01/2027: **R$ 24,90/mês ou R$ 199/ano, congelados enquanto ativos** (`founder = true`). Cancelou, perde o preço.
+  - **Família: R$ 239/ano, em até 12x de R$ 19,92** (só anual);
+  - **Fundadores**, até 31/01/2027: **R$ 199/ano (12x de R$ 16,58), congelado enquanto ativo** (`founder = true`). Cancelou, perde o preço.
   - O detalhe está em `founder/pricing.md`.
 
 ### Jornada depois da compra ou do início do teste (P14)
@@ -550,14 +553,15 @@ Cada bloco é um projeto com plano próprio. A ordem segue o valor e a dependên
 10. A IA é só a do Cloudflare Workers AI, grátis e sem treino. Sem cota, cai no determinístico.
 11. O plano é do assinante e cobre todas as carteiras dele e as pessoas convidadas, até 5, com a carteira pessoal de cada uma.
 12. Gasto privado só fora do cartão compartilhado. PDF e conferência de cartão ficam só com o titular e o dono.
-13. Preço proposto: R$ 29,90/mês ou R$ 239/ano.
-14. Fundadores: R$ 24,90/mês ou R$ 199/ano, congelados enquanto ativos, até 31/01/2027.
+13. Preço proposto: R$ 239/ano em até 12x de R$ 19,92.
+14. Fundadores: R$ 199/ano (12x de R$ 16,58), congelado enquanto ativo, até 31/01/2027.
 15. Anexos: 25 MB por assinante enquanto o Supabase for Free.
 
 **Decidido pelo dono (21/10):**
 - todo membro tem conta com e-mail, filhos inclusive;
 - **não existe plano grátis**: teste de 14 dias e depois a assinatura;
-- preço entre R$ 19,90 e R$ 29;
+- preço entre R$ 19,90 e R$ 29 por mês, **cobrado só no anual** (sem plano mensal);
+- **o WhatsApp é implementado** (Bloco 3);
 - **IA, WhatsApp e infraestrutura só no plano gratuito** até a primeira receita.
 
 **Em aberto, só trava o Bloco 4:** o CNPJ. Asaas e AbacatePay exigem CNPJ, e a escolha do gateway fica para o plano do Bloco 4.

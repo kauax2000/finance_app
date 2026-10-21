@@ -43,9 +43,9 @@ O desenho funcional que implementa esta estratégia está em
 - O paywall depois do teste converte ~5× mais que o freemium (RevenueCat 2026: 10,7% contra 2,1%), com retenção parecida.
 - Teste sem cartão não gera cobrança surpresa.
 
-**Família (até 6 pessoas): R$ 29,90/mês ou R$ 239/ano (R$ 19,92/mês).** Proposta dentro da faixa do dono, de R$ 19,90 a R$ 29.
+**Família (até 6 pessoas): R$ 239/ano, em até 12x de R$ 19,92 no cartão, ou à vista no Pix. Só anual** (decisão do dono: o mensal tem churn alto).
 - Inclui tudo: captura, conferência de fatura, previsão, inteligência, papéis, privacidade, divisão e anexos.
-- **Fundadores, até 31/01/2027:** R$ 24,90/mês ou R$ 199/ano, congelados enquanto ativos.
+- **Fundadores, até 31/01/2027:** R$ 199/ano (12x de R$ 16,58), congelado enquanto ativo.
 
 **Sem assinatura, a conta fica em "só leitura".**
 - Vê tudo, **exporta e apaga quando quiser**. Nada se apaga.
