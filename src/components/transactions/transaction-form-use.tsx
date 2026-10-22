@@ -1,7 +1,9 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import type { Category, CreditCard, Transaction } from "@/lib/supabase"
+import { supabase, type Category, type CreditCard, type Transaction, type TransactionSource } from "@/lib/supabase"
+import { enviarAnexo } from "@/lib/anexos"
+import { useWorkspace } from "@/components/workspace-provider"
 import type { PaymentMethod } from "@/lib/payment-methods"
 import {
     calendarYmdToStorageIso,
@@ -27,6 +29,7 @@ import {
     type InstallmentPlanFormSavePayload,
     type InstallmentPlanUpdatePayload,
     type TransactionFormSavePayload,
+    type TransactionSaveResult,
 } from "@/components/transactions/transaction-form-types"
 
 type RecurringMode = "once" | "daily" | "weekly" | "monthly"
@@ -128,7 +131,7 @@ export type UseTransactionFormArgs = {
     creditCards: CreditCard[]
     categoriesHref: string
     creditCardsHref: string
-    onSave: (payload: TransactionFormSavePayload) => Promise<boolean>
+    onSave: (payload: TransactionFormSavePayload) => Promise<TransactionSaveResult>
     onSaveInstallmentPlan?: (
         payload: InstallmentPlanFormSavePayload
     ) => Promise<boolean>
@@ -189,6 +192,11 @@ export function useTransactionForm({
     // As dúvidas da frase rápida aplicada; `null` sem frase. O salvar leva a
     // origem `quick_text` e a marca de "a conferir" (Decisão 14).
     const [duvidasDaFrase, setDuvidasDaFrase] = useState<string[] | null>(null)
+    // Quem preencheu: a frase (`quick_text`) ou a foto do recibo (`share`).
+    const [fonteDaFrase, setFonteDaFrase] = useState<TransactionSource>("quick_text")
+    // A foto do recibo, já comprimida: vira anexo depois do salvar.
+    const [fotoDoRecibo, setFotoDoRecibo] = useState<File | null>(null)
+    const { currentWorkspaceId } = useWorkspace()
 
     const segmentMode: "create" | "edit" = editingTransaction
         ? "edit"
@@ -279,6 +287,7 @@ export function useTransactionForm({
         setInstallmentCount(v.installmentCount)
         setInstallmentEditScope(v.installmentEditScope)
         setDuvidasDaFrase(null)
+        setFotoDoRecibo(null)
         setSnapshot(v)
     }, [active, editingTransaction, defaultLaunchKind])
     /* eslint-enable react-hooks/set-state-in-effect */
@@ -372,7 +381,7 @@ export function useTransactionForm({
      * Preenche os campos pela frase (`rascunhoDaFrase`). Com parcelas, a
      * criação vai para a Parcelada; o estorno é a receita com o cartão.
      */
-    const aplicarFrase = useCallback((c: CamposDaFrase) => {
+    const preencher = useCallback((c: CamposDaFrase, fonte: TransactionSource) => {
         const r = rascunhoDaFrase(c)
         setFormKind(r.formKind)
         setType(r.type)
@@ -388,7 +397,10 @@ export function useTransactionForm({
         setPaymentCreditCardId(r.paymentCreditCardId)
         setEstornoCartaoId(r.estornoCartaoId)
         setDuvidasDaFrase(c.duvidas)
+        setFonteDaFrase(fonte)
     }, [])
+    const aplicarFrase = useCallback((c: CamposDaFrase) => preencher(c, "quick_text"), [preencher])
+    const aplicarFoto = useCallback((c: CamposDaFrase) => preencher(c, "share"), [preencher])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -464,6 +476,10 @@ export function useTransactionForm({
             })
 
             if (ok) {
+                if (fotoDoRecibo) {
+                    toastError("A compra parcelada não leva a foto: anexe numa parcela.")
+                    setFotoDoRecibo(null)
+                }
                 onSuccess?.()
                 if (closeOnSuccess) onClose()
             }
@@ -584,7 +600,7 @@ export function useTransactionForm({
             estornoCartaoId,
         })
 
-        const ok = await onSave({
+        const salvo = await onSave({
             editingId: editingTransaction?.id ?? null,
             categoryId: categoryId || null,
             type,
@@ -595,10 +611,25 @@ export function useTransactionForm({
             recurringInterval,
             paymentMethod: pm,
             paymentCreditCardId: pcc,
-            ...origemDaFrase(duvidasDaFrase, Boolean(editingTransaction), categoryId),
+            ...origemDaFrase(duvidasDaFrase, Boolean(editingTransaction), categoryId, fonteDaFrase),
         })
 
-        if (ok) {
+        if (salvo) {
+            const foto = editingTransaction ? null : fotoDoRecibo
+            const id = salvo.id
+            // O anexo vai depois do lançamento salvo; falhando, o lançamento fica.
+            if (foto && !id) {
+                toastError("Sem conexão: a foto não foi anexada.")
+            } else if (foto && id && currentWorkspaceId) {
+                void enviarAnexo(supabase, { workspaceId: currentWorkspaceId }, foto, { transactionId: id }).then(
+                    (r) => {
+                        if (!r.ok) toastError(r.erro)
+                    },
+                    () => toastError("A foto não foi anexada."),
+                )
+            }
+            // Uma foto anexa um lançamento só, mesmo com o formulário aberto.
+            setFotoDoRecibo(null)
             onSuccess?.()
             if (closeOnSuccess) onClose()
         }
@@ -648,6 +679,8 @@ export function useTransactionForm({
         planIsActive,
         fraseInicial,
         aplicarFrase,
+        aplicarFoto,
+        setFotoDoRecibo,
     }
 
     const formTitle = transactionFormTitle({

@@ -24,6 +24,12 @@ export type TransactionFormSavePayload = {
     needsReview?: boolean
 }
 
+/**
+ * O que o salvar de um lançamento devolve: `false` na falha; no sucesso, o
+ * `id` quando a criação foi online (editando ou na fila offline, sem `id`).
+ */
+export type TransactionSaveResult = false | { id?: string }
+
 export type InstallmentPlanFormSavePayload = {
     categoryId: string | null
     description: string | null

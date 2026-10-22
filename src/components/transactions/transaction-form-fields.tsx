@@ -77,6 +77,7 @@ import { cn } from "@/lib/utils"
 import { currencyBRL } from "@/lib/formatters"
 import { EstornoWireframe } from "@/components/wireframe/estorno-wireframe"
 import { FraseRapidaWireframe } from "@/components/wireframe/frase-rapida-wireframe"
+import { FotoReciboWireframe } from "@/components/wireframe/foto-recibo-wireframe"
 import type { CamposDaFrase } from "@/lib/captura/frase-no-form"
 
 
@@ -260,6 +261,9 @@ export type TransactionFormFieldsProps = {
     /** A frase rápida (só na criação): a frase já escrita e o que ela preenche. */
     fraseInicial?: string
     aplicarFrase?: (c: CamposDaFrase) => void
+    /** A foto do recibo (só na criação): o que a IA leu e a foto a anexar. */
+    aplicarFoto?: (c: CamposDaFrase) => void
+    setFotoDoRecibo?: (foto: File) => void
 }
 
 /**
@@ -327,6 +331,8 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
         planIsActive = false,
         fraseInicial,
         aplicarFrase,
+        aplicarFoto,
+        setFotoDoRecibo,
     } = props
 
     const isMobile = useIsMobile()
@@ -532,6 +538,9 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                     cartoes={cartoesDaFrase}
                     onAplicar={aplicarFrase}
                 />
+            ) : null}
+            {segmentMode === "create" && aplicarFoto && setFotoDoRecibo ? (
+                <FotoReciboWireframe cartoes={cartoesDaFrase} onAplicar={aplicarFoto} onFoto={setFotoDoRecibo} />
             ) : null}
 
             {showInstallmentEditScopePicker ? (

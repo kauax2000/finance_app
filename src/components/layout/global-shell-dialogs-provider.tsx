@@ -8,6 +8,7 @@ import { persistInstallmentPlanCreate } from "@/components/transactions/transact
 import type {
     InstallmentPlanFormSavePayload,
     TransactionFormSavePayload,
+    TransactionSaveResult,
 } from "@/components/transactions/transaction-form-types"
 import type { NewTransactionMode } from "@/components/transactions/transactions-toolbar"
 import type { TransactionFormKind } from "@/components/transactions/transaction-type-segment"
@@ -105,7 +106,7 @@ export function GlobalShellDialogsProvider({
     }, [])
 
     const handleTxSave = React.useCallback(
-        async (payload: TransactionFormSavePayload): Promise<boolean> => {
+        async (payload: TransactionFormSavePayload): Promise<TransactionSaveResult> => {
             if (!user || !currentWorkspaceId) return false
 
             setTxSaving(true)

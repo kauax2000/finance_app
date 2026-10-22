@@ -52,6 +52,7 @@ import { useTransactionForm } from "@/components/transactions/transaction-form-u
 import type {
     InstallmentPlanUpdatePayload,
     TransactionFormSavePayload,
+    TransactionSaveResult,
 } from "@/components/transactions/transaction-form-types"
 import { ArrowPathRoundedSquareIcon, EllipsisHorizontalIcon, PencilIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid"
 
@@ -74,7 +75,7 @@ export type TransactionDetailSheetProps = {
     creditCardsHref: string
     subscriptionsHref: string
     saving: boolean
-    onSave: (payload: TransactionFormSavePayload) => Promise<boolean>
+    onSave: (payload: TransactionFormSavePayload) => Promise<TransactionSaveResult>
     onUpdateInstallmentPlan: (
         planId: string,
         payload: InstallmentPlanUpdatePayload

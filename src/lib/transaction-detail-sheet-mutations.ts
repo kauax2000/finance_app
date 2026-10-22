@@ -2,6 +2,7 @@ import {
     TRANSACTION_SAVE_TOAST_ID,
     type InstallmentPlanUpdatePayload,
     type TransactionFormSavePayload,
+    type TransactionSaveResult,
 } from "@/components/transactions/transaction-form-types"
 import { scheduleEvaluateCreditCardAlerts } from "@/lib/credit-card-notifications"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
@@ -36,8 +37,8 @@ export async function persistTransactionSave(options: {
     workspaceId: string
     payload: TransactionFormSavePayload
     resolveEditingTransaction: (editingId: string) => Transaction | null
-    onAfterSuccess: () => Promise<void>
-}): Promise<boolean> {
+    onAfterSuccess: (id?: string) => Promise<void>
+}): Promise<TransactionSaveResult> {
     const {
         supabase,
         user,
@@ -116,12 +117,8 @@ export async function persistTransactionSave(options: {
             })
         }
 
-        // O `saveTransaction` devolve o id inserido em tempo de execução
-        // (`insertedId`), embora o tipo dele não o declare. Offline não há id.
-        const insertedId =
-            "insertedId" in result && typeof result.insertedId === "string"
-                ? result.insertedId
-                : null
+        // Offline não há id.
+        const insertedId = result.id
         toastSuccess(offline ? "Transação salva offline" : "Transação criada", {
             id: TRANSACTION_SAVE_TOAST_ID,
             description: offline ? "Sincroniza quando houver conexão." : undefined,
@@ -131,8 +128,8 @@ export async function persistTransactionSave(options: {
         })
     }
 
-    await onAfterSuccess()
-    return true
+    await onAfterSuccess(result.id)
+    return { id: result.id }
 }
 
 export async function persistInstallmentPlanUpdate(options: {

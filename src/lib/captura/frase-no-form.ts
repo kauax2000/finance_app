@@ -4,14 +4,18 @@
  * Edge `capture` (`_shared/captura.ts`), sem a parte de carteira: no app o
  * cartão e o histórico já são da carteira aberta.
  */
+import { onlineManager, type QueryClient } from "@tanstack/react-query"
 import {
     casarCartao,
     interpretarFrase,
     preencherPeloHistorico,
     type CartaoParaCasar,
     type FormaDePagamento,
+    type FraseInterpretada,
     type LinhaHistorico,
 } from "@/lib/captura/frase"
+import type { CamposIA } from "@/lib/ia/ler"
+import { fraseHistoricoKeys } from "@/lib/queries/keys"
 import type { PaymentMethod } from "@/lib/payment-methods"
 import { supabase, type TransactionSource } from "@/lib/supabase"
 import { formatMoneyBrlInput } from "@/lib/money-brl"
@@ -30,7 +34,7 @@ export type CamposDaFrase = {
     creditCardId: string | null
     categoryId: string | null
     parcelas: number | null
-    /** "valor", "data", "cartao", "parcelas", "descricao". */
+    /** "valor", "data", "cartao", "parcelas", "descricao"; "ia" quando a IA leu. */
     duvidas: string[]
 }
 
@@ -53,8 +57,14 @@ const NOME_DA_DUVIDA: Record<string, string> = {
 
 /** "Confira: cartão, categoria", ou `null` quando não há o que conferir. */
 export function textoDasDuvidas(c: Pick<CamposDaFrase, "duvidas" | "categoryId">): string | null {
-    const lista = [...c.duvidas, ...(c.categoryId ? [] : ["categoria"])]
+    // A dúvida "ia" é a marca de conferir, e o aviso da IA já a diz.
+    const lista = [...c.duvidas.filter((d) => d !== "ia"), ...(c.categoryId ? [] : ["categoria"])]
     return lista.length ? `Confira: ${lista.map((d) => NOME_DA_DUVIDA[d] ?? d).join(", ")}` : null
+}
+
+/** "Lido pela IA. Confira e salve.", com as dúvidas no lugar do "Confira e salve." quando houver. */
+export function avisoDaIA(c: Pick<CamposDaFrase, "duvidas" | "categoryId">): string {
+    return `Lido pela IA. ${textoDasDuvidas(c) ?? "Confira e salve."}`
 }
 
 /** `historico` em ordem de `date` desc, `created_at` desc (a mais recente vence o empate). */
@@ -64,7 +74,45 @@ export function camposDaFrase(
     cartoes: CartaoParaCasar[],
     historico: LinhaHistorico[],
 ): CamposDaFrase {
-    const f = interpretarFrase(texto, hoje)
+    return camposDaInterpretacao(interpretarFrase(texto, hoje), cartoes, historico)
+}
+
+/**
+ * Os campos lidos pela IA (frase ou foto) pelas mesmas regras da frase, como a
+ * Edge `capture` faz com a IA e um texto vazio: tipo nulo é despesa, data nula
+ * é hoje, e pix, débito ou dinheiro não têm cartão. Sempre fica a conferir.
+ */
+export function camposDaIA(
+    c: CamposIA,
+    hoje: string,
+    cartoes: CartaoParaCasar[],
+    historico: LinhaHistorico[],
+): CamposDaFrase {
+    const vazia = interpretarFrase("", hoje)
+    const forma = c.forma
+    const campos = camposDaInterpretacao(
+        {
+            ...vazia,
+            valor: c.valor,
+            data: c.data ?? vazia.data,
+            tipo: c.tipo ?? vazia.tipo,
+            descricao: c.descricao || vazia.descricao,
+            duvidas: c.descricao ? [] : ["descricao"],
+            forma,
+            cartaoTexto: forma == null || forma === "credit_card" ? c.cartao : null,
+            parcelas: c.parcelas,
+        },
+        cartoes,
+        historico,
+    )
+    return { ...campos, duvidas: [...campos.duvidas, "ia"] }
+}
+
+function camposDaInterpretacao(
+    f: FraseInterpretada,
+    cartoes: CartaoParaCasar[],
+    historico: LinhaHistorico[],
+): CamposDaFrase {
     let { descricao } = f
     // A dúvida "cartao" só vale no crédito ("30 uber casa" não é cartão).
     const duvidas = f.duvidas.filter((d) => d !== "cartao" || f.forma === "credit_card")
@@ -168,9 +216,37 @@ export function origemDaFrase(
     duvidas: string[] | null,
     editing: boolean,
     categoryId: string,
+    /** `share` quando quem preencheu foi a foto do recibo. */
+    source: TransactionSource = "quick_text",
 ): { source?: TransactionSource; needsReview?: boolean } {
     if (editing || duvidas == null) return {}
-    return { source: "quick_text", needsReview: duvidas.length > 0 || !categoryId }
+    return { source, needsReview: duvidas.length > 0 || !categoryId }
+}
+
+/** O histórico é ajuda: depois disso a frase preenche sem ele. */
+const ESPERA_DO_HISTORICO_MS = 4000
+
+/**
+ * O histórico pelo cache do react-query, carregado só quando a frase (ou a
+ * foto) é aplicada. Offline, falhando ou demorando, a frase preenche sem ele.
+ */
+export async function historicoDaFraseEmCache(
+    queryClient: QueryClient,
+    workspaceId: string | null,
+): Promise<LinhaHistorico[]> {
+    if (!workspaceId || !onlineManager.isOnline()) return []
+    try {
+        return await queryClient.fetchQuery({
+            queryKey: fraseHistoricoKeys.list(workspaceId),
+            queryFn: () => carregarHistoricoDaFrase(workspaceId, AbortSignal.timeout(ESPERA_DO_HISTORICO_MS)),
+            staleTime: 5 * 60_000,
+            networkMode: "always",
+            retry: false,
+            meta: { errorToast: false },
+        })
+    } catch {
+        return []
+    }
 }
 
 /** As últimas 300 linhas da carteira, as colunas que o histórico lê. */

@@ -31,6 +31,7 @@ import { TransactionDetailSheet } from "@/components/transactions/transaction-de
 import type {
     InstallmentPlanUpdatePayload,
     TransactionFormSavePayload,
+    TransactionSaveResult,
 } from "@/components/transactions/transaction-form-types"
 import {
     AlertDialog,
@@ -171,7 +172,7 @@ export default function DashboardPageClient() {
     }, [])
 
     const handleSave = useCallback(
-        async (payload: TransactionFormSavePayload): Promise<boolean> => {
+        async (payload: TransactionFormSavePayload): Promise<TransactionSaveResult> => {
             if (!d.user || !d.currentWorkspaceId) return false
             setSaving(true)
             const ok = await persistTransactionSave({

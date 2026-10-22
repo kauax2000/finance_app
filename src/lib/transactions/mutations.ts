@@ -116,10 +116,11 @@ async function saveTransactionOnline(
     return { ok: true, insertedId: inserted?.id ? String(inserted.id) : undefined }
 }
 
+/** Na criação online, o `id` do lançamento; editando ou na fila offline, sem `id`. */
 export async function saveTransaction(
     ctx: SaveTransactionContext,
     payload: TransactionFormSavePayload
-): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
+): Promise<{ ok: true; id?: string } | { ok: false; errorMessage: string }> {
     const editingId = payload.editingId ?? ctx.editingTransactionId ?? null
     const baseRow = buildTransactionRow(ctx, payload)
     const { clientId, settle } = retryStableClientId(baseRow)
@@ -153,7 +154,7 @@ export async function saveTransaction(
         return { ok: true }
     }
     if ("data" in gateway) {
-        return gateway.data
+        return { ok: true, id: gateway.data.insertedId }
     }
     return { ok: false, errorMessage: "Resposta inesperada ao salvar transação." }
 }

@@ -231,12 +231,16 @@ describe("fonte", () => {
     })
 
     it("o histórico não trava o aplicar offline nem preenche outro formulário", () => {
+        // As guardas do histórico moram no `historicoDaFraseEmCache`, que a
+        // frase e a foto do recibo dividem.
+        const lib = semComentarios(lerFonte("src/lib/captura/frase-no-form.ts"), "tudo")
+        expect(lib).toContain("onlineManager.isOnline()")
+        expect(lib).toContain('networkMode: "always"')
+        expect(lib).toContain("retry: false")
+        expect(lib).toContain("meta: { errorToast: false }")
+        expect(lib).toContain("AbortSignal.timeout(")
         const fonte = semComentarios(lerFonte("src/components/wireframe/frase-rapida-wireframe.tsx"), "tudo")
-        expect(fonte).toContain("onlineManager.isOnline()")
-        expect(fonte).toContain('networkMode: "always"')
-        expect(fonte).toContain("retry: false")
-        expect(fonte).toContain("meta: { errorToast: false }")
-        expect(fonte).toContain("AbortSignal.timeout(")
+        expect(fonte).toContain("historicoDaFraseEmCache(")
         expect(fonte).toMatch(/if \(meu !== pedido\.current\) return/)
     })
 
@@ -244,7 +248,7 @@ describe("fonte", () => {
         const campos = semComentarios(lerFonte("src/components/transactions/transaction-form-fields.tsx"), "tudo")
         expect(campos).toMatch(/segmentMode === "create"[\s\S]{0,80}<FraseRapidaWireframe/)
         const hook = semComentarios(lerFonte("src/components/transactions/transaction-form-use.tsx"), "tudo")
-        expect(hook).toContain("origemDaFrase(duvidasDaFrase, Boolean(editingTransaction), categoryId)")
+        expect(hook).toContain("origemDaFrase(duvidasDaFrase, Boolean(editingTransaction), categoryId, fonteDaFrase)")
     })
 
     it("o manifest compartilha por GET e tem os atalhos", () => {

@@ -13,12 +13,14 @@ import type {
     InstallmentPlanFormSavePayload,
     InstallmentPlanUpdatePayload,
     TransactionFormSavePayload,
+    TransactionSaveResult,
 } from "@/components/transactions/transaction-form-types"
 
 export type {
     InstallmentPlanFormSavePayload,
     InstallmentPlanUpdatePayload,
     TransactionFormSavePayload,
+    TransactionSaveResult,
 } from "@/components/transactions/transaction-form-types"
 
 type TransactionFormDialogProps = {
@@ -32,7 +34,7 @@ type TransactionFormDialogProps = {
     categoriesHref: string
     creditCardsHref: string
     saving: boolean
-    onSave: (payload: TransactionFormSavePayload) => Promise<boolean>
+    onSave: (payload: TransactionFormSavePayload) => Promise<TransactionSaveResult>
     onSaveInstallmentPlan?: (
         payload: InstallmentPlanFormSavePayload
     ) => Promise<boolean>
