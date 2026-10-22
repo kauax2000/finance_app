@@ -526,6 +526,8 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
         <div className="space-y-4 py-1 pb-2">
             {segmentMode === "create" && aplicarFrase ? (
                 <FraseRapidaWireframe
+                    // Um compartilhar com o formulário já aberto troca a frase.
+                    key={fraseInicial}
                     fraseInicial={fraseInicial}
                     cartoes={cartoesDaFrase}
                     onAplicar={aplicarFrase}

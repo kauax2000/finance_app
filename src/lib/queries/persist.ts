@@ -13,6 +13,8 @@ const NON_PERSISTED_ROOTS = new Set<string>([
     queryRoot.memberDirectory,
     // resultado de busca digitada: efêmero, não vale gravar
     queryRoot.transactionsSearch,
+    // a frase rápida busca de novo quando precisa: não vale gravar
+    queryRoot.fraseHistorico,
 ])
 
 export function shouldPersistQuery(query: Query): boolean {

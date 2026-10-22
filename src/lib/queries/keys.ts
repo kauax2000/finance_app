@@ -29,7 +29,13 @@ export const queryRoot = {
     sessions: "sessions",
     activity: "activity",
     userSettings: "userSettings",
+    /** O histórico que a frase rápida lê (categoria e forma pela descrição). */
+    fraseHistorico: "fraseHistorico",
 } as const
+
+export const fraseHistoricoKeys = {
+    list: (workspaceId: string) => [queryRoot.fraseHistorico, workspaceId] as const,
+}
 
 export const workspaceKeys = {
     all: [queryRoot.workspaces] as const,

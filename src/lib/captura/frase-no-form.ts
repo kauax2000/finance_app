@@ -13,7 +13,10 @@ import {
     type LinhaHistorico,
 } from "@/lib/captura/frase"
 import type { PaymentMethod } from "@/lib/payment-methods"
-import { supabase } from "@/lib/supabase"
+import { supabase, type TransactionSource } from "@/lib/supabase"
+import { formatMoneyBrlInput } from "@/lib/money-brl"
+import { DEFAULT_INSTALLMENT_COUNT } from "@/components/transactions/transaction-form-types"
+import type { TransactionFormKind } from "@/components/transactions/transaction-type-segment"
 
 export type CamposDaFrase = {
     tipo: "expense" | "income"
@@ -119,15 +122,71 @@ export function camposDaFrase(
     }
 }
 
+/**
+ * Os campos do formulário que a frase escreve, todos a cada aplicar: nada de
+ * uma frase anterior sobra. O valor vai ao simples e ao total da Parcelada,
+ * para a troca de modo não o perder.
+ */
+export function rascunhoDaFrase(c: CamposDaFrase): {
+    formKind: TransactionFormKind
+    type: "expense" | "income"
+    amount: string
+    installmentValueMode: "total"
+    installmentTotal: string
+    installmentCount: string
+    description: string
+    date: string
+    categoryId: string
+    paymentMethod: PaymentMethod | null
+    paymentCreditCardId: string
+    estornoCartaoId: string | null
+} {
+    const parcelada = c.tipo === "expense" && c.parcelas != null && c.parcelas > 1
+    const valor = c.valor != null ? formatMoneyBrlInput(c.valor) : ""
+    const despesa = c.tipo === "expense"
+    return {
+        formKind: parcelada ? "installment" : c.tipo,
+        type: c.tipo,
+        amount: valor,
+        installmentValueMode: "total",
+        installmentTotal: valor,
+        installmentCount: parcelada ? String(c.parcelas) : DEFAULT_INSTALLMENT_COUNT,
+        description: c.descricao,
+        date: c.data,
+        categoryId: c.categoryId ?? "",
+        paymentMethod: despesa ? c.paymentMethod : null,
+        paymentCreditCardId: despesa ? (c.creditCardId ?? "") : "",
+        estornoCartaoId: c.estorno ? c.creditCardId : null,
+    }
+}
+
+/**
+ * A origem e a marca que o salvar leva: só na criação com frase aplicada.
+ * Dúvida do parser ou categoria vazia no salvar ficam a conferir.
+ */
+export function origemDaFrase(
+    duvidas: string[] | null,
+    editing: boolean,
+    categoryId: string,
+): { source?: TransactionSource; needsReview?: boolean } {
+    if (editing || duvidas == null) return {}
+    return { source: "quick_text", needsReview: duvidas.length > 0 || !categoryId }
+}
+
 /** As últimas 300 linhas da carteira, as colunas que o histórico lê. */
-export async function carregarHistoricoDaFrase(workspaceId: string): Promise<LinhaHistorico[]> {
-    const { data, error } = await supabase
+export async function carregarHistoricoDaFrase(
+    workspaceId: string,
+    signal?: AbortSignal,
+): Promise<LinhaHistorico[]> {
+    let consulta = supabase
         .from("transactions")
         .select("description, category_id, payment_method, payment_credit_card_id, date, type")
         .eq("workspace_id", workspaceId)
         .order("date", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(300)
+    if (signal) consulta = consulta.abortSignal(signal)
+    const { data, error } = await consulta
     if (error) throw error
     return (data ?? []) as LinhaHistorico[]
 }

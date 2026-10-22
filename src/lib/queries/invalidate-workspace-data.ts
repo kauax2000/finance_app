@@ -50,6 +50,12 @@ export async function invalidateWorkspaceData(
                 queryKey: [queryRoot.transactionsSummary, workspaceId],
             }),
         )
+        // o histórico da frase rápida (categoria e forma do último lançamento)
+        tasks.push(
+            queryClient.invalidateQueries({
+                queryKey: [queryRoot.fraseHistorico, workspaceId],
+            }),
+        )
         tasks.push(
             queryClient.invalidateQueries({
                 queryKey: ["transactionsSummaryOnly", workspaceId],

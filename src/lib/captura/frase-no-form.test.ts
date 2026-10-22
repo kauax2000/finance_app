@@ -5,7 +5,9 @@ import type { CartaoParaCasar, LinhaHistorico } from "@/lib/captura/frase"
 
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 
-const { camposDaFrase } = await import("@/lib/captura/frase-no-form")
+const { camposDaFrase, origemDaFrase, rascunhoDaFrase } = await import("@/lib/captura/frase-no-form")
+const { shouldPersistQuery } = await import("@/lib/queries/persist")
+const { fraseHistoricoKeys } = await import("@/lib/queries/keys")
 const { buildTransactionRow } = await import("@/lib/transactions/mutations")
 const { consumirParametroFrase } = await import("@/lib/transactions-list-search-params")
 
@@ -91,6 +93,77 @@ describe("camposDaFrase", () => {
     })
 })
 
+describe("rascunhoDaFrase: nada de uma frase anterior sobra", () => {
+    const aplicar = (frase: string) => rascunhoDaFrase(camposDaFrase(frase, HOJE, [nubank], []))
+
+    it("A: Parcelada e depois simples — o total e o número voltam ao da frase nova", () => {
+        expect(aplicar("42 mercado nubank em 3x")).toMatchObject({
+            formKind: "installment",
+            installmentTotal: "42,00",
+            installmentCount: "3",
+        })
+        expect(aplicar("10 pix padaria")).toMatchObject({
+            formKind: "expense",
+            amount: "10,00",
+            installmentTotal: "10,00",
+            installmentCount: "12",
+            paymentMethod: "pix",
+            paymentCreditCardId: "",
+        })
+    })
+
+    it("B: simples e depois Parcelada — o valor simples é o da frase nova", () => {
+        expect(aplicar("10 pix padaria").amount).toBe("10,00")
+        expect(aplicar("1200 geladeira nubank em 10x")).toMatchObject({
+            formKind: "installment",
+            amount: "1.200,00",
+            installmentTotal: "1.200,00",
+            installmentCount: "10",
+            installmentValueMode: "total",
+        })
+    })
+
+    it("C: Parcelada num formulário novo — trocar para Despesa mantém o valor", () => {
+        const r = aplicar("300 tv nubank em 3x")
+        expect(r.formKind).toBe("installment")
+        expect(r.amount).toBe("300,00")
+    })
+
+    it("estorno: receita sem forma, com o cartão no estorno", () => {
+        expect(aplicar("estorno de 50 no nubank")).toMatchObject({
+            formKind: "income",
+            paymentMethod: null,
+            paymentCreditCardId: "",
+            estornoCartaoId: "card-nu",
+        })
+    })
+})
+
+describe("origemDaFrase", () => {
+    it("sem frase aplicada ou na edição, nada", () => {
+        expect(origemDaFrase(null, false, "cat")).toEqual({})
+        expect(origemDaFrase([], true, "cat")).toEqual({})
+    })
+
+    it("quick_text, a conferir com dúvida ou sem categoria", () => {
+        expect(origemDaFrase([], false, "cat")).toEqual({ source: "quick_text", needsReview: false })
+        expect(origemDaFrase(["data"], false, "cat")).toEqual({ source: "quick_text", needsReview: true })
+        expect(origemDaFrase([], false, "")).toEqual({ source: "quick_text", needsReview: true })
+    })
+})
+
+describe("cache do histórico da frase", () => {
+    it("fica fora do IndexedDB", () => {
+        const query = { queryKey: fraseHistoricoKeys.list("ws-1"), state: { status: "success" } }
+        expect(shouldPersistQuery(query as never)).toBe(false)
+    })
+
+    it("o domínio de transações o invalida", () => {
+        const fonte = semComentarios(lerFonte("src/lib/queries/invalidate-workspace-data.ts"), "tudo")
+        expect(fonte).toContain("queryRoot.fraseHistorico, workspaceId")
+    })
+})
+
 describe("buildTransactionRow", () => {
     const ctx = { userId: "u1", workspaceId: "ws-1" }
     const payload = {
@@ -150,11 +223,21 @@ describe("fonte", () => {
         expect(fonte).toMatch(/<button\s+type="button"/)
     })
 
+    it("o histórico não trava o aplicar offline nem preenche outro formulário", () => {
+        const fonte = semComentarios(lerFonte("src/components/wireframe/frase-rapida-wireframe.tsx"), "tudo")
+        expect(fonte).toContain("onlineManager.isOnline()")
+        expect(fonte).toContain('networkMode: "always"')
+        expect(fonte).toContain("retry: false")
+        expect(fonte).toContain("meta: { errorToast: false }")
+        expect(fonte).toContain("AbortSignal.timeout(")
+        expect(fonte).toMatch(/if \(meu !== pedido\.current\) return/)
+    })
+
     it("o formulário mostra a frase só na criação e leva a origem no payload", () => {
         const campos = semComentarios(lerFonte("src/components/transactions/transaction-form-fields.tsx"), "tudo")
         expect(campos).toMatch(/segmentMode === "create"[\s\S]{0,80}<FraseRapidaWireframe/)
         const hook = semComentarios(lerFonte("src/components/transactions/transaction-form-use.tsx"), "tudo")
-        expect(hook).toContain('source: "quick_text"')
+        expect(hook).toContain("origemDaFrase(duvidasDaFrase, Boolean(editingTransaction), categoryId)")
     })
 
     it("o manifest compartilha por GET e tem os atalhos", () => {

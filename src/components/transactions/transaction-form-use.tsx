@@ -14,10 +14,15 @@ import {
 import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import { totalPurchaseFromPlan } from "@/lib/transaction-installment"
 import { toastError } from "@/lib/toast"
-import type { CamposDaFrase } from "@/lib/captura/frase-no-form"
+import {
+    origemDaFrase,
+    rascunhoDaFrase,
+    type CamposDaFrase,
+} from "@/lib/captura/frase-no-form"
 import type { TransactionFormKind } from "@/components/transactions/transaction-type-segment"
 import { transactionFormTitle } from "@/components/transactions/transaction-form-title"
 import {
+    DEFAULT_INSTALLMENT_COUNT,
     TRANSACTION_SAVE_TOAST_ID,
     type InstallmentPlanFormSavePayload,
     type InstallmentPlanUpdatePayload,
@@ -177,7 +182,7 @@ export function useTransactionForm({
     >("total")
     const [installmentTotal, setInstallmentTotal] = useState("")
     const [installmentPerAmount, setInstallmentPerAmount] = useState("")
-    const [installmentCount, setInstallmentCount] = useState("12")
+    const [installmentCount, setInstallmentCount] = useState(DEFAULT_INSTALLMENT_COUNT)
     const [installmentEditScope, setInstallmentEditScope] = useState<
         "slice" | "plan"
     >("slice")
@@ -235,7 +240,7 @@ export function useTransactionForm({
                   installmentPerAmount: p
                       ? formatMoneyBrlInput(p.installment_amount)
                       : "",
-                  installmentCount: p ? String(p.total_installments) : "12",
+                  installmentCount: p ? String(p.total_installments) : DEFAULT_INSTALLMENT_COUNT,
                   installmentEditScope: "slice",
               }
             : {
@@ -255,7 +260,7 @@ export function useTransactionForm({
                   installmentValueMode: "total",
                   installmentTotal: "",
                   installmentPerAmount: "",
-                  installmentCount: "12",
+                  installmentCount: DEFAULT_INSTALLMENT_COUNT,
                   installmentEditScope: "slice",
               }
         setFormKind(v.formKind)
@@ -364,27 +369,24 @@ export function useTransactionForm({
     )
 
     /**
-     * Preenche os campos pela frase. Com parcelas, a criação vai para a
-     * Parcelada com o total e o número; o estorno é a receita com o cartão.
+     * Preenche os campos pela frase (`rascunhoDaFrase`). Com parcelas, a
+     * criação vai para a Parcelada; o estorno é a receita com o cartão.
      */
     const aplicarFrase = useCallback((c: CamposDaFrase) => {
-        const parcelada = c.tipo === "expense" && c.parcelas != null && c.parcelas > 1
-        const valor = c.valor != null ? formatMoneyBrlInput(c.valor) : ""
-        setFormKind(parcelada ? "installment" : c.tipo)
-        setType(c.tipo)
-        if (parcelada) {
-            setInstallmentValueMode("total")
-            setInstallmentTotal(valor)
-            setInstallmentCount(String(c.parcelas))
-        } else {
-            setAmount(valor)
-        }
-        setDescription(c.descricao)
-        setDate(c.data)
-        setCategoryId(c.categoryId ?? "")
-        setPaymentMethod(c.tipo === "expense" ? c.paymentMethod : null)
-        setPaymentCreditCardId(c.tipo === "expense" ? (c.creditCardId ?? "") : "")
-        setEstornoCartaoId(c.estorno ? c.creditCardId : null)
+        const r = rascunhoDaFrase(c)
+        setFormKind(r.formKind)
+        setType(r.type)
+        setAmount(r.amount)
+        setInstallmentValueMode(r.installmentValueMode)
+        setInstallmentTotal(r.installmentTotal)
+        setInstallmentPerAmount("")
+        setInstallmentCount(r.installmentCount)
+        setDescription(r.description)
+        setDate(r.date)
+        setCategoryId(r.categoryId)
+        setPaymentMethod(r.paymentMethod)
+        setPaymentCreditCardId(r.paymentCreditCardId)
+        setEstornoCartaoId(r.estornoCartaoId)
         setDuvidasDaFrase(c.duvidas)
     }, [])
 
@@ -593,13 +595,7 @@ export function useTransactionForm({
             recurringInterval,
             paymentMethod: pm,
             paymentCreditCardId: pcc,
-            // A categoria vazia no salvar também fica a conferir.
-            ...(!editingTransaction && duvidasDaFrase
-                ? {
-                      source: "quick_text" as const,
-                      needsReview: duvidasDaFrase.length > 0 || !categoryId,
-                  }
-                : {}),
+            ...origemDaFrase(duvidasDaFrase, Boolean(editingTransaction), categoryId),
         })
 
         if (ok) {

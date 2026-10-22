@@ -1,6 +1,9 @@
 import type { PaymentMethod } from "@/lib/payment-methods"
 import type { TransactionSource } from "@/lib/supabase"
 
+/** O número de parcelas com que a Parcelada abre. */
+export const DEFAULT_INSTALLMENT_COUNT = "12"
+
 /** O assunto dos toasts do formulário: o "Transação criada" toma o lugar do erro de validação. */
 export const TRANSACTION_SAVE_TOAST_ID = "salvar-transacao"
 
