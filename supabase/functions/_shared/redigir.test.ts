@@ -50,3 +50,40 @@ Deno.test('redigir: dinheiro e data ficam', () => {
   assertEquals(redigir('pedágio estrada 12,50', []), 'pedágio estrada 12,50')
   assert(redigir('12/10 PARCELA 3/10 LOJA 199,90', []).includes('199,90'))
 })
+
+// ---- rodada 1 da revisão ----
+
+Deno.test('redigir: cartão com separador repetido (C1)', () => {
+  for (const t of ['Cartão 5502  0912  3456  7890', '5502 - 0912 - 3456 - 7890', '4111.1111.1111.1111', '3782 822463 10005']) {
+    const r = redigir(t, [])
+    assertFalse(/\d{5,}/.test(r.replace(/[\s.-]/g, '')), `${t} => ${r}`)
+    assert(r.includes('•••• '), `${t} => ${r}`)
+  }
+})
+
+Deno.test('redigir: a máscara do cartão não engole o número vizinho (I1)', () => {
+  assertEquals(redigir('cartao 5502 0912 3456 7890 42,90', []), 'cartao •••• 7890 42,90')
+  assertEquals(redigir('12/10 5502 0912 3456 7890 199,90', []), '12/10 •••• 7890 199,90')
+})
+
+Deno.test('redigir: telefone com espaço ou ponto (I2)', () => {
+  for (const t of ['11 98765 4321', '(11) 98765 4321', '11 3456 7890', '11.98765.4321', '+55 11 98765-4321', '+55 11 9 8765-4321']) {
+    assertEquals(redigir(`tel ${t} ok`, []), 'tel [telefone] ok', t)
+  }
+})
+
+Deno.test('redigir: a linha do logradouro sai inteira, o dinheiro fica (I3)', () => {
+  assertEquals(redigir('moro na Av. Paulista, 1.578 - Bela Vista', []), 'moro na [endereço]')
+  assertEquals(redigir('Rua 7 de Setembro, 100', []), '[endereço]')
+  assertEquals(redigir('Rua das Flores, 123, apto 45, Jardim Paulista, São Paulo\nmercado 42,90', []), '[endereço]\nmercado 42,90')
+  assertEquals(redigir('uber Rua Augusta 500 25,00', []), 'uber [endereço] 25,00')
+})
+
+Deno.test('redigir: nome em NFD sai (I4)', () => {
+  const r = redigir('pix pra João 50', ['João'])
+  assertEquals(r, 'pix pra [nome] 50')
+})
+
+Deno.test('redigir: CPF com espaços sai', () => {
+  assertEquals(redigir('cpf 123 456 789 09 ok', []), 'cpf [cpf] ok')
+})
