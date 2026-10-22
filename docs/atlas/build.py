@@ -55,7 +55,9 @@ tables = re.findall(r"((?:^\|.*\|\n)+)", md, re.M)
 # 15 tabelas: a da legenda, dez de "Regras técnicas", a de lacunas abertas e as
 # três de lacunas fechadas. As últimas ficam no fim do
 # arquivo, então não deslocou nenhum índice de @@Tn@@.
-assert len(diagrams) == 14 and len(tables) == 15, (len(diagrams), len(tables))
+# 15 diagramas: o 5c (captura e "A conferir", Bloco 3A) entrou como @@D9@@ e
+# deslocou os de Cartões em diante (@@D10@@ a @@D14@@).
+assert len(diagrams) == 15 and len(tables) == 15, (len(diagrams), len(tables))
 out = re.sub(r"@@D(\d+)@@", lambda m: diagram(diagrams[int(m.group(1))]), tpl)
 out = re.sub(r"@@T(\d+)@@", lambda m: table(tables[int(m.group(1))]), out)
 assert "@@" not in out

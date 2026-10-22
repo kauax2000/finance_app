@@ -279,8 +279,8 @@
   <dl class="meta">
     <div><dt>Base</dt><dd>Leitura do código</dd></div>
     <div><dt>Branch</dt><dd>finance-app-2.0</dd></div>
-    <div><dt>Data</dt><dd>21 out 2026 · o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura pelo PDF, CSV ou OFX, a importação de extrato e de planilha e os anexos, com as telas em wireframe e ainda sem publicar; no mesmo dia, o aviso de despesa e os crons diários passam ao banco (trigger e <code>pg_cron</code> com o Vault, por migração, no lugar do Webhook e do SQL manual) e entra o backup semanal do banco, ainda sem publicar; 19 out: a aba Você: a quarta aba do telefone, com o avatar, leva à página <code>/me</code> no lugar do menu "Mais", e as telas dela ganham o voltar; 17 out: as notificações: o painel flutuante agrupado por dia, o sino exato, a categoria que não notifica mais e a revisão do servidor, ainda sem publicar; 16 out: a busca global (⌘K) acha transações, cartões, categorias, parcelas, assinaturas, contas, membros e carteiras da raiz; 15 out: o menu da conta do telefone vira um painel que brota da aba, com o tema em Configurações e o sair e os planos em Minha conta; o "+" abre direto o formulário de lançamento; 14 out: o painel de marca animado nas telas de acesso; 12 out: telas de acesso com cena e a casca no layout de <code>(auth)</code>, reenviar e <code>next</code> na recuperação, convite aceito; antes: busca global, botão direito, período, rascunho, menus do telefone, prévias da lista, as tabelas na URL, o "Ver" dos avisos de criação e a agenda do Painel</dd></div>
-    <div><dt>Conteúdo</dt><dd>10 jornadas · 14 fluxogramas · 10 lacunas abertas (3 fechadas em 12 out, 3 em 21 out)</dd></div>
+    <div><dt>Data</dt><dd>22 out 2026 · o Bloco 3A, "captura sem abrir o app": o token pessoal em Minha conta, o Atalho do iPhone e o Apple Pay pela Edge <code>capture</code>, a frase rápida no "+", o compartilhar do Android, os atalhos do ícone, a lista "A conferir", a contagem no Painel e o lembrete das 20h, com as telas em wireframe e ainda sem publicar; 21 out: o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura pelo PDF, CSV ou OFX, a importação de extrato e de planilha e os anexos, com as telas em wireframe e ainda sem publicar; no mesmo dia, o aviso de despesa e os crons diários passam ao banco (trigger e <code>pg_cron</code> com o Vault, por migração, no lugar do Webhook e do SQL manual) e entra o backup semanal do banco, ainda sem publicar; 19 out: a aba Você: a quarta aba do telefone, com o avatar, leva à página <code>/me</code> no lugar do menu "Mais", e as telas dela ganham o voltar; 17 out: as notificações: o painel flutuante agrupado por dia, o sino exato, a categoria que não notifica mais e a revisão do servidor, ainda sem publicar; 16 out: a busca global (⌘K) acha transações, cartões, categorias, parcelas, assinaturas, contas, membros e carteiras da raiz; 15 out: o menu da conta do telefone vira um painel que brota da aba, com o tema em Configurações e o sair e os planos em Minha conta; o "+" abre direto o formulário de lançamento; 14 out: o painel de marca animado nas telas de acesso; 12 out: telas de acesso com cena e a casca no layout de <code>(auth)</code>, reenviar e <code>next</code> na recuperação, convite aceito; antes: busca global, botão direito, período, rascunho, menus do telefone, prévias da lista, as tabelas na URL, o "Ver" dos avisos de criação e a agenda do Painel</dd></div>
+    <div><dt>Conteúdo</dt><dd>10 jornadas · 15 fluxogramas · 17 lacunas abertas (3 fechadas em 12 out, 3 em 21 out)</dd></div>
     <div><dt>Fonte versionada</dt><dd><code>docs/JORNADAS.md</code></dd></div>
   </dl>
 </header>
@@ -358,6 +358,7 @@
         <div><dt>Fatura</dt><dd>O ciclo de um cartão entre dois fechamentos. Pagar a fatura não cria despesa: as compras já foram lançadas.</dd></div>
         <div><dt>Conta a pagar</dt><dd>Um modelo recorrente (luz, aluguel) que gera parcelas. Pagar uma parcela cria a despesa.</dd></div>
         <div><dt>Assinatura</dt><dd>Uma cobrança recorrente que vira lançamento sozinha na data certa.</dd></div>
+        <div><dt>A conferir</dt><dd>A marca de um lançamento que entrou sem a pessoa olhar (importado ou capturado fora do app) e tem alguma dúvida. Confirmar ou editar tira a marca.</dd></div>
         <div><dt>Orçamento</dt><dd>O limite mensal de uma categoria de despesa. Não tem tela própria: mora na categoria.</dd></div>
       </dl>
     </section>
@@ -369,7 +370,7 @@
         <li><div><strong>Tudo o que decide acesso roda no navegador.</strong> Não há <code>middleware.ts</code>, <code>proxy.ts</code> nem rotas em <code>src/app/api</code>. A sessão é do <code>supabase-js</code>, e quem manda para o login é o componente <code>AuthGuard</code>.</div></li>
         <li><div><strong>A proteção real dos dados é o banco.</strong> As políticas de RLS do Supabase decidem o que cada pessoa lê e grava. O <code>AuthGuard</code> só decide qual tela aparece.</div></li>
         <li><div><strong>Operações compostas são RPCs.</strong> Criar carteira, pagar conta e criar compra parcelada são funções no Postgres, chamadas com <code>supabase.rpc()</code>.</div></li>
-        <li><div><strong>O que precisa de segredo ou de terceiros é Edge Function.</strong> Convites por email, notificações, push, sessões de aparelho e exclusão de conta.</div></li>
+        <li><div><strong>O que precisa de segredo ou de terceiros é Edge Function.</strong> Convites por email, notificações, push, sessões de aparelho, exclusão de conta e a captura pelo Atalho do iPhone, que entra com um token pessoal em vez da sessão.</div></li>
         <li><div><strong>O que depende do calendário roda duas vezes.</strong> Um cron chama <code>run-recurring-billing</code>, e o Painel recupera o que faltou com <code>catch_up_recurring_billing</code> ao abrir.</div></li>
       </ol>
     </section>
@@ -517,6 +518,7 @@
         <li><div><strong>Nome da tela e voltar.</strong> No telefone a barra do topo mostra o título da tela e, nas subpáginas (detalhe de categoria e de cartão, as de Minha conta), o voltar para a tela de cima. As telas que a página "Você" lista (Assinaturas, Contas a pagar, Cartões, Membros e convidados, Minha conta, Configurações) voltam a <code>/me</code>, e Planos e pagamentos volta a Minha conta. Nelas a aba "Você" continua acesa, e tocar nela volta a <code>/me</code>, como no iOS. No desktop ela não mostra o nome nem a trilha: a lateral marca onde se está e é por ela que se volta.</div></li>
         <li><div><strong>Notificações.</strong> O sino da barra do topo mostra quantas não foram lidas — o número vem do servidor, sem arredondar, e se renova sozinho a cada minuto com a aba aberta (e quando a pessoa volta a ela). Clicar nele abre o painel: uma folha flutuante no desktop e uma gaveta no telefone, com as notificações agrupadas por dia ("Hoje", "Ontem", a data), cada uma com um ladrilho colorido pelo tom (âmbar, vermelho, azul ou cinza). Um filtro alterna entre Todas e Não lidas, e o menu ⋯ do cabeçalho tem "Marcar todas como lidas", "Configurar notificações" (leva a <code>/settings#notificacoes</code>) e "Limpar notificações", que pergunta antes de apagar. Numa notificação que leva a algum lugar — o cartão, a categoria, a conta, o lançamento de outro membro —, clicar fecha o painel e abre o destino na hora; a leitura é marcada em segundo plano. Numa que não leva a lugar nenhum, clicar só marca como lida e o painel continua aberto. Cada linha também marca como lida ou como não lida e pode ser excluída (sem desfazer). Se a lista não carregar, aparece um aviso com "Tentar de novo" — nunca a caixa vazia. O painel mostra as 100 mais recentes e avisa quando há mais que isso.</div></li>
         <li><div><strong>O que gera notificações.</strong> Criar uma categoria deixou de avisar (as antigas continuam na lista). Editar uma despesa agora confere o orçamento, comprar parcelado no cartão confere o limite do cartão, e mudar o valor de um orçamento faz os avisos de 80%, 100% e estouro valerem de novo. Ninguém recebe aviso do que ele mesmo fez.</div></li>
+        <li><div><strong>Atalhos do ícone e lembrete das 20h.</strong> Desde o Bloco 3A, segurar o ícone do app instalado oferece "Nova despesa" (<code>/transactions?new=1</code>), "A conferir" (<code>/transactions?conferir=1</code>) e "Painel". Às 20h, quem lançou itens que esperam conferência recebe "Itens a conferir" (no app, no aparelho e por email, conforme as preferências), uma vez por dia e por carteira; a notificação leva à lista "A conferir". O lembrete se desliga em Configurações, por carteira.</div></li>
         <li><div><strong>Endereços antigos.</strong> Rotas de versões anteriores redirecionam no servidor, e um endereço desconhecido cai na página 404.</div></li>
       </ol>
       <figure>
@@ -548,6 +550,7 @@
         <li><div><strong>Indicadores.</strong> Despesas, receitas, resultado e faturas abertas do mês escolhido, comparados ao mês anterior.</div></li>
         <li><div><strong>Calendário.</strong> Cada dia mostra o que venceu ou vai vencer. Na grade, tocar num dia abre o popover dele (uma gaveta, com a janela estreita), e o dia fica marcado. Quando a própria agenda fica estreita — no telefone, e também num laptop com a barra lateral aberta — ela vira a lista do mês: os últimos 5 dias passados e todos os que vêm, cada evento com o tipo, e tocar num evento abre direto o detalhe ou a prévia, sem o popover. Um evento já lançado abre o detalhe; um previsto abre uma prévia com "Ver origem", que leva à assinatura, à parcela, ao cartão ou à conta.</div></li>
         <li><div><strong>Blocos de atalho.</strong> Despesas por categoria, faturas do mês e compras parceladas, cada um com o caminho para a área completa.</div></li>
+        <li><div><strong>A conferir.</strong> Desde o Bloco 3A, quando há lançamentos esperando conferência, o Painel mostra "A conferir: N" entre os indicadores e o calendário, com o link para a lista. Com zero, o bloco some.</div></li>
         <li><div><strong>Fatura e estorno.</strong> Desde o Bloco 2, uma fatura já fechada vale o total que o banco cobrou, quando a pessoa o informou na conferência da fatura; a aberta segue o calculado. O estorno no cartão abate a despesa do mês de fechamento e não conta como receita. A consulta do Painel lê as colunas novas de importação: sem a migração do Bloco 2, ele não carrega.</div></li>
       </ol>
       <figure>
@@ -571,9 +574,9 @@
       <p class="lead">Registrar, encontrar, corrigir e apagar despesas e receitas.</p>
       <dl class="summary">
         <div><dt>Objetivo</dt><dd>Ter cada movimento de dinheiro registrado e fácil de achar.</dd></div>
-        <div><dt>Começa em</dt><dd><code>/transactions</code>, o "+" global, <code>?importar=1</code> ou um atalho de outra área</dd></div>
+        <div><dt>Começa em</dt><dd><code>/transactions</code>, o "+" global, <code>?importar=1</code>, <code>?conferir=1</code>, <code>?frase=</code> (o compartilhar do Android), o Atalho do iPhone ou um atalho de outra área</dd></div>
         <div><dt>Termina em</dt><dd>Lançamento salvo, editado ou excluído</dd></div>
-        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j6">06 Cartões</a><a class="chip" href="#j8">08 Assinaturas</a><a class="chip" href="#j9">09 Categorias</a></dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j3">03 Navegação</a><a class="chip" href="#j4">04 Painel</a><a class="chip" href="#j6">06 Cartões</a><a class="chip" href="#j8">08 Assinaturas</a><a class="chip" href="#j9">09 Categorias</a><a class="chip" href="#j10">10 Conta</a></dd></div>
       </dl>
       <h3>Como funciona</h3>
       <ol class="steps">
@@ -587,7 +590,11 @@
         <li><div><strong>Botão direito.</strong> Na linha, o botão direito (ou o toque longo) abre Abrir, Editar, Selecionar e Excluir — as mesmas ações dos botões da linha, que continuam. Sobre uma linha selecionada, o menu age na seleção inteira: "Excluir 3 lançamentos".</div></li>
         <li><div><strong>Importar extrato ou planilha.</strong> Desde o Bloco 2, um wireframe acima da lista, aberto pelo link "Importar extrato ou planilha" ou por <code>?importar=1</code> (o parâmetro sai da URL logo depois, como o <code>new</code>). A pessoa escolhe o que é (extrato do banco em CSV ou OFX, ou a própria planilha em CSV) e o destino (uma conta, por Pix, débito ou outro, ou um cartão), e o CSV passa por um mapeamento de colunas. A categoria vem do histórico, e as categorias da planilha que ainda não existem são criadas antes. Tudo entra marcado para revisar e com o mesmo lote; repetir "Importar" depois de uma falha não duplica, e "Desfazer importação" apaga o lote inteiro. A importação não avisa os outros membros nem dispara alerta.</div></li>
         <li><div><strong>Estorno no cartão.</strong> No formulário de receita, a caixa "Estorno no cartão" escolhe o cartão: a receita vai ao crédito e abate a fatura do ciclo em que cai — que pode ficar negativa —, e não conta como receita no Painel.</div></li>
-        <li><div><strong>A conferir.</strong> No detalhe, um lançamento importado mostra "Importado · a conferir". "Confirmar" tira a marca; "Desfazer importação do lote" pergunta antes, apaga o lote inteiro e fecha o detalhe.</div></li>
+        <li><div><strong>A conferir.</strong> No detalhe, um lançamento importado mostra "Importado · a conferir". "Confirmar" tira a marca; "Desfazer importação do lote" pergunta antes, apaga o lote inteiro e fecha o detalhe. Desde o Bloco 3A, editar e salvar qualquer lançamento também tira a marca.</div></li>
+        <li><div><strong>Frase rápida.</strong> Desde o Bloco 3A, o formulário de criar abre com o campo "Frase rápida": a pessoa escreve "42 mercado nubank" e toca em "Preencher" (ou Enter), e o app preenche valor, descrição, data, tipo, forma, cartão e a categoria pelo histórico da carteira. Nada é salvo nessa hora: a pessoa confere e salva pelo botão de sempre. Quando o app teve dúvida, ele avisa "Confira" e o lançamento sai marcado "a conferir".</div></li>
+        <li><div><strong>Compartilhar do Android.</strong> No Android, compartilhar um texto com o app abre <code>/transactions?frase=…</code>: o formulário abre com a frase já escrita, sem preencher, e os parâmetros saem da URL. Só texto; foto e arquivo ficam para o Bloco 3B.</div></li>
+        <li><div><strong>Captura sem abrir o app.</strong> Em Minha conta, a pessoa cria um token e segue o guia do Atalho. O Atalho do iPhone (por voz, ou com o texto extraído da foto de um recibo) e a automação do Apple Pay mandam o gasto à Edge <code>capture</code>, que lança como a pessoa e responde com um resumo ("R$ 42,00 · Mercado · Nubank"). Sem valor, nada é gravado. O mesmo pedido repetido não duplica. O cartão casa pelo apelido da Wallet ou pelo nome; casamento parcial ou nenhum, e qualquer outra dúvida, deixam o lançamento "a conferir". No detalhe, com o cartão escolhido, "Lembrar '&lt;nome&gt;' como este cartão" ensina o app, e a próxima compra casa sozinha.</div></li>
+        <li><div><strong>Lista "A conferir".</strong> <code>?conferir=1</code> mostra, acima da lista de sempre, os lançamentos que esperam conferência, com "Confirmar" (tira a marca), "Abrir" (o detalhe, sem perder a lista) e "Fechar". Chegam a ela a contagem do Painel, o atalho do ícone e o lembrete das 20h.</div></li>
         <li><div><strong>Anexos.</strong> O detalhe ganha a seção de anexos: foto ou PDF de até 10 MB, com 25 MB por carteira, e a foto vira WebP antes de subir. O arquivo fica num bucket privado e abre por uma URL assinada que vale uma hora, numa aba nova; com o popup bloqueado, aparece o link "Abrir anexo", e a pessoa não sai do app. Excluir a transação avulsa apaga os arquivos dela; as outras exclusões deixam o arquivo para a limpeza semanal.</div></li>
         <li><div><strong>Prévias nos chips.</strong> Pousar o cursor, focar ou segurar o dedo no chip de fatura mostra o cartão, o estado da fatura e as datas de fechamento e vencimento, com "Ver cartão"; no chip "Parcelada", a parcela, o total e quando termina. O clique no chip continua abrindo a linha.</div></li>
       </ol>
@@ -599,8 +606,17 @@
         <div class="diagram">@@D8@@</div>
         <figcaption><strong>Figura 5b · Criar, editar e excluir</strong></figcaption>
       </figure>
+      <figure>
+        <div class="diagram">@@D9@@</div>
+        <figcaption><strong>Figura 5c · Captura sem abrir o app e "A conferir"</strong></figcaption>
+      </figure>
       <h3>Regras técnicas</h3>
       @@T5@@
+      <div class="callout gap">
+        <p class="label">Ponto de atenção</p>
+        <ul><li><strong>O Bloco 3A não foi publicado.</strong> O backend (a migração, a <code>capture</code>, a <code>review-reminder</code> e o cron) pode subir antes do front, porque nada dele aparece no front de <code>main</code>: <code>supabase/BLOCO_3A_DEPLOYMENT.md</code>.</li>
+          <li>Foto, PDF e arquivo crus ficam para o Bloco 3B, com a IA; o WhatsApp também. Uma compra parcelada capturada vira um lançamento só, com "(1/N)" e a conferir; escrita na frase rápida do formulário, vira o plano de parcelas sem a marca.</li></ul>
+      </div>
     </section>
 
     <section class="block" id="j6">
@@ -624,7 +640,7 @@
         <li><div><strong>Total do banco.</strong> Gravado, ele vale sobre o calculado na fatura fechada: o painel da fatura mostra o total do banco e a diferença, e o Painel e Contas a pagar usam esse total. Quando veio de um PDF, o PDF fica anexado ao total. Os avisos de fatura, que rodam na Edge, também: o "fechou", o "vence" e o limite usado da última fechada valem o total do banco quando ele existe; a fatura que ainda fecha segue no calculado.</div></li>
       </ol>
       <figure>
-        <div class="diagram">@@D9@@</div>
+        <div class="diagram">@@D10@@</div>
         <figcaption><strong>Figura 6 · Cartões e ciclo da fatura</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
@@ -657,7 +673,7 @@
         <li><div><strong>Botão direito.</strong> No cartão de pendência, o botão direito (ou o toque longo) repete Abrir, Pagar e o menu de três pontos.</div></li>
       </ol>
       <figure>
-        <div class="diagram">@@D10@@</div>
+        <div class="diagram">@@D11@@</div>
         <figcaption><strong>Figura 7 · Contas a pagar</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
@@ -682,7 +698,7 @@
         <li><div><strong>Cobrança automática.</strong> Um cron gera os lançamentos na data. Se ele atrasar, o Painel completa o que faltou ao abrir.</div></li>
       </ol>
       <figure>
-        <div class="diagram">@@D11@@</div>
+        <div class="diagram">@@D12@@</div>
         <figcaption><strong>Figura 8 · Assinaturas</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
@@ -708,7 +724,7 @@
         <li><div><strong>Botão direito.</strong> No cartão de categoria, o botão direito (ou o toque longo) abre Abrir, Abrir em nova aba, Editar e Excluir. Ele toma o lugar do menu do navegador sobre o link, e por isso traz a nova aba.</div></li>
       </ol>
       <figure>
-        <div class="diagram">@@D12@@</div>
+        <div class="diagram">@@D13@@</div>
         <figcaption><strong>Figura 9 · Categorias e orçamentos</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
@@ -730,17 +746,18 @@
         <div><dt>Objetivo</dt><dd>Manter a conta correta e sob controle.</dd></div>
         <div><dt>Começa em</dt><dd><code>/account</code>, pelo menu do usuário</dd></div>
         <div><dt>Termina em</dt><dd>Perfil atualizado, sessões encerradas ou conta excluída</dd></div>
-        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j1">01 Acesso</a><a class="chip" href="#j3">03 Navegação</a></dd></div>
+        <div><dt>Conecta com</dt><dd class="chips"><a class="chip" href="#j1">01 Acesso</a><a class="chip" href="#j3">03 Navegação</a><a class="chip" href="#j5">05 Lançamentos</a></dd></div>
       </dl>
       <h3>Como funciona</h3>
       <ol class="steps">
         <li><div><strong>Perfil.</strong> Nome e avatar (até 5 MB). Trocar o email pede a senha atual e envia confirmação para o endereço novo.</div></li>
         <li><div><strong>Senha.</strong> Pede a senha atual e segue as mesmas regras do cadastro. As outras sessões continuam abertas.</div></li>
         <li><div><strong>Sessões e atividade.</strong> A pessoa vê os aparelhos conectados e encerra um ou todos. O histórico registra as mudanças de perfil, email e senha.</div></li>
+        <li><div><strong>Captura sem abrir o app.</strong> Desde o Bloco 3A, a seção (em wireframe) cria tokens pessoais para o Atalho do iPhone: um nome para o aparelho e a carteira padrão. O token aparece uma vez só, para copiar; a lista mostra só o nome, a carteira e o último uso, e "Revogar" o desliga na hora. Até 10 ativos por pessoa. O link leva ao guia de instalação do Atalho.</div></li>
         <li><div><strong>Excluir conta.</strong> Dois passos: um aviso com as carteiras compartilhadas afetadas e a confirmação com email e senha. Depois, tudo é limpo e a pessoa volta ao login.</div></li>
       </ol>
       <figure>
-        <div class="diagram">@@D13@@</div>
+        <div class="diagram">@@D14@@</div>
         <figcaption><strong>Figura 10 · Conta e segurança</strong></figcaption>
       </figure>
       <h3>Regras técnicas</h3>
@@ -755,7 +772,7 @@
     <section class="block" id="lacunas">
       <p class="eyebrow">Fechamento</p>
       <h2>Lacunas encontradas</h2>
-      <p class="lead">Restam dez pontos em que o código não faz o que a jornada promete — três deles achados na rodada dos avisos, em outubro de 2026, a publicação do servidor das notificações e, do Bloco 2, a limpeza dos anexos e a publicação do bloco. Três do Bloco 2 (o boleto da parcela paga, o "Abrir" com o popup bloqueado e os avisos de fatura sem o total do banco) fecharam em 21 de outubro de 2026, e os cinco de acesso na rodada de setembro de 2026; estão listados logo abaixo.</p>
+      <p class="lead">Restam dezessete pontos em que o código não faz o que a jornada promete — três deles achados na rodada dos avisos, em outubro de 2026, a publicação do servidor das notificações, do Bloco 2, a limpeza dos anexos e a publicação do bloco e, do Bloco 3A, a publicação e o que ficou para o 3B. Três do Bloco 2 (o boleto da parcela paga, o "Abrir" com o popup bloqueado e os avisos de fatura sem o total do banco) fecharam em 21 de outubro de 2026, e os cinco de acesso na rodada de setembro de 2026; estão listados logo abaixo.</p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>#</th><th>Jornada</th><th>Tipo</th><th>O que acontece</th><th>Efeito para a pessoa</th></tr></thead>
@@ -770,6 +787,13 @@
             <tr><td>8</td><td>03 Navegação</td><td>Publicação</td><td>Banco e funções das notificações publicados em 21/10/2026: textos e regras novas no ar, aviso de despesa pelo trigger, crons agendados. Segue aberta até o front novo subir, a <code>dispatch-notifications</code> ser apagada e o teste de fumaça e o backup passarem (<code>supabase/NOTIFICATION_DEPLOYMENT.md</code>).</td><td>Até lá, o front antigo ainda pode chamar a <code>dispatch-notifications</code>, e não há backup do banco.</td></tr>
             <tr><td>9</td><td>05 Lançamentos</td><td>Limpeza</td><td>Só a exclusão avulsa online apaga o arquivo do anexo na hora. A exclusão em lote, a de compra parcelada, a feita offline e o desfazer de um lote importado apagam as linhas e deixam o arquivo no bucket até o cron semanal <code>attachments-cleanup-weekly</code>.</td><td>Nenhum visível; o arquivo ocupa o armazenamento do projeto por até uma semana, fora da cota da carteira.</td></tr>
             <tr><td>12</td><td>05, 06, 07</td><td>Publicação</td><td>Banco e funções do Bloco 2 publicados em 21/10/2026 (migrações, bucket privado, políticas, cron e caminho banco → Edge conferidos). O front novo não subiu, então ninguém usa o Bloco 2 ainda. Segue aberta até o front e o teste de fumaça de <code>supabase/BLOCO_2_DEPLOYMENT.md</code>.</td><td>O front novo leva o <code>finance-app-2.0</code> inteiro, não só o Bloco 2.</td></tr>
+            <tr><td>14</td><td>03, 04, 05, 10</td><td>Publicação</td><td>O Bloco 3A (captura sem abrir o app) está no repositório, com as telas em wireframe, e nada foi publicado. O backend pode subir antes do front (<code>supabase/BLOCO_3A_DEPLOYMENT.md</code>).</td><td>Ninguém captura nada ainda; no front de <code>main</code>, nada do 3A aparece.</td></tr>
+            <tr><td>15</td><td>05 Lançamentos</td><td>Escopo</td><td>Imagem crua, PDF e arquivo compartilhado ficam para o Bloco 3B (IA). A <code>capture</code> só aceita JSON, e o compartilhar do Android só leva texto.</td><td>A foto do recibo passa pelo "Extrair texto da imagem" do Atalho; no Android, só texto.</td></tr>
+            <tr><td>16</td><td>05 Lançamentos</td><td>Escopo</td><td>Uma compra parcelada capturada vira um lançamento simples, com "(1/N)" na descrição e a conferir; o plano de parcelas no servidor fica para o 3B.</td><td>As outras parcelas não aparecem até a pessoa refazer a compra como parcelada.</td></tr>
+            <tr><td>17</td><td>05 Lançamentos</td><td>Marca</td><td>Uma compra parcelada escrita na frase rápida do formulário é salva pelo <code>create_workspace_installment_plan</code> com <code>source</code> <code>app</code> e sem a marca de a conferir.</td><td>Mesmo com dúvida do parser, ela não entra em "A conferir".</td></tr>
+            <tr><td>18</td><td>05 Lançamentos</td><td>Dado antigo</td><td>Um item do Apple Pay com casamento parcial gravado antes de a <code>capture</code> guardar o <code>walletCard</code> nesse caso não tem <code>capture_meta.walletCard</code>.</td><td>O detalhe não oferece "Lembrar" para esse item.</td></tr>
+            <tr><td>19</td><td>10 Conta</td><td>Link</td><td>O link do guia do Atalho aponta para <code>docs/captura/atalho-iphone.md</code> em <code>main</code> no GitHub.</td><td>Dá 404 até o <code>finance-app-2.0</code> ir para <code>main</code>.</td></tr>
+            <tr><td>20</td><td>05 Lançamentos</td><td>Escopo</td><td>A captura pelo WhatsApp está pendente (Bloco 3B), à espera das contas de terceiros.</td><td>Só o Atalho do iPhone, o Apple Pay e o compartilhar do Android lançam de fora do app.</td></tr>
           </tbody>
         </table>
       </div>
@@ -832,7 +856,7 @@
             <tr><td><code>/settings</code></td><td>Carteira, app e notificações</td><td>Com sessão</td><td>02</td></tr>
             <tr><td><code>/me</code></td><td>Você: identidade e as telas da carteira e da conta, aba do telefone</td><td>Com sessão</td><td>03</td></tr>
             <tr><td><code>/dashboard</code></td><td>Painel</td><td>Com sessão</td><td>04</td></tr>
-            <tr><td><code>/transactions</code></td><td>Lançamentos; filtros, <code>sort</code> e <code>page</code> na URL; <code>importar=1</code> abre a importação de extrato e planilha</td><td>Com sessão</td><td>05</td></tr>
+            <tr><td><code>/transactions</code></td><td>Lançamentos; filtros, <code>sort</code> e <code>page</code> na URL; <code>importar=1</code> abre a importação de extrato e planilha; <code>conferir=1</code> mostra a lista "A conferir"; <code>frase=</code> (o compartilhar do Android) abre o formulário com a frase; <code>new=1</code> é o atalho "Nova despesa" do ícone</td><td>Com sessão</td><td>05</td></tr>
             <tr><td><code>/credit-cards</code></td><td>Cartões</td><td>Com sessão</td><td>06</td></tr>
             <tr><td><code>/credit-cards/[cardId]</code></td><td>Detalhe do cartão e fatura, com a conferência da fatura e o total do banco</td><td>Com sessão</td><td>06</td></tr>
             <tr><td><code>/bills</code></td><td>Contas a pagar; <code>detail=id</code> abre o painel da conta, com os anexos da parcela pendente e, só para abrir, os da última paga</td><td>Com sessão</td><td>07</td></tr>
@@ -840,7 +864,7 @@
             <tr><td><code>/categories</code></td><td>Categorias e assistente</td><td>Com sessão</td><td>09</td></tr>
             <tr><td><code>/categories/new</code></td><td>Categorias com o formulário aberto</td><td>Com sessão</td><td>09</td></tr>
             <tr><td><code>/categories/[categoryId]</code></td><td>Detalhe da categoria</td><td>Com sessão</td><td>09</td></tr>
-            <tr><td><code>/account</code></td><td>Minha conta</td><td>Com sessão</td><td>10</td></tr>
+            <tr><td><code>/account</code></td><td>Minha conta, com os tokens de captura do Atalho do iPhone</td><td>Com sessão</td><td>10</td></tr>
             <tr><td><code>/account/sessions</code></td><td>Aparelhos conectados</td><td>Com sessão</td><td>10</td></tr>
             <tr><td><code>/account/activity</code></td><td>Histórico de atividade</td><td>Com sessão</td><td>10</td></tr>
             <tr><td><code>/plans</code></td><td>Planos e pagamentos, sem ações</td><td>Com sessão</td><td>10</td></tr>
@@ -875,8 +899,8 @@
             <tr><td><code>transactions_notify_created</code></td><td>Trigger</td><td>Depois de inserir uma despesa manual (sem assinatura, parcela nem lote de importação: desde o Bloco 2 a importação não avisa), chama a Edge que avisa os membros; nunca derruba o <em>insert</em></td><td>05</td></tr>
             <tr><td><code>invoke_edge_function</code></td><td>Função SQL</td><td>Chama uma Edge por <code>pg_net</code> com a URL e o segredo do Vault; sem eles, não faz nada; só o <code>service_role</code> a executa</td><td>05, 06, 07</td></tr>
             <tr><td><code>notify-transaction-created</code></td><td>Edge, via trigger</td><td>Avisa os membros de uma nova despesa manual. Repete o <code>WHEN</code> do trigger: o lançamento importado, a receita, a assinatura e a parcela voltam 200 com <code>skipped</code>, mesmo chamados por um Database Webhook antigo</td><td>05</td></tr>
-            <tr><td><code>evaluate-budgets</code></td><td>Edge</td><td>Confere o limite da categoria depois de uma despesa</td><td>05, 07, 09</td></tr>
-            <tr><td><code>evaluate-credit-card-alerts</code></td><td>Edge</td><td>Confere limite e categoria do cartão, com os estornos descontados; a última fatura fechada não paga vale o total do banco, se gravado</td><td>05, 06</td></tr>
+            <tr><td><code>evaluate-budgets</code></td><td>Edge</td><td>Confere o limite da categoria depois de uma despesa; desde o Bloco 3A aceita também o caminho de serviço (Bearer da service role ou <code>x-cron-secret</code>, com o <code>workspace_id</code> no corpo), além do JWT</td><td>05, 07, 09</td></tr>
+            <tr><td><code>evaluate-credit-card-alerts</code></td><td>Edge</td><td>Confere limite e categoria do cartão, com os estornos descontados; a última fatura fechada não paga vale o total do banco, se gravado; desde o Bloco 3A aceita também o caminho de serviço, além do JWT</td><td>05, 06</td></tr>
             <tr><td><code>credit-card-calendar-alerts</code></td><td>Edge, via cron</td><td>Avisa fechamento e vencimento de fatura, com os estornos descontados; na fatura fechada, o valor é o total do banco, se gravado (uma consulta a <code>credit_card_statement_totals</code> por execução)</td><td>06</td></tr>
             <tr><td><code>credit_card_statement_totals</code></td><td>Tabela</td><td>O total que o banco cobrou, um por cartão e fechamento, com a origem (digitado, PDF, CSV ou OFX); numa fatura fechada, vale sobre o calculado, também nos avisos da Edge</td><td>04, 06, 07</td></tr>
             <tr><td><code>attachments</code></td><td>Tabela</td><td>Um anexo por linha, ligado a uma transação, a uma parcela de conta ou a um total do banco; RLS por carteira</td><td>05, 06, 07</td></tr>
@@ -884,6 +908,16 @@
             <tr><td><code>attachments</code></td><td>Bucket</td><td>Privado, só URL assinada (uma hora); 10 MB por arquivo, WebP, JPEG, PNG e PDF; a pasta é a carteira, e as políticas de <code>storage.objects</code> a conferem</td><td>05, 06, 07</td></tr>
             <tr><td><code>attachments-cleanup</code></td><td>Edge, via cron</td><td>Apaga do bucket o objeto sem linha em <code>attachments</code> e com mais de 24 h; só aceita o <code>x-cron-secret</code></td><td>05, 06, 07</td></tr>
             <tr><td><code>attachments-cleanup-weekly</code></td><td>Cron</td><td>Domingo, 07:00 UTC: chama <code>attachments-cleanup</code> por <code>invoke_edge_function</code></td><td>05, 06, 07</td></tr>
+            <tr><td><code>capture_tokens</code></td><td>Tabela</td><td>Os tokens de captura: só o <code>sha256</code>, a carteira padrão, o uso e a revogação; RLS, e o app não lê o hash</td><td>05, 10</td></tr>
+            <tr><td><code>create_capture_token</code> · <code>revoke_capture_token</code></td><td>RPC</td><td>Cria o token (membro da carteira, até 10 ativos) e o devolve uma vez só; revogar marca <code>revoked_at</code></td><td>10</td></tr>
+            <tr><td><code>workspace_plan</code></td><td>RPC</td><td>O plano da carteira; devolve <code>familia</code> para todas até o Bloco 4. A <code>capture</code> o consulta antes de tudo</td><td>05</td></tr>
+            <tr><td><code>capture</code></td><td>Edge</td><td>Recebe a frase ou os dados do Apple Pay com o token <code>fac_…</code> e grava o lançamento como a pessoa, com a service role e as regras da RLS repetidas; o mesmo <code>id</code> não duplica; chama os avaliadores pelo caminho de serviço</td><td>05</td></tr>
+            <tr><td><code>credit_cards.wallet_alias</code> · <code>transactions.capture_meta</code></td><td>Colunas</td><td>O nome do cartão na Wallet, aprendido em "Lembrar"; o que a captura recebeu e não casou (<code>walletCard</code>)</td><td>05, 06</td></tr>
+            <tr><td><code>transactions_needs_review_idx</code></td><td>Índice</td><td>Os itens a conferir por carteira e data: a lista, a contagem do Painel e o lembrete</td><td>04, 05</td></tr>
+            <tr><td><code>review-reminder</code></td><td>Edge, via cron</td><td>O lembrete das 20h: avisa quem lançou itens a conferir, por carteira, uma vez por dia, pelo <code>deliverNotification</code> com o tipo <code>review</code>; só aceita o <code>x-cron-secret</code></td><td>03, 05</td></tr>
+            <tr><td><code>review-reminder-daily</code></td><td>Cron</td><td>Todo dia, 23:00 UTC (20h em Brasília): chama <code>review-reminder</code> por <code>invoke_edge_function</code></td><td>03, 05</td></tr>
+            <tr><td><code>review_reminder_dedupe</code></td><td>Tabela</td><td>Um lembrete por pessoa, carteira e dia; só a service role lê e grava</td><td>03</td></tr>
+            <tr><td><code>workspace_member_notification_prefs.notify_review</code></td><td>Coluna</td><td>Liga e desliga o lembrete das 20h, por carteira (padrão ligado)</td><td>03</td></tr>
             <tr><td><code>pay_bill_instance</code></td><td>RPC</td><td>Paga a parcela de uma conta e cria a despesa</td><td>07</td></tr>
             <tr><td><code>rpc_fetch_bills_page_bundle</code></td><td>RPC</td><td>Carrega a página de contas a pagar, com os estornos no cartão desde o Bloco 2</td><td>07</td></tr>
             <tr><td><code>evaluate-bills-reminders</code></td><td>Edge, via cron</td><td>Envia lembretes de vencimento</td><td>07</td></tr>
@@ -901,7 +935,7 @@
 </div>
 
 <footer>
-  Atlas de Jornadas do Finance App · escrito a partir do código da branch <code>finance-app-2.0</code> em 17 de setembro de 2026, navegação global revista em 1 de outubro de 2026, prévias da lista e tabelas na URL em 2 de outubro, o "Ver" dos avisos em 4 de outubro, a agenda do Painel em 8 de outubro, as telas de acesso em 12 de outubro, o painel de marca animado em 14 de outubro, o "+" direto ao formulário em 15 de outubro, a barra do topo sem o nome da tela no desktop e a busca global do app em 16 de outubro, as notificações em 17 de outubro, a busca do telefone, as abas que não cabem e a aba Você no lugar do "Mais" em 19 de outubro, o aviso de despesa e os crons no banco e o Bloco 2 (fatura que bate e anexos) em 21 de outubro · fonte dos fluxogramas em <code>docs/JORNADAS.md</code>
+  Atlas de Jornadas do Finance App · escrito a partir do código da branch <code>finance-app-2.0</code> em 17 de setembro de 2026, navegação global revista em 1 de outubro de 2026, prévias da lista e tabelas na URL em 2 de outubro, o "Ver" dos avisos em 4 de outubro, a agenda do Painel em 8 de outubro, as telas de acesso em 12 de outubro, o painel de marca animado em 14 de outubro, o "+" direto ao formulário em 15 de outubro, a barra do topo sem o nome da tela no desktop e a busca global do app em 16 de outubro, as notificações em 17 de outubro, a busca do telefone, as abas que não cabem e a aba Você no lugar do "Mais" em 19 de outubro, o aviso de despesa e os crons no banco e o Bloco 2 (fatura que bate e anexos) em 21 de outubro, o Bloco 3A (captura sem abrir o app) em 22 de outubro · fonte dos fluxogramas em <code>docs/JORNADAS.md</code>
 </footer>
 
 <dialog class="viewer" id="viewer" aria-labelledby="viewer-title">
