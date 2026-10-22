@@ -102,3 +102,11 @@ Deno.test('frase: "Nx de R$ V" é o total', () => {
   }
   assertEquals(interpretarFrase('2x de R$ 15', HOJE).valor, 30)
 })
+
+Deno.test('frase: o "12x" colado vale depois de "R$"; "x" solto fora de números é palavra', () => {
+  const f = interpretarFrase('R$ 12x 99,90', HOJE)
+  assertEquals([f.valor, f.parcelas, f.duvidas.includes('valor')], [99.9, 12, true])
+  const de = interpretarFrase('R$ 2x de 15', HOJE)
+  assertEquals([de.valor, de.parcelas, de.duvidas.includes('valor')], [30, 2, true])
+  assertEquals(interpretarFrase('raio x 150 clinica', HOJE).descricao, 'Raio x clinica')
+})

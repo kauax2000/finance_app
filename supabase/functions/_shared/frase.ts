@@ -58,10 +58,10 @@ const FORMAS = new Map<string, FormaDePagamento>([
   ['credito', 'credit_card'], ['cartao', 'credit_card'],
 ])
 
-/** Ligam a palavra seguinte ("x" é o "vezes" de "30 x 2"): colados antes de uma palavra consumida, saem com ela. */
-const CONECTIVOS = new Set(['no', 'na', 'em', 'de', 'do', 'da', 'com', 'pelo', 'pela', 'via', 'e', 'x'])
+/** Ligam a palavra seguinte: colados antes de uma palavra consumida, saem com ela. */
+const CONECTIVOS = new Set(['no', 'na', 'em', 'de', 'do', 'da', 'com', 'pelo', 'pela', 'via', 'e'])
 /** Antes da última palavra, dizem que ela é do nome ("pão de queijo", "uma pizza"), não um cartão; um número também. */
-const PRENDEM_A_SEGUINTE = new Set(['de', 'do', 'da', 'dos', 'das', 'e', 'um', 'uma', 'o', 'a', 'os', 'as'])
+const PRENDEM_A_SEGUINTE = new Set(['de', 'do', 'da', 'dos', 'das', 'e', 'um', 'uma', 'o', 'a', 'os', 'as', 'x'])
 
 type Token = { texto: string; chave: string; usado: boolean }
 
@@ -216,12 +216,13 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
     const t = toks[i]
 
     // "3x", "3 x", "3 vezes", "três vezes", "três x"; com "de V", V é a parcela.
-    // Um número logo depois de "r$" é dinheiro, nunca a contagem ("R$ 30 x 2").
+    // Um número solto logo depois de "r$" é dinheiro, nunca a contagem ("R$ 30 x 2");
+    // o "12x" colado nunca é dinheiro, então vale mesmo depois de "r$".
     let n: number | null = null
     let fim = i
     const x = /^(\d+)x$/.exec(c)
     const dinheiro = k(i - 1) === 'r$'
-    if (x && !dinheiro) n = Number(x[1])
+    if (x) n = Number(x[1])
     else if (!dinheiro && /^\d+$/.test(c) && ['x', 'vezes', 'vez'].includes(k(i + 1))) {
       n = Number(c)
       fim = i + 1
@@ -340,10 +341,18 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
     }
   }
   for (let i = 0; i < toks.length; i++) if (k(i) === 'r$' || k(i) === 'reais') toks[i].usado = true
+  // O "x" solto entre dois números ("R$ 30 x 2", "R$ 15 x 2 vezes"), ou antes de "de",
+  // é o "vezes": sai da descrição, e a conta é ambígua. Fora disso é palavra ("raio x").
+  const ehNumero = (i: number) => lerNumero(k(i)) != null
+  for (let i = 1; i < toks.length; i++) {
+    if (toks[i].usado || k(i) !== 'x' || !ehNumero(i - 1) || !(ehNumero(i + 1) || k(i + 1) === 'de')) continue
+    toks[i].usado = true
+    duvida('valor')
+  }
   if (valor != null && valor <= 0) valor = null
   // Sem valor, ou com outro número sobrando na descrição ("3 cafés 15", "mil 200 tv"), a pessoa confere.
   const outroNumero = (t: Token) =>
-    lerNumero(t.chave) != null || t.chave === 'mil' || (NUMEROS.has(t.chave) && t.chave !== 'um' && t.chave !== 'uma')
+    lerNumero(t.chave) != null || /^\d+x$/.test(t.chave) || t.chave === 'mil' || (NUMEROS.has(t.chave) && t.chave !== 'um' && t.chave !== 'uma')
   if (valor == null || toks.some((t) => !t.usado && outroNumero(t))) duvida('valor')
 
   // O conectivo colado antes do que foi consumido sai junto ("no débito", "em 3x").

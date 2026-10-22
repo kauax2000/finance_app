@@ -116,6 +116,14 @@ describe("interpretarFrase", () => {
         ["mil 200 tv", HOJE, { valor: 200, descricao: "Mil tv", duvidas: ["valor"] }],
         ["tres x de 14", HOJE, { valor: 42, parcelas: 3, duvidas: ["valor", "cartao", "descricao"] }],
         ["três vezes de 14 mercado", HOJE, { valor: 42, parcelas: 3, descricao: "Mercado" }],
+        // Revisão, rodada 3: o "12x" colado vale depois de "R$"; "x" solto só sai entre números
+        ["R$ 12x 99,90", HOJE, { valor: 99.9, parcelas: 12, duvidas: ["valor", "cartao", "descricao"] }],
+        ["R$ 2x de 15", HOJE, { valor: 30, parcelas: 2, duvidas: ["valor", "cartao", "descricao"] }],
+        ["30 tv 2x 3x", HOJE, { parcelas: 2 }],
+        ["uber x 20", HOJE, { valor: 20, descricao: "Uber x", cartaoTexto: null, duvidas: [] }],
+        ["raio x 150 clinica", HOJE, { valor: 150, descricao: "Raio x clinica", cartaoTexto: null, duvidas: [] }],
+        ["jogo do x 50", HOJE, { valor: 50, descricao: "Jogo do x", cartaoTexto: null, duvidas: [] }],
+        ["R$ 15 x 2 vezes", HOJE, { valor: 15, parcelas: 2, duvidas: ["valor", "cartao", "descricao"] }],
         // Datas
         ["15/12 x 20", "2026-01-10", { data: "2025-12-15", valor: 20 }],
         ["dia 31/03 farmácia 20", HOJE, { data: "2026-03-31", descricao: "Farmácia" }],
