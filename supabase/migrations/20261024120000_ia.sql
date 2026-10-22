@@ -179,10 +179,10 @@ begin
     exit when v_step = 0;
   end loop;
 
-  -- O caminho padrão (o app) não escreve nada a mais.
-  if p_source <> 'app' or p_needs_review then
+  -- O caminho padrão (o app) não escreve nada a mais. Um `p_source` nulo é o app.
+  if coalesce(p_source, 'app') <> 'app' or p_needs_review then
     update public.transactions
-    set source = p_source, needs_review = p_needs_review
+    set source = coalesce(p_source, 'app'), needs_review = p_needs_review
     where installment_plan_id = v_plan_id;
   end if;
 

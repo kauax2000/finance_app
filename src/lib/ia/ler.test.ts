@@ -80,7 +80,7 @@ describe("lerImagemComIA", () => {
         getSession.mockResolvedValueOnce({ data: { session: null } })
         const fetch = vi.fn()
         vi.stubGlobal("fetch", fetch)
-        expect(await lerImagemComIA(CARTEIRA, foto)).toEqual({ ok: false, mensagem: "Entre de novo para usar a IA." })
+        expect(await lerImagemComIA(CARTEIRA, foto)).toEqual({ ok: false, mensagem: "Sessão inválida ou expirada; faça login novamente." })
         expect(fetch).not.toHaveBeenCalled()
     })
 
@@ -144,18 +144,30 @@ describe("Edge ia-ler (fonte)", () => {
         }
         expect(fonte).toContain("'Você não é membro dessa carteira.'")
         expect(fonte).toContain("'Sem plano ativo nesta carteira.'")
-        expect(fonte).toContain("!== 'familia'")
+        expect(fonte).toContain("if (plano !== 'familia') return json(402")
     })
 
-    it("tetos: foto de 4 MB, JSON de 100 KB, frase de 500 e fatura de 80.000", () => {
+    it("tetos: foto de 4 MB, JSON de 256 KB, frase de 500 e fatura de 80.000", () => {
         const fonte = f()
         expect(fonte).toContain("MAX_FOTO = 4 * 1024 * 1024")
-        expect(fonte).toContain("MAX_JSON = 100 * 1024")
+        expect(fonte).toContain("MAX_JSON = 256 * 1024")
         expect(fonte).toContain("'Foto grande demais.'")
         expect(fonte).toContain("'Envie uma foto (JPG, PNG ou WebP).'")
         expect(fonte).toContain("tipoDoArquivo(")
         expect(fonte).toContain("frase: 500")
         expect(fonte).toContain("fatura: 80_000")
+        // Acima de 80.000 a fatura volta como o `lerFatura` (com a dica do CSV), não como 422.
+        expect(fonte).toContain("if (op === 'fatura') return json(200, { ok: false, motivo: 'fatura_grande' })")
+    })
+
+    it("nunca grava (Decisão 11)", () => {
+        expect(f()).not.toMatch(/\.(insert|update|upsert|delete)\(/)
+    })
+
+    it("um erro solto vira 500 com CORS", () => {
+        const fonte = f()
+        expect(fonte).toMatch(/try \{\s*return await atender\(req\)\s*\} catch \(e\) \{\s*return json\(500, \{ error: internalError\('ia-ler', e\) \}\)/)
+        expect(fonte).toContain("headers: { ...corsHeaders, 'Content-Type': 'application/json' }")
     })
 
     it("sem os nomes dos membros, frase e fatura não vão à IA", () => {

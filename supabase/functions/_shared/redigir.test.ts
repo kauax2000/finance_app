@@ -219,6 +219,9 @@ Deno.test('redigir: entrada hostil de 72k termina em menos de 1s (r4, Minor)', (
     barras: '1/'.repeat(N / 2),
     cartoes: '4111111111111111 '.repeat(N / 17),
     palavra: 'a'.repeat(N),
+    // O início depois de "+" (o e-mail colado) é limitado: sem o teto, isto era quadrático.
+    mais: 'a+'.repeat(N / 2),
+    acentos: 'ção+'.repeat(N / 4),
   }
   for (const [nome, texto] of Object.entries(hostis)) {
     const t0 = performance.now()
@@ -226,4 +229,12 @@ Deno.test('redigir: entrada hostil de 72k termina em menos de 1s (r4, Minor)', (
     const ms = performance.now() - t0
     assert(ms < 1000, `${nome}: ${ms.toFixed(0)}ms`)
   }
+})
+
+Deno.test('redigir: e-mail com acento no local e e-mails colados por "+" (I2)', () => {
+  assertEquals(redigir('pix joão.silva@mail.com 50', []), 'pix [email] 50')
+  assertEquals(redigir('a@b.com+c@d.com', []), '[email]+[email]')
+  assertEquals(redigir('joao+tag@x.com.br', []), '[email]')
+  // Mais de 64 antes do "@" no começo da palavra continua inteiro.
+  assertEquals(redigir(`${'a'.repeat(65)}@x.com`, []), '[email]')
 })

@@ -223,7 +223,7 @@ describe("privacidade e IA em Configurações (Bloco 3B, Decisão 13)", () => {
   it("a política cita os provedores, a transferência, o que sai e como apagar", async () => {
     const { PrivacidadeWireframe } = await import("./privacidade-wireframe")
     const html = renderToStaticMarkup(PrivacidadeWireframe())
-    for (const trecho of ["Groq", "Cloudflare", "transferência internacional", "tenta tirar automaticamente", "pode falhar em formatos incomuns", "CPF e CNPJ", "Fotos vão como estão", "30 chamadas de IA por dia", "Excluir conta", "Supabase", "&lt;EMAIL_DE_CONTATO&gt;"]) {
+    for (const trecho of ["Groq", "Cloudflare", "transferência internacional", "tenta tirar automaticamente", "pode falhar em formatos incomuns", "CPF e CNPJ", "Fotos vão como estão", "30 chamadas de IA por dia", "Excluir conta", "Supabase", "O código do link de convite", "&lt;EMAIL_DE_CONTATO&gt;"]) {
       expect(html, trecho).toContain(trecho)
     }
   })

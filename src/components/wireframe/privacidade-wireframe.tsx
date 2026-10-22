@@ -33,6 +33,10 @@ export function PrivacidadeWireframe() {
                         Os anexos (foto ou PDF), num armazenamento privado: só abrem por um link que vale uma hora.
                     </li>
                     <li>Os convites para uma carteira: o e-mail de quem foi convidado.</li>
+                    <li>
+                        O código do link de convite, para conferir o convite quando ele é aberto. Fica só uma
+                        impressão dele (hash): o link em si não é guardado.
+                    </li>
                     <li>As notificações do app e as preferências de aviso de cada carteira.</li>
                     <li>
                         As sessões e os aparelhos conectados: tipo de aparelho, navegador, sistema, endereço IP e

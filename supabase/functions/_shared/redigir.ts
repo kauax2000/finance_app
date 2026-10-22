@@ -143,7 +143,12 @@ function mascararCartoes(texto: string): string {
 
 // O `(?<!…)` só deixa a busca começar no início da palavra: sem ele, 72k de
 // dígitos custavam 2,5s (o `+` recuava tudo em cada posição à procura do "@").
-const EMAIL = /(?<![\w.+-])[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g
+// `\p{L}` com a flag `u` pega o acento ("joão.silva@…" vazava "joã"). Depois de
+// um "+" o início também vale ("a@b.com+c@d.com" vazava o segundo), mas com o
+// local limitado a 64 (o teto do RFC 5321): sem o teto, "a+a+a+…" voltava a
+// ser quadrático.
+const EMAIL =
+  /(?:(?<![\p{L}\p{N}._+-])[\p{L}\p{N}._+-]+|(?<=\+)[\p{L}\p{N}._+-]{1,64})@[\p{L}\p{N}-]+(?:\.[\p{L}\p{N}-]+)+/gu
 
 const SUBSTITUICOES: Array<[RegExp, string]> = [
   // CPF e CNPJ podem vir depois de "/" ("cpf/123.456.789-09"): antes, só "não é dígito".

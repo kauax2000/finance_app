@@ -308,18 +308,21 @@ nome `Teste de fumaça 3B`. O `token_id` é o `<TOKEN_ID>`.
 
 ### 4.2. Frase confusa
 
-Uma frase sem número, que o parser não lê e a IA lê:
+Uma frase com o valor por extenso no fim, que o parser não lê (sozinho, ele
+devolve `valor: null`, então a `capture` pede a IA) e a IA lê:
 
 ```bash
 read -rs TOKEN
 curl -sS -i -X POST '<URL>' \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
-  -d '{"text":"paguei quarenta e dois reais e noventa centavos no almoço de hoje no débito","id":"fumaca-3b-frase"}'
+  -d '{"text":"almoço de hoje no débito, quarenta e dois e noventa","id":"fumaca-3b-frase"}'
 ```
 
-Esperado: `200` com `"ia":true`, `"needs_review":true` e `"anexo":null`. O
-`id` é o `<TX_ID>`. Confira o provedor que respondeu:
+Esperado: `200` com `"ia":true`, `"needs_review":true`, `"anexo":null` e o
+`resumo` começando por `R$ 42,90`. O `id` é o `<TX_ID>`. Um `422` com "Não
+entendi o valor" quer dizer que a IA não respondeu (sem ela, a frase não tem
+valor): veja o passo 4.5. Confira o provedor que respondeu:
 
 ```sql
 select capture_meta -> 'ia' from public.transactions where id = '<TX_ID>';
@@ -406,9 +409,9 @@ select * from public.ia_eventos order by dia desc;
 ```
 
 Esperado: linhas de hoje com `groq` e status `ok` (uma do `openai/gpt-oss-20b`,
-da frase, e uma do `qwen/qwen3.8-27b`, da foto). Uma linha `cloudflare` diz que a
-Groq falhou naquela chamada, e o `status` da linha `groq` do mesmo dia diz por
-quê. `401` e `403` aparecem como `4xx`: confira a chave daquele provedor.
+da frase do passo 4.2, e uma do `qwen/qwen3.8-27b`, da foto do 4.3). Uma linha
+`cloudflare` diz que a Groq falhou naquela chamada, e o `status` da linha `groq`
+do mesmo dia diz por quê. `401` e `403` aparecem como `4xx`: confira a chave daquele provedor.
 
 ### 4.6. O custo
 

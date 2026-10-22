@@ -50,15 +50,6 @@ function lerTotal(texto: string): number | null {
 }
 
 /**
- * Lê o texto de uma fatura de cartão. Linha de item: data no início
- * ("dd/mm" ou "dd MMM"), descrição e valor no fim. O ano vem do fechamento:
- * mês do item maior que o do fechamento é do ano anterior.
- *
- * `completa` só é verdadeira com o total achado e a soma batendo (estorno
- * conta negativo); senão a diferença (total − soma) vai junto e os itens
- * achados continuam importáveis.
- */
-/**
  * A régua de `completa`: total achado e |total − soma| < 0,01, com o estorno
  * contando negativo. A leitura pela IA confere com a mesma.
  */
@@ -69,6 +60,15 @@ export function completude(total: number | null, itens: ItemBanco[]): Pick<Leitu
     return { completa: diferenca != null && Math.abs(diferenca) < 0.01, diferenca }
 }
 
+/**
+ * Lê o texto de uma fatura de cartão. Linha de item: data no início
+ * ("dd/mm" ou "dd MMM"), descrição e valor no fim. O ano vem do fechamento:
+ * mês do item maior que o do fechamento é do ano anterior.
+ *
+ * `completa` só é verdadeira com o total achado e a soma batendo (estorno
+ * conta negativo); senão a diferença (total − soma) vai junto e os itens
+ * achados continuam importáveis.
+ */
 export function extrairItensDaFatura(texto: string, contexto: { fechamento: string }): LeituraFatura {
     const anoFechamento = Number(contexto.fechamento.slice(0, 4))
     const mesFechamento = Number(contexto.fechamento.slice(5, 7))

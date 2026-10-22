@@ -56,7 +56,8 @@ export async function lerImagemComIA(workspaceId: string, arquivo: File): Promis
     const {
         data: { session },
     } = await supabase.auth.getSession()
-    if (!session?.access_token) return { ok: false, mensagem: "Entre de novo para usar a IA." }
+    // O mesmo texto do `invokeEdgeJson`, que a frase e a fatura recebem.
+    if (!session?.access_token) return { ok: false, mensagem: "Sessão inválida ou expirada; faça login novamente." }
 
     const form = new FormData()
     form.set("op", "imagem")

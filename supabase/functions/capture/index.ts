@@ -55,6 +55,7 @@ const CORPO_GRANDE = (multipart: boolean) =>
 const ERRO_PDF = 'PDF de fatura: use Conferir fatura no app.'
 const ERRO_TIPO = 'Envie uma foto (JPG, PNG ou WebP).'
 const ERRO_FOTO = 'Não entendi a foto. Mande o valor no texto.'
+const ERRO_FOTO_GRANDE = 'Foto grande demais para a IA. Reduza a foto ou mande o valor no texto.'
 const EXTENSAO = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' } as const
 type Foto = { bytes: Uint8Array; mime: keyof typeof EXTENSAO }
 
@@ -108,7 +109,7 @@ Deno.serve(async (req: Request) => {
   // O plano é o da carteira padrão do token (spec §9), antes de tudo.
   const { data: plano, error: planoErr } = await admin.rpc('workspace_plan', { p_workspace_id: carteiraPadrao })
   if (planoErr) return json(500, { error: internalError('capture: plano', planoErr) })
-  if (!plano) return json(402, { error: 'Sem plano ativo nesta carteira.' })
+  if (plano !== 'familia') return json(402, { error: 'Sem plano ativo nesta carteira.' })
 
   const { data: membros, error: memErr } = await admin
     .from('workspace_members')
@@ -244,7 +245,9 @@ Deno.serve(async (req: Request) => {
     { userId, carteiraPadrao, carteirasDaPessoa, cartoes, historicoPorCarteira, hoje },
   )
   if (!montado.ok) {
-    return json(montado.status, { error: foto && montado.erro === ERRO_VALOR ? ERRO_FOTO : montado.erro })
+    // Sem valor e com foto: ou a IA não leu, ou a foto nem foi a ela (acima de 4 MB).
+    const erroDaFoto = foto && foto.bytes.byteLength > MAX_FOTO_IA ? ERRO_FOTO_GRANDE : ERRO_FOTO
+    return json(montado.status, { error: foto && montado.erro === ERRO_VALOR ? erroDaFoto : montado.erro })
   }
   const { linha } = montado
 

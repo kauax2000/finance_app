@@ -60,8 +60,8 @@ describe("migração ia", () => {
         expect(corpo).toMatch(/raise exception 'Forbidden'/)
         expect(corpo).toMatch(/raise exception 'Invalid total_installments'/)
         expect(corpo).toMatch(/public\.charge_workspace_installment_plan_step\(v_plan_id\)/)
-        expect(corpo).toMatch(/if p_source <> 'app' or p_needs_review then/)
-        expect(corpo).toMatch(/set source = p_source, needs_review = p_needs_review\s+where installment_plan_id = v_plan_id/)
+        expect(corpo).toMatch(/if coalesce\(p_source, 'app'\) <> 'app' or p_needs_review then/)
+        expect(corpo).toMatch(/set source = coalesce\(p_source, 'app'\), needs_review = p_needs_review\s+where installment_plan_id = v_plan_id/)
         const assinatura = "public.criar_plano_parcelado(uuid, uuid, uuid, text, text, uuid, integer, numeric, numeric, date, text, boolean)"
         expect(sql).toContain(`revoke all on function ${assinatura} from public, anon, authenticated;`)
         expect(sql).toContain(`grant execute on function ${assinatura} to service_role;`)

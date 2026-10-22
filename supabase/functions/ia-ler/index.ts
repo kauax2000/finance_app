@@ -35,8 +35,8 @@ function json(status: number, payload: unknown): Response {
 
 /** A foto já chega comprimida pelo cliente (WebP, ~1600 px); o limite de imagem do provedor. */
 const MAX_FOTO = 4 * 1024 * 1024
-/** A fatura de 80.000 caracteres cabe com folga. */
-const MAX_JSON = 100 * 1024
+/** A fatura de 80.000 caracteres cabe com folga, mesmo com acento (2 bytes cada). */
+const MAX_JSON = 256 * 1024
 const MAX_TEXTO = { frase: 500, fatura: 80_000 } as const
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const ERRO_TIPO = 'Envie uma foto (JPG, PNG ou WebP).'
@@ -50,7 +50,16 @@ type Pedido =
   | { op: 'fatura'; workspaceId: string; texto: string; fechamento: string }
   | { op: 'imagem'; workspaceId: string; bytes: Uint8Array; mime: string }
 
+// Um erro solto viraria 500 sem CORS, que o navegador mostra como "Sem conexão".
 Deno.serve(async (req: Request) => {
+  try {
+    return await atender(req)
+  } catch (e) {
+    return json(500, { error: internalError('ia-ler', e) })
+  }
+})
+
+async function atender(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return json(405, { error: 'Method not allowed' })
 
@@ -88,8 +97,13 @@ Deno.serve(async (req: Request) => {
       const corpo = JSON.parse(new TextDecoder().decode(bruto)) as Record<string, unknown>
       const { op, workspaceId, texto, fechamento } = corpo ?? {}
       if (op !== 'frase' && op !== 'fatura') return INVALIDO('Operação inválida.')
-      if (typeof texto !== 'string' || !texto.trim() || texto.length > MAX_TEXTO[op]) {
-        return INVALIDO(op === 'frase' ? 'Escreva a frase em até 500 caracteres.' : 'Texto da fatura vazio ou acima de 80.000 caracteres.')
+      if (typeof texto !== 'string' || !texto.trim()) {
+        return INVALIDO(op === 'frase' ? 'Escreva a frase em até 500 caracteres.' : 'Texto da fatura vazio.')
+      }
+      if (texto.length > MAX_TEXTO[op]) {
+        // A fatura longa demais responde como o `lerFatura`: o cliente mostra a dica do CSV.
+        if (op === 'fatura') return json(200, { ok: false, motivo: 'fatura_grande' })
+        return INVALIDO('Escreva a frase em até 500 caracteres.')
       }
       const ws = typeof workspaceId === 'string' ? workspaceId : ''
       if (op === 'frase') pedido = { op, workspaceId: ws, texto }
@@ -137,4 +151,4 @@ Deno.serve(async (req: Request) => {
   const ctx = { admin, userId, hoje, nomes }
   if (pedido.op === 'frase') return responder(await interpretar(ctx, pedido.texto), 'campos')
   return responder(await lerFatura(ctx, pedido.texto, pedido.fechamento), 'itens')
-})
+}

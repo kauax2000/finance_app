@@ -112,6 +112,9 @@ describe("Edge capture", () => {
         const f = fonte(CAPTURE)
         expect(f).toContain("MAX_FOTO_IA = 4 * 1024 * 1024")
         expect(f).toContain("foto.bytes.byteLength <= MAX_FOTO_IA")
+        // Sem texto, a foto que não foi à IA diz o motivo certo.
+        expect(f).toContain("'Foto grande demais para a IA. Reduza a foto ou mande o valor no texto.'")
+        expect(f).toContain("foto.bytes.byteLength > MAX_FOTO_IA ? ERRO_FOTO_GRANDE : ERRO_FOTO")
         expect(f).toMatch(/\.formData\(\)\s*\n\s*bruto = null/)
     })
 
@@ -125,6 +128,8 @@ describe("Edge capture", () => {
 
     it("consulta o plano da carteira padrão", () => {
         expect(fonte(CAPTURE)).toContain("rpc('workspace_plan'")
+        // A mesma regra do ia-ler.
+        expect(fonte(CAPTURE)).toContain("if (plano !== 'familia') return json(402")
     })
 
     it("token revogado, desconhecido ou mal formado dão a mesma resposta (Foco 2)", () => {
