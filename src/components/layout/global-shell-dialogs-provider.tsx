@@ -112,6 +112,11 @@ export function GlobalShellDialogsProvider({
 
     const handleTxOpenChange = React.useCallback((open: boolean) => {
         setTxOpen(open)
+        // Fechar solta a frase e a foto do compartilhar (até 10 MB na memória).
+        if (!open) {
+            setCreateFrase(undefined)
+            setCreateFoto(undefined)
+        }
     }, [])
 
     const handleTxSave = React.useCallback(

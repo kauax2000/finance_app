@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { lerFonte, semComentarios } from "@/test/fonte"
 import {
@@ -12,6 +12,7 @@ import {
     consumirParametroCompartilhado,
     PARAMETROS_DA_FRASE,
 } from "@/lib/transactions-list-search-params"
+import { POST as postSemServiceWorker } from "@/app/(app)/transactions/compartilhar/route"
 
 const ORIGEM = "https://app.test"
 const CHAVE = "0b9c2f4e-8a1d-4c3b-9e7f-1a2b3c4d5e6f"
@@ -85,7 +86,7 @@ describe("consumirParametroCompartilhado", () => {
 })
 
 describe("escolherArquivoCompartilhado", () => {
-    it("o primeiro arquivo de imagem ou PDF, com até 10 MB e não vazio", () => {
+    it("o primeiro arquivo de foto ou PDF, com até 10 MB e não vazio", () => {
         const grande = new File([new Uint8Array(10 * 1024 * 1024 + 1)], "g.jpg", { type: "image/jpeg" })
         const vazio = new File([], "v.png", { type: "image/png" })
         const texto = new File(["oi"], "t.txt", { type: "text/plain" })
@@ -94,6 +95,16 @@ describe("escolherArquivoCompartilhado", () => {
         expect(escolherArquivoCompartilhado([grande, vazio, texto])).toBeNull()
         const limite = new File([new Uint8Array(10 * 1024 * 1024)], "l.png", { type: "image/png" })
         expect(escolherArquivoCompartilhado([limite])).toBe(limite)
+    })
+
+    it("SVG e imagem que o canvas não abre ficam de fora; HEIC entra", () => {
+        const svg = new File(["<svg/>"], "x.svg", { type: "image/svg+xml" })
+        const gif = new File(["GIF"], "x.gif", { type: "image/gif" })
+        expect(escolherArquivoCompartilhado([svg, gif])).toBeNull()
+        for (const type of ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif", "application/pdf"]) {
+            const f = new File(["x"], "f", { type })
+            expect(escolherArquivoCompartilhado([f])).toBe(f)
+        }
     })
 
     it("os campos de texto são os do ?frase=", () => {
@@ -138,8 +149,44 @@ describe("receberCompartilhar (a rota do service worker)", () => {
         expect(falsos.lojas.get(CACHE_COMPARTILHADO)).toBeUndefined()
     })
 
-    it("nada aproveitável ou corpo que não é formulário: só a tela", async () => {
-        const vazio = await receberCompartilhar(postDoCompartilhar({ files: new File(["x"], "a.zip", { type: "application/zip" }) }))
+    it("arquivo recusado (outro tipo, grande ou vazio): ?compartilhado_erro=1, sem guardar", async () => {
+        const recusados = [
+            new File(["x"], "a.zip", { type: "application/zip" }),
+            new File([new Uint8Array(10 * 1024 * 1024 + 1)], "g.jpg", { type: "image/jpeg" }),
+            new File([], "vazio.jpg", { type: "image/jpeg" }),
+        ]
+        for (const files of recusados) {
+            const res = await receberCompartilhar(postDoCompartilhar({ frase: "texto junto", files }))
+            expect(res.status).toBe(303)
+            expect(res.headers.get("location")).toBe(`${ORIGEM}/transactions?compartilhado_erro=1`)
+        }
+        expect(falsos.lojas.get(CACHE_COMPARTILHADO)).toBeUndefined()
+    })
+
+    it("a parte files sem nome e vazia é ausência de arquivo: o texto segue", async () => {
+        const res = await receberCompartilhar(
+            postDoCompartilhar({ frase: "42 mercado", files: new File([], "", { type: "application/octet-stream" }) })
+        )
+        expect(res.headers.get("location")).toBe(`${ORIGEM}/transactions?frase=42+mercado`)
+    })
+
+    it("erro inesperado não derruba o fetch: 303 para a tela", async () => {
+        const uuid = vi.spyOn(globalThis.crypto, "randomUUID").mockImplementation(() => {
+            throw new Error("sem uuid")
+        })
+        const erro = vi.spyOn(console, "error").mockImplementation(() => {})
+        try {
+            const res = await receberCompartilhar(postDoCompartilhar({ files: foto() }))
+            expect(res.status).toBe(303)
+            expect(res.headers.get("location")).toBe(`${ORIGEM}/transactions`)
+        } finally {
+            uuid.mockRestore()
+            erro.mockRestore()
+        }
+    })
+
+    it("nada ou corpo que não é formulário: só a tela", async () => {
+        const vazio = await receberCompartilhar(postDoCompartilhar({ outro: "x" }))
         expect(vazio.status).toBe(303)
         expect(vazio.headers.get("location")).toBe(`${ORIGEM}/transactions`)
         const quebrado = await receberCompartilhar(
@@ -159,14 +206,43 @@ describe("receberCompartilhar (a rota do service worker)", () => {
     })
 
     it("sem conseguir guardar, ainda redireciona (a tela avisa que o arquivo sumiu)", async () => {
+        const erro = vi.spyOn(console, "error").mockImplementation(() => {})
         global.caches = {
             open: async () => {
                 throw new Error("quota")
             },
         }
-        const res = await receberCompartilhar(postDoCompartilhar({ files: foto() }))
+        try {
+            const res = await receberCompartilhar(postDoCompartilhar({ files: foto() }))
+            expect(res.status).toBe(303)
+            expect(new URL(res.headers.get("location")!).searchParams.has("compartilhado")).toBe(true)
+            expect(erro).toHaveBeenCalled()
+        } finally {
+            erro.mockRestore()
+        }
+    })
+})
+
+describe("a rota do Next, sem service worker ativo", () => {
+    it("só o texto segue para o ?frase=, o arquivo fica de fora, sempre 303", async () => {
+        const res = await postSemServiceWorker(
+            postDoCompartilhar({ frase: "42 mercado", frase_url: "https://x.test/p", files: foto() })
+        )
         expect(res.status).toBe(303)
-        expect(new URL(res.headers.get("location")!).searchParams.has("compartilhado")).toBe(true)
+        expect(res.headers.get("location")).toBe(
+            `${ORIGEM}/transactions?frase=42+mercado&frase_url=https%3A%2F%2Fx.test%2Fp`
+        )
+        expect(falsos.lojas.size).toBe(0)
+    })
+
+    it("só arquivo ou corpo que não é formulário: a tela", async () => {
+        const soArquivo = await postSemServiceWorker(postDoCompartilhar({ files: foto() }))
+        expect(soArquivo.status).toBe(303)
+        expect(soArquivo.headers.get("location")).toBe(`${ORIGEM}/transactions`)
+        const quebrado = await postSemServiceWorker(
+            new Request(`${ORIGEM}/transactions/compartilhar`, { method: "POST", body: "{}" })
+        )
+        expect(quebrado.headers.get("location")).toBe(`${ORIGEM}/transactions`)
     })
 })
 
@@ -215,9 +291,14 @@ describe("fonte: o compartilhar ligado de ponta a ponta", () => {
         expect(tela).toContain("lerArquivoCompartilhado(")
         expect(tela).toContain('openTransactionCreate("expense", { fotoInicial: arquivo })')
         expect(tela).toContain("CompartilhadoAvisoWireframe")
+        // PDF ou foto pelo arquivo lido, não pelo `tipo` da URL.
+        expect(tela).toContain('arquivo.type === "application/pdf"')
+        expect(tela).not.toContain("pedido.tipo")
+        expect(tela).toContain('searchParams.has("compartilhado_erro")')
         const aviso = lerFonte("src/components/wireframe/compartilhado-aviso-wireframe.tsx")
         expect(aviso).toContain("Para conferir a fatura, abra o cartão e use Conferir fatura.")
         expect(aviso).toContain("O arquivo compartilhado não está mais disponível.")
+        expect(aviso).toContain("Não foi possível receber o arquivo (até 10 MB, foto ou PDF).")
         expect(aviso).toContain("ROUTES.CREDIT_CARDS")
         expect(aviso).not.toContain("@/components/ui")
     })
@@ -225,6 +306,7 @@ describe("fonte: o compartilhar ligado de ponta a ponta", () => {
     it("a foto inicial desce do shell até a Foto do recibo", () => {
         const shell = lerFonte("src/components/layout/global-shell-dialogs-provider.tsx")
         expect(shell).toContain("fotoInicial={createFoto}")
+        expect(shell).toMatch(/if \(!open\) \{\s*setCreateFrase\(undefined\)\s*setCreateFoto\(undefined\)/)
         const dialogo = lerFonte("src/components/transactions/transaction-form-dialog.tsx")
         expect(dialogo).toContain("fotoInicial,")
         const campos = semComentarios(lerFonte("src/components/transactions/transaction-form-fields.tsx"), "tudo")

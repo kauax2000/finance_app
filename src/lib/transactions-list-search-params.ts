@@ -155,8 +155,8 @@ export function consumirParametroFrase(
     return texto || null
 }
 
-/** Os parâmetros que o service worker põe depois de guardar um arquivo compartilhado. */
-export const PARAMETROS_DO_COMPARTILHADO = ["compartilhado", "tipo"] as const
+/** Os parâmetros que o service worker põe: o arquivo guardado, ou o recusado. */
+export const PARAMETROS_DO_COMPARTILHADO = ["compartilhado", "tipo", "compartilhado_erro"] as const
 
 /**
  * `?compartilhado=<chave>` (e `&tipo=pdf`): o arquivo que o compartilhar do

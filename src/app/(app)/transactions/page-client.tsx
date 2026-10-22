@@ -205,28 +205,38 @@ export default function TransactionsPage() {
 
     // `?compartilhado=` (a foto ou o PDF do compartilhar, que o service worker
     // guardou no Cache Storage): a foto abre a criação com a "Foto do recibo"
-    // lendo; o PDF e o arquivo que sumiu viram aviso. Sai da URL nos três casos.
-    const [avisoCompartilhado, setAvisoCompartilhado] = useState<"pdf" | "indisponivel" | null>(null)
+    // lendo; o PDF, o arquivo que sumiu e o recusado (`?compartilhado_erro=1`)
+    // viram aviso. Sai da URL em todos os casos.
+    const [avisoCompartilhado, setAvisoCompartilhado] = useState<
+        "pdf" | "indisponivel" | "recusado" | null
+    >(null)
     const compartilhadoLido = useRef<string | null>(null)
     useEffect(() => {
-        const naUrl = searchParams?.get("compartilhado")
-        if (naUrl == null || !shell || compartilhadoLido.current === naUrl) return
+        if (!searchParams || !shell) return
+        const naUrl = searchParams.get("compartilhado")
+        const recusado = searchParams.has("compartilhado_erro")
+        if (naUrl == null && !recusado) return
         // Ler apaga o arquivo: o ref segura o segundo efeito do modo estrito.
+        if (naUrl != null && compartilhadoLido.current === naUrl) return
         compartilhadoLido.current = naUrl
         const pedido = consumirParametroCompartilhado(searchParams)
-        const resto = new URLSearchParams(searchParams?.toString())
+        const resto = new URLSearchParams(searchParams.toString())
         for (const k of PARAMETROS_DO_COMPARTILHADO) resto.delete(k)
         const qs = resto.toString()
         router.replace(qs ? `${pathname}?${qs}` : pathname)
-        if (!pedido) {
+        if (naUrl == null) {
             // eslint-disable-next-line react-hooks/set-state-in-effect -- consome o parâmetro da URL uma vez
+            setAvisoCompartilhado("recusado")
+            return
+        }
+        if (!pedido) {
             setAvisoCompartilhado("indisponivel")
             return
         }
         void lerArquivoCompartilhado(pedido.chave).then((arquivo) => {
             if (!arquivo) {
                 setAvisoCompartilhado("indisponivel")
-            } else if (pedido.tipo === "pdf") {
+            } else if (arquivo.type === "application/pdf") {
                 setAvisoCompartilhado("pdf")
             } else {
                 setAvisoCompartilhado(null)

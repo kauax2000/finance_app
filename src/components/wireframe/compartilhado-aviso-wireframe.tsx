@@ -4,22 +4,25 @@ import { WireframeBox } from "@/components/wireframe/wireframe-box"
 
 /**
  * O que o compartilhar do Android não leva ao formulário: o PDF (a fatura se
- * confere no cartão) e o arquivo que já saiu do cache (lido ou vencido).
+ * confere no cartão), o arquivo que já saiu do cache (lido ou vencido) e o
+ * recusado pelo service worker (grande, vazio ou de outro tipo).
  */
+const TEXTO = {
+    pdf: "Para conferir a fatura, abra o cartão e use Conferir fatura.",
+    indisponivel: "O arquivo compartilhado não está mais disponível.",
+    recusado: "Não foi possível receber o arquivo (até 10 MB, foto ou PDF).",
+} as const
+
 export function CompartilhadoAvisoWireframe({
     aviso,
     onFechar,
 }: {
-    aviso: "pdf" | "indisponivel"
+    aviso: keyof typeof TEXTO
     onFechar: () => void
 }) {
     return (
         <WireframeBox bloco="3" titulo="Compartilhar">
-            <p role="status">
-                {aviso === "pdf"
-                    ? "Para conferir a fatura, abra o cartão e use Conferir fatura."
-                    : "O arquivo compartilhado não está mais disponível."}
-            </p>
+            <p role="status">{TEXTO[aviso]}</p>
             <div className="flex flex-wrap gap-3">
                 {aviso === "pdf" ? (
                     <Link href={ROUTES.CREDIT_CARDS} className="text-foreground underline">
