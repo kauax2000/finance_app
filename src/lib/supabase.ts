@@ -75,6 +75,8 @@ export interface CreditCard {
     expiry_month?: number | null
     expiry_year?: number | null
     is_active: boolean
+    /** O nome do cartão na Wallet do iPhone, aprendido em "A conferir". Opcional: as consultas de colunas explícitas não o trazem. */
+    wallet_alias?: string | null
     created_at: string
     updated_at: string
 }
@@ -124,6 +126,18 @@ export interface Attachment {
     size_bytes: number
     created_by: string
     created_at: string
+}
+
+/** Token pessoal de captura; o hash fica no banco e nunca chega ao cliente. */
+export interface CaptureToken {
+    id: string
+    user_id: string
+    /** A carteira padrão do que o token lança. */
+    workspace_id: string
+    name: string
+    created_at: string
+    last_used_at: string | null
+    revoked_at: string | null
 }
 
 export type SubscriptionBillingInterval =
@@ -268,6 +282,12 @@ export type TransactionSource =
     | 'import_statement'
     | 'recurring'
 
+/** `transactions.capture_meta`: o cartão da Wallet sem casamento e a frase recebida. */
+export interface TransactionCaptureMeta {
+    walletCard?: string
+    texto?: string
+}
+
 export interface Transaction {
     id: string
     user_id: string
@@ -293,6 +313,8 @@ export interface Transaction {
     needs_review: boolean
     /** Lote de importação; lançamento importado não avisa membros. */
     import_batch_id: string | null
+    /** O que a captura recebeu e não casou. Opcional: as consultas de colunas explícitas não o trazem. */
+    capture_meta?: TransactionCaptureMeta | null
     created_at: string
     updated_at: string
     // Related data

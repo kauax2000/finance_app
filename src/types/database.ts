@@ -391,6 +391,47 @@ export type Database = {
           },
         ]
       }
+      capture_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          last_used_at: string | null
+          name: string
+          revoked_at: string | null
+          token_hash: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_used_at?: string | null
+          name: string
+          revoked_at?: string | null
+          token_hash: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_used_at?: string | null
+          name?: string
+          revoked_at?: string | null
+          token_hash?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capture_tokens_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           client_id: string | null
@@ -650,6 +691,7 @@ export type Database = {
           name: string
           updated_at: string
           user_id: string
+          wallet_alias: string | null
           workspace_id: string
         }
         Insert: {
@@ -667,6 +709,7 @@ export type Database = {
           name: string
           updated_at?: string
           user_id: string
+          wallet_alias: string | null
           workspace_id: string
         }
         Update: {
@@ -684,6 +727,7 @@ export type Database = {
           name?: string
           updated_at?: string
           user_id?: string
+          wallet_alias?: string | null
           workspace_id?: string
         }
         Relationships: [
@@ -803,6 +847,32 @@ export type Database = {
         }
         Relationships: []
       }
+      review_reminder_dedupe: {
+        Row: {
+          sent_on: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          sent_on: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          sent_on?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_reminder_dedupe_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transaction_splits: {
         Row: {
           amount: number
@@ -848,6 +918,7 @@ export type Database = {
       transactions: {
         Row: {
           amount: number
+          capture_meta: Json | null
           category_id: string | null
           client_id: string | null
           created_at: string | null
@@ -871,6 +942,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          capture_meta?: Json | null
           category_id?: string | null
           client_id?: string | null
           created_at?: string | null
@@ -894,6 +966,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          capture_meta?: Json | null
           category_id?: string | null
           client_id?: string | null
           created_at?: string | null
@@ -1218,6 +1291,7 @@ export type Database = {
           notify_in_app: boolean
           notify_promotions: boolean
           notify_push: boolean
+          notify_review: boolean
           notify_transactions: boolean
           updated_at: string
           user_id: string
@@ -1233,6 +1307,7 @@ export type Database = {
           notify_in_app?: boolean
           notify_promotions?: boolean
           notify_push?: boolean
+          notify_review?: boolean
           notify_transactions?: boolean
           updated_at?: string
           user_id: string
@@ -1248,6 +1323,7 @@ export type Database = {
           notify_in_app?: boolean
           notify_promotions?: boolean
           notify_push?: boolean
+          notify_review?: boolean
           notify_transactions?: boolean
           updated_at?: string
           user_id?: string
@@ -1441,6 +1517,10 @@ export type Database = {
         Args: { p_workspace_id: string }
         Returns: undefined
       }
+      create_capture_token: {
+        Args: { p_name: string; p_workspace_id: string }
+        Returns: string
+      }
       create_shared_workspace: {
         Args: {
           p_icon: string
@@ -1513,6 +1593,7 @@ export type Database = {
         }
         Returns: string
       }
+      revoke_capture_token: { Args: { p_id: string }; Returns: undefined }
       rpc_fetch_bills_page_bundle: {
         Args: { p_workspace_id: string }
         Returns: Json
@@ -1545,6 +1626,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      workspace_plan: { Args: { p_workspace_id: string }; Returns: string }
       workspace_role: { Args: { workspace_id: string }; Returns: string }
     }
     Enums: {
