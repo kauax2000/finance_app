@@ -34,7 +34,8 @@ Os itens `needs_review` só nascem pela importação e pela captura do 2.0. Veja
 Faça na ordem. Todo SQL abaixo leva marcadores: troque-os no SQL Editor e
 **nunca** salve o SQL preenchido no repositório (ele é público). Os marcadores
 são `<WORKSPACE_ID>`, `<USER_ID>`, `<EMAIL>`, `<TOKEN_ID>`, `<TX_ID>`,
-`<TOKEN>` e `<URL>`.
+`<INICIO>`, `<TOKEN>` e `<URL>`. O `<TOKEN>` vai ao `curl` pela variável
+`$TOKEN` do shell, nunca escrito no comando.
 
 ## 0. Pré-requisito: Blocos 1 e 2 publicados
 
@@ -209,12 +210,25 @@ Os tokens nascem pela tela de Minha conta do 2.0, que não está no ar. Até lá
 crie o token no SQL Editor. O SQL abaixo grava só o hash e mostra o texto do
 token uma vez, no resultado.
 
-Ache o seu id e confira que você é membro da carteira de teste:
+O SQL Editor mostra só o resultado do último comando: rode um bloco por vez.
+
+Ache o seu id (é o `<USER_ID>`):
 
 ```sql
 select id from auth.users where email = '<EMAIL>';
+```
+
+Confira que você é membro da carteira de teste (uma linha):
+
+```sql
 select role from public.workspace_members
 where workspace_id = '<WORKSPACE_ID>' and user_id = '<USER_ID>';
+```
+
+Anote a hora de início do teste (é o `<INICIO>`, usado na limpeza):
+
+```sql
+select now();
 ```
 
 Crie o token:
@@ -236,14 +250,19 @@ O `token_id` é o `<TOKEN_ID>`, e `token` é o `<TOKEN>`.
 
 > **O texto do token nunca é salvo em lugar nenhum**: nem no repositório, nem num
 > arquivo, nem no histórico do shell. Para não deixá-lo no histórico, guarde-o
-> com `read -rs TOKEN` e escreva `$TOKEN` no lugar do marcador. Feche a aba do
-> SQL Editor depois de copiar. Ao fim do teste o token é revogado e apagado.
+> com `read -rs TOKEN` (cole e tecle Enter; nada aparece) antes do `curl`, que o
+> lê como `$TOKEN`. Feche a aba do SQL Editor depois de copiar. Ao fim do teste
+> o token é revogado e apagado.
+>
+> **Se parar antes do 4.4, revogue o token** (rode o 4.4 e o 4.5): um token de
+> teste esquecido continua lançando na carteira.
 
 ### 4.2. Capturar
 
 ```bash
+read -rs TOKEN
 curl -sS -i -X POST '<URL>' \
-  -H 'Authorization: Bearer <TOKEN>' \
+  -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"text":"1 teste captura","id":"fumaca-3a-1"}'
 ```
@@ -280,7 +299,28 @@ Rode o `curl` de novo. Esperado: `401` com `{"error":"Token inválido."}`.
 
 ```sql
 delete from public.transactions where id = '<TX_ID>';
+```
+
+```sql
 delete from public.capture_tokens where id = '<TOKEN_ID>';
+```
+
+Sem categoria nem cartão casado, a captura de teste não chama os avaliadores, e
+numa carteira só sua o trigger não avisa ninguém. Mesmo assim, confira se o
+teste gerou algum aviso para você nessa carteira:
+
+```sql
+select id, type, title, created_at from public.notifications
+where workspace_id = '<WORKSPACE_ID>' and user_id = '<USER_ID>'
+  and created_at >= '<INICIO>';
+```
+
+Se vierem linhas do teste, apague-as:
+
+```sql
+delete from public.notifications
+where workspace_id = '<WORKSPACE_ID>' and user_id = '<USER_ID>'
+  and created_at >= '<INICIO>';
 ```
 
 Apague o lançamento **antes** do passo 4.6. Senão, o lembrete o acha e gasta o
