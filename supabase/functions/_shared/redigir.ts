@@ -11,21 +11,28 @@ import { normalizarDescricao } from './frase.ts'
 
 const mascaraCartao = (m: string) => `•••• ${m.replace(/\D/g, '').slice(-4)}`
 
-/** Um valor em reais: "42,90", "1.234,56". */
-const DINHEIRO = /\b\d{1,3}(?:\.\d{3})+,\d{2}\b|\b\d+,\d{2}\b/g
+/** Uma linha com valor em reais ("42,90", "1.234,56"): é item de fatura ou frase de compra. */
+const TEM_DINHEIRO = /\b\d{1,3}(?:\.\d{3})*,\d{2}\b|\b\d+,\d{2}\b/
+
+// Sem "tv"/"tv.": colide com TV ("TV. SAMSUNG 2.999,00"); "Travessa" fica por extenso.
+const PALAVRA_LOGRADOURO = String.raw`(?:\b(?:av|r|al)\.\s*|\b(?:rua|av|avenida|travessa|alameda|rodovia|estrada)\s+|\bpra[cç]a\s+)`
+
+/** Sem dinheiro na linha: do logradouro ao fim dela ("linha com logradouro", Decisão 6). */
+const LOGRADOURO_ATE_O_FIM = new RegExp(String.raw`${PALAVRA_LOGRADOURO}[^\n]*`, 'gi')
 
 /**
- * Do logradouro ao fim da linha ("linha com logradouro", Decisão 6), quando
- * sobra um número que não é dinheiro. O dinheiro da linha volta depois da
- * máscara, para a IA não perder o valor ("uber Rua Augusta 500 25,00").
+ * Com dinheiro na linha, só o trecho que parece mesmo endereço: o logradouro,
+ * um nome sem dígito, vírgula ou espaço, e um número que não é o começo de um
+ * valor. "12/10 POSTO AV BRASIL 120,00" fica inteiro: o item da fatura vale mais.
  */
-const LOGRADOURO =
-  /(?:\b(?:av|r|tv|al)\.\s*|\b(?:rua|av|avenida|travessa|alameda|rodovia|estrada)\s+|\bpra[cç]a\s+)[^\n]*/gi
+const LOGRADOURO_COM_NUMERO = new RegExp(
+  String.raw`${PALAVRA_LOGRADOURO}[^\d\n,]{1,60}?(?:,\s*|\s+)(?:n[º°o.]?\s*)?(?:\d{1,3}(?:\.\d{3})+|\d{1,5})\b(?![.,]\d)`,
+  'gi',
+)
 
-function mascaraEndereco(linha: string): string {
-  const dinheiro = linha.match(DINHEIRO) ?? []
-  if (!/\d/.test(linha.replace(DINHEIRO, ''))) return linha
-  return ['[endereço]', ...dinheiro].join(' ')
+function redigirEndereco(linha: string): string {
+  if (TEM_DINHEIRO.test(linha)) return linha.replace(LOGRADOURO_COM_NUMERO, '[endereço]')
+  return linha.replace(LOGRADOURO_ATE_O_FIM, (m) => (/\d/.test(m) ? '[endereço]' : m))
 }
 
 const SUBSTITUICOES: Array<[RegExp, string | ((m: string) => string)]> = [
@@ -45,7 +52,6 @@ const SUBSTITUICOES: Array<[RegExp, string | ((m: string) => string)]> = [
     /(?:\+55[ .-]?)?(?:\(\d{2}\)[ .-]?|\b\d{2}[ .-]?)(?:9[ .-]?)?\d{4}[ .-]?\d{4}\b|\b9?\d{4}-\d{4}\b/g,
     '[telefone]',
   ],
-  [LOGRADOURO, mascaraEndereco],
 ]
 
 /** Partículas de nome que não identificam ninguém e são palavras comuns. */
@@ -55,6 +61,7 @@ export function redigir(texto: string, nomes: string[]): string {
   // NFC: o texto de PDF chega decomposto ("Joa" + acento), e o nome não casaria.
   let r = texto.normalize('NFC')
   for (const [re, troca] of SUBSTITUICOES) r = r.replace(re, troca as string)
+  r = r.split('\n').map(redigirEndereco).join('\n')
 
   // Cada palavra de cada nome, com 3 letras ou mais, comparada sem caixa e sem acento.
   const palavras = new Set(

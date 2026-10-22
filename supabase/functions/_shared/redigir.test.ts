@@ -87,3 +87,22 @@ Deno.test('redigir: nome em NFD sai (I4)', () => {
 Deno.test('redigir: CPF com espaços sai', () => {
   assertEquals(redigir('cpf 123 456 789 09 ok', []), 'cpf [cpf] ok')
 })
+
+Deno.test('redigir: item de fatura com AV, RUA ou TV no nome fica inteiro', () => {
+  for (const t of [
+    '12/10 POSTO AV BRASIL 120,00',
+    'tv. samsung 55 polegadas 2.999,00',
+    'TV. SAMSUNG 2.999,00',
+    '03/10 PADARIA RUA NOVA 18,50',
+    '05/10 PRACA DE ALIMENTACAO 1.234,56',
+  ]) {
+    assertEquals(redigir(t, []), t)
+  }
+})
+
+Deno.test('redigir: endereço sozinho na linha sai; com dinheiro, só o trecho do endereço', () => {
+  assertEquals(redigir('Rua das Flores, 123, apto 45, Jardim Paulista', []), '[endereço]')
+  assertEquals(redigir('Av. Paulista, 1.578 - Bela Vista', []), '[endereço]')
+  assertEquals(redigir('almoço Av. Paulista, 1.578 - 42,90', []), 'almoço [endereço] - 42,90')
+  assertEquals(redigir('Travessa do Ouvidor 12 pão 8,00', []), '[endereço] pão 8,00')
+})
