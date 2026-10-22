@@ -8,20 +8,41 @@
 export type Provedor = 'groq' | 'cloudflare'
 export type Tarefa = 'texto' | 'imagem' | 'fatura'
 
-export const CADEIA: Record<Tarefa, Array<{ provedor: Provedor; modelo: string }>> = {
+/**
+ * O que muda por modelo mora aqui, nunca num `if` sobre o nome em `ia.ts`:
+ * - `extra` entra no corpo do pedido (o gpt-oss pensa, e o pensamento gasta o
+ *   `max_tokens`: `reasoning_effort: "low"` o encurta);
+ * - `semPensar` acrescenta `/no_think` ao prompt (o Qwen3 pula o bloco
+ *   `<think>`).
+ */
+export type ElosDaCadeia = Array<{
+  provedor: Provedor
+  modelo: string
+  extra?: Record<string, unknown>
+  semPensar?: boolean
+}>
+
+const RACIOCINIO_CURTO = { reasoning_effort: 'low' }
+
+export const CADEIA: Record<Tarefa, ElosDaCadeia> = {
   texto: [
-    { provedor: 'groq', modelo: 'openai/gpt-oss-20b' },
-    { provedor: 'cloudflare', modelo: '@cf/qwen/qwen3-30b-a3b-fp8' },
+    { provedor: 'groq', modelo: 'openai/gpt-oss-20b', extra: RACIOCINIO_CURTO },
+    { provedor: 'cloudflare', modelo: '@cf/qwen/qwen3-30b-a3b-fp8', semPensar: true },
   ],
   imagem: [
     { provedor: 'groq', modelo: 'qwen/qwen3.8-27b' },
     { provedor: 'cloudflare', modelo: '@cf/meta/llama-4-scout-17b-16e-instruct' },
   ],
   fatura: [
-    { provedor: 'groq', modelo: 'openai/gpt-oss-120b' },
-    { provedor: 'cloudflare', modelo: '@cf/qwen/qwen3-30b-a3b-fp8' },
+    { provedor: 'groq', modelo: 'openai/gpt-oss-120b', extra: RACIOCINIO_CURTO },
+    { provedor: 'cloudflare', modelo: '@cf/qwen/qwen3-30b-a3b-fp8', semPensar: true },
   ],
 }
+
+/** Teto de tokens da resposta de uma frase ou de uma imagem (o pensamento conta). */
+export const MAX_TOKENS_CAMPOS = 1500
+/** Teto de tokens da resposta de cada fatia de fatura. */
+export const MAX_TOKENS_FATIA = 8000
 
 /** Prazo de cada chamada a um provedor. */
 export const PRAZO_MS = 10_000

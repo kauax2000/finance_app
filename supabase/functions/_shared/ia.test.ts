@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertFalse } from 'jsr:@std/assert@1.0.19'
-import { FATIA_FATURA } from './ia-config.ts'
+import { FATIA_FATURA, MAX_TOKENS_CAMPOS, MAX_TOKENS_FATIA } from './ia-config.ts'
 import {
   type ContextoIA,
   interpretar,
@@ -227,7 +227,8 @@ Deno.test('interpretar: o corpo enviado não leva cartão, CPF nem nome', async 
     assertEquals(json.model, 'openai/gpt-oss-20b')
     assertEquals(json.response_format, { type: 'json_object' })
     assertEquals(json.temperature, 0)
-    assertEquals(json.max_tokens, 400)
+    assertEquals(json.max_tokens, MAX_TOKENS_CAMPOS)
+    assertEquals(json.reasoning_effort, 'low')
   })
 })
 
@@ -246,6 +247,32 @@ Deno.test('interpretar: um provedor que não responde vence o prazo e passa ao p
       assertEquals(f.eventos().map((e) => e.args?.p_status), ['timeout', 'ok'])
     },
   )
+})
+
+Deno.test('interpretar: o Qwen da Cloudflare leva /no_think, e a Groq não', async () => {
+  const f = adminFalso()
+  await comFetch(
+    (url) => (url.includes('groq') ? new Response('x', { status: 503 }) : resposta(CAMPOS)),
+    async (pedidos) => {
+      await interpretar(f.ctx, 'mercado 42,90')
+      const [groq, cf] = pedidos.map((p) => JSON.parse(p.body))
+      assertFalse(groq.messages[0].content.includes('/no_think'))
+      assertEquals(cf.model, '@cf/qwen/qwen3-30b-a3b-fp8')
+      assert(cf.messages[0].content.endsWith('/no_think'))
+      assertEquals(cf.reasoning_effort, undefined)
+    },
+  )
+})
+
+Deno.test('interpretar: o bloco <think> antes do JSON é tirado', async () => {
+  assertEquals(validarCampos('<think>x</think>' + JSON.stringify(CAMPOS), HOJE)?.valor, 42.9)
+  const f = adminFalso()
+  await comFetch(() => resposta('<think>\npensando 99,00\n</think>\n' + JSON.stringify(CAMPOS)), async () => {
+    const r = await interpretar(f.ctx, 'mercado 42,90')
+    assert(r.ok)
+    assertEquals(r.provedor, 'groq')
+    assertEquals(r.dados.valor, 42.9)
+  })
 })
 
 // ---- lerImagem ----
@@ -289,7 +316,7 @@ Deno.test('lerFatura: duas fatias, duas cotas, itens juntados', async () => {
     assertEquals(r.dados.map((i) => i.descricao), ['Loja 1', 'Loja 2'])
     assertEquals(pedidos.length, 2)
     assert(pedidos.every((p) => p.body.length < FATIA_FATURA + 4000))
-    assertEquals(JSON.parse(pedidos[0].body).max_tokens, 4000)
+    assertEquals(JSON.parse(pedidos[0].body).max_tokens, MAX_TOKENS_FATIA)
     assertEquals(f.rpcs.filter((r) => r.fn === 'consumir_cota_ia').length, 2)
   })
 })

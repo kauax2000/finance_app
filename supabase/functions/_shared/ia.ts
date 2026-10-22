@@ -14,7 +14,18 @@
  */
 
 import { lerNumero, normalizarDescricao } from './frase.ts'
-import { CADEIA, FATIA_FATURA, LIMITE_DIARIO, MAX_FATIAS, PRAZO_MS, type Provedor, type Tarefa } from './ia-config.ts'
+import {
+  CADEIA,
+  type ElosDaCadeia,
+  FATIA_FATURA,
+  LIMITE_DIARIO,
+  MAX_FATIAS,
+  MAX_TOKENS_CAMPOS,
+  MAX_TOKENS_FATIA,
+  PRAZO_MS,
+  type Provedor,
+  type Tarefa,
+} from './ia-config.ts'
 import { redigir } from './redigir.ts'
 import type { SupabaseAdminClient } from './supabase-admin.ts'
 import { sha256Hex } from './token-hash.ts'
@@ -185,9 +196,18 @@ function chaveDe(provedor: Provedor): { url: string; token: string } | null {
 type Status = 'ok' | '429' | '5xx' | '4xx' | 'timeout' | 'rede' | 'invalido'
 
 /** Uma chamada: devolve o status do evento e, se `ok`, o conteúdo da resposta. */
+/** O `/no_think` vai no fim do primeiro texto: o `system`, ou o texto da mensagem da imagem. */
+function semPensar([primeira, ...resto]: Mensagem[]): Mensagem[] {
+  const c = primeira.content
+  const content = typeof c === 'string'
+    ? `${c}\n/no_think`
+    : (c as Array<{ type: string; text?: string }>).map((p) => (p.type === 'text' ? { ...p, text: `${p.text}\n/no_think` } : p))
+  return [{ ...primeira, content }, ...resto]
+}
+
 async function chamar(
   destino: { url: string; token: string },
-  modelo: string,
+  elo: ElosDaCadeia[number],
   mensagens: Mensagem[],
   maxTokens: number,
   prazoMs: number,
@@ -197,11 +217,12 @@ async function chamar(
       method: 'POST',
       headers: { Authorization: `Bearer ${destino.token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: modelo,
-        messages: mensagens,
+        model: elo.modelo,
+        messages: elo.semPensar ? semPensar(mensagens) : mensagens,
         response_format: { type: 'json_object' },
         temperature: 0,
         max_tokens: maxTokens,
+        ...elo.extra,
       }),
       signal: AbortSignal.timeout(prazoMs),
     })
@@ -267,8 +288,9 @@ async function executar<T>(
   // Erro na RPC conta como cota esgotada: sem conferir, não chama o provedor.
   if (cota?.data !== true) return { ok: false, motivo: 'cota' }
 
-  for (const { provedor, modelo, destino } of cadeia) {
-    const r = await chamar(destino, modelo, mensagens, maxTokens, ctx.prazoMs ?? PRAZO_MS)
+  for (const { destino, ...elo } of cadeia) {
+    const { provedor, modelo } = elo
+    const r = await chamar(destino, elo, mensagens, maxTokens, ctx.prazoMs ?? PRAZO_MS)
     const dados = r.status === 'ok' ? validar(r.conteudo) : null
     await registrarEvento(ctx, provedor, modelo, r.status === 'ok' && dados == null ? 'invalido' : r.status)
     if (dados != null) {
@@ -291,7 +313,7 @@ export async function interpretar(ctx: ContextoIA, textoBruto: string): Promise<
       { role: 'system', content: `${PROMPT_CAMPOS}\nHoje é ${ctx.hoje}.` },
       { role: 'user', content: entrada },
     ],
-    400,
+    MAX_TOKENS_CAMPOS,
     (b) => validarCampos(b, ctx.hoje),
   )
 }
@@ -319,7 +341,7 @@ export async function lerImagem(ctx: ContextoIA, bytes: Uint8Array, mime: string
         ],
       },
     ],
-    400,
+    MAX_TOKENS_CAMPOS,
     (b) => validarCampos(b, ctx.hoje),
   )
 }
@@ -362,7 +384,7 @@ export async function lerFatura(ctx: ContextoIA, textoBruto: string, fechamento:
         { role: 'system', content: promptFatura(fechamento) },
         { role: 'user', content: fatia },
       ],
-      4000,
+      MAX_TOKENS_FATIA,
       validarItensFatura,
     )
     if (!r.ok) {
