@@ -709,7 +709,7 @@ export type Database = {
           name: string
           updated_at?: string
           user_id: string
-          wallet_alias: string | null
+          wallet_alias?: string | null
           workspace_id: string
         }
         Update: {

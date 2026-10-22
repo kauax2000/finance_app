@@ -98,6 +98,12 @@ describe("importar extrato, estorno e a conferir (Tarefa 7)", () => {
       /t\.needs_review \|\| t\.import_batch_id \|\| \(t\.source === "apple_pay" && t\.capture_meta\?\.walletCard\) \? \(\s*<AConferirWireframe/,
     )
   })
+
+  it("o quadro remonta quando o lançamento ou o needs_review muda", () => {
+    expect(fonte("src/components/transactions/transaction-detail-sheet.tsx")).toMatch(
+      /<AConferirWireframe[\s\S]*?key=\{`\$\{t\.id\}:\$\{t\.needs_review\}`\}/,
+    )
+  })
 })
 
 describe("?importar=1", () => {

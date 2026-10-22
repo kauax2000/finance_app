@@ -152,6 +152,7 @@ export function montarLancamento(
   let forma: FormaDePagamento | null
   let cartaoTexto: string | null
   let parcelas: number | null = null
+  let estorno = false
   const capturaMeta: { walletCard?: string; texto?: string } = {}
 
   const applePay = temAmount(pedido.amount)
@@ -168,7 +169,7 @@ export function montarLancamento(
     forma = cartaoTexto ? 'credit_card' : null
   } else {
     const f = interpretarFrase(pedido.text ?? '', ctx.hoje)
-    ;({ valor, data, tipo, descricao, forma, cartaoTexto, parcelas } = f)
+    ;({ valor, data, tipo, descricao, forma, cartaoTexto, parcelas, estorno } = f)
     // Regra 1: a dúvida "cartao" só vale no crédito ("30 uber casa" não é cartão).
     duvidas = f.duvidas.filter((d) => d !== 'cartao' || forma === 'credit_card')
   }
@@ -202,6 +203,8 @@ export function montarLancamento(
     }
   }
   if (cartao) forma = 'credit_card'
+  // O estorno abate uma fatura: sem cartão casado, fica a conferir (como no formulário).
+  if (estorno && !cartao && !duvidas.includes('cartao')) duvidas.push('cartao')
 
   const carteira = cartao?.workspace_id ?? ctx.carteiraPadrao
   // Regra 2: sem descrição de verdade, o histórico não tem o que casar.
@@ -209,7 +212,12 @@ export function montarLancamento(
     ? null
     : preencherPeloHistorico(descricao, tipo, ctx.historicoPorCarteira[carteira] ?? [])
 
-  const paymentMethod = forma ? FORMA_NO_BANCO[forma] : (historico?.paymentMethod ?? null)
+  // Estorno sem cartão não herda a forma do histórico (um pix de lá não é a fatura).
+  const paymentMethod = forma
+    ? FORMA_NO_BANCO[forma]
+    : estorno && !cartao
+      ? null
+      : (historico?.paymentMethod ?? null)
   let cartaoId = cartao?.id ?? null
   if (!forma && paymentMethod === 'credit_card') {
     // O cartão do histórico só se ainda ativo e da mesma carteira.

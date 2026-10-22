@@ -122,6 +122,19 @@ Deno.test('montarLancamento: com histórico pega categoria e forma, e não fica 
   assertEquals(r.linha.capture_meta, null)
 })
 
+Deno.test('estorno sem cartão fica a conferir e não herda a forma do histórico', () => {
+  const r = ok(
+    montarLancamento(
+      { text: 'estorno 30 uber' },
+      ctx({ historicoPorCarteira: { [PADRAO]: [hist('Uber', 'cat-reemb', { type: 'income', payment_method: 'pix' })] } }),
+    ),
+  )
+  assertEquals(r.linha.type, 'income')
+  assertEquals(r.linha.needs_review, true)
+  assertEquals(r.linha.payment_method, null)
+  assertEquals(r.linha.payment_credit_card_id, null)
+})
+
 Deno.test('montarLancamento: sem valor devolve 422 com a mensagem exata', () => {
   assertEquals(montarLancamento({ text: 'mercado nubank' }, ctx()), {
     ok: false,

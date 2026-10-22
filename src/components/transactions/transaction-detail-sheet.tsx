@@ -421,7 +421,8 @@ export function TransactionDetailSheet({
 
                 {t.needs_review || t.import_batch_id || (t.source === "apple_pay" && t.capture_meta?.walletCard) ? (
                     <AConferirWireframe
-                        key={t.id}
+                        // Confirmado na lista com o detalhe aberto: o quadro remonta, sem "Confirmar" velho.
+                        key={`${t.id}:${t.needs_review}`}
                         transaction={t}
                         onChanged={(o) => {
                             if (o === "desfeito") onOpenChange(false)
