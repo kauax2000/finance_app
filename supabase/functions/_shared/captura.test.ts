@@ -173,8 +173,12 @@ Deno.test('Foco 3: cartão de carteira alheia não é usado; fica na padrão, se
   )
   assertEquals(r.linha.workspace_id, PADRAO)
   assertEquals(r.linha.payment_credit_card_id, null)
-  assertNotEquals(r.linha.category_id, 'cat-alheia')
+  // O histórico é o da padrão, e a palavra do cartão volta à descrição.
+  assertEquals(r.linha.category_id, 'cat-padrao')
+  assertEquals(r.linha.description, 'Mercado nubank')
+  assertEquals(r.linha.capture_meta, { texto: '42 mercado nubank' })
   assertEquals(r.linha.needs_review, true)
+  assertEquals(r.resumo, 'R$\u00a042,00 · Mercado nubank')
 })
 
 Deno.test('Foco 3: cartão casado pelo apelido da Wallet numa carteira alheia também fica fora', () => {
@@ -227,6 +231,50 @@ Deno.test('o histórico não pega cartão de outra carteira nem cartão inativo'
   )
   assertEquals(r.linha.payment_method, 'credit_card')
   assertEquals(r.linha.payment_credit_card_id, null)
+})
+
+Deno.test('o histórico não pega cartão que mora noutra carteira', () => {
+  const r = ok(
+    montarLancamento(
+      { text: '42 mercado' },
+      ctx({
+        cartoes: [cartao('c-outra', 'Inter', OUTRA)],
+        historicoPorCarteira: {
+          [PADRAO]: [hist('Mercado', 'cat-mercado', { payment_method: 'credit_card', payment_credit_card_id: 'c-outra' })],
+        },
+      }),
+    ),
+  )
+  assertEquals(r.linha.workspace_id, PADRAO)
+  assertEquals(r.linha.payment_method, 'credit_card')
+  assertEquals(r.linha.payment_credit_card_id, null)
+})
+
+Deno.test('casamento parcial do nome ("mercado" × "Mercado Pago") fica a conferir', () => {
+  const r = ok(
+    montarLancamento(
+      { text: '50 compras no mercado' },
+      ctx({
+        cartoes: [cartao('c-mp', 'Mercado Pago', OUTRA)],
+        historicoPorCarteira: { [OUTRA]: [hist('Compras', 'cat-compras')] },
+      }),
+    ),
+  )
+  assertEquals(r.linha.needs_review, true)
+  assertEquals(r.linha.capture_meta, { texto: '50 compras no mercado' })
+})
+
+// Os 4 dígitos numa frase o parser ainda não separa como cartão (minor da Tarefa 2).
+Deno.test('casamento completo: o nome inteiro, ou o crédito dito', () => {
+  const c = ctx({
+    cartoes: [cartao('c-mp', 'Mercado Pago', OUTRA)],
+    historicoPorCarteira: { [OUTRA]: [hist('Lanche', 'cat-lanche')] },
+  })
+  for (const text of ['50 lanche mercado pago', '50 lanche no crédito mercado']) {
+    const r = ok(montarLancamento({ text }, c))
+    assertEquals(r.linha.payment_credit_card_id, 'c-mp', text)
+    assertEquals(r.linha.needs_review, false, text)
+  }
 })
 
 Deno.test('o histórico preenche o cartão quando a frase não diz a forma', () => {
@@ -338,4 +386,17 @@ Deno.test('Apple Pay usa a data do pedido; data ilegível cai em hoje e fica a c
   const ruim = ok(montarLancamento({ ...base, date: '08/04/2026' }, c))
   assertEquals(ruim.linha.date, '2026-04-10T12:00:00.000Z')
   assertEquals(ruim.linha.needs_review, true)
+  const futura = ok(montarLancamento({ ...base, date: '2099-12-31' }, c))
+  assertEquals(futura.linha.date, '2099-12-31T12:00:00.000Z')
+  assertEquals(futura.linha.needs_review, true)
+})
+
+Deno.test('amount vazio (variável do Atalho sem valor) conta como ausente', () => {
+  for (const amount of ['', '   ']) {
+    assert(validarPedido({ text: '42 mercado', amount }).ok)
+    const r = ok(montarLancamento({ text: '42 mercado', amount }, ctx()))
+    assertEquals(r.linha.amount, 42)
+    assertEquals(r.linha.description, 'Mercado')
+  }
+  assertEquals(validarPedido({ amount: '' }).ok, false)
 })

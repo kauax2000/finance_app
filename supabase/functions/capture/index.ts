@@ -8,7 +8,7 @@
  * sai do trigger `transactions_notify_created`, não daqui.
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
-import { clientIdDoPedido, montarLancamento, validarPedido } from '../_shared/captura.ts'
+import { clientIdDoPedido, montarLancamento, resumoDoLancamento, validarPedido } from '../_shared/captura.ts'
 import { appTodayYmd, formatYmd } from '../_shared/credit-card-cycle.ts'
 import type { CartaoParaCasar, LinhaHistorico } from '../_shared/frase.ts'
 import { internalError } from '../_shared/http.ts'
@@ -31,24 +31,54 @@ function json(status: number, payload: unknown): Response {
 const MAX_CORPO = 16 * 1024
 const HISTORICO_POR_CARTEIRA = 300
 const TOKEN_INVALIDO = () => json(401, { error: 'Token inválido.' })
+const CORPO_GRANDE = () => json(413, { error: 'Corpo acima de 16 KB.' })
+
+/** O corpo lido aos pedaços; passou de `MAX_CORPO`, para e devolve null — diga o Content-Length o que disser. */
+async function lerCorpo(req: Request): Promise<string | null> {
+  const leitor = req.body?.getReader()
+  if (!leitor) return ''
+  const pedacos: Uint8Array[] = []
+  let total = 0
+  for (;;) {
+    const { done, value } = await leitor.read()
+    if (done) break
+    total += value.byteLength
+    if (total > MAX_CORPO) {
+      await leitor.cancel()
+      return null
+    }
+    pedacos.push(value)
+  }
+  const tudo = new Uint8Array(total)
+  let pos = 0
+  for (const p of pedacos) {
+    tudo.set(p, pos)
+    pos += p.byteLength
+  }
+  return new TextDecoder().decode(tudo)
+}
+
+type Gravado = { id: string; needs_review: boolean; amount: number; description: string; payment_credit_card_id: string | null }
+const COLUNAS_GRAVADO = 'id, needs_review, amount, description, payment_credit_card_id'
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return json(405, { error: 'Method not allowed' })
 
-  if (Number(req.headers.get('content-length') ?? 0) > MAX_CORPO) {
-    return json(413, { error: 'Corpo acima de 16 KB.' })
-  }
-  const bruto = await req.text()
-  if (new TextEncoder().encode(bruto).length > MAX_CORPO) return json(413, { error: 'Corpo acima de 16 KB.' })
-
-  // Revogado, desconhecido ou mal formado: a mesma resposta (Foco 2).
+  // Revogado, desconhecido ou mal formado: a mesma resposta (Foco 2). O formato
+  // se confere antes de ler o corpo.
   const token = req.headers.get('Authorization')?.match(/^Bearer\s+(fac_[0-9a-f]{64})$/)?.[1]
   if (!token) return TOKEN_INVALIDO()
+
+  if (Number(req.headers.get('content-length') ?? 0) > MAX_CORPO) return CORPO_GRANDE()
+  const bruto = await lerCorpo(req)
+  if (bruto == null) return CORPO_GRANDE()
+
   const tokenHash = await sha256Hex(token)
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const admin = createClient(supabaseUrl, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const admin = createClient(supabaseUrl, serviceKey)
 
   const { data: tok, error: tokErr } = await admin
     .from('capture_tokens')
@@ -88,12 +118,43 @@ Deno.serve(async (req: Request) => {
   if (!validado.ok) return json(422, { error: validado.erro })
   const pedido = validado.pedido
 
-  const { data: cartoes, error: cErr } = await admin
+  const { data: cartoesLidos, error: cErr } = await admin
     .from('credit_cards')
     .select('id, name, wallet_alias, last_four, workspace_id, is_active')
     .in('workspace_id', carteirasDaPessoa)
     .eq('is_active', true)
   if (cErr) return json(500, { error: internalError('capture: cartões', cErr) })
+  const cartoes = (cartoesLidos ?? []) as CartaoParaCasar[]
+
+  // O resumo de um retry vem da linha gravada, não do pedido.
+  const responder = (g: Gravado) =>
+    json(200, {
+      ok: true,
+      id: g.id,
+      needs_review: g.needs_review,
+      resumo: resumoDoLancamento(
+        Number(g.amount),
+        g.description,
+        cartoes.find((c) => c.id === g.payment_credit_card_id)?.name,
+      ),
+    })
+
+  // Com `id`, o retry do Atalho cai no mesmo `client_id` e não duplica (Foco 1);
+  // sem `id`, `client_id` nulo nunca conflita, e cada pedido é um lançamento novo.
+  const clientId = pedido.id ? await clientIdDoPedido(tokenId, pedido.id) : null
+  if (clientId) {
+    // Procura em todas as carteiras da pessoa: entre um toque e o retry o
+    // destino pode ter mudado (um cartão desativado), e a chave é por carteira.
+    const { data: anterior, error: antErr } = await admin
+      .from('transactions')
+      .select(COLUNAS_GRAVADO)
+      .in('workspace_id', carteirasDaPessoa)
+      .eq('client_id', clientId)
+      .limit(1)
+      .maybeSingle()
+    if (antErr) return json(500, { error: internalError('capture: retry', antErr) })
+    if (anterior) return responder(anterior as Gravado)
+  }
 
   // ponytail: o histórico de todas as carteiras da pessoa (o destino só se sabe
   // depois de casar o cartão); uma família tem poucas. Se crescer, casar antes.
@@ -118,33 +179,31 @@ Deno.serve(async (req: Request) => {
     userId,
     carteiraPadrao,
     carteirasDaPessoa,
-    cartoes: (cartoes ?? []) as CartaoParaCasar[],
+    cartoes,
     historicoPorCarteira,
     hoje: formatYmd(appTodayYmd()),
   })
   if (!montado.ok) return json(montado.status, { error: montado.erro })
-  const { linha, resumo } = montado
+  const { linha } = montado
 
-  // Com `id`, o retry do Atalho cai no mesmo `client_id` e não duplica (Foco 1);
-  // sem `id`, `client_id` nulo nunca conflita, e cada pedido é um lançamento.
-  const clientId = pedido.id ? await clientIdDoPedido(tokenId, pedido.id) : null
   const { data: inseridos, error: insErr } = await admin
     .from('transactions')
     .upsert({ ...linha, client_id: clientId }, { onConflict: 'workspace_id,client_id', ignoreDuplicates: true })
-    .select('id, needs_review')
+    .select(COLUNAS_GRAVADO)
   if (insErr) return json(500, { error: internalError('capture: insert', insErr) })
 
-  let gravado = (inseridos ?? [])[0] as { id: string; needs_review: boolean } | undefined
+  let gravado = (inseridos ?? [])[0] as Gravado | undefined
   const novo = gravado != null
   if (!gravado) {
+    // Dois retries ao mesmo tempo: o outro gravou primeiro.
     const { data: existente, error: lerErr } = await admin
       .from('transactions')
-      .select('id, needs_review')
+      .select(COLUNAS_GRAVADO)
       .eq('workspace_id', linha.workspace_id)
       .eq('client_id', clientId)
       .maybeSingle()
     if (lerErr || !existente) return json(500, { error: internalError('capture: retry', lerErr ?? 'sem linha') })
-    gravado = existente as { id: string; needs_review: boolean }
+    gravado = existente as Gravado
   }
 
   const { error: usoErr } = await admin
@@ -154,13 +213,14 @@ Deno.serve(async (req: Request) => {
   if (usoErr) console.error('capture: last_used_at', usoErr)
 
   // Os alertas de orçamento e de limite, como o front faz depois de salvar uma
-  // despesa. Falha só vira log.
+  // despesa, com o Bearer da service role (o `isServiceAuthorized` deles). Só
+  // para a linha nova: um retry não avalia duas vezes. Falha só vira log.
   if (novo && linha.type === 'expense') {
     const avaliar = (fn: string, body: Record<string, unknown>) =>
       fetch(`${supabaseUrl.replace(/\/$/, '')}/functions/v1/${fn}`, {
         method: 'POST',
         signal: AbortSignal.timeout(10_000),
-        headers: { 'Content-Type': 'application/json', 'x-cron-secret': Deno.env.get('CRON_SECRET') ?? '' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${serviceKey}` },
         body: JSON.stringify(body),
       })
         .then((r) => {
@@ -186,5 +246,5 @@ Deno.serve(async (req: Request) => {
     else await todas
   }
 
-  return json(200, { ok: true, id: gravado.id, needs_review: gravado.needs_review, resumo })
+  return responder(gravado)
 })

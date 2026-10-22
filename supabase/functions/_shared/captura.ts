@@ -7,6 +7,7 @@ import {
   casarCartao,
   interpretarFrase,
   lerNumero,
+  normalizarDescricao,
   preencherPeloHistorico,
   type CartaoParaCasar,
   type FormaDePagamento,
@@ -60,6 +61,11 @@ const MAX_TEXTO = 500
 const MAX_VALOR = 1_000_000
 const DESCRICAO_PADRAO = 'Lançamento rápido'
 
+/** O `amount` veio? Uma variável vazia do Atalho chega como "" e conta como ausente. */
+function temAmount(amount: unknown): boolean {
+  return amount != null && !(typeof amount === 'string' && !amount.trim())
+}
+
 /** O `amount` do Atalho: 42.9 ou "R$ 42,90" (regras brasileiras); só positivo. */
 function valorDoAmount(amount: unknown): number | null {
   let n: number | null = null
@@ -79,7 +85,7 @@ export function validarPedido(body: unknown): { ok: true; pedido: PedidoCaptura 
     return { ok: false, erro: 'Id inválido.' }
   }
   if (b.source != null && !ORIGENS.includes(b.source as Origem)) return { ok: false, erro: 'Origem inválida.' }
-  if (b.amount != null) {
+  if (temAmount(b.amount)) {
     if (valorDoAmount(b.amount) == null) return { ok: false, erro: ERRO_VALOR }
   } else if (typeof b.text !== 'string' || !b.text.trim()) return { ok: false, erro: ERRO_VALOR }
   return { ok: true, pedido: b as PedidoCaptura }
@@ -106,6 +112,27 @@ const FORMA_NO_BANCO: Record<FormaDePagamento, string> = {
   cash: 'cash',
 }
 
+/**
+ * O casamento é completo pelo apelido da Wallet, pelos 4 dígitos ou com toda
+ * palavra do nome (3+ letras) no texto; uma palavra só de "Mercado Pago" não é.
+ */
+function casamentoCompleto(cartao: CartaoParaCasar, cartaoTexto: string, frase: string): boolean {
+  if (cartao.wallet_alias != null && normalizarDescricao(cartao.wallet_alias) === normalizarDescricao(cartaoTexto)) {
+    return true
+  }
+  const palavras = normalizarDescricao(frase).split(' ')
+  if (cartao.last_four != null && palavras.includes(cartao.last_four)) return true
+  return normalizarDescricao(cartao.name)
+    .split(' ')
+    .filter((p) => p.length >= 3 && !/^\d+$/.test(p))
+    .every((p) => palavras.includes(p))
+}
+
+/** "R$ 42,00 · Mercado · Nubank"; sem cartão, sem a última parte. */
+export function resumoDoLancamento(valor: number, descricao: string, nomeDoCartao?: string | null): string {
+  return [moneyBRL(valor), descricao, nomeDoCartao].filter(Boolean).join(' · ')
+}
+
 /** "2026-04-08" de um calendário real, ou null. */
 function dataValida(s: string | undefined): string | null {
   if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null
@@ -127,14 +154,16 @@ export function montarLancamento(
   let parcelas: number | null = null
   const capturaMeta: { walletCard?: string; texto?: string } = {}
 
-  if (pedido.amount != null) {
+  const applePay = temAmount(pedido.amount)
+  if (applePay) {
     // Apple Pay: o estabelecimento é a descrição e o cartão da Wallet, o cartão.
     valor = valorDoAmount(pedido.amount)
     duvidas = []
     descricao = pedido.merchant?.trim() || DESCRICAO_PADRAO
     if (descricao === DESCRICAO_PADRAO) duvidas.push('descricao')
     data = dataValida(pedido.date) ?? ctx.hoje
-    if (pedido.date && data !== pedido.date) duvidas.push('data')
+    // Ilegível ou depois de hoje: fica hoje, ou a data dada, mas a conferir.
+    if (pedido.date && (data !== pedido.date || data > ctx.hoje)) duvidas.push('data')
     cartaoTexto = pedido.card?.trim() || null
     forma = cartaoTexto ? 'credit_card' : null
   } else {
@@ -151,9 +180,15 @@ export function montarLancamento(
   // lançamento fica na padrão, sem cartão, a conferir.
   const casado = casarCartao(cartaoTexto, ctx.cartoes)
   const cartao = casado && ctx.carteirasDaPessoa.includes(casado.workspace_id) ? casado : null
+  // "50 compras no mercado" casa o "Mercado Pago" por uma palavra: sem o
+  // crédito dito, o casamento parcial leva à carteira do cartão, mas a conferir.
+  // (No Apple Pay a forma já é o crédito.)
+  if (cartao && forma !== 'credit_card' && !casamentoCompleto(cartao, cartaoTexto!, pedido.text ?? '')) {
+    duvidas.push('cartao')
+  }
   let cartaoSemCasar = cartaoTexto != null && cartao == null
   if (cartaoSemCasar) {
-    if (pedido.amount != null) capturaMeta.walletCard = cartaoTexto!
+    if (applePay) capturaMeta.walletCard = cartaoTexto!
     else {
       // Regra 1: a palavra volta ao fim da descrição.
       descricao = duvidas.includes('descricao')
@@ -183,7 +218,7 @@ export function montarLancamento(
   if (parcelas != null && parcelas > 1) descricao = `${descricao} (1/${parcelas})`
   const categoria = historico?.categoryId ?? null
   const needsReview = duvidas.length > 0 || cartaoSemCasar || categoria == null || (parcelas != null && parcelas > 1)
-  if (needsReview && pedido.amount == null) capturaMeta.texto = pedido.text
+  if (needsReview && !applePay) capturaMeta.texto = pedido.text
 
   const nomeDoCartao = ctx.cartoes.find((c) => c.id === cartaoId)?.name
   return {
@@ -202,6 +237,6 @@ export function montarLancamento(
       needs_review: needsReview,
       capture_meta: Object.keys(capturaMeta).length ? capturaMeta : null,
     },
-    resumo: [moneyBRL(valor), descricao, nomeDoCartao].filter(Boolean).join(' · '),
+    resumo: resumoDoLancamento(valor, descricao, nomeDoCartao),
   }
 }
