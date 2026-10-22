@@ -98,6 +98,17 @@ num arquivo do repositório.
   Workers AI grátis dá 10 mil neurons por dia; acima disso a Cloudflare
   recusa, sem cobrar.
 
+Os caminhos dos painéis foram escritos de memória: confira na tela.
+
+### 0.5. A Groq não guarda (ZDR)
+
+Em console.groq.com → Settings → Data Controls (confira na tela), ligue a
+retenção zero (Zero Data Retention), se a opção aparecer na conta grátis. A
+política de `/privacidade` diz que a Groq não guarda nada **quando o ZDR está
+ligado**. Se a opção não existir no Free, registre isso e ajuste o texto de
+`src/components/wireframe/privacidade-wireframe.tsx` (e a data
+`ATUALIZADA_EM`) antes de o front subir.
+
 ## 1. Migração
 
 ```bash
@@ -278,7 +289,9 @@ passo 2, em que você é o único membro.
 
 ### 4.1. Preparar
 
-Anote a hora de início (é o `<INICIO>`, usado na limpeza):
+Anote a hora de início **uma vez só** (é o `<INICIO>`, usado na limpeza). Se você
+acabou de rodar o teste do 3A e já anotou o `<INICIO>` no passo 4.1 de lá, use
+o mesmo e pule este `select`:
 
 ```sql
 select now();
@@ -400,8 +413,9 @@ quê. `401` e `403` aparecem como `4xx`: confira a chave daquele provedor.
 ### 4.6. O custo
 
 Depois do teste, confira de novo o passo 0.4: a Groq continua no Free sem
-cartão, e a Cloudflare no Workers Free. Em console.groq.com/settings/limits, o
-uso do dia subiu e está longe do limite.
+cartão, e a Cloudflare no Workers Free. No painel de uso da Groq (o caminho é
+de memória, confira na tela; `console.groq.com/settings/limits` mostra os
+limites, não o uso), o uso do dia subiu e está longe do limite.
 
 ### 4.7. Limpar
 
@@ -454,13 +468,20 @@ Apague a foto sintética do seu computador.
 
 ## 5. O que confirmar com os provedores (spec §8)
 
-Ficaram para conferir no painel de cada um:
+**A política de privacidade e o front só vão ao ar depois deste passo.** A
+página `/privacidade` afirma o que está abaixo; se algo não se confirmar, o
+texto muda antes (com a data `ATUALIZADA_EM`).
 
-- **Groq, ZDR:** em console.groq.com → Settings → Data Controls, ligue a
-  retenção zero (Zero Data Retention), se a opção aparecer na conta grátis. A
-  política de `/privacidade` diz que a Groq não guarda nada **quando o ZDR está
-  ligado**: se a opção não existir no Free, registre isso e ajuste o texto.
-- **Groq, limites reais:** em console.groq.com/settings/limits, anote as
+Ficaram para conferir no painel e nos termos de cada um:
+
+- **Groq, ZDR:** o passo 0.5 já ligou a retenção zero, ou registrou que ela não
+  existe no Free e o texto foi ajustado.
+- **Sem treino:** os termos da Groq (a proibição de treinar com o dado do
+  cliente) e os da Cloudflare Workers AI dizem que a entrada e a saída não
+  treinam modelos. A página, a linha de Configurações e o Atlas afirmam "sem
+  treino".
+- **Groq, limites reais:** em console.groq.com/settings/limits (confira na
+  tela), anote as
   chamadas por minuto e por dia de `openai/gpt-oss-20b`, `openai/gpt-oss-120b` e
   `qwen/qwen3.8-27b`. A cota do app (30 por pessoa por dia) tem de caber com
   folga.
@@ -498,7 +519,7 @@ Três, todos só nas Edge Functions, nunca no cliente: `GROQ_API_KEY`,
 
 ## Ordem com o front
 
-**Migração e funções antes do front.** O front do 2.0 chama a `ia-ler` ("Tentar
+**Migração, funções e o passo 5 antes do front.** O front do 2.0 chama a `ia-ler` ("Tentar
 com IA", a foto do recibo, a foto compartilhada e "Ler com IA") e lê
 `capture_meta.ia`. Publicado antes, a IA do app volta com um aviso de erro e o
 formulário segue sem ela: nada quebra, mas nada é lido.

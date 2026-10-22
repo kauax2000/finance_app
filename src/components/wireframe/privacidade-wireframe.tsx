@@ -2,6 +2,9 @@ import Link from "next/link"
 import { ROUTES } from "@/config/navigation"
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
 
+/** Atualize a data sempre que o texto da política mudar. */
+const ATUALIZADA_EM = "22/10/2026"
+
 /**
  * A política de privacidade mínima (Bloco 3B, Decisão 13): pública, sem
  * sessão. Diz só o que o código faz hoje — a cadeia de IA mora em
@@ -12,7 +15,7 @@ export function PrivacidadeWireframe() {
         <main className="mx-auto max-w-2xl px-4 py-8">
             <WireframeBox bloco="3" titulo="Privacidade">
                 <h1 className="text-base font-bold text-foreground">Privacidade</h1>
-                <p>Atualizada em 22 de outubro de 2026.</p>
+                <p>Atualizada em {ATUALIZADA_EM}.</p>
 
                 <h2 className="font-bold text-foreground">O que o app guarda</h2>
                 <ul className="list-disc space-y-1 pl-5">
@@ -29,8 +32,26 @@ export function PrivacidadeWireframe() {
                     <li>
                         Os anexos (foto ou PDF), num armazenamento privado: só abrem por um link que vale uma hora.
                     </li>
+                    <li>Os convites para uma carteira: o e-mail de quem foi convidado.</li>
+                    <li>As notificações do app e as preferências de aviso de cada carteira.</li>
+                    <li>
+                        As sessões e os aparelhos conectados: tipo de aparelho, navegador, sistema, endereço IP e
+                        último acesso.
+                    </li>
+                    <li>
+                        O registro de atividade da conta (mudanças de perfil, e-mail, senha e da família), com o
+                        endereço IP e o aparelho.
+                    </li>
+                    <li>A inscrição de cada aparelho nas notificações push, quando você as liga.</li>
+                    <li>
+                        Os tokens de captura do Atalho do iPhone: só uma impressão digital (hash) de cada um, nunca
+                        o token.
+                    </li>
                 </ul>
-                <p>Os membros de uma carteira veem os dados dela. Ninguém de fora vê.</p>
+                <p>
+                    Os dados moram no Supabase, o banco e o armazenamento do app. Os membros de uma carteira veem os
+                    dados dela. Ninguém de fora vê.
+                </p>
 
                 <h2 className="font-bold text-foreground">Inteligência artificial</h2>
                 <p>
@@ -51,24 +72,27 @@ export function PrivacidadeWireframe() {
                 </ul>
 
                 <h2 className="font-bold text-foreground">O que sai antes do envio</h2>
-                <p>Do texto (a frase e a fatura), o app tira antes de enviar:</p>
+                <p>Do texto (a frase e a fatura), o app tenta tirar automaticamente, antes de enviar:</p>
                 <ul className="list-disc space-y-1 pl-5">
                     <li>o número do cartão (ficam só os 4 últimos dígitos);</li>
                     <li>CPF e CNPJ;</li>
                     <li>e-mail e telefone;</li>
                     <li>CEP e endereço;</li>
-                    <li>o nome das pessoas da carteira.</li>
+                    <li>o nome dos membros da carteira.</li>
                 </ul>
                 <p>
-                    <strong>A foto vai como está</strong>: não há como tirar nada de uma imagem. Recibos e
-                    comprovantes costumam mostrar o cartão mascarado.
+                    <strong>
+                        A remoção é automática e pode falhar em formatos incomuns: não escreva dados pessoais no
+                        texto. Fotos vão como estão.
+                    </strong>{" "}
+                    Numa imagem não há como tirar nada. Recibos e comprovantes costumam mostrar o cartão mascarado.
                 </p>
 
                 <h2 className="font-bold text-foreground">Limite e cache</h2>
                 <ul className="list-disc space-y-1 pl-5">
                     <li>
-                        Cada pessoa usa a IA até 30 vezes por dia (no horário de Brasília). Depois disso, o app
-                        segue sem IA até o dia seguinte.
+                        Cada pessoa tem até 30 chamadas de IA por dia (no horário de Brasília). Uma fatura longa
+                        gasta várias, uma por pedaço. Depois disso, o app segue sem IA até o dia seguinte.
                     </li>
                     <li>
                         A resposta da IA fica guardada, presa a uma impressão digital (hash) do que foi enviado, e
@@ -96,9 +120,12 @@ export function PrivacidadeWireframe() {
 
                 <p>
                     <Link href={ROUTES.ACCOUNT} className="text-foreground underline">
-                        Abrir Minha conta
+                        Abrir Minha conta (precisa entrar)
                     </Link>
                 </p>
+
+                <h2 className="font-bold text-foreground">Contato</h2>
+                <p>Dúvidas sobre os seus dados: &lt;EMAIL_DE_CONTATO&gt;.</p>
             </WireframeBox>
         </main>
     )
