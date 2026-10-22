@@ -1,22 +1,6 @@
 import { parseMoneyBrl } from "@/lib/money-brl"
 
-/** Minúscula, sem acento, sem pontuação, espaços colapsados. */
-export function normalizarDescricao(s: string): string {
-    return s
-        .normalize("NFD")
-        .replace(/\p{M}/gu, "")
-        .toLowerCase()
-        .replace(/[^a-z0-9\s]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim()
-}
-
-/** A primeira palavra normalizada com 3 letras ou mais e não numérica. */
-export function palavraSignificativa(s: string): string | null {
-    return normalizarDescricao(s)
-        .split(" ")
-        .find((p) => p.length >= 3 && !/^\d+$/.test(p)) ?? null
-}
+export { normalizarDescricao, palavraSignificativa } from "@/lib/captura/frase"
 
 /**
  * "1.234,56", "-12,50", "R$ 9,90", "20,00-" (crédito de fatura) e "12.50"
