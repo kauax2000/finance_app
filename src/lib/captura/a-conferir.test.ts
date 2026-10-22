@@ -116,3 +116,19 @@ describe("telas de a conferir", () => {
         expect(f).toContain("Lembrete às 20h de itens a conferir")
     })
 })
+
+describe("o detalhe recebe o capture_meta (o lembrar da Wallet)", () => {
+    it("o ?txn= de fora da lista traz a coluna", () => {
+        const f = fonte("src/components/transactions/use-transactions-list-controller.ts")
+        expect(f).toMatch(/\.select\("[^"]*\bneeds_review, import_batch_id, capture_meta\b[^"]*"\)/)
+    })
+
+    it("o range traz a coluna", () => {
+        const f = fonte("src/lib/queries/use-transactions-range.ts")
+        expect(f).toMatch(/TRANSACTION_RANGE_COLUMNS =\s*"[^"]*\bcapture_meta\b/)
+    })
+
+    it("a lista e o detalhe leem todas as colunas", () => {
+        expect(fonte("src/lib/transactions-detail-sheet-query.ts")).toMatch(/TRANSACTION_DETAIL_SHEET_SELECT =\s*"\*,/)
+    })
+})

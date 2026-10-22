@@ -7,7 +7,7 @@ import { fetchAllRows } from "@/lib/queries/fetch-all-rows"
 
 /** Narrow select for dashboard / calendar (category joined client-side). */
 const TRANSACTION_RANGE_COLUMNS =
-    "id,user_id,workspace_id,category_id,type,amount,description,date,is_recurring,recurring_interval,payment_method,payment_credit_card_id,subscription_id,installment_plan_id,installment_sequence,source,needs_review,import_batch_id,created_at,updated_at"
+    "id,user_id,workspace_id,category_id,type,amount,description,date,is_recurring,recurring_interval,payment_method,payment_credit_card_id,subscription_id,installment_plan_id,installment_sequence,source,needs_review,import_batch_id,capture_meta,created_at,updated_at"
 
 export function useTransactionsRangeQuery(
     workspaceId: string | null,
