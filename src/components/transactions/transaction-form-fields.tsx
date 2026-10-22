@@ -261,7 +261,8 @@ export type TransactionFormFieldsProps = {
     /** A frase rápida (só na criação): a frase já escrita e o que ela preenche. */
     fraseInicial?: string
     aplicarFrase?: (c: CamposDaFrase) => void
-    /** A foto do recibo (só na criação): o que a IA leu e a foto a anexar. */
+    /** A foto do recibo (só na criação): a do compartilhar, o que a IA leu e a foto a anexar. */
+    fotoInicial?: File
     aplicarFoto?: (c: CamposDaFrase) => void
     setFotoDoRecibo?: (foto: File) => void
 }
@@ -331,6 +332,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
         planIsActive = false,
         fraseInicial,
         aplicarFrase,
+        fotoInicial,
         aplicarFoto,
         setFotoDoRecibo,
     } = props
@@ -540,7 +542,12 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                 />
             ) : null}
             {segmentMode === "create" && aplicarFoto && setFotoDoRecibo ? (
-                <FotoReciboWireframe cartoes={cartoesDaFrase} onAplicar={aplicarFoto} onFoto={setFotoDoRecibo} />
+                <FotoReciboWireframe
+                    fotoInicial={fotoInicial}
+                    cartoes={cartoesDaFrase}
+                    onAplicar={aplicarFoto}
+                    onFoto={setFotoDoRecibo}
+                />
             ) : null}
 
             {showInstallmentEditScopePicker ? (

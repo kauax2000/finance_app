@@ -1,5 +1,6 @@
 /// <reference types="@serwist/next/typings" />
 
+import { receberCompartilhar, ROTA_COMPARTILHAR } from "@/lib/captura/compartilhado"
 import { pwaIconSrc } from "@/lib/pwa/icon-url"
 import { defaultCache } from "@serwist/next/worker"
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist"
@@ -31,6 +32,14 @@ const serwist = new Serwist({
         ...defaultCache,
     ],
 })
+
+// O `share_target` do manifest (POST multipart): a rota só existe aqui, que guarda o
+// arquivo no Cache Storage e redireciona com 303 para a tela de transações.
+serwist.registerCapture(
+    ({ url, sameOrigin }) => sameOrigin && url.pathname === ROTA_COMPARTILHAR,
+    ({ request }) => receberCompartilhar(request),
+    "POST"
+)
 
 serwist.addEventListeners()
 

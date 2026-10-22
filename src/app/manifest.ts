@@ -17,11 +17,19 @@ export default function manifest(): MetadataRoute.Manifest {
         lang: "pt-BR",
         dir: "ltr",
         categories: ["finance", "productivity"],
-        // O compartilhar do Android: o texto vira a frase rápida (Bloco 3A, Decisão 4).
+        // O compartilhar do Android: o texto vira a frase rápida (Bloco 3A, Decisão 4), e a
+        // foto ou o PDF vai ao service worker, que guarda o arquivo e redireciona com 303
+        // (Bloco 3B, Decisão 12; `src/lib/captura/compartilhado.ts`).
         share_target: {
-            action: "/transactions",
-            method: "GET",
-            params: { text: "frase", title: "frase_titulo", url: "frase_url" },
+            action: "/transactions/compartilhar",
+            method: "POST",
+            enctype: "multipart/form-data",
+            params: {
+                title: "frase_titulo",
+                text: "frase",
+                url: "frase_url",
+                files: [{ name: "files", accept: ["image/*", "application/pdf"] }],
+            },
         },
         icons: [
             {

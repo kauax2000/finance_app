@@ -31,8 +31,14 @@ import {
 import { createSubscription } from "@/lib/subscriptions/mutations"
 
 export type GlobalShellDialogsContextValue = {
-    /** `frase`: a frase rápida já escrita no formulário (o compartilhar do Android). */
-    openTransactionCreate: (mode: NewTransactionMode, opts?: { frase?: string }) => void
+    /**
+     * `frase`: a frase rápida já escrita no formulário; `fotoInicial`: a foto que a
+     * "Foto do recibo" lê ao abrir. As duas vêm do compartilhar do Android.
+     */
+    openTransactionCreate: (
+        mode: NewTransactionMode,
+        opts?: { frase?: string; fotoInicial?: File }
+    ) => void
     openCategoryCreate: () => void
     openSubscriptionCreate: () => void
     openCreditCardCreate: () => void
@@ -69,6 +75,7 @@ export function GlobalShellDialogsProvider({
         React.useState<TransactionFormKind>("expense")
     const [txSaving, setTxSaving] = React.useState(false)
     const [createFrase, setCreateFrase] = React.useState<string | undefined>()
+    const [createFoto, setCreateFoto] = React.useState<File | undefined>()
 
     const [categoryOpen, setCategoryOpen] = React.useState(false)
 
@@ -94,9 +101,10 @@ export function GlobalShellDialogsProvider({
     }, [])
 
     const openTransactionCreate = React.useCallback(
-        (mode: NewTransactionMode, opts?: { frase?: string }) => {
+        (mode: NewTransactionMode, opts?: { frase?: string; fotoInicial?: File }) => {
             setCreateLaunchKind(modeToLaunchKind(mode))
             setCreateFrase(opts?.frase)
+            setCreateFoto(opts?.fotoInicial)
             setTxOpen(true)
         },
         [],
@@ -244,6 +252,7 @@ export function GlobalShellDialogsProvider({
                 onSave={handleTxSave}
                 onSaveInstallmentPlan={handleTxSaveInstallmentPlan}
                 fraseInicial={createFrase}
+                fotoInicial={createFoto}
             />
             <CategoryCreateDialog
                 open={categoryOpen}

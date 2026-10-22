@@ -251,12 +251,5 @@ describe("fonte", () => {
         expect(hook).toContain("origemDaFrase(duvidasDaFrase, Boolean(editingTransaction), categoryId, fonteDaFrase)")
     })
 
-    it("o manifest compartilha por GET e tem os atalhos", () => {
-        const fonte = lerFonte("src/app/manifest.ts")
-        expect(fonte).toContain("share_target")
-        expect(fonte).toContain('method: "GET"')
-        expect(fonte).toContain('params: { text: "frase", title: "frase_titulo", url: "frase_url" }')
-        expect(fonte).toContain("/transactions?conferir=1")
-        expect(fonte).toContain('"Nova despesa"')
-    })
+    // O manifest (POST multipart desde o 3B) é conferido em compartilhado.test.ts.
 })

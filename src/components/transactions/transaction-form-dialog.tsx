@@ -46,6 +46,8 @@ type TransactionFormDialogProps = {
     ) => Promise<boolean>
     /** Na criação, a frase rápida já escrita (o compartilhar do Android). */
     fraseInicial?: string
+    /** Na criação, a foto que a "Foto do recibo" lê ao abrir (o compartilhar do Android). */
+    fotoInicial?: File
 }
 
 export function TransactionFormDialog({
@@ -62,6 +64,7 @@ export function TransactionFormDialog({
     onSaveInstallmentPlan,
     onUpdateInstallmentPlan,
     fraseInicial,
+    fotoInicial,
 }: TransactionFormDialogProps) {
     const isMobile = useIsMobile()
 
@@ -88,6 +91,7 @@ export function TransactionFormDialog({
         closeOnSuccess: true,
         onClose: () => onOpenChange(false),
         fraseInicial,
+        fotoInicial,
     })
 
     // Uma casca só: diálogo no desktop, gaveta alta no telefone. O

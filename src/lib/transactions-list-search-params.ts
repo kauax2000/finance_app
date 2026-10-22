@@ -3,6 +3,7 @@ import type { TransactionFilterType } from "@/components/transactions/transactio
 import type { TransactionsDatePresetKey } from "@/components/transactions/transactions-date-presets"
 import type { SortDir, TransactionsListSortKey } from "@/components/transactions/transactions-list-types"
 import { serializePage, serializeSort } from "@/lib/data-table/url-state"
+import { ehChaveCompartilhada } from "@/lib/captura/compartilhado"
 
 export function buildTransactionsListSearchParams(args: {
     filterType: TransactionFilterType
@@ -152,4 +153,20 @@ export function consumirParametroFrase(
         .join(" ")
         .slice(0, 500)
     return texto || null
+}
+
+/** Os parâmetros que o service worker põe depois de guardar um arquivo compartilhado. */
+export const PARAMETROS_DO_COMPARTILHADO = ["compartilhado", "tipo"] as const
+
+/**
+ * `?compartilhado=<chave>` (e `&tipo=pdf`): o arquivo que o compartilhar do
+ * Android deixou no Cache Storage. `null` sem chave ou com uma que não é UUID.
+ * Quem chama tira os dois da URL.
+ */
+export function consumirParametroCompartilhado(
+    params: { get(chave: string): string | null } | null
+): { chave: string; tipo: "imagem" | "pdf" } | null {
+    const chave = params?.get("compartilhado")
+    if (!ehChaveCompartilhada(chave)) return null
+    return { chave, tipo: params?.get("tipo") === "pdf" ? "pdf" : "imagem" }
 }

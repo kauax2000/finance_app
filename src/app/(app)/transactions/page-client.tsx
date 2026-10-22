@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
     EmptyState,
     EmptyStateActions,
@@ -43,10 +43,14 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { numberBR } from "@/lib/formatters"
 import {
+    consumirParametroCompartilhado,
     consumirParametroFrase,
     consumirParametroImportar,
     PARAMETROS_DA_FRASE,
+    PARAMETROS_DO_COMPARTILHADO,
 } from "@/lib/transactions-list-search-params"
+import { lerArquivoCompartilhado } from "@/lib/captura/compartilhado"
+import { CompartilhadoAvisoWireframe } from "@/components/wireframe/compartilhado-aviso-wireframe"
 import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
 import {
     ImportarExtratoLink,
@@ -199,6 +203,38 @@ export default function TransactionsPage() {
         router.replace(qs ? `${pathname}?${qs}` : pathname)
     }, [searchParams, pathname, router, shell])
 
+    // `?compartilhado=` (a foto ou o PDF do compartilhar, que o service worker
+    // guardou no Cache Storage): a foto abre a criação com a "Foto do recibo"
+    // lendo; o PDF e o arquivo que sumiu viram aviso. Sai da URL nos três casos.
+    const [avisoCompartilhado, setAvisoCompartilhado] = useState<"pdf" | "indisponivel" | null>(null)
+    const compartilhadoLido = useRef<string | null>(null)
+    useEffect(() => {
+        const naUrl = searchParams?.get("compartilhado")
+        if (naUrl == null || !shell || compartilhadoLido.current === naUrl) return
+        // Ler apaga o arquivo: o ref segura o segundo efeito do modo estrito.
+        compartilhadoLido.current = naUrl
+        const pedido = consumirParametroCompartilhado(searchParams)
+        const resto = new URLSearchParams(searchParams?.toString())
+        for (const k of PARAMETROS_DO_COMPARTILHADO) resto.delete(k)
+        const qs = resto.toString()
+        router.replace(qs ? `${pathname}?${qs}` : pathname)
+        if (!pedido) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- consome o parâmetro da URL uma vez
+            setAvisoCompartilhado("indisponivel")
+            return
+        }
+        void lerArquivoCompartilhado(pedido.chave).then((arquivo) => {
+            if (!arquivo) {
+                setAvisoCompartilhado("indisponivel")
+            } else if (pedido.tipo === "pdf") {
+                setAvisoCompartilhado("pdf")
+            } else {
+                setAvisoCompartilhado(null)
+                shell.openTransactionCreate("expense", { fotoInicial: arquivo })
+            }
+        })
+    }, [searchParams, pathname, router, shell])
+
     if (workspaceError) {
         return (
             <Card>
@@ -229,6 +265,12 @@ export default function TransactionsPage() {
             {/* `?conferir=1` é uma vista (o atalho do ícone aponta para ela): fica na URL. */}
             {searchParams?.get("conferir") === "1" && currentWorkspaceId ? (
                 <AConferirListaWireframe workspaceId={currentWorkspaceId} />
+            ) : null}
+            {avisoCompartilhado ? (
+                <CompartilhadoAvisoWireframe
+                    aviso={avisoCompartilhado}
+                    onFechar={() => setAvisoCompartilhado(null)}
+                />
             ) : null}
             {importarAberto && user && currentWorkspaceId ? (
                 <ImportarExtratoWireframe
