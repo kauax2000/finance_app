@@ -40,6 +40,8 @@ type TransactionFormDialogProps = {
         planId: string,
         payload: InstallmentPlanUpdatePayload
     ) => Promise<boolean>
+    /** Na criação, a frase rápida já escrita (o compartilhar do Android). */
+    fraseInicial?: string
 }
 
 export function TransactionFormDialog({
@@ -55,6 +57,7 @@ export function TransactionFormDialog({
     onSave,
     onSaveInstallmentPlan,
     onUpdateInstallmentPlan,
+    fraseInicial,
 }: TransactionFormDialogProps) {
     const isMobile = useIsMobile()
 
@@ -80,6 +83,7 @@ export function TransactionFormDialog({
         onUpdateInstallmentPlan,
         closeOnSuccess: true,
         onClose: () => onOpenChange(false),
+        fraseInicial,
     })
 
     // Uma casca só: diálogo no desktop, gaveta alta no telefone. O

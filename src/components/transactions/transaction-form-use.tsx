@@ -14,6 +14,7 @@ import {
 import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import { totalPurchaseFromPlan } from "@/lib/transaction-installment"
 import { toastError } from "@/lib/toast"
+import type { CamposDaFrase } from "@/lib/captura/frase-no-form"
 import type { TransactionFormKind } from "@/components/transactions/transaction-type-segment"
 import { transactionFormTitle } from "@/components/transactions/transaction-form-title"
 import {
@@ -135,6 +136,8 @@ export type UseTransactionFormArgs = {
     onClose: () => void
     /** Called after any successful save (before onClose when closeOnSuccess). */
     onSuccess?: () => void
+    /** Na criação, a frase rápida já escrita (o compartilhar do Android). */
+    fraseInicial?: string
 }
 
 export function useTransactionForm({
@@ -152,6 +155,7 @@ export function useTransactionForm({
     closeOnSuccess = true,
     onClose,
     onSuccess,
+    fraseInicial,
 }: UseTransactionFormArgs) {
     const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false)
     const [creditCardPopoverOpen, setCreditCardPopoverOpen] = useState(false)
@@ -177,6 +181,9 @@ export function useTransactionForm({
     const [installmentEditScope, setInstallmentEditScope] = useState<
         "slice" | "plan"
     >("slice")
+    // As dúvidas da frase rápida aplicada; `null` sem frase. O salvar leva a
+    // origem `quick_text` e a marca de "a conferir" (Decisão 14).
+    const [duvidasDaFrase, setDuvidasDaFrase] = useState<string[] | null>(null)
 
     const segmentMode: "create" | "edit" = editingTransaction
         ? "edit"
@@ -266,6 +273,7 @@ export function useTransactionForm({
         setInstallmentPerAmount(v.installmentPerAmount)
         setInstallmentCount(v.installmentCount)
         setInstallmentEditScope(v.installmentEditScope)
+        setDuvidasDaFrase(null)
         setSnapshot(v)
     }, [active, editingTransaction, defaultLaunchKind])
     /* eslint-enable react-hooks/set-state-in-effect */
@@ -354,6 +362,31 @@ export function useTransactionForm({
         },
         [syncFieldsForInstallmentScope]
     )
+
+    /**
+     * Preenche os campos pela frase. Com parcelas, a criação vai para a
+     * Parcelada com o total e o número; o estorno é a receita com o cartão.
+     */
+    const aplicarFrase = useCallback((c: CamposDaFrase) => {
+        const parcelada = c.tipo === "expense" && c.parcelas != null && c.parcelas > 1
+        const valor = c.valor != null ? formatMoneyBrlInput(c.valor) : ""
+        setFormKind(parcelada ? "installment" : c.tipo)
+        setType(c.tipo)
+        if (parcelada) {
+            setInstallmentValueMode("total")
+            setInstallmentTotal(valor)
+            setInstallmentCount(String(c.parcelas))
+        } else {
+            setAmount(valor)
+        }
+        setDescription(c.descricao)
+        setDate(c.data)
+        setCategoryId(c.categoryId ?? "")
+        setPaymentMethod(c.tipo === "expense" ? c.paymentMethod : null)
+        setPaymentCreditCardId(c.tipo === "expense" ? (c.creditCardId ?? "") : "")
+        setEstornoCartaoId(c.estorno ? c.creditCardId : null)
+        setDuvidasDaFrase(c.duvidas)
+    }, [])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -560,6 +593,13 @@ export function useTransactionForm({
             recurringInterval,
             paymentMethod: pm,
             paymentCreditCardId: pcc,
+            // A categoria vazia no salvar também fica a conferir.
+            ...(!editingTransaction && duvidasDaFrase
+                ? {
+                      source: "quick_text" as const,
+                      needsReview: duvidasDaFrase.length > 0 || !categoryId,
+                  }
+                : {}),
         })
 
         if (ok) {
@@ -610,6 +650,8 @@ export function useTransactionForm({
         installmentEditScope,
         setInstallmentEditScope: setInstallmentScope,
         planIsActive,
+        fraseInicial,
+        aplicarFrase,
     }
 
     const formTitle = transactionFormTitle({

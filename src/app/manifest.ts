@@ -17,6 +17,12 @@ export default function manifest(): MetadataRoute.Manifest {
         lang: "pt-BR",
         dir: "ltr",
         categories: ["finance", "productivity"],
+        // O compartilhar do Android: o texto vira a frase rápida (Bloco 3A, Decisão 4).
+        share_target: {
+            action: "/transactions",
+            method: "GET",
+            params: { text: "frase", title: "frase_titulo", url: "frase_url" },
+        },
         icons: [
             {
                 src: pwaIconSrc("icon-192.png"),
@@ -39,9 +45,15 @@ export default function manifest(): MetadataRoute.Manifest {
         ],
         shortcuts: [
             {
-                name: "Nova transação",
-                short_name: "Transação",
+                name: "Nova despesa",
+                short_name: "Despesa",
                 url: "/transactions?new=1",
+                icons: [{ src: pwaIconSrc("icon-192.png"), sizes: "192x192", type: "image/png" }],
+            },
+            {
+                name: "A conferir",
+                short_name: "Conferir",
+                url: "/transactions?conferir=1",
                 icons: [{ src: pwaIconSrc("icon-192.png"), sizes: "192x192", type: "image/png" }],
             },
             {

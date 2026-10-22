@@ -29,7 +29,8 @@ import {
 import { createSubscription } from "@/lib/subscriptions/mutations"
 
 export type GlobalShellDialogsContextValue = {
-    openTransactionCreate: (mode: NewTransactionMode) => void
+    /** `frase`: a frase rápida já escrita no formulário (o compartilhar do Android). */
+    openTransactionCreate: (mode: NewTransactionMode, opts?: { frase?: string }) => void
     openCategoryCreate: () => void
     openSubscriptionCreate: () => void
     openCreditCardCreate: () => void
@@ -65,6 +66,7 @@ export function GlobalShellDialogsProvider({
     const [createLaunchKind, setCreateLaunchKind] =
         React.useState<TransactionFormKind>("expense")
     const [txSaving, setTxSaving] = React.useState(false)
+    const [createFrase, setCreateFrase] = React.useState<string | undefined>()
 
     const [categoryOpen, setCategoryOpen] = React.useState(false)
 
@@ -89,10 +91,14 @@ export function GlobalShellDialogsProvider({
         dispatchFinanceTransactionsMutated()
     }, [])
 
-    const openTransactionCreate = React.useCallback((mode: NewTransactionMode) => {
-        setCreateLaunchKind(modeToLaunchKind(mode))
-        setTxOpen(true)
-    }, [])
+    const openTransactionCreate = React.useCallback(
+        (mode: NewTransactionMode, opts?: { frase?: string }) => {
+            setCreateLaunchKind(modeToLaunchKind(mode))
+            setCreateFrase(opts?.frase)
+            setTxOpen(true)
+        },
+        [],
+    )
 
     const handleTxOpenChange = React.useCallback((open: boolean) => {
         setTxOpen(open)
@@ -235,6 +241,7 @@ export function GlobalShellDialogsProvider({
                 saving={txSaving}
                 onSave={handleTxSave}
                 onSaveInstallmentPlan={handleTxSaveInstallmentPlan}
+                fraseInicial={createFrase}
             />
             <CategoryCreateDialog
                 open={categoryOpen}

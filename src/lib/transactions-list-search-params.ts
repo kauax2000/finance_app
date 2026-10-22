@@ -135,3 +135,21 @@ export function consumirParametroImportar(
     resto.delete("importar")
     return resto.toString()
 }
+
+/** Os parâmetros do compartilhar do Android (`share_target` do manifest). */
+export const PARAMETROS_DA_FRASE = ["frase", "frase_titulo", "frase_url"] as const
+
+/**
+ * `?frase=` (e o título e o link do compartilhar) abre a criação com a frase
+ * rápida já escrita: o texto junto, nessa ordem, até 500 caracteres, ou `null`
+ * quando não há nada. Quem chama tira os três da URL.
+ */
+export function consumirParametroFrase(
+    params: { get(chave: string): string | null } | null
+): string | null {
+    const texto = PARAMETROS_DA_FRASE.map((k) => params?.get(k)?.trim() ?? "")
+        .filter(Boolean)
+        .join(" ")
+        .slice(0, 500)
+    return texto || null
+}

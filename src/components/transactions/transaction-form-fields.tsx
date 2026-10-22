@@ -76,6 +76,8 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { currencyBRL } from "@/lib/formatters"
 import { EstornoWireframe } from "@/components/wireframe/estorno-wireframe"
+import { FraseRapidaWireframe } from "@/components/wireframe/frase-rapida-wireframe"
+import type { CamposDaFrase } from "@/lib/captura/frase-no-form"
 
 
 function CategoryRows({
@@ -255,6 +257,9 @@ export type TransactionFormFieldsProps = {
     installmentEditScope?: "slice" | "plan"
     setInstallmentEditScope?: (s: "slice" | "plan") => void
     planIsActive?: boolean
+    /** A frase rápida (só na criação): a frase já escrita e o que ela preenche. */
+    fraseInicial?: string
+    aplicarFrase?: (c: CamposDaFrase) => void
 }
 
 /**
@@ -320,6 +325,8 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
         installmentEditScope = "slice",
         setInstallmentEditScope,
         planIsActive = false,
+        fraseInicial,
+        aplicarFrase,
     } = props
 
     const isMobile = useIsMobile()
@@ -407,6 +414,11 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
     const activeCards = useMemo(
         () => creditCards.filter((c) => c.is_active),
         [creditCards]
+    )
+
+    const cartoesDaFrase = useMemo(
+        () => activeCards.map((c) => ({ ...c, wallet_alias: c.wallet_alias ?? null })),
+        [activeCards]
     )
 
     const handleCategoryPopoverOpenChange = (open: boolean) => {
@@ -512,6 +524,14 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
 
     return (
         <div className="space-y-4 py-1 pb-2">
+            {segmentMode === "create" && aplicarFrase ? (
+                <FraseRapidaWireframe
+                    fraseInicial={fraseInicial}
+                    cartoes={cartoesDaFrase}
+                    onAplicar={aplicarFrase}
+                />
+            ) : null}
+
             {showInstallmentEditScopePicker ? (
                 <TransactionFormScopeSegment
                     value={installmentEditScope}

@@ -1,4 +1,5 @@
 import type { PaymentMethod } from "@/lib/payment-methods"
+import type { TransactionSource } from "@/lib/supabase"
 
 /** O assunto dos toasts do formulário: o "Transação criada" toma o lugar do erro de validação. */
 export const TRANSACTION_SAVE_TOAST_ID = "salvar-transacao"
@@ -14,6 +15,10 @@ export type TransactionFormSavePayload = {
     recurringInterval: "daily" | "weekly" | "monthly" | null
     paymentMethod: PaymentMethod | null
     paymentCreditCardId: string | null
+    /** Só na criação; sem ele, o padrão do banco (`app`). */
+    source?: TransactionSource
+    /** Só na criação; a edição grava sempre `false`. */
+    needsReview?: boolean
 }
 
 export type InstallmentPlanFormSavePayload = {

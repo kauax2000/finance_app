@@ -18,11 +18,23 @@ export type SaveTransactionContext = {
     editingTransactionId?: string | null
 }
 
-function buildTransactionRow(
+/**
+ * @internal Exportada para o teste. Editar e salvar tira a marca de "a
+ * conferir" (Decisão 14); a criação só grava `source` e `needs_review` quando
+ * vierem, e sem eles valem os padrões do banco.
+ */
+export function buildTransactionRow(
     ctx: SaveTransactionContext,
     payload: TransactionFormSavePayload,
 ) {
+    const editing = Boolean(payload.editingId ?? ctx.editingTransactionId)
     return {
+        ...(editing
+            ? { needs_review: false }
+            : {
+                  ...(payload.source ? { source: payload.source } : {}),
+                  ...(payload.needsReview != null ? { needs_review: payload.needsReview } : {}),
+              }),
         user_id: ctx.userId,
         workspace_id: ctx.workspaceId,
         category_id: payload.categoryId,

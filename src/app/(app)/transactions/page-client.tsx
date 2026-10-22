@@ -42,7 +42,12 @@ import {
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { numberBR } from "@/lib/formatters"
-import { consumirParametroImportar } from "@/lib/transactions-list-search-params"
+import {
+    consumirParametroFrase,
+    consumirParametroImportar,
+    PARAMETROS_DA_FRASE,
+} from "@/lib/transactions-list-search-params"
+import { useGlobalShellDialogsOptional } from "@/components/layout/global-shell-dialogs-provider"
 import {
     ImportarExtratoLink,
     ImportarExtratoWireframe,
@@ -179,6 +184,19 @@ export default function TransactionsPage() {
         setImportarAberto(true)
         router.replace(resto ? `${pathname}?${resto}` : pathname)
     }, [searchParams, pathname, router])
+
+    // `?frase=` (o compartilhar do Android, `share_target`) abre a criação com
+    // a frase já escrita, sem aplicar, e sai da URL.
+    const shell = useGlobalShellDialogsOptional()
+    useEffect(() => {
+        const frase = consumirParametroFrase(searchParams)
+        if (frase == null || !shell) return
+        shell.openTransactionCreate("expense", { frase })
+        const resto = new URLSearchParams(searchParams?.toString())
+        for (const k of PARAMETROS_DA_FRASE) resto.delete(k)
+        const qs = resto.toString()
+        router.replace(qs ? `${pathname}?${qs}` : pathname)
+    }, [searchParams, pathname, router, shell])
 
     if (workspaceError) {
         return (
