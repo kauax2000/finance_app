@@ -59,6 +59,8 @@ export type ContextoIA = {
 }
 
 const VALOR_MAXIMO = 1_000_000
+/** Um valor em reais no texto da fatura ("42,90", "1.234,56"). */
+const TEM_DINHEIRO = /\d{1,3}(?:\.\d{3})*,\d{2}/
 
 // ---------------------------------------------------------------- validação
 
@@ -417,7 +419,11 @@ export async function lerFatura(ctx: ContextoIA, textoBruto: string, fechamento:
         { role: 'user', content: fatia },
       ],
       MAX_TOKENS_FATIA,
-      validarItensFatura,
+      // Fatia com valor em reais e resposta vazia é leitura falha, não rodapé: vai ao próximo provedor.
+      (b) => {
+        const lidos = validarItensFatura(b)
+        return lidos?.length === 0 && TEM_DINHEIRO.test(fatia) ? null : lidos
+      },
     )
     if (!r.ok) {
       if (r.motivo !== 'sem_ia') return r

@@ -35,24 +35,38 @@ function redigirEndereco(linha: string): string {
   return linha.replace(LOGRADOURO_ATE_O_FIM, (m) => (/\d/.test(m) ? '[endereço]' : m))
 }
 
+// Um número não começa colado a outro, a uma data ("12/10") ou a um valor
+// ("1.234,56"), e não termina no começo de um valor ou de uma data ("23,90", "03/10").
+const ANTES = String.raw`(?<![\d/.,])`
+const DEPOIS = String.raw`(?!\d|[.,/]\d)`
+const re = (fonte: string, flags = 'g') => new RegExp(fonte, flags)
+
+/** 12 dígitos ou mais em blocos separados é cartão (4-4-4-4, 4-6-5, 8-8, 4-8-4…). */
+const mascaraBlocos = (m: string) => (m.replace(/\D/g, '').length >= 12 ? mascaraCartao(m) : m)
+
 const SUBSTITUICOES: Array<[RegExp, string | ((m: string) => string)]> = [
   // E-mail primeiro: ele pode ter dígitos que as regras abaixo comeriam pela metade.
   [/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g, '[email]'],
-  // Cartão pela forma, com separador repetido ("5502  0912", "5502 - 0912"), sem
-  // engolir o número vizinho: 4-4-4-(1..7), Amex 4-6-5, e corrido de 13 a 19.
-  [/\b\d{4}(?:[ \t.-]{1,3}\d{4}){2}[ \t.-]{1,3}\d{1,7}\b/g, mascaraCartao],
-  [/\b\d{4}[ \t.-]{1,3}\d{6}[ \t.-]{1,3}\d{5}\b/g, mascaraCartao],
-  [/\b\d{13,19}\b/g, mascaraCartao],
-  [/\b\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}\b/g, '[cnpj]'],
-  [/\b\d{3}[. ]?\d{3}[. ]?\d{3}[ -]?\d{2}\b/g, '[cpf]'],
-  [/\b\d{5}-\d{3}\b|\bcep\W*\d{8}\b/gi, '[cep]'],
-  // Telefone: com DDD (ou +55) os blocos aceitam espaço, ponto ou hífen; sem
-  // DDD, só o hífen. "42,90", "1.234,56" e "12/10" não têm a forma.
+  // Cartão em blocos, com separador repetido ("5502  0912", "5502 - 0912", "/", "_").
+  // O último bloco não engole o valor ou a data seguinte: "9012 23,90" fica "•••• 9012 23,90".
+  // Blocos de 3 dígitos ou mais: com o "/" de separador, "03/10" seria um bloco.
+  [re(String.raw`${ANTES}\d{4,8}(?:[ \t._/-]{1,3}\d{3,8}){1,4}${DEPOIS}`), mascaraBlocos],
+  [re(String.raw`${ANTES}\d{13,}${DEPOIS}`), mascaraCartao],
+  [re(String.raw`${ANTES}\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}${DEPOIS}`), '[cnpj]'],
+  [re(String.raw`${ANTES}\d{3}[. ]?\d{3}[. ]?\d{3}[ -]?\d{2}${DEPOIS}`), '[cpf]'],
+  [re(String.raw`${ANTES}\d{5}-\d{3}${DEPOIS}|\bcep\W*\d{5}[ -]?\d{3}${DEPOIS}`, 'gi'), '[cep]'],
+  // Telefone com DDD (ou +55): os blocos aceitam espaço, ponto ou hífen.
   [
-    /(?:\+55[ .-]?)?(?:\(\d{2}\)[ .-]?|\b\d{2}[ .-]?)(?:9[ .-]?)?\d{4}[ .-]?\d{4}\b|\b9?\d{4}-\d{4}\b/g,
+    re(String.raw`(?:\+55[ .-]?)?(?:\(\d{2}\)[ .-]?|${ANTES}\b\d{2}[ .-]?)(?:9[ .-]?)?\d{4}[ .-]?\d{4}${DEPOIS}`),
     '[telefone]',
   ],
+  // Sem DDD, só depois da palavra: "cel 987654321". Sozinho, "1234-5678" pode ser código da compra.
+  [
+    re(String.raw`\b(cel|celular|tel|telefone|fone|whats|whatsapp)(\W{1,3})9?\d{4}[ .-]?\d{4}${DEPOIS}`, 'gi'),
+    '$1$2[telefone]',
+  ],
 ]
+
 
 /** Partículas de nome que não identificam ninguém e são palavras comuns. */
 const PARTICULAS = new Set(['dos', 'das', 'del', 'von', 'van'])

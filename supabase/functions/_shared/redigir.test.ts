@@ -106,3 +106,29 @@ Deno.test('redigir: endereço sozinho na linha sai; com dinheiro, só o trecho d
   assertEquals(redigir('almoço Av. Paulista, 1.578 - 42,90', []), 'almoço [endereço] - 42,90')
   assertEquals(redigir('Travessa do Ouvidor 12 pão 8,00', []), '[endereço] pão 8,00')
 })
+
+// ---- rodada 2 da revisão ----
+
+Deno.test('redigir: o último bloco do cartão não engole o valor nem a data (N1)', () => {
+  assertEquals(redigir('12/10 UBER TRIP 1234 5678 9012 23,90', []), '12/10 UBER TRIP •••• 9012 23,90')
+  assertEquals(redigir('PAGAMENTO 1234 5678 9012 1.234,56', []), 'PAGAMENTO •••• 9012 1.234,56')
+  assertEquals(redigir('12/10 COMPRA 4111 1111 1111 9,90', []), '12/10 COMPRA •••• 1111 9,90')
+  assertEquals(redigir('PARC 2026 1012 3456 03/10', []), 'PARC •••• 3456 03/10')
+})
+
+Deno.test('redigir: CPF e telefone não engolem valor nem data (N2, N3)', () => {
+  assertEquals(redigir('12/10 LOJA 123 456 789 10,00', []), '12/10 LOJA 123 456 789 10,00')
+  assertEquals(redigir('12/10 1234 5678 42,90', []), '12/10 1234 5678 42,90')
+})
+
+Deno.test('redigir: cartão com "/" ou "_" e nos agrupamentos 8-8 e 4-8-4', () => {
+  for (const t of ['4111/1111/1111/1111', '4111_1111_1111_1111', '41111111 11111111', '4111 11111111 1111']) {
+    assertEquals(redigir(t, []), '•••• 1111', t)
+  }
+})
+
+Deno.test('redigir: CEP com espaço e telefone sem DDD depois da palavra', () => {
+  assertEquals(redigir('CEP 01310 100', []), '[cep]')
+  assertEquals(redigir('cel 987654321', []), 'cel [telefone]')
+  assertEquals(redigir('12/10 LOJA 1234-5678 42,90', []), '12/10 LOJA 1234-5678 42,90')
+})

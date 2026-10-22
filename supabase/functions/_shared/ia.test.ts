@@ -415,7 +415,8 @@ Deno.test('lerFatura: fechamento inválido fica fora do prompt', async () => {
 Deno.test('lerFatura: nenhuma compra em fatia nenhuma dá sem_ia', async () => {
   const f = adminFalso()
   await comFetch(() => resposta({ itens: [] }), async (pedidos) => {
-    assertEquals(await lerFatura(f.ctx, LINHA, '2026-10-20'), { ok: false, motivo: 'sem_ia' })
+    // Sem valor no texto: a resposta vazia é válida, e uma chamada basta.
+    assertEquals(await lerFatura(f.ctx, 'Central de atendimento: consulte o app', '2026-10-20'), { ok: false, motivo: 'sem_ia' })
     assertEquals(pedidos.length, 1)
     assertEquals(f.eventos().map((e) => e.args?.p_status), ['ok'])
   })
@@ -428,4 +429,32 @@ Deno.test('lerFatura: o teto vale para o texto bruto, antes de redigir', async (
     assertEquals(await lerFatura(f.ctx, texto, '2026-10-20'), { ok: false, motivo: 'fatura_grande' })
     assertEquals(pedidos.length, 0)
   })
+})
+
+// ---- rodada 2 da revisão ----
+
+Deno.test('lerFatura: {"itens": []} numa fatia com valor é inválido e vai ao próximo, sem cache', async () => {
+  const f = adminFalso()
+  await comFetch((url) => (url.includes('groq') ? resposta({ itens: [] }) : resposta({ itens: [ITEM] })), async () => {
+    const r = await lerFatura(f.ctx, LINHA, '2026-10-20')
+    assert(r.ok)
+    assertEquals(r.provedor, 'cloudflare')
+    assertEquals(f.eventos().map((e) => e.args?.p_status), ['invalido', 'ok'])
+    assertEquals(f.upserts.length, 1)
+    assertEquals((f.upserts[0].resultado as { provedor: string }).provedor, 'cloudflare')
+  })
+})
+
+Deno.test('lerFatura: rodapé sem valor pode vir vazio', async () => {
+  const f = adminFalso()
+  const texto = LINHA.repeat(10) + 'Central de atendimento: consulte o app ' + 'x'.repeat(FATIA_FATURA - 100)
+  await comFetch(
+    (_url, init) => resposta(String(init.body).includes('Central de atendimento') ? { itens: [] } : { itens: [ITEM] }),
+    async () => {
+      const r = await lerFatura(f.ctx, texto, '2026-10-20')
+      assert(r.ok)
+      assertEquals(r.dados.length, 1)
+      assertEquals(f.eventos().map((e) => e.args?.p_status), ['ok', 'ok'])
+    },
+  )
 })
