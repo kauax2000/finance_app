@@ -86,3 +86,19 @@ Deno.test('frase: número por extenso no meio do nome não é valor', () => {
 Deno.test('frase: "dd/mm" depois de hoje é do ano passado', () => {
   assertEquals(interpretarFrase('15/12 x 20', '2026-01-10').data, '2025-12-15')
 })
+
+Deno.test('frase: número depois de "R$" é dinheiro, nunca a contagem', () => {
+  const f = interpretarFrase('R$ 30 x 2 cafés', HOJE)
+  assertEquals([f.valor, f.parcelas, f.duvidas], [30, null, ['valor']])
+  assertEquals(interpretarFrase('r$ 15 x 2', HOJE).valor, 15)
+  const sem = interpretarFrase('15 x 2', HOJE)
+  assertEquals([sem.valor, sem.parcelas, sem.duvidas.includes('valor')], [2, 15, true])
+})
+
+Deno.test('frase: "Nx de R$ V" é o total', () => {
+  for (const s of ['12x de R$ 99,90', '12x de r$99,90']) {
+    const f = interpretarFrase(s, HOJE)
+    assertEquals([f.valor, f.parcelas, f.duvidas.includes('valor')], [1198.8, 12, true], s)
+  }
+  assertEquals(interpretarFrase('2x de R$ 15', HOJE).valor, 30)
+})

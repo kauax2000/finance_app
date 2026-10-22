@@ -58,8 +58,8 @@ const FORMAS = new Map<string, FormaDePagamento>([
   ['credito', 'credit_card'], ['cartao', 'credit_card'],
 ])
 
-/** Ligam a palavra seguinte: colados antes de uma palavra consumida, saem com ela. */
-const CONECTIVOS = new Set(['no', 'na', 'em', 'de', 'do', 'da', 'com', 'pelo', 'pela', 'via', 'e'])
+/** Ligam a palavra seguinte ("x" é o "vezes" de "30 x 2"): colados antes de uma palavra consumida, saem com ela. */
+const CONECTIVOS = new Set(['no', 'na', 'em', 'de', 'do', 'da', 'com', 'pelo', 'pela', 'via', 'e', 'x'])
 /** Antes da última palavra, dizem que ela é do nome ("pão de queijo", "uma pizza"), não um cartão; um número também. */
 const PRENDEM_A_SEGUINTE = new Set(['de', 'do', 'da', 'dos', 'das', 'e', 'um', 'uma', 'o', 'a', 'os', 'as'])
 
@@ -215,17 +215,19 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
     const c = k(i)
     const t = toks[i]
 
-    // "3x", "3 x", "3 vezes", "três vezes"; com "de V", V é a parcela.
+    // "3x", "3 x", "3 vezes", "três vezes", "três x"; com "de V", V é a parcela.
+    // Um número logo depois de "r$" é dinheiro, nunca a contagem ("R$ 30 x 2").
     let n: number | null = null
     let fim = i
     const x = /^(\d+)x$/.exec(c)
-    if (x) n = Number(x[1])
-    else if (/^\d+$/.test(c) && ['x', 'vezes', 'vez'].includes(k(i + 1))) {
+    const dinheiro = k(i - 1) === 'r$'
+    if (x && !dinheiro) n = Number(x[1])
+    else if (!dinheiro && /^\d+$/.test(c) && ['x', 'vezes', 'vez'].includes(k(i + 1))) {
       n = Number(c)
       fim = i + 1
-    } else if (NUMEROS.has(c)) {
+    } else if (!dinheiro && NUMEROS.has(c)) {
       const ext = lerExtenso(toks, i)
-      if (ext && ['vezes', 'vez'].includes(k(ext.fim + 1))) {
+      if (ext && ['x', 'vezes', 'vez'].includes(k(ext.fim + 1))) {
         n = ext.valor
         fim = ext.fim + 1
       }
@@ -235,13 +237,19 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
       const valida = n >= 2 && n <= 48
       if (valida) parcelas ??= n
       else duvida('parcelas')
-      // "10x de 30": o total é 10 × 30, e a dúvida pede que a pessoa confirme.
-      const parcela = k(fim + 1) === 'de' && toks[fim + 2] && !toks[fim + 2].usado ? lerNumero(k(fim + 2)) : null
-      if (parcela != null && valor == null) {
-        usar(fim + 1, fim + 2)
-        valor = valida ? centavos(n * parcela) : parcela
+      // O número logo depois ("10x de 30", "10x de R$ 30", "10x 30"): a pessoa confere.
+      const comDe = k(fim + 1) === 'de'
+      let j = comDe ? fim + 2 : fim + 1
+      if (k(j) === 'r$') j++
+      const seguinte = toks[j] && !toks[j].usado ? lerNumero(k(j)) : null
+      if (seguinte != null) {
         duvida('valor')
-        fim += 2
+        // Com "de", V é a parcela e o total é N × V; sem "de", V fica como o valor.
+        if (comDe && valor == null) {
+          usar(fim + 1, j)
+          valor = valida ? centavos(n * seguinte) : seguinte
+          fim = j
+        }
       }
       i = fim
       continue
@@ -333,8 +341,10 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
   }
   for (let i = 0; i < toks.length; i++) if (k(i) === 'r$' || k(i) === 'reais') toks[i].usado = true
   if (valor != null && valor <= 0) valor = null
-  // Sem valor, ou com outro número sobrando na descrição ("3 cafés 15"), a pessoa confere.
-  if (valor == null || toks.some((t) => !t.usado && lerNumero(t.chave) != null)) duvida('valor')
+  // Sem valor, ou com outro número sobrando na descrição ("3 cafés 15", "mil 200 tv"), a pessoa confere.
+  const outroNumero = (t: Token) =>
+    lerNumero(t.chave) != null || t.chave === 'mil' || (NUMEROS.has(t.chave) && t.chave !== 'um' && t.chave !== 'uma')
+  if (valor == null || toks.some((t) => !t.usado && outroNumero(t))) duvida('valor')
 
   // O conectivo colado antes do que foi consumido sai junto ("no débito", "em 3x").
   for (let i = toks.length - 2; i >= 0; i--) {
