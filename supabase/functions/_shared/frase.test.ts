@@ -53,3 +53,36 @@ Deno.test('preencherPeloHistorico: a mais recente de mesmo tipo', () => {
   ])
   assertEquals(r, { categoryId: 'nova', paymentMethod: 'pix', creditCardId: null })
 })
+
+Deno.test('frase: "N mil" multiplica e some da descrição', () => {
+  const f = interpretarFrase('2 mil tv', HOJE)
+  assertEquals([f.valor, f.descricao], [2000, 'Tv'])
+  assertEquals(interpretarFrase('1,5 mil reforma', HOJE).valor, 1500)
+  assertEquals(interpretarFrase('R$ 2 mil tv', HOJE).valor, 2000)
+})
+
+Deno.test('frase: o valor marcado vence; outro número sobrando vira dúvida', () => {
+  const marcado = interpretarFrase('mercado 3 itens R$ 40', HOJE)
+  assertEquals([marcado.valor, marcado.duvidas], [40, ['valor']])
+  const solto = interpretarFrase('3 cafés 15', HOJE)
+  assertEquals([solto.valor, solto.duvidas], [3, ['valor']])
+  assertEquals(interpretarFrase('42 reais e 90 centavos mercado', HOJE).valor, 42.9)
+})
+
+Deno.test('frase: "Nx de V" é o total, com dúvida', () => {
+  const f = interpretarFrase('em 10x de 30 tv', HOJE)
+  assertEquals([f.valor, f.parcelas, f.duvidas.includes('valor')], [300, 10, true])
+})
+
+Deno.test('frase: número por extenso no meio do nome não é valor', () => {
+  for (const s of ['padaria dois irmãos', 'loja mil coisas', 'bar sete belo', 'cinema oito e meia']) {
+    assertEquals(interpretarFrase(s, HOJE).valor, null, s)
+  }
+  assertEquals(interpretarFrase('mercado quarenta reais', HOJE).valor, 40)
+  const parou = interpretarFrase('quarenta e dois e cinquenta mercado', HOJE)
+  assertEquals([parou.valor, parou.duvidas], [42, ['valor']])
+})
+
+Deno.test('frase: "dd/mm" depois de hoje é do ano passado', () => {
+  assertEquals(interpretarFrase('15/12 x 20', '2026-01-10').data, '2025-12-15')
+})

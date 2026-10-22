@@ -60,7 +60,7 @@ const FORMAS = new Map<string, FormaDePagamento>([
 
 /** Ligam a palavra seguinte: colados antes de uma palavra consumida, saem com ela. */
 const CONECTIVOS = new Set(['no', 'na', 'em', 'de', 'do', 'da', 'com', 'pelo', 'pela', 'via', 'e'])
-/** Antes da última palavra, dizem que ela é do nome ("pão de queijo", "uma pizza"), não um cartão. */
+/** Antes da última palavra, dizem que ela é do nome ("pão de queijo", "uma pizza"), não um cartão; um número também. */
 const PRENDEM_A_SEGUINTE = new Set(['de', 'do', 'da', 'dos', 'das', 'e', 'um', 'uma', 'o', 'a', 'os', 'as'])
 
 type Token = { texto: string; chave: string; usado: boolean }
@@ -84,33 +84,56 @@ function lerNumero(chave: string): number | null {
   return n == null ? null : Math.round(n * 100) / 100
 }
 
+/** A ordem de grandeza de um termo por extenso: centenas 3, dezenas 2, unidades 1. */
+const ordem = (v: number) => (v >= 100 ? 3 : v >= 20 ? 2 : 1)
+
 /**
  * "quarenta e dois", "cento e vinte", "mil e duzentos": de zero a 999, mais
  * "mil", ligados por "e". "um"/"uma" sozinhos não contam ("uma pizza").
+ * Dentro de um grupo cada termo é menor que o anterior; quando o seguinte não
+ * é ("quarenta e dois e cinquenta"), a cadeia para e `parou` avisa.
  */
-function lerExtenso(toks: Token[], i: number): { valor: number; fim: number } | null {
+function lerExtenso(toks: Token[], i: number): { valor: number; fim: number; parou: boolean } | null {
   let total = 0
   let atual = 0
   let palavras = 0
   let fim = -1
+  let anterior = 4
+  let temMil = false
+  let parou = false
   const ehNumero = (t: Token | undefined) => !!t && !t.usado && (t.chave === 'mil' || NUMEROS.has(t.chave))
   let j = i
   while (ehNumero(toks[j])) {
     const c = toks[j].chave
     if (c === 'mil') {
+      if (temMil) {
+        parou = true
+        break
+      }
       total += (atual || 1) * 1000
       atual = 0
-    } else atual += NUMEROS.get(c)!
+      anterior = 4
+      temMil = true
+    } else {
+      const v = NUMEROS.get(c)!
+      if (ordem(v) >= anterior) {
+        parou = true
+        break
+      }
+      atual += v
+      anterior = ordem(v)
+    }
     palavras++
     fim = j
     j += toks[j + 1]?.chave === 'e' && !toks[j + 1].usado && ehNumero(toks[j + 2]) ? 2 : 1
   }
   if (palavras === 0) return null
   if (palavras === 1 && (toks[i].chave === 'um' || toks[i].chave === 'uma')) return null
-  return { valor: total + atual, fim }
+  return { valor: total + atual, fim, parou }
 }
 
 const p2 = (n: number) => String(n).padStart(2, '0')
+const centavos = (n: number) => Math.round(n * 100) / 100
 
 function partes(hoje: string): [number, number, number] {
   const [y, m, d] = hoje.split('-').map(Number)
@@ -139,13 +162,24 @@ function diaDoMes(hoje: string, n: number): string | null {
   return `${y}-${p2(m)}-${p2(Math.min(n, ultimo))}`
 }
 
-/** "dd/mm" com o ano de hoje (ou "dd/mm/aa(aa)"); data inexistente dá null. */
-function diaMes(hoje: string, dia: number, mes: number, ano?: string): string | null {
-  const y = ano ? Number(ano.length === 2 ? `20${ano}` : ano) : partes(hoje)[0]
+function montarData(y: number, mes: number, dia: number): string | null {
   const dt = new Date(Date.UTC(y, mes - 1, dia))
   if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mes - 1 || dt.getUTCDate() !== dia) return null
   return `${y}-${p2(mes)}-${p2(dia)}`
 }
+
+/**
+ * "dd/mm/aa(aa)", ou "dd/mm" com o ano de hoje — o do ano passado quando cairia
+ * depois de hoje, como o "dia N". Data inexistente dá null.
+ */
+function diaMes(hoje: string, dia: number, mes: number, ano?: string): string | null {
+  if (ano) return montarData(Number(ano.length === 2 ? `20${ano}` : ano), mes, dia)
+  const y = partes(hoje)[0]
+  const d = montarData(y, mes, dia)
+  return d != null && d <= hoje ? d : montarData(y - 1, mes, dia)
+}
+
+type Candidato = { valor: number; de: number; ate: number; marcado: boolean; extenso: boolean; parou: boolean }
 
 export function interpretarFrase(texto: string, hoje: string): FraseInterpretada {
   const toks: Token[] = texto
@@ -153,11 +187,15 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
     .filter(Boolean)
     .map((t) => ({ texto: t, chave: chaveDe(t), usado: false }))
   const k = (i: number) => toks[i]?.chave ?? ''
+  const usar = (de: number, ate: number) => {
+    for (let j = de; j <= ate; j++) toks[j].usado = true
+  }
   const duvidas: string[] = []
   const duvida = (d: string) => {
     if (!duvidas.includes(d)) duvidas.push(d)
   }
 
+  let valor: number | null = null
   let data: string | null = null
   let parcelas: number | null = null
   let tipo: 'expense' | 'income' = 'expense'
@@ -165,43 +203,65 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
   let forma: FormaDePagamento | null = null
   let ultimoCredito = -1
 
+  // A primeira data vale; uma inválida ou uma segunda diferente pede conferência.
+  const definirData = (d: string | null) => {
+    if (d == null) duvida('data')
+    else if (data == null) data = d
+    else if (d !== data) duvida('data')
+  }
+
   // 1ª passada: parcelas, data, tipo, forma e a moeda. O que casa é consumido.
   for (let i = 0; i < toks.length; i++) {
     const c = k(i)
     const t = toks[i]
 
+    // "3x", "3 x", "3 vezes", "três vezes"; com "de V", V é a parcela.
+    let n: number | null = null
+    let fim = i
     const x = /^(\d+)x$/.exec(c)
-    const vezes = /^\d+$/.test(c) && (k(i + 1) === 'vezes' || k(i + 1) === 'vez')
-    if (x || vezes) {
-      const n = Number(x ? x[1] : c)
-      t.usado = true
-      if (vezes) toks[++i].usado = true
-      if (n < 2 || n > 48) duvida('parcelas')
-      else parcelas ??= n
+    if (x) n = Number(x[1])
+    else if (/^\d+$/.test(c) && ['x', 'vezes', 'vez'].includes(k(i + 1))) {
+      n = Number(c)
+      fim = i + 1
+    } else if (NUMEROS.has(c)) {
+      const ext = lerExtenso(toks, i)
+      if (ext && ['vezes', 'vez'].includes(k(ext.fim + 1))) {
+        n = ext.valor
+        fim = ext.fim + 1
+      }
+    }
+    if (n != null) {
+      usar(i, fim)
+      const valida = n >= 2 && n <= 48
+      if (valida) parcelas ??= n
+      else duvida('parcelas')
+      // "10x de 30": o total é 10 × 30, e a dúvida pede que a pessoa confirme.
+      const parcela = k(fim + 1) === 'de' && toks[fim + 2] && !toks[fim + 2].usado ? lerNumero(k(fim + 2)) : null
+      if (parcela != null && valor == null) {
+        usar(fim + 1, fim + 2)
+        valor = valida ? centavos(n * parcela) : parcela
+        duvida('valor')
+        fim += 2
+      }
+      i = fim
       continue
     }
 
     if (c === 'hoje' || c === 'ontem' || c === 'anteontem') {
       t.usado = true
-      data ??= somarDias(hoje, c === 'hoje' ? 0 : c === 'ontem' ? -1 : -2)
+      definirData(somarDias(hoje, c === 'hoje' ? 0 : c === 'ontem' ? -1 : -2))
       continue
     }
     if (c === 'dia' && /^\d{1,2}$/.test(k(i + 1))) {
-      t.usado = true
-      toks[++i].usado = true
-      if (data == null) {
-        data = diaDoMes(hoje, Number(k(i)))
-        if (data == null) duvida('data')
-      }
+      usar(i, i + 1)
+      definirData(diaDoMes(hoje, Number(k(++i))))
       continue
     }
     const dm = /^(\d{1,2})\/(\d{1,2})(?:\/(\d{4}|\d{2}))?$/.exec(c)
     if (dm) {
       t.usado = true
-      if (data == null) {
-        data = diaMes(hoje, Number(dm[1]), Number(dm[2]), dm[3])
-        if (data == null) duvida('data')
-      }
+      if (k(i - 1) === 'dia') toks[i - 1].usado = true // "dia 31/03"
+      definirData(diaMes(hoje, Number(dm[1]), Number(dm[2]), dm[3]))
       continue
     }
 
@@ -224,28 +284,57 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
       t.usado = true
       continue
     }
-
-    if (c === 'r$' || c === 'reais') t.usado = true
   }
 
-  // 2ª passada: o valor. O primeiro número em algarismos; sem nenhum, o primeiro por extenso.
-  let valor: number | null = null
-  for (let i = 0; i < toks.length && valor == null; i++) {
-    if (toks[i].usado) continue
-    const n = lerNumero(k(i))
-    if (n != null) {
-      toks[i].usado = true
-      valor = n
+  // 2ª passada: o valor. Vence o marcado (logo depois de "r$" ou logo antes de
+  // "reais"); sem marcado, o primeiro em algarismos; sem nenhum, o por extenso,
+  // que só conta no começo da frase ou antes de "reais" ("padaria dois irmãos" não tem valor).
+  if (valor == null) {
+    const candidatos: Candidato[] = []
+    for (let i = 0; i < toks.length; i++) {
+      if (toks[i].usado || k(i) === 'r$' || k(i) === 'reais') continue
+      let n = lerNumero(k(i))
+      if (n != null) {
+        let ate = i
+        if (k(i + 1) === 'mil' && !toks[i + 1].usado) {
+          n = centavos(n * 1000) // "2 mil", "1,5 mil"
+          ate = i + 1
+        }
+        const marcado = k(i).startsWith('r$') || k(i - 1) === 'r$' || k(ate + 1) === 'reais'
+        candidatos.push({ valor: n, de: i, ate, marcado, extenso: false, parou: false })
+        i = ate
+        continue
+      }
+      const ext = lerExtenso(toks, i)
+      if (!ext) continue
+      const noComeco = toks.slice(0, i).every((t) => t.usado || t.chave === 'r$')
+      const marcado = k(i - 1) === 'r$' || k(ext.fim + 1) === 'reais'
+      if (noComeco || marcado) candidatos.push({ valor: ext.valor, de: i, ate: ext.fim, marcado, extenso: true, parou: ext.parou })
+      i = ext.fim
+    }
+    const escolhido = candidatos.find((c) => c.marcado) ?? candidatos.find((c) => !c.extenso) ?? candidatos[0]
+    if (escolhido) {
+      usar(escolhido.de, escolhido.ate)
+      valor = escolhido.valor
+      if (escolhido.parou) duvida('valor')
+      // "42 reais e 90 centavos"
+      const e = escolhido.ate + 2
+      if (k(e - 1) === 'reais' && k(e) === 'e' && toks[e + 1] && !toks[e + 1].usado) {
+        const digitos = lerNumero(k(e + 1))
+        const ext = digitos == null ? lerExtenso(toks, e + 1) : null
+        const cent = digitos ?? ext?.valor
+        const fimCent = digitos != null ? e + 1 : ext?.fim ?? -1
+        if (cent != null && Number.isInteger(cent) && cent < 100 && /^centavos?$/.test(k(fimCent + 1))) {
+          usar(e, fimCent + 1)
+          valor = centavos(valor + cent / 100)
+        }
+      }
     }
   }
-  for (let i = 0; i < toks.length && valor == null; i++) {
-    const ext = toks[i].usado ? null : lerExtenso(toks, i)
-    if (!ext) continue
-    for (let j = i; j <= ext.fim; j++) toks[j].usado = true
-    valor = ext.valor
-  }
+  for (let i = 0; i < toks.length; i++) if (k(i) === 'r$' || k(i) === 'reais') toks[i].usado = true
   if (valor != null && valor <= 0) valor = null
-  if (valor == null) duvida('valor')
+  // Sem valor, ou com outro número sobrando na descrição ("3 cafés 15"), a pessoa confere.
+  if (valor == null || toks.some((t) => !t.usado && lerNumero(t.chave) != null)) duvida('valor')
 
   // O conectivo colado antes do que foi consumido sai junto ("no débito", "em 3x").
   for (let i = toks.length - 2; i >= 0; i--) {
@@ -264,7 +353,10 @@ export function interpretarFrase(texto: string, hoje: string): FraseInterpretada
   } else if ((tipo === 'expense' || estorno) && (forma == null || forma === 'credit_card')) {
     const s = sobra()
     const ultima = s[s.length - 1]
-    if (s.length >= 2 && ehPalavra(ultima) && !PRENDEM_A_SEGUINTE.has(k(s[s.length - 2]))) cartaoIdx = ultima
+    const antes = k(s[s.length - 2])
+    // "3 itens", "dois cafés", "pão de queijo": a palavra depois de número ou de "de" é do nome.
+    const prende = PRENDEM_A_SEGUINTE.has(antes) || NUMEROS.has(antes) || antes === 'mil' || /\d/.test(antes)
+    if (s.length >= 2 && ehPalavra(ultima) && !prende) cartaoIdx = ultima
   }
   let cartaoTexto: string | null = null
   if (cartaoIdx >= 0) {

@@ -69,6 +69,45 @@ describe("interpretarFrase", () => {
         ["42   mercado    do   bairro", HOJE, { descricao: "Mercado do bairro", cartaoTexto: null }],
         ["42", HOJE, { valor: 42, descricao: "Lançamento rápido", duvidas: ["descricao"] }],
         ["", HOJE, { valor: null, descricao: "Lançamento rápido", duvidas: ["valor", "descricao"] }],
+        // Revisão, rodada 1: "N mil"
+        ["2 mil tv", HOJE, { valor: 2000, descricao: "Tv", duvidas: [] }],
+        ["1,5 mil reforma", HOJE, { valor: 1500, descricao: "Reforma" }],
+        ["R$ 2 mil tv", HOJE, { valor: 2000, descricao: "Tv" }],
+        ["1 mil reais x", HOJE, { valor: 1000 }],
+        // O valor marcado vence; outro número sobrando pede conferência
+        ["mercado 3 itens R$ 40", HOJE, { valor: 40, descricao: "Mercado 3 itens", cartaoTexto: null, duvidas: ["valor"] }],
+        ["mercado 3 itens 40 reais", HOJE, { valor: 40, duvidas: ["valor"] }],
+        ["3 cafés 15", HOJE, { valor: 3, descricao: "Cafés 15", duvidas: ["valor"] }],
+        ["2 pizzas 80", HOJE, { valor: 2, duvidas: ["valor"] }],
+        ["42 reais e 90 centavos mercado", HOJE, { valor: 42.9, descricao: "Mercado", duvidas: [] }],
+        ["quarenta e dois reais e cinquenta centavos mercado", HOJE, { valor: 42.5, descricao: "Mercado" }],
+        // "Nx de V": o total, com dúvida
+        ["em 10x de 30 tv", HOJE, { valor: 300, parcelas: 10, descricao: "Tv", duvidas: ["valor", "cartao"] }],
+        ["3x de 14 mercado", HOJE, { valor: 42, parcelas: 3, duvidas: ["valor", "cartao"] }],
+        ["em 3 x de 30 tv", HOJE, { valor: 90, parcelas: 3, descricao: "Tv" }],
+        ["em 2 vezes de 12,50 livro", HOJE, { valor: 25, parcelas: 2, descricao: "Livro" }],
+        // Por extenso só no começo ou antes de "reais"
+        ["padaria dois irmãos", HOJE, { valor: null, duvidas: ["valor"] }],
+        ["loja mil coisas", HOJE, { valor: null, duvidas: ["valor"] }],
+        ["bar sete belo", HOJE, { valor: null, duvidas: ["valor"] }],
+        ["cinema oito e meia", HOJE, { valor: null, duvidas: ["valor"] }],
+        ["mercado quarenta reais", HOJE, { valor: 40, descricao: "Mercado" }],
+        ["quarenta e dois e cinquenta mercado", HOJE, { valor: 42, duvidas: ["valor"] }],
+        ["dois cafés 10", HOJE, { valor: 10, descricao: "Dois cafés", cartaoTexto: null }],
+        ["dois mil e quinhentos aluguel", HOJE, { valor: 2500, descricao: "Aluguel", duvidas: [] }],
+        ["seiscentos tv em dez vezes", HOJE, { valor: 600, parcelas: 10, descricao: "Tv" }],
+        ["zero mercado", HOJE, { valor: null, duvidas: ["valor"] }],
+        ["0 mercado", HOJE, { valor: null, duvidas: ["valor"] }],
+        // Parcelas: limites e antes do valor
+        ["30 tv 2x", HOJE, { parcelas: 2 }],
+        ["30 tv 48x", HOJE, { parcelas: 48 }],
+        ["30 tv 49x", HOJE, { parcelas: null, valor: 30, duvidas: ["parcelas"] }],
+        ["3x 30 tv", HOJE, { parcelas: 3, valor: 30, descricao: "Tv" }],
+        // Datas
+        ["15/12 x 20", "2026-01-10", { data: "2025-12-15", valor: 20 }],
+        ["dia 31/03 farmácia 20", HOJE, { data: "2026-03-31", descricao: "Farmácia" }],
+        ["hoje 20 padaria dia 3", HOJE, { data: HOJE, duvidas: ["data"] }],
+        ["hoje 20 padaria 10/04", HOJE, { data: HOJE, duvidas: [] }],
     ]
 
     it.each(casos)("%s (hoje %s)", (frase, hoje, esperado) => {
@@ -123,6 +162,12 @@ describe("casarCartao", () => {
         const a = cartao({ id: "a", name: "Visa", last_four: "1234" })
         const b = cartao({ id: "b", name: "Master", last_four: "9876" })
         expect(casarCartao("•••• 9876", [a, b])?.id).toBe("b")
+    })
+
+    it("o nível do nome vence o dos dígitos", () => {
+        const a = cartao({ id: "a", name: "Inter", last_four: "9999" })
+        const b = cartao({ id: "b", name: "Visa", last_four: "1234" })
+        expect(casarCartao("Inter 1234", [a, b])?.id).toBe("a")
     })
 
     it("dois candidatos no mesmo nível dão null", () => {
