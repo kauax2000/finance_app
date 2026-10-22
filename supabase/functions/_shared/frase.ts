@@ -75,7 +75,7 @@ function chaveDe(t: string): string {
 }
 
 /** "42", "42,90", "r$42", "1.234,56", "1.234" (mil) e "12.50" (ponto com até 2 casas é decimal). */
-function lerNumero(chave: string): number | null {
+export function lerNumero(chave: string): number | null {
   const t = chave.replace(/^r\$/, '')
   let n: number | null = null
   if (/^\d{1,3}(\.\d{3})+(,\d{1,2})?$/.test(t)) n = Number(t.replace(/\./g, '').replace(',', '.'))

@@ -53,6 +53,10 @@ verify_jwt = false
 [functions.attachments-cleanup]
 verify_jwt = false
 
+# O Atalho do iPhone manda o token de captura (`fac_…`), não um JWT; a função o confere.
+[functions.capture]
+verify_jwt = false
+
 # Local-only: vector/analytics container requires a docker.sock mount that
 # fails under colima; not needed for db/functions development.
 [analytics]

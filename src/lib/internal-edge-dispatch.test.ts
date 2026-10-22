@@ -73,7 +73,11 @@ describe("chamada interna às Edge Functions (pg_net + Vault)", () => {
     })
 
     it("o webhook entende o segredo do cron", () => {
-        const f = fonte("supabase/functions/notify-transaction-created/index.ts")
+        // O isServiceAuthorized mora em _shared/service-auth.ts desde o Bloco 3A.
+        expect(fonte("supabase/functions/notify-transaction-created/index.ts")).toContain(
+            "from '../_shared/service-auth.ts'",
+        )
+        const f = fonte("supabase/functions/_shared/service-auth.ts")
         expect(f).toContain("'x-cron-secret'")
         expect(f).toContain("CRON_SECRET")
         expect(f).not.toContain("NOTIFY_INTERNAL_SECRET")

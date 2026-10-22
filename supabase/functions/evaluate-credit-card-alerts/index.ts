@@ -3,6 +3,7 @@ import { internalError } from '../_shared/http.ts'
 import { currencyBRL } from '../_shared/formatters.ts'
 import { cardLabel, cardLimitCopy } from '../_shared/notification-copy.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
+import { isServiceAuthorized } from '../_shared/service-auth.ts'
 import { deliverNotification } from '../_shared/deliver-notification.ts'
 import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
 import {
@@ -91,12 +92,18 @@ Deno.serve(async (req: Request) => {
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
 
-  const jwt = bearerJwt(req.headers.get('Authorization'))
-  if (!jwt) return json(401, { error: 'Missing authorization header' })
+  // Caminho de serviço (Edge `capture`): quem chama já conferiu o membro, e o
+  // corpo vale como veio. O JWT da pessoa continua valendo para o front.
+  let userId: string | null = null
+  if (!isServiceAuthorized(req)) {
+    const jwt = bearerJwt(req.headers.get('Authorization'))
+    if (!jwt) return json(401, { error: 'Missing authorization header' })
 
-  const authResult = await getAuthUserFromJwt(supabaseUrl, anonKey, jwt)
-  if (authResult.error || !authResult.user) {
-    return json(401, { error: 'Invalid or expired token' })
+    const authResult = await getAuthUserFromJwt(supabaseUrl, anonKey, jwt)
+    if (authResult.error || !authResult.user) {
+      return json(401, { error: 'Invalid or expired token' })
+    }
+    userId = authResult.user.id
   }
 
   let body: Body
@@ -113,18 +120,19 @@ Deno.serve(async (req: Request) => {
     return json(200, { ok: true, skipped: true, reason: 'missing_workspace_or_card' })
   }
 
-  const userId = authResult.user.id
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-  const { data: membership, error: memErr } = await supabaseAdmin
-    .from('workspace_members')
-    .select('user_id')
-    .eq('workspace_id', workspaceId)
-    .eq('user_id', userId)
-    .maybeSingle()
+  if (userId) {
+    const { data: membership, error: memErr } = await supabaseAdmin
+      .from('workspace_members')
+      .select('user_id')
+      .eq('workspace_id', workspaceId)
+      .eq('user_id', userId)
+      .maybeSingle()
 
-  if (memErr) return json(500, { error: internalError('evaluate-credit-card-alerts', memErr) })
-  if (!membership) return json(403, { error: 'Not a member of this workspace' })
+    if (memErr) return json(500, { error: internalError('evaluate-credit-card-alerts', memErr) })
+    if (!membership) return json(403, { error: 'Not a member of this workspace' })
+  }
 
   const { data: card, error: cErr } = await supabaseAdmin
     .from('credit_cards')

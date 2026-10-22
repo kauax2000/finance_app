@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
-import { secretMatches } from '../_shared/timing-safe-equal.ts'
+import { isServiceAuthorized } from '../_shared/service-auth.ts'
 import { processTransactionNotification } from '../_shared/process-transaction-notification.ts'
 
 const corsHeaders = {
@@ -13,19 +13,6 @@ function json(status: number, payload: unknown): Response {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   })
-}
-
-function bearerToken(authHeader: string | null): string | null {
-  if (!authHeader?.startsWith('Bearer ')) return null
-  const token = authHeader.slice(7).trim()
-  return token.length > 0 ? token : null
-}
-
-function isServiceAuthorized(req: Request): boolean {
-  const bearer = bearerToken(req.headers.get('Authorization'))
-  if (secretMatches(Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'), bearer)) return true
-  if (secretMatches(Deno.env.get('CRON_SECRET'), req.headers.get('x-cron-secret'))) return true
-  return false
 }
 
 type WebhookBody = {

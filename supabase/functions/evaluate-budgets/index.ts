@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
+import { isServiceAuthorized } from '../_shared/service-auth.ts'
 import { deliverNotification } from '../_shared/deliver-notification.ts'
 import { budgetCopy, monthNamePt } from '../_shared/notification-copy.ts'
 
@@ -53,12 +54,18 @@ Deno.serve(async (req: Request) => {
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
 
-  const jwt = bearerJwt(req.headers.get('Authorization'))
-  if (!jwt) return json(401, { error: 'Missing authorization header' })
+  // Caminho de serviço (Edge `capture`): quem chama já conferiu o membro, e o
+  // corpo vale como veio. O JWT da pessoa continua valendo para o front.
+  let userId: string | null = null
+  if (!isServiceAuthorized(req)) {
+    const jwt = bearerJwt(req.headers.get('Authorization'))
+    if (!jwt) return json(401, { error: 'Missing authorization header' })
 
-  const authResult = await getAuthUserFromJwt(supabaseUrl, anonKey, jwt)
-  if (authResult.error || !authResult.user) {
-    return json(401, { error: 'Invalid or expired token' })
+    const authResult = await getAuthUserFromJwt(supabaseUrl, anonKey, jwt)
+    if (authResult.error || !authResult.user) {
+      return json(401, { error: 'Invalid or expired token' })
+    }
+    userId = authResult.user.id
   }
 
   let body: Body
@@ -78,7 +85,6 @@ Deno.serve(async (req: Request) => {
     return json(200, { ok: true, skipped: true, reason: 'no_category' })
   }
 
-  const userId = authResult.user.id
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
   // O orçamento é da carteira da categoria, e não de quem lançou: numa carteira
@@ -93,14 +99,16 @@ Deno.serve(async (req: Request) => {
   if (!workspaceId) return json(200, { ok: true, skipped: true, reason: 'no_category' })
   const categoryName = (category as { name?: string }).name ?? 'esta categoria'
 
-  const { data: membership, error: memErr } = await supabaseAdmin
-    .from('workspace_members')
-    .select('user_id')
-    .eq('workspace_id', workspaceId)
-    .eq('user_id', userId)
-    .maybeSingle()
-  if (memErr) return fail('membro', memErr)
-  if (!membership) return json(403, { error: 'Not a member of this workspace' })
+  if (userId) {
+    const { data: membership, error: memErr } = await supabaseAdmin
+      .from('workspace_members')
+      .select('user_id')
+      .eq('workspace_id', workspaceId)
+      .eq('user_id', userId)
+      .maybeSingle()
+    if (memErr) return fail('membro', memErr)
+    if (!membership) return json(403, { error: 'Not a member of this workspace' })
+  }
 
   // Datas de lançamento ficam ao meio-dia UTC: o prefixo ISO é o dia do lançamento.
   const day = occurredAt.toISOString().slice(0, 10)
