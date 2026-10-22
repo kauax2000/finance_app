@@ -147,6 +147,15 @@ describe("captura sem abrir o app (Bloco 3A, Tarefa 4)", () => {
     expect(f).toContain("docs/captura/atalho-iphone.md")
     // Só as sete colunas que o authenticated lê: `select('*')` dá 42501.
     expect(f).not.toMatch(/select\(\s*["']\*["']\s*\)/)
+    // Lido sem cortar comentário: o `tudo` come o `//` da URL.
+    expect(lerFonte("src/components/wireframe/captura-tokens-wireframe.tsx")).toContain(
+      "https://github.com/kauax2000/finance_app/blob/main/docs/captura/atalho-iphone.md",
+    )
+  })
+
+  it("tokens: o token vive só no estado do componente (Foco 2)", () => {
+    const f = fonte("src/components/wireframe/captura-tokens-wireframe.tsx")
+    expect(f).not.toMatch(/localStorage|sessionStorage|setQueryData\(\s*\[\s*["']capture_tokens|console\./)
   })
 
   it("tokens: os erros do banco em português", async () => {
@@ -171,6 +180,8 @@ describe("captura sem abrir o app (Bloco 3A, Tarefa 4)", () => {
     expect(guia).not.toMatch(/fac_[0-9a-f]/i)
     expect(guia).toContain("<TOKEN>")
     expect(guia).toContain("<URL>")
+    expect(guia).toContain("Cartão ou Passe")
+    expect(guia).toContain("iCloud")
   })
 
   it("a conferir: o Apple Pay aprende o cartão pelo wallet_alias", () => {
@@ -182,5 +193,12 @@ describe("captura sem abrir o app (Bloco 3A, Tarefa 4)", () => {
     expect(f).toContain("normalizeSearchText(")
     // Fora de lote e conferido, só o bloco do lembrar.
     expect(f).toMatch(/confirmado \|\| soLembrar \? null/)
+    expect(f).toContain("Capturado · a conferir")
+    // Zero linhas atualizadas não é sucesso; o apelido novo vai direto ao cache.
+    expect(f).toMatch(/\.update\(\{ wallet_alias: walletCard \}\)\s*\.eq\("id", cartaoId\)\s*\.select\("id"\)/)
+    expect(f).toContain("data?.length !== 1")
+    expect(f).toContain("setQueryData(chaveDoAlias, walletCard)")
+    expect(f).toContain("Trocar '${aliasAtual.data}' por '${walletCard}'")
+    expect(f).toContain("Nome da Wallet longo demais para lembrar.")
   })
 })

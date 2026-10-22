@@ -30,6 +30,11 @@ valor real de nenhum deles.**
 
 Cada pessoa tem no máximo 10 tokens ativos.
 
+> **Cuidado ao compartilhar o atalho.** O token fica gravado dentro do atalho.
+> Quem recebe o atalho recebe também o token, e isso vale para o link do
+> iCloud, a exportação do arquivo e o envio por mensagem. Se você compartilhou
+> o atalho, revogue o token no app e crie um novo (seção 6).
+
 ## 2. O pedido que todos os caminhos fazem
 
 Os três caminhos fazem o mesmo pedido:
@@ -53,7 +58,10 @@ Ou pode ter **os campos separados**:
 
 Os campos opcionais são estes:
 
-- `date`, no formato `AAAA-MM-DD`. Sem ele, vale o dia de hoje em Brasília.
+- `date`, no formato `AAAA-MM-DD`. Ele só vale com os campos separados
+  (`amount`), como no Apple Pay. Com `text`, o app ignora o `date` e lê a data
+  da própria frase ("ontem", "dia 25"). Sem data, vale o dia de hoje em
+  Brasília.
 - `id`, um identificador seu, de até 200 caracteres. O mesmo `id` reenviado não
   duplica o gasto: o app devolve o lançamento que já existe. Sem `id`, cada
   pedido vira um lançamento.
@@ -123,22 +131,35 @@ Esta automação lança cada compra feita com o Apple Pay.
    - Método: `POST`;
    - Cabeçalhos: `Authorization` = `Bearer <TOKEN>`;
    - Corpo da solicitação: `JSON`, com estes campos:
-     - `amount` (Texto) = a variável **Valor**;
-     - `merchant` (Texto) = a variável **Comerciante**;
-     - `card` (Texto) = a variável **Cartão**;
+     - `amount` (Texto) = **Valor**;
+     - `merchant` (Texto) = **Comerciante**;
+     - `card` (Texto) = **Cartão**, que em algumas versões do iOS se chama
+       **Cartão ou Passe**;
      - `source` (Texto) = `apple_pay`.
+
+Valor, Comerciante e Cartão não aparecem como variáveis soltas. Eles são
+**propriedades da Entrada do atalho**: toque na variável **Entrada do atalho** e
+escolha a propriedade. Os nomes mudam um pouco entre versões do iOS e entre
+idiomas (em inglês: Amount, Merchant, Card or Pass). Escolha a propriedade com
+o valor da compra, a do nome da loja e a do cartão usado.
 
 ### O app aprende o cartão
 
-O nome que a Wallet dá ao cartão nem sempre é o nome que ele tem no app. Quando o
-app não reconhece o cartão, o gasto vai para "A conferir", com o nome da Wallet
-guardado.
+O nome que a Wallet dá ao cartão nem sempre é o nome que ele tem no app. O gasto
+vai para "A conferir", com o nome da Wallet guardado, nestes dois casos:
+
+- o app não reconhece o cartão;
+- o app só reconhece o cartão em parte, como "Nubank" na Wallet e "Nubank
+  Ultravioleta" no app. Aí o cartão já vem escolhido.
 
 Para ensinar o app, faça assim:
 
-1. Abra o gasto e escolha o cartão certo.
+1. Abra o gasto e confira o cartão. Se não houver cartão, escolha o certo.
 2. No quadro "A conferir", toque em **Lembrar '<nome da Wallet>' como este
    cartão**.
+
+Cada cartão guarda um nome da Wallet só. Se o cartão já tinha outro, o botão
+diz **Trocar '<antigo>' por '<novo>'**.
 
 Daí em diante, as compras com esse cartão da Wallet já chegam com o cartão
 certo.

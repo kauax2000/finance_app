@@ -4,7 +4,7 @@ import type { ReactNode } from "react"
  * A moldura de todo wireframe: de propósito fora do design system (AGENTS.md,
  * "Funcionalidade nova entra em wireframe"). Na revisão da tela ela some.
  */
-export function WireframeBox({ bloco, titulo, children }: { bloco: number; titulo: string; children: ReactNode }) {
+export function WireframeBox({ bloco, titulo, children }: { bloco: number | string; titulo: string; children: ReactNode }) {
     const etiqueta = `WIREFRAME · Bloco ${bloco} · ${titulo}`
     return (
         <section

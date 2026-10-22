@@ -37,11 +37,13 @@ export function AConferirWireframe({
     const walletCard = transaction.source === "apple_pay" ? transaction.capture_meta?.walletCard?.trim() : undefined
     const cartaoId = transaction.payment_credit_card_id
     // `credit_cards_wallet_alias_check`: de 1 a 60 caracteres.
-    const podeLembrar = Boolean(walletCard && walletCard.length <= 60 && cartaoId)
+    const longoDemais = walletCard != null && walletCard.length > 60
+    const podeLembrar = Boolean(walletCard && !longoDemais && cartaoId)
     /** Conferido e fora de lote: o quadro existe só para o Apple Pay aprender o cartão. */
     const soLembrar = !transaction.needs_review && !transaction.import_batch_id
+    const chaveDoAlias = ["credit_card_wallet_alias", cartaoId]
     const aliasAtual = useQuery({
-        queryKey: ["credit_card_wallet_alias", cartaoId],
+        queryKey: chaveDoAlias,
         enabled: podeLembrar,
         queryFn: async () => {
             const { data, error } = await supabase
@@ -84,13 +86,19 @@ export function AConferirWireframe({
         if (!walletCard || !cartaoId) return
         setPendente(true)
         setErro(null)
-        const { error } = await supabase.from("credit_cards").update({ wallet_alias: walletCard }).eq("id", cartaoId)
+        // Sem linha de volta (cartão apagado ou fora da RLS), nada foi gravado.
+        const { data, error } = await supabase
+            .from("credit_cards")
+            .update({ wallet_alias: walletCard })
+            .eq("id", cartaoId)
+            .select("id")
         setPendente(false)
-        if (error) {
-            setErro(`Não foi possível lembrar o cartão: ${error.message}`)
+        if (error || data?.length !== 1) {
+            setErro("Não foi possível lembrar o cartão.")
             return
         }
         setLembrado(true)
+        queryClient.setQueryData(chaveDoAlias, walletCard)
         if (workspaceId) await invalidateWorkspaceData(queryClient, workspaceId, { domains: ["credit_cards"] })
     }
 
@@ -113,11 +121,20 @@ export function AConferirWireframe({
         onChanged?.("desfeito")
     }
 
+    // Só o lembrar, e a leitura do apelido ainda a caminho: nada a mostrar.
+    if (soLembrar && podeLembrar && aliasAtual.isPending) return null
+
+    const rotulo = transaction.import_batch_id
+        ? confirmado
+            ? "Importado · conferido"
+            : "Importado · a conferir"
+        : confirmado
+          ? "Capturado · conferido"
+          : "Capturado · a conferir"
+
     return (
-        <WireframeBox bloco={2} titulo="A conferir">
-            {soLembrar ? null : (
-                <p className="text-foreground">{confirmado ? "Importado · conferido" : "Importado · a conferir"}</p>
-            )}
+        <WireframeBox bloco="2/3" titulo="A conferir">
+            {soLembrar ? null : <p className="text-foreground">{rotulo}</p>}
             <div className="flex flex-wrap gap-2">
                 {confirmado || soLembrar ? null : (
                     <button type="button" className={botao} disabled={pendente} onClick={() => void confirmar()}>
@@ -126,7 +143,9 @@ export function AConferirWireframe({
                 )}
                 {podeLembrar && !lembrado && !jaLembradoNoBanco && !aliasAtual.isPending ? (
                     <button type="button" className={botao} disabled={pendente} onClick={() => void lembrarCartao()}>
-                        {`Lembrar '${walletCard}' como este cartão`}
+                        {aliasAtual.data
+                            ? `Trocar '${aliasAtual.data}' por '${walletCard}'`
+                            : `Lembrar '${walletCard}' como este cartão`}
                     </button>
                 ) : null}
                 {transaction.import_batch_id ? (
@@ -135,7 +154,8 @@ export function AConferirWireframe({
                     </button>
                 ) : null}
             </div>
-            {walletCard && !cartaoId ? <p>{`Escolha o cartão do lançamento para lembrar '${walletCard}'.`}</p> : null}
+            {longoDemais ? <p>Nome da Wallet longo demais para lembrar.</p> : null}
+            {walletCard && !longoDemais && !cartaoId ? <p>{`Escolha o cartão do lançamento para lembrar '${walletCard}'.`}</p> : null}
             {lembrado ? (
                 <p role="status">Cartão lembrado: {`a próxima compra com '${walletCard}' já casa.`}</p>
             ) : jaLembradoNoBanco ? (

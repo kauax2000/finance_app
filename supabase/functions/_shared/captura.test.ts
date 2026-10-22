@@ -417,6 +417,18 @@ Deno.test('Apple Pay com casamento parcial mantém o cartão, mas fica a conferi
   assertEquals(r.linha.needs_review, true)
 })
 
+Deno.test('Apple Pay com casamento parcial guarda o nome da Wallet para o "Lembrar"', () => {
+  const r = ok(
+    montarLancamento(
+      { amount: 42, merchant: 'Padaria Real', card: 'Nubank', source: 'apple_pay' },
+      ctx({ cartoes: [cartao('c-uv', 'Nubank Ultravioleta', OUTRA)] }),
+    ),
+  )
+  assertEquals(r.linha.payment_credit_card_id, 'c-uv')
+  assertEquals(r.linha.needs_review, true)
+  assertEquals(r.linha.capture_meta?.walletCard, 'Nubank')
+})
+
 Deno.test('Apple Pay com casamento completo pelo nome não fica a conferir', () => {
   const r = ok(
     montarLancamento(

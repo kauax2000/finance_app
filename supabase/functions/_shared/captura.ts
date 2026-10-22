@@ -187,6 +187,8 @@ export function montarLancamento(
   const frase = applePay ? cartaoTexto! : (pedido.text ?? '')
   if (cartao && (applePay || forma !== 'credit_card') && !casamentoCompleto(cartao, cartaoTexto!, frase)) {
     duvidas.push('cartao')
+    // O nome da Wallet fica guardado: "Lembrar" o grava como apelido do cartão.
+    if (applePay) capturaMeta.walletCard = cartaoTexto!
   }
   let cartaoSemCasar = cartaoTexto != null && cartao == null
   if (cartaoSemCasar) {

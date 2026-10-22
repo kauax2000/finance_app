@@ -15,6 +15,9 @@ const campo = "border border-muted-foreground/60 bg-background px-2 py-1 font-mo
 /** O authenticated só lê estas sete colunas: o hash nunca sai do banco, e `*` dá 42501. */
 const COLUNAS = "id, user_id, workspace_id, name, created_at, last_used_at, revoked_at"
 
+/** Resolve quando o 2.0 chegar à `main`; até lá, o caminho no texto ao lado do link diz onde está. */
+const GUIA = "https://github.com/kauax2000/finance_app/blob/main/docs/captura/atalho-iphone.md"
+
 const NOME_INVALIDO = "Nome do aparelho: de 1 a 60 caracteres."
 
 /** O erro do banco (check, not null ou o `raise` das RPCs) na frase da tela. */
@@ -113,7 +116,13 @@ export function CapturaTokensWireframe() {
             <p>
                 Endereço: <code className="break-all text-foreground">{endereco}</code>
             </p>
-            <p>Guia: docs/captura/atalho-iphone.md no repositório (Atalho do iPhone, Apple Pay e compartilhar).</p>
+            <p>
+                Guia (Atalho do iPhone, Apple Pay e compartilhar):{" "}
+                <a href={GUIA} target="_blank" rel="noreferrer" className="text-foreground underline">
+                    docs/captura/atalho-iphone.md
+                </a>{" "}
+                no repositório.
+            </p>
 
             {lista.isPending && user ? <p role="status">Carregando tokens…</p> : null}
             {lista.isError ? <p role="alert">Não foi possível listar os tokens.</p> : null}
