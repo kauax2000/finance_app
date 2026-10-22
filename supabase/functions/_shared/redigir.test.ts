@@ -170,3 +170,60 @@ Deno.test('redigir: CPF e CNPJ depois de "/" e telefone com o 0 da operadora', (
   assertEquals(redigir('tel (011) 98765-4321', []), 'tel [telefone]')
   assertEquals(redigir('tel: 021 3456-7890', []), 'tel: [telefone]')
 })
+
+// ---- rodada 4 da revisão: CSV com validade partida por vírgula, bloco de 4 antes do cartão, tempo ----
+
+Deno.test('redigir: cartão em CSV com a validade partida por vírgula (r4, Important)', () => {
+  const casos: Array<[string, string]> = [
+    ['Fulano,4111 1111 1111 1111,12,2028', 'Fulano,•••• 1111,12,2028'],
+    ['Fulano,5555 5555 5555 4444,12,28,123', 'Fulano,•••• 4444,12,28,123'],
+    ['4111 1111 1111 1111,12,28', '•••• 1111,12,28'],
+    ['Fulano,4111 1111 1111 1111,12', 'Fulano,•••• 1111,12'],
+    // O ";" já funcionava e continua.
+    ['Fulano;4111 1111 1111 1111;12;28', 'Fulano;•••• 1111;12;28'],
+    // A cabeça de 4 dígitos de um valor fecha o cartão; a cauda fica.
+    ['4111 1111 1111 1111,00', '•••• 1111,00'],
+    ['4111.1111.1111.1111,00', '•••• 1111,00'],
+  ]
+  for (const [t, esperado] of casos) assertEquals(redigir(t, []), esperado, t)
+})
+
+Deno.test('redigir: a cabeça de um valor só fecha um cartão de verdade; o valor nunca muda', () => {
+  for (const t of [
+    '12/10 LOJA 4111 1111 1111 1234,56',
+    '12/10 COMPRA 4111 1111 1111 9,90',
+    '12/10 1234 5678 42,90',
+    '12/10 LOJA 123 456 789 10,00',
+    'PAGAMENTO 1234 5678 9012 1.234,56',
+  ]) {
+    assertEquals(redigir(t, []), t)
+  }
+  assertEquals(redigir('PAGAMENTO 4111 1111 1111 1111 1.234,56', []), 'PAGAMENTO •••• 1111 1.234,56')
+})
+
+Deno.test('redigir: um bloco de 4 antes do cartão não desloca a máscara (r4, Minor)', () => {
+  // 2026 5516 6722 4958 também passa no Luhn: a varredura prefere o trecho que termina no fim da sequência.
+  assertEquals(redigir('22/10/2026 5516 6722 4958 1937 42,90', []), '22/10/2026 •••• 1937 42,90')
+  assertEquals(redigir('22/10/2026 5555 5555 5555 4444 42,90', []), '22/10/2026 •••• 4444 42,90')
+  assertEquals(redigir('pedido 8841 4111 1111 1111 1111', []), 'pedido 8841 •••• 1111')
+  assertEquals(redigir('4111111111111111 4111111111111111', []), '•••• 1111 •••• 1111')
+})
+
+Deno.test('redigir: entrada hostil de 72k termina em menos de 1s (r4, Minor)', () => {
+  const N = 72_000
+  const hostis: Record<string, string> = {
+    corrido: '4'.repeat(N),
+    valores: '1,11 '.repeat(N / 5),
+    grupos: '1111 '.repeat(N / 5),
+    milhares: '1.111'.padEnd(N, '.111'),
+    barras: '1/'.repeat(N / 2),
+    cartoes: '4111111111111111 '.repeat(N / 17),
+    palavra: 'a'.repeat(N),
+  }
+  for (const [nome, texto] of Object.entries(hostis)) {
+    const t0 = performance.now()
+    redigir(texto, ['Maria Souza'])
+    const ms = performance.now() - t0
+    assert(ms < 1000, `${nome}: ${ms.toFixed(0)}ms`)
+  }
+})

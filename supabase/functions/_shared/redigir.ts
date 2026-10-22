@@ -9,8 +9,12 @@
 
 import { normalizarDescricao } from './frase.ts'
 
-/** Uma linha com valor em reais ("42,90", "1.234,56"): é item de fatura ou frase de compra. */
-const TEM_DINHEIRO = /\b\d{1,3}(?:\.\d{3})*,\d{2}\b|\b\d+,\d{2}\b/
+/**
+ * Uma linha com valor em reais ("42,90", "1.234,56"): é item de fatura ou frase
+ * de compra. Até quatro grupos de milhar (trilhões): sem teto, "1.111.111…" de
+ * 72k faz o grupo recuar a linha inteira em cada posição.
+ */
+const TEM_DINHEIRO = /\b\d{1,3}(?:\.\d{3}){0,4},\d{2}\b|\b\d+,\d{2}\b/
 
 // Sem "tv"/"tv.": colide com TV ("TV. SAMSUNG 2.999,00"); "Travessa" fica por extenso.
 const PALAVRA_LOGRADOURO = String.raw`(?:\b(?:av|r|al)\.\s*|\b(?:rua|av|avenida|travessa|alameda|rodovia|estrada)\s+|\bpra[cç]a\s+)`
@@ -54,77 +58,92 @@ function passaLuhn(digitos: string): boolean {
 
 /** Blocos de dígitos ligados por 1 a 3 de [espaço . - _ /]; a vírgula nunca liga. */
 const BLOCOS = /\d+(?:[ \t._/-]{1,3}\d+)*/g
-/** Um valor em reais: "1.234,56", "42,90", "9.90". O fim não encosta em dígito nem em "/". */
-const VALOR = /(?<!\d)\d{1,3}(?:\.\d{3})+,\d{2}(?![\d/])|\d+[.,]\d{2}(?![\d/])/g
+/**
+ * Um valor em reais: "1.234,56", "42,90", "9.90". O fim não encosta em dígito,
+ * em "/" nem em outra cauda: "1111,12,28" é validade de cartão, não valor. O
+ * `(?<!\d)` do começo e o teto de quatro milhares são o que mantém a busca
+ * linear: sem eles, o `\d+` e o `(\.\d{3})+` recuam a sequência inteira em
+ * cada posição de um número corrido de 72k.
+ */
+const VALOR = /(?<!\d)\d{1,3}(?:\.\d{3}){1,4},\d{2}(?![\d/]|[.,]\d)|(?<!\d)\d+[.,]\d{2}(?![\d/]|[.,]\d)/g
 
 type Bloco = { ini: number; fim: number; digitos: string }
 
 /**
  * O cartão é achado por varredura, não por regex com guarda (que vazou duas
- * vezes): em cada sequência de blocos, o trecho mais longo de 13 a 19 dígitos
- * que começa num bloco de 4 ou mais, só tem blocos de 3 ou mais e passa no
- * Luhn vira "•••• " + os 4
- * últimos. Um bloco dentro de um valor corta a sequência e nunca entra no
- * cartão, então "4111 1111 1111 1111 23,90" mascara o cartão e deixa o valor.
- * Um número corrido de 13 a 19 dígitos que passa no Luhn é mascarado mesmo
- * colado a um valor ("4111111111111111,90").
+ * vezes): em cada sequência de blocos, um trecho de 13 a 19 dígitos que começa
+ * num bloco de 4 ou mais, só tem blocos de 3 ou mais e passa no Luhn vira
+ * "•••• " + os 4 últimos.
+ *
+ * A varredura vai do fim da sequência para o começo e fica com o trecho que
+ * termina mais à direita (o mais longo, em empate): um bloco de 4 antes do
+ * cartão ("22/10/2026 5516 6722 …") passa no Luhn por acaso uma vez em dez, e
+ * da esquerda ele levaria o ano e exporia 8 dígitos.
+ *
+ * Um bloco dentro de um valor corta a sequência e não entra no cartão, então
+ * "4111 1111 1111 1111 23,90" mascara o cartão e deixa o valor. A exceção é a
+ * cabeça de exatamente 4 dígitos de um valor ("1111,12"): ela pode fechar o
+ * trecho, e só fechar, porque o CSV com a validade partida por vírgula
+ * ("…,4111 1111 1111 1111,12") seria lido como valor e vazaria o cartão; a
+ * cauda fica, e os 4 dígitos continuam no texto. Um número corrido de 13 a 19
+ * dígitos que passa no Luhn é mascarado mesmo colado a um valor
+ * ("4111111111111111,90").
  */
 function mascararCartoes(texto: string): string {
-  const valores: Array<[number, number]> = [...texto.matchAll(VALOR)].map((m) => [m.index, m.index + m[0].length])
-  const dentroDeValor = (b: Bloco) => valores.some(([i, f]) => b.ini < f && b.fim > i)
+  // Um byte por posição: 1 dentro de um valor, 2 no começo da cabeça de 4 dígitos ("1111,12").
+  const valor = new Uint8Array(texto.length)
+  for (const m of texto.matchAll(VALOR)) {
+    valor.fill(1, m.index, m.index + m[0].length)
+    if (m[0].length === 7) valor[m.index] = 2
+  }
 
   const trechos: Array<[number, number, string]> = []
   for (const m of texto.matchAll(BLOCOS)) {
-    const blocos: Bloco[] = [...m[0].matchAll(/\d+/g)].map((d) => ({
-      ini: m.index + d.index,
-      fim: m.index + d.index + d[0].length,
-      digitos: d[0],
-    }))
-    // Corta a sequência em cada bloco de valor; o bloco corrido de 13 a 19 vale sozinho.
     const sequencias: Bloco[][] = [[]]
-    for (const b of blocos) {
-      if (!dentroDeValor(b)) sequencias.at(-1)!.push(b)
-      else {
-        if (b.digitos.length >= 13 && b.digitos.length <= 19 && passaLuhn(b.digitos)) {
+    for (const d of m[0].matchAll(/\d+/g)) {
+      const b: Bloco = { ini: m.index + d.index, fim: m.index + d.index + d[0].length, digitos: d[0] }
+      const marca = valor[b.ini]
+      if (marca !== 1) sequencias.at(-1)!.push(b)
+      if (marca) {
+        if (marca === 1 && b.digitos.length >= 13 && b.digitos.length <= 19 && passaLuhn(b.digitos)) {
           trechos.push([b.ini, b.fim, b.digitos])
         }
         sequencias.push([])
       }
     }
     for (const seq of sequencias) {
-      let i = 0
-      while (i < seq.length) {
-        let achou = -1
+      for (let fim = seq.length - 1; fim >= 0; fim--) {
         let digitos = ''
-        if (seq[i].digitos.length >= 4) {
-          for (let j = i; j < seq.length; j++) {
-            // Bloco de 1 ou 2 dígitos é dia, mês ou parcela ("03/10"), nunca pedaço de cartão.
-            if (seq[j].digitos.length < 3) break
-            digitos += seq[j].digitos
-            if (digitos.length > 19) break
-            if (digitos.length >= 13 && passaLuhn(digitos)) achou = j
-          }
+        let achou = -1
+        for (let ini = fim; ini >= 0; ini--) {
+          // Bloco de 1 ou 2 dígitos é dia, mês ou parcela ("03/10"), nunca pedaço de cartão.
+          if (seq[ini].digitos.length < 3) break
+          digitos = seq[ini].digitos + digitos
+          if (digitos.length > 19) break
+          if (seq[ini].digitos.length >= 4 && digitos.length >= 13 && passaLuhn(digitos)) achou = ini
         }
-        if (achou < 0) {
-          i++
-          continue
-        }
-        const todos = seq.slice(i, achou + 1).map((b) => b.digitos).join('')
-        trechos.push([seq[i].ini, seq[achou].fim, todos])
-        i = achou + 1
+        if (achou < 0) continue
+        const todos = seq.slice(achou, fim + 1).map((b) => b.digitos).join('')
+        trechos.push([seq[achou].ini, seq[fim].fim, todos])
+        fim = achou
       }
     }
   }
-  let r = texto
-  for (const [ini, fim, digitos] of trechos.sort((a, b) => b[0] - a[0])) {
-    r = `${r.slice(0, ini)}•••• ${digitos.slice(-4)}${r.slice(fim)}`
+  trechos.sort((a, b) => a[0] - b[0])
+  let r = ''
+  let pos = 0
+  for (const [ini, fim, digitos] of trechos) {
+    r += `${texto.slice(pos, ini)}•••• ${digitos.slice(-4)}`
+    pos = fim
   }
-  return r
+  return r + texto.slice(pos)
 }
 
 // ---------------------------------------------------------------- o resto
 
-const EMAIL = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g
+// O `(?<!…)` só deixa a busca começar no início da palavra: sem ele, 72k de
+// dígitos custavam 2,5s (o `+` recuava tudo em cada posição à procura do "@").
+const EMAIL = /(?<![\w.+-])[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g
 
 const SUBSTITUICOES: Array<[RegExp, string]> = [
   // CPF e CNPJ podem vir depois de "/" ("cpf/123.456.789-09"): antes, só "não é dígito".
