@@ -13,12 +13,17 @@ const botao = "border border-muted-foreground/60 px-2 py-1 font-mono text-foregr
 /**
  * O selo do lançamento importado ou a revisar, no detalhe (Decisão 2): "Confirmar"
  * tira o `needs_review`; "Desfazer importação do lote" apaga o lote inteiro.
+ * O Apple Pay que não casou o cartão guarda o nome da Wallet; com um cartão
+ * escolhido, "Lembrar" o grava como `wallet_alias` e a próxima captura casa.
  */
 export function AConferirWireframe({
     transaction,
     onChanged,
 }: {
-    transaction: Pick<Transaction, "id" | "workspace_id" | "needs_review" | "import_batch_id">
+    transaction: Pick<
+        Transaction,
+        "id" | "workspace_id" | "needs_review" | "import_batch_id" | "source" | "capture_meta" | "payment_credit_card_id"
+    >
     /** "desfeito": o lançamento não existe mais, e quem mostra o detalhe o fecha. */
     onChanged?: (o: "confirmado" | "desfeito") => void
 }) {
@@ -27,6 +32,11 @@ export function AConferirWireframe({
     const [pendente, setPendente] = useState(false)
     const [erro, setErro] = useState<string | null>(null)
     const workspaceId = transaction.workspace_id
+    const [lembrado, setLembrado] = useState(false)
+    const walletCard = transaction.source === "apple_pay" ? transaction.capture_meta?.walletCard?.trim() : undefined
+    const cartaoId = transaction.payment_credit_card_id
+    // `credit_cards_wallet_alias_check`: de 1 a 60 caracteres.
+    const podeLembrar = Boolean(walletCard && walletCard.length <= 60 && cartaoId)
 
     async function atualizarListas() {
         if (workspaceId) {
@@ -48,6 +58,20 @@ export function AConferirWireframe({
         setConfirmado(true)
         await atualizarListas()
         onChanged?.("confirmado")
+    }
+
+    async function lembrarCartao() {
+        if (!walletCard || !cartaoId) return
+        setPendente(true)
+        setErro(null)
+        const { error } = await supabase.from("credit_cards").update({ wallet_alias: walletCard }).eq("id", cartaoId)
+        setPendente(false)
+        if (error) {
+            setErro(`Não foi possível lembrar o cartão: ${error.message}`)
+            return
+        }
+        setLembrado(true)
+        if (workspaceId) await invalidateWorkspaceData(queryClient, workspaceId, { domains: ["credit_cards"] })
     }
 
     async function desfazerLote() {
@@ -78,12 +102,18 @@ export function AConferirWireframe({
                         Confirmar
                     </button>
                 )}
+                {podeLembrar && !lembrado ? (
+                    <button type="button" className={botao} disabled={pendente} onClick={() => void lembrarCartao()}>
+                        {`Lembrar '${walletCard}' como este cartão`}
+                    </button>
+                ) : null}
                 {transaction.import_batch_id ? (
                     <button type="button" className={botao} disabled={pendente} onClick={() => void desfazerLote()}>
                         Desfazer importação do lote
                     </button>
                 ) : null}
             </div>
+            {lembrado ? <p role="status">Cartão lembrado: {`a próxima compra com '${walletCard}' já casa.`}</p> : null}
             {erro ? (
                 <p role="alert" className="text-destructive">
                     {erro}

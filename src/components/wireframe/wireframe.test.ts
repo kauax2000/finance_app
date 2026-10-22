@@ -134,3 +134,48 @@ describe("estorno no formulário (Decisão 6)", () => {
     ).toEqual({ paymentMethod: "credit_card", paymentCreditCardId: null })
   })
 })
+
+describe("captura sem abrir o app (Bloco 3A, Tarefa 4)", () => {
+  const fonte = (arquivo: string) => semComentarios(lerFonte(arquivo), "tudo")
+
+  it("tokens: cria, revoga e mostra o token uma vez só", () => {
+    const f = fonte("src/components/wireframe/captura-tokens-wireframe.tsx")
+    expect(f).toContain('rpc("create_capture_token"')
+    expect(f).toContain('rpc("revoke_capture_token"')
+    expect(f).toContain("Guarde agora: ele não aparece de novo.")
+    expect(f).toContain("/functions/v1/capture")
+    expect(f).toContain("docs/captura/atalho-iphone.md")
+    // Só as sete colunas que o authenticated lê: `select('*')` dá 42501.
+    expect(f).not.toMatch(/select\(\s*["']\*["']\s*\)/)
+  })
+
+  it("tokens: os erros do banco em português", async () => {
+    const { mensagemDoErroDeToken } = await import("./captura-tokens-wireframe")
+    expect(mensagemDoErroDeToken({ code: "P0001", message: "nao_membro" })).toBe("Você não é membro dessa carteira.")
+    expect(mensagemDoErroDeToken({ code: "P0001", message: "limite_tokens" })).toBe(
+      "Limite de 10 tokens ativos. Revogue um para criar outro.",
+    )
+    expect(mensagemDoErroDeToken({ code: "23514", message: "x" })).toBe("Nome do aparelho: de 1 a 60 caracteres.")
+    expect(mensagemDoErroDeToken({ code: "23502", message: "x" })).toBe("Nome do aparelho: de 1 a 60 caracteres.")
+  })
+
+  it("a conta mostra o wireframe dos tokens", () => {
+    expect(fonte("src/app/(app)/account/page-client.tsx")).toMatch(
+      /import\s*\{[^}]*\bCapturaTokensWireframe\b[^}]*\}\s*from\s*["']@\/components\/wireframe\/captura-tokens-wireframe["']/,
+    )
+  })
+
+  it("o guia não traz URL de projeto nem token", () => {
+    const guia = lerFonte("docs/captura/atalho-iphone.md")
+    expect(guia).not.toContain("supabase.co")
+    expect(guia).not.toMatch(/fac_[0-9a-f]/i)
+    expect(guia).toContain("<TOKEN>")
+    expect(guia).toContain("<URL>")
+  })
+
+  it("a conferir: o Apple Pay aprende o cartão pelo wallet_alias", () => {
+    const f = fonte("src/components/wireframe/a-conferir-wireframe.tsx")
+    expect(f).toContain("wallet_alias")
+    expect(f).toContain("como este cartão")
+  })
+})

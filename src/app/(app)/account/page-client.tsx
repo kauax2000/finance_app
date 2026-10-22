@@ -27,6 +27,7 @@ import { ChangePasswordDialog, DeleteAccountDialog } from "@/components/security
 import { AccountPageSkeleton } from "@/components/account/account-page-skeleton"
 import { EditProfileDialog } from "@/components/account/edit-profile-dialog"
 import { identityToneFor } from "@/lib/avatar"
+import { CapturaTokensWireframe } from "@/components/wireframe/captura-tokens-wireframe"
 
 export default function AccountPage() {
     const { user, profile, loading, profileReady, signOut } = useAuth()
@@ -185,6 +186,8 @@ export default function AccountPage() {
                     </CardContent>
                 </Card>
             </PageSection>
+
+            <CapturaTokensWireframe />
 
             {/* No telefone o plano mora aqui, e não no menu da conta da barra de baixo;
                 no desktop ele segue no menu do usuário. */}
