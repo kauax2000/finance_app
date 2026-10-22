@@ -182,8 +182,10 @@ export function montarLancamento(
   const cartao = casado && ctx.carteirasDaPessoa.includes(casado.workspace_id) ? casado : null
   // "50 compras no mercado" casa o "Mercado Pago" por uma palavra: sem o
   // crédito dito, o casamento parcial leva à carteira do cartão, mas a conferir.
-  // (No Apple Pay a forma já é o crédito.)
-  if (cartao && forma !== 'credit_card' && !casamentoCompleto(cartao, cartaoTexto!, pedido.text ?? '')) {
+  // No Apple Pay o crédito é implícito, então o parcial sempre fica a conferir
+  // ("Nubank" na Wallet × "Nubank Ultravioleta"), e a frase é o nome da Wallet.
+  const frase = applePay ? cartaoTexto! : (pedido.text ?? '')
+  if (cartao && (applePay || forma !== 'credit_card') && !casamentoCompleto(cartao, cartaoTexto!, frase)) {
     duvidas.push('cartao')
   }
   let cartaoSemCasar = cartaoTexto != null && cartao == null

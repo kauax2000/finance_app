@@ -400,3 +400,33 @@ Deno.test('amount vazio (variável do Atalho sem valor) conta como ausente', () 
   }
   assertEquals(validarPedido({ amount: '' }).ok, false)
 })
+
+Deno.test('Apple Pay com casamento parcial mantém o cartão, mas fica a conferir', () => {
+  const r = ok(
+    montarLancamento(
+      { amount: 42, merchant: 'Padaria Real', card: 'Nubank', source: 'apple_pay' },
+      ctx({
+        cartoes: [cartao('c-uv', 'Nubank Ultravioleta', OUTRA)],
+        historicoPorCarteira: { [OUTRA]: [hist('Padaria Real', 'cat-padaria')] },
+      }),
+    ),
+  )
+  assertEquals(r.linha.workspace_id, OUTRA)
+  assertEquals(r.linha.payment_credit_card_id, 'c-uv')
+  assertEquals(r.linha.category_id, 'cat-padaria')
+  assertEquals(r.linha.needs_review, true)
+})
+
+Deno.test('Apple Pay com casamento completo pelo nome não fica a conferir', () => {
+  const r = ok(
+    montarLancamento(
+      { amount: 42, merchant: 'Padaria Real', card: 'Nubank Ultravioleta', source: 'apple_pay' },
+      ctx({
+        cartoes: [cartao('c-uv', 'Nubank Ultravioleta', OUTRA)],
+        historicoPorCarteira: { [OUTRA]: [hist('Padaria Real', 'cat-padaria')] },
+      }),
+    ),
+  )
+  assertEquals(r.linha.payment_credit_card_id, 'c-uv')
+  assertEquals(r.linha.needs_review, false)
+})
