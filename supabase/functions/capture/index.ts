@@ -3,15 +3,31 @@
  * Apple Pay) com o token pessoal `fac_…`, e a função grava o lançamento como a
  * pessoa. A regra mora em `_shared/captura.ts`; aqui é só I/O.
  *
+ * Bloco 3B: a foto chega em multipart (campo `file`, e `text`, `source` e `id`
+ * opcionais), é lida pela IA e vira anexo; a frase confusa vai à IA depois do
+ * parser; parcelas > 1 viram plano pela RPC `criar_plano_parcelado`.
+ *
  * Usa a service role, então repete o que a RLS garantiria (Decisão 8): o autor é
  * o dono do token, e a carteira de destino é uma das dele. O aviso aos membros
  * sai do trigger `transactions_notify_created`, não daqui.
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
-import { clientIdDoPedido, montarLancamento, resumoDoLancamento, validarPedido } from '../_shared/captura.ts'
+import {
+  type CamposDaIA,
+  clientIdDoPedido,
+  ERRO_VALOR,
+  montarLancamento,
+  precisaDeIA,
+  resumoDoLancamento,
+  tipoDoArquivo,
+  validarPedido,
+  valoresDoPlano,
+} from '../_shared/captura.ts'
 import { appTodayYmd, formatYmd } from '../_shared/credit-card-cycle.ts'
 import type { CartaoParaCasar, LinhaHistorico } from '../_shared/frase.ts'
 import { internalError } from '../_shared/http.ts'
+import { type ContextoIA, interpretar, lerImagem } from '../_shared/ia.ts'
+import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
 import { sha256Hex } from '../_shared/token-hash.ts'
 
 declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined
@@ -29,21 +45,29 @@ function json(status: number, payload: unknown): Response {
 }
 
 const MAX_CORPO = 16 * 1024
+/** O multipart da foto; o bucket `attachments` aceita até 10 MB por arquivo. */
+const MAX_FOTO = 10 * 1024 * 1024
 const HISTORICO_POR_CARTEIRA = 300
 const TOKEN_INVALIDO = () => json(401, { error: 'Token inválido.' })
-const CORPO_GRANDE = () => json(413, { error: 'Corpo acima de 16 KB.' })
+const CORPO_GRANDE = (multipart: boolean) =>
+  json(413, { error: multipart ? 'Foto acima de 10 MB.' : 'Corpo acima de 16 KB.' })
+const ERRO_PDF = 'PDF de fatura: use Conferir fatura no app.'
+const ERRO_TIPO = 'Envie uma foto (JPG, PNG ou WebP).'
+const ERRO_FOTO = 'Não entendi a foto. Mande o valor no texto.'
+const EXTENSAO = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' } as const
+type Foto = { bytes: Uint8Array; mime: keyof typeof EXTENSAO }
 
-/** O corpo lido aos pedaços; passou de `MAX_CORPO`, para e devolve null — diga o Content-Length o que disser. */
-async function lerCorpo(req: Request): Promise<string | null> {
+/** O corpo lido aos pedaços; passou do `teto`, para e devolve null — diga o Content-Length o que disser. */
+async function lerCorpo(req: Request, teto: number): Promise<Uint8Array<ArrayBuffer> | null> {
   const leitor = req.body?.getReader()
-  if (!leitor) return ''
+  if (!leitor) return new Uint8Array()
   const pedacos: Uint8Array[] = []
   let total = 0
   for (;;) {
     const { done, value } = await leitor.read()
     if (done) break
     total += value.byteLength
-    if (total > MAX_CORPO) {
+    if (total > teto) {
       await leitor.cancel()
       return null
     }
@@ -55,11 +79,18 @@ async function lerCorpo(req: Request): Promise<string | null> {
     tudo.set(p, pos)
     pos += p.byteLength
   }
-  return new TextDecoder().decode(tudo)
+  return tudo
 }
 
-type Gravado = { id: string; needs_review: boolean; amount: number; description: string; payment_credit_card_id: string | null }
-const COLUNAS_GRAVADO = 'id, needs_review, amount, description, payment_credit_card_id'
+type Gravado = {
+  id: string
+  needs_review: boolean
+  amount: number
+  description: string
+  payment_credit_card_id: string | null
+  capture_meta: { ia?: unknown } | null
+}
+const COLUNAS_GRAVADO = 'id, needs_review, amount, description, payment_credit_card_id, capture_meta'
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -70,9 +101,13 @@ Deno.serve(async (req: Request) => {
   const token = req.headers.get('Authorization')?.match(/^Bearer\s+(fac_[0-9a-f]{64})$/)?.[1]
   if (!token) return TOKEN_INVALIDO()
 
-  if (Number(req.headers.get('content-length') ?? 0) > MAX_CORPO) return CORPO_GRANDE()
-  const bruto = await lerCorpo(req)
-  if (bruto == null) return CORPO_GRANDE()
+  // A foto vem em multipart, com outro teto; o resto é o JSON de sempre.
+  const contentType = req.headers.get('content-type') ?? ''
+  const multipart = /^multipart\/form-data/i.test(contentType)
+  const teto = multipart ? MAX_FOTO : MAX_CORPO
+  if (Number(req.headers.get('content-length') ?? 0) > teto) return CORPO_GRANDE(multipart)
+  const bruto = await lerCorpo(req, teto)
+  if (bruto == null) return CORPO_GRANDE(multipart)
 
   const tokenHash = await sha256Hex(token)
 
@@ -109,12 +144,28 @@ Deno.serve(async (req: Request) => {
   if (!carteirasDaPessoa.includes(carteiraPadrao)) return TOKEN_INVALIDO()
 
   let corpo: unknown
+  let foto: Foto | null = null
   try {
-    corpo = JSON.parse(bruto)
+    if (multipart) {
+      const form = await new Response(bruto, { headers: { 'content-type': contentType } }).formData()
+      const arquivo = form.get('file')
+      if (!(arquivo instanceof File)) return json(422, { error: ERRO_TIPO })
+      const bytes = new Uint8Array(await arquivo.arrayBuffer())
+      // Pelos bytes, não pelo nome: HEIC e o resto caem no tipo (o guia manda converter).
+      const tipo = tipoDoArquivo(bytes)
+      if (tipo === 'application/pdf') return json(422, { error: ERRO_PDF })
+      if (tipo == null) return json(422, { error: ERRO_TIPO })
+      foto = { bytes, mime: tipo }
+      corpo = {
+        text: form.get('text') ?? undefined,
+        source: form.get('source') ?? undefined,
+        id: form.get('id') ?? undefined,
+      }
+    } else corpo = JSON.parse(new TextDecoder().decode(bruto))
   } catch {
     return json(422, { error: 'Corpo inválido.' })
   }
-  const validado = validarPedido(corpo)
+  const validado = validarPedido(corpo, foto != null)
   if (!validado.ok) return json(422, { error: validado.erro })
   const pedido = validado.pedido
 
@@ -126,8 +177,9 @@ Deno.serve(async (req: Request) => {
   if (cErr) return json(500, { error: internalError('capture: cartões', cErr) })
   const cartoes = (cartoesLidos ?? []) as CartaoParaCasar[]
 
-  // O resumo de um retry vem da linha gravada, não do pedido.
-  const responder = (g: Gravado) =>
+  // O resumo de um retry vem da linha gravada, não do pedido. `anexo` é null
+  // sem foto; `ia` diz se a linha passou pela IA (Decisão 2).
+  const responder = (g: Gravado, anexo: boolean | null) =>
     json(200, {
       ok: true,
       id: g.id,
@@ -137,7 +189,19 @@ Deno.serve(async (req: Request) => {
         g.description,
         cartoes.find((c) => c.id === g.payment_credit_card_id)?.name,
       ),
+      ia: g.capture_meta?.ia != null,
+      anexo,
     })
+
+  // Num retry a foto não sobe de novo: o anexo é o que a 1ª vez gravou.
+  const temAnexo = async (transacaoId: string) => {
+    const { count, error } = await admin
+      .from('attachments')
+      .select('id', { count: 'exact', head: true })
+      .eq('transaction_id', transacaoId)
+    if (error) console.error('capture: anexo do retry', error)
+    return (count ?? 0) > 0
+  }
 
   // Com `id`, o retry do Atalho cai no mesmo `client_id` e não duplica (Foco 1);
   // sem `id`, `client_id` nulo nunca conflita, e cada pedido é um lançamento novo.
@@ -153,7 +217,10 @@ Deno.serve(async (req: Request) => {
       .limit(1)
       .maybeSingle()
     if (antErr) return json(500, { error: internalError('capture: retry', antErr) })
-    if (anterior) return responder(anterior as Gravado)
+    if (anterior) {
+      const g = anterior as Gravado
+      return responder(g, foto ? await temAnexo(g.id) : null)
+    }
   }
 
   // ponytail: o histórico de todas as carteiras da pessoa (o destino só se sabe
@@ -175,35 +242,126 @@ Deno.serve(async (req: Request) => {
     historicoPorCarteira[carteirasDaPessoa[i]] = (r.data ?? []) as LinhaHistorico[]
   }
 
-  const montado = montarLancamento(pedido, {
-    userId,
-    carteiraPadrao,
-    carteirasDaPessoa,
-    cartoes,
-    historicoPorCarteira,
-    hoje: formatYmd(appTodayYmd()),
-  })
-  if (!montado.ok) return json(montado.status, { error: montado.erro })
+  const hoje = formatYmd(appTodayYmd())
+
+  // A IA (Decisões 8 e 9): a foto vai sempre; a frase, só se o parser não deu
+  // conta. Sem IA (cota, provedor fora, sem chave), segue o caminho de hoje.
+  let campos: CamposDaIA | undefined
+  if (foto || precisaDeIA(pedido, hoje)) {
+    const ctxIA: ContextoIA = { admin, userId, hoje, nomes: await nomesDosMembros(admin, carteirasDaPessoa) }
+    const lido = foto ? await lerImagem(ctxIA, foto.bytes, foto.mime) : await interpretar(ctxIA, pedido.text ?? '')
+    if (lido.ok) campos = { ...lido.dados, provedor: lido.provedor, modelo: lido.modelo }
+    else console.error('capture: ia', lido.motivo)
+  }
+
+  const montado = montarLancamento(
+    { ...pedido, campos },
+    { userId, carteiraPadrao, carteirasDaPessoa, cartoes, historicoPorCarteira, hoje },
+  )
+  if (!montado.ok) {
+    return json(montado.status, { error: foto && montado.erro === ERRO_VALOR ? ERRO_FOTO : montado.erro })
+  }
   const { linha } = montado
 
-  const { data: inseridos, error: insErr } = await admin
-    .from('transactions')
-    .upsert({ ...linha, client_id: clientId }, { onConflict: 'workspace_id,client_id', ignoreDuplicates: true })
-    .select(COLUNAS_GRAVADO)
-  if (insErr) return json(500, { error: internalError('capture: insert', insErr) })
-
-  let gravado = (inseridos ?? [])[0] as Gravado | undefined
-  const novo = gravado != null
-  if (!gravado) {
-    // Dois retries ao mesmo tempo: o outro gravou primeiro.
-    const { data: existente, error: lerErr } = await admin
+  let gravado: Gravado | undefined
+  let novo: boolean
+  const valores = montado.parcelas ? valoresDoPlano(linha.amount, montado.parcelas) : null
+  if (valores) {
+    // Decisão 10: parcela capturada vira plano de verdade. A RPC cria as
+    // parcelas vencidas até hoje, já com a origem e a conferir.
+    const { data: planoId, error: planoRpcErr } = await admin.rpc('criar_plano_parcelado', {
+      p_user_id: userId,
+      p_workspace_id: linha.workspace_id,
+      p_category_id: linha.category_id,
+      p_description: linha.description,
+      p_payment_method: linha.payment_method,
+      p_payment_credit_card_id: linha.payment_credit_card_id,
+      p_total_installments: montado.parcelas,
+      p_installment_amount: valores.parcela,
+      p_final_installment_amount: valores.ultima,
+      p_next_billing_date: linha.date.slice(0, 10),
+      p_source: linha.source,
+      p_needs_review: true,
+    })
+    if (planoRpcErr) return json(500, { error: internalError('capture: plano parcelado', planoRpcErr) })
+    const { data: primeira, error: primErr } = await admin
       .from('transactions')
       .select(COLUNAS_GRAVADO)
-      .eq('workspace_id', linha.workspace_id)
-      .eq('client_id', clientId)
+      .eq('installment_plan_id', planoId)
+      .order('date', { ascending: true })
+      .limit(1)
       .maybeSingle()
-    if (lerErr || !existente) return json(500, { error: internalError('capture: retry', lerErr ?? 'sem linha') })
-    gravado = existente as Gravado
+    if (primErr) return json(500, { error: internalError('capture: 1ª parcela', primErr) })
+    // 1ª cobrança depois de hoje: o plano existe, e a parcela nasce no cron.
+    if (!primeira) {
+      return json(200, {
+        ok: true,
+        id: null,
+        needs_review: true,
+        resumo: montado.resumo,
+        ia: campos != null,
+        anexo: foto ? false : null,
+      })
+    }
+    // O plano não tem `client_id`: a chave e a capture_meta vão na 1ª parcela,
+    // e o retry a acha pela busca de cima.
+    // ponytail: dois retries simultâneos criam dois planos (o 2º update esbarra
+    // na chave única e só vira log); um retry depois do outro não duplica.
+    const meta = { client_id: clientId, capture_meta: linha.capture_meta }
+    const { error: metaErr } = await admin.from('transactions').update(meta).eq('id', (primeira as Gravado).id)
+    if (metaErr) console.error('capture: chave do plano', metaErr)
+    gravado = { ...(primeira as Gravado), capture_meta: linha.capture_meta }
+    novo = true
+  } else {
+    const { data: inseridos, error: insErr } = await admin
+      .from('transactions')
+      .upsert({ ...linha, client_id: clientId }, { onConflict: 'workspace_id,client_id', ignoreDuplicates: true })
+      .select(COLUNAS_GRAVADO)
+    if (insErr) return json(500, { error: internalError('capture: insert', insErr) })
+
+    gravado = (inseridos ?? [])[0] as Gravado | undefined
+    novo = gravado != null
+    if (!gravado) {
+      // Dois retries ao mesmo tempo: o outro gravou primeiro.
+      const { data: existente, error: lerErr } = await admin
+        .from('transactions')
+        .select(COLUNAS_GRAVADO)
+        .eq('workspace_id', linha.workspace_id)
+        .eq('client_id', clientId)
+        .maybeSingle()
+      if (lerErr || !existente) return json(500, { error: internalError('capture: retry', lerErr ?? 'sem linha') })
+      gravado = existente as Gravado
+    }
+  }
+
+  // A foto vira anexo do lançamento novo (Decisão 8): o objeto sobe antes da
+  // linha, e sem linha (cota estourada, 'cota_anexos_excedida') o objeto sai.
+  // O lançamento fica salvo de qualquer jeito, com `anexo: false`.
+  let anexo: boolean | null = null
+  if (foto && !novo) anexo = await temAnexo(gravado.id)
+  else if (foto) {
+    anexo = false
+    const path = `${linha.workspace_id}/${crypto.randomUUID()}.${EXTENSAO[foto.mime]}`
+    const bucket = admin.storage.from('attachments')
+    const { error: upErr } = await bucket.upload(path, foto.bytes, { contentType: foto.mime, upsert: false })
+    if (upErr) console.error('capture: anexo upload', upErr)
+    else {
+      const { error: anexoErr } = await admin
+        .from('attachments')
+        .insert({
+          workspace_id: linha.workspace_id,
+          transaction_id: gravado.id,
+          path,
+          mime: foto.mime,
+          size_bytes: foto.bytes.byteLength,
+          created_by: userId,
+        })
+      if (anexoErr) {
+        console.error('capture: anexo', anexoErr)
+        const { error: rmErr } = await bucket.remove([path])
+        if (rmErr) console.error('capture: anexo remove', rmErr)
+      } else anexo = true
+    }
   }
 
   const { error: usoErr } = await admin
@@ -246,5 +404,16 @@ Deno.serve(async (req: Request) => {
     else await todas
   }
 
-  return responder(gravado)
+  return responder(gravado, anexo)
 })
+
+/** O `full_name` dos membros das carteiras da pessoa, que `redigir` tira do texto (Decisão 6). */
+async function nomesDosMembros(admin: SupabaseAdminClient, carteiras: string[]): Promise<string[]> {
+  const { data: membros, error } = await admin.from('workspace_members').select('user_id').in('workspace_id', carteiras)
+  if (error) console.error('capture: nomes', error)
+  const ids = [...new Set((membros ?? []).map((m: { user_id: string }) => m.user_id))]
+  if (ids.length === 0) return []
+  const { data: perfis, error: pErr } = await admin.from('profiles').select('full_name').in('id', ids)
+  if (pErr) console.error('capture: nomes', pErr)
+  return (perfis ?? []).flatMap((p: { full_name: string | null }) => (p.full_name?.trim() ? [p.full_name.trim()] : []))
+}

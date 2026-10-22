@@ -44,6 +44,10 @@ Os três caminhos fazem o mesmo pedido:
 - cabeçalho `Content-Type: application/json`;
 - um corpo JSON, de até 16 KB.
 
+A foto de recibo é a exceção: ela vai como **Formulário** (`multipart/form-data`),
+de até 10 MB, com o campo `file` (a imagem em JPG, PNG ou WebP) e os campos
+`text`, `source` e `id` opcionais. Veja a seção 5.
+
 O corpo pode ter **uma frase**:
 
 ```json
@@ -83,10 +87,19 @@ passe o número sem formatação.
 Quando dá certo, o app responde com este JSON:
 
 ```json
-{ "ok": true, "id": "…", "needs_review": false, "resumo": "R$ 42,90 · Mercado · Nubank" }
+{ "ok": true, "id": "…", "needs_review": false, "resumo": "R$ 42,90 · Mercado · Nubank", "ia": false, "anexo": null }
 ```
 
 Com `needs_review: true`, o gasto foi gravado, mas espera você conferir no app.
+
+- `ia: true` diz que a IA leu a foto ou a frase. Esse gasto sempre vai para "A
+  conferir".
+- `anexo` diz se a foto ficou guardada no gasto: `true`, `false` (o gasto foi
+  gravado, mas a foto não, por exemplo com o espaço de anexos da carteira cheio)
+  ou `null` quando não houve foto.
+
+Uma compra parcelada ("300 geladeira em 3x") vira um parcelamento de verdade, e
+o `id` é o da 1ª parcela.
 
 Quando dá errado, a resposta traz `error`:
 
@@ -94,8 +107,13 @@ Quando dá errado, a resposta traz `error`:
 | --- | --- |
 | 401 | `Token inválido.`: o token foi revogado, está errado ou não existe. |
 | 402 | A carteira padrão está sem plano ativo. |
-| 413 | O corpo passou de 16 KB. |
+| 413 | O corpo passou de 16 KB, ou a foto passou de 10 MB. |
 | 422 | O app não achou o valor, por exemplo "Não entendi o valor. Ex.: 42 mercado". Nada foi gravado. |
+| 422 | `Envie uma foto (JPG, PNG ou WebP).`: o arquivo não é uma dessas imagens (HEIC também não é). |
+| 422 | `PDF de fatura: use Conferir fatura no app.`: PDF não vai pela captura. |
+| 422 | `Não entendi a foto. Mande o valor no texto.`: nem a IA nem o `text` trouxeram o valor. |
+
+Quando o app não entende a frase, ele pede ajuda à IA antes de desistir.
 
 ## 3. O Atalho "Lançar gasto" (voz)
 
@@ -169,13 +187,24 @@ certo.
 Crie outro atalho e ligue **Mostrar na Folha de Compartilhar**, aceitando
 **Imagens**. Adicione estas ações:
 
-1. **Extrair texto da imagem**, com a **Entrada do atalho**.
-2. **Obter conteúdo de URL**, com o mesmo pedido da seção 3:
-   - `text` = o **Texto** extraído;
-   - `source` = `share`.
+1. **Converter imagem**, com a **Entrada do atalho**, para **JPEG**. A foto do
+   iPhone costuma ser HEIC, e o app não aceita HEIC.
+2. **Obter conteúdo de URL**, com estes ajustes:
+   - URL: `<URL>`;
+   - Método: `POST`;
+   - Cabeçalhos: `Authorization` = `Bearer <TOKEN>`;
+   - Corpo da solicitação: **Formulário**, com estes campos:
+     - `file` (Arquivo) = a **Imagem Convertida**;
+     - `source` (Texto) = `share`.
 3. **Obter valor do dicionário** (`resumo`) e **Mostrar resultado**.
 
-O app lê só texto. A imagem não é enviada.
+A IA lê a foto, o gasto vai para "A conferir" e a foto fica guardada nele. Se
+quiser, mande também o campo `text` com o valor ("42,90"): o valor escrito vence
+o lido da foto, e sem IA disponível é ele que salva o gasto.
+
+**Alternativa sem IA:** no lugar dos passos 1 e 2, use **Extrair texto da
+imagem** com a **Entrada do atalho** e mande o **Texto** extraído no campo
+`text`, com o mesmo pedido JSON da seção 3. Assim a imagem não sai do iPhone.
 
 ## 6. Perdeu o aparelho? Revogue o token
 

@@ -1,5 +1,14 @@
 import { assert, assertEquals, assertMatch, assertNotEquals } from 'jsr:@std/assert@1.0.19'
-import { clientIdDoPedido, montarLancamento, validarPedido, type ContextoCaptura } from './captura.ts'
+import {
+  clientIdDoPedido,
+  montarLancamento,
+  precisaDeIA,
+  tipoDoArquivo,
+  validarPedido,
+  valoresDoPlano,
+  type CamposDaIA,
+  type ContextoCaptura,
+} from './captura.ts'
 import type { CartaoParaCasar, LinhaHistorico } from './frase.ts'
 
 const HOJE = '2026-04-10'
@@ -327,7 +336,7 @@ Deno.test('com dúvida "descricao" o histórico não é consultado', () => {
   assertEquals(r.linha.needs_review, true)
 })
 
-Deno.test('parcelas > 1 vira lançamento simples com "(1/N)" e a conferir', () => {
+Deno.test('parcelas > 1 sai sem "(1/N)" e com o N para o plano (Decisão 10)', () => {
   const r = ok(
     montarLancamento(
       { text: '300 geladeira nubank em 3x' },
@@ -337,9 +346,19 @@ Deno.test('parcelas > 1 vira lançamento simples com "(1/N)" e a conferir', () =
       }),
     ),
   )
-  assertEquals(r.linha.description, 'Geladeira (1/3)')
+  assertEquals(r.linha.description, 'Geladeira')
   assertEquals(r.linha.amount, 300)
+  assertEquals(r.parcelas, 3)
   assertEquals(r.linha.needs_review, true)
+  assertEquals(ok(montarLancamento({ text: '42 mercado' }, ctx())).parcelas, null)
+})
+
+Deno.test('valoresDoPlano: round(total/N) e a última fecha a diferença; centavo que não divide fica de fora', () => {
+  assertEquals(valoresDoPlano(100, 3), { parcela: 33.33, ultima: 33.34 })
+  assertEquals(valoresDoPlano(300, 3), { parcela: 100, ultima: 100 })
+  assertEquals(valoresDoPlano(10, 6), { parcela: 1.67, ultima: 1.65 })
+  assertEquals(valoresDoPlano(0.1, 6), null)
+  assertEquals(valoresDoPlano(0.01, 3), null)
 })
 
 Deno.test('receita da frase vai como income', () => {
@@ -454,4 +473,107 @@ Deno.test('Apple Pay com casamento completo pelo nome não fica a conferir', () 
   )
   assertEquals(r.linha.payment_credit_card_id, 'c-uv')
   assertEquals(r.linha.needs_review, false)
+})
+
+// --- IA (Decisões 2 e 9) ----------------------------------------------------
+
+const ia = (over: Partial<CamposDaIA> = {}): CamposDaIA => ({
+  valor: 42,
+  data: '2026-04-08',
+  descricao: 'Padaria Real',
+  tipo: 'expense',
+  parcelas: null,
+  forma: null,
+  cartao: null,
+  provedor: 'groq',
+  modelo: 'm1',
+  ...over,
+})
+
+Deno.test('Foco 1: campos da IA sempre a conferir, mesmo com histórico e cartão casado; capture_meta.ia', () => {
+  const r = ok(
+    montarLancamento(
+      { campos: ia({ cartao: 'Nubank', forma: 'credit_card' }) },
+      ctx({
+        cartoes: [cartao('c-nu', 'Nubank', OUTRA)],
+        historicoPorCarteira: { [OUTRA]: [hist('Padaria Real', 'cat-padaria')] },
+      }),
+    ),
+  )
+  assertEquals(r.linha.workspace_id, OUTRA)
+  assertEquals(r.linha.payment_credit_card_id, 'c-nu')
+  assertEquals(r.linha.category_id, 'cat-padaria')
+  assertEquals(r.linha.amount, 42)
+  assertEquals(r.linha.description, 'Padaria Real')
+  assertEquals(r.linha.date, '2026-04-08T12:00:00.000Z')
+  assertEquals(r.linha.needs_review, true)
+  assertEquals(r.linha.capture_meta, { ia: { provedor: 'groq', modelo: 'm1' } })
+})
+
+Deno.test('IA: cartão de carteira alheia continua bloqueado (Foco 3)', () => {
+  const r = ok(
+    montarLancamento(
+      { campos: ia({ cartao: 'Nubank', forma: 'credit_card' }) },
+      ctx({ cartoes: [cartao('c-alheio', 'Nubank', ALHEIA)] }),
+    ),
+  )
+  assertEquals(r.linha.workspace_id, PADRAO)
+  assertEquals(r.linha.payment_credit_card_id, null)
+  assertEquals(r.linha.needs_review, true)
+})
+
+Deno.test('IA: o valor escrito no texto vence o lido; data nula vira hoje; forma vai ao banco', () => {
+  const r = ok(
+    montarLancamento(
+      { text: '55 almoço', campos: ia({ valor: 42, data: null, forma: 'debit', descricao: null }) },
+      ctx(),
+    ),
+  )
+  assertEquals(r.linha.amount, 55)
+  assertEquals(r.linha.date, '2026-04-10T12:00:00.000Z')
+  assertEquals(r.linha.payment_method, 'debit_card')
+  assertEquals(r.linha.description, 'Almoço')
+  assertEquals(r.linha.capture_meta, { ia: { provedor: 'groq', modelo: 'm1' }, texto: '55 almoço' })
+})
+
+Deno.test('IA sem data: vale a data dita no texto ("ontem")', () => {
+  const r = ok(montarLancamento({ text: 'ontem almoço', campos: ia({ data: null }) }, ctx()))
+  assertEquals(r.linha.date, '2026-04-09T12:00:00.000Z')
+})
+
+Deno.test('IA sem valor e sem texto com valor: 422 do valor', () => {
+  const r = montarLancamento({ campos: ia({ valor: null }) }, ctx())
+  assertEquals(r, { ok: false, status: 422, erro: 'Não entendi o valor. Ex.: 42 mercado' })
+})
+
+Deno.test('IA com parcelas leva o N ao plano', () => {
+  assertEquals(ok(montarLancamento({ campos: ia({ valor: 300, parcelas: 3 }) }, ctx())).parcelas, 3)
+  // Receita não vira plano (o plano é de despesa).
+  assertEquals(ok(montarLancamento({ campos: ia({ tipo: 'income', parcelas: 3 }) }, ctx())).parcelas, null)
+})
+
+Deno.test('Foco 5: precisaDeIA só sem valor ou com dúvida de descrição, e nunca no Apple Pay', () => {
+  assertEquals(precisaDeIA({ text: '42 mercado' }, HOJE), false)
+  assertEquals(precisaDeIA({ text: 'paguei o almoço' }, HOJE), true)
+  assertEquals(precisaDeIA({ text: '42' }, HOJE), true)
+  assertEquals(precisaDeIA({ amount: 42, merchant: 'Café' }, HOJE), false)
+})
+
+Deno.test('validarPedido: com foto o texto é opcional; campos da IA não entram pelo corpo', () => {
+  assert(validarPedido({}, true).ok)
+  assertEquals(validarPedido({}).ok, false)
+  const v = validarPedido({ text: '42 mercado', campos: ia() })
+  assert(v.ok && v.pedido.campos === undefined)
+})
+
+Deno.test('tipoDoArquivo: pelos bytes, não pelo nome', () => {
+  const b = (...xs: (number | string)[]) =>
+    new Uint8Array(xs.flatMap((x) => (typeof x === 'string' ? [...x].map((c) => c.charCodeAt(0)) : [x])))
+  assertEquals(tipoDoArquivo(b(0xff, 0xd8, 0xff, 0xe0)), 'image/jpeg')
+  assertEquals(tipoDoArquivo(b(0x89, 'PNG', 0x0d, 0x0a)), 'image/png')
+  assertEquals(tipoDoArquivo(b('RIFF', 0, 0, 0, 0, 'WEBPVP8 ')), 'image/webp')
+  assertEquals(tipoDoArquivo(b('%PDF-1.7')), 'application/pdf')
+  // HEIC: "ftypheic" no byte 4.
+  assertEquals(tipoDoArquivo(b(0, 0, 0, 0x18, 'ftypheic')), null)
+  assertEquals(tipoDoArquivo(new Uint8Array()), null)
 })

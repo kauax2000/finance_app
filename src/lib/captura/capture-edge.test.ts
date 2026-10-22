@@ -45,10 +45,52 @@ describe("Edge capture", () => {
         expect(f).not.toContain("req.text()")
         expect(f).not.toContain("req.json()")
         expect(f).toContain("getReader()")
-        expect(f).toMatch(/total > MAX_CORPO/)
+        expect(f).toMatch(/total > teto/)
+        expect(f).toContain("MAX_CORPO = 16 * 1024")
         const formato = f.indexOf("fac_[0-9a-f]{64}")
         expect(formato).toBeGreaterThan(-1)
-        expect(f.indexOf("await lerCorpo(req)")).toBeGreaterThan(formato)
+        expect(f.indexOf("await lerCorpo(req, teto)")).toBeGreaterThan(formato)
+    })
+
+    it("multipart: teto de 10 MB, lido aos pedaços, conferido no Content-Length (Foco 5)", () => {
+        const f = fonte(CAPTURE)
+        expect(f).toContain("MAX_FOTO = 10 * 1024 * 1024")
+        expect(f).toContain("multipart ? MAX_FOTO : MAX_CORPO")
+        expect(f).toContain("await lerCorpo(req, teto)")
+        expect(f).toContain(".formData()")
+        expect(f).toContain("Number(req.headers.get('content-length') ?? 0) > teto")
+    })
+
+    it("PDF e tipo fora da lista voltam 422 com a mensagem exata (Foco 5)", () => {
+        const f = fonte(CAPTURE)
+        expect(f).toContain("'PDF de fatura: use Conferir fatura no app.'")
+        expect(f).toContain("'Envie uma foto (JPG, PNG ou WebP).'")
+        expect(f).toContain("'Não entendi a foto. Mande o valor no texto.'")
+        expect(f).toContain("tipoDoArquivo(")
+    })
+
+    it("a IA da frase só entra depois do parser (Foco 5); a da foto é lerImagem", () => {
+        const f = fonte(CAPTURE)
+        const parser = f.indexOf("precisaDeIA(pedido")
+        expect(parser).toBeGreaterThan(-1)
+        expect(f.indexOf("await interpretar(")).toBeGreaterThan(parser)
+        expect(f).toContain("await lerImagem(")
+    })
+
+    it("parcelas > 1 viram plano pela RPC interna, com a 1ª parcela como resposta (Decisão 10)", () => {
+        const f = fonte(CAPTURE)
+        expect(f).toContain("rpc('criar_plano_parcelado'")
+        expect(f).toContain("p_needs_review: true")
+        expect(f).toContain(".eq('installment_plan_id', planoId)")
+    })
+
+    it("o anexo grava created_by, e o objeto sai quando a linha falha", () => {
+        const f = fonte(CAPTURE)
+        expect(f).toContain("created_by: userId")
+        expect(f).toContain("upsert: false")
+        const insert = f.search(/\.from\('attachments'\)\s*\.insert\(/)
+        expect(insert).toBeGreaterThan(-1)
+        expect(f.indexOf(".remove([path])", insert)).toBeGreaterThan(insert)
     })
 
     it("consulta o plano da carteira padrão", () => {

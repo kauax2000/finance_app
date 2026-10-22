@@ -13,6 +13,8 @@ import {
   type FormaDePagamento,
   type LinhaHistorico,
 } from './frase.ts'
+import type { CamposIA } from './ia.ts'
+import type { Provedor } from './ia-config.ts'
 import { moneyBRL } from './notification-copy.ts'
 import { sha256Hex } from './token-hash.ts'
 
@@ -28,7 +30,13 @@ export type PedidoCaptura = {
   card?: string
   date?: string
   source?: Origem
+  /** O que a IA leu (Decisão 9). Nunca vem do corpo: a Edge o põe depois de chamar a IA. */
+  campos?: CamposDaIA
 }
+
+export type CamposDaIA = CamposIA & { provedor: Provedor; modelo: string }
+
+type MetaCaptura = { walletCard?: string; texto?: string; ia?: { provedor: Provedor; modelo: string } }
 
 export type LinhaCaptura = {
   workspace_id: string
@@ -42,7 +50,7 @@ export type LinhaCaptura = {
   category_id: string | null
   source: Origem
   needs_review: boolean
-  capture_meta: { walletCard?: string; texto?: string } | null
+  capture_meta: MetaCaptura | null
 }
 
 export type ContextoCaptura = {
@@ -54,7 +62,7 @@ export type ContextoCaptura = {
   hoje: string // YYYY-MM-DD, o dia de São Paulo
 }
 
-const ERRO_VALOR = 'Não entendi o valor. Ex.: 42 mercado'
+export const ERRO_VALOR = 'Não entendi o valor. Ex.: 42 mercado'
 const ERRO_TEXTO = 'Texto acima de 500 caracteres.'
 const ERRO_LIMITE = 'Valor acima do limite.'
 const MAX_TEXTO = 500
@@ -74,7 +82,11 @@ function valorDoAmount(amount: unknown): number | null {
   return n != null && n > 0 ? n : null
 }
 
-export function validarPedido(body: unknown): { ok: true; pedido: PedidoCaptura } | { ok: false; erro: string } {
+/** Com foto (multipart), o texto é opcional: o valor pode vir da imagem. */
+export function validarPedido(
+  body: unknown,
+  comFoto = false,
+): { ok: true; pedido: PedidoCaptura } | { ok: false; erro: string } {
   if (!body || typeof body !== 'object' || Array.isArray(body)) return { ok: false, erro: 'Corpo inválido.' }
   const b = body as Record<string, unknown>
   for (const campo of ['text', 'merchant', 'card', 'date'] as const) {
@@ -87,8 +99,10 @@ export function validarPedido(body: unknown): { ok: true; pedido: PedidoCaptura 
   if (b.source != null && !ORIGENS.includes(b.source as Origem)) return { ok: false, erro: 'Origem inválida.' }
   if (temAmount(b.amount)) {
     if (valorDoAmount(b.amount) == null) return { ok: false, erro: ERRO_VALOR }
-  } else if (typeof b.text !== 'string' || !b.text.trim()) return { ok: false, erro: ERRO_VALOR }
-  return { ok: true, pedido: b as PedidoCaptura }
+  } else if (!comFoto && (typeof b.text !== 'string' || !b.text.trim())) return { ok: false, erro: ERRO_VALOR }
+  // Só os campos do contrato: `campos` (a IA) nunca entra pelo corpo.
+  const { id, text, amount, merchant, card, date, source } = b as PedidoCaptura
+  return { ok: true, pedido: { id, text, amount, merchant, card, date, source } }
 }
 
 /**
@@ -102,6 +116,36 @@ export async function clientIdDoPedido(tokenId: string, id: string): Promise<str
   h[16] = ((parseInt(h[16], 16) & 0x3) | 0x8).toString(16)
   const s = h.join('')
   return `${s.slice(0, 8)}-${s.slice(8, 12)}-${s.slice(12, 16)}-${s.slice(16, 20)}-${s.slice(20)}`
+}
+
+/**
+ * A frase precisa da IA (Decisão 9)? O parser vem primeiro, e a IA só entra se
+ * o valor ficou nulo ou a descrição ficou em dúvida. O Apple Pay nunca.
+ */
+export function precisaDeIA(pedido: PedidoCaptura, hoje: string): boolean {
+  if (temAmount(pedido.amount)) return false
+  const f = interpretarFrase(pedido.text ?? '', hoje)
+  return f.valor == null || f.duvidas.includes('descricao')
+}
+
+/** O tipo do arquivo pelos primeiros bytes; o nome e o Content-Type da parte não contam. */
+export function tipoDoArquivo(b: Uint8Array): 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf' | null {
+  const ascii = (i: number, s: string) => [...s].every((c, k) => b[i + k] === c.charCodeAt(0))
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'image/jpeg'
+  if (b[0] === 0x89 && ascii(1, 'PNG')) return 'image/png'
+  if (ascii(0, 'RIFF') && ascii(8, 'WEBP')) return 'image/webp'
+  if (ascii(0, '%PDF')) return 'application/pdf'
+  return null
+}
+
+/**
+ * A parcela é `round(total / N, 2)` e a última fecha a diferença (Decisão 10).
+ * Null quando o centavo não divide (a RPC exige as duas positivas).
+ */
+export function valoresDoPlano(total: number, n: number): { parcela: number; ultima: number } | null {
+  const parcela = Math.round((total / n) * 100) / 100
+  const ultima = Math.round((total - parcela * (n - 1)) * 100) / 100
+  return parcela > 0 && ultima > 0 ? { parcela, ultima } : null
 }
 
 /** A forma do parser no vocabulário de `transactions.payment_method`. */
@@ -143,7 +187,7 @@ function dataValida(s: string | undefined): string | null {
 export function montarLancamento(
   pedido: PedidoCaptura,
   ctx: ContextoCaptura,
-): { ok: true; linha: LinhaCaptura; resumo: string } | { ok: false; status: 422; erro: string } {
+): { ok: true; linha: LinhaCaptura; resumo: string; parcelas: number | null } | { ok: false; status: 422; erro: string } {
   let valor: number | null
   let data: string
   let tipo: 'expense' | 'income' = 'expense'
@@ -153,7 +197,8 @@ export function montarLancamento(
   let cartaoTexto: string | null
   let parcelas: number | null = null
   let estorno = false
-  const capturaMeta: { walletCard?: string; texto?: string } = {}
+  const capturaMeta: MetaCaptura = {}
+  const c = pedido.campos
 
   const applePay = temAmount(pedido.amount)
   if (applePay) {
@@ -172,6 +217,20 @@ export function montarLancamento(
     ;({ valor, data, tipo, descricao, forma, cartaoTexto, parcelas, estorno } = f)
     // Regra 1: a dúvida "cartao" só vale no crédito ("30 uber casa" não é cartão).
     duvidas = f.duvidas.filter((d) => d !== 'cartao' || forma === 'credit_card')
+    if (c) {
+      // Decisão 9: a IA vence e o texto completa, mas o valor que a pessoa
+      // escreveu vence o lido. Daqui em diante, o mesmo caminho da frase.
+      valor = valor ?? c.valor
+      // Sem data lida, a do texto, que sem data dita já é hoje.
+      data = c.data ?? data
+      tipo = estorno ? 'income' : (c.tipo ?? tipo)
+      if (c.descricao) descricao = c.descricao
+      duvidas = c.descricao || !duvidas.includes('descricao') ? [] : ['descricao']
+      forma = c.forma ?? forma
+      cartaoTexto = c.cartao ?? cartaoTexto
+      parcelas = c.parcelas ?? parcelas
+      capturaMeta.ia = { provedor: c.provedor, modelo: c.modelo }
+    }
   }
 
   if (valor == null) return { ok: false, status: 422, erro: ERRO_VALOR }
@@ -185,7 +244,7 @@ export function montarLancamento(
   // crédito dito, o casamento parcial leva à carteira do cartão, mas a conferir.
   // No Apple Pay o crédito é implícito, então o parcial sempre fica a conferir
   // ("Nubank" na Wallet × "Nubank Ultravioleta"), e a frase é o nome da Wallet.
-  const frase = applePay ? cartaoTexto! : (pedido.text ?? '')
+  const frase = applePay || c ? cartaoTexto! : (pedido.text ?? '')
   if (cartao && (applePay || forma !== 'credit_card') && !casamentoCompleto(cartao, cartaoTexto!, frase)) {
     duvidas.push('cartao')
     // O nome da Wallet fica guardado: "Lembrar" o grava como apelido do cartão.
@@ -227,10 +286,12 @@ export function montarLancamento(
     cartaoId = doHistorico?.id ?? null
   }
 
-  if (parcelas != null && parcelas > 1) descricao = `${descricao} (1/${parcelas})`
+  // O plano é de despesa; a RPC acrescenta o "(k/N)" de cada parcela.
+  const parcelasDoPlano = tipo === 'expense' && parcelas != null && parcelas > 1 ? parcelas : null
   const categoria = historico?.categoryId ?? null
-  const needsReview = duvidas.length > 0 || cartaoSemCasar || categoria == null || (parcelas != null && parcelas > 1)
-  if (needsReview && !applePay) capturaMeta.texto = pedido.text
+  // Decisão 2: tudo que passou por IA nasce a conferir.
+  const needsReview = duvidas.length > 0 || cartaoSemCasar || categoria == null || parcelasDoPlano != null || c != null
+  if (needsReview && !applePay && pedido.text) capturaMeta.texto = pedido.text
 
   const nomeDoCartao = ctx.cartoes.find((c) => c.id === cartaoId)?.name
   return {
@@ -250,5 +311,6 @@ export function montarLancamento(
       capture_meta: Object.keys(capturaMeta).length ? capturaMeta : null,
     },
     resumo: resumoDoLancamento(valor, descricao, nomeDoCartao),
+    parcelas: parcelasDoPlano,
   }
 }
