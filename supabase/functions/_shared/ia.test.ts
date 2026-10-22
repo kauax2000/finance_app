@@ -218,9 +218,9 @@ Deno.test('interpretar: sem a chave da Groq vai direto à Cloudflare', async () 
 Deno.test('interpretar: o corpo enviado não leva cartão, CPF nem nome', async () => {
   const f = adminFalso()
   await comFetch(() => resposta(CAMPOS), async (pedidos) => {
-    await interpretar(f.ctx, 'uber Maria Souza 5502 0912 3456 7890 cpf 123.456.789-09 42,90')
+    await interpretar(f.ctx, 'uber Maria Souza 5555 5555 5555 4444 cpf 123.456.789-09 42,90')
     const corpo = pedidos[0].body
-    assertFalse(corpo.includes('5502'), corpo)
+    assertFalse(corpo.includes('5555'), corpo)
     assertFalse(corpo.includes('123.456.789-09'), corpo)
     assertFalse(corpo.includes('Souza'), corpo)
     const json = JSON.parse(corpo)
@@ -396,10 +396,10 @@ Deno.test('interpretar: a chave do cache leva o dia — outro dia não serve a r
 Deno.test('lerFatura: o corpo enviado nunca leva o número do cartão (C1)', async () => {
   const f = adminFalso()
   await comFetch(() => resposta({ itens: [ITEM] }), async (pedidos) => {
-    await lerFatura(f.ctx, 'Cartão 5502  0912  3456  7890\n' + LINHA, '2026-10-20')
+    await lerFatura(f.ctx, 'Cartão 5555  5555  5555  4444\nFulano,4111111111111111,12/28\n' + LINHA, '2026-10-20')
     const corpo = pedidos[0].body
-    assertFalse(/5502|0912|3456/.test(corpo), corpo)
-    assert(corpo.includes('7890'))
+    assertFalse(/5555|4111/.test(corpo), corpo)
+    assert(corpo.includes('•••• 4444') && corpo.includes('•••• 1111'))
   })
 })
 

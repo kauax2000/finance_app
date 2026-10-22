@@ -1,17 +1,20 @@
 import { assert, assertEquals, assertFalse, assertStringIncludes } from 'jsr:@std/assert@1.0.19'
 import { redigir } from './redigir.ts'
 
+// Números de cartão de teste, de formato real (passam no Luhn): 4111 1111 1111 1111,
+// 5555 5555 5555 4444 e o Amex 3782 822463 10005.
+
 Deno.test('redigir: cartão vira •••• e os 4 últimos, e o CPF sai', () => {
-  const r = redigir('Cartão 5502 0912 3456 7890 CPF 123.456.789-09', [])
-  assertStringIncludes(r, '•••• 7890')
+  const r = redigir('Cartão 5555 5555 5555 4444 CPF 123.456.789-09', [])
+  assertStringIncludes(r, '•••• 4444')
   assertFalse(/\d{13,}/.test(r.replace(/[\s.-]/g, '')), r)
   assertFalse(r.includes('123.456.789-09'), r)
-  assertFalse(r.includes('5502'), r)
+  assertFalse(r.includes('5555'), r)
 })
 
 Deno.test('redigir: cartão sem separador e CPF/CNPJ sem pontuação', () => {
-  const r = redigir('cartao 5502091234567890 cpf 12345678909 cnpj 12.345.678/0001-90', [])
-  assertStringIncludes(r, '•••• 7890')
+  const r = redigir('cartao 5555555555554444 cpf 12345678909 cnpj 12.345.678/0001-90', [])
+  assertStringIncludes(r, '•••• 4444')
   assertFalse(r.includes('12345678909'), r)
   assertFalse(r.includes('0001-90'), r)
 })
@@ -54,7 +57,7 @@ Deno.test('redigir: dinheiro e data ficam', () => {
 // ---- rodada 1 da revisão ----
 
 Deno.test('redigir: cartão com separador repetido (C1)', () => {
-  for (const t of ['Cartão 5502  0912  3456  7890', '5502 - 0912 - 3456 - 7890', '4111.1111.1111.1111', '3782 822463 10005']) {
+  for (const t of ['Cartão 5555  5555  5555  4444', '5555 - 5555 - 5555 - 4444', '4111.1111.1111.1111', '3782 822463 10005']) {
     const r = redigir(t, [])
     assertFalse(/\d{5,}/.test(r.replace(/[\s.-]/g, '')), `${t} => ${r}`)
     assert(r.includes('•••• '), `${t} => ${r}`)
@@ -62,8 +65,8 @@ Deno.test('redigir: cartão com separador repetido (C1)', () => {
 })
 
 Deno.test('redigir: a máscara do cartão não engole o número vizinho (I1)', () => {
-  assertEquals(redigir('cartao 5502 0912 3456 7890 42,90', []), 'cartao •••• 7890 42,90')
-  assertEquals(redigir('12/10 5502 0912 3456 7890 199,90', []), '12/10 •••• 7890 199,90')
+  assertEquals(redigir('cartao 5555 5555 5555 4444 42,90', []), 'cartao •••• 4444 42,90')
+  assertEquals(redigir('12/10 5555 5555 5555 4444 199,90', []), '12/10 •••• 4444 199,90')
 })
 
 Deno.test('redigir: telefone com espaço ou ponto (I2)', () => {
@@ -110,10 +113,12 @@ Deno.test('redigir: endereço sozinho na linha sai; com dinheiro, só o trecho d
 // ---- rodada 2 da revisão ----
 
 Deno.test('redigir: o último bloco do cartão não engole o valor nem a data (N1)', () => {
-  assertEquals(redigir('12/10 UBER TRIP 1234 5678 9012 23,90', []), '12/10 UBER TRIP •••• 9012 23,90')
-  assertEquals(redigir('PAGAMENTO 1234 5678 9012 1.234,56', []), 'PAGAMENTO •••• 9012 1.234,56')
-  assertEquals(redigir('12/10 COMPRA 4111 1111 1111 9,90', []), '12/10 COMPRA •••• 1111 9,90')
-  assertEquals(redigir('PARC 2026 1012 3456 03/10', []), 'PARC •••• 3456 03/10')
+  assertEquals(redigir('12/10 UBER TRIP 4111 1111 1111 1111 23,90', []), '12/10 UBER TRIP •••• 1111 23,90')
+  assertEquals(redigir('PAGAMENTO 4111 1111 1111 1111 1.234,56', []), 'PAGAMENTO •••• 1111 1.234,56')
+  // Não é cartão (12 dígitos, ou sem Luhn): fica como está, com o valor e a data.
+  assertEquals(redigir('12/10 COMPRA 4111 1111 1111 9,90', []), '12/10 COMPRA 4111 1111 1111 9,90')
+  assertEquals(redigir('PARC 2026 1012 3456 03/10', []), 'PARC 2026 1012 3456 03/10')
+  assertEquals(redigir('12/10 UBER TRIP 1234 5678 9012 23,90', []), '12/10 UBER TRIP 1234 5678 9012 23,90')
 })
 
 Deno.test('redigir: CPF e telefone não engolem valor nem data (N2, N3)', () => {
@@ -131,4 +136,37 @@ Deno.test('redigir: CEP com espaço e telefone sem DDD depois da palavra', () =>
   assertEquals(redigir('CEP 01310 100', []), '[cep]')
   assertEquals(redigir('cel 987654321', []), 'cel [telefone]')
   assertEquals(redigir('12/10 LOJA 1234-5678 42,90', []), '12/10 LOJA 1234-5678 42,90')
+})
+
+// ---- rodada 3 da revisão: cartão por varredura e Luhn ----
+
+Deno.test('redigir: cartão colado a "/", "." ou "," é mascarado', () => {
+  const casos: Array<[string, string]> = [
+    ['cartao/4111111111111111', 'cartao/•••• 1111'],
+    ['num.4111111111111111', 'num.•••• 1111'],
+    ['1,4111111111111111', '1,•••• 1111'],
+    ['4111111111111111/12/28', '•••• 1111/12/28'],
+    ['4111111111111111,90', '•••• 1111,90'],
+    ['Fulano,4111111111111111,12/28,123', 'Fulano,•••• 1111,12/28,123'],
+    ['Fulano,4111 1111 1111 1111,12/28', 'Fulano,•••• 1111,12/28'],
+    ['cartao/4111 1111 1111 1111', 'cartao/•••• 1111'],
+    ['4111 1111 1111 1111/2026', '•••• 1111/2026'],
+    ['3782 822463 10005', '•••• 0005'],
+  ]
+  for (const [t, esperado] of casos) assertEquals(redigir(t, []), esperado, t)
+})
+
+Deno.test('redigir: o valor e a data em volta do cartão ficam', () => {
+  assertEquals(redigir('12/10 UBER TRIP 4111 1111 1111 1111 23,90', []), '12/10 UBER TRIP •••• 1111 23,90')
+  assertEquals(redigir('12/10 COMPRA 4111 1111 1111 9,90', []), '12/10 COMPRA 4111 1111 1111 9,90')
+  assertEquals(redigir('PARC 2026 1012 3456 03/10', []), 'PARC 2026 1012 3456 03/10')
+  assertEquals(redigir('12/10 PARC 2026 1012 3456 03/10 42,90', []), '12/10 PARC 2026 1012 3456 03/10 42,90')
+})
+
+Deno.test('redigir: CPF e CNPJ depois de "/" e telefone com o 0 da operadora', () => {
+  assertEquals(redigir('cpf/123.456.789-09', []), 'cpf/[cpf]')
+  assertEquals(redigir('cnpj/12.345.678/0001-90', []), 'cnpj/[cnpj]')
+  assertEquals(redigir('tel 011 98765-4321', []), 'tel [telefone]')
+  assertEquals(redigir('tel (011) 98765-4321', []), 'tel [telefone]')
+  assertEquals(redigir('tel: 021 3456-7890', []), 'tel: [telefone]')
 })
