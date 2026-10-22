@@ -79,28 +79,39 @@ export function camposDaFrase(
 
 /**
  * Os campos lidos pela IA (frase ou foto) pelas mesmas regras da frase, como a
- * Edge `capture` faz com a IA e um texto vazio: tipo nulo é despesa, data nula
- * é hoje, e pix, débito ou dinheiro não têm cartão. Sempre fica a conferir.
+ * Edge `capture` (Decisão 9): a IA vence e o texto da pessoa completa — o
+ * valor escrito vence o lido, e forma, parcelas e estorno ditos ficam quando a
+ * IA não os leu. Tipo nulo é despesa, data nula é a do texto (hoje), pix,
+ * débito ou dinheiro não têm cartão, e data depois de hoje fica hoje, a
+ * conferir. Sempre fica a conferir (a dúvida "ia").
  */
 export function camposDaIA(
     c: CamposIA,
     hoje: string,
     cartoes: CartaoParaCasar[],
     historico: LinhaHistorico[],
+    /** A frase que a pessoa escreveu; a foto não tem. */
+    texto = "",
 ): CamposDaFrase {
-    const vazia = interpretarFrase("", hoje)
-    const forma = c.forma
+    const f = interpretarFrase(texto, hoje)
+    const forma = c.forma ?? f.forma
+    let data = c.data ?? f.data
+    const duvidas = c.descricao || !f.duvidas.includes("descricao") ? [] : ["descricao"]
+    if (data > hoje) {
+        data = hoje
+        duvidas.push("data")
+    }
     const campos = camposDaInterpretacao(
         {
-            ...vazia,
-            valor: c.valor,
-            data: c.data ?? vazia.data,
-            tipo: c.tipo ?? vazia.tipo,
-            descricao: c.descricao || vazia.descricao,
-            duvidas: c.descricao ? [] : ["descricao"],
+            ...f,
+            valor: f.valor ?? c.valor,
+            data,
+            tipo: f.estorno ? "income" : (c.tipo ?? f.tipo),
+            descricao: c.descricao || f.descricao,
+            duvidas,
             forma,
-            cartaoTexto: forma == null || forma === "credit_card" ? c.cartao : null,
-            parcelas: c.parcelas,
+            cartaoTexto: forma == null || forma === "credit_card" ? (c.cartao ?? f.cartaoTexto) : null,
+            parcelas: c.parcelas ?? f.parcelas,
         },
         cartoes,
         historico,

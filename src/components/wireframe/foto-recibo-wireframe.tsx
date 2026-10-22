@@ -49,38 +49,47 @@ export function FotoReciboWireframe({
     }, [])
 
     async function ler(arquivo: File) {
-        if (!currentWorkspaceId) return
+        if (!currentWorkspaceId) {
+            setAviso("Escolha uma carteira primeiro.")
+            return
+        }
+        const workspaceId = currentWorkspaceId
         const meu = ++pedido.current
         const vale = () => montado.current && meu === pedido.current
         setLendo(true)
         setAviso("Lendo a foto…")
-        let foto: File
         try {
-            const blob = await comprimirImagem(arquivo)
-            // Sem WebP no canvas, o navegador devolve PNG: o tipo é o que saiu.
-            foto = new File([blob], `recibo.${blob.type.split("/")[1] ?? "webp"}`, { type: blob.type })
-        } catch {
-            if (vale()) {
-                setLendo(false)
-                setAviso("Não foi possível abrir esta imagem.")
+            let foto: File
+            try {
+                const blob = await comprimirImagem(arquivo)
+                // Sem WebP no canvas, o navegador devolve PNG: o tipo é o que saiu.
+                foto = new File([blob], `recibo.${blob.type.split("/")[1] ?? "webp"}`, { type: blob.type })
+            } catch {
+                if (vale()) setAviso("Não foi possível abrir esta imagem.")
+                return
             }
-            return
+            if (!vale()) return
+            onFoto(foto)
+            const [historico, lido] = await Promise.all([
+                historicoDaFraseEmCache(queryClient, workspaceId),
+                lerImagemComIA(workspaceId, foto),
+            ])
+            if (!vale()) return
+            if (!lido.ok) {
+                setAviso(lido.mensagem)
+                return
+            }
+            const c = camposDaIA(lido.campos, localYmdFromDate(new Date()), cartoes, historico)
+            onAplicar(c)
+            setAviso(avisoDaIA(c))
+        } catch (erro) {
+            // Só a sessão (`getSession`) rejeita; a leitura falhou, a foto fica.
+            console.error("foto do recibo:", erro)
+            if (vale()) setAviso("Não foi possível ler a foto.")
+        } finally {
+            // Um pedido novo cuida do próprio "lendo".
+            if (vale()) setLendo(false)
         }
-        if (!vale()) return
-        onFoto(foto)
-        const [historico, lido] = await Promise.all([
-            historicoDaFraseEmCache(queryClient, currentWorkspaceId),
-            lerImagemComIA(currentWorkspaceId, foto),
-        ])
-        if (!vale()) return
-        setLendo(false)
-        if (!lido.ok) {
-            setAviso(`${lido.mensagem} A foto vai anexada ao salvar.`)
-            return
-        }
-        const c = camposDaIA(lido.campos, localYmdFromDate(new Date()), cartoes, historico)
-        onAplicar(c)
-        setAviso(avisoDaIA(c))
     }
 
     // A foto do compartilhar é lida uma vez; o ref segura o segundo efeito do

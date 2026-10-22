@@ -93,7 +93,10 @@ export async function persistInstallmentPlanCreate(options: {
     return { planId: id }
 }
 
-/** A 1ª parcela já lançada do plano (a que leva a foto do recibo), ou `null`. */
+/**
+ * A 1ª parcela já lançada do plano (a que leva a foto do recibo), ou `null`
+ * sem parcela. Um erro da consulta é lançado: não é "sem parcela".
+ */
 export async function primeiraParcelaDoPlano(supabase: SupabaseClient, planId: string): Promise<string | null> {
     const { data, error } = await supabase
         .from("transactions")
@@ -102,6 +105,6 @@ export async function primeiraParcelaDoPlano(supabase: SupabaseClient, planId: s
         .order("date", { ascending: true })
         .limit(1)
         .maybeSingle()
-    if (error) return null
+    if (error) throw error
     return (data as { id: string } | null)?.id ?? null
 }

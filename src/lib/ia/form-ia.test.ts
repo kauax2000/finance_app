@@ -91,6 +91,32 @@ describe("camposDaIA", () => {
     it("parcelas vão adiante como na frase", () => {
         expect(camposDaIA(ia({ parcelas: 3 }), HOJE, [], []).parcelas).toBe(3)
     })
+
+    it("data lida depois de hoje fica hoje, a conferir (como na Edge)", () => {
+        const c = camposDaIA(ia({ data: "2026-05-01" }), HOJE, [], [])
+        expect(c.data).toBe(HOJE)
+        expect(c.duvidas).toEqual(expect.arrayContaining(["data", "ia"]))
+    })
+
+    it("o texto da pessoa completa o que a IA deixou nulo: parcelas e forma", () => {
+        const c = camposDaIA(
+            ia({ valor: 42, descricao: "Mercado", parcelas: null, forma: null }),
+            HOJE,
+            [nubank],
+            [],
+            "42 mercado em 3x no débito",
+        )
+        expect(c.parcelas).toBe(3)
+        expect(c.paymentMethod).toBe("debit_card")
+        expect(c.duvidas).toContain("ia")
+    })
+
+    it("o estorno dito no texto vale com a IA", () => {
+        const c = camposDaIA(ia({ valor: 30, descricao: "Uber", tipo: "expense" }), HOJE, [nubank], [], "estorno 30 uber nubank")
+        expect(c.tipo).toBe("income")
+        expect(c.estorno).toBe(true)
+        expect(c.creditCardId).toBe("card-nu")
+    })
 })
 
 describe("o aviso e a origem do que veio da IA", () => {
@@ -149,6 +175,10 @@ describe("fonte do formulário com IA", () => {
         const ajudante = form.slice(form.indexOf("function anexarFotoDoRecibo("))
         expect(ajudante).toMatch(/const id = await lancamento\(\)[\s\S]*enviarAnexo\([^)]*transactionId: id/)
         expect(form).toContain("Sem conexão: a foto não foi anexada.")
+        expect(form).toContain("Sem carteira: a foto não foi anexada.")
+        expect(foto).not.toContain("anexada ao salvar")
+        expect(foto).toContain("Escolha uma carteira primeiro.")
+        expect(foto).toMatch(/finally \{[\s\S]{0,120}setLendo\(false\)/)
     })
 
     it("a foto escolhida deixa o formulário sujo", () => {

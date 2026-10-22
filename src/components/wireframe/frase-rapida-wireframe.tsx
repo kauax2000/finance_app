@@ -77,7 +77,7 @@ export function FraseRapidaWireframe({
             setAviso(lido.mensagem)
             return
         }
-        const c = camposDaIA(lido.campos, localYmdFromDate(new Date()), cartoes, historico)
+        const c = camposDaIA(lido.campos, localYmdFromDate(new Date()), cartoes, historico, texto)
         onAplicar(c)
         setAviso(avisoDaIA(c))
         setTentarIA(false)

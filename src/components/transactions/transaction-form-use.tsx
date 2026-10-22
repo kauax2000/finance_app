@@ -635,7 +635,11 @@ export function useTransactionForm({
     function anexarFotoDoRecibo(foto: File, lancamento: (() => Promise<string | null>) | null) {
         // Uma foto anexa um lançamento só, mesmo com o formulário aberto.
         setFotoDoRecibo(null)
-        if (!lancamento || !currentWorkspaceId) {
+        if (!currentWorkspaceId) {
+            toastError("Sem carteira: a foto não foi anexada.")
+            return
+        }
+        if (!lancamento) {
             toastError("Sem conexão: a foto não foi anexada.")
             return
         }
@@ -648,7 +652,10 @@ export function useTransactionForm({
             }
             const r = await enviarAnexo(supabase, { workspaceId }, foto, { transactionId: id })
             if (!r.ok) toastError(r.erro)
-        })().catch(() => toastError("A foto não foi anexada."))
+        })().catch((erro: unknown) => {
+            console.error("anexo da foto do recibo:", erro)
+            toastError("Não foi possível anexar a foto.")
+        })
     }
 
     const showFooter = true

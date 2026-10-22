@@ -6,7 +6,7 @@ vi.mock("@/lib/edge-invoke", () => ({ invokeEdgeJson: vi.fn(() => Promise.resolv
 vi.mock("@/lib/credit-card-notifications", () => ({ scheduleEvaluateCreditCardAlerts: vi.fn() }))
 vi.mock("@/lib/toast", () => ({ toastError: vi.fn(), toastSuccess: vi.fn() }))
 
-const { persistInstallmentPlanCreate } = await import("@/components/transactions/transaction-form-persistence")
+const { persistInstallmentPlanCreate, primeiraParcelaDoPlano } = await import("@/components/transactions/transaction-form-persistence")
 
 const payload: InstallmentPlanFormSavePayload = {
     categoryId: null,
@@ -86,5 +86,27 @@ describe("persistInstallmentPlanCreate", () => {
         })
         expect(r).toEqual({ planId: "plan-1" })
         expect(console.error).toHaveBeenCalled()
+    })
+})
+
+describe("primeiraParcelaDoPlano", () => {
+    const cliente = (resposta: { data: unknown; error: unknown }) =>
+        ({
+            from: () => ({
+                select: () => ({
+                    eq: () => ({ order: () => ({ limit: () => ({ maybeSingle: async () => resposta }) }) }),
+                }),
+            }),
+        }) as never
+
+    it("a 1ª parcela, ou null sem parcela", async () => {
+        expect(await primeiraParcelaDoPlano(cliente({ data: { id: "tx-1" }, error: null }), "plan-1")).toBe("tx-1")
+        expect(await primeiraParcelaDoPlano(cliente({ data: null, error: null }), "plan-1")).toBeNull()
+    })
+
+    it("o erro da consulta é lançado, e não vira 'sem parcela'", async () => {
+        await expect(primeiraParcelaDoPlano(cliente({ data: null, error: { message: "rls" } }), "plan-1")).rejects.toEqual({
+            message: "rls",
+        })
     })
 })
