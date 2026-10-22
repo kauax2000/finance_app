@@ -175,6 +175,8 @@ export async function deliverNotification(
     type === 'budget' ||
     type === 'credit_card' ||
     type === 'bill' ||
+    // O lembrete das 20h é um resumo diário, como a conta a pagar.
+    type === 'review' ||
     systemCritical
 
   if (prefs.notify_email && userEmail && emailAllowed) {

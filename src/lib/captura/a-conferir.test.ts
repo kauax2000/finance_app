@@ -38,6 +38,27 @@ describe("Edge review-reminder", () => {
         expect(f).toMatch(/if \(!delivered\.ok\) \{\s*await releaseDedupe\(/)
     })
 
+    it("pagina por chave, não por deslocamento", () => {
+        const f = fonte(EDGE)
+        expect(f).toContain(".gt('id', lastId)")
+        expect(f).toContain(".order('id', { ascending: true }).limit(PAGE_SIZE)")
+        expect(f).not.toContain(".range(")
+    })
+
+    it("o release confere o erro e a resposta não ecoa mensagens cruas", () => {
+        const f = fonte(EDGE)
+        expect(f).toMatch(/const \{ error \} = await admin\s*\.from\('review_reminder_dedupe'\)\s*\.delete\(\)/)
+        expect(f).toContain("if (error) console.error('review-reminder: releaseDedupe failed:', error.message)")
+        const resposta = f.slice(f.lastIndexOf("return json(200,"))
+        expect(resposta).toContain("failures,")
+        expect(resposta).not.toMatch(/errors|error:/)
+    })
+
+    it("o e-mail sai para o lembrete, como para a conta a pagar", () => {
+        const f = fonte("supabase/functions/_shared/deliver-notification.ts")
+        expect(f).toMatch(/const emailAllowed =[^;]*type === 'bill' \|\|[^;]*type === 'review' \|\|/)
+    })
+
     it("a função não pede JWT e entra na lista de deploy", () => {
         expect(lerFonte("supabase/config.toml")).toMatch(/\[functions\.review-reminder\]\s*verify_jwt = false/)
         expect(lerFonte("package.json")).toMatch(/supabase:deploy:functions[^\n]*\breview-reminder\b/)
@@ -102,6 +123,8 @@ describe("telas de a conferir", () => {
         expect(f).toContain(".limit(LIMITE)")
         expect(f).toContain('.update({ needs_review: false })')
         expect(f).toMatch(/data\?\.length !== 1/)
+        expect(f).toContain("signedCurrencyBRL(")
+        expect(f).not.toMatch(/\bcurrencyBRL\(/)
         expect(f).toContain("Nada a conferir.")
     })
 

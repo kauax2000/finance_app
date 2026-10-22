@@ -6,7 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
-import { currencyBRL } from "@/lib/formatters"
+import { signedCurrencyBRL } from "@/lib/formatters"
 import { aConferirKeys } from "@/lib/queries/keys"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
 import { supabase, type Transaction, type TransactionSource } from "@/lib/supabase"
@@ -109,7 +109,7 @@ export function AConferirListaWireframe({ workspaceId }: { workspaceId: string }
                                 <span>{formatDatePtBr(t.date)}</span>
                                 <span className="text-foreground">{t.description || "(sem descrição)"}</span>
                                 <span className="nums text-foreground">
-                                    {currencyBRL(t.type === "expense" ? -Number(t.amount) : Number(t.amount))}
+                                    {signedCurrencyBRL(t.type === "expense" ? -Number(t.amount) : Number(t.amount))}
                                 </span>
                                 <span>[{ROTULO_DA_ORIGEM[t.source] ?? t.source}]</span>
                                 <button

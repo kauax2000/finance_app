@@ -138,11 +138,19 @@ alter table public.review_reminder_dedupe enable row level security;
 revoke all on public.review_reminder_dedupe from anon, authenticated;
 
 -- O aviso do lembrete é do tipo 'review' (o check só aumenta: o front antigo
--- mostra o tipo novo com o sino padrão).
+-- mostra o tipo novo com o sino padrão). `not valid` + `validate`: o lock forte
+-- não espera a varredura da tabela.
 alter table public.notifications drop constraint if exists notifications_type_check;
 alter table public.notifications
   add constraint notifications_type_check
-  check (type = any (array['transaction', 'budget', 'system', 'promotion', 'credit_card', 'bill', 'review']));
+  check (type = any (array['transaction', 'budget', 'system', 'promotion', 'credit_card', 'bill', 'review']))
+  not valid;
+alter table public.notifications validate constraint notifications_type_check;
+
+-- A lista "A conferir", a contagem do Painel e a varredura do lembrete leem só
+-- os itens marcados.
+create index if not exists transactions_needs_review_idx
+  on public.transactions (workspace_id, date desc) where needs_review;
 
 -- 23h UTC = 20h em Brasília (hosted: extensão presente; local: no-op).
 do $cron$

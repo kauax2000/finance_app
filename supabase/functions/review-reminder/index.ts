@@ -41,12 +41,13 @@ async function claimDedupe(admin: SupabaseAdminClient, row: DedupeRow): Promise<
 /** Desfaz o dedupe quando a entrega falhou, para o próximo disparo tentar de novo. */
 async function releaseDedupe(admin: SupabaseAdminClient, row: DedupeRow): Promise<void> {
   try {
-    await admin
+    const { error } = await admin
       .from('review_reminder_dedupe')
       .delete()
       .eq('user_id', row.user_id)
       .eq('workspace_id', row.workspace_id)
       .eq('sent_on', row.sent_on)
+    if (error) console.error('review-reminder: releaseDedupe failed:', error.message)
   } catch (e) {
     console.error('review-reminder: releaseDedupe failed:', e)
   }
@@ -66,24 +67,26 @@ Deno.serve(async (req: Request) => {
 
   const sentOn = formatYmd(appTodayYmd())
 
-  // 1. Os itens a conferir, paginados: só quem lançou e onde.
+  // 1. Os itens a conferir, paginados por chave (`id > último`): um item
+  //    confirmado durante a varredura não desloca as páginas seguintes.
   const linhas: Array<{ user_id: string; workspace_id: string }> = []
-  for (let page = 0; ; page++) {
-    const from = page * PAGE_SIZE
-    const { data, error } = await admin
+  let lastId: string | null = null
+  for (;;) {
+    let q = admin
       .from('transactions')
-      .select('user_id, workspace_id')
+      .select('id, user_id, workspace_id')
       .eq('needs_review', true)
-      .order('id', { ascending: true })
-      .range(from, from + PAGE_SIZE - 1)
+    if (lastId) q = q.gt('id', lastId)
+    const { data, error } = await q.order('id', { ascending: true }).limit(PAGE_SIZE)
 
     if (error) return json(500, { error: internalError('review-reminder', error) })
 
-    const batch = (data ?? []) as Array<{ user_id: string | null; workspace_id: string | null }>
+    const batch = (data ?? []) as Array<{ id: string; user_id: string | null; workspace_id: string | null }>
     for (const l of batch) {
       if (l.user_id && l.workspace_id) linhas.push({ user_id: l.user_id, workspace_id: l.workspace_id })
     }
     if (batch.length < PAGE_SIZE) break
+    lastId = batch[batch.length - 1].id
   }
 
   const porCarteira = new Map<string, PessoaParaLembrar[]>()
@@ -95,8 +98,9 @@ Deno.serve(async (req: Request) => {
 
   // 2. Por carteira: membros, preferências e e-mails uma vez; a falha de um
   //    aviso não derruba os outros.
+  // A resposta só conta as falhas; o detalhe vai para o log do servidor.
   let notified = 0
-  const errors: Array<Record<string, unknown>> = []
+  let failures = 0
 
   await forEachLimit(porCarteira, FAN_OUT_CONCURRENCY, async ([workspaceId, pessoas]) => {
     try {
@@ -150,21 +154,22 @@ Deno.serve(async (req: Request) => {
 
           if (!delivered.ok) {
             await releaseDedupe(admin, dedupeRow)
-            errors.push({ workspace_id: workspaceId, user_id: pessoa.userId, error: delivered.error })
+            console.error('review-reminder: delivery', workspaceId, pessoa.userId, delivered.error)
+            failures += 1
             continue
           }
           notified += 1
         } catch (e) {
           await releaseDedupe(admin, dedupeRow)
           const msg = e instanceof Error ? e.message : 'delivery_failed'
-          console.error('review-reminder:', msg)
-          errors.push({ workspace_id: workspaceId, user_id: pessoa.userId, error: msg })
+          console.error('review-reminder: delivery', workspaceId, pessoa.userId, msg)
+          failures += 1
         }
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'workspace_failed'
       console.error('review-reminder: workspace', workspaceId, msg)
-      errors.push({ workspace_id: workspaceId, error: msg })
+      failures += 1
     }
   })
 
@@ -173,7 +178,7 @@ Deno.serve(async (req: Request) => {
     notified,
     items_scanned: linhas.length,
     workspaces: porCarteira.size,
-    errors: errors.length > 0 ? errors : undefined,
+    failures,
     today: sentOn,
   })
 })

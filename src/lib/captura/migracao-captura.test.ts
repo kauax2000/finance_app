@@ -83,6 +83,17 @@ describe("migração captura", () => {
         expect(sql).not.toMatch(/on public\.review_reminder_dedupe for/)
     })
 
+    it("o check de notifications aceita 'review' sem varrer a tabela sob o lock forte", () => {
+        expect(sql).toMatch(/add constraint notifications_type_check[^;]*'review'\]\)\)\s*not valid;/)
+        expect(sql).toMatch(/alter table public\.notifications validate constraint notifications_type_check;/)
+    })
+
+    it("um índice parcial serve a lista, a contagem e o lembrete", () => {
+        expect(sql).toMatch(
+            /create index if not exists transactions_needs_review_idx\s+on public\.transactions \(workspace_id, date desc\) where needs_review;/,
+        )
+    })
+
     it("agenda o lembrete das 20h em Brasília", () => {
         expect(sql).toMatch(/where j\.jobname = 'review-reminder-daily'/)
         expect(sql).toMatch(
