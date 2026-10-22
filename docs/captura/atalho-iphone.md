@@ -99,7 +99,8 @@ Com `needs_review: true`, o gasto foi gravado, mas espera você conferir no app.
   ou `null` quando não houve foto.
 
 Uma compra parcelada ("300 geladeira em 3x") vira um parcelamento de verdade, e
-o `id` é o da 1ª parcela.
+o `id` é o da 1ª parcela. O `resumo` também mostra a 1ª parcela e o valor dela
+("R$ 100,00 · Geladeira (1/3)"), não o total.
 
 Quando dá errado, a resposta traz `error`:
 
@@ -187,22 +188,27 @@ certo.
 Crie outro atalho e ligue **Mostrar na Folha de Compartilhar**, aceitando
 **Imagens**. Adicione estas ações:
 
-1. **Converter imagem**, com a **Entrada do atalho**, para **JPEG**. A foto do
-   iPhone costuma ser HEIC, e o app não aceita HEIC.
-2. **Obter conteúdo de URL**, com estes ajustes:
+1. **Redimensionar imagem**, com a **Entrada do atalho**, para a largura de
+   **1600** (altura automática). Um recibo continua legível e fica com poucas
+   centenas de KB. A foto cheia do iPhone tem vários MB: o espaço de anexos é de
+   25 MB por carteira e acabaria em poucos recibos, e a IA não lê imagem acima
+   de 4 MB.
+2. **Converter imagem**, com a **Imagem Redimensionada**, para **JPEG**. A foto
+   do iPhone costuma ser HEIC, e o app não aceita HEIC.
+3. **Obter conteúdo de URL**, com estes ajustes:
    - URL: `<URL>`;
    - Método: `POST`;
    - Cabeçalhos: `Authorization` = `Bearer <TOKEN>`;
    - Corpo da solicitação: **Formulário**, com estes campos:
      - `file` (Arquivo) = a **Imagem Convertida**;
      - `source` (Texto) = `share`.
-3. **Obter valor do dicionário** (`resumo`) e **Mostrar resultado**.
+4. **Obter valor do dicionário** (`resumo`) e **Mostrar resultado**.
 
 A IA lê a foto, o gasto vai para "A conferir" e a foto fica guardada nele. Se
 quiser, mande também o campo `text` com o valor ("42,90"): o valor escrito vence
 o lido da foto, e sem IA disponível é ele que salva o gasto.
 
-**Alternativa sem IA:** no lugar dos passos 1 e 2, use **Extrair texto da
+**Alternativa sem IA:** no lugar dos passos 1 a 3, use **Extrair texto da
 imagem** com a **Entrada do atalho** e mande o **Texto** extraído no campo
 `text`, com o mesmo pedido JSON da seção 3. Assim a imagem não sai do iPhone.
 

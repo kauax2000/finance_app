@@ -134,7 +134,8 @@ export function tipoDoArquivo(b: Uint8Array): 'image/jpeg' | 'image/png' | 'imag
   if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'image/jpeg'
   if (b[0] === 0x89 && ascii(1, 'PNG')) return 'image/png'
   if (ascii(0, 'RIFF') && ascii(8, 'WEBP')) return 'image/webp'
-  if (ascii(0, '%PDF')) return 'application/pdf'
+  // O PDF pode ter bytes antes do cabeçalho (até o byte 1024).
+  for (let i = 0; i <= 1020; i++) if (ascii(i, '%PDF')) return 'application/pdf'
   return null
 }
 
@@ -227,7 +228,9 @@ export function montarLancamento(
       if (c.descricao) descricao = c.descricao
       duvidas = c.descricao || !duvidas.includes('descricao') ? [] : ['descricao']
       forma = c.forma ?? forma
-      cartaoTexto = c.cartao ?? cartaoTexto
+      // Como no parser (frase.ts): pix, débito ou dinheiro não têm cartão, e um
+      // nome de cartão nunca vira crédito por cima da forma dita.
+      cartaoTexto = forma == null || forma === 'credit_card' ? (c.cartao ?? cartaoTexto) : null
       parcelas = c.parcelas ?? parcelas
       capturaMeta.ia = { provedor: c.provedor, modelo: c.modelo }
     }
@@ -293,7 +296,12 @@ export function montarLancamento(
   }
 
   // O plano é de despesa; a RPC acrescenta o "(k/N)" de cada parcela.
-  const parcelasDoPlano = tipo === 'expense' && parcelas != null && parcelas > 1 ? parcelas : null
+  let parcelasDoPlano = tipo === 'expense' && parcelas != null && parcelas > 1 ? parcelas : null
+  // O centavo não divide ("0,10 em 6x"): lançamento simples do total, a conferir.
+  if (parcelasDoPlano != null && valoresDoPlano(valor, parcelasDoPlano) == null) {
+    parcelasDoPlano = null
+    duvidas.push('parcelas')
+  }
   const categoria = historico?.categoryId ?? null
   // Decisão 2: tudo que passou por IA nasce a conferir.
   const needsReview = duvidas.length > 0 || cartaoSemCasar || categoria == null || parcelasDoPlano != null || c != null

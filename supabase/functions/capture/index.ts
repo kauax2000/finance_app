@@ -26,7 +26,7 @@ import {
 import { appTodayYmd, formatYmd } from '../_shared/credit-card-cycle.ts'
 import type { CartaoParaCasar, LinhaHistorico } from '../_shared/frase.ts'
 import { internalError } from '../_shared/http.ts'
-import { type ContextoIA, interpretar, lerImagem } from '../_shared/ia.ts'
+import { interpretar, lerImagem } from '../_shared/ia.ts'
 import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
 import { sha256Hex } from '../_shared/token-hash.ts'
 
@@ -47,6 +47,8 @@ function json(status: number, payload: unknown): Response {
 const MAX_CORPO = 16 * 1024
 /** O multipart da foto; o bucket `attachments` aceita até 10 MB por arquivo. */
 const MAX_FOTO = 10 * 1024 * 1024
+/** Acima disto a foto não vai à IA (o limite de imagem do provedor; memória do worker): o texto decide. */
+const MAX_FOTO_IA = 4 * 1024 * 1024
 const HISTORICO_POR_CARTEIRA = 300
 const TOKEN_INVALIDO = () => json(401, { error: 'Token inválido.' })
 const CORPO_GRANDE = (multipart: boolean) =>
@@ -101,13 +103,13 @@ Deno.serve(async (req: Request) => {
   const token = req.headers.get('Authorization')?.match(/^Bearer\s+(fac_[0-9a-f]{64})$/)?.[1]
   if (!token) return TOKEN_INVALIDO()
 
-  // A foto vem em multipart, com outro teto; o resto é o JSON de sempre.
+  // A foto vem em multipart, com outro teto; o resto é o JSON de sempre. O
+  // corpo só é lido depois do token, do plano e do membro: sem token válido,
+  // a Edge não guarda 10 MB de ninguém.
   const contentType = req.headers.get('content-type') ?? ''
   const multipart = /^multipart\/form-data/i.test(contentType)
   const teto = multipart ? MAX_FOTO : MAX_CORPO
   if (Number(req.headers.get('content-length') ?? 0) > teto) return CORPO_GRANDE(multipart)
-  const bruto = await lerCorpo(req, teto)
-  if (bruto == null) return CORPO_GRANDE(multipart)
 
   const tokenHash = await sha256Hex(token)
 
@@ -143,11 +145,15 @@ Deno.serve(async (req: Request) => {
   // Saiu da carteira padrão: o token não vale mais.
   if (!carteirasDaPessoa.includes(carteiraPadrao)) return TOKEN_INVALIDO()
 
+  let bruto = await lerCorpo(req, teto)
+  if (bruto == null) return CORPO_GRANDE(multipart)
+
   let corpo: unknown
   let foto: Foto | null = null
   try {
     if (multipart) {
       const form = await new Response(bruto, { headers: { 'content-type': contentType } }).formData()
+      bruto = null
       const arquivo = form.get('file')
       if (!(arquivo instanceof File)) return json(422, { error: ERRO_TIPO })
       const bytes = new Uint8Array(await arquivo.arrayBuffer())
@@ -246,13 +252,18 @@ Deno.serve(async (req: Request) => {
 
   // A IA (Decisões 8 e 9): a foto vai sempre; a frase, só se o parser não deu
   // conta. Sem IA (cota, provedor fora, sem chave), segue o caminho de hoje.
-  let campos: CamposDaIA | undefined
-  if (foto || precisaDeIA(pedido, hoje)) {
-    const ctxIA: ContextoIA = { admin, userId, hoje, nomes: await nomesDosMembros(admin, carteirasDaPessoa) }
-    const lido = foto ? await lerImagem(ctxIA, foto.bytes, foto.mime) : await interpretar(ctxIA, pedido.text ?? '')
-    if (lido.ok) campos = { ...lido.dados, provedor: lido.provedor, modelo: lido.modelo }
-    else console.error('capture: ia', lido.motivo)
+  let lido: Awaited<ReturnType<typeof interpretar>> | null = null
+  if (foto) {
+    // A imagem não se redige (Decisão 6), então não leva nomes. Grande demais, o anexo segue e o texto decide.
+    if (foto.bytes.byteLength <= MAX_FOTO_IA) lido = await lerImagem({ admin, userId, hoje, nomes: [] }, foto.bytes, foto.mime)
+  } else if (precisaDeIA(pedido, hoje)) {
+    // Sem os nomes, o texto sairia sem redigir: sem IA.
+    const nomes = await nomesDosMembros(admin, carteirasDaPessoa)
+    if (nomes) lido = await interpretar({ admin, userId, hoje, nomes }, pedido.text ?? '')
   }
+  let campos: CamposDaIA | undefined
+  if (lido?.ok) campos = { ...lido.dados, provedor: lido.provedor, modelo: lido.modelo }
+  else if (lido) console.error('capture: ia', lido.motivo)
 
   const montado = montarLancamento(
     { ...pedido, campos },
@@ -408,13 +419,19 @@ Deno.serve(async (req: Request) => {
   return responder(gravado, anexo)
 })
 
-/** O `full_name` dos membros das carteiras da pessoa, que `redigir` tira do texto (Decisão 6). */
-async function nomesDosMembros(admin: SupabaseAdminClient, carteiras: string[]): Promise<string[]> {
+/** O `full_name` dos membros das carteiras da pessoa, que `redigir` tira do texto (Decisão 6); null se a busca falhar. */
+async function nomesDosMembros(admin: SupabaseAdminClient, carteiras: string[]): Promise<string[] | null> {
   const { data: membros, error } = await admin.from('workspace_members').select('user_id').in('workspace_id', carteiras)
-  if (error) console.error('capture: nomes', error)
+  if (error) {
+    console.error('capture: nomes', error)
+    return null
+  }
   const ids = [...new Set((membros ?? []).map((m: { user_id: string }) => m.user_id))]
   if (ids.length === 0) return []
   const { data: perfis, error: pErr } = await admin.from('profiles').select('full_name').in('id', ids)
-  if (pErr) console.error('capture: nomes', pErr)
+  if (pErr) {
+    console.error('capture: nomes', pErr)
+    return null
+  }
   return (perfis ?? []).flatMap((p: { full_name: string | null }) => (p.full_name?.trim() ? [p.full_name.trim()] : []))
 }

@@ -591,3 +591,42 @@ Deno.test('com parcelas > 1, a 1ª cobrança do plano (p_next_billing_date) nunc
   // A Edge manda `linha.date.slice(0, 10)` como p_next_billing_date.
   assert(r.linha.date.slice(0, 10) <= HOJE)
 })
+
+// --- fix round 1 ------------------------------------------------------------
+
+Deno.test('I2: IA com débito e nome de cartão não vai ao cartão; a forma dita vence', () => {
+  const r = ok(
+    montarLancamento(
+      { campos: ia({ forma: 'debit', cartao: 'Nubank' }) },
+      ctx({ cartoes: [cartao('c-nu', 'Nubank', PADRAO)] }),
+    ),
+  )
+  assertEquals(r.linha.payment_credit_card_id, null)
+  assertEquals(r.linha.payment_method, 'debit_card')
+  assertEquals(r.linha.description, 'Padaria Real')
+  for (const forma of ['pix', 'cash'] as const) {
+    const o = ok(montarLancamento({ campos: ia({ forma, cartao: 'Nubank' }) }, ctx({ cartoes: [cartao('c-nu', 'Nubank', PADRAO)] })))
+    assertEquals(o.linha.payment_credit_card_id, null)
+  }
+})
+
+Deno.test('parcelas que o centavo não divide: lançamento simples, sem plano, a conferir', () => {
+  const r = ok(
+    montarLancamento(
+      { text: '0,10 cafe em 6x' },
+      ctx({ historicoPorCarteira: { [PADRAO]: [hist('Cafe', 'cat-cafe')] } }),
+    ),
+  )
+  assertEquals(r.parcelas, null)
+  assertEquals(r.linha.amount, 0.1)
+  assertEquals(r.linha.needs_review, true)
+})
+
+Deno.test('tipoDoArquivo: PDF com lixo antes do %PDF (até 1024 bytes) ainda é PDF', () => {
+  const lixo = new Uint8Array(1030)
+  lixo.set([...'%PDF-1.4'].map((c) => c.charCodeAt(0)), 500)
+  assertEquals(tipoDoArquivo(lixo), 'application/pdf')
+  const longe = new Uint8Array(1100)
+  longe.set([...'%PDF-1.4'].map((c) => c.charCodeAt(0)), 1050)
+  assertEquals(tipoDoArquivo(longe), null)
+})

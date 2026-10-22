@@ -93,6 +93,34 @@ describe("Edge capture", () => {
         expect(f.indexOf(".remove([path])", insert)).toBeGreaterThan(insert)
     })
 
+    it("I1: o corpo só é lido depois do token, do plano e do membro; o Content-Length antes", () => {
+        const f = fonte(CAPTURE)
+        const leitura = f.indexOf("await lerCorpo(req, teto)")
+        for (const etapa of [".from('capture_tokens')", "rpc('workspace_plan'", ".from('workspace_members')"]) {
+            const i = f.indexOf(etapa)
+            expect(i).toBeGreaterThan(-1)
+            expect(leitura).toBeGreaterThan(i)
+        }
+        const precheck = f.indexOf("Number(req.headers.get('content-length') ?? 0) > teto")
+        expect(precheck).toBeGreaterThan(-1)
+        expect(precheck).toBeLessThan(f.indexOf(".from('capture_tokens')"))
+    })
+
+    it("I3: a foto grande não vai à IA; o corpo cru é solto depois do formData", () => {
+        const f = fonte(CAPTURE)
+        expect(f).toContain("MAX_FOTO_IA = 4 * 1024 * 1024")
+        expect(f).toContain("foto.bytes.byteLength <= MAX_FOTO_IA")
+        expect(f).toMatch(/\.formData\(\)\s*\n\s*bruto = null/)
+    })
+
+    it("sem os nomes dos membros a frase não vai à IA (Decisão 6)", () => {
+        const f = fonte(CAPTURE)
+        const nomes = f.indexOf("await nomesDosMembros(")
+        expect(nomes).toBeGreaterThan(-1)
+        expect(f.indexOf("if (nomes)", nomes)).toBeGreaterThan(nomes)
+        expect(f.indexOf("await interpretar(", nomes)).toBeGreaterThan(f.indexOf("if (nomes)", nomes))
+    })
+
     it("consulta o plano da carteira padrão", () => {
         expect(fonte(CAPTURE)).toContain("rpc('workspace_plan'")
     })
