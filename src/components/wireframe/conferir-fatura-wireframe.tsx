@@ -1,7 +1,7 @@
 "use client"
 
 import { useQueryClient } from "@tanstack/react-query"
-import { type FormEvent, type ReactNode, useMemo, useState } from "react"
+import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react"
 
 import { MapeamentoCsv } from "@/components/wireframe/mapeamento-csv"
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
@@ -16,6 +16,8 @@ import { ajustarAoCiclo, conferirNoCiclo } from "@/lib/fatura/ciclo"
 import type { LancamentoParaConferir } from "@/lib/fatura/conferir"
 import { bancoTotalDoCiclo } from "@/lib/fatura/total-com-banco"
 import { currencyBRL } from "@/lib/formatters"
+import { itensDaIA, releitura } from "@/lib/ia/fatura"
+import { lerFaturaComIA } from "@/lib/ia/ler"
 import { lerCsv } from "@/lib/import/csv"
 import { extrairItensDaFatura, removerIdentificacao } from "@/lib/import/fatura-texto"
 import { importarLancamentos, type ItemImportavel, prepararItens } from "@/lib/import/importar"
@@ -37,6 +39,8 @@ type Leitura = {
     completa: boolean
     diferenca: number | null
     ignoradas: number
+    /** Os itens vieram da IA; o total continua o do leitor determinístico (Decisão 7). */
+    ia?: boolean
 }
 
 // O cartão carrega 11 meses de lançamentos (`fetchCreditCardExpenseRowsForCard`): o ciclo
@@ -108,6 +112,17 @@ export function ConferirFaturaWireframe({
     const [senhaPedida, setSenhaPedida] = useState<{ incorreta: boolean } | null>(null)
     const [senha, setSenha] = useState("")
     const [csv, setCsv] = useState<string[][] | null>(null)
+    // O texto do PDF já redigido: "Ler com IA" o envia sem reler o arquivo nem pedir a senha de novo.
+    const [textoPdf, setTextoPdf] = useState<string | null>(null)
+    // Cada pedido à IA ganha um número; trocar de arquivo, de ciclo ou sair da
+    // tela o muda, e a resposta atrasada de um pedido velho é jogada fora.
+    const pedido = useRef(0)
+    useEffect(() => {
+        const atual = pedido
+        return () => {
+            atual.current += 1
+        }
+    }, [])
 
     const [leitura, setLeitura] = useState<Leitura | null>(null)
     // O clientId nasce uma vez por leitura e fica aqui: repetir o envio não duplica (Foco 3).
@@ -149,6 +164,8 @@ export function ConferirFaturaWireframe({
     const selecionados = faltam.filter((i) => !desmarcados.has(i.clientId))
 
     function limparLeitura() {
+        pedido.current += 1
+        setTextoPdf(null)
         setLeitura(null)
         setItens([])
         setCsv(null)
@@ -234,7 +251,9 @@ export function ConferirFaturaWireframe({
         }
         if (r.ok) {
             setSenhaPedida(null)
-            const l = extrairItensDaFatura(removerIdentificacao(r.texto), { fechamento: ciclo.fechamento })
+            const redigido = removerIdentificacao(r.texto)
+            setTextoPdf(redigido)
+            const l = extrairItensDaFatura(redigido, { fechamento: ciclo.fechamento })
             aplicar(l.itens, { origem: "pdf", total: l.total, completa: l.completa, diferenca: l.diferenca, ignoradas: 0 })
         } else if ("precisaSenha" in r) {
             setSenhaPedida({ incorreta: r.senhaIncorreta })
@@ -259,6 +278,28 @@ export function ConferirFaturaWireframe({
         } else {
             setAviso({ erro: true, texto: "Use um arquivo .pdf, .csv ou .ofx." })
         }
+    }
+
+    async function lerComIA() {
+        if (!leitura || !textoPdf || pendente != null) return
+        const total = leitura.total
+        const meu = ++pedido.current
+        setPendente("ia")
+        setAviso(null)
+        const lido = await lerFaturaComIA(workspaceId, textoPdf, ciclo.fechamento)
+        // Nada mais fica pendente enquanto a IA lê (o arquivo e a IA travam), então só ela solta.
+        setPendente((p) => (p === "ia" ? null : p))
+        if (meu !== pedido.current) return
+        if (!lido.ok) {
+            setAviso({ erro: true, texto: lido.mensagem })
+            return
+        }
+        const novos = itensDaIA(lido.itens)
+        if (novos.length === 0) {
+            setAviso({ erro: true, texto: "A IA não achou itens nesta fatura. Confira à mão." })
+            return
+        }
+        aplicar(novos, { origem: "pdf", total, ...releitura(total, novos), ignoradas: 0, ia: true })
     }
 
     function onAbrirComSenha(e: FormEvent<HTMLFormElement>) {
@@ -381,13 +422,18 @@ export function ConferirFaturaWireframe({
             {leitura && conferencia ? (
                 <div className="space-y-2">
                     <p>
-                        Total lido: {leitura.total != null ? currencyBRL(leitura.total) : "não achado"} · soma dos
+                        {leitura.ia ? "Lido pela IA · " : ""}Total lido: {leitura.total != null ? currencyBRL(leitura.total) : "não achado"} · soma dos
                         itens: {currencyBRL(somaComEstorno(itens))} ·{" "}
                         {leitura.completa
                             ? "leitura completa"
                             : `leitura INCOMPLETA${leitura.diferenca != null ? ` (diferença ${currencyBRL(leitura.diferenca)})` : ""}`}
                         {leitura.ignoradas ? ` · ${leitura.ignoradas} linha(s) ignorada(s)` : ""}
                     </p>
+                    {leitura.origem === "pdf" && leitura.completa === false && !leitura.ia && textoPdf ? (
+                        <button type="button" className={botao} disabled={pendente != null} onClick={() => void lerComIA()}>
+                            {pendente === "ia" ? "Lendo com IA…" : "Ler com IA"}
+                        </button>
+                    ) : null}
                     <p>
                         Banco {currencyBRL(conferencia.somaBanco)} · app {currencyBRL(conferencia.somaApp)} · diferença{" "}
                         {currencyBRL(conferencia.diferenca)}

@@ -58,6 +58,17 @@ function lerTotal(texto: string): number | null {
  * conta negativo); senão a diferença (total − soma) vai junto e os itens
  * achados continuam importáveis.
  */
+/**
+ * A régua de `completa`: total achado e |total − soma| < 0,01, com o estorno
+ * contando negativo. A leitura pela IA confere com a mesma.
+ */
+export function completude(total: number | null, itens: ItemBanco[]): Pick<LeituraFatura, "completa" | "diferenca"> {
+    const soma = itens.reduce((s, i) => s + (i.estorno ? -i.valor : i.valor), 0)
+    // `|| 0` tira o -0 do arredondamento.
+    const diferenca = total == null ? null : roundCents(total - soma) || 0
+    return { completa: diferenca != null && Math.abs(diferenca) < 0.01, diferenca }
+}
+
 export function extrairItensDaFatura(texto: string, contexto: { fechamento: string }): LeituraFatura {
     const anoFechamento = Number(contexto.fechamento.slice(0, 4))
     const mesFechamento = Number(contexto.fechamento.slice(5, 7))
@@ -81,9 +92,6 @@ export function extrairItensDaFatura(texto: string, contexto: { fechamento: stri
     }
 
     const total = lerTotal(texto)
-    const soma = itens.reduce((s, i) => s + (i.estorno ? -i.valor : i.valor), 0)
-    // `|| 0` tira o -0 do arredondamento.
-    const diferenca = total == null ? null : roundCents(total - soma) || 0
     const vencimento = VENCIMENTO.exec(texto)
     const fechamento = FECHAMENTO.exec(texto)
     return {
@@ -91,7 +99,6 @@ export function extrairItensDaFatura(texto: string, contexto: { fechamento: stri
         total,
         vencimento: vencimento ? lerData(vencimento[1]) : null,
         fechamento: fechamento ? lerData(fechamento[1]) : null,
-        completa: diferenca != null && Math.abs(diferenca) < 0.01,
-        diferenca,
+        ...completude(total, itens),
     }
 }
