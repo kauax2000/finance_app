@@ -52,6 +52,7 @@ import {
     ImportarExtratoLink,
     ImportarExtratoWireframe,
 } from "@/components/wireframe/importar-extrato-wireframe"
+import { AConferirListaWireframe } from "@/components/wireframe/a-conferir-lista-wireframe"
 import {
     hasInstallmentDeleteImpact,
     INSTALLMENT_DELETE_WARNING,
@@ -225,6 +226,10 @@ export default function TransactionsPage() {
 
     return (
         <div className="min-w-0 max-w-full space-y-3">
+            {/* `?conferir=1` é uma vista (o atalho do ícone aponta para ela): fica na URL. */}
+            {searchParams?.get("conferir") === "1" && currentWorkspaceId ? (
+                <AConferirListaWireframe workspaceId={currentWorkspaceId} />
+            ) : null}
             {importarAberto && user && currentWorkspaceId ? (
                 <ImportarExtratoWireframe
                     workspaceId={currentWorkspaceId}

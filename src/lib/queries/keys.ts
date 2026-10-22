@@ -31,10 +31,17 @@ export const queryRoot = {
     userSettings: "userSettings",
     /** O histórico que a frase rápida lê (categoria e forma pela descrição). */
     fraseHistorico: "fraseHistorico",
+    /** Os lançamentos `needs_review` da carteira: a lista e a contagem do Painel. */
+    aConferir: "aConferir",
 } as const
 
 export const fraseHistoricoKeys = {
     list: (workspaceId: string) => [queryRoot.fraseHistorico, workspaceId] as const,
+}
+
+export const aConferirKeys = {
+    list: (workspaceId: string) => [queryRoot.aConferir, workspaceId, "list"] as const,
+    count: (workspaceId: string) => [queryRoot.aConferir, workspaceId, "count"] as const,
 }
 
 export const workspaceKeys = {

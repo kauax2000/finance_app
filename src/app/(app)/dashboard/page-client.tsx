@@ -18,6 +18,7 @@ import { useDashboardData } from "@/components/dashboard/use-dashboard-data"
 import { DashboardToolbar } from "@/components/dashboard/dashboard-toolbar"
 import { useMonthInHeader } from "@/components/categories/categories-toolbar"
 import { DashboardKpiCards } from "@/components/dashboard/dashboard-kpi-cards"
+import { AConferirContagemWireframe } from "@/components/wireframe/a-conferir-contagem-wireframe"
 import { DashboardPaymentsCalendar } from "@/components/dashboard/dashboard-payments-calendar"
 import { DashboardOpenInvoices } from "@/components/dashboard/dashboard-open-invoices"
 import { DashboardInstallmentsEndingSoon } from "@/components/dashboard/dashboard-installments-ending-soon"
@@ -306,6 +307,8 @@ export default function DashboardPageClient() {
                     totalOpenInvoices={d.totalOpenInvoices}
                 />
             </div>
+
+            {d.currentWorkspaceId ? <AConferirContagemWireframe workspaceId={d.currentWorkspaceId} /> : null}
 
             <div className="min-h-0 min-w-0">
                 <DashboardPaymentsCalendar

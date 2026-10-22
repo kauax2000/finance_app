@@ -56,6 +56,12 @@ export async function invalidateWorkspaceData(
                 queryKey: [queryRoot.fraseHistorico, workspaceId],
             }),
         )
+        // a lista "A conferir" e a contagem do Painel
+        tasks.push(
+            queryClient.invalidateQueries({
+                queryKey: [queryRoot.aConferir, workspaceId],
+            }),
+        )
         tasks.push(
             queryClient.invalidateQueries({
                 queryKey: ["transactionsSummaryOnly", workspaceId],

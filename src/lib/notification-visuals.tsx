@@ -1,7 +1,7 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { ArrowTrendingDownIcon, ArrowTrendingUpIcon, BellIcon, CalendarIcon, CheckBadgeIcon, ClockIcon, CreditCardIcon, EnvelopeIcon, ExclamationCircleIcon, FolderPlusIcon, ReceiptPercentIcon, ShieldCheckIcon, SparklesIcon, TrashIcon, UserMinusIcon, UserPlusIcon, XCircleIcon } from "@heroicons/react/16/solid"
+import { ArrowTrendingDownIcon, ArrowTrendingUpIcon, BellIcon, CalendarIcon, CheckBadgeIcon, ClipboardDocumentCheckIcon, ClockIcon, CreditCardIcon, EnvelopeIcon, ExclamationCircleIcon, FolderPlusIcon, ReceiptPercentIcon, ShieldCheckIcon, SparklesIcon, TrashIcon, UserMinusIcon, UserPlusIcon, XCircleIcon } from "@heroicons/react/16/solid"
 import type { AppNotification, AppNotificationType } from "@/lib/notifications"
 
 /** Semantic notification key from `metadata.kind` (snake_case); reserved for future producers. */
@@ -101,6 +101,8 @@ function fallbackIconByType(type: AppNotificationType): ReactNode {
             return <CreditCardIcon className={iconClass()} />
         case "bill":
             return <ReceiptPercentIcon className={iconClass()} />
+        case "review":
+            return <ClipboardDocumentCheckIcon className={iconClass()} />
         case "promotion":
             return <BellIcon className={iconClass()} />
         case "system":

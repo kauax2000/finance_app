@@ -4,6 +4,7 @@ import { NotificationPreferences } from "@/components/settings/notification-pref
 import { WorkspaceAppearanceSettings } from "@/components/settings/workspace-appearance-settings"
 import { PwaSettingsSection } from "@/components/pwa/pwa-settings-section"
 import { ThemeSettings } from "@/components/settings/theme-settings"
+import { LembreteConferirWireframe } from "@/components/wireframe/a-conferir-lembrete-wireframe"
 
 export default function SettingsPage() {
     return (
@@ -12,6 +13,7 @@ export default function SettingsPage() {
             <ThemeSettings />
             <PwaSettingsSection />
             <NotificationPreferences />
+            <LembreteConferirWireframe />
         </div>
     )
 }

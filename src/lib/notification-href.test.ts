@@ -16,6 +16,7 @@ const basePrefs: WorkspaceNotificationPrefs = {
     notify_credit_cards: true,
     notify_credit_card_calendar: true,
     notify_bills: true,
+    notify_review: true,
 }
 
 describe("resolveNotificationHref", () => {

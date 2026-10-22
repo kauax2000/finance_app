@@ -137,6 +137,13 @@ create index if not exists idx_review_reminder_dedupe_workspace
 alter table public.review_reminder_dedupe enable row level security;
 revoke all on public.review_reminder_dedupe from anon, authenticated;
 
+-- O aviso do lembrete é do tipo 'review' (o check só aumenta: o front antigo
+-- mostra o tipo novo com o sino padrão).
+alter table public.notifications drop constraint if exists notifications_type_check;
+alter table public.notifications
+  add constraint notifications_type_check
+  check (type = any (array['transaction', 'budget', 'system', 'promotion', 'credit_card', 'bill', 'review']));
+
 -- 23h UTC = 20h em Brasília (hosted: extensão presente; local: no-op).
 do $cron$
 begin

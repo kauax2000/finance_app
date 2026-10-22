@@ -10,6 +10,7 @@ export type AppNotificationType =
     | "promotion"
     | "credit_card"
     | "bill"
+    | "review"
 
 export type AppNotification = {
     id: string
