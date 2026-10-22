@@ -231,6 +231,12 @@ export function montarLancamento(
       parcelas = c.parcelas ?? parcelas
       capturaMeta.ia = { provedor: c.provedor, modelo: c.modelo }
     }
+    // Compra depois de hoje (lida pela IA ou dita no texto) fica hoje, a
+    // conferir: o plano sempre nasce com a 1ª parcela, que guarda o client_id.
+    if (data > ctx.hoje) {
+      data = ctx.hoje
+      if (!duvidas.includes('data')) duvidas.push('data')
+    }
   }
 
   if (valor == null) return { ok: false, status: 422, erro: ERRO_VALOR }

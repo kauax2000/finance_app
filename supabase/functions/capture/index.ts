@@ -292,7 +292,8 @@ Deno.serve(async (req: Request) => {
       .limit(1)
       .maybeSingle()
     if (primErr) return json(500, { error: internalError('capture: 1ª parcela', primErr) })
-    // 1ª cobrança depois de hoje: o plano existe, e a parcela nasce no cron.
+    // Defensivo: `montarLancamento` já traz a data para hoje, então a 1ª parcela
+    // sempre existe. Sem ela, o plano existe e a parcela nasceria no cron.
     if (!primeira) {
       return json(200, {
         ok: true,

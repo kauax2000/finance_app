@@ -577,3 +577,17 @@ Deno.test('tipoDoArquivo: pelos bytes, não pelo nome', () => {
   assertEquals(tipoDoArquivo(b(0, 0, 0, 0x18, 'ftypheic')), null)
   assertEquals(tipoDoArquivo(new Uint8Array()), null)
 })
+
+Deno.test('data depois de hoje (da IA) fica hoje e a conferir', () => {
+  const c = ctx({ historicoPorCarteira: { [PADRAO]: [hist('Padaria Real', 'cat-padaria')] } })
+  const r = ok(montarLancamento({ campos: ia({ data: '2026-04-11' }) }, c))
+  assertEquals(r.linha.date, '2026-04-10T12:00:00.000Z')
+  assertEquals(r.linha.needs_review, true)
+})
+
+Deno.test('com parcelas > 1, a 1ª cobrança do plano (p_next_billing_date) nunca passa de hoje', () => {
+  const r = ok(montarLancamento({ campos: ia({ valor: 300, parcelas: 3, data: '2026-04-11' }) }, ctx()))
+  assertEquals(r.parcelas, 3)
+  // A Edge manda `linha.date.slice(0, 10)` como p_next_billing_date.
+  assert(r.linha.date.slice(0, 10) <= HOJE)
+})

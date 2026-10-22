@@ -282,10 +282,12 @@ export type TransactionSource =
     | 'import_statement'
     | 'recurring'
 
-/** `transactions.capture_meta`: o cartão da Wallet sem casamento e a frase recebida. */
+/** `transactions.capture_meta`: o cartão da Wallet sem casamento, a frase recebida e a IA usada. */
 export interface TransactionCaptureMeta {
     walletCard?: string
     texto?: string
+    /** O provedor e o modelo, quando a IA leu a foto ou a frase (Bloco 3B). */
+    ia?: { provedor: string; modelo: string }
 }
 
 export interface Transaction {
