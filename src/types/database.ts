@@ -740,6 +740,69 @@ export type Database = {
           },
         ]
       }
+      ia_cache: {
+        Row: {
+          chave: string
+          created_at: string
+          resultado: Json
+          tarefa: string
+        }
+        Insert: {
+          chave: string
+          created_at?: string
+          resultado: Json
+          tarefa: string
+        }
+        Update: {
+          chave?: string
+          created_at?: string
+          resultado?: Json
+          tarefa?: string
+        }
+        Relationships: []
+      }
+      ia_eventos: {
+        Row: {
+          dia: string
+          modelo: string
+          provedor: string
+          status: string
+          total: number
+        }
+        Insert: {
+          dia: string
+          modelo: string
+          provedor: string
+          status: string
+          total?: number
+        }
+        Update: {
+          dia?: string
+          modelo?: string
+          provedor?: string
+          status?: string
+          total?: number
+        }
+        Relationships: []
+      }
+      ia_uso: {
+        Row: {
+          chamadas: number
+          dia: string
+          user_id: string
+        }
+        Insert: {
+          chamadas?: number
+          dia: string
+          user_id: string
+        }
+        Update: {
+          chamadas?: number
+          dia?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string
@@ -1517,6 +1580,10 @@ export type Database = {
         Args: { p_workspace_id: string }
         Returns: undefined
       }
+      consumir_cota_ia: {
+        Args: { p_dia: string; p_limite: number; p_user_id: string }
+        Returns: boolean
+      }
       create_capture_token: {
         Args: { p_name: string; p_workspace_id: string }
         Returns: string
@@ -1559,6 +1626,23 @@ export type Database = {
         }
         Returns: string
       }
+      criar_plano_parcelado: {
+        Args: {
+          p_category_id: string
+          p_description: string
+          p_final_installment_amount: number
+          p_installment_amount: number
+          p_needs_review?: boolean
+          p_next_billing_date: string
+          p_payment_credit_card_id: string
+          p_payment_method: string
+          p_source?: string
+          p_total_installments: number
+          p_user_id: string
+          p_workspace_id: string
+        }
+        Returns: string
+      }
       delete_workspace: { Args: { p_workspace_id: string }; Returns: undefined }
       delete_workspace_installment_plan_cascade: {
         Args: { p_plan_id: string }
@@ -1592,6 +1676,15 @@ export type Database = {
           p_payment_method: string
         }
         Returns: string
+      }
+      registrar_evento_ia: {
+        Args: {
+          p_dia: string
+          p_modelo: string
+          p_provedor: string
+          p_status: string
+        }
+        Returns: undefined
       }
       revoke_capture_token: { Args: { p_id: string }; Returns: undefined }
       rpc_fetch_bills_page_bundle: {
