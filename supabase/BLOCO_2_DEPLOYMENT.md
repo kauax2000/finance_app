@@ -3,8 +3,19 @@
 Reúne o estorno no cartão, o total da fatura segundo o banco, a conferência da
 fatura pelo PDF, CSV ou OFX, a importação de extrato e de planilha e os anexos
 (nota, recibo, boleto e o PDF da fatura). As telas novas entram como
-**wireframe** (`src/components/wireframe/`). Está no repositório, testado, e
-**não foi publicado**. Faça na ordem. Todo SQL abaixo leva marcadores: troque-os
+**wireframe** (`src/components/wireframe/`).
+
+**Estado em 21/10/2026: banco e funções publicados; falta o front.** Feito: as
+três migrações deste bloco (junto com a do Bloco 1 e duas do 2.0,
+`20261014120000` e `20261015120000`) aplicadas por `supabase db push`, todas as
+conferências do passo 2 passaram (bucket privado, os três crons, as três
+políticas de storage, o dono da cota lê `storage.objects`, o trigger pula o
+importado), as funções publicadas e o caminho banco → Edge testado
+(`invoke_edge_function('attachments-cleanup')` respondeu 200). Falta publicar o
+front (o `finance-app-2.0` inteiro vai junto) e o teste de fumaça do passo 5,
+que precisa do front novo.
+
+Faça na ordem. Todo SQL abaixo leva marcadores: troque-os
 no SQL Editor e **nunca** salve o SQL preenchido no repositório (ele é público).
 
 ## 0. Pré-requisito: o Bloco 1 publicado

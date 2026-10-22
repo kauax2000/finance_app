@@ -87,16 +87,37 @@ Automated unit tests: `npm run test:unit` (`transaction-notify-rules`, `notifica
 
 Reúne a revisão dos textos e das regras de disparo (2026-10-17, desenho em
 `docs/superpowers/specs/2026-10-17-notificacoes-redesign-design.md`, seção C),
-os crons e o aviso de despesa no banco, e o backup semanal. Está no
-repositório, testado, e **não foi publicado**. Faça na ordem. Todo SQL abaixo
+os crons e o aviso de despesa no banco, e o backup semanal.
+
+**Estado em 21/10/2026: banco e funções publicados; faltam o front, o passo 7
+(backup) e o fim do passo 6.** Feito: `pg_cron` e `pg_net` ligados (estavam
+desligados), `CRON_SECRET` criado (não existia) e repetido no Vault com o
+`edge_functions_url`, as migrações aplicadas (passo 3, conferido), as seis
+funções do passo 4 publicadas e o passo 5 conferido: não havia Database
+Webhook em `transactions`. Desde então o aviso de despesa vem do trigger,
+inclusive com o front antigo (a chamada que ele ainda faz à função recebe 401 e
+não avisa em dobro). Falta: publicar o front (passo 8) e só então apagar a
+`dispatch-notifications`, que o front antigo ainda pode chamar; o teste de
+fumaça com duas pessoas; o backup. O secret `APP_BASE_URL` não existe em
+produção: os links dos e-mails caem no padrão da função.
+
+Faça na ordem. Todo SQL abaixo
 leva marcadores: troque-os no SQL Editor e **nunca** salve o SQL preenchido no
 repositório (ele é público).
 
 ### 1. Secrets das Edge Functions
 
-`CRON_SECRET` já existe (Edge Functions → Secrets): é o valor que o passo 2
-repete no Vault. `NOTIFY_INTERNAL_SECRET` fica sem uso e pode ser **apagado
-depois do passo 6**.
+`CRON_SECRET` (Edge Functions → Secrets) é o valor que o passo 2 repete no
+Vault. Se ele não existir, gere um valor longo e aleatório (`openssl rand -hex
+32`) e cadastre o mesmo nos dois lugares; nada mais o usa. Se existir um
+`NOTIFY_INTERNAL_SECRET`, ele fica sem uso e pode ser **apagado depois do
+passo 6**.
+
+As extensões `pg_cron` e `pg_net` precisam estar ligadas antes do passo 3
+(Database → Extensions, ou `create extension if not exists pg_cron with schema
+pg_catalog;` e `create extension if not exists pg_net with schema extensions;`).
+Sem Docker na máquina, publique as funções com `supabase functions deploy ...
+--use-api`.
 
 ### 2. Vault (SQL Editor)
 
