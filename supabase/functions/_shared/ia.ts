@@ -82,7 +82,7 @@ function lerJson(bruto: unknown): Record<string, unknown> | null {
   return v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : null
 }
 
-const ehDataValida = (s: unknown): s is string => {
+export const ehDataValida = (s: unknown): s is string => {
   if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false
   const d = new Date(`${s}T00:00:00Z`)
   return s >= '2000-01-01' && !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s
@@ -438,4 +438,21 @@ export async function lerFatura(ctx: ContextoIA, textoBruto: string, fechamento:
   return primeiro && itens.length
     ? { ok: true, dados: itens, ...primeiro, doCache: todasDoCache }
     : { ok: false, motivo: 'sem_ia' }
+}
+
+/** O `full_name` dos membros das carteiras, que `redigir` tira do texto (Decisão 6); null se a busca falhar. */
+export async function nomesDosMembros(admin: SupabaseAdminClient, carteiras: string[]): Promise<string[] | null> {
+  const { data: membros, error } = await admin.from('workspace_members').select('user_id').in('workspace_id', carteiras)
+  if (error) {
+    console.error('ia: nomes dos membros', error)
+    return null
+  }
+  const ids = [...new Set((membros ?? []).map((m: { user_id: string }) => m.user_id))]
+  if (ids.length === 0) return []
+  const { data: perfis, error: pErr } = await admin.from('profiles').select('full_name').in('id', ids)
+  if (pErr) {
+    console.error('ia: nomes dos membros', pErr)
+    return null
+  }
+  return (perfis ?? []).flatMap((p: { full_name: string | null }) => (p.full_name?.trim() ? [p.full_name.trim()] : []))
 }

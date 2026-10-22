@@ -25,9 +25,8 @@ import {
 } from '../_shared/captura.ts'
 import { appTodayYmd, formatYmd } from '../_shared/credit-card-cycle.ts'
 import type { CartaoParaCasar, LinhaHistorico } from '../_shared/frase.ts'
-import { internalError } from '../_shared/http.ts'
-import { interpretar, lerImagem } from '../_shared/ia.ts'
-import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
+import { internalError, lerCorpo } from '../_shared/http.ts'
+import { interpretar, lerImagem, nomesDosMembros } from '../_shared/ia.ts'
 import { sha256Hex } from '../_shared/token-hash.ts'
 
 declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined
@@ -58,31 +57,6 @@ const ERRO_TIPO = 'Envie uma foto (JPG, PNG ou WebP).'
 const ERRO_FOTO = 'Não entendi a foto. Mande o valor no texto.'
 const EXTENSAO = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' } as const
 type Foto = { bytes: Uint8Array; mime: keyof typeof EXTENSAO }
-
-/** O corpo lido aos pedaços; passou do `teto`, para e devolve null — diga o Content-Length o que disser. */
-async function lerCorpo(req: Request, teto: number): Promise<Uint8Array<ArrayBuffer> | null> {
-  const leitor = req.body?.getReader()
-  if (!leitor) return new Uint8Array()
-  const pedacos: Uint8Array[] = []
-  let total = 0
-  for (;;) {
-    const { done, value } = await leitor.read()
-    if (done) break
-    total += value.byteLength
-    if (total > teto) {
-      await leitor.cancel()
-      return null
-    }
-    pedacos.push(value)
-  }
-  const tudo = new Uint8Array(total)
-  let pos = 0
-  for (const p of pedacos) {
-    tudo.set(p, pos)
-    pos += p.byteLength
-  }
-  return tudo
-}
 
 type Gravado = {
   id: string
@@ -418,20 +392,3 @@ Deno.serve(async (req: Request) => {
 
   return responder(gravado, anexo)
 })
-
-/** O `full_name` dos membros das carteiras da pessoa, que `redigir` tira do texto (Decisão 6); null se a busca falhar. */
-async function nomesDosMembros(admin: SupabaseAdminClient, carteiras: string[]): Promise<string[] | null> {
-  const { data: membros, error } = await admin.from('workspace_members').select('user_id').in('workspace_id', carteiras)
-  if (error) {
-    console.error('capture: nomes', error)
-    return null
-  }
-  const ids = [...new Set((membros ?? []).map((m: { user_id: string }) => m.user_id))]
-  if (ids.length === 0) return []
-  const { data: perfis, error: pErr } = await admin.from('profiles').select('full_name').in('id', ids)
-  if (pErr) {
-    console.error('capture: nomes', pErr)
-    return null
-  }
-  return (perfis ?? []).flatMap((p: { full_name: string | null }) => (p.full_name?.trim() ? [p.full_name.trim()] : []))
-}

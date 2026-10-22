@@ -25,3 +25,28 @@ export function sessionGuardMessage(
 ): string {
   return result.status >= 500 ? internalError(context, result) : result.message
 }
+
+/** O corpo lido aos pedaços; passou do `teto`, para e devolve null — diga o Content-Length o que disser. */
+export async function lerCorpo(req: Request, teto: number): Promise<Uint8Array<ArrayBuffer> | null> {
+  const leitor = req.body?.getReader()
+  if (!leitor) return new Uint8Array()
+  const pedacos: Uint8Array[] = []
+  let total = 0
+  for (;;) {
+    const { done, value } = await leitor.read()
+    if (done) break
+    total += value.byteLength
+    if (total > teto) {
+      await leitor.cancel()
+      return null
+    }
+    pedacos.push(value)
+  }
+  const tudo = new Uint8Array(total)
+  let pos = 0
+  for (const p of pedacos) {
+    tudo.set(p, pos)
+    pos += p.byteLength
+  }
+  return tudo
+}

@@ -61,6 +61,10 @@ verify_jwt = false
 [functions.capture]
 verify_jwt = false
 
+# A IA do app: a função confere o JWT, o membro e o plano.
+[functions.ia-ler]
+verify_jwt = false
+
 # Local-only: vector/analytics container requires a docker.sock mount that
 # fails under colima; not needed for db/functions development.
 [analytics]
