@@ -9,7 +9,7 @@ lançamento, nos cartões de categoria e nas contas pendentes, com o seletor
 de período que confirma no próprio popover, com o rascunho protegido do
 formulário de lançamento, e com os menus do telefone em gaveta. As telas de
 acesso foram revistas em 2026-10-12 (a casca no layout) e em 2026-10-14 (o
-painel de marca animado) e as notificações em 2026-10-17 (o painel flutuante, o sino exato e a revisão do servidor, ainda não publicada) e em 2026-10-21 (o aviso de despesa e os crons passam ao banco, por migração, também ainda não publicados); a busca do telefone em 2026-10-19 (a lupa vira a barra) e, no mesmo dia, a aba "Você" no lugar do menu "Mais" (a página `/me`). Em 2026-10-21 entrou o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura, a importação de extrato e de planilha e os anexos, com as telas em wireframe (`src/components/wireframe/`) e ainda não publicado (`supabase/BLOCO_2_DEPLOYMENT.md`). Em 2026-10-22 entrou o Bloco 3A, "captura sem abrir o app": o token pessoal em Minha conta, a Edge `capture` (o Atalho do iPhone e o Apple Pay), a frase rápida no "+", o compartilhar do Android, os atalhos do ícone, a lista "A conferir" e o lembrete das 20h, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3A_DEPLOYMENT.md`). Quando uma tela mudar de caminho, atualize o
+painel de marca animado) e as notificações em 2026-10-17 (o painel flutuante, o sino exato e a revisão do servidor, ainda não publicada) e em 2026-10-21 (o aviso de despesa e os crons passam ao banco, por migração, também ainda não publicados); a busca do telefone em 2026-10-19 (a lupa vira a barra) e, no mesmo dia, a aba "Você" no lugar do menu "Mais" (a página `/me`). Em 2026-10-21 entrou o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura, a importação de extrato e de planilha e os anexos, com as telas em wireframe (`src/components/wireframe/`) e ainda não publicado (`supabase/BLOCO_2_DEPLOYMENT.md`). Em 2026-10-22 entrou o Bloco 3A, "captura sem abrir o app": o token pessoal em Minha conta, a Edge `capture` (o Atalho do iPhone e o Apple Pay), a frase rápida no "+", o compartilhar do Android, os atalhos do ícone, a lista "A conferir" e o lembrete das 20h, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3A_DEPLOYMENT.md`). No mesmo dia entrou o Bloco 3B, "IA grátis na captura e na fatura": "Tentar com IA" na frase rápida, a foto do recibo no formulário, a foto e a frase confusa na Edge `capture`, a compra parcelada capturada que vira plano, o compartilhar de foto e PDF do Android, "Ler com IA" na conferência da fatura e a política de privacidade em `/privacidade`, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3B_DEPLOYMENT.md`). Quando uma tela mudar de caminho, atualize o
 diagrama dela.
 
 ## Como ler os diagramas
@@ -27,7 +27,9 @@ O rótulo da seta é a ação da pessoa ou a condição (`sucesso`, `erro`,
 de cada bloco), em qualquer tema do leitor.
 
 **Tudo o que decide acesso roda no navegador.** Não há `middleware.ts`,
-`proxy.ts` nem rotas em `src/app/api`. A sessão é do `supabase-js`, os
+`proxy.ts` nem rotas em `src/app/api` (o único *route handler* é o
+`POST /transactions/compartilhar`, a reserva do compartilhar do Android sem
+service worker). A sessão é do `supabase-js`, os
 redirecionamentos são do `AuthGuard` e a segurança real dos dados é a RLS do
 banco.
 
@@ -88,7 +90,8 @@ flowchart LR
     G5 -->|"cadastrar cartão, prévia da fatura, estorno abate a fatura"| G6
     G10 -->|"token do Atalho: lançar pelo iPhone sem abrir o app"| G5
     G4 -->|"contagem a conferir"| G5
-    G3 -->|"lembrete das 20h, atalhos do ícone, compartilhar do Android"| G5
+    G3 -->|"lembrete das 20h, atalhos do ícone, compartilhar texto, foto e PDF do Android"| G5
+    G2 -->|"Configurações: a linha da IA leva à política"| privacy["/privacidade, pública"]
 
     G10 -->|"sair ou excluir conta"| G1
 ```
@@ -253,6 +256,8 @@ flowchart TD
     owner -->|"não"| leave(["Sair da carteira: confirmação"]) -->|"Sair"| fallback
     settings --> pwa(["Instalar app: folha de instalação"])
     settings --> notif(["Preferências de notificação: canais e tópicos"])
+    settings --> iaWf(["WIREFRAME IA: Groq e Cloudflare, grátis, sem treino; até 30 por dia"])
+    iaWf -->|"Política de privacidade"| privacy["/privacidade: pública, fora da casca e do AuthGuard"]
     settings -.->|"sem carteira"| empty(["Crie ou entre numa carteira"])
 ```
 
@@ -300,6 +305,7 @@ flowchart TD
 | Sair da carteira | Diálogo próprio de confirmação | `src/components/settings/workspace-leave-dialog.tsx` |
 | Membros | RPC `workspace_member_directory`; só a dona convida, revoga e remove | `src/app/(app)/members/page-client.tsx` |
 | Convite | Edges `workspace-invites-create`, `-resend`, `-accept`; o email é montado no servidor | `supabase/functions/_shared/workspace-invite-email.ts` |
+| IA e privacidade (Bloco 3B) | Configurações mostra o wireframe "IA": "IA: Groq e Cloudflare, grátis, sem treino", o limite de 30 leituras por dia e o link "Política de privacidade". `/privacidade` fica fora de `(app)` e de `(auth)`: pública, sem `AuthGuard`, sem a casca e sem esqueleto. Ela diz o que o app guarda, os dois provedores (a transferência internacional), o que sai do texto antes do envio, que a foto vai como está, o limite, o cache, e como exportar (só as assinaturas, em CSV) e apagar a conta | `src/components/wireframe/ia-configuracoes-wireframe.tsx`, `src/components/wireframe/privacidade-wireframe.tsx`, `src/app/privacidade/page.tsx` |
 | Página de convite | Fica no grupo `(auth)`: veste o `AuthShell` e não atravessa a casca do app. O `WorkspaceProvider` é global, então a mudança de grupo não custou nada | `src/app/(auth)/invites/accept/page-client.tsx` |
 
 ---
@@ -385,7 +391,7 @@ flowchart TD
 | Ponto | Regra | Onde |
 |---|---|---|
 | Itens de navegação | Lateral e mobile vêm de configuração, não de JSX solto | `src/config/navigation.ts`, `src/config/mobile-navigation.ts` |
-| Atalhos do ícone e compartilhar (Bloco 3A) | O app instalado traz três atalhos ao segurar o ícone: "Nova despesa" (`/transactions?new=1`; era "Nova transação"), "A conferir" (`/transactions?conferir=1`) e "Painel". O `share_target` do Android manda o texto compartilhado por `GET` a `/transactions?frase=…` (ver 5c) | `src/app/manifest.ts` |
+| Atalhos do ícone e compartilhar (Blocos 3A e 3B) | O app instalado traz três atalhos ao segurar o ícone: "Nova despesa" (`/transactions?new=1`; era "Nova transação"), "A conferir" (`/transactions?conferir=1`) e "Painel". O `share_target` do Android manda o texto, a foto e o PDF compartilhados por `POST` multipart a `/transactions/compartilhar`, que o service worker atende e redireciona a `/transactions?frase=…` ou `?compartilhado=…` (ver 5c; era `GET` com só o texto no Bloco 3A) | `src/app/manifest.ts`, `src/sw.ts` |
 | Formulários globais | Transação e assinatura montados uma vez na casca; salvar invalida as listas abertas | `src/components/layout/global-shell-dialogs-provider.tsx` |
 | Menus do telefone | O "+" abre direto a gaveta do formulário de lançamento, com Despesa marcada (o seletor do formulário troca para Parcelada e Receita; assinatura fica na tela dela e na paleta). Era uma folha de ações (`Drawer` com `DrawerActions`) antes do formulário, e no desktop um menu: um passo a mais na jornada mais comum. A quarta aba da barra é a **"Você"**, com o avatar da pessoa no lugar do glifo (a foto ou as iniciais; enquanto o perfil não chega, o círculo neutro vazio, sem esqueleto): ela leva à página `/me` (`ROUTES.ME`, título "Você") e não abre mais um menu (o `MobileAccountMenu`, o painel da rodada 278, saiu). Ela fica ativa em `/me` e em toda tela que a página lista, subrotas incluídas (`/account/sessions`, `/credit-cards/<id>`, `/settings/*`; `isVoceTabActive`). A página tem a identidade centrada (avatar, nome, e-mail) e dois grupos de linhas, cada um num cartão: **Carteira** (Assinaturas, Contas a pagar com o selo Beta, Cartões, Membros e convidados) e **Conta** (Minha conta, Configurações); as regras moram em `getVoceGroups`. Numa tela estreita, a aba que não cabe com folga na barra (o nome + 16, nunca menos de 44) sai do fim e entra no topo do grupo Carteira: num telefone de 320, Categorias; Painel e "Você" ficam sempre (rodada 342). A barra mede e publica quem saiu num armazém de módulo (`abas-fora.ts`, `useSyncExternalStore`) e a página o lê; no desktop, onde a barra some, nada é publicado. As telas das linhas da página (`/subscriptions`, `/bills`, `/credit-cards`, `/members`, `/account`, `/settings`) são subpáginas dela no telefone: o voltar toma o lugar do sino e leva a `/me` (`defaultMobileBackHref`); as que já têm pai (sessões e atividade → Minha conta, detalhe do cartão → Cartões) mantêm o pai, e a aba que saiu da barra não ganha o voltar. Tocar na aba "Você" já ativa numa dessas telas volta a `/me` (como no iOS, a pilha volta à raiz); só em `/me` o toque sobe ao topo (`BottomBarTab`). O desktop não muda: `/me` renderiza nele, mas nada leva até lá. O tema mora em Configurações (seção Aparência); o sair (o menu ⋯ do perfil) e Planos e pagamentos (a seção Plano, só no telefone) moram em Minha conta. Antes foi um painel de `DropdownMenu` que brotava da aba "Mais", antes uma gaveta de 625px com identidade, tema e sair, e antes dela um `Popover` de vidro escrito à mão | `src/components/layout/quick-actions.tsx`, `src/components/layout/mobile-bottom-nav.tsx`, `src/components/layout/abas-fora.ts`, `src/components/layout/voce-avatar.tsx`, `src/app/(app)/me/page-client.tsx`, `src/config/mobile-navigation.ts`, `src/components/layout/app-header.tsx` |
 | Busca global (⌘K) | Montada uma vez no `AppHeader`, com a lupa nas duas árvores da barra. No telefone a lupa vira a barra de pesquisa no topo, sobre um véu: a pílula nasce no círculo da lupa (`lupaRef`, o `origin` do `CommandDialog`) e se estica para a esquerda, com o × à direita e o teclado aberto no mesmo toque; o ×, Esc e o toque no véu fecham, e o foco volta à lupa (era uma gaveta de baixo até 2026-10-19). A raiz busca tudo, sem as sub-páginas de categorias e cartões: o filtro é da paleta (`shouldFilter: false`) e cada grupo vem ranqueado por `ranquear` (`lib/app-search`), até 5 linhas. Telas (com sinônimos: "gastos" acha Transações, "fatura" Cartões, "boletos" Contas a pagar) são as da barra lateral menos o Painel, mais Membros (`navigation.ts`); Painel, Configurações, Minha conta, Planos e pagamentos, Sessões ativas, Atividade e Notificações ficam fora da busca, por decisão do dono. Ações chamam os mesmos ganchos do "+ Adicionar" (`useQuickCreateTransaction`, `useQuickCreateSubscription`) e os diálogos da casca (Nova categoria, Novo cartão). Transações são uma consulta de leitura ao banco (descrição, valor, data, nome da categoria e do cartão; as 8 mais recentes; espera de 250ms depois da digitação) e abrem `/transactions?txn=id`; "Ver todas em Transações" leva `q`, `from`, `to`, `min` e `max` na URL, e a lista filtra o texto só pela descrição. Transação nunca vira recente. Cartões e categorias leem o cache da casca (`useCategoriesQuery`, `useCreditCardsQuery`); parcelas (`?plan=id`), assinaturas (`?sub=id`) e membros (`/members`) saem das listas do espaço; contas a pagar vêm de uma consulta leve (`useBillsListQuery`) e abrem `/bills?detail=id`; escolher uma carteira troca a carteira atual. Os recentes ficam no `localStorage` (`app:busca`). Digitar `/` escolhe onde buscar (`/transacoes`, `/membros`…, `lib/app-search-scopes`): o nome entra no campo como escopo, só aquele grupo aparece (até 50 linhas; 20 transações), e dois Backspaces com o campo vazio voltam à busca em tudo; num escopo de lista do espaço, enquanto ela carrega o grupo diz "Buscando…" e, sem dado e com erro, "Não deu para carregar … agora." (o "Nada em …" só vale depois da resposta) | `src/components/layout/app-command-palette.tsx`, `src/lib/app-search-scopes.ts`, `src/components/layout/app-search-sources.ts`, `src/lib/app-search.ts`, `src/lib/transaction-search.ts`, `src/lib/queries/use-transactions-search.ts`, `src/lib/queries/use-bills-list.ts` |
@@ -479,6 +485,7 @@ flowchart TD
     parse -->|"txn=id"| detail(("G5b Detalhe"))
     parse -->|"conferir=1, fica na URL"| conferirG(("G5c A conferir"))
     parse -->|"frase, frase_titulo, frase_url: o compartilhar do Android, tirados por router.replace"| form
+    parse -->|"compartilhado=chave, tipo, compartilhado_erro: o arquivo compartilhado, tirados por router.replace"| sharedG(("G5c Compartilhar foto ou PDF"))
     parse -->|"importar=1, tirado por router.replace"| importWf(["WIREFRAME Importar extrato: o que é, destino, arquivo"])
 
     filters --> list(["Tabela paginada de 100 em 100; no telefone, a lista com o mês"])
@@ -540,6 +547,13 @@ flowchart TD
     open -->|"criar"| frase(["WIREFRAME Frase rápida: escrever e Preencher; o Enter preenche e não salva"])
     frase -->|"Preencher: valor, descrição, data, tipo, forma, cartão, categoria pelo histórico"| type
     frase -.->|"com dúvida: o aviso Confira"| type
+    frase -.->|"sem valor: Tentar com IA"| iaFrase[("Edge ia-ler, op frase: o texto redigido; cota de 30 por dia")]
+    iaFrase -->|"campos; a dúvida ia deixa a conferir"| type
+    iaFrase -.->|"cota, sem IA ou erro: o aviso, e a pessoa preenche"| type
+    open -->|"criar"| foto(["WIREFRAME Foto do recibo: câmera ou arquivo; vira WebP de 1600 px"])
+    foto -->|"multipart, op imagem"| iaFoto[("Edge ia-ler: a foto vai crua, sem redação; até 4 MB")]
+    iaFoto -->|"campos; source share, a conferir"| type
+    iaFoto -.->|"cota, sem IA ou foto ilegível: o aviso; a foto fica"| type
     type -->|"Despesa"| expense(["Valor, descrição, categoria, data, forma de pagamento"])
     type -->|"Receita"| income(["Valor, descrição, categoria, data"])
     type -->|"Parcelada"| inst(["Valor total ou por parcela, nº de parcelas, 1ª cobrança"])
@@ -551,7 +565,7 @@ flowchart TD
     cardPick -->|"Cadastrar cartão ou sem cartões"| G6(("G6 /credit-cards"))
     cardPick -.->|"sem cartão escolhido"| disabled(["Salvar desativado"])
 
-    expense -->|"Salvar"| saveTx[("Insere transação; pela frase, source quick_text e needs_review com dúvida")]
+    expense -->|"Salvar"| saveTx[("Insere transação; pela frase, source quick_text; pela foto, share; needs_review com dúvida ou IA")]
     income -->|"Salvar"| saveTx
     income -->|"Estorno no cartão: escolher o cartão"| refund(["WIREFRAME Estorno: receita no crédito, com o cartão"])
     refund -->|"Salvar"| saveTx
@@ -560,10 +574,12 @@ flowchart TD
     saveTx -->|"offline"| queued(["Salva na fila offline"])
     saveTx -->|"erro"| keep(["Aviso; formulário continua aberto"])
     saveTx -->|"sucesso"| after[("Edges evaluate-budgets, evaluate-credit-card-alerts")]
+    saveTx -.->|"com a foto do recibo"| fotoAnexo[("A foto vira anexo do lançamento; falhando, o lançamento fica")]
     saveTx -.->|"despesa manual, no insert"| notifyTrg[("Trigger transactions_notify_created: Edge notify-transaction-created avisa os membros")]
     after --> toast(["Transação criada; listas recarregam"])
     toast -->|"Ver, só online"| txOpen(("G5b Detalhe /transactions?txn=id"))
     savePlan -->|"sucesso"| toastPlan(["Compra parcelada registrada"])
+    savePlan -.->|"pela frase ou pela IA"| markPlan[("Parcelas lançadas recebem source e needs_review; a foto vai à 1ª")]
     toastPlan -->|"Ver, só online"| planList(("G5 /transactions?plan=id"))
     open -->|"Cancelar, Esc ou fora, sem alterações"| closed(["Fecha e descarta"])
     open -->|"fechar com alterações"| discard(["Descartar alterações?"])
@@ -606,6 +622,11 @@ a pessoa. O Android compartilha um texto, que abre o formulário com a frase.
 O que tem dúvida cai em "A conferir", que o Painel conta e o lembrete das 20h
 aponta.
 
+O Bloco 3B pôs a IA no caminho: a `capture` aceita a foto do recibo em
+multipart e manda à IA a frase que o parser não leu; a compra parcelada
+capturada vira plano; e o Android compartilha também foto e PDF, pelo service
+worker.
+
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart TD
@@ -614,18 +635,25 @@ flowchart TD
     createTok --> shown(["O token fac_ aparece uma vez só: Copiar"])
     tokens -->|"Revogar"| revokeTok[("RPC revoke_capture_token: revoked_at")]
     tokens -->|"guia do Atalho"| guide(["docs/captura/atalho-iphone.md, aberto no GitHub"])
-    guide --> iphone(["Atalho do iPhone: ditar a frase, ou Extrair texto da imagem do recibo"])
+    guide --> iphone(["Atalho do iPhone: ditar a frase, a foto do recibo redimensionada e em JPEG, ou Extrair texto da imagem"])
     guide --> wallet(["Automação da Wallet: valor, estabelecimento e cartão do Apple Pay"])
-    iphone -->|"POST text, Bearer fac_"| capture[("Edge capture")]
+    iphone -->|"POST text, ou multipart file, Bearer fac_"| capture[("Edge capture")]
     wallet -->|"POST amount, merchant, card, source apple_pay"| capture
 
     capture --> tokOk{"Token ativo, membro da carteira padrão e workspace_plan?"}
     tokOk -->|"não"| e401(["401 Token inválido, sem dizer por quê"])
-    tokOk -->|"sim"| amountOk{"Achou o valor?"}
+    tokOk -->|"sim"| kind{"Foto ou frase?"}
+    kind -->|"PDF ou outro tipo"| e422f(["422: PDF de fatura, use Conferir fatura no app; ou Envie uma foto"])
+    kind -->|"foto até 4 MB"| iaCap[("IA: cota de 30 por dia, cache, Groq e depois Cloudflare")]
+    kind -->|"frase sem valor ou com dúvida de descrição"| iaCap
+    kind -->|"frase lida pelo parser, ou foto acima de 4 MB"| amountOk{"Achou o valor?"}
+    iaCap -->|"campos, ou sem IA: o parser e o text"| amountOk
     amountOk -->|"não"| e422(["422 com a mensagem; nada gravado"])
     amountOk -->|"sim"| sameId{"Mesmo id de antes?"}
     sameId -->|"sim"| sameTx(["200 com o lançamento que já existe"])
     sameId -->|"não, ou sem id"| cardMatch{"Cartão casa pelo wallet_alias ou pelo nome?"}
+    sameId -->|"não, e parcelas > 1"| planCap[("RPC criar_plano_parcelado: parcelas até hoje com source e needs_review; a chave na 1ª")]
+    planCap --> resumo
     cardMatch -->|"inteiro, numa carteira da pessoa: vai para a carteira do cartão"| saveCap
     cardMatch -->|"parcial: mantém o cartão, a conferir"| saveCap
     cardMatch -->|"nenhum: sem cartão; no Apple Pay, walletCard em capture_meta"| saveCap
@@ -634,9 +662,21 @@ flowchart TD
     saveCap -.->|"despesa nova"| evals[("Edges evaluate-budgets e evaluate-credit-card-alerts, pela service role")]
     saveCap -.->|"despesa"| notifyTrg[("Trigger transactions_notify_created")]
     saveCap -.->|"needs_review"| conferir
+    saveCap -.->|"com foto"| capAnexo[("A foto vira anexo; cota de anexos cheia: anexo false")]
 
-    android(["Compartilhar do Android: um texto"]) -->|"share_target GET"| shareUrl["/transactions?frase=texto"]
+    android(["Compartilhar do Android: texto, foto ou PDF"]) -->|"share_target POST multipart"| swOn{"Service worker ativo?"}
+    swOn -->|"sim"| swRoute[("SW: o arquivo vai ao Cache Storage captura-compartilhada; 303")]
+    swOn -->|"não: route handler do Next"| nextRoute(["POST /transactions/compartilhar: só o texto segue; a foto cai sem aviso"])
+    swRoute -->|"só texto"| shareUrl
+    nextRoute -->|"303"| shareUrl["/transactions?frase=texto"]
     shareUrl -->|"abre o formulário com a frase escrita; os parâmetros saem da URL"| txForm(("G5b Frase rápida no formulário"))
+    swRoute -->|"foto"| sharedPhoto["/transactions?compartilhado=chave"]
+    swRoute -->|"PDF"| sharedPdf["/transactions?compartilhado=chave&tipo=pdf"]
+    swRoute -->|"grande, vazio ou outro tipo"| sharedErr["/transactions?compartilhado_erro=1"]
+    sharedPhoto -->|"lê e apaga o arquivo; abre o formulário com a Foto do recibo lendo"| fotoForm(("G5b Foto do recibo"))
+    sharedPdf -->|"WIREFRAME aviso: abra o cartão e use Conferir fatura"| cardsLink(("G6 /credit-cards"))
+    sharedErr --> shareWarn(["WIREFRAME aviso: arquivo recusado, ou já lido ou vencido"])
+    sharedPhoto -.->|"arquivo lido ou com mais de 1 h"| shareWarn
 
     dash(("G4 Painel: A conferir N")) --> conferir
     iconConf(("G3 Atalho do ícone: A conferir")) --> conferir
@@ -659,11 +699,11 @@ flowchart TD
 
 | Ponto | Regra | Onde |
 |---|---|---|
-| Parâmetros | Lidos e gravados na URL; `new`, `txn` e `importar` são consumidos e removidos (`importar=1` abre o wireframe de importar e sai por `router.replace`, como o `new`). `frase`, `frase_titulo` e `frase_url` (o compartilhar do Android) também saem; `conferir=1` fica, porque é uma vista | `src/lib/transactions-list-search-params.ts`, `src/app/(app)/transactions/page-client.tsx` |
+| Parâmetros | Lidos e gravados na URL; `new`, `txn` e `importar` são consumidos e removidos (`importar=1` abre o wireframe de importar e sai por `router.replace`, como o `new`). `frase`, `frase_titulo` e `frase_url` (o compartilhar do Android) também saem, e desde o Bloco 3B `compartilhado`, `tipo` e `compartilhado_erro` (o arquivo compartilhado); `conferir=1` fica, porque é uma vista | `src/lib/transactions-list-search-params.ts`, `src/app/(app)/transactions/page-client.tsx` |
 | Ordenação e página | `sort=date.desc` · `date.asc` · `amount.desc` · `amount.asc` e `page=N` (a partir de 1) vão para a URL e voltam dela, também no voltar e avançar; o padrão (`date.desc`, página 1) não é escrito. Trocar um filtro volta à página 1. Só na página, não no modo embutido | `src/components/transactions/use-transactions-list-controller.ts`, `src/lib/transactions-list-search-params.ts` |
 | Tabela | `DataTable` em modo `manual` (o banco ordena e pagina): a seleção não alcança as projetadas, que também não abrem nem têm menu; o mês só agrupa ordenado por data; a barra de seleção é flutuante e cancelar a exclusão mantém a seleção; no telefone, a lista gerada das colunas | `src/components/transactions/transactions-table.tsx`, `src/components/ui/data-table.tsx` |
 | Formulário | Um componente para criar, e o mesmo campo a campo na edição | `src/components/transactions/transaction-form-dialog.tsx`, `transaction-form-use.tsx` |
-| Parcelada | RPC `create_workspace_installment_plan`; editar o plano não muda parcelas já lançadas | `src/components/transactions/transaction-form-persistence.ts` |
+| Parcelada | RPC `create_workspace_installment_plan`; editar o plano não muda parcelas já lançadas. Desde o Bloco 3B, a compra preenchida pela frase ou pela IA marca depois da RPC as parcelas já lançadas (`source` e `needs_review`, pela RLS de membro; falhando, o plano fica), e a foto do recibo vai à 1ª parcela (`primeiraParcelaDoPlano`). As parcelas que o cron lança depois nascem `app`, sem marca | `src/components/transactions/transaction-form-persistence.ts`, `src/components/transactions/transaction-form-use.tsx` |
 | Detalhe | Mesmo painel no Painel, em Cartões e em Categorias | `src/components/transactions/transaction-detail-sheet.tsx` |
 | Exclusão | Parcela cancela o plano inteiro por `delete_workspace_installment_plan_cascade`. Continua com confirmação, e não com o Desfazer do toast: a exclusão é física (`delete`), sem `deleted_at` nem RPC de restaurar, e recriar mudaria o id e quebraria parcelas, recorrência e faturas (verificado na rodada 228) | `src/lib/transactions/mutations.ts` |
 | "Ver" do toast | Criar uma transação (não editar) mostra "Ver", que leva a `/transactions?txn=id` e abre o detalhe; a compra parcelada leva a `?plan=id`. Offline não há id, e o toast sai sem "Ver". A trava que abre o `txn` uma vez só volta a soltar quando a URL perde o parâmetro — antes, com `/transactions` aberta, o segundo `?txn=` não abria nada | `persistTransactionSave` em `src/lib/transaction-detail-sheet-mutations.ts`, `transaction-form-persistence.ts`, `use-transactions-list-controller.ts` |
@@ -676,10 +716,13 @@ flowchart TD
 | Importar extrato ou planilha (Bloco 2) | Wireframe acima da barra, pelo link "Importar extrato ou planilha" ou `?importar=1`. Extrato do banco (CSV ou OFX, `source = 'import_statement'`) ou planilha da pessoa (CSV, `import_sheet`), numa conta (Pix, Débito, Outro) ou num cartão. A categoria vem do histórico (a descrição normalizada igual; senão, a transação mais recente com a mesma primeira palavra significativa); as categorias da planilha que faltam são criadas antes. Todo item importado nasce com `needs_review` e o `client_id` gerado uma vez: repetir "Importar" não duplica. Parcela vira despesa simples com "(k/n)" na descrição. "Desfazer importação" apaga o lote (`import_batch_id`). Não avisa os membros nem dispara alerta de orçamento ou de cartão | `src/components/wireframe/importar-extrato-wireframe.tsx`, `src/components/wireframe/mapeamento-csv.tsx`, `src/lib/import/` |
 | Estorno no cartão (Bloco 2) | No formulário de receita, a caixa "Estorno no cartão" grava `payment_method = 'credit_card'` com o cartão. O estorno abate a fatura do ciclo em que cai (que pode ficar negativa, saldo credor), reduz a despesa do mês de fechamento e não conta como receita no Painel | `src/components/wireframe/estorno-wireframe.tsx`, `formaDoPayload` em `src/components/transactions/transaction-form-use.tsx`, `src/lib/expense-month-attribution.ts` |
 | A conferir (Bloco 2) | No detalhe, o lançamento importado ou com `needs_review` mostra "Importado · a conferir". "Confirmar" tira o `needs_review`; "Desfazer importação do lote", depois do `confirm`, apaga o lote inteiro e fecha o detalhe. A lista "A conferir" veio no Bloco 3A (`?conferir=1`) | `src/components/wireframe/a-conferir-wireframe.tsx`, `src/components/transactions/transaction-detail-sheet.tsx` |
-| Frase rápida (Bloco 3A) | Só ao criar, no topo do formulário: o wireframe "Frase rápida" lê a frase ("42 mercado nubank") com o mesmo parser da Edge (`_shared/frase.ts`) e, em "Preencher" ou no Enter, preenche valor, descrição, data, tipo, forma, cartão e a categoria pelo histórico da carteira (`carregarHistoricoDaFrase`, sem travar offline). Não salva: quem salva é a pessoa, pelo botão de sempre. O payload ganha `source: 'quick_text'` e, com dúvida do parser, `needsReview: true`; a categoria escolhida à mão conta como conferida. O Enter do campo chama `preventDefault` e não envia o formulário | `src/components/wireframe/frase-rapida-wireframe.tsx`, `src/lib/captura/frase-no-form.ts`, `src/components/transactions/transaction-form-use.tsx` |
+| Frase rápida (Bloco 3A) | Só ao criar, no topo do formulário: o wireframe "Frase rápida" lê a frase ("42 mercado nubank") com o mesmo parser da Edge (`_shared/frase.ts`) e, em "Preencher" ou no Enter, preenche valor, descrição, data, tipo, forma, cartão e a categoria pelo histórico da carteira (`carregarHistoricoDaFrase`, sem travar offline). Não salva: quem salva é a pessoa, pelo botão de sempre. O payload ganha `source: 'quick_text'` e, com dúvida do parser, `needsReview: true`; a categoria escolhida à mão conta como conferida. O Enter do campo chama `preventDefault` e não envia o formulário. Desde o Bloco 3B, quando o parser não acha o valor, aparece "Tentar com IA": a frase vai à `ia-ler` (`lerFraseComIA`), e o que a IA leu se junta ao que o parser leu (forma, parcelas, estorno); a dúvida `ia` deixa o lançamento a conferir, e a data futura vira hoje com a dúvida `data`. Sem IA, o aviso diz por quê ("Você usou a IA 30 vezes hoje. Amanhã volta.", "A IA não respondeu agora. Confira à mão.") | `src/components/wireframe/frase-rapida-wireframe.tsx`, `src/lib/captura/frase-no-form.ts`, `src/components/transactions/transaction-form-use.tsx` |
 | Editar tira a marca (Bloco 3A) | Toda edição salva grava `needs_review = false`; a criação só grava `source` e `needs_review` quando o payload os traz | `buildTransactionRow` em `src/lib/transactions/mutations.ts` |
-| Compartilhar do Android (Bloco 3A) | O `share_target` do manifest é `GET /transactions` com `text`, `title` e `url` em `frase`, `frase_titulo` e `frase_url`. A tela junta os três (até 500 caracteres), abre o formulário de despesa pelo `openTransactionCreate` da casca com a frase escrita, sem aplicar, e tira os três da URL. Com o formulário já aberto, a frase nova troca a do campo. Só texto: arquivo pediria POST com service worker | `consumirParametroFrase` em `src/lib/transactions-list-search-params.ts`, `src/app/(app)/transactions/page-client.tsx`, `src/app/manifest.ts` |
-| Captura (Bloco 3A) | A Edge `capture` aceita só JSON até 16 KB (`text`, ou `amount` + `merchant` + `card`; `date`, `id` e `source` opcionais) com `Authorization: Bearer fac_…`. Procura o token pelo `sha256`; revogado, desconhecido ou mal formado é o mesmo 401. Depois confere o `workspace_plan` da carteira padrão (402 sem plano) e se a pessoa ainda é membro dela. Grava com a service role repetindo a RLS: o autor é o dono do token, e cartão e categoria são da carteira de destino. Sem valor, 422 e nada gravado. Com `id`, o `client_id` deriva de `sha256(token_id:id)` e o retry devolve o mesmo lançamento. `needs_review` com qualquer dúvida do parser, cartão de crédito citado sem casar, nenhuma categoria pelo histórico ou compra parcelada. Despesa nova chama `evaluate-budgets` e `evaluate-credit-card-alerts` com o Bearer da service role; o aviso aos membros é o do trigger | `supabase/functions/capture/`, `supabase/functions/_shared/captura.ts`, `supabase/functions/_shared/frase.ts` |
+| Compartilhar do Android (Blocos 3A e 3B) | Desde o Bloco 3B, o `share_target` do manifest é `POST /transactions/compartilhar` em `multipart/form-data`, com `files` (foto e PDF), `text`, `title` e `url`. Com o service worker ativo, a rota é dele (`receberCompartilhar`): guarda o primeiro arquivo aceito (JPEG, PNG, WebP, HEIC ou PDF, não vazio, até 10 MB) no Cache Storage `captura-compartilhada` e responde 303 para `/transactions?compartilhado=<chave>` (o PDF com `&tipo=pdf`); arquivo recusado leva a `?compartilhado_erro=1`; só texto, ao `?frase=` do 3A. A tela lê o arquivo pela chave e o apaga do cache (vale 1 hora): a foto abre o formulário de despesa com a "Foto do recibo" lendo (`fotoInicial`); o PDF, o arquivo que sumiu e o recusado viram o wireframe de aviso ("Para conferir a fatura, abra o cartão e use Conferir fatura.", com "Abrir cartões"). Sem service worker ativo (primeira instalação, troca de versão), o *route handler* do Next responde 303 só com o texto, e a foto cai sem aviso. O texto continua como no 3A: `frase`, `frase_titulo` e `frase_url` juntos (até 500 caracteres) abrem o formulário com a frase escrita, sem aplicar; com o formulário aberto, a frase nova troca a do campo | `src/lib/captura/compartilhado.ts`, `src/sw.ts`, `src/app/(app)/transactions/compartilhar/route.ts`, `src/app/(app)/transactions/page-client.tsx`, `src/components/wireframe/compartilhado-aviso-wireframe.tsx`, `src/app/manifest.ts` |
+| Captura (Blocos 3A e 3B) | A Edge `capture` aceita JSON até 16 KB (`text`, ou `amount` + `merchant` + `card`; `date`, `id` e `source` opcionais) e, desde o Bloco 3B, `multipart/form-data` até 10 MB (`file`, a foto em JPEG, PNG ou WebP pelos bytes, e `text`, `source` e `id` opcionais), com `Authorization: Bearer fac_…`. PDF volta 422 "PDF de fatura: use Conferir fatura no app."; outro tipo, 422 "Envie uma foto (JPG, PNG ou WebP)."; o corpo só é lido depois do token, do plano e do membro. A foto até 4 MB vai à IA (`lerImagem`); a frase vai à IA (`interpretar`) só quando o parser não achou o valor ou ficou com dúvida de descrição, e o resultado passa pelo mesmo casamento de cartão e histórico. Sem IA (cota, provedor fora, sem chave), segue o parser; sem valor, 422 (com foto, "Não entendi a foto. Mande o valor no texto."). Todo lançamento que passou pela IA nasce `needs_review`, com `capture_meta.ia` (provedor e modelo). A foto vira anexo; com a cota de anexos cheia, o lançamento fica e a resposta diz `anexo: false`. A resposta ganha `ia` e `anexo`. Data de compra futura vira hoje, a conferir. Procura o token pelo `sha256`; revogado, desconhecido ou mal formado é o mesmo 401. Depois confere o `workspace_plan` da carteira padrão (402 sem plano) e se a pessoa ainda é membro dela. Grava com a service role repetindo a RLS: o autor é o dono do token, e cartão e categoria são da carteira de destino. Sem valor, 422 e nada gravado. Com `id`, o `client_id` deriva de `sha256(token_id:id)` e o retry devolve o mesmo lançamento. `needs_review` com qualquer dúvida do parser, cartão de crédito citado sem casar, nenhuma categoria pelo histórico ou compra parcelada. Despesa nova chama `evaluate-budgets` e `evaluate-credit-card-alerts` com o Bearer da service role; o aviso aos membros é o do trigger | `supabase/functions/capture/`, `supabase/functions/_shared/captura.ts`, `supabase/functions/_shared/frase.ts` |
+| Parcela capturada vira plano (Bloco 3B) | Com `parcelas > 1`, a `capture` chama a RPC interna `criar_plano_parcelado` (só a service role; confere o membro pelo `p_user_id`) com `source` da captura e `needs_review`: a parcela é `round(total / N, 2)` e a última fecha a diferença; a 1ª cobrança é a data do lançamento. As parcelas vencidas até hoje nascem marcadas; o `client_id` e a `capture_meta` vão na 1ª, que é o `id` da resposta e a guarda do retry. Dois retries simultâneos podem criar dois planos | `supabase/functions/capture/`, `supabase/migrations/20261024120000_ia.sql` |
+| Foto do recibo (Bloco 3B) | Só ao criar, abaixo da frase rápida: o wireframe "Foto do recibo" (câmera ou arquivo) comprime a foto para WebP de lado maior 1600 px e a manda à `ia-ler` em multipart (`lerImagemComIA`, com o token da sessão). O que a IA leu preenche o formulário como a frase, com `source: 'share'` e a conferir; quem salva é a pessoa. A foto fica no formulário (suja o rascunho) e vira anexo do lançamento depois do salvar (na compra parcelada, da 1ª parcela); falhando o anexo, o lançamento fica. A resposta atrasada de uma foto trocada é jogada fora; o Enter do campo abre a câmera e não salva | `src/components/wireframe/foto-recibo-wireframe.tsx`, `src/lib/ia/ler.ts`, `src/components/transactions/transaction-form-use.tsx` |
+| IA (Bloco 3B) | Um módulo só, `_shared/ia.ts`, com a cadeia em `_shared/ia-config.ts`: texto e fatura na Groq (`openai/gpt-oss-20b`, `openai/gpt-oss-120b`) e depois na Cloudflare (`@cf/qwen/qwen3-30b-a3b-fp8`); imagem na Groq (`qwen/qwen3.8-27b`, *preview*) e depois na Cloudflare (`@cf/meta/llama-4-scout-17b-16e-instruct`). Ordem: cache (`ia_cache`, não gasta cota) → chaves → cota (`consumir_cota_ia`, 30 por pessoa por dia de São Paulo) → provedores, 10 s cada; 429, 5xx, 401, 403, prazo e JSON inválido passam ao próximo, e cada chamada conta em `ia_eventos`. A saída é validada à mão (valor positivo até 1.000.000, data válida). Antes de enviar texto, `redigir` tira cartão, CPF, CNPJ, e-mail, telefone, CEP, endereço e os nomes dos membros; a imagem vai crua. A `ia-ler` (JWT da pessoa; confere membro e `workspace_plan`) devolve campos e nunca grava: `op` `frase`, `fatura` ou `imagem` (multipart, até 4 MB). Os motivos sem IA são `cota`, `sem_ia` e `fatura_grande` | `supabase/functions/_shared/ia.ts`, `supabase/functions/_shared/ia-config.ts`, `supabase/functions/_shared/redigir.ts`, `supabase/functions/ia-ler/`, `src/lib/ia/ler.ts` |
 | Apple Pay e lembrar cartão (Bloco 3A) | O cartão casa pelo `wallet_alias` ou pelo nome (`casarCartao`); casamento parcial mantém o cartão e marca a conferir; sem casamento, grava crédito sem cartão, a conferir, com o nome da Wallet em `capture_meta.walletCard`. No detalhe, com um cartão escolhido, o wireframe oferece "Lembrar '<nome>' como este cartão", que grava `credit_cards.wallet_alias` (até 60 caracteres); a próxima captura casa. Aparece também no item já conferido, só com o "Lembrar" | `src/components/wireframe/a-conferir-wireframe.tsx`, `src/components/transactions/transaction-detail-sheet.tsx` |
 | A conferir: lista (Bloco 3A) | `?conferir=1` mostra, acima da lista de sempre, o wireframe com os lançamentos `needs_review` da carteira. "Confirmar" tira a marca; "Abrir" leva a `?txn=id` mantendo a lista; "Fechar" tira o `conferir` da URL. Não é filtro do controlador da lista: vira filtro na revisão de tela | `src/components/wireframe/a-conferir-lista-wireframe.tsx`, `src/app/(app)/transactions/page-client.tsx` |
 | Avaliadores pelo servidor (Bloco 3A) | `evaluate-budgets` e `evaluate-credit-card-alerts` aceitam o Bearer da service role ou o `x-cron-secret` (`isServiceAuthorized`, agora em `_shared/service-auth.ts`), além do JWT da pessoa; pelo servidor, o corpo traz o `workspace_id`, e a checagem de membro é pulada | `supabase/functions/_shared/service-auth.ts`, `supabase/functions/evaluate-budgets/`, `supabase/functions/evaluate-credit-card-alerts/` |
@@ -739,6 +782,9 @@ flowchart TD
     pdfRead -->|"não ou senha certa"| reading(["Leitura: total, completa ou incompleta com a diferença"])
     check -->|"arquivo .csv: mapeamento; .ofx"| reading
     reading --> groups(["Grupos: Bate, Falta no app, Só no app, Valor diferente, Parcela fora de sequência"])
+    reading -->|"PDF incompleto: Ler com IA"| iaFat[("Edge ia-ler, op fatura: o texto redigido, em fatias de 12 mil caracteres, até 6")]
+    iaFat -->|"itens: Lido pela IA; o total segue o do leitor"| groups
+    iaFat -.->|"cota, sem IA, fatura grande ou sem itens: o aviso"| reading
     groups -->|"Importar selecionados de Falta no app"| importMissing[("Insere com a data levada para dentro do ciclo e compra em dd/mm na descrição")]
     importMissing -->|"lançamentos recarregam sem esqueleto"| groups
     importMissing -.-> G5
@@ -757,6 +803,7 @@ flowchart TD
 | Pagamento de fatura | Linha em `credit_card_invoice_payments`, sem criar despesa | `src/lib/bills/pay-bill-flow.ts` |
 | "Ver" do toast | Cadastrar um cartão (pela página ou pelo diálogo do "+ Adicionar") mostra "Ver", que leva a `/credit-cards/id`; na fila offline, sem "Ver" | `src/app/(app)/credit-cards/page-client.tsx`, `src/components/credit-cards/credit-card-create-dialog.tsx` |
 | Conferir fatura (Bloco 2) | Wireframe na página do cartão, sobre os ciclos já fechados. O arquivo do banco é `.pdf` (lido no aparelho por `pdfjs-dist`, sem IA; com senha, pede e tenta de novo, e a errada mostra "Senha incorreta"), `.csv` (com o mapeamento de colunas) ou `.ofx`. A leitura cuja soma não fecha com o total fica incompleta e mostra a diferença, e ainda deixa importar o que achou. Os grupos são Bate, Falta no app, Só no app, Valor diferente e Parcela fora de sequência; o que já foi importado cai em Bate. "Importar selecionados" grava os itens de Falta no app como despesas do cartão (estorno como receita), com a data levada para dentro do ciclo (`ajustarAoCiclo`, que acrescenta "compra em dd/mm" à descrição), `source` `import_pdf` (PDF) ou `import_statement` (CSV, OFX), `needs_review` e o lote em `import_batch_id`, e recarrega só os lançamentos do cartão | `src/components/wireframe/conferir-fatura-wireframe.tsx`, `src/lib/fatura/ciclo.ts`, `src/lib/fatura/conferir.ts`, `src/lib/import/pdf-texto.ts`, `src/lib/import/fatura-texto.ts` |
+| Ler com IA (Bloco 3B) | Quando a leitura de um PDF fica incompleta, aparece "Ler com IA": o texto do PDF já redigido no aparelho (`removerIdentificacao`), guardado da leitura, vai à `ia-ler` com o fechamento do ciclo, sem reler o arquivo nem pedir a senha. A Edge redige de novo e corta em fatias de 12.000 caracteres (até 6; acima, "Fatura grande demais para a IA. Use o CSV do banco."), cada uma gastando uma cota. Os itens da IA substituem os do leitor, com "Lido pela IA" no topo; o total continua o do leitor determinístico. Sem item válido, os itens do leitor ficam e o aviso diz "A IA não achou itens nesta fatura. Confira à mão.". Lida pela IA, o botão some | `src/components/wireframe/conferir-fatura-wireframe.tsx`, `src/lib/ia/fatura.ts`, `src/lib/ia/ler.ts` |
 | Total do banco (Bloco 2) | Gravar o total (digitado ou lido) faz um `upsert` em `credit_card_statement_totals` (`workspace_id`, `credit_card_id`, `statement_close_date`), com `source` `manual`, `pdf`, `csv` ou `ofx`. Lido de PDF, o PDF vira anexo do total (o mesmo PDF não sobe duas vezes; falhar aqui não desfaz o total). Numa fatura fechada, o painel mostra "Total do banco · diferença", e o Painel, Contas a pagar e os avisos de fatura da Edge usam o total do banco no lugar do calculado | `src/components/wireframe/conferir-fatura-wireframe.tsx`, `src/lib/fatura/total-com-banco.ts`, `src/components/credit-cards/credit-card-invoice-analytics-panel.tsx` |
 | Estorno (Bloco 2) | A fatura é despesas menos estornos (receita no cartão), e pode ficar negativa; os percentuais por categoria seguem sobre o gasto bruto. Os alertas de limite, fechamento e vencimento descontam o estorno | `src/lib/credit-card-billing.ts`, `src/lib/credit-card-invoice-analytics.ts`, `supabase/functions/_shared/credit-card-cycle.ts` |
 | Alertas | Limite, fechamento e vencimento geram notificações `cc_*`. A compra parcelada no cartão roda a conferência de limite, como a despesa avulsa. Numa fatura fechada (fechou, vence em breve, vence hoje e, no limite, a última fechada não paga), o valor é o total do banco quando gravado (`escolherTotal` em `_shared/credit-card-cycle.ts`, a regra de `totalComBanco`); o calendário lê `credit_card_statement_totals` numa consulta só por execução. A fatura que ainda fecha usa o calculado | edges `evaluate-credit-card-alerts`, `credit-card-calendar-alerts`; `src/components/transactions/transaction-form-persistence.ts` |
@@ -1032,12 +1079,15 @@ continuam aqui para registro.
 | 9 | G5 | Só a exclusão avulsa online apaga o objeto do anexo na hora. A exclusão em lote, a de compra parcelada (o plano sai em cascata no banco), a feita offline e o desfazer de um lote importado apagam as linhas de `attachments` em cascata, mas deixam os objetos no bucket até o cron `attachments-cleanup-weekly` (domingo) apagar o que não tem linha e passou de 24 h. Até lá eles ocupam o armazenamento do projeto, não a cota da carteira. |
 | 12 | G5, G6, G7 | O Bloco 2 (estorno, total do banco, conferência da fatura, importação e anexos) está no repositório, com as telas em wireframe. **Banco e funções publicados em 21/10/2026** (migrações, bucket, políticas e cron conferidos); o front novo não foi publicado, então ninguém usa nada disso ainda. Aberta até o front subir e o teste de fumaça passar: `supabase/BLOCO_2_DEPLOYMENT.md`. |
 | 14 | G3, G4, G5, G10 | O Bloco 3A (captura sem abrir o app) está no repositório, com as telas em wireframe, e **nada foi publicado**. O backend pode subir antes do front, porque nada dele aparece no front de `main`: `supabase/BLOCO_3A_DEPLOYMENT.md`. |
-| 15 | G5 | Imagem crua, PDF e arquivo compartilhado ficam para o Bloco 3B (IA). A `capture` só aceita JSON (a foto do recibo passa pelo "Extrair texto da imagem" do Atalho), e o compartilhar do Android só leva texto. |
-| 16 | G5 | Uma compra parcelada capturada vira um lançamento simples, com "(1/N)" na descrição e a conferir; o plano de parcelas no servidor fica para o 3B. |
-| 17 | G5 | Uma compra parcelada escrita na frase rápida do formulário é salva pelo `create_workspace_installment_plan` com `source` `app` e sem a marca de a conferir. |
 | 18 | G5 | Um item do Apple Pay com casamento parcial gravado antes de a `capture` guardar o `walletCard` nesse caso não tem `capture_meta.walletCard` e não oferece "Lembrar". |
 | 19 | G10 | O link do guia do Atalho aponta para `docs/captura/atalho-iphone.md` em `main` no GitHub e dá 404 até o `finance-app-2.0` ir para `main`. |
-| 20 | G5 | A captura pelo WhatsApp está pendente (Bloco 3B), à espera das contas de terceiros. |
+| 20 | G5 | A captura pelo WhatsApp foi adiada pelo dono em 22/10/2026 e ficou fora do Bloco 3B. Só o Atalho do iPhone, o Apple Pay e o compartilhar do Android lançam de fora do app. |
+| 21 | G5, G6 | A foto vai à IA sem redação: não há como tirar dado de uma imagem. Ela vai crua à Groq e, se a Groq falhar, à Cloudflare. Recibo e comprovante costumam mostrar o cartão mascarado, mas um documento fotografado vai inteiro. A política de `/privacidade` diz isso. |
+| 22 | G5 | O modelo de visão da Groq (`qwen/qwen3.8-27b`) é *preview* e pode sair sem aviso. A Cloudflare cobre a foto enquanto isso; a troca é em `_shared/ia-config.ts`. |
+| 23 | G5 | Dois reenvios simultâneos de uma compra parcelada pela `capture` podem criar dois planos: o plano não tem `client_id`, e a chave do retry mora na 1ª parcela, gravada depois da RPC. Um reenvio depois do outro não duplica. |
+| 24 | G5 | Numa compra parcelada capturada, ou preenchida pela frase ou pela IA, só as parcelas lançadas na hora levam a origem e a marca de a conferir. As que o cron lança nos meses seguintes nascem com `source` `app` e sem marca. |
+| 25 | G5 | Sem service worker ativo (a primeira instalação, a troca de versão), o compartilhar do Android cai no *route handler* do Next, que segue só com o texto: a foto ou o PDF compartilhado some sem aviso. |
+| 26 | G2, G5, G6 | O Bloco 3B (IA na captura e na fatura, e a política de privacidade) está no repositório, com as telas em wireframe, e **nada foi publicado**. O backend sobe junto com o do 3A ou depois dele, e pode subir antes do front: `supabase/BLOCO_3B_DEPLOYMENT.md`. |
 
 ### Fechadas na rodada de acesso (set/2026)
 
@@ -1068,3 +1118,11 @@ string. Se recusar, o link cai na Site URL como antes.
 | 10 | O painel da conta mostrava só os anexos da parcela pendente; o boleto da parcela paga sumia | O painel mostra também os anexos da última parcela paga, só para abrir (`AnexosWireframe somenteLeitura`) |
 | 11 | Com o popup bloqueado, "Abrir" um anexo levava a URL assinada à mesma janela, e a pessoa saía do app | Com o popup bloqueado, a seção mostra o link "Abrir anexo" com a URL assinada, numa aba nova |
 | 13 | Os avisos de fatura da Edge usavam o total calculado e podiam discordar do total do banco | `credit-card-calendar-alerts` e `evaluate-credit-card-alerts` usam o total do banco na fatura fechada (`escolherTotal`, `_shared/credit-card-cycle.ts`), lido numa consulta só por execução |
+
+### Fechadas em 22/out/2026
+
+| Era | Lacuna | O que fechou |
+|---|---|---|
+| 15 | Imagem crua, PDF e arquivo compartilhado ficavam para o Bloco 3B: a `capture` só aceitava JSON, e o compartilhar do Android só levava texto | A `capture` aceita a foto em multipart e a lê com IA (o PDF volta 422 com o caminho da conferência); o compartilhar do Android leva foto e PDF pelo service worker |
+| 16 | Uma compra parcelada capturada virava um lançamento simples, com "(1/N)" na descrição | A `capture` cria o plano de verdade pela `criar_plano_parcelado`, com as parcelas lançadas marcadas a conferir |
+| 17 | Uma compra parcelada escrita na frase rápida do formulário era salva com `source` `app` e sem a marca de a conferir | Depois da RPC, o formulário marca as parcelas já lançadas com a origem e o `needs_review` da frase ou da IA |

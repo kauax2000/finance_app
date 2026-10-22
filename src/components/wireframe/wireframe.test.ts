@@ -208,3 +208,32 @@ describe("captura sem abrir o app (Bloco 3A, Tarefa 4)", () => {
     expect(f).toContain("Nome da Wallet longo demais para lembrar.")
   })
 })
+
+describe("privacidade e IA em Configurações (Bloco 3B, Decisão 13)", () => {
+  const fonte = (arquivo: string) => semComentarios(lerFonte(arquivo), "tudo")
+
+  it("/privacidade é pública: mora fora de (app) e só importa o wireframe", () => {
+    const pagina = fonte("src/app/privacidade/page.tsx")
+    expect(pagina).toMatch(
+      /import\s*\{\s*PrivacidadeWireframe\s*\}\s*from\s*["']@\/components\/wireframe\/privacidade-wireframe["']/,
+    )
+    expect(pagina).not.toContain("AuthGuard")
+  })
+
+  it("a política cita os provedores, a transferência, o que sai e como apagar", async () => {
+    const { PrivacidadeWireframe } = await import("./privacidade-wireframe")
+    const html = renderToStaticMarkup(PrivacidadeWireframe())
+    for (const trecho of ["Groq", "Cloudflare", "transferência internacional", "CPF e CNPJ", "A foto vai como está", "30 vezes por dia", "Excluir conta"]) {
+      expect(html, trecho).toContain(trecho)
+    }
+  })
+
+  it("Configurações mostra a IA com o link da política", async () => {
+    expect(fonte("src/app/(app)/settings/page-client.tsx")).toContain("<IaConfiguracoesWireframe />")
+    const { IaConfiguracoesWireframe } = await import("./ia-configuracoes-wireframe")
+    const html = renderToStaticMarkup(IaConfiguracoesWireframe())
+    expect(html).toContain("IA: Groq e Cloudflare, grátis, sem treino")
+    expect(html).toContain("30")
+    expect(html).toContain('href="/privacidade"')
+  })
+})

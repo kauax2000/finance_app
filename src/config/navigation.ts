@@ -24,6 +24,8 @@ export const ROUTES = {
     FORGOT_PASSWORD: "/forgot-password",
     RESET_PASSWORD: "/reset-password",
     INVITE_ACCEPT: "/invites/accept",
+    /** A política de privacidade: pública, fora da casca do app (Bloco 3B). */
+    PRIVACY: "/privacidade",
 } as const
 
 export function creditCardDetailPath(id: string): string {
