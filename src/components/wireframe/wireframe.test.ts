@@ -93,9 +93,9 @@ describe("importar extrato, estorno e a conferir (Tarefa 7)", () => {
     expect(f).toContain("desfazerImportacao(")
   })
 
-  it("o detalhe mostra o a conferir só para importado ou a revisar", () => {
+  it("o detalhe mostra o a conferir para importado, a revisar ou Apple Pay com o cartão da Wallet", () => {
     expect(fonte("src/components/transactions/transaction-detail-sheet.tsx")).toMatch(
-      /t\.needs_review \|\| t\.import_batch_id \? \(\s*<AConferirWireframe/,
+      /t\.needs_review \|\| t\.import_batch_id \|\| \(t\.source === "apple_pay" && t\.capture_meta\?\.walletCard\) \? \(\s*<AConferirWireframe/,
     )
   })
 })
@@ -177,5 +177,10 @@ describe("captura sem abrir o app (Bloco 3A, Tarefa 4)", () => {
     const f = fonte("src/components/wireframe/a-conferir-wireframe.tsx")
     expect(f).toContain("wallet_alias")
     expect(f).toContain("como este cartão")
+    // Já lembrado, sem botão: a comparação ignora caixa e acento.
+    expect(f).toContain("Cartão já lembrado.")
+    expect(f).toContain("normalizeSearchText(")
+    // Fora de lote e conferido, só o bloco do lembrar.
+    expect(f).toMatch(/confirmado \|\| soLembrar \? null/)
   })
 })

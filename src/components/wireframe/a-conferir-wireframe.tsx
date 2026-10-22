@@ -1,10 +1,11 @@
 "use client"
 
-import { useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
 import { desfazerImportacao } from "@/lib/import/importar"
+import { normalizeSearchText } from "@/lib/command-filter"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
 import { supabase, type Transaction } from "@/lib/supabase"
 
@@ -37,6 +38,25 @@ export function AConferirWireframe({
     const cartaoId = transaction.payment_credit_card_id
     // `credit_cards_wallet_alias_check`: de 1 a 60 caracteres.
     const podeLembrar = Boolean(walletCard && walletCard.length <= 60 && cartaoId)
+    /** Conferido e fora de lote: o quadro existe só para o Apple Pay aprender o cartão. */
+    const soLembrar = !transaction.needs_review && !transaction.import_batch_id
+    const aliasAtual = useQuery({
+        queryKey: ["credit_card_wallet_alias", cartaoId],
+        enabled: podeLembrar,
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from("credit_cards")
+                .select("wallet_alias")
+                .eq("id", cartaoId as string)
+                .maybeSingle()
+            if (error) throw error
+            return data?.wallet_alias ?? null
+        },
+    })
+    const jaLembradoNoBanco =
+        aliasAtual.data != null &&
+        walletCard != null &&
+        normalizeSearchText(aliasAtual.data.trim()) === normalizeSearchText(walletCard)
 
     async function atualizarListas() {
         if (workspaceId) {
@@ -95,14 +115,16 @@ export function AConferirWireframe({
 
     return (
         <WireframeBox bloco={2} titulo="A conferir">
-            <p className="text-foreground">{confirmado ? "Importado · conferido" : "Importado · a conferir"}</p>
+            {soLembrar ? null : (
+                <p className="text-foreground">{confirmado ? "Importado · conferido" : "Importado · a conferir"}</p>
+            )}
             <div className="flex flex-wrap gap-2">
-                {confirmado ? null : (
+                {confirmado || soLembrar ? null : (
                     <button type="button" className={botao} disabled={pendente} onClick={() => void confirmar()}>
                         Confirmar
                     </button>
                 )}
-                {podeLembrar && !lembrado ? (
+                {podeLembrar && !lembrado && !jaLembradoNoBanco && !aliasAtual.isPending ? (
                     <button type="button" className={botao} disabled={pendente} onClick={() => void lembrarCartao()}>
                         {`Lembrar '${walletCard}' como este cartão`}
                     </button>
@@ -113,7 +135,12 @@ export function AConferirWireframe({
                     </button>
                 ) : null}
             </div>
-            {lembrado ? <p role="status">Cartão lembrado: {`a próxima compra com '${walletCard}' já casa.`}</p> : null}
+            {walletCard && !cartaoId ? <p>{`Escolha o cartão do lançamento para lembrar '${walletCard}'.`}</p> : null}
+            {lembrado ? (
+                <p role="status">Cartão lembrado: {`a próxima compra com '${walletCard}' já casa.`}</p>
+            ) : jaLembradoNoBanco ? (
+                <p>Cartão já lembrado.</p>
+            ) : null}
             {erro ? (
                 <p role="alert" className="text-destructive">
                     {erro}

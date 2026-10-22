@@ -419,7 +419,7 @@ export function TransactionDetailSheet({
                     </div>
                 </section>
 
-                {t.needs_review || t.import_batch_id ? (
+                {t.needs_review || t.import_batch_id || (t.source === "apple_pay" && t.capture_meta?.walletCard) ? (
                     <AConferirWireframe
                         key={t.id}
                         transaction={t}
