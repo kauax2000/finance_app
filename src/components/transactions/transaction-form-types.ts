@@ -40,7 +40,13 @@ export type InstallmentPlanFormSavePayload = {
     totalInstallments: number
     installmentAmount: number
     finalInstallmentAmount: number
+    /** A origem da frase ou da IA: marca as parcelas lançadas na hora. */
+    source?: TransactionSource
+    needsReview?: boolean
 }
+
+/** O que criar a compra parcelada devolve: `false` na falha; o `planId` da RPC no sucesso. */
+export type InstallmentPlanSaveResult = false | { planId?: string }
 
 /** Update existing `workspace_installment_plans` row (edit from UI). */
 export type InstallmentPlanUpdatePayload = {

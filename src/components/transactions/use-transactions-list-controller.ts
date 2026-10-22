@@ -40,6 +40,7 @@ import type {
     InstallmentPlanUpdatePayload,
     TransactionFormSavePayload,
     TransactionSaveResult,
+    InstallmentPlanSaveResult,
 } from "@/components/transactions/transaction-form-dialog"
 import { type TransactionFilterType } from "@/components/transactions/transaction-type-segment"
 import {
@@ -903,7 +904,7 @@ export function useTransactionsListController(
 
     const handleSaveInstallmentPlan = async (
         payload: InstallmentPlanFormSavePayload
-    ): Promise<boolean> => {
+    ): Promise<InstallmentPlanSaveResult> => {
         if (!user || !currentWorkspaceId) return false
 
         setSaving(true)

@@ -139,11 +139,23 @@ describe("fonte do formulário com IA", () => {
     })
 
     it("enviarAnexo só depois do salvar, com o id devolvido", () => {
-        const salvar = form.indexOf("await onSave(")
-        const anexar = form.indexOf("enviarAnexo(")
-        expect(salvar).toBeGreaterThan(-1)
-        expect(anexar).toBeGreaterThan(salvar)
-        expect(form).toContain("transactionId: id")
+        // O anexo mora num ajudante que só se chama depois de cada salvar.
+        const chamadas = [...form.matchAll(/anexarFotoDoRecibo\(fotoDoRecibo/g)].map((m) => m.index)
+        expect(chamadas).toHaveLength(2)
+        expect(chamadas[0]).toBeGreaterThan(form.indexOf("await onSaveInstallmentPlan("))
+        expect(chamadas[1]).toBeGreaterThan(form.indexOf("await onSave("))
+        expect(form).toMatch(/anexarFotoDoRecibo\(fotoDoRecibo, id \? async \(\) => id : null\)/)
+        expect(form).toMatch(/primeiraParcelaDoPlano\(supabase, planId\)/)
+        const ajudante = form.slice(form.indexOf("function anexarFotoDoRecibo("))
+        expect(ajudante).toMatch(/const id = await lancamento\(\)[\s\S]*enviarAnexo\([^)]*transactionId: id/)
         expect(form).toContain("Sem conexão: a foto não foi anexada.")
+    })
+
+    it("a foto escolhida deixa o formulário sujo", () => {
+        expect(form).toMatch(/isDirty =[\s\S]{0,160}fotoDoRecibo !== null/)
+    })
+
+    it("a compra parcelada leva a origem da frase ou da IA", () => {
+        expect(form).toMatch(/await onSaveInstallmentPlan\(\{[\s\S]*?origemDaFrase\(duvidasDaFrase, false, categoryId, fonteDaFrase\)/)
     })
 })

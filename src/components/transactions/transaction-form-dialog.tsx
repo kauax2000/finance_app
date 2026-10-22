@@ -14,6 +14,7 @@ import type {
     InstallmentPlanUpdatePayload,
     TransactionFormSavePayload,
     TransactionSaveResult,
+    InstallmentPlanSaveResult,
 } from "@/components/transactions/transaction-form-types"
 
 export type {
@@ -21,6 +22,7 @@ export type {
     InstallmentPlanUpdatePayload,
     TransactionFormSavePayload,
     TransactionSaveResult,
+    InstallmentPlanSaveResult,
 } from "@/components/transactions/transaction-form-types"
 
 type TransactionFormDialogProps = {
@@ -37,7 +39,7 @@ type TransactionFormDialogProps = {
     onSave: (payload: TransactionFormSavePayload) => Promise<TransactionSaveResult>
     onSaveInstallmentPlan?: (
         payload: InstallmentPlanFormSavePayload
-    ) => Promise<boolean>
+    ) => Promise<InstallmentPlanSaveResult>
     onUpdateInstallmentPlan?: (
         planId: string,
         payload: InstallmentPlanUpdatePayload

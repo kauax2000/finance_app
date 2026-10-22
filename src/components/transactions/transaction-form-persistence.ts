@@ -1,6 +1,7 @@
 import {
     TRANSACTION_SAVE_TOAST_ID,
     type InstallmentPlanFormSavePayload,
+    type InstallmentPlanSaveResult,
 } from "@/components/transactions/transaction-form-types"
 import { scheduleEvaluateCreditCardAlerts } from "@/lib/credit-card-notifications"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
@@ -18,8 +19,8 @@ export async function persistInstallmentPlanCreate(options: {
     user: User
     workspaceId: string
     payload: InstallmentPlanFormSavePayload
-    onAfterSuccess: () => Promise<void>
-}): Promise<boolean> {
+    onAfterSuccess: (planId?: string) => Promise<void>
+}): Promise<InstallmentPlanSaveResult> {
     const { supabase, workspaceId, payload, onAfterSuccess } = options
 
     const rpcArgs = {
@@ -51,6 +52,20 @@ export async function persistInstallmentPlanCreate(options: {
         return false
     }
 
+    const id = typeof planId === "string" ? planId : undefined
+    // O que a frase ou a IA preencheu fica marcado (Decisão 2): as parcelas
+    // que a RPC já lançou levam a origem. Falhando, o plano fica.
+    if (id && (payload.source || payload.needsReview != null)) {
+        const { error } = await supabase
+            .from("transactions")
+            .update({
+                ...(payload.source ? { source: payload.source } : {}),
+                ...(payload.needsReview != null ? { needs_review: payload.needsReview } : {}),
+            })
+            .eq("installment_plan_id", id)
+        if (error) console.error("origem das parcelas:", error)
+    }
+
     void invokeEdgeJson("evaluate-budgets", {
         body: {
             category_id: payload.categoryId,
@@ -72,11 +87,21 @@ export async function persistInstallmentPlanCreate(options: {
     toastSuccess("Compra parcelada registrada", {
         id: TRANSACTION_SAVE_TOAST_ID,
         description: "Cada parcela aparece no extrato com o valor da prestação.",
-        action:
-            typeof planId === "string"
-                ? { label: "Ver", href: `/transactions?plan=${planId}` }
-                : undefined,
+        action: id ? { label: "Ver", href: `/transactions?plan=${id}` } : undefined,
     })
-    await onAfterSuccess()
-    return true
+    await onAfterSuccess(id)
+    return { planId: id }
+}
+
+/** A 1ª parcela já lançada do plano (a que leva a foto do recibo), ou `null`. */
+export async function primeiraParcelaDoPlano(supabase: SupabaseClient, planId: string): Promise<string | null> {
+    const { data, error } = await supabase
+        .from("transactions")
+        .select("id")
+        .eq("installment_plan_id", planId)
+        .order("date", { ascending: true })
+        .limit(1)
+        .maybeSingle()
+    if (error) return null
+    return (data as { id: string } | null)?.id ?? null
 }

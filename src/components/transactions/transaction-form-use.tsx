@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { supabase, type Category, type CreditCard, type Transaction, type TransactionSource } from "@/lib/supabase"
 import { enviarAnexo } from "@/lib/anexos"
 import { useWorkspace } from "@/components/workspace-provider"
+import { primeiraParcelaDoPlano } from "@/components/transactions/transaction-form-persistence"
 import type { PaymentMethod } from "@/lib/payment-methods"
 import {
     calendarYmdToStorageIso,
@@ -30,6 +31,7 @@ import {
     type InstallmentPlanUpdatePayload,
     type TransactionFormSavePayload,
     type TransactionSaveResult,
+    type InstallmentPlanSaveResult,
 } from "@/components/transactions/transaction-form-types"
 
 type RecurringMode = "once" | "daily" | "weekly" | "monthly"
@@ -134,7 +136,7 @@ export type UseTransactionFormArgs = {
     onSave: (payload: TransactionFormSavePayload) => Promise<TransactionSaveResult>
     onSaveInstallmentPlan?: (
         payload: InstallmentPlanFormSavePayload
-    ) => Promise<boolean>
+    ) => Promise<InstallmentPlanSaveResult>
     onUpdateInstallmentPlan?: (
         planId: string,
         payload: InstallmentPlanUpdatePayload
@@ -464,7 +466,7 @@ export function useTransactionForm({
                     ? paymentCreditCardId || null
                     : null
 
-            const ok = await onSaveInstallmentPlan({
+            const plano = await onSaveInstallmentPlan({
                 categoryId: categoryId || null,
                 description: description.trim() ? description.trim() : null,
                 firstBillingYmd: date,
@@ -473,12 +475,14 @@ export function useTransactionForm({
                 totalInstallments: n,
                 installmentAmount,
                 finalInstallmentAmount,
+                ...origemDaFrase(duvidasDaFrase, false, categoryId, fonteDaFrase),
             })
 
-            if (ok) {
+            if (plano) {
+                // A foto vai para a 1ª parcela lançada do plano.
+                const planId = plano.planId
                 if (fotoDoRecibo) {
-                    toastError("A compra parcelada não leva a foto: anexe numa parcela.")
-                    setFotoDoRecibo(null)
+                    anexarFotoDoRecibo(fotoDoRecibo, planId ? () => primeiraParcelaDoPlano(supabase, planId) : null)
                 }
                 onSuccess?.()
                 if (closeOnSuccess) onClose()
@@ -615,24 +619,36 @@ export function useTransactionForm({
         })
 
         if (salvo) {
-            const foto = editingTransaction ? null : fotoDoRecibo
             const id = salvo.id
-            // O anexo vai depois do lançamento salvo; falhando, o lançamento fica.
-            if (foto && !id) {
-                toastError("Sem conexão: a foto não foi anexada.")
-            } else if (foto && id && currentWorkspaceId) {
-                void enviarAnexo(supabase, { workspaceId: currentWorkspaceId }, foto, { transactionId: id }).then(
-                    (r) => {
-                        if (!r.ok) toastError(r.erro)
-                    },
-                    () => toastError("A foto não foi anexada."),
-                )
+            if (fotoDoRecibo && !editingTransaction) {
+                anexarFotoDoRecibo(fotoDoRecibo, id ? async () => id : null)
             }
-            // Uma foto anexa um lançamento só, mesmo com o formulário aberto.
-            setFotoDoRecibo(null)
             onSuccess?.()
             if (closeOnSuccess) onClose()
         }
+    }
+
+    /**
+     * A foto do recibo vira anexo depois do lançamento salvo, sem segurar o
+     * fechar; falhando, o lançamento fica. Sem `id` (salvo offline), avisa.
+     */
+    function anexarFotoDoRecibo(foto: File, lancamento: (() => Promise<string | null>) | null) {
+        // Uma foto anexa um lançamento só, mesmo com o formulário aberto.
+        setFotoDoRecibo(null)
+        if (!lancamento || !currentWorkspaceId) {
+            toastError("Sem conexão: a foto não foi anexada.")
+            return
+        }
+        const workspaceId = currentWorkspaceId
+        void (async () => {
+            const id = await lancamento()
+            if (!id) {
+                toastError("A foto não foi anexada: a compra ainda não tem parcela lançada.")
+                return
+            }
+            const r = await enviarAnexo(supabase, { workspaceId }, foto, { transactionId: id })
+            if (!r.ok) toastError(r.erro)
+        })().catch(() => toastError("A foto não foi anexada."))
     }
 
     const showFooter = true
@@ -728,8 +744,11 @@ export function useTransactionForm({
         installmentCount,
         installmentEditScope,
     }
+    // A foto escolhida também é rascunho: fechar pergunta "Descartar alterações?".
     const isDirty =
-        active && snapshot !== null && fotografar(atual) !== fotografar(snapshot)
+        active &&
+        snapshot !== null &&
+        (fotografar(atual) !== fotografar(snapshot) || fotoDoRecibo !== null)
 
     return {
         handleSubmit,
