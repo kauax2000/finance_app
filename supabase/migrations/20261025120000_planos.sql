@@ -1,10 +1,11 @@
 -- Planos (Bloco 4): o direito de uso, o teste de 14 dias calculado, o "só
--- leitura" no banco, a origem `recurring` dos lançamentos dos crons e o cron
--- diário do teste.
+-- leitura" no banco, a origem `recurring` dos lançamentos contratados e o
+-- cron diário do teste.
 -- Tudo aditivo e desligado: com `billing_settings.enforced_since` nulo,
 -- `plano_do_usuario` e `workspace_plan` devolvem 'familia' antes de ler
 -- qualquer outra coisa, o gatilho de escrita nunca barra e o cron do teste não
--- acha ninguém. O front de `main` não muda de comportamento.
+-- acha ninguém. O front de `main` não muda de comportamento: a origem
+-- `recurring` passa a ser gravada já, mas nenhuma tela de `main` a lê.
 
 -- 1. tabelas ------------------------------------------------------------------
 -- Só a service role (as Edges) lê e grava: RLS ligada, nenhuma política e o
@@ -201,9 +202,18 @@ revoke all on function public.workspace_plan(uuid) from public, anon;
 grant execute on function public.workspace_plan(uuid) to authenticated, service_role;
 
 -- 3. só leitura ---------------------------------------------------------------
--- Barra a escrita da pessoa, nunca a dos crons nem a da service role
--- (`auth.uid()` nulo): parcelas e assinaturas já contratadas continuam sendo
--- lançadas, e o `delete-user` continua apagando.
+-- Barra o gesto da pessoa, nunca o que já foi permitido ou contratado:
+-- - sem pessoa (`auth.uid()` nulo: os crons, a service role, o `delete-user`),
+--   passa;
+-- - a cascata (`pg_trigger_depth() > 1`: o `on delete cascade` e o `set null`
+--   de quem apaga carteira, cartão ou categoria) passa. A exclusão já foi
+--   permitida, e a cascata pode correr depois de os membros saírem, quando a
+--   carteira não tem mais dono a consultar;
+-- - o lançamento de assinatura ou parcela já contratada (o cron ou o catch-up
+--   do navegador) passa: o contratado nunca para. Criar a assinatura ou o
+--   parcelamento é que é barrado, nas tabelas deles.
+-- A tabela muda o registro, então a leitura de `subscription_id` mora num `if`
+-- só de `transactions`: o plpgsql só compila a expressão quando chega nela.
 -- ponytail: avalia o plano por linha; uma importação grande paga N leituras
 -- (baratas e só depois do lançamento). Se pesar, um gatilho por comando.
 create or replace function public.garantir_escrita()
@@ -218,6 +228,19 @@ begin
       return old;
     end if;
     return new;
+  end if;
+
+  if pg_trigger_depth() > 1 then
+    if tg_op = 'DELETE' then
+      return old;
+    end if;
+    return new;
+  end if;
+
+  if tg_table_name = 'transactions' and tg_op = 'INSERT' then
+    if new.subscription_id is not null or new.installment_plan_id is not null then
+      return new;
+    end if;
   end if;
 
   if public.workspace_plan(coalesce(new.workspace_id, old.workspace_id)) = 'leitura' then
@@ -239,22 +262,26 @@ drop trigger if exists garantir_escrita on public.workspace_installment_plans;
 create trigger garantir_escrita before insert on public.workspace_installment_plans
   for each row execute function public.garantir_escrita();
 
+drop trigger if exists garantir_escrita on public.workspace_subscriptions;
+create trigger garantir_escrita before insert on public.workspace_subscriptions
+  for each row execute function public.garantir_escrita();
+
 drop trigger if exists garantir_escrita on public.attachments;
 create trigger garantir_escrita before insert on public.attachments
   for each row execute function public.garantir_escrita();
 
--- 4. origem dos crons ---------------------------------------------------------
--- O lançamento de assinatura ou parcela feito sem pessoa (o cron) é
--- `recurring`, sem reescrever as funções dos crons. A captura grava a própria
--- origem depois, por `criar_plano_parcelado`.
+-- 4. origem dos lançamentos contratados ---------------------------------------
+-- Todo lançamento de assinatura ou parcela que chega como `app` é `recurring`,
+-- venha do cron ou do catch-up do navegador, sem reescrever as funções deles.
+-- A captura grava a própria origem depois, por `criar_plano_parcelado` (que só
+-- reescreve quando a origem pedida não é `app`).
 create or replace function public.origem_do_cron()
 returns trigger
 language plpgsql
 set search_path = ''
 as $$
 begin
-  if auth.uid() is null
-     and new.source = 'app'
+  if new.source = 'app'
      and (new.subscription_id is not null or new.installment_plan_id is not null) then
     new.source := 'recurring';
   end if;

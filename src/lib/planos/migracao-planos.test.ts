@@ -106,22 +106,49 @@ describe("migração planos", () => {
         expect(c).toMatch(/raise exception 'workspace_somente_leitura' using errcode = 'P0001';/)
         expect(c).toMatch(/if tg_op = 'DELETE' then\s+return old;/)
         expect(funcao("garantir_escrita")).toMatch(/security definer/)
+    })
+
+    it("a cascata passa: a exclusão de carteira, cartão ou categoria já foi permitida", () => {
+        const c = corpo("garantir_escrita")
+        const cron = c.indexOf("if auth.uid() is null then")
+        const cascata = c.search(/if pg_trigger_depth\(\) > 1 then\s+if tg_op = 'DELETE' then\s+return old;\s+end if;\s+return new;/)
+        const plano = c.indexOf("public.workspace_plan(")
+        expect(cascata).toBeGreaterThan(cron)
+        expect(plano).toBeGreaterThan(cascata)
+    })
+
+    it("o lançamento contratado passa: assinatura ou parcela em transactions", () => {
+        const c = corpo("garantir_escrita")
+        const contratado = c.search(
+            /if tg_table_name = 'transactions' and tg_op = 'INSERT' then\s+if new\.subscription_id is not null or new\.installment_plan_id is not null then\s+return new;/,
+        )
+        expect(contratado).toBeGreaterThan(-1)
+        expect(c.indexOf("public.workspace_plan(")).toBeGreaterThan(contratado)
+        // Nas outras tabelas o registro não tem `subscription_id`: a leitura fica num `if` aninhado.
+        expect(c).not.toMatch(/tg_table_name = 'transactions'[^\n]*subscription_id/)
+    })
+
+    it("os quatro gatilhos de escrita, com criar assinatura entre eles", () => {
         expect(sql).toMatch(
             /create trigger garantir_escrita before insert or update or delete on public\.transactions\s+for each row execute function public\.garantir_escrita\(\);/,
         )
-        expect(sql).toMatch(
-            /create trigger garantir_escrita before insert on public\.workspace_installment_plans\s+for each row execute function public\.garantir_escrita\(\);/,
-        )
-        expect(sql).toMatch(
-            /create trigger garantir_escrita before insert on public\.attachments\s+for each row execute function public\.garantir_escrita\(\);/,
-        )
+        for (const tabela of ["workspace_installment_plans", "workspace_subscriptions", "attachments"]) {
+            expect(sql).toMatch(
+                new RegExp(
+                    `create trigger garantir_escrita before insert on public\\.${tabela}\\s+for each row execute function public\\.garantir_escrita\\(\\);`,
+                ),
+            )
+        }
+        expect(sql.match(/create trigger garantir_escrita\b/g)).toHaveLength(4)
     })
 
-    it("origem_do_cron grava 'recurring' só sem pessoa e com assinatura ou parcela", () => {
+    it("origem_do_cron grava 'recurring' em todo lançamento de assinatura ou parcela que chega como app", () => {
         const c = corpo("origem_do_cron")
         expect(c).toMatch(
-            /if auth\.uid\(\) is null\s+and new\.source = 'app'\s+and \(new\.subscription_id is not null or new\.installment_plan_id is not null\) then\s+new\.source := 'recurring';/,
+            /if new\.source = 'app'\s+and \(new\.subscription_id is not null or new\.installment_plan_id is not null\) then\s+new\.source := 'recurring';/,
         )
+        // Vale também para o catch-up do navegador, que roda com a pessoa logada.
+        expect(c).not.toMatch(/auth\.uid\(\)/)
         expect(sql).toMatch(
             /create trigger origem_do_cron before insert on public\.transactions\s+for each row execute function public\.origem_do_cron\(\);/,
         )
