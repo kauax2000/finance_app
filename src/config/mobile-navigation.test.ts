@@ -6,11 +6,11 @@ import { arquivosTsx, lerFonte } from "@/test/fonte"
 const hrefs = (g: ReturnType<typeof getVoceGroups>[number]) => g.items.map((i) => i.href)
 
 describe("a página Você", () => {
-    it("dois grupos: a carteira e a conta, sem Planos e com Configurações por último", () => {
+    it("dois grupos: a carteira e a conta, sem Planos, com o Cofre aberto e Configurações por último", () => {
         const [carteira, conta] = getVoceGroups([])
         expect(carteira.id).toBe("carteira")
         expect(hrefs(carteira)).toEqual([ROUTES.SUBSCRIPTIONS, ROUTES.BILLS, ROUTES.CREDIT_CARDS, ROUTES.MEMBERS])
-        expect(hrefs(conta)).toEqual([ROUTES.ACCOUNT, ROUTES.SETTINGS])
+        expect(hrefs(conta)).toEqual([ROUTES.ACCOUNT, ROUTES.COFRE, ROUTES.SETTINGS])
     })
 
     it("a aba que saiu da barra entra primeiro na carteira", () => {

@@ -21,6 +21,8 @@ export const ROUTES = {
     PLANS: "/plans",
     /** O Piloto Automático: o que o app lançou sozinho, com desfazer (Bloco 4). Sem entrada no menu. */
     PILOTO: "/piloto",
+    /** O Cofre aberto: o que guardamos, exportar tudo e apagar a conta (Bloco 4). */
+    COFRE: "/cofre",
     LOGIN: "/login",
     REGISTER: "/register",
     FORGOT_PASSWORD: "/forgot-password",
@@ -136,6 +138,8 @@ export const APP_PAGE_TITLES: Record<string, string> = {
     [ROUTES.ME]: "Você",
     [ROUTES.ACCOUNT]: "Minha conta",
     [ROUTES.PLANS]: "Planos e pagamentos",
+    [ROUTES.PILOTO]: "Piloto Automático",
+    [ROUTES.COFRE]: "Cofre aberto",
     [ROUTES.MEMBERS]: "Membros e convidados",
     [ROUTES.SETTINGS]: "Configurações",
     [ROUTES.TRANSACTIONS]: "Transações",

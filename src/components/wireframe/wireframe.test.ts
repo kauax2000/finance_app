@@ -250,3 +250,15 @@ describe("Piloto Automático (Bloco 4)", () => {
     expect(f).toContain("desfazerLancamento(ws, i.id)")
   })
 })
+
+describe("Cofre aberto (Bloco 4)", () => {
+  const f = semComentarios(lerFonte("src/components/wireframe/cofre-aberto-wireframe.tsx"), "tudo")
+
+  it("a rota importa o wireframe; a exportação só lê e o apagar reusa o fluxo de hoje", () => {
+    expect(semComentarios(lerFonte("src/app/(app)/cofre/page.tsx"), "tudo")).toContain("<CofreAbertoWireframe />")
+    expect(f).toContain("exportarTudo(workspaces.map((w) => w.id))")
+    expect(f).toContain("finance-app-${localYmdFromDate(new Date())}.zip")
+    expect(f).toContain("<DeleteAccountDialog open={apagando} onOpenChange={setApagando} />")
+    expect(f).toContain("ROUTES.PILOTO")
+  })
+})
