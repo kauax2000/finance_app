@@ -231,6 +231,93 @@ export type Database = {
           },
         ]
       }
+      billing_avisos: {
+        Row: {
+          enviado_em: string
+          referencia: string
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          enviado_em?: string
+          referencia: string
+          tipo: string
+          user_id: string
+        }
+        Update: {
+          enviado_em?: string
+          referencia?: string
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      billing_settings: {
+        Row: {
+          enforced_since: string | null
+          id: boolean
+        }
+        Insert: {
+          enforced_since?: string | null
+          id?: boolean
+        }
+        Update: {
+          enforced_since?: string | null
+          id?: boolean
+        }
+        Relationships: []
+      }
+      billing_subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_end: string | null
+          founder: boolean
+          grace_until: string | null
+          id: string
+          interval: string
+          plan: string
+          price_cents: number | null
+          provider: string
+          provider_ref: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          founder?: boolean
+          grace_until?: string | null
+          id?: string
+          interval?: string
+          plan?: string
+          price_cents?: number | null
+          provider: string
+          provider_ref?: string | null
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          founder?: boolean
+          grace_until?: string | null
+          id?: string
+          interval?: string
+          plan?: string
+          price_cents?: number | null
+          provider?: string
+          provider_ref?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       bills: {
         Row: {
           amount_estimated: number | null
@@ -1186,18 +1273,21 @@ export type Database = {
         Row: {
           created_at: string
           current_workspace_id: string | null
+          jornada_concluida_em: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
           current_workspace_id?: string | null
+          jornada_concluida_em?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
           current_workspace_id?: string | null
+          jornada_concluida_em?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1565,6 +1655,17 @@ export type Database = {
         Returns: Json
       }
       app_today: { Args: never; Returns: string }
+      avisos_de_teste_pendentes: {
+        Args: never
+        Returns: {
+          email: string
+          fim_do_teste: string
+          relatorio: Json
+          user_id: string
+          workspace_id: string
+        }[]
+      }
+      billing_lancar: { Args: never; Returns: undefined }
       catch_up_recurring_billing: { Args: never; Returns: Json }
       charge_subscription_cycle: {
         Args: { p_subscription_id: string }
@@ -1658,6 +1759,7 @@ export type Database = {
       }
       is_workspace_member: { Args: { workspace_id: string }; Returns: boolean }
       is_workspace_owner: { Args: { workspace_id: string }; Returns: boolean }
+      meu_plano: { Args: never; Returns: Json }
       next_subscription_billing_date:
         | { Args: { p_from: string; p_interval: string }; Returns: string }
         | {
@@ -1677,6 +1779,7 @@ export type Database = {
         }
         Returns: string
       }
+      plano_do_usuario: { Args: { p_user_id: string }; Returns: string }
       registrar_evento_ia: {
         Args: {
           p_dia: string
@@ -1705,6 +1808,8 @@ export type Database = {
       }
       run_installment_billing: { Args: never; Returns: number }
       run_subscription_billing: { Args: never; Returns: number }
+      tem_cobertura: { Args: { p_user_id: string }; Returns: boolean }
+      tem_plano_proprio: { Args: { p_user_id: string }; Returns: boolean }
       workspace_has_members: {
         Args: { p_workspace_id: string }
         Returns: boolean
