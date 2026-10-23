@@ -5,7 +5,8 @@
 -- `plano_do_usuario` e `workspace_plan` devolvem 'familia' antes de ler
 -- qualquer outra coisa, o gatilho de escrita nunca barra e o cron do teste não
 -- acha ninguém. O front de `main` não muda de comportamento: a origem
--- `recurring` passa a ser gravada já, mas nenhuma tela de `main` a lê.
+-- `recurring` dos lançamentos de planos e assinaturas antigos passa a ser
+-- gravada já, mas nenhuma tela de `main` a lê.
 
 -- 1. tabelas ------------------------------------------------------------------
 -- Só a service role (as Edges) lê e grava: RLS ligada, nenhuma política e o
@@ -210,10 +211,12 @@ grant execute on function public.workspace_plan(uuid) to authenticated, service_
 --   permitida, e a cascata pode correr depois de os membros saírem, quando a
 --   carteira não tem mais dono a consultar;
 -- - o lançamento de assinatura ou parcela já contratada (o cron ou o catch-up
---   do navegador) passa: o contratado nunca para. Criar a assinatura ou o
---   parcelamento é que é barrado, nas tabelas deles.
+--   do navegador) passa: o contratado nunca para. Contratada é a que já existia
+--   antes desta transação (`created_at < now()`, o início dela). Criar a
+--   assinatura ou o parcelamento é que é barrado, nas tabelas deles.
 -- A tabela muda o registro, então a leitura de `subscription_id` mora num `if`
 -- só de `transactions`: o plpgsql só compila a expressão quando chega nela.
+-- ponytail: insert direto com id de assinatura ou parcela antiga passa; fecha com marca `set_config` nos crons.
 -- ponytail: avalia o plano por linha; uma importação grande paga N leituras
 -- (baratas e só depois do lançamento). Se pesar, um gatilho por comando.
 create or replace function public.garantir_escrita()
@@ -238,7 +241,13 @@ begin
   end if;
 
   if tg_table_name = 'transactions' and tg_op = 'INSERT' then
-    if new.subscription_id is not null or new.installment_plan_id is not null then
+    if exists (
+      select 1 from public.workspace_installment_plans p
+      where p.id = new.installment_plan_id and p.created_at < now()
+    ) or exists (
+      select 1 from public.workspace_subscriptions s
+      where s.id = new.subscription_id and s.created_at < now()
+    ) then
       return new;
     end if;
   end if;
@@ -271,18 +280,29 @@ create trigger garantir_escrita before insert on public.attachments
   for each row execute function public.garantir_escrita();
 
 -- 4. origem dos lançamentos contratados ---------------------------------------
--- Todo lançamento de assinatura ou parcela que chega como `app` é `recurring`,
--- venha do cron ou do catch-up do navegador, sem reescrever as funções deles.
--- A captura grava a própria origem depois, por `criar_plano_parcelado` (que só
--- reescreve quando a origem pedida não é `app`).
+-- O lançamento que chega como `app` para uma assinatura ou parcela que já
+-- existia antes desta transação (`created_at < now()`, o início dela) é
+-- `recurring`: o cron e o catch-up do navegador, sem reescrever as funções
+-- deles. A assinatura ou o parcelamento criado na mesma transação é o gesto da
+-- pessoa, e a origem fica `app`. A captura grava a própria origem depois, por
+-- `criar_plano_parcelado`. `security definer`: o pai é lido sem depender da RLS
+-- de quem lança.
 create or replace function public.origem_do_cron()
 returns trigger
 language plpgsql
+security definer
 set search_path = ''
 as $$
 begin
-  if new.source = 'app'
-     and (new.subscription_id is not null or new.installment_plan_id is not null) then
+  if new.source = 'app' and (
+    exists (
+      select 1 from public.workspace_installment_plans p
+      where p.id = new.installment_plan_id and p.created_at < now()
+    ) or exists (
+      select 1 from public.workspace_subscriptions s
+      where s.id = new.subscription_id and s.created_at < now()
+    )
+  ) then
     new.source := 'recurring';
   end if;
   return new;

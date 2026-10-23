@@ -6,6 +6,9 @@ import { lerFonte, semComentarios } from "@/test/fonte"
 const sql = semComentarios(lerFonte("supabase/migrations/20261025120000_planos.sql")).replace(/--.*$/gm, "")
 const tipos = lerFonte("src/types/database.ts")
 
+/** O pai já existia antes desta transação: `created_at < now()`, o início dela. */
+const PAI = String.raw`exists \(\s+select 1 from public\.workspace_installment_plans p\s+where p\.id = new\.installment_plan_id and p\.created_at < now\(\)\s+\) or exists \(\s+select 1 from public\.workspace_subscriptions s\s+where s\.id = new\.subscription_id and s\.created_at < now\(\)\s+\)`
+
 function funcao(nome: string): string {
     const fn = sql.match(new RegExp(`create or replace function public\\.${nome}\\([\\s\\S]*?\\n\\$\\$;`))
     expect(fn, nome).not.toBeNull()
@@ -117,15 +120,17 @@ describe("migração planos", () => {
         expect(plano).toBeGreaterThan(cascata)
     })
 
-    it("o lançamento contratado passa: assinatura ou parcela em transactions", () => {
+    it("o lançamento contratado passa: assinatura ou parcela que já existia antes da transação", () => {
         const c = corpo("garantir_escrita")
         const contratado = c.search(
-            /if tg_table_name = 'transactions' and tg_op = 'INSERT' then\s+if new\.subscription_id is not null or new\.installment_plan_id is not null then\s+return new;/,
+            new RegExp(`if tg_table_name = 'transactions' and tg_op = 'INSERT' then\\s+if ${PAI} then\\s+return new;`),
         )
         expect(contratado).toBeGreaterThan(-1)
         expect(c.indexOf("public.workspace_plan(")).toBeGreaterThan(contratado)
         // Nas outras tabelas o registro não tem `subscription_id`: a leitura fica num `if` aninhado.
         expect(c).not.toMatch(/tg_table_name = 'transactions'[^\n]*subscription_id/)
+        // Só o id preenchido não basta: o pai criado na mesma transação não passa.
+        expect(c).not.toMatch(/new\.(subscription_id|installment_plan_id) is not null/)
     })
 
     it("os quatro gatilhos de escrita, com criar assinatura entre eles", () => {
@@ -142,13 +147,16 @@ describe("migração planos", () => {
         expect(sql.match(/create trigger garantir_escrita\b/g)).toHaveLength(4)
     })
 
-    it("origem_do_cron grava 'recurring' em todo lançamento de assinatura ou parcela que chega como app", () => {
+    it("origem_do_cron grava 'recurring' só para assinatura ou parcela que já existia", () => {
         const c = corpo("origem_do_cron")
         expect(c).toMatch(
-            /if new\.source = 'app'\s+and \(new\.subscription_id is not null or new\.installment_plan_id is not null\) then\s+new\.source := 'recurring';/,
+            new RegExp(`if new\\.source = 'app' and \\(\\s+${PAI}\\s+\\) then\\s+new\\.source := 'recurring';`),
         )
+        // O pai criado na mesma transação (o gesto da pessoa) fica `app`.
+        expect(c).not.toMatch(/new\.(subscription_id|installment_plan_id) is not null/)
         // Vale também para o catch-up do navegador, que roda com a pessoa logada.
         expect(c).not.toMatch(/auth\.uid\(\)/)
+        expect(funcao("origem_do_cron")).toMatch(/security definer/)
         expect(sql).toMatch(
             /create trigger origem_do_cron before insert on public\.transactions\s+for each row execute function public\.origem_do_cron\(\);/,
         )
