@@ -20,7 +20,7 @@ vi.mock("@/lib/supabase", () => ({
     },
 }))
 
-import { exportarTudo, lerTudo, TABELAS_EXPORTADAS } from "./exportar"
+import { COLUNAS_CONHECIDAS, exportarTudo, lerTudo, TABELAS_EXPORTADAS } from "./exportar"
 
 describe("lerTudo", () => {
     it("junta 2500 linhas em 3 páginas de 1000", async () => {
@@ -50,6 +50,14 @@ describe("lerTudo", () => {
     })
 })
 
+describe("COLUNAS_CONHECIDAS", () => {
+    it.each(TABELAS_EXPORTADAS)("%s: cabeçalho não vazio e sem repetição", (tabela) => {
+        const cols = COLUNAS_CONHECIDAS[tabela]
+        expect(cols.length).toBeGreaterThan(0)
+        expect(new Set(cols).size).toBe(cols.length)
+    })
+})
+
 describe("TABELAS_EXPORTADAS", () => {
     it("lista as dez tabelas da spec", () => {
         expect(TABELAS_EXPORTADAS).toHaveLength(10)
@@ -69,7 +77,7 @@ describe("exportarTudo", () => {
         const texto = new TextDecoder().decode(new Uint8Array(await blob.arrayBuffer()))
         expect(texto).toContain('"a;b ""c""\nd"')
         expect(texto).toContain("t1499;x")
-        expect(texto).toContain("id;workspace_id;name;color") // categories vazia: só o cabeçalho
+        expect(texto).toContain(COLUNAS_CONHECIDAS.categories.join(";")) // categories vazia: só o cabeçalho
         expect(texto).toContain("transactions.csv")
         expect(texto).toContain("LEIA-ME.txt")
         expect(texto).toContain("Seus dados são seus. Este arquivo foi gerado no seu aparelho.")

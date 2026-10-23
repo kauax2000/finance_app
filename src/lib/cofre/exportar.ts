@@ -1,5 +1,6 @@
 import { toCsv, type CsvColumn } from "@/lib/data-table/csv"
 import { supabase } from "@/lib/supabase"
+import type { Database } from "@/types/database"
 import { zipSemCompressao } from "./zip"
 
 /** As tabelas do Cofre. Os anexos saem só como metadados: o arquivo não vai. */
@@ -20,18 +21,188 @@ const PAGINA = 1000
 /** Ids por `.in()`: uuids longos estouram a URL do PostgREST bem antes de mil. */
 const LOTE_IDS = 100
 
-/** Colunas de uma tabela vazia, para o arquivo sair só com o cabeçalho. */
-const COLUNAS_CONHECIDAS: Record<(typeof TABELAS_EXPORTADAS)[number], string[]> = {
-    transactions: ["id", "workspace_id", "date", "amount", "type", "description", "category_id", "credit_card_id", "source"],
-    categories: ["id", "workspace_id", "name", "color"],
-    credit_cards: ["id", "workspace_id", "name", "last4", "credit_limit", "closing_day", "due_day"],
-    credit_card_statement_totals: ["id", "workspace_id", "credit_card_id", "statement_close_date", "total"],
-    workspace_subscriptions: ["id", "workspace_id", "name", "amount", "billing_day", "status"],
-    workspace_installment_plans: ["id", "workspace_id", "description", "total_amount", "installments_count", "status"],
-    bills: ["id", "workspace_id", "name", "amount", "due_day"],
-    bill_instances: ["id", "workspace_id", "bill_id", "due_date", "amount", "status"],
-    budgets: ["id", "workspace_id", "category_id", "amount"],
-    attachments: ["id", "workspace_id", "transaction_id", "bill_instance_id", "statement_total_id", "path", "mime"],
+type Tabela = (typeof TABELAS_EXPORTADAS)[number]
+type Row<T extends Tabela> = Database["public"]["Tables"][T]["Row"]
+
+/**
+ * Todas as colunas de cada tabela, na ordem do `Row`, para o arquivo de uma
+ * tabela vazia sair só com o cabeçalho. Tipado contra `database.ts`: nome
+ * errado não compila.
+ */
+export const COLUNAS_CONHECIDAS: { [T in Tabela]: ReadonlyArray<keyof Row<T>> } = {
+    transactions: [
+        "amount",
+        "capture_meta",
+        "category_id",
+        "client_id",
+        "created_at",
+        "date",
+        "description",
+        "id",
+        "import_batch_id",
+        "installment_plan_id",
+        "installment_sequence",
+        "is_recurring",
+        "needs_review",
+        "payment_credit_card_id",
+        "payment_method",
+        "recurring_interval",
+        "source",
+        "subscription_id",
+        "type",
+        "updated_at",
+        "user_id",
+        "workspace_id",
+    ],
+    categories: [
+        "client_id",
+        "color",
+        "created_at",
+        "icon",
+        "id",
+        "name",
+        "type",
+        "updated_at",
+        "user_id",
+        "workspace_id",
+    ],
+    credit_cards: [
+        "brand",
+        "client_id",
+        "closing_day",
+        "created_at",
+        "credit_limit",
+        "due_day",
+        "expiry_month",
+        "expiry_year",
+        "id",
+        "is_active",
+        "last_four",
+        "name",
+        "updated_at",
+        "user_id",
+        "wallet_alias",
+        "workspace_id",
+    ],
+    credit_card_statement_totals: [
+        "bank_total",
+        "created_at",
+        "created_by",
+        "credit_card_id",
+        "id",
+        "source",
+        "statement_close_date",
+        "updated_at",
+        "workspace_id",
+    ],
+    workspace_subscriptions: [
+        "amount",
+        "billing_anchor_day",
+        "billing_interval",
+        "category_id",
+        "client_id",
+        "created_at",
+        "currency",
+        "day_of_month",
+        "id",
+        "is_active",
+        "name",
+        "next_billing_date",
+        "notes",
+        "payment_credit_card_id",
+        "payment_method",
+        "start_date",
+        "updated_at",
+        "user_id",
+        "workspace_id",
+    ],
+    workspace_installment_plans: [
+        "billing_anchor_day",
+        "category_id",
+        "created_at",
+        "description",
+        "final_installment_amount",
+        "generated_count",
+        "id",
+        "installment_amount",
+        "is_active",
+        "next_billing_date",
+        "payment_credit_card_id",
+        "payment_method",
+        "total_installments",
+        "updated_at",
+        "user_id",
+        "workspace_id",
+    ],
+    bills: [
+        "amount_estimated",
+        "category_id",
+        "client_id",
+        "created_at",
+        "default_payment_credit_card_id",
+        "default_payment_method",
+        "description",
+        "due_day_of_month",
+        "end_date",
+        "frequency",
+        "icon",
+        "id",
+        "is_active",
+        "name",
+        "notes",
+        "reminder_days_before",
+        "start_date",
+        "updated_at",
+        "user_id",
+        "workspace_id",
+    ],
+    bill_instances: [
+        "amount",
+        "bill_id",
+        "client_id",
+        "created_at",
+        "due_date",
+        "id",
+        "notes",
+        "paid_amount",
+        "paid_at",
+        "payment_credit_card_id",
+        "payment_method",
+        "status",
+        "transaction_id",
+        "updated_at",
+        "user_id",
+        "workspace_id",
+    ],
+    budgets: [
+        "amount",
+        "category_id",
+        "client_id",
+        "created_at",
+        "id",
+        "month",
+        "period_end",
+        "period_start",
+        "threshold_100_sent_at",
+        "threshold_80_sent_at",
+        "threshold_over_sent_at",
+        "updated_at",
+        "user_id",
+        "workspace_id",
+        "year",
+    ],
+    attachments: [
+        "bill_instance_id",
+        "created_at",
+        "created_by",
+        "id",
+        "mime",
+        "path",
+        "size_bytes",
+        "statement_total_id",
+        "transaction_id",
+        "workspace_id",
+    ],
 }
 
 type Resposta<T> = { data: T[] | null; error: unknown }
@@ -90,7 +261,7 @@ export async function exportarTudo(workspaceIds: string[]): Promise<Blob> {
         if (tabela === "bill_instances") linhas = await lerInstancias(billIds)
         else linhas = await lerPorCarteira(tabela, workspaceIds)
         if (tabela === "bills") billIds = linhas.map((l) => String(l.id))
-        arquivos.push({ nome: `${tabela}.csv`, conteudo: csvDe(linhas, COLUNAS_CONHECIDAS[tabela]) })
+        arquivos.push({ nome: `${tabela}.csv`, conteudo: csvDe(linhas, [...COLUNAS_CONHECIDAS[tabela]]) })
     }
     arquivos.push({
         nome: "LEIA-ME.txt",

@@ -67,9 +67,13 @@ export function CofreAbertoWireframe() {
             const a = document.createElement("a")
             a.href = url
             a.download = `finance-app-${localYmdFromDate(new Date())}.zip`
+            // Anexada e revogada depois: o Safari do iOS cancela o download de um link solto.
+            document.body.appendChild(a)
             a.click()
-            URL.revokeObjectURL(url)
-        } catch {
+            a.remove()
+            setTimeout(() => URL.revokeObjectURL(url), 0)
+        } catch (e) {
+            console.error("exportarTudo:", e)
             setErro("Não foi possível exportar agora. Tente novamente.")
         } finally {
             setExportando(false)
