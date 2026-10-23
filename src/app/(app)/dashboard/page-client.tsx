@@ -18,6 +18,7 @@ import { useDashboardData } from "@/components/dashboard/use-dashboard-data"
 import { DashboardToolbar } from "@/components/dashboard/dashboard-toolbar"
 import { useMonthInHeader } from "@/components/categories/categories-toolbar"
 import { DashboardKpiCards } from "@/components/dashboard/dashboard-kpi-cards"
+import { JornadaCartaoWireframe } from "@/components/wireframe/jornada-cartao-wireframe"
 import { AConferirContagemWireframe } from "@/components/wireframe/a-conferir-contagem-wireframe"
 import { DashboardPaymentsCalendar } from "@/components/dashboard/dashboard-payments-calendar"
 import { DashboardOpenInvoices } from "@/components/dashboard/dashboard-open-invoices"
@@ -295,6 +296,8 @@ export default function DashboardPageClient() {
 
     return (
         <div className="min-w-0 max-w-full space-y-5">
+            <JornadaCartaoWireframe />
+
             <DashboardToolbar
                 calendarYm={d.calendarYm}
                 onCalendarYmChange={d.setCalendarYm}
