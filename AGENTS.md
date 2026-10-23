@@ -107,7 +107,7 @@ Estilo, texto e componente que não mudam caminho não contam.
 **O que atualizar, nesta ordem:**
 
 1. `docs/JORNADAS.md`: o fluxograma, a tabela de regras técnicas, o mapa geral
-   se a ponte entre jornadas mudou, e a seção 11 se uma lacuna foi corrigida ou
+   se a ponte entre jornadas mudou, e a seção 13 se uma lacuna foi corrigida ou
    criada.
 2. `docs/atlas/template.html`: a explicação da mesma jornada ("Como funciona",
    resumo, pontos de atenção), as lacunas, os apêndices de rotas e backend, e a

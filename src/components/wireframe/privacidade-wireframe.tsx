@@ -3,7 +3,7 @@ import { ROUTES } from "@/config/navigation"
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
 
 /** Atualize a data sempre que o texto da política mudar. */
-const ATUALIZADA_EM = "22/10/2026"
+const ATUALIZADA_EM = "23/10/2026"
 
 /**
  * A política de privacidade mínima (Bloco 3B, Decisão 13): pública, sem
@@ -47,6 +47,10 @@ export function PrivacidadeWireframe() {
                         endereço IP e o aparelho.
                     </li>
                     <li>A inscrição de cada aparelho nas notificações push, quando você as liga.</li>
+                    <li>
+                        O seu plano: o tipo, a situação e a data do fim do período. O teste grátis de 14 dias não
+                        pede cartão.
+                    </li>
                     <li>
                         Os tokens de captura do Atalho do iPhone: só uma impressão digital (hash) de cada um, nunca
                         o token.
@@ -112,8 +116,9 @@ export function PrivacidadeWireframe() {
                 <h2 className="font-bold text-foreground">Exportar e apagar</h2>
                 <ul className="list-disc space-y-1 pl-5">
                     <li>
-                        Hoje dá para exportar em CSV a lista de assinaturas. A exportação de todos os dados ainda
-                        não existe.
+                        No <strong>Cofre aberto</strong> você vê tudo o que o app guarda, baixa todos os seus dados
+                        (um arquivo ZIP de planilhas CSV) e apaga a conta. Exportar e apagar seguem liberados mesmo
+                        sem plano.
                     </li>
                     <li>
                         Em <strong>Minha conta</strong>, &quot;Excluir conta&quot; apaga a conta, as carteiras que você
@@ -122,7 +127,10 @@ export function PrivacidadeWireframe() {
                     </li>
                 </ul>
 
-                <p>
+                <p className="space-x-4">
+                    <Link href={ROUTES.COFRE} className="text-foreground underline">
+                        Abrir o Cofre aberto (precisa entrar)
+                    </Link>
                     <Link href={ROUTES.ACCOUNT} className="text-foreground underline">
                         Abrir Minha conta (precisa entrar)
                     </Link>

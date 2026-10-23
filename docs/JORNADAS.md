@@ -1,6 +1,6 @@
 # Jornadas do app
 
-O mapa de tudo o que uma pessoa faz no app, dividido em dez jornadas. Cada
+O mapa de tudo o que uma pessoa faz no app, dividido em doze jornadas. Cada
 jornada tem um fluxograma, as regras técnicas que decidem os caminhos e as
 lacunas encontradas no código. Foi escrito lendo o código em 2026-09-17, na
 branch `finance-app-2.0`, e a navegação global foi revista em 2026-10-01,
@@ -9,7 +9,7 @@ lançamento, nos cartões de categoria e nas contas pendentes, com o seletor
 de período que confirma no próprio popover, com o rascunho protegido do
 formulário de lançamento, e com os menus do telefone em gaveta. As telas de
 acesso foram revistas em 2026-10-12 (a casca no layout) e em 2026-10-14 (o
-painel de marca animado) e as notificações em 2026-10-17 (o painel flutuante, o sino exato e a revisão do servidor, ainda não publicada) e em 2026-10-21 (o aviso de despesa e os crons passam ao banco, por migração, também ainda não publicados); a busca do telefone em 2026-10-19 (a lupa vira a barra) e, no mesmo dia, a aba "Você" no lugar do menu "Mais" (a página `/me`). Em 2026-10-21 entrou o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura, a importação de extrato e de planilha e os anexos, com as telas em wireframe (`src/components/wireframe/`) e ainda não publicado (`supabase/BLOCO_2_DEPLOYMENT.md`). Em 2026-10-22 entrou o Bloco 3A, "captura sem abrir o app": o token pessoal em Minha conta, a Edge `capture` (o Atalho do iPhone e o Apple Pay), a frase rápida no "+", o compartilhar do Android, os atalhos do ícone, a lista "A conferir" e o lembrete das 20h, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3A_DEPLOYMENT.md`). No mesmo dia entrou o Bloco 3B, "IA grátis na captura e na fatura": "Tentar com IA" na frase rápida, a foto do recibo no formulário, a foto e a frase confusa na Edge `capture`, a compra parcelada capturada que vira plano, o compartilhar de foto e PDF do Android, "Ler com IA" na conferência da fatura e a política de privacidade em `/privacidade`, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3B_DEPLOYMENT.md`). Quando uma tela mudar de caminho, atualize o
+painel de marca animado) e as notificações em 2026-10-17 (o painel flutuante, o sino exato e a revisão do servidor, ainda não publicada) e em 2026-10-21 (o aviso de despesa e os crons passam ao banco, por migração, também ainda não publicados); a busca do telefone em 2026-10-19 (a lupa vira a barra) e, no mesmo dia, a aba "Você" no lugar do menu "Mais" (a página `/me`). Em 2026-10-21 entrou o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura, a importação de extrato e de planilha e os anexos, com as telas em wireframe (`src/components/wireframe/`) e ainda não publicado (`supabase/BLOCO_2_DEPLOYMENT.md`). Em 2026-10-22 entrou o Bloco 3A, "captura sem abrir o app": o token pessoal em Minha conta, a Edge `capture` (o Atalho do iPhone e o Apple Pay), a frase rápida no "+", o compartilhar do Android, os atalhos do ícone, a lista "A conferir" e o lembrete das 20h, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3A_DEPLOYMENT.md`). No mesmo dia entrou o Bloco 3B, "IA grátis na captura e na fatura": "Tentar com IA" na frase rápida, a foto do recibo no formulário, a foto e a frase confusa na Edge `capture`, a compra parcelada capturada que vira plano, o compartilhar de foto e PDF do Android, "Ler com IA" na conferência da fatura e a política de privacidade em `/privacidade`, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3B_DEPLOYMENT.md`). Em 2026-10-23 entrou o Bloco 4, "planos e confiança": a rota pública `/precos`, o plano em `/plans` (teste de 14 dias, vitalício, cobertura da família e "só leitura" no banco, desligados enquanto `billing_settings.enforced_since` é nulo), a faixa de só leitura na casca, o Piloto Automático (`/piloto`), o Cofre aberto (`/cofre`, com "Exportar tudo" e "Apagar a conta") e a jornada de 4 passos (`/comecar`), com as telas em wireframe e ainda não publicado (`supabase/BLOCO_4_DEPLOYMENT.md`); o assinar de verdade fica para o Bloco 8. Quando uma tela mudar de caminho, atualize o
 diagrama dela.
 
 ## Como ler os diagramas
@@ -46,7 +46,9 @@ banco.
 8. [Assinaturas](#8-assinaturas)
 9. [Categorias e orçamentos](#9-categorias-e-orçamentos)
 10. [Conta e segurança](#10-conta-e-segurança)
-11. [Lacunas encontradas](#11-lacunas-encontradas)
+11. [Plano e só leitura](#11-plano-e-só-leitura)
+12. [Confiança: Piloto, Cofre e o começo](#12-confiança-piloto-cofre-e-o-começo)
+13. [Lacunas encontradas](#13-lacunas-encontradas)
 
 ---
 
@@ -92,6 +94,16 @@ flowchart LR
     G4 -->|"contagem a conferir"| G5
     G3 -->|"lembrete das 20h, atalhos do ícone, compartilhar texto, foto e PDF do Android"| G5
     G2 -->|"Configurações: a linha da IA leva à política"| privacy["/privacidade, pública"]
+
+    G1 -->|"link público de preços"| G11(("G11 Plano e só leitura"))
+    G11 -->|"Cadastrar: teste de 14 dias"| G1
+    G3 -->|"faixa de só leitura, aviso do dia 12, Planos"| G11
+    G11 -.->|"em só leitura, escrever é barrado; exportar e apagar seguem"| G5
+    G4 -->|"cartão: Veja o que o app faz por você"| G12(("G12 Confiança"))
+    G10 -->|"Cofre aberto"| G12
+    G12 -->|"Piloto Automático: desfazer o que o app lançou"| G5
+    G12 -->|"passos do começo"| G5
+    G12 -->|"Apagar a conta"| G1
 
     G10 -->|"sair ou excluir conta"| G1
 ```
@@ -331,12 +343,15 @@ flowchart TD
     sidebar --> nav6["/credit-cards"]
     sidebar --> nav7["/members"]
     sidebar --> nav8["/settings"]
-    sidebar --> userMenu(["Menu do usuário: tema, Minha conta, Planos, Sair"])
-    bottom -->|"aba Você, com o avatar"| mePage["/me: Carteira (Assinaturas, Contas, Cartões, Membros) · Conta (Minha conta, Configurações)"]
+    sidebar --> userMenu(["Menu do usuário: tema, Minha conta, Cofre aberto, Planos, Sair"])
+    bottom -->|"aba Você, com o avatar"| mePage["/me: Carteira (Assinaturas, Contas, Cartões, Membros) · Conta (Minha conta, Cofre aberto, Configurações)"]
     mePage -->|"linha da página"| meDest["Tela de um item da página, com o voltar a /me no lugar do sino"]
     meDest -->|"voltar"| mePage
     userMenu --> G10(("G10 Conta"))
     mePage -->|"Minha conta"| G10
+    mePage -->|"Cofre aberto"| G12(("G12 Confiança"))
+    userMenu -->|"Cofre aberto"| G12
+    shell -.->|"plano leitura: faixa de só leitura acima da tela"| G11(("G11 Plano e só leitura"))
 
     sidebar -->|"+ Adicionar, direto, com Despesa"| txForm(("G5b Formulário de transação"))
     bottom -->|"+, a gaveta do formulário"| txForm
@@ -393,7 +408,7 @@ flowchart TD
 | Itens de navegação | Lateral e mobile vêm de configuração, não de JSX solto | `src/config/navigation.ts`, `src/config/mobile-navigation.ts` |
 | Atalhos do ícone e compartilhar (Blocos 3A e 3B) | O app instalado traz três atalhos ao segurar o ícone: "Nova despesa" (`/transactions?new=1`; era "Nova transação"), "A conferir" (`/transactions?conferir=1`) e "Painel". O `share_target` do Android manda o texto, a foto e o PDF compartilhados por `POST` multipart a `/transactions/compartilhar`, que o service worker atende e redireciona a `/transactions?frase=…` ou `?compartilhado=…` (ver 5c; era `GET` com só o texto no Bloco 3A) | `src/app/manifest.ts`, `src/sw.ts` |
 | Formulários globais | Transação e assinatura montados uma vez na casca; salvar invalida as listas abertas | `src/components/layout/global-shell-dialogs-provider.tsx` |
-| Menus do telefone | O "+" abre direto a gaveta do formulário de lançamento, com Despesa marcada (o seletor do formulário troca para Parcelada e Receita; assinatura fica na tela dela e na paleta). Era uma folha de ações (`Drawer` com `DrawerActions`) antes do formulário, e no desktop um menu: um passo a mais na jornada mais comum. A quarta aba da barra é a **"Você"**, com o avatar da pessoa no lugar do glifo (a foto ou as iniciais; enquanto o perfil não chega, o círculo neutro vazio, sem esqueleto): ela leva à página `/me` (`ROUTES.ME`, título "Você") e não abre mais um menu (o `MobileAccountMenu`, o painel da rodada 278, saiu). Ela fica ativa em `/me` e em toda tela que a página lista, subrotas incluídas (`/account/sessions`, `/credit-cards/<id>`, `/settings/*`; `isVoceTabActive`). A página tem a identidade centrada (avatar, nome, e-mail) e dois grupos de linhas, cada um num cartão: **Carteira** (Assinaturas, Contas a pagar com o selo Beta, Cartões, Membros e convidados) e **Conta** (Minha conta, Configurações); as regras moram em `getVoceGroups`. Numa tela estreita, a aba que não cabe com folga na barra (o nome + 16, nunca menos de 44) sai do fim e entra no topo do grupo Carteira: num telefone de 320, Categorias; Painel e "Você" ficam sempre (rodada 342). A barra mede e publica quem saiu num armazém de módulo (`abas-fora.ts`, `useSyncExternalStore`) e a página o lê; no desktop, onde a barra some, nada é publicado. As telas das linhas da página (`/subscriptions`, `/bills`, `/credit-cards`, `/members`, `/account`, `/settings`) são subpáginas dela no telefone: o voltar toma o lugar do sino e leva a `/me` (`defaultMobileBackHref`); as que já têm pai (sessões e atividade → Minha conta, detalhe do cartão → Cartões) mantêm o pai, e a aba que saiu da barra não ganha o voltar. Tocar na aba "Você" já ativa numa dessas telas volta a `/me` (como no iOS, a pilha volta à raiz); só em `/me` o toque sobe ao topo (`BottomBarTab`). O desktop não muda: `/me` renderiza nele, mas nada leva até lá. O tema mora em Configurações (seção Aparência); o sair (o menu ⋯ do perfil) e Planos e pagamentos (a seção Plano, só no telefone) moram em Minha conta. Antes foi um painel de `DropdownMenu` que brotava da aba "Mais", antes uma gaveta de 625px com identidade, tema e sair, e antes dela um `Popover` de vidro escrito à mão | `src/components/layout/quick-actions.tsx`, `src/components/layout/mobile-bottom-nav.tsx`, `src/components/layout/abas-fora.ts`, `src/components/layout/voce-avatar.tsx`, `src/app/(app)/me/page-client.tsx`, `src/config/mobile-navigation.ts`, `src/components/layout/app-header.tsx` |
+| Menus do telefone | O "+" abre direto a gaveta do formulário de lançamento, com Despesa marcada (o seletor do formulário troca para Parcelada e Receita; assinatura fica na tela dela e na paleta). Era uma folha de ações (`Drawer` com `DrawerActions`) antes do formulário, e no desktop um menu: um passo a mais na jornada mais comum. A quarta aba da barra é a **"Você"**, com o avatar da pessoa no lugar do glifo (a foto ou as iniciais; enquanto o perfil não chega, o círculo neutro vazio, sem esqueleto): ela leva à página `/me` (`ROUTES.ME`, título "Você") e não abre mais um menu (o `MobileAccountMenu`, o painel da rodada 278, saiu). Ela fica ativa em `/me` e em toda tela que a página lista, subrotas incluídas (`/account/sessions`, `/credit-cards/<id>`, `/settings/*`; `isVoceTabActive`). A página tem a identidade centrada (avatar, nome, e-mail) e dois grupos de linhas, cada um num cartão: **Carteira** (Assinaturas, Contas a pagar com o selo Beta, Cartões, Membros e convidados) e **Conta** (Minha conta, Cofre aberto, Configurações); as regras moram em `getVoceGroups`. Numa tela estreita, a aba que não cabe com folga na barra (o nome + 16, nunca menos de 44) sai do fim e entra no topo do grupo Carteira: num telefone de 320, Categorias; Painel e "Você" ficam sempre (rodada 342). A barra mede e publica quem saiu num armazém de módulo (`abas-fora.ts`, `useSyncExternalStore`) e a página o lê; no desktop, onde a barra some, nada é publicado. As telas das linhas da página (`/subscriptions`, `/bills`, `/credit-cards`, `/members`, `/account`, `/settings`) são subpáginas dela no telefone: o voltar toma o lugar do sino e leva a `/me` (`defaultMobileBackHref`); as que já têm pai (sessões e atividade → Minha conta, detalhe do cartão → Cartões) mantêm o pai, e a aba que saiu da barra não ganha o voltar. Tocar na aba "Você" já ativa numa dessas telas volta a `/me` (como no iOS, a pilha volta à raiz); só em `/me` o toque sobe ao topo (`BottomBarTab`). O desktop não muda: `/me` renderiza nele, mas nada leva até lá. O tema mora em Configurações (seção Aparência); o sair (o menu ⋯ do perfil) e Planos e pagamentos (a seção Plano, só no telefone) moram em Minha conta. Antes foi um painel de `DropdownMenu` que brotava da aba "Mais", antes uma gaveta de 625px com identidade, tema e sair, e antes dela um `Popover` de vidro escrito à mão | `src/components/layout/quick-actions.tsx`, `src/components/layout/mobile-bottom-nav.tsx`, `src/components/layout/abas-fora.ts`, `src/components/layout/voce-avatar.tsx`, `src/app/(app)/me/page-client.tsx`, `src/config/mobile-navigation.ts`, `src/components/layout/app-header.tsx` |
 | Busca global (⌘K) | Montada uma vez no `AppHeader`, com a lupa nas duas árvores da barra. No telefone a lupa vira a barra de pesquisa no topo, sobre um véu: a pílula nasce no círculo da lupa (`lupaRef`, o `origin` do `CommandDialog`) e se estica para a esquerda, com o × à direita e o teclado aberto no mesmo toque; o ×, Esc e o toque no véu fecham, e o foco volta à lupa (era uma gaveta de baixo até 2026-10-19). A raiz busca tudo, sem as sub-páginas de categorias e cartões: o filtro é da paleta (`shouldFilter: false`) e cada grupo vem ranqueado por `ranquear` (`lib/app-search`), até 5 linhas. Telas (com sinônimos: "gastos" acha Transações, "fatura" Cartões, "boletos" Contas a pagar) são as da barra lateral menos o Painel, mais Membros (`navigation.ts`); Painel, Configurações, Minha conta, Planos e pagamentos, Sessões ativas, Atividade e Notificações ficam fora da busca, por decisão do dono. Ações chamam os mesmos ganchos do "+ Adicionar" (`useQuickCreateTransaction`, `useQuickCreateSubscription`) e os diálogos da casca (Nova categoria, Novo cartão). Transações são uma consulta de leitura ao banco (descrição, valor, data, nome da categoria e do cartão; as 8 mais recentes; espera de 250ms depois da digitação) e abrem `/transactions?txn=id`; "Ver todas em Transações" leva `q`, `from`, `to`, `min` e `max` na URL, e a lista filtra o texto só pela descrição. Transação nunca vira recente. Cartões e categorias leem o cache da casca (`useCategoriesQuery`, `useCreditCardsQuery`); parcelas (`?plan=id`), assinaturas (`?sub=id`) e membros (`/members`) saem das listas do espaço; contas a pagar vêm de uma consulta leve (`useBillsListQuery`) e abrem `/bills?detail=id`; escolher uma carteira troca a carteira atual. Os recentes ficam no `localStorage` (`app:busca`). Digitar `/` escolhe onde buscar (`/transacoes`, `/membros`…, `lib/app-search-scopes`): o nome entra no campo como escopo, só aquele grupo aparece (até 50 linhas; 20 transações), e dois Backspaces com o campo vazio voltam à busca em tudo; num escopo de lista do espaço, enquanto ela carrega o grupo diz "Buscando…" e, sem dado e com erro, "Não deu para carregar … agora." (o "Nada em …" só vale depois da resposta) | `src/components/layout/app-command-palette.tsx`, `src/lib/app-search-scopes.ts`, `src/components/layout/app-search-sources.ts`, `src/lib/app-search.ts`, `src/lib/transaction-search.ts`, `src/lib/queries/use-transactions-search.ts`, `src/lib/queries/use-bills-list.ts` |
 | Nome da tela e voltar | No telefone a barra do topo mostra o título e o voltar das subpáginas (`/categories/id`, `/categories/new`, `/credit-cards/id`, as de `/account`), pelo `usePageChromeSlot`. As telas que a página Você lista (`/subscriptions`, `/bills`, `/credit-cards`, `/members`, `/account`, `/settings`) ganham o voltar a `/me`, e `/plans` volta a `/account` (só no telefone: a migalha do desktop não muda; `defaultMobileBackHref`). Nessas telas a aba "Você" fica ativa, e tocar nela volta a `/me`. No desktop ela não mostra o nome da tela (o `<h1>` fica só para o leitor de tela) nem a trilha: a lateral marca onde se está e é o caminho de volta. A trilha com o link para a tela de cima ("Categorias", "Cartões de crédito") saiu em 2026-10-16 | `src/components/layout/app-header.tsx` |
 | Painel de notificações | O sino abre a folha flutuante (384px, recuo de 8px, o vidro do `Dialog`) no desktop e a gaveta no telefone (`NotificationsSheet`). As linhas se agrupam por dia local ("Hoje", "Ontem", a data), com o rótulo do dia preso ao rolar; cada uma tem o ladrilho de tom (âmbar, vermelho, azul ou cinza, por `notificationTone`), o título em negrito e o ponto enquanto não lida, a hora local e a seta quando leva a algum lugar. O filtro Todas / Não lidas aparece com ao menos uma notificação; sem nenhuma não lida, o filtro mostra "Tudo lido" com "Ver todas". A lista traz as 100 mais recentes e, cheia, avisa "Mostrando as 100 mais recentes". A falha de carga é um `Alert` com "Tentar de novo", nunca a caixa de entrada vazia (o "Limpar todas" otimista que falha não pode virar "Nenhuma notificação"). Trocar de carteira volta ao esqueleto | `src/components/layout/notifications-sheet.tsx`, `src/components/layout/notifications-panel.tsx`, `src/components/layout/notification-row.tsx`, `src/lib/notification-visuals.tsx` |
@@ -404,6 +419,7 @@ flowchart TD
 | Quem notifica no app | Nova categoria não notifica mais (as linhas antigas `category_created` continuam abrindo `/categories`). Editar uma despesa roda a conferência de orçamento (`evaluate-budgets`); a compra parcelada no cartão roda a de cartão; mudar o valor de um orçamento rearma os avisos de 80%, 100% e estouro (`threshold_*_sent_at` volta a nulo). Ninguém avisa a si mesmo | `src/lib/transaction-detail-sheet-mutations.ts`, `src/components/transactions/transaction-form-persistence.ts`, `src/lib/category-budget-ops.ts` |
 | Notificações no servidor | Edges `evaluate-budgets`, `evaluate-credit-card-alerts`, `evaluate-bills-reminders`, `credit-card-calendar-alerts`, `notify-transaction-created`. Os dois crons diários (`credit-card-calendar-alerts-daily` e `bills-reminders-daily`, `0 12 * * *`) e o trigger `transactions_notify_created` (despesa manual, sem assinatura nem parcela) moram na migração `20261021120000_internal_edge_dispatch.sql`: chamam a Edge por `pg_net`, com a URL e o segredo no Vault, pela função `invoke_edge_function`, que nunca derruba o `insert` (sem segredo, não avisa). O app não chama mais `notify-transaction-created`: quem avisa os membros é o trigger, também na despesa lançada offline e sincronizada depois. `dispatch-notifications` saiu. Revisadas no repositório em 2026-10-17 e ainda não publicadas (o app em produção segue com o comportamento antigo até lá): o link do orçamento leva `?month=AAAA-MM`; textos com categoria, mês e valores; o "limite usado" do cartão soma a fatura aberta e a última fechada se não paga; os lembretes de calendário só dependem do interruptor do calendário, pulam fatura zerada ou paga, toleram um dia de cron perdido, e "fechou" sai no dia seguinte ao fechamento; conta atrasada avisa no 1º dia e a cada 7; o interruptor "Promoções" saiu da tela de preferências. Passo a passo em `supabase/NOTIFICATION_DEPLOYMENT.md` | `supabase/migrations/20261021120000_internal_edge_dispatch.sql`, `supabase/functions/`, `supabase/NOTIFICATION_DEPLOYMENT.md` |
 | Lembrete das 20h (Bloco 3A) | O cron `review-reminder-daily` (`0 23 * * *`, 20h em Brasília) chama a Edge `review-reminder` por `invoke_edge_function`. Ela avisa cada pessoa que lançou itens `needs_review` (pelo `user_id`), por carteira, uma vez por dia (`review_reminder_dedupe`; a entrega que falha devolve o dedupe), pelo `deliverNotification` com o tipo `review`, o título "Itens a conferir" e `metadata.href` `/transactions?conferir=1`. Vale para o aviso no app, o push e o e-mail. Desliga por carteira em Configurações, no wireframe "Lembrete de itens a conferir" (`notify_review`). O tipo entrou no check de `notifications`; o front antigo o mostra com o sino padrão. Migração `20261023120000_captura.sql`, ainda não publicada | `supabase/functions/review-reminder/`, `supabase/functions/_shared/review-reminder.ts`, `src/components/wireframe/a-conferir-lembrete-wireframe.tsx` |
+| Faixa de só leitura e Cofre no menu (Bloco 4) | A casca renderiza a faixa de só leitura acima de toda tela do app, e só com o plano `leitura` (ver 11). "Cofre aberto" (`ROUTES.COFRE`) é um item de `ACCOUNT_MENU_PROFILE_LINK_ITEMS`: aparece no grupo Conta de `/me`, no menu do usuário do desktop e no menu do telefone, e a aba "Você" fica ativa em `/cofre`. `APP_PAGE_TITLES` ganhou `/piloto`, `/cofre` e `/comecar` | `src/components/layout/sidebar-app-shell.tsx`, `src/components/layout/account-menu-links.ts`, `src/config/navigation.ts`, `src/config/mobile-navigation.ts` |
 | Push | Edges `push-subscribe` e `push-unsubscribe` | `supabase/functions/` |
 | Redirecionamentos | Os únicos que acontecem no servidor | `next.config.ts` |
 
@@ -446,6 +462,11 @@ flowchart TD
     blocks --> reviewCount(["WIREFRAME A conferir: N, só com N maior que zero"])
     reviewCount -->|"link"| conferir["/transactions?conferir=1"]
     conferir --> G5c(("G5c A conferir"))
+    blocks --> journeyCard{"jornada_concluida_em nulo?"}
+    journeyCard -->|"sim"| journeyInvite(["WIREFRAME Cartão: Veja o que o app faz por você"])
+    journeyInvite -->|"link"| G12(("G12 /comecar"))
+    journeyInvite -->|"Agora não"| journeyDone[("user_settings.jornada_concluida_em")]
+    journeyCard -->|"não"| journeyNone(["Sem cartão"])
 
     s --> G5(("G5 Lançamentos"))
     p --> G5
@@ -463,6 +484,7 @@ flowchart TD
 | Calendário | Eventos: assinatura, parcela, fechamento, vencimento de cartão, vencimento de conta, receita e despesa lançadas. É a agenda do `Calendar` (rodada 242): na grade, o dia abre o popover e fica marcado (com a janela abaixo de 768px o popover abre como gaveta); abaixo de 40rem da largura da própria agenda ela vira a lista do mês — no telefone, e também num laptop estreito com a barra lateral aberta e o painel de próximos ao lado —, e o evento abre direto o detalhe ou a prévia, sem o popover. A lista mostra os últimos 5 dias passados com evento e todos os que vêm, com o selo do tipo. A grade de pontos do telefone saiu | `src/components/dashboard/dashboard-payments-calendar.tsx` |
 | Prévia | "Ver origem" monta a rota pelo tipo do evento | `src/components/dashboard/dashboard-payment-event-preview-sheet.tsx` |
 | A conferir (Bloco 3A) | Entre os indicadores e o calendário, o wireframe "A conferir: N" conta os lançamentos `needs_review` da carteira (pelo índice parcial `transactions_needs_review_idx`) e leva a `/transactions?conferir=1`. Com zero, some; um erro na contagem também o esconde | `src/components/wireframe/a-conferir-contagem-wireframe.tsx`, `src/app/(app)/dashboard/page-client.tsx` |
+| Cartão da jornada (Bloco 4) | No alto do Painel, o wireframe "Veja o que o app faz por você" leva a `/comecar` enquanto `user_settings.jornada_concluida_em` é nulo; "Agora não" grava a data e o cartão some. Sem resposta da leitura, não aparece. Não há redirecionamento automático para a jornada | `src/components/wireframe/jornada-cartao-wireframe.tsx`, `src/app/(app)/dashboard/page-client.tsx` |
 | Fatura e estorno (Bloco 2) | Nas faturas do mês, uma fatura fechada vale o total do banco quando a pessoa o informou (`credit_card_statement_totals`); a aberta segue o calculado. O estorno no cartão (receita com `payment_method = 'credit_card'`) abate a despesa do mês de fechamento e não conta como receita. A consulta do período pede `source`, `needs_review` e `import_batch_id`: sem a migração do Bloco 2, o Painel não carrega | `src/components/dashboard/use-dashboard-data.ts`, `src/lib/fatura/total-com-banco.ts`, `src/lib/expense-month-attribution.ts`, `src/lib/queries/use-transactions-range.ts` |
 
 ---
@@ -1044,8 +1066,8 @@ flowchart TD
 
     account -->|"WIREFRAME Captura sem abrir o app"| capTok(("G5c Tokens e Atalho"))
 
-    userMenu(("G3 Menu do usuário")) --> plans["/plans"]
-    plans --> placeholder(["Plano padrão, histórico vazio; sem ações"])
+    userMenu(("G3 Menu do usuário")) --> plans(("G11 /plans, o plano e a faixa de só leitura"))
+    account -->|"Cofre aberto, pelo menu do usuário e por /me"| cofre(("G12 /cofre: exportar tudo e apagar a conta"))
 ```
 
 ### Regras técnicas
@@ -1053,14 +1075,142 @@ flowchart TD
 | Ponto | Regra | Onde |
 |---|---|---|
 | Troca de email e senha | Confere a senha atual entrando de novo antes de `updateUser` | `src/components/account/edit-profile-dialog.tsx`, `src/components/security/ChangePasswordDialog.tsx` |
-| Excluir conta | Dois passos; a senha é conferida na Edge Function | `src/components/security/DeleteAccountDialog.tsx`, `src/lib/delete-account.ts` |
+| Excluir conta | Dois passos; a senha é conferida na Edge Function. Desde o Bloco 4 o mesmo diálogo também abre em `/cofre` ("Apagar a conta"), e vale em só leitura (a Edge usa a service role) | `src/components/security/DeleteAccountDialog.tsx`, `src/lib/delete-account.ts` |
 | Sessões | Listar e encerrar pela edge `sessions` | `src/lib/sessions.ts` |
 | Atividade | Perfil, email e senha gravam log | edge `activity-logs` |
 | Tokens de captura (Bloco 3A) | Seção "Captura sem abrir o app" (wireframe): nome do aparelho (1 a 60 caracteres) e carteira padrão; "Novo token" chama `create_capture_token`, que devolve o `fac_…` uma vez só, para copiar; "Revogar" chama `revoke_capture_token`. A lista lê só as colunas sem o hash e nunca mostra o valor. Até 10 ativos por pessoa. O link do guia abre `docs/captura/atalho-iphone.md` no GitHub | `src/components/wireframe/captura-tokens-wireframe.tsx`, `docs/captura/atalho-iphone.md` |
 
 ---
 
-## 11. Lacunas encontradas
+## 11. Plano e só leitura
+
+`/precos`, `/plans` e a faixa de "só leitura": quanto custa, o que a pessoa tem
+hoje e o que muda quando o direito de uso acaba. **Tudo isso está desligado:**
+com `billing_settings.enforced_since` nulo, todo mundo é `familia`, ninguém é
+barrado e o botão "Assinar" não faz nada. O gateway (Asaas) é do Bloco 8.
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    visitor(["Visitante sem conta"]) --> precos["/precos, pública"]
+    precos -->|"Começar o teste grátis"| G1r(("G1 /register"))
+    precos -->|"Já tenho conta"| G1l(("G1 /login"))
+    G1r -->|"conta criada"| trial(["Teste de 14 dias, sem cartão: calculado, não gravado"])
+
+    shell(["Casca do app"]) --> mine[("RPC meu_plano, ao abrir e ao voltar à janela")]
+    mine --> state{"Plano da pessoa"}
+    state -->|"familia"| free(["Nada muda"])
+    state -->|"leitura"| banner(["WIREFRAME Faixa: Sua conta está em só leitura"])
+    banner -->|"Ver planos"| plans["/plans"]
+    userMenu(("G3 Menu do usuário")) -->|"Planos"| plans
+    plans --> origin(["Origem do plano: livre, teste, assinatura, vitalício, convite ou nenhuma"])
+    origin --> price(["Preço de hoje em 12x; fundadores até 31/01/2027"])
+    origin -->|"Assinar"| subscribe(["Desabilitado: A assinatura abre no lançamento"])
+    origin -->|"Ver preços e garantias"| precos
+
+    write(["Gesto de escrita da pessoa"]) --> trigger[("Trigger garantir_escrita")]
+    trigger --> gate{"workspace_plan da carteira"}
+    gate -->|"familia"| saved(["Grava"])
+    gate -->|"leitura"| refused[("Erro workspace_somente_leitura")]
+    refused -->|"online"| msg(["Sua conta está em só leitura. Assine em Planos para voltar a lançar."])
+    refused -->|"offline: item da fila"| failed(["Fila: failed na hora, com a mensagem, sem nova tentativa"])
+    refused -.->|"exportar e apagar seguem liberados"| G12(("G12 /cofre"))
+    cronjobs[("Crons, catch-up e delete-user: sem auth.uid ou já contratado")] --> saved
+
+    daily[("Cron billing-daily, 9h em Brasília")] --> off{"enforced_since"}
+    off -->|"nulo"| skip(["Pulado: ninguém é avisado nem barrado"])
+    off -->|"definido"| day12[("Aviso do dia 12 do teste, essencial, tipo system")]
+    day12 -.->|"sino: href /plans"| plans
+    capture[("Edges capture e ia-ler")] -->|"workspace_plan não é familia"| r402(["402"])
+```
+
+### Regras técnicas
+
+| Ponto | Regra | Onde |
+|---|---|---|
+| O interruptor | `billing_settings.enforced_since` (uma linha só) nulo desliga tudo: `plano_do_usuario` e `workspace_plan` devolvem `familia` antes de ler qualquer outra coisa, o gatilho não lança erro e o cron do teste não acha ninguém. `billing_lancar()` o liga, só pela service role, e é do Bloco 8: o roteiro manda não rodá-lo | `supabase/migrations/20261025120000_planos.sql`, `supabase/BLOCO_4_DEPLOYMENT.md` |
+| `plano_do_usuario` | `familia` ou `leitura`. É `familia` com plano próprio (`tem_plano_proprio`: assinatura `active` no período, ou vitalícia sem `current_period_end`, ou `past_due` dentro da carência), dentro do teste (`greatest(created_at, enforced_since)` mais 14 dias) ou coberta (`tem_cobertura`). Senão, `leitura`. O teste é calculado, não gravado | `supabase/migrations/20261025120000_planos.sql` |
+| Cobertura | Ficam cobertas as até 5 pessoas distintas (fora o assinante) que entraram primeiro, por `min(joined_at)`, nas carteiras em que o assinante é `owner`. Não é transitiva, e nenhum convite é bloqueado: a 6ª pessoa só perde a cobertura da carteira pessoal dela | `supabase/migrations/20261025120000_planos.sql` |
+| `workspace_plan` | Substitui o stub do Bloco 3A, com a mesma assinatura. A carteira segue o dono: `familia` se algum `owner` dela é `familia`. A `capture` e a `ia-ler` já devolvem 402 quando ele não é `familia` | `supabase/migrations/20261025120000_planos.sql`, `supabase/functions/capture/`, `supabase/functions/ia-ler/` |
+| `garantir_escrita` | Gatilho antes de `insert`, `update` e `delete` em `transactions` e antes de `insert` em `workspace_installment_plans`, `workspace_subscriptions` e `attachments`. Barra com `workspace_somente_leitura` o gesto da pessoa em `leitura`. Passa sem `auth.uid()` (crons, service role, `delete-user`), em cascata (`pg_trigger_depth() > 1`) e o lançamento de plano ou assinatura que já existia antes da transação. Criar o parcelamento ou a assinatura é que é barrado | `supabase/migrations/20261025120000_planos.sql` |
+| `origem_do_cron` | Gatilho antes de `insert` em `transactions`: um lançamento `app` de um plano ou assinatura que já existia vira `recurring` (o cron e o catch-up do navegador, sem reescrever as funções deles). A captura grava a própria origem pela `criar_plano_parcelado`. É a origem que o Piloto Automático lê | `supabase/migrations/20261025120000_planos.sql` |
+| `meu_plano()` | A RPC da pessoa logada: `plano`, `origem` (`livre`, `vitalicio`, `assinatura`, `teste`, `convite`, `nenhuma`), `status`, `teste_ate`, `periodo_ate`, `cancelar_no_fim`, `preco_centavos`, `fundador`. A tela e a faixa leem por `usePlano`, ao montar e quando a janela volta ao foco; em erro, `plano` fica nulo e nada aparece | `src/lib/planos/plano.ts`, `src/components/wireframe/planos-wireframe.tsx` |
+| Faixa de só leitura | `SomenteLeituraWireframe`, na casca do app, acima de toda tela. Aparece só com o plano `leitura` e leva a `/plans`. Carregando ou em erro, não aparece | `src/components/wireframe/somente-leitura-wireframe.tsx`, `src/components/layout/sidebar-app-shell.tsx` |
+| Mensagem e fila offline | O erro `workspace_somente_leitura` vira "Sua conta está em só leitura. Assine em Planos para voltar a lançar." (`SOMENTE_LEITURA_PT`). Na fila offline, o item rejeitado com essa mensagem fica `failed` na hora, sem as novas tentativas: nunca some calado | `src/lib/supabase-errors.ts`, `src/lib/offline/sync-engine.ts` |
+| `/precos` | Rota pública fora de `(app)`, como `/privacidade`, sem mexer no `AuthGuard`. Mostra o Plano Família (12x de R$ 29,90, R$ 358,80 por ano) e, até 31/01/2027, o de fundadores (12x de R$ 19,90, congelado enquanto ativo), 14 dias grátis sem cartão e as garantias. Liga a `/register` e `/login` | `src/app/precos/page.tsx`, `src/components/wireframe/precos-wireframe.tsx`, `supabase/functions/_shared/plano.ts` |
+| `/plans` | Dentro do app, é a gestão do plano: a origem e as datas, o preço do dia e o link para `/precos`. "Assinar" aparece desabilitado ("A assinatura abre no lançamento") só quando a pessoa precisa dele; não faz nada até o Bloco 8 | `src/app/(app)/plans/page.tsx`, `src/lib/planos/plano.ts` |
+| Aviso do dia 12 | O cron `billing-daily` (`0 12 * * *` UTC, 9h em Brasília) chama a Edge `billing-daily` por `invoke_edge_function`; só aceita o `x-cron-secret`. Enquanto `enforced_since` é nulo, sai com `pulado: 'desligado'`. Depois, avisa quem está entre o 12º e o 14º dia do teste, sem plano próprio nem cobertura, com o que o app fez no teste. Um aviso por pessoa (`billing_avisos`), pelo `deliverNotification` com o tipo `system`, `metadata.href` `/plans`, na carteira pessoal e com `essencial: true`: ignora o interruptor do tipo, o `notify_in_app` e o `notify_email`, e o push segue a preferência | `supabase/functions/billing-daily/index.ts`, `supabase/functions/_shared/deliver-notification.ts`, `supabase/functions/_shared/notification-types.ts` |
+
+---
+
+## 12. Confiança: Piloto, Cofre e o começo
+
+`/comecar`, `/piloto` e `/cofre`: mostrar o que o app faz sozinho, deixar desfazer
+e abrir tudo o que ele guarda. As três são telas em wireframe, e a jornada de 4
+passos não redireciona ninguém: a pessoa chega por um cartão do Painel.
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    dash["/dashboard"] --> cardCheck{"user_settings.jornada_concluida_em nulo?"}
+    cardCheck -->|"não, ou ainda carregando"| nocard(["Sem cartão"])
+    cardCheck -->|"sim"| invite(["WIREFRAME Cartão: Veja o que o app faz por você"])
+    invite -->|"link"| comecar["/comecar"]
+    invite -->|"Agora não"| concl[("user_settings.jornada_concluida_em")]
+    comecar --> p1(["1 O que eu lanço por você"])
+    p1 -->|"Próximo"| p2(["2 Como eu decido"])
+    p2 -->|"Próximo"| p3(["3 O que eu aviso"])
+    p3 -->|"Próximo"| p4(["4 Quem vê o quê"])
+    p1 -->|"Frase rápida"| newTx["/transactions?new=1"]
+    p1 -->|"Importar extrato, no computador"| imp["/transactions?importar=1"]
+    p1 -->|"Atalho do iPhone"| acc["/account"]
+    p1 -->|"Compartilhar, no Android"| tx["/transactions"]
+    p1 -->|"PDF da fatura"| cards["/credit-cards"]
+    p2 -->|"Ver a lista A conferir"| conf["/transactions?conferir=1"]
+    p3 -->|"Ajustar as preferências"| sets["/settings"]
+    p4 -->|"Convidar"| members["/members"]
+    p4 -->|"Concluir"| concl
+    comecar -->|"Pular"| concl
+    concl -->|"sucesso"| dash
+
+    me["/me, grupo Conta"] -->|"Cofre aberto"| cofre["/cofre"]
+    userMenu(("G3 Menu do usuário")) -->|"Cofre aberto"| cofre
+    privacy["/privacidade"] -->|"Abrir o Cofre aberto"| cofre
+    cofre --> keep(["O que guardamos e onde, por dado"])
+    cofre -->|"Exportar tudo"| zip[("Leitura paginada de cada tabela, no navegador")]
+    zip -->|"sucesso"| file(["finance-app-AAAA-MM-DD.zip: um CSV por tabela e o LEIA-ME"])
+    zip -->|"erro"| zipErr(["Não foi possível exportar agora"])
+    cofre -->|"Apagar a conta"| delDlg(["DeleteAccountDialog"])
+    delDlg -->|"senha confere"| delUser[("Edge delete-user")] --> G1(("G1 /login"))
+    cofre -->|"Piloto Automático"| piloto["/piloto"]
+    piloto --> groups(["Últimos 30 dias: captura, importações em lote, assinaturas e parcelas"])
+    groups -->|"Desfazer um lançamento"| askOne{"confirm()"}
+    groups -->|"Desfazer uma importação"| askBatch{"confirm()"}
+    askOne -->|"sim"| delOne[("Apaga só aquele lançamento")]
+    askBatch -->|"sim"| delBatch[("Apaga só o lote da importação")]
+    askOne -->|"cancelar"| groups
+    askBatch -->|"cancelar"| groups
+    delOne -->|"em só leitura"| ro(["Mensagem de só leitura"])
+    delBatch -->|"em só leitura"| ro
+```
+
+### Regras técnicas
+
+| Ponto | Regra | Onde |
+|---|---|---|
+| Cartão do Painel | Aparece enquanto `user_settings.jornada_concluida_em` é nulo; sem resposta (carregando ou erro de leitura) não aparece, para não piscar. "Agora não" grava a data. Não há redirecionamento automático, então nenhuma ponte de jornada existente muda | `src/components/wireframe/jornada-cartao-wireframe.tsx`, `src/app/(app)/dashboard/page-client.tsx` |
+| `/comecar` | Quatro passos. O 1º muda com a plataforma (`plataformaDe`): Frase rápida e PDF da fatura valem sempre, e o terceiro canal é o Atalho do iPhone, o compartilhar do Android ou a importação de extrato. O 3º lista os avisos ligados e o próximo de cada um (`proximosAvisos`). "Concluir" e "Pular" gravam `jornada_concluida_em` e levam ao Painel; em erro, a tela fica e mostra o motivo | `src/components/wireframe/jornada-wireframe.tsx`, `src/lib/jornada/jornada.ts` |
+| `/piloto` | Lê as `transactions` da carteira atual com `source` diferente de `app` e `created_at` nos últimos 30 dias, com `range` (todas, sem teto de 1.000). Agrupa: captura (frase rápida, atalho, Apple Pay, compartilhado), importações por `import_batch_id` e `recurring`. "Desfazer" pede `confirm()`; o de um lançamento recorrente avisa que o app não o lança de novo (o cron não recria a parcela). Desfazer uma importação apaga só o lote | `src/components/wireframe/piloto-automatico-wireframe.tsx`, `src/lib/piloto/piloto.ts`, `src/lib/import/importar.ts` |
+| Desfazer em só leitura | Apagar é escrita da pessoa: o `garantir_escrita` a barra em `leitura`, e a tela mostra a mensagem do mapa de erros | `supabase/migrations/20261025120000_planos.sql`, `src/lib/supabase-errors.ts` |
+| `/cofre` | Lista o que o app guarda (dado, onde fica, quem vê, por que pedimos). "Exportar tudo" lê cada tabela de todas as carteiras da pessoa, paginando por `range`, e monta o ZIP no navegador: um CSV por tabela, com `;`, aspas e quebra de linha tratadas, mais um `LEIA-ME.txt`; os anexos saem só como metadados. O ZIP é "store", sem compressão (CRC-32 e cabeçalhos escritos à mão). Só lê, então vale também em só leitura. A região do banco ainda diz "a confirmar" (roteiro, passo 4) | `src/components/wireframe/cofre-aberto-wireframe.tsx`, `src/lib/cofre/exportar.ts`, `src/lib/cofre/zip.ts` |
+| Apagar a conta | O mesmo `DeleteAccountDialog` de Minha conta, que confere a senha e chama a Edge `delete-user` (service role, sem `auth.uid()`, então livre em só leitura) | `src/components/security/DeleteAccountDialog.tsx`, `src/lib/delete-account.ts` |
+| Entrada no menu | `ROUTES.COFRE` entra em `ACCOUNT_MENU_PROFILE_LINK_ITEMS` como "Cofre aberto": a linha do grupo Conta de `/me`, o menu do usuário do desktop e o menu do telefone. A aba "Você" fica ativa em `/cofre` (`isVoceTabActive`). `/piloto` e `/comecar` não têm entrada no menu | `src/components/layout/account-menu-links.ts`, `src/config/mobile-navigation.ts`, `src/config/navigation.ts` |
+| Título da tela | `APP_PAGE_TITLES` ganhou `/piloto` ("Piloto Automático"), `/cofre` ("Cofre aberto") e `/comecar` ("Começar") | `src/config/navigation.ts` |
+| Privacidade | `/privacidade` diz que o teste de 14 dias não pede cartão, que o plano é guardado (tipo, situação e fim do período) e liga ao Cofre aberto, onde se exporta tudo e se apaga a conta | `src/components/wireframe/privacidade-wireframe.tsx` |
+
+---
+
+## 13. Lacunas encontradas
 
 Coisas que o mapeamento achou no caminho. As de acesso foram corrigidas na
 rodada de set/2026 e estão registradas abaixo da tabela; as que sobraram
@@ -1085,9 +1235,12 @@ continuam aqui para registro.
 | 21 | G5, G6 | A foto vai à IA sem redação: não há como tirar dado de uma imagem. Ela vai crua à Groq e, se a Groq falhar, à Cloudflare. Recibo e comprovante costumam mostrar o cartão mascarado, mas um documento fotografado vai inteiro. A política de `/privacidade` diz isso. |
 | 22 | G5 | O modelo de visão da Groq (`qwen/qwen3.8-27b`) é *preview* e pode sair sem aviso. A Cloudflare cobre a foto enquanto isso; a troca é em `_shared/ia-config.ts`. |
 | 23 | G5 | Dois reenvios simultâneos de uma compra parcelada pela `capture` podem criar dois planos: o plano não tem `client_id`, e a chave do retry mora na 1ª parcela, gravada depois da RPC. Um reenvio depois do outro não duplica. |
-| 24 | G5 | Numa compra parcelada capturada, ou preenchida pela frase ou pela IA, só as parcelas lançadas na hora levam a origem e a marca de a conferir. As que o cron lança nos meses seguintes nascem com `source` `app` e sem marca. |
+| 24 | G5 | Numa compra parcelada capturada, ou preenchida pela frase ou pela IA, só as parcelas lançadas na hora levam a origem e a marca de a conferir. As que o cron lança nos meses seguintes nascem com `source` `recurring` (desde o Bloco 4; antes, `app`) e sem a marca de a conferir. |
 | 25 | G5 | Sem service worker ativo (a primeira instalação, a troca de versão), o compartilhar do Android cai no *route handler* do Next, que segue só com o texto: a foto ou o PDF compartilhado some sem aviso. |
 | 26 | G2, G5, G6 | O Bloco 3B (IA na captura e na fatura, e a política de privacidade) está no repositório, com as telas em wireframe, e **nada foi publicado**. O backend sobe junto com o do 3A ou depois dele, e pode subir antes do front: `supabase/BLOCO_3B_DEPLOYMENT.md`. |
+| 27 | G11 | "Assinar" só abre no Bloco 8: o gateway (Asaas) saiu do Bloco 4. Até lá o botão em `/plans` fica desabilitado ("A assinatura abre no lançamento"), ninguém consegue assinar e `enforced_since` continua nulo, então ninguém é barrado nem avisado. Quem fica de graça (o dono e a família) entra por `insert` manual (`provider` `manual`). |
+| 28 | G3, G4, G10, G11, G12 | O Bloco 4 (planos e só leitura, `/precos`, Piloto Automático, Cofre aberto e a jornada de 4 passos) está no repositório, com as telas em wireframe, e **nada foi publicado**. O backend pode subir antes do front, porque com `enforced_since` nulo nada dele muda o front de `main`: `supabase/BLOCO_4_DEPLOYMENT.md`. |
+| 29 | G12 | O Cofre ainda diz "região a confirmar" em cada dado. Troca por "no Brasil" (ou pela região) quando a região do projeto Supabase for conferida (passo 4 do roteiro). |
 
 ### Fechadas na rodada de acesso (set/2026)
 
