@@ -558,10 +558,11 @@ Cada bloco é um projeto com plano próprio. A ordem segue o valor e a dependên
 | 1 | Alertas confiáveis (§5) | barato, e destrava os avisos de todo o resto |
 | 2 | Fatura que bate + anexos (§6) | dor nº 1; os anexos são a infra do PDF; nasce o `workspace_plan()` |
 | 3 | Captura + IA (§7, §8) | causa nº 1 de abandono; WhatsApp e Android alcançam a maioria |
-| 4 | Planos e confiança (§9) | com 2 e 3 prontos, o pago já entrega o que a planilha não faz |
+| 4 | Planos e confiança (§9), sem o gateway | com 2 e 3 prontos, o pago já entrega o que a planilha não faz; o checkout do Asaas fica para o 8 |
 | 5 | Previsão (§10) | o "quanto posso gastar" e a parcela inteligente |
 | 6 | Inteligência + contas a pagar (§11) | lê tudo o que os blocos anteriores produzem |
 | 7 | Família e carteiras (§12) | papéis, privacidade, divisão e propósito |
+| 8 | Cobrança pelo Asaas (§9, "Cobrança: Asaas") | por último, antes de o 2.0 ir para `main`: o 4 entrega o direito de uso, as telas e a confiança sem gateway, e a cobrança só liga no lançamento (decisão do dono, 23/10) |
 
 **Cada bloco termina com:**
 - tipos atualizados à mão em `src/types/database.ts`;
