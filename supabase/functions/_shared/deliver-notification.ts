@@ -1,6 +1,7 @@
 import type { SupabaseAdminClient } from './supabase-admin.ts'
 import { renderEmailHtml, sendEmailResend } from './notification-email.ts'
 import {
+  canaisDoAviso,
   DEFAULT_NOTIFICATION_PREFS,
   isTypeAllowedForPrefs,
   type NotificationEventType,
@@ -25,6 +26,11 @@ export type DeliverNotificationInput = {
    * categorias) não pode desligá-lo.
    */
   skipTypePref?: boolean
+  /**
+   * Aviso de plano: ignora o interruptor do tipo, o `notify_in_app` e o
+   * `notify_email`. O push segue a preferência (`canaisDoAviso`).
+   */
+  essencial?: boolean
 }
 
 export type DeliverNotificationResult = {
@@ -114,12 +120,13 @@ export async function deliverNotification(
     body,
     metadata = {},
     skipTypePref = false,
+    essencial = false,
   } = input
 
   const prefs =
     input.prefs ?? (await loadNotificationPrefs(supabaseAdmin, userId, workspaceId))
 
-  if (!skipTypePref && !isTypeAllowedForPrefs(type, prefs)) {
+  if (!skipTypePref && !essencial && !isTypeAllowedForPrefs(type, prefs)) {
     return { ok: true, skipped: 'type_disabled', in_app: false, push: { sent: 0, failed: 0 }, email: false }
   }
 
@@ -130,9 +137,11 @@ export async function deliverNotification(
     email: false,
   }
 
+  const canais = canaisDoAviso(prefs, essencial)
+
   let notificationId: string | undefined
 
-  if (prefs.notify_in_app) {
+  if (canais.in_app) {
     const { data: inserted, error: insErr } = await supabaseAdmin
       .from('notifications')
       .insert({
@@ -154,7 +163,7 @@ export async function deliverNotification(
     result.notification_id = notificationId
   }
 
-  if (prefs.notify_push) {
+  if (canais.push) {
     const pushPayload = buildPushPayload({
       title,
       body,
@@ -177,9 +186,10 @@ export async function deliverNotification(
     type === 'bill' ||
     // O lembrete das 20h é um resumo diário, como a conta a pagar.
     type === 'review' ||
-    systemCritical
+    systemCritical ||
+    essencial
 
-  if (prefs.notify_email && userEmail && emailAllowed) {
+  if (canais.email && userEmail && emailAllowed) {
     const appBase = Deno.env.get('APP_BASE_URL')?.trim() || ''
     const settingsUrl = appBase ? `${appBase.replace(/\/$/, '')}/settings` : '/settings'
     const html = renderEmailHtml({ title, body, settingsUrl })

@@ -47,6 +47,21 @@ export function isTypeAllowedForPrefs(
 }
 
 /**
+ * Os canais de um aviso. O essencial (aviso de plano) ignora `notify_in_app` e
+ * `notify_email`; o push segue a preferência.
+ */
+export function canaisDoAviso(
+  prefs: WorkspaceNotificationPrefs,
+  essencial: boolean
+): { in_app: boolean; email: boolean; push: boolean } {
+  return {
+    in_app: essencial || !!prefs.notify_in_app,
+    email: essencial || !!prefs.notify_email,
+    push: !!prefs.notify_push,
+  }
+}
+
+/**
  * Caminho interno seguro, como `isSafeInternalPath` do cliente
  * (src/lib/notification-href.ts): começa em "/" e não sai do app. Recusa "//",
  * a barra invertida (o navegador a lê como barra) e caractere de controle (o
