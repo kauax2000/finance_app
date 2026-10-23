@@ -30,7 +30,11 @@ const POSTGREST_CODE_PT: Record<string, string> = {
 }
 
 /** As mensagens de `raise exception` das nossas funções SQL. */
+/** O que a pessoa lê quando o gatilho barra a escrita de uma conta em "só leitura". */
+export const SOMENTE_LEITURA_PT = "Sua conta está em só leitura. Assine em Planos para voltar a lançar."
+
 const RAISE_MESSAGE_PT: Record<string, string> = {
+    workspace_somente_leitura: SOMENTE_LEITURA_PT,
     workspace_last_owner: "A carteira precisa de pelo menos um dono.",
     workspace_personal_immutable: "A carteira pessoal não pode ser alterada nem excluída.",
     workspace_not_owner: "Só quem é dono da carteira pode fazer isso.",

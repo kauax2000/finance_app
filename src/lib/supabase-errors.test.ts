@@ -73,3 +73,12 @@ describe("isTransactionsSubscriptionBillingColumnsMissingError", () => {
         ).toBe(false)
     })
 })
+
+describe("formatSupabasePostgrestError", () => {
+    it("workspace_somente_leitura vira a frase do plano", async () => {
+        const { formatSupabasePostgrestError } = await import("./supabase-errors")
+        expect(formatSupabasePostgrestError({ code: "P0001", message: "workspace_somente_leitura" })).toBe(
+            "Sua conta está em só leitura. Assine em Planos para voltar a lançar."
+        )
+    })
+})

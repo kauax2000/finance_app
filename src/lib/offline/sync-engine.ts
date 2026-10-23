@@ -13,6 +13,7 @@ import {
     dispatchFinanceTransactionsMutated,
 } from "@/lib/workspace-data-events"
 import type { OfflineEntity } from "@/lib/offline/types"
+import { SOMENTE_LEITURA_PT } from "@/lib/supabase-errors"
 import { toastErrorWithDescription } from "@/lib/toast"
 
 const MAX_RETRIES = 5
@@ -91,7 +92,9 @@ async function drainOutbox(resetStale: boolean): Promise<void> {
             }
 
             const retryCount = mutation.retryCount + 1
-            if (retryCount >= MAX_RETRIES) {
+            // "Só leitura" não passa sozinha: tentar de novo não adianta, e o lançamento
+            // fica `failed` na fila, com a mensagem, até a pessoa assinar ou descartar.
+            if (retryCount >= MAX_RETRIES || result.error === SOMENTE_LEITURA_PT) {
                 await updateMutation(mutation.id, {
                     status: "failed",
                     retryCount,
