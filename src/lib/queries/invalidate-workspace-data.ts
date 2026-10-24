@@ -203,6 +203,11 @@ export async function invalidateWorkspaceData(
                 queryKey: ["billDetail", workspaceId],
             }),
         )
+        tasks.push(
+            queryClient.invalidateQueries({
+                queryKey: ["previsaoContas", workspaceId],
+            }),
+        )
     }
 
     await Promise.all(tasks)

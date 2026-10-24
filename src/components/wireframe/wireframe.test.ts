@@ -319,5 +319,7 @@ describe("Previsão (Bloco 5)", () => {
     expect(f).toContain("Só quem é dono da carteira altera a reserva.")
     expect(f).toContain(".update({ monthly_savings_target:")
     expect(f).toContain("formatSupabasePostgrestError(")
+    // Trocar de carteira remonta o campo: o rascunho de uma não vai para a outra.
+    expect(f).toContain('<CampoDaReserva key={currentWorkspaceId ?? "nenhuma"} />')
   })
 })

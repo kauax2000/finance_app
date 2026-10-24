@@ -45,7 +45,7 @@ import { useCreditCardExpenseRowsQuery } from "@/lib/queries/use-credit-card-exp
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 import { useInstallmentPlansQuery } from "@/lib/queries/use-installment-plans"
 import { useStatementTotalsQuery } from "@/lib/queries/use-statement-totals"
-import { bancoTotalDoCiclo, statementTotalKey, totalComBanco } from "@/lib/fatura/total-com-banco"
+import { bancoTotalDoCiclo, chavesDeFaturasPagas, statementTotalKey, totalComBanco } from "@/lib/fatura/total-com-banco"
 import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
 import { useSubscriptionsQuery } from "@/lib/queries/use-subscriptions"
 import {
@@ -321,15 +321,10 @@ export function useDashboardData() {
 
     const invoicePaymentsFromQuery =
         workspaceAuxQuery.data?.invoicePayments ?? []
-    const invoicePaidByCardClose = useMemo(() => {
-        const next = new Set<string>()
-        for (const p of invoicePaymentsFromQuery) {
-            if (p.status === "paid") {
-                next.add(statementTotalKey(p.credit_card_id, p.statement_close_date))
-            }
-        }
-        return next
-    }, [invoicePaymentsFromQuery])
+    const invoicePaidByCardClose = useMemo(
+        () => chavesDeFaturasPagas(invoicePaymentsFromQuery),
+        [invoicePaymentsFromQuery],
+    )
 
     const memberDirectoryByUserId = useMemo(() => {
         if (!user?.id) return {}

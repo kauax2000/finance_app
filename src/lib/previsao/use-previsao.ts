@@ -1,25 +1,47 @@
 "use client"
 
+import { useQuery } from "@tanstack/react-query"
 import { useMemo } from "react"
 
 import { useWorkspace } from "@/components/workspace-provider"
 import { periodBoundsFromYearMonth, shiftYearMonth } from "@/lib/budget-month"
-import { statementTotalKey } from "@/lib/fatura/total-com-banco"
+import { chavesDeFaturasPagas } from "@/lib/fatura/total-com-banco"
 import { usePendingBillsDashboardQuery } from "@/lib/queries/fetch-bills-dashboard"
-import { useBillsPageBundleQuery } from "@/lib/queries/use-bills-page-bundle"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
 import { useInstallmentPlansQuery } from "@/lib/queries/use-installment-plans"
 import { useStatementTotalsQuery } from "@/lib/queries/use-statement-totals"
 import { useSubscriptionsQuery } from "@/lib/queries/use-subscriptions"
 import { useTransactionsRangeQuery } from "@/lib/queries/use-transactions-range"
 import { useTransactionsWorkspaceAuxQuery } from "@/lib/queries/use-transactions-workspace-aux-query"
-import { userFacingFetchError } from "@/lib/supabase-errors"
+import { supabase } from "@/lib/supabase"
+import { isPostgrestRelationMissingError, userFacingFetchError } from "@/lib/supabase-errors"
 import { filterRangeEndIso, filterRangeStartIso, localYmdFromDate } from "@/lib/transaction-date"
-import type { DadosDaPrevisao } from "./tipos"
+import type { ContaDaPrevisao, DadosDaPrevisao } from "./tipos"
+
+const COLUNAS_DA_CONTA = "id, name, amount_estimated, frequency, due_day_of_month, end_date, is_active"
+
+/** Só as colunas que a previsão lê, das contas ativas: o pacote da tela de contas é pesado demais. */
+function useContasDaPrevisaoQuery(workspaceId: string | null) {
+    return useQuery({
+        queryKey: ["previsaoContas", workspaceId],
+        queryFn: async (): Promise<ContaDaPrevisao[]> => {
+            const { data, error } = await supabase
+                .from("bills")
+                .select(COLUNAS_DA_CONTA)
+                .eq("workspace_id", workspaceId!)
+                .eq("is_active", true)
+            if (error && isPostgrestRelationMissingError(error)) return []
+            if (error) throw new Error(error.message)
+            return (data as ContaDaPrevisao[]) ?? []
+        },
+        enabled: Boolean(workspaceId),
+        staleTime: 60_000,
+    })
+}
 
 /**
  * Tudo o que `fluxoDoMes`, `seguroParaGastar` e `projecaoMensal` leem, pelos mesmos hooks (e
- * `queryKey`) do Painel. Só as transações pedem uma janela própria (outra chave do mesmo helper):
+ * `queryKey`) do Painel, mais as contas (`useContasDaPrevisaoQuery`). As transações pedem uma janela própria (outra chave do mesmo helper):
  * do dia 1 de dois meses atrás, porque a fatura que vence neste mês fechou no anterior e a janela
  * dela começa antes, até o fim do sexto mês à frente, o último da linha do tempo.
  */
@@ -46,7 +68,7 @@ export function usePrevisao(workspaceId: string | null): {
     const totais = useStatementTotalsQuery(workspaceId, ligado)
     const aux = useTransactionsWorkspaceAuxQuery(workspaceId, ligado)
     const pendentes = usePendingBillsDashboardQuery(workspaceId, ligado)
-    const contas = useBillsPageBundleQuery(workspaceId)
+    const contas = useContasDaPrevisaoQuery(workspaceId)
 
     const consultas = [transacoes, cartoes, assinaturas, planos, totais, aux, pendentes, contas]
     const carregando = ligado && consultas.some((q) => q.isPending)
@@ -59,10 +81,6 @@ export function usePrevisao(workspaceId: string | null): {
     const dados = useMemo((): DadosDaPrevisao | null => {
         if (!transacoes.data || !cartoes.data || !assinaturas.data || !planos.data) return null
         if (!totais.data || !aux.data || !pendentes.data || !contas.data) return null
-        const faturasPagas = new Set<string>()
-        for (const p of aux.data.invoicePayments) {
-            if (p.status === "paid") faturasPagas.add(statementTotalKey(p.credit_card_id, p.statement_close_date))
-        }
         return {
             hojeYmd,
             transacoes: transacoes.data,
@@ -70,8 +88,8 @@ export function usePrevisao(workspaceId: string | null): {
             planos: planos.data,
             cartoes: cartoes.data.filter((c) => c.is_active),
             totaisDoBanco: totais.data,
-            faturasPagas,
-            contas: contas.data.bills,
+            faturasPagas: chavesDeFaturasPagas(aux.data.invoicePayments),
+            contas: contas.data,
             contasPendentes: pendentes.data,
             reserva,
         }

@@ -62,11 +62,17 @@ export function SeguroParaGastarWireframe({ seguro, compacto = false }: { seguro
                     {seguro.contasSemValor.length > 0 ? (
                         <p>Contas sem valor: {seguro.contasSemValor.join(", ")}</p>
                     ) : null}
-                    <CampoDaReserva />
+                    <CampoDaReservaDaCarteira />
                 </>
             )}
         </WireframeBox>
     )
+}
+
+/** Remonta por carteira: o rascunho de uma não pode ser gravado na outra. */
+function CampoDaReservaDaCarteira() {
+    const { currentWorkspaceId } = useWorkspace()
+    return <CampoDaReserva key={currentWorkspaceId ?? "nenhuma"} />
 }
 
 /** `workspaces.monthly_savings_target`: só o dono altera (política de `update` de `workspaces`). */

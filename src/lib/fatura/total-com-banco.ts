@@ -1,5 +1,5 @@
 import { roundCents } from "@/lib/money-brl"
-import type { CreditCardStatementTotal } from "@/lib/supabase"
+import type { CreditCardInvoicePayment, CreditCardStatementTotal } from "@/lib/supabase"
 
 /**
  * Numa fatura fechada, o total que o banco cobrou vale sobre o que o app
@@ -28,4 +28,15 @@ export function bancoTotalDoCiclo(
         (t) => statementTotalKey(t.credit_card_id, t.statement_close_date) === statementTotalKey(cardId, closeYmd),
     )
     return achado ? Number(achado.bank_total) : null
+}
+
+/** As faturas pagas da carteira, pela `statementTotalKey`: o Painel e a previsão leem daqui. */
+export function chavesDeFaturasPagas(
+    pagamentos: ReadonlyArray<Pick<CreditCardInvoicePayment, "credit_card_id" | "statement_close_date" | "status">>,
+): Set<string> {
+    const out = new Set<string>()
+    for (const p of pagamentos) {
+        if (p.status === "paid") out.add(statementTotalKey(p.credit_card_id, p.statement_close_date))
+    }
+    return out
 }

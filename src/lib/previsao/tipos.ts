@@ -8,6 +8,12 @@ import type {
     WorkspaceSubscription,
 } from "@/lib/supabase"
 
+/** As colunas de `bills` que `fluxoDoMes` lê (o nome, o valor e a recorrência). */
+export type ContaDaPrevisao = Pick<
+    Bill,
+    "id" | "name" | "amount_estimated" | "frequency" | "due_day_of_month" | "end_date" | "is_active"
+>
+
 /** Tudo o que a previsão lê da carteira. O dia vem daqui; nenhuma função lê o relógio. */
 export type DadosDaPrevisao = {
     hojeYmd: string
@@ -20,7 +26,7 @@ export type DadosDaPrevisao = {
     totaisDoBanco: CreditCardStatementTotal[]
     /** `statementTotalKey(cardId, closeYmd)` de `credit_card_invoice_payments`. */
     faturasPagas: Set<string>
-    contas: Bill[]
+    contas: ContaDaPrevisao[]
     /** `status = 'pending'`: uma por conta. */
     contasPendentes: BillInstance[]
     /** `workspaces.monthly_savings_target`. */

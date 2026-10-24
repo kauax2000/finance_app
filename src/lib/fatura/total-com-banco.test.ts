@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
-import { bancoTotalDoCiclo, statementTotalKey, totalComBanco } from "@/lib/fatura/total-com-banco"
+import { bancoTotalDoCiclo, chavesDeFaturasPagas, statementTotalKey, totalComBanco } from "@/lib/fatura/total-com-banco"
 import type { CreditCardStatementTotal } from "@/lib/supabase"
 
 describe("totalComBanco", () => {
@@ -62,5 +62,15 @@ describe("consumidores do total do banco", () => {
         expect(leitura).toMatch(/export async function fetchStatementTotals\(\s*workspaceId: string/)
         const chaves = semComentarios(lerFonte("src/lib/queries/keys.ts"))
         expect(chaves).toMatch(/\["credit-card-statement-totals", workspaceId\]/)
+    })
+})
+
+describe("chavesDeFaturasPagas", () => {
+    it("só as pagas, pela chave cartão:fechamento", () => {
+        const chaves = chavesDeFaturasPagas([
+            { credit_card_id: "c1", statement_close_date: "2026-10-10", status: "paid" },
+            { credit_card_id: "c2", statement_close_date: "2026-10-05", status: "pending" },
+        ] as Parameters<typeof chavesDeFaturasPagas>[0])
+        expect([...chaves]).toEqual([statementTotalKey("c1", "2026-10-10")])
     })
 })
