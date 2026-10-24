@@ -2,6 +2,7 @@ import { parseMoneyBrl } from "@/lib/money-brl"
 import type {
     Category,
     SubscriptionBillingInterval,
+    SubscriptionKind,
     TransactionPaymentMethod,
 } from "@/lib/supabase"
 import type { PaymentMethod } from "@/lib/payment-methods"
@@ -37,6 +38,7 @@ export type SubscriptionFormPayload = {
     payment_method: TransactionPaymentMethod | null
     payment_credit_card_id: string | null
     is_active: boolean
+    kind: SubscriptionKind
 }
 
 export const SUBSCRIPTION_PAYMENT_NONE = "__none__" as const
@@ -58,6 +60,8 @@ export function buildSubscriptionFormPayload(opts: {
     active: boolean
     paymentMethod: PaymentMethod | null
     paymentCreditCardId: string
+    /** Ausente vale despesa. */
+    kind?: SubscriptionKind
 }):
     | { ok: true; payload: SubscriptionFormPayload }
     | { ok: false; error: string } {
@@ -75,7 +79,12 @@ export function buildSubscriptionFormPayload(opts: {
             error: "Informe a data da próxima cobrança.",
         }
     }
-    const pm = opts.paymentMethod
+    const kind = opts.kind ?? "expense"
+    // Receita no cartão é estorno, não assinatura: o banco recusa (Tarefa 1).
+    const pm =
+        kind === "income" && opts.paymentMethod === "credit_card"
+            ? null
+            : opts.paymentMethod
     const pcc =
         pm === "credit_card"
             ? opts.paymentCreditCardId.trim() || null
@@ -97,6 +106,7 @@ export function buildSubscriptionFormPayload(opts: {
             payment_method: pm,
             payment_credit_card_id: pcc,
             is_active: opts.active,
+            kind,
         },
     }
 }

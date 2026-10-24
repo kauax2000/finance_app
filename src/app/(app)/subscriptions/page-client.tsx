@@ -54,6 +54,7 @@ import {
     type DataTableColumnDef,
 } from "@/components/ui/data-table"
 import { ROUTES } from "@/config/navigation"
+import { ReceitaRecorrenteMarcador } from "@/components/wireframe/receita-recorrente-wireframe"
 import { SubscriptionFormDialog } from "@/components/subscriptions/subscription-form-dialog"
 import { SubscriptionDetailSheet } from "@/components/subscriptions/subscription-detail-sheet"
 import { SubscriptionsPageSkeleton } from "@/components/subscriptions/subscriptions-page-skeleton"
@@ -113,15 +114,20 @@ function subscriptionColumns(
                 id: "name",
                 header: "Assinatura",
                 title: (s) => s.name,
-                description: (s) => formatSubscriptionTxSummary(s.id, billingStats),
+                description: (s) => (
+                    <>
+                        {s.kind === "income" ? <ReceitaRecorrenteMarcador /> : null}
+                        {formatSubscriptionTxSummary(s.id, billingStats)}
+                    </>
+                ),
                 media: (s) => <ColorTile size="xs" color={s.category?.color} />,
             }),
             sortFn: (a, b) =>
                 a.original.name.localeCompare(b.original.name, "pt-BR"),
         },
         {
-            // Assinatura é sempre saída: o valor fica neutro, sem o "+" verde
-            // que o tom pelo sinal daria a um número positivo.
+            // O valor fica neutro, sem o "+" verde que o tom pelo sinal daria a
+            // um número positivo; quem diz que é receita é o marcador do nome.
             ...col.money({
                 id: "amount",
                 header: "Valor",

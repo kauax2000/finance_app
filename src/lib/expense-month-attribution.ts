@@ -116,10 +116,13 @@ export function projectedSubscriptionCountsInExpenseMonth(
     sub: Pick<
         WorkspaceSubscription,
         "payment_method" | "payment_credit_card_id"
-    >,
+    > &
+        Partial<Pick<WorkspaceSubscription, "kind">>,
     yearMonth: string,
     lookup: CreditCardClosingLookup,
 ): boolean {
+    // Receita recorrente não é despesa de mês nenhum; kind ausente vale despesa.
+    if (sub.kind === "income") return false
     const iso = chargeDateToExpenseIso(chargeDate)
     const tx: ExpenseMonthTx = {
         type: "expense",

@@ -21,6 +21,7 @@ import Link from "next/link"
 import type {
     CreditCard,
     SubscriptionBillingInterval,
+    SubscriptionKind,
     WorkspaceSubscription,
 } from "@/lib/supabase"
 import type { PaymentMethod } from "@/lib/payment-methods"
@@ -32,6 +33,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { ReceitaRecorrenteWireframe } from "@/components/wireframe/receita-recorrente-wireframe"
 import { DatePicker } from "@/components/ui/date-picker"
 import { SubscriptionCategoryPicker } from "@/components/subscriptions/subscription-form-pickers"
 import {
@@ -63,6 +65,8 @@ export type SubscriptionFormFieldsProps = {
     setPaymentMethod: (v: PaymentMethod | null) => void
     paymentCreditCardId: string
     setPaymentCreditCardId: (v: string) => void
+    kind: SubscriptionKind
+    setKind: (v: SubscriptionKind) => void
 }
 
 export function SubscriptionFormFields({
@@ -88,6 +92,8 @@ export function SubscriptionFormFields({
     setPaymentMethod,
     paymentCreditCardId,
     setPaymentCreditCardId,
+    kind,
+    setKind,
 }: SubscriptionFormFieldsProps) {
     const cardSelectOptions = useMemo(() => {
         const active = creditCards.filter((c) => c.is_active)
@@ -101,6 +107,18 @@ export function SubscriptionFormFields({
 
     return (
         <div className="space-y-3 pb-1">
+            <ReceitaRecorrenteWireframe
+                kind={kind}
+                disabled={saving}
+                onChange={(next) => {
+                    setKind(next)
+                    // Receita não usa cartão: a escolha anterior cai.
+                    if (next === "income" && paymentMethod === "credit_card") {
+                        setPaymentMethod(null)
+                        setPaymentCreditCardId("")
+                    }
+                }}
+            />
             <FormInput
                 id="sub-form-name"
                 fieldSize="sm"
@@ -220,7 +238,13 @@ export function SubscriptionFormFields({
                         >
                             Não informado
                         </SelectItem>
-                        {paymentMethodOptions().map((o) => (
+                        {paymentMethodOptions()
+                            .filter(
+                                (o) =>
+                                    kind !== "income" ||
+                                    o.value !== "credit_card"
+                            )
+                            .map((o) => (
                             <SelectItem
                                 key={o.value}
                                 value={o.value}

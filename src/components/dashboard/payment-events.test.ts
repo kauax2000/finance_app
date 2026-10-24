@@ -148,3 +148,42 @@ describe("buildPaymentEventsForMonth credit card attribution", () => {
         expect(subs[0]?.dateYmd).toBe("2026-05-29")
     })
 })
+
+describe("buildPaymentEventsForMonth recurring income", () => {
+    const base = {
+        id: "s1",
+        workspace_id: "w",
+        user_id: "u",
+        name: "Salário",
+        amount: 5000,
+        billing_interval: "monthly" as const,
+        currency: "BRL",
+        start_date: "2026-01-05",
+        next_billing_date: "2026-05-05",
+        day_of_month: null,
+        category_id: "c1",
+        notes: null,
+        payment_method: "pix" as const,
+        payment_credit_card_id: null,
+        is_active: true,
+        created_at: "",
+        updated_at: "",
+    }
+    const build = (sub: Record<string, unknown>) =>
+        buildPaymentEventsForMonth("2026-05", {
+            todayYmd: "2026-05-01",
+            subscriptions: [sub as never],
+            installmentPlans: [],
+            creditCards: [] as CreditCard[],
+            transactions: [],
+        }).filter((e) => e.kind === "subscription")
+
+    it("does not emit an outflow event for an income subscription", () => {
+        expect(build({ ...base, kind: "income" })).toHaveLength(0)
+    })
+
+    it("keeps expense, and an absent kind (old cache) counts as expense", () => {
+        expect(build({ ...base, kind: "expense" })).toHaveLength(1)
+        expect(build(base)).toHaveLength(1)
+    })
+})

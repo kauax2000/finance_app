@@ -201,3 +201,43 @@ describe("category-expense-month-rows", () => {
         expect(Number(projected[0]?.amount)).toBeCloseTo(49.9)
     })
 })
+
+describe("buildProjectedCategoryExpenseRows recurring income", () => {
+    const base = {
+        id: "s1",
+        workspace_id: "w",
+        user_id: "u",
+        name: "Salário",
+        amount: 5000,
+        billing_interval: "monthly" as const,
+        currency: "BRL",
+        start_date: "2026-01-05",
+        next_billing_date: "2026-05-05",
+        day_of_month: null,
+        category_id: "c1",
+        notes: null,
+        payment_method: "pix" as const,
+        payment_credit_card_id: null,
+        is_active: true,
+        created_at: "",
+        updated_at: "",
+    }
+    const run = (sub: Record<string, unknown>) =>
+        buildProjectedCategoryExpenseRows({
+            categoryId: "c1",
+            yearMonth: "2026-05",
+            installmentPlans: [],
+            subscriptions: [sub as never],
+            postedTransactions: [],
+            creditCards: [],
+            categories: [],
+        })
+
+    it("ignores an income subscription", () => {
+        expect(run({ ...base, kind: "income" })).toHaveLength(0)
+    })
+
+    it("an absent kind still projects as expense", () => {
+        expect(run(base)).toHaveLength(1)
+    })
+})

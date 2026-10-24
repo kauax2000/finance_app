@@ -161,7 +161,7 @@ export function buildProjectedCategoryExpenseRows(args: {
     }
 
     for (const s of subscriptions) {
-        if (!s.is_active) continue
+        if (!s.is_active || s.kind === "income") continue
         if (s.category_id !== categoryId) continue
         const isCc = s.payment_method === "credit_card" && s.payment_credit_card_id
         const rangeStart = isCc ? padStart : period_start

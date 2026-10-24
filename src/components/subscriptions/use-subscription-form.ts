@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react"
 import type {
     CreditCard,
     SubscriptionBillingInterval,
+    SubscriptionKind,
     WorkspaceSubscription,
 } from "@/lib/supabase"
 import type { PaymentMethod } from "@/lib/payment-methods"
@@ -66,6 +67,7 @@ export function useSubscriptionForm({
         null
     )
     const [paymentCreditCardId, setPaymentCreditCardId] = useState("")
+    const [kind, setKind] = useState<SubscriptionKind>("expense")
 
     useEffect(() => {
         if (!active) return
@@ -87,6 +89,7 @@ export function useSubscriptionForm({
             setPaymentCreditCardId(
                 editingSubscription.payment_credit_card_id ?? ""
             )
+            setKind(editingSubscription.kind ?? "expense")
         } else {
             setName("")
             setAmount("")
@@ -96,13 +99,14 @@ export function useSubscriptionForm({
             setNotes("")
             setPaymentMethod(null)
             setPaymentCreditCardId("")
+            setKind("expense")
         }
     }, [active, editingSubscription])
 
     const handleSubmit = useCallback(
         async (e: React.FormEvent) => {
             e.preventDefault()
-            if (paymentMethod === "credit_card") {
+            if (kind === "expense" && paymentMethod === "credit_card") {
                 const activeCardRows = creditCards.filter((c) => c.is_active)
                 const id = paymentCreditCardId.trim()
                 if (!id) {
@@ -130,6 +134,7 @@ export function useSubscriptionForm({
                 active: editingSubscription?.is_active ?? true,
                 paymentMethod,
                 paymentCreditCardId,
+                kind,
             })
             if (!built.ok) {
                 toastError(built.error, { id: SUBSCRIPTION_SAVE_TOAST_ID })
@@ -152,6 +157,7 @@ export function useSubscriptionForm({
             closeOnSuccess,
             creditCards,
             editingSubscription,
+            kind,
             name,
             notes,
             onClose,
@@ -195,6 +201,8 @@ export function useSubscriptionForm({
         setPaymentMethod,
         paymentCreditCardId,
         setPaymentCreditCardId,
+        kind,
+        setKind,
     }
 
     return {

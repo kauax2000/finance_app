@@ -175,7 +175,7 @@ export function buildPaymentEventsForMonth(
     }
 
     for (const s of args.subscriptions) {
-        if (!s.is_active) continue
+        if (!s.is_active || s.kind === "income") continue
         const isCc = s.payment_method === "credit_card" && s.payment_credit_card_id
         const rangeStart = isCc ? padStart : monthStartYmd
         const rangeEnd = isCc ? padEnd : monthEndYmd

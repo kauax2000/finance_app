@@ -269,3 +269,41 @@ describe("buildCategoryCommitmentsForMonth", () => {
         expect(res.c1?.projectedSubscriptionsTotal).toBeCloseTo(49.9)
     })
 })
+
+describe("buildCategoryCommitmentsForMonth recurring income", () => {
+    const base = {
+        id: "s1",
+        workspace_id: "w",
+        user_id: "u",
+        name: "Salário",
+        amount: 5000,
+        billing_interval: "monthly" as const,
+        currency: "BRL",
+        start_date: "2026-01-05",
+        next_billing_date: "2026-05-05",
+        day_of_month: null,
+        category_id: "c1",
+        notes: null,
+        payment_method: "pix" as const,
+        payment_credit_card_id: null,
+        is_active: true,
+        created_at: "",
+        updated_at: "",
+    }
+    const run = (sub: Record<string, unknown>) =>
+        buildCategoryCommitmentsForMonth({
+            yearMonth: "2026-05",
+            transactions: [],
+            installmentPlans: [],
+            subscriptions: [sub as never],
+            creditCards,
+        })
+
+    it("ignores an income subscription", () => {
+        expect(run({ ...base, kind: "income" }).c1).toBeUndefined()
+    })
+
+    it("an absent kind still counts as expense", () => {
+        expect(run(base).c1?.projectedSubscriptionsTotal).toBe(5000)
+    })
+})

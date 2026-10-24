@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { executeMutation } from "@/lib/offline/mutation-gateway"
 import { retryStableClientId } from "@/lib/offline/retry-client-id"
-import type { SubscriptionBillingInterval, TransactionPaymentMethod } from "@/lib/supabase"
+import type { SubscriptionBillingInterval, SubscriptionKind, TransactionPaymentMethod } from "@/lib/supabase"
 
 /**
  * Caminho único de escrita para assinaturas (gateway offline).
@@ -26,6 +26,7 @@ export type SubscriptionWritePayload = {
     payment_method?: TransactionPaymentMethod | null
     payment_credit_card_id?: string | null
     is_active?: boolean
+    kind?: SubscriptionKind
 }
 
 export type SubscriptionMutationResult =

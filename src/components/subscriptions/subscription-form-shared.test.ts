@@ -141,3 +141,37 @@ describe("buildSubscriptionFormPayload", () => {
         }
     })
 })
+
+describe("buildSubscriptionFormPayload kind", () => {
+    const opts = {
+        name: "Salário",
+        amountStr: "5000",
+        billing: "monthly" as const,
+        billingDate: "2026-04-05",
+        cId: SUBSCRIPTION_SELECT_NONE,
+        n: "",
+        active: true,
+        paymentMethod: "pix" as const,
+        paymentCreditCardId: "",
+    }
+
+    it("defaults to expense", () => {
+        const r = buildSubscriptionFormPayload(opts)
+        expect(r.ok && r.payload.kind).toBe("expense")
+    })
+
+    it("income leaves out the credit card even if one was picked", () => {
+        const r = buildSubscriptionFormPayload({
+            ...opts,
+            kind: "income",
+            paymentMethod: "credit_card",
+            paymentCreditCardId: "card-1",
+        })
+        expect(r.ok).toBe(true)
+        if (r.ok) {
+            expect(r.payload.kind).toBe("income")
+            expect(r.payload.payment_method).toBeNull()
+            expect(r.payload.payment_credit_card_id).toBeNull()
+        }
+    })
+})

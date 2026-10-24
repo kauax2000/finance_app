@@ -133,7 +133,7 @@ export function buildCategoryCommitmentsForMonth(args: {
     }
 
     for (const s of args.subscriptions) {
-        if (!s.is_active) continue
+        if (!s.is_active || s.kind === "income") continue
         const categoryId = s.category_id
         if (!categoryId) continue
         const rangeStart =

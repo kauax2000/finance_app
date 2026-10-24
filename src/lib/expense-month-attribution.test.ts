@@ -197,6 +197,18 @@ describe("projectedChargeCountsInExpenseMonth", () => {
 })
 
 describe("projectedSubscriptionCountsInExpenseMonth", () => {
+    it("never counts an income subscription as expense; absent kind is expense", () => {
+        const chargeDate = new Date(2026, 4, 29, 12, 0, 0, 0)
+        const sub = { payment_method: "pix" as const, payment_credit_card_id: null }
+        expect(
+            projectedSubscriptionCountsInExpenseMonth(chargeDate, { ...sub, kind: "income" }, "2026-05", lookup),
+        ).toBe(false)
+        expect(
+            projectedSubscriptionCountsInExpenseMonth(chargeDate, { ...sub, kind: "expense" }, "2026-05", lookup),
+        ).toBe(true)
+        expect(projectedSubscriptionCountsInExpenseMonth(chargeDate, sub, "2026-05", lookup)).toBe(true)
+    })
+
     it("uses billing month for credit card subscription charges", () => {
         const chargeDate = new Date(2026, 4, 29, 12, 0, 0, 0)
         expect(
