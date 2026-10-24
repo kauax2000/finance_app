@@ -28,17 +28,23 @@ describe("migração contas", () => {
         expect(fn).toMatch(/update public\.bills b\s+set amount_estimated = coalesce\(/)
         expect(fn).toMatch(/round\(avg\(u\.paid_amount\), 2\)/)
         expect(fn).toMatch(
-            /where i\.bill_id = new\.bill_id\s+and i\.workspace_id = new\.workspace_id\s+and i\.status = 'paid'\s+and i\.paid_amount is not null/,
+            /where i\.bill_id = v_bill\s+and i\.workspace_id = v_ws\s+and i\.status = 'paid'\s+and i\.paid_amount is not null/,
         )
         expect(fn).toMatch(/order by i\.due_date desc\s+limit 3/)
         // Sem paga com valor, o estimado atual fica: nunca vira nulo.
         expect(fn).toMatch(/\), b\.amount_estimated\)/)
-        expect(fn).toMatch(/where b\.id = new\.bill_id\s+and b\.workspace_id = new\.workspace_id\s+and b\.valor_variavel;/)
+        expect(fn).toMatch(/where b\.id = v_bill\s+and b\.workspace_id = v_ws\s+and b\.valor_variavel;/)
+        // A conta e a carteira vêm de `new`, ou de `old` no delete.
+        expect(fn).toMatch(/v_bill uuid := coalesce\(new\.bill_id, old\.bill_id\);/)
+        expect(fn).toMatch(/v_ws uuid := coalesce\(new\.workspace_id, old\.workspace_id\);/)
     })
 
-    it("a média recalcula quando uma paga entra, sai ou muda de valor", () => {
+    it("a média recalcula quando uma paga entra, sai, muda de valor ou é apagada", () => {
         expect(sql).toMatch(
             /create trigger media_da_conta after update of status, paid_amount on public\.bill_instances\s+for each row\s+when \(old\.status = 'paid' or new\.status = 'paid'\)\s+execute function public\.media_da_conta\(\);/,
+        )
+        expect(sql).toMatch(
+            /create trigger media_da_conta_ao_apagar after delete on public\.bill_instances\s+for each row\s+when \(old\.status = 'paid'\)\s+execute function public\.media_da_conta\(\);/,
         )
     })
 

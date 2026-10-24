@@ -40,11 +40,21 @@ select ok(
     'transactions.amount > 0 validated'
 );
 
+-- A parcela sai de uma conta real da própria carteira: o `same_ws_bill_id`
+-- (BEFORE) barraria um `bill_id` inventado antes de o CHECK ser avaliado.
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('00000000-0000-4000-f600-000000000001', 'integridade@local.dev', '{"full_name":"Integridade"}');
+
+insert into public.bills (id, workspace_id, user_id, name, frequency, due_day_of_month, start_date)
+select '00000000-0000-4000-f700-000000000001', w.id, w.created_by, 'Luz', 'monthly', 10, current_date
+from public.workspaces w
+where w.created_by = '00000000-0000-4000-f600-000000000001' and w.type = 'personal';
+
 select throws_like(
     $sql$insert into public.bill_instances
       (workspace_id, user_id, bill_id, due_date, status, paid_at)
-      values (gen_random_uuid(), gen_random_uuid(), gen_random_uuid(),
-              current_date, 'paid', null)$sql$,
+      select b.workspace_id, b.user_id, b.id, current_date, 'paid', null
+      from public.bills b where b.id = '00000000-0000-4000-f700-000000000001'$sql$,
     '%bill_instances_paid_requires_paid_at%',
     'paid bill instance without paid_at is rejected'
 );

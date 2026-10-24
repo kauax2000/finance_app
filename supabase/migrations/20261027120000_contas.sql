@@ -11,7 +11,9 @@ alter table public.bills
   add column if not exists valor_variavel boolean not null default false;
 
 -- Roda sempre que uma paga entra ou sai do conjunto (pagar, reabrir ao apagar
--- o lançamento) ou muda de valor (`acompanhar_valor_pago`). Paga sem
+-- o lançamento, apagar a própria instância paga) ou muda de valor
+-- (`acompanhar_valor_pago`). No delete, `new` é nulo e valem os campos de
+-- `old` (o mesmo `coalesce` do `garantir_escrita`). Paga sem
 -- `paid_amount` não entra; sem nenhuma com valor, o `amount_estimated` atual
 -- fica (o `coalesce`).
 -- `security definer`: a média lê as instâncias e grava a conta sem depender
@@ -26,6 +28,9 @@ language plpgsql
 security definer
 set search_path = ''
 as $$
+declare
+  v_bill uuid := coalesce(new.bill_id, old.bill_id);
+  v_ws uuid := coalesce(new.workspace_id, old.workspace_id);
 begin
   update public.bills b
   set amount_estimated = coalesce((
@@ -33,16 +38,16 @@ begin
     from (
       select i.paid_amount
       from public.bill_instances i
-      where i.bill_id = new.bill_id
-        and i.workspace_id = new.workspace_id
+      where i.bill_id = v_bill
+        and i.workspace_id = v_ws
         and i.status = 'paid'
         and i.paid_amount is not null
       order by i.due_date desc
       limit 3
     ) u
   ), b.amount_estimated)
-  where b.id = new.bill_id
-    and b.workspace_id = new.workspace_id
+  where b.id = v_bill
+    and b.workspace_id = v_ws
     and b.valor_variavel;
   return null;
 end;
@@ -52,6 +57,12 @@ drop trigger if exists media_da_conta on public.bill_instances;
 create trigger media_da_conta after update of status, paid_amount on public.bill_instances
   for each row
   when (old.status = 'paid' or new.status = 'paid')
+  execute function public.media_da_conta();
+
+drop trigger if exists media_da_conta_ao_apagar on public.bill_instances;
+create trigger media_da_conta_ao_apagar after delete on public.bill_instances
+  for each row
+  when (old.status = 'paid')
   execute function public.media_da_conta();
 
 -- A instância é da carteira da conta. O `assert_same_workspace_ref`
