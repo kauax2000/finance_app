@@ -12,7 +12,6 @@ import {
     PlusIcon,
 } from "@heroicons/react/16/solid"
 import * as React from "react"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
     Menubar,
@@ -177,12 +176,6 @@ export function BillsToolbar({
                             ))}
                         </TabsList>
                     </Tabs>
-                    <Badge
-                        size="xs"
-                        className="shrink-0"
-                    >
-                        Beta
-                    </Badge>
                 </ToolbarFilters>
 
                 {/* Uma árvore só. No telefone, o botão de filtros do cabeçalho

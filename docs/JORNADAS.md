@@ -9,7 +9,7 @@ lançamento, nos cartões de categoria e nas contas pendentes, com o seletor
 de período que confirma no próprio popover, com o rascunho protegido do
 formulário de lançamento, e com os menus do telefone em gaveta. As telas de
 acesso foram revistas em 2026-10-12 (a casca no layout) e em 2026-10-14 (o
-painel de marca animado) e as notificações em 2026-10-17 (o painel flutuante, o sino exato e a revisão do servidor, ainda não publicada) e em 2026-10-21 (o aviso de despesa e os crons passam ao banco, por migração, também ainda não publicados); a busca do telefone em 2026-10-19 (a lupa vira a barra) e, no mesmo dia, a aba "Você" no lugar do menu "Mais" (a página `/me`). Em 2026-10-21 entrou o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura, a importação de extrato e de planilha e os anexos, com as telas em wireframe (`src/components/wireframe/`) e ainda não publicado (`supabase/BLOCO_2_DEPLOYMENT.md`). Em 2026-10-22 entrou o Bloco 3A, "captura sem abrir o app": o token pessoal em Minha conta, a Edge `capture` (o Atalho do iPhone e o Apple Pay), a frase rápida no "+", o compartilhar do Android, os atalhos do ícone, a lista "A conferir" e o lembrete das 20h, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3A_DEPLOYMENT.md`). No mesmo dia entrou o Bloco 3B, "IA grátis na captura e na fatura": "Tentar com IA" na frase rápida, a foto do recibo no formulário, a foto e a frase confusa na Edge `capture`, a compra parcelada capturada que vira plano, o compartilhar de foto e PDF do Android, "Ler com IA" na conferência da fatura e a política de privacidade em `/privacidade`, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3B_DEPLOYMENT.md`). Em 2026-10-23 entrou o Bloco 4, "planos e confiança": a rota pública `/precos`, o plano em `/plans` (teste de 14 dias, vitalício, cobertura da família e "só leitura" no banco, desligados enquanto `billing_settings.enforced_since` é nulo), a faixa de só leitura na casca, o Piloto Automático (`/piloto`), o Cofre aberto (`/cofre`, com "Exportar tudo" e "Apagar a conta") e a jornada de 4 passos (`/comecar`), com as telas em wireframe e ainda não publicado (`supabase/BLOCO_4_DEPLOYMENT.md`); o assinar de verdade fica para o Bloco 8. Em 2026-10-24 entrou o Bloco 5, "previsão": o "seguro para gastar" no Painel e em `/previsao` (com a linha do tempo de 6 meses e a reserva), a receita recorrente nas assinaturas, o quadro de impacto da parcela, o orçamento que se repete todo mês, o aviso de orçamento pelo mês do fechamento da fatura e o aviso de fatura acima do normal, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_5_DEPLOYMENT.md`). Quando uma tela mudar de caminho, atualize o
+painel de marca animado) e as notificações em 2026-10-17 (o painel flutuante, o sino exato e a revisão do servidor, ainda não publicada) e em 2026-10-21 (o aviso de despesa e os crons passam ao banco, por migração, também ainda não publicados); a busca do telefone em 2026-10-19 (a lupa vira a barra) e, no mesmo dia, a aba "Você" no lugar do menu "Mais" (a página `/me`). Em 2026-10-21 entrou o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura, a importação de extrato e de planilha e os anexos, com as telas em wireframe (`src/components/wireframe/`) e ainda não publicado (`supabase/BLOCO_2_DEPLOYMENT.md`). Em 2026-10-22 entrou o Bloco 3A, "captura sem abrir o app": o token pessoal em Minha conta, a Edge `capture` (o Atalho do iPhone e o Apple Pay), a frase rápida no "+", o compartilhar do Android, os atalhos do ícone, a lista "A conferir" e o lembrete das 20h, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3A_DEPLOYMENT.md`). No mesmo dia entrou o Bloco 3B, "IA grátis na captura e na fatura": "Tentar com IA" na frase rápida, a foto do recibo no formulário, a foto e a frase confusa na Edge `capture`, a compra parcelada capturada que vira plano, o compartilhar de foto e PDF do Android, "Ler com IA" na conferência da fatura e a política de privacidade em `/privacidade`, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3B_DEPLOYMENT.md`). Em 2026-10-23 entrou o Bloco 4, "planos e confiança": a rota pública `/precos`, o plano em `/plans` (teste de 14 dias, vitalício, cobertura da família e "só leitura" no banco, desligados enquanto `billing_settings.enforced_since` é nulo), a faixa de só leitura na casca, o Piloto Automático (`/piloto`), o Cofre aberto (`/cofre`, com "Exportar tudo" e "Apagar a conta") e a jornada de 4 passos (`/comecar`), com as telas em wireframe e ainda não publicado (`supabase/BLOCO_4_DEPLOYMENT.md`); o assinar de verdade fica para o Bloco 8. Em 2026-10-24 entrou o Bloco 5, "previsão": o "seguro para gastar" no Painel e em `/previsao` (com a linha do tempo de 6 meses e a reserva), a receita recorrente nas assinaturas, o quadro de impacto da parcela, o orçamento que se repete todo mês, o aviso de orçamento pelo mês do fechamento da fatura e o aviso de fatura acima do normal, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_5_DEPLOYMENT.md`). Em 2026-10-24 entrou também o Bloco 6A, "contas a pagar" revista: a conta que não é paga não para de recorrer (passo 0 do cron), o lembrete por janela, a edição da agenda que reprograma a pendente, o pular atômico, os estados Encerrada e Concluída, o valor variável pela média, o casamento automático do pagamento ("Isso pagou a conta X?"), o boleto no pagamento e no lançamento pago, a explicação "conta ou assinatura" e a saída do "Beta", com as telas novas em wireframe e ainda não publicado (`supabase/BLOCO_6A_DEPLOYMENT.md`). Quando uma tela mudar de caminho, atualize o
 diagrama dela.
 
 ## Como ler os diagramas
@@ -346,7 +346,7 @@ flowchart TD
     sidebar --> nav2["/transactions"]
     sidebar --> nav3["/categories"]
     sidebar --> nav4["/subscriptions"]
-    sidebar --> nav5["/bills (Beta)"]
+    sidebar --> nav5["/bills"]
     sidebar --> nav6["/credit-cards"]
     sidebar --> nav7["/members"]
     sidebar --> nav8["/settings"]
@@ -856,19 +856,26 @@ flowchart TD
 
 ## 7. Contas a pagar
 
-`/bills` (Beta): contas recorrentes e o que está pendente, incluindo as faturas
-de cartão que fecharam em aberto.
+`/bills`: contas recorrentes e o que está pendente, incluindo as faturas de
+cartão que fecharam em aberto. A conta a pagar é paga pela pessoa, e o app
+lembra e confirma; a assinatura (jornada 8) cobra sozinha, e o app lança. O
+Pix Automático é assinatura.
 
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart TD
-    bills["/bills?detail=id"] -->|"detail presente"| sheet(["Painel da conta"])
+    bills["/bills?detail=id&new=1"] -->|"detail presente"| sheet(["Painel da conta: Ativa, Encerrada, Concluída ou Inativa"])
+    bills -->|"new=1, aberto pelo link da assinatura"| form
     bills --> tabs{"Aba"}
-    tabs -->|"Contas: todas, ativas, inativas"| summary(["Cartões de conta"])
+    tabs -->|"Contas: todas, ativas, inativas"| summary(["Cartões de conta, com o estado calculado"])
     tabs -->|"Pendentes: todas, atrasadas, 30 dias"| pending(["Itens pendentes"])
-    bills -->|"Nova conta"| form(["Formulário: nome, categoria, periodicidade, vencimento, valor, início, fim, forma, cartão, lembretes, ativa"])
+    bills -->|"Nova conta"| form(["Formulário: nome, categoria, periodicidade, vencimento, valor, valor variável, início, fim, forma, cartão, lembretes, ativa"])
+    form -->|"WIREFRAME Conta ou assinatura"| explain(["Explicação: conta é paga pela pessoa; assinatura cobra sozinha"])
+    explain -->|"Nova assinatura"| G8(("G8 /subscriptions?new=1"))
+    form -->|"WIREFRAME Valor variável"| varAmount(["Estimativa pela média das 3 últimas pagas"])
     form -->|"Salvar"| saved(["Conta criada ou atualizada"])
     saved -->|"Ver, ao criar e online"| bills
+    saved -->|"editou a agenda"| resched[("Reprograma a pendente futura; apaga a depois do fim; avança se a data já existe")]
     form -->|"Cancelar"| bills
 
     bills --> empty{"Vazio?"}
@@ -880,11 +887,15 @@ flowchart TD
     pending --> kind{"Tipo do item"}
     kind -->|"parcela de conta"| regular(["Parcela"])
     kind -->|"fatura de cartão fechada"| virtual(["Fatura: o total do banco, se informado; senão, o calculado com os estornos"])
+    pending -->|"despesa recente parecida com uma pendente"| match(["WIREFRAME Casamento: Isso pagou a conta X?"])
+    match -->|"Sim"| linkRpc[("RPC ligar_pagamento_da_conta: marca paga, liga o lançamento, sem lançar de novo")]
+    linkRpc --> G5(("G5 Lançamentos"))
+    match -->|"Não"| noMatch(["Lembra no aparelho (localStorage); a pergunta some"]) --> pending
 
     regular -->|"clique"| sheet
-    regular -->|"Pagar"| payRegular(["Pagar: valor, data, categoria, forma, cartão, descrição"])
+    regular -->|"Pagar"| payRegular(["Pagar: valor, data até hoje, categoria, forma, cartão, descrição; boleto só para abrir"])
     regular -->|"⋯ Editar modelo"| form
-    regular -->|"⋯ Ignorar parcela"| skip(["Parcela ignorada; próxima gerada"])
+    regular -->|"⋯ Ignorar parcela"| skip[("RPC pular_instancia_da_conta: atômica; próxima gerada")]
     regular -->|"⋯ Excluir conta"| del(["Excluir conta?"])
 
     virtual -->|"clique"| G6(("G6 /credit-cards/id"))
@@ -909,12 +920,15 @@ flowchart TD
     payRegular -->|"Registrar pagamento"| online{"Online?"}
     online -->|"não"| needNet(["Requer conexão"])
     online -->|"sim"| payRpc[("RPC pay_bill_instance: cria despesa")]
-    payRpc --> alerts[("Edges evaluate-budgets e alertas de cartão")] --> G5(("G5 Lançamentos"))
+    payRpc --> alerts[("Edges evaluate-budgets e alertas de cartão")] --> G5
+    G5 -->|"Detalhe do lançamento pago: boleto da instância ligada, sem Apagar"| billFiles
+    G5 -->|"apagar o lançamento"| reopen[("Trigger: a instância volta a pendente; a média é recalculada")] --> pending
     payVirtual -->|"Marcar como paga"| invPay[("credit_card_invoice_payments, sem despesa")] --> G6
     del -->|"Excluir"| removed(["Conta removida com todas as parcelas"])
     del -->|"Cancelar"| bills
 
-    reminders[("Edge evaluate-bills-reminders")] -.->|"3 dias antes, no dia e atraso"| notif(("G3 Notificação bill_reminder"))
+    reminders[("Edge evaluate-bills-reminders, via cron: passo 0 gera as pendentes que faltam, depois avisa por janela")] -.->|"menor offset da janela, no atraso e uma vez por instância"| notif(("G3 Notificação bill_reminder"))
+    reminders -.->|"cria a instância de cada vencimento que chegou"| pending
 ```
 
 ### Regras técnicas
@@ -924,9 +938,21 @@ flowchart TD
 | Dados | Um RPC traz a página inteira; desde o Bloco 2 ele traz também as receitas no cartão (os estornos), e o total do banco das faturas vem à parte (`credit_card_statement_totals`) | `rpc_fetch_bills_page_bundle` em `src/lib/queries/fetch-bills-page-bundle.ts`, `supabase/migrations/20261022121000_bills_bundle_estornos.sql`, `src/lib/queries/use-statement-totals.ts` |
 | Fatura como pendência | Projetada no cliente a partir dos ciclos fechados com valor em aberto. O valor é o total do banco quando a pessoa o informou na conferência da fatura; senão, o calculado (despesas menos estornos). Total zero ou negativo (saldo credor) não vira pendência | `src/lib/bills/credit-card-bill-projector.ts`, `src/lib/fatura/total-com-banco.ts` |
 | Anexos (Bloco 2) | O painel da conta (`?detail=`) mostra os anexos da parcela pendente que ele exibe (`bill_instance_id`), com as mesmas regras dos anexos do lançamento, e abaixo os da última parcela paga (por vencimento), só para abrir: sem anexar nem apagar, e a seção some se ela não tem anexo | `src/components/bills/bill-detail-sheet.tsx`, `src/components/wireframe/anexos-wireframe.tsx` |
-| Pagar conta | `pay_bill_instance` cria a despesa e avança a recorrência; bloqueado offline | `src/lib/bills/pay-bill-flow.ts` |
+| Boleto (Bloco 6A) | O boleto é anexo da **instância** e não é copiado ao pagar. O diálogo de pagar o mostra só para abrir (a fatura virtual não tem instância); o detalhe do lançamento pago mostra os anexos da instância ligada (`bill_instances.transaction_id`), sem "Apagar" ali. `attachments` não ganhou política de `update` | `src/components/bills/pay-bill-dialog.tsx`, `src/lib/bills/anexos-da-conta.ts`, `src/components/transactions/transaction-detail-sheet.tsx` |
+| Pagar conta | `pay_bill_instance` cria a despesa e avança a recorrência a partir do **vencimento pago**, e não do dia do pagamento (o ciclo é a referência); bloqueado offline. A data do pagamento não pode ser depois de hoje ("A data do pagamento não pode ser depois de hoje.") | `src/lib/bills/pay-bill-flow.ts`, `src/components/bills/pay-bill-dialog.tsx` |
 | Pagar fatura | Só marca como paga: as compras já estão lançadas no cartão | `src/lib/bills/pay-bill-flow.ts` |
-| Recorrência | Mensal, Bimestral, Trimestral, Anual, Única | `src/lib/bills/recurrence.ts` |
+| Recorrência | Mensal, Bimestral, Trimestral, Anual, Única. **Uma regra só**, no `_shared`, que o cliente reexporta e a Edge usa: o dia 31 vence no último dia do mês curto (28 ou 29 em fevereiro, 30 em abril); a trimestral iniciada em 31/01 vence em 30/04; a anual de 29/02 vence em 28/02 no ano que não é bissexto | `supabase/functions/_shared/recorrencia-conta.ts`, `src/lib/bills/recurrence.ts` |
+| Passo 0 (Bloco 6A) | A conta que não é paga não para: o primeiro passo do `evaluate-bills-reminders` cria, para cada conta ativa e não `one_time`, a pendência de cada vencimento que já chegou (até hoje), a partir da última instância. Respeita o `end_date`; `upsert` com `ignoreDuplicates` em `(bill_id, due_date)`, então o passo 0, o pagamento e o pular dão uma instância só por vencimento. Três meses sem pagar viram três pendências vencidas. O limite de 60 dias do lembrete vale para o aviso, não para a geração; a resposta traz `geradas` | `supabase/functions/evaluate-bills-reminders/index.ts`, `vencimentosQueFaltam` em `_shared/recorrencia-conta.ts` |
+| Lembrete por janela (Bloco 6A) | A vencer: a instância avisa o **menor offset** da janela (`0 <= dias até o vencimento <= offset`), uma vez por offset, então um dia sem cron não perde o aviso. Atrasada: no 1º dia e a cada 7. Nos dois, `sent_on` fica no vencimento, e o `releaseDedupe` filtra também por `sent_on`. Depois do `end_date` não há aviso | `offsetDaJanela` em `supabase/functions/_shared/notification-schedule.ts`, `evaluate-bills-reminders/index.ts` |
+| Editar a agenda | Mudar `due_day_of_month`, `frequency`, `start_date`, `end_date` ou reativar reprograma a pendente: a que ainda não venceu passa à próxima data do ciclo a partir do último vencimento pago ou pulado (nunca antes de hoje nem do início); a depois do fim é apagada; se a data já existe (23505), avança ao ciclo seguinte. A pendente vencida não muda, é dívida de um ciclo que passou. Reativar uma conta sem pendente cria a próxima. O replay offline faz o mesmo | `src/lib/bills/reprogramar.ts`, `updateBillRow` em `src/lib/bills/mutations.ts`, `src/lib/offline/handlers/bills.ts` |
+| Pular | `pular_instancia_da_conta` é atômico: a instância é reivindicada com `status = 'pending'` e a próxima nasce com `on conflict do nothing`. Falha com `BILL_INSTANCE_NOT_PENDING` quando já não está pendente | `supabase/migrations/20261027120000_contas.sql`, `skipBillInstance` em `src/lib/bills/mutations.ts` |
+| Encerrada e Concluída | Estados calculados, sem coluna: sem pendente, a `one_time` é **Concluída** e a recorrente com `end_date` antes de hoje é **Encerrada**; o resto é Ativa ou Inativa. Não nasce instância depois do `end_date`, nem a primeira | `statusDaConta` em `src/components/bills/bill-status.ts` |
+| Valor variável (Bloco 6A) | `bills.valor_variavel` (padrão `false`). Quando a conta é variável, o gatilho `media_da_conta` grava `amount_estimated` como a média dos `paid_amount` das 3 últimas pagas (arredondada a centavo), dentro da carteira da instância, ao pagar, reabrir, editar o valor ou apagar uma instância paga. Sem nenhuma paga com valor, fica o valor digitado. Lista, lembrete e previsão já leem `amount_estimated`: a fonte é uma só | `supabase/migrations/20261027120000_contas.sql`, `src/components/wireframe/conta-valor-variavel-wireframe.tsx` |
+| Lançamento apagado ou editado | Apagar o lançamento de uma conta paga reabre a instância (`pending`, com `paid_at`, `paid_amount`, `transaction_id` e `amount` nulos): ela volta às Pendentes e o lembrete volta a valer. Mudar o valor do lançamento acompanha o `paid_amount`. Os dois são gatilhos em `transactions` (`reabrir_instancia_ao_apagar`, `acompanhar_valor_pago`) | `supabase/migrations/20261027120000_contas.sql` |
+| Instância da carteira da conta | O gatilho `same_ws_bill_id` impede `bill_instances.bill_id` de apontar para a conta de outra carteira | `supabase/migrations/20261027120000_contas.sql` |
+| Casamento automático (Bloco 6A) | Na aba Pendentes, o cliente cruza as despesas dos últimos 40 dias com as pendentes: descrição parecida (o casador de palavras da conferência da fatura), valor dentro de ±15% e data dentro de ±5 dias do vencimento. Cada lançamento casa com uma conta só (a de maior semelhança), receita nunca casa, e um lançamento já ligado a qualquer conta não reaparece. "Sim" chama `ligar_pagamento_da_conta` (marca a instância paga com o valor e a data do lançamento e liga os dois, sem lançamento novo; `TRANSACTION_ALREADY_LINKED` e `BILL_INSTANCE_NOT_PENDING` fazem a pergunta sair). "Não" fica em `localStorage`, neste aparelho | `src/lib/bills/casamento.ts`, `src/components/wireframe/casamento-conta-wireframe.tsx`, `src/app/(app)/bills/page-client.tsx` |
+| Conta ou assinatura | A explicação (wireframe) fica nos dois formulários e leva ao outro cadastro: `/subscriptions?new=1` e `/bills?new=1`. `new=1` abre o cadastro uma vez e sai da URL | `src/components/wireframe/conta-ou-assinatura-wireframe.tsx`, `src/app/(app)/bills/page-client.tsx` |
+| O "hoje" da tela | Recalculado quando a janela volta ao foco e na virada do dia, e não mais congelado ao abrir a página | `src/hooks/use-hoje-ymd.ts` |
 | Botão direito | No cartão de pendência, repete o "Pagar" e o menu de três pontos, que continuam à vista | `src/components/bills/bill-pending-card.tsx` |
 | "Ver" do toast | Criar uma conta mostra "Ver", que leva a `/bills?detail=id` e abre o painel dela (sem levar os outros filtros da URL); na fila offline, sem "Ver" | `src/app/(app)/bills/page-client.tsx` |
 
@@ -947,6 +973,7 @@ flowchart TD
     list -->|"Nova assinatura"| form
     list -->|"vazio"| emptyNew(["Cadastre suas assinaturas"]) --> form
     list -->|"filtro sem resultado"| clear(["Limpar filtros"]) --> list
+    form -->|"WIREFRAME Conta ou assinatura: Nova conta a pagar"| G7(("G7 /bills?new=1"))
     form -->|"link do cartão"| G6(("G6 /credit-cards"))
     form -->|"link da categoria"| G9(("G9 /categories"))
     form -->|"Salvar"| saved(["Assinatura cadastrada ou atualizada"]) --> list
@@ -980,6 +1007,7 @@ flowchart TD
 | Periodicidade | Semanal, Mensal, Bimestral, Anual | `src/components/subscriptions/subscription-form-dialog.tsx` |
 | Cobrança | `run-recurring-billing` só aceita chamada com `CRON_SECRET`; o Painel recupera o atraso | `supabase/functions/run-recurring-billing/index.ts` |
 | Receita recorrente (Bloco 5) | `workspace_subscriptions.kind` é `expense` (o padrão) ou `income`. O formulário ganha o wireframe "Receita recorrente" (Despesa ou Receita): com Receita, a categoria é de receita e a forma de pagamento perde o cartão (o check `workspace_subscriptions_income_no_card`: receita no cartão é estorno). `charge_subscription_cycle` e `seed_subscription_first_transaction` gravam `type = kind`, e o check `transactions_subscription_expense_only` saiu. A lista marca a receita com "Receita" e mantém o valor neutro. O salário cadastrado entra no extrato como `income` e soma no seguro; **não** aparece nos eventos de pagamento do calendário, nos compromissos da categoria de despesa nem na fatura de um cartão. A previsão trata as duas à parte (`fluxoDoMes`: a receita vai a "previstas" de receitas) | `src/components/wireframe/receita-recorrente-wireframe.tsx`, `src/components/subscriptions/subscription-form-fields.tsx`, `src/components/subscriptions/subscription-form-shared.ts`, `src/components/dashboard/payment-events.ts`, `supabase/migrations/20261026120000_previsao.sql` |
+| Conta ou assinatura (Bloco 6A) | O formulário abre com a explicação (wireframe): a assinatura cobra sozinha e o app lança; o que a pessoa paga por boleto ou Pix é conta a pagar, e o link leva a `/bills?new=1` | `src/components/wireframe/conta-ou-assinatura-wireframe.tsx` |
 | Filtro por assinatura | `/transactions?sub=id` | `src/lib/transactions-list-search-params.ts` |
 | Estado na URL | `sort=<coluna>.<asc\|desc>`, `page=N` (a partir de 1), `q` (a busca) e `status=active` ou `inactive`, lidos ao abrir e gravados a cada troca; trocar de carteira zera os quatro | `urlState` do `DataTable` em `src/app/(app)/subscriptions/page-client.tsx` |
 | Tabela | `DataTable` no cliente: busca sem acento, exportar CSV, colunas e densidade guardadas; Excluir da linha está no ⋯ (Editar fica à vista); cancelar a exclusão em lote mantém a seleção | `src/app/(app)/subscriptions/page-client.tsx` |
@@ -1333,6 +1361,10 @@ continuam aqui para registro.
 | 34 | G5 | Com "em 10x" na frase rápida, o quadro de impacto da parcela aparece duas vezes: na frase e, depois de aplicada, no formulário no modo Parcelada. |
 | 35 | G9, G13 | O orçamento da categoria não abate o estorno no cartão: a Edge `evaluate-budgets` e a tela de Categorias somam só a despesa. A fatura e a previsão abatem. |
 | 36 | G4, G5, G8, G9, G13 | O Bloco 5 (previsão, receita recorrente, orçamento que se repete e aviso de fatura alta) está no repositório, com as telas em wireframe, e **nada foi publicado**. O backend pode subir antes do front, menos a Edge `credit-card-calendar-alerts`, que sobe com o front porque o aviso de fatura alta leva a `/previsao`, e com dois cuidados (uma receita recorrente cadastrada aparece como despesa em `main` e precisa ser apagada; o aviso de orçamento de `main` avalia mais de um mês): `supabase/BLOCO_5_DEPLOYMENT.md`. |
+| 37 | G7 | Se a reprogramação da agenda falhar depois de o `update` da conta gravar (só no replay offline), o replay seguinte não a refaz: a agenda lida de antes já é a nova. Guardar a agenda de antes no payload resolve. |
+| 38 | G7 | Uma conta `one_time` com `end_date` antes do 1º vencimento fica sem pendente e aparece como "Concluída", sem nunca ter sido paga. |
+| 39 | G3, G7 | Os atrasos não são agrupados por conta: no 1º dia depois do deploy, o passo 0 cria as pendências vencidas que faltavam, e uma conta com várias atrasadas pode mandar até 2 avisos de atraso no mesmo dia (o 1º dia e a janela de 7 dias de cada instância). |
+| 40 | G3, G7, G8 | O Bloco 6A (contas a pagar revista: recorrência que não trava, lembrete por janela, reprogramar, pular atômico, valor variável, casamento e boleto) está no repositório, com as telas novas em wireframe, e **nada foi publicado**. A migração sobe antes do front (o front do 2.0 chama as RPCs novas e manda `valor_variavel`); as duas Edges sobem junto: `supabase/BLOCO_6A_DEPLOYMENT.md`. |
 
 ### Fechadas na rodada de acesso (set/2026)
 
@@ -1363,6 +1395,12 @@ string. Se recusar, o link cai na Site URL como antes.
 | 10 | O painel da conta mostrava só os anexos da parcela pendente; o boleto da parcela paga sumia | O painel mostra também os anexos da última parcela paga, só para abrir (`AnexosWireframe somenteLeitura`) |
 | 11 | Com o popup bloqueado, "Abrir" um anexo levava a URL assinada à mesma janela, e a pessoa saía do app | Com o popup bloqueado, a seção mostra o link "Abrir anexo" com a URL assinada, numa aba nova |
 | 13 | Os avisos de fatura da Edge usavam o total calculado e podiam discordar do total do banco | `credit-card-calendar-alerts` e `evaluate-credit-card-alerts` usam o total do banco na fatura fechada (`escolherTotal`, `_shared/credit-card-cycle.ts`), lido numa consulta só por execução |
+
+### Fechadas em 24/out/2026
+
+| Era | Lacuna | O que fechou |
+|---|---|---|
+| — | A recorrência da conta travava sem pagamento: a próxima instância só nascia quando a atual era paga ou pulada, então uma conta esquecida parava de vencer e de lembrar | O passo 0 do `evaluate-bills-reminders` gera, todo dia, a pendência de cada vencimento que já chegou, a partir da última instância, pela regra única de `_shared/recorrencia-conta.ts`; o lembrete passou a valer pela janela |
 
 ### Fechadas em 22/out/2026
 

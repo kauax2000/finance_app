@@ -110,7 +110,6 @@ export const MAIN_NAVIGATION: NavigationItem[] = [
         name: "Contas a pagar",
         href: ROUTES.BILLS,
         icon: ClipboardDocumentCheckIcon,
-        beta: true,
     },
     {
         // O rótulo da barra é curto; o título da página continua "Cartões de crédito".
