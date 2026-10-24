@@ -1,6 +1,6 @@
 # Jornadas do app
 
-O mapa de tudo o que uma pessoa faz no app, dividido em doze jornadas. Cada
+O mapa de tudo o que uma pessoa faz no app, dividido em treze jornadas. Cada
 jornada tem um fluxograma, as regras técnicas que decidem os caminhos e as
 lacunas encontradas no código. Foi escrito lendo o código em 2026-09-17, na
 branch `finance-app-2.0`, e a navegação global foi revista em 2026-10-01,
@@ -9,7 +9,7 @@ lançamento, nos cartões de categoria e nas contas pendentes, com o seletor
 de período que confirma no próprio popover, com o rascunho protegido do
 formulário de lançamento, e com os menus do telefone em gaveta. As telas de
 acesso foram revistas em 2026-10-12 (a casca no layout) e em 2026-10-14 (o
-painel de marca animado) e as notificações em 2026-10-17 (o painel flutuante, o sino exato e a revisão do servidor, ainda não publicada) e em 2026-10-21 (o aviso de despesa e os crons passam ao banco, por migração, também ainda não publicados); a busca do telefone em 2026-10-19 (a lupa vira a barra) e, no mesmo dia, a aba "Você" no lugar do menu "Mais" (a página `/me`). Em 2026-10-21 entrou o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura, a importação de extrato e de planilha e os anexos, com as telas em wireframe (`src/components/wireframe/`) e ainda não publicado (`supabase/BLOCO_2_DEPLOYMENT.md`). Em 2026-10-22 entrou o Bloco 3A, "captura sem abrir o app": o token pessoal em Minha conta, a Edge `capture` (o Atalho do iPhone e o Apple Pay), a frase rápida no "+", o compartilhar do Android, os atalhos do ícone, a lista "A conferir" e o lembrete das 20h, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3A_DEPLOYMENT.md`). No mesmo dia entrou o Bloco 3B, "IA grátis na captura e na fatura": "Tentar com IA" na frase rápida, a foto do recibo no formulário, a foto e a frase confusa na Edge `capture`, a compra parcelada capturada que vira plano, o compartilhar de foto e PDF do Android, "Ler com IA" na conferência da fatura e a política de privacidade em `/privacidade`, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3B_DEPLOYMENT.md`). Em 2026-10-23 entrou o Bloco 4, "planos e confiança": a rota pública `/precos`, o plano em `/plans` (teste de 14 dias, vitalício, cobertura da família e "só leitura" no banco, desligados enquanto `billing_settings.enforced_since` é nulo), a faixa de só leitura na casca, o Piloto Automático (`/piloto`), o Cofre aberto (`/cofre`, com "Exportar tudo" e "Apagar a conta") e a jornada de 4 passos (`/comecar`), com as telas em wireframe e ainda não publicado (`supabase/BLOCO_4_DEPLOYMENT.md`); o assinar de verdade fica para o Bloco 8. Quando uma tela mudar de caminho, atualize o
+painel de marca animado) e as notificações em 2026-10-17 (o painel flutuante, o sino exato e a revisão do servidor, ainda não publicada) e em 2026-10-21 (o aviso de despesa e os crons passam ao banco, por migração, também ainda não publicados); a busca do telefone em 2026-10-19 (a lupa vira a barra) e, no mesmo dia, a aba "Você" no lugar do menu "Mais" (a página `/me`). Em 2026-10-21 entrou o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura, a importação de extrato e de planilha e os anexos, com as telas em wireframe (`src/components/wireframe/`) e ainda não publicado (`supabase/BLOCO_2_DEPLOYMENT.md`). Em 2026-10-22 entrou o Bloco 3A, "captura sem abrir o app": o token pessoal em Minha conta, a Edge `capture` (o Atalho do iPhone e o Apple Pay), a frase rápida no "+", o compartilhar do Android, os atalhos do ícone, a lista "A conferir" e o lembrete das 20h, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3A_DEPLOYMENT.md`). No mesmo dia entrou o Bloco 3B, "IA grátis na captura e na fatura": "Tentar com IA" na frase rápida, a foto do recibo no formulário, a foto e a frase confusa na Edge `capture`, a compra parcelada capturada que vira plano, o compartilhar de foto e PDF do Android, "Ler com IA" na conferência da fatura e a política de privacidade em `/privacidade`, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3B_DEPLOYMENT.md`). Em 2026-10-23 entrou o Bloco 4, "planos e confiança": a rota pública `/precos`, o plano em `/plans` (teste de 14 dias, vitalício, cobertura da família e "só leitura" no banco, desligados enquanto `billing_settings.enforced_since` é nulo), a faixa de só leitura na casca, o Piloto Automático (`/piloto`), o Cofre aberto (`/cofre`, com "Exportar tudo" e "Apagar a conta") e a jornada de 4 passos (`/comecar`), com as telas em wireframe e ainda não publicado (`supabase/BLOCO_4_DEPLOYMENT.md`); o assinar de verdade fica para o Bloco 8. Em 2026-10-24 entrou o Bloco 5, "previsão": o "seguro para gastar" no Painel e em `/previsao` (com a linha do tempo de 6 meses e a reserva), a receita recorrente nas assinaturas, o quadro de impacto da parcela, o orçamento que se repete todo mês, o aviso de orçamento pelo mês do fechamento da fatura e o aviso de fatura acima do normal, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_5_DEPLOYMENT.md`). Quando uma tela mudar de caminho, atualize o
 diagrama dela.
 
 ## Como ler os diagramas
@@ -48,7 +48,8 @@ banco.
 10. [Conta e segurança](#10-conta-e-segurança)
 11. [Plano e só leitura](#11-plano-e-só-leitura)
 12. [Confiança: Piloto, Cofre e o começo](#12-confiança-piloto-cofre-e-o-começo)
-13. [Lacunas encontradas](#13-lacunas-encontradas)
+13. [Previsão](#13-previsão)
+14. [Lacunas encontradas](#14-lacunas-encontradas)
 
 ---
 
@@ -106,6 +107,12 @@ flowchart LR
     G12 -->|"Apagar a conta"| G1
 
     G10 -->|"sair ou excluir conta"| G1
+
+    G4 -->|"cartão Seguro para gastar"| G13(("G13 Previsão"))
+    G5 -->|"Parcelada: quadro de impacto antes de salvar"| G13
+    G8 -->|"receita recorrente entra no caixa previsto"| G13
+    G3 -->|"sino: fatura acima do normal"| G13
+    G13 -->|"fatura que vence no mês"| G6
 ```
 
 ---
@@ -462,6 +469,13 @@ flowchart TD
     blocks --> reviewCount(["WIREFRAME A conferir: N, só com N maior que zero"])
     reviewCount -->|"link"| conferir["/transactions?conferir=1"]
     conferir --> G5c(("G5c A conferir"))
+    blocks --> seguroMes{"Mês do seletor é o corrente?"}
+    seguroMes -->|"sim"| seguroCard(["WIREFRAME Seguro para gastar, compacto: o valor, por dia e o regime"])
+    seguroMes -->|"não"| seguroOutro(["WIREFRAME A previsão é do mês corrente"])
+    seguroCard -->|"Ver a previsão"| prev(("G13 /previsao"))
+    seguroOutro -->|"Ver a previsão"| prev
+    state -->|"ok"| garantir[("RPC garantir_orcamentos_do_mes, uma vez por carteira e mês")]
+    garantir -->|"copiou linhas"| orcRefresh(["Recarrega as categorias"])
     blocks --> journeyCard{"jornada_concluida_em nulo?"}
     journeyCard -->|"sim"| journeyInvite(["WIREFRAME Cartão: Veja o que o app faz por você"])
     journeyInvite -->|"link"| G12(("G12 /comecar"))
@@ -485,6 +499,9 @@ flowchart TD
 | Prévia | "Ver origem" monta a rota pelo tipo do evento | `src/components/dashboard/dashboard-payment-event-preview-sheet.tsx` |
 | A conferir (Bloco 3A) | Entre os indicadores e o calendário, o wireframe "A conferir: N" conta os lançamentos `needs_review` da carteira (pelo índice parcial `transactions_needs_review_idx`) e leva a `/transactions?conferir=1`. Com zero, some; um erro na contagem também o esconde | `src/components/wireframe/a-conferir-contagem-wireframe.tsx`, `src/app/(app)/dashboard/page-client.tsx` |
 | Cartão da jornada (Bloco 4) | No alto do Painel, o wireframe "Veja o que o app faz por você" leva a `/comecar` enquanto `user_settings.jornada_concluida_em` é nulo; "Agora não" grava a data e o cartão some. Sem resposta da leitura, não aparece. Não há redirecionamento automático para a jornada | `src/components/wireframe/jornada-cartao-wireframe.tsx`, `src/app/(app)/dashboard/page-client.tsx` |
+| Seguro para gastar (Bloco 5) | Entre o seletor de mês e os indicadores, o wireframe "Seguro para gastar" mostra o valor, o valor por dia (contando hoje) e o regime ("Caixa: o dinheiro que sai neste mês. A fatura conta no mês em que vence."), com o link "Ver a previsão" para `/previsao`. É compacto: o detalhe mora na rota. Só no mês corrente; em outro mês do seletor, o cartão diz "A previsão é do mês corrente" e mantém o link. Carregando ou em erro, o cartão diz isso e mantém o link. O Painel lê a previsão por `usePrevisao`, com os mesmos hooks e `queryKey` dele | `src/components/wireframe/seguro-para-gastar-wireframe.tsx`, `src/lib/previsao/use-previsao.ts`, `src/app/(app)/dashboard/page-client.tsx` |
+| Orçamentos que repetem (Bloco 5) | Ao abrir, o Painel chama `garantir_orcamentos_do_mes` (a mesma chamada de Categorias, no máximo uma vez por carteira e mês na sessão). Se a RPC criou linhas, as categorias são invalidadas e a tela refaz a busca. Erro vai ao console e a próxima abertura tenta de novo | `src/hooks/use-garantir-orcamentos-do-mes.ts`, `src/lib/category-budget-ops.ts` |
+| "Em aberto" e "prevista" (Bloco 5) | O "em aberto" das faturas do Painel segue o `buildCardMonthlyInvoiceSnapshot`: **não** soma as assinaturas do cartão que ainda vão cair. A fatura "prevista" da previsão (`faturaPrevista`) soma. São dois números com dois nomes; a revisão de tela decide se o "em aberto" passa a ser o previsto | `src/components/dashboard/use-dashboard-data.ts`, `src/lib/previsao/fatura-prevista.ts` |
 | Fatura e estorno (Bloco 2) | Nas faturas do mês, uma fatura fechada vale o total do banco quando a pessoa o informou (`credit_card_statement_totals`); a aberta segue o calculado. O estorno no cartão (receita com `payment_method = 'credit_card'`) abate a despesa do mês de fechamento e não conta como receita. A consulta do período pede `source`, `needs_review` e `import_batch_id`: sem a migração do Bloco 2, o Painel não carrega | `src/components/dashboard/use-dashboard-data.ts`, `src/lib/fatura/total-com-banco.ts`, `src/lib/expense-month-attribution.ts`, `src/lib/queries/use-transactions-range.ts` |
 
 ---
@@ -592,6 +609,10 @@ flowchart TD
     income -->|"Estorno no cartão: escolher o cartão"| refund(["WIREFRAME Estorno: receita no crédito, com o cartão"])
     refund -->|"Salvar"| saveTx
     refund -.->|"abate a fatura do ciclo em que cai; fora da receita do Painel"| G6
+    inst -.->|"2 ou mais parcelas e valor, antes de salvar"| impacto(["WIREFRAME Impacto da parcela: parcela e fim, pico, próximas faturas, renda, mês no vermelho e limite"])
+    frase -.->|"com parcelas e valor"| impacto
+    planInfo -.->|"detalhe de compra parcelada"| impacto
+    impacto -.->|"a mesma conta da previsão"| G13(("G13 Previsão"))
     inst -->|"Salvar"| savePlan[("RPC create_workspace_installment_plan")]
     saveTx -->|"offline"| queued(["Salva na fila offline"])
     saveTx -->|"erro"| keep(["Aviso; formulário continua aberto"])
@@ -726,6 +747,7 @@ flowchart TD
 | Tabela | `DataTable` em modo `manual` (o banco ordena e pagina): a seleção não alcança as projetadas, que também não abrem nem têm menu; o mês só agrupa ordenado por data; a barra de seleção é flutuante e cancelar a exclusão mantém a seleção; no telefone, a lista gerada das colunas | `src/components/transactions/transactions-table.tsx`, `src/components/ui/data-table.tsx` |
 | Formulário | Um componente para criar, e o mesmo campo a campo na edição | `src/components/transactions/transaction-form-dialog.tsx`, `transaction-form-use.tsx` |
 | Parcelada | RPC `create_workspace_installment_plan`; editar o plano não muda parcelas já lançadas. Desde o Bloco 3B, a compra preenchida pela frase ou pela IA marca depois da RPC as parcelas já lançadas (`source` e `needs_review`, pela RLS de membro; falhando, o plano fica), e a foto do recibo vai à 1ª parcela (`primeiraParcelaDoPlano`). As parcelas que o cron lança depois nascem `app`, sem marca | `src/components/transactions/transaction-form-persistence.ts`, `src/components/transactions/transaction-form-use.tsx` |
+| Impacto da parcela (Bloco 5) | O wireframe "Impacto da parcela" aparece em três lugares: no formulário, no modo Parcelada, com 2 ou mais parcelas, data e valor (e, no crédito, o cartão escolhido); na frase rápida, quando a frase aplicada traz parcelas e valor; e no detalhe de um lançamento de compra parcelada, com o plano ativo. Com "em 10x" na frase, o quadro aparece duas vezes (na frase e no formulário). Nenhuma conta própria: o "depois" é a mesma `projecaoMensal` e a mesma `faturaPrevista` com um plano sintético igual ao que o banco gravaria. Mostra a parcela e o mês da última, o pico de parcelas num mês (pelo mês da cobrança), as 3 próximas faturas antes e depois (só com cartão), a parcela como % da renda recorrente (`kind = income`; sem receita, diz que não há), o primeiro mês da linha do tempo com o seguro negativo, antes e depois, e o limite. O limite disponível desconta as faturas fechadas não pagas (o total do banco, quando gravado), o lançado na aberta e todas as parcelas futuras, e **não** as assinaturas; sem cartão (Pix, por exemplo), não há faturas nem limite, e o cartão sem `credit_limit` diz "Sem limite cadastrado" em vez de "Não cabe no limite do cartão" | `src/components/wireframe/impacto-parcela-wireframe.tsx`, `src/lib/previsao/impacto-parcela.ts`, `src/components/transactions/transaction-form-fields.tsx`, `src/components/wireframe/frase-rapida-wireframe.tsx`, `src/components/transactions/transaction-detail-sheet.tsx` |
 | Detalhe | Mesmo painel no Painel, em Cartões e em Categorias | `src/components/transactions/transaction-detail-sheet.tsx` |
 | Exclusão | Parcela cancela o plano inteiro por `delete_workspace_installment_plan_cascade`. Continua com confirmação, e não com o Desfazer do toast: a exclusão é física (`delete`), sem `deleted_at` nem RPC de restaurar, e recriar mudaria o id e quebraria parcelas, recorrência e faturas (verificado na rodada 228) | `src/lib/transactions/mutations.ts` |
 | "Ver" do toast | Criar uma transação (não editar) mostra "Ver", que leva a `/transactions?txn=id` e abre o detalhe; a compra parcelada leva a `?plan=id`. Offline não há id, e o toast sai sem "Ver". A trava que abre o `txn` uma vez só volta a soltar quando a URL perde o parâmetro — antes, com `/transactions` aberta, o segundo `?txn=` não abria nada | `persistTransactionSave` em `src/lib/transaction-detail-sheet-mutations.ts`, `transaction-form-persistence.ts`, `use-transactions-list-controller.ts` |
@@ -828,7 +850,7 @@ flowchart TD
 | Ler com IA (Bloco 3B) | Quando a leitura de um PDF fica incompleta, aparece "Ler com IA": o texto do PDF já redigido no aparelho (`removerIdentificacao`), guardado da leitura, vai à `ia-ler` com o fechamento do ciclo, sem reler o arquivo nem pedir a senha. A Edge redige de novo e corta em fatias de 12.000 caracteres (até 6; acima, "Fatura grande demais para a IA. Use o CSV do banco."), cada uma gastando uma cota. Os itens da IA substituem os do leitor, com "Lido pela IA" no topo; o total continua o do leitor determinístico. Sem item válido, os itens do leitor ficam e o aviso diz "A IA não achou itens nesta fatura. Confira à mão.". Lida pela IA, o botão some | `src/components/wireframe/conferir-fatura-wireframe.tsx`, `src/lib/ia/fatura.ts`, `src/lib/ia/ler.ts` |
 | Total do banco (Bloco 2) | Gravar o total (digitado ou lido) faz um `upsert` em `credit_card_statement_totals` (`workspace_id`, `credit_card_id`, `statement_close_date`), com `source` `manual`, `pdf`, `csv` ou `ofx`. Lido de PDF, o PDF vira anexo do total (o mesmo PDF não sobe duas vezes; falhar aqui não desfaz o total). Numa fatura fechada, o painel mostra "Total do banco · diferença", e o Painel, Contas a pagar e os avisos de fatura da Edge usam o total do banco no lugar do calculado | `src/components/wireframe/conferir-fatura-wireframe.tsx`, `src/lib/fatura/total-com-banco.ts`, `src/components/credit-cards/credit-card-invoice-analytics-panel.tsx` |
 | Estorno (Bloco 2) | A fatura é despesas menos estornos (receita no cartão), e pode ficar negativa; os percentuais por categoria seguem sobre o gasto bruto. Os alertas de limite, fechamento e vencimento descontam o estorno | `src/lib/credit-card-billing.ts`, `src/lib/credit-card-invoice-analytics.ts`, `supabase/functions/_shared/credit-card-cycle.ts` |
-| Alertas | Limite, fechamento e vencimento geram notificações `cc_*`. A compra parcelada no cartão roda a conferência de limite, como a despesa avulsa. Numa fatura fechada (fechou, vence em breve, vence hoje e, no limite, a última fechada não paga), o valor é o total do banco quando gravado (`escolherTotal` em `_shared/credit-card-cycle.ts`, a regra de `totalComBanco`); o calendário lê `credit_card_statement_totals` numa consulta só por execução. A fatura que ainda fecha usa o calculado | edges `evaluate-credit-card-alerts`, `credit-card-calendar-alerts`; `src/components/transactions/transaction-form-persistence.ts` |
+| Alertas | Limite, fechamento e vencimento geram notificações `cc_*`. A compra parcelada no cartão roda a conferência de limite, como a despesa avulsa. Numa fatura fechada (fechou, vence em breve, vence hoje e, no limite, a última fechada não paga), o valor é o total do banco quando gravado (`escolherTotal` em `_shared/credit-card-cycle.ts`, a regra de `totalComBanco`); o calendário lê `credit_card_statement_totals` numa consulta só por execução. A fatura que ainda fecha usa o calculado. Desde o Bloco 5 o `credit-card-calendar-alerts` também avisa a fatura acima do normal (ver 13), com consulta própria | edges `evaluate-credit-card-alerts`, `credit-card-calendar-alerts`; `src/components/transactions/transaction-form-persistence.ts` |
 
 ---
 
@@ -917,8 +939,9 @@ flowchart TD
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart TD
-    subs["/subscriptions?new=1&sort&page&q&status"] -->|"new presente"| form(["Formulário: nome, valor, periodicidade, próxima cobrança, forma, cartão, categoria, observações"])
-    subs --> list(["Lista: todas, ativas, inativas; ordenar; buscar; colunas e densidade"])
+    subs["/subscriptions?new=1&sort&page&q&status"] -->|"new presente"| form(["Formulário: nome, tipo (Despesa ou Receita), valor, periodicidade, próxima cobrança, forma, cartão, categoria, observações"])
+    form -->|"Receita"| incomeSub(["WIREFRAME Receita recorrente: categorias de receita; sem cartão"]) --> form
+    subs --> list(["Lista: todas, ativas, inativas; ordenar; buscar; colunas e densidade; marcador Receita"])
     list -.->|"ordenar, página, busca, status"| url["URL"]
     list -->|"Exportar"| csv(["CSV da lista filtrada"])
     list -->|"Nova assinatura"| form
@@ -946,6 +969,7 @@ flowchart TD
     cron[("Edge run-recurring-billing, via cron")] --> billed(["Cobrança vira lançamento"])
     catchup[("RPC catch_up_recurring_billing ao abrir o Painel")] --> billed
     billed --> G5(("G5 Lançamentos"))
+    billed -.->|"receita: type income; despesa: expense"| G13(("G13 Previsão"))
 ```
 
 ### Regras técnicas
@@ -955,6 +979,7 @@ flowchart TD
 | Dados | `rpc_fetch_subscriptions_page_bundle` | `src/lib/queries/fetch-subscriptions-page-bundle.ts` |
 | Periodicidade | Semanal, Mensal, Bimestral, Anual | `src/components/subscriptions/subscription-form-dialog.tsx` |
 | Cobrança | `run-recurring-billing` só aceita chamada com `CRON_SECRET`; o Painel recupera o atraso | `supabase/functions/run-recurring-billing/index.ts` |
+| Receita recorrente (Bloco 5) | `workspace_subscriptions.kind` é `expense` (o padrão) ou `income`. O formulário ganha o wireframe "Receita recorrente" (Despesa ou Receita): com Receita, a categoria é de receita e a forma de pagamento perde o cartão (o check `workspace_subscriptions_income_no_card`: receita no cartão é estorno). `charge_subscription_cycle` e `seed_subscription_first_transaction` gravam `type = kind`, e o check `transactions_subscription_expense_only` saiu. A lista marca a receita com "Receita" e mantém o valor neutro. O salário cadastrado entra no extrato como `income` e soma no seguro; **não** aparece nos eventos de pagamento do calendário, nos compromissos da categoria de despesa nem na fatura de um cartão. A previsão trata as duas à parte (`fluxoDoMes`: a receita vai a "previstas" de receitas) | `src/components/wireframe/receita-recorrente-wireframe.tsx`, `src/components/subscriptions/subscription-form-fields.tsx`, `src/components/subscriptions/subscription-form-shared.ts`, `src/components/dashboard/payment-events.ts`, `supabase/migrations/20261026120000_previsao.sql` |
 | Filtro por assinatura | `/transactions?sub=id` | `src/lib/transactions-list-search-params.ts` |
 | Estado na URL | `sort=<coluna>.<asc\|desc>`, `page=N` (a partir de 1), `q` (a busca) e `status=active` ou `inactive`, lidos ao abrir e gravados a cada troca; trocar de carteira zera os quatro | `urlState` do `DataTable` em `src/app/(app)/subscriptions/page-client.tsx` |
 | Tabela | `DataTable` no cliente: busca sem acento, exportar CSV, colunas e densidade guardadas; Excluir da linha está no ⋯ (Editar fica à vista); cancelar a exclusão em lote mantém a seleção | `src/app/(app)/subscriptions/page-client.tsx` |
@@ -984,7 +1009,7 @@ flowchart TD
     onboarded -->|"sim"| listView(["Lista: Despesas ou Receitas; mês só em Despesas"])
 
     newRoute["/categories/new"] --> catForm
-    listView -->|"Nova categoria"| catForm(["Formulário: tipo, nome, cor, ícone; limite do mês se despesa"])
+    listView -->|"Nova categoria"| catForm(["Formulário: tipo, nome, cor, ícone; limite do mês se despesa, com Repetir todo mês"])
     catForm -->|"Salvar"| savedCat[("Categoria e orçamento do mês")]
     savedCat -->|"toast Ver, ao criar e online"| detail
     savedCat --> listView
@@ -1011,7 +1036,13 @@ flowchart TD
     embedded -->|"linha"| txDetail(("G5b Detalhe"))
     embedded -->|"vazio: Nova transação"| txForm(("G5b Formulário"))
 
-    budget[("Edge evaluate-budgets")] -.->|"limite atingido"| notifBudget(("G3 Notificação budget_threshold"))
+    budget[("Edge evaluate-budgets")] -.->|"limite atingido, pelo mês do fechamento da fatura"| notifBudget(("G3 Notificação budget_threshold"))
+
+    cats --> ensure[("RPC garantir_orcamentos_do_mes, ao abrir")]
+    ensure -->|"copiou linhas"| listView
+    cronCopy[("Cron orcamentos-do-mes, dia 1 às 00:05 de Brasília")] -.-> copied(["Orçamentos que repetem copiados para o mês novo"])
+    copied -.-> listView
+    catForm -->|"Repetir todo mês desmarcado"| noRepeat[("budgets.repeats = false: o mês seguinte não ganha esta linha")]
 ```
 
 ### Regras técnicas
@@ -1023,6 +1054,8 @@ flowchart TD
 | "Ver" do toast | Criar uma categoria (pela tela ou pelo diálogo do "+ Adicionar") mostra "Categoria criada" com "Ver", que leva a `/categories/id?type=`; se o orçamento falhar, o aviso "Categoria criada, mas o orçamento não foi salvo" leva ao mesmo detalhe. Na fila offline, sem "Ver". A tela de categorias não mostrava toast nenhum ao criar | `src/components/categories/category-create-dialog.tsx`, `src/app/(app)/categories/page-client.tsx` |
 | Entradas no detalhe | Lista de categorias, gasto por categoria do cartão, notificação de orçamento | `src/components/categories/detail/` |
 | Orçamento | Avaliado depois de cada despesa criada ou editada e de cada conta paga; mudar o valor do orçamento rearma os avisos de 80%, 100% e estouro. Criar a categoria não notifica mais | edge `evaluate-budgets`, `src/lib/category-budget-ops.ts` |
+| Orçamento que se repete (Bloco 5) | O formulário da categoria de despesa ganha o wireframe "Repetir todo mês" (ligado por padrão), que grava `budgets.repeats`. Sem novo valor, o upsert não roda e só a repetição do orçamento já salvo muda (`definirRepeticao`). O padrão do banco é `true`; só o mês corrente foi marcado na migração, e o histórico ficou `false`. `copiar_orcamentos_do_mes(p_period_start, p_workspace_id)` copia a linha do mês anterior com `repeats` para o mês dado, **uma vez por carteira e mês**: o marcador `orcamentos_copiados` entra antes e é ele que impede o orçamento apagado no mês de voltar. O mês que já tem a categoria não ganha outra (`on conflict do nothing` na chave única), a categoria apagada já levou o orçamento pela FK em cascata, e os avisos (`threshold_*`) nascem nulos. Roda pelo cron `orcamentos-do-mes` (`5 3 1 * *`, 00:05 em Brasília) e pelo RPC `garantir_orcamentos_do_mes(p_workspace_id)`, que confere o membro e a Categorias e o Painel chamam ao abrir | `src/components/wireframe/orcamento-repete-wireframe.tsx`, `src/lib/category-budget-ops.ts`, `src/hooks/use-garantir-orcamentos-do-mes.ts`, `supabase/migrations/20261026120000_previsao.sql` |
+| Aviso pelo mês do fechamento (Bloco 5) | `evaluate-budgets` soma a categoria no mês pelo `gastoDaCategoriaNoMes` (`_shared/orcamento-mes.ts`): a despesa fora do cartão conta pelo dia; a do cartão, pelo mês do **fechamento** da fatura da compra. É a mesma regra do `postedTotal` de `buildCategoryCommitmentsForMonth`, travada pelos vetores dourados (`orcamento-mes-vectors.json`). A receita (o estorno no cartão também) não entra: **a categoria não abate o estorno**, como a tela. Os chamadores (formulário, edição, conta paga, a fila offline e a `capture`) mandam `payment_method` e `payment_credit_card_id`, e a Edge avalia o orçamento do mês do fechamento. O front antigo de `main` não manda: a Edge avalia o dia e o fechamento da compra em cada cartão da carteira | `supabase/functions/evaluate-budgets/index.ts`, `supabase/functions/_shared/orcamento-mes.ts`, `src/lib/fixtures/orcamento-mes-vectors.json` |
 | Botão direito | No cartão de categoria, o menu toma o lugar do menu do navegador sobre o link, por isso traz "Abrir em nova aba"; o ⋯ continua | `src/components/categories/category-card-context-menu.tsx` |
 
 ---
@@ -1211,7 +1244,58 @@ flowchart TD
 
 ---
 
-## 13. Lacunas encontradas
+## 13. Previsão
+
+`/previsao` e o cartão do Painel: quanto sobra para gastar no mês, os próximos 6
+meses e o que uma compra parcelada faz a eles. É a jornada nova do Bloco 5, em
+wireframe. **Os números são de caixa** (o dinheiro que sai no mês, com a fatura
+contada no mês em que **vence**); o orçamento da categoria é de competência (a
+compra no crédito conta no mês do **fechamento**). Cada tela diz qual regime mostra.
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    dash(("G4 Painel: cartão Seguro para gastar")) -->|"Ver a previsão"| prev["/previsao"]
+    bell(("G3 Sino")) -->|"Fatura acima do normal, href /previsao"| prev
+    prev --> read[("Leitura: transações, assinaturas, parcelas, contas, cartões e totais do banco")]
+    read --> detail(["WIREFRAME Seguro para gastar: receitas, despesas, faturas que vencem, reserva, sobra e comprometido na próxima fatura"])
+    read --> linhaTempo(["WIREFRAME Linha do tempo: 6 meses, entra, sai e sobra; primeiro mês no vermelho; fim de parcelamentos"])
+    read -->|"falha"| readErr(["Mensagem de erro; os links seguem"])
+    detail -->|"Salvar reserva"| owner{"A pessoa é dona da carteira?"}
+    owner -->|"sim"| saveReserve[("workspaces.monthly_savings_target")] --> detail
+    owner -->|"não"| readOnly(["Campo só leitura: só quem é dono altera a reserva"])
+    detail -->|"fatura do cartão"| G6(("G6 /credit-cards"))
+
+    subs(("G8 Assinaturas: receita recorrente")) -->|"entra em receitas previstas"| detail
+    form(("G5b Formulário Parcelada, frase rápida ou detalhe de compra parcelada")) -.->|"2 ou mais parcelas e valor"| impact(["WIREFRAME Impacto da parcela, antes de salvar: a mesma conta da previsão"])
+    impact -->|"sem cartão: só parcela, pico, renda e seguro"| impact
+
+    cron[("Cron credit-card-calendar-alerts, 9h em Brasília")] --> trend{"Aberta mais as parcelas acima de 120% da média das 3 últimas fechadas?"}
+    trend -->|"sim: uma vez por ciclo"| alert[("Notificação cc_invoice_trending_high, tipo credit_card")]
+    alert --> bell
+    trend -->|"não, ou menos de 3 fechadas"| quiet(["Não avisa"])
+```
+
+### Regras técnicas
+
+| Ponto | Regra | Onde |
+|---|---|---|
+| Rota | `/previsao`, dentro do app, sem entrada no menu: a porta é o cartão do Painel (e o sino, quando a fatura passa do normal). `ROUTES.PREVISAO` e o título "Previsão" em `APP_PAGE_TITLES`; tem `loading.tsx` e `AdiarMontagem` | `src/app/(app)/previsao/`, `src/config/navigation.ts` |
+| Regime e mês | O mês é o do calendário (sem `cycle_start_day`), e **não há saldo de partida**: cada mês começa do zero. O dia vem de `America/Sao_Paulo` (`localYmdFromDate` no cliente). O "seguro para gastar" é caixa; o orçamento é competência (ver 9) | `src/lib/previsao/fluxo.ts` |
+| `fluxoDoMes` | A única fonte do seguro e da linha do tempo. **Entra:** receita fora do cartão (a que já passou e a prevista) e as cobranças de assinatura `income` ainda não lançadas. **Sai:** a despesa fora do cartão (paga e prevista), as cobranças de assinatura e de parcela fora do cartão ainda não lançadas, as contas a pagar e as faturas que **vencem** no mês. A receita no cartão é estorno: abate a fatura e não conta como receita. A conta é em centavos | `src/lib/previsao/fluxo.ts` |
+| `faturaPrevista` | A fatura do snapshot (compras, estornos e parcelas projetadas) **mais** as assinaturas de despesa do cartão ainda não lançadas na janela. Fechada e com o total do banco, vale o do banco; **a aberta nunca usa o total do banco**. O rótulo é "prevista", não "em aberto" (ver Painel) | `src/lib/previsao/fatura-prevista.ts` |
+| Contas a pagar | Toda instância `pending` com vencimento até o fim do mês entra pelo valor da instância ou o `amount_estimated` da conta, inclusive a vencida de mês anterior (sai no mês de hoje, porque o dinheiro ainda vai sair). As ocorrências seguintes da mesma conta são projetadas pela recorrência (`computeNextBillInstanceDueYmd`). Conta sem valor entra com 0 e é listada como "sem valor". A fatura paga continua no caixa do mês do vencimento e é marcada `paga` | `src/lib/previsao/fluxo.ts` |
+| `seguroParaGastar` | `sobra do mês − reserva`. `diasRestantes` conta o dia de hoje (no último dia do mês, 1) e `porDia` é o seguro dividido por eles, 0 se o seguro não é positivo. "Já comprometido na próxima fatura" soma a fatura aberta de cada cartão que vence depois do mês. O fechamento no dia 31 vira o último dia do mês, e a fatura cujo vencimento cai no mês seguinte não entra no caixa deste | `src/lib/previsao/fluxo.ts` |
+| `projecaoMensal` | Os 6 meses a partir do atual, cada um um `fluxoDoMes`, mais o "fim de parcelamentos" (o mês em que sai o dinheiro da última parcela: a data da cobrança fora do cartão, o vencimento da fatura que a contém no cartão) e o primeiro mês de sobra negativa | `src/lib/previsao/fluxo.ts` |
+| Reserva | `workspaces.monthly_savings_target`, editada no campo "Reserva do mês" do detalhe. A escrita segue a política `Owners can update workspace`: o membro vê o campo desabilitado com o aviso; se o `update` não alcança linha, a tela diz que só o dono altera. Vale por carteira (o campo remonta ao trocar) | `src/components/wireframe/seguro-para-gastar-wireframe.tsx`, `supabase/migrations/20261026120000_previsao.sql` |
+| Dados | `usePrevisao` usa os mesmos hooks e `queryKey` do Painel, mais as contas ativas (`previsaoContas`, só as colunas que a previsão lê) e uma janela própria de transações: do dia 1 de dois meses atrás ao fim do sexto mês à frente. Qualquer consulta pendente deixa a tela em "Carregando…"; qualquer falha mostra a mensagem | `src/lib/previsao/use-previsao.ts`, `src/lib/queries/invalidate-workspace-data.ts` |
+| Impacto da parcela | Ver 5, "Impacto da parcela (Bloco 5)": o mesmo núcleo, com um plano sintético. O limite é o do banco: faturas fechadas não pagas, o lançado na aberta e todas as parcelas futuras, **sem** assinaturas | `src/lib/previsao/impacto-parcela.ts` |
+| Alerta de fatura alta | No cron diário `credit-card-calendar-alerts` (12:00 UTC), para cada cartão ativo: a fatura em aberto mais as parcelas que ainda caem nela contra a média das 3 últimas fechadas (o total do banco, se gravado; a fatura sem movimento não conta). Acima de 120% (120% exatos não) e com 3 fechadas, avisa. Tipo `credit_card` e preferência `notify_credit_cards`, `metadata.href` `/previsao`, dedupe `cal:trending_high:{fechamento}:c:{cartão}` (uma vez por ciclo). A consulta é própria e paginada: falhar não derruba os outros avisos do calendário. **A mensagem diz o valor previsto e quanto ele passa da média, mas não diz quanto sobra no mês do vencimento**: isso exigiria reescrever o seguro em Deno, uma segunda conta; a pessoa vê o seguro em `/previsao` | `supabase/functions/credit-card-calendar-alerts/index.ts`, `supabase/functions/_shared/fatura-tendencia.ts`, `supabase/functions/_shared/notification-copy.ts` |
+| Paridade | A projeção de parcelas do alerta espelha `sumProjectedCreditCardInstallmentsInWindow` do cliente, travada por `fatura-tendencia-vectors.json`; o gasto do orçamento, por `orcamento-mes-vectors.json` | `src/lib/fatura-tendencia-parity.test.ts`, `src/lib/orcamento-mes-parity.test.ts` |
+
+---
+
+## 14. Lacunas encontradas
 
 Coisas que o mapeamento achou no caminho. As de acesso foram corrigidas na
 rodada de set/2026 e estão registradas abaixo da tabela; as que sobraram
@@ -1243,6 +1327,12 @@ continuam aqui para registro.
 | 28 | G3, G4, G10, G11, G12 | O Bloco 4 (planos e só leitura, `/precos`, Piloto Automático, Cofre aberto e a jornada de 4 passos) está no repositório, com as telas em wireframe, e **nada foi publicado**. O backend pode subir antes do front, porque com `enforced_since` nulo nada dele muda o front de `main`: `supabase/BLOCO_4_DEPLOYMENT.md`. |
 | 29 | G12 | O Cofre ainda diz "região a confirmar" em cada dado. Troca por "no Brasil" (ou pela região) quando a região do projeto Supabase for conferida (passo 4 do roteiro). |
 | 30 | G1, G11 | Nenhuma tela de acesso (`/login`, `/register`, a raiz) leva a `/precos`: hoje só se chega a ela pelo endereço direto ou pelo `/plans`. A porta pública do preço existe, mas ninguém a encontra antes de ter conta. |
+| 31 | G4, G13 | O "em aberto" das faturas do Painel não soma as assinaturas do cartão que ainda vão cair; a "prevista" da previsão soma. Os dois números têm nomes diferentes de propósito, mas a mesma fatura mostra valores diferentes no Painel e em `/previsao`. A revisão de tela decide se o "em aberto" passa a ser o previsto. |
+| 32 | G13, G3 | O aviso de fatura acima do normal diz o valor previsto e quanto ele passa da média, mas não quanto sobra no mês do vencimento. Para dizer, a conta do seguro teria de ser reescrita em Deno, uma segunda implementação. O link leva a `/previsao`, onde o seguro está. |
+| 33 | G6, G13 | O vencimento de um cartão é sempre posto no mês seguinte ao do fechamento (`estimatedDueDateForClose`), regra antiga mantida. Um cartão que fecha no dia 5 e vence no dia 25 do mesmo mês é previsto um mês depois do real. |
+| 34 | G5 | Com "em 10x" na frase rápida, o quadro de impacto da parcela aparece duas vezes: na frase e, depois de aplicada, no formulário no modo Parcelada. |
+| 35 | G9, G13 | O orçamento da categoria não abate o estorno no cartão: a Edge `evaluate-budgets` e a tela de Categorias somam só a despesa. A fatura e a previsão abatem. |
+| 36 | G4, G5, G8, G9, G13 | O Bloco 5 (previsão, receita recorrente, orçamento que se repete e aviso de fatura alta) está no repositório, com as telas em wireframe, e **nada foi publicado**. O backend pode subir antes do front, com dois cuidados (uma receita recorrente cadastrada aparece como despesa em `main`; o aviso de orçamento de `main` avalia mais de um mês): `supabase/BLOCO_5_DEPLOYMENT.md`. |
 
 ### Fechadas na rodada de acesso (set/2026)
 

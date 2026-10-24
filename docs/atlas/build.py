@@ -52,14 +52,15 @@ def table(block):
 
 diagrams = re.findall(r"```mermaid\n(.*?)```", md, re.S)
 tables = re.findall(r"((?:^\|.*\|\n)+)", md, re.M)
-# 18 tabelas: a da legenda, doze de "Regras técnicas" (as duas novas, T11 e T12,
-# são as jornadas 11 e 12 do Bloco 4), a de lacunas abertas e as quatro de
-# lacunas fechadas. As de lacunas ficam no fim do arquivo e o template as
+# 19 tabelas: a da legenda, treze de "Regras técnicas" (as três novas, T11, T12
+# e T13, são as jornadas 11 e 12 do Bloco 4 e a 13 do Bloco 5), a de lacunas
+# abertas e as quatro de lacunas fechadas. As de lacunas ficam no fim do arquivo e o template as
 # escreve à mão, então não deslocam nenhum índice de @@Tn@@.
-# 17 diagramas: o 5c (captura e "A conferir", Bloco 3A) entrou como @@D9@@ e
+# 18 diagramas: o 5c (captura e "A conferir", Bloco 3A) entrou como @@D9@@ e
 # deslocou os de Cartões em diante (@@D10@@ a @@D14@@). Os dois do Bloco 4
-# (@@D15@@, Plano e só leitura, e @@D16@@, Confiança) vêm depois do da Conta.
-assert len(diagrams) == 17 and len(tables) == 18, (len(diagrams), len(tables))
+# (@@D15@@, Plano e só leitura, e @@D16@@, Confiança) vêm depois do da Conta, e o
+# do Bloco 5 (@@D17@@, Previsão) é o último.
+assert len(diagrams) == 18 and len(tables) == 19, (len(diagrams), len(tables))
 out = re.sub(r"@@D(\d+)@@", lambda m: diagram(diagrams[int(m.group(1))]), tpl)
 out = re.sub(r"@@T(\d+)@@", lambda m: table(tables[int(m.group(1))]), out)
 assert "@@" not in out
