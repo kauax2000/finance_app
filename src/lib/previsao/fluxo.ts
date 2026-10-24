@@ -9,6 +9,7 @@ import {
     expandRemainingInstallmentCharges,
     isProjectedChargeAlreadyPosted,
 } from "@/lib/credit-card-installment-projection"
+import { estimatedDueDateForClose, firstCloseOnOrAfter } from "@/lib/credit-card-billing"
 import { statementTotalKey } from "@/lib/fatura/total-com-banco"
 import { compareYmd, localYmdFromDate, transactionLocalYmd } from "@/lib/transaction-date"
 import { centavos, cobrancasLancadas, cobrancasPorLancar, faturaPrevista } from "./fatura-prevista"
@@ -50,13 +51,14 @@ export function fluxoDoMes(dados: DadosDaPrevisao, ym: string): FluxoDoMes {
         else despesasPrevistas += v
     }
 
-    // Assinaturas e parcelas fora do cartão, de hoje em diante, ainda não lançadas.
-    const desde = compareYmd(hoje, inicio) > 0 ? hoje : inicio
-    if (compareYmd(desde, fim) <= 0) {
+    // Assinaturas e parcelas fora do cartão ainda não lançadas, num mês que não acabou. Elas partem
+    // da próxima cobrança (o cron já lançou o que vem antes), mesmo que ela seja de ontem e o cron
+    // esteja atrasado: o dinheiro ainda vai sair.
+    if (compareYmd(hoje, fim) <= 0) {
         const lancadas = cobrancasLancadas(dados.transacoes)
         for (const sub of dados.assinaturas) {
             if (sub.payment_method === "credit_card") continue
-            for (const v of cobrancasPorLancar(sub, desde, fim, lancadas)) {
+            for (const v of cobrancasPorLancar(sub, inicio, fim, lancadas)) {
                 if (sub.kind === "income") receitasPrevistas += centavos(v)
                 else despesasPrevistas += centavos(v)
             }
@@ -66,7 +68,7 @@ export function fluxoDoMes(dados: DadosDaPrevisao, ym: string): FluxoDoMes {
             if (p.payment_method === "credit_card") continue
             for (const c of expandRemainingInstallmentCharges(p)) {
                 const ymd = localYmdFromDate(c.chargeDate)
-                if (compareYmd(ymd, desde) < 0 || compareYmd(ymd, fim) > 0) continue
+                if (!noMes(ymd)) continue
                 if (isProjectedChargeAlreadyPosted(c, parcelasLancadas)) continue
                 despesasPrevistas += centavos(c.amount)
             }
@@ -74,29 +76,38 @@ export function fluxoDoMes(dados: DadosDaPrevisao, ym: string): FluxoDoMes {
     }
 
     // Contas a pagar (Decisão 3): a pendente sai no mês do vencimento, ou no de hoje se já venceu;
-    // as ocorrências seguintes da mesma conta são projetadas pela recorrência dela.
+    // as ocorrências seguintes da mesma conta são projetadas pela recorrência dela, a partir da
+    // pendente mais recente (duas pendentes da mesma conta não duplicam a projeção).
     const contasSemValor: string[] = []
-    const somarConta = (valor: number | null | undefined, nome: string) => {
+    const semValor = new Set<string>()
+    const somarConta = (valor: number | null | undefined, billId: string, nome: string) => {
         if (valor == null) {
-            if (!contasSemValor.includes(nome)) contasSemValor.push(nome)
+            if (!semValor.has(billId)) contasSemValor.push(nome)
+            semValor.add(billId)
             return
         }
         despesasPrevistas += centavos(valor)
     }
-    for (const inst of dados.contasPendentes) {
-        if (inst.status !== "pending") continue
+    const pendentes = dados.contasPendentes.filter((i) => i.status === "pending")
+    const ultimaPendente = new Map<string, string>()
+    for (const inst of pendentes) {
+        const due = inst.due_date.slice(0, 10)
+        const atual = ultimaPendente.get(inst.bill_id)
+        if (!atual || compareYmd(due, atual) > 0) ultimaPendente.set(inst.bill_id, due)
+    }
+    for (const inst of pendentes) {
         const conta = dados.contas.find((b) => b.id === inst.bill_id) ?? inst.bill ?? null
         const nome = conta?.name ?? "Conta"
         const due = inst.due_date.slice(0, 10)
         const saiEm = compareYmd(due.slice(0, 7), mesDeHoje) < 0 ? mesDeHoje : due.slice(0, 7)
-        if (saiEm === ym) somarConta(inst.amount ?? conta?.amount_estimated, nome)
-        if (!conta) continue
+        if (saiEm === ym) somarConta(inst.amount ?? conta?.amount_estimated, inst.bill_id, nome)
+        if (!conta || ultimaPendente.get(inst.bill_id) !== due) continue
         for (
             let prox = computeNextBillInstanceDueYmd(conta, due);
             prox && compareYmd(prox, fim) <= 0;
             prox = computeNextBillInstanceDueYmd(conta, prox)
         ) {
-            if (compareYmd(prox, inicio) >= 0) somarConta(conta.amount_estimated, nome)
+            if (compareYmd(prox, inicio) >= 0) somarConta(conta.amount_estimated, inst.bill_id, nome)
         }
     }
 
@@ -163,12 +174,20 @@ export function seguroParaGastar(dados: DadosDaPrevisao, ym: string = dados.hoje
 }
 
 export function projecaoMensal(dados: DadosDaPrevisao, meses = 6): Projecao {
-    // O fim de um parcelamento é o mês da última parcela (a data da cobrança).
+    // O fim de um parcelamento é o mês em que sai o dinheiro da última parcela: a data da cobrança
+    // fora do cartão; no cartão, o vencimento da fatura que a contém (a linha do tempo é caixa).
     const fins = new Map<string, MesDaLinha["fimDeParcelamentos"]>()
     for (const p of dados.planos) {
         const ultima = expandRemainingInstallmentCharges(p).at(-1)
         if (!ultima) continue
-        const ym = localYmdFromDate(ultima.chargeDate).slice(0, 7)
+        const card =
+            p.payment_method === "credit_card"
+                ? dados.cartoes.find((c) => c.id === p.payment_credit_card_id)
+                : undefined
+        const saida = card
+            ? estimatedDueDateForClose(firstCloseOnOrAfter(ultima.chargeDate, card.closing_day), card.due_day)
+            : ultima.chargeDate
+        const ym = localYmdFromDate(saida).slice(0, 7)
         fins.set(ym, [...(fins.get(ym) ?? []), { planoId: p.id, descricao: p.description?.trim() || "Parcelada" }])
     }
     const inicio = dados.hojeYmd.slice(0, 7)

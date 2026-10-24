@@ -200,15 +200,91 @@ describe("projecaoMensal", () => {
             ["2027-03", 5000],
             ["2027-04", 5000],
         ])
+        // A TV no cartão termina no caixa em fevereiro (a fatura de 10/01 vence em 20/02), não em
+        // dezembro, o mês da última compra.
         expect(p.meses.map((m) => m.fimDeParcelamentos)).toEqual([
             [],
-            [{ planoId: "tv", descricao: "TV" }],
-            [{ planoId: "curso", descricao: "Curso" }],
             [],
+            [{ planoId: "curso", descricao: "Curso" }],
+            [{ planoId: "tv", descricao: "TV" }],
             [],
             [],
         ])
         expect(p.primeiroMesNegativo).toBe("2027-01")
         expect(projecaoMensal(d, 2).primeiroMesNegativo).toBeNull()
+    })
+
+    it("10b. a parcela no cartão antes do fechamento termina no caixa um mês depois da compra", () => {
+        const d = dados({
+            hojeYmd: "2026-11-01",
+            cartoes: [cartao("c", 10, 20)],
+            planos: [
+                plano({
+                    id: "fone",
+                    description: "Fone",
+                    payment_method: "credit_card",
+                    payment_credit_card_id: "c",
+                    installment_amount: 100,
+                    final_installment_amount: 100,
+                    next_billing_date: "2026-11-05",
+                }),
+            ],
+        })
+        // Compra em 05/11, fecha em 10/11, vence em 20/12.
+        expect(projecaoMensal(d, 2).meses.map((m) => m.fimDeParcelamentos)).toEqual([
+            [],
+            [{ planoId: "fone", descricao: "Fone" }],
+        ])
+    })
+})
+
+describe("fluxoDoMes — bordas", () => {
+    it("a assinatura no cartão fica fora das despesas e entra na fatura", () => {
+        const d = dados({
+            hojeYmd: "2026-11-01",
+            cartoes: [cartao("c", 10, 20)],
+            assinaturas: [
+                assinatura({
+                    id: "netflix",
+                    amount: 40,
+                    payment_method: "credit_card",
+                    payment_credit_card_id: "c",
+                    next_billing_date: "2026-10-07",
+                }),
+                assinatura({ id: "academia", amount: 100, next_billing_date: "2026-11-15" }),
+            ],
+        })
+        const nov = fluxoDoMes(d, "2026-11")
+        expect(nov.despesas.previstas).toBe(100)
+        // A cobrança de 07/10 está na fatura de 10/10, que vence em 20/11.
+        expect(nov.faturas.map((f) => [f.closeYmd, f.total])).toEqual([["2026-10-10", 40]])
+    })
+
+    it("com o cron atrasado, a cobrança de ontem ainda não lançada entra no mês", () => {
+        const d = dados({
+            hojeYmd: "2026-11-10",
+            assinaturas: [assinatura({ id: "academia", amount: 100, next_billing_date: "2026-11-09" })],
+        })
+        expect(fluxoDoMes(d, "2026-11").despesas.previstas).toBe(100)
+    })
+
+    it("duas pendentes da mesma conta não duplicam a projeção", () => {
+        const aluguel = conta({ id: "aluguel", due_day_of_month: 5, amount_estimated: 1500 })
+        const d = dados({
+            hojeYmd: "2026-11-01",
+            contas: [aluguel],
+            contasPendentes: [pendente("aluguel", "2026-11-05"), pendente("aluguel", "2026-12-05")],
+        })
+        expect(fluxoDoMes(d, "2026-12").despesas.previstas).toBe(1500)
+        expect(fluxoDoMes(d, "2027-01").despesas.previstas).toBe(1500)
+    })
+
+    it("duas contas sem valor com o mesmo nome são duas linhas", () => {
+        const d = dados({
+            hojeYmd: "2026-11-01",
+            contas: [conta({ id: "a", name: "Seguro" }), conta({ id: "b", name: "Seguro" })],
+            contasPendentes: [pendente("a", "2026-11-10"), pendente("b", "2026-11-20")],
+        })
+        expect(fluxoDoMes(d, "2026-11").contasSemValor).toEqual(["Seguro", "Seguro"])
     })
 })
