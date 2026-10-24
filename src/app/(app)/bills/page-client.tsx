@@ -13,7 +13,7 @@ import { PlusIcon } from "@heroicons/react/16/solid"
 import { FunnelIcon, MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import type { User } from "@supabase/supabase-js"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
@@ -59,8 +59,9 @@ import {
 } from "@/lib/bills/mutations"
 import type { BillInstance } from "@/lib/supabase"
 import { useHojeYmd } from "@/hooks/use-hoje-ymd"
+import { billsPageBundleKeys } from "@/lib/queries/keys"
 import { useTransactionsRangeQuery } from "@/lib/queries/use-transactions-range"
-import { casamentoIgnorado, casarPagamentos, ligarPagamento, type Casamento } from "@/lib/bills/casamento"
+import { casamentoIgnorado, casarPagamentos, ligarPagamento, transacoesLigadas, type Casamento } from "@/lib/bills/casamento"
 import { computeNextBillInstanceDueYmd } from "@/lib/bills/recurrence"
 import { CasamentoContaWireframe } from "@/components/wireframe/casamento-conta-wireframe"
 import { statusDaConta, type StatusDaConta } from "@/components/bills/bill-status"
@@ -290,15 +291,21 @@ export default function BillsPageClient() {
         enabled: mode === "pending",
     })
     const [ignoradosTick, setIgnoradosTick] = useState(0)
+    // Quem já está ligado a QUALQUER conta, por consulta própria sobre esses lançamentos.
+    const despesaIds = useMemo(
+        () => (recentTxQ.data ?? []).filter((t) => t.type === "expense").map((t) => t.id).sort(),
+        [recentTxQ.data]
+    )
+    const ligadasQ = useQuery({
+        queryKey: [...billsPageBundleKeys.bundle(currentWorkspaceId ?? "__none__"), "ligadas", despesaIds.join(",")],
+        queryFn: () => transacoesLigadas(supabase, currentWorkspaceId ?? "", despesaIds),
+        enabled: mode === "pending" && Boolean(currentWorkspaceId) && despesaIds.length > 0,
+    })
     const casamentos = useMemo(() => {
-        if (mode !== "pending" || !recentTxQ.data) return [] as Casamento[]
-        const jaLigadas = new Set<string>()
-        for (const i of [
-            ...(bundleQ.data?.pendingInstances ?? []),
-            ...(bundleQ.data?.recentPaidInstances ?? []),
-        ]) {
-            if (i.transaction_id) jaLigadas.add(i.transaction_id)
+        if (mode !== "pending" || !recentTxQ.data || (despesaIds.length > 0 && !ligadasQ.data)) {
+            return [] as Casamento[]
         }
+        const jaLigadas = ligadasQ.data ?? new Set<string>()
         const pendentes = regularRows.flatMap((r) =>
             r.kind === "regular"
                 ? [{
@@ -324,7 +331,7 @@ export default function BillsPageClient() {
             jaLigadas
         ).filter((c) => !casamentoIgnorado(c))
         // eslint-disable-next-line react-hooks/exhaustive-deps -- `ignoradosTick` relê o localStorage
-    }, [mode, recentTxQ.data, bundleQ.data, regularRows, ignoradosTick])
+    }, [mode, recentTxQ.data, despesaIds, ligadasQ.data, regularRows, ignoradosTick])
 
     const paidSnippets = useMemo(
         () => bundleQ.data?.recentPaidInstances ?? [],
@@ -458,6 +465,8 @@ export default function BillsPageClient() {
             const r = await ligarPagamento(supabase, c, computeNextBillInstanceDueYmd(row.bill, row.dueYmd))
             if (!r.ok) {
                 toastError(r.erro ?? "Não foi possível ligar o pagamento.", { id: "casamento-conta" })
+                // A pergunta ficou velha (já ligado ou já paga): recarrega para ela sair.
+                if (r.conflito) await onInvalidate()
                 return
             }
             toastSuccess("Pagamento ligado à conta", { id: "casamento-conta" })

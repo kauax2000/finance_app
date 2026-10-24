@@ -68,7 +68,17 @@ export function casarPagamentos(
             })
         }
     }
-    candidatos.sort((a, b) => b.c.semelhanca - a.c.semelhanca || a.difValor - b.difValor)
+    // Empate total: o vencimento mais perto, depois os ids, para a ordem não depender da entrada.
+    const diasDe = (x: Casamento) =>
+        Math.abs(daysBetweenYmd(pendentes.find((p) => p.id === x.instanciaId)!.due_date, x.dataYmd) ?? 0)
+    candidatos.sort(
+        (a, b) =>
+            b.c.semelhanca - a.c.semelhanca ||
+            a.difValor - b.difValor ||
+            diasDe(a.c) - diasDe(b.c) ||
+            a.c.transacaoId.localeCompare(b.c.transacaoId) ||
+            a.c.instanciaId.localeCompare(b.c.instanciaId),
+    )
     const instUsadas = new Set<string>()
     const txUsadas = new Set<string>()
     const pares: Casamento[] = []
@@ -86,7 +96,7 @@ export async function ligarPagamento(
     supabase: SupabaseClient,
     c: Casamento,
     proximoVencimento: string | null,
-): Promise<{ ok: boolean; erro?: string }> {
+): Promise<{ ok: boolean; erro?: string; conflito?: boolean }> {
     const { error } = await supabase.rpc("ligar_pagamento_da_conta", {
         p_instance_id: c.instanciaId,
         p_transaction_id: c.transacaoId,
@@ -94,8 +104,8 @@ export async function ligarPagamento(
     })
     if (!error) return { ok: true }
     const msg = String(error.message ?? "")
-    if (msg.includes("TRANSACTION_ALREADY_LINKED")) return { ok: false, erro: "Esse lançamento já pagou outra conta." }
-    if (msg.includes("BILL_INSTANCE_NOT_PENDING")) return { ok: false, erro: "Esta conta já foi paga ou pulada." }
+    if (msg.includes("TRANSACTION_ALREADY_LINKED")) return { ok: false, erro: "Esse lançamento já pagou outra conta.", conflito: true }
+    if (msg.includes("BILL_INSTANCE_NOT_PENDING")) return { ok: false, erro: "Esta conta já foi paga ou pulada.", conflito: true }
     return { ok: false, erro: formatSupabasePostgrestError(error) ?? "Não foi possível ligar o pagamento." }
 }
 
@@ -115,4 +125,30 @@ export function casamentoIgnorado(c: Pick<Casamento, "instanciaId" | "transacaoI
     } catch {
         return false
     }
+}
+
+const LOTE_IDS = 100
+
+/**
+ * Dos lançamentos dados, os que já estão ligados a QUALQUER instância da carteira,
+ * por mais antiga que ela seja (o bundle só enxerga as de 90 dias de vencimento).
+ */
+export async function transacoesLigadas(
+    supabase: SupabaseClient,
+    workspaceId: string,
+    transactionIds: string[],
+): Promise<Set<string>> {
+    const ligadas = new Set<string>()
+    for (let i = 0; i < transactionIds.length; i += LOTE_IDS) {
+        const { data, error } = await supabase
+            .from("bill_instances")
+            .select("transaction_id")
+            .eq("workspace_id", workspaceId)
+            .in("transaction_id", transactionIds.slice(i, i + LOTE_IDS))
+        if (error) throw error
+        for (const r of (data ?? []) as Array<{ transaction_id: string | null }>) {
+            if (r.transaction_id) ligadas.add(r.transaction_id)
+        }
+    }
+    return ligadas
 }

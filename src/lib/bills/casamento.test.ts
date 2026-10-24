@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { casarPagamentos, ligarPagamento, type Casamento } from "./casamento"
+import { casamentoIgnorado, casarPagamentos, ignorarCasamento, ligarPagamento, transacoesLigadas, type Casamento } from "./casamento"
 
 const conta = (id: string, nome: string, due: string, estimado: number | null, amount: number | null = null) => ({
     id,
@@ -31,6 +31,26 @@ describe("casarPagamentos", () => {
         expect(casarPagamentos([luz], [tx("t1", "Conta de luz", 150, "2026-10-16")], new Set())).toEqual([])
         expect(casarPagamentos([luz], [tx("t1", "Conta de luz", 150, "2026-10-05")], new Set())).toHaveLength(1)
         expect(casarPagamentos([luz], [tx("t1", "Conta de luz", 150, "2026-10-04")], new Set())).toEqual([])
+    })
+
+    it("borda exata de 15%: 172,50 casa, 172,51 não", () => {
+        expect(casarPagamentos([luz], [tx("t1", "Conta de luz", 172.5, "2026-10-10")], new Set())).toHaveLength(1)
+        expect(casarPagamentos([luz], [tx("t1", "Conta de luz", 172.51, "2026-10-10")], new Set())).toEqual([])
+    })
+
+    it("empate total: vence o vencimento mais perto, depois o id, em qualquer ordem de entrada", () => {
+        const ts = [tx("tb", "Conta de luz", 160, "2026-10-10"), tx("ta", "Conta de luz", 140, "2026-10-10")]
+        expect(casarPagamentos([luz], ts, new Set())[0].transacaoId).toBe("ta")
+        expect(casarPagamentos([luz], [...ts].reverse(), new Set())[0].transacaoId).toBe("ta")
+        const perto = [tx("ta", "Conta de luz", 140, "2026-10-14"), tx("tb", "Conta de luz", 160, "2026-10-11")]
+        expect(casarPagamentos([luz], perto, new Set())[0].transacaoId).toBe("tb")
+        expect(casarPagamentos([luz], [...perto].reverse(), new Set())[0].transacaoId).toBe("tb")
+    })
+
+    it("conta antiga e vencida paga agora: o lançamento ligado a ela não é oferecido à instância atual", () => {
+        const atual = conta("i-out", "Conta de luz", "2026-10-10", 150)
+        // t1 pagou a instância de julho (fora dos 90 dias do bundle); chega por `transacoesLigadas`.
+        expect(casarPagamentos([atual], [tx("t1", "Conta de luz", 150, "2026-10-10")], new Set(["t1"]))).toEqual([])
     })
 
     it("receita nunca casa", () => {
@@ -89,10 +109,47 @@ describe("ligarPagamento", () => {
 
     it("mapeia os erros conhecidos", async () => {
         expect(await ligarPagamento(cliente({ message: "TRANSACTION_ALREADY_LINKED" }).client, c, null)).toEqual({
-            ok: false, erro: "Esse lançamento já pagou outra conta.",
+            ok: false, erro: "Esse lançamento já pagou outra conta.", conflito: true,
         })
         expect(await ligarPagamento(cliente({ message: "BILL_INSTANCE_NOT_PENDING" }).client, c, null)).toEqual({
-            ok: false, erro: "Esta conta já foi paga ou pulada.",
+            ok: false, erro: "Esta conta já foi paga ou pulada.", conflito: true,
         })
+    })
+})
+
+describe("transacoesLigadas", () => {
+    it("consulta bill_instances por transaction_id da carteira, em lotes de 100", async () => {
+        const chamadas: unknown[][] = []
+        const q: Record<string, unknown> = {}
+        q.from = () => q
+        q.select = () => q
+        q.eq = () => q
+        q.in = (_c: string, ids: string[]) => {
+            chamadas.push(ids)
+            return Promise.resolve({ data: ids.includes("t5") ? [{ transaction_id: "t5" }, { transaction_id: null }] : [], error: null })
+        }
+        const ids = Array.from({ length: 150 }, (_, i) => `t${i}`)
+        const r = await transacoesLigadas(q as unknown as SupabaseClient, "w1", ids)
+        expect([...r]).toEqual(["t5"])
+        expect(chamadas.map((c) => c.length)).toEqual([100, 50])
+    })
+})
+
+describe("localStorage do Não", () => {
+    const par = { instanciaId: "i1", transacaoId: "t1" }
+    it("guarda e lê o par", () => {
+        const mem = new Map<string, string>()
+        vi.stubGlobal("localStorage", { setItem: (k: string, v: string) => mem.set(k, v), getItem: (k: string) => mem.get(k) ?? null })
+        ignorarCasamento(par)
+        expect(mem.has("casamento:ignorado:i1:t1")).toBe(true)
+        expect(casamentoIgnorado(par)).toBe(true)
+        vi.unstubAllGlobals()
+    })
+    it("se o localStorage lança, não quebra e a pergunta só volta", () => {
+        const lanca = () => { throw new Error("bloqueado") }
+        vi.stubGlobal("localStorage", { setItem: lanca, getItem: lanca })
+        expect(() => ignorarCasamento(par)).not.toThrow()
+        expect(casamentoIgnorado(par)).toBe(false)
+        vi.unstubAllGlobals()
     })
 })
