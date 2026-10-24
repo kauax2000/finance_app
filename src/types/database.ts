@@ -937,6 +937,32 @@ export type Database = {
           },
         ]
       }
+      orcamentos_copiados: {
+        Row: {
+          copiado_em: string
+          period_start: string
+          workspace_id: string
+        }
+        Insert: {
+          copiado_em?: string
+          period_start: string
+          workspace_id: string
+        }
+        Update: {
+          copiado_em?: string
+          period_start?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamentos_copiados_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_color: string | null

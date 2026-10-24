@@ -1,6 +1,6 @@
 -- pgTAP: schema objects for Assinaturas (plan §6–7 static checks)
 begin;
-select plan(16);
+select plan(19);
 
 select has_table('public', 'workspace_subscriptions', 'workspace_subscriptions table exists');
 
@@ -70,12 +70,37 @@ select ok(
 );
 
 select ok(
-    exists(
+    not exists(
         select 1
         from pg_constraint
         where conname = 'transactions_subscription_expense_only'
     ),
-    'CHECK transactions_subscription_expense_only exists'
+    'CHECK transactions_subscription_expense_only is gone (income subscriptions)'
+);
+
+select ok(
+    exists(
+        select 1
+        from pg_constraint
+        where conname = 'workspace_subscriptions_income_no_card'
+    ),
+    'CHECK workspace_subscriptions_income_no_card exists'
+);
+
+select has_column(
+    'public',
+    'workspace_subscriptions',
+    'kind',
+    'workspace_subscriptions.kind exists'
+);
+
+select ok(
+    exists(
+        select 1
+        from pg_constraint
+        where conname = 'workspace_subscriptions_kind_check'
+    ),
+    'CHECK workspace_subscriptions_kind_check exists'
 );
 
 select ok(

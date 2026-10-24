@@ -10,7 +10,7 @@
 -- repete por assinatura.
 alter table public.workspace_subscriptions
   add column if not exists kind text not null default 'expense'
-  check (kind in ('expense', 'income'));
+  constraint workspace_subscriptions_kind_check check (kind in ('expense', 'income'));
 
 alter table public.workspace_subscriptions
   drop constraint if exists workspace_subscriptions_income_no_card;
@@ -161,7 +161,26 @@ where period_start = date_trunc('month', public.app_today())::date;
 
 alter table public.budgets alter column repeats set default true;
 
--- Idempotente: o mês que já tem a categoria não ganha outra (a chave única
+-- A cópia acontece uma vez por carteira e mês: o marcador em
+-- `orcamentos_copiados` nasce junto com ela, e quem já tem o marcador não é
+-- copiado de novo. Sem ele, o orçamento apagado no mês voltaria na próxima
+-- abertura do Painel (`garantir_orcamentos_do_mes`). Tabela só do servidor:
+-- nenhuma tela a lê.
+create table if not exists public.orcamentos_copiados (
+  workspace_id uuid references public.workspaces on delete cascade,
+  period_start date,
+  copiado_em timestamptz not null default now(),
+  primary key (workspace_id, period_start)
+);
+
+alter table public.orcamentos_copiados enable row level security;
+revoke all on public.orcamentos_copiados from anon, authenticated;
+
+-- Alvo é a carteira com ao menos uma linha `repeats` no mês anterior; a que não
+-- tem nada a copiar não ganha marcador. O marcador entra primeiro, com
+-- `on conflict do nothing`: só as carteiras marcadas agora são copiadas (duas
+-- chamadas ao mesmo tempo esperam pela chave e só uma copia). Dentro da cópia,
+-- o mês que já tem a categoria não ganha outra (a chave única
 -- `budgets_workspace_category_period_unique`), e a categoria apagada já levou
 -- o orçamento dela pela FK em cascata. Os avisos (`threshold_*`) e o
 -- `client_id` nascem nulos.
@@ -175,6 +194,18 @@ declare
   v_inicio date := date_trunc('month', p_period_start)::date;
   v_n integer;
 begin
+  with alvos as (
+    select distinct b.workspace_id
+    from public.budgets b
+    where b.period_start = (v_inicio - interval '1 month')::date
+      and b.repeats
+      and (p_workspace_id is null or b.workspace_id = p_workspace_id)
+  ), marcadas as (
+    insert into public.orcamentos_copiados (workspace_id, period_start)
+    select a.workspace_id, v_inicio from alvos a
+    on conflict (workspace_id, period_start) do nothing
+    returning workspace_id
+  )
   insert into public.budgets (
     user_id, workspace_id, category_id, amount, repeats,
     period_start, period_end, year, month
@@ -186,9 +217,9 @@ begin
     extract(year from v_inicio)::int,
     extract(month from v_inicio)::int
   from public.budgets b
+  join marcadas m on m.workspace_id = b.workspace_id
   where b.period_start = (v_inicio - interval '1 month')::date
     and b.repeats
-    and (p_workspace_id is null or b.workspace_id = p_workspace_id)
   on conflict (workspace_id, category_id, period_start) do nothing;
   get diagnostics v_n = row_count;
   return v_n;

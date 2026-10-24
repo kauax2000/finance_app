@@ -22,7 +22,7 @@ function insertDaTransacao(nome: string): string {
 describe("migração previsão", () => {
     it("a assinatura ganha kind, com padrão expense, e a receita não usa cartão", () => {
         expect(sql).toMatch(
-            /alter table public\.workspace_subscriptions\s+add column if not exists kind text not null default 'expense'\s+check \(kind in \('expense', 'income'\)\);/,
+            /alter table public\.workspace_subscriptions\s+add column if not exists kind text not null default 'expense'\s+constraint workspace_subscriptions_kind_check check \(kind in \('expense', 'income'\)\);/,
         )
         expect(sql).toMatch(
             /add constraint workspace_subscriptions_income_no_card\s+check \(kind = 'expense' or payment_method is distinct from 'credit_card'\);/,
@@ -83,6 +83,32 @@ describe("migração previsão", () => {
         expect(sql).toMatch(/revoke all on function public\.copiar_orcamentos_do_mes\(date, uuid\) from public, anon, authenticated;/)
         expect(sql).toMatch(/grant execute on function public\.copiar_orcamentos_do_mes\(date, uuid\) to service_role;/)
         expect(sql).not.toMatch(/grant [^;]*copiar_orcamentos_do_mes[^;]*authenticated/)
+    })
+
+    it("a cópia acontece uma vez por carteira e mês, pelo marcador", () => {
+        expect(sql).toMatch(
+            /create table if not exists public\.orcamentos_copiados \(\s+workspace_id uuid references public\.workspaces on delete cascade,\s+period_start date,\s+copiado_em timestamptz not null default now\(\),\s+primary key \(workspace_id, period_start\)\s+\);/,
+        )
+        expect(sql).toMatch(/alter table public\.orcamentos_copiados enable row level security;/)
+        expect(sql).toMatch(/revoke all on public\.orcamentos_copiados from anon, authenticated;/)
+        expect(sql).not.toMatch(/create policy[^;]*orcamentos_copiados/)
+        expect(sql).not.toMatch(/grant [^;]*orcamentos_copiados/)
+        expect(sql).not.toMatch(/after delete on public\.budgets/)
+
+        const fn = funcao("copiar_orcamentos_do_mes")
+        // Alvo: quem tem `repeats` no mês anterior, pelo filtro da carteira.
+        const alvos = fn.match(/with alvos as \(([\s\S]*?)\), marcadas as/)
+        expect(alvos).not.toBeNull()
+        expect(alvos![1]).toMatch(/select distinct b\.workspace_id\s+from public\.budgets b/)
+        expect(alvos![1]).toMatch(/and b\.repeats\b/)
+        expect(alvos![1]).toMatch(/p_workspace_id is null or b\.workspace_id = p_workspace_id/)
+        // O marcador entra antes, sem repetir quem já tem.
+        expect(fn).toMatch(
+            /marcadas as \(\s+insert into public\.orcamentos_copiados \(workspace_id, period_start\)\s+select a\.workspace_id, v_inicio from alvos a\s+on conflict \(workspace_id, period_start\) do nothing\s+returning workspace_id\s+\)/,
+        )
+        // Só as marcadas agora são copiadas.
+        expect(fn.indexOf("insert into public.orcamentos_copiados")).toBeLessThan(fn.indexOf("insert into public.budgets"))
+        expect(fn).toMatch(/from public\.budgets b\s+join marcadas m on m\.workspace_id = b\.workspace_id\s+where/)
     })
 
     it("garantir_orcamentos_do_mes: só o membro, para o mês de hoje", () => {
