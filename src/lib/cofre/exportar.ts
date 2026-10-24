@@ -253,7 +253,8 @@ async function lerInstancias(billIds: string[]): Promise<Linha[]> {
 }
 
 /** O ZIP de CSVs de todas as carteiras dadas. Só lê: vale também em "só leitura". */
-export async function exportarTudo(workspaceIds: string[]): Promise<Blob> {
+export async function exportarTudo(carteiras: Array<{ id: string; name: string }>): Promise<Blob> {
+    const workspaceIds = carteiras.map((c) => c.id)
     const arquivos: Array<{ nome: string; conteudo: string }> = []
     let billIds: string[] = []
     for (const tabela of TABELAS_EXPORTADAS) {
@@ -267,7 +268,8 @@ export async function exportarTudo(workspaceIds: string[]): Promise<Blob> {
         nome: "LEIA-ME.txt",
         conteudo: [
             `Exportação do Finance App em ${new Date().toISOString()}.`,
-            `Carteiras: ${workspaceIds.join(", ")}.`,
+            `Carteiras: ${carteiras.map((c) => `${c.name} (${c.id})`).join(", ")}.`,
+            "Os CSVs são para o Excel em português: colunas separadas por ponto e vírgula (;) e números com vírgula decimal (128,40).",
             "Os anexos saem só como metadados; os arquivos não vão.",
             "Seus dados são seus. Este arquivo foi gerado no seu aparelho.",
             "",

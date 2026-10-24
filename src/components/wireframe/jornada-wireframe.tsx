@@ -12,6 +12,7 @@ import { ROUTES } from "@/config/navigation"
 import { useWorkspaceNotificationPrefs } from "@/hooks/use-workspace-notification-prefs"
 import { canaisPara, concluirJornada, plataformaDe, proximosAvisos, type Plataforma } from "@/lib/jornada/jornada"
 import { supabase } from "@/lib/supabase"
+import { localYmdFromDate } from "@/lib/transaction-date"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 
 const botao = "border border-muted-foreground/60 px-2 py-1 font-mono text-foreground disabled:opacity-50"
@@ -37,7 +38,7 @@ function usePlataforma(): Plataforma {
     )
 }
 
-/** Os cartões e a próxima conta em aberto da carteira, para a tabela de avisos. */
+/** Os cartões ativos e a próxima conta em aberto (de hoje em diante) da carteira, para a tabela de avisos. */
 function useDadosDosAvisos(workspaceId: string | null) {
     return useQuery({
         queryKey: ["jornada", "avisos", workspaceId],
@@ -45,12 +46,13 @@ function useDadosDosAvisos(workspaceId: string | null) {
         queryFn: async () => {
             const ws = workspaceId as string
             const [cartoes, contas] = await Promise.all([
-                supabase.from("credit_cards").select("name, closing_day, due_day").eq("workspace_id", ws),
+                supabase.from("credit_cards").select("id, name, closing_day, due_day").eq("workspace_id", ws).eq("is_active", true),
                 supabase
                     .from("bill_instances")
                     .select("due_date, bills(name)")
                     .eq("workspace_id", ws)
                     .eq("status", "pending")
+                    .gte("due_date", localYmdFromDate(new Date()))
                     .order("due_date", { ascending: true })
                     .limit(1),
             ])
@@ -59,7 +61,7 @@ function useDadosDosAvisos(workspaceId: string | null) {
             const conta = contas.data?.[0] as { due_date: string; bills: { name: string } | { name: string }[] | null } | undefined
             const nomeDaConta = Array.isArray(conta?.bills) ? conta?.bills[0]?.name : conta?.bills?.name
             return {
-                cartoes: (cartoes.data ?? []).map((c) => ({ nome: c.name, closingDay: c.closing_day, dueDay: c.due_day })),
+                cartoes: (cartoes.data ?? []).map((c) => ({ id: c.id, nome: c.name, closingDay: c.closing_day, dueDay: c.due_day })),
                 proximaConta: conta ? { nome: nomeDaConta ?? "Conta", data: conta.due_date } : null,
             }
         },
@@ -76,7 +78,7 @@ export function JornadaWireframe() {
     const { user } = useAuth()
     const { currentWorkspaceId } = useWorkspace()
     const plataforma = usePlataforma()
-    const { prefs } = useWorkspaceNotificationPrefs()
+    const { prefs, loading: prefsCarregando } = useWorkspaceNotificationPrefs()
     const dados = useDadosDosAvisos(currentWorkspaceId)
     const [passo, setPasso] = useState(0)
     const [pendente, setPendente] = useState(false)
@@ -112,7 +114,7 @@ export function JornadaWireframe() {
 
             {passo === 0 ? (
                 <ul className="space-y-2">
-                    {canaisPara(plataforma).map((c) => (
+                    {canaisPara(plataforma, (dados.data?.cartoes ?? []).map((c) => c.id)).map((c) => (
                         <li key={c.titulo}>
                             <Link href={c.href} className={link}>
                                 {c.titulo}
@@ -127,7 +129,7 @@ export function JornadaWireframe() {
                 <div className="space-y-2">
                     <p>A categoria vem do histórico: se você já lançou uma descrição parecida, repito a categoria dela.</p>
                     <p>Na dúvida, não chuto: o item vai para a lista de itens a conferir, e você confirma com um toque.</p>
-                    <Link href="/transactions?conferir=1" className={link}>
+                    <Link href={`${ROUTES.TRANSACTIONS}?conferir=1`} className={link}>
                         Ver a lista &quot;A conferir&quot;
                     </Link>
                 </div>
@@ -147,7 +149,7 @@ export function JornadaWireframe() {
                             {avisos.map((a) => (
                                 <tr key={a.aviso}>
                                     <td className="pr-3 text-foreground">{a.aviso}</td>
-                                    <td className="pr-3">{a.ligado ? "sim" : "não"}</td>
+                                    <td className="pr-3">{prefsCarregando ? "carregando" : a.ligado ? "sim" : "não"}</td>
                                     <td>{a.proximo ?? "—"}</td>
                                 </tr>
                             ))}

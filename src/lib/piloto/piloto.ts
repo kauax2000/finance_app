@@ -43,7 +43,11 @@ export type GrupoPiloto =
     | { tipo: "recorrente"; itens: ItemPiloto[] }
 
 const rotulo = (source: string) => ROTULO_DA_ORIGEM[source] ?? source
-const maisRecente = (a: { criadoEm: string }, b: { criadoEm: string }) => (a.criadoEm < b.criadoEm ? 1 : -1)
+const comparar = (x: string, y: string) => (x < y ? -1 : x > y ? 1 : 0)
+const chave = (x: { id: string } | { loteId: string }) => ("id" in x ? x.id : x.loteId)
+/** Mais novo primeiro; no mesmo `criadoEm`, pelo id, para a ordem não depender da chegada. */
+const maisRecente = <T extends { criadoEm: string } & ({ id: string } | { loteId: string })>(a: T, b: T) =>
+    comparar(b.criadoEm, a.criadoEm) || comparar(chave(a), chave(b))
 
 export function agruparPiloto(linhas: LinhaPiloto[]): GrupoPiloto[] {
     const captura: ItemPiloto[] = []

@@ -48,6 +48,20 @@ describe("agruparPiloto", () => {
         expect(recorrente.itens[0].origem).toBe("Assinatura ou parcela")
     })
 
+    it("no mesmo criadoEm desempata pelo id, em qualquer ordem de chegada", () => {
+        const mesmo = "2026-10-01T10:00:00Z"
+        const itens = ["b", "c", "a"].map((id) => linha({ id, created_at: mesmo }))
+        for (const ordem of [itens, [...itens].reverse()]) {
+            const [g] = agruparPiloto(ordem)
+            if (g.tipo !== "captura") throw new Error("tipo")
+            expect(g.itens.map((i) => i.id)).toEqual(["a", "b", "c"])
+        }
+        const lotes = agruparPiloto(
+            ["L2", "L1"].map((lote) => linha({ id: lote, source: "import_pdf", import_batch_id: lote, created_at: mesmo })),
+        )
+        expect(lotes.map((x) => (x.tipo === "importacao" ? x.loteId : x.tipo))).toEqual(["L1", "L2"])
+    })
+
     it("omite o grupo vazio", () => {
         expect(agruparPiloto([])).toEqual([])
         const g = agruparPiloto([linha({ id: "r", source: "recurring" })])

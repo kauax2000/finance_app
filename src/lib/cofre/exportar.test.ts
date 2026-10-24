@@ -72,7 +72,7 @@ describe("exportarTudo", () => {
             description: i === 0 ? 'a;b "c"\nd' : "x",
         }))
         tabelas.bills = [{ id: "b1" }]
-        const blob = await exportarTudo(["w1", "w2"])
+        const blob = await exportarTudo([{ id: "w1", name: "Casa" }, { id: "w2", name: "Viagem" }])
         expect(blob.type).toBe("application/zip")
         const texto = new TextDecoder().decode(new Uint8Array(await blob.arrayBuffer()))
         expect(texto).toContain('"a;b ""c""\nd"')
@@ -81,6 +81,8 @@ describe("exportarTudo", () => {
         expect(texto).toContain("transactions.csv")
         expect(texto).toContain("LEIA-ME.txt")
         expect(texto).toContain("Seus dados são seus. Este arquivo foi gerado no seu aparelho.")
+        expect(texto).toContain("Carteiras: Casa (w1), Viagem (w2).")
+        expect(texto).toContain("ponto e vírgula (;) e números com vírgula decimal")
         expect(filtros).toContainEqual(["transactions", "workspace_id", ["w1", "w2"]])
         expect(filtros).toContainEqual(["bill_instances", "bill_id", ["b1"]])
     })

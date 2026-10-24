@@ -27,15 +27,22 @@ describe("plataformaDe", () => {
 
 describe("canaisPara", () => {
     it.each(["iphone", "android", "computador"] as const)("%s: sempre a frase rápida e o PDF da fatura", (p) => {
-        const canais = canaisPara(p)
+        const canais = canaisPara(p, [])
         expect(canais.some((c) => c.href === "/transactions?new=1")).toBe(true)
         expect(canais.some((c) => c.href === "/credit-cards" && c.titulo.includes("PDF da última fatura"))).toBe(true)
     })
 
     it("cada plataforma traz o seu canal próprio", () => {
-        expect(canaisPara("iphone").some((c) => c.href === "/account" && c.titulo.includes("Atalho"))).toBe(true)
-        expect(canaisPara("android").some((c) => c.texto.includes("compartilhe o comprovante"))).toBe(true)
-        expect(canaisPara("computador").some((c) => c.titulo === "Importar extrato")).toBe(true)
+        expect(canaisPara("iphone", []).some((c) => c.href === "/account" && c.titulo.includes("Atalho"))).toBe(true)
+        expect(canaisPara("android", []).some((c) => c.texto.includes("Adicionar à tela inicial") && c.texto.includes("Compartilhar → Finance App"))).toBe(true)
+        expect(canaisPara("computador", []).some((c) => c.titulo === "Importar extrato" && c.href === "/transactions?importar=1")).toBe(true)
+    })
+
+    it("o PDF vai ao detalhe com um cartão ativo só; com zero ou dois, à lista", () => {
+        const pdf = (ids: string[]) => canaisPara("computador", ids).find((c) => c.titulo.includes("PDF"))!.href
+        expect(pdf(["c1"])).toBe("/credit-cards/c1")
+        expect(pdf([])).toBe("/credit-cards")
+        expect(pdf(["c1", "c2"])).toBe("/credit-cards")
     })
 })
 

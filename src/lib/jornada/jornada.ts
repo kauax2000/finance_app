@@ -5,6 +5,7 @@ import {
     nextCloseAfter,
     previousStatementCloseBefore,
 } from "@/lib/credit-card-billing"
+import { creditCardDetailPath, ROUTES } from "@/config/navigation"
 import { supabase } from "@/lib/supabase"
 
 export type Plataforma = "iphone" | "android" | "computador"
@@ -17,36 +18,40 @@ export function plataformaDe(userAgent: string): Plataforma {
 
 type Canal = { titulo: string; texto: string; href: string }
 
-/** Os caminhos do primeiro lançamento: dois valem em toda plataforma, um é da plataforma. */
-export function canaisPara(p: Plataforma): Canal[] {
+/**
+ * Os caminhos do primeiro lançamento: dois valem em toda plataforma, um é da
+ * plataforma. O PDF da fatura vai direto ao cartão quando a carteira tem um só
+ * ativo (`cartoesAtivos`, os ids); senão, à lista de cartões.
+ */
+export function canaisPara(p: Plataforma, cartoesAtivos: readonly string[]): Canal[] {
     const proprio: Record<Plataforma, Canal> = {
         iphone: {
             titulo: "Atalho do iPhone",
             texto: "Fale ou escreva o gasto e o Atalho lança. Crie o token em Minha conta.",
-            href: "/account",
+            href: ROUTES.ACCOUNT,
         },
         android: {
             titulo: "Compartilhar com o app",
-            texto: "Instale o app e compartilhe o comprovante com ele.",
-            href: "/transactions",
+            texto: "Instale o app pelo menu do navegador (Adicionar à tela inicial) e use Compartilhar → Finance App no comprovante.",
+            href: ROUTES.TRANSACTIONS,
         },
         computador: {
             titulo: "Importar extrato",
             texto: "Suba o extrato do banco ou a sua planilha e o app lança de uma vez.",
-            href: "/transactions?importar=1",
+            href: `${ROUTES.TRANSACTIONS}?importar=1`,
         },
     }
     return [
         {
             titulo: "Frase rápida",
             texto: "Escreva \"42 mercado\" e o app entende valor, descrição e categoria.",
-            href: "/transactions?new=1",
+            href: `${ROUTES.TRANSACTIONS}?new=1`,
         },
         proprio[p],
         {
             titulo: "Envie o PDF da última fatura",
             texto: "O app lê a fatura e confere com o que você já lançou.",
-            href: "/credit-cards",
+            href: cartoesAtivos.length === 1 ? creditCardDetailPath(cartoesAtivos[0]) : ROUTES.CREDIT_CARDS,
         },
     ]
 }

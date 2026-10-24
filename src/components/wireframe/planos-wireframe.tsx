@@ -3,6 +3,7 @@
 import Link from "next/link"
 
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
+import { ROUTES } from "@/config/navigation"
 import { doze, fundadoresAbertos, precoDoDia, resumoDoPlano, usePlano } from "@/lib/planos/plano"
 
 /**
@@ -42,7 +43,7 @@ export function PlanosWireframe() {
                 </div>
             ) : null}
 
-            <Link href="/precos" className="text-foreground underline">
+            <Link href={ROUTES.PRECOS} className="text-foreground underline">
                 Ver preços e garantias
             </Link>
         </WireframeBox>

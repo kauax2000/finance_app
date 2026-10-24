@@ -26,6 +26,22 @@ describe("zipSemCompressao", () => {
         expect(dv.getUint32(diretorio, true)).toBe(0x02014b50)
     })
 
+    it("o diretório central aponta para o cabeçalho local de cada arquivo", () => {
+        const fim = zip.length - 22
+        let p = dv.getUint32(fim + 16, true)
+        let esperado = 0
+        for (const [nome, conteudo] of [["a.csv", "Alimentação"], ["LEIA-ME.txt", "oi"]]) {
+            expect(dv.getUint32(p, true)).toBe(0x02014b50)
+            const local = dv.getUint32(p + 42, true)
+            expect(local).toBe(esperado)
+            expect(dv.getUint32(local, true)).toBe(0x04034b50)
+            expect(new TextDecoder().decode(zip.slice(local + 30, local + 30 + u8(nome).length))).toBe(nome)
+            esperado = local + 30 + u8(nome).length + u8(conteudo).length
+            p += 46 + dv.getUint16(p + 28, true)
+        }
+        expect(esperado).toBe(dv.getUint32(fim + 16, true))
+    })
+
     it("os tamanhos são os bytes UTF-8 e a flag de nome UTF-8 está ligada", () => {
         const bytes = u8("Alimentação")
         expect(bytes.length).toBe(13)

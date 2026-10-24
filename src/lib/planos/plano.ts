@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react"
 
-import { currencyBRL } from "@/lib/formatters"
 import { supabase } from "@/lib/supabase"
 import { formatDatePtBr } from "@/lib/transaction-date"
+import { doze } from "./precos"
 import { FIM_FUNDADORES, PRECO_FAMILIA_CENTAVOS, PRECO_FUNDADOR_CENTAVOS } from "../../../supabase/functions/_shared/plano"
 
 export * from "../../../supabase/functions/_shared/plano"
+export { doze } from "./precos"
 
 /** O que a RPC `meu_plano` devolve. */
 export type MeuPlano = {
@@ -25,21 +26,37 @@ export async function buscarMeuPlano(): Promise<MeuPlano> {
   return data as unknown as MeuPlano
 }
 
-/** Busca ao montar e quando a janela volta ao foco. Em erro, `plano` fica nulo: nada de aviso falso. */
+/**
+ * Busca quando a sessão chega ou troca de pessoa (o `INITIAL_SESSION` do
+ * `onAuthStateChange` cobre a montagem) e quando a janela volta ao foco. Em
+ * erro, `plano` fica nulo: nada de aviso falso.
+ */
 export function usePlano(): { plano: MeuPlano | null; carregando: boolean } {
   const [estado, setEstado] = useState<{ plano: MeuPlano | null; carregando: boolean }>({ plano: null, carregando: true })
 
   useEffect(() => {
     let vivo = true
+    let usuario: string | null | undefined
     const buscar = () =>
       buscarMeuPlano().then(
         (plano) => vivo && setEstado({ plano, carregando: false }),
         () => vivo && setEstado((e) => ({ ...e, carregando: false })),
       )
-    void buscar()
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_evento, sessao) => {
+      const id = sessao?.user.id ?? null
+      if (id === usuario) return
+      usuario = id
+      // Outra pessoa: o plano da anterior não vale. A RPC sai do callback
+      // (`setTimeout`): chamar o Supabase dentro dele pode travar no lock da sessão.
+      setEstado({ plano: null, carregando: true })
+      setTimeout(buscar, 0)
+    })
     window.addEventListener("focus", buscar)
     return () => {
       vivo = false
+      subscription.unsubscribe()
       window.removeEventListener("focus", buscar)
     }
   }, [])
@@ -53,8 +70,6 @@ export const fundadoresAbertos = (agora: Date) => agora.getTime() < Date.parse(F
 export function precoDoDia(agora: Date): number {
   return fundadoresAbertos(agora) ? PRECO_FUNDADOR_CENTAVOS : PRECO_FAMILIA_CENTAVOS
 }
-
-export const doze = (centavos: number) => `12x de ${currencyBRL(centavos / 1200)}`
 
 export function resumoDoPlano(p: MeuPlano, agora: Date): { titulo: string; linhas: string[]; podeAssinar: boolean } {
   switch (p.origem) {

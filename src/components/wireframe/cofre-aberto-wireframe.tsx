@@ -62,16 +62,17 @@ export function CofreAbertoWireframe() {
         setExportando(true)
         setErro(null)
         try {
-            const blob = await exportarTudo(workspaces.map((w) => w.id))
+            const blob = await exportarTudo(workspaces.map((w) => ({ id: w.id, name: w.name })))
             const url = URL.createObjectURL(blob)
             const a = document.createElement("a")
             a.href = url
             a.download = `finance-app-${localYmdFromDate(new Date())}.zip`
-            // Anexada e revogada depois: o Safari do iOS cancela o download de um link solto.
+            // Anexada e revogada um minuto depois: o Safari do iOS cancela o download de um
+            // link solto e já cancelou o de uma URL revogada na hora.
             document.body.appendChild(a)
             a.click()
             a.remove()
-            setTimeout(() => URL.revokeObjectURL(url), 0)
+            setTimeout(() => URL.revokeObjectURL(url), 60_000)
         } catch (e) {
             console.error("exportarTudo:", e)
             setErro("Não foi possível exportar agora. Tente novamente.")

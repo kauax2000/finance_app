@@ -1,8 +1,15 @@
 import Link from "next/link"
 
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
-// Direto do `_shared`: `lib/planos/plano` traz o hook do cliente, e esta página é de servidor.
-import { FIM_FUNDADORES } from "../../../supabase/functions/_shared/plano"
+import { ROUTES } from "@/config/navigation"
+// `lib/planos/precos`, e não `lib/planos/plano`: aquele traz o hook do cliente, e esta página é de servidor.
+import { doze, porAno, ultimoDiaDosFundadores } from "@/lib/planos/precos"
+import {
+    FIM_FUNDADORES,
+    PRECO_FAMILIA_CENTAVOS,
+    PRECO_FUNDADOR_CENTAVOS,
+    TESTE_DIAS,
+} from "../../../supabase/functions/_shared/plano"
 
 /**
  * Os preços, públicos (Bloco 4): pessoa sem conta vê o que custa antes de
@@ -15,9 +22,15 @@ export function PrecosWireframe() {
         <main className="mx-auto max-w-2xl px-4 py-8">
             <WireframeBox bloco={4} titulo="Preços">
                 <h1 className="text-base font-bold text-foreground">Plano Família, até 6 pessoas</h1>
-                <p>12x de R$ 29,90 no cartão (R$ 358,80/ano)</p>
-                {fundadores ? <p>Fundadores: 12x de R$ 19,90, congelado enquanto ativo, até 31/01/2027</p> : null}
-                <p>14 dias grátis, sem cartão</p>
+                <p>
+                    {doze(PRECO_FAMILIA_CENTAVOS)} no cartão ({porAno(PRECO_FAMILIA_CENTAVOS)})
+                </p>
+                {fundadores ? (
+                    <p>
+                        Fundadores: {doze(PRECO_FUNDADOR_CENTAVOS)}, congelado enquanto ativo, até {ultimoDiaDosFundadores()}
+                    </p>
+                ) : null}
+                <p>{TESTE_DIAS} dias grátis, sem cartão</p>
 
                 <h2 className="font-bold text-foreground">Garantias</h2>
                 <ul className="list-disc space-y-1 pl-5">
@@ -28,10 +41,10 @@ export function PrecosWireframe() {
                 </ul>
 
                 <p className="space-x-4">
-                    <Link href="/register" className="text-foreground underline">
+                    <Link href={ROUTES.REGISTER} className="text-foreground underline">
                         Começar o teste grátis
                     </Link>
-                    <Link href="/login" className="text-foreground underline">
+                    <Link href={ROUTES.LOGIN} className="text-foreground underline">
                         Já tenho conta
                     </Link>
                 </p>

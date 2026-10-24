@@ -19,6 +19,8 @@ export const ROUTES = {
     ACCOUNT_ACTIVITY: "/account/activity",
     MEMBERS: "/members",
     PLANS: "/plans",
+    /** Os preços, públicos, fora da casca do app (Bloco 4). */
+    PRECOS: "/precos",
     /** O Piloto Automático: o que o app lançou sozinho, com desfazer (Bloco 4). Sem entrada no menu. */
     PILOTO: "/piloto",
     /** O Cofre aberto: o que guardamos, exportar tudo e apagar a conta (Bloco 4). */
