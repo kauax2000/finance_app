@@ -22,11 +22,13 @@ Reúne a receita recorrente, o orçamento que se repete e a previsão do mês:
 não: ele só vai para `main`, e para produção, quando os blocos planejados
 estiverem prontos (decisão do dono).
 
-**O backend do Bloco 5 pode subir antes do front.** A migração só acrescenta, e
-nada dela muda o que o front de `main` faz (a tabela do §6 mostra o porquê).
-Dois pontos pedem atenção, e ambos estão no §6: a assinatura de **receita** só
-existe para o front novo, e o aviso de orçamento do front antigo passa a olhar
-mais de um mês.
+**O backend do Bloco 5 pode subir antes do front, menos o
+`credit-card-calendar-alerts`.** A migração só acrescenta, e nada dela muda o que
+o front de `main` faz (a tabela do §6 mostra o porquê). O
+`credit-card-calendar-alerts` só sobe junto com o front (§7): o aviso novo leva a
+`/previsao`, que não existe em `main`. Os outros pontos de atenção estão no §6: a
+assinatura de **receita** só existe para o front novo, e o aviso de orçamento do
+front antigo passa a olhar mais de um mês.
 
 Faça na ordem. Todo SQL abaixo cabe como está no SQL Editor: ele não leva id,
 chave nem URL, e nada precisa ser trocado. **Nunca** salve no repositório o
@@ -193,42 +195,43 @@ mudou.
 **Como a lista foi feita:** para cada `supabase/functions/*/index.ts`, foram
 seguidos os `import` relativos, diretos e através do `_shared` (por exemplo,
 `captura.ts` e `formatters.ts` importam o `notification-copy.ts`), até o fim, e
-ficou na lista toda função que alcança um desses quatro módulos. Entram oito:
+ficou na lista toda função que alcança um desses quatro módulos. São oito: sete
+sobem aqui, e o `credit-card-calendar-alerts` sobe só com o front (§7).
 
 ```bash
-supabase functions deploy capture credit-card-calendar-alerts evaluate-bills-reminders evaluate-budgets evaluate-credit-card-alerts ia-ler notify-transaction-created review-reminder --use-api
+supabase functions deploy capture evaluate-bills-reminders evaluate-budgets evaluate-credit-card-alerts ia-ler notify-transaction-created review-reminder --use-api
 ```
+
+**Mudam de comportamento:**
 
 | Função | Por quê |
 |--------|---------|
-| `evaluate-budgets` | **Muda de comportamento.** Importa `credit-card-cycle.ts`, `notification-copy.ts` e `orcamento-mes.ts`: a compra no cartão conta pelo mês do fechamento |
-| `credit-card-calendar-alerts` | **Muda de comportamento.** Importa os quatro: ganha o aviso `cc_invoice_trending_high`, com consulta própria e paginada |
-| `capture` | Importa `credit-card-cycle.ts` e `notification-copy.ts`, e agora manda `payment_method` e `payment_credit_card_id` ao `evaluate-budgets` |
+| `evaluate-budgets` | Importa `credit-card-cycle.ts`, `notification-copy.ts` e `orcamento-mes.ts`: a compra no cartão conta pelo mês do fechamento |
+| `capture` | Importa `credit-card-cycle.ts` e `notification-copy.ts`, e agora manda `payment_method` e `payment_credit_card_id` ao `evaluate-budgets` (compatível: o `evaluate-budgets` novo lê o par, e sem ele cai em "todo cartão") |
+
+**Mesmo comportamento** (só um acréscimo no módulo, uma função nova que elas
+não chamam): publicá-las não muda o que fazem, mas deixa o código no ar igual ao
+do repositório.
+
+| Função | Por quê |
+|--------|---------|
 | `evaluate-bills-reminders` | Importa `credit-card-cycle.ts` e `notification-copy.ts` |
 | `evaluate-credit-card-alerts` | Importa `credit-card-cycle.ts` e `notification-copy.ts` |
 | `ia-ler` | Importa `credit-card-cycle.ts` e `notification-copy.ts` |
 | `notify-transaction-created` | Importa `notification-copy.ts` (pelo `formatters.ts`) |
 | `review-reminder` | Importa `credit-card-cycle.ts` |
 
-As seis últimas só têm um acréscimo no módulo (uma função nova que elas não
-chamam): publicá-las não muda o que fazem, mas deixa o código no ar igual ao do
-repositório.
+**Fica para o §7:** `credit-card-calendar-alerts`. Ele importa três dos módulos
+mudados (`credit-card-cycle.ts`, `notification-copy.ts` e `fatura-tendencia.ts`)
+e ganha o aviso com o link `/previsao`. Até lá, a versão no ar continua com o
+`_shared` que foi embutido no último deploy dela, e os eventos que ela já manda
+(fechou, vence em breve, vence hoje) não precisam do código novo:
+`credit-card-cycle.ts` e `notification-copy.ts` só ganharam funções novas, sem
+mudar nenhuma das que existiam.
 
 Não precisam de deploy: `run-recurring-billing` (ele só chama a RPC
 `charge_subscription_cycle`, que a migração já trocou), `billing-daily` e as
 demais, que não alcançam nenhum dos quatro módulos.
-
-**Nenhum segredo novo.** O aviso de fatura alta usa o
-mesmo `x-cron-secret` e a mesma preferência `notify_credit_cards` que já existem;
-o cron `credit-card-calendar-alerts-daily` (12:00 UTC) é o de sempre.
-
-**O que muda no `credit-card-calendar-alerts`:** todo dia, para cada cartão ativo,
-a fatura em aberto mais as parcelas que ainda vão cair nela é comparada à média
-das 3 últimas fechadas (o total do banco, quando gravado). Acima de 120% da média,
-e só com 3 fechadas, sai um aviso do tipo `credit_card`, uma vez por ciclo
-(`cal:trending_high:{fechamento}:c:{cartão}`), com o link `/previsao`. Quem
-desligou `notify_credit_cards` não recebe. Os outros eventos do calendário
-(fechou, vence em breve, vence hoje) seguem como estavam.
 
 ## 3. Conferência pós-deploy
 
@@ -264,11 +267,18 @@ e confira, nos logs de `evaluate-budgets` (Dashboard → Edge Functions →
 `payment_method` e `payment_credit_card_id` é o front do 2.0 e a `capture`; o
 front de `main` não manda, e a Edge cai em "todo cartão" (§6).
 
-**O aviso de fatura alta** só dispara com 3 faturas fechadas e a aberta acima de
-120% da média. Para conferir sem esperar, olhe os logs de
-`credit-card-calendar-alerts` no dia seguinte: o corpo da resposta traz a lista
-`errors`, e uma falha da consulta de um cartão aparece como `trending_high: ...`
-sem derrubar os outros avisos.
+**Nenhuma receita recorrente antes do front.** Repita esta conferência toda
+semana, e antes de publicar o front, até o 2.0 ir para `main`:
+
+```sql
+select kind, count(*) from public.workspace_subscriptions group by kind;
+```
+
+Esperado: só `expense`. Uma linha `income` encontrada em produção antes do front
+precisa ser **apagada**, não desativada: o front de `main` não lê `kind` e a
+mostra como saída (na lista, no calendário de pagamentos e nos compromissos da
+categoria), enquanto o cron grava o lançamento como receita. O `is_active = false`
+não resolve, porque a assinatura inativa continua listada. O §6 explica.
 
 ## 4. O orçamento que se repete
 
@@ -311,7 +321,7 @@ inteiro de volta de todas as carteiras, inclusive o que a pessoa parou de usar.
 | `orcamentos_copiados`, `copiar_orcamentos_do_mes`, `garantir_orcamentos_do_mes` | Só o cron e o front novo as chamam |
 | `workspaces.monthly_savings_target` | Coluna nova e opcional; a política de `update` é a que já existia |
 | `evaluate-budgets` | O corpo novo (`payment_method`, `payment_credit_card_id`) é opcional: sem ele, a Edge avalia o dia e o fechamento da compra em cada cartão da carteira |
-| `credit-card-calendar-alerts` | Os eventos que existiam ficam como estavam; o novo usa a preferência `notify_credit_cards` |
+| `credit-card-calendar-alerts` | **Não sobe antes do front.** O aviso novo de fatura alta leva a `/previsao`, que só existe no front do 2.0; o `main` abre o `metadata.href` da notificação, então no sino, no push e no e-mail o link daria 404. Ela sobe no §7. Os eventos que existiam ficam como estavam, e o novo usa a preferência `notify_credit_cards` |
 
 **Os dois pontos de atenção:**
 
@@ -320,15 +330,40 @@ inteiro de volta de todas as carteiras, inclusive o que a pessoa parou de usar.
   pagamentos e nas projeções. O lançamento que o cron grava é receita de verdade,
   então o extrato fica certo, mas o resto vira confusão. Enquanto o front novo não
   for para `main`, **não cadastre receita recorrente em produção** além do que for
-  teste, e apague o teste. A conferência do §1 mostra se alguma já existe.
+  teste, e apague o teste (apagar, não desativar: a inativa continua listada). A
+  conferência do §1, repetida no §3, mostra se alguma existe.
 - **O aviso de orçamento do front antigo.** Sem o pagamento no corpo, a Edge
   avalia, além do dia da compra, o fechamento dela em cada cartão da carteira:
   uma despesa no Pix perto do fim do mês pode avaliar o orçamento do mês seguinte.
   O efeito é um aviso a mais, não a menos, e some quando o 2.0 vai para `main`.
 
-## 7. Depois do front
+## 7. Com o front
 
-Quando o front do 2.0 subir, confira:
+Junto com o front do 2.0 indo para `main`, publique o alerta de fatura alta:
+
+```bash
+supabase functions deploy credit-card-calendar-alerts --use-api
+```
+
+**O que muda no `credit-card-calendar-alerts`:** todo dia, para cada cartão ativo,
+a fatura em aberto mais as parcelas que ainda vão cair nela é comparada à média
+das 3 últimas fechadas com valor positivo (o total do banco, quando gravado). Acima
+de 120% da média, e só com 3 fechadas, sai um aviso do tipo `credit_card`, uma vez
+por ciclo (`cal:trending_high:{fechamento}:c:{cartão}`), com o link `/previsao`.
+Quem desligou `notify_credit_cards` não recebe. Os outros eventos do calendário
+(fechou, vence em breve, vence hoje) seguem como estavam.
+
+**Nenhum segredo novo.** O aviso de fatura alta usa o mesmo `x-cron-secret` e a
+mesma preferência `notify_credit_cards` que já existem; o cron
+`credit-card-calendar-alerts-daily` (12:00 UTC) é o de sempre.
+
+**O aviso de fatura alta** só dispara com 3 faturas fechadas e a aberta acima de
+120% da média. Para conferir sem esperar, olhe os logs de
+`credit-card-calendar-alerts` no dia seguinte: o corpo da resposta traz a lista
+`errors`, e uma falha da consulta de um cartão aparece como `trending_high: ...`
+sem derrubar os outros avisos.
+
+Quando o front do 2.0 subir, confira também:
 
 - o Painel mostra o cartão "Seguro para gastar" **só no mês corrente** (em outro
   mês, uma linha diz que a previsão é do mês corrente) e leva a `/previsao`;

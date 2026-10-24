@@ -909,7 +909,7 @@
           <li><strong>Dois números para a mesma fatura.</strong> O "em aberto" do Painel não soma as assinaturas do cartão; a "prevista" daqui soma.</li>
           <li><strong>O aviso não diz quanto sobra.</strong> Para dizer, a conta do seguro teria de ser reescrita em Deno, uma segunda implementação. O aviso leva a <code>/previsao</code>, onde o seguro do mês está.</li>
           <li><strong>O vencimento fica sempre no mês seguinte ao fechamento.</strong> É a regra antiga do app, mantida; um cartão que vence no mesmo mês em que fecha é previsto um mês depois do real.</li>
-          <li>O Bloco 5 está no repositório e nada foi publicado. O backend pode subir antes do front, com dois cuidados (uma receita recorrente cadastrada aparece como despesa em <code>main</code>; o aviso de orçamento de <code>main</code> avalia mais de um mês): <code>supabase/BLOCO_5_DEPLOYMENT.md</code>.</li>
+          <li>O Bloco 5 está no repositório e nada foi publicado. O backend pode subir antes do front, menos a Edge <code>credit-card-calendar-alerts</code>, que sobe com o front porque o aviso de fatura alta leva a <code>/previsao</code>, e com dois cuidados (uma receita recorrente cadastrada aparece como despesa em <code>main</code> e precisa ser apagada; o aviso de orçamento de <code>main</code> avalia mais de um mês): <code>supabase/BLOCO_5_DEPLOYMENT.md</code>.</li>
         </ul>
       </div>
     </section>
@@ -952,7 +952,7 @@
             <tr><td>33</td><td>06, 13</td><td>Regra antiga</td><td>O vencimento de um cartão é sempre posto no mês seguinte ao do fechamento, regra mantida do app.</td><td>Um cartão que vence no mesmo mês em que fecha é previsto um mês depois do real.</td></tr>
             <tr><td>34</td><td>05</td><td>Repetição</td><td>Com "em 10x" na frase rápida, o quadro de impacto da parcela aparece na frase e, depois de aplicada, no formulário.</td><td>O mesmo quadro duas vezes na tela.</td></tr>
             <tr><td>35</td><td>09, 13</td><td>Regra</td><td>O orçamento da categoria (a Edge <code>evaluate-budgets</code> e a tela de Categorias) não abate o estorno no cartão; a fatura e a previsão abatem.</td><td>Um estorno no cartão não devolve limite ao orçamento da categoria.</td></tr>
-            <tr><td>36</td><td>04, 05, 08, 09, 13</td><td>Publicação</td><td>O Bloco 5 (previsão, receita recorrente, orçamento que se repete e aviso de fatura alta) está no repositório, com as telas em wireframe, e nada foi publicado. O backend pode subir antes do front, com dois cuidados (<code>supabase/BLOCO_5_DEPLOYMENT.md</code>).</td><td>Uma receita recorrente cadastrada aparece como despesa em <code>main</code>; o aviso de orçamento de <code>main</code> avalia mais de um mês.</td></tr>
+            <tr><td>36</td><td>04, 05, 08, 09, 13</td><td>Publicação</td><td>O Bloco 5 (previsão, receita recorrente, orçamento que se repete e aviso de fatura alta) está no repositório, com as telas em wireframe, e nada foi publicado. O backend pode subir antes do front, menos a Edge <code>credit-card-calendar-alerts</code>, que sobe com o front, e com dois cuidados (<code>supabase/BLOCO_5_DEPLOYMENT.md</code>).</td><td>Uma receita recorrente cadastrada aparece como despesa em <code>main</code> e precisa ser apagada; o aviso de orçamento de <code>main</code> avalia mais de um mês; o aviso de fatura alta, publicado antes do front, levaria a <code>/previsao</code>, que <code>main</code> não tem.</td></tr>
           </tbody>
         </table>
       </div>
