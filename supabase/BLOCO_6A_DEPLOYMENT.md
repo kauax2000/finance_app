@@ -10,8 +10,6 @@ Reúne a revisão de "Contas a pagar":
   `acompanhar_valor_pago`;
 - a Edge `evaluate-bills-reminders`, que ganha o **passo 0** (cria a pendência de
   cada vencimento que já chegou) e o aviso por janela;
-- a Edge `credit-card-calendar-alerts`, só para o código no ar ficar igual ao do
-  repositório (ver §2);
 - no front do 2.0: a edição que reprograma a pendente, o pular atômico, os
   estados Encerrada e Concluída, o valor variável, o casamento automático do
   pagamento ("Isso pagou a conta X?"), o boleto no pagamento e no lançamento
@@ -130,16 +128,23 @@ módulo mudado precisa ser publicada de novo. Os módulos mudados neste bloco s�
 **Como a lista foi feita:** para cada `supabase/functions/*/index.ts`, foram
 seguidos os `import` relativos, diretos e através do `_shared`, até o fim, e
 ficou na lista toda função que alcança um desses dois módulos. Nenhum outro
-arquivo do `_shared` importa os dois, então o fecho é de duas funções.
+arquivo do `_shared` os reimporta, então o fecho é de duas funções, e só uma sobe
+agora (ver abaixo).
 
 ```bash
-supabase functions deploy evaluate-bills-reminders credit-card-calendar-alerts --use-api
+supabase functions deploy evaluate-bills-reminders --use-api
 ```
 
 | Função | Por quê |
 |--------|---------|
 | `evaluate-bills-reminders` | **Muda de comportamento.** Importa os dois módulos: ganha o passo 0 (cria as pendências que faltam) e o aviso por janela, e deixa de avisar depois do `end_date` |
-| `credit-card-calendar-alerts` | **Mesmo comportamento.** Importa o `notification-schedule.ts`, que só ganhou uma função nova que ela não chama. Publicá-la deixa o código no ar igual ao do repositório |
+
+**`credit-card-calendar-alerts` fica fora deste comando.** Ela também importa o
+`notification-schedule.ts`, mas só ganhou uma função nova que ela não chama: a
+mudança do 6A nela é opcional. O que pesa é outra coisa: o código dela já traz o
+aviso de fatura alta do Bloco 5, cujo link é `/previsao`, que não existe em
+`main`. Por isso ela **só sobe junto com o front do 2.0**, como manda o §7 de
+`BLOCO_5_DEPLOYMENT.md`; quando subir, já leva o `_shared` novo.
 
 Não precisam de deploy: as demais funções, que não alcançam nenhum dos dois
 módulos. O `pay_bill_instance` e as RPCs são do banco, e a migração já os trocou.
@@ -213,9 +218,9 @@ tocadas.
 
 **Os avisos do primeiro dia.** Dois efeitos de uma vez só, ambos esperados:
 
-- uma conta com várias atrasadas pode mandar até **2 avisos de atraso** no mesmo
-  dia (o 1º dia e a janela de 7 dias de cada instância; os atrasos não são
-  agrupados por conta);
+- no primeiro dia depois do deploy, uma conta atrasada pode receber até **2 avisos
+  de atraso** (um por instância atrasada que cai numa janela de aviso; os atrasos
+  não são agrupados por conta);
 - o `sent_on` da chave de dedupe passou a ser o **vencimento** também na
   parcela a vencer. Uma parcela que já foi avisada pelo código antigo (com o
   `sent_on` do dia do aviso) e ainda não venceu pode receber **uma vez mais** o
