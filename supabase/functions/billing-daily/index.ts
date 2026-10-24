@@ -8,13 +8,12 @@ import { avisoDoTeste, type RelatorioDoTeste } from '../_shared/plano.ts'
 
 // O cron diário dos planos (9h em Brasília): hoje só o aviso do dia 12 do
 // teste, com o relatório do que o app fez. O Bloco 8 acrescenta a renovação.
-// Só o servidor chama: sem CORS.
-const corsHeaders = {} as Record<string, string>
+// Só o cron chama: sem CORS nem OPTIONS.
 
 function json(status: number, payload: unknown): Response {
   return new Response(JSON.stringify(payload), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
   })
 }
 
@@ -51,7 +50,6 @@ async function releaseDedupe(admin: SupabaseAdminClient, row: DedupeRow): Promis
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return json(405, { error: 'Method not allowed' })
 
   if (!secretMatches(Deno.env.get('CRON_SECRET'), req.headers.get('x-cron-secret'))) {

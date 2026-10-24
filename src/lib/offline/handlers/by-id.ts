@@ -3,7 +3,8 @@ import { supabase } from "@/lib/supabase"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import type { OfflineMutation } from "@/lib/offline/types"
 
-export type SyncResult = { ok: true } | { ok: false; error: string }
+/** `somenteLeitura`: o gatilho barrou pela conta em "só leitura", lido do erro cru, antes da frase. */
+export type SyncResult = { ok: true } | { ok: false; error: string; somenteLeitura?: boolean }
 
 type Table =
     | "transactions"
@@ -17,7 +18,11 @@ type Table =
 type Row = Record<string, unknown>
 
 export function failure(error: PostgrestError): SyncResult {
-    return { ok: false, error: formatSupabasePostgrestError(error) ?? error.message }
+    return {
+        ok: false,
+        error: formatSupabasePostgrestError(error) ?? error.message,
+        somenteLeitura: error.message === "workspace_somente_leitura",
+    }
 }
 
 function targetId(mutation: OfflineMutation) {

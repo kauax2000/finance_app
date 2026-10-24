@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import type { PostgrestError } from "@supabase/supabase-js"
+
 import type { OfflineMutation } from "@/lib/offline/types"
 
 const mutation = { id: "m1", entity: "transaction", operation: "insert", workspaceId: "w1", payload: {}, status: "pending", retryCount: 0 } as unknown as OfflineMutation
@@ -27,16 +29,17 @@ vi.mock("@/lib/workspace-data-events", () => ({
     dispatchFinanceTransactionsMutated: vi.fn(),
 }))
 
+vi.mock("@/lib/supabase", () => ({ supabase: {} }))
+
 const { processOutbox } = await import("@/lib/offline/sync-engine")
-const { formatSupabasePostgrestError } = await import("@/lib/supabase-errors")
+const { failure } = await import("@/lib/offline/handlers/by-id")
 
 beforeEach(() => vi.clearAllMocks())
 
 describe("sync-engine em só leitura", () => {
     it("a escrita barrada vira failed de uma vez, com a mensagem, e continua na fila", async () => {
-        // O handler devolve o que `failure()` monta a partir do erro do Postgres.
-        const error = formatSupabasePostgrestError({ code: "P0001", message: "workspace_somente_leitura" })
-        mocks.sync.mockResolvedValue({ ok: false, error })
+        // O handler devolve o que `failure()` monta a partir do erro cru do Postgres.
+        mocks.sync.mockResolvedValue(failure({ code: "P0001", message: "workspace_somente_leitura" } as PostgrestError))
 
         await processOutbox()
 
@@ -47,6 +50,12 @@ describe("sync-engine em só leitura", () => {
         })
         expect(mocks.removeMutation).not.toHaveBeenCalled()
         expect(mocks.toast).toHaveBeenCalledOnce()
+    })
+
+    it("a decisão vem do erro cru, não da frase: a mesma frase sem a marca segue pending", async () => {
+        mocks.sync.mockResolvedValue({ ok: false, error: "Sua conta está em só leitura. Assine em Planos para voltar a lançar." })
+        await processOutbox()
+        expect(mocks.updateMutation).toHaveBeenLastCalledWith("m1", expect.objectContaining({ status: "pending" }))
     })
 
     it("outro erro continua pending para a próxima tentativa", async () => {

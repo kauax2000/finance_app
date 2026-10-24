@@ -29,10 +29,10 @@ const POSTGREST_CODE_PT: Record<string, string> = {
     "28000": "Sessão expirada. Entre novamente.",
 }
 
-/** As mensagens de `raise exception` das nossas funções SQL. */
 /** O que a pessoa lê quando o gatilho barra a escrita de uma conta em "só leitura". */
 export const SOMENTE_LEITURA_PT = "Sua conta está em só leitura. Assine em Planos para voltar a lançar."
 
+/** As mensagens de `raise exception` das nossas funções SQL. */
 const RAISE_MESSAGE_PT: Record<string, string> = {
     workspace_somente_leitura: SOMENTE_LEITURA_PT,
     workspace_last_owner: "A carteira precisa de pelo menos um dono.",

@@ -168,8 +168,11 @@ $$;
 revoke all on function public.plano_do_usuario(uuid) from public, anon, authenticated;
 grant execute on function public.plano_do_usuario(uuid) to service_role;
 
--- Substitui o stub do Bloco 3A: mesma assinatura, mesmos grants. A carteira
--- segue o plano de quem é dono dela.
+-- Substitui o stub do Bloco 3A com a mesma assinatura. A carteira segue o plano
+-- de quem é dono dela. Sai do alcance de `authenticated` (o stub o dava): com o
+-- uuid, qualquer pessoa logada descobriria se o dono de outra carteira paga.
+-- Nenhum cliente a chama; quem chama é a service role (`capture`, `ia-ler`) e
+-- os `security definer` (`garantir_escrita`), que executam como o dono.
 create or replace function public.workspace_plan(p_workspace_id uuid)
 returns text
 language plpgsql
@@ -199,8 +202,8 @@ begin
 end;
 $$;
 
-revoke all on function public.workspace_plan(uuid) from public, anon;
-grant execute on function public.workspace_plan(uuid) to authenticated, service_role;
+revoke all on function public.workspace_plan(uuid) from public, anon, authenticated;
+grant execute on function public.workspace_plan(uuid) to service_role;
 
 -- 3. só leitura ---------------------------------------------------------------
 -- Barra o gesto da pessoa, nunca o que já foi permitido ou contratado:

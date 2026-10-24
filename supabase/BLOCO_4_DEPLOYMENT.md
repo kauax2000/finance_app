@@ -36,13 +36,16 @@ front de `main` faz:
   isso só acontece depois do lançamento.
 
 Faça na ordem. Todo SQL abaixo leva marcadores: troque-os no SQL Editor e
-**nunca** salve o SQL preenchido no repositório (ele é público). O único
-marcador deste roteiro é o `<USER_ID>`.
+**nunca** salve o SQL preenchido no repositório (ele é público). Os marcadores
+são dois: `<USER_ID>`, o `id` da pessoa em `auth.users` (Dashboard →
+Authentication → Users; o §1 o usa antes de o §3 explicar), e `<tabela>`, o nome
+da tabela que uma conferência do §1 acusou.
 
 ## 0. Pré-requisitos
 
 - **Os Blocos 3A e 3B vão antes, ou junto.** A `workspace_plan` substitui o stub
-  do 3A (mesma assinatura, mesmos grants), e o `origem_do_cron` e o
+  do 3A (mesma assinatura; o `execute` sai de `authenticated` e fica só na
+  service role), e o `origem_do_cron` e o
   `garantir_escrita` leem `workspace_installment_plans` e
   `workspace_subscriptions`. Se eles ainda não subiram, o `db push` aplica as
   migrações em ordem (captura, ia, planos): faça as conferências dos três
@@ -118,7 +121,8 @@ das três vier `true`, **pare**: qualquer pessoa logada ligaria a cobrança ou
 leria o plano de outra. Rode de novo o `revoke` e o `grant` da função na
 migração.
 
-**A pessoa logada alcança só o `meu_plano()` e a `workspace_plan`.**
+**A pessoa logada alcança só o `meu_plano()`.** A `workspace_plan` deixa de ser
+dela (o stub do 3A a dava): com o uuid, ela descobriria o plano de outra carteira.
 
 ```sql
 select
@@ -127,7 +131,8 @@ select
   has_function_privilege('anon', 'public.meu_plano()', 'execute') as meu_plano_anon;
 ```
 
-Esperado: `true`, `true`, `false`.
+Esperado: `true`, `false`, `false`. Se `workspace_plan` vier `true`, rode de novo
+o `revoke` e o `grant` dela na migração.
 
 **Os gatilhos existem.**
 
@@ -269,7 +274,7 @@ update public.billing_settings set enforced_since = null;
 
 | O que muda no banco | Por que `main` não sente |
 |---|---|
-| `workspace_plan` deixa de ser o stub | Com `enforced_since` nulo devolve `familia`, como o stub |
+| `workspace_plan` deixa de ser o stub | Com `enforced_since` nulo devolve `familia`, como o stub; só a service role a executa, e o front de `main` não a chama |
 | Gatilho `garantir_escrita` em 4 tabelas | Nunca lança com a cobrança desligada; sem `auth.uid()` (crons, `delete-user`) e em cascata passa sempre |
 | Gatilho `origem_do_cron` | Só troca `app` por `recurring` em lançamento de plano ou assinatura que já existia; `main` não lê a origem |
 | `user_settings.jornada_concluida_em` | Coluna nova, opcional |

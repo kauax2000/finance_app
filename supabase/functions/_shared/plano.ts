@@ -29,5 +29,6 @@ export function avisoDoTeste(r: RelatorioDoTeste): { titulo: string; corpo: stri
     partes.length === 0
       ? ''
       : `Nestes dias o app ${partes.length === 1 ? partes[0] : `${partes.slice(0, -1).join(', ')} e ${partes[partes.length - 1]}`}. `
-  return { titulo: 'Seu teste termina em 2 dias', corpo: resumo + convite }
+  const faltam = TESTE_DIAS - AVISO_TESTE_DIA
+  return { titulo: `Seu teste termina em ${faltam} ${faltam === 1 ? 'dia' : 'dias'}`, corpo: resumo + convite }
 }

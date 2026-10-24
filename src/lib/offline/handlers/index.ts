@@ -3,11 +3,12 @@ import { syncBudgetMutation, syncCategoryMutation } from "@/lib/offline/handlers
 import { syncCreditCardMutation } from "@/lib/offline/handlers/credit-cards"
 import { syncSubscriptionMutation } from "@/lib/offline/handlers/subscriptions"
 import { syncTransactionMutation } from "@/lib/offline/handlers/transactions"
+import type { SyncResult } from "@/lib/offline/handlers/by-id"
 import type { OfflineMutation } from "@/lib/offline/types"
 
 export async function syncMutation(
     mutation: OfflineMutation
-): Promise<{ ok: true } | { ok: false; error: string }> {
+): Promise<SyncResult> {
     switch (mutation.entity) {
         case "transaction":
             return syncTransactionMutation(mutation)

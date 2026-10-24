@@ -92,12 +92,16 @@ describe("migração planos", () => {
         expect(fn).toMatch(/order by min\(m\.joined_at\), m\.user_id\s+limit 5/)
     })
 
-    it("workspace_plan mantém a assinatura e os grants do stub", () => {
+    it("workspace_plan mantém a assinatura do stub e sai do alcance de authenticated", () => {
         const fn = funcao("workspace_plan")
         expect(fn).toMatch(/public\.workspace_plan\(p_workspace_id uuid\)\s+returns text/)
         expect(fn).toMatch(/wm\.role = 'owner'/)
         expect(fn).toMatch(/public\.plano_do_usuario\(wm\.user_id\) = 'familia'/)
-        expect(sql).toMatch(/grant execute on function public\.workspace_plan\(uuid\) to authenticated, service_role;/)
+        expect(sql).toMatch(/revoke all on function public\.workspace_plan\(uuid\) from public, anon, authenticated;/)
+        expect(sql).toMatch(/grant execute on function public\.workspace_plan\(uuid\) to service_role;/)
+        expect(sql).not.toMatch(/grant execute on function public\.workspace_plan\(uuid\) to [^;]*authenticated/)
+        // Quem ainda a chama do banco é definer: executa como o dono, não como a pessoa.
+        expect(funcao("garantir_escrita")).toMatch(/security definer/)
     })
 
     it("garantir_escrita deixa o cron passar e barra a pessoa em só leitura", () => {
