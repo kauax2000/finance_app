@@ -24,7 +24,7 @@ export async function fetchPendingBillInstancesForDashboard(
     const res = await supabase
         .from("bill_instances")
         .select(
-            "id,bill_id,due_date,status,workspace_id,user_id,bills(id,name,is_active,amount_estimated)",
+            "id,bill_id,due_date,status,amount,workspace_id,user_id,bills(id,name,is_active,amount_estimated)",
         )
         .eq("workspace_id", workspaceId)
         .eq("status", "pending")

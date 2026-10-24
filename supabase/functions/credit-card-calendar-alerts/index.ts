@@ -303,8 +303,9 @@ async function trendingCopy(
   for (const r of totais.data ?? []) banco.set(String(r.statement_close_date).slice(0, 10), Number(r.bank_total))
   const valores = fechadas
     .map((w) => escolherTotal(cardInvoiceNetInWindow(rows, ev.cardId, w), banco.get(formatYmd(w.end))))
-    // A fatura sem movimento (o cartão novo) não conta como fechada.
-    .filter((v) => v !== 0)
+    // A fatura sem movimento (o cartão novo) não conta como fechada, nem a que
+    // fechou negativa (só estorno): ela baixaria a média e afrouxaria os 120%.
+    .filter((v) => v > 0)
   // ponytail: a parcela lançada só é reconhecida pelas linhas do intervalo
   // consultado; uma que teve a data movida para fora dele seria contada de novo.
   const prevista =

@@ -56,6 +56,12 @@ describe("o cron avisa a fatura alta", () => {
         expect(fonte).toContain("const PAGE_SIZE = 1000")
     })
 
+    it("só a fechada positiva entra na média (a de estorno não afrouxa os 120%)", () => {
+        const tendencia = corpo("async function trendingCopy(", "async function resolveCardEvents(")
+        expect(tendencia).toContain(".filter((v) => v > 0)")
+        expect(tendencia).not.toContain("v !== 0")
+    })
+
     it("a consulta dos avisos do calendário lê a mesma faixa de antes", () => {
         const calendario = corpo("async function resolveCardEvents(", "Deno.serve(")
         expect(calendario).toContain(

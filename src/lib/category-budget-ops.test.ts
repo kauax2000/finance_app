@@ -88,6 +88,25 @@ describe("garantirOrcamentosDoMes", () => {
         err.mockRestore()
     })
 
+    it("duas telas abrem com o pedido no ar: um RPC só, e as duas buscam de novo", async () => {
+        let resolver!: (v: { data: number; error: null }) => void
+        rpc.mockReturnValueOnce(new Promise((r) => (resolver = r)))
+        const painel = vi.fn()
+        const categorias = vi.fn()
+        const a = garantirOrcamentosDoMes("w4", "2026-10", painel)
+        const b = garantirOrcamentosDoMes("w4", "2026-10", categorias)
+        resolver({ data: 2, error: null })
+        await Promise.all([a, b])
+        expect(rpc).toHaveBeenCalledTimes(1)
+        expect(painel).toHaveBeenCalledTimes(1)
+        expect(categorias).toHaveBeenCalledTimes(1)
+
+        const depois = vi.fn()
+        await garantirOrcamentosDoMes("w4", "2026-10", depois)
+        expect(rpc).toHaveBeenCalledTimes(1)
+        expect(depois).not.toHaveBeenCalled()
+    })
+
     it("rejeição lançada também libera a chave", async () => {
         const err = vi.spyOn(console, "error").mockImplementation(() => {})
         rpc.mockRejectedValueOnce(new Error("rede"))

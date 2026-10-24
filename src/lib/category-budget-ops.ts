@@ -145,17 +145,27 @@ export async function definirRepeticao(
     }
 }
 
-// Chaves `${carteira}:${YYYY-MM}` já garantidas nesta sessão.
-const garantidos = new Set<string>()
+// Chave `${carteira}:${YYYY-MM}` → o pedido da cópia nesta sessão. Enquanto ele
+// voa, quem abre outra tela espera o mesmo pedido em vez de pular a cópia.
+const garantidos = new Map<string, Promise<number>>()
 
 export function resetGarantidosParaTeste() {
     garantidos.clear()
 }
 
+async function pedirCopia(workspaceId: string): Promise<number> {
+    const { data, error } = await supabase.rpc("garantir_orcamentos_do_mes", {
+        p_workspace_id: workspaceId,
+    })
+    if (error) throw error
+    return typeof data === "number" ? data : 0
+}
+
 /**
  * Copia os orçamentos que repetem do mês anterior (RPC idempotente) no máximo
- * uma vez por carteira e mês. `onCopied` roda só quando o RPC criou linhas.
- * Erro vai ao console e a chave sai do conjunto, para a próxima abertura tentar de novo.
+ * uma vez por carteira e mês. `onCopied` roda só quando o RPC criou linhas, em
+ * cada tela que esperou por ele (inclusive a que abriu com o pedido no ar).
+ * Erro vai ao console e a chave sai do mapa, para a próxima abertura tentar de novo.
  */
 export async function garantirOrcamentosDoMes(
     workspaceId: string,
@@ -163,16 +173,19 @@ export async function garantirOrcamentosDoMes(
     onCopied: () => void,
 ): Promise<void> {
     const key = `${workspaceId}:${yearMonth}`
-    if (garantidos.has(key)) return
-    garantidos.add(key)
+    let pedido = garantidos.get(key)
+    if (!pedido) {
+        pedido = pedirCopia(workspaceId)
+        garantidos.set(key, pedido)
+        // Resolvido, quem abrir depois já lê o mês copiado: não precisa buscar de novo.
+        pedido.then(
+            () => garantidos.set(key, Promise.resolve(0)),
+            () => garantidos.delete(key),
+        )
+    }
     try {
-        const { data, error } = await supabase.rpc("garantir_orcamentos_do_mes", {
-            p_workspace_id: workspaceId,
-        })
-        if (error) throw error
-        if (typeof data === "number" && data > 0) onCopied()
+        if ((await pedido) > 0) onCopied()
     } catch (e) {
-        garantidos.delete(key)
         console.error(e)
     }
 }

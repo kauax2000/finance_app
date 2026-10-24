@@ -45,4 +45,10 @@ describe("usePrevisao", () => {
         expect(previsao).toContain("chavesDeFaturasPagas(aux.data.invoicePayments)")
         expect(painel).toContain("chavesDeFaturasPagas(invoicePaymentsFromQuery)")
     })
+
+    it("a conta pendente traz o valor da própria instância (o do fluxo vence a estimativa)", () => {
+        const contas = semComentarios(lerFonte("src/lib/queries/fetch-bills-dashboard.ts"), "tudo")
+        const primeira = contas.match(/\.from\("bill_instances"\)\s*\.select\(\s*"([^"]+)"/)?.[1] ?? ""
+        expect(primeira.split(",")).toContain("amount")
+    })
 })
