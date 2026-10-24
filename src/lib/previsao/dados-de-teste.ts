@@ -138,6 +138,7 @@ export function conta(over: Partial<Bill> & { id: string }): Bill {
         frequency: "monthly",
         due_day_of_month: 1,
         amount_estimated: null,
+        valor_variavel: false,
         start_date: "2026-01-01",
         end_date: null,
         default_payment_method: null,

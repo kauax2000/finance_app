@@ -199,6 +199,8 @@ export interface Bill {
     frequency: BillFrequency
     due_day_of_month: number
     amount_estimated: number | null
+    /** Valor variável: `amount_estimated` é a média das 3 últimas pagas (gatilho `media_da_conta`). */
+    valor_variavel: boolean
     start_date: string
     end_date: string | null
     default_payment_method: TransactionPaymentMethod | null

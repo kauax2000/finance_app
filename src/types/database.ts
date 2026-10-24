@@ -339,6 +339,7 @@ export type Database = {
           start_date: string
           updated_at: string
           user_id: string
+          valor_variavel: boolean
           workspace_id: string
         }
         Insert: {
@@ -361,6 +362,7 @@ export type Database = {
           start_date: string
           updated_at?: string
           user_id: string
+          valor_variavel?: boolean
           workspace_id: string
         }
         Update: {
@@ -383,6 +385,7 @@ export type Database = {
           start_date?: string
           updated_at?: string
           user_id?: string
+          valor_variavel?: boolean
           workspace_id?: string
         }
         Relationships: [
@@ -1803,6 +1806,14 @@ export type Database = {
       }
       is_workspace_member: { Args: { workspace_id: string }; Returns: boolean }
       is_workspace_owner: { Args: { workspace_id: string }; Returns: boolean }
+      ligar_pagamento_da_conta: {
+        Args: {
+          p_instance_id: string
+          p_next_due_date: string
+          p_transaction_id: string
+        }
+        Returns: undefined
+      }
       meu_plano: { Args: never; Returns: Json }
       next_subscription_billing_date:
         | { Args: { p_from: string; p_interval: string }; Returns: string }
@@ -1824,6 +1835,10 @@ export type Database = {
         Returns: string
       }
       plano_do_usuario: { Args: { p_user_id: string }; Returns: string }
+      pular_instancia_da_conta: {
+        Args: { p_instance_id: string; p_next_due_date: string }
+        Returns: undefined
+      }
       registrar_evento_ia: {
         Args: {
           p_dia: string
