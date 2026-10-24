@@ -418,7 +418,8 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
             ultimaParcela: split.finalInstallmentAmount,
             primeiraYmd: dateYmd,
             cardId,
-            descricao: description,
+            // A descrição não muda número nenhum: fora do memo, digitar nela não refaz a previsão.
+            descricao: "",
         }
     }, [
         segmentMode,
@@ -430,7 +431,6 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
         installmentValueMode,
         installmentTotal,
         installmentPerAmount,
-        description,
     ])
 
     const selectedCategory = useMemo(

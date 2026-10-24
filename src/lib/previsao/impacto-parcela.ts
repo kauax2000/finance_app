@@ -4,13 +4,18 @@
  * plano sintético igual ao que `create_workspace_installment_plan` gravaria.
  */
 import { shiftYearMonth } from "@/lib/budget-month"
-import { firstCloseOnOrAfter } from "@/lib/credit-card-billing"
-import { expandAllPlanCharges } from "@/lib/credit-card-installment-projection"
-import { statementTotalKey } from "@/lib/fatura/total-com-banco"
+import { buildCardMonthlyInvoiceSnapshot, firstCloseOnOrAfter } from "@/lib/credit-card-billing"
+import {
+    buildPostedInstallmentDedupeKeys,
+    expandAllPlanCharges,
+    expandRemainingInstallmentCharges,
+    isProjectedChargeAlreadyPosted,
+} from "@/lib/credit-card-installment-projection"
+import { bancoTotalDoCiclo, statementTotalKey, totalComBanco } from "@/lib/fatura/total-com-banco"
 import { currencyBRL } from "@/lib/formatters"
 import type { CreditCard, WorkspaceInstallmentPlan } from "@/lib/supabase"
 import { localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
-import { centavos, faturaPrevista } from "./fatura-prevista"
+import { centavos, faturaPrevista, hojeDate } from "./fatura-prevista"
 import { projecaoMensal } from "./fluxo"
 import type { DadosDaPrevisao } from "./tipos"
 
@@ -99,20 +104,34 @@ function rendaMensal(dados: DadosDaPrevisao): number {
         .reduce((s, a) => s + centavos(a.amount) * porMes[a.billing_interval], 0)
 }
 
-/** O limite menos as faturas não pagas do aberto em diante, até a última parcela já prevista no cartão. */
+/** Quantas fechadas não pagas o limite procura para trás (uma em dia; mais é fatura atrasada). */
+const FECHADAS_NAO_PAGAS = 3
+
+/**
+ * O limite como o banco calcula: menos (A) as fechadas não pagas, pelo total do banco quando houver;
+ * (B) o lançado na aberta (compras menos estornos); (C) toda parcela ainda não lançada dos planos do
+ * cartão, até o fim de cada um, porque a compra parcelada ocupa o limite inteira. Assinatura
+ * projetada não ocupa limite. A procura das fechadas para na primeira paga ou em
+ * `FECHADAS_NAO_PAGAS` ciclos.
+ */
 function limiteDisponivel(card: CreditCard, dados: DadosDaPrevisao): number {
+    const hoje = hojeDate(dados.hojeYmd)
+    const lancado = (ym: string) => buildCardMonthlyInvoiceSnapshot(card, dados.transacoes, ym, hoje)
     const aberto = ymDoFechamento(dados.hojeYmd, card)
-    let ultimo = aberto
+    let usado = centavos(lancado(aberto).postedTotal)
+    for (let i = 1; i <= FECHADAS_NAO_PAGAS; i++) {
+        const snap = lancado(shiftYearMonth(aberto, -i))
+        const closeYmd = localYmdFromDate(snap.close)
+        if (dados.faturasPagas.has(statementTotalKey(card.id, closeYmd))) break
+        const banco = bancoTotalDoCiclo(dados.totaisDoBanco, card.id, closeYmd)
+        usado += centavos(totalComBanco(snap.postedTotal, banco).total)
+    }
+    const lancadas = buildPostedInstallmentDedupeKeys(card.id, dados.transacoes)
     for (const p of dados.planos) {
         if (p.payment_method !== "credit_card" || p.payment_credit_card_id !== card.id) continue
-        const fim = expandAllPlanCharges(p).at(-1)
-        const ym = fim ? ymDoFechamento(localYmdFromDate(fim.chargeDate), card) : ultimo
-        if (ym > ultimo) ultimo = ym
-    }
-    let usado = 0
-    for (let ym = aberto; ym <= ultimo; ym = shiftYearMonth(ym, 1)) {
-        const f = faturaPrevista(card, ym, dados)
-        if (!dados.faturasPagas.has(statementTotalKey(card.id, f.closeYmd))) usado += centavos(f.total)
+        for (const c of expandRemainingInstallmentCharges(p)) {
+            if (!isProjectedChargeAlreadyPosted(c, lancadas)) usado += centavos(c.amount)
+        }
     }
     return (centavos(card.credit_limit ?? 0) - usado) / 100
 }

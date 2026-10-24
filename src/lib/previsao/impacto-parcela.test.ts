@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest"
 import { currencyBRL } from "@/lib/formatters"
 import { lerFonte, semComentarios } from "@/test/fonte"
-import { assinatura, cartao, dados, noCartao, plano } from "./dados-de-teste"
+import { statementTotalKey } from "@/lib/fatura/total-com-banco"
+import { assinatura, cartao, dados, noCartao, plano, totalDoBanco } from "./dados-de-teste"
 import { impactoDaParcela, impactoDoPlano, mesCurto, type PlanoProposto } from "./impacto-parcela"
 
 const HOJE = "2026-10-24"
@@ -79,6 +80,60 @@ describe("impactoDaParcela", () => {
             ],
         })
         expect(impactoDaParcela(dezParcelas, d).limite).toEqual({ disponivel: 4400, cabe: true, motivo: null })
+    })
+
+    describe("o limite como o banco calcula", () => {
+        // Fecha dia 15 e vence dia 5: em 24/10 a fatura de 15/10 está fechada e ainda não venceu.
+        const c2 = { ...cartao("c2", 15, 5), credit_limit: 2000 }
+        const noC2: PlanoProposto = { ...dezParcelas, cardId: "c2" }
+        const fechada400 = noCartao("expense", 400, "2026-10-10", "c2")
+
+        it("a fechada não paga de R$ 400, entre o fechamento e o vencimento, é descontada", () => {
+            const d = dados({ hojeYmd: HOJE, cartoes: [c2], transacoes: [fechada400] })
+            expect(impactoDaParcela(noC2, d).limite.disponivel).toBe(1600)
+        })
+
+        it("a mesma fatura paga não é descontada", () => {
+            const d = dados({
+                hojeYmd: HOJE,
+                cartoes: [c2],
+                transacoes: [fechada400],
+                faturasPagas: new Set([statementTotalKey("c2", "2026-10-15")]),
+            })
+            expect(impactoDaParcela(noC2, d).limite.disponivel).toBe(2000)
+        })
+
+        it("a fechada com o total do banco vale o do banco", () => {
+            const d = dados({
+                hojeYmd: HOJE,
+                cartoes: [c2],
+                transacoes: [fechada400],
+                totaisDoBanco: [totalDoBanco("c2", "2026-10-15", 450)],
+            })
+            expect(impactoDaParcela(noC2, d).limite.disponivel).toBe(1550)
+        })
+
+        it("a assinatura de R$ 50 projetada na aberta não ocupa limite", () => {
+            const d = dados({
+                hojeYmd: HOJE,
+                cartoes: [c2],
+                assinaturas: [
+                    assinatura({ id: "streaming", amount: 50, payment_method: "credit_card", payment_credit_card_id: "c2", next_billing_date: "2026-11-01" }),
+                ],
+            })
+            expect(impactoDaParcela(noC2, d).limite.disponivel).toBe(2000)
+        })
+
+        it("um 10x com 7 parcelas por lançar desconta as 7", () => {
+            const d = dados({
+                hojeYmd: HOJE,
+                cartoes: [c2],
+                planos: [
+                    plano({ id: "sofa", payment_method: "credit_card", payment_credit_card_id: "c2", total_installments: 10, generated_count: 3, installment_amount: 100, final_installment_amount: 100, next_billing_date: "2026-11-01" }),
+                ],
+            })
+            expect(impactoDaParcela(noC2, d).limite.disponivel).toBe(1300)
+        })
     })
 
     it("sem cartão (Pix): nem faturas nem limite", () => {
