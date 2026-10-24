@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest"
 // `agruparPiloto` é pura; o cliente do Supabase exige variáveis de ambiente que o teste não tem.
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 
-import { agruparPiloto, ROTULO_DA_ORIGEM, type LinhaPiloto } from "./piloto"
+import { agruparPiloto, ROTULO_DA_ORIGEM, textoDesfazerImportacao, type LinhaPiloto } from "./piloto"
 
 function linha(p: Partial<LinhaPiloto> & { id: string }): LinhaPiloto {
     return {
@@ -63,5 +63,13 @@ describe("agruparPiloto", () => {
 
     it("tem rótulo para as nove origens", () => {
         expect(Object.keys(ROTULO_DA_ORIGEM)).toHaveLength(9)
+    })
+})
+
+describe("textoDesfazerImportacao", () => {
+    it("usa o singular com 1 lançamento e o plural nos demais", () => {
+        expect(textoDesfazerImportacao(1)).toBe("Apagar o lançamento desta importação?")
+        expect(textoDesfazerImportacao(2)).toBe("Apagar os 2 lançamentos desta importação?")
+        expect(textoDesfazerImportacao(12)).toBe("Apagar os 12 lançamentos desta importação?")
     })
 })

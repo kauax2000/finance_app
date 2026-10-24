@@ -11,6 +11,7 @@ import {
     agruparPiloto,
     buscarPiloto,
     desfazerLancamento,
+    textoDesfazerImportacao,
     type ItemPiloto,
 } from "@/lib/piloto/piloto"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
@@ -117,7 +118,7 @@ export function PilotoAutomaticoWireframe() {
                                     className={botao}
                                     disabled={pendente}
                                     onClick={() =>
-                                        void desfazer(`Apagar os ${g.total} lançamentos desta importação?`, (ws) =>
+                                        void desfazer(textoDesfazerImportacao(g.total), (ws) =>
                                             desfazerImportacao(supabase, ws, g.loteId),
                                         )
                                     }

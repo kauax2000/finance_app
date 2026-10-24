@@ -118,3 +118,8 @@ export async function desfazerLancamento(workspaceId: string, id: string): Promi
     if (!data?.length) return { ok: false, erro: "O lançamento já não existe." }
     return { ok: true }
 }
+
+/** A pergunta antes de apagar uma importação: singular para 1 lançamento, plural nos demais. */
+export function textoDesfazerImportacao(total: number): string {
+    return total === 1 ? "Apagar o lançamento desta importação?" : `Apagar os ${total} lançamentos desta importação?`
+}

@@ -244,7 +244,7 @@ describe("Piloto Automático (Bloco 4)", () => {
   it("a rota importa o wireframe, e o desfazer confirma antes de apagar", () => {
     expect(semComentarios(lerFonte("src/app/(app)/piloto/page.tsx"), "tudo")).toContain("<PilotoAutomaticoWireframe />")
     expect(f).toContain("window.confirm(texto)")
-    expect(f).toContain("Apagar os ${g.total} lançamentos desta importação?")
+    expect(f).toContain("textoDesfazerImportacao(g.total)")
     expect(f).toContain("Apagar este lançamento? O app não o lança de novo.")
     expect(f).toContain("desfazerImportacao(supabase, ws, g.loteId)")
     expect(f).toContain("desfazerLancamento(ws, i.id)")

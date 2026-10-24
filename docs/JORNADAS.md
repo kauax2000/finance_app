@@ -1087,12 +1087,12 @@ flowchart TD
 `/precos`, `/plans` e a faixa de "só leitura": quanto custa, o que a pessoa tem
 hoje e o que muda quando o direito de uso acaba. **Tudo isso está desligado:**
 com `billing_settings.enforced_since` nulo, todo mundo é `familia`, ninguém é
-barrado e o botão "Assinar" não faz nada. O gateway (Asaas) é do Bloco 8.
+barrado e o botão "Assinar" (que só aparece com origem `teste` ou `nenhuma`) não faz nada. O gateway (Asaas) é do Bloco 8.
 
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart TD
-    visitor(["Visitante sem conta"]) --> precos["/precos, pública"]
+    visitor(["Visitante sem conta"]) -->|"pelo endereço direto, sem link de entrada no app"| precos["/precos, pública"]
     precos -->|"Começar o teste grátis"| G1r(("G1 /register"))
     precos -->|"Já tenho conta"| G1l(("G1 /login"))
     G1r -->|"conta criada"| trial(["Teste de 14 dias, sem cartão: calculado, não gravado"])
@@ -1105,7 +1105,7 @@ flowchart TD
     userMenu(("G3 Menu do usuário")) -->|"Planos"| plans
     plans --> origin(["Origem do plano: livre, teste, assinatura, vitalício, convite ou nenhuma"])
     origin --> price(["Preço de hoje em 12x; fundadores até 31/01/2027"])
-    origin -->|"Assinar"| subscribe(["Desabilitado: A assinatura abre no lançamento"])
+    origin -->|"Assinar, só com origem teste ou nenhuma"| subscribe(["Desabilitado: A assinatura abre no lançamento"])
     origin -->|"Ver preços e garantias"| precos
 
     write(["Gesto de escrita da pessoa"]) --> trigger[("Trigger garantir_escrita")]
@@ -1138,7 +1138,7 @@ flowchart TD
 | Faixa de só leitura | `SomenteLeituraWireframe`, na casca do app, acima de toda tela. Aparece só com o plano `leitura` e leva a `/plans`. Carregando ou em erro, não aparece | `src/components/wireframe/somente-leitura-wireframe.tsx`, `src/components/layout/sidebar-app-shell.tsx` |
 | Mensagem e fila offline | O erro `workspace_somente_leitura` vira "Sua conta está em só leitura. Assine em Planos para voltar a lançar." (`SOMENTE_LEITURA_PT`). Na fila offline, o item rejeitado com essa mensagem fica `failed` na hora, sem as novas tentativas: nunca some calado | `src/lib/supabase-errors.ts`, `src/lib/offline/sync-engine.ts` |
 | `/precos` | Rota pública fora de `(app)`, como `/privacidade`, sem mexer no `AuthGuard`. Mostra o Plano Família (12x de R$ 29,90, R$ 358,80 por ano) e, até 31/01/2027, o de fundadores (12x de R$ 19,90, congelado enquanto ativo), 14 dias grátis sem cartão e as garantias. Liga a `/register` e `/login` | `src/app/precos/page.tsx`, `src/components/wireframe/precos-wireframe.tsx`, `supabase/functions/_shared/plano.ts` |
-| `/plans` | Dentro do app, é a gestão do plano: a origem e as datas, o preço do dia e o link para `/precos`. "Assinar" aparece desabilitado ("A assinatura abre no lançamento") só quando a pessoa precisa dele; não faz nada até o Bloco 8 | `src/app/(app)/plans/page.tsx`, `src/lib/planos/plano.ts` |
+| `/plans` | Dentro do app, é a gestão do plano: a origem e as datas, o preço do dia e o link para `/precos`. "Assinar" aparece desabilitado ("A assinatura abre no lançamento") só quando a pessoa precisa dele (origem `teste` ou `nenhuma`; com `livre`, o estado de hoje, não aparece); não faz nada até o Bloco 8 | `src/app/(app)/plans/page.tsx`, `src/lib/planos/plano.ts` |
 | Aviso do dia 12 | O cron `billing-daily` (`0 12 * * *` UTC, 9h em Brasília) chama a Edge `billing-daily` por `invoke_edge_function`; só aceita o `x-cron-secret`. Enquanto `enforced_since` é nulo, sai com `pulado: 'desligado'`. Depois, avisa quem está entre o 12º e o 14º dia do teste, sem plano próprio nem cobertura, com o que o app fez no teste. Um aviso por pessoa (`billing_avisos`), pelo `deliverNotification` com o tipo `system`, `metadata.href` `/plans`, na carteira pessoal e com `essencial: true`: ignora o interruptor do tipo, o `notify_in_app` e o `notify_email`, e o push segue a preferência | `supabase/functions/billing-daily/index.ts`, `supabase/functions/_shared/deliver-notification.ts`, `supabase/functions/_shared/notification-types.ts` |
 
 ---
@@ -1238,9 +1238,10 @@ continuam aqui para registro.
 | 24 | G5 | Numa compra parcelada capturada, ou preenchida pela frase ou pela IA, só as parcelas lançadas na hora levam a origem e a marca de a conferir. As que o cron lança nos meses seguintes nascem com `source` `recurring` (desde o Bloco 4; antes, `app`) e sem a marca de a conferir. |
 | 25 | G5 | Sem service worker ativo (a primeira instalação, a troca de versão), o compartilhar do Android cai no *route handler* do Next, que segue só com o texto: a foto ou o PDF compartilhado some sem aviso. |
 | 26 | G2, G5, G6 | O Bloco 3B (IA na captura e na fatura, e a política de privacidade) está no repositório, com as telas em wireframe, e **nada foi publicado**. O backend sobe junto com o do 3A ou depois dele, e pode subir antes do front: `supabase/BLOCO_3B_DEPLOYMENT.md`. |
-| 27 | G11 | "Assinar" só abre no Bloco 8: o gateway (Asaas) saiu do Bloco 4. Até lá o botão em `/plans` fica desabilitado ("A assinatura abre no lançamento"), ninguém consegue assinar e `enforced_since` continua nulo, então ninguém é barrado nem avisado. Quem fica de graça (o dono e a família) entra por `insert` manual (`provider` `manual`). |
+| 27 | G11 | "Assinar" só abre no Bloco 8: o gateway (Asaas) saiu do Bloco 4. Até lá o botão em `/plans`, quando aparece (origem `teste` ou `nenhuma`; com `livre` não aparece), fica desabilitado ("A assinatura abre no lançamento"), ninguém consegue assinar e `enforced_since` continua nulo, então ninguém é barrado nem avisado. Quem fica de graça (o dono e a família) entra por `insert` manual (`provider` `manual`). |
 | 28 | G3, G4, G10, G11, G12 | O Bloco 4 (planos e só leitura, `/precos`, Piloto Automático, Cofre aberto e a jornada de 4 passos) está no repositório, com as telas em wireframe, e **nada foi publicado**. O backend pode subir antes do front, porque com `enforced_since` nulo nada dele muda o front de `main`: `supabase/BLOCO_4_DEPLOYMENT.md`. |
 | 29 | G12 | O Cofre ainda diz "região a confirmar" em cada dado. Troca por "no Brasil" (ou pela região) quando a região do projeto Supabase for conferida (passo 4 do roteiro). |
+| 30 | G1, G11 | Nenhuma tela de acesso (`/login`, `/register`, a raiz) leva a `/precos`: hoje só se chega a ela pelo endereço direto ou pelo `/plans`. A porta pública do preço existe, mas ninguém a encontra antes de ter conta. |
 
 ### Fechadas na rodada de acesso (set/2026)
 
