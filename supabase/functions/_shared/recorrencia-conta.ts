@@ -22,9 +22,11 @@ function ymd(ano: number, mes1: number, dia: number): string {
   return `${ano}-${String(mes1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
 }
 
-function partes(s: string): [number, number, number] | null {
-  const p = s.slice(0, 10).split('-').map((n) => parseInt(n, 10))
-  return p.length === 3 && p.every((n) => !Number.isNaN(n)) ? [p[0], p[1], p[2]] : null
+function partes(s: string): [number, number, number] {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s)
+  const [ano, mes, dia] = m ? [Number(m[1]), Number(m[2]), Number(m[3])] : [0, 0, 0]
+  if (!m || mes < 1 || mes > 12 || dia < 1 || dia > 31) throw new Error(`data inválida: ${s}`)
+  return [ano, mes, dia]
 }
 
 function ancora(dia: number): number {
@@ -34,9 +36,7 @@ function ancora(dia: number): number {
 /** Primeiro vencimento >= início no dia da conta (limitado ao tamanho do mês). */
 export function primeiroVencimento(inicioYmd: string, diaDoVencimento: number): string {
   const inicio = inicioYmd.slice(0, 10)
-  const p = partes(inicio)
-  if (!p) return inicio
-  let [ano, mes] = p
+  let [ano, mes] = partes(inicio)
   const dia = ancora(diaDoVencimento)
   let cand = ymd(ano, mes, dia)
   if (cand < inicio) {
@@ -50,7 +50,7 @@ export function primeiroVencimento(inicioYmd: string, diaDoVencimento: number): 
   return cand
 }
 
-/** O vencimento seguinte ao dado; `null` para `one_time` ou data ilegível. */
+/** O vencimento seguinte ao dado; `null` para `one_time`; data malformada lança. */
 export function proximoVencimento(
   depoisDeYmd: string,
   frequencia: Frequencia,
@@ -58,7 +58,6 @@ export function proximoVencimento(
 ): string | null {
   if (frequencia === 'one_time') return null
   const p = partes(depoisDeYmd)
-  if (!p) return null
   const total = p[0] * 12 + (p[1] - 1) + MESES[frequencia]
   return ymd(Math.floor(total / 12), (total % 12) + 1, ancora(diaDoVencimento))
 }

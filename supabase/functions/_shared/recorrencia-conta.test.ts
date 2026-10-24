@@ -1,4 +1,4 @@
-import { assertEquals } from 'jsr:@std/assert@1.0.19'
+import { assertEquals, assertThrows } from 'jsr:@std/assert@1.0.19'
 import {
   primeiroVencimento,
   proximoVencimento,
@@ -32,9 +32,15 @@ Deno.test('recorrencia: bimestral, trimestral e anual', () => {
   assertEquals(proximoVencimento('2027-02-28', 'yearly', 29), '2028-02-29')
 })
 
-Deno.test('recorrencia: one_time e data inválida não têm próximo', () => {
+Deno.test('recorrencia: one_time não tem próximo', () => {
   assertEquals(proximoVencimento('2026-08-10', 'one_time', 10), null)
-  assertEquals(proximoVencimento('lixo', 'monthly', 10), null)
+})
+
+Deno.test('recorrencia: data malformada lança erro claro', () => {
+  for (const ruim of ['lixo', '2026-13-05', '2026-8-5', '2026-08-00', '2026-08-32']) {
+    assertThrows(() => proximoVencimento(ruim, 'monthly', 10), Error, 'data inválida')
+    assertThrows(() => primeiroVencimento(ruim, 10), Error, 'data inválida')
+  }
 })
 
 Deno.test('recorrencia: a próxima da conta respeita ativa, one_time e end_date', () => {
