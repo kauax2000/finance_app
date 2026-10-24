@@ -8,6 +8,7 @@ import {
   invoiceCopy,
   moneyBRL,
   monthNamePt,
+  trendingHighCopy,
 } from './notification-copy.ts'
 
 Deno.test('moneyBRL escreve o real sem depender do locale do runtime', () => {
@@ -96,4 +97,11 @@ Deno.test('billCopy', () => {
     billCopy({ conta: 'Luz', valor: null, data: '20/10', dias: -2 }).body,
     'Vencia em 20/10. Registre o pagamento.'
   )
+})
+
+Deno.test('trendingHighCopy', () => {
+  assertEquals(trendingHighCopy('Nubank ··1234', 1210.5, 21, 210.5), {
+    title: 'Fatura do Nubank ··1234 acima do normal',
+    body: 'A fatura prevista é R$ 1.210,50, 21% acima da média das últimas 3 (R$ 210,50 a mais). Veja quanto ainda sobra no mês do vencimento em Previsão.',
+  })
 })

@@ -33,6 +33,7 @@ describe("notificationTone", () => {
         [{ kind: "cc_category_limit_crossed" }, "warning"],
         [{ kind: "cc_invoice_closed" }, "info"],
         [{ kind: "cc_invoice_closing_soon" }, "info"],
+        [{ kind: "cc_invoice_trending_high" }, "warning"],
         [{ kind: "cc_payment_due_soon" }, "info"],
         [{ kind: "cc_payment_due_today" }, "warning"],
         [{ kind: "bill_reminder", offset_days: -1 }, "destructive"],

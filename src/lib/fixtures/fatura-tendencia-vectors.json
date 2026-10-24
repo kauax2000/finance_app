@@ -1,0 +1,162 @@
+{
+  "_doc": "Alerta de fatura alta (cc_invoice_trending_high). `parcelas`: as parcelas projetadas na janela da fatura; o esperado é o sumProjectedCreditCardInstallmentsInWindow do cliente (src/lib/credit-card-installment-projection.ts), e o mesmo JSON trava parcelasProjetadasNaJanela (supabase/functions/_shared/fatura-tendencia.ts) no Deno e no Vitest. `tendencia`: avaliarTendencia, só no Deno (o cliente não tem par).",
+  "parcelas": [
+    {
+      "name": "a parcela ainda não lançada entra",
+      "card_id": "c1",
+      "window": { "start": "2026-10-21", "end": "2026-11-20" },
+      "plans": [
+        { "id": "p1", "is_active": true, "payment_method": "credit_card", "payment_credit_card_id": "c1", "next_billing_date": "2026-11-05", "installment_amount": 100, "final_installment_amount": 100, "total_installments": 5, "generated_count": 2, "billing_anchor_day": 5 }
+      ],
+      "rows": [],
+      "expected": 100
+    },
+    {
+      "name": "a parcela já lançada não conta de novo",
+      "card_id": "c1",
+      "window": { "start": "2026-09-21", "end": "2026-10-20" },
+      "plans": [
+        { "id": "p1", "is_active": true, "payment_method": "credit_card", "payment_credit_card_id": "c1", "next_billing_date": "2026-11-05", "installment_amount": 100, "final_installment_amount": 100, "total_installments": 5, "generated_count": 2, "billing_anchor_day": 5 }
+      ],
+      "rows": [
+        { "amount": 100, "type": "expense", "date": "2026-10-05T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": null, "installment_plan_id": "p1", "installment_sequence": 2 }
+      ],
+      "expected": 0
+    },
+    {
+      "name": "a parcela lançada sem sequência sai pelo dia",
+      "card_id": "c1",
+      "window": { "start": "2026-09-21", "end": "2026-10-20" },
+      "plans": [
+        { "id": "p1", "is_active": true, "payment_method": "credit_card", "payment_credit_card_id": "c1", "next_billing_date": "2026-11-05", "installment_amount": 100, "final_installment_amount": 100, "total_installments": 5, "generated_count": 2, "billing_anchor_day": 5 }
+      ],
+      "rows": [
+        { "amount": 100, "type": "expense", "date": "2026-10-05T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": null, "installment_plan_id": "p1", "installment_sequence": null }
+      ],
+      "expected": 0
+    },
+    {
+      "name": "a parcela gerada e apagada volta à projeção",
+      "card_id": "c1",
+      "window": { "start": "2026-09-21", "end": "2026-10-20" },
+      "plans": [
+        { "id": "p1", "is_active": true, "payment_method": "credit_card", "payment_credit_card_id": "c1", "next_billing_date": "2026-11-05", "installment_amount": 100, "final_installment_amount": 100, "total_installments": 5, "generated_count": 2, "billing_anchor_day": 5 }
+      ],
+      "rows": [],
+      "expected": 100
+    },
+    {
+      "name": "o dia âncora 31 cai no último dia de fevereiro",
+      "card_id": "c1",
+      "window": { "start": "2027-02-11", "end": "2027-03-10" },
+      "plans": [
+        { "id": "p1", "is_active": true, "payment_method": "credit_card", "payment_credit_card_id": "c1", "next_billing_date": "2027-01-31", "installment_amount": 80, "final_installment_amount": 80.01, "total_installments": 3, "generated_count": 0, "billing_anchor_day": 31 }
+      ],
+      "rows": [],
+      "expected": 80
+    },
+    {
+      "name": "o dia âncora 31 volta ao 31 depois de um mês de 30",
+      "card_id": "c1",
+      "window": { "start": "2026-12-11", "end": "2027-01-10" },
+      "plans": [
+        { "id": "p1", "is_active": true, "payment_method": "credit_card", "payment_credit_card_id": "c1", "next_billing_date": "2026-11-30", "installment_amount": 50, "final_installment_amount": 50.5, "total_installments": 4, "generated_count": 1, "billing_anchor_day": 31 }
+      ],
+      "rows": [],
+      "expected": 50
+    },
+    {
+      "name": "sem âncora, o dia do próximo vencimento vira a âncora",
+      "card_id": "c1",
+      "window": { "start": "2027-03-29", "end": "2027-04-27" },
+      "plans": [
+        { "id": "p1", "is_active": true, "payment_method": "credit_card", "payment_credit_card_id": "c1", "next_billing_date": "2027-02-28", "installment_amount": 40, "final_installment_amount": 40, "total_installments": 3, "generated_count": 0, "billing_anchor_day": null }
+      ],
+      "rows": [],
+      "expected": 0
+    },
+    {
+      "name": "o plano em outro cartão não entra",
+      "card_id": "c1",
+      "window": { "start": "2026-10-21", "end": "2026-11-20" },
+      "plans": [
+        { "id": "p2", "is_active": true, "payment_method": "credit_card", "payment_credit_card_id": "c2", "next_billing_date": "2026-11-05", "installment_amount": 100, "final_installment_amount": 100, "total_installments": 5, "generated_count": 2, "billing_anchor_day": 5 }
+      ],
+      "rows": [],
+      "expected": 0
+    },
+    {
+      "name": "o plano inativo e o plano no Pix não entram",
+      "card_id": "c1",
+      "window": { "start": "2026-10-21", "end": "2026-11-20" },
+      "plans": [
+        { "id": "p3", "is_active": false, "payment_method": "credit_card", "payment_credit_card_id": "c1", "next_billing_date": "2026-11-05", "installment_amount": 100, "final_installment_amount": 100, "total_installments": 5, "generated_count": 2, "billing_anchor_day": 5 },
+        { "id": "p4", "is_active": true, "payment_method": "pix", "payment_credit_card_id": null, "next_billing_date": "2026-11-05", "installment_amount": 100, "final_installment_amount": 100, "total_installments": 5, "generated_count": 2, "billing_anchor_day": 5 }
+      ],
+      "rows": [],
+      "expected": 0
+    },
+    {
+      "name": "o plano sem cartão é reconhecido pela parcela lançada nele",
+      "card_id": "c1",
+      "window": { "start": "2026-10-21", "end": "2026-11-20" },
+      "plans": [
+        { "id": "p5", "is_active": true, "payment_method": "credit_card", "payment_credit_card_id": null, "next_billing_date": "2026-11-05", "installment_amount": 70, "final_installment_amount": 70, "total_installments": 3, "generated_count": 1, "billing_anchor_day": 5 },
+        { "id": "p6", "is_active": true, "payment_method": "credit_card", "payment_credit_card_id": null, "next_billing_date": "2026-11-05", "installment_amount": 999, "final_installment_amount": 999, "total_installments": 3, "generated_count": 1, "billing_anchor_day": 5 }
+      ],
+      "rows": [
+        { "amount": 70, "type": "expense", "date": "2026-10-05T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": null, "installment_plan_id": "p5", "installment_sequence": 1 }
+      ],
+      "expected": 70
+    },
+    {
+      "name": "a última parcela usa o valor final e os planos somam em centavos",
+      "card_id": "c1",
+      "window": { "start": "2026-10-21", "end": "2026-11-20" },
+      "plans": [
+        { "id": "p1", "is_active": true, "payment_method": "credit_card", "payment_credit_card_id": "c1", "next_billing_date": "2026-11-05", "installment_amount": 33.33, "final_installment_amount": 33.34, "total_installments": 3, "generated_count": 2, "billing_anchor_day": 5 },
+        { "id": "p7", "is_active": true, "payment_method": "credit_card", "payment_credit_card_id": "c1", "next_billing_date": "2026-11-15", "installment_amount": 66.67, "final_installment_amount": 66.66, "total_installments": 4, "generated_count": 0, "billing_anchor_day": 15 }
+      ],
+      "rows": [],
+      "expected": 100.01
+    }
+  ],
+  "tendencia": [
+    {
+      "name": "só 2 fechadas não dispara",
+      "aberta": 500,
+      "fechadas": [100, 100],
+      "expected": { "dispara": false, "media": 100, "acima": 400, "percentual": 400 }
+    },
+    {
+      "name": "exatamente 120% não dispara",
+      "aberta": 120,
+      "fechadas": [90, 100, 110],
+      "expected": { "dispara": false, "media": 100, "acima": 20, "percentual": 20 }
+    },
+    {
+      "name": "121% dispara",
+      "aberta": 121,
+      "fechadas": [90, 100, 110],
+      "expected": { "dispara": true, "media": 100, "acima": 21, "percentual": 21 }
+    },
+    {
+      "name": "um centavo acima de 120% dispara",
+      "aberta": 360.01,
+      "fechadas": [300, 300, 300],
+      "expected": { "dispara": true, "media": 300, "acima": 60.01, "percentual": 20 }
+    },
+    {
+      "name": "a média com dízima arredonda o percentual",
+      "aberta": 1000,
+      "fechadas": [300, 300, 301],
+      "expected": { "dispara": true, "media": 300.33, "acima": 699.67, "percentual": 233 }
+    },
+    {
+      "name": "média zero não dispara",
+      "aberta": 50,
+      "fechadas": [0, 0, 0],
+      "expected": { "dispara": false, "media": 0, "acima": 50, "percentual": 0 }
+    }
+  ]
+}

@@ -7,7 +7,7 @@ import {
   loadWorkspacePrefsMap,
 } from '../_shared/deliver-notification.ts'
 import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
-import { cardLabel, ddmm, invoiceCopy } from '../_shared/notification-copy.ts'
+import { cardLabel, type Copy, ddmm, invoiceCopy, trendingHighCopy } from '../_shared/notification-copy.ts'
 import { withinReminderWindow } from '../_shared/notification-schedule.ts'
 import {
   addCalendarDays,
@@ -25,10 +25,15 @@ import {
   escolherTotal,
   statementTotalKey,
   appTodayYmd,
-  type CardTxRow,
   type OpenWindow,
   type Ymd,
 } from '../_shared/credit-card-cycle.ts'
+import {
+  avaliarTendencia,
+  parcelasProjetadasNaJanela,
+  type ParcelaTxRow,
+  type PlanoNoCartao,
+} from '../_shared/fatura-tendencia.ts'
 
 // Server-to-server only (cron/scheduler): no CORS — browsers have no business
 // probing this endpoint with the shared secret.
@@ -87,7 +92,7 @@ type CardRow = {
   is_active: boolean
 }
 
-type InvoiceEvent = 'closed' | 'closing_soon' | 'due_soon' | 'due_today'
+type InvoiceEvent = 'closed' | 'closing_soon' | 'due_soon' | 'due_today' | 'trending_high'
 
 type CalEvent = {
   cardId: string
@@ -97,6 +102,8 @@ type CalEvent = {
   evento: InvoiceEvent
   /** A fatura de que o aviso fala: o valor é a soma dela. */
   win: OpenWindow
+  /** Só na fatura alta: as 3 últimas fechadas, da mais recente para a mais antiga. */
+  fechadas?: OpenWindow[]
   /** Data mostrada no corpo, em dd/mm. */
   data: string
   dias?: number
@@ -111,7 +118,7 @@ type ReadyEvent = CalEvent & { title: string; body: string }
  * total do banco, se gravado, vale sobre o calculado. A que ainda fecha não tem.
  */
 function isClosedCycle(ev: CalEvent): boolean {
-  return ev.evento !== 'closing_soon'
+  return ev.evento !== 'closing_soon' && ev.evento !== 'trending_high'
 }
 
 /** A fatura que fecha em `close`: do dia seguinte ao fechamento anterior até ele. */
@@ -161,6 +168,23 @@ function buildCardEvents(card: CardRow, today: Ymd): CalEvent[] {
     })
   }
 
+  // A fatura alta é avaliada todo dia e avisada uma vez por ciclo: a chave é o
+  // fechamento da fatura em aberto. Leva a Previsão, onde está o mês do vencimento.
+  const close1 = previousStatementCloseBefore(lastClose, closingDay)
+  events.push({
+    cardId: card.id,
+    href: '/previsao',
+    dedupeKey: `cal:trending_high:${formatYmd(nextClose)}:c:${card.id}`,
+    kind: 'cc_invoice_trending_high',
+    evento: 'trending_high',
+    win: { start: addCalendarDays(lastClose, 1), end: nextClose },
+    fechadas: [lastClose, close1, previousStatementCloseBefore(close1, closingDay)].map((c) =>
+      invoiceWindowEndingAt(c, closingDay)
+    ),
+    data: ddmm(formatYmd(nextClose)),
+    checkPaid: false,
+  })
+
   let dueCycle: { close: Ymd; due: Ymd }
   try {
     dueCycle = nextPaymentDueCycleOnOrAfter(today, closingDay, dueDay)
@@ -196,6 +220,57 @@ function buildCardEvents(card: CardRow, today: Ymd): CalEvent[] {
   return events
 }
 
+const PLAN_COLUMNS =
+  'id,is_active,payment_method,payment_credit_card_id,next_billing_date,installment_amount,final_installment_amount,total_installments,generated_count,billing_anchor_day'
+
+/**
+ * A fatura alta: a aberta com as parcelas que ainda caem nela, contra as 3
+ * últimas fechadas (com o total do banco, se gravado). `null`: não avisa.
+ */
+async function trendingCopy(
+  admin: SupabaseAdminClient,
+  workspaceId: string,
+  label: string,
+  ev: CalEvent,
+  rows: ParcelaTxRow[]
+): Promise<Copy | null> {
+  const fechadas = ev.fechadas ?? []
+  const [planos, totais] = await Promise.all([
+    admin
+      .from('workspace_installment_plans')
+      .select(PLAN_COLUMNS)
+      .eq('workspace_id', workspaceId)
+      .eq('is_active', true)
+      .eq('payment_method', 'credit_card')
+      // O plano antigo sem cartão entra se a parcela lançada o liga a este.
+      .or(`payment_credit_card_id.eq.${ev.cardId},payment_credit_card_id.is.null`),
+    admin
+      .from('credit_card_statement_totals')
+      .select('statement_close_date,bank_total')
+      .eq('credit_card_id', ev.cardId)
+      .in('statement_close_date', fechadas.map((w) => formatYmd(w.end))),
+  ])
+  if (planos.error) throw new Error(planos.error.message)
+  if (totais.error) throw new Error(totais.error.message)
+
+  const banco = new Map<string, number>()
+  for (const r of totais.data ?? []) banco.set(String(r.statement_close_date).slice(0, 10), Number(r.bank_total))
+  const valores = fechadas
+    .map((w) => escolherTotal(cardInvoiceNetInWindow(rows, ev.cardId, w), banco.get(formatYmd(w.end))))
+    // A fatura sem movimento (o cartão novo) não conta como fechada.
+    .filter((v) => v !== 0)
+  // ponytail: a parcela lançada só é reconhecida pelas linhas do intervalo
+  // consultado; uma que teve a data movida para fora dele seria contada de novo.
+  const prevista =
+    Math.round(
+      (cardInvoiceNetInWindow(rows, ev.cardId, ev.win) +
+        parcelasProjetadasNaJanela(ev.cardId, ev.win, (planos.data ?? []) as PlanoNoCartao[], rows)) *
+        100
+    ) / 100
+  const t = avaliarTendencia(prevista, valores)
+  return t.dispara ? trendingHighCopy(label, prevista, t.percentual, t.acima) : null
+}
+
 /**
  * Põe valor e texto nos eventos de um cartão: soma as faturas, descarta a
  * zerada (`invoiceCopy` devolve null) e a de vencimento já paga.
@@ -205,15 +280,17 @@ async function resolveCardEvents(
   workspaceId: string,
   label: string,
   events: CalEvent[],
-  bankTotals: Map<string, number>
+  bankTotals: Map<string, number>,
+  errors: Array<Record<string, unknown>>
 ): Promise<ReadyEvent[]> {
   const cardId = events[0].cardId
-  const from = events.reduce((m, e) => (compareYmd(e.win.start, m) < 0 ? e.win.start : m), events[0].win.start)
-  const to = events.reduce((m, e) => (compareYmd(e.win.end, m) > 0 ? e.win.end : m), events[0].win.end)
+  const wins = events.flatMap((e) => [e.win, ...(e.fechadas ?? [])])
+  const from = wins.reduce((m, w) => (compareYmd(w.start, m) < 0 ? w.start : m), wins[0].start)
+  const to = wins.reduce((m, w) => (compareYmd(w.end, m) > 0 ? w.end : m), wins[0].end)
 
   const { data: txRows, error: txErr } = await admin
     .from('transactions')
-    .select('amount,type,date,payment_method,payment_credit_card_id,category_id')
+    .select('amount,type,date,payment_method,payment_credit_card_id,category_id,installment_plan_id,installment_sequence')
     .eq('workspace_id', workspaceId)
     .eq('payment_credit_card_id', cardId)
     // Receita no cartão é estorno: abate a fatura.
@@ -222,7 +299,7 @@ async function resolveCardEvents(
     .gte('date', filterRangeStartIso(from))
     .lte('date', filterRangeEndIso(to))
   if (txErr) throw new Error(txErr.message)
-  const rows = (txRows ?? []) as CardTxRow[]
+  const rows = (txRows ?? []) as ParcelaTxRow[]
 
   const closes = [...new Set(events.filter((e) => e.checkPaid).map((e) => formatYmd(e.win.end)))]
   const paid = new Set<string>()
@@ -240,6 +317,18 @@ async function resolveCardEvents(
   const ready: ReadyEvent[] = []
   for (const ev of events) {
     if (ev.checkPaid && paid.has(formatYmd(ev.win.end))) continue
+    if (ev.evento === 'trending_high') {
+      // A falha da fatura alta não derruba os outros avisos do cartão.
+      try {
+        const copy = await trendingCopy(admin, workspaceId, label, ev, rows)
+        if (copy) ready.push({ ...ev, ...copy })
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'trending_failed'
+        console.error('credit-card-calendar-alerts: trending', cardId, msg)
+        errors.push({ workspace_id: workspaceId, credit_card_id: cardId, error: `trending_high: ${msg}` })
+      }
+      continue
+    }
     const calculado = cardInvoiceNetInWindow(rows, cardId, ev.win)
     const copy = invoiceCopy({
       cartao: label,
@@ -340,7 +429,7 @@ Deno.serve(async (req: Request) => {
       for (const c of cards) {
         // A consulta de um cartão que falha não derruba os outros do dia.
         try {
-          events.push(...(await resolveCardEvents(admin, workspaceId, c.label, c.events, bankTotals)))
+          events.push(...(await resolveCardEvents(admin, workspaceId, c.label, c.events, bankTotals, errors)))
         } catch (e) {
           const msg = e instanceof Error ? e.message : 'card_failed'
           console.error('credit-card-calendar-alerts: card', c.events[0].cardId, msg)
@@ -373,7 +462,11 @@ Deno.serve(async (req: Request) => {
       for (const ev of events) {
         for (const userId of memberIds) {
           const prefs = prefsMap.get(userId)
-          if (!prefs || prefs.notify_credit_card_calendar === false) continue
+          if (!prefs) continue
+          // A fatura alta é aviso de cartão; os outros, do calendário.
+          const ligado =
+            ev.evento === 'trending_high' ? prefs.notify_credit_cards : prefs.notify_credit_card_calendar
+          if (ligado === false) continue
           if (!prefs.notify_in_app && !prefs.notify_email && !prefs.notify_push) continue
 
           const userDedupe = `${ev.dedupeKey}:u:${userId}`
@@ -391,8 +484,8 @@ Deno.serve(async (req: Request) => {
               body: ev.body,
               metadata: { kind: ev.kind, credit_card_id: ev.cardId, href: ev.href },
               prefs,
-              // Só o `notify_credit_card_calendar` (conferido acima) vale aqui: o
-              // interruptor de limite e categorias não desliga o calendário.
+              // Só o interruptor conferido acima vale aqui: o de limite e
+              // categorias não desliga o calendário.
               skipTypePref: true,
             })
 

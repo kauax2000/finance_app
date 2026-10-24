@@ -10,6 +10,7 @@ export type AppNotificationKind =
     | "cc_category_limit_crossed"
     | "cc_invoice_closed"
     | "cc_invoice_closing_soon"
+    | "cc_invoice_trending_high"
     | "cc_limit_exceeded"
     | "cc_limit_reached"
     | "cc_limit_warning"
@@ -37,6 +38,7 @@ const ALL_KINDS = new Set<string>([
     "cc_category_limit_crossed",
     "cc_invoice_closed",
     "cc_invoice_closing_soon",
+    "cc_invoice_trending_high",
     "cc_limit_exceeded",
     "cc_limit_reached",
     "cc_limit_warning",
@@ -126,6 +128,7 @@ export function notificationTone(n: AppNotification): NotificationTone {
             return "destructive"
         case "cc_limit_warning":
         case "cc_category_limit_crossed":
+        case "cc_invoice_trending_high":
         case "cc_payment_due_today":
             return "warning"
         case "cc_invoice_closed":
@@ -163,6 +166,7 @@ export function getNotificationIcon(n: AppNotification): ReactNode {
 
     switch (kind) {
         case "cc_limit_warning":
+        case "cc_invoice_trending_high":
             return <ArrowTrendingUpIcon className={iconClass()} />
         case "cc_limit_reached":
             return <ExclamationCircleIcon className={iconClass()} />

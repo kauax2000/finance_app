@@ -121,3 +121,11 @@ export function billCopy(a: { conta: string; valor: number | null; data: string;
     body: valor ? `${valor} em ${a.data}.` : `Vence em ${a.data}.`,
   }
 }
+
+/** A fatura em aberto, com as parcelas que ainda caem nela, acima da média das 3 últimas fechadas. */
+export function trendingHighCopy(nome: string, prevista: number, percentual: number, acima: number): Copy {
+  return {
+    title: `Fatura do ${nome} acima do normal`,
+    body: `A fatura prevista é ${moneyBRL(prevista)}, ${percentual}% acima da média das últimas 3 (${moneyBRL(acima)} a mais). Veja quanto ainda sobra no mês do vencimento em Previsão.`,
+  }
+}
