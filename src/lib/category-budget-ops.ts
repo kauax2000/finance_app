@@ -13,7 +13,7 @@ export type CategoryBudgetUpsertInput = {
     budgetId?: string | null
     /** Valor salvo antes desta edição; se mudou, os avisos de limite rearmam. */
     previousAmount?: number | null
-    /** Copia o orçamento para o mês seguinte; `true` quando não se diz nada. */
+    /** Copia o orçamento para o mês seguinte. Sem valor, a linha não leva a coluna: insert fica com o padrão do banco (`true`) e update mantém o que está salvo. */
     repeats?: boolean
 }
 
@@ -31,7 +31,7 @@ export function buildBudgetRow(input: CategoryBudgetUpsertInput, clientId?: stri
         period_start,
         period_end,
         amount: input.amount,
-        repeats: input.repeats ?? true,
+        ...(input.repeats !== undefined ? { repeats: input.repeats } : {}),
         // Valor novo, limite novo: os avisos de 80%, 100% e estouro podem soar de novo.
         ...(input.previousAmount != null && input.previousAmount !== input.amount
             ? {
@@ -128,8 +128,17 @@ export async function definirRepeticao(
     budgetId: string,
     repeats: boolean,
 ): Promise<{ ok: boolean; erro?: string }> {
-    const { error } = await supabase.from("budgets").update({ repeats }).eq("id", budgetId)
-    if (!error) return { ok: true }
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        return { ok: false, erro: "Sem conexão. Tente de novo quando voltar a internet." }
+    }
+    const { data, error } = await supabase
+        .from("budgets")
+        .update({ repeats })
+        .eq("id", budgetId)
+        .select("id")
+    if (!error) {
+        return data?.length ? { ok: true } : { ok: false, erro: "Não foi possível alterar este orçamento." }
+    }
     return {
         ok: false,
         erro: formatSupabasePostgrestError(error) ?? "Não foi possível salvar a repetição do orçamento.",
@@ -156,13 +165,14 @@ export async function garantirOrcamentosDoMes(
     const key = `${workspaceId}:${yearMonth}`
     if (garantidos.has(key)) return
     garantidos.add(key)
-    const { data, error } = await supabase.rpc("garantir_orcamentos_do_mes", {
-        p_workspace_id: workspaceId,
-    })
-    if (error) {
+    try {
+        const { data, error } = await supabase.rpc("garantir_orcamentos_do_mes", {
+            p_workspace_id: workspaceId,
+        })
+        if (error) throw error
+        if (typeof data === "number" && data > 0) onCopied()
+    } catch (e) {
         garantidos.delete(key)
-        console.error(error)
-        return
+        console.error(e)
     }
-    if (typeof data === "number" && data > 0) onCopied()
 }

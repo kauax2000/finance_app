@@ -1,9 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const rpc = vi.fn()
-vi.mock("@/lib/supabase", () => ({ supabase: { rpc: (...a: unknown[]) => rpc(...a) } }))
+const selectId = vi.fn()
+vi.mock("@/lib/supabase", () => ({
+    supabase: {
+        rpc: (...a: unknown[]) => rpc(...a),
+        from: () => ({ update: () => ({ eq: () => ({ select: (...a: unknown[]) => selectId(...a) }) }) }),
+    },
+}))
 import {
     buildBudgetRow,
+    definirRepeticao,
     garantirOrcamentosDoMes,
     resetGarantidosParaTeste,
 } from "@/lib/category-budget-ops"
@@ -36,8 +43,12 @@ describe("buildBudgetRow", () => {
 })
 
 describe("buildBudgetRow repeats", () => {
-    it("repete por padrão e respeita o falso", () => {
-        expect(buildBudgetRow(base).repeats).toBe(true)
+    it("sem repeats a linha não leva a coluna (insert usa o padrão do banco, update mantém)", () => {
+        expect(buildBudgetRow(base)).not.toHaveProperty("repeats")
+    })
+
+    it("leva repeats quando a pessoa definiu", () => {
+        expect(buildBudgetRow({ ...base, repeats: true }).repeats).toBe(true)
         expect(buildBudgetRow({ ...base, repeats: false }).repeats).toBe(false)
     })
 })
@@ -75,5 +86,45 @@ describe("garantirOrcamentosDoMes", () => {
         await garantirOrcamentosDoMes("w2", "2026-10", onCopied)
         expect(rpc).toHaveBeenCalledTimes(3)
         err.mockRestore()
+    })
+
+    it("rejeição lançada também libera a chave", async () => {
+        const err = vi.spyOn(console, "error").mockImplementation(() => {})
+        rpc.mockRejectedValueOnce(new Error("rede"))
+        await garantirOrcamentosDoMes("w3", "2026-10", vi.fn())
+        rpc.mockResolvedValueOnce({ data: 0, error: null })
+        await garantirOrcamentosDoMes("w3", "2026-10", vi.fn())
+        expect(rpc).toHaveBeenCalledTimes(2)
+        err.mockRestore()
+    })
+})
+
+describe("definirRepeticao", () => {
+    beforeEach(() => selectId.mockReset())
+
+    it("sucesso com linha afetada", async () => {
+        selectId.mockResolvedValue({ data: [{ id: "b1" }], error: null })
+        expect(await definirRepeticao("b1", false)).toEqual({ ok: true })
+    })
+
+    it("nenhuma linha afetada é falha", async () => {
+        selectId.mockResolvedValue({ data: [], error: null })
+        expect(await definirRepeticao("b1", false)).toEqual({
+            ok: false,
+            erro: "Não foi possível alterar este orçamento.",
+        })
+    })
+
+    it("sem conexão: falha clara sem chamar o Supabase", async () => {
+        vi.stubGlobal("navigator", { onLine: false })
+        try {
+            expect(await definirRepeticao("b1", true)).toEqual({
+                ok: false,
+                erro: "Sem conexão. Tente de novo quando voltar a internet.",
+            })
+            expect(selectId).not.toHaveBeenCalled()
+        } finally {
+            vi.unstubAllGlobals()
+        }
     })
 })
