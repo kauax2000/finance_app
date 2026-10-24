@@ -59,6 +59,10 @@ import {
 } from "@/lib/bills/mutations"
 import type { BillInstance } from "@/lib/supabase"
 import { useHojeYmd } from "@/hooks/use-hoje-ymd"
+import { useTransactionsRangeQuery } from "@/lib/queries/use-transactions-range"
+import { casamentoIgnorado, casarPagamentos, ligarPagamento, type Casamento } from "@/lib/bills/casamento"
+import { computeNextBillInstanceDueYmd } from "@/lib/bills/recurrence"
+import { CasamentoContaWireframe } from "@/components/wireframe/casamento-conta-wireframe"
 import { statusDaConta, type StatusDaConta } from "@/components/bills/bill-status"
 import { supabase } from "@/lib/supabase"
 import { toastError, toastSuccess } from "@/lib/toast"
@@ -277,6 +281,51 @@ export default function BillsPageClient() {
         return rows
     }, [bundleQ.data?.bills, pendingRegular, virtualRows])
 
+    // Casamento automático (Bloco 6A): despesas dos últimos 40 dias que parecem o pagamento de uma pendente.
+    const recentTxRange = useMemo(
+        () => ({ from: addDaysYmd(todayYmd, -40), to: todayYmd }),
+        [todayYmd]
+    )
+    const recentTxQ = useTransactionsRangeQuery(currentWorkspaceId, recentTxRange, {
+        enabled: mode === "pending",
+    })
+    const [ignoradosTick, setIgnoradosTick] = useState(0)
+    const casamentos = useMemo(() => {
+        if (mode !== "pending" || !recentTxQ.data) return [] as Casamento[]
+        const jaLigadas = new Set<string>()
+        for (const i of [
+            ...(bundleQ.data?.pendingInstances ?? []),
+            ...(bundleQ.data?.recentPaidInstances ?? []),
+        ]) {
+            if (i.transaction_id) jaLigadas.add(i.transaction_id)
+        }
+        const pendentes = regularRows.flatMap((r) =>
+            r.kind === "regular"
+                ? [{
+                      id: r.instance.id,
+                      due_date: r.dueYmd,
+                      amount: r.instance.amount != null ? Number(r.instance.amount) : null,
+                      bill: {
+                          name: r.bill.name,
+                          amount_estimated: r.bill.amount_estimated != null ? Number(r.bill.amount_estimated) : null,
+                      },
+                  }]
+                : []
+        )
+        return casarPagamentos(
+            pendentes,
+            recentTxQ.data.map((t) => ({
+                id: t.id,
+                type: t.type,
+                amount: Number(t.amount),
+                date: t.date,
+                description: t.description,
+            })),
+            jaLigadas
+        ).filter((c) => !casamentoIgnorado(c))
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- `ignoradosTick` relê o localStorage
+    }, [mode, recentTxQ.data, bundleQ.data, regularRows, ignoradosTick])
+
     const paidSnippets = useMemo(
         () => bundleQ.data?.recentPaidInstances ?? [],
         [bundleQ.data?.recentPaidInstances]
@@ -401,6 +450,21 @@ export default function BillsPageClient() {
             ],
         })
     }, [qc, currentWorkspaceId])
+
+    const handleLigarPagamento = useCallback(
+        async (c: Casamento) => {
+            const row = regularRows.find((r) => r.kind === "regular" && r.instance.id === c.instanciaId)
+            if (!row || row.kind !== "regular") return
+            const r = await ligarPagamento(supabase, c, computeNextBillInstanceDueYmd(row.bill, row.dueYmd))
+            if (!r.ok) {
+                toastError(r.erro ?? "Não foi possível ligar o pagamento.", { id: "casamento-conta" })
+                return
+            }
+            toastSuccess("Pagamento ligado à conta", { id: "casamento-conta" })
+            await onInvalidate()
+        },
+        [regularRows, onInvalidate]
+    )
 
     const handleSaveBill = useCallback(
         async (
@@ -696,6 +760,18 @@ export default function BillsPageClient() {
                 </Card>
             ) : (
                 <>
+                    {mode === "pending" && casamentos.length > 0 && (
+                        <div className="flex flex-col gap-3">
+                            {casamentos.map((c) => (
+                                <CasamentoContaWireframe
+                                    key={`${c.instanciaId}:${c.transacaoId}`}
+                                    casamento={c}
+                                    onLigar={() => handleLigarPagamento(c)}
+                                    onIgnorar={() => setIgnoradosTick((n) => n + 1)}
+                                />
+                            ))}
+                        </div>
+                    )}
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                         {mode === "pending"
                             ? sortedPendingCards.map((row) => (

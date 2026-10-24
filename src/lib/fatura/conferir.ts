@@ -26,6 +26,9 @@ export type ResultadoConferencia = {
 
 const JANELA_DIAS = 3
 
+/** A semelhança mínima de descrição para dois lançamentos serem o mesmo (também usada pelo casamento das contas). */
+export const SEMELHANCA_MINIMA = 0.5
+
 function palavras(s: string): Set<string> {
     return new Set(normalizarDescricao(s).split(" ").filter((p) => p.length >= 3 && !/^\d+$/.test(p)))
 }
@@ -105,7 +108,7 @@ export function conferirFatura(banco: ItemBanco[], app: LancamentoParaConferir[]
         app,
         usadosBanco,
         usadosApp,
-        (b, a, sim) => sim >= 0.5 && Math.abs(b.valor - a.amount) >= 0.005,
+        (b, a, sim) => sim >= SEMELHANCA_MINIMA && Math.abs(b.valor - a.amount) >= 0.005,
     )) {
         r.valorDiferente.push({ banco: banco[i], app: app[j] })
     }
