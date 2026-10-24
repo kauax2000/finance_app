@@ -60,6 +60,7 @@ import {
     type PayBillInput,
 } from "@/lib/bills/pay-bill-flow"
 import type { User } from "@supabase/supabase-js"
+import { useHojeYmd } from "@/hooks/use-hoje-ymd"
 
 const CAT_NONE = "__none__"
 
@@ -100,6 +101,9 @@ export function PayBillDialog({
     const [pmOption, setPmOption] = useState<string>(BILL_PAYMENT_NONE)
     const [pccId, setPccId] = useState("")
     const [desc, setDesc] = useState("")
+    const hojeYmd = useHojeYmd()
+    // O teto do calendário anda com o dia, sem um `new Date()` a cada render.
+    const hoje = useMemo(() => parseYmdLocal(hojeYmd) ?? undefined, [hojeYmd])
 
     useEffect(() => {
         if (!open || !input) return
@@ -248,7 +252,7 @@ export function PayBillDialog({
                                             d ? localYmdFromDate(d) : localYmdFromDate(new Date()),
                                         )
                                     }
-                                    max={new Date()}
+                                    max={hoje}
                                     displayStyle="relative"
                                     presets
                                 />

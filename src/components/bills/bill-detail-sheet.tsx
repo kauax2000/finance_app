@@ -110,7 +110,7 @@ export function BillDetailSheet({
 
     const nextInst = useMemo(() => nextPendingHero(instances), [instances])
     const lastPaid = useMemo(() => lastPaidInstance(instances), [instances])
-    const status = bill ? statusDaConta(bill, instances, todayYmd) : "ativa"
+    const status = bill ? statusDaConta(bill, nextInst == null, todayYmd) : "ativa"
 
     const limit90 = useMemo(() => addDaysYmd(todayYmd, -90), [todayYmd])
     const limit60 = useMemo(() => addDaysYmd(todayYmd, 60), [todayYmd])

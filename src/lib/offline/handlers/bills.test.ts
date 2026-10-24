@@ -7,7 +7,7 @@ const db = vi.hoisted(() => {
         results: [] as { data: unknown; error: unknown }[],
     }
     const query: Record<string, unknown> = {}
-    for (const method of ["from", "insert", "update", "delete", "eq", "select", "maybeSingle", "single", "upsert"]) {
+    for (const method of ["from", "insert", "update", "delete", "eq", "select", "maybeSingle", "single", "upsert", "in", "order", "limit"]) {
         query[method] = (...args: unknown[]) => {
             state.calls.push([method, ...args])
             return query
@@ -37,6 +37,7 @@ describe("syncBillMutation (replay do update da conta)", () => {
             { data: agenda, error: null },
             { data: [{ id: "b1" }], error: null },
             { data: [{ id: "i1", due_date: "2026-12-10" }], error: null },
+            { data: [], error: null },
             { data: null, error: null }
         )
         const r = await syncBillMutation({

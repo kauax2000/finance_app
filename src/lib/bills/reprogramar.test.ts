@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest"
-import { reprogramacao } from "./reprogramar"
+import { reprogramacao as decidir } from "./reprogramar"
+
+const reprogramacao = (o: Omit<Parameters<typeof decidir>[0], "ultimoNaoPendenteYmd"> & { ultimoNaoPendenteYmd?: string | null }) =>
+    decidir({ ultimoNaoPendenteYmd: null, ...o })
 
 const antes = {
     frequency: "monthly",
@@ -101,5 +104,66 @@ describe("reprogramacao (editar a agenda move a pendente futura)", () => {
         expect(
             reprogramacao({ antes, depois: { ...antes, is_active: false, due_day_of_month: 20 }, pendentes: [], hojeYmd })
         ).toEqual({ tipo: "nada" })
+    })
+
+    it("só o end_date muda numa anual pendente em 10/03/2027: ela fica", () => {
+        const anual = { ...antes, frequency: "yearly" } as const
+        expect(
+            reprogramacao({
+                antes: anual,
+                depois: { ...anual, end_date: "2030-12-31" },
+                pendentes: [{ id: "i1", due_date: "2027-03-10" }],
+                ultimoNaoPendenteYmd: "2026-03-10",
+                hojeYmd,
+            })
+        ).toEqual({ tipo: "nada" })
+    })
+
+    it("só o end_date muda e a pendente passa do fim: é apagada", () => {
+        expect(
+            reprogramacao({
+                antes,
+                depois: { ...antes, end_date: "2026-12-01" },
+                pendentes: [{ id: "i1", due_date: "2026-12-10" }],
+                hojeYmd,
+            })
+        ).toEqual({ tipo: "apagar", id: "i1" })
+    })
+
+    it("mensal paga em 10/12 e pendente em 10/01, dia para 20: vai a 20/01, não a 20/11", () => {
+        expect(
+            reprogramacao({
+                antes,
+                depois: { ...antes, due_day_of_month: 20 },
+                pendentes: [{ id: "i1", due_date: "2027-01-10" }],
+                ultimoNaoPendenteYmd: "2026-12-10",
+                hojeYmd,
+            })
+        ).toEqual({ tipo: "mover", id: "i1", due_date: "2027-01-20" })
+    })
+
+    it("trimestral paga em 10/09, dia para 20 com hoje em 15/11: vai a 20/12", () => {
+        const tri = { ...antes, frequency: "quarterly" } as const
+        expect(
+            reprogramacao({
+                antes: tri,
+                depois: { ...tri, due_day_of_month: 20 },
+                pendentes: [{ id: "i1", due_date: "2026-12-10" }],
+                ultimoNaoPendenteYmd: "2026-09-10",
+                hojeYmd,
+            })
+        ).toEqual({ tipo: "mover", id: "i1", due_date: "2026-12-20" })
+    })
+
+    it("o último fechado antigo avança ciclo a ciclo até hoje", () => {
+        expect(
+            reprogramacao({
+                antes,
+                depois: { ...antes, due_day_of_month: 20 },
+                pendentes: [{ id: "i1", due_date: "2026-12-10" }],
+                ultimoNaoPendenteYmd: "2026-06-10",
+                hojeYmd,
+            })
+        ).toEqual({ tipo: "mover", id: "i1", due_date: "2026-11-20" })
     })
 })

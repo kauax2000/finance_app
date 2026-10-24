@@ -20,7 +20,7 @@ const db = vi.hoisted(() => {
         results: [] as { data: unknown; error: unknown }[],
     }
     const query: Record<string, unknown> = {}
-    for (const method of ["from", "insert", "update", "delete", "eq", "select", "single", "maybeSingle", "rpc"]) {
+    for (const method of ["from", "insert", "update", "delete", "eq", "select", "single", "maybeSingle", "rpc", "in", "order", "limit"]) {
         query[method] = (...args: unknown[]) => {
             state.calls.push([method, ...args])
             return query
@@ -99,12 +99,32 @@ describe("updateBillRow", () => {
             { data: { ...payload, due_day_of_month: 10 }, error: null },
             { data: [{ id: "b1" }], error: null },
             { data: [{ id: "i1", due_date: "2026-12-10" }], error: null },
+            { data: [], error: null },
             { data: null, error: null }
         )
         const r = await updateBillRow({ supabase: db.client, workspaceId: "w1", billId: "b1", userId: "u1", payload })
         expect(r).toEqual({ ok: true })
         expect(chamadas("update")[1]).toEqual(["update", { due_date: "2026-11-20" }])
         expect(db.state.calls).toContainEqual(["eq", "id", "i1"])
+        expect(db.state.calls).toContainEqual(["in", "status", ["paid", "skipped"]])
+    })
+
+    it("a data que já existe (23505) avança um ciclo, sem apagar a pendente", async () => {
+        db.state.results.push(
+            { data: { ...payload, due_day_of_month: 10 }, error: null },
+            { data: [{ id: "b1" }], error: null },
+            { data: [{ id: "i1", due_date: "2026-12-10" }], error: null },
+            { data: [], error: null },
+            { data: null, error: { code: "23505", message: "duplicate" } },
+            { data: null, error: null }
+        )
+        const r = await updateBillRow({ supabase: db.client, workspaceId: "w1", billId: "b1", userId: "u1", payload })
+        expect(r).toEqual({ ok: true })
+        expect(chamadas("update").slice(1)).toEqual([
+            ["update", { due_date: "2026-11-20" }],
+            ["update", { due_date: "2026-12-20" }],
+        ])
+        expect(chamadas("delete")).toHaveLength(0)
     })
 })
 

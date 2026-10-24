@@ -13,5 +13,6 @@ describe("o hoje da tela de contas", () => {
         const hook = semComentarios(lerFonte("src/hooks/use-hoje-ymd.ts"))
         expect(hook).toContain('addEventListener("focus"')
         expect(hook).toContain("setTimeout(")
+        expect(hook).toContain('addEventListener("visibilitychange"')
     })
 })

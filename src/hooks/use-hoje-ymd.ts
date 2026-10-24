@@ -4,8 +4,8 @@ import { useEffect, useState } from "react"
 import { localYmdFromDate } from "@/lib/transaction-date"
 
 /**
- * O dia local de hoje, vivo: volta a ser lido quando a janela recebe o foco e
- * na virada da meia-noite. Um `useMemo([])` o congelava no dia em que a tela
+ * O dia local de hoje, vivo: volta a ser lido quando a janela recebe o foco,
+ * quando a aba volta a ficar visível e na virada da meia-noite. Um `useMemo([])` o congelava no dia em que a tela
  * abriu.
  */
 export function useHojeYmd(): string {
@@ -23,11 +23,17 @@ export function useHojeYmd(): string {
             setHoje(localYmdFromDate(new Date()))
             agendarVirada()
         }
+        // No PWA do iOS, voltar do fundo nem sempre dispara `focus`.
+        const aoMostrar = () => {
+            if (document.visibilityState === "visible") atualizar()
+        }
         agendarVirada()
         window.addEventListener("focus", atualizar)
+        document.addEventListener("visibilitychange", aoMostrar)
         return () => {
             clearTimeout(timer)
             window.removeEventListener("focus", atualizar)
+            document.removeEventListener("visibilitychange", aoMostrar)
         }
     }, [])
 

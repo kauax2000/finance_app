@@ -379,7 +379,7 @@ export default function BillsPageClient() {
                 latePay90Count,
                 nextDueYmd,
                 nextAmountHint,
-                status: statusDaConta(bill, nextInst ? [...paidList, nextInst] : paidList, todayYmd),
+                status: statusDaConta(bill, !nextInst, todayYmd),
             }
         })
     }, [bundleQ.data, modelFilter, todayYmd])

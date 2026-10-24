@@ -47,18 +47,16 @@ export type StatusDaConta = "ativa" | "encerrada" | "concluida" | "inativa"
 
 /**
  * O estado da conta, calculado (Bloco 6A, decisão 4): "Concluída" é a única
- * sem pendente e com uma paga; "Encerrada", o fim antes de hoje sem pendente.
- * `instancias` são as que se conhecem da conta (pendentes e pagas).
+ * sem pendente (paga ou pulada, ela não tem próxima); "Encerrada", o fim
+ * antes de hoje sem pendente. `semPendente` vem da consulta de pendentes, que
+ * não tem limite: a ausência é um dado completo, sem depender do histórico.
  */
 export function statusDaConta(
     conta: Pick<Bill, "frequency" | "end_date" | "is_active">,
-    instancias: Pick<BillInstance, "status">[],
+    semPendente: boolean,
     hojeYmd: string
 ): StatusDaConta {
-    const semPendente = !instancias.some((i) => i.status === "pending")
-    if (semPendente && conta.frequency === "one_time" && instancias.some((i) => i.status === "paid")) {
-        return "concluida"
-    }
+    if (semPendente && conta.frequency === "one_time") return "concluida"
     if (semPendente && conta.end_date && conta.end_date.slice(0, 10) < hojeYmd) return "encerrada"
     return conta.is_active ? "ativa" : "inativa"
 }
