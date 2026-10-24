@@ -8,7 +8,7 @@ import {
     EmptyStateTitle,
 } from "@/components/ui/empty-state"
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/components/providers"
@@ -55,7 +55,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { PlusIcon } from "@heroicons/react/16/solid"
-import { upsertCategoryBudget, deleteCategoryBudgetById } from "@/lib/category-budget-ops"
+import { upsertCategoryBudget, deleteCategoryBudgetById, definirRepeticao } from "@/lib/category-budget-ops"
+import { useGarantirOrcamentosDoMes } from "@/hooks/use-garantir-orcamentos-do-mes"
+import { OrcamentoRepeteWireframe } from "@/components/wireframe/orcamento-repete-wireframe"
 import { deleteCategoryById, saveCategory } from "@/lib/categories/mutations"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { parseMoneyBrl, formatMoneyBrlInput } from "@/lib/money-brl"
@@ -139,6 +141,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     const [icon, setIcon] = useState<CategoryIconId>(CATEGORY_ICONS[0])
     const [editBudgetAmount, setEditBudgetAmount] = useState("")
     const [editBudgetRemoving, setEditBudgetRemoving] = useState(false)
+    const [editBudgetRepeats, setEditBudgetRepeats] = useState(true)
     const { confirm: confirmAction, dialog: confirmDialog } = useConfirmDialog()
     const [saving, setSaving] = useState(false)
     const subrouteLabels = useDashboardCategoriesSubrouteLabels(pathname)
@@ -163,6 +166,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         setIcon(CATEGORY_ICONS[0])
         setEditingCategory(null)
         setEditBudgetAmount("")
+        setEditBudgetRepeats(true)
         setEditBudgetRemoving(false)
     }, [])
 
@@ -180,6 +184,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                     setEditBudgetAmount(
                         bud ? formatMoneyBrlInput(Number(bud.amount)) : "",
                     )
+                    setEditBudgetRepeats(bud?.repeats ?? true)
                 } else {
                     setEditBudgetAmount("")
                 }
@@ -201,6 +206,9 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         })
     }, [currentWorkspaceId, queryClient])
 
+    const fetchBudgetsAndSpendRef = useRef<() => void>(() => {})
+    useGarantirOrcamentosDoMes(currentWorkspaceId, () => fetchBudgetsAndSpendRef.current())
+
     const fetchBudgetsAndSpend = useCallback(async () => {
         if (!user || !currentWorkspaceId) return
         if (!parseYearMonthParam(budgetMonthYm)) return
@@ -215,7 +223,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             const [budRes, txRes, plansRes, subsRes, cardsRes] = await Promise.all([
                 supabase
                     .from("budgets")
-                    .select("amount, category_id, created_at, id, month, period_end, period_start, threshold_100_sent_at, threshold_80_sent_at, threshold_over_sent_at, updated_at, user_id, workspace_id, year")
+                    .select("amount, category_id, created_at, id, month, period_end, period_start, threshold_100_sent_at, threshold_80_sent_at, threshold_over_sent_at, updated_at, user_id, workspace_id, year, repeats")
                     .eq("workspace_id", currentWorkspaceId)
                     .eq("period_start", period_start),
                 supabase
@@ -318,6 +326,10 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     }, [user, currentWorkspaceId, budgetMonthYm])
 
     useEffect(() => {
+        fetchBudgetsAndSpendRef.current = () => void fetchBudgetsAndSpend()
+    }, [fetchBudgetsAndSpend])
+
+    useEffect(() => {
         if (authLoading || !user || !currentWorkspaceId || !currentWorkspace) return
         if (showOnboarding) return
         void fetchBudgetsAndSpend()
@@ -409,13 +421,23 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         const saveExpenseBudgetForCategory = async (categoryId: string): Promise<boolean> => {
             if (type !== "expense") return true
             const raw = editBudgetAmount.trim()
-            if (raw.length === 0) return true
+            const savedBudget = budgets.find((b) => b.category_id === categoryId)
+            if (raw.length === 0) {
+                // Sem valor novo o upsert não roda: só a repetição do orçamento já salvo muda.
+                if (savedBudget && savedBudget.repeats !== editBudgetRepeats) {
+                    const r = await definirRepeticao(savedBudget.id, editBudgetRepeats)
+                    if (!r.ok) {
+                        toastError(r.erro ?? "Não foi possível salvar o orçamento", { id: "salvar-categoria" })
+                        return false
+                    }
+                }
+                return true
+            }
             const amt = parseMoneyBrl(editBudgetAmount)
             if (amt === null || amt <= 0) {
                 toastError("Informe um valor válido em reais, maior que zero", { id: "salvar-categoria" })
                 return false
             }
-            const savedBudget = budgets.find((b) => b.category_id === categoryId)
             const { error: budErr } = await upsertCategoryBudget({
                 userId: user.id,
                 workspaceId: currentWorkspaceId,
@@ -423,6 +445,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                 yearMonth: budgetMonthYm,
                 amount: amt,
                 previousAmount: savedBudget ? Number(savedBudget.amount) : null,
+                repeats: editBudgetRepeats,
             })
             if (budErr) {
                 toastError(
@@ -604,6 +627,10 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                         placeholder="Ex: 1.500,00"
                         value={editBudgetAmount}
                         onValueChange={setEditBudgetAmount}
+                    />
+                    <OrcamentoRepeteWireframe
+                        repeats={editBudgetRepeats}
+                        onChange={setEditBudgetRepeats}
                     />
                     {dialogExistingBudget ? (
                         <Button

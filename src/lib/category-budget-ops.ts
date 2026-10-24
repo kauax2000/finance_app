@@ -13,6 +13,8 @@ export type CategoryBudgetUpsertInput = {
     budgetId?: string | null
     /** Valor salvo antes desta edição; se mudou, os avisos de limite rearmam. */
     previousAmount?: number | null
+    /** Copia o orçamento para o mês seguinte; `true` quando não se diz nada. */
+    repeats?: boolean
 }
 
 export function buildBudgetRow(input: CategoryBudgetUpsertInput, clientId?: string) {
@@ -29,6 +31,7 @@ export function buildBudgetRow(input: CategoryBudgetUpsertInput, clientId?: stri
         period_start,
         period_end,
         amount: input.amount,
+        repeats: input.repeats ?? true,
         // Valor novo, limite novo: os avisos de 80%, 100% e estouro podem soar de novo.
         ...(input.previousAmount != null && input.previousAmount !== input.amount
             ? {
@@ -118,4 +121,48 @@ export async function deleteCategoryBudgetById(
     }
 
     return { error: null }
+}
+
+/** Liga ou desliga a cópia do orçamento para o mês seguinte. */
+export async function definirRepeticao(
+    budgetId: string,
+    repeats: boolean,
+): Promise<{ ok: boolean; erro?: string }> {
+    const { error } = await supabase.from("budgets").update({ repeats }).eq("id", budgetId)
+    if (!error) return { ok: true }
+    return {
+        ok: false,
+        erro: formatSupabasePostgrestError(error) ?? "Não foi possível salvar a repetição do orçamento.",
+    }
+}
+
+// Chaves `${carteira}:${YYYY-MM}` já garantidas nesta sessão.
+const garantidos = new Set<string>()
+
+export function resetGarantidosParaTeste() {
+    garantidos.clear()
+}
+
+/**
+ * Copia os orçamentos que repetem do mês anterior (RPC idempotente) no máximo
+ * uma vez por carteira e mês. `onCopied` roda só quando o RPC criou linhas.
+ * Erro vai ao console e a chave sai do conjunto, para a próxima abertura tentar de novo.
+ */
+export async function garantirOrcamentosDoMes(
+    workspaceId: string,
+    yearMonth: string,
+    onCopied: () => void,
+): Promise<void> {
+    const key = `${workspaceId}:${yearMonth}`
+    if (garantidos.has(key)) return
+    garantidos.add(key)
+    const { data, error } = await supabase.rpc("garantir_orcamentos_do_mes", {
+        p_workspace_id: workspaceId,
+    })
+    if (error) {
+        garantidos.delete(key)
+        console.error(error)
+        return
+    }
+    if (typeof data === "number" && data > 0) onCopied()
 }

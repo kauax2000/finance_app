@@ -4,6 +4,7 @@ import { useCallback, useState } from "react"
 import dynamic from "next/dynamic"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
+import { useGarantirOrcamentosDoMes } from "@/hooks/use-garantir-orcamentos-do-mes"
 import {
     Alert,
     AlertAction,
@@ -102,6 +103,7 @@ export default function DashboardPageClient() {
     } = useWorkspace()
 
     const d = useDashboardData()
+    useGarantirOrcamentosDoMes(currentWorkspaceId)
     // No telefone o mês mora no cabeçalho, colado à lupa; no desktop, na barra da tela.
     useMonthInHeader({ budgetMonthYm: d.calendarYm, onBudgetMonthYmChange: d.setCalendarYm })
 

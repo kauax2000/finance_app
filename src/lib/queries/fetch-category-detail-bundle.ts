@@ -166,7 +166,7 @@ async function fetchCategoryDetailBundleLegacy(args: {
             .maybeSingle(),
         supabase
             .from("budgets")
-            .select("amount, category_id, created_at, id, month, period_end, period_start, threshold_100_sent_at, threshold_80_sent_at, threshold_over_sent_at, updated_at, user_id, workspace_id, year")
+            .select("amount, category_id, created_at, id, month, period_end, period_start, threshold_100_sent_at, threshold_80_sent_at, threshold_over_sent_at, updated_at, user_id, workspace_id, year, repeats")
             .eq("workspace_id", workspaceId)
             .eq("category_id", categoryId)
             .eq("period_start", period_start)
