@@ -77,6 +77,9 @@ import { cn } from "@/lib/utils"
 import { currencyBRL } from "@/lib/formatters"
 import { EstornoWireframe } from "@/components/wireframe/estorno-wireframe"
 import { FraseRapidaWireframe } from "@/components/wireframe/frase-rapida-wireframe"
+import { ImpactoDaParcela } from "@/components/wireframe/impacto-parcela-wireframe"
+import { equalInstallmentsFromPortion, splitTotalAcrossInstallments } from "@/lib/installment-amounts"
+import type { PlanoProposto } from "@/lib/previsao/impacto-parcela"
 import { FotoReciboWireframe } from "@/components/wireframe/foto-recibo-wireframe"
 import type { CamposDaFrase } from "@/lib/captura/frase-no-form"
 
@@ -396,6 +399,40 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
         dateYmd,
     ])
 
+    // A compra como o salvar a mandaria (`InstallmentPlanFormSavePayload`), para o quadro de impacto.
+    // No crédito sem cartão escolhido ainda não há o que mostrar.
+    const planoProposto = useMemo((): PlanoProposto | null => {
+        if (segmentMode !== "create" || formKind !== "installment" || parcelas < 2 || !dateYmd) return null
+        const cardId = paymentMethod === "credit_card" ? paymentCreditCardId || null : null
+        if (paymentMethod === "credit_card" && !cardId) return null
+        const valor = parseMoneyBrl(installmentValueMode === "total" ? installmentTotal : installmentPerAmount)
+        if (valor === null || valor <= 0) return null
+        const split =
+            installmentValueMode === "total"
+                ? splitTotalAcrossInstallments(valor, parcelas)
+                : equalInstallmentsFromPortion(valor, parcelas)
+        if (split.installmentAmount <= 0 || split.finalInstallmentAmount <= 0) return null
+        return {
+            valorParcela: split.installmentAmount,
+            parcelas,
+            ultimaParcela: split.finalInstallmentAmount,
+            primeiraYmd: dateYmd,
+            cardId,
+            descricao: description,
+        }
+    }, [
+        segmentMode,
+        formKind,
+        parcelas,
+        dateYmd,
+        paymentMethod,
+        paymentCreditCardId,
+        installmentValueMode,
+        installmentTotal,
+        installmentPerAmount,
+        description,
+    ])
+
     const selectedCategory = useMemo(
         () => filteredCategories.find((c) => c.id === categoryId),
         [filteredCategories, categoryId]
@@ -656,6 +693,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                     <p id="tx-inst-preview" className="nums text-sm text-muted-foreground">
                         {installmentPreview ?? "Informe o valor e o número de parcelas."}
                     </p>
+                    {planoProposto ? <ImpactoDaParcela proposto={planoProposto} /> : null}
                 </div>
             ) : (
                 <FormInput

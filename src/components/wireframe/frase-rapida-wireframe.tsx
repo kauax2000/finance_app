@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useWorkspace } from "@/components/workspace-provider"
+import { ImpactoDaParcela } from "@/components/wireframe/impacto-parcela-wireframe"
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
 import type { CartaoParaCasar } from "@/lib/captura/frase"
 import {
@@ -14,6 +15,8 @@ import {
     type CamposDaFrase,
 } from "@/lib/captura/frase-no-form"
 import { lerFraseComIA } from "@/lib/ia/ler"
+import { splitTotalAcrossInstallments } from "@/lib/installment-amounts"
+import type { PlanoProposto } from "@/lib/previsao/impacto-parcela"
 import { localYmdFromDate } from "@/lib/transaction-date"
 
 const campo = "w-full border border-dashed border-muted-foreground/60 bg-transparent px-2 py-1 font-mono text-foreground"
@@ -40,6 +43,9 @@ export function FraseRapidaWireframe({
     const [aplicando, setAplicando] = useState(false)
     // A frase aplicada sem valor: a IA pode tentar lê-la.
     const [tentarIA, setTentarIA] = useState(false)
+    // O que a frase aplicou por último: com parcelas e valor, o quadro de impacto aparece.
+    const [aplicado, setAplicado] = useState<CamposDaFrase | null>(null)
+    const proposto = useMemo(() => planoDaFrase(aplicado), [aplicado])
     // Cada aplicar ganha um número; editar a frase ou fechar o formulário o
     // muda, e a resposta atrasada de um pedido velho é jogada fora.
     const pedido = useRef(0)
@@ -58,6 +64,7 @@ export function FraseRapidaWireframe({
         if (meu !== pedido.current) return
         const c = camposDaFrase(texto, localYmdFromDate(new Date()), cartoes, historico)
         onAplicar(c)
+        setAplicado(c)
         setAviso(textoDasDuvidas(c) ?? "Preenchido. Confira e salve.")
         setTentarIA(c.duvidas.includes("valor"))
         setAplicando(false)
@@ -79,6 +86,7 @@ export function FraseRapidaWireframe({
         }
         const c = camposDaIA(lido.campos, localYmdFromDate(new Date()), cartoes, historico, texto)
         onAplicar(c)
+        setAplicado(c)
         setAviso(avisoDaIA(c))
         setTentarIA(false)
     }
@@ -95,6 +103,7 @@ export function FraseRapidaWireframe({
                         pedido.current += 1
                         setTexto(e.target.value)
                         setAviso(null)
+                        setAplicado(null)
                         setTentarIA(false)
                         setAplicando(false)
                     }}
@@ -129,6 +138,24 @@ export function FraseRapidaWireframe({
                 </button>
             ) : null}
             {aviso ? <p role="status">{aviso}</p> : null}
+            {proposto ? <ImpactoDaParcela proposto={proposto} /> : null}
         </WireframeBox>
     )
+}
+
+/** O valor da frase é o total (`installmentValueMode: "total"`): dividido como o salvar divide. */
+function planoDaFrase(c: CamposDaFrase | null): PlanoProposto | null {
+    if (!c || c.tipo !== "expense" || c.parcelas == null || c.parcelas < 2 || c.valor == null) return null
+    const cardId = c.paymentMethod === "credit_card" ? c.creditCardId : null
+    if (c.paymentMethod === "credit_card" && !cardId) return null
+    const split = splitTotalAcrossInstallments(c.valor, c.parcelas)
+    if (split.installmentAmount <= 0) return null
+    return {
+        valorParcela: split.installmentAmount,
+        parcelas: c.parcelas,
+        ultimaParcela: split.finalInstallmentAmount,
+        primeiraYmd: c.data,
+        cardId,
+        descricao: c.descricao,
+    }
 }
