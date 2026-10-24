@@ -30,6 +30,7 @@ function baseSubscription(
         payment_method: null,
         payment_credit_card_id: null,
         is_active: true,
+        kind: "expense",
         created_at: "2026-01-01T00:00:00Z",
         updated_at: "2026-01-01T00:00:00Z",
         ...overrides,

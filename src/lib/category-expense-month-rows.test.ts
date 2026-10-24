@@ -175,6 +175,7 @@ describe("category-expense-month-rows", () => {
                     payment_method: "credit_card",
                     payment_credit_card_id: "card1",
                     is_active: true,
+                    kind: "expense",
                     created_at: "",
                     updated_at: "",
                 },

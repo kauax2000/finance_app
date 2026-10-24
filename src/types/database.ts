@@ -419,6 +419,7 @@ export type Database = {
           month: number
           period_end: string
           period_start: string
+          repeats: boolean
           threshold_100_sent_at: string | null
           threshold_80_sent_at: string | null
           threshold_over_sent_at: string | null
@@ -436,6 +437,7 @@ export type Database = {
           month: number
           period_end: string
           period_start: string
+          repeats?: boolean
           threshold_100_sent_at?: string | null
           threshold_80_sent_at?: string | null
           threshold_over_sent_at?: string | null
@@ -453,6 +455,7 @@ export type Database = {
           month?: number
           period_end?: string
           period_start?: string
+          repeats?: boolean
           threshold_100_sent_at?: string | null
           threshold_80_sent_at?: string | null
           threshold_over_sent_at?: string | null
@@ -1533,6 +1536,7 @@ export type Database = {
           day_of_month: number | null
           id: string
           is_active: boolean
+          kind: string
           name: string
           next_billing_date: string | null
           notes: string | null
@@ -1554,6 +1558,7 @@ export type Database = {
           day_of_month?: number | null
           id?: string
           is_active?: boolean
+          kind?: string
           name: string
           next_billing_date?: string | null
           notes?: string | null
@@ -1575,6 +1580,7 @@ export type Database = {
           day_of_month?: number | null
           id?: string
           is_active?: boolean
+          kind?: string
           name?: string
           next_billing_date?: string | null
           notes?: string | null
@@ -1617,6 +1623,7 @@ export type Database = {
           icon: string
           icon_background_color: string
           id: string
+          monthly_savings_target: number | null
           name: string
           type: string
           updated_at: string
@@ -1628,6 +1635,7 @@ export type Database = {
           icon?: string
           icon_background_color?: string
           id?: string
+          monthly_savings_target?: number | null
           name: string
           type?: string
           updated_at?: string
@@ -1639,6 +1647,7 @@ export type Database = {
           icon?: string
           icon_background_color?: string
           id?: string
+          monthly_savings_target?: number | null
           name?: string
           type?: string
           updated_at?: string
@@ -1685,6 +1694,10 @@ export type Database = {
         Args: { p_dia: string; p_limite: number; p_user_id: string }
         Returns: boolean
       }
+      copiar_orcamentos_do_mes: {
+        Args: { p_period_start: string; p_workspace_id?: string }
+        Returns: number
+      }
       create_capture_token: {
         Args: { p_name: string; p_workspace_id: string }
         Returns: string
@@ -1702,6 +1715,7 @@ export type Database = {
           icon: string
           icon_background_color: string
           id: string
+          monthly_savings_target: number | null
           name: string
           type: string
           updated_at: string
@@ -1748,6 +1762,10 @@ export type Database = {
       delete_workspace_installment_plan_cascade: {
         Args: { p_plan_id: string }
         Returns: undefined
+      }
+      garantir_orcamentos_do_mes: {
+        Args: { p_workspace_id: string }
+        Returns: number
       }
       get_device_info_from_user_agent: {
         Args: { user_agent_text: string }

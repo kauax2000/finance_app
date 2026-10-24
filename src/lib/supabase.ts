@@ -146,6 +146,9 @@ export type SubscriptionBillingInterval =
     | 'bimonthly'
     | 'yearly'
 
+/** `'income'`: receita recorrente (salário), que nunca usa cartão. */
+export type SubscriptionKind = "expense" | "income"
+
 export interface WorkspaceSubscription {
     id: string
     workspace_id: string
@@ -164,6 +167,8 @@ export interface WorkspaceSubscription {
     payment_method: TransactionPaymentMethod | null
     payment_credit_card_id: string | null
     is_active: boolean
+    /** Despesa (o padrão) ou receita; o lançamento do ciclo nasce com este tipo. */
+    kind: SubscriptionKind
     created_at: string
     updated_at: string
 }
@@ -375,6 +380,8 @@ export interface Workspace {
     updated_at: string
     /** When set, categories/budgets onboarding wizard is not shown. */
     categories_onboarding_completed_at?: string | null
+    /** Reserva do mês, que sai do "seguro para gastar"; nula sem reserva. */
+    monthly_savings_target: number | null
 }
 
 /** Monthly budget cap for a category (workspace-scoped RLS). */
@@ -391,6 +398,8 @@ export interface Budget {
     threshold_80_sent_at: string | null
     threshold_100_sent_at: string | null
     threshold_over_sent_at: string | null
+    /** Copiado para o mês seguinte (`copiar_orcamentos_do_mes`). */
+    repeats: boolean
     created_at: string
     updated_at: string
 }
