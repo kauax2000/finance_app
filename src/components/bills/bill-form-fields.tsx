@@ -55,6 +55,8 @@ import {
     CategoryIconGrid,
     type CategoryIconId,
 } from "@/components/categories/category-appearance-fields"
+import { ContaValorVariavelWireframe } from "@/components/wireframe/conta-valor-variavel-wireframe"
+import { ContaOuAssinaturaWireframe } from "@/components/wireframe/conta-ou-assinatura-wireframe"
 
 export type BillFormFieldsProps = {
     name: string
@@ -88,6 +90,8 @@ export type BillFormFieldsProps = {
     setReminder0: (v: boolean) => void
     isActive: boolean
     setIsActive: (v: boolean) => void
+    valorVariavel: boolean
+    setValorVariavel: (v: boolean) => void
     creditCards: CreditCard[]
     editingBill: Bill | null
 }
@@ -124,6 +128,8 @@ export function BillFormFields({
     setReminder0,
     isActive,
     setIsActive,
+    valorVariavel,
+    setValorVariavel,
     creditCards,
     editingBill,
 }: BillFormFieldsProps) {
@@ -151,6 +157,7 @@ export function BillFormFields({
 
     return (
         <div className="flex flex-col gap-4 px-4 pb-4 sm:gap-5 sm:px-5">
+            <ContaOuAssinaturaWireframe onde="conta" />
             <FormInput
                 id="bill-name"
                 label="Nome"
@@ -281,6 +288,10 @@ export function BillFormFields({
                 onValueChange={setAmountEstimatedStr}
                 placeholder="Ex.: 250,90 — só ajuda nas previsões"
                 description="Não será lançado automaticamente."
+            />
+            <ContaValorVariavelWireframe
+                valorVariavel={valorVariavel}
+                onChange={setValorVariavel}
             />
             <div className="grid gap-4 sm:grid-cols-2">
                 <Field>

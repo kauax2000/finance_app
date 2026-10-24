@@ -6,7 +6,7 @@ import type { Bill, BillInstance, TransactionPaymentMethod } from "@/lib/supabas
 import type { SupabaseClient, User } from "@supabase/supabase-js"
 import { computeNextBillInstanceDueYmd } from "@/lib/bills/recurrence"
 import type { VirtualCreditCardBill } from "@/lib/bills/credit-card-bill-projector"
-import { calendarYmdToStorageIso } from "@/lib/transaction-date"
+import { calendarYmdToStorageIso, localYmdFromDate } from "@/lib/transaction-date"
 import { assertActionAllowedOffline } from "@/lib/offline/mutation-gateway"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 
@@ -63,6 +63,9 @@ export async function executePayBillFlow(options: {
     input: PayBillInput
     payload: PayBillPayload
 }): Promise<{ ok: true } | { ok: false; error: string }> {
+    if (options.payload.paidDateYmd.slice(0, 10) > localYmdFromDate(new Date())) {
+        return { ok: false, error: "A data do pagamento não pode ser depois de hoje." }
+    }
     try {
         assertActionAllowedOffline("pay_bill_edge", "Pagar conta")
     } catch (err) {

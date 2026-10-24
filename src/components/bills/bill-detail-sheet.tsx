@@ -4,7 +4,7 @@ import {
     addDaysYmd,
     compareYmd,
 } from "@/lib/transaction-date"
-import { billDuePill } from "@/components/bills/bill-status"
+import { billDuePill, statusDaConta, statusDaContaLabel } from "@/components/bills/bill-status"
 import { useMemo } from "react"
 import { EllipsisHorizontalIcon, PencilIcon, TrashIcon, XMarkIcon } from "@heroicons/react/16/solid"
 
@@ -110,6 +110,7 @@ export function BillDetailSheet({
 
     const nextInst = useMemo(() => nextPendingHero(instances), [instances])
     const lastPaid = useMemo(() => lastPaidInstance(instances), [instances])
+    const status = bill ? statusDaConta(bill, instances, todayYmd) : "ativa"
 
     const limit90 = useMemo(() => addDaysYmd(todayYmd, -90), [todayYmd])
     const limit60 = useMemo(() => addDaysYmd(todayYmd, 60), [todayYmd])
@@ -242,11 +243,11 @@ export function BillDetailSheet({
                         <div className="flex shrink-0 flex-col items-end gap-2">
                             {bill && !loading ? (
                                 <Badge
-                                    variant={bill.is_active ? "soft" : "outline"}
-                                    tone={bill.is_active ? "success" : "neutral"}
+                                    variant={status === "ativa" ? "soft" : "outline"}
+                                    tone={status === "ativa" ? "success" : "neutral"}
                                     className="shrink-0"
                                 >
-                                    {bill.is_active ? "Ativa" : "Inativa"}
+                                    {statusDaContaLabel(status)}
                                 </Badge>
                             ) : null}
                             <div className="flex items-center gap-0.5">

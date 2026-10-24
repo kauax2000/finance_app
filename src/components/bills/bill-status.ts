@@ -1,5 +1,5 @@
 import { tagChipDanger, tagChipNeutral, tagChipSuccess, tagChipWarning } from "@/components/ui/badge"
-import type { BillInstance } from "@/lib/supabase"
+import type { Bill, BillInstance } from "@/lib/supabase"
 import { daysBetweenYmd } from "@/lib/transaction-date"
 
 /**
@@ -41,4 +41,35 @@ export function billDaysDeltaLabel(
     const a = Math.abs(days)
     const n = compact ? `${a}d` : `${a} dia${a === 1 ? "" : "s"}`
     return days > 0 ? `em ${n}` : `há ${n}`
+}
+
+export type StatusDaConta = "ativa" | "encerrada" | "concluida" | "inativa"
+
+/**
+ * O estado da conta, calculado (Bloco 6A, decisão 4): "Concluída" é a única
+ * sem pendente e com uma paga; "Encerrada", o fim antes de hoje sem pendente.
+ * `instancias` são as que se conhecem da conta (pendentes e pagas).
+ */
+export function statusDaConta(
+    conta: Pick<Bill, "frequency" | "end_date" | "is_active">,
+    instancias: Pick<BillInstance, "status">[],
+    hojeYmd: string
+): StatusDaConta {
+    const semPendente = !instancias.some((i) => i.status === "pending")
+    if (semPendente && conta.frequency === "one_time" && instancias.some((i) => i.status === "paid")) {
+        return "concluida"
+    }
+    if (semPendente && conta.end_date && conta.end_date.slice(0, 10) < hojeYmd) return "encerrada"
+    return conta.is_active ? "ativa" : "inativa"
+}
+
+const STATUS_LABEL: Record<StatusDaConta, string> = {
+    ativa: "Ativa",
+    encerrada: "Encerrada",
+    concluida: "Concluída",
+    inativa: "Inativa",
+}
+
+export function statusDaContaLabel(s: StatusDaConta): string {
+    return STATUS_LABEL[s]
 }

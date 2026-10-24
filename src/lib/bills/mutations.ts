@@ -8,6 +8,8 @@ import {
     computeFirstDueYmd,
     computeNextBillInstanceDueYmd,
 } from "@/lib/bills/recurrence"
+import { CAMPOS_DA_AGENDA, reprogramarPendenteDaConta, type AgendaDaConta } from "@/lib/bills/reprogramar"
+import { localYmdFromDate } from "@/lib/transaction-date"
 import { executeMutation } from "@/lib/offline/mutation-gateway"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 
@@ -24,7 +26,6 @@ function mapBillInsertPayload(
     | "created_at"
     | "updated_at"
     | "category"
-    | "valor_variavel"
 > {
     return {
         workspace_id: workspaceId,
@@ -43,7 +44,14 @@ function mapBillInsertPayload(
         reminder_days_before: p.reminder_days_before,
         is_active: p.is_active,
         icon: p.icon,
+        valor_variavel: p.valor_variavel,
     }
+}
+
+/** O primeiro vencimento, ou `null` quando ele já passa do fim: a conta nasce sem instância. */
+function primeiraInstanciaYmd(p: Pick<SavePayload, "start_date" | "due_day_of_month" | "end_date">): string | null {
+    const due = computeFirstDueYmd({ startYmd: p.start_date.slice(0, 10), dueDayOfMonth: p.due_day_of_month })
+    return p.end_date && due > p.end_date.slice(0, 10) ? null : due
 }
 
 async function insertBillWithFirstInstanceOnline(opts: {
@@ -67,10 +75,8 @@ async function insertBillWithFirstInstanceOnline(opts: {
     }
 
     const b = bill as BillRow
-    const dueYmd = computeFirstDueYmd({
-        startYmd: billStartYmd(b),
-        dueDayOfMonth: b.due_day_of_month,
-    })
+    const dueYmd = primeiraInstanciaYmd({ ...b, start_date: billStartYmd(b) })
+    if (!dueYmd) return { ok: true, bill: b }
 
     const { error: instErr } = await supabase.from("bill_instances").insert({
         workspace_id: workspaceId,
@@ -101,10 +107,7 @@ export async function insertBillWithFirstInstance(opts: {
     const { supabase, user, workspaceId, payload } = opts
     const clientId = crypto.randomUUID()
     const row = mapBillInsertPayload(user.id, workspaceId, payload)
-    const dueYmdPreview = computeFirstDueYmd({
-        startYmd: payload.start_date,
-        dueDayOfMonth: payload.due_day_of_month,
-    })
+    const dueYmdPreview = primeiraInstanciaYmd(payload)
 
     const gateway = await executeMutation({
         entity: "bill",
@@ -115,7 +118,7 @@ export async function insertBillWithFirstInstance(opts: {
             ...row,
             client_id: clientId,
             user_id: user.id,
-            first_instance_due: dueYmdPreview,
+            ...(dueYmdPreview ? { first_instance_due: dueYmdPreview } : {}),
         },
         onlineFn: async () => {
             const result = await insertBillWithFirstInstanceOnline({
@@ -152,9 +155,11 @@ export async function updateBillRow(opts: {
     supabase: SupabaseClient
     workspaceId: string
     billId: string
+    /** Quem cria a próxima pendente ao reativar (a RLS pede `user_id = auth.uid()`). */
+    userId: string
     payload: SavePayload
 }): Promise<{ ok: true; queued?: boolean } | { ok: false; error: string }> {
-    const { supabase, workspaceId, billId, payload } = opts
+    const { supabase, workspaceId, billId, userId, payload } = opts
 
     const updateRow = {
         name: payload.name,
@@ -171,6 +176,7 @@ export async function updateBillRow(opts: {
         reminder_days_before: payload.reminder_days_before,
         is_active: payload.is_active,
         icon: payload.icon,
+        valor_variavel: payload.valor_variavel,
     }
 
     const gateway = await executeMutation({
@@ -179,12 +185,30 @@ export async function updateBillRow(opts: {
         workspaceId,
         offlinePayload: { ...updateRow, serverId: billId },
         onlineFn: async () => {
+            const { data: antes, error: readErr } = await supabase
+                .from("bills")
+                .select(CAMPOS_DA_AGENDA)
+                .eq("id", billId)
+                .eq("workspace_id", workspaceId)
+                .single()
+            if (readErr || !antes) {
+                throw new Error(formatSupabasePostgrestError(readErr) ?? "Conta não encontrada nesta carteira.")
+            }
             const { error } = await supabase
                 .from("bills")
                 .update(updateRow)
                 .eq("id", billId)
                 .eq("workspace_id", workspaceId)
             if (error) throw new Error(formatSupabasePostgrestError(error) ?? "Não foi possível salvar a conta.")
+            const erro = await reprogramarPendenteDaConta(supabase, {
+                workspaceId,
+                billId,
+                userId,
+                antes: antes as AgendaDaConta,
+                depois: updateRow,
+                hojeYmd: localYmdFromDate(new Date()),
+            })
+            if (erro) throw new Error(erro)
             return { ok: true as const }
         },
     })
@@ -230,29 +254,18 @@ export async function skipBillInstance(opts: {
     bill: BillRow
     currentDueYmd: string
 }): Promise<{ ok: true } | { ok: false; error: string }> {
-    const { supabase, user, workspaceId, instanceId, bill, currentDueYmd } =
-        opts
+    const { supabase, instanceId, bill, currentDueYmd } = opts
 
-    const { error: upErr } = await supabase
-        .from("bill_instances")
-        .update({ status: "skipped" })
-        .eq("id", instanceId)
-        .eq("workspace_id", workspaceId)
-        .eq("status", "pending")
-
-    if (upErr) return { ok: false, error: upErr.message }
-
-    const nextYmd = computeNextBillInstanceDueYmd(bill, currentDueYmd)
-    if (nextYmd) {
-        await supabase.from("bill_instances").insert({
-            workspace_id: workspaceId,
-            user_id: user.id,
-            bill_id: bill.id,
-            due_date: nextYmd,
-            status: "pending",
-            amount: null,
-        })
+    // Uma transação só: pula a instância e cria a próxima (Bloco 6A, decisão 5).
+    const { error } = await supabase.rpc("pular_instancia_da_conta", {
+        p_instance_id: instanceId,
+        p_next_due_date: computeNextBillInstanceDueYmd(bill, currentDueYmd),
+    })
+    if (error) {
+        if (String(error.message ?? "").includes("BILL_INSTANCE_NOT_PENDING")) {
+            return { ok: false, error: "Esta conta já foi paga ou pulada." }
+        }
+        return { ok: false, error: formatSupabasePostgrestError(error) ?? "Não foi possível pular a conta." }
     }
-
     return { ok: true }
 }

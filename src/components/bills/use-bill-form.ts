@@ -82,6 +82,7 @@ export function useBillForm({
     const [reminder3, setReminder3] = useState(true)
     const [reminder0, setReminder0] = useState(true)
     const [isActive, setIsActive] = useState(true)
+    const [valorVariavel, setValorVariavel] = useState(false)
 
     /* Hydrate controlled fields whenever the dialog opens or the bill being edited changes. */
     /* eslint-disable react-hooks/set-state-in-effect -- deliberate form reset from props */
@@ -115,6 +116,7 @@ export function useBillForm({
             setReminder3(r.includes(3))
             setReminder0(r.includes(0))
             setIsActive(b.is_active)
+            setValorVariavel(b.valor_variavel === true)
         } else {
             setName("")
             setDescription("")
@@ -131,6 +133,7 @@ export function useBillForm({
             setReminder3(true)
             setReminder0(true)
             setIsActive(true)
+            setValorVariavel(false)
         }
     }, [active, editingBill])
     /* eslint-enable react-hooks/set-state-in-effect */
@@ -159,6 +162,7 @@ export function useBillForm({
                 reminder3,
                 reminder0,
                 isActive,
+                valorVariavel,
             })
 
             if (!parsed.ok) {
@@ -192,6 +196,7 @@ export function useBillForm({
             reminder3,
             reminder0,
             isActive,
+            valorVariavel,
             onSave,
             editingBill?.id,
             closeOnSuccess,
@@ -231,6 +236,8 @@ export function useBillForm({
         setReminder0,
         isActive,
         setIsActive,
+        valorVariavel,
+        setValorVariavel,
         creditCards,
         editingBill,
     }

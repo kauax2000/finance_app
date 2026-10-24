@@ -1,6 +1,6 @@
 "use client"
 
-import { billDuePill } from "@/components/bills/bill-status"
+import { billDuePill, statusDaContaLabel, type StatusDaConta } from "@/components/bills/bill-status"
 import {
     DescriptionDetails,
     DescriptionList,
@@ -43,6 +43,8 @@ export type BillSummaryCardProps = {
     latePay90Count: number
     nextDueYmd: string | null
     nextAmountHint: number | null
+    /** `statusDaConta`: ativa, encerrada, concluída ou inativa. */
+    status: StatusDaConta
     onOpenDetail: () => void
 }
 
@@ -55,6 +57,7 @@ export function BillSummaryCard({
     latePay90Count,
     nextDueYmd,
     nextAmountHint,
+    status,
     onOpenDetail,
 }: BillSummaryCardProps) {
     const cat = bill.category
@@ -66,7 +69,7 @@ export function BillSummaryCard({
         nextDueYmd != null ? billDuePill(nextDueYmd, todayYmd) : null
 
     return (
-        <Card padding="sm" inactive={!bill.is_active} className="group">
+        <Card padding="sm" inactive={status !== "ativa"} className="group">
                 <CardHeader
                     media={
                         <ColorTile size="2xl" color={headerColor}>
@@ -92,11 +95,11 @@ export function BillSummaryCard({
 
                         <CardAction>
                         <Badge
-                            variant={bill.is_active ? "soft" : "outline"}
-                            tone={bill.is_active ? "success" : "neutral"}
+                            variant={status === "ativa" ? "soft" : "outline"}
+                            tone={status === "ativa" ? "success" : "neutral"}
                             className="shrink-0"
                         >
-                            {bill.is_active ? "Ativa" : "Inativa"}
+                            {statusDaContaLabel(status)}
                         </Badge>
                         </CardAction>
 

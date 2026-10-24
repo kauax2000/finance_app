@@ -41,6 +41,8 @@ export type BillFormPayloadForSave = {
     default_payment_credit_card_id: string | null
     reminder_days_before: number[]
     is_active: boolean
+    /** O estimado vira a média dos 3 últimos pagamentos (gatilho no banco). */
+    valor_variavel: boolean
 }
 
 export function buildBillFormPayload(opts: {
@@ -59,6 +61,7 @@ export function buildBillFormPayload(opts: {
     reminder3: boolean
     reminder0: boolean
     isActive: boolean
+    valorVariavel: boolean
 }):
     | { ok: true; payload: BillFormPayloadForSave }
     | { ok: false; error: string } {
@@ -104,6 +107,9 @@ export function buildBillFormPayload(opts: {
 
     const end =
         opts.endDateYmd.trim().length === 0 ? null : opts.endDateYmd.trim()
+    if (end && end < opts.startDateYmd.trim()) {
+        return { ok: false, error: "A data de fim não pode ser antes do início." }
+    }
 
     const iconNorm = normalizeCategoryIcon(opts.icon)
 
@@ -125,6 +131,7 @@ export function buildBillFormPayload(opts: {
             default_payment_credit_card_id: pcc,
             reminder_days_before,
             is_active: opts.isActive,
+            valor_variavel: opts.valorVariavel,
         },
     }
 }

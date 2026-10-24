@@ -34,6 +34,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { ReceitaRecorrenteWireframe } from "@/components/wireframe/receita-recorrente-wireframe"
+import { ContaOuAssinaturaWireframe } from "@/components/wireframe/conta-ou-assinatura-wireframe"
 import { DatePicker } from "@/components/ui/date-picker"
 import { SubscriptionCategoryPicker } from "@/components/subscriptions/subscription-form-pickers"
 import {
@@ -111,6 +112,7 @@ export function SubscriptionFormFields({
 
     return (
         <div className="space-y-3 pb-1">
+            <ContaOuAssinaturaWireframe onde="assinatura" />
             <ReceitaRecorrenteWireframe
                 kind={kind}
                 disabled={saving}

@@ -248,6 +248,7 @@ export function PayBillDialog({
                                             d ? localYmdFromDate(d) : localYmdFromDate(new Date()),
                                         )
                                     }
+                                    max={new Date()}
                                     displayStyle="relative"
                                     presets
                                 />

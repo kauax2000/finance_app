@@ -11,7 +11,7 @@ import {
 import { addDaysYmd, compareYmd } from "@/lib/transaction-date"
 import { PlusIcon } from "@heroicons/react/16/solid"
 import { FunnelIcon, MagnifyingGlassIcon, ReceiptPercentIcon } from "@heroicons/react/24/outline"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import type { User } from "@supabase/supabase-js"
@@ -58,7 +58,8 @@ import {
     updateBillRow,
 } from "@/lib/bills/mutations"
 import type { BillInstance } from "@/lib/supabase"
-import { localYmdFromDate } from "@/lib/transaction-date"
+import { useHojeYmd } from "@/hooks/use-hoje-ymd"
+import { statusDaConta, type StatusDaConta } from "@/components/bills/bill-status"
 import { supabase } from "@/lib/supabase"
 import { toastError, toastSuccess } from "@/lib/toast"
 import { BILL_SAVE_TOAST_ID } from "@/components/bills/use-bill-form"
@@ -129,6 +130,7 @@ type BillModelSummary = {
     latePay90Count: number
     nextDueYmd: string | null
     nextAmountHint: number | null
+    status: StatusDaConta
 }
 
 function compareModelSummaries(
@@ -214,7 +216,7 @@ export default function BillsPageClient() {
         }
     }, [])
 
-    const todayYmd = useMemo(() => localYmdFromDate(new Date()), [])
+    const todayYmd = useHojeYmd()
     const limit30Ymd = useMemo(() => addDaysYmd(todayYmd, 30), [todayYmd])
 
     const virtualRows = useMemo(() => {
@@ -377,9 +379,10 @@ export default function BillsPageClient() {
                 latePay90Count,
                 nextDueYmd,
                 nextAmountHint,
+                status: statusDaConta(bill, nextInst ? [...paidList, nextInst] : paidList, todayYmd),
             }
         })
-    }, [bundleQ.data, modelFilter])
+    }, [bundleQ.data, modelFilter, todayYmd])
 
     const sortedModelCards = useMemo(() => {
         const copy = [...modelSummaries]
@@ -412,6 +415,7 @@ export default function BillsPageClient() {
                         supabase,
                         workspaceId: currentWorkspaceId,
                         billId: billIdForUpdate,
+                        userId: user.id,
                         payload,
                     })
                     if (!up.ok) {
@@ -474,6 +478,21 @@ export default function BillsPageClient() {
         detailBillId,
         setDetailBillId,
     ])
+
+    // `?new=1` abre o cadastro, como em Assinaturas: é o link da explicação
+    // "conta ou assinatura" do formulário de assinatura.
+    const didConsumeNewQuery = useRef(false)
+    useEffect(() => {
+        if (!bundleQ.data || formOpen || didConsumeNewQuery.current) return
+        if (searchParams.get("new") !== "1") return
+        didConsumeNewQuery.current = true
+        setEditingBill(null)
+        setFormOpen(true)
+        const next = new URLSearchParams(searchParams.toString())
+        next.delete("new")
+        const qs = next.toString()
+        router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+    }, [bundleQ.data, formOpen, pathname, router, searchParams])
 
     const openPay = useCallback((input: PayBillInput) => {
         setPayInput(input)
@@ -742,6 +761,7 @@ export default function BillsPageClient() {
                                       latePay90Count={m.latePay90Count}
                                       nextDueYmd={m.nextDueYmd}
                                       nextAmountHint={m.nextAmountHint}
+                                      status={m.status}
                                       onOpenDetail={() =>
                                           setDetailBillId(m.bill.id)
                                       }
