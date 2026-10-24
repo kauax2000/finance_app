@@ -61,6 +61,7 @@ import {
 } from "@/lib/bills/pay-bill-flow"
 import type { User } from "@supabase/supabase-js"
 import { useHojeYmd } from "@/hooks/use-hoje-ymd"
+import { AnexosWireframe } from "@/components/wireframe/anexos-wireframe"
 
 const CAT_NONE = "__none__"
 
@@ -222,6 +223,16 @@ export function PayBillDialog({
                     </DialogHeader>
 
                     <DialogBody className="scrollbar-thin flex flex-col gap-4">
+                        {/* O boleto é da instância e só se abre aqui; a fatura virtual não tem instância. */}
+                        {input.kind === "regular" && workspaceId ? (
+                            <AnexosWireframe
+                                key={input.instance.id}
+                                workspaceId={workspaceId}
+                                vinculo={{ billInstanceId: input.instance.id }}
+                                titulo="Boleto"
+                                somenteLeitura
+                            />
+                        ) : null}
                         {input.kind === "regular" ? (
                             <FormInput
                                 money

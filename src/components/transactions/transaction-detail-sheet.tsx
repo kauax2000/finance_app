@@ -48,6 +48,7 @@ import {
 import { TransactionFormSurface } from "@/components/transactions/transaction-form-surface"
 import { AConferirWireframe } from "@/components/wireframe/a-conferir-wireframe"
 import { AnexosWireframe } from "@/components/wireframe/anexos-wireframe"
+import { anexosDoLancamento } from "@/lib/bills/anexos-da-conta"
 import { ImpactoDaParcela } from "@/components/wireframe/impacto-parcela-wireframe"
 import { useTransactionForm } from "@/components/transactions/transaction-form-use"
 import type {
@@ -433,7 +434,13 @@ export function TransactionDetailSheet({
                 ) : null}
 
                 {t.workspace_id ? (
-                    <AnexosWireframe key={t.id} workspaceId={t.workspace_id} vinculo={{ transactionId: t.id }} />
+                    <AnexosWireframe
+                        key={t.id}
+                        workspaceId={t.workspace_id}
+                        vinculo={{ transactionId: t.id }}
+                        // Com a conta paga por este lançamento, o boleto da instância aparece junto.
+                        listar={() => anexosDoLancamento(supabase, t.id)}
+                    />
                 ) : null}
 
                 {installmentBlock ? (

@@ -25,15 +25,18 @@ export function AnexosWireframe({
     vinculo,
     titulo = "Anexos",
     somenteLeitura = false,
+    listar,
 }: {
     workspaceId: string
     vinculo: VinculoAnexo
     titulo?: string
     somenteLeitura?: boolean
+    /** Troca a busca do `vinculo` (o lançamento pago também lista o boleto da conta). */
+    listar?: () => Promise<Attachment[]>
 }) {
     const lista = useQuery({
-        queryKey: ["attachments", workspaceId, vinculo],
-        queryFn: () => listarAnexos(supabase, vinculo),
+        queryKey: ["attachments", workspaceId, vinculo, listar ? "custom" : null],
+        queryFn: () => (listar ? listar() : listarAnexos(supabase, vinculo)),
     })
     const [pendente, setPendente] = useState<string | null>(null)
     const [erro, setErro] = useState<string | null>(null)
