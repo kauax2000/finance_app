@@ -157,6 +157,14 @@ export async function urlAssinada(supabase: SupabaseClient, path: string): Promi
     return data?.signedUrl ?? null
 }
 
+/**
+ * O boleto é da instância da conta: quem olha o lançamento pago (vínculo sem
+ * `billInstanceId`) o abre, mas não o apaga.
+ */
+export function podeApagarAnexo(anexo: Pick<Attachment, "bill_instance_id">, vinculo: VinculoAnexo): boolean {
+    return !(anexo.bill_instance_id != null && vinculo.billInstanceId == null)
+}
+
 /** A linha sai primeiro; o objeto que não sair fica para a limpeza semanal. */
 export async function apagarAnexo(supabase: SupabaseClient, anexo: Pick<Attachment, "id" | "path">): Promise<Resultado> {
     const { error } = await supabase.from("attachments").delete().eq("id", anexo.id)

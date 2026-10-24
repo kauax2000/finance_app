@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest"
 
 import { lerFonte, semComentarios } from "@/test/fonte"
 
+import { podeApagarAnexo } from "@/lib/anexos"
+
 import { anexosDoLancamento } from "./anexos-da-conta"
 
 type Linha = Record<string, unknown>
@@ -48,7 +50,8 @@ describe("anexosDoLancamento", () => {
                 anexo("a2", "w/x.pdf", { bill_instance_id: "i1" }),
             ],
         })
-        expect(await anexosDoLancamento(supabase, "t1")).toHaveLength(1)
+        const r = await anexosDoLancamento(supabase, "t1")
+        expect(r.map((a) => a.id)).toEqual(["a1"])
     })
 
     it("sem instância ligada, devolve só os do lançamento", async () => {
@@ -66,5 +69,21 @@ describe("fonte", () => {
     it("o detalhe do lançamento lista pelo anexosDoLancamento", () => {
         const f = semComentarios(lerFonte("src/components/transactions/transaction-detail-sheet.tsx"), "tudo")
         expect(f).toContain("anexosDoLancamento(supabase, t.id)")
+    })
+})
+
+describe("podeApagarAnexo", () => {
+    it("o boleto da instância não se apaga pelo lançamento", () => {
+        expect(podeApagarAnexo({ bill_instance_id: "i1" }, { transactionId: "t1" })).toBe(false)
+    })
+
+    it("o anexo do lançamento e o da própria instância se apagam", () => {
+        expect(podeApagarAnexo({ bill_instance_id: null }, { transactionId: "t1" })).toBe(true)
+        expect(podeApagarAnexo({ bill_instance_id: "i1" }, { billInstanceId: "i1" })).toBe(true)
+    })
+
+    it("o bloco de anexos usa a regra no botão Apagar", () => {
+        const f = semComentarios(lerFonte("src/components/wireframe/anexos-wireframe.tsx"), "tudo")
+        expect(f).toContain("somenteLeitura || !podeApagarAnexo(a, vinculo)")
     })
 })

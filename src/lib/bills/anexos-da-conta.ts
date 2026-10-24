@@ -17,9 +17,8 @@ export async function anexosDoLancamento(supabase: SupabaseClient, transactionId
         listarAnexos(supabase, { transactionId }),
         ...instancias.map((i) => listarAnexos(supabase, { billInstanceId: i.id })),
     ])
-    const vistos = new Set<string>()
-    return listas
-        .flat()
-        .filter((a) => !vistos.has(a.path) && vistos.add(a.path))
-        .sort((a, b) => a.created_at.localeCompare(b.created_at))
+    // Um path, uma linha; no empate vale a primeira, a do lançamento.
+    const porPath = new Map<string, Attachment>()
+    for (const a of listas.flat()) if (!porPath.has(a.path)) porPath.set(a.path, a)
+    return [...porPath.values()].sort((a, b) => a.created_at.localeCompare(b.created_at))
 }

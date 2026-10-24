@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
-import { apagarAnexo, enviarAnexo, listarAnexos, urlAssinada, type VinculoAnexo } from "@/lib/anexos"
+import { apagarAnexo, enviarAnexo, listarAnexos, podeApagarAnexo, urlAssinada, type VinculoAnexo } from "@/lib/anexos"
 import { supabase, type Attachment } from "@/lib/supabase"
 
 const botao = "border border-muted-foreground/60 px-2 py-1 font-mono text-foreground disabled:opacity-50"
@@ -105,7 +105,7 @@ export function AnexosWireframe({
                             <button type="button" className={botao} onClick={() => void abrir(a)}>
                                 Abrir
                             </button>
-                            {somenteLeitura ? null : (
+                            {somenteLeitura || !podeApagarAnexo(a, vinculo) ? null : (
                                 <button
                                     type="button"
                                     className={botao}
