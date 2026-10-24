@@ -5,16 +5,15 @@
  */
 import { assertEquals, assertMatch } from 'jsr:@std/assert@1.0.19'
 import {
-  addCalendarDays,
   appTodayYmd,
   cardInvoiceNetInWindow,
   escolherTotal,
   estimatedDueYmdForClose,
   formatYmd,
   isoPrefixYmd,
-  nextCloseAfter,
   nextPaymentDueCycleOnOrAfter,
   sumCardExpensesInWindow,
+  statementCloseYmdForPurchaseYmd,
   statementTotalKey,
   sumCardRefundsInWindow,
   type Ymd,
@@ -32,14 +31,9 @@ function ymd(s: string): Ymd {
   return v
 }
 
-/** Primeiro fechamento >= purchase (inclusivo no dia do fechamento). */
-function firstCloseOnOrAfter(purchase: Ymd, closingDay: number): Ymd {
-  return nextCloseAfter(addCalendarDays(purchase, -1), closingDay)
-}
-
 Deno.test('statement close for purchase matches golden vectors', () => {
   for (const v of vectors.statement_close_for_purchase) {
-    const close = firstCloseOnOrAfter(ymd(v.purchase), v.closing_day)
+    const close = statementCloseYmdForPurchaseYmd(ymd(v.purchase), v.closing_day)
     assertEquals(
       formatYmd(close),
       v.expected_close,

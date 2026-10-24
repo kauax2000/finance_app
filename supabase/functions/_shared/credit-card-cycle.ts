@@ -90,6 +90,14 @@ export function nextCloseAfter(ref: Ymd, closingDay: number): Ymd {
   throw new Error('nextCloseAfter: range')
 }
 
+/**
+ * O fechamento da fatura da compra: o primeiro no dia da compra ou depois.
+ * Espelha `statementCloseYmdForPurchaseDate` do cliente (`src/lib/credit-card-billing.ts`).
+ */
+export function statementCloseYmdForPurchaseYmd(purchase: Ymd, closingDay: number): Ymd {
+  return nextCloseAfter(addCalendarDays(purchase, -1), closingDay)
+}
+
 export function previousStatementCloseBefore(closeYmd: Ymd, closingDay: number): Ymd {
   const t = ymdToUtcNoon(closeYmd) - MS_DAY
   return statementCloseOnOrBefore(utcNoonToYmd(t), closingDay)

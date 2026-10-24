@@ -1,0 +1,121 @@
+{
+  "_doc": "Gasto da categoria no mês do orçamento: despesa fora do cartão pelo dia, no cartão pelo mês do fechamento. O valor esperado é o postedTotal de buildCategoryCommitmentsForMonth (a tela de Categorias); o mesmo JSON trava gastoDaCategoriaNoMes (supabase/functions/_shared/orcamento-mes.ts) no Deno e no Vitest.",
+  "cases": [
+    {
+      "name": "a compra no dia do fechamento fica na fatura que fecha nele",
+      "category_id": "cat-a",
+      "ym": "2026-03",
+      "cards": { "c1": 10 },
+      "rows": [
+        { "amount": 100, "type": "expense", "date": "2026-03-10T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" },
+        { "amount": 7, "type": "expense", "date": "2026-02-10T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" }
+      ],
+      "expected": 100
+    },
+    {
+      "name": "o dia seguinte ao fechamento vai para o mês seguinte",
+      "category_id": "cat-a",
+      "ym": "2026-04",
+      "cards": { "c1": 10 },
+      "rows": [
+        { "amount": 100, "type": "expense", "date": "2026-03-10T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" },
+        { "amount": 50, "type": "expense", "date": "2026-03-11T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" }
+      ],
+      "expected": 50
+    },
+    {
+      "name": "o fechamento no 31 em fevereiro vira o dia 28",
+      "category_id": "cat-a",
+      "ym": "2026-02",
+      "cards": { "c1": 31 },
+      "rows": [
+        { "amount": 10, "type": "expense", "date": "2026-01-31T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" },
+        { "amount": 5, "type": "expense", "date": "2026-02-01T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" },
+        { "amount": 20, "type": "expense", "date": "2026-02-28T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" },
+        { "amount": 40, "type": "expense", "date": "2026-03-01T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" }
+      ],
+      "expected": 25
+    },
+    {
+      "name": "o estorno no cartão não abate da categoria, como na tela",
+      "category_id": "cat-a",
+      "ym": "2026-05",
+      "cards": { "c1": 20 },
+      "rows": [
+        { "amount": 200, "type": "expense", "date": "2026-05-05T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" },
+        { "amount": 80, "type": "income", "date": "2026-05-06T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" }
+      ],
+      "expected": 200
+    },
+    {
+      "name": "a despesa no Pix conta pelo dia",
+      "category_id": "cat-a",
+      "ym": "2026-05",
+      "cards": { "c1": 20 },
+      "rows": [
+        { "amount": 30, "type": "expense", "date": "2026-05-31T12:00:00.000Z", "payment_method": "pix", "payment_credit_card_id": null, "category_id": "cat-a" },
+        { "amount": 9, "type": "expense", "date": "2026-06-01T12:00:00.000Z", "payment_method": "pix", "payment_credit_card_id": null, "category_id": "cat-a" },
+        { "amount": 60, "type": "expense", "date": "2026-05-25T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" }
+      ],
+      "expected": 30
+    },
+    {
+      "name": "a categoria diferente e a sem categoria não entram",
+      "category_id": "cat-a",
+      "ym": "2026-06",
+      "cards": { "c1": 20 },
+      "rows": [
+        { "amount": 10, "type": "expense", "date": "2026-06-10T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" },
+        { "amount": 500, "type": "expense", "date": "2026-06-10T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-b" },
+        { "amount": 300, "type": "expense", "date": "2026-06-11T12:00:00.000Z", "payment_method": "pix", "payment_credit_card_id": null, "category_id": null }
+      ],
+      "expected": 10
+    },
+    {
+      "name": "dois cartões, cada um pelo próprio fechamento",
+      "category_id": "cat-a",
+      "ym": "2026-07",
+      "cards": { "c1": 5, "c2": 25 },
+      "rows": [
+        { "amount": 11, "type": "expense", "date": "2026-07-03T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" },
+        { "amount": 22, "type": "expense", "date": "2026-07-10T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" },
+        { "amount": 33, "type": "expense", "date": "2026-07-10T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c2", "category_id": "cat-a" },
+        { "amount": 44, "type": "expense", "date": "2026-07-26T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c2", "category_id": "cat-a" }
+      ],
+      "expected": 44
+    },
+    {
+      "name": "a virada de ano: a compra de dezembro fecha em janeiro",
+      "category_id": "cat-a",
+      "ym": "2027-01",
+      "cards": { "c1": 15 },
+      "rows": [
+        { "amount": 70, "type": "expense", "date": "2026-12-20T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" },
+        { "amount": 5, "type": "expense", "date": "2026-12-15T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" },
+        { "amount": 30, "type": "expense", "date": "2027-01-10T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" }
+      ],
+      "expected": 100
+    },
+    {
+      "name": "o cartão sem fechamento conhecido conta pelo dia",
+      "category_id": "cat-a",
+      "ym": "2026-03",
+      "cards": {},
+      "rows": [
+        { "amount": 15, "type": "expense", "date": "2026-03-20T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c9", "category_id": "cat-a" }
+      ],
+      "expected": 15
+    },
+    {
+      "name": "a soma em centavos",
+      "category_id": "cat-a",
+      "ym": "2026-08",
+      "cards": {},
+      "rows": [
+        { "amount": "0.10", "type": "expense", "date": "2026-08-01T12:00:00.000Z", "payment_method": "pix", "payment_credit_card_id": null, "category_id": "cat-a" },
+        { "amount": "0.20", "type": "expense", "date": "2026-08-02T12:00:00.000Z", "payment_method": "pix", "payment_credit_card_id": null, "category_id": "cat-a" }
+      ],
+      "expected": 0.3
+    }
+  ]
+}

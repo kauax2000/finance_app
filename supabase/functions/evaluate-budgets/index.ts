@@ -3,6 +3,15 @@ import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { isServiceAuthorized } from '../_shared/service-auth.ts'
 import { deliverNotification } from '../_shared/deliver-notification.ts'
 import { budgetCopy, monthNamePt } from '../_shared/notification-copy.ts'
+import {
+  addCalendarDays,
+  type CardTxRow,
+  daysInMonth,
+  formatYmd,
+  isoPrefixYmd,
+  statementCloseYmdForPurchaseYmd,
+} from '../_shared/credit-card-cycle.ts'
+import { gastoDaCategoriaNoMes } from '../_shared/orcamento-mes.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -41,9 +50,25 @@ function pct(spend: number, amount: number): number {
   return (spend / amount) * 100
 }
 
-function fail(context: string, error: unknown): Response {
+type Result = { status: number; payload: Record<string, unknown> }
+
+function failResult(context: string, error: unknown): Result {
   console.error(`evaluate-budgets: ${context}`, error)
-  return json(500, { error: 'Erro ao avaliar orçamento.' })
+  return { status: 500, payload: { error: 'Erro ao avaliar orçamento.' } }
+}
+
+function fail(context: string, error: unknown): Response {
+  const r = failResult(context, error)
+  return json(r.status, r.payload)
+}
+
+/** Do primeiro dia do mês anterior ao último do seguinte: a folga da compra no cartão. */
+function margemDoMes(ym: string): { start: string; end: string } {
+  const [y, m] = ym.split('-').map(Number)
+  const start = { ...addCalendarDays({ y, m, d: 1 }, -1), d: 1 }
+  const ny = m === 12 ? y + 1 : y
+  const nm = m === 12 ? 1 : m + 1
+  return { start: formatYmd(start), end: formatYmd({ y: ny, m: nm, d: daysInMonth(ny, nm) }) }
 }
 
 Deno.serve(async (req: Request) => {
@@ -112,149 +137,187 @@ Deno.serve(async (req: Request) => {
 
   // Datas de lançamento ficam ao meio-dia UTC: o prefixo ISO é o dia do lançamento.
   const day = occurredAt.toISOString().slice(0, 10)
-  const { data: budget, error: bErr } = await supabaseAdmin
+  const purchase = isoPrefixYmd(day)!
+
+  const { data: cardRows, error: cardsErr } = await supabaseAdmin
+    .from('credit_cards')
+    .select('id,closing_day')
+    .eq('workspace_id', workspaceId)
+  if (cardsErr) return fail('cartões', cardsErr)
+  const closingDayByCard: Record<string, number> = {}
+  for (const c of (cardRows ?? []) as { id: string; closing_day: number }[]) {
+    closingDayByCard[c.id] = c.closing_day
+  }
+
+  // O orçamento é competência: a compra no cartão conta no mês do fechamento.
+  // O corpo não diz o cartão, então os dias candidatos são o da compra (fora do
+  // cartão) e o fechamento dela em cada cartão da carteira; cada orçamento
+  // atingido é avaliado com a soma do mês dele.
+  const candidateDays = [
+    ...new Set([
+      day,
+      ...Object.values(closingDayByCard).map((cd) => formatYmd(statementCloseYmdForPurchaseYmd(purchase, cd))),
+    ]),
+  ].sort()
+
+  const { data: budgetRows, error: bErr } = await supabaseAdmin
     .from('budgets')
     .select('*')
     .eq('workspace_id', workspaceId)
     .eq('category_id', categoryId)
-    .lte('period_start', day)
-    .gte('period_end', day)
+    .lte('period_start', candidateDays[candidateDays.length - 1])
+    .gte('period_end', candidateDays[0])
     .order('period_start', { ascending: false })
-    .limit(1)
-    .maybeSingle()
   if (bErr) return fail('orçamento', bErr)
-  if (!budget) return json(200, { ok: true, skipped: true, reason: 'no_budget' })
+  // Por dia, o orçamento mais recente que o contém (o `limit(1)` de antes).
+  const budgets = new Map<string, BudgetRow>()
+  for (const d of candidateDays) {
+    const hit = ((budgetRows ?? []) as BudgetRow[]).find((r) => r.period_start <= d && r.period_end >= d)
+    if (hit) budgets.set(hit.id, hit)
+  }
+  if (budgets.size === 0) return json(200, { ok: true, skipped: true, reason: 'no_budget' })
 
-  const b = budget as BudgetRow
-
-  const { data: sumRows, error: sumErr } = await supabaseAdmin
+  const months = [...budgets.values()].map((b) => b.period_start.slice(0, 7)).sort()
+  const win = { start: margemDoMes(months[0]).start, end: margemDoMes(months[months.length - 1]).end }
+  // Só despesa, como a tela de Categorias, que lê `type = 'expense'`.
+  const { data: txRows, error: sumErr } = await supabaseAdmin
     .from('transactions')
-    .select('amount')
+    .select('amount,type,date,payment_method,payment_credit_card_id,category_id')
     .eq('workspace_id', workspaceId)
     .eq('category_id', categoryId)
     .eq('type', 'expense')
-    .gte('date', `${b.period_start}T00:00:00.000Z`)
-    .lte('date', `${b.period_end}T23:59:59.999Z`)
+    .gte('date', `${win.start}T00:00:00.000Z`)
+    .lte('date', `${win.end}T23:59:59.999Z`)
   if (sumErr) return fail('soma', sumErr)
 
-  const budgetAmount = Number(b.amount)
-  // Em centavos: somar reais em ponto flutuante erra na segunda casa.
-  const spend =
-    (sumRows ?? []).reduce(
-      (acc: number, r: { amount: number }) => acc + Math.round(Number(r.amount || 0) * 100),
-      0,
-    ) / 100
-  const percent = pct(spend, budgetAmount)
-  const hitOver = spend > budgetAmount
-  const hit100 = spend >= budgetAmount && !hitOver
-  const hit80 = spend >= budgetAmount * 0.8 && spend < budgetAmount
+  const evaluateBudget = async (b: BudgetRow, spend: number): Promise<Result> => {
+    const budgetAmount = Number(b.amount)
+    const percent = pct(spend, budgetAmount)
+    const hitOver = spend > budgetAmount
+    const hit100 = spend >= budgetAmount && !hitOver
+    const hit80 = spend >= budgetAmount * 0.8 && spend < budgetAmount
 
-  // O mês do orçamento, e não o de hoje: um lançamento retroativo fala do mês dele.
-  const yearMonth = b.period_start.slice(0, 7)
-  const mes = monthNamePt(Number(yearMonth.slice(5, 7)))
-  const copy = (nivel: '80' | '100' | 'over') =>
-    budgetCopy({ categoria: categoryName, mes, gasto: spend, limite: budgetAmount, nivel })
+    // O mês do orçamento, e não o de hoje: um lançamento retroativo fala do mês dele.
+    const yearMonth = b.period_start.slice(0, 7)
+    const mes = monthNamePt(Number(yearMonth.slice(5, 7)))
+    const copy = (nivel: '80' | '100' | 'over') =>
+      budgetCopy({ categoria: categoryName, mes, gasto: spend, limite: budgetAmount, nivel })
 
-  const thresholds: Array<{ key: ThresholdKey; hit: boolean; title: string; body: string }> = [
-    { key: 'threshold_80_sent_at', hit: hit80, ...copy('80') },
-    { key: 'threshold_100_sent_at', hit: hit100, ...copy('100') },
-    { key: 'threshold_over_sent_at', hit: hitOver, ...copy('over') },
-  ]
+    const thresholds: Array<{ key: ThresholdKey; hit: boolean; title: string; body: string }> = [
+      { key: 'threshold_80_sent_at', hit: hit80, ...copy('80') },
+      { key: 'threshold_100_sent_at', hit: hit100, ...copy('100') },
+      { key: 'threshold_over_sent_at', hit: hitOver, ...copy('over') },
+    ]
 
-  // O limiar mais severo atingido e ainda não enviado.
-  let chosen: (typeof thresholds)[number] | null = null
-  for (const t of thresholds.slice().reverse()) {
-    if (t.hit && !b[t.key]) {
-      chosen = t
-      break
-    }
-  }
-  if (!chosen) {
-    return json(200, { ok: true, skipped: true, reason: 'no_new_threshold', percent })
-  }
-
-  // Reivindicação condicional: duas avaliações em paralelo não enviam o mesmo limiar.
-  const nowIso = new Date().toISOString()
-  const { data: claimed, error: upErr } = await supabaseAdmin
-    .from('budgets')
-    .update({ [chosen.key]: nowIso })
-    .eq('id', b.id)
-    .is(chosen.key, null)
-    .select('id')
-    .maybeSingle()
-  if (upErr) return fail('reivindicação', upErr)
-  if (!claimed) {
-    return json(200, { ok: true, skipped: true, reason: 'threshold_already_sent', percent })
-  }
-
-  const releaseClaim = () =>
-    supabaseAdmin.from('budgets').update({ [chosen!.key]: null }).eq('id', b.id).eq(chosen!.key, nowIso)
-
-  // Todos os membros recebem; cada um com as próprias preferências, que
-  // deliverNotification confere (notify_budget).
-  const { data: memberRows, error: membersErr } = await supabaseAdmin
-    .from('workspace_members')
-    .select('user_id')
-    .eq('workspace_id', workspaceId)
-  if (membersErr) {
-    await releaseClaim()
-    return fail('membros', membersErr)
-  }
-  const memberIds = (memberRows ?? []).map((m: { user_id: string }) => m.user_id)
-
-  const emails = new Map<string, string | null>()
-  if (memberIds.length > 0) {
-    const { data: profileRows } = await supabaseAdmin
-      .from('profiles')
-      .select('id,email')
-      .in('id', memberIds)
-    for (const p of profileRows ?? []) {
-      emails.set(p.id as string, (p.email as string | null) ?? null)
-    }
-  }
-
-  const metadata = {
-    kind: 'budget_threshold',
-    percent,
-    budget_id: b.id,
-    category_id: categoryId,
-    threshold: chosen.key,
-    // A tela da categoria lê `month` (parseYearMonthParam) e abre no mês do orçamento.
-    href: `/categories/${categoryId}?month=${yearMonth}`,
-  }
-
-  let anyDelivered = false
-  const results: Array<Record<string, unknown>> = []
-  for (const memberId of memberIds) {
-    try {
-      const r = await deliverNotification({
-        supabaseAdmin,
-        userId: memberId,
-        userEmail: emails.get(memberId) ?? null,
-        workspaceId,
-        type: 'budget',
-        title: chosen.title,
-        body: chosen.body,
-        metadata,
-      })
-      if (r.ok) {
-        anyDelivered = true
-        results.push({ user_id: memberId, in_app: r.in_app, email: r.email, push: r.push })
-      } else {
-        console.error('evaluate-budgets: entrega', memberId, r.error)
-        results.push({ user_id: memberId, error: 'delivery_failed' })
+    // O limiar mais severo atingido e ainda não enviado.
+    let chosen: (typeof thresholds)[number] | null = null
+    for (const t of thresholds.slice().reverse()) {
+      if (t.hit && !b[t.key]) {
+        chosen = t
+        break
       }
-    } catch (e) {
-      console.error('evaluate-budgets: entrega', memberId, e)
-      results.push({ user_id: memberId, error: 'delivery_failed' })
     }
+    if (!chosen) {
+      return { status: 200, payload: { ok: true, skipped: true, reason: 'no_new_threshold', percent } }
+    }
+
+    // Reivindicação condicional: duas avaliações em paralelo não enviam o mesmo limiar.
+    const nowIso = new Date().toISOString()
+    const { data: claimed, error: upErr } = await supabaseAdmin
+      .from('budgets')
+      .update({ [chosen.key]: nowIso })
+      .eq('id', b.id)
+      .is(chosen.key, null)
+      .select('id')
+      .maybeSingle()
+    if (upErr) return failResult('reivindicação', upErr)
+    if (!claimed) {
+      return { status: 200, payload: { ok: true, skipped: true, reason: 'threshold_already_sent', percent } }
+    }
+
+    const releaseClaim = () =>
+      supabaseAdmin.from('budgets').update({ [chosen!.key]: null }).eq('id', b.id).eq(chosen!.key, nowIso)
+
+    // Todos os membros recebem; cada um com as próprias preferências, que
+    // deliverNotification confere (notify_budget).
+    const { data: memberRows, error: membersErr } = await supabaseAdmin
+      .from('workspace_members')
+      .select('user_id')
+      .eq('workspace_id', workspaceId)
+    if (membersErr) {
+      await releaseClaim()
+      return failResult('membros', membersErr)
+    }
+    const memberIds = (memberRows ?? []).map((m: { user_id: string }) => m.user_id)
+
+    const emails = new Map<string, string | null>()
+    if (memberIds.length > 0) {
+      const { data: profileRows } = await supabaseAdmin
+        .from('profiles')
+        .select('id,email')
+        .in('id', memberIds)
+      for (const p of profileRows ?? []) {
+        emails.set(p.id as string, (p.email as string | null) ?? null)
+      }
+    }
+
+    const metadata = {
+      kind: 'budget_threshold',
+      percent,
+      budget_id: b.id,
+      category_id: categoryId,
+      threshold: chosen.key,
+      // A tela da categoria lê `month` (parseYearMonthParam) e abre no mês do orçamento.
+      href: `/categories/${categoryId}?month=${yearMonth}`,
+    }
+
+    let anyDelivered = false
+    const deliveries: Array<Record<string, unknown>> = []
+    for (const memberId of memberIds) {
+      try {
+        const r = await deliverNotification({
+          supabaseAdmin,
+          userId: memberId,
+          userEmail: emails.get(memberId) ?? null,
+          workspaceId,
+          type: 'budget',
+          title: chosen.title,
+          body: chosen.body,
+          metadata,
+        })
+        if (r.ok) {
+          anyDelivered = true
+          deliveries.push({ user_id: memberId, in_app: r.in_app, email: r.email, push: r.push })
+        } else {
+          console.error('evaluate-budgets: entrega', memberId, r.error)
+          deliveries.push({ user_id: memberId, error: 'delivery_failed' })
+        }
+      } catch (e) {
+        console.error('evaluate-budgets: entrega', memberId, e)
+        deliveries.push({ user_id: memberId, error: 'delivery_failed' })
+      }
+    }
+
+    // Ninguém recebeu: libera o limiar para uma próxima avaliação tentar de novo.
+    if (!anyDelivered) {
+      await releaseClaim()
+      return { status: 500, payload: { error: 'Erro ao entregar o alerta de orçamento.', percent } }
+    }
+
+    return { status: 200, payload: { ok: true, percent, results: deliveries } }
   }
 
-  // Ninguém recebeu: libera o limiar para uma próxima avaliação tentar de novo.
-  if (!anyDelivered) {
-    await releaseClaim()
-    return json(500, { error: 'Erro ao entregar o alerta de orçamento.', percent })
+  const results: Result[] = []
+  for (const b of budgets.values()) {
+    const spend = gastoDaCategoriaNoMes(
+      (txRows ?? []) as CardTxRow[],
+      categoryId,
+      b.period_start.slice(0, 7),
+      closingDayByCard
+    )
+    results.push(await evaluateBudget(b, spend))
   }
-
-  return json(200, { ok: true, percent, results })
+  if (results.length === 1) return json(results[0].status, results[0].payload)
+  const failed = results.some((r) => r.status !== 200)
+  return json(failed ? 500 : 200, { ok: !failed, budgets: results.map((r) => r.payload) })
 })
