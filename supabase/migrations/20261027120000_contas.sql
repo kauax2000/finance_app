@@ -10,12 +10,16 @@
 alter table public.bills
   add column if not exists valor_variavel boolean not null default false;
 
--- Roda quando a instância vira paga. Paga sem `paid_amount` não entra; sem
--- nenhuma com valor, o `amount_estimated` digitado fica (o `coalesce`).
+-- Roda sempre que uma paga entra ou sai do conjunto (pagar, reabrir ao apagar
+-- o lançamento) ou muda de valor (`acompanhar_valor_pago`). Paga sem
+-- `paid_amount` não entra; sem nenhuma com valor, o `amount_estimated` atual
+-- fica (o `coalesce`).
 -- `security definer`: a média lê as instâncias e grava a conta sem depender
--- da RLS de quem paga.
--- ponytail: só recalcula ao pagar; editar o valor ou reabrir uma paga deixa a
--- média até o próximo pagamento.
+-- da RLS de quem paga. Por isso a leitura e a escrita ficam presas à carteira
+-- da instância, e o `same_ws_bill_id` abaixo impede a instância de apontar
+-- para a conta de outra carteira.
+-- ponytail: reabrir a única paga mantém a última média (não volta ao valor
+-- digitado, que não é guardado à parte).
 create or replace function public.media_da_conta()
 returns trigger
 language plpgsql
@@ -30,6 +34,7 @@ begin
       select i.paid_amount
       from public.bill_instances i
       where i.bill_id = new.bill_id
+        and i.workspace_id = new.workspace_id
         and i.status = 'paid'
         and i.paid_amount is not null
       order by i.due_date desc
@@ -37,16 +42,26 @@ begin
     ) u
   ), b.amount_estimated)
   where b.id = new.bill_id
+    and b.workspace_id = new.workspace_id
     and b.valor_variavel;
   return null;
 end;
 $$;
 
 drop trigger if exists media_da_conta on public.bill_instances;
-create trigger media_da_conta after update of status on public.bill_instances
+create trigger media_da_conta after update of status, paid_amount on public.bill_instances
   for each row
-  when (new.status = 'paid' and old.status <> 'paid')
+  when (old.status = 'paid' or new.status = 'paid')
   execute function public.media_da_conta();
+
+-- A instância é da carteira da conta. O `assert_same_workspace_ref`
+-- (20260915100000) já guarda o cartão dela; faltava a conta. Só roda
+-- quando `bill_id` ou `workspace_id` é escrito: as linhas de hoje e os
+-- updates de status do front de `main` não passam por aqui.
+drop trigger if exists same_ws_bill_id on public.bill_instances;
+create trigger same_ws_bill_id
+  before insert or update of bill_id, workspace_id on public.bill_instances
+  for each row execute function public.assert_same_workspace_ref('bill_id', 'bills');
 
 -- 2. pular é atômico ----------------------------------------------------------
 -- Como o `pay_bill_instance`: a instância é reivindicada com
@@ -167,7 +182,8 @@ begin
       paid_amount = null,
       amount = null,
       transaction_id = null
-  where transaction_id = old.id;
+  where transaction_id = old.id
+    and workspace_id = old.workspace_id;
   return old;
 end;
 $$;
@@ -188,6 +204,7 @@ begin
   set paid_amount = new.amount,
       amount = new.amount
   where transaction_id = new.id
+    and workspace_id = new.workspace_id
     and status = 'paid';
   return null;
 end;

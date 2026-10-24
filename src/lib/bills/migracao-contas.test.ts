@@ -21,17 +21,30 @@ describe("migração contas", () => {
         )
     })
 
-    it("media_da_conta: média das 3 últimas pagas com valor, a centavo, só quando vira paga", () => {
+    it("media_da_conta: média das 3 últimas pagas com valor, a centavo, dentro da carteira", () => {
         const fn = funcao("media_da_conta")
         expect(fn).toMatch(/returns trigger/)
         expect(fn).toMatch(/set search_path = ''/)
         expect(fn).toMatch(/update public\.bills b\s+set amount_estimated = coalesce\(/)
         expect(fn).toMatch(/round\(avg\(u\.paid_amount\), 2\)/)
-        expect(fn).toMatch(/i\.status = 'paid'\s+and i\.paid_amount is not null/)
+        expect(fn).toMatch(
+            /where i\.bill_id = new\.bill_id\s+and i\.workspace_id = new\.workspace_id\s+and i\.status = 'paid'\s+and i\.paid_amount is not null/,
+        )
         expect(fn).toMatch(/order by i\.due_date desc\s+limit 3/)
-        expect(fn).toMatch(/b\.valor_variavel/)
+        // Sem paga com valor, o estimado atual fica: nunca vira nulo.
+        expect(fn).toMatch(/\), b\.amount_estimated\)/)
+        expect(fn).toMatch(/where b\.id = new\.bill_id\s+and b\.workspace_id = new\.workspace_id\s+and b\.valor_variavel;/)
+    })
+
+    it("a média recalcula quando uma paga entra, sai ou muda de valor", () => {
         expect(sql).toMatch(
-            /create trigger media_da_conta after update of status on public\.bill_instances\s+for each row\s+when \(new\.status = 'paid' and old\.status <> 'paid'\)\s+execute function public\.media_da_conta\(\);/,
+            /create trigger media_da_conta after update of status, paid_amount on public\.bill_instances\s+for each row\s+when \(old\.status = 'paid' or new\.status = 'paid'\)\s+execute function public\.media_da_conta\(\);/,
+        )
+    })
+
+    it("a instância só aponta para conta da própria carteira", () => {
+        expect(sql).toMatch(
+            /create trigger same_ws_bill_id\s+before insert or update of bill_id, workspace_id on public\.bill_instances\s+for each row execute function public\.assert_same_workspace_ref\('bill_id', 'bills'\);/,
         )
     })
 
@@ -94,7 +107,7 @@ describe("migração contas", () => {
         expect(fn).toMatch(/returns trigger/)
         expect(fn).toMatch(/security definer\s+set search_path = ''/)
         expect(fn).toMatch(
-            /update public\.bill_instances\s+set status = 'pending',\s+paid_at = null,\s+paid_amount = null,\s+amount = null,\s+transaction_id = null\s+where transaction_id = old\.id;/,
+            /update public\.bill_instances\s+set status = 'pending',\s+paid_at = null,\s+paid_amount = null,\s+amount = null,\s+transaction_id = null\s+where transaction_id = old\.id\s+and workspace_id = old\.workspace_id;/,
         )
         expect(fn).toMatch(/return old;/)
         expect(sql).toMatch(
@@ -106,7 +119,7 @@ describe("migração contas", () => {
         const fn = funcao("acompanhar_valor_pago")
         expect(fn).toMatch(/returns trigger/)
         expect(fn).toMatch(
-            /update public\.bill_instances\s+set paid_amount = new\.amount,\s+amount = new\.amount\s+where transaction_id = new\.id\s+and status = 'paid';/,
+            /update public\.bill_instances\s+set paid_amount = new\.amount,\s+amount = new\.amount\s+where transaction_id = new\.id\s+and workspace_id = new\.workspace_id\s+and status = 'paid';/,
         )
         expect(sql).toMatch(
             /create trigger acompanhar_valor_pago after update of amount on public\.transactions\s+for each row\s+when \(new\.amount is distinct from old\.amount\)\s+execute function public\.acompanhar_valor_pago\(\);/,
