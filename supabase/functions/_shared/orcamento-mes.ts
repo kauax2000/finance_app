@@ -31,3 +31,31 @@ export function gastoDaCategoriaNoMes(
   }
   return cents / 100
 }
+
+export type PagamentoDaCompra = { payment_method: string | null; payment_credit_card_id: string | null }
+
+/**
+ * Os dias que decidem o mês do orçamento da compra (o orçamento que contém o dia).
+ * Com o pagamento no corpo há um dia só: o fechamento da compra no cartão dela, ou
+ * o próprio dia fora do cartão (e no cartão que a carteira não tem). Sem ele, o
+ * dia da compra e o fechamento dela em cada cartão da carteira.
+ */
+export function diasCandidatos(
+  dia: string,
+  closingDayByCard: Record<string, number>,
+  pagamento?: PagamentoDaCompra
+): string[] {
+  const compra = isoPrefixYmd(dia)
+  if (!compra) return [dia]
+  const fechamento = (cd: number) => formatYmd(statementCloseYmdForPurchaseYmd(compra, cd))
+  if (pagamento) {
+    const cd =
+      pagamento.payment_method === 'credit_card' && pagamento.payment_credit_card_id
+        ? closingDayByCard[pagamento.payment_credit_card_id]
+        : undefined
+    return [cd == null ? dia : fechamento(cd)]
+  }
+  // ponytail: o front antigo de `main` não manda o cartão, então vale todo cartão
+  // da carteira (um Pix pode avaliar o mês seguinte). Sai quando o 2.0 for a `main`.
+  return [...new Set([dia, ...Object.values(closingDayByCard).map(fechamento)])].sort()
+}

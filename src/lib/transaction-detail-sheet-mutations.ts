@@ -84,6 +84,8 @@ export async function persistTransactionSave(options: {
                 body: {
                     category_id: payload.categoryId,
                     occurred_at: payload.dateIso,
+                    payment_method: payload.paymentMethod,
+                    payment_credit_card_id: payload.paymentCreditCardId,
                 },
             }).catch(() => {
                 /* non-blocking */
@@ -103,6 +105,8 @@ export async function persistTransactionSave(options: {
                 body: {
                     category_id: payload.categoryId,
                     occurred_at: payload.dateIso,
+                    payment_method: payload.paymentMethod,
+                    payment_credit_card_id: payload.paymentCreditCardId,
                 },
             }).catch(() => {
                 /* non-blocking */

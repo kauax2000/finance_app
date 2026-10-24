@@ -79,10 +79,10 @@
       "rows": [
         { "amount": 11, "type": "expense", "date": "2026-07-03T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" },
         { "amount": 22, "type": "expense", "date": "2026-07-10T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" },
-        { "amount": 33, "type": "expense", "date": "2026-07-10T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c2", "category_id": "cat-a" },
+        { "amount": 35, "type": "expense", "date": "2026-07-10T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c2", "category_id": "cat-a" },
         { "amount": 44, "type": "expense", "date": "2026-07-26T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c2", "category_id": "cat-a" }
       ],
-      "expected": 44
+      "expected": 46
     },
     {
       "name": "a virada de ano: a compra de dezembro fecha em janeiro",

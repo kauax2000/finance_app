@@ -70,6 +70,8 @@ export async function persistInstallmentPlanCreate(options: {
         body: {
             category_id: payload.categoryId,
             occurred_at: `${payload.firstBillingYmd}T12:00:00.000Z`,
+            payment_method: payload.paymentMethod,
+            payment_credit_card_id: payload.paymentCreditCardId,
         },
     }).catch(() => {
         /* non-blocking */

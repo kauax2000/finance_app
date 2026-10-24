@@ -8,10 +8,8 @@ import {
   type CardTxRow,
   daysInMonth,
   formatYmd,
-  isoPrefixYmd,
-  statementCloseYmdForPurchaseYmd,
 } from '../_shared/credit-card-cycle.ts'
-import { gastoDaCategoriaNoMes } from '../_shared/orcamento-mes.ts'
+import { diasCandidatos, gastoDaCategoriaNoMes } from '../_shared/orcamento-mes.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -29,6 +27,9 @@ function json(status: number, payload: unknown): Response {
 type Body = {
   category_id: string | null
   occurred_at: string
+  // O front 2.0 e o `capture` mandam o pagamento; o front antigo de `main`, não.
+  payment_method?: string | null
+  payment_credit_card_id?: string | null
 }
 
 type BudgetRow = {
@@ -137,7 +138,6 @@ Deno.serve(async (req: Request) => {
 
   // Datas de lançamento ficam ao meio-dia UTC: o prefixo ISO é o dia do lançamento.
   const day = occurredAt.toISOString().slice(0, 10)
-  const purchase = isoPrefixYmd(day)!
 
   const { data: cardRows, error: cardsErr } = await supabaseAdmin
     .from('credit_cards')
@@ -150,15 +150,12 @@ Deno.serve(async (req: Request) => {
   }
 
   // O orçamento é competência: a compra no cartão conta no mês do fechamento.
-  // O corpo não diz o cartão, então os dias candidatos são o da compra (fora do
-  // cartão) e o fechamento dela em cada cartão da carteira; cada orçamento
-  // atingido é avaliado com a soma do mês dele.
-  const candidateDays = [
-    ...new Set([
-      day,
-      ...Object.values(closingDayByCard).map((cd) => formatYmd(statementCloseYmdForPurchaseYmd(purchase, cd))),
-    ]),
-  ].sort()
+  // Com o pagamento no corpo há um dia candidato só (ver `diasCandidatos`).
+  const pagamento =
+    'payment_method' in body
+      ? { payment_method: body.payment_method ?? null, payment_credit_card_id: body.payment_credit_card_id ?? null }
+      : undefined
+  const candidateDays = diasCandidatos(day, closingDayByCard, pagamento)
 
   const { data: budgetRows, error: bErr } = await supabaseAdmin
     .from('budgets')

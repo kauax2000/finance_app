@@ -376,7 +376,12 @@ Deno.serve(async (req: Request) => {
         .catch((e) => console.error(`capture: ${fn}`, e))
     const chamadas: Promise<void>[] = []
     if (linha.category_id) {
-      chamadas.push(avaliar('evaluate-budgets', { category_id: linha.category_id, occurred_at: linha.date }))
+      chamadas.push(avaliar('evaluate-budgets', {
+          category_id: linha.category_id,
+          occurred_at: linha.date,
+          payment_method: linha.payment_method,
+          payment_credit_card_id: linha.payment_credit_card_id,
+        }))
     }
     if (linha.payment_credit_card_id) {
       chamadas.push(

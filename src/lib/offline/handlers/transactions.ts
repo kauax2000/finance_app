@@ -64,7 +64,12 @@ export async function syncTransactionMutation(
     if (inserted?.type === "expense") {
         const dateIso = String(row.date ?? "")
         void invokeEdgeJson("evaluate-budgets", {
-            body: { category_id: row.category_id ?? null, occurred_at: dateIso },
+            body: {
+                category_id: row.category_id ?? null,
+                occurred_at: dateIso,
+                payment_method: (row.payment_method as TransactionPaymentMethod | null) ?? null,
+                payment_credit_card_id: (row.payment_credit_card_id as string | null) ?? null,
+            },
         }).catch(() => {})
         scheduleEvaluateCreditCardAlerts({
             workspaceId: mutation.workspaceId,

@@ -42,6 +42,8 @@ function fireBudgetAndCcAlerts(
         body: {
             category_id: payload.categoryId,
             occurred_at: dateIso,
+            payment_method: payload.paymentMethod,
+            payment_credit_card_id: payload.paymentCreditCardId,
         },
     }).catch(() => {})
     scheduleEvaluateCreditCardAlerts({

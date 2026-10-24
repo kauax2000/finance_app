@@ -18,6 +18,32 @@ describe("quem dispara notificação no cliente", () => {
         expect(f.split('"evaluate-budgets"').length - 1).toBeGreaterThanOrEqual(2)
     })
 
+    // O orçamento conta a compra no cartão pelo mês do fechamento: sem o cartão
+    // no corpo, a Edge avalia o mês de todo cartão da carteira.
+    it.each([
+        ["src/components/transactions/transaction-form-persistence.ts", 1],
+        ["src/lib/transaction-detail-sheet-mutations.ts", 2],
+        ["src/lib/bills/pay-bill-flow.ts", 1],
+        ["src/lib/offline/handlers/transactions.ts", 1],
+        ["supabase/functions/capture/index.ts", 1],
+    ])("%s manda o cartão da compra ao evaluate-budgets", (caminho, chamadas) => {
+        const partes = fonte(caminho).split(/["']evaluate-budgets["']/).slice(1)
+        expect(partes).toHaveLength(chamadas)
+        for (const p of partes) {
+            const corpo = p.slice(0, p.indexOf("})"))
+            expect(corpo).toContain("payment_method:")
+            expect(corpo).toContain("payment_credit_card_id:")
+        }
+    })
+
+    it("evaluate-budgets: com o pagamento no corpo, um dia candidato só", () => {
+        const f = fonte("supabase/functions/evaluate-budgets/index.ts")
+        expect(f).toContain("'payment_method' in body")
+        expect(f).toContain("diasCandidatos(day, closingDayByCard, pagamento)")
+        const helper = fonte("supabase/functions/_shared/orcamento-mes.ts")
+        expect(helper).toMatch(/if \(pagamento\) \{[\s\S]*?return \[cd == null \? dia : fechamento\(cd\)\]/)
+    })
+
     it("a compra parcelada avalia os alertas do cartão", () => {
         expect(fonte("src/components/transactions/transaction-form-persistence.ts")).toContain(
             "scheduleEvaluateCreditCardAlerts(",
