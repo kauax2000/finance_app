@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState, startTransition } from "react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
@@ -39,7 +39,7 @@ import {
 import { userFacingFetchError } from "@/lib/supabase-errors"
 import { isPostgrestTransientNetworkError } from "@/lib/transient-network-retry"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
-import { fetchPendingBillInstancesForDashboard } from "@/lib/queries/fetch-bills-dashboard"
+import { usePendingBillsDashboardQuery } from "@/lib/queries/fetch-bills-dashboard"
 import { useCategoriesQuery } from "@/lib/queries/use-categories"
 import { useCreditCardExpenseRowsQuery } from "@/lib/queries/use-credit-card-expense-rows"
 import { useCreditCardsQuery } from "@/lib/queries/use-credit-cards"
@@ -288,17 +288,10 @@ export function useDashboardData() {
 
     useRecurringBillingCatchup(currentWorkspaceId, queriesEnabled)
 
-    const pendingBillsDashboardQuery = useQuery({
-        queryKey: ["dashboardPendingBills", currentWorkspaceId],
-        queryFn: async () => {
-            const { rows } = await fetchPendingBillInstancesForDashboard(
-                currentWorkspaceId!,
-            )
-            return rows
-        },
-        enabled: queriesEnabled && Boolean(currentWorkspaceId),
-        staleTime: 45_000,
-    })
+    const pendingBillsDashboardQuery = usePendingBillsDashboardQuery(
+        currentWorkspaceId,
+        queriesEnabled,
+    )
 
     const categories = categoriesQuery.data ?? []
     const txRowsRaw = txQuery.data ?? []

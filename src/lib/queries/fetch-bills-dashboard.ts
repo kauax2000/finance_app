@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query"
 import { supabase, type BillInstance } from "@/lib/supabase"
 import type { BillRowWithCategory } from "@/lib/queries/fetch-bills-page-bundle"
 import {
@@ -84,4 +85,17 @@ export async function fetchPendingBillInstancesForDashboard(
         })
 
     return { rows, error: null }
+}
+
+/** As pendentes do Painel; a previsão lê o mesmo cache. */
+export function usePendingBillsDashboardQuery(workspaceId: string | null, enabled = true) {
+    return useQuery({
+        queryKey: ["dashboardPendingBills", workspaceId],
+        queryFn: async () => {
+            const { rows } = await fetchPendingBillInstancesForDashboard(workspaceId!)
+            return rows
+        },
+        enabled: enabled && Boolean(workspaceId),
+        staleTime: 45_000,
+    })
 }

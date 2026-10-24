@@ -263,3 +263,61 @@ describe("Cofre aberto (Bloco 4)", () => {
     expect(f).toContain("ROUTES.PILOTO")
   })
 })
+
+describe("Previsão (Bloco 5)", () => {
+  const regime = "Caixa: o dinheiro que sai neste mês. A fatura conta no mês em que vence."
+
+  async function seguroDeTeste(over: Parameters<typeof import("@/lib/previsao/dados-de-teste").dados>[0]) {
+    const { dados } = await import("@/lib/previsao/dados-de-teste")
+    const { seguroParaGastar } = await import("@/lib/previsao/fluxo")
+    return seguroParaGastar(dados(over))
+  }
+
+  it("compacto: o número, o por dia, o regime e o link para /previsao", async () => {
+    const { createElement } = await import("react")
+    const { ROUTES } = await import("@/config/navigation")
+    const { SeguroParaGastarWireframe } = await import("./seguro-para-gastar-wireframe")
+    const seguro = await seguroDeTeste({ hojeYmd: "2026-10-24" })
+    const html = renderToStaticMarkup(createElement(SeguroParaGastarWireframe, { seguro, compacto: true }))
+    expect(html).toContain("WIREFRAME · Bloco 5 · Seguro para gastar")
+    expect(html).toContain(regime)
+    expect(html).toContain("por dia")
+    expect(html).toContain(`href="${ROUTES.PREVISAO}"`)
+    expect(ROUTES.PREVISAO).toBe("/previsao")
+    expect(html).not.toContain("Reserva do mês")
+  })
+
+  it("detalhe: decomposição, comprometido, contas sem valor e a reserva", async () => {
+    const { createElement } = await import("react")
+    const { SeguroParaGastarWireframe } = await import("./seguro-para-gastar-wireframe")
+    const seguro = { ...(await seguroDeTeste({ hojeYmd: "2026-10-24" })), contasSemValor: ["Luz"] }
+    const html = renderToStaticMarkup(createElement(SeguroParaGastarWireframe, { seguro }))
+    expect(html).toContain(regime)
+    expect(html).toContain("Já comprometido na próxima fatura:")
+    expect(html).toContain("Contas sem valor: Luz")
+    expect(html).toContain("Reserva do mês")
+  })
+
+  it("linha do tempo: entra, sai, sobra e o primeiro mês no vermelho", async () => {
+    const { createElement } = await import("react")
+    const { dados, tx } = await import("@/lib/previsao/dados-de-teste")
+    const { projecaoMensal } = await import("@/lib/previsao/fluxo")
+    const { LinhaDoTempoWireframe } = await import("./linha-do-tempo-wireframe")
+    const projecao = projecaoMensal(dados({ hojeYmd: "2026-10-24", transacoes: [tx("expense", 50, "2026-11-10")] }))
+    expect(projecao.primeiroMesNegativo).toBe("2026-11")
+    const html = renderToStaticMarkup(createElement(LinhaDoTempoWireframe, { projecao }))
+    expect(html).toContain("WIREFRAME · Bloco 5 · Linha do tempo")
+    expect(html.match(/Primeiro mês no vermelho/g)).toHaveLength(1)
+    for (const t of ["Entra", "Sai", "Sobra", "Fim de"]) expect(html).toContain(t)
+  })
+
+  it("a rota e o Painel montam os wireframes; a reserva só o dono altera", () => {
+    expect(semComentarios(lerFonte("src/app/(app)/previsao/page.tsx"), "tudo")).toContain("<PrevisaoWireframe />")
+    expect(semComentarios(lerFonte("src/app/(app)/dashboard/page-client.tsx"), "tudo")).toContain("<SeguroDoPainelWireframe")
+    const f = semComentarios(lerFonte("src/components/wireframe/seguro-para-gastar-wireframe.tsx"), "tudo")
+    expect(f).toContain("A previsão é do mês corrente")
+    expect(f).toContain("Só quem é dono da carteira altera a reserva.")
+    expect(f).toContain(".update({ monthly_savings_target:")
+    expect(f).toContain("formatSupabasePostgrestError(")
+  })
+})
