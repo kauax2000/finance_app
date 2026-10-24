@@ -18,3 +18,20 @@ export function withinReminderWindow(diasAte: number, alvo: number): boolean {
 export function overdueDedupeBucket(diasDeAtraso: number): number {
   return Math.floor((diasDeAtraso - 1) / 7)
 }
+
+/**
+ * Conta a vencer: um offset `o` é devido quando `0 <= diasAte <= o`, e só o menor
+ * dos devidos é avisado (um aviso por instância por dia). Se ele já foi avisado,
+ * nada sai — um maior seria um aviso velho. Na Edge, `avisados` é a própria chave
+ * da dedupe (o `sent_on` fixo no vencimento vale entre os dias).
+ */
+export function offsetDaJanela(
+  offsets: readonly number[],
+  diasAte: number,
+  avisados: readonly number[] = [],
+): number | null {
+  const devidos = offsets.filter((o) => diasAte >= 0 && diasAte <= o)
+  if (devidos.length === 0) return null
+  const menor = Math.min(...devidos)
+  return avisados.includes(menor) ? null : menor
+}
