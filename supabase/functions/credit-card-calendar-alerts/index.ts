@@ -25,6 +25,7 @@ import {
   escolherTotal,
   statementTotalKey,
   appTodayYmd,
+  type CardTxRow,
   type OpenWindow,
   type Ymd,
 } from '../_shared/credit-card-cycle.ts'
@@ -92,7 +93,7 @@ type CardRow = {
   is_active: boolean
 }
 
-type InvoiceEvent = 'closed' | 'closing_soon' | 'due_soon' | 'due_today' | 'trending_high'
+type InvoiceEvent = 'closed' | 'closing_soon' | 'due_soon' | 'due_today'
 
 type CalEvent = {
   cardId: string
@@ -102,8 +103,6 @@ type CalEvent = {
   evento: InvoiceEvent
   /** A fatura de que o aviso fala: o valor é a soma dela. */
   win: OpenWindow
-  /** Só na fatura alta: as 3 últimas fechadas, da mais recente para a mais antiga. */
-  fechadas?: OpenWindow[]
   /** Data mostrada no corpo, em dd/mm. */
   data: string
   dias?: number
@@ -111,14 +110,17 @@ type CalEvent = {
   checkPaid: boolean
 }
 
-type ReadyEvent = CalEvent & { title: string; body: string }
+/** A fatura alta: `win` é a aberta; `fechadas`, as 3 últimas, da mais recente para a mais antiga. */
+type TrendingEvent = Omit<CalEvent, 'evento'> & { evento: 'trending_high'; fechadas: OpenWindow[] }
+
+type ReadyEvent = (CalEvent | TrendingEvent) & { title: string; body: string }
 
 /**
  * O aviso fala de uma fatura fechada (fechou, vence em breve, vence hoje): o
  * total do banco, se gravado, vale sobre o calculado. A que ainda fecha não tem.
  */
 function isClosedCycle(ev: CalEvent): boolean {
-  return ev.evento !== 'closing_soon' && ev.evento !== 'trending_high'
+  return ev.evento !== 'closing_soon'
 }
 
 /** A fatura que fecha em `close`: do dia seguinte ao fechamento anterior até ele. */
@@ -168,23 +170,6 @@ function buildCardEvents(card: CardRow, today: Ymd): CalEvent[] {
     })
   }
 
-  // A fatura alta é avaliada todo dia e avisada uma vez por ciclo: a chave é o
-  // fechamento da fatura em aberto. Leva a Previsão, onde está o mês do vencimento.
-  const close1 = previousStatementCloseBefore(lastClose, closingDay)
-  events.push({
-    cardId: card.id,
-    href: '/previsao',
-    dedupeKey: `cal:trending_high:${formatYmd(nextClose)}:c:${card.id}`,
-    kind: 'cc_invoice_trending_high',
-    evento: 'trending_high',
-    win: { start: addCalendarDays(lastClose, 1), end: nextClose },
-    fechadas: [lastClose, close1, previousStatementCloseBefore(close1, closingDay)].map((c) =>
-      invoiceWindowEndingAt(c, closingDay)
-    ),
-    data: ddmm(formatYmd(nextClose)),
-    checkPaid: false,
-  })
-
   let dueCycle: { close: Ymd; due: Ymd }
   try {
     dueCycle = nextPaymentDueCycleOnOrAfter(today, closingDay, dueDay)
@@ -220,6 +205,48 @@ function buildCardEvents(card: CardRow, today: Ymd): CalEvent[] {
   return events
 }
 
+/**
+ * A fatura alta é avaliada todo dia e avisada uma vez por ciclo: a chave é o
+ * fechamento da fatura em aberto. Leva a Previsão, onde está o mês do vencimento.
+ * Fica fora do `buildCardEvents` para não mexer na consulta dos avisos do calendário.
+ */
+function buildTrendingEvent(card: CardRow, today: Ymd): TrendingEvent | null {
+  const closingDay = Number(card.closing_day)
+  if (!closingDay || closingDay < 1 || closingDay > 31) return null
+  const lastClose = statementCloseOnOrBefore(today, closingDay)
+  const nextClose = nextCloseAfter(lastClose, closingDay)
+  const close1 = previousStatementCloseBefore(lastClose, closingDay)
+  return {
+    cardId: card.id,
+    href: '/previsao',
+    dedupeKey: `cal:trending_high:${formatYmd(nextClose)}:c:${card.id}`,
+    kind: 'cc_invoice_trending_high',
+    evento: 'trending_high',
+    win: { start: addCalendarDays(lastClose, 1), end: nextClose },
+    fechadas: [lastClose, close1, previousStatementCloseBefore(close1, closingDay)].map((c) =>
+      invoiceWindowEndingAt(c, closingDay)
+    ),
+    data: ddmm(formatYmd(nextClose)),
+    checkPaid: false,
+  }
+}
+
+const PAGE_SIZE = 1000
+
+/** Lê todas as páginas: o PostgREST corta em `max_rows` (1000) sem erro. */
+async function todasAsPaginas<T>(
+  pagina: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>
+): Promise<T[]> {
+  const out: T[] = []
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await pagina(from, from + PAGE_SIZE - 1)
+    if (error) throw new Error(error.message)
+    const batch = data ?? []
+    out.push(...batch)
+    if (batch.length < PAGE_SIZE) return out
+  }
+}
+
 const PLAN_COLUMNS =
   'id,is_active,payment_method,payment_credit_card_id,next_billing_date,installment_amount,final_installment_amount,total_installments,generated_count,billing_anchor_day'
 
@@ -231,26 +258,45 @@ async function trendingCopy(
   admin: SupabaseAdminClient,
   workspaceId: string,
   label: string,
-  ev: CalEvent,
-  rows: ParcelaTxRow[]
+  ev: TrendingEvent
 ): Promise<Copy | null> {
-  const fechadas = ev.fechadas ?? []
-  const [planos, totais] = await Promise.all([
-    admin
-      .from('workspace_installment_plans')
-      .select(PLAN_COLUMNS)
-      .eq('workspace_id', workspaceId)
-      .eq('is_active', true)
-      .eq('payment_method', 'credit_card')
-      // O plano antigo sem cartão entra se a parcela lançada o liga a este.
-      .or(`payment_credit_card_id.eq.${ev.cardId},payment_credit_card_id.is.null`),
+  const fechadas = ev.fechadas
+  const wins = [ev.win, ...fechadas]
+  const from = wins.reduce((m, w) => (compareYmd(w.start, m) < 0 ? w.start : m), ev.win.start)
+  const [rows, planos, totais] = await Promise.all([
+    todasAsPaginas<ParcelaTxRow>((a, b) =>
+      admin
+        .from('transactions')
+        .select('amount,type,date,payment_method,payment_credit_card_id,category_id,installment_plan_id,installment_sequence')
+        .eq('workspace_id', workspaceId)
+        .eq('payment_credit_card_id', ev.cardId)
+        // Receita no cartão é estorno: abate a fatura.
+        .in('type', ['expense', 'income'])
+        .eq('payment_method', 'credit_card')
+        .gte('date', filterRangeStartIso(from))
+        .lte('date', filterRangeEndIso(ev.win.end))
+        .order('id', { ascending: true })
+        .range(a, b)
+    ),
+    todasAsPaginas<PlanoNoCartao>((a, b) =>
+      admin
+        .from('workspace_installment_plans')
+        .select(PLAN_COLUMNS)
+        .eq('workspace_id', workspaceId)
+        .eq('is_active', true)
+        .eq('payment_method', 'credit_card')
+        // O plano antigo sem cartão entra se a parcela lançada o liga a este.
+        .or(`payment_credit_card_id.eq.${ev.cardId},payment_credit_card_id.is.null`)
+        .order('id', { ascending: true })
+        .range(a, b)
+    ),
+    // Três linhas no máximo: uma por fechada.
     admin
       .from('credit_card_statement_totals')
       .select('statement_close_date,bank_total')
       .eq('credit_card_id', ev.cardId)
       .in('statement_close_date', fechadas.map((w) => formatYmd(w.end))),
   ])
-  if (planos.error) throw new Error(planos.error.message)
   if (totais.error) throw new Error(totais.error.message)
 
   const banco = new Map<string, number>()
@@ -264,7 +310,7 @@ async function trendingCopy(
   const prevista =
     Math.round(
       (cardInvoiceNetInWindow(rows, ev.cardId, ev.win) +
-        parcelasProjetadasNaJanela(ev.cardId, ev.win, (planos.data ?? []) as PlanoNoCartao[], rows)) *
+        parcelasProjetadasNaJanela(ev.cardId, ev.win, planos, rows)) *
         100
     ) / 100
   const t = avaliarTendencia(prevista, valores)
@@ -280,17 +326,15 @@ async function resolveCardEvents(
   workspaceId: string,
   label: string,
   events: CalEvent[],
-  bankTotals: Map<string, number>,
-  errors: Array<Record<string, unknown>>
+  bankTotals: Map<string, number>
 ): Promise<ReadyEvent[]> {
   const cardId = events[0].cardId
-  const wins = events.flatMap((e) => [e.win, ...(e.fechadas ?? [])])
-  const from = wins.reduce((m, w) => (compareYmd(w.start, m) < 0 ? w.start : m), wins[0].start)
-  const to = wins.reduce((m, w) => (compareYmd(w.end, m) > 0 ? w.end : m), wins[0].end)
+  const from = events.reduce((m, e) => (compareYmd(e.win.start, m) < 0 ? e.win.start : m), events[0].win.start)
+  const to = events.reduce((m, e) => (compareYmd(e.win.end, m) > 0 ? e.win.end : m), events[0].win.end)
 
   const { data: txRows, error: txErr } = await admin
     .from('transactions')
-    .select('amount,type,date,payment_method,payment_credit_card_id,category_id,installment_plan_id,installment_sequence')
+    .select('amount,type,date,payment_method,payment_credit_card_id,category_id')
     .eq('workspace_id', workspaceId)
     .eq('payment_credit_card_id', cardId)
     // Receita no cartão é estorno: abate a fatura.
@@ -299,7 +343,7 @@ async function resolveCardEvents(
     .gte('date', filterRangeStartIso(from))
     .lte('date', filterRangeEndIso(to))
   if (txErr) throw new Error(txErr.message)
-  const rows = (txRows ?? []) as ParcelaTxRow[]
+  const rows = (txRows ?? []) as CardTxRow[]
 
   const closes = [...new Set(events.filter((e) => e.checkPaid).map((e) => formatYmd(e.win.end)))]
   const paid = new Set<string>()
@@ -317,18 +361,6 @@ async function resolveCardEvents(
   const ready: ReadyEvent[] = []
   for (const ev of events) {
     if (ev.checkPaid && paid.has(formatYmd(ev.win.end))) continue
-    if (ev.evento === 'trending_high') {
-      // A falha da fatura alta não derruba os outros avisos do cartão.
-      try {
-        const copy = await trendingCopy(admin, workspaceId, label, ev, rows)
-        if (copy) ready.push({ ...ev, ...copy })
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : 'trending_failed'
-        console.error('credit-card-calendar-alerts: trending', cardId, msg)
-        errors.push({ workspace_id: workspaceId, credit_card_id: cardId, error: `trending_high: ${msg}` })
-      }
-      continue
-    }
     const calculado = cardInvoiceNetInWindow(rows, cardId, ev.win)
     const copy = invoiceCopy({
       cartao: label,
@@ -362,7 +394,10 @@ Deno.serve(async (req: Request) => {
 
   // 1. Paginate the global active-card scan and compute events per workspace
   //    (só as datas; o valor de cada fatura sai no passo 2, por cartão).
-  const eventsByWorkspace = new Map<string, Array<{ label: string; events: CalEvent[] }>>()
+  const eventsByWorkspace = new Map<
+    string,
+    Array<{ label: string; events: CalEvent[]; tendencia: TrendingEvent | null }>
+  >()
   let cardsScanned = 0
 
   for (let page = 0; ; page++) {
@@ -381,9 +416,10 @@ Deno.serve(async (req: Request) => {
 
     for (const card of batch) {
       const events = buildCardEvents(card, today)
-      if (events.length === 0) continue
+      const tendencia = buildTrendingEvent(card, today)
+      if (events.length === 0 && !tendencia) continue
       const list = eventsByWorkspace.get(card.workspace_id) ?? []
-      list.push({ label: cardLabel(card.name, card.last_four), events })
+      list.push({ label: cardLabel(card.name, card.last_four), events, tendencia })
       eventsByWorkspace.set(card.workspace_id, list)
     }
 
@@ -428,12 +464,25 @@ Deno.serve(async (req: Request) => {
       const events: ReadyEvent[] = []
       for (const c of cards) {
         // A consulta de um cartão que falha não derruba os outros do dia.
-        try {
-          events.push(...(await resolveCardEvents(admin, workspaceId, c.label, c.events, bankTotals, errors)))
-        } catch (e) {
-          const msg = e instanceof Error ? e.message : 'card_failed'
-          console.error('credit-card-calendar-alerts: card', c.events[0].cardId, msg)
-          errors.push({ workspace_id: workspaceId, credit_card_id: c.events[0].cardId, error: msg })
+        if (c.events.length > 0) {
+          try {
+            events.push(...(await resolveCardEvents(admin, workspaceId, c.label, c.events, bankTotals)))
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : 'card_failed'
+            console.error('credit-card-calendar-alerts: card', c.events[0].cardId, msg)
+            errors.push({ workspace_id: workspaceId, credit_card_id: c.events[0].cardId, error: msg })
+          }
+        }
+        // A fatura alta tem consulta própria: a falha dela não derruba os outros avisos.
+        if (c.tendencia) {
+          try {
+            const copy = await trendingCopy(admin, workspaceId, c.label, c.tendencia)
+            if (copy) events.push({ ...c.tendencia, ...copy })
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : 'trending_failed'
+            console.error('credit-card-calendar-alerts: trending', c.tendencia.cardId, msg)
+            errors.push({ workspace_id: workspaceId, credit_card_id: c.tendencia.cardId, error: `trending_high: ${msg}` })
+          }
         }
       }
       if (events.length === 0) return
