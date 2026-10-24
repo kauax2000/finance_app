@@ -95,6 +95,7 @@ export type SubscriptionDetailSheetProps = {
     onOpenChange: (open: boolean) => void
     txSummaryLine: string
     expenseCategories: ExpenseCategoryOption[]
+    incomeCategories: ExpenseCategoryOption[]
     categoriesHref: string
     creditCards: CreditCard[]
     creditCardsHref: string
@@ -120,6 +121,7 @@ export function SubscriptionDetailSheet({
     onOpenChange,
     txSummaryLine,
     expenseCategories,
+    incomeCategories,
     categoriesHref,
     creditCards,
     creditCardsHref,
@@ -199,6 +201,7 @@ export function SubscriptionDetailSheet({
         saving,
         editingSubscription: s,
         expenseCategories,
+        incomeCategories,
         categoriesHref,
         creditCards,
         creditCardsHref,

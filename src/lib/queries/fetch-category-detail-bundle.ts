@@ -201,7 +201,7 @@ async function fetchCategoryDetailBundleLegacy(args: {
             .order("next_billing_date", { ascending: true }),
         supabase
             .from("workspace_subscriptions")
-            .select("amount, billing_anchor_day, billing_interval, category_id, created_at, currency, day_of_month, id, is_active, name, next_billing_date, notes, payment_credit_card_id, payment_method, start_date, updated_at, user_id, workspace_id")
+            .select("amount, billing_anchor_day, billing_interval, category_id, created_at, currency, day_of_month, id, is_active, kind, name, next_billing_date, notes, payment_credit_card_id, payment_method, start_date, updated_at, user_id, workspace_id")
             .eq("workspace_id", workspaceId)
             .eq("category_id", categoryId)
             .order("name", { ascending: true }),

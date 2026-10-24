@@ -78,12 +78,14 @@ export function SubscriptionCategoryPicker({
     categories,
     categoriesHref,
     disabled,
+    label = "Categoria de despesa",
 }: {
     value: string
     onChange: (id: string) => void
     categories: ExpenseCategoryOption[]
     categoriesHref: string
     disabled?: boolean
+    label?: string
 }) {
     const isMobile = useIsMobile()
     const [open, setOpen] = useState(false)
@@ -114,7 +116,7 @@ export function SubscriptionCategoryPicker({
             <FormPickerPopoverTrigger
                 id="subscription-category-picker"
                 disabled={disabled}
-                aria-label="Categoria de despesa"
+                aria-label={label}
             >
                 {selected ? (
                     <>

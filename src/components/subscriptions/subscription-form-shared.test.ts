@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
 import {
     buildSubscriptionFormPayload,
+    categoriesForKind,
+    categoryIdForKind,
     SUBSCRIPTION_SELECT_NONE,
 } from "./subscription-form-shared"
 
@@ -173,5 +175,22 @@ describe("buildSubscriptionFormPayload kind", () => {
             expect(r.payload.payment_method).toBeNull()
             expect(r.payload.payment_credit_card_id).toBeNull()
         }
+    })
+})
+
+describe("categoria por tipo", () => {
+    const despesas = [{ id: "d1", name: "Lazer", color: "#000" }]
+    const receitas = [{ id: "r1", name: "Salário", color: "#000" }]
+
+    it("a receita escolhe entre as categorias de receita", () => {
+        expect(categoriesForKind("income", despesas, receitas)).toBe(receitas)
+        expect(categoriesForKind("expense", despesas, receitas)).toBe(despesas)
+    })
+
+    it("ao trocar o tipo, a categoria do outro tipo cai; a que serve fica", () => {
+        expect(categoryIdForKind("d1", "income", despesas, receitas)).toBe(SUBSCRIPTION_SELECT_NONE)
+        expect(categoryIdForKind("r1", "expense", despesas, receitas)).toBe(SUBSCRIPTION_SELECT_NONE)
+        expect(categoryIdForKind("r1", "income", despesas, receitas)).toBe("r1")
+        expect(categoryIdForKind(SUBSCRIPTION_SELECT_NONE, "income", despesas, receitas)).toBe(SUBSCRIPTION_SELECT_NONE)
     })
 })

@@ -112,3 +112,26 @@ export function buildSubscriptionFormPayload(opts: {
 }
 
 export type ExpenseCategoryOption = Pick<Category, "id" | "name" | "color">
+
+/** As categorias que o seletor oferece: a receita escolhe entre as de receita. */
+export function categoriesForKind(
+    kind: SubscriptionKind,
+    expenseCategories: ExpenseCategoryOption[],
+    incomeCategories: ExpenseCategoryOption[]
+): ExpenseCategoryOption[] {
+    return kind === "income" ? incomeCategories : expenseCategories
+}
+
+/** Ao trocar o tipo, a categoria que não existe na lista nova cai. */
+export function categoryIdForKind(
+    categoryId: string,
+    kind: SubscriptionKind,
+    expenseCategories: ExpenseCategoryOption[],
+    incomeCategories: ExpenseCategoryOption[]
+): string {
+    return categoriesForKind(kind, expenseCategories, incomeCategories).some(
+        (c) => c.id === categoryId
+    )
+        ? categoryId
+        : SUBSCRIPTION_SELECT_NONE
+}

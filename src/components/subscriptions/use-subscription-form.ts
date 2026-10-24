@@ -27,6 +27,7 @@ export type UseSubscriptionFormArgs = {
     saving: boolean
     editingSubscription: WorkspaceSubscription | null
     expenseCategories: ExpenseCategoryOption[]
+    incomeCategories: ExpenseCategoryOption[]
     categoriesHref: string
     creditCards: CreditCard[]
     creditCardsHref: string
@@ -44,6 +45,7 @@ export function useSubscriptionForm({
     saving,
     editingSubscription,
     expenseCategories,
+    incomeCategories,
     categoriesHref,
     creditCards,
     creditCardsHref,
@@ -182,6 +184,7 @@ export function useSubscriptionForm({
         saving,
         editingSubscription,
         expenseCategories,
+        incomeCategories,
         categoriesHref,
         creditCards,
         creditCardsHref,

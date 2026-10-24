@@ -254,6 +254,10 @@ export default function SubscriptionsPageClient() {
         () => categories.filter((c) => c.type === "expense"),
         [categories]
     )
+    const incomeCategories = useMemo(
+        () => categories.filter((c) => c.type === "income"),
+        [categories]
+    )
 
     const columns = useMemo(
         () => subscriptionColumns(billingStats),
@@ -574,6 +578,7 @@ export default function SubscriptionsPageClient() {
                 onOpenChange={handleFormOpenChange}
                 editingSubscription={editingSubscription}
                 expenseCategories={expenseCategories}
+                incomeCategories={incomeCategories}
                 categoriesHref={ROUTES.DASHBOARD_CATEGORIES}
                 creditCards={creditCards}
                 creditCardsHref={ROUTES.CREDIT_CARDS}
@@ -598,6 +603,7 @@ export default function SubscriptionsPageClient() {
                         detailSub.next_billing_date ?? detailSub.start_date
                     )}
                     expenseCategories={expenseCategories}
+                    incomeCategories={incomeCategories}
                     categoriesHref={ROUTES.DASHBOARD_CATEGORIES}
                     creditCards={creditCards}
                     creditCardsHref={ROUTES.CREDIT_CARDS}

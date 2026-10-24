@@ -39,6 +39,8 @@ import { SubscriptionCategoryPicker } from "@/components/subscriptions/subscript
 import {
     SUBSCRIPTION_BILLING_OPTIONS,
     SUBSCRIPTION_PAYMENT_NONE,
+    categoriesForKind,
+    categoryIdForKind,
     type ExpenseCategoryOption,
 } from "@/components/subscriptions/subscription-form-shared"
 import { localYmdFromDate, parseYmdLocal } from "@/lib/transaction-date"
@@ -46,6 +48,7 @@ export type SubscriptionFormFieldsProps = {
     saving: boolean
     editingSubscription: WorkspaceSubscription | null
     expenseCategories: ExpenseCategoryOption[]
+    incomeCategories: ExpenseCategoryOption[]
     categoriesHref: string
     creditCards: CreditCard[]
     creditCardsHref: string
@@ -73,6 +76,7 @@ export function SubscriptionFormFields({
     saving,
     editingSubscription,
     expenseCategories,
+    incomeCategories,
     categoriesHref,
     creditCards,
     creditCardsHref,
@@ -112,6 +116,14 @@ export function SubscriptionFormFields({
                 disabled={saving}
                 onChange={(next) => {
                     setKind(next)
+                    setCategoryId(
+                        categoryIdForKind(
+                            categoryId,
+                            next,
+                            expenseCategories,
+                            incomeCategories
+                        )
+                    )
                     // Receita não usa cartão: a escolha anterior cai.
                     if (next === "income" && paymentMethod === "credit_card") {
                         setPaymentMethod(null)
@@ -245,13 +257,13 @@ export function SubscriptionFormFields({
                                     o.value !== "credit_card"
                             )
                             .map((o) => (
-                            <SelectItem
-                                key={o.value}
-                                value={o.value}
-                            >
-                                {o.label}
-                            </SelectItem>
-                        ))}
+                                <SelectItem
+                                    key={o.value}
+                                    value={o.value}
+                                >
+                                    {o.label}
+                                </SelectItem>
+                            ))}
                     </SelectContent>
                 </Select>
             </Field>
@@ -326,14 +338,25 @@ export function SubscriptionFormFields({
                 rótulo aponta para ele explicitamente. */}
             <Field size="sm">
                 <FieldLabel htmlFor="subscription-category-picker" optional>
-                    Categoria de despesa
+                    {kind === "income"
+                        ? "Categoria de receita"
+                        : "Categoria de despesa"}
                 </FieldLabel>
                 <SubscriptionCategoryPicker
                     value={categoryId}
                     onChange={setCategoryId}
-                    categories={expenseCategories}
+                    categories={categoriesForKind(
+                        kind,
+                        expenseCategories,
+                        incomeCategories
+                    )}
                     categoriesHref={categoriesHref}
                     disabled={saving}
+                    label={
+                        kind === "income"
+                            ? "Categoria de receita"
+                            : "Categoria de despesa"
+                    }
                 />
             </Field>
             <FormInput

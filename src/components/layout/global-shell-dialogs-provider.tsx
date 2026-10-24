@@ -199,18 +199,18 @@ export function GlobalShellDialogsProvider({
         [user, currentWorkspaceId]
     )
 
-    const expenseCategories = React.useMemo(
-        () =>
+    const { expenseCategories, incomeCategories } = React.useMemo(() => {
+        const pick = (type: "expense" | "income") =>
             txCategories
-                .filter((c) => c.type === "expense")
+                .filter((c) => c.type === type)
                 .map((c) => ({
                     id: c.id,
                     name: c.name,
                     color: c.color,
                     icon: c.icon,
-                })),
-        [txCategories],
-    )
+                }))
+        return { expenseCategories: pick("expense"), incomeCategories: pick("income") }
+    }, [txCategories])
 
     const openCategoryCreate = React.useCallback(() => {
         setCategoryOpen(true)
@@ -270,6 +270,7 @@ export function GlobalShellDialogsProvider({
                 onOpenChange={handleSubscriptionOpenChange}
                 editingSubscription={null}
                 expenseCategories={expenseCategories}
+                incomeCategories={incomeCategories}
                 categoriesHref={ROUTES.DASHBOARD_CATEGORIES}
                 creditCards={txCreditCards}
                 creditCardsHref={ROUTES.CREDIT_CARDS}

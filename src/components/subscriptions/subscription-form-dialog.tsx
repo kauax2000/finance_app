@@ -15,6 +15,7 @@ type SubscriptionFormDialogProps = {
     onOpenChange: (open: boolean) => void
     editingSubscription: WorkspaceSubscription | null
     expenseCategories: ExpenseCategoryOption[]
+    incomeCategories: ExpenseCategoryOption[]
     categoriesHref: string
     creditCards: CreditCard[]
     creditCardsHref: string
@@ -30,6 +31,7 @@ export function SubscriptionFormDialog({
     onOpenChange,
     editingSubscription,
     expenseCategories,
+    incomeCategories,
     categoriesHref,
     creditCards,
     creditCardsHref,
@@ -49,6 +51,7 @@ export function SubscriptionFormDialog({
         saving,
         editingSubscription,
         expenseCategories,
+        incomeCategories,
         categoriesHref,
         creditCards,
         creditCardsHref,

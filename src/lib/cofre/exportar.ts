@@ -106,6 +106,7 @@ export const COLUNAS_CONHECIDAS: { [T in Tabela]: ReadonlyArray<keyof Row<T>> } 
         "day_of_month",
         "id",
         "is_active",
+        "kind",
         "name",
         "next_billing_date",
         "notes",
