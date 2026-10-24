@@ -1,11 +1,16 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { SEMELHANCA_MINIMA, similaridade } from "@/lib/fatura/conferir"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
-import { daysBetweenYmd } from "@/lib/transaction-date"
+import { addDaysYmd, daysBetweenYmd, filterRangeEndIso, filterRangeStartIso } from "@/lib/transaction-date"
 
 /** Spec §11: valor dentro de ±15% e data dentro de ±5 dias do vencimento. */
 const TOLERANCIA_VALOR = 0.15
 const JANELA_DIAS = 5
+
+/** Faixa dos lançamentos candidatos: 40 dias até hoje, em ISO (`date` é timestamptz; "hoje" a T12:00Z entra). */
+export function faixaDoCasamento(todayYmd: string): { from: string; to: string } {
+    return { from: filterRangeStartIso(addDaysYmd(todayYmd, -40)), to: filterRangeEndIso(todayYmd) }
+}
 
 export type Casamento = {
     instanciaId: string

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { casamentoIgnorado, casarPagamentos, ignorarCasamento, ligarPagamento, transacoesLigadas, type Casamento } from "./casamento"
+import { casamentoIgnorado, faixaDoCasamento, casarPagamentos, ignorarCasamento, ligarPagamento, transacoesLigadas, type Casamento } from "./casamento"
 
 const conta = (id: string, nome: string, due: string, estimado: number | null, amount: number | null = null) => ({
     id,
@@ -151,5 +151,13 @@ describe("localStorage do Não", () => {
         expect(() => ignorarCasamento(par)).not.toThrow()
         expect(casamentoIgnorado(par)).toBe(false)
         vi.unstubAllGlobals()
+    })
+})
+
+describe("faixaDoCasamento", () => {
+    it("cobre hoje inteiro (T12:00Z) e os 40 dias para trás", () => {
+        const { from, to } = faixaDoCasamento("2026-11-15")
+        expect(Date.parse(to)).toBeGreaterThanOrEqual(Date.parse("2026-11-15T12:00:00Z"))
+        expect(Date.parse(from)).toBeLessThanOrEqual(Date.parse("2026-10-06T00:00:00Z"))
     })
 })

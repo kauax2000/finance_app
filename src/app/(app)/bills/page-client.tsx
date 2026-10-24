@@ -61,7 +61,7 @@ import type { BillInstance } from "@/lib/supabase"
 import { useHojeYmd } from "@/hooks/use-hoje-ymd"
 import { billsPageBundleKeys } from "@/lib/queries/keys"
 import { useTransactionsRangeQuery } from "@/lib/queries/use-transactions-range"
-import { casamentoIgnorado, casarPagamentos, ligarPagamento, transacoesLigadas, type Casamento } from "@/lib/bills/casamento"
+import { casamentoIgnorado, casarPagamentos, faixaDoCasamento, ligarPagamento, transacoesLigadas, type Casamento } from "@/lib/bills/casamento"
 import { computeNextBillInstanceDueYmd } from "@/lib/bills/recurrence"
 import { CasamentoContaWireframe } from "@/components/wireframe/casamento-conta-wireframe"
 import { statusDaConta, type StatusDaConta } from "@/components/bills/bill-status"
@@ -284,7 +284,7 @@ export default function BillsPageClient() {
 
     // Casamento automático (Bloco 6A): despesas dos últimos 40 dias que parecem o pagamento de uma pendente.
     const recentTxRange = useMemo(
-        () => ({ from: addDaysYmd(todayYmd, -40), to: todayYmd }),
+        () => faixaDoCasamento(todayYmd),
         [todayYmd]
     )
     const recentTxQ = useTransactionsRangeQuery(currentWorkspaceId, recentTxRange, {
