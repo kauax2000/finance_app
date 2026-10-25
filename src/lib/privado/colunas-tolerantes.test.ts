@@ -9,9 +9,14 @@ import { lerFonte, semComentarios } from "@/test/fonte"
  * colunas explícitas, num filtro ou numa tabela nova derruba a consulta
  * (`42703`/`PGRST204`/`PGRST205`): ela só entra por `*`, ou pelos leitores
  * tolerantes abaixo, que só consultam quando já há uma privada na mão. As
- * colunas do 7C (projeto, propósito e modo da carteira) seguem a mesma regra.
+ * colunas do 7C (projeto, propósito e modo da carteira, quem pagou e as
+ * partes) seguem a mesma regra. As tabelas e as RPCs novas do 7C só entram em
+ * arquivo que trata a ausência delas (`PGRST205` da tabela, `PGRST202` da RPC).
  */
-const NOVAS = /\b(is_private|holder_user_id|project_id|purpose|starts_on|ends_on|budget_total|split_mode)\b/
+const COLUNAS = "is_private|holder_user_id|project_id|purpose|starts_on|ends_on|budget_total|split_mode|paid_by|shares_manual|split_since|split_weights"
+const NOVAS = new RegExp(`\\b(${COLUNAS})\\b`)
+const TABELAS_NOVAS = /\.from\(\s*["'`](projects|transaction_shares|settlements|workspace_split_weights)["'`]/g
+const RPCS_NOVAS = /\.rpc\(\s*["'`](criar_carteira_de_modelo|definir_partes|saldos_da_carteira)["'`]/g
 const TOLERANTES = new Set(["src/lib/privado/detalhes.ts", "src/lib/cofre/exportar.ts"])
 
 function fontes(dir: string): string[] {
@@ -32,8 +37,14 @@ function achadosDe(arquivo: string): string[] {
         if (NOVAS.test(m[0]) && m[0].includes(",")) achados.push(m[0])
     }
     // Um filtro ou um select de uma coluna só.
-    for (const m of texto.matchAll(/\.(select|eq|neq|is|in|not|or|order|filter|match)\(\s*["'`](is_private|holder_user_id|project_id|purpose|starts_on|ends_on|budget_total|split_mode)\b/g)) {
+    for (const m of texto.matchAll(new RegExp(`\\.(select|eq|neq|is|in|not|or|order|filter|match)\\(\\s*["'\`](${COLUNAS})\\b`, "g"))) {
         achados.push(m[0])
+    }
+    if (!texto.includes("PGRST205")) {
+        for (const m of texto.matchAll(TABELAS_NOVAS)) achados.push(m[0])
+    }
+    if (!texto.includes("PGRST202")) {
+        for (const m of texto.matchAll(RPCS_NOVAS)) achados.push(m[0])
     }
     if (!TOLERANTES.has(arquivo)) {
         for (const m of texto.matchAll(/\.from\(\s*["'`]transacoes_privadas/g)) achados.push(m[0])
@@ -41,7 +52,7 @@ function achadosDe(arquivo: string): string[] {
     return achados
 }
 
-describe("Ruling 8: as colunas do 7B e do 7C não entram em consulta explícita", () => {
+describe("Ruling 8: as colunas, as tabelas e as RPCs do 7B e do 7C não entram sem tolerância", () => {
     it("nenhum arquivo cita as colunas do 7B e do 7C numa consulta explícita", () => {
         const ofensores = Object.fromEntries(
             arquivos.map((a) => [a, achadosDe(a)] as const).filter(([, x]) => x.length),

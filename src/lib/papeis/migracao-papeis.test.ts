@@ -111,6 +111,10 @@ const FICAM_COM_MEMBRO: Record<string, string> = {
     guardar_privado: "o gatilho do 7B confere o papel do autor da linha (role in owner, member), não o de quem chama",
     conferir_titular: "o gatilho do 7B confere que o titular do cartão é adulto da carteira",
     conferencia_liberada: "o helper do 7B: o dono, ou o titular do cartão; não devolve dado",
+    definir_quem_pagou: "o gatilho do 7C lê o papel do autor da linha (o convidado paga pelo responsável), não o de quem chama",
+    gerar_partes: "o gatilho do 7C divide entre os adultos da carteira (role in owner, member); não devolve dado",
+    definir_partes: "a RPC do 7C confere is_workspace_adult de quem chama e que cada parte é de um adulto",
+    saldos_da_carteira: "a RPC do 7C confere is_workspace_adult de quem chama e só lista os adultos",
 }
 
 describe("migração papéis: o convidado e o adulto", () => {

@@ -51,10 +51,10 @@ select ok(
         select 1
         from pg_policies
         where schemaname = 'public'
-          and tablename = 'transaction_splits'
-          and policyname = 'Workspace members can view splits'
+          and tablename = 'transaction_shares'
+          and policyname = 'transaction_shares_select'
     ),
-    'RLS select policy on transaction_splits (workspace members)'
+    'RLS select policy on transaction_shares (workspace adults)'
 );
 
 select ok(

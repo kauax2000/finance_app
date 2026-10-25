@@ -1217,6 +1217,50 @@ export type Database = {
           },
         ]
       }
+      settlements: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          from_user: string
+          id: string
+          note: string | null
+          settled_on: string
+          to_user: string
+          workspace_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          from_user: string
+          id?: string
+          note?: string | null
+          settled_on?: string
+          to_user: string
+          workspace_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          from_user?: string
+          id?: string
+          note?: string | null
+          settled_on?: string
+          to_user?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settlements_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transacoes_privadas: {
         Row: {
           capture_meta: Json | null
@@ -1262,41 +1306,25 @@ export type Database = {
           },
         ]
       }
-      transaction_splits: {
+      transaction_shares: {
         Row: {
           amount: number
-          category_id: string | null
-          created_at: string | null
-          id: string
-          percentage: number
           transaction_id: string
+          user_id: string
         }
         Insert: {
           amount: number
-          category_id?: string | null
-          created_at?: string | null
-          id?: string
-          percentage: number
           transaction_id: string
+          user_id: string
         }
         Update: {
           amount?: number
-          category_id?: string | null
-          created_at?: string | null
-          id?: string
-          percentage?: number
           transaction_id?: string
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "transaction_splits_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transaction_splits_transaction_id_fkey"
+            foreignKeyName: "transaction_shares_transaction_id_fkey"
             columns: ["transaction_id"]
             isOneToOne: false
             referencedRelation: "transactions"
@@ -1320,10 +1348,12 @@ export type Database = {
           is_private: boolean
           is_recurring: boolean | null
           needs_review: boolean
+          paid_by: string | null
           payment_credit_card_id: string | null
           payment_method: string | null
           project_id: string | null
           recurring_interval: string | null
+          shares_manual: boolean
           source: string
           subscription_id: string | null
           type: string
@@ -1346,10 +1376,12 @@ export type Database = {
           is_private?: boolean
           is_recurring?: boolean | null
           needs_review?: boolean
+          paid_by?: string | null
           payment_credit_card_id?: string | null
           payment_method?: string | null
           project_id?: string | null
           recurring_interval?: string | null
+          shares_manual?: boolean
           source?: string
           subscription_id?: string | null
           type: string
@@ -1372,10 +1404,12 @@ export type Database = {
           is_private?: boolean
           is_recurring?: boolean | null
           needs_review?: boolean
+          paid_by?: string | null
           payment_credit_card_id?: string | null
           payment_method?: string | null
           project_id?: string | null
           recurring_interval?: string | null
+          shares_manual?: boolean
           source?: string
           subscription_id?: string | null
           type?: string
@@ -1567,6 +1601,7 @@ export type Database = {
           next_billing_date: string
           payment_credit_card_id: string | null
           payment_method: string | null
+          split_weights: Json | null
           total_installments: number
           updated_at: string
           user_id: string
@@ -1585,6 +1620,7 @@ export type Database = {
           next_billing_date: string
           payment_credit_card_id?: string | null
           payment_method?: string | null
+          split_weights?: Json | null
           total_installments: number
           updated_at?: string
           user_id: string
@@ -1603,6 +1639,7 @@ export type Database = {
           next_billing_date?: string
           payment_credit_card_id?: string | null
           payment_method?: string | null
+          split_weights?: Json | null
           total_installments?: number
           updated_at?: string
           user_id?: string
@@ -1820,6 +1857,32 @@ export type Database = {
           },
         ]
       }
+      workspace_split_weights: {
+        Row: {
+          user_id: string
+          weight: number
+          workspace_id: string
+        }
+        Insert: {
+          user_id: string
+          weight: number
+          workspace_id: string
+        }
+        Update: {
+          user_id?: string
+          weight?: number
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_split_weights_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_subscriptions: {
         Row: {
           amount: number
@@ -1925,6 +1988,7 @@ export type Database = {
           name: string
           purpose: string
           split_mode: string
+          split_since: string | null
           starts_on: string | null
           type: string
           updated_at: string
@@ -1942,6 +2006,7 @@ export type Database = {
           name: string
           purpose?: string
           split_mode?: string
+          split_since?: string | null
           starts_on?: string | null
           type?: string
           updated_at?: string
@@ -1959,6 +2024,7 @@ export type Database = {
           name?: string
           purpose?: string
           split_mode?: string
+          split_since?: string | null
           starts_on?: string | null
           type?: string
           updated_at?: string
@@ -2040,6 +2106,7 @@ export type Database = {
           name: string
           purpose: string
           split_mode: string
+          split_since: string | null
           starts_on: string | null
           type: string
           updated_at: string
@@ -2086,10 +2153,21 @@ export type Database = {
         }
         Returns: string
       }
+      definir_partes: {
+        Args: { p_partes: Json; p_transaction_id: string }
+        Returns: undefined
+      }
       delete_workspace: { Args: { p_workspace_id: string }; Returns: undefined }
       delete_workspace_installment_plan_cascade: {
         Args: { p_plan_id: string }
         Returns: undefined
+      }
+      dividir_em_partes: {
+        Args: { p_pagador: string; p_pesos: Json; p_total_centavos: number }
+        Returns: {
+          centavos: number
+          user_id: string
+        }[]
       }
       garantir_orcamentos_do_mes: {
         Args: { p_workspace_id: string }
@@ -2189,6 +2267,16 @@ export type Database = {
       }
       run_installment_billing: { Args: never; Returns: number }
       run_subscription_billing: { Args: never; Returns: number }
+      saldos_da_carteira: {
+        Args: { p_workspace_id: string }
+        Returns: {
+          acertos: number
+          pago: number
+          partes: number
+          saldo: number
+          user_id: string
+        }[]
+      }
       tem_cobertura: { Args: { p_user_id: string }; Returns: boolean }
       tem_plano_proprio: { Args: { p_user_id: string }; Returns: boolean }
       trocar_papel: {

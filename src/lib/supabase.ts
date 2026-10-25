@@ -253,6 +253,8 @@ export interface WorkspaceInstallmentPlan {
     /** Dia do mês das parcelas; mantido pelo banco (trigger `maintain_billing_anchor_day`). */
     billing_anchor_day?: number | null
     is_active: boolean
+    /** Os pesos da divisão desta compra (Bloco 7C): `{ user_id, weight }[]`; nulo vale os da carteira. Opcional: o banco sem a migração não a tem. */
+    split_weights?: { user_id: string; weight: number }[] | null
     created_at: string
     updated_at: string
 }
@@ -330,6 +332,10 @@ export interface Transaction {
     is_private?: boolean
     /** Projeto da carteira (Bloco 7C). Opcional: as consultas de colunas explícitas não o trazem. */
     project_id?: string | null
+    /** Quem pagou (Bloco 7C): o autor, ou o responsável do convidado; preenchido pelo banco. Opcional pelo mesmo motivo. */
+    paid_by?: string | null
+    /** As partes foram escritas à mão (`definir_partes`); o banco não as refaz. Opcional pelo mesmo motivo. */
+    shares_manual?: boolean
     created_at: string
     updated_at: string
     // Related data
@@ -339,13 +345,31 @@ export interface Transaction {
     installment_plan?: TransactionInstallmentPlanRef | null
 }
 
-export interface TransactionSplit {
-    id: string
+/** A parte de um adulto numa despesa de carteira `split` (Bloco 7C); só o banco escreve. */
+export interface TransactionShare {
     transaction_id: string
-    category_id: string | null
+    user_id: string
     amount: number
-    percentage: number
+}
+
+/** Um acerto entre dois adultos da carteira (Bloco 7C). */
+export interface Settlement {
+    id: string
+    workspace_id: string
+    from_user: string
+    to_user: string
+    amount: number
+    settled_on: string
+    note: string | null
+    created_by: string | null
     created_at: string
+}
+
+/** O peso de um adulto na divisão da carteira (Bloco 7C); sem linha, vale 1. */
+export interface WorkspaceSplitWeight {
+    workspace_id: string
+    user_id: string
+    weight: number
 }
 
 export interface Session {
@@ -400,6 +424,8 @@ export interface Workspace {
      */
     purpose?: WorkspacePurpose
     split_mode?: WorkspaceSplitMode
+    /** O dia em que a divisão começou; carimbado pelo banco na primeira vez que o modo vira `split`. */
+    split_since?: string | null
     starts_on?: string | null
     ends_on?: string | null
     budget_total?: number | null

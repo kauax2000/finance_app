@@ -48,4 +48,4 @@ These RPCs collapse multiple PostgREST round-trips into one call (with legacy cl
 
 - `rpc_fetch_dashboard_bundle` to replace the multi-query dashboard bootstrap.
 - Optimistic updates on transaction save / bill pay.
-- Denormalize `workspace_id` on `transaction_splits` if RLS cost remains high.
+- Denormalize `workspace_id` on `transaction_shares` if the RLS join through `transactions` gets expensive (`transaction_splits` was removed in Bloco 7C).

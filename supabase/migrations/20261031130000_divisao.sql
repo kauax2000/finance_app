@@ -1,0 +1,571 @@
+-- Bloco 7C, Tarefa 2 — quem pagou, as partes geradas pelo banco, o acerto e a
+-- saída do `transaction_splits`.
+--
+-- Só acrescenta, fora o `drop table public.transaction_splits` (Decisão 7),
+-- guardado por uma conferência de tabela vazia. O front de `main` continua em
+-- produção e não manda `paid_by`, `shares_manual` nem `split_weights`: quem
+-- preenche é o banco, por gatilho, em todo caminho de escrita (o cliente, a
+-- fila offline, a importação, a captura pela service role, os crons de
+-- assinatura e parcela, `pay_bill_instance` e os `virar_*`). Nenhum depende de
+-- uma RPC para ganhar `paid_by` ou partes.
+
+-- 1. quem pagou ---------------------------------------------------------------
+-- O padrão é o autor; a despesa do convidado é paga pelo responsável dele
+-- (`workspace_members.sponsor_user_id`, 7A). Não é `default` de coluna porque
+-- o padrão lê outra coluna. `shares_manual` marca as partes escritas à mão
+-- (`definir_partes`): o gatilho das partes não as reescreve.
+alter table public.transactions
+  add column if not exists paid_by uuid references auth.users(id) on delete set null,
+  add column if not exists shares_manual boolean not null default false;
+
+create index if not exists idx_transactions_paid_by on public.transactions (paid_by)
+  where paid_by is not null;
+
+-- `before insert or update`: a linha antiga, sem `paid_by`, ganha o padrão na
+-- primeira edição. O autor vem de `old` no update: o `preserve_transactions_author`
+-- roda depois deste (ordem alfabética) e o `new.user_id` ainda pode ser o que o
+-- cliente mandou.
+create or replace function public.definir_quem_pagou()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_autor uuid := case when tg_op = 'UPDATE' then old.user_id else new.user_id end;
+  v_papel text;
+  v_responsavel uuid;
+begin
+  select wm.role, wm.sponsor_user_id into v_papel, v_responsavel
+  from public.workspace_members wm
+  where wm.workspace_id = new.workspace_id
+    and wm.user_id = v_autor;
+
+  if tg_op = 'UPDATE'
+     and old.paid_by is not null
+     and new.paid_by is not distinct from old.paid_by
+     and new.workspace_id is not distinct from old.workspace_id then
+    -- Quem pagou não está em jogo: editar a descrição de uma despesa antiga
+    -- não muda o saldo de ninguém, mesmo que o pagador tenha saído.
+    null;
+  elsif v_papel = 'guest' then
+    -- O convidado nunca é quem pagou: o responsável dele, ou o dono quando o
+    -- responsável saiu (`on delete set null`).
+    new.paid_by := coalesce(v_responsavel, (
+      select wm.user_id from public.workspace_members wm
+      where wm.workspace_id = new.workspace_id
+        and wm.role = 'owner'
+      order by wm.joined_at, wm.user_id
+      limit 1
+    ));
+  elsif new.paid_by is null then
+    new.paid_by := v_autor;
+  elsif new.paid_by is distinct from v_autor and not exists (
+    select 1 from public.workspace_members wm
+    where wm.workspace_id = new.workspace_id
+      and wm.user_id = new.paid_by
+      and wm.role in ('owner', 'member')
+  ) then
+    -- Mudar de carteira leva quem pagou de volta ao autor; escolher alguém de
+    -- fora dos adultos é recusado.
+    if tg_op = 'UPDATE' and new.paid_by is not distinct from old.paid_by then
+      new.paid_by := v_autor;
+    else
+      raise exception 'PAGADOR_INVALIDO' using errcode = 'P0001';
+    end if;
+  end if;
+
+  -- A linha nasce automática. As partes à mão deixam de fechar quando o valor,
+  -- o tipo ou a carteira mudam: elas voltam ao automático, e o gatilho de
+  -- depois as refaz.
+  if tg_op = 'INSERT' then
+    new.shares_manual := false;
+  elsif new.shares_manual and old.shares_manual and (
+    new.amount is distinct from old.amount
+    or new.type is distinct from old.type
+    or new.workspace_id is distinct from old.workspace_id
+  ) then
+    new.shares_manual := false;
+  end if;
+
+  return new;
+end;
+$$;
+
+revoke all on function public.definir_quem_pagou() from public, anon, authenticated;
+
+drop trigger if exists definir_quem_pagou on public.transactions;
+create trigger definir_quem_pagou
+  before insert or update on public.transactions
+  for each row execute function public.definir_quem_pagou();
+
+-- 2. o modo da carteira -------------------------------------------------------
+-- `split_mode` entrou na Tarefa 1. `split_since` é o dia em que a divisão
+-- começou: as despesas de antes não ganham parte. Ele é carimbado na primeira
+-- vez que o modo vira `split` e nunca se perde: voltar a `pooled` e depois a
+-- `split` mantém o dia, e as partes guardadas valem de novo.
+alter table public.workspaces
+  add column if not exists split_since date;
+
+create or replace function public.carimbar_split_since()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if new.split_mode = 'split' then
+    new.split_since := coalesce(new.split_since, public.app_today());
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function public.carimbar_split_since() from public, anon, authenticated;
+
+-- No insert vale sempre: os modelos `casal`, `viagem`, `reforma` e `evento`
+-- (`criar_carteira_de_modelo`) nascem `split`.
+drop trigger if exists carimbar_split_since on public.workspaces;
+create trigger carimbar_split_since
+  before insert or update of split_mode on public.workspaces
+  for each row execute function public.carimbar_split_since();
+
+-- 3. os pesos -----------------------------------------------------------------
+-- Sem linha, o peso vale 1: a divisão igual.
+create table if not exists public.workspace_split_weights (
+  workspace_id uuid not null references public.workspaces(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  weight numeric(6, 2) not null check (weight > 0),
+  primary key (workspace_id, user_id)
+);
+
+create index if not exists idx_workspace_split_weights_user_id on public.workspace_split_weights (user_id);
+
+alter table public.workspace_split_weights enable row level security;
+revoke all on public.workspace_split_weights from anon;
+revoke truncate on public.workspace_split_weights from authenticated;
+
+drop policy if exists workspace_split_weights_select on public.workspace_split_weights;
+create policy workspace_split_weights_select on public.workspace_split_weights
+  for select to authenticated
+  using (public.is_workspace_adult(workspace_id));
+
+drop policy if exists workspace_split_weights_insert on public.workspace_split_weights;
+create policy workspace_split_weights_insert on public.workspace_split_weights
+  for insert to authenticated
+  with check (public.is_workspace_adult(workspace_id));
+
+drop policy if exists workspace_split_weights_update on public.workspace_split_weights;
+create policy workspace_split_weights_update on public.workspace_split_weights
+  for update to authenticated
+  using (public.is_workspace_adult(workspace_id))
+  with check (public.is_workspace_adult(workspace_id));
+
+drop policy if exists workspace_split_weights_delete on public.workspace_split_weights;
+create policy workspace_split_weights_delete on public.workspace_split_weights
+  for delete to authenticated
+  using (public.is_workspace_adult(workspace_id));
+
+-- A regra da parcelada mora no plano: um array de `{ user_id, weight }`. Nulo
+-- vale os pesos da carteira; quem não está no array não tem parte.
+alter table public.workspace_installment_plans
+  add column if not exists split_weights jsonb
+    constraint workspace_installment_plans_split_weights_array
+    check (split_weights is null or pg_catalog.jsonb_typeof(split_weights) = 'array');
+
+-- 4. as partes ----------------------------------------------------------------
+-- Só o banco escreve: o gatilho e o `definir_partes`. O adulto lê.
+create table if not exists public.transaction_shares (
+  transaction_id uuid not null references public.transactions(id) on delete cascade,
+  user_id uuid not null,
+  amount numeric(12, 2) not null,
+  primary key (transaction_id, user_id)
+);
+
+create index if not exists idx_transaction_shares_user_id on public.transaction_shares (user_id);
+
+alter table public.transaction_shares enable row level security;
+revoke all on public.transaction_shares from anon;
+revoke insert, update, delete, truncate on public.transaction_shares from authenticated;
+
+drop policy if exists transaction_shares_select on public.transaction_shares;
+create policy transaction_shares_select on public.transaction_shares
+  for select to authenticated
+  using (
+    exists (
+      select 1 from public.transactions t
+      where t.id = transaction_shares.transaction_id
+        and public.is_workspace_adult(t.workspace_id)
+    )
+  );
+
+-- O algoritmo da Decisão 5, num lugar só:
+--   1. em centavos;
+--   2. a parte de cada um é `floor(total * peso / soma_pesos)`;
+--   3. os centavos que sobram vão inteiros para quem pagou;
+--   4. se quem pagou não está entre os pesos, o resto vai para o menor `user_id`.
+create or replace function public.dividir_em_partes(p_total_centavos bigint, p_pesos jsonb, p_pagador uuid)
+returns table(user_id uuid, centavos bigint)
+language sql
+immutable
+set search_path = ''
+as $$
+  with pesos as (
+    select (e ->> 'user_id')::uuid as user_id, (e ->> 'weight')::numeric as peso
+    from pg_catalog.jsonb_array_elements(p_pesos) e
+  ), base as (
+    select p.user_id, pg_catalog.floor(p_total_centavos * p.peso / sum(p.peso) over ())::bigint as centavos
+    from pesos p
+  ), resto as (
+    select p_total_centavos - sum(b.centavos)::bigint as centavos from base b
+  ), quem as (
+    select coalesce(
+      (select b.user_id from base b where b.user_id = p_pagador),
+      (select b.user_id from base b order by b.user_id limit 1)
+    ) as user_id
+  )
+  select b.user_id, b.centavos + case when b.user_id = q.user_id then r.centavos else 0 end
+  from base b
+  cross join resto r
+  cross join quem q;
+$$;
+
+revoke all on function public.dividir_em_partes(bigint, jsonb, uuid) from public, anon, authenticated;
+
+-- Ruling 2: lê só `amount`, `paid_by`, `type`, `date`, `workspace_id` e
+-- `installment_plan_id` (mais `id` e `shares_manual`), colunas que o
+-- mascaramento do 7B não toca. É `after` e só escreve em
+-- `transaction_shares`: convive com o `guardar_privado`/`guardar_privado_depois`
+-- em qualquer ordem e não dispara a si mesmo.
+--
+-- A despesa ganha partes numa carteira `split`, com data a partir de
+-- `split_since`, quando não é à mão. Fora disso, as automáticas saem — menos
+-- numa carteira que voltou a `pooled`: trocar o modo não apaga nada, e a
+-- despesa que já tinha partes as mantém em dia; a que nasce no pote único não
+-- ganha nenhuma.
+create or replace function public.gerar_partes()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_modo text;
+  v_desde date;
+  v_pesos jsonb;
+begin
+  if new.shares_manual then
+    return null;
+  end if;
+
+  select w.split_mode, w.split_since into v_modo, v_desde
+  from public.workspaces w
+  where w.id = new.workspace_id;
+
+  if new.type <> 'expense'
+     or new.amount <= 0
+     or v_desde is null
+     or (new.date at time zone 'America/Sao_Paulo')::date < v_desde then
+    delete from public.transaction_shares s where s.transaction_id = new.id;
+    return null;
+  end if;
+
+  if v_modo is distinct from 'split' and (
+    (tg_op = 'UPDATE' and new.workspace_id is distinct from old.workspace_id)
+    or not exists (select 1 from public.transaction_shares s where s.transaction_id = new.id)
+  ) then
+    delete from public.transaction_shares s where s.transaction_id = new.id;
+    return null;
+  end if;
+
+  -- Os pesos do plano da parcela, entre os adultos que ele cita; senão, os da
+  -- carteira, entre todos os adultos. O convidado nunca tem parte.
+  select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('user_id', wm.user_id, 'weight', (e ->> 'weight')::numeric))
+  into v_pesos
+  from public.workspace_installment_plans p
+  cross join lateral pg_catalog.jsonb_array_elements(p.split_weights) e
+  join public.workspace_members wm
+    on wm.workspace_id = new.workspace_id
+   and wm.user_id = (e ->> 'user_id')::uuid
+  where p.id = new.installment_plan_id
+    and p.split_weights is not null
+    and wm.role in ('owner', 'member')
+    and (e ->> 'weight')::numeric > 0;
+
+  if v_pesos is null then
+    select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('user_id', wm.user_id, 'weight', coalesce(sw.weight, 1)))
+    into v_pesos
+    from public.workspace_members wm
+    left join public.workspace_split_weights sw
+      on sw.workspace_id = wm.workspace_id
+     and sw.user_id = wm.user_id
+    where wm.workspace_id = new.workspace_id
+      and wm.role in ('owner', 'member');
+  end if;
+
+  delete from public.transaction_shares s where s.transaction_id = new.id;
+  if v_pesos is null then
+    return null;
+  end if;
+
+  insert into public.transaction_shares (transaction_id, user_id, amount)
+  select new.id, d.user_id, d.centavos::numeric / 100
+  from public.dividir_em_partes(pg_catalog.round(new.amount * 100)::bigint, v_pesos, new.paid_by) d;
+
+  return null;
+end;
+$$;
+
+revoke all on function public.gerar_partes() from public, anon, authenticated;
+
+-- `date` e `shares_manual` entram na lista: a despesa que muda de dia cruza o
+-- `split_since`, e o `definir_partes(…, null)` volta ao automático por aqui.
+drop trigger if exists gerar_partes on public.transactions;
+create trigger gerar_partes
+  after insert or update of amount, paid_by, type, date, workspace_id, installment_plan_id, shares_manual
+  on public.transactions
+  for each row execute function public.gerar_partes();
+
+-- As partes à mão: `p_partes` é um array de `{ user_id, amount }` entre os
+-- adultos, que soma o valor exato. Nulo volta ao automático.
+create or replace function public.definir_partes(p_transaction_id uuid, p_partes jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_ws uuid;
+  v_autor uuid;
+  v_privada boolean;
+  v_valor numeric;
+  v_tipo text;
+  v_data timestamptz;
+  v_desde date;
+  v_soma numeric;
+begin
+  select t.workspace_id, t.user_id, t.is_private, t.amount, t.type, t.date
+  into v_ws, v_autor, v_privada, v_valor, v_tipo, v_data
+  from public.transactions t
+  where t.id = p_transaction_id;
+
+  if v_ws is null or not public.is_workspace_adult(v_ws) then
+    raise exception 'not a workspace adult' using errcode = '42501';
+  end if;
+  -- 7B: só o autor mexe na privada.
+  if v_privada and v_autor is distinct from auth.uid() then
+    raise exception 'PRIVADO_NAO_PERMITIDO' using errcode = 'P0001';
+  end if;
+
+  if p_partes is null then
+    update public.transactions set shares_manual = false where id = p_transaction_id;
+    return;
+  end if;
+
+  select w.split_since into v_desde from public.workspaces w where w.id = v_ws;
+  if v_tipo <> 'expense' or v_desde is null or (v_data at time zone 'America/Sao_Paulo')::date < v_desde then
+    raise exception 'PARTES_FORA_DA_DIVISAO' using errcode = 'P0001';
+  end if;
+
+  if pg_catalog.jsonb_typeof(p_partes) <> 'array' or pg_catalog.jsonb_array_length(p_partes) = 0 then
+    raise exception 'PARTES_INVALIDAS' using errcode = '22023';
+  end if;
+  if exists (
+    select 1 from pg_catalog.jsonb_array_elements(p_partes) e
+    where (e ->> 'amount')::numeric is null
+      or (e ->> 'amount')::numeric < 0
+      or (e ->> 'amount')::numeric <> pg_catalog.round((e ->> 'amount')::numeric, 2)
+      or not exists (
+        select 1 from public.workspace_members wm
+        where wm.workspace_id = v_ws
+          and wm.user_id = (e ->> 'user_id')::uuid
+          and wm.role in ('owner', 'member')
+      )
+  ) or (
+    select count(distinct e ->> 'user_id') <> count(*) from pg_catalog.jsonb_array_elements(p_partes) e
+  ) then
+    raise exception 'PARTES_INVALIDAS' using errcode = '22023';
+  end if;
+
+  select sum((e ->> 'amount')::numeric) into v_soma from pg_catalog.jsonb_array_elements(p_partes) e;
+  if v_soma is distinct from v_valor then
+    raise exception 'PARTES_NAO_FECHAM' using errcode = 'P0001';
+  end if;
+
+  -- Primeiro a marca: o gatilho das partes vê a linha à mão e não a refaz.
+  update public.transactions set shares_manual = true where id = p_transaction_id;
+  delete from public.transaction_shares s where s.transaction_id = p_transaction_id;
+  insert into public.transaction_shares (transaction_id, user_id, amount)
+  select p_transaction_id, (e ->> 'user_id')::uuid, (e ->> 'amount')::numeric
+  from pg_catalog.jsonb_array_elements(p_partes) e;
+end;
+$$;
+
+revoke all on function public.definir_partes(uuid, jsonb) from public, anon;
+grant execute on function public.definir_partes(uuid, jsonb) to authenticated;
+
+-- 5. o acerto -----------------------------------------------------------------
+-- Um pagamento entre dois adultos da carteira. Não se edita: quem errou apaga
+-- o que criou e lança de novo.
+create table if not exists public.settlements (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references public.workspaces(id) on delete cascade,
+  from_user uuid not null,
+  to_user uuid not null,
+  amount numeric(12, 2) not null check (amount > 0),
+  settled_on date not null default public.app_today(),
+  note text,
+  created_by uuid default auth.uid() references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  constraint settlements_pessoas_distintas check (from_user <> to_user)
+);
+
+create index if not exists idx_settlements_workspace_id on public.settlements (workspace_id);
+
+alter table public.settlements enable row level security;
+revoke all on public.settlements from anon;
+revoke update, truncate on public.settlements from authenticated;
+
+drop policy if exists settlements_select on public.settlements;
+create policy settlements_select on public.settlements
+  for select to authenticated
+  using (public.is_workspace_adult(workspace_id));
+
+drop policy if exists settlements_insert on public.settlements;
+create policy settlements_insert on public.settlements
+  for insert to authenticated
+  with check (
+    public.is_workspace_adult(workspace_id)
+    and created_by = (select auth.uid())
+    and exists (
+      select 1 from public.workspace_members wm
+      where wm.workspace_id = settlements.workspace_id
+        and wm.user_id = settlements.from_user
+        and wm.role in ('owner', 'member')
+    )
+    and exists (
+      select 1 from public.workspace_members wm
+      where wm.workspace_id = settlements.workspace_id
+        and wm.user_id = settlements.to_user
+        and wm.role in ('owner', 'member')
+    )
+  );
+
+drop policy if exists settlements_delete on public.settlements;
+create policy settlements_delete on public.settlements
+  for delete to authenticated
+  using (public.is_workspace_adult(workspace_id) and created_by = (select auth.uid()));
+
+-- A carteira só de leitura (sem plano) não lança acerto, como não lança despesa.
+drop trigger if exists garantir_escrita on public.settlements;
+create trigger garantir_escrita before insert on public.settlements
+  for each row execute function public.garantir_escrita();
+
+-- O saldo de cada adulto: pago − partes + acertos. Positivo, os outros devem a
+-- ele. Conta só as despesas com partes a partir de `split_since`, e só lista os
+-- adultos: o convidado não entra (a despesa dele foi paga pelo responsável).
+create or replace function public.saldos_da_carteira(p_workspace_id uuid)
+returns table(user_id uuid, pago numeric, partes numeric, acertos numeric, saldo numeric)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+#variable_conflict use_column
+begin
+  if not public.is_workspace_adult(p_workspace_id) then
+    raise exception 'not a workspace adult' using errcode = '42501';
+  end if;
+
+  return query
+  with adultos as (
+    select wm.user_id
+    from public.workspace_members wm
+    where wm.workspace_id = p_workspace_id
+      and wm.role in ('owner', 'member')
+  ), despesas as (
+    select t.id, t.amount, t.paid_by
+    from public.transactions t
+    join public.workspaces w on w.id = t.workspace_id
+    where t.workspace_id = p_workspace_id
+      and t.type = 'expense'
+      and w.split_since is not null
+      and (t.date at time zone 'America/Sao_Paulo')::date >= w.split_since
+      and exists (select 1 from public.transaction_shares s where s.transaction_id = t.id)
+  ), pagos as (
+    select d.paid_by as user_id, sum(d.amount) as valor
+    from despesas d
+    group by d.paid_by
+  ), minhas as (
+    select s.user_id, sum(s.amount) as valor
+    from public.transaction_shares s
+    join despesas d on d.id = s.transaction_id
+    group by s.user_id
+  ), acertados as (
+    select x.user_id, sum(x.valor) as valor
+    from (
+      select st.from_user as user_id, st.amount as valor
+      from public.settlements st
+      where st.workspace_id = p_workspace_id
+      union all
+      select st.to_user as user_id, -st.amount as valor
+      from public.settlements st
+      where st.workspace_id = p_workspace_id
+    ) x
+    group by x.user_id
+  )
+  select
+    a.user_id,
+    coalesce(pg.valor, 0)::numeric,
+    coalesce(mi.valor, 0)::numeric,
+    coalesce(ac.valor, 0)::numeric,
+    (coalesce(pg.valor, 0) - coalesce(mi.valor, 0) + coalesce(ac.valor, 0))::numeric
+  from adultos a
+  left join pagos pg on pg.user_id = a.user_id
+  left join minhas mi on mi.user_id = a.user_id
+  left join acertados ac on ac.user_id = a.user_id
+  order by a.user_id;
+end;
+$$;
+
+revoke all on function public.saldos_da_carteira(uuid) from public, anon;
+grant execute on function public.saldos_da_carteira(uuid) to authenticated;
+
+-- 6. a saída do `transaction_splits` -----------------------------------------
+-- Nem o 2.0 nem o `main` a leem (levantamento §4). A conferência para a
+-- migração se houver linha: apagar dado é decisão do dono, não da migração.
+do $$
+declare
+  v_tem_linha boolean := false;
+begin
+  if pg_catalog.to_regclass('public.transaction_splits') is not null then
+    execute 'select exists (select 1 from public.transaction_splits)' into v_tem_linha;
+  end if;
+  if v_tem_linha then
+    raise exception 'transaction_splits tem linhas: confira antes de remover' using errcode = 'P0001';
+  end if;
+end;
+$$;
+
+drop table if exists public.transaction_splits;
+
+-- Conferência para o roteiro (Foco de revisão 1), no SQL editor:
+--
+-- R$ 100,00 entre três adultos de peso igual: 3333, 3333 e 3334 (o centavo
+-- para quem pagou, o ...02):
+-- select * from public.dividir_em_partes(10000, '[
+--   {"user_id":"00000000-0000-0000-0000-000000000001","weight":1},
+--   {"user_id":"00000000-0000-0000-0000-000000000002","weight":1},
+--   {"user_id":"00000000-0000-0000-0000-000000000003","weight":1}
+-- ]'::jsonb, '00000000-0000-0000-0000-000000000002');
+--
+-- Pesos 2 e 1 em R$ 10,00: 666 e 334 quando quem pagou tem peso 1; 667 e 333
+-- quando quem pagou tem peso 2:
+-- select * from public.dividir_em_partes(1000, '[
+--   {"user_id":"00000000-0000-0000-0000-000000000001","weight":2},
+--   {"user_id":"00000000-0000-0000-0000-000000000002","weight":1}
+-- ]'::jsonb, '00000000-0000-0000-0000-000000000002');
+-- select * from public.dividir_em_partes(1000, '[
+--   {"user_id":"00000000-0000-0000-0000-000000000001","weight":2},
+--   {"user_id":"00000000-0000-0000-0000-000000000002","weight":1}
+-- ]'::jsonb, '00000000-0000-0000-0000-000000000001');

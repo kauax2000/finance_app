@@ -6,7 +6,7 @@ select plan(24);
 select has_table('public', 'profiles',                            'profiles exists');
 select has_table('public', 'categories',                          'categories exists');
 select has_table('public', 'transactions',                        'transactions exists');
-select has_table('public', 'transaction_splits',                  'transaction_splits exists');
+select hasnt_table('public', 'transaction_splits',                'transaction_splits removed (Bloco 7C)');
 select has_table('public', 'budgets',                             'budgets exists');
 select has_table('public', 'workspaces',                          'workspaces exists');
 select has_table('public', 'workspace_members',                   'workspace_members exists');
