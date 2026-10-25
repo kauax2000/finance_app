@@ -1,6 +1,6 @@
 # Jornadas do app
 
-O mapa de tudo o que uma pessoa faz no app, dividido em dezesseis jornadas. Cada
+O mapa de tudo o que uma pessoa faz no app, dividido em dezessete jornadas. Cada
 jornada tem um fluxograma, as regras técnicas que decidem os caminhos e as
 lacunas encontradas no código. Foi escrito lendo o código em 2026-09-17, na
 branch `finance-app-2.0`, e a navegação global foi revista em 2026-10-01,
@@ -9,7 +9,7 @@ lançamento, nos cartões de categoria e nas contas pendentes, com o seletor
 de período que confirma no próprio popover, com o rascunho protegido do
 formulário de lançamento, e com os menus do telefone em gaveta. As telas de
 acesso foram revistas em 2026-10-12 (a casca no layout) e em 2026-10-14 (o
-painel de marca animado) e as notificações em 2026-10-17 (o painel flutuante, o sino exato e a revisão do servidor, ainda não publicada) e em 2026-10-21 (o aviso de despesa e os crons passam ao banco, por migração, também ainda não publicados); a busca do telefone em 2026-10-19 (a lupa vira a barra) e, no mesmo dia, a aba "Você" no lugar do menu "Mais" (a página `/me`). Em 2026-10-21 entrou o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura, a importação de extrato e de planilha e os anexos, com as telas em wireframe (`src/components/wireframe/`) e ainda não publicado (`supabase/BLOCO_2_DEPLOYMENT.md`). Em 2026-10-22 entrou o Bloco 3A, "captura sem abrir o app": o token pessoal em Minha conta, a Edge `capture` (o Atalho do iPhone e o Apple Pay), a frase rápida no "+", o compartilhar do Android, os atalhos do ícone, a lista "A conferir" e o lembrete das 20h, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3A_DEPLOYMENT.md`). No mesmo dia entrou o Bloco 3B, "IA grátis na captura e na fatura": "Tentar com IA" na frase rápida, a foto do recibo no formulário, a foto e a frase confusa na Edge `capture`, a compra parcelada capturada que vira plano, o compartilhar de foto e PDF do Android, "Ler com IA" na conferência da fatura e a política de privacidade em `/privacidade`, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3B_DEPLOYMENT.md`). Em 2026-10-23 entrou o Bloco 4, "planos e confiança": a rota pública `/precos`, o plano em `/plans` (teste de 14 dias, vitalício, cobertura da família e "só leitura" no banco, desligados enquanto `billing_settings.enforced_since` é nulo), a faixa de só leitura na casca, o Piloto Automático (`/piloto`), o Cofre aberto (`/cofre`, com "Exportar tudo" e "Apagar a conta") e a jornada de 4 passos (`/comecar`), com as telas em wireframe e ainda não publicado (`supabase/BLOCO_4_DEPLOYMENT.md`); o assinar de verdade fica para o Bloco 8. Em 2026-10-24 entrou o Bloco 5, "previsão": o "seguro para gastar" no Painel e em `/previsao` (com a linha do tempo de 6 meses e a reserva), a receita recorrente nas assinaturas, o quadro de impacto da parcela, o orçamento que se repete todo mês, o aviso de orçamento pelo mês do fechamento da fatura e o aviso de fatura acima do normal, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_5_DEPLOYMENT.md`). Em 2026-10-24 entrou também o Bloco 6A, "contas a pagar" revista: a conta que não é paga não para de recorrer (passo 0 do cron), o lembrete por janela, a edição da agenda que reprograma a pendente, o pular atômico, os estados Encerrada e Concluída, o valor variável pela média, o casamento automático do pagamento ("Isso pagou a conta X?"), o boleto no pagamento e no lançamento pago, a explicação "conta ou assinatura" e a saída do "Beta", com as telas novas em wireframe e ainda não publicado (`supabase/BLOCO_6A_DEPLOYMENT.md`). Em 2026-10-25 entrou o Bloco 6B, "insights": o cron diário das 10h que acha fatos nas carteiras (a fatura que fechou, o relatório do mês, a recorrência, o gasto atípico, a mudança de preço, o lançamento repetido, as parcelas acabando, o sazonal e o "a conferir"), a caixa de insights no Painel com as ações de um toque (virar assinatura ou conta, atualizar o preço, apagar um repetido, ver a fatura, a previsão ou os itens a conferir), o "Não mostrar mais este tipo", o teto de 3 push por semana por pessoa e a chave "Insights" nas preferências de aviso, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_6B_DEPLOYMENT.md`). Em 2026-10-25 entrou também o Bloco 7A, "papéis e limites": o papel de convidado (lança despesa, vê só o que é dele, lê categorias e cartões e não tem orçamento, contas, previsão nem membros), o convite com papel e o consentimento do responsável legal quando o convidado é menor de idade, a troca de papel pelo dono, o app curto do convidado (navegação filtrada, guarda de rota e o Painel dele) e o limite mensal por pessoa, com aviso em 80% e 100% à pessoa e ao dono e o insight do limite, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_7A_DEPLOYMENT.md`). Quando uma tela mudar de caminho, atualize o
+painel de marca animado) e as notificações em 2026-10-17 (o painel flutuante, o sino exato e a revisão do servidor, ainda não publicada) e em 2026-10-21 (o aviso de despesa e os crons passam ao banco, por migração, também ainda não publicados); a busca do telefone em 2026-10-19 (a lupa vira a barra) e, no mesmo dia, a aba "Você" no lugar do menu "Mais" (a página `/me`). Em 2026-10-21 entrou o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura, a importação de extrato e de planilha e os anexos, com as telas em wireframe (`src/components/wireframe/`) e ainda não publicado (`supabase/BLOCO_2_DEPLOYMENT.md`). Em 2026-10-22 entrou o Bloco 3A, "captura sem abrir o app": o token pessoal em Minha conta, a Edge `capture` (o Atalho do iPhone e o Apple Pay), a frase rápida no "+", o compartilhar do Android, os atalhos do ícone, a lista "A conferir" e o lembrete das 20h, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3A_DEPLOYMENT.md`). No mesmo dia entrou o Bloco 3B, "IA grátis na captura e na fatura": "Tentar com IA" na frase rápida, a foto do recibo no formulário, a foto e a frase confusa na Edge `capture`, a compra parcelada capturada que vira plano, o compartilhar de foto e PDF do Android, "Ler com IA" na conferência da fatura e a política de privacidade em `/privacidade`, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3B_DEPLOYMENT.md`). Em 2026-10-23 entrou o Bloco 4, "planos e confiança": a rota pública `/precos`, o plano em `/plans` (teste de 14 dias, vitalício, cobertura da família e "só leitura" no banco, desligados enquanto `billing_settings.enforced_since` é nulo), a faixa de só leitura na casca, o Piloto Automático (`/piloto`), o Cofre aberto (`/cofre`, com "Exportar tudo" e "Apagar a conta") e a jornada de 4 passos (`/comecar`), com as telas em wireframe e ainda não publicado (`supabase/BLOCO_4_DEPLOYMENT.md`); o assinar de verdade fica para o Bloco 8. Em 2026-10-24 entrou o Bloco 5, "previsão": o "seguro para gastar" no Painel e em `/previsao` (com a linha do tempo de 6 meses e a reserva), a receita recorrente nas assinaturas, o quadro de impacto da parcela, o orçamento que se repete todo mês, o aviso de orçamento pelo mês do fechamento da fatura e o aviso de fatura acima do normal, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_5_DEPLOYMENT.md`). Em 2026-10-24 entrou também o Bloco 6A, "contas a pagar" revista: a conta que não é paga não para de recorrer (passo 0 do cron), o lembrete por janela, a edição da agenda que reprograma a pendente, o pular atômico, os estados Encerrada e Concluída, o valor variável pela média, o casamento automático do pagamento ("Isso pagou a conta X?"), o boleto no pagamento e no lançamento pago, a explicação "conta ou assinatura" e a saída do "Beta", com as telas novas em wireframe e ainda não publicado (`supabase/BLOCO_6A_DEPLOYMENT.md`). Em 2026-10-25 entrou o Bloco 6B, "insights": o cron diário das 10h que acha fatos nas carteiras (a fatura que fechou, o relatório do mês, a recorrência, o gasto atípico, a mudança de preço, o lançamento repetido, as parcelas acabando, o sazonal e o "a conferir"), a caixa de insights no Painel com as ações de um toque (virar assinatura ou conta, atualizar o preço, apagar um repetido, ver a fatura, a previsão ou os itens a conferir), o "Não mostrar mais este tipo", o teto de 3 push por semana por pessoa e a chave "Insights" nas preferências de aviso, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_6B_DEPLOYMENT.md`). Em 2026-10-25 entrou também o Bloco 7A, "papéis e limites": o papel de convidado (lança despesa, vê só o que é dele, lê categorias e cartões e não tem orçamento, contas, previsão nem membros), o convite com papel e o consentimento do responsável legal quando o convidado é menor de idade, a troca de papel pelo dono, o app curto do convidado (navegação filtrada, guarda de rota e o Painel dele) e o limite mensal por pessoa, com aviso em 80% e 100% à pessoa e ao dono e o insight do limite, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_7A_DEPLOYMENT.md`). Em 2026-10-25 entrou também o Bloco 7B, "gasto privado e titular do cartão": a chave Privado no lançamento do adulto (Pix, débito, dinheiro ou um cartão de que ele é titular), que deixa os outros adultos verem só "Gasto pessoal de {nome}" e o valor, com o valor em todos os totais; o titular do cartão, escolhido pelo dono entre os adultos da carteira; a conferência da fatura e o PDF de um cartão com titular abertos só ao titular e ao dono; e os avisos, os insights e a captura que não leem o original, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_7B_DEPLOYMENT.md`). Quando uma tela mudar de caminho, atualize o
 diagrama dela.
 
 ## Como ler os diagramas
@@ -52,7 +52,8 @@ banco.
 14. [Insights](#14-insights)
 15. [Papéis: dono, membro e convidado](#15-papéis-dono-membro-e-convidado)
 16. [Limite por pessoa](#16-limite-por-pessoa)
-17. [Lacunas encontradas](#17-lacunas-encontradas)
+17. [Gasto privado e titular do cartão](#17-gasto-privado-e-titular-do-cartão)
+18. [Lacunas encontradas](#18-lacunas-encontradas)
 
 ---
 
@@ -133,6 +134,14 @@ flowchart LR
     G16 -->|"definir o limite em Membros"| G2
     G16 -->|"aviso em 80% e 100%"| G3
     G16 -->|"insight do limite"| G14
+
+    G5 -->|"chave Privado: Pix, débito, dinheiro ou cartão de que é titular"| G17(("G17 Gasto privado e titular"))
+    G6 -->|"titular do cartão; conferência só dele e do dono"| G17
+    G15 -->|"só o adulto marca; o convidado nunca"| G17
+    G17 -->|"o valor segue nos totais; a categoria some"| G4
+    G17 -->|"Gasto pessoal de Fulana na lista e na conferência"| G5
+    G17 -->|"aviso da despesa privada e da fatura do titular"| G3
+    G17 -->|"insight da fatura do cartão com titular"| G14
 ```
 
 ---
@@ -645,6 +654,7 @@ flowchart TD
     income --> catPick
     catPick -->|"Gerenciar categorias"| G9(("G9 /categories"))
     expense -->|"forma: cartão de crédito"| cardPick(["Seletor de cartão"])
+    expense -.->|"autor adulto: Pix, débito, dinheiro ou cartão de que é titular, chave Privado"| G17(("G17 Gasto privado"))
     cardPick -->|"Cadastrar cartão ou sem cartões"| G6(("G6 /credit-cards"))
     cardPick -.->|"sem cartão escolhido"| disabled(["Salvar desativado"])
 
@@ -815,6 +825,7 @@ flowchart TD
 | A conferir: lista (Bloco 3A) | `?conferir=1` mostra, acima da lista de sempre, o wireframe com os lançamentos `needs_review` da carteira. "Confirmar" tira a marca; "Abrir" leva a `?txn=id` mantendo a lista; "Fechar" tira o `conferir` da URL. Não é filtro do controlador da lista: vira filtro na revisão de tela | `src/components/wireframe/a-conferir-lista-wireframe.tsx`, `src/app/(app)/transactions/page-client.tsx` |
 | Avaliadores pelo servidor (Bloco 3A) | `evaluate-budgets` e `evaluate-credit-card-alerts` aceitam o Bearer da service role ou o `x-cron-secret` (`isServiceAuthorized`, agora em `_shared/service-auth.ts`), além do JWT da pessoa; pelo servidor, o corpo traz o `workspace_id`, e a checagem de membro é pulada | `supabase/functions/_shared/service-auth.ts`, `supabase/functions/evaluate-budgets/`, `supabase/functions/evaluate-credit-card-alerts/` |
 | Anexos (Bloco 2) | No detalhe, a seção de anexos: WebP, JPEG, PNG ou PDF, até 10 MB, e 25 MB por carteira; a foto vira WebP de lado maior 1600 px. O objeto mora em `<workspace_id>/<uuid>.<ext>` no bucket privado `attachments`, e a cota conta o tamanho real do objeto (`attachments_enforce_quota`). Se a linha falha depois do envio, o objeto é apagado. "Abrir" pede uma URL assinada de 3600 s numa aba aberta no clique; com o popup bloqueado, a seção mostra o link "Abrir anexo" com a URL assinada (`target="_blank"`), e a pessoa não sai do app. Excluir a transação avulsa apaga os objetos; em lote, parcelada ou offline, quem apaga é o cron semanal | `src/components/wireframe/anexos-wireframe.tsx`, `src/lib/anexos.ts`, `src/lib/transactions/mutations.ts`, `supabase/migrations/20261022130000_anexos.sql` |
+| Gasto privado (Bloco 7B) | A chave "Privado" do formulário (só na despesa da própria pessoa) grava `is_private`; os outros adultos leem "Gasto pessoal de {nome}" e o valor, sem categoria, e só o autor edita ou exclui. Ver a jornada 17 | `src/components/wireframe/gasto-privado-wireframe.tsx`, `src/lib/privado/` |
 | Botão direito na linha | Atalho das ações da linha (os botões da coluna Ações continuam); sobre uma linha selecionada age na seleção inteira (`contextMenuTargets`); linhas projetadas não têm menu | `TransactionRowContextMenu` em `src/components/transactions/transactions-table.tsx` |
 
 ---
@@ -835,6 +846,7 @@ flowchart TD
     valid -->|"sim"| created(["Cartão cadastrado"]) --> list
     created -->|"Ver, só online"| detail
     newCard -->|"Cancelar"| list
+    newCard -.->|"só o dono: titular do cartão"| G17(("G17 Titular do cartão"))
     tiles -->|"cartão"| detail["/credit-cards/id"]
 
     detail --> found{"Cartão existe?"}
@@ -864,6 +876,7 @@ flowchart TD
     recent -->|"Ver todas"| G5
 
     top --> check(["WIREFRAME Conferir fatura: ciclo fechado, total do banco, arquivo"])
+    check -.->|"cartão com titular: só o titular e o dono conferem"| G17
     check -->|"digitar o total e Gravar"| bankTotal[("Grava credit_card_statement_totals, um por cartão e fechamento")]
     check -->|"arquivo .pdf"| pdfRead{"PDF com senha?"}
     pdfRead -->|"sim"| pdfPass(["Pede a senha; errada: Senha incorreta"]) -->|"Abrir"| pdfRead
@@ -894,6 +907,7 @@ flowchart TD
 | Ler com IA (Bloco 3B) | Quando a leitura de um PDF fica incompleta, aparece "Ler com IA": o texto do PDF já redigido no aparelho (`removerIdentificacao`), guardado da leitura, vai à `ia-ler` com o fechamento do ciclo, sem reler o arquivo nem pedir a senha. A Edge redige de novo e corta em fatias de 12.000 caracteres (até 6; acima, "Fatura grande demais para a IA. Use o CSV do banco."), cada uma gastando uma cota. Os itens da IA substituem os do leitor, com "Lido pela IA" no topo; o total continua o do leitor determinístico. Sem item válido, os itens do leitor ficam e o aviso diz "A IA não achou itens nesta fatura. Confira à mão.". Lida pela IA, o botão some | `src/components/wireframe/conferir-fatura-wireframe.tsx`, `src/lib/ia/fatura.ts`, `src/lib/ia/ler.ts` |
 | Total do banco (Bloco 2) | Gravar o total (digitado ou lido) faz um `upsert` em `credit_card_statement_totals` (`workspace_id`, `credit_card_id`, `statement_close_date`), com `source` `manual`, `pdf`, `csv` ou `ofx`. Lido de PDF, o PDF vira anexo do total (o mesmo PDF não sobe duas vezes; falhar aqui não desfaz o total). Numa fatura fechada, o painel mostra "Total do banco · diferença", e o Painel, Contas a pagar e os avisos de fatura da Edge usam o total do banco no lugar do calculado | `src/components/wireframe/conferir-fatura-wireframe.tsx`, `src/lib/fatura/total-com-banco.ts`, `src/components/credit-cards/credit-card-invoice-analytics-panel.tsx` |
 | Estorno (Bloco 2) | A fatura é despesas menos estornos (receita no cartão), e pode ficar negativa; os percentuais por categoria seguem sobre o gasto bruto. Os alertas de limite, fechamento e vencimento descontam o estorno | `src/lib/credit-card-billing.ts`, `src/lib/credit-card-invoice-analytics.ts`, `supabase/functions/_shared/credit-card-cycle.ts` |
+| Titular e conferência (Bloco 7B) | O dono escolhe o titular do cartão (`holder_user_id`, nulo é o cartão da casa) no cadastro e na edição. Num cartão com titular, o total do banco, o PDF da fatura e a conferência são só do titular e do dono, os avisos com dado do banco vão só a eles, e o titular pode marcar as compras do cartão como privadas. Ver a jornada 17 | `src/components/wireframe/gasto-privado-wireframe.tsx`, `src/components/wireframe/conferir-fatura-wireframe.tsx` |
 | Alertas | Limite, fechamento e vencimento geram notificações `cc_*`. A compra parcelada no cartão roda a conferência de limite, como a despesa avulsa. Numa fatura fechada (fechou, vence em breve, vence hoje e, no limite, a última fechada não paga), o valor é o total do banco quando gravado (`escolherTotal` em `_shared/credit-card-cycle.ts`, a regra de `totalComBanco`); o calendário lê `credit_card_statement_totals` numa consulta só por execução. A fatura que ainda fecha usa o calculado. Desde o Bloco 5 o `credit-card-calendar-alerts` também avisa a fatura acima do normal (ver a jornada 13, Previsão), com consulta própria | edges `evaluate-credit-card-alerts`, `credit-card-calendar-alerts`; `src/components/transactions/transaction-form-persistence.ts` |
 
 ---
@@ -1451,7 +1465,7 @@ Quem pode o quê dentro de uma carteira compartilhada. O dono e o membro são
 adultos e usam a casa inteira; o **convidado** (Bloco 7A, em wireframe) lança
 despesa, vê só o que é dele e tem um app mais curto. O convidado entra pelo
 convite com papel (ver 2b), e o dono pode trocar o papel de quem já está na
-carteira. A coluna "privadas" da spec é do Bloco 7B.
+carteira. A coluna "privadas" da spec é do Bloco 7B (jornada 17).
 
 | Ação | Dono | Membro | Convidado |
 |---|---|---|---|
@@ -1463,6 +1477,7 @@ carteira. A coluna "privadas" da spec é do Bloco 7B.
 | Orçamento, faturas, previsão, contas, insights da casa | vê | vê | não |
 | O próprio limite | vê | vê | vê |
 | Convites e membros | gerencia | não | não |
+| Marcar um gasto como privado | sim (o dele) | sim (o dele) | não |
 
 ### 15a. Trocar o papel
 
@@ -1590,7 +1605,135 @@ flowchart TD
 
 ---
 
-## 17. Lacunas encontradas
+## 17. Gasto privado e titular do cartão
+
+Entre adultos da mesma carteira, uma compra pode ser **privada**: os outros
+adultos veem o valor e que ela existe, mas não o que foi comprado. Bloco 7B, em
+wireframe. Ela vale para a compra paga por **Pix, débito ou dinheiro**, ou num
+cartão cujo **titular é o próprio autor**; o cartão sem titular é "da casa", e
+nele o privado não vale. O **valor entra em todos os totais** (mês, seguro,
+fatura): só a descrição, a categoria e o `capture_meta` saem da vista. O
+**titular do cartão** é escolhido pelo dono, entre os adultos da carteira, e
+também decide quem confere a fatura no banco. A carteira pessoal continua sendo
+a privacidade total, e nada muda nela. Três caminhos: lançar o gasto privado
+(17a), escolher o titular (17b) e conferir a fatura de um cartão com titular
+(17c).
+
+### 17a. Lançar um gasto privado
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    form(["Formulário de lançamento: Despesa"]) --> aparece{"A chave Privado aparece?"}
+    aparece -->|"receita, papel a caminho, linha de outra pessoa ou linha lida sem is_private"| semChave(["Sem a chave: o lançamento é como sempre"])
+    aparece -->|"despesa da própria pessoa, com o papel carregado"| regra{"podeSerPrivado: vale aqui?"}
+    regra -->|"convidado"| nao1(["Chave desabilitada: Quem é convidado não marca gasto privado"])
+    regra -->|"parcelada, assinatura ou conta ligada"| nao2(["Chave desabilitada: Assinatura, parcela e conta não podem ser privadas"])
+    regra -->|"TED ou outro método"| nao3(["Chave desabilitada: Só Pix, débito, dinheiro ou o cartão de que você é titular"])
+    regra -->|"cartão de crédito sem titular"| nao4(["Chave desabilitada: No cartão da casa o titular vê a fatura no banco"])
+    regra -->|"cartão de outro titular"| nao5(["Chave desabilitada: Só o titular do cartão pode marcar como privado"])
+    regra -->|"Pix, débito, dinheiro ou cartão de que é titular"| chave(["WIREFRAME Privado: os outros adultos veem Gasto pessoal de seu nome e o valor"])
+    nao4 -.->|"o dono define o titular"| G17b(("G17b Titular do cartão"))
+    chave -->|"Salvar marcado: is_private true; desmarcado numa linha que era privada: false"| grava[("transactions: insert ou update")]
+    grava --> gat[("Trigger guardar_privado: vale para cliente, RPC e service role")]
+    gat -->|"não vale, ou outro autor tentando marcar"| recusa(["PRIVADO_NAO_PERMITIDO: a frase do banco, e o formulário continua aberto"])
+    gat -->|"vale"| mascara[("Descrição, categoria e capture_meta vão para transacoes_privadas, que só o autor lê; a linha fica Gasto pessoal, sem categoria")]
+    mascara --> totais(["O valor entra no total do mês, no seguro e na fatura"])
+    totais -.-> G4(("G4 Painel"))
+    totais -.-> G13(("G13 Previsão"))
+    mascara -.->|"fora da tela de categoria e do orçamento por categoria"| G9(("G9 Categorias"))
+
+    mascara --> quem{"Quem olha a linha?"}
+    quem -->|"o autor, no app 2.0"| autor(["Lista, folha, formulário, Painel, cartão, A conferir e Cofre juntam os originais"])
+    quem -->|"outro adulto, no app 2.0"| outros(["Gasto pessoal de Fulana e o valor, sem categoria e sem anexos"])
+    quem -->|"outro adulto, no app de main"| mainFront(["Gasto pessoal e o valor"])
+    outros -->|"Editar ou Excluir"| barra[("RLS: update e delete só do autor; 0 linhas, e a mensagem diz que só quem lançou muda")]
+    autor -->|"Editar e desmarcar"| volta[("Trigger devolve descrição, categoria e capture_meta e apaga a linha de transacoes_privadas")]
+
+    mascara -.->|"despesa manual"| aviso[("notify-transaction-created: valor e Gasto pessoal de Fulana")]
+    aviso --> G3(("G3 Sino"))
+    mascara -.->|"insights e capture"| edges[("insights-daily ignora a privada nos detectores; capture não a usa como histórico")]
+    edges --> G14(("G14 Insights"))
+```
+
+### 17b. Titular do cartão
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    cartao(["/credit-cards: Novo cartão ou Editar cartão"]) --> dono{"É dono da carteira?"}
+    dono -->|"não"| semSeletor(["Sem o seletor de titular"])
+    dono -->|"sim"| seletor(["WIREFRAME Titular do cartão: os adultos da carteira ou Cartão da casa"])
+    seletor -->|"Cartão da casa"| casa(["holder_user_id nulo: o privado não vale e a conferência é de todo adulto"])
+    seletor -->|"um adulto"| titular(["holder_user_id = o adulto"])
+    casa -->|"Salvar"| grava[("credit_cards: insert ou update")]
+    titular -->|"Salvar"| grava
+    grava --> gat[("Triggers conferir_titular e conferir_titular_troca")]
+    gat -->|"quem grava não é dono, salvo o titular tirando a si mesmo"| erroDono(["TITULAR_SO_DONO: Só quem é dono da carteira escolhe o titular do cartão"])
+    gat -->|"o titular não é dono nem membro da carteira"| erroAdulto(["TITULAR_NAO_ADULTO: O titular do cartão precisa ser adulto da carteira"])
+    gat -->|"vale"| salvo(["Cartão salvo"])
+    erroDono --> cartao
+    erroAdulto --> cartao
+    salvo -->|"com titular"| efeitos(["O titular pode marcar as compras do cartão como privadas, e a fatura no banco passa a ser dele e do dono"])
+    efeitos --> G17a(("G17a Lançar um gasto privado"))
+    efeitos --> G17c(("G17c Conferir a fatura"))
+    efeitos -.->|"avisos com total do banco e o resumo da fatura"| avisos[("Edges: só o titular e os donos")]
+    avisos --> G3(("G3 Sino"))
+    salvo -->|"Ver cartões"| G6(("G6 Cartões"))
+```
+
+### 17c. Conferir a fatura de um cartão com titular
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    detalhe["/credit-cards/id: Conferir fatura"] --> comTitular{"O cartão tem titular?"}
+    comTitular -->|"não: cartão da casa"| aberta(["Como antes: todo adulto confere"])
+    comTitular -->|"sim"| quem{"Quem abre?"}
+    quem -->|"adulto que não é o titular nem o dono"| fechada(["Só o titular do cartão e o dono da carteira conferem esta fatura"])
+    quem -->|"o titular ou o dono"| confere(["WIREFRAME Conferir fatura: total do banco e arquivo"])
+    aberta --> confere
+    confere -->|"gravar o total, anexar o PDF"| totais[("credit_card_statement_totals e attachments da fatura: só com conferencia_liberada")]
+    confere --> grupos(["Bate, Falta no app, Só no app, Valor diferente, Parcela fora de sequência"])
+    grupos -->|"linha casada com a privada de outra pessoa"| mascarada(["Gasto pessoal de Fulana e o valor, no lado do banco e no do app"])
+    grupos -->|"linha casada com a privada da própria pessoa"| propria(["A descrição original"])
+    fechada -.->|"a RLS diz o mesmo: o total e o PDF não vêm"| totais
+    totais -.->|"fatura fechada vale o total do banco"| G7(("G7 Contas a pagar"))
+    totais -.->|"aviso de fatura e limite com o total do banco"| avisos[("credit-card-calendar-alerts e evaluate-credit-card-alerts: só o titular e os donos")]
+    avisos --> G3(("G3 Sino"))
+    totais -.->|"insight Fatura fechou"| fechou[("insights-daily: do titular e de cada dono, e não da carteira")]
+    fechou --> G14(("G14 Insights"))
+    grupos -->|"Importar selecionados"| G5(("G5 Lançamentos"))
+```
+
+### Quem vê o quê
+
+| Quem olha | Valor e totais | Descrição e categoria | Editar e excluir | Anexos |
+|---|---|---|---|---|
+| O autor | sim, em todos | os originais, no app 2.0 | sim | sim |
+| Outro adulto, no app 2.0 | sim, em todos | "Gasto pessoal de {nome}", sem categoria | não: a RLS barra e a tela avisa | não |
+| Outro adulto, no app de `main` | sim, em todos | "Gasto pessoal", sem categoria | não: a RLS barra | não |
+| Convidado | só as dele; ele não marca privado | as dele | só as dele | as dele |
+
+### Regras técnicas
+
+| Ponto | Regra | Onde |
+|---|---|---|
+| O mecanismo | A linha de `transactions` guarda o valor, a data, o método e `is_private`. A descrição, a categoria e o `capture_meta` moram em `transacoes_privadas` (uma linha por transação privada, `category_id` com `on delete set null`; RLS e as quatro políticas só do autor, e o insert e o update exigem a transação ser dele). O `guardar_privado` (antes de gravar) mascara a linha com a palavra fixa `Gasto pessoal`, sem categoria e sem `capture_meta`. Num insert a transação ainda não existe e a chave estrangeira recusaria a linha de `transacoes_privadas`: o gatilho guarda os detalhes numa configuração local da transação (`set_config(..., true)`, chave `privado.t` + md5 da carteira com o `client_id` ou o `id`) e o `guardar_privado_depois` os grava. No upsert que cai no conflito (`workspace_id,client_id`) o `excluded` já chega mascarado, e é pela mesma chave que o update acha o que a pessoa mandou. O trigger vale para cliente, RPC `security definer` e service role. O SQL nunca rodou contra um banco: valide num ramo de teste antes da produção | `supabase/migrations/20261030120000_privado.sql`, `src/lib/privado/migracao-privado.test.ts` |
+| Onde vale | Só a **despesa de adulto** (dono ou membro, lido direto de `workspace_members`), paga por `pix`, `debit_card` ou `cash`, ou por `credit_card` num cartão com `holder_user_id` igual ao autor. Não vale no cartão da casa (titular nulo), no cartão de outro titular, no TED ou outro método, na receita nem no gasto do convidado. Não pode ter `subscription_id`, `installment_plan_id` nem conta ligada (`bill_instances.transaction_id`, recusada pelo `recusar_conta_na_privada`). Recusa com `PRIVADO_NAO_PERMITIDO`. O `project_id` do 7C entra na mesma checagem quando a coluna existir (Ruling 2). A carteira pessoal não é distinguida: a chave aparece e funciona, sem efeito prático | `supabase/migrations/20261030120000_privado.sql` |
+| A tela explica antes | `podeSerPrivado` espelha o gatilho para a chave dizer o motivo antes de salvar (Ruling 3): convidado, vínculo, método, cartão da casa e cartão de outro titular. O banco é a garantia, e um teste de paridade lê o `in (...)` do gatilho e compara. A chave só aparece na despesa da própria pessoa, com o papel carregado e, na edição, com a linha trazendo `is_private`. `privadoDoSalvar` só manda a coluna ao marcar ou ao desmarcar uma linha que era privada: o insert comum não a cita | `src/lib/privado/pode-ser-privado.ts`, `src/components/transactions/transaction-form-use.tsx`, `src/components/wireframe/gasto-privado-wireframe.tsx` |
+| Editar e desmarcar | Só o autor marca, edita ou desmarca (quem chama sem sessão passa). Na edição de uma privada, o campo que veio diferente do da linha (a máscara) é o novo; o igual fica como está em `transacoes_privadas`, e assim o `main`, que devolve a máscara, não apaga o original. Por isso, numa privada, limpar a categoria ou o `capture_meta` não faz nada (igual à máscara): desmarque. Desmarcar devolve a descrição, a categoria e o `capture_meta` à linha e apaga a de `transacoes_privadas`, sem revalidar. As políticas de `update` e `delete` de `transactions` ganharam `(not is_private or user_id = auth.uid())` no ramo do adulto: um membro no `main` não mexe na privada alheia, nem pelo `update` direto. A tela confere as linhas afetadas e responde com a frase de que o lançamento pode ter sido mudado por outra pessoa, online e na fila offline | `supabase/migrations/20261030120000_privado.sql`, `src/lib/supabase-errors.ts` (`NADA_MUDOU`), `src/lib/offline/handlers/by-id.ts` |
+| O valor entra em tudo | O select e o insert de `transactions` não mudaram: todo adulto lê a linha mascarada. O total do mês, o seguro para gastar e a fatura prevista dão o mesmo antes e depois de marcar (teste com o mesmo conjunto de lançamentos). A categoria nula é o que tira a privada da tela de categoria e do orçamento por categoria (lacuna 62) | `src/lib/privado/numeros-privado.test.ts` |
+| O que o autor e os outros leem | O autor junta os originais (`juntarDetalhesPrivados`, uma consulta só a `transacoes_privadas`, e só quando a página tem privada dele) na lista, na folha, no `?txn=`, no Painel e no calendário, nas compras do cartão, no "A conferir" e no Cofre; se a busca falha, a linha abre mascarada. Os outros leem `rotuloDaTransacao`: "Gasto pessoal de {nome}", com o nome do diretório de membros. O filtro por categoria e a busca por descrição rodam na linha mascarada, então o autor não acha a própria privada pelo original (lacuna 61) | `src/lib/privado/detalhes.ts`, `src/lib/privado/use-rotulo-da-transacao.ts`, `src/lib/cofre/exportar.ts` |
+| Anexos | A política de `attachments` (ver, inserir e apagar) e a do storage escondem o anexo cuja transação é privada de outra pessoa, e o da fatura de um cartão cuja conferência não está liberada (`anexo_oculto`, `objeto_de_anexo_oculto`: as duas `security definer`, para o convidado e a RLS não lerem "não oculto"). O objeto órfão (sem linha de `attachments`) fica fechado, menos para quem o subiu e para o dono. O adulto que apaga o anexo de outro deixa o objeto até a limpeza semanal (lacuna 64) | `supabase/migrations/20261030120000_privado.sql` |
+| O titular | `credit_cards.holder_user_id` (nulo é "cartão da casa"). `conferir_titular` e `conferir_titular_troca` recusam: sem ser dono da carteira, `TITULAR_SO_DONO` (o titular atual só pode limpar a si mesmo; mudar de carteira um cartão com titular também pede o dono); o novo titular que não é dono nem membro da carteira, `TITULAR_NAO_ADULTO`. A service role passa. Só o dono vê o seletor, com os adultos da carteira e o "Cartão da casa"; um titular que saiu aparece como "(fora da carteira)". O titular e o autor só são conferidos ao gravar: quem sai ou vira convidado depois continua titular no banco (lacuna 67) | `supabase/migrations/20261030120000_privado.sql`, `src/components/wireframe/gasto-privado-wireframe.tsx`, `src/lib/credit-cards/mutations.ts` |
+| A conferência | Num cartão com titular, `credit_card_statement_totals` (as quatro políticas) e os anexos de fatura só valem para o titular e o dono (`conferencia_liberada`). No cartão da casa, de todo adulto, como hoje. A tela mostra "Só o titular do cartão e o dono da carteira conferem esta fatura." a quem não é nenhum dos dois. Nos grupos, a linha casada com a privada de outra pessoa diz "Gasto pessoal de {nome}" com o valor. A privada casa pelo valor e pela data como qualquer linha: a máscara só muda o nome mostrado | `supabase/migrations/20261030120000_privado.sql`, `src/components/wireframe/conferir-fatura-wireframe.tsx` |
+| Avisos e insights | `leitoresDoCartao(membros, titular, usaBanco)`: os adultos, e, com titular e dado do banco, só o titular e os donos (o titular que saiu some). O aviso de fatura com total do banco, o de limite com o total do banco e o resumo da conferência seguem a regra; o "fecha em breve" e a fatura sem total gravado vão a todo adulto (Ruling 6). O insight `fatura_fechou` de um cartão com titular é sempre do titular e dos donos, com `user_id` (Ruling 7). O aviso de despesa nova diz "{valor} — Gasto pessoal de {nome}" na privada. Os detectores de recorrência, atípico, duplicidade, preço e sazonal ignoram a privada (a fatura e os totais a contam); a `capture` ignora as privadas no histórico que casa; `virar_assinatura` e `virar_conta` deixam a privada de fora | `supabase/functions/_shared/destinatarios.ts`, `supabase/functions/_shared/insights/detectores.ts`, `supabase/functions/_shared/process-transaction-notification.ts`, `supabase/functions/insights-daily/index.ts`, `supabase/functions/credit-card-calendar-alerts/index.ts`, `supabase/functions/evaluate-credit-card-alerts/index.ts`, `supabase/functions/capture/index.ts` |
+| O 2.0 sem a migração | O front do 2.0 roda contra um banco sem a migração do 7B (Ruling 8): as colunas novas só entram em consulta `*` ou tolerante, o corpo de escrita só cita `is_private` e `holder_user_id` quando mudam algo, e a busca de `transacoes_privadas` só roda depois de achar uma privada. Um teste de fonte tranca. Marcar privado ou escolher um titular sem a migração falha: aplique-a antes de o dono testar. O `main` não manda nenhuma das duas colunas e lê "Gasto pessoal" | `src/lib/privado/colunas-tolerantes.test.ts`, `supabase/BLOCO_7B_DEPLOYMENT.md` |
+
+---
+
+## 18. Lacunas encontradas
 
 Coisas que o mapeamento achou no caminho. As de acesso foram corrigidas na
 rodada de set/2026 e estão registradas abaixo da tabela; as que sobraram
@@ -1651,6 +1794,13 @@ continuam aqui para registro.
 | 58 | G2, G3, G4, G5, G14, G15, G16 | O Bloco 7A (papéis e limites) está no repositório, com as telas em wireframe, e **nada foi publicado**. A migração dos papéis sobe antes das Edges de convite (`workspace-invites-create` e `-resend` gravam e leem `menor` e `consentimento_em`, e a Edge antiga cria convite de membro mesmo com `role: guest`), a dos limites antes do novo `evaluate-budgets`, e ninguém é convidado como `guest` antes do front do 2.0: `supabase/BLOCO_7A_DEPLOYMENT.md`. |
 | 59 | G15 | O convidado lê a lista de membros pela API (nomes, fotos, e-mails, papéis e o responsável de cada convidado): `workspace_member_directory` e a política de leitura de `workspace_members` ficam de membro, de propósito, porque ele precisa dos nomes de quem divide a casa. Só a gestão (convidar, remover, trocar o papel) é do dono. |
 | 60 | G2, G15 | Quem saiu da carteira como convidado e ainda tem um link de convite ativo entra de novo como **membro**: o link é sempre de membro, sem limite de usos, por 7 dias, e o `accept_workspace_invite` só recusa quem ainda está dentro (`already_member`). O link é portador por natureza (quem o tem, entra). Para um menor, prefira o convite por e-mail, e revogue os links de membro que ele possa ter visto (`supabase/BLOCO_7A_DEPLOYMENT.md` §4). |
+| 61 | G5, G17 | Para o autor de uma privada, o filtro por categoria e a busca (na lista e na paleta) pela descrição original não acham a compra dele: os filtros rodam na linha mascarada (`Gasto pessoal`, sem categoria). A `transacoes_privadas` só o autor lê, então buscar pelo original é possível, mas fica para depois. |
+| 62 | G9, G13, G17 | A privada não aparece na tela de categoria nem no orçamento por categoria, por construção: a categoria vai para `transacoes_privadas`, e a linha fica sem categoria. O valor entra no total do mês, no seguro e na fatura. A carteira pessoal não é distinguida (a chave aparece e funciona), e nela a privada também perde a categoria. |
+| 63 | G6, G17 | O titular que não é o dono não consegue se tirar de titular pela tela: o seletor é só do dono (Ruling 4). O banco deixa o titular atual limpar o próprio `holder_user_id`; quem precisa sair do cartão pede ao dono. |
+| 64 | G5, G6, G17 | O adulto que apaga um anexo que outro adulto subiu (e que ele pode ver) apaga a linha de `attachments` e deixa o objeto no bucket até o `attachments-cleanup-weekly` (domingo): o objeto é fechado a todos menos a quem o subiu e ao dono. |
+| 65 | G3, G14, G17 | O insight `fatura_fechou` de um cartão com titular vai só ao titular e aos donos (Ruling 7), e o aviso de fatura, de limite e o resumo da conferência com dado do banco também (Ruling 5). O membro adulto que não é titular nem dono deixa de receber o resumo da fatura de um cartão que não é dele. O "fecha em breve" e a fatura sem total do banco gravado seguem a todos (Ruling 6). |
+| 66 | G6, G17 | O titular e o autor só são conferidos ao gravar. Quem era titular e saiu da carteira ou virou convidado continua com o `holder_user_id` no banco: o titular que saiu some dos avisos, e a conferência fica só com o dono. As privadas de um autor que virou convidado seguem mascaradas, e ele só consegue desmarcá-las. |
+| 67 | G2, G3, G4, G5, G6, G14, G15, G17 | O Bloco 7B (gasto privado e titular do cartão) está no repositório, com as telas em wireframe, e **nada foi publicado**. O SQL da migração nunca rodou contra um banco (nem o pgTAP roda aqui): valide o gatilho num ramo de teste antes da produção, em especial o `set_config` local do upsert. A migração sobe antes das Edges `insights-daily`, `credit-card-calendar-alerts`, `evaluate-credit-card-alerts`, `capture` e `notify-transaction-created`, que leem `is_private` e `holder_user_id`; o front do 2.0 roda sem a migração (Ruling 8): `supabase/BLOCO_7B_DEPLOYMENT.md`. |
 
 ### Fechadas na rodada de acesso (set/2026)
 

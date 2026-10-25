@@ -52,18 +52,19 @@ def table(block):
 
 diagrams = re.findall(r"```mermaid\n(.*?)```", md, re.S)
 tables = re.findall(r"((?:^\|.*\|\n)+)", md, re.M)
-# 25 tabelas: a da legenda, dezesseis de "Regras técnicas" mais a dos papéis (as novas, T11, T12,
-# T13, T14, T16 e T17, são as jornadas 11 e 12 do Bloco 4, a 13 do Bloco 5, a 14 do Bloco 6B e
-# a 15 e a 16 do Bloco 7A; a T15 é a tabela de papéis da jornada 15), a de lacunas abertas e as
-# seis de lacunas fechadas. As de lacunas ficam no fim do arquivo e o template as escreve à mão,
+# 27 tabelas: a da legenda, dezessete de "Regras técnicas" mais a dos papéis e a de quem vê o quê (as
+# novas, T11, T12, T13, T14, T16, T17 e T19, são as jornadas 11 e 12 do Bloco 4, a 13 do Bloco 5, a 14
+# do Bloco 6B, a 15 e a 16 do Bloco 7A e a 17 do Bloco 7B; a T15 é a tabela de papéis da jornada 15 e a
+# T18 a de quem vê o quê da 17), a de lacunas abertas e as seis de lacunas fechadas. As de lacunas ficam no fim do arquivo e o template as escreve à mão,
 # então não deslocam nenhum índice de @@Tn@@.
 # 22 diagramas: o 5c (captura e "A conferir", Bloco 3A) entrou como @@D9@@ e
 # deslocou os de Cartões em diante (@@D10@@ a @@D14@@). Os dois do Bloco 4
 # (@@D15@@, Plano e só leitura, e @@D16@@, Confiança) vêm depois do da Conta, o
 # do Bloco 5 (@@D17@@, Previsão) e o do Bloco 6B (@@D18@@, Insights) vêm depois, e os três do
-# Bloco 7A vêm por último (@@D19@@, Trocar o papel, @@D20@@, O app do convidado, e @@D21@@,
-# Limite por pessoa).
-assert len(diagrams) == 22 and len(tables) == 25, (len(diagrams), len(tables))
+# Bloco 7A (@@D19@@, Trocar o papel, @@D20@@, O app do convidado, e @@D21@@, Limite por pessoa) e
+# os três do Bloco 7B vêm por último (@@D22@@, Lançar um gasto privado, @@D23@@, Titular do cartão,
+# e @@D24@@, Conferir a fatura de um cartão com titular).
+assert len(diagrams) == 25 and len(tables) == 27, (len(diagrams), len(tables))
 out = re.sub(r"@@D(\d+)@@", lambda m: diagram(diagrams[int(m.group(1))]), tpl)
 out = re.sub(r"@@T(\d+)@@", lambda m: table(tables[int(m.group(1))]), out)
 assert "@@" not in out
