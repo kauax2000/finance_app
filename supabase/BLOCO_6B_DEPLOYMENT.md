@@ -428,6 +428,6 @@ Quando o front do 2.0 subir, publique a `insights-daily` (§2) e confira também
 **O que fica de fora, de propósito.** O "limite da pessoa" (o gasto passou do
 limite de alguém da família) e o "convidado recebe só os insights do próprio
 limite" ficam para o Bloco 7, porque o limite por pessoa e o papel `guest` ainda
-não existem. O motor já nasce com `user_id` opcional para servi-los. E um
+não existem (entregues no Bloco 7A: `BLOCO_7A_DEPLOYMENT.md`). O motor já nasce com `user_id` opcional para servi-los. E um
 lançamento novo é visto pelo cron do **dia seguinte**, não na hora: é desvio
 consciente, para o caminho do lançamento não ganhar mais uma chamada.

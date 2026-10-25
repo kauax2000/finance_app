@@ -73,8 +73,9 @@ Aplica, **nesta ordem**, `20261029120000_papeis.sql` e `20261029130000_limites.s
 
 As duas só acrescentam: nenhum `drop table`, nenhum `drop column`, os checks só
 crescem (`guest` entra, nada sai) e as colunas novas têm padrão. Os checks novos
-entram `not valid` e são validados em seguida, para o lock forte não esperar a
-varredura da tabela.
+entram `not valid` e são validados em seguida, por cautela: as duas etapas rodam
+na mesma transação do `db push`, então o padrão não encurta o lock, e nestas
+tabelas pequenas isso não pesa.
 
 Depois, rode as conferências **uma por vez**: o SQL Editor mostra só o resultado
 do último comando.
@@ -263,7 +264,8 @@ na lista toda função que alcança um desses módulos **ou** teve o próprio
 `index.ts` mudado. A conferência é refazer a conta:
 
 ```bash
-git diff e288f16a..HEAD --name-only -- supabase/functions
+git log --oneline -- supabase/migrations/20261029120000_papeis.sql
+git diff <o commit antes dessa migração>..HEAD --name-only -- supabase/functions
 ```
 
 (e seguir os imports de cada `index.ts`; `grep -rn "destinatarios\|limite-pessoa\|insights/textos\|process-transaction-notification\|workspace-invite-email" supabase/functions` mostra quem importa os cinco módulos).
@@ -334,7 +336,10 @@ mostra o papel pedido, não o criado.
 
 **Confirme que o convite sem `role` continua `member`.** Depois de publicar as
 duas Edges de convite, e com o front de `main` ainda no ar, crie um convite
-pelo front de `main` (por e-mail ou por link) e rode:
+pelo front de `main` e rode. Use o **link** (ou o seu próprio e-mail): o convite
+por e-mail envia uma mensagem de verdade, e o banco de desenvolvimento é o de
+produção. O link não prova o ramo do e-mail, então, se quiser prová-lo, convide
+um endereço seu:
 
 ```sql
 select role, menor, consentimento_em, invited_email, created_at
@@ -369,25 +374,24 @@ de sempre sai igual. As causas esperadas são a tabela ausente (a migração
 convidado (§6):
 
 ```sql
-select n.type, count(*)
+select n.type, n.metadata->>'kind' as kind, count(*)
 from public.notifications n
 join public.workspace_members m on m.user_id = n.user_id and m.workspace_id = n.workspace_id
 where m.role = 'guest'
-  and n.type in ('budget', 'bill', 'credit_card', 'insight')
-group by 1;
+group by 1, 2;
 ```
 
-Esperado: só o `budget` do limite dele (`metadata.kind` igual a `member_limit`) e
-o `insight` dele (`limite_pessoa`). Qualquer `bill`, `credit_card` ou outro
-`budget` é aviso da casa que vazou: confira se a Edge daquele aviso foi
-republicada.
+Esperado: no máximo uma linha, `budget` / `member_limit` (o aviso do limite dele).
+O insight do limite é uma linha de `insights`, sem notificação própria. Qualquer
+outra linha (`bill`, `credit_card`, `insight`, ou um `budget` de outro `kind`) é
+aviso da casa que vazou: confira se a Edge daquele aviso foi republicada.
 
 ## 4. O que não fazer neste bloco
 
 **Não convide ninguém como `guest` antes do front do 2.0 subir.** No front de
-`main` o convidado veria a tela de membro inteira (Orçamento, Contas a pagar,
-Membros, faturas), e a RLS responderia vazio ou com erro onde `main` espera dado;
-o Painel da casa montaria sem a maior parte do que ele lê. Isso vale para as duas
+`main` o papel `guest` vira `member` na leitura (`fetch-workspaces-data.ts`), então
+o convidado veria a tela de membro inteira (Orçamento, Contas a pagar, Membros,
+faturas), e a RLS responderia vazio ou com erro onde `main` espera dado. Isso vale para as duas
 portas: o convite por e-mail com papel (só o front do 2.0 manda `role`) e a troca
 de papel por SQL (`update public.workspace_members set role = 'guest'`). **Não troque
 papel por SQL**: o `trocar_papel` preenche o responsável (`sponsor_user_id`) e
@@ -399,8 +403,14 @@ grava o histórico, e o `update` direto não.
 
 **Não apague linhas de `limites_avisados` para "reenviar" o aviso.** Ela é o
 dedupe: sem a linha, o aviso de 80% e o de 100% saem de novo no próximo
-lançamento do mês. Para recomeçar de verdade, apague o limite (a linha sai junto
-quando a pessoa sai da carteira).
+lançamento do mês. Apagar e regravar o limite **não** limpa o dedupe: a linha de `limites_avisados`
+só sai quando a pessoa sai da carteira. Para recomeçar um mês de propósito (e
+reenviar os avisos), apague só a linha daquela pessoa e daquele mês:
+
+```sql
+delete from public.limites_avisados
+where workspace_id = '<carteira>' and user_id = '<pessoa>' and ym = '<AAAA-MM>';
+```
 
 **Para desfazer um convidado**, sem apagar nada: o dono troca o papel de volta
 para membro pela tela (`trocar_papel` com `member`, que também zera o
