@@ -41,9 +41,6 @@ describe("migração privado: o titular, a privada e as políticas", () => {
         expect(fn).toMatch(/security definer\s+set search_path = ''/)
         expect(fn).toMatch(/wm\.workspace_id = new\.workspace_id\s+and wm\.user_id = new\.holder_user_id\s+and wm\.role in \('owner', 'member'\)/)
         expect(fn).toMatch(/raise exception 'TITULAR_NAO_ADULTO'/)
-        expect(sql).toMatch(
-            /create trigger conferir_titular\s+before insert or update of holder_user_id, workspace_id on public\.credit_cards\s+for each row\s+when \(new\.holder_user_id is not null\)/,
-        )
     })
 
     it("is_private com padrão falso: o main não manda e nada muda", () => {
@@ -149,6 +146,7 @@ describe("migração privado: o titular, a privada e as políticas", () => {
         const fn = ultima("guardar_privado")
         expect(fn).toMatch(/new\.description := 'Gasto pessoal';\s+new\.category_id := null;\s+new\.capture_meta := null;\s+return new;\s+end;/)
         // A máscara é o último passo, depois de recusar: nada sai mascarado sem os detalhes guardados.
+        expect(fn.indexOf("if not coalesce(v_pode, false)")).toBeGreaterThan(-1)
         expect(fn.indexOf("new.description := 'Gasto pessoal'")).toBeGreaterThan(fn.indexOf("if not coalesce(v_pode, false)"))
         // A edição da privada guarda o que veio diferente da máscara, e não a máscara.
         expect(fn).toMatch(
@@ -187,7 +185,9 @@ describe("migração privado: o titular, a privada e as políticas", () => {
         expect(bloco![0]).toMatch(/new\.capture_meta := v_lado\.capture_meta;/)
         expect(bloco![0]).toMatch(/delete from public\.transacoes_privadas p where p\.transaction_id = old\.id;/)
         // Desmarcar não passa pela régua de onde o privado vale.
-        expect(fn.indexOf("if not new.is_private then\n    select")).toBeLessThan(fn.indexOf("v_pode :="))
+        const desmarca = fn.search(/if not new\.is_private then\s+select/)
+        expect(desmarca).toBeGreaterThan(-1)
+        expect(desmarca).toBeLessThan(fn.indexOf("v_pode :="))
     })
 
     it("transactions: o update e o delete ganham o privado no ramo do adulto; o convidado fica como no 7A", () => {
@@ -255,7 +255,7 @@ describe("migração privado: o titular, a privada e as políticas", () => {
             const p = politicaFinal("storage.objects", comando, doBucket)
             expect(p.arquivo, comando).toBe(MIGRACAO)
             expect(p.texto, comando).toMatch(
-                /bucket_id = 'attachments' and not public\.objeto_de_anexo_oculto\(objects\.name\) and case when/,
+                /bucket_id = 'attachments' and not public\.objeto_de_anexo_oculto\(objects\.name\) and \( owner_id = /,
             )
             expect(p.texto, comando).toMatch(/then public\.is_workspace_adult\(/)
             expect(p.texto, comando).toMatch(/owner_id = \(select auth\.uid\(\)\)::text/)
@@ -281,6 +281,63 @@ describe("migração privado: o titular, a privada e as políticas", () => {
         // Os drops que restam são os `if exists` de política e gatilho, recriados logo abaixo.
         for (const m of sql.matchAll(/drop (policy|trigger) if exists ("[^"]+"|\w+) on [\w.]+;/g)) {
             expect(sql, m[0]).toContain(`create ${m[1]} ${m[2]}`)
+        }
+    })
+
+    it("Ruling 4: só o dono define ou troca o titular; o titular só limpa o próprio", () => {
+        const fn = ultima("conferir_titular")
+        expect(fn).toMatch(/v_uid uuid := auth\.uid\(\);/)
+        // Insert com titular, ou troca: o dono ou quem chama sem sessão.
+        expect(fn).toMatch(
+            /if v_uid is not null\s+and not public\.is_workspace_owner\(new\.workspace_id\)\s+and not \(\s*tg_op = 'UPDATE'\s+and new\.holder_user_id is null\s+and old\.holder_user_id = v_uid\s*\) then\s+raise exception 'TITULAR_SO_DONO'/,
+        )
+        // O adulto só é conferido quando há titular novo.
+        expect(fn).toMatch(/if new\.holder_user_id is not null and not exists \(/)
+        expect(fn.indexOf("'TITULAR_SO_DONO'")).toBeGreaterThan(-1)
+        expect(fn.indexOf("'TITULAR_NAO_ADULTO'")).toBeGreaterThan(fn.indexOf("'TITULAR_SO_DONO'"))
+        // Dois gatilhos: o update dispara também quando o titular vira nulo.
+        expect(sql).toMatch(
+            /create trigger conferir_titular\s+before insert on public\.credit_cards\s+for each row\s+when \(new\.holder_user_id is not null\)/,
+        )
+        expect(sql).toMatch(
+            /create trigger conferir_titular_troca\s+before update of holder_user_id, workspace_id on public\.credit_cards\s+for each row\s+when \(new\.holder_user_id is distinct from old\.holder_user_id or new\.workspace_id is distinct from old\.workspace_id\)\s+execute function public\.conferir_titular\(\);/,
+        )
+    })
+
+    it("I1: o objeto sem linha em attachments fica fechado, menos para quem subiu e para o dono", () => {
+        const doBucket = (p: Politica) => p.texto.includes("bucket_id = 'attachments'")
+        for (const comando of ["select", "delete"]) {
+            const p = politicaFinal("storage.objects", comando, doBucket)
+            expect(p.texto, comando).toContain(
+                "and ( owner_id = (select auth.uid())::text or exists ( select 1 from public.attachments a where a.path = objects.name ) or case when (storage.foldername(name))[1] ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then public.is_workspace_owner(((storage.foldername(name))[1])::uuid) else false end ) and case when",
+            )
+        }
+    })
+
+    it("I3: virar_assinatura e virar_conta deixam a privada de fora, sem abortar", () => {
+        const assinatura = ultima("virar_assinatura")
+        expect(assinatura).toMatch(/security invoker/)
+        expect(assinatura).toMatch(
+            /and x\.subscription_id is null\s+and not x\.is_private\s+and not exists \(select 1 from public\.bill_instances i where i\.transaction_id = x\.id\)/,
+        )
+        const conta = ultima("virar_conta")
+        expect(conta).toMatch(/security invoker/)
+        expect(conta).toMatch(
+            /and t\.subscription_id is null\s+and not t\.is_private\s+and not exists \(select 1 from public\.bill_instances i where i\.transaction_id = t\.id\);/,
+        )
+        // O resto é o corpo de 20261028120000, sem tirar nada.
+        const original = lerFonte("supabase/migrations/20261028120000_insights.sql").replace(/--.*$/gm, "")
+        for (const [nome, filtro] of [["virar_assinatura", /\n\s+and not x\.is_private/], ["virar_conta", /\n\s+and not t\.is_private/]] as const) {
+            const antes = original.match(new RegExp(`create or replace function public\\.${nome}\\([\\s\\S]*?\\$\\$[\\s\\S]*?\\$\\$`))![0]
+            expect(ultima(nome).replace(filtro, ""), nome).toBe(antes)
+        }
+        for (const assinaturaSql of [
+            "virar_assinatura(uuid, text, numeric, smallint, text, uuid, uuid)",
+            "virar_conta(uuid, text, smallint, boolean, uuid, date)",
+        ]) {
+            const esc = assinaturaSql.replace(/[()]/g, "\\$&")
+            expect(sql).toMatch(new RegExp(`revoke all on function public\\.${esc} from public, anon;`))
+            expect(sql).toMatch(new RegExp(`grant execute on function public\\.${esc} to authenticated;`))
         }
     })
 

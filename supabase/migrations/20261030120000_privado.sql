@@ -19,17 +19,32 @@ alter table public.credit_cards
 create index if not exists credit_cards_holder_user_id_idx
   on public.credit_cards (holder_user_id) where holder_user_id is not null;
 
--- O titular é adulto da carteira do cartão. Gatilho, e não só política: vale
--- também para quem grava sem RLS. `security definer`: lê `workspace_members`
--- sem depender da RLS de quem grava.
+-- O titular é adulto da carteira do cartão, e só o dono o define ou troca
+-- (Ruling 4): trocar o titular é trocar quem lê a fatura. O titular atual só
+-- pode limpar o próprio. Quem chama sem sessão (a service role) passa.
+-- Gatilho, e não só política: vale também para quem grava sem RLS, e o
+-- update de cartão é de todo adulto. `security definer`: lê
+-- `workspace_members` sem depender da RLS de quem grava.
 create or replace function public.conferir_titular()
 returns trigger
 language plpgsql
 security definer
 set search_path = ''
 as $$
+declare
+  v_uid uuid := auth.uid();
 begin
-  if not exists (
+  if v_uid is not null
+     and not public.is_workspace_owner(new.workspace_id)
+     and not (
+       tg_op = 'UPDATE'
+       and new.holder_user_id is null
+       and old.holder_user_id = v_uid
+     ) then
+    raise exception 'TITULAR_SO_DONO' using errcode = 'P0001';
+  end if;
+
+  if new.holder_user_id is not null and not exists (
     select 1 from public.workspace_members wm
     where wm.workspace_id = new.workspace_id
       and wm.user_id = new.holder_user_id
@@ -43,11 +58,20 @@ $$;
 
 revoke all on function public.conferir_titular() from public, anon, authenticated;
 
+-- O insert só com titular; o update também quando ele vira nulo (o titular
+-- tirado é uma troca).
 drop trigger if exists conferir_titular on public.credit_cards;
 create trigger conferir_titular
-  before insert or update of holder_user_id, workspace_id on public.credit_cards
+  before insert on public.credit_cards
   for each row
   when (new.holder_user_id is not null)
+  execute function public.conferir_titular();
+
+drop trigger if exists conferir_titular_troca on public.credit_cards;
+create trigger conferir_titular_troca
+  before update of holder_user_id, workspace_id on public.credit_cards
+  for each row
+  when (new.holder_user_id is distinct from old.holder_user_id or new.workspace_id is distinct from old.workspace_id)
   execute function public.conferir_titular();
 
 -- 2. o privado na linha -------------------------------------------------------
@@ -543,7 +567,13 @@ create policy "Workspace members can delete attachments" on public.attachments
     and not public.anexo_oculto(transaction_id, statement_total_id)
   );
 
--- No storage, o estado final do 7A com o oculto antes da pasta. O upload
+-- No storage, o estado final do 7A com o oculto antes da pasta. O objeto
+-- órfão (a linha de `attachments` sumiu: o cartão apagado levou a fatura, o
+-- `main` apagou a privada, o insert da linha foi recusado) fica fechado até o
+-- `attachments-cleanup`, menos para quem o subiu (`owner_id`) e para o dono da
+-- carteira. O `exists` roda com a RLS de quem chama, que já aplica o
+-- `anexo_oculto`. O upload sobe o objeto antes da linha, e quem sobe é o
+-- `owner_id`; a captura e a limpeza são da service role, sem RLS. O upload
 -- (membro da pasta) fica como está: a linha é que o insert acima barra.
 -- Guardado como em 20261022130000.
 do $$
@@ -552,6 +582,16 @@ begin
   create policy "Workspace members can view attachments" on storage.objects
     for select to authenticated
     using (bucket_id = 'attachments' and not public.objeto_de_anexo_oculto(objects.name)
+      and (
+        owner_id = (select auth.uid())::text
+        or exists (
+          select 1 from public.attachments a
+          where a.path = objects.name
+        )
+        or case when (storage.foldername(name))[1] ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+          then public.is_workspace_owner(((storage.foldername(name))[1])::uuid)
+          else false end
+      )
       and case when (storage.foldername(name))[1] ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
       then public.is_workspace_adult(((storage.foldername(name))[1])::uuid)
         or (
@@ -578,6 +618,16 @@ begin
   create policy "Workspace members can delete attachments" on storage.objects
     for delete to authenticated
     using (bucket_id = 'attachments' and not public.objeto_de_anexo_oculto(objects.name)
+      and (
+        owner_id = (select auth.uid())::text
+        or exists (
+          select 1 from public.attachments a
+          where a.path = objects.name
+        )
+        or case when (storage.foldername(name))[1] ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+          then public.is_workspace_owner(((storage.foldername(name))[1])::uuid)
+          else false end
+      )
       and case when (storage.foldername(name))[1] ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
       then public.is_workspace_adult(((storage.foldername(name))[1])::uuid)
         or (
@@ -604,6 +654,192 @@ exception
     raise notice 'privado: sem privilégio para as políticas de storage.objects; aplique pelo SQL editor do Dashboard.';
 end;
 $$;
+
+-- 8. virar assinatura ou conta deixa a privada de fora -----------------------
+-- O insight criado antes de a compra virar privada ainda lista o id dela em
+-- `payload.lancamentos`. Sem o filtro, o `guardar_privado` (assinatura) e o
+-- `recusar_conta_na_privada` (conta) abortavam a ação inteira. Os corpos de
+-- 20261028120000, com `not is_private` entre os candidatos.
+create or replace function public.virar_assinatura(p_insight_id uuid, p_nome text, p_valor numeric, p_dia smallint, p_payment_method text, p_card_id uuid, p_category_id uuid)
+returns uuid
+language plpgsql
+security invoker
+set search_path = public
+as $$
+declare
+  v_ins public.insights%rowtype;
+  v_hoje date := public.app_today();
+  v_mes date := date_trunc('month', public.app_today())::date;
+  v_next date;
+  v_sub uuid;
+  v_pedidos uuid[];
+begin
+  if nullif(btrim(p_nome), '') is null then
+    raise exception 'INSIGHT_NOME_INVALIDO' using errcode = '22023';
+  end if;
+  if p_dia is null or p_dia not between 1 and 31 then
+    raise exception 'INSIGHT_DIA_INVALIDO' using errcode = '22023';
+  end if;
+  if p_valor is null or p_valor <= 0 then
+    raise exception 'INSIGHT_VALOR_INVALIDO' using errcode = '22023';
+  end if;
+
+  select * into v_ins from public.insights where id = p_insight_id;
+  if not found then
+    raise exception 'INSIGHT_NAO_ENCONTRADO' using errcode = 'P0002';
+  end if;
+  if v_ins.kind <> 'recorrencia' then
+    raise exception 'INSIGHT_TIPO_INVALIDO' using errcode = '22023';
+  end if;
+
+  perform public.marcar_insight(p_insight_id, 'acted');
+
+  select coalesce(array_agg(e::uuid), '{}')
+  into v_pedidos
+  from jsonb_array_elements_text(coalesce(v_ins.payload -> 'lancamentos', '[]'::jsonb)) e;
+
+  perform 1 from public.transactions t where t.id = any(v_pedidos) for update;
+
+  v_next := v_mes + (least(p_dia::int, extract(day from (v_mes + interval '1 month - 1 day'))::int) - 1);
+  if v_next <= v_hoje then
+    v_mes := (v_mes + interval '1 month')::date;
+    v_next := v_mes + (least(p_dia::int, extract(day from (v_mes + interval '1 month - 1 day'))::int) - 1);
+  end if;
+
+  insert into public.workspace_subscriptions (
+    workspace_id, user_id, name, amount, billing_interval, start_date, next_billing_date,
+    billing_anchor_day, category_id, payment_method, payment_credit_card_id, kind, is_active
+  ) values (
+    v_ins.workspace_id, (select auth.uid()), p_nome, p_valor, 'monthly', v_next, v_next,
+    p_dia, p_category_id, p_payment_method,
+    case when p_payment_method = 'credit_card' then p_card_id end,
+    'expense', true
+  )
+  returning id into v_sub;
+
+  update public.transactions t
+  set subscription_id = v_sub
+  where t.id in (
+      select distinct on ((x.date at time zone 'UTC')::date) x.id
+      from public.transactions x
+      where x.id = any(v_pedidos)
+        and x.workspace_id = v_ins.workspace_id
+        and x.type = 'expense'
+        and x.subscription_id is null
+        and not x.is_private
+        and not exists (select 1 from public.bill_instances i where i.transaction_id = x.id)
+      order by (x.date at time zone 'UTC')::date, x.id
+    )
+    and not exists (
+      select 1 from public.transactions y
+      where y.subscription_id = v_sub
+        and (y.date at time zone 'UTC')::date = (t.date at time zone 'UTC')::date
+    );
+
+  return v_sub;
+end;
+$$;
+
+revoke all on function public.virar_assinatura(uuid, text, numeric, smallint, text, uuid, uuid) from public, anon;
+grant execute on function public.virar_assinatura(uuid, text, numeric, smallint, text, uuid, uuid) to authenticated;
+
+create or replace function public.virar_conta(p_insight_id uuid, p_nome text, p_dia smallint, p_valor_variavel boolean, p_category_id uuid, p_next_due_date date)
+returns uuid
+language plpgsql
+security invoker
+set search_path = public
+as $$
+declare
+  v_ins public.insights%rowtype;
+  v_pedidos uuid[];
+  v_ids uuid[];
+  v_bill uuid;
+begin
+  if nullif(btrim(p_nome), '') is null then
+    raise exception 'INSIGHT_NOME_INVALIDO' using errcode = '22023';
+  end if;
+  if p_dia is null or p_dia not between 1 and 31 then
+    raise exception 'INSIGHT_DIA_INVALIDO' using errcode = '22023';
+  end if;
+  -- A próxima pendente vem do cliente (Ruling 1), mas nunca nasce atrasada.
+  if p_next_due_date is null or p_next_due_date < public.app_today() then
+    raise exception 'INSIGHT_DATA_INVALIDA' using errcode = '22023';
+  end if;
+
+  select * into v_ins from public.insights where id = p_insight_id;
+  if not found then
+    raise exception 'INSIGHT_NAO_ENCONTRADO' using errcode = 'P0002';
+  end if;
+  if v_ins.kind not in ('recorrencia', 'sazonal') then
+    raise exception 'INSIGHT_TIPO_INVALIDO' using errcode = '22023';
+  end if;
+
+  perform public.marcar_insight(p_insight_id, 'acted');
+
+  select coalesce(array_agg(e::uuid), '{}')
+  into v_pedidos
+  from jsonb_array_elements_text(coalesce(v_ins.payload -> 'lancamentos', '[]'::jsonb)) e;
+
+  perform 1 from public.transactions t where t.id = any(v_pedidos) for update;
+
+  select coalesce(array_agg(t.id), '{}')
+  into v_ids
+  from public.transactions t
+  where t.id = any(v_pedidos)
+    and t.workspace_id = v_ins.workspace_id
+    and t.type = 'expense'
+    and t.subscription_id is null
+    and not t.is_private
+    and not exists (select 1 from public.bill_instances i where i.transaction_id = t.id);
+
+  insert into public.bills (
+    workspace_id, user_id, name, category_id, frequency, due_day_of_month,
+    amount_estimated, start_date, default_payment_method, valor_variavel
+  ) values (
+    v_ins.workspace_id, (select auth.uid()), p_nome, p_category_id, 'monthly', p_dia,
+    coalesce(
+      (select round(avg(u.amount), 2) from (
+        select t.amount from public.transactions t
+        where t.id = any(v_ids)
+        order by t.date desc
+        limit 3
+      ) u),
+      (v_ins.payload ->> 'valorMedio')::numeric,
+      (v_ins.payload ->> 'valor')::numeric
+    ),
+    coalesce(
+      (select min((t.date at time zone 'UTC')::date) from public.transactions t where t.id = any(v_ids)),
+      p_next_due_date,
+      public.app_today()
+    ),
+    nullif(v_ins.payload ->> 'payment_method', 'credit_card'),
+    coalesce(p_valor_variavel, false)
+  )
+  returning id into v_bill;
+
+  insert into public.bill_instances (
+    workspace_id, user_id, bill_id, due_date, status, amount,
+    paid_at, paid_amount, payment_method, payment_credit_card_id, transaction_id
+  )
+  select
+    v_ins.workspace_id, (select auth.uid()), v_bill, (t.date at time zone 'UTC')::date,
+    'paid', t.amount, t.date, t.amount, t.payment_method, t.payment_credit_card_id, t.id
+  from public.transactions t
+  where t.id = any(v_ids)
+  on conflict do nothing;
+
+  if p_next_due_date is not null then
+    insert into public.bill_instances (workspace_id, user_id, bill_id, due_date, status, amount)
+    values (v_ins.workspace_id, (select auth.uid()), v_bill, p_next_due_date, 'pending', null)
+    on conflict do nothing;
+  end if;
+
+  return v_bill;
+end;
+$$;
+
+revoke all on function public.virar_conta(uuid, text, smallint, boolean, uuid, date) from public, anon;
+grant execute on function public.virar_conta(uuid, text, smallint, boolean, uuid, date) to authenticated;
 
 comment on table public.transacoes_privadas is
   'Os detalhes de uma transação privada (descrição, categoria, capture_meta). Só o autor lê. Quem grava é o gatilho guardar_privado de transactions; na linha fica ''Gasto pessoal''.';
