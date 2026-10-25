@@ -1,6 +1,6 @@
 # Jornadas do app
 
-O mapa de tudo o que uma pessoa faz no app, dividido em treze jornadas. Cada
+O mapa de tudo o que uma pessoa faz no app, dividido em catorze jornadas. Cada
 jornada tem um fluxograma, as regras técnicas que decidem os caminhos e as
 lacunas encontradas no código. Foi escrito lendo o código em 2026-09-17, na
 branch `finance-app-2.0`, e a navegação global foi revista em 2026-10-01,
@@ -9,7 +9,7 @@ lançamento, nos cartões de categoria e nas contas pendentes, com o seletor
 de período que confirma no próprio popover, com o rascunho protegido do
 formulário de lançamento, e com os menus do telefone em gaveta. As telas de
 acesso foram revistas em 2026-10-12 (a casca no layout) e em 2026-10-14 (o
-painel de marca animado) e as notificações em 2026-10-17 (o painel flutuante, o sino exato e a revisão do servidor, ainda não publicada) e em 2026-10-21 (o aviso de despesa e os crons passam ao banco, por migração, também ainda não publicados); a busca do telefone em 2026-10-19 (a lupa vira a barra) e, no mesmo dia, a aba "Você" no lugar do menu "Mais" (a página `/me`). Em 2026-10-21 entrou o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura, a importação de extrato e de planilha e os anexos, com as telas em wireframe (`src/components/wireframe/`) e ainda não publicado (`supabase/BLOCO_2_DEPLOYMENT.md`). Em 2026-10-22 entrou o Bloco 3A, "captura sem abrir o app": o token pessoal em Minha conta, a Edge `capture` (o Atalho do iPhone e o Apple Pay), a frase rápida no "+", o compartilhar do Android, os atalhos do ícone, a lista "A conferir" e o lembrete das 20h, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3A_DEPLOYMENT.md`). No mesmo dia entrou o Bloco 3B, "IA grátis na captura e na fatura": "Tentar com IA" na frase rápida, a foto do recibo no formulário, a foto e a frase confusa na Edge `capture`, a compra parcelada capturada que vira plano, o compartilhar de foto e PDF do Android, "Ler com IA" na conferência da fatura e a política de privacidade em `/privacidade`, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3B_DEPLOYMENT.md`). Em 2026-10-23 entrou o Bloco 4, "planos e confiança": a rota pública `/precos`, o plano em `/plans` (teste de 14 dias, vitalício, cobertura da família e "só leitura" no banco, desligados enquanto `billing_settings.enforced_since` é nulo), a faixa de só leitura na casca, o Piloto Automático (`/piloto`), o Cofre aberto (`/cofre`, com "Exportar tudo" e "Apagar a conta") e a jornada de 4 passos (`/comecar`), com as telas em wireframe e ainda não publicado (`supabase/BLOCO_4_DEPLOYMENT.md`); o assinar de verdade fica para o Bloco 8. Em 2026-10-24 entrou o Bloco 5, "previsão": o "seguro para gastar" no Painel e em `/previsao` (com a linha do tempo de 6 meses e a reserva), a receita recorrente nas assinaturas, o quadro de impacto da parcela, o orçamento que se repete todo mês, o aviso de orçamento pelo mês do fechamento da fatura e o aviso de fatura acima do normal, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_5_DEPLOYMENT.md`). Em 2026-10-24 entrou também o Bloco 6A, "contas a pagar" revista: a conta que não é paga não para de recorrer (passo 0 do cron), o lembrete por janela, a edição da agenda que reprograma a pendente, o pular atômico, os estados Encerrada e Concluída, o valor variável pela média, o casamento automático do pagamento ("Isso pagou a conta X?"), o boleto no pagamento e no lançamento pago, a explicação "conta ou assinatura" e a saída do "Beta", com as telas novas em wireframe e ainda não publicado (`supabase/BLOCO_6A_DEPLOYMENT.md`). Quando uma tela mudar de caminho, atualize o
+painel de marca animado) e as notificações em 2026-10-17 (o painel flutuante, o sino exato e a revisão do servidor, ainda não publicada) e em 2026-10-21 (o aviso de despesa e os crons passam ao banco, por migração, também ainda não publicados); a busca do telefone em 2026-10-19 (a lupa vira a barra) e, no mesmo dia, a aba "Você" no lugar do menu "Mais" (a página `/me`). Em 2026-10-21 entrou o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura, a importação de extrato e de planilha e os anexos, com as telas em wireframe (`src/components/wireframe/`) e ainda não publicado (`supabase/BLOCO_2_DEPLOYMENT.md`). Em 2026-10-22 entrou o Bloco 3A, "captura sem abrir o app": o token pessoal em Minha conta, a Edge `capture` (o Atalho do iPhone e o Apple Pay), a frase rápida no "+", o compartilhar do Android, os atalhos do ícone, a lista "A conferir" e o lembrete das 20h, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3A_DEPLOYMENT.md`). No mesmo dia entrou o Bloco 3B, "IA grátis na captura e na fatura": "Tentar com IA" na frase rápida, a foto do recibo no formulário, a foto e a frase confusa na Edge `capture`, a compra parcelada capturada que vira plano, o compartilhar de foto e PDF do Android, "Ler com IA" na conferência da fatura e a política de privacidade em `/privacidade`, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3B_DEPLOYMENT.md`). Em 2026-10-23 entrou o Bloco 4, "planos e confiança": a rota pública `/precos`, o plano em `/plans` (teste de 14 dias, vitalício, cobertura da família e "só leitura" no banco, desligados enquanto `billing_settings.enforced_since` é nulo), a faixa de só leitura na casca, o Piloto Automático (`/piloto`), o Cofre aberto (`/cofre`, com "Exportar tudo" e "Apagar a conta") e a jornada de 4 passos (`/comecar`), com as telas em wireframe e ainda não publicado (`supabase/BLOCO_4_DEPLOYMENT.md`); o assinar de verdade fica para o Bloco 8. Em 2026-10-24 entrou o Bloco 5, "previsão": o "seguro para gastar" no Painel e em `/previsao` (com a linha do tempo de 6 meses e a reserva), a receita recorrente nas assinaturas, o quadro de impacto da parcela, o orçamento que se repete todo mês, o aviso de orçamento pelo mês do fechamento da fatura e o aviso de fatura acima do normal, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_5_DEPLOYMENT.md`). Em 2026-10-24 entrou também o Bloco 6A, "contas a pagar" revista: a conta que não é paga não para de recorrer (passo 0 do cron), o lembrete por janela, a edição da agenda que reprograma a pendente, o pular atômico, os estados Encerrada e Concluída, o valor variável pela média, o casamento automático do pagamento ("Isso pagou a conta X?"), o boleto no pagamento e no lançamento pago, a explicação "conta ou assinatura" e a saída do "Beta", com as telas novas em wireframe e ainda não publicado (`supabase/BLOCO_6A_DEPLOYMENT.md`). Em 2026-10-25 entrou o Bloco 6B, "insights": o cron diário das 10h que acha fatos nas carteiras (a fatura que fechou, o relatório do mês, a recorrência, o gasto atípico, a mudança de preço, o lançamento repetido, as parcelas acabando, o sazonal e o "a conferir"), a caixa de insights no Painel com as ações de um toque (virar assinatura ou conta, atualizar o preço, apagar um repetido, ver a fatura, a previsão ou os itens a conferir), o "Não mostrar mais este tipo", o teto de 3 push por semana por pessoa e a chave "Insights" nas preferências de aviso, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_6B_DEPLOYMENT.md`). Quando uma tela mudar de caminho, atualize o
 diagrama dela.
 
 ## Como ler os diagramas
@@ -49,7 +49,8 @@ banco.
 11. [Plano e só leitura](#11-plano-e-só-leitura)
 12. [Confiança: Piloto, Cofre e o começo](#12-confiança-piloto-cofre-e-o-começo)
 13. [Previsão](#13-previsão)
-14. [Lacunas encontradas](#14-lacunas-encontradas)
+14. [Insights](#14-insights)
+15. [Lacunas encontradas](#15-lacunas-encontradas)
 
 ---
 
@@ -113,6 +114,14 @@ flowchart LR
     G8 -->|"receita recorrente entra no caixa previsto"| G13
     G3 -->|"sino: fatura acima do normal"| G13
     G13 -->|"fatura que vence no mês"| G6
+
+    G4 -->|"caixa de insights no Painel"| G14(("G14 Insights"))
+    G3 -->|"sino: aviso de insight"| G14
+    G14 -->|"criar assinatura, atualizar o preço"| G8
+    G14 -->|"criar conta a pagar"| G7
+    G14 -->|"ver lançamentos, conferir, apagar o repetido"| G5
+    G14 -->|"ver a fatura"| G6
+    G14 -->|"ver a previsão"| G13
 ```
 
 ---
@@ -389,6 +398,7 @@ flowchart TD
     dest -->|"tipo bill"| n5["/bills"]
     dest -->|"member_expense_created"| n6["/transactions?txn=id"]
     dest -->|"metadata.href do lembrete das 20h"| n7["/transactions?conferir=1"]
+    dest -->|"tipo insight: o href da ação, senão o Painel"| G14(("G14 Insights"))
     panel -->|"linha sem destino"| stay(["Só marca como lida; o painel fica aberto"])
     panel -->|"⋯ da linha"| rowMenu(["Marcar como lida ou não lida; Excluir, sem desfazer"])
     panel -->|"⋯ do cabeçalho"| headMenu(["Marcar todas como lidas; Configurar notificações; Limpar notificações"])
@@ -427,6 +437,7 @@ flowchart TD
 | Notificações no servidor | Edges `evaluate-budgets`, `evaluate-credit-card-alerts`, `evaluate-bills-reminders`, `credit-card-calendar-alerts`, `notify-transaction-created`. Os dois crons diários (`credit-card-calendar-alerts-daily` e `bills-reminders-daily`, `0 12 * * *`) e o trigger `transactions_notify_created` (despesa manual, sem assinatura nem parcela) moram na migração `20261021120000_internal_edge_dispatch.sql`: chamam a Edge por `pg_net`, com a URL e o segredo no Vault, pela função `invoke_edge_function`, que nunca derruba o `insert` (sem segredo, não avisa). O app não chama mais `notify-transaction-created`: quem avisa os membros é o trigger, também na despesa lançada offline e sincronizada depois. `dispatch-notifications` saiu. Revisadas no repositório em 2026-10-17 e ainda não publicadas (o app em produção segue com o comportamento antigo até lá): o link do orçamento leva `?month=AAAA-MM`; textos com categoria, mês e valores; o "limite usado" do cartão soma a fatura aberta e a última fechada se não paga; os lembretes de calendário só dependem do interruptor do calendário, pulam fatura zerada ou paga, toleram um dia de cron perdido, e "fechou" sai no dia seguinte ao fechamento; conta atrasada avisa no 1º dia e a cada 7; o interruptor "Promoções" saiu da tela de preferências. Passo a passo em `supabase/NOTIFICATION_DEPLOYMENT.md` | `supabase/migrations/20261021120000_internal_edge_dispatch.sql`, `supabase/functions/`, `supabase/NOTIFICATION_DEPLOYMENT.md` |
 | Lembrete das 20h (Bloco 3A) | O cron `review-reminder-daily` (`0 23 * * *`, 20h em Brasília) chama a Edge `review-reminder` por `invoke_edge_function`. Ela avisa cada pessoa que lançou itens `needs_review` (pelo `user_id`), por carteira, uma vez por dia (`review_reminder_dedupe`; a entrega que falha devolve o dedupe), pelo `deliverNotification` com o tipo `review`, o título "Itens a conferir" e `metadata.href` `/transactions?conferir=1`. Vale para o aviso no app, o push e o e-mail. Desliga por carteira em Configurações, no wireframe "Lembrete de itens a conferir" (`notify_review`). O tipo entrou no check de `notifications`; o front antigo o mostra com o sino padrão. Migração `20261023120000_captura.sql`, ainda não publicada | `supabase/functions/review-reminder/`, `supabase/functions/_shared/review-reminder.ts`, `src/components/wireframe/a-conferir-lembrete-wireframe.tsx` |
 | Faixa de só leitura e Cofre no menu (Bloco 4) | A casca renderiza a faixa de só leitura acima de toda tela do app, e só com o plano `leitura` (ver 11). "Cofre aberto" (`ROUTES.COFRE`) é um item de `ACCOUNT_MENU_PROFILE_LINK_ITEMS`: aparece no grupo Conta de `/me` (o telefone não tem outro menu de conta) e no menu do usuário do desktop, depois de Minha conta e Planos, e a aba "Você" fica ativa em `/cofre`. `APP_PAGE_TITLES` ganhou `/piloto`, `/cofre` e `/comecar` | `src/components/layout/sidebar-app-shell.tsx`, `src/components/layout/account-menu-links.ts`, `src/config/navigation.ts`, `src/config/mobile-navigation.ts` |
+| Aviso de insight (Bloco 6B) | O tipo `insight` entra no check de `notifications` sem tirar nenhum e tem a preferência `notify_insights` (por carteira, padrão ligada, a chave "Insights" em Configurações). O `metadata` traz `kind`, `insight_id` e o `href` da ação; sem `href`, `getNotificationAction` devolve "Ver no Painel". O front de `main` mostraria o tipo novo com o sino padrão, mas a Edge só sobe com o front do 2.0. Ver 14 | `supabase/functions/_shared/notification-types.ts`, `src/lib/notification-actions.ts`, `src/lib/notification-href.ts` |
 | Push | Edges `push-subscribe` e `push-unsubscribe` | `supabase/functions/` |
 | Redirecionamentos | Os únicos que acontecem no servidor | `next.config.ts` |
 
@@ -469,7 +480,11 @@ flowchart TD
     blocks --> reviewCount(["WIREFRAME A conferir: N, só com N maior que zero"])
     reviewCount -->|"link"| conferir["/transactions?conferir=1"]
     conferir --> G5c(("G5c A conferir"))
+    blocks --> insightsBox(["WIREFRAME Insights: a caixa da carteira, até 20 novos e vistos, com uma ação ou Entendi"])
+    insightsBox -->|"ação, Entendi ou Não mostrar mais este tipo"| G14(("G14 Insights"))
     blocks --> seguroMes{"Mês do seletor é o corrente?"}
+    seguroMes -->|"sim, seguro abaixo de 10% da renda"| seguroBaixo[("RPC registrar_insight: seguro baixo, uma vez por sessão, carteira e mês")]
+    seguroBaixo --> insightsBox
     seguroMes -->|"sim"| seguroCard(["WIREFRAME Seguro para gastar, compacto: o valor, por dia e o regime"])
     seguroMes -->|"não"| seguroOutro(["WIREFRAME A previsão é do mês corrente"])
     seguroCard -->|"Ver a previsão"| prev(("G13 /previsao"))
@@ -500,6 +515,8 @@ flowchart TD
 | A conferir (Bloco 3A) | Entre os indicadores e o calendário, o wireframe "A conferir: N" conta os lançamentos `needs_review` da carteira (pelo índice parcial `transactions_needs_review_idx`) e leva a `/transactions?conferir=1`. Com zero, some; um erro na contagem também o esconde | `src/components/wireframe/a-conferir-contagem-wireframe.tsx`, `src/app/(app)/dashboard/page-client.tsx` |
 | Cartão da jornada (Bloco 4) | No alto do Painel, o wireframe "Veja o que o app faz por você" leva a `/comecar` enquanto `user_settings.jornada_concluida_em` é nulo; "Agora não" grava a data e o cartão some. Sem resposta da leitura, não aparece. Não há redirecionamento automático para a jornada | `src/components/wireframe/jornada-cartao-wireframe.tsx`, `src/app/(app)/dashboard/page-client.tsx` |
 | Seguro para gastar (Bloco 5) | Entre o seletor de mês e os indicadores, o wireframe "Seguro para gastar" mostra o valor, o valor por dia (contando hoje) e o regime ("Caixa: o dinheiro que sai neste mês. A fatura conta no mês em que vence."), com o link "Ver a previsão" para `/previsao`. É compacto: o detalhe mora na rota. Só no mês corrente; em outro mês do seletor, o cartão diz "A previsão é do mês corrente" e mantém o link. Carregando ou em erro, o cartão diz isso e mantém o link. O Painel lê a previsão por `usePrevisao`, com os mesmos hooks e `queryKey` dele | `src/components/wireframe/seguro-para-gastar-wireframe.tsx`, `src/lib/previsao/use-previsao.ts`, `src/app/(app)/dashboard/page-client.tsx` |
+| Insights (Bloco 6) | Entre o seguro para gastar e os indicadores, o wireframe "Insights" lista os `new` e `seen` da carteira, até 20, do mais novo ao mais velho (a RLS já tira o de outra pessoa e o tipo que a pessoa silenciou). Cada um tem uma ação ou "Entendi"; "Mais" abre "Dispensar este" e "Não mostrar mais este tipo". Os novos que aparecem viram `seen` (`marcar_insight`, uma vez por sessão). Sem a tabela (migração ainda não aplicada) a caixa fica vazia; um erro de leitura aparece como alerta. Ver 14 | `src/components/wireframe/insights-wireframe.tsx`, `src/lib/insights/use-insights.ts`, `src/app/(app)/dashboard/page-client.tsx` |
+| Seguro baixo (Bloco 6B) | É o único insight que o cliente produz: ao abrir o Painel no mês corrente, se o seguro para gastar (`seguroParaGastar`, o mesmo do cartão ao lado) está abaixo de 10% da renda do mês (e há renda), `registrar_insight` grava o do mês, uma vez por sessão, carteira e mês. O texto da caixa mostra o seguro de agora, nunca o gravado; o insight some quando deixou de estar baixo e não aparece em mês que passou | `src/lib/insights/use-insights.ts` (`useSeguroBaixo`), `src/lib/insights/acoes.ts` (`textoNaCaixa`) |
 | Orçamentos que repetem (Bloco 5) | Ao abrir, o Painel chama `garantir_orcamentos_do_mes` (a mesma chamada de Categorias, no máximo uma vez por carteira e mês na sessão). Se a RPC criou linhas, as categorias são invalidadas e a tela refaz a busca. Erro vai ao console e a próxima abertura tenta de novo | `src/hooks/use-garantir-orcamentos-do-mes.ts`, `src/lib/category-budget-ops.ts` |
 | "Em aberto" e "prevista" (Bloco 5) | O "em aberto" das faturas do Painel segue o `buildCardMonthlyInvoiceSnapshot`: **não** soma as assinaturas do cartão que ainda vão cair. A fatura "prevista" da previsão (`faturaPrevista`) soma. São dois números com dois nomes; a revisão de tela decide se o "em aberto" passa a ser o previsto | `src/components/dashboard/use-dashboard-data.ts`, `src/lib/previsao/fatura-prevista.ts` |
 | Fatura e estorno (Bloco 2) | Nas faturas do mês, uma fatura fechada vale o total do banco quando a pessoa o informou (`credit_card_statement_totals`); a aberta segue o calculado. O estorno no cartão (receita com `payment_method = 'credit_card'`) abate a despesa do mês de fechamento e não conta como receita. A consulta do período pede `source`, `needs_review` e `import_batch_id`: sem a migração do Bloco 2, o Painel não carrega | `src/components/dashboard/use-dashboard-data.ts`, `src/lib/fatura/total-com-banco.ts`, `src/lib/expense-month-attribution.ts`, `src/lib/queries/use-transactions-range.ts` |
@@ -1323,7 +1340,81 @@ flowchart TD
 
 ---
 
-## 14. Lacunas encontradas
+## 14. Insights
+
+O que o app nota sozinho nas carteiras: a fatura que fechou, o relatório do mês,
+um gasto que se repete todo mês, um gasto fora do comum, uma assinatura que
+mudou de preço, um lançamento repetido, parcelas que estão acabando, uma conta de
+começo de ano que vem aí, itens a conferir e o seguro para gastar baixo. É a
+jornada nova do Bloco 6B, em wireframe. **Todo insight tem uma ação ou um
+"Entendi"**, existe o "Não mostrar mais este tipo", e o tom é neutro.
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    cron[("Cron insights-daily, 13h UTC: 10h em Brasília")] --> daily[("Edge insights-daily, por carteira com movimento")]
+    daily --> achados(["Detectores: fatura que fechou, relatório do mês, recorrência, gasto atípico, preço, repetido, parcelas acabando, sazonal, a conferir"])
+    achados --> corte(["No máximo 5 novos por carteira e execução, o mais recente primeiro"])
+    corte --> grava[("RPC inserir_insights: a chave de dedupe barra o repetido e o descartado")]
+    grava -->|"insight novo"| quem{"Cada membro: tipo silenciado ou aviso desligado?"}
+    quem -->|"sim"| sem(["Não avisa; o insight fica na caixa"])
+    quem -->|"não"| teto{"Quer push, tem aparelho e está abaixo de 3 na semana?"}
+    teto -->|"sim"| claim[("RPC reivindicar_push_de_insight")] --> push(["Sino e push"])
+    teto -->|"não"| inapp(["Só no sino, sem push"])
+    push --> bell(("G3 Sino"))
+    inapp --> bell
+    bell -->|"o href da ação, senão o Painel"| caixa
+
+    dash(("G4 Painel")) --> caixa(["WIREFRAME Insights: a caixa da carteira"])
+    dash -->|"mês corrente, seguro abaixo de 10% da renda"| reg[("RPC registrar_insight: seguro baixo")]
+    reg --> caixa
+    caixa -->|"o novo aparece"| visto[("RPC marcar_insight: visto")]
+    caixa --> acao{"Qual ação?"}
+    acao -->|"Entendi ou Dispensar este"| dispensa[("RPC marcar_insight: dispensado")]
+    acao -->|"Não mostrar mais este tipo"| silencia[("insights_silenciados: por pessoa, em todas as carteiras")]
+    acao -->|"recorrência: Criar"| dialogo(["Diálogo: assinatura ou conta, nome, valor ou variável, dia, categoria"])
+    dialogo -->|"cartão ou débito automático"| virarAss[("RPC virar_assinatura: liga os lançamentos passados")]
+    dialogo -->|"Pix, boleto ou dinheiro"| virarConta[("RPC virar_conta: uma parcela paga por lançamento e a próxima pendente")]
+    virarAss --> G8(("G8 Assinaturas"))
+    virarConta --> G7(("G7 Contas a pagar"))
+    acao -->|"preço: Atualizar valor"| preco[("updateSubscription, depois marcar_insight")]
+    preco --> G8
+    acao -->|"repetido: Apagar um"| apaga(["Confirma e apaga o de id maior"])
+    apaga --> G5(("G5 Lançamentos"))
+    acao -->|"Ver lançamentos ou Conferir agora"| lista["/transactions?q, cats ou conferir=1"]
+    lista --> G5
+    acao -->|"Ver fatura"| fatura["/credit-cards/id"]
+    fatura --> G6(("G6 Cartões"))
+    acao -->|"Ver mês, Ver previsão ou Ver o que pesa"| prev["/previsao"]
+    prev --> G13(("G13 Previsão"))
+    acao -->|"sazonal: Criar conta a pagar"| novaConta["/bills?new=1"]
+    novaConta --> G7
+```
+
+### Regras técnicas
+
+| Ponto | Regra | Onde |
+|---|---|---|
+| Quem produz | O cron `insights-daily` (`0 13 * * *`, 10h em Brasília) produz tudo, menos o seguro baixo: a fatura que fechou ontem ou anteontem, o relatório do mês (no dia 1), a recorrência, o gasto atípico, a mudança de preço, a duplicidade, as parcelas acabando, o sazonal e o "a conferir". O seguro baixo é do cliente, ao abrir o Painel (ver 4). Os insights do cron são da **carteira** (`user_id` nulo) | `supabase/functions/insights-daily/index.ts`, `supabase/functions/_shared/insights/detectores.ts` |
+| O catálogo | **Recorrência:** a mesma descrição normalizada (minúsculas, sem acento, sem dígito nem pontuação) e o valor a ±10% em 3 meses seguidos, ou 2 meses no mesmo dia ±3, e sem vínculo (assinatura, conta ou parcela). **Gasto atípico:** acima de 2× a média dos 3 meses anteriores. **Seguro baixo:** abaixo de 10% da renda do mês. **A conferir:** mais de 5 itens. **Duplicidade:** o mesmo valor e a mesma descrição no mesmo dia, fora de parcela, assinatura e estorno. **Sazonal:** de 1º de janeiro a 15 de fevereiro, `ipva`, `iptu`, `material escolar`, `matricula` ou `licenciamento` em janeiro a março do ano anterior, sem conta ativa parecida | `supabase/functions/_shared/insights/detectores.ts`, `src/lib/insights/insights.ts` (reexporta) |
+| Quando vê o fato | O lançamento novo é visto pelo cron do **dia seguinte**, e não por gatilho: o caminho do lançamento não ganha mais uma chamada | `supabase/functions/insights-daily/index.ts` |
+| Dedupe | Cada insight tem `dedupe_key`, e `(workspace_id, coalesce(user_id, zero-uuid), kind, dedupe_key)` é único. O cron e o de amanhã sobre o mesmo fato dão um só; o insight descartado fica na tabela e **não volta** com a mesma chave. O cron grava por `inserir_insights` (o `on conflict` no índice de expressão), e só as linhas novas voltam: é a elas que manda o aviso | `supabase/migrations/20261028120000_insights.sql` |
+| Limites do primeiro dia | A duplicidade só olha os últimos 30 dias e lançamentos de R$ 10 ou mais. No máximo 5 insights novos por carteira em cada execução, o mais recente primeiro e, no mesmo dia, o que mais vale (fatura, relatório, a conferir, repetido…); o que já está gravado sai antes do corte, então o resto volta nos dias seguintes enquanto continuar verdade | `supabase/functions/insights-daily/index.ts`, `supabase/functions/_shared/insights/limitar.ts` |
+| Teto de push | 3 por pessoa e semana (segunda a domingo, Brasília), **somando todas as carteiras dela** (`insights_push_semana`). `reivindicar_push_de_insight` soma 1 só abaixo de 3, num comando só. Quem não reivindicou, ou quem não tem aparelho inscrito, recebe o aviso **só no app** (`semPush` do `deliverNotification`); quem não tem aparelho não gasta o teto. E-mail não: insight não é essencial | `supabase/functions/insights-daily/index.ts`, `supabase/functions/_shared/deliver-notification.ts`, `supabase/functions/_shared/insights/semana.ts` |
+| Silenciar | "Não mostrar mais este tipo" grava `insights_silenciados(user_id, kind)`: vale **por pessoa**, em todas as carteiras dela. O cron e `registrar_insight` não criam o insight pessoal de um tipo silenciado; o aviso também não vai. Num insight da carteira, quem silenciou não o vê (o filtro é na leitura, pela RLS), e `marcar_insight` o recusa | `src/lib/insights/use-insights.ts`, `supabase/migrations/20261028120000_insights.sql` |
+| Estado compartilhado | O insight da carteira (`user_id` nulo) tem **um status só**: o "Entendi", a ação ou o visto de um membro vale para todos. Silenciar continua por pessoa. O `acted` não volta atrás e o `dismissed` não volta a `seen`; usar duas vezes é `INSIGHT_JA_USADO`, e dois toques ao mesmo tempo não criam a mesma assinatura duas vezes | `supabase/migrations/20261028120000_insights.sql` (`marcar_insight`) |
+| Recorrência: assinatura ou conta | O destino vem sugerido pelo meio de pagamento: cartão de crédito ou débito automático (`credit_card`, `debit_card`) vira **assinatura**; Pix, TED, dinheiro ou outro (`pix`, `ted`, `cash`, `other`) vira **conta a pagar**. A pessoa pode trocar no diálogo, que também confere nome, valor, dia e categoria | `supabase/functions/_shared/insights/detectores.ts`, `src/components/wireframe/insights-wireframe.tsx` |
+| `virar_assinatura` | `security invoker`: valem a RLS e o `garantir_escrita`. Marca o insight `acted` primeiro (uma falha desfaz a marca). Cria a assinatura mensal com a primeira cobrança no próximo `p_dia` depois de hoje (no dia de hoje, vai ao mês que vem, para não cobrar duas vezes) e grava `subscription_id` nos lançamentos do insight, **no máximo um por dia**; pela regra do Bloco 5 eles viram `recurring`. Ignora o lançamento que já tem assinatura ou conta | `supabase/migrations/20261028120000_insights.sql`, `src/lib/insights/acoes.ts` |
+| `virar_conta` | Marca `acted`, cria a conta mensal (a estimativa é a média dos 3 últimos lançamentos), uma instância `paga` por lançamento (com `transaction_id`, `paid_amount` e `paid_at`) e a próxima `pendente` em `p_next_due_date`, que o cliente calcula pela recorrência do 6A e **nunca nasce atrasada**. O valor variável vem sugerido quando os valores diferem mais de 5%. Dois lançamentos no mesmo dia dão uma paga só | `supabase/migrations/20261028120000_insights.sql`, `src/lib/insights/acoes.ts` |
+| Atualizar o preço e apagar um | "Atualizar valor" muda o `amount` da assinatura e só então marca `acted`; "Apagar um" pede confirmação e apaga, dos dois lançamentos iguais, o de id maior. A mutação já vale quando o `marcar` falha: o insight volta na próxima leitura e repetir é inofensivo | `src/lib/insights/acoes.ts` |
+| Os links | Ver fatura (`/credit-cards/id`), Ver mês, Ver previsão e Ver o que pesa (`/previsao`), Ver lançamentos (`/transactions?q=…` ou `?cats=…`), Conferir agora (`/transactions?conferir=1`) e o sazonal (`/bills?new=1`). Tocar no link marca `acted`; o sazonal só abre o cadastro e fica `seen` | `supabase/functions/_shared/insights/textos.ts`, `src/lib/insights/acoes.ts` (`statusAoTocarOLink`) |
+| O texto | Os modelos de frase moram num módulo só, sem import, que o servidor e o cliente usam (`textoDoInsight`). Tom neutro: nenhum modelo tem "culpado", "irresponsável", "deveria", "cuidado" nem "!", e a variação sai com sinal e uma casa. O "seguro cumprido" do relatório do mês é calculado na hora de mostrar, no cliente, com o `fluxoDoMes` do mês anterior; o payload do servidor não o traz | `supabase/functions/_shared/insights/textos.ts`, `src/lib/insights/acoes.ts` (`linhaDoSeguroDoMes`) |
+| Aviso e preferência | O aviso é do tipo `insight`, vai pelo `deliverNotification` e respeita `notify_insights` (a chave "Insights" em Configurações), `notify_in_app` e `notify_push` da carteira. Desligar a chave não esconde a caixa do Painel | `supabase/functions/insights-daily/index.ts`, `src/components/wireframe/insights-wireframe.tsx` (`InsightsAvisoWireframe`) |
+| Banco | `insights` (RLS: membro da carteira, `user_id` nulo ou o da pessoa, e tipo não silenciado), `insights_silenciados` (a pessoa lê, insere e apaga o seu) e `insights_push_semana` (só a service role). Ninguém escreve em `insights` direto: só as funções e a service role do cron | `supabase/migrations/20261028120000_insights.sql` |
+
+---
+
+## 15. Lacunas encontradas
 
 Coisas que o mapeamento achou no caminho. As de acesso foram corrigidas na
 rodada de set/2026 e estão registradas abaixo da tabela; as que sobraram
@@ -1365,6 +1456,9 @@ continuam aqui para registro.
 | 38 | G7 | Uma conta `one_time` com `end_date` antes do 1º vencimento fica sem pendente e aparece como "Concluída", sem nunca ter sido paga. |
 | 39 | G3, G7 | Os atrasos não são agrupados por conta: no 1º dia depois do deploy, o passo 0 cria as pendências vencidas que faltavam, e uma conta atrasada pode receber até 2 avisos de atraso nesse primeiro dia (um por instância atrasada que cai numa janela de aviso). |
 | 40 | G3, G7, G8 | O Bloco 6A (contas a pagar revista: recorrência que não trava, lembrete por janela, reprogramar, pular atômico, valor variável, casamento e boleto) está no repositório, com as telas novas em wireframe, e **nada foi publicado**. A migração sobe antes do front (o front do 2.0 chama as RPCs novas e manda `valor_variavel`) e o `evaluate-bills-reminders` sobe junto com ela; a `credit-card-calendar-alerts` segue o Bloco 5 e só sobe com o front (§7 de `BLOCO_5_DEPLOYMENT.md`): `supabase/BLOCO_6A_DEPLOYMENT.md`. |
+| 41 | G14 | O "limite da pessoa" (o gasto de alguém da família passou do limite dela) e o "o convidado recebe só os insights do próprio limite" ficam para o Bloco 7: o limite por pessoa e o papel `guest` ainda não existem. O motor nasce com `user_id` opcional para servi-los. |
+| 42 | G14 | Um lançamento novo é visto pelo cron do dia seguinte (até 1 dia de atraso), e não na hora: desvio consciente, para o caminho do lançamento não ganhar mais uma chamada. |
+| 43 | G3, G4, G5, G7, G8, G13, G14 | O Bloco 6B (insights) está no repositório, com as telas em wireframe, e **nada foi publicado**. A migração sobe antes de tudo e o cron já nasce nela (sem a Edge, só deixa um 404 em `net._http_response`, sem erro); a Edge `insights-daily` só sobe junto com o front do 2.0, porque os links dela (`/previsao`, a caixa do Painel) não existem em `main`: `supabase/BLOCO_6B_DEPLOYMENT.md`. |
 
 ### Fechadas na rodada de acesso (set/2026)
 
