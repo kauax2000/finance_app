@@ -976,6 +976,38 @@ export type Database = {
         }
         Relationships: []
       }
+      limites_avisados: {
+        Row: {
+          avisado_em: string
+          nivel: number
+          user_id: string
+          workspace_id: string
+          ym: string
+        }
+        Insert: {
+          avisado_em?: string
+          nivel: number
+          user_id: string
+          workspace_id: string
+          ym: string
+        }
+        Update: {
+          avisado_em?: string
+          nivel?: number
+          user_id?: string
+          workspace_id?: string
+          ym?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "limites_avisados_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string
@@ -1544,6 +1576,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "workspace_invites_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_member_limits: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_member_limits_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"

@@ -386,6 +386,8 @@ Deno.serve(async (req: Request) => {
           occurred_at: linha.date,
           payment_method: linha.payment_method,
           payment_credit_card_id: linha.payment_credit_card_id,
+          // O autor, para o limite da pessoa: no caminho de serviço não há JWT.
+          user_id: userId,
         }))
     }
     if (linha.payment_credit_card_id) {

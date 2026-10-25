@@ -1,8 +1,11 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { isServiceAuthorized } from '../_shared/service-auth.ts'
+import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
 import { deliverNotification } from '../_shared/deliver-notification.ts'
-import { adultosDaCarteira } from '../_shared/destinatarios.ts'
+import { adultosDaCarteira, donosDaCarteira } from '../_shared/destinatarios.ts'
+import { gastoDaPessoaNoMes, type LancamentoDaPessoa, nivelDoLimite } from '../_shared/limite-pessoa.ts'
+import { textoDoInsight } from '../_shared/insights/textos.ts'
 import { budgetCopy, monthNamePt } from '../_shared/notification-copy.ts'
 import {
   addCalendarDays,
@@ -31,6 +34,10 @@ type Body = {
   // O front 2.0 e o `capture` mandam o pagamento; o front antigo de `main`, não.
   payment_method?: string | null
   payment_credit_card_id?: string | null
+  // O autor do lançamento, que o caminho de serviço (`capture`) manda. Pelo
+  // JWT o autor é quem chama e o campo é ignorado; no caminho de serviço sem
+  // ele, o limite não é avaliado.
+  user_id?: string | null
 }
 
 type BudgetRow = {
@@ -71,6 +78,153 @@ function margemDoMes(ym: string): { start: string; end: string } {
   const ny = m === 12 ? y + 1 : y
   const nm = m === 12 ? 1 : m + 1
   return { start: formatYmd(start), end: formatYmd({ y: ny, m: nm, d: daysInMonth(ny, nm) }) }
+}
+
+/** O cliente de serviço com as RPCs (o `SupabaseAdminClient` as deixa opcionais). */
+type Admin = SupabaseAdminClient & Required<Pick<SupabaseAdminClient, 'rpc'>>
+type Membro = { user_id: string; role: string }
+
+/**
+ * O limite mensal do autor (Bloco 7A, spec §12): o gasto dele no mês contra o
+ * limite, e o aviso de 80% ou de 100% à pessoa e a cada dono, uma vez cada. Só
+ * o nível mais alto atingido avisa, e a reivindicação grava os de baixo junto.
+ * Roda com ou sem orçamento na categoria; uma falha vira log e não muda a
+ * resposta do orçamento.
+ */
+async function avaliarLimite(
+  admin: Admin,
+  workspaceId: string,
+  autorId: string,
+  meses: string[],
+  closingDayByCard: Record<string, number>
+): Promise<void> {
+  const { data: lim, error: limErr } = await admin
+    .from('workspace_member_limits')
+    .select('amount')
+    .eq('workspace_id', workspaceId)
+    .eq('user_id', autorId)
+    .maybeSingle()
+  if (limErr) return console.error('evaluate-budgets: limite', limErr)
+  if (!lim) return
+  const limiteCentavos = Math.round(Number((lim as { amount: number }).amount) * 100)
+
+  const { data: memberRows, error: memErr } = await admin
+    .from('workspace_members')
+    .select('user_id, role')
+    .eq('workspace_id', workspaceId)
+  if (memErr) return console.error('evaluate-budgets: limite membros', memErr)
+  const membros = (memberRows ?? []) as Membro[]
+  const papelDe = new Map(membros.map((m) => [m.user_id, m.role]))
+  if (!papelDe.has(autorId)) return
+
+  const ordenados = [...meses].sort()
+  const { data: txRows, error: txErr } = await admin
+    .from('transactions')
+    .select('user_id,type,amount,date,payment_method,payment_credit_card_id')
+    .eq('workspace_id', workspaceId)
+    .eq('user_id', autorId)
+    .eq('type', 'expense')
+    .gte('date', `${margemDoMes(ordenados[0]).start}T00:00:00.000Z`)
+    .lte('date', `${margemDoMes(ordenados[ordenados.length - 1]).end}T23:59:59.999Z`)
+  if (txErr) return console.error('evaluate-budgets: limite soma', txErr)
+  type TxLimite = Omit<LancamentoDaPessoa, 'card'> & { payment_credit_card_id: string | null }
+  const lancs: LancamentoDaPessoa[] = ((txRows ?? []) as TxLimite[]).map((t) => {
+    const cd = t.payment_credit_card_id ? closingDayByCard[t.payment_credit_card_id] : undefined
+    return { ...t, amount: Number(t.amount), card: cd == null ? null : { closing_day: cd } }
+  })
+
+  // A pessoa e cada dono, uma vez cada: o dono que é a própria pessoa recebe um.
+  const destinatarios = [...new Set([autorId, ...donosDaCarteira(membros)])]
+  let perfis: Map<string, { email: string | null; full_name: string | null }> | null = null
+
+  for (const ym of new Set(ordenados)) {
+    const gasto = gastoDaPessoaNoMes(lancs, autorId, ym)
+    const nivel = nivelDoLimite(gasto, limiteCentavos)
+    if (nivel === 0) continue
+
+    // Reivindica antes de avisar: `on conflict do nothing` só devolve o que é
+    // novo, e duas avaliações em paralelo não avisam o mesmo nível.
+    const niveis = nivel === 100 ? [80, 100] : [80]
+    const { data: novos, error: claimErr } = await admin
+      .from('limites_avisados')
+      .upsert(
+        niveis.map((n) => ({ workspace_id: workspaceId, user_id: autorId, ym, nivel: n })),
+        { onConflict: 'workspace_id,user_id,ym,nivel', ignoreDuplicates: true }
+      )
+      .select('nivel')
+    if (claimErr) {
+      console.error('evaluate-budgets: limite reivindicação', claimErr)
+      continue
+    }
+    const reivindicados = ((novos ?? []) as { nivel: number }[]).map((r) => r.nivel)
+    if (!reivindicados.includes(nivel)) continue
+    const liberar = () =>
+      admin
+        .from('limites_avisados')
+        .delete()
+        .eq('workspace_id', workspaceId)
+        .eq('user_id', autorId)
+        .eq('ym', ym)
+        .in('nivel', reivindicados)
+
+    if (!perfis) {
+      const { data: profileRows } = await admin.from('profiles').select('id,email,full_name').in('id', destinatarios)
+      perfis = new Map(
+        ((profileRows ?? []) as { id: string; email: string | null; full_name: string | null }[]).map((p) => [p.id, p])
+      )
+    }
+    const autor = perfis.get(autorId)
+    const nome = autor?.full_name?.trim() || autor?.email?.split('@')[0] || 'Alguém'
+
+    const payloadDe = (quem: string) => ({
+      para: quem === autorId ? 'pessoa' : 'dono',
+      papel: papelDe.get(quem) ?? 'owner',
+      nome,
+      nivel,
+      gasto: gasto / 100,
+      limite: limiteCentavos / 100,
+      ym,
+      pessoaId: autorId,
+    })
+
+    // O insight é de cada destinatário (`user_id` preenchido), sem push
+    // próprio: o push é o aviso logo abaixo.
+    const { error: insErr } = await admin.rpc('inserir_insights', {
+      p_linhas: destinatarios.map((quem) => ({
+        workspace_id: workspaceId,
+        user_id: quem,
+        kind: 'limite_pessoa',
+        dedupe_key: `lim:${autorId}:${ym}:${nivel}`,
+        payload: payloadDe(quem),
+      })),
+    })
+    if (insErr) console.error('evaluate-budgets: limite insight', insErr)
+
+    let anyDelivered = false
+    for (const quem of destinatarios) {
+      const payload = payloadDe(quem)
+      const texto = textoDoInsight('limite_pessoa', payload)
+      try {
+        const r = await deliverNotification({
+          supabaseAdmin: admin,
+          userId: quem,
+          userEmail: perfis.get(quem)?.email ?? null,
+          workspaceId,
+          type: 'budget',
+          title: texto.titulo,
+          body: texto.corpo,
+          metadata: { kind: 'member_limit', nivel, ym, user_id: autorId, href: texto.acao?.href ?? '/dashboard' },
+        })
+        if (r.ok) anyDelivered = true
+        else console.error('evaluate-budgets: limite entrega', quem, r.error)
+      } catch (e) {
+        console.error('evaluate-budgets: limite entrega', quem, e)
+      }
+    }
+    // Ninguém recebeu: libera o nível para uma próxima avaliação tentar de novo
+    // (o insight já gravado não se repete, pelo dedupe dele).
+    if (!anyDelivered) await liberar()
+  }
 }
 
 // O convidado não vê orçamento (Bloco 7A): a avaliação roda e avisa os adultos
@@ -166,6 +320,17 @@ async function avaliar(req: Request, ctx: { convidado: boolean }): Promise<Respo
       ? { payment_method: body.payment_method ?? null, payment_credit_card_id: body.payment_credit_card_id ?? null }
       : undefined
   const candidateDays = diasCandidatos(day, closingDayByCard, pagamento)
+
+  // O limite do autor vale com ou sem orçamento na categoria, e no mês em que
+  // a compra conta (o fechamento, no crédito).
+  const autorId = userId ?? (typeof body.user_id === 'string' && body.user_id ? body.user_id : null)
+  if (autorId) {
+    try {
+      await avaliarLimite(supabaseAdmin, workspaceId, autorId, candidateDays.map((d) => d.slice(0, 7)), closingDayByCard)
+    } catch (e) {
+      console.error('evaluate-budgets: limite', e)
+    }
+  }
 
   const { data: budgetRows, error: bErr } = await supabaseAdmin
     .from('budgets')

@@ -143,6 +143,19 @@ export function textoDoInsight(kind: string, p: Record<string, unknown>): Texto 
         corpo: 'Eles foram salvos e só precisam de uma olhada.',
         acao: { rotulo: 'Conferir agora', href: '/transactions?conferir=1' },
       }
+    case 'limite_pessoa': {
+      // `para` diz quem lê: a própria pessoa ou um dono. O convidado vê o
+      // limite no Painel; o adulto, na seção de limites de Membros.
+      const valores = `(${brl(num(p.gasto))} de ${brl(num(p.limite))})`
+      const dono = p.para === 'dono'
+      return {
+        titulo: dono ? `Limite de ${str(p.nome)}` : 'Seu limite do mês',
+        corpo: dono
+          ? `${str(p.nome)} chegou a ${num(p.nivel)}% do limite do mês ${valores}.`
+          : `Você chegou a ${num(p.nivel)}% do seu limite do mês ${valores}.`,
+        acao: { rotulo: 'Ver limite', href: p.papel === 'guest' ? '/dashboard' : '/members#limites' },
+      }
+    }
     default:
       return { titulo: 'Novidade na carteira', corpo: '', acao: null }
   }
