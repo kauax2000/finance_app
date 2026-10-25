@@ -2273,6 +2273,7 @@ export type Database = {
           acertos: number
           pago: number
           partes: number
+          saiu: boolean
           saldo: number
           user_id: string
         }[]

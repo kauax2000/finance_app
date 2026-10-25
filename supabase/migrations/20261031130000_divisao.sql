@@ -44,10 +44,14 @@ begin
   if tg_op = 'UPDATE'
      and old.paid_by is not null
      and new.paid_by is not distinct from old.paid_by
-     and new.workspace_id is not distinct from old.workspace_id then
+     and new.workspace_id is not distinct from old.workspace_id
+     and new.is_private is not distinct from old.is_private then
     -- Quem pagou não está em jogo: editar a descrição de uma despesa antiga
     -- não muda o saldo de ninguém, mesmo que o pagador tenha saído.
     null;
+  elsif new.is_private then
+    -- Ruling 4: a privada é paga pelo autor, e só ele tem parte nela.
+    new.paid_by := v_autor;
   elsif v_papel = 'guest' then
     -- O convidado nunca é quem pagou: o responsável dele, ou o dono quando o
     -- responsável saiu (`on delete set null`).
@@ -75,15 +79,16 @@ begin
     end if;
   end if;
 
-  -- A linha nasce automática. As partes à mão deixam de fechar quando o valor,
-  -- o tipo ou a carteira mudam: elas voltam ao automático, e o gatilho de
-  -- depois as refaz.
+  -- A linha nasce automática. As partes à mão deixam de valer quando o valor,
+  -- o tipo, a carteira ou o privado mudam: elas voltam ao automático, e o
+  -- gatilho de depois as refaz.
   if tg_op = 'INSERT' then
     new.shares_manual := false;
   elsif new.shares_manual and old.shares_manual and (
     new.amount is distinct from old.amount
     or new.type is distinct from old.type
     or new.workspace_id is distinct from old.workspace_id
+    or new.is_private is distinct from old.is_private
   ) then
     new.shares_manual := false;
   end if;
@@ -173,12 +178,62 @@ alter table public.workspace_installment_plans
     constraint workspace_installment_plans_split_weights_array
     check (split_weights is null or pg_catalog.jsonb_typeof(split_weights) = 'array');
 
+-- Ruling 5: os pesos do plano são validados na escrita — um array de
+-- `{ user_id, weight }`, cada `user_id` um adulto da carteira, `weight` um
+-- número > 0, sem repetir pessoa. Um valor ruim não chega ao cron das parcelas.
+create or replace function public.validar_pesos_do_plano()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if new.split_weights is null then
+    return new;
+  end if;
+  if pg_catalog.jsonb_typeof(new.split_weights) <> 'array'
+     or pg_catalog.jsonb_array_length(new.split_weights) = 0
+     or exists (
+       select 1 from pg_catalog.jsonb_array_elements(new.split_weights) e
+       where pg_catalog.jsonb_typeof(e) <> 'object'
+         or pg_catalog.jsonb_typeof(e -> 'weight') <> 'number'
+         or coalesce(e ->> 'user_id', '') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+     ) then
+    raise exception 'PESOS_INVALIDOS' using errcode = '22023';
+  end if;
+  -- As conversões só correm depois da forma conferida acima.
+  if exists (
+       select 1 from pg_catalog.jsonb_array_elements(new.split_weights) e
+       where (e ->> 'weight')::numeric <= 0
+         or not exists (
+           select 1 from public.workspace_members wm
+           where wm.workspace_id = new.workspace_id
+             and wm.user_id = (e ->> 'user_id')::uuid
+             and wm.role in ('owner', 'member')
+         )
+     ) or (
+       select count(distinct pg_catalog.lower(e ->> 'user_id')) <> count(*)
+       from pg_catalog.jsonb_array_elements(new.split_weights) e
+     ) then
+    raise exception 'PESOS_INVALIDOS' using errcode = '22023';
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function public.validar_pesos_do_plano() from public, anon, authenticated;
+
+drop trigger if exists validar_pesos_do_plano on public.workspace_installment_plans;
+create trigger validar_pesos_do_plano
+  before insert or update of split_weights, workspace_id on public.workspace_installment_plans
+  for each row execute function public.validar_pesos_do_plano();
+
 -- 4. as partes ----------------------------------------------------------------
 -- Só o banco escreve: o gatilho e o `definir_partes`. O adulto lê.
 create table if not exists public.transaction_shares (
   transaction_id uuid not null references public.transactions(id) on delete cascade,
   user_id uuid not null,
-  amount numeric(12, 2) not null,
+  amount numeric(15, 2) not null,
   primary key (transaction_id, user_id)
 );
 
@@ -232,65 +287,105 @@ $$;
 
 revoke all on function public.dividir_em_partes(bigint, jsonb, uuid) from public, anon, authenticated;
 
--- Ruling 2: lê só `amount`, `paid_by`, `type`, `date`, `workspace_id` e
--- `installment_plan_id` (mais `id` e `shares_manual`), colunas que o
--- mascaramento do 7B não toca. É `after` e só escreve em
--- `transaction_shares`: convive com o `guardar_privado`/`guardar_privado_depois`
--- em qualquer ordem e não dispara a si mesmo.
+-- O corpo das partes de uma despesa, chamado pelo gatilho de `transactions` e
+-- pelo de `workspace_installment_plans` (Ruling 6).
+--
+-- Ruling 2: lê só `amount`, `paid_by`, `type`, `date`, `workspace_id`,
+-- `installment_plan_id`, `is_private`, `user_id` e `shares_manual`, colunas que
+-- o mascaramento do 7B não toca. Só escreve em `transaction_shares`: convive
+-- com o `guardar_privado`/`guardar_privado_depois` em qualquer ordem e não
+-- dispara gatilho nenhum.
 --
 -- A despesa ganha partes numa carteira `split`, com data a partir de
 -- `split_since`, quando não é à mão. Fora disso, as automáticas saem — menos
 -- numa carteira que voltou a `pooled`: trocar o modo não apaga nada, e a
 -- despesa que já tinha partes as mantém em dia; a que nasce no pote único não
 -- ganha nenhuma.
-create or replace function public.gerar_partes()
-returns trigger
+--
+-- As partes nascem na escrita, entre os adultos daquele momento: a despesa
+-- lançada antes de outro adulto entrar fica com quem estava (lacuna, Ruling 7).
+-- A privada (Ruling 4) tem uma parte só, inteira do autor. Com os pesos do
+-- plano que deixam quem pagou de fora, o centavo que sobra vai para o menor
+-- `user_id` entre os participantes do plano, e não para quem pagou.
+create or replace function public.refazer_partes(p_transaction_id uuid)
+returns void
 language plpgsql
 security definer
 set search_path = ''
 as $$
 declare
+  v_valor numeric;
+  v_pagador uuid;
+  v_autor uuid;
+  v_tipo text;
+  v_data timestamptz;
+  v_ws uuid;
+  v_plano uuid;
+  v_privada boolean;
+  v_manual boolean;
   v_modo text;
   v_desde date;
   v_pesos jsonb;
 begin
-  if new.shares_manual then
-    return null;
+  select t.amount, t.paid_by, t.user_id, t.type, t.date, t.workspace_id, t.installment_plan_id, t.is_private, t.shares_manual
+  into v_valor, v_pagador, v_autor, v_tipo, v_data, v_ws, v_plano, v_privada, v_manual
+  from public.transactions t
+  where t.id = p_transaction_id;
+  if not found or v_manual then
+    return;
   end if;
 
   select w.split_mode, w.split_since into v_modo, v_desde
   from public.workspaces w
-  where w.id = new.workspace_id;
+  where w.id = v_ws;
 
-  if new.type <> 'expense'
-     or new.amount <= 0
+  if v_tipo <> 'expense'
+     or v_valor <= 0
      or v_desde is null
-     or (new.date at time zone 'America/Sao_Paulo')::date < v_desde then
-    delete from public.transaction_shares s where s.transaction_id = new.id;
-    return null;
+     or (v_data at time zone 'America/Sao_Paulo')::date < v_desde then
+    delete from public.transaction_shares s where s.transaction_id = p_transaction_id;
+    return;
   end if;
 
-  if v_modo is distinct from 'split' and (
-    (tg_op = 'UPDATE' and new.workspace_id is distinct from old.workspace_id)
-    or not exists (select 1 from public.transaction_shares s where s.transaction_id = new.id)
-  ) then
-    delete from public.transaction_shares s where s.transaction_id = new.id;
-    return null;
+  if v_modo is distinct from 'split'
+     and not exists (select 1 from public.transaction_shares s where s.transaction_id = p_transaction_id) then
+    return;
+  end if;
+
+  delete from public.transaction_shares s where s.transaction_id = p_transaction_id;
+
+  if v_privada then
+    insert into public.transaction_shares (transaction_id, user_id, amount)
+    values (p_transaction_id, v_autor, v_valor);
+    return;
   end if;
 
   -- Os pesos do plano da parcela, entre os adultos que ele cita; senão, os da
-  -- carteira, entre todos os adultos. O convidado nunca tem parte.
-  select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('user_id', wm.user_id, 'weight', (e ->> 'weight')::numeric))
+  -- carteira, entre todos os adultos. O convidado nunca tem parte. As
+  -- conversões são guardadas e há um peso por pessoa: um valor ruim que
+  -- escapou da validação cai nos pesos da carteira, sem derrubar o lançamento.
+  select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('user_id', x.user_id, 'weight', x.weight))
   into v_pesos
-  from public.workspace_installment_plans p
-  cross join lateral pg_catalog.jsonb_array_elements(p.split_weights) e
-  join public.workspace_members wm
-    on wm.workspace_id = new.workspace_id
-   and wm.user_id = (e ->> 'user_id')::uuid
-  where p.id = new.installment_plan_id
-    and p.split_weights is not null
-    and wm.role in ('owner', 'member')
-    and (e ->> 'weight')::numeric > 0;
+  from (
+    select wm.user_id, max(c.peso) as weight
+    from public.workspace_installment_plans p
+    cross join lateral pg_catalog.jsonb_array_elements(
+      case when pg_catalog.jsonb_typeof(p.split_weights) = 'array' then p.split_weights else '[]'::jsonb end
+    ) e
+    cross join lateral (
+      select
+        case when e ->> 'user_id' ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+          then (e ->> 'user_id')::uuid end as user_id,
+        case when pg_catalog.jsonb_typeof(e -> 'weight') = 'number' then (e ->> 'weight')::numeric end as peso
+    ) c
+    join public.workspace_members wm
+      on wm.workspace_id = v_ws
+     and wm.user_id = c.user_id
+    where p.id = v_plano
+      and wm.role in ('owner', 'member')
+      and c.peso > 0
+    group by wm.user_id
+  ) x;
 
   if v_pesos is null then
     select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('user_id', wm.user_id, 'weight', coalesce(sw.weight, 1)))
@@ -299,32 +394,83 @@ begin
     left join public.workspace_split_weights sw
       on sw.workspace_id = wm.workspace_id
      and sw.user_id = wm.user_id
-    where wm.workspace_id = new.workspace_id
+    where wm.workspace_id = v_ws
       and wm.role in ('owner', 'member');
   end if;
 
-  delete from public.transaction_shares s where s.transaction_id = new.id;
   if v_pesos is null then
-    return null;
+    return;
   end if;
 
   insert into public.transaction_shares (transaction_id, user_id, amount)
-  select new.id, d.user_id, d.centavos::numeric / 100
-  from public.dividir_em_partes(pg_catalog.round(new.amount * 100)::bigint, v_pesos, new.paid_by) d;
+  select p_transaction_id, d.user_id, d.centavos::numeric / 100
+  from public.dividir_em_partes(pg_catalog.round(v_valor * 100)::bigint, v_pesos, v_pagador) d;
+end;
+$$;
 
+revoke all on function public.refazer_partes(uuid) from public, anon, authenticated;
+
+-- Mudar de carteira começa do zero: as partes da outra casa saem antes, e o
+-- pote único de destino não as mantém.
+create or replace function public.gerar_partes()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if tg_op = 'UPDATE' and new.workspace_id is distinct from old.workspace_id then
+    delete from public.transaction_shares s where s.transaction_id = new.id;
+  end if;
+  perform public.refazer_partes(new.id);
   return null;
 end;
 $$;
 
 revoke all on function public.gerar_partes() from public, anon, authenticated;
 
--- `date` e `shares_manual` entram na lista: a despesa que muda de dia cruza o
--- `split_since`, e o `definir_partes(…, null)` volta ao automático por aqui.
+-- `date`, `shares_manual` e `is_private` entram na lista: a despesa que muda
+-- de dia cruza o `split_since`, o `definir_partes(…, null)` volta ao
+-- automático por aqui, e marcar como privada a deixa só com o autor.
 drop trigger if exists gerar_partes on public.transactions;
 create trigger gerar_partes
-  after insert or update of amount, paid_by, type, date, workspace_id, installment_plan_id, shares_manual
+  after insert or update of amount, paid_by, type, date, workspace_id, installment_plan_id, shares_manual, is_private
   on public.transactions
   for each row execute function public.gerar_partes();
+
+-- Ruling 6: a regra da parcelada mora no plano. Mudar os pesos refaz as partes
+-- automáticas das parcelas dele; as escritas à mão ficam. A tela grava os
+-- pesos logo depois de criar o plano (o `criar_plano_parcelado` não muda de
+-- assinatura: o `main` o chama). Apagar o plano solta as parcelas
+-- (`set null`), e elas passam aos pesos da carteira (lacuna).
+create or replace function public.refazer_partes_do_plano()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_id uuid;
+begin
+  for v_id in
+    select t.id from public.transactions t
+    where t.installment_plan_id = new.id
+      and not t.shares_manual
+  loop
+    perform public.refazer_partes(v_id);
+  end loop;
+  return null;
+end;
+$$;
+
+revoke all on function public.refazer_partes_do_plano() from public, anon, authenticated;
+
+drop trigger if exists refazer_partes_do_plano on public.workspace_installment_plans;
+create trigger refazer_partes_do_plano
+  after update of split_weights on public.workspace_installment_plans
+  for each row
+  when (new.split_weights is distinct from old.split_weights)
+  execute function public.refazer_partes_do_plano();
 
 -- As partes à mão: `p_partes` é um array de `{ user_id, amount }` entre os
 -- adultos, que soma o valor exato. Nulo volta ao automático.
@@ -336,7 +482,6 @@ set search_path = ''
 as $$
 declare
   v_ws uuid;
-  v_autor uuid;
   v_privada boolean;
   v_valor numeric;
   v_tipo text;
@@ -344,16 +489,16 @@ declare
   v_desde date;
   v_soma numeric;
 begin
-  select t.workspace_id, t.user_id, t.is_private, t.amount, t.type, t.date
-  into v_ws, v_autor, v_privada, v_valor, v_tipo, v_data
+  select t.workspace_id, t.is_private, t.amount, t.type, t.date
+  into v_ws, v_privada, v_valor, v_tipo, v_data
   from public.transactions t
   where t.id = p_transaction_id;
 
   if v_ws is null or not public.is_workspace_adult(v_ws) then
     raise exception 'not a workspace adult' using errcode = '42501';
   end if;
-  -- 7B: só o autor mexe na privada.
-  if v_privada and v_autor is distinct from auth.uid() then
+  -- Ruling 4: a privada fica inteira com o autor; ninguém a divide à mão.
+  if v_privada then
     raise exception 'PRIVADO_NAO_PERMITIDO' using errcode = 'P0001';
   end if;
 
@@ -461,11 +606,14 @@ drop trigger if exists garantir_escrita on public.settlements;
 create trigger garantir_escrita before insert on public.settlements
   for each row execute function public.garantir_escrita();
 
--- O saldo de cada adulto: pago − partes + acertos. Positivo, os outros devem a
--- ele. Conta só as despesas com partes a partir de `split_since`, e só lista os
--- adultos: o convidado não entra (a despesa dele foi paga pelo responsável).
+-- O saldo de cada pessoa: pago − partes + acertos. Positivo, os outros devem a
+-- ela. Conta só as despesas com partes a partir de `split_since`. Ruling 7:
+-- lista os adultos de hoje e todo mundo que aparece nas partes, nos pagamentos
+-- ou nos acertos da carteira, com `saiu` para quem não é mais adulto — assim a
+-- soma dos saldos é sempre 0, e quem saiu continua na tela até acertar. O
+-- convidado nunca aparece: não paga (o responsável paga por ele) nem tem parte.
 create or replace function public.saldos_da_carteira(p_workspace_id uuid)
-returns table(user_id uuid, pago numeric, partes numeric, acertos numeric, saldo numeric)
+returns table(user_id uuid, pago numeric, partes numeric, acertos numeric, saldo numeric, saiu boolean)
 language plpgsql
 stable
 security definer
@@ -495,6 +643,7 @@ begin
   ), pagos as (
     select d.paid_by as user_id, sum(d.amount) as valor
     from despesas d
+    where d.paid_by is not null
     group by d.paid_by
   ), minhas as (
     select s.user_id, sum(s.amount) as valor
@@ -513,18 +662,27 @@ begin
       where st.workspace_id = p_workspace_id
     ) x
     group by x.user_id
+  ), pessoas as (
+    select ad.user_id from adultos ad
+    union
+    select pg.user_id from pagos pg
+    union
+    select mi.user_id from minhas mi
+    union
+    select ac.user_id from acertados ac
   )
   select
-    a.user_id,
+    pe.user_id,
     coalesce(pg.valor, 0)::numeric,
     coalesce(mi.valor, 0)::numeric,
     coalesce(ac.valor, 0)::numeric,
-    (coalesce(pg.valor, 0) - coalesce(mi.valor, 0) + coalesce(ac.valor, 0))::numeric
-  from adultos a
-  left join pagos pg on pg.user_id = a.user_id
-  left join minhas mi on mi.user_id = a.user_id
-  left join acertados ac on ac.user_id = a.user_id
-  order by a.user_id;
+    (coalesce(pg.valor, 0) - coalesce(mi.valor, 0) + coalesce(ac.valor, 0))::numeric,
+    not exists (select 1 from adultos ad where ad.user_id = pe.user_id)
+  from pessoas pe
+  left join pagos pg on pg.user_id = pe.user_id
+  left join minhas mi on mi.user_id = pe.user_id
+  left join acertados ac on ac.user_id = pe.user_id
+  order by pe.user_id;
 end;
 $$;
 
