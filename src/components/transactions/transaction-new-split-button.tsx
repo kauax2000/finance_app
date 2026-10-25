@@ -17,6 +17,8 @@ export type TransactionNewSplitButtonProps = {
     onNew: (mode: NewTransactionMode) => void
     /** Extra rows below the three launch types (e.g. Nova assinatura). */
     menuFooter?: React.ReactNode
+    /** O convidado só lança despesa (Bloco 7A, Ruling 11): sem "Nova receita". */
+    semReceita?: boolean
     menuAlign?: "start" | "end"
     menuSide?: "top" | "right" | "bottom" | "left"
     className?: string
@@ -25,6 +27,7 @@ export type TransactionNewSplitButtonProps = {
 export function TransactionNewSplitButton({
     onNew,
     menuFooter,
+    semReceita = false,
     menuAlign = "end",
     menuSide,
     className,
@@ -60,9 +63,11 @@ export function TransactionNewSplitButton({
                     <DropdownMenuItem onClick={() => onNew("expense")}>
                         Nova despesa
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onNew("income")}>
-                        Nova receita
-                    </DropdownMenuItem>
+                    {semReceita ? null : (
+                        <DropdownMenuItem onClick={() => onNew("income")}>
+                            Nova receita
+                        </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={() => onNew("installment")}>
                         Nova compra parcelada
                     </DropdownMenuItem>

@@ -201,7 +201,11 @@ export function useTransactionForm({
     const [fonteDaFrase, setFonteDaFrase] = useState<TransactionSource>("quick_text")
     // A foto do recibo, já comprimida: vira anexo depois do salvar.
     const [fotoDoRecibo, setFotoDoRecibo] = useState<File | null>(null)
-    const { currentWorkspaceId } = useWorkspace()
+    const { currentWorkspaceId, papel } = useWorkspace()
+    // Toda porta de receita (paleta, `?new=receita`, casca) abre a do convidado
+    // em despesa: ele só lança despesa (Bloco 7A, Ruling 11).
+    const kindInicial: TransactionFormKind =
+        papel === "guest" && defaultLaunchKind === "income" ? "expense" : defaultLaunchKind
 
     const segmentMode: "create" | "edit" = editingTransaction
         ? "edit"
@@ -257,8 +261,8 @@ export function useTransactionForm({
                   installmentEditScope: "slice",
               }
             : {
-                  formKind: defaultLaunchKind,
-                  type: defaultLaunchKind === "income" ? "income" : "expense",
+                  formKind: kindInicial,
+                  type: kindInicial === "income" ? "income" : "expense",
                   amount: "",
                   description: "",
                   categoryId: "",
@@ -294,7 +298,7 @@ export function useTransactionForm({
         setDuvidasDaFrase(null)
         setFotoDoRecibo(null)
         setSnapshot(v)
-    }, [active, editingTransaction, defaultLaunchKind])
+    }, [active, editingTransaction, kindInicial])
     /* eslint-enable react-hooks/set-state-in-effect */
 
     /* eslint-disable react-hooks/set-state-in-effect -- sync form type/panels with launch kind and active state */

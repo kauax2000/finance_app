@@ -56,6 +56,8 @@ const ERRO_PDF = 'PDF de fatura: use Conferir fatura no app.'
 const ERRO_TIPO = 'Envie uma foto (JPG, PNG ou WebP).'
 const ERRO_FOTO = 'Não entendi a foto. Mande o valor no texto.'
 const ERRO_FOTO_GRANDE = 'Foto grande demais para a IA. Reduza a foto ou mande o valor no texto.'
+/** O convidado só lança despesa (Bloco 7A, Ruling 11); a RLS barraria o mesmo pelo app. */
+const ERRO_RECEITA_DO_CONVIDADO = 'Convidado lança só despesa. Peça a um adulto da carteira para lançar a receita.'
 const EXTENSAO = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' } as const
 type Foto = { bytes: Uint8Array; mime: keyof typeof EXTENSAO }
 
@@ -255,6 +257,8 @@ Deno.serve(async (req: Request) => {
     return json(montado.status, { error: foto && montado.erro === ERRO_VALOR ? erroDaFoto : montado.erro })
   }
   const { linha } = montado
+  // A service role não passa pela RLS: a recusa do convidado se repete aqui.
+  if (linha.type === 'income' && convidadoEm.has(linha.workspace_id)) return json(422, { error: ERRO_RECEITA_DO_CONVIDADO })
 
   let gravado: Gravado | undefined
   let novo: boolean

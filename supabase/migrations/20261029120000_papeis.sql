@@ -82,8 +82,21 @@ grant execute on function public.is_workspace_adult(uuid) to anon, authenticated
 
 -- 4. transactions -------------------------------------------------------------
 -- O adulto vê e mexe em tudo, como hoje. O convidado, só nas dele (o autor é
--- `user_id`, que o `preserve_row_author` não deixa trocar). O insert fica como
--- está: membro e `user_id = auth.uid()`.
+-- `user_id`, que o `preserve_row_author` não deixa trocar), e só lança despesa
+-- (Ruling 11): o insert e o `with check` do update exigem `type = 'expense'`
+-- para quem não é adulto, então ele não cria receita nem vira uma despesa em
+-- receita. O insert continua exigindo `user_id = auth.uid()`.
+drop policy if exists "Workspace members can insert transactions" on public.transactions;
+create policy "Workspace members can insert transactions" on public.transactions
+  for insert
+  with check (
+    user_id = (select auth.uid())
+    and (
+      public.is_workspace_adult(workspace_id)
+      or (public.is_workspace_member(workspace_id) and type = 'expense')
+    )
+  );
+
 drop policy if exists "Workspace members can view transactions" on public.transactions;
 create policy "Workspace members can view transactions" on public.transactions
   for select
@@ -98,6 +111,10 @@ create policy "Workspace members can update transactions" on public.transactions
   using (
     public.is_workspace_adult(workspace_id)
     or (user_id = (select auth.uid()) and public.is_workspace_member(workspace_id))
+  )
+  with check (
+    public.is_workspace_adult(workspace_id)
+    or (user_id = (select auth.uid()) and public.is_workspace_member(workspace_id) and type = 'expense')
   );
 
 drop policy if exists "Workspace members can delete transactions" on public.transactions;

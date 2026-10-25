@@ -92,3 +92,35 @@ describe("só leitura para quem não é adulto (Ruling 8)", () => {
         expect(f.match(/\{isAdulto \? \(/g)).toHaveLength(2)
     })
 })
+
+describe("o convidado só lança despesa (Ruling 11)", () => {
+    it("a paleta tira a Nova receita do convidado", () => {
+        const f = fonte("src/components/layout/app-command-palette.tsx")
+        expect(f).toContain('todasAsAcoes.filter((a) => a.id === "expense" || a.id === "installment")')
+        expect(f).not.toMatch(/a\.id === "income"/)
+    })
+
+    it("o Nova transação da tela de transações não oferece receita", () => {
+        const botao = fonte("src/components/transactions/transaction-new-split-button.tsx")
+        expect(botao).toMatch(/\{semReceita \? null : \(\s*<DropdownMenuItem onClick=\{\(\) => onNew\("income"\)\}>/)
+        expect(fonte("src/app/(app)/transactions/page-client.tsx")).toContain("semReceita={convidado}")
+    })
+
+    it("o trilho do formulário esconde a Receita: na criação sai a aba, na edição sai o trilho", () => {
+        const seg = fonte("src/components/transactions/transaction-type-segment.tsx")
+        expect(seg).toContain('const abas = semReceita ? FORM_KIND_TABS.filter((t) => t.value !== "income") : FORM_KIND_TABS')
+        expect(seg).toMatch(/\{abas\.map\(\(t\) =>/)
+        const campos = fonte("src/components/transactions/transaction-form-fields.tsx")
+        expect(campos).toContain('const semReceita = useWorkspace().papel === "guest"')
+        expect(campos).toContain('if (segmentMode === "edit" && (hasInstallmentPlan || semReceita)) return null')
+        expect(campos).toContain("<TransactionFormKindSegment value={formKind} onChange={setFormKind} semReceita={semReceita} />")
+    })
+
+    it("toda porta de receita (paleta, ?new=receita, casca) abre o formulário do convidado em despesa", () => {
+        const f = fonte("src/components/transactions/transaction-form-use.tsx")
+        expect(f).toContain('papel === "guest" && defaultLaunchKind === "income" ? "expense" : defaultLaunchKind')
+        expect(f).toContain("formKind: kindInicial,")
+        expect(f).toContain('type: kindInicial === "income" ? "income" : "expense",')
+        expect(f).toContain("}, [active, editingTransaction, kindInicial])")
+    })
+})

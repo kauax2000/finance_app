@@ -43,11 +43,15 @@ export function TransactionFormKindSegment({
     value,
     onChange,
     className,
+    semReceita = false,
 }: {
     value: TransactionFormKind
     onChange: (next: TransactionFormKind) => void
     className?: string
+    /** O convidado só lança despesa (Bloco 7A, Ruling 11). */
+    semReceita?: boolean
 }) {
+    const abas = semReceita ? FORM_KIND_TABS.filter((t) => t.value !== "income") : FORM_KIND_TABS
     return (
         <ToggleGroup
             type="single"
@@ -58,7 +62,7 @@ export function TransactionFormKindSegment({
             onValueChange={(next) => onChange(next as TransactionFormKind)}
             className={className}
         >
-            {FORM_KIND_TABS.map((t) => (
+            {abas.map((t) => (
                 <ToggleGroupItem key={t.value} value={t.value} icon={t.icon}>
                     {t.label}
                 </ToggleGroupItem>

@@ -210,15 +210,26 @@ describe("migração papéis: o convidado e o adulto", () => {
         }
     })
 
-    it("transactions: o adulto como hoje; o convidado lê, edita e apaga só as dele; o insert não muda", () => {
+    it("transactions: o adulto como hoje; o convidado lê, edita e apaga só as dele", () => {
         for (const [verbo, op] of [["view", "select"], ["update", "update"], ["delete", "delete"]]) {
             const pol = politica(`Workspace members can ${verbo} transactions`, "public.transactions")
             expect(pol).toMatch(new RegExp(`for ${op}\\b`))
             expect(pol).toMatch(
-                /public\.is_workspace_adult\(workspace_id\)\s+or \(user_id = \(select auth\.uid\(\)\) and public\.is_workspace_member\(workspace_id\)\)/,
+                /using \(\s*public\.is_workspace_adult\(workspace_id\)\s+or \(user_id = \(select auth\.uid\(\)\) and public\.is_workspace_member\(workspace_id\)\)\s*\)/,
             )
         }
-        expect(sql).not.toMatch(/"Workspace members can insert transactions"/)
+    })
+
+    it("transactions: o convidado só lança despesa (Ruling 11), no insert e no with check do update", () => {
+        const ins = politica("Workspace members can insert transactions", "public.transactions")
+        expect(ins).toMatch(/for insert\b/)
+        expect(ins).toMatch(
+            /with check \(\s*user_id = \(select auth\.uid\(\)\)\s+and \(\s*public\.is_workspace_adult\(workspace_id\)\s+or \(public\.is_workspace_member\(workspace_id\) and type = 'expense'\)\s*\)\s*\)/,
+        )
+        const upd = politica("Workspace members can update transactions", "public.transactions")
+        expect(upd).toMatch(
+            /with check \(\s*public\.is_workspace_adult\(workspace_id\)\s+or \(user_id = \(select auth\.uid\(\)\) and public\.is_workspace_member\(workspace_id\) and type = 'expense'\)\s*\)/,
+        )
     })
 
     it("categories e credit_cards: select por membro (fica como está), escrita por adulto", () => {
@@ -410,8 +421,11 @@ describe("migração papéis: o convidado e o adulto", () => {
             expect(p.texto, comando).toMatch(/public\.is_workspace_adult\(workspace_id\) or/)
             expect(p.texto, comando).toMatch(autorTx)
         }
-        expect(politicaFinal("public.transactions", "insert").texto).toMatch(
-            /is_workspace_member\(workspace_id\) and user_id = \(select auth\.uid\(\)\)/,
+        const insTx = politicaFinal("public.transactions", "insert").texto
+        expect(insTx).toMatch(/user_id = \(select auth\.uid\(\)\) and \( public\.is_workspace_adult\(workspace_id\) or/)
+        expect(insTx).toMatch(/public\.is_workspace_member\(workspace_id\) and type = 'expense'/)
+        expect(politicaFinal("public.transactions", "update").texto).toMatch(
+            /with check \( public\.is_workspace_adult\(workspace_id\) or \(user_id = \(select auth\.uid\(\)\) and public\.is_workspace_member\(workspace_id\) and type = 'expense'\) \)/,
         )
 
         for (const comando of ["select", "delete"]) {

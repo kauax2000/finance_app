@@ -390,6 +390,7 @@ export default function TransactionsPage() {
                 }}
                 toolbarTrailing={() => (
                     <TransactionNewSplitButton
+                        semReceita={convidado}
                         menuAlign="end"
                         menuSide="bottom"
                         onNew={(mode) => {

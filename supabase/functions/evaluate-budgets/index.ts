@@ -171,14 +171,17 @@ async function avaliarLimite(
     }
     const reivindicados = ((novos ?? []) as { nivel: number }[]).map((r) => r.nivel)
     if (!nivelNovo(nivel, reivindicados)) continue
-    const liberar = () =>
-      admin
+    // Sem a liberação, o nível fica reivindicado e não avisa mais no mês: o erro se loga.
+    const liberar = async () => {
+      const { error } = await admin
         .from('limites_avisados')
         .delete()
         .eq('workspace_id', workspaceId)
         .eq('user_id', autorId)
         .eq('ym', ym)
         .in('nivel', reivindicados)
+      if (error) console.error('evaluate-budgets: limite liberar', error)
+    }
 
     if (!perfis) {
       const { data: profileRows, error: profErr } = await admin
@@ -306,7 +309,12 @@ async function avaliar(req: Request, ctx: { convidado: boolean }): Promise<Respo
       .eq('id', body.transaction_id)
       .maybeSingle()
     if (error) return fail('lançamento', error)
-    if (!data) return json(200, { ok: true, skipped: true, reason: 'no_transaction' })
+    // Com quem chama, a linha que não existe responde o mesmo 403 da linha de
+    // outra carteira: um UUID não se sonda. Sem quem chama (a service role), pula.
+    if (!data) {
+      if (userId) return json(403, { error: 'Not a member of this workspace' })
+      return json(200, { ok: true, skipped: true, reason: 'no_transaction' })
+    }
     lanc = data as TxDoAviso
   }
 

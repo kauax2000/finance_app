@@ -8,7 +8,7 @@ Reúne o convidado, o limite por pessoa e o app do convidado:
   do convite, os checks `workspace_invites_guest_requer_email` e
   `workspace_invites_menor_requer_consentimento`, o helper `is_workspace_adult`,
   as políticas que tiram da casa o que não é do convidado (transações dele só as
-  dele; orçamento, contas, assinaturas, parcelamentos, faturas e conferências só
+  dele, e só despesa; orçamento, contas, assinaturas, parcelamentos, faturas e conferências só
   do adulto; categorias e cartões só para ler; anexos e storage pelo autor),
   `trocar_papel`, e as RPCs `accept_workspace_invite`, `marcar_insight`,
   `registrar_insight`, `garantir_orcamentos_do_mes`,
@@ -123,6 +123,52 @@ where schemaname = 'public'
 Esperado: nenhuma linha. Uma linha é uma política de `select`, `update` ou
 `delete` que ainda deixa o convidado ver ou mexer no que não é dele. Se vier uma,
 **pare**: rode de novo a seção 4 do arquivo da migração ("transactions").
+
+**O convidado só lança despesa.** O `insert` e o `with check` do `update` exigem
+`type = 'expense'` de quem não é adulto: o convidado não cria receita nem vira uma
+despesa dele em receita.
+
+```sql
+select policyname, cmd, coalesce(with_check, '') like '%''expense''%' as so_despesa
+from pg_policies
+where schemaname = 'public'
+  and tablename = 'transactions'
+  and cmd in ('INSERT', 'UPDATE')
+order by 2;
+```
+
+Esperado: duas linhas (`INSERT` e `UPDATE`), as duas com `so_despesa` `true`. Um
+`false` quer dizer que a seção 4 não subiu: rode-a de novo.
+
+**As políticas de anexo do storage passaram a ser do adulto ou do autor.** O bloco
+`do $$ … exception when insufficient_privilege` da seção "7. anexos" da migração
+recria as duas políticas de `storage.objects`. Se o papel da migração não for
+dono de `storage.objects` (o caso que o `BLOCO_2_DEPLOYMENT.md` já registrou neste
+projeto), o bloco só emite o aviso `papeis: sem privilégio para as políticas de
+storage.objects; aplique pelo SQL editor do Dashboard.`, é desfeito em silêncio, e
+o `db push` termina sem erro.
+
+```sql
+select policyname, cmd,
+  coalesce(qual, '') || coalesce(with_check, '') like '%is_workspace_adult%' as adulto
+from pg_policies
+where schemaname = 'storage'
+  and tablename = 'objects'
+  and policyname in ('Workspace members can view attachments', 'Workspace members can delete attachments')
+order by 1;
+```
+
+Esperado: duas linhas, as duas com `adulto` `true`.
+
+Se vier `false`, faltar uma linha ou o log do `db push` trouxer o aviso acima,
+**as políticas antigas continuam valendo**: as de qualquer membro da pasta da
+carteira. Com elas, o convidado lista, baixa e apaga pelo storage todo recibo da
+carteira, inclusive os anexos de contas e faturas e os das transações dos outros.
+A RLS de `attachments` não o protege, porque o `list`, o `download` e o `remove` são
+do bucket. Rode no SQL Editor o bloco `do $$ ... $$` da seção "7. anexos" de
+`20261029120000_papeis.sql` (copie do arquivo; é só o trecho de `storage.objects`,
+depois das políticas de `public.attachments`) e confira de novo. **Ninguém é
+convidado antes de esta conferência dar `true` nas duas.**
 
 **As tabelas só do adulto não têm política só de membro.** Orçamento, contas,
 assinaturas, parcelamentos, pagamentos de fatura, alertas de categoria do cartão e
@@ -364,6 +410,24 @@ select count(*) from public.limites_avisados;
 Esperado: `0` até alguém definir um limite pelo front do 2.0 e passar de 80%. Se
 vier mais que zero sem limite definido, veja os logs de `evaluate-budgets`.
 
+**As políticas de anexo do storage continuam do adulto ou do autor.** A mesma
+conferência do §1, de novo depois do deploy: um `db push` posterior, ou alguém no
+Dashboard, pode ter recriado as de membro.
+
+```sql
+select policyname, cmd,
+  coalesce(qual, '') || coalesce(with_check, '') like '%is_workspace_adult%' as adulto
+from pg_policies
+where schemaname = 'storage'
+  and tablename = 'objects'
+  and policyname in ('Workspace members can view attachments', 'Workspace members can delete attachments')
+order by 1;
+```
+
+Esperado: duas linhas, as duas com `adulto` `true`. Um `false` deixa o convidado
+ler e apagar todo recibo da carteira pelo storage: rode no SQL Editor o bloco
+`do $$ ... $$` da seção "7. anexos" da migração, como no §1.
+
 **Os logs das Edges.** Em Dashboard → Edge Functions → `evaluate-budgets` →
 Logs, uma falha do limite aparece como `evaluate-budgets: limite ...` e **não
 muda** a resposta do orçamento: o limite é um acréscimo, e o aviso de orçamento
@@ -411,6 +475,12 @@ reenviar os avisos), apague só a linha daquela pessoa e daquele mês:
 delete from public.limites_avisados
 where workspace_id = '<carteira>' and user_id = '<pessoa>' and ym = '<AAAA-MM>';
 ```
+
+**Não deixe um link de membro ativo ao convidar um convidado.** O link de convite
+é sempre de membro, sem limite de usos, por 7 dias, e funciona como portador:
+quem saiu da carteira como convidado e ainda tem o link entra de novo como
+membro. Para um menor, prefira sempre o convite por e-mail, e revogue em Membros
+os links de membro que ele possa ter visto (lacuna 60 de `docs/JORNADAS.md`).
 
 **Para desfazer um convidado**, sem apagar nada: o dono troca o papel de volta
 para membro pela tela (`trocar_papel` com `member`, que também zera o
@@ -463,7 +533,9 @@ carteira compartilhada de teste:
 
   Esperado: `guest` e `true`;
 - **o convidado vê** o Painel dele (o limite, o gasto do mês, as transações dele e
-  "Lançar despesa"), Transações (só as dele), Categorias e Cartões só para ler (sem
+  "Lançar despesa"), Transações (só as dele; o "Nova transação", a paleta e o
+  formulário não oferecem receita, e o Atalho com uma receita responde "Convidado
+  lança só despesa…"), Categorias e Cartões só para ler (sem
   criar, editar nem excluir; o cartão não é link), Minha conta, Configurações,
   Planos e o Cofre aberto. **Não vê** Orçamento, Previsão, Contas a pagar,
   Assinaturas, Membros, a fatura e a conferência. Digitar o endereço de uma tela

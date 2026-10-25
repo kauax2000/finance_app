@@ -366,9 +366,9 @@ function PaletteBody({ close }: { close: () => void }) {
               ]
             : []),
     ]
-    // O convidado lança (despesa, parcelada, receita); assinatura, categoria e cartão são do adulto.
+    // O convidado lança despesa e parcelada (Ruling 11: receita, assinatura, categoria e cartão são do adulto).
     const acoes = convidado
-        ? todasAsAcoes.filter((a) => a.id === "expense" || a.id === "installment" || a.id === "income")
+        ? todasAsAcoes.filter((a) => a.id === "expense" || a.id === "installment")
         : todasAsAcoes
     const telasBuscaveis = itensDeNavegacaoPara(papel, TELAS_BUSCAVEIS)
 

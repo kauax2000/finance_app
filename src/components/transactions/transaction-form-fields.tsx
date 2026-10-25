@@ -287,11 +287,14 @@ export function TransactionFormSegment({
     TransactionFormFieldsProps,
     "segmentMode" | "hasInstallmentPlan" | "type" | "setType" | "formKind" | "setFormKind"
 >) {
-    if (segmentMode === "edit" && hasInstallmentPlan) return null
+    // O convidado só lança despesa (Ruling 11): na edição não há o que escolher.
+    // O papel a caminho mostra o trilho inteiro; quem barra é a RLS.
+    const semReceita = useWorkspace().papel === "guest"
+    if (segmentMode === "edit" && (hasInstallmentPlan || semReceita)) return null
     return segmentMode === "edit" ? (
         <TransactionFormTypeSegment value={type} onChange={setType} />
     ) : (
-        <TransactionFormKindSegment value={formKind} onChange={setFormKind} />
+        <TransactionFormKindSegment value={formKind} onChange={setFormKind} semReceita={semReceita} />
     )
 }
 

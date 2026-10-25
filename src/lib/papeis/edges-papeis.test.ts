@@ -118,3 +118,31 @@ describe("Edge capture: o histórico do convidado", () => {
         expect(f).toContain("convidadoEm.has(w) ? q.eq('user_id', userId) : q")
     })
 })
+
+describe("Edge capture: o convidado só lança despesa (Ruling 11)", () => {
+    it("recusa a receita de token de convidado antes de gravar", () => {
+        const f = fonte("capture/index.ts")
+        expect(f).toMatch(/const ERRO_RECEITA_DO_CONVIDADO =\s*'[^']*despesa[^']*'/)
+        const recusa = f.indexOf(
+            "if (linha.type === 'income' && convidadoEm.has(linha.workspace_id)) return json(422, { error: ERRO_RECEITA_DO_CONVIDADO })",
+        )
+        expect(recusa).toBeGreaterThan(f.indexOf("const { linha } = montado"))
+        expect(recusa).toBeLessThan(f.indexOf("let gravado: Gravado | undefined"))
+    })
+})
+
+describe("Edge evaluate-budgets: o UUID não se sonda e a liberação confere o erro", () => {
+    const f = fonte("evaluate-budgets/index.ts")
+
+    it("sem a linha, quem chama recebe o mesmo 403 do lançamento de outra carteira", () => {
+        expect(f).toMatch(
+            /if \(!data\) \{\s*if \(userId\) return json\(403, \{ error: 'Not a member of this workspace' \}\)\s*return json\(200, \{ ok: true, skipped: true, reason: 'no_transaction' \}\)\s*\}/,
+        )
+    })
+
+    it("liberar() loga o próprio erro", () => {
+        expect(f).toMatch(
+            /const liberar = async \(\) => \{\s*const \{ error \} = await admin\s*\.from\('limites_avisados'\)[\s\S]*?\.in\('nivel', reivindicados\)\s*if \(error\) console\.error\('evaluate-budgets: limite liberar', error\)\s*\}/,
+        )
+    })
+})
