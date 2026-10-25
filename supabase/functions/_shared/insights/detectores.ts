@@ -69,8 +69,14 @@ export function normalizarDescricao(s: string | null): string {
     .join(' ')
 }
 
-/** O nome que o texto mostra: a chave com a primeira letra maiúscula. */
-const nomeDe = (chave: string) => chave.charAt(0).toUpperCase() + chave.slice(1)
+/**
+ * O nome que o texto mostra e que o `?q=` busca: a descrição original do mais
+ * recente (a busca é `ilike`, sensível a acento). Vazia, a chave com maiúscula.
+ */
+function nomeDe(grupo: Lanc[], chave: string): string {
+  const recente = grupo.reduce((a, b) => (b.dateYmd > a.dateYmd ? b : a))
+  return recente.description?.trim() || chave.charAt(0).toUpperCase() + chave.slice(1)
+}
 
 /** A frase contém o termo como palavras inteiras ("uber" não casa "uberlandia"). */
 const contem = (frase: string, termo: string) => termo !== '' && ` ${frase} `.includes(` ${termo} `)
@@ -143,7 +149,7 @@ export function detectarRecorrencias(
     const ultimo = achados.at(-1)!
     saida.push({
       chave: `rec:${chave}`,
-      nome: nomeDe(chave),
+      nome: nomeDe(achados, chave),
       valorMedio: reais(soma(achados.map((l) => l.amount)) / achados.length),
       dia: dia(ultimo.dateYmd),
       destino: ASSINATURA_POR.has(ultimo.payment_method ?? '') ? 'assinatura' : 'conta',
@@ -171,15 +177,20 @@ export function detectarAtipicos(
   const anteriores = [1, 2, 3].map((n) => somaMeses(atual, -n))
   const despesas = lancs.filter((l) => l.type === 'expense' && l.dateYmd <= hojeYmd)
   const saida: ReturnType<typeof detectarAtipicos> = []
-  const avaliar = (alvo: 'categoria' | 'descricao', grupos: Map<string, Lanc[]>, nome: (k: string) => string | undefined) => {
+  const avaliar = (
+    alvo: 'categoria' | 'descricao',
+    grupos: Map<string, Lanc[]>,
+    nome: (k: string, grupo: Lanc[]) => string | undefined,
+  ) => {
     for (const [k, grupo] of grupos) {
       const total = (m: string) => soma(grupo.filter((l) => ym(l.dateYmd) === m).map((l) => centavos(l.amount)))
       const mes = total(atual)
       const media3 = soma(anteriores.map(total)) / 3
-      const n = nome(k)
+      const n = nome(k, grupo)
       if (!n || !(media3 > 0) || mes <= 2 * media3) continue
       saida.push({
-        chave: `atip:${alvo}:${n}:${atual}`,
+        // A descrição entra na chave normalizada; a categoria, pelo nome.
+        chave: `atip:${alvo}:${alvo === 'categoria' ? n : k}:${atual}`,
         alvo,
         nome: n,
         mes: mes / 100,
@@ -189,7 +200,7 @@ export function detectarAtipicos(
     }
   }
   avaliar('categoria', agrupar(despesas, (l) => l.category_id), (k) => nomesCategoria[k])
-  avaliar('descricao', agrupar(despesas, (l) => normalizarDescricao(l.description)), nomeDe)
+  avaliar('descricao', agrupar(despesas, (l) => normalizarDescricao(l.description)), (k, g) => nomeDe(g, k))
   return saida
 }
 

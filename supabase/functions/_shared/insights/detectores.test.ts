@@ -163,7 +163,21 @@ Deno.test('atípico: por descrição, e exatamente 2× não dispara', () => {
   assertEquals(detectarAtipicos(igual, HOJE, {}), [])
   const acima = [...base, l({ dateYmd: '2026-10-03', amount: 81, description: 'Uber' }), l({ dateYmd: '2026-10-04', amount: 40, description: 'UBER *TRIP' })]
   const r = detectarAtipicos(acima, HOJE, {})
-  assertEquals(r.map((x) => [x.chave, x.mes, x.media3]), [['atip:descricao:Uber:2026-10', 81, 40]])
+  assertEquals(r.map((x) => [x.chave, x.mes, x.media3]), [['atip:descricao:uber:2026-10', 81, 40]])
+})
+
+Deno.test('nome original: "Conta de Água" no título, a chave sem acento', () => {
+  const rec = ['2026-08-10', '2026-09-10', '2026-10-10'].map((d, i) =>
+    l({ dateYmd: d, amount: 90, description: i === 2 ? ' Conta de Água ' : 'CONTA DE AGUA 0810', payment_method: 'pix' }),
+  )
+  const r = detectarRecorrencias(rec, HOJE)
+  assertEquals([r[0].chave, r[0].nome], ['rec:conta agua', 'Conta de Água'])
+  const atip = [
+    ...['2026-07-03', '2026-08-03', '2026-09-03'].map((d) => l({ dateYmd: d, amount: 40, description: 'Padaria São João' })),
+    l({ dateYmd: '2026-10-03', amount: 90, description: 'Padaria São João' }),
+  ]
+  const a = detectarAtipicos(atip, HOJE, {})
+  assertEquals([a[0].chave, a[0].nome], ['atip:descricao:padaria sao joao:2026-10', 'Padaria São João'])
 })
 
 Deno.test('atípico: sem histórico (média zero) não dispara', () => {

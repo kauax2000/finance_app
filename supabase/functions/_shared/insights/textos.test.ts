@@ -98,6 +98,10 @@ Deno.test('gasto_atipico: filtro de categoria ou busca pela descrição', () => 
   assertEquals(cat.acao, { rotulo: 'Ver lançamentos', href: '/transactions?cats=cat-mercado' })
   const desc = textoDoInsight('gasto_atipico', { alvo: 'descricao', nome: 'Padaria Real', mes: 81, media3: 40 })
   assertEquals(desc.acao?.href, '/transactions?q=Padaria+Real')
+  const acento = textoDoInsight('gasto_atipico', { alvo: 'descricao', nome: 'Conta de Água', mes: 200, media3: 90 })
+  assertEquals(acento.titulo, 'Conta de Água acima do comum')
+  assertEquals(acento.acao?.href, '/transactions?q=Conta+de+%C3%81gua')
+  assertEquals(new URLSearchParams(acento.acao!.href.split('?')[1]).get('q'), 'Conta de Água')
 })
 
 Deno.test('preco_assinatura, duplicidade, parcelas_acabando e sazonal', () => {
