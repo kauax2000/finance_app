@@ -101,8 +101,17 @@ describe("migração insights", () => {
         expect(fn).toMatch(/v_next <= v_hoje/)
         expect(fn).toMatch(/v_next, v_next,/)
         expect(fn).toMatch(/update public\.transactions t\s+set subscription_id = v_sub/)
-        expect(fn).toMatch(/t\.subscription_id is null/)
-        expect(fn).toMatch(/not exists \(select 1 from public\.bill_instances i where i\.transaction_id = t\.id\)/)
+        expect(fn).toMatch(/v_ins\.kind <> 'recorrencia'/)
+        expect(fn).toMatch(/x\.subscription_id is null/)
+        expect(fn).toMatch(/not exists \(select 1 from public\.bill_instances i where i\.transaction_id = x\.id\)/)
+        expect(fn).toMatch(/for update/)
+        // Uma cobrança por dia UTC: o de menor id, e nenhum no dia que a assinatura já cobra (o seed).
+        expect(fn).toMatch(
+            /select distinct on \(\(x\.date at time zone 'UTC'\)::date\) x\.id[\s\S]*?order by \(x\.date at time zone 'UTC'\)::date, x\.id/,
+        )
+        expect(fn).toMatch(
+            /not exists \(\s*select 1 from public\.transactions y\s+where y\.subscription_id = v_sub\s+and \(y\.date at time zone 'UTC'\)::date = \(t\.date at time zone 'UTC'\)::date\s*\)/,
+        )
         expect(sql).toMatch(
             /grant execute on function public\.virar_assinatura\(uuid, text, numeric, smallint, text, uuid, uuid\) to authenticated;/,
         )
@@ -115,6 +124,7 @@ describe("migração insights", () => {
         )
         expect(fn).toMatch(/security invoker\s+set search_path = public/)
         expect(fn).toMatch(/perform public\.marcar_insight\(p_insight_id, 'acted'\);/)
+        expect(fn).toMatch(/v_ins\.kind not in \('recorrencia', 'sazonal'\)/)
         expect(fn).toMatch(/insert into public\.bills/)
         expect(fn).toMatch(/valor_variavel/)
         expect(fn).toMatch(/t\.subscription_id is null/)
@@ -125,6 +135,18 @@ describe("migração insights", () => {
         expect(sql).toMatch(
             /grant execute on function public\.virar_conta\(uuid, text, smallint, boolean, uuid, date\) to authenticated;/,
         )
+    })
+
+    it("inserir_insights: só service_role, on conflict pela expressão do índice, devolve só as novas", () => {
+        const fn = funcao("inserir_insights")
+        expect(fn).toMatch(/^create or replace function public\.inserir_insights\(p_linhas jsonb\)\s+returns setof public\.insights/)
+        expect(fn).toMatch(/security definer\s+set search_path = ''/)
+        expect(fn).toMatch(
+            /on conflict \(workspace_id, coalesce\(user_id, '00000000-0000-0000-0000-000000000000'::uuid\), kind, dedupe_key\) do nothing\s+returning \*;/,
+        )
+        expect(fn).toMatch(/public\.insights_silenciados/)
+        expect(sql).toMatch(/revoke all on function public\.inserir_insights\(jsonb\) from public, anon, authenticated;/)
+        expect(sql).toMatch(/grant execute on function public\.inserir_insights\(jsonb\) to service_role;/)
     })
 
     it("o aviso: o tipo 'insight' entra no check com os outros sete, e a preferência nasce ligada", () => {

@@ -47,6 +47,7 @@ create table if not exists public.insights_silenciados (
 
 alter table public.insights_silenciados enable row level security;
 revoke all on public.insights_silenciados from anon;
+revoke update, truncate on public.insights_silenciados from authenticated;
 
 drop policy if exists insights_silenciados_select on public.insights_silenciados;
 create policy insights_silenciados_select on public.insights_silenciados
@@ -121,7 +122,9 @@ grant execute on function public.reivindicar_push_de_insight(uuid, date) to serv
 -- usado não volta atrás, e o descartado não volta a visto. Usar duas vezes é
 -- `INSIGHT_JA_USADO`: o `update` espera o outro e relê o status, então dois
 -- toques ao mesmo tempo não criam duas vezes (as RPCs `virar_*` marcam primeiro).
--- O status de um insight da carteira é um só para todos os membros.
+-- Ruling 3: o insight da carteira (`user_id` nulo) tem um status só,
+-- compartilhado: o "Entendi", o agir ou o visto de um membro vale para todos.
+-- O silenciar continua por pessoa (na leitura).
 create or replace function public.marcar_insight(p_id uuid, p_status text)
 returns void
 language plpgsql
@@ -186,6 +189,10 @@ begin
     raise exception 'INSIGHT_TIPO_NAO_PERMITIDO' using errcode = '22023';
   end if;
 
+  if length(p_dedupe_key) > 100 or pg_column_size(p_payload) > 8192 then
+    raise exception 'INSIGHT_GRANDE_DEMAIS' using errcode = '22023';
+  end if;
+
   if exists (
     select 1 from public.insights_silenciados s
     where s.user_id = v_uid
@@ -206,6 +213,33 @@ $$;
 revoke all on function public.registrar_insight(uuid, text, text, jsonb) from public, anon;
 grant execute on function public.registrar_insight(uuid, text, text, jsonb) to authenticated;
 
+-- O insert do cron. O PostgREST não sabe apontar o `onConflict` para o índice
+-- de expressão, então o cron grava por aqui: a mesma expressão do
+-- `insights_dedupe_uidx` no `on conflict`, e só as linhas novas voltam (é a
+-- elas que o cron manda o aviso). O insight pessoal de um tipo silenciado pela
+-- pessoa não entra.
+create or replace function public.inserir_insights(p_linhas jsonb)
+returns setof public.insights
+language sql
+security definer
+set search_path = ''
+as $$
+  insert into public.insights (workspace_id, user_id, kind, dedupe_key, payload)
+  select r.workspace_id, r.user_id, r.kind, r.dedupe_key, coalesce(r.payload, '{}'::jsonb)
+  from jsonb_to_recordset(coalesce(p_linhas, '[]'::jsonb))
+    as r(workspace_id uuid, user_id uuid, kind text, dedupe_key text, payload jsonb)
+  where not exists (
+    select 1 from public.insights_silenciados s
+    where s.user_id = r.user_id
+      and s.kind = r.kind
+  )
+  on conflict (workspace_id, coalesce(user_id, '00000000-0000-0000-0000-000000000000'::uuid), kind, dedupe_key) do nothing
+  returning *;
+$$;
+
+revoke all on function public.inserir_insights(jsonb) from public, anon, authenticated;
+grant execute on function public.inserir_insights(jsonb) to service_role;
+
 -- 6. "Criar com 1 toque, ligando os lançamentos passados" ---------------------
 -- `security invoker`: valem a RLS de quem toca (membro da carteira, autor =
 -- auth.uid()), o `garantir_escrita` do plano e as travas de mesma carteira. O
@@ -220,6 +254,11 @@ grant execute on function public.registrar_insight(uuid, text, text, jsonb) to a
 -- futura, como faz quando a tela cria uma assinatura com data adiante, e não
 -- repete um mês que os lançamentos passados já cobrem. A âncora é o `p_dia`,
 -- para o fevereiro encurtado não puxar os meses seguintes.
+-- ponytail: com `p_dia` = hoje, o ciclo de hoje não é cobrado (vai ao mês que
+-- vem): troca segura contra cobrar duas vezes a cobrança que ainda não chegou.
+-- Uma cobrança por dia (`transactions_subscription_charge_unique`): de dois
+-- lançamentos no mesmo dia UTC liga o de menor id, e nenhum no dia que a
+-- assinatura já cobra (o do seed incluso). A ação nunca cai nessa chave.
 create or replace function public.virar_assinatura(p_insight_id uuid, p_nome text, p_valor numeric, p_dia smallint, p_payment_method text, p_card_id uuid, p_category_id uuid)
 returns uuid
 language plpgsql
@@ -232,7 +271,11 @@ declare
   v_mes date := date_trunc('month', public.app_today())::date;
   v_next date;
   v_sub uuid;
+  v_pedidos uuid[];
 begin
+  if nullif(btrim(p_nome), '') is null then
+    raise exception 'INSIGHT_NOME_INVALIDO' using errcode = '22023';
+  end if;
   if p_dia is null or p_dia not between 1 and 31 then
     raise exception 'INSIGHT_DIA_INVALIDO' using errcode = '22023';
   end if;
@@ -244,8 +287,17 @@ begin
   if not found then
     raise exception 'INSIGHT_NAO_ENCONTRADO' using errcode = 'P0002';
   end if;
+  if v_ins.kind <> 'recorrencia' then
+    raise exception 'INSIGHT_TIPO_INVALIDO' using errcode = '22023';
+  end if;
 
   perform public.marcar_insight(p_insight_id, 'acted');
+
+  select coalesce(array_agg(e::uuid), '{}')
+  into v_pedidos
+  from jsonb_array_elements_text(coalesce(v_ins.payload -> 'lancamentos', '[]'::jsonb)) e;
+
+  perform 1 from public.transactions t where t.id = any(v_pedidos) for update;
 
   v_next := v_mes + (least(p_dia::int, extract(day from (v_mes + interval '1 month - 1 day'))::int) - 1);
   if v_next <= v_hoje then
@@ -267,12 +319,20 @@ begin
   update public.transactions t
   set subscription_id = v_sub
   where t.id in (
-      select e::uuid from jsonb_array_elements_text(coalesce(v_ins.payload -> 'lancamentos', '[]'::jsonb)) e
+      select distinct on ((x.date at time zone 'UTC')::date) x.id
+      from public.transactions x
+      where x.id = any(v_pedidos)
+        and x.workspace_id = v_ins.workspace_id
+        and x.type = 'expense'
+        and x.subscription_id is null
+        and not exists (select 1 from public.bill_instances i where i.transaction_id = x.id)
+      order by (x.date at time zone 'UTC')::date, x.id
     )
-    and t.workspace_id = v_ins.workspace_id
-    and t.type = 'expense'
-    and t.subscription_id is null
-    and not exists (select 1 from public.bill_instances i where i.transaction_id = t.id);
+    and not exists (
+      select 1 from public.transactions y
+      where y.subscription_id = v_sub
+        and (y.date at time zone 'UTC')::date = (t.date at time zone 'UTC')::date
+    );
 
   return v_sub;
 end;
@@ -288,6 +348,10 @@ grant execute on function public.virar_assinatura(uuid, text, numeric, smallint,
 -- `ligar_pagamento_da_conta`. O `media_da_conta` só roda no update: por isso o
 -- estimado nasce aqui pela mesma conta dele (a média das 3 últimas), e sem
 -- lançamento vem do payload (`valorMedio` da recorrência, `valor` do sazonal).
+-- ponytail: dois lançamentos no mesmo dia UTC dão uma paga só
+-- (`bill_instances_unique_cycle` + `on conflict do nothing`); o outro fica
+-- solto, e o casamento do 6A pode oferecê-lo depois. O mesmo vale para a
+-- pendente que caísse no dia de uma paga.
 create or replace function public.virar_conta(p_insight_id uuid, p_nome text, p_dia smallint, p_valor_variavel boolean, p_category_id uuid, p_next_due_date date)
 returns uuid
 language plpgsql
@@ -300,9 +364,16 @@ declare
   v_ids uuid[];
   v_bill uuid;
 begin
+  if nullif(btrim(p_nome), '') is null then
+    raise exception 'INSIGHT_NOME_INVALIDO' using errcode = '22023';
+  end if;
+
   select * into v_ins from public.insights where id = p_insight_id;
   if not found then
     raise exception 'INSIGHT_NAO_ENCONTRADO' using errcode = 'P0002';
+  end if;
+  if v_ins.kind not in ('recorrencia', 'sazonal') then
+    raise exception 'INSIGHT_TIPO_INVALIDO' using errcode = '22023';
   end if;
 
   perform public.marcar_insight(p_insight_id, 'acted');

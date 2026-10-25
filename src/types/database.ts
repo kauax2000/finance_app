@@ -1887,6 +1887,10 @@ export type Database = {
         Args: { p_workspace_id: string }
         Returns: Json
       }
+      inserir_insights: {
+        Args: { p_linhas: Json }
+        Returns: Database["public"]["Tables"]["insights"]["Row"][]
+      }
       is_workspace_member: { Args: { workspace_id: string }; Returns: boolean }
       is_workspace_owner: { Args: { workspace_id: string }; Returns: boolean }
       ligar_pagamento_da_conta: {
@@ -1971,22 +1975,22 @@ export type Database = {
       tem_plano_proprio: { Args: { p_user_id: string }; Returns: boolean }
       virar_assinatura: {
         Args: {
-          p_card_id: string
-          p_category_id: string
+          p_card_id: string | null
+          p_category_id: string | null
           p_dia: number
           p_insight_id: string
           p_nome: string
-          p_payment_method: string
+          p_payment_method: string | null
           p_valor: number
         }
         Returns: string
       }
       virar_conta: {
         Args: {
-          p_category_id: string
+          p_category_id: string | null
           p_dia: number
           p_insight_id: string
-          p_next_due_date: string
+          p_next_due_date: string | null
           p_nome: string
           p_valor_variavel: boolean
         }
