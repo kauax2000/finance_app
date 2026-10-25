@@ -261,7 +261,9 @@ select public.invoke_edge_function('insights-daily');
 ```
 
 (a mesma chamada que o cron faz). Rodar duas vezes no mesmo dia não duplica
-nada: a chave de dedupe é única. Deixar o cron rodar dá o mesmo resultado, só
+nada: a chave de dedupe é única. Mas cada execução pode trazer até 5 novos
+por carteira, então a segunda rodada do dia pode trazer mais cinco do histórico
+que sobrou. Deixar o cron rodar dá o mesmo resultado, só
 mais tarde. Uma rodada manual gasta o teto de push da semana como qualquer
 outra.
 
@@ -284,10 +286,14 @@ group by kind, status
 order by 1, 2;
 ```
 
-**Nenhuma carteira passou de 5 insights do cron no mesmo dia.**
+**Nenhuma carteira passou de 5 insights do cron em uma execução.** O teto é por
+execução, não por dia: uma rodada manual mais o cron do mesmo dia são duas
+execuções, e juntas podem passar de 5 sem nada errado. Por isso a conferência
+agrupa por minuto, que separa as execuções (os insights de uma carteira são
+gravados em segundos):
 
 ```sql
-select workspace_id, created_at::date as dia, count(*)
+select workspace_id, date_trunc('minute', created_at) as minuto, count(*)
 from public.insights
 where kind <> 'seguro_baixo'
 group by 1, 2
@@ -295,7 +301,8 @@ having count(*) > 5;
 ```
 
 Esperado: nenhuma linha. O `seguro_baixo` fica de fora porque é o cliente que o
-grava, ao abrir o Painel, um por pessoa e mês.
+grava, ao abrir o Painel, um por pessoa e mês. Uma linha só quer dizer problema
+se vier de uma execução isolada: duas execuções no mesmo minuto se somariam.
 
 **O teto de push vale.**
 
@@ -385,7 +392,8 @@ Quando o front do 2.0 subir, publique a `insights-daily` (§2) e confira também
   conta aparece em `/subscriptions` ou `/bills`;
 - "Atualizar valor" muda o preço da assinatura; "Apagar um" pede confirmação e
   apaga só um dos dois lançamentos iguais;
-- "Ver fatura" abre o cartão, "Ver mês" e "Ver previsão" abrem `/previsao`,
+- "Ver fatura" abre o cartão, "Ver mês", "Ver previsão" e "Ver o que pesa" (o
+  seguro baixo) abrem `/previsao`,
   "Ver lançamentos" abre `/transactions` já filtrado, "Conferir agora" abre
   `/transactions?conferir=1` e "Criar conta a pagar" (o sazonal) abre
   `/bills?new=1`;
@@ -394,9 +402,12 @@ Quando o front do 2.0 subir, publique a `insights-daily` (§2) e confira também
   carteiras dela;
 - o seguro baixo aparece só no mês corrente, quando o "seguro para gastar" está
   abaixo de 10% da renda do mês, e some quando deixa de estar;
-- em Configurações › Notificações, a chave "Insights" liga e desliga os avisos
+- em Configurações, no bloco tracejado "Insights" logo abaixo das preferências de aviso, a chave liga e desliga os avisos
   desta carteira (a caixa do Painel não depende dela);
-- o sino traz "Ver no Painel" nos avisos de insight, ou o link da ação.
+- o sino traz "Ver no Painel" nos avisos de insight, ou o link da ação;
+- o "a conferir" (mais de 5 itens) aparece no máximo uma vez por semana: a chave
+  dele é a segunda-feira da semana, então o mesmo acúmulo não avisa de novo no
+  dia seguinte.
 
 **O que fica de fora, de propósito.** O "limite da pessoa" (o gasto passou do
 limite de alguém da família) e o "convidado recebe só os insights do próprio
