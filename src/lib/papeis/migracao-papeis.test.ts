@@ -1,7 +1,6 @@
-import { readdirSync } from "node:fs"
-import { resolve } from "node:path"
 import { describe, expect, it } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
+import { politicasFinais, ultimasFuncoes, type Politica } from "@/test/migracoes"
 
 // O `semComentarios` corta comentário de JS; o `--` do SQL sai aqui, para as
 // asserções de ausência não lerem a prosa da migração.
@@ -10,17 +9,7 @@ const sql = semComentarios(lerFonte(`supabase/migrations/${MIGRACAO}`)).replace(
 const tipos = lerFonte("src/types/database.ts")
 const supabaseTs = lerFonte("src/lib/supabase.ts")
 
-/**
- * A última definição de cada função de `public`, lendo as migrações em ordem:
- * quem vale no banco é o último `create or replace`. O corpo vai até a mesma
- * etiqueta de dólar que o abriu (`$$`, `$function$`).
- */
-const ULTIMA = new Map<string, { arquivo: string; texto: string }>()
-for (const arquivo of readdirSync(resolve(process.cwd(), "supabase/migrations")).filter((f) => f.endsWith(".sql")).sort()) {
-    const texto = lerFonte(`supabase/migrations/${arquivo}`).replace(/--.*$/gm, "")
-    const re = /create\s+(?:or\s+replace\s+)?function\s+"?public"?\."?(\w+)"?\s*\([\s\S]*?\bas\s+(\$\w*\$)[\s\S]*?\2/gi
-    for (const m of texto.matchAll(re)) ULTIMA.set(m[1], { arquivo, texto: m[0] })
-}
+const ULTIMA = ultimasFuncoes()
 
 function ultima(nome: string): string {
     const fn = ULTIMA.get(nome)
@@ -28,31 +17,7 @@ function ultima(nome: string): string {
     return fn!.texto
 }
 
-/**
- * O estado final das políticas, como o `pg_policies` depois de todas as
- * migrações em ordem: `create policy` põe, `drop policy` tira. O texto fica
- * sem aspas e em minúsculas, para o `"public"."is_workspace_member"` do
- * baseline ler como o das migrações seguintes. A chave é `tabela|nome`.
- */
-type Politica = { tabela: string; nome: string; comando: string; texto: string; arquivo: string }
-const POLITICAS = new Map<string, Politica>()
-for (const arquivo of readdirSync(resolve(process.cwd(), "supabase/migrations")).filter((f) => f.endsWith(".sql")).sort()) {
-    const texto = lerFonte(`supabase/migrations/${arquivo}`).replace(/--.*$/gm, "")
-    const re = /\b(create|drop)\s+policy\s+(?:if\s+exists\s+)?("[^"]+"|\w+)\s+on\s+((?:"?\w+"?\.)?"?\w+"?)([^;]*);/gi
-    for (const m of texto.matchAll(re)) {
-        const nome = m[2].replace(/"/g, "")
-        const crua = m[3].replace(/"/g, "").toLowerCase()
-        const tabela = crua.includes(".") ? crua : `public.${crua}`
-        const chave = `${tabela}|${nome}`
-        if (m[1].toLowerCase() === "drop") {
-            POLITICAS.delete(chave)
-            continue
-        }
-        const corpo = m[4].replace(/"/g, "").toLowerCase().replace(/\s+/g, " ")
-        const comando = corpo.match(/\bfor (select|insert|update|delete|all)\b/)?.[1] ?? "all"
-        POLITICAS.set(chave, { tabela, nome, comando, texto: corpo, arquivo })
-    }
-}
+const POLITICAS = politicasFinais()
 
 function politicasDe(tabela: string): Politica[] {
     return [...POLITICAS.values()].filter((p) => p.tabela === tabela)
@@ -143,6 +108,9 @@ const FICAM_COM_MEMBRO: Record<string, string> = {
     tem_cobertura: "o assento do plano conta o convidado (Decisão 1)",
     workspace_plan: "lê só os donos",
     avisos_de_teste_pendentes: "lê só os donos, pela service role",
+    guardar_privado: "o gatilho do 7B confere o papel do autor da linha (role in owner, member), não o de quem chama",
+    conferir_titular: "o gatilho do 7B confere que o titular do cartão é adulto da carteira",
+    conferencia_liberada: "o helper do 7B: o dono, ou o titular do cartão; não devolve dado",
 }
 
 describe("migração papéis: o convidado e o adulto", () => {
@@ -416,16 +384,20 @@ describe("migração papéis: o convidado e o adulto", () => {
 
     it("estado final: transactions e attachments só citam membro junto do ramo do autor", () => {
         const autorTx = /user_id = \(select auth\.uid\(\)\) and public\.is_workspace_member\(workspace_id\)/
+        // O 7B (20261030120000) acrescenta o privado ao ramo do adulto do update e do delete.
+        const adulto = String.raw`public\.is_workspace_adult\(workspace_id\)(?: and \(not is_private or user_id = \(select auth\.uid\(\)\)\)\))?`
         for (const comando of ["select", "update", "delete"]) {
             const p = politicaFinal("public.transactions", comando)
-            expect(p.texto, comando).toMatch(/public\.is_workspace_adult\(workspace_id\) or/)
+            expect(p.texto, comando).toMatch(new RegExp(`${adulto} or`))
             expect(p.texto, comando).toMatch(autorTx)
         }
         const insTx = politicaFinal("public.transactions", "insert").texto
         expect(insTx).toMatch(/user_id = \(select auth\.uid\(\)\) and \( public\.is_workspace_adult\(workspace_id\) or/)
         expect(insTx).toMatch(/public\.is_workspace_member\(workspace_id\) and type = 'expense'/)
         expect(politicaFinal("public.transactions", "update").texto).toMatch(
-            /with check \( public\.is_workspace_adult\(workspace_id\) or \(user_id = \(select auth\.uid\(\)\) and public\.is_workspace_member\(workspace_id\) and type = 'expense'\) \)/,
+            new RegExp(
+                String.raw`with check \( \(?${adulto}\)? or \(user_id = \(select auth\.uid\(\)\) and public\.is_workspace_member\(workspace_id\) and type = 'expense'\) \)`,
+            ),
         )
 
         for (const comando of ["select", "delete"]) {
