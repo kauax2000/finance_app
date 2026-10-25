@@ -73,7 +73,15 @@ function margemDoMes(ym: string): { start: string; end: string } {
   return { start: formatYmd(start), end: formatYmd({ y: ny, m: nm, d: daysInMonth(ny, nm) }) }
 }
 
+// O convidado não vê orçamento (Bloco 7A): a avaliação roda e avisa os adultos
+// como sempre, e a resposta a ele não diz nada além de `ok`.
 Deno.serve(async (req: Request) => {
+  const ctx = { convidado: false }
+  const res = await avaliar(req, ctx)
+  return ctx.convidado ? json(200, { ok: true }) : res
+})
+
+async function avaliar(req: Request, ctx: { convidado: boolean }): Promise<Response> {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return json(405, { error: 'Method not allowed' })
 
@@ -129,12 +137,13 @@ Deno.serve(async (req: Request) => {
   if (userId) {
     const { data: membership, error: memErr } = await supabaseAdmin
       .from('workspace_members')
-      .select('user_id')
+      .select('user_id, role')
       .eq('workspace_id', workspaceId)
       .eq('user_id', userId)
       .maybeSingle()
     if (memErr) return fail('membro', memErr)
     if (!membership) return json(403, { error: 'Not a member of this workspace' })
+    ctx.convidado = membership.role === 'guest'
   }
 
   // Datas de lançamento ficam ao meio-dia UTC: o prefixo ISO é o dia do lançamento.
@@ -318,4 +327,4 @@ Deno.serve(async (req: Request) => {
   if (results.length === 1) return json(results[0].status, results[0].payload)
   const failed = results.some((r) => r.status !== 200)
   return json(failed ? 500 : 200, { ok: !failed, budgets: results.map((r) => r.payload) })
-})
+}

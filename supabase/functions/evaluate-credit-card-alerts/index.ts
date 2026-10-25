@@ -83,7 +83,15 @@ async function releaseDedupe(
   }
 }
 
+// O convidado não vê fatura (Bloco 7A): a avaliação roda e avisa os adultos
+// como sempre, e a resposta a ele não diz nada além de `ok`.
 Deno.serve(async (req: Request) => {
+  const ctx = { convidado: false }
+  const res = await avaliar(req, ctx)
+  return ctx.convidado ? json(200, { ok: true }) : res
+})
+
+async function avaliar(req: Request, ctx: { convidado: boolean }): Promise<Response> {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -126,13 +134,14 @@ Deno.serve(async (req: Request) => {
   if (userId) {
     const { data: membership, error: memErr } = await supabaseAdmin
       .from('workspace_members')
-      .select('user_id')
+      .select('user_id, role')
       .eq('workspace_id', workspaceId)
       .eq('user_id', userId)
       .maybeSingle()
 
     if (memErr) return json(500, { error: internalError('evaluate-credit-card-alerts', memErr) })
     if (!membership) return json(403, { error: 'Not a member of this workspace' })
+    ctx.convidado = membership.role === 'guest'
   }
 
   const { data: card, error: cErr } = await supabaseAdmin
@@ -395,4 +404,4 @@ Deno.serve(async (req: Request) => {
   }
 
   return json(200, { ok: true, results, periodKey })
-})
+}

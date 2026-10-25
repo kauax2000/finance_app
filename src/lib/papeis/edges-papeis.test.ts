@@ -50,6 +50,20 @@ describe("Edges: avisos só aos adultos", () => {
     })
 })
 
+describe("Edges chamadas pelo convidado não respondem dado da casa", () => {
+    it.each(["evaluate-budgets", "evaluate-credit-card-alerts"])("%s: avalia e avisa, e ao convidado responde só ok", (n) => {
+        const f = fonte(`${n}/index.ts`)
+        expect(f).toMatch(
+            /\.from\('workspace_members'\)\s*\.select\('user_id, role'\)\s*\.eq\('workspace_id', workspaceId\)\s*\.eq\('user_id', userId\)/,
+        )
+        expect(f).toContain("ctx.convidado = membership.role === 'guest'")
+        expect(f).toContain("const res = await avaliar(req, ctx)")
+        expect(f).toContain("return ctx.convidado ? json(200, { ok: true }) : res")
+        expect(f.match(/Deno\.serve\(/g)).toHaveLength(1)
+        expect(f).toMatch(/Deno\.serve\(async \(req: Request\) => \{\s*const ctx = \{ convidado: false \}/)
+    })
+})
+
 describe("Edge workspace-invites-create: o convite com papel", () => {
     const f = fonte("workspace-invites-create/index.ts")
 
@@ -77,6 +91,14 @@ describe("Edge workspace-invites-resend e o e-mail", () => {
         const f = fonte("workspace-invites-resend/index.ts")
         expect(f).toMatch(/\.select\('[^']*\bmenor\b[^']*'\)/)
         expect(f).toContain("menor: invite.menor === true")
+    })
+
+    it("o responsável do reenvio é quem criou o convite, não quem reenvia", () => {
+        const f = fonte("workspace-invites-resend/index.ts")
+        expect(f).toMatch(/\.select\('[^']*\bcreated_by\b[^']*'\)/)
+        expect(f).toMatch(/\.from\('profiles'\)\s*\.select\('email'\)\s*\.eq\('id', invite\.created_by\)/)
+        expect(f).toContain("inviterName: responsavel,")
+        expect(f).not.toContain("inviterName: caller.email")
     })
 
     it("o parágrafo da LGPD só entra com menor", () => {

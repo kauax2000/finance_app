@@ -77,7 +77,7 @@ Deno.serve(async (req: Request) => {
 
   const { data: invite, error: inviteErr } = await supabaseAdmin
     .from('workspace_invites')
-    .select('id, workspace_id, invited_email, status, expires_at, menor, workspace:workspaces(name)')
+    .select('id, workspace_id, invited_email, status, expires_at, menor, created_by, workspace:workspaces(name)')
     .eq('id', inviteId)
     .maybeSingle()
 
@@ -125,12 +125,24 @@ Deno.serve(async (req: Request) => {
 
   const inviteUrl = buildInviteAcceptUrl(appBase, tokenRaw)
 
+  // O responsável do e-mail é quem criou o convite (e consentiu, no do menor),
+  // não quem reenvia; pelo e-mail, como no create.
+  let responsavel = caller.email ?? 'Alguém'
+  if (invite.created_by && invite.created_by !== caller.id) {
+    const { data: autor } = await supabaseAdmin
+      .from('profiles')
+      .select('email')
+      .eq('id', invite.created_by)
+      .maybeSingle()
+    responsavel = (autor?.email as string | null | undefined)?.trim() || 'Alguém'
+  }
+
   try {
     await sendEmailResend({
       to: invitedEmail,
       subject: `Convite para o workspace ${workspaceName.slice(0, 60)}`,
       html: renderInviteHtml({
-        inviterName: caller.email ?? 'Alguém',
+        inviterName: responsavel,
         workspaceName,
         inviteUrl,
         menor: invite.menor === true,
