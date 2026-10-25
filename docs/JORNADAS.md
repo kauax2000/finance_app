@@ -1,6 +1,6 @@
 # Jornadas do app
 
-O mapa de tudo o que uma pessoa faz no app, dividido em catorze jornadas. Cada
+O mapa de tudo o que uma pessoa faz no app, dividido em dezesseis jornadas. Cada
 jornada tem um fluxograma, as regras técnicas que decidem os caminhos e as
 lacunas encontradas no código. Foi escrito lendo o código em 2026-09-17, na
 branch `finance-app-2.0`, e a navegação global foi revista em 2026-10-01,
@@ -9,7 +9,7 @@ lançamento, nos cartões de categoria e nas contas pendentes, com o seletor
 de período que confirma no próprio popover, com o rascunho protegido do
 formulário de lançamento, e com os menus do telefone em gaveta. As telas de
 acesso foram revistas em 2026-10-12 (a casca no layout) e em 2026-10-14 (o
-painel de marca animado) e as notificações em 2026-10-17 (o painel flutuante, o sino exato e a revisão do servidor, ainda não publicada) e em 2026-10-21 (o aviso de despesa e os crons passam ao banco, por migração, também ainda não publicados); a busca do telefone em 2026-10-19 (a lupa vira a barra) e, no mesmo dia, a aba "Você" no lugar do menu "Mais" (a página `/me`). Em 2026-10-21 entrou o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura, a importação de extrato e de planilha e os anexos, com as telas em wireframe (`src/components/wireframe/`) e ainda não publicado (`supabase/BLOCO_2_DEPLOYMENT.md`). Em 2026-10-22 entrou o Bloco 3A, "captura sem abrir o app": o token pessoal em Minha conta, a Edge `capture` (o Atalho do iPhone e o Apple Pay), a frase rápida no "+", o compartilhar do Android, os atalhos do ícone, a lista "A conferir" e o lembrete das 20h, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3A_DEPLOYMENT.md`). No mesmo dia entrou o Bloco 3B, "IA grátis na captura e na fatura": "Tentar com IA" na frase rápida, a foto do recibo no formulário, a foto e a frase confusa na Edge `capture`, a compra parcelada capturada que vira plano, o compartilhar de foto e PDF do Android, "Ler com IA" na conferência da fatura e a política de privacidade em `/privacidade`, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3B_DEPLOYMENT.md`). Em 2026-10-23 entrou o Bloco 4, "planos e confiança": a rota pública `/precos`, o plano em `/plans` (teste de 14 dias, vitalício, cobertura da família e "só leitura" no banco, desligados enquanto `billing_settings.enforced_since` é nulo), a faixa de só leitura na casca, o Piloto Automático (`/piloto`), o Cofre aberto (`/cofre`, com "Exportar tudo" e "Apagar a conta") e a jornada de 4 passos (`/comecar`), com as telas em wireframe e ainda não publicado (`supabase/BLOCO_4_DEPLOYMENT.md`); o assinar de verdade fica para o Bloco 8. Em 2026-10-24 entrou o Bloco 5, "previsão": o "seguro para gastar" no Painel e em `/previsao` (com a linha do tempo de 6 meses e a reserva), a receita recorrente nas assinaturas, o quadro de impacto da parcela, o orçamento que se repete todo mês, o aviso de orçamento pelo mês do fechamento da fatura e o aviso de fatura acima do normal, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_5_DEPLOYMENT.md`). Em 2026-10-24 entrou também o Bloco 6A, "contas a pagar" revista: a conta que não é paga não para de recorrer (passo 0 do cron), o lembrete por janela, a edição da agenda que reprograma a pendente, o pular atômico, os estados Encerrada e Concluída, o valor variável pela média, o casamento automático do pagamento ("Isso pagou a conta X?"), o boleto no pagamento e no lançamento pago, a explicação "conta ou assinatura" e a saída do "Beta", com as telas novas em wireframe e ainda não publicado (`supabase/BLOCO_6A_DEPLOYMENT.md`). Em 2026-10-25 entrou o Bloco 6B, "insights": o cron diário das 10h que acha fatos nas carteiras (a fatura que fechou, o relatório do mês, a recorrência, o gasto atípico, a mudança de preço, o lançamento repetido, as parcelas acabando, o sazonal e o "a conferir"), a caixa de insights no Painel com as ações de um toque (virar assinatura ou conta, atualizar o preço, apagar um repetido, ver a fatura, a previsão ou os itens a conferir), o "Não mostrar mais este tipo", o teto de 3 push por semana por pessoa e a chave "Insights" nas preferências de aviso, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_6B_DEPLOYMENT.md`). Quando uma tela mudar de caminho, atualize o
+painel de marca animado) e as notificações em 2026-10-17 (o painel flutuante, o sino exato e a revisão do servidor, ainda não publicada) e em 2026-10-21 (o aviso de despesa e os crons passam ao banco, por migração, também ainda não publicados); a busca do telefone em 2026-10-19 (a lupa vira a barra) e, no mesmo dia, a aba "Você" no lugar do menu "Mais" (a página `/me`). Em 2026-10-21 entrou o Bloco 2, "fatura que bate e anexos": o estorno no cartão, o total da fatura segundo o banco, a conferência da fatura, a importação de extrato e de planilha e os anexos, com as telas em wireframe (`src/components/wireframe/`) e ainda não publicado (`supabase/BLOCO_2_DEPLOYMENT.md`). Em 2026-10-22 entrou o Bloco 3A, "captura sem abrir o app": o token pessoal em Minha conta, a Edge `capture` (o Atalho do iPhone e o Apple Pay), a frase rápida no "+", o compartilhar do Android, os atalhos do ícone, a lista "A conferir" e o lembrete das 20h, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3A_DEPLOYMENT.md`). No mesmo dia entrou o Bloco 3B, "IA grátis na captura e na fatura": "Tentar com IA" na frase rápida, a foto do recibo no formulário, a foto e a frase confusa na Edge `capture`, a compra parcelada capturada que vira plano, o compartilhar de foto e PDF do Android, "Ler com IA" na conferência da fatura e a política de privacidade em `/privacidade`, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_3B_DEPLOYMENT.md`). Em 2026-10-23 entrou o Bloco 4, "planos e confiança": a rota pública `/precos`, o plano em `/plans` (teste de 14 dias, vitalício, cobertura da família e "só leitura" no banco, desligados enquanto `billing_settings.enforced_since` é nulo), a faixa de só leitura na casca, o Piloto Automático (`/piloto`), o Cofre aberto (`/cofre`, com "Exportar tudo" e "Apagar a conta") e a jornada de 4 passos (`/comecar`), com as telas em wireframe e ainda não publicado (`supabase/BLOCO_4_DEPLOYMENT.md`); o assinar de verdade fica para o Bloco 8. Em 2026-10-24 entrou o Bloco 5, "previsão": o "seguro para gastar" no Painel e em `/previsao` (com a linha do tempo de 6 meses e a reserva), a receita recorrente nas assinaturas, o quadro de impacto da parcela, o orçamento que se repete todo mês, o aviso de orçamento pelo mês do fechamento da fatura e o aviso de fatura acima do normal, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_5_DEPLOYMENT.md`). Em 2026-10-24 entrou também o Bloco 6A, "contas a pagar" revista: a conta que não é paga não para de recorrer (passo 0 do cron), o lembrete por janela, a edição da agenda que reprograma a pendente, o pular atômico, os estados Encerrada e Concluída, o valor variável pela média, o casamento automático do pagamento ("Isso pagou a conta X?"), o boleto no pagamento e no lançamento pago, a explicação "conta ou assinatura" e a saída do "Beta", com as telas novas em wireframe e ainda não publicado (`supabase/BLOCO_6A_DEPLOYMENT.md`). Em 2026-10-25 entrou o Bloco 6B, "insights": o cron diário das 10h que acha fatos nas carteiras (a fatura que fechou, o relatório do mês, a recorrência, o gasto atípico, a mudança de preço, o lançamento repetido, as parcelas acabando, o sazonal e o "a conferir"), a caixa de insights no Painel com as ações de um toque (virar assinatura ou conta, atualizar o preço, apagar um repetido, ver a fatura, a previsão ou os itens a conferir), o "Não mostrar mais este tipo", o teto de 3 push por semana por pessoa e a chave "Insights" nas preferências de aviso, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_6B_DEPLOYMENT.md`). Em 2026-10-25 entrou também o Bloco 7A, "papéis e limites": o papel de convidado (lança despesa, vê só o que é dele, lê categorias e cartões e não tem orçamento, contas, previsão nem membros), o convite com papel e o consentimento do responsável legal quando o convidado é menor de idade, a troca de papel pelo dono, o app curto do convidado (navegação filtrada, guarda de rota e o Painel dele) e o limite mensal por pessoa, com aviso em 80% e 100% à pessoa e ao dono e o insight do limite, com as telas em wireframe e ainda não publicado (`supabase/BLOCO_7A_DEPLOYMENT.md`). Quando uma tela mudar de caminho, atualize o
 diagrama dela.
 
 ## Como ler os diagramas
@@ -50,7 +50,9 @@ banco.
 12. [Confiança: Piloto, Cofre e o começo](#12-confiança-piloto-cofre-e-o-começo)
 13. [Previsão](#13-previsão)
 14. [Insights](#14-insights)
-15. [Lacunas encontradas](#15-lacunas-encontradas)
+15. [Papéis: dono, membro e convidado](#15-papéis-dono-membro-e-convidado)
+16. [Limite por pessoa](#16-limite-por-pessoa)
+17. [Lacunas encontradas](#17-lacunas-encontradas)
 
 ---
 
@@ -122,6 +124,15 @@ flowchart LR
     G14 -->|"ver lançamentos, conferir, apagar o repetido"| G5
     G14 -->|"ver a fatura"| G6
     G14 -->|"ver a previsão"| G13
+
+    G2 -->|"convidar com papel e consentimento, trocar o papel"| G15(("G15 Papéis e convidado"))
+    G15 -->|"rota fora da lista leva ao Painel, que é o dele"| G4
+    G15 -->|"o convidado lança despesa, só vê as dele"| G5
+    G5 -->|"despesa salva avalia o limite da pessoa"| G16(("G16 Limite por pessoa"))
+    G15 -->|"o convidado vê o próprio limite"| G16
+    G16 -->|"definir o limite em Membros"| G2
+    G16 -->|"aviso em 80% e 100%"| G3
+    G16 -->|"insight do limite"| G14
 ```
 
 ---
@@ -297,13 +308,20 @@ flowchart TD
     members["/members"] --> isOwner{"É dona?"}
     isOwner -->|"não"| readonly(["Alerta e campos desativados"])
     isOwner -->|"sim"| actions(["Seção Convidar"])
-    actions -->|"convidar por email"| create[("Edge workspace-invites-create")]
+    actions -->|"convidar por email"| papel(["WIREFRAME Papel do convite: Membro ou Convidado"])
+    papel -->|"Membro"| create[("Edge workspace-invites-create")]
+    papel -->|"Convidado"| menorQ{"É menor de idade?"}
+    menorQ -->|"não"| create
+    menorQ -->|"sim"| consent(["Caixa obrigatória: sou o responsável legal e autorizo o uso do app (LGPD, art. 14)"])
+    consent -->|"marcada"| create
     create -->|"carteira pessoal"| rejected(["Servidor recusa: carteira pessoal não se compartilha"])
-    create -->|"sucesso"| mail(["Email com /invites/accept?token=..."])
-    actions -->|"gerar link"| link(["Link copiável, substitui o anterior"])
+    create -->|"convidado sem email, menor sem consentimento ou menor que não é convidado"| recusa(["400 na frase da tela: convidado_requer_email, consentimento_obrigatorio ou menor_requer_convidado"])
+    create -->|"sucesso"| mail(["Email com /invites/accept?token=..., o de menor com o parágrafo do responsável legal"])
+    actions -->|"gerar link"| link(["Link copiável, sempre de membro, substitui o anterior"])
     actions -->|"reenviar"| resend[("Edge workspace-invites-resend")]
     actions -->|"revogar"| revoke(["Confirmação"])
     actions -->|"remover membro"| remove(["Confirmação"])
+    actions -->|"trocar o papel de quem já entrou"| G15a(("G15a Trocar o papel"))
 
     mail --> acceptPage["/invites/accept?token="]
     link --> acceptPage
@@ -318,10 +336,12 @@ flowchart TD
     login -.->|"volta pelo next"| acceptPage
     register -.->|"volta pelo next"| acceptPage
     logged -->|"sim"| acceptFn[("Edge workspace-invites-accept")]
+    acceptFn --> grava[("RPC accept_workspace_invite: grava o papel do convite e, no convidado, o responsável")]
     acceptFn -->|"erro: usado, expirado, outro email"| fail(["Mensagem e Tentar depois de entrar"])
-    acceptFn -->|"sucesso"| switched(["Atualiza carteiras e troca para a convidada"])
+    grava -->|"sucesso"| switched(["Atualiza carteiras e troca para a convidada"])
     switched --> accepted(["Status Convite aceito"])
-    accepted -->|"Abrir a carteira"| dash(("G4 Painel"))
+    accepted -->|"Abrir a carteira, de membro"| dash(("G4 Painel"))
+    accepted -->|"Abrir a carteira, de convidado"| guest(("G15b App do convidado"))
 ```
 
 ### Regras técnicas
@@ -333,6 +353,10 @@ flowchart TD
 | Sair da carteira | Diálogo próprio de confirmação | `src/components/settings/workspace-leave-dialog.tsx` |
 | Membros | RPC `workspace_member_directory`; só a dona convida, revoga e remove | `src/app/(app)/members/page-client.tsx` |
 | Convite | Edges `workspace-invites-create`, `-resend`, `-accept`; o email é montado no servidor | `supabase/functions/_shared/workspace-invite-email.ts` |
+| Papel do convite (Bloco 7A) | O convite por e-mail escolhe o papel: `member` ou `guest` (`workspace_invites.role`). O corpo sem `role` é `member`, como o front de `main` manda. O link é **sempre de membro**: `guest` sem e-mail volta 400 `convidado_requer_email`, e o check `workspace_invites_guest_requer_email` repete a regra no banco. O corpo do convite vem de `montarConvite`, que recusa o que a Edge recusa, na mesma ordem | `supabase/functions/workspace-invites-create/index.ts`, `src/lib/papeis/papeis.ts`, `src/components/wireframe/papeis-wireframe.tsx` |
+| Menor de idade e consentimento (Bloco 7A, LGPD art. 14) | "É menor de idade" só aparece com Convidado. Marcada, a caixa obrigatória diz "Sou o responsável legal e autorizo o uso do app (LGPD, art. 14)." A Edge recusa `menor` sem `consentimento: true` (400 `consentimento_obrigatorio`) e `menor` sem `guest` (400 `menor_requer_convidado`, que o check do banco repetiria como 500), e grava `menor` e `consentimento_em` (a hora do convite). O e-mail de um convite `menor` traz o parágrafo "{responsável} criou este convite como responsável legal e autorizou o uso do app por você, como pede a LGPD (art. 14)."; o reenvio repete o parágrafo, com o responsável buscado no `created_by` do convite | `supabase/functions/workspace-invites-create/index.ts`, `supabase/functions/workspace-invites-resend/index.ts`, `supabase/functions/_shared/workspace-invite-email.ts` |
+| O aceite grava o papel e o responsável (Bloco 7A) | `accept_workspace_invite` grava `role = v_invite.role` (era `'member'` fixo) e, no convidado, `sponsor_user_id = v_invite.created_by`. A RPC continua só da service role: a Edge de aceite não mudou | `supabase/migrations/20261029120000_papeis.sql` |
+| Lista de membros e convites (Bloco 7A) | O selo mostra Dono, Membro ou Convidado (`rotuloDoPapel`); o convite por e-mail pendente mostra o papel; a troca de papel é da linha do membro e só do dono (ver 15a). O membro adulto também lê a seção Limites (ver 16) | `src/app/(app)/members/page-client.tsx`, `src/components/members/workspace-invite-dialog.tsx` |
 | IA e privacidade (Bloco 3B) | Configurações mostra o wireframe "IA": "IA: Groq e Cloudflare, grátis, sem treino", o limite de 30 chamadas de IA por dia e o link "Política de privacidade". `/privacidade` fica fora de `(app)` e de `(auth)`: pública, sem `AuthGuard`, sem a casca e sem esqueleto. Ela diz o que o app guarda, os dois provedores (a transferência internacional), o que o app tenta tirar do texto antes do envio (e que a remoção automática pode falhar), que a foto vai como está, o limite, o cache, e como exportar (só as assinaturas, em CSV) e apagar a conta | `src/components/wireframe/ia-configuracoes-wireframe.tsx`, `src/components/wireframe/privacidade-wireframe.tsx`, `src/app/privacidade/page.tsx` |
 | Página de convite | Fica no grupo `(auth)`: veste o `AuthShell` e não atravessa a casca do app. O `WorkspaceProvider` é global, então a mudança de grupo não custou nada | `src/app/(auth)/invites/accept/page-client.tsx` |
 
@@ -438,6 +462,8 @@ flowchart TD
 | Lembrete das 20h (Bloco 3A) | O cron `review-reminder-daily` (`0 23 * * *`, 20h em Brasília) chama a Edge `review-reminder` por `invoke_edge_function`. Ela avisa cada pessoa que lançou itens `needs_review` (pelo `user_id`), por carteira, uma vez por dia (`review_reminder_dedupe`; a entrega que falha devolve o dedupe), pelo `deliverNotification` com o tipo `review`, o título "Itens a conferir" e `metadata.href` `/transactions?conferir=1`. Vale para o aviso no app, o push e o e-mail. Desliga por carteira em Configurações, no wireframe "Lembrete de itens a conferir" (`notify_review`). O tipo entrou no check de `notifications`; o front antigo o mostra com o sino padrão. Migração `20261023120000_captura.sql`, ainda não publicada | `supabase/functions/review-reminder/`, `supabase/functions/_shared/review-reminder.ts`, `src/components/wireframe/a-conferir-lembrete-wireframe.tsx` |
 | Faixa de só leitura e Cofre no menu (Bloco 4) | A casca renderiza a faixa de só leitura acima de toda tela do app, e só com o plano `leitura` (ver 11). "Cofre aberto" (`ROUTES.COFRE`) é um item de `ACCOUNT_MENU_PROFILE_LINK_ITEMS`: aparece no grupo Conta de `/me` (o telefone não tem outro menu de conta) e no menu do usuário do desktop, depois de Minha conta e Planos, e a aba "Você" fica ativa em `/cofre`. `APP_PAGE_TITLES` ganhou `/piloto`, `/cofre` e `/comecar` | `src/components/layout/sidebar-app-shell.tsx`, `src/components/layout/account-menu-links.ts`, `src/config/navigation.ts`, `src/config/mobile-navigation.ts` |
 | Aviso de insight (Bloco 6B) | O tipo `insight` entra no check de `notifications` sem tirar nenhum e tem a preferência `notify_insights` (por carteira, padrão ligada, a chave "Insights" em Configurações). O `metadata` traz `kind`, `insight_id` e o `href` da ação; sem `href`, `getNotificationAction` devolve "Ver no Painel". O front de `main` mostraria o tipo novo com o sino padrão, mas a Edge só sobe com o front do 2.0. Ver 14 | `supabase/functions/_shared/notification-types.ts`, `src/lib/notification-actions.ts`, `src/lib/notification-href.ts` |
+| Navegação do convidado (Bloco 7A) | Com o papel `guest`, a lateral, a barra de baixo, a página Você, o menu da conta e a paleta (⌘K) mostram só Painel, Transações, Categorias e Cartões (mais Minha conta, Configurações, Planos e Cofre), e uma rota fora da lista leva a `/dashboard` (ver 15). Com o papel a caminho, só os itens comuns aos dois papéis | `src/lib/papeis/rotas-do-convidado.ts`, `src/components/layout/convidado-route-guard.tsx` |
+| Aviso do limite da pessoa (Bloco 7A) | O aviso do limite é do tipo `budget` com `metadata.kind: 'member_limit'` (a preferência é `notify_budget`) e o `href` por papel: `/members#limites` para dono e membro, `/dashboard` para o convidado (ver 16) | `supabase/functions/evaluate-budgets/index.ts` |
 | Push | Edges `push-subscribe` e `push-unsubscribe` | `supabase/functions/` |
 | Redirecionamentos | Os únicos que acontecem no servidor | `next.config.ts` |
 
@@ -520,6 +546,7 @@ flowchart TD
 | Orçamentos que repetem (Bloco 5) | Ao abrir, o Painel chama `garantir_orcamentos_do_mes` (a mesma chamada de Categorias, no máximo uma vez por carteira e mês na sessão). Se a RPC criou linhas, as categorias são invalidadas e a tela refaz a busca. Erro vai ao console e a próxima abertura tenta de novo | `src/hooks/use-garantir-orcamentos-do-mes.ts`, `src/lib/category-budget-ops.ts` |
 | "Em aberto" e "prevista" (Bloco 5) | O "em aberto" das faturas do Painel segue o `buildCardMonthlyInvoiceSnapshot`: **não** soma as assinaturas do cartão que ainda vão cair. A fatura "prevista" da previsão (`faturaPrevista`) soma. São dois números com dois nomes; a revisão de tela decide se o "em aberto" passa a ser o previsto | `src/components/dashboard/use-dashboard-data.ts`, `src/lib/previsao/fatura-prevista.ts` |
 | Fatura e estorno (Bloco 2) | Nas faturas do mês, uma fatura fechada vale o total do banco quando a pessoa o informou (`credit_card_statement_totals`); a aberta segue o calculado. O estorno no cartão (receita com `payment_method = 'credit_card'`) abate a despesa do mês de fechamento e não conta como receita. A consulta do período pede `source`, `needs_review` e `import_batch_id`: sem a migração do Bloco 2, o Painel não carrega | `src/components/dashboard/use-dashboard-data.ts`, `src/lib/fatura/total-com-banco.ts`, `src/lib/expense-month-attribution.ts`, `src/lib/queries/use-transactions-range.ts` |
+| Painel do convidado (Bloco 7A) | Com `guest`, `PainelPorPapel` troca o Painel da casa pelo wireframe dele: o limite do mês, o total, as dez últimas transações e "Lançar despesa" (ver 15b). Dono e membro seguem no Painel da casa. A caixa de insights, o seguro para gastar e as faturas não existem para ele | `src/components/dashboard/painel-por-papel.tsx` |
 
 ---
 
@@ -1413,11 +1440,155 @@ flowchart TD
 | Os links | Ver fatura (`/credit-cards/id`), Ver mês, Ver previsão e Ver o que pesa (`/previsao`), Ver lançamentos (`/transactions?q=…` ou `?cats=…`), Conferir agora (`/transactions?conferir=1`) e o sazonal (`/bills?new=1`). Tocar no link marca `acted`; o sazonal só abre o cadastro e fica `seen` | `supabase/functions/_shared/insights/textos.ts`, `src/lib/insights/acoes.ts` (`statusAoTocarOLink`) |
 | O texto | Os modelos de frase moram num módulo só, sem import, que o servidor e o cliente usam (`textoDoInsight`). Tom neutro: nenhum modelo tem "culpado", "irresponsável", "deveria", "cuidado" nem "!", e a variação sai com sinal e uma casa. O "seguro cumprido" do relatório do mês é calculado na hora de mostrar, no cliente, com o `fluxoDoMes` do mês anterior; o payload do servidor não o traz | `supabase/functions/_shared/insights/textos.ts`, `src/lib/insights/acoes.ts` (`linhaDoSeguroDoMes`) |
 | Aviso e preferência | O aviso é do tipo `insight`, vai pelo `deliverNotification` e respeita `notify_insights` (a chave "Insights" em Configurações), `notify_in_app` e `notify_push` da carteira. Desligar a chave não esconde a caixa do Painel | `supabase/functions/insights-daily/index.ts`, `src/components/wireframe/insights-wireframe.tsx` (`InsightsAvisoWireframe`) |
-| Banco | `insights` (RLS: membro da carteira, `user_id` nulo ou o da pessoa, e tipo não silenciado), `insights_silenciados` (a pessoa lê, insere e apaga o seu) e `insights_push_semana` (só a service role). Ninguém escreve em `insights` direto: só as funções e a service role do cron | `supabase/migrations/20261028120000_insights.sql` |
+| Banco | `insights` (RLS: o adulto vê os da carteira, com `user_id` nulo, e os próprios; o convidado, só os dele; e tipo não silenciado), `insights_silenciados` (a pessoa lê, insere e apaga o seu) e `insights_push_semana` (só a service role). Ninguém escreve em `insights` direto: só as funções e a service role do cron | `supabase/migrations/20261028120000_insights.sql` |
+| Limite da pessoa (Bloco 7A) | O tipo `limite_pessoa` é o único que não vem do cron: sai do `evaluate-budgets` ao salvar uma despesa, com `user_id` da pessoa e de cada dono e a chave `lim:{user_id}:{ym}:{nivel}`, sem push próprio (o aviso do sino já é o push). A ação "Ver limite" leva a `/members#limites` ou, para o convidado, a `/dashboard`. Ver 16 | `supabase/functions/evaluate-budgets/index.ts`, `supabase/functions/_shared/insights/textos.ts` |
 
 ---
 
-## 15. Lacunas encontradas
+## 15. Papéis: dono, membro e convidado
+
+Quem pode o quê dentro de uma carteira compartilhada. O dono e o membro são
+adultos e usam a casa inteira; o **convidado** (Bloco 7A, em wireframe) lança
+despesa, vê só o que é dele e tem um app mais curto. O convidado entra pelo
+convite com papel (ver 2b), e o dono pode trocar o papel de quem já está na
+carteira. A coluna "privadas" da spec é do Bloco 7B.
+
+| Ação | Dono | Membro | Convidado |
+|---|---|---|---|
+| Lançar despesa | sim | sim | sim (autor = ele) |
+| Ver transações | todas | todas | só as dele |
+| Editar e excluir | tudo | tudo | só as dele |
+| Categorias e cartões | gerencia | gerencia | só lê |
+| Orçamento, faturas, previsão, contas, insights da casa | vê | vê | não |
+| O próprio limite | vê | vê | vê |
+| Convites e membros | gerencia | não | não |
+
+### 15a. Trocar o papel
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    members["/members"] --> isOwner{"É dona?"}
+    isOwner -->|"não"| semTroca(["Sem seletor: só a dona troca o papel"])
+    isOwner -->|"sim"| linha{"Linha de quem?"}
+    linha -->|"a dela ou a de outra dona"| semSeletor(["Sem seletor de papel"])
+    linha -->|"membro ou convidado"| seletor(["WIREFRAME Trocar papel: Membro ou Convidado"])
+    seletor -->|"Trocar papel"| troca[("RPC trocar_papel")]
+    troca -->|"não é dona, papel inválido, a própria linha, a de uma dona ou membro inexistente"| erro(["Erro na frase da tela"])
+    troca -->|"para Convidado"| resp(["Responsável = quem trocou, se ainda não tinha"])
+    troca -->|"para Membro"| zera(["Responsável zerado"])
+    resp --> log[("user_activity_logs: family_role_changed")]
+    zera --> log
+    log --> msg(["Mensagem: Fulano agora é convidado ou membro, e a lista recarrega"])
+    msg -.->|"no próximo carregamento das carteiras da pessoa"| appConv(("G15b App do convidado"))
+    direct["update direto de role no banco"] -->|"with check: dona e papel member ou guest"| nunca(["Ninguém vira dono por update"])
+```
+
+### 15b. O app do convidado
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    carteiras[("fetch-workspaces-data: o papel em cada carteira")] --> papelQ{"Papel na carteira atual"}
+    papelQ -->|"a caminho"| espera(["Navegação só com os itens comuns, Painel com esqueleto, guarda espera"])
+    papelQ -->|"dono ou membro"| casa(("G3 e G4 como sempre"))
+    papelQ -->|"convidado"| navCv(["Navegação: Painel, Transações, Categorias e Cartões"])
+    navCv --> rota{"A rota está na lista dele?"}
+    rota -->|"não: Orçamento, Previsão, Contas, Assinaturas, Membros, fatura e conferência"| volta(["ConvidadoRouteGuard: router.replace para /dashboard"])
+    rota -->|"sim"| painelCv["/dashboard: WIREFRAME Painel do convidado"]
+    volta --> painelCv
+    painelCv --> limiteCv(["Seu limite do mês: X de Y, passou de N%, ou Sem limite definido"])
+    painelCv --> totalCv(["Total do mês e as últimas 10 transações dele, mês escolhido por ele"])
+    painelCv -->|"Lançar despesa"| formCv(["Gaveta de lançamento, a mesma do +"])
+    formCv -->|"salvar: autor = ele"| insere[("transactions: RLS insert de membro com user_id igual a auth.uid")]
+    insere --> avisaCasa[("notify-transaction-created: avisa os adultos")]
+    insere --> avalia[("evaluate-budgets: avalia o limite dele")]
+    avalia --> G16(("G16 Limite por pessoa"))
+    navCv --> transCv["/transactions: só as dele"]
+    transCv --> G5(("G5 Lançamentos"))
+    navCv --> catsCv["/categories: só leitura"]
+    navCv --> cardsCv["/credit-cards: só leitura, o cartão não é link"]
+    rota -->|"sim: Minha conta, Configurações, Planos e Cofre"| contaCv["/account, /settings, /plans, /cofre"]
+    contaCv --> G10(("G10 Conta"))
+```
+
+### Regras técnicas
+
+| Ponto | Regra | Onde |
+|---|---|---|
+| Os papéis no banco | `workspace_members.role` aceita `owner`, `member` e `guest`; `workspace_invites.role`, só `member` e `guest`. `is_workspace_adult(ws)` vale para dono e membro; `is_workspace_member` não mudou e inclui o convidado. O check do `guest` entrou com `not valid` e foi validado em seguida; `workspace_members.sponsor_user_id` é o responsável (nulo para adultos) e o 7C o usa como quem paga pelo convidado | `supabase/migrations/20261029120000_papeis.sql` |
+| O que o convidado lê e escreve | **Transações:** vê, edita e exclui só as dele (`user_id = auth.uid()` e membro); o insert continua de membro com o autor ele. **Categorias e cartões:** lê; só o adulto escreve. **Orçamento, contas, parcelas das contas, assinaturas, parcelamentos, pagamentos de fatura, alertas de categoria do cartão e totais da fatura:** só o adulto, em tudo. **Anexos e o bucket:** o adulto, quem anexou ou o dono da transação ligada; o convidado só anexa à transação dele. **Insights:** os dele, nunca os da carteira. **Sair da carteira:** membro e convidado. Os splits seguem a RLS das transações | `supabase/migrations/20261029120000_papeis.sql`, `src/lib/papeis/migracao-papeis.test.ts` |
+| As RPCs | Conferem adulto: `complete_workspace_categories_onboarding`, `garantir_orcamentos_do_mes` e `registrar_insight` (estas duas devolvem `0` e `null` em silêncio ao convidado, e `42501` a quem nem é membro). `pay_bill_instance`, `pular_instancia_da_conta`, `ligar_pagamento_da_conta`, `virar_assinatura`, `virar_conta` e os três `rpc_fetch_*_bundle` são `security invoker`: a RLS já barra, e o teste de fonte confere que continuam assim. Ficam abertas ao convidado porque lançar é dele: `criar_plano_parcelado`, `create_workspace_installment_plan`, `create_capture_token` e `marcar_insight` (só os insights dele). `delete_workspace_installment_plan_cascade` aceita o adulto ou o autor do plano | `supabase/migrations/20261029120000_papeis.sql` |
+| Trocar o papel | `trocar_papel(p_workspace_id, p_user_id, p_role)` é `security definer` e só o dono chama. `p_role` é `member` ou `guest`; não troca a linha de um dono nem a própria. Para `guest`, `sponsor_user_id` fica o atual ou quem trocou; para `member`, zera. Grava `family_role_changed` em `user_activity_logs`. A política de `update` de `workspace_members` tem `with check` com a dona e `role in ('member','guest')`: ninguém vira dono por `update` direto | `supabase/migrations/20261029120000_papeis.sql`, `src/components/wireframe/papeis-wireframe.tsx` |
+| O papel no cliente | O `WorkspaceProvider` expõe `papel` e `isAdulto` da carteira atual. A leitura das carteiras não converte mais o `guest` em `member`. Com o papel a caminho (`null`), a navegação mostra só os itens comuns aos dois papéis e o Painel espera com o esqueleto; os itens de adulto entram quando o papel chega | `src/components/workspace-provider.tsx`, `src/lib/queries/fetch-workspaces-data.ts`, `src/lib/papeis/papeis.ts` |
+| As rotas dele | `/dashboard`, `/credit-cards`, `/me`, `/plans` e `/cofre` (só a rota exata); `/transactions`, `/categories` (menos `/categories/new`), `/settings` e `/account`, com as subrotas e a query. Ficam de fora `/bills`, `/subscriptions`, `/previsao`, `/members`, `/piloto`, `/comecar` e `/credit-cards/[cardId]` (fatura e conferência) | `src/lib/papeis/rotas-do-convidado.ts` |
+| A guarda | `ConvidadoRouteGuard` envolve as telas da casca: o convidado numa rota fora da lista não vê a tela e vai a `/dashboard` por `router.replace`. Com o papel a caminho, espera (`decidirRotaDoConvidado`); dono e membro nunca são tocados | `src/app/(app)/layout-client.tsx`, `src/components/layout/convidado-route-guard.tsx` |
+| A navegação | A barra lateral, a barra de baixo, a página Você, o menu da conta e a paleta (⌘K) filtram pela lista dele: sem Membros, sem o "Assinatura" do menu de nova transação, ações só de lançamento, e sem os grupos de cartões, parcelas, assinaturas, contas e membros. Cofre e Planos ficam (exportar e apagar são sempre liberados). "+ Adicionar" não muda | `src/lib/papeis/rotas-do-convidado.ts` (`itensDeNavegacaoPara`), `src/components/layout/` |
+| O Painel dele | `PainelPorPapel` escolhe: convidado, o `ConvidadoPainelWireframe`; papel a caminho com a carteira carregando, o esqueleto; senão o Painel da casa. O wireframe mostra o limite, o gasto, o total do mês e as dez últimas transações dele (a RLS só devolve as dele), e recarrega a cada mutação de lançamento | `src/components/dashboard/painel-por-papel.tsx`, `src/components/wireframe/convidado-painel-wireframe.tsx` |
+| O que o convidado não chama | `useGarantirOrcamentosDoMes` e `useSeguroBaixo` exigem `isAdulto`: o Painel da casa e Categorias não pedem ao banco o que a RPC devolveria vazio ou barrado | `src/hooks/use-garantir-orcamentos-do-mes.ts`, `src/lib/insights/use-insights.ts` |
+| Só leitura | Categorias, o detalhe da categoria e Cartões escondem criar, editar e excluir para quem não é adulto, e o assistente de categorias não abre. O ladrilho do cartão não é link e mostra só as compras dele no ciclo ("Suas compras neste ciclo"), sem comparação nem uso do limite, que enganariam. O formulário de lançamento troca "Gerenciar categorias" por "Ver categorias" e esconde "Cadastrar cartão" | `src/app/(app)/categories/page-client.tsx`, `src/app/(app)/credit-cards/page-client.tsx` |
+| Quem recebe aviso | O helper `adultosDaCarteira` (dono e membro) decide os destinatários: o lançamento de um membro **não** avisa o convidado, e a despesa do convidado avisa o dono e os membros. Orçamento, fatura, conta vencendo e insights da casa também são só dos adultos. Ao convidado, `evaluate-budgets` e `evaluate-credit-card-alerts` respondem `{ ok: true }`, sem dado da casa. O `review-reminder` fica de fora de propósito: cada pessoa é lembrada dos próprios itens a conferir | `supabase/functions/_shared/destinatarios.ts`, `src/lib/papeis/edges-papeis.test.ts` |
+| A captura | O dono de um token que é convidado casa o histórico só com os lançamentos dele; a `capture` passa o `transaction_id` ao `evaluate-budgets` para o limite do autor | `supabase/functions/capture/index.ts` |
+| Assentos | O convidado ocupa um assento do Plano Família: a cobertura é dos 5 primeiros membros de quem assina, de qualquer papel (`tem_cobertura` não mudou). O filho coberto tem também o Família na própria carteira pessoal | `supabase/migrations/20261025120000_planos.sql` |
+| Sem plano nada se desliga | `garantir_escrita` não mexe em RLS: sem plano, o convidado continua restrito e o limite dele continua visível | `supabase/migrations/20261029120000_papeis.sql` |
+
+---
+
+## 16. Limite por pessoa
+
+O dono dá a cada pessoa um limite mensal de gasto; o app avisa a pessoa e o dono
+quando o gasto chega a 80% e a 100%. Bloco 7A, em wireframe. O limite é mensal e
+**se repete** (não tem mês), a compra no crédito conta pelo mês do fechamento da
+fatura, e quem manda é o **autor** da despesa: o limite é de quem gastou, e não de
+quem pagou (o `paid_by` do 7C não muda a régua).
+
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart TD
+    members["/members, seção Limites"] --> isOwner{"É dona?"}
+    isOwner -->|"não, mas é adulto"| leitura(["Vê o gasto e o limite de todos, sem editar"])
+    isOwner -->|"sim"| formLim(["WIREFRAME Limites por pessoa: um campo por pessoa"])
+    formLim -->|"Salvar"| grava[("workspace_member_limits: upsert, só a dona escreve")]
+    formLim -->|"Tirar limite"| tira[("workspace_member_limits: delete")]
+
+    G5(("G5 Lançamentos")) -->|"despesa salva, editada, conta paga, plano parcelado ou captura"| avalia[("Edge evaluate-budgets: avaliarLimite")]
+    imp(["Importação de extrato"]) -.->|"não avalia"| avalia
+    avalia --> temLim{"O autor da linha tem limite?"}
+    temLim -->|"não"| nada(["Nada acontece"])
+    temLim -->|"sim"| gasto(["Gasto do mês: despesas dele, crédito pelo mês do fechamento"])
+    gasto --> nivel{"Nível do gasto"}
+    nivel -->|"abaixo de 80%"| nada
+    nivel -->|"80% ou mais"| reivindica[("limites_avisados: on conflict do nothing, o 100 grava o 80 junto")]
+    reivindica -->|"nível já avisado neste mês"| nada
+    reivindica -->|"nível novo"| quem(["Destinatários: a pessoa e cada dona, uma vez cada"])
+    quem --> insight[("RPC inserir_insights: limite_pessoa, um por destinatário")]
+    quem --> notif[("deliverNotification: tipo budget, kind member_limit")]
+    insight --> caixa(("G14 Caixa de insights"))
+    notif --> sino(("G3 Sino"))
+    sino --> destino{"Ver limite: papel de quem recebe"}
+    caixa --> destino
+    destino -->|"dono ou membro"| lim["/members, seção Limites"]
+    destino -->|"convidado"| dash["/dashboard"]
+```
+
+### Regras técnicas
+
+| Ponto | Regra | Onde |
+|---|---|---|
+| O limite | `workspace_member_limits(workspace_id, user_id, amount)`: uma linha por pessoa e carteira, `amount > 0`, chave estrangeira em `workspace_members` (não se grava limite de quem não é membro, e o limite sai junto quando a pessoa sai). RLS: o adulto lê o de todos e a pessoa lê o dela; só o dono escreve. Sem plano o limite continua visível | `supabase/migrations/20261029130000_limites.sql` |
+| O gasto da pessoa | As despesas (`type = 'expense'`) com `user_id` igual à pessoa; no cartão de crédito, o mês do fechamento da fatura (`mesDaCompra`: a compra depois do dia de fechamento conta no mês seguinte; o dia de fechamento é preso ao fim do mês curto). A receita não entra. O módulo não importa nada e o cliente o reexporta; o teste confere `mesDaCompra` contra `statementCloseYmdForPurchaseYmd` em todo dia de 2026 | `supabase/functions/_shared/limite-pessoa.ts`, `src/lib/limites/limites.ts` |
+| Quando avalia | Ao salvar uma despesa, no `evaluate-budgets`, junto com o orçamento: o formulário (novo e edição), o replay offline, o pagamento de uma conta, o plano parcelado e a `capture`. Roda **com ou sem categoria e com ou sem orçamento**. A **importação não avalia** (decisão do Bloco 2). O corpo antigo de `main`, sem `transaction_id` nem `workspace_id`, continua voltando `no_category` cedo | `supabase/functions/evaluate-budgets/index.ts`, `src/lib/import/importar.ts` |
+| O autor é a régua | Com `transaction_id`, a Edge lê a linha pela service role: a carteira e o autor (`user_id`) saem da **linha**, nunca do corpo. Na edição, quem avalia é o limite do autor da linha, e não o de quem editou: o dono que edita a despesa do convidado confere o limite do convidado. Com só `workspace_id` (a conta paga, o plano parcelado), o autor é quem chama. Pelo JWT, quem chama precisa ser membro da carteira da linha (403); o convidado que chama sobre a linha de outra pessoa também leva 403 | `supabase/functions/evaluate-budgets/index.ts` |
+| Níveis e dedupe | 80% e 100% (`nivelDoLimite`, em centavos). Um aviso por pessoa, mês e nível: a Edge reivindica em `limites_avisados(workspace_id, user_id, ym, nivel)` com `on conflict do nothing` antes de avisar, e ir de 79% a 101% grava o 80 junto com o 100 (o de 80 não sai depois). O segundo lançamento acima de 80% no mesmo mês não avisa de novo. A tabela tem RLS e nenhuma política: só a service role | `supabase/functions/_shared/limite-pessoa.ts` (`decidirAvisosDoLimite`, `nivelNovo`), `supabase/migrations/20261029130000_limites.sql` |
+| Quem recebe | A pessoa e cada dono da carteira, **uma vez cada**: o dono que é a própria pessoa recebe um aviso, não dois. Quem é só membro e não é o autor não recebe. Quem não é membro da carteira não tem limite avaliado | `supabase/functions/_shared/limite-pessoa.ts`, `supabase/functions/_shared/destinatarios.ts` (`donosDaCarteira`) |
+| O aviso e o insight | O aviso é `type: 'budget'` com `metadata.kind: 'member_limit'`, para não mexer no check de `notifications`, e respeita `notify_budget`. Junto entra um insight `limite_pessoa` por destinatário (`user_id` = o destinatário, `dedupe_key` `lim:{user_id}:{ym}:{nivel}`), sem push próprio: o aviso já é o push. Os textos são "Limite de {nome}" (o dono) e "Seu limite do mês" (a pessoa), com a ação "Ver limite". Se o insight ou a entrega falha, a Edge libera os níveis que reivindicou e a próxima avaliação tenta de novo; uma falha do limite só vai ao log e não muda a resposta do orçamento | `supabase/functions/evaluate-budgets/index.ts`, `supabase/functions/_shared/insights/textos.ts` |
+| O destino de "Ver limite" | Dono e membro vão a `/members#limites`; o convidado, a `/dashboard`. Na caixa de insights o destino sai do papel de quem lê **agora** (`destinoDoInsightDeLimite`), e não de um papel guardado no payload; no aviso do sino, do papel do destinatário na hora do envio | `src/lib/papeis/papeis.ts`, `src/lib/insights/acoes.ts`, `supabase/functions/_shared/limite-pessoa.ts` |
+| A tela | A seção Limites de Membros (só para o adulto) lista o gasto do mês contra o limite de cada pessoa (lido pelo cliente com `lerLancamentosDoMes`, paginado, o mês e o anterior). Só o dono vê o campo (texto com vírgula, de R$ 0,01 até R$ 9.999.999.999,99) e "Salvar" / "Tirar limite"; o dono pode dar limite a si mesmo. Se a leitura falha, o estado neutro diz que os limites ainda não estão disponíveis | `src/components/wireframe/limites-wireframe.tsx`, `src/lib/limites/limites.ts` |
+| Insights do convidado | `limite_pessoa` entra nos checks de `insights.kind` e `insights_silenciados.kind` (o tipo pode ser silenciado). O convidado recebe o dele; o dono, um por pessoa que passou | `supabase/migrations/20261029130000_limites.sql` |
+
+---
+
+## 17. Lacunas encontradas
 
 Coisas que o mapeamento achou no caminho. As de acesso foram corrigidas na
 rodada de set/2026 e estão registradas abaixo da tabela; as que sobraram
@@ -1459,7 +1630,6 @@ continuam aqui para registro.
 | 38 | G7 | Uma conta `one_time` com `end_date` antes do 1º vencimento fica sem pendente e aparece como "Concluída", sem nunca ter sido paga. |
 | 39 | G3, G7 | Os atrasos não são agrupados por conta: no 1º dia depois do deploy, o passo 0 cria as pendências vencidas que faltavam, e uma conta atrasada pode receber até 2 avisos de atraso nesse primeiro dia (um por instância atrasada que cai numa janela de aviso). |
 | 40 | G3, G7, G8 | O Bloco 6A (contas a pagar revista: recorrência que não trava, lembrete por janela, reprogramar, pular atômico, valor variável, casamento e boleto) está no repositório, com as telas novas em wireframe, e **nada foi publicado**. A migração sobe antes do front (o front do 2.0 chama as RPCs novas e manda `valor_variavel`) e o `evaluate-bills-reminders` sobe junto com ela; a `credit-card-calendar-alerts` segue o Bloco 5 e só sobe com o front (§7 de `BLOCO_5_DEPLOYMENT.md`): `supabase/BLOCO_6A_DEPLOYMENT.md`. |
-| 41 | G14 | O "limite da pessoa" (o gasto de alguém da família passou do limite dela) e o "o convidado recebe só os insights do próprio limite" ficam para o Bloco 7: o limite por pessoa e o papel `guest` ainda não existem. O motor nasce com `user_id` opcional para servi-los. |
 | 42 | G14 | Um lançamento novo é visto pelo cron do dia seguinte (até 1 dia de atraso), e não na hora: desvio consciente, para o caminho do lançamento não ganhar mais uma chamada. |
 | 43 | G3, G4, G5, G7, G8, G13, G14 | O Bloco 6B (insights) está no repositório, com as telas em wireframe, e **nada foi publicado**. A migração sobe antes de tudo e o cron já nasce nela (sem a Edge, só deixa um 404 em `net._http_response`, sem erro); a Edge `insights-daily` só sobe junto com o front do 2.0, porque os links dela (`/previsao`, a caixa do Painel) não existem em `main`: `supabase/BLOCO_6B_DEPLOYMENT.md`. |
 | 44 | G3, G14 | A notificação da recorrência leva a `/subscriptions?new=1` ou `/bills?new=1` com o formulário vazio, sem os dados nem o vínculo dos lançamentos: o "Criar" de um toque só existe na caixa do Painel, onde o insight continua `new`. |
@@ -1467,6 +1637,16 @@ continuam aqui para registro.
 | 46 | G8, G14 | "Atualizar valor" pode trocar o preço errado com um nome curto: a assinatura "Amazon" de R$ 14,90 e uma compra "Amazon" de R$ 19,90 dão "mudou de preço", e o toque grava 19,90. Exigir o mesmo meio de pagamento (e cartão) ou a descrição igual resolve. |
 | 47 | G14 | O gasto atípico não tem piso de valor: média de R$ 10 e mês de R$ 21 já viram "acima do comum". O teto de 5 por execução e a chave mensal limitam o ruído. |
 | 48 | G5, G14 | "Apagar um" dos lançamentos repetidos apaga o de id maior, e os ids são uuid aleatórios: a escolha é arbitrária. O efeito no dinheiro é o mesmo; preferir o mais novo (`created_at`) ou o importado manteria o que tem anexo ou revisão. |
+| 49 | G15 | O convidado consegue ler `workspaces.monthly_savings_target` (a meta de poupança da carteira) pela API: a coluna mora em `workspaces`, e a política de leitura é de membro. Movê-la exigiria apagar uma coluna, e a migração só acrescenta. A tela do convidado não a mostra. |
+| 50 | G16 | Subir o limite no meio do mês não reabre os avisos desse mês: o dedupe é por mês e nível (`limites_avisados`), então quem já recebeu o de 80% ou o de 100% não o recebe de novo, mesmo que o novo limite seja alcançado. Vale a partir do mês seguinte. |
+| 51 | G5, G16 | A importação (extrato e planilha) não avalia o limite: o gasto importado conta no mês, mas o aviso só sai no próximo lançamento comum da pessoa. |
+| 52 | G2 | O e-mail do convite ainda diz "workspace" ("convidou você para participar do workspace…" e o título "Convite para workspace"), e não "carteira". |
+| 53 | G5, G16 | O limite é avaliado quando a despesa é salva. Na edição a Edge confere o limite do **autor** da linha, e não o de quem editou: o dono que edita a despesa do convidado confere o limite do convidado. Excluir uma despesa, mudar o limite ou mudar o fechamento do cartão não reavalia nada, e nenhum aviso já enviado é retirado. |
+| 54 | G14, G15 | O insight `limite_pessoa` do convidado não aparece em lugar nenhum para ele: a caixa de insights é só da casa, e o Painel dele não lista insights. Ele recebe o aviso no sino, que leva ao Painel, onde está o limite. |
+| 55 | G5, G15 | A folha de detalhe da transação lê `workspace_installment_plans`, que agora é só do adulto: a compra parcelada do convidado perde o "parcela x de y". |
+| 56 | G15 | O papel pode ficar até 5 minutos velho no cliente (o `staleTime` das carteiras e o cache persistido): depois de `trocar_papel`, quem virou convidado continua com o Painel da casa e a navegação inteira até a próxima busca. A RLS protege: ele vê vazio. |
+| 57 | G15 | O convidado pode criar uma linha de `attachments` na própria transação apontando para um caminho que já existe na pasta da carteira e ainda não tem linha, e então ler e apagar esse objeto. Janela estreita: o caminho é único e imprevisível. |
+| 58 | G2, G3, G4, G5, G14, G15, G16 | O Bloco 7A (papéis e limites) está no repositório, com as telas em wireframe, e **nada foi publicado**. A migração dos papéis sobe antes das Edges de convite (`workspace-invites-create` e `-resend` gravam e leem `menor` e `consentimento_em`, e a Edge antiga cria convite de membro mesmo com `role: guest`), a dos limites antes do novo `evaluate-budgets`, e ninguém é convidado como `guest` antes do front do 2.0: `supabase/BLOCO_7A_DEPLOYMENT.md`. |
 
 ### Fechadas na rodada de acesso (set/2026)
 
@@ -1511,3 +1691,9 @@ string. Se recusar, o link cai na Site URL como antes.
 | Era | Lacuna | O que fechou |
 |---|---|---|
 | — | A recorrência da conta travava sem pagamento: a próxima instância só nascia quando a atual era paga ou pulada, então uma conta esquecida parava de vencer e de lembrar | O passo 0 do `evaluate-bills-reminders` gera, todo dia, a pendência de cada vencimento que já chegou, a partir da última instância, pela regra única de `_shared/recorrencia-conta.ts`; o lembrete passou a valer pela janela |
+
+### Fechadas em 25/out/2026
+
+| Era | Lacuna | O que fechou |
+|---|---|---|
+| 41 | O "limite da pessoa" (o gasto de alguém da família passou do limite dela) e o "o convidado recebe só os insights do próprio limite" ficavam para o Bloco 7: o limite por pessoa e o papel `guest` não existiam | `workspace_member_limits` e o papel `guest` entraram no Bloco 7A; o `evaluate-budgets` avisa em 80% e 100% a pessoa e o dono, com o insight `limite_pessoa` (`user_id` da pessoa e de cada dono), e o convidado só lê os insights dele |
