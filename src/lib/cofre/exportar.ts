@@ -1,4 +1,5 @@
 import { toCsv, type CsvColumn } from "@/lib/data-table/csv"
+import { comDetalhesPrivados, type DetalhePrivado } from "@/lib/privado/detalhes"
 import { supabase } from "@/lib/supabase"
 import type { Database } from "@/types/database"
 import { zipSemCompressao } from "./zip"
@@ -42,6 +43,7 @@ export const COLUNAS_CONHECIDAS: { [T in Tabela]: ReadonlyArray<keyof Row<T>> } 
         "import_batch_id",
         "installment_plan_id",
         "installment_sequence",
+        "is_private",
         "is_recurring",
         "needs_review",
         "payment_credit_card_id",
@@ -75,6 +77,7 @@ export const COLUNAS_CONHECIDAS: { [T in Tabela]: ReadonlyArray<keyof Row<T>> } 
         "due_day",
         "expiry_month",
         "expiry_year",
+        "holder_user_id",
         "id",
         "is_active",
         "last_four",
@@ -240,6 +243,29 @@ function lerPorCarteira(tabela: string, ids: string[]) {
     )
 }
 
+/**
+ * As privadas da pessoa voltam com os detalhes dela (Bloco 7B). A RLS de
+ * `transacoes_privadas` só devolve as do próprio autor, então quem as lê é o
+ * dono de todas: o `user_id` delas é o de quem exporta.
+ */
+async function comAsMinhasPrivadas(linhas: Linha[], ids: string[]): Promise<Linha[]> {
+    if (!linhas.some((l) => l.is_private)) return linhas
+    const detalhes = await lerTudo<DetalhePrivado & { user_id: string }>((de, ate) =>
+        supabase
+            .from("transacoes_privadas")
+            .select("transaction_id, user_id, description, category_id, capture_meta")
+            .in("workspace_id", ids)
+            .order("transaction_id")
+            .range(de, ate),
+    )
+    if (!detalhes.length) return linhas
+    return comDetalhesPrivados(
+        linhas as Array<Linha & { id: string; user_id: string; is_private?: boolean }>,
+        detalhes,
+        detalhes[0].user_id,
+    )
+}
+
 async function lerInstancias(billIds: string[]): Promise<Linha[]> {
     const lotes: string[][] = []
     for (let i = 0; i < billIds.length; i += LOTE_IDS) lotes.push(billIds.slice(i, i + LOTE_IDS))
@@ -262,6 +288,7 @@ export async function exportarTudo(carteiras: Array<{ id: string; name: string }
         let linhas: Linha[]
         if (tabela === "bill_instances") linhas = await lerInstancias(billIds)
         else linhas = await lerPorCarteira(tabela, workspaceIds)
+        if (tabela === "transactions") linhas = await comAsMinhasPrivadas(linhas, workspaceIds)
         if (tabela === "bills") billIds = linhas.map((l) => String(l.id))
         arquivos.push({ nome: `${tabela}.csv`, conteudo: csvDe(linhas, [...COLUNAS_CONHECIDAS[tabela]]) })
     }

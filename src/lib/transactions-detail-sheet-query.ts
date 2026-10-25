@@ -1,3 +1,4 @@
+import { juntarDetalhesPrivados } from "@/lib/privado/detalhes"
 import type { CreditCard, Transaction } from "@/lib/supabase"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import type { SupabaseClient } from "@supabase/supabase-js"
@@ -50,7 +51,17 @@ export async function fetchTransactionForDetailSheet(
     if (!data) {
         return { transaction: null, errorMessage: null }
     }
-    const row = data as unknown as Transaction
+    // A privada do autor volta com a descrição e a categoria dele: a folha e
+    // o formulário de edição leem daqui (Bloco 7B).
+    let row = data as unknown as Transaction
+    try {
+        row = (await juntarDetalhesPrivados(client, [row]))[0]
+    } catch (e) {
+        return {
+            transaction: null,
+            errorMessage: e instanceof Error ? e.message : "Não foi possível carregar a transação.",
+        }
+    }
     const [withCard] = attachPaymentCards([row], args.creditCards)
     return { transaction: withCard ?? null, errorMessage: null }
 }

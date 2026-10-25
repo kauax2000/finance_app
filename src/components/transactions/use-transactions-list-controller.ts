@@ -18,6 +18,7 @@ import {
 } from "react"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
+import { juntarDetalhesPrivados } from "@/lib/privado/detalhes"
 import { supabase, type Transaction } from "@/lib/supabase"
 import {
     deleteTransactionsByIds,
@@ -834,7 +835,7 @@ export function useTransactionsListController(
             } else {
                 const { data, error } = await supabase
                     .from("transactions")
-                    .select("amount, category_id, created_at, date, description, id, installment_plan_id, installment_sequence, is_recurring, payment_credit_card_id, payment_method, recurring_interval, subscription_id, type, updated_at, user_id, workspace_id, source, needs_review, import_batch_id, capture_meta")
+                    .select("amount, category_id, created_at, date, description, id, installment_plan_id, installment_sequence, is_recurring, payment_credit_card_id, payment_method, recurring_interval, subscription_id, type, updated_at, user_id, workspace_id, source, needs_review, import_batch_id, capture_meta, is_private")
                     .eq("id", txnParam)
                     .eq("workspace_id", currentWorkspaceId)
                     .maybeSingle()
@@ -845,8 +846,13 @@ export function useTransactionsListController(
                     return
                 }
 
+                // A privada do autor abre com os detalhes dele (Bloco 7B).
+                const [linha] = await juntarDetalhesPrivados(supabase, [data as Transaction]).catch(
+                    () => [data as Transaction],
+                )
+                if (cancelled) return
                 setDidAutoOpenTxn(true)
-                openTransactionDetail(data as Transaction)
+                openTransactionDetail(linha)
             }
 
             const nextParams = new URLSearchParams(searchParams.toString())

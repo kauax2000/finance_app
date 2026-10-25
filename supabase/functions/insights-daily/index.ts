@@ -4,7 +4,7 @@ import { FAN_OUT_CONCURRENCY, forEachLimit } from '../_shared/for-each-limit.ts'
 import { secretMatches } from '../_shared/timing-safe-equal.ts'
 import { todasAsPaginas } from '../_shared/todas-as-paginas.ts'
 import { deliverNotification, loadWorkspacePrefsMap } from '../_shared/deliver-notification.ts'
-import { adultosDaCarteira } from '../_shared/destinatarios.ts'
+import { adultosDaCarteira, donosDaCarteira } from '../_shared/destinatarios.ts'
 import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
 import { cardLabel } from '../_shared/notification-copy.ts'
 import {
@@ -72,7 +72,7 @@ const DUPLICIDADE_DIAS = 30
 const DUPLICIDADE_VALOR_MINIMO = 10
 
 const TX_COLUMNS =
-  'id,type,amount,date,description,category_id,payment_method,payment_credit_card_id,subscription_id,installment_plan_id,installment_sequence,needs_review,source'
+  'id,type,amount,date,description,category_id,payment_method,payment_credit_card_id,subscription_id,installment_plan_id,installment_sequence,needs_review,source,is_private'
 
 type TxRow = CardTxRow & {
   id: string
@@ -82,9 +82,19 @@ type TxRow = CardTxRow & {
   installment_sequence: number | null
   needs_review: boolean
   source: string | null
+  is_private: boolean | null
 }
 
-type CardRow = { id: string; name: string; last_four: string | null; closing_day: number; due_day: number; is_active: boolean }
+/** `holder_user_id` (Bloco 7B): o cartão com titular; nulo é o da casa. */
+type CardRow = {
+  id: string
+  name: string
+  last_four: string | null
+  closing_day: number
+  due_day: number
+  is_active: boolean
+  holder_user_id: string | null
+}
 
 type PlanRow = {
   id: string
@@ -96,12 +106,13 @@ type PlanRow = {
   is_active: boolean
 }
 
-type Linha = { workspace_id: string; user_id: null; kind: string; dedupe_key: string; payload: Record<string, unknown> }
+/** `user_id` nulo é da carteira; preenchido, só da pessoa (o resumo do cartão com titular). */
+type Linha = { workspace_id: string; user_id: string | null; kind: string; dedupe_key: string; payload: Record<string, unknown> }
 
 /** A linha com a data da evidência, para o corte (`limitarAchados`). */
 type Achado = Linha & { dataYmd: string }
 
-type InsightRow = { id: string; kind: string; dedupe_key: string; payload: Record<string, unknown> }
+type InsightRow = { id: string; user_id: string | null; kind: string; dedupe_key: string; payload: Record<string, unknown> }
 
 /** O cliente de serviço com as RPCs (o `SupabaseAdminClient` as deixa opcionais). */
 type Admin = SupabaseAdminClient & Required<Pick<SupabaseAdminClient, 'rpc'>>
@@ -135,6 +146,7 @@ function lancDe(t: TxRow, ligadas: Set<string>): Lanc {
     installment_plan_id: t.installment_plan_id,
     ligadoAConta: ligadas.has(t.id),
     needs_review: t.needs_review,
+    is_private: t.is_private === true,
   }
 }
 
@@ -283,11 +295,13 @@ async function relatorioDoMes(
     ),
   ])
 
+  // O cartão com titular fica de fora: a diferença para o banco é do titular
+  // e dos donos (Ruling 5 do 7B), e o relatório é da carteira.
   let diferencas = 0
   for (const r of totais) {
     const card = cartoes.get(r.credit_card_id)
     const close = isoPrefixYmd(String(r.statement_close_date))
-    if (!card || !close) continue
+    if (!card || card.holder_user_id || !close) continue
     const calculado = cardInvoiceNetInWindow(tx, card.id, invoiceWindowEndingAt(close, Number(card.closing_day)))
     if (centavos(r.bank_total) !== centavos(calculado)) diferencas += 1
   }
@@ -349,7 +363,7 @@ async function achadosDaCarteira(admin: SupabaseAdminClient, workspaceId: string
     todasAsPaginas<CardRow>((a, b) =>
       admin
         .from('credit_cards')
-        .select('id,name,last_four,closing_day,due_day,is_active')
+        .select('id,name,last_four,closing_day,due_day,is_active,holder_user_id')
         .eq('workspace_id', workspaceId)
         .order('id', { ascending: true })
         .range(a, b)
@@ -457,9 +471,24 @@ async function achadosDaCarteira(admin: SupabaseAdminClient, workspaceId: string
       banco.set(statementTotalKey(String(r.credit_card_id), dia(String(r.statement_close_date))), Number(r.bank_total))
     }
   }
+  // O resumo de um cartão com titular leva o total do banco e a diferença: vai
+  // só ao titular e aos donos, como insight de cada um (Ruling 5 do 7B). O do
+  // cartão da casa segue da carteira.
+  let donos: string[] | null = null
   for (const c of ativos) {
     const r = resumoDoCartao(c, hoje, tx, banco, nomes, planosMap)
-    if (r) linhas.push(linha(workspaceId, 'fatura_fechou', r, String(r.closeYmd)))
+    if (!r) continue
+    const l = linha(workspaceId, 'fatura_fechou', r, String(r.closeYmd))
+    if (!c.holder_user_id) {
+      linhas.push(l)
+      continue
+    }
+    if (!donos) {
+      const { data, error } = await admin.from('workspace_members').select('user_id, role').eq('workspace_id', workspaceId)
+      if (error) throw new Error(error.message)
+      donos = donosDaCarteira(data ?? [])
+    }
+    for (const u of new Set([c.holder_user_id, ...donos])) linhas.push({ ...l, user_id: u })
   }
 
   // No dia 1, ou no 2 se o do dia 1 falhou (como a fatura tolera um dia
@@ -472,9 +501,10 @@ async function achadosDaCarteira(admin: SupabaseAdminClient, workspaceId: string
 }
 
 /**
- * As chaves que a carteira já gravou (o insight dela, `user_id` nulo): saem
- * antes do corte, para um achado antigo e ainda verdadeiro não ocupar a vaga
- * de um novo. Em lotes, para a URL do `.in()` não crescer.
+ * As chaves que a carteira já gravou (o insight dela, `user_id` nulo, e o de
+ * cada pessoa, o resumo do cartão com titular): saem antes do corte, para um
+ * achado antigo e ainda verdadeiro não ocupar a vaga de um novo. Em lotes,
+ * para a URL do `.in()` não crescer.
  */
 async function chavesGravadas(admin: SupabaseAdminClient, workspaceId: string, linhas: Achado[]): Promise<Set<string>> {
   const out = new Set<string>()
@@ -482,17 +512,17 @@ async function chavesGravadas(admin: SupabaseAdminClient, workspaceId: string, l
   for (let i = 0; i < chaves.length; i += 50) {
     const { data, error } = await admin
       .from('insights')
-      .select('kind,dedupe_key')
+      .select('user_id,kind,dedupe_key')
       .eq('workspace_id', workspaceId)
-      .is('user_id', null)
       .in('dedupe_key', chaves.slice(i, i + 50))
     if (error) throw new Error(error.message)
-    for (const r of data ?? []) out.add(`${r.kind}:${r.dedupe_key}`)
+    for (const r of data ?? []) out.add(chaveDe(r))
   }
   return out
 }
 
-const chaveDe = (l: { kind: string; dedupe_key: string }) => `${l.kind}:${l.dedupe_key}`
+const chaveDe = (l: { user_id: string | null; kind: string; dedupe_key: string }) =>
+  `${l.user_id ?? ''}:${l.kind}:${l.dedupe_key}`
 
 /**
  * Avisa os adultos de cada insight novo. O push só vai a quem reivindicou um
@@ -529,7 +559,8 @@ async function avisar(
   for (const ins of novos) {
     const texto = textoDoInsight(ins.kind, ins.payload ?? {})
     const href = texto.acao?.href ?? '/dashboard'
-    for (const userId of membros) {
+    // O insight de uma pessoa (o resumo do cartão com titular) avisa só ela.
+    for (const userId of membros.filter((u) => !ins.user_id || u === ins.user_id)) {
       if (silenciados.has(`${userId}:${ins.kind}`)) continue
       const prefs = prefsMap.get(userId)
       if (!prefs || prefs.notify_insights === false) continue

@@ -7,7 +7,7 @@ import {
   deliverNotification,
   loadWorkspacePrefsMap,
 } from '../_shared/deliver-notification.ts'
-import { adultosDaCarteira } from '../_shared/destinatarios.ts'
+import { adultosDaCarteira, donosDaCarteira } from '../_shared/destinatarios.ts'
 import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
 import { cardLabel, type Copy, ddmm, invoiceCopy, trendingHighCopy } from '../_shared/notification-copy.ts'
 import { withinReminderWindow } from '../_shared/notification-schedule.ts'
@@ -94,6 +94,8 @@ type CardRow = {
   closing_day: number
   due_day: number
   is_active: boolean
+  /** O titular (Bloco 7B); nulo é o cartão da casa. */
+  holder_user_id: string | null
 }
 
 type InvoiceEvent = 'closed' | 'closing_soon' | 'due_soon' | 'due_today'
@@ -116,7 +118,8 @@ type CalEvent = {
 /** A fatura alta: `win` é a aberta; `fechadas`, as 3 últimas, da mais recente para a mais antiga. */
 type TrendingEvent = Omit<CalEvent, 'evento'> & { evento: 'trending_high'; fechadas: OpenWindow[] }
 
-type ReadyEvent = (CalEvent | TrendingEvent) & { title: string; body: string }
+/** `holder`: o titular do cartão (Bloco 7B), para o aviso ir só a ele e aos donos. */
+type ReadyEvent = (CalEvent | TrendingEvent) & { title: string; body: string; holder?: string | null }
 
 /**
  * O aviso fala de uma fatura fechada (fechou, vence em breve, vence hoje): o
@@ -379,7 +382,7 @@ Deno.serve(async (req: Request) => {
   //    (só as datas; o valor de cada fatura sai no passo 2, por cartão).
   const eventsByWorkspace = new Map<
     string,
-    Array<{ label: string; events: CalEvent[]; tendencia: TrendingEvent | null }>
+    Array<{ label: string; events: CalEvent[]; tendencia: TrendingEvent | null; holder: string | null }>
   >()
   let cardsScanned = 0
 
@@ -387,7 +390,7 @@ Deno.serve(async (req: Request) => {
     const from = page * CARD_PAGE_SIZE
     const { data: cards, error: cErr } = await admin
       .from('credit_cards')
-      .select('id, workspace_id, name, last_four, closing_day, due_day, is_active')
+      .select('id, workspace_id, name, last_four, closing_day, due_day, is_active, holder_user_id')
       .eq('is_active', true)
       .order('id', { ascending: true })
       .range(from, from + CARD_PAGE_SIZE - 1)
@@ -402,7 +405,7 @@ Deno.serve(async (req: Request) => {
       const tendencia = buildTrendingEvent(card, today)
       if (events.length === 0 && !tendencia) continue
       const list = eventsByWorkspace.get(card.workspace_id) ?? []
-      list.push({ label: cardLabel(card.name, card.last_four), events, tendencia })
+      list.push({ label: cardLabel(card.name, card.last_four), events, tendencia, holder: card.holder_user_id ?? null })
       eventsByWorkspace.set(card.workspace_id, list)
     }
 
@@ -449,7 +452,8 @@ Deno.serve(async (req: Request) => {
         // A consulta de um cartão que falha não derruba os outros do dia.
         if (c.events.length > 0) {
           try {
-            events.push(...(await resolveCardEvents(admin, workspaceId, c.label, c.events, bankTotals)))
+            const prontos = await resolveCardEvents(admin, workspaceId, c.label, c.events, bankTotals)
+            events.push(...prontos.map((e) => ({ ...e, holder: c.holder })))
           } catch (e) {
             const msg = e instanceof Error ? e.message : 'card_failed'
             console.error('credit-card-calendar-alerts: card', c.events[0].cardId, msg)
@@ -460,7 +464,7 @@ Deno.serve(async (req: Request) => {
         if (c.tendencia) {
           try {
             const copy = await trendingCopy(admin, workspaceId, c.label, c.tendencia)
-            if (copy) events.push({ ...c.tendencia, ...copy })
+            if (copy) events.push({ ...c.tendencia, ...copy, holder: c.holder })
           } catch (e) {
             const msg = e instanceof Error ? e.message : 'trending_failed'
             console.error('credit-card-calendar-alerts: trending', c.tendencia.cardId, msg)
@@ -479,6 +483,11 @@ Deno.serve(async (req: Request) => {
 
       const memberIds = adultosDaCarteira(memberRows ?? [])
       if (memberIds.length === 0) return
+      // O aviso do cartão com titular leva o total do banco (a fechada e a
+      // média da fatura alta): vai só ao titular e aos donos (Ruling 5 do 7B).
+      const donos = donosDaCarteira(memberRows ?? [])
+      const leitores = (ev: ReadyEvent) =>
+        ev.holder ? memberIds.filter((u) => u === ev.holder || donos.includes(u)) : memberIds
 
       const prefsMap = await loadWorkspacePrefsMap(admin, workspaceId, memberIds)
 
@@ -493,7 +502,7 @@ Deno.serve(async (req: Request) => {
       }
 
       for (const ev of events) {
-        for (const userId of memberIds) {
+        for (const userId of leitores(ev)) {
           const prefs = prefsMap.get(userId)
           if (!prefs) continue
           // A fatura alta é aviso de cartão; os outros, do calendário.

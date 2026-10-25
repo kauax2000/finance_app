@@ -1,3 +1,4 @@
+import { juntarDetalhesPrivados } from "@/lib/privado/detalhes"
 import { supabase, type Transaction } from "@/lib/supabase"
 import {
     filterRangeEndIso,
@@ -209,8 +210,11 @@ export async function fetchTransactionsListPage(
         )
     }
 
+    // As privadas do autor voltam com os detalhes dele (Bloco 7B); a busca dos
+    // detalhes só roda quando a página tem uma. Os filtros acima leem a linha
+    // mascarada: a descrição e a categoria originais não acham a privada.
     return {
-        transactions: (data ?? []) as unknown as Transaction[],
+        transactions: await juntarDetalhesPrivados(supabase, (data ?? []) as unknown as Transaction[]),
         totalCount: count ?? 0,
     }
 }

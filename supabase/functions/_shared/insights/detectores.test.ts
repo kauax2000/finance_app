@@ -379,3 +379,23 @@ Deno.test('duplicidade: abaixo de valorMinimo (duas passagens de metrô) fica de
   const dez = { dateYmd: '2026-10-20', description: 'Padaria Real', amount: 10 }
   assertEquals(detectarDuplicidades([l(dez), l(dez)], { valorMinimo: 10 }).length, 1)
 })
+
+// ── Gasto privado (Bloco 7B) ─────────────────────────────────────────────────
+
+Deno.test('privado: três meses de "Gasto pessoal" não viram recorrência, atípico nem duplicidade', () => {
+  const privada = (dateYmd: string) =>
+    l({ dateYmd, amount: 80, description: 'Gasto pessoal', payment_method: 'pix', payment_credit_card_id: null, is_private: true })
+  const ls = [privada('2026-08-10'), privada('2026-09-10'), privada('2026-10-10'), privada('2026-10-10')]
+  assertEquals(detectarRecorrencias(ls, HOJE, []), [])
+  assertEquals(detectarDuplicidades(ls), [])
+  // A mesma conta sem a marca vira recorrência: é o `is_private` que tira.
+  assertEquals(detectarRecorrencias(ls.slice(0, 3).map((x) => ({ ...x, is_private: false })), HOJE, []).length, 1)
+
+  const muito = [
+    l({ dateYmd: '2026-07-10', amount: 10, description: 'Gasto pessoal', is_private: true }),
+    l({ dateYmd: '2026-08-10', amount: 10, description: 'Gasto pessoal', is_private: true }),
+    l({ dateYmd: '2026-09-10', amount: 10, description: 'Gasto pessoal', is_private: true }),
+    l({ dateYmd: '2026-10-10', amount: 500, description: 'Gasto pessoal', is_private: true }),
+  ]
+  assertEquals(detectarAtipicos(muito, HOJE, {}), [])
+})
