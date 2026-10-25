@@ -28,6 +28,43 @@ function ultima(nome: string): string {
     return fn!.texto
 }
 
+/**
+ * O estado final das políticas, como o `pg_policies` depois de todas as
+ * migrações em ordem: `create policy` põe, `drop policy` tira. O texto fica
+ * sem aspas e em minúsculas, para o `"public"."is_workspace_member"` do
+ * baseline ler como o das migrações seguintes. A chave é `tabela|nome`.
+ */
+type Politica = { tabela: string; nome: string; comando: string; texto: string; arquivo: string }
+const POLITICAS = new Map<string, Politica>()
+for (const arquivo of readdirSync(resolve(process.cwd(), "supabase/migrations")).filter((f) => f.endsWith(".sql")).sort()) {
+    const texto = lerFonte(`supabase/migrations/${arquivo}`).replace(/--.*$/gm, "")
+    const re = /\b(create|drop)\s+policy\s+(?:if\s+exists\s+)?("[^"]+"|\w+)\s+on\s+((?:"?\w+"?\.)?"?\w+"?)([^;]*);/gi
+    for (const m of texto.matchAll(re)) {
+        const nome = m[2].replace(/"/g, "")
+        const crua = m[3].replace(/"/g, "").toLowerCase()
+        const tabela = crua.includes(".") ? crua : `public.${crua}`
+        const chave = `${tabela}|${nome}`
+        if (m[1].toLowerCase() === "drop") {
+            POLITICAS.delete(chave)
+            continue
+        }
+        const corpo = m[4].replace(/"/g, "").toLowerCase().replace(/\s+/g, " ")
+        const comando = corpo.match(/\bfor (select|insert|update|delete|all)\b/)?.[1] ?? "all"
+        POLITICAS.set(chave, { tabela, nome, comando, texto: corpo, arquivo })
+    }
+}
+
+function politicasDe(tabela: string): Politica[] {
+    return [...POLITICAS.values()].filter((p) => p.tabela === tabela)
+}
+
+/** A política final de um comando; exige que seja uma só. */
+function politicaFinal(tabela: string, comando: string, filtro: (p: Politica) => boolean = () => true): Politica {
+    const lista = politicasDe(tabela).filter((p) => (p.comando === comando || p.comando === "all") && filtro(p))
+    expect(lista.map((p) => p.nome), `${tabela} ${comando}`).toHaveLength(1)
+    return lista[0]
+}
+
 function definer(texto: string): boolean {
     return /security\s+definer/i.test(texto)
 }
@@ -197,24 +234,39 @@ describe("migração papéis: o convidado e o adulto", () => {
         }
     })
 
-    it("attachments: o adulto, ou quem anexou; o insert não muda", () => {
+    it("attachments: o adulto, ou quem anexou, ou o dono da transação; o convidado só anexa à transação dele", () => {
         for (const [verbo, op] of [["view", "select"], ["delete", "delete"]]) {
             const pol = politica(`Workspace members can ${verbo} attachments`, "public.attachments")
             expect(pol).toMatch(new RegExp(`for ${op}\\b`))
+            expect(pol).toMatch(/public\.is_workspace_adult\(workspace_id\)\s+or \(\s*public\.is_workspace_member\(workspace_id\)\s+and \(/)
+            expect(pol).toMatch(/created_by = \(select auth\.uid\(\)\)/)
             expect(pol).toMatch(
-                /public\.is_workspace_adult\(workspace_id\)\s+or \(created_by = \(select auth\.uid\(\)\) and public\.is_workspace_member\(workspace_id\)\)/,
+                /exists \(\s*select 1 from public\.transactions t\s+where t\.id = attachments\.transaction_id\s+and t\.user_id = \(select auth\.uid\(\)\)\s*\)/,
             )
         }
-        expect(sql).not.toMatch(/"Workspace members can insert attachments" on public\.attachments/)
+        const ins = politica("Workspace members can insert attachments", "public.attachments")
+        expect(ins).toMatch(/for insert/)
+        expect(ins).toMatch(/with check \(\s*created_by = \(select auth\.uid\(\)\)\s+and \(\s*public\.is_workspace_adult\(workspace_id\)\s+or \(/)
+        expect(ins).toMatch(/public\.is_workspace_member\(workspace_id\)\s+and bill_instance_id is null\s+and statement_total_id is null/)
+        expect(ins).toMatch(
+            /exists \(\s*select 1 from public\.transactions t\s+where t\.id = attachments\.transaction_id\s+and t\.user_id = \(select auth\.uid\(\)\)\s*\)/,
+        )
     })
 
-    it("storage attachments: o adulto da pasta, ou o dono do objeto", () => {
+    it("storage attachments: o adulto da pasta; o convidado pelo dono do objeto ou pela linha do anexo", () => {
         for (const [verbo, op] of [["view", "select"], ["delete", "delete"]]) {
             const pol = politica(`Workspace members can ${verbo} attachments`, "storage.objects")
             expect(pol).toMatch(new RegExp(`for ${op} to authenticated`))
             expect(pol).toMatch(/bucket_id = 'attachments'/)
-            expect(pol).toMatch(/public\.is_workspace_adult\(\(\(storage\.foldername\(name\)\)\[1\]\)::uuid\)/)
+            expect(pol).toMatch(/then public\.is_workspace_adult\(\(\(storage\.foldername\(name\)\)\[1\]\)::uuid\)/)
+            expect(pol).toMatch(/or \(\s*public\.is_workspace_member\(\(\(storage\.foldername\(name\)\)\[1\]\)::uuid\)\s+and \(/)
             expect(pol).toMatch(/owner_id = \(select auth\.uid\(\)\)::text/)
+            // O recibo da captura sobe pela service role (`owner_id` nulo): o
+            // convidado chega a ele pela linha de `attachments`.
+            expect(pol).toMatch(/exists \(\s*select 1 from public\.attachments a\s+where a\.path = objects\.name/)
+            expect(pol).toMatch(/a\.created_by = \(select auth\.uid\(\)\)/)
+            expect(pol).toMatch(/t\.id = a\.transaction_id\s+and t\.user_id = \(select auth\.uid\(\)\)/)
+            expect(pol).toMatch(/else false end\);/)
         }
         expect(sql).not.toMatch(/"Workspace members can upload attachments"/)
         expect(sql).toMatch(/exception\s+when insufficient_privilege then/)
@@ -275,8 +327,29 @@ describe("migração papéis: o convidado e o adulto", () => {
             expect(definer(fn), nome).toBe(true)
             expect(fn, nome).toMatch(/set search_path = ''/)
             expect(fn, nome).toMatch(/public\.is_workspace_adult\(/)
-            expect(fn, nome).not.toMatch(/is_workspace_member/)
         }
+        expect(ultima("complete_workspace_categories_onboarding")).not.toMatch(/is_workspace_member/)
+    })
+
+    it("Ruling 4: o convidado apaga o próprio parcelamento; o de outro, só o adulto", () => {
+        const fn = ultima("delete_workspace_installment_plan_cascade")
+        expect(fn).toMatch(/select p\.workspace_id, p\.user_id into v_workspace_id, v_user_id/)
+        expect(fn).toMatch(
+            /if not \(\s*public\.is_workspace_adult\(v_workspace_id\)\s+or \(v_user_id = auth\.uid\(\) and public\.is_workspace_member\(v_workspace_id\)\)\s*\) then\s+raise exception 'Forbidden';/,
+        )
+        // A guarda de autenticação continua antes de qualquer leitura.
+        expect(fn.indexOf("'Not authenticated'")).toBeLessThan(fn.indexOf("from public.workspace_installment_plans"))
+    })
+
+    it("Ruling 5: o seguro baixo e a cópia do orçamento calam para o convidado, sem erro", () => {
+        const garantir = ultima("garantir_orcamentos_do_mes")
+        expect(garantir).toMatch(
+            /if not public\.is_workspace_member\(p_workspace_id\) then\s+raise exception 'not a workspace member' using errcode = '42501';\s+end if;\s+if not public\.is_workspace_adult\(p_workspace_id\) then\s+return 0;\s+end if;/,
+        )
+        const registrar = ultima("registrar_insight")
+        expect(registrar).toMatch(
+            /if v_uid is null or not public\.is_workspace_member\(p_workspace_id\) then\s+raise exception 'not a workspace member' using errcode = '42501';\s+end if;\s+if not public\.is_workspace_adult\(p_workspace_id\) then\s+return null;\s+end if;/,
+        )
     })
 
     it("as RPCs invoker da Decisão 3 continuam invoker: a RLS do adulto barra o convidado", () => {
@@ -315,6 +388,74 @@ describe("migração papéis: o convidado e o adulto", () => {
         for (const [nome, porque] of Object.entries({ ...ABERTAS_AO_CONVIDADO, ...FICAM_COM_MEMBRO })) {
             expect(porque.length, nome).toBeGreaterThan(10)
         }
+    })
+
+    it("estado final: as tabelas só do adulto têm exatamente as quatro políticas, nenhuma de membro", () => {
+        for (const [tabela, autor] of Object.entries(SO_DO_ADULTO)) {
+            const lista = politicasDe(`public.${tabela}`)
+            expect(lista.map((p) => p.comando).sort(), tabela).toEqual(["delete", "insert", "select", "update"])
+            for (const p of lista) {
+                expect(p.texto, `${tabela} ${p.nome}`).toMatch(/public\.is_workspace_adult\(workspace_id\)/)
+                expect(p.texto, `${tabela} ${p.nome}`).not.toMatch(/is_workspace_member/)
+                expect(p.texto, `${tabela} ${p.nome}`).not.toMatch(/as restrictive/)
+            }
+            expect(politicaFinal(`public.${tabela}`, "insert").texto).toMatch(new RegExp(`${autor} = \\(select auth\\.uid\\(\\)\\)`))
+        }
+    })
+
+    it("estado final: transactions e attachments só citam membro junto do ramo do autor", () => {
+        const autorTx = /user_id = \(select auth\.uid\(\)\) and public\.is_workspace_member\(workspace_id\)/
+        for (const comando of ["select", "update", "delete"]) {
+            const p = politicaFinal("public.transactions", comando)
+            expect(p.texto, comando).toMatch(/public\.is_workspace_adult\(workspace_id\) or/)
+            expect(p.texto, comando).toMatch(autorTx)
+        }
+        expect(politicaFinal("public.transactions", "insert").texto).toMatch(
+            /is_workspace_member\(workspace_id\) and user_id = \(select auth\.uid\(\)\)/,
+        )
+
+        for (const comando of ["select", "delete"]) {
+            const p = politicaFinal("public.attachments", comando)
+            expect(p.texto, comando).toMatch(/public\.is_workspace_adult\(workspace_id\) or \( public\.is_workspace_member\(workspace_id\) and \(/)
+            expect(p.texto, comando).toMatch(/created_by = \(select auth\.uid\(\)\)/)
+            expect(p.texto, comando).toMatch(/t\.id = attachments\.transaction_id/)
+        }
+        const ins = politicaFinal("public.attachments", "insert")
+        expect(ins.texto).toMatch(/bill_instance_id is null and statement_total_id is null/)
+        expect(ins.texto).toMatch(/t\.id = attachments\.transaction_id and t\.user_id = \(select auth\.uid\(\)\)/)
+        expect(politicasDe("public.attachments")).toHaveLength(3)
+    })
+
+    it("estado final: o storage de anexos tem o ramo do adulto e o do convidado", () => {
+        const doBucket = (p: Politica) => p.texto.includes("bucket_id = 'attachments'")
+        for (const comando of ["select", "delete"]) {
+            const p = politicaFinal("storage.objects", comando, doBucket)
+            expect(p.texto, comando).toMatch(/then public\.is_workspace_adult\(/)
+            expect(p.texto, comando).toMatch(/from public\.attachments a where a\.path = objects\.name/)
+            expect(p.texto, comando).toMatch(/else false end/)
+        }
+        expect(politicaFinal("storage.objects", "insert", doBucket).texto).toMatch(/public\.is_workspace_member\(/)
+    })
+
+    it("estado final: em categories e credit_cards, só o select cita membro", () => {
+        for (const tabela of ["public.categories", "public.credit_cards"]) {
+            const lista = politicasDe(tabela)
+            expect(lista.map((p) => p.comando).sort(), tabela).toEqual(["delete", "insert", "select", "update"])
+            for (const p of lista) {
+                if (p.comando === "select") expect(p.texto).toMatch(/is_workspace_member\(workspace_id\)/)
+                else {
+                    expect(p.texto, `${tabela} ${p.comando}`).not.toMatch(/is_workspace_member/)
+                    expect(p.texto, `${tabela} ${p.comando}`).toMatch(/public\.is_workspace_adult\(workspace_id\)/)
+                }
+            }
+        }
+    })
+
+    it("pgTAP: is_workspace_adult entra na lista das definer que o anon executa", () => {
+        const pgtap = lerFonte("supabase/tests/database/security_privileges_policies.test.sql")
+        expect(pgtap).toMatch(
+            /p\.proname not in \('is_workspace_member', 'is_workspace_owner', 'workspace_role', 'is_workspace_adult'\)/,
+        )
     })
 
     it("só acrescenta: nenhum drop table nem drop column", () => {

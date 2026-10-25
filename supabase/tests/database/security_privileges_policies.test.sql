@@ -62,7 +62,7 @@ select is(
     where n.nspname = 'public'
       and p.prosecdef
       and has_function_privilege('anon', p.oid, 'execute')
-      and p.proname not in ('is_workspace_member', 'is_workspace_owner', 'workspace_role')
+      and p.proname not in ('is_workspace_member', 'is_workspace_owner', 'workspace_role', 'is_workspace_adult')
     order by 1
   ),
   '{}'::text[],

@@ -281,14 +281,46 @@ create policy "Workspace members can delete credit_card_statement_totals" on pub
   for delete
   using (public.is_workspace_adult(workspace_id));
 
--- 7. anexos: o adulto, ou quem anexou -----------------------------------------
--- O insert (membro e `created_by = auth.uid()`) fica como está.
+-- 7. anexos: o adulto, ou o convidado no que é dele ---------------------------
+-- O convidado vê e apaga o anexo que ele subiu e o da transação dele (o
+-- adulto pode ter anexado o recibo à compra dele). Ele só anexa à transação
+-- dele: nunca à conta, à fatura conferida nem à transação de outro.
 drop policy if exists "Workspace members can view attachments" on public.attachments;
 create policy "Workspace members can view attachments" on public.attachments
   for select
   using (
     public.is_workspace_adult(workspace_id)
-    or (created_by = (select auth.uid()) and public.is_workspace_member(workspace_id))
+    or (
+      public.is_workspace_member(workspace_id)
+      and (
+        created_by = (select auth.uid())
+        or exists (
+          select 1 from public.transactions t
+          where t.id = attachments.transaction_id
+            and t.user_id = (select auth.uid())
+        )
+      )
+    )
+  );
+
+drop policy if exists "Workspace members can insert attachments" on public.attachments;
+create policy "Workspace members can insert attachments" on public.attachments
+  for insert
+  with check (
+    created_by = (select auth.uid())
+    and (
+      public.is_workspace_adult(workspace_id)
+      or (
+        public.is_workspace_member(workspace_id)
+        and bill_instance_id is null
+        and statement_total_id is null
+        and exists (
+          select 1 from public.transactions t
+          where t.id = attachments.transaction_id
+            and t.user_id = (select auth.uid())
+        )
+      )
+    )
   );
 
 drop policy if exists "Workspace members can delete attachments" on public.attachments;
@@ -296,13 +328,26 @@ create policy "Workspace members can delete attachments" on public.attachments
   for delete
   using (
     public.is_workspace_adult(workspace_id)
-    or (created_by = (select auth.uid()) and public.is_workspace_member(workspace_id))
+    or (
+      public.is_workspace_member(workspace_id)
+      and (
+        created_by = (select auth.uid())
+        or exists (
+          select 1 from public.transactions t
+          where t.id = attachments.transaction_id
+            and t.user_id = (select auth.uid())
+        )
+      )
+    )
   );
 
--- No storage, a pasta é a carteira: o adulto dela, ou o dono do objeto (quem
--- subiu), ainda membro. O upload (membro da pasta) fica como está. Guardado
--- como em 20261022130000: alguns ambientes negam ao papel da migração as
--- políticas de storage.objects.
+-- No storage, a pasta é a carteira: o adulto dela, ou o convidado ainda
+-- membro, pelo dono do objeto (quem subiu pelo app) ou pela linha do anexo.
+-- O recibo da captura sobe pela service role, com `owner_id` nulo: é a linha
+-- de `attachments` (`created_by` ou a transação dele) que o leva até ele. O
+-- upload (membro da pasta) fica como está; a linha é que o insert acima barra.
+-- Guardado como em 20261022130000: alguns ambientes negam ao papel da
+-- migração as políticas de storage.objects.
 do $$
 begin
   drop policy if exists "Workspace members can view attachments" on storage.objects;
@@ -310,7 +355,24 @@ begin
     for select to authenticated
     using (bucket_id = 'attachments' and case when (storage.foldername(name))[1] ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
       then public.is_workspace_adult(((storage.foldername(name))[1])::uuid)
-        or (owner_id = (select auth.uid())::text and public.is_workspace_member(((storage.foldername(name))[1])::uuid))
+        or (
+          public.is_workspace_member(((storage.foldername(name))[1])::uuid)
+          and (
+            owner_id = (select auth.uid())::text
+            or exists (
+              select 1 from public.attachments a
+              where a.path = objects.name
+                and (
+                  a.created_by = (select auth.uid())
+                  or exists (
+                    select 1 from public.transactions t
+                    where t.id = a.transaction_id
+                      and t.user_id = (select auth.uid())
+                  )
+                )
+            )
+          )
+        )
       else false end);
 
   drop policy if exists "Workspace members can delete attachments" on storage.objects;
@@ -318,7 +380,24 @@ begin
     for delete to authenticated
     using (bucket_id = 'attachments' and case when (storage.foldername(name))[1] ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
       then public.is_workspace_adult(((storage.foldername(name))[1])::uuid)
-        or (owner_id = (select auth.uid())::text and public.is_workspace_member(((storage.foldername(name))[1])::uuid))
+        or (
+          public.is_workspace_member(((storage.foldername(name))[1])::uuid)
+          and (
+            owner_id = (select auth.uid())::text
+            or exists (
+              select 1 from public.attachments a
+              where a.path = objects.name
+                and (
+                  a.created_by = (select auth.uid())
+                  or exists (
+                    select 1 from public.transactions t
+                    where t.id = a.transaction_id
+                      and t.user_id = (select auth.uid())
+                  )
+                )
+            )
+          )
+        )
       else false end);
 exception
   when insufficient_privilege then
@@ -393,7 +472,8 @@ $$;
 revoke all on function public.marcar_insight(uuid, text) from public, anon;
 grant execute on function public.marcar_insight(uuid, text) to authenticated;
 
--- O seguro baixo é a conta da casa: só o adulto o calcula e registra.
+-- O seguro baixo é a conta da casa: só o adulto o registra. Para o convidado
+-- não cria nada e devolve nulo, sem erro (Ruling 5): o Painel chama ao abrir.
 create or replace function public.registrar_insight(p_workspace_id uuid, p_kind text, p_dedupe_key text, p_payload jsonb)
 returns uuid
 language plpgsql
@@ -404,8 +484,11 @@ declare
   v_uid uuid := auth.uid();
   v_id uuid;
 begin
-  if v_uid is null or not public.is_workspace_adult(p_workspace_id) then
+  if v_uid is null or not public.is_workspace_member(p_workspace_id) then
     raise exception 'not a workspace member' using errcode = '42501';
+  end if;
+  if not public.is_workspace_adult(p_workspace_id) then
+    return null;
   end if;
 
   if p_kind is distinct from 'seguro_baixo' then
@@ -636,7 +719,9 @@ begin
 end;
 $$;
 
--- Apagar um parcelamento apaga as parcelas de todos: é da casa.
+-- Apagar um parcelamento apaga as parcelas dele. O adulto apaga qualquer um; o
+-- convidado, só o que é dele (`user_id`), ainda membro (Ruling 4: "excluir:
+-- só as dele").
 create or replace function public.delete_workspace_installment_plan_cascade(p_plan_id uuid)
 returns void
 language plpgsql
@@ -645,20 +730,24 @@ set search_path = ''
 as $$
 declare
   v_workspace_id uuid;
+  v_user_id uuid;
 begin
   if auth.uid() is null then
     raise exception 'Not authenticated';
   end if;
 
-  select workspace_id into v_workspace_id
-  from public.workspace_installment_plans
-  where id = p_plan_id;
+  select p.workspace_id, p.user_id into v_workspace_id, v_user_id
+  from public.workspace_installment_plans p
+  where p.id = p_plan_id;
 
   if not found then
     return;
   end if;
 
-  if not public.is_workspace_adult(v_workspace_id) then
+  if not (
+    public.is_workspace_adult(v_workspace_id)
+    or (v_user_id = auth.uid() and public.is_workspace_member(v_workspace_id))
+  ) then
     raise exception 'Forbidden';
   end if;
 
@@ -670,6 +759,8 @@ begin
 end;
 $$;
 
+-- O orçamento é da casa: para o convidado não copia nada e devolve 0, sem
+-- erro (Ruling 5), porque o Painel e as Categorias chamam ao abrir.
 create or replace function public.garantir_orcamentos_do_mes(p_workspace_id uuid)
 returns integer
 language plpgsql
@@ -677,8 +768,11 @@ security definer
 set search_path = ''
 as $$
 begin
-  if not public.is_workspace_adult(p_workspace_id) then
+  if not public.is_workspace_member(p_workspace_id) then
     raise exception 'not a workspace member' using errcode = '42501';
+  end if;
+  if not public.is_workspace_adult(p_workspace_id) then
+    return 0;
   end if;
 
   return public.copiar_orcamentos_do_mes(date_trunc('month', public.app_today())::date, p_workspace_id);
