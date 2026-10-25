@@ -1006,7 +1006,8 @@ export default function MembersPage() {
                                                                 </>
                                                             ) : (
                                                                 <>
-                                                                    Expira:{" "}
+                                                                    {rotuloDoPapel(invite.role)}
+                                                                    {" · "}Expira:{" "}
                                                                     {formatDatePtBr(
                                                                         invite.expires_at
                                                                     )}

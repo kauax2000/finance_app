@@ -2,7 +2,15 @@ import { describe, expect, it, vi } from "vitest"
 
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 
-import { linhasDosLimites, nivelDoLimite, type LancamentoDaPessoa } from "./limites"
+import { lerFonte, semComentarios } from "@/test/fonte"
+
+import {
+    LIMITE_MAXIMO,
+    lerLimiteDigitado,
+    linhasDosLimites,
+    nivelDoLimite,
+    type LancamentoDaPessoa,
+} from "./limites"
 
 const lanc = (o: Partial<LancamentoDaPessoa>): LancamentoDaPessoa => ({
     user_id: "ana",
@@ -42,5 +50,32 @@ describe("limites por pessoa", () => {
             { user_id: "ana", nome: "Ana", limite: 500, gastoCentavos: 41_000, nivel: 80 },
             { user_id: "bia", nome: "Bia", limite: null, gastoCentavos: 5_000, nivel: 0 },
         ])
+    })
+})
+
+describe("lerLimiteDigitado: o valor em reais, de 0,01 ao teto de numeric(12,2)", () => {
+    it("lê a máscara pt-BR e recusa zero, vazio, lixo e acima do teto", () => {
+        expect(lerLimiteDigitado("1.234,56")).toBe(1234.56)
+        expect(lerLimiteDigitado("250")).toBe(250)
+        expect(lerLimiteDigitado("9.999.999.999,99")).toBe(LIMITE_MAXIMO)
+        expect(lerLimiteDigitado("0")).toBeNull()
+        expect(lerLimiteDigitado("0,00")).toBeNull()
+        expect(lerLimiteDigitado("")).toBeNull()
+        expect(lerLimiteDigitado("abc")).toBeNull()
+        expect(lerLimiteDigitado("10.000.000.000,00")).toBeNull()
+    })
+})
+
+describe("lerLancamentosDoMes: paginado, no mês e no anterior", () => {
+    it("a fonte pede página por página, só o mês e o anterior, e o gasto é o da Edge", () => {
+        const fonte = semComentarios(lerFonte("src/lib/limites/limites.ts"))
+        const corpo = fonte.slice(fonte.indexOf("export async function lerLancamentosDoMes"), fonte.indexOf("export const LIMITE_MAXIMO"))
+        expect(corpo).toContain("fetchAllRows<TxDoMes>(")
+        expect(corpo).toMatch(/\.order\("id"\)\s*\.range\(from, to\)/)
+        expect(corpo).toContain("periodBoundsFromYearMonth(shiftYearMonth(ym, -1)).period_start")
+        expect(corpo).toContain("periodBoundsFromYearMonth(ym).period_end")
+        expect(corpo).not.toContain("paddedBoundsForYearMonth")
+        expect(fonte).toMatch(/const gastoCentavos = gastoDaPessoaNoMes\(lancs, user_id, ym\)/)
+        expect(fonte).toContain('from "../../../supabase/functions/_shared/limite-pessoa"')
     })
 })

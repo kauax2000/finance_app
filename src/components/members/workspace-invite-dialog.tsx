@@ -34,7 +34,7 @@ import { supabase, type WorkspaceInvite } from "@/lib/supabase"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
 import { PAPEL_DO_CONVITE_INICIAL, PapelDoConviteWireframe } from "@/components/wireframe/papeis-wireframe"
-import { ERRO_DO_CONVITE, montarConvite } from "@/lib/papeis/papeis"
+import { ERRO_DO_CONVITE, montarConvite, rotuloDoPapel } from "@/lib/papeis/papeis"
 import { toastError, toastSuccess } from "@/lib/toast"
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { formatDateTimeShortPtBr } from "@/lib/transaction-date"
@@ -459,7 +459,7 @@ export function WorkspaceInviteDialog({
                                                     </ItemMedia>
                                                     <ItemContent className="min-w-0">
                                                         <span className="truncate">
-                                                                {invite.invited_email}
+                                                                {invite.invited_email} · {rotuloDoPapel(invite.role)}
                                                         </span>
                                                     </ItemContent>
                                                     <ItemActions className="gap-1">

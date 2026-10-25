@@ -4,9 +4,11 @@ import { useCallback, useEffect, useState, type FormEvent } from "react"
 
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
 import { currencyBRL } from "@/lib/formatters"
+import { formatMoneyBrlInput } from "@/lib/money-brl"
 import {
     gravarLimite,
     lerLancamentosDoMes,
+    lerLimiteDigitado,
     lerLimites,
     linhasDosLimites,
     removerLimite,
@@ -70,7 +72,7 @@ export function LimitesWireframe({
                 <ul className="space-y-2">
                     {linhasDosLimites(pessoas, dados.limites, dados.lancs, ym).map((l) => (
                         <LinhaDoLimiteWireframe
-                            key={l.user_id}
+                            key={`${l.user_id}:${l.limite}`}
                             linha={l}
                             podeEditar={podeEditar}
                             onSalvar={(valor) => gravarLimite(workspaceId, l.user_id, valor).then(carregar)}
@@ -94,7 +96,7 @@ function LinhaDoLimiteWireframe({
     onSalvar: (valor: number) => Promise<void>
     onRemover: () => Promise<void>
 }) {
-    const [valor, setValor] = useState(linha.limite == null ? "" : String(linha.limite))
+    const [valor, setValor] = useState(linha.limite == null ? "" : formatMoneyBrlInput(linha.limite))
     const [salvando, setSalvando] = useState(false)
     const [erro, setErro] = useState<string | null>(null)
     const gasto = currencyBRL(linha.gastoCentavos / 100)
@@ -113,7 +115,12 @@ function LinhaDoLimiteWireframe({
 
     function salvar(e: FormEvent<HTMLFormElement>) {
         e.preventDefault()
-        void rodar(() => onSalvar(Number(valor)))
+        const n = lerLimiteDigitado(valor)
+        if (n == null) {
+            setErro("Informe um valor maior que zero, até R$ 9.999.999.999,99.")
+            return
+        }
+        void rodar(() => onSalvar(n))
     }
 
     return (
@@ -129,10 +136,8 @@ function LinhaDoLimiteWireframe({
                     <label>
                         Limite (R$){" "}
                         <input
-                            type="number"
-                            required
-                            min={0.01}
-                            step={0.01}
+                            type="text"
+                            placeholder="1.234,56"
                             inputMode="decimal"
                             value={valor}
                             disabled={salvando}
