@@ -11,14 +11,16 @@ import {
     atualizarPrecoDaAssinatura,
     lancamentosDaRecorrencia,
     linhaDoSeguroDoMes,
+    marcarInsight,
+    statusAoTocarOLink,
     sugerirValorVariavel,
+    textoNaCaixa,
     virarAssinatura,
     virarConta,
     type AjustesDaRecorrencia,
     type Insight,
     type Resultado,
 } from "@/lib/insights/acoes"
-import { textoDoInsight } from "@/lib/insights/insights"
 import { useInsights, useSeguroBaixo } from "@/lib/insights/use-insights"
 import type { DadosDaPrevisao } from "@/lib/previsao/tipos"
 import { usePrevisao } from "@/lib/previsao/use-previsao"
@@ -55,7 +57,8 @@ export function InsightsDoPainel({
             } else if (insight.kind === "preco_assinatura") r = await atualizarPrecoDaAssinatura(insight)
             else if (insight.kind === "duplicidade") r = await apagarUm(insight)
             else {
-                const e = await agir(insight.id)
+                const e =
+                    statusAoTocarOLink(insight.kind) === "seen" ? await marcarInsight(insight.id, "seen") : await agir(insight.id)
                 return e ? { ok: false, erro: e } : { ok: true }
             }
             if (r.ok) await recarregar()
@@ -98,6 +101,10 @@ export function InsightsWireframe({
     const [ocupado, setOcupado] = useState<string | null>(null)
     const [recorrencia, setRecorrencia] = useState<Insight | null>(null)
     const mesAnterior = dados ? shiftYearMonth(dados.hojeYmd.slice(0, 7), -1) : null
+    const visiveis = itens.flatMap((i) => {
+        const t = textoNaCaixa(i, dados)
+        return t ? [{ i, t }] : []
+    })
 
     async function rodar(id: string, fn: () => Promise<Resultado | string | null>) {
         setOcupado(id)
@@ -114,10 +121,9 @@ export function InsightsWireframe({
     return (
         <WireframeBox bloco={6} titulo="Insights">
             {erro ? <p role="alert">{erro}</p> : null}
-            {itens.length === 0 && !erro ? <p>Nenhum insight agora.</p> : null}
+            {visiveis.length === 0 && !erro ? <p>Nenhum insight agora.</p> : null}
             <ul className="space-y-3">
-                {itens.map((i) => {
-                    const t = textoDoInsight(i.kind, i.payload ?? {})
+                {visiveis.map(({ i, t }) => {
                     const ym = typeof i.payload?.mes === "string" ? i.payload.mes : null
                     const linhaDoSeguro =
                         i.kind === "relatorio_mes" && dados && ym && ym === mesAnterior ? linhaDoSeguroDoMes(dados, ym) : null

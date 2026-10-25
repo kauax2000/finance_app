@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { dados as dadosDaPrevisao, tx } from "@/lib/previsao/dados-de-teste"
+import { seguroParaGastar } from "@/lib/previsao/fluxo"
 import { lerFonte, semComentarios } from "@/test/fonte"
 
 const db = vi.hoisted(() => {
@@ -35,7 +36,9 @@ const {
     linhaDoSeguroDoMes,
     proximoVencimentoDaRecorrencia,
     seguroEstaBaixo,
+    statusAoTocarOLink,
     sugerirValorVariavel,
+    textoNaCaixa,
     virarAssinatura,
     virarConta,
 } = await import("./acoes")
@@ -148,6 +151,14 @@ describe("proximoVencimentoDaRecorrencia e sugerirValorVariavel", () => {
         expect(proximoVencimentoDaRecorrencia([], 28, "2026-10-25")).toBe("2026-10-28")
     })
 
+    it("a pendente nunca nasce no passado: anda de ciclo em ciclo até hoje", () => {
+        const datas = ["2026-08-05T15:00:00+00:00", "2026-09-05T15:00:00+00:00"]
+        expect(proximoVencimentoDaRecorrencia(datas, 5, "2026-10-20")).toBe("2026-11-05")
+        expect(proximoVencimentoDaRecorrencia(datas, 5, "2026-10-05")).toBe("2026-10-05")
+        expect(proximoVencimentoDaRecorrencia(["2026-03-31T15:00:00+00:00"], 31, "2026-10-25")).toBe("2026-10-31")
+        expect(proximoVencimentoDaRecorrencia(datas, 5, "2026-09-01")).toBe("2026-10-05")
+    })
+
     it("acima de 5% de variação sugere valor variável", () => {
         expect(sugerirValorVariavel([100, 105])).toBe(false)
         expect(sugerirValorVariavel([100, 105.5])).toBe(true)
@@ -236,6 +247,59 @@ describe("linhaDoSeguroDoMes", () => {
             transacoes: [tx("income", 100, "2026-09-10"), tx("expense", 300, "2026-09-12")],
         })
         expect(linhaDoSeguroDoMes(d, "2026-09")).toMatch(/^Seguro para gastar: passou R\$\s250,00$/)
+    })
+
+    it("sempre bate com o seguroParaGastar do mesmo mês", () => {
+        const casos = [
+            dadosDaPrevisao({ hojeYmd: "2026-10-25" }),
+            dadosDaPrevisao({ hojeYmd: "2026-10-25", reserva: 0.01, transacoes: [tx("income", 0.01, "2026-09-01")] }),
+            dadosDaPrevisao({ hojeYmd: "2026-10-25", reserva: 120.33, transacoes: [tx("income", 999.99, "2026-09-03"), tx("expense", 880.1, "2026-09-20")] }),
+            dadosDaPrevisao({ hojeYmd: "2026-10-25", transacoes: [tx("expense", 10.07, "2026-09-30")] }),
+        ]
+        for (const d of casos) {
+            const { seguro } = seguroParaGastar(d, "2026-09")
+            const linha = linhaDoSeguroDoMes(d, "2026-09")
+            if (seguro >= 0) expect(linha).toBe("Seguro para gastar: cumprido")
+            else expect(linha.replace(/\s/g, " ")).toBe(`Seguro para gastar: passou R$ ${(-seguro).toFixed(2).replace(".", ",")}`)
+        }
+    })
+})
+
+describe("textoNaCaixa: o seguro baixo nunca mostra o número guardado", () => {
+    const seguroBaixo = (over: Partial<{ payload: Record<string, unknown>; dedupe_key: string }> = {}) => ({
+        ...recorrencia,
+        kind: "seguro_baixo",
+        dedupe_key: "seguro:2026-10",
+        payload: { seguro: 10, renda: 1000, ym: "2026-10" },
+        ...over,
+    })
+    const baixo = dadosDaPrevisao({ hojeYmd: "2026-10-25", transacoes: [tx("income", 1000, "2026-10-01"), tx("expense", 950, "2026-10-02")] })
+
+    it("no mês corrente, o seguro de agora, o mesmo do cartão do Painel", () => {
+        expect(seguroParaGastar(baixo).seguro).toBe(50)
+        expect(textoNaCaixa(seguroBaixo(), baixo)?.corpo).toMatch(/R\$\s50,00/)
+    })
+
+    it("o registrado antes do campo ym acha o mês pela chave", () => {
+        expect(textoNaCaixa(seguroBaixo({ payload: { seguro: 10, renda: 1000 } }), baixo)?.corpo).toMatch(/R\$\s50,00/)
+    })
+
+    it("de um mês que passou, sem a previsão ou já sem aperto, não aparece", () => {
+        expect(textoNaCaixa(seguroBaixo({ dedupe_key: "seguro:2026-09", payload: { seguro: 10, ym: "2026-09" } }), baixo)).toBeNull()
+        expect(textoNaCaixa(seguroBaixo(), null)).toBeNull()
+        const folgado = dadosDaPrevisao({ hojeYmd: "2026-10-25", transacoes: [tx("income", 1000, "2026-10-01")] })
+        expect(textoNaCaixa(seguroBaixo(), folgado)).toBeNull()
+    })
+
+    it("os outros tipos seguem o modelo de frase", () => {
+        expect(textoNaCaixa(recorrencia, null)?.titulo).toBe("Academia todo mês")
+    })
+})
+
+describe("statusAoTocarOLink", () => {
+    it("o sazonal só abre o cadastro: fica visto, não usado", () => {
+        expect(statusAoTocarOLink("sazonal")).toBe("seen")
+        expect(statusAoTocarOLink("fatura_fechou")).toBe("acted")
     })
 })
 

@@ -31,7 +31,7 @@ export function useInsights(workspaceId: string | null) {
         queryFn: async (): Promise<Insight[]> => {
             const { data, error } = await supabase
                 .from("insights")
-                .select("id,workspace_id,kind,payload,status,created_at")
+                .select("id,workspace_id,kind,dedupe_key,payload,status,created_at")
                 .eq("workspace_id", workspaceId!)
                 .in("status", ["new", "seen"])
                 .order("created_at", { ascending: false })
@@ -104,7 +104,7 @@ export function useSeguroBaixo(workspaceId: string | null, dados: DadosDaPrevisa
                 p_workspace_id: workspaceId,
                 p_kind: "seguro_baixo",
                 p_dedupe_key: `seguro:${ym}`,
-                p_payload: { seguro: s.seguro, renda },
+                p_payload: { seguro: s.seguro, renda, ym },
             })
             .then(({ data, error }) => {
                 if (!error && data) aoRegistrar()

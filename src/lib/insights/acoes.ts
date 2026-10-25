@@ -5,11 +5,12 @@
  */
 import { computeFirstDueYmd, computeNextBillInstanceDueYmd } from "@/lib/bills/recurrence"
 import { currencyBRL } from "@/lib/formatters"
-import { fluxoDoMes } from "@/lib/previsao/fluxo"
+import { seguroParaGastar } from "@/lib/previsao/fluxo"
 import type { DadosDaPrevisao, Seguro } from "@/lib/previsao/tipos"
 import { updateSubscription } from "@/lib/subscriptions/mutations"
 import { supabase } from "@/lib/supabase"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
+import { textoDoInsight, type Texto } from "./insights"
 import { localYmdFromDate } from "@/lib/transaction-date"
 import { deleteTransactionById } from "@/lib/transactions/mutations"
 import { dispatchFinanceTransactionsMutated } from "@/lib/workspace-data-events"
@@ -18,6 +19,7 @@ export type Insight = {
     id: string
     workspace_id: string
     kind: string
+    dedupe_key?: string
     payload: Record<string, unknown>
     status: string
     created_at: string
@@ -67,15 +69,16 @@ export function sugerirValorVariavel(valores: number[]): boolean {
 
 /**
  * A pendente que nasce com a conta: o ciclo depois do último lançamento (a data UTC, a mesma da
- * instância paga que a RPC grava), pela recorrência do 6A; sem lançamento, o primeiro a partir de hoje.
+ * instância paga que a RPC grava), pela recorrência do 6A, e andando de ciclo em ciclo até hoje ou
+ * depois: a conta nunca nasce atrasada. Sem lançamento, o primeiro a partir de hoje.
  */
 export function proximoVencimentoDaRecorrencia(datas: string[], dia: number, hojeYmd: string): string | null {
     const ultimo = datas.map((d) => d.slice(0, 10)).sort().at(-1)
     if (!ultimo) return computeFirstDueYmd({ startYmd: hojeYmd, dueDayOfMonth: dia })
-    return computeNextBillInstanceDueYmd(
-        { frequency: "monthly", due_day_of_month: dia, end_date: null, is_active: true },
-        ultimo,
-    )
+    const agenda = { frequency: "monthly", due_day_of_month: dia, end_date: null, is_active: true } as const
+    let proximo = computeNextBillInstanceDueYmd(agenda, ultimo)
+    while (proximo && proximo < hojeYmd) proximo = computeNextBillInstanceDueYmd(agenda, proximo)
+    return proximo
 }
 
 export async function virarAssinatura(insight: Insight, a: AjustesDaRecorrencia): Promise<Resultado> {
@@ -149,8 +152,33 @@ export function seguroEstaBaixo(s: Pick<Seguro, "seguro" | "receitas">): boolean
     return renda > 0 && s.seguro < 0.1 * renda
 }
 
-/** A linha do relatório do mês: o seguro (sobra menos a reserva) daquele mês, calculado na hora. */
+/** A linha do relatório do mês: o seguro daquele mês, sempre pela função do Bloco 5, na hora. */
 export function linhaDoSeguroDoMes(dados: DadosDaPrevisao, ym: string): string {
-    const centavos = Math.round(fluxoDoMes(dados, ym).sobra * 100) - Math.round((dados.reserva ?? 0) * 100)
-    return centavos >= 0 ? "Seguro para gastar: cumprido" : `Seguro para gastar: passou ${currencyBRL(-centavos / 100)}`
+    const { seguro } = seguroParaGastar(dados, ym)
+    return seguro >= 0 ? "Seguro para gastar: cumprido" : `Seguro para gastar: passou ${currencyBRL(-seguro)}`
 }
+
+/** O mês do seguro baixo: `payload.ym`, ou o da chave `seguro:{ym}` (os registrados antes do campo). */
+function mesDoSeguroBaixo(insight: Insight): string | null {
+    if (typeof insight.payload.ym === "string") return insight.payload.ym
+    return /^seguro:(\d{4}-\d{2})$/.exec(insight.dedupe_key ?? "")?.[1] ?? null
+}
+
+/**
+ * O texto que a caixa mostra, ou `null` para não mostrar. O seguro baixo nunca exibe o número
+ * guardado: no mês corrente ele é o `seguroParaGastar` de agora (o mesmo do cartão ao lado), e some
+ * quando deixou de estar baixo; de um mês que passou, ou sem a previsão carregada, ele não aparece.
+ */
+export function textoNaCaixa(insight: Insight, dados: DadosDaPrevisao | null): Texto | null {
+    if (insight.kind !== "seguro_baixo") return textoDoInsight(insight.kind, insight.payload ?? {})
+    if (!dados || mesDoSeguroBaixo(insight) !== dados.hojeYmd.slice(0, 7)) return null
+    const agora = seguroParaGastar(dados)
+    if (!seguroEstaBaixo(agora)) return null
+    return textoDoInsight("seguro_baixo", { ...insight.payload, seguro: agora.seguro })
+}
+
+/**
+ * O status de um toque no link da ação. O sazonal só abre o cadastro, e a conta ainda não existe:
+ * ele fica `seen`. Os outros links são a própria ação (ver a fatura, o mês, a previsão).
+ */
+export const statusAoTocarOLink = (kind: string): "seen" | "acted" => (kind === "sazonal" ? "seen" : "acted")
