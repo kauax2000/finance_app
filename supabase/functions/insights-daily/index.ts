@@ -597,8 +597,8 @@ Deno.serve(async (req: Request) => {
       carteiras += 1
       if (linhas.length === 0) return
 
-      // No máximo 5 novos por execução, o mais recente e o que mais vale
-      // primeiro; o já gravado sai antes do corte.
+      // No máximo 5 novos por execução, o tipo que mais vale primeiro e, no
+      // empate, o mais recente; o já gravado sai antes do corte.
       const gravadas = await chavesGravadas(admin, workspaceId, linhas)
       const escolhidos = limitarAchados(
         linhas.filter((l) => !gravadas.has(chaveDe(l))),
