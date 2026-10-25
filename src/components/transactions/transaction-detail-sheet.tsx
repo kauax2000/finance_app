@@ -1,5 +1,6 @@
 "use client"
 
+import { useRotuloDaTransacao } from "@/lib/privado/use-rotulo-da-transacao"
 import { currencyBRL, signedCurrencyBRL } from "@/lib/formatters"
 import { Card, CardField } from "@/components/ui/card"
 import { useEffect, useMemo, useState } from "react"
@@ -105,6 +106,7 @@ export function TransactionDetailSheet({
     onLaunchEditConsumed,
 }: TransactionDetailSheetProps) {
     const isMobile = useIsMobile()
+    const rotulo = useRotuloDaTransacao()
     const [detailMode, setDetailMode] = useState<"view" | "edit">("view")
     const [planFallback, setPlanFallback] =
         useState<TransactionInstallmentPlanRef | null>(null)
@@ -268,7 +270,7 @@ export function TransactionDetailSheet({
                                 size="sm"
                                 header={
                                     <DropdownMenuHeader
-                                        title={t.description?.trim() || t.category?.name || "Sem descrição"}
+                                        title={rotulo(t).trim() || t.category?.name || "Sem descrição"}
                                         description={`${formatTransactionDayPtBr(t.date)} · ${signedCurrencyBRL(
                                             isIncome ? Number(t.amount) : -Number(t.amount)
                                         )}`}
@@ -345,7 +347,7 @@ export function TransactionDetailSheet({
                     <div className="space-y-3 text-sm">
                         <CardField label="Descrição">
                             <p className="line-clamp-4 break-words text-foreground">
-                                {t.description?.trim() || "—"}
+                                {rotulo(t).trim() || "—"}
                             </p>
                         </CardField>
 

@@ -45,3 +45,28 @@ export function podeSerPrivado({
     if (titular !== autorId) return { pode: false, motivo: MOTIVO.outroTitular }
     return { pode: true }
 }
+
+/**
+ * O `isPrivate` que o salvar manda (Ruling 8): `true` ao marcar, `false` ao
+ * desmarcar uma linha que era privada, e nada no resto. Assim o insert comum
+ * não cita a coluna, e o front roda num banco sem a migração do 7B. Sem a
+ * regra (o papel a caminho, a linha de outra pessoa) a coluna não vai; a
+ * privada que vira receita desmarca.
+ */
+export function privadoDoSalvar({
+    marcado,
+    regra,
+    eraPrivada,
+    receita = false,
+}: {
+    marcado: boolean
+    regra: PodeSerPrivado | null
+    eraPrivada: boolean
+    receita?: boolean
+}): boolean | undefined {
+    if (eraPrivada && receita) return false
+    if (!regra) return undefined
+    const vale = marcado && regra.pode
+    if (eraPrivada) return vale
+    return vale ? true : undefined
+}

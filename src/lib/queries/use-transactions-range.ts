@@ -4,10 +4,14 @@ import { useQuery } from "@tanstack/react-query"
 import { supabase, type Transaction } from "@/lib/supabase"
 import { transactionsKeys, type TransactionsRangeKey } from "@/lib/queries/keys"
 import { fetchAllRows } from "@/lib/queries/fetch-all-rows"
+import { juntarDetalhesPrivados } from "@/lib/privado/detalhes"
 
-/** Narrow select for dashboard / calendar (category joined client-side). */
-const TRANSACTION_RANGE_COLUMNS =
-    "id,user_id,workspace_id,category_id,type,amount,description,date,is_recurring,recurring_interval,payment_method,payment_credit_card_id,subscription_id,installment_plan_id,installment_sequence,source,needs_review,import_batch_id,capture_meta,is_private,created_at,updated_at"
+/**
+ * Dashboard / calendar (category joined client-side). `*` e não a lista: uma
+ * coluna de um bloco ainda não aplicado no banco (o `is_private`) só não vem,
+ * em vez de derrubar a consulta (Ruling 8 do 7B).
+ */
+const TRANSACTION_RANGE_COLUMNS = "*"
 
 export function useTransactionsRangeQuery(
     workspaceId: string | null,
@@ -21,7 +25,8 @@ export function useTransactionsRangeQuery(
         queryKey: transactionsKeys.summary(workspaceId ?? "__none__", range),
         queryFn: async (): Promise<Transaction[]> => {
             if (!workspaceId) return []
-            return fetchAllRows<Transaction>((from, to) =>
+            // A privada do autor volta com os detalhes dele (Bloco 7B).
+            const linhas = await fetchAllRows<Transaction>((from, to) =>
                 supabase
                     .from("transactions")
                     .select(TRANSACTION_RANGE_COLUMNS)
@@ -34,6 +39,7 @@ export function useTransactionsRangeQuery(
                     .range(from, to)
                     .returns<Transaction[]>(),
             )
+            return juntarDetalhesPrivados(supabase, linhas)
         },
         enabled,
         staleTime: 60_000,

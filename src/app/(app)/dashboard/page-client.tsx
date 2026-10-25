@@ -1,5 +1,6 @@
 "use client"
 
+import { useRotuloDaTransacao } from "@/lib/privado/use-rotulo-da-transacao"
 import { useCallback, useState } from "react"
 import dynamic from "next/dynamic"
 import { useAuth } from "@/components/providers"
@@ -104,6 +105,7 @@ export default function DashboardPageClient() {
     } = useWorkspace()
 
     const d = useDashboardData()
+    const rotulo = useRotuloDaTransacao()
     useGarantirOrcamentosDoMes(currentWorkspaceId)
     // No telefone o mês mora no cabeçalho, colado à lupa; no desktop, na barra da tela.
     useMonthInHeader({ budgetMonthYm: d.calendarYm, onBudgetMonthYmChange: d.setCalendarYm })
@@ -433,7 +435,7 @@ export default function DashboardPageClient() {
                                             pendingDelete.date,
                                         )}{" "}
                                         —{" "}
-                                        {pendingDelete.description ||
+                                        {rotulo(pendingDelete) ||
                                             pendingDelete.category?.name ||
                                             "Sem descrição"}
                                     </li>

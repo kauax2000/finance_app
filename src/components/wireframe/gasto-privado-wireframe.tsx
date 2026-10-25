@@ -3,8 +3,10 @@
 import { useQuery } from "@tanstack/react-query"
 import { useId } from "react"
 
+import { useAuth } from "@/components/providers"
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
 import { useWorkspace } from "@/components/workspace-provider"
+import { MASCARA_PRIVADA } from "@/lib/privado/detalhes"
 import type { PodeSerPrivado } from "@/lib/privado/pode-ser-privado"
 import { nomeDoMembro } from "@/lib/privado/use-rotulo-da-transacao"
 import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
@@ -27,6 +29,10 @@ export function PrivadoWireframe({
     regra: PodeSerPrivado
 }) {
     const motivoId = useId()
+    const { user } = useAuth()
+    const { currentWorkspaceId } = useWorkspace()
+    const diretorio = useMemberDirectoryQuery(currentWorkspaceId)
+    const meuNome = nomeDoMembro(diretorio.data?.find((m) => m.user_id === user?.id))
     return (
         <WireframeBox bloco={7} titulo="Gasto privado">
             <label className="flex items-center gap-2 text-foreground">
@@ -41,7 +47,7 @@ export function PrivadoWireframe({
             </label>
             <p id={motivoId}>
                 {regra.pode
-                    ? "Os outros adultos veem só \"Gasto pessoal\" e o valor; o valor entra em todos os totais."
+                    ? `Os outros adultos veem só "${MASCARA_PRIVADA} de ${meuNome}" e o valor; o valor entra em todos os totais.`
                     : regra.motivo}
             </p>
         </WireframeBox>

@@ -11,6 +11,7 @@ import { aConferirKeys } from "@/lib/queries/keys"
 import { invalidateWorkspaceData } from "@/lib/queries/invalidate-workspace-data"
 import { supabase, type Transaction, type TransactionSource } from "@/lib/supabase"
 import { formatDatePtBr } from "@/lib/transaction-date"
+import { juntarDetalhesPrivados } from "@/lib/privado/detalhes"
 import { useRotuloDaTransacao } from "@/lib/privado/use-rotulo-da-transacao"
 
 const LIMITE = 50
@@ -51,14 +52,16 @@ export function AConferirListaWireframe({ workspaceId }: { workspaceId: string }
         queryFn: async () => {
             const { data, error, count } = await supabase
                 .from("transactions")
-                .select("id, date, description, amount, type, source, user_id, is_private", { count: "exact" })
+                .select("*", { count: "exact" })
                 .eq("workspace_id", workspaceId)
                 .eq("needs_review", true)
                 .order("date", { ascending: false })
                 .order("created_at", { ascending: false })
                 .limit(LIMITE)
             if (error) throw error
-            return { itens: (data ?? []) as Item[], total: count ?? data?.length ?? 0 }
+            // A privada do autor volta com os detalhes dele (Bloco 7B).
+            const itens = await juntarDetalhesPrivados(supabase, (data ?? []) as Item[])
+            return { itens, total: count ?? data?.length ?? 0 }
         },
     })
 

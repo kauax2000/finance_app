@@ -1,5 +1,6 @@
 "use client"
 
+import { useRotuloDaTransacao } from "@/lib/privado/use-rotulo-da-transacao"
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -258,6 +259,7 @@ function PaletteBody({ close }: { close: () => void }) {
 
     const { user } = useAuth()
     const workspaceId = user && currentWorkspaceId ? currentWorkspaceId : null
+    const rotuloDaTransacao = useRotuloDaTransacao()
     // O que é da casa nem é pedido pelo convidado (a RLS devolveria vazio).
     const daCasaId = convidado ? null : workspaceId
     // Categorias e cartões: as mesmas chaves que o `GlobalShellDialogsProvider`
@@ -644,7 +646,7 @@ function PaletteBody({ close }: { close: () => void }) {
                                         </CommandItemIcon>
                                         <CommandItemTitle>
                                             <CommandHighlight>
-                                                {t.description || "Sem descrição"}
+                                                {rotuloDaTransacao(t) || "Sem descrição"}
                                             </CommandHighlight>
                                         </CommandItemTitle>
                                         <CommandItemMeta>

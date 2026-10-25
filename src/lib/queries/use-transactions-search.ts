@@ -15,10 +15,13 @@ export type TransacaoEncontrada = Pick<
     | "date"
     | "category_id"
     | "payment_credit_card_id"
+    | "user_id"
+    | "is_private"
 >
 
-const COLUNAS =
-    "id, description, amount, type, date, category_id, payment_credit_card_id"
+// `*`: o `user_id` e o `is_private` dão o "Gasto pessoal de {nome}", e uma
+// coluna que o banco ainda não tem só não vem (Ruling 8 do 7B).
+const COLUNAS = "*"
 
 /** O padrão do `ilike` entre aspas quando o texto traz o que quebraria o `or=`. */
 function padraoIlike(texto: string): string {

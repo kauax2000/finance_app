@@ -196,7 +196,7 @@ export default function CreditCardDetailPageClient() {
         const [cardRes, txPack, plansPack, paymentsPack] = await Promise.all([
             supabase
                 .from("credit_cards")
-                .select("brand, closing_day, created_at, credit_limit, due_day, expiry_month, expiry_year, id, is_active, last_four, name, updated_at, user_id, workspace_id, holder_user_id")
+                .select("*")
                 .eq("id", cardId)
                 .eq("workspace_id", currentWorkspaceId)
                 .maybeSingle(),
@@ -316,7 +316,7 @@ export default function CreditCardDetailPageClient() {
                     .eq("workspace_id", currentWorkspaceId),
                 supabase
                     .from("credit_cards")
-                    .select("brand, closing_day, created_at, credit_limit, due_day, expiry_month, expiry_year, id, is_active, last_four, name, updated_at, user_id, workspace_id, holder_user_id")
+                    .select("*")
                     .eq("workspace_id", currentWorkspaceId)
                     .order("name"),
             ])

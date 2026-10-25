@@ -12,6 +12,9 @@ import { executeMutation } from "@/lib/offline/mutation-gateway"
 import { retryStableClientId } from "@/lib/offline/retry-client-id"
 import { dispatchFinanceTransactionsMutated } from "@/lib/workspace-data-events"
 
+/** 0 linhas sem erro: a RLS barrou (a privada de outra pessoa) ou a linha já saiu. */
+export const NADA_MUDOU = "Só quem lançou pode mudar um gasto privado."
+
 export type SaveTransactionContext = {
     userId: string
     workspaceId: string
@@ -64,16 +67,19 @@ async function saveTransactionOnline(
     row: Record<string, unknown>
 ): Promise<{ ok: true; insertedId?: string } | { ok: false; errorMessage: string }> {
     if (editingId) {
-        let { error } = await supabase
+        let { data, error } = await supabase
             .from("transactions")
             .update(row)
             .eq("id", editingId)
+            .select("id")
 
         if (error && isTransactionsPaymentColumnsUnsupportedError(error)) {
             const retry = await supabase
                 .from("transactions")
                 .update(stripPaymentColumns(row))
                 .eq("id", editingId)
+                .select("id")
+            data = retry.data
             error = retry.error
         }
 
@@ -85,6 +91,8 @@ async function saveTransactionOnline(
                     "Não foi possível atualizar a transação.",
             }
         }
+        // A RLS filtra sem erro (a privada de outra pessoa, Bloco 7B): 0 linhas não é salvo.
+        if (!data?.length) return { ok: false, errorMessage: NADA_MUDOU }
 
         return { ok: true }
     }
@@ -256,13 +264,14 @@ export async function deletePlainTransactionById(
         onlineFn: async () => {
             // Os caminhos são lidos antes: as linhas dos anexos saem no cascade.
             const anexos = await caminhosDaTransacao(supabase, id)
-            const { error } = await supabase.from("transactions").delete().eq("id", id)
+            const { data, error } = await supabase.from("transactions").delete().eq("id", id).select("id")
             if (error) {
                 throw new Error(
                     formatSupabasePostgrestError(error) ??
                         "Não foi possível excluir a transação."
                 )
             }
+            if (!data?.length) throw new Error(NADA_MUDOU)
             await removerObjetos(supabase, anexos)
             dispatchFinanceTransactionsMutated()
             return { ok: true as const }

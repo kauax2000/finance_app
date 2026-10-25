@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
-import { MOTIVO, podeSerPrivado, METODOS_PRIVADOS } from "./pode-ser-privado"
+import { MOTIVO, podeSerPrivado, privadoDoSalvar, METODOS_PRIVADOS } from "./pode-ser-privado"
 
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 const { buildTransactionRow } = await import("@/lib/transactions/mutations")
@@ -66,6 +66,8 @@ describe("podeSerPrivado (a regra do guardar_privado, para a tela explicar antes
         expect(sql).toMatch(/c\.holder_user_id = new\.user_id/)
         expect(sql).toMatch(/wm\.role in \('owner', 'member'\)/)
         expect(sql).toMatch(/new\.subscription_id is null\s+and new\.installment_plan_id is null/)
+        // Só despesa: a tela mostra a chave só com `type === "expense"`.
+        expect(sql).toMatch(/v_pode := new\.type = 'expense'/)
     })
 
     it("o erro do banco vira frase em português", () => {
@@ -102,5 +104,31 @@ describe("o salvar do lançamento e o is_private", () => {
             category_id: "cat-1",
         })
         expect(buildTransactionRow(ctx, { ...payload, isPrivate: false })).toMatchObject({ is_private: false })
+    })
+})
+
+describe("privadoDoSalvar (Ruling 8): a coluna só vai quando muda algo", () => {
+    const sim = { pode: true } as const
+    const nao = { pode: false, motivo: MOTIVO.cartaoDaCasa } as const
+
+    it("criar sem marcar não manda is_private: o insert roda num banco sem a 7B", () => {
+        expect(privadoDoSalvar({ marcado: false, regra: sim, eraPrivada: false })).toBeUndefined()
+        expect(privadoDoSalvar({ marcado: false, regra: null, eraPrivada: false })).toBeUndefined()
+        expect(privadoDoSalvar({ marcado: true, regra: nao, eraPrivada: false })).toBeUndefined()
+    })
+
+    it("marcar manda true", () => {
+        expect(privadoDoSalvar({ marcado: true, regra: sim, eraPrivada: false })).toBe(true)
+    })
+
+    it("desmarcar uma privada manda false; a que não vale mais também desmarca", () => {
+        expect(privadoDoSalvar({ marcado: false, regra: sim, eraPrivada: true })).toBe(false)
+        expect(privadoDoSalvar({ marcado: true, regra: nao, eraPrivada: true })).toBe(false)
+        expect(privadoDoSalvar({ marcado: true, regra: null, eraPrivada: true, receita: true })).toBe(false)
+    })
+
+    it("a privada mantida segue true; sem a regra (o papel a caminho) a coluna não vai", () => {
+        expect(privadoDoSalvar({ marcado: true, regra: sim, eraPrivada: true })).toBe(true)
+        expect(privadoDoSalvar({ marcado: true, regra: null, eraPrivada: true })).toBeUndefined()
     })
 })

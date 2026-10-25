@@ -143,12 +143,13 @@ describe("telas de a conferir", () => {
 describe("o detalhe recebe o capture_meta (o lembrar da Wallet)", () => {
     it("o ?txn= de fora da lista traz a coluna", () => {
         const f = fonte("src/components/transactions/use-transactions-list-controller.ts")
-        expect(f).toMatch(/\.select\("[^"]*\bneeds_review, import_batch_id, capture_meta\b[^"]*"\)/)
+        // `*` desde a Ruling 8 do 7B: traz o `capture_meta` e o que vier depois.
+        expect(f).toMatch(/\.from\("transactions"\)\s*\.select\("\*"\)\s*\.eq\("id", txnParam\)/)
     })
 
     it("o range traz a coluna", () => {
         const f = fonte("src/lib/queries/use-transactions-range.ts")
-        expect(f).toMatch(/TRANSACTION_RANGE_COLUMNS =\s*"[^"]*\bcapture_meta\b/)
+        expect(f).toMatch(/TRANSACTION_RANGE_COLUMNS =\s*"\*"/)
     })
 
     it("a lista e o detalhe leem todas as colunas", () => {

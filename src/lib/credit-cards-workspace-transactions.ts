@@ -10,10 +10,10 @@ import {
 } from "@/lib/supabase"
 import {
     isPostgrestRelationMissingError,
-    isTransactionsSubscriptionBillingColumnsMissingError,
 } from "@/lib/supabase-errors"
 import { attachPaymentCards } from "@/lib/transactions-detail-sheet-query"
 import { localYmdFromDate } from "@/lib/transaction-date"
+import { juntarDetalhesPrivados } from "@/lib/privado/detalhes"
 
 type SupabaseBrowserClient = typeof supabase
 
@@ -64,13 +64,12 @@ export type CcTxAnalyticsRow = Pick<
 export const CREDIT_CARD_EXPENSE_SELECT =
     "id,type,amount,date,description,payment_method,payment_credit_card_id,installment_plan_id,installment_sequence,category_id,category:categories(name)"
 
-/** Card detail analytics: full category embed + subscription / installment links. */
-export const CREDIT_CARD_ANALYTICS_SELECT =
-    "id,user_id,is_private,type,amount,date,description,payment_method,payment_credit_card_id,installment_sequence,category_id,subscription_id,installment_plan_id,category:categories(id,name,color,icon)"
-
-/** Same as analytics select when `subscription_id` / `installment_plan_id` columns are absent. */
-export const CREDIT_CARD_ANALYTICS_SELECT_COMPAT =
-    "id,user_id,is_private,type,amount,date,description,payment_method,payment_credit_card_id,installment_sequence,category_id,category:categories(id,name,color,icon)"
+/**
+ * Card detail analytics: full category embed + subscription / installment links.
+ * `*` e não a lista: a coluna que ainda não existe no banco (o `is_private` do
+ * 7B; antes, `subscription_id`) só não vem (Ruling 8 do 7B).
+ */
+export const CREDIT_CARD_ANALYTICS_SELECT = "*,category:categories(id,name,color,icon)"
 
 export const RECENT_CC_TX_CAP = 20
 
@@ -225,32 +224,24 @@ export async function fetchCreditCardExpenseRowsForCard(
     since.setMonth(since.getMonth() - 11)
     const sinceYmd = localYmdFromDate(since)
 
-    const first = await client
+    const { data, error } = await client
         .from("transactions")
         .select(CREDIT_CARD_ANALYTICS_SELECT)
         .eq("workspace_id", workspaceId)
         .eq("payment_method", "credit_card")
         .eq("payment_credit_card_id", cardId)
         .gte("date", `${sinceYmd}T00:00:00.000Z`)
-    let data: unknown[] | null = (first.data as unknown[] | null) ?? null
-    let error: PostgrestError | null = first.error
-
-    if (error && isTransactionsSubscriptionBillingColumnsMissingError(error)) {
-        const second = await client
-            .from("transactions")
-            .select(CREDIT_CARD_ANALYTICS_SELECT_COMPAT)
-            .eq("workspace_id", workspaceId)
-            .eq("payment_method", "credit_card")
-            .eq("payment_credit_card_id", cardId)
-            .gte("date", `${sinceYmd}T00:00:00.000Z`)
-        data = (second.data as unknown[] | null) ?? null
-        error = second.error
-    }
 
     if (error) {
         return { rows: [], error }
     }
-    return { rows: (data ?? []).map(normalizeCcTxAnalyticsRow), error: null }
+    // A privada do autor volta com os detalhes dele (Bloco 7B): a conferência
+    // do titular casa pela descrição real.
+    const linhas = await juntarDetalhesPrivados(
+        client,
+        (data ?? []) as Array<CcTxAnalyticsRow & { user_id: string }>,
+    )
+    return { rows: linhas.map(normalizeCcTxAnalyticsRow), error: null }
 }
 
 export async function fetchCreditCardInvoicePaymentsForCard(

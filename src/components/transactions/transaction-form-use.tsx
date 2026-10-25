@@ -5,7 +5,7 @@ import { supabase, type Category, type CreditCard, type Transaction, type Transa
 import { enviarAnexo } from "@/lib/anexos"
 import { useWorkspace } from "@/components/workspace-provider"
 import { useAuth } from "@/components/providers"
-import { podeSerPrivado } from "@/lib/privado/pode-ser-privado"
+import { podeSerPrivado, privadoDoSalvar } from "@/lib/privado/pode-ser-privado"
 import { primeiraParcelaDoPlano } from "@/components/transactions/transaction-form-persistence"
 import type { PaymentMethod } from "@/lib/payment-methods"
 import {
@@ -351,8 +351,8 @@ export function useTransactionForm({
         !editingTransaction && formKind === "installment"
 
     // O "Privado" (Bloco 7B): só na despesa de quem a lançou, e só depois de o
-    // papel chegar. Sem a chave à vista, o salvar não manda `is_private` (uma
-    // linha lida sem a coluna não é desmarcada por engano).
+    // papel chegar. O salvar só manda `is_private` ao marcar ou desmarcar
+    // (`privadoDoSalvar`, Ruling 8).
     const { user } = useAuth()
     const autorId = editingTransaction?.user_id ?? user?.id ?? ""
     const regraDoPrivado =
@@ -653,7 +653,12 @@ export function useTransactionForm({
             recurringInterval,
             paymentMethod: pm,
             paymentCreditCardId: pcc,
-            ...(regraDoPrivado ? { isPrivate: isPrivate && regraDoPrivado.pode } : {}),
+            isPrivate: privadoDoSalvar({
+                marcado: isPrivate,
+                regra: regraDoPrivado,
+                eraPrivada: editingTransaction?.is_private === true,
+                receita: type === "income",
+            }),
             ...origemDaFrase(duvidasDaFrase, Boolean(editingTransaction), categoryId, fonteDaFrase),
         })
 
