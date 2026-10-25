@@ -74,7 +74,9 @@ import {
     FINANCE_MEMBERS_MUTATED_EVENT,
 } from "@/lib/workspace-data-events"
 
-type MemberWithProfile = WorkspaceMember & {
+// A lista lê só as quatro colunas de sempre; o responsável do convidado
+// (`sponsor_user_id`) ainda não aparece nesta tela.
+type MemberWithProfile = Omit<WorkspaceMember, "sponsor_user_id"> & {
     profile?: {
         id: string
         email: string
@@ -389,6 +391,8 @@ export default function MembersPage() {
                         workspace_id: currentWorkspaceId,
                         invited_email: emailLower,
                         role: "member",
+                        menor: false,
+                        consentimento_em: null,
                         status: "pending",
                         expires_at: expiresAt,
                         created_by: user.id,

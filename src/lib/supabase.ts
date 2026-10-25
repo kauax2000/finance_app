@@ -369,7 +369,7 @@ export interface Wallet {
 }
 
 export type WorkspaceType = "personal" | "shared"
-export type WorkspaceRole = "owner" | "member"
+export type WorkspaceRole = "owner" | "member" | "guest"
 
 export interface Workspace {
     id: string
@@ -425,6 +425,8 @@ export interface WorkspaceMember {
     user_id: string
     role: WorkspaceRole
     joined_at: string
+    /** Quem responde pelo convidado; nulo para dono e membro. */
+    sponsor_user_id: string | null
     workspace?: Workspace
 }
 
@@ -434,7 +436,11 @@ export interface WorkspaceInvite {
     id: string
     workspace_id: string
     invited_email: string | null
-    role: "member"
+    /** O link é sempre `member`; `guest` só por e-mail. */
+    role: "member" | "guest"
+    /** Convidado menor de idade: exige `consentimento_em` (LGPD, art. 14). */
+    menor: boolean
+    consentimento_em: string | null
     status: WorkspaceInviteStatus
     expires_at: string
     created_by: string

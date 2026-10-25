@@ -148,6 +148,8 @@ export function WorkspaceInviteDialog({
                         workspace_id: workspaceId,
                         invited_email: emailLower,
                         role: "member",
+                        menor: false,
+                        consentimento_em: null,
                         status: "pending",
                         expires_at: res.expires_at!,
                         created_by: user.id,

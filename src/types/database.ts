@@ -1495,12 +1495,14 @@ export type Database = {
       workspace_invites: {
         Row: {
           accepted_at: string | null
+          consentimento_em: string | null
           created_at: string
           created_by: string
           expires_at: string
           id: string
           invited_email: string | null
           max_uses: number | null
+          menor: boolean
           role: string
           status: string
           token_hash: string
@@ -1509,12 +1511,14 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
+          consentimento_em?: string | null
           created_at?: string
           created_by: string
           expires_at: string
           id?: string
           invited_email?: string | null
           max_uses?: number | null
+          menor?: boolean
           role?: string
           status?: string
           token_hash: string
@@ -1523,12 +1527,14 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
+          consentimento_em?: string | null
           created_at?: string
           created_by?: string
           expires_at?: string
           id?: string
           invited_email?: string | null
           max_uses?: number | null
+          menor?: boolean
           role?: string
           status?: string
           token_hash?: string
@@ -1611,18 +1617,21 @@ export type Database = {
         Row: {
           joined_at: string
           role: string
+          sponsor_user_id: string | null
           user_id: string
           workspace_id: string
         }
         Insert: {
           joined_at?: string
           role: string
+          sponsor_user_id?: string | null
           user_id: string
           workspace_id: string
         }
         Update: {
           joined_at?: string
           role?: string
+          sponsor_user_id?: string | null
           user_id?: string
           workspace_id?: string
         }
@@ -1891,6 +1900,7 @@ export type Database = {
         Args: { p_linhas: Json }
         Returns: Database["public"]["Tables"]["insights"]["Row"][]
       }
+      is_workspace_adult: { Args: { p_workspace_id: string }; Returns: boolean }
       is_workspace_member: { Args: { workspace_id: string }; Returns: boolean }
       is_workspace_owner: { Args: { workspace_id: string }; Returns: boolean }
       ligar_pagamento_da_conta: {
@@ -1973,6 +1983,10 @@ export type Database = {
       run_subscription_billing: { Args: never; Returns: number }
       tem_cobertura: { Args: { p_user_id: string }; Returns: boolean }
       tem_plano_proprio: { Args: { p_user_id: string }; Returns: boolean }
+      trocar_papel: {
+        Args: { p_role: string; p_user_id: string; p_workspace_id: string }
+        Returns: undefined
+      }
       virar_assinatura: {
         Args: {
           p_card_id: string | null

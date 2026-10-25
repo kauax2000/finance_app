@@ -72,7 +72,7 @@ export async function fetchWorkspacesData(user: User): Promise<WorkspacesBundle>
             }
             const workspaceValue = typed.workspace
             const role: WorkspaceRole =
-                typed.role === "owner" || typed.role === "member"
+                typed.role === "owner" || typed.role === "member" || typed.role === "guest"
                     ? typed.role
                     : "member"
 
