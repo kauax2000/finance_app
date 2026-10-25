@@ -349,3 +349,19 @@ Deno.test('resumoDaFatura: sem fatura anterior, sem variação; banco nulo, sem 
   assertEquals(p.contraAnterior, null)
   assertEquals(p.diferencaBanco, null)
 })
+
+Deno.test('duplicidade: o par antes de desdeYmd fica de fora', () => {
+  const velho = { dateYmd: '2026-09-20', description: 'Padaria Real', amount: 57.3 }
+  const novo = { dateYmd: '2026-10-20', description: 'Padaria Real', amount: 57.3 }
+  const ls = [l(velho), l(velho), l(novo), l(novo)]
+  const achados = detectarDuplicidades(ls, { desdeYmd: '2026-09-25' })
+  assertEquals(achados.map((a) => a.dataYmd), ['2026-10-20'])
+  assertEquals(detectarDuplicidades(ls).length, 2)
+})
+
+Deno.test('duplicidade: abaixo de valorMinimo (duas passagens de metrô) fica de fora', () => {
+  const metro = { dateYmd: '2026-10-20', description: 'Metrô SP', amount: 5.4 }
+  assertEquals(detectarDuplicidades([l(metro), l(metro)], { valorMinimo: 10 }), [])
+  const dez = { dateYmd: '2026-10-20', description: 'Padaria Real', amount: 10 }
+  assertEquals(detectarDuplicidades([l(dez), l(dez)], { valorMinimo: 10 }).length, 1)
+})

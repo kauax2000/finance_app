@@ -46,6 +46,28 @@ describe("Edge insights-daily", () => {
         expect(f).toMatch(/json\(200, \{[^}]*carteiras[^}]*novos[^}]*push[^}]*inApp/)
     })
 
+    it("no máximo 5 novos por carteira, cortados por limitarAchados depois de tirar os já gravados", () => {
+        expect(f).toContain("const NOVOS_POR_EXECUCAO = 5")
+        const gravadas = f.indexOf("chavesGravadas(admin, workspaceId, linhas)")
+        const corte = f.indexOf("limitarAchados(")
+        const insert = f.indexOf("rpc('inserir_insights'")
+        expect(gravadas).toBeGreaterThan(-1)
+        expect(corte).toBeGreaterThan(gravadas)
+        expect(insert).toBeGreaterThan(corte)
+        expect(f).toContain("NOVOS_POR_EXECUCAO,")
+    })
+
+    it("a duplicidade olha só os últimos 30 dias e a partir de R$ 10", () => {
+        expect(f).toContain("const DUPLICIDADE_DIAS = 30")
+        expect(f).toContain("const DUPLICIDADE_VALOR_MINIMO = 10")
+        expect(f).toContain("detectarDuplicidades(lancs, duplicidade)")
+    })
+
+    it("só quem tem push ligado e um aparelho inscrito reivindica o teto", () => {
+        expect(f).toContain(".from('push_subscriptions')")
+        expect(f).toContain("if (prefs.notify_push && inscritos.has(userId)) {")
+    })
+
     it("o insight nunca vai por e-mail", () => {
         const gate = entrega.slice(entrega.indexOf("const emailAllowed"), entrega.indexOf("if (canais.email"))
         expect(gate).not.toContain("'insight'")

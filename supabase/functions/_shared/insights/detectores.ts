@@ -209,11 +209,17 @@ export function detectarAtipicos(
 /**
  * Mesmo valor, mesma descrição e mesmo dia, só despesa. Parcela não entra, e
  * dois lançamentos da mesma assinatura também não. O estorno é receita: fora.
+ * `desdeYmd` corta a evidência antiga (o acervo da primeira execução) e
+ * `valorMinimo` a compra pequena repetida de verdade (duas passagens, dois cafés).
  */
 export function detectarDuplicidades(
   lancs: Lanc[],
+  opcoes: { desdeYmd?: string; valorMinimo?: number } = {},
 ): Array<{ chave: string; ids: [string, string]; valor: number; descricao: string; dataYmd: string }> {
-  const candidatos = lancs.filter((l) => l.type === 'expense' && !l.installment_plan_id)
+  const { desdeYmd = '', valorMinimo = 0 } = opcoes
+  const candidatos = lancs.filter(
+    (l) => l.type === 'expense' && !l.installment_plan_id && l.dateYmd >= desdeYmd && l.amount >= valorMinimo,
+  )
   const grupos = agrupar(candidatos, (l) => {
     const d = normalizarDescricao(l.description)
     return d ? `${centavos(l.amount)}|${l.dateYmd}|${d}` : null

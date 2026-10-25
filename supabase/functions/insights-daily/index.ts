@@ -39,6 +39,7 @@ import {
 } from '../_shared/insights/detectores.ts'
 import { textoDoInsight } from '../_shared/insights/textos.ts'
 import { segundaDaSemana } from '../_shared/insights/semana.ts'
+import { limitarAchados } from '../_shared/insights/limitar.ts'
 
 // Os insights das 10h (cron `insights-daily`, Bloco 6B): por carteira com
 // movimento, os detectores, o resumo da fatura que fechou ontem ou anteontem,
@@ -58,6 +59,16 @@ function json(status: number, payload: unknown): Response {
 
 /** Mais de 5 itens a conferir vira insight (spec §11). */
 const A_CONFERIR_MINIMO = 5
+
+/**
+ * Insights novos por carteira em cada execução. O resto volta nas próximas
+ * enquanto continuar verdade: o já gravado sai antes do corte.
+ */
+const NOVOS_POR_EXECUCAO = 5
+
+/** A duplicidade só olha o último mês, e não a compra pequena repetida de verdade. */
+const DUPLICIDADE_DIAS = 30
+const DUPLICIDADE_VALOR_MINIMO = 10
 
 const TX_COLUMNS =
   'id,type,amount,date,description,category_id,payment_method,payment_credit_card_id,subscription_id,installment_plan_id,installment_sequence,needs_review,source'
@@ -86,7 +97,10 @@ type PlanRow = {
 
 type Linha = { workspace_id: string; user_id: null; kind: string; dedupe_key: string; payload: Record<string, unknown> }
 
-type InsightRow = { id: string; kind: string; payload: Record<string, unknown> }
+/** A linha com a data da evidência, para o corte (`limitarAchados`). */
+type Achado = Linha & { dataYmd: string }
+
+type InsightRow = { id: string; kind: string; dedupe_key: string; payload: Record<string, unknown> }
 
 /** O cliente de serviço com as RPCs (o `SupabaseAdminClient` as deixa opcionais). */
 type Admin = SupabaseAdminClient & Required<Pick<SupabaseAdminClient, 'rpc'>>
@@ -121,9 +135,14 @@ function lancDe(t: TxRow, ligadas: Set<string>): Lanc {
   }
 }
 
-function linha(workspaceId: string, kind: string, achado: { chave: string; [k: string]: unknown }): Linha {
+function linha(
+  workspaceId: string,
+  kind: string,
+  achado: { chave: string; [k: string]: unknown },
+  dataYmd: string,
+): Achado {
   const { chave, ...payload } = achado
-  return { workspace_id: workspaceId, user_id: null, kind, dedupe_key: chave, payload }
+  return { workspace_id: workspaceId, user_id: null, kind, dedupe_key: chave, payload, dataYmd }
 }
 
 /**
@@ -388,22 +407,33 @@ async function achadosDaCarteira(admin: SupabaseAdminClient, workspaceId: string
   const cartoesMap = new Map(cartoes.map((c) => [c.id, c]))
   const ativos = cartoes.filter((c) => c.is_active)
 
-  const linhas: Linha[] = [
-    ...detectarRecorrencias(lancs, hojeYmd).map((a) => linha(workspaceId, 'recorrencia', a)),
-    ...detectarAtipicos(lancs, hojeYmd, nomes).map((a) => linha(workspaceId, 'gasto_atipico', a)),
-    ...detectarDuplicidades(lancs).map((a) => linha(workspaceId, 'duplicidade', a)),
-    ...detectarPrecoDeAssinatura(lancs, assinaturas, hojeYmd).map((a) => linha(workspaceId, 'preco_assinatura', a)),
-    ...detectarParcelasAcabando(planos, hojeYmd).map((a) => linha(workspaceId, 'parcelas_acabando', a)),
+  // A data da evidência ordena o corte; quem não tem uma fica com hoje.
+  const dataDe = new Map(lancs.map((l) => [l.id, l.dateYmd]))
+  const maisRecente = (ids: string[]) =>
+    ids.map((id) => dataDe.get(id) ?? '').reduce((a, b) => (b > a ? b : a), '') || hojeYmd
+  const duplicidade = {
+    desdeYmd: formatYmd(addCalendarDays(hoje, -DUPLICIDADE_DIAS)),
+    valorMinimo: DUPLICIDADE_VALOR_MINIMO,
+  }
+
+  const linhas: Achado[] = [
+    ...detectarRecorrencias(lancs, hojeYmd).map((a) => linha(workspaceId, 'recorrencia', a, maisRecente(a.lancamentos))),
+    ...detectarAtipicos(lancs, hojeYmd, nomes).map((a) => linha(workspaceId, 'gasto_atipico', a, hojeYmd)),
+    ...detectarDuplicidades(lancs, duplicidade).map((a) => linha(workspaceId, 'duplicidade', a, a.dataYmd)),
+    ...detectarPrecoDeAssinatura(lancs, assinaturas, hojeYmd).map((a) =>
+      linha(workspaceId, 'preco_assinatura', a, maisRecente([a.lancamentoId]))
+    ),
+    ...detectarParcelasAcabando(planos, hojeYmd).map((a) => linha(workspaceId, 'parcelas_acabando', a, hojeYmd)),
     ...detectarSazonais(
       passados.map((t) => lancDe(t, ligadasSet)),
       hojeYmd,
       contas.map((c) => c.name),
-    ).map((a) => linha(workspaceId, 'sazonal', a)),
+    ).map((a) => linha(workspaceId, 'sazonal', a, hojeYmd)),
   ]
 
   // Um por semana enquanto passar de 5.
   const n = conferir.count ?? 0
-  if (n > A_CONFERIR_MINIMO) linhas.push(linha(workspaceId, 'a_conferir', { chave: `conf:${semana}`, n }))
+  if (n > A_CONFERIR_MINIMO) linhas.push(linha(workspaceId, 'a_conferir', { chave: `conf:${semana}`, n }, hojeYmd))
 
   // O total do banco das fechadas em jogo (a que fechou e as 3 antes dela).
   const fechadas = ativos.flatMap((c) =>
@@ -424,15 +454,38 @@ async function achadosDaCarteira(admin: SupabaseAdminClient, workspaceId: string
   }
   for (const c of ativos) {
     const r = resumoDoCartao(c, hoje, tx, banco, nomes, planosMap)
-    if (r) linhas.push(linha(workspaceId, 'fatura_fechou', r))
+    if (r) linhas.push(linha(workspaceId, 'fatura_fechou', r, String(r.closeYmd)))
   }
 
   if (hoje.d === 1) {
-    linhas.push(linha(workspaceId, 'relatorio_mes', await relatorioDoMes(admin, workspaceId, hoje, tx, cartoesMap)))
+    linhas.push(linha(workspaceId, 'relatorio_mes', await relatorioDoMes(admin, workspaceId, hoje, tx, cartoesMap), hojeYmd))
   }
 
   return linhas
 }
+
+/**
+ * As chaves que a carteira já gravou (o insight dela, `user_id` nulo): saem
+ * antes do corte, para um achado antigo e ainda verdadeiro não ocupar a vaga
+ * de um novo. Em lotes, para a URL do `.in()` não crescer.
+ */
+async function chavesGravadas(admin: SupabaseAdminClient, workspaceId: string, linhas: Achado[]): Promise<Set<string>> {
+  const out = new Set<string>()
+  const chaves = [...new Set(linhas.map((l) => l.dedupe_key))]
+  for (let i = 0; i < chaves.length; i += 50) {
+    const { data, error } = await admin
+      .from('insights')
+      .select('kind,dedupe_key')
+      .eq('workspace_id', workspaceId)
+      .is('user_id', null)
+      .in('dedupe_key', chaves.slice(i, i + 50))
+    if (error) throw new Error(error.message)
+    for (const r of data ?? []) out.add(`${r.kind}:${r.dedupe_key}`)
+  }
+  return out
+}
+
+const chaveDe = (l: { kind: string; dedupe_key: string }) => `${l.kind}:${l.dedupe_key}`
 
 /**
  * Avisa os membros de cada insight novo. O push só vai a quem reivindicou um
@@ -454,11 +507,15 @@ async function avisar(
   const membros = (memberRows ?? []).map((m: { user_id: string }) => m.user_id)
   if (membros.length === 0) return
 
-  const [prefsMap, silRes] = await Promise.all([
+  const [prefsMap, silRes, inscRes] = await Promise.all([
     loadWorkspacePrefsMap(admin, workspaceId, membros),
     admin.from('insights_silenciados').select('user_id,kind').in('user_id', membros),
+    admin.from('push_subscriptions').select('user_id').in('user_id', membros),
   ])
   if (silRes.error) throw new Error(silRes.error.message)
+  if (inscRes.error) throw new Error(inscRes.error.message)
+  // Quem ligou o push sem nenhum aparelho inscrito não gasta o teto da semana.
+  const inscritos = new Set((inscRes.data ?? []).map((r: { user_id: string }) => r.user_id))
   const silenciados = new Set((silRes.data ?? []).map((s: { user_id: string; kind: string }) => `${s.user_id}:${s.kind}`))
 
   for (const ins of novos) {
@@ -470,9 +527,9 @@ async function avisar(
       if (!prefs || prefs.notify_insights === false) continue
       if (!prefs.notify_in_app && !prefs.notify_push) continue
       try {
-        // Só quem quer push gasta o teto da semana.
+        // Só quem quer push e tem onde recebê-lo gasta o teto da semana.
         let comPush = false
-        if (prefs.notify_push) {
+        if (prefs.notify_push && inscritos.has(userId)) {
           const { data, error } = await admin.rpc('reivindicar_push_de_insight', { p_user_id: userId, p_semana: semana })
           if (error) throw new Error(error.message)
           comPush = data === true
@@ -534,11 +591,32 @@ Deno.serve(async (req: Request) => {
       carteiras += 1
       if (linhas.length === 0) return
 
+      // No máximo 5 novos por execução, o mais recente e o que mais vale
+      // primeiro; o já gravado sai antes do corte.
+      const gravadas = await chavesGravadas(admin, workspaceId, linhas)
+      const escolhidos = limitarAchados(
+        linhas.filter((l) => !gravadas.has(chaveDe(l))),
+        NOVOS_POR_EXECUCAO,
+      )
+      if (escolhidos.length === 0) return
+
       // `on conflict do nothing` no índice de dedupe: só as linhas novas voltam,
       // e o fato de ontem (ou o descartado) não avisa de novo.
-      const { data, error } = await admin.rpc('inserir_insights', { p_linhas: linhas })
+      const { data, error } = await admin.rpc('inserir_insights', {
+        p_linhas: escolhidos.map((l): Linha => ({
+          workspace_id: l.workspace_id,
+          user_id: l.user_id,
+          kind: l.kind,
+          dedupe_key: l.dedupe_key,
+          payload: l.payload,
+        })),
+      })
       if (error) throw new Error(error.message)
-      const novos = (data ?? []) as InsightRow[]
+      // O push vai na ordem do corte: a fatura e o relatório antes do resto.
+      const ordem = escolhidos.map(chaveDe)
+      const novos = ((data ?? []) as InsightRow[]).sort(
+        (a, b) => ordem.indexOf(chaveDe(a)) - ordem.indexOf(chaveDe(b)),
+      )
       c.novos += novos.length
       if (novos.length > 0) await avisar(admin, workspaceId, novos, semana, c)
     } catch (e) {
