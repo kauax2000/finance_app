@@ -54,6 +54,7 @@ export type CcTxAnalyticsRow = Pick<
     | "category_id"
     | "subscription_id"
     | "installment_plan_id"
+    | "is_private"
 > & {
     user_id?: string
     category?: CcCategoryEmbed | null
@@ -65,11 +66,11 @@ export const CREDIT_CARD_EXPENSE_SELECT =
 
 /** Card detail analytics: full category embed + subscription / installment links. */
 export const CREDIT_CARD_ANALYTICS_SELECT =
-    "id,user_id,type,amount,date,description,payment_method,payment_credit_card_id,installment_sequence,category_id,subscription_id,installment_plan_id,category:categories(id,name,color,icon)"
+    "id,user_id,is_private,type,amount,date,description,payment_method,payment_credit_card_id,installment_sequence,category_id,subscription_id,installment_plan_id,category:categories(id,name,color,icon)"
 
 /** Same as analytics select when `subscription_id` / `installment_plan_id` columns are absent. */
 export const CREDIT_CARD_ANALYTICS_SELECT_COMPAT =
-    "id,user_id,type,amount,date,description,payment_method,payment_credit_card_id,installment_sequence,category_id,category:categories(id,name,color,icon)"
+    "id,user_id,is_private,type,amount,date,description,payment_method,payment_credit_card_id,installment_sequence,category_id,category:categories(id,name,color,icon)"
 
 export const RECENT_CC_TX_CAP = 20
 
@@ -174,6 +175,7 @@ export function ccAnalyticsRowsToListTransactions(
         subscription_id: row.subscription_id ?? null,
         installment_plan_id: row.installment_plan_id ?? null,
         installment_sequence: row.installment_sequence ?? null,
+        is_private: row.is_private === true,
         // A linha sintética só alimenta a lista; o detalhe relê a transação com "*".
         source: "app",
         needs_review: false,

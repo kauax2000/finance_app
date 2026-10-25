@@ -22,6 +22,8 @@ export type TransactionFormSavePayload = {
     source?: TransactionSource
     /** Só na criação; a edição grava sempre `false`. */
     needsReview?: boolean
+    /** Gasto privado (Bloco 7B); sem ele, a coluna fica como está. */
+    isPrivate?: boolean
 }
 
 /**

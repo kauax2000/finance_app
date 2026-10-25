@@ -1,4 +1,5 @@
 import { isPostgrestTransientNetworkError } from "@/lib/transient-network-retry"
+import { MOTIVO as MOTIVO_PRIVADO } from "@/lib/privado/pode-ser-privado"
 
 /** User-facing copy for offline / flaky network (matches auth fetch messaging). */
 export const TRANSIENT_NETWORK_MESSAGE_PT =
@@ -61,6 +62,10 @@ const RAISE_MESSAGE_PT: Record<string, string> = {
     insight_dia_invalido: "O dia vai de 1 a 31.",
     insight_valor_invalido: "Informe um valor maior que zero.",
     insight_grande_demais: "Os dados deste insight passaram do tamanho aceito.",
+    // Bloco 7B, o gasto privado e o titular do cartão.
+    privado_nao_permitido: MOTIVO_PRIVADO.banco,
+    titular_so_dono: "Só quem é dono da carteira escolhe o titular do cartão.",
+    titular_nao_adulto: "O titular do cartão precisa ser adulto da carteira.",
 }
 
 /**

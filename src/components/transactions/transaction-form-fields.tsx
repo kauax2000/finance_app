@@ -77,6 +77,8 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { currencyBRL } from "@/lib/formatters"
 import { EstornoWireframe } from "@/components/wireframe/estorno-wireframe"
+import { PrivadoWireframe } from "@/components/wireframe/gasto-privado-wireframe"
+import type { PodeSerPrivado } from "@/lib/privado/pode-ser-privado"
 import { FraseRapidaWireframe } from "@/components/wireframe/frase-rapida-wireframe"
 import { ImpactoDaParcela } from "@/components/wireframe/impacto-parcela-wireframe"
 import { equalInstallmentsFromPortion, splitTotalAcrossInstallments } from "@/lib/installment-amounts"
@@ -269,6 +271,10 @@ export type TransactionFormFieldsProps = {
     fotoInicial?: File
     aplicarFoto?: (c: CamposDaFrase) => void
     setFotoDoRecibo?: (foto: File) => void
+    /** O "Privado" (Bloco 7B): `null` esconde a chave. */
+    isPrivate?: boolean
+    setIsPrivate?: (v: boolean) => void
+    regraDoPrivado?: PodeSerPrivado | null
 }
 
 /**
@@ -343,6 +349,9 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
         aplicarFrase,
         fotoInicial,
         aplicarFoto,
+        isPrivate,
+        setIsPrivate,
+        regraDoPrivado,
         setFotoDoRecibo,
     } = props
 
@@ -923,6 +932,14 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                         </p>
                     ) : null}
                 </Field>
+            ) : null}
+
+            {regraDoPrivado && setIsPrivate ? (
+                <PrivadoWireframe
+                    marcado={Boolean(isPrivate)}
+                    onChange={setIsPrivate}
+                    regra={regraDoPrivado}
+                />
             ) : null}
         </div>
     )

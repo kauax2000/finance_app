@@ -16,6 +16,8 @@ export type CreditCardInsertRow = {
     expiry_month?: number | null
     expiry_year?: number | null
     is_active: boolean
+    /** O titular (Bloco 7B): só o dono o define; nulo é o cartão da casa. */
+    holder_user_id?: string | null
 }
 
 export async function createCreditCard(

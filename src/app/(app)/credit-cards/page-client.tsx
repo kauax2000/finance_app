@@ -109,6 +109,7 @@ export default function CreditCardsPageClient() {
     const [creditLimit, setCreditLimit] = useState("")
     const [expiryMonth, setExpiryMonth] = useState("")
     const [expiryYear, setExpiryYear] = useState("")
+    const [holderUserId, setHolderUserId] = useState<string | null>(null)
 
     const canCreateCard =
         !authLoading &&
@@ -172,6 +173,7 @@ export default function CreditCardsPageClient() {
         setCreditLimit("")
         setExpiryMonth("")
         setExpiryYear("")
+        setHolderUserId(null)
     }
 
     const handleCreate = async (e: React.FormEvent) => {
@@ -226,6 +228,7 @@ export default function CreditCardsPageClient() {
             credit_limit:
                 limitVal !== null && !Number.isNaN(limitVal) ? limitVal : null,
             is_active: true,
+            ...(holderUserId ? { holder_user_id: holderUserId } : {}),
             ...(exp.month != null && exp.year != null
                 ? { expiry_month: exp.month, expiry_year: exp.year }
                 : {}),
@@ -425,6 +428,8 @@ export default function CreditCardsPageClient() {
                                     onExpiryMonthChange={setExpiryMonth}
                                     expiryYear={expiryYear}
                                     onExpiryYearChange={setExpiryYear}
+                                    holderUserId={holderUserId}
+                                    onHolderUserIdChange={setHolderUserId}
                                 />
                             </div>
                         </DialogBody>

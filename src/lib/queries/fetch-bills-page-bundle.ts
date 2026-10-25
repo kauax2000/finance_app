@@ -147,7 +147,7 @@ async function fetchBillsPageBundleLegacy(
             .order("name"),
         supabase
             .from("credit_cards")
-            .select("brand, closing_day, created_at, credit_limit, due_day, expiry_month, expiry_year, id, is_active, last_four, name, updated_at, user_id, workspace_id")
+            .select("brand, closing_day, created_at, credit_limit, due_day, expiry_month, expiry_year, id, is_active, last_four, name, updated_at, user_id, workspace_id, holder_user_id")
             .eq("workspace_id", workspaceId)
             .order("name"),
         supabase

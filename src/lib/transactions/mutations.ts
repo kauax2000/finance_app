@@ -46,6 +46,7 @@ export function buildTransactionRow(
         recurring_interval: payload.recurringInterval,
         payment_method: payload.paymentMethod,
         payment_credit_card_id: payload.paymentCreditCardId,
+        ...(payload.isPrivate != null ? { is_private: payload.isPrivate } : {}),
     }
 }
 

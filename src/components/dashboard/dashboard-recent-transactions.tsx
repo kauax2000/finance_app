@@ -31,6 +31,7 @@ import { labelYearMonthPt } from "@/lib/budget-month"
 import { signedCurrencyBRL } from "@/lib/formatters"
 import { MoneyDisplay } from "@/components/ui/money-display"
 import { TransactionsTable } from "@/components/transactions/transactions-table"
+import { useRotuloDaTransacao } from "@/lib/privado/use-rotulo-da-transacao"
 
 const EMPTY_INVOICE_PAID_KEYS: ReadonlySet<string> = new Set()
 
@@ -99,6 +100,7 @@ export function DashboardRecentTransactions({
     truncationFooter?: RecentTransactionsTruncationFooter
 }) {
     const monthTitle = useMemo(() => labelYearMonthPt(calendarYm), [calendarYm])
+    const rotulo = useRotuloDaTransacao()
     return (
         <PageSection className="max-w-full">
             <PageSectionHeader
@@ -158,7 +160,7 @@ export function DashboardRecentTransactions({
                                 <ul className="divide-y divide-border" role="list">
                                     {transactions.map((transaction) => {
                                 const primary =
-                                    transaction.description ||
+                                    rotulo(transaction) ||
                                     transaction.category?.name ||
                                     "Sem descrição"
                                 const catName = transaction.category?.name

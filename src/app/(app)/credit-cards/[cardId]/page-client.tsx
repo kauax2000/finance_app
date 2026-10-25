@@ -1,5 +1,6 @@
 "use client"
 
+import { useRotuloDaTransacao } from "@/lib/privado/use-rotulo-da-transacao"
 import { currencyBRL } from "@/lib/formatters"
 import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -117,6 +118,7 @@ export default function CreditCardDetailPageClient() {
 
     const { user, loading: authLoading } = useAuth()
     const { currentWorkspaceId, loading: workspaceLoading } = useWorkspace()
+    const rotulo = useRotuloDaTransacao()
 
     const [card, setCard] = useState<CreditCard | null>(null)
     const [ccAnalyticsRows, setCcAnalyticsRows] = useState<CcTxAnalyticsRow[]>([])
@@ -152,6 +154,7 @@ export default function CreditCardDetailPageClient() {
     const [editCreditLimit, setEditCreditLimit] = useState("")
     const [editExpiryMonth, setEditExpiryMonth] = useState("")
     const [editExpiryYear, setEditExpiryYear] = useState("")
+    const [editHolderUserId, setEditHolderUserId] = useState<string | null>(null)
 
     const openEdit = useCallback((c: CreditCard) => {
         setEditFormKey((k) => k + 1)
@@ -168,6 +171,7 @@ export default function CreditCardDetailPageClient() {
                 : ""
         )
         setEditExpiryYear(c.expiry_year != null ? String(c.expiry_year) : "")
+        setEditHolderUserId(c.holder_user_id ?? null)
         setEditingOpen(true)
     }, [])
 
@@ -180,6 +184,7 @@ export default function CreditCardDetailPageClient() {
         setEditCreditLimit("")
         setEditExpiryMonth("")
         setEditExpiryYear("")
+        setEditHolderUserId(null)
     }, [])
 
     const load = useCallback(async () => {
@@ -191,7 +196,7 @@ export default function CreditCardDetailPageClient() {
         const [cardRes, txPack, plansPack, paymentsPack] = await Promise.all([
             supabase
                 .from("credit_cards")
-                .select("brand, closing_day, created_at, credit_limit, due_day, expiry_month, expiry_year, id, is_active, last_four, name, updated_at, user_id, workspace_id")
+                .select("brand, closing_day, created_at, credit_limit, due_day, expiry_month, expiry_year, id, is_active, last_four, name, updated_at, user_id, workspace_id, holder_user_id")
                 .eq("id", cardId)
                 .eq("workspace_id", currentWorkspaceId)
                 .maybeSingle(),
@@ -311,7 +316,7 @@ export default function CreditCardDetailPageClient() {
                     .eq("workspace_id", currentWorkspaceId),
                 supabase
                     .from("credit_cards")
-                    .select("brand, closing_day, created_at, credit_limit, due_day, expiry_month, expiry_year, id, is_active, last_four, name, updated_at, user_id, workspace_id")
+                    .select("brand, closing_day, created_at, credit_limit, due_day, expiry_month, expiry_year, id, is_active, last_four, name, updated_at, user_id, workspace_id, holder_user_id")
                     .eq("workspace_id", currentWorkspaceId)
                     .order("name"),
             ])
@@ -662,6 +667,8 @@ export default function CreditCardDetailPageClient() {
                 credit_limit:
                     limitVal !== null && !Number.isNaN(limitVal) ? limitVal : null,
                 is_active: card.is_active,
+                // Só quando mudou: o gatilho do titular é do dono (Ruling 4).
+                ...(editHolderUserId !== (card.holder_user_id ?? null) ? { holder_user_id: editHolderUserId } : {}),
                 ...(exp.month != null && exp.year != null
                     ? { expiry_month: exp.month, expiry_year: exp.year }
                     : {}),
@@ -809,6 +816,8 @@ export default function CreditCardDetailPageClient() {
                                 onExpiryMonthChange={setEditExpiryMonth}
                                 expiryYear={editExpiryYear}
                                 onExpiryYearChange={setEditExpiryYear}
+                                holderUserId={editHolderUserId}
+                                onHolderUserIdChange={setEditHolderUserId}
                             />
                         </div>
                     </DialogBody>
@@ -938,7 +947,7 @@ export default function CreditCardDetailPageClient() {
                                             pendingTransactionDelete.date
                                         )}{" "}
                                         —{" "}
-                                        {pendingTransactionDelete.description ||
+                                        {rotulo(pendingTransactionDelete) ||
                                             pendingTransactionDelete.category?.name ||
                                             "Sem descrição"}
                                     </li>

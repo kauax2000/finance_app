@@ -31,6 +31,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { TitularDoCartaoWireframe } from "@/components/wireframe/gasto-privado-wireframe"
 const DAY_OPTIONS = Array.from({ length: 31 }, (_, i) => String(i + 1))
 
 const billingDaySelectTriggerClass = "w-full min-w-0"
@@ -60,6 +61,9 @@ export type CreditCardFormFieldsProps = {
     onExpiryMonthChange: (v: string) => void
     expiryYear: string
     onExpiryYearChange: (v: string) => void
+    /** O titular (Bloco 7B); sem o `onHolderUserIdChange`, o campo não aparece. */
+    holderUserId?: string | null
+    onHolderUserIdChange?: (v: string | null) => void
 }
 
 function CreditCardBillingSection({
@@ -229,6 +233,8 @@ export function CreditCardFormFields({
     onExpiryMonthChange,
     expiryYear,
     onExpiryYearChange,
+    holderUserId = null,
+    onHolderUserIdChange,
 }: CreditCardFormFieldsProps) {
     return (
         <>
@@ -317,6 +323,9 @@ export function CreditCardFormFields({
                 dueDay={dueDay}
                 onDueDayChange={onDueDayChange}
             />
+            {onHolderUserIdChange ? (
+                <TitularDoCartaoWireframe valor={holderUserId} onChange={onHolderUserIdChange} />
+            ) : null}
         </>
     )
 }

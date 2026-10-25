@@ -1,0 +1,106 @@
+import { describe, expect, it, vi } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
+import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
+import { MOTIVO, podeSerPrivado, METODOS_PRIVADOS } from "./pode-ser-privado"
+
+vi.mock("@/lib/supabase", () => ({ supabase: {} }))
+const { buildTransactionRow } = await import("@/lib/transactions/mutations")
+
+const EU = "u-eu"
+const OUTRA = "u-outra"
+const cartaoDaCasa = { holder_user_id: null }
+const meuCartao = { holder_user_id: EU }
+const cartaoDela = { holder_user_id: OUTRA }
+
+describe("podeSerPrivado (a regra do guardar_privado, para a tela explicar antes)", () => {
+    it.each(["pix", "debit_card", "cash"] as const)("vale: %s do adulto", (metodo) => {
+        expect(podeSerPrivado({ papel: "member", metodo, cartao: null, autorId: EU })).toEqual({ pode: true })
+        expect(podeSerPrivado({ papel: "owner", metodo, cartao: null, autorId: EU })).toEqual({ pode: true })
+    })
+
+    it("vale: o cartão cujo titular é o autor", () => {
+        expect(podeSerPrivado({ papel: "member", metodo: "credit_card", cartao: meuCartao, autorId: EU })).toEqual({ pode: true })
+    })
+
+    it("o cartão da casa (titular nulo) não vale", () => {
+        expect(podeSerPrivado({ papel: "owner", metodo: "credit_card", cartao: cartaoDaCasa, autorId: EU })).toEqual({
+            pode: false,
+            motivo: "No cartão da casa o titular vê a fatura no banco.",
+        })
+    })
+
+    it("o cartão de outro titular não vale", () => {
+        expect(podeSerPrivado({ papel: "owner", metodo: "credit_card", cartao: cartaoDela, autorId: EU })).toEqual({
+            pode: false,
+            motivo: "Só o titular do cartão pode marcar como privado.",
+        })
+    })
+
+    it("o convidado não marca", () => {
+        expect(podeSerPrivado({ papel: "guest", metodo: "pix", cartao: null, autorId: EU })).toEqual({
+            pode: false,
+            motivo: "Quem é convidado não marca gasto privado.",
+        })
+    })
+
+    it("assinatura, parcela e conta não", () => {
+        expect(podeSerPrivado({ papel: "member", metodo: "pix", cartao: null, autorId: EU, vinculado: true })).toEqual({
+            pode: false,
+            motivo: "Assinatura, parcela e conta não podem ser privadas.",
+        })
+    })
+
+    it.each(["ted", "other", null] as const)("o método %s não vale", (metodo) => {
+        expect(podeSerPrivado({ papel: "member", metodo, cartao: null, autorId: EU })).toEqual({
+            pode: false,
+            motivo: MOTIVO.metodo,
+        })
+    })
+
+    it("paridade com o gatilho: os mesmos métodos, o titular igual ao autor, adulto, sem vínculo", () => {
+        const sql = semComentarios(lerFonte("supabase/migrations/20261030120000_privado.sql")).replace(/--.*$/gm, "")
+        const m = sql.match(/new\.payment_method in \(([^)]*)\)/)
+        expect(m).not.toBeNull()
+        const doGatilho = m![1].split(",").map((s) => s.trim().replace(/'/g, ""))
+        expect([...METODOS_PRIVADOS].sort()).toEqual(doGatilho.sort())
+        expect(sql).toMatch(/c\.holder_user_id = new\.user_id/)
+        expect(sql).toMatch(/wm\.role in \('owner', 'member'\)/)
+        expect(sql).toMatch(/new\.subscription_id is null\s+and new\.installment_plan_id is null/)
+    })
+
+    it("o erro do banco vira frase em português", () => {
+        expect(formatSupabasePostgrestError({ message: "PRIVADO_NAO_PERMITIDO" })).toBe(MOTIVO.banco)
+        expect(formatSupabasePostgrestError({ message: "TITULAR_SO_DONO" })).toBe(
+            "Só quem é dono da carteira escolhe o titular do cartão.",
+        )
+    })
+})
+
+describe("o salvar do lançamento e o is_private", () => {
+    const ctx = { userId: "u1", workspaceId: "ws-1" }
+    const payload = {
+        editingId: "tx-1",
+        categoryId: "cat-1",
+        type: "expense" as const,
+        amount: 42,
+        description: "Farmácia",
+        dateIso: "2026-04-10T12:00:00.000Z",
+        isRecurring: false,
+        recurringInterval: null,
+        paymentMethod: "pix" as const,
+        paymentCreditCardId: null,
+    }
+
+    it("sem a chave à vista, a coluna não vai (uma linha lida sem ela não é desmarcada)", () => {
+        expect(buildTransactionRow(ctx, payload)).not.toHaveProperty("is_private")
+    })
+
+    it("marcar e desmarcar mandam a descrição e a categoria reais junto: o gatilho guarda e devolve", () => {
+        expect(buildTransactionRow(ctx, { ...payload, isPrivate: true })).toMatchObject({
+            is_private: true,
+            description: "Farmácia",
+            category_id: "cat-1",
+        })
+        expect(buildTransactionRow(ctx, { ...payload, isPrivate: false })).toMatchObject({ is_private: false })
+    })
+})

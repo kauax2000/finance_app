@@ -50,6 +50,7 @@ export function CreditCardCreateDialog({
     const [creditLimit, setCreditLimit] = React.useState("")
     const [expiryMonth, setExpiryMonth] = React.useState("")
     const [expiryYear, setExpiryYear] = React.useState("")
+    const [holderUserId, setHolderUserId] = React.useState<string | null>(null)
 
     const resetCreateForm = React.useCallback(() => {
         setName("")
@@ -59,6 +60,7 @@ export function CreditCardCreateDialog({
         setCreditLimit("")
         setExpiryMonth("")
         setExpiryYear("")
+        setHolderUserId(null)
     }, [])
 
     React.useEffect(() => {
@@ -119,6 +121,7 @@ export function CreditCardCreateDialog({
             credit_limit:
                 limitVal !== null && !Number.isNaN(limitVal) ? limitVal : null,
             is_active: true,
+            ...(holderUserId ? { holder_user_id: holderUserId } : {}),
             ...(exp.month != null && exp.year != null
                 ? { expiry_month: exp.month, expiry_year: exp.year }
                 : {}),
@@ -204,6 +207,8 @@ export function CreditCardCreateDialog({
                                 onExpiryMonthChange={setExpiryMonth}
                                 expiryYear={expiryYear}
                                 onExpiryYearChange={setExpiryYear}
+                                holderUserId={holderUserId}
+                                onHolderUserIdChange={setHolderUserId}
                             />
                         </div>
                     </DialogBody>

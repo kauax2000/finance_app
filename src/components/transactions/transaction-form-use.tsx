@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { supabase, type Category, type CreditCard, type Transaction, type TransactionSource } from "@/lib/supabase"
 import { enviarAnexo } from "@/lib/anexos"
 import { useWorkspace } from "@/components/workspace-provider"
+import { useAuth } from "@/components/providers"
+import { podeSerPrivado } from "@/lib/privado/pode-ser-privado"
 import { primeiraParcelaDoPlano } from "@/components/transactions/transaction-form-persistence"
 import type { PaymentMethod } from "@/lib/payment-methods"
 import {
@@ -79,6 +81,7 @@ function fotografar(r: Rascunho): string {
         r.installmentTotal,
         r.installmentPerAmount,
         r.installmentCount,
+        r.isPrivate,
     ])
 }
 
@@ -100,6 +103,8 @@ type Rascunho = {
     installmentPerAmount: string
     installmentCount: string
     installmentEditScope: "slice" | "plan"
+    /** Gasto privado (Bloco 7B). */
+    isPrivate: boolean
 }
 
 /**
@@ -194,6 +199,7 @@ export function useTransactionForm({
     const [installmentEditScope, setInstallmentEditScope] = useState<
         "slice" | "plan"
     >("slice")
+    const [isPrivate, setIsPrivate] = useState(false)
     // As dúvidas da frase rápida aplicada; `null` sem frase. O salvar leva a
     // origem `quick_text` e a marca de "a conferir" (Decisão 14).
     const [duvidasDaFrase, setDuvidasDaFrase] = useState<string[] | null>(null)
@@ -259,6 +265,7 @@ export function useTransactionForm({
                       : "",
                   installmentCount: p ? String(p.total_installments) : DEFAULT_INSTALLMENT_COUNT,
                   installmentEditScope: "slice",
+                  isPrivate: editingTransaction.is_private === true,
               }
             : {
                   formKind: kindInicial,
@@ -279,6 +286,7 @@ export function useTransactionForm({
                   installmentPerAmount: "",
                   installmentCount: DEFAULT_INSTALLMENT_COUNT,
                   installmentEditScope: "slice",
+                  isPrivate: false,
               }
         setFormKind(v.formKind)
         setType(v.type)
@@ -295,6 +303,7 @@ export function useTransactionForm({
         setInstallmentPerAmount(v.installmentPerAmount)
         setInstallmentCount(v.installmentCount)
         setInstallmentEditScope(v.installmentEditScope)
+        setIsPrivate(v.isPrivate)
         setDuvidasDaFrase(null)
         setFotoDoRecibo(null)
         setSnapshot(v)
@@ -340,6 +349,28 @@ export function useTransactionForm({
 
     const isInstallmentCreate =
         !editingTransaction && formKind === "installment"
+
+    // O "Privado" (Bloco 7B): só na despesa de quem a lançou, e só depois de o
+    // papel chegar. Sem a chave à vista, o salvar não manda `is_private` (uma
+    // linha lida sem a coluna não é desmarcada por engano).
+    const { user } = useAuth()
+    const autorId = editingTransaction?.user_id ?? user?.id ?? ""
+    const regraDoPrivado =
+        type === "expense" &&
+        papel != null &&
+        Boolean(user) &&
+        autorId === user?.id &&
+        (!editingTransaction || editingTransaction.is_private !== undefined)
+            ? podeSerPrivado({
+                  papel,
+                  metodo: paymentMethod,
+                  cartao: creditCards.find((c) => c.id === paymentCreditCardId) ?? null,
+                  autorId,
+                  vinculado:
+                      formKind === "installment" ||
+                      Boolean(editingTransaction?.installment_plan_id || editingTransaction?.subscription_id),
+              })
+            : null
 
     const isInstallmentPlanEdit =
         Boolean(editingTransaction?.installment_plan_id) &&
@@ -622,6 +653,7 @@ export function useTransactionForm({
             recurringInterval,
             paymentMethod: pm,
             paymentCreditCardId: pcc,
+            ...(regraDoPrivado ? { isPrivate: isPrivate && regraDoPrivado.pode } : {}),
             ...origemDaFrase(duvidasDaFrase, Boolean(editingTransaction), categoryId, fonteDaFrase),
         })
 
@@ -712,6 +744,9 @@ export function useTransactionForm({
         fotoInicial,
         aplicarFoto,
         setFotoDoRecibo,
+        isPrivate,
+        setIsPrivate,
+        regraDoPrivado,
     }
 
     const formTitle = transactionFormTitle({
@@ -758,6 +793,7 @@ export function useTransactionForm({
         installmentPerAmount,
         installmentCount,
         installmentEditScope,
+        isPrivate,
     }
     // A foto escolhida também é rascunho: fechar pergunta "Descartar alterações?".
     const isDirty =

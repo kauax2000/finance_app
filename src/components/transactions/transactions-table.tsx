@@ -15,6 +15,7 @@ import {
     transactionCalendarParts,
 } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
+import { useRotuloDaTransacao } from "@/lib/privado/use-rotulo-da-transacao"
 import { ROUTES, creditCardDetailPath } from "@/config/navigation"
 import {
     DataTable,
@@ -499,22 +500,26 @@ const noopSetSelectedIds: React.Dispatch<
 
 const col = dataTableColumns<Transaction>()
 
-const descriptionOf = (t: Transaction) =>
-    t.description || t.category?.name || "Sem descrição"
+/** O rótulo da linha: "Gasto pessoal de {nome}" na privada de outra pessoa (Bloco 7B). */
+type Rotulo = (t: Transaction) => string
+
+const descriptionOf = (t: Transaction, rotulo: Rotulo) =>
+    rotulo(t) || t.category?.name || "Sem descrição"
 
 const signedAmountOf = (t: Transaction) =>
     t.type === "income" ? Number(t.amount) : -Number(t.amount)
 
 /** O nome da linha nos rótulos ("Editar Mercado, 12/03"): a data desempata as homônimas. */
-const rowLabelOf = (t: Transaction) =>
-    `${descriptionOf(t)}, ${formatTransactionDayPtBr(t.date)}`
+const rowLabelOf = (t: Transaction, rotulo: Rotulo) =>
+    `${descriptionOf(t, rotulo)}, ${formatTransactionDayPtBr(t.date)}`
 
 /** A coluna que agrupa por mês — e a única ordenação em que o mês faz sentido. */
 const DATE_COLUMN: TransactionsTableSortKey = "date"
 
 function transactionColumns(
     enableSort: boolean,
-    invoicePaidByCardClose: ReadonlySet<string>
+    invoicePaidByCardClose: ReadonlySet<string>,
+    rotulo: Rotulo
 ): DataTableColumnDef<Transaction>[] {
     return [
         {
@@ -535,7 +540,7 @@ function transactionColumns(
             enableSorting: false,
             cell: ({ row }) => {
                 const t = row.original
-                const descText = descriptionOf(t)
+                const descText = descriptionOf(t, rotulo)
                 return (
                     <span className="inline-flex flex-wrap items-center gap-x-1 gap-y-0.5">
                         <span
@@ -676,11 +681,12 @@ export function TransactionsTable({
     mobile = true,
 }: TransactionsTableProps) {
     const setSelectedIds = setSelectedIdsProp ?? noopSetSelectedIds
+    const rotulo = useRotuloDaTransacao()
     const pageSize = pageSizeProp ?? Math.max(transactions.length, 1)
 
     const columns = React.useMemo(
-        () => transactionColumns(enableSort, invoicePaidByCardClose),
-        [enableSort, invoicePaidByCardClose]
+        () => transactionColumns(enableSort, invoicePaidByCardClose, rotulo),
+        [enableSort, invoicePaidByCardClose, rotulo]
     )
 
     // Só conta e só apaga o que está na tela: uma seleção feita antes de trocar o
@@ -749,7 +755,7 @@ export function TransactionsTable({
                 columns={columns}
                 data={transactions}
                 getRowId={(t) => t.id}
-                getRowLabel={rowLabelOf}
+                getRowLabel={(t) => rowLabelOf(t, rotulo)}
                 manual={{
                     rowCount: totalCount ?? transactions.length,
                     sorting: true,
@@ -799,7 +805,7 @@ export function TransactionsTable({
                     isProjectedTransactionRow(t) ? null : (
                         <TransactionRowContextMenu
                             transaction={t}
-                            title={descriptionOf(t)}
+                            title={descriptionOf(t, rotulo)}
                             alvos={targets.map((x) => x.id)}
                             selected={selected}
                             enableSelection={enableSelection}
