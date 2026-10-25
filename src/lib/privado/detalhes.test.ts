@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from "vitest"
+import { lerFonte, semComentarios } from "@/test/fonte"
 import {
     buscarDetalhesPrivados,
     comDetalhesPrivados,
+    ehPrivadaAlheia,
     juntarDetalhesPrivados,
     MASCARA_PRIVADA,
     rotuloDaTransacao,
@@ -44,6 +46,25 @@ describe("rotuloDaTransacao", () => {
         expect(rotuloDaTransacao({ ...minha, description: "Farmácia" }, "Eu", "eu")).toBe("Farmácia")
         expect(rotuloDaTransacao(daCasa, "Ana", "eu")).toBe("Mercado")
         expect(rotuloDaTransacao({ ...daCasa, description: null }, "Ana", "eu")).toBe("")
+    })
+})
+
+describe("ehPrivadaAlheia: sem Editar nem Excluir na privada de outra pessoa", () => {
+    it("só a privada de outra pessoa", () => {
+        expect(ehPrivadaAlheia(daAna, "eu")).toBe(true)
+        expect(ehPrivadaAlheia(minha, "eu")).toBe(false)
+        expect(ehPrivadaAlheia(daCasa, "eu")).toBe(false)
+    })
+
+    it("a lista e a folha de detalhe (que o Painel, a categoria e o cartão abrem) escondem as duas ações", () => {
+        const folha = semComentarios(lerFonte("src/components/transactions/transaction-detail-sheet.tsx"))
+        expect(folha).toMatch(/\{privadaAlheia\(t\) \? null : \(\s*<DropdownMenu>/)
+        expect(folha).toMatch(/if \(!t \|\| !privadaAlheia\(t\)\) setDetailMode\("edit"\)/)
+        const lista = semComentarios(lerFonte("src/components/transactions/transactions-table.tsx"))
+        expect(lista.match(/hidden: \(t\) => isProjectedTransactionRow\(t\) \|\| privadaAlheia\(t\),/g)).toHaveLength(2)
+        expect(lista).toMatch(/disabled: \(rows\) => rows\.length !== 1 \|\| privadaAlheia\(rows\[0\]\),/)
+        expect(lista).toMatch(/alheia=\{privadaAlheia\(t\)\}/)
+        expect(lista).toMatch(/enableActions && onDeleteSingle && !alheia/)
     })
 })
 

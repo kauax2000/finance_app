@@ -3,7 +3,7 @@
 import { useCallback, useMemo } from "react"
 import { useAuth } from "@/components/providers"
 import { useWorkspace } from "@/components/workspace-provider"
-import { rotuloDaTransacao } from "@/lib/privado/detalhes"
+import { ehPrivadaAlheia, rotuloDaTransacao } from "@/lib/privado/detalhes"
 import { useMemberDirectoryQuery, type MemberDirectoryRow } from "@/lib/queries/use-member-directory"
 
 /** O nome de quem lançou, como o Painel o escreve: nome, o começo do e-mail, ou "Membro". */
@@ -30,4 +30,11 @@ export function useRotuloDaTransacao(): (t: Linha) => string {
     )
     const meuId = user?.id ?? ""
     return useCallback((t: Linha) => rotuloDaTransacao(t, nomeDoMembro(porId.get(t.user_id)), meuId), [porId, meuId])
+}
+
+/** `ehPrivadaAlheia` com quem está na sessão: esconde Editar e Excluir da privada de outra pessoa. */
+export function usePrivadaAlheia(): (t: { is_private?: boolean | null; user_id: string }) => boolean {
+    const { user } = useAuth()
+    const meuId = user?.id ?? ""
+    return useCallback((t: { is_private?: boolean | null; user_id: string }) => ehPrivadaAlheia(t, meuId), [meuId])
 }

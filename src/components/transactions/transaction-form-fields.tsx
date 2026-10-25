@@ -275,6 +275,8 @@ export type TransactionFormFieldsProps = {
     isPrivate?: boolean
     setIsPrivate?: (v: boolean) => void
     regraDoPrivado?: PodeSerPrivado | null
+    /** A linha editada já era privada: com a regra que não vale mais, segura o salvar (Ruling 10). */
+    eraPrivada?: boolean
 }
 
 /**
@@ -352,6 +354,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
         isPrivate,
         setIsPrivate,
         regraDoPrivado,
+        eraPrivada = false,
         setFotoDoRecibo,
     } = props
 
@@ -939,6 +942,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                     marcado={Boolean(isPrivate)}
                     onChange={setIsPrivate}
                     regra={regraDoPrivado}
+                    eraPrivada={eraPrivada}
                 />
             ) : null}
         </div>

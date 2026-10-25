@@ -168,6 +168,10 @@ describe("migração privado: o titular, a privada e as políticas", () => {
         expect(depois).toMatch(/security definer\s+set search_path = ''/)
         expect(depois).toMatch(chave)
         expect(depois).toMatch(/perform pg_catalog\.set_config\(v_chave, '', true\);/)
+        // Sem a configuração do de antes, falha alto em vez de gravar o detalhe nulo (I1).
+        expect(depois).toMatch(
+            /begin\s+if v_enviado is null then\s+raise exception 'PRIVADO_SEM_DETALHE' using errcode = 'P0001';\s+end if;\s+perform pg_catalog\.set_config/,
+        )
         expect(depois).toMatch(/insert into public\.transacoes_privadas/)
         expect(depois).not.toMatch(/update public\.transactions|insert into public\.transactions/)
         expect(antes).not.toMatch(/update public\.transactions|insert into public\.transactions/)

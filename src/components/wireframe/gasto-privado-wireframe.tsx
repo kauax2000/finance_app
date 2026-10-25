@@ -17,39 +17,58 @@ const campo = "border border-muted-foreground/60 bg-transparent px-1 text-foregr
 /**
  * A chave "Privado" do lançamento (Bloco 7B). Quando não vale, fica
  * desabilitada com o motivo embaixo: a mesma regra do gatilho
- * (`podeSerPrivado`), dita antes de salvar.
+ * (`podeSerPrivado`), dita antes de salvar. Na privada cuja regra deixou de
+ * valer (Ruling 10), o salvar fica preso até a autora corrigir o método ou
+ * tocar em "Deixar de ser privado": nada é desmarcado por ela.
  */
 export function PrivadoWireframe({
     marcado,
     onChange,
     regra,
+    eraPrivada = false,
 }: {
     marcado: boolean
     onChange: (v: boolean) => void
     regra: PodeSerPrivado
+    eraPrivada?: boolean
 }) {
     const motivoId = useId()
     const { user } = useAuth()
     const { currentWorkspaceId } = useWorkspace()
     const diretorio = useMemberDirectoryQuery(currentWorkspaceId)
     const meuNome = nomeDoMembro(diretorio.data?.find((m) => m.user_id === user?.id))
+    const presa = eraPrivada && marcado && !regra.pode
+    const desmarcadaAqui = eraPrivada && !marcado && !regra.pode
     return (
         <WireframeBox bloco={7} titulo="Gasto privado">
             <label className="flex items-center gap-2 text-foreground">
                 <input
                     type="checkbox"
-                    checked={marcado && regra.pode}
+                    checked={marcado && (regra.pode || presa)}
                     disabled={!regra.pode}
                     aria-describedby={motivoId}
                     onChange={(e) => onChange(e.target.checked)}
                 />
                 Privado
             </label>
-            <p id={motivoId}>
+            <p id={motivoId} role={presa ? "alert" : undefined}>
                 {regra.pode
                     ? `Os outros adultos veem só "${MASCARA_PRIVADA} de ${meuNome}" e o valor; o valor entra em todos os totais.`
-                    : regra.motivo}
+                    : presa
+                      ? `Este gasto não pode mais ser privado: ${regra.motivo} Corrija a forma de pagamento ou deixe de ser privado para salvar.`
+                      : desmarcadaAqui
+                        ? "Ao salvar, deixa de ser privado: a descrição e a categoria voltam a aparecer para os outros adultos."
+                        : regra.motivo}
             </p>
+            {presa ? (
+                <button
+                    type="button"
+                    className="border border-muted-foreground/60 px-2 text-foreground"
+                    onClick={() => onChange(false)}
+                >
+                    Deixar de ser privado
+                </button>
+            ) : null}
         </WireframeBox>
     )
 }

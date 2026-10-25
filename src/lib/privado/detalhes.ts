@@ -104,6 +104,14 @@ export function rotuloDaTransacao(
     nomeDoAutor: string,
     meuId: string,
 ): string {
-    if (t.is_private && t.user_id !== meuId) return `${MASCARA_PRIVADA} de ${nomeDoAutor}`
+    if (ehPrivadaAlheia(t, meuId)) return `${MASCARA_PRIVADA} de ${nomeDoAutor}`
     return t.description ?? ""
+}
+
+/**
+ * A privada de outra pessoa: só a autora edita ou apaga (a RLS recusa), então
+ * a tela nem oferece Editar e Excluir.
+ */
+export function ehPrivadaAlheia(t: { is_private?: boolean | null; user_id: string }, meuId: string): boolean {
+    return Boolean(t.is_private) && t.user_id !== meuId
 }

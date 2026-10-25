@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import { lerFonte, semComentarios } from "@/test/fonte"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
-import { MOTIVO, podeSerPrivado, privadoDoSalvar, METODOS_PRIVADOS } from "./pode-ser-privado"
+import { MOTIVO, podeSerPrivado, privadaPresa, privadoDoSalvar, METODOS_PRIVADOS } from "./pode-ser-privado"
 
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 const { buildTransactionRow } = await import("@/lib/transactions/mutations")
@@ -72,6 +72,9 @@ describe("podeSerPrivado (a regra do guardar_privado, para a tela explicar antes
 
     it("o erro do banco vira frase em português", () => {
         expect(formatSupabasePostgrestError({ message: "PRIVADO_NAO_PERMITIDO" })).toBe(MOTIVO.banco)
+        expect(formatSupabasePostgrestError({ message: "PRIVADO_SEM_DETALHE" })).toBe(
+            "Não foi possível guardar o gasto privado. Tente de novo.",
+        )
         expect(formatSupabasePostgrestError({ message: "TITULAR_SO_DONO" })).toBe(
             "Só quem é dono da carteira escolhe o titular do cartão.",
         )
@@ -121,14 +124,75 @@ describe("privadoDoSalvar (Ruling 8): a coluna só vai quando muda algo", () => 
         expect(privadoDoSalvar({ marcado: true, regra: sim, eraPrivada: false })).toBe(true)
     })
 
-    it("desmarcar uma privada manda false; a que não vale mais também desmarca", () => {
+    it("desmarcar uma privada manda false; a que não vale mais nunca desmarca sozinha (Ruling 10)", () => {
         expect(privadoDoSalvar({ marcado: false, regra: sim, eraPrivada: true })).toBe(false)
-        expect(privadoDoSalvar({ marcado: true, regra: nao, eraPrivada: true })).toBe(false)
-        expect(privadoDoSalvar({ marcado: true, regra: null, eraPrivada: true, receita: true })).toBe(false)
+        // Sem a coluna, o banco recusa (PRIVADO_NAO_PERMITIDO) em vez de revelar.
+        expect(privadoDoSalvar({ marcado: true, regra: nao, eraPrivada: true })).toBeUndefined()
+        // "Deixar de ser privado" desmarca: aí, sim, vai false.
+        expect(privadoDoSalvar({ marcado: false, regra: nao, eraPrivada: true })).toBe(false)
     })
 
     it("a privada mantida segue true; sem a regra (o papel a caminho) a coluna não vai", () => {
         expect(privadoDoSalvar({ marcado: true, regra: sim, eraPrivada: true })).toBe(true)
         expect(privadoDoSalvar({ marcado: true, regra: null, eraPrivada: true })).toBeUndefined()
+    })
+})
+
+describe("a privada que não vale mais segura o salvar (Ruling 10)", () => {
+    const base = { papel: "member" as const, autorId: EU }
+    const casos = [
+        {
+            nome: "o titular saiu do cartão",
+            regra: podeSerPrivado({ ...base, metodo: "credit_card", cartao: cartaoDaCasa }),
+            motivo: MOTIVO.cartaoDaCasa,
+        },
+        {
+            nome: "o cartão foi apagado (a privada ficou sem cartão)",
+            regra: podeSerPrivado({ ...base, metodo: "credit_card", cartao: null }),
+            motivo: MOTIVO.semCartao,
+        },
+        {
+            nome: "virou receita",
+            regra: podeSerPrivado({ ...base, metodo: null, cartao: null, receita: true }),
+            motivo: MOTIVO.receita,
+        },
+        {
+            nome: "o método mudou para um que não vale",
+            regra: podeSerPrivado({ ...base, metodo: "ted", cartao: null }),
+            motivo: MOTIVO.metodo,
+        },
+    ]
+
+    it.each(casos)("$nome: mostra o motivo, segura o salvar e não manda false", ({ regra, motivo }) => {
+        expect(regra).toEqual({ pode: false, motivo })
+        expect(privadaPresa({ marcado: true, regra, eraPrivada: true })).toBe(motivo)
+        expect(privadoDoSalvar({ marcado: true, regra, eraPrivada: true })).toBeUndefined()
+    })
+
+    it.each(casos)("$nome: \"Deixar de ser privado\" solta o salvar e desmarca", ({ regra }) => {
+        expect(privadaPresa({ marcado: false, regra, eraPrivada: true })).toBeNull()
+        expect(privadoDoSalvar({ marcado: false, regra, eraPrivada: true })).toBe(false)
+    })
+
+    it("corrigir o método solta o salvar e a privada segue privada", () => {
+        const regra = podeSerPrivado({ ...base, metodo: "pix", cartao: null })
+        expect(privadaPresa({ marcado: true, regra, eraPrivada: true })).toBeNull()
+        expect(privadoDoSalvar({ marcado: true, regra, eraPrivada: true })).toBe(true)
+        const meu = podeSerPrivado({ ...base, metodo: "credit_card", cartao: meuCartao })
+        expect(privadaPresa({ marcado: true, regra: meu, eraPrivada: true })).toBeNull()
+    })
+
+    it("fora da edição de uma privada nada segura", () => {
+        const nao = podeSerPrivado({ ...base, metodo: "ted", cartao: null })
+        expect(privadaPresa({ marcado: true, regra: nao, eraPrivada: false })).toBeNull()
+        expect(privadaPresa({ marcado: true, regra: null, eraPrivada: true })).toBeNull()
+    })
+
+    it("o formulário segura o salvar pela regra, e a receita da privada não desmarca por conta própria", () => {
+        const fonte = semComentarios(lerFonte("src/components/transactions/transaction-form-use.tsx"))
+        expect(fonte).toMatch(/const submitDisabled =\s+saving \|\|\s+motivoDaPresa != null \|\|/)
+        expect(fonte).toMatch(/if \(motivoDaPresa\) \{\s+toastError\(motivoDaPresa/)
+        expect(fonte).toMatch(/\(type === "expense" \|\| eraPrivada\) &&/)
+        expect(fonte).toMatch(/receita: type === "income"/)
     })
 })

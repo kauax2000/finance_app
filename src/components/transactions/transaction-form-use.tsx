@@ -5,7 +5,7 @@ import { supabase, type Category, type CreditCard, type Transaction, type Transa
 import { enviarAnexo } from "@/lib/anexos"
 import { useWorkspace } from "@/components/workspace-provider"
 import { useAuth } from "@/components/providers"
-import { podeSerPrivado, privadoDoSalvar } from "@/lib/privado/pode-ser-privado"
+import { podeSerPrivado, privadaPresa, privadoDoSalvar } from "@/lib/privado/pode-ser-privado"
 import { primeiraParcelaDoPlano } from "@/components/transactions/transaction-form-persistence"
 import type { PaymentMethod } from "@/lib/payment-methods"
 import {
@@ -351,12 +351,15 @@ export function useTransactionForm({
         !editingTransaction && formKind === "installment"
 
     // O "Privado" (Bloco 7B): só na despesa de quem a lançou, e só depois de o
-    // papel chegar. O salvar só manda `is_private` ao marcar ou desmarcar
-    // (`privadoDoSalvar`, Ruling 8).
+    // papel chegar; na edição de uma privada, também na receita, para dizer
+    // por que ela não vale mais. O salvar só manda `is_private` ao marcar ou
+    // desmarcar (`privadoDoSalvar`, Ruling 8), e a privada cuja regra deixou
+    // de valer segura o salvar (`privadaPresa`, Ruling 10).
     const { user } = useAuth()
     const autorId = editingTransaction?.user_id ?? user?.id ?? ""
+    const eraPrivada = editingTransaction?.is_private === true
     const regraDoPrivado =
-        type === "expense" &&
+        (type === "expense" || eraPrivada) &&
         papel != null &&
         Boolean(user) &&
         autorId === user?.id &&
@@ -366,11 +369,13 @@ export function useTransactionForm({
                   metodo: paymentMethod,
                   cartao: creditCards.find((c) => c.id === paymentCreditCardId) ?? null,
                   autorId,
+                  receita: type === "income",
                   vinculado:
                       formKind === "installment" ||
                       Boolean(editingTransaction?.installment_plan_id || editingTransaction?.subscription_id),
               })
             : null
+    const motivoDaPresa = privadaPresa({ marcado: isPrivate, regra: regraDoPrivado, eraPrivada })
 
     const isInstallmentPlanEdit =
         Boolean(editingTransaction?.installment_plan_id) &&
@@ -635,6 +640,11 @@ export function useTransactionForm({
             return
         }
 
+        if (motivoDaPresa) {
+            toastError(motivoDaPresa, { id: TRANSACTION_SAVE_TOAST_ID })
+            return
+        }
+
         const { paymentMethod: pm, paymentCreditCardId: pcc } = formaDoPayload({
             type,
             paymentMethod,
@@ -656,8 +666,7 @@ export function useTransactionForm({
             isPrivate: privadoDoSalvar({
                 marcado: isPrivate,
                 regra: regraDoPrivado,
-                eraPrivada: editingTransaction?.is_private === true,
-                receita: type === "income",
+                eraPrivada,
             }),
             ...origemDaFrase(duvidasDaFrase, Boolean(editingTransaction), categoryId, fonteDaFrase),
         })
@@ -752,6 +761,7 @@ export function useTransactionForm({
         isPrivate,
         setIsPrivate,
         regraDoPrivado,
+        eraPrivada,
     }
 
     const formTitle = transactionFormTitle({
@@ -777,6 +787,7 @@ export function useTransactionForm({
 
     const submitDisabled =
         saving ||
+        motivoDaPresa != null ||
         (needsCreditCard &&
             (isInstallmentCreate ||
                 isInstallmentPlanEdit ||

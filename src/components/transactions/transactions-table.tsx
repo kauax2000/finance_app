@@ -15,7 +15,7 @@ import {
     transactionCalendarParts,
 } from "@/lib/transaction-date"
 import { cn } from "@/lib/utils"
-import { useRotuloDaTransacao } from "@/lib/privado/use-rotulo-da-transacao"
+import { usePrivadaAlheia, useRotuloDaTransacao } from "@/lib/privado/use-rotulo-da-transacao"
 import { ROUTES, creditCardDetailPath } from "@/config/navigation"
 import {
     DataTable,
@@ -395,6 +395,7 @@ function TransactionRowContextMenu({
     selected,
     enableSelection,
     enableActions,
+    alheia,
     openTransactionDetail,
     setSelectedIds,
     onDeleteSingle,
@@ -406,6 +407,8 @@ function TransactionRowContextMenu({
     selected: boolean
     enableSelection: boolean
     enableActions: boolean
+    /** A privada de outra pessoa: sem Editar nem Excluir. */
+    alheia: boolean
     openTransactionDetail: TransactionsTableProps["openTransactionDetail"]
     setSelectedIds: React.Dispatch<React.SetStateAction<Set<string>>>
     onDeleteSingle?: (t: Transaction) => void
@@ -457,12 +460,14 @@ function TransactionRowContextMenu({
                 <ArrowRightIcon aria-hidden />
                 Abrir
             </ContextMenuItem>
-            <ContextMenuItem
-                onSelect={() => openTransactionDetail(transaction, { edit: true })}
-            >
-                <PencilIcon aria-hidden />
-                Editar
-            </ContextMenuItem>
+            {alheia ? null : (
+                <ContextMenuItem
+                    onSelect={() => openTransactionDetail(transaction, { edit: true })}
+                >
+                    <PencilIcon aria-hidden />
+                    Editar
+                </ContextMenuItem>
+            )}
             {enableSelection ? (
                 <ContextMenuItem
                     onSelect={() =>
@@ -478,7 +483,7 @@ function TransactionRowContextMenu({
                     {selected ? "Desmarcar" : "Selecionar"}
                 </ContextMenuItem>
             ) : null}
-            {enableActions && onDeleteSingle ? (
+            {enableActions && onDeleteSingle && !alheia ? (
                 <>
                     <ContextMenuSeparator />
                     <ContextMenuItem
@@ -682,6 +687,7 @@ export function TransactionsTable({
 }: TransactionsTableProps) {
     const setSelectedIds = setSelectedIdsProp ?? noopSetSelectedIds
     const rotulo = useRotuloDaTransacao()
+    const privadaAlheia = usePrivadaAlheia()
     const pageSize = pageSizeProp ?? Math.max(transactions.length, 1)
 
     const columns = React.useMemo(
@@ -710,7 +716,7 @@ export function TransactionsTable({
         {
             label: "Editar",
             icon: <PencilIcon aria-hidden />,
-            disabled: (rows) => rows.length !== 1,
+            disabled: (rows) => rows.length !== 1 || privadaAlheia(rows[0]),
             onSelect: ([t]) => {
                 if (t) openTransactionDetail(t, { edit: true })
             },
@@ -733,7 +739,7 @@ export function TransactionsTable({
             label: "Editar",
             icon: <PencilIcon aria-hidden />,
             primary: true,
-            hidden: isProjectedTransactionRow,
+            hidden: (t) => isProjectedTransactionRow(t) || privadaAlheia(t),
             onSelect: (t) => openTransactionDetail(t, { edit: true }),
         },
         {
@@ -741,7 +747,7 @@ export function TransactionsTable({
             icon: <TrashIcon aria-hidden />,
             primary: true,
             variant: "destructive",
-            hidden: isProjectedTransactionRow,
+            hidden: (t) => isProjectedTransactionRow(t) || privadaAlheia(t),
             onSelect: (t) => onDeleteSingle?.(t),
         },
     ]
@@ -810,6 +816,7 @@ export function TransactionsTable({
                             selected={selected}
                             enableSelection={enableSelection}
                             enableActions={enableActions}
+                            alheia={privadaAlheia(t)}
                             openTransactionDetail={openTransactionDetail}
                             setSelectedIds={setSelectedIds}
                             onDeleteSingle={onDeleteSingle}

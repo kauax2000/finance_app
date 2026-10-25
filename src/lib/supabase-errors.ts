@@ -71,6 +71,7 @@ const RAISE_MESSAGE_PT: Record<string, string> = {
     insight_grande_demais: "Os dados deste insight passaram do tamanho aceito.",
     // Bloco 7B, o gasto privado e o titular do cartão.
     privado_nao_permitido: MOTIVO_PRIVADO.banco,
+    privado_sem_detalhe: "Não foi possível guardar o gasto privado. Tente de novo.",
     titular_so_dono: "Só quem é dono da carteira escolhe o titular do cartão.",
     titular_nao_adulto: "O titular do cartão precisa ser adulto da carteira.",
 }

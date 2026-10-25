@@ -1,6 +1,6 @@
 "use client"
 
-import { useRotuloDaTransacao } from "@/lib/privado/use-rotulo-da-transacao"
+import { usePrivadaAlheia, useRotuloDaTransacao } from "@/lib/privado/use-rotulo-da-transacao"
 import { currencyBRL, signedCurrencyBRL } from "@/lib/formatters"
 import { Card, CardField } from "@/components/ui/card"
 import { useEffect, useMemo, useState } from "react"
@@ -107,6 +107,7 @@ export function TransactionDetailSheet({
 }: TransactionDetailSheetProps) {
     const isMobile = useIsMobile()
     const rotulo = useRotuloDaTransacao()
+    const privadaAlheia = usePrivadaAlheia()
     const [detailMode, setDetailMode] = useState<"view" | "edit">("view")
     const [planFallback, setPlanFallback] =
         useState<TransactionInstallmentPlanRef | null>(null)
@@ -198,9 +199,9 @@ export function TransactionDetailSheet({
     useEffect(() => {
         if (!open || !launchInEditMode) return
         // eslint-disable-next-line react-hooks/set-state-in-effect -- open sheet directly in edit from row action
-        setDetailMode("edit")
+        if (!t || !privadaAlheia(t)) setDetailMode("edit")
         onLaunchEditConsumed?.()
-    }, [open, launchInEditMode, onLaunchEditConsumed])
+    }, [open, launchInEditMode, onLaunchEditConsumed, t, privadaAlheia])
 
     if (!t) {
         return null
@@ -252,7 +253,9 @@ export function TransactionDetailSheet({
                         </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-0.5">
-                        {/* O ⋯ abre como menu também no telefone, na escala do toque. */}
+                        {/* O ⋯ abre como menu também no telefone, na escala do toque. Na
+                            privada de outra pessoa não há o que editar nem apagar. */}
+                        {privadaAlheia(t) ? null : (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
@@ -291,6 +294,7 @@ export function TransactionDetailSheet({
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
+                        )}
                         <Button
                             type="button"
                             variant="tertiary"

@@ -194,7 +194,7 @@ begin
     if not new.is_private and not old.is_private then
       return new;
     end if;
-    -- O autor não troca (o `preserve_row_author` roda depois deste).
+    -- O autor não troca (o `preserve_transactions_author` roda depois deste).
     new.user_id := old.user_id;
 
     -- O cartão apagado (`on delete set null`, uma cascata): a privada fica
@@ -312,6 +312,11 @@ declare
   v_chave text := 'privado.t' || pg_catalog.md5(new.workspace_id::text || ':' || coalesce(new.client_id::text, new.id::text));
   v_enviado jsonb := nullif(pg_catalog.current_setting(v_chave, true), '')::jsonb;
 begin
+  -- Sem a configuração do de antes, a linha já saiu mascarada: gravar nulo
+  -- aqui perderia a descrição e a categoria em silêncio. Falha alto.
+  if v_enviado is null then
+    raise exception 'PRIVADO_SEM_DETALHE' using errcode = 'P0001';
+  end if;
   perform pg_catalog.set_config(v_chave, '', true);
   insert into public.transacoes_privadas (transaction_id, workspace_id, user_id, description, category_id, capture_meta)
   values (
