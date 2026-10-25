@@ -7,7 +7,7 @@ import {
   deliverNotification,
   loadWorkspacePrefsMap,
 } from '../_shared/deliver-notification.ts'
-import { adultosDaCarteira, donosDaCarteira } from '../_shared/destinatarios.ts'
+import { adultosDaCarteira, leitoresDoCartao } from '../_shared/destinatarios.ts'
 import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
 import { cardLabel, type Copy, ddmm, invoiceCopy, trendingHighCopy } from '../_shared/notification-copy.ts'
 import { withinReminderWindow } from '../_shared/notification-schedule.ts'
@@ -118,8 +118,11 @@ type CalEvent = {
 /** A fatura alta: `win` é a aberta; `fechadas`, as 3 últimas, da mais recente para a mais antiga. */
 type TrendingEvent = Omit<CalEvent, 'evento'> & { evento: 'trending_high'; fechadas: OpenWindow[] }
 
-/** `holder`: o titular do cartão (Bloco 7B), para o aviso ir só a ele e aos donos. */
-type ReadyEvent = (CalEvent | TrendingEvent) & { title: string; body: string; holder?: string | null }
+/**
+ * `holder`: o titular do cartão (Bloco 7B); `usaBanco`: o aviso leva o total do
+ * banco. Os dois juntos o deixam só com o titular e os donos (`leitoresDoCartao`).
+ */
+type ReadyEvent = (CalEvent | TrendingEvent) & { title: string; body: string; holder?: string | null; usaBanco: boolean }
 
 /**
  * O aviso fala de uma fatura fechada (fechou, vence em breve, vence hoje): o
@@ -244,7 +247,7 @@ async function trendingCopy(
   workspaceId: string,
   label: string,
   ev: TrendingEvent
-): Promise<Copy | null> {
+): Promise<(Copy & { usaBanco: boolean }) | null> {
   const fechadas = ev.fechadas
   const wins = [ev.win, ...fechadas]
   const from = wins.reduce((m, w) => (compareYmd(w.start, m) < 0 ? w.start : m), ev.win.start)
@@ -286,6 +289,8 @@ async function trendingCopy(
 
   const banco = new Map<string, number>()
   for (const r of totais.data ?? []) banco.set(String(r.statement_close_date).slice(0, 10), Number(r.bank_total))
+  // A média leva o total do banco de alguma fechada: o aviso o carrega.
+  const usaBanco = fechadas.some((w) => banco.has(formatYmd(w.end)))
   const valores = fechadas
     .map((w) => escolherTotal(cardInvoiceNetInWindow(rows, ev.cardId, w), banco.get(formatYmd(w.end))))
     // A fatura sem movimento (o cartão novo) não conta como fechada, nem a que
@@ -300,7 +305,7 @@ async function trendingCopy(
         100
     ) / 100
   const t = avaliarTendencia(prevista, valores)
-  return t.dispara ? trendingHighCopy(label, prevista, t.percentual, t.acima) : null
+  return t.dispara ? { ...trendingHighCopy(label, prevista, t.percentual, t.acima), usaBanco } : null
 }
 
 /**
@@ -348,16 +353,15 @@ async function resolveCardEvents(
   for (const ev of events) {
     if (ev.checkPaid && paid.has(formatYmd(ev.win.end))) continue
     const calculado = cardInvoiceNetInWindow(rows, cardId, ev.win)
+    const banco = isClosedCycle(ev) ? bankTotals.get(statementTotalKey(cardId, formatYmd(ev.win.end))) : undefined
     const copy = invoiceCopy({
       cartao: label,
       evento: ev.evento,
-      valor: isClosedCycle(ev)
-        ? escolherTotal(calculado, bankTotals.get(statementTotalKey(cardId, formatYmd(ev.win.end))))
-        : calculado,
+      valor: banco !== undefined ? escolherTotal(calculado, banco) : calculado,
       data: ev.data,
       dias: ev.dias,
     })
-    if (copy) ready.push({ ...ev, ...copy })
+    if (copy) ready.push({ ...ev, ...copy, usaBanco: banco !== undefined })
   }
   return ready
 }
@@ -483,11 +487,9 @@ Deno.serve(async (req: Request) => {
 
       const memberIds = adultosDaCarteira(memberRows ?? [])
       if (memberIds.length === 0) return
-      // O aviso do cartão com titular leva o total do banco (a fechada e a
-      // média da fatura alta): vai só ao titular e aos donos (Ruling 5 do 7B).
-      const donos = donosDaCarteira(memberRows ?? [])
-      const leitores = (ev: ReadyEvent) =>
-        ev.holder ? memberIds.filter((u) => u === ev.holder || donos.includes(u)) : memberIds
+      // O aviso de um cartão com titular que leva o total do banco fica com o
+      // titular e os donos; os outros vão a todo adulto (Rulings 5 e 6 do 7B).
+      const leitores = (ev: ReadyEvent) => leitoresDoCartao(memberRows ?? [], ev.holder ?? null, ev.usaBanco)
 
       const prefsMap = await loadWorkspacePrefsMap(admin, workspaceId, memberIds)
 

@@ -5,6 +5,7 @@ const filtros: Array<[string, string, unknown]> = []
 
 vi.mock("@/lib/supabase", () => ({
     supabase: {
+        auth: { getSession: async () => ({ data: { session: { user: { id: "eu" } } } }) },
         from: (tabela: string) => {
             const q = {
                 select: () => q,

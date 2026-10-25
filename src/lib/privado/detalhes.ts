@@ -73,7 +73,9 @@ export async function meuIdDaSessao(supabase: SupabaseClient): Promise<string | 
 /**
  * Junta os detalhes só quando a página tem privada do próprio autor. Quem
  * está na sessão é lido aqui: toda consulta que passa por esta função sai com
- * os detalhes, sem cada tela lembrar de mandar o id.
+ * os detalhes, sem cada tela lembrar de mandar o id. Se a leitura dos detalhes
+ * falhar, as linhas voltam mascaradas (e o log diz): salvar uma privada
+ * mascarada não apaga o original, o gatilho mantém o campo igual à máscara.
  */
 export async function juntarDetalhesPrivados<T extends LinhaComAutor>(
     supabase: SupabaseClient,
@@ -84,7 +86,12 @@ export async function juntarDetalhesPrivados<T extends LinhaComAutor>(
     if (!meuId) return linhas
     const ids = linhas.filter((t) => t.is_private && t.user_id === meuId).map((t) => t.id)
     if (!ids.length) return linhas
-    return comDetalhesPrivados(linhas, await buscarDetalhesPrivados(supabase, ids), meuId)
+    try {
+        return comDetalhesPrivados(linhas, await buscarDetalhesPrivados(supabase, ids), meuId)
+    } catch (e) {
+        console.error("juntarDetalhesPrivados:", e)
+        return linhas
+    }
 }
 
 /**

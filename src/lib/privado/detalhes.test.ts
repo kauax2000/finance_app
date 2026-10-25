@@ -78,4 +78,13 @@ describe("buscarDetalhesPrivados e juntarDetalhesPrivados", () => {
         expect(a.description).toBe("Farmácia")
         expect(b).toBe(daAna)
     })
+
+    it("se a leitura dos detalhes falhar, as linhas voltam mascaradas, sem derrubar a página", async () => {
+        const f = clienteFalso([], "eu")
+        f.inn.mockResolvedValueOnce({ data: null, error: { message: "fora do ar" } } as never)
+        const erro = vi.spyOn(console, "error").mockImplementation(() => {})
+        expect(await juntarDetalhesPrivados(f.cliente, [minha, daCasa])).toEqual([minha, daCasa])
+        expect(erro).toHaveBeenCalled()
+        erro.mockRestore()
+    })
 })

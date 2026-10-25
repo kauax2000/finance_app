@@ -1,5 +1,5 @@
 import { toCsv, type CsvColumn } from "@/lib/data-table/csv"
-import { comDetalhesPrivados, type DetalhePrivado } from "@/lib/privado/detalhes"
+import { comDetalhesPrivados, meuIdDaSessao, type DetalhePrivado } from "@/lib/privado/detalhes"
 import { supabase } from "@/lib/supabase"
 import type { Database } from "@/types/database"
 import { zipSemCompressao } from "./zip"
@@ -245,15 +245,17 @@ function lerPorCarteira(tabela: string, ids: string[]) {
 
 /**
  * As privadas da pessoa voltam com os detalhes dela (Bloco 7B). A RLS de
- * `transacoes_privadas` só devolve as do próprio autor, então quem as lê é o
- * dono de todas: o `user_id` delas é o de quem exporta.
+ * `transacoes_privadas` só devolve as do próprio autor; a junção confere de
+ * novo pelo id da sessão.
  */
 async function comAsMinhasPrivadas(linhas: Linha[], ids: string[]): Promise<Linha[]> {
     if (!linhas.some((l) => l.is_private)) return linhas
-    const detalhes = await lerTudo<DetalhePrivado & { user_id: string }>((de, ate) =>
+    const meuId = await meuIdDaSessao(supabase)
+    if (!meuId) return linhas
+    const detalhes = await lerTudo<DetalhePrivado>((de, ate) =>
         supabase
             .from("transacoes_privadas")
-            .select("transaction_id, user_id, description, category_id, capture_meta")
+            .select("transaction_id, description, category_id, capture_meta")
             .in("workspace_id", ids)
             .order("transaction_id")
             .range(de, ate),
@@ -262,7 +264,7 @@ async function comAsMinhasPrivadas(linhas: Linha[], ids: string[]): Promise<Linh
     return comDetalhesPrivados(
         linhas as Array<Linha & { id: string; user_id: string; is_private?: boolean }>,
         detalhes,
-        detalhes[0].user_id,
+        meuId,
     )
 }
 

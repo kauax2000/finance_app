@@ -53,15 +53,7 @@ export async function fetchTransactionForDetailSheet(
     }
     // A privada do autor volta com a descrição e a categoria dele: a folha e
     // o formulário de edição leem daqui (Bloco 7B).
-    let row = data as unknown as Transaction
-    try {
-        row = (await juntarDetalhesPrivados(client, [row]))[0]
-    } catch (e) {
-        return {
-            transaction: null,
-            errorMessage: e instanceof Error ? e.message : "Não foi possível carregar a transação.",
-        }
-    }
+    const [row] = await juntarDetalhesPrivados(client, [data as unknown as Transaction])
     const [withCard] = attachPaymentCards([row], args.creditCards)
     return { transaction: withCard ?? null, errorMessage: null }
 }

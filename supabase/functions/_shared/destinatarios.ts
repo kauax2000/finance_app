@@ -18,3 +18,16 @@ export function adultosDaCarteira(rows: Membro[], excluir?: string): string[] {
 export function donosDaCarteira(rows: Membro[]): string[] {
   return [...new Set(rows.filter((r) => r.role === 'owner').map((r) => r.user_id))]
 }
+
+/**
+ * Quem recebe um aviso de cartão (Bloco 7B, Rulings 5 e 6). Os adultos, como
+ * sempre; só o aviso que carrega dado do banco (total, diferença, resumo da
+ * conferência) de um cartão com titular fica com o titular e os donos. O
+ * titular que não é mais adulto da carteira some com os outros.
+ */
+export function leitoresDoCartao(rows: Membro[], holderUserId: string | null, usaBanco: boolean): string[] {
+  const adultos = adultosDaCarteira(rows)
+  if (!holderUserId || !usaBanco) return adultos
+  const donos = donosDaCarteira(rows)
+  return adultos.filter((u) => u === holderUserId || donos.includes(u))
+}

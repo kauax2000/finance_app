@@ -5,7 +5,7 @@ import { cardLabel, cardLimitCopy } from '../_shared/notification-copy.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { isServiceAuthorized } from '../_shared/service-auth.ts'
 import { deliverNotification } from '../_shared/deliver-notification.ts'
-import { adultosDaCarteira, donosDaCarteira } from '../_shared/destinatarios.ts'
+import { adultosDaCarteira, leitoresDoCartao } from '../_shared/destinatarios.ts'
 import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
 import {
   addCalendarDays,
@@ -237,12 +237,10 @@ async function avaliar(req: Request, ctx: { convidado: boolean }): Promise<Respo
   if (membersErr) return json(500, { error: internalError('evaluate-credit-card-alerts', membersErr) })
 
   const memberIds = adultosDaCarteira(memberRows ?? [])
-  // O limite do cartão com titular conta a fechada pelo total do banco: vai só
-  // ao titular e aos donos (Ruling 5 do 7B). O da casa, a todo adulto.
-  const donos = donosDaCarteira(memberRows ?? [])
-  const leitoresDoLimite = card.holder_user_id
-    ? memberIds.filter((u) => u === card.holder_user_id || donos.includes(u))
-    : memberIds
+  // O limite que conta a fechada pelo total do banco, num cartão com titular,
+  // fica com o titular e os donos; sem o total do banco, vai a todo adulto
+  // (Rulings 5 e 6 do 7B).
+  const leitoresDoLimite = leitoresDoCartao(memberRows ?? [], card.holder_user_id ?? null, !paidRow && bankTotal != null)
 
   const memberEmails = new Map<string, string | null>()
   if (memberIds.length > 0) {

@@ -399,3 +399,14 @@ Deno.test('privado: três meses de "Gasto pessoal" não viram recorrência, atí
   ]
   assertEquals(detectarAtipicos(muito, HOJE, {}), [])
 })
+
+Deno.test('privado: preço de assinatura e sazonal ignoram a privada (com controle)', () => {
+  const netflix = [{ id: 's1', name: 'Netflix', amount: 39.9, is_active: true }]
+  const p = l({ dateYmd: '2026-10-20', amount: 45.9, description: 'Netflix', is_private: true })
+  assertEquals(detectarPrecoDeAssinatura([p], netflix, HOJE), [])
+  assertEquals(detectarPrecoDeAssinatura([{ ...p, is_private: false }], netflix, HOJE).length, 1)
+
+  const ipva = l({ dateYmd: '2025-01-20', amount: 1200, description: 'IPVA 2025', is_private: true })
+  assertEquals(detectarSazonais([ipva], '2026-01-10', []), [])
+  assertEquals(detectarSazonais([{ ...ipva, is_private: false }], '2026-01-10', []).length, 1)
+})

@@ -4,7 +4,7 @@ import { FAN_OUT_CONCURRENCY, forEachLimit } from '../_shared/for-each-limit.ts'
 import { secretMatches } from '../_shared/timing-safe-equal.ts'
 import { todasAsPaginas } from '../_shared/todas-as-paginas.ts'
 import { deliverNotification, loadWorkspacePrefsMap } from '../_shared/deliver-notification.ts'
-import { adultosDaCarteira, donosDaCarteira } from '../_shared/destinatarios.ts'
+import { adultosDaCarteira, leitoresDoCartao } from '../_shared/destinatarios.ts'
 import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
 import { cardLabel } from '../_shared/notification-copy.ts'
 import {
@@ -471,10 +471,11 @@ async function achadosDaCarteira(admin: SupabaseAdminClient, workspaceId: string
       banco.set(statementTotalKey(String(r.credit_card_id), dia(String(r.statement_close_date))), Number(r.bank_total))
     }
   }
-  // O resumo de um cartão com titular leva o total do banco e a diferença: vai
-  // só ao titular e aos donos, como insight de cada um (Ruling 5 do 7B). O do
-  // cartão da casa segue da carteira.
-  let donos: string[] | null = null
+  // O resumo da fatura de um cartão com titular é do titular e dos donos, como
+  // insight de cada um, mesmo sem total do banco (Ruling 5 do 7B: uma
+  // carteira num dia e pessoas no outro, com a mesma chave, repetiria o
+  // resumo). O do cartão da casa segue da carteira.
+  let membros: Array<{ user_id: string; role: string }> | null = null
   for (const c of ativos) {
     const r = resumoDoCartao(c, hoje, tx, banco, nomes, planosMap)
     if (!r) continue
@@ -483,12 +484,12 @@ async function achadosDaCarteira(admin: SupabaseAdminClient, workspaceId: string
       linhas.push(l)
       continue
     }
-    if (!donos) {
+    if (!membros) {
       const { data, error } = await admin.from('workspace_members').select('user_id, role').eq('workspace_id', workspaceId)
       if (error) throw new Error(error.message)
-      donos = donosDaCarteira(data ?? [])
+      membros = data ?? []
     }
-    for (const u of new Set([c.holder_user_id, ...donos])) linhas.push({ ...l, user_id: u })
+    for (const u of leitoresDoCartao(membros ?? [], c.holder_user_id, true)) linhas.push({ ...l, user_id: u })
   }
 
   // No dia 1, ou no 2 se o do dia 1 falhou (como a fatura tolera um dia

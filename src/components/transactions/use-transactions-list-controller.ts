@@ -847,9 +847,7 @@ export function useTransactionsListController(
                 }
 
                 // A privada do autor abre com os detalhes dele (Bloco 7B).
-                const [linha] = await juntarDetalhesPrivados(supabase, [data as Transaction]).catch(
-                    () => [data as Transaction],
-                )
+                const [linha] = await juntarDetalhesPrivados(supabase, [data as Transaction])
                 if (cancelled) return
                 setDidAutoOpenTxn(true)
                 openTransactionDetail(linha)
