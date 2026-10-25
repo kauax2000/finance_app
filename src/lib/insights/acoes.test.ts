@@ -266,6 +266,28 @@ describe("linhaDoSeguroDoMes", () => {
     })
 })
 
+describe("textoNaCaixa: o Ver limite sai do papel de quem lê agora", () => {
+    const limite = (payload: Record<string, unknown>) => ({
+        id: "l",
+        workspace_id: "w",
+        kind: "limite_pessoa",
+        payload: { nivel: 80, gasto: 400, limite: 500, ...payload },
+        status: "new",
+        created_at: "2026-10-25T12:00:00Z",
+    })
+
+    it("o convidado vai ao Painel e o adulto aos limites, mesmo com um papel guardado no payload", () => {
+        const doGuest = limite({ para: "pessoa", papel: "member" })
+        expect(textoNaCaixa(doGuest, null, "guest")?.acao?.href).toBe("/dashboard")
+        expect(textoNaCaixa(doGuest, null, "member")?.acao?.href).toBe("/members#limites")
+        expect(textoNaCaixa(limite({ para: "dono", nome: "Ana" }), null, "owner")?.acao).toEqual({
+            rotulo: "Ver limite",
+            href: "/members#limites",
+        })
+        expect(textoNaCaixa(limite({ para: "pessoa" }), null)?.acao?.href).toBe("/dashboard")
+    })
+})
+
 describe("textoNaCaixa: o seguro baixo nunca mostra o número guardado", () => {
     const seguroBaixo = (over: Partial<{ payload: Record<string, unknown>; dedupe_key: string }> = {}) => ({
         ...recorrencia,

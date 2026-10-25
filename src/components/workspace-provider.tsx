@@ -9,6 +9,7 @@ import {
     type ReactNode,
 } from "react"
 import { useIsRestoring, useQueryClient } from "@tanstack/react-query"
+import { ehAdulto } from "@/lib/papeis/papeis"
 import { supabase, type Workspace, type WorkspaceRole } from "@/lib/supabase"
 import {
     isWorkspaceIconKey,
@@ -57,6 +58,10 @@ type WorkspaceContextType = {
     currentWorkspace: Workspace | null
     currentWorkspaceId: string | null
     workspaceRoleById: Record<string, WorkspaceRole>
+    /** O papel de quem usa na carteira atual (Bloco 7A); `null` enquanto carrega. */
+    papel: WorkspaceRole | null
+    /** Dono ou membro: o convidado não vê o que é da casa. */
+    isAdulto: boolean
     /** Email invites addressed to the signed-in user where they are not yet a member. */
     pendingWorkspaceInvites: import("@/lib/queries/fetch-workspaces-data").PendingWorkspaceInvite[]
     loading: boolean
@@ -88,6 +93,8 @@ const WorkspaceContext = createContext<WorkspaceContextType>({
     currentWorkspace: null,
     currentWorkspaceId: null,
     workspaceRoleById: {},
+    papel: null,
+    isAdulto: false,
     pendingWorkspaceInvites: [],
     loading: true,
     error: null,
@@ -487,12 +494,17 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         [workspaces, currentWorkspaceId],
     )
 
+    const papel = (currentWorkspaceId && workspaceRoleById[currentWorkspaceId]) || null
+    const isAdulto = ehAdulto(papel)
+
     const value = useMemo<WorkspaceContextType>(
         () => ({
             workspaces,
             currentWorkspace,
             currentWorkspaceId,
             workspaceRoleById,
+            papel,
+            isAdulto,
             pendingWorkspaceInvites,
             loading,
             error,
@@ -510,6 +522,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             currentWorkspace,
             currentWorkspaceId,
             workspaceRoleById,
+            papel,
+            isAdulto,
             pendingWorkspaceInvites,
             loading,
             error,

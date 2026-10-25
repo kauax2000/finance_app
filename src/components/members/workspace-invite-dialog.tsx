@@ -33,6 +33,8 @@ import {
 import { supabase, type WorkspaceInvite } from "@/lib/supabase"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
+import { PAPEL_DO_CONVITE_INICIAL, PapelDoConviteWireframe } from "@/components/wireframe/papeis-wireframe"
+import { ERRO_DO_CONVITE, montarConvite } from "@/lib/papeis/papeis"
 import { toastError, toastSuccess } from "@/lib/toast"
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { formatDateTimeShortPtBr } from "@/lib/transaction-date"
@@ -73,6 +75,7 @@ export function WorkspaceInviteDialog({
     const later = useTimeout()
     const [invites, setInvites] = React.useState<WorkspaceInvite[]>([])
     const [inviteEmail, setInviteEmail] = React.useState("")
+    const [papelDoConvite, setPapelDoConvite] = React.useState(PAPEL_DO_CONVITE_INICIAL)
     const [loadingInvites, setLoadingInvites] = React.useState(false)
     const [savingInvite, setSavingInvite] = React.useState(false)
     const [savingLink, setSavingLink] = React.useState(false)
@@ -119,6 +122,7 @@ export function WorkspaceInviteDialog({
         if (!open || !workspaceId) return
         void fetchInvites()
         setInviteEmail("")
+        setPapelDoConvite(PAPEL_DO_CONVITE_INICIAL)
         setGeneratedLinkUrl(null)
         setGeneratedLinkExpiresAt(null)
         setLinkCopied(false)
@@ -127,6 +131,11 @@ export function WorkspaceInviteDialog({
     const handleInvite = async () => {
         if (!workspaceId || !inviteEmail.trim() || !canManageMembers) return
 
+        const convite = montarConvite({ ...papelDoConvite, email: inviteEmail })
+        if (!convite.ok) {
+            toastError(ERRO_DO_CONVITE[convite.erro], { id: "convite-email" })
+            return
+        }
         const emailLower = inviteEmail.trim().toLowerCase()
         setSavingInvite(true)
         try {
@@ -134,12 +143,10 @@ export function WorkspaceInviteDialog({
                 invite_id?: string
                 expires_at?: string
             }>("workspace-invites-create", {
-                body: {
-                    workspace_id: workspaceId,
-                    invited_email: emailLower,
-                },
+                body: { workspace_id: workspaceId, ...convite.corpo },
             })
             setInviteEmail("")
+            setPapelDoConvite(PAPEL_DO_CONVITE_INICIAL)
             if (res.invite_id && res.expires_at && user?.id) {
                 setInvites((prev) => {
                     if (prev.some((i) => i.id === res.invite_id)) return prev
@@ -147,9 +154,9 @@ export function WorkspaceInviteDialog({
                         id: res.invite_id!,
                         workspace_id: workspaceId,
                         invited_email: emailLower,
-                        role: "member",
-                        menor: false,
-                        consentimento_em: null,
+                        role: convite.corpo.role,
+                        menor: convite.corpo.menor,
+                        consentimento_em: convite.corpo.menor ? new Date().toISOString() : null,
                         status: "pending",
                         expires_at: res.expires_at!,
                         created_by: user.id,
@@ -300,6 +307,11 @@ export function WorkspaceInviteDialog({
                             </p>
                         ) : (
                             <>
+                                <PapelDoConviteWireframe
+                                    valor={papelDoConvite}
+                                    onChange={setPapelDoConvite}
+                                    disabled={savingInvite}
+                                />
                                 <Form
                                     layout="inline"
                                     pending={savingInvite}

@@ -1,5 +1,8 @@
-/** Mensagens das edges que chegam em inglês até a tela. */
+import { ERRO_DO_CONVITE } from "@/lib/papeis/papeis"
+
+/** Mensagens das edges que chegam em inglês (ou em código) até a tela. */
 const EDGE_ERROR_PT: Record<string, string> = {
+    ...ERRO_DO_CONVITE,
     "Invite not found": "Convite não encontrado. Peça um novo a quem convidou você.",
     "Invite is not pending": "Este convite já foi utilizado ou não está mais pendente.",
     "Invite expired": "Este convite expirou. Peça um novo a quem convidou você.",

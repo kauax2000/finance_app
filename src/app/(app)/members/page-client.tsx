@@ -34,6 +34,13 @@ import { describeSupabaseErrorForLog, formatSupabasePostgrestError } from "@/lib
 import { useConfirmDialog } from "@/components/use-confirm-dialog"
 import { isPostgrestTransientNetworkError } from "@/lib/transient-network-retry"
 import { invokeEdgeJson } from "@/lib/edge-invoke"
+import { LimitesWireframe } from "@/components/wireframe/limites-wireframe"
+import {
+    PAPEL_DO_CONVITE_INICIAL,
+    PapelDoConviteWireframe,
+    TrocarPapelWireframe,
+} from "@/components/wireframe/papeis-wireframe"
+import { ERRO_DO_CONVITE, montarConvite, rotuloDoPapel } from "@/lib/papeis/papeis"
 import {
     dismissPageFetchError,
     toastError,
@@ -200,12 +207,14 @@ export default function MembersPage() {
     const {
         currentWorkspaceId,
         isWorkspaceOwner,
+        isAdulto,
         loading: workspaceLoading,
     } = useWorkspace()
     const later = useTimeout()
     const [members, setMembers] = useState<MemberWithProfile[]>([])
     const [invites, setInvites] = useState<WorkspaceInvite[]>([])
     const [inviteEmail, setInviteEmail] = useState("")
+    const [papelDoConvite, setPapelDoConvite] = useState(PAPEL_DO_CONVITE_INICIAL)
     const [loading, setLoading] = useState(true)
     const [savingInvite, setSavingInvite] = useState(false)
     const [busyInviteId, setBusyInviteId] = useState<string | null>(null)
@@ -362,6 +371,11 @@ export default function MembersPage() {
     const handleInvite = async () => {
         if (!currentWorkspaceId || !inviteEmail.trim() || !canManageMembers) return
 
+        const convite = montarConvite({ ...papelDoConvite, email: inviteEmail })
+        if (!convite.ok) {
+            toastError(ERRO_DO_CONVITE[convite.erro], { id: "convite-email" })
+            return
+        }
         const emailLower = inviteEmail.trim().toLowerCase()
         setSavingInvite(true)
         try {
@@ -369,16 +383,14 @@ export default function MembersPage() {
                 invite_id?: string
                 expires_at?: string
             }>("workspace-invites-create", {
-                body: {
-                    workspace_id: currentWorkspaceId,
-                    invited_email: emailLower,
-                },
+                body: { workspace_id: currentWorkspaceId, ...convite.corpo },
             })
             const resBody = res as { error?: unknown }
             if (typeof resBody.error === "string" && resBody.error.trim()) {
                 throw new Error(resBody.error.trim())
             }
             setInviteEmail("")
+            setPapelDoConvite(PAPEL_DO_CONVITE_INICIAL)
             if (res.invite_id && user?.id) {
                 const expiresAt =
                     typeof res.expires_at === "string" && res.expires_at.trim()
@@ -390,9 +402,9 @@ export default function MembersPage() {
                         id: res.invite_id!,
                         workspace_id: currentWorkspaceId,
                         invited_email: emailLower,
-                        role: "member",
-                        menor: false,
-                        consentimento_em: null,
+                        role: convite.corpo.role,
+                        menor: convite.corpo.menor,
+                        consentimento_em: convite.corpo.menor ? new Date().toISOString() : null,
                         status: "pending",
                         expires_at: expiresAt,
                         created_by: user.id,
@@ -714,7 +726,7 @@ export default function MembersPage() {
                                                             tone={isOwner ? "info" : "success"}
                                                             className="shrink-0 px-1.5 py-0 text-2xs"
                                                         >
-                                                            {isOwner ? "Owner" : "Membro"}
+                                                            {rotuloDoPapel(member.role)}
                                                         </Badge>
                                                     </div>
                                                     <p
@@ -750,6 +762,15 @@ export default function MembersPage() {
                                                 ) : null}
                                             </CardContent>
                                         </Card>
+                                        {canManageMembers && !isOwner && !isMe ? (
+                                            <TrocarPapelWireframe
+                                                workspaceId={currentWorkspaceId}
+                                                userId={member.user_id}
+                                                nome={name}
+                                                papel={member.role}
+                                                onTrocado={() => void fetchMembersAndInvites()}
+                                            />
+                                        ) : null}
                                     </li>
                                 )
                             })}
@@ -764,6 +785,19 @@ export default function MembersPage() {
                     </CardContent>
                 </Card>
             </PageSection>
+
+            {isAdulto ? (
+                <div
+                    id="limites"
+                    className="min-w-0 scroll-mt-[calc(var(--mobile-header-offset)+0.5rem)] md:scroll-mt-6"
+                >
+                    <LimitesWireframe
+                        workspaceId={currentWorkspaceId}
+                        pessoas={members.map((m) => ({ user_id: m.user_id, nome: memberDisplayName(m) }))}
+                        podeEditar={canManageMembers}
+                    />
+                </div>
+            ) : null}
 
             <div
                 id="workspace-invites"
@@ -786,6 +820,13 @@ export default function MembersPage() {
                                 <p className="text-xs leading-snug text-muted-foreground">Por e-mail ou link</p>
                             </CardToolbar>
                             <div className="flex flex-col gap-2 px-4 py-3">
+                                {canManageMembers ? (
+                                    <PapelDoConviteWireframe
+                                        valor={papelDoConvite}
+                                        onChange={setPapelDoConvite}
+                                        disabled={savingInvite}
+                                    />
+                                ) : null}
                                 <Form
                                     layout="inline"
                                     pending={savingInvite}

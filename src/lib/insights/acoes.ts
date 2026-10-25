@@ -5,10 +5,11 @@
  */
 import { computeFirstDueYmd, computeNextBillInstanceDueYmd } from "@/lib/bills/recurrence"
 import { currencyBRL } from "@/lib/formatters"
+import { destinoDoInsightDeLimite } from "@/lib/papeis/papeis"
 import { seguroParaGastar } from "@/lib/previsao/fluxo"
 import type { DadosDaPrevisao, Seguro } from "@/lib/previsao/tipos"
 import { updateSubscription } from "@/lib/subscriptions/mutations"
-import { supabase } from "@/lib/supabase"
+import { supabase, type WorkspaceRole } from "@/lib/supabase"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 import { textoDoInsight, type Texto } from "./insights"
 import { localYmdFromDate } from "@/lib/transaction-date"
@@ -176,7 +177,16 @@ function mesDoSeguroBaixo(insight: Insight): string | null {
  * guardado: no mês corrente ele é o `seguroParaGastar` de agora (o mesmo do cartão ao lado), e some
  * quando deixou de estar baixo; de um mês que passou, ou sem a previsão carregada, ele não aparece.
  */
-export function textoNaCaixa(insight: Insight, dados: DadosDaPrevisao | null): Texto | null {
+export function textoNaCaixa(
+    insight: Insight,
+    dados: DadosDaPrevisao | null,
+    papel: WorkspaceRole | null = null,
+): Texto | null {
+    if (insight.kind === "limite_pessoa") {
+        // O destino sai do papel de quem lê agora, nunca de um guardado no insight.
+        const t = textoDoInsight(insight.kind, insight.payload ?? {})
+        return t.acao ? { ...t, acao: { ...t.acao, href: destinoDoInsightDeLimite(papel) } } : t
+    }
     if (insight.kind !== "seguro_baixo") return textoDoInsight(insight.kind, insight.payload ?? {})
     if (!dados || mesDoSeguroBaixo(insight) !== dados.hojeYmd.slice(0, 7)) return null
     const agora = seguroParaGastar(dados)

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 
 import { WireframeBox } from "@/components/wireframe/wireframe-box"
+import { useWorkspace } from "@/components/workspace-provider"
 import { useWorkspaceNotificationPrefs } from "@/hooks/use-workspace-notification-prefs"
 import { shiftYearMonth } from "@/lib/budget-month"
 import {
@@ -24,7 +25,7 @@ import {
 import { useInsights, useSeguroBaixo } from "@/lib/insights/use-insights"
 import type { DadosDaPrevisao } from "@/lib/previsao/tipos"
 import { usePrevisao } from "@/lib/previsao/use-previsao"
-import type { Category } from "@/lib/supabase"
+import type { Category, WorkspaceRole } from "@/lib/supabase"
 import { localYmdFromDate } from "@/lib/transaction-date"
 
 const botao = "border border-muted-foreground/60 px-2 py-1 font-mono text-foreground disabled:opacity-50"
@@ -45,6 +46,7 @@ export function InsightsDoPainel({
     categorias: Categoria[]
 }) {
     const { itens, erro, entendi, silenciar, agir, recarregar } = useInsights(workspaceId)
+    const { papel } = useWorkspace()
     const { dados } = usePrevisao(workspaceId)
     const mesCorrente = calendarYm === localYmdFromDate(new Date()).slice(0, 7)
     useSeguroBaixo(workspaceId, mesCorrente ? dados : null, recarregar)
@@ -73,6 +75,7 @@ export function InsightsDoPainel({
             erro={erro}
             dados={dados}
             categorias={categorias}
+            papel={papel}
             onAcao={onAcao}
             onEntendi={entendi}
             onSilenciar={silenciar}
@@ -85,6 +88,7 @@ export function InsightsWireframe({
     erro,
     dados,
     categorias,
+    papel = null,
     onAcao,
     onEntendi,
     onSilenciar,
@@ -93,6 +97,8 @@ export function InsightsWireframe({
     erro?: string | null
     dados: DadosDaPrevisao | null
     categorias: Categoria[]
+    /** O papel de quem lê: decide o "Ver limite" do `limite_pessoa`. */
+    papel?: WorkspaceRole | null
     onAcao: (insight: Insight, ajustes?: ConfirmacaoDaRecorrencia) => Promise<Resultado>
     onEntendi: (id: string) => Promise<string | null>
     onSilenciar: (kind: string) => Promise<string | null>
@@ -102,7 +108,7 @@ export function InsightsWireframe({
     const [recorrencia, setRecorrencia] = useState<Insight | null>(null)
     const mesAnterior = dados ? shiftYearMonth(dados.hojeYmd.slice(0, 7), -1) : null
     const visiveis = itens.flatMap((i) => {
-        const t = textoNaCaixa(i, dados)
+        const t = textoNaCaixa(i, dados, papel)
         return t ? [{ i, t }] : []
     })
 
