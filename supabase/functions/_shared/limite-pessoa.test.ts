@@ -1,6 +1,14 @@
 import { assertEquals } from 'jsr:@std/assert@1.0.19'
 import { addCalendarDays, formatYmd, statementCloseYmdForPurchaseYmd } from './credit-card-cycle.ts'
-import { gastoDaPessoaNoMes, type LancamentoDaPessoa, mesDaCompra, nivelDoLimite } from './limite-pessoa.ts'
+import {
+  decidirAvisosDoLimite,
+  destinoDoAvisoDoLimite,
+  gastoDaPessoaNoMes,
+  type LancamentoDaPessoa,
+  mesDaCompra,
+  nivelDoLimite,
+  nivelNovo,
+} from './limite-pessoa.ts'
 
 Deno.test('nivelDoLimite: 80 a partir de 80%, 100 a partir de 100%', () => {
   assertEquals(nivelDoLimite(79_99, 100_00), 0)
@@ -49,4 +57,43 @@ Deno.test('mesDaCompra: o mesmo mês que statementCloseYmdForPurchaseYmd, todo d
   assertEquals(mesDaCompra('2026-12-28', 25), '2027-01')
   assertEquals(mesDaCompra('2026-10-28', null), '2026-10')
   assertEquals(mesDaCompra('lixo', 25), null)
+})
+
+const membros = [
+  { user_id: 'dona', role: 'owner' },
+  { user_id: 'bia', role: 'member' },
+  { user_id: 'caio', role: 'guest' },
+]
+
+Deno.test('decidirAvisosDoLimite: a pessoa e cada dono, uma vez cada', () => {
+  assertEquals(decidirAvisosDoLimite('bia', membros, 80_00, 100_00), {
+    nivel: 80,
+    reivindicar: [80],
+    destinatarios: ['bia', 'dona'],
+  })
+  // O dono que é a própria pessoa recebe um aviso, não dois.
+  assertEquals(decidirAvisosDoLimite('dona', membros, 100_00, 100_00).destinatarios, ['dona'])
+  // Dois donos; o convidado recebe o próprio, e o membro não dono não recebe.
+  const dois = [...membros, { user_id: 'davi', role: 'owner' }]
+  assertEquals(decidirAvisosDoLimite('caio', dois, 90_00, 100_00).destinatarios, ['caio', 'dona', 'davi'])
+})
+
+Deno.test('decidirAvisosDoLimite: o 100 reivindica o 80 junto; abaixo de 80, nada', () => {
+  assertEquals(decidirAvisosDoLimite('bia', membros, 101_00, 100_00).reivindicar, [80, 100])
+  assertEquals(decidirAvisosDoLimite('bia', membros, 79_99, 100_00), { nivel: 0, reivindicar: [], destinatarios: [] })
+  // Quem não é membro da carteira não tem limite avaliado.
+  assertEquals(decidirAvisosDoLimite('fora', membros, 200_00, 100_00), { nivel: 0, reivindicar: [], destinatarios: [] })
+})
+
+Deno.test('nivelNovo: só avisa o nível que a reivindicação devolveu', () => {
+  assertEquals(nivelNovo(100, [80, 100]), true) // 79% → 101%: avisa o 100
+  assertEquals(nivelNovo(100, [100]), true) // o 80 já tinha saído
+  assertEquals(nivelNovo(80, []), false) // o segundo lançamento acima de 80%
+  assertEquals(nivelNovo(100, [80]), false)
+})
+
+Deno.test('destinoDoAvisoDoLimite: o convidado no Painel, o adulto nos limites de Membros', () => {
+  assertEquals(destinoDoAvisoDoLimite('guest'), '/dashboard')
+  assertEquals(destinoDoAvisoDoLimite('member'), '/members#limites')
+  assertEquals(destinoDoAvisoDoLimite('owner'), '/members#limites')
 })

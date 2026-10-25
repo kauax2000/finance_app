@@ -379,17 +379,18 @@ Deno.serve(async (req: Request) => {
           if (!r.ok) console.error(`capture: ${fn}`, r.status)
         })
         .catch((e) => console.error(`capture: ${fn}`, e))
-    const chamadas: Promise<void>[] = []
-    if (linha.category_id) {
-      chamadas.push(avaliar('evaluate-budgets', {
-          category_id: linha.category_id,
-          occurred_at: linha.date,
-          payment_method: linha.payment_method,
-          payment_credit_card_id: linha.payment_credit_card_id,
-          // O autor, para o limite da pessoa: no caminho de serviço não há JWT.
-          user_id: userId,
-        }))
-    }
+    // O `evaluate-budgets` vai sempre, com ou sem categoria: o limite da pessoa
+    // vale para toda despesa, e a Edge lê carteira e autor da própria linha.
+    // O orçamento continua precisando da categoria, e a Edge confere.
+    const chamadas: Promise<void>[] = [
+      avaliar('evaluate-budgets', {
+        transaction_id: gravado.id,
+        category_id: linha.category_id,
+        occurred_at: linha.date,
+        payment_method: linha.payment_method,
+        payment_credit_card_id: linha.payment_credit_card_id,
+      }),
+    ]
     if (linha.payment_credit_card_id) {
       chamadas.push(
         avaliar('evaluate-credit-card-alerts', {

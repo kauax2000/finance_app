@@ -44,6 +44,8 @@ function fireBudgetAndCcAlerts(
             occurred_at: dateIso,
             payment_method: payload.paymentMethod,
             payment_credit_card_id: payload.paymentCreditCardId,
+            // Sem o id da despesa: o limite avaliado é o de quem paga.
+            workspace_id: workspaceId,
         },
     }).catch(() => {})
     scheduleEvaluateCreditCardAlerts({

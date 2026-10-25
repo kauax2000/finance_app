@@ -86,6 +86,8 @@ export async function persistTransactionSave(options: {
                     occurred_at: payload.dateIso,
                     payment_method: payload.paymentMethod,
                     payment_credit_card_id: payload.paymentCreditCardId,
+                    // A linha decide carteira e autor (o limite é de quem lançou).
+                    transaction_id: payload.editingId,
                 },
             }).catch(() => {
                 /* non-blocking */
@@ -107,6 +109,8 @@ export async function persistTransactionSave(options: {
                     occurred_at: payload.dateIso,
                     payment_method: payload.paymentMethod,
                     payment_credit_card_id: payload.paymentCreditCardId,
+                    transaction_id: result.id,
+                    workspace_id: workspaceId,
                 },
             }).catch(() => {
                 /* non-blocking */

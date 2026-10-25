@@ -61,3 +61,35 @@ export function gastoDaPessoaNoMes(lancs: LancamentoDaPessoa[], userId: string, 
   }
   return cents
 }
+
+export type MembroDoLimite = { user_id: string; role: string }
+
+export type AvisosDoLimite = { nivel: 0 | 80 | 100; reivindicar: Array<80 | 100>; destinatarios: string[] }
+
+/**
+ * O que o gasto do autor pede: o nível, os níveis a reivindicar (o 100 leva o
+ * 80 junto, para o de 80 não sair depois) e quem recebe — a pessoa e cada
+ * dono, uma vez cada (o dono que é a própria pessoa recebe um). Quem não é
+ * membro da carteira não tem limite avaliado.
+ */
+export function decidirAvisosDoLimite(
+  autorId: string,
+  membros: MembroDoLimite[],
+  gastoCentavos: number,
+  limiteCentavos: number
+): AvisosDoLimite {
+  const nivel = nivelDoLimite(gastoCentavos, limiteCentavos)
+  if (nivel === 0 || !membros.some((m) => m.user_id === autorId)) return { nivel: 0, reivindicar: [], destinatarios: [] }
+  const donos = membros.filter((m) => m.role === 'owner').map((m) => m.user_id)
+  return { nivel, reivindicar: nivel === 100 ? [80, 100] : [80], destinatarios: [...new Set([autorId, ...donos])] }
+}
+
+/** Avisa só se a reivindicação devolveu o próprio nível (o resto já saiu). */
+export function nivelNovo(nivel: 80 | 100, reivindicados: number[]): boolean {
+  return reivindicados.includes(nivel)
+}
+
+/** Para onde o aviso leva, pelo papel de quem o recebe na hora do envio. */
+export function destinoDoAvisoDoLimite(role: string): string {
+  return role === 'guest' ? '/dashboard' : '/members#limites'
+}

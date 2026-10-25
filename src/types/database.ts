@@ -1000,11 +1000,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "limites_avisados_workspace_id_fkey"
-            columns: ["workspace_id"]
+            foreignKeyName: "limites_avisados_workspace_id_user_id_fkey"
+            columns: ["workspace_id", "user_id"]
             isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
+            referencedRelation: "workspace_members"
+            referencedColumns: ["workspace_id", "user_id"]
           },
         ]
       }
@@ -1610,11 +1610,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "workspace_member_limits_workspace_id_fkey"
-            columns: ["workspace_id"]
+            foreignKeyName: "workspace_member_limits_workspace_id_user_id_fkey"
+            columns: ["workspace_id", "user_id"]
             isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
+            referencedRelation: "workspace_members"
+            referencedColumns: ["workspace_id", "user_id"]
           },
         ]
       }

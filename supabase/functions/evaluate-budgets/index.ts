@@ -3,8 +3,14 @@ import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { isServiceAuthorized } from '../_shared/service-auth.ts'
 import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
 import { deliverNotification } from '../_shared/deliver-notification.ts'
-import { adultosDaCarteira, donosDaCarteira } from '../_shared/destinatarios.ts'
-import { gastoDaPessoaNoMes, type LancamentoDaPessoa, nivelDoLimite } from '../_shared/limite-pessoa.ts'
+import { adultosDaCarteira } from '../_shared/destinatarios.ts'
+import {
+  decidirAvisosDoLimite,
+  destinoDoAvisoDoLimite,
+  gastoDaPessoaNoMes,
+  type LancamentoDaPessoa,
+  nivelNovo,
+} from '../_shared/limite-pessoa.ts'
 import { textoDoInsight } from '../_shared/insights/textos.ts'
 import { budgetCopy, monthNamePt } from '../_shared/notification-copy.ts'
 import {
@@ -34,10 +40,21 @@ type Body = {
   // O front 2.0 e o `capture` mandam o pagamento; o front antigo de `main`, não.
   payment_method?: string | null
   payment_credit_card_id?: string | null
-  // O autor do lançamento, que o caminho de serviço (`capture`) manda. Pelo
-  // JWT o autor é quem chama e o campo é ignorado; no caminho de serviço sem
-  // ele, o limite não é avaliado.
-  user_id?: string | null
+  // Bloco 7A: o lançamento que disparou (a carteira e o autor saem da linha),
+  // ou, para quem não tem um id só (o plano parcelado, a conta paga), a
+  // carteira — o autor é quem chama. O corpo sem os dois é o de hoje.
+  transaction_id?: string | null
+  workspace_id?: string | null
+}
+
+type TxDoAviso = {
+  workspace_id: string
+  user_id: string
+  type: string
+  category_id: string | null
+  date: string
+  payment_method: string | null
+  payment_credit_card_id: string | null
 }
 
 type BudgetRow = {
@@ -87,9 +104,9 @@ type Membro = { user_id: string; role: string }
 /**
  * O limite mensal do autor (Bloco 7A, spec §12): o gasto dele no mês contra o
  * limite, e o aviso de 80% ou de 100% à pessoa e a cada dono, uma vez cada. Só
- * o nível mais alto atingido avisa, e a reivindicação grava os de baixo junto.
- * Roda com ou sem orçamento na categoria; uma falha vira log e não muda a
- * resposta do orçamento.
+ * o nível mais alto atingido avisa, e a reivindicação grava os de baixo junto
+ * (`decidirAvisosDoLimite`). Roda com ou sem categoria e orçamento; uma falha
+ * vira log e não muda a resposta do orçamento.
  */
 async function avaliarLimite(
   admin: Admin,
@@ -115,7 +132,6 @@ async function avaliarLimite(
   if (memErr) return console.error('evaluate-budgets: limite membros', memErr)
   const membros = (memberRows ?? []) as Membro[]
   const papelDe = new Map(membros.map((m) => [m.user_id, m.role]))
-  if (!papelDe.has(autorId)) return
 
   const ordenados = [...meses].sort()
   const { data: txRows, error: txErr } = await admin
@@ -133,22 +149,19 @@ async function avaliarLimite(
     return { ...t, amount: Number(t.amount), card: cd == null ? null : { closing_day: cd } }
   })
 
-  // A pessoa e cada dono, uma vez cada: o dono que é a própria pessoa recebe um.
-  const destinatarios = [...new Set([autorId, ...donosDaCarteira(membros)])]
   let perfis: Map<string, { email: string | null; full_name: string | null }> | null = null
 
   for (const ym of new Set(ordenados)) {
     const gasto = gastoDaPessoaNoMes(lancs, autorId, ym)
-    const nivel = nivelDoLimite(gasto, limiteCentavos)
+    const { nivel, reivindicar, destinatarios } = decidirAvisosDoLimite(autorId, membros, gasto, limiteCentavos)
     if (nivel === 0) continue
 
     // Reivindica antes de avisar: `on conflict do nothing` só devolve o que é
     // novo, e duas avaliações em paralelo não avisam o mesmo nível.
-    const niveis = nivel === 100 ? [80, 100] : [80]
     const { data: novos, error: claimErr } = await admin
       .from('limites_avisados')
       .upsert(
-        niveis.map((n) => ({ workspace_id: workspaceId, user_id: autorId, ym, nivel: n })),
+        reivindicar.map((n) => ({ workspace_id: workspaceId, user_id: autorId, ym, nivel: n })),
         { onConflict: 'workspace_id,user_id,ym,nivel', ignoreDuplicates: true }
       )
       .select('nivel')
@@ -157,7 +170,7 @@ async function avaliarLimite(
       continue
     }
     const reivindicados = ((novos ?? []) as { nivel: number }[]).map((r) => r.nivel)
-    if (!reivindicados.includes(nivel)) continue
+    if (!nivelNovo(nivel, reivindicados)) continue
     const liberar = () =>
       admin
         .from('limites_avisados')
@@ -168,7 +181,11 @@ async function avaliarLimite(
         .in('nivel', reivindicados)
 
     if (!perfis) {
-      const { data: profileRows } = await admin.from('profiles').select('id,email,full_name').in('id', destinatarios)
+      const { data: profileRows, error: profErr } = await admin
+        .from('profiles')
+        .select('id,email,full_name')
+        .in('id', destinatarios)
+      if (profErr) console.error('evaluate-budgets: limite perfis', profErr)
       perfis = new Map(
         ((profileRows ?? []) as { id: string; email: string | null; full_name: string | null }[]).map((p) => [p.id, p])
       )
@@ -176,9 +193,10 @@ async function avaliarLimite(
     const autor = perfis.get(autorId)
     const nome = autor?.full_name?.trim() || autor?.email?.split('@')[0] || 'Alguém'
 
+    // O destino do insight sai do papel de quem lê na hora da leitura (Tarefa
+    // 4); por isso o payload não guarda papel.
     const payloadDe = (quem: string) => ({
       para: quem === autorId ? 'pessoa' : 'dono',
-      papel: papelDe.get(quem) ?? 'owner',
       nome,
       nivel,
       gasto: gasto / 100,
@@ -188,7 +206,9 @@ async function avaliarLimite(
     })
 
     // O insight é de cada destinatário (`user_id` preenchido), sem push
-    // próprio: o push é o aviso logo abaixo.
+    // próprio: o push é o aviso logo abaixo. Se ele falha, a reivindicação é
+    // liberada e nada é avisado: a próxima avaliação tenta os dois de novo (o
+    // dedupe do insight não deixa repetir).
     const { error: insErr } = await admin.rpc('inserir_insights', {
       p_linhas: destinatarios.map((quem) => ({
         workspace_id: workspaceId,
@@ -198,12 +218,15 @@ async function avaliarLimite(
         payload: payloadDe(quem),
       })),
     })
-    if (insErr) console.error('evaluate-budgets: limite insight', insErr)
+    if (insErr) {
+      console.error('evaluate-budgets: limite insight', insErr)
+      await liberar()
+      continue
+    }
 
     let anyDelivered = false
     for (const quem of destinatarios) {
-      const payload = payloadDe(quem)
-      const texto = textoDoInsight('limite_pessoa', payload)
+      const texto = textoDoInsight('limite_pessoa', payloadDe(quem))
       try {
         const r = await deliverNotification({
           supabaseAdmin: admin,
@@ -213,7 +236,13 @@ async function avaliarLimite(
           type: 'budget',
           title: texto.titulo,
           body: texto.corpo,
-          metadata: { kind: 'member_limit', nivel, ym, user_id: autorId, href: texto.acao?.href ?? '/dashboard' },
+          metadata: {
+            kind: 'member_limit',
+            nivel,
+            ym,
+            user_id: autorId,
+            href: destinoDoAvisoDoLimite(papelDe.get(quem) ?? 'member'),
+          },
         })
         if (r.ok) anyDelivered = true
         else console.error('evaluate-budgets: limite entrega', quem, r.error)
@@ -264,29 +293,51 @@ async function avaliar(req: Request, ctx: { convidado: boolean }): Promise<Respo
     return json(400, { error: 'Invalid JSON body' })
   }
 
-  const occurredAt = new Date(body.occurred_at)
+  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+
+  // Com `transaction_id`, a linha manda: carteira, autor, data, pagamento e
+  // categoria saem dela, lida pela service role, e nunca do corpo. Sem ele vale
+  // o corpo de hoje (o front antigo de `main`), com o autor = quem chama.
+  let lanc: TxDoAviso | null = null
+  if (typeof body.transaction_id === 'string' && body.transaction_id) {
+    const { data, error } = await supabaseAdmin
+      .from('transactions')
+      .select('workspace_id,user_id,type,category_id,date,payment_method,payment_credit_card_id')
+      .eq('id', body.transaction_id)
+      .maybeSingle()
+    if (error) return fail('lançamento', error)
+    if (!data) return json(200, { ok: true, skipped: true, reason: 'no_transaction' })
+    lanc = data as TxDoAviso
+  }
+
+  const occurredAt = new Date(lanc ? lanc.date : body.occurred_at)
   if (Number.isNaN(occurredAt.getTime())) {
     return json(400, { error: 'Invalid occurred_at' })
   }
 
-  const categoryId = body.category_id
-  if (!categoryId) {
+  const categoryId = lanc ? lanc.category_id : body.category_id
+  const workspaceDoCorpo = typeof body.workspace_id === 'string' && body.workspace_id ? body.workspace_id : null
+  if (!lanc && !categoryId && !workspaceDoCorpo) {
     return json(200, { ok: true, skipped: true, reason: 'no_category' })
   }
 
-  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
-
   // O orçamento é da carteira da categoria, e não de quem lançou: numa carteira
   // compartilhada o orçamento criado por um membro vale para o lançamento de outro.
-  const { data: category, error: catErr } = await supabaseAdmin
-    .from('categories')
-    .select('workspace_id,name')
-    .eq('id', categoryId)
-    .maybeSingle()
-  if (catErr) return fail('categoria', catErr)
-  const workspaceId = (category as { workspace_id?: string | null } | null)?.workspace_id ?? null
+  let workspaceId: string | null = lanc?.workspace_id ?? null
+  let categoryName = 'esta categoria'
+  if (categoryId) {
+    const { data: category, error: catErr } = await supabaseAdmin
+      .from('categories')
+      .select('workspace_id,name')
+      .eq('id', categoryId)
+      .maybeSingle()
+    if (catErr) return fail('categoria', catErr)
+    const cat = category as { workspace_id?: string | null; name?: string } | null
+    workspaceId ??= cat?.workspace_id ?? null
+    categoryName = cat?.name ?? categoryName
+  }
+  workspaceId ??= workspaceDoCorpo
   if (!workspaceId) return json(200, { ok: true, skipped: true, reason: 'no_category' })
-  const categoryName = (category as { name?: string }).name ?? 'esta categoria'
 
   if (userId) {
     const { data: membership, error: memErr } = await supabaseAdmin
@@ -298,7 +349,12 @@ async function avaliar(req: Request, ctx: { convidado: boolean }): Promise<Respo
     if (memErr) return fail('membro', memErr)
     if (!membership) return json(403, { error: 'Not a member of this workspace' })
     ctx.convidado = membership.role === 'guest'
+    // O convidado só avalia o que é dele (a RLS nem lhe mostra o resto).
+    if (ctx.convidado && lanc && lanc.user_id !== userId) {
+      return json(403, { error: 'Not a member of this workspace' })
+    }
   }
+  if (lanc && lanc.type !== 'expense') return json(200, { ok: true, skipped: true, reason: 'not_expense' })
 
   // Datas de lançamento ficam ao meio-dia UTC: o prefixo ISO é o dia do lançamento.
   const day = occurredAt.toISOString().slice(0, 10)
@@ -314,16 +370,18 @@ async function avaliar(req: Request, ctx: { convidado: boolean }): Promise<Respo
   }
 
   // O orçamento é competência: a compra no cartão conta no mês do fechamento.
-  // Com o pagamento no corpo há um dia candidato só (ver `diasCandidatos`).
-  const pagamento =
-    'payment_method' in body
+  // Com o pagamento no corpo (ou na linha) há um dia candidato só (ver `diasCandidatos`).
+  const pagamento = lanc
+    ? { payment_method: lanc.payment_method, payment_credit_card_id: lanc.payment_credit_card_id }
+    : 'payment_method' in body
       ? { payment_method: body.payment_method ?? null, payment_credit_card_id: body.payment_credit_card_id ?? null }
       : undefined
   const candidateDays = diasCandidatos(day, closingDayByCard, pagamento)
 
-  // O limite do autor vale com ou sem orçamento na categoria, e no mês em que
-  // a compra conta (o fechamento, no crédito).
-  const autorId = userId ?? (typeof body.user_id === 'string' && body.user_id ? body.user_id : null)
+  // O limite do autor vale com ou sem categoria e com ou sem orçamento, no mês
+  // em que a compra conta (o fechamento, no crédito). O autor é o da linha; sem
+  // ela, quem chama pelo JWT (o caminho de serviço sem linha não tem autor).
+  const autorId = lanc ? lanc.user_id : userId
   if (autorId) {
     try {
       await avaliarLimite(supabaseAdmin, workspaceId, autorId, candidateDays.map((d) => d.slice(0, 7)), closingDayByCard)
@@ -331,6 +389,9 @@ async function avaliar(req: Request, ctx: { convidado: boolean }): Promise<Respo
       console.error('evaluate-budgets: limite', e)
     }
   }
+
+  // O orçamento continua precisando da categoria.
+  if (!categoryId) return json(200, { ok: true, skipped: true, reason: 'no_category' })
 
   const { data: budgetRows, error: bErr } = await supabaseAdmin
     .from('budgets')

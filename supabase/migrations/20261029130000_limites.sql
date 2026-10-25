@@ -7,15 +7,18 @@
 
 -- 1. o limite -----------------------------------------------------------------
 -- O gasto é de quem lançou (`transactions.user_id`), não de quem pagou: o
--- `paid_by` do 7C não muda a régua.
+-- `paid_by` do 7C não muda a régua. O limite é de um membro da carteira (a
+-- chave estrangeira em `workspace_members`): não se grava para quem não é, e
+-- sai junto quando a pessoa sai (ao voltar, começa sem limite).
 create table if not exists public.workspace_member_limits (
-  workspace_id uuid not null references public.workspaces(id) on delete cascade,
-  user_id uuid not null references auth.users(id) on delete cascade,
+  workspace_id uuid not null,
+  user_id uuid not null,
   amount numeric(12,2) not null check (amount > 0),
   created_by uuid default auth.uid() references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  primary key (workspace_id, user_id)
+  primary key (workspace_id, user_id),
+  foreign key (workspace_id, user_id) references public.workspace_members(workspace_id, user_id) on delete cascade
 );
 
 drop trigger if exists set_workspace_member_limits_updated_at on public.workspace_member_limits;
@@ -54,12 +57,13 @@ create policy workspace_member_limits_delete on public.workspace_member_limits
 -- nothing` antes de avisar; ir de 79% a 101% grava o 80 junto com o 100, para
 -- o de 80 não sair depois. Só a service role: RLS ligada e nenhuma política.
 create table if not exists public.limites_avisados (
-  workspace_id uuid not null references public.workspaces(id) on delete cascade,
-  user_id uuid not null references auth.users(id) on delete cascade,
+  workspace_id uuid not null,
+  user_id uuid not null,
   ym text not null check (ym ~ '^[0-9]{4}-[0-9]{2}$'),
   nivel smallint not null check (nivel in (80, 100)),
   avisado_em timestamptz not null default now(),
-  primary key (workspace_id, user_id, ym, nivel)
+  primary key (workspace_id, user_id, ym, nivel),
+  foreign key (workspace_id, user_id) references public.workspace_members(workspace_id, user_id) on delete cascade
 );
 
 alter table public.limites_avisados enable row level security;

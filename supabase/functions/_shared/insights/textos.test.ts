@@ -24,7 +24,7 @@ const EXEMPLOS: Record<string, Record<string, unknown>> = {
   seguro_baixo: { seguro: 180 },
   sazonal: { termo: 'ipva', mesAnterior: '2026-01', valor: 1000 },
   a_conferir: { n: 7 },
-  limite_pessoa: { para: 'pessoa', papel: 'guest', nivel: 80, gasto: 400, limite: 500, ym: '2026-10', pessoaId: 'ana' },
+  limite_pessoa: { para: 'pessoa', nivel: 80, gasto: 400, limite: 500, ym: '2026-10', pessoaId: 'ana' },
 }
 
 Deno.test('anti-sermão: nenhum modelo tem palavra proibida nem "!"', () => {
@@ -34,7 +34,7 @@ Deno.test('anti-sermão: nenhum modelo tem palavra proibida nem "!"', () => {
     ...Object.entries(EXEMPLOS),
     ['recorrencia', { nome: 'Luz', destino: 'conta' }],
     ['gasto_atipico', { alvo: 'descricao', nome: 'Uber', mes: 81, media3: 40 }],
-    ['limite_pessoa', { para: 'dono', papel: 'owner', nome: 'Ana', nivel: 100, gasto: 520, limite: 500 }],
+    ['limite_pessoa', { para: 'dono', nome: 'Ana', nivel: 100, gasto: 520, limite: 500 }],
   ] as Array<[string, Record<string, unknown>]>
   for (const [kind, payload] of variantes) {
     const t = textoDoInsight(kind, payload)
@@ -119,15 +119,13 @@ Deno.test('preco_assinatura, duplicidade, parcelas_acabando e sazonal', () => {
   assertEquals(z.acao, { rotulo: 'Criar conta a pagar', href: '/bills?new=1' })
 })
 
-Deno.test('limite_pessoa: a frase da pessoa e a do dono, e o destino pelo papel de quem lê', () => {
+Deno.test('limite_pessoa: a frase da pessoa e a do dono, e o destino de cada uma', () => {
   const p = textoDoInsight('limite_pessoa', EXEMPLOS.limite_pessoa)
   assertEquals(p.corpo.replaceAll('\u00a0', ' '), 'Você chegou a 80% do seu limite do mês (R$ 400,00 de R$ 500,00).')
   assertEquals(p.acao, { rotulo: 'Ver limite', href: '/dashboard' })
-  const d = textoDoInsight('limite_pessoa', { para: 'dono', papel: 'owner', nome: 'Ana', nivel: 100, gasto: 520, limite: 500 })
+  const d = textoDoInsight('limite_pessoa', { para: 'dono', nome: 'Ana', nivel: 100, gasto: 520, limite: 500 })
   assertEquals(d.corpo.replaceAll('\u00a0', ' '), 'Ana chegou a 100% do limite do mês (R$ 520,00 de R$ 500,00).')
   assertEquals(d.acao, { rotulo: 'Ver limite', href: '/members#limites' })
-  const adulto = textoDoInsight('limite_pessoa', { para: 'pessoa', papel: 'member', nivel: 80, gasto: 80, limite: 100 })
-  assertEquals(adulto.acao?.href, '/members#limites')
 })
 
 Deno.test('kind desconhecido: "Entendi" (ação nula)', () => {

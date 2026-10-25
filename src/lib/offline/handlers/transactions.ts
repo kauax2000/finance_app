@@ -69,6 +69,7 @@ export async function syncTransactionMutation(
                 occurred_at: dateIso,
                 payment_method: (row.payment_method as TransactionPaymentMethod | null) ?? null,
                 payment_credit_card_id: (row.payment_credit_card_id as string | null) ?? null,
+                transaction_id: inserted.id,
             },
         }).catch(() => {})
         scheduleEvaluateCreditCardAlerts({

@@ -72,6 +72,8 @@ export async function persistInstallmentPlanCreate(options: {
             occurred_at: `${payload.firstBillingYmd}T12:00:00.000Z`,
             payment_method: payload.paymentMethod,
             payment_credit_card_id: payload.paymentCreditCardId,
+            // Sem um id só: o limite avaliado é o de quem cria o plano.
+            workspace_id: workspaceId,
         },
     }).catch(() => {
         /* non-blocking */
