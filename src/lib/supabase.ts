@@ -328,6 +328,8 @@ export interface Transaction {
     capture_meta?: TransactionCaptureMeta | null
     /** Gasto privado (Bloco 7B): na linha fica 'Gasto pessoal', e os detalhes moram em `transacoes_privadas`, que só o autor lê. Opcional: as consultas de colunas explícitas não o trazem. */
     is_private?: boolean
+    /** Projeto da carteira (Bloco 7C). Opcional: as consultas de colunas explícitas não o trazem. */
+    project_id?: string | null
     created_at: string
     updated_at: string
     // Related data
@@ -374,6 +376,10 @@ export interface Wallet {
 
 export type WorkspaceType = "personal" | "shared"
 export type WorkspaceRole = "owner" | "member" | "guest"
+/** `everyday` é o dia a dia; `project` é a carteira com dinheiro separado ou gente de fora (Bloco 7C). */
+export type WorkspacePurpose = "everyday" | "project"
+/** `pooled` é o pote único; `split` divide as despesas entre os adultos (Bloco 7C). */
+export type WorkspaceSplitMode = "pooled" | "split"
 
 export interface Workspace {
     id: string
@@ -388,6 +394,30 @@ export interface Workspace {
     categories_onboarding_completed_at?: string | null
     /** Reserva do mês, que sai do "seguro para gastar"; nula sem reserva. */
     monthly_savings_target: number | null
+    /**
+     * Bloco 7C. Opcionais: o banco sem a migração não os tem, e o padrão é
+     * `everyday` e `pooled`. O período e o orçamento total só valem em `project`.
+     */
+    purpose?: WorkspacePurpose
+    split_mode?: WorkspaceSplitMode
+    starts_on?: string | null
+    ends_on?: string | null
+    budget_total?: number | null
+}
+
+/** Um projeto da carteira (Bloco 7C): um rótulo de planejamento com período e orçamento opcionais. */
+export interface Project {
+    id: string
+    workspace_id: string
+    name: string
+    starts_on: string | null
+    ends_on: string | null
+    budget_total: number | null
+    /** Arquivado não aceita lançamento novo (`PROJETO_ARQUIVADO`). */
+    archived_at: string | null
+    created_by: string | null
+    created_at: string
+    updated_at: string
 }
 
 /** Monthly budget cap for a category (workspace-scoped RLS). */

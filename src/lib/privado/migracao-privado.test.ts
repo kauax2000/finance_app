@@ -12,10 +12,13 @@ const supabaseTs = lerFonte("src/lib/supabase.ts")
 const ULTIMA = ultimasFuncoes()
 const POLITICAS = politicasFinais()
 
+/** Ruling 1 do 7C: o `guardar_privado` ganha a recusa do projeto lá; o resto é o daqui. */
+const REDEFINIDA_NO_7C: Record<string, string> = { guardar_privado: "20261031120000_projetos.sql" }
+
 function ultima(nome: string): string {
     const fn = ULTIMA.get(nome)
     expect(fn, nome).toBeDefined()
-    expect(fn!.arquivo, nome).toBe(MIGRACAO)
+    expect(fn!.arquivo, nome).toBe(REDEFINIDA_NO_7C[nome] ?? MIGRACAO)
     return fn!.texto
 }
 
@@ -130,8 +133,8 @@ describe("migração privado: o titular, a privada e as políticas", () => {
         expect(fn).toMatch(/new\.subscription_id is null/)
         expect(fn).toMatch(/new\.installment_plan_id is null/)
         expect(fn).toMatch(/not exists \(\s*select 1 from public\.bill_instances i\s+where i\.transaction_id = new\.id\s*\)/)
-        // Ruling 2: a coluna não existe ainda; o 7C acrescenta a checagem.
-        expect(fn).not.toMatch(/project_id/)
+        // Ruling 2: o 7C acrescenta a checagem do projeto (migracao-projetos.test.ts).
+        expect(fn).toMatch(/new\.installment_plan_id is null\s+and new\.project_id is null/)
 
         const conta = ultima("recusar_conta_na_privada")
         expect(conta).toMatch(/security definer\s+set search_path = ''/)

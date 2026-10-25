@@ -1111,6 +1111,53 @@ export type Database = {
         }
         Relationships: []
       }
+      projects: {
+        Row: {
+          archived_at: string | null
+          budget_total: number | null
+          created_at: string
+          created_by: string | null
+          ends_on: string | null
+          id: string
+          name: string
+          starts_on: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          archived_at?: string | null
+          budget_total?: number | null
+          created_at?: string
+          created_by?: string | null
+          ends_on?: string | null
+          id?: string
+          name: string
+          starts_on?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          archived_at?: string | null
+          budget_total?: number | null
+          created_at?: string
+          created_by?: string | null
+          ends_on?: string | null
+          id?: string
+          name?: string
+          starts_on?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       push_subscriptions: {
         Row: {
           auth: string
@@ -1275,6 +1322,7 @@ export type Database = {
           needs_review: boolean
           payment_credit_card_id: string | null
           payment_method: string | null
+          project_id: string | null
           recurring_interval: string | null
           source: string
           subscription_id: string | null
@@ -1300,6 +1348,7 @@ export type Database = {
           needs_review?: boolean
           payment_credit_card_id?: string | null
           payment_method?: string | null
+          project_id?: string | null
           recurring_interval?: string | null
           source?: string
           subscription_id?: string | null
@@ -1325,6 +1374,7 @@ export type Database = {
           needs_review?: boolean
           payment_credit_card_id?: string | null
           payment_method?: string | null
+          project_id?: string | null
           recurring_interval?: string | null
           source?: string
           subscription_id?: string | null
@@ -1353,6 +1403,13 @@ export type Database = {
             columns: ["payment_credit_card_id"]
             isOneToOne: false
             referencedRelation: "credit_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {
@@ -1856,38 +1913,53 @@ export type Database = {
       }
       workspaces: {
         Row: {
+          budget_total: number | null
           categories_onboarding_completed_at: string | null
           created_at: string
           created_by: string
+          ends_on: string | null
           icon: string
           icon_background_color: string
           id: string
           monthly_savings_target: number | null
           name: string
+          purpose: string
+          split_mode: string
+          starts_on: string | null
           type: string
           updated_at: string
         }
         Insert: {
+          budget_total?: number | null
           categories_onboarding_completed_at?: string | null
           created_at?: string
           created_by: string
+          ends_on?: string | null
           icon?: string
           icon_background_color?: string
           id?: string
           monthly_savings_target?: number | null
           name: string
+          purpose?: string
+          split_mode?: string
+          starts_on?: string | null
           type?: string
           updated_at?: string
         }
         Update: {
+          budget_total?: number | null
           categories_onboarding_completed_at?: string | null
           created_at?: string
           created_by?: string
+          ends_on?: string | null
           icon?: string
           icon_background_color?: string
           id?: string
           monthly_savings_target?: number | null
           name?: string
+          purpose?: string
+          split_mode?: string
+          starts_on?: string | null
           type?: string
           updated_at?: string
         }
@@ -1956,14 +2028,19 @@ export type Database = {
           p_name: string
         }
         Returns: {
+          budget_total: number | null
           categories_onboarding_completed_at: string | null
           created_at: string
           created_by: string
+          ends_on: string | null
           icon: string
           icon_background_color: string
           id: string
           monthly_savings_target: number | null
           name: string
+          purpose: string
+          split_mode: string
+          starts_on: string | null
           type: string
           updated_at: string
         }
@@ -1986,6 +2063,10 @@ export type Database = {
           p_total_installments: number
           p_workspace_id: string
         }
+        Returns: string
+      }
+      criar_carteira_de_modelo: {
+        Args: { p_modelo: string; p_nome: string }
         Returns: string
       }
       criar_plano_parcelado: {

@@ -302,7 +302,10 @@ describe("migração papéis: o convidado e o adulto", () => {
     it("as RPCs definer da Decisão 3 conferem adulto", () => {
         for (const nome of RPC_DO_ADULTO) {
             const fn = ultima(nome)
-            expect(ULTIMA.get(nome)!.arquivo, nome).toBe(MIGRACAO)
+            // O 7C redefine a garantia para pular a carteira de projeto, com a guarda daqui.
+            expect(ULTIMA.get(nome)!.arquivo, nome).toBe(
+                nome === "garantir_orcamentos_do_mes" ? "20261031120000_projetos.sql" : MIGRACAO,
+            )
             expect(definer(fn), nome).toBe(true)
             expect(fn, nome).toMatch(/set search_path = ''/)
             expect(fn, nome).toMatch(/public\.is_workspace_adult\(/)
