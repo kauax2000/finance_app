@@ -98,13 +98,18 @@ create function pg_temp.guarda_local() returns void
 language plpgsql security definer set search_path = ''
 as $$ begin perform pg_catalog.set_config('privado.tprobe', 'ok', true); end $$;
 
-begin;
-select pg_temp.guarda_local();
-select current_setting('privado.tprobe', true) as sobrevive_a_funcao;
-rollback;
+create function pg_temp.sonda() returns text language plpgsql as $$
+begin
+  perform pg_temp.guarda_local();
+  return coalesce(current_setting('privado.tprobe', true), 'vazio');
+end $$;
+
+select pg_temp.sonda() as sobrevive_a_funcao;
 ```
 
-Esperado: `ok`. Vazio quer dizer que o valor local não sobrevive à saída da
+Tudo vale numa instrução só no fim, para o SQL Editor mostrar o resultado (ele
+mostra só o do último comando). As duas funções moram em `pg_temp` e somem com a
+sessão; nada permanente é gravado. Esperado: `ok`. `vazio` quer dizer que o valor local não sobrevive à saída da
 função com `search_path` próprio, e **a migração não pode subir**: o insert de uma
 privada perderia a descrição e a categoria originais.
 
@@ -122,8 +127,8 @@ uma membro) numa carteira compartilhada de teste:
 3. A dona edita a privada (muda o valor e o texto) e depois desmarca "Privado": a
    descrição e a categoria originais voltam à linha, e o detalhe sai de
    `transacoes_privadas`.
-4. A membro tenta editar e excluir a privada da dona: a tela avisa que só quem
-   lançou muda um gasto privado, e a linha continua igual.
+4. A membro tenta editar e excluir a privada da dona: a tela responde que o
+   lançamento pode ter sido mudado por outra pessoa, e a linha continua igual.
 5. Pix, débito, dinheiro e o cartão de que a dona é titular marcam; o cartão da
    casa, o de outro titular, TED, uma assinatura e uma parcelada não (a chave vem
    desabilitada com o motivo, e o banco recusa a escrita direta com
@@ -146,7 +151,7 @@ Ela só acrescenta: duas colunas com padrão (`is_private` falso, titular nulo),
 tabela nova, gatilhos e helpers novos, e as políticas e as duas RPCs recriadas
 com um ramo a mais. Nenhum `drop table`, nenhum `drop column`. Os gatilhos de
 `guardar_privado` saem na primeira linha com `is_private` falso e não leem mais
-nada, e os de `credit_cards` só disparam com titular. Até o 2.0 marcar uma compra
+nada, `conferir_titular` só dispara no insert com titular, e `conferir_titular_troca`, quando o titular ou a carteira do cartão mudam (mudar de carteira qualquer cartão pede o dono). Até o 2.0 marcar uma compra
 ou escolher um titular, nada muda para quem usa o `main` (§5).
 
 ### 1.3. Conferir, uma por vez
@@ -390,8 +395,8 @@ git diff d79e35d7..HEAD --name-only -- supabase/functions
 | `notify-transaction-created` | `process-transaction-notification`, `transaction-notify-rules` e `destinatarios` (o `index.ts` não mudou) | **Depois da migração.** Lê `is_private`; o aviso de uma privada diz "{valor} — Gasto pessoal de {nome}". Uma despesa comum sai igual |
 | `capture` | o `index.ts` mudou | **Depois da migração.** O histórico que casa a frase ignora as privadas (`.eq('is_private', false)`), as do autor também: elas chegam mascaradas e não têm nada para casar |
 | `evaluate-credit-card-alerts` | `destinatarios`; o `index.ts` mudou | **Depois da migração.** Lê `holder_user_id`; o aviso de limite com o total do banco, de um cartão com titular, vai só ao titular e aos donos. O alerta por categoria e o cartão da casa seguem a todos os adultos |
-| `credit-card-calendar-alerts` | `destinatarios`; o `index.ts` mudou | **Depois da migração, e só com o front** (§7 de `BLOCO_5_DEPLOYMENT.md`). Os avisos de um cartão com titular que carregam o total do banco (fechou, vence, vence hoje e fatura alta) vão só ao titular e aos donos; o "fecha em breve" e a fechada sem total gravado vão a todos |
-| `insights-daily` | `destinatarios`, `insights/detectores`; o `index.ts` mudou | **Depois da migração, e só com o front** (`BLOCO_6B_DEPLOYMENT.md`). Os detectores ignoram a privada, e o `fatura_fechou` de um cartão com titular vira um insight do titular e de cada dono (`user_id`), e não da carteira |
+| `credit-card-calendar-alerts` | `destinatarios`; o `index.ts` mudou | **Depois da migração, e só com o front** (§7 de `BLOCO_5_DEPLOYMENT.md`). Os avisos de um cartão com titular que carregam o total do banco (fechou, vence, vence hoje, e a fatura alta quando alguma fechada da média usou o total do banco) vão só ao titular e aos donos; o "fecha em breve" e a fechada sem total gravado vão a todos |
+| `insights-daily` | `destinatarios`, `insights/detectores`; o `index.ts` mudou | **Depois da migração, e só com o front** (`BLOCO_6B_DEPLOYMENT.md`). Os detectores ignoram a privada, e o `fatura_fechou` de um cartão com titular vira um insight do titular e de cada dono (`user_id`), e não da carteira. O `relatorio_mes` não conta a diferença para o banco de um cartão com titular |
 
 **As duas que não entram.** `evaluate-budgets` e `evaluate-bills-reminders`
 alcançam o `destinatarios.ts`, mas só ganharam o `leitoresDoCartao` embutido,
@@ -465,12 +470,13 @@ upsert (§1.1): no conflito, o `update` recebe o `excluded` já mascarado.
 ```sql
 select count(*) as detalhe_igual_a_mascara
 from public.transacoes_privadas
-where description is null or description = 'Gasto pessoal';
+where description = 'Gasto pessoal';
 ```
 
 Esperado: `0`. No ramo de teste, qualquer valor acima é o bug do upsert: a
 descrição original foi trocada pela máscara. Em produção, só vale se alguém
-digitou literalmente "Gasto pessoal" como descrição.
+digitou literalmente "Gasto pessoal" como descrição. Uma privada sem descrição
+(ela é opcional) tem o detalhe nulo, e isso é normal.
 
 **Toda privada está onde o privado vale.**
 
@@ -569,13 +575,14 @@ contas de teste (uma dona e uma membro), numa carteira compartilhada de teste:
 - **A chave "Privado".** No formulário de despesa da dona, a chave aparece com
   Pix, débito, dinheiro e com o cartão de que ela é titular. No cartão da casa, no
   de outro titular, no TED, na parcelada e na assinatura, ela vem desabilitada, com
-  o motivo embaixo. Na receita e no lançamento do convidado, não aparece;
+  o motivo embaixo. Na receita, não aparece. No lançamento do convidado, vem desabilitada com
+  "Quem é convidado não marca gasto privado";
 - **O que a outra pessoa vê.** A membro lê "Gasto pessoal de {nome da dona}" e o
   valor, sem categoria, na lista, no Painel, no cartão, no sino e na conferência
   da fatura. O total do mês, o seguro para gastar e a fatura são os mesmos antes e
   depois de marcar. A tela de categoria perde a linha (lacuna 62). A membro não
-  edita nem exclui a privada, e a tela diz que só quem lançou muda um gasto
-  privado;
+  edita nem exclui a privada, e a tela responde que o lançamento pode ter sido
+  mudado por outra pessoa;
 - **O que a dona vê.** A descrição e a categoria originais, em todas as telas, e
   o Cofre exporta o original. Desmarcar devolve tudo à linha;
 - **Os anexos.** O anexo de uma privada some para a membro (a lista e o storage);

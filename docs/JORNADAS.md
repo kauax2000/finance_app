@@ -139,6 +139,8 @@ flowchart LR
     G6 -->|"titular do cartão; conferência só dele e do dono"| G17
     G15 -->|"só o adulto marca; o convidado nunca"| G17
     G17 -->|"o valor segue nos totais; a categoria some"| G4
+    G17 -->|"fora do orçamento por categoria; o valor entra na fatura prevista"| G9
+    G17 -->|"o valor entra no seguro para gastar"| G13
     G17 -->|"Gasto pessoal de Fulana na lista e na conferência"| G5
     G17 -->|"aviso da despesa privada e da fatura do titular"| G3
     G17 -->|"insight da fatura do cartão com titular"| G14
@@ -1628,7 +1630,7 @@ flowchart TD
     aparece -->|"receita, papel a caminho, linha de outra pessoa ou linha lida sem is_private"| semChave(["Sem a chave: o lançamento é como sempre"])
     aparece -->|"despesa da própria pessoa, com o papel carregado"| regra{"podeSerPrivado: vale aqui?"}
     regra -->|"convidado"| nao1(["Chave desabilitada: Quem é convidado não marca gasto privado"])
-    regra -->|"parcelada, assinatura ou conta ligada"| nao2(["Chave desabilitada: Assinatura, parcela e conta não podem ser privadas"])
+    regra -->|"parcelada ou assinatura"| nao2(["Chave desabilitada: Assinatura, parcela e conta não podem ser privadas"])
     regra -->|"TED ou outro método"| nao3(["Chave desabilitada: Só Pix, débito, dinheiro ou o cartão de que você é titular"])
     regra -->|"cartão de crédito sem titular"| nao4(["Chave desabilitada: No cartão da casa o titular vê a fatura no banco"])
     regra -->|"cartão de outro titular"| nao5(["Chave desabilitada: Só o titular do cartão pode marcar como privado"])
@@ -1637,6 +1639,7 @@ flowchart TD
     chave -->|"Salvar marcado: is_private true; desmarcado numa linha que era privada: false"| grava[("transactions: insert ou update")]
     grava --> gat[("Trigger guardar_privado: vale para cliente, RPC e service role")]
     gat -->|"não vale, ou outro autor tentando marcar"| recusa(["PRIVADO_NAO_PERMITIDO: a frase do banco, e o formulário continua aberto"])
+    gat -->|"conta ligada (bill_instances): só o banco vê"| recusa
     gat -->|"vale"| mascara[("Descrição, categoria e capture_meta vão para transacoes_privadas, que só o autor lê; a linha fica Gasto pessoal, sem categoria")]
     mascara --> totais(["O valor entra no total do mês, no seguro e na fatura"])
     totais -.-> G4(("G4 Painel"))
@@ -1647,7 +1650,7 @@ flowchart TD
     quem -->|"o autor, no app 2.0"| autor(["Lista, folha, formulário, Painel, cartão, A conferir e Cofre juntam os originais"])
     quem -->|"outro adulto, no app 2.0"| outros(["Gasto pessoal de Fulana e o valor, sem categoria e sem anexos"])
     quem -->|"outro adulto, no app de main"| mainFront(["Gasto pessoal e o valor"])
-    outros -->|"Editar ou Excluir"| barra[("RLS: update e delete só do autor; 0 linhas, e a mensagem diz que só quem lançou muda")]
+    outros -->|"Editar ou Excluir"| barra[("RLS: update e delete só do autor; 0 linhas, e a tela responde que o lançamento pode ter sido mudado por outra pessoa")]
     autor -->|"Editar e desmarcar"| volta[("Trigger devolve descrição, categoria e capture_meta e apaga a linha de transacoes_privadas")]
 
     mascara -.->|"despesa manual"| aviso[("notify-transaction-created: valor e Gasto pessoal de Fulana")]
@@ -1711,7 +1714,7 @@ flowchart TD
 | Quem olha | Valor e totais | Descrição e categoria | Editar e excluir | Anexos |
 |---|---|---|---|---|
 | O autor | sim, em todos | os originais, no app 2.0 | sim | sim |
-| Outro adulto, no app 2.0 | sim, em todos | "Gasto pessoal de {nome}", sem categoria | não: a RLS barra e a tela avisa | não |
+| Outro adulto, no app 2.0 | sim, em todos | "Gasto pessoal de {nome}", sem categoria | não: a RLS barra, e a tela responde que o lançamento pode ter sido mudado por outra pessoa | não |
 | Outro adulto, no app de `main` | sim, em todos | "Gasto pessoal", sem categoria | não: a RLS barra | não |
 | Convidado | só as dele; ele não marca privado | as dele | só as dele | as dele |
 
@@ -1726,9 +1729,9 @@ flowchart TD
 | O valor entra em tudo | O select e o insert de `transactions` não mudaram: todo adulto lê a linha mascarada. O total do mês, o seguro para gastar e a fatura prevista dão o mesmo antes e depois de marcar (teste com o mesmo conjunto de lançamentos). A categoria nula é o que tira a privada da tela de categoria e do orçamento por categoria (lacuna 62) | `src/lib/privado/numeros-privado.test.ts` |
 | O que o autor e os outros leem | O autor junta os originais (`juntarDetalhesPrivados`, uma consulta só a `transacoes_privadas`, e só quando a página tem privada dele) na lista, na folha, no `?txn=`, no Painel e no calendário, nas compras do cartão, no "A conferir" e no Cofre; se a busca falha, a linha abre mascarada. Os outros leem `rotuloDaTransacao`: "Gasto pessoal de {nome}", com o nome do diretório de membros. O filtro por categoria e a busca por descrição rodam na linha mascarada, então o autor não acha a própria privada pelo original (lacuna 61) | `src/lib/privado/detalhes.ts`, `src/lib/privado/use-rotulo-da-transacao.ts`, `src/lib/cofre/exportar.ts` |
 | Anexos | A política de `attachments` (ver, inserir e apagar) e a do storage escondem o anexo cuja transação é privada de outra pessoa, e o da fatura de um cartão cuja conferência não está liberada (`anexo_oculto`, `objeto_de_anexo_oculto`: as duas `security definer`, para o convidado e a RLS não lerem "não oculto"). O objeto órfão (sem linha de `attachments`) fica fechado, menos para quem o subiu e para o dono. O adulto que apaga o anexo de outro deixa o objeto até a limpeza semanal (lacuna 64) | `supabase/migrations/20261030120000_privado.sql` |
-| O titular | `credit_cards.holder_user_id` (nulo é "cartão da casa"). `conferir_titular` e `conferir_titular_troca` recusam: sem ser dono da carteira, `TITULAR_SO_DONO` (o titular atual só pode limpar a si mesmo; mudar de carteira um cartão com titular também pede o dono); o novo titular que não é dono nem membro da carteira, `TITULAR_NAO_ADULTO`. A service role passa. Só o dono vê o seletor, com os adultos da carteira e o "Cartão da casa"; um titular que saiu aparece como "(fora da carteira)". O titular e o autor só são conferidos ao gravar: quem sai ou vira convidado depois continua titular no banco (lacuna 67) | `supabase/migrations/20261030120000_privado.sql`, `src/components/wireframe/gasto-privado-wireframe.tsx`, `src/lib/credit-cards/mutations.ts` |
+| O titular | `credit_cards.holder_user_id` (nulo é "cartão da casa"). `conferir_titular` e `conferir_titular_troca` recusam: sem ser dono da carteira, `TITULAR_SO_DONO` (o titular atual só pode limpar a si mesmo; mudar qualquer cartão de carteira também pede o dono); o novo titular que não é dono nem membro da carteira, `TITULAR_NAO_ADULTO`. A service role passa. Só o dono vê o seletor, com os adultos da carteira e o "Cartão da casa"; um titular que saiu aparece como "(fora da carteira)". O titular e o autor só são conferidos ao gravar: quem sai ou vira convidado depois continua titular no banco (lacuna 66) | `supabase/migrations/20261030120000_privado.sql`, `src/components/wireframe/gasto-privado-wireframe.tsx`, `src/lib/credit-cards/mutations.ts` |
 | A conferência | Num cartão com titular, `credit_card_statement_totals` (as quatro políticas) e os anexos de fatura só valem para o titular e o dono (`conferencia_liberada`). No cartão da casa, de todo adulto, como hoje. A tela mostra "Só o titular do cartão e o dono da carteira conferem esta fatura." a quem não é nenhum dos dois. Nos grupos, a linha casada com a privada de outra pessoa diz "Gasto pessoal de {nome}" com o valor. A privada casa pelo valor e pela data como qualquer linha: a máscara só muda o nome mostrado | `supabase/migrations/20261030120000_privado.sql`, `src/components/wireframe/conferir-fatura-wireframe.tsx` |
-| Avisos e insights | `leitoresDoCartao(membros, titular, usaBanco)`: os adultos, e, com titular e dado do banco, só o titular e os donos (o titular que saiu some). O aviso de fatura com total do banco, o de limite com o total do banco e o resumo da conferência seguem a regra; o "fecha em breve" e a fatura sem total gravado vão a todo adulto (Ruling 6). O insight `fatura_fechou` de um cartão com titular é sempre do titular e dos donos, com `user_id` (Ruling 7). O aviso de despesa nova diz "{valor} — Gasto pessoal de {nome}" na privada. Os detectores de recorrência, atípico, duplicidade, preço e sazonal ignoram a privada (a fatura e os totais a contam); a `capture` ignora as privadas no histórico que casa; `virar_assinatura` e `virar_conta` deixam a privada de fora | `supabase/functions/_shared/destinatarios.ts`, `supabase/functions/_shared/insights/detectores.ts`, `supabase/functions/_shared/process-transaction-notification.ts`, `supabase/functions/insights-daily/index.ts`, `supabase/functions/credit-card-calendar-alerts/index.ts`, `supabase/functions/evaluate-credit-card-alerts/index.ts`, `supabase/functions/capture/index.ts` |
+| Avisos e insights | `leitoresDoCartao(membros, titular, usaBanco)`: os adultos, e, com titular e dado do banco, só o titular e os donos (o titular que saiu some). O aviso de fatura com total do banco, o de limite com o total do banco e o resumo da conferência seguem a regra; o "fecha em breve" e a fatura sem total gravado vão a todo adulto (Ruling 6). O insight `fatura_fechou` de um cartão com titular é sempre do titular e dos donos, com `user_id` (Ruling 7). O aviso de despesa nova diz "{valor} — Gasto pessoal de {nome}" na privada. Os detectores de recorrência, atípico, duplicidade, preço e sazonal ignoram a privada (a fatura e os totais a contam), e o relatório do mês não conta a diferença para o banco de um cartão com titular; a `capture` ignora as privadas no histórico que casa; `virar_assinatura` e `virar_conta` deixam a privada de fora | `supabase/functions/_shared/destinatarios.ts`, `supabase/functions/_shared/insights/detectores.ts`, `supabase/functions/_shared/process-transaction-notification.ts`, `supabase/functions/insights-daily/index.ts`, `supabase/functions/credit-card-calendar-alerts/index.ts`, `supabase/functions/evaluate-credit-card-alerts/index.ts`, `supabase/functions/capture/index.ts` |
 | O 2.0 sem a migração | O front do 2.0 roda contra um banco sem a migração do 7B (Ruling 8): as colunas novas só entram em consulta `*` ou tolerante, o corpo de escrita só cita `is_private` e `holder_user_id` quando mudam algo, e a busca de `transacoes_privadas` só roda depois de achar uma privada. Um teste de fonte tranca. Marcar privado ou escolher um titular sem a migração falha: aplique-a antes de o dono testar. O `main` não manda nenhuma das duas colunas e lê "Gasto pessoal" | `src/lib/privado/colunas-tolerantes.test.ts`, `supabase/BLOCO_7B_DEPLOYMENT.md` |
 
 ---

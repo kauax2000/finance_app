@@ -369,6 +369,8 @@ Depois das migrações, as obrigatórias e as neutras que não esperam o front:
 supabase functions deploy workspace-invites-create workspace-invites-resend evaluate-budgets capture notify-transaction-created evaluate-credit-card-alerts evaluate-bills-reminders --use-api
 ```
 
+**Neste repositório, `capture`, `notify-transaction-created` e `evaluate-credit-card-alerts` já leem colunas do 7B** (`is_private`, `holder_user_id`): aplique `20261030120000_privado.sql` antes (`BLOCO_7B_DEPLOYMENT.md` §0), ou elas param até a migração subir.
+
 Quando o front do 2.0 subir, publique as duas que esperam por ele (se as outras já
 subiram por um roteiro anterior, estas são as únicas pendentes):
 
