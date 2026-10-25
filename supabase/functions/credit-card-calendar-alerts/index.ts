@@ -7,6 +7,7 @@ import {
   deliverNotification,
   loadWorkspacePrefsMap,
 } from '../_shared/deliver-notification.ts'
+import { adultosDaCarteira } from '../_shared/destinatarios.ts'
 import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
 import { cardLabel, type Copy, ddmm, invoiceCopy, trendingHighCopy } from '../_shared/notification-copy.ts'
 import { withinReminderWindow } from '../_shared/notification-schedule.ts'
@@ -469,13 +470,14 @@ Deno.serve(async (req: Request) => {
       }
       if (events.length === 0) return
 
+      // Fatura é da casa: o convidado não recebe.
       const { data: memberRows, error: mErr } = await admin
         .from('workspace_members')
-        .select('user_id')
+        .select('user_id, role')
         .eq('workspace_id', workspaceId)
       if (mErr) throw new Error(mErr.message)
 
-      const memberIds = (memberRows ?? []).map((m: { user_id: string }) => m.user_id)
+      const memberIds = adultosDaCarteira(memberRows ?? [])
       if (memberIds.length === 0) return
 
       const prefsMap = await loadWorkspacePrefsMap(admin, workspaceId, memberIds)

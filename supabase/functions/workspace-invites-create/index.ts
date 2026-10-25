@@ -24,6 +24,10 @@ type CreateInviteBody = {
   invite_kind?: string
   /** camelCase alias (some clients send this) */
   inviteKind?: string
+  /** Bloco 7A. Sem `role`, o convite é de membro, como no front de `main`. */
+  role?: 'member' | 'guest'
+  menor?: boolean
+  consentimento?: boolean
 }
 
 function json(status: number, payload: unknown): Response {
@@ -82,6 +86,14 @@ Deno.serve(async (req: Request) => {
     })
   }
 
+  const role = body.role ?? 'member'
+  if (role !== 'member' && role !== 'guest') return json(400, { error: 'role inválido' })
+  // O link é sempre de membro; o menor é convidado, com o consentimento do responsável (LGPD, art. 14).
+  if (role === 'guest' && isLink) return json(400, { error: 'convidado_requer_email' })
+  const menor = body.menor === true
+  if (menor && role !== 'guest') return json(400, { error: 'menor_requer_convidado' })
+  if (menor && body.consentimento !== true) return json(400, { error: 'consentimento_obrigatorio' })
+
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
   const caller = authResult.user
 
@@ -138,7 +150,9 @@ Deno.serve(async (req: Request) => {
     ? {
         workspace_id: workspaceId,
         invited_email: null as string | null,
-        role: 'member' as const,
+        role,
+        menor,
+        consentimento_em: menor ? new Date().toISOString() : null,
         token_hash: tokenHash,
         status: 'pending' as const,
         expires_at: expiresAt,
@@ -149,7 +163,9 @@ Deno.serve(async (req: Request) => {
     : {
         workspace_id: workspaceId,
         invited_email: invitedEmail,
-        role: 'member' as const,
+        role,
+        menor,
+        consentimento_em: menor ? new Date().toISOString() : null,
         token_hash: tokenHash,
         status: 'pending' as const,
         expires_at: expiresAt,
@@ -177,6 +193,7 @@ Deno.serve(async (req: Request) => {
           inviterName: caller.email ?? 'Alguém',
           workspaceName: workspace.name,
           inviteUrl,
+          menor,
         }),
       })
     } catch (error) {

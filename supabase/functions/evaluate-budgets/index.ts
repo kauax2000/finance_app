@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { isServiceAuthorized } from '../_shared/service-auth.ts'
 import { deliverNotification } from '../_shared/deliver-notification.ts'
+import { adultosDaCarteira } from '../_shared/destinatarios.ts'
 import { budgetCopy, monthNamePt } from '../_shared/notification-copy.ts'
 import {
   addCalendarDays,
@@ -235,17 +236,17 @@ Deno.serve(async (req: Request) => {
     const releaseClaim = () =>
       supabaseAdmin.from('budgets').update({ [chosen!.key]: null }).eq('id', b.id).eq(chosen!.key, nowIso)
 
-    // Todos os membros recebem; cada um com as próprias preferências, que
-    // deliverNotification confere (notify_budget).
+    // Os adultos recebem (o convidado não vê orçamento); cada um com as
+    // próprias preferências, que deliverNotification confere (notify_budget).
     const { data: memberRows, error: membersErr } = await supabaseAdmin
       .from('workspace_members')
-      .select('user_id')
+      .select('user_id, role')
       .eq('workspace_id', workspaceId)
     if (membersErr) {
       await releaseClaim()
       return failResult('membros', membersErr)
     }
-    const memberIds = (memberRows ?? []).map((m: { user_id: string }) => m.user_id)
+    const memberIds = adultosDaCarteira(memberRows ?? [])
 
     const emails = new Map<string, string | null>()
     if (memberIds.length > 0) {

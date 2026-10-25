@@ -9,6 +9,7 @@ import {
   triggerSkipReason,
   type TransactionNotifyRow,
 } from '../_shared/transaction-notify-rules.ts'
+import { adultosDaCarteira } from './destinatarios.ts'
 
 export type NotifyTransactionResult = {
   ok: true
@@ -89,14 +90,16 @@ export async function processTransactionNotification(
     return { ok: true, skipped: 'not_eligible', notified: 0 }
   }
 
+  // Só os adultos, menos o autor: o convidado não vê o lançamento dos outros,
+  // e a despesa dele avisa o dono e os membros.
   const { data: members, error: memErr } = await supabaseAdmin
     .from('workspace_members')
-    .select('user_id')
+    .select('user_id, role')
     .eq('workspace_id', workspaceId)
-    .neq('user_id', tx.user_id)
 
   if (memErr) return { ok: false, error: memErr.message, status: 500 }
-  if (!members?.length) {
+  const memberIds = adultosDaCarteira(members ?? [], tx.user_id)
+  if (!memberIds.length) {
     return { ok: true, skipped: 'no_recipients', notified: 0 }
   }
 
@@ -116,7 +119,6 @@ export async function processTransactionNotification(
   let notified = 0
   const results: Array<{ user_id: string; ok: boolean; skipped?: string }> = []
 
-  const memberIds = (members as Array<{ user_id: string }>).map((m) => m.user_id)
   const prefsMap = await loadWorkspacePrefsMap(supabaseAdmin, workspaceId, memberIds)
 
   for (const memberId of memberIds) {

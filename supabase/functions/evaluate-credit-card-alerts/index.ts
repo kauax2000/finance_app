@@ -5,6 +5,7 @@ import { cardLabel, cardLimitCopy } from '../_shared/notification-copy.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import { isServiceAuthorized } from '../_shared/service-auth.ts'
 import { deliverNotification } from '../_shared/deliver-notification.ts'
+import { adultosDaCarteira } from '../_shared/destinatarios.ts'
 import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
 import {
   addCalendarDays,
@@ -215,17 +216,18 @@ Deno.serve(async (req: Request) => {
 
   const results: Record<string, unknown> = {}
 
-  // Fan out to every workspace member (deliverNotification honors each
-  // recipient's own prefs). Previously only the acting user was notified, and
-  // the workspace-scoped dedupe key let them starve everyone else for the cycle.
+  // Fan out to every adult of the workspace (deliverNotification honors each
+  // recipient's own prefs; the guest doesn't see invoices). Previously only the
+  // acting user was notified, and the workspace-scoped dedupe key let them
+  // starve everyone else for the cycle.
   const { data: memberRows, error: membersErr } = await supabaseAdmin
     .from('workspace_members')
-    .select('user_id')
+    .select('user_id, role')
     .eq('workspace_id', workspaceId)
 
   if (membersErr) return json(500, { error: internalError('evaluate-credit-card-alerts', membersErr) })
 
-  const memberIds = (memberRows ?? []).map((m: { user_id: string }) => m.user_id)
+  const memberIds = adultosDaCarteira(memberRows ?? [])
 
   const memberEmails = new Map<string, string | null>()
   if (memberIds.length > 0) {

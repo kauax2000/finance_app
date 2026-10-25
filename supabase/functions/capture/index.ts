@@ -113,10 +113,14 @@ Deno.serve(async (req: Request) => {
 
   const { data: membros, error: memErr } = await admin
     .from('workspace_members')
-    .select('workspace_id')
+    .select('workspace_id, role')
     .eq('user_id', userId)
   if (memErr) return json(500, { error: internalError('capture: membro', memErr) })
   const carteirasDaPessoa = (membros ?? []).map((m: { workspace_id: string }) => m.workspace_id)
+  // O convidado só vê as transações dele (Bloco 7A): o histórico que casa também.
+  const convidadoEm = new Set(
+    (membros ?? []).filter((m: { role: string }) => m.role === 'guest').map((m: { workspace_id: string }) => m.workspace_id),
+  )
   // Saiu da carteira padrão: o token não vale mais.
   if (!carteirasDaPessoa.includes(carteiraPadrao)) return TOKEN_INVALIDO()
 
@@ -207,15 +211,16 @@ Deno.serve(async (req: Request) => {
   // ponytail: o histórico de todas as carteiras da pessoa (o destino só se sabe
   // depois de casar o cartão); uma família tem poucas. Se crescer, casar antes.
   const historicos = await Promise.all(
-    carteirasDaPessoa.map((w: string) =>
-      admin
+    carteirasDaPessoa.map((w: string) => {
+      const q = admin
         .from('transactions')
         .select('description, category_id, payment_method, payment_credit_card_id, date, type')
         .eq('workspace_id', w)
+      return (convidadoEm.has(w) ? q.eq('user_id', userId) : q)
         .order('date', { ascending: false })
         .order('created_at', { ascending: false })
-        .limit(HISTORICO_POR_CARTEIRA),
-    ),
+        .limit(HISTORICO_POR_CARTEIRA)
+    }),
   )
   const historicoPorCarteira: Record<string, LinhaHistorico[]> = {}
   for (const [i, r] of historicos.entries()) {

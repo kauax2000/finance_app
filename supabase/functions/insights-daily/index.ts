@@ -4,6 +4,7 @@ import { FAN_OUT_CONCURRENCY, forEachLimit } from '../_shared/for-each-limit.ts'
 import { secretMatches } from '../_shared/timing-safe-equal.ts'
 import { todasAsPaginas } from '../_shared/todas-as-paginas.ts'
 import { deliverNotification, loadWorkspacePrefsMap } from '../_shared/deliver-notification.ts'
+import { adultosDaCarteira } from '../_shared/destinatarios.ts'
 import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
 import { cardLabel } from '../_shared/notification-copy.ts'
 import {
@@ -494,7 +495,7 @@ async function chavesGravadas(admin: SupabaseAdminClient, workspaceId: string, l
 const chaveDe = (l: { kind: string; dedupe_key: string }) => `${l.kind}:${l.dedupe_key}`
 
 /**
- * Avisa os membros de cada insight novo. O push só vai a quem reivindicou um
+ * Avisa os adultos de cada insight novo. O push só vai a quem reivindicou um
  * envio da semana (`reivindicar_push_de_insight`, até 3); os outros recebem só
  * no app. E-mail não: insight não é essencial.
  */
@@ -505,12 +506,13 @@ async function avisar(
   semana: string,
   c: Contagem,
 ): Promise<void> {
+  // Os insights da carteira são da casa: o convidado não recebe.
   const { data: memberRows, error: mErr } = await admin
     .from('workspace_members')
-    .select('user_id')
+    .select('user_id, role')
     .eq('workspace_id', workspaceId)
   if (mErr) throw new Error(mErr.message)
-  const membros = (memberRows ?? []).map((m: { user_id: string }) => m.user_id)
+  const membros = adultosDaCarteira(memberRows ?? [])
   if (membros.length === 0) return
 
   const [prefsMap, silRes, inscRes] = await Promise.all([

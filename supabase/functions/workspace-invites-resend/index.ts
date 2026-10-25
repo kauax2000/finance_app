@@ -77,7 +77,7 @@ Deno.serve(async (req: Request) => {
 
   const { data: invite, error: inviteErr } = await supabaseAdmin
     .from('workspace_invites')
-    .select('id, workspace_id, invited_email, status, expires_at, workspace:workspaces(name)')
+    .select('id, workspace_id, invited_email, status, expires_at, menor, workspace:workspaces(name)')
     .eq('id', inviteId)
     .maybeSingle()
 
@@ -133,6 +133,7 @@ Deno.serve(async (req: Request) => {
         inviterName: caller.email ?? 'Alguém',
         workspaceName,
         inviteUrl,
+        menor: invite.menor === true,
       }),
     })
   } catch (error) {

@@ -88,6 +88,8 @@ export function renderInviteHtml(args: {
   inviterName: string
   workspaceName: string
   inviteUrl: string
+  /** Convite de menor: o parágrafo do consentimento do responsável (LGPD, art. 14). */
+  menor?: boolean
 }): string {
   const workspace = escapeHtml(args.workspaceName)
   const inviter = escapeHtml(args.inviterName)
@@ -106,7 +108,14 @@ export function renderInviteHtml(args: {
         <h1 style="margin:0 0 10px;font-size:18px;line-height:1.3;">Você recebeu um convite</h1>
         <p style="margin:0 0 12px;color:rgba(255,255,255,.75);font-size:14px;line-height:1.5;">
           ${inviter} convidou você para participar do workspace <strong>${workspace}</strong>.
-        </p>
+        </p>${
+    args.menor
+      ? `
+        <p style="margin:0 0 12px;color:rgba(255,255,255,.75);font-size:14px;line-height:1.5;">
+          ${inviter} criou este convite como responsável legal e autorizou o uso do app por você, como pede a LGPD (art. 14).
+        </p>`
+      : ''
+  }
         <a href="${url}" style="display:inline-block;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.10);color:#fff;text-decoration:none;font-size:13px;">
           Aceitar convite
         </a>
