@@ -53,7 +53,7 @@ const GUARDADO: ReadonlyArray<readonly [dado: string, onde: string, quem: string
  * A exportação só lê, então funciona também em "só leitura".
  */
 export function CofreAbertoWireframe() {
-    const { workspaces } = useWorkspace()
+    const { workspaces, isAdulto } = useWorkspace()
     const [exportando, setExportando] = useState(false)
     const [erro, setErro] = useState<string | null>(null)
     const [apagando, setApagando] = useState(false)
@@ -126,11 +126,14 @@ export function CofreAbertoWireframe() {
             </button>
             <DeleteAccountDialog open={apagando} onOpenChange={setApagando} />
 
-            <p>
-                <Link href={ROUTES.PILOTO} className="text-foreground underline">
-                    Ver o que o app lançou sozinho (Piloto Automático)
-                </Link>
-            </p>
+            {/* O Piloto é da casa: o convidado (Bloco 7A) não o abre. */}
+            {isAdulto ? (
+                <p>
+                    <Link href={ROUTES.PILOTO} className="text-foreground underline">
+                        Ver o que o app lançou sozinho (Piloto Automático)
+                    </Link>
+                </p>
+            ) : null}
         </WireframeBox>
     )
 }

@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
 export type CreditCardsEmptyStateProps = {
-    onAddCard: () => void
+    /** Sem ele (o convidado, Bloco 7A), o vazio só informa. */
+    onAddCard?: () => void
 }
 
 export function CreditCardsEmptyState({ onAddCard }: CreditCardsEmptyStateProps) {
@@ -26,10 +27,15 @@ export function CreditCardsEmptyState({ onAddCard }: CreditCardsEmptyStateProps)
             >
                 <EmptyState variant="plain" size="lg">
                     <EmptyStateGhost leading="card" trailing="amount" />
-                    <EmptyStateTitle>Cadastre seus cartões de crédito</EmptyStateTitle>
+                    <EmptyStateTitle>
+                        {onAddCard ? "Cadastre seus cartões de crédito" : "Nenhum cartão ainda"}
+                    </EmptyStateTitle>
                     <EmptyStateDescription>
-                        {CREDIT_CARDS_EMPTY_BILLING_HINT}
+                        {onAddCard
+                            ? CREDIT_CARDS_EMPTY_BILLING_HINT
+                            : "Quem administra a carteira cadastra os cartões. Eles aparecem aqui."}
                     </EmptyStateDescription>
+                    {onAddCard ? (
                     <EmptyStateActions>
                         <Button
                             type="button"
@@ -40,6 +46,7 @@ export function CreditCardsEmptyState({ onAddCard }: CreditCardsEmptyStateProps)
                             Novo cartão
                         </Button>
                     </EmptyStateActions>
+                    ) : null}
                 </EmptyState>
             </CardContent>
         </Card>

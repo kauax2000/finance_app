@@ -220,8 +220,9 @@ function PaletteBody({ close }: { close: () => void }) {
     const { recents, add } = useCommandRecents(RECENTES)
 
     const pages = useCommandPages()
-    const { currentWorkspaceId, workspaces, setCurrentWorkspaceId, papel } = useWorkspace()
-    const convidado = papel === "guest"
+    const { currentWorkspaceId, workspaces, setCurrentWorkspaceId, papel, isAdulto } = useWorkspace()
+    // O convidado e o papel a caminho: só o que é comum aos dois (Bloco 7A).
+    const convidado = !isAdulto
     const lugarDele = (e: Escopo | null) => (e && convidado && !ESCOPOS_DO_CONVIDADO.has(e.id) ? null : e)
     const escopo = pages.current as EscopoId | undefined
     const rotulo = ESCOPOS.find((e) => e.id === escopo)?.rotulo

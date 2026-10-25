@@ -26,13 +26,20 @@ import { cn } from "@/lib/utils"
 export type CreditCardTileProps = {
     card: CreditCard
     snapshot: CardCycleSnapshot | null | undefined
+    /**
+     * A ficha de leitura do convidado (Bloco 7A): não é link (o detalhe é a
+     * fatura e a conferência, fora da lista dele), e o ciclo diz "suas
+     * compras" — a RLS só devolve as dele, então o uso do limite e a
+     * comparação, com metade dos dados, saem.
+     */
+    somenteLeitura?: boolean
 }
 
 /**
  * List tile: one link (Option A in plan) — entire surface opens detail.
  * Identity row matches [CreditCardDetailView] ficha card header (title, badge).
  */
-export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
+export function CreditCardTile({ card, snapshot, somenteLeitura = false }: CreditCardTileProps) {
     const detailHref = creditCardDetailPath(card.id)
     const limit = card.credit_limit != null ? Number(card.credit_limit) : null
     const committedTotal = snapshot?.committedOpenTotal ?? snapshot?.openTotal ?? 0
@@ -57,21 +64,8 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
         return Math.min(100, Math.max(0, pct))
     })()
 
-    return (
-        // Um alvo só, e por isso o cartão **é** o link: `interactive asChild`
-        // traz a elevação, o par de toque e o anel de foco que o <Link> de
-        // dentro escrevia à mão (rodada 204). O inativo é `inactive`, e a
-        // barra de topo com fio virou o cabeçalho do sistema.
-        <Card
-            interactive
-            asChild
-            inactive={!card.is_active}
-            className="group text-inherit no-underline"
-        >
-            <Link
-                href={detailHref}
-                aria-label={`Abrir cartão ${card.name}, final ${card.last_four}. Ver detalhes.`}
-            >
+    const conteudo = (
+        <>
                 <CardHeader>
                     <CardTitle className="truncate">{card.name}</CardTitle>
                     <CardAction>
@@ -94,10 +88,12 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                                 showInactiveBadge={false}
                             />
                         </CreditCardFaceTilt>
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors group-hover:text-foreground active:text-foreground">
-                            Ver detalhes
-                            <ChevronRightIcon className="size-3.5 shrink-0 opacity-85 transition-transform group-hover:translate-x-0.5" aria-hidden />
-                        </span>
+                        {somenteLeitura ? null : (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors group-hover:text-foreground active:text-foreground">
+                                Ver detalhes
+                                <ChevronRightIcon className="size-3.5 shrink-0 opacity-85 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                            </span>
+                        )}
                     </div>
 
                     <div className="min-w-0 flex-1 space-y-3">
@@ -107,7 +103,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                                 <DescriptionList term="eyebrow">
                                     <DescriptionListItem>
                                         <DescriptionTerm>
-                                            Fatura aberta (planejada)
+                                            {somenteLeitura ? "Suas compras neste ciclo" : "Fatura aberta (planejada)"}
                                         </DescriptionTerm>
                                         <DescriptionDetails size="lg">
                                             {currencyBRL(
@@ -130,6 +126,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                                 </DescriptionList>
                             </div>
 
+                            {somenteLeitura ? null : (
                             <div className="flex items-center justify-between gap-3 rounded-row border border-border/60 bg-background/80 px-2.5 py-2 text-2xs dark:bg-background/50">
                                 <span className="text-muted-foreground">Comparação</span>
                                 <span
@@ -143,6 +140,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                                     {delta === 0 ? "—" : currencyBRL(delta)}
                                 </span>
                             </div>
+                            )}
 
                             <div className="space-y-1 text-2xs leading-snug text-muted-foreground">
                                 <p className="flex items-center justify-between gap-2">
@@ -166,7 +164,7 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                                 </p>
                             </div>
 
-                            {usagePct != null ? (
+                            {usagePct != null && !somenteLeitura ? (
                                 <Progress
                                     value={committedTotal}
                                     max={limit ?? 100}
@@ -185,8 +183,33 @@ export function CreditCardTile({ card, snapshot }: CreditCardTileProps) {
                     ) : null}
                     </div>
                 </CardContent>
-            </Link>
-        </Card>
+        </>
+    )
+
+    return (
+        // Um alvo só, e por isso o cartão **é** o link: `interactive asChild`
+        // traz a elevação, o par de toque e o anel de foco que o <Link> de
+        // dentro escrevia à mão (rodada 204). O inativo é `inactive`, e a
+        // barra de topo com fio virou o cabeçalho do sistema.
+        somenteLeitura ? (
+            <Card inactive={!card.is_active} className="group">
+                {conteudo}
+            </Card>
+        ) : (
+            <Card
+                interactive
+                asChild
+                inactive={!card.is_active}
+                className="group text-inherit no-underline"
+            >
+                <Link
+                    href={detailHref}
+                    aria-label={`Abrir cartão ${card.name}, final ${card.last_four}. Ver detalhes.`}
+                >
+                    {conteudo}
+                </Link>
+            </Card>
+        )
     )
 }
 

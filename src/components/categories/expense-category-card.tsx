@@ -122,8 +122,9 @@ export function ExpenseCategoryCard({
     spendRank: number
     categoriesWithPositiveSpend: number
     href: string
-    onEdit: () => void
-    onDelete: () => void
+    /** Sem eles (o convidado, Bloco 7A), o cartão é só leitura: sem o menu. */
+    onEdit?: () => void
+    onDelete?: () => void
 }) {
     const color = category.color || TILE_EXPENSE_DEFAULT
     const hasBudget = limit > 0
@@ -210,42 +211,44 @@ export function ExpenseCategoryCard({
 
                     <CardAction className="flex items-center gap-1.5">
                         <MomComparisonBadge now={spent} prev={previousSpent} />
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    type="button"
-                                    variant="tertiary"
-                                    size="icon-md"
-                                    className="text-muted-foreground hover:text-foreground active:text-foreground"
-                                    aria-label={`Opções da categoria ${category.name}`}
-                                    onClick={(e) => stopLinkNavigation(e)}
-                                    onPointerDown={(e) => e.stopPropagation()}
+                        {onEdit && onDelete ? (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        type="button"
+                                        variant="tertiary"
+                                        size="icon-md"
+                                        className="text-muted-foreground hover:text-foreground active:text-foreground"
+                                        aria-label={`Opções da categoria ${category.name}`}
+                                        onClick={(e) => stopLinkNavigation(e)}
+                                        onPointerDown={(e) => e.stopPropagation()}
+                                    >
+                                        <EllipsisVerticalIcon aria-hidden />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    align="end"
+                                    size="sm"
+                                    header={
+                                        <DropdownMenuHeader
+                                            title={category.name}
+                                            description={`${currency(spent)} no mês`}
+                                        />
+                                    }
                                 >
-                                    <EllipsisVerticalIcon aria-hidden />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                align="end"
-                                size="sm"
-                                header={
-                                    <DropdownMenuHeader
-                                        title={category.name}
-                                        description={`${currency(spent)} no mês`}
-                                    />
-                                }
-                            >
-                                <DropdownMenuItem onSelect={() => onEdit()}>
-                                    <PencilIcon aria-hidden />
-                                    Editar
-                                </DropdownMenuItem>
-                                <DropdownMenuItem variant="destructive"
-                                    onSelect={() => onDelete()}
-                                >
-                                    <TrashIcon aria-hidden />
-                                    Excluir
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                    <DropdownMenuItem onSelect={onEdit}>
+                                        <PencilIcon aria-hidden />
+                                        Editar
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem variant="destructive"
+                                        onSelect={onDelete}
+                                    >
+                                        <TrashIcon aria-hidden />
+                                        Excluir
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        ) : null}
                     </CardAction>
                 </CardHeader>
 

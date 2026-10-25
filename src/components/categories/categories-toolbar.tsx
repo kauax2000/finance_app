@@ -458,7 +458,8 @@ export function CategoriesToolbar({
 }: {
     filterType: TransactionFilterType
     onFilterTypeChange: (v: TransactionFilterType) => void
-    onNewCategory: () => void
+    /** Sem ele (o convidado, Bloco 7A), a barra não cria categoria. */
+    onNewCategory?: () => void
     showMonthControls: boolean
     budgetMonthYm: string
     onBudgetMonthYmChange: (ym: string) => void
@@ -488,14 +489,16 @@ export function CategoriesToolbar({
                         className="hidden md:flex"
                     />
                 ) : null}
-                <ToolbarButton
-                    type="button"
-                    variant="primary"
-                    collapse
-                    icon={<PlusIcon aria-hidden />}
-                    label="Nova categoria"
-                    onClick={onNewCategory}
-                />
+                {onNewCategory ? (
+                    <ToolbarButton
+                        type="button"
+                        variant="primary"
+                        collapse
+                        icon={<PlusIcon aria-hidden />}
+                        label="Nova categoria"
+                        onClick={onNewCategory}
+                    />
+                ) : null}
             </ToolbarActions>
         </Toolbar>
     )

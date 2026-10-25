@@ -47,7 +47,9 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
     const router = useRouter()
     const searchParams = useSearchParams()
     const { user, loading: authLoading } = useAuth()
-    const { currentWorkspaceId, loading: workspaceLoading, error: workspaceError } = useWorkspace()
+    const { currentWorkspaceId, loading: workspaceLoading, error: workspaceError, isAdulto } = useWorkspace()
+    // O convidado (Bloco 7A) só lê: sem editar, excluir nem mexer no orçamento.
+    const podeEscrever = isAdulto
 
     const [yearMonth, setYearMonth] = React.useState(() => formatYearMonth(new Date()))
 
@@ -451,8 +453,8 @@ export default function CategoryDetailPageClient({ categoryId }: { categoryId: s
             <CategoryDetailHero
                 category={category}
                 accentColor={accentColor}
-                onEdit={openEditDialog}
-                onDelete={() => setDeleteDialogOpen(true)}
+                onEdit={podeEscrever ? openEditDialog : undefined}
+                onDelete={podeEscrever ? () => setDeleteDialogOpen(true) : undefined}
                 monthToolbar={
                     <div className="hidden md:contents">
                         <MonthNav

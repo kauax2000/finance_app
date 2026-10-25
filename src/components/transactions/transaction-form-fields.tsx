@@ -34,6 +34,7 @@ import {
     normalizeCategoryIcon,
 } from "@/components/categories/category-appearance-fields"
 import Link from "next/link"
+import { useWorkspace } from "@/components/workspace-provider"
 import type { Category, CreditCard } from "@/lib/supabase"
 import { paymentMethodChipOptions, type PaymentMethod } from "@/lib/payment-methods"
 import {
@@ -295,6 +296,8 @@ export function TransactionFormSegment({
 }
 
 export function TransactionFormFields(props: TransactionFormFieldsProps) {
+    // O convidado (Bloco 7A) lança, mas não cadastra categoria nem cartão.
+    const { isAdulto } = useWorkspace()
     const {
         segmentMode,
         formKind,
@@ -754,7 +757,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                         <FormPickerPopoverFooter>
                             <FormPickerPopoverFooterAction className="text-xs">
                                 <Link href={categoriesHref}>
-                                    Gerenciar categorias
+                                    {isAdulto ? "Gerenciar categorias" : "Ver categorias"}
                                 </Link>
                             </FormPickerPopoverFooterAction>
                         </FormPickerPopoverFooter>
@@ -826,11 +829,13 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                             <EmptyStateDescription>
                                 Nenhum cartão cadastrado para vincular esta despesa.
                             </EmptyStateDescription>
-                            <EmptyStateActions>
-                                <Button variant="link" asChild>
-                                    <Link href={creditCardsHref}>Cadastrar cartão</Link>
-                                </Button>
-                            </EmptyStateActions>
+                            {isAdulto ? (
+                                <EmptyStateActions>
+                                    <Button variant="link" asChild>
+                                        <Link href={creditCardsHref}>Cadastrar cartão</Link>
+                                    </Button>
+                                </EmptyStateActions>
+                            ) : null}
                         </EmptyState>
                     ) : (
                         <Popover
@@ -872,13 +877,15 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                                         embedInScrollContainer
                                     />
                                 </FormPickerPopoverList>
-                                <FormPickerPopoverFooter>
-                                    <FormPickerPopoverFooterAction className="text-xs">
-                                        <Link href={creditCardsHref}>
-                                            Cadastrar cartão
-                                        </Link>
-                                    </FormPickerPopoverFooterAction>
-                                </FormPickerPopoverFooter>
+                                {isAdulto ? (
+                                    <FormPickerPopoverFooter>
+                                        <FormPickerPopoverFooterAction className="text-xs">
+                                            <Link href={creditCardsHref}>
+                                                Cadastrar cartão
+                                            </Link>
+                                        </FormPickerPopoverFooterAction>
+                                    </FormPickerPopoverFooter>
+                                ) : null}
                             </FormPickerPopoverContent>
                         </Popover>
                     )}

@@ -158,7 +158,7 @@ function resolveNavItems(hrefs: readonly string[]): NavigationItem[] {
 }
 
 /** As abas da barra; o convidado vê só as da lista dele (Bloco 7A). */
-export function getMobileNavTabs(papel?: WorkspaceRole | null): NavigationItem[] {
+export function getMobileNavTabs(papel: WorkspaceRole | null): NavigationItem[] {
     return itensDeNavegacaoPara(papel, resolveNavItems(MOBILE_TAB_NAV))
 }
 
@@ -236,19 +236,25 @@ export type VoceGroup = {
  * fixadas), embaixo a conta e, por último, as configurações. Planos e pagamentos
  * mora em Minha conta, no telefone. `abasFora` são os `href` das abas que a barra
  * não coube; a ordem delas é a da barra. O convidado (Bloco 7A) vê só as telas
- * da lista dele: sem Assinaturas, Contas a pagar, Membros nem o Cofre.
+ * da lista dele: sem Assinaturas, Contas a pagar nem Membros (e, com o papel a
+ * caminho, também só essas, `itensDeNavegacaoPara`).
  */
-export function getVoceGroups(abasFora: readonly string[], papel?: WorkspaceRole | null): VoceGroup[] {
+export function getVoceGroups(abasFora: readonly string[], papel: WorkspaceRole | null): VoceGroup[] {
+    return todosOsGrupos(abasFora).map((g) => ({ ...g, items: itensDeNavegacaoPara(papel, g.items) }))
+}
+
+/** Os grupos inteiros, sem o papel: o realce da aba e o voltar valem para qualquer rota. */
+function todosOsGrupos(abasFora: readonly string[]): VoceGroup[] {
     const fixadas = getMobileAccountMenuPinnedNavItems()
     const telas = [
-        ...getMobileNavTabs()
+        ...resolveNavItems(MOBILE_TAB_NAV)
             .filter((tab) => abasFora.includes(tab.href))
             .map(({ name, href, icon }) => ({ name, href, icon })),
         ...fixadas,
     ].filter((item, i, todas) => todas.findIndex((o) => o.href === item.href) === i)
     const configuracoes = telas.filter((item) => item.href === ROUTES.SETTINGS)
 
-    const grupos: VoceGroup[] = [
+    return [
         {
             id: "carteira",
             label: "Carteira",
@@ -265,7 +271,6 @@ export function getVoceGroups(abasFora: readonly string[], papel?: WorkspaceRole
             ],
         },
     ]
-    return grupos.map((g) => ({ ...g, items: itensDeNavegacaoPara(papel, g.items) }))
 }
 
 /**
@@ -276,7 +281,7 @@ export function isVoceTabActive(pathname: string, abasFora: readonly string[]): 
     return (
         pathname === ROUTES.ME ||
         isPlansPath(pathname) ||
-        getVoceGroups(abasFora).some((grupo) =>
+        todosOsGrupos(abasFora).some((grupo) =>
             grupo.items.some((item) => isMobileAccountMenuNavItemActive(pathname, item))
         )
     )
@@ -288,7 +293,7 @@ export function isVoceTabActive(pathname: string, abasFora: readonly string[]): 
  * tem o próprio pai e não passa por aqui.
  */
 export function voceBackHref(pathname: string): string | undefined {
-    const listada = getVoceGroups([]).some((grupo) =>
+    const listada = todosOsGrupos([]).some((grupo) =>
         grupo.items.some((item) => item.href === pathname)
     )
     return listada ? ROUTES.ME : undefined

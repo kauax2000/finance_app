@@ -26,7 +26,7 @@ export function UserMenu({ children }: UserMenuProps) {
     const { signOut } = useAuth()
     const { papel } = useWorkspace()
 
-    // O convidado (Bloco 7A) fica só com Minha conta: Planos e o Cofre não são da lista dele.
+    // A lista do papel (Bloco 7A): Minha conta, Planos e o Cofre valem para todos.
     const dropdownLinkItems = itensDeNavegacaoPara(papel, ACCOUNT_MENU_LINK_ITEMS).filter(
         ({ href }) =>
             href !== ROUTES.SETTINGS && href !== ROUTES.MEMBERS

@@ -41,7 +41,9 @@ export function ConvidadoPainelWireframe() {
     const { currentWorkspaceId } = useWorkspace()
     const lancar = useQuickCreateTransaction()
     const [ym, setYm] = useState(() => formatYearMonth(new Date()))
-    const [dados, setDados] = useState<Dados | null>(null)
+    // Os dados levam a carteira e o mês: trocando um deles, os números de antes
+    // não ficam sob o rótulo novo (volta o "Carregando…").
+    const [lidos, setLidos] = useState<(Dados & { chave: string }) | null>(null)
     const [erro, setErro] = useState<string | null>(null)
     const [versao, setVersao] = useState(0)
     // O calendário do cabeçalho do telefone, como no Painel da casa (a rota o declara).
@@ -54,6 +56,8 @@ export function ConvidadoPainelWireframe() {
     }, [])
 
     const userId = user?.id ?? null
+    const chave = `${currentWorkspaceId}:${ym}`
+    const dados = lidos?.chave === chave ? lidos : null
     useEffect(() => {
         if (!currentWorkspaceId || !userId) return
         let vivo = true
@@ -78,7 +82,8 @@ export function ConvidadoPainelWireframe() {
                 if (!vivo) return
                 const meu = limites.find((l) => l.user_id === userId)
                 const soma = (tipo: string) => doMes.filter((t) => t.type === tipo).reduce((s, t) => s + Number(t.amount || 0), 0)
-                setDados({
+                setLidos({
+                    chave: `${currentWorkspaceId}:${ym}`,
                     limite: meu ? Number(meu.amount) : null,
                     gastoCentavos: gastoDaPessoaNoMes(lancs, userId, ym),
                     despesas: soma("expense"),
@@ -106,7 +111,7 @@ export function ConvidadoPainelWireframe() {
                     <input
                         type="month"
                         value={ym}
-                        onChange={(e) => e.target.value && setYm(e.target.value)}
+                        onChange={(e) => /^\d{4}-\d{2}$/.test(e.target.value) && setYm(e.target.value)}
                         className="border border-muted-foreground/60 bg-transparent px-1 text-foreground"
                     />
                 </label>

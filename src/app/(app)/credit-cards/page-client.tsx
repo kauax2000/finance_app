@@ -72,7 +72,9 @@ export default function CreditCardsPageClient() {
     const pathname = usePathname()
     const searchParams = useSearchParams()
     const { user, loading: authLoading } = useAuth()
-    const { currentWorkspaceId, loading: workspaceLoading } = useWorkspace()
+    const { currentWorkspaceId, loading: workspaceLoading, isAdulto } = useWorkspace()
+    // O convidado (Bloco 7A) só lê: sem cadastrar, e o cartão não abre a fatura.
+    const podeEscrever = isAdulto
     const bundleQuery = useCreditCardsPageBundle(
         !authLoading && !workspaceLoading && currentWorkspaceId
             ? currentWorkspaceId
@@ -121,6 +123,7 @@ export default function CreditCardsPageClient() {
 
     useEffect(() => {
         if (authLoading || workspaceLoading || loading) return
+        if (!podeEscrever) return
         if (createOpen) return
         if (didConsumeNewQuery.current) return
         if (searchParams.get("new") !== "1") return
@@ -141,6 +144,7 @@ export default function CreditCardsPageClient() {
         workspaceLoading,
         loading,
         createOpen,
+        podeEscrever,
         pathname,
         router,
         searchParams,
@@ -338,22 +342,24 @@ export default function CreditCardsPageClient() {
                     onChange={setPageView}
                     className="min-w-0 flex-1 md:max-w-full md:flex-none"
                 />
-                <ToolbarActions>
-                    <ToolbarButton
-                        type="button"
-                        variant="primary"
-                        collapse
-                        icon={<PlusIcon aria-hidden />}
-                        label="Novo cartão"
-                        disabled={!canCreateCard}
-                        onClick={() => setCreateOpen(true)}
-                    />
-                </ToolbarActions>
+                {podeEscrever ? (
+                    <ToolbarActions>
+                        <ToolbarButton
+                            type="button"
+                            variant="primary"
+                            collapse
+                            icon={<PlusIcon aria-hidden />}
+                            label="Novo cartão"
+                            disabled={!canCreateCard}
+                            onClick={() => setCreateOpen(true)}
+                        />
+                    </ToolbarActions>
+                ) : null}
             </Toolbar>
 
             {pageView === "cards" ? (
                 cards.length === 0 ? (
-                    <CreditCardsEmptyState onAddCard={() => setCreateOpen(true)} />
+                    <CreditCardsEmptyState onAddCard={podeEscrever ? () => setCreateOpen(true) : undefined} />
                 ) : (
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                         {cards.map((c) => (
@@ -361,6 +367,7 @@ export default function CreditCardsPageClient() {
                                 key={c.id}
                                 card={c}
                                 snapshot={snapshots.get(c.id)}
+                                somenteLeitura={!podeEscrever}
                             />
                         ))}
                     </div>

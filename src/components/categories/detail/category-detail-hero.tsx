@@ -21,8 +21,9 @@ import { cn } from "@/lib/utils"
 type CategoryDetailHeroProps = {
     category: Category
     accentColor: string
-    onEdit: () => void
-    onDelete: () => void
+    /** Sem eles (o convidado, Bloco 7A), a categoria é só leitura. */
+    onEdit?: () => void
+    onDelete?: () => void
     /** Mês: em telas pequenas fica abaixo do título; a partir de `md`, na mesma faixa. */
     monthToolbar?: ReactNode
 }
@@ -42,6 +43,40 @@ export function CategoryDetailHero({
             description={isExpense ? "Despesa" : "Receita"}
         />
     )
+
+    // Sem editar nem excluir (o convidado, Bloco 7A), não há menu.
+    const menu =
+        onEdit && onDelete ? (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button
+                        type="button"
+                        variant="tertiary"
+                        size="icon-md"
+                        className="shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
+                        aria-label={`Opções da categoria ${category.name}`}
+                    >
+                        <EllipsisVerticalIcon aria-hidden />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                    align="end"
+                    size="sm"
+                    header={menuHeader}
+                >
+                    <DropdownMenuItem onSelect={onEdit}>
+                        <PencilIcon aria-hidden />
+                        Editar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem variant="destructive"
+                        onSelect={onDelete}
+                    >
+                        <TrashIcon aria-hidden />
+                        Excluir
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        ) : null
 
     return (
         <div className="w-full min-w-0 max-w-full space-y-2">
@@ -76,35 +111,7 @@ export function CategoryDetailHero({
                 </div>
 
                 <div className="flex shrink-0 items-center gap-1">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                type="button"
-                                variant="tertiary"
-                                size="icon-md"
-                                className="shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
-                                aria-label={`Opções da categoria ${category.name}`}
-                            >
-                                <EllipsisVerticalIcon aria-hidden />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                            align="end"
-                            size="sm"
-                            header={menuHeader}
-                        >
-                            <DropdownMenuItem onSelect={() => onEdit()}>
-                                <PencilIcon aria-hidden />
-                                Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem variant="destructive"
-                                onSelect={() => onDelete()}
-                            >
-                                <TrashIcon aria-hidden />
-                                Excluir
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    {menu}
                 </div>
             </div>
 
@@ -153,35 +160,7 @@ export function CategoryDetailHero({
                 ) : null}
 
                 <div className="flex min-h-10 shrink-0 items-center justify-end">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                type="button"
-                                variant="tertiary"
-                                size="icon-md"
-                                className="shrink-0 text-muted-foreground hover:text-foreground active:text-foreground"
-                                aria-label={`Opções da categoria ${category.name}`}
-                            >
-                                <EllipsisVerticalIcon aria-hidden />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                            align="end"
-                            size="sm"
-                            header={menuHeader}
-                        >
-                            <DropdownMenuItem onSelect={() => onEdit()}>
-                                <PencilIcon aria-hidden />
-                                Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem variant="destructive"
-                                onSelect={() => onDelete()}
-                            >
-                                <TrashIcon aria-hidden />
-                                Excluir
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    {menu}
                 </div>
             </div>
         </div>

@@ -30,8 +30,9 @@ export function IncomeCategoryCard({
 }: {
     category: { id: string; name: string; icon: string | null; color: string | null }
     href: string
-    onEdit: () => void
-    onDelete: () => void
+    /** Sem eles (o convidado, Bloco 7A), o cartão é só leitura: sem o menu. */
+    onEdit?: () => void
+    onDelete?: () => void
 }) {
     const color = category.color || TILE_INCOME_DEFAULT
 
@@ -59,42 +60,44 @@ export function IncomeCategoryCard({
                         </CardLink>
                     </CardTitle>
                     <CardAction>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    type="button"
-                                    variant="tertiary"
-                                    size="icon-md"
-                                    className="text-muted-foreground hover:text-foreground active:text-foreground"
-                                    aria-label={`Opções da categoria ${category.name}`}
-                                    onClick={(e) => stopLinkNavigation(e)}
-                                    onPointerDown={(e) => e.stopPropagation()}
+                        {onEdit && onDelete ? (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        type="button"
+                                        variant="tertiary"
+                                        size="icon-md"
+                                        className="text-muted-foreground hover:text-foreground active:text-foreground"
+                                        aria-label={`Opções da categoria ${category.name}`}
+                                        onClick={(e) => stopLinkNavigation(e)}
+                                        onPointerDown={(e) => e.stopPropagation()}
+                                    >
+                                        <EllipsisVerticalIcon aria-hidden />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    align="end"
+                                    size="sm"
+                                    header={
+                                        <DropdownMenuHeader
+                                            title={category.name}
+                                            description="Categoria de receita"
+                                        />
+                                    }
                                 >
-                                    <EllipsisVerticalIcon aria-hidden />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                align="end"
-                                size="sm"
-                                header={
-                                    <DropdownMenuHeader
-                                        title={category.name}
-                                        description="Categoria de receita"
-                                    />
-                                }
-                            >
-                                <DropdownMenuItem onSelect={() => onEdit()}>
-                                    <PencilIcon aria-hidden />
-                                    Editar
-                                </DropdownMenuItem>
-                                <DropdownMenuItem variant="destructive"
-                                    onSelect={() => onDelete()}
-                                >
-                                    <TrashIcon aria-hidden />
-                                    Excluir
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                    <DropdownMenuItem onSelect={onEdit}>
+                                        <PencilIcon aria-hidden />
+                                        Editar
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem variant="destructive"
+                                        onSelect={onDelete}
+                                    >
+                                        <TrashIcon aria-hidden />
+                                        Excluir
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        ) : null}
                     </CardAction>
                 </CardHeader>
 

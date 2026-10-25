@@ -3,8 +3,7 @@
 import { useEffect, type ReactNode } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { useWorkspace } from "@/components/workspace-provider"
-import { ROUTES } from "@/config/navigation"
-import { rotaPermitidaAoConvidado } from "@/lib/papeis/rotas-do-convidado"
+import { decidirRotaDoConvidado } from "@/lib/papeis/rotas-do-convidado"
 
 /**
  * O convidado (Bloco 7A) numa tela fora da lista dele vai ao Painel. Só depois
@@ -15,11 +14,12 @@ export function ConvidadoRouteGuard({ children }: { children: ReactNode }) {
     const { papel } = useWorkspace()
     const pathname = usePathname()
     const router = useRouter()
-    const fora = papel === "guest" && !rotaPermitidaAoConvidado(pathname)
+    const decisao = decidirRotaDoConvidado(papel, pathname)
+    const destino = decisao === "esperar" || decisao === "ok" ? null : decisao
 
     useEffect(() => {
-        if (fora) router.replace(ROUTES.DASHBOARD)
-    }, [fora, router])
+        if (destino) router.replace(destino)
+    }, [destino, router])
 
-    return fora ? null : children
+    return destino ? null : children
 }

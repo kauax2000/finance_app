@@ -7,14 +7,14 @@ const hrefs = (g: ReturnType<typeof getVoceGroups>[number]) => g.items.map((i) =
 
 describe("a página Você", () => {
     it("dois grupos: a carteira e a conta, sem Planos, com o Cofre aberto e Configurações por último", () => {
-        const [carteira, conta] = getVoceGroups([])
+        const [carteira, conta] = getVoceGroups([], "owner")
         expect(carteira.id).toBe("carteira")
         expect(hrefs(carteira)).toEqual([ROUTES.SUBSCRIPTIONS, ROUTES.BILLS, ROUTES.CREDIT_CARDS, ROUTES.MEMBERS])
         expect(hrefs(conta)).toEqual([ROUTES.ACCOUNT, ROUTES.COFRE, ROUTES.SETTINGS])
     })
 
     it("a aba que saiu da barra entra primeiro na carteira", () => {
-        const [carteira] = getVoceGroups([ROUTES.DASHBOARD_CATEGORIES])
+        const [carteira] = getVoceGroups([ROUTES.DASHBOARD_CATEGORIES], "owner")
         expect(hrefs(carteira)[0]).toBe(ROUTES.DASHBOARD_CATEGORIES)
     })
 
@@ -54,12 +54,17 @@ describe("o telefone do convidado (Bloco 7A)", () => {
     it("a página Você não lista Assinaturas, Contas a pagar nem Membros", () => {
         const [carteira, conta] = getVoceGroups([], "guest")
         expect(hrefs(carteira)).toEqual([ROUTES.CREDIT_CARDS])
-        expect(hrefs(conta)).toEqual([ROUTES.ACCOUNT, ROUTES.SETTINGS])
+        expect(hrefs(conta)).toEqual([ROUTES.ACCOUNT, ROUTES.COFRE, ROUTES.SETTINGS])
         for (const href of daCasa) expect([...hrefs(carteira), ...hrefs(conta)]).not.toContain(href)
     })
 
+    it("com o papel a caminho, a mesma página do convidado (os itens de adulto entram depois)", () => {
+        expect(getVoceGroups([], null)).toEqual(getVoceGroups([], "guest"))
+        expect(getMobileNavTabs(null)).toEqual(getMobileNavTabs("guest"))
+    })
+
     it("o adulto continua com tudo", () => {
-        expect(getVoceGroups([], "member")).toEqual(getVoceGroups([]))
+        expect(getVoceGroups([], "member")).toEqual(getVoceGroups([], "owner"))
     })
 })
 

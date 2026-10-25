@@ -195,7 +195,7 @@ export default function TransactionsPage() {
     // a frase já escrita, sem aplicar, e sai da URL.
     const shell = useGlobalShellDialogsOptional()
     // A assinatura é da casa: o convidado (Bloco 7A) só lança.
-    const convidado = useWorkspace().papel === "guest"
+    const convidado = !useWorkspace().isAdulto
     useEffect(() => {
         const frase = consumirParametroFrase(searchParams)
         if (frase == null || !shell) return

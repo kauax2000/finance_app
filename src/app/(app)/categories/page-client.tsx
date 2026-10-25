@@ -96,7 +96,10 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         loading: workspaceLoading,
         error: workspaceError,
         refreshWorkspaces,
+        isAdulto,
     } = useWorkspace()
+    // O convidado (Bloco 7A) só lê: sem criar, editar, apagar, orçamento nem o assistente.
+    const podeEscrever = isAdulto
     const categoriesQuery = useCategoriesQuery(
         !authLoading && !workspaceLoading && currentWorkspaceId
             ? currentWorkspaceId
@@ -197,6 +200,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
     )
 
     const showOnboarding =
+        podeEscrever &&
         Boolean(user && currentWorkspace && !currentWorkspace.categories_onboarding_completed_at)
 
     const bumpCategories = useCallback(() => {
@@ -663,7 +667,7 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
             <CategoriesToolbar
                 filterType={filterType}
                 onFilterTypeChange={setFilterType}
-                onNewCategory={() => openDialog()}
+                onNewCategory={podeEscrever ? () => openDialog() : undefined}
                 includeAll={false}
                 showMonthControls={filterType === "expense"}
                 budgetMonthYm={budgetMonthYm}
@@ -711,12 +715,11 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                                     key={category.id}
                                     category={category}
                                     href={categoryDetailPath(category.id, { type: "income" })}
-                                    onEdit={() => openDialog(category)}
-                                    onDelete={() =>
-                                        setPendingDelete({
-                                            id: category.id,
-                                            name: category.name,
-                                        })
+                                    onEdit={podeEscrever ? () => openDialog(category) : undefined}
+                                    onDelete={
+                                        podeEscrever
+                                            ? () => setPendingDelete({ id: category.id, name: category.name })
+                                            : undefined
                                     }
                                 />
                             ))}
@@ -757,12 +760,11 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                                             type: "expense",
                                             month: budgetMonthYm,
                                         })}
-                                        onEdit={() => openDialog(category)}
-                                        onDelete={() =>
-                                            setPendingDelete({
-                                                id: category.id,
-                                                name: category.name,
-                                            })
+                                        onEdit={podeEscrever ? () => openDialog(category) : undefined}
+                                        onDelete={
+                                            podeEscrever
+                                                ? () => setPendingDelete({ id: category.id, name: category.name })
+                                                : undefined
                                         }
                                     />
                                 )
@@ -781,17 +783,22 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                     <CardContent role="status" aria-live="polite">
                         <EmptyState variant="plain" size="lg">
                             <EmptyStateGhost leading="tile" trailing="amount" />
-                            <EmptyStateTitle>Crie suas categorias</EmptyStateTitle>
+                            <EmptyStateTitle>
+                                {podeEscrever ? "Crie suas categorias" : "Nenhuma categoria ainda"}
+                            </EmptyStateTitle>
                             <EmptyStateDescription>
-                                Categorias agrupam receitas e despesas, e é nelas que os
-                                orçamentos do mês se apoiam.
+                                {podeEscrever
+                                    ? "Categorias agrupam receitas e despesas, e é nelas que os orçamentos do mês se apoiam."
+                                    : "Quem administra a carteira cria as categorias. Elas aparecem aqui."}
                             </EmptyStateDescription>
-                            <EmptyStateActions>
-                                <Button type="button" onClick={() => openDialog()}>
-                                    <PlusIcon aria-hidden />
-                                    Criar primeira categoria
-                                </Button>
-                            </EmptyStateActions>
+                            {podeEscrever ? (
+                                <EmptyStateActions>
+                                    <Button type="button" onClick={() => openDialog()}>
+                                        <PlusIcon aria-hidden />
+                                        Criar primeira categoria
+                                    </Button>
+                                </EmptyStateActions>
+                            ) : null}
                         </EmptyState>
                     </CardContent>
                 </Card>

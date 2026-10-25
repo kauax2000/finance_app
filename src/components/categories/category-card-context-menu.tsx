@@ -20,7 +20,8 @@ import {
  * O botão direito (e o toque longo) num cartão de categoria: as ações do
  * menu de três pontos, mais abrir. O cartão é um link esticado, e o menu
  * toma o lugar do menu do navegador sobre ele — por isso "Abrir em nova
- * aba" está aqui. O menu de três pontos continua: este é atalho.
+ * aba" está aqui. O menu de três pontos continua: este é atalho. Sem
+ * `onEdit`/`onDelete` (o convidado, Bloco 7A), só abrir.
  */
 export function CategoryCardContextMenu({
     name,
@@ -33,8 +34,8 @@ export function CategoryCardContextMenu({
     name: string
     description?: string
     href: string
-    onEdit: () => void
-    onDelete: () => void
+    onEdit?: () => void
+    onDelete?: () => void
     children: React.ReactNode
 }) {
     const router = useRouter()
@@ -55,15 +56,19 @@ export function CategoryCardContextMenu({
                     <ArrowTopRightOnSquareIcon aria-hidden />
                     Abrir em nova aba
                 </ContextMenuItem>
-                <ContextMenuSeparator />
-                <ContextMenuItem onSelect={onEdit}>
-                    <PencilIcon aria-hidden />
-                    Editar
-                </ContextMenuItem>
-                <ContextMenuItem variant="destructive" onSelect={onDelete}>
-                    <TrashIcon aria-hidden />
-                    Excluir
-                </ContextMenuItem>
+                {onEdit && onDelete ? (
+                    <>
+                        <ContextMenuSeparator />
+                        <ContextMenuItem onSelect={onEdit}>
+                            <PencilIcon aria-hidden />
+                            Editar
+                        </ContextMenuItem>
+                        <ContextMenuItem variant="destructive" onSelect={onDelete}>
+                            <TrashIcon aria-hidden />
+                            Excluir
+                        </ContextMenuItem>
+                    </>
+                ) : null}
             </ContextMenuContent>
         </ContextMenu>
     )
