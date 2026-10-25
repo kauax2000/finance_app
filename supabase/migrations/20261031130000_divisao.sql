@@ -92,6 +92,11 @@ begin
   ) then
     new.shares_manual := false;
   end if;
+  -- Ruling 4: a privada fica inteira com o autor. O `definir_partes` a recusa,
+  -- e um update cru com `shares_manual` também não a congela dividida.
+  if new.is_private then
+    new.shares_manual := false;
+  end if;
 
   return new;
 end;
@@ -196,7 +201,8 @@ begin
      or exists (
        select 1 from pg_catalog.jsonb_array_elements(new.split_weights) e
        where pg_catalog.jsonb_typeof(e) <> 'object'
-         or pg_catalog.jsonb_typeof(e -> 'weight') <> 'number'
+         -- Sem a chave, o typeof é nulo: `<>` deixaria passar.
+         or pg_catalog.jsonb_typeof(e -> 'weight') is distinct from 'number'
          or coalesce(e ->> 'user_id', '') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
      ) then
     raise exception 'PESOS_INVALIDOS' using errcode = '22023';

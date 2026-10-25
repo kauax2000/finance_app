@@ -1,7 +1,10 @@
 -- pgTAP: Bloco 7C — quem pagou, partes, acerto e saldo (20261031130000_divisao.sql).
 -- Roda no staging antes de publicar; não roda na CI.
+-- Supõe a cobrança sem `billing_settings.enforced_since`, como os outros
+-- testes: depois do primeiro `set_config`, os claims seguem valendo mesmo com
+-- `reset role`, e o `garantir_escrita` consulta o plano da carteira.
 begin;
-select plan(16);
+select plan(26);
 
 -- 1. o algoritmo (Foco de revisão 1) -------------------------------------------
 select is(
@@ -119,6 +122,15 @@ select throws_ok(
   'partes que não somam o valor são recusadas'
 );
 
+select throws_ok(
+  $$select public.definir_partes('00000000-0000-4000-d400-000000000003', '[
+      {"user_id":"00000000-0000-4000-d200-000000000001","amount":25},
+      {"user_id":"00000000-0000-4000-d200-000000000002","amount":25}
+    ]'::jsonb)$$,
+  'P0001', 'PRIVADO_NAO_PERMITIDO',
+  'a privada não se divide à mão'
+);
+
 select public.definir_partes('00000000-0000-4000-d400-000000000001', '[
     {"user_id":"00000000-0000-4000-d200-000000000001","amount":60},
     {"user_id":"00000000-0000-4000-d200-000000000002","amount":40}
@@ -132,12 +144,52 @@ select is(
   'as partes à mão que fecham substituem as automáticas'
 );
 
+set local role authenticated;
+select public.definir_partes('00000000-0000-4000-d400-000000000001', null);
+reset role;
+
+select is(
+  (select array_agg(amount order by user_id) from public.transaction_shares
+   where transaction_id = '00000000-0000-4000-d400-000000000001'),
+  array[33.34, 33.33, 33.33]::numeric[],
+  'definir_partes com nulo volta ao automático'
+);
+
 -- 4. os pesos do plano ---------------------------------------------------------
 insert into public.workspace_installment_plans (
   id, workspace_id, user_id, total_installments, installment_amount, final_installment_amount, next_billing_date
 ) values (
   '00000000-0000-4000-d500-000000000001', '00000000-0000-4000-d300-000000000001',
   '00000000-0000-4000-d200-000000000001', 3, 10, 10, public.app_today() + 30
+);
+
+-- Duas parcelas: a 5 automática, a 6 à mão.
+insert into public.transactions (id, user_id, workspace_id, type, amount, description, payment_method, installment_plan_id, installment_sequence) values
+  ('00000000-0000-4000-d400-000000000005', '00000000-0000-4000-d200-000000000001', '00000000-0000-4000-d300-000000000001', 'expense', 10, 'Sofá 1/3', 'pix', '00000000-0000-4000-d500-000000000001', 1),
+  ('00000000-0000-4000-d400-000000000006', '00000000-0000-4000-d200-000000000001', '00000000-0000-4000-d300-000000000001', 'expense', 10, 'Sofá 2/3', 'pix', '00000000-0000-4000-d500-000000000001', 2);
+
+set local role authenticated;
+select public.definir_partes('00000000-0000-4000-d400-000000000006', '[
+    {"user_id":"00000000-0000-4000-d200-000000000001","amount":5},
+    {"user_id":"00000000-0000-4000-d200-000000000002","amount":5}
+  ]'::jsonb);
+reset role;
+
+update public.workspace_installment_plans
+set split_weights = '[{"user_id":"00000000-0000-4000-d200-000000000001","weight":1}]'::jsonb
+where id = '00000000-0000-4000-d500-000000000001';
+
+select results_eq(
+  $$select user_id, amount from public.transaction_shares where transaction_id = '00000000-0000-4000-d400-000000000005'$$,
+  $$values ('00000000-0000-4000-d200-000000000001'::uuid, 10.00::numeric)$$,
+  'mudar os pesos do plano refaz as partes automáticas da parcela'
+);
+
+select is(
+  (select array_agg(amount order by user_id) from public.transaction_shares
+   where transaction_id = '00000000-0000-4000-d400-000000000006'),
+  array[5.00, 5.00]::numeric[],
+  'a regeração pula a linha à mão'
 );
 
 select throws_ok(
@@ -151,10 +203,71 @@ select throws_ok(
   'pesos do plano com pessoa repetida são recusados'
 );
 
--- 5. o saldo fecha, mesmo depois de alguém sair --------------------------------
+select throws_ok(
+  $$update public.workspace_installment_plans
+    set split_weights = '[
+      {"user_id":"00000000-0000-4000-d200-000000000001","weight":1},
+      {"user_id":"00000000-0000-4000-d200-000000000002"}
+    ]'::jsonb
+    where id = '00000000-0000-4000-d500-000000000001'$$,
+  '22023', 'PESOS_INVALIDOS',
+  'um peso sem a chave weight é recusado'
+);
+
+-- 5. marcar e desmarcar a privada ----------------------------------------------
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-d200-000000000003","role":"authenticated"}', true);
+update public.transactions set is_private = true where id = '00000000-0000-4000-d400-000000000004';
+reset role;
+
+select results_eq(
+  $$select user_id, amount from public.transaction_shares where transaction_id = '00000000-0000-4000-d400-000000000004'$$,
+  $$values ('00000000-0000-4000-d200-000000000003'::uuid, 60.00::numeric)$$,
+  'marcar como privada deixa uma parte só, do autor'
+);
+
+set local role authenticated;
+update public.transactions set is_private = false where id = '00000000-0000-4000-d400-000000000004';
+reset role;
+
+select is(
+  (select array_agg(amount order by user_id) from public.transaction_shares
+   where transaction_id = '00000000-0000-4000-d400-000000000004'),
+  array[20.00, 20.00, 20.00]::numeric[],
+  'desmarcar a privada divide de novo entre os adultos'
+);
+
+-- 6. trocar o modo não duplica nem apaga ----------------------------------------
+update public.workspaces set split_mode = 'pooled' where id = '00000000-0000-4000-d300-000000000001';
+update public.workspaces set split_mode = 'split' where id = '00000000-0000-4000-d300-000000000001';
+update public.workspaces set split_mode = 'pooled' where id = '00000000-0000-4000-d300-000000000001';
+update public.workspaces set split_mode = 'split' where id = '00000000-0000-4000-d300-000000000001';
+update public.transactions set amount = 100 where id = '00000000-0000-4000-d400-000000000001';
+
+select is(
+  (select count(*)::int from public.transaction_shares where transaction_id = '00000000-0000-4000-d400-000000000001'),
+  3,
+  'pooled, split, pooled, split: as partes não duplicam'
+);
+
+select is(
+  (select split_since from public.workspaces where id = '00000000-0000-4000-d300-000000000001'),
+  public.app_today(),
+  'o split_since fica o do primeiro split'
+);
+
+insert into public.transactions (id, user_id, workspace_id, type, amount, description, payment_method, date) values
+  ('00000000-0000-4000-d400-000000000007', '00000000-0000-4000-d200-000000000001', '00000000-0000-4000-d300-000000000001', 'expense', 40, 'Antiga', 'pix', now() - interval '10 days');
+
+select is(
+  (select count(*)::int from public.transaction_shares where transaction_id = '00000000-0000-4000-d400-000000000007'),
+  0,
+  'a despesa de antes do split_since não ganha parte'
+);
+
+-- 7. o saldo fecha, mesmo depois de alguém sair --------------------------------
 insert into public.settlements (workspace_id, from_user, to_user, amount, created_by)
-values ('00000000-0000-4000-d300-000000000001', '00000000-0000-4000-d200-000000000003',
-        '00000000-0000-4000-d200-000000000001', 10, '00000000-0000-4000-d200-000000000001');
+values ('00000000-0000-4000-d300-000000000001', '00000000-0000-4000-d200-000000000003', '00000000-0000-4000-d200-000000000001', 10, '00000000-0000-4000-d200-000000000001');
 
 delete from public.workspace_members
 where workspace_id = '00000000-0000-4000-d300-000000000001'

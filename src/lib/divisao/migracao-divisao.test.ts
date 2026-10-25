@@ -147,6 +147,8 @@ describe("migração divisão: quem pagou, partes, acerto e a saída do transact
         expect(pagou).toMatch(/elsif new\.is_private then\s+new\.paid_by := v_autor;/)
         expect(pagou).toMatch(/and new\.is_private is not distinct from old\.is_private/)
         expect(pagou).toMatch(/or new\.is_private is distinct from old\.is_private/)
+        // Nada legítimo deixa partes à mão numa privada: nem um update cru.
+        expect(pagou).toMatch(/if new\.is_private then\s+new\.shares_manual := false;\s+end if;/)
 
         const definir = ultima("definir_partes")
         expect(definir).toMatch(/if v_privada then\s+raise exception 'PRIVADO_NAO_PERMITIDO'/)
@@ -158,7 +160,10 @@ describe("migração divisão: quem pagou, partes, acerto e a saída do transact
         expect(fn).toMatch(/security definer\s+set search_path = ''/)
         expect(fn).toMatch(/pg_catalog\.jsonb_typeof\(new\.split_weights\) <> 'array'/)
         expect(fn).toMatch(/pg_catalog\.jsonb_typeof\(e\) <> 'object'/)
-        expect(fn).toMatch(/pg_catalog\.jsonb_typeof\(e -> 'weight'\) <> 'number'/)
+        // Sem a chave `weight`, o typeof é nulo: `is distinct from` o pega, `<>` não.
+        expect(fn).toMatch(/pg_catalog\.jsonb_typeof\(e -> 'weight'\) is distinct from 'number'/)
+        expect(fn).not.toMatch(/jsonb_typeof\(e -> 'weight'\) <>/)
+        expect(fn).toMatch(/coalesce\(e ->> 'user_id', ''\) !~\*/)
         expect(fn).toMatch(/\(e ->> 'weight'\)::numeric <= 0/)
         expect(fn).toMatch(/wm\.role in \('owner', 'member'\)/)
         expect(fn).toMatch(/count\(distinct pg_catalog\.lower\(e ->> 'user_id'\)\) <> count\(\*\)/)
@@ -308,6 +313,13 @@ describe("migração divisão: quem pagou, partes, acerto e a saída do transact
             "PESOS_INVALIDOS",
             "saldos_da_carteira",
             "saiu",
+            "PRIVADO_NAO_PERMITIDO",
+            "set split_mode = 'pooled'",
+            "antes do split_since",
+            "volta ao automático",
+            "sem a chave weight",
+            "pula a linha à mão",
+            "desmarcar a privada",
         ]) {
             expect(pg, marca).toContain(marca)
         }
