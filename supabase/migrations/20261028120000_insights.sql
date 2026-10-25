@@ -367,6 +367,13 @@ begin
   if nullif(btrim(p_nome), '') is null then
     raise exception 'INSIGHT_NOME_INVALIDO' using errcode = '22023';
   end if;
+  if p_dia is null or p_dia not between 1 and 31 then
+    raise exception 'INSIGHT_DIA_INVALIDO' using errcode = '22023';
+  end if;
+  -- A próxima pendente vem do cliente (Ruling 1), mas nunca nasce atrasada.
+  if p_next_due_date is null or p_next_due_date < public.app_today() then
+    raise exception 'INSIGHT_DATA_INVALIDA' using errcode = '22023';
+  end if;
 
   select * into v_ins from public.insights where id = p_insight_id;
   if not found then

@@ -33,6 +33,7 @@ vi.mock("@/lib/transactions/mutations", () => ({ deleteTransactionById: mut.dele
 const {
     apagarUm,
     atualizarPrecoDaAssinatura,
+    filtroDaCaixa,
     linhaDoSeguroDoMes,
     proximoVencimentoDaRecorrencia,
     seguroEstaBaixo,
@@ -293,6 +294,19 @@ describe("textoNaCaixa: o seguro baixo nunca mostra o número guardado", () => {
 
     it("os outros tipos seguem o modelo de frase", () => {
         expect(textoNaCaixa(recorrencia, null)?.titulo).toBe("Academia todo mês")
+    })
+})
+
+describe("filtroDaCaixa: o seguro baixo de um mês que passou não ocupa vaga", () => {
+    it("deixa todo outro tipo e só o seguro baixo do mês de hoje", () => {
+        expect(filtroDaCaixa("2026-11-03")).toBe('kind.neq.seguro_baixo,dedupe_key.eq."seguro:2026-11"')
+    })
+
+    it("a leitura da caixa aplica o filtro antes do limit(20), com o dia local", () => {
+        const f = semComentarios(lerFonte("src/lib/insights/use-insights.ts"), "tudo")
+        const filtro = f.indexOf(".or(filtroDaCaixa(localYmdFromDate(new Date())))")
+        expect(filtro).toBeGreaterThan(-1)
+        expect(filtro).toBeLessThan(f.indexOf(".limit(20)"))
     })
 })
 

@@ -68,6 +68,38 @@ describe("Edge insights-daily", () => {
         expect(f).toContain("if (prefs.notify_push && inscritos.has(userId)) {")
     })
 
+    it("o relatório do mês sai no dia 1 ou no 2, e a chave rel:{mes} segura a repetição", () => {
+        expect(f).toContain("if (hoje.d <= 2) {")
+        expect(f).not.toContain("hoje.d === 1")
+        expect(f).toContain("chave: `rel:${mes}`")
+        // O mês é o anterior nos dois dias: a repetição do dia 2 cai na mesma chave.
+        expect(f).toContain("const inicio = inicioDoMes(hoje, 1)")
+        expect(f).toMatch(/linhas\.filter\(\(l\) => !gravadas\.has\(chaveDe\(l\)\)\)/)
+    })
+
+    it("o prazo do relatório compara o dia de Brasília do pagamento, não o UTC", () => {
+        expect(f).toContain("const diaDeBrasilia = (iso: string) => formatYmd(appTodayYmd(new Date(iso)))")
+        expect(f).toContain("diaDeBrasilia(c.paid_at) <= dia(c.due_date)")
+        expect(f).toContain("diaDeBrasilia(p.paid_at) <=")
+        expect(f).not.toContain("dia(c.paid_at)")
+        expect(f).not.toContain("dia(p.paid_at)")
+    })
+
+    it("a recorrência recebe os nomes das contas e assinaturas ativas, e as contas são lidas sempre", () => {
+        expect(f).toContain("const jaCadastrados = [...contas.map((c) => c.name), ...assinaturas.map((s) => s.name)]")
+        expect(f).toContain("detectarRecorrencias(lancs, hojeYmd, jaCadastrados)")
+        const contas = f.slice(f.indexOf(".from('bills')") - 200, f.indexOf(".from('bills')"))
+        expect(contas).not.toContain("sazonal")
+    })
+
+    it("uma falha antes do laço do aviso fica no log com os insights sem aviso, e a carteira segue contada", () => {
+        const aviso = f.indexOf("await avisar(admin, workspaceId, novos, semana, c)")
+        expect(aviso).toBeGreaterThan(-1)
+        const antes = f.slice(f.lastIndexOf("try {", aviso), aviso)
+        expect(antes).toContain("try {")
+        expect(f.slice(aviso, aviso + 400)).toContain("'insights-daily: insights sem aviso'")
+    })
+
     it("o insight nunca vai por e-mail", () => {
         const gate = entrega.slice(entrega.indexOf("const emailAllowed"), entrega.indexOf("if (canais.email"))
         expect(gate).not.toContain("'insight'")

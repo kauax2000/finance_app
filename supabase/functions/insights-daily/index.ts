@@ -43,7 +43,7 @@ import { limitarAchados } from '../_shared/insights/limitar.ts'
 
 // Os insights das 10h (cron `insights-daily`, Bloco 6B): por carteira com
 // movimento, os detectores, o resumo da fatura que fechou ontem ou anteontem,
-// o relatório do mês (no dia 1) e o "a conferir". Cada achado novo vira um
+// o relatório do mês (no dia 1, ou no 2 se o 1 falhou) e o "a conferir". Cada achado novo vira um
 // aviso para os membros; o push tem teto de 3 por pessoa e semana, e o resto
 // fica só no app. Só o servidor chama: sem CORS.
 // Sobe só com o front 2.0: os links (`/previsao`, a caixa do Painel) não
@@ -115,6 +115,8 @@ function inicioDoMes(x: Ymd, n: number): Ymd {
 
 const fimDoMes = (x: Ymd): Ymd => ({ ...x, d: daysInMonth(x.y, x.m) })
 const dia = (iso: string) => iso.slice(0, 10)
+/** O dia de Brasília de um instante (`paid_at` é timestamptz: o prefixo do ISO é o dia UTC). */
+const diaDeBrasilia = (iso: string) => formatYmd(appTodayYmd(new Date(iso)))
 const centavos = (v: number | string) => Math.round(Number(v || 0) * 100)
 const dentro = (iso: string, w: OpenWindow) => dia(iso) >= formatYmd(w.start) && dia(iso) <= formatYmd(w.end)
 
@@ -289,12 +291,12 @@ async function relatorioDoMes(
     if (centavos(r.bank_total) !== centavos(calculado)) diferencas += 1
   }
 
-  let avisos = contas.filter((c) => c.paid_at && dia(c.paid_at) <= dia(c.due_date)).length
+  let avisos = contas.filter((c) => c.paid_at && diaDeBrasilia(c.paid_at) <= dia(c.due_date)).length
   for (const p of faturas) {
     const card = cartoes.get(p.credit_card_id)
     const close = isoPrefixYmd(String(p.statement_close_date))
     if (!card || !close || !p.paid_at) continue
-    if (dia(p.paid_at) <= formatYmd(estimatedDueYmdForClose(close, Number(card.due_day)))) avisos += 1
+    if (diaDeBrasilia(p.paid_at) <= formatYmd(estimatedDueYmdForClose(close, Number(card.due_day)))) avisos += 1
   }
 
   return {
@@ -368,17 +370,16 @@ async function achadosDaCarteira(admin: SupabaseAdminClient, workspaceId: string
         .order('id', { ascending: true })
         .range(a, b)
     ),
-    sazonal
-      ? todasAsPaginas<{ name: string }>((a, b) =>
-          admin
-            .from('bills')
-            .select('id,name')
-            .eq('workspace_id', workspaceId)
-            .eq('is_active', true)
-            .order('id', { ascending: true })
-            .range(a, b)
-        )
-      : Promise.resolve([]),
+    // As contas ativas: o sazonal e a recorrência não oferecem o que a carteira já tem.
+    todasAsPaginas<{ name: string }>((a, b) =>
+      admin
+        .from('bills')
+        .select('id,name')
+        .eq('workspace_id', workspaceId)
+        .eq('is_active', true)
+        .order('id', { ascending: true })
+        .range(a, b)
+    ),
     sazonal
       ? todasAsPaginas<TxRow>((a, b) =>
           admin
@@ -416,8 +417,11 @@ async function achadosDaCarteira(admin: SupabaseAdminClient, workspaceId: string
     valorMinimo: DUPLICIDADE_VALOR_MINIMO,
   }
 
+  const jaCadastrados = [...contas.map((c) => c.name), ...assinaturas.map((s) => s.name)]
   const linhas: Achado[] = [
-    ...detectarRecorrencias(lancs, hojeYmd).map((a) => linha(workspaceId, 'recorrencia', a, maisRecente(a.lancamentos))),
+    ...detectarRecorrencias(lancs, hojeYmd, jaCadastrados).map((a) =>
+      linha(workspaceId, 'recorrencia', a, maisRecente(a.lancamentos))
+    ),
     ...detectarAtipicos(lancs, hojeYmd, nomes).map((a) => linha(workspaceId, 'gasto_atipico', a, hojeYmd)),
     ...detectarDuplicidades(lancs, duplicidade).map((a) => linha(workspaceId, 'duplicidade', a, a.dataYmd)),
     ...detectarPrecoDeAssinatura(lancs, assinaturas, hojeYmd).map((a) =>
@@ -457,7 +461,9 @@ async function achadosDaCarteira(admin: SupabaseAdminClient, workspaceId: string
     if (r) linhas.push(linha(workspaceId, 'fatura_fechou', r, String(r.closeYmd)))
   }
 
-  if (hoje.d === 1) {
+  // No dia 1, ou no 2 se o do dia 1 falhou (como a fatura tolera um dia
+  // perdido); o mês é o anterior nos dois, e a chave `rel:{mes}` não repete.
+  if (hoje.d <= 2) {
     linhas.push(linha(workspaceId, 'relatorio_mes', await relatorioDoMes(admin, workspaceId, hoje, tx, cartoesMap), hojeYmd))
   }
 
@@ -618,7 +624,23 @@ Deno.serve(async (req: Request) => {
         (a, b) => ordem.indexOf(chaveDe(a)) - ordem.indexOf(chaveDe(b)),
       )
       c.novos += novos.length
-      if (novos.length > 0) await avisar(admin, workspaceId, novos, semana, c)
+      if (novos.length === 0) return
+      try {
+        await avisar(admin, workspaceId, novos, semana, c)
+      } catch (e) {
+        // Os insights já estão na caixa; amanhã o `inserir_insights` não os
+        // devolve, então ninguém é avisado deles. O log leva os ids.
+        // ponytail: sem nova tentativa (a notificação pode ter sido apagada pela
+        // pessoa, então "sem notificação" não quer dizer "não avisado"); uma
+        // coluna `avisado_em` no insight seria o caminho, se o log mostrar perda.
+        console.error(
+          'insights-daily: insights sem aviso',
+          workspaceId,
+          novos.map((n) => n.id),
+          e instanceof Error ? e.message : e,
+        )
+        c.falhas += 1
+      }
     } catch (e) {
       console.error('insights-daily: carteira', workspaceId, e instanceof Error ? e.message : e)
       c.falhas += 1

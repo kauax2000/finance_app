@@ -158,6 +158,13 @@ export function linhaDoSeguroDoMes(dados: DadosDaPrevisao, ym: string): string {
     return seguro >= 0 ? "Seguro para gastar: cumprido" : `Seguro para gastar: passou ${currencyBRL(-seguro)}`
 }
 
+/**
+ * O filtro da leitura da caixa (`.or()` do PostgREST): todo tipo, menos o seguro baixo de um mês
+ * que passou. O `textoNaCaixa` o esconde, e sem o filtro ele seguiria ocupando uma das 20 linhas,
+ * um fantasma a mais por mês. A chave entre aspas porque `:` é reservado no filtro.
+ */
+export const filtroDaCaixa = (hojeYmd: string) => `kind.neq.seguro_baixo,dedupe_key.eq."seguro:${hojeYmd.slice(0, 7)}"`
+
 /** O mês do seguro baixo: `payload.ym`, ou o da chave `seguro:{ym}` (os registrados antes do campo). */
 function mesDoSeguroBaixo(insight: Insight): string | null {
     if (typeof insight.payload.ym === "string") return insight.payload.ym

@@ -245,8 +245,9 @@ A primeira rodada das 13h UTC depois do deploy olha todas as carteiras. Os
 limites do primeiro dia existem para ela não despejar o histórico:
 
 - a **duplicidade** só olha os últimos 30 dias e lançamentos de R$ 10 ou mais;
-- **cada carteira recebe no máximo 5 insights novos por execução**, os mais
-  recentes primeiro (a fatura e o relatório antes do resto). O que sobra volta
+- **cada carteira recebe no máximo 5 insights novos por execução**, primeiro o
+  que mais vale (a fatura e o relatório antes do resto) e, no mesmo tipo, o mais
+  recente. O que sobra volta
   nos dias seguintes, enquanto continuar verdade; o que já foi gravado, aceito ou
   descartado não volta;
 - **o push tem teto de 3 por semana por pessoa**, somando todas as carteiras
@@ -275,7 +276,18 @@ Só leitura.
 `insights-daily` → Logs), a resposta do dia traz `ok: true` e os números
 `carteiras`, `novos`, `push`, `inApp` e `falhas`. Uma `falhas` maior que zero
 quer dizer que uma carteira ou um aviso falhou; as outras seguem, e o cron do
-dia seguinte tenta de novo (o insight já gravado não repete).
+dia seguinte tenta de novo (o insight já gravado não repete). O relatório do mês
+sai no dia 1; se a carteira falhar nesse dia, ele sai no dia 2 (a chave
+`rel:{mes}` não deixa repetir).
+
+**Insight gravado sem aviso.** Se a leitura dos membros, das preferências, dos
+silêncios ou das inscrições falhar depois do `inserir_insights`, os insights
+daquela rodada ficam na caixa do Painel, mas ninguém é avisado deles: amanhã o
+`inserir_insights` não os devolve. O log traz `insights-daily: insights sem
+aviso` com a carteira e os ids. Não há nova tentativa de propósito: a pessoa
+pode ter apagado a notificação, então "sem notificação" não quer dizer "não
+avisado". Se o log mostrar isso com frequência, o caminho é uma coluna de
+"avisado" no insight.
 
 **Os insights por tipo e estado.**
 
@@ -389,7 +401,11 @@ Quando o front do 2.0 subir, publique a `insights-daily` (§2) e confira também
 - numa recorrência, "Criar" abre o diálogo com o destino sugerido (cartão ou
   débito automático vira assinatura; Pix, boleto ou dinheiro vira conta a pagar),
   e confirmar liga os lançamentos passados. O insight some e a assinatura ou a
-  conta aparece em `/subscriptions` ou `/bills`;
+  conta aparece em `/subscriptions` ou `/bills`. Um gasto com o nome de uma
+  conta ou assinatura ativa (o "Aluguel" pago por Pix sem ligar à conta
+  "Aluguel") não vira recorrência. Na conta, o dia fora de 1–31 e a próxima
+  pendente antes de hoje são recusados (`INSIGHT_DIA_INVALIDO`,
+  `INSIGHT_DATA_INVALIDA`);
 - "Atualizar valor" muda o preço da assinatura; "Apagar um" pede confirmação e
   apaga só um dos dois lançamentos iguais;
 - "Ver fatura" abre o cartão, "Ver mês", "Ver previsão" e "Ver o que pesa" (o

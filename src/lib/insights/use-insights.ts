@@ -8,7 +8,8 @@ import type { DadosDaPrevisao } from "@/lib/previsao/tipos"
 import { seguroParaGastar } from "@/lib/previsao/fluxo"
 import { supabase } from "@/lib/supabase"
 import { formatSupabasePostgrestError, isPostgrestRelationMissingError } from "@/lib/supabase-errors"
-import { marcarInsight, seguroEstaBaixo, type Insight } from "./acoes"
+import { localYmdFromDate } from "@/lib/transaction-date"
+import { filtroDaCaixa, marcarInsight, seguroEstaBaixo, type Insight } from "./acoes"
 
 const chave = (workspaceId: string | null) => ["insights", workspaceId] as const
 
@@ -19,7 +20,8 @@ const segurosRegistrados = new Set<string>()
 
 /**
  * A caixa de insights da carteira: os `new` e `seen`, até 20, do mais novo ao mais velho (a RLS
- * já tira os de outra pessoa e os tipos que a pessoa silenciou). Os novos que aparecem viram `seen`.
+ * já tira os de outra pessoa e os tipos que a pessoa silenciou; o `filtroDaCaixa`, o seguro baixo
+ * de outro mês). Os novos que aparecem viram `seen`.
  */
 export function useInsights(workspaceId: string | null) {
     const { user } = useAuth()
@@ -34,6 +36,7 @@ export function useInsights(workspaceId: string | null) {
                 .select("id,workspace_id,kind,dedupe_key,payload,status,created_at")
                 .eq("workspace_id", workspaceId!)
                 .in("status", ["new", "seen"])
+                .or(filtroDaCaixa(localYmdFromDate(new Date())))
                 .order("created_at", { ascending: false })
                 .limit(20)
             // Até a migração subir, a tabela não existe: a caixa fica vazia.

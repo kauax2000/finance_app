@@ -48,7 +48,7 @@ Deno.test('recorrência: 3 meses seguidos dentro de ±10% viram assinatura no ca
     l({ dateYmd: '2026-09-05', amount: 39.9, description: 'Netflix.com' }),
     l({ dateYmd: '2026-10-05', amount: 41.9, description: 'Netflix', category_id: 'cat-lazer' }),
   ]
-  const r = detectarRecorrencias(ls, HOJE)
+  const r = detectarRecorrencias(ls, HOJE, [])
   assertEquals(r.length, 1)
   assertEquals(r[0].chave, 'rec:netflix')
   assertEquals(r[0].nome, 'Netflix')
@@ -67,15 +67,29 @@ Deno.test('recorrência: o mais recente pode ser o mês anterior; Pix vira conta
     l({ dateYmd: '2026-08-10', amount: 190, description: 'Luz', payment_method: 'pix', payment_credit_card_id: null }),
     l({ dateYmd: '2026-09-10', amount: 185, description: 'Luz', payment_method: 'pix', payment_credit_card_id: null }),
   ]
-  const r = detectarRecorrencias(ls, HOJE)
+  const r = detectarRecorrencias(ls, HOJE, [])
   assertEquals(r.length, 1)
   assertEquals(r[0].destino, 'conta')
   assertEquals(r[0].card_id, null)
 })
 
+Deno.test('recorrência: o nome de uma conta ou assinatura ativa não vira recorrência de novo', () => {
+  const aluguel = ['2026-08-05', '2026-09-05', '2026-10-05'].map((d) =>
+    l({ dateYmd: d, amount: 2000, description: 'Pix Aluguel', payment_method: 'pix', payment_credit_card_id: null }),
+  )
+  assertEquals(detectarRecorrencias(aluguel, HOJE, []).length, 1)
+  // A conta "Aluguel" ativa, paga por Pix sem vínculo.
+  assertEquals(detectarRecorrencias(aluguel, HOJE, ['Aluguel']), [])
+  // A assinatura "Netflix" ativa, cobrada sem `subscription_id` (importação do banco).
+  const netflix = ['2026-08-05', '2026-09-05', '2026-10-05'].map((d) => l({ dateYmd: d, amount: 39.9, description: 'NETFLIX.COM' }))
+  assertEquals(detectarRecorrencias(netflix, HOJE, ['Netflix.com']), [])
+  // Um nome que só contém parte de outra palavra não esconde ("uber" não é "uberlandia").
+  assertEquals(detectarRecorrencias(netflix, HOJE, ['Aluguel', 'Net']).length, 1)
+})
+
 Deno.test('recorrência: 3 meses que terminam há dois meses não contam', () => {
   const ls = ['2026-06-10', '2026-07-10', '2026-08-10'].map((d) => l({ dateYmd: d, description: 'Luz' }))
-  assertEquals(detectarRecorrencias(ls, HOJE), [])
+  assertEquals(detectarRecorrencias(ls, HOJE, []), [])
 })
 
 Deno.test('recorrência: 2 meses no mesmo dia ±3 casam', () => {
@@ -83,7 +97,7 @@ Deno.test('recorrência: 2 meses no mesmo dia ±3 casam', () => {
     l({ dateYmd: '2026-09-12', amount: 50, description: 'Academia', payment_method: 'debit_card' }),
     l({ dateYmd: '2026-10-14', amount: 50, description: 'Academia', payment_method: 'debit_card' }),
   ]
-  const r = detectarRecorrencias(ls, HOJE)
+  const r = detectarRecorrencias(ls, HOJE, [])
   assertEquals(r.length, 1)
   assertEquals(r[0].destino, 'assinatura')
   assertEquals(r[0].dia, 14)
@@ -94,7 +108,7 @@ Deno.test('Foco 2: dois cafés de R$ 8 no mesmo mês não são recorrência', ()
     l({ dateYmd: '2026-10-03', amount: 8, description: 'Café' }),
     l({ dateYmd: '2026-10-04', amount: 8, description: 'Café' }),
   ]
-  assertEquals(detectarRecorrencias(ls, HOJE), [])
+  assertEquals(detectarRecorrencias(ls, HOJE, []), [])
 })
 
 Deno.test('Foco 2: lançamento já ligado a assinatura, conta ou parcela não entra', () => {
@@ -104,12 +118,12 @@ Deno.test('Foco 2: lançamento já ligado a assinatura, conta ou parcela não en
   const comParcela = datas.map((d, i) => l({ dateYmd: d, installment_plan_id: i === 2 ? 'p1' : null }))
   // Sobram dois meses, a ±3 dias: o par casa, mas o ligado nunca vai na lista.
   for (const ls of [comAssinatura, comConta, comParcela]) {
-    const r = detectarRecorrencias(ls, HOJE)
+    const r = detectarRecorrencias(ls, HOJE, [])
     const ligado = ls.find((x) => x.subscription_id || x.ligadoAConta || x.installment_plan_id)!
     assertEquals(r.every((x) => !x.lancamentos.includes(ligado.id)), true)
   }
   const tudoLigado = datas.map((d) => l({ dateYmd: d, subscription_id: 'sub-1' }))
-  assertEquals(detectarRecorrencias(tudoLigado, HOJE), [])
+  assertEquals(detectarRecorrencias(tudoLigado, HOJE, []), [])
 })
 
 Deno.test('Foco 2: o valor que varia 12% não casa', () => {
@@ -118,14 +132,14 @@ Deno.test('Foco 2: o valor que varia 12% não casa', () => {
     l({ dateYmd: '2026-09-05', amount: 100 }),
     l({ dateYmd: '2026-10-05', amount: 112 }),
   ]
-  assertEquals(detectarRecorrencias(tres, HOJE), [])
+  assertEquals(detectarRecorrencias(tres, HOJE, []), [])
   const dois = [l({ dateYmd: '2026-09-05', amount: 100 }), l({ dateYmd: '2026-10-05', amount: 112 })]
-  assertEquals(detectarRecorrencias(dois, HOJE), [])
+  assertEquals(detectarRecorrencias(dois, HOJE, []), [])
 })
 
 Deno.test('Foco 2: o dia 12 contra o 16 não é "mesmo dia ±3"', () => {
   const ls = [l({ dateYmd: '2026-09-12', amount: 50 }), l({ dateYmd: '2026-10-16', amount: 50 })]
-  assertEquals(detectarRecorrencias(ls, HOJE), [])
+  assertEquals(detectarRecorrencias(ls, HOJE, []), [])
 })
 
 Deno.test('recorrência: receita e lançamento futuro não entram', () => {
@@ -136,7 +150,7 @@ Deno.test('recorrência: receita e lançamento futuro não entram', () => {
     l({ dateYmd: '2026-10-28', description: 'Luz' }),
     l({ dateYmd: '2026-11-28', description: 'Luz' }),
   ]
-  assertEquals(detectarRecorrencias(ls, HOJE), [])
+  assertEquals(detectarRecorrencias(ls, HOJE, []), [])
 })
 
 // ── Gasto atípico ────────────────────────────────────────────────────────────
@@ -170,7 +184,7 @@ Deno.test('nome original: "Conta de Água" no título, a chave sem acento', () =
   const rec = ['2026-08-10', '2026-09-10', '2026-10-10'].map((d, i) =>
     l({ dateYmd: d, amount: 90, description: i === 2 ? ' Conta de Água ' : 'CONTA DE AGUA 0810', payment_method: 'pix' }),
   )
-  const r = detectarRecorrencias(rec, HOJE)
+  const r = detectarRecorrencias(rec, HOJE, [])
   assertEquals([r[0].chave, r[0].nome], ['rec:conta agua', 'Conta de Água'])
   const atip = [
     ...['2026-07-03', '2026-08-03', '2026-09-03'].map((d) => l({ dateYmd: d, amount: 40, description: 'Padaria São João' })),

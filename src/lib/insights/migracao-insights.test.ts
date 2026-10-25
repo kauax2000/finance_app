@@ -137,6 +137,19 @@ describe("migração insights", () => {
         )
     })
 
+    it("virar_conta valida o dia (1–31) e a próxima pendente, que nunca nasce antes de hoje", () => {
+        const fn = funcao("virar_conta")
+        const valida = fn.indexOf("perform public.marcar_insight")
+        const dia = fn.indexOf("if p_dia is null or p_dia not between 1 and 31 then")
+        const data = fn.indexOf("if p_next_due_date is null or p_next_due_date < public.app_today() then")
+        expect(dia).toBeGreaterThan(-1)
+        expect(data).toBeGreaterThan(-1)
+        expect(dia).toBeLessThan(valida)
+        expect(data).toBeLessThan(valida)
+        expect(fn).toMatch(/raise exception 'INSIGHT_DIA_INVALIDO' using errcode = '22023';/)
+        expect(fn).toMatch(/raise exception 'INSIGHT_DATA_INVALIDA' using errcode = '22023';/)
+    })
+
     it("inserir_insights: só service_role, on conflict pela expressão do índice, devolve só as novas", () => {
         const fn = funcao("inserir_insights")
         expect(fn).toMatch(/^create or replace function public\.inserir_insights\(p_linhas jsonb\)\s+returns setof public\.insights/)

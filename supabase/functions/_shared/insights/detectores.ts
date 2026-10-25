@@ -104,11 +104,15 @@ const ASSINATURA_POR = new Set(['credit_card', 'debit_card'])
  * Mesma descrição em 3 meses seguidos, ou em 2 meses seguidos no mesmo dia
  * ±3, com os valores a ±10% entre si e um lançamento só por mês. O mês do mais
  * recente é a âncora e precisa ser o atual ou o anterior. Só despesa sem
- * vínculo (assinatura, parcela ou conta).
+ * vínculo (assinatura, parcela ou conta). `jaCadastrados` são os nomes das
+ * contas e assinaturas ativas: a descrição que casa com um deles (como no
+ * sazonal) não vira recorrência, senão o "Criar" faria uma segunda "Aluguel"
+ * ao lado da que a família paga por Pix sem ligar.
  */
 export function detectarRecorrencias(
   lancs: Lanc[],
   hojeYmd: string,
+  jaCadastrados: string[],
 ): Array<{
   chave: string
   nome: string
@@ -125,8 +129,10 @@ export function detectarRecorrencias(
     (l) =>
       l.type === 'expense' && !l.subscription_id && !l.installment_plan_id && !l.ligadoAConta && l.dateYmd <= hojeYmd,
   )
+  const nomes = jaCadastrados.map(normalizarDescricao)
   const saida: ReturnType<typeof detectarRecorrencias> = []
   for (const [chave, grupo] of agrupar(soltos, (l) => normalizarDescricao(l.description))) {
+    if (nomes.some((n) => contem(n, chave) || contem(chave, n))) continue
     const porMes = agrupar(grupo, (l) => ym(l.dateYmd))
     const ancora = [...porMes.keys()].sort().at(-1)!
     if (ancora !== atual && ancora !== somaMeses(atual, -1)) continue

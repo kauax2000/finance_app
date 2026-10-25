@@ -3,7 +3,7 @@
  * nenhum import**, como os outros módulos de `insights/`.
  */
 
-/** A ordem no mesmo dia: o que mais vale primeiro (também na fila do push). */
+/** O que mais vale primeiro (também na fila do push). */
 export const PRIORIDADE_DOS_TIPOS = [
   'fatura_fechou',
   'relatorio_mes',
@@ -22,12 +22,14 @@ const posicao = (kind: string) => {
 }
 
 /**
- * Os `max` primeiros pela data da evidência, do mais recente ao mais antigo
- * (quem chama põe hoje no achado sem data), e no mesmo dia pela prioridade do
- * tipo. Não mexe no array recebido.
+ * Os `max` primeiros pela prioridade do tipo, e no mesmo tipo pela data da
+ * evidência, do mais recente ao mais antigo (quem chama põe hoje no achado sem
+ * data). A prioridade vem antes da data: a fatura que fechou ontem perderia a
+ * vaga para os achados datados de hoje, e depois de anteontem ela não volta.
+ * Não mexe no array recebido.
  */
 export function limitarAchados<T extends { kind: string; dataYmd: string }>(achados: T[], max: number): T[] {
   return [...achados]
-    .sort((a, b) => (a.dataYmd === b.dataYmd ? posicao(a.kind) - posicao(b.kind) : a.dataYmd < b.dataYmd ? 1 : -1))
+    .sort((a, b) => posicao(a.kind) - posicao(b.kind) || (a.dataYmd === b.dataYmd ? 0 : a.dataYmd < b.dataYmd ? 1 : -1))
     .slice(0, max)
 }
