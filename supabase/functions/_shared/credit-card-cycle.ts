@@ -110,6 +110,11 @@ export function addCalendarDays(ymd: Ymd, delta: number): Ymd {
 
 export type OpenWindow = { start: Ymd; end: Ymd }
 
+/** A fatura que fecha em `close`: do dia seguinte ao fechamento anterior até ele. */
+export function invoiceWindowEndingAt(close: Ymd, closingDay: number): OpenWindow {
+  return { start: addCalendarDays(previousStatementCloseBefore(close, closingDay), 1), end: close }
+}
+
 export type CardTxRow = {
   amount: string | number
   type: string

@@ -53,7 +53,8 @@ describe("o cron avisa a fatura alta", () => {
         expect(tendencia).toContain(".from('transactions')")
         expect(tendencia).toContain(".eq('payment_credit_card_id', ev.cardId)")
         expect(tendencia.match(/\.order\('id', \{ ascending: true \}\)\s*\.range\(a, b\)/g)).toHaveLength(2)
-        expect(fonte).toContain("const PAGE_SIZE = 1000")
+        expect(fonte).toContain("import { todasAsPaginas } from '../_shared/todas-as-paginas.ts'")
+        expect(lerFonte("supabase/functions/_shared/todas-as-paginas.ts")).toContain("export const PAGE_SIZE = 1000")
     })
 
     it("só a fechada positiva entra na média (a de estorno não afrouxa os 120%)", () => {

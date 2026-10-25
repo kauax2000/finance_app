@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
 import { internalError } from '../_shared/http.ts'
 import { FAN_OUT_CONCURRENCY, forEachLimit } from '../_shared/for-each-limit.ts'
 import { secretMatches } from '../_shared/timing-safe-equal.ts'
+import { todasAsPaginas } from '../_shared/todas-as-paginas.ts'
 import {
   deliverNotification,
   loadWorkspacePrefsMap,
@@ -17,6 +18,7 @@ import {
   filterRangeEndIso,
   filterRangeStartIso,
   formatYmd,
+  invoiceWindowEndingAt,
   nextCloseAfter,
   nextPaymentDueCycleOnOrAfter,
   previousStatementCloseBefore,
@@ -123,11 +125,6 @@ function isClosedCycle(ev: CalEvent): boolean {
   return ev.evento !== 'closing_soon'
 }
 
-/** A fatura que fecha em `close`: do dia seguinte ao fechamento anterior até ele. */
-function invoiceWindowEndingAt(close: Ymd, closingDay: number): OpenWindow {
-  return { start: addCalendarDays(previousStatementCloseBefore(close, closingDay), 1), end: close }
-}
-
 function buildCardEvents(card: CardRow, today: Ymd): CalEvent[] {
   const closingDay = Number(card.closing_day)
   const dueDay = Number(card.due_day)
@@ -228,22 +225,6 @@ function buildTrendingEvent(card: CardRow, today: Ymd): TrendingEvent | null {
     ),
     data: ddmm(formatYmd(nextClose)),
     checkPaid: false,
-  }
-}
-
-const PAGE_SIZE = 1000
-
-/** Lê todas as páginas: o PostgREST corta em `max_rows` (1000) sem erro. */
-async function todasAsPaginas<T>(
-  pagina: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>
-): Promise<T[]> {
-  const out: T[] = []
-  for (let from = 0; ; from += PAGE_SIZE) {
-    const { data, error } = await pagina(from, from + PAGE_SIZE - 1)
-    if (error) throw new Error(error.message)
-    const batch = data ?? []
-    out.push(...batch)
-    if (batch.length < PAGE_SIZE) return out
   }
 }
 

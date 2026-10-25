@@ -31,6 +31,8 @@ export type DeliverNotificationInput = {
    * `notify_email`. O push segue a preferência (`canaisDoAviso`).
    */
   essencial?: boolean
+  /** Só in-app: o teto de push dos insights (3 por semana) já foi gasto. */
+  semPush?: boolean
 }
 
 export type DeliverNotificationResult = {
@@ -122,6 +124,7 @@ export async function deliverNotification(
     metadata = {},
     skipTypePref = false,
     essencial = false,
+    semPush = false,
   } = input
 
   const prefs =
@@ -164,7 +167,7 @@ export async function deliverNotification(
     result.notification_id = notificationId
   }
 
-  if (canais.push) {
+  if (canais.push && !semPush) {
     const pushPayload = buildPushPayload({
       title,
       body,
