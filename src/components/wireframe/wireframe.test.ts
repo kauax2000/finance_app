@@ -323,3 +323,56 @@ describe("Previsão (Bloco 5)", () => {
     expect(f).toContain('<CampoDaReserva key={currentWorkspaceId ?? "nenhuma"} />')
   })
 })
+
+describe("Projetos e modelos de carteira (Bloco 7C)", () => {
+  const fonte = (arquivo: string) => semComentarios(lerFonte(arquivo), "tudo")
+
+  it("o project_id só vai quando muda algo, e a privada e a receita não o levam (M7)", async () => {
+    const { projetoDoSalvar } = await import("@/components/transactions/transaction-form-use")
+    expect(projetoDoSalvar({ escolhido: "", original: undefined, privado: false, type: "expense" })).toBeUndefined()
+    expect(projetoDoSalvar({ escolhido: "p1", original: undefined, privado: false, type: "expense" })).toBe("p1")
+    expect(projetoDoSalvar({ escolhido: "p1", original: "p1", privado: false, type: "expense" })).toBeUndefined()
+    expect(projetoDoSalvar({ escolhido: "", original: "p1", privado: false, type: "expense" })).toBeNull()
+    expect(projetoDoSalvar({ escolhido: "p1", original: undefined, privado: true, type: "expense" })).toBeUndefined()
+    expect(projetoDoSalvar({ escolhido: "p1", original: "p1", privado: true, type: "expense" })).toBeNull()
+    expect(projetoDoSalvar({ escolhido: "p1", original: "p1", privado: false, type: "income" })).toBeNull()
+  })
+
+  it("sem a tabela ou a RPC no banco, a leitura é indisponível e não quebra (Ruling 8)", async () => {
+    const { tabelaTolerante } = await import("@/lib/projetos/dados")
+    const resposta = (data: unknown, error: { code: string; message: string } | null) => Promise.resolve({ data, error })
+    await expect(tabelaTolerante(resposta(null, { code: "PGRST205", message: "x" }))).resolves.toEqual({ disponivel: false })
+    await expect(tabelaTolerante(resposta([1], null))).resolves.toEqual({ disponivel: true, dados: [1] })
+    await expect(tabelaTolerante(resposta(null, { code: "42501", message: "x" }))).rejects.toThrow()
+    expect(fonte("src/lib/projetos/dados.ts")).toMatch(/RPC_AUSENTE = new Set\(\["PGRST202"/)
+  })
+
+  it("marcar a privada limpa o projeto, e o seletor some nela", () => {
+    expect(fonte("src/components/transactions/transaction-form-use.tsx")).toMatch(/setIsPrivateBruto\(v\)\s*if \(v\) setProjectId\(""\)/)
+    expect(fonte("src/components/transactions/transaction-form-fields.tsx")).toMatch(
+      /!isPrivate &&[\s\S]{0,200}<ProjetoDoLancamentoWireframe/,
+    )
+  })
+
+  it("o Painel da carteira de projeto troca o seguro pelo resumo", () => {
+    expect(fonte("src/app/(app)/dashboard/page-client.tsx")).toMatch(
+      /currentWorkspace\?\.purpose === "project" \? \(\s*<ResumoDaCarteiraProjetoWireframe[\s\S]*?<SeguroDoPainelWireframe/,
+    )
+  })
+
+  it("criar carteira mostra os modelos, e /comecar cria a Casa", () => {
+    expect(fonte("src/components/workspace/project-form-dialog.tsx")).toContain("<ModelosDeCarteiraWireframe")
+    expect(fonte("src/app/(app)/comecar/page.tsx")).toContain("<CriarACasaWireframe />")
+    expect(fonte("src/components/wireframe/modelos-de-carteira-wireframe.tsx")).toContain('criarCarteiraDeModelo("casa", "Casa")')
+  })
+
+  it("a etiqueta e a regra da escolha no wireframe de modelos", async () => {
+    const { createElement } = await import("react")
+    const { REGRA_DA_ESCOLHA } = await import("@/lib/projetos/modelos")
+    const { ModelosDeCarteiraWireframe } = await import("./modelos-de-carteira-wireframe")
+    const html = renderToStaticMarkup(createElement(ModelosDeCarteiraWireframe, { modelo: null, onModeloChange: () => {} }))
+    expect(html).toContain("WIREFRAME · Bloco 7 · Modelos de carteira")
+    expect(html).toContain(REGRA_DA_ESCOLHA)
+    for (const r of ["Casa", "Casal", "Pessoal", "Viagem", "Reforma", "Evento"]) expect(html).toContain(r)
+  })
+})

@@ -82,6 +82,7 @@ function fotografar(r: Rascunho): string {
         r.installmentPerAmount,
         r.installmentCount,
         r.isPrivate,
+        r.projectId,
     ])
 }
 
@@ -105,6 +106,23 @@ type Rascunho = {
     installmentEditScope: "slice" | "plan"
     /** Gasto privado (Bloco 7B). */
     isPrivate: boolean
+    /** O projeto da despesa (Bloco 7C); `""` sem projeto. */
+    projectId: string
+}
+
+/**
+ * O `project_id` que o salvar manda (Bloco 7C, Ruling 8): só quando muda
+ * alguma coisa — um projeto escolhido na criação, ou trocado e tirado na
+ * edição. A privada e a receita não levam projeto (M7).
+ */
+export function projetoDoSalvar(a: {
+    escolhido: string
+    original: string | null | undefined
+    privado: boolean
+    type: "income" | "expense"
+}): string | null | undefined {
+    const novo = a.privado || a.type !== "expense" ? null : a.escolhido || null
+    return novo === (a.original ?? null) ? undefined : novo
 }
 
 /**
@@ -199,7 +217,13 @@ export function useTransactionForm({
     const [installmentEditScope, setInstallmentEditScope] = useState<
         "slice" | "plan"
     >("slice")
-    const [isPrivate, setIsPrivate] = useState(false)
+    const [isPrivate, setIsPrivateBruto] = useState(false)
+    const [projectId, setProjectId] = useState("")
+    // Marcar a privada limpa o projeto (M7): a privada não leva projeto.
+    const setIsPrivate = useCallback((v: boolean) => {
+        setIsPrivateBruto(v)
+        if (v) setProjectId("")
+    }, [])
     // As dúvidas da frase rápida aplicada; `null` sem frase. O salvar leva a
     // origem `quick_text` e a marca de "a conferir" (Decisão 14).
     const [duvidasDaFrase, setDuvidasDaFrase] = useState<string[] | null>(null)
@@ -266,6 +290,7 @@ export function useTransactionForm({
                   installmentCount: p ? String(p.total_installments) : DEFAULT_INSTALLMENT_COUNT,
                   installmentEditScope: "slice",
                   isPrivate: editingTransaction.is_private === true,
+                  projectId: editingTransaction.project_id ?? "",
               }
             : {
                   formKind: kindInicial,
@@ -287,6 +312,7 @@ export function useTransactionForm({
                   installmentCount: DEFAULT_INSTALLMENT_COUNT,
                   installmentEditScope: "slice",
                   isPrivate: false,
+                  projectId: "",
               }
         setFormKind(v.formKind)
         setType(v.type)
@@ -303,7 +329,8 @@ export function useTransactionForm({
         setInstallmentPerAmount(v.installmentPerAmount)
         setInstallmentCount(v.installmentCount)
         setInstallmentEditScope(v.installmentEditScope)
-        setIsPrivate(v.isPrivate)
+        setIsPrivateBruto(v.isPrivate)
+        setProjectId(v.projectId)
         setDuvidasDaFrase(null)
         setFotoDoRecibo(null)
         setSnapshot(v)
@@ -668,6 +695,12 @@ export function useTransactionForm({
                 regra: regraDoPrivado,
                 eraPrivada,
             }),
+            projectId: projetoDoSalvar({
+                escolhido: projectId,
+                original: editingTransaction?.project_id,
+                privado: isPrivate,
+                type,
+            }),
             ...origemDaFrase(duvidasDaFrase, Boolean(editingTransaction), categoryId, fonteDaFrase),
         })
 
@@ -762,6 +795,8 @@ export function useTransactionForm({
         setIsPrivate,
         regraDoPrivado,
         eraPrivada,
+        projectId,
+        setProjectId,
     }
 
     const formTitle = transactionFormTitle({
@@ -810,6 +845,7 @@ export function useTransactionForm({
         installmentCount,
         installmentEditScope,
         isPrivate,
+        projectId,
     }
     // A foto escolhida também é rascunho: fechar pergunta "Descartar alterações?".
     const isDirty =

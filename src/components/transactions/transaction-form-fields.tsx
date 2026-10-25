@@ -78,6 +78,7 @@ import { cn } from "@/lib/utils"
 import { currencyBRL } from "@/lib/formatters"
 import { EstornoWireframe } from "@/components/wireframe/estorno-wireframe"
 import { PrivadoWireframe } from "@/components/wireframe/gasto-privado-wireframe"
+import { ProjetoDoLancamentoWireframe } from "@/components/wireframe/projetos-wireframe"
 import type { PodeSerPrivado } from "@/lib/privado/pode-ser-privado"
 import { FraseRapidaWireframe } from "@/components/wireframe/frase-rapida-wireframe"
 import { ImpactoDaParcela } from "@/components/wireframe/impacto-parcela-wireframe"
@@ -277,6 +278,9 @@ export type TransactionFormFieldsProps = {
     regraDoPrivado?: PodeSerPrivado | null
     /** A linha editada já era privada: com a regra que não vale mais, segura o salvar (Ruling 10). */
     eraPrivada?: boolean
+    /** O projeto da despesa (Bloco 7C); sem `setProjectId`, o seletor não aparece. */
+    projectId?: string
+    setProjectId?: (id: string) => void
 }
 
 /**
@@ -356,6 +360,8 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
         regraDoPrivado,
         eraPrivada = false,
         setFotoDoRecibo,
+        projectId = "",
+        setProjectId,
     } = props
 
     const isMobile = useIsMobile()
@@ -944,6 +950,15 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                     regra={regraDoPrivado}
                     eraPrivada={eraPrivada}
                 />
+            ) : null}
+
+            {/* A privada esconde o projeto (M7); a parcelada e o plano não o levam. */}
+            {setProjectId &&
+            type === "expense" &&
+            !isPrivate &&
+            formKind !== "installment" &&
+            !(hasInstallmentPlan && installmentEditScope === "plan") ? (
+                <ProjetoDoLancamentoWireframe valor={projectId} onChange={setProjectId} />
             ) : null}
         </div>
     )

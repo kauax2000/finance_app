@@ -24,6 +24,8 @@ export type TransactionFormSavePayload = {
     needsReview?: boolean
     /** Gasto privado (Bloco 7B); sem ele, a coluna fica como está. */
     isPrivate?: boolean
+    /** O projeto (Bloco 7C); sem ele, a coluna fica como está, e `null` o tira. */
+    projectId?: string | null
 }
 
 /**

@@ -23,6 +23,7 @@ import { DashboardKpiCards } from "@/components/dashboard/dashboard-kpi-cards"
 import { JornadaCartaoWireframe } from "@/components/wireframe/jornada-cartao-wireframe"
 import { AConferirContagemWireframe } from "@/components/wireframe/a-conferir-contagem-wireframe"
 import { SeguroDoPainelWireframe } from "@/components/wireframe/seguro-para-gastar-wireframe"
+import { ResumoDaCarteiraProjetoWireframe } from "@/components/wireframe/projetos-wireframe"
 import { InsightsDoPainel } from "@/components/wireframe/insights-wireframe"
 import { DashboardPaymentsCalendar } from "@/components/dashboard/dashboard-payments-calendar"
 import { DashboardOpenInvoices } from "@/components/dashboard/dashboard-open-invoices"
@@ -98,6 +99,7 @@ function previewFrom(e: PaymentEvent | UpcomingPaymentRow): DashboardPaymentPrev
 export default function DashboardPageClient() {
     const { loading: authLoading } = useAuth()
     const {
+        currentWorkspace,
         currentWorkspaceId,
         loading: workspaceLoading,
         error: workspaceError,
@@ -309,7 +311,12 @@ export default function DashboardPageClient() {
                 onCalendarYmChange={d.setCalendarYm}
             />
 
-            <SeguroDoPainelWireframe workspaceId={d.currentWorkspaceId} calendarYm={d.calendarYm} />
+            {/* A carteira de projeto (Bloco 7C) não tem previsão: o resumo dela no lugar do seguro. */}
+            {currentWorkspace?.purpose === "project" ? (
+                <ResumoDaCarteiraProjetoWireframe workspace={currentWorkspace} />
+            ) : (
+                <SeguroDoPainelWireframe workspaceId={d.currentWorkspaceId} calendarYm={d.calendarYm} />
+            )}
 
             <InsightsDoPainel workspaceId={d.currentWorkspaceId} calendarYm={d.calendarYm} categorias={d.categories} />
 

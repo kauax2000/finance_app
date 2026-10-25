@@ -1,4 +1,4 @@
-import { ArrowPathRoundedSquareIcon, RectangleStackIcon, ClipboardDocumentCheckIcon, Cog6ToothIcon, CreditCardIcon, Squares2X2Icon, TagIcon, UserGroupIcon } from "@heroicons/react/24/outline"
+import { ArrowPathRoundedSquareIcon, RectangleStackIcon, ClipboardDocumentCheckIcon, Cog6ToothIcon, CreditCardIcon, FolderIcon, Squares2X2Icon, TagIcon, UserGroupIcon } from "@heroicons/react/24/outline"
 import type { NavigationItem, SubPageMeta } from "@/types/navigation"
 
 /** Canonical path constants for links and active-state checks */
@@ -29,6 +29,8 @@ export const ROUTES = {
     PREVISAO: "/previsao",
     /** A jornada de 4 passos do que o app faz sozinho (Bloco 4). Sem entrada no menu. */
     COMECAR: "/comecar",
+    /** Os projetos da carteira, com o resumo de cada um (Bloco 7C). Só do adulto. */
+    PROJETOS: "/projetos",
     LOGIN: "/login",
     REGISTER: "/register",
     FORGOT_PASSWORD: "/forgot-password",
@@ -37,6 +39,10 @@ export const ROUTES = {
     /** A política de privacidade: pública, fora da casca do app (Bloco 3B). */
     PRIVACY: "/privacidade",
 } as const
+
+export function projetoDetailPath(id: string): string {
+    return `${ROUTES.PROJETOS}/${encodeURIComponent(id)}`
+}
 
 export function creditCardDetailPath(id: string): string {
     return `${ROUTES.CREDIT_CARDS}/${encodeURIComponent(id)}`
@@ -117,6 +123,8 @@ export const MAIN_NAVIGATION: NavigationItem[] = [
         href: ROUTES.CREDIT_CARDS,
         icon: CreditCardIcon,
     },
+    // Só do adulto: `/projetos` fica fora da lista do convidado (Ruling 3).
+    { name: "Projetos", href: ROUTES.PROJETOS, icon: FolderIcon },
 ]
 
 export const MEMBERS_NAV_ITEM: NavigationItem = {
@@ -147,6 +155,7 @@ export const APP_PAGE_TITLES: Record<string, string> = {
     [ROUTES.COFRE]: "Cofre aberto",
     [ROUTES.PREVISAO]: "Previsão",
     [ROUTES.COMECAR]: "Começar",
+    [ROUTES.PROJETOS]: "Projetos",
     [ROUTES.MEMBERS]: "Membros e convidados",
     [ROUTES.SETTINGS]: "Configurações",
     [ROUTES.TRANSACTIONS]: "Transações",

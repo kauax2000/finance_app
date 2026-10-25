@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/dialog"
 import { CustomForm, FormCancel, FormSubmit } from "@/components/ui/form"
 import { randomWorkspaceAccentColor, type WorkspaceIconKey } from "@/lib/workspace-icons"
+import { ModelosDeCarteiraWireframe } from "@/components/wireframe/modelos-de-carteira-wireframe"
+import { AINDA_NAO_DISPONIVEL, criarCarteiraDeModelo } from "@/lib/projetos/dados"
+import type { ModeloDeCarteira } from "@/lib/projetos/modelos"
 
 export type ProjectFormDialogProps = {
     open: boolean
@@ -25,7 +28,7 @@ export function ProjectFormDialog({
     open,
     onOpenChange,
 }: ProjectFormDialogProps) {
-    const { createWorkspace, setCurrentWorkspaceId, error: contextError } = useWorkspace()
+    const { createWorkspace, refreshWorkspaces, setCurrentWorkspaceId, error: contextError } = useWorkspace()
     // A carteira criada espera o diálogo terminar de sair para virar a atual.
     const criada = useRef<string | null>(null)
 
@@ -34,6 +37,7 @@ export function ProjectFormDialog({
     const [previewColor, setPreviewColor] = useState(() =>
         randomWorkspaceAccentColor()
     )
+    const [modelo, setModelo] = useState<ModeloDeCarteira | null>(null)
     const [submitting, setSubmitting] = useState(false)
     const [localError, setLocalError] = useState<string | null>(null)
 
@@ -49,8 +53,29 @@ export function ProjectFormDialog({
         e.preventDefault()
         setLocalError(null)
         const trimmed = name.trim()
-        if (!trimmed) {
+        // A Pessoal não cria nada: o nome não vale nela.
+        if (!trimmed && modelo !== "pessoal") {
             setLocalError("Informe um nome para a carteira.")
+            return
+        }
+
+        if (modelo) {
+            // O modelo (Bloco 7C) cria pela RPC, com as categorias e o modo dele.
+            setSubmitting(true)
+            try {
+                const r = await criarCarteiraDeModelo(modelo, trimmed)
+                if (!r.disponivel) {
+                    setLocalError(AINDA_NAO_DISPONIVEL)
+                    return
+                }
+                await refreshWorkspaces()
+                criada.current = r.dados
+                onOpenChange(false)
+            } catch (e) {
+                setLocalError(e instanceof Error ? e.message : "Não foi possível criar a carteira.")
+            } finally {
+                setSubmitting(false)
+            }
             return
         }
 
@@ -98,6 +123,7 @@ export function ProjectFormDialog({
                     className="flex min-h-0 flex-1 flex-col"
                 >
                     <DialogBody>
+                        <ModelosDeCarteiraWireframe modelo={modelo} onModeloChange={setModelo} />
                         <WorkspaceAppearanceFormFields
                             name={name}
                             onNameChange={setName}

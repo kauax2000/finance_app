@@ -74,6 +74,10 @@ const RAISE_MESSAGE_PT: Record<string, string> = {
     privado_sem_detalhe: "Não foi possível guardar o gasto privado. Tente de novo.",
     titular_so_dono: "Só quem é dono da carteira escolhe o titular do cartão.",
     titular_nao_adulto: "O titular do cartão precisa ser adulto da carteira.",
+    // Bloco 7C, os projetos e os modelos de carteira.
+    projeto_arquivado: "Este projeto está arquivado e não aceita lançamento novo.",
+    modelo_desconhecido: "Escolha um dos modelos da lista.",
+    carteira_pessoal_ausente: "Sua carteira pessoal não foi encontrada.",
 }
 
 /**

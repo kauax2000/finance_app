@@ -64,6 +64,8 @@ function defaultMobileBackHref(pathname: string): string | undefined {
     // Planos e pagamentos só se abre de Minha conta no telefone; no desktop a
     // migalha não o põe debaixo dela (por isso não está em APP_SUB_PAGE_TITLES).
     if (pathname === ROUTES.PLANS) return ROUTES.ACCOUNT
+    // O detalhe de um projeto volta à lista.
+    if (/^\/projetos\/[^/]+$/.test(pathname)) return ROUTES.PROJETOS
     // Por último: as telas listadas na página Você voltam a ela (não são
     // subpáginas de ninguém, então nada acima as reconhece).
     return voceBackHref(pathname)
