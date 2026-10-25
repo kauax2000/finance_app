@@ -5,6 +5,7 @@ import { WorkspaceAppearanceSettings } from "@/components/settings/workspace-app
 import { PwaSettingsSection } from "@/components/pwa/pwa-settings-section"
 import { ThemeSettings } from "@/components/settings/theme-settings"
 import { LembreteConferirWireframe } from "@/components/wireframe/a-conferir-lembrete-wireframe"
+import { InsightsAvisoWireframe } from "@/components/wireframe/insights-wireframe"
 import { IaConfiguracoesWireframe } from "@/components/wireframe/ia-configuracoes-wireframe"
 
 export default function SettingsPage() {
@@ -15,6 +16,7 @@ export default function SettingsPage() {
             <PwaSettingsSection />
             <NotificationPreferences />
             <LembreteConferirWireframe />
+            <InsightsAvisoWireframe />
             <IaConfiguracoesWireframe />
         </div>
     )

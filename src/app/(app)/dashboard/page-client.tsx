@@ -22,6 +22,7 @@ import { DashboardKpiCards } from "@/components/dashboard/dashboard-kpi-cards"
 import { JornadaCartaoWireframe } from "@/components/wireframe/jornada-cartao-wireframe"
 import { AConferirContagemWireframe } from "@/components/wireframe/a-conferir-contagem-wireframe"
 import { SeguroDoPainelWireframe } from "@/components/wireframe/seguro-para-gastar-wireframe"
+import { InsightsDoPainel } from "@/components/wireframe/insights-wireframe"
 import { DashboardPaymentsCalendar } from "@/components/dashboard/dashboard-payments-calendar"
 import { DashboardOpenInvoices } from "@/components/dashboard/dashboard-open-invoices"
 import { DashboardInstallmentsEndingSoon } from "@/components/dashboard/dashboard-installments-ending-soon"
@@ -307,6 +308,8 @@ export default function DashboardPageClient() {
             />
 
             <SeguroDoPainelWireframe workspaceId={d.currentWorkspaceId} calendarYm={d.calendarYm} />
+
+            <InsightsDoPainel workspaceId={d.currentWorkspaceId} calendarYm={d.calendarYm} categorias={d.categories} />
 
             <div className="relative">
                 <DashboardKpiCards

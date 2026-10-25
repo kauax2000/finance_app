@@ -48,6 +48,15 @@ const RAISE_MESSAGE_PT: Record<string, string> = {
     "not a workspace member": "Você não faz parte desta carteira.",
     "not authenticated": "Sessão expirada. Entre novamente.",
     forbidden: "Você não tem permissão para fazer isso.",
+    // Bloco 6B, as RPCs dos insights.
+    insight_ja_usado: "Isso já foi feito.",
+    insight_nao_encontrado: "Este insight não existe mais.",
+    insight_tipo_invalido: "Este insight não aceita essa ação.",
+    insight_tipo_nao_permitido: "Este insight não aceita essa ação.",
+    insight_nome_invalido: "Dê um nome.",
+    insight_dia_invalido: "O dia vai de 1 a 31.",
+    insight_valor_invalido: "Informe um valor maior que zero.",
+    insight_grande_demais: "Os dados deste insight passaram do tamanho aceito.",
 }
 
 /**

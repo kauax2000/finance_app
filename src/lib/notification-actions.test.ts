@@ -32,3 +32,16 @@ describe("getNotificationAction — href", () => {
         expect(getNotificationAction(notif({ href: "/categories/abc" }))?.href).toBe("/categories/abc")
     })
 })
+
+describe("getNotificationAction — insight", () => {
+    it("abre o href da ação do insight", () => {
+        expect(getNotificationAction(notif({ kind: "fatura_fechou", insight_id: "i1", href: "/credit-cards/c1" }, "insight"))).toEqual({
+            label: "Abrir",
+            href: "/credit-cards/c1",
+        })
+    })
+
+    it("sem href (ou inseguro), a caixa do Painel", () => {
+        expect(getNotificationAction(notif({ kind: "recorrencia", href: "//evil.com" }, "insight"))?.href).toBe("/dashboard")
+    })
+})

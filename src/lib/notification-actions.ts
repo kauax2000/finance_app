@@ -41,6 +41,11 @@ export function getNotificationAction(n: AppNotification): NotificationAction | 
         }
     }
 
+    // O insight leva o `href` da ação dele (acima); sem ele, a caixa do Painel.
+    if (n.type === "insight") {
+        return { label: "Ver no Painel", href: ROUTES.DASHBOARD }
+    }
+
     if (n.type === "bill") {
         return { label: "Contas a pagar", href: ROUTES.BILLS }
     }
