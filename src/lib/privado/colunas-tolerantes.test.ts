@@ -23,22 +23,29 @@ function fontes(dir: string): string[] {
 
 const arquivos = fontes("src").filter((f) => f !== join("src", "types", "database.ts"))
 
+function achadosDe(arquivo: string): string[] {
+    const texto = semComentarios(lerFonte(arquivo))
+    const achados: string[] = []
+    // Uma lista de colunas (string com vírgula) que cita a coluna nova.
+    for (const m of texto.matchAll(/"[^"\n]*"|'[^'\n]*'|`[^`]*`/g)) {
+        if (NOVAS.test(m[0]) && m[0].includes(",")) achados.push(m[0])
+    }
+    // Um filtro ou um select de uma coluna só.
+    for (const m of texto.matchAll(/\.(select|eq|neq|is|in|not|or|order|filter|match)\(\s*["'`](is_private|holder_user_id)\b/g)) {
+        achados.push(m[0])
+    }
+    if (!TOLERANTES.has(arquivo)) {
+        for (const m of texto.matchAll(/\.from\(\s*["'`]transacoes_privadas/g)) achados.push(m[0])
+    }
+    return achados
+}
+
 describe("Ruling 8: as colunas do 7B não entram em consulta explícita", () => {
-    it.each(arquivos)("%s", (arquivo) => {
-        const texto = semComentarios(lerFonte(arquivo))
-        const achados: string[] = []
-        // Uma lista de colunas (string com vírgula) que cita a coluna nova.
-        for (const m of texto.matchAll(/"[^"\n]*"|'[^'\n]*'|`[^`]*`/g)) {
-            if (NOVAS.test(m[0]) && m[0].includes(",")) achados.push(m[0])
-        }
-        // Um filtro ou um select de uma coluna só.
-        for (const m of texto.matchAll(/\.(select|eq|neq|is|in|not|order|filter|match)\(\s*["'`](is_private|holder_user_id)\b/g)) {
-            achados.push(m[0])
-        }
-        if (!TOLERANTES.has(arquivo)) {
-            for (const m of texto.matchAll(/\.from\(\s*["'`]transacoes_privadas/g)) achados.push(m[0])
-        }
-        expect(achados).toEqual([])
+    it("nenhum arquivo cita as colunas do 7B numa consulta explícita", () => {
+        const ofensores = Object.fromEntries(
+            arquivos.map((a) => [a, achadosDe(a)] as const).filter(([, x]) => x.length),
+        )
+        expect(ofensores).toEqual({})
     })
 
     it("os tolerantes só leem transacoes_privadas depois de achar uma privada", () => {

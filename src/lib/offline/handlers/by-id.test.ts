@@ -7,7 +7,7 @@ const db = vi.hoisted(() => {
         results: [] as { data: unknown; error: unknown }[],
     }
     const query: Record<string, unknown> = {}
-    for (const method of ["from", "update", "delete", "eq", "select"]) {
+    for (const method of ["from", "update", "delete", "eq", "select", "maybeSingle"]) {
         query[method] = (...args: unknown[]) => {
             state.calls.push([method, ...args])
             return query
@@ -21,6 +21,7 @@ const db = vi.hoisted(() => {
 vi.mock("@/lib/supabase", () => ({ supabase: db.query }))
 
 const { deleteById, updateById } = await import("@/lib/offline/handlers/by-id")
+const { NADA_MUDOU } = await import("@/lib/supabase-errors")
 
 const mutation = (payload: Record<string, unknown>) =>
     ({ workspaceId: "w1", payload, idempotencyKey: "k1" }) as unknown as OfflineMutation
@@ -57,5 +58,33 @@ describe("handlers offline por id", () => {
         expect(await deleteById("credit_cards", mutation({ serverId: "cc1" }))).toEqual({ ok: true })
         expect(db.state.calls).toContainEqual(["eq", "id", "cc1"])
         expect(db.state.calls).toContainEqual(["eq", "workspace_id", "w1"])
+    })
+
+    describe("delete conferido (a transação, Bloco 7B)", () => {
+        it("apagou: sincronizado", async () => {
+            db.state.results.push({ data: [{ id: "t1" }], error: null })
+            expect(await deleteById("transactions", mutation({ serverId: "t1" }), { conferir: true })).toEqual({ ok: true })
+            expect(db.state.calls).toContainEqual(["select", "id"])
+        })
+
+        it("0 linhas e a linha ainda existe: a RLS barrou, não é sucesso", async () => {
+            db.state.results.push({ data: [], error: null }, { data: { id: "t1" }, error: null })
+            expect(await deleteById("transactions", mutation({ serverId: "t1" }), { conferir: true })).toEqual({
+                ok: false,
+                error: NADA_MUDOU,
+            })
+        })
+
+        it("0 linhas e a linha já saiu: idempotente", async () => {
+            db.state.results.push({ data: [], error: null }, { data: null, error: null })
+            expect(await deleteById("transactions", mutation({ serverId: "t1" }), { conferir: true })).toEqual({ ok: true })
+        })
+    })
+
+    it("o handler de transações apaga conferindo", async () => {
+        const { lerFonte, semComentarios } = await import("@/test/fonte")
+        expect(semComentarios(lerFonte("src/lib/offline/handlers/transactions.ts"))).toContain(
+            'deleteById("transactions", mutation, { conferir: true })',
+        )
     })
 })

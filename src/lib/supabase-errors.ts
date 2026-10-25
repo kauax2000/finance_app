@@ -30,6 +30,13 @@ const POSTGREST_CODE_PT: Record<string, string> = {
     "28000": "Sessão expirada. Entre novamente.",
 }
 
+/**
+ * Uma escrita que voltou com 0 linhas e sem erro: a RLS barrou (a privada de
+ * outra pessoa, Bloco 7B; a linha de outro, para o convidado) ou a linha já saiu.
+ */
+export const NADA_MUDOU =
+    "Nada foi alterado. Esse lançamento pode ter sido mudado por outra pessoa ou não estar mais disponível para você."
+
 /** O que a pessoa lê quando o gatilho barra a escrita de uma conta em "só leitura". */
 export const SOMENTE_LEITURA_PT = "Sua conta está em só leitura. Assine em Planos para voltar a lançar."
 

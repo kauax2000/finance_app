@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase"
 import {
     formatSupabasePostgrestError,
     isTransactionsPaymentColumnsUnsupportedError,
+    NADA_MUDOU,
 } from "@/lib/supabase-errors"
 import type {
     InstallmentPlanUpdatePayload,
@@ -11,9 +12,6 @@ import type {
 import { executeMutation } from "@/lib/offline/mutation-gateway"
 import { retryStableClientId } from "@/lib/offline/retry-client-id"
 import { dispatchFinanceTransactionsMutated } from "@/lib/workspace-data-events"
-
-/** 0 linhas sem erro: a RLS barrou (a privada de outra pessoa) ou a linha já saiu. */
-export const NADA_MUDOU = "Só quem lançou pode mudar um gasto privado."
 
 export type SaveTransactionContext = {
     userId: string

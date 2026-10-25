@@ -29,7 +29,7 @@ export async function syncTransactionMutation(
             return { ok: true }
         }
 
-        return deleteById("transactions", mutation)
+        return deleteById("transactions", mutation, { conferir: true })
     }
 
     if (operation !== "insert") {

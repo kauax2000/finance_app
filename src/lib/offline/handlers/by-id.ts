@@ -1,6 +1,6 @@
 import type { PostgrestError } from "@supabase/supabase-js"
 import { supabase } from "@/lib/supabase"
-import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
+import { formatSupabasePostgrestError, NADA_MUDOU } from "@/lib/supabase-errors"
 import type { OfflineMutation } from "@/lib/offline/types"
 
 /** `somenteLeitura`: o gatilho barrou pela conta em "só leitura", lido do erro cru, antes da frase. */
@@ -29,14 +29,33 @@ function targetId(mutation: OfflineMutation) {
     return String(mutation.payload.serverId ?? mutation.payload.id ?? "")
 }
 
-/** Apagar o que já não existe chega ao mesmo fim: nenhuma linha afetada é sucesso. */
-export async function deleteById(table: Table, mutation: OfflineMutation): Promise<SyncResult> {
-    const { error } = await supabase
+/**
+ * Apagar o que já não existe chega ao mesmo fim: nenhuma linha afetada é
+ * sucesso. Com `conferir`, 0 linhas relê a linha: se ela ainda está lá, a RLS
+ * barrou sem erro (a privada de outra pessoa, Bloco 7B), e não é sucesso.
+ */
+export async function deleteById(
+    table: Table,
+    mutation: OfflineMutation,
+    { conferir = false }: { conferir?: boolean } = {},
+): Promise<SyncResult> {
+    const id = targetId(mutation)
+    const apagar = supabase.from(table).delete().eq("id", id).eq("workspace_id", mutation.workspaceId)
+    if (!conferir) {
+        const { error } = await apagar
+        return error ? failure(error) : { ok: true }
+    }
+    const { data, error } = await apagar.select("id")
+    if (error) return failure(error)
+    if (data?.length) return { ok: true }
+    const ainda = await supabase
         .from(table)
-        .delete()
-        .eq("id", targetId(mutation))
+        .select("id")
+        .eq("id", id)
         .eq("workspace_id", mutation.workspaceId)
-    return error ? failure(error) : { ok: true }
+        .maybeSingle()
+    if (ainda.error) return failure(ainda.error)
+    return ainda.data ? { ok: false, error: NADA_MUDOU } : { ok: true }
 }
 
 /**
