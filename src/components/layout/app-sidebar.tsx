@@ -25,6 +25,7 @@ import {
 } from "@/config/navigation"
 import { useWorkspace } from "@/components/workspace-provider"
 import { microIconFor } from "@/config/mobile-navigation"
+import { itensDeNavegacaoPara } from "@/lib/papeis/rotas-do-convidado"
 import type { HeroIcon } from "@/types/navigation"
 import { prefetchNavRouteHref } from "@/components/layout/sidebar-route-prefetch"
 
@@ -40,7 +41,10 @@ function NavIcon({ icon }: { icon: HeroIcon }) {
 export function AppSidebar() {
     const pathname = usePathname()
     const queryClient = useQueryClient()
-    const { currentWorkspaceId } = useWorkspace()
+    const { currentWorkspaceId, papel } = useWorkspace()
+    // O convidado vê só as telas dele (Bloco 7A): sem Assinaturas, Contas a pagar nem Membros.
+    const navegacao = itensDeNavegacaoPara(papel, MAIN_NAVIGATION)
+    const comMembros = itensDeNavegacaoPara(papel, [MEMBERS_NAV_ITEM]).length > 0
 
     // **A pílula do ativo anda no clique, e não quando a página chega.** Medido:
     // esperando o `pathname`, a viagem caía nos ~200ms em que a página nova se
@@ -78,7 +82,7 @@ export function AppSidebar() {
                 </SidebarGroup>
                 <SidebarGroup>
                     <SidebarMenu>
-                        {MAIN_NAVIGATION.map((item) => {
+                        {navegacao.map((item) => {
                             const active = ativo(item.href)
                             const tooltip = item.beta
                                 ? {
@@ -136,18 +140,20 @@ export function AppSidebar() {
                 </SidebarGroup>
                 <SidebarGroup className="mt-auto">
                     <SidebarMenu>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton
-                                asChild
-                                isActive={membersActive}
-                                tooltip={MEMBERS_NAV_ITEM.name}
-                            >
-                                <Link href={MEMBERS_NAV_ITEM.href} onClick={irPara(MEMBERS_NAV_ITEM.href)}>
-                                    <NavIcon icon={MEMBERS_NAV_ITEM.icon} />
-                                    <span>{MEMBERS_NAV_ITEM.name}</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
+                        {comMembros ? (
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={membersActive}
+                                    tooltip={MEMBERS_NAV_ITEM.name}
+                                >
+                                    <Link href={MEMBERS_NAV_ITEM.href} onClick={irPara(MEMBERS_NAV_ITEM.href)}>
+                                        <NavIcon icon={MEMBERS_NAV_ITEM.icon} />
+                                        <span>{MEMBERS_NAV_ITEM.name}</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        ) : null}
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 asChild

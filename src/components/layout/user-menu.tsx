@@ -15,6 +15,8 @@ import { ACCOUNT_MENU_LINK_ITEMS } from "@/components/layout/account-menu-links"
 import { ROUTES } from "@/config/navigation"
 import { microIconFor } from "@/config/mobile-navigation"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { useWorkspace } from "@/components/workspace-provider"
+import { itensDeNavegacaoPara } from "@/lib/papeis/rotas-do-convidado"
 
 interface UserMenuProps {
     children: React.ReactNode
@@ -22,8 +24,10 @@ interface UserMenuProps {
 
 export function UserMenu({ children }: UserMenuProps) {
     const { signOut } = useAuth()
+    const { papel } = useWorkspace()
 
-    const dropdownLinkItems = ACCOUNT_MENU_LINK_ITEMS.filter(
+    // O convidado (Bloco 7A) fica só com Minha conta: Planos e o Cofre não são da lista dele.
+    const dropdownLinkItems = itensDeNavegacaoPara(papel, ACCOUNT_MENU_LINK_ITEMS).filter(
         ({ href }) =>
             href !== ROUTES.SETTINGS && href !== ROUTES.MEMBERS
     )

@@ -9,7 +9,7 @@ describe("a página Você", () => {
         expect(ROTA).toContain("<AdiarMontagem fallback={<Loading />}>")
     })
     it("os grupos vêm da regra e das abas que saíram", () => {
-        expect(PAGINA).toContain("getVoceGroups(useAbasFora())")
+        expect(PAGINA).toContain("getVoceGroups(useAbasFora(), useWorkspace().papel)")
         expect(PAGINA).toContain('<VoceAvatar size="xl" />')
     })
     it("cada linha é um link com ícone mini, nome e chevron", () => {

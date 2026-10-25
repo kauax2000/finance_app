@@ -1,5 +1,6 @@
 "use client"
 
+import { ConvidadoRouteGuard } from "@/components/layout/convidado-route-guard"
 import { SidebarAppShell } from "@/components/layout/sidebar-app-shell"
 
 export default function AppLayoutClient({
@@ -11,7 +12,7 @@ export default function AppLayoutClient({
 }) {
     return (
         <SidebarAppShell defaultSidebarOpen={defaultSidebarOpen}>
-            {children}
+            <ConvidadoRouteGuard>{children}</ConvidadoRouteGuard>
         </SidebarAppShell>
     )
 }

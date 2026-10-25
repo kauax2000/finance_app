@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { ROUTES } from "@/config/navigation"
-import { getVoceGroups, isVoceTabActive, mobileHeaderFilterFor, voceBackHref } from "@/config/mobile-navigation"
+import { getMobileNavTabs, getVoceGroups, isVoceTabActive, mobileHeaderFilterFor, voceBackHref } from "@/config/mobile-navigation"
 import { arquivosTsx, lerFonte } from "@/test/fonte"
 
 const hrefs = (g: ReturnType<typeof getVoceGroups>[number]) => g.items.map((i) => i.href)
@@ -39,6 +39,27 @@ describe("a página Você", () => {
         expect(voceBackHref(`${ROUTES.SETTINGS}/aparencia`)).toBeUndefined()
         expect(voceBackHref(ROUTES.ACCOUNT_SESSIONS)).toBeUndefined()
         expect(voceBackHref(ROUTES.DASHBOARD_CATEGORIES)).toBeUndefined()
+    })
+})
+
+describe("o telefone do convidado (Bloco 7A)", () => {
+    const daCasa = [ROUTES.BILLS, ROUTES.PREVISAO, ROUTES.SUBSCRIPTIONS, ROUTES.MEMBERS]
+
+    it("a barra não tem Orçamento, Previsão, Contas nem Membros", () => {
+        const abas = getMobileNavTabs("guest").map((t) => t.href)
+        expect(abas).toEqual([ROUTES.DASHBOARD, ROUTES.TRANSACTIONS, ROUTES.DASHBOARD_CATEGORIES])
+        for (const href of daCasa) expect(abas).not.toContain(href)
+    })
+
+    it("a página Você não lista Assinaturas, Contas a pagar nem Membros", () => {
+        const [carteira, conta] = getVoceGroups([], "guest")
+        expect(hrefs(carteira)).toEqual([ROUTES.CREDIT_CARDS])
+        expect(hrefs(conta)).toEqual([ROUTES.ACCOUNT, ROUTES.SETTINGS])
+        for (const href of daCasa) expect([...hrefs(carteira), ...hrefs(conta)]).not.toContain(href)
+    })
+
+    it("o adulto continua com tudo", () => {
+        expect(getVoceGroups([], "member")).toEqual(getVoceGroups([]))
     })
 })
 

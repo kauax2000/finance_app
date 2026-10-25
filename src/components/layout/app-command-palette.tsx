@@ -52,6 +52,7 @@ import {
     useQuickCreateTransaction,
 } from "@/components/layout/quick-actions"
 import { TELAS_BUSCAVEIS } from "@/components/layout/app-search-sources"
+import { itensDeNavegacaoPara, rotaPermitidaAoConvidado } from "@/lib/papeis/rotas-do-convidado"
 import type { HeroIcon } from "@/types/navigation"
 import {
     ROUTES,
@@ -205,6 +206,13 @@ type Acao = {
 
 const MAX_IDS_NA_BUSCA = 50
 
+/**
+ * O que o convidado (Bloco 7A) acha: as telas e os lançamentos dele, as
+ * categorias e as carteiras. Os cartões levam à fatura, e parcelas,
+ * assinaturas, contas e membros são da casa.
+ */
+const ESCOPOS_DO_CONVIDADO = new Set<EscopoId>(["telas", "acoes", "transacoes", "categorias", "carteiras"])
+
 function PaletteBody({ close }: { close: () => void }) {
     const router = useRouter()
     const [query, setQuery] = React.useState("")
@@ -212,11 +220,14 @@ function PaletteBody({ close }: { close: () => void }) {
     const { recents, add } = useCommandRecents(RECENTES)
 
     const pages = useCommandPages()
+    const { currentWorkspaceId, workspaces, setCurrentWorkspaceId, papel } = useWorkspace()
+    const convidado = papel === "guest"
+    const lugarDele = (e: Escopo | null) => (e && convidado && !ESCOPOS_DO_CONVIDADO.has(e.id) ? null : e)
     const escopo = pages.current as EscopoId | undefined
     const rotulo = ESCOPOS.find((e) => e.id === escopo)?.rotulo
     // Dentro do escopo, "/" é texto: o comando só é lido na raiz.
     const comando = escopo ? null : lerComando(query)
-    const lugares = comando ? casarEscopos(comando.parcial) : []
+    const lugares = comando ? casarEscopos(comando.parcial).filter((e) => lugarDele(e)) : []
 
     const inputRef = React.useRef<HTMLInputElement>(null)
     const restoRef = React.useRef("")
@@ -239,24 +250,25 @@ function PaletteBody({ close }: { close: () => void }) {
     /** O atalho de quem digita: o comando inteiro e um espaço entram direto. */
     const digitar = (valor: string) => {
         const lido = escopo ? null : lerComando(valor)
-        const exato = lido?.fechado ? escopoExato(lido.parcial) : null
+        const exato = lido?.fechado ? lugarDele(escopoExato(lido.parcial)) : null
         if (exato && lido) entrar(exato, lido.resto)
         else setQuery(valor)
     }
 
     const { user } = useAuth()
-    const { currentWorkspaceId, workspaces, setCurrentWorkspaceId } = useWorkspace()
     const workspaceId = user && currentWorkspaceId ? currentWorkspaceId : null
+    // O que é da casa nem é pedido pelo convidado (a RLS devolveria vazio).
+    const daCasaId = convidado ? null : workspaceId
     // Categorias e cartões: as mesmas chaves que o `GlobalShellDialogsProvider`
     // já carrega, então é leitura do cache. As outras listas ligam aqui, com a
     // paleta aberta (este corpo só monta com ela), para o nome de um recente
     // se resolver mesmo com o campo vazio.
     const categorias = useCategoriesQuery(workspaceId)
     const cartoes = useCreditCardsQuery(workspaceId)
-    const parcelas = useInstallmentPlansQuery(workspaceId)
-    const assinaturas = useSubscriptionsQuery(workspaceId)
-    const membros = useMemberDirectoryQuery(workspaceId)
-    const contas = useBillsListQuery(workspaceId, true)
+    const parcelas = useInstallmentPlansQuery(daCasaId)
+    const assinaturas = useSubscriptionsQuery(daCasaId)
+    const membros = useMemberDirectoryQuery(daCasaId)
+    const contas = useBillsListQuery(daCasaId, !convidado)
 
     // A consulta de transações espera a pessoa parar de digitar. O texto que
     // sobra do termo também casa a categoria e o cartão pelo nome, e os ids
@@ -341,7 +353,7 @@ function PaletteBody({ close }: { close: () => void }) {
     }
 
     /** As ações do "+ Adicionar" e as duas da casca, que só existem com ela. */
-    const acoes: Acao[] = [
+    const todasAsAcoes: Acao[] = [
         { id: "expense", label: "Nova despesa", icon: ArrowTrendingDownIcon, palavras: ["gasto", "saída"], executar: () => criarTransacao("expense") },
         { id: "installment", label: "Nova parcelada", icon: CalendarDaysIcon, palavras: [], executar: () => criarTransacao("installment") },
         { id: "income", label: "Nova receita", icon: ArrowTrendingUpIcon, palavras: ["entrada", "salário"], executar: () => criarTransacao("income") },
@@ -353,10 +365,15 @@ function PaletteBody({ close }: { close: () => void }) {
               ]
             : []),
     ]
+    // O convidado lança (despesa, parcelada, receita); assinatura, categoria e cartão são do adulto.
+    const acoes = convidado
+        ? todasAsAcoes.filter((a) => a.id === "expense" || a.id === "installment" || a.id === "income")
+        : todasAsAcoes
+    const telasBuscaveis = itensDeNavegacaoPara(papel, TELAS_BUSCAVEIS)
 
     /** O nome de todo destino que pode virar recente, pelo `href`. */
     const destinos = new Map<string, string>([
-        ...TELAS_BUSCAVEIS.map((tela) => [tela.href, tela.name] as const),
+        ...telasBuscaveis.map((tela) => [tela.href, tela.name] as const),
         ...(categorias.data ?? []).map(
             (c) => [categoryDetailPath(c.id), c.name] as const,
         ),
@@ -373,7 +390,7 @@ function PaletteBody({ close }: { close: () => void }) {
     ])
     const recentes = recents.flatMap((href) => {
         const label = destinos.get(href)
-        return label ? [{ href, label }] : []
+        return label && (!convidado || rotaPermitidaAoConvidado(href)) ? [{ href, label }] : []
     })
 
     // O que cada grupo mostra. Com o "/" aberto, ou fora do escopo dele, nada.
@@ -386,16 +403,16 @@ function PaletteBody({ close }: { close: () => void }) {
         chave: (item: T) => { valor: string; palavras?: string[] },
         semTexto: readonly T[] = [],
     ): readonly T[] => {
-        if (comando || (escopo && escopo !== id)) return []
+        if (comando || (escopo && escopo !== id) || (convidado && !ESCOPOS_DO_CONVIDADO.has(id))) return []
         const lista = itens ?? []
         if (q) return ranquear(lista, q, chave, escopo ? POR_ESCOPO : POR_GRUPO)
         return escopo ? lista.slice(0, POR_ESCOPO) : semTexto
     }
     const telas = achar(
         "telas",
-        TELAS_BUSCAVEIS,
+        telasBuscaveis,
         (t) => ({ valor: t.name, palavras: t.palavras }),
-        TELAS_BUSCAVEIS.filter((t) => !recentes.some((r) => r.href === t.href)),
+        telasBuscaveis.filter((t) => !recentes.some((r) => r.href === t.href)),
     )
     const acoesVistas = achar("acoes", acoes, (a) => ({ valor: a.label, palavras: a.palavras }), acoes)
     const cartoesVistos = achar("cartoes", cartoes.data, (c) => ({ valor: c.name, palavras: [c.last_four] }))

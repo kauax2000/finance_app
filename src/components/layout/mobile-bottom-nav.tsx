@@ -17,6 +17,7 @@ import { BottomBar, BottomBarTab } from "@/components/ui/bottom-bar"
 import { getMobileNavTabs, isVoceTabActive, solidIconFor } from "@/config/mobile-navigation"
 import { isExactPath, ROUTES } from "@/config/navigation"
 import { quemSai } from "@/lib/overflow"
+import { useWorkspace } from "@/components/workspace-provider"
 
 function isMobileNavTabActive(pathname: string, href: string): boolean {
     if (href === ROUTES.DASHBOARD_CATEGORIES) {
@@ -90,7 +91,7 @@ function useAbasQueSaem(nomes: string[]) {
 
 export function MobileBottomNav() {
     const pathname = usePathname()
-    const navTabs = getMobileNavTabs()
+    const navTabs = getMobileNavTabs(useWorkspace().papel)
     const { raiz, saem } = useAbasQueSaem(navTabs.map((item) => item.name))
     const naBarra = navTabs.slice(0, navTabs.length - saem)
     const noMais = navTabs.slice(navTabs.length - saem)

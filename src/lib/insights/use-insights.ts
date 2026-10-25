@@ -4,6 +4,7 @@ import { useCallback, useEffect } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { useAuth } from "@/components/providers"
+import { useWorkspace } from "@/components/workspace-provider"
 import type { DadosDaPrevisao } from "@/lib/previsao/tipos"
 import { seguroParaGastar } from "@/lib/previsao/fluxo"
 import { supabase } from "@/lib/supabase"
@@ -90,11 +91,13 @@ export function useInsights(workspaceId: string | null) {
 
 /**
  * O seguro baixo é produzido aqui, ao abrir o Painel no mês corrente: uma vez por sessão, carteira
- * e mês. A RPC ignora o repetido e o tipo silenciado.
+ * e mês. A RPC ignora o repetido e o tipo silenciado. O seguro é da casa: o convidado (Bloco 7A)
+ * não registra, e com o papel a caminho ninguém registra.
  */
 export function useSeguroBaixo(workspaceId: string | null, dados: DadosDaPrevisao | null, aoRegistrar: () => void) {
+    const { isAdulto } = useWorkspace()
     useEffect(() => {
-        if (!workspaceId || !dados) return
+        if (!workspaceId || !dados || !isAdulto) return
         const ym = dados.hojeYmd.slice(0, 7)
         const id = `${workspaceId}:${ym}`
         if (segurosRegistrados.has(id)) return
@@ -112,5 +115,5 @@ export function useSeguroBaixo(workspaceId: string | null, dados: DadosDaPrevisa
             .then(({ data, error }) => {
                 if (!error && data) aoRegistrar()
             })
-    }, [workspaceId, dados, aoRegistrar])
+    }, [workspaceId, dados, aoRegistrar, isAdulto])
 }

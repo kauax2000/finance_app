@@ -23,6 +23,7 @@ import { JornadaCartaoWireframe } from "@/components/wireframe/jornada-cartao-wi
 import { AConferirContagemWireframe } from "@/components/wireframe/a-conferir-contagem-wireframe"
 import { SeguroDoPainelWireframe } from "@/components/wireframe/seguro-para-gastar-wireframe"
 import { InsightsDoPainel } from "@/components/wireframe/insights-wireframe"
+import { ConvidadoPainelWireframe } from "@/components/wireframe/convidado-painel-wireframe"
 import { DashboardPaymentsCalendar } from "@/components/dashboard/dashboard-payments-calendar"
 import { DashboardOpenInvoices } from "@/components/dashboard/dashboard-open-invoices"
 import { DashboardInstallmentsEndingSoon } from "@/components/dashboard/dashboard-installments-ending-soon"
@@ -94,7 +95,19 @@ function previewFrom(e: PaymentEvent | UpcomingPaymentRow): DashboardPaymentPrev
     }
 }
 
+/**
+ * O convidado (Bloco 7A) tem o Painel dele, em wireframe: o limite, o total do
+ * mês e as transações dele. Com o papel a caminho, o esqueleto da rota espera,
+ * para o Painel da casa não montar (e pedir o que é da casa) para quem é convidado.
+ */
 export default function DashboardPageClient() {
+    const { papel, loading } = useWorkspace()
+    if (papel === "guest") return <ConvidadoPainelWireframe />
+    if (papel === null && loading) return <DashboardPageSkeleton />
+    return <PainelDaCasa />
+}
+
+function PainelDaCasa() {
     const { loading: authLoading } = useAuth()
     const {
         currentWorkspaceId,

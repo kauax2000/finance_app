@@ -5,6 +5,7 @@ import { useAbasFora } from "@/components/layout/abas-fora"
 import { VoceAvatar } from "@/components/layout/voce-avatar"
 import { MePageSkeleton } from "@/components/me/me-page-skeleton"
 import { useAuth } from "@/components/providers"
+import { useWorkspace } from "@/components/workspace-provider"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import {
@@ -20,7 +21,7 @@ import { getVoceGroups, miniIconFor } from "@/config/mobile-navigation"
 
 export default function MePage() {
     const { user, loading, profileReady } = useAuth()
-    const grupos = getVoceGroups(useAbasFora())
+    const grupos = getVoceGroups(useAbasFora(), useWorkspace().papel)
 
     const userName =
         user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuário"

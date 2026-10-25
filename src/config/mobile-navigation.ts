@@ -60,6 +60,8 @@ import {
     MAIN_NAVIGATION,
     ROUTES,
 } from "@/config/navigation"
+import { itensDeNavegacaoPara } from "@/lib/papeis/rotas-do-convidado"
+import type { WorkspaceRole } from "@/lib/supabase"
 import type { HeroIcon, NavigationItem } from "@/types/navigation"
 
 /**
@@ -155,8 +157,9 @@ function resolveNavItems(hrefs: readonly string[]): NavigationItem[] {
     })
 }
 
-export function getMobileNavTabs(): NavigationItem[] {
-    return resolveNavItems(MOBILE_TAB_NAV)
+/** As abas da barra; o convidado vê só as da lista dele (Bloco 7A). */
+export function getMobileNavTabs(papel?: WorkspaceRole | null): NavigationItem[] {
+    return itensDeNavegacaoPara(papel, resolveNavItems(MOBILE_TAB_NAV))
 }
 
 /** As telas da navegação que não são abas da barra: a página Você as lista. */
@@ -232,9 +235,10 @@ export type VoceGroup = {
  * fazia: em cima a carteira (as abas que não couberam na barra, depois as telas
  * fixadas), embaixo a conta e, por último, as configurações. Planos e pagamentos
  * mora em Minha conta, no telefone. `abasFora` são os `href` das abas que a barra
- * não coube; a ordem delas é a da barra.
+ * não coube; a ordem delas é a da barra. O convidado (Bloco 7A) vê só as telas
+ * da lista dele: sem Assinaturas, Contas a pagar, Membros nem o Cofre.
  */
-export function getVoceGroups(abasFora: readonly string[]): VoceGroup[] {
+export function getVoceGroups(abasFora: readonly string[], papel?: WorkspaceRole | null): VoceGroup[] {
     const fixadas = getMobileAccountMenuPinnedNavItems()
     const telas = [
         ...getMobileNavTabs()
@@ -244,7 +248,7 @@ export function getVoceGroups(abasFora: readonly string[]): VoceGroup[] {
     ].filter((item, i, todas) => todas.findIndex((o) => o.href === item.href) === i)
     const configuracoes = telas.filter((item) => item.href === ROUTES.SETTINGS)
 
-    return [
+    const grupos: VoceGroup[] = [
         {
             id: "carteira",
             label: "Carteira",
@@ -261,6 +265,7 @@ export function getVoceGroups(abasFora: readonly string[]): VoceGroup[] {
             ],
         },
     ]
+    return grupos.map((g) => ({ ...g, items: itensDeNavegacaoPara(papel, g.items) }))
 }
 
 /**

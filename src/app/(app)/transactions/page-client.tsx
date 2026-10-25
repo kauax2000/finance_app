@@ -19,6 +19,7 @@ import {
 import { TransactionNewSplitButton } from "@/components/transactions/transaction-new-split-button"
 import { TransactionsToolbar } from "@/components/transactions/transactions-toolbar"
 import { QuickActionResourceLinks } from "@/components/layout/quick-actions"
+import { useWorkspace } from "@/components/workspace-provider"
 import { TransactionsActiveFiltersChips } from "@/components/transactions/transactions-active-filters-chips"
 import { TransactionsTable } from "@/components/transactions/transactions-table"
 import { useTransactionsListController } from "@/components/transactions/use-transactions-list-controller"
@@ -193,6 +194,8 @@ export default function TransactionsPage() {
     // `?frase=` (o compartilhar do Android, `share_target`) abre a criação com
     // a frase já escrita, sem aplicar, e sai da URL.
     const shell = useGlobalShellDialogsOptional()
+    // A assinatura é da casa: o convidado (Bloco 7A) só lança.
+    const convidado = useWorkspace().papel === "guest"
     useEffect(() => {
         const frase = consumirParametroFrase(searchParams)
         if (frase == null || !shell) return
@@ -393,12 +396,14 @@ export default function TransactionsPage() {
                             openDialog(undefined, mode)
                         }}
                         menuFooter={
-                            <>
-                                <DropdownMenuSeparator />
-                                <QuickActionResourceLinks
-                                    onCloseMenu={() => {}}
-                                />
-                            </>
+                            convidado ? undefined : (
+                                <>
+                                    <DropdownMenuSeparator />
+                                    <QuickActionResourceLinks
+                                        onCloseMenu={() => {}}
+                                    />
+                                </>
+                            )
                         }
                     />
                 )}
