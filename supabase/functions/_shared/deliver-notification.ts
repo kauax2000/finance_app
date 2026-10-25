@@ -45,7 +45,7 @@ export type DeliverNotificationResult = {
 }
 
 const PREFS_COLUMNS =
-  'notify_email, notify_in_app, notify_push, notify_transactions, notify_budget, notify_promotions, notify_credit_cards, notify_credit_card_calendar, notify_bills, notify_review'
+  'notify_email, notify_in_app, notify_push, notify_transactions, notify_budget, notify_promotions, notify_credit_cards, notify_credit_card_calendar, notify_bills, notify_review, notify_insights'
 
 function normalizePrefsRow(prefs: Record<string, unknown>): WorkspaceNotificationPrefs {
   return {
@@ -59,6 +59,7 @@ function normalizePrefsRow(prefs: Record<string, unknown>): WorkspaceNotificatio
     notify_credit_card_calendar: prefs.notify_credit_card_calendar !== false,
     notify_bills: prefs.notify_bills !== false,
     notify_review: prefs.notify_review !== false,
+    notify_insights: prefs.notify_insights !== false,
   }
 }
 

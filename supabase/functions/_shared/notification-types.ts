@@ -6,6 +6,7 @@ export type NotificationEventType =
   | 'credit_card'
   | 'bill'
   | 'review'
+  | 'insight'
 
 export type WorkspaceNotificationPrefs = {
   notify_email: boolean
@@ -18,6 +19,7 @@ export type WorkspaceNotificationPrefs = {
   notify_credit_card_calendar: boolean
   notify_bills: boolean
   notify_review: boolean
+  notify_insights: boolean
 }
 
 export const DEFAULT_NOTIFICATION_PREFS: WorkspaceNotificationPrefs = {
@@ -31,6 +33,7 @@ export const DEFAULT_NOTIFICATION_PREFS: WorkspaceNotificationPrefs = {
   notify_credit_card_calendar: true,
   notify_bills: true,
   notify_review: true,
+  notify_insights: true,
 }
 
 export function isTypeAllowedForPrefs(
@@ -43,6 +46,7 @@ export function isTypeAllowedForPrefs(
   if (type === 'credit_card') return !!prefs.notify_credit_cards
   if (type === 'bill') return prefs.notify_bills !== false
   if (type === 'review') return prefs.notify_review !== false
+  if (type === 'insight') return prefs.notify_insights !== false
   return true
 }
 

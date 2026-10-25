@@ -16,6 +16,7 @@ export type WorkspaceMemberNotificationPrefs = {
     notify_credit_card_calendar: boolean
     notify_bills: boolean
     notify_review: boolean
+    notify_insights: boolean
     created_at: string
     updated_at: string
 }
@@ -33,6 +34,7 @@ export type WorkspaceNotificationPrefsPatch = Partial<
         | "notify_credit_card_calendar"
         | "notify_bills"
         | "notify_review"
+        | "notify_insights"
     >
 >
 
@@ -50,6 +52,7 @@ export const DEFAULT_WORKSPACE_NOTIFICATION_PREFS: Omit<
     notify_credit_card_calendar: true,
     notify_bills: true,
     notify_review: true,
+    notify_insights: true,
 }
 
 const INSERT_DEFAULTS = {
@@ -64,6 +67,7 @@ const INSERT_DEFAULTS = {
         DEFAULT_WORKSPACE_NOTIFICATION_PREFS.notify_credit_card_calendar,
     notify_bills: DEFAULT_WORKSPACE_NOTIFICATION_PREFS.notify_bills,
     notify_review: DEFAULT_WORKSPACE_NOTIFICATION_PREFS.notify_review,
+    notify_insights: DEFAULT_WORKSPACE_NOTIFICATION_PREFS.notify_insights,
 } as const
 
 export async function getWorkspaceNotificationPrefs(
@@ -72,7 +76,7 @@ export async function getWorkspaceNotificationPrefs(
 ): Promise<WorkspaceMemberNotificationPrefs | null> {
     const { data, error } = await supabase
         .from("workspace_member_notification_prefs")
-        .select("created_at, notify_bills, notify_budget, notify_credit_card_calendar, notify_credit_cards, notify_email, notify_in_app, notify_promotions, notify_push, notify_review, notify_transactions, updated_at, user_id, workspace_id")
+        .select("created_at, notify_bills, notify_budget, notify_credit_card_calendar, notify_credit_cards, notify_email, notify_in_app, notify_insights, notify_promotions, notify_push, notify_review, notify_transactions, updated_at, user_id, workspace_id")
         .eq("user_id", userId)
         .eq("workspace_id", workspaceId)
         .maybeSingle()
@@ -100,7 +104,7 @@ export async function ensureWorkspaceNotificationPrefsRow(
             user_id: userId,
             ...INSERT_DEFAULTS,
         })
-        .select("created_at, notify_bills, notify_budget, notify_credit_card_calendar, notify_credit_cards, notify_email, notify_in_app, notify_promotions, notify_push, notify_review, notify_transactions, updated_at, user_id, workspace_id")
+        .select("created_at, notify_bills, notify_budget, notify_credit_card_calendar, notify_credit_cards, notify_email, notify_in_app, notify_insights, notify_promotions, notify_push, notify_review, notify_transactions, updated_at, user_id, workspace_id")
         .single()
 
     if (error) {
@@ -127,7 +131,7 @@ export async function patchWorkspaceNotificationPrefs(
         .update(patch)
         .eq("user_id", userId)
         .eq("workspace_id", workspaceId)
-        .select("created_at, notify_bills, notify_budget, notify_credit_card_calendar, notify_credit_cards, notify_email, notify_in_app, notify_promotions, notify_push, notify_review, notify_transactions, updated_at, user_id, workspace_id")
+        .select("created_at, notify_bills, notify_budget, notify_credit_card_calendar, notify_credit_cards, notify_email, notify_in_app, notify_insights, notify_promotions, notify_push, notify_review, notify_transactions, updated_at, user_id, workspace_id")
         .single()
 
     if (error) {

@@ -17,6 +17,7 @@ const basePrefs: WorkspaceNotificationPrefs = {
     notify_credit_card_calendar: true,
     notify_bills: true,
     notify_review: true,
+    notify_insights: true,
 }
 
 describe("resolveNotificationHref", () => {
@@ -61,6 +62,13 @@ describe("isTypeAllowedForPrefs", () => {
         expect(
             isTypeAllowedForPrefs("budget", { ...basePrefs, notify_budget: false })
         ).toBe(false)
+    })
+
+    it("blocks insight when notify_insights is false", () => {
+        expect(
+            isTypeAllowedForPrefs("insight", { ...basePrefs, notify_insights: false })
+        ).toBe(false)
+        expect(isTypeAllowedForPrefs("insight", basePrefs)).toBe(true)
     })
 
     it("allows system regardless of type toggles", () => {

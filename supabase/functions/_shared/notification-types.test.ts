@@ -2,6 +2,7 @@ import { assertEquals } from 'jsr:@std/assert@1.0.19'
 import {
   canaisDoAviso,
   DEFAULT_NOTIFICATION_PREFS,
+  isTypeAllowedForPrefs,
   resolveNotificationHref,
 } from './notification-types.ts'
 
@@ -29,4 +30,9 @@ Deno.test('canaisDoAviso: essencial manda in-app e e-mail mesmo desligados; push
 Deno.test('canaisDoAviso: sem essencial, os três seguem as preferências', () => {
   const p = { ...DEFAULT_NOTIFICATION_PREFS, notify_email: false, notify_push: true }
   assertEquals(canaisDoAviso(p, false), { in_app: true, email: false, push: true })
+})
+
+Deno.test("isTypeAllowedForPrefs: 'insight' segue notify_insights, ligado por padrão", () => {
+  assertEquals(isTypeAllowedForPrefs('insight', DEFAULT_NOTIFICATION_PREFS), true)
+  assertEquals(isTypeAllowedForPrefs('insight', { ...DEFAULT_NOTIFICATION_PREFS, notify_insights: false }), false)
 })

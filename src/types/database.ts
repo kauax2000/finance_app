@@ -896,6 +896,86 @@ export type Database = {
         }
         Relationships: []
       }
+      insights: {
+        Row: {
+          created_at: string
+          dedupe_key: string
+          id: string
+          kind: string
+          payload: Json
+          status: string
+          updated_at: string
+          user_id: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          dedupe_key: string
+          id?: string
+          kind: string
+          payload?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          dedupe_key?: string
+          id?: string
+          kind?: string
+          payload?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insights_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      insights_push_semana: {
+        Row: {
+          enviados: number
+          semana: string
+          user_id: string
+        }
+        Insert: {
+          enviados?: number
+          semana: string
+          user_id: string
+        }
+        Update: {
+          enviados?: number
+          semana?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      insights_silenciados: {
+        Row: {
+          criado_em: string
+          kind: string
+          user_id: string
+        }
+        Insert: {
+          criado_em?: string
+          kind: string
+          user_id: string
+        }
+        Update: {
+          criado_em?: string
+          kind?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string
@@ -1474,6 +1554,7 @@ export type Database = {
           notify_credit_cards: boolean
           notify_email: boolean
           notify_in_app: boolean
+          notify_insights: boolean
           notify_promotions: boolean
           notify_push: boolean
           notify_review: boolean
@@ -1490,6 +1571,7 @@ export type Database = {
           notify_credit_cards?: boolean
           notify_email?: boolean
           notify_in_app?: boolean
+          notify_insights?: boolean
           notify_promotions?: boolean
           notify_push?: boolean
           notify_review?: boolean
@@ -1506,6 +1588,7 @@ export type Database = {
           notify_credit_cards?: boolean
           notify_email?: boolean
           notify_in_app?: boolean
+          notify_insights?: boolean
           notify_promotions?: boolean
           notify_push?: boolean
           notify_review?: boolean
@@ -1814,6 +1897,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      marcar_insight: {
+        Args: { p_id: string; p_status: string }
+        Returns: undefined
+      }
       meu_plano: { Args: never; Returns: Json }
       next_subscription_billing_date:
         | { Args: { p_from: string; p_interval: string }; Returns: string }
@@ -1848,6 +1935,19 @@ export type Database = {
         }
         Returns: undefined
       }
+      registrar_insight: {
+        Args: {
+          p_dedupe_key: string
+          p_kind: string
+          p_payload: Json
+          p_workspace_id: string
+        }
+        Returns: string
+      }
+      reivindicar_push_de_insight: {
+        Args: { p_semana: string; p_user_id: string }
+        Returns: boolean
+      }
       revoke_capture_token: { Args: { p_id: string }; Returns: undefined }
       rpc_fetch_bills_page_bundle: {
         Args: { p_workspace_id: string }
@@ -1869,6 +1969,29 @@ export type Database = {
       run_subscription_billing: { Args: never; Returns: number }
       tem_cobertura: { Args: { p_user_id: string }; Returns: boolean }
       tem_plano_proprio: { Args: { p_user_id: string }; Returns: boolean }
+      virar_assinatura: {
+        Args: {
+          p_card_id: string
+          p_category_id: string
+          p_dia: number
+          p_insight_id: string
+          p_nome: string
+          p_payment_method: string
+          p_valor: number
+        }
+        Returns: string
+      }
+      virar_conta: {
+        Args: {
+          p_category_id: string
+          p_dia: number
+          p_insight_id: string
+          p_next_due_date: string
+          p_nome: string
+          p_valor_variavel: boolean
+        }
+        Returns: string
+      }
       workspace_has_members: {
         Args: { p_workspace_id: string }
         Returns: boolean
