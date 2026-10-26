@@ -6,7 +6,8 @@
  *
  * Ordem: método → JWT → config → corpo → nome e CPF → convidado → linha →
  * reivindicação da linha → cliente do Asaas → o que já está aberto no Asaas
- * (Ruling 7) → cobrança nova ou reusada → linha gravada.
+ * (Ruling 7) → cobrança nova ou reusada → parcelamento registrado (Ruling 9) →
+ * linha gravada.
  *
  * Contra cobrança dupla: a linha é reivindicada (compare-and-swap no `status`
  * e no `checkout_criado_em` lidos) antes de qualquer chamada ao Asaas, e toda
@@ -220,9 +221,11 @@ async function atender(req: Request): Promise<Response> {
 
   let ref: string
   let url: string
+  let parcelamento: string | null
   if (reusar) {
     ref = reusar.id
     url = reusar.invoiceUrl
+    parcelamento = reusar.installment
   } else {
     const cobranca = await criarCobranca(cfg, {
       cliente,
@@ -239,6 +242,20 @@ async function atender(req: Request): Promise<Response> {
     }
     ref = cobranca.dados.id
     url = cobranca.dados.invoiceUrl
+    parcelamento = cobranca.dados.installment
+  }
+
+  // Ruling 9: o webhook só ativa parcelamento registrado. Ele entra antes de a pessoa receber o link.
+  if (!parcelamento) {
+    console.error('billing-checkout: cobrança sem parcelamento', linha.id, ref)
+    await soltar()
+    return SEM_RESPOSTA()
+  }
+  const { error: pErr } = await admin
+    .from('billing_parcelamentos').insert({ installment: parcelamento, subscription_id: linha.id })
+  if (pErr && pErr.code !== '23505') {
+    await soltar()
+    throw new Error(`billing-checkout: parcelamento: ${pErr.message}`)
   }
 
   // Um `past_due` (ou `active` vencido, Ruling 6) segue no status lido: nunca vira `pending`.

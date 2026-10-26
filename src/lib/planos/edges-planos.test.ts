@@ -144,6 +144,29 @@ describe("Edge billing-checkout", () => {
 
 const WEBHOOK = "supabase/functions/asaas-webhook/index.ts"
 
+/** Cada chamada `console.…(…)` inteira, com os argumentos em várias linhas. */
+function chamadasDeLog(f: string): string[] {
+    const chamadas: string[] = []
+    for (const m of f.matchAll(/console\.\w+\(|internalError\(/g)) {
+        let fundo = 0
+        let fim = m.index!
+        for (; fim < f.length; fim++) {
+            if (f[fim] === "(") fundo++
+            else if (f[fim] === ")" && --fundo === 0) break
+        }
+        chamadas.push(f.slice(m.index!, fim + 1))
+    }
+    return chamadas
+}
+
+/** O corpo de uma função de topo do arquivo, até a próxima. */
+function funcao(f: string, nome: string): string {
+    const inicio = f.indexOf(`async function ${nome}(`)
+    expect(inicio, nome).toBeGreaterThan(-1)
+    const proxima = f.indexOf("\nasync function ", inicio + 1)
+    return f.slice(inicio, proxima === -1 ? undefined : proxima)
+}
+
 describe("Edge asaas-webhook", () => {
     it("confere o token do Asaas antes de tocar no banco, e só o token errado volta 401", () => {
         const f = fonte(WEBHOOK)
@@ -173,28 +196,58 @@ describe("Edge asaas-webhook", () => {
         expect(f).toContain("checkout_url: null")
     })
 
-    it("a gravação da linha é condicional ao updated_at lido", () => {
+    it("a gravação da linha é condicional ao estado lido", () => {
         const f = fonte(WEBHOOK)
         expect(f).toContain(".eq('updated_at', linha.updated_at)")
+        expect(f).toContain(".eq('status', linha.status)")
+        expect(f).toContain("for (const col of ['provider_ref', 'current_period_end'] as const)")
+        expect(f).toContain("q = linha[col] === null ? q.is(col, null) : q.eq(col, linha[col])")
+    })
+
+    it("Ruling 9: decide pelo registro dos parcelamentos — desconhecido é ignorado, já ativado é mensal", () => {
+        const f = fonte(WEBHOOK)
+        const tratar = funcao(f, "tratar")
+        const registro = tratar.indexOf(".from('billing_parcelamentos')")
+        expect(registro).toBeGreaterThan(-1)
+        expect(tratar.indexOf("efeitoDoEvento(")).toBeGreaterThan(registro)
+        expect(tratar).toContain("console.error('asaas-webhook: parcelamento desconhecido'")
+        expect(tratar).toContain("ignorado('parcelamento')")
+        expect(tratar).toContain("if (registro.ativado_em)")
+        // ativar marca o ativado_em, e o evento do provider_ref o conserta se faltou
+        expect(f).toContain("marcarAtivado(")
+        expect(f).toContain(".is('ativado_em', null)")
     })
 
     it("o erro de banco apaga o evento e volta 500, para o Asaas tentar de novo", () => {
         const f = fonte(WEBHOOK)
-        const apaga = f.indexOf(".from('billing_events').delete()")
-        expect(apaga).toBeGreaterThan(-1)
+        expect(f).toContain(".from('billing_events').delete()")
+        expect(f).toContain("await esquecer(id)")
         expect(f).toContain("json(500")
     })
 
-    it("Ruling 8: estorna o pagamento em dobro só depois do pagamentoEmDobro, e a falha apaga o evento", () => {
+    it("Ruling 8 e 10: estorna só depois do pagamentoEmDobro, lê o parcelamento antes, e nunca volta 500", () => {
         const f = fonte(WEBHOOK)
         const dobro = f.indexOf("pagamentoEmDobro(")
+        const busca = f.indexOf("buscarParcelamento(cfg")
         const estorno = f.indexOf("estornarParcelamento(cfg")
         expect(dobro).toBeGreaterThan(-1)
-        expect(estorno).toBeGreaterThan(dobro)
-        expect(f).toContain("installment !== linha.provider_ref")
-        const falha = f.slice(estorno, estorno + 600)
-        expect(falha).toContain("esquecer(")
-        expect(falha).toContain("json(500")
+        expect(busca).toBeGreaterThan(dobro)
+        expect(estorno).toBeGreaterThan(busca)
+        expect(f).toContain("payment.installment !== linha.provider_ref")
+        expect(f).toContain("jaEstornado(")
+        const estornar = funcao(f, "estornar")
+        // um problema no estorno fica pendente para o billing-daily, e a fila segue
+        expect(estornar).not.toContain("json(500")
+        expect(estornar).not.toContain("esquecer(")
+        expect(estornar).toContain("estorno_status: 'pendente'")
+        expect(estornar).toContain("estorno_status: 'feito'")
+        expect(estornar).toContain(".is('estorno_status', null)")
+        expect(estornar.indexOf("estorno_status: 'pendente'")).toBeLessThan(estornar.indexOf("buscarParcelamento(cfg"))
+        expect(estornar.indexOf("avisarDoEstorno(")).toBeGreaterThan(estornar.indexOf("estorno_status: 'feito'"))
+    })
+
+    it("o aviso do estorno é essencial, do tipo system, na carteira pessoal", () => {
+        const f = fonte(WEBHOOK)
         expect(f).toContain("Cobrança em dobro devolvida")
         expect(f).toContain("Recebemos um pagamento a mais pelo plano e já pedimos o estorno ao Asaas. O valor volta para o cartão em até 10 dias úteis.")
         expect(f).toContain("type: 'system'")
@@ -204,11 +257,24 @@ describe("Edge asaas-webhook", () => {
     })
 
     it("o CPF não vai a log", () => {
-        const f = fonte(WEBHOOK)
-        for (const l of f.split("\n").filter((l) => /console\.|internalError\(/.test(l))) expect(l).not.toMatch(/cpf/i)
+        const chamadas = chamadasDeLog(fonte(WEBHOOK))
+        expect(chamadas.length).toBeGreaterThan(5)
+        for (const c of chamadas) expect(c).not.toMatch(/cpf/i)
     })
 
     it("a Edge está no config sem JWT", () => {
         expect(lerFonte("supabase/config.toml")).toMatch(/\[functions\.asaas-webhook\]\s*\nverify_jwt = false/)
+    })
+})
+
+describe("Edge billing-checkout registra o parcelamento (Ruling 9)", () => {
+    it("grava em billing_parcelamentos o que cria ou reusa, antes de entregar o link", () => {
+        const f = fonte(CHECKOUT)
+        const registro = f.indexOf(".from('billing_parcelamentos').insert(")
+        expect(registro).toBeGreaterThan(f.indexOf("criarCobranca(cfg"))
+        expect(registro).toBeLessThan(f.indexOf("checkout_url: url"))
+        expect(f).toContain("subscription_id: linha.id")
+        expect(f).toContain("reusar.installment")
+        expect(f).toContain("cobranca.dados.installment")
     })
 })

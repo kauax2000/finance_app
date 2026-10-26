@@ -270,6 +270,41 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_parcelamentos: {
+        Row: {
+          ativado_em: string | null
+          criado_em: string
+          estorno_status: string | null
+          estorno_tentado_em: string | null
+          installment: string
+          subscription_id: string
+        }
+        Insert: {
+          ativado_em?: string | null
+          criado_em?: string
+          estorno_status?: string | null
+          estorno_tentado_em?: string | null
+          installment: string
+          subscription_id: string
+        }
+        Update: {
+          ativado_em?: string | null
+          criado_em?: string
+          estorno_status?: string | null
+          estorno_tentado_em?: string | null
+          installment?: string
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_parcelamentos_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "billing_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       billing_settings: {
         Row: {
           enforced_since: string | null

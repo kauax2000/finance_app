@@ -10,7 +10,9 @@ import {
   cpfValido,
   efeitoDoEvento,
   falhaNaRenovacao,
+  jaEstornado,
   pagamentoEmDobro,
+  type Parcelamento,
   type Mudanca,
   type Pagamento,
   PARCELAS,
@@ -529,28 +531,69 @@ Deno.test('triagemDasAbertas: outro valor, outro cliente, avulsa ou um segundo i
   ])
 })
 
-// pagamentoEmDobro (Ruling 8)
+// pagamentoEmDobro (Ruling 8, decidido pelo registro da Ruling 9)
 
-Deno.test('pagamentoEmDobro: outro parcelamento confirmado numa linha paga, fora da janela, é em dobro', () => {
-  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag(), sub(), em(-30 * DIA)), true)
-  assertEquals(pagamentoEmDobro('PAYMENT_RECEIVED', pag(), sub(), em(-2 * DIA - 1)), true)
+const reg = (x: Partial<Parcelamento> = {}): Parcelamento => ({
+  installment: 'inst-novo',
+  subscription_id: 'sub-1',
+  ativado_em: null,
+  estorno_status: null,
+  estorno_tentado_em: null,
+  ...x,
+})
+
+Deno.test('pagamentoEmDobro: um parcelamento nosso nunca ativado, numa linha paga fora da janela, é em dobro', () => {
+  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag(), sub(), reg(), em(-30 * DIA)), true)
+  assertEquals(pagamentoEmDobro('PAYMENT_RECEIVED', pag(), sub(), reg(), em(-2 * DIA - 1)), true)
+})
+
+Deno.test('pagamentoEmDobro: o parcelamento já ativado (evento mensal) nunca é dobro — a parcela de X depois da renovação Y', () => {
+  // A repro da revisão: X pagou o ano passado; a renovação Y já confirmou; o RECEIVED mensal de X chega depois.
+  const renovada = sub({ provider_ref: 'inst-Y', current_period_end: '2028-03-10T15:00:00.000Z' })
+  const x = pag({ installment: 'inst-X' })
+  const regX = reg({ installment: 'inst-X', ativado_em: '2026-03-10T15:00:00.000Z' })
+  assertEquals(efeitoDoEvento('PAYMENT_RECEIVED', x, renovada, em(3 * DIA)), null)
+  assertEquals(pagamentoEmDobro('PAYMENT_RECEIVED', x, renovada, regX, em(3 * DIA)), false)
+  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', x, renovada, regX, em(30 * DIA)), false)
+  // a compra nova Z depois de expirar, com a parcela atrasada de X
+  const compraZ = sub({ provider_ref: 'inst-Z', current_period_end: '2027-06-01T12:00:00.000Z' })
+  assertEquals(pagamentoEmDobro('PAYMENT_RECEIVED', x, compraZ, regX, new Date('2026-06-20T12:00:00Z')), false)
+})
+
+Deno.test('pagamentoEmDobro: sem registro, ou registro de outra linha ou de outro parcelamento, não é dobro', () => {
+  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag(), sub(), null, em(-30 * DIA)), false)
+  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag(), sub(), reg({ subscription_id: 'sub-2' }), em(-30 * DIA)), false)
+  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag(), sub(), reg({ installment: 'inst-outro' }), em(-30 * DIA)), false)
 })
 
 Deno.test('pagamentoEmDobro: na janela da renovação é renovação, não dobro', () => {
-  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag(), sub(), em(-2 * DIA)), false)
-  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag(), sub({ grace_until: iso(em(7 * DIA)) }), em(DIA)), false)
+  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag(), sub(), reg(), em(-2 * DIA)), false)
+  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag(), sub({ grace_until: iso(em(7 * DIA)) }), reg(), em(DIA)), false)
 })
 
 Deno.test('pagamentoEmDobro: o mesmo parcelamento, sem parcelamento ou de outra linha não é dobro', () => {
-  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag({ installment: 'inst-velho' }), sub(), em(-30 * DIA)), false)
-  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag({ installment: null }), sub(), em(-30 * DIA)), false)
-  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag({ externalReference: 'sub-2' }), sub(), em(-30 * DIA)), false)
+  const velho = reg({ installment: 'inst-velho' })
+  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag({ installment: 'inst-velho' }), sub(), velho, em(-30 * DIA)), false)
+  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag({ installment: null }), sub(), reg(), em(-30 * DIA)), false)
+  assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag({ externalReference: 'sub-2' }), sub(), reg(), em(-30 * DIA)), false)
 })
 
 Deno.test('pagamentoEmDobro: só numa linha active e só com pagamento confirmado', () => {
   for (const status of ['pending', 'past_due', 'expired'] as const) {
-    assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag(), sub({ status }), em(-30 * DIA)), false)
+    assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag(), sub({ status }), reg(), em(-30 * DIA)), false)
   }
-  assertEquals(pagamentoEmDobro('PAYMENT_REFUNDED', pag(), sub(), em(-30 * DIA)), false)
-  assertEquals(pagamentoEmDobro('PAYMENT_CREATED', pag(), sub(), em(-30 * DIA)), false)
+  assertEquals(pagamentoEmDobro('PAYMENT_REFUNDED', pag(), sub(), reg(), em(-30 * DIA)), false)
+  assertEquals(pagamentoEmDobro('PAYMENT_CREATED', pag(), sub(), reg(), em(-30 * DIA)), false)
+})
+
+// jaEstornado (Ruling 10)
+
+Deno.test('jaEstornado: estorno pedido ou feito conta; cancelado ou nenhum não', () => {
+  assertEquals(jaEstornado({ refunds: [{ status: 'DONE' }] }), true)
+  assertEquals(jaEstornado({ refunds: [{ status: 'PENDING' }] }), true)
+  assertEquals(jaEstornado({ status: 'REFUND_REQUESTED', refunds: null }), true)
+  assertEquals(jaEstornado({ status: 'REFUNDED' }), true)
+  assertEquals(jaEstornado({ refunds: [{ status: 'CANCELLED' }] }), false)
+  assertEquals(jaEstornado({ refunds: null }), false)
+  assertEquals(jaEstornado({ status: 'CONFIRMED', refunds: [] }), false)
 })

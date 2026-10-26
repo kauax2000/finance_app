@@ -59,6 +59,15 @@ describe(`migração ${MIGRACAO}`, () => {
         expect(sql).not.toMatch(/create policy/i)
     })
 
+    it("billing_parcelamentos: o registro da Ruling 9, só da service role", () => {
+        expect(sql).toMatch(
+            /create table if not exists public\.billing_parcelamentos \(\s*installment text primary key,\s*subscription_id uuid not null references public\.billing_subscriptions\(id\) on delete cascade,\s*criado_em timestamptz not null default now\(\),\s*ativado_em timestamptz,\s*estorno_status text check \(estorno_status in \('pendente', 'feito'\)\),\s*estorno_tentado_em timestamptz\s*\);/,
+        )
+        expect(sql).toMatch(/alter table public\.billing_parcelamentos enable row level security;/)
+        expect(sql).toMatch(/revoke all on public\.billing_parcelamentos from anon, authenticated;/)
+        expect(sql).not.toMatch(/grant[^;]*on (table )?public\.billing_parcelamentos/i)
+    })
+
     it("tem_plano_proprio: a ativa espera a confirmação pela grace_until (Decisão 8)", () => {
         const { arquivo, texto } = ultima("tem_plano_proprio")
         expect(arquivo).toBe(MIGRACAO)
@@ -124,5 +133,8 @@ describe(`migração ${MIGRACAO}`, () => {
     it("os tipos à mão conhecem as colunas e a tabela nova", () => {
         for (const coluna of Object.keys(COLUNAS)) expect(tipos, coluna).toContain(`${coluna}: string | null`)
         expect(tipos).toMatch(/billing_events: \{\s+Row: \{\s+id: string\s+recebido_em: string\s+tipo: string/)
+        expect(tipos).toMatch(
+            /billing_parcelamentos: \{\s+Row: \{\s+ativado_em: string \| null\s+criado_em: string\s+estorno_status: string \| null\s+estorno_tentado_em: string \| null\s+installment: string\s+subscription_id: string/,
+        )
     })
 })

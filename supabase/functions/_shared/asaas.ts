@@ -14,6 +14,12 @@ export type RespostaAsaas<T> =
 const PRAZO_MS = 15_000
 /** A cobrança no cartão pede pelo menos 60 s, pela orientação do Asaas. */
 export const PRAZO_CARTAO_MS = 60_000
+/**
+ * O estorno corre dentro do webhook, que o Asaas espera só 10 s: a leitura e o
+ * pedido cabem juntos nesse prazo (Ruling 10).
+ */
+export const PRAZO_LEITURA_ESTORNO_MS = 3_000
+export const PRAZO_ESTORNO_MS = 6_000
 
 export function configDoAsaas(): AsaasConfig | null {
   const url = Deno.env.get('ASAAS_API_URL')?.trim()
@@ -129,7 +135,20 @@ export function removerCobranca(
 }
 
 export function estornarParcelamento(cfg: AsaasConfig, parcelamento: string): Promise<RespostaAsaas<unknown>> {
-  return asaas(cfg, 'POST', `/installments/${encodeURIComponent(parcelamento)}/refund`, {})
+  return asaas(cfg, 'POST', `/installments/${encodeURIComponent(parcelamento)}/refund`, {}, PRAZO_ESTORNO_MS)
+}
+
+/** O parcelamento como o Asaas o guarda: o cliente e os estornos já pedidos (`refunds[]`). */
+export type ParcelamentoNoAsaas = {
+  id: string
+  customer?: string | null
+  status?: string | null
+  refunds?: { status?: string | null }[] | null
+}
+
+/** Lido antes de estornar: um estorno que estourou o prazo pode já ter sido feito (Ruling 10). */
+export function buscarParcelamento(cfg: AsaasConfig, parcelamento: string): Promise<RespostaAsaas<ParcelamentoNoAsaas>> {
+  return asaas(cfg, 'GET', `/installments/${encodeURIComponent(parcelamento)}`, undefined, PRAZO_LEITURA_ESTORNO_MS)
 }
 
 export function agendarNota(

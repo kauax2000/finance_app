@@ -210,18 +210,46 @@ export function efeitoDoEvento(evento: string, pagamento: Pagamento, sub: Assina
   return null
 }
 
+/** Um parcelamento que nós criamos, em `billing_parcelamentos` (Ruling 9). */
+export type Parcelamento = {
+  installment: string
+  subscription_id: string
+  ativado_em: string | null
+  estorno_status: 'pendente' | 'feito' | null
+  estorno_tentado_em: string | null
+}
+
 /**
- * Ruling 8: um pagamento confirmado de outro parcelamento numa linha `active`,
- * que o `efeitoDoEvento` ignora (fora da janela da renovação), é cobrança em
- * dobro: o webhook o estorna na hora.
+ * Ruling 8, decidida pelo registro (Ruling 9): um parcelamento nosso, desta
+ * linha e nunca ativado, confirmado com a linha já paga no período por outro
+ * (o `efeitoDoEvento` o ignora), é cobrança em dobro. Um já ativado é evento
+ * mensal — a parcela de X que chega depois da renovação Y — e nunca é dobro.
  */
-export function pagamentoEmDobro(evento: string, pagamento: Pagamento, sub: Assinatura, agora: Date): boolean {
+export function pagamentoEmDobro(
+  evento: string,
+  pagamento: Pagamento,
+  sub: Assinatura,
+  registro: Parcelamento | null,
+  agora: Date,
+): boolean {
   return (evento === 'PAYMENT_CONFIRMED' || evento === 'PAYMENT_RECEIVED') &&
     sub.status === 'active' &&
     pagamento.externalReference === sub.id &&
     !!pagamento.installment &&
     pagamento.installment !== sub.provider_ref &&
+    registro?.installment === pagamento.installment &&
+    registro.subscription_id === sub.id &&
+    registro.ativado_em === null &&
     efeitoDoEvento(evento, pagamento, sub, agora) === null
+}
+
+/**
+ * O parcelamento lido do Asaas já tem estorno pedido ou feito (Ruling 10): um
+ * `refunds[]` que não foi cancelado, ou o status de estorno.
+ */
+export function jaEstornado(p: { status?: string | null; refunds?: { status?: string | null }[] | null }): boolean {
+  if (p.status && ['REFUNDED', 'REFUND_REQUESTED', 'REFUND_IN_PROGRESS'].includes(p.status)) return true
+  return (p.refunds ?? []).some((r) => r.status !== 'CANCELLED')
 }
 
 /** O que o cron diário faz com a linha hoje. A renovação começa um dia antes do fim (Decisão 8). */

@@ -3,6 +3,7 @@ import {
   agendarNota,
   asaas,
   buscarCobranca,
+  buscarParcelamento,
   type AsaasConfig,
   configDoAsaas,
   criarCliente,
@@ -129,8 +130,10 @@ Deno.test('prazo: 60 s na cobrança por token, 15 s no resto', async () => {
     await criarCobranca(CFG, COBRANCA)
     await criarCliente(CFG, { nome: 'Ana', cpf: '12345678909', email: null, userId: 'u-1' })
     await estornarParcelamento(CFG, 'inst_1')
+    await buscarParcelamento(CFG, 'inst_1')
     await asaas(CFG, 'GET', '/x')
-    assertEquals(prazos, [60_000, 15_000, 15_000, 15_000, 15_000])
+    // o estorno corre dentro do webhook, que o Asaas espera só 10 s (Ruling 10)
+    assertEquals(prazos, [60_000, 15_000, 15_000, 6_000, 3_000, 15_000])
   })
 })
 
@@ -222,6 +225,25 @@ Deno.test('estornarParcelamento: POST /installments/{id}/refund com corpo vazio 
     assertEquals(pedidos[0].url, 'https://api-sandbox.asaas.com/v3/installments/inst_1/refund')
     assertEquals(pedidos[0].init.method, 'POST')
     assertEquals(pedidos[0].corpo, {})
+  })
+})
+
+Deno.test('buscarParcelamento: GET /installments/{id}, com os estornos', async () => {
+  await comFetch(() => json(200, { id: 'inst_1', customer: 'cus_1', refunds: [{ status: 'DONE' }] }), async (pedidos) => {
+    const r = await buscarParcelamento(CFG, 'inst 1')
+    assertEquals(pedidos[0].url, 'https://api-sandbox.asaas.com/v3/installments/inst%201')
+    assertEquals(pedidos[0].init.method, 'GET')
+    assertEquals(r, { ok: true, dados: { id: 'inst_1', customer: 'cus_1', refunds: [{ status: 'DONE' }] } })
+  })
+})
+
+Deno.test('buscarParcelamento: o prazo estourado volta incerto', async () => {
+  await comFetch(() => {
+    throw new DOMException('Signal timed out.', 'TimeoutError')
+  }, async () => {
+    const r = await buscarParcelamento(CFG, 'inst_1')
+    assertEquals(r.ok, false)
+    if (!r.ok) assertEquals(r.incerto, true)
   })
 })
 

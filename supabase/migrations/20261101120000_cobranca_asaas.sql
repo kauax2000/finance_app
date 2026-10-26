@@ -1,5 +1,5 @@
 -- Cobrança pelo Asaas (Bloco 8): as colunas da cobrança parcelada na linha da
--- pessoa, a idempotência do webhook e as redefinições de `tem_plano_proprio`
+-- pessoa, a idempotência do webhook, o registro dos parcelamentos e as redefinições de `tem_plano_proprio`
 -- (a renovação que espera a confirmação) e de `meu_plano` (os campos da tela).
 -- Tudo aditivo: com `billing_settings.enforced_since` nulo, nada muda para o
 -- front de `main`. A lista de gatilhos `garantir_escrita` não é tocada.
@@ -30,6 +30,24 @@ create table if not exists public.billing_events (
 
 alter table public.billing_events enable row level security;
 revoke all on public.billing_events from anon, authenticated;
+
+-- 2b. o registro dos parcelamentos (Ruling 9) -----------------------------------
+-- Cada parcelamento que nós criamos (o checkout, a renovação do cron) entra aqui
+-- ao nascer. O webhook decide por ele: um já ativado é evento mensal; um nunca
+-- ativado com a linha já paga no período é cobrança em dobro e é estornado; um
+-- desconhecido não ativa nada. `estorno_status` 'pendente' é o estorno que o
+-- `billing-daily` tenta de novo (Ruling 10). Só da service role.
+create table if not exists public.billing_parcelamentos (
+  installment text primary key,
+  subscription_id uuid not null references public.billing_subscriptions(id) on delete cascade,
+  criado_em timestamptz not null default now(),
+  ativado_em timestamptz,
+  estorno_status text check (estorno_status in ('pendente', 'feito')),
+  estorno_tentado_em timestamptz
+);
+
+alter table public.billing_parcelamentos enable row level security;
+revoke all on public.billing_parcelamentos from anon, authenticated;
 
 -- 3. direito de uso -------------------------------------------------------------
 -- A renovação começa um dia antes do fim; aceita e ainda não confirmada, ela
