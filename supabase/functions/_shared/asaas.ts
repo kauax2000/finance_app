@@ -118,6 +118,32 @@ export async function listarCobrancasAbertas(
   return { ok: true, dados: todas }
 }
 
+/**
+ * Todas as cobranças da linha criadas desde `desde` (YYYY-MM-DD), de qualquer
+ * status: a verificação da renovação em espera (Ruling 19). Pagina por
+ * `offset` enquanto `hasMore`; quem lê filtra a data de novo, caso o filtro
+ * `dateCreated[ge]` não valha.
+ */
+// ponytail: teto de 10 páginas (1000 cobranças); uma linha faz 12 por ano
+export async function listarCobrancasDesde(
+  cfg: AsaasConfig,
+  referencia: string,
+  desde: string,
+): Promise<RespostaAsaas<Pagamento[]>> {
+  const todas: Pagamento[] = []
+  for (let offset = 0, pagina = 0; pagina < 10; pagina++, offset += 100) {
+    const r = await asaas<{ data?: Pagamento[]; hasMore?: boolean }>(
+      cfg,
+      'GET',
+      `/payments?externalReference=${encodeURIComponent(referencia)}&dateCreated%5Bge%5D=${desde}&limit=100&offset=${offset}`,
+    )
+    if (!r.ok) return r
+    todas.push(...(r.dados.data ?? []))
+    if (!r.dados.hasMore) break
+  }
+  return { ok: true, dados: todas }
+}
+
 export function buscarCobranca(cfg: AsaasConfig, id: string): Promise<RespostaAsaas<CobrancaAberta>> {
   return asaas(cfg, 'GET', `/payments/${encodeURIComponent(id)}`)
 }

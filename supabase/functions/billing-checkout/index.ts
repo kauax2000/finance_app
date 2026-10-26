@@ -27,6 +27,7 @@ import {
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
 import {
   type Assinatura,
+  checkoutPendente,
   cpfValido,
   planoDoCheckout,
   type PlanoDoCheckout,
@@ -188,6 +189,7 @@ async function atender(req: Request): Promise<Response> {
   }
 
   // Ruling 7: a fatura do checkout anterior já paga espera o webhook; cobrar de novo seria em dobro.
+  // Ruling 17: um parcelamento já ativado é um período que passou, não um pagamento esperando.
   if (linha.checkout_ref) {
     const r = await buscarCobranca(cfg, linha.checkout_ref)
     if (!r.ok && r.status !== 404) {
@@ -195,10 +197,20 @@ async function atender(req: Request): Promise<Response> {
       await soltar()
       return SEM_RESPOSTA()
     }
-    const paga = r.ok && (r.dados.status === 'CONFIRMED' || r.dados.status === 'RECEIVED')
-    if (paga && r.dados.installment && r.dados.installment !== linha.provider_ref) {
-      await soltar()
-      return json(409, { error: 'Seu pagamento está sendo confirmado.' })
+    if (r.ok && r.dados.installment) {
+      const { data: registro, error } = await admin
+        .from('billing_parcelamentos')
+        .select('ativado_em')
+        .eq('installment', r.dados.installment)
+        .maybeSingle()
+      if (error) {
+        await soltar()
+        throw new Error(`billing-checkout: registro: ${error.message}`)
+      }
+      if (checkoutPendente(r.dados, linha.provider_ref, registro)) {
+        await soltar()
+        return json(409, { error: 'Seu pagamento está sendo confirmado.' })
+      }
     }
   }
 

@@ -13,12 +13,16 @@ export const AVISO_RENOVACAO_DIAS = 7
 export const ARREPENDIMENTO_DIAS = 7
 /** Uma cobrança criada há menos que isso ainda espera o webhook: não cobra de novo. */
 const ESPERA_DO_CHECKOUT_DIAS = 2
+/** A renovação começa em `fim - 2 dias`: duas chances antes do fim (Ruling 20). */
+const INICIO_DA_RENOVACAO_DIAS = 2
 /**
- * Só cobramos a renovação a partir de `fim - 1 dia`; com a folga do webhook, um
- * pagamento de outro parcelamento antes de `fim - 2 dias` numa linha paga é
- * parcela atrasada do parcelamento anterior, não renovação (Ruling 3).
+ * Com a folga do webhook, um pagamento de outro parcelamento antes de
+ * `fim - 3 dias` numa linha paga é parcela atrasada do parcelamento anterior,
+ * não renovação (Ruling 3, com a Ruling 20).
  */
-const JANELA_DA_RENOVACAO_DIAS = 2
+const JANELA_DA_RENOVACAO_DIAS = 3
+/** Uma cobrança aceita que espera há mais que isso é conferida no Asaas (Ruling 19). */
+const VERIFICAR_ESPERA_DIAS = 1
 
 const DIA_MS = 24 * 60 * 60 * 1000
 
@@ -44,6 +48,9 @@ export type Pagamento = {
   customer: string
   externalReference: string | null
   status: string
+  /** `YYYY-MM-DD`, como o `GET /payments` devolve. */
+  dateCreated?: string
+  deleted?: boolean
   creditCard?: {
     creditCardToken?: string | null
     creditCardNumber?: string | null
@@ -54,10 +61,22 @@ export type Mudanca =
   & Partial<
     Pick<
       Assinatura,
-      'status' | 'provider_ref' | 'current_period_end' | 'grace_until' | 'reembolsavel_ate' | 'cancel_at_period_end'
+      | 'status'
+      | 'provider_ref'
+      | 'current_period_end'
+      | 'grace_until'
+      | 'reembolsavel_ate'
+      | 'cancel_at_period_end'
+      | 'checkout_criado_em'
     >
   >
-  & { card_token?: string | null; card_last4?: string | null; card_brand?: string | null }
+  & {
+    card_token?: string | null
+    card_last4?: string | null
+    card_brand?: string | null
+    checkout_ref?: string | null
+    checkout_url?: string | null
+  }
 
 const maisDias = (d: Date, dias: number) => new Date(d.getTime() + dias * DIA_MS)
 const maisUmAno = (d: Date) => {
@@ -188,6 +207,10 @@ export function efeitoDoEvento(evento: string, pagamento: Pagamento, sub: Assina
       provider_ref: parcelamento,
       grace_until: null,
       cancel_at_period_end: false,
+      // Ruling 17: a ativação fecha a tentativa; o checkout_ref antigo não fica parecendo "pago, esperando".
+      checkout_ref: null,
+      checkout_url: null,
+      checkout_criado_em: null,
       ...(renovacao
         ? { current_period_end: maisUmAno(fimAntigo!).toISOString() }
         : {
@@ -252,8 +275,15 @@ export function jaEstornado(p: { status?: string | null; refunds?: { status?: st
   return (p.refunds ?? []).some((r) => r.status !== 'CANCELLED')
 }
 
-/** O que o cron diário faz com a linha hoje. A renovação começa um dia antes do fim (Decisão 8). */
-export function acaoDoDia(sub: Assinatura, agora: Date): 'avisar_renovacao' | 'renovar' | 'expirar' | null {
+/**
+ * O que o cron diário faz com a linha hoje. A renovação começa dois dias antes
+ * do fim (Decisão 8, Ruling 20). `'verificar'` é a cobrança aceita que espera
+ * há mais de um dia: o cron a confere no Asaas (Ruling 19).
+ */
+export function acaoDoDia(
+  sub: Assinatura,
+  agora: Date,
+): 'avisar_renovacao' | 'renovar' | 'verificar' | 'expirar' | null {
   if (sub.provider !== 'asaas' || !sub.current_period_end) return null
   const fim = new Date(sub.current_period_end)
   const esperandoWebhook = sub.checkout_criado_em !== null &&
@@ -261,9 +291,13 @@ export function acaoDoDia(sub: Assinatura, agora: Date): 'avisar_renovacao' | 'r
 
   if (sub.status === 'active') {
     // Ruling 2: a cobrança já foi aceita e espera a confirmação; cobrar de novo seria cobrar duas vezes.
-    if (sub.grace_until) return agora >= new Date(sub.grace_until) ? 'expirar' : null
+    if (sub.grace_until) {
+      if (agora >= new Date(sub.grace_until)) return 'expirar'
+      const tentativa = sub.checkout_criado_em ? new Date(sub.checkout_criado_em).getTime() : 0
+      return agora.getTime() - tentativa > VERIFICAR_ESPERA_DIAS * DIA_MS ? 'verificar' : null
+    }
     if (sub.cancel_at_period_end) return agora >= fim ? 'expirar' : null
-    if (agora >= maisDias(fim, -1)) return esperandoWebhook ? null : 'renovar'
+    if (agora >= maisDias(fim, -INICIO_DA_RENOVACAO_DIAS)) return esperandoWebhook ? null : 'renovar'
     if (agora >= maisDias(fim, -AVISO_RENOVACAO_DIAS)) return 'avisar_renovacao'
     return null
   }
@@ -312,6 +346,63 @@ export function podeDesfazer(sub: Assinatura, agora: Date): boolean {
 
 export function podeReembolsar(sub: Assinatura, agora: Date): boolean {
   return sub.status === 'active' && sub.reembolsavel_ate !== null && agora < new Date(sub.reembolsavel_ate)
+}
+
+/**
+ * Ruling 17: a fatura do checkout está paga e espera o webhook — só se o
+ * parcelamento dela não é o do plano e nunca ativou. Um já ativado é um
+ * período que passou, não um pagamento pendente.
+ */
+export function checkoutPendente(
+  cobranca: { status: string; installment: string | null },
+  providerRef: string | null,
+  registro: Pick<Parcelamento, 'ativado_em'> | null,
+): boolean {
+  const paga = cobranca.status === 'CONFIRMED' || cobranca.status === 'RECEIVED'
+  return paga && !!cobranca.installment && cobranca.installment !== providerRef && !registro?.ativado_em
+}
+
+/**
+ * Ruling 18: o que a resposta da cobrança por token quer dizer. Só um 4xx é
+ * recusa (o Asaas não cria a cobrança recusada); rede, 5xx, prazo estourado ou
+ * 200 ilegível podem ter cobrado, e esperam.
+ */
+export function resultadoDaCobranca(
+  r: { ok: true; dados: { status: string } } | { ok: false; status: number },
+): 'ativar' | 'esperar' | 'recusada' {
+  if (r.ok) return r.dados.status === 'CONFIRMED' || r.dados.status === 'RECEIVED' ? 'ativar' : 'esperar'
+  return r.status >= 400 && r.status < 500 ? 'recusada' : 'esperar'
+}
+
+/**
+ * Ruling 19: as cobranças da linha no Asaas, desde o dia da tentativa, dizem
+ * se a renovação em espera foi paga, segue pendente ou nunca foi criada. O
+ * parcelamento do plano (`provider_ref`) e as removidas não contam.
+ */
+export function vereditoDaEspera(
+  pagamentos: Pagamento[],
+  providerRef: string | null,
+  desde: string,
+): { tipo: 'nenhuma' } | { tipo: 'paga'; pagamento: Pagamento } | { tipo: 'pendente' } {
+  const dela = pagamentos.filter((p) =>
+    !p.deleted && !!p.installment && p.installment !== providerRef && (p.dateCreated ?? '') >= desde
+  )
+  const paga = dela.find((p) => p.status === 'CONFIRMED' || p.status === 'RECEIVED')
+  if (paga) return { tipo: 'paga', pagamento: paga }
+  return dela.length ? { tipo: 'pendente' } : { tipo: 'nenhuma' }
+}
+
+/**
+ * Ruling 21: a NFS-e do período sai depois da janela de arrependimento (a
+ * renovação não tem janela) e nunca para um parcelamento com estorno.
+ */
+export function notaPendente(
+  sub: Pick<Assinatura, 'status' | 'provider_ref' | 'reembolsavel_ate'> & { nfse_para: string | null },
+  registro: Pick<Parcelamento, 'estorno_status'> | null,
+  agora: Date,
+): boolean {
+  return sub.status === 'active' && !!sub.provider_ref && sub.nfse_para !== sub.provider_ref &&
+    (!sub.reembolsavel_ate || agora >= new Date(sub.reembolsavel_ate)) && !registro?.estorno_status
 }
 
 /** O cartão recusou a renovação. A tolerância conta do fim do período e não se estende a cada tentativa. */
@@ -364,6 +455,14 @@ export const AVISOS = {
       titulo: 'Seu plano terminou',
       corpo:
         'Sua conta está em só leitura: tudo continua visível, e exportar e apagar seguem liberados. Assine em Planos para voltar a lançar.',
+    }
+  },
+  /** O reembolso do arrependimento concluído (Ruling 16): no billing-cancel e no cron. */
+  reembolso(): { titulo: string; corpo: string } {
+    return {
+      titulo: 'Reembolso confirmado',
+      corpo:
+        'O Asaas confirmou o reembolso do plano. O valor volta para o cartão em até 10 dias úteis. Sua conta está em só leitura: tudo continua visível, e exportar e apagar seguem liberados.',
     }
   },
   /** A cobrança em dobro estornada (Ruling 8): o webhook e o cron, ao concluir um estorno pendente. */

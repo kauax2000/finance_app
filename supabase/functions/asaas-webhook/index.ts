@@ -4,7 +4,8 @@
  * cabeçalho `asaas-access-token`: sem JWT nem CORS.
  *
  * Ordem: método → token → corpo → evento gravado (o repetido para aqui) →
- * linha → cliente → registro do parcelamento (Ruling 9) → efeitoDoEvento →
+ * linha → cliente → registro do parcelamento (Ruling 9; o desconhecido da
+ * própria linha e do próprio cliente entra nele, Ruling 15) → efeitoDoEvento →
  * gravação condicional, ou o estorno do pagamento em dobro (Ruling 8 e 10).
  *
  * Só o token errado volta 401. Todo caminho tratado volta exatamente 200, até a
@@ -114,13 +115,25 @@ async function tratar(
         // As parcelas mensais do plano: nada a mudar, e o ativado_em que faltou se conserta aqui.
         await marcarAtivado(admin, parcelamento)
       } else {
-        const { data: r, error: rErr } = await admin
-          .from('billing_parcelamentos')
-          .select('*')
-          .eq('installment', parcelamento)
-          .maybeSingle()
-        if (rErr) throw new Error(`parcelamento: ${rErr.message}`)
-        registro = r as Parcelamento | null
+        const lerRegistro = async () => {
+          const { data: r, error: rErr } = await admin
+            .from('billing_parcelamentos')
+            .select('*')
+            .eq('installment', parcelamento)
+            .maybeSingle()
+          if (rErr) throw new Error(`parcelamento: ${rErr.message}`)
+          return r as Parcelamento | null
+        }
+        registro = await lerRegistro()
+        // Ruling 15: a referência é a linha e o cliente é o dela (conferidos acima), e só nós criamos essa
+        // cobrança. O registro que o cron faz depois da resposta pode chegar atrás deste evento.
+        if (!registro) {
+          const { error: iErr } = await admin
+            .from('billing_parcelamentos')
+            .insert({ installment: parcelamento, subscription_id: linha.id })
+          if (iErr && iErr.code !== '23505') throw new Error(`parcelamento novo: ${iErr.message}`)
+          registro = await lerRegistro()
+        }
         if (!registro || registro.subscription_id !== linha.id) {
           console.error('asaas-webhook: parcelamento desconhecido', linha.id, parcelamento)
           return ignorado('parcelamento')

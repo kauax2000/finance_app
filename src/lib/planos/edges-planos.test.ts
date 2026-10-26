@@ -53,7 +53,7 @@ describe("Edge billing-daily", () => {
         expect(entregar).toContain("claimDedupe(admin, dedupe)")
         expect(funcao(f, "avisar")).toContain("const referencia = (linha.current_period_end ?? ctx.iso).slice(0, 10)")
         expect(f).toContain("avisar(ctx, linha, 'renovacao', AVISOS.renovacao(linha, linha.card_last4))")
-        expect(f.match(/avisar\(ctx, linha, 'cartao', AVISOS\.cartao\(\{ \.\.\.linha, \.\.\.falha \}\)\)/g)?.length).toBe(2)
+        expect(f.match(/avisar\(ctx, linha, 'cartao', AVISOS\.cartao\(\{ \.\.\.linha, \.\.\.falha \}\)\)/g)?.length).toBe(3)
         expect(funcao(f, "expirar")).toContain("avisar(ctx, linha, 'fim', AVISOS.fim())")
     })
 
@@ -115,7 +115,7 @@ describe("Edge billing-daily", () => {
         expect(cobra).toBeGreaterThan(remove)
         expect(r).toContain("reusar ? [reusar, ...remover] : remover")
         // a falha de leitura ou remoção não cobra: devolve a data de antes
-        expect(r.match(/return await soltar\(/g)?.length).toBe(3)
+        expect(r.match(/return await soltar\(/g)?.length).toBe(4)
     })
 
     it("registra o parcelamento da renovação antes de gravar o resultado (Ruling 9)", () => {
@@ -125,15 +125,16 @@ describe("Edge billing-daily", () => {
         expect(registro).toBeLessThan(r.indexOf("efeitoDoEvento("))
         expect(registro).toBeLessThan(r.indexOf("aguardandoConfirmacao("))
         expect(registro).toBeLessThan(r.indexOf("falhaNaRenovacao(linha, agora)", r.indexOf("criarCobranca(cfg")))
-        expect(r).toContain("cobranca.incerto\n    ? await criadosHoje(ctx, cfg, linha)")
-        expect(funcao(fonte(DIARIO), "criadosHoje")).toContain("i !== linha.provider_ref")
+        expect(r).toContain("const installment = cobranca.ok ? cobranca.dados.installment : null")
+        expect(fonte(DIARIO)).not.toContain("criadosHoje")
     })
 
     it("o resultado: confirmada ativa, aceita ou incerta espera, recusada vira past_due", () => {
         const r = funcao(fonte(DIARIO), "renovar")
-        expect(r).toContain("(cobranca.dados.status === 'CONFIRMED' || cobranca.dados.status === 'RECEIVED')")
+        expect(r).toContain("const resultado = resultadoDaCobranca(cobranca)")
+        expect(r).toContain("if (cobranca.ok && resultado === 'ativar') {")
         const efeito = r.indexOf("efeitoDoEvento('PAYMENT_CONFIRMED', cobranca.dados, linha, agora)")
-        const espera = r.indexOf("if (cobranca.ok || cobranca.incerto) {")
+        const espera = r.indexOf("if (cobranca.ok || resultado !== 'recusada') {")
         const recusa = r.indexOf("const falha = falhaNaRenovacao(linha, agora)", espera)
         expect(efeito).toBeGreaterThan(-1)
         expect(espera).toBeGreaterThan(efeito)
@@ -194,6 +195,71 @@ describe("Edge billing-daily", () => {
         expect(n).toContain("l.nfse_para !== l.provider_ref")
         expect(n).toContain("agendarNota(cfg, { parcelamento: ref, centavos, data: ctx.hoje, codigo, nome })")
         expect(n.indexOf("update({ nfse_para: ref })")).toBeGreaterThan(n.indexOf("if (!r.ok)"))
+    })
+
+    it("C1 / Ruling 17: a fatura do checkout só segura a renovação se o parcelamento dela nunca ativou", () => {
+        const r = funcao(fonte(DIARIO), "renovar")
+        const busca = r.indexOf("buscarCobranca(cfg, linha.checkout_ref)")
+        const registro = r.indexOf(".from('billing_parcelamentos')", busca)
+        const pendente = r.indexOf("checkoutPendente(r.dados, linha.provider_ref, registro)")
+        expect(registro).toBeGreaterThan(busca)
+        expect(pendente).toBeGreaterThan(registro)
+        expect(r.indexOf("criarCobranca(cfg")).toBeGreaterThan(pendente)
+        // a espera restante loga e conta
+        const espera = r.slice(pendente, r.indexOf("return", pendente))
+        expect(espera).toContain("console.error('billing-daily: fatura do checkout paga, esperando o webhook'")
+        expect(espera).toContain("ctx.n.aguardando += 1")
+        expect(r).not.toMatch(/r\.dados\.status === 'CONFIRMED'/)
+    })
+
+    it("I1 / Ruling 18: só o resultado 'recusada' (4xx) vira past_due e aviso do cartão", () => {
+        const r = funcao(fonte(DIARIO), "renovar")
+        const espera = r.indexOf("if (cobranca.ok || resultado !== 'recusada') {")
+        expect(r.slice(espera, r.indexOf("return", espera))).toContain("aguardandoConfirmacao(linha)")
+        expect(r.indexOf("falhaNaRenovacao(linha, agora)", r.indexOf("criarCobranca(cfg"))).toBeGreaterThan(espera)
+        expect(r).not.toContain("cobranca.incerto")
+    })
+
+    it("I2 / Ruling 19: a renovação em espera há mais de 1 dia é conferida no Asaas", () => {
+        const f = fonte(DIARIO)
+        expect(funcao(f, "renovarAssinaturas")).toContain("else if (acao === 'verificar') await verificar(ctx, linha)")
+        const v = funcao(f, "verificar")
+        const lista = v.indexOf("listarCobrancasDesde(cfg, linha.id, desde)")
+        const veredito = v.indexOf("vereditoDaEspera(r.dados, linha.provider_ref, desde)")
+        expect(lista).toBeGreaterThan(-1)
+        expect(veredito).toBeGreaterThan(lista)
+        expect(v).toContain("if (!r.ok) return erro(")
+        expect(v).toContain("if (veredito.tipo === 'pendente') return")
+        const fimDaPaga = v.indexOf("const falha = falhaNaRenovacao(linha, agora)")
+        expect(fimDaPaga).toBeGreaterThan(v.indexOf("if (veredito.tipo === 'paga') {"))
+        const paga = v.slice(v.indexOf("if (veredito.tipo === 'paga') {"), fimDaPaga)
+        const registro = paga.indexOf(".from('billing_parcelamentos').insert(")
+        expect(registro).toBeGreaterThan(-1)
+        expect(paga.indexOf("efeitoDoEvento('PAYMENT_CONFIRMED', p, linha, agora)")).toBeGreaterThan(registro)
+        expect(paga).toContain("marcarAtivado(ctx, m.provider_ref)")
+        const nenhuma = v.slice(fimDaPaga)
+        expect(nenhuma).toContain("falhaNaRenovacao(linha, agora)")
+        expect(nenhuma).toContain("checkout_criado_em: iso, checkout_url: null")
+        expect(nenhuma).toContain("avisar(ctx, linha, 'cartao', AVISOS.cartao({ ...linha, ...falha }))")
+        expect(v).toContain(".eq('updated_at', linha.updated_at)")
+        expect(v).toContain(".eq('grace_until', linha.grace_until!)")
+        expect(v).not.toContain("criarCobranca(")
+    })
+
+    it("I4 / Ruling 16: o reembolso concluído pelo cron avisa, uma vez por parcelamento", () => {
+        const s = funcao(fonte(DIARIO), "refazerEstornos")
+        const ramo = s.slice(s.indexOf("if (p.installment === linha.provider_ref)"), s.indexOf("AVISOS.estorno()"))
+        expect(ramo.indexOf("AVISOS.reembolso()")).toBeGreaterThan(ramo.indexOf("status: 'expired'"))
+        expect(ramo).toContain("entregar(ctx, { user_id: linha.user_id, tipo: 'reembolso', referencia: p.installment }, destino, AVISOS.reembolso())")
+    })
+
+    it("I5 / Ruling 21: a NFS-e passa pelo notaPendente, com o estorno do registro", () => {
+        const n = funcao(fonte(DIARIO), "emitirNotas")
+        const registro = n.indexOf(".select('estorno_status')")
+        const pendente = n.indexOf("if (!notaPendente(linha, registro, ctx.agora)) return")
+        expect(registro).toBeGreaterThan(-1)
+        expect(pendente).toBeGreaterThan(registro)
+        expect(n.indexOf("agendarNota(cfg")).toBeGreaterThan(pendente)
     })
 
     it("a Edge está no config sem JWT", () => {
@@ -267,6 +333,12 @@ describe("Edge billing-checkout", () => {
         expect(cria).toBeGreaterThan(remove)
         expect(f).toContain("buscarCobranca(cfg, linha.checkout_ref)")
         expect(f).toContain("Seu pagamento está sendo confirmado.")
+        // Ruling 17: o checkout_ref de um parcelamento já ativado não responde "sendo confirmado"
+        const busca = f.indexOf("buscarCobranca(cfg, linha.checkout_ref)")
+        const registro = f.indexOf(".from('billing_parcelamentos')", busca)
+        expect(registro).toBeGreaterThan(busca)
+        expect(f.indexOf("checkoutPendente(r.dados, linha.provider_ref, registro)")).toBeGreaterThan(registro)
+        expect(f.indexOf("Seu pagamento está sendo confirmado.")).toBeGreaterThan(f.indexOf("checkoutPendente(r.dados"))
         expect(f).toContain("triagemDasAbertas(")
     })
 
@@ -370,6 +442,13 @@ describe("Edge asaas-webhook", () => {
         expect(tratar).toContain("console.error('asaas-webhook: parcelamento desconhecido'")
         expect(tratar).toContain("ignorado('parcelamento')")
         expect(tratar).toContain("if (registro.ativado_em)")
+        // Ruling 15: o desconhecido da própria linha e do próprio cliente entra no registro antes de decidir
+        const cliente = tratar.indexOf("payment.customer !== linha.asaas_customer_id")
+        const insere = tratar.indexOf(".insert({ installment: parcelamento, subscription_id: linha.id })")
+        expect(insere).toBeGreaterThan(cliente)
+        expect(insere).toBeGreaterThan(registro)
+        expect(insere).toBeLessThan(tratar.indexOf("registro.subscription_id !== linha.id"))
+        expect(tratar.slice(tratar.indexOf("if (!registro) {"), insere)).not.toContain("return")
         // ativar marca o ativado_em, e o evento do provider_ref o conserta se faltou
         expect(f).toContain("marcarAtivado(")
         expect(f).toContain(".is('ativado_em', null)")
@@ -521,6 +600,23 @@ describe("Edge billing-cancel", () => {
         const perdeu = r.slice(r.indexOf("if (!meu?.length)"), r.indexOf("} else {", r.indexOf("if (!meu?.length)")))
         expect(perdeu).toContain("if (registro?.estorno_status !== 'feito') return REEMBOLSO_PEDIDO()")
         expect(r.indexOf("!== 'feito') return REEMBOLSO_PEDIDO()")).toBeLessThan(r.indexOf("status: 'expired'"))
+    })
+
+    it("I4 / Ruling 16: o reembolso concluído por este toque avisa, essencial e deduplicado", () => {
+        const f = fonte(CANCEL)
+        const r = funcao(f, "reembolsar")
+        expect(r.indexOf("concluiu = true")).toBeGreaterThan(r.indexOf("estorno_status: 'feito'"))
+        expect(r.indexOf("if (concluiu) await avisarDoReembolso(admin, linha.user_id, email, ref)")).toBeGreaterThan(r.indexOf("status: 'expired'"))
+        const a = funcao(f, "avisarDoReembolso")
+        expect(a).toContain("tipo: 'reembolso', referencia: ref")
+        expect(a.indexOf(".from('billing_avisos').insert(dedupe)")).toBeLessThan(a.indexOf("deliverNotification("))
+        expect(a).toContain("'23505'")
+        expect(a).toContain("AVISOS.reembolso()")
+        expect(a).toContain("essencial: true")
+        expect(a).toContain("type: 'system'")
+        expect(a).toContain("metadata: { href: '/plans' }")
+        expect(a).toContain(".eq('type', 'personal')")
+        expect(a).toContain("await soltar()")
     })
 
     it("a Edge está no config sem JWT", () => {

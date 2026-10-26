@@ -11,6 +11,7 @@ import {
   estornarNoAsaas,
   estornarParcelamento,
   listarCobrancasAbertas,
+  listarCobrancasDesde,
   removerCobranca,
 } from './asaas.ts'
 
@@ -378,5 +379,28 @@ Deno.test('removerCobranca: a recusa do Asaas volta como falha', async () => {
       status: 400,
       erros: ['Não é possível remover.'],
     })
+  })
+})
+
+Deno.test('listarCobrancasDesde: todas da referência desde a data, página a página enquanto hasMore', async () => {
+  await comFetch((url) =>
+    json(200, {
+      object: 'list',
+      hasMore: url.endsWith('offset=0'),
+      data: [{ id: url.endsWith('offset=0') ? 'pay_1' : 'pay_2', installment: 'inst_1', status: 'CONFIRMED' }],
+    }), async (pedidos) => {
+    const r = await listarCobrancasDesde(CFG, 'sub 1', '2027-03-08')
+    assertEquals(r.ok && r.dados.map((c) => c.id), ['pay_1', 'pay_2'])
+    assertEquals(pedidos.map((p) => [p.init.method, p.url]), [
+      ['GET', 'https://api-sandbox.asaas.com/v3/payments?externalReference=sub%201&dateCreated%5Bge%5D=2027-03-08&limit=100&offset=0'],
+      ['GET', 'https://api-sandbox.asaas.com/v3/payments?externalReference=sub%201&dateCreated%5Bge%5D=2027-03-08&limit=100&offset=100'],
+    ])
+  })
+})
+
+Deno.test('listarCobrancasDesde: uma página que falha devolve a falha', async () => {
+  await comFetch(() => json(500, {}), async () => {
+    const r = await listarCobrancasDesde(CFG, 'sub-1', '2027-03-08')
+    assertEquals(r.ok, false)
   })
 })

@@ -18,7 +18,15 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
 import { configDoAsaas, estornarNoAsaas } from '../_shared/asaas.ts'
 import { bearerJwt, getAuthUserFromJwt } from '../_shared/auth-user.ts'
-import { type Assinatura, type Parcelamento, podeCancelar, podeDesfazer, podeReembolsar } from '../_shared/billing.ts'
+import {
+  type Assinatura,
+  AVISOS,
+  type Parcelamento,
+  podeCancelar,
+  podeDesfazer,
+  podeReembolsar,
+} from '../_shared/billing.ts'
+import { deliverNotification } from '../_shared/deliver-notification.ts'
 import { internalError, lerCorpo } from '../_shared/http.ts'
 import type { SupabaseAdminClient } from '../_shared/supabase-admin.ts'
 
@@ -87,7 +95,7 @@ async function atender(req: Request): Promise<Response> {
 
   if (acao === 'cancelar') return await cancelar(admin, linha, agora)
   if (acao === 'desfazer') return await desfazer(admin, linha, agora)
-  return await reembolsar(admin, linha, agora)
+  return await reembolsar(admin, linha, agora, auth.user.email ?? null)
 }
 
 async function cancelar(admin: SupabaseAdminClient, linha: Linha | null, agora: Date): Promise<Response> {
@@ -134,7 +142,12 @@ async function desfazer(admin: SupabaseAdminClient, linha: Linha | null, agora: 
   return data?.length ? json(200, { ok: true }) : MUDOU()
 }
 
-async function reembolsar(admin: SupabaseAdminClient, linha: Linha | null, agora: Date): Promise<Response> {
+async function reembolsar(
+  admin: SupabaseAdminClient,
+  linha: Linha | null,
+  agora: Date,
+  email: string | null,
+): Promise<Response> {
   const ref = linha?.provider_ref ?? null
   const lerRegistro = async () => {
     const { data, error } = await admin.from('billing_parcelamentos').select('*').eq('installment', ref!).maybeSingle()
@@ -142,6 +155,8 @@ async function reembolsar(admin: SupabaseAdminClient, linha: Linha | null, agora
     return data as Parcelamento | null
   }
   let registro = ref ? await lerRegistro() : null
+  /** Este toque concluiu o estorno: ele avisa (Ruling 16). */
+  let concluiu = false
 
   // O reembolso já pedido não é pedido de novo: o billing-daily o conclui (Ruling 13).
   if (registro?.estorno_status === 'pendente' && registro.subscription_id === linha!.id) return REEMBOLSO_PEDIDO()
@@ -188,6 +203,7 @@ async function reembolsar(admin: SupabaseAdminClient, linha: Linha | null, agora
         .update({ estorno_status: 'feito' })
         .eq('installment', ref)
       if (fErr) console.error('billing-cancel: marcar o estorno', linha.id, ref, fErr.message)
+      concluiu = true
     }
   }
 
@@ -207,5 +223,61 @@ async function reembolsar(admin: SupabaseAdminClient, linha: Linha | null, agora
     .eq('status', 'active')
     .eq('provider_ref', ref)
   if (eErr) throw new Error(`expirar: ${eErr.message}`)
+  if (concluiu) await avisarDoReembolso(admin, linha.user_id, email, ref)
   return json(200, { ok: true })
+}
+
+/**
+ * Ruling 16: o reembolso concluído, essencial e uma vez por parcelamento
+ * (`billing_avisos` 'reembolso', o mesmo dedupe do cron). O estorno já foi
+ * feito: uma falha aqui só vai ao log, e libera o dedupe.
+ */
+async function avisarDoReembolso(
+  admin: SupabaseAdminClient,
+  userId: string,
+  email: string | null,
+  ref: string,
+): Promise<void> {
+  const dedupe = { user_id: userId, tipo: 'reembolso', referencia: ref }
+  const soltar = async () => {
+    const { error } = await admin.from('billing_avisos').delete()
+      .eq('user_id', userId).eq('tipo', 'reembolso').eq('referencia', ref)
+    if (error) console.error('billing-cancel: soltar o aviso', userId, error.message)
+  }
+  try {
+    const { data: carteira, error: wErr } = await admin
+      .from('workspaces')
+      .select('id')
+      .eq('created_by', userId)
+      .eq('type', 'personal')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+    if (wErr || !carteira) {
+      console.error('billing-cancel: aviso sem carteira pessoal', userId, wErr?.message)
+      return
+    }
+    const { error: dErr } = await admin.from('billing_avisos').insert(dedupe)
+    if (dErr?.code === '23505') return
+    if (dErr) throw new Error(dErr.message)
+    const { titulo, corpo } = AVISOS.reembolso()
+    const entregue = await deliverNotification({
+      supabaseAdmin: admin,
+      userId,
+      userEmail: email,
+      workspaceId: carteira.id,
+      type: 'system',
+      title: titulo,
+      body: corpo,
+      metadata: { href: '/plans' },
+      essencial: true,
+    })
+    if (!entregue.ok) {
+      console.error('billing-cancel: aviso do reembolso', userId, entregue.error)
+      await soltar()
+    }
+  } catch (e) {
+    console.error('billing-cancel: aviso do reembolso', userId, e instanceof Error ? e.message : e)
+    await soltar()
+  }
 }
