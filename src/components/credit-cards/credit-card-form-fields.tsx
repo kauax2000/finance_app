@@ -31,7 +31,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { TitularDoCartaoWireframe } from "@/components/wireframe/gasto-privado-wireframe"
+import { TitularDoCartaoWireframe } from "@/components/wireframe/titular-do-cartao-wireframe"
 const DAY_OPTIONS = Array.from({ length: 31 }, (_, i) => String(i + 1))
 
 const billingDaySelectTriggerClass = "w-full min-w-0"
