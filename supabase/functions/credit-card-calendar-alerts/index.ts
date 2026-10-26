@@ -21,7 +21,7 @@ import {
   formatYmd,
   invoiceWindowEndingAt,
   nextCloseAfter,
-  nextPaymentDueCycleOnOrAfter,
+  dueCyclesOnOrAfter,
   previousStatementCloseBefore,
   statementCloseOnOrBefore,
   cardInvoiceNetInWindow,
@@ -174,37 +174,42 @@ function buildCardEvents(card: CardRow, today: Ymd): CalEvent[] {
     })
   }
 
-  let dueCycle: { close: Ymd; due: Ymd }
+  let dueCycles: { close: Ymd; due: Ymd }[]
   try {
-    dueCycle = nextPaymentDueCycleOnOrAfter(today, closingDay, dueDay)
+    dueCycles = dueCyclesOnOrAfter(today, closingDay, dueDay)
   } catch {
     return events
   }
 
-  const daysToDue = diffCalendarDays(today, dueCycle.due)
-  const due = {
-    ...base,
-    win: invoiceWindowEndingAt(dueCycle.close, closingDay),
-    data: ddmm(formatYmd(dueCycle.due)),
-    checkPaid: true,
-  }
-  if (withinReminderWindow(daysToDue, 3)) {
-    events.push({
-      ...due,
-      dedupeKey: `cal:due_soon:${formatYmd(dueCycle.due)}:c:${card.id}`,
-      kind: 'cc_payment_due_soon',
-      evento: 'due_soon',
-      dias: daysToDue,
-    })
-  }
-  if (daysToDue === 0) {
-    events.push({
-      ...due,
-      dedupeKey: `cal:due_today:${formatYmd(dueCycle.due)}:c:${card.id}`,
-      kind: 'cc_payment_due_today',
-      evento: 'due_today',
-    })
-  }
+  // Duas faturas podem vencer no mesmo dia (#94): a primeira mantém a chave de
+  // antes, para nada sair de novo quando a Edge for republicada.
+  dueCycles.forEach((dueCycle, i) => {
+    const sufixo = i === 0 ? '' : `:f:${formatYmd(dueCycle.close)}`
+    const daysToDue = diffCalendarDays(today, dueCycle.due)
+    const due = {
+      ...base,
+      win: invoiceWindowEndingAt(dueCycle.close, closingDay),
+      data: ddmm(formatYmd(dueCycle.due)),
+      checkPaid: true,
+    }
+    if (withinReminderWindow(daysToDue, 3)) {
+      events.push({
+        ...due,
+        dedupeKey: `cal:due_soon:${formatYmd(dueCycle.due)}:c:${card.id}${sufixo}`,
+        kind: 'cc_payment_due_soon',
+        evento: 'due_soon',
+        dias: daysToDue,
+      })
+    }
+    if (daysToDue === 0) {
+      events.push({
+        ...due,
+        dedupeKey: `cal:due_today:${formatYmd(dueCycle.due)}:c:${card.id}${sufixo}`,
+        kind: 'cc_payment_due_today',
+        evento: 'due_today',
+      })
+    }
+  })
 
   return events
 }

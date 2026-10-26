@@ -14,6 +14,7 @@ import {
   estimatedDueYmdInMonth,
   formatYmd,
   isoPrefixYmd,
+  dueCyclesOnOrAfter,
   nextPaymentDueCycleOnOrAfter,
   sumCardExpensesInWindow,
   statementCloseYmdForPurchaseYmd,
@@ -202,4 +203,17 @@ Deno.test('escolherTotal: com total do banco, vale o do banco (até zero)', () =
 
 Deno.test('statementTotalKey: cartão:fechamento, como o front', () => {
   assertEquals(statementTotalKey('card-1', '2026-10-03'), 'card-1:2026-10-03')
+})
+
+Deno.test('dueCyclesOnOrAfter devolve as duas faturas que vencem no mesmo dia (#94)', () => {
+  // Fecha 30, vence 31: em maio (30 dias em abril) as faturas de 30/04 e 30/05 vencem em 31/05.
+  const dois = dueCyclesOnOrAfter(ymd('2026-05-29'), 30, 31)
+  assertEquals(
+    dois.map((c) => [formatYmd(c.close), formatYmd(c.due)]),
+    [['2026-04-30', '2026-05-31'], ['2026-05-30', '2026-05-31']],
+  )
+  // O caso comum (fecha 28, vence 10) tem um vencimento só, igual ao de antes.
+  const um = dueCyclesOnOrAfter(ymd('2026-11-01'), 28, 10)
+  const antes = nextPaymentDueCycleOnOrAfter(ymd('2026-11-01'), 28, 10)
+  assertEquals(um.map((c) => [formatYmd(c.close), formatYmd(c.due)]), [[formatYmd(antes.close), formatYmd(antes.due)]])
 })

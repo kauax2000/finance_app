@@ -319,3 +319,14 @@ export function nextPaymentDueCycleOnOrAfter(
   }
   throw new Error('nextPaymentDueCycleOnOrAfter: range exceeded')
 }
+
+/**
+ * O próximo vencimento e, se a fatura seguinte vencer no mesmo dia (fecha 30,
+ * vence 31 num mês de 30 dias), ela também: cada uma é uma fatura a avisar (#94).
+ */
+export function dueCyclesOnOrAfter(today: Ymd, closingDay: number, dueDay: number): { close: Ymd; due: Ymd }[] {
+  const primeiro = nextPaymentDueCycleOnOrAfter(today, closingDay, dueDay)
+  const close = nextCloseAfter(primeiro.close, closingDay)
+  const due = estimatedDueYmdForClose(close, dueDay)
+  return compareYmd(due, primeiro.due) === 0 ? [primeiro, { close, due }] : [primeiro]
+}
