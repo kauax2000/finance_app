@@ -3,7 +3,7 @@
  * a pessoa digita o cartão na fatura do Asaas, e a renovação usa só o
  * `creditCardToken` que ele devolveu.
  */
-import { type CobrancaAberta, type Pagamento, PARCELAS } from './billing.ts'
+import { type CobrancaAberta, jaEstornado, type Pagamento, PARCELAS } from './billing.ts'
 
 export type AsaasConfig = { url: string; chave: string }
 /** `incerto`: o prazo estourou e o Asaas pode ter processado o pedido (Ruling 5). */
@@ -149,6 +149,28 @@ export type ParcelamentoNoAsaas = {
 /** Lido antes de estornar: um estorno que estourou o prazo pode já ter sido feito (Ruling 10). */
 export function buscarParcelamento(cfg: AsaasConfig, parcelamento: string): Promise<RespostaAsaas<ParcelamentoNoAsaas>> {
   return asaas(cfg, 'GET', `/installments/${encodeURIComponent(parcelamento)}`, undefined, PRAZO_LEITURA_ESTORNO_MS)
+}
+
+/**
+ * O estorno de um parcelamento inteiro pela regra da Ruling 10: lê antes (um
+ * pedido que estourou o prazo pode já ter sido feito), confere o cliente e só
+ * então pede. `etapa` diz onde parou: na `'leitura'` e no `'cliente'` nada foi
+ * pedido ao Asaas; no `'estorno'` o pedido pode ter chegado. Quem chama
+ * reivindica e marca o `billing_parcelamentos`.
+ */
+export async function estornarNoAsaas(
+  cfg: AsaasConfig,
+  parcelamento: string,
+  cliente: string | null,
+): Promise<{ ok: true } | { ok: false; etapa: 'leitura' | 'cliente' | 'estorno'; status: number; erros: string[] }> {
+  const estado = await buscarParcelamento(cfg, parcelamento)
+  if (!estado.ok) return { ok: false, etapa: 'leitura', status: estado.status, erros: estado.erros }
+  if (estado.dados.customer && estado.dados.customer !== cliente) {
+    return { ok: false, etapa: 'cliente', status: 0, erros: [] }
+  }
+  if (jaEstornado(estado.dados)) return { ok: true }
+  const r = await estornarParcelamento(cfg, parcelamento)
+  return r.ok ? { ok: true } : { ok: false, etapa: 'estorno', status: r.status, erros: r.erros }
 }
 
 export function agendarNota(

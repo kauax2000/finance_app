@@ -228,13 +228,9 @@ describe("Edge asaas-webhook", () => {
     it("Ruling 8 e 10: estorna só depois do pagamentoEmDobro, lê o parcelamento antes, e nunca volta 500", () => {
         const f = fonte(WEBHOOK)
         const dobro = f.indexOf("pagamentoEmDobro(")
-        const busca = f.indexOf("buscarParcelamento(cfg")
-        const estorno = f.indexOf("estornarParcelamento(cfg")
         expect(dobro).toBeGreaterThan(-1)
-        expect(busca).toBeGreaterThan(dobro)
-        expect(estorno).toBeGreaterThan(busca)
+        expect(f.indexOf("estornarNoAsaas(cfg")).toBeGreaterThan(dobro)
         expect(f).toContain("payment.installment !== linha.provider_ref")
-        expect(f).toContain("jaEstornado(")
         const estornar = funcao(f, "estornar")
         // um problema no estorno fica pendente para o billing-daily, e a fila segue
         expect(estornar).not.toContain("json(500")
@@ -242,7 +238,7 @@ describe("Edge asaas-webhook", () => {
         expect(estornar).toContain("estorno_status: 'pendente'")
         expect(estornar).toContain("estorno_status: 'feito'")
         expect(estornar).toContain(".is('estorno_status', null)")
-        expect(estornar.indexOf("estorno_status: 'pendente'")).toBeLessThan(estornar.indexOf("buscarParcelamento(cfg"))
+        expect(estornar.indexOf("estorno_status: 'pendente'")).toBeLessThan(estornar.indexOf("estornarNoAsaas(cfg"))
         expect(estornar.indexOf("avisarDoEstorno(")).toBeGreaterThan(estornar.indexOf("estorno_status: 'feito'"))
     })
 
@@ -276,5 +272,86 @@ describe("Edge billing-checkout registra o parcelamento (Ruling 9)", () => {
         expect(f).toContain("subscription_id: linha.id")
         expect(f).toContain("reusar.installment")
         expect(f).toContain("cobranca.dados.installment")
+    })
+})
+
+describe("estorno compartilhado (Ruling 10)", () => {
+    it("estornarNoAsaas lê o parcelamento, confere o cliente e só então pede", () => {
+        const f = fonte("supabase/functions/_shared/asaas.ts")
+        const helper = f.slice(f.indexOf("export async function estornarNoAsaas("))
+        const busca = helper.indexOf("buscarParcelamento(cfg")
+        expect(busca).toBeGreaterThan(-1)
+        expect(helper.indexOf("estado.dados.customer !== cliente")).toBeGreaterThan(busca)
+        expect(helper.indexOf("jaEstornado(")).toBeGreaterThan(busca)
+        expect(helper.indexOf("estornarParcelamento(cfg")).toBeGreaterThan(helper.indexOf("jaEstornado("))
+    })
+})
+
+const CANCEL = "supabase/functions/billing-cancel/index.ts"
+
+describe("Edge billing-cancel", () => {
+    it("exige o JWT antes de ler o corpo e o banco, com o CORS do app", () => {
+        const f = fonte(CANCEL)
+        const jwt = f.indexOf("bearerJwt(req.headers.get('Authorization'))")
+        expect(jwt).toBeGreaterThan(-1)
+        expect(f.indexOf("getAuthUserFromJwt(")).toBeGreaterThan(jwt)
+        expect(f.indexOf("lerCorpo(req")).toBeGreaterThan(f.indexOf("getAuthUserFromJwt("))
+        expect(f.indexOf("createClient(")).toBeGreaterThan(f.indexOf("getAuthUserFromJwt("))
+        expect(f.match(/json\(401/g)?.length).toBe(2)
+        expect(f).toContain(".eq('user_id', auth.user.id)")
+        expect(f).toMatch(/'Access-Control-Allow-Headers': '[^']*x-app-session-id[^']*'/)
+        expect(f).toContain("return json(500, { error: internalError('billing-cancel', e) })")
+        expect(f).toContain("Ação desconhecida.")
+    })
+
+    it("cancelar: active e past_due, recusa a renovação esperando confirmação (Ruling 11 e 12)", () => {
+        const f = fonte(CANCEL)
+        const c = funcao(f, "cancelar")
+        expect(c).toContain("podeCancelar(linha)")
+        expect(c).toContain("A renovação deste ano já foi cobrada e está sendo confirmada. Depois de confirmada, você pode cancelar a próxima.")
+        expect(c).toContain("Não há assinatura para cancelar.")
+        expect(c).toContain(".eq('status', linha.status)")
+        expect(c).toContain(".is('grace_until', null)")
+        expect(funcao(f, "desfazer")).toContain("podeDesfazer(linha, agora)")
+    })
+
+    it("reembolsar: podeReembolsar antes de qualquer chamada ao Asaas, e só o provider_ref da linha", () => {
+        const r = funcao(fonte(CANCEL), "reembolsar")
+        const pode = r.indexOf("podeReembolsar(linha, agora)")
+        expect(pode).toBeGreaterThan(-1)
+        expect(r.indexOf("configDoAsaas(")).toBeGreaterThan(pode)
+        expect(r.indexOf("estornarNoAsaas(cfg, ref, linha.asaas_customer_id)")).toBeGreaterThan(pode)
+        expect(r).toContain("const ref = linha?.provider_ref ?? null")
+        expect(r).toContain("O prazo de 7 dias para reembolso terminou.")
+    })
+
+    it("reembolsar: reivindica o registro antes de pedir, e expira só depois do estorno confirmado", () => {
+        const r = funcao(fonte(CANCEL), "reembolsar")
+        const reivindica = r.indexOf("estorno_status: 'pendente'")
+        const pede = r.indexOf("estornarNoAsaas(cfg")
+        const falha = r.indexOf("if (!r.ok)")
+        const feito = r.indexOf("estorno_status: 'feito'")
+        const expira = r.indexOf("status: 'expired'")
+        expect(r).toContain(".is('estorno_status', null)")
+        expect(reivindica).toBeLessThan(pede)
+        expect(falha).toBeGreaterThan(pede)
+        expect(feito).toBeGreaterThan(falha)
+        expect(expira).toBeGreaterThan(feito)
+        expect(r.match(/status: 'expired'/g)?.length).toBe(1)
+        expect(r).toContain(".eq('provider_ref', ref)")
+    })
+
+    it("reembolsar: o pedido estourado ou recusado fica pendente e volta 202, sem pedir de novo (Ruling 13)", () => {
+        const f = fonte(CANCEL)
+        expect(f).toContain("json(202, { ok: true, pendente: true, mensagem: 'Pedimos o reembolso ao Asaas. Avisamos quando ele for confirmado.' })")
+        const r = funcao(f, "reembolsar")
+        // o pendente responde antes de qualquer chamada ao Asaas
+        expect(r.indexOf("registro?.estorno_status === 'pendente'")).toBeLessThan(r.indexOf("estornarNoAsaas(cfg"))
+        expect(r).toContain("if (r.etapa === 'estorno') return REEMBOLSO_PEDIDO()")
+        expect(r.slice(r.indexOf("if (!r.ok)"), r.indexOf("estorno_status: 'feito'"))).not.toContain("status: 'expired'")
+    })
+
+    it("a Edge está no config sem JWT", () => {
+        expect(lerFonte("supabase/config.toml")).toMatch(/\[functions\.billing-cancel\]\s*\nverify_jwt = false/)
     })
 })

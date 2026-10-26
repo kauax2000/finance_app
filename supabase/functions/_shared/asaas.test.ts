@@ -8,6 +8,7 @@ import {
   configDoAsaas,
   criarCliente,
   criarCobranca,
+  estornarNoAsaas,
   estornarParcelamento,
   listarCobrancasAbertas,
   removerCobranca,
@@ -244,6 +245,40 @@ Deno.test('buscarParcelamento: o prazo estourado volta incerto', async () => {
     const r = await buscarParcelamento(CFG, 'inst_1')
     assertEquals(r.ok, false)
     if (!r.ok) assertEquals(r.incerto, true)
+  })
+})
+
+Deno.test('estornarNoAsaas: lê antes; já estornado não pede de novo', async () => {
+  await comFetch(() => json(200, { id: 'inst_1', customer: 'cus_1', refunds: [{ status: 'PENDING' }] }), async (pedidos) => {
+    assertEquals(await estornarNoAsaas(CFG, 'inst_1', 'cus_1'), { ok: true })
+    assertEquals(pedidos.map((p) => p.init.method), ['GET'])
+  })
+})
+
+Deno.test('estornarNoAsaas: GET e depois o POST do estorno', async () => {
+  await comFetch(() => json(200, { id: 'inst_1', customer: 'cus_1', refunds: [] }), async (pedidos) => {
+    assertEquals(await estornarNoAsaas(CFG, 'inst_1', 'cus_1'), { ok: true })
+    assertEquals(pedidos.map((p) => p.init.method), ['GET', 'POST'])
+    assertEquals(pedidos[1].url, 'https://api-sandbox.asaas.com/v3/installments/inst_1/refund')
+  })
+})
+
+Deno.test('estornarNoAsaas: outro cliente ou leitura falha não pede estorno', async () => {
+  await comFetch(() => json(200, { id: 'inst_1', customer: 'cus_2' }), async (pedidos) => {
+    assertEquals((await estornarNoAsaas(CFG, 'inst_1', 'cus_1')).ok, false)
+    assertEquals(pedidos.length, 1)
+  })
+  await comFetch(() => json(500, {}), async (pedidos) => {
+    const r = await estornarNoAsaas(CFG, 'inst_1', 'cus_1')
+    assertEquals(r.ok ? null : r.etapa, 'leitura')
+    assertEquals(pedidos.length, 1)
+  })
+})
+
+Deno.test('estornarNoAsaas: o POST recusado ou estourado volta na etapa estorno', async () => {
+  await comFetch((_url, init) => init.method === 'GET' ? json(200, { id: 'inst_1', customer: 'cus_1' }) : json(400, {}), async () => {
+    const r = await estornarNoAsaas(CFG, 'inst_1', 'cus_1')
+    assertEquals(r.ok ? null : [r.etapa, r.status], ['estorno', 400])
   })
 })
 

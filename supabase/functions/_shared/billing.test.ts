@@ -17,6 +17,8 @@ import {
   type Pagamento,
   PARCELAS,
   planoDoCheckout,
+  podeCancelar,
+  podeDesfazer,
   podeReembolsar,
   precoPara,
   TOLERANCIA_DIAS,
@@ -282,9 +284,43 @@ Deno.test('acaoDoDia past_due sem grace_until: o limite é fim + 7 dias', () => 
   assertEquals(acaoDoDia(s, em(7 * DIA)), 'expirar')
 })
 
+Deno.test('acaoDoDia past_due com cancelamento (Ruling 11): nunca renova; expira no grace_until', () => {
+  const s = sub({ status: 'past_due', grace_until: iso(em(7 * DIA)), cancel_at_period_end: true })
+  assertEquals(acaoDoDia(s, em(3 * DIA)), null)
+  assertEquals(acaoDoDia(s, em(7 * DIA - 1)), null)
+  assertEquals(acaoDoDia(s, em(7 * DIA)), 'expirar')
+  // sem grace_until, o limite é fim + 7 dias
+  const semCarencia = sub({ status: 'past_due', cancel_at_period_end: true })
+  assertEquals(acaoDoDia(semCarencia, em(DIA)), null)
+  assertEquals(acaoDoDia(semCarencia, em(7 * DIA)), 'expirar')
+})
+
 Deno.test('acaoDoDia: pending e expired não têm ação', () => {
   assertEquals(acaoDoDia(sub({ status: 'pending' }), em(0)), null)
   assertEquals(acaoDoDia(sub({ status: 'expired' }), em(0)), null)
+})
+
+// podeCancelar / podeDesfazer
+
+Deno.test('podeCancelar: active e past_due do Asaas; o active com grace_until está renovando (Ruling 12)', () => {
+  assertEquals(podeCancelar(sub()), 'sim')
+  assertEquals(podeCancelar(sub({ status: 'past_due', grace_until: iso(em(7 * DIA)) })), 'sim')
+  assertEquals(podeCancelar(sub({ grace_until: iso(em(7 * DIA)) })), 'renovando')
+  assertEquals(podeCancelar(sub({ provider: 'manual' })), 'nao')
+  assertEquals(podeCancelar(sub({ status: 'pending' })), 'nao')
+  assertEquals(podeCancelar(sub({ status: 'expired' })), 'nao')
+})
+
+Deno.test('podeDesfazer: só cancelado, até o fim do período ou da tolerância do past_due', () => {
+  const c = (x: Partial<Assinatura> = {}) => sub({ cancel_at_period_end: true, ...x })
+  assertEquals(podeDesfazer(c(), em(-1)), true)
+  assertEquals(podeDesfazer(c(), em(0)), false)
+  assertEquals(podeDesfazer(sub(), em(-DIA)), false)
+  assertEquals(podeDesfazer(c({ provider: 'manual' }), em(-DIA)), false)
+  assertEquals(podeDesfazer(c({ status: 'expired' }), em(-DIA)), false)
+  const atraso = c({ status: 'past_due', grace_until: iso(em(7 * DIA)) })
+  assertEquals(podeDesfazer(atraso, em(3 * DIA)), true)
+  assertEquals(podeDesfazer(atraso, em(7 * DIA)), false)
 })
 
 // falhaNaRenovacao / aguardandoConfirmacao / podeReembolsar

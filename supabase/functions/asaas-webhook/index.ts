@@ -14,11 +14,10 @@
  * tentativa não parar no "repetido".
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
-import { buscarParcelamento, configDoAsaas, estornarParcelamento } from '../_shared/asaas.ts'
+import { configDoAsaas, estornarNoAsaas } from '../_shared/asaas.ts'
 import {
   type Assinatura,
   efeitoDoEvento,
-  jaEstornado,
   type Pagamento,
   pagamentoEmDobro,
   type Parcelamento,
@@ -205,21 +204,10 @@ async function estornar(admin: Admin, linha: Linha, registro: Parcelamento): Pro
     return pendente('config')
   }
 
-  const estado = await buscarParcelamento(cfg, parcelamento)
-  if (!estado.ok) {
-    console.error('asaas-webhook: ler o parcelamento', linha.id, parcelamento, estado.status, estado.erros)
-    return pendente('leitura')
-  }
-  if (estado.dados.customer && estado.dados.customer !== linha.asaas_customer_id) {
-    console.error('asaas-webhook: o parcelamento é de outro cliente', linha.id, parcelamento)
-    return pendente('cliente')
-  }
-  if (!jaEstornado(estado.dados)) {
-    const r = await estornarParcelamento(cfg, parcelamento)
-    if (!r.ok) {
-      console.error('asaas-webhook: estorno falhou', linha.id, parcelamento, r.status, r.erros)
-      return pendente('estorno')
-    }
+  const r = await estornarNoAsaas(cfg, parcelamento, linha.asaas_customer_id)
+  if (!r.ok) {
+    console.error('asaas-webhook: estorno', r.etapa, linha.id, parcelamento, r.status, r.erros)
+    return pendente(r.etapa)
   }
 
   // Falhou a marca, o billing-daily lê o parcelamento, acha o estorno e marca.

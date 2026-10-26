@@ -269,12 +269,36 @@ export function acaoDoDia(sub: Assinatura, agora: Date): 'avisar_renovacao' | 'r
   }
 
   if (sub.status === 'past_due') {
-    const limite = sub.grace_until ? new Date(sub.grace_until) : maisDias(fim, TOLERANCIA_DIAS)
-    if (agora >= limite) return 'expirar'
+    if (agora >= limiteDoAtraso(sub, fim)) return 'expirar'
+    // Ruling 11: quem cancelou com o cartão recusado não é cobrado de novo.
+    if (sub.cancel_at_period_end) return null
     return esperandoWebhook ? null : 'renovar'
   }
 
   return null
+}
+
+/** Até quando um `past_due` segue com o plano: a `grace_until`, ou o fim mais a tolerância. */
+const limiteDoAtraso = (sub: Assinatura, fim: Date) =>
+  sub.grace_until ? new Date(sub.grace_until) : maisDias(fim, TOLERANCIA_DIAS)
+
+/**
+ * O "cancelar em 1 toque": vale no `active` e no `past_due` (Ruling 11) do
+ * Asaas. `'renovando'` é um `active` com `grace_until`: a renovação foi cobrada
+ * e espera a confirmação, que desligaria o cancelamento em silêncio (Ruling 12).
+ */
+export function podeCancelar(sub: Assinatura): 'sim' | 'renovando' | 'nao' {
+  if (sub.provider !== 'asaas') return 'nao'
+  if (sub.status === 'active') return sub.grace_until ? 'renovando' : 'sim'
+  return sub.status === 'past_due' ? 'sim' : 'nao'
+}
+
+/** Desfazer o cancelamento enquanto o plano não acabou: o período, ou a tolerância de um `past_due`. */
+export function podeDesfazer(sub: Assinatura, agora: Date): boolean {
+  if (sub.provider !== 'asaas' || !sub.cancel_at_period_end || !sub.current_period_end) return false
+  const fim = new Date(sub.current_period_end)
+  if (sub.status === 'active') return agora < fim
+  return sub.status === 'past_due' && agora < limiteDoAtraso(sub, fim)
 }
 
 export function podeReembolsar(sub: Assinatura, agora: Date): boolean {

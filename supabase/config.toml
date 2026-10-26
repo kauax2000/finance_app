@@ -81,6 +81,10 @@ verify_jwt = false
 [functions.asaas-webhook]
 verify_jwt = false
 
+# Cancelar, desfazer e reembolsar o plano: a função confere o JWT.
+[functions.billing-cancel]
+verify_jwt = false
+
 # Local-only: vector/analytics container requires a docker.sock mount that
 # fails under colima; not needed for db/functions development.
 [analytics]
