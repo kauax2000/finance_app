@@ -192,14 +192,6 @@ begin
     );
   end if;
 
-  -- O link não tem e-mail: o ex-convidado volta só por um convite por e-mail.
-  if v_invite.invited_email is null and exists (
-    select 1 from public.workspace_ex_convidados x
-    where x.workspace_id = v_invite.workspace_id and x.user_id = p_user_id
-  ) then
-    return jsonb_build_object('status', 'ex_convidado', 'workspace_id', v_invite.workspace_id);
-  end if;
-
   if v_invite.status <> 'pending' then
     return jsonb_build_object('status', 'not_pending', 'workspace_id', v_invite.workspace_id);
   end if;
@@ -207,6 +199,15 @@ begin
   if v_invite.expires_at < now() then
     update public.workspace_invites set status = 'expired' where id = v_invite.id;
     return jsonb_build_object('status', 'expired', 'workspace_id', v_invite.workspace_id);
+  end if;
+
+  -- Depois de revogado/expirado, para o link responder o estado real.
+  -- O link não tem e-mail: o ex-convidado volta só por um convite por e-mail.
+  if v_invite.invited_email is null and exists (
+    select 1 from public.workspace_ex_convidados x
+    where x.workspace_id = v_invite.workspace_id and x.user_id = p_user_id
+  ) then
+    return jsonb_build_object('status', 'ex_convidado', 'workspace_id', v_invite.workspace_id);
   end if;
 
   if v_invite.invited_email is not null

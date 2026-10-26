@@ -132,11 +132,6 @@ alcançam o `credit-card-cycle.ts`, mas só usam funções que não mudaram.
 dia de vencer (fecha no dia 5, vence no 25): o `main` ainda conta "o mês
 seguinte".
 
-**O estorno no `evaluate-budgets` e no `evaluate-credit-card-alerts`.** Republicadas,
-as duas passam a abater do gasto da categoria os estornos no cartão que o front
-2.0 grava **no mesmo banco**. É intencional, e só diminui o gasto. Antes do front
-2.0 ninguém grava estorno com categoria de despesa, então nada muda.
-
 **Primeiro, a Edge do convite** (pode subir já, sem esperar o resto):
 
 ```bash

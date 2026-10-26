@@ -211,6 +211,7 @@ export function despesaPorCategoria(
     const spendById = new Map<string, number>()
     for (const t of transactions) {
         const sinal = sinalNaDespesa(t)
+        // O estorno sem categoria não abate o balde "Sem categoria", de propósito.
         if (!sinal || (sinal < 0 && !t.category_id)) continue
         const id = t.category_id ?? "__none__"
         spendById.set(id, (spendById.get(id) ?? 0) + sinal * Number(t.amount))

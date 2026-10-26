@@ -30,6 +30,7 @@ import {
     DEFAULT_INSTALLMENT_COUNT,
     TRANSACTION_SAVE_TOAST_ID,
     categoriaForaDoTipo,
+    categoriaSaiuDoEstorno,
     type InstallmentPlanFormSavePayload,
     type InstallmentPlanUpdatePayload,
     type TransactionFormSavePayload,
@@ -224,6 +225,7 @@ export function useTransactionForm({
     )
     const [paymentCreditCardId, setPaymentCreditCardId] = useState("")
     const [estornoCartaoId, setEstornoCartaoId] = useState<string | null>(null)
+    const [categoriaSaiu, setCategoriaSaiu] = useState(false)
     const [installmentValueMode, setInstallmentValueMode] = useState<
         "total" | "per_installment"
     >("total")
@@ -369,8 +371,14 @@ export function useTransactionForm({
         }
     }, [active])
 
+    // Escolher outra categoria ou largar o estorno apaga o aviso.
+    useEffect(() => {
+        if (categoryId || !estornoCartaoId) setCategoriaSaiu(false)
+    }, [categoryId, estornoCartaoId])
+
     useEffect(() => {
         if (!categoriaForaDoTipo({ type, estornoCartaoId, categoryId }, categories)) return
+        setCategoriaSaiu(categoriaSaiuDoEstorno({ type, estornoCartaoId, categoryId }, categories))
         setCategoryId("")
         // A categoria que já nasceu fora do tipo (o estorno antigo, numa de
         // receita) sai também da fotografia: abrir não suja o formulário.
@@ -756,6 +764,7 @@ export function useTransactionForm({
         setPaymentCreditCardId,
         estornoCartaoId,
         setEstornoCartaoId,
+        categoriaSaiu,
         categories,
         creditCards,
         categoriesHref,

@@ -93,6 +93,8 @@ describe(`migração ${MIGRACAO}`, () => {
             /if v_invite\.invited_email is null and exists \(\s*select 1 from public\.workspace_ex_convidados x\s+where x\.workspace_id = v_invite\.workspace_id and x\.user_id = p_user_id\s*\) then\s+return jsonb_build_object\('status', 'ex_convidado', 'workspace_id', v_invite\.workspace_id\);/,
         )
         expect(ex).toBeGreaterThan(jaMembro)
+        // Link revogado ou expirado responde o estado real, não o ex-convidado.
+        expect(ex).toBeGreaterThan(c.indexOf("v_invite.expires_at < now()"))
         const entra = c.indexOf("insert into public.workspace_members")
         expect(ex).toBeLessThan(entra)
         const apaga = c.search(

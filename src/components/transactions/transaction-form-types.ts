@@ -80,3 +80,14 @@ export function categoriaForaDoTipo(
     const cat = r.categoryId ? categorias.find((c) => c.id === r.categoryId) : undefined
     return cat != null && cat.type !== tipoDaCategoria(r.type, r.estornoCartaoId)
 }
+
+/**
+ * O estorno aberto trazia categoria de receita e `categoriaForaDoTipo` a
+ * limpou: o campo avisa por quê (a da compra é de despesa).
+ */
+export function categoriaSaiuDoEstorno(
+    r: { type: "income" | "expense"; estornoCartaoId: string | null; categoryId: string },
+    categorias: { id: string; type: "income" | "expense" }[],
+): boolean {
+    return r.type === "income" && r.estornoCartaoId != null && categoriaForaDoTipo(r, categorias)
+}

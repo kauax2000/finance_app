@@ -128,6 +128,8 @@ export type CardTxRow = {
  * Despesas no cartão com data em [start, end] (inclusivo), somadas em centavos.
  * `categoryId` undefined soma todas; null, só as sem categoria. Com uma
  * categoria, o estorno no cartão dela abate (o alerta de categoria do ciclo).
+ * O estorno sem categoria não abate o balde "sem categoria", de propósito
+ * (como `despesaPorCategoria` explica).
  */
 export function sumCardExpensesInWindow(
   rows: CardTxRow[],

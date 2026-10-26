@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { categoriaForaDoTipo } from "@/components/transactions/transaction-form-types"
+import { categoriaForaDoTipo, categoriaSaiuDoEstorno } from "@/components/transactions/transaction-form-types"
 import { tipoDaCategoria } from "@/lib/expense-month-attribution"
 
 describe("tipoDaCategoria", () => {
@@ -28,5 +28,22 @@ describe("categoriaForaDoTipo", () => {
     it("sem categoria, ou com uma que a lista não tem, não há o que tirar", () => {
         expect(categoriaForaDoTipo({ type: "income", estornoCartaoId: "c1", categoryId: "" }, categorias)).toBe(false)
         expect(categoriaForaDoTipo({ type: "income", estornoCartaoId: null, categoryId: "sumida" }, categorias)).toBe(false)
+    })
+})
+
+describe("categoriaSaiuDoEstorno", () => {
+    const categorias = [
+        { id: "reembolso", type: "income" as const },
+        { id: "mercado", type: "expense" as const },
+    ]
+
+    it("avisa quando o estorno largou uma categoria de receita", () => {
+        expect(categoriaSaiuDoEstorno({ type: "income", estornoCartaoId: "c1", categoryId: "reembolso" }, categorias)).toBe(true)
+    })
+
+    it("não avisa com categoria de despesa, sem estorno ou sem categoria", () => {
+        expect(categoriaSaiuDoEstorno({ type: "income", estornoCartaoId: "c1", categoryId: "mercado" }, categorias)).toBe(false)
+        expect(categoriaSaiuDoEstorno({ type: "expense", estornoCartaoId: null, categoryId: "reembolso" }, categorias)).toBe(false)
+        expect(categoriaSaiuDoEstorno({ type: "income", estornoCartaoId: "c1", categoryId: "" }, categorias)).toBe(false)
     })
 })

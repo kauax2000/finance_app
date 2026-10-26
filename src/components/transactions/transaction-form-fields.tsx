@@ -245,6 +245,8 @@ export type TransactionFormFieldsProps = {
     /** Receita que é estorno no cartão (o wireframe do Bloco 2). */
     estornoCartaoId: string | null
     setEstornoCartaoId: (id: string | null) => void
+    /** A categoria de receita do estorno aberto foi limpa: o campo explica. */
+    categoriaSaiu: boolean
     categories: Category[]
     creditCards: CreditCard[]
     categoriesHref: string
@@ -332,6 +334,7 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
         setPaymentCreditCardId,
         estornoCartaoId,
         setEstornoCartaoId,
+        categoriaSaiu,
         categories,
         creditCards,
         categoriesHref,
@@ -790,6 +793,9 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
                 </Popover>
                 {type === "income" && estornoCartaoId ? (
                     <FieldDescription>No estorno, a categoria é a da compra (de despesa).</FieldDescription>
+                ) : null}
+                {categoriaSaiu && !categoryId ? (
+                    <FieldDescription>A categoria antiga era de receita e saiu; escolha a da compra.</FieldDescription>
                 ) : null}
             </Field>
 
