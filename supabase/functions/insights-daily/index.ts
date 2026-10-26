@@ -343,10 +343,18 @@ async function achadosDaCarteira(admin: SupabaseAdminClient, workspaceId: string
   // O sazonal olha janeiro a março do ano anterior, fora da janela de 4 meses.
   const sazonal = hojeYmd.slice(5) <= '02-15'
   const [assinaturas, planos, cartoes, ligadas, categorias, contas, passados, conferir] = await Promise.all([
-    todasAsPaginas<{ id: string; name: string; amount: number; is_active: boolean; kind: string }>((a, b) =>
+    todasAsPaginas<{
+      id: string
+      name: string
+      amount: number
+      is_active: boolean
+      kind: string
+      payment_method: string | null
+      payment_credit_card_id: string | null
+    }>((a, b) =>
       admin
         .from('workspace_subscriptions')
-        .select('id,name,amount,is_active,kind')
+        .select('id,name,amount,is_active,kind,payment_method,payment_credit_card_id')
         .eq('workspace_id', workspaceId)
         .eq('is_active', true)
         .order('id', { ascending: true })

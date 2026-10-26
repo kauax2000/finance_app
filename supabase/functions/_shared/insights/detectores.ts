@@ -252,12 +252,21 @@ export function detectarDuplicidades(
 
 /**
  * Um lançamento solto dos últimos 40 dias cuja descrição contém o nome de uma
- * assinatura ativa de despesa, com valor diferente em mais de R$ 0,01 e menos
+ * assinatura ativa de despesa (igual a ele, ou contendo-o no mesmo método e no mesmo cartão
+ * da assinatura), com valor diferente em mais de R$ 0,01 e menos
  * de 50%. Fica o mais recente por assinatura.
  */
 export function detectarPrecoDeAssinatura(
   lancs: Lanc[],
-  assinaturas: Array<{ id: string; name: string; amount: number; is_active: boolean; kind?: string }>,
+  assinaturas: Array<{
+    id: string
+    name: string
+    amount: number
+    is_active: boolean
+    kind?: string
+    payment_method?: string | null
+    payment_credit_card_id?: string | null
+  }>,
   hojeYmd: string,
 ): Array<{ chave: string; assinaturaId: string; nome: string; de: number; para: number; lancamentoId: string }> {
   const desde = menosDias(hojeYmd, 40)
@@ -271,7 +280,15 @@ export function detectarPrecoDeAssinatura(
   for (const s of assinaturas) {
     if (!s.is_active || (s.kind ?? 'expense') !== 'expense') continue
     const nome = normalizarDescricao(s.name)
-    const l = soltos.find((x) => contem(normalizarDescricao(x.description), nome))
+    const l = soltos.find((x) => {
+      const d = normalizarDescricao(x.description)
+      if (d === nome) return true
+      return (
+        contem(d, nome) &&
+        x.payment_method === (s.payment_method ?? null) &&
+        (!s.payment_credit_card_id || x.payment_credit_card_id === s.payment_credit_card_id)
+      )
+    })
     if (!l) continue
     const dif = Math.abs(centavos(l.amount) - centavos(s.amount))
     if (dif <= 1 || dif >= centavos(s.amount) / 2) continue

@@ -133,15 +133,44 @@ export async function atualizarPrecoDaAssinatura(insight: Insight): Promise<Resu
     return marcarDepois(insight)
 }
 
-/** Dos dois lançamentos iguais, apaga o de id maior (o outro fica). */
+type LinhaDoRepetido = { id: string; created_at: string; needs_review: boolean; anexos: number }
+
+/**
+ * Dos lançamentos repetidos, o que apagar: fica o que tem anexo, depois o já revisado, depois o
+ * mais antigo. Com menos de dois, não há o que apagar (`null`).
+ */
+export function qualApagar(linhas: LinhaDoRepetido[]): string | null {
+    if (linhas.length < 2) return null
+    const [, ...resto] = [...linhas].sort(
+        (a, b) =>
+            Number(b.anexos > 0) - Number(a.anexos > 0) ||
+            Number(!b.needs_review) - Number(!a.needs_review) ||
+            a.created_at.localeCompare(b.created_at),
+    )
+    return resto[0].id
+}
+
+/** Dos dois lançamentos iguais, apaga o que `qualApagar` manda (o outro fica). */
 export async function apagarUm(
     insight: Insight,
     confirmar: (mensagem: string) => boolean = (m) => window.confirm(m),
 ): Promise<Resultado> {
-    const alvo = ids(insight.payload.ids).sort().at(-1)
-    if (!alvo) return { ok: false, erro: "Este insight não aceita essa ação." }
+    const lista = ids(insight.payload.ids)
+    if (lista.length === 0) return { ok: false, erro: "Este insight não aceita essa ação." }
+    const lidas = await supabase.from("transactions").select("id,created_at,needs_review").in("id", lista)
+    if (lidas.error) return falha(lidas.error, "Não foi possível ler os lançamentos.")
+    const linhas = (lidas.data as Array<{ id: string; created_at: string; needs_review: boolean }> | null) ?? []
+    // Sem a leitura dos anexos, conta 0: o desempate cai no revisado e no mais antigo.
+    const anexados = await supabase.from("attachments").select("transaction_id").in("transaction_id", lista)
+    const comAnexo = (anexados.data as Array<{ transaction_id: string }> | null) ?? []
+    const alvo = qualApagar(
+        linhas.map((l) => ({ ...l, anexos: comAnexo.filter((x) => x.transaction_id === l.id).length })),
+    )
+    // Só um sobrou: a duplicata já foi desfeita, só falta marcar.
+    if (!alvo) return marcarDepois(insight)
     const descricao = texto(insight.payload.descricao) ?? "o lançamento"
-    if (!confirmar(`Apagar um dos dois lançamentos de ${descricao}? O outro fica.`)) return { ok: false, erro: null }
+    if (!confirmar(`Apagar um dos dois lançamentos de ${descricao}? O que tem anexo, ou já foi revisado, fica.`))
+        return { ok: false, erro: null }
     const r = await deleteTransactionById(alvo, insight.workspace_id)
     if (!r.ok) return { ok: false, erro: r.errorMessage }
     return marcarDepois(insight)

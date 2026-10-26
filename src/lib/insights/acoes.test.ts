@@ -32,6 +32,7 @@ vi.mock("@/lib/transactions/mutations", () => ({ deleteTransactionById: mut.dele
 
 const {
     apagarUm,
+    qualApagar,
     atualizarPrecoDaAssinatura,
     filtroDaCaixa,
     linhaDoSeguroDoMes,
@@ -192,6 +193,20 @@ describe("atualizarPrecoDaAssinatura", () => {
     })
 })
 
+describe("qualApagar", () => {
+    const l = (id: string, created_at: string, needs_review = false, anexos = 0) => ({ id, created_at, needs_review, anexos })
+
+    it("mantém o anexo, depois o revisado, depois o mais antigo", () => {
+        expect(qualApagar([l("a", "2026-10-01", false, 0), l("b", "2026-10-02", true, 1)])).toBe("a")
+        expect(qualApagar([l("a", "2026-10-01", true), l("b", "2026-10-02", false)])).toBe("a")
+        expect(qualApagar([l("a", "2026-10-01"), l("b", "2026-10-02")])).toBe("b")
+    })
+
+    it("com uma linha só, não apaga", () => {
+        expect(qualApagar([l("a", "2026-10-01")])).toBeNull()
+    })
+})
+
 describe("apagarUm", () => {
     const dup = {
         ...recorrencia,
@@ -199,7 +214,21 @@ describe("apagarUm", () => {
         payload: { ids: ["b-2", "a-1"], valor: 50, descricao: "Mercado", dataYmd: "2026-10-20" },
     }
 
-    it("pergunta, apaga o de id maior e marca usado", async () => {
+    const lidas = () => {
+        db.state.results.push(
+            {
+                data: [
+                    { id: "b-2", created_at: "2026-10-20T10:00:00Z", needs_review: false },
+                    { id: "a-1", created_at: "2026-10-20T11:00:00Z", needs_review: false },
+                ],
+                error: null,
+            },
+            { data: [{ transaction_id: "a-1" }], error: null },
+        )
+    }
+
+    it("pergunta, apaga o sem anexo e marca usado", async () => {
+        lidas()
         mut.deleteTransactionById.mockResolvedValue({ ok: true })
         const confirmar = vi.fn(() => true)
         expect(await apagarUm(dup, confirmar)).toEqual({ ok: true })
@@ -209,12 +238,21 @@ describe("apagarUm", () => {
     })
 
     it("sem confirmação, nada acontece", async () => {
+        lidas()
         expect(await apagarUm(dup, () => false)).toEqual({ ok: false, erro: null })
         expect(mut.deleteTransactionById).not.toHaveBeenCalled()
         expect(rpcs()).toEqual([])
     })
 
+    it("só um existe: não apaga, só marca usado", async () => {
+        db.state.results.push({ data: [{ id: "a-1", created_at: "2026-10-20T11:00:00Z", needs_review: false }], error: null })
+        expect(await apagarUm(dup, () => true)).toEqual({ ok: true })
+        expect(mut.deleteTransactionById).not.toHaveBeenCalled()
+        expect(marcouUsado()).toBe(true)
+    })
+
     it("com erro ao apagar, não marca", async () => {
+        lidas()
         mut.deleteTransactionById.mockResolvedValue({ ok: false, errorMessage: "Falhou." })
         expect(await apagarUm(dup, () => true)).toEqual({ ok: false, erro: "Falhou." })
         expect(marcouUsado()).toBe(false)

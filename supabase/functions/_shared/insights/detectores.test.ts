@@ -239,7 +239,7 @@ Deno.test('Foco 3: uma despesa e o estorno dela não são duplicidade', () => {
 // ── Preço de assinatura ──────────────────────────────────────────────────────
 
 const ASSINATURAS = [
-  { id: 'sub-spot', name: 'Spotify', amount: 21.9, is_active: true, kind: 'expense' },
+  { id: 'sub-spot', name: 'Spotify', amount: 21.9, is_active: true, kind: 'expense', payment_method: 'credit_card', payment_credit_card_id: 'card-1' },
   { id: 'sub-old', name: 'Deezer', amount: 20, is_active: false, kind: 'expense' },
   { id: 'sub-sal', name: 'Salário', amount: 5000, is_active: true, kind: 'income' },
 ]
@@ -261,6 +261,18 @@ Deno.test('preço: mesmo valor, ligado, antigo, inativa, receita ou salto de 50%
     l({ dateYmd: '2026-10-02', amount: 5100, description: 'Salário' }),
   ]
   assertEquals(detectarPrecoDeAssinatura(ls, ASSINATURAS, HOJE), [])
+})
+
+Deno.test('preço: nome só contido exige o mesmo método e o mesmo cartão; nome igual basta', () => {
+  const amazon = [
+    { id: 'sub-amz', name: 'Amazon', amount: 14.9, is_active: true, kind: 'expense', payment_method: 'credit_card', payment_credit_card_id: 'card-1' },
+  ]
+  const outroCartao = l({ dateYmd: '2026-10-02', amount: 19.9, description: 'Amazon compra', payment_credit_card_id: 'card-2' })
+  assertEquals(detectarPrecoDeAssinatura([outroCartao], amazon, HOJE), [])
+  const mesmoCartao = l({ id: 'm1', dateYmd: '2026-10-02', amount: 16.9, description: 'Amazon compra' })
+  assertEquals(detectarPrecoDeAssinatura([mesmoCartao], amazon, HOJE).map((x) => x.lancamentoId), ['m1'])
+  const nomeIgual = l({ id: 'n1', dateYmd: '2026-10-02', amount: 16.9, description: 'amazon', payment_credit_card_id: 'card-2' })
+  assertEquals(detectarPrecoDeAssinatura([nomeIgual], amazon, HOJE).map((x) => x.lancamentoId), ['n1'])
 })
 
 // ── Parcelas acabando ────────────────────────────────────────────────────────
