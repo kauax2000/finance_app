@@ -82,8 +82,8 @@ Gerado em 26/10/2026 a partir de `docs/JORNADAS.md` §19 (branch `finance-app-2.
 | 54 | O insight `limite_pessoa` do convidado não aparece para ele; só o aviso no sino. | Bloco 7A: Papéis | M | não | o sino já avisa |
 | 55 | A folha de detalhe lê `workspace_installment_plans`, agora só do adulto; compra parcelada do convidado perde 'parcela x de y'. | Bloco 7A: Papéis | P | não | só rótulo |
 | 56 | O papel pode ficar até 5 min velho no cliente (`staleTime` das carteiras): quem virou convidado vê a navegação da casa até a próxima busca. | Bloco 7A: Papéis | P | não | a RLS protege; ele vê vazio |
-| 63 | O titular que não é dono não consegue se tirar do cartão pela tela (seletor só do dono). | Bloco 7B: Privado | P | não | pede ao dono |
-| 65 | Fatura fechou, aviso de fatura e limite de um cartão com titular vão só ao titular e aos donos; membro adulto sem ser titular deixa de receber o resumo. | Bloco 7B: Privado | P | não | regra de privacidade escolhida (Ruling 5 e 7); confirmar com o dono |
+| 63 | O titular que não é dono não consegue se tirar do cartão pela tela (seletor só do dono). | Bloco 7B: Titular | P | não | pede ao dono |
+| 65 | Fatura fechou, aviso de fatura e limite de um cartão com titular vão só ao titular e aos donos; membro adulto sem ser titular deixa de receber o resumo. | Bloco 7B: Titular | P | não | regra de privacidade escolhida (Ruling 5 e 7); confirmar com o dono |
 | 72 | Quem saiu aparece como 'Ex-membro' sem nome (com sufixo de id só no acerto); linha antiga sem `paid_by` também lê 'Ex-membro'. | Bloco 7C: Divisão | M | não | só nome; saldo fecha em 0 |
 | 73 | A carteira de projeto não tem previsão, mas só o link do Painel some: `/previsao` direta abre nela, e insight de seguro e quadro de impacto seguem calculando. A rota não tem guarda. | Bloco 7C: Divisão | P | não | tela sem sentido, sem dano |
 | 80 | A exportação do Cofre não traz a linha do plano (`billing_subscriptions` é só da service role). | Bloco 8: Cobrança | P | não | o plano aparece em `/plans`; incluir via `meu_plano()` |
@@ -124,5 +124,5 @@ Gerado em 26/10/2026 a partir de `docs/JORNADAS.md` §19 (branch `finance-app-2.
 | 2 | O provider global expõe 'abrir convite', mas nada o chama (código morto). | Base: Membros | P | não | sem efeito para a pessoa |
 | 9 | Exclusão em lote, parcelada, offline e desfazer de importação deixam o objeto do anexo no bucket até o cron de domingo. | Bloco 2: Fatura | P | não | só ocupa armazenamento do projeto |
 | 18 | Item do Apple Pay antigo com casamento parcial não tem `walletCard` e não oferece 'Lembrar'. | Bloco 3A: Captura | P | não | só dado gravado antes do ajuste |
-| 64 | Adulto que apaga anexo de outro adulto deixa o objeto no bucket até o cron de domingo. | Bloco 7B: Privado | P | não | só armazenamento |
+| 64 | Adulto que apaga anexo de outro adulto deixa o objeto no bucket até o cron de domingo. | Bloco 7B: Titular | P | não | só armazenamento |
 | 71 | Apagar o plano parcelado direto na tabela solta as parcelas e o gatilho as redivide pelos pesos da carteira (perde pesos próprios). | Bloco 7C: Divisão | P | não | o botão do app apaga as parcelas junto; só acesso direto |
