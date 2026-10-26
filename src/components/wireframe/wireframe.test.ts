@@ -385,6 +385,9 @@ describe("Carteira de projeto, fix 1 (Bloco 7C)", () => {
     const w = fonte("src/components/wireframe/projetos-wireframe.tsx")
     expect(w).toContain("isWorkspaceOwner(alvo.id)")
     expect(w).toContain("camposDaCarteiraProjeto(")
+    // O orçamento do projeto passa pelo mesmo parser pt-BR, e "0" é recusado.
+    expect(w).toContain("orcamentoTotal(orcamento)")
+    expect(w).not.toContain("Number(orcamento)")
     expect(w).toContain("formatMoneyBrlInput(")
     expect(fonte("src/app/(app)/settings/page-client.tsx")).toContain("<DatasDaCarteiraProjetoWireframe />")
     expect(fonte("src/components/workspace/project-form-dialog.tsx")).toContain("<DatasDaCarteiraProjetoWireframe")
@@ -496,6 +499,16 @@ describe("Divisão: quem pagou, partes, modo e saldo (Bloco 7C)", () => {
     expect(p).toMatch(/\.from\("workspace_installment_plans"\)\s*\.update\(\{ split_weights: payload\.splitWeights \}\)\s*\.eq\("id", id\)/)
     expect(p.indexOf('"create_workspace_installment_plan"')).toBeLessThan(p.indexOf("split_weights: payload.splitWeights"))
     expect(p).not.toContain("p_split_weights")
+  })
+
+  it("Ruling 8: o acerto lista quem saiu e exige que quem grava seja uma das partes", () => {
+    const w = fonte(W)
+    expect(w).toContain("pessoasDoAcerto(lista, saldos.data?.saldos ?? [])")
+    expect(w).toMatch(/if \(!acertoEhMeu\(meuId, de, para\)\) return setAviso\(/)
+    expect(w).toContain("acertoEhMeu(meuId, s.de, s.para) ?")
+    expect(w).not.toContain("quem saiu não entra num acerto novo")
+    // As duas listas do acerto são as pessoas do saldo, e não só os adultos.
+    expect(w.slice(w.indexOf("function SaldoEAcerto"))).not.toMatch(/\{lista\.map\(\(a\) => \(\s*<option/)
   })
 
   it("a etiqueta de cada peça", () => {

@@ -53,6 +53,24 @@ export function sugestaoDeAcerto(
     }
 }
 
+/**
+ * Ruling 8: quem entra num acerto — os adultos de hoje e quem saiu mas ainda
+ * está no saldo (`saiu`), que o banco aceita como a outra parte. Cada ex-membro
+ * leva um sufixo do id, para dois deles não se confundirem.
+ */
+export function pessoasDoAcerto(
+    adultos: { user_id: string; nome: string }[],
+    saldos: { user_id: string; saiu: boolean }[],
+): { user_id: string; nome: string }[] {
+    const fora = saldos
+        .filter((s) => s.saiu && !adultos.some((a) => a.user_id === s.user_id))
+        .map((s) => ({ user_id: s.user_id, nome: `Ex-membro ·${s.user_id.slice(0, 4)}` }))
+    return [...adultos, ...fora]
+}
+
+/** Ruling 8: quem grava o acerto é uma das duas partes (a política de insert confere). */
+export const acertoEhMeu = (meuId: string, de: string, para: string) => meuId === de || meuId === para
+
 /** O peso digitado ("1", "1,5"): maior que zero, até 9999,99, com até 2 casas; senão `null`. */
 export function lerPeso(texto: string): number | null {
     const t = texto.trim().replace(",", ".")

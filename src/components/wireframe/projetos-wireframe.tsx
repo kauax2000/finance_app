@@ -20,7 +20,7 @@ import {
     type Tolerante,
 } from "@/lib/projetos/dados"
 import { formatMoneyBrlInput } from "@/lib/money-brl"
-import { camposDaCarteiraProjeto } from "@/lib/projetos/modelos"
+import { camposDaCarteiraProjeto, orcamentoTotal } from "@/lib/projetos/modelos"
 import { resumoDoProjeto, SEM_CATEGORIA, type ResumoDoProjeto } from "@/lib/projetos/resumo"
 import { useMemberDirectoryQuery } from "@/lib/queries/use-member-directory"
 import { supabase, type Project, type Workspace } from "@/lib/supabase"
@@ -126,19 +126,21 @@ function FormularioDoProjeto({
     const [nome, setNome] = useState(inicial?.name ?? "")
     const [inicio, setInicio] = useState(inicial?.starts_on ?? "")
     const [fim, setFim] = useState(inicial?.ends_on ?? "")
-    const [orcamento, setOrcamento] = useState(inicial?.budget_total != null ? String(inicial.budget_total) : "")
+    const [orcamento, setOrcamento] = useState(inicial?.budget_total != null ? formatMoneyBrlInput(Number(inicial.budget_total)) : "")
     const [pendente, setPendente] = useState(false)
     const [erro, setErro] = useState<string | null>(null)
 
     async function onSubmit(e: FormEvent) {
         e.preventDefault()
+        const total = orcamentoTotal(orcamento)
+        if (!total.ok) return setErro(total.erro)
         setPendente(true)
         setErro(null)
         const falha = await enviar({
             name: nome.trim(),
             starts_on: inicio || null,
             ends_on: fim || null,
-            budget_total: orcamento ? Number(orcamento) : null,
+            budget_total: total.valor,
         })
         setPendente(false)
         setErro(falha)
@@ -168,10 +170,8 @@ function FormularioDoProjeto({
                 Orçamento total em R$ (opcional)
                 <input
                     className={campo}
-                    type="number"
                     inputMode="decimal"
-                    min="0.01"
-                    step="0.01"
+                    placeholder="0,00"
                     value={orcamento}
                     onChange={(e) => setOrcamento(e.target.value)}
                 />

@@ -19,7 +19,16 @@ import {
     listarAcertos,
     type Adulto,
 } from "@/lib/divisao/dados"
-import { emCentavos, lerPeso, partesFecham, pesosDigitados, sugestaoDeAcerto, textoDoSaldo } from "@/lib/divisao/partes"
+import {
+    acertoEhMeu,
+    emCentavos,
+    lerPeso,
+    partesFecham,
+    pesosDigitados,
+    pessoasDoAcerto,
+    sugestaoDeAcerto,
+    textoDoSaldo,
+} from "@/lib/divisao/partes"
 import { currencyBRL } from "@/lib/formatters"
 import { formatMoneyBrlInput, parseMoneyBrl } from "@/lib/money-brl"
 import { AINDA_NAO_DISPONIVEL } from "@/lib/projetos/dados"
@@ -453,13 +462,16 @@ function SaldoEAcerto({ ws }: { ws: string }) {
     const [pendente, setPendente] = useState(false)
     const [aviso, setAviso] = useState<string | null>(null)
 
-    const adulto = (id: string) => lista.some((a) => a.user_id === id)
+    // Ruling 8: quem saiu mas está no saldo entra no acerto, com o próprio rótulo.
+    const pessoas = pessoasDoAcerto(lista, saldos.data?.saldos ?? [])
+    const nomeDe = (id: string) => pessoas.find((p) => p.user_id === id)?.nome ?? nome(id)
     const atualizar = () => queryClient.invalidateQueries({ queryKey: chaves.saldos(ws) })
 
     async function onSubmit(e: FormEvent) {
         e.preventDefault()
         const reais = parseMoneyBrl(valor)
         if (!de || !para || de === para) return setAviso("Escolha duas pessoas diferentes.")
+        if (!acertoEhMeu(meuId, de, para)) return setAviso("Você precisa ser uma das duas pessoas do acerto.")
         if (reais == null || reais <= 0) return setAviso("Informe um valor maior que zero.")
         setPendente(true)
         setAviso(null)
@@ -512,7 +524,7 @@ function SaldoEAcerto({ ws }: { ws: string }) {
                         {saldos.data.saldos.map((s) => (
                             <li key={s.user_id}>
                                 <span className="text-foreground">
-                                    {textoDoSaldo(emCentavos(s.saldo), nome(s.user_id), meuId, s.user_id)}
+                                    {textoDoSaldo(emCentavos(s.saldo), nomeDe(s.user_id), meuId, s.user_id)}
                                 </span>
                                 {s.saiu ? " · saiu da carteira" : ""}
                                 {` · pagou ${currencyBRL(Number(s.pago))}; partes ${currencyBRL(Number(s.partes))}; acertos ${currencyBRL(Number(s.acertos))}`}
@@ -524,8 +536,8 @@ function SaldoEAcerto({ ws }: { ws: string }) {
                     <ul>
                         {sugestoes.map((s) => (
                             <li key={`${s.de}:${s.para}`} className="flex flex-wrap items-center gap-2">
-                                {nome(s.de)} paga {currencyBRL(s.centavos / 100)} a {nome(s.para)}
-                                {adulto(s.de) && adulto(s.para) ? (
+                                {nomeDe(s.de)} paga {currencyBRL(s.centavos / 100)} a {nomeDe(s.para)}
+                                {acertoEhMeu(meuId, s.de, s.para) ? (
                                     <button
                                         type="button"
                                         className={botao}
@@ -538,7 +550,7 @@ function SaldoEAcerto({ ws }: { ws: string }) {
                                         Usar esta sugestão
                                     </button>
                                 ) : (
-                                    <span>(quem saiu não entra num acerto novo)</span>
+                                    <span>(quem registra é quem paga ou quem recebe)</span>
                                 )}
                             </li>
                         ))}
@@ -550,7 +562,7 @@ function SaldoEAcerto({ ws }: { ws: string }) {
                             Quem pagou
                             <select className={campo} value={de} onChange={(e) => setDe(e.target.value)} required>
                                 <option value="">Escolha</option>
-                                {lista.map((a) => (
+                                {pessoas.map((a) => (
                                     <option key={a.user_id} value={a.user_id}>
                                         {a.nome}
                                     </option>
@@ -561,7 +573,7 @@ function SaldoEAcerto({ ws }: { ws: string }) {
                             Para quem
                             <select className={campo} value={para} onChange={(e) => setPara(e.target.value)} required>
                                 <option value="">Escolha</option>
-                                {lista.map((a) => (
+                                {pessoas.map((a) => (
                                     <option key={a.user_id} value={a.user_id}>
                                         {a.nome}
                                     </option>
@@ -592,8 +604,8 @@ function SaldoEAcerto({ ws }: { ws: string }) {
                     <ul>
                         {saldos.data.acertos.map((a) => (
                             <li key={a.id} className="flex flex-wrap items-center gap-2">
-                                {formatDatePtBr(a.settled_on)}: {nome(a.from_user)} pagou {currencyBRL(Number(a.amount))} a{" "}
-                                {nome(a.to_user)}
+                                {formatDatePtBr(a.settled_on)}: {nomeDe(a.from_user)} pagou {currencyBRL(Number(a.amount))} a{" "}
+                                {nomeDe(a.to_user)}
                                 {a.note ? ` (${a.note})` : ""}
                                 {a.created_by === meuId ? (
                                     <button type="button" className={botao} onClick={() => void apagar(a.id)}>

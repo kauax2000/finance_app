@@ -79,16 +79,26 @@ begin
     end if;
   end if;
 
-  -- A linha nasce automática. As partes à mão deixam de valer quando o valor,
-  -- o tipo, a carteira ou o privado mudam: elas voltam ao automático, e o
-  -- gatilho de depois as refaz.
+  -- A linha nasce automática. Ruling 10: as partes à mão deixam de valer
+  -- quando o valor, o tipo, a carteira ou o privado mudam, venha a mudança de
+  -- onde vier — também de um update cru que liga `shares_manual` e muda o valor
+  -- na mesma frase, que congelaria partes com a soma antiga. Elas voltam ao
+  -- automático, e o gatilho de depois as refaz. O par à mão só sobrevive ao que
+  -- não mexe no valor. A data que vai para antes do `split_since` também solta
+  -- a marca: o gatilho de depois cai no "fora da divisão" e apaga as partes.
   if tg_op = 'INSERT' then
     new.shares_manual := false;
-  elsif new.shares_manual and old.shares_manual and (
+  elsif new.shares_manual and (
     new.amount is distinct from old.amount
     or new.type is distinct from old.type
     or new.workspace_id is distinct from old.workspace_id
     or new.is_private is distinct from old.is_private
+    or (new.date is distinct from old.date and not exists (
+      select 1 from public.workspaces w
+      where w.id = new.workspace_id
+        and w.split_since is not null
+        and (new.date at time zone 'America/Sao_Paulo')::date >= w.split_since
+    ))
   ) then
     new.shares_manual := false;
   end if;
@@ -160,21 +170,40 @@ create policy workspace_split_weights_select on public.workspace_split_weights
   for select to authenticated
   using (public.is_workspace_adult(workspace_id));
 
+-- Os pesos são do dono, como o modo ("Owners can update workspace"): um membro
+-- não passa a parte dele para os outros pela API. O peso guardado é de um adulto
+-- da carteira; o dono apaga qualquer linha, até a de quem saiu.
 drop policy if exists workspace_split_weights_insert on public.workspace_split_weights;
 create policy workspace_split_weights_insert on public.workspace_split_weights
   for insert to authenticated
-  with check (public.is_workspace_adult(workspace_id));
+  with check (
+    public.is_workspace_owner(workspace_id)
+    and exists (
+      select 1 from public.workspace_members wm
+      where wm.workspace_id = workspace_split_weights.workspace_id
+        and wm.user_id = workspace_split_weights.user_id
+        and wm.role in ('owner', 'member')
+    )
+  );
 
 drop policy if exists workspace_split_weights_update on public.workspace_split_weights;
 create policy workspace_split_weights_update on public.workspace_split_weights
   for update to authenticated
-  using (public.is_workspace_adult(workspace_id))
-  with check (public.is_workspace_adult(workspace_id));
+  using (public.is_workspace_owner(workspace_id))
+  with check (
+    public.is_workspace_owner(workspace_id)
+    and exists (
+      select 1 from public.workspace_members wm
+      where wm.workspace_id = workspace_split_weights.workspace_id
+        and wm.user_id = workspace_split_weights.user_id
+        and wm.role in ('owner', 'member')
+    )
+  );
 
 drop policy if exists workspace_split_weights_delete on public.workspace_split_weights;
 create policy workspace_split_weights_delete on public.workspace_split_weights
   for delete to authenticated
-  using (public.is_workspace_adult(workspace_id));
+  using (public.is_workspace_owner(workspace_id));
 
 -- A regra da parcelada mora no plano: um array de `{ user_id, weight }`. Nulo
 -- vale os pesos da carteira; quem não está no array não tem parte.
@@ -310,7 +339,10 @@ revoke all on function public.dividir_em_partes(bigint, jsonb, uuid) from public
 --
 -- As partes nascem na escrita, entre os adultos daquele momento: a despesa
 -- lançada antes de outro adulto entrar fica com quem estava (lacuna, Ruling 7).
--- A privada (Ruling 4) tem uma parte só, inteira do autor. Com os pesos do
+-- A privada (Ruling 4) tem uma parte só, inteira do autor. Sem `paid_by` (a
+-- linha de antes da migração, ou a conta de quem pagou apagada), quem pagou é o
+-- autor, a mesma regra do `saldos_da_carteira`: o centavo que sobra e o pago
+-- caem na mesma pessoa, e Σ saldo = 0. Com os pesos do
 -- plano que deixam quem pagou de fora, o centavo que sobra vai para o menor
 -- `user_id` entre os participantes do plano, e não para quem pagou.
 create or replace function public.refazer_partes(p_transaction_id uuid)
@@ -333,7 +365,7 @@ declare
   v_desde date;
   v_pesos jsonb;
 begin
-  select t.amount, t.paid_by, t.user_id, t.type, t.date, t.workspace_id, t.installment_plan_id, t.is_private, t.shares_manual
+  select t.amount, coalesce(t.paid_by, t.user_id), t.user_id, t.type, t.date, t.workspace_id, t.installment_plan_id, t.is_private, t.shares_manual
   into v_valor, v_pagador, v_autor, v_tipo, v_data, v_ws, v_plano, v_privada, v_manual
   from public.transactions t
   where t.id = p_transaction_id;
@@ -445,7 +477,9 @@ create trigger gerar_partes
   for each row execute function public.gerar_partes();
 
 -- Ruling 6: a regra da parcelada mora no plano. Mudar os pesos refaz as partes
--- automáticas das parcelas dele; as escritas à mão ficam. A tela grava os
+-- automáticas das parcelas dele; as escritas à mão ficam. Quem pagou sai do
+-- `refazer_partes` (o autor quando `paid_by` é nulo): a parcela antiga, criada
+-- sem `paid_by`, fecha o saldo mesmo sem nenhum update em `transactions`. A tela grava os
 -- pesos logo depois de criar o plano (o `criar_plano_parcelado` não muda de
 -- assinatura: o `main` o chama). Apagar o plano solta as parcelas
 -- (`set null`), e elas passam aos pesos da carteira (lacuna).
@@ -518,13 +552,22 @@ begin
     raise exception 'PARTES_FORA_DA_DIVISAO' using errcode = 'P0001';
   end if;
 
-  if pg_catalog.jsonb_typeof(p_partes) <> 'array' or pg_catalog.jsonb_array_length(p_partes) = 0 then
+  if pg_catalog.jsonb_typeof(p_partes) <> 'array' then
+    raise exception 'PARTES_INVALIDAS' using errcode = '22023';
+  end if;
+  -- A forma antes das conversões: um id ou um valor malformado sai como
+  -- PARTES_INVALIDAS, e não como o 22P02 cru do `::uuid` ou do `::numeric`.
+  if pg_catalog.jsonb_array_length(p_partes) = 0 or exists (
+    select 1 from pg_catalog.jsonb_array_elements(p_partes) e
+    where pg_catalog.jsonb_typeof(e) <> 'object'
+      or pg_catalog.jsonb_typeof(e -> 'amount') is distinct from 'number'
+      or coalesce(e ->> 'user_id', '') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+  ) then
     raise exception 'PARTES_INVALIDAS' using errcode = '22023';
   end if;
   if exists (
     select 1 from pg_catalog.jsonb_array_elements(p_partes) e
-    where (e ->> 'amount')::numeric is null
-      or (e ->> 'amount')::numeric < 0
+    where (e ->> 'amount')::numeric < 0
       or (e ->> 'amount')::numeric <> pg_catalog.round((e ->> 'amount')::numeric, 2)
       or not exists (
         select 1 from public.workspace_members wm
@@ -533,7 +576,7 @@ begin
           and wm.role in ('owner', 'member')
       )
   ) or (
-    select count(distinct e ->> 'user_id') <> count(*) from pg_catalog.jsonb_array_elements(p_partes) e
+    select count(distinct pg_catalog.lower(e ->> 'user_id')) <> count(*) from pg_catalog.jsonb_array_elements(p_partes) e
   ) then
     raise exception 'PARTES_INVALIDAS' using errcode = '22023';
   end if;
@@ -556,8 +599,8 @@ revoke all on function public.definir_partes(uuid, jsonb) from public, anon;
 grant execute on function public.definir_partes(uuid, jsonb) to authenticated;
 
 -- 5. o acerto -----------------------------------------------------------------
--- Um pagamento entre dois adultos da carteira. Não se edita: quem errou apaga
--- o que criou e lança de novo.
+-- Um pagamento entre duas pessoas do saldo da carteira. Não se edita: quem
+-- errou apaga o que criou e lança de novo.
 create table if not exists public.settlements (
   id uuid primary key default gen_random_uuid(),
   workspace_id uuid not null references public.workspaces(id) on delete cascade,
@@ -582,25 +625,7 @@ create policy settlements_select on public.settlements
   for select to authenticated
   using (public.is_workspace_adult(workspace_id));
 
-drop policy if exists settlements_insert on public.settlements;
-create policy settlements_insert on public.settlements
-  for insert to authenticated
-  with check (
-    public.is_workspace_adult(workspace_id)
-    and created_by = (select auth.uid())
-    and exists (
-      select 1 from public.workspace_members wm
-      where wm.workspace_id = settlements.workspace_id
-        and wm.user_id = settlements.from_user
-        and wm.role in ('owner', 'member')
-    )
-    and exists (
-      select 1 from public.workspace_members wm
-      where wm.workspace_id = settlements.workspace_id
-        and wm.user_id = settlements.to_user
-        and wm.role in ('owner', 'member')
-    )
-  );
+-- O `settlements_insert` vem depois do `saldos_da_carteira`, que ele chama.
 
 drop policy if exists settlements_delete on public.settlements;
 create policy settlements_delete on public.settlements
@@ -613,11 +638,15 @@ create trigger garantir_escrita before insert on public.settlements
   for each row execute function public.garantir_escrita();
 
 -- O saldo de cada pessoa: pago − partes + acertos. Positivo, os outros devem a
--- ela. Conta só as despesas com partes a partir de `split_since`. Ruling 7:
+-- ela. Conta só as despesas com partes a partir de `split_since`. Sem `paid_by`,
+-- quem pagou é o autor, como no `refazer_partes`. Ruling 7:
 -- lista os adultos de hoje e todo mundo que aparece nas partes, nos pagamentos
 -- ou nos acertos da carteira, com `saiu` para quem não é mais adulto — assim a
--- soma dos saldos é sempre 0, e quem saiu continua na tela até acertar. O
--- convidado nunca aparece: não paga (o responsável paga por ele) nem tem parte.
+-- soma dos saldos é sempre 0, e quem saiu continua na tela até acertar
+-- (Ruling 8: o acerto com ele é aceito). O convidado que nunca foi adulto não
+-- aparece: não paga (o responsável paga por ele) nem tem parte. O adulto
+-- rebaixado a convidado guarda as partes e os pagamentos antigos, e aparece
+-- como quem saiu.
 create or replace function public.saldos_da_carteira(p_workspace_id uuid)
 returns table(user_id uuid, pago numeric, partes numeric, acertos numeric, saldo numeric, saiu boolean)
 language plpgsql
@@ -638,7 +667,7 @@ begin
     where wm.workspace_id = p_workspace_id
       and wm.role in ('owner', 'member')
   ), despesas as (
-    select t.id, t.amount, t.paid_by
+    select t.id, t.amount, coalesce(t.paid_by, t.user_id) as paid_by
     from public.transactions t
     join public.workspaces w on w.id = t.workspace_id
     where t.workspace_id = p_workspace_id
@@ -695,6 +724,28 @@ $$;
 revoke all on function public.saldos_da_carteira(uuid) from public, anon;
 grant execute on function public.saldos_da_carteira(uuid) to authenticated;
 
+drop policy if exists settlements_insert on public.settlements;
+-- Ruling 8: quem grava é adulto atual e uma das duas partes (ninguém registra
+-- um pagamento entre outras duas pessoas). A outra parte é quem aparece no
+-- `saldos_da_carteira` — os adultos de hoje e quem saiu mas tem parte,
+-- pagamento ou acerto na carteira —, para o saldo de quem saiu poder zerar. O
+-- convidado que nunca foi adulto não aparece ali e não entra num acerto.
+create policy settlements_insert on public.settlements
+  for insert to authenticated
+  with check (
+    public.is_workspace_adult(workspace_id)
+    and created_by = (select auth.uid())
+    and (select auth.uid()) in (from_user, to_user)
+    and exists (
+      select 1 from public.saldos_da_carteira(settlements.workspace_id) s
+      where s.user_id = settlements.from_user
+    )
+    and exists (
+      select 1 from public.saldos_da_carteira(settlements.workspace_id) s
+      where s.user_id = settlements.to_user
+    )
+  );
+
 -- 6. a saída do `transaction_splits` -----------------------------------------
 -- Nem o 2.0 nem o `main` a leem (levantamento §4). A conferência para a
 -- migração se houver linha: apagar dado é decisão do dono, não da migração.
@@ -715,8 +766,8 @@ drop table if exists public.transaction_splits;
 
 -- Conferência para o roteiro (Foco de revisão 1), no SQL editor:
 --
--- R$ 100,00 entre três adultos de peso igual: 3333, 3333 e 3334 (o centavo
--- para quem pagou, o ...02):
+-- R$ 100,00 entre três adultos de peso igual, ordenado por user_id: 3333, 3334
+-- e 3333 (o centavo para quem pagou, o ...02):
 -- select * from public.dividir_em_partes(10000, '[
 --   {"user_id":"00000000-0000-0000-0000-000000000001","weight":1},
 --   {"user_id":"00000000-0000-0000-0000-000000000002","weight":1},

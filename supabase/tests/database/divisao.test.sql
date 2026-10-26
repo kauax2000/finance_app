@@ -4,7 +4,7 @@
 -- testes: depois do primeiro `set_config`, os claims seguem valendo mesmo com
 -- `reset role`, e o `garantir_escrita` consulta o plano da carteira.
 begin;
-select plan(26);
+select plan(37);
 
 -- 1. o algoritmo (Foco de revisão 1) -------------------------------------------
 select is(
@@ -131,6 +131,14 @@ select throws_ok(
   'a privada não se divide à mão'
 );
 
+select throws_ok(
+  $$select public.definir_partes('00000000-0000-4000-d400-000000000001', '[
+      {"user_id":"nao-e-um-uuid","amount":"abc"}
+    ]'::jsonb)$$,
+  '22023', 'PARTES_INVALIDAS',
+  'partes malformadas saem como PARTES_INVALIDAS, e não como o 22P02 do cast'
+);
+
 select public.definir_partes('00000000-0000-4000-d400-000000000001', '[
     {"user_id":"00000000-0000-4000-d200-000000000001","amount":60},
     {"user_id":"00000000-0000-4000-d200-000000000002","amount":40}
@@ -237,6 +245,25 @@ select is(
   'desmarcar a privada divide de novo entre os adultos'
 );
 
+-- 5b. Ruling 10: o update cru que liga a marca e muda o valor numa frase só ----
+-- Sem a regra, as partes de R$ 60,00 ficariam congeladas numa despesa de R$ 90,00.
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-d200-000000000003","role":"authenticated"}', true);
+update public.transactions set shares_manual = true, amount = 90 where id = '00000000-0000-4000-d400-000000000004';
+reset role;
+
+select is(
+  (select sum(amount) from public.transaction_shares where transaction_id = '00000000-0000-4000-d400-000000000004'),
+  90.00::numeric,
+  'shares_manual = true, amount = 90 numa frase só: as partes refazem e fecham o valor novo'
+);
+
+select is(
+  (select shares_manual from public.transactions where id = '00000000-0000-4000-d400-000000000004'),
+  false,
+  'o update cru que muda o valor não deixa a marca de à mão'
+);
+
 -- 6. trocar o modo não duplica nem apaga ----------------------------------------
 update public.workspaces set split_mode = 'pooled' where id = '00000000-0000-4000-d300-000000000001';
 update public.workspaces set split_mode = 'split' where id = '00000000-0000-4000-d300-000000000001';
@@ -264,6 +291,47 @@ select is(
   0,
   'a despesa de antes do split_since não ganha parte'
 );
+
+-- 6b. a linha à mão que vai para antes do split_since --------------------------
+update public.transactions set date = now() - interval '10 days' where id = '00000000-0000-4000-d400-000000000006';
+
+select is(
+  (select count(*)::int from public.transaction_shares where transaction_id = '00000000-0000-4000-d400-000000000006'),
+  0,
+  'a linha à mão que vai para antes do split_since perde as partes'
+);
+
+select is(
+  (select shares_manual from public.transactions where id = '00000000-0000-4000-d400-000000000006'),
+  false,
+  'e volta ao automático'
+);
+
+-- 6c. I1: a parcela com paid_by nulo (a de antes da migração) ------------------
+-- Só dá para fazer a linha antiga com o gatilho desligado. Os pesos do plano
+-- refazem as partes sem nenhum update em `transactions`, e o paid_by fica nulo.
+alter table public.transactions disable trigger definir_quem_pagou;
+update public.transactions set paid_by = null where id = '00000000-0000-4000-d400-000000000005';
+alter table public.transactions enable trigger definir_quem_pagou;
+
+update public.workspace_installment_plans
+set split_weights = '[{"user_id":"00000000-0000-4000-d200-000000000001","weight":1},{"user_id":"00000000-0000-4000-d200-000000000002","weight":1}]'::jsonb
+where id = '00000000-0000-4000-d500-000000000001';
+
+select is(
+  (select paid_by from public.transactions where id = '00000000-0000-4000-d400-000000000005'),
+  null::uuid,
+  'a parcela segue com paid_by nulo depois de os pesos do plano mudarem'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-d200-000000000001","role":"authenticated"}', true);
+select is(
+  (select sum(saldo) from public.saldos_da_carteira('00000000-0000-4000-d300-000000000001')),
+  0::numeric,
+  'Σ saldo = 0 com paid_by nulo: quem pagou é o autor'
+);
+reset role;
 
 -- 7. o saldo fecha, mesmo depois de alguém sair --------------------------------
 insert into public.settlements (workspace_id, from_user, to_user, amount, created_by)
@@ -294,6 +362,40 @@ select is(
    where user_id = '00000000-0000-4000-d200-000000000004'),
   0,
   'o convidado não entra no saldo'
+);
+
+-- Ruling 8: o acerto com quem saiu fecha o saldo dele.
+select lives_ok(
+  $$insert into public.settlements (workspace_id, from_user, to_user, amount)
+    values ('00000000-0000-4000-d300-000000000001', '00000000-0000-4000-d200-000000000003', '00000000-0000-4000-d200-000000000001', 5)$$,
+  'o acerto com quem saiu é aceito'
+);
+
+select throws_ok(
+  $$insert into public.settlements (workspace_id, from_user, to_user, amount)
+    values ('00000000-0000-4000-d300-000000000001', '00000000-0000-4000-d200-000000000003', '00000000-0000-4000-d200-000000000002', 5)$$,
+  '42501',
+  null,
+  'quem grava não é uma das partes: o acerto é recusado'
+);
+
+-- 8. os pesos da carteira são do dono, e só de adultos -------------------------
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-d200-000000000002","role":"authenticated"}', true);
+select throws_ok(
+  $$insert into public.workspace_split_weights (workspace_id, user_id, weight)
+    values ('00000000-0000-4000-d300-000000000001', '00000000-0000-4000-d200-000000000002', 3)$$,
+  '42501',
+  null,
+  'peso escrito por quem não é dono é recusado'
+);
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-d200-000000000001","role":"authenticated"}', true);
+select throws_ok(
+  $$insert into public.workspace_split_weights (workspace_id, user_id, weight)
+    values ('00000000-0000-4000-d300-000000000001', '00000000-0000-4000-d200-000000000004', 2)$$,
+  '42501',
+  null,
+  'peso de quem não é adulto é recusado, mesmo pelo dono'
 );
 
 reset role;

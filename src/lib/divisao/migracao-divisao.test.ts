@@ -252,14 +252,22 @@ describe("migração divisão: quem pagou, partes, acerto e a saída do transact
         expect(lista[0].texto).not.toMatch(/is_workspace_member/)
     })
 
-    it("workspace_split_weights: peso positivo, só do adulto", () => {
+    it("workspace_split_weights: peso positivo; o adulto lê, só o dono escreve, e só o peso de um adulto (T4 I2)", () => {
         expect(sql).toMatch(/weight numeric\(6, 2\) not null check \(weight > 0\),\s+primary key \(workspace_id, user_id\)/)
         const lista = politicasDe("workspace_split_weights")
         expect(lista.map((p) => p.comando).sort()).toEqual(["delete", "insert", "select", "update"])
-        for (const p of lista) {
-            expect(p.texto, p.comando).toMatch(/public\.is_workspace_adult\(workspace_id\)/)
-            expect(p.texto, p.comando).not.toMatch(/is_workspace_member/)
+        const de = (comando: string) => lista.find((p) => p.comando === comando)!.texto
+        expect(de("select")).toMatch(/public\.is_workspace_adult\(workspace_id\)/)
+        for (const comando of ["insert", "update", "delete"]) {
+            expect(de(comando), comando).toMatch(/public\.is_workspace_owner\(workspace_id\)/)
+            expect(de(comando), comando).not.toMatch(/is_workspace_adult|is_workspace_member/)
         }
+        // O peso guardado é de um adulto da carteira, no insert e no with check do update.
+        const adulto =
+            /wm\.workspace_id = workspace_split_weights\.workspace_id and wm\.user_id = workspace_split_weights\.user_id and wm\.role in \('owner', 'member'\)/
+        expect(de("insert")).toMatch(adulto)
+        expect(de("update")).toMatch(new RegExp(`with check \\(.*${adulto.source}`))
+        for (const p of lista) expect(p.texto, p.comando).not.toMatch(/is_workspace_member/)
     })
 
     it("settlements: select e insert do adulto, delete só de quem criou, sem update", () => {
@@ -279,9 +287,66 @@ describe("migração divisão: quem pagou, partes, acerto e a saída do transact
             expect(de(comando), comando).not.toMatch(/is_workspace_member/)
         }
         expect(de("insert")).toMatch(/created_by = \(select auth\.uid\(\)\)/)
-        expect(de("insert")).toMatch(/wm\.user_id = settlements\.from_user and wm\.role in \('owner', 'member'\)/)
-        expect(de("insert")).toMatch(/wm\.user_id = settlements\.to_user and wm\.role in \('owner', 'member'\)/)
+        // Ruling 8: quem grava é adulto atual e uma das duas partes; a outra é
+        // quem aparece no saldo da carteira (adultos, partes, pagamentos, acertos).
+        expect(de("insert")).toMatch(/\(select auth\.uid\(\)\) in \(from_user, to_user\)/)
+        for (const lado of ["from_user", "to_user"]) {
+            expect(de("insert"), lado).toMatch(
+                new RegExp(`exists \\( select 1 from public\\.saldos_da_carteira\\(settlements\\.workspace_id\\) s where s\\.user_id = settlements\\.${lado} \\)`),
+            )
+        }
+        expect(de("insert")).not.toMatch(/wm\.role in/)
+        // A política chama a função: o `create policy` só resolve o nome se ela já existe.
+        expect(sql.indexOf("create policy settlements_insert")).toBeGreaterThan(
+            sql.indexOf("create or replace function public.saldos_da_carteira"),
+        )
         expect(de("delete")).toMatch(/created_by = \(select auth\.uid\(\)\)/)
+    })
+
+    it("I1: sem paid_by, quem pagou é o autor, nas partes e no saldo (Σ saldo = 0)", () => {
+        const refazer = ultima("refazer_partes")
+        expect(refazer).toMatch(
+            /select t\.amount, coalesce\(t\.paid_by, t\.user_id\), t\.user_id, t\.type, t\.date, t\.workspace_id, t\.installment_plan_id, t\.is_private, t\.shares_manual\s+into v_valor, v_pagador,/,
+        )
+        // O plano refaz pela mesma função: o pagador é resolvido num lugar só.
+        expect(ultima("refazer_partes_do_plano")).toMatch(/perform public\.refazer_partes\(v_id\);/)
+        expect(ultima("refazer_partes_do_plano")).not.toMatch(/paid_by/)
+        const saldos = ultima("saldos_da_carteira")
+        expect(saldos).toMatch(/despesas as \(\s*select t\.id, t\.amount, coalesce\(t\.paid_by, t\.user_id\) as paid_by\s+from public\.transactions t/)
+        expect(saldos).not.toMatch(/select t\.id, t\.amount, t\.paid_by\b/)
+    })
+
+    it("Ruling 10: valor, tipo ou carteira mudando zeram o shares_manual, venha de onde vier", () => {
+        const fn = ultima("definir_quem_pagou")
+        // Sem exigir a marca antiga: um update cru que liga a marca e muda o valor na mesma frase também volta.
+        expect(fn).not.toMatch(/old\.shares_manual/)
+        const bloco = fn.match(/elsif new\.shares_manual and \(([\s\S]*?)\) then\s+new\.shares_manual := false;/)
+        expect(bloco).not.toBeNull()
+        for (const coluna of ["amount", "type", "workspace_id", "is_private"]) {
+            expect(bloco![1], coluna).toContain(`new.${coluna} is distinct from old.${coluna}`)
+        }
+    })
+
+    it("M1: a linha à mão que vai para antes do split_since perde as partes e a marca", () => {
+        const fn = ultima("definir_quem_pagou")
+        const bloco = fn.match(/elsif new\.shares_manual and \(([\s\S]*?)\) then\s+new\.shares_manual := false;/)
+        expect(bloco![1]).toMatch(
+            /new\.date is distinct from old\.date and not exists \(\s*select 1 from public\.workspaces w\s+where w\.id = new\.workspace_id\s+and w\.split_since is not null\s+and \(new\.date at time zone 'America\/Sao_Paulo'\)::date >= w\.split_since/,
+        )
+        // Sem a marca, o refazer_partes chega ao ramo "fora da divisão" e apaga.
+        expect(ultima("refazer_partes")).toMatch(/< v_desde then\s+delete from public\.transaction_shares/)
+    })
+
+    it("M2: definir_partes confere a forma antes de converter, e o 22P02 vira PARTES_INVALIDAS", () => {
+        const fn = ultima("definir_partes")
+        const forma = fn.indexOf("jsonb_typeof(e -> 'amount') is distinct from 'number'")
+        expect(forma).toBeGreaterThan(-1)
+        expect(fn).toMatch(/pg_catalog\.jsonb_typeof\(e\) <> 'object'/)
+        expect(fn).toMatch(/coalesce\(e ->> 'user_id', ''\) !~\* '\^\[0-9a-f\]\{8\}-/)
+        // A forma vem antes de qualquer conversão.
+        expect(forma).toBeLessThan(fn.indexOf("::uuid"))
+        expect(forma).toBeLessThan(fn.indexOf("::numeric"))
+        expect(fn).toMatch(/count\(distinct pg_catalog\.lower\(e ->> 'user_id'\)\) <> count\(\*\)/)
     })
 
     it("Decisão 7: a guarda de tabela vazia antes do drop do transaction_splits, e nenhum outro drop", () => {
@@ -320,6 +385,15 @@ describe("migração divisão: quem pagou, partes, acerto e a saída do transact
             "sem a chave weight",
             "pula a linha à mão",
             "desmarcar a privada",
+            "paid_by nulo",
+            "disable trigger definir_quem_pagou",
+            "shares_manual = true, amount",
+            "acerto com quem saiu",
+            "quem grava não é uma das partes",
+            "peso escrito por quem não é dono",
+            "peso de quem não é adulto",
+            "PARTES_INVALIDAS",
+            "para antes do split_since",
         ]) {
             expect(pg, marca).toContain(marca)
         }

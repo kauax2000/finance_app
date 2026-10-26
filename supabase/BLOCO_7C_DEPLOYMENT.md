@@ -31,7 +31,7 @@ Reúne os projetos, os modelos de carteira e a divisão por quem pagou:
     app), o algoritmo `dividir_em_partes`, o `refazer_partes`, o gatilho
     `gerar_partes` e o `refazer_partes_do_plano`;
   - a RPC `definir_partes` (as partes escritas à mão) e a tabela `settlements`
-    (o acerto entre dois adultos);
+    (o acerto entre duas pessoas do saldo, uma delas quem grava);
   - a RPC `saldos_da_carteira` (pago − partes ± acertos);
   - a saída da tabela `transaction_splits`, guardada por uma conferência de
     tabela vazia;
@@ -54,22 +54,29 @@ não há Postgres local. A RLS, os gatilhos e o algoritmo são trancados por tes
 de fonte sobre as migrações (`src/lib/projetos/migracao-projetos.test.ts`,
 `src/lib/divisao/migracao-divisao.test.ts`), que leem o texto do SQL, não o
 comportamento. **Antes da produção, valide as duas migrações num ramo de teste
-ou num projeto descartável (§1.1), rodando o pgTAP `divisao.test.sql` (26 casos)
+ou num projeto descartável (§1.1), rodando o pgTAP `divisao.test.sql` (37 casos)
 e as três conferências do algoritmo.** É a primeira vez que este SQL executa.
 
-**A onda final de correções do bloco ainda não entrou.** Duas decisões já estão
-tomadas e vão nela, no SQL da divisão e nas telas, então quem revisar o bloco
-deve conferir se entraram (§1.4):
+**A onda final de correções do bloco já está nas duas migrações** (editadas no
+lugar, porque nenhuma subiu). O §1.4 confere no banco que ela entrou:
 
-- **Acertar com quem saiu da carteira** (Ruling 8): hoje a política de insert de
-  `settlements` exige que as duas pessoas sejam adultos atuais, e o saldo de
-  quem saiu nunca zera pelo app. A correção a abre para quem aparece em
-  `saldos_da_carteira` (partes, pagamentos ou acertos da carteira), com quem
-  grava ainda sendo adulto atual e uma das duas partes. A tela de acerto passa a
-  aceitar essa pessoa junto.
-- **Os pesos da carteira só mudam pelo dono**: hoje as quatro políticas de
-  `workspace_split_weights` são de qualquer adulto, e a correção as passa para
-  `is_workspace_owner`. A tela já mostra o modo e os pesos só ao dono.
+- **Sem `paid_by`, quem pagou é o autor**, no `refazer_partes` (e por ele no
+  `refazer_partes_do_plano`) e no `saldos_da_carteira`. A parcela antiga, criada
+  antes da migração, e a despesa de quem apagou a conta fecham Σ saldo = 0.
+- **Valor, tipo ou carteira mudando zeram o `shares_manual`**, venha de onde vier
+  (Ruling 10). Um update cru que liga a marca e muda o valor na mesma frase não
+  congela mais partes com a soma antiga. A linha à mão que vai para antes do
+  `split_since` também perde a marca e as partes.
+- **Acertar com quem saiu da carteira** (Ruling 8): a política de insert de
+  `settlements` aceita como partes quem aparece em `saldos_da_carteira` (os
+  adultos de hoje e quem saiu mas tem parte, pagamento ou acerto na carteira).
+  Quem grava continua sendo adulto atual **e uma das duas partes**. A tela de
+  acerto lista quem saiu como "Ex-membro".
+- **Os pesos da carteira só mudam pelo dono**: as três políticas de escrita de
+  `workspace_split_weights` usam `is_workspace_owner`, e o peso guardado tem de
+  ser de um adulto da carteira. A leitura continua de todo adulto.
+- **`definir_partes` confere a forma antes de converter**: um id ou um valor
+  malformado sai como `PARTES_INVALIDAS`, e não como o `22P02` do cast.
 
 Faça na ordem. Todo SQL abaixo cabe como está no SQL Editor: ele não leva id,
 chave nem URL, e nada precisa ser trocado. O SQL Editor roda como `postgres`,
@@ -122,32 +129,58 @@ migração segue.
 ### 1.1. Antes da produção: um ramo de teste
 
 Valide num ramo de teste do Supabase ou num projeto descartável, com as
-migrações aplicadas até a do 7C, e **só lá** (o pgTAP e os passos abaixo gravam
-dado, dentro de transações que ele desfaz).
+migrações aplicadas até a do 7C, e **só lá**. O pgTAP desfaz o que grava; os
+passos 3 e 4 gravam de verdade, por isso só no ramo.
+
+**O projeto ligado (`supabase link`) é o de produção.** Nenhum comando desta
+seção leva `--linked`. Todos apontam para a string de conexão do ramo ou do
+projeto descartável, copiada do painel dele (Settings › Database), que fica
+fora do repositório. Para as migrações chegarem lá:
+
+```bash
+supabase db push --db-url "<string de conexão do ramo>"
+```
 
 1. **O pgTAP da divisão.** Rode `supabase/tests/database/divisao.test.sql`
-   inteiro. O arquivo abre em `begin`, planeja 26 casos (`plan(26)`) e termina
+   inteiro. O arquivo abre em `begin`, planeja 37 casos (`plan(37)`) e termina
    em `rollback`. Ele supõe a cobrança sem `billing_settings.enforced_since`,
-   como os outros testes. Esperado: 26 linhas `ok` e nenhuma `not ok`. Os casos:
+   como os outros testes. Esperado: 37 linhas `ok` e nenhuma `not ok`. Os casos:
    - o algoritmo: R$ 100,00 em três de peso igual, a soma, e os pesos 2 e 1 com
      quem pagou de peso 1 e de peso 2;
    - a carteira dividida: as partes de cada despesa, `paid_by` do convidado igual
      ao responsável, o convidado sem parte e fora de `saldos_da_carteira`;
    - a despesa privada: uma parte só, inteira do autor, e `definir_partes`
      recusando-a com `PRIVADO_NAO_PERMITIDO`;
-   - `definir_partes` com `PARTES_NAO_FECHAM`, as partes à mão no lugar das
-     automáticas e o `null` de volta ao automático;
+   - `definir_partes` com `PARTES_NAO_FECHAM` e com `PARTES_INVALIDAS` (id e
+     valor malformados), as partes à mão no lugar das automáticas e o `null` de
+     volta ao automático;
    - os pesos do plano: `PESOS_INVALIDOS` (repetido, e peso sem a chave), e as
      parcelas automáticas refeitas quando os pesos mudam;
    - marcar e desmarcar uma privada que já existia;
+   - o update cru `shares_manual = true, amount = …` numa frase só: as partes
+     refazem e fecham o valor novo (Ruling 10);
    - `pooled → split → pooled → split` sem duplicar as partes e sem perder o
      `split_since`, e a despesa de antes dele sem partes;
-   - a soma dos saldos igual a 0 depois que um membro sai.
+   - a linha à mão que vai para antes do `split_since` perde as partes e a marca;
+   - a parcela com `paid_by` nulo (feita com o gatilho desligado, dentro do
+     teste) e os pesos do plano mudando: Σ saldo = 0;
+   - a soma dos saldos igual a 0 depois que um membro sai, e o acerto com ele
+     aceito; o acerto gravado por quem não é uma das partes, recusado;
+   - o peso da carteira escrito por um membro, e o peso de um convidado escrito
+     pelo dono, recusados.
 
-   Como rodar: `supabase test db --linked` aponta o pgTAP para o projeto ligado
-   (só o do ramo, nunca o de produção), ou cole o arquivo numa sessão `psql` do
-   ramo, com a extensão `pgtap` criada. Um `not ok` é o SQL fazendo o que a revisão
-   não previu: **a migração não sobe**.
+   Como rodar, sempre contra o ramo ou o projeto descartável, com a extensão
+   `pgtap` criada nele:
+
+   ```bash
+   psql "<string de conexão do ramo>" -f supabase/tests/database/divisao.test.sql
+   ```
+
+   Numa máquina com Docker, `supabase test db --db-url "<string de conexão do
+   ramo>"` faz o mesmo (esta não tem). **Nunca `supabase test db --linked`**: o
+   projeto ligado é o de produção, e o teste grava em `auth.users` antes do
+   `rollback`. Um `not ok` é o SQL fazendo o que a revisão não previu: **a
+   migração não sobe**.
 
 2. **As três conferências do algoritmo.** Estão comentadas no fim da migração
    `divisao`, com ids de brinquedo, e rodam em qualquer banco que já tenha a
@@ -200,13 +233,15 @@ dado, dentro de transações que ele desfaz).
 supabase db push --linked
 ```
 
+Este, sim, é o de produção: só com o pedido explícito do dono, depois do §1.1.
 Aplica, **nesta ordem**, `20261031120000_projetos.sql` e
 `20261031130000_divisao.sql` (e, antes delas, as que ainda não subiram). A
 ordem importa: a segunda usa `workspaces.split_mode`, que a primeira cria.
 
 **Não rode as migrações aos pedaços pelo SQL Editor.** O `add constraint
 workspaces_project_fields` da primeira não é reexecutável: se ela parar no meio
-e for rodada de novo à mão, o segundo `add constraint` falha. O `db push` roda
+e for rodada de novo à mão, esse `add constraint workspaces_project_fields`
+falha com "already exists". O `db push` roda
 cada arquivo numa transação só, e uma falha desfaz o arquivo.
 
 As duas só acrescentam, com uma exceção: a `divisao` termina com o `drop table
@@ -351,7 +386,8 @@ order by 1, 2;
 ```
 
 Esperado: dez linhas, todas com `ligado` `O`. O `guardar_privado` é o do 7B,
-redefinido aqui; o `gerar_partes` é o único `after` da lista.
+redefinido aqui; o `gerar_partes` é o único `after` em `transactions` (o
+`refazer_partes_do_plano`, em `workspace_installment_plans`, também é `after`).
 
 **As funções são `security definer` (menos duas) e têm o `search_path` vazio.**
 
@@ -435,32 +471,53 @@ where is_private and project_id is not null;
 
 Esperado: `0`.
 
-### 1.4. Depois da onda final
+### 1.4. A onda final entrou
 
-Quando a onda final entrar (veja o topo), confirme as duas correções no banco:
+Confirme no banco as correções da onda final (veja o topo). Só leitura do texto
+das políticas e das funções:
 
 ```sql
 select policyname,
-  (coalesce(qual, '') || coalesce(with_check, '')) like '%saldos_da_carteira%' as aceita_quem_saiu
+  with_check like '%saldos_da_carteira%' as aceita_quem_saiu,
+  with_check like '%ARRAY[%from_user%to_user%]%' as quem_grava_e_parte,
+  with_check not like '%role%' as sem_dois_adultos
 from pg_policies
 where schemaname = 'public' and tablename = 'settlements' and cmd = 'INSERT';
 ```
 
-Esperado **depois** da onda: `true`. Antes dela, `false` (a política exige os
-dois adultos atuais). Se a onda abrir o acerto por outro caminho, confira o texto
-da política `settlements_insert` no arquivo da migração.
+Esperado: uma linha, `settlements_insert`, com `true` nas três. O Postgres
+guarda o `(select auth.uid()) in (from_user, to_user)` da migração reescrito
+como `= ANY (ARRAY[from_user, to_user])`, por isso a segunda conta procura o
+`ARRAY`. A terceira confirma que a exigência antiga, dos dois adultos atuais
+(`wm.role in ('owner', 'member')`), saiu. Se alguma vier `false`, leia o
+`with_check` inteiro contra o `settlements_insert` da migração.
 
 ```sql
-select cmd, (coalesce(qual, '') || coalesce(with_check, '')) like '%is_workspace_owner%' as so_dono
+select cmd,
+  (coalesce(qual, '') || coalesce(with_check, '')) like '%is_workspace_owner%' as so_dono,
+  coalesce(with_check, '') like '%workspace_members%' as so_peso_de_adulto
 from pg_policies
 where schemaname = 'public' and tablename = 'workspace_split_weights'
 order by 1;
 ```
 
-Esperado **depois** da onda: quatro linhas (`DELETE`, `INSERT`, `SELECT`,
-`UPDATE`), as de escrita com `so_dono` `true`. Antes dela, qualquer adulto
-escreve os pesos. Se alguma não bater, a migração da onda não subiu: rode o
-`db push` de novo.
+Esperado: quatro linhas. `DELETE` com `so_dono` `true`; `INSERT` e `UPDATE` com
+`true` e `true`; `SELECT` com `false` e `false` (todo adulto lê os pesos).
+
+```sql
+select
+  pg_get_functiondef('public.refazer_partes(uuid)'::regprocedure) like '%coalesce(t.paid_by, t.user_id)%' as partes_com_autor,
+  pg_get_functiondef('public.saldos_da_carteira(uuid)'::regprocedure) like '%coalesce(t.paid_by, t.user_id)%' as saldo_com_autor,
+  pg_get_functiondef('public.definir_quem_pagou()'::regprocedure) not like '%old.shares_manual%' as manual_zera_sempre,
+  pg_get_functiondef('public.definir_partes(uuid, jsonb)'::regprocedure) like '%jsonb_typeof(e -> ''amount'')%' as partes_conferem_a_forma;
+```
+
+Esperado: `true` nas quatro. Um `false` quer dizer que a versão de antes da onda
+continua no banco: rode o `db push` de novo.
+
+Para ver a política de acerto agindo, no ramo e logado como adulto pelo app: tire
+um membro com saldo da carteira e registre um acerto com ele (ele aparece como
+"Ex-membro" nas duas listas). O acerto entra, e o saldo dele vai a zero.
 
 ## 2. Funções
 
@@ -472,7 +529,9 @@ arquivo de `supabase/functions` mudou. Confirme pelo repositório:
 git diff f46be83e..HEAD --name-only -- supabase/functions
 ```
 
-(`f46be83e` é o último commit do 7B.) Esperado: **nenhuma linha**. E nenhuma Edge
+(`f46be83e` é o último commit antes do 7C, no ramo do bloco. Depois de um
+squash ele some: use o commit de `main` anterior ao merge do 7C.) Esperado:
+**nenhuma linha**. E nenhuma Edge
 lê nem escreve o que este bloco cria:
 
 ```bash
@@ -606,7 +665,7 @@ partes são iguais:
 
 ```sql
 with despesas as (
-  select t.id, t.workspace_id, t.amount, t.paid_by
+  select t.id, t.workspace_id, t.amount, coalesce(t.paid_by, t.user_id) as paid_by
   from public.transactions t
   join public.workspaces w on w.id = t.workspace_id
   where t.type = 'expense'
@@ -626,8 +685,9 @@ full join partes q on q.workspace_id = p.workspace_id
 where coalesce(p.total, 0) <> coalesce(q.total, 0);
 ```
 
-Esperado: `0`. Uma carteira aqui tem despesa com parte e sem `paid_by` (ninguém
-pagou), ou parte que não fecha o valor. No app, o mesmo conferido de outro jeito:
+Esperado: `0`. Sem `paid_by`, quem pagou é o autor, a mesma regra do
+`refazer_partes` e do `saldos_da_carteira`; uma carteira aqui tem parte que não
+fecha o valor. No app, o mesmo conferido de outro jeito:
 no Painel da carteira dividida, a soma dos saldos mostrados é zero.
 
 **Os acertos.**
@@ -653,10 +713,9 @@ from (
   select t.workspace_id, s.user_id
   from public.transaction_shares s join public.transactions t on t.id = s.transaction_id
   union
-  select t.workspace_id, t.paid_by
+  select t.workspace_id, coalesce(t.paid_by, t.user_id)
   from public.transactions t
-  where t.paid_by is not null
-    and exists (select 1 from public.transaction_shares s where s.transaction_id = t.id)
+  where exists (select 1 from public.transaction_shares s where s.transaction_id = t.id)
   union
   select st.workspace_id, st.from_user from public.settlements st
   union
@@ -669,8 +728,8 @@ where not exists (
 ```
 
 Esperado: `0` até alguém sair de uma carteira dividida. Depois disso, é a pessoa
-que a tela mostra como "Ex-membro" (lacuna 72). Acerte o saldo dela antes de
-tirá-la da carteira, ou espere a onda final (§1.4).
+que a tela mostra como "Ex-membro" (lacuna 72). O acerto com ela é aceito
+(Ruling 8): quem lança é um adulto atual que paga ou recebe dela.
 
 **Os projetos.**
 
@@ -731,7 +790,8 @@ pote único nesse meio-tempo, porém, não entra (lacuna 76).
 
 **Acerte o saldo antes de tirar alguém da carteira ou de rebaixá-lo a convidado.**
 As partes e os pagamentos dele ficam, e ele aparece no saldo como "Ex-membro"
-(lacuna 72). Até a onda final, o app não grava acerto com quem saiu (§1.4).
+(lacuna 72). Dá para acertar depois, pelo Painel, mas só quem paga ou recebe
+dele registra o acerto, e ele mesmo não entra mais no app para conferir.
 
 **Não apague um projeto esperando apagar os lançamentos dele.** O `on delete set
 null` solta os lançamentos do projeto, sem apagá-los. A tela só arquiva; a API
@@ -821,16 +881,20 @@ contas de teste (uma dona e uma membro) e uma convidada da dona:
   soma igual ao valor. "Voltar ao automático" desfaz. A privada mostra a parte
   inteira do autor e não se divide;
 - **O modo e os pesos.** Em Configurações, o dono troca `pooled` e `split` e dá
-  um peso por adulto. Trocar de modo avisa que não apaga nada. A parcelada nova
+  um peso por adulto. Trocar de modo avisa que não apaga nada. A membro não vê o
+  editor, e o banco recusa um peso escrito por ela pela API. A parcelada nova
   oferece "Pesos desta parcelada" (a regra mora no plano);
 - **O saldo e o acerto.** No Painel da carteira dividida (só para adultos), cada
   pessoa tem "a receber", "deve" ou "em dia", a sugestão de quem paga quem e o
-  "Acertar". Registrar um acerto muda o saldo na hora, e só quem o criou o apaga.
+  "Acertar". As duas listas trazem também quem saiu ("Ex-membro"), e quem
+  registra tem de ser uma das duas pessoas. Registrar um acerto muda o saldo na
+  hora, e só quem o criou o apaga.
   O app **não faz o Pix**: o pagamento acontece fora (lacuna 75);
 - **O convidado** não vê projetos, resumo, partes, saldo nem modo da carteira; a
   despesa dele entra na divisão pelo responsável.
 
 **O que fica de fora, de propósito.** O Pix do acerto (lacuna 75), a divisão
-retroativa, o saldo de quem saiu da carteira até a onda final (lacuna 72) e a
+retroativa, quem saiu da carteira continuar no saldo até alguém acertar com ele
+(lacuna 72) e a
 Previsão de uma carteira de projeto aberta direto (lacuna 73). As lacunas
 conhecidas estão na seção 19 de `docs/JORNADAS.md`.

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { ROUTES } from "@/config/navigation"
 import { decidirRotaDoConvidado, rotaPermitidaAoConvidado } from "@/lib/papeis/rotas-do-convidado"
-import { camposDaCarteiraProjeto, MODELOS_DE_CARTEIRA, REGRA_DA_ESCOLHA } from "./modelos"
+import { camposDaCarteiraProjeto, MODELOS_DE_CARTEIRA, orcamentoTotal, REGRA_DA_ESCOLHA } from "./modelos"
 
 describe("os modelos de carteira (Decisão 3)", () => {
     it("são os seis, com o propósito e o modo da RPC", () => {
@@ -59,5 +59,16 @@ describe("as datas e o orçamento da carteira de projeto (I1)", () => {
             erro: "O orçamento total precisa ser maior que zero.",
         })
         expect(camposDaCarteiraProjeto({ inicio: "", fim: "", orcamento: "abc" }).ok).toBe(false)
+    })
+})
+
+describe("orcamentoTotal: o orçamento do projeto e o da carteira de projeto pelo mesmo caminho", () => {
+    it("pt-BR, vazio é nulo, zero e texto são recusados", () => {
+        expect(orcamentoTotal("1.234,56")).toEqual({ ok: true, valor: 1234.56 })
+        expect(orcamentoTotal("  ")).toEqual({ ok: true, valor: null })
+        const erro = { ok: false, erro: "O orçamento total precisa ser maior que zero." }
+        expect(orcamentoTotal("0")).toEqual(erro)
+        expect(orcamentoTotal("0,00")).toEqual(erro)
+        expect(orcamentoTotal("abc")).toEqual(erro)
     })
 })

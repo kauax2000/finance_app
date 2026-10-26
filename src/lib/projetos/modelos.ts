@@ -26,6 +26,17 @@ export const MODELOS_DE_CARTEIRA: readonly DefinicaoDeModelo[] = [
     { id: "evento", rotulo: "Evento", descricao: "Uma festa ou evento, com as despesas divididas.", purpose: "project", split_mode: "split" },
 ]
 
+/**
+ * O orçamento total digitado (do projeto e da carteira de projeto): pt-BR,
+ * vazio é nulo, e o que não é maior que zero é recusado antes do check do banco.
+ */
+export function orcamentoTotal(texto: string): { ok: true; valor: number | null } | { ok: false; erro: string } {
+    if (!texto.trim()) return { ok: true, valor: null }
+    const valor = parseMoneyBrl(texto)
+    if (valor == null || valor <= 0) return { ok: false, erro: "O orçamento total precisa ser maior que zero." }
+    return { ok: true, valor }
+}
+
 export type CamposDaCarteiraProjeto = { starts_on: string | null; ends_on: string | null; budget_total: number | null }
 
 /**
@@ -41,10 +52,7 @@ export function camposDaCarteiraProjeto(a: {
     const inicio = a.inicio || null
     const fim = a.fim || null
     if (inicio && fim && fim < inicio) return { ok: false, erro: "O fim não pode vir antes do começo." }
-    let orcamento: number | null = null
-    if (a.orcamento.trim()) {
-        orcamento = parseMoneyBrl(a.orcamento)
-        if (orcamento == null || orcamento <= 0) return { ok: false, erro: "O orçamento total precisa ser maior que zero." }
-    }
-    return { ok: true, campos: { starts_on: inicio, ends_on: fim, budget_total: orcamento } }
+    const orcamento = orcamentoTotal(a.orcamento)
+    if (!orcamento.ok) return orcamento
+    return { ok: true, campos: { starts_on: inicio, ends_on: fim, budget_total: orcamento.valor } }
 }

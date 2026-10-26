@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest"
 import { currencyBRL } from "@/lib/formatters"
-import { emCentavos, lerPeso, partesFecham, pesosDigitados, sugestaoDeAcerto, textoDoSaldo } from "@/lib/divisao/partes"
+import {
+    acertoEhMeu,
+    emCentavos,
+    lerPeso,
+    partesFecham,
+    pesosDigitados,
+    pessoasDoAcerto,
+    sugestaoDeAcerto,
+    textoDoSaldo,
+} from "@/lib/divisao/partes"
 import { formatSupabasePostgrestError } from "@/lib/supabase-errors"
 
 describe("partesFecham", () => {
@@ -98,5 +107,28 @@ describe("os erros da divisão em português", () => {
         for (const c of ["PARTES_INVALIDAS", "PARTES_FORA_DA_DIVISAO", "PESOS_INVALIDOS", "PAGADOR_INVALIDO", "not a workspace adult"]) {
             expect(pt(c), c).toBeTruthy()
         }
+    })
+})
+
+describe("Ruling 8: o acerto com quem saiu", () => {
+    it("pessoasDoAcerto: os adultos e quem saiu mas está no saldo, cada ex-membro com um sufixo", () => {
+        const adultos = [{ user_id: "aaaa-1", nome: "Ana" }]
+        const saldos = [
+            { user_id: "aaaa-1", saiu: false },
+            { user_id: "b1b2-9", saiu: true },
+            { user_id: "c3c4-9", saiu: true },
+        ]
+        expect(pessoasDoAcerto(adultos, saldos)).toEqual([
+            { user_id: "aaaa-1", nome: "Ana" },
+            { user_id: "b1b2-9", nome: "Ex-membro ·b1b2" },
+            { user_id: "c3c4-9", nome: "Ex-membro ·c3c4" },
+        ])
+        expect(pessoasDoAcerto(adultos, [])).toEqual(adultos)
+    })
+
+    it("acertoEhMeu: quem grava é uma das duas partes", () => {
+        expect(acertoEhMeu("eu", "eu", "ana")).toBe(true)
+        expect(acertoEhMeu("eu", "ana", "eu")).toBe(true)
+        expect(acertoEhMeu("eu", "ana", "bia")).toBe(false)
     })
 })
