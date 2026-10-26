@@ -12,10 +12,10 @@
 - o `/plans`, com "Assinar" desabilitado;
 - o `/precos` e a faixa de "só leitura".
 
-**Este é um rascunho de 22 e 23/10.** Ao começar o bloco:
-- reconfirme a API do Asaas, porque os fatos são de 22/10;
-- confira os nomes que os Blocos 5 a 7 possam ter mudado;
-- escolha o carimbo da migração depois do último do Bloco 7.
+**Atualizado em 25/10, com os Blocos 4 a 7C já em `finance-app-2.0`.** O rascunho de 22 e 23/10 foi conferido contra o código:
+- a API do Asaas foi reconfirmada na documentação pública, sem mudança. Os quatro pontos que a documentação não garante estão no §1 do roteiro;
+- os nomes dos Blocos 4 a 7 foram conferidos, e as diferenças viraram as Decisões 8 a 12;
+- a migração nova é `20261101120000_cobranca_asaas.sql`, depois de `20261031130000_divisao.sql`.
 
 **Objetivo:** assinar o plano Família anual em 12x no cartão pelo Asaas. O servidor cuida de:
 - renovar no aniversário;
@@ -35,7 +35,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-20-proposta-funcional-design.md` §9, "Cobrança: Asaas" e "Regras de cobrança honesta".
 
-**Fatos da API do Asaas:** levantados só da documentação pública em 2026-10-22. Ficam no ledger desta execução. Os pontos que a documentação não garante estão no §1 do roteiro (Tarefa 8) e são testados no Sandbox antes da produção.
+**Fatos da API do Asaas:** levantados só da documentação pública em 2026-10-22 e reconfirmados em 2026-10-25, sem mudança. O orquestrador os copia para o ledger desta execução. Os pontos que a documentação não garante estão no §1 do roteiro (Tarefa 8) e são testados no Sandbox antes da produção.
 
 
 ## Restrições globais
@@ -72,11 +72,16 @@
   | `COBERTOS_MAX` | 5 |
 - **Testes:**
   - Vitest roda em ambiente `node`, só `src/**/*.test.ts`.
-  - O Deno roda `supabase/functions/_shared/*.test.ts` (`npm run test:edge`). A Tarefa 2 acrescenta `ASAAS_API_URL,ASAAS_API_KEY` ao `--allow-env` do script.
+  - O Deno roda `supabase/functions/_shared/**/*.test.ts` (`npm run test:edge`). Hoje o `--allow-env` do script é exatamente `GROQ_API_KEY,CLOUDFLARE_ACCOUNT_ID,CLOUDFLARE_API_TOKEN`; a Tarefa 2 acrescenta `ASAAS_API_URL,ASAAS_API_KEY`.
   - Para simular o `fetch`, troque `globalThis.fetch` e devolva o original no `finally`.
+- **O front 2.0 roda contra o banco sem esta migração** (o dev usa produção; Ruling 8 do 7B). Os campos novos de `meu_plano()` são lidos como opcionais (`?? null`), e as Edges novas que ainda não subiram aparecem como "Ainda não disponível", nunca como erro solto.
+- **Dinheiro nos textos:** `currencyBRL` (`_shared/formatters.ts`) recebe **reais**, não centavos, e põe um espaço inquebrável depois de `R$`. A parcela é `currencyBRL(centavos / 1200)`, e os testes normalizam o espaço como `src/lib/planos/plano.test.ts` já faz.
+- **`_shared/plano.ts` não importa nada** e é reexportado pelo cliente (`export *`). O `billing.ts` importa dele com a extensão `.ts`, e nada novo entra no `plano.ts` que traga import.
 - **Edges novas:**
   - entram em `supabase/config.toml` com `verify_jwt = false`;
-  - fazem a própria autenticação, como as existentes: JWT por `getAuthUserFromJwt`, cron por `secretMatches(CRON_SECRET, x-cron-secret)` e webhook por `secretMatches(ASAAS_WEBHOOK_TOKEN, asaas-access-token)`.
+  - fazem a própria autenticação, como as existentes: JWT por `bearerJwt` + `getAuthUserFromJwt` (como `ia-ler/index.ts:70-72`), cron por `secretMatches(CRON_SECRET, x-cron-secret)` e webhook por `secretMatches(ASAAS_WEBHOOK_TOKEN, asaas-access-token)`;
+  - as chamadas pelo cliente seguem o CORS de `ia-ler` (`ia-ler/index.ts:24-34, 53-64`), com `x-app-session-id` na lista de cabeçalhos (o `invokeEdgeJson` o envia), e embrulham o tratamento num `try/catch` que devolve `json(500, …)` com CORS;
+  - `lerCorpo(req, teto)` devolve bytes (`Uint8Array | null`): a Edge faz o `JSON.parse(new TextDecoder().decode(…))`.
 - **Wireframe** (`AGENTS.md`):
   - fica só em `src/components/wireframe/`;
   - leva a etiqueta `WIREFRAME · Bloco 4 · <funcionalidade>`;
@@ -108,7 +113,17 @@ As regras do direito de uso (status, provedores, cobertura, "só leitura", aviso
    - Sem `ASAAS_NFSE_SERVICO_CODIGO`, o passo é pulado com `console.error`.
    - Uma falha tenta de novo no dia seguinte.
 6. **Hospedagem:** Vercel Pro (US$ 20/mês) no dia em que a cobrança ligar, porque o Hobby proíbe uso comercial. Não há migração para Cloudflare. É ação do dono, registrada no roteiro.
-7. **Ligar a cobrança é o último passo:** `billing_lancar()` roda junto com o 2.0 indo para `main`.
+7. **Ligar a cobrança é o último passo:** `billing_lancar()` roda junto com o 2.0 indo para `main`. Ela é só da `service_role`: roda no SQL Editor do painel.
+8. **A renovação acontece um dia antes do fim, não no fim.** `tem_plano_proprio` deixa de contar uma linha `active` assim que `current_period_end <= now()`, e o cron roda uma vez por dia. Renovar no fim deixaria quem paga em "só leitura" por até um dia a cada aniversário. Por isso:
+   - `acaoDoDia` devolve `'renovar'` a partir de `fim - 1 dia`;
+   - uma cobrança aceita mas ainda não confirmada grava `grace_until = fim + 7 dias` sem mudar o `status` (Tarefa 2, `aguardandoConfirmacao`);
+   - a migração redefine `tem_plano_proprio` para contar também `active` com `grace_until > now()`.
+
+   Assim, nem a espera pelo webhook nem a recusa do cartão (que já cai em `past_due` dentro da tolerância) tiram o plano antes da hora.
+9. **`meu_plano()` ganha `carencia_ate`** (o `grace_until`), para a tela dizer "Atualize o cartão até DD/MM". **As ações da tela seguem o `status`, não a `origem`:** passada a tolerância, a `origem` cai para `teste`, `convite` ou `nenhuma` enquanto o `status` continua `past_due`.
+10. **Quem é convidado não assina.** O plano do convidado vem de quem o convidou (`tem_cobertura`), e o convidado pode ser menor de idade. A `billing-checkout` recusa quem tem `role = 'guest'` em alguma carteira com `409 { error: 'Seu acesso vem de quem te convidou. Peça para essa pessoa cuidar do plano.' }`, e a tela não mostra "Assinar" para ele.
+11. **A "só leitura" do Bloco 4 continua cobrindo** `transactions`, `workspace_installment_plans`, `workspace_subscriptions`, `attachments` e, desde o 7C, `settlements`. **`projects`, `workspace_split_weights` e `workspace_member_limits` ficam fora**: não são lançar, capturar nem importar, que é o que a spec manda parar. Isso vira lacuna na Tarefa 8, e a migração deste bloco não mexe na lista de gatilhos.
+12. **Três Edges novas:** `billing-checkout`, `asaas-webhook` e `billing-cancel`. A `billing-daily` já existe e é estendida.
 
 ## Foco de revisão
 
@@ -117,15 +132,17 @@ As regras do direito de uso (status, provedores, cobertura, "só leitura", aviso
 3. **Dado de cartão ou CPF onde não deve.** Nenhuma Edge recebe número de cartão. O CPF não vai a tabela nem a log. O `card_token`, o `asaas_customer_id` e o `ultimo_ip` não são legíveis pelo cliente: o cliente lê só por `meu_plano()`. (Tarefa 1, teste de fonte. Tarefa 3, teste de que o corpo enviado ao Asaas não tem `creditCard`.)
 4. **Renovação sem token.** Sem `card_token`, a renovação vira `past_due` com o aviso "atualize seu cartão", e nunca cobra às cegas. (Tarefa 2, `acaoDoDia`. Tarefa 6, teste de fonte.)
 5. **Preço de fundador perdido por engano.** Uma renovação, e um `past_due` recuperado, mantêm o `price_cents` da linha. Só uma compra depois de `expired` recalcula o preço. (Tarefa 3, `planoDoCheckout`.)
+6. **Só leitura no dia da renovação.** Quem paga em dia nunca fica em "só leitura" no aniversário: a renovação começa um dia antes, e a espera pelo webhook mantém o plano pela `grace_until`. (Tarefa 1, teste de fonte de `tem_plano_proprio`. Tarefa 2, `acaoDoDia` em `fim - 1 dia` e `aguardandoConfirmacao`.)
+7. **Convidado ou menor pagando.** A `billing-checkout` recusa quem é `guest` em alguma carteira, antes de criar cliente ou cobrança no Asaas. (Tarefa 3, teste de fonte da ordem.)
 
 ---
 
 ### Tarefa 1: Migração com as colunas do Asaas e a idempotência do webhook
 
 **Arquivos:**
-- Criar: `supabase/migrations/<carimbo depois do Bloco 7>_cobranca_asaas.sql`
-- Modificar: `src/types/database.ts`
-- Teste: `src/lib/planos/migracao-cobranca.test.ts` (teste de fonte)
+- Criar: `supabase/migrations/20261101120000_cobranca_asaas.sql`
+- Modificar: `src/types/database.ts` (os tipos escritos à mão das tabelas de cobrança, `:234-300`, e a tabela nova)
+- Teste: `src/lib/planos/migracao-cobranca.test.ts` (teste de fonte). O `migracao-planos.test.ts` lê só o arquivo do Bloco 4; o teste novo cobre as redefinições deste bloco, com o estado final por `src/test/migracoes.ts`.
 
 **Interfaces (produz):**
 - `billing_subscriptions` ganha, com `add column if not exists`:
@@ -140,18 +157,21 @@ As regras do direito de uso (status, provedores, cobertura, "só leitura", aviso
   - `checkout_criado_em timestamptz`;
   - `nfse_para text`.
 - `public.billing_events(id text primary key, tipo text not null, recebido_em timestamptz not null default now())`. RLS ligada, sem política, `revoke all` de `anon, authenticated`.
-- `meu_plano()` é recriada com os campos do Bloco 4 e mais:
+- `meu_plano()` é recriada, a partir da versão do Bloco 4 (`20261025120000_planos.sql:320-381`), com os campos dela e mais:
   - `cartao_final`;
   - `reembolsavel_ate`;
+  - `carencia_ate` (o `grace_until`; Decisão 9);
   - `checkout_url`, só quando `status in ('pending','past_due')` e `checkout_criado_em > now() - interval '1 day'`.
 
-  Nunca devolve `card_token`, `asaas_customer_id` nem `ultimo_ip`.
+  Nunca devolve `card_token`, `asaas_customer_id` nem `ultimo_ip`. Os grants ficam como estão (`revoke` de `public, anon`; `execute` para `authenticated`).
+- `tem_plano_proprio(uuid)` é recriada (Decisão 8), a partir da versão do Bloco 4 (`:69-86`). Ela conta `(active and (current_period_end is null or current_period_end > now() or grace_until > now())) or (past_due and grace_until > now())`, e continua só da `service_role`.
 
 - [ ] **Passo 1: teste de fonte que falha.** Ele confere:
   - as colunas;
   - `billing_events` com RLS e `revoke`;
-  - o `jsonb_build_object` de `meu_plano` sem `card_token`, `asaas_customer_id` e `ultimo_ip`;
-  - nenhum `drop column`.
+  - o `jsonb_build_object` de `meu_plano` com `carencia_ate` e sem `card_token`, `asaas_customer_id` e `ultimo_ip`;
+  - o ramo `active … grace_until > now()` no estado final de `tem_plano_proprio`;
+  - nenhum `drop column`, e a lista de gatilhos `garantir_escrita` intacta (Decisão 11).
 - [ ] **Passo 2:** `npx vitest run src/lib/planos/migracao-cobranca.test.ts`. Esperado: FAIL.
 - [ ] **Passo 3:** escrever a migração e os tipos.
 - [ ] **Passo 4:** `npx tsc --noEmit && npm run test:unit`. Esperado: PASS.
@@ -192,6 +212,7 @@ export function efeitoDoEvento(evento: string, pagamento: Pagamento, sub: Assina
 export function acaoDoDia(sub: Assinatura, agora: Date): 'avisar_renovacao' | 'renovar' | 'expirar' | null
 export function podeReembolsar(sub: Assinatura, agora: Date): boolean
 export function falhaNaRenovacao(sub: Assinatura, agora: Date): Mudanca
+export function aguardandoConfirmacao(sub: Assinatura): Mudanca   // { grace_until: current_period_end + 7 dias }, status intacto (Decisão 8)
 export const AVISOS: {
   renovacao(sub: Assinatura, final: string | null): { titulo: string; corpo: string }
   cartao(sub: Assinatura): { titulo: string; corpo: string }
@@ -201,7 +222,7 @@ export const AVISOS: {
 
 As regras que os testes travam:
 - **`efeitoDoEvento`, renovação:** é renovação quando `sub.status` é `active` ou `past_due`, `current_period_end` não é nulo e `current_period_end + 7 dias > agora`. Senão, é compra nova.
-- **`efeitoDoEvento`, pagamento confirmado:** com `PAYMENT_CONFIRMED` ou `PAYMENT_RECEIVED`, um `installment` diferente de `sub.provider_ref` e `externalReference === sub.id`, a mudança é:
+- **`efeitoDoEvento`, pagamento confirmado:** com `PAYMENT_CONFIRMED` ou `PAYMENT_RECEIVED`, um `installment` diferente de `sub.provider_ref` e `externalReference === sub.id`, a mudança é (com a renovação feita um dia antes do fim, o "fim antigo + 1 ano" mantém o aniversário):
   - `status: 'active'`;
   - `provider_ref: installment`;
   - `grace_until: null`;
@@ -217,8 +238,8 @@ As regras que os testes travam:
 - **`acaoDoDia`** devolve `null` para `provider !== 'asaas'` ou `current_period_end` nulo. Para os demais:
   - **`active`:**
     - com `agora >= fim` e `cancel_at_period_end`, devolve `'expirar'`;
-    - com `agora >= fim`, sem cancelamento, devolve `'renovar'`;
-    - com `fim - 7 dias <= agora < fim`, sem cancelamento, devolve `'avisar_renovacao'`.
+    - com `agora >= fim - 1 dia`, sem cancelamento, devolve `'renovar'`, salvo se `checkout_criado_em` tiver menos de 2 dias (a renovação já foi tentada e espera o webhook): aí devolve `null`;
+    - com `fim - 7 dias <= agora < fim - 1 dia`, sem cancelamento, devolve `'avisar_renovacao'`.
   - **`past_due`:**
     - com `agora >= grace_until`, devolve `'expirar'`;
     - senão, devolve `'renovar'` só se `checkout_criado_em` for nulo ou tiver mais de 2 dias;
@@ -278,6 +299,8 @@ O que cada função envia:
 - [ ] **Passo 1: testes Deno que falham.**
   - `billing.test.ts`:
     - um caso por regra acima;
+    - `acaoDoDia` com `agora = fim - 1 dia` devolve `'renovar'`, com `fim - 1 dia - 1 min` devolve `'avisar_renovacao'`, e com uma tentativa há 1 dia devolve `null`;
+    - `aguardandoConfirmacao` devolve só `grace_until = fim + 7 dias`;
     - a 2ª parcela do mesmo `installment` devolve `null`;
     - a renovação estende a partir do fim antigo, mesmo confirmada 3 dias depois dele;
     - um `past_due` com tentativa há 1 dia devolve `null`, e há 3 dias devolve `'renovar'`;
@@ -304,7 +327,7 @@ O que cada função envia:
 - Consome a Tarefa 2 (`precoPara`, `cpfValido`, `criarCliente`, `criarCobranca`, `configDoAsaas`) e a Tarefa 1 (as colunas de `billing_subscriptions`).
 - Produz `POST /functions/v1/billing-checkout`:
   - com o JWT da pessoa e `{ nome: string, cpf: string }`, devolve `200 { url: string }`;
-  - os erros são `400 { error: 'CPF inválido.' }`, `400 { error: 'Informe o nome como no cartão.' }`, `409 { error: 'Você já tem um plano ativo.' }`, `502 { error: 'O Asaas não respondeu. Tente de novo em instantes.' }` e `503` quando `configDoAsaas()` é nulo.
+  - os erros são `400 { error: 'CPF inválido.' }`, `400 { error: 'Informe o nome como no cartão.' }`, `409 { error: 'Você já tem um plano ativo.' }`, o `409` do convidado (Decisão 10), `502 { error: 'O Asaas não respondeu. Tente de novo em instantes.' }` e `503` quando `configDoAsaas()` é nulo.
 - Produz em `billing.ts`: `export function planoDoCheckout(sub: Assinatura | null, agora: Date): { tipo: 'bloqueado' } | { tipo: 'reusar' } | { tipo: 'novo'; centavos: number; fundador: boolean; renovacao: boolean }`. A ordem das regras:
   1. Linha `active` sem `cancel_at_period_end` e com `current_period_end` no futuro (ou nulo, no caso do `manual`): `bloqueado`.
   2. Linha `active` com `cancel_at_period_end`: também `bloqueado`. A tela oferece "Desfazer cancelamento".
@@ -317,23 +340,26 @@ O fluxo da Edge, nesta ordem:
 2. Exige o JWT (`getAuthUserFromJwt`).
 3. Lê o corpo com `lerCorpo(req, 4096)`.
 4. Valida o nome (de 3 a 100 caracteres) e o CPF.
-5. Busca a linha da pessoa e chama `planoDoCheckout`.
-6. No caso `reusar`, devolve a `checkout_url` guardada.
-7. Garante o cliente do Asaas (`criarCliente`, se `asaas_customer_id` for nulo) e grava o id.
-8. Faz o upsert da linha, `onConflict: 'user_id'`, mantendo `status` se for `past_due` e usando `pending` nos outros casos. Grava `provider: 'asaas'`, `price_cents`, `founder` e `ultimo_ip` (o primeiro valor de `x-forwarded-for`, aparado, até 45 caracteres).
-9. Chama `criarCobranca` com:
-   - `referencia: linha.id`;
-   - `vencimento: formatYmd(appTodayYmd())`;
-   - `retorno: ${APP_BASE_URL}/plans?pago=1`.
-10. Grava `checkout_ref`, `checkout_url = invoiceUrl` e `checkout_criado_em = now()`.
-11. Devolve `{ url }`.
+5. Recusa quem tem `role = 'guest'` em alguma carteira (Decisão 10), antes de qualquer chamada ao Asaas.
+6. Busca a linha da pessoa e chama `planoDoCheckout`.
+7. No caso `reusar`, devolve a `checkout_url` guardada.
+8. Garante o cliente do Asaas (`criarCliente`, se `asaas_customer_id` for nulo) e grava o id.
+9. Faz o upsert da linha, `onConflict: 'user_id'`, mantendo `status` se for `past_due` e usando `pending` nos outros casos. Grava `provider: 'asaas'`, `price_cents`, `founder` e `ultimo_ip` (o primeiro valor de `x-forwarded-for`, aparado, até 45 caracteres).
+10. Chama `criarCobranca` com:
+    - `referencia: linha.id`;
+    - `vencimento: formatYmd(appTodayYmd())`;
+    - `retorno: ${APP_BASE_URL}/plans?pago=1`.
+11. Grava `checkout_ref`, `checkout_url = invoiceUrl` e `checkout_criado_em = now()`.
+12. Devolve `{ url }`.
 
 O CPF não aparece em nenhum `console.*` nem na resposta.
 
-- [ ] **Passo 1: testes Deno de `planoDoCheckout`, que falham.** Um por regra, incluindo:
-  - a linha `active` cancelada;
-  - o `past_due` mantém o preço de fundador depois de 31/01/2027;
-  - o `expired` volta ao preço do dia.
+- [ ] **Passo 1: testes que falham.**
+  - Deno, de `planoDoCheckout`, um por regra, incluindo:
+    - a linha `active` cancelada;
+    - o `past_due` mantém o preço de fundador depois de 31/01/2027;
+    - o `expired` volta ao preço do dia.
+  - Fonte (`src/lib/planos/edges-planos.test.ts`): a recusa do convidado vem antes de `criarCliente`; o CORS inclui `x-app-session-id`; nenhum `console.*` recebe o `cpf`.
 - [ ] **Passo 2:** `npm run test:edge`. Esperado: FAIL.
 - [ ] **Passo 3:** implementar `planoDoCheckout`, a Edge e a entrada no `config.toml`.
 - [ ] **Passo 4:** `npm run test:edge && npx tsc --noEmit && npm run lint`. Esperado: PASS.
@@ -413,13 +439,13 @@ A regra que separa 401 de 200: só o token errado volta 401. Uma referência est
 
 O fluxo do cron:
 1. Confere `x-cron-secret`.
-2. O atalho de `enforced_since` nulo passa a pular **só o passo do teste**. A renovação e a NFS-e rodam sempre que houver assinatura `asaas`, inclusive no Sandbox antes do lançamento.
-3. **Assinaturas `asaas` com `status in ('active','past_due')`**, paginadas por `id`. Para cada uma, executa `acaoDoDia`:
+2. O atalho de `enforced_since` nulo passa a pular **só o passo do teste**. Hoje ele é um `return` que encerra a função inteira (`billing-daily/index.ts:61-67`): vira um `if` em volta do passo do teste. A renovação e a NFS-e rodam sempre que houver assinatura `asaas`, inclusive no Sandbox antes do lançamento.
+3. **Assinaturas `asaas` com `status in ('active','past_due')`**, lidas com `todasAsPaginas` (`_shared/todas-as-paginas.ts`). Para cada uma, executa `acaoDoDia`:
    - **`avisar_renovacao`:** reivindica `billing_avisos(user_id, 'renovacao', current_period_end::date)`. Se conseguiu, entrega `AVISOS.renovacao`.
    - **`renovar`:**
      - **Com `card_token` e `configDoAsaas()`:** grava `checkout_criado_em = now()` antes de chamar. Depois chama `criarCobranca` com `token`, `ip: ultimo_ip`, `referencia: id` e o `price_cents` da linha.
        - Num `ok` com `status in ('CONFIRMED','RECEIVED')`, aplica `efeitoDoEvento('PAYMENT_CONFIRMED', resposta, linha, agora)`. O webhook que chega depois é idempotente.
-       - Noutro `ok`, não faz nada: o webhook resolve.
+       - Noutro `ok` (aceita, ainda não confirmada), grava `aguardandoConfirmacao(linha)`: o plano continua valendo pela `grace_until` até o webhook confirmar (Decisão 8).
        - Numa falha, grava `falhaNaRenovacao` e entrega `AVISOS.cartao`, com o aviso deduplicado por `('cartao', current_period_end::date)`.
      - **Sem token:** grava `falhaNaRenovacao` e `checkout_criado_em = now()`, e entrega `AVISOS.cartao`.
    - **`expirar`:** grava `status = 'expired'` e entrega `AVISOS.fim`, deduplicado por `('fim', current_period_end::date)`.
@@ -435,16 +461,18 @@ O fluxo do cron:
    - `metadata: { href: '/plans' }`;
    - a carteira pessoal da pessoa como `workspaceId`;
    - o e-mail de `auth.admin.getUserById`.
-6. Uma entrega que falha libera o dedupe, como o `releaseDedupe` do `review-reminder`.
+6. Uma entrega que falha libera o dedupe. O `claimDedupe` e o `releaseDedupe` já moram no próprio `billing-daily/index.ts:30-50`; os passos novos usam os mesmos.
 7. O fan-out usa `forEachLimit(FAN_OUT_CONCURRENCY)`.
 8. Devolve as contagens: `{ renovadas, falhas, expiradas, avisos, notas }`, somadas às do passo do teste.
 
 - [ ] **Passo 1: testes que falham.**
   - Teste de fonte de `billing-daily`, que confere:
     - o `checkout_criado_em` gravado antes do `criarCobranca`;
+    - o `aguardandoConfirmacao` no `ok` não confirmado;
     - o `essencial: true` nos avisos novos;
     - os tipos `renovacao`, `cartao` e `fim` de `billing_avisos`;
     - o `enforced_since` nulo não pulando a renovação.
+  - **O teste de hoje trava o que esta tarefa muda** (`src/lib/planos/edges-planos.test.ts`): as linhas 14-20 exigem o `pulado: 'desligado'` do `return` antecipado, e a linha 39 exige exatamente duas ocorrências de `await releaseDedupe(admin, dedupe)`. Atualize as duas travas na mesma tarefa para a forma nova (o `if` em volta do passo do teste, e uma liberação por entrega que falha).
 - [ ] **Passo 2:** `npm run test:edge && npx vitest run src/lib/planos/edges-planos.test.ts`. Esperado: FAIL.
 - [ ] **Passo 3:** implementar.
 - [ ] **Passo 4:** `npm run test:edge && npx tsc --noEmit && npm run lint && npm run test:unit`. Esperado: PASS.
@@ -456,10 +484,12 @@ O fluxo do cron:
 - Modificar: `src/lib/planos/plano.ts`, `src/lib/planos/plano.test.ts` e `src/components/wireframe/planos-wireframe.tsx` (todos do Bloco 4).
 
 **Interfaces:**
-- Consome as Tarefas 1 (`meu_plano` com `cartao_final`, `reembolsavel_ate` e `checkout_url`), 3 (`billing-checkout`) e 5 (`billing-cancel`).
+- Consome as Tarefas 1 (`meu_plano` com `cartao_final`, `reembolsavel_ate`, `carencia_ate` e `checkout_url`), 3 (`billing-checkout`) e 5 (`billing-cancel`), e o `papel` do `workspace-provider` (Bloco 7A). A assinatura fica `resumoDoPlano(p: MeuPlano, agora: Date, papel: WorkspaceRole | null)`.
 - Em `src/lib/planos/plano.ts`:
-  - `MeuPlano` ganha `cartao_final: string | null`, `reembolsavel_ate: string | null` e `checkout_url: string | null`;
-  - `resumoDoPlano` troca `podeAssinar` por `acoes: Array<'assinar' | 'atualizar_cartao' | 'cancelar' | 'desfazer' | 'reembolsar' | 'pagar_pendente'>`;
+  - `MeuPlano` ganha `cartao_final`, `reembolsavel_ate`, `carencia_ate` e `checkout_url`, todos `string | null`, lidos com `?? null` (o banco de produção ainda não os tem);
+  - `resumoDoPlano` troca `podeAssinar` por `acoes: Array<'assinar' | 'atualizar_cartao' | 'cancelar' | 'desfazer' | 'reembolsar' | 'pagar_pendente'>`. O `podeAssinar` hoje é usado em `plano.ts:74-100`, `plano.test.ts:20-60` e `planos-wireframe.tsx:37`: os três mudam juntos;
+  - **as ações seguem o `status`** (Decisão 9): um `past_due` dá `atualizar_cartao` mesmo quando a `origem` já caiu para `teste`, `convite` ou `nenhuma`;
+  - **quem é convidado não vê "Assinar"** (Decisão 10): `resumoDoPlano` recebe `papel` e devolve `[]` para `guest`;
   - entram duas funções novas:
     ```ts
     export function assinar(nome: string, cpf: string): Promise<string>                 // invokeEdgeJson('billing-checkout') → url
@@ -471,7 +501,7 @@ O fluxo do cron:
   |---|---|
   | `teste` e `nenhuma` | `['assinar']` |
   | `assinatura` `active` | `cancelar` ou `desfazer`, mais `reembolsar` enquanto `reembolsavel_ate > agora`. A linha ganha "Cartão final 1234" quando houver |
-  | `past_due` | título "Não conseguimos renovar", linha "Atualize o cartão até DD/MM.", ações `['atualizar_cartao']` |
+  | `status` `past_due`, qualquer origem | título "Não conseguimos renovar", linha "Atualize o cartão até DD/MM." com a data de `carencia_ate`, ações `['atualizar_cartao']` |
   | `livre`, `vitalicio` e `convite` | nenhuma |
 
   Em qualquer estado, com `checkout_url` não nulo, `pagar_pendente` ("Continuar o pagamento", que abre a `checkout_url`) entra como a primeira ação e substitui `assinar` e `atualizar_cartao`.
@@ -481,7 +511,12 @@ O fluxo do cron:
   - os botões das ações chamam `alterarAssinatura`. O reembolso pede `confirm()` nativo com "O valor volta para o cartão em até 10 dias úteis e a conta volta ao estado de antes da compra.";
   - com `?pago=1`, consulta `buscarMeuPlano` a cada 5 s por até 2 min, enquanto o status for `pending`.
 
-- [ ] **Passo 1: testes Vitest que falham.** Uma linha de `resumoDoPlano` por estado da tabela, com o reembolso só dentro dos 7 dias e o `pagar_pendente` vencendo `assinar`.
+- [ ] **Passo 1: testes Vitest que falham.** Uma linha de `resumoDoPlano` por estado da tabela, com:
+  - o reembolso só dentro dos 7 dias;
+  - o `pagar_pendente` vencendo `assinar`;
+  - um `past_due` com `origem: 'nenhuma'` dando `atualizar_cartao`;
+  - o `guest` sem ação nenhuma;
+  - um `MeuPlano` sem os campos novos (o banco antes da migração) dando o mesmo resumo do Bloco 4.
 - [ ] **Passo 2:** `npx vitest run src/lib/planos`. Esperado: FAIL.
 - [ ] **Passo 3:** implementar.
 - [ ] **Passo 4:** `npx tsc --noEmit && npm run lint && npm run test:unit && npm run ds:audit -- src/components/wireframe && npm run build`. Esperado: PASS.
@@ -491,12 +526,17 @@ O fluxo do cron:
 
 **Arquivos:**
 - Criar: `supabase/BLOCO_8_DEPLOYMENT.md`
-- Modificar: `src/components/wireframe/privacidade-wireframe.tsx`, `docs/JORNADAS.md`, `docs/atlas/template.html`, `docs/atlas/atlas-jornadas.html` (gerado)
+- Modificar: `src/components/wireframe/privacidade-wireframe.tsx`, `src/components/wireframe/cofre-aberto-wireframe.tsx`, `docs/JORNADAS.md`, `docs/atlas/template.html`, `docs/atlas/atlas-jornadas.html` (gerado)
 
 O roteiro, na ordem:
 - **§0, pré-requisitos do dono:**
   - o CNPJ e a conta Asaas aprovada;
-  - o pedido ao suporte de **tokenização em produção** e da resposta sobre o `remoteIp` numa cobrança recorrente fora de sessão;
+  - o pedido ao suporte de **tokenização em produção** (a documentação diz que "depende de habilitação"), e as perguntas que a documentação não responde:
+    - o que a fatura hospedada mostra numa cobrança com `installmentCount: 12` (12x fixo numa compra só, ou 12 faturas);
+    - se o `creditCard.creditCardToken` vem no `PAYMENT_CONFIRMED` depois do pagamento na fatura hospedada;
+    - se o `remoteIp` guardado na compra serve para a cobrança de renovação fora de sessão (ele é obrigatório);
+    - a taxa, a elegibilidade e o Sandbox do Pix Automático, para depois;
+  - o **domínio do app cadastrado nos dados comerciais da conta**: o `callback.successUrl` precisa estar nele;
   - a configuração fiscal (código do serviço e alíquotas) no painel;
   - o Vercel Pro antes de ligar a cobrança.
 - **§1, Sandbox, antes de qualquer cliente real.** Os segredos apontam para o Sandbox. Confirme numa compra de teste:
@@ -509,7 +549,7 @@ O roteiro, na ordem:
 
   **Se o item 2 falhar**, a renovação cai no caminho sem token (aviso e cartão confirmado na fatura) e o roteiro registra isso. O código não muda.
 - **§2, banco:** aplicar a migração e conferir o cron `billing-daily`. O `enforced_since` continua nulo.
-- **§3, segredos e deploy** das quatro Edges, com `--use-api`.
+- **§3, segredos e deploy** das três Edges novas (`billing-checkout`, `asaas-webhook`, `billing-cancel`) e da `billing-daily` estendida, com `--use-api`. A migração vai antes da `billing-daily`, que passa a ler as colunas novas.
 - **§4, webhook no painel do Asaas:**
   - a URL da `asaas-webhook`;
   - o `authToken` igual a `ASAAS_WEBHOOK_TOKEN`;
@@ -517,16 +557,21 @@ O roteiro, na ordem:
   - os eventos `PAYMENT_CONFIRMED`, `PAYMENT_RECEIVED`, `PAYMENT_REFUNDED` e `PAYMENT_CHARGEBACK_REQUESTED`.
 - **§5, "bateu ou devolvemos"** no 1º mês pago: é processo manual pelo suporte. O estorno sai pelo painel do Asaas, e o webhook (`PAYMENT_REFUNDED`) leva a conta para `expired`.
 - **§6, ligar a cobrança: só no lançamento do 2.0** (front em `main`):
-  - `select public.billing_lancar();`;
+  - `select public.billing_lancar();`, no SQL Editor do painel (a função é só da `service_role`);
   - quem já usa ganha 14 dias a partir desse instante.
 - **§7, reverter:** `update billing_settings set enforced_since = null;` devolve todo mundo ao `familia`.
 
 As outras mudanças:
-- **Privacidade:** acrescentar que o CPF e o cartão vão direto ao Asaas, que guardamos só o token do Asaas, os 4 últimos dígitos, a bandeira e o IP da compra (para a renovação), e que a NFS-e é emitida pelo Asaas.
+- **Privacidade:** acrescentar que o CPF e o cartão vão direto ao Asaas, que guardamos só o token do Asaas, os 4 últimos dígitos, a bandeira e o IP da compra (para a renovação), e que a NFS-e é emitida pelo Asaas. Suba o `ATUALIZADA_EM`. Só acrescente: o `wireframe.test.ts:212-240` trava a lista de frases que já existe.
+- **Cofre aberto:** a tabela `GUARDADO` diz "Mesma lista da /privacidade" e não tem a linha do plano: acrescente a linha da cobrança (o que o Asaas guarda e o que nós guardamos).
 - **Jornadas:**
-  - a jornada "Plano e só leitura" do Bloco 4 ganha a compra: `/plans` → fatura do Asaas → webhook → `/plans?pago=1` → renovação pelo cron, aviso e "atualizar cartão" → só leitura;
+  - a jornada "Plano e só leitura" do Bloco 4 ganha a compra: `/plans` → fatura do Asaas → webhook → `/plans?pago=1` → renovação pelo cron um dia antes do fim, aviso e "atualizar cartão" → só leitura;
+  - o convidado não assina (Decisão 10);
   - a lacuna "assinar só abre no Bloco 8" sai;
-  - entra a lacuna "a renovação depende do token na fatura hospedada (a confirmar no Sandbox)".
+  - entram as lacunas:
+    - "a renovação depende do token na fatura hospedada (a confirmar no Sandbox)";
+    - "a só leitura não cobre `projects`, `workspace_split_weights` nem `workspace_member_limits`" (Decisão 11);
+    - "a exportação do Cofre não traz a linha do plano da pessoa".
   - Siga a legenda e o `%%{init}%%` do topo.
 - **Atlas:** a explicação da mesma jornada, os apêndices de rotas (`/precos`) e de backend (quatro Edges, o cron e a migração), e a data e as contagens da capa. Depois, `python3 docs/atlas/build.py`.
 
