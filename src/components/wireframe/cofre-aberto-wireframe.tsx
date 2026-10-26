@@ -48,7 +48,7 @@ const GUARDADO: ReadonlyArray<readonly [dado: string, onde: string, quem: string
     ],
     [
         "Plano e cobrança: situação, fim do período, preço, os 4 últimos dígitos e a bandeira do cartão, o token do cartão e o cadastro que o Asaas devolve, e o IP da compra",
-        "Supabase (região a confirmar). O nome, o CPF, o e-mail e o cartão ficam só no Asaas",
+        "Supabase (região a confirmar). O CPF, o cartão e o nome como no cartão ficam só no Asaas; o nome e o e-mail da conta continuam aqui, como na conta, e o e-mail vai também ao Asaas, que guarda a própria cópia",
         "Você vê o plano e o final do cartão em Planos; o token, o cadastro e o IP, só o servidor do app",
         "Cobrar e renovar o plano anual. O Asaas pede o IP na renovação e emite a nota fiscal (NFS-e).",
     ],
@@ -127,6 +127,7 @@ export function CofreAbertoWireframe() {
 
             <h2 className="font-bold text-foreground">Apagar a conta</h2>
             <p>Apaga a conta, as carteiras que você criou (também para os outros membros), os lançamentos e o perfil. Pede a sua senha e não tem volta.</p>
+            <p>O plano e a renovação acabam junto. O que o Asaas precisa guardar por lei (as cobranças e as notas fiscais) fica lá pelo prazo fiscal; para pedir a ele o que pode ser apagado, fale com o atendimento do Asaas.</p>
             <button type="button" className={botao} onClick={() => setApagando(true)}>
                 Apagar a conta
             </button>

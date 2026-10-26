@@ -1303,7 +1303,7 @@ flowchart TD
     checkout -->|"cliente no Asaas; abertas reusadas ou removidas; 12x criado"| invoice
     invoice -->|"pago"| ret["/plans?pago=1"]
     ret --> poll(["Confirmando o pagamento: lê o plano a cada 5 s, por até 2 min"])
-    poll -->|"o status mudou"| active(["active: 1 ano, Renova em DD/MM, cartão final"])
+    poll -->|"o status mudou"| active(["active: 1 ano, Renova em DD/MM/AAAA, cartão final"])
     poll -->|"2 min sem mudança"| slow(["Ainda não recebemos a confirmação do Asaas"])
     invoice -.->|"PAYMENT_CONFIRMED"| hook[("Edge asaas-webhook")]
     hook -->|"compra nova: reembolso por 7 dias"| active
@@ -1311,7 +1311,7 @@ flowchart TD
     dup -.->|"sino"| dupMsg(["Cobrança em dobro devolvida"])
 
     active -->|"Cancelar a renovação"| cancel[("Edge billing-cancel")]
-    cancel -->|"cancelado"| endsAt(["Termina em DD/MM; Desfazer o cancelamento"])
+    cancel -->|"cancelado"| endsAt(["Termina em DD/MM/AAAA; Desfazer o cancelamento"])
     endsAt -->|"Desfazer o cancelamento"| active
     active -->|"Pedir reembolso, só nos 7 dias, com confirm()"| refund[("billing-cancel: reembolsar")]
     refund -->|"estornado"| refunded(["expired: a conta volta ao estado de antes da compra"])
@@ -1324,9 +1324,13 @@ flowchart TD
     token -->|"confirmada"| renewed(["Renovado: fim antigo + 1 ano"])
     token -->|"aceita, ou resposta incerta"| waiting(["Renovação em confirmação: plano até fim + 7"])
     waiting -->|"o webhook confirma"| renewed
-    waiting -->|"mais de 1 dia: o cron confere no Asaas"| daily
+    waiting -->|"mais de 1 dia: o cron confere no Asaas"| check{"Cobrança da renovação no Asaas"}
+    check -->|"paga"| renewed
+    check -->|"nunca criada"| pastDue
+    check -->|"pendente"| waiting
     token -->|"4xx do Asaas, ou sem token"| pastDue(["past_due: Não conseguimos renovar, atualize até DD/MM"])
     pastDue -->|"Atualizar cartão, preço da linha"| form
+    pastDue -->|"Cancelar a renovação"| cancel
     pastDue -->|"fim + 7 dias sem pagar"| over(["expired: Seu plano terminou"])
     endsAt -->|"no fim do período"| over
     over --> ro(["Só leitura, se não houver teste nem cobertura (11a)"])
@@ -1429,7 +1433,7 @@ flowchart TD
 | Apagar a conta | O mesmo `DeleteAccountDialog` de Minha conta, que confere a senha e chama a Edge `delete-user` (service role, sem `auth.uid()`, então livre em só leitura) | `src/components/security/DeleteAccountDialog.tsx`, `src/lib/delete-account.ts` |
 | Entrada no menu | `ROUTES.COFRE` entra em `ACCOUNT_MENU_PROFILE_LINK_ITEMS` como "Cofre aberto": a linha do grupo Conta de `/me` (no telefone, a única entrada) e o item do menu do usuário do desktop, depois de Minha conta e Planos. A aba "Você" fica ativa em `/cofre` (`isVoceTabActive`). `/piloto` e `/comecar` não têm entrada no menu | `src/components/layout/account-menu-links.ts`, `src/config/mobile-navigation.ts`, `src/config/navigation.ts` |
 | Título da tela | `APP_PAGE_TITLES` ganhou `/piloto` ("Piloto Automático"), `/cofre` ("Cofre aberto") e `/comecar` ("Começar") | `src/config/navigation.ts` |
-| Privacidade | `/privacidade` diz que o teste de 14 dias não pede cartão, que o plano é guardado (tipo, situação e fim do período) e liga ao Cofre aberto, onde se exporta tudo e se apaga a conta. Desde o Bloco 8, "A cobrança do plano": o cartão é digitado no Asaas e o CPF vai direto a ele; guardamos só o token do cartão, os 4 últimos dígitos, a bandeira, o cadastro no Asaas e o IP da compra (para a renovação); a NFS-e é emitida pelo Asaas | `src/components/wireframe/privacidade-wireframe.tsx` |
+| Privacidade | `/privacidade` diz que o teste de 14 dias não pede cartão, que o plano é guardado (tipo, situação e fim do período) e liga ao Cofre aberto, onde se exporta tudo e se apaga a conta. Desde o Bloco 8, "A cobrança do plano": o cartão é digitado no Asaas e o CPF passa pela `billing-checkout` sem ser guardado, a caminho do Asaas; guardamos só o token do cartão, os 4 últimos dígitos, a bandeira, o cadastro no Asaas e o IP da compra (para a renovação); a NFS-e é emitida pelo Asaas; e apagar a conta aqui não apaga o que o Asaas guarda por lei (as cobranças e as NFS-e), que se pede ao Asaas (lacuna 91) | `src/components/wireframe/privacidade-wireframe.tsx` |
 | Criar a Casa (Bloco 7C) | No alto de `/comecar`, quem ainda não é dono de nenhuma carteira compartilhada vê o wireframe "Criar a Casa", que chama o modelo `casa` e troca para a carteira nova. Não é um dos 4 passos nem redireciona ninguém: só aparece, e some para quem já é dono. O `handle_new_user` não mudou. Ver a jornada 18 | `src/components/wireframe/modelos-de-carteira-wireframe.tsx`, `src/app/(app)/comecar/page.tsx` |
 
 ---
@@ -2132,6 +2136,7 @@ continuam aqui para registro.
 | 88 | G11 | Um estorno pendente que o Asaas recusa sempre (o cliente do parcelamento não é o da linha) é tentado todo dia, só com log: não há alerta. O acompanhamento é manual (§8 do roteiro). |
 | 89 | G11 | Uma assinatura cancelada e já vencida fica bloqueada para um checkout novo ("Você já tem um plano ativo.") até o cron expirá-la, por até um dia. |
 | 90 | G3, G11, G12 | O Bloco 8 (cobrança pelo Asaas) está no repositório, com as telas em wireframe, e **nada foi publicado**. Nenhuma linha chamou o Asaas: o Sandbox (§1 do roteiro, num ramo de teste) é a primeira vez, e o §0 lista as perguntas que a documentação não responde. A migração sobe antes das quatro Edges, a cobrança só liga com o 2.0 em `main` (`billing_lancar()`), e uma Edge ainda não publicada aparece como "Ainda não disponível." (ou, sem CORS no 404, como falha do servidor): `supabase/BLOCO_8_DEPLOYMENT.md`. |
+| 91 | G10, G11, G12 | Apagar a conta (`delete-user`) apaga a linha do plano em cascata e para a renovação, mas não toca no Asaas: o cadastro, as cobranças e as NFS-e ficam lá, e a nota tem guarda fiscal. A política e o Cofre dizem isso e mandam pedir ao Asaas; o app não pede a exclusão por ele. |
 
 ### Fechadas na rodada de acesso (set/2026)
 

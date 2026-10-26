@@ -68,8 +68,9 @@ export function PrivacidadeWireframe() {
                         a cobrança. O cartão você digita na página do Asaas: ele nunca passa pelo app.
                     </li>
                     <li>
-                        O CPF que você informa em Planos vai direto ao Asaas, que o exige para a cobrança, junto com o
-                        nome e o e-mail. O app não guarda o CPF.
+                        O CPF que você informa em Planos passa pela função de cobrança do app (billing-checkout) só
+                        para chegar ao Asaas, que o exige, junto com o nome como no cartão e o e-mail da conta. Ela não
+                        o grava nem o registra. O app não guarda o CPF.
                     </li>
                     <li>
                         Do Asaas, guardamos só o token do cartão (um código que o Asaas devolve e que só ele sabe
@@ -145,6 +146,12 @@ export function PrivacidadeWireframe() {
                         Em <strong>Minha conta</strong>, &quot;Excluir conta&quot; apaga a conta, as carteiras que você
                         criou (também para os outros membros), os lançamentos, as categorias, as preferências e o
                         perfil. A exclusão pede a sua senha e não tem volta.
+                    </li>
+                    <li>
+                        Apagar a conta aqui encerra o plano e a renovação, mas não apaga o que o Asaas precisa guardar
+                        por lei: as cobranças, as notas fiscais (NFS-e) e o cadastro delas ficam lá pelo prazo fiscal.
+                        Para pedir ao Asaas o que pode ser apagado, fale com o atendimento dele ou escreva para nós no
+                        contato abaixo.
                     </li>
                 </ul>
 

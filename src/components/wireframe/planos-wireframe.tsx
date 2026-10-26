@@ -174,7 +174,7 @@ export function PlanosWireframe() {
                             onChange={(e) => setCpf(e.target.value)}
                         />
                     </label>
-                    <p>{`O pagamento abre no Asaas: ${doze(precoDoFormulario)} no cartão. O CPF vai direto para ele; não o guardamos.`}</p>
+                    <p>{`O pagamento abre no Asaas: ${doze(precoDoFormulario)} no cartão. O CPF passa pelo nosso servidor só para chegar a ele; não o guardamos.`}</p>
                     <button type="submit" disabled={ocupado} className={botao}>
                         {ocupado ? "Abrindo…" : formulario}
                     </button>

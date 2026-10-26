@@ -84,8 +84,10 @@ uma conferência: o repositório é público.
   o nome em `ASAAS_NFSE_SERVICO_NOME`. **O código manda a nota com todos os
   impostos zerados** (`iss`, `pis`, `cofins`, `csll`, `inss`, `ir` em 0 e
   `retainIss` falso, em `_shared/asaas.ts`, `agendarNota`). Confirme com o
-  contador que o regime da empresa aceita isso. Se não aceitar, o código muda
-  antes de ligar a cobrança.
+  contador que o regime da empresa aceita isso. Peça também a regra da nota: o
+  código emite **uma nota por período, pelo total do plano**, com o
+  parcelamento, e não uma por parcela. Se o contador discordar de qualquer
+  das duas coisas, o código muda antes de ligar a cobrança.
 - **A Vercel Pro** (US$ 20 por mês) antes de ligar a cobrança: o plano Hobby
   proíbe uso comercial. É uma ação do dono, no painel da Vercel.
 
@@ -113,7 +115,9 @@ o que der:
    parcelas abertas de um parcelamento, e `DELETE /v3/payments/{id}` remove uma
    cobrança avulsa? As duas devolvem `{ deleted: true, id }`? A remoção de um
    parcelamento com uma parcela vencida (`OVERDUE`) funciona? A de um
-   parcelamento com parcela confirmada é recusada? Se a remoção de um
+   parcelamento com parcela confirmada é recusada? E `GET /v3/payments/{id}` de
+   uma cobrança removida responde 404 ou volta com `deleted: true`? O código
+   aceita os dois. Se a remoção de um
    parcelamento vencido for recusada, o checkout daquela linha devolve 502 para
    sempre.
 5. **O estado do estorno em `GET /v3/installments/{id}`.** O código lê o
@@ -124,14 +128,17 @@ o que der:
    O parcelamento tem `status`?
 6. **O filtro `dateCreated[ge]`.** `GET /v3/payments?externalReference=…&dateCreated[ge]=AAAA-MM-DD`
    filtra pela data de criação e pagina por `offset` e `hasMore`? A
-   verificação da renovação em espera depende disso (Ruling 19). Se o Asaas
+   verificação da renovação em espera depende disso. Se o Asaas
    responder 400, toda cobrança incerta espera até `fim + 7 dias` e expira sem
    o aviso do cartão antes.
 7. **A listagem por `status`.** `GET /v3/payments?externalReference=…&status=PENDING`
    aceita um `status` por chamada (o código faz uma para `PENDING` e outra
    para `OVERDUE`)? Cada parcela vem com `installment`, `customer`, `value` (o
    da parcela), `dueDate` e a própria `invoiceUrl`? A `invoiceUrl` da 1ª
-   parcela paga o plano inteiro?
+   parcela paga o plano inteiro? E o `externalReference` e o `customer` da
+   cobrança vão em **cada uma das 12 parcelas** e no payload do
+   `PAYMENT_CONFIRMED`? O webhook ignora o evento sem `externalReference`, e a
+   listagem procura por ele.
 8. **Um parcelamento pago nunca lista parcela aberta.** Depois que a pessoa paga
    na fatura, as 12 parcelas passam juntas a `CONFIRMED` ou `RECEIVED`, e
    nenhuma fica `PENDING` ou `OVERDUE` com um vencimento futuro?
@@ -175,31 +182,59 @@ explícito do dono.
 
 ## 1. Sandbox, antes de qualquer cliente real
 
-**Onde.** Num ramo de teste do Supabase ou num projeto descartável, com todas
-as migrações aplicadas até esta, as quatro Edges publicadas e os segredos
-apontando para o **Sandbox** do Asaas (§3, com `ASAAS_API_URL` =
-`https://api-sandbox.asaas.com/v3` e a chave do Sandbox). O ramo precisa também
-do Vault (`edge_functions_url` e `cron_secret`) e do `CRON_SECRET`, para o
-`select public.invoke_edge_function('billing-daily')` funcionar. As migrações
-chegam lá com a string de conexão do ramo, que fica fora do repositório:
+**Onde: só num ramo de teste do Supabase ou num projeto descartável, nunca no
+projeto de produção.** O "Assinar" só aparece com a cobrança lançada, e lançá-la
+em produção é o §6, no lançamento do 2.0. Produção também não mistura a chave
+do Sandbox com dado real.
+
+**1. As migrações.** O ramo precisa de todas as migrações até esta, com a string
+de conexão dele, que fica fora do repositório:
 
 ```bash
 supabase db push --db-url "<string de conexão do ramo>"
 ```
 
-O front do 2.0 roda apontado para o ramo, num endereço do domínio cadastrado na
-conta do Sandbox (um preview da Vercel, por exemplo). O `APP_BASE_URL` do ramo
-é esse endereço. No painel do Sandbox, o webhook (§4) aponta para a
-`asaas-webhook` do ramo.
+E do Vault (`edge_functions_url` e `cron_secret`) e do segredo `CRON_SECRET`,
+para o `select public.invoke_edge_function('billing-daily')` funcionar.
 
-**Se o dono preferir o projeto de produção**, faça antes o §2 e o §3 com os
-segredos do Sandbox, e use **só uma conta de teste** (nunca a do dono nem a da
-família: uma pessoa tem uma linha só em `billing_subscriptions`, e o vitalício
-dela ocuparia a linha). Ao terminar, apague a conta de teste pelo app (Cofre
-aberto › Apagar a conta): a linha dela e os parcelamentos saem em cascata. Só
-depois troque os segredos para os de produção.
+**2. Os segredos e as funções, no ramo.** Os comandos do §3 sem `--project-ref`
+vão para o projeto ligado, **que é o de produção**: aqui, todo comando leva o
+ref do ramo ou do projeto de teste (Settings › General do painel dele, fora do
+repositório). Os valores dos segredos vão no painel do ramo (Edge Functions ›
+Secrets); pela CLI, só para conferir os nomes:
 
-**As escritas desta seção** mudam só a linha da conta de teste, para simular o
+```bash
+supabase secrets list --project-ref <ramo-ou-projeto-de-teste>
+supabase functions deploy billing-checkout asaas-webhook billing-cancel billing-daily --project-ref <ramo-ou-projeto-de-teste> --use-api
+```
+
+Os segredos do ramo são os da tabela do §3, com `ASAAS_API_URL` =
+`https://api-sandbox.asaas.com/v3`, a chave do Sandbox, um
+`ASAAS_WEBHOOK_TOKEN` só do ramo e os dois da nota. O `APP_BASE_URL` do ramo é o
+endereço do front do 2.0 apontado para ele, num domínio cadastrado na conta do
+Sandbox (um preview da Vercel, por exemplo). No painel do Sandbox, o webhook
+(§4) aponta para a `asaas-webhook` do ramo.
+
+**3. Ligar a cobrança no ramo.** No SQL Editor **do ramo** (confira o nome do
+projeto no topo do painel antes de rodar):
+
+```sql
+select public.billing_lancar();
+```
+
+Sem isso, `meu_plano()` devolve a origem `livre`, e `/plans` não oferece
+nenhuma ação: nem "Assinar", nem cancelar, nem reembolsar. Com ela, a conta de
+teste fica em teste (`origem = 'teste'`) e vê "Assinar". Os itens 1 a 11
+precisam disso.
+
+**4. No fim do §1, desligue a cobrança no ramo** (ou apague o projeto
+descartável):
+
+```sql
+update public.billing_settings set enforced_since = null;
+```
+
+**As escritas desta seção** rodam só no ramo e mudam só a linha da conta de teste, para simular o
 tempo (o fim do período, uma espera, um estorno pendente). Depois de cada uma,
 dispare o cron na mão:
 
@@ -260,12 +295,13 @@ tabela do §1.4 e a lacuna 78 de `docs/JORNADAS.md` continua aberta.
    painel do Sandbox há um parcelamento novo, pago sem a pessoa digitar o
    cartão. Enquanto espera a confirmação, `/plans` mostra "Renovação em
    confirmação." e não oferece cancelar.
-5. **A recusa não deixa cobrança.** Troque o token por um inválido e repita:
+5. **A recusa não deixa cobrança.** Espere o webhook do item 4 confirmar. Depois troque o token por
+   um inválido e repita (o `update` zera a espera, para a linha voltar a renovar):
 
    ```sql
    update public.billing_subscriptions
    set card_token = 'token-invalido-de-teste', current_period_end = now() + interval '1 day',
-       checkout_criado_em = null, updated_at = now()
+       grace_until = null, checkout_criado_em = null, updated_at = now()
    where user_id = '<USER_ID_DE_TESTE>' and provider = 'asaas' and status = 'active';
    ```
 
@@ -276,7 +312,8 @@ tabela do §1.4 e a lacuna 78 de `docs/JORNADAS.md` continua aberta.
    DD/MM.", "Atualizar cartão" e "Cancelar a renovação". "Atualizar cartão"
    abre uma fatura com o preço da linha. Paga, a linha volta a `active` com o
    fim antigo + 1 ano.
-6. **A cobrança incerta, conferida no dia seguinte** (Ruling 19). A
+6. **A cobrança incerta, conferida no dia seguinte.** Uma renovação aceita que espera há mais de
+   um dia é conferida no Asaas: paga, ativa; nunca criada, vira `past_due`. A
    verificação conta as cobranças da linha criadas desde o dia da tentativa, e
    as dos itens 4 e 5 contariam: use uma conta com uma compra só (uma conta
    nova, ou dois dias depois). Simule uma cobrança aceita há mais de um dia que
@@ -291,7 +328,7 @@ tabela do §1.4 e a lacuna 78 de `docs/JORNADAS.md` continua aberta.
 
    Dispare o cron. Esperado: a verificação lê `GET /payments` com
    `dateCreated[ge]`, não acha cobrança nova, e a linha vai a `past_due` com o
-   aviso do cartão. Se os logs mostrarem "verificação" com um 400, o filtro não
+   aviso do cartão. Se os logs mostrarem `verificar` com um 400, o filtro não
    existe (§0, pergunta 6): a linha fica esperando até `grace_until`.
 
 ### 1.3. O reembolso, o dobro e o checkout que não duplica
@@ -305,7 +342,28 @@ compre de novo.
    parcelamento estornado, chega o `PAYMENT_REFUNDED` (a linha já expirada não
    muda) e o aviso "Reembolso confirmado". A conta volta ao estado de antes da
    compra (o teste, se ainda estiver nele; senão, só leitura).
-8. **O reembolso pendente, concluído pelo cron** (Ruling 13). Numa compra nova,
+
+   A tela não mostra o `PAYMENT_REFUNDED` (a linha já expirou). Os eventos que
+   chegaram, e quantos o estorno das 12 parcelas gerou (§0, pergunta 11):
+
+   ```sql
+   select tipo, count(*) from public.billing_events
+   where tipo in ('PAYMENT_CONFIRMED', 'PAYMENT_RECEIVED', 'PAYMENT_REFUNDED')
+   group by 1 order by 1;
+   ```
+
+   E o estado dos estornos dos parcelamentos da conta de teste (só lê; vale
+   também para os itens 8 e 9):
+
+   ```sql
+   select p.installment, p.criado_em, p.ativado_em, p.estorno_status, p.estorno_tentado_em
+   from public.billing_parcelamentos p
+   join public.billing_subscriptions b on b.id = p.subscription_id
+   where b.user_id = '<USER_ID_DE_TESTE>'
+   order by p.criado_em;
+   ```
+8. **O reembolso pendente, concluído pelo cron.** O estorno que o Asaas não confirmou a tempo fica
+   `pendente`, e o cron o conclui e só então expira a linha. Numa compra nova,
    simule o estorno que estourou o prazo:
 
    ```sql
@@ -320,7 +378,8 @@ compre de novo.
    Avisamos quando ele for confirmado.", sem chamar o Asaas. Dispare o cron.
    Esperado: `estornos: 1`, o parcelamento estornado no painel, a linha
    `expired` e o aviso "Reembolso confirmado".
-9. **A cobrança em dobro é devolvida** (Ruling 8). Numa linha `active` dentro do
+9. **A cobrança em dobro é devolvida.** Um segundo parcelamento nosso pago com o período já pago é
+   estornado na hora. Numa linha `active` dentro do
    período, crie pela API do Sandbox uma segunda cobrança de 12x para o mesmo
    cliente, com a referência da linha. A chave do Sandbox fica numa variável da
    sessão do terminal, nunca num arquivo:
@@ -335,11 +394,12 @@ compre de novo.
    Família).
 
    Abra a `invoiceUrl` da resposta e pague. Esperado: o webhook registra o
-   parcelamento (Ruling 15), vê que a linha já está paga no período e o estorna.
+   parcelamento (a referência é a linha e o cliente é o dela), vê que a linha já está paga no período e o estorna.
    O registro dele em `billing_parcelamentos` fica `feito`, o painel mostra o
    estorno, o período da linha não muda, e chega o aviso "Cobrança em dobro
    devolvida".
-10. **Listar antes de criar** (Ruling 7). Com uma conta de teste sem plano,
+10. **Listar antes de criar.** Antes de uma cobrança nova, o checkout reaproveita a aberta que serve
+    e tira as outras do ar. Com uma conta de teste sem plano,
     "Assinar" e feche a fatura sem pagar. `/plans` mostra "Continuar o
     pagamento", com o mesmo link. Agora finja que o link venceu:
 
@@ -523,7 +583,8 @@ Secrets), não na linha de comando: o histórico do terminal guardaria a chave.
 | `ASAAS_NFSE_SERVICO_CODIGO` | O código do serviço da configuração fiscal | `billing-daily` |
 | `ASAAS_NFSE_SERVICO_NOME` | O nome do serviço | `billing-daily` |
 
-`APP_BASE_URL`, `CRON_SECRET` e os do Resend já existem. Confira só os nomes:
+`APP_BASE_URL`, `CRON_SECRET` e os do Resend já existem. Confira só os nomes
+(sem `--project-ref`, a CLI lê o projeto ligado, o de produção):
 
 ```bash
 supabase secrets list
@@ -540,7 +601,9 @@ publique as funções. A chave de produção (`ASAAS_API_URL` e `ASAAS_API_KEY`)
 pode esperar a tokenização aprovada: até o 2.0 ir para `main`, ninguém chega ao
 "Assinar".
 
-**As funções.** O `_shared` vai embutido em cada função no deploy. Os módulos
+**As funções.** Os comandos desta seção não levam `--project-ref`: vão para o
+projeto ligado, **que é o de produção**. Só com o pedido explícito do dono. O
+`_shared` vai embutido em cada função no deploy. Os módulos
 novos deste bloco são `_shared/billing.ts` e `_shared/asaas.ts`, e só estas
 quatro funções os importam. Nenhum módulo antigo do `_shared` mudou.
 
@@ -667,6 +730,11 @@ para. Três cuidados:
   parar a cobrança também, apague o `ASAAS_API_KEY` dos segredos (o checkout e o
   reembolso respondem 503, e as linhas com token são puladas, com log) e
   devolva o que for preciso pelo painel (§5).
+- **O resto do ciclo também continua.** Mesmo sem a chave, uma linha sem token
+  que chega a `fim − 2 dias` vai a `past_due` com o aviso do cartão, e uma linha
+  que passa da tolerância expira com o aviso "Seu plano terminou… só leitura".
+  Com o interruptor desligado ninguém fica em só leitura de verdade, mas o
+  aviso sai. Avise quem assina por fora, se for o caso.
 - **Ligar de novo recomeça o teste de todo mundo**: o `billing_lancar()` grava
   um instante novo, e os 14 dias contam dele.
 - Nada se apaga: as linhas, os parcelamentos e os eventos ficam.
@@ -698,6 +766,15 @@ from public.billing_parcelamentos where estorno_status = 'pendente' order by cri
 O que ficar mais de dois dias se resolve à mão: estorne pelo painel do Asaas, e
 o cron seguinte vê o estorno feito, marca `feito` e avisa a pessoa.
 
+Os estornos de todos, por estado (só lê):
+
+```sql
+select estorno_status, count(*) from public.billing_parcelamentos group by 1 order by 1;
+```
+
+`null` é o parcelamento sem estorno, `feito` o devolvido, e `pendente` o que o
+cron ainda tenta.
+
 **Nenhuma espera vencida.**
 
 ```sql
@@ -717,7 +794,9 @@ where provider = 'asaas' and status = 'active' and provider_ref is not null
 ```
 
 Esperado: `0`. Uma linha com estorno no parcelamento também conta aqui, de
-propósito: nota de venda devolvida não se emite.
+propósito: nota de venda devolvida não se emite. E uma renovação confirmada
+pelo webhook depois do cron do dia aparece aqui até o cron seguinte: repita a
+conferência no outro dia antes de procurar o problema.
 
 **Os logs que pedem atenção**, nas Edges `billing-daily` e `asaas-webhook`:
 
@@ -727,7 +806,7 @@ propósito: nota de venda devolvida não se emite.
 | `cobrança incerta` | Rede, 5xx ou prazo estourado na cobrança por token: a linha espera e é conferida no dia seguinte |
 | `fatura do checkout paga, esperando o webhook` | O cron não cobra o token porque a fatura já foi paga. Se repetir por dias, o webhook se perdeu: reenvie o evento pelo painel do Asaas |
 | `parcelamento desconhecido` | Um pagamento de outra linha com a nossa referência. Não ativa nada |
-| `pagamento em dobro, estornando` | A Ruling 8 em ação: confira o estorno no painel |
+| `pagamento em dobro, estornando` | Um segundo pagamento no período já pago está sendo devolvido: confira o estorno no painel |
 | `NFS-e pulada` · `agendarNota` | A nota não saiu: segredo faltando, ou o Asaas recusou |
 | `aviso sem carteira pessoal` | A pessoa não tem carteira pessoal, e o aviso não saiu |
 
@@ -752,7 +831,8 @@ novos de `meu_plano()` são lidos com `?? null`, e uma Edge que ainda não subiu
 
 ## 10. Com o front
 
-Com o front do 2.0 no ar (ou no ramo de teste), confira com uma conta de teste:
+Com o front do 2.0 no ar e a cobrança lançada (§6), ou no ramo de teste com a
+cobrança ligada nele (§1), confira com uma conta de teste:
 
 - **`/plans` com origem `teste` ou `nenhuma`** mostra o formulário (nome como no
   cartão e CPF) e "Assinar". O CPF some do campo depois do envio, e uma recusa
@@ -769,11 +849,12 @@ Com o front do 2.0 no ar (ou no ramo de teste), confira com uma conta de teste:
 - **cancelar** mostra "Termina em DD/MM/AAAA" e "Desfazer o cancelamento";
 - **o reembolso** pede a confirmação "O valor volta para o cartão em até 10 dias
   úteis e a conta volta ao estado de antes da compra.";
-- **`/privacidade`** diz que o CPF e o cartão vão direto ao Asaas, o que
-  guardamos e que a NFS-e é emitida pelo Asaas, e **`/cofre`** tem a linha do
-  plano e da cobrança.
+- **`/privacidade`** diz que o cartão é digitado no Asaas, que o CPF passa
+  pela `billing-checkout` sem ser guardado, o que guardamos, que a NFS-e é
+  emitida pelo Asaas e o que fica lá depois de apagar a conta, e **`/cofre`**
+  tem a linha do plano e da cobrança.
 
 **O que fica de fora, de propósito.** O Pix Automático (depois de o CNPJ
 completar 6 meses), o mensal, o "bateu ou devolvemos" automático (§5) e a
 troca de cartão sem pagar (o cartão novo só entra pela fatura). As lacunas
-conhecidas estão na seção 19 de `docs/JORNADAS.md`, da 78 à 90.
+conhecidas estão na seção 19 de `docs/JORNADAS.md`, da 78 à 91.

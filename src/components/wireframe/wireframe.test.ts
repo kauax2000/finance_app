@@ -231,10 +231,10 @@ describe("privacidade e IA em Configurações (Bloco 3B, Decisão 13)", () => {
   it("a política diz o que vai ao Asaas e o que guardamos da cobrança (Bloco 8)", async () => {
     const { PrivacidadeWireframe } = await import("./privacidade-wireframe")
     const html = renderToStaticMarkup(PrivacidadeWireframe())
-    for (const trecho of ["Asaas", "nunca passa pelo app", "O app não guarda o CPF", "token do cartão", "os 4 últimos dígitos, a bandeira", "endereço IP da compra", "NFS-e"]) {
+    for (const trecho of ["Asaas", "nunca passa pelo app", "passa pela função de cobrança do app (billing-checkout)", "O app não guarda o CPF", "token do cartão", "os 4 últimos dígitos, a bandeira", "endereço IP da compra", "NFS-e", "não apaga o que o Asaas precisa guardar"]) {
       expect(html, trecho).toContain(trecho)
     }
-    expect(fonte("src/components/wireframe/cofre-aberto-wireframe.tsx")).toContain("O nome, o CPF, o e-mail e o cartão ficam só no Asaas")
+    expect(fonte("src/components/wireframe/cofre-aberto-wireframe.tsx")).toContain("O CPF, o cartão e o nome como no cartão ficam só no Asaas; o nome e o e-mail da conta continuam aqui")
   })
 
   it("Configurações mostra a IA com o link da política", async () => {

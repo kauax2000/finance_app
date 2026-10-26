@@ -222,7 +222,7 @@ export const AVISOS: {
 
 As regras que os testes travam:
 - **`efeitoDoEvento`, renovação:** é renovação quando `sub.status` é `active` ou `past_due`, `current_period_end` não é nulo e `current_period_end + 7 dias > agora`. Senão, é compra nova.
-- **`efeitoDoEvento`, pagamento confirmado:** com `PAYMENT_CONFIRMED` ou `PAYMENT_RECEIVED`, um `installment` diferente de `sub.provider_ref` e `externalReference === sub.id`, a mudança é (com a renovação feita um dia antes do fim, o "fim antigo + 1 ano" mantém o aniversário):
+- **`efeitoDoEvento`, pagamento confirmado:** com `PAYMENT_CONFIRMED` ou `PAYMENT_RECEIVED`, um `installment` diferente de `sub.provider_ref` e `externalReference === sub.id`, a mudança é (com a renovação feita dois dias antes do fim, Ruling 20, o "fim antigo + 1 ano" mantém o aniversário):
   - `status: 'active'`;
   - `provider_ref: installment`;
   - `grace_until: null`;
@@ -238,8 +238,8 @@ As regras que os testes travam:
 - **`acaoDoDia`** devolve `null` para `provider !== 'asaas'` ou `current_period_end` nulo. Para os demais:
   - **`active`:**
     - com `agora >= fim` e `cancel_at_period_end`, devolve `'expirar'`;
-    - com `agora >= fim - 1 dia`, sem cancelamento, devolve `'renovar'`, salvo se `checkout_criado_em` tiver menos de 2 dias (a renovação já foi tentada e espera o webhook): aí devolve `null`;
-    - com `fim - 7 dias <= agora < fim - 1 dia`, sem cancelamento, devolve `'avisar_renovacao'`.
+    - com `agora >= fim - 2 dias` (Ruling 20), sem cancelamento, devolve `'renovar'`, salvo se `checkout_criado_em` tiver menos de 2 dias (a renovação já foi tentada e espera o webhook): aí devolve `null`;
+    - com `fim - 7 dias <= agora < fim - 2 dias`, sem cancelamento, devolve `'avisar_renovacao'`.
   - **`past_due`:**
     - com `agora >= grace_until`, devolve `'expirar'`;
     - senão, devolve `'renovar'` só se `checkout_criado_em` for nulo ou tiver mais de 2 dias;
@@ -299,7 +299,7 @@ O que cada função envia:
 - [ ] **Passo 1: testes Deno que falham.**
   - `billing.test.ts`:
     - um caso por regra acima;
-    - `acaoDoDia` com `agora = fim - 1 dia` devolve `'renovar'`, com `fim - 1 dia - 1 min` devolve `'avisar_renovacao'`, e com uma tentativa há 1 dia devolve `null`;
+    - `acaoDoDia` com `agora = fim - 2 dias` devolve `'renovar'`, com `fim - 2 dias - 1 min` devolve `'avisar_renovacao'`, e com uma tentativa há 1 dia devolve `null`;
     - `aguardandoConfirmacao` devolve só `grace_until = fim + 7 dias`;
     - a 2ª parcela do mesmo `installment` devolve `null`;
     - a renovação estende a partir do fim antigo, mesmo confirmada 3 dias depois dele;
@@ -565,7 +565,7 @@ As outras mudanças:
 - **Privacidade:** acrescentar que o CPF e o cartão vão direto ao Asaas, que guardamos só o token do Asaas, os 4 últimos dígitos, a bandeira e o IP da compra (para a renovação), e que a NFS-e é emitida pelo Asaas. Suba o `ATUALIZADA_EM`. Só acrescente: o `wireframe.test.ts:212-240` trava a lista de frases que já existe.
 - **Cofre aberto:** a tabela `GUARDADO` diz "Mesma lista da /privacidade" e não tem a linha do plano: acrescente a linha da cobrança (o que o Asaas guarda e o que nós guardamos).
 - **Jornadas:**
-  - a jornada "Plano e só leitura" do Bloco 4 ganha a compra: `/plans` → fatura do Asaas → webhook → `/plans?pago=1` → renovação pelo cron um dia antes do fim, aviso e "atualizar cartão" → só leitura;
+  - a jornada "Plano e só leitura" do Bloco 4 ganha a compra: `/plans` → fatura do Asaas → webhook → `/plans?pago=1` → renovação pelo cron dois dias antes do fim (Ruling 20), aviso e "atualizar cartão" → só leitura;
   - o convidado não assina (Decisão 10);
   - a lacuna "assinar só abre no Bloco 8" sai;
   - entram as lacunas:
