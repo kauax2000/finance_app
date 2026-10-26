@@ -11,32 +11,189 @@ describe("Edge billing-daily", () => {
         expect(f).toContain("return json(401")
     })
 
-    it("lê o enforced_since antes de pedir os avisos, e desligado pula", () => {
+    it("o enforced_since nulo pula só o aviso do teste; a renovação, os estornos e a NFS-e rodam sempre", () => {
         const f = fonte(DIARIO)
         const config = f.indexOf(".from('billing_settings')")
         expect(config).toBeGreaterThan(-1)
-        expect(f.indexOf("avisos_de_teste_pendentes")).toBeGreaterThan(config)
-        expect(f).toContain("pulado: 'desligado'")
+        expect(f).not.toContain("pulado: 'desligado'")
+        const teste = f.indexOf("if (config?.enforced_since) await passo(ctx, 'teste', () => avisarDoTeste(ctx))")
+        expect(teste).toBeGreaterThan(config)
+        expect(funcao(f, "avisarDoTeste")).toContain("avisos_de_teste_pendentes")
+        for (const p of ["estornos', () => refazerEstornos(ctx))", "renovação', () => renovarAssinaturas(ctx))", "NFS-e', () => emitirNotas(ctx))"]) {
+            expect(f).toContain(`\n  await passo(ctx, '${p}`)
+            expect(f.indexOf(p)).toBeGreaterThan(teste)
+        }
+        expect(f).toContain("return json(200, { ok: true, ...ctx.n })")
+        for (const c of ["renovadas", "falhas", "expiradas", "avisos", "notas"]) expect(f).toContain(`${c}: 0`)
     })
 
-    it("o aviso é essencial, do tipo system, com o link para os planos", () => {
+    it("todo aviso é essencial, do tipo system, com o link para os planos", () => {
         const f = fonte(DIARIO)
-        expect(f).toContain("essencial: true")
-        expect(f).toContain("type: 'system'")
-        expect(f).toContain("metadata: { href: '/plans' }")
+        expect(f.match(/deliverNotification\(/g)?.length).toBe(1)
+        const enviar = funcao(f, "enviar")
+        expect(enviar).toContain("deliverNotification(")
+        expect(enviar).toContain("essencial: true")
+        expect(enviar).toContain("type: 'system'")
+        expect(enviar).toContain("metadata: { href: '/plans' }")
         expect(f).toContain("avisoDoTeste(")
+        expect(funcao(f, "destinoDe")).toContain(".eq('type', 'personal')")
+        expect(funcao(f, "destinoDe")).toContain("auth.admin.getUserById(userId)")
     })
 
-    it("o dedupe 'teste' é liberado quando a entrega falha", () => {
+    it("os avisos são deduplicados por período, e a entrega que falha libera o dedupe", () => {
         const f = fonte(DIARIO)
         expect(f).toContain("tipo: 'teste'")
         expect(f).toContain(".from('billing_avisos')")
-        expect(f).toContain("claimDedupe(")
-        expect(f).toContain("releaseDedupe(")
         expect(f).toContain("forEachLimit(")
         expect(f).toContain("FAN_OUT_CONCURRENCY")
-        // a falha de entrega e a exceção liberam o dedupe
+        // a falha de entrega e a exceção liberam o dedupe, num lugar só
         expect(f.split("await releaseDedupe(admin, dedupe)").length - 1).toBe(2)
+        const entregar = funcao(f, "entregar")
+        expect(entregar.split("await releaseDedupe(admin, dedupe)").length - 1).toBe(2)
+        expect(entregar).toContain("claimDedupe(admin, dedupe)")
+        expect(funcao(f, "avisar")).toContain("const referencia = (linha.current_period_end ?? ctx.iso).slice(0, 10)")
+        expect(f).toContain("avisar(ctx, linha, 'renovacao', AVISOS.renovacao(linha, linha.card_last4))")
+        expect(f.match(/avisar\(ctx, linha, 'cartao', AVISOS\.cartao\(\{ \.\.\.linha, \.\.\.falha \}\)\)/g)?.length).toBe(2)
+        expect(funcao(f, "expirar")).toContain("avisar(ctx, linha, 'fim', AVISOS.fim())")
+    })
+
+    it("lê as assinaturas do Asaas em todas as páginas, e uma linha que falha não para as outras", () => {
+        const f = fonte(DIARIO)
+        const ler = funcao(f, "renovarAssinaturas")
+        expect(ler).toContain("todasAsPaginas<Linha>(")
+        expect(ler).toContain(".in('status', ['active', 'past_due'])")
+        expect(ler).toContain("acaoDoDia(linha, ctx.agora)")
+        // todo fan-out tem o seu try/catch por item
+        const laços = f.match(/forEachLimit\(/g)?.length ?? 0
+        expect(laços).toBe(4)
+        expect(f.match(/FAN_OUT_CONCURRENCY, async \(\w+\) => \{\n\s*try \{/g)?.length).toBe(laços)
+    })
+
+    it("grava o checkout_criado_em, condicional e sem o cancelado, antes de cobrar o token", () => {
+        const r = funcao(fonte(DIARIO), "renovar")
+        const reivindica = r.indexOf("update({ checkout_criado_em: iso, checkout_url: null, updated_at: iso })")
+        expect(reivindica).toBeGreaterThan(-1)
+        expect(r.indexOf("criarCobranca(cfg")).toBeGreaterThan(reivindica)
+        expect(r).toContain(".eq('cancel_at_period_end', false)")
+        expect(r).toContain("for (const col of ['checkout_criado_em', 'grace_until', 'current_period_end'] as const)")
+        expect(r).toContain("if (!minha?.length) return")
+        expect(r).toContain("token: linha.card_token!")
+        expect(r).toContain("ip: linha.ultimo_ip")
+        expect(r).toContain("referencia: linha.id")
+        expect(r).toContain("linha.price_cents ??")
+    })
+
+    it("sem token ou sem ultimo_ip não cobra: falhaNaRenovacao e o aviso do cartão", () => {
+        const r = funcao(fonte(DIARIO), "renovar")
+        expect(r).toContain("const comToken = !!(linha.card_token && linha.ultimo_ip && linha.asaas_customer_id)")
+        const sem = r.slice(r.indexOf("if (!comToken)"), r.indexOf("const cfg = ctx.cfg"))
+        expect(sem).toContain("falhaNaRenovacao(linha, agora)")
+        expect(sem).toContain("checkout_criado_em: iso, checkout_url: null")
+        expect(sem).toContain("AVISOS.cartao(")
+        expect(sem).not.toContain("criarCobranca(")
+        expect(r.indexOf("if (!comToken)")).toBeLessThan(r.indexOf("criarCobranca(cfg"))
+    })
+
+    it("toda gravação do checkout_criado_em zera o checkout_url", () => {
+        const f = fonte(DIARIO)
+        const gravacoes = f.split("\n").filter((l) => /\.update\(\{[^}]*checkout_criado_em: iso/.test(l))
+        expect(gravacoes.length).toBe(2)
+        for (const l of gravacoes) expect(l).toContain("checkout_url: null")
+    })
+
+    it("tira do ar a fatura aberta do checkout antes de cobrar, e nunca o provider_ref (Ruling 7)", () => {
+        const r = funcao(fonte(DIARIO), "renovar")
+        const paga = r.indexOf("buscarCobranca(cfg, linha.checkout_ref)")
+        const lista = r.indexOf("listarCobrancasAbertas(cfg, linha.id)")
+        const triagem = r.indexOf("triagemDasAbertas(abertas.dados, centavos, linha.asaas_customer_id!, linha.provider_ref)")
+        const remove = r.indexOf("removerCobranca(cfg, c)")
+        const cobra = r.indexOf("criarCobranca(cfg")
+        expect(paga).toBeGreaterThan(-1)
+        expect(lista).toBeGreaterThan(paga)
+        expect(triagem).toBeGreaterThan(lista)
+        expect(remove).toBeGreaterThan(triagem)
+        expect(cobra).toBeGreaterThan(remove)
+        expect(r).toContain("reusar ? [reusar, ...remover] : remover")
+        // a falha de leitura ou remoção não cobra: devolve a data de antes
+        expect(r.match(/return await soltar\(/g)?.length).toBe(3)
+    })
+
+    it("registra o parcelamento da renovação antes de gravar o resultado (Ruling 9)", () => {
+        const r = funcao(fonte(DIARIO), "renovar")
+        const registro = r.indexOf(".from('billing_parcelamentos').insert({ installment, subscription_id: linha.id })")
+        expect(registro).toBeGreaterThan(r.indexOf("criarCobranca(cfg"))
+        expect(registro).toBeLessThan(r.indexOf("efeitoDoEvento("))
+        expect(registro).toBeLessThan(r.indexOf("aguardandoConfirmacao("))
+        expect(registro).toBeLessThan(r.indexOf("falhaNaRenovacao(linha, agora)", r.indexOf("criarCobranca(cfg")))
+        expect(r).toContain("cobranca.incerto\n    ? await criadosHoje(ctx, cfg, linha)")
+        expect(funcao(fonte(DIARIO), "criadosHoje")).toContain("i !== linha.provider_ref")
+    })
+
+    it("o resultado: confirmada ativa, aceita ou incerta espera, recusada vira past_due", () => {
+        const r = funcao(fonte(DIARIO), "renovar")
+        expect(r).toContain("(cobranca.dados.status === 'CONFIRMED' || cobranca.dados.status === 'RECEIVED')")
+        const efeito = r.indexOf("efeitoDoEvento('PAYMENT_CONFIRMED', cobranca.dados, linha, agora)")
+        const espera = r.indexOf("if (cobranca.ok || cobranca.incerto) {")
+        const recusa = r.indexOf("const falha = falhaNaRenovacao(linha, agora)", espera)
+        expect(efeito).toBeGreaterThan(-1)
+        expect(espera).toBeGreaterThan(efeito)
+        expect(r.slice(espera, recusa)).toContain("gravar(aguardandoConfirmacao(linha))")
+        expect(recusa).toBeGreaterThan(espera)
+        expect(r.slice(recusa)).toContain("AVISOS.cartao(")
+        // um efeito nulo não grava nada e cai na espera
+        expect(r.slice(efeito, espera)).toContain("if (m) {")
+        expect(r.slice(efeito, espera)).toContain("marcarAtivado(ctx, m.provider_ref)")
+        // depois da cobrança, a gravação vale só para a reivindicação desta chamada
+        expect(r).toContain(".eq('checkout_criado_em', iso)")
+    })
+
+    it("expira condicional ao que leu", () => {
+        const e = funcao(fonte(DIARIO), "expirar")
+        expect(e).toContain("status: 'expired', checkout_url: null")
+        expect(e).toContain(".eq('updated_at', linha.updated_at)")
+        expect(e).toContain(".eq('status', linha.status)")
+    })
+
+    it("refaz os estornos pendentes com mais de 1 hora, e o reembolso concluído expira a linha (Ruling 10 e 13)", () => {
+        const s = funcao(fonte(DIARIO), "refazerEstornos")
+        expect(s).toContain(".eq('estorno_status', 'pendente')")
+        expect(s).toContain(".lt('estorno_tentado_em', limite)")
+        expect(s).toContain("UMA_HORA_MS")
+        const tentativa = s.indexOf(".eq('estorno_tentado_em', p.estorno_tentado_em)")
+        const pede = s.indexOf("estornarNoAsaas(cfg, p.installment, linha.asaas_customer_id)")
+        const feito = s.indexOf("update({ estorno_status: 'feito' })")
+        const expira = s.indexOf("status: 'expired'")
+        expect(tentativa).toBeGreaterThan(-1)
+        expect(pede).toBeGreaterThan(tentativa)
+        expect(feito).toBeGreaterThan(pede)
+        expect(expira).toBeGreaterThan(feito)
+        expect(s).toContain("if (p.installment === linha.provider_ref)")
+        expect(s.slice(expira)).toContain(".eq('status', 'active')")
+        expect(s.slice(expira)).toContain(".eq('provider_ref', p.installment)")
+    })
+
+    it("o estorno da cobrança em dobro leva o aviso do webhook, uma vez, e o reembolso não", () => {
+        const f = fonte(DIARIO)
+        const s = funcao(f, "refazerEstornos")
+        const aviso = s.indexOf("AVISOS.estorno()")
+        expect(aviso).toBeGreaterThan(s.indexOf("if (p.installment === linha.provider_ref)"))
+        expect(s.slice(s.indexOf("if (p.installment === linha.provider_ref)"), aviso)).toContain("return\n      }")
+        expect(s).toContain("if (!marcou?.length) return")
+        expect(f.match(/AVISOS\.estorno\(\)/g)?.length).toBe(1)
+        expect(fonte(WEBHOOK)).toContain("AVISOS.estorno()")
+    })
+
+    it("a NFS-e: uma por parcelamento pago, sem os segredos pula com um console.error", () => {
+        const n = funcao(fonte(DIARIO), "emitirNotas")
+        expect(n).toContain("Deno.env.get('ASAAS_NFSE_SERVICO_CODIGO')")
+        expect(n).toContain("Deno.env.get('ASAAS_NFSE_SERVICO_NOME')")
+        const pula = n.indexOf("if (!cfg || !codigo || !nome) {")
+        expect(n.slice(pula, n.indexOf("return", pula)).match(/console\.error\(/g)?.length).toBe(1)
+        expect(n).toContain(".eq('status', 'active')")
+        expect(n).toContain(".not('provider_ref', 'is', null)")
+        expect(n).toContain("l.nfse_para !== l.provider_ref")
+        expect(n).toContain("agendarNota(cfg, { parcelamento: ref, centavos, data: ctx.hoje, codigo, nome })")
+        expect(n.indexOf("update({ nfse_para: ref })")).toBeGreaterThan(n.indexOf("if (!r.ok)"))
     })
 
     it("a Edge está no config sem JWT", () => {
@@ -244,8 +401,10 @@ describe("Edge asaas-webhook", () => {
 
     it("o aviso do estorno é essencial, do tipo system, na carteira pessoal", () => {
         const f = fonte(WEBHOOK)
-        expect(f).toContain("Cobrança em dobro devolvida")
-        expect(f).toContain("Recebemos um pagamento a mais pelo plano e já pedimos o estorno ao Asaas. O valor volta para o cartão em até 10 dias úteis.")
+        expect(f).toContain("AVISOS.estorno()")
+        const billing = fonte("supabase/functions/_shared/billing.ts")
+        expect(billing).toContain("Cobrança em dobro devolvida")
+        expect(billing).toContain("Recebemos um pagamento a mais pelo plano e já pedimos o estorno ao Asaas. O valor volta para o cartão em até 10 dias úteis.")
         expect(f).toContain("type: 'system'")
         expect(f).toContain("essencial: true")
         expect(f).toContain("metadata: { href: '/plans' }")

@@ -366,4 +366,12 @@ export const AVISOS = {
         'Sua conta está em só leitura: tudo continua visível, e exportar e apagar seguem liberados. Assine em Planos para voltar a lançar.',
     }
   },
+  /** A cobrança em dobro estornada (Ruling 8): o webhook e o cron, ao concluir um estorno pendente. */
+  estorno(): { titulo: string; corpo: string } {
+    return {
+      titulo: 'Cobrança em dobro devolvida',
+      corpo:
+        'Recebemos um pagamento a mais pelo plano e já pedimos o estorno ao Asaas. O valor volta para o cartão em até 10 dias úteis.',
+    }
+  },
 }

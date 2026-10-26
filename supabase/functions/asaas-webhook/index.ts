@@ -17,6 +17,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
 import { configDoAsaas, estornarNoAsaas } from '../_shared/asaas.ts'
 import {
   type Assinatura,
+  AVISOS,
   efeitoDoEvento,
   type Pagamento,
   pagamentoEmDobro,
@@ -237,15 +238,15 @@ async function avisarDoEstorno(admin: Admin, userId: string): Promise<void> {
       return
     }
     const { data: pessoa } = await admin.auth.admin.getUserById(userId)
+    const { titulo, corpo } = AVISOS.estorno()
     const entregue = await deliverNotification({
       supabaseAdmin: admin,
       userId,
       userEmail: pessoa?.user?.email ?? null,
       workspaceId: carteira.id,
       type: 'system',
-      title: 'Cobrança em dobro devolvida',
-      body:
-        'Recebemos um pagamento a mais pelo plano e já pedimos o estorno ao Asaas. O valor volta para o cartão em até 10 dias úteis.',
+      title: titulo,
+      body: corpo,
       metadata: { href: '/plans' },
       essencial: true,
     })
