@@ -9,8 +9,6 @@ Reúne os projetos, os modelos de carteira e a divisão por quem pagou:
     `same_ws_project_id` (o projeto é da mesma carteira) e o
     `recusar_projeto_arquivado` (`PROJETO_ARQUIVADO`: o vínculo novo com um
     projeto arquivado é recusado);
-  - o `guardar_privado` do 7B redefinido com uma linha a mais: uma privada não
-    leva projeto (`PRIVADO_NAO_PERMITIDO`);
   - as colunas de `workspaces`: `purpose` (`everyday` ou `project`), `starts_on`,
     `ends_on`, `budget_total` e `split_mode` (`pooled` ou `split`), com o check
     `workspaces_project_fields` (período e orçamento só na carteira de projeto);
@@ -22,7 +20,7 @@ Reúne os projetos, os modelos de carteira e a divisão por quem pagou:
 - a migração `20261031130000_divisao.sql`:
   - `transactions.paid_by` e `transactions.shares_manual`, e o gatilho
     `definir_quem_pagou` (o autor por padrão; o responsável, se o autor é
-    convidado; a privada é sempre do autor);
+    convidado);
   - `workspaces.split_since` e o gatilho `carimbar_split_since`;
   - a tabela `workspace_split_weights` (os pesos da carteira; sem linha, o peso
     vale 1) e `workspace_installment_plans.split_weights` (a regra da
@@ -88,12 +86,11 @@ resultado de uma conferência (o repositório é público).
 - **Os Blocos 3A, 3B, 4, 5, 6A, 6B, 7A e 7B vão antes, ou junto.** As duas
   migrações do 7C são as últimas da fila; se as outras ainda não subiram, o
   `db push` aplica todas em ordem. As dependências que importam:
-  - `projetos` redefine o `guardar_privado` a partir do corpo do 7B
-    (`20261030120000_privado.sql`) e as duas funções de orçamento a partir do 7A
+  - `projetos` redefine as duas funções de orçamento a partir do 7A
     (`20261029120000_papeis.sql`), e usa o `assert_same_workspace_ref` do 6A e o
     `is_workspace_adult` do 7A;
   - `divisao` usa `workspace_members.sponsor_user_id` (o responsável do
-    convidado, 7A), `is_private` (7B), o `garantir_escrita` do 4 e o `app_today`.
+    convidado, 7A), o `garantir_escrita` do 4 e o `app_today`.
 - **A CLI** do Homebrew, 2.121 ou mais nova, com o projeto ligado
   (`supabase link`, uma vez só). Sem Docker nesta máquina, as funções sobem pela
   API (`--use-api`); este bloco não tem função.
@@ -142,21 +139,18 @@ supabase db push --db-url "<string de conexão do ramo>"
 ```
 
 1. **O pgTAP da divisão.** Rode `supabase/tests/database/divisao.test.sql`
-   inteiro. O arquivo abre em `begin`, planeja 37 casos (`plan(37)`) e termina
+   inteiro. O arquivo abre em `begin`, planeja 32 casos (`plan(32)`) e termina
    em `rollback`. Ele supõe a cobrança sem `billing_settings.enforced_since`,
-   como os outros testes. Esperado: 37 linhas `ok` e nenhuma `not ok`. Os casos:
+   como os outros testes. Esperado: 32 linhas `ok` e nenhuma `not ok`. Os casos:
    - o algoritmo: R$ 100,00 em três de peso igual, a soma, e os pesos 2 e 1 com
      quem pagou de peso 1 e de peso 2;
    - a carteira dividida: as partes de cada despesa, `paid_by` do convidado igual
      ao responsável, o convidado sem parte e fora de `saldos_da_carteira`;
-   - a despesa privada: uma parte só, inteira do autor, e `definir_partes`
-     recusando-a com `PRIVADO_NAO_PERMITIDO`;
    - `definir_partes` com `PARTES_NAO_FECHAM` e com `PARTES_INVALIDAS` (id e
      valor malformados), as partes à mão no lugar das automáticas e o `null` de
      volta ao automático;
    - os pesos do plano: `PESOS_INVALIDOS` (repetido, e peso sem a chave), e as
      parcelas automáticas refeitas quando os pesos mudam;
-   - marcar e desmarcar uma privada que já existia;
    - o update cru `shares_manual = true, amount = …` numa frase só: as partes
      refazem e fecham o valor novo (Ruling 10);
    - `pooled → split → pooled → split` sem duplicar as partes e sem perder o
@@ -375,7 +369,7 @@ join pg_class c on c.oid = t.tgrelid
 where not t.tgisinternal
   and (
     (c.relname = 'transactions' and t.tgname in (
-      'same_ws_project_id', 'recusar_projeto_arquivado', 'definir_quem_pagou', 'gerar_partes', 'guardar_privado'
+      'same_ws_project_id', 'recusar_projeto_arquivado', 'definir_quem_pagou', 'gerar_partes'
     ))
     or (c.relname = 'workspaces' and t.tgname = 'carimbar_split_since')
     or (c.relname = 'workspace_installment_plans' and t.tgname in ('validar_pesos_do_plano', 'refazer_partes_do_plano'))
@@ -385,8 +379,7 @@ where not t.tgisinternal
 order by 1, 2;
 ```
 
-Esperado: dez linhas, todas com `ligado` `O`. O `guardar_privado` é o do 7B,
-redefinido aqui; o `gerar_partes` é o único `after` em `transactions` (o
+Esperado: nove linhas, todas com `ligado` `O`. O `gerar_partes` é o único `after` em `transactions` (o
 `refazer_partes_do_plano`, em `workspace_installment_plans`, também é `after`).
 
 **As funções são `security definer` (menos duas) e têm o `search_path` vazio.**
@@ -396,14 +389,14 @@ select proname, prosecdef as definer, coalesce(proconfig::text, '') like '%searc
 from pg_proc
 where pronamespace = 'public'::regnamespace
   and proname in (
-    'recusar_projeto_arquivado', 'guardar_privado', 'criar_carteira_de_modelo',
+    'recusar_projeto_arquivado', 'criar_carteira_de_modelo',
     'definir_quem_pagou', 'carimbar_split_since', 'validar_pesos_do_plano', 'dividir_em_partes',
     'refazer_partes', 'gerar_partes', 'refazer_partes_do_plano', 'definir_partes', 'saldos_da_carteira'
   )
 order by 1;
 ```
 
-Esperado: doze linhas, `com_search_path` `true` em todas. `definer` é `true` em
+Esperado: onze linhas, `com_search_path` `true` em todas. `definer` é `true` em
 todas menos `criar_carteira_de_modelo` (de propósito `security invoker`: a RLS e
 o `created_by = auth.uid()` valem na criação, como no `create_shared_workspace`)
 e `dividir_em_partes` (SQL puro e `immutable`, sem acesso a tabela).
@@ -436,11 +429,10 @@ select
   pg_get_functiondef('public.definir_partes(uuid, jsonb)'::regprocedure) like '%PARTES_NAO_FECHAM%' as partes_conferem_a_soma,
   pg_get_functiondef('public.definir_quem_pagou()'::regprocedure) like '%PAGADOR_INVALIDO%' as pagador_so_adulto,
   pg_get_functiondef('public.copiar_orcamentos_do_mes(date, uuid)'::regprocedure) like '%purpose%' as copia_pula_projeto,
-  pg_get_functiondef('public.garantir_orcamentos_do_mes(uuid)'::regprocedure) like '%purpose%' as garante_pula_projeto,
-  pg_get_functiondef('public.guardar_privado()'::regprocedure) like '%project_id%' as privada_sem_projeto;
+  pg_get_functiondef('public.garantir_orcamentos_do_mes(uuid)'::regprocedure) like '%purpose%' as garante_pula_projeto;
 ```
 
-Esperado: `true` nas seis. Um `false` quer dizer que a função antiga continua no
+Esperado: `true` nas cinco. Um `false` quer dizer que a função antiga continua no
 banco: rode o `db push` de novo.
 
 **Toda origem ganha `paid_by`.** É o foco de revisão 3: o `main` não manda
@@ -460,16 +452,6 @@ Esperado: `0`. Se o `db push` terminou há menos de uma hora, a conta pega
 linhas de antes dele (que ficam sem `paid_by` até a primeira edição, de
 propósito: não há backfill). A linha antiga ganha o autor na primeira vez em que
 for editada.
-
-**Nenhuma privada leva projeto.** Ruling 1 do bloco:
-
-```sql
-select count(*) as privada_com_projeto
-from public.transactions
-where is_private and project_id is not null;
-```
-
-Esperado: `0`.
 
 ### 1.4. A onda final entrou
 
@@ -626,37 +608,6 @@ dele (ou ao dono mais antigo, se o responsável saiu). Se vier acima de `0`, qua
 sempre é alguém que tinha parte ou pagou e foi **rebaixado** a convidado depois:
 a parte antiga fica (a divisão só vale para a frente), e ele aparece no saldo
 como quem saiu (lacuna 72).
-
-**Cada despesa privada tem uma parte só, inteira do autor.** Ruling 4: ninguém
-divide um gasto que não pode ver.
-
-```sql
-with privadas as (
-  select t.id,
-    (select count(*) from public.transaction_shares s where s.transaction_id = t.id) as n,
-    exists (
-      select 1 from public.transaction_shares s
-      where s.transaction_id = t.id
-        and (s.user_id is distinct from t.user_id or s.amount is distinct from t.amount)
-    ) as parte_errada
-  from public.transactions t
-  join public.workspaces w on w.id = t.workspace_id
-  where t.is_private
-    and t.type = 'expense'
-    and w.split_mode = 'split'
-    and w.split_since is not null
-    and (t.date at time zone 'America/Sao_Paulo')::date >= w.split_since
-)
-select
-  count(*) filter (where n = 0) as privada_sem_parte,
-  count(*) filter (where n > 1 or parte_errada) as privada_mal_dividida
-from privadas;
-```
-
-Esperado: `0` e `0`. A privada sem parte tem a mesma explicação das despesas sem
-parte acima (a virada de modo). Uma `mal_dividida` é uma privada dividida entre
-dois, ou com a parte de outra pessoa: o `definir_quem_pagou` e o `refazer_partes`
-deviam tê-la deixado só com o autor.
 
 **Os saldos fecham em 0, por carteira.** O pago, as partes e os acertos:
 `saldo = pago − partes ± acertos`, e cada acerto soma `+x` a quem pagou e `−x` a
@@ -825,7 +776,6 @@ texto de erro do Auth).
 | `gerar_partes` | Sai cedo: numa carteira `pooled` sem `split_since` não cria nem apaga parte. Para `main`, toda carteira é assim |
 | `workspaces.purpose`, `starts_on`, `ends_on`, `budget_total`, `split_mode`, `split_since` | Colunas novas com padrão (`everyday`, `pooled`, nulo). `main` as lê em `select *` sem usá-las |
 | `copiar_orcamentos_do_mes`, `garantir_orcamentos_do_mes` | Mesmos corpos, com o `purpose = 'everyday'` a mais: toda carteira existente é `everyday`, e o resultado é o de hoje |
-| `guardar_privado` | O mesmo corpo do 7B com `project_id is null` a mais; `main` não manda `project_id` |
 | `projects`, `transaction_shares`, `settlements`, `workspace_split_weights` | Tabelas novas; `main` não as consulta. Ninguém escreve nelas sem usar o 2.0 |
 | `workspace_installment_plans.split_weights` | Coluna nova, nula: o plano criado por `main` usa os pesos da carteira, e numa carteira `pooled` nem isso |
 | `transaction_splits` sai | Vazia (§1.0), e nem `main` nem o 2.0 a leem |
@@ -841,7 +791,7 @@ nova quando ela muda algo (`paid_by` só se a pessoa escolheu outro pagador;
 `project_id` só se escolheu ou tirou o projeto), e as tabelas e as RPCs novas são
 chamadas por `tabelaTolerante` e `rpcTolerante`, que devolvem "Ainda não
 disponível" para `PGRST205`, `PGRST204`, `PGRST200`, `42P01`, `42703`, `PGRST202`
-e `42883`. O `src/lib/privado/colunas-tolerantes.test.ts` tranca. Por isso o
+e `42883`. O `src/lib/titular/colunas-tolerantes.test.ts` tranca. Por isso o
 front do 2.0 **não fica bloqueado** por esta migração, e as telas novas só
 mostram o aviso até ela subir. Aplique as migrações antes de o dono testar.
 
@@ -863,7 +813,7 @@ contas de teste (uma dona e uma membro) e uma convidada da dona:
   ela. Quem já é dono não vê o passo;
 - **Projetos.** Em `/projetos` (só dono e membro; o convidado não tem a rota nem o
   item), criar um projeto com nome, período e orçamento. No formulário de despesa
-  aparece "Projeto (opcional)", e marcar a despesa como privada o esconde. Em
+  aparece "Projeto (opcional)". Em
   `/projetos/{id}` o resumo mostra o gasto, o que falta do orçamento (ou "Passou
   do orçamento em…"), a quebra por categoria e a por pessoa. **Arquivar** pede
   confirmação; depois, lançar naquele projeto responde "Este projeto está
@@ -874,12 +824,11 @@ contas de teste (uma dona e uma membro) e uma convidada da dona:
   datas e o orçamento total. No dia 1, nenhum orçamento é copiado para ela;
 - **Quem pagou.** Numa carteira `split`, a despesa de um adulto mostra "Quem
   pagou", só com os adultos, e o padrão é quem lança. A despesa da convidada sai
-  com `paid_by` igual à responsável. A privada, a parcelada e a receita não
+  com `paid_by` igual à responsável. A parcelada e a receita não
   oferecem a escolha;
 - **As partes.** Na folha de detalhe, "Partes desta despesa" lista cada adulto, o
   centavo que sobra fica com quem pagou, e "Editar à mão" só deixa salvar com a
-  soma igual ao valor. "Voltar ao automático" desfaz. A privada mostra a parte
-  inteira do autor e não se divide;
+  soma igual ao valor. "Voltar ao automático" desfaz;
 - **O modo e os pesos.** Em Configurações, o dono troca `pooled` e `split` e dá
   um peso por adulto. Trocar de modo avisa que não apaga nada. A membro não vê o
   editor, e o banco recusa um peso escrito por ela pela API. A parcelada nova

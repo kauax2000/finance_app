@@ -369,7 +369,7 @@ Depois das migrações, as obrigatórias e as neutras que não esperam o front:
 supabase functions deploy workspace-invites-create workspace-invites-resend evaluate-budgets capture notify-transaction-created evaluate-credit-card-alerts evaluate-bills-reminders --use-api
 ```
 
-**Neste repositório, `capture`, `notify-transaction-created` e `evaluate-credit-card-alerts` já leem colunas do 7B** (`is_private`, `holder_user_id`): aplique `20261030120000_privado.sql` antes (`BLOCO_7B_DEPLOYMENT.md` §0), ou elas param até a migração subir.
+**Neste repositório, `evaluate-credit-card-alerts` já lê coluna do 7B** (`holder_user_id`): aplique `20261030120000_privado.sql` antes (`BLOCO_7B_DEPLOYMENT.md` §0), ou elas param até a migração subir.
 
 Quando o front do 2.0 subir, publique as duas que esperam por ele (se as outras já
 subiram por um roteiro anterior, estas são as únicas pendentes):
@@ -556,7 +556,7 @@ carteira compartilhada de teste:
 - o convidado ocupa um assento do Plano Família (a cobertura é dos 5 primeiros
   membros de quem assina, de qualquer papel; `tem_cobertura` não mudou).
 
-**O que fica de fora, de propósito.** As transações privadas e a divisão (`paid_by`)
+**O que fica de fora, de propósito.** O titular do cartão e a divisão (`paid_by`)
 são do Bloco 7B e 7C; a coluna `sponsor_user_id` já nasce para o 7C, que a usa como
 o responsável que paga pelo convidado. Sem plano, nada que protege alguém se
 desliga: `garantir_escrita` não mexe em RLS, o convidado continua restrito e o
