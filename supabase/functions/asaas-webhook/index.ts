@@ -20,6 +20,7 @@ import {
   type Assinatura,
   AVISOS,
   efeitoDoEvento,
+  eventoDaLinha,
   type Pagamento,
   pagamentoEmDobro,
   type Parcelamento,
@@ -106,7 +107,8 @@ async function tratar(
       .maybeSingle()
     if (error) throw new Error(`linha: ${error.message}`)
     const linha = data as Linha | null
-    if (!linha || payment.customer !== linha.asaas_customer_id) return ignorado('linha')
+    // N1: antes do registro da Ruling 15 e de qualquer estorno.
+    if (!linha || !eventoDaLinha(linha, payment)) return ignorado('linha')
 
     // Ruling 9: o pagamento de outro parcelamento é decidido pelo registro.
     let registro: Parcelamento | null = null

@@ -10,6 +10,7 @@ import {
   checkoutPendente,
   cpfValido,
   efeitoDoEvento,
+  eventoDaLinha,
   falhaNaRenovacao,
   jaEstornado,
   notaPendente,
@@ -755,4 +756,24 @@ Deno.test('notaPendente: nunca para um parcelamento com estorno pendente ou feit
   assertEquals(notaPendente(linha, { estorno_status: 'pendente' }, agora), false)
   assertEquals(notaPendente(linha, { estorno_status: 'feito' }, agora), false)
   assertEquals(notaPendente(linha, { estorno_status: null }, agora), true)
+})
+
+// eventoDaLinha (N1)
+
+Deno.test('eventoDaLinha: só a linha do Asaas, com cliente, e o mesmo cliente', () => {
+  const asaas = { provider: 'asaas' as const, asaas_customer_id: 'cus-1' }
+  assertEquals(eventoDaLinha(asaas, { customer: 'cus-1' }), true)
+  assertEquals(eventoDaLinha(asaas, { customer: 'cus-2' }), false)
+})
+
+Deno.test('eventoDaLinha (N1): customer nulo nunca casa com a linha sem cliente, nem fora do Asaas', () => {
+  const nulo = { customer: null as unknown as string }
+  // a pending cujo criarCliente falhou
+  assertEquals(eventoDaLinha({ provider: 'asaas', asaas_customer_id: null }, nulo), false)
+  // a vitalícia manual e as das lojas
+  for (const provider of ['manual', 'apple', 'google'] as const) {
+    assertEquals(eventoDaLinha({ provider, asaas_customer_id: null }, nulo), false)
+    assertEquals(eventoDaLinha({ provider, asaas_customer_id: 'cus-1' }, { customer: 'cus-1' }), false)
+  }
+  assertEquals(eventoDaLinha({ provider: 'asaas', asaas_customer_id: 'cus-1' }, nulo), false)
 })

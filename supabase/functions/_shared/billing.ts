@@ -233,6 +233,18 @@ export function efeitoDoEvento(evento: string, pagamento: Pagamento, sub: Assina
   return null
 }
 
+/**
+ * N1: um evento só vale para a linha do Asaas com cliente, e com o mesmo
+ * cliente. `null === null` deixaria um evento forjado ativar uma linha
+ * `manual`, ou uma `pending` cujo cliente não chegou a ser criado.
+ */
+export function eventoDaLinha(
+  linha: Pick<Assinatura, 'provider'> & { asaas_customer_id: string | null },
+  pagamento: Pick<Pagamento, 'customer'>,
+): boolean {
+  return linha.provider === 'asaas' && !!linha.asaas_customer_id && pagamento.customer === linha.asaas_customer_id
+}
+
 /** Um parcelamento que nós criamos, em `billing_parcelamentos` (Ruling 9). */
 export type Parcelamento = {
   installment: string

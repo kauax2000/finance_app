@@ -420,8 +420,16 @@ describe("Edge asaas-webhook", () => {
 
     it("ignora com 200 o cliente diferente do da linha, e decide pelo efeitoDoEvento", () => {
         const f = fonte(WEBHOOK)
-        expect(f).toContain("payment.customer !== linha.asaas_customer_id")
+        expect(f).toContain("if (!linha || !eventoDaLinha(linha, payment)) return ignorado('linha')")
+        expect(f).not.toContain("payment.customer !== linha.asaas_customer_id")
         expect(f).toContain("efeitoDoEvento(")
+        // N1: a guarda vem antes do registro da Ruling 15 e de todo estorno
+        const tratar = funcao(f, "tratar")
+        const guarda = tratar.indexOf("eventoDaLinha(linha, payment)")
+        expect(guarda).toBeLessThan(tratar.indexOf(".insert({ installment: parcelamento, subscription_id: linha.id })"))
+        expect(guarda).toBeLessThan(tratar.indexOf("estornar(admin, linha, registro)"))
+        const regra = fonte("supabase/functions/_shared/billing.ts")
+        expect(regra).toContain("linha.provider === 'asaas' && !!linha.asaas_customer_id && pagamento.customer === linha.asaas_customer_id")
         expect(f).toContain("checkout_url: null")
     })
 
@@ -443,7 +451,7 @@ describe("Edge asaas-webhook", () => {
         expect(tratar).toContain("ignorado('parcelamento')")
         expect(tratar).toContain("if (registro.ativado_em)")
         // Ruling 15: o desconhecido da própria linha e do próprio cliente entra no registro antes de decidir
-        const cliente = tratar.indexOf("payment.customer !== linha.asaas_customer_id")
+        const cliente = tratar.indexOf("eventoDaLinha(linha, payment)")
         const insere = tratar.indexOf(".insert({ installment: parcelamento, subscription_id: linha.id })")
         expect(insere).toBeGreaterThan(cliente)
         expect(insere).toBeGreaterThan(registro)

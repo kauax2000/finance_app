@@ -50,8 +50,8 @@ alter table public.billing_parcelamentos enable row level security;
 revoke all on public.billing_parcelamentos from anon, authenticated;
 
 -- 3. direito de uso -------------------------------------------------------------
--- A renovação começa um dia antes do fim; aceita e ainda não confirmada, ela
--- grava `grace_until` sem mudar o `status`. A ativa conta também pela
+-- A renovação começa dois dias antes do fim (fim − 2 dias, Ruling 20); aceita e
+-- ainda não confirmada, ela grava `grace_until`. A ativa conta também pela
 -- `grace_until`, para quem paga em dia não cair em "só leitura" no aniversário.
 create or replace function public.tem_plano_proprio(p_user_id uuid)
 returns boolean
