@@ -52,3 +52,55 @@ describe("entrega essencial", () => {
         expect(f).toMatch(/!skipTypePref && !essencial && !isTypeAllowedForPrefs/)
     })
 })
+
+const CHECKOUT = "supabase/functions/billing-checkout/index.ts"
+
+describe("Edge billing-checkout", () => {
+    it("recusa o convidado antes de qualquer chamada ao Asaas", () => {
+        const f = fonte(CHECKOUT)
+        const guest = f.indexOf(".eq('role', 'guest')")
+        expect(guest).toBeGreaterThan(-1)
+        expect(f).toContain("Seu acesso vem de quem te convidou. Peça para essa pessoa cuidar do plano.")
+        expect(f.indexOf("criarCliente(cfg")).toBeGreaterThan(guest)
+        expect(f.indexOf("criarCobranca(cfg")).toBeGreaterThan(guest)
+        expect(f.indexOf("planoDoCheckout(")).toBeGreaterThan(guest)
+    })
+
+    it("o CORS inclui x-app-session-id e o erro solto volta com CORS", () => {
+        const f = fonte(CHECKOUT)
+        expect(f).toMatch(/'Access-Control-Allow-Headers': '[^']*x-app-session-id[^']*'/)
+        expect(f).toContain("return json(500, { error: internalError('billing-checkout', e) })")
+        expect(f).toContain("bearerJwt(req.headers.get('Authorization'))")
+        expect(f).toContain("getAuthUserFromJwt(")
+    })
+
+    it("o CPF não vai a log, a tabela nem a resposta", () => {
+        const f = fonte(CHECKOUT)
+        const chamadas = (re: RegExp) => [...f.matchAll(re)].map((m) => m[0])
+        for (const c of chamadas(/console\.\w+\([^)]*\)/g)) expect(c).not.toMatch(/cpf/i)
+        for (const c of chamadas(/internalError\([^)]*\)/g)) expect(c).not.toMatch(/cpf/i)
+        for (const c of chamadas(/json\(\d+, \{[^}]*\}\)/g)) expect(c).not.toMatch(/cpf\b(?! inválido)/i)
+        const upsert = f.slice(f.indexOf(".upsert("), f.indexOf("onConflict"))
+        expect(upsert).not.toMatch(/cpf/i)
+        expect(f.match(/\bcpf\b/g)?.length).toBe(5) // declarar, ler do corpo, validar (2) e mandar ao cliente
+    })
+
+    it("não manda dado de cartão e nem token: o cartão é digitado na fatura", () => {
+        const f = fonte(CHECKOUT)
+        expect(f).not.toContain("creditCard")
+        expect(f).not.toMatch(/token:/)
+    })
+
+    it("grava o IP do x-forwarded-for e o link da fatura", () => {
+        const f = fonte(CHECKOUT)
+        expect(f).toContain("req.headers.get('x-forwarded-for')?.split(',')[0]?.trim().slice(0, 45)")
+        expect(f).toContain("onConflict: 'user_id'")
+        expect(f).toContain("checkout_url: cobranca.dados.invoiceUrl")
+        expect(f).toContain("retorno: `${appBase}/plans?pago=1`")
+        expect(f).toContain("vencimento: formatYmd(appTodayYmd())")
+    })
+
+    it("a Edge está no config sem JWT", () => {
+        expect(lerFonte("supabase/config.toml")).toMatch(/\[functions\.billing-checkout\]\s*\nverify_jwt = false/)
+    })
+})

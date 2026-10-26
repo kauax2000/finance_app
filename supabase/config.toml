@@ -73,6 +73,10 @@ verify_jwt = false
 [functions.ia-ler]
 verify_jwt = false
 
+# O checkout do plano: a função confere o JWT e recusa o convidado.
+[functions.billing-checkout]
+verify_jwt = false
+
 # Local-only: vector/analytics container requires a docker.sock mount that
 # fails under colima; not needed for db/functions development.
 [analytics]

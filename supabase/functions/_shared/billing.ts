@@ -84,6 +84,40 @@ export function cpfValido(cpf: string): boolean {
   return verificador(9) === Number(d[9]) && verificador(10) === Number(d[10])
 }
 
+/** Um link de pagamento criado há menos que isso ainda vale: o checkout o devolve em vez de cobrar de novo. */
+const VALIDADE_DO_CHECKOUT_MS = DIA_MS
+
+export type PlanoDoCheckout =
+  | { tipo: 'bloqueado' }
+  | { tipo: 'reusar' }
+  | { tipo: 'novo'; centavos: number; fundador: boolean; renovacao: boolean }
+
+/**
+ * O que o checkout faz com a linha da pessoa. Só uma compra depois de `expired`
+ * (ou sem linha) recalcula o preço; o `past_due` recuperado mantém o da linha.
+ */
+export function planoDoCheckout(sub: Assinatura | null, agora: Date): PlanoDoCheckout {
+  if (sub?.status === 'active') {
+    // A cobrança aceita espera a confirmação: um checkout novo cobraria duas vezes.
+    if (sub.grace_until) return { tipo: 'bloqueado' }
+    if (sub.cancel_at_period_end) return { tipo: 'bloqueado' }
+    if (!sub.current_period_end || new Date(sub.current_period_end) > agora) return { tipo: 'bloqueado' }
+  }
+  if (
+    (sub?.status === 'pending' || sub?.status === 'past_due') && sub.checkout_criado_em &&
+    agora.getTime() - new Date(sub.checkout_criado_em).getTime() < VALIDADE_DO_CHECKOUT_MS
+  ) return { tipo: 'reusar' }
+  if (sub?.status === 'past_due') {
+    return {
+      tipo: 'novo',
+      centavos: sub.price_cents ?? (sub.founder ? PRECO_FUNDADOR_CENTAVOS : PRECO_FAMILIA_CENTAVOS),
+      fundador: sub.founder,
+      renovacao: true,
+    }
+  }
+  return { tipo: 'novo', ...precoPara(agora), renovacao: false }
+}
+
 /**
  * O que um evento de pagamento do Asaas muda na linha da pessoa. `null` é
  * "nada a fazer": outra pessoa, o mesmo parcelamento (as 12 parcelas mensais

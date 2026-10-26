@@ -12,6 +12,7 @@ import {
   type Mudanca,
   type Pagamento,
   PARCELAS,
+  planoDoCheckout,
   podeReembolsar,
   precoPara,
   TOLERANCIA_DIAS,
@@ -368,4 +369,64 @@ Deno.test('AVISOS.fim', () => {
     corpo:
       'Sua conta está em só leitura: tudo continua visível, e exportar e apagar seguem liberados. Assine em Planos para voltar a lançar.',
   })
+})
+
+// planoDoCheckout
+
+const AGORA = new Date('2027-03-01T12:00:00Z') // depois do fim do preço de fundador
+
+Deno.test('planoDoCheckout: active esperando a confirmação de uma cobrança aceita é bloqueado', () => {
+  const grace = iso(em(7 * DIA))
+  assertEquals(planoDoCheckout(sub({ grace_until: grace }), AGORA), { tipo: 'bloqueado' })
+  // mesmo com o fim já passado: um checkout novo cobraria duas vezes
+  assertEquals(planoDoCheckout(sub({ grace_until: grace }), em(DIA)), { tipo: 'bloqueado' })
+})
+
+Deno.test('planoDoCheckout: active no período, ou manual sem fim, é bloqueado', () => {
+  assertEquals(planoDoCheckout(sub(), AGORA), { tipo: 'bloqueado' })
+  assertEquals(planoDoCheckout(sub({ provider: 'manual', current_period_end: null }), AGORA), { tipo: 'bloqueado' })
+})
+
+Deno.test('planoDoCheckout: active com cancelamento marcado é bloqueado (a tela oferece desfazer)', () => {
+  assertEquals(planoDoCheckout(sub({ cancel_at_period_end: true }), AGORA), { tipo: 'bloqueado' })
+})
+
+Deno.test('planoDoCheckout: pending ou past_due com checkout de menos de 24 h reusa o link', () => {
+  const criado = iso(new Date(AGORA.getTime() - 23 * 60 * 60 * 1000))
+  assertEquals(planoDoCheckout(sub({ status: 'pending', checkout_criado_em: criado }), AGORA), { tipo: 'reusar' })
+  assertEquals(planoDoCheckout(sub({ status: 'past_due', checkout_criado_em: criado }), AGORA), { tipo: 'reusar' })
+})
+
+Deno.test('planoDoCheckout: past_due mantém o preço de fundador da linha depois de 31/01/2027', () => {
+  const antigo = iso(new Date(AGORA.getTime() - 25 * 60 * 60 * 1000))
+  const linha = sub({ status: 'past_due', price_cents: 23880, founder: true, checkout_criado_em: antigo })
+  assertEquals(planoDoCheckout(linha, AGORA), { tipo: 'novo', centavos: 23880, fundador: true, renovacao: true })
+})
+
+Deno.test('planoDoCheckout: past_due sem price_cents cai no preço do founder da linha', () => {
+  const linha = sub({ status: 'past_due', price_cents: null, founder: true })
+  assertEquals(planoDoCheckout(linha, AGORA), { tipo: 'novo', centavos: 23880, fundador: true, renovacao: true })
+})
+
+Deno.test('planoDoCheckout: expired volta ao preço do dia', () => {
+  const linha = sub({ status: 'expired', price_cents: 23880, founder: true })
+  assertEquals(planoDoCheckout(linha, AGORA), { tipo: 'novo', centavos: 35880, fundador: false, renovacao: false })
+  assertEquals(planoDoCheckout(linha, new Date('2026-12-01T12:00:00Z')), {
+    tipo: 'novo',
+    centavos: 23880,
+    fundador: true,
+    renovacao: false,
+  })
+})
+
+Deno.test('planoDoCheckout: sem linha, ou pending antigo, é compra nova pelo preço do dia', () => {
+  assertEquals(planoDoCheckout(null, AGORA), { tipo: 'novo', centavos: 35880, fundador: false, renovacao: false })
+  const antigo = iso(new Date(AGORA.getTime() - 25 * 60 * 60 * 1000))
+  assertEquals(planoDoCheckout(sub({ status: 'pending', checkout_criado_em: antigo }), AGORA), {
+    tipo: 'novo',
+    centavos: 35880,
+    fundador: false,
+    renovacao: false,
+  })
+  assertEquals(planoDoCheckout(sub({ status: 'pending', checkout_criado_em: null }), AGORA).tipo, 'novo')
 })
