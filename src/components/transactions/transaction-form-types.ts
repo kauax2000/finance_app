@@ -66,3 +66,14 @@ export type InstallmentPlanUpdatePayload = {
     /** When plan is active; omit or null when inactive / completed. */
     nextBillingYmd: string | null
 }
+
+/**
+ * O tipo das categorias que o lançamento oferece. O estorno no cartão é uma
+ * receita, mas escolhe uma categoria de despesa: ele abate o orçamento dela.
+ */
+export function tipoDaCategoria(
+    type: "income" | "expense",
+    estornoCartaoId: string | null,
+): "income" | "expense" {
+    return type === "income" && estornoCartaoId ? "expense" : type
+}

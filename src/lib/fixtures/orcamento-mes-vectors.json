@@ -1,5 +1,5 @@
 {
-  "_doc": "Gasto da categoria no mês do orçamento: despesa fora do cartão pelo dia, no cartão pelo mês do fechamento. O valor esperado é o postedTotal de buildCategoryCommitmentsForMonth (a tela de Categorias); o mesmo JSON trava gastoDaCategoriaNoMes (supabase/functions/_shared/orcamento-mes.ts) no Deno e no Vitest.",
+  "_doc": "Gasto da categoria no mês do orçamento: despesa fora do cartão pelo dia, no cartão pelo mês do fechamento. O estorno no cartão (receita no crédito com o cartão) abate a categoria dele pelo mesmo mês do fechamento. O valor esperado é o postedTotal de buildCategoryCommitmentsForMonth (a tela de Categorias); o mesmo JSON trava gastoDaCategoriaNoMes (supabase/functions/_shared/orcamento-mes.ts) no Deno e no Vitest.",
   "cases": [
     {
       "name": "a compra no dia do fechamento fica na fatura que fecha nele",
@@ -37,7 +37,7 @@
       "expected": 25
     },
     {
-      "name": "o estorno no cartão não abate da categoria, como na tela",
+      "name": "o estorno no cartão abate a categoria dele",
       "category_id": "cat-a",
       "ym": "2026-05",
       "cards": { "c1": 20 },
@@ -45,7 +45,42 @@
         { "amount": 200, "type": "expense", "date": "2026-05-05T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" },
         { "amount": 80, "type": "income", "date": "2026-05-06T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" }
       ],
-      "expected": 200
+      "expected": 120
+    },
+    {
+      "name": "compra de 100 e estorno de 30 em Mercado no mesmo ciclo dão 70",
+      "category_id": "mercado",
+      "ym": "2026-05",
+      "cards": { "c1": 20 },
+      "rows": [
+        { "amount": 100, "type": "expense", "date": "2026-05-02T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "mercado" },
+        { "amount": 30, "type": "income", "date": "2026-05-09T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "mercado" }
+      ],
+      "expected": 70
+    },
+    {
+      "name": "o estorno depois do fechamento abate o mês seguinte, como a compra no mesmo dia",
+      "category_id": "cat-a",
+      "ym": "2026-06",
+      "cards": { "c1": 20 },
+      "rows": [
+        { "amount": 100, "type": "expense", "date": "2026-05-25T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" },
+        { "amount": 30, "type": "income", "date": "2026-05-21T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" },
+        { "amount": 5, "type": "income", "date": "2026-05-20T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-a" }
+      ],
+      "expected": 70
+    },
+    {
+      "name": "a receita fora do cartão e o estorno de outra categoria não abatem",
+      "category_id": "cat-a",
+      "ym": "2026-05",
+      "cards": { "c1": 20 },
+      "rows": [
+        { "amount": 100, "type": "expense", "date": "2026-05-02T12:00:00.000Z", "payment_method": "pix", "payment_credit_card_id": null, "category_id": "cat-a" },
+        { "amount": 40, "type": "income", "date": "2026-05-03T12:00:00.000Z", "payment_method": null, "payment_credit_card_id": null, "category_id": "cat-a" },
+        { "amount": 25, "type": "income", "date": "2026-05-04T12:00:00.000Z", "payment_method": "credit_card", "payment_credit_card_id": "c1", "category_id": "cat-b" }
+      ],
+      "expected": 100
     },
     {
       "name": "a despesa no Pix conta pelo dia",

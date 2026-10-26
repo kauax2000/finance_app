@@ -23,4 +23,24 @@ describe("buildMonthlySeries", () => {
         )
         expect(series.at(-1)?.total).toBe(42)
     })
+
+    it("abate o estorno no cartão da categoria de despesa, no mês do fechamento", () => {
+        const linha = (type: "income" | "expense", date: string, amount: number) => ({
+            date,
+            amount,
+            type,
+            category_id: "cat",
+            payment_method: "credit_card" as const,
+            payment_credit_card_id: "c1",
+        })
+        const series = buildMonthlySeries(
+            "2026-09",
+            [linha("expense", "2026-09-02T12:00:00.000Z", 100), linha("income", "2026-09-04T12:00:00.000Z", 30)],
+            "cat",
+            "expense",
+            2,
+            [{ id: "c1", closing_day: 20 }]
+        )
+        expect(series.at(-1)?.total).toBe(70)
+    })
 })

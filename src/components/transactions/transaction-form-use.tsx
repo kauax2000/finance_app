@@ -29,6 +29,7 @@ import { transactionFormTitle } from "@/components/transactions/transaction-form
 import {
     DEFAULT_INSTALLMENT_COUNT,
     TRANSACTION_SAVE_TOAST_ID,
+    tipoDaCategoria,
     type InstallmentPlanFormSavePayload,
     type InstallmentPlanUpdatePayload,
     type TransactionFormSavePayload,
@@ -370,10 +371,10 @@ export function useTransactionForm({
 
     useEffect(() => {
         const cat = categories.find((c) => c.id === categoryId)
-        if (categoryId && cat && cat.type !== type) {
+        if (categoryId && cat && cat.type !== tipoDaCategoria(type, estornoCartaoId)) {
             setCategoryId("")
         }
-    }, [type, categories, categoryId])
+    }, [type, estornoCartaoId, categories, categoryId])
 
     useEffect(() => {
         if (type === "income") {

@@ -172,6 +172,18 @@ export function sumCardRefundsInWindow(rows: CardTxRow[], cardId: string, win: O
   return cents / 100
 }
 
+/**
+ * O estorno no cartão: a receita no crédito com o cartão. Abate a fatura e o
+ * orçamento da categoria dele (uma categoria de despesa), e não é renda.
+ */
+export function ehEstornoNoCartao(t: {
+  type: string
+  payment_method?: string | null
+  payment_credit_card_id?: string | null
+}): boolean {
+  return t.type === 'income' && t.payment_method === 'credit_card' && !!t.payment_credit_card_id
+}
+
 /** Fatura na janela: despesas − estornos, em centavos. Pode ser negativa (saldo credor). */
 export function cardInvoiceNetInWindow(rows: CardTxRow[], cardId: string, win: OpenWindow): number {
   const cents =

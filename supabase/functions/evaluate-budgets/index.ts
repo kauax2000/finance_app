@@ -420,13 +420,15 @@ async function avaliar(req: Request, ctx: { convidado: boolean }): Promise<Respo
 
   const months = [...budgets.values()].map((b) => b.period_start.slice(0, 7)).sort()
   const win = { start: margemDoMes(months[0]).start, end: margemDoMes(months[months.length - 1]).end }
-  // Só despesa, como a tela de Categorias, que lê `type = 'expense'`.
+  // A despesa e o estorno no cartão da categoria, como a tela de Categorias; a
+  // outra receita `gastoDaCategoriaNoMes` ignora. No `main` nenhuma receita tem
+  // categoria de despesa, então o aviso dele não muda.
   const { data: txRows, error: sumErr } = await supabaseAdmin
     .from('transactions')
     .select('amount,type,date,payment_method,payment_credit_card_id,category_id')
     .eq('workspace_id', workspaceId)
     .eq('category_id', categoryId)
-    .eq('type', 'expense')
+    .in('type', ['expense', 'income'])
     .gte('date', `${win.start}T00:00:00.000Z`)
     .lte('date', `${win.end}T23:59:59.999Z`)
   if (sumErr) return fail('soma', sumErr)

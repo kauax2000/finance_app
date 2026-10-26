@@ -2,6 +2,7 @@ import type { CreditCard, Transaction } from "@/lib/supabase"
 import { periodBoundsFromYearMonth, shiftYearMonth } from "@/lib/budget-month"
 import {
     buildCreditCardClosingLookup,
+    ehEstornoNoCartao,
     expenseYearMonthKey,
     type CreditCardClosingLookup,
 } from "@/lib/expense-month-attribution"
@@ -68,14 +69,16 @@ export function buildMonthlySeries(
 
     for (const t of txs) {
         if (t.category_id !== categoryId) continue
-        if (typeFilter && t.type !== typeFilter) continue
+        // Na categoria de despesa o estorno no cartão abate no mês do fechamento.
+        const estorno = typeFilter === "expense" && ehEstornoNoCartao(t)
+        if (typeFilter && t.type !== typeFilter && !estorno) continue
         const mk =
-            typeFilter === "expense" && t.type === "expense"
-                ? expenseYearMonthKey(t, closingLookup)
+            typeFilter === "expense" && (t.type === "expense" || estorno)
+                ? expenseYearMonthKey({ ...t, type: "expense" }, closingLookup)
                 : monthYearKeyFromTransactionDate(t.date)
         if (!mk) continue
         if (totals[mk] === undefined) continue
-        totals[mk] += Number(t.amount)
+        totals[mk] += estorno ? -Number(t.amount) : Number(t.amount)
     }
 
     return months.map((ym) => ({ name: formatYearMonthShortPtBr(ym), total: totals[ym] ?? 0 }))

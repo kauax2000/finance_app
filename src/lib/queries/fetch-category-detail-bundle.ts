@@ -16,6 +16,7 @@ import {
 import {
     aggregateIncomeExpenseForMonth,
     buildCreditCardClosingLookup,
+    ehEstornoNoCartao,
     transactionCountsInExpenseMonth,
 } from "@/lib/expense-month-attribution"
 import { throwIfQueryError } from "@/lib/supabase-errors"
@@ -115,12 +116,14 @@ function applyExpenseMonthAttribution(
         lookup,
     )
 
+    // Na categoria de despesa o estorno no cartão abate, como no orçamento.
     let prevMonthCategoryTotal = 0
     for (const t of args.categoryTxsWide) {
-        if (catType && t.type !== catType) continue
+        const estorno = catType === "expense" && ehEstornoNoCartao(t)
+        if (catType && t.type !== catType && !estorno) continue
         if (!transactionCountsInExpenseMonth(t, prevYm, lookup)) continue
         const v = Number(t.amount)
-        if (Number.isFinite(v)) prevMonthCategoryTotal += v
+        if (Number.isFinite(v)) prevMonthCategoryTotal += estorno ? -v : v
     }
 
     return {

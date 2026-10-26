@@ -236,7 +236,8 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
                         "type,amount,date,category_id,subscription_id,installment_plan_id,installment_sequence,payment_method,payment_credit_card_id",
                     )
                     .eq("workspace_id", currentWorkspaceId)
-                    .eq("type", "expense")
+                    // O estorno no cartão (uma receita) abate a categoria dele.
+                    .in("type", ["expense", "income"])
                     .gte("date", `${padStart}T00:00:00.000Z`)
                     .lte("date", `${padEnd}T23:59:59.999Z`),
                 supabase
@@ -559,7 +560,11 @@ export default function CategoriesPage({ shouldOpenNew = false }: { shouldOpenNe
         void fetchBudgetsAndSpend()
     }
 
-    const totalMonthSpend = Object.values(spendByCategoryId).reduce((sum, v) => sum + v, 0)
+    // Só as categorias de despesa: o estorno antigo, gravado numa de receita,
+    // não abate o total.
+    const totalMonthSpend = categories
+        .filter((c) => c.type === "expense")
+        .reduce((sum, c) => sum + (spendByCategoryId[c.id] ?? 0), 0)
 
     const expenseSpendRankById = (() => {
         const rows = expenseFiltered.map((c) => ({

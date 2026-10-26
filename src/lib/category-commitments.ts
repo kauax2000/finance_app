@@ -9,6 +9,7 @@ import { localYmdFromDate, transactionLocalYmd } from "@/lib/transaction-date"
 import { paddedBoundsForYearMonth, periodBoundsFromYearMonth } from "@/lib/budget-month"
 import {
     buildCreditCardClosingLookup,
+    ehEstornoNoCartao,
     projectedChargeCountsInExpenseMonth,
     projectedSubscriptionCountsInExpenseMonth,
     transactionCountsInExpenseMonth,
@@ -88,13 +89,16 @@ export function buildCategoryCommitmentsForMonth(args: {
     )
     const out: CategoryCommitmentsById = {}
 
+    // O estorno no cartão abate a categoria dele no mês do fechamento.
     for (const t of args.transactions) {
-        if (t.type !== "expense") continue
+        const estorno = ehEstornoNoCartao(t)
+        if (t.type !== "expense" && !estorno) continue
         const categoryId = t.category_id
         if (!categoryId) continue
         if (!transactionCountsInExpenseMonth(t, args.yearMonth, closingLookup)) continue
         const b = ensureBucket(out, categoryId)
-        b.postedTotal += Number(t.amount) || 0
+        const valor = Number(t.amount) || 0
+        b.postedTotal += estorno ? -valor : valor
     }
 
     const installmentDedupe = buildGlobalInstallmentDedupeKeys(args.transactions)

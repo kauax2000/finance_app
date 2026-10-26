@@ -7,6 +7,7 @@ import { assertEquals, assertMatch } from 'jsr:@std/assert@1.0.19'
 import {
   appTodayYmd,
   cardInvoiceNetInWindow,
+  ehEstornoNoCartao,
   escolherTotal,
   estimatedDueYmdForClose,
   estimatedDueYmdInMonth,
@@ -140,6 +141,24 @@ Deno.test('sumCardRefundsInWindow soma só os estornos do cartão na janela', ()
   assertEquals(cardInvoiceNetInWindow(big, 'c1', win), -300)
   // Centavos: 0,30 − 0,10 dá 0,2 exato, sem resto de ponto flutuante.
   assertEquals(cardInvoiceNetInWindow([row('expense', '2026-10-05', 0.3), row('income', '2026-10-06', 0.1)], 'c1', win), 0.2)
+})
+
+Deno.test('ehEstornoNoCartao: a receita no crédito com o cartão', () => {
+  const t = { type: 'income', payment_method: 'credit_card', payment_credit_card_id: 'c1' }
+  assertEquals(ehEstornoNoCartao(t), true)
+  assertEquals(ehEstornoNoCartao({ ...t, type: 'expense' }), false)
+  assertEquals(ehEstornoNoCartao({ ...t, payment_method: 'pix' }), false)
+  assertEquals(ehEstornoNoCartao({ ...t, payment_credit_card_id: null }), false)
+})
+
+Deno.test('a fatura abate o estorno com categoria de despesa como antes', () => {
+  const row = (type: string, amount: number, category_id: string | null) => ({
+    amount, type, date: '2026-10-06T12:00:00.000Z', payment_method: 'credit_card',
+    payment_credit_card_id: 'c1', category_id,
+  })
+  const win = { start: ymd('2026-10-04'), end: ymd('2026-11-03') }
+  assertEquals(cardInvoiceNetInWindow([row('expense', 100, 'mercado'), row('income', 30, 'mercado')], 'c1', win), 70)
+  assertEquals(sumCardExpensesInWindow([row('expense', 100, 'mercado'), row('income', 30, 'mercado')], 'c1', win, 'mercado'), 100)
 })
 
 Deno.test('escolherTotal: sem total do banco, vale o calculado', () => {

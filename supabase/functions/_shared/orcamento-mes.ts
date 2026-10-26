@@ -2,13 +2,14 @@
  * O gasto da categoria no mês do orçamento, pela regra da tela de Categorias
  * (`postedTotal` de `buildCategoryCommitmentsForMonth`, via `expenseYearMonthKey`):
  * a despesa fora do cartão conta pelo dia; a do cartão, pelo mês do fechamento da
- * fatura da compra. O cartão sem `closing_day` conhecido volta ao dia. A receita
- * (o estorno no cartão inclusive) não entra: a tela também não a abate.
+ * fatura da compra. O cartão sem `closing_day` conhecido volta ao dia. O estorno
+ * no cartão da categoria abate pelo mesmo mês do fechamento, como a compra no
+ * mesmo dia; a outra receita não entra.
  * Travado pelos vetores de `src/lib/fixtures/orcamento-mes-vectors.json`.
  */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- `@ts-expect-error` quebraria o `deno check`, onde a linha não tem erro.
 // @ts-ignore TS5097: o Deno exige a extensão; o tsc do app chega aqui pelo teste de paridade.
-import { type CardTxRow, formatYmd, isoPrefixYmd, statementCloseYmdForPurchaseYmd } from './credit-card-cycle.ts'
+import { type CardTxRow, ehEstornoNoCartao, formatYmd, isoPrefixYmd, statementCloseYmdForPurchaseYmd } from './credit-card-cycle.ts'
 
 export function gastoDaCategoriaNoMes(
   rows: CardTxRow[],
@@ -18,7 +19,8 @@ export function gastoDaCategoriaNoMes(
 ): number {
   let cents = 0
   for (const t of rows) {
-    if (t.type !== 'expense' || t.category_id !== categoryId) continue
+    const estorno = ehEstornoNoCartao(t)
+    if ((t.type !== 'expense' && !estorno) || t.category_id !== categoryId) continue
     const day = isoPrefixYmd(t.date)
     if (!day) continue
     const closingDay =
@@ -27,7 +29,8 @@ export function gastoDaCategoriaNoMes(
         : undefined
     const attributed = closingDay == null ? day : statementCloseYmdForPurchaseYmd(day, closingDay)
     if (formatYmd(attributed).slice(0, 7) !== ym) continue
-    cents += Math.round(Number(t.amount || 0) * 100)
+    const valor = Math.round(Number(t.amount || 0) * 100)
+    cents += estorno ? -valor : valor
   }
   return cents / 100
 }

@@ -77,6 +77,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { currencyBRL } from "@/lib/formatters"
 import { EstornoWireframe } from "@/components/wireframe/estorno-wireframe"
+import { tipoDaCategoria } from "@/components/transactions/transaction-form-types"
 import { ProjetoDoLancamentoWireframe } from "@/components/wireframe/projetos-wireframe"
 import { PesosDaParceladaWireframe, QuemPagouWireframe } from "@/components/wireframe/divisao-wireframe"
 import { FraseRapidaWireframe } from "@/components/wireframe/frase-rapida-wireframe"
@@ -374,8 +375,8 @@ export function TransactionFormFields(props: TransactionFormFieldsProps) {
     }, [])
 
     const filteredCategories = useMemo(
-        () => categories.filter((c) => c.type === type),
-        [categories, type]
+        () => categories.filter((c) => c.type === tipoDaCategoria(type, estornoCartaoId)),
+        [categories, type, estornoCartaoId]
     )
 
     const showInstallmentFields =

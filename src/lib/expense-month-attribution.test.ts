@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
     aggregateIncomeExpenseForMonth,
     buildCreditCardClosingLookup,
+    ehEstornoNoCartao,
     expenseYearMonthKey,
     projectedChargeCountsInExpenseMonth,
     projectedSubscriptionCountsInExpenseMonth,
@@ -90,6 +91,19 @@ describe("transactionCountsInExpenseMonth", () => {
                 lookup,
             ),
         ).toBe(false)
+    })
+
+    it("conta o estorno no cartão pelo mês do fechamento, como a compra no mesmo dia", () => {
+        // O cartão fecha dia 28: o estorno de 29/05 cai na fatura de junho.
+        const estorno = {
+            type: "income" as const,
+            date: "2026-05-29T12:00:00.000Z",
+            payment_method: "credit_card" as const,
+            payment_credit_card_id: "card1",
+        }
+        expect(ehEstornoNoCartao(estorno)).toBe(true)
+        expect(transactionCountsInExpenseMonth(estorno, "2026-06", lookup)).toBe(true)
+        expect(transactionCountsInExpenseMonth(estorno, "2026-05", lookup)).toBe(false)
     })
 })
 

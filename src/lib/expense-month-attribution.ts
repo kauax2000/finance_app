@@ -7,6 +7,9 @@ import type {
     WorkspaceSubscription,
 } from "@/lib/supabase"
 import { monthYearKeyFromTransactionDate } from "@/lib/transaction-date"
+import { ehEstornoNoCartao } from "../../supabase/functions/_shared/credit-card-cycle"
+
+export { ehEstornoNoCartao }
 
 export type CreditCardClosingLookup = Map<string, number>
 
@@ -52,11 +55,19 @@ export function expenseYearMonthKey(
     return cal || null
 }
 
+/**
+ * Receita pelo mês do calendário; despesa pelo mês de despesa. O estorno no
+ * cartão conta pelo mês do fechamento, como a compra no mesmo dia: é ali que
+ * ele abate a fatura e o orçamento da categoria.
+ */
 export function transactionCountsInExpenseMonth(
     tx: ExpenseMonthTx,
     yearMonth: string,
     lookup: CreditCardClosingLookup,
 ): boolean {
+    if (ehEstornoNoCartao(tx)) {
+        return expenseYearMonthKey({ ...tx, type: "expense" }, lookup) === yearMonth
+    }
     if (tx.type === "income") {
         return calendarYearMonthKeyFromTransactionDate(tx.date) === yearMonth
     }
