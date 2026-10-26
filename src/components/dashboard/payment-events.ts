@@ -266,10 +266,13 @@ export function buildPaymentEventsForMonth(
                 status: eventStatus(closeYmd, todayYmd),
                 metaId: card.id,
             })
-            // O vencimento do mês vem do fechamento do mês anterior (vence
-            // antes do dia do fechamento) ou do mesmo mês (vence depois dele).
+            // O vencimento do mês vem do fechamento do mês anterior (vence no
+            // mesmo dia do fechamento ou antes) ou do mesmo mês (vence depois
+            // dele). As duas podem vencer no mesmo dia (fecha 30, vence 31:
+            // 30/04 e 30/05 vencem em 31/05), então o id é o do fechamento.
             for (const c of [previousStatementCloseBefore(close, card.closing_day), close]) {
                 const dueYmd = localYmdFromDate(estimatedDueDateForClose(c, card.due_day))
+                const cYmd = localYmdFromDate(c)
                 if (
                     compareYmd(dueYmd, monthStartYmd) < 0 ||
                     compareYmd(dueYmd, monthEndYmd) > 0
@@ -277,7 +280,7 @@ export function buildPaymentEventsForMonth(
                     continue
                 }
                 out.push({
-                    id: `due-${card.id}-${dueYmd}`,
+                    id: `due-${card.id}-${cYmd}`,
                     dateYmd: dueYmd,
                     kind: "card_due",
                     title: `Vencimento · ${card.name}`,

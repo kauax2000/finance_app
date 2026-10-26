@@ -221,4 +221,17 @@ describe("buildPaymentEventsForMonth card due", () => {
     it("mostra o vencimento que vem do fechamento do mesmo mês (fecha 5, vence 25)", () => {
         expect(dues("2026-10", [card("b", 5, 25)])).toEqual(["b:2026-10-25"])
     })
+
+    it("duas faturas que vencem no mesmo dia aparecem as duas, com ids distintos (fecha 30, vence 31)", () => {
+        const events = buildPaymentEventsForMonth("2026-05", {
+            todayYmd: "2026-05-01",
+            subscriptions: [],
+            installmentPlans: [],
+            creditCards: [card("x", 30, 31)],
+            transactions: [],
+        }).filter((e) => e.kind === "card_due")
+        // 30/04 vence 31/05 (o 31 não cabe em abril) e 30/05 vence 31/05.
+        expect(events.map((e) => e.dateYmd)).toEqual(["2026-05-31", "2026-05-31"])
+        expect(events.map((e) => e.id)).toEqual(["due-x-2026-04-30", "due-x-2026-05-30"])
+    })
 })

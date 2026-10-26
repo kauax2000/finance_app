@@ -1,6 +1,6 @@
 "use client"
 
-import { CalendarIcon, InformationCircleIcon } from "@heroicons/react/16/solid"
+import { CalendarIcon } from "@heroicons/react/16/solid"
 import {
     Field,
     FieldControl,
@@ -9,7 +9,6 @@ import {
     FieldRow,
     FieldSet,
 } from "@/components/ui/field"
-import { useMemo } from "react"
 import { CreditCardBillingFormPreview } from "@/components/credit-cards/credit-card-billing-form-preview"
 import { CreditCardBrandPreview } from "@/components/credit-cards/credit-card-brand-preview"
 import {
@@ -35,11 +34,6 @@ import { TitularDoCartaoWireframe } from "@/components/wireframe/titular-do-cart
 const DAY_OPTIONS = Array.from({ length: 31 }, (_, i) => String(i + 1))
 
 const billingDaySelectTriggerClass = "w-full min-w-0"
-
-function parseDay(s: string): number {
-    const n = parseInt(s, 10)
-    return Number.isFinite(n) && n >= 1 ? n : 0
-}
 
 export type CreditCardFormFieldsProps = {
     /** Bumps when the dialog/card instance resets (for parent remount semantics). */
@@ -76,12 +70,6 @@ function CreditCardBillingSection({
     CreditCardFormFieldsProps,
     "idPrefix" | "closingDay" | "onClosingDayChange" | "dueDay" | "onDueDayChange"
 >) {
-    const showUnusualDueWarning = useMemo(() => {
-        const c = parseDay(closingDay)
-        const d = parseDay(dueDay)
-        return c >= 1 && d >= 1 && d <= c
-    }, [closingDay, dueDay])
-
     return (
         // Fechamento e vencimento são um grupo com título: `fieldset` + `legend`,
         // e não uma caixa pintada. A legenda tem de ser o primeiro filho.
@@ -165,16 +153,6 @@ function CreditCardBillingSection({
                     </Select>
                 </Field>
             </div>
-
-            {showUnusualDueWarning ? (
-                <p
-                    className="flex items-start gap-1.5 text-2xs leading-snug text-warning-muted-foreground"
-                    role="status"
-                >
-                    <InformationCircleIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-                    {CREDIT_CARD_BILLING_FORM.unusualDueWarning}
-                </p>
-            ) : null}
 
             <CreditCardBillingFormPreview closingDay={closingDay} dueDay={dueDay} />
 

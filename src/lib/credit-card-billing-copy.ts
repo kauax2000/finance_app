@@ -11,8 +11,6 @@ export const CREDIT_CARD_BILLING_FORM = {
         label: "Dia de vencimento",
         placeholder: "Ex.: 15",
     },
-    unusualDueWarning:
-        "Vencimento no mesmo dia ou antes do fechamento é incomum — confira no app do banco.",
     previewIntro: "Se você comprasse hoje:",
     previewClose: "esta compra entraria na fatura que fecha em",
     previewDue: "vencimento estimado em",

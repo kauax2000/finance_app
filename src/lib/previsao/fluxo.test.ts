@@ -252,7 +252,7 @@ describe("fluxoDoMes — bordas", () => {
                     amount: 40,
                     payment_method: "credit_card",
                     payment_credit_card_id: "c",
-                    next_billing_date: "2026-10-07",
+                    next_billing_date: "2026-11-07",
                 }),
                 assinatura({ id: "academia", amount: 100, next_billing_date: "2026-11-15" }),
             ],

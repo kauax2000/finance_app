@@ -41,6 +41,8 @@
     { "close": "2026-10-10", "due_day": 10, "expected_due": "2026-11-10" },
     { "close": "2026-02-28", "due_day": 30, "expected_due": "2026-03-30" },
     { "close": "2026-12-05", "due_day": 31, "expected_due": "2026-12-31" },
-    { "close": "2026-12-28", "due_day": 10, "expected_due": "2027-01-10" }
+    { "close": "2026-12-28", "due_day": 10, "expected_due": "2027-01-10" },
+    { "close": "2026-04-30", "due_day": 31, "expected_due": "2026-05-31" },
+    { "close": "2026-05-30", "due_day": 31, "expected_due": "2026-05-31" }
   ]
 }
