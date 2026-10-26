@@ -10,7 +10,11 @@ reembolso:
     `nfse_para`. A tabela continua só da service role, e o cliente lê só por
     `meu_plano()`;
   - a tabela `billing_events`, a idempotência do webhook (um evento do Asaas
-    por `id`);
+    por `id`, com `processado_em`: o evento só conta como tratado depois do
+    tratamento, Ruling 25);
+  - o gatilho `set_billing_subscriptions_updated_at` (a função
+    `set_updated_at` dos outros gatilhos): toda escrita na linha renova o
+    `updated_at`, que o webhook e o cron usam nas gravações condicionais;
   - a tabela `billing_parcelamentos`, o registro de cada parcelamento que nós
     criamos (o checkout e a renovação do cron), com `ativado_em` e o estado do
     estorno (`pendente` ou `feito`). RLS ligada, nenhuma política;
@@ -148,7 +152,9 @@ o que der:
 10. **A recusa por token.** Uma cobrança parcelada por token recusada volta 400
     e não deixa cobrança criada, como a avulsa? Como simular no Sandbox a
     recusa de um token válido (os cartões de recusa do Sandbox não geram
-    token)?
+    token)? O código conta como recusa só o 4xx que não é 401, 403, 408 nem
+    429: esses quatro e o 5xx soltam a tentativa e o cron tenta no dia seguinte,
+    sem aviso (Ruling 26).
 11. **O estorno do parcelamento inteiro** (`POST /v3/installments/{id}/refund`)
     manda um `PAYMENT_REFUNDED` por parcela? O código expira a linha no
     primeiro e ignora os outros.
@@ -156,6 +162,14 @@ o que der:
     de uma cobrança parcelada, uma vez só?
 13. **O Pix Automático**, para depois: a taxa, a elegibilidade da conta e se o
     Sandbox o oferece. A spec o prevê quando o CNPJ completar 6 meses.
+14. **A cobrança por token depois do 200.** O `POST /v3/payments` com
+    `creditCardToken` devolve a 1ª parcela com `installment` e
+    `externalReference`? Sem os dois, toda renovação cai na espera do webhook
+    (`aguardando: 1` no §1.2, item 4). E que status uma parcela de cartão pode
+    ter depois de aceita (a análise de risco)? O código espera só por
+    `PENDING`, `AWAITING_RISK_ANALYSIS` e `AUTHORIZED`; qualquer outro
+    (`REFUSED`, `REPROVED_BY_RISK_ANALYSIS`, `OVERDUE`, estornada) conta como
+    renovação que não aconteceu, e a pessoa recebe o aviso do cartão (I1).
 
 Anote as respostas fora do repositório. Uma resposta que contradiz o que o
 código faz é um bloqueio: o código muda antes do §6.
@@ -393,8 +407,18 @@ compre de novo.
    `<TOTAL>` é o preço da linha em reais (`238.80` no de fundador, `358.80` no
    Família).
 
-   Abra a `invoiceUrl` da resposta e pague. Esperado: o webhook registra o
-   parcelamento (a referência é a linha e o cliente é o dela), vê que a linha já está paga no período e o estorna.
+   O webhook só estorna um parcelamento que nós registramos e que nunca
+   ativou: um desconhecido que não ativa a linha é ignorado, com o log
+   "parcelamento desconhecido" (C1 da revisão final). Registre o da resposta
+   (o campo `installment`) antes de pagar, no SQL Editor do ramo:
+
+   ```sql
+   insert into public.billing_parcelamentos (installment, subscription_id)
+   values ('<INSTALLMENT_DA_RESPOSTA>', '<ID_DA_LINHA>');
+   ```
+
+   Abra a `invoiceUrl` da resposta e pague. Esperado: o webhook acha o
+   parcelamento no registro, vê que a linha já está paga no período e o estorna.
    O registro dele em `billing_parcelamentos` fica `feito`, o painel mostra o
    estorno, o período da linha não muda, e chega o aviso "Cobrança em dobro
    devolvida".
@@ -455,9 +479,10 @@ Este é o de produção: só com o pedido explícito do dono, depois do §1. Apl
 **A migração vai antes de qualquer uma das quatro Edges**: todas leem as colunas
 e as tabelas novas.
 
-Ela só acrescenta: `add column if not exists`, `create table if not exists` e
-o `create or replace` das duas funções. Nenhum `drop`, nenhum dado muda, e a
-lista de gatilhos do `garantir_escrita` não é tocada.
+Ela só acrescenta: `add column if not exists`, `create table if not exists`, o
+`create or replace` das duas funções e o do gatilho do `updated_at` de
+`billing_subscriptions`. Nenhum `drop`, nenhum dado muda (o gatilho só age na
+próxima escrita), e a lista de gatilhos do `garantir_escrita` não é tocada.
 
 Depois, as conferências, **uma por vez**: o SQL Editor mostra só o resultado do
 último comando. Todas só leem.
@@ -506,6 +531,16 @@ from unnest(array['anon', 'authenticated']) as r(papel),
 ```
 
 Seis linhas, todas com `alcanca = false`.
+
+**O `updated_at` da linha é do gatilho.**
+
+```sql
+select tgname from pg_trigger
+where tgrelid = 'public.billing_subscriptions'::regclass and not tgisinternal
+order by 1;
+```
+
+Entre as linhas, `set_billing_subscriptions_updated_at`.
 
 **O token, o cliente do Asaas e o IP não são legíveis pelo cliente.**
 
@@ -660,8 +695,10 @@ Os eventos ficam guardados por 14 dias. Para reativar: Integrações › Webhook
 o webhook › reativar a fila.
 
 Só o 200 conta como entregue. O código responde 200 a tudo o que repetir não
-resolveria (evento de outra pessoa, corpo ilegível, evento repetido, estorno
-que falhou) e 500 só a erro do banco, que o Asaas reenvia.
+resolveria (evento de outra pessoa, corpo ilegível, evento repetido já tratado,
+estorno que falhou), 500 só a erro do banco e 503 ao evento repetido que outro
+processo ainda trata há menos de 5 minutos (Ruling 25). O Asaas reenvia os
+dois.
 
 ## 5. "Bateu ou devolvemos"
 
@@ -775,6 +812,26 @@ select estorno_status, count(*) from public.billing_parcelamentos group by 1 ord
 `null` é o parcelamento sem estorno, `feito` o devolvido, e `pendente` o que o
 cron ainda tenta.
 
+**Nenhum evento do webhook parado** (Ruling 25). O evento entra em
+`billing_events` sem `processado_em` e só é marcado depois do tratamento. Um
+processo que morre no meio (deploy, falta de memória, prazo da Edge) deixa o
+evento sem a marca, e o próximo reenvio do Asaas com o mesmo `id`, passados 5
+minutos, retoma e trata de novo (toda gravação é condicional; refazer é
+seguro). Antes dos 5 minutos, o reenvio recebe 503.
+
+```sql
+select id, tipo, recebido_em from public.billing_events
+where processado_em is null and recebido_em < now() - interval '15 minutes'
+order by recebido_em;
+```
+
+Esperado: nenhuma linha. Uma linha aqui é um evento que não foi tratado até o
+fim e que o Asaas não reenviou: reenvie-o pelo painel (Integrações › Webhooks ›
+o webhook › os eventos), e o reenvio com o mesmo `id` o retoma. Não apague a
+linha à mão. O webhook também pode passar dos 10 segundos que o Asaas espera
+quando estorna na hora (3 s de leitura, 6 s de estorno e o aviso): o Asaas
+conta uma falha e reenvia, e o reenvio recebe "repetido".
+
 **Nenhuma espera vencida.**
 
 ```sql
@@ -802,12 +859,14 @@ conferência no outro dia antes de procurar o problema.
 
 | Log | O que é |
 |---|---|
-| `renovação recusada` | O Asaas devolveu 4xx na cobrança por token. Um 401 ou 403 é chave errada, e um 429 é limite de requisições: nenhum é cartão recusado, mas a linha vai a `past_due` e a pessoa recebe o aviso do cartão (lacuna 85) |
-| `cobrança incerta` | Rede, 5xx ou prazo estourado na cobrança por token: a linha espera e é conferida no dia seguinte |
-| `fatura do checkout paga, esperando o webhook` | O cron não cobra o token porque a fatura já foi paga. Se repetir por dias, o webhook se perdeu: reenvie o evento pelo painel do Asaas |
-| `parcelamento desconhecido` | Um pagamento de outra linha com a nossa referência. Não ativa nada |
+| `renovação recusada` | O Asaas devolveu um 4xx que não é 401, 403, 408 nem 429 na cobrança por token: o cartão recusou. A linha vai a `past_due` e a pessoa recebe o aviso do cartão |
+| `cobrança por token` | 401, 403 (chave errada), 408, 429 (limite de requisições) ou 5xx na cobrança por token (Ruling 26): nada foi cobrado e a pessoa não recebe aviso; a tentativa volta e o cron tenta no dia seguinte. Repetido em muitas linhas, confira o `ASAAS_API_KEY` e o ambiente: enquanto isso, quem passa do fim fica sem renovar |
+| `cobrança incerta` | Rede ou prazo estourado na cobrança por token: a linha espera e é conferida no dia seguinte |
+| `fatura do checkout paga sem o webhook, aplicando` | O webhook da fatura paga pelo checkout não chegou, e o cron aplicou o pagamento (I2), na renovação ou antes de expirar um `past_due`. Repetido, confira a fila do webhook no painel |
+| `parcelamento desconhecido` | Um pagamento com a nossa referência e o cliente da linha, de um parcelamento fora do registro e que não ativa a linha: a parcela atrasada de um período que passou, ou uma cobrança feita à mão. Não ativa nem estorna nada; uma cobrança em dobro de verdade se devolve pelo painel |
 | `pagamento em dobro, estornando` | Um segundo pagamento no período já pago está sendo devolvido: confira o estorno no painel |
-| `NFS-e pulada` · `agendarNota` | A nota não saiu: segredo faltando, ou o Asaas recusou |
+| `NFS-e pulada` · `agendarNota` | A nota não saiu: segredo faltando, ou o Asaas recusou (4xx: a reivindicação volta e o cron tenta amanhã) |
+| `NFS-e incerta, confira no painel antes de emitir` | Rede, 5xx ou prazo ao agendar a nota. A nota é reivindicada (`nfse_para`) antes do pedido, para nunca sair duas vezes; por isso o cron não tenta de novo. Confira em Notas fiscais e, se ela não estiver lá, agende à mão |
 | `aviso sem carteira pessoal` | A pessoa não tem carteira pessoal, e o aviso não saiu |
 
 ## 9. Compatibilidade com o front de `main`
@@ -857,4 +916,5 @@ cobrança ligada nele (§1), confira com uma conta de teste:
 **O que fica de fora, de propósito.** O Pix Automático (depois de o CNPJ
 completar 6 meses), o mensal, o "bateu ou devolvemos" automático (§5) e a
 troca de cartão sem pagar (o cartão novo só entra pela fatura). As lacunas
-conhecidas estão na seção 19 de `docs/JORNADAS.md`, da 78 à 91.
+conhecidas estão na seção 19 de `docs/JORNADAS.md`, da 78 à 91 (a 85 e a 86
+fecharam na revisão final).

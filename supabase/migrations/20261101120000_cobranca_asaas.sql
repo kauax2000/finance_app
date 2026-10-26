@@ -1,7 +1,7 @@
 -- Cobrança pelo Asaas (Bloco 8): as colunas da cobrança parcelada na linha da
 -- pessoa, a idempotência do webhook, o registro dos parcelamentos e as redefinições de `tem_plano_proprio`
--- (a renovação que espera a confirmação) e de `meu_plano` (os campos da tela).
--- Tudo aditivo: com `billing_settings.enforced_since` nulo, nada muda para o
+-- (a renovação que espera a confirmação) e de `meu_plano` (os campos da tela),
+-- e o gatilho do `updated_at` da linha. Tudo aditivo: com `billing_settings.enforced_since` nulo, nada muda para o
 -- front de `main`. A lista de gatilhos `garantir_escrita` não é tocada.
 
 -- 1. a linha da pessoa ganha o Asaas -------------------------------------------
@@ -20,12 +20,23 @@ alter table public.billing_subscriptions
   add column if not exists checkout_criado_em timestamptz,
   add column if not exists nfse_para text;
 
+-- 1b. `updated_at` de verdade --------------------------------------------------
+-- O webhook e o cron gravam condicionais ao `updated_at` lido; toda escrita na
+-- linha (checkout, webhook, cancelamento, cron, SQL do suporte) o renova aqui,
+-- com a função dos outros gatilhos `set_*_updated_at`.
+create or replace trigger set_billing_subscriptions_updated_at before update on public.billing_subscriptions
+  for each row execute function public.set_updated_at();
+
 -- 2. idempotência do webhook ----------------------------------------------------
--- Um evento do Asaas por `id`: o repetido não é aplicado de novo.
+-- Um evento do Asaas por `id` (Ruling 25): entra com `processado_em` nulo e é
+-- marcado só depois do tratamento. Repetido e processado não é aplicado de
+-- novo; repetido e parado há mais de 5 min (o processo morreu) é retomado, com
+-- o `recebido_em` como posse; em andamento, o webhook responde 503.
 create table if not exists public.billing_events (
   id text primary key,
   tipo text not null,
-  recebido_em timestamptz not null default now()
+  recebido_em timestamptz not null default now(),
+  processado_em timestamptz
 );
 
 alter table public.billing_events enable row level security;

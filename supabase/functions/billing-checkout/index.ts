@@ -52,10 +52,17 @@ const MAX_CORPO = 4096
 const SEM_RESPOSTA = () => json(502, { error: 'O Asaas não respondeu. Tente de novo em instantes.' })
 const MUDOU = () => json(409, { error: 'Seu plano mudou agora. Abra Planos de novo.' })
 
-/** A resposta de quando não há cobrança a criar. */
-function respostaDoEstado(plano: Exclude<PlanoDoCheckout, { tipo: 'novo' }>, url: string | null): Response {
+/** A resposta de quando não há cobrança a criar. `status` é o da linha: na 1ª compra não há renovação. */
+function respostaDoEstado(
+  plano: Exclude<PlanoDoCheckout, { tipo: 'novo' }>,
+  url: string | null,
+  status: string | null,
+): Response {
   if (plano.tipo === 'reusar' && url) return json(200, { url })
   if (plano.tipo === 'aguardar') {
+    if (status === 'pending') {
+      return json(409, { error: 'Estamos confirmando seu pagamento. Tente de novo em alguns minutos.' })
+    }
     return json(409, { error: 'Estamos tentando renovar com seu cartão. Tente de novo em alguns minutos.' })
   }
   if (plano.tipo === 'bloqueado') return json(409, { error: 'Você já tem um plano ativo.' })
@@ -126,7 +133,7 @@ async function atender(req: Request): Promise<Response> {
   const peloEstadoDeAgora = async () => {
     const atual = await lerLinha()
     const p = planoDoCheckout(atual as Assinatura | null, new Date(), !!atual?.checkout_url)
-    return p.tipo === 'novo' ? MUDOU() : respostaDoEstado(p, atual?.checkout_url ?? null)
+    return p.tipo === 'novo' ? MUDOU() : respostaDoEstado(p, atual?.checkout_url ?? null, atual?.status ?? null)
   }
 
   // Sem linha, ela nasce vazia (sem preço nem link); quem a disputar perde na reivindicação.
@@ -142,7 +149,7 @@ async function atender(req: Request): Promise<Response> {
 
   const agora = new Date()
   const plano = planoDoCheckout(linha as Assinatura, agora, !!linha.checkout_url)
-  if (plano.tipo !== 'novo') return respostaDoEstado(plano, linha.checkout_url)
+  if (plano.tipo !== 'novo') return respostaDoEstado(plano, linha.checkout_url, linha.status)
 
   // A reivindicação: só uma chamada passa daqui com o mesmo estado lido.
   const reivindicado = agora.toISOString()

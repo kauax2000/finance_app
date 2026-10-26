@@ -3,16 +3,19 @@
  * pessoa em `billing_subscriptions`. Só o Asaas chama, com o `authToken` no
  * cabeçalho `asaas-access-token`: sem JWT nem CORS.
  *
- * Ordem: método → token → corpo → evento gravado (o repetido para aqui) →
- * linha → cliente → registro do parcelamento (Ruling 9; o desconhecido da
- * própria linha e do próprio cliente entra nele, Ruling 15) → efeitoDoEvento →
- * gravação condicional, ou o estorno do pagamento em dobro (Ruling 8 e 10).
+ * Ordem: método → token → corpo → evento gravado (o repetido já processado
+ * para aqui; Ruling 25) → linha → cliente → registro do parcelamento (Ruling 9;
+ * o desconhecido da própria linha e do próprio cliente entra nele só quando
+ * este evento o ativa, Ruling 15 com C1) → efeitoDoEvento → gravação
+ * condicional, ou o estorno do pagamento em dobro (Ruling 8 e 10) → evento
+ * marcado como processado.
  *
  * Só o token errado volta 401. Todo caminho tratado volta exatamente 200, até a
  * referência estranha e o estorno que falhou (fica 'pendente' para o
  * `billing-daily`): a fila do Asaas pausa depois de 15 respostas que não são
  * 200. O 500 é só o erro de banco, e ele apaga o evento gravado para a nova
- * tentativa não parar no "repetido".
+ * tentativa não esperar a retomada. O 503 é o evento repetido que outro
+ * processo ainda trata (menos de 5 min).
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
 import { configDoAsaas, estornarNoAsaas } from '../_shared/asaas.ts'
@@ -36,6 +39,8 @@ function json(status: number, payload: unknown): Response {
 
 const ignorado = (motivo: string) => json(200, { ok: true, ignorado: motivo })
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+/** Um evento repetido sem `processado_em` há menos que isso ainda está com outro processo (Ruling 25). */
+const EVENTO_EM_ANDAMENTO_MS = 5 * 60 * 1000
 
 /** O cliente de serviço, com o pedaço do `auth` que o aviso usa (o e-mail da pessoa). */
 type Admin = SupabaseAdminClient & {
@@ -65,27 +70,59 @@ Deno.serve(async (req: Request) => {
 
   const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
-  // O Asaas entrega ao menos uma vez: o `id` do evento é o dedupe.
+  // O Asaas entrega ao menos uma vez: o `id` do evento é o dedupe (Ruling 25). O evento entra sem
+  // `processado_em` e só é marcado depois do tratamento: um processo morto no meio não o perde.
   const { error: insErr } = await admin.from('billing_events').insert({ id, tipo: event })
-  if (insErr?.code === '23505') return json(200, { ok: true, repetido: true })
-  if (insErr) return json(500, { error: internalError('asaas-webhook: evento', insErr) })
+  if (insErr && insErr.code !== '23505') return json(500, { error: internalError('asaas-webhook: evento', insErr) })
+  if (insErr) {
+    const { data: ev, error: lErr } = await admin
+      .from('billing_events')
+      .select('recebido_em, processado_em')
+      .eq('id', id)
+      .maybeSingle()
+    if (lErr) return json(500, { error: internalError('asaas-webhook: evento repetido', lErr) })
+    if (ev?.processado_em) return json(200, { ok: true, repetido: true })
+    // Sumiu (o `esquecer` de outro processo) ou ainda está com outro processo: o Asaas tenta de novo depois.
+    if (!ev || Date.now() - new Date(ev.recebido_em).getTime() < EVENTO_EM_ANDAMENTO_MS) {
+      return json(503, { error: 'evento em andamento' })
+    }
+    // Parado há mais de 5 min: o processo morreu. Toma o evento (o `recebido_em` é a posse) e reprocessa;
+    // toda gravação do tratamento é condicional, e refazer é seguro.
+    const { data: tomei, error: tErr } = await admin
+      .from('billing_events')
+      .update({ recebido_em: new Date().toISOString() })
+      .eq('id', id)
+      .eq('recebido_em', ev.recebido_em)
+      .is('processado_em', null)
+      .select('id')
+    if (tErr) return json(500, { error: internalError('asaas-webhook: retomar', tErr) })
+    if (!tomei?.length) return json(503, { error: 'evento em andamento' })
+  }
 
-  /** Apaga o evento gravado em `billing_events`, para o Asaas tentar de novo. */
+  /** Apaga o evento gravado em `billing_events`, para o Asaas tentar de novo sem esperar a retomada. */
   const esquecer = async (evento: string) => {
     try {
-      const { error } = await admin.from('billing_events').delete().eq('id', evento)
+      const { error } = await admin.from('billing_events').delete().eq('id', evento).is('processado_em', null)
       if (error) console.error('asaas-webhook: esquecer', error.message)
     } catch (e) {
       console.error('asaas-webhook: esquecer', e)
     }
   }
 
+  let resposta: Response
   try {
-    return await tratar(admin, event, payment as Pagamento | null | undefined)
+    resposta = await tratar(admin, event, payment as Pagamento | null | undefined)
   } catch (e) {
     await esquecer(id)
     return json(500, { error: internalError('asaas-webhook', e) })
   }
+  // Tratado. Falhou a marca, o evento fica sem `processado_em`: um reenvio refaz o que já está feito.
+  const { error: mErr } = await admin
+    .from('billing_events')
+    .update({ processado_em: new Date().toISOString() })
+    .eq('id', id)
+  if (mErr) console.error('asaas-webhook: marcar o evento', id, mErr.message)
+  return resposta
 })
 
 async function tratar(
@@ -111,11 +148,13 @@ async function tratar(
     if (!linha || !eventoDaLinha(linha, payment)) return ignorado('linha')
 
     // Ruling 9: o pagamento de outro parcelamento é decidido pelo registro.
+    const agora = new Date()
+    const mudanca = efeitoDoEvento(event, payment, linha, agora)
     let registro: Parcelamento | null = null
     if (confirmado && parcelamento) {
       if (parcelamento === linha.provider_ref) {
-        // As parcelas mensais do plano: nada a mudar, e o ativado_em que faltou se conserta aqui.
-        await marcarAtivado(admin, parcelamento)
+        // As parcelas mensais do plano: nada a mudar, e o registro que faltou se conserta aqui (C1).
+        await marcarAtivado(admin, parcelamento, linha.id)
       } else {
         const lerRegistro = async () => {
           const { data: r, error: rErr } = await admin
@@ -128,8 +167,14 @@ async function tratar(
         }
         registro = await lerRegistro()
         // Ruling 15: a referência é a linha e o cliente é o dela (conferidos acima), e só nós criamos essa
-        // cobrança. O registro que o cron faz depois da resposta pode chegar atrás deste evento.
+        // cobrança. O registro que o cron faz depois da resposta pode chegar atrás deste evento. C1: só
+        // entra quando este evento ativa a linha; o desconhecido que não ativa nada nunca vira "em dobro"
+        // (a parcela atrasada de um ano que passou, sem registro, estornaria o ano inteiro).
         if (!registro) {
+          if (!mudanca) {
+            console.error('asaas-webhook: parcelamento desconhecido', linha.id, parcelamento)
+            return ignorado('parcelamento')
+          }
           const { error: iErr } = await admin
             .from('billing_parcelamentos')
             .insert({ installment: parcelamento, subscription_id: linha.id })
@@ -145,8 +190,6 @@ async function tratar(
       }
     }
 
-    const agora = new Date()
-    const mudanca = efeitoDoEvento(event, payment, linha, agora)
     if (!mudanca) {
       // A trava do provider_ref se repete aqui de propósito: o estorno não depende só da função pura.
       if (
@@ -173,18 +216,30 @@ async function tratar(
     const { data: gravou, error: uErr } = await q.select('id')
     if (uErr) throw new Error(`gravar: ${uErr.message}`)
     if (gravou?.length) {
-      if (mudanca.provider_ref) await marcarAtivado(admin, mudanca.provider_ref)
+      if (mudanca.provider_ref) await marcarAtivado(admin, mudanca.provider_ref, linha.id)
       return json(200, { ok: true, mudou: true })
     }
   }
   throw new Error('a linha mudou duas vezes durante o evento')
 }
 
-/** O parcelamento ativou a linha: daqui em diante, os eventos dele são mensais. */
-async function marcarAtivado(admin: Admin, parcelamento: string): Promise<void> {
+/**
+ * O parcelamento ativou a linha: daqui em diante, os eventos dele são mensais.
+ * C1: o registro que faltou (o insert do cron falhou) nasce aqui, já ativado —
+ * o parcelamento do plano nunca fica sem registro.
+ */
+async function marcarAtivado(admin: Admin, parcelamento: string, linhaId: string): Promise<void> {
+  const agora = new Date().toISOString()
+  const { error: uErr } = await admin
+    .from('billing_parcelamentos')
+    .upsert({ installment: parcelamento, subscription_id: linhaId, ativado_em: agora }, {
+      onConflict: 'installment',
+      ignoreDuplicates: true,
+    })
+  if (uErr) throw new Error(`registro: ${uErr.message}`)
   const { error } = await admin
     .from('billing_parcelamentos')
-    .update({ ativado_em: new Date().toISOString() })
+    .update({ ativado_em: agora })
     .eq('installment', parcelamento)
     .is('ativado_em', null)
   if (error) throw new Error(`ativado_em: ${error.message}`)

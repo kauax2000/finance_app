@@ -50,9 +50,9 @@ describe(`migração ${MIGRACAO}`, () => {
         expect(sql).not.toMatch(/grant[^;]*on (table )?public\.billing_subscriptions/i)
     })
 
-    it("billing_events: chave pelo id do evento, RLS ligada, nenhuma política, revoke", () => {
+    it("billing_events: chave pelo id do evento, processado_em (Ruling 25), RLS ligada, nenhuma política, revoke", () => {
         expect(sql).toMatch(
-            /create table if not exists public\.billing_events \(\s*id text primary key,\s*tipo text not null,\s*recebido_em timestamptz not null default now\(\)\s*\);/,
+            /create table if not exists public\.billing_events \(\s*id text primary key,\s*tipo text not null,\s*recebido_em timestamptz not null default now\(\),\s*processado_em timestamptz\s*\);/,
         )
         expect(sql).toMatch(/alter table public\.billing_events enable row level security;/)
         expect(sql).toMatch(/revoke all on public\.billing_events from anon, authenticated;/)
@@ -112,6 +112,12 @@ describe(`migração ${MIGRACAO}`, () => {
         expect(sql).toMatch(/grant execute on function public\.meu_plano\(\) to authenticated;/)
     })
 
+    it("I5: o updated_at da linha é do gatilho set_updated_at, em toda escrita", () => {
+        expect(sql).toMatch(
+            /create or replace trigger set_billing_subscriptions_updated_at before update on public\.billing_subscriptions\s+for each row execute function public\.set_updated_at\(\);/,
+        )
+    })
+
     it("é aditiva e não mexe na lista de gatilhos da só leitura (Decisão 11)", () => {
         expect(sql).not.toMatch(/drop column/i)
         expect(sql).not.toMatch(/alter column[^;]*\btype\b/i)
@@ -132,7 +138,7 @@ describe(`migração ${MIGRACAO}`, () => {
 
     it("os tipos à mão conhecem as colunas e a tabela nova", () => {
         for (const coluna of Object.keys(COLUNAS)) expect(tipos, coluna).toContain(`${coluna}: string | null`)
-        expect(tipos).toMatch(/billing_events: \{\s+Row: \{\s+id: string\s+recebido_em: string\s+tipo: string/)
+        expect(tipos).toMatch(/billing_events: \{\s+Row: \{\s+id: string\s+processado_em: string \| null\s+recebido_em: string\s+tipo: string/)
         expect(tipos).toMatch(
             /billing_parcelamentos: \{\s+Row: \{\s+ativado_em: string \| null\s+criado_em: string\s+estorno_status: string \| null\s+estorno_tentado_em: string \| null\s+installment: string\s+subscription_id: string/,
         )

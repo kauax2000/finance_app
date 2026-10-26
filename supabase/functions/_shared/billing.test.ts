@@ -644,6 +644,26 @@ Deno.test('pagamentoEmDobro: o parcelamento já ativado (evento mensal) nunca é
   assertEquals(pagamentoEmDobro('PAYMENT_RECEIVED', x, compraZ, regX, new Date('2026-06-20T12:00:00Z')), false)
 })
 
+Deno.test('C1: o registro do cron falhou; a parcela atrasada do ano passado, depois da renovação seguinte, não estorna nada', () => {
+  // Ano 1: o cron renovou com Y e o insert do registro falhou. Ano 2: o cron renovou com Z em F2 − 2 dias.
+  // O 12º PAYMENT_RECEIVED de Y chega perto de F2, depois de Z.
+  const F2 = '2028-03-10T15:00:00.000Z'
+  const linhaAno2 = sub({ provider_ref: 'inst-Z', current_period_end: '2029-03-10T15:00:00.000Z' })
+  const atrasada = pag({ installment: 'inst-Y', status: 'RECEIVED' })
+  const agora = new Date(F2)
+  // O webhook só registra o desconhecido quando o evento ativa a linha (C1): aqui o efeito é nulo, então
+  // o Y desconhecido é ignorado, sem registro e sem estorno.
+  assertEquals(efeitoDoEvento('PAYMENT_RECEIVED', atrasada, linhaAno2, agora), null)
+  assertEquals(pagamentoEmDobro('PAYMENT_RECEIVED', atrasada, linhaAno2, null, agora), false)
+  // E o registro que o marcarAtivado conserta (upsert com ativado_em) nunca é dobro.
+  const consertado = reg({ installment: 'inst-Y', ativado_em: '2027-03-08T12:00:00.000Z' })
+  assertEquals(pagamentoEmDobro('PAYMENT_RECEIVED', atrasada, linhaAno2, consertado, agora), false)
+  // O que o Ruling 15 ainda cobre: o Y da renovação chegando antes do registro do cron ativa a linha.
+  const linhaAno1 = sub({ provider_ref: 'inst-X', current_period_end: '2027-03-10T15:00:00.000Z' })
+  const renovacao = pag({ installment: 'inst-Y', status: 'CONFIRMED' })
+  assertEquals(efeitoDoEvento('PAYMENT_CONFIRMED', renovacao, linhaAno1, em(-2 * DIA))?.provider_ref, 'inst-Y')
+})
+
 Deno.test('pagamentoEmDobro: sem registro, ou registro de outra linha ou de outro parcelamento, não é dobro', () => {
   assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag(), sub(), null, em(-30 * DIA)), false)
   assertEquals(pagamentoEmDobro('PAYMENT_CONFIRMED', pag(), sub(), reg({ subscription_id: 'sub-2' }), em(-30 * DIA)), false)
@@ -712,9 +732,15 @@ Deno.test('resultadoDaCobranca: confirmada ativa; aceita espera', () => {
   assertEquals(resultadoDaCobranca({ ok: true, dados: { status: 'PENDING' } }), 'esperar')
 })
 
-Deno.test('resultadoDaCobranca (I1): só o 4xx é recusa; rede, prazo, 5xx e 200 ilegível esperam', () => {
+Deno.test('resultadoDaCobranca (Ruling 18 e 26): só o outro 4xx é recusa; rede, prazo e 200 ilegível esperam', () => {
   for (const status of [400, 402, 404, 422, 499]) assertEquals(resultadoDaCobranca({ ok: false, status }), 'recusada')
-  for (const status of [0, 200, 500, 502, 503]) assertEquals(resultadoDaCobranca({ ok: false, status }), 'esperar')
+  for (const status of [0, 200]) assertEquals(resultadoDaCobranca({ ok: false, status }), 'esperar')
+})
+
+Deno.test('resultadoDaCobranca (I4 / Ruling 26): chave, limite, prazo do servidor e 5xx soltam a tentativa, sem recusa', () => {
+  for (const status of [401, 403, 408, 429, 500, 502, 503, 504]) {
+    assertEquals(resultadoDaCobranca({ ok: false, status }), 'soltar')
+  }
 })
 
 // vereditoDaEspera (Ruling 19)
@@ -735,6 +761,38 @@ Deno.test('vereditoDaEspera: a paga desde a tentativa ativa; a pendente espera',
   const pendente = pag({ id: 'pay-3', installment: 'inst-Z', status: 'PENDING', dateCreated: '2027-03-09' })
   assertEquals(vereditoDaEspera([pendente, paga], 'inst-velho', '2027-03-08'), { tipo: 'paga', pagamento: paga })
   assertEquals(vereditoDaEspera([pendente], 'inst-velho', '2027-03-08'), { tipo: 'pendente' })
+})
+
+Deno.test('vereditoDaEspera (I1): a cobrança recusada depois do 200 não é pendente, é "nenhuma"', () => {
+  for (const status of ['REFUSED', 'REPROVED_BY_RISK_ANALYSIS', 'OVERDUE', 'REFUNDED', 'CHARGEBACK_REQUESTED']) {
+    const p = pag({ installment: 'inst-Y', status, dateCreated: '2027-03-08' })
+    assertEquals(vereditoDaEspera([p], 'inst-velho', '2027-03-08'), { tipo: 'nenhuma' }, status)
+  }
+  // a 1ª parcela recusada mata o parcelamento, mesmo com as outras 11 PENDING
+  const y = [
+    pag({ id: 'y1', installment: 'inst-Y', status: 'REFUSED', dateCreated: '2027-03-08' }),
+    ...Array.from({ length: 11 }, (_, i) => pag({ id: `y${i + 2}`, installment: 'inst-Y', status: 'PENDING', dateCreated: '2027-03-08' })),
+  ]
+  assertEquals(vereditoDaEspera(y, 'inst-velho', '2027-03-08'), { tipo: 'nenhuma' })
+})
+
+Deno.test('vereditoDaEspera (I1): só os status vivos esperam', () => {
+  for (const status of ['PENDING', 'AWAITING_RISK_ANALYSIS', 'AUTHORIZED']) {
+    const p = pag({ installment: 'inst-Y', status, dateCreated: '2027-03-08' })
+    assertEquals(vereditoDaEspera([p], 'inst-velho', '2027-03-08'), { tipo: 'pendente' }, status)
+  }
+  // um morto não esconde um vivo de outro parcelamento
+  const morto = pag({ id: 'a', installment: 'inst-Y', status: 'REFUSED', dateCreated: '2027-03-08' })
+  const vivo = pag({ id: 'b', installment: 'inst-Z', status: 'PENDING', dateCreated: '2027-03-09' })
+  assertEquals(vereditoDaEspera([morto, vivo], 'inst-velho', '2027-03-08'), { tipo: 'pendente' })
+})
+
+Deno.test('vereditoDaEspera (M5): a cobrança sem dateCreated conta, o filtro do servidor já cortou', () => {
+  const paga = pag({ installment: 'inst-Y', status: 'CONFIRMED' })
+  assertEquals(vereditoDaEspera([paga], 'inst-velho', '2027-03-08'), { tipo: 'paga', pagamento: paga })
+  assertEquals(vereditoDaEspera([pag({ installment: 'inst-Y', status: 'PENDING' })], 'inst-velho', '2027-03-08'), {
+    tipo: 'pendente',
+  })
 })
 
 // notaPendente (Ruling 21)

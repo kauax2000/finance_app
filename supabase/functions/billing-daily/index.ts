@@ -22,6 +22,7 @@ import {
   falhaNaRenovacao,
   type Mudanca,
   notaPendente,
+  type Pagamento,
   type Parcelamento,
   resultadoDaCobranca,
   triagemDasAbertas,
@@ -197,14 +198,70 @@ async function avisarDoTeste(ctx: Ctx): Promise<void> {
   })
 }
 
-/** O parcelamento ativou a linha: daqui em diante, os eventos dele são mensais (Ruling 9). */
-async function marcarAtivado(ctx: Ctx, parcelamento: string): Promise<void> {
+/**
+ * O parcelamento ativou a linha: daqui em diante, os eventos dele são mensais
+ * (Ruling 9). C1: o registro que faltou (o insert depois da cobrança falhou)
+ * nasce aqui, já ativado — o parcelamento do plano nunca fica sem registro.
+ */
+async function marcarAtivado(ctx: Ctx, parcelamento: string, linhaId: string): Promise<void> {
+  const { error: uErr } = await ctx.admin
+    .from('billing_parcelamentos')
+    .upsert({ installment: parcelamento, subscription_id: linhaId, ativado_em: ctx.iso }, {
+      onConflict: 'installment',
+      ignoreDuplicates: true,
+    })
+  if (uErr) console.error('billing-daily: registro', parcelamento, uErr.message)
   const { error } = await ctx.admin
     .from('billing_parcelamentos')
     .update({ ativado_em: ctx.iso })
     .eq('installment', parcelamento)
     .is('ativado_em', null)
   if (error) console.error('billing-daily: ativado_em', parcelamento, error.message)
+}
+
+/**
+ * Um pagamento confirmado no Asaas que o webhook não aplicou: a renovação
+ * conferida (Ruling 19) ou a fatura do checkout com o webhook perdido (I2).
+ * Decide por `efeitoDoEvento`, grava pela condição de quem chama e marca o
+ * registro (o `marcarAtivado` o cria, se faltou). `false`: o efeito é nulo e
+ * nada foi gravado. Um webhook que chegue depois acha a linha ativada e não muda nada.
+ */
+async function aplicarPagamento(
+  ctx: Ctx,
+  linha: Linha,
+  p: Pagamento,
+  gravar: (m: Mudanca) => Promise<boolean>,
+): Promise<boolean> {
+  const m = efeitoDoEvento('PAYMENT_CONFIRMED', p, linha, ctx.agora)
+  if (!m) return false
+  if (await gravar(m)) {
+    if (m.provider_ref) await marcarAtivado(ctx, m.provider_ref, linha.id)
+    ctx.n.renovadas += 1
+  }
+  return true
+}
+
+/**
+ * A fatura do checkout (`checkout_ref`) paga, de um parcelamento que nunca
+ * ativou: o pagamento que espera o webhook (Ruling 7 e 17). `null` sem fatura
+ * paga; `{ falha }` quando o Asaas ou o banco não respondeu.
+ */
+async function faturaPagaDoCheckout(
+  ctx: Ctx,
+  cfg: AsaasConfig,
+  linha: Linha,
+): Promise<Pagamento | null | { falha: string }> {
+  if (!linha.checkout_ref) return null
+  const r = await buscarCobranca(cfg, linha.checkout_ref)
+  if (!r.ok && r.status !== 404) return { falha: `buscarCobranca ${r.status} ${r.erros.join('; ')}` }
+  if (!r.ok || !r.dados.installment) return null
+  const { data: registro, error } = await ctx.admin
+    .from('billing_parcelamentos')
+    .select('ativado_em')
+    .eq('installment', r.dados.installment)
+    .maybeSingle()
+  if (error) return { falha: `registro do checkout ${error.message}` }
+  return checkoutPendente(r.dados, linha.provider_ref, registro) ? r.dados : null
 }
 
 /**
@@ -264,24 +321,33 @@ async function renovar(ctx: Ctx, linha: Linha): Promise<void> {
     if (error) console.error('billing-daily: soltar', linha.id, error.message)
   }
 
+  /** A gravação vale só se a reivindicação ainda é desta chamada; nada lança. */
+  const gravar = async (m: Mudanca): Promise<boolean> => {
+    let q = admin.from('billing_subscriptions').update({ ...m, updated_at: iso })
+      .eq('id', linha.id)
+      .eq('status', linha.status)
+      .eq('checkout_criado_em', iso)
+    q = linha.provider_ref === null ? q.is('provider_ref', null) : q.eq('provider_ref', linha.provider_ref)
+    const { data, error } = await q.select('id')
+    if (error || !data?.length) {
+      console.error('billing-daily: a linha mudou durante a cobrança', linha.id, error?.message)
+      return false
+    }
+    return true
+  }
+
   // Ruling 7: a fatura do checkout já paga espera o webhook; cobrar o cartão seria em dobro.
   // Ruling 17: o parcelamento dela já ativado é um período que passou, e não segura a renovação.
-  if (linha.checkout_ref) {
-    const r = await buscarCobranca(cfg, linha.checkout_ref)
-    if (!r.ok && r.status !== 404) return await soltar('buscarCobranca', r.status, r.erros)
-    if (r.ok && r.dados.installment) {
-      const { data: registro, error } = await admin
-        .from('billing_parcelamentos')
-        .select('ativado_em')
-        .eq('installment', r.dados.installment)
-        .maybeSingle()
-      if (error) return await soltar('registro do checkout', 0, [error.message])
-      if (checkoutPendente(r.dados, linha.provider_ref, registro)) {
-        console.error('billing-daily: fatura do checkout paga, esperando o webhook', linha.id, r.dados.installment)
-        ctx.n.aguardando += 1
-        return
-      }
+  // I2: o webhook dela se perdeu (ou ainda vem): o cron aplica o pagamento, como o verificar.
+  const paga = await faturaPagaDoCheckout(ctx, cfg, linha)
+  if (paga && 'falha' in paga) return await soltar('fatura do checkout', 0, [paga.falha])
+  if (paga) {
+    console.error('billing-daily: fatura do checkout paga sem o webhook, aplicando', linha.id, paga.installment)
+    if (!(await aplicarPagamento(ctx, linha, paga, gravar))) {
+      console.error('billing-daily: fatura do checkout paga sem efeito, esperando o webhook', linha.id, paga.installment)
+      ctx.n.aguardando += 1
     }
+    return
   }
 
   // Ruling 7: a fatura aberta do checkout sai do ar antes da cobrança; a do plano pago (provider_ref) nunca.
@@ -313,30 +379,11 @@ async function renovar(ctx: Ctx, linha: Linha): Promise<void> {
   }
 
   // Depois da cobrança, nada lança: a gravação vale se a reivindicação ainda é desta chamada.
-  const gravar = async (m: Mudanca): Promise<boolean> => {
-    let q = admin.from('billing_subscriptions').update({ ...m, updated_at: iso })
-      .eq('id', linha.id)
-      .eq('status', linha.status)
-      .eq('checkout_criado_em', iso)
-    q = linha.provider_ref === null ? q.is('provider_ref', null) : q.eq('provider_ref', linha.provider_ref)
-    const { data, error } = await q.select('id')
-    if (error || !data?.length) {
-      console.error('billing-daily: a linha mudou durante a cobrança', linha.id, error?.message)
-      return false
-    }
-    return true
-  }
-
   const resultado = resultadoDaCobranca(cobranca)
+  // Ruling 26: 401, 403, 408, 429 e 5xx não são o cartão. Devolve a tentativa, sem aviso, e amanhã tenta de novo.
+  if (!cobranca.ok && resultado === 'soltar') return await soltar('cobrança por token', cobranca.status, cobranca.erros)
   if (cobranca.ok && resultado === 'ativar') {
-    const m = efeitoDoEvento('PAYMENT_CONFIRMED', cobranca.dados, linha, agora)
-    if (m) {
-      if (await gravar(m)) {
-        if (m.provider_ref) await marcarAtivado(ctx, m.provider_ref)
-        ctx.n.renovadas += 1
-      }
-      return
-    }
+    if (await aplicarPagamento(ctx, linha, cobranca.dados, gravar)) return
     // Sem parcelamento na resposta: espera o webhook em vez de cobrar de novo em 2 dias.
     console.error('billing-daily: confirmada sem efeito', linha.id, cobranca.dados.id)
   }
@@ -348,7 +395,7 @@ async function renovar(ctx: Ctx, linha: Linha): Promise<void> {
     return
   }
 
-  // Só o 4xx é recusa: o Asaas não cria a cobrança recusada.
+  // Só o outro 4xx é recusa: o Asaas não cria a cobrança recusada.
   console.error('billing-daily: renovação recusada', linha.id, cobranca.status, cobranca.erros)
   const falha = falhaNaRenovacao(linha, agora)
   if (await gravar(falha)) {
@@ -395,14 +442,7 @@ async function verificar(ctx: Ctx, linha: Linha): Promise<void> {
 
   if (veredito.tipo === 'paga') {
     const p = veredito.pagamento
-    const { error } = await admin.from('billing_parcelamentos').insert({ installment: p.installment, subscription_id: linha.id })
-    if (error && error.code !== '23505') throw new Error(`registrar: ${error.message}`)
-    const m = efeitoDoEvento('PAYMENT_CONFIRMED', p, linha, agora)
-    if (!m) return erro(ctx, 'verificar sem efeito', linha.id, p.id)
-    if (await gravar(m)) {
-      if (m.provider_ref) await marcarAtivado(ctx, m.provider_ref)
-      ctx.n.renovadas += 1
-    }
+    if (!(await aplicarPagamento(ctx, linha, p, gravar))) erro(ctx, 'verificar sem efeito', linha.id, p.id)
     return
   }
 
@@ -415,6 +455,29 @@ async function verificar(ctx: Ctx, linha: Linha): Promise<void> {
 }
 
 async function expirar(ctx: Ctx, linha: Linha): Promise<void> {
+  /** Condicional ao que leu: o webhook que chegou no meio vence. */
+  const gravar = async (m: Mudanca): Promise<boolean> => {
+    const { data, error } = await ctx.admin
+      .from('billing_subscriptions')
+      .update({ ...m, updated_at: ctx.iso })
+      .eq('id', linha.id)
+      .eq('status', linha.status)
+      .eq('updated_at', linha.updated_at)
+      .select('id')
+    if (error) throw new Error(`expirar: ${error.message}`)
+    return !!data?.length
+  }
+  // I2: o past_due que pagou a fatura do checkout e perdeu o webhook não expira: o pagamento é aplicado.
+  // O Asaas fora do ar adia o fim para o dia seguinte; nunca expira um plano que pode estar pago.
+  if (linha.status === 'past_due' && linha.checkout_ref && ctx.cfg) {
+    const paga = await faturaPagaDoCheckout(ctx, ctx.cfg, linha)
+    if (paga && 'falha' in paga) return erro(ctx, 'expirar: fatura do checkout', linha.id, paga.falha)
+    if (paga) {
+      console.error('billing-daily: fatura do checkout paga sem o webhook, aplicando', linha.id, paga.installment)
+      if (await aplicarPagamento(ctx, linha, paga, gravar)) return
+    }
+  }
+
   const { data, error } = await ctx.admin
     .from('billing_subscriptions')
     .update({ status: 'expired', checkout_url: null, updated_at: ctx.iso })
@@ -585,15 +648,34 @@ async function emitirNotas(ctx: Ctx): Promise<void> {
         .maybeSingle()
       if (rErr) throw new Error(`registro: ${rErr.message}`)
       if (!notaPendente(linha, registro, ctx.agora)) return
-      const centavos = linha.price_cents ?? (linha.founder ? PRECO_FUNDADOR_CENTAVOS : PRECO_FAMILIA_CENTAVOS)
-      const r = await agendarNota(cfg, { parcelamento: ref, centavos, data: ctx.hoje, codigo, nome })
-      if (!r.ok) return erro(ctx, 'agendarNota', linha.id, `${r.status} ${r.erros.join('; ')}`)
-      const { error } = await ctx.admin
+      // A nota é reivindicada antes de agendar: uma gravação que falhe depois nunca agenda a segunda.
+      let reivindica = ctx.admin
         .from('billing_subscriptions')
         .update({ nfse_para: ref })
         .eq('id', linha.id)
         .eq('provider_ref', ref)
+      reivindica = linha.nfse_para === null ? reivindica.is('nfse_para', null) : reivindica.eq('nfse_para', linha.nfse_para)
+      const { data: minha, error } = await reivindica.select('id')
       if (error) throw new Error(`nfse_para: ${error.message}`)
+      if (!minha?.length) return
+      const centavos = linha.price_cents ?? (linha.founder ? PRECO_FUNDADOR_CENTAVOS : PRECO_FAMILIA_CENTAVOS)
+      const r = await agendarNota(cfg, { parcelamento: ref, centavos, data: ctx.hoje, codigo, nome })
+      if (!r.ok) {
+        erro(ctx, 'agendarNota', linha.id, `${r.status} ${r.erros.join('; ')}`)
+        // Só a recusa clara (4xx) não agendou nada: a reivindicação volta, e amanhã tenta de novo.
+        // Rede, 5xx ou prazo podem ter agendado: fica reivindicada, e o suporte confere no painel.
+        if (r.status < 400 || r.status >= 500) {
+          console.error('billing-daily: NFS-e incerta, confira no painel antes de emitir', linha.id, ref)
+          return
+        }
+        const { error: vErr } = await ctx.admin
+          .from('billing_subscriptions')
+          .update({ nfse_para: linha.nfse_para })
+          .eq('id', linha.id)
+          .eq('nfse_para', ref)
+        if (vErr) console.error('billing-daily: soltar a NFS-e', linha.id, vErr.message)
+        return
+      }
       ctx.n.notas += 1
     } catch (e) {
       erro(ctx, 'NFS-e', linha.id, e)

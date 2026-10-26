@@ -375,21 +375,31 @@ export function checkoutPendente(
 }
 
 /**
- * Ruling 18: o que a resposta da cobrança por token quer dizer. Só um 4xx é
- * recusa (o Asaas não cria a cobrança recusada); rede, 5xx, prazo estourado ou
- * 200 ilegível podem ter cobrado, e esperam.
+ * Ruling 18 e 26: o que a resposta da cobrança por token quer dizer. 401, 403,
+ * 408, 429 e 5xx não são o cartão: a chave, o limite ou o Asaas fora do ar —
+ * `'soltar'` devolve a tentativa e o cron tenta no dia seguinte, sem aviso. Só
+ * os outros 4xx são recusa (o Asaas não cria a cobrança recusada); rede, prazo
+ * estourado ou 200 ilegível podem ter cobrado, e esperam.
  */
 export function resultadoDaCobranca(
   r: { ok: true; dados: { status: string } } | { ok: false; status: number },
-): 'ativar' | 'esperar' | 'recusada' {
+): 'ativar' | 'esperar' | 'recusada' | 'soltar' {
   if (r.ok) return r.dados.status === 'CONFIRMED' || r.dados.status === 'RECEIVED' ? 'ativar' : 'esperar'
+  if ([401, 403, 408, 429].includes(r.status) || r.status >= 500) return 'soltar'
   return r.status >= 400 && r.status < 500 ? 'recusada' : 'esperar'
 }
+
+/** Os status de uma cobrança que ainda pode ser paga (I1). REFUSED, REPROVED…, OVERDUE e os estornos não. */
+const COBRANCA_VIVA = ['PENDING', 'AWAITING_RISK_ANALYSIS', 'AUTHORIZED']
 
 /**
  * Ruling 19: as cobranças da linha no Asaas, desde o dia da tentativa, dizem
  * se a renovação em espera foi paga, segue pendente ou nunca foi criada. O
- * parcelamento do plano (`provider_ref`) e as removidas não contam.
+ * parcelamento do plano (`provider_ref`) e as removidas não contam. I1: só um
+ * parcelamento com todas as parcelas vivas está pendente; um com qualquer
+ * parcela recusada, vencida ou estornada morreu e conta como "nenhuma" — a
+ * pessoa recebe o aviso do cartão e paga pelo checkout no preço da linha. M5:
+ * a cobrança sem `dateCreated` conta (o filtro do servidor já cortou).
  */
 export function vereditoDaEspera(
   pagamentos: Pagamento[],
@@ -397,11 +407,12 @@ export function vereditoDaEspera(
   desde: string,
 ): { tipo: 'nenhuma' } | { tipo: 'paga'; pagamento: Pagamento } | { tipo: 'pendente' } {
   const dela = pagamentos.filter((p) =>
-    !p.deleted && !!p.installment && p.installment !== providerRef && (p.dateCreated ?? '') >= desde
+    !p.deleted && !!p.installment && p.installment !== providerRef && (!p.dateCreated || p.dateCreated >= desde)
   )
   const paga = dela.find((p) => p.status === 'CONFIRMED' || p.status === 'RECEIVED')
   if (paga) return { tipo: 'paga', pagamento: paga }
-  return dela.length ? { tipo: 'pendente' } : { tipo: 'nenhuma' }
+  const mortos = new Set(dela.filter((p) => !COBRANCA_VIVA.includes(p.status)).map((p) => p.installment))
+  return dela.some((p) => !mortos.has(p.installment)) ? { tipo: 'pendente' } : { tipo: 'nenhuma' }
 }
 
 /**

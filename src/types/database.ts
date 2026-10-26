@@ -255,16 +255,19 @@ export type Database = {
       billing_events: {
         Row: {
           id: string
+          processado_em: string | null
           recebido_em: string
           tipo: string
         }
         Insert: {
           id: string
+          processado_em?: string | null
           recebido_em?: string
           tipo: string
         }
         Update: {
           id?: string
+          processado_em?: string | null
           recebido_em?: string
           tipo?: string
         }
